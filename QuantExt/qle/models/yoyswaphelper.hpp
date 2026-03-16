@@ -38,7 +38,7 @@ public:
     YoYSwapHelper(const QuantLib::Handle<QuantLib::Quote>& rate,
         QuantLib::Natural settlementDays,
         const QuantLib::Period& tenor,
-        const boost::shared_ptr<QuantLib::YoYInflationIndex>& yoyIndex,
+        const QuantLib::ext::shared_ptr<QuantLib::YoYInflationIndex>& yoyIndex,
         const QuantLib::Handle<QuantLib::YieldTermStructure>& rateCurve,
         const QuantLib::Period& observationLag,
         const QuantLib::Calendar& yoyCalendar,
@@ -64,11 +64,11 @@ public:
 
     //! \name YoYSwapHelper inspectors
     //@{
-    boost::shared_ptr<QuantLib::YearOnYearInflationSwap> yoySwap() const;
+    QuantLib::ext::shared_ptr<QuantLib::YearOnYearInflationSwap> yoySwap() const;
     //@}
 
     //! Set the pricing engine to be used by the underlying YoY swap
-    void setPricingEngine(const boost::shared_ptr<QuantLib::PricingEngine>& engine);
+    void setPricingEngine(const QuantLib::ext::shared_ptr<QuantLib::PricingEngine>& engine);
 
     //! Return the market fair year on year rate
     QuantLib::Real marketRate() const;
@@ -84,16 +84,16 @@ private:
     QuantLib::Handle<QuantLib::Quote> rate_;
 
     //! The underlying YoY swap
-    boost::shared_ptr<QuantLib::YearOnYearInflationSwap> yoySwap_;
+    QuantLib::ext::shared_ptr<QuantLib::YearOnYearInflationSwap> yoySwap_;
 
     //! The pricing engine used to value the YoY swap
-    boost::shared_ptr<QuantLib::PricingEngine> engine_;
+    QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engine_;
 
     // Store variables needed to rebuild the YoY swap
     QuantLib::Date evaluationDate_;
     QuantLib::Natural settlementDays_;
     QuantLib::Period tenor_;
-    boost::shared_ptr<QuantLib::YoYInflationIndex> yoyIndex_;
+    QuantLib::ext::shared_ptr<QuantLib::YoYInflationIndex> yoyIndex_;
     QuantLib::Handle<QuantLib::YieldTermStructure> rateCurve_;
     QuantLib::Period observationLag_;
     QuantLib::Calendar yoyCalendar_;

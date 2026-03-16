@@ -22,22 +22,30 @@
     \ingroup utilities
 */
 
-#include <boost/algorithm/string.hpp>
-#include <map>
 #include <ored/utilities/calendarparser.hpp>
 #include <ored/utilities/currencyparser.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/scripting/models/heston.hpp>
+
+#include <qle/instruments/cashflowresults.hpp>
+#include <qle/time/yearcounter.hpp>
+#include <qle/models/assetmodelwrapper.hpp>
+#include <qle/time/monthcounter.hpp>
+
 #include <ql/errors.hpp>
 #include <ql/indexes/all.hpp>
 #include <ql/time/daycounters/all.hpp>
 #include <ql/utilities/dataparsers.hpp>
-#include <ql/version.hpp>
-#include <qle/instruments/cashflowresults.hpp>
-#include <qle/time/yearcounter.hpp>
+#include <ql/math/integrals/simpsonintegral.hpp>
+#include <ql/math/integrals/kronrodintegral.hpp>
+#include <ql/math/integrals/segmentintegral.hpp>
 
+#include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
+
+#include <map>
 #include <regex>
 
 using namespace QuantLib;
@@ -116,6 +124,12 @@ Real parseReal(const string& s) {
     } catch (const std::exception& ex) {
         QL_FAIL("Failed to parseReal(\"" << s << "\") " << ex.what());
     }
+}
+
+Real parseRealOrNull(const string& s) {
+    if(s.empty())
+        return Null<Real>();
+    return parseReal(s);
 }
 
 bool tryParseReal(const string& s, QuantLib::Real& result) {
@@ -224,6 +238,7 @@ DayCounter parseDayCounter(const string& s) {
                                         {"30/360", Thirty360(Thirty360::USA)},
                                         {"30/360 US", Thirty360(Thirty360::USA)},
                                         {"30/360 (US)", Thirty360(Thirty360::USA)},
+                                        {"30/360 NASD", Thirty360(Thirty360::NASD)},
                                         {"30U/360", Thirty360(Thirty360::USA)},
                                         {"30US/360", Thirty360(Thirty360::USA)},
                                         {"30/360 (Bond Basis)", Thirty360(Thirty360::BondBasis)},
@@ -271,7 +286,8 @@ DayCounter parseDayCounter(const string& s) {
                                         {"A364", QuantLib::Actual364()},
                                         {"Actual/364", Actual364()},
                                         {"Act/364", Actual364()},
-                                        {"ACT/364", Actual364()}};
+                                        {"ACT/364", Actual364()}, 
+                                        {"Month", MonthCounter()}};
 
     auto it = m.find(s);
     if (it != m.end()) {
@@ -458,6 +474,20 @@ Settlement::Method parseSettlementMethod(const std::string& s) {
     }
 }
 
+QuantLib::Date calculateMporDate(const QuantLib::Size& mporDays, const QuantLib::Date& asOf, const std::string& mporCalendar) {
+    QuantLib::Calendar mporCal = parseCalendar(mporCalendar);
+    return calculateMporDate(mporDays, mporCal, asOf);
+}
+
+QuantLib::Date calculateMporDate(const QuantLib::Size& mporDays, const QuantLib::Calendar& mporCalendar,
+                                 const QuantLib::Date& asOf) {
+    Date d = asOf;
+    if (d == Date())
+        d = Settings::instance().evaluationDate();
+    return mporCalendar.advance(d, mporDays, QuantExt::Days);
+
+}
+
 Exercise::Type parseExerciseType(const std::string& s) {
     static map<string, Exercise::Type> m = {
         {"European", Exercise::European},
@@ -607,10 +637,15 @@ Weekday parseWeekday(const string& s) {
 
 Month parseMonth(const string& s) {
 
-    static map<string, Month> m = {{"Jan", Month::January}, {"Feb", Month::February}, {"Mar", Month::March},
-                                   {"Apr", Month::April},   {"May", Month::May},      {"Jun", Month::June},
-                                   {"Jul", Month::July},    {"Aug", Month::August},   {"Sep", Month::September},
-                                   {"Oct", Month::October}, {"Nov", Month::November}, {"Dec", Month::December}};
+    static map<string, Month> m = {
+        {"Jan", Month::January},     {"Feb", Month::February},      {"Mar", Month::March},
+        {"Apr", Month::April},       {"May", Month::May},           {"Jun", Month::June},
+        {"Jul", Month::July},        {"Aug", Month::August},        {"Sep", Month::September},
+        {"Oct", Month::October},     {"Nov", Month::November},      {"Dec", Month::December},
+        {"January", Month::January}, {"February", Month::February}, {"March", Month::March},
+        {"April", Month::April},     {"May", Month::May},           {"June", Month::June},
+        {"July", Month::July},       {"August", Month::August},     {"September", Month::September},
+        {"October", Month::October}, {"November", Month::November}, {"December", Month::December}};
 
     auto it = m.find(s);
     if (it != m.end()) {
@@ -639,6 +674,18 @@ std::vector<string> parseListOfValues(string s, const char escape, const char de
     for (auto r : tokens) {
         boost::trim(r);
         vec.push_back(r);
+    }
+    return vec;
+}
+
+std::vector<int> parseListOfValuesAsInt(string s, const char escape, const char delim, const char quote) {
+    boost::trim(s);
+    std::vector<int> vec;
+    boost::escaped_list_separator<char> sep(escape, delim, quote);
+    boost::tokenizer<boost::escaped_list_separator<char>> tokens(s, sep);
+    for (auto r : tokens) {
+        boost::trim(r);
+        vec.push_back(std::stoi(r));
     }
     return vec;
 }
@@ -706,7 +753,7 @@ AssetClass parseAssetClass(const std::string& s) {
     static map<string, AssetClass> assetClasses = {{"EQ", AssetClass::EQ},     {"FX", AssetClass::FX},
                                                    {"COM", AssetClass::COM},   {"IR", AssetClass::IR},
                                                    {"INF", AssetClass::INF},   {"CR", AssetClass::CR},
-                                                   {"BOND", AssetClass::BOND}, {"BOND_INDEX", AssetClass::BOND_INDEX}};
+                                                   {"BOND", AssetClass::BOND}, {"BOND_INDEX", AssetClass::BOND_INDEX}, {"PORTFOLIO_DETAILS", AssetClass::PORTFOLIO_DETAILS}};
     auto it = assetClasses.find(s);
     if (it != assetClasses.end()) {
         return it->second;
@@ -733,6 +780,8 @@ std::ostream& operator<<(std::ostream& os, AssetClass a) {
         return os << "BOND";
     case AssetClass::BOND_INDEX:
         return os << "BOND_INDEX";
+    case AssetClass::PORTFOLIO_DETAILS:
+        return os << "PORTFOLIO_DETAILS";
     default:
         QL_FAIL("Unknown AssetClass");
     }
@@ -851,40 +900,40 @@ QuantExt::CrossAssetModel::AssetType parseCamAssetType(const string& s) {
     }
 }
 
-pair<string, string> parseBoostAny(const boost::any& anyType, Size precision) {
+pair<string, string> parseBoostAny(const QuantLib::ext::any& anyType, Size precision) {
     string resultType;
     std::ostringstream oss;
 
     if (anyType.type() == typeid(int)) {
         resultType = "int";
-        int r = boost::any_cast<int>(anyType);
+        int r = QuantLib::ext::any_cast<int>(anyType);
         oss << std::fixed << std::setprecision(precision) << r;
     } else if (anyType.type() == typeid(Size)) {
         resultType = "size";
-        int r = boost::any_cast<Size>(anyType);
+        int r = QuantLib::ext::any_cast<Size>(anyType);
         oss << std::fixed << std::setprecision(precision) << r;
     } else if (anyType.type() == typeid(double)) {
         resultType = "double";
-        double r = boost::any_cast<double>(anyType);
+        double r = QuantLib::ext::any_cast<double>(anyType);
         if (r != Null<Real>())
             oss << std::fixed << std::setprecision(precision) << r;
     } else if (anyType.type() == typeid(std::string)) {
         resultType = "string";
-        std::string r = boost::any_cast<std::string>(anyType);
+        std::string r = QuantLib::ext::any_cast<std::string>(anyType);
         oss << std::fixed << std::setprecision(precision) << r;
     } else if (anyType.type() == typeid(Date)) {
         resultType = "date";
-        oss << io::iso_date(boost::any_cast<Date>(anyType));
+        oss << io::iso_date(QuantLib::ext::any_cast<Date>(anyType));
     } else if (anyType.type() == typeid(bool)) {
         resultType = "bool";
-        oss << std::boolalpha << boost::any_cast<bool>(anyType);
+        oss << std::boolalpha << QuantLib::ext::any_cast<bool>(anyType);
     } else if (anyType.type() == typeid(std::vector<bool>)) {
         resultType = "vector_bool";
-        std::vector<bool> r = boost::any_cast<std::vector<bool>>(anyType);
+        std::vector<bool> r = QuantLib::ext::any_cast<std::vector<bool>>(anyType);
         if (r.size() == 0) {
             oss << "";
         } else {
-            oss << std::boolalpha << "\"" << boost::any_cast<bool>(anyType);
+            oss << std::boolalpha << "\"" << QuantLib::ext::any_cast<bool>(anyType);
             for (Size i = 1; i < r.size(); i++) {
                 oss << ", " << r[i];
             }
@@ -892,7 +941,7 @@ pair<string, string> parseBoostAny(const boost::any& anyType, Size precision) {
         }
     } else if (anyType.type() == typeid(std::vector<double>)) {
         resultType = "vector_double";
-        std::vector<double> r = boost::any_cast<std::vector<double>>(anyType);
+        std::vector<double> r = QuantLib::ext::any_cast<std::vector<double>>(anyType);
         if (r.size() == 0) {
             oss << "";
         } else {
@@ -908,7 +957,7 @@ pair<string, string> parseBoostAny(const boost::any& anyType, Size precision) {
         }
     } else if (anyType.type() == typeid(std::vector<Date>)) {
         resultType = "vector_date";
-        std::vector<Date> r = boost::any_cast<std::vector<Date>>(anyType);
+        std::vector<Date> r = QuantLib::ext::any_cast<std::vector<Date>>(anyType);
         if (r.size() == 0) {
             oss << "";
         } else {
@@ -920,7 +969,7 @@ pair<string, string> parseBoostAny(const boost::any& anyType, Size precision) {
         }
     } else if (anyType.type() == typeid(std::vector<std::string>)) {
         resultType = "vector_string";
-        std::vector<std::string> r = boost::any_cast<std::vector<std::string>>(anyType);
+        std::vector<std::string> r = QuantLib::ext::any_cast<std::vector<std::string>>(anyType);
         if (r.size() == 0) {
             oss << "";
         } else {
@@ -932,7 +981,7 @@ pair<string, string> parseBoostAny(const boost::any& anyType, Size precision) {
         }
     } else if (anyType.type() == typeid(std::vector<CashFlowResults>)) {
         resultType = "vector_cashflows";
-        std::vector<CashFlowResults> r = boost::any_cast<std::vector<CashFlowResults>>(anyType);
+        std::vector<CashFlowResults> r = QuantLib::ext::any_cast<std::vector<CashFlowResults>>(anyType);
         if (!r.empty()) {
             oss << std::fixed << std::setprecision(precision) << "\"" << r[0];
             for (Size i = 1; i < r.size(); ++i) {
@@ -942,17 +991,27 @@ pair<string, string> parseBoostAny(const boost::any& anyType, Size precision) {
         }
     } else if (anyType.type() == typeid(QuantLib::Matrix)) {
         resultType = "matrix";
-        QuantLib::Matrix r = boost::any_cast<QuantLib::Matrix>(anyType);
+        QuantLib::Matrix r = QuantLib::ext::any_cast<QuantLib::Matrix>(anyType);
         std::regex pattern("\n");
         std::ostringstream tmp;
         tmp << std::setprecision(precision) << r;
         oss << std::fixed << std::regex_replace(tmp.str(), pattern, std::string(""));
     } else if (anyType.type() == typeid(QuantLib::Array)) {
         resultType = "array";
-        QuantLib::Array r = boost::any_cast<QuantLib::Array>(anyType);
+        QuantLib::Array r = QuantLib::ext::any_cast<QuantLib::Array>(anyType);
         oss << std::fixed << std::setprecision(precision) << r;
+    } else if (anyType.type() == typeid(QuantLib::Currency)) {
+        resultType = "currency";
+        QuantLib::Currency r = QuantLib::ext::any_cast<QuantLib::Currency>(anyType);
+        oss << r;
+    } else if (anyType.type() == typeid(MultiAssetHestonPaths)) {
+        resultType = "heston_paths";
+        oss << "see separate report";
+    } else if (anyType.type() == typeid(std::vector<AssetModelCalibrationResults>)) {
+        resultType = "vector_calibration_results";
+        oss << "see separate reports";
     } else {
-        ALOG("Unsupported Boost::Any type");
+      ALOG("Unsupported QuantLib::ext::any type");
         resultType = "unsupported_type";
     }
     return make_pair(resultType, oss.str());
@@ -984,8 +1043,15 @@ FutureConvention::DateGenerationRule parseFutureDateGenerationRule(const std::st
         return FutureConvention::DateGenerationRule::IMM;
     else if (s == "FirstDayOfMonth")
         return FutureConvention::DateGenerationRule::FirstDayOfMonth;
+    else if (s == "IMMAUD" || s == "SecondThursday")  // SecondThursday is a backward-compatible alias for IMMAUD
+        return FutureConvention::DateGenerationRule::IMMAUD;
+    else if (s == "IMMNZD")
+        return FutureConvention::DateGenerationRule::IMMNZD;
+    else if (s == "IMMCAD")
+        return FutureConvention::DateGenerationRule::IMMCAD;
     else {
-        QL_FAIL("FutureConvention /  DateGenerationRule '" << s << "' not known, expect 'IMM' or 'FirstDayOfMonth'");
+        QL_FAIL("FutureConvention /  DateGenerationRule '" << s << "' not known, expect 'IMM', 'FirstDayOfMonth',"
+                " 'IMMAUD' (alias 'SecondThursday'), 'IMMNZD', or 'IMMCAD'");
     }
 }
 
@@ -994,6 +1060,12 @@ std::ostream& operator<<(std::ostream& os, FutureConvention::DateGenerationRule 
         return os << "IMM";
     else if (t == FutureConvention::DateGenerationRule::FirstDayOfMonth)
         return os << "FirstDayOfMonth";
+    else if (t == FutureConvention::DateGenerationRule::IMMAUD)
+        return os << "IMMAUD";
+    else if (t == FutureConvention::DateGenerationRule::IMMNZD)
+        return os << "IMMNZD";
+    else if (t == FutureConvention::DateGenerationRule::IMMCAD)
+        return os << "IMMCAD";
     else {
         QL_FAIL("Internal error: unknown FutureConvention::DateGenerationRule - check implementation of operator<< "
                 "for this enum");
@@ -1391,28 +1463,191 @@ std::ostream& operator<<(std::ostream& os, const CreditPortfolioSensitivityDecom
     }
 }
 
-QuantLib::Pillar::Choice parsePillarChoice(const std::string& s) {
-    /* we support
-       - the string corresponding to the enum label (preferred, first alternative below)
-       - the string generated by operator<<() in QuantLib */
-    if (s == "MaturityDate" || s == "MaturityPillarDate")
-        return QuantLib::Pillar::MaturityDate;
-    else if (s == "LastRelevantDate" || s == "LastRelevantPillarDate")
-        return QuantLib::Pillar::LastRelevantDate;
-    else if (s == "CustomDate" || s == "CustomPillarDate")
-        return QuantLib::Pillar::CustomDate;
-    else {
-        QL_FAIL("PillarChoice '" << s << "' not recognized, expected MaturityDate, LastRelevantDate, CustomDate");
+YieldCurveSegment::Type parseYieldCurveSegment(const string& s) {
+    if (iequals(s, "Zero"))
+        return YieldCurveSegment::Type::Zero;
+    else if (iequals(s, "Zero Spread"))
+        return YieldCurveSegment::Type::ZeroSpread;
+    else if (iequals(s, "Discount"))
+        return YieldCurveSegment::Type::Discount;
+    else if (iequals(s, "Deposit"))
+        return YieldCurveSegment::Type::Deposit;
+    else if (iequals(s, "FRA"))
+        return YieldCurveSegment::Type::FRA;
+    else if (iequals(s, "Future"))
+        return YieldCurveSegment::Type::Future;
+    else if (iequals(s, "OIS"))
+        return YieldCurveSegment::Type::OIS;
+    else if (iequals(s, "Swap"))
+        return YieldCurveSegment::Type::Swap;
+    else if (iequals(s, "Average OIS"))
+        return YieldCurveSegment::Type::AverageOIS;
+    else if (iequals(s, "Tenor Basis Swap"))
+        return YieldCurveSegment::Type::TenorBasis;
+    else if (iequals(s, "Tenor Basis Two Swaps"))
+        return YieldCurveSegment::Type::TenorBasisTwo;
+    else if (iequals(s, "BMA Basis Swap"))
+        return YieldCurveSegment::Type::BMABasis;
+    else if (iequals(s, "FX Forward"))
+        return YieldCurveSegment::Type::FXForward;
+    else if (iequals(s, "Cross Currency Basis Swap"))
+        return YieldCurveSegment::Type::CrossCcyBasis;
+    else if (iequals(s, "Cross Currency Fix Float Swap"))
+        return YieldCurveSegment::Type::CrossCcyFixFloat;
+    else if (iequals(s, "Discount Ratio"))
+        return YieldCurveSegment::Type::DiscountRatio;
+    else if (iequals(s, "FittedBond"))
+        return YieldCurveSegment::Type::FittedBond;
+    else if (iequals(s, "Yield Plus Default"))
+        return YieldCurveSegment::Type::YieldPlusDefault;
+    else if (iequals(s, "Weighted Average"))
+        return YieldCurveSegment::Type::WeightedAverage;
+    else if (iequals(s, "Ibor Fallback"))
+        return YieldCurveSegment::Type::IborFallback;
+    else if (iequals(s, "Bond Yield Shifted"))
+        return YieldCurveSegment::Type::BondYieldShifted;
+    QL_FAIL("Yield curve segment type " << s << " not recognized");
+}
+
+std::ostream& operator<<(std::ostream& os, const YieldCurveSegment::Type c) {
+    if (c == YieldCurveSegment::Type::Zero) {
+        return os << "Zero";
+    } else if (c == YieldCurveSegment::Type::ZeroSpread) {
+        return os << "Zero Spread";
+    } else if (c == YieldCurveSegment::Type::Discount) {
+        return os << "Discount";
+    } else if (c == YieldCurveSegment::Type::Deposit) {
+        return os << "Deposit";
+    } else if (c == YieldCurveSegment::Type::FRA) {
+        return os << "FRA";
+    } else if (c == YieldCurveSegment::Type::Future) {
+        return os << "Future";
+    } else if (c == YieldCurveSegment::Type::OIS) {
+        return os << "OIS";
+    } else if (c == YieldCurveSegment::Type::Swap) {
+        return os << "Swap";
+    } else if (c == YieldCurveSegment::Type::AverageOIS) {
+        return os << "Average OIS";
+    } else if (c == YieldCurveSegment::Type::TenorBasis) {
+        return os << "Tenor Basis Swap";
+    } else if (c == YieldCurveSegment::Type::TenorBasisTwo) {
+        return os << "Tenor Basis Two Swaps";
+    } else if (c == YieldCurveSegment::Type::BMABasis) {
+        return os << "BMA Basis Swap";
+    } else if (c == YieldCurveSegment::Type::FXForward) {
+        return os << "FX Forward";
+    } else if (c == YieldCurveSegment::Type::CrossCcyBasis) {
+        return os << "Cross Currency Basis Swap";
+    } else if (c == YieldCurveSegment::Type::CrossCcyFixFloat) {
+        return os << "Cross Currency Fix Float Swap";
+    } else if (c == YieldCurveSegment::Type::DiscountRatio) {
+        return os << "Discount Ratio";
+    } else if (c == YieldCurveSegment::Type::FittedBond) {
+        return os << "FittedBond";
+    } else if (c == YieldCurveSegment::Type::YieldPlusDefault) {
+        return os << "Yield Plus Default";
+    } else if (c == YieldCurveSegment::Type::WeightedAverage) {
+        return os << "Weighted Average";
+    } else if (c == YieldCurveSegment::Type::IborFallback) {
+        return os << "Ibor Fallback";
+    } else if (c == YieldCurveSegment::Type::BondYieldShifted) {
+        return os << "Bond Yield Shifted";
+    } else {
+        QL_FAIL("Unknonw YieldCurveSegment::Type value " << static_cast<std::size_t>(c));
     }
 }
 
-QuantExt::McMultiLegBaseEngine::RegressorModel parseRegressorModel(const std::string& s) {
-    if (s == "Simple")
-        return McMultiLegBaseEngine::RegressorModel::Simple;
-    else if (s == "LaggedFX")
-        return McMultiLegBaseEngine::RegressorModel::LaggedFX;
+YieldCurveSegment::PillarChoice parsePillarChoice(const std::string& s) {
+    if (s == "NoPillar")
+        return YieldCurveSegment::PillarChoice::NoPillar;
+    else if (s == "MaturityDate" || s == "MaturityPillarDate")
+        return YieldCurveSegment::PillarChoice::MaturityDate;
+    else if (s == "LastRelevantDate" || s == "LastRelevantPillarDate")
+        return YieldCurveSegment::PillarChoice::LastRelevantDate;
+    else if (s == "StartDate")
+        return YieldCurveSegment::PillarChoice::StartDate;
+    else if (s == "StartDateAndMaturityDate")
+        return YieldCurveSegment::PillarChoice::StartDateAndMaturityDate;
+    else if (s == "StartDateAndLastRelevantDate")
+        return YieldCurveSegment::PillarChoice::StartDateAndLastRelevantDate;
     else {
-        QL_FAIL("RegressorModel '" << s << "' not recognized, expected Simple, LaggedFX");
+        QL_FAIL("PillarChoice '" << s
+                                 << "' not recognized, expected NoPillar, MaturityDate (or MaturityPillarDate), "
+                                    "LastRelevantDate (or LastRelevantPillarDate), StartDate, "
+                                    "StartDateAndMaturityDate, StartDateAndLastRelevantDate");
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, const YieldCurveSegment::PillarChoice c) {
+    if (c == YieldCurveSegment::PillarChoice::NoPillar) {
+        return os << "NoPillar";
+    } else if (c == YieldCurveSegment::PillarChoice::MaturityDate) {
+        return os << "MaturityDate";
+    } else if (c == YieldCurveSegment::PillarChoice::LastRelevantDate) {
+        return os << "LastRelevantDate";
+    } else if (c == YieldCurveSegment::PillarChoice::StartDate) {
+        return os << "StartDate";
+    } else if (c == YieldCurveSegment::PillarChoice::StartDateAndMaturityDate) {
+        return os << "StartDateAndMaturityDate";
+    } else if (c == YieldCurveSegment::PillarChoice::StartDateAndLastRelevantDate) {
+        return os << "StartDateAndLastRelevantDate";
+    } else {
+        QL_FAIL("Unknonw PillarChoice value " << static_cast<std::size_t>(c));
+    }
+}
+
+YieldCurveSegment::DuplicatePillarPolicy parseDuplicatePillarPolicy(const std::string& s) {
+    if (s == "KeepLast")
+        return YieldCurveSegment::DuplicatePillarPolicy::KeepLast;
+    else if (s == "KeepFirst")
+        return YieldCurveSegment::DuplicatePillarPolicy::KeepFirst;
+    else if (s == "KeepAll")
+        return YieldCurveSegment::DuplicatePillarPolicy::KeepAll;
+    else if (s == "ThrowError")
+        return YieldCurveSegment::DuplicatePillarPolicy::ThrowError;
+    else {
+        QL_FAIL("DuplicatePillarPolicy '" << s
+                                          << "' not recognized, expected KeepLast, KeepFirst, KeepAll, ThrowError");
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, const YieldCurveSegment::DuplicatePillarPolicy c) {
+    if (c == YieldCurveSegment::DuplicatePillarPolicy::KeepLast) {
+        return os << "KeepLast";
+    } else if (c == YieldCurveSegment::DuplicatePillarPolicy::KeepFirst) {
+        return os << "KeepFirst";
+    } else if (c == YieldCurveSegment::DuplicatePillarPolicy::KeepAll) {
+        return os << "KeepAll";
+    } else if (c == YieldCurveSegment::DuplicatePillarPolicy::ThrowError) {
+        return os << "ThrowError";
+    } else {
+        QL_FAIL("Unknonw DuplicatePillarPolicy value " << static_cast<std::size_t>(c));
+    }
+}
+
+QuantExt::McRegressionModel::RegressorModel parseRegressorModel(const std::string& s) {
+    if (s == "Simple")
+        return McRegressionModel::RegressorModel::Simple;
+    else if (s == "Lagged")
+        return McRegressionModel::RegressorModel::Lagged;
+    else if (s == "LaggedIR")
+        return McRegressionModel::RegressorModel::LaggedIR;
+    else if (s == "LaggedFX")
+        return McRegressionModel::RegressorModel::LaggedFX;
+    else if (s == "LaggedEQ")
+        return McRegressionModel::RegressorModel::LaggedEQ;
+    else {
+        QL_FAIL("RegressorModel '" << s << "' not recognized, expected Simple, Lagged, LaggedIR, LaggedFX, LaggedEQ");
+    }
+}
+
+QuantExt::McRegressionModel::VarGroupMode parseVarGroupMode(const std::string& s) {
+    if (s == "Global")
+        return McRegressionModel::VarGroupMode::Global;
+    else if (s == "Trivial")
+        return McRegressionModel::VarGroupMode::Trivial;
+    else {
+        QL_FAIL("VarGroupMode '" << s << "' not recognized, expected Global, Trivial");
     }
 }
 
@@ -1446,5 +1681,208 @@ std::ostream& operator<<(std::ostream& out, MporCashFlowMode t) {
     return out;
 }
 
+SabrParametricVolatility::ModelVariant parseSabrParametricVolatilityModelVariant(const std::string& s) {
+    static map<string, SabrParametricVolatility::ModelVariant> m = {
+        {"Hagan2002Lognormal", SabrParametricVolatility::ModelVariant::Hagan2002Lognormal},
+        {"Hagan2002Normal", SabrParametricVolatility::ModelVariant::Hagan2002Normal},
+        {"Hagan2002NormalZeroBeta", SabrParametricVolatility::ModelVariant::Hagan2002NormalZeroBeta},
+        {"Antonov2015FreeBoundaryNormal", SabrParametricVolatility::ModelVariant::Antonov2015FreeBoundaryNormal},
+        {"KienitzLawsonSwaynePde", SabrParametricVolatility::ModelVariant::KienitzLawsonSwaynePde},
+        {"FlochKennedy", SabrParametricVolatility::ModelVariant::FlochKennedy}};
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL(
+            "SabrParametricVolatilityModelVariant '"
+            << s
+            << "' not recognized, expected one of 'Hagan2002Lognormal', 'Hagan2002Normal', 'Hagan2002NormalZeroBeta', "
+               "'Antonov2015FreeBoundaryNormal', 'KienitzLawsonSwaynePde', 'FlochKennedy'.");
+    }
+}
+
+std::ostream& operator<<(std::ostream& out, SabrParametricVolatility::ModelVariant m) {
+    if (m == SabrParametricVolatility::ModelVariant::Hagan2002Lognormal) {
+        out << "Hagan2002Lognormal";
+    } else if (m == SabrParametricVolatility::ModelVariant::Hagan2002Normal) {
+        out << "Hagan2002Normal";
+    } else if (m == SabrParametricVolatility::ModelVariant::Hagan2002NormalZeroBeta) {
+        out << "Hagan200NormalZeroBeta";
+    } else if (m == SabrParametricVolatility::ModelVariant::Antonov2015FreeBoundaryNormal) {
+        out << "AntonovNormalZeroBeta";
+    } else if (m == SabrParametricVolatility::ModelVariant::KienitzLawsonSwaynePde) {
+        out << "KienitzLawsonSwaynePde";
+    } else if (m == SabrParametricVolatility::ModelVariant::FlochKennedy) {
+        out << "FlochKennedy";
+    } else {
+        QL_FAIL("SabrParametricVolatility::ModelVariant (" << static_cast<int>(m)
+                                                           << ") not recognized. This is an internal error.");
+    }
+    return out;
+}
+
+std::ostream& operator<<(std::ostream& os, Exercise::Type type) {
+    if (type == Exercise::European) {
+        os << "European";
+    } else if (type == Exercise::Bermudan) {
+        os << "Bermudan";
+    } else if (type == Exercise::American) {
+        os << "American";
+    } else {
+        QL_FAIL("Exercise::Type (" << static_cast<int>(type)
+                                   << " not recognized. Expected 'European', 'Bermudan', or 'American'.");
+    }
+
+    return os;
+}
+
+SalvagingAlgorithm::Type parseSalvagingAlgorithmType(const std::string& s) {
+    static map<string, SalvagingAlgorithm::Type> m = {{"None", SalvagingAlgorithm::None},
+                                                      {"Spectral", SalvagingAlgorithm::Spectral},
+                                                      {"Hypersphere", SalvagingAlgorithm::Hypersphere},
+                                                      {"LowerDiagonal", SalvagingAlgorithm::LowerDiagonal},
+                                                      {"Higham", SalvagingAlgorithm::Higham}};
+
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("SalvagingAlgorithm type \"" << s << "\" not recognized");
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, SalvagingAlgorithm::Type type) {
+
+    if (type == SalvagingAlgorithm::None) {
+        os << "None";
+    } else if (type == SalvagingAlgorithm::Spectral) {
+        os << "Spectral";
+    } else if (type == SalvagingAlgorithm::Hypersphere) {
+        os << "Hypersphere";
+    } else if (type == SalvagingAlgorithm::LowerDiagonal) {
+        os << "LowerDiagonal";
+    } else if (type == SalvagingAlgorithm::Higham) {
+        os << "Higham";
+    } else {
+        QL_FAIL("SalvagingAlgorithm::Type ("
+                << static_cast<int>(type)
+                << " not recognized. Expected 'None', 'Spectral', 'Hypersphere', 'LowerDiagonal', or 'Higham'.");
+    }
+
+    return os;
+}
+
+std::vector<std::string> pairToStrings(std::pair<std::string, std::string> p) {
+    std::vector<std::string> pair = {p.first, p.second};
+    return pair;
+}
+
+QuantLib::ext::shared_ptr<Integrator> parseIntegrationPolicy(const std::string& s) {
+    if (s.empty())
+        return nullptr;
+    vector<string> tokens;
+    boost::split(tokens, s, boost::is_any_of(","));
+    QL_REQUIRE(!tokens.empty(), "parseIntegrationPolicy(" << s << "): no tokens found.");
+    if (tokens[0] == "Simpson") {
+        QL_REQUIRE(tokens.size() == 4, "parseIntegrationPolicy(" << s << "): expected 4 tokens.");
+        return QuantLib::ext::make_shared<SimpsonIntegral>(parseReal(tokens[1]), parseInteger(tokens[2]),
+                                                           parseInteger(tokens[3]));
+    } else if (tokens[0] == "Segment") {
+        QL_REQUIRE(tokens.size() == 2, "parseIntegrationPolicy(" << s << "): expected 2 tokens.");
+        return QuantLib::ext::make_shared<SegmentIntegral>(parseReal(tokens[1]));
+    } else if (tokens[0] == "GaussKronrodNonAdaptive") {
+        QL_REQUIRE(tokens.size() == 4, "parseIntegrationPolicy(" << s << "): expected 4 tokens.");
+        return QuantLib::ext::make_shared<GaussKronrodNonAdaptive>(parseReal(tokens[1]), parseInteger(tokens[2]),
+                                                                   parseReal(tokens[3]));
+    } else if (tokens[0] == "GaussKronrodAdaptive") {
+        QL_REQUIRE(tokens.size() == 3, "parseIntegrationPolicy(" << s << "): expected 3 tokens.");
+        return QuantLib::ext::make_shared<GaussKronrodAdaptive>(parseReal(tokens[1]), parseInteger(tokens[2]));
+    } else {
+        QL_FAIL("parseIntegrationPolicy(" << s << "): not recognized");
+    }
+}
+
+std::string splitByLastDelimiter(const std::string& source, const std::string& delimiter) {
+    if (source.find_last_of(delimiter) != std::string::npos )
+        return source.substr(source.find_last_of(delimiter) + 1);
+    else 
+        return std::string();
+}
+
+std::string removeAfterLastDelimiter(const std::string& source, const std::string& delimiter) {
+    auto const pos = source.find_last_of(delimiter);
+    return source.substr(0, pos);
+}
+
+ParConversionMatrixRegularisation parseParConversionMatrixRegularisation(const std::string& s) {
+    if (s == "Silent") {
+        return ParConversionMatrixRegularisation::Silent;
+    } else if (s == "Warning") {
+        return ParConversionMatrixRegularisation::Warning;
+    } else if (s == "Disable") {
+        return ParConversionMatrixRegularisation::Disable;
+    } else {
+        QL_FAIL("Invalid ParConversionMatrixRegularisation: " << s << ". Valid values are: Silent, Warning, Disable");
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, ParConversionMatrixRegularisation regularisation) {
+    if (regularisation == ParConversionMatrixRegularisation::Silent) {
+        os << "Silent";
+    } else if (regularisation == ParConversionMatrixRegularisation::Warning) {
+        os << "Warning";
+    } else if (regularisation == ParConversionMatrixRegularisation::Disable) {
+        os << "Disable";
+    } else {
+        QL_FAIL("Unknown ParConversionMatrixRegularisation");
+    }
+    return os;
+}
+
+HestonProcess::Discretization parseHestonProcessDiscretization(const std::string& s) {
+    static std::map<std::string, HestonProcess::Discretization> m = {
+        {"PartialTruncation", HestonProcess::PartialTruncation},
+        {"FullTruncation", HestonProcess::FullTruncation},
+        {"Reflection", HestonProcess::Reflection},
+        {"NonCentralChiSquareVariance", HestonProcess::NonCentralChiSquareVariance},
+        {"QuadraticExponential", HestonProcess::QuadraticExponential},
+        {"QuadraticExponentialMartingale", HestonProcess::QuadraticExponentialMartingale},
+        {"BroadieKayaExactSchemeLobatto", HestonProcess::BroadieKayaExactSchemeLobatto},
+        {"BroadieKayaExactSchemeLaguerre", HestonProcess::BroadieKayaExactSchemeLaguerre},
+        {"BroadieKayaExactSchemeTrapezoidal", HestonProcess::BroadieKayaExactSchemeTrapezoidal}};
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("Cannot convert \"" << s << "\" to HestonProcess::Discretization");
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, HestonProcess::Discretization dis) {
+    if (dis == HestonProcess::PartialTruncation) {
+        os << "PartialTruncation";
+    } else if (dis == HestonProcess::FullTruncation) {
+        os << "FullTruncation";
+    } else if (dis == HestonProcess::Reflection) {
+        os << "Reflection";
+    } else if (dis == HestonProcess::NonCentralChiSquareVariance) {
+        os << "NonCentralChiSquareVariance";
+    } else if (dis == HestonProcess::QuadraticExponential) {
+        os << "QuadraticExponential";
+    } else if (dis == HestonProcess::QuadraticExponentialMartingale) {
+        os << "QuadraticExponentialMartingale";
+    } else if (dis == HestonProcess::BroadieKayaExactSchemeLobatto) {
+        os << "BroadieKayaExactSchemeLobatto";
+    } else if (dis == HestonProcess::BroadieKayaExactSchemeLaguerre) {
+        os << "BroadieKayaExactSchemeLaguerre";
+    } else if (dis == HestonProcess::BroadieKayaExactSchemeTrapezoidal) {
+        os << "BroadieKayaExactSchemeTrapezoidal";
+    } else {
+        QL_FAIL("Unknown HestonProcess::Discretization");
+    }
+    return os;
+}
+
+  
 } // namespace data
 } // namespace ore

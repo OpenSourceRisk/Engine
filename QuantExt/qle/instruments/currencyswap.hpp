@@ -174,8 +174,8 @@ class VanillaCrossCurrencySwap : public CurrencySwap {
 public:
     VanillaCrossCurrencySwap(bool payFixed, Currency fixedCcy, Real fixedNominal, const Schedule& fixedSchedule,
                              Rate fixedRate, const DayCounter& fixedDayCount, Currency floatCcy, Real floatNominal,
-                             const Schedule& floatSchedule, const boost::shared_ptr<IborIndex>& iborIndex,
-                             Rate floatSpread, boost::optional<BusinessDayConvention> paymentConvention = boost::none,
+                             const Schedule& floatSchedule, const QuantLib::ext::shared_ptr<IborIndex>& iborIndex,
+                             Rate floatSpread, QuantLib::ext::optional<BusinessDayConvention> paymentConvention = QuantLib::ext::nullopt,
                              const bool isPhysicallySettled = true, const bool isResettable = false);
 };
 
@@ -191,8 +191,8 @@ public:
     CrossCurrencySwap(bool payFixed, Currency fixedCcy, std::vector<Real> fixedNominals, const Schedule& fixedSchedule,
                       std::vector<Rate> fixedRates, const DayCounter& fixedDayCount, Currency floatCcy,
                       std::vector<Real> floatNominals, const Schedule& floatSchedule,
-                      const boost::shared_ptr<IborIndex>& iborIndex, std::vector<Rate> floatSpreads,
-                      boost::optional<BusinessDayConvention> paymentConvention = boost::none,
+                      const QuantLib::ext::shared_ptr<IborIndex>& iborIndex, std::vector<Rate> floatSpreads,
+                      QuantLib::ext::optional<BusinessDayConvention> paymentConvention = QuantLib::ext::nullopt,
                       const bool isPhysicallySettled = true, const bool isResettable = false);
 
     // fixed/fixed
@@ -200,15 +200,15 @@ public:
                       std::vector<Rate> fixedRates1, const DayCounter& fixedDayCount1, Currency ccy2,
                       std::vector<Real> nominals2, const Schedule& schedule2, std::vector<Rate> fixedRates2,
                       const DayCounter& fixedDayCount2,
-                      boost::optional<BusinessDayConvention> paymentConvention = boost::none,
+                      QuantLib::ext::optional<BusinessDayConvention> paymentConvention = QuantLib::ext::nullopt,
                       const bool isPhysicallySettled = true, const bool isResettable = false);
 
     // floating/floating
     CrossCurrencySwap(bool pay1, Currency ccy1, std::vector<Real> nominals1, const Schedule& schedule1,
-                      const boost::shared_ptr<IborIndex>& iborIndex1, std::vector<Rate> spreads1, Currency ccy2,
+                      const QuantLib::ext::shared_ptr<IborIndex>& iborIndex1, std::vector<Rate> spreads1, Currency ccy2,
                       std::vector<Real> nominals2, const Schedule& schedule2,
-                      const boost::shared_ptr<IborIndex>& iborIndex2, std::vector<Rate> spreads2,
-                      boost::optional<BusinessDayConvention> paymentConvention = boost::none,
+                      const QuantLib::ext::shared_ptr<IborIndex>& iborIndex2, std::vector<Rate> spreads2,
+                      QuantLib::ext::optional<BusinessDayConvention> paymentConvention = QuantLib::ext::nullopt,
                       const bool isPhysicallySettled = true, const bool isResettable = false);
 };
 } // namespace QuantExt

@@ -25,8 +25,9 @@
 
 #include <vector>
 
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 #include <orea/scenario/scenario.hpp>
+#include <orea/scenario/scenarioloader.hpp>
 #include <ql/time/date.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 #include <ql/timegrid.hpp>
@@ -45,7 +46,7 @@ public:
     virtual ~ScenarioGenerator() {}
 
     //! Return the next scenario for the given date.
-    virtual boost::shared_ptr<Scenario> next(const Date& d) = 0;
+    virtual QuantLib::ext::shared_ptr<Scenario> next(const Date& d) = 0;
 
     //! Reset the generator so calls to next() return the first scenario.
     /*! This allows re-generation of scenarios if required. */
@@ -70,30 +71,17 @@ public:
         QL_REQUIRE(dates.front() > today, "date grid must start in the future");
     }
 
-    virtual boost::shared_ptr<Scenario> next(const Date& d) override {
-        if (d == dates_.front()) { // new path
-            path_ = nextPath();
-            pathStep_ = 0;
-        }
-        QL_REQUIRE(pathStep_ < dates_.size(), "step mismatch");
-        if(d == dates_[pathStep_]){
-            return path_[pathStep_++]; // post increment
-        } else{
-            auto it = std::find(dates_.begin(), dates_.end(), d);
-            QL_REQUIRE(it != dates_.end(), "invalid date " << d);
-            return path_[std::distance(dates_.begin(), it)];
-        }
-    }
+    virtual QuantLib::ext::shared_ptr<Scenario> next(const Date& d) override;
 
 protected:
-    virtual std::vector<boost::shared_ptr<Scenario>> nextPath() = 0;
+    virtual std::vector<QuantLib::ext::shared_ptr<Scenario>> nextPath() = 0;
 
     Date today_;
     vector<Date> dates_;
     Size pathStep_;
     // DayCounter dayCounter_;
     TimeGrid timeGrid_;
-    std::vector<boost::shared_ptr<Scenario>> path_;
+    std::vector<QuantLib::ext::shared_ptr<Scenario>> path_;
 };
 
 // A simple scenario generator that contains a single scenario
@@ -102,12 +90,29 @@ public:
     StaticScenarioGenerator() {}
 
     void reset() override {}
-    boost::shared_ptr<ore::analytics::Scenario> next(const Date&) override { return s_; }
+    QuantLib::ext::shared_ptr<Scenario> next(const Date&) override { return s_; }
 
-    void setScenario(const boost::shared_ptr<ore::analytics::Scenario>& s) { s_ = s; }
+    void setScenario(const QuantLib::ext::shared_ptr<Scenario>& s) { s_ = s; }
 
 private:
-    boost::shared_ptr<ore::analytics::Scenario> s_;
+    QuantLib::ext::shared_ptr<Scenario> s_;
+};
+
+// A simple scenario generator that returns scenarios from a scenario loader
+class ScenarioLoaderPathGenerator : public ScenarioPathGenerator {
+public:
+    ScenarioLoaderPathGenerator(const QuantLib::ext::shared_ptr<SimpleScenarioLoader>& scenarioLoader, Date today,
+                            const vector<Date>& dates, TimeGrid timeGrid)
+        : ScenarioPathGenerator(today, dates, timeGrid), scenarioLoader_(scenarioLoader), i_(0) {}
+
+    void reset() override { i_ = 0; }
+
+    const QuantLib::ext::shared_ptr<SimpleScenarioLoader>& scenarioLoader() const { return scenarioLoader_; }
+    std::vector<QuantLib::ext::shared_ptr<Scenario>> nextPath() override;
+
+private:
+    QuantLib::ext::shared_ptr<SimpleScenarioLoader> scenarioLoader_;
+    Size i_ = 0;
 };
 
 } // namespace analytics

@@ -31,13 +31,13 @@ OptionletStripper::OptionletStripper(const ext::shared_ptr<QuantExt::CapFloorTer
                                      const ext::shared_ptr<IborIndex>& index,
                                      const Handle<YieldTermStructure>& discount, const VolatilityType type,
                                      const Real displacement, const Period& rateComputationPeriod,
-                                     const Size onCapSettlementDays)
+                                     const Size onCapSettlementDays, const bool useEffectiveVolatility)
     : termVolSurface_(termVolSurface), index_(index), discount_(discount), nStrikes_(termVolSurface->strikes().size()),
       volatilityType_(type), displacement_(displacement),
       rateComputationPeriod_(rateComputationPeriod == 0 * Days ? index->tenor() : rateComputationPeriod),
-      onCapSettlementDays_(onCapSettlementDays) {
+      onCapSettlementDays_(onCapSettlementDays), useEffectiveVolatility_(useEffectiveVolatility) {
 
-    bool isOis = boost::dynamic_pointer_cast<OvernightIndex>(index_) != nullptr;
+    bool isOis = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(index_) != nullptr;
 
     QL_REQUIRE(!isOis || rateComputationPeriod != 0 * Days,
                "OptionletStripper: For an OIS index the rateComputationPeriod must be given");
@@ -144,27 +144,32 @@ Real OptionletStripper::displacement() const { return displacement_; }
 
 VolatilityType OptionletStripper::volatilityType() const { return volatilityType_; }
 
+bool OptionletStripper::useEffectiveVolatility() const { return useEffectiveVolatility_; }
+
 const Period& OptionletStripper::rateComputationPeriod() const { return rateComputationPeriod_; }
 
 void OptionletStripper::populateDates() const {
 
-    bool isOis = boost::dynamic_pointer_cast<OvernightIndex>(index_) != nullptr;
+    bool isOis = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(index_) != nullptr;
 
     Date referenceDate = termVolSurface_->referenceDate();
     DayCounter dc = termVolSurface_->dayCounter();
-    boost::shared_ptr<BlackCapFloorEngine> dummyEngine =
-        boost::make_shared<BlackCapFloorEngine>(index_->forwardingTermStructure(), 0.20, dc);
+    QuantLib::ext::shared_ptr<BlackCapFloorEngine> dummyEngine =
+        QuantLib::ext::make_shared<BlackCapFloorEngine>(index_->forwardingTermStructure(), 0.20, dc);
 
     for (Size i = 0; i < nOptionletTenors_; ++i) {
         if (isOis) {
             Leg dummyCap =
-                MakeOISCapFloor(CapFloor::Cap, capFloorLengths_[i], boost::dynamic_pointer_cast<OvernightIndex>(index_),
+                MakeOISCapFloor(CapFloor::Cap, capFloorLengths_[i], QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(index_),
                                 rateComputationPeriod_, 0.04)
                     .withTelescopicValueDates(true)
-                    .withSettlementDays(onCapSettlementDays_);
-            auto lastCoupon = boost::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(dummyCap.back());
+                    .withSettlementDays(onCapSettlementDays_)
+                    .withRule(DateGeneration::Rule::Forward);
+            auto lastCoupon = QuantLib::ext::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(dummyCap.back());
             QL_REQUIRE(lastCoupon, "OptionletStripper::populateDates(): expected CappedFlooredOvernightIndexedCoupon");
-            optionletDates_[i] = std::max(referenceDate + 1, lastCoupon->underlying()->fixingDates().front());
+            optionletDates_[i] =
+                std::max(referenceDate + 1, useEffectiveVolatility_ ? lastCoupon->underlying()->fixingDates().back()
+                                                                    : lastCoupon->underlying()->fixingDates().front());
             optionletPaymentDates_[i] = lastCoupon->underlying()->date();
             optionletAccrualPeriods_[i] = lastCoupon->underlying()->accrualPeriod();
             optionletTimes_[i] = dc.yearFraction(referenceDate, optionletDates_[i]);
@@ -172,7 +177,7 @@ void OptionletStripper::populateDates() const {
         } else {
             CapFloor dummyCap =
                 MakeCapFloor(CapFloor::Cap, capFloorLengths_[i], index_, 0.04, 0 * Days).withPricingEngine(dummyEngine);
-            boost::shared_ptr<FloatingRateCoupon> lastCoupon = dummyCap.lastFloatingRateCoupon();
+            QuantLib::ext::shared_ptr<FloatingRateCoupon> lastCoupon = dummyCap.lastFloatingRateCoupon();
             optionletDates_[i] = std::max(referenceDate + 1, lastCoupon->fixingDate());
             optionletPaymentDates_[i] = lastCoupon->date();
             optionletAccrualPeriods_[i] = lastCoupon->accrualPeriod();

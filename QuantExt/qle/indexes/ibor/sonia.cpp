@@ -27,6 +27,6 @@ namespace QuantExt {
 
 SoniaTerm::SoniaTerm(const Period& tenor, const Handle<YieldTermStructure>& h)
     : TermRateIndex("GBP-SONIATerm", tenor, 2, GBPCurrency(), UnitedKingdom(UnitedKingdom::Exchange), ModifiedFollowing,
-                    false, Actual360(), h, boost::make_shared<QuantLib::Sonia>(h)) {}
+                    false, Actual360(), h, QuantLib::ext::make_shared<QuantLib::Sonia>(h)) {}
 
 } // namespace QuantExt

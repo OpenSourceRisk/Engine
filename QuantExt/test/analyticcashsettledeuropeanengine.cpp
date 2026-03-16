@@ -47,20 +47,20 @@ namespace {
 
 // Create a flat yield term structure where DF(0, t) = exp (-r * t)
 Handle<YieldTermStructure> flatYts(Rate r) {
-    return Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, NullCalendar(), r, Actual365Fixed()));
+    return Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), r, Actual365Fixed()));
 }
 
 // Create a process for the tests
-boost::shared_ptr<GeneralizedBlackScholesProcess> getProcess(Rate spot, Volatility vol, Rate r, Rate q) {
+QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> getProcess(Rate spot, Volatility vol, Rate r, Rate q) {
 
     // Set up the term structures
-    Handle<Quote> spotQuote(boost::make_shared<SimpleQuote>(spot));
+    Handle<Quote> spotQuote(QuantLib::ext::make_shared<SimpleQuote>(spot));
     Handle<YieldTermStructure> rTs = flatYts(r);
     Handle<YieldTermStructure> qTs = flatYts(q);
-    Handle<BlackVolTermStructure> volTs(boost::make_shared<BlackConstantVol>(0, NullCalendar(), vol, Actual365Fixed()));
+    Handle<BlackVolTermStructure> volTs(QuantLib::ext::make_shared<BlackConstantVol>(0, NullCalendar(), vol, Actual365Fixed()));
 
     // Return the process
-    return boost::make_shared<GeneralizedBlackScholesProcess>(spotQuote, qTs, rTs, volTs);
+    return QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(spotQuote, qTs, rTs, volTs);
 }
 
 // Create a dummy price term structure
@@ -68,7 +68,7 @@ Handle<PriceTermStructure> priceTs() {
     vector<Period> tenors{ 0 * Days, 1 * Years };
     vector<Real> prices{ 60.0, 69.0 };
     return Handle<PriceTermStructure>(
-        boost::make_shared<InterpolatedPriceCurve<Linear> >(tenors, prices, Actual365Fixed(), USDCurrency()));
+        QuantLib::ext::make_shared<InterpolatedPriceCurve<Linear> >(tenors, prices, Actual365Fixed(), USDCurrency()));
 }
 
 // Return a map containing all of the CashSettledEuropeanOption results
@@ -163,15 +163,15 @@ BOOST_DATA_TEST_CASE(testOptionBeforeExpiry, bdata::make(strikes) * bdata::make(
     Volatility vol = 0.30;
     Rate r = 0.02;
     Rate q = 0.01;
-    boost::shared_ptr<PricingEngine> engine =
-        boost::make_shared<AnalyticCashSettledEuropeanEngine>(getProcess(spot, vol, r, q));
+    QuantLib::ext::shared_ptr<PricingEngine> engine =
+        QuantLib::ext::make_shared<AnalyticCashSettledEuropeanEngine>(getProcess(spot, vol, r, q));
 
     // Value the option accounting for cash settlement and store all results
     option.setPricingEngine(engine);
     map<string, Real> cashSettledResults = results(option);
 
     // Value the option ignoring cash settlement
-    engine = boost::make_shared<AnalyticEuropeanEngine>(getProcess(spot, vol, r, q));
+    engine = QuantLib::ext::make_shared<AnalyticEuropeanEngine>(getProcess(spot, vol, r, q));
     option.setPricingEngine(engine);
     map<string, Real> theoreticalResults = results(option);
 
@@ -239,8 +239,8 @@ BOOST_DATA_TEST_CASE(testOptionManualExerciseAfterExpiry, bdata::make(strikes) *
     Volatility vol = 0.30;
     Rate r = 0.02;
     Rate q = 0.01;
-    boost::shared_ptr<PricingEngine> engine =
-        boost::make_shared<AnalyticCashSettledEuropeanEngine>(getProcess(spot, vol, r, q));
+    QuantLib::ext::shared_ptr<PricingEngine> engine =
+        QuantLib::ext::make_shared<AnalyticCashSettledEuropeanEngine>(getProcess(spot, vol, r, q));
 
     // Value the option accounting for cash settlement and store all results
     option.setPricingEngine(engine);
@@ -282,8 +282,8 @@ BOOST_DATA_TEST_CASE(testOptionManualExerciseOnExpiry,
     Volatility vol = 0.30;
     Rate r = 0.02;
     Rate q = 0.01;
-    boost::shared_ptr<PricingEngine> engine =
-        boost::make_shared<AnalyticCashSettledEuropeanEngine>(getProcess(spot, vol, r, q));
+    QuantLib::ext::shared_ptr<PricingEngine> engine =
+        QuantLib::ext::make_shared<AnalyticCashSettledEuropeanEngine>(getProcess(spot, vol, r, q));
 
     // Set the pricing engine
     option.setPricingEngine(engine);
@@ -317,8 +317,8 @@ BOOST_DATA_TEST_CASE(testOptionManualExerciseOnPayment, bdata::make(strikes) * b
     Volatility vol = 0.30;
     Rate r = 0.02;
     Rate q = 0.01;
-    boost::shared_ptr<PricingEngine> engine =
-        boost::make_shared<AnalyticCashSettledEuropeanEngine>(getProcess(spot, vol, r, q));
+    QuantLib::ext::shared_ptr<PricingEngine> engine =
+        QuantLib::ext::make_shared<AnalyticCashSettledEuropeanEngine>(getProcess(spot, vol, r, q));
 
     // Set the pricing engine
     option.setPricingEngine(engine);
@@ -355,8 +355,8 @@ BOOST_DATA_TEST_CASE(testOptionAutomaticExerciseAfterExpiry, bdata::make(strikes
     // Create index to be used in option.
     Date expiry(3, Sep, 2020);
     NullCalendar fixingCalendar;
-    boost::shared_ptr<Index> index =
-        boost::make_shared<CommodityFuturesIndex>("TEST", expiry, fixingCalendar, priceTs());
+    QuantLib::ext::shared_ptr<Index> index =
+        QuantLib::ext::make_shared<CommodityFuturesIndex>("TEST", expiry, fixingCalendar, priceTs());
 
     // Add the expiry date fixing for the index.
     Real exercisePrice = 59.00;
@@ -372,8 +372,8 @@ BOOST_DATA_TEST_CASE(testOptionAutomaticExerciseAfterExpiry, bdata::make(strikes
     Volatility vol = 0.30;
     Rate r = 0.02;
     Rate q = 0.01;
-    boost::shared_ptr<PricingEngine> engine =
-        boost::make_shared<AnalyticCashSettledEuropeanEngine>(getProcess(spot, vol, r, q));
+    QuantLib::ext::shared_ptr<PricingEngine> engine =
+        QuantLib::ext::make_shared<AnalyticCashSettledEuropeanEngine>(getProcess(spot, vol, r, q));
 
     // Set the pricing engine
     option.setPricingEngine(engine);
@@ -395,7 +395,7 @@ BOOST_DATA_TEST_CASE(testOptionAutomaticExerciseOnExpiry,
     Settings::instance().evaluationDate() = expiry;
     NullCalendar fixingCalendar;
     Handle<PriceTermStructure> pts = priceTs();
-    boost::shared_ptr<Index> index = boost::make_shared<CommodityFuturesIndex>("TEST", expiry, fixingCalendar, pts);
+    QuantLib::ext::shared_ptr<Index> index = QuantLib::ext::make_shared<CommodityFuturesIndex>("TEST", expiry, fixingCalendar, pts);
 
     // Create cash settled option instrument
     Date payment(7, Sep, 2020);
@@ -407,8 +407,8 @@ BOOST_DATA_TEST_CASE(testOptionAutomaticExerciseOnExpiry,
     Volatility vol = 0.30;
     Rate r = 0.02;
     Rate q = 0.01;
-    boost::shared_ptr<PricingEngine> engine =
-        boost::make_shared<AnalyticCashSettledEuropeanEngine>(getProcess(spot, vol, r, q));
+    QuantLib::ext::shared_ptr<PricingEngine> engine =
+        QuantLib::ext::make_shared<AnalyticCashSettledEuropeanEngine>(getProcess(spot, vol, r, q));
 
     // Set the pricing engine
     option.setPricingEngine(engine);
@@ -434,8 +434,8 @@ BOOST_DATA_TEST_CASE(testOptionAutomaticExerciseOnPayment, bdata::make(strikes) 
     // Create index to be used in option.
     Date expiry(3, Sep, 2020);
     NullCalendar fixingCalendar;
-    boost::shared_ptr<Index> index =
-        boost::make_shared<CommodityFuturesIndex>("TEST", expiry, fixingCalendar, priceTs());
+    QuantLib::ext::shared_ptr<Index> index =
+        QuantLib::ext::make_shared<CommodityFuturesIndex>("TEST", expiry, fixingCalendar, priceTs());
 
     // Add the expiry date fixing for the index.
     Real exercisePrice = 59.00;
@@ -452,8 +452,8 @@ BOOST_DATA_TEST_CASE(testOptionAutomaticExerciseOnPayment, bdata::make(strikes) 
     Volatility vol = 0.30;
     Rate r = 0.02;
     Rate q = 0.01;
-    boost::shared_ptr<PricingEngine> engine =
-        boost::make_shared<AnalyticCashSettledEuropeanEngine>(getProcess(spot, vol, r, q));
+    QuantLib::ext::shared_ptr<PricingEngine> engine =
+        QuantLib::ext::make_shared<AnalyticCashSettledEuropeanEngine>(getProcess(spot, vol, r, q));
 
     // Set the pricing engine
     option.setPricingEngine(engine);

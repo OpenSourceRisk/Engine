@@ -64,6 +64,7 @@ public:
     ext::shared_ptr<IborIndex> index() const;
     Real displacement() const override;
     VolatilityType volatilityType() const override;
+    bool useEffectiveVolatility() const override;
 
     const Period& rateComputationPeriod() const;
 
@@ -72,7 +73,8 @@ protected:
     OptionletStripper(const ext::shared_ptr<QuantExt::CapFloorTermVolSurface>&, const ext::shared_ptr<IborIndex>& index,
                       const Handle<YieldTermStructure>& discount = Handle<YieldTermStructure>(),
                       const VolatilityType type = ShiftedLognormal, const Real displacement = 0.0,
-                      const Period& rateComputationPeriod = 0 * Days, const Size onCapSettlementDays = 0);
+                      const Period& rateComputationPeriod = 0 * Days, const Size onCapSettlementDays = 0,
+                      const bool useEffectiveVolatility = false);
 
     //! Method to populate the dates, times and accruals that can be overridden in derived classes
     virtual void populateDates() const;
@@ -94,10 +96,11 @@ protected:
     mutable std::vector<Time> optionletAccrualPeriods_;
 
     std::vector<Period> capFloorLengths_;
-    const VolatilityType volatilityType_;
-    const Real displacement_;
-    const Period rateComputationPeriod_;
-    const Size onCapSettlementDays_;
+    VolatilityType volatilityType_;
+    Real displacement_;
+    Period rateComputationPeriod_;
+    Size onCapSettlementDays_;
+    bool useEffectiveVolatility_;
 };
 
 } // namespace QuantExt

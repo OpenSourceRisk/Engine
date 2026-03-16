@@ -42,7 +42,7 @@ class OptionletStripper2 : public QuantExt::OptionletStripper {
 public:
     //! Optionlet stripper that modifies the stripped optionlets from \p optionletStripper by adding optionlet
     //! volatilities stripped from an ATM volatility curve \p atmCapFloorTermVolCurve
-    OptionletStripper2(const boost::shared_ptr<QuantExt::OptionletStripper>& optionletStripper,
+    OptionletStripper2(const QuantLib::ext::shared_ptr<QuantExt::OptionletStripper>& optionletStripper,
                        const Handle<QuantLib::CapFloorTermVolCurve>& atmCapFloorTermVolCurve,
                        const Handle<YieldTermStructure>& discount = Handle<YieldTermStructure>(),
                        const VolatilityType type = ShiftedLognormal, const Real displacement = 0.0);
@@ -61,26 +61,26 @@ private:
 
     class ObjectiveFunction {
     public:
-        ObjectiveFunction(const boost::shared_ptr<QuantExt::OptionletStripper>&,
-                          const boost::shared_ptr<QuantLib::CapFloor>&, Real targetValue,
+        ObjectiveFunction(const QuantLib::ext::shared_ptr<QuantExt::OptionletStripper>&,
+                          const QuantLib::ext::shared_ptr<QuantLib::CapFloor>&, Real targetValue,
                           const Handle<YieldTermStructure>& discount);
         Real operator()(Volatility spreadVol) const;
 
     private:
-        boost::shared_ptr<SimpleQuote> spreadQuote_;
-        boost::shared_ptr<QuantLib::CapFloor> cap_;
+        QuantLib::ext::shared_ptr<SimpleQuote> spreadQuote_;
+        QuantLib::ext::shared_ptr<QuantLib::CapFloor> cap_;
         Real targetValue_;
         const Handle<YieldTermStructure> discount_;
     };
 
-    const boost::shared_ptr<QuantExt::OptionletStripper> stripper_;
+    const QuantLib::ext::shared_ptr<QuantExt::OptionletStripper> stripper_;
     const Handle<QuantLib::CapFloorTermVolCurve> atmCapFloorTermVolCurve_;
     DayCounter dc_;
     Size nOptionExpiries_;
     mutable vector<Rate> atmCapFloorStrikes_;
     mutable vector<Real> atmCapFloorPrices_;
     mutable vector<Volatility> spreadsVolImplied_;
-    mutable vector<boost::shared_ptr<QuantLib::CapFloor> > caps_;
+    mutable vector<QuantLib::ext::shared_ptr<QuantLib::CapFloor> > caps_;
     Size maxEvaluations_;
     Real accuracy_;
     const VolatilityType inputVolatilityType_;

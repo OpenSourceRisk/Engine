@@ -20,10 +20,10 @@
 
 #pragma once
 
+#include <qle/indexes/fxindex.hpp>
 #include <qle/instruments/convertiblebond2.hpp>
 #include <qle/models/defaultableequityjumpdiffusionmodel.hpp>
-
-#include <qle/indexes/fxindex.hpp>
+#include <qle/pricingengines/fdconvertiblebondevents.hpp>
 
 #include <ql/methods/finitedifferences/meshers/fdm1dmesher.hpp>
 
@@ -50,6 +50,8 @@ public:
 
 private:
     void calculate() const override;
+    Real softCallBarrier(const FdConvertibleBondEvents& events, const Size i, const Real t, const Real n,
+                         const Real cr) const;
 
     Handle<DefaultableEquityJumpDiffusionModel> model_;
     Handle<QuantLib::YieldTermStructure> discountingCurve_;
@@ -65,7 +67,7 @@ private:
     std::vector<Real> conversionRatioDiscretisationGrid_;
     bool generateAdditionalResults_;
 
-    mutable boost::shared_ptr<Fdm1dMesher> mesher_;
+    mutable QuantLib::ext::shared_ptr<Fdm1dMesher> mesher_;
 };
 
 } // namespace QuantExt

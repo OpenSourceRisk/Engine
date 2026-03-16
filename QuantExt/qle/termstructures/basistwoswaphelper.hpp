@@ -40,13 +40,17 @@ public:
     BasisTwoSwapHelper(const Handle<Quote>& spread, const Period& swapTenor, const Calendar& calendar,
                        // Long tenor swap
                        Frequency longFixedFrequency, BusinessDayConvention longFixedConvention,
-                       const DayCounter& longFixedDayCount, const boost::shared_ptr<IborIndex>& longIndex,
+                       const DayCounter& longFixedDayCount, const QuantLib::ext::shared_ptr<IborIndex>& longIndex,
+                       bool longIndexGiven,
                        // Short tenor swap
                        Frequency shortFixedFrequency, BusinessDayConvention shortFixedConvention,
-                       const DayCounter& shortFixedDayCount, const boost::shared_ptr<IborIndex>& shortIndex,
-                       bool longMinusShort = true,
+                       const DayCounter& shortFixedDayCount, const QuantLib::ext::shared_ptr<IborIndex>& shortIndex,
+                       bool longMinusShort, bool shortIndexGiven,
                        // Discount curve
-                       const Handle<YieldTermStructure>& discountingCurve = Handle<YieldTermStructure>());
+                       const Handle<YieldTermStructure>& discountingCurve = Handle<YieldTermStructure>(),
+                       bool discountCurveGiven = false,
+                       const QuantLib::Pillar::Choice pillarChoice = QuantLib::Pillar::LastRelevantDate,
+                       const QuantLib::Date& customPillarDate = Date());
 
     //! \name RateHelper interface
     //@{
@@ -55,13 +59,14 @@ public:
     //@}
     //! \name BasisTwoSwapHelper inspectors
     //@{
-    boost::shared_ptr<VanillaSwap> longSwap() const;
-    boost::shared_ptr<VanillaSwap> shortSwap() const;
+    QuantLib::ext::shared_ptr<VanillaSwap> longSwap() const;
+    QuantLib::ext::shared_ptr<VanillaSwap> shortSwap() const;
     //@}
     //! \name Visitability
     //@{
     void accept(AcyclicVisitor&) override;
     //@}
+    RelinkableHandle<YieldTermStructure> discountHandle() const { return discountRelinkableHandle_; }
 
 protected:
     void initializeDates() override;
@@ -71,25 +76,29 @@ protected:
     Frequency longFixedFrequency_;
     BusinessDayConvention longFixedConvention_;
     DayCounter longFixedDayCount_;
-    boost::shared_ptr<IborIndex> longIndex_;
+    QuantLib::ext::shared_ptr<IborIndex> longIndex_;
+    bool longIndexGiven_;
     // Short tenor swap
     Frequency shortFixedFrequency_;
     BusinessDayConvention shortFixedConvention_;
     DayCounter shortFixedDayCount_;
-    boost::shared_ptr<IborIndex> shortIndex_;
+    QuantLib::ext::shared_ptr<IborIndex> shortIndex_;
     bool longMinusShort_;
+    bool shortIndexGiven_;
 
-    boost::shared_ptr<VanillaSwap> longSwap_;
-    boost::shared_ptr<VanillaSwap> shortSwap_;
+    QuantLib::ext::shared_ptr<VanillaSwap> longSwap_;
+    QuantLib::ext::shared_ptr<VanillaSwap> shortSwap_;
 
     RelinkableHandle<YieldTermStructure> termStructureHandle_;
     Handle<YieldTermStructure> discountHandle_;
+    bool discountCurveGiven_;
+    QuantLib::Pillar::Choice pillarChoice_;
     RelinkableHandle<YieldTermStructure> discountRelinkableHandle_;
 };
 
-inline boost::shared_ptr<VanillaSwap> BasisTwoSwapHelper::shortSwap() const { return shortSwap_; }
+inline QuantLib::ext::shared_ptr<VanillaSwap> BasisTwoSwapHelper::shortSwap() const { return shortSwap_; }
 
-inline boost::shared_ptr<VanillaSwap> BasisTwoSwapHelper::longSwap() const { return longSwap_; }
+inline QuantLib::ext::shared_ptr<VanillaSwap> BasisTwoSwapHelper::longSwap() const { return longSwap_; }
 } // namespace QuantExt
 
 #endif

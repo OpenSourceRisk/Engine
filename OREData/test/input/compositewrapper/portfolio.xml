@@ -91,7 +91,7 @@
         </BarrierData>
         <BoughtCurrency>EUR</BoughtCurrency>
         <BoughtAmount>1000000</BoughtAmount>
-        <SoldCurrency>USD</SoldCurrency>
+        <SoldCurrency>GBP</SoldCurrency>
         <SoldAmount>1100000</SoldAmount>
     </FxBarrierOptionData>
   </Trade>
@@ -124,7 +124,7 @@
             </BarrierData>
             <BoughtCurrency>EUR</BoughtCurrency>
             <BoughtAmount>1000000</BoughtAmount>
-            <SoldCurrency>USD</SoldCurrency>
+            <SoldCurrency>GBP</SoldCurrency>
             <SoldAmount>1100000</SoldAmount>
         </FxDoubleBarrierOptionData>
     </Trade>
@@ -157,10 +157,10 @@
         </BarrierData>
         <StartDate>2016-02-01</StartDate>
         <Calendar>US</Calendar>
-        <FXIndex>FX-Reuters-EUR-USD</FXIndex>
+        <FXIndex>FX-ECB-EUR-GBP</FXIndex>
         <BoughtCurrency>EUR</BoughtCurrency>
         <BoughtAmount>1000000</BoughtAmount>
-        <SoldCurrency>USD</SoldCurrency>
+        <SoldCurrency>GBP</SoldCurrency>
         <SoldAmount>1100000</SoldAmount>
     </FxDoubleBarrierOptionData>
 </Trade>
@@ -200,10 +200,10 @@
         </Barriers>
         <StartDate>2016-02-01</StartDate>
         <Calendar>US</Calendar>
-        <FXIndex>FX-Reuters-EUR-USD</FXIndex>
+        <FXIndex>FX-ECB-EUR-GBP</FXIndex>
         <BoughtCurrency>EUR</BoughtCurrency>
         <BoughtAmount>1000000</BoughtAmount>
-        <SoldCurrency>USD</SoldCurrency>
+        <SoldCurrency>GBP</SoldCurrency>
         <SoldAmount>1100000</SoldAmount>
     </FxKIKOBarrierOptionData>
 </Trade>
@@ -241,7 +241,7 @@
                 </Levels>
             </BarrierData>
         </Barriers>
-        <BoughtCurrency>USD</BoughtCurrency>
+        <BoughtCurrency>GBP</BoughtCurrency>
         <BoughtAmount>1100000</BoughtAmount>
         <SoldCurrency>EUR</SoldCurrency>
         <SoldAmount>1000000</SoldAmount>

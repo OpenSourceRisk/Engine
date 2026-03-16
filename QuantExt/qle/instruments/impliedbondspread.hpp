@@ -41,9 +41,9 @@ namespace detail {
 */
 class ImpliedBondSpreadHelper {
 public:
-    static QuantLib::Real calculate(const boost::shared_ptr<QuantLib::Bond>& bond,
-                                    const boost::shared_ptr<QuantLib::PricingEngine>& engine,
-                                    const boost::shared_ptr<QuantLib::SimpleQuote>& spreadQuote,
+    static QuantLib::Real calculate(const QuantLib::ext::shared_ptr<QuantLib::Bond>& bond,
+                                    const QuantLib::ext::shared_ptr<QuantLib::PricingEngine>& engine,
+                                    const QuantLib::ext::shared_ptr<QuantLib::SimpleQuote>& spreadQuote,
                                     QuantLib::Real targetValue,
                                     bool isCleanPrice, // if false, assumes targetValue is based on dirty price
                                     QuantLib::Real accuracy, QuantLib::Natural maxEvaluations, QuantLib::Real minSpread,

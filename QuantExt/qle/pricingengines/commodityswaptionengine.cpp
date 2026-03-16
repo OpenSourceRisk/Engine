@@ -27,6 +27,7 @@
 #include <ql/processes/ornsteinuhlenbeckprocess.hpp>
 #include <qle/cashflows/commodityindexedaveragecashflow.hpp>
 #include <qle/cashflows/commodityindexedcashflow.hpp>
+#include <qle/instruments/cashflowresults.hpp>
 #include <qle/pricingengines/commodityswaptionengine.hpp>
 
 using std::map;
@@ -45,8 +46,8 @@ using QuantLib::Leg;
 // Check also that the spread is 0.0 and the gearing is 1.0. These restrictions should be easy to remove
 // but we should only spend time on this if it is needed.
 template <typename CommCashflow> void checkCashflows(const Leg& leg) {
-    for (const boost::shared_ptr<CashFlow>& cf : leg) {
-        auto ccf = boost::dynamic_pointer_cast<CommCashflow>(cf);
+    for (const QuantLib::ext::shared_ptr<CashFlow>& cf : leg) {
+        auto ccf = QuantLib::ext::dynamic_pointer_cast<CommCashflow>(cf);
         QL_REQUIRE(ccf, "checkCashflows: not all of the "
                             << "cashflows on the commodity floating leg are of the same type");
         QL_REQUIRE(close(ccf->spread(), 0.0), "checkCashflows: a non-zero spread on a commodity swap "
@@ -59,11 +60,11 @@ template <typename CommCashflow> void checkCashflows(const Leg& leg) {
 // If the first coupon in the leg references a commodity future price, return true. If it references a spot price
 // return false. If the leg is not a commodity leg, throw.
 bool referencesFuturePrice(const Leg& leg) {
-    boost::shared_ptr<CashFlow> cf = leg.front();
-    if (boost::shared_ptr<CommodityIndexedCashFlow> ccf = boost::dynamic_pointer_cast<CommodityIndexedCashFlow>(cf)) {
+    QuantLib::ext::shared_ptr<CashFlow> cf = leg.front();
+    if (QuantLib::ext::shared_ptr<CommodityIndexedCashFlow> ccf = QuantLib::ext::dynamic_pointer_cast<CommodityIndexedCashFlow>(cf)) {
         return ccf->useFuturePrice();
-    } else if (boost::shared_ptr<CommodityIndexedAverageCashFlow> ccf =
-                   boost::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(cf)) {
+    } else if (QuantLib::ext::shared_ptr<CommodityIndexedAverageCashFlow> ccf =
+                   QuantLib::ext::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(cf)) {
         return ccf->useFuturePrice();
     } else {
         QL_FAIL("referencesFuturePrice: expected leg to be a commodity leg");
@@ -78,6 +79,10 @@ CommoditySwaptionBaseEngine::CommoditySwaptionBaseEngine(const Handle<YieldTermS
                                                          const Handle<BlackVolTermStructure>& vol, Real beta)
     : discountCurve_(discountCurve), volStructure_(vol), beta_(beta) {
     QL_REQUIRE(beta_ >= 0.0, "beta >= 0 required, found " << beta_);
+    QL_REQUIRE(!volStructure_.empty(), "no volatility structure provided");
+    QL_REQUIRE(volStructure_->volType() == QuantLib::VolatilityType::ShiftedLognormal &&
+                   QuantLib::close_enough(volStructure_->shift(), 0.0),
+               "only lognormal volatilities are supported");
     registerWith(discountCurve_);
     registerWith(volStructure_);
 }
@@ -91,13 +96,13 @@ Size CommoditySwaptionBaseEngine::fixedLegIndex() const {
 
     // Check both legs and populate the index of the fixed leg.
     for (Size i = 0; i < 2; i++) {
-        boost::shared_ptr<CashFlow> cf = arguments_.legs[i].front();
-        if (boost::shared_ptr<CommodityIndexedAverageCashFlow> flow =
-                boost::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(cf)) {
+        QuantLib::ext::shared_ptr<CashFlow> cf = arguments_.legs[i].front();
+        if (QuantLib::ext::shared_ptr<CommodityIndexedAverageCashFlow> flow =
+                QuantLib::ext::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(cf)) {
             haveFloatingLeg = true;
             checkCashflows<CommodityIndexedAverageCashFlow>(arguments_.legs[i]);
-        } else if (boost::shared_ptr<CommodityIndexedCashFlow> flow =
-                       boost::dynamic_pointer_cast<CommodityIndexedCashFlow>(cf)) {
+        } else if (QuantLib::ext::shared_ptr<CommodityIndexedCashFlow> flow =
+                       QuantLib::ext::dynamic_pointer_cast<CommodityIndexedCashFlow>(cf)) {
             haveFloatingLeg = true;
             checkCashflows<CommodityIndexedCashFlow>(arguments_.legs[i]);
         } else {
@@ -117,7 +122,7 @@ Real CommoditySwaptionBaseEngine::fixedLegValue(Size fixedLegIndex) const {
     // This is the quantity K^{*} in the ORE+ Product Catalogue.
     Real value = 0.0;
 
-    for (const boost::shared_ptr<CashFlow>& cf : arguments_.legs[fixedLegIndex]) {
+    for (const QuantLib::ext::shared_ptr<CashFlow>& cf : arguments_.legs[fixedLegIndex]) {
         value += cf->amount() * discountCurve_->discount(cf->date());
     }
 
@@ -135,11 +140,11 @@ Real CommoditySwaptionBaseEngine::strike(Size fixedLegIndex) const {
 
     // Divide by first calculation period floating leg (full calculation period) quantity
     Size idxFloat = fixedLegIndex == 0 ? 1 : 0;
-    boost::shared_ptr<CashFlow> cf = arguments_.legs[idxFloat].front();
-    if (boost::shared_ptr<CommodityIndexedCashFlow> ccf = boost::dynamic_pointer_cast<CommodityIndexedCashFlow>(cf)) {
+    QuantLib::ext::shared_ptr<CashFlow> cf = arguments_.legs[idxFloat].front();
+    if (QuantLib::ext::shared_ptr<CommodityIndexedCashFlow> ccf = QuantLib::ext::dynamic_pointer_cast<CommodityIndexedCashFlow>(cf)) {
         return amount / ccf->periodQuantity();
-    } else if (boost::shared_ptr<CommodityIndexedAverageCashFlow> ccf =
-                   boost::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(cf)) {
+    } else if (QuantLib::ext::shared_ptr<CommodityIndexedAverageCashFlow> ccf =
+                   QuantLib::ext::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(cf)) {
         return amount / ccf->periodQuantity();
     } else {
         QL_FAIL("Expected a CommodityIndexedCashFlow or CommodityIndexedAverageCashFlow");
@@ -161,7 +166,7 @@ bool CommoditySwaptionBaseEngine::averaging(Size floatLegIndex) const {
 
     // All cashflows in the floating leg have been checked for same type so just use first one here
     return static_cast<bool>(
-        boost::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(arguments_.legs[floatLegIndex].front()));
+        QuantLib::ext::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(arguments_.legs[floatLegIndex].front()));
 }
 
 void CommoditySwaptionEngine::calculate() const {
@@ -221,7 +226,7 @@ Real CommoditySwaptionEngine::expA(Size floatLegIndex, Real normFactor) const {
     // This is the quantity E[A(t_e)] in the ORE+ Product Catalogue.
     Real value = 0.0;
 
-    for (const boost::shared_ptr<CashFlow>& cf : arguments_.legs[floatLegIndex]) {
+    for (const QuantLib::ext::shared_ptr<CashFlow>& cf : arguments_.legs[floatLegIndex]) {
         value += cf->amount() * discountCurve_->discount(cf->date()) / normFactor;
     }
 
@@ -258,8 +263,8 @@ Real CommoditySwaptionEngine::expASquared(Size floatLegIndex, Real strike, Real 
     return value;
 }
 
-Real CommoditySwaptionEngine::crossTerms(const boost::shared_ptr<CashFlow>& cf_1,
-                                         const boost::shared_ptr<CashFlow>& cf_2, bool isAveraging, Real strike,
+Real CommoditySwaptionEngine::crossTerms(const QuantLib::ext::shared_ptr<CashFlow>& cf_1,
+                                         const QuantLib::ext::shared_ptr<CashFlow>& cf_2, bool isAveraging, Real strike,
                                          Real normFactor) const {
 
     // Time to swaption expiry
@@ -269,10 +274,10 @@ Real CommoditySwaptionEngine::crossTerms(const boost::shared_ptr<CashFlow>& cf_1
     if (isAveraging) {
 
         // Must have CommodityIndexedAverageCashFlow if averaging
-        boost::shared_ptr<CommodityIndexedAverageCashFlow> ccf_1 =
-            boost::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(cf_1);
-        boost::shared_ptr<CommodityIndexedAverageCashFlow> ccf_2 =
-            boost::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(cf_2);
+        QuantLib::ext::shared_ptr<CommodityIndexedAverageCashFlow> ccf_1 =
+            QuantLib::ext::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(cf_1);
+        QuantLib::ext::shared_ptr<CommodityIndexedAverageCashFlow> ccf_2 =
+            QuantLib::ext::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(cf_2);
 
         // Product of quantities
         Real result = ccf_1->periodQuantity() / normFactor;
@@ -360,8 +365,8 @@ Real CommoditySwaptionEngine::crossTerms(const boost::shared_ptr<CashFlow>& cf_1
     } else {
 
         // Must have CommodityIndexedCashFlow if not averaging
-        boost::shared_ptr<CommodityIndexedCashFlow> ccf_1 = boost::dynamic_pointer_cast<CommodityIndexedCashFlow>(cf_1);
-        boost::shared_ptr<CommodityIndexedCashFlow> ccf_2 = boost::dynamic_pointer_cast<CommodityIndexedCashFlow>(cf_2);
+        QuantLib::ext::shared_ptr<CommodityIndexedCashFlow> ccf_1 = QuantLib::ext::dynamic_pointer_cast<CommodityIndexedCashFlow>(cf_1);
+        QuantLib::ext::shared_ptr<CommodityIndexedCashFlow> ccf_2 = QuantLib::ext::dynamic_pointer_cast<CommodityIndexedCashFlow>(cf_2);
 
         // Don't support non-zero spreads or gearing != 1 so amount gives forward * quantity for commodity cashflow
         // referencing spot price or future * quantity for commodity cashflow referencing future price
@@ -404,13 +409,13 @@ Real CommoditySwaptionEngine::maxQuantity(Size floatLegIndex) const {
 
     if (averaging(floatLegIndex)) {
         for (const auto& cf : arguments_.legs[floatLegIndex]) {
-            auto ccf = boost::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(cf);
+            auto ccf = QuantLib::ext::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(cf);
             QL_REQUIRE(ccf, "maxQuantity: expected a CommodityIndexedAverageCashFlow");
             result = max(result, ccf->periodQuantity());
         }
     } else {
         for (const auto& cf : arguments_.legs[floatLegIndex]) {
-            auto ccf = boost::dynamic_pointer_cast<CommodityIndexedCashFlow>(cf);
+            auto ccf = QuantLib::ext::dynamic_pointer_cast<CommodityIndexedCashFlow>(cf);
             QL_REQUIRE(ccf, "maxQuantity: expected a CommodityIndexedCashFlow");
             result = max(result, ccf->periodQuantity());
         }
@@ -493,6 +498,17 @@ void CommoditySwaptionMonteCarloEngine::calculateSpot(Size idxFixed, Size idxFlo
     results_.additionalResults["SwapNPV"] = discountExercise * swapValue;
     results_.additionalResults["FixedLegNPV"] = discountExercise * valueFixedLeg;
     results_.additionalResults["FloatingLegNPV"] = discountExercise * floatLegValue;
+
+    std::vector<QuantExt::CashFlowResults> cfResults;
+    cfResults.emplace_back();
+    cfResults.back().amount = optionValue;
+    cfResults.back().payDate = exercise;
+    cfResults.back().legNumber = 0;
+    cfResults.back().type = "ExpectedFlow";
+    cfResults.back().accrualEndDate = exercise;
+
+    results_.additionalResults["expectedFlow"] = swapValue;
+    results_.additionalResults["cashFlowResults"] = cfResults;
 }
 
 void CommoditySwaptionMonteCarloEngine::calculateFuture(Size idxFixed, Size idxFloat, Real strike) const {
@@ -577,6 +593,7 @@ void CommoditySwaptionMonteCarloEngine::calculateFuture(Size idxFixed, Size idxF
     // Populate the results remembering to multiply by P(0, t_e)
     results_.value = discountExercise * optionValue;
     results_.additionalResults["SwapNPV"] = discountExercise * swapValue;
+    results_.additionalResults["expectedFlow"] = swapValue;
     results_.additionalResults["FixedLegNPV"] = discountExercise * valueFixedLeg;
     results_.additionalResults["FloatingLegNPV"] = discountExercise * floatLegValue;
 }
@@ -587,14 +604,14 @@ Real CommoditySwaptionMonteCarloEngine::spotFloatLegFactor(Size idxFloat, Real d
     Real floatLegValue = 0.0;
     if (averaging(idxFloat)) {
         for (const auto& cf : arguments_.legs[idxFloat]) {
-            auto ccf = boost::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(cf);
+            auto ccf = QuantLib::ext::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(cf);
             QL_REQUIRE(ccf, "spotSwapValue: expected a CommodityIndexedAverageCashFlow");
             Real disc = discountCurve_->discount(ccf->date());
             floatLegValue += disc * ccf->amount();
         }
     } else {
         for (const auto& cf : arguments_.legs[idxFloat]) {
-            auto ccf = boost::dynamic_pointer_cast<CommodityIndexedCashFlow>(cf);
+            auto ccf = QuantLib::ext::dynamic_pointer_cast<CommodityIndexedCashFlow>(cf);
             QL_REQUIRE(ccf, "spotSwapValue: expected a CommodityIndexedCashFlow");
             Real disc = discountCurve_->discount(ccf->date());
             floatLegValue += disc * ccf->amount();
@@ -624,7 +641,7 @@ void CommoditySwaptionMonteCarloEngine::futureFloatLegFactors(Size idxFloat, Rea
     // Different float leg valuation depending on whether leg is averaging or not.
     if (averaging(idxFloat)) {
         for (Size i = 0; i < numCfs; i++) {
-            auto ccf = boost::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(arguments_.legs[idxFloat][i]);
+            auto ccf = QuantLib::ext::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(arguments_.legs[idxFloat][i]);
             QL_REQUIRE(ccf, "futureFloatLegFactors: expected a CommodityIndexedAverageCashFlow");
             Size numObs = ccf->indices().size();
             for (const auto& p : ccf->indices()) {
@@ -642,7 +659,7 @@ void CommoditySwaptionMonteCarloEngine::futureFloatLegFactors(Size idxFloat, Rea
         }
     } else {
         for (Size i = 0; i < numCfs; i++) {
-            auto ccf = boost::dynamic_pointer_cast<CommodityIndexedCashFlow>(arguments_.legs[idxFloat][i]);
+            auto ccf = QuantLib::ext::dynamic_pointer_cast<CommodityIndexedCashFlow>(arguments_.legs[idxFloat][i]);
             QL_REQUIRE(ccf, "futureFloatLegFactors: expected a CommodityIndexedCashFlow");
 
             auto it = find(expiries.begin(), expiries.end(), ccf->index()->expiryDate());
@@ -669,7 +686,7 @@ map<Date, Real> CommoditySwaptionMonteCarloEngine::futureExpiries(Size idxFloat,
     // Populate the unique future expiry dates referenced on the floating leg
     if (averaging(idxFloat)) {
         for (const auto& cf : arguments_.legs[idxFloat]) {
-            auto ccf = boost::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(cf);
+            auto ccf = QuantLib::ext::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(cf);
             QL_REQUIRE(ccf, "futureExpiries: expected a CommodityIndexedAverageCashFlow");
             QL_REQUIRE(ccf->useFuturePrice(), "futureExpiries: expected the cashflow to reference a future price");
             for (const auto& p : ccf->indices()) {
@@ -678,7 +695,7 @@ map<Date, Real> CommoditySwaptionMonteCarloEngine::futureExpiries(Size idxFloat,
         }
     } else {
         for (const auto& cf : arguments_.legs[idxFloat]) {
-            auto ccf = boost::dynamic_pointer_cast<CommodityIndexedCashFlow>(cf);
+            auto ccf = QuantLib::ext::dynamic_pointer_cast<CommodityIndexedCashFlow>(cf);
             QL_REQUIRE(ccf, "futureExpiries: expected a CommodityIndexedCashFlow");
             QL_REQUIRE(ccf->useFuturePrice(), "futureExpiries: expected the cashflow to reference a future price");
             result[ccf->index()->expiryDate()] = 0.0;

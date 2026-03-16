@@ -28,7 +28,7 @@
 #include <orea/cube/npvcube.hpp>
 #include <ored/portfolio/portfolio.hpp>
 
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 
 namespace ore {
 namespace analytics {
@@ -47,14 +47,16 @@ class ExposureCalculator {
 public:
     ExposureCalculator(
         //! Driving portfolio consistent with the cube below
-        const boost::shared_ptr<Portfolio>& portfolio,
+        const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
         //! NPV cube resulting from the Monte Carlo simulation loop
-        const boost::shared_ptr<NPVCube>& cube,
+        const QuantLib::ext::shared_ptr<NPVCube>& cube,
         //! Interpreter for cube storage (where to find which data items)
-        const boost::shared_ptr<CubeInterpretation> cubeInterpretation,
+        const QuantLib::ext::shared_ptr<CubeInterpretation> cubeInterpretation,
+        //! Aggregation scenario data resulting from Monte Carlo simulation loop
+        const QuantLib::ext::shared_ptr<AggregationScenarioData>& aggregationScenarioData,
         //! Market data object to access e.g. discounting and funding curves
-        const boost::shared_ptr<Market>& market,
-	    //! Flag to indicate exposure termination at the next break date
+        const QuantLib::ext::shared_ptr<Market>& market,
+        //! Flag to indicate exposure termination at the next break date
         const bool exerciseNextBreak,
         //! Expression currency for all results
         const string& baseCurrency,
@@ -64,11 +66,16 @@ public:
         const Real quantile,
         //! Collateral calculation type to be used, see class %CollateralExposureHelper
         const CollateralExposureHelper::CalculationType calcType,
-	    //! Flag to indicate exposure evaluation with dynamic credit
+        //! Flag to indicate exposure evaluation with dynamic credit
         const bool multiPath,
         //! Flag to indicate flipped xva calculation
-        const bool flipViewXVA
-    );
+        const bool flipViewXVA,
+        //! Use close-out values for exposure profiles
+        const bool exposureProfilesUseCloseOutValues_ = false,
+        //! Continue with the calculation if possible when there is an error
+        bool continueOnError = false,
+        //! use double precision cube
+        bool useDoublePrecisionCubes = false);
 
     virtual ~ExposureCalculator() {}
 
@@ -83,10 +90,10 @@ public:
     };
     const Size EXPOSURE_CUBE_DEPTH = 4;
 
-    boost::shared_ptr<Portfolio> portfolio() { return portfolio_; }
-    boost::shared_ptr<NPVCube> npvCube() { return cube_; }
-    boost::shared_ptr<CubeInterpretation> cubeInterpretation() { return cubeInterpretation_; }
-    boost::shared_ptr<Market> market() { return market_; }
+    QuantLib::ext::shared_ptr<Portfolio> portfolio() { return portfolio_; }
+    QuantLib::ext::shared_ptr<NPVCube> npvCube() { return cube_; }
+    QuantLib::ext::shared_ptr<CubeInterpretation> cubeInterpretation() { return cubeInterpretation_; }
+    QuantLib::ext::shared_ptr<Market> market() { return market_; }
     bool exerciseNextBreak() { return exerciseNextBreak_; }
     string baseCurrency() { return baseCurrency_; }
     string configuration() { return configuration_; }
@@ -103,7 +110,7 @@ public:
     map<string, Date> nettingSetMaturity() { return nettingSetMaturity_; }
     vector<Real> times() { return times_; };
 
-    const boost::shared_ptr<NPVCube>& exposureCube() { return exposureCube_; }
+    const QuantLib::ext::shared_ptr<NPVCube>& exposureCube() { return exposureCube_; }
     const map<string, vector<vector<Real>>>& nettingSetDefaultValue() { return nettingSetDefaultValue_; }
     const map<string, vector<vector<Real>>>& nettingSetCloseOutValue() { return nettingSetCloseOutValue_; }
     const map<string, vector<vector<Real>>>& nettingSetMporPositiveFlow() { return nettingSetMporPositiveFlow_; }
@@ -118,18 +125,21 @@ public:
     vector<Real>& pfe(const string& tid) { return pfe_[tid]; }
     Real& epe_b(const string& tid) { return epe_b_[tid]; }
     Real& eepe_b(const string& tid) { return eepe_b_[tid]; }
+    vector<Real>& epe_b_timeWeighted(const string& tid) { return epe_bTimeWeighted_[tid]; }
+    vector<Real>& eepe_b_timeWeighted(const string& tid) { return eepe_bTimeWeighted_[tid]; }
 
 protected:
-    const boost::shared_ptr<Portfolio> portfolio_;
-    const boost::shared_ptr<NPVCube> cube_;
-    const boost::shared_ptr<CubeInterpretation> cubeInterpretation_;
-    const boost::shared_ptr<Market> market_;
-    const bool exerciseNextBreak_;
-    const string baseCurrency_;
-    const string configuration_;
-    const Real quantile_;
-    const CollateralExposureHelper::CalculationType calcType_;
-    const bool multiPath_;
+    QuantLib::ext::shared_ptr<Portfolio> portfolio_;
+    QuantLib::ext::shared_ptr<NPVCube> cube_;
+    QuantLib::ext::shared_ptr<CubeInterpretation> cubeInterpretation_;
+    QuantLib::ext::shared_ptr<AggregationScenarioData> aggregationScenarioData_;
+    QuantLib::ext::shared_ptr<Market> market_;
+    bool exerciseNextBreak_;
+    string baseCurrency_;
+    string configuration_;
+    Real quantile_;
+    CollateralExposureHelper::CalculationType calcType_;
+    bool multiPath_;
     bool isRegularCubeStorage_;
 
     vector<Date> dates_;
@@ -140,7 +150,7 @@ protected:
     map<string, Date> nettingSetMaturity_;
     vector<Real> times_;
 
-    boost::shared_ptr<NPVCube> exposureCube_;
+    QuantLib::ext::shared_ptr<NPVCube> exposureCube_;
     map<string, vector<vector<Real>>> nettingSetDefaultValue_, nettingSetCloseOutValue_;
     map<string, vector<vector<Real>>> nettingSetMporPositiveFlow_, nettingSetMporNegativeFlow_;
 
@@ -149,8 +159,12 @@ protected:
     map<string, std::vector<Real>> pfe_;
     map<string, Real> epe_b_;
     map<string, Real> eepe_b_;
+    map<string, std::vector<Real>> epe_bTimeWeighted_;
+    map<string, std::vector<Real>> eepe_bTimeWeighted_;
     vector<Real> getMeanExposure(const string& tid, ExposureIndex index);
     bool flipViewXVA_;
+    bool exposureProfilesUseCloseOutValues_ = false;
+    bool continueOnError_;
 };
 
 } // namespace analytics

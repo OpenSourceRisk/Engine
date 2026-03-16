@@ -68,6 +68,8 @@ class ASTRunner : public AcyclicVisitor,
                   public Visitor<FunctionNormalPdfNode>,
                   public Visitor<FunctionMinNode>,
                   public Visitor<FunctionMaxNode>,
+                  public Visitor<FunctionFractionNode>,
+                  public Visitor<FunctionRoundNode>,
                   public Visitor<FunctionPowNode>,
                   public Visitor<FunctionBlackNode>,
                   public Visitor<FunctionDcfNode>,
@@ -105,10 +107,10 @@ class ASTRunner : public AcyclicVisitor,
                   public Visitor<IfThenElseNode>,
                   public Visitor<LoopNode> {
 public:
-    ASTRunner(const boost::shared_ptr<Model> model, const std::string& script, bool& interactive, Context& context,
-              ASTNode*& lastVisitedNode, boost::shared_ptr<PayLog> paylog)
+    ASTRunner(const QuantLib::ext::shared_ptr<Model> model, const std::string& script, bool& interactive, Context& context,
+              ASTNode*& lastVisitedNode, QuantLib::ext::shared_ptr<PayLog> paylog, bool includePastCashflows)
         : model_(model), size_(model ? model->size() : 1), script_(script), interactive_(interactive), paylog_(paylog),
-          context_(context), lastVisitedNode_(lastVisitedNode) {
+          includePastCashflows_(includePastCashflows), context_(context), lastVisitedNode_(lastVisitedNode) {
         filter.emplace(size_, true);
         value.push(RandomVariable());
     }
@@ -140,19 +142,19 @@ public:
         checkpoint(v);
         if (v.isCached) {
             if (v.isScalar) {
-                return std::make_pair(boost::ref(*v.cachedScalar), 0);
+                return std::make_pair(std::ref(*v.cachedScalar), 0);
             } else {
                 QL_REQUIRE(v.args[0], "array subscript required for variable '" << v.name << "'");
                 v.args[0]->accept(*this);
                 auto arg = value.pop();
                 QL_REQUIRE(arg.which() == ValueTypeWhich::Number,
                            "array subscript must be of type NUMBER, got " << valueTypeLabels.at(arg.which()));
-                RandomVariable i = boost::get<RandomVariable>(arg);
+                RandomVariable& i = boost::get<RandomVariable>(arg);
                 QL_REQUIRE(i.deterministic(), "array subscript must be deterministic");
                 long il = std::lround(i.at(0));
                 QL_REQUIRE(static_cast<long>(v.cachedVector->size()) >= il && il >= 1,
                            "array index " << il << " out of bounds 1..." << v.cachedVector->size());
-                return std::make_pair(boost::ref(v.cachedVector->operator[](il - 1)), il - 1);
+                return std::make_pair(std::ref(v.cachedVector->operator[](il - 1)), il - 1);
             }
         } else {
             auto scalar = context_.scalars.find(v.name);
@@ -161,7 +163,7 @@ public:
                 v.isCached = true;
                 v.isScalar = true;
                 v.cachedScalar = &scalar->second;
-                return std::make_pair(boost::ref(scalar->second), 0);
+                return std::make_pair(std::ref(scalar->second), 0);
             }
             auto array = context_.arrays.find(v.name);
             if (array != context_.arrays.end()) {
@@ -178,7 +180,7 @@ public:
 
     void declareVariable(const ASTNodePtr arg, const ValueType& val) {
         checkpoint(*arg);
-        auto v = boost::dynamic_pointer_cast<VariableNode>(arg);
+        auto v = QuantLib::ext::dynamic_pointer_cast<VariableNode>(arg);
         QL_REQUIRE(v, "invalid declaration");
         if (context_.ignoreAssignments.find(v->name) != context_.ignoreAssignments.end()) {
             TRACE("declare(" << v->name << " ignored, because listed in ignoreAssignment variables set", *arg);
@@ -193,7 +195,7 @@ public:
             checkpoint(*arg);
             auto size = value.pop();
             QL_REQUIRE(size.which() == ValueTypeWhich::Number, "expected NUMBER for array size definition");
-            RandomVariable arraySize = boost::get<RandomVariable>(size);
+            RandomVariable& arraySize = boost::get<RandomVariable>(size);
             QL_REQUIRE(arraySize.deterministic(), "array size definition requires deterministic argument");
             long arraySizeL = std::lround(arraySize.at(0));
             QL_REQUIRE(arraySizeL >= 0, "expected non-negative array size, got " << arraySizeL);
@@ -235,6 +237,8 @@ public:
     void visit(FunctionNormalPdfNode& n) override { unaryOp<ValueType>(n, "normalPdf", normalPdf); }
     void visit(FunctionMinNode& n) override { binaryOp<ValueType>(n, "min", min); }
     void visit(FunctionMaxNode& n) override { binaryOp<ValueType>(n, "max", max); }
+    void visit(FunctionFractionNode& n) override { unaryOp<ValueType>(n, "frac", frac); }
+    void visit(FunctionRoundNode& n) override { binaryOp<ValueType>(n, "round", round); }
     void visit(FunctionPowNode& n) override { binaryOp<ValueType>(n, "pow", pow); }
 
     // condition nodes
@@ -254,7 +258,7 @@ public:
         auto left = value.pop();
         checkpoint(n);
         QL_REQUIRE(left.which() == ValueTypeWhich::Filter, "expected condition");
-        Filter l = boost::get<Filter>(left);
+        Filter& l = boost::get<Filter>(left);
         if (l.deterministic() && !l[0]) {
             // short cut if first expression is already false
             value.push(Filter(l.size(), false));
@@ -274,7 +278,7 @@ public:
         auto left = value.pop();
         checkpoint(n);
         QL_REQUIRE(left.which() == ValueTypeWhich::Filter, "expected condition");
-        Filter l = boost::get<Filter>(left);
+        Filter& l = boost::get<Filter>(left);
         if (l.deterministic() && l[0]) {
             // short cut if first expression is already true
             value.push(Filter(l.size(), true));
@@ -329,7 +333,7 @@ public:
         auto array = context_.arrays.find(n.name);
         QL_REQUIRE(array != context_.arrays.end(),
                    "DATEINDEX: second argument event array '" << n.name << "' not found");
-        auto v = boost::dynamic_pointer_cast<VariableNode>(n.args[0]);
+        auto v = QuantLib::ext::dynamic_pointer_cast<VariableNode>(n.args[0]);
         QL_REQUIRE(v, "DATEINDEX: first argument must be a variable expression");
         auto ref = getVariableRef(*v);
         checkpoint(n);
@@ -365,7 +369,7 @@ public:
         n.args[1]->accept(*this);
         auto right = value.pop();
         checkpoint(n);
-        auto v = boost::dynamic_pointer_cast<VariableNode>(n.args[0]);
+        auto v = QuantLib::ext::dynamic_pointer_cast<VariableNode>(n.args[0]);
         QL_REQUIRE(v, "expected variable identifier on LHS of assignment");
         if (context_.ignoreAssignments.find(v->name) != context_.ignoreAssignments.end()) {
             TRACE("assign(" << v->name << ") ignored, because variable is  listed in context's ignoreAssignment set",
@@ -385,7 +389,7 @@ public:
             QL_REQUIRE(right.which() == ValueTypeWhich::Number, "invalid assignment: type "
                                                                     << valueTypeLabels.at(ref.first.which()) << " <- "
                                                                     << valueTypeLabels.at(right.which()));
-            // TODO, better have a RESETTIME() function?
+            // disable check in assignments
             boost::get<RandomVariable>(ref.first).setTime(Null<Real>());
             ref.first = conditionalResult(filter.top(), boost::get<RandomVariable>(right),
                                           boost::get<RandomVariable>(ref.first));
@@ -426,7 +430,7 @@ public:
         checkpoint(n);
         QL_REQUIRE(if_.which() == ValueTypeWhich::Filter,
                    "IF must be followed by a boolean, got " << valueTypeLabels.at(if_.which()));
-        Filter cond = boost::get<Filter>(if_);
+        Filter& cond = boost::get<Filter>(if_);
         TRACE("if( " << cond << " )", n);
         Filter baseFilter = filter.top();
         Filter currentFilter = baseFilter && cond;
@@ -469,9 +473,9 @@ public:
                    "loop bounds and step must be of type NUMBER, got " << valueTypeLabels.at(left.which()) << ", "
                                                                        << valueTypeLabels.at(right.which()) << ", "
                                                                        << valueTypeLabels.at(step.which()));
-        RandomVariable a = boost::get<RandomVariable>(left);
-        RandomVariable b = boost::get<RandomVariable>(right);
-        RandomVariable s = boost::get<RandomVariable>(step);
+        RandomVariable& a = boost::get<RandomVariable>(left);
+        RandomVariable& b = boost::get<RandomVariable>(right);
+        RandomVariable& s = boost::get<RandomVariable>(step);
         QL_REQUIRE(a.deterministic(), "first loop bound must be deterministic");
         QL_REQUIRE(b.deterministic(), "second loop bound must be deterministic");
         QL_REQUIRE(s.deterministic(), "loop step must be deterministic");
@@ -542,7 +546,7 @@ public:
         std::vector<RandomVariable*> x, y, p;
 
         if (n.args[0]) {
-            auto xname = boost::dynamic_pointer_cast<VariableNode>(n.args[0]);
+            auto xname = QuantLib::ext::dynamic_pointer_cast<VariableNode>(n.args[0]);
             QL_REQUIRE(xname, "x must be a variable");
             QL_REQUIRE(!xname->args[0], "x must not be indexed");
             auto xv = context_.arrays.find(xname->name);
@@ -554,7 +558,7 @@ public:
         }
 
         if (n.args[1]) {
-            auto yname = boost::dynamic_pointer_cast<VariableNode>(n.args[1]);
+            auto yname = QuantLib::ext::dynamic_pointer_cast<VariableNode>(n.args[1]);
             QL_REQUIRE(yname, "y must be a variable");
             QL_REQUIRE(!yname->args[0], "y must not be indexed");
             auto yv = context_.arrays.find(yname->name);
@@ -566,7 +570,7 @@ public:
         }
 
         if (n.args[2]) {
-            auto pname = boost::dynamic_pointer_cast<VariableNode>(n.args[2]);
+            auto pname = QuantLib::ext::dynamic_pointer_cast<VariableNode>(n.args[2]);
             QL_REQUIRE(pname, "p must be a variable");
             QL_REQUIRE(!pname->args[0], "p must not be indexed");
             auto pv = context_.arrays.find(pname->name);
@@ -640,7 +644,7 @@ public:
         std::vector<RandomVariable*> x, y, p;
 
         if (n.args[0]) {
-            auto xname = boost::dynamic_pointer_cast<VariableNode>(n.args[0]);
+            auto xname = QuantLib::ext::dynamic_pointer_cast<VariableNode>(n.args[0]);
             QL_REQUIRE(xname, "x must be a variable");
             QL_REQUIRE(!xname->args[0], "x must not be indexed");
             auto xv = context_.arrays.find(xname->name);
@@ -652,7 +656,7 @@ public:
         }
 
         if (n.args[1]) {
-            auto yname = boost::dynamic_pointer_cast<VariableNode>(n.args[1]);
+            auto yname = QuantLib::ext::dynamic_pointer_cast<VariableNode>(n.args[1]);
             QL_REQUIRE(yname, "y must be a variable");
             QL_REQUIRE(!yname->args[0], "y must not be indexed");
             auto yv = context_.arrays.find(yname->name);
@@ -664,7 +668,7 @@ public:
         }
 
         if (n.args[2]) {
-            auto pname = boost::dynamic_pointer_cast<VariableNode>(n.args[2]);
+            auto pname = QuantLib::ext::dynamic_pointer_cast<VariableNode>(n.args[2]);
             QL_REQUIRE(pname, "p must be a variable");
             QL_REQUIRE(!pname->args[0], "p must not be indexed");
             auto pv = context_.arrays.find(pname->name);
@@ -743,12 +747,12 @@ public:
         QL_REQUIRE(forward.which() == ValueTypeWhich::Number, "forward must be NUMBER");
         QL_REQUIRE(forward.which() == ValueTypeWhich::Number, "impliedvol must be NUMBER");
 
-        RandomVariable omega = boost::get<RandomVariable>(callput);
+        RandomVariable& omega = boost::get<RandomVariable>(callput);
         Date obs = boost::get<EventVec>(obsdate).value;
         Date expiry = boost::get<EventVec>(expirydate).value;
-        RandomVariable k = boost::get<RandomVariable>(strike);
-        RandomVariable f = boost::get<RandomVariable>(forward);
-        RandomVariable v = boost::get<RandomVariable>(impliedvol);
+        RandomVariable& k = boost::get<RandomVariable>(strike);
+        RandomVariable& f = boost::get<RandomVariable>(forward);
+        RandomVariable& v = boost::get<RandomVariable>(impliedvol);
 
         QL_REQUIRE(model_, "model is null");
 
@@ -769,7 +773,7 @@ public:
         QL_REQUIRE(model_, "model is null");
         // handle case of past payments: do not evaluate the other parameters, since not needed (e.g. past fixings)
         Date pay = boost::get<EventVec>(paydate).value;
-        if (pay <= model_->referenceDate()) {
+        if (pay <= model_->referenceDate() && (!log || !includePastCashflows_)) {
             value.push(RandomVariable(size_, 0.0));
             TRACE("pay() = 0, since paydate " << paydate << " <= " << model_->referenceDate(), n);
         } else {
@@ -786,8 +790,13 @@ public:
             Date obs = boost::get<EventVec>(obsdate).value;
             std::string pccy = boost::get<CurrencyVec>(paycurr).value;
             QL_REQUIRE(obs <= pay, "observation date (" << obs << ") <= payment date (" << pay << ") required");
-            RandomVariable result = model_->pay(boost::get<RandomVariable>(amount), obs, pay, pccy);
+            RandomVariable result = pay <= model_->referenceDate()
+                                        ? RandomVariable(model_->size(), 0.0)
+                                        : model_->pay(boost::get<RandomVariable>(amount), obs, pay, pccy);
+            RandomVariable cashflowResult =
+                pay <= model_->referenceDate() ? boost::get<RandomVariable>(amount) : result;
             if (!log || paylog_ == nullptr) {
+                value.push(result);
                 TRACE("pay( " << amount << " , " << obsdate << " , " << paydate << " , " << paycurr << " )", n);
             } else {
                 // cashflow logging
@@ -798,13 +807,13 @@ public:
                     pn.args[4]->accept(*this);
                     auto s = value.pop();
                     QL_REQUIRE(s.which() == ValueTypeWhich::Number, "legno must be NUMBER");
-                    RandomVariable sv = boost::get<RandomVariable>(s);
+                    RandomVariable& sv = boost::get<RandomVariable>(s);
                     sv.updateDeterministic();
                     QL_REQUIRE(sv.deterministic(), "legno must be deterministic");
                     legno = std::lround(sv.at(0));
                     QL_REQUIRE(slot >= 0, " legNo must be >= 0");
                     QL_REQUIRE(pn.args[5], "expected cashflow type argument when legno is given");
-                    auto cftname = boost::dynamic_pointer_cast<VariableNode>(n.args[5]);
+                    auto cftname = QuantLib::ext::dynamic_pointer_cast<VariableNode>(n.args[5]);
                     QL_REQUIRE(cftname, "cashflow type must be a variable name");
                     QL_REQUIRE(!cftname->args[0], "cashflow type must not be indexed");
                     cftype = cftname->name;
@@ -812,21 +821,20 @@ public:
                         pn.args[6]->accept(*this);
                         auto s = value.pop();
                         QL_REQUIRE(s.which() == ValueTypeWhich::Number, "slot must be NUMBER");
-                        RandomVariable sv = boost::get<RandomVariable>(s);
+                        RandomVariable& sv = boost::get<RandomVariable>(s);
                         sv.updateDeterministic();
                         QL_REQUIRE(sv.deterministic(), "slot must be deterministic");
                         slot = std::lround(sv.at(0));
                         QL_REQUIRE(slot >= 1, " slot must be >= 1");
                     }
                 }
-                paylog_->write(result, filter.top(), obs, pay, pccy, static_cast<Size>(legno), cftype,
+                paylog_->write(cashflowResult, filter.top(), obs, pay, pccy, static_cast<Size>(legno), cftype,
                                static_cast<Size>(slot));
+                value.push(result);
                 TRACE("logpay( " << amount << " , " << obsdate << " , " << paydate << " , " << paycurr << " , " << legno
                                  << " , " << cftype << " , " << slot << ")",
                       n);
             }
-            // push result
-            value.push(result);
         }
     }
 
@@ -878,9 +886,9 @@ public:
         Date obs = boost::get<EventVec>(obsdate).value;
         // roll back to past dates is treated as roll back to TODAY for convenience
         obs = std::max(obs, model_->referenceDate());
-        boost::optional<long> mem(boost::none);
+        QuantLib::ext::optional<long> mem(QuantLib::ext::nullopt);
         if (hasMemSlot) {
-            RandomVariable v = boost::get<RandomVariable>(memSlot);
+            RandomVariable& v = boost::get<RandomVariable>(memSlot);
             QL_REQUIRE(v.deterministic(), "memory slot must be deterministic");
             mem = static_cast<long>(v.at(0));
         }
@@ -914,10 +922,12 @@ public:
         std::string und = boost::get<IndexVec>(underlying).value;
         // if observation date is in the future, the answer is always zero
         if (obs > model_->referenceDate())
-            value.push(RandomVariable(model_->size(), 0));
+            value.push(RandomVariable(model_->size(), 0.0));
         else {
             // otherwise check whether a fixing is present in the historical time series
+            QL_DEPRECATED_DISABLE_WARNING
             TimeSeries<Real> series = IndexManager::instance().getHistory(IndexInfo(und).index()->name());
+            QL_DEPRECATED_ENABLE_WARNING
             if (series[obs] == Null<Real>())
                 value.push(RandomVariable(model_->size(), 0.0));
             else
@@ -1093,7 +1103,7 @@ public:
         std::string und = boost::get<IndexVec>(underlying).value;
         Date obs1 = boost::get<EventVec>(obsdate1).value;
         Date obs2 = boost::get<EventVec>(obsdate2).value;
-        RandomVariable barrierValue = boost::get<RandomVariable>(barrier);
+        RandomVariable& barrierValue = boost::get<RandomVariable>(barrier);
         if (obs1 > obs2)
             value.push(RandomVariable(model_->size(), 0.0));
         else
@@ -1140,11 +1150,12 @@ public:
     }
 
     // inputs
-    const boost::shared_ptr<Model> model_;
+    const QuantLib::ext::shared_ptr<Model> model_;
     const Size size_;
     const std::string script_;
     bool& interactive_;
-    boost::shared_ptr<PayLog> paylog_; // cashflow log
+    QuantLib::ext::shared_ptr<PayLog> paylog_; // cashflow log
+    bool includePastCashflows_;
     // working variables
     Context& context_;
     ASTNode*& lastVisitedNode_;
@@ -1155,10 +1166,11 @@ public:
 
 } // namespace
 
-void ScriptEngine::run(const std::string& script, bool interactive, boost::shared_ptr<PayLog> paylog) {
+void ScriptEngine::run(const std::string& script, bool interactive, QuantLib::ext::shared_ptr<PayLog> paylog,
+                       bool includePastCashflows) {
 
     ASTNode* loc;
-    ASTRunner runner(model_, script, interactive, *context_, loc, paylog);
+    ASTRunner runner(model_, script, interactive, *context_, loc, paylog, paylog != nullptr && includePastCashflows);
 
     randomvariable_output_pattern pattern;
     if (model_ == nullptr || model_->type() == Model::Type::MC) {

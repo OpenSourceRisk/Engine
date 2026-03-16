@@ -19,6 +19,7 @@
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/cashflows/overnightindexedcoupon.hpp>
 #include <ql/indexes/iborindex.hpp>
+#include <ql/math/solvers1d/bisection.hpp>
 #include <ql/math/solvers1d/brent.hpp>
 #include <qle/pricingengines/analyticlgmswaptionengine.hpp>
 
@@ -28,32 +29,32 @@
 
 namespace QuantExt {
 
-AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model,
+AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model,
                                                      const Handle<YieldTermStructure>& discountCurve,
-                                                     const FloatSpreadMapping floatSpreadMapping)
+                                                     const FloatSpreadMapping floatSpreadMapping, const Real x0)
     : GenericEngine<Swaption::arguments, Swaption::results>(), p_(model->parametrization()),
       c_(discountCurve.empty() ? p_->termStructure() : discountCurve), floatSpreadMapping_(floatSpreadMapping),
-      caching_(false) {
+      x0_(x0) {
     registerWith(model);
     registerWith(c_);
 }
 
-AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(const boost::shared_ptr<CrossAssetModel>& model, const Size ccy,
-                                                     const Handle<YieldTermStructure>& discountCurve,
-                                                     const FloatSpreadMapping floatSpreadMapping)
+AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(const QuantLib::ext::shared_ptr<CrossAssetModel>& model,
+                                                     const Size ccy, const Handle<YieldTermStructure>& discountCurve,
+                                                     const FloatSpreadMapping floatSpreadMapping, const Real x0)
     : GenericEngine<Swaption::arguments, Swaption::results>(), p_(model->irlgm1f(ccy)),
       c_(discountCurve.empty() ? p_->termStructure() : discountCurve), floatSpreadMapping_(floatSpreadMapping),
-      caching_(false) {
+      x0_(x0) {
     registerWith(model);
     registerWith(c_);
 }
 
-AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(const boost::shared_ptr<IrLgm1fParametrization> irlgm1f,
+AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(const QuantLib::ext::shared_ptr<IrLgm1fParametrization> irlgm1f,
                                                      const Handle<YieldTermStructure>& discountCurve,
-                                                     const FloatSpreadMapping floatSpreadMapping)
+                                                     const FloatSpreadMapping floatSpreadMapping, const Real x0)
     : GenericEngine<Swaption::arguments, Swaption::results>(), p_(irlgm1f),
       c_(discountCurve.empty() ? p_->termStructure() : discountCurve), floatSpreadMapping_(floatSpreadMapping),
-      caching_(false) {
+      x0_(x0) {
     registerWith(c_);
 }
 
@@ -74,7 +75,17 @@ void AnalyticLgmSwaptionEngine::calculate() const {
 
     QL_REQUIRE(arguments_.settlementType == Settlement::Physical, "cash-settled swaptions are not supported ...");
 
-    Date reference = p_->termStructure()->referenceDate();
+    // we allow c_'s reference date to be different from the lgm reference date
+
+    Date reference = c_->referenceDate();
+
+    QL_REQUIRE(reference >= p_->termStructure()->referenceDate(),
+               "AnalyticLgmSwaptionEngine::calculate(): curve reference date ("
+                   << reference << ") must not lie before lgm parametrization reference date ("
+                   << p_->termStructure()->referenceDate() << ")");
+
+    if (reference == p_->termStructure()->referenceDate())
+        x0_ = 0.0;
 
     Date expiry = arguments_.exercise->dates().back();
 
@@ -89,34 +100,36 @@ void AnalyticLgmSwaptionEngine::calculate() const {
 
         Option::Type type = arguments_.type == VanillaSwap::Payer ? Option::Call : Option::Put;
 
-        QL_REQUIRE(
-            arguments_.swap || arguments_.swapOis,
-            "AnalyticalLgmSwaptionEngine::calculate(): internal error, expected either swap or swapOis to be set.");
-        const Schedule& fixedSchedule =
-            arguments_.swap ? arguments_.swap->fixedSchedule() : arguments_.swapOis->schedule();
-        const Schedule& floatSchedule =
-            arguments_.swap ? arguments_.swap->floatingSchedule() : arguments_.swapOis->schedule();
+        QL_REQUIRE(arguments_.swap != nullptr,
+                   "AnalyticalLgmSwaptionEngine::calculate(): internal error, expected swap to be set.");
+        const Schedule& fixedSchedule = arguments_.swap->fixedSchedule();
+        const Schedule& floatSchedule = arguments_.swap->floatingSchedule();
 
-        j1_ = std::lower_bound(fixedSchedule.dates().begin(), fixedSchedule.dates().end(), expiry) -
-              fixedSchedule.dates().begin();
-        k1_ = std::lower_bound(floatSchedule.dates().begin(), floatSchedule.dates().end(), expiry) -
-              floatSchedule.dates().begin();
-
-        nominal_ = arguments_.swap ? arguments_.swap->nominal() : arguments_.swapOis->nominal();
+        nominal_ = arguments_.swap->nominal();
 
         fixedLeg_.clear();
-	floatingLeg_.clear();
-	for(auto const& c: (arguments_.swap ? arguments_.swap->fixedLeg() : arguments_.swapOis->fixedLeg())) {
-	    fixedLeg_.push_back(boost::dynamic_pointer_cast<FixedRateCoupon>(c));
+        floatingLeg_.clear();
+        for (auto const& c : arguments_.swap->fixedLeg()) {
+            fixedLeg_.push_back(QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(c));
             QL_REQUIRE(fixedLeg_.back(),
                        "AnalyticalLgmSwaptionEngine::calculate(): internal error, could not cast to FixedRateCoupon");
         }
-	for(auto const& c: (arguments_.swap ? arguments_.swap->floatingLeg() : arguments_.swapOis->overnightLeg())) {
-	    floatingLeg_.push_back(boost::dynamic_pointer_cast<FloatingRateCoupon>(c));
+        for (auto const& c : arguments_.swap->floatingLeg()) {
+            floatingLeg_.push_back(QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(c));
             QL_REQUIRE(
                 floatingLeg_.back(),
                 "AnalyticalLgmSwaptionEngine::calculate(): internal error, could not cast to FloatingRateRateCoupon");
         }
+
+        j1_ = std::lower_bound(fixedSchedule.dates().begin(), fixedSchedule.dates().end(), expiry) -
+              fixedSchedule.dates().begin();
+
+        QL_REQUIRE(j1_ < fixedLeg_.size(), "fixed leg's periods are all before expiry.");
+
+        k1_ = std::lower_bound(floatSchedule.dates().begin(), floatSchedule.dates().end(), expiry) -
+              floatSchedule.dates().begin();
+
+        QL_REQUIRE(k1_ < floatingLeg_.size(), "floating leg's periods are all before expiry.");
 
         // compute S_i, i.e. equivalent fixed rate spreads compensating for
         // a) a possibly non-zero float spread and
@@ -137,82 +150,49 @@ void AnalyticLgmSwaptionEngine::calculate() const {
                                "higher than fixed leg's payment frequency in "
                                "analytic lgm swaption engine");
 
+        if (floatSpreadMapping_ == FloatSpreadMapping::simple) {
+            Real annuity = 0.0;
+            for (Size j = j1_; j < fixedLeg_.size(); ++j) {
+                annuity += nominal_ * fixedLeg_[j]->accrualPeriod() * c_->discount(fixedLeg_[j]->date());
+            }
+            Real floatAmountMismatch = 0.0;
+            for (Size k = k1_; k < floatingLeg_.size(); ++k) {
+                floatAmountMismatch += (floatingLeg_[k]->amount() - flatAmount(floatingLeg_[k], c_)) *
+                                       c_->discount(floatingLeg_[k]->date());
+            }
+            for (Size j = j1_; j < fixedLeg_.size(); ++j) {
+                S_[j] = fixedLeg_[j]->accrualPeriod() * nominal_ * floatAmountMismatch / annuity;
+            }
+        }
+
         Size k = k1_;
         // The method reduces the problem to a one curve configuration w.r.t. the discount curve and
         // apply a correction for the discount curve / forwarding curve spread. Furthermore the method
         // assumes that no historical fixings are present in the floating rate coupons.
-        boost::shared_ptr<IborIndex> index =
-            arguments_.swap ? arguments_.swap->iborIndex() : arguments_.swapOis->overnightIndex();
         for (Size j = j1_; j < fixedLeg_.size(); ++j) {
             Real sum1 = 0.0, sum2 = 0.0;
             for (Size rr = 0; rr < ratio && k < floatingLeg_.size(); ++rr, ++k) {
                 Real amount = Null<Real>();
-		// same strategy as in VanillaSwap::setupArguments()
+                // same strategy as in VanillaSwap::setupArguments()
                 try {
                     amount = floatingLeg_[k]->amount();
                 } catch (...) {
                 }
-                Real lambda1 = 0.0, lambda2 = 1.0;
-                if (floatSpreadMapping_ == proRata) {
+                Real lambda1, lambda2;
+                if (floatSpreadMapping_ == FloatSpreadMapping::proRata) {
                     // we do not use the exact pay dates but the ratio to determine
                     // the distance to the adjacent payment dates
                     lambda2 = static_cast<Real>(rr + 1) / static_cast<Real>(ratio);
                     lambda1 = 1.0 - lambda2;
+                } else if (floatSpreadMapping_ == FloatSpreadMapping::nextCoupon) {
+                    lambda1 = 0.0;
+                    lambda2 = 1.0;
+                } else {
+                    lambda1 = lambda2 = 0.0;
                 }
                 if (amount != Null<Real>()) {
-                    Real flatAmount;
-		    if(arguments_.swapOis) {
-                        auto on = boost::dynamic_pointer_cast<QuantLib::OvernightIndexedCoupon>(floatingLeg_[k]);
-                       QL_REQUIRE(on, "AnalyticalLgmSwaptionEngine::calculate(): internal error, could not cast to "
-                                       "QuantLib::OvernightIndexedCoupon.");
-                        QL_REQUIRE(
-                            !on->valueDates().empty(),
-                            "AnalyticalLgmSwaptionEngine::calculate(): internal error, no value dates in ois coupon.");
-                        Date v1 = std::max(reference, on->valueDates().front());
-                        Date v2 = std::max(v1 + 1, on->valueDates().back());
-                        Real rate;
-                        if (on->averagingMethod() == QuantLib::RateAveraging::Compound)
-                            rate =
-                                (c_->discount(v1) / c_->discount(v2) - 1.0) / index->dayCounter().yearFraction(v1, v2);
-                        else
-                            rate = std::log(c_->discount(v1) / c_->discount(v2)) /
-                                   index->dayCounter().yearFraction(v1, v2);
-                        flatAmount = floatingLeg_[k]->accrualPeriod() * nominal_ * rate;
-		    } else {
-                        if (IborCoupon::Settings::instance().usingAtParCoupons()) {
-                            // if par coupons are used, we mimick the fixing estimation in IborCoupon; we make
-                            // sure that the estimation period does not start in the past and we do not use
-                            // historical fixings
-                            Date fixingValueDate = index->fixingCalendar().advance(floatingLeg_[k]->fixingDate(),
-                                                                                   index->fixingDays(), Days);
-                            fixingValueDate = std::max(fixingValueDate, reference);
-                            auto cpn = boost::dynamic_pointer_cast<Coupon>(floatingLeg_[k]);
-                            QL_REQUIRE(cpn,
-                                       "AnalyticalLgmSwaptionEngine::calculate(): coupon expected on underlying swap "
-                                       "floating leg, could not cast");
-                            Date nextFixingDate = index->fixingCalendar().advance(
-                                cpn->accrualEndDate(), -static_cast<Integer>(index->fixingDays()), Days);
-                            Date fixingEndDate =
-                                index->fixingCalendar().advance(nextFixingDate, index->fixingDays(), Days);
-                            fixingEndDate = std::max(fixingEndDate, fixingValueDate + 1);
-                            Real spanningTime = index->dayCounter().yearFraction(fixingValueDate, fixingEndDate);
-                            DiscountFactor disc1 = c_->discount(fixingValueDate);
-                            DiscountFactor disc2 = c_->discount(fixingEndDate);
-                            Real fixing = (disc1 / disc2 - 1.0) / spanningTime;
-                            flatAmount = fixing * floatingLeg_[k]->accrualPeriod() * nominal_;
-                        } else {
-                            // if indexed coupons are used, we use a proper fixing, but make sure that the fixing
-                            // date is not in the past and we do not use a historical fixing for "today"
-                            auto flatIbor = boost::make_shared<IborIndex>(
-                                index->familyName() + " (no fixings)", index->tenor(), index->fixingDays(),
-                                index->currency(), index->fixingCalendar(), index->businessDayConvention(),
-                                index->endOfMonth(), index->dayCounter(), c_);
-                            Date fixingDate =
-                                flatIbor->fixingCalendar().adjust(std::max(floatingLeg_[k]->fixingDate(), reference));
-                            flatAmount = flatIbor->fixing(fixingDate) * floatingLeg_[k]->accrualPeriod() * nominal_;
-                        }
-		    }
-                    Real correction = (amount - flatAmount) * c_->discount(floatingLeg_[k]->date());
+                    Real correction =
+                        (amount - flatAmount(floatingLeg_[k], c_)) * c_->discount(floatingLeg_[k]->date());
                     sum1 += lambda1 * correction;
                     sum2 += lambda2 * correction;
                 } else {
@@ -256,21 +236,47 @@ void AnalyticLgmSwaptionEngine::calculate() const {
         }
     }
 
+    /* for the following calculations, see [1] 5.5 - 5.7, with the slight generalization that we condition
+       the npv calculation on (t, x(t)) if lgm ref date < valuation ref date, using 4.4b */
+
     if (!caching_ || !lgm_alpha_constant_ || zetaex_ == Null<Real>()) {
-        zetaex_ = p_->zeta(p_->termStructure()->timeFromReference(expiry));
+        zetaex_ = p_->zeta(p_->termStructure()->timeFromReference(expiry)) -
+                  p_->zeta(p_->termStructure()->timeFromReference(reference)) +
+                  (applyZetaShift_ ? zetaShift_ * zetaShiftT_ : 0.0);
     }
 
     Brent b;
     Real yStar;
+
+    // Try three optimization routines to find yStar (as root of a given function yStarHelper).
+    // First, try to run the Brent solver. If it does not succeed for numerical reasons,
+    // try to find a better starting point via bisection and run the Brent again.
+    // If that fails again, try to find another starting point again, this time
+    // in an even larger interval of starting values.
     try {
-        yStar = b.solve(boost::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, boost::placeholders::_1), 1.0E-6,
-                        0.0, 0.01);
+        try {
+            try { // Try Brent
+                yStar = b.solve(std::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, std::placeholders::_1), 1.0E-6,
+                                0.0, 0.01);
+            } catch (const std::exception&) { // Try Brent with optimized starting point
+                Bisection b2;
+                double startValue = b2.solve(
+                    std::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, std::placeholders::_1), 1.0E-2, -3.0, 3.0);
+                yStar = b.solve(std::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, std::placeholders::_1), 1.0E-6,
+                                startValue, 0.01);
+            }
+        } catch (const std::exception&) { // Try Brent with another optimized starting point
+            Bisection b2;
+            double startValue2 = b2.solve(
+                std::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, std::placeholders::_1), 1.0E-2, -10.0, 10.0);
+            yStar = b.solve(std::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, std::placeholders::_1), 1.0E-6,
+                            startValue2, 0.01);
+        }
     } catch (const std::exception& e) {
         std::ostringstream os;
         os << "AnalyticLgmSwaptionEngine: failed to compute yStar (" << e.what() << "), parameter details: [";
-        Real tte = p_->termStructure()->timeFromReference(expiry);
-        os << "tte=" << tte << ", vol=" << std::sqrt(zetaex_ / tte) << ", nominal=" << nominal_
-           << ", d=" << D0_;
+        Real tte = c_->timeFromReference(expiry);
+        os << "tte=" << tte << ", vol=" << std::sqrt(zetaex_ / tte) << ", nominal=" << nominal_ << ", d=" << D0_;
         for (Size j = 0; j < Dj_.size(); ++j)
             os << ", d" << j << "=" << Dj_[j];
         os << ", h=" << H0_;
@@ -293,11 +299,18 @@ void AnalyticLgmSwaptionEngine::calculate() const {
     Real sum = 0.0;
     for (Size j = j1_; j < fixedLeg_.size(); ++j) {
         sum += w_ * (fixedLeg_[j]->amount() - S_[j - j1_]) * Dj_[j - j1_] *
-               N(u_ * w_ * (yStar + (Hj_[j - j1_] - H0_) * zetaex_) / sqrt_zetaex);
+               N(u_ * w_ * ((yStar + x0_) + (Hj_[j - j1_] - H0_) * zetaex_) / sqrt_zetaex);
     }
-    sum += -w_ * S_m1 * D0_ * N(u_ * w_ * yStar / sqrt_zetaex);
-    sum += w_ * (nominal_ * Dj_.back() * N(u_ * w_ * (yStar + (Hj_.back() - H0_) * zetaex_) / sqrt_zetaex) -
-                 nominal_ * D0_ * N(u_ * w_ * yStar / sqrt_zetaex));
+    sum += -w_ * S_m1 * D0_ * N(u_ * w_ * (yStar + x0_) / sqrt_zetaex);
+    sum += w_ * (nominal_ * Dj_.back() * N(u_ * w_ * ((yStar + x0_) + (Hj_.back() - H0_) * zetaex_) / sqrt_zetaex) -
+                 nominal_ * D0_ * N(u_ * w_ * (yStar + x0_) / sqrt_zetaex));
+
+    if (reference > p_->termStructure()->referenceDate()) {
+        Real Ht = p_->H(p_->termStructure()->timeFromReference(reference));
+        Real zetat = p_->zeta(p_->termStructure()->timeFromReference(reference));
+        sum *= 1.0 / c_->discount(reference) * std::exp(Ht * x0_ + 0.5 * Ht * Ht * zetat);
+    }
+
     results_.value = sum;
 
     results_.additionalResults["fixedAmountCorrectionSettlement"] = S_m1;
@@ -316,6 +329,40 @@ Real AnalyticLgmSwaptionEngine::yStarHelper(const Real y) const {
            std::exp(-(Hj_.back() - H0_) * y - 0.5 * (Hj_.back() - H0_) * (Hj_.back() - H0_) * zetaex_);
     sum -= D0_ * nominal_;
     return sum;
+}
+
+void AnalyticLgmSwaptionEngine::setZetaShift(const Time t, const Real shift) {
+    QL_REQUIRE(!lgm_alpha_constant_, "AnalyticLgmSwaptionEngine::setZetaShift(): lgm_alpha_constant is true, which is "
+                                     "not allowed when setting a shift for zeta.");
+    zetaShiftT_ = t;
+    zetaShift_ = shift;
+    applyZetaShift_ = true;
+    notifyObservers();
+}
+
+void AnalyticLgmSwaptionEngine::resetZetaShift() {
+    applyZetaShift_ = false;
+    notifyObservers();
+}
+
+std::ostream& operator<<(std::ostream& oss, const AnalyticLgmSwaptionEngine::FloatSpreadMapping& m) {
+    if (m == AnalyticLgmSwaptionEngine::FloatSpreadMapping::nextCoupon)
+        oss << "NextCoupon";
+    else if (m == AnalyticLgmSwaptionEngine::FloatSpreadMapping::proRata)
+        oss << "ProRata";
+    else if (m == AnalyticLgmSwaptionEngine::FloatSpreadMapping::simple)
+        oss << "Simple";
+    else
+        QL_FAIL("FloatSpreadMapping type not covered");
+    return oss;
+}
+
+Real flatAmount(const QuantLib::ext::shared_ptr<QuantLib::CashFlow>& f, const Handle<YieldTermStructure>& c) {
+    QL_REQUIRE(QuantLib::ext::dynamic_pointer_cast<QuantLib::OvernightIndexedCoupon>(f) ||
+                   QuantLib::ext::dynamic_pointer_cast<QuantLib::IborCoupon>(f),
+               "flatAmount(): coupon type not handled.");
+    auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(f);
+    return cpn->nominal() * (c->discount(cpn->accrualStartDate()) / c->discount(cpn->accrualEndDate()) - 1.0);
 }
 
 } // namespace QuantExt

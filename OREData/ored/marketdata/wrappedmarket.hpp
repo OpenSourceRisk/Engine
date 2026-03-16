@@ -39,8 +39,8 @@ namespace data {
 */
 class WrappedMarket : public Market {
 public:
-    WrappedMarket(const boost::shared_ptr<Market>& market, const bool handlePseudoCurrencies);
-    boost::shared_ptr<Market> underlyingMarket() const;
+    WrappedMarket(const QuantLib::ext::shared_ptr<Market>& market, const bool handlePseudoCurrencies);
+    QuantLib::ext::shared_ptr<Market> underlyingMarket() const;
 
     // market interface
     Date asofDate() const override;
@@ -90,7 +90,7 @@ public:
     Handle<YoYInflationIndex>
     yoyInflationIndex(const string& indexName,
                       const string& configuration = Market::defaultConfiguration) const override;
-    Handle<CPIVolatilitySurface>
+    Handle<QuantLib::CPIVolatilitySurface>
     cpiInflationCapFloorVolatilitySurface(const string& indexName,
                                           const string& configuration = Market::defaultConfiguration) const override;
     Handle<Quote> equitySpot(const string& eqName,
@@ -109,6 +109,11 @@ public:
 
     Handle<Quote> securitySpread(const string& securityID,
                                  const string& configuration = Market::defaultConfiguration) const override;
+    Handle<Quote> conversionFactor(const string& name,
+                                   const string& configuration = Market::defaultConfiguration) const override;
+    Handle<Quote> securityPrice(const string& name,
+                                const string& configuration = Market::defaultConfiguration) const override;
+
     QuantLib::Handle<QuantExt::PriceTermStructure>
     commodityPriceCurve(const std::string& commodityName,
                         const std::string& configuration = Market::defaultConfiguration) const override;
@@ -124,7 +129,7 @@ public:
                       const string& configuration = Market::defaultConfiguration) const override;
 
 protected:
-    boost::shared_ptr<Market> market_;
+    QuantLib::ext::shared_ptr<Market> market_;
 };
 
 } // namespace data

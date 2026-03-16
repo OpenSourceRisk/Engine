@@ -29,23 +29,22 @@ namespace data {
 
 EquityVolatilityCurveConfig::EquityVolatilityCurveConfig(
     const string& curveID, const string& curveDescription, const string& currency,
-    const vector<boost::shared_ptr<VolatilityConfig>>& volatilityConfig, const string& equityId, 
+    const vector<QuantLib::ext::shared_ptr<VolatilityConfig>>& volatilityConfig, const string& equityId, 
     const string& dayCounter, const string& calendar, const OneDimSolverConfig& solverConfig, 
-    const boost::optional<bool>& preferOutOfTheMoney)
+    const QuantLib::ext::optional<bool>& preferOutOfTheMoney)
     : CurveConfig(curveID, curveDescription), ccy_(currency), volatilityConfig_(volatilityConfig),
       equityId_(equityId), dayCounter_(dayCounter), calendar_(calendar), solverConfig_(solverConfig),
       preferOutOfTheMoney_(preferOutOfTheMoney) {
     populateQuotes();
-    populateRequiredCurveIds();
 }
 
 EquityVolatilityCurveConfig::EquityVolatilityCurveConfig(
     const string& curveID, const string& curveDescription, const string& currency,
-    const boost::shared_ptr<VolatilityConfig>& volatilityConfig, const string& equityId,
+    const QuantLib::ext::shared_ptr<VolatilityConfig>& volatilityConfig, const string& equityId,
     const string& dayCounter, const string& calendar, const OneDimSolverConfig& solverConfig,
-    const boost::optional<bool>& preferOutOfTheMoney)
+    const QuantLib::ext::optional<bool>& preferOutOfTheMoney)
     : EquityVolatilityCurveConfig(curveID, curveDescription, currency,
-        std::vector<boost::shared_ptr<VolatilityConfig>>{volatilityConfig}, equityId, dayCounter, 
+        std::vector<QuantLib::ext::shared_ptr<VolatilityConfig>>{volatilityConfig}, equityId, dayCounter, 
         calendar, solverConfig, preferOutOfTheMoney) {}
 
 const string EquityVolatilityCurveConfig::quoteStem(const string& volType) const {
@@ -55,14 +54,14 @@ const string EquityVolatilityCurveConfig::quoteStem(const string& volType) const
 void EquityVolatilityCurveConfig::populateQuotes() {
     // add quotes from all the volatility configs
     for (auto vc : volatilityConfig_) {
-        if (boost::dynamic_pointer_cast<QuoteBasedVolatilityConfig>(vc)) {
+        if (QuantLib::ext::dynamic_pointer_cast<QuoteBasedVolatilityConfig>(vc)) {
             // The quotes depend on the type of volatility structure that has been configured.
-            if (auto c = boost::dynamic_pointer_cast<ConstantVolatilityConfig>(vc)) {
+            if (auto c = QuantLib::ext::dynamic_pointer_cast<ConstantVolatilityConfig>(vc)) {
                 quotes_.push_back(c->quote());
-            } else if (auto c = boost::dynamic_pointer_cast<VolatilityCurveConfig>(vc)) {
+            } else if (auto c = QuantLib::ext::dynamic_pointer_cast<VolatilityCurveConfig>(vc)) {
                 auto qs = c->quotes();
                 quotes_.insert(quotes_.end(), qs.begin(), qs.end());
-            } else if (auto c = boost::dynamic_pointer_cast<VolatilitySurfaceConfig>(vc)) {
+            } else if (auto c = QuantLib::ext::dynamic_pointer_cast<VolatilitySurfaceConfig>(vc)) {
                 // Clear the quotes_ if necessary and populate with surface quotes
                 string quoteStr;
                 string volType = to_string<MarketDatum::QuoteType>(c->quoteType());
@@ -79,9 +78,11 @@ void EquityVolatilityCurveConfig::populateQuotes() {
     }
 }
 
-void EquityVolatilityCurveConfig::populateRequiredCurveIds() {
+void EquityVolatilityCurveConfig::populateRequiredIds() const {
+    requiredCurveIds_[CurveSpec::CurveType::Equity].insert(curveID_);
+    requiredNames_[std::make_pair(MarketObject::DiscountCurve, std::string())].insert(ccy_);
     for (auto vc : volatilityConfig_) {
-        if (auto p = boost::dynamic_pointer_cast<ProxyVolatilityConfig>(vc)) {
+        if (auto p = QuantLib::ext::dynamic_pointer_cast<ProxyVolatilityConfig>(vc)) {
             requiredCurveIds_[CurveSpec::CurveType::Equity].insert(p->proxyVolatilityCurve());
             requiredCurveIds_[CurveSpec::CurveType::EquityVolatility].insert(p->proxyVolatilityCurve());
             if (!p->fxVolatilityCurve().empty())
@@ -112,7 +113,7 @@ void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
         solverConfig_.fromXML(n);
     }
 
-    preferOutOfTheMoney_ = boost::none;
+    preferOutOfTheMoney_ = QuantLib::ext::nullopt;
     if (XMLNode* n = XMLUtils::getChildNode(node, "PreferOutOfTheMoney")) {
         preferOutOfTheMoney_ = parseBool(XMLUtils::getNodeValue(n));
     }
@@ -150,10 +151,10 @@ void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
                 }
             }
             volatilityConfig_.push_back(
-                boost::make_shared<VolatilityCurveConfig>(quotes, timeExtrapolation, timeExtrapolation));
+                QuantLib::ext::make_shared<VolatilityCurveConfig>(quotes, timeExtrapolation, timeExtrapolation));
         } else {
             // if Smile create VolatilityStrikeSurfaceConfig
-            volatilityConfig_.push_back(boost::make_shared<VolatilityStrikeSurfaceConfig>(
+            volatilityConfig_.push_back(QuantLib::ext::make_shared<VolatilityStrikeSurfaceConfig>(
                 strikes, expiries, "Linear", "Linear", true, timeExtrapolation, strikeExtrapolation));
         }
 
@@ -170,7 +171,6 @@ void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
     }
 
     populateQuotes();
-    populateRequiredCurveIds();
 }
 
 XMLNode* EquityVolatilityCurveConfig::toXML(XMLDocument& doc) const {
@@ -206,7 +206,7 @@ XMLNode* EquityVolatilityCurveConfig::toXML(XMLDocument& doc) const {
 
 bool EquityVolatilityCurveConfig::isProxySurface() {
     for (auto vc : volatilityConfig_) {
-        if (auto p = boost::dynamic_pointer_cast<ProxyVolatilityConfig>(vc)) {
+        if (auto p = QuantLib::ext::dynamic_pointer_cast<ProxyVolatilityConfig>(vc)) {
             return true;
         }
     }

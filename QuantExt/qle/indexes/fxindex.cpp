@@ -125,8 +125,9 @@ void FxIndex::initialise() {
     name_ = tmp.str();
 
     oreName_ = "FX-" + familyName_ + "-" + sourceCurrency_.code() + "-" + targetCurrency_.code();
-
+    QL_DEPRECATED_DISABLE_WARNING
     registerWith(IndexManager::instance().notifier(name()));
+    QL_DEPRECATED_ENABLE_WARNING
     registerWith(fxSpot_);
     registerWith(sourceYts_);
     registerWith(targetYts_);
@@ -141,14 +142,14 @@ const Handle<Quote> FxIndex::fxQuote(bool withSettlementLag) const {
         if (fxRate_.empty()) {
             Handle<Quote> tmpQuote;
             if (!useQuote_)
-                tmpQuote = Handle<Quote>(boost::make_shared<SimpleQuote>(
+                tmpQuote = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(
                     ExchangeRateManager::instance().lookup(sourceCurrency_, targetCurrency_).rate()));
             else
                 tmpQuote = fxSpot_;
 
             // adjust for spot
             fxRate_ = Handle<Quote>(
-                boost::make_shared<FxRateQuote>(tmpQuote, sourceYts_, targetYts_, fixingDays_, fixingCalendar_));
+                QuantLib::ext::make_shared<FxRateQuote>(tmpQuote, sourceYts_, targetYts_, fixingDays_, fixingCalendar_));
         }
         quote = fxRate_;
     }
@@ -254,13 +255,13 @@ Real FxIndex::forecastFixing(const Date& fixingDate) const {
     return forward;
 }
 
-boost::shared_ptr<FxIndex> FxIndex::clone(const Handle<Quote> fxQuote, const Handle<YieldTermStructure>& sourceYts,
+QuantLib::ext::shared_ptr<FxIndex> FxIndex::clone(const Handle<Quote> fxQuote, const Handle<YieldTermStructure>& sourceYts,
                                           const Handle<YieldTermStructure>& targetYts, const string& familyName) {
     Handle<Quote> quote = fxQuote.empty() ? fxSpot_ : fxQuote;
     Handle<YieldTermStructure> source = sourceYts.empty() ? sourceYts_ : sourceYts;
     Handle<YieldTermStructure> target = targetYts.empty() ? targetYts_ : targetYts;
     string famName = familyName.empty() ? familyName_ : familyName;
-    return boost::make_shared<FxIndex>(famName, fixingDays_, sourceCurrency_, targetCurrency_, fixingCalendar_, quote,
+    return QuantLib::ext::make_shared<FxIndex>(famName, fixingDays_, sourceCurrency_, targetCurrency_, fixingCalendar_, quote,
                                        source, target);
 }
 
@@ -293,15 +294,18 @@ Real FxIndex::pastFixing(const Date& fixingDate) const {
                                                          << ")");
 
     Real fixing = timeSeries()[fixingDate];
-    if (fixing != Null<Real>())
+    if (fixing != Null<Real>()) {
         return fixing;
+    }
 
     if (fixingTriangulation_) {
         // check reverse
         string revName = familyName_ + " " + targetCurrency_.code() + "/" + sourceCurrency_.code();
-        if (IndexManager::instance().hasHistoricalFixing(revName, fixingDate))
-            return 1.0 / IndexManager::instance().getHistory(revName)[fixingDate];
-
+        QL_DEPRECATED_DISABLE_WARNING
+        if (IndexManager::instance().hasHistoricalFixing(revName, fixingDate)){
+            return 1.0 / IndexManager::instance().getHistory(revName)[fixingDate];;
+        }
+        QL_DEPRECATED_ENABLE_WARNING
         // Now we search for a pair of quotes that we can combine to construct the quote required.
         // We only search for a pair of quotes a single step apart.
         //
@@ -316,6 +320,7 @@ Real FxIndex::pastFixing(const Date& fixingDate) const {
 
         // Loop over all the possible Indexes
         vector<string> availIndexes = IndexManager::instance().histories();
+        QL_DEPRECATED_DISABLE_WARNING
         for (auto i : availIndexes) {
             if (boost::starts_with(i, familyName_)) {
                 // check for a fixing
@@ -364,6 +369,7 @@ Real FxIndex::pastFixing(const Date& fixingDate) const {
                 }
             }
         }
+        QL_DEPRECATED_ENABLE_WARNING
     }
     return fixing;
 }

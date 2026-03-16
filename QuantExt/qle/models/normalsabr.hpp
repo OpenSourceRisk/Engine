@@ -34,6 +34,7 @@ Real normalSabrVolatility(Rate strike, Rate forward, Time expiryTime, Real alpha
 Real normalSabrAlphaFromAtmVol(Rate forward, Time expiryTime, Real atmVol, Real nu, Real rho);
 
 // Antonov 2015, Mixing SABR models for Negative Rates and 2013, SABR spreads its wings
+Real normalFreeBoundarySabrPrice(Rate strike, Rate forward, Time expiryTime, Real alpha, Real nu, Real rho);
 Real normalFreeBoundarySabrVolatility(Rate strike, Rate forward, Time expiryTime, Real alpha, Real nu, Real rho);
 
 } // namespace QuantExt

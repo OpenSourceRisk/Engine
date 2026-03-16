@@ -35,18 +35,41 @@ namespace analytics {
     the config in ore.xml / simulation.xml. All meta data is optional, i.e. if not given in the cube file, the original
     config will be used. */
 
-struct NPVCubeWithMetaData {
-    boost::shared_ptr<NPVCube> cube;
-    // all of the following members are optional
-    boost::shared_ptr<ScenarioGeneratorData> scenarioGeneratorData;
-    boost::optional<bool> storeFlows;
-    boost::optional<Size> storeCreditStateNPVs;
+
+class NPVCubeWithMetaData  {
+public:
+    NPVCubeWithMetaData() {}
+    NPVCubeWithMetaData(const QuantLib::ext::shared_ptr<NPVCube>& cube,
+                        const QuantLib::ext::shared_ptr<ScenarioGeneratorData>& scenarioGeneratorData,
+                        const QuantLib::ext::optional<bool>& storeFlows,
+                        const QuantLib::ext::optional<Size>& storeCreditStateNPVs)
+        : cube_(cube), scenarioGeneratorData_(scenarioGeneratorData), storeFlows_(storeFlows), storeCreditStateNPVs_(storeCreditStateNPVs) {};
+
+    //getters
+    const QuantLib::ext::shared_ptr<NPVCube>& cube() const { return cube_; }
+    const QuantLib::ext::shared_ptr<ScenarioGeneratorData>& scenarioGeneratorData() const { return scenarioGeneratorData_; }
+    const QuantLib::ext::optional<bool>& storeFlows() const { return storeFlows_; }
+    const QuantLib::ext::optional<Size>& storeCreditStateNPVs() const { return storeCreditStateNPVs_; }
+
+    //setters
+    void setCube(const QuantLib::ext::shared_ptr<NPVCube>& cube) { cube_ = cube; }
+    void setScenarioGeneratorData(const QuantLib::ext::shared_ptr<ScenarioGeneratorData>& data) {
+        scenarioGeneratorData_ = data;
+    }
+    void setStoreFlows(bool storeFlows) { storeFlows_ = storeFlows; }
+    void storeCreditStateNPVs(Size depth) { storeCreditStateNPVs_ = depth; }
+
+private:
+    QuantLib::ext::shared_ptr<NPVCube> cube_;
+    QuantLib::ext::shared_ptr<ScenarioGeneratorData> scenarioGeneratorData_;
+    QuantLib::ext::optional<bool> storeFlows_;
+    QuantLib::ext::optional<Size> storeCreditStateNPVs_;
 };
 
-NPVCubeWithMetaData loadCube(const std::string& filename, const bool doublePrecision = false);
-void saveCube(const std::string& filename, const NPVCubeWithMetaData& cube, const bool doublePrecision = false);
+QuantLib::ext::shared_ptr<NPVCubeWithMetaData> loadCube(const std::string& filename);
+void saveCube(const std::string& filename, const NPVCubeWithMetaData& cube);
 
-boost::shared_ptr<AggregationScenarioData> loadAggregationScenarioData(const std::string& filename);
+QuantLib::ext::shared_ptr<AggregationScenarioData> loadAggregationScenarioData(const std::string& filename);
 void saveAggregationScenarioData(const std::string& filename, const AggregationScenarioData& cube);
 
 } // namespace analytics

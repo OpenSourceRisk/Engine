@@ -35,8 +35,8 @@ namespace QuantExt {
  */
 class Gaussian1dCrossAssetAdaptor : public Gaussian1dModel {
 public:
-    Gaussian1dCrossAssetAdaptor(const boost::shared_ptr<LinearGaussMarkovModel>& model);
-    Gaussian1dCrossAssetAdaptor(const Size ccy, const boost::shared_ptr<CrossAssetModel>& model);
+    Gaussian1dCrossAssetAdaptor(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model);
+    Gaussian1dCrossAssetAdaptor(const Size ccy, const QuantLib::ext::shared_ptr<CrossAssetModel>& model);
 
 private:
     /*! Gaussian1dModel interface */
@@ -59,7 +59,7 @@ private:
     void initialize();
 
     /* members */
-    const boost::shared_ptr<LinearGaussMarkovModel> x_;
+    const QuantLib::ext::shared_ptr<LinearGaussMarkovModel> x_;
 };
 
 // inline

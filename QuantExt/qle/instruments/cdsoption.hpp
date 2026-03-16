@@ -44,6 +44,7 @@
 #define quantext_cds_option_hpp
 
 #include <ql/instruments/creditdefaultswap.hpp>
+#include <ql/instruments/swaption.hpp>
 
 #include <ql/option.hpp>
 
@@ -72,9 +73,10 @@ public:
 
     enum StrikeType { Price, Spread };
 
-    CdsOption(const boost::shared_ptr<CreditDefaultSwap>& swap, const boost::shared_ptr<Exercise>& exercise,
-              bool knocksOut = true, const Real strike = Null<Real>(),
-              const StrikeType strikeType = StrikeType::Spread);
+    CdsOption(const QuantLib::ext::shared_ptr<CreditDefaultSwap>& swap,
+              const QuantLib::ext::shared_ptr<Exercise>& exercise, bool knocksOut = true,
+              const Real strike = Null<Real>(), const StrikeType strikeType = StrikeType::Spread,
+              Settlement::Type settlementType = Settlement::Cash);
 
     //! \name Instrument interface
     //@{
@@ -83,23 +85,26 @@ public:
     //@}
     //! \name Inspectors
     //@{
-    const boost::shared_ptr<CreditDefaultSwap>& underlyingSwap() const { return swap_; }
+    const QuantLib::ext::shared_ptr<CreditDefaultSwap>& underlyingSwap() const { return swap_; }
     //@}
     //! \name Calculations
     //@{
     Rate atmRate() const;
     Real riskyAnnuity() const;
-    Volatility impliedVolatility(Real price, const Handle<QuantLib::YieldTermStructure>& termStructure,
+    Volatility impliedVolatility(Real price,
+                                 const QuantLib::Handle<QuantLib::YieldTermStructure>& termStructureSwapCurrency,
+                                 const QuantLib::Handle<QuantLib::YieldTermStructure>& termStructureTradeCollateral,
                                  const Handle<DefaultProbabilityTermStructure>&, Real recoveryRate,
                                  Real accuracy = 1.e-4, Size maxEvaluations = 100, Volatility minVol = 1.0e-7,
                                  Volatility maxVol = 4.0) const;
     //@}
 
 private:
-    boost::shared_ptr<CreditDefaultSwap> swap_;
+    QuantLib::ext::shared_ptr<CreditDefaultSwap> swap_;
     bool knocksOut_;
     Real strike_;
     StrikeType strikeType_;
+    Settlement::Type settlementType_;
 
     mutable Real riskyAnnuity_;
     void setupExpired() const override;
@@ -111,10 +116,12 @@ class CdsOption::arguments : public CreditDefaultSwap::arguments, public Option:
 public:
     arguments() {}
 
-    boost::shared_ptr<CreditDefaultSwap> swap;
+    QuantLib::ext::shared_ptr<CreditDefaultSwap> swap;
     bool knocksOut;
     Real strike;
     StrikeType strikeType;
+    Settlement::Type settlementType;
+
     void validate() const override;
 };
 

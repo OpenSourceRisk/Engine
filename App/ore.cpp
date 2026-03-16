@@ -27,25 +27,22 @@
 
 #include <orea/app/oreapp.hpp>
 
-#include <ored/utilities/initbuilders.hpp>
+#include <orea/app/initbuilders.hpp>
 
 #include <qle/version.hpp>
+#include <qle/gitversion.hpp>
 
 #include <iostream>
 
-#ifdef BOOST_MSVC
+#if !defined(BOOST_ALL_NO_LIB) && defined(BOOST_MSVC)
 #include <orea/auto_link.hpp>
 #include <ored/auto_link.hpp>
 #include <ql/auto_link.hpp>
 #include <qle/auto_link.hpp>
 // Find the name of the correct boost library with which to link.
-#define BOOST_LIB_NAME boost_regex
-#include <boost/config/auto_link.hpp>
 #define BOOST_LIB_NAME boost_serialization
 #include <boost/config/auto_link.hpp>
 #define BOOST_LIB_NAME boost_date_time
-#include <boost/config/auto_link.hpp>
-#define BOOST_LIB_NAME boost_filesystem
 #include <boost/config/auto_link.hpp>
 #define BOOST_LIB_NAME boost_system
 #include <boost/config/auto_link.hpp>
@@ -66,17 +63,24 @@ int main(int argc, char** argv) {
         exit(0);
     }
 
+    if (argc == 2 && (string(argv[1]) == "-h" || string(argv[1]) == "--hash")) {
+        #ifdef GIT_HASH
+        cout << "Git hash " << GIT_HASH << endl;
+        #endif
+        exit(0);
+    }
+
     if (argc != 2) {
         std::cout << endl << "usage: ORE path/to/ore.xml" << endl << endl;
         return -1;
     }
 
-    ore::data::initBuilders();
+    ore::analytics::initBuilders();
 
     string inputFile(argv[1]);
 
     try {
-        auto params = boost::make_shared<Parameters>();
+        auto params = QuantLib::ext::make_shared<Parameters>();
         params->fromFile(inputFile);
         OREApp ore(params, true);
         ore.run();

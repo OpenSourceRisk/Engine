@@ -52,7 +52,7 @@ public:
     virtual bool hasBuckets(const CrifRecord::RiskType& riskType) const = 0;
 
     //! Check if the given \p riskType and \p qualifier has a mapping (which is valid, and matches the fallback flag if given)
-    virtual bool has(const CrifRecord::RiskType& riskType, const std::string& qualifier, boost::optional<bool> fallback = boost::none) const = 0;
+    virtual bool has(const CrifRecord::RiskType& riskType, const std::string& qualifier, QuantLib::ext::optional<bool> fallback = QuantLib::ext::nullopt) const = 0;
 
     //! Add a single \p bucket mapping for \p qualifier with risk type \p riskType
     /*! \todo Not very convenient. If deemed useful, add more methods for adding
@@ -64,8 +64,12 @@ public:
 
     virtual const std::set<FailedMapping>& failedMappings() const = 0;
 
-    void updateFromCrif(const ore::analytics::Crif& crif) {
-        for (const auto& cr : crif) {
+    void updateFromCrif(const QuantLib::ext::shared_ptr<ore::analytics::Crif>& crif) {
+        if (!crif)
+            return;
+
+        for (const auto& scr : *crif) {
+            CrifRecord cr = scr.toCrifRecord();
             if (!cr.isSimmParameter() && hasBuckets(cr.riskType)) {
                 addMapping(cr.riskType, cr.qualifier, cr.bucket);
             }

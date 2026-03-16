@@ -26,11 +26,11 @@ namespace QuantExt {
 using namespace CrossAssetAnalytics;
 
 AnalyticXAssetLgmEquityOptionEngine::AnalyticXAssetLgmEquityOptionEngine(
-    const boost::shared_ptr<CrossAssetModel>& model, const Size eqName, const Size EqCcy)
+    const QuantLib::ext::shared_ptr<CrossAssetModel>& model, const Size eqName, const Size EqCcy)
     : model_(model), eqIdx_(eqName), ccyIdx_(EqCcy) {}
 
 Real AnalyticXAssetLgmEquityOptionEngine::value(const Time t0, const Time t,
-                                                const boost::shared_ptr<StrikedTypePayoff> payoff, const Real discount,
+                                                const QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff, const Real discount,
                                                 const Real eqForward) const {
 
     const Size& k = eqIdx_;
@@ -59,7 +59,7 @@ void AnalyticXAssetLgmEquityOptionEngine::calculate() const {
 
     QL_REQUIRE(arguments_.exercise->type() == Exercise::European, "only European options are allowed");
 
-    boost::shared_ptr<StrikedTypePayoff> payoff = boost::dynamic_pointer_cast<StrikedTypePayoff>(arguments_.payoff);
+    QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff = QuantLib::ext::dynamic_pointer_cast<StrikedTypePayoff>(arguments_.payoff);
     QL_REQUIRE(payoff != NULL, "only striked payoff is allowed");
 
     Date expiry = arguments_.exercise->lastDate();

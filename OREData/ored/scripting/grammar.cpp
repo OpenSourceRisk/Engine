@@ -38,7 +38,7 @@ template <typename NodeType, typename... AddArgs> struct createASTNode {
             evalStack.pop();
             --n;
         }
-        auto node = boost::make_shared<NodeType>(addArgs..., arg);
+        auto node = QuantLib::ext::make_shared<NodeType>(addArgs..., arg);
         if (mergeLocation && !arg.empty()) {
             auto const& loc1 = arg.front()->locationInfo;
             auto const& loc2 = arg.back()->locationInfo;
@@ -66,7 +66,7 @@ template <typename NodeType, typename... AddArgs> struct collapseASTNode {
         ASTNodePtr previous = evalStack.top();
         evalStack.pop();
         arg.insert(arg.begin(), previous->args.begin(), previous->args.end());
-        auto node = boost::make_shared<NodeType>(addArgs..., arg);
+        auto node = QuantLib::ext::make_shared<NodeType>(addArgs..., arg);
         node->locationInfo = previous->locationInfo;
         evalStack.push(node);
     }
@@ -85,7 +85,7 @@ ScriptGrammar::ScriptGrammar(ScriptGrammarIterator first)
                            | qi::lit("sqrt")      | qi::lit("normalCdf") | qi::lit("normalPdf")  | qi::lit("max")     | qi::lit("min")       | qi::lit("pow")  | qi::lit("black")
                            | qi::lit("dcf")       | qi::lit("days")      | qi::lit("PAY")        | qi::lit("NPVMEM")  | qi::lit("DISCOUNT")  | qi::lit("SIZE") | qi::lit("SORT")
                            | qi::lit("PERMUTE")   | qi::lit("LOGPAY")    | qi::lit("HISTFIXING") | qi::lit("FWDCOMP") | qi::lit("FWDAVG")    | qi::lit("ABOVEPROB")
-			   | qi::lit("BELOWPROB") | qi::lit("NPV")    | qi::lit("DATEINDEX")
+                           | qi::lit("BELOWPROB") | qi::lit("NPV")       | qi::lit("DATEINDEX")  | qi::lit("frac")    | qi::lit("round")
                            ) >> !(qi::alnum | qi::char_('_')) ];
 
     varname %= qi::lexeme[ (qi::alpha | qi::char_('_')) >> *(qi::alnum | qi::char_('_')) ] - keyword;
@@ -152,6 +152,8 @@ ScriptGrammar::ScriptGrammar(ScriptGrammarIterator first)
         | (qi::lit("normalPdf") > "(" > term > ')')             [ createASTNode<FunctionNormalPdfNode>(evalStack, 1)      ]
         | (qi::lit("max") > "(" > term > ',' > term > ')')      [ createASTNode<FunctionMaxNode>(evalStack, 2)            ]
         | (qi::lit("min") > "(" > term > ',' > term > ')')      [ createASTNode<FunctionMinNode>(evalStack, 2)            ]
+        | (qi::lit("frac") > "(" > term > ')')                  [ createASTNode<FunctionFractionNode>(evalStack, 1)       ]
+        | (qi::lit("round") > "(" > term > ',' > term > ')')    [ createASTNode<FunctionRoundNode>(evalStack, 2)          ]
         | (qi::lit("pow") > "(" > term > ',' > term > ')')      [ createASTNode<FunctionPowNode>(evalStack, 2)            ]
         | (qi::lit("black") > "(" > term > ',' > term > ',' > term > ',' > term > ',' > term > ',' > term > ')')
                                                          [ createASTNode<FunctionBlackNode>(evalStack, 6)          ]

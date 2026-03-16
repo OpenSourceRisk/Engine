@@ -48,7 +48,7 @@ Rate SpreadedYoYVolatilitySurface::maxStrike() const { return baseVol_->maxStrik
 
 Volatility SpreadedYoYVolatilitySurface::volatilityImpl(Time length, Rate strike) const {
     calculate();
-    return baseVol_->volatility(length, strike) + volSpreadInterpolation_(length, strike);
+    return std::max(0.0, baseVol_->volatility(length, strike) + volSpreadInterpolation_(length, strike));
 }
 
 void SpreadedYoYVolatilitySurface::performCalculations() const {
@@ -64,7 +64,7 @@ void SpreadedYoYVolatilitySurface::performCalculations() const {
             volSpreadValues_(k, i) = volSpreads_[i][k]->value();
         }
     }
-    volSpreadInterpolation_ = FlatExtrapolator2D(boost::make_shared<BilinearInterpolation>(
+    volSpreadInterpolation_ = FlatExtrapolator2D(QuantLib::ext::make_shared<BilinearInterpolation>(
         optionTimes_.begin(), optionTimes_.end(), strikes_.begin(), strikes_.end(), volSpreadValues_));
     volSpreadInterpolation_.enableExtrapolation();
 }

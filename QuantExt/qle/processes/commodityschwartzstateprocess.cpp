@@ -23,12 +23,12 @@
 namespace QuantExt {
 
 CommoditySchwartzStateProcess::CommoditySchwartzStateProcess(
-    const boost::shared_ptr<CommoditySchwartzParametrization>& parametrization,
+    const QuantLib::ext::shared_ptr<CommoditySchwartzParametrization>& parametrization,
     const CommoditySchwartzModel::Discretization discretization)
     : StochasticProcess1D(discretization == CommoditySchwartzModel::Discretization::Euler
-                              ? boost::make_shared<EulerDiscretization>()
-                              : boost::static_pointer_cast<StochasticProcess1D::discretization>(
-                                    boost::make_shared<ExactDiscretization>(parametrization))),
+                              ? QuantLib::ext::make_shared<EulerDiscretization>()
+                              : QuantLib::ext::static_pointer_cast<StochasticProcess1D::discretization>(
+                                    QuantLib::ext::make_shared<ExactDiscretization>(parametrization))),
       p_(parametrization) {}
 
 Real CommoditySchwartzStateProcess::drift(Time t, Real x0) const {

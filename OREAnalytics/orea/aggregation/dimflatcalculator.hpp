@@ -39,21 +39,24 @@ using namespace std;
 class FlatDynamicInitialMarginCalculator : public DynamicInitialMarginCalculator {
 public:
     FlatDynamicInitialMarginCalculator(
-        //! Global input parameters
-        const boost::shared_ptr<InputParameters>& inputs,
         //! Driving portfolio consistent with the cube below
-        const boost::shared_ptr<Portfolio>& portfolio,
+        const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
         //! NPV cube resulting from the Monte Carlo simulation loop
-        const boost::shared_ptr<NPVCube>& cube,
+        const QuantLib::ext::shared_ptr<NPVCube>& cube,
         //! Interpretation of the cube, regular NPV, MPoR grid etc
-        const boost::shared_ptr<CubeInterpretation>& cubeInterpretation,
+        const QuantLib::ext::shared_ptr<CubeInterpretation>& cubeInterpretation,
          //! Additional output of the MC simulation loop with numeraires, index fixings, FX spots etc
-        const boost::shared_ptr<AggregationScenarioData>& scenarioData);
+        const QuantLib::ext::shared_ptr<AggregationScenarioData>& scenarioData,
+        //! structure with collateral balances
+        const QuantLib::ext::shared_ptr<ore::data::CollateralBalances>& collateralBalances = nullptr);
 
-    map<string, Real> unscaledCurrentDIM() override { return currentIM_; }
+    const map<string, Real>& unscaledCurrentDIM() const override { return currentIM_; }
     void build() override;
     void exportDimEvolution(ore::data::Report& dimEvolutionReport) const override;
     const vector<Real>& dimResults(const std::string& nettingSet) const;
+
+private:
+    QuantLib::ext::shared_ptr<ore::data::CollateralBalances> collateralBalances_;
 };
 
 } // namespace analytics

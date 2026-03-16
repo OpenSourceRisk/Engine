@@ -42,15 +42,18 @@ public:
     //! \name Constructors
     //@{
     //! Detailed constructor
-    CrossCcyFixFloatSwap(Type type, QuantLib::Real fixedNominal, const QuantLib::Currency& fixedCurrency,
-                         const QuantLib::Schedule& fixedSchedule, QuantLib::Rate fixedRate,
-                         const QuantLib::DayCounter& fixedDayCount, QuantLib::BusinessDayConvention fixedPaymentBdc,
-                         QuantLib::Natural fixedPaymentLag, const QuantLib::Calendar& fixedPaymentCalendar,
-                         QuantLib::Real floatNominal, const QuantLib::Currency& floatCurrency,
-                         const QuantLib::Schedule& floatSchedule,
-                         const boost::shared_ptr<QuantLib::IborIndex>& floatIndex, QuantLib::Spread floatSpread,
-                         QuantLib::BusinessDayConvention floatPaymentBdc, QuantLib::Natural floatPaymentLag,
-                         const QuantLib::Calendar& floatPaymentCalendar);
+    CrossCcyFixFloatSwap(
+        Type type, QuantLib::Real fixedNominal, const QuantLib::Currency& fixedCurrency,
+        const QuantLib::Schedule& fixedSchedule, QuantLib::Rate fixedRate, const QuantLib::DayCounter& fixedDayCount,
+        QuantLib::BusinessDayConvention fixedPaymentBdc, QuantLib::Natural fixedPaymentLag,
+        const QuantLib::Calendar& fixedPaymentCalendar, QuantLib::Real floatNominal,
+        const QuantLib::Currency& floatCurrency, const QuantLib::Schedule& floatSchedule,
+        const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& floatIndex, QuantLib::Spread floatSpread,
+        QuantLib::BusinessDayConvention floatPaymentBdc, QuantLib::Natural floatPaymentLag,
+                         const QuantLib::Calendar& floatPaymentCalendar, const bool telescopicValueDates = false,
+                         QuantLib::ext::optional<bool> floatIncludeSpread = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<Period> floatLookback = QuantLib::ext::nullopt, QuantLib::ext::optional<Size> floatFixingDays = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<Size> floatRateCutoff = QuantLib::ext::nullopt, QuantLib::ext::optional<bool> floatIsAveraged = QuantLib::ext::nullopt);
     //@}
 
     //! \name Instrument interface
@@ -75,11 +78,16 @@ public:
     QuantLib::Real floatNominal() const { return floatNominal_; }
     const QuantLib::Currency& floatCurrency() const { return floatCurrency_; }
     const QuantLib::Schedule& floatSchedule() const { return floatSchedule_; }
-    const boost::shared_ptr<QuantLib::IborIndex>& floatIndex() const { return floatIndex_; }
+    const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& floatIndex() const { return floatIndex_; }
     QuantLib::Rate floatSpread() const { return floatSpread_; }
     QuantLib::BusinessDayConvention floatPaymentBdc() const { return floatPaymentBdc_; }
     QuantLib::Natural floatPaymentLag() const { return floatPaymentLag_; }
     const QuantLib::Calendar& floatPaymentCalendar() const { return floatPaymentCalendar_; }
+    QuantLib::ext::optional<bool> floatIncludeSpread() const { return floatIncludeSpread_; }
+    QuantLib::ext::optional<Period> floatLookback() const { return floatLookback_; }
+    QuantLib::ext::optional<Size> floatFixingDays() const { return floatFixingDays_; }
+    QuantLib::ext::optional<Size> floatRateCutoff() const { return floatRateCutoff_; }
+    QuantLib::ext::optional<bool> floatIsAveraged() const { return floatIsAveraged_; }
     //@}
 
     //! \name Additional interface
@@ -118,11 +126,17 @@ private:
     QuantLib::Real floatNominal_;
     QuantLib::Currency floatCurrency_;
     QuantLib::Schedule floatSchedule_;
-    boost::shared_ptr<QuantLib::IborIndex> floatIndex_;
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex> floatIndex_;
     QuantLib::Spread floatSpread_;
     QuantLib::BusinessDayConvention floatPaymentBdc_;
     QuantLib::Natural floatPaymentLag_;
     QuantLib::Calendar floatPaymentCalendar_;
+    bool telescopicValueDates_;
+    QuantLib::ext::optional<bool> floatIncludeSpread_;
+    QuantLib::ext::optional<Period> floatLookback_;
+    QuantLib::ext::optional<Size> floatFixingDays_;
+    QuantLib::ext::optional<Size> floatRateCutoff_;
+    QuantLib::ext::optional<bool> floatIsAveraged_;
 
     mutable QuantLib::Rate fairFixedRate_;
     mutable QuantLib::Spread fairSpread_;

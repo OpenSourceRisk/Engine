@@ -45,7 +45,7 @@ public:
     const std::string& version() const override { return version_; }
 
     //! Returns the SIMM bucket mapper used by the configuration
-    const boost::shared_ptr<SimmBucketMapper>& bucketMapper() const override { return simmBucketMapper_; }
+    const QuantLib::ext::shared_ptr<SimmBucketMapper>& bucketMapper() const override { return simmBucketMapper_; }
 
     //! Return true if the SIMM risk type \p rt has buckets
     bool hasBuckets(const CrifRecord::RiskType& rt) const override;
@@ -69,12 +69,6 @@ public:
     //! An empty vector is returned if the risk type does not use <em>Label2</em>
     std::vector<std::string> labels2(const CrifRecord::RiskType& rt) const override;
 
-    //! Return the SIMM <em>Label2</em> value for the given interest rate index
-    std::string labels2(const boost::shared_ptr<QuantLib::InterestRateIndex>& irIndex) const override;
-
-    //! Return the SIMM <em>Label2</em> value for the given Libor tenor
-    std::string labels2(const QuantLib::Period& p) const override;
-
     //! Add SIMM <em>Label2</em> values under certain circumstances.
     void addLabels2(const CrifRecord::RiskType& rt, const std::string& label_2) override {}
 
@@ -86,8 +80,8 @@ public:
         -# there is a qualifier-dependent and label1-dependent risk weight for the risk
            factor's RiskType so need all three parameters
     */
-    QuantLib::Real weight(const CrifRecord::RiskType& rt, boost::optional<std::string> qualifier = boost::none,
-                          boost::optional<std::string> label_1 = boost::none,
+    QuantLib::Real weight(const CrifRecord::RiskType& rt, QuantLib::ext::optional<std::string> qualifier = QuantLib::ext::nullopt,
+                          QuantLib::ext::optional<std::string> label_1 = QuantLib::ext::nullopt,
                           const std::string& calculationCurrency = "") const override;
 
     /*! Gives back the value of the scaling function used in the calculation of curvature risk
@@ -117,8 +111,8 @@ public:
 
         \remark For convenience, returns 1.0 if not applicable for risk type \p rt
     */
-    QuantLib::Real sigma(const CrifRecord::RiskType& rt, boost::optional<std::string> qualifier = boost::none,
-                         boost::optional<std::string> label_1 = boost::none,
+    QuantLib::Real sigma(const CrifRecord::RiskType& rt, QuantLib::ext::optional<std::string> qualifier = QuantLib::ext::nullopt,
+                         QuantLib::ext::optional<std::string> label_1 = QuantLib::ext::nullopt,
                          const std::string& calculationCurrency = "") const override;
 
     /*! Give back the scaling factor for the Interest Rate curvature margin
@@ -140,23 +134,23 @@ public:
     //! Return the correlation between SIMM risk classes \p rc_1 and \p rc_2
     QuantLib::Real correlationRiskClasses(const RiskClass& rc_1, const RiskClass& rc_2) const override;
 
-    /*! Return the correlation between the \p firstQualifier with risk type \p firstRt,
-        Label1 value of \p firstLabel_1 and Label2 value of \p firstLabel_2 *and* the
-        \p secondQualifier with risk type \p secondRt, Label1 value of \p secondLabel_1
-        and Label2 value of \p secondLabel_2
+    /*! Return the correlation between the \p firstQualifier and \p firstBucket with risk type \p firstRt, Label1 value
+        of \p firstLabel_1 and Label2 value of \p firstLabel_2 *and* the \p secondQualifier and \p secondBucket with
+        risk type \p secondRt, Label1 value of \p secondLabel_1 and Label2 value of \p secondLabel_2
 
-        \remark if not using \p firstLabel_1 and \p secondLabel_1, just enter an empty
-                string for both. Similarly for \p firstLabel_2 and \p secondLabel_2.
+        firstBucket and secondBucket are derived from firstQualifier and secondQualifier
+        if they are not given (empty string)
 
         \warning Returns 0 if no correlation found
 
         \todo test if the default return value of 0 makes sense
     */
     QuantLib::Real correlation(const CrifRecord::RiskType& firstRt, const std::string& firstQualifier,
-                               const std::string& firstLabel_1, const std::string& firstLabel_2,
-                               const CrifRecord::RiskType& secondRt, const std::string& secondQualifier,
+                               const std::string& firstBucket, const std::string& firstLabel_1,
+                               const std::string& firstLabel_2, const CrifRecord::RiskType& secondRt,
+                               const std::string& secondQualifier, const std::string& secondBucket,
                                const std::string& secondLabel_1, const std::string& secondLabel_2,
-                               const std::string& calculationCurrency = "") const override;
+                               const std::string& calculationCurrency) const override;
 
     //! MPOR in days
     QuantLib::Size mporDays() const { return mporDays_; }
@@ -169,17 +163,17 @@ private:
 
 protected:
     //! Constructor taking the SIMM configuration \p name and \p version
-    SimmConfigurationBase(const boost::shared_ptr<SimmBucketMapper>& simmBucketMapper, const std::string& name,
+    SimmConfigurationBase(const QuantLib::ext::shared_ptr<SimmBucketMapper>& simmBucketMapper, const std::string& name,
                           const std::string version, QuantLib::Size mporDays = 10);
 
     //! SIMM configuration version
     std::string version_;
 
     //! Used to map SIMM <em>Qualifier</em> names to SIMM <em>bucket</em> values
-    boost::shared_ptr<SimmBucketMapper> simmBucketMapper_;
+    QuantLib::ext::shared_ptr<SimmBucketMapper> simmBucketMapper_;
 
     //! Used to get the concentration thresholds for a given risk type and qualifier
-    boost::shared_ptr<SimmConcentration> simmConcentration_;
+    QuantLib::ext::shared_ptr<SimmConcentration> simmConcentration_;
 
     const std::tuple<std::string, std::string, std::string> makeKey(const std::string&, const std::string&,
                                                                     const std::string&) const;

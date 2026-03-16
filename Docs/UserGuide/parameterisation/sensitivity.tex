@@ -9,11 +9,11 @@ ORE currently supports sensitivity analysis with respect to
 \item Yield curves including e.g. equity forecast yield curves (in the zero rate domain)
 \item FX Spots
 \item FX volatilities
-\item Swaption volatilities, ATM matrix or cube 
+\item Swaption volatilities, ATM matrix or cube
 \item Cap/Floor volatility matrices (in the caplet/floorlet domain)
 \item Default probability curves (in the ``zero rate'' domain, expressing survival probabilities $S(t)$ in term of zero rates $z(t)$ via $S(t)=\exp(-z(t)\times t)$ with Actual/365 day counter)
 \item Equity spot prices
-\item Equity volatilities, ATM or including strike dimension 
+\item Equity volatilities, ATM or including strike dimension
 \item Zero inflation curves
 \item Year-on-Year inflation curves
 \item CDS volatilities
@@ -22,13 +22,14 @@ ORE currently supports sensitivity analysis with respect to
 \item Correlation termstructures
 \end{itemize}
 
-The {\tt sensitivity.xml} file specifies how sensitivities are computed for each market component. 
+The {\tt sensitivity.xml} file specifies how sensitivities are computed for each market component.
 The general structure is shown in listing \ref{lst:sensitivity_config}, for a more comprehensive case see {\tt Examples/Example\_15}. A subset of the following parameters is used in each market component to specify the sensitivity analysis:
 
 \begin{itemize}
 \item {\tt ShiftType:} Both absolute or relative shifts can be used to compute a sensitivity, specified by the key words
   {\tt Absolute} resp. {\tt Relative}.
 \item {\tt ShiftSize:} The size of the shift to apply.
+\item {\tt ShiftScheme:} The finite difference scheme to use ({\tt Forward}, {\tt Backward}, {\tt Central}), if not given, this parameter defaults to {\tt Forward}
 \item {\tt ShiftTenors:} For curves, the tenor buckets to apply shifts to, given as a comma separated list of periods.
 \item {\tt ShiftExpiries:} For volatility surfaces, the option expiry buckets to apply shifts to, given as a comma
   separated list of periods.
@@ -40,6 +41,52 @@ The general structure is shown in listing \ref{lst:sensitivity_config}, for a mo
   list of absolute strikes
 \item {\tt CurveType:} In the context of Yield Curves used to identify an equity ``risk free'' rate forecasting curve; set to {\tt EquityForecast} in this case
 \end{itemize}
+
+The ShiftType, ShiftSize, ShiftScheme nodes take an optional attribute key that allows to configure different values for
+different sensitivity templates. The sensitivity templates are defined in the pricing engine configuration. This is best
+explained by an example: In Example 15 the product type BermudanSwaption has a sensitivity template \verb+IR_FD+
+attached, see \ref{lst:sensi_template}. This can be used to specify different shifts for trades that were built against
+this engine configuration, see \ref{lst:sensi_config_template}: For Bermudan swaptions a larger shift size of 10bp and a
+central difference scheme is used to compute discount curve sensitivities in EUR. Since no separate shift type is
+specified, the default shift type {\tt Absolute} is used. Note regarding the reports:
+
+\begin{itemize}
+\item the sensi scenario report contains scenario NPVs related to the possibly product specific configured shift sizes
+\item the sensi report contains renormalized sensitivities, i.e. sensitivities are always expressed w.r.t. the default shift sizes
+\item the sensi config report only contains the default configuration
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\scriptsize]{xml}
+  <Product type="BermudanSwaption">
+    <Model>LGM</Model>
+    <ModelParameters>
+      ...
+    </ModelParameters>
+    <Engine>Grid</Engine>
+    <EngineParameters>
+      ...
+      <Parameter name="SensitivityTemplate">IR_FD</Parameter>
+    </EngineParameters>
+  </Product>
+\end{minted}
+\caption{Sensitivity template definition}
+\label{lst:sensi_template}
+\end{longlisting}
+\begin{longlisting}
+\begin{minted}[fontsize=\scriptsize]{xml}
+    <DiscountCurve ccy="EUR">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
+      <ShiftSize key="IR_FD">0.001</ShiftSize>
+      <ShiftScheme key="IR_FD">Central</ShiftScheme>
+      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </DiscountCurve>
+\end{minted}
+\caption{Sensitivity template definition}
+\label{lst:sensi_config_template}
+\end{longlisting}
 
 The cross gamma filter section contains a list of pairs of sensitivity keys. For each possible pair of sensitivity keys
 matching the given strings, a cross gamma sensitivity is computed. The given pair of keys can be (and usually are)
@@ -167,3 +214,155 @@ Additional flags:
 \caption{Sensitivity configuration}
 \label{lst:sensitivity_config}
 \end{longlisting}
+
+\subsubsection*{Par Sensitivity Analysis}
+
+To perform a par sensitivity analysis, additional sensitivity configuration is required that describes the assumed par instruments and related conventions.
+This additional data is required for:
+\begin{itemize}
+\item DiscountCurves
+\item IndexCurves
+\item CapFloorVolatilities
+\item CreditCurves
+\item ZeroInflationIndexCurves
+\item YYInflationIndexCurves
+\item YYCapFloorVolatilities
+\end{itemize}
+
+By default, par conversion is applied to all risk factor types listed above. However, it is possible to exclude
+selected risk factor types by adding an optional block to the sensitivity configuration as shown in listing \ref{lst:par_conversion_excludes}. Uncomment the risk factor type(s) here that should be excluded from par conversion.
+
+\begin{longlisting}
+  \begin{minted}[fontsize=\footnotesize]{xml}
+<SensitivityAnalysis>
+
+  <ParConversionExcludes>
+    <!--<Type>DiscountCurve</Type>-->
+    <!--<Type>YieldCurve</Type>-->
+    <!--<Type>IndexCurve</Type>-->
+    <!--<Type>OptionletVolatility</Type>-->
+    <!--<Type>SurvivalProbability</Type>-->
+    <!--<Type>ZeroInflationCurve</Type>-->
+    <!--<Type>YearOnYearInflationCurve</Type>-->
+    <!--<Type>YoYInflationCapFloorVolatility</Type>-->
+  </ParConversionExcludes>
+
+  ...
+
+</SensitivityAnalysis>
+\end{minted}
+\caption{Par conversion excludes}
+\label{lst:par_conversion_excludes}
+\end{longlisting}
+
+By default, par sensitivity excludes index historical fixings on valuation date when calculating the sensitivities of par instruments to zero rates. However, it is possible to exclude
+selected indexes by adding an optional block to the sensitivity configuration as shown in listing \ref{lst:par_sensi_excludes_fixings}. It handles a regex.
+
+\begin{longlisting}
+  \begin{minted}[fontsize=\footnotesize]{xml}
+<SensitivityAnalysis>
+
+  <ParSensiRemoveFixing>.*</ParSensiRemoveFixing>
+
+</SensitivityAnalysis>
+\end{minted}
+\caption{Par Sensitivity excludes fixings}
+\label{lst:par_sensi_excludes_fixings}
+\end{longlisting}
+
+By default, par sensitivity analysis sets small diagonal elements in the par conversion matrix to 0.01 silently to avoid matrix inversion issues. However, it is possible to control this behaviour by adding an optional block to the sensitivity configuration as shown in listing \ref{lst:par_conversion_matrix_regularisation}. The available options are:
+
+\begin{itemize}
+\item {\tt Silent}: Set small diagonal elements to 0.01 without warnings (default behaviour)
+\item {\tt Warning}: Set small diagonal elements to 0.01 but issue structured warnings
+\item {\tt Disable}: Disable regularisation, use original diagonal elements as-is
+\end{itemize}
+
+\begin{longlisting}
+  \begin{minted}[fontsize=\footnotesize]{xml}
+<SensitivityAnalysis>
+
+  <ParConversionMatrixRegularisation>Warning</ParConversionMatrixRegularisation>
+
+</SensitivityAnalysis>
+\end{minted}
+\caption{Par conversion matrix regularisation}
+\label{lst:par_conversion_matrix_regularisation}
+\end{longlisting}
+
+Using DiscountCurves as an example, the full sensitivity specification including par conversion data is as follows:
+
+\begin{longlisting}
+  \begin{minted}[fontsize=\footnotesize]{xml}
+    <DiscountCurve ccy="EUR">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>2W,1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y</ShiftTenors>
+      <ParConversion>
+        <!--DEP, FRA, IRS, OIS, FXF, XBS -->
+	<Instruments>OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS</Instruments>
+	<SingleCurve>true</SingleCurve>
+  <Conventions>
+	  <Convention id="DEP">EUR-EURIBOR-CONVENTIONS</Convention>
+	  <Convention id="IRS">EUR-6M-SWAP-CONVENTIONS</Convention>
+	  <Convention id="OIS">EUR-OIS-CONVENTIONS</Convention>
+	</Conventions>
+      </ParConversion>
+    </DiscountCurve>
+\end{minted}
+\caption{Par sensitivity configuration}
+\label{lst:par_sensitivity_config}
+\end{longlisting}
+
+Using CapFloors as an example:
+
+\begin{longlisting}
+  \begin{minted}[fontsize=\footnotesize]{xml}
+		<CapFloorVolatility key="USD-SOFR">
+			<ShiftType>Absolute</ShiftType>
+			<ShiftSize>0.0001</ShiftSize>
+			<ShiftScheme>Forward</ShiftScheme>
+			<ShiftExpiries>1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y</ShiftExpiries>
+			<ShiftStrikes>-0.0075,-0.005,-0.0025,-0.0015,0.0,0.0025,0.005,0.0075,0.01,0.015,0.02,0.025</ShiftStrikes>
+			<Index>USD-SOFR</Index>
+			<IsRelative>false</IsRelative>
+			<ParConversion>
+				<Instruments>CapFloor,CapFloor,CapFloor,CapFloor,CapFloor,CapFloor,CapFloor,CapFloor</Instruments>
+				<DiscountCurve>USD-SOFR</DiscountCurve>
+				<RateComputationPeriod>3M</RateComputationPeriod>
+			</ParConversion>
+		</CapFloorVolatility>
+\end{minted}
+\caption{Par sensitivity configuration}
+\label{lst:par_sensitivity_config}
+\end{longlisting}
+
+
+ParConversion Fields:
+
+\begin{itemize}
+\item \textbf{Instruments} a comma separated list of par instrument types, see below for the possible values. The
+  3-letter instrument code can be extended by an arbitrary suffix to reference different conventions. For example, you
+  can use FRA1, FRA2 in the instrument list to build FRA instruments with different convention ids FRA1, FRA2.
+\item \textbf{DiscountCurve} \textit{optional}: discount curve used for pricing the par instrument.
+\item \textbf{RateComputationPeriod} \textit{optional}: required for OIS CapFloors, sepcify the period of the optionlet.
+\end{itemize}
+
+
+Note
+\begin{itemize}
+\item The list of shift tenors needs to match the list of tenors matches the corresponding grid in the simulation (market) configuration
+\item The length of list of (par) instruments needs to match the length of the list of shift tenors
+\item Permissible codes for the assumed par instruments:
+	\begin{itemize}
+	\item DEP, FRA, IRS, OIS, TBS, FXF, XBS in the case of DiscountCurves
+	\item DEP, FRA, IRS, OIS, TBS in the case of IndexCurves
+	\item DEP, FRA, IRS, OIS, TBS, XBS in the case of YieldCurves
+	\item ZIS, YYS for YYInflationIndexCurves, interpreted as Year-on-Year Inflation Swaps linked to Zero Inflation resp. YoY Inflation curves
+	\item ZIS, YYS for YYCapFloorVolatilities, interpreted as Year-on-Year Inflation Cap Floor linked to Zero Inflation resp. YoY Inflation curves
+	\item Any code for CreditCurves, interpreted as CDS
+	\item Any code for ZeroInflationIndexCurves, interpreted as CPI Swaps linked to Zero Inflation curves
+	\item Any code for CapFloorVolatilities, interpreted as flat Cap/Floor
+	\end{itemize}
+\item One convention needs to be referenced for each of the instrument codes
+\end{itemize}

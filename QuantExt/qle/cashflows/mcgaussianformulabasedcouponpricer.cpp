@@ -37,8 +37,8 @@ namespace QuantExt {
 
 MCGaussianFormulaBasedCouponPricer::MCGaussianFormulaBasedCouponPricer(
     const std::string& paymentCurrencyCode,
-    const std::map<std::string, boost::shared_ptr<IborCouponPricer>>& iborPricers,
-    const std::map<std::string, boost::shared_ptr<CmsCouponPricer>>& cmsPricers,
+    const std::map<std::string, QuantLib::ext::shared_ptr<IborCouponPricer>>& iborPricers,
+    const std::map<std::string, QuantLib::ext::shared_ptr<CmsCouponPricer>>& cmsPricers,
     const std::map<std::string, Handle<BlackVolTermStructure>>& fxVolatilities,
     const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlation,
     const Handle<YieldTermStructure>& couponDiscountCurve, const Size samples, const Size seed, const bool useSobol,
@@ -135,15 +135,15 @@ void MCGaussianFormulaBasedCouponPricer::initialize(const FloatingRateCoupon& co
     covariance_ = Matrix(n_, n_, 0.0);
 
     for (Size i = 0; i < n_; ++i) {
-        auto ibor = boost::dynamic_pointer_cast<IborIndex>(index_->indices()[i]);
-        auto cms = boost::dynamic_pointer_cast<SwapIndex>(index_->indices()[i]);
-        boost::shared_ptr<FloatingRateCoupon> c;
+        auto ibor = QuantLib::ext::dynamic_pointer_cast<IborIndex>(index_->indices()[i]);
+        auto cms = QuantLib::ext::dynamic_pointer_cast<SwapIndex>(index_->indices()[i]);
+        QuantLib::ext::shared_ptr<FloatingRateCoupon> c;
         if (ibor) {
             auto iborPricer = iborPricers_.find(ibor->name());
             QL_REQUIRE(iborPricer != iborPricers_.end(),
                        "MCGaussianFormulaBasedCouponPricer::initialize(): need ibor coupon pricer for key '"
                            << ibor->name() << "'");
-            c = boost::make_shared<IborCoupon>(coupon_->date(), coupon_->nominal(), coupon_->accrualStartDate(),
+            c = QuantLib::ext::make_shared<IborCoupon>(coupon_->date(), coupon_->nominal(), coupon_->accrualStartDate(),
                                                coupon_->accrualEndDate(), coupon_->fixingDays(), ibor, 1.0, 0.0,
                                                coupon_->referencePeriodStart(), coupon_->referencePeriodEnd(),
                                                coupon_->dayCounter(), coupon_->isInArrears());
@@ -161,7 +161,7 @@ void MCGaussianFormulaBasedCouponPricer::initialize(const FloatingRateCoupon& co
             QL_REQUIRE(cmsPricer != cmsPricers_.end(),
                        "MCGaussianFormulaBasedCouponPricer::initialize(): need cms coupon pricer for key '"
                            << cms->iborIndex()->name() << "'");
-            c = boost::make_shared<CmsCoupon>(coupon_->date(), coupon_->nominal(), coupon_->accrualStartDate(),
+            c = QuantLib::ext::make_shared<CmsCoupon>(coupon_->date(), coupon_->nominal(), coupon_->accrualStartDate(),
                                               coupon_->accrualEndDate(), coupon_->fixingDays(), cms, 1.0, 0.0,
                                               coupon_->referencePeriodStart(), coupon_->referencePeriodEnd(),
                                               coupon_->dayCounter(), coupon_->isInArrears());

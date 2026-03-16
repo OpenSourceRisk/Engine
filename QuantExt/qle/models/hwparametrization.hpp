@@ -53,8 +53,8 @@ public:
     /*! the underlying term structure */
     const QuantLib::Handle<TS> termStructure() const { return termStructure_; }
 
-    /*! we have m x n (from g) + n (from kappa) parameters */
-    QuantLib::Size numberOfParameters() const override { return m_ * n_ + n_; }
+    /*! we have 2 parameters sigma, kappa */
+    QuantLib::Size numberOfParameters() const override { return 2; }
 
     QuantLib::Size n() const { return n_; }
     QuantLib::Size m() const { return m_; }

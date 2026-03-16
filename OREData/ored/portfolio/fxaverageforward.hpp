@@ -47,7 +47,7 @@
 	 fxIndex_(fxIndex), settlement_(settlement) {}
 
      //! Build QuantLib/QuantExt instrument, link pricing engine
-     void build(const boost::shared_ptr<EngineFactory>&) override;
+     void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
 
      //! \name Inspectors
      //@{
@@ -68,7 +68,7 @@
      virtual XMLNode* toXML(XMLDocument& doc) const override;
      //@}
 
-     const std::map<std::string,boost::any>& additionalData() const override;
+     const std::map<std::string,QuantLib::ext::any>& additionalData() const override;
 
  private:
      ScheduleData observationDates_;

@@ -40,19 +40,19 @@ using namespace ore::data;
  */
 class CmsSpreadCouponPricerBuilder
     : public CachingCouponPricerBuilder<string, const Currency&, const string&, const string&,
-                                        const boost::shared_ptr<QuantLib::CmsCouponPricer>&> {
+                                        const QuantLib::ext::shared_ptr<QuantLib::CmsCouponPricer>&> {
 public:
     CmsSpreadCouponPricerBuilder() : CachingEngineBuilder("BrigoMercurio", "Analytic", {"CMSSpread"}) {}
 
 protected:
     string keyImpl(const Currency& ccy, const string& index1, const string& index2,
-                   const boost::shared_ptr<QuantLib::CmsCouponPricer>& cmsPricer) override {
+                   const QuantLib::ext::shared_ptr<QuantLib::CmsCouponPricer>& cmsPricer) override {
 
         return index1 + ":" + index2;
     }
-    boost::shared_ptr<FloatingRateCouponPricer>
+    QuantLib::ext::shared_ptr<FloatingRateCouponPricer>
     engineImpl(const Currency& ccy, const string& index1, const string& index2,
-               const boost::shared_ptr<QuantLib::CmsCouponPricer>& cmsPricer) override;
+               const QuantLib::ext::shared_ptr<QuantLib::CmsCouponPricer>& cmsPricer) override;
 };
 
 } // namespace data

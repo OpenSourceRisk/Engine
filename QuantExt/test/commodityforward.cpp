@@ -33,7 +33,7 @@ namespace {
 class CommonData {
 public:
     // Variables
-    boost::shared_ptr<CommodityIndex> index;
+    QuantLib::ext::shared_ptr<CommodityIndex> index;
     USDCurrency currency;
     Position::Type position;
     Real quantity;
@@ -44,7 +44,7 @@ public:
     SavedSettings backup;
 
     // Default constructor
-    CommonData() : index(boost::make_shared<CommoditySpotIndex>("GOLD_USD", NullCalendar())),
+    CommonData() : index(QuantLib::ext::make_shared<CommoditySpotIndex>("GOLD_USD", NullCalendar())),
         currency(USDCurrency()), position(Position::Long), quantity(100), maturity(19, Feb, 2019), strike(50.0) {}
 };
 } // namespace
@@ -138,26 +138,6 @@ BOOST_AUTO_TEST_CASE(testIsExpiredCashSettledPaymentGtMaturity) {
     Settings::instance().includeReferenceDateEvents() = true;
     BOOST_CHECK_EQUAL(forward.isExpired(), true);
 
-}
-
-BOOST_AUTO_TEST_CASE(testNegativeQuantityThrows) {
-
-    BOOST_TEST_MESSAGE("Test that using a negative quantity in the constructor causes an exception");
-
-    CommonData td;
-
-    BOOST_CHECK_THROW(CommodityForward(td.index, td.currency, td.position, -10.0, td.maturity, td.strike),
-                      QuantLib::Error);
-}
-
-BOOST_AUTO_TEST_CASE(testNegativeStrikeThrows) {
-
-    BOOST_TEST_MESSAGE("Test that using a negative strike in the constructor causes an exception");
-
-    CommonData td;
-
-    BOOST_CHECK_THROW(CommodityForward(td.index, td.currency, td.position, td.quantity, td.maturity, -50.0),
-                      QuantLib::Error);
 }
 
 BOOST_AUTO_TEST_CASE(testPaymentDateLtMaturityCashSettledThrows) {

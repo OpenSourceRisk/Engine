@@ -1,0 +1,32 @@
+<TodaysMarket>
+	<YieldCurves id="default"/>
+	<DiscountingCurves id="default">
+		<!-- <DiscountingCurve currency="EUR">Yield/EUR/EUR-ESTER</DiscountingCurve> -->
+		<DiscountingCurve currency="EUR">Yield/EUR/EUR-NoDiscount</DiscountingCurve>
+	</DiscountingCurves>
+	<IndexForwardingCurves id="default">
+		<Index name="EUR-EONIA">Yield/EUR/EUR-EONIA</Index>
+		<Index name="EUR-ESTER">Yield/EUR/EUR-ESTER</Index>
+		<Index name="EUR-EURIBOR-3M">Yield/EUR/EUR-EURIBOR-3M</Index>
+		<Index name="EUR-EURIBOR-6M">Yield/EUR/EUR-EURIBOR-6M</Index>
+	</IndexForwardingCurves>
+	<SwapIndexCurves id="default">
+		<SwapIndex name="EUR-CMS-1Y">
+			<Discounting>EUR-EONIA</Discounting>
+		</SwapIndex>
+		<SwapIndex name="EUR-CMS-30Y">
+			<Discounting>EUR-EONIA</Discounting>
+		</SwapIndex>
+	</SwapIndexCurves>
+	<SwaptionVolatilities id="default">
+		<SwaptionVolatility key="EUR">SwaptionVolatility/EUR/EUR</SwaptionVolatility>
+	</SwaptionVolatilities>
+	<DefaultCurves id="default">
+		<DefaultCurve name="CPTY_C">Default/EUR/CPTY_C</DefaultCurve>
+	</DefaultCurves>
+	<Securities id="default">
+		<Security name="SECURITY_1_FWDEXP_20251220">Security/SECURITY_1_FWDEXP_20251220</Security>
+		<Security name="SECURITY_1_cutted">Security/SECURITY_1_cutted</Security>
+	</Securities>
+</TodaysMarket>
+

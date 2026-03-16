@@ -25,7 +25,10 @@
 #define quantext_equity_coupon_pricer_hpp
 
 #include <ql/cashflows/couponpricer.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 #include <qle/cashflows/equitycoupon.hpp>
+#include <qle/termstructures/correlationtermstructure.hpp>
+
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -36,15 +39,21 @@ using namespace QuantLib;
 class EquityCouponPricer : public virtual Observer, public virtual Observable {
 public:
     struct AdditionalResultCache {
-        Real initialPrice;
+        Real currentPeriodStartPrice;
         Real startFixingTotal;
         Real startFixing;
-        Real startFxFixing;
+        Real currentPeriodStartFxFixing;
         Real endFixingTotal;
         Real endFixing;
-        Real endFxFixing;
+        Real currentPeriodEndFxFixing;
         Real pastDividends;
         Real forecastDividends;
+        Real dividendFactor;
+        // Convexity Adjustment
+        Real equityVolatility;
+        Real fxVolatility;
+        Real equityFxCorrelation;
+        Real convexityAdjustment;
 
         void clear();
     };
@@ -61,13 +70,25 @@ public:
     //@{
     virtual void update() override { notifyObservers(); }
     //@}
+
+    // Convexity adjustment
+    void setEquityVolatility(const Handle<BlackVolTermStructure>& equityVol);
+    void setFxVolatility(const Handle<BlackVolTermStructure>& fxVol);
+    void setCorrelation(const Handle<QuantExt::CorrelationTermStructure>& correlation);
+
 protected:
     const EquityCoupon* coupon_;
-    boost::shared_ptr<QuantExt::EquityIndex2> equityCurve_;
-    boost::shared_ptr<FxIndex> fxIndex_;
+    QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> equityCurve_;
+    QuantLib::ext::shared_ptr<FxIndex> fxIndex_;
     EquityReturnType returnType_;
     Real dividendFactor_;
     AdditionalResultCache additionalResultCache_;
+
+private:
+    // Convexity adjustment
+    Handle<BlackVolTermStructure> equityVolatility_;
+    Handle<BlackVolTermStructure> fxVolatility_;
+    Handle<QuantExt::CorrelationTermStructure> correlation_;
 };
 } // namespace QuantExt
 

@@ -48,7 +48,7 @@ public:
                                const Date& protectionStart, const Date& protectionEnd, const std::string& creditCurveId,
                                const std::string& issuerId = "", const bool settlesAccrual = true,
                                const Real fixedRecoveryRate = Null<Real>(),
-                               const boost::optional<ore::data::OptionData>& optionData = boost::none)
+                               const QuantLib::ext::optional<ore::data::OptionData>& optionData = QuantLib::ext::nullopt)
         : Trade("RiskParticipationAgreement", env), underlying_(underlying), tlockData_(ore::data::TreasuryLockData()),
           protectionFee_(protectionFee), participationRate_(participationRate), protectionStart_(protectionStart),
           protectionEnd_(protectionEnd), creditCurveId_(creditCurveId), issuerId_(issuerId),
@@ -67,7 +67,7 @@ public:
     //! \name Inspectors
     //@{
     const std::vector<ore::data::LegData>& underlying() const { return underlying_; }
-    const boost::optional<ore::data::OptionData>& optionData() const { return optionData_; }
+    const QuantLib::ext::optional<ore::data::OptionData>& optionData() const { return optionData_; }
     const ore::data::TreasuryLockData& tlockData() const { return tlockData_; }
     const std::vector<ore::data::LegData>& protectionFee() const { return protectionFee_; }
     Real participationRate() const { return participationRate_; }
@@ -79,13 +79,13 @@ public:
     Real fixedRecoveryRate() const { return fixedRecoveryRate_; }
     //@}
 
-    void build(const boost::shared_ptr<ore::data::EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>&) override;
     virtual void fromXML(ore::data::XMLNode* node) override;
     virtual ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
 private:
-    void buildWithSwapUnderlying(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory);
-    void buildWithTlockUnderlying(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory);
+    void buildWithSwapUnderlying(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory);
+    void buildWithTlockUnderlying(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory);
 
     std::vector<ore::data::LegData> underlying_;
     ore::data::TreasuryLockData tlockData_;
@@ -95,7 +95,7 @@ private:
     std::string creditCurveId_, issuerId_;
     bool settlesAccrual_;
     Real fixedRecoveryRate_;
-    boost::optional<ore::data::OptionData> optionData_;
+    QuantLib::ext::optional<ore::data::OptionData> optionData_;
     bool nakedOption_;
 };
 

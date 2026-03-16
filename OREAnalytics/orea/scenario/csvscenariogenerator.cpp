@@ -32,7 +32,7 @@ namespace ore {
 namespace analytics {
 
 CSVScenarioGenerator::CSVScenarioGenerator(const std::string& filename,
-                                           const boost::shared_ptr<ScenarioFactory> scenarioFactory, const char sep)
+                                           const QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory, const char sep)
     : sep_(sep), filename_(filename), scenarioFactory_(scenarioFactory) {
     file_.open(filename_.c_str());
     QL_REQUIRE(file_.is_open(), "error opening file " << filename_);
@@ -50,10 +50,10 @@ void CSVScenarioGenerator::readKeys() {
     QL_REQUIRE(tokens.size() > 3, "No RiskFactorKeys found in " << filename_);
     keys_.resize(tokens.size() - 3);
     for (Size i = 3; i < tokens.size(); i++) {
-        keys_[i - 3] = parseRiskFactorKey(tokens[i]);
+        keys_[i - 3] = QuantExt::parseRiskFactorKey(tokens[i]);
     }
 }
-boost::shared_ptr<Scenario> CSVScenarioGenerator::next(const Date& d) {
+QuantLib::ext::shared_ptr<Scenario> CSVScenarioGenerator::next(const Date& d) {
     // Read in the next line
     QL_REQUIRE(!file_.eof(), "unexpected end of scenario file " << filename_);
     string line;
@@ -69,7 +69,7 @@ boost::shared_ptr<Scenario> CSVScenarioGenerator::next(const Date& d) {
     QL_REQUIRE(to_string(d) == tokens[0], "Incompatible date " << tokens[0] << " in " << filename_);
 
     // Build scenario
-    const boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(d);
+    const QuantLib::ext::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(d, true);
 
     // Fill scenario with RiskFactorKeys
     QL_REQUIRE(keys_.size() == tokens.size() - 3, "Erroneus line in " << filename_);

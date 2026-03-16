@@ -86,7 +86,7 @@ protected:
 class DerivedPriceQuote : public QuantLib::Quote, public QuantLib::Observer {
 
 public:
-    DerivedPriceQuote(const QuantLib::Handle<PriceTermStructure>& priceTs);
+    DerivedPriceQuote(const QuantLib::Handle<PriceTermStructure>& priceTs, const QuantLib::Date& date = QuantLib::Date());
 
     //! \name Quote interface
     //@{
@@ -101,6 +101,7 @@ public:
 
 private:
     QuantLib::Handle<PriceTermStructure> priceTs_;
+    QuantLib::Date date_;
 };
 
 } // namespace QuantExt

@@ -41,7 +41,7 @@ typedef Lgm1fParametrization<DefaultProbabilityTermStructure> CrLgm1fParametriza
 typedef Lgm1fConstantParametrization<DefaultProbabilityTermStructure> CrLgm1fConstantParametrization;
 
 typedef Lgm1fPiecewiseConstantHullWhiteAdaptor<DefaultProbabilityTermStructure>
-    CrLgm1fPiecewiseConstantHullWhiteADaptor;
+    CrLgm1fPiecewiseConstantHullWhiteAdaptor;
 
 typedef Lgm1fPiecewiseConstantParametrization<DefaultProbabilityTermStructure> CrLgm1fPiecewiseConstantParametrization;
 

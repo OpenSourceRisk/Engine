@@ -43,18 +43,18 @@ public:
 
 protected:
     virtual string keyImpl(const string& indexName) override { return indexName; }
-    virtual boost::shared_ptr<QuantLib::InflationCouponPricer> engineImpl(const string& indexName) override {
-        boost::shared_ptr<YoYOptionletVolatilitySurface> vol =
+    virtual QuantLib::ext::shared_ptr<QuantLib::InflationCouponPricer> engineImpl(const string& indexName) override {
+        QuantLib::ext::shared_ptr<YoYOptionletVolatilitySurface> vol =
             market_->yoyCapFloorVol(indexName, configuration(MarketContext::pricing)).currentLink();
         Handle<YoYInflationIndex> index = market_->yoyInflationIndex(indexName, configuration(MarketContext::pricing));
         Handle<YieldTermStructure> yts = market_->discountCurve(index->currency().code());
         if (vol->volatilityType() == VolatilityType::ShiftedLognormal && vol->displacement() == 0.0)
-            return boost::make_shared<BlackYoYInflationCouponPricer>(Handle<YoYOptionletVolatilitySurface>(vol), yts);
+            return QuantLib::ext::make_shared<BlackYoYInflationCouponPricer>(Handle<YoYOptionletVolatilitySurface>(vol), yts);
         else if (vol->volatilityType() == VolatilityType::ShiftedLognormal && vol->displacement() != 0.0)
-            return boost::make_shared<UnitDisplacedBlackYoYInflationCouponPricer>(
+            return QuantLib::ext::make_shared<UnitDisplacedBlackYoYInflationCouponPricer>(
                 Handle<YoYOptionletVolatilitySurface>(vol), yts);
         else if (vol->volatilityType() == VolatilityType::Normal)
-            return boost::make_shared<BachelierYoYInflationCouponPricer>(Handle<YoYOptionletVolatilitySurface>(vol),
+            return QuantLib::ext::make_shared<BachelierYoYInflationCouponPricer>(Handle<YoYOptionletVolatilitySurface>(vol),
                                                                          yts);
         else
             QL_FAIL("Unknown VolatilityType of YoYOptionletVolatilitySurface");

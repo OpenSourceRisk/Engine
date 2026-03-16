@@ -39,9 +39,11 @@ public:
     SubPeriodsSwapHelper(Handle<Quote> spread, const Period& swapTenor, const Period& fixedTenor,
                          const Calendar& fixedCalendar, const DayCounter& fixedDayCount,
                          BusinessDayConvention fixedConvention, const Period& floatPayTenor,
-                         const boost::shared_ptr<IborIndex>& iborIndex, const DayCounter& floatDayCount,
+                         const QuantLib::ext::shared_ptr<IborIndex>& iborIndex, const DayCounter& floatDayCount,
                          const Handle<YieldTermStructure>& discountingCurve = Handle<YieldTermStructure>(),
-                         QuantExt::SubPeriodsCoupon1::Type type = QuantExt::SubPeriodsCoupon1::Compounding);
+                         QuantExt::SubPeriodsCoupon1::Type type = QuantExt::SubPeriodsCoupon1::Compounding,
+                         QuantLib::Pillar::Choice pillarChoice = QuantLib::Pillar::LastRelevantDate,
+                         const QuantLib::Date& customPillarDate = QuantLib::Date());
 
     //! \name RateHelper interface
     //@{
@@ -50,7 +52,7 @@ public:
     //@}
     //! \name SubPeriodsSwapHelper inspectors
     //@{
-    boost::shared_ptr<SubPeriodsSwap> swap() const { return swap_; }
+    QuantLib::ext::shared_ptr<SubPeriodsSwap> swap() const { return swap_; }
     //@}
     //! \name Visitability
     //@{
@@ -61,8 +63,8 @@ protected:
     void initializeDates() override;
 
 private:
-    boost::shared_ptr<SubPeriodsSwap> swap_;
-    boost::shared_ptr<IborIndex> iborIndex_;
+    QuantLib::ext::shared_ptr<SubPeriodsSwap> swap_;
+    QuantLib::ext::shared_ptr<IborIndex> iborIndex_;
     Period swapTenor_;
     Period fixedTenor_;
     Calendar fixedCalendar_;
@@ -71,6 +73,7 @@ private:
     Period floatPayTenor_;
     DayCounter floatDayCount_;
     QuantExt::SubPeriodsCoupon1::Type type_;
+    QuantLib::Pillar::Choice pillarChoice_;
 
     RelinkableHandle<YieldTermStructure> termStructureHandle_;
     Handle<YieldTermStructure> discountHandle_;

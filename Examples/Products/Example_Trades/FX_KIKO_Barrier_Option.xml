@@ -1,0 +1,54 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="FX_BARRIER_OPTION">
+        <TradeType>FxKIKOBarrierOption</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <FxKIKOBarrierOptionData>
+            <OptionData>
+                <LongShort>Long</LongShort>
+                <OptionType>Call</OptionType>
+                <Style>European</Style>
+                <Settlement>Cash</Settlement>
+                <PayOffAtExpiry>false</PayOffAtExpiry>
+                <ExerciseDates>
+                    <ExerciseDate>2031-02-21</ExerciseDate>
+                </ExerciseDates>
+                <Premiums>
+                    <Premium>
+                        <Amount>10900</Amount>
+                        <Currency>EUR</Currency>
+                        <PayDate>2023-02-21</PayDate>
+                    </Premium>
+                </Premiums>
+            </OptionData>
+            <Barriers>
+                <BarrierData>
+                    <Type>UpAndIn</Type>
+                    <Levels>
+                        <Level>1.3</Level>
+                    </Levels>
+                </BarrierData>
+                <BarrierData>
+                    <Type>DownAndOut</Type>
+                    <Levels>
+                        <Level>1.1</Level>
+                    </Levels>
+                </BarrierData>
+            </Barriers>
+            <StartDate>2023-12-04</StartDate>
+            <Calendar>US</Calendar>
+            <FXIndex>FX-TR20H-EUR-USD</FXIndex>
+            <BoughtCurrency>EUR</BoughtCurrency>
+            <BoughtAmount>1000000</BoughtAmount>
+            <SoldCurrency>USD</SoldCurrency>
+            <SoldAmount>1100000</SoldAmount>
+        </FxKIKOBarrierOptionData>
+    </Trade>
+</Portfolio>

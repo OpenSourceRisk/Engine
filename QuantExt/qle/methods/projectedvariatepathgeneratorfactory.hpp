@@ -32,20 +32,20 @@ namespace QuantExt {
 class ProjectedVariatePathGeneratorFactory : public PathGeneratorFactory {
 public:
     ProjectedVariatePathGeneratorFactory(const std::vector<Size>& stateProcessProjection,
-                                         const boost::shared_ptr<MultiPathVariateGeneratorBase>& variateGenerator)
+                                         const QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>& variateGenerator)
         : stateProcessProjection_(stateProcessProjection), variateGenerator_(variateGenerator) {}
-    boost::shared_ptr<MultiPathGeneratorBase> build(const SequenceType s,
-                                                    const boost::shared_ptr<StochasticProcess>& process,
+    QuantLib::ext::shared_ptr<MultiPathGeneratorBase> build(const SequenceType s,
+                                                    const QuantLib::ext::shared_ptr<StochasticProcess>& process,
                                                     const TimeGrid& timeGrid, const BigNatural seed,
                                                     const SobolBrownianGenerator::Ordering ordering,
                                                     const SobolRsg::DirectionIntegers directionIntegers) override {
-        return boost::make_shared<ProjectedVariateMultiPathGenerator>(process, timeGrid, stateProcessProjection_,
+        return QuantLib::ext::make_shared<ProjectedVariateMultiPathGenerator>(process, timeGrid, stateProcessProjection_,
                                                                       variateGenerator_);
     }
 
 private:
     const std::vector<Size> stateProcessProjection_;
-    const boost::shared_ptr<MultiPathVariateGeneratorBase> variateGenerator_;
+    const QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase> variateGenerator_;
 };
 
 } // namespace QuantExt

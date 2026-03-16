@@ -39,12 +39,12 @@ using ore::test::TopLevelFixture;
 
 namespace {
 
-boost::shared_ptr<vector<boost::shared_ptr<IrModelData>>> irConfigsData() {
+QuantLib::ext::shared_ptr<vector<QuantLib::ext::shared_ptr<IrModelData>>> irConfigsData() {
 
     // Create three instances
-    boost::shared_ptr<IrLgmData> lgmData1(new data::IrLgmData());
-    boost::shared_ptr<IrLgmData> lgmData2(new data::IrLgmData());
-    boost::shared_ptr<IrLgmData> lgmData3(new data::IrLgmData());
+    QuantLib::ext::shared_ptr<IrLgmData> lgmData1(new data::IrLgmData());
+    QuantLib::ext::shared_ptr<IrLgmData> lgmData2(new data::IrLgmData());
+    QuantLib::ext::shared_ptr<IrLgmData> lgmData3(new data::IrLgmData());
 
     vector<std::string> expiries = {"1Y", "2Y", "36M"};
     vector<std::string> terms = {"5Y", "2Y", "6M"};
@@ -130,20 +130,20 @@ boost::shared_ptr<vector<boost::shared_ptr<IrModelData>>> irConfigsData() {
 
     lgmData3->scaling() = 1.0;
 
-    boost::shared_ptr<vector<boost::shared_ptr<IrModelData>>> lgmDataVector(new vector<boost::shared_ptr<IrModelData>>);
+    QuantLib::ext::shared_ptr<vector<QuantLib::ext::shared_ptr<IrModelData>>> lgmDataVector(new vector<QuantLib::ext::shared_ptr<IrModelData>>);
     *lgmDataVector = {lgmData1, lgmData2, lgmData3};
     return lgmDataVector;
 }
 
-vector<boost::shared_ptr<InflationModelData>> infConfigsData() {
+vector<QuantLib::ext::shared_ptr<InflationModelData>> infConfigsData() {
 
     // TODO: Replacing the data that was here for now. It doesn't make sense.
 
-    vector<boost::shared_ptr<CalibrationInstrument>> instruments;
+    vector<QuantLib::ext::shared_ptr<CalibrationInstrument>> instruments;
     vector<Period> expiries = { 1 * Years, 2 * Years, 36 * Months };
-    auto strike = boost::make_shared<AbsoluteStrike>(0.03);
+    auto strike = QuantLib::ext::make_shared<AbsoluteStrike>(0.03);
     for (const Period& expiry : expiries) {
-        instruments.push_back(boost::make_shared<CpiCapFloor>(CapFloor::Floor, expiry, strike));
+        instruments.push_back(QuantLib::ext::make_shared<CpiCapFloor>(CapFloor::Floor, expiry, strike));
     }
     CalibrationBasket cb(instruments);
     vector<CalibrationBasket> calibrationBaskets = { cb };
@@ -156,51 +156,52 @@ vector<boost::shared_ptr<InflationModelData>> infConfigsData() {
 
     LgmReversionTransformation rt(1.0, 1.0);
 
-    boost::shared_ptr<InfDkData> data = boost::make_shared<InfDkData>(CalibrationType::Bootstrap, calibrationBaskets,
+    QuantLib::ext::shared_ptr<InfDkData> data = QuantLib::ext::make_shared<InfDkData>(CalibrationType::Bootstrap, calibrationBaskets,
         "EUR", "EUHICPXT", reversion, volatility, rt);
 
     return {data};
 }
 
-boost::shared_ptr<vector<boost::shared_ptr<FxBsData>>> fxConfigsData() {
+QuantLib::ext::shared_ptr<vector<QuantLib::ext::shared_ptr<FxData>>> fxConfigsData() {
 
     // Create two instances
-    boost::shared_ptr<FxBsData> fxBsData1(new data::FxBsData());
-    boost::shared_ptr<FxBsData> fxBsData2(new data::FxBsData());
+    QuantLib::ext::shared_ptr<FxBsData> fxBsData1(new data::FxBsData());
+    QuantLib::ext::shared_ptr<FxBsData> fxBsData2(new data::FxBsData());
 
     vector<std::string> expiries = {"1Y", "2Y", "36M"};
     vector<std::string> strikes = {"ATMF", "ATMF", "ATMF"};
     std::vector<Time> times = {1.0, 2.0, 3.0, 4.0};
 
     // First instance
-    fxBsData1->foreignCcy() = "USD";
-    fxBsData1->domesticCcy() = "EUR";
-    fxBsData1->calibrationType() = parseCalibrationType("BOOTSTRAP");
-    fxBsData1->calibrateSigma() = true;
-    fxBsData1->sigmaParamType() = parseParamType("CONSTANT");
-    fxBsData1->sigmaTimes() = times;
-    fxBsData1->optionExpiries() = expiries;
-    fxBsData1->optionStrikes() = strikes;
+    fxBsData1->setForeignCcy("USD");
+    fxBsData1->setDomesticCcy("EUR");
+    fxBsData1->setCalibrationType(parseCalibrationType("BOOTSTRAP"));
+    fxBsData1->setCalibrateSigma(true);
+    fxBsData1->setSigmaParamType(parseParamType("CONSTANT"));
+    fxBsData1->setSigmaTimes(times);
+    fxBsData1->setOptionExpiries(expiries);
+    fxBsData1->setOptionStrikes(strikes);
 
     // Second instance
-    fxBsData2->foreignCcy() = "JPY";
-    fxBsData2->domesticCcy() = "EUR";
-    fxBsData2->calibrationType() = parseCalibrationType("BOOTSTRAP");
-    fxBsData2->calibrateSigma() = true;
-    fxBsData2->sigmaParamType() = parseParamType("CONSTANT");
-    fxBsData2->sigmaTimes() = times;
-    fxBsData2->optionExpiries() = expiries;
-    fxBsData2->optionStrikes() = strikes;
+    fxBsData2->setForeignCcy("JPY");
+    fxBsData2->setDomesticCcy("EUR");
+    fxBsData2->setCalibrationType(parseCalibrationType("BOOTSTRAP"));
+    fxBsData2->setCalibrateSigma(true);
+    fxBsData2->setSigmaParamType(parseParamType("CONSTANT"));
+    fxBsData2->setSigmaTimes(times);
+    fxBsData2->setOptionExpiries(expiries);
+    fxBsData2->setOptionStrikes(strikes);
 
-    boost::shared_ptr<vector<boost::shared_ptr<FxBsData>>> fxBsDataVector(new vector<boost::shared_ptr<FxBsData>>);
-    *fxBsDataVector = {fxBsData1, fxBsData2};
-    return fxBsDataVector;
+    auto tmp = QuantLib::ext::make_shared<vector<QuantLib::ext::shared_ptr<FxData>>>();
+    tmp->push_back(fxBsData1);
+    tmp->push_back(fxBsData2);
+    return tmp;
 }
 
-boost::shared_ptr<vector<boost::shared_ptr<EqBsData>>> eqConfigsData() {
+QuantLib::ext::shared_ptr<vector<QuantLib::ext::shared_ptr<EqBsData>>> eqConfigsData() {
 
     // Create two instances
-    boost::shared_ptr<EqBsData> eqBsData1(new data::EqBsData());
+    QuantLib::ext::shared_ptr<EqBsData> eqBsData1(new data::EqBsData());
 
     vector<std::string> expiries = {"1Y", "2Y", "36M"};
     vector<std::string> strikes = {"ATMF", "ATMF", "ATMF"};
@@ -216,15 +217,15 @@ boost::shared_ptr<vector<boost::shared_ptr<EqBsData>>> eqConfigsData() {
     eqBsData1->optionExpiries() = expiries;
     eqBsData1->optionStrikes() = strikes;
 
-    boost::shared_ptr<vector<boost::shared_ptr<EqBsData>>> eqBsDataVector(new vector<boost::shared_ptr<EqBsData>>);
+    QuantLib::ext::shared_ptr<vector<QuantLib::ext::shared_ptr<EqBsData>>> eqBsDataVector(new vector<QuantLib::ext::shared_ptr<EqBsData>>);
     *eqBsDataVector = {eqBsData1};
     return eqBsDataVector;
 }
 
-boost::shared_ptr<vector<boost::shared_ptr<CrLgmData>>> crLgmConfigsData() {
+QuantLib::ext::shared_ptr<vector<QuantLib::ext::shared_ptr<CrLgmData>>> crLgmConfigsData() {
 
     // Create three instances
-    boost::shared_ptr<CrLgmData> lgmData(new data::CrLgmData());
+    QuantLib::ext::shared_ptr<CrLgmData> lgmData(new data::CrLgmData());
 
     lgmData->name() = "ItraxxEuropeS9V1";
 
@@ -251,15 +252,15 @@ boost::shared_ptr<vector<boost::shared_ptr<CrLgmData>>> crLgmConfigsData() {
 
     lgmData->scaling() = 1.0;
 
-    boost::shared_ptr<vector<boost::shared_ptr<CrLgmData>>> lgmDataVector(new vector<boost::shared_ptr<CrLgmData>>);
+    QuantLib::ext::shared_ptr<vector<QuantLib::ext::shared_ptr<CrLgmData>>> lgmDataVector(new vector<QuantLib::ext::shared_ptr<CrLgmData>>);
     *lgmDataVector = {lgmData};
     return lgmDataVector;
 }
 
-boost::shared_ptr<vector<boost::shared_ptr<CrCirData>>> crCirConfigsData() {
+QuantLib::ext::shared_ptr<vector<QuantLib::ext::shared_ptr<CrCirData>>> crCirConfigsData() {
 
     // Create three instances
-    boost::shared_ptr<CrCirData> cirData(new data::CrCirData());
+    QuantLib::ext::shared_ptr<CrCirData> cirData(new data::CrCirData());
 
     cirData->name() = "CDX.NA.S33v1";
 
@@ -274,26 +275,55 @@ boost::shared_ptr<vector<boost::shared_ptr<CrCirData>>> crCirConfigsData() {
     cirData->fellerFactor() = 1.1;
     cirData->tolerance() = 1e-8;
 
-    boost::shared_ptr<vector<boost::shared_ptr<CrCirData>>> cirDataVector(new vector<boost::shared_ptr<CrCirData>>);
+    QuantLib::ext::shared_ptr<vector<QuantLib::ext::shared_ptr<CrCirData>>> cirDataVector(new vector<QuantLib::ext::shared_ptr<CrCirData>>);
     *cirDataVector = {cirData};
     return cirDataVector;
 }
 
-boost::shared_ptr<data::CrossAssetModelData> crossAssetData() {
+QuantLib::ext::shared_ptr<vector<QuantLib::ext::shared_ptr<CommoditySchwartzData>>> comConfigsData() {
 
-    boost::shared_ptr<data::CrossAssetModelData> crossAssetData(new data::CrossAssetModelData());
+    // Create two instances
+    QuantLib::ext::shared_ptr<CommoditySchwartzData> comData(new data::CommoditySchwartzData());
+
+    vector<std::string> expiries = {"1Y", "2Y", "36M"};
+    vector<std::string> strikes = {"ATMF", "ATMF", "ATMF"}; 
+
+    std::vector<Time> seasonalityTimes = {1.0, 2.0, 3.0, 4.0};
+    std::vector<Real> seasonalityValues = {0.01, 0.01, 0.01, 0.01, 0.01};
+
+    // First instance
+    comData->name() = "ICE:T";
+    comData->currency() = "USD";
+    comData->calibrationType() = parseCalibrationType("BOOTSTRAP");
+    comData->calibrateSeasonality() = true;
+    comData->seasonalityParamType() = parseParamType("PIECEWISE");
+    comData->seasonalityValues() = seasonalityValues;
+    comData->seasonalityTimes() = seasonalityTimes;
+    comData->optionExpiries() = expiries;
+    comData->optionStrikes() = strikes;
+
+    QuantLib::ext::shared_ptr<vector<QuantLib::ext::shared_ptr<CommoditySchwartzData>>> comDataVector(new vector<QuantLib::ext::shared_ptr<CommoditySchwartzData>>);
+    *comDataVector = {comData};
+    return comDataVector;
+}
+
+QuantLib::ext::shared_ptr<data::CrossAssetModelData> crossAssetData() {
+
+    QuantLib::ext::shared_ptr<data::CrossAssetModelData> crossAssetData(new data::CrossAssetModelData());
 
     crossAssetData->domesticCurrency() = "EUR";
     crossAssetData->currencies() = {"EUR", "USD", "JPY"}; // need to check how to set this up
     crossAssetData->equities() = {"SP5"};
     crossAssetData->infIndices() = {"EUHICPXT"};
     crossAssetData->creditNames() = {"ItraxxEuropeS9V1", "CDX.NA.S33v1"};
+    crossAssetData->commodities() = {"ICE:T"}; 
     crossAssetData->irConfigs() = *irConfigsData();
     crossAssetData->fxConfigs() = *fxConfigsData();
     crossAssetData->eqConfigs() = *eqConfigsData();
     crossAssetData->infConfigs() = infConfigsData();
     crossAssetData->crLgmConfigs() = *crLgmConfigsData();
     crossAssetData->crCirConfigs() = *crCirConfigsData();
+    crossAssetData->comConfigs() = *comConfigsData();
 
     CorrelationMatrixBuilder cmb;
     cmb.addCorrelation("IR:EUR", "IR:USD", 1.0);

@@ -15,11 +15,16 @@
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
-#include <boost/make_shared.hpp>
-#include <ql/cashflows/iborcoupon.hpp>
-#include <ql/utilities/null_deleter.hpp>
+
+#include <qle/utilities/ratehelpers.hpp>
 #include <qle/pricingengines/crossccyswapengine.hpp>
 #include <qle/termstructures/crossccyfixfloatmtmresetswaphelper.hpp>
+
+#include <ql/cashflows/iborcoupon.hpp>
+#include <ql/utilities/null_deleter.hpp>
+#include <ql/quotes/derivedquote.hpp>
+
+#include <boost/make_shared.hpp>
 
 namespace QuantExt {
 
@@ -27,12 +32,19 @@ CrossCcyFixFloatMtMResetSwapHelper::CrossCcyFixFloatMtMResetSwapHelper(
     const Handle<Quote>& rate, const Handle<Quote>& spotFx, Natural settlementDays, const Calendar& paymentCalendar,
     BusinessDayConvention paymentConvention, const Period& tenor, const Currency& fixedCurrency,
     Frequency fixedFrequency, BusinessDayConvention fixedConvention, const DayCounter& fixedDayCount,
-    const boost::shared_ptr<IborIndex>& index, const Handle<YieldTermStructure>& floatDiscount,
-    const Handle<Quote>& spread, bool endOfMonth, bool resetsOnFloatLeg)
+    const QuantLib::ext::shared_ptr<IborIndex>& index, const Handle<YieldTermStructure>& floatDiscount,
+    const Handle<Quote>& spread, bool endOfMonth, bool resetsOnFloatLeg, bool telescopicValueDates,
+    const QuantLib::Pillar::Choice pillarChoice, const QuantLib::Date& customPillarDate,
+    const std::vector<Natural>& spotFXSettleDaysVec, const std::vector<Calendar>& spotFXSettleCalendarVec,
+    QuantLib::ext::optional<bool> includeSpread, QuantLib::ext::optional<Period> lookback,
+    QuantLib::ext::optional<Size> fixingDays, QuantLib::ext::optional<Size> rateCutoff,
+    QuantLib::ext::optional<bool> isAveraged)
     : RelativeDateRateHelper(rate), spotFx_(spotFx), settlementDays_(settlementDays), paymentCalendar_(paymentCalendar),
-    paymentConvention_(paymentConvention), tenor_(tenor), fixedCurrency_(fixedCurrency),
-    fixedFrequency_(fixedFrequency), fixedConvention_(fixedConvention), fixedDayCount_(fixedDayCount), index_(index),
-    floatDiscount_(floatDiscount), spread_(spread), endOfMonth_(endOfMonth), resetsOnFloatLeg_(resetsOnFloatLeg){
+      paymentConvention_(paymentConvention), tenor_(tenor), fixedCurrency_(fixedCurrency),
+      fixedFrequency_(fixedFrequency), fixedConvention_(fixedConvention), fixedDayCount_(fixedDayCount), index_(index),
+      floatDiscount_(floatDiscount), spread_(spread), endOfMonth_(endOfMonth), resetsOnFloatLeg_(resetsOnFloatLeg),
+      telescopicValueDates_(telescopicValueDates), pillarChoice_(pillarChoice), includeSpread_(includeSpread),
+      lookback_(lookback), fixingDays_(fixingDays), rateCutoff_(rateCutoff), isAveraged_(isAveraged) {
 
     QL_REQUIRE(!spotFx_.empty(), "Spot FX quote cannot be empty.");
     QL_REQUIRE(fixedCurrency_ != index_->currency(), "Fixed currency should not equal float leg currency.");
@@ -41,6 +53,8 @@ CrossCcyFixFloatMtMResetSwapHelper::CrossCcyFixFloatMtMResetSwapHelper(
     registerWith(index_);
     registerWith(floatDiscount_);
     registerWith(spread_);
+
+    pillarDate_ = customPillarDate;
 
     initializeDates();
 }
@@ -53,66 +67,60 @@ void CrossCcyFixFloatMtMResetSwapHelper::initializeDates() {
     Date start = paymentCalendar_.advance(referenceDate, settlementDays_ * Days);
     Date end = start + tenor_;
 
+    // calc spotFXSettleDate
+    Date spotFXSettleDate = referenceDate;
+    Size numSpotFXSettleDays = spotFXSettleDaysVec_.size(); // guaranteed to be at least 1
+    for (Size i = 0; i < numSpotFXSettleDays; i++) {
+        // Guaranteed here that spotFXSettleDaysVec_ and spotFXSettleCalendarVec_ have the same size
+        spotFXSettleDate = spotFXSettleCalendarVec_[i].advance(spotFXSettleDate, spotFXSettleDaysVec_[i], Days);
+    }
+
     // Fixed schedule
     Schedule fixedSchedule(start, end, Period(fixedFrequency_), paymentCalendar_, fixedConvention_, fixedConvention_,
-        DateGeneration::Backward, endOfMonth_);
+                           DateGeneration::Backward, endOfMonth_);
 
     // Float schedule
     Schedule floatSchedule(start, end, index_->tenor(), paymentCalendar_, paymentConvention_, paymentConvention_,
-        DateGeneration::Backward, endOfMonth_);
+                           DateGeneration::Backward, endOfMonth_);
 
     Real nominal = 1.0;
 
     // build an FX index for forward rate projection (TODO - review settlement and calendar)
     Natural paymentLag = 0;
     Spread floatSpread = spread_.empty() ? 0.0 : spread_->value();
-    boost::shared_ptr<FxIndex> fxIdx;
+    QuantLib::ext::shared_ptr<FxIndex> fxIdx;
     if (resetsOnFloatLeg_) {
-        fxIdx = boost::make_shared<FxIndex>("dummy", settlementDays_, fixedCurrency_, index_->currency(),  paymentCalendar_,
-            spotFx_, termStructureHandle_, floatDiscount_);
+        auto m = [](Real x) { return 1.0 / x; };
+        Handle<Quote> fxSpotInv(QuantLib::ext::make_shared<DerivedQuote<decltype(m)>>(spotFx_, m));
+        fxIdx = QuantLib::ext::make_shared<FxIndex>("dummy", settlementDays_, fixedCurrency_, index_->currency(),
+                                                    paymentCalendar_, fxSpotInv, termStructureHandle_, floatDiscount_);
     } else {
-        fxIdx = boost::make_shared<FxIndex>("dummy", settlementDays_, index_->currency(), fixedCurrency_, paymentCalendar_,
-            spotFx_, floatDiscount_, termStructureHandle_);
+        fxIdx = QuantLib::ext::make_shared<FxIndex>("dummy", settlementDays_, index_->currency(), fixedCurrency_,
+                                                    paymentCalendar_, spotFx_, floatDiscount_, termStructureHandle_);
     }
 
-    swap_ = boost::make_shared<CrossCcyFixFloatMtMResetSwap>(nominal, fixedCurrency_, fixedSchedule, 0.0, fixedDayCount_, paymentConvention_,
-        paymentLag, paymentCalendar_, index_->currency(), floatSchedule, index_, floatSpread, paymentConvention_,
-        paymentLag, paymentCalendar_, fxIdx, resetsOnFloatLeg_);
+    swap_ = QuantLib::ext::make_shared<CrossCcyFixFloatMtMResetSwap>(
+        nominal, fixedCurrency_, fixedSchedule, quote().empty() || !quote()->isValid() ? 0.0 : quote()->value(),
+        fixedDayCount_, paymentConvention_, paymentLag, paymentCalendar_, index_->currency(), floatSchedule, index_,
+        floatSpread, paymentConvention_, paymentLag, paymentCalendar_, fxIdx, resetsOnFloatLeg_, true, includeSpread_,
+        lookback_, fixingDays_, rateCutoff_, isAveraged_);
 
     // Attach engine
-    boost::shared_ptr<PricingEngine> engine = boost::make_shared<CrossCcySwapEngine>(
-        fixedCurrency_, termStructureHandle_, index_->currency(), floatDiscount_, spotFx_);
+    QuantLib::ext::shared_ptr<PricingEngine> engine = QuantLib::ext::make_shared<CrossCcySwapEngine>(
+        fixedCurrency_, termStructureHandle_, index_->currency(), floatDiscount_, spotFx_, QuantLib::ext::nullopt,
+        Date(), Date(), spotFXSettleDate);
     swap_->setPricingEngine(engine);
 
     earliestDate_ = swap_->startDate();
-    latestDate_ = swap_->maturityDate();
+    maturityDate_ = swap_->maturityDate();
 
-    /* May need to adjust latestDate_ if you are projecting libor based
-        on tenor length rather than from accrual date to accrual date. */
-    if (!IborCoupon::Settings::instance().usingAtParCoupons()) {
-        Size numCashflows = swap_->leg(1).size();
-        Date endDate = latestDate_;
-        if (numCashflows > 0) {
-            for(Size i = numCashflows; i > 0; i--) {
-                Size pos = i - 1;
-                boost::shared_ptr<FloatingRateCoupon> lastFloating =
-                    boost::dynamic_pointer_cast<FloatingRateCoupon>(swap_->leg(1)[pos]);
-                if (!lastFloating)
-                    continue;
-                else {
-                    Date fixingValueDate = index_->valueDate(lastFloating->fixingDate());
-                    endDate = index_->maturityDate(fixingValueDate);
-                    Date endValueDate = index_->maturityDate(fixingValueDate);
-                    latestDate_ = std::max(latestDate_, endValueDate);
-                    break;
-                }
-            }
-        }
-    }
+    latestRelevantDate_ = determineLatestRelevantDate(swap_->legs(), {false, false});
+    latestDate_ = pillarDate_ =
+        determinePillarDate(pillarDate_, pillarChoice_, earliestDate_, maturityDate_, latestRelevantDate_);
 }
 
 void CrossCcyFixFloatMtMResetSwapHelper::setTermStructure(YieldTermStructure* t) {
-    boost::shared_ptr<YieldTermStructure> temp(t, null_deleter());
+    QuantLib::ext::shared_ptr<YieldTermStructure> temp(t, null_deleter());
     termStructureHandle_.linkTo(temp, false);
     RelativeDateRateHelper::setTermStructure(t);
 }

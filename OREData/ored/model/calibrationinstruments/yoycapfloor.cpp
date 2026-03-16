@@ -31,7 +31,7 @@ YoYCapFloor::YoYCapFloor()
 
 YoYCapFloor::YoYCapFloor(YoYInflationCapFloor::Type type,
     const Period& tenor,
-    const boost::shared_ptr<BaseStrike>& strike)
+    const QuantLib::ext::shared_ptr<BaseStrike>& strike)
     : CalibrationInstrument("YoYCapFloor"),
       type_(type),
       tenor_(tenor),
@@ -45,7 +45,7 @@ const QuantLib::Period& YoYCapFloor::tenor() const {
     return tenor_;
 }
 
-const boost::shared_ptr<BaseStrike>& YoYCapFloor::strike() const {
+const QuantLib::ext::shared_ptr<BaseStrike>& YoYCapFloor::strike() const {
     return strike_;
 }
 

@@ -28,17 +28,19 @@
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/marketdata.hpp>
+#include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
-#include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
-#include <ql/pricingengines/vanilla/fdblackscholesvanillaengine.hpp>
+#include <qle/pricingengines/fdblackscholesvanillaengine.hpp>
 #include <ql/processes/blackscholesprocess.hpp>
-#include <ql/version.hpp>
+#include <ql/utilities/dataparsers.hpp>
 #include <qle/pricingengines/analyticcashsettledeuropeanengine.hpp>
 #include <qle/pricingengines/analyticeuropeanforwardengine.hpp>
+#include <qle/pricingengines/analyticeuropeanengine.hpp>
 #include <qle/pricingengines/baroneadesiwhaleyengine.hpp>
 #include <qle/termstructures/blackmonotonevarvoltermstructure.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
-
+#include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
 namespace ore {
 namespace data {
 
@@ -49,11 +51,12 @@ public:
         : CachingPricingEngineBuilder<T, Args...>(model, engine, tradeTypes), assetClass_(assetClass) {}
 
 protected:
-    boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> getBlackScholesProcess(const string& assetName,
+    QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> getBlackScholesProcess(const string& assetName,
                                                                              const Currency& ccy,
                                                                              const AssetClass& assetClassUnderlying,
                                                                              const std::vector<Time>& timePoints = {},
-                                                                             const bool useFxSpot = true) {
+                                                                             const bool useFxSpot = true,
+                                                                             const QuantLib::Date forwardDate = QuantLib::Date()) {
 
         using VVTS = QuantExt::BlackMonotoneVarVolTermStructure;
         string config = this->configuration(ore::data::MarketContext::pricing);
@@ -61,10 +64,10 @@ protected:
         if (assetClassUnderlying == AssetClass::EQ) {
             Handle<BlackVolTermStructure> vol = this->market_->equityVol(assetName, config);
             if (!timePoints.empty()) {
-                vol = Handle<BlackVolTermStructure>(boost::make_shared<VVTS>(vol, timePoints));
+                vol = Handle<BlackVolTermStructure>(QuantLib::ext::make_shared<VVTS>(vol, timePoints));
                 vol->enableExtrapolation();
             }
-            return boost::make_shared<QuantLib::GeneralizedBlackScholesProcess>(
+            return QuantLib::ext::make_shared<QuantLib::GeneralizedBlackScholesProcess>(
                 this->market_->equitySpot(assetName, config), this->market_->equityDividendCurve(assetName, config),
                 this->market_->equityForecastCurve(assetName, config), vol);
 
@@ -72,15 +75,15 @@ protected:
             const string& ccyPairCode = assetName + ccy.code();
             Handle<BlackVolTermStructure> vol = this->market_->fxVol(ccyPairCode, config);
             if (!timePoints.empty()) {
-                vol = Handle<BlackVolTermStructure>(boost::make_shared<VVTS>(vol, timePoints));
+                vol = Handle<BlackVolTermStructure>(QuantLib::ext::make_shared<VVTS>(vol, timePoints));
                 vol->enableExtrapolation();
             }
             if (useFxSpot) {
-                return boost::make_shared<QuantLib::GeneralizedBlackScholesProcess>(
+                return QuantLib::ext::make_shared<QuantLib::GeneralizedBlackScholesProcess>(
                     this->market_->fxSpot(ccyPairCode, config), this->market_->discountCurve(assetName, config),
                     this->market_->discountCurve(ccy.code(), config), vol);
             }
-            return boost::make_shared<QuantLib::GeneralizedBlackScholesProcess>(
+            return QuantLib::ext::make_shared<QuantLib::GeneralizedBlackScholesProcess>(
                 this->market_->fxRate(ccyPairCode, config), this->market_->discountCurve(assetName, config),
                 this->market_->discountCurve(ccy.code(), config), vol);
             
@@ -89,20 +92,26 @@ protected:
 
             Handle<BlackVolTermStructure> vol = this->market_->commodityVolatility(assetName, config);
             if (!timePoints.empty()) {
-                vol = Handle<BlackVolTermStructure>(boost::make_shared<VVTS>(vol, timePoints));
+                vol = Handle<BlackVolTermStructure>(QuantLib::ext::make_shared<VVTS>(vol, timePoints));
                 vol->enableExtrapolation();
             }
 
             // Create the commodity convenience yield curve for the process
             Handle<QuantExt::PriceTermStructure> priceCurve = this->market_->commodityPriceCurve(assetName, config);
-            Handle<Quote> commoditySpot(boost::make_shared<QuantExt::DerivedPriceQuote>(priceCurve));
-            Handle<YieldTermStructure> discount = this->market_->discountCurve(ccy.code(), config);
-            Handle<YieldTermStructure> yield(
-                boost::make_shared<QuantExt::PriceTermStructureAdapter>(*priceCurve, *discount));
-            yield->enableExtrapolation();
+            Handle<Quote> commoditySpot(QuantLib::ext::make_shared<QuantExt::DerivedPriceQuote>(priceCurve, forwardDate));
+            if (forwardDate != Date()){
+                Handle<YieldTermStructure> discount = Handle<YieldTermStructure>(QuantLib::ext::make_shared<QuantLib::FlatForward>(0, TARGET(), 0.0, Actual365Fixed()));
+                Handle<YieldTermStructure> yield = discount;
+                yield->enableExtrapolation();
+                return QuantLib::ext::make_shared<QuantLib::GeneralizedBlackScholesProcess>(commoditySpot, yield, discount, vol);       
+            } else {
+                Handle<YieldTermStructure> discount = this->market_->discountCurve(ccy.code(), config);
+                Handle<YieldTermStructure> yield = Handle<YieldTermStructure>(QuantLib::ext::make_shared<QuantExt::PriceTermStructureAdapter>(*priceCurve, *discount));          
+                yield->enableExtrapolation();
+                return QuantLib::ext::make_shared<QuantLib::GeneralizedBlackScholesProcess>(commoditySpot, yield, discount, vol);       
+            }
 
-            return boost::make_shared<QuantLib::GeneralizedBlackScholesProcess>(commoditySpot, yield, discount, vol);
-
+            
         } else {
             QL_FAIL("Asset class of " << (int)assetClassUnderlying << " not recognized.");
         }
@@ -116,27 +125,51 @@ protected:
     \ingroup builders
  */
 class VanillaOptionEngineBuilder
-    : public CachingOptionEngineBuilder<string, const string&, const Currency&, const AssetClass&, const Date&, const bool> {
+    : public CachingOptionEngineBuilder<string, const string&, const Currency&, const string&, const AssetClass&, const Date&, const bool, const std::optional<Currency>&> {
 public:
     VanillaOptionEngineBuilder(const string& model, const string& engine, const set<string>& tradeTypes,
                                const AssetClass& assetClass, const Date& expiryDate)
         : CachingOptionEngineBuilder(model, engine, tradeTypes, assetClass), expiryDate_(expiryDate) {}
 
-    boost::shared_ptr<PricingEngine> engine(const string& assetName, const Currency& ccy, const Date& expiryDate, const bool useFxSpot = true) {
-        return CachingPricingEngineBuilder<string, const string&, const Currency&, const AssetClass&,
-                                           const Date&, const bool>::engine(assetName, ccy, assetClass_, expiryDate, useFxSpot);
+    QuantLib::ext::shared_ptr<PricingEngine> engine(const string& assetName, const Currency& ccy, const string& discountCurveName, const Date& expiryDate, const bool useFxSpot = true, 
+        const std::optional<Currency>& cashSettlementCurrency = std::nullopt) {
+        return CachingPricingEngineBuilder<string, const string&, const Currency&, const string&, const AssetClass&,
+                                           const Date&, const bool, const std::optional<Currency>&>::engine(assetName, ccy, discountCurveName, assetClass_, expiryDate, useFxSpot, 
+                                            cashSettlementCurrency);
     }
 
-    boost::shared_ptr<PricingEngine> engine(const Currency& ccy1, const Currency& ccy2, const Date& expiryDate,
+    QuantLib::ext::shared_ptr<PricingEngine> engine(const Currency& ccy1, const Currency& ccy2, const string& discountCurveName, const Date& expiryDate,
                                             const bool useFxSpot = true) {
-        return CachingPricingEngineBuilder<string, const string&, const Currency&, const AssetClass&,
-                                           const Date&, const bool>::engine(ccy1.code(), ccy2, assetClass_, expiryDate, useFxSpot);
+        return CachingPricingEngineBuilder<string, const string&, const Currency&, const string&, const AssetClass&,
+                                           const Date&, const bool, const std::optional<Currency>&>::engine(ccy1.code(), ccy2, discountCurveName, assetClass_, expiryDate, useFxSpot, 
+                                           std::nullopt);
     }
 
 protected:
-    virtual string keyImpl(const string& assetName, const Currency& ccy, const AssetClass& assetClassUnderlying,
-                           const Date& expiryDate, const bool useFxSpot) override {
-        return assetName + "/" + ccy.code() + "/" + to_string(expiryDate);
+    virtual string keyImpl(const string& assetName, const Currency& ccy, const string& discountCurveName, const AssetClass& assetClassUnderlying,
+                           const Date& expiryDate, const bool useFxSpot, const std::optional<Currency>& cashSettlementCurrency) override {
+        std::string settlementCurrency = cashSettlementCurrency ? cashSettlementCurrency->code() : ccy.code();
+        return assetName + "/" + ccy.code() + "/" + discountCurveName + "/" + to_string(expiryDate) + "/" + (useFxSpot ? "1" : "0") + "/" + settlementCurrency;
+    }
+
+    std::pair<QuantLib::DiffusionModelType, Real> getVolTypeAndDisplacement(const string& assetName, const AssetClass& assetClassUnderlying) {
+        QuantLib::DiffusionModelType volType = QuantLib::DiffusionModelType::AsInputVolatilityType;
+        Real displacement = 0.0;
+        if (assetClassUnderlying == AssetClass::COM) {
+            auto volTypeStr = this->modelParameter("Volatility", {assetName}, false, "AsInputVolatilityType");
+            boost::to_lower(volTypeStr);
+            auto displacementStr = this->modelParameter("Displacement", {assetName}, false, "0.0");
+            if (volTypeStr == "lognormal") {
+                volType = QuantLib::DiffusionModelType::Black;
+            } else if (volTypeStr == "shiftedlognormal") {
+                volType = QuantLib::DiffusionModelType::Black;
+                displacement = parseReal(displacementStr);
+            } else if (volTypeStr == "normal")
+                volType = QuantLib::DiffusionModelType::Bachelier;
+            else
+                volType = QuantLib::DiffusionModelType::AsInputVolatilityType;
+        }
+        return {volType, displacement};
     }
 
     Date expiryDate_;
@@ -153,14 +186,29 @@ public:
         : VanillaOptionEngineBuilder(model, "AnalyticEuropeanEngine", tradeTypes, assetClass, Date()) {}
 
 protected:
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
+                                                        const string& discountCurveName,
                                                         const AssetClass& assetClassUnderlying,
-                                                        const Date& expiryDate, const bool useFxSpot) override {
-        boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp =
+                                                        const Date& expiryDate, const bool useFxSpot,
+                                                        const std::optional<Currency>&) override {
+        QuantLib::ext::optional<unsigned int> spotDays;
+        QuantLib::ext::optional<QuantLib::Calendar> spotCalendar;
+        QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp =
             getBlackScholesProcess(assetName, ccy, assetClassUnderlying);
-        Handle<YieldTermStructure> discountCurve =
-            market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
-        return boost::make_shared<QuantLib::AnalyticEuropeanEngine>(gbsp, discountCurve);
+    
+        Handle<YieldTermStructure> discountCurve = discountCurveName.empty()
+            ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
+            : indexOrYieldCurve(market_, discountCurveName, configuration(MarketContext::pricing));
+        if (assetClassUnderlying == AssetClass::FX && useFxSpot){
+            auto [fixingDays, calendar, bdc] = ore::data::getFxIndexConventions(assetName + ccy.code());
+            spotDays = fixingDays;
+            spotCalendar = calendar;
+        }
+
+        auto [volType, displacement] = getVolTypeAndDisplacement(assetName, assetClassUnderlying);
+
+        return QuantLib::ext::make_shared<QuantExt::AnalyticEuropeanEngine>(gbsp, discountCurve, false, spotDays,
+                                                                            spotCalendar, volType, displacement);
     }
 };
 
@@ -175,14 +223,17 @@ public:
         : VanillaOptionEngineBuilder(model, "AnalyticEuropeanForwardEngine", tradeTypes, assetClass, Date()) {}
 
 protected:
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
+                                                        const string& discountCurveName,
                                                         const AssetClass& assetClassUnderlying, const Date& expiryDate,
-                                                        const bool useFxSpot) override {
-        boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp =
+                                                        const bool useFxSpot, const std::optional<Currency>&) override {
+        QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp =
             getBlackScholesProcess(assetName, ccy, assetClassUnderlying);
-        Handle<YieldTermStructure> discountCurve =
-            market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
-        return boost::make_shared<QuantExt::AnalyticEuropeanForwardEngine>(gbsp, discountCurve);
+        Handle<YieldTermStructure> discountCurve = discountCurveName.empty()
+            ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
+            : indexOrYieldCurve(market_, discountCurveName, configuration(MarketContext::pricing));
+        auto [volType, displacement] = getVolTypeAndDisplacement(assetName, assetClassUnderlying);
+        return QuantLib::ext::make_shared<QuantExt::AnalyticEuropeanForwardEngine>(gbsp, discountCurve, volType, displacement);
     }
 };
 
@@ -195,14 +246,19 @@ public:
         : VanillaOptionEngineBuilder(model, "AnalyticCashSettledEuropeanEngine", tradeTypes, assetClass, Date()) {}
 
 protected:
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
+                                                        const string& discountCurveName,
                                                         const AssetClass& assetClassUnderlying, const Date& expiryDate,
-                                                        const bool useFxSpot) override {
-        boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp =
+                                                        const bool useFxSpot, const std::optional<Currency>& cashSettlementCurrency) override {
+        QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp =
             getBlackScholesProcess(assetName, ccy, assetClassUnderlying);
-        Handle<YieldTermStructure> discountCurve =
-            market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
-        return boost::make_shared<QuantExt::AnalyticCashSettledEuropeanEngine>(gbsp, discountCurve);
+        std::string discountingCurrency = cashSettlementCurrency ? cashSettlementCurrency->code() : ccy.code();
+        Handle<YieldTermStructure> discountCurve = discountCurveName.empty()
+            ? market_->discountCurve(discountingCurrency, configuration(MarketContext::pricing))
+            : indexOrYieldCurve(market_, discountCurveName, configuration(MarketContext::pricing));
+        auto [volType, displacement] = getVolTypeAndDisplacement(assetName, assetClassUnderlying);
+        bool flipResults = false;
+        return QuantLib::ext::make_shared<QuantExt::AnalyticCashSettledEuropeanEngine>(gbsp, discountCurve, flipResults, volType, displacement);
     }
 };
 
@@ -230,14 +286,24 @@ public:
         : AmericanOptionEngineBuilder(model, "FdBlackScholesVanillaEngine", tradeTypes, assetClass, expiryDate) {}
 
 protected:
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
+                                                        const string& discountCurveName,
                                                         const AssetClass& assetClass, const Date& expiryDate,
-                                                        const bool useFxSpot) override {
+                                                        const bool useFxSpot, const std::optional<Currency>&) override {
         // We follow the way FdBlackScholesBarrierEngine determines maturity for time grid generation
-        Handle<YieldTermStructure> riskFreeRate =
-            market_->discountCurve(ccy.code(), configuration(ore::data::MarketContext::pricing));
+        Handle<YieldTermStructure> riskFreeRate = market_->discountCurve(ccy.code(), configuration(ore::data::MarketContext::pricing));
         Time expiry = riskFreeRate->dayCounter().yearFraction(riskFreeRate->referenceDate(),
                                                               std::max(riskFreeRate->referenceDate(), expiryDate));
+        
+        std::string delimiter = "#";
+        std::string assetNameLocal = assetName;
+        QuantLib::Date forwardDate = QuantLib::Date();
+        if (assetName.find(delimiter) != std::string::npos){
+            std::string forwardDateString = splitByLastDelimiter(assetName, delimiter);
+            bool validDate = tryParse<Date>(forwardDateString, forwardDate, parseDate);
+            if (validDate)
+                assetNameLocal= removeAfterLastDelimiter(assetName, delimiter);
+        }
 
         FdmSchemeDesc scheme = parseFdmSchemeDesc(engineParameter("Scheme"));
         Size tGrid = (Size)(parseInteger(engineParameter("TimeGridPerYear")) * expiry);
@@ -247,7 +313,7 @@ protected:
         Size tGridMin = parseInteger(engineParameter("TimeGridMinimumSize", {}, false, "1"));
         tGrid = std::max(tGridMin, tGrid);
         
-        boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp;
+        QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp;
 
         if (monotoneVar) {
             // Replicate the construction of time grid in FiniteDifferenceModel::rollbackImpl
@@ -260,11 +326,17 @@ protected:
             for (Size i = 0; i < totalSteps; i++)
                 timePoints[timePoints.size() - i - 1] = timePointsArray[i];
             timePoints.insert(std::upper_bound(timePoints.begin(), timePoints.end(), 0.99 / 365), 0.99 / 365);
-            gbsp = getBlackScholesProcess(assetName, ccy, assetClass, timePoints);
+            gbsp = getBlackScholesProcess(assetNameLocal, ccy, assetClass, timePoints, true, forwardDate);
         } else {
-            gbsp = getBlackScholesProcess(assetName, ccy, assetClass);
+            gbsp = getBlackScholesProcess(assetNameLocal, ccy, assetClass, {}, true, forwardDate);
         }
-        return boost::make_shared<FdBlackScholesVanillaEngine>(gbsp, tGrid, xGrid, dampingSteps, scheme);
+        auto volTS = gbsp->blackVolatility();
+        QL_REQUIRE(volTS->volType() == QuantLib::VolatilityType::ShiftedLognormal &&
+                       QuantLib::close_enough(volTS->shift(), 0.0),
+                   "AmericanOptionFDEngineBuilder: currently only lognormal vols are supported");
+
+        return QuantLib::ext::make_shared<QuantExt::FdBlackScholesVanillaEngine2>(gbsp, tGrid, xGrid, dampingSteps,
+                                                                                  scheme);
     }
 };
 
@@ -279,11 +351,26 @@ public:
         : AmericanOptionEngineBuilder(model, "BaroneAdesiWhaleyApproximationEngine", tradeTypes, assetClass, Date()) {}
 
 protected:
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
+                                                        const string& discountCurveName,
                                                         const AssetClass& assetClass, const Date& expiryDate,
-                                                        const bool useFxSpot) override {
-        boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp = getBlackScholesProcess(assetName, ccy, assetClass);
-        return boost::make_shared<QuantExt::BaroneAdesiWhaleyApproximationEngine>(gbsp);
+                                                        const bool useFxSpot, const std::optional<Currency>&) override {
+        std::string delimiter = "#";
+        std::string assetNameLocal = assetName;
+        QuantLib::Date forwardDate = QuantLib::Date();
+        if (assetName.find(delimiter) != std::string::npos) {
+            std::string forwardDateString = splitByLastDelimiter(assetName, delimiter);
+            bool validDate = tryParse<Date>(forwardDateString, forwardDate, parseDate);
+            if (validDate)
+                assetNameLocal = removeAfterLastDelimiter(assetName, delimiter);
+        }
+        QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp =
+            getBlackScholesProcess(assetNameLocal, ccy, assetClass);
+        auto volTS = gbsp->blackVolatility();
+        QL_REQUIRE(volTS->volType() == QuantLib::VolatilityType::ShiftedLognormal &&
+                       QuantLib::close_enough(volTS->shift(), 0.0),
+                   "AmericanOptionBAWEngineBuilder: currently only lognormal vols are supported");
+        return QuantLib::ext::make_shared<QuantExt::BaroneAdesiWhaleyApproximationEngine>(gbsp);
     }
 };
 

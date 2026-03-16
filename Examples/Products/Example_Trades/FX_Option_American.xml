@@ -1,0 +1,37 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="AMERICAN_FX_CALL_OPTION">
+        <TradeType>FxOption</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <FxOptionData>
+            <OptionData>
+                <LongShort>Long</LongShort>
+                <OptionType>Put</OptionType>
+                <Style>American</Style>
+                <Settlement>Cash</Settlement>
+                <PayOffAtExpiry>false</PayOffAtExpiry>
+                <ExerciseDates>
+                    <ExerciseDate>2033-02-20</ExerciseDate>
+                </ExerciseDates>
+                <Premiums>
+                    <Premium>
+                        <Amount>10900</Amount>
+                        <Currency>EUR</Currency>
+                        <PayDate>2025-02-20</PayDate>
+                    </Premium>
+                </Premiums>
+            </OptionData>
+            <BoughtCurrency>EUR</BoughtCurrency>
+            <BoughtAmount>1000000</BoughtAmount>
+            <SoldCurrency>USD</SoldCurrency>
+            <SoldAmount>1100000</SoldAmount>
+        </FxOptionData>
+    </Trade>
+</Portfolio>

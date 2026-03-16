@@ -50,20 +50,20 @@ using namespace QuantLib;
 class LgmScenarioGenerator : public ScenarioPathGenerator {
 public:
     //! Constructor
-    LgmScenarioGenerator(boost::shared_ptr<QuantExt::LGM> model,
-                         boost::shared_ptr<QuantExt::MultiPathGeneratorBase> multiPathGenerator,
-                         boost::shared_ptr<ScenarioFactory> scenarioFactory,
-                         boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig, Date today, DateGrid grid);
+    LgmScenarioGenerator(QuantLib::ext::shared_ptr<QuantExt::LGM> model,
+                         QuantLib::ext::shared_ptr<QuantExt::MultiPathGeneratorBase> multiPathGenerator,
+                         QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory,
+                         QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketConfig, Date today, DateGrid grid);
     //! Destructor
     ~LgmScenarioGenerator(){};
-    std::vector<boost::shared_ptr<Scenario>> nextPath() override;
+    std::vector<QuantLib::ext::shared_ptr<Scenario>> nextPath() override;
     void reset() override { pathGenerator_->reset(); }
 
 private:
-    boost::shared_ptr<QuantExt::LGM> model_;
-    boost::shared_ptr<QuantExt::MultiPathGeneratorBase> pathGenerator_;
-    boost::shared_ptr<ScenarioFactory> scenarioFactory_;
-    boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig_;
+    QuantLib::ext::shared_ptr<QuantExt::LGM> model_;
+    QuantLib::ext::shared_ptr<QuantExt::MultiPathGeneratorBase> pathGenerator_;
+    QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory_;
+    QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketConfig_;
 };
 } // namespace analytics
 } // namespace ore

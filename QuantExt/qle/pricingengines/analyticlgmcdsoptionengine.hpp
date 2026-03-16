@@ -33,7 +33,7 @@ namespace QuantExt {
 /*! Reference: Modern Derivatives Pricing and Credit Exposure Analysis by Lichters, Stamm and Gallagher, 15.1 */
 class AnalyticLgmCdsOptionEngine : public QuantExt::CdsOption::engine {
 public:
-    AnalyticLgmCdsOptionEngine(const boost::shared_ptr<CrossAssetModel>& model, const Size index, const Size ccy,
+    AnalyticLgmCdsOptionEngine(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, const Size index, const Size ccy,
                                const Real recoveryRate,
                                const Handle<YieldTermStructure>& termStructure = Handle<YieldTermStructure>());
     void calculate() const override;
@@ -41,7 +41,7 @@ public:
 private:
     Real Ei(const Real w, const Real strike, const Size i) const;
     Real lambdaStarHelper(const Real lambda) const;
-    const boost::shared_ptr<CrossAssetModel> model_;
+    const QuantLib::ext::shared_ptr<CrossAssetModel> model_;
     const Size index_, ccy_;
     const Real recoveryRate_;
     const Handle<YieldTermStructure> termStructure_;

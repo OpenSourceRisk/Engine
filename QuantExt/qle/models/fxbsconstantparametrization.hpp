@@ -36,18 +36,18 @@ public:
     /*! The currency refers to the foreign currency, the
         spot is as of today (i.e. the discounted spot) */
     FxBsConstantParametrization(const Currency& currency, const Handle<Quote>& fxSpotToday, const Real sigma,
-        const boost::shared_ptr<QuantLib::Constraint>& sigmaConstraint = boost::make_shared<QuantLib::NoConstraint>());
+        const QuantLib::ext::shared_ptr<QuantLib::Constraint>& sigmaConstraint = QuantLib::ext::make_shared<QuantLib::NoConstraint>());
 
     Real variance(const Time t) const override;
     Real sigma(const Time t) const override;
-    const boost::shared_ptr<Parameter> parameter(const Size) const override;
+    const QuantLib::ext::shared_ptr<Parameter> parameter(const Size) const override;
 
 protected:
     Real direct(const Size i, const Real x) const override;
     Real inverse(const Size i, const Real y) const override;
 
 private:
-    const boost::shared_ptr<PseudoParameter> sigma_;
+    const QuantLib::ext::shared_ptr<PseudoParameter> sigma_;
 };
 
 // inline
@@ -62,7 +62,7 @@ inline Real FxBsConstantParametrization::variance(const Time t) const {
 
 inline Real FxBsConstantParametrization::sigma(const Time) const { return direct(0, sigma_->params()[0]); }
 
-inline const boost::shared_ptr<Parameter> FxBsConstantParametrization::parameter(const Size i) const {
+inline const QuantLib::ext::shared_ptr<Parameter> FxBsConstantParametrization::parameter(const Size i) const {
     QL_REQUIRE(i == 0, "parameter " << i << " does not exist, only have 0");
     return sigma_;
 }

@@ -1,0 +1,12 @@
+\subsubsection{Basket Option}
+\label{pricing::basektoption}
+
+A basket option is a European option written on a basket of
+$n$ underlying equities. The basket price is a weighted average of equity
+prices, taking FX conversions into the payoff currency into account. 
+
+Basket options are priced using correlated Black-Scholes processes for
+the underlyings $S_i$ calibrated to their quoted market ATM
+volatility. The valuation is done using a Monte Carlo simulation.
+
+See \ref{pricing::scriptedtrade_mc} for more details, the relevant product classification is MultiAssetOption.

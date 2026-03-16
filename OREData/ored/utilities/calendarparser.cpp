@@ -128,6 +128,7 @@ void CalendarParser::reset() {
         {"US-NERC", UnitedStates(UnitedStates::NERC)},
         {"US-NYSE", UnitedStates(UnitedStates::NYSE)},
         {"US-SET", UnitedStates(UnitedStates::Settlement)},
+        {"US-SOFR", UnitedStates(UnitedStates::SOFR)},
 
         // Country full name to Settlement/Default
         {"Australia", Australia()},
@@ -144,6 +145,7 @@ void CalendarParser::reset() {
         {"Luxembourg", Luxembourg()},
         {"Spain", Spain()},
         {"Austria", QuantExt::Austria()},
+        {"New Zealand", QuantExt::NewZealand()},
 
         // city specific calendars
         {"FRA", Germany(Germany::Settlement)},
@@ -320,6 +322,8 @@ void CalendarParser::reset() {
         {"GBX", UnitedKingdom()},
         {"ILa", QuantLib::Israel()},
         {"ILX", QuantLib::Israel()},
+        {"ILs", QuantLib::Israel()},
+        {"ILA", QuantLib::Israel()},
         {"ZAc", SouthAfrica()},
         {"ZAC", SouthAfrica()},
         {"ZAX", SouthAfrica()},
@@ -383,6 +387,7 @@ void CalendarParser::reset() {
         {"XLME", UnitedKingdom(UnitedKingdom::Metals)},
         {"XNYS", UnitedStates(UnitedStates::NYSE)},
         {"XDUB", Ireland()},
+        {"XPAR", QuantLib::France(QuantLib::France::Exchange)},
 
         // Other / Legacy
         {"DEN", Denmark()}, // TODO: consider remove it, not ISO
@@ -421,6 +426,7 @@ void CalendarParser::reset() {
 
         // Simple calendars
         {"WeekendsOnly", WeekendsOnly()},
+        {"IslamicWeekendsOnly", IslamicWeekendsOnly()},
         {"UNMAPPED", WeekendsOnly()},
         {"NullCalendar", NullCalendar()},
         {"", NullCalendar()}};

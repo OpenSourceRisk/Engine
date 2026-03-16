@@ -58,7 +58,7 @@ public:
     */
     PaymentDiscountingEngine(const Handle<YieldTermStructure>& discountCurve,
                              const Handle<Quote>& spotFX = Handle<Quote>(),
-                             boost::optional<bool> includeSettlementDateFlows = boost::none,
+                             QuantLib::ext::optional<bool> includeSettlementDateFlows = QuantLib::ext::nullopt,
                              const Date& settlementDate = Date(), const Date& npvDate = Date());
     //@}
 
@@ -76,7 +76,7 @@ public:
 private:
     Handle<YieldTermStructure> discountCurve_;
     Handle<Quote> spotFX_;
-    boost::optional<bool> includeSettlementDateFlows_;
+    QuantLib::ext::optional<bool> includeSettlementDateFlows_;
     Date settlementDate_;
     Date npvDate_;
 };

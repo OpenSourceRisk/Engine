@@ -18,7 +18,6 @@
 
 #include <qle/instruments/convertiblebond2.hpp>
 #include <qle/methods/fdmdefaultableequityjumpdiffusionop.hpp>
-#include <qle/pricingengines/fdconvertiblebondevents.hpp>
 #include <qle/pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.hpp>
 
 #include <ql/cashflows/coupon.hpp>
@@ -83,6 +82,44 @@ FdDefaultableEquityJumpDiffusionConvertibleBondEngine::FdDefaultableEquityJumpDi
     registerWith(creditCurve_);
     registerWith(recoveryRate_);
     registerWith(fxConversion_);
+}
+
+Real FdDefaultableEquityJumpDiffusionConvertibleBondEngine::softCallBarrier(const FdConvertibleBondEvents& events,
+                                                                            const Size i, const Real t, const Real n,
+                                                                            const Real cr) const {
+    Date today = Settings::instance().evaluationDate();
+    auto const& cd = events.getCallData(i);
+    Real r = cd.softTriggerRatio;
+    Real N = cd.softTriggerN;
+    Real M = cd.softTriggerM;
+    Real D;
+    if (t > M || QuantLib::close_enough(t, M)) {
+        // lookback does not reach into the past
+        D = N;
+    } else {
+        // lookback overlaps with past, correct D by past trigger hits
+        Date d = today - 1;
+        Real triggerPastHit = 0.0;
+        for (Real pastDt = static_cast<double>(today - d) / 365.25;
+             pastDt < M - t || QuantLib::close_enough(pastDt, M - t);
+             d = d - 1 * Days, pastDt = static_cast<double>(today - d) / 365.25) {
+            if (model_->equity()->fixing(model_->equity()->fixingCalendar().adjust(d, Preceding)) > r * n / cr)
+                triggerPastHit += 1.0 / 365.25;
+        }
+        D = std::max(0.0, N - triggerPastHit);
+    }
+    if (D > t && !QuantLib::close_enough(D, t)) {
+        // we can not meet the trigger condition at t
+        return QL_MAX_REAL;
+    }
+    if (D > 0.0) {
+        // From: Jasper Anderluh and Hans van der Weide: Parisian Options – The Implied Barrier Concept
+        // M. Bubak et al. (Eds.): ICCS 2004, LNCS 3039, pp. 851–858, 2004. Springer-Verlag Berlin Heidelberg 2004.
+        Real sigma = std::sqrt(model_->variance(t) / t);
+        Real m = (model_->int_r_q(t) / t - 0.5 * sigma * sigma) / sigma;
+        r *= std::exp(sigma * std::sqrt(D * M_PI_2) * std::exp(-m * m * D / 2.0));
+    }
+    return r * n / cr;
 }
 
 void FdDefaultableEquityJumpDiffusionConvertibleBondEngine::calculate() const {
@@ -175,7 +212,7 @@ void FdDefaultableEquityJumpDiffusionConvertibleBondEngine::calculate() const {
         Real xMin = std::log(mi) - sigmaSqrtT * normInvEps * mesherScaling_;
         Real xMax = std::log(ma) + sigmaSqrtT * normInvEps * mesherScaling_;
 
-        mesher_ = boost::make_shared<Uniform1dMesher>(xMin, xMax, stateGridPoints_);
+        mesher_ = QuantLib::ext::make_shared<Uniform1dMesher>(xMin, xMax, stateGridPoints_);
     }
 
     // 4 set up functions accrual(t), notional(t), recovery(t, S)
@@ -187,7 +224,7 @@ void FdDefaultableEquityJumpDiffusionConvertibleBondEngine::calculate() const {
     for (auto const& c : arguments_.cashflows) {
         if (c->date() <= today)
             continue;
-        if (auto cpn = boost::dynamic_pointer_cast<Coupon>(c)) {
+        if (auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(c)) {
             if (!close_enough(cpn->nominal(), notionals.back())) {
                 notionalTimes.push_back(model_->timeFromReference(c->date()));
                 notionals.push_back(cpn->nominal());
@@ -251,14 +288,14 @@ void FdDefaultableEquityJumpDiffusionConvertibleBondEngine::calculate() const {
 
     // 5 build operator
 
-    auto fdmOp = boost::make_shared<FdmDefaultableEquityJumpDiffusionOp>(
-        boost::make_shared<FdmMesherComposite>(mesher_), *model_, 0, recovery, discountingCurve_, discountingSpread_,
+    auto fdmOp = QuantLib::ext::make_shared<FdmDefaultableEquityJumpDiffusionOp>(
+        QuantLib::ext::make_shared<FdmMesherComposite>(mesher_), *model_, 0, recovery, discountingCurve_, discountingSpread_,
         creditCurve_, addRecovery);
 
     // 6 build solver
 
-    auto solver = boost::make_shared<FdmBackwardSolver>(
-        fdmOp, std::vector<boost::shared_ptr<BoundaryCondition<FdmLinearOp>>>(), nullptr, FdmSchemeDesc::Douglas());
+    auto solver = QuantLib::ext::make_shared<FdmBackwardSolver>(
+        fdmOp, std::vector<QuantLib::ext::shared_ptr<BoundaryCondition<FdmLinearOp>>>(), nullptr, FdmSchemeDesc::Douglas());
 
     // 7 prepare event container
 
@@ -505,11 +542,11 @@ void FdDefaultableEquityJumpDiffusionConvertibleBondEngine::calculate() const {
             if (events.hasCall(i)) {
                 Real c = getCallPriceAmount(events.getCallData(i), notional(t_from), accrual(t_from));
                 Real cr0 = value.size() > 1 ? stochasticConversionRatios[plane] : events.getCurrentConversionRatio(i);
+                Real effectiveSoftBarrier = softCallBarrier(events, i, t_from, notionals.front(), cr0);
                 for (Size j = 0; j < n; ++j) {
                     if (!conversionExercised[plane][j]) {
                         // check soft call trigger if applicable
-                        if (!events.getCallData(i).isSoft ||
-                            S[j] > events.getCallData(i).softTriggerRatio * notionals.front() / cr0) {
+                        if (!events.getCallData(i).isSoft || S[j] > effectiveSoftBarrier) {
                             // apply mw cr increase if applicable
                             Real cr = cr0;
                             if (events.getCallData(i).mwCr)
@@ -517,10 +554,12 @@ void FdDefaultableEquityJumpDiffusionConvertibleBondEngine::calculate() const {
                             // compuate forced conversion value and update npv node
                             Real forcedConversionValue = S[j] * cr * notional(grid[i]) / N0 + accrual(grid[i]);
                             if (forcedConversionValue > c && forcedConversionValue < value[plane][j]) {
-                                // conversion is forced -> update flags
+                                // the issuer executes the call and triggers a forced conversion because
+                                // a) the forced conversion value is greater than the issuer call price but
+                                // b) the forced conversion value is still below the current continuation value
                                 if (!conversionIndicator.empty())
-                                    conversionIndicator[plane][j] = 0.0;
-                                conversionExercised[plane][j] = false;
+                                    conversionIndicator[plane][j] = 1.0;
+                                conversionExercised[plane][j] = true;
                             }
                             value[plane][j] = std::min(std::max(forcedConversionValue, c), value[plane][j]);
                             if (!valueNoConversion.empty()) {

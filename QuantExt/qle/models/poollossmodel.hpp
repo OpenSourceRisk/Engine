@@ -40,7 +40,7 @@ class PoolLossModel : public DefaultLossModel {
 public:
     PoolLossModel(
         bool homogeneous,
-        const boost::shared_ptr<ExtendedConstantLossLatentModel<CopulaPolicy>>& copula,
+        const QuantLib::ext::shared_ptr<ExtendedConstantLossLatentModel<CopulaPolicy>>& copula,
         QuantLib::Size nBuckets,
         QuantLib::Real max = 5.0,
         QuantLib::Real min = -5.0,
@@ -60,7 +60,7 @@ public:
     
 private:
     bool homogeneous_;
-    boost::shared_ptr<ExtendedConstantLossLatentModel<CopulaPolicy>> copula_;
+    QuantLib::ext::shared_ptr<ExtendedConstantLossLatentModel<CopulaPolicy>> copula_;
     QuantLib::Size nBuckets_;
     QuantLib::Real max_;
     QuantLib::Real min_;
@@ -109,8 +109,8 @@ typedef PoolLossModel<TCopulaPolicy> StudentPoolLossModel;
 template <class CopulaPolicy>
 class LossModelConditionalDist {
 public:
-    LossModelConditionalDist(const boost::shared_ptr<ExtendedConstantLossLatentModel<CopulaPolicy>>& copula,
-        const boost::shared_ptr<QuantLib::LossDist>& bucketing,
+    LossModelConditionalDist(const QuantLib::ext::shared_ptr<ExtendedConstantLossLatentModel<CopulaPolicy>>& copula,
+        const QuantLib::ext::shared_ptr<QuantLib::LossDist>& bucketing,
         const std::vector<QuantLib::Real>& marginalDps,
         const std::vector<QuantLib::Real>& lgds);
 
@@ -118,8 +118,8 @@ public:
     QuantLib::Real conditionalAverage(QuantLib::Real factor, QuantLib::Size bucket);
 
 private:
-    const boost::shared_ptr<ExtendedConstantLossLatentModel<CopulaPolicy>> copula_;
-    boost::shared_ptr<QuantLib::LossDist> bucketing_;
+    const QuantLib::ext::shared_ptr<ExtendedConstantLossLatentModel<CopulaPolicy>> copula_;
+    QuantLib::ext::shared_ptr<QuantLib::LossDist> bucketing_;
     std::vector<QuantLib::Real> inverseMarginalDps_;
     std::vector<QuantLib::Real> lgds_;
 
@@ -138,7 +138,7 @@ private:
 template <class CopulaPolicy>
 PoolLossModel<CopulaPolicy>::PoolLossModel(
     bool homogeneous,
-    const boost::shared_ptr<ExtendedConstantLossLatentModel<CopulaPolicy>>& copula,
+    const QuantLib::ext::shared_ptr<ExtendedConstantLossLatentModel<CopulaPolicy>>& copula,
     QuantLib::Size nBuckets,
     QuantLib::Real max,
     QuantLib::Real min,
@@ -422,11 +422,11 @@ QuantLib::Distribution PoolLossModel<CopulaPolicy>::lossDistrib(const QuantLib::
     QuantLib::Distribution dist(nBuckets_, minimum, maximum);
     
     // Use the relevant loss bucketing algorithm
-    boost::shared_ptr<QuantLib::LossDist> bucketing;
+    QuantLib::ext::shared_ptr<QuantLib::LossDist> bucketing;
     if (homogeneous_)
-        bucketing = boost::make_shared<QuantLib::LossDistHomogeneous>(nBuckets_, maximum);
+        bucketing = QuantLib::ext::make_shared<QuantLib::LossDistHomogeneous>(nBuckets_, maximum);
     else
-        bucketing = boost::make_shared<QuantLib::LossDistBucketing>(nBuckets_, maximum);
+        bucketing = QuantLib::ext::make_shared<QuantLib::LossDistBucketing>(nBuckets_, maximum);
 
     // Is the ql bucketing used?
     bool useQlBucketing = false;
@@ -539,8 +539,8 @@ QuantLib::Distribution PoolLossModel<CopulaPolicy>::lossDistrib(const QuantLib::
 
 template <class CopulaPolicy>
 LossModelConditionalDist<CopulaPolicy>::LossModelConditionalDist(
-    const boost::shared_ptr<ExtendedConstantLossLatentModel<CopulaPolicy>>& copula,
-    const boost::shared_ptr<QuantLib::LossDist>& bucketing,
+    const QuantLib::ext::shared_ptr<ExtendedConstantLossLatentModel<CopulaPolicy>>& copula,
+    const QuantLib::ext::shared_ptr<QuantLib::LossDist>& bucketing,
     const std::vector<QuantLib::Real>& marginalDps,
     const std::vector<QuantLib::Real>& lgds)
     : copula_(copula), bucketing_(bucketing),

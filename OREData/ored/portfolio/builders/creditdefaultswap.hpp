@@ -30,6 +30,7 @@
 #include <qle/pricingengines/midpointcdsenginemultistate.hpp>
 
 #include <ql/pricingengines/credit/midpointcdsengine.hpp>
+#include <ql/pricingengines/credit/isdacdsengine.hpp>
 
 #include <boost/make_shared.hpp>
 
@@ -146,7 +147,7 @@ public:
     MidPointCdsEngineBuilder() : CreditDefaultSwapEngineBuilder("DiscountedCashflows", "MidPointCdsEngine") {}
 
 protected:
-    boost::shared_ptr<PricingEngine>
+    QuantLib::ext::shared_ptr<PricingEngine>
     engineImpl(QuantLib::Currency ccy, std::string creditCurveId,
                QuantLib::Real recoveryRate = QuantLib::Null<QuantLib::Real>()) override {
 
@@ -159,7 +160,7 @@ protected:
             recoveryRate = market_->recoveryRate(creditCurveId, cfg)->value();
         }
 
-        return boost::make_shared<MidPointCdsEngine>(dpts->curve(), recoveryRate, yts);
+        return QuantLib::ext::make_shared<MidPointCdsEngine>(dpts->curve(), recoveryRate, yts);
     }
 };
 
@@ -174,7 +175,7 @@ public:
         : CreditDefaultSwapEngineBuilder("DiscountedCashflows", "MidPointCdsEngineMultiState") {}
 
 protected:
-    virtual boost::shared_ptr<PricingEngine>
+    virtual QuantLib::ext::shared_ptr<PricingEngine>
     engineImpl(QuantLib::Currency ccy, std::string creditCurveId,
                QuantLib::Real recoveryRate = QuantLib::Null<QuantLib::Real>()) override {
         Handle<YieldTermStructure> yts = market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
@@ -202,7 +203,7 @@ protected:
             } else {
                 boost::split(tokens, rule, boost::is_any_of(","));
                 QL_REQUIRE(tokens.size() == 2, "invalid rule: " << rule);
-                stateCreditCurveId = regex_replace(creditCurveId, std::regex(tokens[0]), tokens[1]);
+                stateCreditCurveId = std::regex_replace(creditCurveId, std::regex(tokens[0]), tokens[1]);
                 DLOG("Apply " << rule_s.str() << " => " << tokens[0] << " in " << creditCurveId << " yields state #"
                               << i << " creditCurve id " << stateCreditCurveId);
             }
@@ -213,14 +214,14 @@ protected:
             dpts.push_back(market_->defaultCurve(stateCreditCurveId, configuration(MarketContext::pricing))->curve());
             recovery.push_back(recoveryRate == Null<Real>()
                                    ? market_->recoveryRate(stateCreditCurveId, configuration(MarketContext::pricing))
-                                   : Handle<Quote>(boost::make_shared<SimpleQuote>(recoveryRate)));
+                                   : Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(recoveryRate)));
         }
         // If there were no rules at all we take the original creditCurveId as the only state
         if (i == 0) {
             dpts.push_back(market_->defaultCurve(creditCurveId, configuration(MarketContext::pricing))->curve());
             recovery.push_back(recoveryRate == Null<Real>()
                                    ? market_->recoveryRate(creditCurveId, configuration(MarketContext::pricing))
-                                   : Handle<Quote>(boost::make_shared<SimpleQuote>(recoveryRate)));
+                                   : Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(recoveryRate)));
             mainResultState = 0;
             DLOG("No rules given, only states are " << creditCurveId << " and default");
         }
@@ -228,7 +229,33 @@ protected:
         QL_REQUIRE(mainResultState != Null<Size>(),
                    "CreditDefaultSwapMultiStateEngineBuilder: No main state found for " << creditCurveId);
         // return engine
-        return boost::make_shared<QuantExt::MidPointCdsEngineMultiState>(dpts, recovery, yts, mainResultState);
+        return QuantLib::ext::make_shared<QuantExt::MidPointCdsEngineMultiState>(dpts, recovery, yts, mainResultState);
+    }
+};
+
+//! Isda Cds engine builder class for credit default swaps
+/*! This class creates a IsdaCdsEngine
+    \ingroup builders
+*/
+class IsdaCdsEngineBuilder : public CreditDefaultSwapEngineBuilder {
+public:
+    IsdaCdsEngineBuilder() : CreditDefaultSwapEngineBuilder("DiscountedCashflows", "IsdaCdsEngine") {}
+
+protected:
+    QuantLib::ext::shared_ptr<PricingEngine>
+    engineImpl(QuantLib::Currency ccy, std::string creditCurveId,
+               QuantLib::Real recoveryRate = QuantLib::Null<QuantLib::Real>()) override {
+
+        auto cfg = configuration(MarketContext::pricing);
+        auto yts = market_->discountCurve(ccy.code(), cfg);
+        auto dpts = market_->defaultCurve(creditCurveId, cfg);
+
+        if (recoveryRate == QuantLib::Null<QuantLib::Real>()) {
+            // If recovery rate is null, get it from the market for the given reference entity
+            recoveryRate = market_->recoveryRate(creditCurveId, cfg)->value();
+        }
+
+        return QuantLib::ext::make_shared<IsdaCdsEngine>(dpts->curve(), recoveryRate, yts);
     }
 };
 

@@ -53,11 +53,11 @@ public:
                          Real payoffPerUnit = 0.0);
 
     //! Implement the build method
-    void build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) override;
+    void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory) override;
 
     //! Add underlying Commodity names
     std::map<ore::data::AssetClass, std::set<std::string>>
-    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
     //! \name Inspectors
     //@{
@@ -82,11 +82,6 @@ public:
     virtual ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     //@}
 
-    //! \name Trade
-    //@{
-    bool hasCashflows() const override { return false; }
-    //@}
-
 private:
     ore::data::LegData legData_;
     std::vector<QuantLib::Position::Type> callPositions_;
@@ -102,14 +97,14 @@ private:
     bool isDigital_;
     Real unaryPayoff_;
 
-    boost::shared_ptr<CommodityFloatingLegData> commLegData_;
+    QuantLib::ext::shared_ptr<CommodityFloatingLegData> commLegData_;
 
     //! Build an average price option strip
-    void buildAPOs(const QuantLib::Leg& leg, const boost::shared_ptr<ore::data::EngineFactory>& engineFactory);
+    void buildAPOs(const QuantLib::Leg& leg, const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory);
 
     //! Build a standard option strip
     void buildStandardOptions(const QuantLib::Leg& leg,
-                              const boost::shared_ptr<ore::data::EngineFactory>& engineFactory);
+                              const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory);
 
     //! Perform checks before building
     void check(QuantLib::Size numberPeriods) const;

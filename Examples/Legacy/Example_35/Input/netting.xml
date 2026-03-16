@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<NettingSetDefinitions>
+  <NettingSet>
+    <NettingSetId>CPTY_A</NettingSetId>
+    <ActiveCSAFlag>true</ActiveCSAFlag>
+    <CSADetails>
+      <Bilateral>CallOnly</Bilateral>
+      <CSACurrency>EUR</CSACurrency>
+      <Index>EUR-EONIA</Index>
+      <ThresholdPay>500000</ThresholdPay>
+      <ThresholdReceive>100000</ThresholdReceive>
+      <MinimumTransferAmountPay>1000000</MinimumTransferAmountPay>
+      <MinimumTransferAmountReceive>5000000</MinimumTransferAmountReceive>
+      <IndependentAmount>
+        <IndependentAmountHeld>0</IndependentAmountHeld>
+        <IndependentAmountType>FIXED</IndependentAmountType>
+      </IndependentAmount>
+      <MarginingFrequency>
+        <CallFrequency>2D</CallFrequency>
+        <PostFrequency>1D</PostFrequency>
+      </MarginingFrequency>
+      <MarginPeriodOfRisk>0W</MarginPeriodOfRisk>
+      <CollateralCompoundingSpreadReceive>1.00</CollateralCompoundingSpreadReceive>
+      <CollateralCompoundingSpreadPay>2.00</CollateralCompoundingSpreadPay>
+      <EligibleCollaterals>
+        <Currencies>
+          <Currency>EUR</Currency>
+        </Currencies>
+      </EligibleCollaterals>
+    </CSADetails>
+  </NettingSet>
+</NettingSetDefinitions>

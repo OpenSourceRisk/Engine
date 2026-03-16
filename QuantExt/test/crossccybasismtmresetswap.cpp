@@ -100,7 +100,7 @@ Handle<YieldTermStructure> USDDiscountCurve() {
     dates[26] = Date(13, Sep, 2068);
     dfs[26] = 0.28183300653329;
 
-    return Handle<YieldTermStructure>(boost::make_shared<DiscountCurve>(dates, dfs, dayCounter));
+    return Handle<YieldTermStructure>(QuantLib::ext::make_shared<DiscountCurve>(dates, dfs, dayCounter));
 }
 
 Handle<YieldTermStructure> USDProjectionCurve() {
@@ -160,7 +160,7 @@ Handle<YieldTermStructure> USDProjectionCurve() {
     dates[24] = Date(13, Sep, 2068);
     dfs[24] = 0.23210070222569;
 
-    return Handle<YieldTermStructure>(boost::make_shared<DiscountCurve>(dates, dfs, dayCounter));
+    return Handle<YieldTermStructure>(QuantLib::ext::make_shared<DiscountCurve>(dates, dfs, dayCounter));
 }
 
 Handle<YieldTermStructure> GBPDiscountCurve() {
@@ -224,7 +224,7 @@ Handle<YieldTermStructure> GBPDiscountCurve() {
     dates[26] = Date(13, Sep, 2068);
     dfs[26] = 0.28183300653329;
 
-    return Handle<YieldTermStructure>(boost::make_shared<DiscountCurve>(dates, dfs, dayCounter));
+    return Handle<YieldTermStructure>(QuantLib::ext::make_shared<DiscountCurve>(dates, dfs, dayCounter));
 }
 
 Handle<YieldTermStructure> GBPProjectionCurve() {
@@ -284,14 +284,14 @@ Handle<YieldTermStructure> GBPProjectionCurve() {
     dates[24] = Date(13, Sep, 2068);
     dfs[24] = 0.23210070222569;
 
-    return Handle<YieldTermStructure>(boost::make_shared<DiscountCurve>(dates, dfs, dayCounter));
+    return Handle<YieldTermStructure>(QuantLib::ext::make_shared<DiscountCurve>(dates, dfs, dayCounter));
 }
 
-boost::shared_ptr<CrossCcyBasisMtMResetSwap> makeTestSwap(Rate spotFx, Spread GBPSpread) {
+QuantLib::ext::shared_ptr<CrossCcyBasisMtMResetSwap> makeTestSwap(Rate spotFx, Spread GBPSpread) {
 
     // USD nominal
     Real GBPNominal = 10000000.0;
-    Handle<Quote> fxSpotQuote = Handle<Quote>(boost::make_shared<SimpleQuote>(spotFx));
+    Handle<Quote> fxSpotQuote = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(spotFx));
 
     // Dates and calendars
     JointCalendar payCalendar = JointCalendar(UnitedStates(UnitedStates::Settlement), UnitedKingdom());
@@ -303,13 +303,13 @@ boost::shared_ptr<CrossCcyBasisMtMResetSwap> makeTestSwap(Rate spotFx, Spread GB
                       DateGeneration::Backward, false);
 
     // Indices
-    boost::shared_ptr<IborIndex> USDindex = boost::make_shared<USDLibor>(3 * Months, USDProjectionCurve());
-    boost::shared_ptr<IborIndex> GBPindex = boost::make_shared<GBPLibor>(3 * Months, GBPProjectionCurve());
-    boost::shared_ptr<FxIndex> fxIndex = boost::make_shared<FxIndex>(
+    QuantLib::ext::shared_ptr<IborIndex> USDindex = QuantLib::ext::make_shared<USDLibor>(3 * Months, USDProjectionCurve());
+    QuantLib::ext::shared_ptr<IborIndex> GBPindex = QuantLib::ext::make_shared<GBPLibor>(3 * Months, GBPProjectionCurve());
+    QuantLib::ext::shared_ptr<FxIndex> fxIndex = QuantLib::ext::make_shared<FxIndex>(
         "dummy", 0, GBPCurrency(), USDCurrency(), payCalendar, fxSpotQuote, GBPDiscountCurve(), USDDiscountCurve());
 
     // Create swap
-    return boost::shared_ptr<CrossCcyBasisMtMResetSwap>(new CrossCcyBasisMtMResetSwap(
+    return QuantLib::ext::shared_ptr<CrossCcyBasisMtMResetSwap>(new CrossCcyBasisMtMResetSwap(
         GBPNominal, GBPCurrency(), schedule, GBPindex, GBPSpread, USDCurrency(), schedule, USDindex, 0.0, fxIndex));
 }
 } // namespace
@@ -328,11 +328,11 @@ BOOST_AUTO_TEST_CASE(testSwapPricing) {
     // Create swap
     Rate spotFx = 1;
     Spread spread = 0;
-    boost::shared_ptr<CrossCcyBasisMtMResetSwap> swap = makeTestSwap(spotFx, spread);
+    QuantLib::ext::shared_ptr<CrossCcyBasisMtMResetSwap> swap = makeTestSwap(spotFx, spread);
 
     // Attach pricing engine
-    Handle<Quote> fxSpotQuote = Handle<Quote>(boost::make_shared<SimpleQuote>(spotFx));
-    boost::shared_ptr<PricingEngine> engine = boost::make_shared<CrossCcySwapEngine>(
+    Handle<Quote> fxSpotQuote = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(spotFx));
+    QuantLib::ext::shared_ptr<PricingEngine> engine = QuantLib::ext::make_shared<CrossCcySwapEngine>(
         USDCurrency(), USDDiscountCurve(), GBPCurrency(), GBPDiscountCurve(), fxSpotQuote);
 
     swap->setPricingEngine(engine);

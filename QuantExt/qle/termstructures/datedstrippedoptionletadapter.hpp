@@ -39,7 +39,7 @@ using namespace QuantLib;
 */
 class DatedStrippedOptionletAdapter : public OptionletVolatilityStructure, public LazyObject {
 public:
-    DatedStrippedOptionletAdapter(const boost::shared_ptr<DatedStrippedOptionletBase>& s, const bool flatExtrapolation);
+    DatedStrippedOptionletAdapter(const QuantLib::ext::shared_ptr<DatedStrippedOptionletBase>& s, const bool flatExtrapolation);
 
     //! \name TermStructure interface
     //@{
@@ -62,14 +62,14 @@ public:
 protected:
     //! \name OptionletVolatilityStructure interface
     //@{
-    boost::shared_ptr<SmileSection> smileSectionImpl(Time optionTime) const override;
+    QuantLib::ext::shared_ptr<SmileSection> smileSectionImpl(Time optionTime) const override;
     Volatility volatilityImpl(Time length, Rate strike) const override;
     //@}
 
 private:
-    const boost::shared_ptr<DatedStrippedOptionletBase> optionletStripper_;
+    const QuantLib::ext::shared_ptr<DatedStrippedOptionletBase> optionletStripper_;
     Size nInterpolations_;
-    mutable vector<boost::shared_ptr<Interpolation> > strikeInterpolations_;
+    mutable vector<QuantLib::ext::shared_ptr<Interpolation> > strikeInterpolations_;
     bool flatExtrapolation_;
 };
 

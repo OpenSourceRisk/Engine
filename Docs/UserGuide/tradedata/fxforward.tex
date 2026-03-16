@@ -1,6 +1,14 @@
 \subsubsection{FX Forward}
 
-The \lstinline!FXForwardData!  node is the trade data container for the \emph{FxForward} trade type.  The structure -
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+An Fx Forward is a contract that locks in the FX rate for the exchange of a set 
+amount of one currency for another at a predetermined time in the future. An Fx 
+Forward does not involve any upfront payment.
+
+{\bf Input}}\fi
+
+The \lstinline!FxForwardData!  node is the trade data container for the \emph{FxForward} trade type.  The structure -
 including example values - of the \lstinline!FXForwardData!  node is shown in Listing \ref{lst:fxforward_data}.
 
 \begin{listing}[H]
@@ -25,7 +33,8 @@ including example values - of the \lstinline!FXForwardData!  node is shown in Li
 The meanings and allowable values of the various elements in the \lstinline!FXForwardData!  node follow below.
 
 \begin{itemize}
-\item ValueDate: The value date of the FX Forward. \\ Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+\item ValueDate: The value date of the FxForward. The FX rate "fixes" on the ValueDate (i.e., the agreed fxforward rate is applied). Before the ValueDate, the FxForward contract's value fluctuates with market FX rates.
+At the ValueDate, the settlement becomes deterministic. \\ Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
 \item BoughtCurrency: The currency to be bought on value date.  \\ Allowable values:  See Table \ref{tab:currency}  \lstinline!Currency!.
 \item BoughtAmount: The amount to be bought on value date.  \\ Allowable values:  Any positive real number.
 \item SoldCurrency: The currency to be sold on value date.  \\ Allowable values:   See Table \ref{tab:currency}  \lstinline!Currency!.

@@ -1,0 +1,4 @@
+#TradeId,TradeType,Maturity,MaturityTime,NPV,NpvCurrency,NPV(Base),BaseCurrency,Notional,NotionalCurrency,Notional(Base),NettingSet,CounterParty
+Ascot,Ascot,2028-02-01,7.437158,34380.453252,EUR,40202.313733,USD,1000000.00,EUR,1169336.35,,CPTY_C
+AssetSwap,Swap,2028-02-01,7.437158,-4714.720821,EUR,-5513.094438,USD,1000000.00,EUR,1169336.35,,CPTY_C
+ConvertibleBond,ConvertibleBond,2028-02-01,7.437158,1039115.230229,EUR,1215075.211011,USD,1.00,EUR,1.17,,CPTY_C

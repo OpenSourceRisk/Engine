@@ -17,6 +17,7 @@
 */
 
 #include <orea/app/analytics/parconversionanalytic.hpp>
+#include <orea/app/inputparameters.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/engine/parsensitivityanalysis.hpp>
@@ -24,17 +25,18 @@
 #include <orea/scenario/deltascenariofactory.hpp>
 #include <orea/scenario/scenario.hpp>
 #include <orea/scenario/shiftscenariogenerator.hpp>
+#include <ored/report/inmemoryreport.hpp>
 #include <ored/utilities/to_string.hpp>
 
 using namespace ore::data;
-using namespace boost::filesystem;
+using namespace std::filesystem;
 
 namespace ore {
 namespace analytics {
 
-std::map<RiskFactorKey, std::string> getScenarioDescriptions(boost::shared_ptr<ScenarioGenerator> scenGen) {
+std::map<RiskFactorKey, std::string> getScenarioDescriptions(QuantLib::ext::shared_ptr<ScenarioGenerator> scenGen) {
     std::map<RiskFactorKey, std::string> descriptions;
-    auto sensiScenGen = boost::dynamic_pointer_cast<SensitivityScenarioGenerator>(scenGen);
+    auto sensiScenGen = QuantLib::ext::dynamic_pointer_cast<SensitivityScenarioGenerator>(scenGen);
     if (sensiScenGen) {
         for (const auto& desc : sensiScenGen->scenarioDescriptions()) {
             descriptions[desc.key1()] = desc.indexDesc1();
@@ -51,11 +53,8 @@ void ParConversionAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().engineData = inputs_->parConversionPricingEngine();
 }
 
-void ParConversionAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+void ParConversionAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                                             const std::set<std::string>& runTypes) {
-    if (!analytic()->match(runTypes))
-        return;
-
     LOG("ParConversionAnalytic::runAnalytic called");
 
     analytic()->buildMarket(loader, false);
@@ -67,9 +66,11 @@ void ParConversionAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::I
     auto zeroSensis = parConversionAnalytic->loadZeroSensitivities();
 
     if (!zeroSensis.empty()) {
-        set<RiskFactorKey::KeyType> typesDisabled{RiskFactorKey::KeyType::OptionletVolatility};
+        auto& configs = analytic()->configurations();
 
-        auto parAnalysis = boost::make_shared<ParSensitivityAnalysis>(
+        const set<RiskFactorKey::KeyType>& typesDisabled = configs.sensiScenarioData->parConversionExcludes();
+
+        auto parAnalysis = QuantLib::ext::make_shared<ParSensitivityAnalysis>(
             inputs_->asof(), analytic()->configurations().simMarketParams,
             *analytic()->configurations().sensiScenarioData, Market::defaultConfiguration, true, typesDisabled);
 
@@ -80,25 +81,27 @@ void ParConversionAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::I
             LOG("Sensi analysis - skip aligning pillars");
         }
 
-        auto& configs = analytic()->configurations();
-
-        auto simMarket = boost::make_shared<ScenarioSimMarket>(
+        auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
             analytic()->market(), configs.simMarketParams, inputs_->marketConfig("pricing"),
             configs.curveConfig ? *configs.curveConfig : ore::data::CurveConfigurations(),
             configs.todaysMarketParams ? *configs.todaysMarketParams : ore::data::TodaysMarketParameters(), true,
-            configs.sensiScenarioData->useSpreadedTermStructures(), false, false, *inputs_->iborFallbackConfig());
+            configs.sensiScenarioData->useSpreadedTermStructures(), false, false, inputs_->iborFallbackConfig());
 
-        auto scenarioGenerator = boost::make_shared<SensitivityScenarioGenerator>(
+        auto scenarioGenerator = QuantLib::ext::make_shared<SensitivityScenarioGenerator>(
             configs.sensiScenarioData, simMarket->baseScenario(), configs.simMarketParams, simMarket,
-            boost::make_shared<DeltaScenarioFactory>(simMarket->baseScenario()), true, std::string(), true,
+            QuantLib::ext::make_shared<DeltaScenarioFactory>(simMarket->baseScenario()), true, std::string(), true,
             simMarket->baseScenarioAbsolute());
 
         simMarket->scenarioGenerator() = scenarioGenerator;
 
         parAnalysis->computeParInstrumentSensitivities(simMarket);
 
-        boost::shared_ptr<ParSensitivityConverter> parConverter =
-            boost::make_shared<ParSensitivityConverter>(parAnalysis->parSensitivities(), parAnalysis->shiftSizes());
+        QuantLib::ext::shared_ptr<InMemoryReport> parScenarioRatesReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+        parAnalysis->writeParRatesReport(*parScenarioRatesReport);
+        analytic()->addReport("PARCONVERSION", "parConversionScenarioParRates", parScenarioRatesReport);
+
+        QuantLib::ext::shared_ptr<ParSensitivityConverter> parConverter =
+            QuantLib::ext::make_shared<ParSensitivityConverter>(parAnalysis->parSensitivities(), parAnalysis->shiftSizes());
 
         map<RiskFactorKey, Size> factorToIndex;
 
@@ -122,7 +125,7 @@ void ParConversionAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::I
                     ALOG("Currency in the sensitivity input and config aren't consistent. Skip trade " << id);
                     break;
                 }
-                auto [rf, desc] = deconstructFactor(zero.riskFactor);
+                auto [rf, desc] = QuantExt::deconstructFactor(zero.riskFactor);
                 if (rf.keytype != RiskFactorKey::KeyType::None) {
                     auto it = factorToIndex.find(rf);
                     if (it == factorToIndex.end()) {
@@ -181,23 +184,29 @@ void ParConversionAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::I
             }
         }
 
-        auto ss = boost::make_shared<SensitivityInMemoryStream>(results.begin(), results.end());
-        boost::shared_ptr<InMemoryReport> report = boost::make_shared<InMemoryReport>();
+        auto ss = QuantLib::ext::make_shared<SensitivityInMemoryStream>(results.begin(), results.end());
+        QuantLib::ext::shared_ptr<InMemoryReport> report =
+            QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
         ReportWriter(inputs_->reportNaString()).writeSensitivityReport(*report, ss, inputs_->parConversionThreshold());
-        analytic()->reports()["PARCONVERSION"]["parConversionSensitivity"] = report;
+        analytic()->addReport("PARCONVERSION", "parConversionSensitivity", report);
 
         if (inputs_->parConversionOutputJacobi()) {
-            boost::shared_ptr<InMemoryReport> jacobiReport = boost::make_shared<InMemoryReport>();
+            QuantLib::ext::shared_ptr<InMemoryReport> jacobiReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
             writeParConversionMatrix(parAnalysis->parSensitivities(), *jacobiReport);
-            analytic()->reports()["PARCONVERSION"]["parConversionJacobi"] = jacobiReport;
+            analytic()->addReport("PARCONVERSION", "parConversionJacobi", jacobiReport);
 
-            boost::shared_ptr<InMemoryReport> jacobiInverseReport = boost::make_shared<InMemoryReport>();
+            QuantLib::ext::shared_ptr<InMemoryReport> jacobiInverseReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
             parConverter->writeConversionMatrix(*jacobiInverseReport);
-            analytic()->reports()["PARCONVERSION"]["parConversionJacobi_inverse"] = jacobiInverseReport;
+            analytic()->addReport("PARCONVERSION", "parConversionJacobi_inverse", jacobiInverseReport);
         }
     }
     LOG("Sensi Analysis - Completed");
     CONSOLE("OK");
+}
+
+std::map<std::string, std::vector<ZeroSensitivityLoader::ZeroSensitivity>> ParConversionAnalytic::loadZeroSensitivities() const {
+    ZeroSensitivityLoader loader(inputs_->parConversionInputFile());
+    return loader.sensitivities();
 }
 
 } // namespace analytics

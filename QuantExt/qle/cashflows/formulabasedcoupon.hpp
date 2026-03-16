@@ -39,13 +39,13 @@ using namespace QuantLib;
 class FormulaBasedCoupon : public FloatingRateCoupon {
 public:
     FormulaBasedCoupon(const Currency& paymentCurrency, const Date& paymentDate, Real nominal, const Date& startDate,
-                       const Date& endDate, Natural fixingDays, const boost::shared_ptr<FormulaBasedIndex>& index,
+                       const Date& endDate, Natural fixingDays, const QuantLib::ext::shared_ptr<FormulaBasedIndex>& index,
                        const Date& refPeriodStart = Date(), const Date& refPeriodEnd = Date(),
                        const DayCounter& dayCounter = DayCounter(), bool isInArrears = false);
     //! \name Inspectors
     //@{
     const Currency& paymentCurrency() const { return paymentCurrency_; }
-    const boost::shared_ptr<FormulaBasedIndex>& formulaBasedIndex() const { return index_; }
+    const QuantLib::ext::shared_ptr<FormulaBasedIndex>& formulaBasedIndex() const { return index_; }
     //@}
     //! \name Visitability
     //@{
@@ -53,14 +53,14 @@ public:
     //@}
 private:
     const Currency paymentCurrency_;
-    boost::shared_ptr<FormulaBasedIndex> index_;
+    QuantLib::ext::shared_ptr<FormulaBasedIndex> index_;
 };
 
 //! helper class building a sequence of formula based coupons
 class FormulaBasedLeg {
 public:
     FormulaBasedLeg(const Currency& paymentCurrency, const Schedule& schedule,
-                    const boost::shared_ptr<FormulaBasedIndex>& index);
+                    const QuantLib::ext::shared_ptr<FormulaBasedIndex>& index);
     FormulaBasedLeg& withNotionals(Real notional);
     FormulaBasedLeg& withNotionals(const std::vector<Real>& notionals);
     FormulaBasedLeg& withPaymentDayCounter(const DayCounter&);
@@ -76,7 +76,7 @@ public:
 private:
     Currency paymentCurrency_;
     Schedule schedule_;
-    boost::shared_ptr<FormulaBasedIndex> index_;
+    QuantLib::ext::shared_ptr<FormulaBasedIndex> index_;
     std::vector<Real> notionals_;
     DayCounter paymentDayCounter_;
     BusinessDayConvention paymentAdjustment_;

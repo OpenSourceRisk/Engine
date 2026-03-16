@@ -113,7 +113,7 @@
                                                          this->xEnd_,
                                                          logY_.begin());
              }
-             boost::shared_ptr<Interpolation> interpolation() const {
+             QuantLib::ext::shared_ptr<Interpolation> interpolation() const {
                  return interpolation_;
              }
              void update() override {
@@ -140,7 +140,7 @@
              }
            private:
              std::vector<Real> logY_;
-             boost::shared_ptr<Interpolation> interpolation_;
+             QuantLib::ext::shared_ptr<Interpolation> interpolation_;
              Real multiplier_;
              Real offset_;
          };

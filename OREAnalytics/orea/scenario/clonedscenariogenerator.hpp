@@ -30,14 +30,16 @@ namespace analytics {
 
 class ClonedScenarioGenerator : public ScenarioGenerator {
 public:
-    ClonedScenarioGenerator(const boost::shared_ptr<ScenarioGenerator>& scenarioGenerator,
+    ClonedScenarioGenerator(const QuantLib::ext::shared_ptr<ScenarioGenerator>& scenarioGenerator,
                             const std::vector<Date>& dates, const Size nSamples);
-    boost::shared_ptr<Scenario> next(const Date& d) override;
+    QuantLib::ext::shared_ptr<Scenario> next(const Date& d) override;
     virtual void reset() override;
 
 private:
-    std::vector<boost::shared_ptr<Scenario>> scenarios_;
-    Size i_ = 0;
+    std::map<Date, size_t> dates_;
+    Date firstDate_;
+    Size nSim_ = 0;
+    std::vector<QuantLib::ext::shared_ptr<Scenario>> scenarios_;
 };
 
 } // namespace analytics

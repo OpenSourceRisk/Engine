@@ -31,8 +31,10 @@ namespace QuantExt {
 
 class FxModel : public LinkableCalibratedModel {
 public:
+    enum class Discretization { Euler, PC, Exact, ExactGlobal };
+
     /*! parametrization (as base class) */
-    virtual const boost::shared_ptr<Parametrization> parametrizationBase() const = 0;
+    virtual const QuantLib::ext::shared_ptr<Parametrization> parametrizationBase() const = 0;
 
     /*! today's fx rate on which the model is based */
     virtual Handle<Quote> fxSpotToday() const = 0;
@@ -43,9 +45,21 @@ public:
     /*! number of Brownians to evolve the state */
     virtual Size m() const = 0;
 
-    /*! perform an Euler step given short rates for the rates */
-    virtual Array eulerStep(const Time t0, const Array& x0, const Time dt, const Array& dw, const Real r_dom,
-                            const Real r_for) const = 0;
+    /*! (effective) dimension of auxilliary state */
+    virtual Size n_aux() const = 0;
+
+    /*! (effective) number of Brownians required to evolve the auxilliary state */
+    virtual Size m_aux() const = 0;
+
+    /*! get initial value of state */
+    virtual Array initialValue() const { return Array(1, std::log(fxSpotToday()->value())); }
+
+    /*! get spot volatility at time t for state s */
+    virtual double volatility(const Time t, const Array& s) const = 0;
+
+    /*! perform a marginal step given short rates for the rates */
+    virtual Array marginalStep(const Time t0, const Array& x0, const Time dt, const Array& dw, const Real r_dom,
+                               const Real r_for, const std::optional<Discretization> disc = std::nullopt) const = 0;
 };
 
 } // namespace QuantExt

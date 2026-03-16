@@ -48,10 +48,10 @@ GaussianLHPLossModel::GaussianLHPLossModel(Real correlation, const std::vector<R
                                         // g++ complains default value not seen as typename
                                         GaussianCopulaPolicy::initTraits()),
       sqrt1minuscorrel_(std::sqrt(1. - correlation)),
-      correl_(Handle<Quote>(boost::make_shared<SimpleQuote>(correlation))), beta_(sqrt(correlation)),
+      correl_(Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(correlation))), beta_(sqrt(correlation)),
       biphi_(-sqrt(correlation)) {
     for (Size i = 0; i < recoveries.size(); i++)
-        rrQuotes_.push_back(Handle<RecoveryRateQuote>(boost::make_shared<RecoveryRateQuote>(recoveries[i])));
+        rrQuotes_.push_back(Handle<RecoveryRateQuote>(QuantLib::ext::make_shared<RecoveryRateQuote>(recoveries[i])));
 }
 
 GaussianLHPLossModel::GaussianLHPLossModel(const Handle<Quote>& correlQuote, const std::vector<Real>& recoveries)
@@ -62,7 +62,7 @@ GaussianLHPLossModel::GaussianLHPLossModel(const Handle<Quote>& correlQuote, con
       biphi_(-sqrt(correlQuote->value())) {
     registerWith(correl_);
     for (Size i = 0; i < recoveries.size(); i++)
-        rrQuotes_.push_back(Handle<RecoveryRateQuote>(boost::make_shared<RecoveryRateQuote>(recoveries[i])));
+        rrQuotes_.push_back(Handle<RecoveryRateQuote>(QuantLib::ext::make_shared<RecoveryRateQuote>(recoveries[i])));
 }
 
 Real GaussianLHPLossModel::expectedTrancheLossImpl(Real remainingNot, // << at the given date 'd'

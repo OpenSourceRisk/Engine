@@ -69,25 +69,25 @@ BOOST_AUTO_TEST_CASE(testCommodityAPO) {
     std::vector<Real> prices = {100.0, 100.0, 100.0};
     DayCounter dc = Actual365Fixed();
     Handle<QuantExt::PriceTermStructure> priceCurve(
-        boost::make_shared<InterpolatedPriceCurve<Linear>>(today, dates, prices, dc, USDCurrency()));
+        QuantLib::ext::make_shared<InterpolatedPriceCurve<Linear>>(today, dates, prices, dc, USDCurrency()));
     priceCurve->enableExtrapolation();
 
     // Market - flat discount curve
-    Handle<Quote> rateQuote(boost::make_shared<SimpleQuote>(0.01));
-    Handle<YieldTermStructure> discountCurve(boost::make_shared<FlatForward>(today, rateQuote, dc, Compounded, Annual));
+    Handle<Quote> rateQuote(QuantLib::ext::make_shared<SimpleQuote>(0.01));
+    Handle<YieldTermStructure> discountCurve(QuantLib::ext::make_shared<FlatForward>(today, rateQuote, dc, Compounded, Annual));
 
     // Market - flat volatility structure
-    Handle<QuantLib::BlackVolTermStructure> vol(boost::make_shared<QuantLib::BlackConstantVol>(today, cal, 0.3, dc));
+    Handle<QuantLib::BlackVolTermStructure> vol(QuantLib::ext::make_shared<QuantLib::BlackConstantVol>(today, cal, 0.3, dc));
 
     // Analytical engine
     Real beta = 0.0;
-    boost::shared_ptr<PricingEngine> analyticalEngine =
-        boost::make_shared<CommodityAveragePriceOptionAnalyticalEngine>(discountCurve, vol, beta);
+    QuantLib::ext::shared_ptr<PricingEngine> analyticalEngine =
+        QuantLib::ext::make_shared<CommodityAveragePriceOptionAnalyticalEngine>(discountCurve, vol, beta);
 
     // Monte Carlo engine
     Size samples = 10000;
-    boost::shared_ptr<PricingEngine> mcEngine =
-        boost::make_shared<CommodityAveragePriceOptionMonteCarloEngine>(discountCurve, vol, samples, beta);
+    QuantLib::ext::shared_ptr<PricingEngine> mcEngine =
+        QuantLib::ext::make_shared<CommodityAveragePriceOptionMonteCarloEngine>(discountCurve, vol, samples, beta);
 
     // Instrument
     Real quantity = 1.0;
@@ -112,13 +112,13 @@ BOOST_AUTO_TEST_CASE(testCommodityAPO) {
             Date startDate = today + startTerm;
             Date endDate = startDate + term;
             Date payDate = endDate;
-            boost::shared_ptr<CommoditySpotIndex> index = boost::make_shared<CommoditySpotIndex>(name, cal, priceCurve);
-            boost::shared_ptr<CommodityIndexedAverageCashFlow> flow =
-                boost::make_shared<CommodityIndexedAverageCashFlow>(quantity, startDate, endDate, payDate, index);
-            boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(endDate);
+            QuantLib::ext::shared_ptr<CommoditySpotIndex> index = QuantLib::ext::make_shared<CommoditySpotIndex>(name, cal, priceCurve);
+            QuantLib::ext::shared_ptr<CommodityIndexedAverageCashFlow> flow =
+                QuantLib::ext::make_shared<CommodityIndexedAverageCashFlow>(quantity, startDate, endDate, payDate, index);
+            QuantLib::ext::shared_ptr<Exercise> exercise = QuantLib::ext::make_shared<EuropeanExercise>(endDate);
 
-            boost::shared_ptr<CommodityAveragePriceOption> apo =
-                boost::make_shared<CommodityAveragePriceOption>(flow, exercise, quantity, strikePrice, optionType);
+            QuantLib::ext::shared_ptr<CommodityAveragePriceOption> apo =
+                QuantLib::ext::make_shared<CommodityAveragePriceOption>(flow, exercise, quantity, strikePrice, optionType);
 
             boost::timer::cpu_timer tan;
             apo->setPricingEngine(analyticalEngine);

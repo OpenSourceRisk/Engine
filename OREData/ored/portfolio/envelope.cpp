@@ -43,18 +43,18 @@ void Envelope::fromXML(XMLNode* node) {
             portfolioIds_.insert(XMLUtils::getNodeValue(c));
     }
 
-    std::function<boost::any(XMLNode*)> getValue;
+    std::function<QuantLib::ext::any(XMLNode*)> getValue;
     getValue = [&getValue](XMLNode* node) {
-        boost::any value;
+        QuantLib::ext::any value;
         vector<XMLNode*> children = XMLUtils::getChildrenNodes(node, "");
         // If node is a single-value node
         if (children.size() == 1 && XMLUtils::getNodeName(children[0]) == "") {
             value = XMLUtils::getNodeValue(node);
         } else {
-            std::multimap<string, boost::any> subAddFields;
+            std::multimap<string, QuantLib::ext::any> subAddFields;
             for (XMLNode* child : children) {
                 const string& name = XMLUtils::getNodeName(child);
-                boost::any childValue = getValue(child);
+                QuantLib::ext::any childValue = getValue(child);
                 subAddFields.insert({name, childValue});
             }
             value = subAddFields;
@@ -87,16 +87,16 @@ XMLNode* Envelope::toXML(XMLDocument& doc) const {
     XMLNode* additionalNode = doc.allocNode("AdditionalFields");
     XMLUtils::appendNode(node, additionalNode);
 
-    std::function<void(XMLNode*, const string&, const boost::any&)> addChild;
-    addChild = [&addChild, &doc](XMLNode* node, const string& name, const boost::any& val) {
+    std::function<void(XMLNode*, const string&, const QuantLib::ext::any&)> addChild;
+    addChild = [&addChild, &doc](XMLNode* node, const string& name, const QuantLib::ext::any& val) {
         if (val.type() == typeid(string)) {
-            XMLUtils::addChild(doc, node, name, boost::any_cast<string>(val));
+            XMLUtils::addChild(doc, node, name, QuantLib::ext::any_cast<string>(val));
         } else {
-            QL_REQUIRE(val.type() == typeid(std::multimap<string, boost::any>),
-                       "Additional field type must be either string or map<string, boost::any>");
+            QL_REQUIRE(val.type() == typeid(std::multimap<string, QuantLib::ext::any>),
+                       "Additional field type must be either string or map<string, QuantLib::ext::any>");
             XMLNode* childNode = doc.allocNode(name);
             XMLUtils::appendNode(node, childNode);
-            for (const auto& kv : boost::any_cast<std::multimap<string, boost::any>>(val)) {
+            for (const auto& kv : QuantLib::ext::any_cast<std::multimap<string, QuantLib::ext::any>>(val)) {
                 addChild(childNode, kv.first, kv.second);
             }
         }
@@ -111,7 +111,7 @@ const map<string, string> Envelope::additionalFields() const {
     map<string, string> stringAddFields;
     for (const auto& f : additionalFields_)
         if (f.second.type() == typeid(string))
-            stringAddFields[f.first] = boost::any_cast<string>(f.second);
+            stringAddFields[f.first] = QuantLib::ext::any_cast<string>(f.second);
     return stringAddFields;
 }
 
@@ -123,14 +123,14 @@ string Envelope::additionalField(const std::string& name, const bool mandatory, 
     return it == af.end() ? defaultValue : it->second;
 }
 
-boost::any Envelope::additionalAnyField(const std::string& name, const bool mandatory, const boost::any& defaultValue) const {
+QuantLib::ext::any Envelope::additionalAnyField(const std::string& name, const bool mandatory, const QuantLib::ext::any& defaultValue) const {
     auto it = additionalFields_.find(name);
     QL_REQUIRE(it != additionalFields_.end() || !mandatory,
                "Envelope::additionalField(): Mandatory field '" << name << "' not found.");
     return it == additionalFields_.end() ? defaultValue : it->second;
 }
 
-void Envelope::setAdditionalField(const std::string& key, const boost::any& value) {
+void Envelope::setAdditionalField(const std::string& key, const QuantLib::ext::any& value) {
     additionalFields_[key] = value;
 }
 

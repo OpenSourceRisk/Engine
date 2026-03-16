@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<TodaysMarket>
+  <Configuration id="default">
+    <DiscountingCurvesId>xois_eur</DiscountingCurvesId>
+    <YieldCurvesId>xois_eur</YieldCurvesId>
+  </Configuration>  
+  <!-- yield curve definition (in ccy swap discounting) -->
+  <YieldCurves id="default">
+  
+  </YieldCurves>
+  <!-- yield curve definition (in ccy ois discounting) -->
+  
+  <!-- discounting curve definition (xois discounting w.r.t. EUR collateral) -->
+  <DiscountingCurves id="xois_eur">
+    <DiscountingCurve currency="EUR">Yield/EUR/EUR1D</DiscountingCurve>
+    <DiscountingCurve currency="USD">Yield/USD/USD-IN-EUR</DiscountingCurve>
+  </DiscountingCurves>
+  <DiscountingCurves id="xois_usd">
+    <DiscountingCurve currency="EUR">Yield/EUR/EUR-IN-USD</DiscountingCurve>
+    <DiscountingCurve currency="USD">Yield/USD/USD1D</DiscountingCurve>
+  </DiscountingCurves>
+  
+  <!-- index forwarding curve definition -->
+  <IndexForwardingCurves id="default">
+    <Index name="EUR-EURIBOR-3M">Yield/EUR/EUR3M</Index>
+    <Index name="EUR-EONIA">Yield/EUR/EUR1D</Index>
+    <Index name="USD-FedFunds">Yield/USD/USD1D</Index>
+    <Index name="USD-LIBOR-3M">Yield/USD/USD3M</Index>
+    </IndexForwardingCurves>
+  <!-- fx spot definition -->
+  <FxSpots id="default">
+    <FxSpot pair="EURUSD">FX/EUR/USD</FxSpot>
+  </FxSpots>
+  <!-- fx volatility definition -->
+  <FxVolatilities id="default">
+    <FxVolatility pair="EURUSD">FXVolatility/EUR/USD/EURUSD</FxVolatility>
+  </FxVolatilities>
+</TodaysMarket>

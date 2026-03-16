@@ -37,8 +37,8 @@ QuantLib::Size SimmConfiguration_ISDA_V2_6::group(const string& qualifier,
     return result;
 }
 
-QuantLib::Real SimmConfiguration_ISDA_V2_6::weight(const RiskType& rt, boost::optional<string> qualifier,
-                                                   boost::optional<std::string> label_1,
+QuantLib::Real SimmConfiguration_ISDA_V2_6::weight(const RiskType& rt, QuantLib::ext::optional<string> qualifier,
+                                                   QuantLib::ext::optional<std::string> label_1,
                                                    const std::string& calculationCurrency) const {
 
     if (rt == RiskType::FX) {
@@ -54,8 +54,9 @@ QuantLib::Real SimmConfiguration_ISDA_V2_6::weight(const RiskType& rt, boost::op
 }
 
 QuantLib::Real SimmConfiguration_ISDA_V2_6::correlation(const RiskType& firstRt, const string& firstQualifier,
-                                                        const string& firstLabel_1, const string& firstLabel_2,
-                                                        const RiskType& secondRt, const string& secondQualifier,
+                                                        const string& firstBucket, const string& firstLabel_1,
+                                                        const string& firstLabel_2, const RiskType& secondRt,
+                                                        const string& secondQualifier, const string& secondBucket,
                                                         const string& secondLabel_1, const string& secondLabel_2,
                                                         const std::string& calculationCurrency) const {
 
@@ -73,11 +74,12 @@ QuantLib::Real SimmConfiguration_ISDA_V2_6::correlation(const RiskType& firstRt,
         }
     }
 
-    return SimmConfigurationBase::correlation(firstRt, firstQualifier, firstLabel_1, firstLabel_2, secondRt,
-                                              secondQualifier, secondLabel_1, secondLabel_2);
+    return SimmConfigurationBase::correlation(firstRt, firstQualifier, firstBucket, firstLabel_1, firstLabel_2,
+                                              secondRt, secondQualifier, secondBucket, secondLabel_1, secondLabel_2,
+                                              calculationCurrency);
 }
 
-SimmConfiguration_ISDA_V2_6::SimmConfiguration_ISDA_V2_6(const boost::shared_ptr<SimmBucketMapper>& simmBucketMapper,
+SimmConfiguration_ISDA_V2_6::SimmConfiguration_ISDA_V2_6(const QuantLib::ext::shared_ptr<SimmBucketMapper>& simmBucketMapper,
                                                          const QuantLib::Size& mporDays, const std::string& name,
                                                          const std::string version)
     : SimmConfigurationBase(simmBucketMapper, name, version, mporDays) {
@@ -89,10 +91,10 @@ SimmConfiguration_ISDA_V2_6::SimmConfiguration_ISDA_V2_6(const boost::shared_ptr
 
     // Set up the correct concentration threshold getter
     if (mporDays == 10) {
-        simmConcentration_ = boost::make_shared<SimmConcentration_ISDA_V2_6>(simmBucketMapper_);
+        simmConcentration_ = QuantLib::ext::make_shared<SimmConcentration_ISDA_V2_6>(simmBucketMapper_);
     } else {
         // SIMM:Technical Paper, Section I.4: "The Concentration Risk feature is disabled"
-        simmConcentration_ = boost::make_shared<SimmConcentrationBase>();
+        simmConcentration_ = QuantLib::ext::make_shared<SimmConcentrationBase>();
     }
 
     // clang-format off
@@ -1280,21 +1282,21 @@ SimmConfiguration_ISDA_V2_6::SimmConfiguration_ISDA_V2_6(const boost::shared_ptr
 is the historical volatility ratio for the interest-rate risk class (see page 8 section 11(d)
 of the ISDA-SIMM-v2.6 documentation).
 */
-QuantLib::Real SimmConfiguration_ISDA_V2_6::curvatureMarginScaling() const { return pow(hvr_ir_, -2.0); }
+QuantLib::Real SimmConfiguration_ISDA_V2_6::curvatureMarginScaling() const { return std::pow(hvr_ir_, -2.0); }
 
 void SimmConfiguration_ISDA_V2_6::addLabels2(const RiskType& rt, const string& label_2) {
     // Call the shared implementation
     SimmConfigurationBase::addLabels2Impl(rt, label_2);
 }
 
-string SimmConfiguration_ISDA_V2_6::labels2(const boost::shared_ptr<InterestRateIndex>& irIndex) const {
+string SimmConfiguration_ISDA_V2_6::label2(const QuantLib::ext::shared_ptr<InterestRateIndex>& irIndex) const {
     // Special for BMA
     if (boost::algorithm::starts_with(irIndex->name(), "BMA")) {
         return "Municipal";
     }
 
     // Otherwise pass off to base class
-    return SimmConfigurationBase::labels2(irIndex);
+    return SimmConfigurationBase::label2(irIndex);
 }
 
 } // namespace analytics

@@ -187,16 +187,16 @@ struct SwaptionVolatilityEUR {
                     Size index = j * optionTenors.size() + i;
                     Real nVolSpread =
                         k == atmStrikeIndex ? 0.0 : nVolSpreadMin + rng.nextReal() * (nVolSpreadMax - nVolSpreadMin);
-                    nVolSpreads[index][k] = Handle<Quote>(boost::shared_ptr<SimpleQuote>(new SimpleQuote(nVolSpread)));
+                    nVolSpreads[index][k] = Handle<Quote>(QuantLib::ext::shared_ptr<SimpleQuote>(new SimpleQuote(nVolSpread)));
                     Real lnVolSpread =
                         k == atmStrikeIndex ? 0.0 : lnVolSpreadMin + rng.nextReal() * (lnVolSpreadMax - lnVolSpreadMin);
                     lnVolSpreads[index][k] =
-                        Handle<Quote>(boost::shared_ptr<SimpleQuote>(new SimpleQuote(lnVolSpread)));
+                        Handle<Quote>(QuantLib::ext::shared_ptr<SimpleQuote>(new SimpleQuote(lnVolSpread)));
                     Real slnVolSpread = k == atmStrikeIndex
                                             ? 0.0
                                             : slnVolSpreadMin + rng.nextReal() * (slnVolSpreadMax - slnVolSpreadMin);
                     slnVolSpreads[index][k] =
-                        Handle<Quote>(boost::shared_ptr<SimpleQuote>(new SimpleQuote(slnVolSpread)));
+                        Handle<Quote>(QuantLib::ext::shared_ptr<SimpleQuote>(new SimpleQuote(slnVolSpread)));
                 }
             }
         }
@@ -220,9 +220,9 @@ struct SwaptionConventionsEUR {
     // Constructor
     SwaptionConventionsEUR()
         : settlementDays(2), fixedTenor(Period(1, Years)), fixedCalendar(TARGET()), fixedConvention(ModifiedFollowing),
-          fixedDayCounter(Thirty360(Thirty360::BondBasis)), floatIndex(boost::make_shared<Euribor6M>()),
-          swapIndex(boost::make_shared<EuriborSwapIsdaFixA>(10 * Years)),
-          shortSwapIndex(boost::make_shared<EuriborSwapIsdaFixA>(2 * Years)) {}
+          fixedDayCounter(Thirty360(Thirty360::BondBasis)), floatIndex(QuantLib::ext::make_shared<Euribor6M>()),
+          swapIndex(QuantLib::ext::make_shared<EuriborSwapIsdaFixA>(10 * Years)),
+          shortSwapIndex(QuantLib::ext::make_shared<EuriborSwapIsdaFixA>(2 * Years)) {}
 
     // Members
     Natural settlementDays;
@@ -230,8 +230,8 @@ struct SwaptionConventionsEUR {
     Calendar fixedCalendar;
     BusinessDayConvention fixedConvention;
     DayCounter fixedDayCounter;
-    boost::shared_ptr<IborIndex> floatIndex;
-    boost::shared_ptr<SwapIndex> swapIndex, shortSwapIndex;
+    QuantLib::ext::shared_ptr<IborIndex> floatIndex;
+    QuantLib::ext::shared_ptr<SwapIndex> swapIndex, shortSwapIndex;
 };
 } // namespace QuantExt
 

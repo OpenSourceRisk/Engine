@@ -21,7 +21,7 @@
 namespace QuantExt {
 
 CirppImpliedDefaultTermStructure::CirppImpliedDefaultTermStructure(
-    const boost::shared_ptr<CrCirpp>& model, const Size index,
+    const QuantLib::ext::shared_ptr<CrCirpp>& model, const Size index,
     const DayCounter& dc, const bool purelyTimeBased)
     : SurvivalProbabilityStructure(dc == DayCounter() ? model->defaultCurve()->dayCounter() : dc),
       model_(model), index_(index), purelyTimeBased_(purelyTimeBased),

@@ -1,0 +1,5 @@
+#AssetType,Indices
+EQ,Lufthansa|SP5
+IR,Euribor6M Actual/360|GBPLibor6M Actual/365 (Fixed)|USDLibor6M Actual/360
+INF,EUHICPXT|UKRPI
+BOND,SECURITY_1

@@ -25,7 +25,7 @@ void AverageONIndexedCouponPricer::initialize(const FloatingRateCoupon& coupon) 
     coupon_ = dynamic_cast<const AverageONIndexedCoupon*>(&coupon);
     QL_REQUIRE(coupon_, "AverageONIndexedCoupon required");
 
-    overnightIndex_ = boost::dynamic_pointer_cast<OvernightIndex>(coupon_->index());
+    overnightIndex_ = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(coupon_->index());
     QL_REQUIRE(overnightIndex_, "OvernightIndex required");
 
     gearing_ = coupon_->gearing();

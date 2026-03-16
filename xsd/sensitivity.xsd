@@ -4,6 +4,9 @@
 
   <xs:complexType name="sensitivityanalysis">
     <xs:all>
+      <xs:element type="parExcludes" name="ParConversionExcludes" minOccurs="0"/>
+      <xs:element type="xs:string" name="ParSensiRemoveFixing" minOccurs="0"/>
+      <xs:element type="parConversionMatrixRegularisation" name="ParConversionMatrixRegularisation" minOccurs="0"/>
       <xs:element type="xs:boolean" name="ParConversion" minOccurs="0"/>
       <xs:element type="discountcurves" name="DiscountCurves"/>
       <xs:element type="indexcurves" name="IndexCurves" minOccurs="0"/>
@@ -40,7 +43,8 @@
       <xs:element type="xs:boolean" name="SingleCurve" maxOccurs="unbounded" minOccurs="0"/>
       <xs:element type="xs:string" name="DiscountCurve" maxOccurs="1" minOccurs="0"/>
       <xs:element type="currencyCode" name="OtherCurrency" maxOccurs="1" minOccurs="0"/>
-      <xs:element name="Conventions">
+      <xs:element type="xs:string" name="RateComputationPeriod" maxOccurs="1" minOccurs="0"/>
+      <xs:element name="Conventions" maxOccurs="1" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
             <xs:element name="Convention" maxOccurs="unbounded" minOccurs="0">
@@ -54,6 +58,13 @@
             </xs:element>
           </xs:sequence>
         </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="parExcludes">
+    <xs:sequence>
+      <xs:element name="Type" maxOccurs="unbounded" minOccurs="0">
       </xs:element>
     </xs:sequence>
   </xs:complexType>
@@ -399,6 +410,7 @@
       <xs:element type="xs:string" name="ShiftStrikes" minOccurs="0"/>
       <xs:element type="indexNameType" name="Index" minOccurs="0"/>
       <xs:element type="xs:boolean" name="IsRelative" minOccurs="0"/>
+      <xs:element type="parconversion" name="ParConversion" minOccurs="0"/>
     </xs:sequence>
     <xs:attribute type="xs:string" name="key"/>
     <xs:attribute type="currencyCode" name="ccy"/> <!-- deprecated -->
@@ -602,5 +614,13 @@
       <xs:element type="riskFactorKeyType" name="RiskFactorKeyType"/>
     </xs:sequence>
   </xs:complexType>
+
+  <xs:simpleType name="parConversionMatrixRegularisation">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Silent"/>
+      <xs:enumeration value="Warning"/>
+      <xs:enumeration value="Disable"/>
+    </xs:restriction>
+  </xs:simpleType>
 
 </xs:schema>

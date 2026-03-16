@@ -27,7 +27,7 @@ namespace QuantExt {
                exercise into swaptions
 */
 
-LgmConvolutionSolver::LgmConvolutionSolver(const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real sy,
+LgmConvolutionSolver::LgmConvolutionSolver(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const Real sy,
                                            const Size ny, const Real sx, const Size nx)
     : model_(model), nx_(nx) {
 

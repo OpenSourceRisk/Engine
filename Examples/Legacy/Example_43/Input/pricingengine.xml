@@ -1,0 +1,109 @@
+<?xml version="1.0"?>
+<PricingEngines>
+  <Product type="Swap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingSwapEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="CrossCurrencySwap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingCrossCurrencySwapEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="FxForward">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingFxForwardEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="FxOption">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="EuropeanSwaption">
+    <Model>BlackBachelier</Model>
+    <!-- depends on input vol -->
+    <ModelParameters/>
+    <Engine>BlackBachelierSwaptionEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="BermudanSwaption">
+    <Model>LGM</Model>
+    <ModelParameters>
+      <Parameter name="Calibration">Bootstrap</Parameter>
+      <Parameter name="CalibrationStrategy">CoterminalATM</Parameter>
+      <Parameter name="Reversion">0.03</Parameter>
+      <Parameter name="ReversionType">HullWhite</Parameter>
+      <Parameter name="Volatility">0.01</Parameter>
+      <Parameter name="VolatilityType">Hagan</Parameter>
+      <Parameter name="Tolerance">0.0001</Parameter>
+    </ModelParameters>
+    <Engine>Grid</Engine>
+    <EngineParameters>
+      <Parameter name="sy">3.0</Parameter>
+      <Parameter name="ny">10</Parameter>
+      <Parameter name="sx">3.0</Parameter>
+      <Parameter name="nx">10</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CapFloor">
+    <Model>IborCapModel</Model>
+    <ModelParameters/>
+    <Engine>IborCapEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="CapFlooredIborLeg">
+    <Model>BlackOrBachelier</Model>
+    <ModelParameters/>
+    <Engine>BlackIborCouponPricer</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="XXXBond">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingRiskyBondEngine</Engine>
+    <EngineParameters>
+      <Parameter name="TimestepPeriod">6M</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="Bond">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingRiskyBondEngineMultiState</Engine>
+    <EngineParameters>
+      <Parameter name="TimestepPeriod">6M</Parameter>
+      <Parameter name="Rule_0">(_AAA$|_AA$|_A$|_BBB$|_BB$|_B$|_C$),_AAA</Parameter>
+      <Parameter name="Rule_1">(_AAA$|_AA$|_A$|_BBB$|_BB$|_B$|_C$),_AA</Parameter>
+      <Parameter name="Rule_2">(_AAA$|_AA$|_A$|_BBB$|_BB$|_B$|_C$),_A</Parameter>
+      <Parameter name="Rule_3">(_AAA$|_AA$|_A$|_BBB$|_BB$|_B$|_C$),_BBB</Parameter>
+      <Parameter name="Rule_4">(_AAA$|_AA$|_A$|_BBB$|_BB$|_B$|_C$),_BB</Parameter>
+      <Parameter name="Rule_5">(_AAA$|_AA$|_A$|_BBB$|_BB$|_B$|_C$),_B</Parameter>
+      <Parameter name="Rule_6">(_AAA$|_AA$|_A$|_BBB$|_BB$|_B$|_C$),_C</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="XXXCreditDefaultSwap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>MidPointCdsEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="CreditDefaultSwap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>MidPointCdsEngineMultiState</Engine>
+    <EngineParameters>
+      <!-- Empty rules mean that the initial curve is used for that state -->
+      <Parameter name="Rule_0"/>
+      <Parameter name="Rule_1"/>
+      <Parameter name="Rule_2"/>
+      <Parameter name="Rule_3"/>
+      <Parameter name="Rule_4"/>
+      <Parameter name="Rule_5"/>
+      <Parameter name="Rule_6"/>
+    </EngineParameters>
+  </Product>
+</PricingEngines>

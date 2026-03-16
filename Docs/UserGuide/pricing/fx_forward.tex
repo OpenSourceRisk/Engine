@@ -1,0 +1,26 @@
+\subsubsection{FX Forward}
+\label{pricing:fx_forward}
+
+Vanilla FX instruments are priced using a multi-currency framework of discount 
+curves by cash flow currency and forwarding curves per index, see \ref{sec:curves}.
+ 
+\medskip
+The NPV in base currency, for an FX Forward paying currency B and receiving 
+currency A at time $T$, is computed as follows:
+$$
+\NPV= N_A \cdot X_A\cdot P_A(T) - N_B\cdot X_B\cdot P_B(T)
+$$
+Where:
+\begin{itemize}
+\item $N_A$: the set amount to be received in currency A at maturity
+\item $P_A(T)$: the discount factor at maturity $T$ for currency A
+\item $N_B$: the set amount to be received in currency B at maturity
+\item $P_B(T)$: the discount factor at maturity $T$ for currency B
+\item $X_A$: the FX spot rate between currencies A and base currency
+\item $X_B$: the FX spot rate between currencies B and base currency
+\end{itemize}
+
+Note that for the case that USD is VM Collateral Currency, discounting is 
+done using the USD OIS curve. All  currencies other than the VM Collateral Currency use a ``Foreign Currency 
+Discount Curve'' as the discount curve as described in section \ref{sec:curves}.
+

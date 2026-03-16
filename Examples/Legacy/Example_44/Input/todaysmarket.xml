@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<TodaysMarket>
+  <Configuration id="default">
+    <DiscountingCurvesId>xois_eur</DiscountingCurvesId>
+    <YieldCurvesId>xois_eur</YieldCurvesId>
+  </Configuration>
+  
+  <!-- yield curve definition (xois discounting w.r.t. EUR collateral) -->
+  <YieldCurves id="xois_eur">
+  </YieldCurves>
+
+  <DiscountingCurves id="xois_eur">
+  </DiscountingCurves>
+  
+  <IndexForwardingCurves id="default">
+  </IndexForwardingCurves>
+
+  <SwapIndexCurves id="default">
+  </SwapIndexCurves>
+
+  <ZeroInflationIndexCurves id="default">
+  </ZeroInflationIndexCurves>
+
+  <YYInflationIndexCurves id="default">
+  </YYInflationIndexCurves>
+
+  <FxSpots id="default">
+    <FxSpot pair="EURUSD">FX/EUR/USD</FxSpot>
+    <FxSpot pair="EURGBP">FX/EUR/GBP</FxSpot>
+    <FxSpot pair="EURCHF">FX/EUR/CHF</FxSpot>
+    <FxSpot pair="EURJPY">FX/EUR/JPY</FxSpot>
+    <FxSpot pair="GBPUSD">FX/GBP/USD</FxSpot>
+    <FxSpot pair="USDCHF">FX/USD/CHF</FxSpot>
+  </FxSpots>
+
+  <FxVolatilities id="default">
+  </FxVolatilities>
+
+  <SwaptionVolatilities id="default">
+  </SwaptionVolatilities>
+
+  <CapFloorVolatilities id="default">
+  </CapFloorVolatilities>
+
+  <CDSVolatilities id="default">
+  </CDSVolatilities>
+
+  <DefaultCurves id="default">
+  </DefaultCurves>
+
+  <YYInflationCapFloorVolatilities id="default">
+  </YYInflationCapFloorVolatilities>
+
+  <ZeroInflationCapFloorVolatilities id="default">
+  </ZeroInflationCapFloorVolatilities>
+
+  <EquityCurves id="default">
+  </EquityCurves>
+
+  <EquityVolatilities id="default">
+  </EquityVolatilities>
+
+  <Securities id="default">
+  </Securities>
+
+  <BaseCorrelations id="default">
+  </BaseCorrelations>
+
+  <CommodityCurves id="default">
+  </CommodityCurves>
+
+  <CommodityVolatilities id="default">
+  </CommodityVolatilities>
+
+</TodaysMarket>

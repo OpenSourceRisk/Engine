@@ -4,7 +4,7 @@
 
 The configuration of various term structures required to price a portfolio is covered in a single configuration file
 which we will label {\tt curveconfig.xml} in the following though the file name can be chosen by the user. This
-configuration determines the composition of 
+configuration determines the composition of
 \begin{itemize}
 \item Yield curves % done
 \item Default curves % done
@@ -36,13 +36,46 @@ Listing \ref{lst:swaptionvol_configuration} shows an example of a Swaption volat
 \begin{longlisting}
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
-<SwaptionVolatilities>    
+<SwaptionVolatilities>
   <SwaptionVolatility>
     <CurveId>EUR_SW_N</CurveId>
     <CurveDescription>EUR normal swaption volatilities</CurveDescription>
     <Dimension>ATM</Dimension>
     <VolatilityType>Normal</VolatilityType>
+    <Interpolation>Hagan2002NormalZeroBeta</Interpolation>
+    <ParametricSmileConfiguration>
+      <Parameters>
+        <Parameter>
+          <Name>alpha</Name>
+          <InitialValue>0.0050</InitialValue>
+          <Calibration>Implied</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>beta</Name>
+          <InitialValue>0.0</InitialValue>
+          <Calibration>Fixed</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>nu</Name>
+          <InitialValue>0.30</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>rho</Name>
+          <InitialValue>0.0</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+      </Parameters>
+      <Calibration>
+        <MaxCalibrationAttempts>10</MaxCalibrationAttempts>
+        <ExitEarlyErrorThreshold>0.005</ExitEarlyErrorThreshold>
+        <MaxAcceptableError>0.05</MaxAcceptableError>
+      </Calibration>
+    </ParametricSmileConfiguration>
     <Extrapolation>Flat</Extrapolation>
+    <OutputVolatilityType>Normal</OutputVolatilityType>
+    <OutputShift>0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0</OutputShift>
+    <ModelShift>0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0</ModelShift>
     <DayCounter>Actual/365 (Fixed)</DayCounter>
     <Calendar>TARGET</Calendar>
     <BusinessDayConvention>Following</BusinessDayConvention>
@@ -64,17 +97,33 @@ Listing \ref{lst:swaptionvol_configuration} shows an example of a Swaption volat
 \label{lst:swaptionvol_configuration}
 \end{longlisting}
 
-The meaning of each of the elements in Listing \ref{lst:swaptionvol_configuration} is given below. 
+The meaning of each of the elements in Listing \ref{lst:swaptionvol_configuration} is given below.
 %If an element is labelled as 'Optional', then it may be excluded or included and left blank.
 
 \begin{itemize}
 \item CurveId: Unique identifier of the swaption volatility structure
 \item CurveDescription [Optional]: A description of the volatility structure, may be left blank.
 \item Dimension: Distinguishes at-the-money matrices and full volatility cubes. \\ Allowable values: {\tt ATM, Smile}
-\item VolatilityType: Specifies the type of market volatility inputs. \\ 
+\item VolatilityType: Specifies the type of market volatility inputs. \\
 Allowable values: {\tt Normal, Lognormal, ShiftedLognormal} \\
-In the case of {\tt ShiftedLognormal}, a matrix of shifts (by option and swap tenor) has to be provided in the market data input. 
-\item Extrapolation: Specifies the extrapolation behaviour in all dimensions. \\ Allowable values: {\tt Linear, Flat, None}
+In the case of {\tt ShiftedLognormal}, a matrix of shifts (by option and swap tenor) has to be provided in the market data input.
+\item Interpolation: Optional. Possible values: Linear, Hagan2002Lognormal, Hagan2002Normal, Hagan2002NormalZeroBeta,
+  Antonov2015FreeBoundaryNormal, KienitzLawsonSwaynePde, FlochKennedy\footnote{FlochKennedy shows unstable results and
+  is considered experimental. More work is needed.}. If not given, defaults to Linear.
+\item ParametricSmileConfiguration: Optional. Applies to SABR only. If not given, default values are used. Allows to
+  specify initial values for calibrated parameters, to exclude single parameters from calibration and to set calibration
+  parameters. See Example 59 for how to configure single value and termstructures of sabr parameters for swaption and cap curve configs.
+\item Extrapolation: Specifies the extrapolation behaviour in all dimensions. \\ Allowable values: {\tt Linear, Flat,
+  None}
+\item OutputVolatilityType: Optional, defaults to input volatility type. Possible values: Normal, Lognormal (alias for
+  ShiftedLognormal, shift is taken from OutputShift if given, or input market data shift. Input market quotes will be
+  converted to output volatility type and shift before building the vol surfaces, except for parametric models (SABR),
+  where the model is calibrated to the input market data directly (without conversion) and the output volatility type
+  and shift is handled by the calibrated parametric model. An early conversion of the input market data would not be an
+  advantage in this case, we could only loose information.
+\item OutputShift: Optional, defaults to input market data shift. Specifies the shift if OutputVolatilityType is
+  Lognormal / ShiftedLognormal
+\item ModelShift: Optional, defaults to input market data shift. Specifies the shift used for SABR model if applicable
 \item DayCounter: The term structure's day counter used in date to time conversions
 \item Calendar: The term structure's calendar used in option tenor to date conversions
 \item BusinessDayConvention: The term structure's business day convention used in option tenor to date conversion
@@ -83,7 +132,7 @@ In the case of {\tt ShiftedLognormal}, a matrix of shifts (by option and swap te
   \item OptionTenors: Option expiry in period form
   \item SwapTenors: Underlying Swap term in period form
   \item ShortSwapIndexBase: Swap index (ORE naming convention, e.g. EUR-CMS-1Y) used to compute ATM strikes for tenors up to and including the tenor given in the index (1Y in this example)
-  \item SwapIndexBase: Swap index used to compute ATM strikes for tenors longer than the one defined by the short index 
+  \item SwapIndexBase: Swap index used to compute ATM strikes for tenors longer than the one defined by the short index
   \end{itemize}
 \item Smile section specification, this part is required when Dimension is set to {\tt Smile}, otherwise it can be omitted:
   \begin{itemize}
@@ -110,7 +159,7 @@ Listings \ref{lst:fxoptionvol_configuration_atm}, \ref{lst:fxoptionvol_configura
   <FXVolatility>
     <CurveId>EURUSD</CurveId>
     <CurveDescription />
-    <Dimension>ATM</Dimension> 
+    <Dimension>ATM</Dimension>
     <Expiries>1M,3M,6M,1Y,2Y,3Y,10Y</Expiries>
     <FXSpotID>FX/EUR/USD</FXSpotID>
     <FXForeignCurveID>Yield/EUR/EUR-IN-USD</FXForeignCurveID>
@@ -129,8 +178,8 @@ Listings \ref{lst:fxoptionvol_configuration_atm}, \ref{lst:fxoptionvol_configura
   <FXVolatility>
     <CurveId>USDJPY</CurveId>
     <CurveDescription />
-    <Dimension>Smile</Dimension> 
-    <SmileType>VannaVolga</SmileType> 
+    <Dimension>Smile</Dimension>
+    <SmileType>VannaVolga</SmileType>
     <SmileInterpolation>VannaVolga2</SmileInterpolation>
     <Expiries>1M,3M,6M,1Y,2Y,3Y,10Y</Expiries>
     <SmileDelta>25</SmileDelta>
@@ -151,8 +200,8 @@ Listings \ref{lst:fxoptionvol_configuration_atm}, \ref{lst:fxoptionvol_configura
   <FXVolatility>
     <CurveId>USDJPY</CurveId>
     <CurveDescription />
-    <Dimension>Smile</Dimension> 
-    <SmileType>Delta</SmileType> 
+    <Dimension>Smile</Dimension>
+    <SmileType>Delta</SmileType>
     <SmileInterpolation>Linear</SmileInterpolation>
     <Expiries>1M,3M,6M,1Y,2Y,3Y,10Y</Expiries>
     <Deltas>10P,20P,30P,40P,ATM,40C,30C,20C,10C</Deltas>
@@ -162,6 +211,7 @@ Listings \ref{lst:fxoptionvol_configuration_atm}, \ref{lst:fxoptionvol_configura
     <DayCounter>A365</DayCounter>
     <Calendar>US,JP</Calendar>
     <Conventions>USD-JPY-FXOPTION</Conventions>
+    <SmileExtrapolation>UseInterpolator</SmileExtrapolation>
   </FXVolatility>
 \end{minted}
 \caption{FX option volatility configuration Smile / Delta}
@@ -173,9 +223,11 @@ Listings \ref{lst:fxoptionvol_configuration_atm}, \ref{lst:fxoptionvol_configura
   <FXVolatility>
     <CurveId>USDJPY</CurveId>
     <CurveDescription />
-    <Dimension>Smile</Dimension> 
-    <SmileType>BFRR</SmileType> 
+    <Dimension>Smile</Dimension>
+    <SmileType>BFRR</SmileType>
     <SmileInterpolation>Cubic</SmileInterpolation>
+    <TimeInterpolation>V2T</TimeInterpolation>
+    <TimeWeighting>USD-JPY-FXOPTION-TIMEWEIGHTING</TimeWeighting>
     <Expiries>1M,3M,6M,1Y,2Y,3Y,10Y</Expiries>
     <SmileDelta>10,25</SmileDelta>
     <FXSpotID>FX/USD/JPY</FXSpotID>
@@ -184,6 +236,7 @@ Listings \ref{lst:fxoptionvol_configuration_atm}, \ref{lst:fxoptionvol_configura
     <DayCounter>A365</DayCounter>
     <Calendar>US,JP</Calendar>
     <Conventions>USD-JPY-FXOPTION</Conventions>
+    <ButterflyErrorTolerance>0.01</ButterflyErrorTolerance>
   </FXVolatility>
 \end{minted}
 \caption{FX option volatility configuration Smile / BFRR with 10 and 25 BF and RR}
@@ -195,8 +248,8 @@ Listings \ref{lst:fxoptionvol_configuration_atm}, \ref{lst:fxoptionvol_configura
   <FXVolatility>
     <CurveId>USDJPY</CurveId>
     <CurveDescription />
-    <Dimension>Smile</Dimension> 
-    <SmileType>Absolute</SmileType> 
+    <Dimension>Smile</Dimension>
+    <SmileType>Absolute</SmileType>
     <SmileInterpolation>Cubic</SmileInterpolation>
     <Expiries>1M,3M,6M,1Y,2Y,3Y,10Y</Expiries>
     <FXSpotID>FX/USD/JPY</FXSpotID>
@@ -216,7 +269,7 @@ Listings \ref{lst:fxoptionvol_configuration_atm}, \ref{lst:fxoptionvol_configura
   <FXVolatility>
     <CurveId>EURJPY</CurveId>
     <CurveDescription />
-    <Dimension>ATMTriangulated</Dimension> 
+    <Dimension>ATMTriangulated</Dimension>
     <FXSpotID>FX/EUR/JPY</FXSpotID>
     <DayCounter>A365</DayCounter>
     <Calendar>US,JP</Calendar>
@@ -249,6 +302,12 @@ The meaning of each of the elements in Listings \ref{lst:fxoptionvol_configurati
 \item {\tt Linear} or {\tt Cubic} in case of SmileType {\tt Delta} or {\tt BFRR} with default {\tt Linear} for SmileType
   Delta and {\tt Cubic} for SmileType BFRR and Absolute if left blank
 \end{itemize}
+\item TimeInterpolation [Optional]: specifies whether time interpolation is done in volatility ({\tt V}, default) or
+  variance ({\tt V2T})
+\item ButterflyErrorTolerance [Optional]: max allowed error for broker butterfly match, defaults to 0.01 relative rmse
+  of broker butterfly market premiums vs theoretical premiums
+\item TimeWeighting [Optional]: if given, a time weighting scheme is applied for time interpolation, see the
+  documentation of FxOptionTimeWeighting convention for more details
 \item Expiries: Option expiries in period form. A wildcard may also be used. In the wildcard case, it will look for any
   matching quotes provided in the loader, and construct the curve from these. This is currently only supported for {\tt
     ATM} or {\tt Delta} or {\tt BFRR} or {\tt Absolute} curves.
@@ -257,7 +316,7 @@ The meaning of each of the elements in Listings \ref{lst:fxoptionvol_configurati
 \item SmileDelta [Optional]: Strike grid for SmileType {\tt VannaVolga} and {\tt BFRR}, defaults to 25 for VannaVolga
   resp. 10,25 for BFRR \\ Allowable values: a list of integers, see example in Listing
   \ref{lst:fxoptionvol_configuration_smile_bfrr}
-\item FXSpotID: ORE representation of the relevant FX spot quote in the form FX/CCY1/CCY2 
+\item FXSpotID: ORE representation of the relevant FX spot quote in the form FX/CCY1/CCY2
 \item FXForeignCurveID [Optional]: Yield curve, in ORE format Yield/CCY/ID, used as foreign yield curve in smile curves,
   may be omitted for ATM curves.
 \item FXDomesticCurveID [Optional]: Yield curve, in ORE format Yield/CCY/ID, used as domestic yield curve in smile
@@ -273,6 +332,11 @@ The meaning of each of the elements in Listings \ref{lst:fxoptionvol_configurati
   data input. See \ref{sss:fx_option_conv} for more details.
 \item BaseVolatility1: For `ATMTriangulated' this denotes one of the surfaces we want to triangulate from
 \item BaseVolatility2: For `ATMTriangulated' this denotes one of the surfaces we want to triangulate from
+\item SmileExtrapolation [Optional]: Applicable only in case of SmileType Delta. Indicates the extrapolation in the
+smile direction. The allowable values are None, UseInterpolator (or Linear) and Flat. Both Flat and None give flat
+extrapolation. UseInterpolator indicates that the configured interpolation should be continued in the strike
+direction in order to extrapolate. Default if not provided value is Flat.
+
 \end{itemize}
 
 \subsubsection{Equity Curve Structures}
@@ -289,7 +353,7 @@ Listing \ref{lst:eqcurve_configuration} shows the configuration of equity forwar
     <Currency>USD</Currency>
     <ForecastingCurve>EUR1D</ForecastingCurve>
     <!-- DividendYield, ForwardPrice, OptionPremium, NoDividends, ForwardDividendPrice -->
-    <Type>DividendYield</Type> 
+    <Type>DividendYield</Type>
     <!-- Optional node, only used when Type is OptionPremium -->
     <ExerciseStyle>American</ExerciseStyle>
     <!-- Spot quote from the market data file -->
@@ -316,14 +380,14 @@ Listing \ref{lst:eqcurve_configuration} shows the configuration of equity forwar
   </EquityCurve>
   <EquityCurve>
     ...
-  </EquityCurve> 
+  </EquityCurve>
   </EquityCurves>
 \end{minted}
 \caption{Equity curve configuration}
 \label{lst:eqcurve_configuration}
 \end{longlisting}
 
-The meaning of each of the elements is given below. 
+The meaning of each of the elements is given below.
 
 \begin{itemize}
 \item CurveId: Unique identifier of the equity curve structure.
@@ -341,9 +405,9 @@ The meaning of each of the elements is given below.
 \item Extrapolation [Optional]: Boolean flag indicating whether extrapolation in the forward price is allowed. Defaults to {\tt False}.
 \end{itemize}
 
-The equity curves here consists of a spot equity price, as well as a set of either forward prices or else dividend 
+The equity curves here consists of a spot equity price, as well as a set of either forward prices or else dividend
 yields. If the index is a dividend futures index then curve type should be entered as ForwardDividendPrice. In this case the curve will be built from forward prices as normal, but excluded from the SIMM calculations as required by the SIMM methodology.
-Upon construction, ORE stores internally an equity spot price quote, a forecasting curve and a dividend yield 
+Upon construction, ORE stores internally an equity spot price quote, a forecasting curve and a dividend yield
 term structure, which are then used together for projection of forward prices.
 
 \subsubsection{Equity Volatility Structures}
@@ -541,7 +605,7 @@ see \ref{md:equity_option_iv} for details of the market data.
 \end{longlisting}
 
 Finally, the volatility proxy surface configuration layout is given in Listing \ref{lst:eqoptionvol_proxy}. This allows us to use any other surface as a proxy, in cases where there is no option data for a given equity. We provide a name in the \lstinline!EquityVolatilityCurve! field, which must match the \lstinline!CurveId! of another configuration.  \lstinline!FXVolatilityCurve! and \lstinline!CorrelationCurve! must be provided if the currency of the proxy surface is different to that of current surface, that can be omitted otherwise. The proxy surface looks up the volatility in the reference surface based on moneyness.
- 
+
 \begin{longlisting}
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
@@ -576,63 +640,97 @@ elements are the following:
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
 <InflationCurves>
-   <InflationCurve>
-       <CurveId>USCPI_ZC_Swaps</CurveId>
-       <CurveDescription>Estimation Curve for USCPI</CurveDescription>
-       <NominalTermStructure>Yield/USD/USD1D</NominalTermStructure>
-       <Type>ZC</Type>
-       <Quotes>
-           <Quote>ZC_INFLATIONSWAP/RATE/USCPI/1Y</Quote>
-           <Quote>ZC_INFLATIONSWAP/RATE/USCPI/2Y</Quote>
-           ...
-           <Quote>ZC_INFLATIONSWAP/RATE/USCPI/30Y</Quote>
-           <Quote>ZC_INFLATIONSWAP/RATE/USCPI/40Y</Quote>
-       </Quotes>
-       <Conventions>USCPI_INFLATIONSWAP</Conventions>
-       <Extrapolation>true</Extrapolation>
-       <Calendar>US</Calendar>
-       <DayCounter>A365</DayCounter>
-       <Lag>3M</Lag>
-       <Frequency>Monthly</Frequency>
-       <BaseRate>0.01</BaseRate>
-       <Tolerance>0.000000000001</Tolerance>
-       <Seasonality>
-           <BaseDate>20160101</BaseDate>
-           <Frequency>Monthly</Frequency>
-           <Factors>
-               <Factor>SEASONALITY/RATE/MULT/USCPI/JAN</Factor>
-               <Factor>SEASONALITY/RATE/MULT/USCPI/FEB</Factor>
-               <Factor>SEASONALITY/RATE/MULT/USCPI/MAR</Factor>
-               <Factor>SEASONALITY/RATE/MULT/USCPI/APR</Factor>
-               <Factor>SEASONALITY/RATE/MULT/USCPI/MAY</Factor>
-               <Factor>SEASONALITY/RATE/MULT/USCPI/JUN</Factor>
-               <Factor>SEASONALITY/RATE/MULT/USCPI/JUL</Factor>
-               <Factor>SEASONALITY/RATE/MULT/USCPI/AUG</Factor>
-               <Factor>SEASONALITY/RATE/MULT/USCPI/SEP</Factor>
-               <Factor>SEASONALITY/RATE/MULT/USCPI/OCT</Factor>
-               <Factor>SEASONALITY/RATE/MULT/USCPI/NOV</Factor>
-               <Factor>SEASONALITY/RATE/MULT/USCPI/DEC</Factor>
-           </Factors>
-           <OverrideFactors>
-               1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00
-           </OverrideFactors>
-       </Seasonality>
-   </InflationCurve>
+    <InflationCurve>
+        <CurveId>USCPI_ZC_Swaps</CurveId>
+        <CurveDescription>Estimation Curve for USCPI</CurveDescription>
+        <NominalTermStructure>Yield/USD/USD1D</NominalTermStructure>
+        <Type>ZC</Type>
+        <Segments>
+            <Segment>
+                <Conventions>USCPI_INFLATIONSWAP_2M</Conventions>
+                <Quotes>
+                    <Quote>ZC_INFLATIONSWAP/RATE/USCPI/3M</Quote>
+                    <Quote>ZC_INFLATIONSWAP/RATE/USCPI/4M</Quote>
+                    <!-- ...more quotes... -->
+                    <Quote>ZC_INFLATIONSWAP/RATE/USCPI/24M</Quote>
+                </Quotes>
+            </Segment>
+            <Segment>
+                <Conventions>USCPI_INFLATIONSWAP</Conventions>
+                <Quotes>
+                    <Quote>ZC_INFLATIONSWAP/RATE/USCPI/3Y</Quote>
+                    <Quote>ZC_INFLATIONSWAP/RATE/USCPI/4Y</Quote>
+                    <!-- ...more quotes... -->
+                    <Quote>ZC_INFLATIONSWAP/RATE/USCPI/30Y</Quote>
+                </Quotes>
+            </Segment>
+        </Segments>
+        <Extrapolation>true</Extrapolation>
+        <Calendar>US</Calendar>
+        <DayCounter>A365</DayCounter>
+        <Lag>3M</Lag>
+        <Frequency>Monthly</Frequency>
+        <BaseRate/>
+        <Tolerance>0.000000000001</Tolerance>
+        <InterpolationVariable>ZeroRate</InterpolationVariable>
+        <InterpolationMethod>Linear</InterpolationMethod>
+        <UseLastFixingDate>false</UseLastFixingDate>
+        <Seasonality>
+            <BaseDate>20160101</BaseDate>
+            <Frequency>Monthly</Frequency>
+            <Factors>
+                <Factor>SEASONALITY/RATE/MULT/USCPI/JAN</Factor>
+                <Factor>SEASONALITY/RATE/MULT/USCPI/FEB</Factor>
+                <!-- ...more quotes... -->
+                <Factor>SEASONALITY/RATE/MULT/USCPI/DEC</Factor>
+            </Factors>
+        </Seasonality>
+    </InflationCurve>
 </InflationCurves>
 \end{minted}
 \caption{Inflation Curve Configuration}
 \label{lst:inflationcurve_configuration}
 \end{longlisting}
 
+\paragraph{Legacy Schema}
+The legacy schema (still supported) uses a single block for quotes and conventions:
+\begin{minted}[fontsize=\footnotesize]{xml}
+<InflationCurve>
+    <CurveId>USCPI_ZC_Swaps</CurveId>
+    <CurveDescription>Estimation Curve for USCPI</CurveDescription>
+    <NominalTermStructure>Yield/USD/USD1D</NominalTermStructure>
+    <Type>ZC</Type>
+    <Quotes>
+        <Quote>ZC_INFLATIONSWAP/RATE/USCPI/1Y</Quote>
+        <!-- ...more quotes... -->
+        <Quote>ZC_INFLATIONSWAP/RATE/USCPI/40Y</Quote>
+    </Quotes>
+    <Conventions>USCPI_INFLATIONSWAP</Conventions>
+    <!-- ... -->
+</InflationCurve>
+\end{minted}
+
 \begin{itemize}
 \item {\tt NominalTermStructure}: The interest rate curve to be used to strip the inflation curve.
 \item {\tt Type}: The type of the curve, {\tt ZC} for zero coupon, {\tt YY} for year on year.
-\item {\tt Quotes}: The instruments' market quotes from which to bootstrap the curve.
-\item {\tt Conventions}: The conventions applicable to the curve instruments.
+\item {\tt Segments}: Allows multiple instrument/convention blocks.
+\item {\tt Quotes}: Legacy (use instead segments). The instruments' market quotes from which to bootstrap the curve.
+\item {\tt Conventions}: Legacy (use instead segments). The conventions applicable to the curve instruments.
 \item {\tt Lag}: The observation lag used in the term structure.
 \item {\tt Frequency}: The frequency of index fixings.
 \item {\tt BaseRate}: The rate at $t=0$, this introduces an additional degree of freedom to get a smoother curve. If not
   given, it is defaulted to the first market rate.
+\item {\tt InterpolationVariable}: Optional, the variable on which the interpolation of the zero inflation curve is
+  performed. The allowable values \emph{ZeroRate} and \emph{PriceIndex}. If not provided, the default value is \emph{ZeroRate}. Ignored for year on year inflation curves.
+\item {\tt InterpolationMethod}: Only relevant if InterpolationVariable is PriceIndex, allowed is \emph{Linear} and \emph{LogLinear}. Defaults to \emph{Linear}.
+\end{itemize}
+
+The segment block defines instruments to use for curve building, with their quotes and swap conventions.
+
+\paragraph{Segment Schema}
+\begin{itemize}
+\item {\tt Conventions}: The conventions applicable to the segment's instruments.
+\item {\tt Quotes}: The instruments' market quotes for the segment.
 \end{itemize}
 
 The optional seasonality block defines a multiplicative seasonality and contains the following elements:
@@ -648,9 +746,13 @@ The optional seasonality block defines a multiplicative seasonality and contains
   block.
 \end{itemize}
 
-We note that if zero coupon swap market quotes are given, but the type is set to YY, the zero coupon swap quotes will be
+\paragraph{Notes}
+\begin{itemize}
+\item All swaps used in segments must reference the same inflation index name for curve building, but can differ in their swap conventions (e.g., lag, interpolation).
+\item If zero coupon swap market quotes are given, but the type is set to YY, the zero coupon swap quotes will be
 converted to year on year swap quotes on the fly, using the plain forward rates, i.e. no convexity adjustment is
 applied.
+\end{itemize}
 
 \subsubsection{Inflation Cap/Floor Volatility Surfaces}
 
@@ -676,7 +778,7 @@ floor price surface.
           <!-- QuoteType 'Volatility' requires <Strikes>: -->
           <!-- <Strikes>-0.02,-0.01,-0.005,0.00,0.01,0.015,0.02,0.025,0.03</Strikes> -->
           <!-- QuoteType 'Price' requires <CapStrikes> and/or <FloorStrikes>: -->
-          <CapStrikes/> 
+          <CapStrikes/>
           <FloorStrikes>-0.02,-0.01,-0.005,0.00,0.01,0.015,0.02,0.025,0.03</FloorStrikes>
           <Index>EUHICPXT</Index>
           <IndexCurve>Inflation/EUHICPXT/EUHICPXT_ZC_Swaps</IndexCurve>
@@ -691,20 +793,20 @@ floor price surface.
 \end{longlisting}
 
 \begin{itemize}
-\item {\tt Type}: The type of the surface, {\tt ZC} for zero coupon, {\tt YY} for year on year. 
-\item {\tt QuoteType}: The type of the quotes used to build the surface, {\tt Volatility} for volatility quotes, {\tt Price} for bootstrap from option premia. 
-\item {\tt VolatilityType}: If QuoteType is {\tt Volatility}, this specifies whether the input is {\tt Normal}, {\tt Lognormal} or {\tt ShiftedLognormal}. 
-\item {\tt Extrapolation}: Boolean to indicate whether the surface should allow extrapolation. 
+\item {\tt Type}: The type of the surface, {\tt ZC} for zero coupon, {\tt YY} for year on year.
+\item {\tt QuoteType}: The type of the quotes used to build the surface, {\tt Volatility} for volatility quotes, {\tt Price} for bootstrap from option premia.
+\item {\tt VolatilityType}: If QuoteType is {\tt Volatility}, this specifies whether the input is {\tt Normal}, {\tt Lognormal} or {\tt ShiftedLognormal}.
+\item {\tt Extrapolation}: Boolean to indicate whether the surface should allow extrapolation.
 \item {\tt DayCounter}: The term structure's day counter
-\item {\tt Calendar}: The term structure's calendar 
+\item {\tt Calendar}: The term structure's calendar
 \item {\tt BusinessDayConvention}: The term structure's business day convention
 \item {\tt Tenors:} The maturities for which cap and floor prices are quoted
 \item {\tt Strikes}: In the case of QuoteType {\tt Volatility}, the strikes for which floor prices are quoted (may, and will usually, overlap with the cap
-  strike region); neither CapStrikes nor FloorStrikes are expected in this case. 
+  strike region); neither CapStrikes nor FloorStrikes are expected in this case.
 \item {\tt CapStrikes}: The strikes for which cap prices are quoted (may, and will usually, overlap with the floor
   strike region); if the QuoteType above is {\tt Price}, either CapStrikes or FloorStrikes or both are required.
 \item {\tt FloorStrikes}: The strikes for which floor prices are quoted (may and will usually) overlap with the cap
-  strike region); if the QuoteType above is {\tt Price}, either CapStrikes or FloorStrikes or both are required. 
+  strike region); if the QuoteType above is {\tt Price}, either CapStrikes or FloorStrikes or both are required.
 \item {\tt Index}: The underlying zero inflation index.
 \item {\tt IndexCurve}: The curve id of the index's projection curve used to determine the ATM levels for the surface.
 \item {\tt IndexInterpolated}: Flag indicating whether the index should be interpolating.
@@ -888,7 +990,13 @@ When the CDS volatility surface is configured as in Listing \ref{lst:cdsvol_surf
 
 \subsubsection{Base Correlations}
 
-Listing \ref{lst:basecorr_configuration} shows the configuration of a Base Correlation curve.
+Base correlations can be configured using either quoted base correlations directly or by implying them from quoted upfront quotes.
+When using quoted base correlations, the market quotes are directly used to construct the base correlation curve.
+Alternatively, base correlations can be implied from upfront quotes of tranches, which involves a calibration process to
+derive the base correlation values that best fit the observed market prices of the tranches.
+
+
+Listing \ref{lst:basecorr_configuration} shows the configuration of a Base Correlation curve from quoted correlations.
 
 \begin{longlisting}
 %\hrule\medskip
@@ -911,7 +1019,7 @@ Listing \ref{lst:basecorr_configuration} shows the configuration of a Base Corre
 \label{lst:basecorr_configuration}
 \end{longlisting}
 
-The meaning of each of the elements in Listing \ref{lst:basecorr_configuration} is given below. 
+The meaning of each of the elements in Listing \ref{lst:basecorr_configuration} is given below.
 
 \begin{itemize}
 \item CurveId: Unique identifier of the base correlation structure
@@ -926,10 +1034,82 @@ Allowable values: Any positive number less than one
 \item Extrapolate: Boolean to indicate whether the correlation curve shall be extrapolated or not
 \end{itemize}
 
+Listing \ref{lst:basecorr_upfront_configuration} shows the configuration of a Base Correlation curve from upfront quotes or base correlations if it fails to imply the base correlations.
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<BaseCorrelation>
+  <CurveId>RED:2I666VDI3</CurveId>
+  <CurveDescription />
+  <Terms>*</Terms>
+  <DetachmentPoints>*</DetachmentPoints>
+  <SettlementDays>0</SettlementDays>
+  <Calendar>weekends only</Calendar>
+  <BusinessDayConvention>Following</BusinessDayConvention>
+  <DayCounter>Actual/365 (Fixed)</DayCounter>
+  <Extrapolate>true</Extrapolate>
+  <QuoteName>2I666VDI3</QuoteName>
+  <StartDate>2023-09-20</StartDate>
+  <Rule>CDS2015</Rule>
+  <AdjustForLosses>true</AdjustForLosses>
+  <QuoteTypes>
+    <QuoteType>PRICE</QuoteType>
+    <QuoteType>BASE_CORRELATION</QuoteType>
+  <QuoteTypes>
+  <IndexSpread>0.01</IndexSpread>
+  <Currency>EUR</Currency>
+  <CalibrateConstituentsToIndexSpread>true</CalibrateConstituentsToIndexSpread>
+  <AdjustForLosses>true</AdjustForLosses>
+  <UseAssumedRecovery>true</UseAssumedRecovery>
+  <RecoveryGrid>
+    <Grid seniority="SECDOM">0.4</Grid>
+    <Grid seniority="SNRFOR">0.7, 0.40000000000000002, 0.10000000000000001</Grid>
+    <Grid seniority="SNRLAC">0.4</Grid>
+    <Grid seniority="SUBLT2">0.2</Grid>
+  </RecoveryGrid>
+  <RecoveryProbabilities>
+    <Probabilities seniority="SECDOM">1</Probabilities>
+    <Probabilities seniority="SNRFOR">0.35, 0.29999999999999999, 0.34999999999999998</Probabilities>
+    <Probabilities seniority="SNRLAC">1</Probabilities>
+    <Probabilities seniority="SUBLT2">1</Probabilities>
+  </RecoveryProbabilities>
+</BaseCorrelation>
+\end{minted}
+\caption{Base Correlation Configuration from Upfront Quotes}
+\label{lst:basecorr_upfront_configuration}
+\end{longlisting}
+
+The meaning of each of the elements in Listing \ref{lst:basecorr_upfront_configuration} is given below.
+
+\begin{itemize}
+\item CurveId: Unique identifier of the base correlation structure.
+\item CurveDescription [Optional]: A description of the base correlation structure, may be left blank.
+\item Terms: Comma-separated list of tenors, sorted in increasing order, possibly a single term to represent a flat term structure in the time direction. A wildcard (*) can be used to include all terms.
+\item DetachmentPoints: Comma-separated list of equity tranche detachment points, sorted in increasing order. A wildcard (*) can be used to include all detachment points.
+\item SettlementDays: The floating term structure's settlement days argument used in the reference date calculation.
+\item Calendar: The term structure's calendar used in tenor to date conversions.
+\item BusinessDayConvention: The term structure's business day convention used in tenor to date conversion.
+\item DayCounter: The term structure's day counter used in date to time conversions.
+\item Extrapolate: Boolean to indicate whether the correlation curve shall be extrapolated or not.
+\item QuoteName: The name of the quote used for the base correlation.
+\item StartDate: The start date for the base correlation curve.
+\item Rule: The rule used for the base correlation curve, e.g., CDS2015.
+\item AdjustForLosses: Boolean to indicate whether to adjust for losses.
+\item QuoteTypes: A priority list of quote types to use for the base correlation curve. If it fails to build a base correlation from the first quote type it will try the next one.
+\item IndexSpread: The spread of the index.
+\item Currency: The currency of the base correlation curve.
+\item CalibrateConstituentsToIndexSpread: Relevant only when price quotes are used. Indicates if the constituents should be calibrated to the index spread before deriving the base correlations from the tranche prices.
+\item UseAssumedRecovery: Boolean flag to indicate whether to use specialized default curves bootstrapped with assumed recovery rates (mean of the stochastic recovery rate distribution). These curves have following the naming convention
+\_\_CDO\_CurveName\_\&\_REC\_0.30\_\&\_ and are used to derive the base correlations.
+\item RecoveryGrid: Specifies the recovery rates for different seniorities of the constituent. Use wildcard * to apply one grid for all seniorities.
+\item RecoveryProbabilities: Specifies the probabilities of the recovery rates for different seniorities. Use wildcard * to apply one grid for all seniorities.
+\end{itemize}
+
+
 \subsubsection{FXSpots}
 
 Listing \ref{lst:fxspot_configuration} shows the configuration of the fxSpots. It is assumed that each FXSpot CurveId is of
-the form "Ccy1Ccy2".
+the form ``Ccy1Ccy2''.
 \begin{longlisting}
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
@@ -965,11 +1145,18 @@ Listing \ref{lst:security_configuration} shows the configuration of the Securiti
 \item an optional RecoveryRateQuote. Usually a pricer will fall back on the recovery rate associated to the credit curve
   involved in the pricing if no security specific recovery rate is given. If no credit curve is given either, a zero
   recovery rate will be assumed.
+\item an optional ConversionFactor. In case of a bond future, a conversion factor might be applied. The application requires
+  a clean price settlement. Otherwise the default value of 1.0 for the conversion factor will be used.
+\item an optional PriceQuote. If the bond spread imply analytics is available, this is used to imply a SpreadQuote to
+  match a given bond price. Notice that if a SpreadQuote is given explicitly in the market data, this will override an
+  implied spread.
 \end{itemize}
 
 If no configuration is given for a security, in general a pricer will assume as zero spread and recovery rate. Notice
 that in this case the spread and recovery will not be simulated and therefore also be excluded from the sensitivity and
 stress analysis.
+
+Note: in case of a forward bond, the convention for security specification requires the format \emph{securityId\_FWDEXP\_expiryDate}.
 
 \begin{longlisting}
 %\hrule\medskip
@@ -980,6 +1167,8 @@ stress analysis.
     <CurveDescription>Security</CurveDescription>
     <SpreadQuote>BOND/YIELD_SPREAD/SECURITY_1</SpreadQuote>
     <RecoveryRateQuote>RECOVERY_RATE/RATE/SECURITY_1</RecoveryRateQuote>
+    <PriceQuote>BOND/PRICE/SECURITY_1</PriceQuote>
+    <ConversionFactor>BOND/CONVERSION_FACTOR/SECURITY_1</ConversionFactor>
   </Security>
 </Securities>
 \end{minted}
@@ -1042,6 +1231,8 @@ The \lstinline!BootstrapConfig! node, outlined in listing \ref{lst:bootstrap_con
   <MaxFactor>...</MaxFactor>
   <MinFactor>...</MinFactor>
   <DontThrowSteps>...</DontThrowSteps>
+  <Global>...<Global>
+  <SmoothnessLambda>...</SmoothnessLambda>
 </BootstrapConfig>
 \end{minted}
 \caption{\lstinline!BootstrapConfig! node outline}
@@ -1050,8 +1241,10 @@ The \lstinline!BootstrapConfig! node, outlined in listing \ref{lst:bootstrap_con
 
 The meaning of each of the elements is:
 \begin{itemize}
-\item \lstinline!Accuracy! [Optional]:
-The accuracy with which the implied quote must match the market quote for each instrument in the curve bootstrap. This node should hold a positive real number. If omitted, the default value is \num[scientific-notation=true]{1.0e-12}.
+\item \lstinline!Accuracy! [Optional]: The accuracy with which the implied quote must match the market quote for each
+  instrument in the curve bootstrap (iterative bootstrap) or the accuracy of the global optimizer (global
+  bootstrap). This node should hold a positive real number. If omitted, the default value is
+  \num[scientific-notation=true]{1.0e-12}.
 
 \item \lstinline!GlobalAccuracy! [Optional]:
 If the interpolation method in the bootstrap is global, e.g. cubic spline, the bootstrap routine needs to perform multiple iterative bootstraps of the curve to converge. After each such bootstrap of the full curve, the absolute value of the change between the current bootstrap and previous bootstrap for the curve value at each pillar is calculated. The global bootstrap is deemed to have converged if the maximum of these changes is less than the global accuracy or the accuracy from the \lstinline!Accuracy! node. This node should hold a positive real number. If omitted, the global accuracy is set equal to the accuracy from the \lstinline!Accuracy! node. This node is useful in some cases where a slightly less restrictive accuracy, than that given by the \lstinline!Accuracy! node, is needed for the global bootstrap.
@@ -1070,6 +1263,22 @@ This node is used only if \lstinline!MaxAttempts! is greater than 1. The meaning
 
 \item \lstinline!DontThrowSteps! [Optional]:
 This node is used only if \lstinline!DontThrow! is \lstinline!true!. The meaning of this node is given in the description of the \lstinline!DontThrow! node. This node should hold a positive integer. If omitted, the default value is 10.
+
+\item \lstinline!Global! [Optional]: Defaults to false. This nodes specifies whether the curve should use a global
+  bootstrap over all instruments of the curve (true) or iterative bootstrap (false, default value). If global bootstrap
+  is used, only the fields Accuracy and SmoothnessLambda of the BootstrapConfig are relevant. Accurcy specifies the
+  accuracy of the global optimizer in this case.  Global bootstrap is required to build curves that form a cycle in the
+  dependency graph, in this case all members of the cycle must have Global set to true in their bootstrap configs. In
+  this case a global optimization is run over all instrument of all members of the cycle simultaneously. Global
+  bootstrap is also required if according to the PillarChoice configuration of each segment there are curve instrument
+  without or with more than one associated curve pillar date. Finally, global bootstrap can be preferable over iterative
+  bootstrap if the latter requires an outer convergence loop, i.e. if a pillar choice is not set to LastRelevatDate or
+  if the interpolation is non-local.
+
+\item \lstinline!SmoothnessLambda! [Optional]: Defaults to zero. Only applies if GLobal is set to true. If positive,
+  penalty components are included in the global optimization used to build a curve. For each adjacent pair of discrete
+  forward rates $F_i$, $F_{i+1}$ between curve interpolation pillars, the term $\lambda\cdot(F_{i+1} - F_i)$ is added to
+  the target function vector of which the MSE is optimized.
 
 \end{itemize}
 

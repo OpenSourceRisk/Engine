@@ -56,19 +56,19 @@ struct TestData {
         vol[2][1] = 0.09;
 
         refVol = Handle<BlackVolTermStructure>(
-            boost::make_shared<BlackVarianceSurface>(origRefDate, TARGET(), refDates, strikes, vol, Actual365Fixed()));
+            QuantLib::ext::make_shared<BlackVarianceSurface>(origRefDate, TARGET(), refDates, strikes, vol, Actual365Fixed()));
         refVol->enableExtrapolation();
 
         // set up floating spot and term structures
-        spot = boost::make_shared<SimpleQuote>(1.00);
+        spot = QuantLib::ext::make_shared<SimpleQuote>(1.00);
         spot_q = Handle<Quote>(spot);
-        rate = boost::make_shared<SimpleQuote>(0.02);
+        rate = QuantLib::ext::make_shared<SimpleQuote>(0.02);
         rate_q = Handle<Quote>(rate);
-        div = boost::make_shared<SimpleQuote>(0.02);
+        div = QuantLib::ext::make_shared<SimpleQuote>(0.02);
         div_q = Handle<Quote>(div);
 
-        riskfreeTs = Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, TARGET(), rate_q, Actual365Fixed()));
-        dividendTs = Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, TARGET(), div_q, Actual365Fixed()));
+        riskfreeTs = Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(0, TARGET(), rate_q, Actual365Fixed()));
+        dividendTs = Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(0, TARGET(), div_q, Actual365Fixed()));
     }
 
     SavedSettings backup;
@@ -77,7 +77,7 @@ struct TestData {
     std::vector<Real> strikes;
     Matrix vol;
     Handle<BlackVolTermStructure> refVol;
-    boost::shared_ptr<SimpleQuote> spot, rate, div;
+    QuantLib::ext::shared_ptr<SimpleQuote> spot, rate, div;
     Handle<Quote> spot_q, rate_q, div_q;
     Handle<YieldTermStructure> riskfreeTs, dividendTs;
 };
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(testConstantVarianceStickyStrike) {
     TestData d;
 
     Handle<DynamicBlackVolTermStructure<tag::surface> > dyn(
-        boost::make_shared<DynamicBlackVolTermStructure<tag::surface> >(
+        QuantLib::ext::make_shared<DynamicBlackVolTermStructure<tag::surface> >(
             d.refVol, 0, TARGET(), ConstantVariance, StickyStrike, d.riskfreeTs, d.dividendTs, d.spot_q));
 
     dyn->enableExtrapolation();
@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(testConstantVarianceStickyLogMoneyness) {
     TestData d;
 
     Handle<DynamicBlackVolTermStructure<tag::surface> > dyn(
-        boost::make_shared<DynamicBlackVolTermStructure<tag::surface> >(
+        QuantLib::ext::make_shared<DynamicBlackVolTermStructure<tag::surface> >(
             d.refVol, 0, TARGET(), ConstantVariance, StickyLogMoneyness, d.riskfreeTs, d.dividendTs, d.spot_q));
 
     dyn->enableExtrapolation();
@@ -234,7 +234,7 @@ BOOST_AUTO_TEST_CASE(testForwardVarianceStickyStrike) {
     TestData d;
 
     Handle<DynamicBlackVolTermStructure<tag::surface> > dyn(
-        boost::make_shared<DynamicBlackVolTermStructure<tag::surface> >(
+        QuantLib::ext::make_shared<DynamicBlackVolTermStructure<tag::surface> >(
             d.refVol, 0, TARGET(), ForwardForwardVariance, StickyStrike, d.riskfreeTs, d.dividendTs, d.spot_q));
 
     dyn->enableExtrapolation();
@@ -299,7 +299,7 @@ BOOST_AUTO_TEST_CASE(testForwardVarianceStickyLogMoneyness) {
     TestData d;
 
     Handle<DynamicBlackVolTermStructure<tag::surface> > dyn(
-        boost::make_shared<DynamicBlackVolTermStructure<tag::surface> >(
+        QuantLib::ext::make_shared<DynamicBlackVolTermStructure<tag::surface> >(
             d.refVol, 0, TARGET(), ForwardForwardVariance, StickyLogMoneyness, d.riskfreeTs, d.dividendTs, d.spot_q));
 
     dyn->enableExtrapolation();

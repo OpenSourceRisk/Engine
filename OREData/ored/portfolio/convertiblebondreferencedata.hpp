@@ -29,7 +29,7 @@
 
 #include <ql/cashflow.hpp>
 
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 
 namespace ore {
 namespace data {

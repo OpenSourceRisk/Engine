@@ -118,7 +118,7 @@ public:
     void accept(AcyclicVisitor&) override;
     //@}
 private:
-    boost::shared_ptr<OvernightIndex> overnightIndex_;
+    QuantLib::ext::shared_ptr<OvernightIndex> overnightIndex_;
     std::vector<Date> valueDates_, fixingDates_;
     mutable std::vector<Rate> fixings_;
     Size n_;
@@ -187,6 +187,10 @@ public:
     Real effectiveCapletVolatility() const;
     //! effective floorlet volatility
     Real effectiveFloorletVolatility() const;
+    //! stripped caplet volatility
+    Real strippedCapletVolatility() const;
+    //! stripped floorlet volatility
+    Real strippedFloorletVolatility() const;
     //@}
     //! \name Visitability
     //@{
@@ -206,23 +210,26 @@ protected:
     bool localCapFloor_;
     mutable Real effectiveCapletVolatility_;
     mutable Real effectiveFloorletVolatility_;
+    mutable Real strippedCapletVolatility_;
+    mutable Real strippedFloorletVolatility_;
 };
 
 //! capped floored overnight indexed coupon pricer base class
 class CappedFlooredOvernightIndexedCouponPricer : public FloatingRateCouponPricer {
 public:
-    CappedFlooredOvernightIndexedCouponPricer(const Handle<OptionletVolatilityStructure>& v,
-                                              const bool effectiveVolatilityInput = false);
+    CappedFlooredOvernightIndexedCouponPricer(const Handle<OptionletVolatilityStructure>& v);
     Handle<OptionletVolatilityStructure> capletVolatility() const;
-    bool effectiveVolatilityInput() const;
     Real effectiveCapletVolatility() const;   // only available after capletRate() was called
     Real effectiveFloorletVolatility() const; // only available after floorletRate() was called
+    Real strippedCapletVolatility() const;    // only available after capletRate() was called
+    Real strippedFloorletVolatility() const;  // only available after floorletRate() was called
 
 protected:
     Handle<OptionletVolatilityStructure> capletVol_;
-    bool effectiveVolatilityInput_;
     mutable Real effectiveCapletVolatility_ = Null<Real>();
     mutable Real effectiveFloorletVolatility_ = Null<Real>();
+    mutable Real strippedCapletVolatility_ = Null<Real>();
+    mutable Real strippedFloorletVolatility_ = Null<Real>();
 };
 
 //! helper class building a sequence of overnight coupons
@@ -251,12 +258,12 @@ public:
     OvernightLeg& withNakedOption(const bool nakedOption);
     OvernightLeg& withLocalCapFloor(const bool localCapFloor);
     OvernightLeg& withInArrears(const bool inArrears);
-    OvernightLeg& withLastRecentPeriod(const boost::optional<Period>& lastRecentPeriod);
+    OvernightLeg& withLastRecentPeriod(const QuantLib::ext::optional<Period>& lastRecentPeriod);
     OvernightLeg& withLastRecentPeriodCalendar(const Calendar& lastRecentPeriodCalendar);
-    OvernightLeg& withOvernightIndexedCouponPricer(const boost::shared_ptr<OvernightIndexedCouponPricer>& couponPricer);
+    OvernightLeg& withOvernightIndexedCouponPricer(const QuantLib::ext::shared_ptr<OvernightIndexedCouponPricer>& couponPricer);
     OvernightLeg& withPaymentDates(const std::vector<Date>& paymentDates);
     OvernightLeg& withCapFlooredOvernightIndexedCouponPricer(
-        const boost::shared_ptr<CappedFlooredOvernightIndexedCouponPricer>& couponPricer);
+        const QuantLib::ext::shared_ptr<CappedFlooredOvernightIndexedCouponPricer>& couponPricer);
     operator Leg() const;
 
 private:
@@ -278,11 +285,11 @@ private:
     bool nakedOption_;
     bool localCapFloor_;
     bool inArrears_;
-    boost::optional<Period> lastRecentPeriod_;
+    QuantLib::ext::optional<Period> lastRecentPeriod_;
     Calendar lastRecentPeriodCalendar_;
     std::vector<QuantLib::Date> paymentDates_;
-    boost::shared_ptr<OvernightIndexedCouponPricer> couponPricer_;
-    boost::shared_ptr<CappedFlooredOvernightIndexedCouponPricer> capFlooredCouponPricer_;
+    QuantLib::ext::shared_ptr<OvernightIndexedCouponPricer> couponPricer_;
+    QuantLib::ext::shared_ptr<CappedFlooredOvernightIndexedCouponPricer> capFlooredCouponPricer_;
 };
 
 } // namespace QuantExt

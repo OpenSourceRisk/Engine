@@ -42,14 +42,17 @@ using namespace QuantLib;
 
 class DynamicOptionletVolatilityStructure : public OptionletVolatilityStructure {
 public:
-    DynamicOptionletVolatilityStructure(const boost::shared_ptr<OptionletVolatilityStructure>& source,
+    //Constructor with the reference date based on the global evaluation date
+    DynamicOptionletVolatilityStructure(const QuantLib::ext::shared_ptr<OptionletVolatilityStructure>& source,
                                         Natural settlementDays, const Calendar& calendar,
                                         ReactionToTimeDecay decayMode = ConstantVariance);
+    
+    QuantLib::ext::shared_ptr<OptionletVolatilityStructure> getSource() { return source_; }
 
 protected:
     //! \name OptionletVolatilityStructure interface
     //@{
-    boost::shared_ptr<SmileSection> smileSectionImpl(Time optionTime) const override;
+    QuantLib::ext::shared_ptr<SmileSection> smileSectionImpl(Time optionTime) const override;
     Volatility volatilityImpl(Time optionTime, Rate strike) const override;
     //@}
 
@@ -74,7 +77,7 @@ protected:
     Real displacement() const override;
 
 private:
-    const boost::shared_ptr<OptionletVolatilityStructure> source_;
+    const QuantLib::ext::shared_ptr<OptionletVolatilityStructure> source_;
     ReactionToTimeDecay decayMode_;
     const Date originalReferenceDate_;
     const VolatilityType volatilityType_;

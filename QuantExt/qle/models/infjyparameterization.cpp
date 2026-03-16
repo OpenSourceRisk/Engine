@@ -29,9 +29,9 @@ using QuantLib::ZeroInflationTermStructure;
 namespace QuantExt {
 
 InfJyParameterization::InfJyParameterization(
-    boost::shared_ptr<Lgm1fParametrization<ZeroInflationTermStructure>> realRate,
-    boost::shared_ptr<FxBsParametrization> index,
-    boost::shared_ptr<ZeroInflationIndex> inflationIndex)
+    QuantLib::ext::shared_ptr<Lgm1fParametrization<ZeroInflationTermStructure>> realRate,
+    QuantLib::ext::shared_ptr<FxBsParametrization> index,
+    QuantLib::ext::shared_ptr<ZeroInflationIndex> inflationIndex)
     : Parametrization(realRate->currency(), realRate->name()),
       realRate_(realRate), index_(index), inflationIndex_(inflationIndex) {}
 
@@ -44,7 +44,7 @@ const Array& InfJyParameterization::parameterTimes(const Size i) const {
     }
 }
 
-const boost::shared_ptr<Parameter> InfJyParameterization::parameter(const Size i) const {
+const QuantLib::ext::shared_ptr<Parameter> InfJyParameterization::parameter(const Size i) const {
     checkIndex(i);
     if (i < 2) {
         return realRate_->parameter(i);
@@ -58,15 +58,15 @@ void InfJyParameterization::update() const {
     index_->update();
 }
 
-boost::shared_ptr<Lgm1fParametrization<ZeroInflationTermStructure>> InfJyParameterization::realRate() const {
+QuantLib::ext::shared_ptr<Lgm1fParametrization<ZeroInflationTermStructure>> InfJyParameterization::realRate() const {
     return realRate_;
 }
 
-boost::shared_ptr<FxBsParametrization> InfJyParameterization::index() const {
+QuantLib::ext::shared_ptr<FxBsParametrization> InfJyParameterization::index() const {
     return index_;
 }
 
-boost::shared_ptr<ZeroInflationIndex> InfJyParameterization::inflationIndex() const {
+QuantLib::ext::shared_ptr<ZeroInflationIndex> InfJyParameterization::inflationIndex() const {
     return inflationIndex_;
 }
 

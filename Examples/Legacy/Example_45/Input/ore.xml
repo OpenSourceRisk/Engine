@@ -1,0 +1,39 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<ORE>
+  <Setup>
+    <Parameter name="asofDate">2022-09-26</Parameter>
+    <Parameter name="inputPath">./Input</Parameter>
+    <Parameter name="outputPath">./Output</Parameter>
+    <Parameter name="marketDataFile">market.txt</Parameter>
+    <Parameter name="fixingDataFile">fixings.txt</Parameter>
+    <Parameter name="logFile">log.txt</Parameter>
+    <Parameter name="curveConfigFile">curveconfig.xml</Parameter>
+    <Parameter name="conventionsFile">conventions.xml</Parameter>
+    <Parameter name="marketConfigFile">todaysmarket.xml</Parameter>
+    <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
+    <Parameter name="portfolioFile">portfolio.xml</Parameter>
+    <Parameter name="logMask">255</Parameter>
+    <Parameter name="lazyMarketBuilding">true</Parameter>
+    <Parameter name="continueOnError">true</Parameter>
+    <Parameter name="observationModel">Disable</Parameter>
+    <Parameter name="implyTodaysFixings">N</Parameter>
+    <Parameter name="referenceDataFile">reference_data.xml</Parameter>
+  </Setup>
+  <Markets>
+    <Parameter name="lgmcalibration">default</Parameter>
+    <Parameter name="fxcalibration">default</Parameter>
+    <Parameter name="pricing">default</Parameter>
+    <Parameter name="bondpricing">default</Parameter>
+  </Markets>
+  <Analytics>
+    <Analytic type="npv">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="outputFileName">npv.csv</Parameter>
+      <Parameter name="baseCurrency">USD</Parameter>
+    </Analytic>
+    <Analytic type="cashflow">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="outputFileName">flows.csv</Parameter>
+    </Analytic>
+  </Analytics>
+</ORE>

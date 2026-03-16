@@ -20,8 +20,8 @@
 namespace ore {
 namespace data {
 
-boost::shared_ptr<ore::data::Trade>
-AsianOptionScriptedEngineBuilder::build(const Trade* trade, const boost::shared_ptr<EngineFactory>& engineFactory) {
+QuantLib::ext::shared_ptr<ore::data::Trade>
+AsianOptionScriptedEngineBuilder::build(const Trade* trade, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     auto asianOption = dynamic_cast<const ore::data::AsianOption*>(trade);
 
@@ -29,9 +29,9 @@ AsianOptionScriptedEngineBuilder::build(const Trade* trade, const boost::shared_
         asianOption != nullptr,
         "AsianOptionScriptedEngineBuilder: internal error, could not cast to ore::data::AsianOption. Contact dev.");
 
-    auto basketOption = boost::make_shared<BasketOption>(
+    auto basketOption = QuantLib::ext::make_shared<BasketOption>(
         asianOption->payCurrency(), std::to_string(asianOption->quantity()), asianOption->strike(),
-        std::vector<boost::shared_ptr<ore::data::Underlying>>(1, asianOption->underlying()), asianOption->option(),
+        std::vector<QuantLib::ext::shared_ptr<ore::data::Underlying>>(1, asianOption->underlying()), asianOption->option(),
         asianOption->settlementDate() == QuantLib::Null<QuantLib::Date>()
             ? ""
             : ore::data::to_string(asianOption->settlementDate()),

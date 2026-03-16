@@ -32,14 +32,14 @@ class CliquetOptionMcScriptEngine : public QuantExt::CliquetOption::engine {
 public:
     CliquetOptionMcScriptEngine(const std::string& underlying, const std::string& baseCcy,
                                 const std::string& underlyingCcy,
-                                const boost::shared_ptr<GeneralizedBlackScholesProcess>& p,
+                                const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& p,
                                 const std::set<std::string>& tradeTypes, const Size samples, const Size regressionOrder,
                                 bool interactive, bool scriptedLibraryOverride);
     void calculate() const override;
 
 private:
     const std::string underlying_, baseCcy_, underlyingCcy_;
-    const boost::shared_ptr<GeneralizedBlackScholesProcess> p_;
+    const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> p_;
     const Size samples_, regressionOrder_;
     bool interactive_;
     ASTNodePtr ast_;

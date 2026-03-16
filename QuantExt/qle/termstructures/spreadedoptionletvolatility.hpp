@@ -43,8 +43,8 @@ public:
 protected:
     //! \name OptionletVolatilityStructure interface
     //@{
-    boost::shared_ptr<SmileSection> smileSectionImpl(const Date& d) const override;
-    boost::shared_ptr<SmileSection> smileSectionImpl(Time optionT) const override;
+    QuantLib::ext::shared_ptr<SmileSection> smileSectionImpl(const Date& d) const override;
+    QuantLib::ext::shared_ptr<SmileSection> smileSectionImpl(Time optionT) const override;
     Volatility volatilityImpl(Time optionTime, Rate strike) const override;
     //@}
 };

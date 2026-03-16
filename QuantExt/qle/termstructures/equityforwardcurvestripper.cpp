@@ -62,8 +62,8 @@ Real PriceError::operator()(Volatility x) const {
 
 namespace QuantExt {
 
-EquityForwardCurveStripper::EquityForwardCurveStripper(const boost::shared_ptr<OptionPriceSurface>& callSurface,
-                                                       const boost::shared_ptr<OptionPriceSurface>& putSurface,
+EquityForwardCurveStripper::EquityForwardCurveStripper(const QuantLib::ext::shared_ptr<OptionPriceSurface>& callSurface,
+                                                       const QuantLib::ext::shared_ptr<OptionPriceSurface>& putSurface,
                                                        Handle<YieldTermStructure>& forecastCurve,
                                                        Handle<QuantLib::Quote>& equitySpot, Exercise::Type type)
     : callSurface_(callSurface), putSurface_(putSurface), forecastCurve_(forecastCurve), equitySpot_(equitySpot),
@@ -153,16 +153,16 @@ void EquityForwardCurveStripper::performCalculations() const {
                 Real q = forecastCurve_->zeroRate(t, Continuous) - log(forward / equitySpot_->value()) / t;
 
                 // term structures needed to get implied vol
-                boost::shared_ptr<SimpleQuote> volQuote = boost::make_shared<SimpleQuote>(0.1);
+                QuantLib::ext::shared_ptr<SimpleQuote> volQuote = QuantLib::ext::make_shared<SimpleQuote>(0.1);
                 Handle<BlackVolTermStructure> volTs(
-                    boost::make_shared<BlackConstantVol>(asof, cal, Handle<Quote>(volQuote), dc));
-                Handle<YieldTermStructure> divTs(boost::make_shared<FlatForward>(asof, q, dc));
+                    QuantLib::ext::make_shared<BlackConstantVol>(asof, cal, Handle<Quote>(volQuote), dc));
+                Handle<YieldTermStructure> divTs(QuantLib::ext::make_shared<FlatForward>(asof, q, dc));
 
                 // a black scholes process
-                boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp =
-                    boost::make_shared<BlackScholesMertonProcess>(equitySpot_, divTs, forecastCurve_, volTs);
-                boost::shared_ptr<PricingEngine> engine =
-                    boost::make_shared<QuantExt::BaroneAdesiWhaleyApproximationEngine>(gbsp);
+                QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> gbsp =
+                    QuantLib::ext::make_shared<BlackScholesMertonProcess>(equitySpot_, divTs, forecastCurve_, volTs);
+                QuantLib::ext::shared_ptr<PricingEngine> engine =
+                    QuantLib::ext::make_shared<QuantExt::BaroneAdesiWhaleyApproximationEngine>(gbsp);
 
                 vector<vector<Volatility> > vols(2, vector<Volatility>(amerStrikes.size()));
                 vector<Option::Type> types;
@@ -172,8 +172,8 @@ void EquityForwardCurveStripper::performCalculations() const {
                 for (Size l = 0; l < types.size(); l++) {
                     for (Size k = 0; k < amerStrikes.size(); k++) {
                         // create an american option for current strike/expiry and type
-                        boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(types[l], amerStrikes[k]));
-                        boost::shared_ptr<Exercise> exercise = boost::make_shared<AmericanExercise>(expiry);
+                        QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(types[l], amerStrikes[k]));
+                        QuantLib::ext::shared_ptr<Exercise> exercise = QuantLib::ext::make_shared<AmericanExercise>(expiry);
                         VanillaOption option(payoff, exercise);
                         option.setPricingEngine(engine);
 
@@ -218,8 +218,8 @@ void EquityForwardCurveStripper::performCalculations() const {
                 // must have at least one new strike otherwise continue with current price surfaces
                 if (newStrikes.size() > 0) {
                     // build call/put price surfaces with the new European prices
-                    callSurface = boost::make_shared<OptionPriceSurface>(asof, dates, newStrikes, callPremiums, dc);
-                    putSurface = boost::make_shared<OptionPriceSurface>(asof, dates, newStrikes, putPremiums, dc);
+                    callSurface = QuantLib::ext::make_shared<OptionPriceSurface>(asof, dates, newStrikes, callPremiums, dc);
+                    putSurface = QuantLib::ext::make_shared<OptionPriceSurface>(asof, dates, newStrikes, putPremiums, dc);
                 }
             }
 

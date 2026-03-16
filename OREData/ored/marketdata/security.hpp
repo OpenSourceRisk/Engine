@@ -46,12 +46,14 @@ public:
     Handle<Quote> price() const { return price_; }
     Handle<Quote> recoveryRate() const { return recoveryRate_; }
     Handle<Quote> cpr() const { return cpr_; }
+    Handle<Quote> conversionFactor() const { return conversionFactor_; }
 
 private:
     Handle<Quote> spread_;
     Handle<Quote> price_;
     Handle<Quote> recoveryRate_;
     Handle<Quote> cpr_;
+    Handle<Quote> conversionFactor_;
 };
 } // namespace data
 } // namespace ore

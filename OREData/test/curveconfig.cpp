@@ -156,7 +156,7 @@ BOOST_DATA_TEST_CASE(testCurveConfigQuotesSimpleTodaysMarket, bdata::make(files)
     BOOST_TEST_MESSAGE("Testing with todaysmarket file: " << filePair.first);
 
     // Read the simple, single default configuration, TodaysMarketParameters instance from file
-    boost::shared_ptr<TodaysMarketParameters> tmp = boost::make_shared<TodaysMarketParameters>();
+    QuantLib::ext::shared_ptr<TodaysMarketParameters> tmp = QuantLib::ext::make_shared<TodaysMarketParameters>();
     tmp->fromFile(TEST_INPUT_FILE(filePair.first));
 
     // Ask the curve configurations object for its quotes, restricted by the TodaysMarketParameters instance
@@ -174,7 +174,7 @@ BOOST_DATA_TEST_CASE(testCurveConfigQuotesSimpleTodaysMarket, bdata::make(files)
 BOOST_AUTO_TEST_CASE(testCurveConfigQuotesTodaysMarketMultipleConfigs) {
 
     // Read the TodaysMarketParameters instance, containing multiple configurations, from file
-    boost::shared_ptr<TodaysMarketParameters> tmp = boost::make_shared<TodaysMarketParameters>();
+    QuantLib::ext::shared_ptr<TodaysMarketParameters> tmp = QuantLib::ext::make_shared<TodaysMarketParameters>();
     tmp->fromFile(TEST_INPUT_FILE("todays_market_multiple_configs.xml"));
 
     BOOST_REQUIRE_EQUAL(tmp->configurations().size(), 4);
@@ -224,7 +224,6 @@ BOOST_AUTO_TEST_CASE(testDiscountRatioSegmentFromXml) {
 
     // Perform the checks
     BOOST_CHECK(seg.type() == YieldCurveSegment::Type::DiscountRatio);
-    BOOST_CHECK_EQUAL(seg.typeID(), "Discount Ratio");
     BOOST_CHECK_EQUAL(seg.conventionsID(), "");
     BOOST_CHECK(seg.quotes().empty());
 
@@ -249,7 +248,6 @@ BOOST_AUTO_TEST_CASE(testDiscountRatioSegmentToXml) {
     DiscountRatioYieldCurveSegment newSeg;
     BOOST_CHECK_NO_THROW(newSeg.fromXML(doc.getFirstNode("")));
     BOOST_CHECK(newSeg.type() == YieldCurveSegment::Type::DiscountRatio);
-    BOOST_CHECK_EQUAL(newSeg.typeID(), "Discount Ratio");
     BOOST_CHECK_EQUAL(newSeg.conventionsID(), "");
     BOOST_CHECK(newSeg.quotes().empty());
 

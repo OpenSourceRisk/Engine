@@ -30,12 +30,12 @@ namespace analytics {
 //! Class for generating scenarios from a csv file assumed to be in a format compatible with ScenarioWriter.
 class CSVScenarioGenerator : public ScenarioGenerator {
 public:
-    CSVScenarioGenerator(const std::string& filename, const boost::shared_ptr<ScenarioFactory> scenarioFactory,
+    CSVScenarioGenerator(const std::string& filename, const QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory,
                          const char sep = ',');
 
     virtual ~CSVScenarioGenerator();
 
-    virtual boost::shared_ptr<Scenario> next(const Date& d) override;
+    virtual QuantLib::ext::shared_ptr<Scenario> next(const Date& d) override;
 
     virtual void reset() override;
 
@@ -46,7 +46,7 @@ private:
     std::ifstream file_;
     const char sep_;
     const std::string& filename_;
-    const boost::shared_ptr<ScenarioFactory> scenarioFactory_;
+    const QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory_;
 };
 } // namespace analytics
 } // namespace ore

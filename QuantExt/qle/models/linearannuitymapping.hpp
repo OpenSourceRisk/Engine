@@ -48,7 +48,7 @@ class LinearAnnuityMappingBuilder : public AnnuityMappingBuilder {
 public:
     LinearAnnuityMappingBuilder(const Real a, const Real b);
     LinearAnnuityMappingBuilder(const Handle<Quote>& reversion);
-    boost::shared_ptr<AnnuityMapping> build(const Date& valuationDate, const Date& optionDate, const Date& paymentDate,
+    QuantLib::ext::shared_ptr<AnnuityMapping> build(const Date& valuationDate, const Date& optionDate, const Date& paymentDate,
                                             const VanillaSwap& underlying,
                                             const Handle<YieldTermStructure>& discountCurve) override;
 

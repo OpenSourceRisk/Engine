@@ -41,14 +41,14 @@ public:
                                 const Handle<YieldTermStructure>& eqDivYieldCurveToday);
     Real variance(const Time t) const override;
     Real sigma(const Time t) const override;
-    const boost::shared_ptr<Parameter> parameter(const Size) const override;
+    const QuantLib::ext::shared_ptr<Parameter> parameter(const Size) const override;
 
 protected:
     Real direct(const Size i, const Real x) const override;
     Real inverse(const Size i, const Real y) const override;
 
 private:
-    const boost::shared_ptr<PseudoParameter> sigma_;
+    const QuantLib::ext::shared_ptr<PseudoParameter> sigma_;
 };
 
 // inline
@@ -63,7 +63,7 @@ inline Real EqBsConstantParametrization::variance(const Time t) const {
 
 inline Real EqBsConstantParametrization::sigma(const Time) const { return direct(0, sigma_->params()[0]); }
 
-inline const boost::shared_ptr<Parameter> EqBsConstantParametrization::parameter(const Size i) const {
+inline const QuantLib::ext::shared_ptr<Parameter> EqBsConstantParametrization::parameter(const Size i) const {
     QL_REQUIRE(i == 0, "parameter " << i << " does not exist, only have 0");
     return sigma_;
 }

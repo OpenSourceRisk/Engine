@@ -36,7 +36,7 @@ public:
                                  const std::vector<Period>& tenors, const std::vector<double>& detachmentPoints,
                                  const std::vector<std::vector<Handle<Quote>>>& corrSpreads,
                                  const Date& startDate = Date(),
-                                 boost::optional<DateGeneration::Rule> rule = boost::none);
+                                 QuantLib::ext::optional<DateGeneration::Rule> rule = QuantLib::ext::nullopt);
     //@}
     void update() override;
 

@@ -19,6 +19,7 @@
 #include <qle/models/jyimpliedzeroinflationtermstructure.hpp>
 #include <qle/models/crossassetanalytics.hpp>
 #include <qle/utilities/inflation.hpp>
+#include <qle/utilities/time.hpp>
 
 using QuantLib::Date;
 using QuantLib::Size;
@@ -27,29 +28,34 @@ using QuantLib::Time;
 namespace QuantExt {
 
 JyImpliedZeroInflationTermStructure::JyImpliedZeroInflationTermStructure(
-    const boost::shared_ptr<CrossAssetModel>& model, Size index)
-    : ZeroInflationModelTermStructure(model, index) {}
-
-QL_DEPRECATED_DISABLE_WARNING
-JyImpliedZeroInflationTermStructure::JyImpliedZeroInflationTermStructure(
-    const boost::shared_ptr<CrossAssetModel>& model, Size index, bool indexIsInterpolated)
-    : ZeroInflationModelTermStructure(model, index, indexIsInterpolated) {}
-QL_DEPRECATED_ENABLE_WARNING
+    const QuantLib::ext::shared_ptr<CrossAssetModel>& model, Size index,
+    const std::optional<QuantLib::DayCounter>& simulationDayCounter)
+    : ZeroInflationModelTermStructure(model, index, simulationDayCounter) {}
 
 Real JyImpliedZeroInflationTermStructure::zeroRateImpl(Time t) const {
+    // Return the desired z(S) = \left( \frac{P_r(S, T)}{P_n(S, T)} \right)^{\frac{1}{t}} - 1
 
-    QL_REQUIRE(t >= 0.0, "JyImpliedZeroInflationTermStructure::zeroRateImpl: negative time (" << t << ") given");
+    auto irDayCounter =
+        model_->irlgm1f(model_->ccyIndex(model_->infjy(index_)->currency()))->termStructure()->dayCounter(); 
+    auto tDate = lowerDate(t, referenceDate_, simulationDayCounter_.value_or(irDayCounter));  
+    auto tau = dayCounter().yearFraction(baseDate(), tDate);
+    auto [_, growth] = indexGrowth(t);
+    return std::pow(growth, 1 / tau) - 1;
+}
 
+std::pair<QuantLib::Real, QuantLib::Real> JyImpliedZeroInflationTermStructure::indexGrowth(Time t) const {
+    QL_REQUIRE(t >= 0.0, "JyImpliedZeroInflationTermStructure::inflationGrowthImpl: negative time (" << t
+                                                                                                 << ") given");
     // Zero rate is calculated from the relation: P_n(S, T) (1 + z(S))^t = P_r(S, T)
     // Here, S in the relation is given by relativeTime_ and T := S + t.
     // ratio holds \frac{P_r(S, T)}{P_n(S, T)}.
     auto S = relativeTime_;
-    auto T = relativeTime_ + t;
-    QL_DEPRECATED_DISABLE_WARNING
-    auto ratio = inflationGrowth(model_, index_, S, T, state_[2], state_[0], indexIsInterpolated_);
-    QL_DEPRECATED_ENABLE_WARNING
-    // Return the desired z(S) = \left( \frac{P_r(S, T)}{P_n(S, T)} \right)^{\frac{1}{t}} - 1
-    return std::pow(ratio, 1 / t) - 1;
+    // simulate lag is needed to ensure that the growth is calculated for the correct inflation observation date.
+    // at time t, we effectivly observe the inflation at time t - simulationLag, so we need to add the simulation lag to
+    // get the correct T.
+    auto T = relativeTime_ + t + simulationLag();
+    auto ratio = inflationGrowth(model_, index_, S, T, state_[2], state_[0], true, simulationDayCounter_);
+    return std::make_pair(std::exp(state_[1]), ratio);
 }
 
 void JyImpliedZeroInflationTermStructure::checkState() const {
@@ -58,9 +64,8 @@ void JyImpliedZeroInflationTermStructure::checkState() const {
         "three elements but got " << state_.size());
 }
 
-Real inflationGrowth(const boost::shared_ptr<CrossAssetModel>& model, Size index,
-    Time S, Time T, Real irState, Real rrState, bool indexIsInterpolated) {
-
+Real inflationGrowth(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, Size index, Time S, Time T, Real irState,
+                     Real rrState, bool indexIsInterpolated, std::optional<QuantLib::DayCounter> simulationDayCounter) {
     QL_REQUIRE(T >= S, "inflationGrowth: end time (" << T << ") must be >= start time (" << S << ")");
 
     // After this step, p_n holds P_n(S, T) * P_n(0, S) / P_n(0, T)
@@ -82,8 +87,7 @@ Real inflationGrowth(const boost::shared_ptr<CrossAssetModel>& model, Size index
     // Now, use the original zero inflation term structure to get P_r(0, S) / P_n(0, S) and P_r(0, T) / P_n(0, T) and
     // return \frac{P_r(S, T)}{P_n(S, T)}
     const auto& zts = model->infjy(index)->realRate()->termStructure();
-    return inflationGrowth(zts, T, indexIsInterpolated) / inflationGrowth(zts, S, indexIsInterpolated) * p_r / p_n;
-
+    return inflationGrowth(zts, T, simulationDayCounter.value_or(irTs->dayCounter()), indexIsInterpolated) /
+           inflationGrowth(zts, S, simulationDayCounter.value_or(irTs->dayCounter()), indexIsInterpolated) * p_r / p_n;
 }
-
 }

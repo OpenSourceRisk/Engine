@@ -26,6 +26,21 @@
 namespace ore {
 namespace data {
 
+NettingSetDetails getNettingSetDetails(XMLNode* node) {
+    NettingSetDetails nsd;
+
+    // Read in the mandatory nodes.
+    XMLNode* nettingSetDetailsNode = XMLUtils::getChildNode(node, "NettingSetDetails");
+    if (nettingSetDetailsNode) {
+        nsd.fromXML(nettingSetDetailsNode);
+    } else {
+        string id = XMLUtils::getChildValue(node, "NettingSetId", false);
+        nsd = NettingSetDetails(id);
+    }
+
+    return nsd;
+}
+
 CSA::Type parseCsaType(const string& s) {
     static map<string, CSA::Type> t = {
         {"Bilateral", CSA::Bilateral}, {"CallOnly", CSA::CallOnly}, {"PostOnly", CSA::PostOnly}};
@@ -128,7 +143,7 @@ NettingSetDefinition::NettingSetDefinition(const NettingSetDetails& nettingSetDe
                                            const string& nonExemptIMRegulations)
     : nettingSetDetails_(nettingSetDetails), activeCsaFlag_(true) {
 
-    csa_ = boost::make_shared<CSA>(
+    csa_ = QuantLib::ext::make_shared<CSA>(
         parseCsaType(bilateral), csaCurrency, index, thresholdPay, thresholdRcv, mtaPay, mtaRcv, iaHeld, iaType,
         parsePeriod(marginCallFreq), parsePeriod(marginPostFreq), parsePeriod(mpr), collatSpreadPay, collatSpreadRcv,
         eligCollatCcys, applyInitialMargin, parseCsaType(initialMarginType), calculateIMAmount, calculateVMAmount,
@@ -142,13 +157,7 @@ void NettingSetDefinition::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "NettingSet");
 
     // Read in the mandatory nodes.
-    XMLNode* nettingSetDetailsNode = XMLUtils::getChildNode(node, "NettingSetDetails");
-    if (nettingSetDetailsNode) {
-        nettingSetDetails_.fromXML(nettingSetDetailsNode);
-    } else {
-        nettingSetId_ = XMLUtils::getChildValue(node, "NettingSetId", false);
-        nettingSetDetails_ = NettingSetDetails(nettingSetId_);
-    }
+    nettingSetDetails_ = getNettingSetDetails(node);
 
     activeCsaFlag_ = XMLUtils::getChildValueAsBool(node, "ActiveCSAFlag", false, true);
 
@@ -208,7 +217,7 @@ void NettingSetDefinition::fromXML(XMLNode* node) {
 
         string nonExemptIMRegulations = XMLUtils::getChildValue(csaChild, "NonExemptIMRegulations", false);
 
-        csa_ = boost::make_shared<CSA>(parseCsaType(csaTypeStr), csaCurrency, index, thresholdPay, thresholdRcv, mtaPay,
+        csa_ = QuantLib::ext::make_shared<CSA>(parseCsaType(csaTypeStr), csaCurrency, index, thresholdPay, thresholdRcv, mtaPay,
                                        mtaRcv, iaHeld, iaType, parsePeriod(marginCallFreqStr),
                                        parsePeriod(marginPostFreqStr), parsePeriod(mprStr), collatSpreadPay,
                                        collatSpreadRcv, eligCollatCcys, applyInitialMargin,
@@ -225,7 +234,7 @@ XMLNode* NettingSetDefinition::toXML(XMLDocument& doc) const {
 
     // Add the mandatory members.
     if (nettingSetDetails_.emptyOptionalFields()) {
-        XMLUtils::addChild(doc, node, "NettingSetId", nettingSetId_);
+        XMLUtils::addChild(doc, node, "NettingSetId", nettingSetId());
     } else {
         XMLUtils::appendNode(node, nettingSetDetails_.toXML(doc));
     }

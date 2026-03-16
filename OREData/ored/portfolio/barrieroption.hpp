@@ -49,37 +49,47 @@ public:
     }
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
-    void build(const boost::shared_ptr<ore::data::EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>&) override;
+    
+    QuantLib::Real notional() const override;
+    string notionalCurrency() const override;
     
     //! check validity of barriers
     virtual void checkBarriers() = 0;
 
     // index of the underlying
-    virtual boost::shared_ptr<QuantLib::Index> getIndex() = 0;
+    virtual QuantLib::ext::shared_ptr<QuantLib::Index> getIndex() const = 0;
+    virtual QuantLib::ext::shared_ptr<QuantLib::Index> getLowIndex() const { return nullptr; }
+    virtual QuantLib::ext::shared_ptr<QuantLib::Index> getHighIndex() const { return nullptr; }
 
     // strike of underlying option
-    virtual const QuantLib::Real strike() = 0;
+    virtual const QuantLib::Real strike() const = 0;
 
     virtual QuantLib::Real tradeMultiplier() = 0;
     virtual Currency tradeCurrency() = 0;
-    virtual boost::shared_ptr<QuantLib::PricingEngine>
-    vanillaPricingEngine(const boost::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
+    virtual QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
+    vanillaPricingEngine(const QuantLib::ext::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
                            const QuantLib::Date& paymentDate) = 0;
-    virtual boost::shared_ptr<QuantLib::PricingEngine>
-    barrierPricingEngine(const boost::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
+    virtual QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
+    barrierPricingEngine(const QuantLib::ext::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
                            const QuantLib::Date& paymentDate) = 0;
+
+    virtual QuantLib::ext::shared_ptr<ore::data::DelegatingEngineBuilder>
+    getDelegatingBuilder(const QuantLib::ext::shared_ptr<EngineFactory>& ef) {
+        return nullptr;
+    }
     virtual const QuantLib::Handle<QuantLib::Quote>& spotQuote() = 0;
 
     virtual void additionalFromXml(ore::data::XMLNode* node) = 0;
     virtual void additionalToXml(ore::data::XMLDocument& doc, ore::data::XMLNode* node) const = 0;
     virtual std::string indexFixingName() = 0;
-
     //! \name Inspectors
     //@{
     const ore::data::OptionData& option() const { return option_; }
     const BarrierData& barrier() const { return barrier_; }
     const QuantLib::Date& startDate() const { return startDate_; }
     const QuantLib::Calendar& calendar() const { return calendar_; }
+    const std::string& calendarStr() const { return calendarStr_; }
     //@}
 
     //! \name Serialisation
@@ -93,7 +103,7 @@ private:
     BarrierData barrier_;
     QuantLib::Date startDate_;
     QuantLib::Calendar calendar_;
-
+    QuantLib::ext::shared_ptr<Trade> delegatingTrade_;
 protected:
     std::string calendarStr_;
 };
@@ -106,13 +116,15 @@ public:
 
     //! Constructor
     FxOptionWithBarrier(const std::string& tradeType, ore::data::Envelope& env, ore::data::OptionData option,
-        BarrierData barrier, QuantLib::Date startDate, std::string calendar, std::string boughtCurrency,
-        QuantLib::Real boughtAmount, std::string soldCurrency, QuantLib::Real soldAmount, 
-        std::string fxIndex = std::string())
-        : ore::data::Trade(tradeType, env), 
-          FxSingleAssetDerivative(tradeType, env, boughtCurrency, soldCurrency),
-          BarrierOption(option, barrier, startDate, calendar), 
-          fxIndexStr_(fxIndex), boughtAmount_(boughtAmount), soldAmount_(soldAmount) {}
+                        BarrierData barrier, QuantLib::Date startDate, const std::string& calendar,
+                        const std::string& boughtCurrency, QuantLib::Real boughtAmount, const std::string& soldCurrency,
+                        QuantLib::Real soldAmount, const std::string& fxIndex = std::string(),
+                        const std::string& fxIndexDailyLows = std::string(),
+                        const std::string& fxIndexDailyHighs = std::string())
+        : ore::data::Trade(tradeType, env), FxSingleAssetDerivative(tradeType, env, boughtCurrency, soldCurrency),
+          BarrierOption(option, barrier, startDate, calendar), fxIndexStr_(fxIndex),
+          fxIndexDailyLowsStr_(fxIndexDailyLows), fxIndexDailyHighsStr_(fxIndexDailyHighs), boughtAmount_(boughtAmount),
+          soldAmount_(soldAmount) {}
 
     //! \name Inspectors
     //@{
@@ -120,29 +132,40 @@ public:
     QuantLib::Real soldAmount() const { return soldAmount_; }
     //@}
 
-    void build(const boost::shared_ptr<ore::data::EngineFactory>& ef) override;
+    void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& ef) override;
+
     //! \name Serialisation
     //@{
     void additionalFromXml(ore::data::XMLNode* node) override;
     void additionalToXml(ore::data::XMLDocument& doc, ore::data::XMLNode* node) const override;
     //@}
 
-    boost::shared_ptr<QuantLib::Index> getIndex() override { return boost::dynamic_pointer_cast<Index>(fxIndex_); }
-    const QuantLib::Real strike() override { return soldAmount_ / boughtAmount_; }
+    QuantLib::ext::shared_ptr<QuantLib::Index> getIndex() const override { return QuantLib::ext::dynamic_pointer_cast<Index>(fxIndex_); }
+    QuantLib::ext::shared_ptr<QuantLib::Index> getLowIndex() const override { return QuantLib::ext::dynamic_pointer_cast<Index>(fxIndexLows_); }
+    QuantLib::ext::shared_ptr<QuantLib::Index> getHighIndex() const override { return QuantLib::ext::dynamic_pointer_cast<Index>(fxIndexHighs_); }
+    QuantLib::ext::shared_ptr<DelegatingEngineBuilder> getDelegatingBuilder(const QuantLib::ext::shared_ptr<EngineFactory>& ef) override;
+    const QuantLib::Real strike() const override { return soldAmount_ / boughtAmount_; }
     QuantLib::Real tradeMultiplier() override { return boughtAmount_; }
     Currency tradeCurrency() override { return parseCurrency(soldCurrency_); }
     const QuantLib::Handle<QuantLib::Quote>& spotQuote() override { return spotQuote_; }
     std::string indexFixingName() override;
+    const std::string& fxIndex() const { return fxIndexStr_; }
+    
 
     void fromXML(ore::data::XMLNode* node) override { BarrierOption::fromXML(node); }
     ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override { return BarrierOption::toXML(doc); }
 
 private:
     std::string fxIndexStr_;
-    boost::shared_ptr<QuantExt::FxIndex> fxIndex_;
+    std::string fxIndexDailyLowsStr_;
+    std::string fxIndexDailyHighsStr_;
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex_;
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndexLows_;
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndexHighs_;
     QuantLib::Handle<QuantLib::Quote> spotQuote_;
     QuantLib::Real boughtAmount_;
     QuantLib::Real soldAmount_;
+    
 };
 
 
@@ -165,15 +188,20 @@ public:
     QuantLib::Real quantity() const { return quantity_; }
     //@}
 
-    void build(const boost::shared_ptr<ore::data::EngineFactory>& ef) override;
+    void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& ef) override;
+
+    //! Add underlying Equity names
+    std::map<AssetClass, std::set<std::string>> underlyingIndices(
+        const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+
     //! \name Serialisation
     //@{
     void additionalFromXml(ore::data::XMLNode* node) override;
     void additionalToXml(ore::data::XMLDocument& doc, ore::data::XMLNode* node) const override;
     //@}
 
-    boost::shared_ptr<QuantLib::Index> getIndex() override { return boost::dynamic_pointer_cast<Index>(eqIndex_); }
-    const QuantLib::Real strike() override { return tradeStrike_.value(); }
+    QuantLib::ext::shared_ptr<QuantLib::Index> getIndex() const override { return QuantLib::ext::dynamic_pointer_cast<Index>(eqIndex_); }
+    const QuantLib::Real strike() const override { return tradeStrike_.value(); }
     QuantLib::Real tradeMultiplier() override { return quantity_; }
     Currency tradeCurrency() override { return currency_; }
     const QuantLib::Handle<QuantLib::Quote>& spotQuote() override { return eqIndex_->equitySpot(); }
@@ -183,7 +211,7 @@ public:
     ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override { return BarrierOption::toXML(doc); }
 
 private:
-    boost::shared_ptr<QuantExt::EquityIndex2> eqIndex_;
+    QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> eqIndex_;
     QuantLib::Currency currency_;
     std::string currencyStr_;
     QuantLib::Real quantity_;

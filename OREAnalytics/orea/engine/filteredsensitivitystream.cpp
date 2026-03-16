@@ -25,7 +25,7 @@ using std::fabs;
 namespace ore {
 namespace analytics {
 
-FilteredSensitivityStream::FilteredSensitivityStream(const boost::shared_ptr<SensitivityStream>& ss,
+FilteredSensitivityStream::FilteredSensitivityStream(const QuantLib::ext::shared_ptr<SensitivityStream>& ss,
                                                      Real deltaThreshold, Real gammaThreshold)
     : ss_(ss), deltaThreshold_(deltaThreshold), gammaThreshold_(gammaThreshold) {
     // Reset the underlying stream in case
@@ -39,7 +39,7 @@ FilteredSensitivityStream::FilteredSensitivityStream(const boost::shared_ptr<Sen
     ss_->reset();
 }
 
-FilteredSensitivityStream::FilteredSensitivityStream(const boost::shared_ptr<SensitivityStream>& ss,
+FilteredSensitivityStream::FilteredSensitivityStream(const QuantLib::ext::shared_ptr<SensitivityStream>& ss,
                                                      QuantLib::Real threshold)
     : FilteredSensitivityStream(ss, threshold, threshold) {}
 

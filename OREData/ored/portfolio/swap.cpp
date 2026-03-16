@@ -23,14 +23,18 @@
 #include <ored/portfolio/swap.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 
 #include <ql/time/calendars/target.hpp>
+#include <ql/indexes/inflation/euhicp.hpp>
+#include <ql/termstructures/yield/zerospreadedtermstructure.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/equitycouponpricer.hpp>
 #include <qle/indexes/fxindex.hpp>
 #include <qle/instruments/currencyswap.hpp>
+#include <qle/utilities/fairrate.hpp>
 
 #include <ql/instruments/swap.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
@@ -42,13 +46,13 @@ using std::make_pair;
 namespace ore {
 namespace data {
 
-void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("Swap::build() called for trade " << id());
 
     setIsdaTaxonomyFields();
-    
+
     QL_REQUIRE(legData_.size() >= 1, "Swap must have at least 1 leg");
-    const boost::shared_ptr<Market> market = engineFactory->market();
+    const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
 
     // allow minor currencies in case first leg is equity
     Currency currency = parseCurrencyWithMinors(legData_[0].currency());
@@ -57,16 +61,18 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Size numLegs = legData_.size();
     legPayers_ = vector<bool>(numLegs);
     std::vector<QuantLib::Currency> currencies(numLegs);
-    std::vector<QuantLib::Currency> currenciesForMcSimulation;
+    std::vector<QuantLib::Currency> currenciesWithIndexing;
+    std::set<std::string> eqNames;
     legs_.resize(numLegs);
 
     isXCCY_ = false;
     isResetting_ = false;
+    allLegsAreSimmPlainVanillaIrLegs_ = true;
 
     for (Size i = 0; i < numLegs; ++i) {
         // allow minor currencies for Equity legs as some exchanges trade in these, e.g LSE in pence - GBX or GBp
         // minor currencies on other legs will fail here
-        if (legData_[i].legType() == "Equity")
+        if (legData_[i].legType() == LegType::Equity)
             currencies[i] = parseCurrencyWithMinors(legData_[i].currency());
         else
             currencies[i] = parseCurrency(legData_[i].currency());
@@ -74,58 +80,57 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         if (currencies[i] != currency)
             isXCCY_ = true;
         isResetting_ = isResetting_ || (!legData_[i].isNotResetXCCY());
+
+        if(!legData_[i].isSimmPlainVanillaIrLeg()){
+
+            allLegsAreSimmPlainVanillaIrLegs_ = false;
+        }
     }
 
-    
-    // Check if there is indexing is used, need to collect all underlying currrencies
-    // for AMC simulations, such a trade needs to be treated a x-ccy swap with both leg paying
-    // one currency.
+    /* collect currencies from fx indexing and eq names from eq indexing
+       note: we do not add ccys from eq here, this requires accessing the market and is left to engine builders */
+
     auto addUnique = [](vector<Currency>& currencies, Currency ccy) {
         if (std::find(currencies.begin(), currencies.end(), ccy) ==
             currencies.end()) {
             currencies.push_back(ccy);
         }
     };
-    
+
     for (Size i = 0; i < numLegs; ++i) {
-        addUnique(currenciesForMcSimulation, currencies[i]);
+        addUnique(currenciesWithIndexing, currencies[i]);
         vector<Indexing> indexings = legData_[i].indexing();
         if (!indexings.empty() && indexings.front().hasData()) {
             Indexing indexing = indexings.front();
             if (boost::starts_with(indexing.index(), "FX-")) {
                 auto index = parseFxIndex(indexing.index());
-                addUnique(currenciesForMcSimulation, index->targetCurrency());
-                addUnique(currenciesForMcSimulation, index->sourceCurrency());
+                addUnique(currenciesWithIndexing, index->targetCurrency());
+                addUnique(currenciesWithIndexing, index->sourceCurrency());
+            } else if(boost::starts_with(indexing.index(), "EQ-")) {
+                auto index = parseEquityIndex(indexing.index());
+                eqNames.insert(index->name());
             }
         }
     }
-    isXCCY_ = isXCCY_ || currenciesForMcSimulation.size() > 1;
-    static std::set<std::string> eligibleForXbs = {"Fixed", "Floating"};
+
+    // identify equity underlyings
+
+    for (Size i = 0; i < numLegs; ++i) {
+        if (legData_[i].legType() == LegType::Equity) {
+            eqNames.insert(QuantLib::ext::dynamic_pointer_cast<EquityLegData>(legData_[i].concreteLegData())->eqName());
+        }
+    }
+
+    /* determine whether we have a xccy and whether to use the special xbs curves */
+    isXCCY_ = isXCCY_ || currenciesWithIndexing.size() > 1;
+
+    static std::set<LegType> eligibleForXbs = {LegType::Fixed, LegType::Floating};
+
     bool useXbsCurves = true;
     for(Size i=0;i<numLegs;++i) {
         useXbsCurves = useXbsCurves && (eligibleForXbs.find(legData_[i].legType()) != eligibleForXbs.end());
     }
 
-    boost::shared_ptr<EngineBuilder> builder =
-        isXCCY_ ? engineFactory->builder("CrossCurrencySwap") : engineFactory->builder("Swap");
-    auto configuration = builder->configuration(MarketContext::pricing);
-
-    for (Size i = 0; i < numLegs; ++i) {
-        legPayers_[i] = legData_[i].isPayer();
-        auto legBuilder = engineFactory->legBuilder(legData_[i].legType());
-        legs_[i] =
-            legBuilder->buildLeg(legData_[i], engineFactory, requiredFixings_, configuration, Null<Date>(), useXbsCurves);
-        DLOG("Swap::build(): currency[" << i << "] = " << currencies[i]);
-        
-        // add notional leg, if applicable
-        auto leg = buildNotionalLeg(legData_[i], legs_[i], requiredFixings_, engineFactory->market(), configuration);
-        applyIndexing(leg, legData_[i], engineFactory, requiredFixings_, Null<Date>(), useXbsCurves);
-        if (!leg.empty()) {
-            legs_.push_back(leg);
-            legPayers_.push_back(legPayers_[i]);
-            currencies.push_back(currencies[i]);
-        }
-    } // for legs
 
     // The npv currency, notional currency and current notional are taken from the first leg that
     // appears in the XML that has a notional. If no such leg exists the notional currency
@@ -173,24 +178,51 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Currency npvCcy = parseCurrency(npvCurrency_);
     DLOG("npv currency is " << npvCurrency_);
 
+    QuantLib::ext::shared_ptr<EngineBuilder> builder =
+        isXCCY_ ? engineFactory->builder("CrossCurrencySwap") : engineFactory->builder("Swap");
+    auto configuration = builder->configuration(MarketContext::pricing);
+
+    for (Size i = 0; i < numLegs; ++i) {
+        legPayers_[i] = legData_[i].isPayer();
+        auto legBuilder = engineFactory->legBuilder(legData_[i].legType());
+        std::set<std::tuple<std::set<std::string>, std::string, std::string>> productModelEngines;
+        legs_[i] = legBuilder->buildLeg(legData_[i], engineFactory, requiredFixings_, configuration, Null<Date>(),
+                                        useXbsCurves, true, &productModelEngines);
+        addProductModelEngine(productModelEngines);
+        DLOG("Swap::build(): currency[" << i << "] = " << currencies[i]);
+
+        // add notional leg, if applicable
+        auto leg = buildNotionalLeg(legData_[i], legs_[i], requiredFixings_, engineFactory->market(), configuration);
+        applyIndexing(leg, legData_[i], engineFactory, requiredFixings_, Null<Date>(), useXbsCurves);
+        if (!leg.empty()) {
+            legs_.push_back(leg);
+            legPayers_.push_back(legPayers_[i]);
+            currencies.push_back(currencies[i]);
+        }
+    } // for legs
+
     if (isXCCY_) {
-        boost::shared_ptr<QuantExt::CurrencySwap> swap(
+        QuantLib::ext::shared_ptr<QuantExt::CurrencySwap> swap(
             new QuantExt::CurrencySwap(legs_, legPayers_, currencies, settlement_ == "Physical", isResetting_));
-        boost::shared_ptr<CrossCurrencySwapEngineBuilderBase> swapBuilder =
-            boost::dynamic_pointer_cast<CrossCurrencySwapEngineBuilderBase>(builder);
+        QuantLib::ext::shared_ptr<CrossCurrencySwapEngineBuilderBase> swapBuilder =
+            QuantLib::ext::dynamic_pointer_cast<CrossCurrencySwapEngineBuilderBase>(builder);
         QL_REQUIRE(swapBuilder, "No Builder found for CrossCurrencySwap " << id());
-        swap->setPricingEngine(swapBuilder->engine(currenciesForMcSimulation, npvCcy));
+        bool useXccyYieldCurvesForDiscounting = allLegsAreSimmPlainVanillaIrLegs_;
+        swap->setPricingEngine(
+            swapBuilder->engine(currenciesWithIndexing, npvCcy, useXccyYieldCurvesForDiscounting, eqNames));
         setSensitivityTemplate(*swapBuilder);
+        addProductModelEngine(*swapBuilder);
         // take the first legs currency as the npv currency (arbitrary choice)
         instrument_.reset(new VanillaInstrument(swap));
     } else {
-        boost::shared_ptr<QuantLib::Swap> swap(new QuantLib::Swap(legs_, legPayers_));
-        boost::shared_ptr<SwapEngineBuilderBase> swapBuilder =
-            boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
+        QuantLib::ext::shared_ptr<QuantLib::Swap> swap(new QuantLib::Swap(legs_, legPayers_));
+        QuantLib::ext::shared_ptr<SwapEngineBuilderBase> swapBuilder =
+            QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
         QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
         swap->setPricingEngine(swapBuilder->engine(npvCcy, envelope().additionalField("discount_curve", false),
-                                                   envelope().additionalField("security_spread", false)));
+                                                   envelope().additionalField("security_spread", false), eqNames));
         setSensitivityTemplate(*swapBuilder);
+        addProductModelEngine(*swapBuilder);
         instrument_.reset(new VanillaInstrument(swap));
     }
 
@@ -207,14 +239,65 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     for (auto const& l : legs_) {
         if (!l.empty()) {
             maturity_ = std::max(maturity_, l.back()->date());
+            if (maturity_ == l.back()->date())
+                maturityType_ = "Leg End Date";
             startDate = std::min(startDate, l.front()->date());
-            boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(l.front());
+            QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(l.front());
             if (coupon)
-                startDate = std::min(startDate, coupon->accrualStartDate());                
+                startDate = std::min(startDate, coupon->accrualStartDate());
         }
     }
 
     additionalData_["startDate"] = to_string(startDate);
+
+    // Store discount curves and FX spots for fair rate calculation
+    discountCurves_.resize(numLegs);
+    fxSpots_.resize(numLegs);
+
+    if (isXCCY_) {
+        // Cross-currency swap: per-leg curves and FX spots
+        bool useXccyYieldCurves = allLegsAreSimmPlainVanillaIrLegs_;
+        for (Size i = 0; i < numLegs; ++i) {
+            string ccyCode = currencies[i].code();
+            if (useXccyYieldCurves) {
+                discountCurves_[i] = (xccyYieldCurve)(market, ccyCode, configuration);
+            } else {
+                discountCurves_[i] = market->discountCurve(ccyCode, configuration);
+            }
+            // FX spot: convert leg currency to NPV currency
+            if (ccyCode == npvCcy.code()) {
+                fxSpots_[i] = 1.0;
+            } else {
+                string pair = ccyCode + npvCcy.code();
+                Handle<Quote> fx = market->fxRate(pair, configuration);
+                if (fx.empty()) {
+                    DLOG("Swap::build(): missing FX spot for pair " << pair << " in configuration " << configuration
+                                                                     << ", using 1.0 as placeholder for fair-rate reporting.");
+                    fxSpots_[i] = 1.0;
+                } else {
+                    fxSpots_[i] = fx->value();
+                }
+            }
+        }
+    } else {
+        // Single-currency swap: same curve for all legs, FX spots = 1.0
+        std::string discountCurveName = envelope().additionalField("discount_curve", false);
+        std::string securitySpread = envelope().additionalField("security_spread", false);
+
+        Handle<YieldTermStructure> yts =
+            discountCurveName.empty() ? market->discountCurve(npvCcy.code(), configuration)
+                                      : indexOrYieldCurve(market, discountCurveName, configuration);
+
+        if (!securitySpread.empty()) {
+            yts = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(
+                yts, market->securitySpread(securitySpread, configuration)));
+        }
+
+        for (Size i = 0; i < numLegs; ++i) {
+            discountCurves_[i] = yts;
+            fxSpots_[i] = 1.0;
+        }
+    }
 }
 
 void Swap::setIsdaTaxonomyFields() {
@@ -225,23 +308,26 @@ void Swap::setIsdaTaxonomyFields() {
     additionalData_["isdaTransaction"] = string("");
 }
 
-const std::map<std::string,boost::any>& Swap::additionalData() const {
+const std::map<std::string,QuantLib::ext::any>& Swap::additionalData() const {
     Size numLegs = legData_.size();
     // use the build time as of date to determine current notionals
-    boost::shared_ptr<QuantLib::Swap> swap = boost::dynamic_pointer_cast<QuantLib::Swap>(instrument_->qlInstrument());
-    boost::shared_ptr<QuantExt::CurrencySwap> cswap = boost::dynamic_pointer_cast<QuantExt::CurrencySwap>(instrument_->qlInstrument());
+    QuantLib::ext::shared_ptr<QuantLib::Swap> swap = QuantLib::ext::dynamic_pointer_cast<QuantLib::Swap>(instrument_->qlInstrument());
+    QuantLib::ext::shared_ptr<QuantExt::CurrencySwap> cswap = QuantLib::ext::dynamic_pointer_cast<QuantExt::CurrencySwap>(instrument_->qlInstrument());
     std::map<std::string, Real> legNpv; // by currency
     for (Size i = 0; i < numLegs; ++i) {
         string legID = to_string(i+1);
-        additionalData_["legType[" + legID + "]"] = legData_[i].legType();
+        additionalData_["legType[" + legID + "]"] = ore::data::to_string(legData_[i].legType());
         additionalData_["isPayer[" + legID + "]"] = legData_[i].isPayer();
         additionalData_["notionalCurrency[" + legID + "]"] = legData_[i].currency();
         if (!isXCCY_) {
-            if (swap)
+            if (swap) {
                 additionalData_["legNPV[" + legID + "]"] = swap->legNPV(i);
-            else
+                if (allLegsAreSimmPlainVanillaIrLegs_ && legData_[i].legType() == LegType::Fixed) {
+                    additionalData_["PV01[" + legID + "]"] = std::abs(swap->legBPS(i));
+                }
+            } else
                 ALOG("single currency swap underlying instrument not set, skip leg npv reporting");
-        } 
+        }
         else {
             if (cswap) {
                 // The currency swap has more legs than the swap wrapper (additional notional legs), so aggregate by currency
@@ -256,10 +342,27 @@ const std::map<std::string,boost::any>& Swap::additionalData() const {
                 additionalData_["legNPV[" + legID + "]"] = legNpv;
                 additionalData_["legNPVCCY[" + legID + "]"] = legNpvInCcy;
             }
-            else 
+            else
                 ALOG("cross currency swap underlying instrument not set, skip leg npv reporting");
         }
         setLegBasedAdditionalData(i);
+    }
+
+    // Compute fair rate using the new utility function
+    // Restrict to SIMM plain-vanilla IR legs, but allow multi-leg and cross-currency within that scope
+    if (allLegsAreSimmPlainVanillaIrLegs_ && !legs_.empty() && !discountCurves_.empty() &&
+        discountCurves_.size() == numLegs) {
+        try {
+            auto [atmForward, spreadCorrection] = QuantExt::fairRate(
+                std::vector<Leg>(legs_.begin(), legs_.begin() + numLegs),
+                std::vector<bool>(legPayers_.begin(), legPayers_.begin() + numLegs),
+                discountCurves_,
+                fxSpots_);
+            additionalData_["atmForward"] = atmForward;
+            additionalData_["spreadCorrection"] = spreadCorrection;
+        } catch (const std::exception& e) {
+            DLOG("Could not compute atmForward using fairRate utility: " << e.what());
+        }
     }
     return additionalData_;
 }
@@ -269,7 +372,7 @@ QuantLib::Real Swap::notional() const {
     try {
         return instrument_->qlInstrument(true)->result<Real>("currentNotional");
     } catch (const std::exception& e) {
-        WLOG("swap engine does not provide current notional: " << e.what() << ", using fallback");
+        DLOG("swap engine does not provide current notional: " << e.what() << ", using fallback");
         // Try getting current notional from coupons
         if (notionalTakenFromLeg_ < legs_.size()) {
             Real n = currentNotional(legs_[notionalTakenFromLeg_]);
@@ -278,7 +381,7 @@ QuantLib::Real Swap::notional() const {
             }
         }
         // else return the face value
-        WLOG("swap does not provide coupon notionals, using face value");
+        DLOG("swap does not provide coupon notionals, using face value");
         return notional_;
     }
 }
@@ -289,13 +392,13 @@ std::string Swap::notionalCurrency() const {
         return instrument_->qlInstrument(true)->result<std::string>("notionalCurrency");
     } catch (const std::exception& e) {
         if (strcmp(e.what(), "notionalCurrency not provided"))
-            WLOG("swap engine does not provide notional ccy: " << e.what() << ", using fallback");
+            DLOG("swap engine does not provide notional ccy: " << e.what() << ", using fallback");
         return notionalCurrency_;
     }
 }
 
 map<AssetClass, set<string>>
-Swap::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+Swap::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
 
     map<AssetClass, set<string>> result;
     for (const auto& ld : legData_) {
@@ -304,11 +407,11 @@ Swap::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& reference
             if (ind.substr(0, 5) != "COMM-" && ind.substr(0, 3) != "EQ-")
                 continue;
 
-            boost::shared_ptr<Index> index = parseIndex(ind);
+            QuantLib::ext::shared_ptr<Index> index = parseIndex(ind);
 
-            if (auto ei = boost::dynamic_pointer_cast<EquityIndex2>(index)) {
+            if (auto ei = QuantLib::ext::dynamic_pointer_cast<EquityIndex2>(index)) {
                 result[AssetClass::EQ].insert(ei->name());
-            } else if (auto ci = boost::dynamic_pointer_cast<QuantExt::CommodityIndex>(index)) {
+            } else if (auto ci = QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityIndex>(index)) {
                 result[AssetClass::COM].insert(ci->name());
             }
         }
@@ -325,20 +428,25 @@ std::string isdaSubProductSwap(const std::string& tradeId, const vector<LegData>
     Size nFixed = 0;
     Size nFloating = 0;
     for (Size i = 0; i < legData.size(); ++i) {
-        std::string type = legData[i].legType();
-        if (type == "Fixed" ||
-            type == "ZeroCouponFixed" ||
-            type == "Cashflow")
+        const LegType& type = legData[i].legType();
+        if (type == LegType::Fixed ||
+            type == LegType::ZeroCouponFixed ||
+            type == LegType::Cashflow ||
+            type == LegType::CommodityFixed)
             nFixed++;
-        else if (type == "Floating" ||
-                 type == "CPI" ||
-                 type == "YY" ||
-                 type == "CMS" ||
-                 type == "DigitalCMS" ||
-                 type == "CMSSpread" ||
-                 type == "DigitalCMSSpread" ||
-                 type == "CMB" ||
-                 type == "Equity")
+        else if (type ==  LegType::Floating ||
+                 type ==  LegType::CPI ||
+                 type ==  LegType::YY ||
+                 type ==  LegType::CMS ||
+                 type ==  LegType::DigitalCMS ||
+                 type ==  LegType::CMSSpread ||
+                 type ==  LegType::DigitalCMSSpread ||
+                 type ==  LegType::CMB ||
+                 type ==  LegType::Equity ||
+                 type ==  LegType::DurationAdjustedCMS ||
+                 type ==  LegType::FormulaBased ||
+                 type == LegType::CommodityFloating ||
+                 type == LegType::EquityMargin)
             nFloating++;
         else {
             ALOG("leg type " << type << " not mapped for trade " << tradeId);
@@ -346,9 +454,9 @@ std::string isdaSubProductSwap(const std::string& tradeId, const vector<LegData>
     }
 
     if (nFixed == 0)
-        return string("Basis");  
+        return string("Basis");
     else if (nFloating >= 1)
-        return string("Fixed Float");  
+        return string("Fixed Float");
     else
         return string("Fixed Fixed");
 }
@@ -372,11 +480,11 @@ void Swap::fromXML(XMLNode* node) {
     for (Size i = 0; i < nodes.size(); i++) {
         auto ld = createLegData();
         ld->fromXML(nodes[i]);
-        legData_.push_back(*boost::static_pointer_cast<LegData>(ld));
+        legData_.push_back(*QuantLib::ext::static_pointer_cast<LegData>(ld));
     }
 }
 
-boost::shared_ptr<LegData> Swap::createLegData() const { return boost::make_shared<LegData>(); }
+QuantLib::ext::shared_ptr<LegData> Swap::createLegData() const { return QuantLib::ext::make_shared<LegData>(); }
 
 XMLNode* Swap::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);

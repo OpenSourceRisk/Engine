@@ -38,10 +38,10 @@ public:
         greater than the \p deltaThreshold or the absolute value of the gamma is greater
         than the \p gammaThreshold, then the SensitivityRecord is streamed
     */
-    FilteredSensitivityStream(const boost::shared_ptr<SensitivityStream>& ss, QuantLib::Real deltaThreshold,
+    FilteredSensitivityStream(const QuantLib::ext::shared_ptr<SensitivityStream>& ss, QuantLib::Real deltaThreshold,
                               QuantLib::Real gammaThreshold);
     //! Constructor that uses the same \p threshold for delta and gamma
-    FilteredSensitivityStream(const boost::shared_ptr<SensitivityStream>& ss, QuantLib::Real threshold);
+    FilteredSensitivityStream(const QuantLib::ext::shared_ptr<SensitivityStream>& ss, QuantLib::Real threshold);
     //! Returns the next SensitivityRecord in the stream after filtering
     SensitivityRecord next() override;
     //! Resets the stream so that SensitivityRecord objects can be streamed again
@@ -49,7 +49,7 @@ public:
 
 private:
     //! The underlying sensitivity stream that has been wrapped
-    boost::shared_ptr<SensitivityStream> ss_;
+    QuantLib::ext::shared_ptr<SensitivityStream> ss_;
     //! The delta threshold
     QuantLib::Real deltaThreshold_;
     //! The gamma threshold

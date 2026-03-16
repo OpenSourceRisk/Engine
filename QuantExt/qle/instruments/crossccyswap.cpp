@@ -22,7 +22,7 @@ namespace QuantExt {
 
 CrossCcySwap::CrossCcySwap(const Leg& firstLeg, const Currency& firstLegCcy, const Leg& secondLeg,
                            const Currency& secondLegCcy)
-    : Swap(firstLeg, secondLeg) {
+    : Swap(firstLeg, secondLeg), inCcyLegNPV_(2, 0.0), inCcyLegBPS_(2, 0.0), npvDateDiscounts_(2, 0.0) {
     currencies_.resize(2);
     currencies_[0] = firstLegCcy;
     currencies_[1] = secondLegCcy;
@@ -30,7 +30,8 @@ CrossCcySwap::CrossCcySwap(const Leg& firstLeg, const Currency& firstLegCcy, con
 
 CrossCcySwap::CrossCcySwap(const std::vector<Leg>& legs, const std::vector<bool>& payer,
                            const std::vector<Currency>& currencies)
-    : Swap(legs, payer), currencies_(currencies) {
+    : Swap(legs, payer), currencies_(currencies), inCcyLegNPV_(legs.size(), 0.0), inCcyLegBPS_(legs.size(), 0.0),
+      npvDateDiscounts_(legs.size(), 0.0) {
     QL_REQUIRE(payer.size() == currencies_.size(), "Size mismatch "
                                                    "between payer ("
                                                        << payer.size() << ") and currencies (" << currencies_.size()

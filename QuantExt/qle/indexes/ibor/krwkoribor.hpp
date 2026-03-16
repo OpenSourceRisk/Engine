@@ -42,7 +42,7 @@ using namespace QuantLib;
 class KRWKoribor : public IborIndex {
 public:
     KRWKoribor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
-        : IborIndex("KRW-KORIBOR", tenor, 2, KRWCurrency(), SouthKorea(SouthKorea::Settlement), ModifiedFollowing,
+        : IborIndex("KRW-KORIBOR", tenor, 1, KRWCurrency(), SouthKorea(SouthKorea::Settlement), ModifiedFollowing,
                     false, Actual365Fixed(), h) {}
 };
 } // namespace QuantExt

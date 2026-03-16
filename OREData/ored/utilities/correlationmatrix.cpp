@@ -21,6 +21,7 @@
 #include <ored/utilities/parsers.hpp>
 #include <ql/quotes/derivedquote.hpp>
 #include <ql/quotes/simplequote.hpp>
+#include <qle/math/kendallrankcorrelation.hpp>
 
 using namespace QuantLib;
 using namespace std;
@@ -52,18 +53,21 @@ bool operator!=(const CorrelationFactor& lhs, const CorrelationFactor& rhs) {
 }
 
 ostream& operator<<(ostream& out, const CorrelationFactor& f) {
-    return out << "{" << f.type << "," << f.name << "," << f.index << "}";
+    return out << f.type << ":" << f.name << ":" << f.index;
 }
 
-CorrelationFactor parseCorrelationFactor(const string& name) {
-    
-    Size pos = name.find(':');
-    QL_REQUIRE(pos != string::npos, "Expected the factor to be of the form 'type:name'");
+CorrelationFactor parseCorrelationFactor(const string& name, const char separator) {
 
-    CrossAssetModel::AssetType factorType = parseCamAssetType(name.substr(0, pos));
-    string factorName = name.substr(pos + 1);
+    std::string sep(1, separator);
+    vector<string> tokens;
+    boost::split(tokens, name, boost::is_any_of(sep));
 
-    return { factorType, factorName, 0 };
+    QL_REQUIRE(tokens.size() == 2 || tokens.size() == 3,
+               "parseCorrelationFactor(" << name << "): expected 2 or 3 tokens separated by separator ('" << sep
+                                         << "'), e.g. 'IR" << sep << "USD' or 'INF" << sep << "UKRPI" << sep << "0'");
+
+    return {parseCamAssetType(tokens[0]), tokens[1],
+            static_cast<Size>(tokens.size() == 3 ? parseInteger(tokens[3]) : 0)};
 }
 
 void CorrelationMatrixBuilder::reset() {
@@ -73,7 +77,7 @@ void CorrelationMatrixBuilder::reset() {
 void CorrelationMatrixBuilder::addCorrelation(const string& factor1, const string& factor2, Real correlation) {
     CorrelationFactor f_1 = parseCorrelationFactor(factor1);
     CorrelationFactor f_2 = parseCorrelationFactor(factor2);
-    addCorrelation(f_1, f_2, Handle<Quote>(boost::make_shared<SimpleQuote>(correlation)));
+    addCorrelation(f_1, f_2, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(correlation)));
 }
 
 void CorrelationMatrixBuilder::addCorrelation(const string& factor1, const string& factor2,
@@ -85,7 +89,7 @@ void CorrelationMatrixBuilder::addCorrelation(const string& factor1, const strin
 
 void CorrelationMatrixBuilder::addCorrelation(const CorrelationFactor& f_1,
     const CorrelationFactor& f_2, Real correlation) {
-    addCorrelation(f_1, f_2, Handle<Quote>(boost::make_shared<SimpleQuote>(correlation)));
+    addCorrelation(f_1, f_2, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(correlation)));
 }
 
 void CorrelationMatrixBuilder::addCorrelation(const CorrelationFactor& f_1, const CorrelationFactor& f_2,
@@ -97,8 +101,6 @@ void CorrelationMatrixBuilder::addCorrelation(const CorrelationFactor& f_1, cons
 
     // Store the correlation.
     CorrelationKey ck = createKey(f_1, f_2);
-    QL_REQUIRE(corrs_.find(ck) == corrs_.end(), "Correlation for key [" <<
-        ck.first << "," << ck.second << "] already set");
     QL_REQUIRE(correlation->value() >= -1.0 && correlation->value() <= 1.0, "Correlation value, " <<
         correlation->value() << ", for key [" << ck.first << "," << ck.second << "] should be in [-1.0,1.0]");
     corrs_[ck] = correlation;
@@ -269,7 +271,7 @@ Handle<Quote> CorrelationMatrixBuilder::getCorrelation(const CorrelationFactor& 
         ck = createKey(if_1, f_2);
         auto it = corrs_.find(ck);
         if (it != corrs_.end())
-            return Handle<Quote>(boost::make_shared<InvQuote>(it->second, negate<Real>()));
+            return Handle<Quote>(QuantLib::ext::make_shared<InvQuote>(it->second, negate<Real>()));
     }
 
     // If factor 2 is FX
@@ -278,7 +280,7 @@ Handle<Quote> CorrelationMatrixBuilder::getCorrelation(const CorrelationFactor& 
         ck = createKey(f_1, if_2);
         auto it = corrs_.find(ck);
         if (it != corrs_.end())
-            return Handle<Quote>(boost::make_shared<InvQuote>(it->second, negate<Real>()));
+            return Handle<Quote>(QuantLib::ext::make_shared<InvQuote>(it->second, negate<Real>()));
     }
 
     // If factor 1 and factor 2 are both FX
@@ -292,13 +294,47 @@ Handle<Quote> CorrelationMatrixBuilder::getCorrelation(const CorrelationFactor& 
     }
 
     // If we still haven't found anything, return a correlation of 0.
-    return Handle<Quote>(boost::make_shared<SimpleQuote>(0.0));
+    return Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.0));
 }
 
 const map<CorrelationKey, Handle<Quote>>& CorrelationMatrixBuilder::correlations() {
     return corrs_;
 }
 
+QuantLib::Matrix CorrelationMatrixBuilder::pearsonCorrelation(const QuantLib::Matrix& mCovariance) {
+    //Regular Pearson Correlation
+    QL_REQUIRE(mCovariance.columns()==mCovariance.rows(),"Covariance Matrix must be a squared Matrix");
+    Size n = mCovariance.rows();
+    Matrix mCorrelation(n, n);
+    Array stdDevs(n);
+    for (Size i = 0; i < n; i++) {
+        stdDevs[i] = std::sqrt(mCovariance[i][i]);
+    }
+    for (Size i = 0; i < n; i++) {
+        for (Size j = 0; j < n; j++) {
+            mCorrelation[i][j] = mCovariance[i][j] / (stdDevs[i] * stdDevs[j]);
+        }
+    }
+    return mCorrelation;
+}
+
+QuantLib::Matrix CorrelationMatrixBuilder::kendallCorrelation(const QuantLib::Matrix& mData) {
+    Size row = mData.rows();
+    Size col = mData.columns();
+    Matrix mCorrelation(row, col);
+    for (int i = 0; i < col; i++) {
+        mCorrelation[i][i] = 1.0;
+        for (int j = 1; j < col; j++) {
+            vector<double> colI, colJ;
+            for (int k = 0; k < row; k++) {
+                colI.push_back(mData[k][i]);
+                colJ.push_back(mData[k][j]);
+            }
+            mCorrelation[i][j] = mCorrelation[j][i] = QuantExt::kendallRankCorrelation(colI.begin(), colI.end(), colJ.begin());
+        }
+    }
+    return mCorrelation;
+}
 
 } // namespace data
 } // namespace ore

@@ -56,24 +56,24 @@ BOOST_AUTO_TEST_CASE(testSingleCurrencyYieldCurveBootstrap) {
     Settings::instance().evaluationDate() = asof;
 
     // Market
-    auto conventions = boost::make_shared<Conventions>();
+    auto conventions = QuantLib::ext::make_shared<Conventions>();
     conventions->fromFile(TEST_INPUT_FILE("conventions_01.xml"));
     InstrumentConventions::instance().setConventions(conventions);
 
-    auto todaysMarketParams = boost::make_shared<TodaysMarketParameters>();
+    auto todaysMarketParams = QuantLib::ext::make_shared<TodaysMarketParameters>();
     todaysMarketParams->fromFile(TEST_INPUT_FILE("todaysmarket_01.xml"));
-    auto curveConfigs = boost::make_shared<CurveConfigurations>();
+    auto curveConfigs = QuantLib::ext::make_shared<CurveConfigurations>();
     curveConfigs->fromFile(TEST_INPUT_FILE("curveconfig_01.xml"));
     auto loader =
-        boost::make_shared<CSVLoader>(TEST_INPUT_FILE("market_01.txt"), TEST_INPUT_FILE("fixings.txt"), false);
-    boost::shared_ptr<TodaysMarket> market =
-        boost::make_shared<TodaysMarket>(asof, todaysMarketParams, loader, curveConfigs, false);
+        QuantLib::ext::make_shared<CSVLoader>(TEST_INPUT_FILE("market_01.txt"), TEST_INPUT_FILE("fixings.txt"), false);
+    QuantLib::ext::shared_ptr<TodaysMarket> market =
+        QuantLib::ext::make_shared<TodaysMarket>(asof, todaysMarketParams, loader, curveConfigs, false);
 
     // Portfolio to test market
-    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
     engineData->fromFile(TEST_INPUT_FILE("pricingengine_01.xml"));
-    boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(engineData, market);
-    boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
+    QuantLib::ext::shared_ptr<EngineFactory> factory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
+    QuantLib::ext::shared_ptr<Portfolio> portfolio = QuantLib::ext::make_shared<Portfolio>();
     portfolio->fromFile(TEST_INPUT_FILE("mxn_ir_swap.xml"));
     portfolio->build(factory);
 
@@ -91,24 +91,24 @@ BOOST_AUTO_TEST_CASE(testCrossCurrencyYieldCurveBootstrap) {
     Settings::instance().evaluationDate() = asof;
 
     // Market
-    auto conventions = boost::make_shared<Conventions>();
+    auto conventions = QuantLib::ext::make_shared<Conventions>();
     conventions->fromFile(TEST_INPUT_FILE("conventions_02.xml"));
     InstrumentConventions::instance().setConventions(conventions);
     
-    auto todaysMarketParams = boost::make_shared<TodaysMarketParameters>();
+    auto todaysMarketParams = QuantLib::ext::make_shared<TodaysMarketParameters>();
     todaysMarketParams->fromFile(TEST_INPUT_FILE("todaysmarket_02.xml"));
-    auto curveConfigs = boost::make_shared<CurveConfigurations>();
+    auto curveConfigs = QuantLib::ext::make_shared<CurveConfigurations>();
     curveConfigs->fromFile(TEST_INPUT_FILE("curveconfig_02.xml"));
     auto loader =
-        boost::make_shared<CSVLoader>(TEST_INPUT_FILE("market_02.txt"), TEST_INPUT_FILE("fixings.txt"), false);
-    boost::shared_ptr<TodaysMarket> market =
-        boost::make_shared<TodaysMarket>(asof, todaysMarketParams, loader, curveConfigs, false);
+        QuantLib::ext::make_shared<CSVLoader>(TEST_INPUT_FILE("market_02.txt"), TEST_INPUT_FILE("fixings.txt"), false);
+    QuantLib::ext::shared_ptr<TodaysMarket> market =
+        QuantLib::ext::make_shared<TodaysMarket>(asof, todaysMarketParams, loader, curveConfigs, false);
 
     // Portfolio to test market
-    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
     engineData->fromFile(TEST_INPUT_FILE("pricingengine_02.xml"));
-    boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(engineData, market);
-    boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
+    QuantLib::ext::shared_ptr<EngineFactory> factory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
+    QuantLib::ext::shared_ptr<Portfolio> portfolio = QuantLib::ext::make_shared<Portfolio>();
     portfolio->fromFile(TEST_INPUT_FILE("mxn_usd_xccy_swap.xml"));
     portfolio->build(factory);
 
@@ -127,24 +127,24 @@ BOOST_AUTO_TEST_CASE(testCapFloorStrip) {
     Settings::instance().evaluationDate() = asof;
 
     // Market
-    auto conventions = boost::make_shared<Conventions>();
+    auto conventions = QuantLib::ext::make_shared<Conventions>();
     conventions->fromFile(TEST_INPUT_FILE("conventions_03.xml"));
     InstrumentConventions::instance().setConventions(conventions);
     
-    auto todaysMarketParams = boost::make_shared<TodaysMarketParameters>();
+    auto todaysMarketParams = QuantLib::ext::make_shared<TodaysMarketParameters>();
     todaysMarketParams->fromFile(TEST_INPUT_FILE("todaysmarket_03.xml"));
-    auto curveConfigs = boost::make_shared<CurveConfigurations>();
+    auto curveConfigs = QuantLib::ext::make_shared<CurveConfigurations>();
     curveConfigs->fromFile(TEST_INPUT_FILE("curveconfig_03.xml"));
     auto loader =
-        boost::make_shared<CSVLoader>(TEST_INPUT_FILE("market_03.txt"), TEST_INPUT_FILE("fixings.txt"), false);
-    boost::shared_ptr<TodaysMarket> market =
-        boost::make_shared<TodaysMarket>(asof, todaysMarketParams, loader, curveConfigs, false);
+        QuantLib::ext::make_shared<CSVLoader>(TEST_INPUT_FILE("market_03.txt"), TEST_INPUT_FILE("fixings.txt"), false);
+    QuantLib::ext::shared_ptr<TodaysMarket> market =
+        QuantLib::ext::make_shared<TodaysMarket>(asof, todaysMarketParams, loader, curveConfigs, false);
 
     // Portfolio to test market
-    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
     engineData->fromFile(TEST_INPUT_FILE("pricingengine_03.xml"));
-    boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(engineData, market);
-    boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
+    QuantLib::ext::shared_ptr<EngineFactory> factory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
+    QuantLib::ext::shared_ptr<Portfolio> portfolio = QuantLib::ext::make_shared<Portfolio>();
     portfolio->fromFile(TEST_INPUT_FILE("mxn_ir_cap.xml"));
     portfolio->build(factory);
 
@@ -160,8 +160,8 @@ BOOST_AUTO_TEST_CASE(testCapFloorStrip) {
     auto trade = portfolio->trades().begin()->second;
     BOOST_REQUIRE(trade);
     BOOST_REQUIRE(trade->legs().size() == 1);
-    auto pricer = boost::make_shared<BlackIborCouponPricer>(Handle<OptionletVolatilityStructure>(
-        boost::make_shared<ConstantOptionletVolatility>(0, NullCalendar(), Unadjusted, 0.20320, Actual365Fixed())));
+    auto pricer = QuantLib::ext::make_shared<BlackIborCouponPricer>(Handle<OptionletVolatilityStructure>(
+        QuantLib::ext::make_shared<ConstantOptionletVolatility>(0, NullCalendar(), Unadjusted, 0.20320, Actual365Fixed())));
     Leg leg = trade->legs().front();
     setCouponPricer(leg, pricer);
     Real npvMarketVol = CashFlows::npv(leg, **market->discountCurve("MXN"), false);

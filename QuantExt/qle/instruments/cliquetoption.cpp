@@ -22,8 +22,8 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-CliquetOption::CliquetOption(const boost::shared_ptr<PercentageStrikePayoff>& payoff,
-                             const boost::shared_ptr<EuropeanExercise>& maturity, const std::set<Date>& valuationDates,
+CliquetOption::CliquetOption(const QuantLib::ext::shared_ptr<PercentageStrikePayoff>& payoff,
+                             const QuantLib::ext::shared_ptr<EuropeanExercise>& maturity, const std::set<Date>& valuationDates,
                              const Date& paymentDate, const Real notional, const Position::Type& longShort,
                              const Real localCap, const Real localFloor, const Real globalCap, const Real globalFloor,
                              const Real premium, const Date& premiumPayDate, const std::string& premiumCurrency)
@@ -46,8 +46,8 @@ void CliquetOption::setupArguments(PricingEngine::arguments* args) const {
 
     moreArgs->notional = notional_;
     moreArgs->longShort = longShort_;
-    moreArgs->moneyness = boost::dynamic_pointer_cast<PercentageStrikePayoff>(payoff_)->strike();
-    moreArgs->type = boost::dynamic_pointer_cast<PercentageStrikePayoff>(payoff_)->optionType();
+    moreArgs->moneyness = QuantLib::ext::dynamic_pointer_cast<PercentageStrikePayoff>(payoff_)->strike();
+    moreArgs->type = QuantLib::ext::dynamic_pointer_cast<PercentageStrikePayoff>(payoff_)->optionType();
     moreArgs->valuationDates = valuationDates_;
     moreArgs->paymentDate = paymentDate_;
     moreArgs->localCap = localCap_;
@@ -61,7 +61,7 @@ void CliquetOption::setupArguments(PricingEngine::arguments* args) const {
 
 void CliquetOption::arguments::validate() const {
 
-    boost::shared_ptr<PercentageStrikePayoff> moneyness = boost::dynamic_pointer_cast<PercentageStrikePayoff>(payoff);
+    QuantLib::ext::shared_ptr<PercentageStrikePayoff> moneyness = QuantLib::ext::dynamic_pointer_cast<PercentageStrikePayoff>(payoff);
     QL_REQUIRE(moneyness, "wrong payoff type");
     QL_REQUIRE(moneyness->strike() > 0.0, "negative or zero moneyness given");
     QL_REQUIRE(!valuationDates.empty(), "no reset dates given");

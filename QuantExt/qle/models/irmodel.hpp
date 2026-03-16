@@ -38,7 +38,7 @@ public:
     virtual Measure measure() const = 0;
 
     /*! parametrization (as base class) */
-    virtual const boost::shared_ptr<Parametrization> parametrizationBase() const = 0;
+    virtual const QuantLib::ext::shared_ptr<Parametrization> parametrizationBase() const = 0;
 
     /*! yield term structure to which the IrModel is (initially) calibrated */
     virtual Handle<YieldTermStructure> termStructure() const = 0;
@@ -56,24 +56,29 @@ public:
      * schemes */
     virtual Size m_aux() const = 0;
 
+    /*! get initial value of state */
+    virtual Array initialValue() const { return Array(n() + n_aux(), 0.0); }
+
     /*! stochastic process, this has dimension n() + n_aux() and m() + m_aux() Brownian drivers */
-    virtual boost::shared_ptr<StochasticProcess> stateProcess() const = 0;
+    virtual QuantLib::ext::shared_ptr<StochasticProcess> stateProcess() const = 0;
 
     /*! discount bond depending on state (of dimension n()) */
     virtual QuantLib::Real discountBond(
         const QuantLib::Time t, const QuantLib::Time T, const QuantLib::Array& x,
         const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve = Handle<YieldTermStructure>()) const = 0;
 
-    /*! numeraire depending on state and aux state (of dimensions n(), n_aux() */
-    virtual QuantLib::Real
-    numeraire(const QuantLib::Time t, const QuantLib::Array& x,
-              const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
-              const QuantLib::Array& aux = Array()) const = 0;
+    /*! numeraire depending on state (including aux state) of dimension n() + n_aux() */
+    virtual QuantLib::Real numeraire(
+        const QuantLib::Time t, const QuantLib::Array& x,
+        const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve = Handle<YieldTermStructure>()) const = 0;
 
     /*! short rate at t */
     virtual QuantLib::Real shortRate(
         const QuantLib::Time t, const QuantLib::Array& x,
         const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve = Handle<YieldTermStructure>()) const = 0;
+
+    /*! perform an Euler step */
+    virtual Array marginalStep(const Time t0, const Array& x0, const Time dt, const Array& dw) const = 0;
 };
 
 } // namespace QuantExt

@@ -25,7 +25,7 @@
 namespace QuantExt {
 
 RiskParticipationAgreementTLock::RiskParticipationAgreementTLock(
-    const boost::shared_ptr<QuantLib::Bond>& bond, Real bondNotional, bool payer, Real referenceRate,
+    const QuantLib::ext::shared_ptr<QuantLib::Bond>& bond, Real bondNotional, bool payer, Real referenceRate,
     const DayCounter& dayCounter, const Date& terminationDate, const Date& paymentDate,
     const std::vector<Leg>& protectionFee, const bool protectionFeePayer,
     const std::vector<std::string>& protectionFeeCcys, const Real participationRate, const Date& protectionStart,
@@ -53,8 +53,8 @@ RiskParticipationAgreementTLock::RiskParticipationAgreementTLock(
                "protection end (" << protectionEnd_ << ") must be greater than protection start " << protectionStart_);
 
     for (auto const& c : bond->cashflows()) {
-        if (auto tmp = boost::dynamic_pointer_cast<Coupon>(c)) {
-            QL_REQUIRE(boost::dynamic_pointer_cast<FixedRateCoupon>(c),
+        if (auto tmp = QuantLib::ext::dynamic_pointer_cast<Coupon>(c)) {
+            QL_REQUIRE(QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(c),
                        "RiskParticipationAgreementTLock: only fixed rate coupons allowed in bond underlying");
         }
     }

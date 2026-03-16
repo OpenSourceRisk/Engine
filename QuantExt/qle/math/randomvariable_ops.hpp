@@ -33,28 +33,39 @@ namespace QuantExt {
 
 // random variable operations
 
-using RandomVariableOp = std::function<RandomVariable(const std::vector<const RandomVariable*>&)>;
+using RandomVariableOp = std::function<RandomVariable(const std::vector<const RandomVariable*>&, const Size)>;
+
+RandomVariable randomVariableOpConditionalExpectation(const Size size, const Size regressionOrder,
+                                                      QuantLib::LsmBasisSystem::PolynomialType polynomType,
+                                                      QuantLib::Real regressionVarianceCutoff,
+                                                      const std::set<std::set<std::size_t>>& regressorGroups,
+                                                      const bool usePythonIntegration,
+                                                      const std::vector<const RandomVariable*>& args);
 
 // eps determines the smoothing, 0 means no smoothing (default)
 std::vector<RandomVariableOp>
 getRandomVariableOps(const Size size, const Size regressionOrder = 2,
                      const QuantLib::LsmBasisSystem::PolynomialType polynomType = QuantLib::LsmBasisSystem::Monomial,
-                     const double eps = 0.0);
+                     const double eps = 0.0, QuantLib::Real regressionVarianceCutoff = Null<Real>(),
+                     const std::map<std::size_t, std::set<std::set<std::size_t>>>& regressorGroups = {},
+                     const bool usePythonIntegration = false);
 
 // random variable gradients
 
-using RandomVariableGrad =
-    std::function<std::vector<RandomVariable>(const std::vector<const RandomVariable*>&, const RandomVariable*)>;
+using RandomVariableGrad = std::function<std::vector<RandomVariable>(const std::vector<const RandomVariable*>&,
+                                                                     const RandomVariable*, const Size)>;
 
 // eps determines the smoothing, 0 means no smoothing
 std::vector<RandomVariableGrad> getRandomVariableGradients(
     const Size size, const Size regressionOrder = 2,
     const QuantLib::LsmBasisSystem::PolynomialType polynomType = QuantLib::LsmBasisSystem::Monomial,
-    const double eps = 0.2);
+    const double eps = 0.2, QuantLib::Real regressionVarianceCutoff = Null<Real>());
 
 // random variable flags which values are needed to compute the gradient
 
 using RandomVariableOpNodeRequirements = std::function<std::pair<std::vector<bool>, bool>(const std::size_t)>;
 std::vector<RandomVariableOpNodeRequirements> getRandomVariableOpNodeRequirements();
+
+std::vector<bool> getRandomVariableOpAllowsPredeletion();
 
 } // namespace QuantExt

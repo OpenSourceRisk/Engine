@@ -39,7 +39,7 @@ Real CashFlows::spreadNpv(const Leg& leg, const YieldTermStructure& discountCurv
     Real spreadNpv = 0.0;
     for (Size i = 0; i < leg.size(); ++i) {
 
-        boost::shared_ptr<FloatingRateCoupon> floatCoupon = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg[i]);
+        QuantLib::ext::shared_ptr<FloatingRateCoupon> floatCoupon = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(leg[i]);
 
         if (floatCoupon && !floatCoupon->hasOccurred(settlementDate, includeSettlementDateFlows)) {
 
@@ -72,7 +72,7 @@ vector<Rate> CashFlows::couponRates(const Leg& leg) {
     vector<Rate> couponRates;
     // Non-empty leg
     for (Size i = 0; i < leg.size(); ++i) {
-        boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(leg[i]);
+        QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(leg[i]);
         if (coupon)
             couponRates.push_back(coupon->rate());
     }
@@ -84,7 +84,7 @@ vector<Rate> CashFlows::couponDcfRates(const Leg& leg) {
     vector<Rate> couponDcfRates;
     // Non-empty leg
     for (Size i = 0; i < leg.size(); ++i) {
-        boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(leg[i]);
+        QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(leg[i]);
         if (coupon)
             couponDcfRates.push_back(coupon->rate() * coupon->accrualPeriod());
     }

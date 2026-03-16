@@ -71,6 +71,12 @@ std::string getHostname();
 //! Returns all the above system details in a single string
 std::string getSystemDetails();
 
+//! Write the current stacktrace to stderr and LOG() with level = ALERT
+void dumpStacktrace();
+
+//! Set an assert handler that logs the stacktrace
+void setAssertHandler();
+
 //! @}
 }; // namespace os
 } // namespace data

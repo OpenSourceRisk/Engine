@@ -1,0 +1,86 @@
+%========================================================
+\section{Counterparty Information}\label{sec:counterpartyinformation}
+%========================================================
+
+The counterparty information file - {\tt counterparty.xml} - 
+contains a list of counterparty-level details.
+The file is written in XML format, with a top-level
+\lstinline!CounterpartyInformation! node consisting of two
+children nodes: \lstinline!Counterparties! and
+\lstinline!Correlations!.
+
+\vspace{1em}
+
+\subsection{Counterparties}
+The \lstinline!Counterparties! node is used to define inputs
+for each counterparty in the calculations. Each counterparty is
+then defined with its own \lstinline!Counterparty! node, with the following
+XML template:
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <Counterparties>
+        <Counterparty>
+            <CounterpartyId> </CounterpartyId>
+            <CreditQuality>IG</CreditQuality>
+            <BaCvaRiskWeight> </BaCvaRiskWeight>
+            <SaCcrRiskWeight> </SaCcrRiskWeight>
+            <SaCvaRiskBucket> </SaCvaRiskBucket>
+        </Counterparty>
+        <Counterparty>
+            .......
+        </Counterparty>
+    </Counterparties>
+\end{minted}
+\caption{Counterparty definition}
+\label{lst:counterparties}
+\end{listing}
+
+The meanings of the various elements of the \lstinline!Counterparty!
+node are as follows (default input values for certain analytics are
+specified in their own respective sections, otherwise the
+defaults below are applicable):
+\begin{itemize}
+\item \lstinline!CounterpartyId!: The unique identifier for the counterparty.\\
+  Allowable values: Any string.
+\item \lstinline!ClearingCounterparty! [Optional]: Whether the counterparty is a
+clearing counterparty.\\
+  Allowable values: Boolean node, allowing \emph{Y}, \emph{N}, \emph{1}, \emph{0},
+  \emph{true}, \emph{false}, etc. The full set of allowable values is given in Table
+  \ref{tab:boolean_allowable}. If left blank or omitted, defaults to \emph{False}.
+\item \lstinline!CreditQuality! [Optional]: Credit quality/rating. \\
+  Allowable values: \emph{HY} (high yield), \emph{IG} (investment grade), 
+  \emph{NR} (not rated). Defaults to \emph{NR} if left blank or omitted.
+\item \lstinline!BaCvaRiskWeight! [Optional]: BA-CVA supervisory risk weight based
+on sector and credit quality\ifdefined\RiskCatalogue{, as defined in Section
+\ref{sssec_bacva_reduced}}\fi. This field is only used when calculating BA-CVA or SA-CVA.\\
+  Allowable values: Any number. If left blank or omitted, defaults to zero.
+\item \lstinline!SaCcrRiskWeight! [Optional]: SA-CCR supervisory risk weight based
+on sector and credit quality\ifdefined\RiskCatalogue{, as defined in Section
+\ref{sssec_saccr_capital_charge}}\fi. This field is only used when calculating
+SA-CCR or BA-CVA (which itself calculates SA-CCR).\\
+  Allowable values: Any number. If left blank or omitted, defaults to \emph{1.0}.
+\item \lstinline!SaCvaRiskBucket! [Optional]: SA-CVA delta risk buckets for
+counterparty credit spread.\\
+  Allowable values: Any integer from \emph{1} to \emph{8} (inclusive).
+\end{itemize}
+
+\subsection{Correlations}
+
+The \lstinline!Correlations! node is used to define counterparty correlations which are
+used for calculating correlations between counterparty credit risk factor, with the following
+XML template:
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <Correlations>
+        <Correlation cpty1="CPTY_A" cpty2="CPTY_B">0.5</Correlation>
+        <Correlation cpty1="CPTY_B" cpty2="CPTY_C">0.5</Correlation>
+        ....
+    </Correlations>
+\end{minted}
+\caption{Counterparty correlations definition}
+\label{lst:counterparty_correlations}
+\end{listing}

@@ -66,6 +66,8 @@ public:
     const std::vector<std::pair<std::size_t, std::size_t>>& redBlockRanges() const;
     const std::set<std::size_t>& redBlockDependencies() const;
 
+    
+
 private:
     std::vector<std::vector<std::size_t>> predecessors_;
     std::vector<std::size_t> opId_;
@@ -96,6 +98,7 @@ std::size_t cg_var(ComputationGraph& g, const std::string& name,
                    ComputationGraph::VarDoesntExist = ComputationGraph::VarDoesntExist::Throw);
 std::size_t cg_add(ComputationGraph& g, const std::size_t a, const std::size_t b,
                    const std::string& label = std::string());
+std::size_t cg_add(ComputationGraph& g, const std::vector<std::size_t>& a, const std::string& label = std::string());
 std::size_t cg_subtract(ComputationGraph& g, const std::size_t a, const std::size_t b, const std::string& label = std::string());
 std::size_t cg_negative(ComputationGraph& g, const std::size_t a, const std::string& label = std::string());
 std::size_t cg_mult(ComputationGraph& g, const std::size_t a, const std::size_t b, const std::string& label = std::string());
@@ -111,12 +114,18 @@ std::size_t cg_indicatorGeq(ComputationGraph& g, const std::size_t a, const std:
                             const std::string& label = std::string());
 std::size_t cg_min(ComputationGraph& g, const std::size_t a, const std::size_t b, const std::string& label = std::string());
 std::size_t cg_max(ComputationGraph& g, const std::size_t a, const std::size_t b, const std::string& label = std::string());
+std::size_t cg_round(ComputationGraph& g, const std::size_t a, const std::size_t b, const std::string& label = std::string());
 std::size_t cg_abs(ComputationGraph& g, const std::size_t a, const std::string& label = std::string());
 std::size_t cg_exp(ComputationGraph& g, const std::size_t a, const std::string& label = std::string());
 std::size_t cg_sqrt(ComputationGraph& g, const std::size_t a, const std::string& label = std::string());
+std::size_t cg_frac(ComputationGraph& g, const std::size_t a, const std::string& label = std::string());
 std::size_t cg_log(ComputationGraph& g, const std::size_t a, const std::string& label = std::string());
 std::size_t cg_pow(ComputationGraph& g, const std::size_t a, const std::size_t b, const std::string& label = std::string());
 std::size_t cg_normalCdf(ComputationGraph& g, const std::size_t a, const std::string& label = std::string());
 std::size_t cg_normalPdf(ComputationGraph& g, const std::size_t a, const std::string& label = std::string());
     
+// utility functions on cg
+
+std::set<std::size_t> dependentNodes(const ComputationGraph& g, const std::size_t start, const std::size_t end);
+
 } // namespace QuantExt

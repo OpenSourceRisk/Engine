@@ -29,7 +29,7 @@ namespace QuantExt {
 MidPointCdsEngineMultiState::MidPointCdsEngineMultiState(
     const std::vector<Handle<DefaultProbabilityTermStructure>>& defaultCurves,
     const std::vector<Handle<Quote>> recoveryRates, const Handle<YieldTermStructure>& discountCurve,
-    const Size mainResultState, const boost::optional<bool> includeSettlementDateFlows)
+    const Size mainResultState, const QuantLib::ext::optional<bool> includeSettlementDateFlows)
     : MidPointCdsEngine(Handle<DefaultProbabilityTermStructure>(), 0.0, discountCurve, includeSettlementDateFlows),
       defaultCurves_(defaultCurves), recoveryRates_(recoveryRates), mainResultState_(mainResultState) {
     QL_REQUIRE(defaultCurves.size() == recoveryRates.size(), "MidPointCdsEngineMultiState: number of default curves ("

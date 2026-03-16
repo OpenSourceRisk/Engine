@@ -66,7 +66,7 @@ struct CommonVars : public qle::test::TopLevelFixture {
         volQuotes.resize(tenors.size());
         volHandles.resize(tenors.size());
         for (Size i = 0; i < tenors.size(); ++i) {
-            volQuotes[i] = boost::make_shared<SimpleQuote>(testData.nAtmVols[i]);
+            volQuotes[i] = QuantLib::ext::make_shared<SimpleQuote>(testData.nAtmVols[i]);
             volHandles[i] = Handle<Quote>(volQuotes[i]);
         }
     }
@@ -85,7 +85,7 @@ struct CommonVars : public qle::test::TopLevelFixture {
 
     // Cap floor test data
     vector<Period> tenors;
-    vector<boost::shared_ptr<SimpleQuote> > volQuotes;
+    vector<QuantLib::ext::shared_ptr<SimpleQuote> > volQuotes;
     vector<Handle<Quote> > volHandles;
 };
 
@@ -157,60 +157,60 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testCapFloorTermVolCurveInterpolation,
     BOOST_TEST_MESSAGE("  Flat first period: " << boolalpha << flatFirstPeriod);
 
     // Create the CapFloorTermVolatilityStructure using the appropriate interpolation and reference date/settlement days
-    boost::shared_ptr<CapFloorTermVolatilityStructure> cftvs;
+    QuantLib::ext::shared_ptr<CapFloorTermVolatilityStructure> cftvs;
     switch (interpolationType.which()) {
     case 0:
         if (isMoving) {
             BOOST_TEST_MESSAGE("Using Linear interpolation with a moving reference date");
-            BOOST_REQUIRE_NO_THROW(cftvs = boost::make_shared<InterpolatedCapFloorTermVolCurve<Linear> >(
+            BOOST_REQUIRE_NO_THROW(cftvs = QuantLib::ext::make_shared<InterpolatedCapFloorTermVolCurve<Linear> >(
                                        settlementDays, calendar, bdc, tenors, volHandles, dayCounter, flatFirstPeriod));
         } else {
             BOOST_TEST_MESSAGE("Using Linear interpolation with a fixed reference date");
-            BOOST_REQUIRE_NO_THROW(cftvs = boost::make_shared<InterpolatedCapFloorTermVolCurve<Linear> >(
+            BOOST_REQUIRE_NO_THROW(cftvs = QuantLib::ext::make_shared<InterpolatedCapFloorTermVolCurve<Linear> >(
                                        referenceDate, calendar, bdc, tenors, volHandles, dayCounter, flatFirstPeriod));
         }
         break;
     case 1:
         if (isMoving) {
             BOOST_TEST_MESSAGE("Using BackwardFlat interpolation with a moving reference date");
-            BOOST_REQUIRE_NO_THROW(cftvs = boost::make_shared<InterpolatedCapFloorTermVolCurve<BackwardFlat> >(
+            BOOST_REQUIRE_NO_THROW(cftvs = QuantLib::ext::make_shared<InterpolatedCapFloorTermVolCurve<BackwardFlat> >(
                                        settlementDays, calendar, bdc, tenors, volHandles, dayCounter, flatFirstPeriod));
         } else {
             BOOST_TEST_MESSAGE("Using BackwardFlat interpolation with a fixed reference date");
-            BOOST_REQUIRE_NO_THROW(cftvs = boost::make_shared<InterpolatedCapFloorTermVolCurve<BackwardFlat> >(
+            BOOST_REQUIRE_NO_THROW(cftvs = QuantLib::ext::make_shared<InterpolatedCapFloorTermVolCurve<BackwardFlat> >(
                                        referenceDate, calendar, bdc, tenors, volHandles, dayCounter, flatFirstPeriod));
         }
         break;
     case 2:
         if (isMoving) {
             BOOST_TEST_MESSAGE("Using LinearFlat interpolation with a moving reference date");
-            BOOST_REQUIRE_NO_THROW(cftvs = boost::make_shared<InterpolatedCapFloorTermVolCurve<LinearFlat> >(
+            BOOST_REQUIRE_NO_THROW(cftvs = QuantLib::ext::make_shared<InterpolatedCapFloorTermVolCurve<LinearFlat> >(
                                        settlementDays, calendar, bdc, tenors, volHandles, dayCounter, flatFirstPeriod));
         } else {
             BOOST_TEST_MESSAGE("Using LinearFlat interpolation with a fixed reference date");
-            BOOST_REQUIRE_NO_THROW(cftvs = boost::make_shared<InterpolatedCapFloorTermVolCurve<LinearFlat> >(
+            BOOST_REQUIRE_NO_THROW(cftvs = QuantLib::ext::make_shared<InterpolatedCapFloorTermVolCurve<LinearFlat> >(
                                        referenceDate, calendar, bdc, tenors, volHandles, dayCounter, flatFirstPeriod));
         }
         break;
     case 3:
         if (isMoving) {
             BOOST_TEST_MESSAGE("Using Cubic interpolation with a moving reference date");
-            BOOST_REQUIRE_NO_THROW(cftvs = boost::make_shared<InterpolatedCapFloorTermVolCurve<Cubic> >(
+            BOOST_REQUIRE_NO_THROW(cftvs = QuantLib::ext::make_shared<InterpolatedCapFloorTermVolCurve<Cubic> >(
                                        settlementDays, calendar, bdc, tenors, volHandles, dayCounter, flatFirstPeriod));
         } else {
             BOOST_TEST_MESSAGE("Using Cubic interpolation with a fixed reference date");
-            BOOST_REQUIRE_NO_THROW(cftvs = boost::make_shared<InterpolatedCapFloorTermVolCurve<Cubic> >(
+            BOOST_REQUIRE_NO_THROW(cftvs = QuantLib::ext::make_shared<InterpolatedCapFloorTermVolCurve<Cubic> >(
                                        referenceDate, calendar, bdc, tenors, volHandles, dayCounter, flatFirstPeriod));
         }
         break;
     case 4:
         if (isMoving) {
             BOOST_TEST_MESSAGE("Using CubicFlat interpolation with a moving reference date");
-            BOOST_REQUIRE_NO_THROW(cftvs = boost::make_shared<InterpolatedCapFloorTermVolCurve<CubicFlat> >(
+            BOOST_REQUIRE_NO_THROW(cftvs = QuantLib::ext::make_shared<InterpolatedCapFloorTermVolCurve<CubicFlat> >(
                                        settlementDays, calendar, bdc, tenors, volHandles, dayCounter, flatFirstPeriod));
         } else {
             BOOST_TEST_MESSAGE("Using CubicFlat interpolation with a fixed reference date");
-            BOOST_REQUIRE_NO_THROW(cftvs = boost::make_shared<InterpolatedCapFloorTermVolCurve<CubicFlat> >(
+            BOOST_REQUIRE_NO_THROW(cftvs = QuantLib::ext::make_shared<InterpolatedCapFloorTermVolCurve<CubicFlat> >(
                                        referenceDate, calendar, bdc, tenors, volHandles, dayCounter, flatFirstPeriod));
         }
         break;

@@ -44,9 +44,9 @@ public:
         //! Name index for writing to the cube
         Size nameIndex,
         //! The market
-        const boost::shared_ptr<SimMarket>& simMarket,
+        const QuantLib::ext::shared_ptr<SimMarket>& simMarket,
         //! The cube for data on name level
-        boost::shared_ptr<NPVCube>& outputCube,
+        QuantLib::ext::shared_ptr<NPVCube>& outputCube,
         //! The date
         const Date& date,
         //! Date index
@@ -62,9 +62,9 @@ public:
         //! Name index for writing to the cube
         Size nameIndex,
         //! The market
-        const boost::shared_ptr<SimMarket>& simMarket,
+        const QuantLib::ext::shared_ptr<SimMarket>& simMarket,
         //! The cube
-        boost::shared_ptr<NPVCube>& outputCube) = 0;
+        QuantLib::ext::shared_ptr<NPVCube>& outputCube) = 0;
 };
 
 //! SurvivalProbabilityCalculator
@@ -80,15 +80,15 @@ public:
         : configuration_(configuration), index_(index) {}
 
     virtual void calculate(const std::string& name, Size nameIndex,
-                           const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
+                           const QuantLib::ext::shared_ptr<SimMarket>& simMarket, QuantLib::ext::shared_ptr<NPVCube>& outputCube,
                            const Date& date, Size dateIndex, Size sample, bool isCloseOut = false) override;
 
     virtual void calculateT0(const std::string& name, Size nameIndex,
-                             const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube) override;
+                             const QuantLib::ext::shared_ptr<SimMarket>& simMarket, QuantLib::ext::shared_ptr<NPVCube>& outputCube) override;
 
 private:
     Real survProb(const std::string& name,
-                  const boost::shared_ptr<SimMarket>& simMarket,
+                  const QuantLib::ext::shared_ptr<SimMarket>& simMarket,
                   const Date& date = Date());
 
     std::string configuration_;

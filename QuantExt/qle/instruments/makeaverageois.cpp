@@ -23,7 +23,7 @@
 
 namespace QuantExt {
 
-MakeAverageOIS::MakeAverageOIS(const Period& swapTenor, const boost::shared_ptr<OvernightIndex>& overnightIndex,
+MakeAverageOIS::MakeAverageOIS(const Period& swapTenor, const QuantLib::ext::shared_ptr<OvernightIndex>& overnightIndex,
                                const Period& onTenor, Rate fixedRate, const Period& fixedTenor,
                                const DayCounter& fixedDayCounter, const Period& spotLagTenor,
                                const Period& forwardStart)
@@ -41,14 +41,14 @@ MakeAverageOIS::MakeAverageOIS(const Period& swapTenor, const boost::shared_ptr<
       onGearing_(1.0), onDayCounter_(overnightIndex->dayCounter()),
       onPaymentAdjustment_(overnightIndex->businessDayConvention()),
       onPaymentCalendar_(overnightIndex->fixingCalendar()), telescopicValueDates_(false),
-      onCouponPricer_(boost::make_shared<AverageONIndexedCouponPricer>()) {}
+      onCouponPricer_(QuantLib::ext::make_shared<AverageONIndexedCouponPricer>()) {}
 
 MakeAverageOIS::operator AverageOIS() const {
-    boost::shared_ptr<AverageOIS> swap = *this;
+    QuantLib::ext::shared_ptr<AverageOIS> swap = *this;
     return *swap;
 }
 
-MakeAverageOIS::operator boost::shared_ptr<AverageOIS>() const {
+MakeAverageOIS::operator QuantLib::ext::shared_ptr<AverageOIS>() const {
 
     // Deduce the effective date if it is not given.
     Date effectiveDate;
@@ -78,7 +78,7 @@ MakeAverageOIS::operator boost::shared_ptr<AverageOIS>() const {
     Schedule onSchedule(effectiveDate, terminationDate, onTenor_, onCalendar_, onConvention_,
                         onTerminationDateConvention_, onRule_, onEndOfMonth_, onFirstDate_, onNextToLastDate_);
 
-    boost::shared_ptr<AverageOIS> swap(
+    QuantLib::ext::shared_ptr<AverageOIS> swap(
         new AverageOIS(type_, nominal_, fixedSchedule, fixedRate_, fixedDayCounter_, fixedPaymentAdjustment_,
                        fixedPaymentCalendar_, onSchedule, overnightIndex_, onPaymentAdjustment_, onPaymentCalendar_,
                        rateCutoff_, onSpread_, onGearing_, onDayCounter_, onCouponPricer_, telescopicValueDates_));
@@ -241,18 +241,18 @@ MakeAverageOIS& MakeAverageOIS::withTelescopicValueDates(bool telescopicValueDat
 }
 
 MakeAverageOIS&
-MakeAverageOIS::withONCouponPricer(const boost::shared_ptr<AverageONIndexedCouponPricer>& onCouponPricer) {
+MakeAverageOIS::withONCouponPricer(const QuantLib::ext::shared_ptr<AverageONIndexedCouponPricer>& onCouponPricer) {
     onCouponPricer_ = onCouponPricer;
     return *this;
 }
 
 MakeAverageOIS& MakeAverageOIS::withDiscountingTermStructure(const Handle<YieldTermStructure>& discountCurve) {
     bool includeSettlementDateFlows = false;
-    engine_ = boost::shared_ptr<PricingEngine>(new DiscountingSwapEngine(discountCurve, includeSettlementDateFlows));
+    engine_ = QuantLib::ext::shared_ptr<PricingEngine>(new DiscountingSwapEngine(discountCurve, includeSettlementDateFlows));
     return *this;
 }
 
-MakeAverageOIS& MakeAverageOIS::withPricingEngine(const boost::shared_ptr<PricingEngine>& engine) {
+MakeAverageOIS& MakeAverageOIS::withPricingEngine(const QuantLib::ext::shared_ptr<PricingEngine>& engine) {
     engine_ = engine;
     return *this;
 }

@@ -46,7 +46,7 @@ class LegAdditionalData;
 
     \ingroup portfolio
 */
-template <class T> boost::shared_ptr<LegAdditionalData> createLegData() { return boost::make_shared<T>(); }
+template <class T> QuantLib::ext::shared_ptr<LegAdditionalData> createLegData() { return QuantLib::ext::make_shared<T>(); }
 
 /*! Leg data factory class
 
@@ -70,7 +70,7 @@ public:
     /*! The container type used to store the leg data type key and the function that will be used to build a default
         instance of that leg data type.
     */
-    typedef std::map<std::string, std::function<boost::shared_ptr<LegAdditionalData>()>> map_type;
+    typedef std::map<std::string, std::function<QuantLib::ext::shared_ptr<LegAdditionalData>()>> map_type;
 
     /*! A call to \c build should return an instance of \c LegAdditionalData corresponding to the required \p legType.
         For example, a call to <code>build("Fixed")</code> should return a \c FixedLegData instance.
@@ -78,11 +78,11 @@ public:
         \warning If the \p legType has not been added to the factory then a call to this method for that \p legType
                  will return a \c nullptr
     */
-    boost::shared_ptr<LegAdditionalData> build(const std::string& legType);
+    QuantLib::ext::shared_ptr<LegAdditionalData> build(const std::string& legType);
 
     /*! Add a builder function \p builder for a given \p legType
      */
-    void addBuilder(const std::string& legType, std::function<boost::shared_ptr<LegAdditionalData>()> builder,
+    void addBuilder(const std::string& legType, std::function<QuantLib::ext::shared_ptr<LegAdditionalData>()> builder,
                     const bool allowOverwrite = false);
 
 private:

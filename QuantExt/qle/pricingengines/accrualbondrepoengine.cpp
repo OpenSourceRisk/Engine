@@ -32,7 +32,7 @@ void AccrualBondRepoEngine::calculate() const {
     Real cashLegAccrual = 0.0, cashLegNominal = 0.0, cashLegNpv = 0.0;
     auto cf = CashFlows::nextCashFlow(arguments_.cashLeg, false);
     if (cf != arguments_.cashLeg.end()) {
-        auto cpn = boost::dynamic_pointer_cast<Coupon>(*cf);
+        auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(*cf);
         cashLegNominal = multiplier * cpn->nominal();
         cashLegAccrual = multiplier * CashFlows::accruedAmount(arguments_.cashLeg, false);
         cashLegNpv = cashLegNominal + cashLegAccrual;

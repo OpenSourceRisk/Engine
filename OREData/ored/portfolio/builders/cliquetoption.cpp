@@ -26,7 +26,7 @@ using namespace std;
 namespace ore {
 namespace data {
 
-boost::shared_ptr<PricingEngine> EquityCliquetOptionMcScriptEngineBuilder::engineImpl(const string& assetName,
+QuantLib::ext::shared_ptr<PricingEngine> EquityCliquetOptionMcScriptEngineBuilder::engineImpl(const string& assetName,
                                                                                       const Currency& ccy,
                                                                                       const AssetClass& assetClass) {
 
@@ -35,10 +35,10 @@ boost::shared_ptr<PricingEngine> EquityCliquetOptionMcScriptEngineBuilder::engin
     bool interactive = parseBool(engineParameter("Interactive"));
     bool scriptedLibraryOverride = parseBool(engineParameter("ScriptedLibraryOverride", {}, false));
 
-    boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = getBlackScholesProcess(assetName, ccy, assetClass);
+    QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> gbsp = getBlackScholesProcess(assetName, ccy, assetClass);
     Handle<YieldTermStructure> discountCurve =
         market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
-    return boost::make_shared<CliquetOptionMcScriptEngine>("EQ-" + assetName, ccy.code(), ccy.code(), gbsp, tradeTypes_,
+    return QuantLib::ext::make_shared<CliquetOptionMcScriptEngine>("EQ-" + assetName, ccy.code(), ccy.code(), gbsp, tradeTypes_,
                                                            nPaths, regressionOrder, interactive,
                                                            scriptedLibraryOverride);
 }

@@ -24,7 +24,7 @@ namespace QuantExt {
 
 MidPointIndexCdsEngine::MidPointIndexCdsEngine(const Handle<DefaultProbabilityTermStructure>& probability,
                                                Real recoveryRate, const Handle<YieldTermStructure>& discountCurve,
-                                               boost::optional<bool> includeSettlementDateFlows)
+                                               QuantLib::ext::optional<bool> includeSettlementDateFlows)
     : MidPointCdsEngineBase(discountCurve, includeSettlementDateFlows), probability_(probability),
       recoveryRate_(recoveryRate), useUnderlyingCurves_(false) {
     registerWith(discountCurve_);
@@ -34,7 +34,7 @@ MidPointIndexCdsEngine::MidPointIndexCdsEngine(const Handle<DefaultProbabilityTe
 MidPointIndexCdsEngine::MidPointIndexCdsEngine(
     const std::vector<Handle<DefaultProbabilityTermStructure>>& underlyingProbability,
     const std::vector<Real>& underlyingRecoveryRate, const Handle<YieldTermStructure>& discountCurve,
-    boost::optional<bool> includeSettlementDateFlows)
+    QuantLib::ext::optional<bool> includeSettlementDateFlows)
     : MidPointCdsEngineBase(discountCurve, includeSettlementDateFlows), underlyingProbability_(underlyingProbability),
       underlyingRecoveryRate_(underlyingRecoveryRate), useUnderlyingCurves_(true) {
     registerWith(discountCurve_);

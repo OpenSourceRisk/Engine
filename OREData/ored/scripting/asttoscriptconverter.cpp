@@ -43,6 +43,8 @@ class ASTToScriptConverter : public AcyclicVisitor,
                              public Visitor<FunctionNormalPdfNode>,
                              public Visitor<FunctionMinNode>,
                              public Visitor<FunctionMaxNode>,
+                             public Visitor<FunctionFractionNode>,
+                             public Visitor<FunctionRoundNode>,
                              public Visitor<FunctionPowNode>,
                              public Visitor<FunctionBlackNode>,
                              public Visitor<FunctionDcfNode>,
@@ -165,6 +167,19 @@ public:
         n.args[1]->accept(*this);
         auto right = script;
         script = "max(" + left + ", " + right + ")";
+    }
+
+    void visit(FunctionFractionNode& n) override {
+        n.args[0]->accept(*this);
+        script = "frac(" + script + ")";
+    }
+
+    void visit(FunctionRoundNode& n) override {
+        n.args[0]->accept(*this);
+        auto left = script;
+        n.args[1]->accept(*this);
+        auto right = script;
+        script = "round(" + left + ", " + right + ")";
     }
 
     void visit(FunctionPowNode& n) override {
@@ -592,16 +607,16 @@ public:
     }
 
     void visit(SortNode& n) override {
-        auto v1 = boost::dynamic_pointer_cast<VariableNode>(n.args[0]);
-        auto v2 = boost::dynamic_pointer_cast<VariableNode>(n.args[1]);
-        auto v3 = boost::dynamic_pointer_cast<VariableNode>(n.args[2]);
+        auto v1 = QuantLib::ext::dynamic_pointer_cast<VariableNode>(n.args[0]);
+        auto v2 = QuantLib::ext::dynamic_pointer_cast<VariableNode>(n.args[1]);
+        auto v3 = QuantLib::ext::dynamic_pointer_cast<VariableNode>(n.args[2]);
         script = "SORT ( " + (v1 ? v1->name : "") + (v2 ? "," + v2->name : "") + (v3 ? "," + v3->name : "") + " )";
     }
 
     void visit(PermuteNode& n) override {
-        auto v1 = boost::dynamic_pointer_cast<VariableNode>(n.args[0]);
-        auto v2 = boost::dynamic_pointer_cast<VariableNode>(n.args[1]);
-        auto v3 = boost::dynamic_pointer_cast<VariableNode>(n.args[2]);
+        auto v1 = QuantLib::ext::dynamic_pointer_cast<VariableNode>(n.args[0]);
+        auto v2 = QuantLib::ext::dynamic_pointer_cast<VariableNode>(n.args[1]);
+        auto v3 = QuantLib::ext::dynamic_pointer_cast<VariableNode>(n.args[2]);
         script = "PERMUTE ( " + (v1 ? v1->name : "") + (v2 ? "," + v2->name : "") + (v3 ? "," + v3->name : "") + " )";
     }
 

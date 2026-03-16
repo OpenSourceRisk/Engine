@@ -1,0 +1,167 @@
+<?xml version="1.0"?>
+<ReferenceData>
+  <!-- =============================================== -->
+  <!-- Vanilla Bond Data                               -->
+  <!-- =============================================== -->
+  <ReferenceDatum id="ISIN:XY2000000000">
+    <Type>Bond</Type>
+    <BondReferenceData>
+      <IssuerId>CPTY_C</IssuerId>
+      <CreditCurveId>ISIN:XY2000000000</CreditCurveId>
+      <ReferenceCurveId>EURBENCHMARK-EUR</ReferenceCurveId>
+      <SettlementDays>2</SettlementDays>
+      <Calendar>TARGET</Calendar>
+      <IssueDate>20140203</IssueDate>
+      <LegData>
+        <LegType>Floating</LegType>
+        <Payer>false</Payer>
+        <Currency>EUR</Currency>
+        <Notionals>
+          <Notional>1</Notional>
+        </Notionals>
+        <DayCounter>ACT/ACT</DayCounter>
+        <PaymentConvention>F</PaymentConvention>
+        <FloatingLegData>
+          <Spreads>
+            <Spread>0.025</Spread>
+          </Spreads>
+          <Index>EUR-EURIBOR-6M</Index>
+          <IsInArrears>false</IsInArrears>
+          <FixingDays>2</FixingDays>
+        </FloatingLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>20160201</StartDate>
+            <EndDate>20280201</EndDate>
+            <Tenor>6M</Tenor>
+            <Calendar>TARGET</Calendar>
+            <Convention>F</Convention>
+            <TermConvention>F</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+    </BondReferenceData>
+  </ReferenceDatum>
+  <!-- =============================================== -->
+  <!-- Convertible Bond Data,                          -->
+  <!-- Vanilla Part is the same as above               -->
+  <!-- =============================================== -->
+  <ReferenceDatum id="ISIN:XY1000000000">
+    <Type>ConvertibleBond</Type>
+    <ConvertibleBondReferenceData>
+      <!-- =============================================== -->
+      <!-- Vanilla Bond Data                               -->
+      <!-- =============================================== -->
+      <BondData>
+        <IssuerId>CPTY_C</IssuerId>
+        <CreditCurveId>ISIN:XY1000000000</CreditCurveId>
+        <ReferenceCurveId>EURBENCHMARK-EUR</ReferenceCurveId>
+        <SettlementDays>2</SettlementDays>
+        <Calendar>TARGET</Calendar>
+        <IssueDate>20160201</IssueDate>
+        <LegData>
+          <LegType>Floating</LegType>
+          <Payer>false</Payer>
+          <Currency>EUR</Currency>
+          <Notionals>
+            <Notional>1</Notional>
+          </Notionals>
+          <DayCounter>ACT/ACT</DayCounter>
+          <PaymentConvention>F</PaymentConvention>
+          <FloatingLegData>
+            <Spreads>
+              <Spread>0.025</Spread>
+            </Spreads>
+            <Index>EUR-EURIBOR-6M</Index>
+            <IsInArrears>false</IsInArrears>
+            <FixingDays>2</FixingDays>
+          </FloatingLegData>
+          <ScheduleData>
+            <Rules>
+              <StartDate>20160201</StartDate>
+              <EndDate>20280201</EndDate>
+              <Tenor>6M</Tenor>
+              <Calendar>TARGET</Calendar>
+              <Convention>F</Convention>
+              <TermConvention>F</TermConvention>
+              <Rule>Forward</Rule>
+              <EndOfMonth/>
+              <FirstDate/>
+              <LastDate/>
+            </Rules>
+          </ScheduleData>
+        </LegData>
+      </BondData>
+      <!-- =============================================== -->
+      <!-- Call Data                                       -->
+      <!-- =============================================== -->
+      <CallData>
+        <Styles>
+          <Style>Bermudan</Style>
+        </Styles>
+        <ScheduleData>
+          <Dates>
+            <Dates>
+              <Date>2018-08-01</Date>
+              <Date>2019-02-01</Date>
+              <Date>2019-08-01</Date>
+              <Date>2020-02-01</Date>
+              <Date>2020-08-01</Date>
+              <Date>2021-02-01</Date>
+              <Date>2021-08-01</Date>
+              <Date>2022-02-01</Date>
+            </Dates>
+          </Dates>
+        </ScheduleData>
+        <Prices>
+          <Price>1.02</Price>
+        </Prices>
+        <PriceTypes>
+          <PriceType>Clean</PriceType>
+        </PriceTypes>
+        <IncludeAccruals>
+          <IncludeAccrual>true</IncludeAccrual>
+        </IncludeAccruals>
+        <Soft>
+          <Soft>true</Soft>
+        </Soft>
+        <TriggerRatios>
+          <TriggerRatio>0.8</TriggerRatio>
+        </TriggerRatios>
+      </CallData>
+      <!-- =============================================== -->
+      <!-- Conversion Data                                 -->
+      <!-- =============================================== -->
+      <ConversionData>
+        <Styles>
+          <Style>Bermudan</Style>
+        </Styles>
+        <ScheduleData>
+          <Dates>
+            <Dates>
+              <Date>2018-08-01</Date>
+              <Date>2019-02-01</Date>
+              <Date>2019-08-01</Date>
+              <Date>2020-02-01</Date>
+              <Date>2020-08-01</Date>
+              <Date>2021-02-01</Date>
+              <Date>2021-08-01</Date>
+              <Date>2022-02-01</Date>
+            </Dates>
+          </Dates>
+        </ScheduleData>
+        <ConversionRatios>
+          <ConversionRatio>0.05</ConversionRatio>
+        </ConversionRatios>
+        <Underlying>
+          <Type>Equity</Type>
+          <Name>RIC:.ABCD</Name>
+        </Underlying>
+      </ConversionData>
+    </ConvertibleBondReferenceData>
+  </ReferenceDatum>
+</ReferenceData>

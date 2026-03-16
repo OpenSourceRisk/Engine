@@ -36,8 +36,8 @@ namespace QuantExt {
 
 DurationAdjustedCmsCouponTsrPricer::DurationAdjustedCmsCouponTsrPricer(
     const Handle<SwaptionVolatilityStructure>& swaptionVol,
-    const boost::shared_ptr<AnnuityMappingBuilder>& annuityMappingBuilder, const Real lowerIntegrationBound,
-    const Real upperIntegrationBound, const boost::shared_ptr<Integrator>& integrator)
+    const QuantLib::ext::shared_ptr<AnnuityMappingBuilder>& annuityMappingBuilder, const Real lowerIntegrationBound,
+    const Real upperIntegrationBound, const QuantLib::ext::shared_ptr<Integrator>& integrator)
     : CmsCouponPricer(swaptionVol), annuityMappingBuilder_(annuityMappingBuilder),
       lowerIntegrationBound_(lowerIntegrationBound), upperIntegrationBound_(upperIntegrationBound),
       integrator_(integrator) {

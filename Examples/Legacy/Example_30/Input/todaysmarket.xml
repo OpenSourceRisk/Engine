@@ -1,0 +1,36 @@
+<TodaysMarket>
+  <Configuration id="default">
+    <YieldCurvesId>default</YieldCurvesId>
+    <DiscountingCurvesId>default</DiscountingCurvesId>
+    <IndexForwardingCurvesId>default</IndexForwardingCurvesId>
+    <SwapIndexCurvesId>default</SwapIndexCurvesId>
+    <ZeroInflationIndexCurvesId>default</ZeroInflationIndexCurvesId>
+    <ZeroInflationCapFloorVolatilitiesId>default</ZeroInflationCapFloorVolatilitiesId>
+    <YYInflationIndexCurvesId>default</YYInflationIndexCurvesId>
+    <FxSpotsId>default</FxSpotsId>
+    <BaseCorrelationsId>default</BaseCorrelationsId>
+    <FxVolatilitiesId>default</FxVolatilitiesId>
+    <SwaptionVolatilitiesId>default</SwaptionVolatilitiesId>
+    <YieldVolatilitiesId>default</YieldVolatilitiesId>
+    <CapFloorVolatilitiesId>default</CapFloorVolatilitiesId>
+    <CDSVolatilitiesId>default</CDSVolatilitiesId>
+    <DefaultCurvesId>default</DefaultCurvesId>
+    <YYInflationCapFloorVolatilitiesId>default</YYInflationCapFloorVolatilitiesId>
+    <EquityCurvesId>default</EquityCurvesId>
+    <EquityVolatilitiesId>default</EquityVolatilitiesId>
+    <SecuritiesId>default</SecuritiesId>
+    <CommodityCurvesId>default</CommodityCurvesId>
+    <CommodityVolatilitiesId>default</CommodityVolatilitiesId>
+    <CorrelationsId>default</CorrelationsId>
+  </Configuration>
+  <YieldCurves id="default"/>
+  <DiscountingCurves id="default">
+    <DiscountingCurve currency="USD">Yield/USD/USD-FedFunds</DiscountingCurve>
+  </DiscountingCurves>
+  <IndexForwardingCurves id="default">
+    <Index name="USD-FedFunds">Yield/USD/USD-FedFunds</Index>
+    <Index name="USD-LIBOR-3M">Yield/USD/USD-LIBOR-3M</Index>
+    <Index name="USD-Prime">Yield/USD/USD-Prime</Index>
+  </IndexForwardingCurves>
+  <FxSpots id="default"/>
+</TodaysMarket>

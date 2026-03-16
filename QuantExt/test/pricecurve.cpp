@@ -44,7 +44,7 @@ public:
     vector<Period> curveTenors;
     vector<Real> prices;
     vector<Real> shiftedPrices;
-    vector<boost::shared_ptr<SimpleQuote> > pQuotes;
+    vector<QuantLib::ext::shared_ptr<SimpleQuote> > pQuotes;
     vector<Handle<Quote> > quotes;
 
     // Dates on which we will check interpolated values
@@ -107,7 +107,7 @@ public:
 
         // Create quotes
         for (Size i = 0; i < quotes.size(); i++) {
-            pQuotes[i] = boost::make_shared<SimpleQuote>(prices[i]);
+            pQuotes[i] = QuantLib::ext::make_shared<SimpleQuote>(prices[i]);
             quotes[i] = Handle<Quote>(pQuotes[i]);
         }
 

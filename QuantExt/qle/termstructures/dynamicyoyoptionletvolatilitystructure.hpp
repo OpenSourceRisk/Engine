@@ -41,7 +41,7 @@ using namespace QuantLib;
 
 class DynamicYoYOptionletVolatilitySurface : public YoYOptionletVolatilitySurface {
 public:
-    DynamicYoYOptionletVolatilitySurface(const boost::shared_ptr<YoYOptionletVolatilitySurface>& source,
+    DynamicYoYOptionletVolatilitySurface(const QuantLib::ext::shared_ptr<YoYOptionletVolatilitySurface>& source,
                                          ReactionToTimeDecay decayMode = ConstantVariance);
 
 protected:
@@ -51,7 +51,7 @@ protected:
     Date maxDate() const override;
 
 private:
-    const boost::shared_ptr<YoYOptionletVolatilitySurface> source_;
+    const QuantLib::ext::shared_ptr<YoYOptionletVolatilitySurface> source_;
     ReactionToTimeDecay decayMode_;
     const Date originalReferenceDate_;
 };

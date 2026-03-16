@@ -47,7 +47,7 @@ using namespace QuantLib;
 
 class FormulaBasedIndex : public QuantLib::InterestRateIndex {
 public:
-    FormulaBasedIndex(const std::string& familyName, const std::vector<boost::shared_ptr<InterestRateIndex>>& indices,
+    FormulaBasedIndex(const std::string& familyName, const std::vector<QuantLib::ext::shared_ptr<InterestRateIndex>>& indices,
                       const CompiledFormula& formula, const Calendar& fixingCalendar);
 
     // InterestRateIndex interface
@@ -59,11 +59,11 @@ public:
     bool allowsNativeFixings() override { return false; }
 
     // Inspectors
-    const std::vector<boost::shared_ptr<InterestRateIndex>>& indices() const { return indices_; }
+    const std::vector<QuantLib::ext::shared_ptr<InterestRateIndex>>& indices() const { return indices_; }
     const CompiledFormula& formula() const { return formula_; }
 
 private:
-    const std::vector<boost::shared_ptr<InterestRateIndex>> indices_;
+    const std::vector<QuantLib::ext::shared_ptr<InterestRateIndex>> indices_;
     const CompiledFormula formula_;
 };
 

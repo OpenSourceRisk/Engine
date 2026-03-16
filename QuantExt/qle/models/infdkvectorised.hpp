@@ -35,13 +35,13 @@ using namespace QuantLib;
 
 class InfDkVectorised {
 public:
-    InfDkVectorised(const boost::shared_ptr<CrossAssetModel>& cam);
+    InfDkVectorised(const QuantLib::ext::shared_ptr<CrossAssetModel>& cam);
 
     std::pair<RandomVariable, RandomVariable> infdkI(const Size i, const Time t, const Time T, const RandomVariable& z,
                                                      const RandomVariable& y, bool indexIsInterpolated) const;
 
 private:
-    const boost::shared_ptr<CrossAssetModel> cam_;
+    const QuantLib::ext::shared_ptr<CrossAssetModel> cam_;
 };
 
 } // namespace QuantExt

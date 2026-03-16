@@ -1,0 +1,308 @@
+\documentclass[]{article}
+
+\usepackage{amsmath}
+\usepackage{xcolor}
+%\usepackage{newtxtext}
+%\usepackage[euler-digits]{eulervm}
+\usepackage[bb=stixtwo]{mathalpha}
+
+% Title Page
+\title{1F-Schwartz model with drift adjustments}
+%'\author{S.K.A}
+\date{12 March 2025}
+\setlength\parindent{0pt}
+
+\begin{document}
+\maketitle
+
+\abstract{1F-Schwartz model with drift adjustments}
+In the current set up of ORE, only  commodity(COM) indexes are allowed to be correlated between each other. In other words, it assumed that COM has zero correlations with other risk factors. This note is an attempt to relax this restriction by deriving drift adjustments arise from non-zero IR-COM and FX-COM correlations.
+
+\section{LGM Measure}
+\subsection{Domestic drift adjustment}
+Let $z_0(t)$ be the state variable of the domestic interest rate whose dynamics are given as 
+%
+$$
+dz_0(t) = \alpha_0(t) dW^z_0(t)
+$$
+where $W^z_0$ is a Brownian motion under the LGM measure equipped with numeraire
+%
+\begin{equation}
+N_0(t) = \frac{1}{P_0(0,t)} e^{H_0(t) z_0(t) + 0.5 H_0^2(t)\zeta_0(t)}\label{eq:N0t}
+\end{equation}
+%
+Let $F_i(t,T)$ be the commodity future price with expiry $T$ seen from $t$ for the $i^{th}$ future index -which is assumed to be quoted in the domestic currency $0$-. Moreover, the dynamics of $F_i(t,T)$ is given as 
+%
+\begin{equation}
+dF_i(t,T) = F_i(t,T) \sigma_i^c e^{-\kappa^c_i (T-t) }dW^c_i(t) \label{eq:FitT}
+\end{equation}
+%
+where $W^c_i(t) $ is a Brownian motion under the money markt account. The correlation between  $W^z_0$  and  $W^c_i(t) $  is denoted by $\rho^{zc}_{0i }$. Then,  commodity future price $F_i(t,T)$ can be calculated as follows
+%
+\begin{align}
+F_i(t,T) &= F_i(0,T) \exp\left\{-0.5\int_0^t \left(\sigma_i^c\right)^2 e^{-2\kappa_i^c(T-u) du} + \int_0^t\sigma_i^c e^{-\kappa_i^c(T-u)} dW^c_i(u)\right\} \nonumber\\
+ &= F_i(0,T) \exp\left\{-0.5\left(\sigma_i^c\right)^2 e^{-2\kappa_i^c T}\int_0^t e^{2\kappa_i^c u du} + e^{-\kappa_i^c(T-t)} \int_0^t\sigma_i^c e^{-\kappa^c_i(t-u)} dW^c_i(u)\right\} \nonumber\\
+ &= F_i(0,T) \exp\left\{ e^{-\kappa_i^c(T-t)} X_i(t) - 0.5 (V_i(0,T) - V_i(t,T))\right\} \nonumber
+ \end{align}
+where
+\begin{align}
+dX_i(t) &= -\kappa_i^cX_i(t) dt + \sigma_i^c dW_i^c(t), \quad \text{ with }  X_i(0) = 0 \label{eq:Xit}\\
+V_i(t,T) &= \exp\left\{-0.5\left(\sigma_i^c\right)^2 e^{-2\kappa^c_i T}\int_t^T e^{2\kappa^c_i u du}\right\} \nonumber
+ \end{align}
+%
+Drift-free state variable can be derived as follows:
+%
+\begin{align}
+X_i(t) &= e^{-\kappa^c_it} X_i(0) +  \int_0^t\sigma_i^c e^{-\kappa^c_i(t-u)} dW^c_i(u)  \nonumber \\
+\intertext{mulitply both sided with $e^{\kappa_i^c t}$}
+ Y(t) &:= e^{\kappa_i^c t} X_i(t) =  X_i(0) +  \int_0^t\sigma_i^c e^{\kappa^c_iu} dW^c_i(u)  \nonumber \\
+ \intertext{which implies}
+ dY(t) &= \sigma_i^c e^{\kappa^c_it} dW^c_i(t)  \label{eq:Yit}
+ \end{align}
+%
+Martingale condition imposes that every tradeable asset normalised with numeraire must be a martingale. 
+%
+\begin{align}
+\frac{F_i(t,T)}{N_0(t)} &= F_i(0,T) P_0(0,t) \exp\Big\{ -0.5 (V_i(0,T)- V_i(t,T) )+ e^{-\kappa^c_iT }Y(t) \nonumber \\
+%
+&\quad \quad \quad  \quad \quad   \quad \quad   \quad \quad   \quad  - 0.5 H_0^2(t) - H_0(t) z_0(t) \Big\}\nonumber
+%
+\intertext{The expectation of the quotient can be calculated by using the stochastic exponential formula}
+%
+E\left[\frac{F_i(t,T)}{N_0(t)}\right]& = F_i(0,T) P_0(0,t)  \exp\Big\{  - \rho^{zc}_{0i} e^{-\kappa^c_iT } \int_0^t H_0(u) \alpha_0(u) \sigma^c_i e^{\kappa^c_i u} du\Big\} \nonumber
+%
+\intertext{Martingale condition imposes that the exponential term must vanish. Hence the quotient can be rewritten as follows}
+%
+\frac{F_i(t,T)}{N_0(t)} &= F_i(0,T) P_0(0,t) \exp\Bigg\{ -0.5 (V_i(0,T)- V_i(t,T)  -  0.5 H_0^2(t) - H_0(t) z_0(t) \nonumber \\
+%
+&\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad+ e^{-\kappa^c_iT }\left(  Y(t) - \rho^{zc}_{0i} \int_0^t H_0(u) \alpha_0(u) \sigma^c_i e^{\kappa^c_i u} du \right) \Bigg\}   \nonumber
+\end{align}
+which implies the following measure change
+%
+\begin{equation}
+d\widetilde W^c_i(t)  = dW^c_i(t) - \rho^{zc}_{0i } H_0(t) \alpha_0(t) dt
+\end{equation}
+%
+where $\widetilde W^c_i(t)$ is a Brownian motion under LGM measure.
+%
+Therefore the dynamics of drift-free state variable $Y_i(t)$ under the  LGM measure can be written as follows:
+%
+\begin{align}
+Y_i(t) &=Y_i(0)+ \textcolor{blue}{ \rho^{zc}_{0i } \int_{0}^t   H_0(u) \alpha_0(u) e^{\kappa^c_i u}  \sigma_i^c du }  + \int_0^t \sigma_i^c  e^{\kappa^c_i u} d\widetilde W_i^c(u)\nonumber \\
+dY_i(t) &= \textcolor{blue}{ \rho^{zc}_{0i } H_0(t) \alpha_0(t) e^{\kappa^c_i t}  \sigma_i^c   dt} +  \sigma_i^c  e^{\kappa^c_i t} d\widetilde W_i^c(t)\nonumber 
+%X_i(t) &=  \textcolor{blue}{ \rho^{zc}_{0i } \int_{0}^t   H_0(u) \alpha_0(u)e^{-\kappa^c_i (t-u)}  \sigma_i^c du}  + \int_0^t \sigma_i^c  e^{-\kappa^c_i (t-u)} d\widetilde W_i^c(u)\nonumber \\
+%dX_i(t) &= \left(-\kappa^c_i  + \textcolor{blue}{ \rho^{zc}_{0i } H_0(t) \alpha_0(t) e^{\kappa^c_i t}  \sigma_i^c  }\right) dt +  \sigma_i^c  d\widetilde W_i^c(t)\nonumber 
+\end{align}
+%
+Then, $X_i(t)$ dynamics follows immediately
+%
+\begin{align}
+%Y_i(t) &=\textcolor{blue}{ \rho^{zc}_{0i } \int_{0}^t   H_0(u) \alpha_0(u) e^{\kappa^c_i u}  \sigma_i^c du }  + \int_0^t \sigma_i^c  e^{\kappa^c_i u} d\widetilde W_i^c(u)\nonumber \\
+%dY_i(t) &= \textcolor{blue}{ \rho^{zc}_{0i } H_0(t) \alpha_0(t) e^{\kappa^c_i t}  \sigma_i^c   dt} +  \sigma_i^c  e^{\kappa^c_i t} d\widetilde W_i^c(t)\nonumber \\
+X_i(t) &=  e^{-\kappa_i t}X_i(0) + \textcolor{blue}{ \rho^{zc}_{0i } \int_{0}^t   H_0(u) \alpha_0(u)e^{-\kappa^c_i (t-u)}  \sigma_i^c du}  + \int_0^t \sigma_i^c  e^{-\kappa^c_i (t-u)} d\widetilde W_i^c(u)\nonumber \\
+dX_i(t) &= -\kappa^c_i dt  + \textcolor{blue}{ \rho^{zc}_{0i } H_0(t) \alpha_0(t)  \sigma_i^c  dt}  +  \sigma_i^c  d\widetilde W_i^c(t)\nonumber 
+\end{align}
+
+ \subsection{Quanto drift adjustment}
+ %
+ As in the previous section, we denote the drift-free commodity state variable $Y_i$ (or $X_i(t)$). Moreover, the index of the
+denominating currency for the commodity process is denoted as $\phi(i)$, which is assumed to be different than the domestic currency (whose index is $0$).  The dynamics of the foreign exchange rate for currency $\phi(i)$  is given by
+%
+\begin{equation}
+dx_{\phi(i)}(t)  = x_{\phi(i)}(t) \left(  \left( r_0 - r _{\phi(i)} + \rho^{zx}_{0\phi(i)} \alpha_0(t) H_0(t) \sigma^x_{\phi(i)} \right) dt  + \sigma^x_{\phi(i)} dW^x_{\phi(i)}(t) \right)
+\label{eq:xphit}
+\end{equation}
+%
+The quotient
+%
+\begin{align}
+ \frac{F_i(t,T) x_{\phi(i)}(t) }{N_0(t)} =& F_i(0,T) P_0(0,t)  x_{\phi(i)}(0) \nonumber  \\
+ %
+ &\exp\Bigg\{ -0.5 (V_i(0,T)- V_i(t,T) ) + e^{-\kappa^c_iT }  Y(t) -  0.5 H_0^2(t) - H_0(t) z_0(t) \nonumber \\
+ %
+ &\quad\quad+\int_0^t\left( r_0(u) - r_{\phi(i)}(u) -0.5\sigma^x_{\phi(i)}(u) - \rho^{zx}_{0\phi(i)} \alpha_0(u) H_0(u) \sigma^x_{\phi(i)}(u) \right)du \nonumber \\
+ %
+ &\quad\quad+\int_0^t \sigma^x_{\phi(i)}(u) dW^x_{\phi(i)}(u) \Bigg\}   \nonumber
+ %
+ \intertext{The expectation of the quotient can be calculated by using the stochastic exponential formula}
+ %
+E\left[ \frac{F_i(t,T) x_{\phi(i)}(t) }{N_0(t)}  \right]= &F_i(0,T) P_0(0,t)  x_{\phi(i)}(0)  \frac{P_{\phi(i)} (0,t) }{P_0(0,t)}\nonumber \\
+%
+&  \exp\Big\{ e^{-\kappa^c_iT }\Big( - \rho^{zc}_{0i}  \int_0^t H_0(u) \alpha_0(u) \sigma^c_i e^{\kappa^c_i u} du \nonumber \\
+%
+&\quad\quad\quad\quad\quad\quad+ \rho^{xc}_{\phi(i)i}  \int_0^t  \sigma^x_{\phi(i)}(u) \sigma^c_i e^{\kappa^c_i u} du \Big)\Big\} \nonumber 
+%
+%&\quad\quad\quad\quad\quad\quad+ \rho^{zc}_{0i}  \int_0^t  (H_0(t) - H_0(u)) \alpha_0(u) \sigma^c_i e^{\kappa^c_i u} du \nonumber \\
+%
+%&\quad\quad\quad\quad\quad\quad- \rho^{zc}_{\phi(i)i}  \int_0^t    \left(H_{\phi(i)}(t) - H_{\phi(i)}(u) \right)\alpha_{\phi(i)}(u) \sigma^c_i e^{\kappa^c_i u} du \nonumber
+\end{align}
+%
+where, the exponential terms are the covariances between $Y_i(t)$  and
+\begin{itemize}
+\item interest rate state variable term  $H(t) z_0(t)= H_0(t) \int_0^t\alpha_0(u)dW^z_{0}(u) $
+\item FX rate: $\int_0^t \sigma^x_{\phi(i)}(u) dW^x_{\phi(i)}(u)$ term
+%\item FX rate: $r_0(t)$ term 
+%\item FX rate: $r_{\phi(i)}(t)$ term 
+\end{itemize}
+Similarly in the previous section, the following dynamics can be driven 
+%
+\begin{align}
+Y_i(t) =&Y_i(0)+ \textcolor{blue}{ \rho^{zc}_{0i } \int_{0}^t   H_0(u) \alpha_0(u) e^{\kappa^c_i u}  \sigma_i^c du }  
+ -\textcolor{red}{ \rho^{xc}_{\phi(i)i}   \int_0^t  \sigma^x_{\phi(i)}(u) \sigma^c_i e^{\kappa^c_i u} du} \nonumber \\
+%& +\textcolor{teal}{\rho^{zc}_{0i}  \int_0^t  (H_0(t) - H_0(u)) \alpha_0(u) \sigma^c_i e^{\kappa^c_i u} du} \nonumber \\
+%&- \textcolor{teal}{\rho^{zc}_{\phi(i)i}  \int_0^t    \left(H_{\phi(i)}(t) - H_{\phi(i)}(u) \right)\alpha_{\phi(i)}(u) \sigma^c_i e^{\kappa^c_i u} du } \nonumber \\
+&+ \int_0^t \sigma_i^c  e^{\kappa^c_i u} d\widetilde W_i^c(u)\nonumber \\
+dY_i(t) &= \textcolor{blue}{ \rho^{zc}_{0i } H_0(t) \alpha_0(t) e^{\kappa^c_i t}  \sigma_i^c   dt} 
+-\textcolor{red}{ \rho^{xc}_{\phi(i)i}   \sigma^x_{\phi(i)}(t) \sigma^c_i e^{\kappa^c_i t} dt}
++  \sigma_i^c  e^{\kappa^c_i t} d\widetilde W_i^c(t)\nonumber 
+%X_i(t) &=  \textcolor{blue}{ \rho^{zc}_{0i } \int_{0}^t   H_0(u) \alpha_0(u)e^{-\kappa^c_i (t-u)}  \sigma_i^c du}  + \int_0^t \sigma_i^c  e^{-\kappa^c_i (t-u)} d\widetilde W_i^c(u)\nonumber \\
+%dX_i(t) &= \left(-\kappa^c_i  + \textcolor{blue}{ \rho^{zc}_{0i } H_0(t) \alpha_0(t) e^{\kappa^c_i t}  \sigma_i^c  }\right) dt +  \sigma_i^c  d\widetilde W_i^c(t)\nonumber 
+\end{align}
+
+%
+\begin{align}
+X_i(t) =&  e^{-\kappa_i t}X_i(0) + \textcolor{blue}{ \rho^{zc}_{0i } \int_{0}^t   H_0(u) \alpha_0(u)e^{-\kappa^c_i (t-u)}  \sigma_i^c du}  
+ -\textcolor{red}{ \rho^{xc}_{\phi(i)i}   \int_0^t  \sigma^x_{\phi(i)}(u) \sigma^c_i e^{-\kappa^c_i (t-u)} du}\nonumber \\
+%& +\textcolor{teal}{\rho^{zc}_{0i}  \int_0^t  (H_0(t) - H_0(u)) \alpha_0(u) \sigma^c_i e^{-\kappa^c_i(t- u)} du} \nonumber \\
+%&- \textcolor{teal}{\rho^{zc}_{\phi(i)i}  \int_0^t     \left(H_{\phi(i)}(t) - H_{\phi(i)}(u) \right) \alpha_{\phi(i)}(u) \sigma^c_i e^{-\kappa^c_i(t- u)} du } \nonumber \\
+&+ \int_0^t \sigma_i^c  e^{-\kappa^c_i (t-u)} d\widetilde W_i^c(u)\nonumber \\
+dX_i(t) =& -\kappa^c_i dt + \textcolor{blue}{ \rho^{zc}_{0i } H_0(t) \alpha_0(t) \sigma_i^c  dt }  
+ -\textcolor{red}{ \rho^{xc}_{\phi(i)i}  \sigma^x_{\phi(i)}(u) \sigma^c_i du}
++  \sigma_i^c  d\widetilde W_i^c(t)\nonumber 
+\end{align}
+%
+
+\section{BA Measure}
+%
+Under the BA measure equipped with numeraire 
+%
+$$B_0(t) = e^{\int_0^t r_0(u) du} $$
+%
+The quanto drift adjustment can be driven similarly as in pervious section by considering the quotient
+%
+$$ \frac{F_i(t,T) x_{\phi(i)}(t) }{B_0(t)}  $$
+%
+and imposing martingale condition. Then the dynamics of $Y_i(t)$ and $X_i(t)$ are given by the following SDEs:
+%
+
+\begin{align}
+Y_i(t) =&Y_i(0)-  \rho^{xc}_{\phi(i)i}   \int_0^t  \sigma^x_{\phi(i)}(u) \sigma^c_i e^{\kappa^c_i u} du+ \int_0^t \sigma_i^c  e^{\kappa^c_i u} d\widetilde W_i^c(u)\nonumber \\
+dY_i(t) &= \rho^{xc}_{\phi(i)i}   \sigma^x_{\phi(i)}(t) \sigma^c_i e^{\kappa^c_i t} dt
++  \sigma_i^c  e^{\kappa^c_i t} d\widetilde W_i^c(t)\nonumber 
+%X_i(t) &=  \textcolor{blue}{ \rho^{zc}_{0i } \int_{0}^t   H_0(u) \alpha_0(u)e^{-\kappa^c_i (t-u)}  \sigma_i^c du}  + \int_0^t \sigma_i^c  e^{-\kappa^c_i (t-u)} d\widetilde W_i^c(u)\nonumber \\
+%dX_i(t) &= \left(-\kappa^c_i  + \textcolor{blue}{ \rho^{zc}_{0i } H_0(t) \alpha_0(t) e^{\kappa^c_i t}  \sigma_i^c  }\right) dt +  \sigma_i^c  d\widetilde W_i^c(t)\nonumber 
+\end{align}
+
+%
+\begin{align}
+X_i(t) =&  e^{-\kappa_i t}X_i(0) - \rho^{xc}_{\phi(i)i}   \int_0^t  \sigma^x_{\phi(i)}(u) \sigma^c_i e^{-\kappa^c_i (t-u) du} + \int_0^t \sigma_i^c  e^{-\kappa^c_i (t-u)} d\widetilde W_i^c(u)\nonumber \\
+dX_i(t) =& -\kappa^c_i dt - \rho^{xc}_{\phi(i)i}  \sigma^x_{\phi(i)}(u) \sigma^c_i du+  \sigma_i^c  d\widetilde W_i^c(t)\nonumber 
+\end{align}
+
+\section{Analytical Moments}%
+%
+Let $C_i(t)$ denote the state variable of the $it^{th}$ commodity process, which can be either the drift-free state variable $Y_i(t)$ or the state variable with drift $X_i(t)$. Let further $\theta^c_i(u)$ denote the diffusion coefficient of $C_i(u)$. Then,
+
+$$
+\theta^c_i (u)= 
+ \left\{ 
+    \begin{array}{cc}
+      \sigma^c_i e^{\kappa^c_i u}  & \text{$C_i(t) = Y_i(t)$, i.e. drift-free} \\
+      \sigma^c_i e^{-\kappa^c_i (t-u)} &\text{$C_i(t) = X_i(t)$, i.e. with drift} \
+    \end{array}
+    \right.
+$$
+
+\begin{align}
+&\text{\textbf{COM Expectation:} }   \nonumber \\
+%
+&\quad\text{\textbf{under LGM :} } \nonumber \\
+&\quad\quad E(C_i(t)) = C_i(0) + \rho^{zc}_{0i } \int_{0}^t   H_0(u) \alpha_0(u) e^{\kappa^c_i u}  \sigma_i^c du - 1_{\{ \phi(i) \neq 0\}} \rho^{xc}_{\phi(i)i}   \int_0^t  \sigma^x_{\phi(i)}(u) \theta^c_i(u) du\nonumber \\
+%
+&\quad\text{\textbf{under BA :} } \nonumber \\
+&\quad\quad E(C_i(t)) = C_i(0) - 1_{\{ \phi(i) \neq 0\}} \rho^{xc}_{\phi(i)i}   \int_0^t  \sigma^x_{\phi(i)}(u) \theta^c_i(u) du\nonumber \\
+%
+&\text{\textbf{IR-COM Covariance:} } \nonumber \\
+& \quad\quad  Cov (z_k(t),C_i(t) ) = \rho^{zc}_{ki } \int_{0}^t   \alpha_k(u) \theta^c_i(u) du \nonumber\\
+%
+&\text{\textbf{FX-COM Covariance:} }  \nonumber \\
+&\quad\quad Cov(\ln[x_{k}(t)], C_i(t)) =Cov\left(\int r_0(u) du - \int r_k(u) du +\ldots+  \int \sigma^x_k(u)dW^x_k(u), \int \theta^c_i(u) dW^c_i(u) \right) \nonumber \\
+&\quad\quad\quad\quad \quad\quad\quad\quad\quad\quad\quad  = \rho^{zc}_{0i}  \int_0^t  (H_0(t) - H_0(u)) \alpha_0(u)\theta^c_i(u) du \nonumber \\
+&\quad\quad \quad\quad \quad\quad\quad\quad\quad\quad \quad- \rho^{zc}_{ki}  \int_0^t    \left(H_{k}(t) - H_{k}(u) \right)\alpha_{k}(u) \theta^c_i(u) du  \nonumber \\
+&\quad\quad \quad\quad \quad\quad\quad\quad \quad\quad \quad+\rho^{xc}_{ki}   \int_0^t  \sigma^x_{k}(u)\theta^c_i(u) du\nonumber \\
+%
+&\text{\textbf{EQ-COM covariance:} } \nonumber \\
+& \quad\quad \ln(s_k(t)) = \ldots + \int_0^t r_{\phi(k)}(u) du  + \int \sigma^s_k(u)dW^s_k(u)\nonumber \\
+&\quad\quad Cov(\ln [ s_{k}(t) ], C_i(t)) %=Cov\left(\int r_{\phi(k)}(u) du + \int \sigma^s_k(u)dW^s_k(u), \int \sigma^c_i(u) e^{-\kappa u} dW^c_i(u) \right) \nonumber \\
+ = \rho^{c\,z}_{i\phi(k)}  \int_0^t  (H_{\phi(k)}(t) - H_{\phi(k)}(u)) \alpha_{\phi(k)}(u) \theta^c_i(u) du \nonumber \\
+&\quad\quad\quad\quad \quad\quad\quad\quad\quad\quad\quad  +\rho^{sc}_{ki}   \int_0^t  \sigma^s_{k}(u) \theta^c_i(u)du\nonumber \\
+%
+&\text{\textbf{DK-INF($z^I$, $y^I$)-COM covariances:} } \nonumber \\
+& \quad\quad y_k(t) = \int_0^t \alpha^y_k(t) dW^{y}_k(t) \nonumber \\
+& \quad\quad dy^I_k(t) = \int_0^t\alpha^y_k(t) H^y_k(t) dW^{y}_k(t) \nonumber \\
+&\quad\quad Cov( y_k(t) , C_i(t)) = \rho^{cy}_{ik}   \int_0^t  \alpha^{y}_{k}(u) \theta^c_i(u) du\nonumber \\
+&\quad\quad Cov(y^{I}_k , C_i(t)) = \rho^{cy}_{ik}   \int_0^t  \alpha^{y}_{k}(u) H^{y}_{k}(u)  \theta^c_i(u) du\nonumber 
+%
+\end{align}
+%
+\begin{align}
+%
+&\text{\textbf{JY-INF($z^I$, $I$)-COM covariance:} } \nonumber \\
+& \quad\quad  y_k(t)= \ldots + \int_0^t \alpha^y_k(t) dW^{y}_k(t) \nonumber \\
+& \quad\quad \ln(I_k(t)) = \ldots + \int_0^t r_{\phi(k)}(u) du - \int_0^t rr_{k}(u) du + \int_0^t \sigma^I_k(u)dW^y_k(u)\nonumber \\
+&\quad\quad Cov( y_k(t) , C_i(t)) = \rho^{yc}_{ki}   \int_0^t  \alpha^{y}_{k}(u) \theta^c_i(u) du\nonumber \\
+&\quad\quad Cov(\ln[I_{k}(t)], C_i(t)) = \rho^{c z }_{i\phi(k)}  \int_0^t  (H_{\phi(k)}(t) - H_{\phi(k)}(u)) \alpha_{\phi(k)}(u) \theta^c_i(u) du \nonumber \\
+&\quad\quad \quad\quad \quad\quad\quad\quad\quad\quad \quad- \rho^{yc}_{ki}  \int_0^t \left( H^{y}_{k}(t) - H^{y}_{k}(u) \right)\alpha^{y}_{k}(u) \theta^c_i(u) du  \nonumber \\
+&\quad\quad \quad\quad \quad\quad\quad\quad \quad\quad \quad+\rho^{Ic}_{ki}   \int_0^t  \sigma^I_{k}(u) \theta^c_i(u)du\nonumber \\
+%
+&\text{\textbf{Gaussian-CR($z^I$, $y^I$)-COM covariances:} } \nonumber \\
+& \quad\quad z^{\lambda}_k(t) = \int_0^t \alpha^{\lambda}_k(t) dW^{z^{\lambda}}_k(t) \nonumber \\
+& \quad\quad dy^{\lambda}_k(t) = \int_0^t\alpha^{\lambda}_k(t) H^{\lambda}_k(t) dW^{z^{\lambda}}_k(t) \nonumber \\
+&\quad\quad Cov( z^{\lambda}_k(t) , C_i(t)) = \rho^{cz^{\lambda}}_{ik}   \int_0^t  \alpha^{z^{\lambda}}_{k}(u) \theta^c_i(u) du\nonumber \\
+&\quad\quad Cov(y^{\lambda}_k(t) , C_i(t)) = \rho^{cy^{\lambda}}_{ik}   \int_0^t  \alpha^{y^{\lambda}}_{k}(u) H^{y^{\lambda}}_{k}(u) \theta^c_i(u) du\nonumber
+\end{align}
+%
+%Moments of state variable $X_i(t)$:
+%\begin{align}
+%&\text{\textbf{COM Expectation:} }   \nonumber \\
+%&\quad\quad E(X_i(t)) =  e^{-\kappa_i t}X_i(0) + \rho^{zc}_{0i } \int_{0}^t   H_0(u) \alpha_0(u)e^{-\kappa^c_i (t-u)}  \sigma_i^c du  \nonumber \\
+%&\quad\quad\quad\quad \quad\quad  -1_{\{ \phi(i) \neq 0\}}\rho^{xc}_{\phi(i)i}   \int_0^t  \sigma^x_{\phi(i)}(u) \sigma^c_i e^{-\kappa^c_i (t-u)} du  \nonumber \\
+%%& +\rho^{zc}_{0i}  \int_0^t  (H_0(t) - H_0(u)) \alpha_0(u) \sigma^c_i e^{-\kappa^c_i(t- u)} du \nonumber \\
+%%&- \rho^{zc}_{\phi(i)i}  \int_0^t     \left(H_{\phi(i)}(t) - H_{\phi(i)}(u) \right) \alpha_{\phi(i)}(u) \sigma^c_i e^{-\kappa^c_i(t- u)} du  \Bigg]\nonumber \\
+%%
+%&\text{\textbf{IR-COM Covariance:} } \nonumber \\
+%&\quad\quad Cov(z_k(t),X_i(t)) =  \rho^{zc}_{ki } \int_{0}^t   \alpha_k(u)e^{-\kappa^c_i (t-u)}  \sigma_i^c du \nonumber\\
+%%
+%&\text{\textbf{FX-COM Covariance:} }  \nonumber \\
+%&\quad\quad Cov(x_k(t), X_i(t)) = \rho^{zc}_{0i}  \int_0^t  (H_0(t) - H_0(u)) \alpha_0(u) \sigma^c_i e^{-\kappa^c_i(t- u)} du \nonumber \\
+%&\quad\quad\quad\quad \quad\quad\quad\quad\quad\quad - \rho^{zc}_{ki}  \int_0^t     \left(H_{k}(t) - H_{k}(u) \right) \alpha_{k}(u) \sigma^c_i e^{-\kappa^c_i(t- u)} du  \nonumber \\
+% &\quad\quad\quad\quad \quad\quad\quad \quad \quad\quad + \rho^{xc}_{ki}   \int_0^t  \sigma^x_{k}(u) \sigma^c_i e^{-\kappa^c_i (t-u)} du  \nonumber\\
+%%
+%&\text{\textbf{EQ-COM covariance:} } \nonumber \\
+%&\quad\quad Cov(\ln [ s_{k(t)} ], X_i(t)) = \rho^{zc}_{\phi(k)i}  \int_0^t  (H_{\phi(k)}(t) - H_{\phi(k)}(u)) \alpha_{\phi(k)}(u) \sigma^c_i e^{-\kappa^c_i (t-u)} du \nonumber \\
+%&\quad\quad\quad\quad \quad\quad\quad\quad\quad\quad\quad +\rho^{xc}_{ki}   \int_0^t  \sigma^x_{k}(u) \sigma^c_i e^{-\kappa^c_i(t- u)} du\nonumber \\
+%%
+%&\text{\textbf{DK-INF($z^I$, $y^I$)-COM covariances:} } \nonumber \\
+%& \quad\quad z^I_k(t) = \int_0^t \alpha^I_k(t) dW^{z^I}_k(t) \nonumber \\
+%& \quad\quad dy^I_k(t) = \int_0^t\alpha^I_k(t) H^I_k(t) dW^{z^I}_k(t) \nonumber \\
+%&\quad\quad Cov( z^{I}_k , C_i(t)) = \rho^{cz^I}_{ik}   \int_0^t  \alpha^{z^I}_{k}(u) \sigma^c_i e^{-\kappa^c_i (t-u)} du\nonumber \\
+%&\quad\quad Cov(y^{I}_k , C_i(t)) = \rho^{cy^I}_{ik}   \int_0^t  \alpha^{y^I}_{k}(u) H^{y^I}_{k}(u)  \sigma^c_i e^{-\kappa^c_i (t-u)} du\nonumber \\
+%%
+%&\text{\textbf{JY-INF($z^I$, $I$)-COM covariance:} } \nonumber \\
+%& \quad\quad z^I_k(t) = \int_0^t \alpha^I_k(t) dW^I_k(t) \nonumber \\
+%& \quad\quad \ln(I_k) = \ldots + \int_0^t r_{\phi(k)}(u) du - \int_0^trr_{k}(u) du + \int_0^t \sigma^I_k(u)dW^I_k(u)\nonumber \\
+%&\quad\quad Cov( z^{I}_k , C_i(t)) = \rho^{cz^I}_{ik}   \int_0^t  \alpha^{z^I}_{k}(u) \sigma^c_i e^{-\kappa^c_i (t-u)}  du\nonumber \\
+%%
+%&\quad\quad Cov(\ln[C_{k}(t)], C_i(t)) = \rho^{cz}_{i\phi(k)}  \int_0^t  (H_{\phi(k)}(t) - H_{\phi(k)}(u)) \alpha_{\phi(k)}(u) \sigma^c_i e^{-\kappa^c_i (t-u)}  du \nonumber \\
+%&\quad\quad \quad\quad \quad\quad\quad\quad\quad\quad \quad- \rho^{c\, rr}_{ik}  \int_0^t \left( H^{rr}_{k}(t) - H^{rr}_{k}(u) \right)\alpha^{rr}_{k}(u) \sigma^c_i e^{-\kappa^c_i (t-u)}  du  \nonumber \\
+%&\quad\quad \quad\quad \quad\quad\quad\quad \quad\quad \quad+\rho^{xc}_{ki}   \int_0^t  \sigma^x_{k}(u) \sigma^c_i e^{-\kappa^c_i (t-u)}  du\nonumber \\
+%%
+%&\text{\textbf{Gaussian-CR($z^I$, $y^I$)-COM covariances:} } \nonumber \\
+%& \quad\quad z^C_k(t) = \int_0^t \alpha^C_k(t) dW^{z^I}_k(t) \nonumber \\
+%& \quad\quad dy^C_k(t) = \int_0^t\alpha^C_k(t) H^I_k(t) dW^{z^I}_k(t) \nonumber \\
+%&\quad\quad Cov( z^{I}_k , C_i(t)) = \rho^{cz^C}_{ik}   \int_0^t  \alpha^{z^C}_{k}(u) \sigma^c_i e^{-\kappa^c_i (t-u)} du\nonumber \\
+%&\quad\quad Cov(y^{C}_k , C_i(t)) = \rho^{cy^C}_{ik}   \int_0^t  \alpha^{y^C}_{k}(u) H^{y^C}_{k}(u)  \sigma^c_i e^{-\kappa^c_i (t-u)}  du\nonumber
+%\end{align}
+
+\end{document}
+

@@ -30,13 +30,16 @@ namespace QuantExt {
 class ModelBuilder : public QuantLib::LazyObject {
 public:
     //! recalibrate model, if necessary
-    void recalibrate() const { calculate(); }
+    virtual void recalibrate() const { calculate(); }
 
     //! force recalibration of model
     virtual void forceRecalculate() { recalculate(); }
 
     //! if false is returned, the model does not require a recalibration
     virtual bool requiresRecalibration() const = 0;
+
+    //! notify model that a new calc will be done, but recalibration is not desired
+    virtual void newCalcWithoutRecalibration() const {}
 };
 
 } // namespace QuantExt

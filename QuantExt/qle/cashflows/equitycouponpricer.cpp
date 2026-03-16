@@ -21,15 +21,20 @@
 namespace QuantExt {
 
 void EquityCouponPricer::AdditionalResultCache::clear() {
-    initialPrice = Null<Real>();
+    currentPeriodStartPrice = Null<Real>();
     startFixingTotal = Null<Real>();
     startFixing = Null<Real>();
-    startFxFixing = Null<Real>();
+    currentPeriodStartFxFixing = Null<Real>();
     endFixingTotal = Null<Real>();
     endFixing = Null<Real>();
-    endFxFixing = Null<Real>();
+    currentPeriodEndFxFixing = Null<Real>();
     pastDividends = Null<Real>();
     forecastDividends = Null<Real>();
+    dividendFactor = Null<Real>();
+    equityVolatility = Null<Real>();
+    fxVolatility = Null<Real>();
+    equityFxCorrelation = Null<Real>();
+    convexityAdjustment = Null<Real>();
 }
 
 Rate EquityCouponPricer::swapletRate() {
@@ -37,13 +42,15 @@ Rate EquityCouponPricer::swapletRate() {
 
     // Start fixing shouldn't include dividends as the assumption of continuous dividends means they will have been paid
     // as they accrued in the previous period (or at least at the end when performance is measured).
-    additionalResultCache_.initialPrice = coupon_->initialPrice();
+    additionalResultCache_.currentPeriodStartPrice = coupon_->initialPrice();
     additionalResultCache_.endFixing = equityCurve_->fixing(coupon_->fixingEndDate(), false, false);
-
+    
     // fx rates at start and end, at start we only convert if the initial price is not already in target ccy
-    additionalResultCache_.startFxFixing =
+    additionalResultCache_.currentPeriodStartFxFixing =
         fxIndex_ && !coupon_->initialPriceIsInTargetCcy() ? fxIndex_->fixing(coupon_->fixingStartDate()) : 1.0;
-    additionalResultCache_.endFxFixing = fxIndex_ ? fxIndex_->fixing(coupon_->fixingEndDate()) : 1.0;
+    additionalResultCache_.currentPeriodEndFxFixing = fxIndex_ ? fxIndex_->fixing(coupon_->fixingEndDate()) : 1.0;
+
+    additionalResultCache_.dividendFactor = coupon_->dividendFactor();
 
     Real dividends = 0.0;
 
@@ -66,27 +73,64 @@ Rate EquityCouponPricer::swapletRate() {
         dividends += additionalResultCache_.pastDividends;
     }
 
+    if (coupon_->fixingEndDate() > Settings::instance().evaluationDate() && !equityVolatility_.empty() &&
+        !fxVolatility_.empty() && !correlation_.empty()) {
+        Real sigmaEq = equityVolatility_->blackVol(coupon_->fixingEndDate(), additionalResultCache_.endFixing);
+        Real sigmaFx =
+            fxVolatility_->blackVol(coupon_->fixingEndDate(), additionalResultCache_.currentPeriodEndFxFixing);
+        Real rho = correlation_->correlation(coupon_->fixingEndDate());
+        Real convexityAdjustment = std::exp(sigmaEq * sigmaFx * rho *
+                                            equityCurve_->equityForecastCurve()->dayCounter().yearFraction(
+                                                Settings::instance().evaluationDate(), coupon_->fixingEndDate()));
+        additionalResultCache_.equityVolatility = sigmaEq;
+        additionalResultCache_.fxVolatility = sigmaFx;
+        additionalResultCache_.equityFxCorrelation = rho;
+        additionalResultCache_.convexityAdjustment = convexityAdjustment;
+        additionalResultCache_.endFixing *= convexityAdjustment;
+    }
+
     if (returnType_ == EquityReturnType::Dividend)
         return dividends; 
-    else if (additionalResultCache_.initialPrice == 0)
-        return (additionalResultCache_.endFixing + dividends * dividendFactor_) * additionalResultCache_.endFxFixing;
+    else if (additionalResultCache_.currentPeriodStartPrice == 0)
+        return (additionalResultCache_.endFixing + dividends * dividendFactor_) *
+               additionalResultCache_.currentPeriodEndFxFixing;
     else if (returnType_ == EquityReturnType::Absolute)
-        return ((additionalResultCache_.endFixing + dividends * dividendFactor_) * additionalResultCache_.endFxFixing -
-                additionalResultCache_.initialPrice * additionalResultCache_.startFxFixing);
+        return ((additionalResultCache_.endFixing + dividends * dividendFactor_) *
+                    additionalResultCache_.currentPeriodEndFxFixing -
+                additionalResultCache_.currentPeriodStartPrice * additionalResultCache_.currentPeriodStartFxFixing);
     else
-        return ((additionalResultCache_.endFixing + dividends * dividendFactor_) * additionalResultCache_.endFxFixing -
-                additionalResultCache_.initialPrice * additionalResultCache_.startFxFixing) /
-               (additionalResultCache_.initialPrice * additionalResultCache_.startFxFixing);
+        return ((additionalResultCache_.endFixing + dividends * dividendFactor_) *
+                    additionalResultCache_.currentPeriodEndFxFixing -
+                additionalResultCache_.currentPeriodStartPrice * additionalResultCache_.currentPeriodStartFxFixing) /
+               (additionalResultCache_.currentPeriodStartPrice * additionalResultCache_.currentPeriodStartFxFixing);
 }
 
 void EquityCouponPricer::initialize(const EquityCoupon& coupon) {
 
     coupon_ = &coupon;
 
-    equityCurve_ = boost::dynamic_pointer_cast<QuantExt::EquityIndex2>(coupon.equityCurve());
-    fxIndex_ = boost::dynamic_pointer_cast<FxIndex>(coupon.fxIndex());
+    equityCurve_ = QuantLib::ext::dynamic_pointer_cast<QuantExt::EquityIndex2>(coupon.equityCurve());
+    fxIndex_ = QuantLib::ext::dynamic_pointer_cast<FxIndex>(coupon.fxIndex());
     returnType_ = coupon.returnType();
     dividendFactor_ = coupon.dividendFactor();
+}
+
+void EquityCouponPricer::setEquityVolatility(const Handle<BlackVolTermStructure>& equityVol) {
+    equityVolatility_ = equityVol;
+    registerWith(equityVolatility_);
+    update();
+}
+
+void EquityCouponPricer::setFxVolatility(const Handle<BlackVolTermStructure>& fxVol) {
+    fxVolatility_ = fxVol;
+    registerWith(fxVolatility_);
+    update();
+}
+
+void EquityCouponPricer::setCorrelation(const Handle<QuantExt::CorrelationTermStructure>& correlation) {
+    correlation_ = correlation;
+    registerWith(correlation_);
+    update();
 }
 
 } // namespace QuantExt

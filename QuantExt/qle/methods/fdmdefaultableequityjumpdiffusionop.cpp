@@ -25,8 +25,8 @@ namespace QuantExt {
 using namespace QuantLib;
 
 FdmDefaultableEquityJumpDiffusionOp::FdmDefaultableEquityJumpDiffusionOp(
-    const boost::shared_ptr<QuantLib::FdmMesher>& mesher,
-    const boost::shared_ptr<DefaultableEquityJumpDiffusionModel>& model, const Size direction,
+    const QuantLib::ext::shared_ptr<QuantLib::FdmMesher>& mesher,
+    const QuantLib::ext::shared_ptr<DefaultableEquityJumpDiffusionModel>& model, const Size direction,
     const std::function<Real(Real, Real, Real)>& recovery, const Handle<QuantLib::YieldTermStructure>& discountingCurve,
     const Handle<QuantLib::Quote>& discountingSpread,
     const Handle<QuantLib::DefaultProbabilityTermStructure>& addCreditCurve,

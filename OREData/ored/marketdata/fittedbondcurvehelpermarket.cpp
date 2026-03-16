@@ -32,7 +32,7 @@ FittedBondCurveHelperMarket::FittedBondCurveHelperMarket(
     const std::map<std::string, Handle<YieldTermStructure>>& iborIndexCurves, const bool handlePseudoCurrencies)
     : MarketImpl(handlePseudoCurrencies) {
 
-    boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+    QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
 
     // populate the ibor index curves
     for (auto const& c : iborIndexCurves)
@@ -42,22 +42,22 @@ FittedBondCurveHelperMarket::FittedBondCurveHelperMarket(
 
 Handle<YieldTermStructure> FittedBondCurveHelperMarket::yieldCurve(const string& name,
                                                                    const string& configuration) const {
-    return Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, NullCalendar(), 0.0, Actual365Fixed()));
+    return Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.0, Actual365Fixed()));
 }
 
 Handle<Quote> FittedBondCurveHelperMarket::securitySpread(const string& securityID, const string& configuration) const {
-    return Handle<Quote>(boost::make_shared<SimpleQuote>(0.0));
+    return Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.0));
 }
 
 Handle<QuantExt::CreditCurve> FittedBondCurveHelperMarket::defaultCurve(const string&,
                                                                         const string& configuration) const {
     return Handle<QuantExt::CreditCurve>(
-        boost::make_shared<QuantExt::CreditCurve>(Handle<DefaultProbabilityTermStructure>(
-            boost::make_shared<FlatHazardRate>(0, NullCalendar(), 0.0, Actual365Fixed()))));
+        QuantLib::ext::make_shared<QuantExt::CreditCurve>(Handle<DefaultProbabilityTermStructure>(
+            QuantLib::ext::make_shared<FlatHazardRate>(0, NullCalendar(), 0.0, Actual365Fixed()))));
 }
 
 Handle<Quote> FittedBondCurveHelperMarket::recoveryRate(const string&, const string& configuration) const {
-    return Handle<Quote>(boost::make_shared<SimpleQuote>(0.0));
+    return Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.0));
 }
 
 } // namespace data

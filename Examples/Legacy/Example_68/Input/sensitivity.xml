@@ -1,0 +1,123 @@
+<SensitivityAnalysis>
+	<DiscountCurves>
+		<DiscountCurve ccy="EUR">
+			<ShiftType>Absolute</ShiftType>
+			<ShiftSize>0.0001</ShiftSize>
+			<ShiftScheme>Forward</ShiftScheme>
+			<ShiftTenors>1Y, 5Y</ShiftTenors>		
+			<ParConversion>
+				<Instruments>OIS, OIS</Instruments>
+				<SingleCurve>true</SingleCurve>
+				<Conventions>
+					<Convention id="DEP">EUR-EONIA-CONVENTIONS</Convention>
+					<Convention id="OIS">EUR-OIS-CONVENTIONS</Convention>
+				</Conventions>
+			</ParConversion>
+			
+		</DiscountCurve>
+		<DiscountCurve ccy="USD">
+			<ShiftType>Absolute</ShiftType>
+			<ShiftSize>0.0001</ShiftSize>
+			<ShiftScheme>Forward</ShiftScheme>
+			<ShiftTenors>1Y, 5Y</ShiftTenors>
+			<ParConversion>
+				<Instruments>FXF,XBS</Instruments>
+				<SingleCurve>true</SingleCurve>
+				<Conventions>
+					<Convention id="XBS">EUR-USD-XCCY-BASIS-CONVENTIONS</Convention>
+					<Convention id="FXF">EUR-USD-FX-CONVENTIONS</Convention>
+				</Conventions>
+			</ParConversion>
+		</DiscountCurve>
+	</DiscountCurves>
+	<YieldCurves/>
+	<IndexCurves>
+	        <IndexCurve index="EUR-EURIBOR-6M">
+			<ShiftType>Absolute</ShiftType>
+			<ShiftSize>0.0001</ShiftSize>
+			<ShiftScheme>Forward</ShiftScheme>
+			<ShiftTenors>1Y, 5Y</ShiftTenors>
+			<ParConversion>
+				<Instruments>FRA, IRS</Instruments>
+				<SingleCurve>false</SingleCurve>
+				<DiscountCurve>EUR-EONIA</DiscountCurve>
+				<Conventions>
+					<Convention id="DEP">EUR-DEPOSIT</Convention>
+					<Convention id="FRA">EUR-6M-FRA-CONVENTIONS</Convention>
+					<Convention id="IRS">EUR-6M-SWAP-CONVENTIONS</Convention>
+				</Conventions>
+			</ParConversion>
+		</IndexCurve>
+		<IndexCurve index="USD-LIBOR-3M">
+			<ShiftType>Absolute</ShiftType>
+			<ShiftSize>0.0001</ShiftSize>
+			<ShiftScheme>Forward</ShiftScheme>
+			<ShiftTenors>1Y, 5Y</ShiftTenors>
+			<ParConversion>
+				<Instruments>FRA, IRS</Instruments>
+				<SingleCurve>false</SingleCurve>
+				<DiscountCurve>USD-FedFunds</DiscountCurve>
+				<Conventions>
+					<Convention id="DEP">USD-ON-SOFR-DEPOSIT</Convention>
+					<Convention id="OIS">USD-SOFR-OIS</Convention>
+					<Convention id="FRA">USD-3M-FRA-CONVENTIONS</Convention>
+					<Convention id="IRS">USD-3M-SWAP-CONVENTIONS</Convention>
+				</Conventions>
+			</ParConversion>
+		    </IndexCurve>
+	</IndexCurves>
+	<FxSpots>
+		<FxSpot ccypair="USDEUR">
+			<ShiftType>Relative</ShiftType>
+			<ShiftSize>0.01</ShiftSize>
+			<ShiftScheme>Central</ShiftScheme>
+		</FxSpot>
+	</FxSpots>
+	<CreditCurves>
+		<CreditCurve name="CPTY_A">
+			<Currency>USD</Currency>
+			<ShiftType>Absolute</ShiftType>
+			<ShiftSize>0.0001</ShiftSize>
+			<ShiftScheme>Forward</ShiftScheme>
+			<ShiftTenors>1Y, 5Y</ShiftTenors>
+			<ParConversion>
+				<Instruments>CDS, CDS</Instruments>
+				<SingleCurve>false</SingleCurve>
+				<Conventions>
+					<Convention id="CDS">CDS-STANDARD-CONVENTIONS</Convention>
+				</Conventions>
+			</ParConversion>
+		</CreditCurve>
+	</CreditCurves>
+	<SwaptionVolatilities>
+		<SwaptionVolatility ccy="EUR">
+			<ShiftType>Relative</ShiftType>
+			<ShiftSize>0.01</ShiftSize>
+			<ShiftScheme>Forward</ShiftScheme>
+			<ShiftExpiries>5Y</ShiftExpiries>
+			<ShiftStrikes>0.0000000000000000</ShiftStrikes>
+			<ShiftTerms>5Y</ShiftTerms>
+		</SwaptionVolatility>
+		<SwaptionVolatility ccy="USD">
+			<ShiftType>Relative</ShiftType>
+			<ShiftSize>0.01</ShiftSize>
+			<ShiftScheme>Forward</ShiftScheme>
+			<ShiftExpiries>5Y</ShiftExpiries>
+			<ShiftStrikes>0.0000000000000000</ShiftStrikes>
+			<ShiftTerms>5Y</ShiftTerms>
+		</SwaptionVolatility>
+	</SwaptionVolatilities>	
+	<FxVolatilities>
+	        <FxVolatility ccypair="EURUSD">
+			<ShiftType>Relative</ShiftType>
+			<ShiftSize>0.01</ShiftSize>
+			<ShiftScheme>Forward</ShiftScheme>
+			<ShiftExpiries>5Y</ShiftExpiries>
+			<ShiftStrikes>0.0000000000000000</ShiftStrikes>
+		</FxVolatility>
+		</FxVolatilities>
+	<CapFloorVolatilities>
+	</CapFloorVolatilities>
+	<ComputeGamma>false</ComputeGamma>
+	<UseSpreadedTermStructures>true</UseSpreadedTermStructures>
+</SensitivityAnalysis>

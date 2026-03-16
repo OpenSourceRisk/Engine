@@ -44,8 +44,8 @@ Rate BRLCdi::forecastFixing(const Date& fixingDate) const {
     return pow(discountStart / discountEnd, 1.0 / dcf) - 1.0;
 }
 
-boost::shared_ptr<IborIndex> BRLCdi::clone(const Handle<YieldTermStructure>& h) const {
-    return boost::make_shared<BRLCdi>(h);
+QuantLib::ext::shared_ptr<IborIndex> BRLCdi::clone(const Handle<YieldTermStructure>& h) const {
+    return QuantLib::ext::make_shared<BRLCdi>(h);
 }
 
 } // namespace QuantExt

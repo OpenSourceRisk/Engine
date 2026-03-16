@@ -42,7 +42,7 @@ private:
     class FlatExtrapolationImpl : public Interpolation::Impl {
 
     public:
-        FlatExtrapolationImpl(const boost::shared_ptr<Interpolation>& i) : i_(i) {}
+        FlatExtrapolationImpl(const QuantLib::ext::shared_ptr<Interpolation>& i) : i_(i) {}
         void update() override { i_->update(); }
         Real xMin() const override { return i_->xMin(); }
         Real xMax() const override { return i_->xMax(); }
@@ -83,12 +83,12 @@ private:
         }
 
     private:
-        const boost::shared_ptr<Interpolation> i_;
+        const QuantLib::ext::shared_ptr<Interpolation> i_;
     };
 
 public:
-    FlatExtrapolation(const boost::shared_ptr<Interpolation>& i) {
-        impl_ = boost::make_shared<FlatExtrapolationImpl>(i);
+    FlatExtrapolation(const QuantLib::ext::shared_ptr<Interpolation>& i) {
+        impl_ = QuantLib::ext::make_shared<FlatExtrapolationImpl>(i);
         impl_->update();
     }
 };
@@ -97,7 +97,7 @@ public:
 class LinearFlat {
 public:
     template <class I1, class I2> Interpolation interpolate(const I1& xBegin, const I1& xEnd, const I2& yBegin) const {
-        return FlatExtrapolation(boost::make_shared<LinearInterpolation>(xBegin, xEnd, yBegin));
+        return FlatExtrapolation(QuantLib::ext::make_shared<LinearInterpolation>(xBegin, xEnd, yBegin));
     }
     static const bool global = false;
     static const Size requiredPoints = 2;
@@ -107,7 +107,7 @@ public:
 class LogLinearFlat {
 public:
     template <class I1, class I2> Interpolation interpolate(const I1& xBegin, const I1& xEnd, const I2& yBegin) const {
-        return FlatExtrapolation(boost::make_shared<LogLinearInterpolation>(xBegin, xEnd, yBegin));
+        return FlatExtrapolation(QuantLib::ext::make_shared<LogLinearInterpolation>(xBegin, xEnd, yBegin));
     }
     static const bool global = false;
     static const Size requiredPoints = 2;
@@ -117,7 +117,7 @@ public:
 class HermiteFlat {
 public:
      template <class I1, class I2> Interpolation interpolate(const I1& xBegin, const I1& xEnd, const I2& yBegin) const {
-         return FlatExtrapolation(boost::make_shared<Parabolic>(xBegin, xEnd, yBegin));
+         return FlatExtrapolation(QuantLib::ext::make_shared<Parabolic>(xBegin, xEnd, yBegin));
      }
      static const bool global = false;
      static const Size requiredPoints = 2;
@@ -137,7 +137,7 @@ public:
           leftValue_(leftConditionValue), rightValue_(rightConditionValue) {}
 
     template <class I1, class I2> Interpolation interpolate(const I1& xBegin, const I1& xEnd, const I2& yBegin) const {
-        return FlatExtrapolation(boost::make_shared<CubicInterpolation>(
+        return FlatExtrapolation(QuantLib::ext::make_shared<CubicInterpolation>(
             xBegin, xEnd, yBegin, da_, monotonic_, leftType_, leftValue_, rightType_, rightValue_));
     }
 

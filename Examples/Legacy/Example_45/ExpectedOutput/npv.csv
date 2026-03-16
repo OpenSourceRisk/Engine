@@ -1,0 +1,2 @@
+#TradeId,TradeType,Maturity,MaturityTime,NPV,NpvCurrency,NPV(Base),BaseCurrency,Notional,NotionalCurrency,Notional(Base),NettingSet,CounterParty
+TestedCBO,CBO,2037-05-29,14.671233,1816441.111779,USD,1816441.111779,USD,1802750.20,USD,1802750.20,CPTY_A,CPTY_A

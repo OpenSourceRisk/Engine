@@ -64,21 +64,21 @@ BOOST_AUTO_TEST_CASE(testNPV) {
     Settings::instance().evaluationDate() = Date(31, Dec, 2018);
     Date asof = Settings::instance().evaluationDate();
     // Market
-    auto conventions = boost::make_shared<Conventions>();
+    auto conventions = QuantLib::ext::make_shared<Conventions>();
     conventions->fromFile(TEST_INPUT_FILE("conventions.xml"));
     InstrumentConventions::instance().setConventions(conventions);
 
-    auto todaysMarketParams = boost::make_shared<TodaysMarketParameters>();
+    auto todaysMarketParams = QuantLib::ext::make_shared<TodaysMarketParameters>();
     todaysMarketParams->fromFile(TEST_INPUT_FILE("todaysmarket.xml"));
-    auto curveConfigs = boost::make_shared<CurveConfigurations>();
+    auto curveConfigs = QuantLib::ext::make_shared<CurveConfigurations>();
     curveConfigs->fromFile(TEST_INPUT_FILE("curveconfig.xml"));
-    auto loader = boost::make_shared<CSVLoader>(TEST_INPUT_FILE("market.txt"), TEST_INPUT_FILE("fixings.txt"), false);
-    auto market = boost::make_shared<TodaysMarket>(asof, todaysMarketParams, loader, curveConfigs, false);
+    auto loader = QuantLib::ext::make_shared<CSVLoader>(TEST_INPUT_FILE("market.txt"), TEST_INPUT_FILE("fixings.txt"), false);
+    auto market = QuantLib::ext::make_shared<TodaysMarket>(asof, todaysMarketParams, loader, curveConfigs, false);
 
     // Portfolio to test market
-    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
     engineData->fromFile(TEST_INPUT_FILE("pricingengine.xml"));
-    boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(engineData, market);
+    QuantLib::ext::shared_ptr<EngineFactory> factory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
     // move cleanup to fixture once this code is in ore minus
     struct cleanup {

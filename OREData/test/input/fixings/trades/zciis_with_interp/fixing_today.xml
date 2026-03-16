@@ -33,7 +33,6 @@
           <Rates>
             <Rate>1.0</Rate>
           </Rates>
-          <BaseCPI>234.781</BaseCPI>
           <StartDate>2019-02-12</StartDate>
 	  <ObservationLag>3M</ObservationLag>
           <Interpolation>Linear</Interpolation>

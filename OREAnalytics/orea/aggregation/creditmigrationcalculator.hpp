@@ -28,7 +28,7 @@
 #include <orea/cube/npvcube.hpp>
 #include <ored/portfolio/portfolio.hpp>
 
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 
 namespace ore {
 namespace analytics {
@@ -41,12 +41,12 @@ using namespace std;
 //! Credit Migration Calculator
 class CreditMigrationCalculator {
 public:
-    CreditMigrationCalculator(const boost::shared_ptr<Portfolio>& portfolio,
-                              const boost::shared_ptr<CreditSimulationParameters>& creditSimulationParameters,
-                              const boost::shared_ptr<NPVCube>& cube,
-                              const boost::shared_ptr<CubeInterpretation> cubeInterpretation,
-                              const boost::shared_ptr<NPVCube>& nettedcube,
-                              const boost::shared_ptr<AggregationScenarioData>& aggregationScenarioData,
+    CreditMigrationCalculator(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
+                              const QuantLib::ext::shared_ptr<CreditSimulationParameters>& creditSimulationParameters,
+                              const QuantLib::ext::shared_ptr<NPVCube>& cube,
+                              const QuantLib::ext::shared_ptr<CubeInterpretation> cubeInterpretation,
+                              const QuantLib::ext::shared_ptr<NPVCube>& nettedcube,
+                              const QuantLib::ext::shared_ptr<AggregationScenarioData>& aggregationScenarioData,
                               const std::vector<Real>& creditMigrationDistributionGrid,
                               const std::vector<Size>& creditMigrationTimeSteps,
                               const Matrix& creditStateCorrelationMatrix, const std::string baseCurrency);
@@ -58,12 +58,12 @@ public:
     const std::vector<std::vector<Real>> pdf() const { return pdf_; }
 
 private:
-    boost::shared_ptr<Portfolio> portfolio_;
-    boost::shared_ptr<CreditSimulationParameters> creditSimulationParameters_;
-    boost::shared_ptr<NPVCube> cube_;
-    boost::shared_ptr<CubeInterpretation> cubeInterpretation_;
-    boost::shared_ptr<NPVCube> nettedCube_;
-    boost::shared_ptr<AggregationScenarioData> aggregationScenarioData_;
+    QuantLib::ext::shared_ptr<Portfolio> portfolio_;
+    QuantLib::ext::shared_ptr<CreditSimulationParameters> creditSimulationParameters_;
+    QuantLib::ext::shared_ptr<NPVCube> cube_;
+    QuantLib::ext::shared_ptr<CubeInterpretation> cubeInterpretation_;
+    QuantLib::ext::shared_ptr<NPVCube> nettedCube_;
+    QuantLib::ext::shared_ptr<AggregationScenarioData> aggregationScenarioData_;
     std::vector<Real> creditMigrationDistributionGrid_;
     std::vector<Size> creditMigrationTimeSteps_;
     Matrix creditStateCorrelationMatrix_;

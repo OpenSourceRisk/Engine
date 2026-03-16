@@ -20,7 +20,7 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 
 namespace QuantExt {
 DynamicYoYOptionletVolatilitySurface::DynamicYoYOptionletVolatilitySurface(
-    const boost::shared_ptr<YoYOptionletVolatilitySurface>& source, ReactionToTimeDecay decayMode)
+    const QuantLib::ext::shared_ptr<YoYOptionletVolatilitySurface>& source, ReactionToTimeDecay decayMode)
     : YoYOptionletVolatilitySurface(source->settlementDays(), source->calendar(), source->businessDayConvention(),
                                     source->dayCounter(), source->observationLag(), source->frequency(),
                                     source->indexIsInterpolated(), source->volatilityType(), source->displacement()),

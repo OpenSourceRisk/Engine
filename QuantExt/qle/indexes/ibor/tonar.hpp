@@ -32,22 +32,6 @@
 namespace QuantExt {
 using namespace QuantLib;
 
-//! %JPY %TONAR rate
-/*! Tokyo Overnight Average Rate published by BOJ.
-
-    See <http://www.boj.or.jp/en/statistics/market/short/mutan/>.
-
-    \remark There is a publication lag of 1 business day.
-            Using Japan calendar, should be Tokyo.
-
-            \ingroup indexes
-*/
-class Tonar : public OvernightIndex {
-public:
-    Tonar(const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
-        : OvernightIndex("TONAR", 0, JPYCurrency(), Japan(), Actual365Fixed(), h) {}
-};
-
 /*! TONAR term index
     https://moneyworld.jp/page/torf.html
     https://www.torf.co.jp/en/2021/04/26/torfrate26april/
@@ -56,7 +40,7 @@ class TonarTerm : public TermRateIndex {
 public:
     TonarTerm(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
         : TermRateIndex("JPY-TONARTerm", tenor, 2, JPYCurrency(), Japan(), ModifiedFollowing, false, Actual365Fixed(), h,
-                        boost::make_shared<Tonar>(h)) {}
+                        QuantLib::ext::make_shared<Tonar>(h)) {}
 };
 
 } // namespace QuantExt

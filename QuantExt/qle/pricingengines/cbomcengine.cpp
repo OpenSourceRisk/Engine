@@ -231,7 +231,7 @@ namespace QuantExt {
         // Prepare additional results for loss distributions if they have been requested
         map<Date, string> lossDistributionDates = getLossDistributionDates(today);
         vector<Date> lossDistributionDatesVector;
-        map<string, boost::shared_ptr<BucketedDistribution> > lossDistributionMap;
+        map<string, QuantLib::ext::shared_ptr<BucketedDistribution> > lossDistributionMap;
         if (!lossDistributionDates.empty()) {
 
             // calculate max loss from the pool
@@ -244,8 +244,8 @@ namespace QuantExt {
             // initialise the Loss BucketedDistribtions with the above maxLoss
             Size numBuckets = 100;
             for (map<Date, string>::iterator it = lossDistributionDates.begin(); it != lossDistributionDates.end(); it++) {
-                boost::shared_ptr<BucketedDistribution> bucketedDistribution = 
-                    boost::make_shared<BucketedDistribution> (0, maxLoss, numBuckets);
+                QuantLib::ext::shared_ptr<BucketedDistribution> bucketedDistribution = 
+                    QuantLib::ext::make_shared<BucketedDistribution> (0, maxLoss, numBuckets);
                 // Set all probabilities = 0.0;
                 for (Size i = 0; i < numBuckets; i++)
                     bucketedDistribution->probabilities()[i] = 0.0;
@@ -599,7 +599,7 @@ namespace QuantExt {
                     Date d = lossDistributionDatesVector[k];
                     string dateString = lossDistributionDates[d];
 
-                    boost::shared_ptr<BucketedDistribution> bd = lossDistributionMap[dateString];
+                    QuantLib::ext::shared_ptr<BucketedDistribution> bd = lossDistributionMap[dateString];
                     Size index = bd->bucket(loss); // find the bucket we need to update
                     bd->probabilities()[index] += 1.0 / samples_;
                 }

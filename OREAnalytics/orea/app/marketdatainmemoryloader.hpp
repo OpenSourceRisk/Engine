@@ -32,34 +32,34 @@ class MarketDataInMemoryLoaderImpl : public MarketDataLoaderImpl {
 public:
     MarketDataInMemoryLoaderImpl() {}
 
-    MarketDataInMemoryLoaderImpl(const boost::shared_ptr<InputParameters>& inputs, 
+    MarketDataInMemoryLoaderImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs, 
                                  const std::vector<std::string>& marketData,
                                  const std::vector<std::string>& fixingData)
         : inputs_(inputs), marketData_(marketData), fixingData_(fixingData) {}
     
-    void loadCorporateActionData(boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+    void loadCorporateActionData(QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                                  const std::map<std::string, std::string>& equities) override;
     
-    void retrieveMarketData(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+    void retrieveMarketData(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
         const ore::analytics::QuoteMap& quotes,
         const QuantLib::Date& marketDate) override;        
     
-    void retrieveFixings(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+    void retrieveFixings(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
         ore::analytics::FixingMap fixings = {},
         std::map<std::pair<std::string, QuantLib::Date>, std::set<QuantLib::Date>> lastAvailableFixingLookupMap = {}) override;
 
 private:
-    boost::shared_ptr<InputParameters> inputs_;
+    QuantLib::ext::shared_ptr<InputParameters> inputs_;
     std::vector<std::string> marketData_;
     std::vector<std::string> fixingData_;
 };
 
 class MarketDataInMemoryLoader : public MarketDataLoader {
 public: 
-    MarketDataInMemoryLoader(const boost::shared_ptr<InputParameters>& inputs,
+    MarketDataInMemoryLoader(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
                              const std::vector<std::string>& marketData,
                              const std::vector<std::string>& fixingData)
-        : MarketDataLoader(inputs, boost::make_shared<MarketDataInMemoryLoaderImpl>(inputs, marketData, fixingData)) {}
+        : MarketDataLoader(inputs, QuantLib::ext::make_shared<MarketDataInMemoryLoaderImpl>(inputs, marketData, fixingData)) {}
 };
     
 } // namespace analytics

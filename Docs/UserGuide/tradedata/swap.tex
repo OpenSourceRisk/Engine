@@ -1,4 +1,62 @@
-\subsubsection{Swap}
+\subsubsection{Swap}\label{ss:swap}
+
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+An interest rate swap ({\bf IRS}) is an agreement between two counterparties in which one 
+stream of future interest payments (leg) is exchanged for another based on a 
+specified notional amount. A vanilla interest rate swap involves two legs in 
+the same currency, exchanging a floating rate benchmarked to an Interbank 
+Offered Rate (IBOR)\footnote{IBOR is a generic term for a family of indices 
+that represent a rate for deposit periods, or tenors, longer than one day. 
+Specific IBOR indices are usually named after the location where they are set, 
+such as LIBOR (London), TIBOR (Tokyo) or EURIBOR (Eurozone).}   
+index of a specified tenor for a fixed rate, or vice versa. 
+\begin{itemize}
+\item The notional amount for each leg may be fixed, amortising or accreting. 
+\item The fixed rate and the spread can vary over the lifetime of the swap. 
+\end{itemize} 
+
+A single currency basis swap ({\bf BS}) has two floating legs, benchmarked to any two of 
+the supported IBOR indices. The two legs may also have different tenors of the 
+same IBOR index. 
+\begin{itemize}
+\item The notional amount for each leg may be fixed, amortising or accreting. 
+\item The floating leg spreads can vary over the lifetime of the swap. 
+\end{itemize}
+
+An Overnight Index Swap ({\bf OIS}) has at least one leg where the floating rate is 
+benchmarked to an overnight index rate, typically the rate for overnight unsecured 
+lending between banks. 
+\begin{itemize}
+\item For example, in USD the overnight index rate would be the Federal Funds rate, 
+in EUR it would be Eonia, and in GBP it would be Sonia. 
+\item The overnight index rate leg compounds on a daily basis as per the corresponding
+overnight rate.
+\end{itemize}
+The typical OIS Swap exchanges compounded overnight interest for a fixed leg, paying 
+once at maturity for maturities up to a year and paying annually for longer maturities.
+In the US OIS Swap market another flavour is common that exchanges an OIS linked leg 
+paying the arithmetic weighted average of O/N fixings (quarterly, without compounding)  
+for a floating USD-LIBOR-3M linked leg with a spread.
+
+A Bond Market Association ({\bf BMA}) Swap has at least one leg where the floating rate 
+is benchmarked to the BMA's floating rate municipal swap index. That is, 
+the floating leg rate is based upon fixings of the US SIFMA Municipal Swap Index 
+(formerly the BMA Municipal Index or ``BMA Index''). The non-BMA leg of a BMA Swap 
+can be fixed or floating.
+
+A Constant Maturity Swap ({\bf CMS}) has at least one leg where the floating rate is 
+benchmarked against a CMS index using the market rate of a fixed maturity 
+instrument, such as a swap, with a longer maturity than the 
+length of the reset period. The CMS leg may contain a cap, floor, or collar. 
+
+Similar to a CMS, a variable rate Swap leg can be linked to a Constant Maturity Bond ({\bf CMB}) index.
+In contrast to CMS the yield is determined by the yields of a class of Bonds, such as Government Bonds.
+As in the CMS case, the term of the yield is typically longer than the length of the reset period.
+A CMB index in ORE is of the form CMB-FAMILY-TENOR.
+Note, that the CMB linked legs in ORE currently do not support Caps, Floors or Collars.
+
+{\bf Input}}\fi
 
 The \lstinline!SwapData! node is the trade data container for the \emph{Swap} trade type. A Swap must have at least one leg,
 and can have an unlimited number of legs. Each leg is represented by a \lstinline!LegData! trade component sub-node,

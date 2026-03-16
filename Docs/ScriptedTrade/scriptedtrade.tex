@@ -101,9 +101,9 @@
 
 \begin{document}
 
-\title{ORE+ Trade Scripting Module}
-\author{Quaternion Risk Management}
-\date{22 June 2023}
+\title{ORE Scripted Trade Module}
+%\author{Quaternion Risk Management}
+\date{30 January 2026}
 \maketitle
 
 \newpage
@@ -136,7 +136,13 @@
   13-09-2021 & Nathaniel Volfango & update Index section and add note on payment currency \\
   11-02-2022 & Peter Caspers & extend FWDCOMP, add FWDAVG function (breaking change) \\
   22-06-2023 & Peter Caspers & add config flags for external devices \\
-  12-02-2024 & Peter Caspers & additions for FD GaussianCam model
+  12-02-2024 & Peter Caspers & additions for FD GaussianCam model \\
+  05-11-2024 & Peter Caspers & indicator smoothing, various updates models \\
+  09-05-2025 & Peter Caspers & add engine type FD for local vol models \\
+  11-05-2025 & Peter Caspers & add trade type to engine configuration key \\
+  26-06-2025 & Peter Caspers & add purpose tag amccg \\
+  07-07-2025 & Peter Caspers & add amccg components node for exposure \\
+  28-11-2025 & Roland Lichters & add Heston pricing engine configuration
  \\ \hline
 \end{supertabular}
 \end{center}
@@ -210,7 +216,7 @@ This document describes the ORE+ trade scripting module.
 \subsection{Compact Trade XML}\label{compactXml}
 \input{docs/compacttradexml.tex}
 
-\subsection{A comment on the Payment Currency in Scripted Trades}\label{sss:payccy_st}
+\subsection{Payment Currency}\label{sss:payccy_st}
 \input{docs/noteonpayccy.tex}
 
 \subsection{Convenience Trade Wrappers}
@@ -244,6 +250,21 @@ This document describes the ORE+ trade scripting module.
 
 % \bibitem{savine}Savine, Antoine: Financial Cashflow Scripting: Beyond Valuation, slides available at \url{https://www.slideshare.net/AntoineSavine/financial-cashflow-scripting-beyond-valuation}
 
+\bibitem{dimitroff_2011}
+  G.Dimitroff, S.~Lorenz, A.~Szimayer: A Parsimonious Multi-Asset Heston Model (March 3, 2011).
+  Available at SSRN: \url{https://ssrn.com/abstract=1435199}
+
+\bibitem{innocentis_2016}
+  M.~de Innocentis, R.~Lichters, M.~Trahe: Efficient Simulation of the Multi Asset Heston Model (February 15, 2016).
+  Available at SSRN: \url{https://ssrn.com/abstract=2729475}
+
+\bibitem{cesarini_2014}
+  A.~Cesarini and S.~Giovannitti: Quanto Implied Volatility Smile (January 30, 2014).
+  Available at SSRN: \url{https://ssrn.com/abstract=2388093}
+
+\bibitem{stackexchange_40521}
+  \url{https://quant.stackexchange.com/questions/40521/quanto-pricing-explanation}
+  
 % \bibitem{nx}Numerix payoff language ({\color{red}publicly available papers?})
 
 \end{thebibliography}

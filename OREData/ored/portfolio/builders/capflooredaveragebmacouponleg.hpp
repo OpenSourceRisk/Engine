@@ -43,7 +43,7 @@ public:
 
 protected:
     string keyImpl(const string& index, const QuantLib::Period& rateComputationPeriod) override;
-    boost::shared_ptr<FloatingRateCouponPricer> engineImpl(const string& index,
+    QuantLib::ext::shared_ptr<FloatingRateCouponPricer> engineImpl(const string& index,
                                                            const QuantLib::Period& rateComputationPeriod) override;
 };
 } // namespace data

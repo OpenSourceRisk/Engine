@@ -27,10 +27,10 @@ Ireland::Ireland(const Market market) {
     // implementation instance
     switch (market) {
     case IrishStockExchange:
-        impl_ = boost::make_shared<Ireland::IrishStockExchangeImpl>();
+        impl_ = QuantLib::ext::make_shared<Ireland::IrishStockExchangeImpl>();
         break;
     case BankHolidays:
-        impl_ = boost::make_shared<Ireland::BankHolidaysImpl>();
+        impl_ = QuantLib::ext::make_shared<Ireland::BankHolidaysImpl>();
         break;
     default:
         QL_FAIL("Internal error, unexpected market " << market);

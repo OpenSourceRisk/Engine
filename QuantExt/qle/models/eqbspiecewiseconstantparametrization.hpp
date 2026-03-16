@@ -57,7 +57,7 @@ public:
     Real variance(const Time t) const override;
     Real sigma(const Time t) const override;
     const Array& parameterTimes(const Size) const override;
-    const boost::shared_ptr<Parameter> parameter(const Size) const override;
+    const QuantLib::ext::shared_ptr<Parameter> parameter(const Size) const override;
     void update() const override;
 
 protected:
@@ -89,7 +89,7 @@ inline const Array& EqBsPiecewiseConstantParametrization::parameterTimes(const S
     return PiecewiseConstantHelper1::t_;
 }
 
-inline const boost::shared_ptr<Parameter> EqBsPiecewiseConstantParametrization::parameter(const Size i) const {
+inline const QuantLib::ext::shared_ptr<Parameter> EqBsPiecewiseConstantParametrization::parameter(const Size i) const {
     QL_REQUIRE(i == 0, "parameter " << i << " does not exist, only have 0");
     return PiecewiseConstantHelper1::y_;
 }

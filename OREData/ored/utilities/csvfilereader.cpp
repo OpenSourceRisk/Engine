@@ -21,7 +21,7 @@
 #include <ql/errors.hpp> 
 #include <ql/utilities/null.hpp> 
 
-#include <boost/algorithm/string/trim.hpp>
+#include <boost/algorithm/string.hpp>
 
 using QuantLib::Null;
 
@@ -44,6 +44,9 @@ void CSVReader::setStream(std::istream* stream) {
          std::string line;
          getline(*stream_, line, eolMarker_);
          boost::trim(line);
+         // remove comment charactor if present
+         if (boost::starts_with(line, "#"))
+             line = line.substr(1);
          tokenizer_.assign(line);
          std::copy(tokenizer_.begin(), tokenizer_.end(), std::back_inserter(headers_));
          numberOfColumns_ = headers_.size();

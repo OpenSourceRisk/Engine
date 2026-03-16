@@ -31,6 +31,7 @@
 #include <ored/marketdata/market.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/report/report.hpp>
+#include <ored/report/inmemoryreport.hpp>
 
 #include <map>
 #include <set>
@@ -41,57 +42,65 @@ namespace analytics {
 
 //! Stress Test Analysis
 /*!
-  This class wraps functionality to perform a stress testing analysis for a given portfolio.
+  This function wraps functionality to perform a stress testing analysis for a given portfolio.
   It comprises
   - building the "simulation" market to which sensitivity scenarios are applied
   - building the portfolio linked to this simulation market
   - generating sensitivity scenarios
-  - running the scenario "engine" to apply these and compute the NPV impacts of all required shifts
-  - fill result structures that can be queried
-  - write stress test report to a file
-
-  \ingroup simulation
+  - running the scenario "engine" to apply these and compute the NPV (CF) impacts of all required shifts
+  - write results to reports
 */
-class StressTest {
-public:
-    //! Constructor
-    StressTest(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
-               const boost::shared_ptr<ore::data::Market>& market, const string& marketConfiguration,
-               const boost::shared_ptr<ore::data::EngineData>& engineData,
-               const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-               const boost::shared_ptr<StressTestScenarioData>& stressData,
-               const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
-               const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
-               boost::shared_ptr<ScenarioFactory> scenarioFactory = {},
-               const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
-               const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
-               bool continueOnError = false);
 
-    //! Return set of trades analysed
-    const std::set<std::string>& trades() { return trades_; }
+void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
+                   const QuantLib::ext::shared_ptr<ore::data::Market>& market, const string& marketConfiguration,
+                   const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData,
+                   const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+                   const QuantLib::ext::shared_ptr<StressTestScenarioData>& stressData,
+                   const QuantLib::ext::shared_ptr<ore::data::Report>& report,
+                   const QuantLib::ext::shared_ptr<ore::data::Report>& cfReport = nullptr, const double threshold = 0.0,
+                   const Size precision = 2, const bool includePastCashflows = false,
+                   const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
+                   const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
+                   const QuantLib::ext::shared_ptr<ScenarioFactory>& scenarioFactory = nullptr,
+                   const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
+                   const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
+                       QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
+                   bool continueOnError = false,
+                   const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& scenarioReport = nullptr,
+                   const bool useAtParCouponsTrades = true);
 
-    //! Return unique set of factors shifted
-    const std::set<std::string>& stressTests() { return labels_; }
+void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
+                   const QuantLib::ext::shared_ptr<ore::data::Market>& market, const string& marketConfiguration,
+                   const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData,
+                   const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+                   const QuantLib::ext::shared_ptr<ScenarioReader>& scenarioReader,
+                   const QuantLib::ext::shared_ptr<ore::data::Report>& report,
+                   const QuantLib::ext::shared_ptr<ore::data::Report>& cfReport = nullptr, const double threshold = 0.0,
+                   const Size precision = 2, const bool includePastCashflows = false,
+                   const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
+                   const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
+                   const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
+                   const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
+                       QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
+                   bool continueOnError = false,
+                   const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& scenarioReport = nullptr,
+                   const bool useAtParCouponsTrades = true);
 
-    //! Return base NPV by trade, before shift
-    const std::map<std::string, Real>& baseNPV() { return baseNPV_; }
+void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio, const Date& asof,
+                   const QuantLib::ext::shared_ptr<ScenarioSimMarket> simMarket, const string& marketConfiguration,
+                   const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData, const string& baseCcy,
+                   const QuantLib::ext::shared_ptr<ShiftScenarioGenerator>& scenarioGenerator,
+                   const QuantLib::ext::shared_ptr<ore::data::Report>& report,
+                   const QuantLib::ext::shared_ptr<ore::data::Report>& cfReport = nullptr, const double threshold = 0.0,
+                   const Size precision = 2, const bool includePastCashflows = false,
+                   const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
+                   const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
+                   const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
+                   const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
+                       QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
+                   bool continueOnError = false,
+                   const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& scenarioReport = nullptr,
+                   const bool useAtParCouponsTrades = true);
 
-    //! Return shifted NPVs by trade and scenario
-    const std::map<std::pair<std::string, std::string>, Real>& shiftedNPV() { return shiftedNPV_; }
-
-    //! Return delta NPV by trade and scenario
-    const std::map<std::pair<std::string, std::string>, Real>& delta() { return delta_; }
-
-    //! Write NPV by trade/scenario to a file (base and shifted NPVs, delta)
-    void writeReport(const boost::shared_ptr<ore::data::Report>& report, Real outputThreshold = 0.0);
-
-private:
-    // base NPV by trade
-    std::map<std::string, Real> baseNPV_;
-    // NPV respectively sensitivity by trade and scenario
-    std::map<std::pair<string, string>, Real> shiftedNPV_, delta_;
-    // scenario labels
-    std::set<std::string> labels_, trades_;
-};
 } // namespace analytics
 } // namespace ore

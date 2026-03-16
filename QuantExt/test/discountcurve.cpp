@@ -62,18 +62,18 @@ BOOST_AUTO_TEST_CASE(testDiscountCurve) {
 
         // set up Quote of DiscountFactors
         DiscountFactor df = ::exp(-rate * t);
-        Handle<Quote> q(boost::make_shared<SimpleQuote>(df));
+        Handle<Quote> q(QuantLib::ext::make_shared<SimpleQuote>(df));
         quotes.push_back(q);
         dfs.push_back(df);
     }
 
     // Test against the QL curve
-    boost::shared_ptr<YieldTermStructure> ytsBase;
+    QuantLib::ext::shared_ptr<YieldTermStructure> ytsBase;
     ytsBase =
-        boost::shared_ptr<YieldTermStructure>(new QuantLib::InterpolatedDiscountCurve<LogLinear>(dates, dfs, dc, cal));
+        QuantLib::ext::shared_ptr<YieldTermStructure>(new QuantLib::InterpolatedDiscountCurve<LogLinear>(dates, dfs, dc, cal));
     ytsBase->enableExtrapolation();
 
-    boost::shared_ptr<YieldTermStructure> ytsTest(new QuantExt::InterpolatedDiscountCurve2(times, quotes, dc));
+    QuantLib::ext::shared_ptr<YieldTermStructure> ytsTest(new QuantExt::InterpolatedDiscountCurve2(times, quotes, dc));
 
     // now check that they give the same discount factors (including extrapolation)
     for (Time t = 0.1; t < numYears + 10.0; t += 0.1) {

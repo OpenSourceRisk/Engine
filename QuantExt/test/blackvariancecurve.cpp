@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(testBlackVarianceCurve) {
     vector<Time> times;
     vector<Date> dates;
     vector<Volatility> vols;
-    vector<boost::shared_ptr<SimpleQuote> > simpleQuotes;
+    vector<QuantLib::ext::shared_ptr<SimpleQuote> > simpleQuotes;
     vector<Handle<Quote> > quotes;
 
     Size numYears = 10;
@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(testBlackVarianceCurve) {
         Volatility vol = 0.1 + (0.01 * i); // 11% at 1Y, 12% at 2Y
         vols.push_back(vol);
 
-        simpleQuotes.push_back(boost::make_shared<SimpleQuote>(vol));
+        simpleQuotes.push_back(QuantLib::ext::make_shared<SimpleQuote>(vol));
         quotes.push_back(Handle<Quote>(simpleQuotes.back()));
 
         dates.push_back(Date(1, Dec, today.year() + i));

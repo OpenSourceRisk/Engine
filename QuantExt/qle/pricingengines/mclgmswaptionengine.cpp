@@ -31,6 +31,7 @@ void McLgmSwaptionEngine::calculate() const {
     }
     exercise_ = arguments_.exercise;
     optionSettlement_ = arguments_.settlementType;
+    cashSettlementDates_ = exercise_->dates(); // no info -> default
     McMultiLegBaseEngine::calculate();
     results_.value = resultValue_;
     results_.additionalResults["underlyingNpv"] = resultUnderlyingNpv_;
@@ -46,6 +47,7 @@ void McLgmNonstandardSwaptionEngine::calculate() const {
     }
     exercise_ = arguments_.exercise;
     optionSettlement_ = arguments_.settlementType;
+    cashSettlementDates_ = exercise_->dates(); // no info -> default
     McMultiLegBaseEngine::calculate();
     results_.value = resultValue_;
     results_.additionalResults["underlyingNpv"] = resultUnderlyingNpv_;

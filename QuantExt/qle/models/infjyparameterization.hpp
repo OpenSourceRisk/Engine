@@ -23,7 +23,7 @@
 #ifndef quantext_inf_jy_parameterization_hpp
 #define quantext_inf_jy_parameterization_hpp
 
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 #include <ql/indexes/inflationindex.hpp>
 #include <ql/termstructures/inflationtermstructure.hpp>
 #include <qle/models/fxbsparametrization.hpp>
@@ -33,22 +33,22 @@ namespace QuantExt {
 
 class InfJyParameterization : public Parametrization {
 public:
-    InfJyParameterization(boost::shared_ptr<Lgm1fParametrization<QuantLib::ZeroInflationTermStructure>> realRate,
-                          boost::shared_ptr<FxBsParametrization> index,
-                          boost::shared_ptr<QuantLib::ZeroInflationIndex> inflationIndex);
+    InfJyParameterization(QuantLib::ext::shared_ptr<Lgm1fParametrization<QuantLib::ZeroInflationTermStructure>> realRate,
+                          QuantLib::ext::shared_ptr<FxBsParametrization> index,
+                          QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex> inflationIndex);
 
     //! \name Parametrization interface
     //@{
     const QuantLib::Array& parameterTimes(const QuantLib::Size i) const override;
-    const boost::shared_ptr<QuantLib::Parameter> parameter(const QuantLib::Size i) const override;
+    const QuantLib::ext::shared_ptr<QuantLib::Parameter> parameter(const QuantLib::Size i) const override;
     void update() const override;
     //@}
 
     //! \name Inspectors
     //@{
-    boost::shared_ptr<Lgm1fParametrization<QuantLib::ZeroInflationTermStructure>> realRate() const;
-    boost::shared_ptr<FxBsParametrization> index() const;
-    boost::shared_ptr<QuantLib::ZeroInflationIndex> inflationIndex() const;
+    QuantLib::ext::shared_ptr<Lgm1fParametrization<QuantLib::ZeroInflationTermStructure>> realRate() const;
+    QuantLib::ext::shared_ptr<FxBsParametrization> index() const;
+    QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex> inflationIndex() const;
     //@}
 
     Size numberOfParameters() const override { return 3; }
@@ -61,9 +61,9 @@ protected:
     //@}
 
 private:
-    boost::shared_ptr<Lgm1fParametrization<QuantLib::ZeroInflationTermStructure>> realRate_;
-    boost::shared_ptr<FxBsParametrization> index_;
-    boost::shared_ptr<QuantLib::ZeroInflationIndex> inflationIndex_;
+    QuantLib::ext::shared_ptr<Lgm1fParametrization<QuantLib::ZeroInflationTermStructure>> realRate_;
+    QuantLib::ext::shared_ptr<FxBsParametrization> index_;
+    QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex> inflationIndex_;
 
     //! Check that the indexing.
     void checkIndex(QuantLib::Size i) const;

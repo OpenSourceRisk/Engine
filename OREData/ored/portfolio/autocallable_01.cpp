@@ -22,7 +22,7 @@
 namespace ore {
 namespace data {
 
-void Autocallable_01::build(const boost::shared_ptr<EngineFactory>& factory) {
+void Autocallable_01::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory) {
 
     // set script parameters
 
@@ -77,7 +77,7 @@ void Autocallable_01::setIsdaTaxonomyFields() {
 
     // ISDA taxonomy, asset class set in the base class build
     // asset class set in the base class already
-    std::string assetClass = boost::any_cast<std::string>(additionalData_["isdaAssetClass"]);
+    std::string assetClass = QuantLib::ext::any_cast<std::string>(additionalData_["isdaAssetClass"]);
     if (assetClass == "Equity") {
         additionalData_["isdaBaseProduct"] = string("Other");
         additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");  

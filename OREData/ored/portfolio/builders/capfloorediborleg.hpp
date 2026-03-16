@@ -32,7 +32,7 @@ namespace ore {
 namespace data {
 
 //! CouponPricer Builder for CapFlooredIborLeg
-/*! The coupon pricers are cached by currency
+/*! The coupon pricers are cached by index name
  \ingroup builders
  */
 class CapFlooredIborLegEngineBuilder : public CachingCouponPricerBuilder<string, const string&> {
@@ -42,7 +42,22 @@ public:
 
 protected:
     string keyImpl(const string& index) override { return index; }
-    boost::shared_ptr<FloatingRateCouponPricer> engineImpl(const string& index) override;
+    QuantLib::ext::shared_ptr<FloatingRateCouponPricer> engineImpl(const string& index) override;
+};
+
+//! CouponPricer Builder for CapFlooredInterpolatedIborLeg
+/*! The coupon pricers are cached by index name
+ \ingroup builders
+ */
+class CapFlooredInterpolatedIborLegEngineBuilder : public CachingCouponPricerBuilder<string, const string&> {
+public:
+    CapFlooredInterpolatedIborLegEngineBuilder()
+        : CachingEngineBuilder("BlackOrBachelier", "BlackInterpolatedIborCouponPricer",
+                               {"CapFlooredInterpolatedIborLeg"}) {}
+
+protected:
+    string keyImpl(const string& index) override { return index; }
+    QuantLib::ext::shared_ptr<FloatingRateCouponPricer> engineImpl(const string& index) override;
 };
 
 } // namespace data

@@ -1,0 +1,104 @@
+<?xml version="1.0"?>
+<ORE>
+  <Setup>
+    <Parameter name="asofDate">2016-02-05</Parameter>
+    <Parameter name="inputPath">Input/CreditPortfolioModel</Parameter>
+    <Parameter name="outputPath">Output/CreditPortfolioModel</Parameter>
+    <Parameter name="logFile">log.txt</Parameter>
+    <Parameter name="logMask">31</Parameter>
+    <Parameter name="marketDataFile">../../../Input/market_20160205.txt</Parameter>
+    <Parameter name="fixingDataFile">../../../Input/fixings_20160205.txt</Parameter>
+    <Parameter name="implyTodaysFixings">N</Parameter>
+    <Parameter name="curveConfigFile">curveconfig.xml</Parameter>
+    <Parameter name="conventionsFile">../../../Input/conventions.xml</Parameter>
+    <Parameter name="marketConfigFile">todaysmarket.xml</Parameter>
+    <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
+    <Parameter name="portfolioFile">portfolio.xml</Parameter>
+    <Parameter name="observationModel">None</Parameter>
+  </Setup>
+  <Markets>
+    <Parameter name="lgmcalibration">collateral_inccy</Parameter>
+    <Parameter name="fxcalibration">xois_eur</Parameter>
+    <Parameter name="pricing">xois_eur</Parameter>
+    <Parameter name="simulation">xois_eur</Parameter>
+  </Markets>
+  <Analytics>
+    <Analytic type="npv">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="baseCurrency">EUR</Parameter>
+      <Parameter name="outputFileName">npv.csv</Parameter>
+    </Analytic>
+    <Analytic type="cashflow">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="outputFileName">flows.csv</Parameter>
+    </Analytic>
+    <Analytic type="curves">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="configuration">default</Parameter>
+      <Parameter name="grid">240,1M</Parameter>
+      <Parameter name="outputFileName">curves.csv</Parameter>
+    </Analytic>
+    <Analytic type="creditcurves">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="configuration">default</Parameter>
+      <Parameter name="grid">240,1M</Parameter>
+      <Parameter name="outputFileName">creditcurves.csv</Parameter>
+    </Analytic>
+    <Analytic type="simulation">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="simulationConfigFile">simulation.xml</Parameter>
+      <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
+      <Parameter name="baseCurrency">EUR</Parameter>
+      <Parameter name="computeCube">Y</Parameter>
+      <Parameter name="cubeFile">cube.csv.gz</Parameter>
+      <Parameter name="aggregationScenarioDataFileName">scenariodata.csv.gz</Parameter>
+      <Parameter name="storeFlows">Y</Parameter>
+      <!-- credit risk configuration -->
+      <Parameter name="storeCreditStateNPVs">8</Parameter>
+      <!-- end of credit risk configuration -->
+    </Analytic>
+    <Analytic type="xva">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="csaFile">netting.xml</Parameter>
+      <Parameter name="cubeFile">cube.csv.gz</Parameter>
+      <Parameter name="hyperCube">Y</Parameter>
+      <Parameter name="scenarioFile">scenariodata.csv.gz</Parameter>
+      <Parameter name="baseCurrency">EUR</Parameter>
+      <Parameter name="exposureProfiles">Y</Parameter>
+      <Parameter name="quantile">0.95</Parameter>
+      <Parameter name="calculationType">Symmetric</Parameter>
+      <Parameter name="allocationMethod">None</Parameter>
+      <Parameter name="marginalAllocationLimit">1.0</Parameter>
+      <Parameter name="exerciseNextBreak">N</Parameter>
+      <Parameter name="cva">Y</Parameter>
+      <Parameter name="dva">N</Parameter>
+      <Parameter name="dvaName">BANK</Parameter>
+      <Parameter name="fva">N</Parameter>
+      <Parameter name="fvaBorrowingCurve">BANK_EUR_BORROW</Parameter>
+      <Parameter name="fvaLendingCurve">BANK_EUR_LEND</Parameter>
+      <Parameter name="colva">N</Parameter>
+      <Parameter name="collateralSpread">0.0000</Parameter>
+      <Parameter name="collateralFloor">N</Parameter>
+      <!-- credit risk configuration -->
+      <Parameter name="creditMigration">Y</Parameter>
+      <Parameter name="creditMigrationDistributionGrid">-2E7,1E7,300</Parameter>
+      <Parameter name="creditMigrationTimeSteps">3,11</Parameter>
+      <Parameter name="creditMigrationConfig">creditsimulation.xml</Parameter>
+      <Parameter name="creditMigrationOutputFiles">credit_migration_bond1</Parameter>
+      <!-- end of credit risk configuration -->
+      <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
+      <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
+    </Analytic>
+    <Analytic type="sensitivity">
+      <Parameter name="active">N</Parameter>
+      <Parameter name="marketConfigFile">simulation.xml</Parameter>
+      <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
+      <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+      <Parameter name="scenarioOutputFile">scenario.csv</Parameter>
+      <Parameter name="sensitivityOutputFile">sensitivity.csv</Parameter>
+      <Parameter name="crossGammaOutputFile">crossgamma.csv</Parameter>
+      <Parameter name="parRateSensitivityOutputFile">parsensi.csv</Parameter>
+      <Parameter name="outputSensitivityThreshold">0.000001</Parameter>
+    </Analytic>
+  </Analytics>
+</ORE>

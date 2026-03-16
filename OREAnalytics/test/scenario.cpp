@@ -17,16 +17,16 @@ using namespace ore::analytics;
 class TestScenarioGenerator : public ScenarioGenerator {
 public:
     TestScenarioGenerator() { current_position_ = 0; }
-    void addScenario(boost::shared_ptr<Scenario> s) {
+    void addScenario(QuantLib::ext::shared_ptr<Scenario> s) {
         scenarios.push_back(s);
         current_position_++;
     }
 
-    boost::shared_ptr<Scenario> next(const Date& d) override { return scenarios[current_position_++]; }
+    QuantLib::ext::shared_ptr<Scenario> next(const Date& d) override { return scenarios[current_position_++]; }
 
     void reset() override { current_position_ = 0; }
 
-    vector<boost::shared_ptr<Scenario>> scenarios;
+    vector<QuantLib::ext::shared_ptr<Scenario>> scenarios;
 
 private:
     int current_position_;
@@ -52,9 +52,9 @@ BOOST_AUTO_TEST_CASE(testCSVScenarioGenerator) {
                                   {RiskFactorKey::KeyType::FXSpot, "CHF"},
                                   {RiskFactorKey::KeyType::FXVolatility, "CHFVol"}};
 
-    boost::shared_ptr<TestScenarioGenerator> tsg = boost::make_shared<TestScenarioGenerator>();
-    tsg->addScenario(boost::make_shared<SimpleScenario>(d));
-    tsg->addScenario(boost::make_shared<SimpleScenario>(d));
+    QuantLib::ext::shared_ptr<TestScenarioGenerator> tsg = QuantLib::ext::make_shared<TestScenarioGenerator>();
+    tsg->addScenario(QuantLib::ext::make_shared<SimpleScenario>(d));
+    tsg->addScenario(QuantLib::ext::make_shared<SimpleScenario>(d));
     for (auto scenario : tsg->scenarios) {
         for (auto rf : rfks) {
             scenario->add(rf, rand());
@@ -71,12 +71,12 @@ BOOST_AUTO_TEST_CASE(testCSVScenarioGenerator) {
     sw.reset();
 
     // Read in scenarios from file
-    boost::shared_ptr<SimpleScenarioFactory> ssf = boost::make_shared<SimpleScenarioFactory>();
+    QuantLib::ext::shared_ptr<SimpleScenarioFactory> ssf = QuantLib::ext::make_shared<SimpleScenarioFactory>(true);
     CSVScenarioGenerator csvsgen(filename, ssf);
 
     // Compare scenarios by looping over risk keys
     for (Size i = 0; i < tsg->scenarios.size(); i++) {
-        boost::shared_ptr<Scenario> s = csvsgen.next(d);
+        QuantLib::ext::shared_ptr<Scenario> s = csvsgen.next(d);
         BOOST_CHECK_EQUAL_COLLECTIONS(s->keys().begin(), s->keys().end(), tsg->scenarios[i]->keys().begin(),
                                       tsg->scenarios[i]->keys().end());
         for (auto rfk : s->keys()) {

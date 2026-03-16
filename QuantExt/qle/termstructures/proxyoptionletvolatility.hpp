@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <ql/indexes/iborindex.hpp>
 #include <ql/termstructures/volatility/optionlet/optionletvolatilitystructure.hpp>
 
 namespace QuantExt {
@@ -30,29 +31,46 @@ namespace QuantExt {
 class ProxyOptionletVolatility : public QuantLib::OptionletVolatilityStructure {
 public:
     ProxyOptionletVolatility(const QuantLib::Handle<OptionletVolatilityStructure>& baseVol,
-                             const boost::shared_ptr<QuantLib::IborIndex>& baseIndex,
-                             const boost::shared_ptr<QuantLib::IborIndex>& targetIndex,
+                             const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& baseIndex,
+                             const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& targetIndex,
                              const QuantLib::Period& baseRateComputationPeriod = 0 * QuantLib::Days,
-                             const QuantLib::Period& targetRateComputationPeriod = 0 * QuantLib::Days);
+                             const QuantLib::Period& targetRateComputationPeriod = 0 * QuantLib::Days,
+                             double scalingFactor = 1.0);
 
     QuantLib::Rate minStrike() const override { return baseVol_->minStrike(); }
     QuantLib::Rate maxStrike() const override { return baseVol_->maxStrike(); }
     QuantLib::Date maxDate() const override { return baseVol_->maxDate(); }
     const QuantLib::Date& referenceDate() const override { return baseVol_->referenceDate(); }
-    VolatilityType volatilityType() const override { return baseVol_->volatilityType(); }
-    Real displacement() const override { return baseVol_->displacement(); }
-    Calendar calendar() const override { return baseVol_->calendar(); }
+    QuantLib::VolatilityType volatilityType() const override { return baseVol_->volatilityType(); }
+    QuantLib::Real displacement() const override { return baseVol_->displacement(); }
+    bool useEffectiveVolatility() const override { return baseVol_->useEffectiveVolatility(); }
+    QuantLib::Calendar calendar() const override { return baseVol_->calendar(); }
+
+    const QuantLib::Handle<QuantLib::OptionletVolatilityStructure>& baseVol() const { return baseVol_; }
+    const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& baseIndex() const { return baseIndex_; }
+    const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& targetIndex() const { return targetIndex_; }
+    const QuantLib::Period& baseRateComputationPeriod() const { return baseRateComputationPeriod_; }
+    const QuantLib::Period& targetRateComputationPeriod() const { return targetRateComputationPeriod_; }
+    double scalingFactor() const { return scalingFactor_; }
+
+    static QuantLib::Real getAtmLevel(const QuantLib::Date& fixingDate,
+                                      const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index,
+                                      const QuantLib::Period& rateComputationPeriod);
+
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex> getBaseIndex() const { return baseIndex_; }
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex> getTargetIndex() const { return targetIndex_; }
 
 private:
-    boost::shared_ptr<QuantLib::SmileSection> smileSectionImpl(const QuantLib::Date& optionDate) const override;
-    boost::shared_ptr<QuantLib::SmileSection> smileSectionImpl(QuantLib::Time optionTime) const override;
+    QuantLib::ext::shared_ptr<QuantLib::SmileSection> smileSectionImpl(const QuantLib::Date& optionDate) const override;
+    QuantLib::ext::shared_ptr<QuantLib::SmileSection> smileSectionImpl(QuantLib::Time optionTime) const override;
     QuantLib::Volatility volatilityImpl(QuantLib::Time optionTime, QuantLib::Rate strike) const override;
 
     QuantLib::Handle<QuantLib::OptionletVolatilityStructure> baseVol_;
-    boost::shared_ptr<QuantLib::IborIndex> baseIndex_;
-    boost::shared_ptr<QuantLib::IborIndex> targetIndex_;
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex> baseIndex_;
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex> targetIndex_;
     QuantLib::Period baseRateComputationPeriod_;
     QuantLib::Period targetRateComputationPeriod_;
+    double scalingFactor_;
 };
 
 } // namespace QuantExt

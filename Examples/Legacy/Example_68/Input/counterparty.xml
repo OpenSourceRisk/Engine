@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<CounterpartyInformation>
+  <Counterparties>
+      <Counterparty>
+        <CounterpartyId>CPTY_A</CounterpartyId>
+	<CreditQuality>IG</CreditQuality>
+        <BaCvaRiskWeight>0.05</BaCvaRiskWeight>
+        <SaCcrRiskWeight>1</SaCcrRiskWeight>
+        <SaCvaRiskBucket>2</SaCvaRiskBucket>
+      </Counterparty>
+  </Counterparties>
+</CounterpartyInformation>

@@ -26,11 +26,19 @@ McMultiLegOptionEngine::McMultiLegOptionEngine(
     const Size calibrationSeed, const Size pricingSeed, const Size polynomOrder,
     const LsmBasisSystem::PolynomialType polynomType, const SobolBrownianGenerator::Ordering ordering,
     const SobolRsg::DirectionIntegers directionIntegers, const std::vector<Handle<YieldTermStructure>>& discountCurves,
-    const std::vector<Date>& simulationDates, const std::vector<Size>& externalModelIndices, const bool minObsDate,
-    const RegressorModel regressorModel)
+    const std::vector<Date>& simulationDates, const std::vector<Date>& stickyCloseOutDates,
+    const std::vector<Size>& externalModelIndices, const bool minObsDate, const McRegressionModel::RegressorModel regressorModel,
+    const Real regressionVarianceCutoff, const bool recalibrateOnStickyCloseOutDates,
+    const bool reevaluateExerciseInStickyRun, const Size cfOnCpnMaxSimTimes, const Period& cfOnCpnAddSimTimesCutoff,
+    const Size regressionMaxSimTimesIr, const Size regressionMaxSimTimesFx, const Size regressionMaxSimTimesEq,
+    const McRegressionModel::VarGroupMode regressionVarGroupMode)
     : McMultiLegBaseEngine(model, calibrationPathGenerator, pricingPathGenerator, calibrationSamples, pricingSamples,
                            calibrationSeed, pricingSeed, polynomOrder, polynomType, ordering, directionIntegers,
-                           discountCurves, simulationDates, externalModelIndices, minObsDate, regressorModel) {
+                           discountCurves, simulationDates, stickyCloseOutDates, externalModelIndices, minObsDate,
+                           regressorModel, regressionVarianceCutoff, recalibrateOnStickyCloseOutDates,
+                           reevaluateExerciseInStickyRun, cfOnCpnMaxSimTimes, cfOnCpnAddSimTimesCutoff,
+                           regressionMaxSimTimesIr, regressionMaxSimTimesFx, regressionMaxSimTimesEq,
+                           regressionVarGroupMode) {
     registerWith(model_);
     for (auto& h : discountCurves_) {
         registerWith(h);
@@ -38,19 +46,27 @@ McMultiLegOptionEngine::McMultiLegOptionEngine(
 }
 
 McMultiLegOptionEngine::McMultiLegOptionEngine(
-    const boost::shared_ptr<LinearGaussMarkovModel>& model, const SequenceType calibrationPathGenerator,
+    const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const SequenceType calibrationPathGenerator,
     const SequenceType pricingPathGenerator, const Size calibrationSamples, const Size pricingSamples,
     const Size calibrationSeed, const Size pricingSeed, const Size polynomOrder,
     const LsmBasisSystem::PolynomialType polynomType, const SobolBrownianGenerator::Ordering ordering,
     const SobolRsg::DirectionIntegers directionIntegers, const Handle<YieldTermStructure>& discountCurve,
-    const std::vector<Date>& simulationDates, const std::vector<Size>& externalModelIndices, const bool minimalObsDate,
-    const RegressorModel regressorModel)
-    : McMultiLegOptionEngine(Handle<CrossAssetModel>(boost::make_shared<CrossAssetModel>(
-                                 std::vector<boost::shared_ptr<IrModel>>(1, model),
-                                 std::vector<boost::shared_ptr<FxBsParametrization>>())),
+    const std::vector<Date>& simulationDates, const std::vector<Date>& stickyCloseOutDates,
+    const std::vector<Size>& externalModelIndices, const bool minimalObsDate, const McRegressionModel::RegressorModel regressorModel,
+    const Real regressionVarianceCutoff, const bool recalibrateOnStickyCloseOutDates,
+    const bool reevaluateExerciseInStickyRun, const Size cfOnCpnMaxSimTimes, const Period& cfOnCpnAddSimTimesCutoff,
+    const Size regressionMaxSimTimesIr, const Size regressionMaxSimTimesFx, const Size regressionMaxSimTimesEq,
+    const McRegressionModel::VarGroupMode regressionVarGroupMode)
+    : McMultiLegOptionEngine(Handle<CrossAssetModel>(QuantLib::ext::make_shared<CrossAssetModel>(
+                                 std::vector<QuantLib::ext::shared_ptr<IrModel>>(1, model),
+                                 std::vector<QuantLib::ext::shared_ptr<FxBsParametrization>>())),
                              calibrationPathGenerator, pricingPathGenerator, calibrationSamples, pricingSamples,
                              calibrationSeed, pricingSeed, polynomOrder, polynomType, ordering, directionIntegers,
-                             {discountCurve}, simulationDates, externalModelIndices, minimalObsDate, regressorModel) {}
+                             {discountCurve}, simulationDates, stickyCloseOutDates, externalModelIndices,
+                             minimalObsDate, regressorModel, regressionVarianceCutoff, recalibrateOnStickyCloseOutDates,
+                             reevaluateExerciseInStickyRun, cfOnCpnMaxSimTimes, cfOnCpnAddSimTimesCutoff,
+                             regressionMaxSimTimesIr, regressionMaxSimTimesFx, regressionMaxSimTimesEq,
+                             regressionVarGroupMode) {}
 
 void McMultiLegOptionEngine::calculate() const {
 
@@ -59,6 +75,7 @@ void McMultiLegOptionEngine::calculate() const {
     payer_ = arguments_.payer;
     exercise_ = arguments_.exercise;
     optionSettlement_ = arguments_.settlementType;
+    cashSettlementDates_ = arguments_.settlementDates;
 
     McMultiLegBaseEngine::calculate();
 
@@ -66,7 +83,7 @@ void McMultiLegOptionEngine::calculate() const {
     Real fxSpot = 1.0;
     Size npvCcyIndex = model_->ccyIndex(currency_.front());
     if (npvCcyIndex > 0)
-        fxSpot = model_->fxbs(npvCcyIndex - 1)->fxSpotToday()->value();
+        fxSpot = model_->fxModel(npvCcyIndex - 1)->fxSpotToday()->value();
     results_.value = resultValue_ / fxSpot;
     results_.additionalResults["underlyingNpv"] = resultUnderlyingNpv_ / fxSpot;
     results_.additionalResults["amcCalculator"] = amcCalculator();

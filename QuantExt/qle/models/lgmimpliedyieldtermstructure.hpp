@@ -45,7 +45,7 @@ using namespace QuantLib;
 
 class LgmImpliedYieldTermStructure : public YieldTermStructure {
 public:
-    LgmImpliedYieldTermStructure(const boost::shared_ptr<LinearGaussMarkovModel>& model,
+    LgmImpliedYieldTermStructure(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model,
                                  const DayCounter& dc = DayCounter(), const bool purelyTimeBased = false,
                                  const bool cacheValues = false);
 
@@ -69,7 +69,7 @@ protected:
     mutable Real Ht_;
     bool cacheValues_;
 
-    const boost::shared_ptr<LinearGaussMarkovModel> model_;
+    const QuantLib::ext::shared_ptr<LinearGaussMarkovModel> model_;
     const bool purelyTimeBased_;
     Date referenceDate_;
     Real relativeTime_, state_;
@@ -83,7 +83,7 @@ protected:
 */
 class LgmImpliedYtsFwdFwdCorrected : public LgmImpliedYieldTermStructure {
 public:
-    LgmImpliedYtsFwdFwdCorrected(const boost::shared_ptr<LinearGaussMarkovModel>& model,
+    LgmImpliedYtsFwdFwdCorrected(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model,
                                  const Handle<YieldTermStructure> targetCurve, const DayCounter& dc = DayCounter(),
                                  const bool purelyTimeBased = false, const bool cacheValues = false);
 
@@ -105,7 +105,7 @@ private:
 */
 class LgmImpliedYtsSpotCorrected : public LgmImpliedYieldTermStructure {
 public:
-    LgmImpliedYtsSpotCorrected(const boost::shared_ptr<LinearGaussMarkovModel>& model,
+    LgmImpliedYtsSpotCorrected(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model,
                                const Handle<YieldTermStructure> targetCurve, const DayCounter& dc,
                                const bool purelyTimeBased, const bool cacheValues = false);
 

@@ -70,8 +70,8 @@ public:
                      const std::vector<Period>& optionTenors, const std::vector<Period>& swapTenors,
                      const std::vector<Spread>& strikeSpreads,
                      const std::vector<std::vector<Handle<Quote> > >& volSpreads,
-                     const boost::shared_ptr<SwapIndex>& swapIndexBase,
-                     const boost::shared_ptr<SwapIndex>& shortSwapIndexBase, bool vegaWeightedSmileFit,
+                     const QuantLib::ext::shared_ptr<SwapIndex>& swapIndexBase,
+                     const QuantLib::ext::shared_ptr<SwapIndex>& shortSwapIndexBase, bool vegaWeightedSmileFit,
                      bool flatExtrapolation, bool volsAreSpreads = true);
     //! \name LazyObject interface
     //@{
@@ -80,8 +80,8 @@ public:
     //! \name SwaptionVolatilityCube inspectors
     //@{
     const Matrix& volSpreads(Size i) const { return volSpreadsMatrix_[i]; }
-    boost::shared_ptr<SmileSection> smileSectionImpl(const Date& optionDate, const Period& swapTenor) const override;
-    boost::shared_ptr<SmileSection> smileSectionImpl(Time optionTime, Time swapLength) const override;
+    QuantLib::ext::shared_ptr<SmileSection> smileSectionImpl(const Date& optionDate, const Period& swapTenor) const override;
+    QuantLib::ext::shared_ptr<SmileSection> smileSectionImpl(Time optionTime, Time swapLength) const override;
     //@}
 private:
     const bool flatExtrapolation_, volsAreSpreads_;

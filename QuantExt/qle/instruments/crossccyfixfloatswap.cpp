@@ -22,6 +22,8 @@
 #include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
+#include <qle/cashflows/averageonindexedcoupon.hpp>
+#include <qle/cashflows/overnightindexedcoupon.hpp>
 
 namespace QuantExt {
 
@@ -29,23 +31,51 @@ CrossCcyFixFloatSwap::CrossCcyFixFloatSwap(
     Type type, Real fixedNominal, const Currency& fixedCurrency, const Schedule& fixedSchedule, Rate fixedRate,
     const DayCounter& fixedDayCount, BusinessDayConvention fixedPaymentBdc, Natural fixedPaymentLag,
     const Calendar& fixedPaymentCalendar, Real floatNominal, const Currency& floatCurrency,
-    const Schedule& floatSchedule, const boost::shared_ptr<IborIndex>& floatIndex, Spread floatSpread,
-    BusinessDayConvention floatPaymentBdc, Natural floatPaymentLag, const Calendar& floatPaymentCalendar)
+    const Schedule& floatSchedule, const QuantLib::ext::shared_ptr<IborIndex>& floatIndex, Spread floatSpread,
+    BusinessDayConvention floatPaymentBdc, Natural floatPaymentLag, const Calendar& floatPaymentCalendar,
+    const bool telescopicValueDates, QuantLib::ext::optional<bool> floatIncludeSpread, QuantLib::ext::optional<Period> floatLookback,
+    QuantLib::ext::optional<Size> floatFixingDays, QuantLib::ext::optional<Size> floatRateCutoff, QuantLib::ext::optional<bool> floatIsAveraged)
     : CrossCcySwap(2), type_(type), fixedNominal_(fixedNominal), fixedCurrency_(fixedCurrency),
       fixedSchedule_(fixedSchedule), fixedRate_(fixedRate), fixedDayCount_(fixedDayCount),
       fixedPaymentBdc_(fixedPaymentBdc), fixedPaymentLag_(fixedPaymentLag), fixedPaymentCalendar_(fixedPaymentCalendar),
       floatNominal_(floatNominal), floatCurrency_(floatCurrency), floatSchedule_(floatSchedule),
       floatIndex_(floatIndex), floatSpread_(floatSpread), floatPaymentBdc_(floatPaymentBdc),
-      floatPaymentLag_(floatPaymentLag), floatPaymentCalendar_(floatPaymentCalendar) {
+      floatPaymentLag_(floatPaymentLag), floatPaymentCalendar_(floatPaymentCalendar),
+      telescopicValueDates_(telescopicValueDates),
+      floatIncludeSpread_(floatIncludeSpread), floatLookback_(floatLookback), floatFixingDays_(floatFixingDays),
+      floatRateCutoff_(floatRateCutoff), floatIsAveraged_(floatIsAveraged) {
 
     // Build the float leg
-    Leg floatLeg = IborLeg(floatSchedule_, floatIndex_)
+    Leg floatLeg;
+    if (auto on = QuantLib::ext::dynamic_pointer_cast<QuantLib::OvernightIndex>(floatIndex_)) {
+        if (floatIsAveraged_ && *floatIsAveraged_) {
+            floatLeg = QuantExt::AverageONLeg(floatSchedule_, on)
+                           .withNotional(floatNominal_)
+                           .withSpread(floatSpread_)
+                           .withPaymentLag(floatPaymentLag_)
+                           .withLookback(floatLookback_ ? *floatLookback_ : 0 * Days)
+                           .withFixingDays(floatFixingDays_ ? *floatFixingDays_ : 0)
+                           .withRateCutoff(floatRateCutoff_ ? *floatRateCutoff_ : 0)
+                           .withTelescopicValueDates(telescopicValueDates_);
+        } else {
+            floatLeg = QuantExt::OvernightLeg(floatSchedule_, on)
+                           .withNotionals(floatNominal_)
+                           .withSpreads(floatSpread_)
+                           .withPaymentLag(floatPaymentLag_)
+                           .includeSpread(floatIncludeSpread_ ? *floatIncludeSpread_ : false)
+                           .withLookback(floatLookback_ ? *floatLookback_ : 0 * Days)
+                           .withFixingDays(floatFixingDays_ ? *floatFixingDays_ : 0)
+                           .withRateCutoff(floatRateCutoff_ ? *floatRateCutoff_ : 0)
+                           .withTelescopicValueDates(telescopicValueDates_);
+        }
+    } else {
+        floatLeg = IborLeg(floatSchedule_, floatIndex_)
                        .withNotionals(floatNominal_)
                        .withSpreads(floatSpread_)
                        .withPaymentAdjustment(floatPaymentBdc_)
                        .withPaymentLag(floatPaymentLag_)
                        .withPaymentCalendar(floatPaymentCalendar_);
-
+    }
     // Register with each floating rate coupon
     for (Leg::const_iterator it = floatLeg.begin(); it < floatLeg.end(); ++it)
         registerWith(*it);
@@ -53,12 +83,12 @@ CrossCcyFixFloatSwap::CrossCcyFixFloatSwap(
     // Initial notional exchange
     Date aDate = floatSchedule_.dates().front();
     aDate = floatPaymentCalendar_.adjust(aDate, floatPaymentBdc_);
-    boost::shared_ptr<CashFlow> aCashflow = boost::make_shared<SimpleCashFlow>(-floatNominal_, aDate);
+    QuantLib::ext::shared_ptr<CashFlow> aCashflow = QuantLib::ext::make_shared<SimpleCashFlow>(-floatNominal_, aDate);
     floatLeg.insert(floatLeg.begin(), aCashflow);
 
     // Final notional exchange
     aDate = floatLeg.back()->date();
-    aCashflow = boost::make_shared<SimpleCashFlow>(floatNominal_, aDate);
+    aCashflow = QuantLib::ext::make_shared<SimpleCashFlow>(floatNominal_, aDate);
     floatLeg.push_back(aCashflow);
 
     // Build the fixed rate leg
@@ -72,12 +102,12 @@ CrossCcyFixFloatSwap::CrossCcyFixFloatSwap(
     // Initial notional exchange
     aDate = fixedSchedule_.dates().front();
     aDate = fixedPaymentCalendar_.adjust(aDate, fixedPaymentBdc_);
-    aCashflow = boost::make_shared<SimpleCashFlow>(-fixedNominal_, aDate);
+    aCashflow = QuantLib::ext::make_shared<SimpleCashFlow>(-fixedNominal_, aDate);
     fixedLeg.insert(fixedLeg.begin(), aCashflow);
 
     // Final notional exchange
     aDate = fixedLeg.back()->date();
-    aCashflow = boost::make_shared<SimpleCashFlow>(fixedNominal_, aDate);
+    aCashflow = QuantLib::ext::make_shared<SimpleCashFlow>(fixedNominal_, aDate);
     fixedLeg.push_back(aCashflow);
 
     // Deriving from cross currency swap where:

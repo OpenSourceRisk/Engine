@@ -1,0 +1,167 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="Ascot">
+        <TradeType>Ascot</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <AscotData>
+            <!-- The underlying of the ascot. -->
+            <ConvertibleBondData>
+                <BondData>
+                    <!-- The ISIN identifying the underlying convertible bond -->
+                    <SecurityId>ISIN:DE000A3H2WP2</SecurityId>
+                    <!-- The bond notional on which the option is written. -->
+                    <BondNotional>1000000.00</BondNotional>
+                </BondData>
+            </ConvertibleBondData>
+            <!-- The option terms -->
+            <OptionData>
+                <!-- Long or Short -->
+                <LongShort>Long</LongShort>
+                <!-- Put or Call -->
+                <OptionType>Call</OptionType>
+                <!-- only American supported -->
+                <Style>American</Style>
+                <!-- Physical or Cash -->
+                <Settlement>Physical</Settlement>
+                <!-- The last possible exercise date -->
+                <ExerciseDates>
+                    <ExerciseDate>2030-10-08</ExerciseDate>
+                </ExerciseDates>
+                <!-- The option premiumn paid by the option holder -->
+                <Premiums>
+                    <Premium>
+                        <Amount>166000</Amount>
+                        <Currency>EUR</Currency>
+                        <PayDate>2021-10-10</PayDate>
+                    </Premium>
+                </Premiums>
+            </OptionData>
+            <!-- The reference swap funding leg, the asset leg is implied from the bond data. Payer should be false,
+             i.e. the swap is entered from the viewpoint of the asset swap buyer. -->
+            <ReferenceSwapData>
+                <LegData>
+                    <LegType>Floating</LegType>
+                    <Payer>false</Payer>
+                    <Currency>EUR</Currency>
+                    <Notionals>
+                        <Notional>1000000.00</Notional>
+                    </Notionals>
+                    <DayCounter>A360</DayCounter>
+                    <PaymentConvention>ModifiedFollowing</PaymentConvention>
+                    <FloatingLegData>
+                        <Index>EUR-EURIBOR-3M</Index>
+                        <!-- The recall spread goes here. -->
+                        <Spreads>
+                            <Spread>0.02</Spread>
+                        </Spreads>
+                    </FloatingLegData>
+                    <ScheduleData>
+                        <Rules>
+                            <StartDate>2021-10-08</StartDate>
+                            <EndDate>2030-10-08</EndDate>
+                            <Tenor>3M</Tenor>
+                            <Calendar>TARGET</Calendar>
+                            <Convention>ModifiedFollowing</Convention>
+                            <Rule>Backward</Rule>
+                        </Rules>
+                    </ScheduleData>
+                </LegData>
+            </ReferenceSwapData>
+        </AscotData>
+    </Trade>
+    <Trade id="ConvertibleBond">
+        <TradeType>ConvertibleBond</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <!-- The underlying of the ascot. -->
+        <ConvertibleBondData>
+            <BondData>
+                <!-- The ISIN identifying the underlying convertible bond -->
+                <SecurityId>ISIN:US531229AR32</SecurityId>
+                <!-- The bond notional on which the option is written. -->
+                <BondNotional>1000000.00</BondNotional>
+            </BondData>
+        </ConvertibleBondData>
+    </Trade>
+    <Trade id="AssetSwap">
+        <TradeType>Swap</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <SwapData>
+            <LegData>
+                <LegType>Floating</LegType>
+                <Payer>true</Payer>
+                <Currency>EUR</Currency>
+                <Notionals>
+                    <Notional>1000000.00</Notional>
+                </Notionals>
+                <DayCounter>ACT/ACT</DayCounter>
+                <PaymentConvention>F</PaymentConvention>
+                <FloatingLegData>
+                    <Spreads>
+                        <Spread>0.025</Spread>
+                    </Spreads>
+                    <Index>EUR-EURIBOR-6M</Index>
+                    <IsInArrears>false</IsInArrears>
+                    <FixingDays>2</FixingDays>
+                </FloatingLegData>
+                <ScheduleData>
+                    <Rules>
+                        <StartDate>2018-10-08</StartDate>
+                        <EndDate>2030-10-08</EndDate>
+                        <Tenor>6M</Tenor>
+                        <Calendar>TARGET</Calendar>
+                        <Convention>F</Convention>
+                        <Rule>Forward</Rule>
+                    </Rules>
+                </ScheduleData>
+            </LegData>
+            <LegData>
+                <LegType>Floating</LegType>
+                <Payer>false</Payer>
+                <Currency>EUR</Currency>
+                <Notionals>
+                    <Notional>1000000.00</Notional>
+                </Notionals>
+                <DayCounter>A360</DayCounter>
+                <PaymentConvention>ModifiedFollowing</PaymentConvention>
+                <FloatingLegData>
+                    <Index>EUR-EURIBOR-3M</Index>
+                    <!-- The recall spread goes here. -->
+                    <Spreads>
+                        <Spread>0.02</Spread>
+                    </Spreads>
+                </FloatingLegData>
+                <ScheduleData>
+                    <Rules>
+                        <StartDate>2021-10-08</StartDate>
+                        <EndDate>2030-10-08</EndDate>
+                        <Tenor>3M</Tenor>
+                        <Calendar>TARGET</Calendar>
+                        <Convention>ModifiedFollowing</Convention>
+                        <Rule>Backward</Rule>
+                    </Rules>
+                </ScheduleData>
+            </LegData>
+        </SwapData>
+    </Trade>
+</Portfolio>

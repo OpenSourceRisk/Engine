@@ -29,20 +29,20 @@
 namespace ore {
 namespace data {
 
-boost::shared_ptr<QuantExt::FormulaBasedIndex>
-makeFormulaBasedIndex(const std::string& formula, const boost::shared_ptr<ore::data::Market> market,
+QuantLib::ext::shared_ptr<QuantExt::FormulaBasedIndex>
+makeFormulaBasedIndex(const std::string& formula, const QuantLib::ext::shared_ptr<ore::data::Market> market,
                       const std::string& configuration,
-                      std::map<std::string, boost::shared_ptr<QuantLib::InterestRateIndex>>& indexMaps,
+                      std::map<std::string, QuantLib::ext::shared_ptr<QuantLib::InterestRateIndex>>& indexMaps,
                       const Calendar& fixingCalendar) {
 
     indexMaps.clear();
-    std::vector<boost::shared_ptr<QuantLib::InterestRateIndex>> indices;
+    std::vector<QuantLib::ext::shared_ptr<QuantLib::InterestRateIndex>> indices;
     std::vector<std::string> variables;
     QuantExt::CompiledFormula compiledFormula = parseFormula(formula, variables);
     Calendar fixCal = NullCalendar();
     for (auto const& v : variables) {
-        boost::shared_ptr<InterestRateIndex> index;
-        boost::shared_ptr<IborIndex> dummyIborIndex;
+        QuantLib::ext::shared_ptr<InterestRateIndex> index;
+        QuantLib::ext::shared_ptr<IborIndex> dummyIborIndex;
         if (ore::data::tryParseIborIndex(v, dummyIborIndex)) {
             index = *market->iborIndex(v, configuration);
         } else {
@@ -57,7 +57,7 @@ makeFormulaBasedIndex(const std::string& formula, const boost::shared_ptr<ore::d
         indexMaps[v] = index;
     }
 
-    boost::shared_ptr<QuantExt::FormulaBasedIndex> fbi = boost::make_shared<QuantExt::FormulaBasedIndex>(
+    QuantLib::ext::shared_ptr<QuantExt::FormulaBasedIndex> fbi = QuantLib::ext::make_shared<QuantExt::FormulaBasedIndex>(
         "FormulaBasedIndex", indices, compiledFormula, fixingCalendar == Calendar() ? fixCal : fixingCalendar);
     return fbi;
 }

@@ -43,6 +43,8 @@ public:
         bool includeAccrual;
         bool isSoft;
         Real softTriggerRatio;
+        Real softTriggerM;
+        Real softTriggerN;
         // make whole result of cr increase as a function of stock price and current cr
         std::function<Real(Real, Real)> mwCr;
     };
@@ -99,13 +101,13 @@ public:
     };
 
     FdConvertibleBondEvents(const Date& today, const DayCounter& dc, const Real N0,
-                            const boost::shared_ptr<QuantExt::EquityIndex2>& equity,
-                            const boost::shared_ptr<FxIndex>& fxConversion);
+                            const QuantLib::ext::shared_ptr<QuantExt::EquityIndex2>& equity,
+                            const QuantLib::ext::shared_ptr<FxIndex>& fxConversion);
 
     // The intended workflow is as follows:
 
     // 1 register events describing the convertible bond features and cashflows
-    void registerBondCashflow(const boost::shared_ptr<CashFlow>& c);
+    void registerBondCashflow(const QuantLib::ext::shared_ptr<CashFlow>& c);
     void registerCall(const ConvertibleBond2::CallabilityData& c);
     void registerMakeWhole(const ConvertibleBond2::MakeWholeData& c);
     void registerPut(const ConvertibleBond2::CallabilityData& c);
@@ -147,7 +149,7 @@ public:
     Real getCurrentFxConversion(const Size i) const;       // populated for all i
     Date getAssociatedDate(const Size i) const;            // null if no date is associated
 
-    const std::map<std::string, boost::any>& additionalResults() const { return additionalResults_; }
+    const std::map<std::string, QuantLib::ext::any>& additionalResults() const { return additionalResults_; }
 
 private:
     Date nextExerciseDate(const Date& d, const std::vector<ConvertibleBond2::CallabilityData>& data) const;
@@ -165,8 +167,8 @@ private:
     Date today_;
     DayCounter dc_;
     Real N0_;
-    boost::shared_ptr<QuantExt::EquityIndex2> equity_;
-    boost::shared_ptr<FxIndex> fxConversion_;
+    QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> equity_;
+    QuantLib::ext::shared_ptr<FxIndex> fxConversion_;
 
     std::set<Real> times_;
     TimeGrid grid_;
@@ -175,7 +177,7 @@ private:
     Date lastRedemptionDate_;
 
     // the registered events (before finalise())
-    std::vector<boost::shared_ptr<CashFlow>> registeredBondCashflows_;
+    std::vector<QuantLib::ext::shared_ptr<CashFlow>> registeredBondCashflows_;
     std::vector<ConvertibleBond2::CallabilityData> registeredCallData_, registeredPutData_;
     std::vector<ConvertibleBond2::ConversionRatioData> registeredConversionRatioData_;
     std::vector<ConvertibleBond2::ConversionData> registeredConversionData_;
@@ -205,7 +207,7 @@ private:
     std::vector<Date> associatedDate_;
 
     // additional results provided by the event processor
-    std::map<std::string, boost::any> additionalResults_;
+    std::map<std::string, QuantLib::ext::any> additionalResults_;
 
     // containers to store interpolation data for mw cr increases
     QuantLib::Array mw_cr_inc_x_, mw_cr_inc_y_;

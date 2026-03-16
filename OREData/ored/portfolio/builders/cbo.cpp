@@ -31,13 +31,13 @@ namespace data {
 static DefaultProbKey dummyDefaultProbKey() {
     Currency currency = QuantLib::EURCurrency();
     Seniority seniority = NoSeniority;
-    boost::shared_ptr<DefaultType> defaultType(new DefaultType());
-    vector<boost::shared_ptr<DefaultType>> defaultTypes(1, defaultType);
+    QuantLib::ext::shared_ptr<DefaultType> defaultType(new DefaultType());
+    vector<QuantLib::ext::shared_ptr<DefaultType>> defaultTypes(1, defaultType);
     DefaultProbKey key(defaultTypes, currency, seniority);
     return key;
 }
 
-boost::shared_ptr<PricingEngine> CboMCEngineBuilder::engine(const boost::shared_ptr<Pool>& pool) {
+QuantLib::ext::shared_ptr<PricingEngine> CboMCEngineBuilder::engine(const QuantLib::ext::shared_ptr<Pool>& pool) {
 
     // get parameter
     Size samples = parseInteger(engineParameter("Samples"));
@@ -53,16 +53,16 @@ boost::shared_ptr<PricingEngine> CboMCEngineBuilder::engine(const boost::shared_
     for (Size i = 0; i < lossDistributionPeriods_vec.size(); i++)
         lossDistributionPeriods.push_back(parsePeriod(lossDistributionPeriods_vec[i]));
 
-    boost::shared_ptr<SimpleQuote> correlationQuote(new SimpleQuote(corr));
+    QuantLib::ext::shared_ptr<SimpleQuote> correlationQuote(new SimpleQuote(corr));
     Handle<Quote> correlationHandle = Handle<Quote>(correlationQuote);
-    boost::shared_ptr<OneFactorCopula> gaussianCopula(new OneFactorGaussianCopula(correlationHandle));
+    QuantLib::ext::shared_ptr<OneFactorCopula> gaussianCopula(new OneFactorGaussianCopula(correlationHandle));
     RelinkableHandle<OneFactorCopula> copula(gaussianCopula);
 
     vector<DefaultProbKey> keys(pool->size(), dummyDefaultProbKey());
 
-    boost::shared_ptr<RandomDefaultModel> rdm(new GaussianRandomDefaultModel(pool, keys, copula, 1.e-6, seed));
+    QuantLib::ext::shared_ptr<RandomDefaultModel> rdm(new GaussianRandomDefaultModel(pool, keys, copula, 1.e-6, seed));
 
-    return boost::make_shared<QuantExt::MonteCarloCBOEngine>(rdm, samples, bins, errorTolerance,
+    return QuantLib::ext::make_shared<QuantExt::MonteCarloCBOEngine>(rdm, samples, bins, errorTolerance,
                                                              lossDistributionPeriods);
 };
 

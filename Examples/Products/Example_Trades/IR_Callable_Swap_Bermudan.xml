@@ -1,0 +1,114 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="CALLABLE_SWAP_withExerciseDate">
+        <TradeType>CallableSwap</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <valuation_date>2025-02-10</valuation_date>
+                <party_id>party</party_id>
+            </AdditionalFields>
+        </Envelope>
+        <CallableSwapData>
+            <OptionData>
+                <LongShort>Short</LongShort>
+                <Style>Bermudan</Style>
+                <!-- notice date conventions -->
+                <NoticePeriod>2D</NoticePeriod>
+                <NoticeConvention>F</NoticeConvention>
+                <NoticeCalendar>TARGET</NoticeCalendar>
+                <Settlement>Physical</Settlement>
+                <ExerciseFees>
+                    <!-- 10bp fee relative to notional -->
+                    <ExerciseFee type="Percentage">0.0010</ExerciseFee>
+                    <!-- 15k absolute fee from 2030 onwards-->
+                    <ExerciseFee startDate="2037-09-29" type="Absolute">15000</ExerciseFee>
+                    <!-- 5bp fee from 2032 onwards -->
+                    <ExerciseFee startDate="2039-09-30" type="Percentage">0.0005</ExerciseFee>
+                </ExerciseFees>
+                <!-- exercise fee settlement conventions -->
+                <ExerciseFeeSettlementPeriod>5D</ExerciseFeeSettlementPeriod>
+                <ExerciseFeeSettlementConvention>MF</ExerciseFeeSettlementConvention>
+                <ExerciseFeeSettlementCalendar>TARGET</ExerciseFeeSettlementCalendar>
+                <ExerciseDates>
+                    <ExerciseDate>2035-09-30</ExerciseDate>
+                    <ExerciseDate>2036-09-29</ExerciseDate>
+                    <ExerciseDate>2037-09-29</ExerciseDate>
+                    <ExerciseDate>2038-09-29</ExerciseDate>
+                    <ExerciseDate>2039-09-30</ExerciseDate>
+                    <ExerciseDate>2040-09-29</ExerciseDate>
+                </ExerciseDates>
+            </OptionData>
+            <LegData>
+                <LegType>Floating</LegType>
+                <Payer>true</Payer>
+                <Currency>EUR</Currency>
+                <Notionals>
+                    <Notional>10000000</Notional>
+                    <Notional startDate="2036-09-29">9000000</Notional>
+                    <Notional startDate="2037-09-29">8000000</Notional>
+                    <Notional startDate="2038-09-29">7000000</Notional>
+                    <Notional startDate="2039-09-30">6000000</Notional>
+                    <Notional startDate="2040-09-29">5000000</Notional>
+                    <Notional startDate="2041-09-29">4000000</Notional>
+                    <Notional startDate="2042-09-29">3000000</Notional>
+                    <Notional startDate="2043-09-30">2000000</Notional>
+                    <Notional startDate="2044-09-29">1000000</Notional>
+                </Notionals>
+                <DayCounter>A360</DayCounter>
+                <PaymentConvention>ModifiedFollowing</PaymentConvention>
+                <FloatingLegData>
+                    <Index>EUR-EURIBOR-3M</Index>
+                    <Spreads>
+                        <Spread>0.0</Spread>
+                    </Spreads>
+                </FloatingLegData>
+                <ScheduleData>
+                    <Rules>
+                        <StartDate>2035-09-30</StartDate>
+                        <EndDate>2045-09-29</EndDate>
+                        <Tenor>3M</Tenor>
+                        <Calendar>TARGET</Calendar>
+                        <Convention>ModifiedFollowing</Convention>
+                        <Rule>Forward</Rule>
+                    </Rules>
+                </ScheduleData>
+            </LegData>
+            <LegData>
+                <LegType>Fixed</LegType>
+                <Payer>false</Payer>
+                <Currency>EUR</Currency>
+                <Notionals>
+                    <Notional>10000000</Notional>
+                    <Notional startDate="2036-09-29">9000000</Notional>
+                    <Notional startDate="2037-09-29">8000000</Notional>
+                    <Notional startDate="2038-09-29">7000000</Notional>
+                    <Notional startDate="2039-09-30">6000000</Notional>
+                    <Notional startDate="2040-09-29">5000000</Notional>
+                    <Notional startDate="2041-09-29">4000000</Notional>
+                    <Notional startDate="2042-09-29">3000000</Notional>
+                    <Notional startDate="2043-09-30">2000000</Notional>
+                    <Notional startDate="2044-09-29">1000000</Notional>
+                </Notionals>
+                <DayCounter>ACT/ACT</DayCounter>
+                <PaymentConvention>Following</PaymentConvention>
+                <FixedLegData>
+                    <Rates>
+                        <Rate>0.05</Rate>
+                    </Rates>
+                </FixedLegData>
+                <ScheduleData>
+                    <Rules>
+                        <StartDate>2035-09-30</StartDate>
+                        <EndDate>2045-09-29</EndDate>
+                        <Tenor>1Y</Tenor>
+                        <Calendar>TARGET</Calendar>
+                        <Convention>Following</Convention>
+                        <Rule>Forward</Rule>
+                    </Rules>
+                </ScheduleData>
+            </LegData>
+        </CallableSwapData>
+    </Trade>
+</Portfolio>

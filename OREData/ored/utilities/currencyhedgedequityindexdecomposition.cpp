@@ -12,20 +12,20 @@
 namespace ore {
 namespace data {
 
-boost::shared_ptr<CurrencyHedgedEquityIndexDecomposition>
-loadCurrencyHedgedIndexDecomposition(const std::string& name, const boost::shared_ptr<ReferenceDataManager>& refDataMgr,
-                                     const boost::shared_ptr<CurveConfigurations>& curveConfigs) {
-    boost::shared_ptr<CurrencyHedgedEquityIndexReferenceDatum> indexRefData;
-    boost::shared_ptr<EquityIndexReferenceDatum> underlyingRefData;
+QuantLib::ext::shared_ptr<CurrencyHedgedEquityIndexDecomposition>
+loadCurrencyHedgedIndexDecomposition(const std::string& name, const QuantLib::ext::shared_ptr<ReferenceDataManager>& refDataMgr,
+                                     const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigs) {
+    QuantLib::ext::shared_ptr<CurrencyHedgedEquityIndexReferenceDatum> indexRefData;
+    QuantLib::ext::shared_ptr<EquityIndexReferenceDatum> underlyingRefData;
     std::map<std::string, std::pair<double, std::string>> currencyWeightsAndFxIndexNames;
     
     if (refDataMgr) {
         if (refDataMgr->hasData("CurrencyHedgedEquityIndex", name))
-            indexRefData = boost::dynamic_pointer_cast<CurrencyHedgedEquityIndexReferenceDatum>(
+            indexRefData = QuantLib::ext::dynamic_pointer_cast<CurrencyHedgedEquityIndexReferenceDatum>(
                 refDataMgr->getData("CurrencyHedgedEquityIndex", name));
 
         if (indexRefData != nullptr && refDataMgr->hasData("EquityIndex", indexRefData->underlyingIndexName()))
-            underlyingRefData = boost::dynamic_pointer_cast<EquityIndexReferenceDatum>(
+            underlyingRefData = QuantLib::ext::dynamic_pointer_cast<EquityIndexReferenceDatum>(
                 refDataMgr->getData("EquityIndex", indexRefData->underlyingIndexName()));
     }
 
@@ -69,7 +69,7 @@ loadCurrencyHedgedIndexDecomposition(const std::string& name, const boost::share
         std::map<std::string, double> underlyingIndexWeightsAtRebalancing;
 
         if (indexRefData->currencyWeights().empty()) {
-            boost::shared_ptr<ReferenceDatum> undIndexRefDataAtRefDate;
+            QuantLib::ext::shared_ptr<ReferenceDatum> undIndexRefDataAtRefDate;
             try {
                 undIndexRefDataAtRefDate = refDataMgr->getData("EquityIndex", underlyingIndexName, refDate);
             } catch (...) {
@@ -77,7 +77,7 @@ loadCurrencyHedgedIndexDecomposition(const std::string& name, const boost::share
             }
             if (undIndexRefDataAtRefDate) {
                 underlyingIndexWeightsAtRebalancing =
-                    boost::dynamic_pointer_cast<EquityIndexReferenceDatum>(undIndexRefDataAtRefDate)->underlyings();
+                    QuantLib::ext::dynamic_pointer_cast<EquityIndexReferenceDatum>(undIndexRefDataAtRefDate)->underlyings();
             }
         } else {
             underlyingIndexWeightsAtRebalancing = indexRefData->currencyWeights();
@@ -111,13 +111,13 @@ loadCurrencyHedgedIndexDecomposition(const std::string& name, const boost::share
             }
         }
     }
-    return boost::make_shared<CurrencyHedgedEquityIndexDecomposition>(name, indexRefData, underlyingRefData,
+    return QuantLib::ext::make_shared<CurrencyHedgedEquityIndexDecomposition>(name, indexRefData, underlyingRefData,
                                                                       indexCurrency, underlyingIndexCurrency,
                                                                       fxIndexName, currencyWeightsAndFxIndexNames);
 }
 
 QuantLib::Date CurrencyHedgedEquityIndexDecomposition::referenceDate(
-    const boost::shared_ptr<CurrencyHedgedEquityIndexReferenceDatum>& refData,
+    const QuantLib::ext::shared_ptr<CurrencyHedgedEquityIndexReferenceDatum>& refData,
                                                       const QuantLib::Date& asof) {
     QuantLib::Date hedgingDate = CurrencyHedgedEquityIndexDecomposition::rebalancingDate(refData, asof);
     if (hedgingDate == QuantLib::Date()) {
@@ -129,7 +129,7 @@ QuantLib::Date CurrencyHedgedEquityIndexDecomposition::referenceDate(
 }
 
 QuantLib::Date CurrencyHedgedEquityIndexDecomposition::rebalancingDate(
-    const boost::shared_ptr<CurrencyHedgedEquityIndexReferenceDatum>& refData,
+    const QuantLib::ext::shared_ptr<CurrencyHedgedEquityIndexReferenceDatum>& refData,
                                                         const QuantLib::Date& asof) {
     if (refData->rebalancingStrategy() ==
         ore::data::CurrencyHedgedEquityIndexReferenceDatum::RebalancingDate::EndOfMonth) {
@@ -155,7 +155,7 @@ QuantLib::Date CurrencyHedgedEquityIndexDecomposition::rebalancingDate(const Qua
 }
 
 std::map<std::string, double> CurrencyHedgedEquityIndexDecomposition::fxSpotRiskFromForwards(
-    const double quantity, const QuantLib::Date& asof, const boost::shared_ptr<ore::data::Market>& todaysMarket, const double shiftsize) const {
+    const double quantity, const QuantLib::Date& asof, const QuantLib::ext::shared_ptr<ore::data::Market>& todaysMarket, const double shiftsize) const {
 
     std::map<std::string, double> fxRisks;
     auto indexCurve = todaysMarket->equityCurve(indexName());
@@ -181,7 +181,7 @@ std::map<std::string, double> CurrencyHedgedEquityIndexDecomposition::fxSpotRisk
 double
 CurrencyHedgedEquityIndexDecomposition::unhedgedSpotExposure(double hedgedExposure, const double quantity,
                                                       const QuantLib::Date& asof,
-                                                      const boost::shared_ptr<ore::data::Market>& todaysMarket) const {
+                                                      const QuantLib::ext::shared_ptr<ore::data::Market>& todaysMarket) const {
     auto indexCurve = todaysMarket->equityCurve(indexName());
     auto underlyingCurve = todaysMarket->equityCurve(underlyingIndexName());
     QuantLib::Date rebalanceDt = rebalancingDate(asof);

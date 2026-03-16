@@ -20,7 +20,7 @@
 
 namespace QuantExt {
 
-ModelImpliedPriceTermStructure::ModelImpliedPriceTermStructure(const boost::shared_ptr<CommodityModel>& model,
+ModelImpliedPriceTermStructure::ModelImpliedPriceTermStructure(const QuantLib::ext::shared_ptr<CommodityModel>& model,
                                                                const DayCounter& dc, const bool purelyTimeBased)
     : PriceTermStructure(dc == DayCounter() ? model->termStructure()->dayCounter() : dc), model_(model),
       purelyTimeBased_(purelyTimeBased),

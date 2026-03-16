@@ -24,7 +24,7 @@
 #ifndef quantext_blackvolatilityconstantspread_hpp
 #define quantext_blackvolatilityconstantspread_hpp
 
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvariancesurface.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>

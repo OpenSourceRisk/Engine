@@ -57,7 +57,7 @@ protected:
 class AnnuityMappingBuilder : public Observable, public Observer {
 public:
     virtual ~AnnuityMappingBuilder() {}
-    virtual boost::shared_ptr<AnnuityMapping> build(const Date& valuationDate, const Date& optionDate,
+    virtual QuantLib::ext::shared_ptr<AnnuityMapping> build(const Date& valuationDate, const Date& optionDate,
                                                     const Date& paymentDate, const VanillaSwap& underlying,
                                                     const Handle<YieldTermStructure>& discountCurve) = 0;
     void update() override;

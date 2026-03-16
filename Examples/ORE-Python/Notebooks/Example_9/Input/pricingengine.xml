@@ -1,0 +1,178 @@
+<?xml version="1.0"?>
+<PricingEngines>
+  <Product type="Swap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingSwapEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="CrossCurrencySwap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingCrossCurrencySwapEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="FxForward">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingFxForwardEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="FxOption">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="EuropeanSwaption">
+    <Model>BlackBachelier</Model>
+    <!-- depends on input vol -->
+    <ModelParameters/>
+    <Engine>BlackBachelierSwaptionEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="BermudanSwaption">
+    <Model>LGM</Model>
+    <ModelParameters>
+      <Parameter name="Calibration">Bootstrap</Parameter>
+      <Parameter name="CalibrationStrategy">CoterminalATM</Parameter>
+      <Parameter name="Reversion">0.03</Parameter>
+      <Parameter name="ReversionType">HullWhite</Parameter>
+      <Parameter name="Volatility">0.01</Parameter>
+      <Parameter name="VolatilityType">Hagan</Parameter>
+      <!-- shift horizon as ratio of maturity time -->
+      <Parameter name="ShiftHorizon">0.5</Parameter>
+      <Parameter name="Tolerance">0.0001</Parameter>
+    </ModelParameters>
+    <Engine>Grid</Engine>
+    <EngineParameters>
+      <Parameter name="sy">3.0</Parameter>
+      <Parameter name="ny">10</Parameter>
+      <Parameter name="sx">3.0</Parameter>
+      <Parameter name="nx">10</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CapFloor">
+    <Model>IborCapModel</Model>
+    <ModelParameters/>
+    <Engine>IborCapEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="YYCapFloor">
+    <Model>YYCapModel</Model>
+    <ModelParameters/>
+    <Engine>YYCapEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="CapFlooredIborLeg">
+    <Model>BlackOrBachelier</Model>
+    <ModelParameters/>
+    <Engine>BlackIborCouponPricer</Engine>
+    <EngineParameters>
+      <!-- Black76 or BivariateLognormal -->
+      <Parameter name="TimingAdjustment">Black76</Parameter>
+      <!-- Correlation Parameter for BivariateLognormal -->
+      <Parameter name="Correlation">1.0</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="EquityForward">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingEquityForwardEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="EquityOption">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="Bond">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingRiskyBondEngine</Engine>
+    <EngineParameters>
+      <Parameter name="TimestepPeriod">6M</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CreditDefaultSwap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>MidPointCdsEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <!-- CMS Linear TRS Model -->
+  <Product type="CMS">
+    <Model>LinearTSR</Model>
+    <ModelParameters/>
+    <Engine>LinearTSRPricer</Engine>
+    <EngineParameters>
+      <Parameter name="MeanReversion">0.0</Parameter>
+      <!-- RateBound, VegaRatio, PriceThreshold, BsStdDev -->
+      <Parameter name="Policy">RateBound</Parameter>
+      <!-- RateBounds for ln / sln volatility input -->
+      <Parameter name="LowerRateBoundLogNormal">0.0001</Parameter>
+      <Parameter name="UpperRateBoundLogNormal">2.0000</Parameter>
+      <!-- RateBounds for normal volatility input -->
+      <Parameter name="LowerRateBoundNormal">-2.0000</Parameter>
+      <Parameter name="UpperRateBoundNormal">2.0000</Parameter>
+      <!-- Only required for policy VegaRatio -->
+      <Parameter name="VegaRatio">0.01</Parameter>
+      <!-- Only required for policy PriceThreshold -->
+      <Parameter name="PriceThreshold">0.0000001</Parameter>
+      <!-- Only required for policy BsStdDev -->
+      <Parameter name="BsStdDev">3.0</Parameter>
+    </EngineParameters>
+  </Product>
+  <!-- Hagan Analytic Model -->
+  <Product type="CMS_DEACTIVATED">
+    <Model>Hagan</Model>
+    <ModelParameters/>
+    <Engine>Analytic</Engine>
+    <EngineParameters>
+      <Parameter name="YieldCurveModel">Standard</Parameter>
+      <!-- or ExactYield, ParallelShifts, NonParallelShifts -->
+      <Parameter name="MeanReversion">0.0</Parameter>
+    </EngineParameters>
+  </Product>
+  <!-- Hagan Numerical Model -->
+  <Product type="CMS_DEACTIVATED">
+    <Model>Hagan</Model>
+    <ModelParameters/>
+    <Engine>Numerical</Engine>
+    <EngineParameters>
+      <Parameter name="YieldCurveModel">Standard</Parameter>
+      <!-- or ExactYield, ParallelShifts, NonParallelShifts -->
+      <Parameter name="MeanReversion">0.0</Parameter>
+      <Parameter name="UpperLimit">0.0</Parameter>
+      <Parameter name="LowerLimit">1.0</Parameter>
+      <Parameter name="Precision">0.000001</Parameter>
+    </EngineParameters>
+  </Product>
+  <!-- CMS Spread Brigo Mercurio Model -->
+  <Product type="CMSSpread">
+    <Model>BrigoMercurio</Model>
+    <ModelParameters>
+      <Parameter name="Correlation_EUR">0.8</Parameter>
+      <Parameter name="Correlation_USD">0.75</Parameter>
+      <Parameter name="Correlation_GBP">0.72</Parameter>
+      <Parameter name="Correlation_CHF">0.7</Parameter>
+    </ModelParameters>
+    <Engine>Analytic</Engine>
+    <EngineParameters>
+      <Parameter name="IntegrationPoints">16</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CommodityForward">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingCommodityForwardEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="CommodityOption">
+    <Model>BlackScholes</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanEngine</Engine>
+    <EngineParameters/>
+  </Product>
+</PricingEngines>

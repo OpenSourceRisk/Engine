@@ -80,7 +80,7 @@ public:
     //@{
     const std::string& issuerName() const;
     const std::string& creditCurveId() const;
-    const boost::optional<ore::data::CdsReferenceInformation>& cdsReferenceInfo() const;
+    const QuantLib::ext::optional<ore::data::CdsReferenceInformation>& cdsReferenceInfo() const;
     QuantLib::Real notional() const;
     const std::string& currency() const;
     QuantLib::Real priorNotional() const;
@@ -97,7 +97,7 @@ public:
 private:
     
     std::string issuerName_;
-    boost::optional<ore::data::CdsReferenceInformation> cdsReferenceInfo_;
+    QuantLib::ext::optional<ore::data::CdsReferenceInformation> cdsReferenceInfo_;
     std::string creditCurveId_;
     QuantLib::Real notional_;
     std::string currency_;

@@ -25,14 +25,26 @@ using namespace QuantLib;
 
 namespace ore::data {
 
-Leg makeNonStandardIborLeg(const boost::shared_ptr<IborIndex>& index, const std::vector<Date>& calcDates,
+Leg makeNonStandardIborLeg(const QuantLib::ext::shared_ptr<IborIndex>& index, const std::vector<Date>& calcDates,
                            const std::vector<Date>& payDatesInput, const std::vector<Date>& fixingDatesInput,
                            const std::vector<Date>& resetDatesInput, const Size fixingDays,
                            const std::vector<Real>& notionals, const std::vector<Date>& notionalDatesInput,
-                           const std::vector<Real>& spreads, const std::vector<Date>& spreadDatesInput,
-                           const std::vector<Real>& gearings, const std::vector<Date>& gearingDatesInput,
+                           const std::vector<Real>& spreadsInput, const std::vector<Date>& spreadDatesInput,
+                           const std::vector<Real>& gearingsInput, const std::vector<Date>& gearingDatesInput,
                            const bool strictNotionalDates, const DayCounter& dayCounter, const Calendar& payCalendar,
                            const BusinessDayConvention payConv, const Period& payLag, const bool isInArrears) {
+
+    // add spread and gearing if none is given
+
+    std::vector<Real> spreads = spreadsInput, gearings = gearingsInput;
+
+    if (spreads.empty()) {
+        spreads.push_back(0.0);
+    }
+
+    if (gearings.empty()) {
+        gearings.push_back(1.0);
+    }
 
     // checks
 
@@ -106,10 +118,6 @@ Leg makeNonStandardIborLeg(const boost::shared_ptr<IborIndex>& index, const std:
                                                             << resetDates.size() << ")");
 
     for (Size i = 0; i < fixingDates.size(); ++i) {
-        QL_REQUIRE(fixingDates[i] <= resetDates[i], "makeNonStandardIborLeg(): fixing date at "
-                                                        << i << " (" << fixingDates[i]
-                                                        << ") must be less or equal to reset date at " << i << " ("
-                                                        << resetDates[i] << ")");
         QL_REQUIRE(resetDates[i] <= calcDates.back(), "makeNonStandardIborLeg(): reset date at "
                                                           << i << " (" << resetDates[i]
                                                           << ") must be less or equal last calculation date ("
@@ -144,30 +152,34 @@ Leg makeNonStandardIborLeg(const boost::shared_ptr<IborIndex>& index, const std:
     for (auto const& d : calcDates)
         effCalcDates.insert(d);
 
-    for (auto const& d : resetDates)
-        effCalcDates.insert(d);
-
-    if (strictNotionalDates)
-        for (auto const& d : notionalDates) {
+    for (auto const& d : resetDates) {
+        if (d >= calcDates.front() && d < calcDates.back())
             effCalcDates.insert(d);
+    }
+
+    if (strictNotionalDates) {
+        for (auto const& d : notionalDates) {
+            if (d >= calcDates.front() && d < calcDates.back())
+                effCalcDates.insert(d);
         }
+    }
 
     // build coupons
 
     Leg leg;
 
     for (auto startDate = effCalcDates.begin(); startDate != std::next(effCalcDates.end(), -1); ++startDate) {
-
         // determine calc end date from start date
 
         Date endDate = *std::next(startDate, 1);
 
+        if (endDate > calcDates.back())
+            continue;
+
         // determine pay date
 
         auto nextCalcDate = std::lower_bound(calcDates.begin(), calcDates.end(), endDate);
-        QL_REQUIRE(nextCalcDate != calcDates.begin(),
-                   "makeNonStandardIborLeg(): internal error, nextCalcDate == calcDates.begin(), contact dev.");
-        Date payDate = payDates[std::distance(calcDates.begin(), nextCalcDate) - 1];
+        Date payDate = payDates[std::max<Size>(1, std::distance(calcDates.begin(), nextCalcDate)) - 1];
 
         // determine reset and thereby fixing date
 
@@ -181,21 +193,22 @@ Leg makeNonStandardIborLeg(const boost::shared_ptr<IborIndex>& index, const std:
         // determine notional
 
         auto notionalDate = std::upper_bound(notionalDates.begin(), notionalDates.end(), *startDate);
-        Real notional = notionals[std::distance(notionalDates.begin(), notionalDate)];
+        Real notional =
+            notionals[std::min<Size>(notionals.size() - 1, std::distance(notionalDates.begin(), notionalDate))];
 
         // determine spread
 
         auto spreadDate = std::upper_bound(spreadDates.begin(), spreadDates.end(), *startDate);
-        Real spread = spreads[std::distance(spreadDates.begin(), spreadDate)];
+        Real spread = spreads[std::min<Size>(spreads.size() - 1, std::distance(spreadDates.begin(), spreadDate))];
 
         // determine gearing
 
         auto gearingDate = std::upper_bound(gearingDates.begin(), gearingDates.end(), *startDate);
-        Real gearing = gearings[std::distance(gearingDates.begin(), gearingDate)];
+        Real gearing = gearings[std::min<Size>(gearings.size() - 1, std::distance(gearingDates.begin(), gearingDate))];
 
         // build coupon
 
-        leg.push_back(boost::make_shared<IborCoupon>(payDate, notional, *startDate, endDate, fixingDate, index, gearing,
+        leg.push_back(QuantLib::ext::make_shared<IborCoupon>(payDate, notional, *startDate, endDate, fixingDate, index, gearing,
                                                      spread, Date(), Date(), dayCounter));
     }
 
@@ -213,6 +226,7 @@ Leg makeNonStandardFixedLeg(const std::vector<Date>& calcDates, const std::vecto
     QL_REQUIRE(calcDates.size() >= 2,
                "makeNonStandardFixedLeg(): calc dates size (" << calcDates.size() << ") >= 2 required");
     QL_REQUIRE(!notionals.empty(), "makeNonStandardFixedLeg(): empty notinoals");
+    QL_REQUIRE(!rates.empty(), "makeNonStandardFixedLeg(): empty rates");
     QL_REQUIRE(notionalDatesInput.empty() || notionalDatesInput.size() == notionals.size() - 1,
                "makeNonStandardFixedLeg(): notional dates (" << notionalDatesInput.size() << ") must match notional ("
                                                              << notionals.size() << ") minus 1");
@@ -264,7 +278,8 @@ Leg makeNonStandardFixedLeg(const std::vector<Date>& calcDates, const std::vecto
 
     if (strictNotionalDates)
         for (auto const& d : notionalDates) {
-            effCalcDates.insert(d);
+            if (d >= calcDates.front() && d < calcDates.back())
+                effCalcDates.insert(d);
         }
 
     // build coupons
@@ -277,26 +292,28 @@ Leg makeNonStandardFixedLeg(const std::vector<Date>& calcDates, const std::vecto
 
         Date endDate = *std::next(startDate, 1);
 
+        if (endDate >= calcDates.back())
+            continue;
+
         // determine pay date
 
         auto nextCalcDate = std::lower_bound(calcDates.begin(), calcDates.end(), endDate);
-        QL_REQUIRE(nextCalcDate != calcDates.begin(),
-                   "makeNonStandardFixedLeg(): internal error, nextCalcDate == calcDates.begin(), contact dev.");
-        Date payDate = payDates[std::distance(calcDates.begin(), nextCalcDate) - 1];
+        Date payDate = payDates[std::max<Size>(1, std::distance(calcDates.begin(), nextCalcDate)) - 1];
 
         // determine notional
 
         auto notionalDate = std::upper_bound(notionalDates.begin(), notionalDates.end(), *startDate);
-        Real notional = notionals[std::distance(notionalDates.begin(), notionalDate)];
+        Real notional =
+            notionals[std::min<Size>(notionals.size() - 1, std::distance(notionalDates.begin(), notionalDate))];
 
         // determine rate
 
         auto rateDate = std::upper_bound(rateDates.begin(), rateDates.end(), *startDate);
-        Real rate = rates[std::distance(rateDates.begin(), rateDate)];
+        Real rate = rates[std::min<Size>(rates.size() - 1, std::distance(rateDates.begin(), rateDate))];
 
         // build coupon
 
-        leg.push_back(boost::make_shared<FixedRateCoupon>(payDate, notional, rate, dayCounter, *startDate, endDate,
+        leg.push_back(QuantLib::ext::make_shared<FixedRateCoupon>(payDate, notional, rate, dayCounter, *startDate, endDate,
                                                           Date(), Date()));
     }
 

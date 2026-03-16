@@ -41,14 +41,14 @@ public:
     BondTRS(Envelope env, const BondData& bondData)
         : Trade("BondTRS", env), originalBondData_(bondData), bondData_(bondData) {}
 
-    virtual void build(const boost::shared_ptr<EngineFactory>&) override;
+    virtual void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
 
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 
     //! Add underlying Bond names
     std::map<AssetClass, std::set<std::string>>
-    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
     const BondData& bondData() const { return bondData_; }
 
@@ -86,6 +86,7 @@ private:
 
     // optional fx terms for composite bond trs
     string fxIndex_ = "";
+    bool applyFxIndexFixingDays_ = false;
 };
 } // namespace data
 } // namespace ore

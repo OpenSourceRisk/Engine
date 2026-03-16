@@ -43,7 +43,7 @@ public:
     vector<Rate> strikes;
     DayCounter dc;
     vector<vector<Handle<Quote> > > vols;
-    boost::shared_ptr<StrippedOptionlet> optionletSurface;
+    QuantLib::ext::shared_ptr<StrippedOptionlet> optionletSurface;
 
     F() : expiries(2), strikes(2), dc(Actual365Fixed()), vols(2) {
 
@@ -55,7 +55,7 @@ public:
         Natural settlementDays = 2;
         UnitedStates calendar(UnitedStates::Settlement);
         BusinessDayConvention bdc = Following;
-        boost::shared_ptr<IborIndex> dummyIborIndex;
+        QuantLib::ext::shared_ptr<IborIndex> dummyIborIndex;
         VolatilityType type = Normal;
 
         expiries[0] = Date(17, Apr, 2020);
@@ -65,14 +65,14 @@ public:
         strikes[1] = 0.04;
 
         // clang-format off
-        vols[0].push_back(Handle<Quote>(boost::make_shared<SimpleQuote>(0.0091)));
-        vols[0].push_back(Handle<Quote>(boost::make_shared<SimpleQuote>(0.0092)));
-        vols[1].push_back(Handle<Quote>(boost::make_shared<SimpleQuote>(0.0070)));
-        vols[1].push_back(Handle<Quote>(boost::make_shared<SimpleQuote>(0.0088)));
+        vols[0].push_back(Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.0091)));
+        vols[0].push_back(Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.0092)));
+        vols[1].push_back(Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.0070)));
+        vols[1].push_back(Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.0088)));
         // clang-format on
 
         // Create the optionlet surface
-        optionletSurface = boost::make_shared<StrippedOptionlet>(settlementDays, calendar, bdc, dummyIborIndex,
+        optionletSurface = QuantLib::ext::make_shared<StrippedOptionlet>(settlementDays, calendar, bdc, dummyIborIndex,
                                                                  expiries, strikes, vols, dc, type);
     }
 
@@ -87,8 +87,8 @@ BOOST_AUTO_TEST_SUITE(StrippedOptionletAdapterTests)
 BOOST_FIXTURE_TEST_CASE(testFlatExtrapAfterLastExpiry, F) {
 
     // Set up optionlet adapter with flat extrapolation
-    boost::shared_ptr<StrippedOptionletAdapter<LinearFlat, LinearFlat> > adapter =
-        boost::make_shared<StrippedOptionletAdapter<LinearFlat, LinearFlat> >(optionletSurface);
+    QuantLib::ext::shared_ptr<StrippedOptionletAdapter<LinearFlat, LinearFlat> > adapter =
+        QuantLib::ext::make_shared<StrippedOptionletAdapter<LinearFlat, LinearFlat> >(optionletSurface);
 
     // Pick a date 1Y after the max date
     Date testDate = expiries.back() + 1 * Years;
@@ -117,8 +117,8 @@ BOOST_FIXTURE_TEST_CASE(testFlatExtrapAfterLastExpiry, F) {
 BOOST_FIXTURE_TEST_CASE(testFlatExtrapBetweenFirstLastExpiry, F) {
 
     // Set up optionlet adapter with flat extrapolation
-    boost::shared_ptr<StrippedOptionletAdapter<LinearFlat, LinearFlat> > adapter =
-        boost::make_shared<StrippedOptionletAdapter<LinearFlat, LinearFlat> >(optionletSurface);
+    QuantLib::ext::shared_ptr<StrippedOptionletAdapter<LinearFlat, LinearFlat> > adapter =
+        QuantLib::ext::make_shared<StrippedOptionletAdapter<LinearFlat, LinearFlat> >(optionletSurface);
 
     // Check flat extrapolation on expiry pillars
     for (Size i = 0; i < expiries.size(); i++) {
@@ -148,8 +148,8 @@ BOOST_FIXTURE_TEST_CASE(testFlatExtrapBetweenFirstLastExpiry, F) {
 BOOST_FIXTURE_TEST_CASE(testFlatExtrapBeforeFirstExpiry, F) {
 
     // Set up optionlet adapter with flat extrapolation
-    boost::shared_ptr<StrippedOptionletAdapter<LinearFlat, LinearFlat> > adapter =
-        boost::make_shared<StrippedOptionletAdapter<LinearFlat, LinearFlat> >(optionletSurface);
+    QuantLib::ext::shared_ptr<StrippedOptionletAdapter<LinearFlat, LinearFlat> > adapter =
+        QuantLib::ext::make_shared<StrippedOptionletAdapter<LinearFlat, LinearFlat> >(optionletSurface);
 
     // Pick a date between evaluation date and first expiry
     Size numDays = dc.dayCount(asof, expiries.front()) / 2;
@@ -189,22 +189,22 @@ BOOST_AUTO_TEST_CASE(testOneStrikeColumn) {
     UnitedStates calendar(UnitedStates::Settlement);
     BusinessDayConvention bdc = Following;
     Actual365Fixed dc;
-    boost::shared_ptr<IborIndex> dummyIborIndex;
+    QuantLib::ext::shared_ptr<IborIndex> dummyIborIndex;
     VolatilityType type = Normal;
     vector<Date> expiries = list_of(Date(17, Jul, 2019))(Date(17, Oct, 2019));
     vector<Rate> strikes = list_of(0.0);
 
     vector<vector<Handle<Quote> > > vols(2);
-    vols[0].push_back(Handle<Quote>(boost::make_shared<SimpleQuote>(0.0091)));
-    vols[1].push_back(Handle<Quote>(boost::make_shared<SimpleQuote>(0.0070)));
+    vols[0].push_back(Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.0091)));
+    vols[1].push_back(Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.0070)));
 
     // Create the optionlet surface
-    boost::shared_ptr<StrippedOptionlet> optionletSurface = boost::make_shared<StrippedOptionlet>(
+    QuantLib::ext::shared_ptr<StrippedOptionlet> optionletSurface = QuantLib::ext::make_shared<StrippedOptionlet>(
         settlementDays, calendar, bdc, dummyIborIndex, expiries, strikes, vols, dc, type);
 
     // Set up optionlet adapter with flat extrapolation
-    boost::shared_ptr<StrippedOptionletAdapter<LinearFlat, LinearFlat> > adapter =
-        boost::make_shared<StrippedOptionletAdapter<LinearFlat, LinearFlat> >(optionletSurface);
+    QuantLib::ext::shared_ptr<StrippedOptionletAdapter<LinearFlat, LinearFlat> > adapter =
+        QuantLib::ext::make_shared<StrippedOptionletAdapter<LinearFlat, LinearFlat> >(optionletSurface);
 
     // Ask for vols on expiry dates at any strikes and should get back inputs
     Volatility strikeShift = 0.10;

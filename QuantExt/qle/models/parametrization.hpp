@@ -72,7 +72,7 @@ public:
     virtual Array parameterValues(const Size) const;
 
     /*! the parameter storing the raw parameter values */
-    virtual const boost::shared_ptr<Parameter> parameter(const Size) const;
+    virtual const QuantLib::ext::shared_ptr<Parameter> parameter(const Size) const;
 
     /*! this method should be called when input parameters
         linked via references or pointers change in order
@@ -100,7 +100,7 @@ private:
     Currency currency_;
     std::string name_;
     const Array emptyTimes_;
-    const boost::shared_ptr<Parameter> emptyParameter_;
+    const QuantLib::ext::shared_ptr<Parameter> emptyParameter_;
 };
 
 // inline
@@ -125,7 +125,7 @@ inline const Currency& Parametrization::currency() const { return currency_; }
 
 inline const Array& Parametrization::parameterTimes(const Size) const { return emptyTimes_; }
 
-inline const boost::shared_ptr<Parameter> Parametrization::parameter(const Size) const { return emptyParameter_; }
+inline const QuantLib::ext::shared_ptr<Parameter> Parametrization::parameter(const Size) const { return emptyParameter_; }
 
 inline Array Parametrization::parameterValues(const Size i) const {
     const Array& tmp = parameter(i)->params();

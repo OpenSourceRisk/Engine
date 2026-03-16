@@ -43,12 +43,12 @@ void CmsCapHelper::performCalculations() const {
     std::vector<Real> nominals(1, 1.0);
 
     {
-        boost::shared_ptr<PricingEngine> swapEngine(
+        QuantLib::ext::shared_ptr<PricingEngine> swapEngine(
             new DiscountingSwapEngine(index1_->discountingTermStructure(), false));
 
         Calendar calendar = index1_->fixingCalendar();
 
-        boost::shared_ptr<IborIndex> index = index1_->iborIndex();
+        QuantLib::ext::shared_ptr<IborIndex> index = index1_->iborIndex();
 
         // FIXME, reduce length by forward start
         startDate = calendar.advance(calendar.advance(asof_, spotDays_), forwardStart_);
@@ -68,17 +68,17 @@ void CmsCapHelper::performCalculations() const {
         std::vector<bool> cmsPayers;
         cmsLegs.push_back(cmsLeg);
         cmsPayers.push_back(true);
-        boost::shared_ptr<QuantLib::Swap> s = boost::make_shared<QuantLib::Swap>(cmsLegs, cmsPayers);
+        QuantLib::ext::shared_ptr<QuantLib::Swap> s = QuantLib::ext::make_shared<QuantLib::Swap>(cmsLegs, cmsPayers);
         s->setPricingEngine(swapEngine);
 
         rate1 = s->NPV() / (s->legBPS(0) / 1.0e-4);
     }
 
-    boost::shared_ptr<PricingEngine> swapEngine(new DiscountingSwapEngine(index2_->discountingTermStructure(), false));
+    QuantLib::ext::shared_ptr<PricingEngine> swapEngine(new DiscountingSwapEngine(index2_->discountingTermStructure(), false));
 
     Calendar calendar = index2_->fixingCalendar();
 
-    boost::shared_ptr<IborIndex> index = index2_->iborIndex();
+    QuantLib::ext::shared_ptr<IborIndex> index = index2_->iborIndex();
     // FIXME, reduce length by forward start
     startDate = calendar.advance(calendar.advance(asof_, spotDays_), forwardStart_);
     endDate = calendar.advance(startDate, length_ - forwardStart_, index->businessDayConvention());
@@ -97,7 +97,7 @@ void CmsCapHelper::performCalculations() const {
     std::vector<bool> cmsPayers;
     cmsLegs.push_back(cmsLeg);
     cmsPayers.push_back(true);
-    boost::shared_ptr<QuantLib::Swap> s = boost::make_shared<QuantLib::Swap>(cmsLegs, cmsPayers);
+    QuantLib::ext::shared_ptr<QuantLib::Swap> s = QuantLib::ext::make_shared<QuantLib::Swap>(cmsLegs, cmsPayers);
     s->setPricingEngine(swapEngine);
 
     rate2 = s->NPV() / (s->legBPS(0) / 1.0e-4);
@@ -109,7 +109,7 @@ void CmsCapHelper::performCalculations() const {
     std::vector<Leg> legs;
     std::vector<bool> legPayers;
 
-    boost::shared_ptr<QuantLib::SwapSpreadIndex> spreadIndex = boost::make_shared<QuantLib::SwapSpreadIndex>(
+    QuantLib::ext::shared_ptr<QuantLib::SwapSpreadIndex> spreadIndex = QuantLib::ext::make_shared<QuantLib::SwapSpreadIndex>(
         "CMSSpread_" + index1_->familyName() + "_" + index2_->familyName(), index1_, index2_);
 
     startDate = calendar_.advance(calendar_.advance(asof_, spotDays_), forwardStart_);
@@ -133,8 +133,8 @@ void CmsCapHelper::performCalculations() const {
     legs.push_back(cmsLeg1b);
     legPayers.push_back(false);
 
-    cap_ = boost::make_shared<QuantLib::Swap>(legs, legPayers);
-    boost::shared_ptr<PricingEngine> swapEngine2(new DiscountingSwapEngine(discountCurve_, false));
+    cap_ = QuantLib::ext::make_shared<QuantLib::Swap>(legs, legPayers);
+    QuantLib::ext::shared_ptr<PricingEngine> swapEngine2(new DiscountingSwapEngine(discountCurve_, false));
     cap_->setPricingEngine(swapEngine2);
 }
 

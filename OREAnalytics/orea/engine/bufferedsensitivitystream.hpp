@@ -29,12 +29,12 @@ namespace analytics {
 
 class BufferedSensitivityStream : public SensitivityStream {
 public:
-    explicit BufferedSensitivityStream(const boost::shared_ptr<SensitivityStream>& stream);
+    explicit BufferedSensitivityStream(const QuantLib::ext::shared_ptr<SensitivityStream>& stream);
     SensitivityRecord next() override;
     void reset() override;
 
 private:
-    boost::shared_ptr<SensitivityStream> stream_;
+    QuantLib::ext::shared_ptr<SensitivityStream> stream_;
     std::vector<SensitivityRecord> buffer_;
     QuantLib::Size index_ = QuantLib::Null<QuantLib::Size>();
 };

@@ -66,7 +66,7 @@ struct CommonVars {
           todaysMarketConfig(XMLDocument(TEST_INPUT_FILE("todaysmarket.xml")).toString()),
           pricingEngineConfig(XMLDocument(TEST_INPUT_FILE("pricingengine.xml")).toString()),
           curveConfig(XMLDocument(TEST_INPUT_FILE("curveconfig.xml")).toString()),
-          loader(boost::make_shared<CSVLoader>(TEST_INPUT_FILE("market.csv"), TEST_INPUT_FILE("fixings.csv"), "")) {
+          loader(QuantLib::ext::make_shared<CSVLoader>(TEST_INPUT_FILE("market.csv"), TEST_INPUT_FILE("fixings.csv"), "")) {
 
         Settings::instance().evaluationDate() = asof;
     }
@@ -78,7 +78,7 @@ struct CommonVars {
     string todaysMarketConfig;
     string pricingEngineConfig;
     string curveConfig;
-    boost::shared_ptr<Loader> loader;
+    QuantLib::ext::shared_ptr<Loader> loader;
     SavedSettings savedSettings;
 };
 
@@ -88,11 +88,11 @@ struct CommonVars {
 
 BOOST_AUTO_TEST_CASE(testCompositeInstrumentWrapperPrice) {
     CommonVars vars;
-    boost::shared_ptr<CurveConfigurations> curveConfig = boost::make_shared<CurveConfigurations>();
-    boost::shared_ptr<Conventions> conventions = boost::make_shared<Conventions>();
-    boost::shared_ptr<TodaysMarketParameters> todaysMarketConfig = boost::make_shared<TodaysMarketParameters>();
-    boost::shared_ptr<EngineData> pricingEngineConfig = boost::make_shared<EngineData>();
-    boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
+    QuantLib::ext::shared_ptr<CurveConfigurations> curveConfig = QuantLib::ext::make_shared<CurveConfigurations>();
+    QuantLib::ext::shared_ptr<Conventions> conventions = QuantLib::ext::make_shared<Conventions>();
+    QuantLib::ext::shared_ptr<TodaysMarketParameters> todaysMarketConfig = QuantLib::ext::make_shared<TodaysMarketParameters>();
+    QuantLib::ext::shared_ptr<EngineData> pricingEngineConfig = QuantLib::ext::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<Portfolio> portfolio = QuantLib::ext::make_shared<Portfolio>();
 
     loadFromXMLString(*curveConfig, vars.curveConfig);
     loadFromXMLString(*conventions, vars.conventions);
@@ -103,23 +103,23 @@ BOOST_AUTO_TEST_CASE(testCompositeInstrumentWrapperPrice) {
 
     portfolio->fromXMLString(vars.portfolio);
 
-    boost::shared_ptr<Market> market =
-        boost::make_shared<TodaysMarket>(vars.asof, todaysMarketConfig, vars.loader, curveConfig, true);
+    QuantLib::ext::shared_ptr<Market> market =
+        QuantLib::ext::make_shared<TodaysMarket>(vars.asof, todaysMarketConfig, vars.loader, curveConfig, true);
     auto configurations = std::map<MarketContext, string>();
-    boost::shared_ptr<EngineFactory> factory =
-        boost::make_shared<EngineFactory>(pricingEngineConfig, market, configurations);
+    QuantLib::ext::shared_ptr<EngineFactory> factory =
+        QuantLib::ext::make_shared<EngineFactory>(pricingEngineConfig, market, configurations);
 
     BOOST_TEST_MESSAGE("number trades " << portfolio->size());
     portfolio->build(factory);
     BOOST_TEST_MESSAGE("number trades " << portfolio->size());
 
-    Handle<Quote> fx = Handle<Quote>(boost::make_shared<SimpleQuote>(1.0));
-    vector<boost::shared_ptr<InstrumentWrapper>> iw;
+    Handle<Quote> fx = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
+    vector<QuantLib::ext::shared_ptr<InstrumentWrapper>> iw;
     std::vector<Handle<Quote>> fxRates;
 
     Real totalNPV = 0;
     for (const auto& [tradeId, trade] : portfolio->trades()) {
-        Handle<Quote> fx = Handle<Quote>(boost::make_shared<SimpleQuote>(1.0));
+        Handle<Quote> fx = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
         if (trade->npvCurrency() != "USD")
             fx = factory->market()->fxRate(trade->npvCurrency() + "USD");
         fxRates.push_back(fx);
@@ -129,8 +129,8 @@ BOOST_AUTO_TEST_CASE(testCompositeInstrumentWrapperPrice) {
 
         totalNPV += iw.back()->NPV() * fxRates.back()->value();
     }
-    boost::shared_ptr<InstrumentWrapper> instrument =
-        boost::shared_ptr<InstrumentWrapper>(new ore::data::CompositeInstrumentWrapper(iw, fxRates, vars.asof));
+    QuantLib::ext::shared_ptr<InstrumentWrapper> instrument =
+        QuantLib::ext::shared_ptr<InstrumentWrapper>(new ore::data::CompositeInstrumentWrapper(iw, fxRates, vars.asof));
 
     BOOST_TEST_MESSAGE(instrument->NPV());
 

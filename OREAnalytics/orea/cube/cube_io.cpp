@@ -17,11 +17,12 @@
 */
 
 #include <orea/cube/cube_io.hpp>
+#include <orea/cube/cube_io_utils.hpp>
 #include <orea/cube/inmemorycube.hpp>
 
 #include <ored/utilities/to_string.hpp>
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <boost/iostreams/device/file_descriptor.hpp>
 #ifdef ORE_USE_ZLIB
 #include <boost/iostreams/filter/gzip.hpp>
@@ -36,11 +37,13 @@ namespace analytics {
 
 namespace {
 
+using namespace ore::analytics::cube_io_utils;
+
 bool use_compression(const std::string& filename) {
 #ifdef ORE_USE_ZLIB
     // assume compression for all filenames that do not end with csv or txt
 
-    std::string extension = boost::filesystem::path(filename).extension().string();
+    std::string extension = std::filesystem::path(filename).extension().string();
     return extension != ".csv" && extension != ".txt";
 #else
     return false;
@@ -60,9 +63,9 @@ std::string getMetaData(const std::string& line, const std::string& tag, const b
 
 } // namespace
 
-NPVCubeWithMetaData loadCube(const std::string& filename, const bool doublePrecision) {
+QuantLib::ext::shared_ptr<NPVCubeWithMetaData> loadCube(const std::string& filename) {
 
-    NPVCubeWithMetaData result;
+    auto result = QuantLib::ext::make_shared<NPVCubeWithMetaData>();
 
     // open file
 
@@ -89,6 +92,8 @@ NPVCubeWithMetaData loadCube(const std::string& filename, const bool doublePreci
     Size samples = ore::data::parseInteger(getMetaData(line, "samples"));
     std::getline(in, line);
     Size depth = ore::data::parseInteger(getMetaData(line, "depth"));
+    std::getline(in, line);
+    bool useDoublePrecision = ore::data::parseBool(getMetaData(line, "usesDblPrc"));
 
     std::getline(in, line);
     getMetaData(line, "dates");
@@ -108,49 +113,46 @@ NPVCubeWithMetaData loadCube(const std::string& filename, const bool doublePreci
 
     std::getline(in, line);
     if (std::string md = getMetaData(line, "scenGenDta", false); !md.empty()) {
-        result.scenarioGeneratorData = boost::make_shared<ScenarioGeneratorData>();
-        result.scenarioGeneratorData->fromXMLString(md);
+        auto sgd = QuantLib::ext::make_shared<ScenarioGeneratorData>();
+        sgd->fromXMLString(md);
+        result->setScenarioGeneratorData(sgd);
         std::getline(in, line);
         DLOG("overwrite scenario generator data with meta data from cube: " << md);
     }
 
     if (std::string md = getMetaData(line, "storeFlows", false); !md.empty()) {
-        result.storeFlows = parseBool(md);
+        result->setStoreFlows(parseBool(md));
         std::getline(in, line);
         DLOG("overwrite storeFlows with meta data from cube: " << md);
     }
 
     if (std::string md = getMetaData(line, "storeCrSt", false); !md.empty()) {
-        result.storeCreditStateNPVs = parseInteger(md);
+        result->storeCreditStateNPVs(parseInteger(md));
         std::getline(in, line);
         DLOG("overwrite storeCreditStateNPVs with meta data from cube: " << md);
     }
 
-    boost::shared_ptr<NPVCube> cube;
-    if (doublePrecision && depth <= 1) {
-        cube = boost::make_shared<DoublePrecisionInMemoryCube>(asof, ids, dates, samples, 0.0);
-    } else if (doublePrecision && depth > 1) {
-        cube = boost::make_shared<DoublePrecisionInMemoryCubeN>(asof, ids, dates, samples, depth, 0.0);
-    } else if (!doublePrecision && depth <= 1) {
-        cube = boost::make_shared<SinglePrecisionInMemoryCube>(asof, ids, dates, samples, 0.0f);
-    } else if (!doublePrecision && depth > 1) {
-        cube = boost::make_shared<SinglePrecisionInMemoryCubeN>(asof, ids, dates, samples, depth, 0.0f);
+    QuantLib::ext::shared_ptr<NPVCube> cube;
+    if (useDoublePrecision) {
+        cube = QuantLib::ext::make_shared<InMemoryCubeOpt<double>>(asof, ids, dates, samples, depth, 0.0);
+    } else {
+        cube = QuantLib::ext::make_shared<InMemoryCubeOpt<float>>(asof, ids, dates, samples, depth, 0.0);
     }
-    result.cube = cube;
+    result->setCube(cube);
 
-    vector<string> tokens;
     Size nData = 0;
     while (!in.eof()) {
         std::getline(in, line);
         if (line.empty())
             continue;
-        boost::split(tokens, line, [](char c) { return c == ','; });
-        QL_REQUIRE(tokens.size() == 5, "loadCube(): invalid data line '" << line << "', expected 5 tokens");
-        Size id = ore::data::parseInteger(tokens[0]);
-        Size date = ore::data::parseInteger(tokens[1]);
-        Size sample = ore::data::parseInteger(tokens[2]);
-        Size depth = ore::data::parseInteger(tokens[3]);
-        double value = ore::data::parseReal(tokens[4]);
+        const char* p   = line.data();
+        const char* end = p + line.size();
+        Size id = 0, date = 0, sample = 0, depth = 0;
+        double value = 0.0;
+        QL_REQUIRE(fast_parse_size(p, end, id) && fast_parse_size(p, end, date) &&
+                       fast_parse_size(p, end, sample) && fast_parse_size(p, end, depth) &&
+                       fast_parse_double(p, end, value),
+                   "loadCube(): invalid data line '" << line << "'");
         if (date == 0)
             cube->setT0(value, id, depth);
         else
@@ -164,7 +166,7 @@ NPVCubeWithMetaData loadCube(const std::string& filename, const bool doublePreci
     return result;
 }
 
-void saveCube(const std::string& filename, const NPVCubeWithMetaData& cube, const bool doublePrecision) {
+void saveCube(const std::string& filename, const NPVCubeWithMetaData& cube) {
 
     // open file
 
@@ -179,59 +181,83 @@ void saveCube(const std::string& filename, const NPVCubeWithMetaData& cube, cons
 
     // write meta data (tag width is hardcoded and used in getMetaData())
 
-    out << "# asof       : " << ore::data::to_string(cube.cube->asof()) << "\n";
-    out << "# numIds     : " << std::to_string(cube.cube->numIds()) << "\n";
-    out << "# numDates   : " << std::to_string(cube.cube->numDates()) << "\n";
-    out << "# samples    : " << ore::data::to_string(cube.cube->samples()) << "\n";
-    out << "# depth      : " << ore::data::to_string(cube.cube->depth()) << "\n";
+    out << "# asof       : " << ore::data::to_string(cube.cube()->asof()) << "\n";
+    out << "# numIds     : " << std::to_string(cube.cube()->numIds()) << "\n";
+    out << "# numDates   : " << std::to_string(cube.cube()->numDates()) << "\n";
+    out << "# samples    : " << ore::data::to_string(cube.cube()->samples()) << "\n";
+    out << "# depth      : " << ore::data::to_string(cube.cube()->depth()) << "\n";
+    out << "# usesDblPrc : " << std::boolalpha << cube.cube()->usesDoublePrecision() << "\n";
     out << "# dates      : \n";
-    for (auto const& d : cube.cube->dates())
+    for (auto const& d : cube.cube()->dates())
         out << "# " << ore::data::to_string(d) << "\n";
 
     out << "# ids        : \n";
     std::map<Size, std::string> ids;
-    for (auto const& d : cube.cube->idsAndIndexes()) {
+    for (auto const& d : cube.cube()->idsAndIndexes()) {
         ids[d.second] = d.first;
     }
     for (auto const& d : ids) {
         out << "# " << d.second << "\n";
     }
 
-    if (cube.scenarioGeneratorData) {
+    if (cube.scenarioGeneratorData()) {
         std::string scenGenDataXml =
-            std::regex_replace(cube.scenarioGeneratorData->toXMLString(), std::regex("\\r\\n|\\r|\\n|\\t"), "");
+            std::regex_replace(cube.scenarioGeneratorData()->toXMLString(), std::regex("\\r\\n|\\r|\\n|\\t"), "");
         out << "# scenGenDta : " << scenGenDataXml << "\n";
     }
-    if (cube.storeFlows) {
-        out << "# storeFlows : " << std::boolalpha << *cube.storeFlows << "\n";
+    if (cube.storeFlows()) {
+        out << "# storeFlows : " << std::boolalpha << *cube.storeFlows() << "\n";
     }
-    if (cube.storeCreditStateNPVs) {
-        out << "# storeCrSt  : " << *cube.storeCreditStateNPVs << "\n";
+    if (cube.storeCreditStateNPVs()) {
+        out << "# storeCrSt  : " << *cube.storeCreditStateNPVs() << "\n";
     }
-
-    // set precision
-
-    out << std::setprecision(doublePrecision ? std::numeric_limits<double>::max_digits10
-                                             : std::numeric_limits<float>::max_digits10);
 
     // write cube data
+    {
+        BufWriter w(out);
+        static constexpr char hdr[] = "#id,date,sample,depth,value\n";
+        w.write(hdr, sizeof(hdr) - 1);
 
-    out << "#id,date,sample,depth,value\n";
-    for (Size i = 0; i < cube.cube->numIds(); ++i) {
-        out << i << ",0,0,0," << cube.cube->getT0(i) << "\n";
-        for (Size j = 0; j < cube.cube->numDates(); ++j) {
-            for (Size k = 0; k < cube.cube->samples(); ++k) {
-                for (Size d = 0; d < cube.cube->depth(); ++d) {
-                    double value = cube.cube->get(i, j, k, d);
-                    if (value != 0.0)
-                        out << i << "," << (j + 1) << "," << k << "," << d << "," << value << "\n";
+        char idxBuf[128]; // sufficient for 4 x uint64 indices + commas
+        char valBuf[32];  // sufficient for any double in shortest round-trip form
+
+        for (Size i = 0; i < cube.cube()->numIds(); ++i) {
+            // T0 line: "i,0,0,0,value\n"
+            {
+                char* p = std::to_chars(idxBuf, idxBuf + 24, i).ptr;
+                *p++ = ','; *p++ = '0'; *p++ = ','; *p++ = '0'; *p++ = ','; *p++ = '0'; *p++ = ',';
+                char* vp = write_double(valBuf, valBuf + sizeof(valBuf), cube.cube()->getT0(i));
+                w.write(idxBuf, static_cast<std::size_t>(p - idxBuf));
+                w.write(valBuf, static_cast<std::size_t>(vp - valBuf));
+                w.put('\n');
+            }
+
+            char* p0_end = std::to_chars(idxBuf, idxBuf + 24, i).ptr;
+            *p0_end++ = ',';
+            for (Size j = 0; j < cube.cube()->numDates(); ++j) {
+                char* p1_end = std::to_chars(p0_end, p0_end + 24, j + 1).ptr;
+                *p1_end++ = ',';
+                for (Size k = 0; k < cube.cube()->samples(); ++k) {
+                    char* p2_end = std::to_chars(p1_end, p1_end + 24, k).ptr;
+                    *p2_end++ = ',';
+                    for (Size d = 0; d < cube.cube()->depth(); ++d) {
+                        double value = cube.cube()->get(i, j, k, d);
+                        if (value != 0.0) {
+                            char* p3_end = std::to_chars(p2_end, p2_end + 24, d).ptr;
+                            *p3_end++ = ',';
+                            char* vp = write_double(valBuf, valBuf + sizeof(valBuf), value);
+                            w.write(idxBuf, static_cast<std::size_t>(p3_end - idxBuf));
+                            w.write(valBuf, static_cast<std::size_t>(vp - valBuf));
+                            w.put('\n');
+                        }
+                    }
                 }
             }
         }
     }
 }
 
-boost::shared_ptr<AggregationScenarioData> loadAggregationScenarioData(const std::string& filename) {
+QuantLib::ext::shared_ptr<AggregationScenarioData> loadAggregationScenarioData(const std::string& filename) {
 
     // open file
 
@@ -253,23 +279,26 @@ boost::shared_ptr<AggregationScenarioData> loadAggregationScenarioData(const std
     std::getline(in, line);
     Size dimSamples = ore::data::parseInteger(getMetaData(line, "dimSamples"));
 
-    vector<string> tokens;
-
     std::getline(in, line);
     Size numKeys = ore::data::parseInteger(getMetaData(line, "keys"));
     std::vector<std::pair<AggregationScenarioDataType, std::string>> keys;
     for (Size i = 0; i < numKeys; ++i) {
         std::getline(in, line);
-        boost::split(tokens, line.substr(2), [](char c) { return c == ','; });
-        QL_REQUIRE(tokens.size() == 2,
-                   "loadAggregationScenarioData(): invalid data line '" << line << "', expected 2 tokens");
-        keys.push_back(std::make_pair(AggregationScenarioDataType(ore::data::parseInteger(tokens[0])), tokens[1]));
+        // Format: "# <keyType>,<keyName>"
+        QL_REQUIRE(line.size() >= 2 && line[0] == '#' && line[1] == ' ',
+                   "loadAggregationScenarioData(): invalid key line '" << line << "'");
+        const char* p   = line.data() + 2;
+        const char* end = line.data() + line.size();
+        Size keyType = 0;
+        QL_REQUIRE(fast_parse_size(p, end, keyType),
+                   "loadAggregationScenarioData(): invalid key type in line '" << line << "'");
+        keys.push_back(std::make_pair(AggregationScenarioDataType(keyType), std::string(p, end)));
     }
 
     std::getline(in, line); // header line for data
 
-    boost::shared_ptr<InMemoryAggregationScenarioData> result =
-        boost::make_shared<InMemoryAggregationScenarioData>(dimDates, dimSamples);
+    QuantLib::ext::shared_ptr<InMemoryAggregationScenarioData> result =
+        QuantLib::ext::make_shared<InMemoryAggregationScenarioData>(dimDates, dimSamples);
 
     std::getline(in, line); // header line for data
 
@@ -278,13 +307,13 @@ boost::shared_ptr<AggregationScenarioData> loadAggregationScenarioData(const std
         std::getline(in, line);
         if (line.empty())
             continue;
-        boost::split(tokens, line, [](char c) { return c == ','; });
-        QL_REQUIRE(tokens.size() == 4,
-                   "loadAggregationScenarioData(): invalid data line '" << line << "', expected 4 tokens");
-        Size date = ore::data::parseInteger(tokens[0]);
-        Size sample = ore::data::parseInteger(tokens[1]);
-        Size key = ore::data::parseInteger(tokens[2]);
-        double value = ore::data::parseReal(tokens[3]);
+        const char* p   = line.data();
+        const char* end = p + line.size();
+        Size date = 0, sample = 0, key = 0;
+        double value = 0.0;
+        QL_REQUIRE(fast_parse_size(p, end, date) && fast_parse_size(p, end, sample) &&
+                       fast_parse_size(p, end, key) && fast_parse_double(p, end, value),
+                   "loadAggregationScenarioData(): invalid data line '" << line << "'");
         QL_REQUIRE(key < keys.size(), "loadAggregationScenarioData(): invalid data line '" << line << "', key (" << key
                                                                                            << ") is out of range 0..."
                                                                                            << (keys.size() - 1));
@@ -324,17 +353,25 @@ void saveAggregationScenarioData(const std::string& filename, const AggregationS
         out << "# " << (unsigned int)k.first << "," << k.second << "\n";
     }
 
-    // set precision
-
-    out << std::setprecision(std::numeric_limits<double>::max_digits10);
-
     // write data
+    {
+        BufWriter w(out);
+        static constexpr char hdr[] = "#date,sample,key,value\n";
+        w.write(hdr, sizeof(hdr) - 1);
 
-    out << "#date,sample,key,value\n";
-    for (Size i = 0; i < cube.dimDates(); ++i) {
-        for (Size j = 0; j < cube.dimSamples(); ++j) {
-            for (Size k = 0; k < keys.size(); ++k) {
-                out << (i + 1) << "," << j << "," << k << "," << cube.get(i, j, keys[k].first, keys[k].second) << "\n";
+        char lineBuf[128]; // date + sample + key + value + 3 commas + newline
+        for (Size i = 0; i < cube.dimDates(); ++i) {
+            for (Size j = 0; j < cube.dimSamples(); ++j) {
+                for (Size k = 0; k < keys.size(); ++k) {
+                    char* p = lineBuf;
+                    p = std::to_chars(p, p + 20, i + 1).ptr; *p++ = ',';
+                    p = std::to_chars(p, p + 20, j).ptr;     *p++ = ',';
+                    p = std::to_chars(p, p + 20, k).ptr;     *p++ = ',';
+                    p = write_double(p, p + 32,
+                                     cube.get(i, j, keys[k].first, keys[k].second));
+                    *p++ = '\n';
+                    w.write(lineBuf, static_cast<std::size_t>(p - lineBuf));
+                }
             }
         }
     }

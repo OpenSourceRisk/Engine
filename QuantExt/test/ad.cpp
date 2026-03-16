@@ -190,6 +190,34 @@ BOOST_AUTO_TEST_CASE(testIndicatorDerivative) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(testPow) {
+    BOOST_TEST_MESSAGE("Testing pow function...");
+
+    Real tol = 1E-13;
+
+    for (int p = -300; p <= 300; ++p) {
+
+        ComputationGraph g;
+        g.enableLabels();
+        auto x = cg_var(g, "x", ComputationGraph::VarDoesntExist::Create);
+        auto y = cg_pow(g, x, cg_const(g, static_cast<double>(p)), "y");
+
+        std::vector<RandomVariable> values(g.size(), RandomVariable(1));
+
+        for (auto const& [v, id] : g.constants())
+            values[id] = RandomVariable(1, v);
+
+        Real v = 5.0;
+        values[x] = RandomVariable(1, v);
+
+        forwardEvaluation(g, values, getRandomVariableOps(1));
+
+        // BOOST_TEST_MESSAGE("SSA Form for p = " << p << ":\n" + ssaForm(g, getRandomVariableOpLabels(), values));
+
+        BOOST_CHECK_CLOSE(values[y].at(0), std::pow(v, p), tol);
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

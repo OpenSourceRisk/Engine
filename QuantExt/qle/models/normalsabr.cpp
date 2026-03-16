@@ -78,8 +78,7 @@ Real G(const Real t, const Real s) {
 
 } // namespace
 
-Real normalFreeBoundarySabrVolatility(Rate strike, Rate forward, Time expiryTime, Real alpha, Real nu, Real rho) {
-
+Real normalFreeBoundarySabrPrice(Rate strike, Rate forward, Time expiryTime, Real alpha, Real nu, Real rho) {
     // update extreme parameters
 
     nu = std::max(nu, 1E-6);
@@ -113,9 +112,12 @@ Real normalFreeBoundarySabrVolatility(Rate strike, Rate forward, Time expiryTime
     Real price = V0 / M_PI * gl(integrand, lowerBound, upperBound);
     price += std::max(forward - strike, 0.0);
 
-    // back out implied volatility
+    return price;
+}
 
-    return exactBachelierImpliedVolatility(Option::Call, strike, forward, expiryTime, price);
+Real normalFreeBoundarySabrVolatility(Rate strike, Rate forward, Time expiryTime, Real alpha, Real nu, Real rho) {
+    return exactBachelierImpliedVolatility(Option::Call, strike, forward, expiryTime,
+                                           normalFreeBoundarySabrPrice(strike, forward, expiryTime, alpha, nu, rho));
 }
 
 } // namespace QuantExt

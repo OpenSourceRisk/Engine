@@ -16,20 +16,22 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <ored/portfolio/bond.hpp>
+#include <ored/portfolio/bondfuture.hpp>
 #include <ored/portfolio/bondposition.hpp>
+#include <ored/portfolio/bondutils.hpp>
 #include <ored/portfolio/equityoptionposition.hpp>
 #include <ored/portfolio/equityposition.hpp>
-#include <ored/portfolio/trsunderlyingbuilder.hpp>
-#include <qle/indexes/compositeindex.hpp>
-
-#include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/forwardbond.hpp>
+#include <ored/portfolio/trsunderlyingbuilder.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/parsers.hpp>
 
 #include <qle/cashflows/bondtrscashflow.hpp>
+#include <qle/indexes/compositeindex.hpp>
 #include <qle/instruments/forwardbond.hpp>
+#include <qle/instruments/bondfuture.hpp>
 
 namespace ore {
 namespace data {
@@ -54,13 +56,13 @@ Leg makeBondTRSLeg(const std::vector<Date>& valuationDates, const std::vector<Da
                    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex) {
 
     Leg returnLeg =
-        QuantExt::BondTRSLeg(valuationDates, paymentDates, bondIndexBuilder.bond().bondData().bondNotional(),
+        QuantExt::BondTRSLeg(valuationDates, paymentDates, bondIndexBuilder.bondData().bondNotional(),
                              bondIndexBuilder.bondIndex(), fxIndex).withInitialPrice(initialPrice);
-    modifyBondTRSLeg(returnLeg, parseDate(bondIndexBuilder.bond().bondData().issueDate()));
+    modifyBondTRSLeg(returnLeg, parseDate(bondIndexBuilder.bondData().issueDate()));
     return returnLeg;
 }
 
-boost::shared_ptr<TrsUnderlyingBuilder> TrsUnderlyingBuilderFactory::getBuilder(const std::string& tradeType) const {
+QuantLib::ext::shared_ptr<TrsUnderlyingBuilder> TrsUnderlyingBuilderFactory::getBuilder(const std::string& tradeType) const {
     boost::shared_lock<boost::shared_mutex> lock(mutex_);
     auto b = builders_.find(tradeType);
     QL_REQUIRE(b != builders_.end(), "TrsUnderlyingBuilderFactory::getBuilder(" << tradeType << "): no builder found");
@@ -68,7 +70,7 @@ boost::shared_ptr<TrsUnderlyingBuilder> TrsUnderlyingBuilderFactory::getBuilder(
 }
 
 void TrsUnderlyingBuilderFactory::addBuilder(const std::string& tradeType,
-                                             const boost::shared_ptr<TrsUnderlyingBuilder>& builder,
+                                             const QuantLib::ext::shared_ptr<TrsUnderlyingBuilder>& builder,
                                              const bool allowOverwrite) {
     boost::unique_lock<boost::shared_mutex> locK(mutex_);
     QL_REQUIRE(builders_.insert(std::make_pair(tradeType, builder)).second || allowOverwrite,
@@ -76,23 +78,23 @@ void TrsUnderlyingBuilderFactory::addBuilder(const std::string& tradeType,
 }
 
 void BondTrsUnderlyingBuilder::build(
-    const std::string& parentId, const boost::shared_ptr<Trade>& underlying, const std::vector<Date>& valuationDates, 
+    const std::string& parentId, const QuantLib::ext::shared_ptr<Trade>& underlying, const std::vector<Date>& valuationDates, 
     const std::vector<Date>& paymentDates, const std::string& fundingCurrency,
-    const boost::shared_ptr<EngineFactory>& engineFactory, boost::shared_ptr<QuantLib::Index>& underlyingIndex,
+    const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, QuantLib::ext::shared_ptr<QuantLib::Index>& underlyingIndex,
     Real& underlyingMultiplier, std::map<std::string, double>& indexQuantities,
-    std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices, Real& initialPrice,
+    std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices, Real& initialPrice,
     std::string& assetCurrency, std::string& creditRiskCurrency,
-    std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping, Date& maturity,
-    const std::function<boost::shared_ptr<QuantExt::FxIndex>(
-        const boost::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
-        const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
+    std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping,
+    const std::function<QuantLib::ext::shared_ptr<QuantExt::FxIndex>(
+        const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
+        const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
         getFxIndex,
     const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const {
-    auto t = boost::dynamic_pointer_cast<ore::data::Bond>(underlying);
+    auto t = QuantLib::ext::dynamic_pointer_cast<ore::data::Bond>(underlying);
     QL_REQUIRE(t, "could not cast to ore::data::Bond, this is unexpected");
-    auto qlBond = boost::dynamic_pointer_cast<QuantLib::Bond>(underlying->instrument()->qlInstrument());
+    auto qlBond = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(underlying->instrument()->qlInstrument());
     QL_REQUIRE(qlBond, "expected QuantLib::Bond, could not cast");
-    BondIndexBuilder bondIndexBuilder(*t, true, false, NullCalendar(), true, engineFactory);
+    BondIndexBuilder bondIndexBuilder(t->bondData().securityId(), true, false, NullCalendar(), true, engineFactory);
     underlyingIndex = bondIndexBuilder.bondIndex();
 
     underlyingMultiplier = t->bondData().bondNotional();
@@ -106,7 +108,7 @@ void BondTrsUnderlyingBuilder::build(
     auto fxIndex = getFxIndex(engineFactory->market(), engineFactory->configuration(MarketContext::pricing), assetCurrency,
                fundingCurrency, fxIndices);
 
-    auto leg = QuantExt::BondTRSLeg(valuationDates, paymentDates, bondIndexBuilder.bond().bondData().bondNotional(),
+    auto leg = QuantExt::BondTRSLeg(valuationDates, paymentDates, bondIndexBuilder.bondData().bondNotional(),
                                     bondIndexBuilder.bondIndex(), fxIndex)
                    .withInitialPrice(initialPrice);
 
@@ -117,32 +119,76 @@ void BondTrsUnderlyingBuilder::build(
     if (!t->bondData().creditCurveId().empty())
         creditRiskCurrency = t->bondData().currency();
     creditQualifierMapping[securitySpecificCreditCurveName(t->bondData().securityId(), t->bondData().creditCurveId())] =
-        SimmCreditQualifierMapping(t->bondData().securityId(), t->bondData().creditGroup());
+        SimmCreditQualifierMapping(t->bondData().securityId(), t->bondData().creditGroup(),t->bondData().hasCreditRisk());
     creditQualifierMapping[t->bondData().creditCurveId()] =
-        SimmCreditQualifierMapping(t->bondData().securityId(), t->bondData().creditGroup());
-    // FIXME shouldn't we leave that empty and let TRS determine the maturity date based on valuation / funding dates?
-    maturity = qlBond->maturityDate();
+        SimmCreditQualifierMapping(t->bondData().securityId(), t->bondData().creditGroup(), t->bondData().hasCreditRisk());
+}
+
+void BondFutureTrsUnderlyingBuilder::build(
+    const std::string& parentId, const QuantLib::ext::shared_ptr<Trade>& underlying, const std::vector<Date>& valuationDates, 
+    const std::vector<Date>& paymentDates, const std::string& fundingCurrency,
+    const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, QuantLib::ext::shared_ptr<QuantLib::Index>& underlyingIndex,
+    Real& underlyingMultiplier, std::map<std::string, double>& indexQuantities,
+    std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices, Real& initialPrice,
+    std::string& assetCurrency, std::string& creditRiskCurrency,
+    std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping,
+    const std::function<QuantLib::ext::shared_ptr<QuantExt::FxIndex>(
+        const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
+        const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
+        getFxIndex,
+    const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const {
+
+    auto t = QuantLib::ext::dynamic_pointer_cast<ore::data::BondFuture>(underlying);
+    QL_REQUIRE(t, "could not cast to ore::data::BondFuture, this is unexpected");
+
+    auto qlBondFuture = QuantLib::ext::dynamic_pointer_cast<QuantExt::BondFuture>(underlying->instrument()->qlInstrument());
+    QL_REQUIRE(qlBondFuture, "expected QuantExt::BondFUture, could not cast");
+
+    underlyingIndex = qlBondFuture->index();
+    underlyingMultiplier = qlBondFuture->contractNotional() * qlBondFuture->index()->conversionFactor();
+
+    indexQuantities[underlyingIndex->name()] = underlyingMultiplier;
+
+    assetCurrency = t->referenceDatum()->bondFutureData().currency;
+
+    auto fxIndex = getFxIndex(engineFactory->market(), engineFactory->configuration(MarketContext::pricing),
+                              assetCurrency, fundingCurrency, fxIndices);
+
+    returnLegs.push_back(QuantExt::BondTRSLeg(valuationDates, paymentDates, underlyingMultiplier, underlyingIndex, fxIndex)
+                             .withInitialPrice(initialPrice));
+
+    if (!t->bondData().creditCurveId().empty())
+        creditRiskCurrency = t->bondData().currency();
+    creditQualifierMapping[securitySpecificCreditCurveName(
+        StructuredSecurityId(t->bondData().securityId()).securityId(), t->bondData().creditCurveId())] =
+        SimmCreditQualifierMapping(StructuredSecurityId(t->bondData().securityId()).securityId(),
+                                   t->bondData().creditGroup(), t->bondData().hasCreditRisk());
+    creditQualifierMapping[t->bondData().creditCurveId()] =
+        SimmCreditQualifierMapping(t->bondData().securityId(), t->bondData().creditGroup(), t->bondData().hasCreditRisk());
 }
 
 void ForwardBondTrsUnderlyingBuilder::build(
-    const std::string& parentId, const boost::shared_ptr<Trade>& underlying, const std::vector<Date>& valuationDates, 
+    const std::string& parentId, const QuantLib::ext::shared_ptr<Trade>& underlying, const std::vector<Date>& valuationDates, 
     const std::vector<Date>& paymentDates, const std::string& fundingCurrency,
-    const boost::shared_ptr<EngineFactory>& engineFactory, boost::shared_ptr<QuantLib::Index>& underlyingIndex,
+    const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, QuantLib::ext::shared_ptr<QuantLib::Index>& underlyingIndex,
     Real& underlyingMultiplier, std::map<std::string, double>& indexQuantities,
-    std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices, Real& initialPrice,
+    std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices, Real& initialPrice,
     std::string& assetCurrency, std::string& creditRiskCurrency,
-    std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping, Date& maturity,
-    const std::function<boost::shared_ptr<QuantExt::FxIndex>(
-        const boost::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
-        const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
+    std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping,
+    const std::function<QuantLib::ext::shared_ptr<QuantExt::FxIndex>(
+        const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
+        const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
         getFxIndex,
     const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const {
-    auto t = boost::dynamic_pointer_cast<ore::data::ForwardBond>(underlying);
+
+    auto t = QuantLib::ext::dynamic_pointer_cast<ore::data::ForwardBond>(underlying);
     QL_REQUIRE(t, "could not cast to ore::data::ForwardBond, this is unexpected");
-    auto qlBond = boost::dynamic_pointer_cast<QuantExt::ForwardBond>(underlying->instrument()->qlInstrument());
+    auto qlBond = QuantLib::ext::dynamic_pointer_cast<QuantExt::ForwardBond>(underlying->instrument()->qlInstrument());
     QL_REQUIRE(qlBond, "expected QuantExt::ForwardBond, could not cast");
-    auto futuresIndex = boost::make_shared<QuantExt::BondFuturesIndex>(
-        parseDate(t->fwdMaturityDate()), t->bondData().securityId(), true, false, NullCalendar(), qlBond->underlying());
+
+    auto futuresIndex = QuantLib::ext::make_shared<QuantExt::BondFuturesIndex>("dummy", parseDate(t->fwdMaturityDate()),
+                                                                               qlBond->underlying(), 1.0, false);
+
     underlyingIndex = futuresIndex;
     underlyingMultiplier = t->bondData().bondNotional();
 
@@ -151,6 +197,8 @@ void ForwardBondTrsUnderlyingBuilder::build(
     std::string name = o.str();
     name.erase(name.length() - 3);
     indexQuantities[name] = underlyingMultiplier;
+
+    futuresIndex->setName(name);
 
     Real adj = t->bondData().priceQuoteMethod() == QuantExt::BondIndex::PriceQuoteMethod::CurrencyPerUnit
                    ? 1.0 / t->bondData().priceQuoteBaseValue()
@@ -168,26 +216,26 @@ void ForwardBondTrsUnderlyingBuilder::build(
     if (!t->bondData().creditCurveId().empty())
         creditRiskCurrency = t->bondData().currency();
     creditQualifierMapping[securitySpecificCreditCurveName(t->bondData().securityId(), t->bondData().creditCurveId())] =
-        SimmCreditQualifierMapping(t->bondData().securityId(), t->bondData().creditGroup());
+        SimmCreditQualifierMapping(t->bondData().securityId(), t->bondData().creditGroup(), t->bondData().hasCreditRisk());
     creditQualifierMapping[t->bondData().creditCurveId()] =
-        SimmCreditQualifierMapping(t->bondData().securityId(), t->bondData().creditGroup());
+        SimmCreditQualifierMapping(t->bondData().securityId(), t->bondData().creditGroup(), t->bondData().hasCreditRisk());
 }
 
 template <class T>
 void AssetPositionTrsUnderlyingBuilder<T>::build(
-    const std::string& parentId, const boost::shared_ptr<Trade>& underlying, const std::vector<Date>& valuationDates, 
+    const std::string& parentId, const QuantLib::ext::shared_ptr<Trade>& underlying, const std::vector<Date>& valuationDates, 
     const std::vector<Date>& paymentDates, const std::string& fundingCurrency,
-    const boost::shared_ptr<EngineFactory>& engineFactory, boost::shared_ptr<QuantLib::Index>& underlyingIndex,
+    const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, QuantLib::ext::shared_ptr<QuantLib::Index>& underlyingIndex,
     Real& underlyingMultiplier, std::map<std::string, double>& indexQuantities,
-    std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices, Real& initialPrice,
+    std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices, Real& initialPrice,
     std::string& assetCurrency, std::string& creditRiskCurrency,
-    std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping, Date& maturity,
-    const std::function<boost::shared_ptr<QuantExt::FxIndex>(
-        const boost::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
-        const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
+    std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping,
+    const std::function<QuantLib::ext::shared_ptr<QuantExt::FxIndex>(
+        const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
+        const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
         getFxIndex,
     const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const {
-    auto t = boost::dynamic_pointer_cast<T>(underlying);
+    auto t = QuantLib::ext::dynamic_pointer_cast<T>(underlying);
     QL_REQUIRE(t, "could not cast to ore::data::EquityPosition, this is unexpected");
     if (t->isSingleCurrency()) {
         assetCurrency = t->npvCurrency();
@@ -201,8 +249,8 @@ void AssetPositionTrsUnderlyingBuilder<T>::build(
                                                            engineFactory->configuration(MarketContext::pricing)));
         DLOG("underlying equity position is multi-currency, set assetCurrency to fundingCurrency = " << assetCurrency);
     }
-    std::vector<boost::shared_ptr<QuantExt::FxIndex>> fxConversion(t->data().underlyings().size());
-    std::vector<boost::shared_ptr<QuantLib::Index>> indices;
+    std::vector<QuantLib::ext::shared_ptr<QuantExt::FxIndex>> fxConversion(t->data().underlyings().size());
+    std::vector<QuantLib::ext::shared_ptr<QuantLib::Index>> indices;
     for (auto const& i : t->indices()) {
         indices.push_back(i);
         DLOG("underlying equity index " << i->name() << " added.");
@@ -213,7 +261,7 @@ void AssetPositionTrsUnderlyingBuilder<T>::build(
         updateQuantities(indexQuantities, t->data().underlyings()[i].name(),
                          t->weights()[i] * t->data().quantity());
     }
-    underlyingIndex = boost::make_shared<QuantExt::CompositeIndex>("Composite Index trade id " + parentId, indices,
+    underlyingIndex = QuantLib::ext::make_shared<QuantExt::CompositeIndex>("Composite Index trade id " + parentId, indices,
                                                                    t->weights(), fxConversion);
     DLOG("underlying equity index built with " << indices.size() << " constituents.");
     underlyingMultiplier = t->data().quantity();
@@ -227,19 +275,19 @@ void AssetPositionTrsUnderlyingBuilder<T>::build(
 
 template <>
 std::string AssetPositionTrsUnderlyingBuilder<ore::data::EquityPosition>::getIndexCurrencyFromPosition(
-    boost::shared_ptr<EquityPosition> position, size_t i) const {
+    QuantLib::ext::shared_ptr<EquityPosition> position, size_t i) const {
     return position->indices()[i]->currency().code();
 }
 
 template <>
 std::string AssetPositionTrsUnderlyingBuilder<ore::data::CommodityPosition>::getIndexCurrencyFromPosition(
-    boost::shared_ptr<CommodityPosition> position, size_t i) const {
+    QuantLib::ext::shared_ptr<CommodityPosition> position, size_t i) const {
     return position->indices()[i]->priceCurve()->currency().code();
 }
 
 template <class T>
 std::string AssetPositionTrsUnderlyingBuilder<T>::getIndexCurrencyFromPosition(
-    boost::shared_ptr<T> position, size_t i) const {
+    QuantLib::ext::shared_ptr<T> position, size_t i) const {
     QL_FAIL("internal error AssetPositionTrsUnderlyingBuilder only support Equity and Commodity positions");
 }
 
@@ -261,19 +309,19 @@ void AssetPositionTrsUnderlyingBuilder<T>::updateQuantities(std::map<std::string
 }
 
 void EquityOptionPositionTrsUnderlyingBuilder::build(
-    const std::string& parentId, const boost::shared_ptr<Trade>& underlying, const std::vector<Date>& valuationDates, 
+    const std::string& parentId, const QuantLib::ext::shared_ptr<Trade>& underlying, const std::vector<Date>& valuationDates, 
     const std::vector<Date>& paymentDates, const std::string& fundingCurrency,
-    const boost::shared_ptr<EngineFactory>& engineFactory, boost::shared_ptr<QuantLib::Index>& underlyingIndex,
+    const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, QuantLib::ext::shared_ptr<QuantLib::Index>& underlyingIndex,
     Real& underlyingMultiplier, std::map<std::string, double>& indexQuantities,
-    std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices, Real& initialPrice,
+    std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices, Real& initialPrice,
     std::string& assetCurrency, std::string& creditRiskCurrency,
-    std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping, Date& maturity,
-    const std::function<boost::shared_ptr<QuantExt::FxIndex>(
-        const boost::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
-        const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
+    std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping,
+    const std::function<QuantLib::ext::shared_ptr<QuantExt::FxIndex>(
+        const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
+        const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
         getFxIndex,
     const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const {
-    auto t = boost::dynamic_pointer_cast<ore::data::EquityOptionPosition>(underlying);
+    auto t = QuantLib::ext::dynamic_pointer_cast<ore::data::EquityOptionPosition>(underlying);
     QL_REQUIRE(t, "could not cast to ore::data::EquityOptionPosition, this is unexpected");
     if (t->isSingleCurrency()) {
         assetCurrency = t->npvCurrency();
@@ -288,8 +336,8 @@ void EquityOptionPositionTrsUnderlyingBuilder::build(
         DLOG("underlying equity option position is multi-currency, set assetCurrency to fundingCurrency = "
              << assetCurrency);
     }
-    std::vector<boost::shared_ptr<QuantExt::FxIndex>> fxConversion(t->data().underlyings().size());
-    std::vector<boost::shared_ptr<QuantLib::Index>> indices;
+    std::vector<QuantLib::ext::shared_ptr<QuantExt::FxIndex>> fxConversion(t->data().underlyings().size());
+    std::vector<QuantLib::ext::shared_ptr<QuantLib::Index>> indices;
     for (auto const& i : t->historicalPriceIndices()) {
         indices.push_back(i);
         DLOG("underlying historical equity option price index " << i->name() << " added.");
@@ -307,7 +355,7 @@ void EquityOptionPositionTrsUnderlyingBuilder::build(
         w.push_back(t->weights()[i] * t->positions()[i]);
     }
     underlyingIndex =
-        boost::make_shared<QuantExt::CompositeIndex>("Composite Index trade id " + parentId, indices, w, fxConversion);
+        QuantLib::ext::make_shared<QuantExt::CompositeIndex>("Composite Index trade id " + parentId, indices, w, fxConversion);
     DLOG("underlying equity option historical price index built with " << indices.size() << " constituents.");
     underlyingMultiplier = t->data().quantity();
     
@@ -319,19 +367,19 @@ void EquityOptionPositionTrsUnderlyingBuilder::build(
 }
 
 void BondPositionTrsUnderlyingBuilder::build(
-    const std::string& parentId, const boost::shared_ptr<Trade>& underlying, const std::vector<Date>& valuationDates, 
+    const std::string& parentId, const QuantLib::ext::shared_ptr<Trade>& underlying, const std::vector<Date>& valuationDates, 
     const std::vector<Date>& paymentDates, const std::string& fundingCurrency,
-    const boost::shared_ptr<EngineFactory>& engineFactory, boost::shared_ptr<QuantLib::Index>& underlyingIndex,
+    const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, QuantLib::ext::shared_ptr<QuantLib::Index>& underlyingIndex,
     Real& underlyingMultiplier, std::map<std::string, double>& indexQuantities,
-    std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices, Real& initialPrice,
+    std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices, Real& initialPrice,
     std::string& assetCurrency, std::string& creditRiskCurrency,
-    std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping, Date& maturity,
-    const std::function<boost::shared_ptr<QuantExt::FxIndex>(
-        const boost::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
-        const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
+    std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping,
+    const std::function<QuantLib::ext::shared_ptr<QuantExt::FxIndex>(
+        const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
+        const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
         getFxIndex,
     const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const {
-    auto t = boost::dynamic_pointer_cast<ore::data::BondPosition>(underlying);
+    auto t = QuantLib::ext::dynamic_pointer_cast<ore::data::BondPosition>(underlying);
     QL_REQUIRE(t, "could not cast to ore::data::BondPosition, this is unexpected");
     if (t->isSingleCurrency()) {
         assetCurrency = t->npvCurrency();
@@ -344,16 +392,16 @@ void BondPositionTrsUnderlyingBuilder::build(
         DLOG("underlying bond position is multi-currency, set assetCurrency to fundingCurrency = " << assetCurrency);
     }
 
-    std::vector<boost::shared_ptr<QuantExt::FxIndex>> fxConversion(t->data().underlyings().size());
-    std::vector<boost::shared_ptr<QuantLib::Index>> indices;
+    std::vector<QuantLib::ext::shared_ptr<QuantExt::FxIndex>> fxConversion(t->bonds().size());
+    std::vector<QuantLib::ext::shared_ptr<QuantLib::Index>> indices;
     bool hasCreditRisk = false;
     for (Size i = 0; i < t->bonds().size(); ++i) {
         // relative index, because weights are supposed to include any amortization factors
 
-        BondIndexBuilder bondIndexBuilder(t->data().underlyings()[i].name(), true, false, 
-            NullCalendar(), true, engineFactory, t->data().underlyings()[i].bidAskAdjustment(), true);
+        BondIndexBuilder bondIndexBuilder(t->bonds()[i].securityId, true, false, 
+            NullCalendar(), true, engineFactory, t->bidAskAdjustments()[i], true);
 
-        auto assetCurr = bondIndexBuilder.bond().bondData().currency();
+        auto assetCurr = bondIndexBuilder.bondData().currency();
         auto fxIndex = getFxIndex(engineFactory->market(), engineFactory->configuration(MarketContext::pricing),
                                   assetCurr, fundingCurrency, fxIndices);
 
@@ -368,53 +416,46 @@ void BondPositionTrsUnderlyingBuilder::build(
         indexQuantities[bondIndexBuilder.bondIndex()->name()] = t->weights()[i] * t->data().quantity();
         creditQualifierMapping[ore::data::securitySpecificCreditCurveName(t->bonds()[i].securityId,
                                                                           t->bonds()[i].creditCurveId)] =
-            SimmCreditQualifierMapping(t->bonds()[i].securityId, t->bonds()[i].creditGroup);
+            SimmCreditQualifierMapping(t->bonds()[i].securityId, t->bonds()[i].creditGroup, t->bonds()[i].hasCreditRisk);
         creditQualifierMapping[t->bonds()[i].creditCurveId] =
-            SimmCreditQualifierMapping(t->bonds()[i].securityId, t->bonds()[i].creditGroup);
+            SimmCreditQualifierMapping(t->bonds()[i].securityId, t->bonds()[i].creditGroup, t->bonds()[i].hasCreditRisk);
         hasCreditRisk = hasCreditRisk || t->bonds()[i].hasCreditRisk;
     }
-    for (Size i = 0; i < t->data().underlyings().size(); ++i) {
+    for (Size i = 0; i < t->bonds().size(); ++i) {
         fxConversion[i] = getFxIndex(engineFactory->market(), engineFactory->configuration(MarketContext::pricing),
                                      assetCurrency, t->bonds()[i].currency, fxIndices);
     }
     std::vector<Real> w;
-    for (Size i = 0; i < t->weights().size(); ++i) {
+    for (Size i = 0; i < t->bonds().size(); ++i) {
         w.push_back(t->weights()[i]);
     }
     underlyingIndex =
-        boost::make_shared<QuantExt::CompositeIndex>("Composite Index trade id " + parentId, indices, w, fxConversion);
+        QuantLib::ext::make_shared<QuantExt::CompositeIndex>("Composite Index trade id " + parentId, indices, w, fxConversion);
     DLOG("underlying bond position index built with " << indices.size() << " constituents.");
     underlyingMultiplier = t->data().quantity();
 
     if (hasCreditRisk)
         creditRiskCurrency = assetCurrency;
-    // FIXME same question as for single bond underlying: shouldn't we leave that empty and let TRS determine the
-    // maturity date based on valuation / funding dates?
-    maturity = t->maturity();
 }
 
 void DerivativeTrsUnderlyingBuilder::build(
-    const std::string& parentId, const boost::shared_ptr<Trade>& underlying, const std::vector<Date>& valuationDates, 
+    const std::string& parentId, const QuantLib::ext::shared_ptr<Trade>& underlying, const std::vector<Date>& valuationDates, 
     const std::vector<Date>& paymentDates, const std::string& fundingCurrency,
-    const boost::shared_ptr<EngineFactory>& engineFactory, boost::shared_ptr<QuantLib::Index>& underlyingIndex,
+    const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, QuantLib::ext::shared_ptr<QuantLib::Index>& underlyingIndex,
     Real& underlyingMultiplier, std::map<std::string, double>& indexQuantities,
-    std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices, Real& initialPrice,
+    std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices, Real& initialPrice,
     std::string& assetCurrency, std::string& creditRiskCurrency,
-    std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping, Date& maturity,
-    const std::function<boost::shared_ptr<QuantExt::FxIndex>(
-        const boost::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
-        const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
+    std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping,
+    const std::function<QuantLib::ext::shared_ptr<QuantExt::FxIndex>(
+        const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
+        const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
         getFxIndex,
     const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const {
     assetCurrency = underlying->npvCurrency();
     auto indexName = "GENERIC-" + underlyingDerivativeId;
     IndexNameTranslator::instance().add(indexName, indexName);
-    underlyingIndex = boost::make_shared<QuantExt::GenericIndex>(indexName);
+    underlyingIndex = QuantLib::ext::make_shared<QuantExt::GenericIndex>(indexName);
     indexQuantities[indexName] = 1.0;
-    underlyingMultiplier = 1.0;
-    // FIXME same question as for single bond underlying: shouldn't we leave that empty and let TRS determine the
-    // maturity date based on valuation / funding dates?
-    maturity = underlying->maturity();
     
     auto fxIndex = getFxIndex(engineFactory->market(), engineFactory->configuration(MarketContext::pricing),
                               assetCurrency, fundingCurrency, fxIndices);

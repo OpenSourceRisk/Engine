@@ -9,7 +9,7 @@
     <Product type="Swap">
     <Model>DiscountedCashflows</Model>
     <ModelParameters/>
-    <Engine>DiscountingSwapEngineOptimised</Engine>
+    <Engine>DiscountingSwapEngine</Engine>
     <EngineParameters/>
   </Product>
   <Product type="CappedFlooredCpiLegCoupons">

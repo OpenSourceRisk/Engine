@@ -46,7 +46,7 @@ namespace {
 
 // run a naive mc simulation and price defaultable zero bonds and equity call options at the payoffTimes
 
-void runMcSimulation(const boost::shared_ptr<DefaultableEquityJumpDiffusionModel>& model, const Size nPaths,
+void runMcSimulation(const QuantLib::ext::shared_ptr<DefaultableEquityJumpDiffusionModel>& model, const Size nPaths,
                      const Size seed, const Size timeSteps, const std::vector<Real>& payoffTimes,
                      const std::vector<Real>& equityCallStrikes, std::vector<Real>& resultDefaultableBonds,
                      std::vector<Real>& resultEquityOptions) {
@@ -63,7 +63,7 @@ void runMcSimulation(const boost::shared_ptr<DefaultableEquityJumpDiffusionModel
     resultDefaultableBonds.resize(payoffTimes.size(), 0.0);
     resultEquityOptions.resize(payoffTimes.size(), 0.0);
 
-    auto pathGen = boost::make_shared<SobolBrownianGenerator>(1, grid.size() - 1, SobolBrownianGenerator::Steps, seed,
+    auto pathGen = QuantLib::ext::make_shared<SobolBrownianGenerator>(1, grid.size() - 1, SobolBrownianGenerator::Steps, seed,
                                                               SobolRsg::JoeKuoD7);
     MersenneTwisterUniformRng mt(seed);
     std::vector<Real> out(1);
@@ -120,14 +120,14 @@ BOOST_AUTO_TEST_CASE(test_zero_p) {
     Real S0 = 100.0;
     std::vector<Real> stepTimes = {1.0, 2.0, 3.0, 4.0, 5.0};
 
-    Handle<YieldTermStructure> rate(boost::make_shared<FlatForward>(0, NullCalendar(), 0.01, Actual365Fixed()));
-    Handle<YieldTermStructure> dividend(boost::make_shared<FlatForward>(0, NullCalendar(), 0.02, Actual365Fixed()));
-    Handle<BlackVolTermStructure> vol(boost::make_shared<BlackConstantVol>(0, NullCalendar(), 0.3, Actual365Fixed()));
+    Handle<YieldTermStructure> rate(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.01, Actual365Fixed()));
+    Handle<YieldTermStructure> dividend(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.02, Actual365Fixed()));
+    Handle<BlackVolTermStructure> vol(QuantLib::ext::make_shared<BlackConstantVol>(0, NullCalendar(), 0.3, Actual365Fixed()));
     Handle<DefaultProbabilityTermStructure> creditCurve(
-        boost::make_shared<FlatHazardRate>(0, NullCalendar(), 0.0050, Actual365Fixed()));
+        QuantLib::ext::make_shared<FlatHazardRate>(0, NullCalendar(), 0.0050, Actual365Fixed()));
 
-    auto equity = boost::make_shared<EquityIndex2>("myEqIndex", NullCalendar(), EURCurrency(),
-                                                  Handle<Quote>(boost::make_shared<SimpleQuote>(S0)), rate, dividend);
+    auto equity = QuantLib::ext::make_shared<EquityIndex2>("myEqIndex", NullCalendar(), EURCurrency(),
+                                                  Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(S0)), rate, dividend);
 
     std::vector<Real> strikes;
     for (auto const& t : stepTimes) {
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(test_zero_p) {
 
         std::vector<Real> resultDefaultableBonds, resultEquityOptions;
         // mode does not matter, since p=0 and we don't enforce Fokker-Planck bootstrap
-        auto modelBuilder = boost::make_shared<DefaultableEquityJumpDiffusionModelBuilder>(
+        auto modelBuilder = QuantLib::ext::make_shared<DefaultableEquityJumpDiffusionModelBuilder>(
             stepTimes, equity, vol, creditCurve, 0.0, eta, false, 24, 100, 1E-4, 1.5, Null<Real>(),
             DefaultableEquityJumpDiffusionModelBuilder::BootstrapMode::Simultaneously, false);
         auto model = *modelBuilder->model();
@@ -188,14 +188,14 @@ BOOST_AUTO_TEST_CASE(test_nonzero_p) {
     Real S0 = 100.0;
     std::vector<Real> stepTimes = {1.0, 2.0, 3.0, 4.0, 5.0};
 
-    Handle<YieldTermStructure> rate(boost::make_shared<FlatForward>(0, NullCalendar(), 0.01, Actual365Fixed()));
-    Handle<YieldTermStructure> dividend(boost::make_shared<FlatForward>(0, NullCalendar(), 0.02, Actual365Fixed()));
-    Handle<BlackVolTermStructure> vol(boost::make_shared<BlackConstantVol>(0, NullCalendar(), 0.3, Actual365Fixed()));
+    Handle<YieldTermStructure> rate(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.01, Actual365Fixed()));
+    Handle<YieldTermStructure> dividend(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.02, Actual365Fixed()));
+    Handle<BlackVolTermStructure> vol(QuantLib::ext::make_shared<BlackConstantVol>(0, NullCalendar(), 0.3, Actual365Fixed()));
     Handle<DefaultProbabilityTermStructure> creditCurve(
-        boost::make_shared<FlatHazardRate>(0, NullCalendar(), 0.0050, Actual365Fixed()));
+        QuantLib::ext::make_shared<FlatHazardRate>(0, NullCalendar(), 0.0050, Actual365Fixed()));
 
-    auto equity = boost::make_shared<EquityIndex2>("myEqIndex", NullCalendar(), EURCurrency(),
-                                                  Handle<Quote>(boost::make_shared<SimpleQuote>(S0)), rate, dividend);
+    auto equity = QuantLib::ext::make_shared<EquityIndex2>("myEqIndex", NullCalendar(), EURCurrency(),
+                                                  Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(S0)), rate, dividend);
 
     std::vector<Real> strikes;
     for (auto const& t : stepTimes) {
@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE(test_nonzero_p) {
             for (auto const& eta : etas) {
 
                 std::vector<Real> resultDefaultableBonds, resultEquityOptions;
-                auto modelBuilder = boost::make_shared<DefaultableEquityJumpDiffusionModelBuilder>(
+                auto modelBuilder = QuantLib::ext::make_shared<DefaultableEquityJumpDiffusionModelBuilder>(
                     stepTimes, equity, vol, creditCurve, p, eta, false, 24, 400, 1E-5, 1.5, Null<Real>(), mode, true);
                 auto model = *modelBuilder->model();
 

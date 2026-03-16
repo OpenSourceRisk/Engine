@@ -404,10 +404,10 @@ bool isAuctionedSeniority(CdsTier contractTier, CreditEventTiers creditEventTier
 }
 // end TODO refactor to creditevents.cpp
 
-CdsReferenceInformation::CdsReferenceInformation() : tier_(CdsTier::SNRFOR), docClause_(boost::none) {}
+CdsReferenceInformation::CdsReferenceInformation() : tier_(CdsTier::SNRFOR), docClause_(QuantLib::ext::nullopt) {}
 
 CdsReferenceInformation::CdsReferenceInformation(const string& referenceEntityId, CdsTier tier,
-                                                 const Currency& currency, boost::optional<CdsDocClause> docClause)
+                                                 const Currency& currency, QuantLib::ext::optional<CdsDocClause> docClause)
     : referenceEntityId_(referenceEntityId), tier_(tier), currency_(currency), docClause_(docClause) {
     populateId();
 }
@@ -444,7 +444,7 @@ CdsDocClause CdsReferenceInformation::docClause() const {
     return *docClause_;
 }
 
-bool CdsReferenceInformation::hasDocClause() const { return docClause_ != boost::none; }
+bool CdsReferenceInformation::hasDocClause() const { return docClause_ != QuantLib::ext::nullopt; }
 
 bool tryParseCdsInformation(string strInfo, CdsReferenceInformation& cdsInfo) {
 
@@ -469,7 +469,7 @@ bool tryParseCdsInformation(string strInfo, CdsReferenceInformation& cdsInfo) {
         return false;
     }
 
-    boost::optional<CdsDocClause> cdsDocClause;
+    QuantLib::ext::optional<CdsDocClause> cdsDocClause;
     if (tokens.size() == 4) {
         CdsDocClause tmp;
         if (!tryParse<CdsDocClause>(tokens[3], tmp, &parseCdsDocClause)) {

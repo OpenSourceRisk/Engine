@@ -40,16 +40,14 @@ using namespace std;
 class RegressionDynamicInitialMarginCalculator : public DynamicInitialMarginCalculator {
 public:
     RegressionDynamicInitialMarginCalculator(
-        //! Global input parameters
-        const boost::shared_ptr<InputParameters>& inputs,
         //! Driving portfolio consistent with the cube below
-        const boost::shared_ptr<Portfolio>& portfolio,
+        const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
         //! NPV cube resulting from the Monte Carlo simulation loop
-        const boost::shared_ptr<NPVCube>& cube,
+        const QuantLib::ext::shared_ptr<NPVCube>& cube,
         //! Interpretation of the cube, regular NPV, MPoR grid etc
-        const boost::shared_ptr<CubeInterpretation>& cubeInterpretation,
+        const QuantLib::ext::shared_ptr<CubeInterpretation>& cubeInterpretation,
          //! Additional output of the MC simulation loop with numeraires, index fixings, FX spots etc
-        const boost::shared_ptr<AggregationScenarioData>& scenarioData,
+        const QuantLib::ext::shared_ptr<AggregationScenarioData>& scenarioData,
         //! VaR quantile expressed as a percentage
         Real quantile,
         //! VaR holding period in calendar days
@@ -62,15 +60,17 @@ public:
         Size localRegressionEvaluations = 0,
         //! Local regression band width in standard deviations of the regression variable
         Real localRegressionBandWidth = 0,
-	//! Actual t0 IM by netting set used to scale the DIM evolution, no scaling if the argument is omitted
-	const std::map<std::string, Real>& currentIM = std::map<std::string, Real>());
+	    //! Actual t0 IM by netting set used to scale the DIM evolution, no scaling if the argument is omitted
+	    const std::map<std::string, Real>& currentIM = std::map<std::string, Real>(),
+        //! Deterministic Intitial Margin time series by netting set
+        const std::map<std::string, TimeSeries<Real>>& deterministicInitialMargin = {});
 
-    map<string, Real> unscaledCurrentDIM() override;
+    const map<string, Real>& unscaledCurrentDIM() const override;
     void build() override;
     void exportDimEvolution(ore::data::Report& dimEvolutionReport) const override;
 
     void exportDimRegression(const std::string& nettingSet, const std::vector<Size>& timeSteps,
-                             const std::vector<boost::shared_ptr<ore::data::Report>>& dimRegReports);
+                             const std::vector<QuantLib::ext::shared_ptr<ore::data::Report>>& dimRegReports);
 
     const vector<vector<Real>>& localRegressionResults(const string& nettingSet);
     const vector<Real>& zeroOrderResults(const string& nettingSet);
@@ -94,6 +94,9 @@ private:
     map<string, vector<Real>> nettingSetZeroOrderDIM_;
     map<string, vector<Real>> nettingSetSimpleDIMh_;
     map<string, vector<Real>> nettingSetSimpleDIMp_;
+
+    map<string, Real> currentDIM_;
+    std::map<std::string, TimeSeries<Real>> deterministicInitialMargin_;
 };
 
 inline bool lessThan(const Array& a, const Array& b) {

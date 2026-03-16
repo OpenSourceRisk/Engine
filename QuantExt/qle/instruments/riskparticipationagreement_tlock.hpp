@@ -41,7 +41,7 @@ public:
     /*! The bond must be a fixed rate bond, i.e. it may only contain FixedCoupons.
         The udnerlying payout is (referenceRate - bond yield) * DV01 if payer = false, otherwise multiplied by -1.
         As in the swap RPA, protectionFeepayer = true means protection is received, protection fee is paid. */
-    RiskParticipationAgreementTLock(const boost::shared_ptr<QuantLib::Bond>& bond, Real bondNotional, bool payer,
+    RiskParticipationAgreementTLock(const QuantLib::ext::shared_ptr<QuantLib::Bond>& bond, Real bondNotional, bool payer,
                                     Real referenceRate, const DayCounter& dayCounter, const Date& terminationDate,
                                     const Date& paymentDate, const std::vector<Leg>& protectionFee,
                                     const bool protectionFeePayer, const std::vector<std::string>& protectionFeeCcys,
@@ -53,7 +53,7 @@ public:
     bool isExpired() const override;
 
     //! Inspectors
-    const boost::shared_ptr<QuantLib::Bond>& bond() const { return bond_; }
+    const QuantLib::ext::shared_ptr<QuantLib::Bond>& bond() const { return bond_; }
     bool payer() { return payer_; }
     Real referenceRate() const { return referenceRate_; }
     const DayCounter& dayCounter() const { return dayCounter_; }
@@ -78,7 +78,7 @@ private:
     void fetchResults(const QuantLib::PricingEngine::results*) const override;
 
     // underlying
-    boost::shared_ptr<QuantLib::Bond> bond_;
+    QuantLib::ext::shared_ptr<QuantLib::Bond> bond_;
     Real bondNotional_;
     bool payer_;
     Real referenceRate_;
@@ -106,7 +106,7 @@ public:
     void validate() const override {}
 
     // underlying
-    boost::shared_ptr<QuantLib::Bond> bond;
+    QuantLib::ext::shared_ptr<QuantLib::Bond> bond;
     Real bondNotional;
     bool payer;
     Real referenceRate;

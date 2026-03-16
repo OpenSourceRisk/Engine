@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <algorithm>
 #include <ored/scripting/engines/riskparticipationagreementbaseengine.hpp>
 
 #include <ql/cashflows/floatingratecoupon.hpp>
@@ -29,9 +30,11 @@ namespace data {
 RiskParticipationAgreementBaseEngine::RiskParticipationAgreementBaseEngine(
     const std::string& baseCcy, const std::map<std::string, Handle<YieldTermStructure>>& discountCurves,
     const std::map<std::string, Handle<Quote>>& fxSpots, const Handle<DefaultProbabilityTermStructure>& defaultCurve,
-    const Handle<Quote>& recoveryRate, const Size maxGapDays, const Size maxDiscretisationPoints)
+    const Handle<Quote>& recoveryRate, const Size maxGapDays, const Size maxDiscretisationPoints,
+    const OptionExpiryPosition optionExpiryPosition)
     : baseCcy_(baseCcy), discountCurves_(discountCurves), fxSpots_(fxSpots), defaultCurve_(defaultCurve),
-      recoveryRate_(recoveryRate), maxGapDays_(maxGapDays), maxDiscretisationPoints_(maxDiscretisationPoints) {
+      recoveryRate_(recoveryRate), maxGapDays_(maxGapDays), maxDiscretisationPoints_(maxDiscretisationPoints),
+      optionExpiryPosition_(optionExpiryPosition) {
     QL_REQUIRE(maxGapDays == Null<Size>() || maxGapDays >= 1,
                "invalid maxGapDays (" << maxGapDays << "), must be >= 1");
     QL_REQUIRE(maxDiscretisationPoints_ == Null<Size>() || maxDiscretisationPoints_ >= 1,
@@ -42,7 +45,7 @@ RiskParticipationAgreementBaseEngine::RiskParticipationAgreementBaseEngine(
         registerWith(s.second);
     registerWith(defaultCurve_);
     registerWith(recoveryRate_);
-    fxSpots_[baseCcy_] = Handle<Quote>(boost::make_shared<SimpleQuote>(1.0));
+    fxSpots_[baseCcy_] = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
 }
 
 // just for debugging
@@ -71,7 +74,7 @@ std::vector<Date> RiskParticipationAgreementBaseEngine::buildDiscretisationGrid(
     std::vector<Date> accrualDates;
     for (auto const& l : underlying) {
         for (auto const& c : l) {
-            if (auto f = boost::dynamic_pointer_cast<FloatingRateCoupon>(c)) {
+            if (auto f = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(c)) {
                 accrualDates.push_back(f->accrualEndDate());
             }
         }
@@ -226,7 +229,7 @@ void RiskParticipationAgreementBaseEngine::calculate() const {
             // the fee is only paid if the reference entity is still alive at the payment date
             fee += thisFeeAmounts.back() * thisFeeDiscounts.back() * feeFXSpot.back() * thisFeeSurvivalProbs.back();
             // accrual settlement using the mid of the coupon periods
-            auto cpn = boost::dynamic_pointer_cast<Coupon>(c);
+            auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(c);
             if (cpn && arguments_.settlesAccrual) {
                 Date start = std::max(cpn->accrualStartDate(), referenceDate_);
                 Date end = cpn->accrualEndDate();
@@ -296,6 +299,16 @@ void RiskParticipationAgreementBaseEngine::calculate() const {
         results_.additionalResults["FeePeriodPDs"] = feePeriodPDs[l];
         results_.additionalResults["FeeFXSpot"] = feeFXSpot;
         results_.additionalResults["FeeCurrency"] = arguments_.protectionFeeCcys[l];
+    }
+}
+
+RiskParticipationAgreementBaseEngine::OptionExpiryPosition parseRpaOptionExpiryPosition(const std::string& s) {
+    if (s == "Mid")
+        return RiskParticipationAgreementBaseEngine::OptionExpiryPosition::Mid;
+    else if (s == "Left")
+        return RiskParticipationAgreementBaseEngine::OptionExpiryPosition::Left;
+    else {
+        QL_FAIL("parseRpaOptionExpiryPosition(" << s << "): not recognized, expected 'Mid' or 'Left'");
     }
 }
 

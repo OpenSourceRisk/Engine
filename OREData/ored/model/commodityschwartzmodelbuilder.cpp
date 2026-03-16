@@ -19,7 +19,8 @@
 #include <ql/math/optimization/levenbergmarquardt.hpp>
 #include <ql/quotes/simplequote.hpp>
 
-#include <qle/models/commodityschwartzparametrization.hpp>
+#include <qle/models/commodityschwartzpiecewiseconstantparametrization.hpp>
+#include <qle/models/commodityschwartzconstantparametrization.hpp>
 #include <qle/models/futureoptionhelper.hpp>
 #include <qle/pricingengines/commodityschwartzfutureoptionengine.hpp>
 
@@ -38,14 +39,14 @@ namespace ore {
 namespace data {
 
 CommoditySchwartzModelBuilder::CommoditySchwartzModelBuilder(
-                         const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<CommoditySchwartzData>& data,
+                         const QuantLib::ext::shared_ptr<ore::data::Market>& market, const QuantLib::ext::shared_ptr<CommoditySchwartzData>& data,
                          const QuantLib::Currency& baseCcy, const std::string& configuration,
                          const std::string& referenceCalibrationGrid)
     : market_(market), configuration_(configuration), data_(data), referenceCalibrationGrid_(referenceCalibrationGrid),
       baseCcy_(baseCcy) {
 
-    optionActive_ = std::vector<bool>(data_->optionExpiries().size(), false);
-    marketObserver_ = boost::make_shared<MarketObserver>();
+    optionActive_ = std::vector<bool>(data->optionExpiries().size(), false);
+    marketObserver_ = QuantLib::ext::make_shared<MarketObserver>();
     QuantLib::Currency ccy = ore::data::parseCurrency(data->currency());
     string name = data->name();
 
@@ -69,17 +70,50 @@ CommoditySchwartzModelBuilder::CommoditySchwartzModelBuilder(
     alwaysForwardNotifications();
 
     // build option basket and derive parametrization from it
-    if (data->calibrateSigma() || data->calibrateKappa())
+    if (data->calibrateSigma() || data->calibrateKappa() || data->calibrateSeasonality())
         buildOptionBasket();
 
-    parametrization_ = boost::make_shared<QuantExt::CommoditySchwartzParametrization>(ccy, name, curve_, fxSpot_,
-                                                                                      data->sigmaValue(), data->kappaValue(),
-                                                                                      data->driftFreeState());
-    model_ = boost::make_shared<QuantExt::CommoditySchwartzModel>(parametrization_);
+    Array seasonalityTimes_a, seasonalityValues_a;
+
+    if (data->seasonalityParamType()  == ParamType::Constant ){
+        QL_REQUIRE(data->seasonalityTimes().size() == 0, "seasonality time grid size 0 expected");
+        QL_REQUIRE(data->seasonalityValues().size() == 1, "initial seasonality grid size 1 expected");
+        seasonalityValues_a = Array(data->seasonalityValues().begin(), data->seasonalityValues().end());
+    } else {
+        if (data->calibrateSeasonality()) { // override
+            QL_REQUIRE(optionExpiries_.size() > 0, "optionExpiries is empty");
+            // the last expiry is taken, as a(T) is calibrated not \int_{0}^T \sigma_{T-1}(u)du
+            seasonalityTimes_a = Array(optionExpiries_.begin(), optionExpiries_.end()); 
+            seasonalityValues_a = Array(seasonalityTimes_a.size(), data->seasonalityValues()[0]);
+        } else {
+            // use input time grid and input alpha array otherwise
+            seasonalityTimes_a = Array(data->seasonalityTimes().begin(), data->seasonalityTimes().end());
+            seasonalityValues_a = Array(data->seasonalityValues().begin(), data->seasonalityValues().end());
+            QL_REQUIRE(seasonalityValues_a.size() == seasonalityTimes_a.size(), "seasonality grids do not match");
+        }
+    }
+    if (data->seasonalityParamType() == ParamType::Piecewise)
+        parametrization_ = QuantLib::ext::make_shared<QuantExt::CommoditySchwartzPiecewiseConstantParametrization>(ccy, name, curve_, fxSpot_,
+                                                                                                    data->sigmaValue(), data->kappaValue(),
+                                                                                                    seasonalityTimes_a, seasonalityValues_a, 
+                                                                                                    QuantLib::ext::make_shared<QuantLib::NoConstraint>(),
+                                                                                                    data->driftFreeState());
+    else if (data->seasonalityParamType() == ParamType::Constant)
+        parametrization_ = QuantLib::ext::make_shared<QuantExt::CommoditySchwartzConstantParametrization>(ccy, name, curve_, fxSpot_,
+                                                                                                    data->sigmaValue(), data->kappaValue(),
+                                                                                                    seasonalityValues_a[0],
+                                                                                                    data->driftFreeState());
+    else
+        QL_FAIL("interpolation type not supported for commodity");
+
+
+
+    //TODO: constant parametrisation see eqbsmodelbuilder.cpp
+    model_ = QuantLib::ext::make_shared<QuantExt::CommoditySchwartzModel>(parametrization_);
     params_ = model_->params();
 }
 
-boost::shared_ptr<QuantExt::CommoditySchwartzModel> CommoditySchwartzModelBuilder::model() const {
+QuantLib::ext::shared_ptr<QuantExt::CommoditySchwartzModel> CommoditySchwartzModelBuilder::model() const {
     calculate();
     return model_;
 }
@@ -89,11 +123,11 @@ Real CommoditySchwartzModelBuilder::error() const {
     return error_;
 }
 
-boost::shared_ptr<QuantExt::CommoditySchwartzParametrization> CommoditySchwartzModelBuilder::parametrization() const {
+QuantLib::ext::shared_ptr<QuantExt::CommoditySchwartzParametrization> CommoditySchwartzModelBuilder::parametrization() const {
     calculate();
     return parametrization_;
 }
-std::vector<boost::shared_ptr<BlackCalibrationHelper>> CommoditySchwartzModelBuilder::optionBasket() const {
+std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>> CommoditySchwartzModelBuilder::optionBasket() const {
     calculate();
     return optionBasket_;
 }
@@ -106,70 +140,15 @@ bool CommoditySchwartzModelBuilder::requiresRecalibration() const {
 void CommoditySchwartzModelBuilder::performCalculations() const {
     if (requiresRecalibration()) {
         DLOG("COM model requires recalibration");
-
-        // reset market observer updated flag
-        marketObserver_->hasUpdated(true);
-        // build option basket
         buildOptionBasket();
-        // update vol cache
-        volSurfaceChanged(true);
-
-        // attach pricing engine to helpers
-        boost::shared_ptr<QuantExt::CommoditySchwartzFutureOptionEngine> engine =
-            boost::make_shared<QuantExt::CommoditySchwartzFutureOptionEngine>(model_);
-        for (Size j = 0; j < optionBasket_.size(); j++)
-            optionBasket_[j]->setPricingEngine(engine);
-
-        QL_REQUIRE(data_->calibrationType() != CalibrationType::Bootstrap, "Bootstrap COM calibration not supported yet");
-
-        if (data_->calibrationType() == CalibrationType::None ||
-            (data_->calibrateSigma() == false && data_->calibrateKappa() == false)) {
-            LOG("COM calibration is deactivated in the CommoditySchwartzModelData for name " << data_->name());
-            return;
-        }
-
-        // check which parameters are kept fixed
-        std::vector<bool> fix(model_->parametrization()->numberOfParameters(), true);
-        std::vector<Real> weights;
-        Size freeParams = 0;
-        if (data_->calibrateSigma()) {
-            fix[0] = false;
-            freeParams++;
-            LOG("CommoditySchwartzModel: calibrate sigma for name " << data_->name());
-        }
-        if (data_->calibrateKappa()) {
-            fix[1] = false;
-            freeParams++;
-            LOG("CommoditySchwartzModel: calibrate kappa for name " << data_->name());
-        }
-        if (freeParams == 0) {
-            WLOG("CommoditySchwartzModel: skip calibration for name " << data_->name() << ", no free parameters");
-            error_ = 0.0;
-            return;
-        }
-
-        LOG("CommoditySchwartzModel for name " << data_->name() << " before calibration:"
-            << " sigma=" << parametrization_->sigmaParameter()
-            << " kappa=" << parametrization_->kappaParameter());
-
-        // use identical start values for each calibration to ensure identical results for identical baskets
-        model_->setParams(params_);
-
-        model_->calibrate(optionBasket_, *data_->optimizationMethod(), data_->endCriteria(), data_->constraint(), weights, fix);
-
-        LOG("CommoditySchwartzModel for name " << data_->name() << " after calibration:"
-            << " sigma=" << parametrization_->sigmaParameter()
-            << " kappa=" << parametrization_->kappaParameter());
-
-        error_ = getCalibrationError(optionBasket_);
-        LOG("CommoditySchwartzModel calibration rmse error " << error_ << " for name " << data_->name());
-        try {
-            auto d = getCalibrationDetails(optionBasket_, parametrization_);
-            DLOG(d);
-        } catch (const std::exception& e) {
-            WLOG("An error occurred: " << e.what());
-        }
     }
+}
+
+void CommoditySchwartzModelBuilder::setCalibrationDone() const {
+    // reset market observer updated flag
+    marketObserver_->hasUpdated(true);
+    // update vol cache
+    volSurfaceChanged(true);
 }
 
 Real CommoditySchwartzModelBuilder::optionStrike(const Size j) const {
@@ -242,8 +221,8 @@ void CommoditySchwartzModelBuilder::buildOptionBasket() const {
         if (refCalDate == referenceCalibrationDates.end() || *refCalDate > lastRefCalDate) {
             optionActive_[j] = true;
             Real strikeValue = optionStrike(j);
-            Handle<Quote> volQuote(boost::make_shared<SimpleQuote>(vol_->blackVol(expiryDate, strikeValue)));
-            boost::shared_ptr<QuantExt::FutureOptionHelper> helper = boost::make_shared<QuantExt::FutureOptionHelper>(
+            Handle<Quote> volQuote(QuantLib::ext::make_shared<SimpleQuote>(vol_->blackVol(expiryDate, strikeValue)));
+            QuantLib::ext::shared_ptr<QuantExt::FutureOptionHelper> helper = QuantLib::ext::make_shared<QuantExt::FutureOptionHelper>(
                 expiryDate, strikeValue, curve_, volQuote, data_->calibrationErrorType());
             optionBasket_.push_back(helper);
             helper->performCalculations();

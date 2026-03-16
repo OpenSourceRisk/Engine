@@ -101,7 +101,7 @@ using namespace QuantLib;
   The pricing algorithm allows for varying notional amounts and
   default termstructures of the underlyings.
 
-  \ingroup credit
+  \ingroup instruments
 
   \todo Investigate and fix cases \f$ E_{i+1} < E_i. \f$
 */
@@ -120,18 +120,18 @@ public:
                payment date...
     */
     // RL: QuantExt version
-    SyntheticCDO(const boost::shared_ptr<QuantExt::Basket>& basket, Protection::Side side, const Schedule& schedule,
+    SyntheticCDO(const QuantLib::ext::shared_ptr<QuantExt::Basket>& basket, Protection::Side side, const Schedule& schedule,
                  Rate upfrontRate, Rate runningRate, const DayCounter& dayCounter,
                  BusinessDayConvention paymentConvention, bool settlesAccrual = true,
                  const QuantLib::CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime =
                      QuantLib::CreditDefaultSwap::ProtectionPaymentTime::atDefault,
                  Date protectionStart = Date(), Date upfrontDate = Date(),
-                 boost::optional<Real> notional = boost::none,
+                 QuantLib::ext::optional<Real> notional = QuantLib::ext::nullopt,
                  Real recoveryRate = Null<Real>(),
                  const DayCounter& lastPeriodDayCounter = DayCounter());
 
     // RL: QuantExt version
-    const boost::shared_ptr<QuantExt::Basket>& basket() const { return basket_; }
+    const QuantLib::ext::shared_ptr<QuantExt::Basket>& basket() const { return basket_; }
 
     bool isExpired() const override;
     Rate fairPremium() const;
@@ -140,7 +140,12 @@ public:
     Rate protectionValue() const;
     Real premiumLegNPV() const;
     Real protectionLegNPV() const;
-    //! Returns the recovery rate for fixed recovery CDO, otherwise returns Null<Real>() 
+    Real accrualRebateNPV() const;
+    Real accrualRebateNPVCurrent() const;
+    Real upfrontPremiumValue() const;
+    Real cleanNPV() const;
+
+    //! Returns the recovery rate for fixed recovery CDO, otherwise returns Null<Real>()
     Real recoveryRate() const { return recoveryRate_; }
     /*!
       Total outstanding tranche notional, not wiped out
@@ -152,7 +157,7 @@ public:
     Real leverageFactor() const { return leverageFactor_; }
     //! Last protection date.
     const Date& maturity() const {
-        return boost::dynamic_pointer_cast<FixedRateCoupon>(normalizedLeg_.back())->accrualEndDate();
+        return QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(normalizedLeg_.back())->accrualEndDate();
     }
     /*! The Gaussian Copula LHP implied correlation that makes the
         contract zero value. This is for a flat correlation along
@@ -174,7 +179,7 @@ private:
     void setupExpired() const override;
 
     // RL: QuantExt version
-    boost::shared_ptr<QuantExt::Basket> basket_;
+    QuantLib::ext::shared_ptr<QuantExt::Basket> basket_;
     Protection::Side side_;
     Leg normalizedLeg_;
 
@@ -187,7 +192,7 @@ private:
     QuantLib::CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime_;
     Date protectionStart_;
     Date upfrontDate_;
-    boost::shared_ptr<CashFlow> upfrontPayment_, accrualRebate_, accrualRebateCurrent_;
+    QuantLib::ext::shared_ptr<CashFlow> upfrontPayment_, accrualRebate_, accrualRebateCurrent_;
     Real recoveryRate_;
     
     mutable Real premiumValue_;
@@ -196,6 +201,9 @@ private:
     mutable Real remainingNotional_;
     mutable Size error_;
     mutable std::vector<Real> expectedTrancheLoss_;
+    mutable Real accrualRebateNPV_;
+    mutable Real accrualRebateNPVCurrent_;
+    mutable Real cleanNPV_;
 };
 
 class SyntheticCDO::arguments : public virtual PricingEngine::arguments {
@@ -204,7 +212,7 @@ public:
     void validate() const override;
 
     // RL: QuantExt version
-    boost::shared_ptr<QuantExt::Basket> basket;
+    QuantLib::ext::shared_ptr<QuantExt::Basket> basket;
     Protection::Side side;
     Leg normalizedLeg;
 
@@ -213,7 +221,7 @@ public:
     Real leverageFactor;
     DayCounter dayCounter;
     BusinessDayConvention paymentConvention;
-    boost::shared_ptr<CashFlow> upfrontPayment, accrualRebate, accrualRebateCurrent;
+    QuantLib::ext::shared_ptr<CashFlow> upfrontPayment, accrualRebate, accrualRebateCurrent;
     bool settlesAccrual;
     QuantLib::CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime;
     Date protectionStart;
@@ -229,6 +237,9 @@ public:
     Real upfrontPremiumValue;
     Real accrualRebateValue;
     Real accrualRebateCurrentValue;
+    Real accrualRebateNPV_;
+    Real accrualRebateNPVCurrent_;
+    Real cleanNPV;
     Real remainingNotional;
     Real xMin, xMax;
     Size error;

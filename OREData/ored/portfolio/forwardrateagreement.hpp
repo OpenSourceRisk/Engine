@@ -41,11 +41,18 @@ public:
         : ore::data::Swap(env, "ForwardRateAgreement"), longShort_(longShort), currency_(currency), startDate_(startDate),
           endDate_(endDate), index_(index), strike_(strike), amount_(amount) {}
 
-    void build(const boost::shared_ptr<EngineFactory>& engineFactory) override;
+    void build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) override;
 
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
     const string& index() const { return index_; }
+
+    const std::string& longShort() const { return longShort_;}
+    const std::map<std::string,QuantLib::ext::any>& additionalData() const override;
+    
+    //! Add underlying index names
+    std::map<AssetClass, std::set<std::string>> underlyingIndices(
+        const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
 private:
     string longShort_;

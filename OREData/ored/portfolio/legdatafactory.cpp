@@ -26,7 +26,7 @@ using std::string;
 namespace ore {
 namespace data {
 
-boost::shared_ptr<LegAdditionalData> LegDataFactory::build(const string& legType) {
+QuantLib::ext::shared_ptr<LegAdditionalData> LegDataFactory::build(const string& legType) {
     boost::shared_lock<boost::shared_mutex> lock(mutex_);
     auto it = map_.find(legType);
     if (it == map_.end())
@@ -34,7 +34,7 @@ boost::shared_ptr<LegAdditionalData> LegDataFactory::build(const string& legType
     return it->second();
 }
 
-void LegDataFactory::addBuilder(const string& legType, function<boost::shared_ptr<LegAdditionalData>()> builder,
+void LegDataFactory::addBuilder(const string& legType, function<QuantLib::ext::shared_ptr<LegAdditionalData>()> builder,
                                 const bool allowOverwrite) {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
     QL_REQUIRE(map_.insert(std::make_pair(legType, builder)).second || allowOverwrite,

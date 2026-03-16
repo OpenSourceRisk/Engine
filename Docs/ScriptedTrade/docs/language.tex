@@ -41,6 +41,8 @@ variable identifiers.
     \verb+max+ & \\
     \verb+min+ & \\
     \verb+pow+ & \\
+    \verb+frac+ & \\
+    \verb+round+ & \\
     \verb+black+ & \\
     \verb+dcf+ & \\
     \verb+days+ & \\ \hline
@@ -398,21 +400,21 @@ If the condition {\tt C} is not true, a runtime error is thrown. Examples:
 \item {\tt REQUIRE Strike >= 0;}
 \end{itemize}
 
-% ====================================================
-\stsubsection{Functions {\tt min}, {\tt max}, {\tt pow}}
-% ====================================================
+% =========================================================================
+\stsubsection{Functions {\tt min}, {\tt max}, {\tt pow}}, {\tt round(x,y)}
+% =========================================================================
 
-Binary functions {\tt min(x,y)}, {\tt max(x,y)}, {\tt pow(x,y)}, applicable to numbers only.
+Binary functions {\tt min(x,y)}, {\tt max(x,y)}, {\tt pow(x,y)}, {\tt round(x,y)}, applicable to numbers only.
 
-% ====================================================
-\stsubsection{Functions {\tt -}, abs, exp, ln, sqrt}
-% ====================================================
+% ========================================================
+\stsubsection{Functions {\tt -}, abs, exp, ln, sqrt, frac}
+% ========================================================
 
-Unary functions {\tt -x}, {\tt abs(x)}, {\tt exp(x)}, {\tt ln(x)}, {\tt sqrt(x)}, applicable to numbers only.
+Unary functions {\tt -x}, {\tt abs(x)}, {\tt exp(x)}, {\tt ln(x)}, {\tt sqrt(x)}, {\tt frac(x)} which take the fractional part of a float, applicable to numbers only.
 
-% ====================================================
+% =======================================================
 \stsubsection{Functions {\tt normalPdf}, {\tt normalCdf}}
-% ====================================================
+% =======================================================
 
 Returns the standard normal pdf $\phi(x)$ resp. cdf $\Phi(x)$, applicable to numbers only.
 
@@ -466,7 +468,8 @@ where
 \item here $P_{ccy}$ is the discount factor in currency ccy, $FX$ is the FX spot from ccy to base and $N$ is the model
   numeraire
 \item $d\leq p$ must hold
-\item if $p$ lies on or before the evaluation date, the result is zero; $X$ is not evaluated in this case
+\item if $p$ lies on or before the evaluation date, the result is zero; $X$ is not evaluated in this case. 
+Note that $X$ is evaluated in the LOGPAY function if past cashflows are included, see \ref{function_logpay}.
 \item avoids reading non-relevant past fixings from the index history
 \item if $d$ lies before (but $p$ after) the evaluation date, it is set to the evaluation date, i.e. the result is
   computed as of the evaluation date
@@ -513,6 +516,9 @@ Examples for the three forms are given below:
 Here, Payoff1 will appear under leg number $0$ and flow type ``Unspecified'' in the cashflow report. Payoff2 will appear
 under leg number $2$ and flow Type ``Interest''. The same holds for Payoff3, but if any amounts were booked using the
 slot parameter $3$ previously they will be overwritten with the current amount.
+
+Note: If IncludePastCashflows in the pricing engine config is set to true then even if $p$ lies on or before the
+evaluation date, a cashflow entry will be generated.
 
 % ====================================================
 \stsubsection{Function {\tt NPV, NPVMEM}}\label{function_npv}
@@ -626,7 +632,7 @@ description in section ``Floating Leg Data, Spreads, Gearings, Caps and Floors''
 \stsubsection{Functions {\tt ABOVEPROB, BELOWPROB}}\label{function_aboveprob}
 % ====================================================
 
-These functions are only available in Monte Carlo engines. The expression
+These functions are only available in Monte Carlo engines (not yet for the Heston model). The expression
 
 \begin{minted}[fontsize=\footnotesize]{text}
   ABOVEPROB(underlying, d1, d2, U)

@@ -34,14 +34,14 @@ namespace QuantExt {
 class DepositEngine : public Deposit::engine {
 public:
     DepositEngine(const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
-                  boost::optional<bool> includeSettlementDateFlows = boost::none, Date settlementDate = Date(),
+                  QuantLib::ext::optional<bool> includeSettlementDateFlows = QuantLib::ext::nullopt, Date settlementDate = Date(),
                   Date npvDate = Date());
     void calculate() const override;
     Handle<YieldTermStructure> discountCurve() const { return discountCurve_; }
 
 private:
     Handle<YieldTermStructure> discountCurve_;
-    boost::optional<bool> includeSettlementDateFlows_;
+    QuantLib::ext::optional<bool> includeSettlementDateFlows_;
     Date settlementDate_, npvDate_;
 };
 } // namespace QuantExt

@@ -24,7 +24,6 @@
 #include <ored/utilities/vectorutils.hpp>
 
 #include <ql/errors.hpp>
-#include <ql/version.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -35,17 +34,17 @@ namespace ore {
 namespace analytics {
 
 ValueAdjustmentCalculator::ValueAdjustmentCalculator(
-    const boost::shared_ptr<Portfolio> portfolio,
-    const boost::shared_ptr<Market> market,
+    const QuantLib::ext::shared_ptr<Portfolio> portfolio,
+    const QuantLib::ext::shared_ptr<Market> market,
     const string& configuration,
     const string& baseCurrency,
     const string& dvaName,
     const string& fvaBorrowingCurve,
     const string& fvaLendingCurve,
     const bool applyDynamicInitialMargin,
-    const boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator,
-    const boost::shared_ptr<NPVCube> tradeExposureCube,
-    const boost::shared_ptr<NPVCube> nettingSetExposureCube,
+    const QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator> dimCalculator,
+    const QuantLib::ext::shared_ptr<NPVCube> tradeExposureCube,
+    const QuantLib::ext::shared_ptr<NPVCube> nettingSetExposureCube,
     const Size tradeEpeIndex, const Size tradeEneIndex,
     const Size nettingSetEpeIndex, const Size nettingSetEneIndex, 
     const bool flipViewXVA, const string& flipViewBorrowingCurvePostfix, const string& flipViewLendingCurvePostfix)
@@ -105,6 +104,35 @@ ValueAdjustmentCalculator::ValueAdjustmentCalculator(
         << nettingSetEneIndex << ") exceeds depth of nettingSetExposureCube("
         << nettingSetExposureCube_->depth() << ")");
     
+    for (const auto& [tid, trade] : portfolio_->trades()) {
+        tradeCva_[tid] = Null<Real>();
+        tradeDva_[tid] = Null<Real>();
+        tradeFca_[tid] = Null<Real>();
+        tradeFca_exOwnSp_[tid] = Null<Real>();
+        tradeFca_exAllSp_[tid] = Null<Real>();
+        tradeFba_[tid] = Null<Real>();
+        tradeFba_exOwnSp_[tid] = Null<Real>();
+        tradeFba_exAllSp_[tid] = Null<Real>();
+        tradeMva_[tid] = Null<Real>();
+
+        string nid = trade->envelope().nettingSetId();
+        nettingSetSumCva_[nid] = Null<Real>();
+        nettingSetSumDva_[nid] = Null<Real>();
+    }
+
+    // Netting Set XVA
+    for (const auto& pair : nettingSetCpty_) {
+        string nid = pair.first;
+        nettingSetCva_[nid] = Null<Real>();
+        nettingSetDva_[nid] = Null<Real>();
+        nettingSetFca_[nid] = Null<Real>();
+        nettingSetFca_exOwnSp_[nid] = Null<Real>();
+        nettingSetFca_exAllSp_[nid] = Null<Real>();
+        nettingSetFba_[nid] = Null<Real>();
+        nettingSetFba_exOwnSp_[nid] = Null<Real>();
+        nettingSetFba_exAllSp_[nid] = Null<Real>();
+        nettingSetMva_[nid] = Null<Real>();
+    }
 }
 
 const map<string, Real>& ValueAdjustmentCalculator::tradeCva() {
@@ -352,15 +380,18 @@ void ValueAdjustmentCalculator::build() {
                     tradeFba_exAllSp_[tid] += fbaIncrement_exAllSP;
                 }
             }
-            if (nettingSetSumCva_.find(nid) == nettingSetSumCva_.end()) {
+            if (nettingSetSumCva_.find(nid) == nettingSetSumCva_.end() || nettingSetSumCva_[nid] == Null<Real>()) {
                 nettingSetSumCva_[nid] = 0.0;
                 nettingSetSumDva_[nid] = 0.0;
             }
             nettingSetSumCva_[nid] += tradeCva_[tid];
             nettingSetSumDva_[nid] += tradeDva_[tid];
         } catch (const std::exception& e) {
+            map<string, string> subfields;
+            subfields.insert({"tradeId", tid});
+            subfields.insert({"tradeType", trade->tradeType()});
             StructuredAnalyticsErrorMessage("ValueAdjustmentCalculator", "Error processing trade.", e.what(),
-                                            {{"tradeId", tid}})
+                                            subfields)
                 .log();
         }
     }

@@ -1,0 +1,24 @@
+RUN dates.py
+---------------------------
+advance start date by 1M
+startDate 2020-05-01
+endDate   2020-06-01
+---------------------------
+holidays (pre adjustment):
+2020-05-04
+2020-05-05
+2020-05-06
+---------------------------
+holidays (post adjustment):
+2020-05-04
+2020-05-05
+2020-05-06
+---------------------------
+advance start date by 1M
+startDate 2020-05-01
+endDate   2020-06-01
+---------------------------
+May 1st, 2020
+May 6th, 2020
+May 11th, 2020
+2020-05-06

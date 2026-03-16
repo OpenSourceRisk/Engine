@@ -1,0 +1,63 @@
+<ORE>
+  <Setup>
+    <Parameter name="asofDate">2025-02-10</Parameter>
+    <Parameter name="inputPath">Input/Dim2</Parameter>
+    <Parameter name="outputPath">Output/Dim2</Parameter>
+    <Parameter name="logFile">log.txt</Parameter>
+    <Parameter name="logMask">255</Parameter>
+    <Parameter name="marketDataFile">marketdata_flatvol.csv</Parameter>
+    <Parameter name="fixingDataFile">fixings.csv</Parameter>
+    <Parameter name="implyTodaysFixings">N</Parameter>
+    <Parameter name="curveConfigFile">curveconfig.xml</Parameter>
+    <Parameter name="conventionsFile">conventions.xml</Parameter>
+    <Parameter name="marketConfigFile">todaysmarket.xml</Parameter>
+    <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
+    <Parameter name="portfolioFile">portfolio_swap.xml</Parameter>
+    <Parameter name="scriptLibrary">scriptlibrary.xml</Parameter>
+    <Parameter name="observationModel">None</Parameter>
+    <Parameter name="continueOnError">false</Parameter>
+    <Parameter name="buildFailedTrades">true</Parameter>
+  </Setup>
+  <Markets>
+    <Parameter name="lgmcalibration">default</Parameter>
+    <Parameter name="fxcalibration">default</Parameter>
+    <Parameter name="infcalibration">default</Parameter>
+    <Parameter name="pricing">default</Parameter>
+    <Parameter name="simulation">default</Parameter>
+    <Parameter name="sensitivity">default</Parameter>
+  </Markets>
+  <Analytics>
+    <Analytic type="npv">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="baseCurrency">EUR</Parameter>
+      <Parameter name="outputFileName">npv.csv</Parameter>
+      <Parameter name="additionalResults">Y</Parameter>
+      <Parameter name="additionalResultsReportPrecision">12</Parameter>
+    </Analytic>
+    <Analytic type="simulation">
+      <Parameter name="active">Y</Parameter>
+      <!-- With simulation of Swaption vols -->
+      <Parameter name="simulationConfigFile">simulation.xml</Parameter>
+      <!-- uses Swaption vols without simulation, i.e. with COnstant/Forward Variance -->
+      <!--<Parameter name="simulationConfigFile">simulation_false.xml</Parameter>-->
+      <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
+      <Parameter name="baseCurrency">EUR</Parameter>
+      <Parameter name="storeExerciseValues">Y</Parameter>
+      <Parameter name="observationModel">Disable</Parameter>
+      <Parameter name="cubeFile">cube.csv.gz</Parameter>
+      <Parameter name="aggregationScenarioDataFileName">scenariodata.csv.gz</Parameter>
+      <Parameter name="scenariodump">scenariodump.csv</Parameter>
+    </Analytic>
+    <Analytic type="xva">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="csaFile">netting.xml</Parameter>
+      <Parameter name="cubeFile">cube.csv.gz</Parameter>
+      <Parameter name="scenarioFile">scenariodata.csv.gz</Parameter>
+      <Parameter name="baseCurrency">EUR</Parameter>
+      <Parameter name="exposureProfiles">N</Parameter>
+      <Parameter name="exposureProfilesByTrade">N</Parameter>
+      <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
+      <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
+    </Analytic>
+  </Analytics>
+</ORE>

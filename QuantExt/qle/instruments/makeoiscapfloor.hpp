@@ -52,7 +52,7 @@ public:
 private:
     CapFloor::Type type_;
     Period tenor_;
-    boost::shared_ptr<OvernightIndex> index_;
+    QuantLib::ext::shared_ptr<OvernightIndex> index_;
     Period rateComputationPeriod_;
     Rate strike_;
 

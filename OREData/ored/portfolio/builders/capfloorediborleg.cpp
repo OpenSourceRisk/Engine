@@ -19,31 +19,61 @@
 #include <ored/portfolio/builders/capfloorediborleg.hpp>
 #include <ored/utilities/log.hpp>
 
+#include <qle/cashflows/interpolatediborcouponpricer.hpp>
+
+#include <ql/termstructures/volatility/optionlet/constantoptionletvol.hpp>
+
 #include <boost/make_shared.hpp>
 
 namespace ore {
 namespace data {
 
-boost::shared_ptr<FloatingRateCouponPricer> CapFlooredIborLegEngineBuilder::engineImpl(const std::string& index) {
+namespace {
+template <class T>
+ext::shared_ptr<FloatingRateCouponPricer>
+getEngine(const std::string& index, const ext::shared_ptr<Market>& market, const std::string& configuration,
+          const bool zeroVolatility, const std::string& timingAdjustmentStr, const Real correlationValue,
+          std::map<string, ext::shared_ptr<FloatingRateCouponPricer>>& engines) {
 
     std::string ccyCode = parseIborIndex(index)->currency().code();
-    Handle<YieldTermStructure> yts = market_->discountCurve(ccyCode, configuration(MarketContext::pricing));
-    Handle<OptionletVolatilityStructure> ovs = market_->capFloorVol(index, configuration(MarketContext::pricing));
-    BlackIborCouponPricer::TimingAdjustment timingAdjustment = BlackIborCouponPricer::Black76;
-    boost::shared_ptr<SimpleQuote> correlation = boost::make_shared<SimpleQuote>(1.0);
-    // for backwards compatibility we do not require the additional timing adjustment fields
-    if (engineParameters_.find("TimingAdjustment") != engineParameters_.end()) {
-        string adjStr = engineParameter("TimingAdjustment");
-        if (adjStr == "Black76")
-            timingAdjustment = BlackIborCouponPricer::Black76;
-        else if (adjStr == "BivariateLognormal")
-            timingAdjustment = BlackIborCouponPricer::BivariateLognormal;
-        else {
-            QL_FAIL("timing adjustment parameter (" << adjStr << ") not recognised.");
-        }
-        correlation->setValue(parseReal(engineParameter("Correlation")));
+    Handle<YieldTermStructure> yts = market->discountCurve(ccyCode, configuration);
+    Handle<OptionletVolatilityStructure> ovs;
+    if (zeroVolatility) {
+        ovs = Handle<OptionletVolatilityStructure>(QuantLib::ext::make_shared<ConstantOptionletVolatility>(
+            0, NullCalendar(), Unadjusted, 0.0, Actual365Fixed(), Normal));
+    } else {
+        ovs = market->capFloorVol(index, configuration);
     }
-    return boost::make_shared<BlackIborCouponPricer>(ovs, timingAdjustment, Handle<Quote>(correlation));
+    typename T::TimingAdjustment timingAdjustment = T::Black76;
+    QuantLib::ext::shared_ptr<SimpleQuote> correlation = QuantLib::ext::make_shared<SimpleQuote>(1.0);
+    // for backwards compatibility we do not require the additional timing adjustment fields
+    if (timingAdjustmentStr == "Black76")
+        timingAdjustment = T::Black76;
+    else if (timingAdjustmentStr == "BivariateLognormal")
+        timingAdjustment = T::BivariateLognormal;
+    else {
+        QL_FAIL("timing adjustment parameter (" << timingAdjustmentStr << ") not recognised.");
+    }
+    correlation->setValue(correlationValue);
+    return QuantLib::ext::make_shared<T>(ovs, timingAdjustment, Handle<Quote>(correlation));
+}
+} // namespace
+
+ext::shared_ptr<FloatingRateCouponPricer> CapFlooredIborLegEngineBuilder::engineImpl(const std::string& index) {
+    return getEngine<BlackIborCouponPricer>(index, market_, configuration(MarketContext::pricing),
+                                            parseBool(engineParameter("ZeroVolatility", {}, false, "false")),
+                                            engineParameter("TimingAdjustment", {}, false, "Black76"),
+                                            parseReal(engineParameter("Correlation", {}, false, "0.0")),
+                                            engines_);
+}
+
+ext::shared_ptr<FloatingRateCouponPricer>
+CapFlooredInterpolatedIborLegEngineBuilder::engineImpl(const std::string& index) {
+    return getEngine<QuantExt::BlackInterpolatedIborCouponPricer>(
+        index, market_, configuration(MarketContext::pricing),
+        parseBool(engineParameter("ZeroVolatility", {}, false, "false")),
+        engineParameter("TimingAdjustment", {}, false, "Black76"),
+        parseReal(engineParameter("Correlation", {}, false, "0.0")), engines_);
 }
 
 } // namespace data

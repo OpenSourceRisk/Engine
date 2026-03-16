@@ -36,18 +36,18 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
-void IndexCreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void IndexCreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("IndexCreditDefaultSwap::build() called for trade " << id());
 
     // ISDA taxonomy
     additionalData_["isdaAssetClass"] = string("Credit");
     additionalData_["isdaBaseProduct"] = string("Index");
     string entity = swap_.creditCurveId();
-    boost::shared_ptr<ReferenceDataManager> refData = engineFactory->referenceData();
+    QuantLib::ext::shared_ptr<ReferenceDataManager> refData = engineFactory->referenceData();
     if (refData && refData->hasData("CreditIndex", entity)) {
         auto refDatum = refData->getData("CreditIndex", entity);
-        boost::shared_ptr<CreditIndexReferenceDatum> creditIndexRefDatum =
-            boost::dynamic_pointer_cast<CreditIndexReferenceDatum>(refDatum);
+        QuantLib::ext::shared_ptr<CreditIndexReferenceDatum> creditIndexRefDatum =
+            QuantLib::ext::dynamic_pointer_cast<CreditIndexReferenceDatum>(refDatum);
         additionalData_["isdaSubProduct"] = creditIndexRefDatum->indexFamily();
         if (creditIndexRefDatum->indexFamily() == "") {
             ALOG("IndexFamily is blank in credit index reference data for entity " << entity);
@@ -58,12 +58,12 @@ void IndexCreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engin
     // skip the transaction level mapping for now
     additionalData_["isdaTransaction"] = string("");  
 
-    const boost::shared_ptr<Market> market = engineFactory->market();
-    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("IndexCreditDefaultSwap");
+    const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
+    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("IndexCreditDefaultSwap");
 
-    QL_REQUIRE(swap_.leg().legType() == "Fixed", "IndexCreditDefaultSwap requires Fixed leg");
-    boost::shared_ptr<FixedLegData> fixedLegData =
-        boost::dynamic_pointer_cast<FixedLegData>(swap_.leg().concreteLegData());
+    QL_REQUIRE(swap_.leg().legType() == LegType::Fixed, "IndexCreditDefaultSwap requires Fixed leg");
+    QuantLib::ext::shared_ptr<FixedLegData> fixedLegData =
+        QuantLib::ext::dynamic_pointer_cast<FixedLegData>(swap_.leg().concreteLegData());
 
     auto configuration = builder->configuration(MarketContext::pricing);
     FixedLegBuilder flb;
@@ -71,6 +71,17 @@ void IndexCreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engin
     legs_[0] = flb.buildLeg(swap_.leg(), engineFactory, requiredFixings_, configuration);
 
     Schedule schedule = makeSchedule(swap_.leg().schedule());
+
+    
+
+    if (schedule.hasRule() && (schedule.rule() == DateGeneration::CDS2015 || schedule.rule() == DateGeneration::CDS)) {
+        Date protectionStart = swap_.protectionStart();
+        Date tradeDate = swap_.tradeDate();
+        protectionStart = protectionStart != Date() ? protectionStart: schedule[0];
+        tradeDate = tradeDate != Date() ? tradeDate : protectionStart - 1;
+        schedule = removeCDSPeriodsBeforeStartDate(schedule, tradeDate + 1);
+    }
+
     BusinessDayConvention payConvention = parseBusinessDayConvention(swap_.leg().paymentConvention());
     Protection::Side prot = swap_.leg().isPayer() ? Protection::Side::Buyer : Protection::Side::Seller;
 
@@ -152,10 +163,10 @@ void IndexCreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engin
         QL_REQUIRE(engineFactory->referenceData(), "No BasketData or ReferenceDataManager");
         QL_REQUIRE(engineFactory->referenceData()->hasData(CreditIndexReferenceDatum::TYPE, id),
                    "No CreditIndex reference data for " << id);
-        boost::shared_ptr<ReferenceDatum> refData =
+        QuantLib::ext::shared_ptr<ReferenceDatum> refData =
             engineFactory->referenceData()->getData(CreditIndexReferenceDatum::TYPE, id);
-        boost::shared_ptr<CreditIndexReferenceDatum> creditRefData =
-            boost::dynamic_pointer_cast<CreditIndexReferenceDatum>(refData);
+        QuantLib::ext::shared_ptr<CreditIndexReferenceDatum> creditRefData =
+            QuantLib::ext::dynamic_pointer_cast<CreditIndexReferenceDatum>(refData);
         DLOG("Got CreditIndexReferenceDatum for id " << id);
 
         Real totalWeight = 0.0;
@@ -185,22 +196,23 @@ void IndexCreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engin
         }
     }
 
-    boost::shared_ptr<QuantExt::IndexCreditDefaultSwap> cds;
+    QuantLib::ext::shared_ptr<QuantExt::IndexCreditDefaultSwap> cds;
     if (swap_.upfrontFee() == Null<Real>()) {
-        cds = boost::make_shared<QuantExt::IndexCreditDefaultSwap>(
+        cds = QuantLib::ext::make_shared<QuantExt::IndexCreditDefaultSwap>(
             prot, indexFactor * notional_, basketNotionals, fixedLegData->rates().front(), schedule, payConvention, dc,
-            swap_.settlesAccrual(), swap_.protectionPaymentTime(), swap_.protectionStart(), boost::shared_ptr<Claim>(),
-            lastPeriodDayCounter, true, swap_.tradeDate(), swap_.cashSettlementDays());
+            swap_.settlesAccrual(), swap_.protectionPaymentTime(), swap_.protectionStart(),
+            QuantLib::ext::shared_ptr<Claim>(), lastPeriodDayCounter, true, swap_.tradeDate(),
+            swap_.cashSettlementDays());
     } else {
-        cds = boost::make_shared<QuantExt::IndexCreditDefaultSwap>(
+        cds = QuantLib::ext::make_shared<QuantExt::IndexCreditDefaultSwap>(
             prot, indexFactor * notional_, basketNotionals, swap_.upfrontFee(), fixedLegData->rates().front(), schedule,
             payConvention, dc, swap_.settlesAccrual(), swap_.protectionPaymentTime(), swap_.protectionStart(),
-            swap_.upfrontDate(), boost::shared_ptr<Claim>(), lastPeriodDayCounter, true, swap_.tradeDate(),
+            swap_.upfrontDate(), QuantLib::ext::shared_ptr<Claim>(), lastPeriodDayCounter, true, swap_.tradeDate(),
             swap_.cashSettlementDays());
     }
 
-    boost::shared_ptr<IndexCreditDefaultSwapEngineBuilder> cdsBuilder =
-        boost::dynamic_pointer_cast<IndexCreditDefaultSwapEngineBuilder>(builder);
+    QuantLib::ext::shared_ptr<IndexCreditDefaultSwapEngineBuilder> cdsBuilder =
+        QuantLib::ext::dynamic_pointer_cast<IndexCreditDefaultSwapEngineBuilder>(builder);
 
     npvCurrency_ = swap_.leg().currency();
     notionalCurrency_ = swap_.leg().currency();
@@ -215,13 +227,16 @@ void IndexCreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engin
                 swap_.creditCurveId() + "')").log();
     }
 
-    cds->setPricingEngine(cdsBuilder->engine(parseCurrency(npvCurrency_), swap_.creditCurveIdWithTerm(),
-                                             basketCreditCurves, boost::none, swap_.recoveryRate(), false));
+    maturity_ = cds->coupons().back()->date();
+    maturityType_ = "Last Coupon Date";
+    cds->setPricingEngine(cdsBuilder->engine(
+        parseCurrency(npvCurrency_), swap_.creditCurveIdWithTerm(), basketCreditCurves, QuantLib::ext::nullopt,
+        QuantLib::ext::nullopt, basketNotionals, swap_.recoveryRate(), false));
     setSensitivityTemplate(*cdsBuilder);
+    addProductModelEngine(*cdsBuilder);
 
     instrument_.reset(new VanillaInstrument(cds));
 
-    maturity_ = cds->coupons().back()->date();
 
     legs_ = {cds->coupons()};
     legCurrencies_ = {npvCurrency_};
@@ -235,7 +250,7 @@ void IndexCreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engin
     sensitivityDecomposition_ = cdsBuilder->sensitivityDecomposition();
 }
 
-const std::map<std::string, boost::any>& IndexCreditDefaultSwap::additionalData() const {
+const std::map<std::string, QuantLib::ext::any>& IndexCreditDefaultSwap::additionalData() const {
     setLegBasedAdditionalData(0, 2);
     additionalData_["legNPV[1]"] = instrument_->qlInstrument()->result<Real>("protectionLegNPV");
     additionalData_["legNPV[2]"] = instrument_->qlInstrument()->result<Real>("premiumLegNPVDirty") +
@@ -243,7 +258,7 @@ const std::map<std::string, boost::any>& IndexCreditDefaultSwap::additionalData(
                                    instrument_->qlInstrument()->result<Real>("accrualRebateNPV");
     additionalData_["isPayer[1]"] = !swap_.leg().isPayer();
     additionalData_["isPayer[2]"] = swap_.leg().isPayer();
-    additionalData_["legType[2]"] = swap_.leg().legType();
+    additionalData_["legType[2]"] = ore::data::to_string(swap_.leg().legType());
     additionalData_["legType[1]"] = std::string("Protection");
     additionalData_["currentNotional[1]"] = additionalData_["currentNotional[2]"];
     additionalData_["originalNotional[1]"] = additionalData_["originalNotional[2]"];
@@ -257,7 +272,7 @@ QuantLib::Real IndexCreditDefaultSwap::notional() const {
     Date asof = Settings::instance().evaluationDate();
     // get the current notional from the premium leg
     for (Size i = 0; i < legs_[0].size(); ++i) {
-        boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(legs_[0][i]);
+        QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(legs_[0][i]);
         if (coupon->date() > asof)
             return coupon->nominal();
     }

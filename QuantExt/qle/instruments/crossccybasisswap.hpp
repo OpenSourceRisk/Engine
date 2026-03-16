@@ -49,14 +49,14 @@ public:
     */
     CrossCcyBasisSwap(
         Real payNominal, const Currency& payCurrency, const Schedule& paySchedule,
-        const boost::shared_ptr<IborIndex>& payIndex, Spread paySpread, Real payGearing, Real recNominal,
-        const Currency& recCurrency, const Schedule& recSchedule, const boost::shared_ptr<IborIndex>& recIndex,
+        const QuantLib::ext::shared_ptr<IborIndex>& payIndex, Spread paySpread, Real payGearing, Real recNominal,
+        const Currency& recCurrency, const Schedule& recSchedule, const QuantLib::ext::shared_ptr<IborIndex>& recIndex,
         Spread recSpread, Real recGearing, Size payPaymentLag = 0, Size recPaymentLag = 0,
-        boost::optional<bool> payIncludeSpread = boost::none, boost::optional<Period> payLookback = boost::none,
-        boost::optional<Size> payFixingDays = boost::none, boost::optional<Size> payRateCutoff = boost::none,
-        boost::optional<bool> payIsAveraged = boost::none, boost::optional<bool> recIncludeSpread = boost::none,
-        boost::optional<Period> recLookback = boost::none, boost::optional<Size> recFixingDays = boost::none,
-        boost::optional<Size> recRateCutoff = boost::none, boost::optional<bool> recIsAveraged = boost::none,
+        QuantLib::ext::optional<bool> payIncludeSpread = QuantLib::ext::nullopt, QuantLib::ext::optional<Period> payLookback = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<Size> payFixingDays = QuantLib::ext::nullopt, QuantLib::ext::optional<Size> payRateCutoff = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<bool> payIsAveraged = QuantLib::ext::nullopt, QuantLib::ext::optional<bool> recIncludeSpread = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<Period> recLookback = QuantLib::ext::nullopt, QuantLib::ext::optional<Size> recFixingDays = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<Size> recRateCutoff = QuantLib::ext::nullopt, QuantLib::ext::optional<bool> recIsAveraged = QuantLib::ext::nullopt,
         const bool telescopicValueDates = false);
     //@}
     //! \name Instrument interface
@@ -69,14 +69,14 @@ public:
     Real payNominal() const { return payNominal_; }
     const Currency& payCurrency() const { return payCurrency_; }
     const Schedule& paySchedule() const { return paySchedule_; }
-    const boost::shared_ptr<IborIndex>& payIndex() const { return payIndex_; }
+    const QuantLib::ext::shared_ptr<IborIndex>& payIndex() const { return payIndex_; }
     Spread paySpread() const { return paySpread_; }
     Real payGearing() const { return payGearing_; }
 
     Real recNominal() const { return recNominal_; }
     const Currency& recCurrency() const { return recCurrency_; }
     const Schedule& recSchedule() const { return recSchedule_; }
-    const boost::shared_ptr<IborIndex>& recIndex() const { return recIndex_; }
+    const QuantLib::ext::shared_ptr<IborIndex>& recIndex() const { return recIndex_; }
     Spread recSpread() const { return recSpread_; }
     Real recGearing() const { return recGearing_; }
     //@}
@@ -107,30 +107,30 @@ private:
     Real payNominal_;
     Currency payCurrency_;
     Schedule paySchedule_;
-    boost::shared_ptr<IborIndex> payIndex_;
+    QuantLib::ext::shared_ptr<IborIndex> payIndex_;
     Spread paySpread_;
     Real payGearing_;
 
     Real recNominal_;
     Currency recCurrency_;
     Schedule recSchedule_;
-    boost::shared_ptr<IborIndex> recIndex_;
+    QuantLib::ext::shared_ptr<IborIndex> recIndex_;
     Spread recSpread_;
     Real recGearing_;
 
     Size payPaymentLag_;
     Size recPaymentLag_;
     // OIS only
-    boost::optional<bool> payIncludeSpread_;
-    boost::optional<QuantLib::Period> payLookback_;
-    boost::optional<QuantLib::Size> payFixingDays_;
-    boost::optional<Size> payRateCutoff_;
-    boost::optional<bool> payIsAveraged_;
-    boost::optional<bool> recIncludeSpread_;
-    boost::optional<QuantLib::Period> recLookback_;
-    boost::optional<QuantLib::Size> recFixingDays_;
-    boost::optional<Size> recRateCutoff_;
-    boost::optional<bool> recIsAveraged_;
+    QuantLib::ext::optional<bool> payIncludeSpread_;
+    QuantLib::ext::optional<QuantLib::Period> payLookback_;
+    QuantLib::ext::optional<QuantLib::Size> payFixingDays_;
+    QuantLib::ext::optional<Size> payRateCutoff_;
+    QuantLib::ext::optional<bool> payIsAveraged_;
+    QuantLib::ext::optional<bool> recIncludeSpread_;
+    QuantLib::ext::optional<QuantLib::Period> recLookback_;
+    QuantLib::ext::optional<QuantLib::Size> recFixingDays_;
+    QuantLib::ext::optional<Size> recRateCutoff_;
+    QuantLib::ext::optional<bool> recIsAveraged_;
     bool telescopicValueDates_;
 
     mutable Spread fairPaySpread_;

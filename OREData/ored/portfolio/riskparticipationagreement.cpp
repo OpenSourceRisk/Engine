@@ -34,7 +34,7 @@
 namespace ore {
 namespace data {
 
-void RiskParticipationAgreement::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void RiskParticipationAgreement::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     LOG("RiskParticipationAgreement::build() for id \"" << id() << "\" called.");
 
@@ -64,7 +64,7 @@ void RiskParticipationAgreement::build(const boost::shared_ptr<EngineFactory>& e
     additionalData_["startDate"] = to_string(protectionStart_);
 }
 
-void RiskParticipationAgreement::buildWithSwapUnderlying(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void RiskParticipationAgreement::buildWithSwapUnderlying(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     npvCurrency_ = notionalCurrency_ = underlying_.front().currency();
 
     bool isXccy = false;
@@ -92,19 +92,21 @@ void RiskParticipationAgreement::buildWithSwapUnderlying(const boost::shared_ptr
        - two legs in different currencies with arbitrary coupons allowed, no optionData though
     */
 
-    std::set<std::string> legTypes;
+    std::set<LegType> legTypes;
     std::set<bool> legPayers;
     bool hasCapFloors = false, hasIborInArrears = false;
     for (auto const& l : underlying_) {
-        QL_REQUIRE(l.legType() == "Fixed" || l.legType() == "Floating" || l.legType() == "Cashflow",
+        QL_REQUIRE(l.legType() == LegType::Fixed || l.legType() == LegType::Floating ||
+                   l.legType() == LegType::Cashflow,
                    "RiskParticipationAgreement: leg type " << l.legType()
                                                            << " not supported, expected Fixed, Floating, Cashflow");
         legTypes.insert(l.legType());
         legPayers.insert(l.isPayer());
-        if (auto c = boost::dynamic_pointer_cast<FloatingLegData>(l.concreteLegData())) {
+        if (auto c = QuantLib::ext::dynamic_pointer_cast<FloatingLegData>(l.concreteLegData())) {
             hasCapFloors = hasCapFloors || !c->caps().empty();
             hasCapFloors = hasCapFloors || !c->floors().empty();
-            hasIborInArrears = hasIborInArrears || (c->isInArrears() && !isOvernightIndex(c->index()));
+            hasIborInArrears =
+                hasIborInArrears || ((c->isInArrears() && *c->isInArrears()) && !isOvernightIndex(c->index()));
         }
     }
 
@@ -113,8 +115,8 @@ void RiskParticipationAgreement::buildWithSwapUnderlying(const boost::shared_ptr
         productVariant = "RiskParticipationAgreement_Vanilla_XCcy";
         QL_REQUIRE(!optionData_, "XCcy Risk Participation Agreement does not allow for OptionData");
     } else if (underlying_.size() == 2 &&
-               (legTypes == std::set<std::string>{"Fixed", "Floating"} ||
-                legTypes == std::set<std::string>{"Cashflow", "Floating"}) &&
+               (legTypes == std::set<LegType>{LegType::Fixed, LegType::Floating} ||
+                legTypes == std::set<LegType>{LegType::Cashflow, LegType::Floating}) &&
                legPayers == std::set<bool>{false, true} && !hasCapFloors && !hasIborInArrears && !optionData_) {
         productVariant = "RiskParticipationAgreement_Vanilla";
     } else {
@@ -124,7 +126,7 @@ void RiskParticipationAgreement::buildWithSwapUnderlying(const boost::shared_ptr
     // get engine builder
 
     DLOG("get engine builder for product variant " << productVariant);
-    auto builder = boost::dynamic_pointer_cast<RiskParticipationAgreementEngineBuilderBase>(
+    auto builder = QuantLib::ext::dynamic_pointer_cast<RiskParticipationAgreementEngineBuilderBase>(
         engineFactory->builder(productVariant));
     QL_REQUIRE(builder, "wrong builder, expected RiskParticipationAgreementEngineBuilderBase");
     auto configuration = builder->configuration(MarketContext::pricing);
@@ -155,9 +157,9 @@ void RiskParticipationAgreement::buildWithSwapUnderlying(const boost::shared_ptr
 
     // build exercise, if option data is present
 
-    boost::shared_ptr<QuantLib::Exercise> exercise;
+    QuantLib::ext::shared_ptr<QuantLib::Exercise> exercise;
     bool exerciseIsLong = true;
-    std::vector<boost::shared_ptr<CashFlow>> vectorPremium;
+    std::vector<QuantLib::ext::shared_ptr<CashFlow>> vectorPremium;
     if (optionData_) {
         ExerciseBuilder eb(*optionData_, underlyingLegs);
         exercise = eb.exercise();
@@ -165,20 +167,20 @@ void RiskParticipationAgreement::buildWithSwapUnderlying(const boost::shared_ptr
         for (const auto& premium : (*optionData_).premiumData().premiumData()) {
             QL_REQUIRE((premium.ccy == underlyingCcys[0]) && (premium.ccy == underlyingCcys[1]),
                            "premium currency must be the same than the swaption legs");
-            vectorPremium.push_back(boost::make_shared<SimpleCashFlow>(premium.amount, premium.payDate));
+            vectorPremium.push_back(QuantLib::ext::make_shared<SimpleCashFlow>(premium.amount, premium.payDate));
         }
     }
 
     // build ql instrument
 
-    auto qleInstr = boost::make_shared<QuantExt::RiskParticipationAgreement>(
+    auto qleInstr = QuantLib::ext::make_shared<QuantExt::RiskParticipationAgreement>(
         underlyingLegs, underlyingPayer, underlyingCcys, protectionFeeLegs, protectionPayer.front(), protectionCcys,
         participationRate_, protectionStart_, protectionEnd_, settlesAccrual_, fixedRecoveryRate_, exercise,
         exerciseIsLong, vectorPremium, nakedOption_);
 
     // wrap instrument
 
-    instrument_ = boost::make_shared<VanillaInstrument>(qleInstr);
+    instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(qleInstr);
 
     // set trade members
 
@@ -190,6 +192,10 @@ void RiskParticipationAgreement::buildWithSwapUnderlying(const boost::shared_ptr
                                                          engineFactory->configuration(MarketContext::pricing))
                                                 ->value());
     }
+    for(auto const& af: envelope().additionalFields()){
+        if(af.first == "im_model" && af.second =="Schedule")
+            notional_ = notional_ * participationRate_;
+    }
     legs_ = underlyingLegs;
     legCurrencies_ = underlyingCcys;
     legPayers_ = underlyingPayer;
@@ -197,16 +203,18 @@ void RiskParticipationAgreement::buildWithSwapUnderlying(const boost::shared_ptr
     legCurrencies_.insert(legCurrencies_.end(), protectionCcys.begin(), protectionCcys.end());
     legPayers_.insert(legPayers_.end(), protectionPayer.begin(), protectionPayer.end());
     maturity_ = qleInstr->maturity();
+    maturityType_ = "Protection End Date or Fee Payment Date";
 
     // set pricing engine
     qleInstr->setPricingEngine(builder->engine(id(), this));
     setSensitivityTemplate(*builder);
+    addProductModelEngine(*builder);
 }
 
 namespace {
 DayCounter getDayCounter(const Leg& l) {
     for (auto const& c : l) {
-        if (auto cpn = boost::dynamic_pointer_cast<Coupon>(c))
+        if (auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(c))
             return cpn->dayCounter();
     }
     QL_FAIL("RiskParticipationAgreement: could not deduce DayCounter from underlying bond, no coupons found in "
@@ -217,7 +225,7 @@ DayCounter getDayCounter(const Leg& l) {
 
 } // namespace
 
-void RiskParticipationAgreement::buildWithTlockUnderlying(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void RiskParticipationAgreement::buildWithTlockUnderlying(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     std::string productVariant = "RiskParticipationAgreement_TLock";
 
     // get bond reference data and build bond
@@ -226,7 +234,7 @@ void RiskParticipationAgreement::buildWithTlockUnderlying(const boost::shared_pt
     tlockData_.bondData().populateFromBondReferenceData(engineFactory->referenceData());
     ore::data::Bond tmp(Envelope(), tlockData_.bondData());
     tmp.build(engineFactory);
-    auto bond = boost::dynamic_pointer_cast<QuantLib::Bond>(tmp.instrument()->qlInstrument());
+    auto bond = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(tmp.instrument()->qlInstrument());
     QL_REQUIRE(bond != nullptr, "RiskParticipationAgreement: could not build tlock underlying, cast failed (internal "
                                 "error that dev needs to look at)");
 
@@ -234,6 +242,10 @@ void RiskParticipationAgreement::buildWithTlockUnderlying(const boost::shared_pt
 
     npvCurrency_ = notionalCurrency_ = tlockData_.bondData().currency();
     notional_ = tlockData_.bondData().bondNotional();
+    for(auto const& af: envelope().additionalFields()){
+        if(af.first == "im_model" && af.second =="Schedule")
+            notional_ = notional_ * participationRate_;
+    }
 
     // checks
 
@@ -244,7 +256,7 @@ void RiskParticipationAgreement::buildWithTlockUnderlying(const boost::shared_pt
     // get engine builder
 
     DLOG("get engine builder for product variant " << productVariant);
-    auto builder = boost::dynamic_pointer_cast<RiskParticipationAgreementEngineBuilderBase>(
+    auto builder = QuantLib::ext::dynamic_pointer_cast<RiskParticipationAgreementEngineBuilderBase>(
         engineFactory->builder(productVariant));
     QL_REQUIRE(builder, "wrong builder, expected RiskParticipationAgreementEngineBuilderBase");
     auto configuration = builder->configuration(MarketContext::pricing);
@@ -270,14 +282,14 @@ void RiskParticipationAgreement::buildWithTlockUnderlying(const boost::shared_pt
     }
 
     Date paymentDate = paymentCalendar.advance(terminationDate, paymentGap * Days);
-    auto qleInstr = boost::make_shared<QuantExt::RiskParticipationAgreementTLock>(
+    auto qleInstr = QuantLib::ext::make_shared<QuantExt::RiskParticipationAgreementTLock>(
         bond, notional_, payer, referenceRate, dayCounter, terminationDate, paymentDate, protectionFeeLegs,
         protectionPayer.front(), protectionCcys, participationRate_, protectionStart_, protectionEnd_, settlesAccrual_,
         fixedRecoveryRate_);
 
     // wrap instrument
 
-    instrument_ = boost::make_shared<VanillaInstrument>(qleInstr);
+    instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(qleInstr);
 
     // set trade members
 
@@ -288,11 +300,13 @@ void RiskParticipationAgreement::buildWithTlockUnderlying(const boost::shared_pt
     legCurrencies_.insert(legCurrencies_.end(), protectionCcys.begin(), protectionCcys.end());
     legPayers_.insert(legPayers_.end(), protectionPayer.begin(), protectionPayer.end());
     maturity_ = qleInstr->maturity();
+    maturityType_ = "Protection End Date or Fee Payment Date";
 
     // set pricing engine
 
     qleInstr->setPricingEngine(builder->engine(id(), this));
     setSensitivityTemplate(*builder);
+    addProductModelEngine(*builder);
 }
 
 void RiskParticipationAgreement::fromXML(XMLNode* node) {

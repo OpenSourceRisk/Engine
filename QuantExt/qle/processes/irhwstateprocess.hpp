@@ -37,10 +37,10 @@ using namespace QuantLib;
  */
 class IrHwStateProcess : public StochasticProcess {
 public:
-    IrHwStateProcess(const boost::shared_ptr<IrHwParametrization>& parametrization, const IrModel::Measure measure,
+    IrHwStateProcess(const QuantLib::ext::shared_ptr<IrHwParametrization>& parametrization, const IrModel::Measure measure,
                      const HwModel::Discretization discretization = HwModel::Discretization::Euler,
                      const bool evaluateBankAccount = true)
-        : StochasticProcess(discretization == HwModel::Discretization::Euler ? boost::make_shared<EulerDiscretization>()
+        : StochasticProcess(discretization == HwModel::Discretization::Euler ? QuantLib::ext::make_shared<EulerDiscretization>()
                                                                              : nullptr),
           parametrization_(parametrization), measure_(measure), discretization_(discretization),
           evaluateBankAccount_(evaluateBankAccount) {
@@ -62,11 +62,23 @@ public:
     Array drift(Time t, const Array& s) const override;
     Matrix diffusion(Time t, const Array& s) const override;
 
+    // enables and resets the cache, once enabled the simulated times must stay the stame
+    void resetCache(const Size timeSteps) const;
+
 private:
-    boost::shared_ptr<IrHwParametrization> parametrization_;
+    QuantLib::ext::shared_ptr<IrHwParametrization> parametrization_;
     IrModel::Measure measure_;
     HwModel::Discretization discretization_;
     bool evaluateBankAccount_;
+
+    mutable bool cacheNotReady_drift_ = true;
+    mutable bool cacheNotReady_diffusion_ = true;
+    mutable Size timeStepsToCache_drift_ = 0;
+    mutable Size timeStepsToCache_diffusion_ = 0;
+    mutable Size timeStepCache_drift_ = 0;
+    mutable Size timeStepCache_diffusion_ = 0;
+    mutable std::vector<Matrix> cache_drift_;
+    mutable std::vector<Matrix> cache_diffusion_;
 };
 
 } // namespace QuantExt

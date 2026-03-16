@@ -27,7 +27,7 @@ EqBsConstantParametrization::EqBsConstantParametrization(const Currency& currenc
                                                          const Handle<YieldTermStructure>& eqIrCurveToday,
                                                          const Handle<YieldTermStructure>& eqDivYieldCurveToday)
     : EqBsParametrization(currency, eqName, eqSpotToday, fxSpotToday, eqIrCurveToday, eqDivYieldCurveToday),
-      sigma_(boost::make_shared<PseudoParameter>(1)) {
+      sigma_(QuantLib::ext::make_shared<PseudoParameter>(1)) {
     sigma_->setParam(0, inverse(0, sigma));
 }
 

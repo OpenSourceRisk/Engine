@@ -23,16 +23,26 @@
 
 #pragma once
 
-#include <ql/experimental/fx/deltavolquote.hpp>
+#include <ql/quotes/deltavolquote.hpp>
 #include <ql/option.hpp>
 #include <ql/types.hpp>
-
+// Have to use boost optional as long we support boost versions < 1.84, where std::optional serialization is not supported
 #include <boost/optional.hpp>
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/version.hpp>
 #include <boost/serialization/optional.hpp>
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
+
+namespace QuantLib {
+
+//! Write \p deltaType to stream. Not provided in QuantLib so add it here.
+std::ostream& operator<<(std::ostream& os, QuantLib::DeltaVolQuote::DeltaType type);
+
+//! Write \p atmType to stream. Not provided in QuantLib so add it here.
+std::ostream& operator<<(std::ostream& os, QuantLib::DeltaVolQuote::AtmType type);
+
+}
 
 namespace ore {
 namespace data {
@@ -191,6 +201,8 @@ protected:
 
 private:
     QuantLib::DeltaVolQuote::AtmType atmType_;
+    // boost optional is required as long we support boost < 1.84, where std::optional serialization is not
+    // supported
     boost::optional<QuantLib::DeltaVolQuote::DeltaType> deltaType_;
 
     //! Perform validation
@@ -255,12 +267,6 @@ private:
 //! Write \p strike to stream.
 std::ostream& operator<<(std::ostream& os, const BaseStrike& strike);
 
-//! Write \p deltaType to stream. Not provided in QuantLib so add it here.
-std::ostream& operator<<(std::ostream& os, QuantLib::DeltaVolQuote::DeltaType type);
-
-//! Write \p atmType to stream. Not provided in QuantLib so add it here.
-std::ostream& operator<<(std::ostream& os, QuantLib::DeltaVolQuote::AtmType type);
-
 //! Write MoneynessStrike::Type, \p type, to stream.
 std::ostream& operator<<(std::ostream& os, MoneynessStrike::Type type);
 
@@ -268,7 +274,7 @@ std::ostream& operator<<(std::ostream& os, MoneynessStrike::Type type);
 MoneynessStrike::Type parseMoneynessType(const std::string& type);
 
 //! Parse a Strike from its string representation, \p strStrike.
-boost::shared_ptr<BaseStrike> parseBaseStrike(const std::string& strStrike);
+QuantLib::ext::shared_ptr<BaseStrike> parseBaseStrike(const std::string& strStrike);
 
 template <class Archive> void registerBaseStrike(Archive& ar) {
     ar.template register_type<AbsoluteStrike>();

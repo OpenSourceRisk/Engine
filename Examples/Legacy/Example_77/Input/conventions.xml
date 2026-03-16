@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Conventions>
+<FxOption>
+  <Id>EUR-USD-FXOPTION</Id>
+  <FXConventionID>EUR-USD-FX</FXConventionID>
+  <AtmType>AtmDeltaNeutral</AtmType>
+  <LongTermAtmType>AtmDeltaNeutral</LongTermAtmType>
+  <DeltaType>Spot</DeltaType>
+  <LongTermDeltaType>Fwd</LongTermDeltaType>
+  <SwitchTenor>2Y</SwitchTenor>
+  <RiskReversalInFavorOf>Call</RiskReversalInFavorOf>
+  <ButterflyStyle>Broker</ButterflyStyle>
+</FxOption>
+<FX>
+  <Id>EUR-USD-FX</Id>
+  <SpotDays>2</SpotDays>
+  <SourceCurrency>EUR</SourceCurrency>
+  <TargetCurrency>USD</TargetCurrency>
+  <PointsFactor>10000</PointsFactor>
+  <AdvanceCalendar>TARGET,US</AdvanceCalendar>
+  <SpotRelative>true</SpotRelative>
+</FX>
+<FX>
+  <Id>EUR-USD-FX-CONVENTIONS</Id>
+  <SpotDays>0</SpotDays>
+  <SourceCurrency>EUR</SourceCurrency>
+  <TargetCurrency>USD</TargetCurrency>
+  <PointsFactor>10000</PointsFactor>
+  <AdvanceCalendar>TARGET,US, UK</AdvanceCalendar>
+  <SpotRelative>true</SpotRelative>
+</FX>
+<Deposit>
+  <Id>EUR-EONIA-CONVENTIONS</Id>
+  <IndexBased>true</IndexBased>
+  <Index>EUR-EONIA</Index>
+</Deposit>
+<Deposit>
+  <Id>EUR-EURIBOR-CONVENTIONS</Id>
+  <IndexBased>true</IndexBased>
+  <Index>EUR-EURIBOR</Index>
+</Deposit>
+<Deposit>
+  <Id>USD-FED-FUNDS-CONVENTIONS</Id>
+  <IndexBased>true</IndexBased>
+  <Index>USD-FedFunds</Index>
+</Deposit>
+<Deposit>
+  <Id>USD-LIBOR-CONVENTIONS</Id>
+  <IndexBased>true</IndexBased>
+  <Index>USD-LIBOR</Index>
+</Deposit>
+<FRA>
+  <Id>EUR-3M-FRA-CONVENTIONS</Id>
+  <Index>EUR-EURIBOR-3M</Index>
+</FRA>
+<FRA>
+  <Id>USD-3M-FRA-CONVENTIONS</Id>
+  <Index>USD-LIBOR-3M</Index>
+</FRA>
+<OIS>
+  <Id>EUR-OIS-CONVENTIONS</Id>
+  <SpotLag>2</SpotLag>
+  <Index>EUR-EONIA</Index>
+  <FixedDayCounter>A360</FixedDayCounter>
+  <PaymentLag>1</PaymentLag>
+  <EOM>false</EOM>
+  <FixedFrequency>Annual</FixedFrequency>
+  <FixedConvention>Following</FixedConvention>
+  <FixedPaymentConvention>Following</FixedPaymentConvention>
+  <Rule>Backward</Rule>
+  <RateCutoff>1</RateCutoff>
+</OIS>
+<OIS>
+  <Id>USD-OIS-CONVENTIONS</Id>
+  <SpotLag>2</SpotLag>
+  <Index>USD-FedFunds</Index>
+  <FixedDayCounter>A360</FixedDayCounter>
+  <PaymentLag>2</PaymentLag>
+  <EOM>false</EOM>
+  <FixedFrequency>Annual</FixedFrequency>
+  <FixedConvention>Following</FixedConvention>
+  <FixedPaymentConvention>Following</FixedPaymentConvention>
+  <Rule>Backward</Rule>
+  <RateCutoff>1</RateCutoff>
+</OIS>
+<CrossCurrencyBasis>
+  <Id>EUR-USD-XCCY-BASIS-CONVENTIONS</Id>
+  <SettlementDays>2</SettlementDays>
+  <SettlementCalendar>TARGET,US,UK</SettlementCalendar>
+  <RollConvention>MF</RollConvention>
+  <FlatIndex>USD-LIBOR-3M</FlatIndex>
+  <SpreadIndex>EUR-EURIBOR-3M</SpreadIndex>
+  <IsResettable>Y</IsResettable>
+  <FlatIndexIsResettable>Y</FlatIndexIsResettable>
+</CrossCurrencyBasis>
+<Swap>
+  <Id>EUR-3M-SWAP-CONVENTIONS</Id>
+  <FixedCalendar>TARGET</FixedCalendar>
+  <FixedFrequency>Annual</FixedFrequency>
+  <FixedConvention>MF</FixedConvention>
+  <FixedDayCounter>30/360</FixedDayCounter>
+  <Index>EUR-EURIBOR-3M</Index>
+</Swap>
+<Swap>
+  <Id>USD-3M-SWAP-CONVENTIONS</Id>
+  <FixedCalendar>US,UK</FixedCalendar>
+  <FixedFrequency>Semiannual</FixedFrequency>
+  <FixedConvention>MF</FixedConvention>
+  <FixedDayCounter>30/360</FixedDayCounter>
+  <Index>USD-LIBOR-3M</Index>
+</Swap>
+</Conventions>

@@ -16,6 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <qle/utilities/ratehelpers.hpp>
+
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <ql/utilities/null_deleter.hpp>
@@ -23,16 +25,16 @@
 
 namespace QuantExt {
 
-SubPeriodsSwapHelper::SubPeriodsSwapHelper(Handle<Quote> spread, const Period& swapTenor, const Period& fixedTenor,
-                                           const Calendar& fixedCalendar, const DayCounter& fixedDayCount,
-                                           BusinessDayConvention fixedConvention, const Period& floatPayTenor,
-                                           const boost::shared_ptr<IborIndex>& iborIndex,
-                                           const DayCounter& floatDayCount,
-                                           const Handle<YieldTermStructure>& discountingCurve,
-                                           QuantExt::SubPeriodsCoupon1::Type type)
+SubPeriodsSwapHelper::SubPeriodsSwapHelper(
+    Handle<Quote> spread, const Period& swapTenor, const Period& fixedTenor, const Calendar& fixedCalendar,
+    const DayCounter& fixedDayCount, BusinessDayConvention fixedConvention, const Period& floatPayTenor,
+    const QuantLib::ext::shared_ptr<IborIndex>& iborIndex, const DayCounter& floatDayCount,
+    const Handle<YieldTermStructure>& discountingCurve, QuantExt::SubPeriodsCoupon1::Type type,
+    QuantLib::Pillar::Choice pillarChoice, const QuantLib::Date& customPillarDate)
     : RelativeDateRateHelper(spread), iborIndex_(iborIndex), swapTenor_(swapTenor), fixedTenor_(fixedTenor),
       fixedCalendar_(fixedCalendar), fixedDayCount_(fixedDayCount), fixedConvention_(fixedConvention),
-      floatPayTenor_(floatPayTenor), floatDayCount_(floatDayCount), type_(type), discountHandle_(discountingCurve) {
+      floatPayTenor_(floatPayTenor), floatDayCount_(floatDayCount), type_(type), pillarChoice_(pillarChoice),
+      discountHandle_(discountingCurve) {
 
     iborIndex_ = iborIndex_->clone(termStructureHandle_);
     iborIndex_->unregisterWith(termStructureHandle_);
@@ -40,6 +42,8 @@ SubPeriodsSwapHelper::SubPeriodsSwapHelper(Handle<Quote> spread, const Period& s
     registerWith(iborIndex_);
     registerWith(spread);
     registerWith(discountHandle_);
+
+    pillarDate_ = customPillarDate;
 
     initializeDates();
 }
@@ -54,40 +58,27 @@ void SubPeriodsSwapHelper::initializeDates() {
     valuationDate = spotCalendar.adjust(valuationDate);
     Date effectiveDate = spotCalendar.advance(valuationDate, spotDays * Days);
 
-    swap_ = boost::shared_ptr<SubPeriodsSwap>(new SubPeriodsSwap(
-        effectiveDate, 1.0, swapTenor_, true, fixedTenor_, 0.0, fixedCalendar_, fixedDayCount_, fixedConvention_,
-        floatPayTenor_, iborIndex_, floatDayCount_, DateGeneration::Backward, type_));
+    swap_ = QuantLib::ext::shared_ptr<SubPeriodsSwap>(new SubPeriodsSwap(
+        effectiveDate, 1.0, swapTenor_, true, fixedTenor_,
+        quote().empty() || !quote()->isValid() ? 0.0 : quote()->value(), fixedCalendar_, fixedDayCount_,
+        fixedConvention_, floatPayTenor_, iborIndex_, floatDayCount_, DateGeneration::Backward, type_));
 
-    boost::shared_ptr<PricingEngine> engine(new DiscountingSwapEngine(discountRelinkableHandle_));
+    QuantLib::ext::shared_ptr<PricingEngine> engine(new DiscountingSwapEngine(discountRelinkableHandle_));
     swap_->setPricingEngine(engine);
 
     // set earliest and latest
     earliestDate_ = swap_->startDate();
-    latestDate_ = swap_->maturityDate();
-
-    boost::shared_ptr<FloatingRateCoupon> lastFloating =
-        boost::dynamic_pointer_cast<FloatingRateCoupon>(swap_->floatLeg().back());
-    if (IborCoupon::Settings::instance().usingAtParCoupons()) {
-        /* Subperiods coupons do not have a par approximation either... */
-        if (boost::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(lastFloating)) {
-            Date fixingValueDate = iborIndex_->valueDate(lastFloating->fixingDate());
-            Date endValueDate = iborIndex_->maturityDate(fixingValueDate);
-            latestDate_ = std::max(latestDate_, endValueDate);
-        }
-    } else {
-        /* May need to adjust latestDate_ if you are projecting libor based
-        on tenor length rather than from accrual date to accrual date. */
-        Date fixingValueDate = iborIndex_->valueDate(lastFloating->fixingDate());
-        Date endValueDate = iborIndex_->maturityDate(fixingValueDate);
-        latestDate_ = std::max(latestDate_, endValueDate);
-    }
+    maturityDate_ = swap_->maturityDate();
+    latestRelevantDate_ = determineLatestRelevantDate(swap_->legs());
+    latestDate_ = pillarDate_ =
+        determinePillarDate(pillarDate_, pillarChoice_, earliestDate_, maturityDate_, latestRelevantDate_);
 }
 
 void SubPeriodsSwapHelper::setTermStructure(YieldTermStructure* t) {
 
     bool observer = false;
 
-    boost::shared_ptr<YieldTermStructure> temp(t, null_deleter());
+    QuantLib::ext::shared_ptr<YieldTermStructure> temp(t, null_deleter());
     termStructureHandle_.linkTo(temp, observer);
 
     if (discountHandle_.empty())

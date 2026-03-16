@@ -25,7 +25,7 @@ namespace QuantExt {
 
 template <class T>
 BinomialConvertibleEngine<T>::BinomialConvertibleEngine(
-    const boost::shared_ptr<GeneralizedBlackScholesProcess>& process, const Handle<YieldTermStructure>& referenceCurve,
+    const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process, const Handle<YieldTermStructure>& referenceCurve,
     const Handle<Quote>& creditSpread, const Handle<DefaultProbabilityTermStructure>& defaultCurve,
     const Handle<Quote>& recoveryRate, Size timeSteps)
     : process_(process), referenceCurve_(referenceCurve), creditSpread_(creditSpread), defaultCurve_(defaultCurve),
@@ -75,22 +75,22 @@ template <class T> void BinomialConvertibleEngine<T>::calculate() const {
     }
 
     // binomial trees with constant coefficient
-    Handle<Quote> underlying(boost::shared_ptr<Quote>(new SimpleQuote(s0)));
+    Handle<Quote> underlying(QuantLib::ext::shared_ptr<Quote>(new SimpleQuote(s0)));
     Handle<YieldTermStructure> flatRiskFree(
-        boost::shared_ptr<YieldTermStructure>(new FlatForward(referenceDate, riskFreeRate, rfdc)));
+        QuantLib::ext::shared_ptr<YieldTermStructure>(new FlatForward(referenceDate, riskFreeRate, rfdc)));
     Handle<YieldTermStructure> flatDividends(
-        boost::shared_ptr<YieldTermStructure>(new FlatForward(referenceDate, q, divdc)));
+        QuantLib::ext::shared_ptr<YieldTermStructure>(new FlatForward(referenceDate, q, divdc)));
     Handle<BlackVolTermStructure> flatVol(
-        boost::shared_ptr<BlackVolTermStructure>(new BlackConstantVol(referenceDate, volcal, v, voldc)));
+        QuantLib::ext::shared_ptr<BlackVolTermStructure>(new BlackConstantVol(referenceDate, volcal, v, voldc)));
 
-    boost::shared_ptr<PlainVanillaPayoff> payoff = boost::dynamic_pointer_cast<PlainVanillaPayoff>(arguments_.payoff);
+    QuantLib::ext::shared_ptr<PlainVanillaPayoff> payoff = QuantLib::ext::dynamic_pointer_cast<PlainVanillaPayoff>(arguments_.payoff);
     QL_REQUIRE(payoff, "non-plain payoff given");
 
     Time maturity = rfdc.yearFraction(arguments_.settlementDate, maturityDate);
 
-    boost::shared_ptr<GeneralizedBlackScholesProcess> bs(
+    QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> bs(
         new GeneralizedBlackScholesProcess(underlying, flatDividends, flatRiskFree, flatVol));
-    boost::shared_ptr<T> tree(new T(bs, maturity, timeSteps_, payoff->strike()));
+    QuantLib::ext::shared_ptr<T> tree(new T(bs, maturity, timeSteps_, payoff->strike()));
 
     // the lattice uses the eq process risk free rate, we use a credit spread over this rate which comprises
     // - the credit spread itself
@@ -116,11 +116,11 @@ template <class T> void BinomialConvertibleEngine<T>::calculate() const {
 
     Real creditSpread = creditRate + (referenceCurveRate - riskFreeRate) + defaultRate * (1.0 - recRate);
 
-    boost::shared_ptr<Lattice> lattice(
+    QuantLib::ext::shared_ptr<Lattice> lattice(
         new TsiveriotisFernandesLattice<T>(tree, riskFreeRate, maturity, timeSteps_, creditSpread, v, q));
 
     QuantExt::DiscretizedConvertible convertible(
-        arguments_, bs, Handle<Quote>(boost::make_shared<SimpleQuote>(creditSpread)), TimeGrid(maturity, timeSteps_));
+        arguments_, bs, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(creditSpread)), TimeGrid(maturity, timeSteps_));
 
     convertible.initialize(lattice, maturity);
     convertible.rollback(0.0);

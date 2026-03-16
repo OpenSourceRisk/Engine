@@ -22,6 +22,7 @@
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/instruments/rebatedexercise.hpp>
+#include <qle/utilities/fairrate.hpp>
 
 #include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/fixedratecoupon.hpp>
@@ -43,7 +44,7 @@ bool BlackMultiLegOptionEngineBase::instrumentIsHandled(const MultiLegOption& m,
 
 bool BlackMultiLegOptionEngineBase::instrumentIsHandled(const std::vector<Leg>& legs, const std::vector<bool>& payer,
                                                         const std::vector<Currency>& currency,
-                                                        const boost::shared_ptr<Exercise>& exercise,
+                                                        const QuantLib::ext::shared_ptr<Exercise>& exercise,
                                                         const Settlement::Type& settlementType,
                                                         const Settlement::Method& settlementMethod,
                                                         std::vector<std::string>& messages) {
@@ -63,7 +64,7 @@ bool BlackMultiLegOptionEngineBase::instrumentIsHandled(const std::vector<Leg>& 
 
     for (Size i = 0; i < legs.size(); ++i) {
         for (Size j = 0; j < legs[i].size(); ++j) {
-            if (auto cpn = boost::dynamic_pointer_cast<FloatingRateCoupon>(legs[i][j])) {
+            if (auto cpn = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(legs[i][j])) {
                 if (cpn->index()->currency() != currency[0]) {
                     messages.push_back("NumericLgmMultilegOptionEngine: can only handle indices (" +
                                        cpn->index()->name() + ") with same currency as unqiue pay currency (" +
@@ -77,12 +78,13 @@ bool BlackMultiLegOptionEngineBase::instrumentIsHandled(const std::vector<Leg>& 
 
     for (Size i = 0; i < legs.size(); ++i) {
         for (Size j = 0; j < legs[i].size(); ++j) {
-            if (auto c = boost::dynamic_pointer_cast<Coupon>(legs[i][j])) {
-                if (!(boost::dynamic_pointer_cast<IborCoupon>(c) || boost::dynamic_pointer_cast<FixedRateCoupon>(c) ||
-                      boost::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(c) ||
-                      boost::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(c) ||
-                      boost::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(c) ||
-                      boost::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(c))) {
+            if (auto c = QuantLib::ext::dynamic_pointer_cast<Coupon>(legs[i][j])) {
+                if (!(QuantLib::ext::dynamic_pointer_cast<IborCoupon>(c) ||
+                      QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(c) ||
+                      QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(c) ||
+                      QuantLib::ext::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(c) ||
+                      QuantLib::ext::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(c) ||
+                      QuantLib::ext::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(c))) {
                     messages.push_back(
                         "BlackMultilegOptionEngine: coupon type not handled, supported coupon types: Fix, "
                         "Ibor, ON comp, ON avg, BMA/SIFMA, subperiod. leg = " +
@@ -151,31 +153,57 @@ void BlackMultiLegOptionEngineBase::calculate() const {
 
     for (Size i = 0; i < legs_.size(); ++i) {
         for (Size j = 0; j < legs_[i].size(); ++j) {
+
             Real payer = payer_[i] ? -1.0 : 1.0;
-            if (auto c = boost::dynamic_pointer_cast<Coupon>(legs_[i][j])) {
-                auto fixedCoupon = boost::dynamic_pointer_cast<FixedRateCoupon>(c);
+
+            if (legs_[i][j]->date() <= exerciseDate)
+                continue;
+
+            if (auto c = QuantLib::ext::dynamic_pointer_cast<Coupon>(legs_[i][j])) {
+
+                /* coupon is part of exercise if ...
+                   ... mid coupon exercise true: a coupon with pay date > exercise date + mid cpn settle days
+                                                 is part of the exercise
+                   ... mid coupon exercise false: coupon with accrualStart > exercise date is part of exercise
+                */
+
+                auto fixedCoupon = QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(c);
                 if (fixedCoupon)
                     fixedDayCount = c->dayCounter();
-                if (c->accrualStartDate() >= exerciseDate) {
+
+                Date exerciseAccrualStart =
+                    midCouponExercise_ ? noticeCalendar_.advance(exerciseDate, noticePeriod_, noticeConvention_)
+                                       : c->accrualStartDate();
+
+                if (c->accrualEndDate() > exerciseAccrualStart && exerciseAccrualStart >= exerciseDate) {
                     cfInfo.push_back(CfInfo());
-                    earliestAccrualStartDate = std::min(earliestAccrualStartDate, c->accrualStartDate());
+                    earliestAccrualStartDate = std::min(earliestAccrualStartDate, exerciseAccrualStart);
                     latestAccrualEndDate = std::max(latestAccrualEndDate, c->accrualEndDate());
                     if (fixedCoupon) {
                         cfInfo.back().fixedRate = fixedCoupon->rate();
                         cfInfo.back().nominal = c->nominal() * payer;
                         ++numFixed;
-                    } else if (auto f = boost::dynamic_pointer_cast<FloatingRateCoupon>(c)) {
+                    } else if (auto f = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(c)) {
                         cfInfo.back().floatingSpread = f->spread();
                         cfInfo.back().floatingGearing = f->gearing();
                         cfInfo.back().nominal = f->nominal() * payer;
                         ++numFloat;
                     }
-                    cfInfo.back().accrual = c->accrualPeriod();
+                    cfInfo.back().accrual =
+                        midCouponExercise_ && c->accrualStartDate() < exerciseDate
+                            ? c->dayCounter().yearFraction(exerciseAccrualStart, c->accrualEndDate())
+                            : c->accrualPeriod();
                     cfInfo.back().discountFactor = discountCurve_->discount(c->date());
-                    cfInfo.back().amount = c->amount() * payer;
+                    // mid cpn exercise assumes short coupon is paid
+                    cfInfo.back().amount =
+                        c->amount() * payer * (midCouponExercise_ ? cfInfo.back().accrual / c->accrualPeriod() : 1.0);
                     cfInfo.back().payDate = c->date();
                 }
-            } else if (legs_[i][j]->date() > exerciseDate) {
+
+            } else {
+
+                // non-coupon is part of exercise if pay date > exercise date
+
                 cfInfo.push_back(CfInfo());
                 cfInfo.back().discountFactor = discountCurve_->discount(legs_[i][j]->date());
                 cfInfo.back().amount = legs_[i][j]->amount() * payer;
@@ -184,7 +212,7 @@ void BlackMultiLegOptionEngineBase::calculate() const {
         }
     }
 
-    // if there are future floating coupons, but no fixed, we add a dummy fixed with 0 fixed rate to 
+    // if there are future floating coupons, but no fixed, we add a dummy fixed with 0 fixed rate to
     // ensure we can calculate the ATM rate
     if (numFloat > 0 && numFixed == 0) {
         for (auto const& c : cfInfo) {
@@ -208,7 +236,7 @@ void BlackMultiLegOptionEngineBase::calculate() const {
 
     // add the rebate (if any) as a fixed cashflow to the exercise-into underlying
 
-    if (auto rebatedExercise = boost::dynamic_pointer_cast<QuantExt::RebatedExercise>(exercise_)) {
+    if (auto rebatedExercise = QuantLib::ext::dynamic_pointer_cast<QuantExt::RebatedExercise>(exercise_)) {
         cfInfo.push_back(CfInfo());
         cfInfo.back().amount = rebatedExercise->rebate(0);
         cfInfo.back().discountFactor = discountCurve_->discount(rebatedExercise->rebatePaymentDate(0));
@@ -227,22 +255,19 @@ void BlackMultiLegOptionEngineBase::calculate() const {
             fixedNpv += c.amount * c.discountFactor;
         }
     }
-    Real weightedFixedRate = weightedFixedRateNom / weightedFixedRateDenom;
+    Real weightedFixedRate =
+        QuantLib::close_enough(weightedFixedRateDenom, 0.0) ? 0.0 : weightedFixedRateNom / weightedFixedRateDenom;
 
-    // determine the pv-weighted floating margin, the floating bps, the floating npv
+    // determine floating npv and floating spread npv
 
-    Real weightedFloatingSpreadNom = 0.0, weightedFloatingSpreadDenom = 0.0;
-    Real floatingBps = 0.0, floatingNpv = 0.0;
+    Real floatingNpv = 0.0, floatingSpreadNpv = 0.0;
     for (auto const& c : cfInfo) {
         if (c.floatingSpread != Null<Real>()) {
             Real w = c.nominal * c.accrual * c.discountFactor;
-            weightedFloatingSpreadNom += c.floatingSpread * w;
-            weightedFloatingSpreadDenom += w;
-            floatingBps += w;
             floatingNpv += c.amount * c.discountFactor;
+            floatingSpreadNpv += c.floatingSpread * w;
         }
     }
-    Real weightedFloatingSpread = weightedFloatingSpreadNom / weightedFloatingSpreadDenom;
 
     // determine the simple cf npv
 
@@ -255,21 +280,18 @@ void BlackMultiLegOptionEngineBase::calculate() const {
 
     // determine the fair swap rate
 
-    Real atmForward = -floatingNpv / fixedBps;
+    Real effectiveAtmForward = 0.0;
+    Real spreadCorrection = 0.0;
+    std::tie(effectiveAtmForward, spreadCorrection) = fairRateFromNpvBps(fixedBps, floatingNpv, floatingSpreadNpv);
 
-    // determine the spread correction
-
-    Real spreadCorrection = weightedFloatingSpread * std::abs(floatingBps / fixedBps);
-
-    Real effectiveAtmForward = atmForward - spreadCorrection;
-    Real effectiveFixedRate = weightedFixedRate - spreadCorrection;
+    Real effectiveFixedRate = weightedFixedRate + spreadCorrection;
 
     // incorporate the simple cashflows (including the rebate)
 
     Real simpleCfCorrection = 0.0;
     for (auto const& c : cfInfo) {
         if (c.fixedRate == Null<Real>() && c.floatingSpread == Null<Real>()) {
-            simpleCfCorrection += c.amount * c.discountFactor / fixedBps;
+            simpleCfCorrection += QuantLib::close_enough(fixedBps, 0.0) ? 0.0 : c.amount * c.discountFactor / fixedBps;
         }
     }
 
@@ -303,7 +325,9 @@ void BlackMultiLegOptionEngineBase::calculate() const {
     // and a shift from volatility_ we floor swapLength at 1/12 here therefore.
     swapLength = std::max(swapLength, 1.0 / 12.0);
 
-    Real variance = volatility_->blackVariance(exerciseDate, swapLength, effectiveFixedRate);
+    Date today = Settings::instance().evaluationDate();
+    Real variance =
+        exerciseDate == today ? 0.0 : volatility_->blackVariance(exerciseDate, swapLength, effectiveFixedRate);
     Real displacement =
         volatility_->volatilityType() == ShiftedLognormal ? volatility_->shift(exerciseDate, swapLength) : 0.0;
 
@@ -329,10 +353,8 @@ void BlackMultiLegOptionEngineBase::calculate() const {
 
     underlyingNpv_ = fixedNpv + floatingNpv + simpleCfNpv;
 
-    additionalResults_["spreadCorrection"] = spreadCorrection;
     additionalResults_["simpleCashflowCorrection"] = simpleCfCorrection;
     additionalResults_["strike"] = effectiveFixedRate;
-    additionalResults_["atmForward"] = effectiveAtmForward;
     additionalResults_["underlyingNPV"] = underlyingNpv_;
     additionalResults_["annuity"] = annuity;
     additionalResults_["timeToExpiry"] = exerciseTime;
@@ -343,10 +365,12 @@ void BlackMultiLegOptionEngineBase::calculate() const {
     additionalResults_["vega"] = vega;
     additionalResults_["fixedNpv"] = fixedNpv;
     additionalResults_["fixedBps"] = fixedBps;
+    additionalResults_["atmForward"] = effectiveAtmForward - spreadCorrection;
+    additionalResults_["spreadCorrection"] = spreadCorrection;
+    additionalResults_["effectiveAtmForward"] = effectiveAtmForward;
     additionalResults_["weightedFixedRate"] = weightedFixedRate;
     additionalResults_["floatingNpv"] = floatingNpv;
-    additionalResults_["floatingBps"] = floatingBps;
-    additionalResults_["weightedFloatingSpread"] = weightedFloatingSpread;
+    additionalResults_["floatingSpreadNpv"] = floatingSpreadNpv;
     additionalResults_["simpleCfNpv"] = simpleCfNpv;
 }
 
@@ -364,6 +388,10 @@ void BlackMultiLegOptionEngine::calculate() const {
     exercise_ = arguments_.exercise;
     settlementType_ = arguments_.settlementType;
     settlementMethod_ = arguments_.settlementMethod;
+    midCouponExercise_ = arguments_.midCouponExercise;
+    noticePeriod_ = arguments_.noticePeriod;
+    noticeCalendar_ = arguments_.noticeCalendar;
+    noticeConvention_ = arguments_.noticeConvention;
 
     BlackMultiLegOptionEngineBase::calculate();
 
@@ -390,6 +418,10 @@ void BlackSwaptionFromMultilegOptionEngine::calculate() const {
     exercise_ = arguments_.exercise;
     settlementType_ = arguments_.settlementType;
     settlementMethod_ = arguments_.settlementMethod;
+    midCouponExercise_ = false;
+    noticePeriod_ = 0 * Days;
+    noticeCalendar_ = NullCalendar();
+    noticeConvention_ = Following;
 
     BlackMultiLegOptionEngineBase::calculate();
 
@@ -415,6 +447,11 @@ void BlackNonstandardSwaptionFromMultilegOptionEngine::calculate() const {
     exercise_ = arguments_.exercise;
     settlementType_ = arguments_.settlementType;
     settlementMethod_ = arguments_.settlementMethod;
+    midCouponExercise_ = false;
+    noticePeriod_ = 0 * Days;
+    noticeCalendar_ = NullCalendar();
+    noticeConvention_ = Following;
+
 
     BlackMultiLegOptionEngineBase::calculate();
 

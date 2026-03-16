@@ -21,13 +21,14 @@
     \ingroup
 */
 
-#include <boost/filesystem/operations.hpp>
 #include <chrono>
 #include <ored/utilities/fileio.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ql/math/randomnumbers/mt19937uniformrng.hpp>
 #include <thread>
 #include <vector>
+#include <random>
 
 namespace ore {
 namespace data {
@@ -71,6 +72,8 @@ FILE* FileIO::fopen(const char* filename, const char* mode) {
             em.set("retry_count", i);
             Real backoffMillis = currentBackoff * 1000;
             em.set("retry_interval", backoffMillis);
+            em.set("errno", errno);
+            em.set("strerror", std::string(std::strerror(errno)));
             em.log();
             std::this_thread::sleep_for(std::chrono::duration<Real>(currentBackoff));
             Real nextBackoff = currentBackoff * 2;
@@ -102,7 +105,7 @@ bool FileIO::create_directories(const path& p) {
         }
 
         try {
-            res = boost::filesystem::create_directories(p);
+            res = std::filesystem::create_directories(p);
             if (res)
                 break;
         } catch (...) {
@@ -129,7 +132,7 @@ bool FileIO::remove_all(const path& p) {
         }
 
         try {
-            res = boost::filesystem::remove_all(p);
+            res = std::filesystem::remove_all(p);
             if (res)
                 break;
         } catch (...) {
@@ -137,6 +140,14 @@ bool FileIO::remove_all(const path& p) {
     }
 
     return res;
+}
+
+std::filesystem::path unique_path(const std::filesystem::path& base) {
+    static std::mt19937_64 rng{std::random_device{}()};
+    static std::uniform_int_distribution<unsigned long long> dist;
+
+    auto unique_name = base.string() + "_" + std::to_string(dist(rng));
+    return std::filesystem::path(unique_name);
 }
 
 } // namespace data

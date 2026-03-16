@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<ORE>
+  <Setup>
+    <Parameter name="asofDate">2016-02-05</Parameter>
+    <Parameter name="inputPath">Input</Parameter>
+    <Parameter name="outputPath">Output</Parameter>
+    <Parameter name="logFile">log_smile.txt</Parameter>
+    <Parameter name="logMask">31</Parameter>
+    <Parameter name="marketDataFile">market_20160205_smile.txt</Parameter>
+    <Parameter name="fixingDataFile">../../../Input/fixings_20160205.txt</Parameter>
+    <Parameter name="implyTodaysFixings">Y</Parameter>
+    <Parameter name="curveConfigFile">curveconfig.xml</Parameter>
+    <Parameter name="conventionsFile">../../../Input/conventions.xml</Parameter>
+    <Parameter name="marketConfigFile">todaysmarket_smile.xml</Parameter>
+    <Parameter name="pricingEnginesFile">../../../Input/pricingengine.xml</Parameter>
+    <Parameter name="portfolioFile">portfolio_swaption.xml</Parameter>
+  </Setup>
+  <Markets>
+    <Parameter name="lgmcalibration">default</Parameter>
+    <Parameter name="fxcalibration">default</Parameter>
+    <Parameter name="pricing">default</Parameter>
+  </Markets>
+  <Analytics>
+    <Analytic type="npv">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="baseCurrency">EUR</Parameter>
+      <Parameter name="outputFileName">npv_smile.csv</Parameter>
+    </Analytic>
+    <Analytic type="additionalResults">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="outputFileName">additionalResultsSmile.csv</Parameter>
+    </Analytic>
+  </Analytics>
+</ORE>

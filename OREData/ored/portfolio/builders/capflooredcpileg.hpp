@@ -43,7 +43,7 @@ public:
 
 protected:
     virtual string keyImpl(const string& indexName) override { return indexName; }
-    virtual boost::shared_ptr<QuantLib::InflationCouponPricer> engineImpl(const string& indexName) override {
+    virtual QuantLib::ext::shared_ptr<QuantLib::InflationCouponPricer> engineImpl(const string& indexName) override {
         Handle<QuantLib::CPIVolatilitySurface> vol =
             market_->cpiInflationCapFloorVolatilitySurface(indexName, configuration(MarketContext::pricing));
         Handle<ZeroInflationIndex> cpiIndex =
@@ -52,15 +52,12 @@ protected:
         Handle<YieldTermStructure> discountCurve =
             market_->discountCurve(ccyCode, configuration(MarketContext::pricing));
 
-         bool useLastFixingDate =
-            parseBool(engineParameter("useLastFixingDate", std::vector<std::string>(), false, "false"));
-
          bool isLogNormal = QuantExt::ZeroInflation::isCPIVolSurfaceLogNormal(vol.currentLink());
 
          if (isLogNormal) {
-             return boost::make_shared<QuantExt::BlackCPICouponPricer>(vol, discountCurve, useLastFixingDate);
+             return QuantLib::ext::make_shared<QuantExt::BlackCPICouponPricer>(vol, discountCurve);
          } else {
-             return boost::make_shared<QuantExt::BachelierCPICouponPricer>(vol, discountCurve, useLastFixingDate);
+             return QuantLib::ext::make_shared<QuantExt::BachelierCPICouponPricer>(vol, discountCurve);
          }
 
         
@@ -74,7 +71,7 @@ public:
 
 protected:
     virtual string keyImpl(const string& indexName) override { return indexName; }
-    virtual boost::shared_ptr<QuantExt::InflationCashFlowPricer> engineImpl(const string& indexName) override {
+    virtual QuantLib::ext::shared_ptr<QuantExt::InflationCashFlowPricer> engineImpl(const string& indexName) override {
         Handle<QuantLib::CPIVolatilitySurface> vol =
             market_->cpiInflationCapFloorVolatilitySurface(indexName, configuration(MarketContext::pricing));
         Handle<ZeroInflationIndex> cpiIndex =
@@ -83,15 +80,12 @@ protected:
         Handle<YieldTermStructure> discountCurve =
             market_->discountCurve(ccyCode, configuration(MarketContext::pricing));
 
-        bool useLastFixingDate =
-            parseBool(engineParameter("useLastFixingDate", std::vector<std::string>(), false, "false"));
-
         bool isLogNormal = QuantExt::ZeroInflation::isCPIVolSurfaceLogNormal(vol.currentLink());
 
         if (isLogNormal) {
-            return boost::make_shared<QuantExt::BlackCPICashFlowPricer>(vol, discountCurve, useLastFixingDate);
+            return QuantLib::ext::make_shared<QuantExt::BlackCPICashFlowPricer>(vol, discountCurve);
         } else {
-            return boost::make_shared<QuantExt::BachelierCPICashFlowPricer>(vol, discountCurve, useLastFixingDate);
+            return QuantLib::ext::make_shared<QuantExt::BachelierCPICashFlowPricer>(vol, discountCurve);
         }
     }
 };

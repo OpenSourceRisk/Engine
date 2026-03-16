@@ -1,6 +1,33 @@
 \subsubsection{Swaption}
 \label{ss:swaption} 
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+A swaption is an option which gives the buyer the right, but not the obligation, 
+to enter into an underlying interest rate swap. The underlying swap may have varying 
+notional, rates, and spreads during its lifetime.
+
+With a {\bf European Swaption}, the buyer is only allowed to exercise the option and enter 
+into the swap on the expiration date of the swaption.
+There are two types of swaptions, payer and receiver:
+\begin{itemize}	
+\item Payer swaptions: the underlying swap pays fixed rate and receives floating 
+rate.
+\item Receiver swaptions: the underlying swap receives fixed and pays floating 
+rate.
+\end{itemize}
+European Swaption settlement can be either cash or physical delivery of the underlying swap.
+For cash settlement there are different methods to compute the settlement price (collateralized
+cash price, par yield curve).
+
+In a {\bf Bermudan Swaption}, the buyer is allowed to exercise the option and enter into the underlying
+swap on a predetermined set of dates rather than a single expiration
+date. The underlying swap may have varying notional, rates, and spreads during its lifetime.
+
+For an {\bf American Swaption} the buyer is allowed to exercise the option any time between two specified dates.
+
+{\bf Input}}\fi
+
 The \lstinline!SwaptionData!  node is the trade data container for the \emph{Swaption} trade type. The \lstinline!SwaptionData!
 node has one and exactly one \lstinline!OptionData! trade component sub-node, and at least one \lstinline!LegData! trade
 component sub-node.  These trade components are outlined in section \ref{ss:option_data} and section
@@ -8,7 +35,7 @@ component sub-node.  These trade components are outlined in section \ref{ss:opti
 \vspace{5mm}
 Supported swaption exercise styles are \emph{European}, \emph{Bermudan}, \emph{American}. Swaptions of all exercise styles can have an arbitrary number of legs, with
 each leg represented by a \lstinline!LegData! sub-node.  Cross currency swaptions are not supported for either exercise style, i.e. the Currency element must
-have the same value for all \lstinline!LegData! sub-nodes of a swaption. There must be at least one full coupon period after the exercise date for European 
+have the same value for all \lstinline!LegData! sub-nodes of a swaption. Unless \lstinline!MidCouponExercise! isset to \emph{true}, there must be at least one full coupon period after the exercise date for European 
 Swaptions, and after the last exercise date for Bermudan and American Swaptions. See Table \ref{tab:swaption_requirements} for further details on requirements for
  swaptions.\\
 \vspace{5mm}
@@ -73,7 +100,7 @@ The \lstinline!OptionData! trade component sub-node is outlined in section \ref{
 The relevant fields in the \lstinline!OptionData! node for a Swaption are:
 
 \begin{itemize}
-\item \lstinline!LongShort!: The allowable values are \emph{Long} or \emph{Short}. Note that the payer and receiver legs in the underlying swap are always from the perspective of the party that is \emph{Long}. E.g. for a \emph{Short} swaption with a fixed leg where the Payer flag is set to \emph{false}, it means that the counterparty receives the fixed flows.  
+\item \lstinline!LongShort!: The allowable values are \emph{Long} or \emph{Short}. Note that for Swaptions the payer and receiver legs in the underlying swap are always from the perspective of the party that is \emph{Long}. E.g. for a \emph{Short} swaption with a fixed leg where the Payer flag is set to \emph{false}, it means that the counterparty receives the fixed flows.  
 
 \begin{table}[H]
 \centering
@@ -88,6 +115,7 @@ The relevant fields in the \lstinline!OptionData! node for a Swaption are:
   \label{tab:swaption_setup}
 \end{table}
 
+Note that for CallableSwaps, contrary to the above, the payer and receiver legs in the underlying swap are instead from the perspective of the client, like for a standalone Swap trade.
 
 
 
@@ -105,7 +133,7 @@ The relevant fields in the \lstinline!OptionData! node for a Swaption are:
 \item \lstinline!NoticeConvention![Optional]: The roll convention used to compute the notice date from the exercise date. Defaults to
   \emph{Unadjusted} if not given. Allowable values: See Table \ref{tab:convention} Roll Convention.
 
-\item  \lstinline!Settlement!: Delivery Type. The allowable values are \emph{Cash} or \emph{Physical}. Note that for TradeType \emph{CallableSwap} only \emph{Physical} is allowed.
+\item  \lstinline!Settlement!: Delivery Type. The allowable values are \emph{Cash} or \emph{Physical}. Note that for TradeType \emph{CallableSwap} only \emph{Physical} is allowed. Also note that \emph{Cash} means the last Exercise date will be the Maturity date, whereas for \emph{Physical} the Maturity date will be the End date of the underlying Swap.
 
 \item \lstinline!SettlementMethod![Optional]: Specifies the method to calculate the settlement amount for Swaptions and CallableSwaps. Allowable values: \emph{PhysicalOTC}, \emph{PhysicalCleared}, \emph{CollateralizedCashPrice}, \emph{ParYieldCurve}. Defaults to \emph{ParYieldCurve} if Settlement is \emph{Cash} and defaults to \emph{PhysicalOTC} if Settlement is \emph{Physical}.
 
@@ -113,6 +141,14 @@ The relevant fields in the \lstinline!OptionData! node for a Swaption are:
 \emph{PhysicalCleared} = Cleared swaptions with physical settlement\\
 \emph{CollateralizedCashPrice} = Cash settled swaptions with settlement price calculation using zero coupon curve discounting \\
 \emph{ParYieldCurve}  = Cash settled swaptions with settlement price calculation using par yield discounting \footnote{https://www.isda.org/book/2006-isda-definitions/} \footnote{https://www.isda.org/a/TlAEE/Supplement-No-58-to-ISDA-2006-Definitions.pdf} \\
+
+\item \lstinline!MidCouponExercise! [Optional]:   If \emph{false}, the exercise-into underlying comprises all coupons with accrual start date greater or equal to notification date. I.e. one exercises into the next coupon, not the current one.\\
+If \emph{true}, the exercise-into underlying 
+comprises all coupons with accrual end date greater than the effective exercise date which is computed from the notification date by adding the notice period. 
+The accrual paid for such coupons on exercise is calculated from the effective exercise date to the accrual end date (short coupon).
+
+Allowable values: \emph{true}, \emph{false}. If omitted, defaults to \emph{false} for \emph{European} and \emph{Bermudan} swaptions and \emph{true} for \emph{American} swaptions.
+
 
 \item \lstinline!ExerciseFees![Optional]: This node contains child elements of type \lstinline!ExerciseFee!. Similar to a list of notionals
   (see \ref{ss:leg_data}) the fees can be given either
@@ -142,7 +178,9 @@ The relevant fields in the \lstinline!OptionData! node for a Swaption are:
 \item \lstinline!ExerciseFeeSettlementConvention![Optional]: The roll convention used to compute the exercise fee settlement date from
   the exercise date. Defaults to \emph{Unadjusted} if not given. Allowable values: See Table \ref{tab:convention} Roll Convention.
 
-\item An \lstinline!ExerciseDates! node where for \emph{European} style swaptions exactly one \lstinline!ExerciseDate! date element must be given, and for \emph{American} style swaptions  exactly two \lstinline!ExerciseDate! date element must be given, defining the start and the end of the American exercise period.  \emph{Bermudan} style swaptions can have \lstinline!ExerciseDate! elements given directly (at least two  \lstinline!ExerciseDate! elements must be given), or Rules or Dates based exercise dates. See Listings \ref{lst:bermudan_swaption_exercisedates}, \ref{lst:bermudan_swaption_rules} and \ref{lst:bermudan_swaption_dates}.
+\item An \lstinline!ExerciseDates! node where for \emph{European} style swaptions exactly one \lstinline!ExerciseDate! date element must be given, and for \emph{American} style swaptions  exactly two \lstinline!ExerciseDate! date element must be given, defining the start and the end of the American exercise period.  \emph{Bermudan} style swaptions can have \lstinline!ExerciseDate! elements given directly (at least two  \lstinline!ExerciseDate! elements must be given). See Listing \ref{lst:bermudan_swaption_exercisedates}
+
+\item  \emph{Bermudan} style swaptions can also have Rules or Dates based exercise dates using an  \lstinline!ExerciseSchedule! node instead of  \lstinline!ExerciseDates!. See Listings \ref{lst:bermudan_swaption_rules} and \ref{lst:bermudan_swaption_dates}.
 
 
 \begin{listing}[H]
@@ -172,15 +210,15 @@ The relevant fields in the \lstinline!OptionData! node for a Swaption are:
         <LongShort>Long</LongShort>
         <Style>Bermudan</Style>
         <Settlement>Physical</Settlement>
-        <ExerciseDates>
+        <ExerciseSchedule>
          <Rules>
           <StartDate>2027-03-02</StartDate>
           <EndDate>2029-03-02</EndDate>
           <Tenor>1Y</Tenor>
           <Calendar>US</Calendar>
           <Convention>MF</Convention>
-         <Rules>                    
-        </ExerciseDates>
+         </Rules>                    
+        </ExerciseSchedule>
         ...
     </OptionData>
    ...
@@ -196,7 +234,7 @@ The relevant fields in the \lstinline!OptionData! node for a Swaption are:
         <LongShort>Long</LongShort>
         <Style>Bermudan</Style>
         <Settlement>Physical</Settlement>
-        <ExerciseDates>
+        <ExerciseSchedule>
          <Dates>
           <Calendar>NullCalendar</Calendar>
           <Convention>Unadjusted</Convention>
@@ -204,9 +242,9 @@ The relevant fields in the \lstinline!OptionData! node for a Swaption are:
            <Date>2027-03-02</Date>
            <Date>2028-03-02</Date>
            <Date>2029-03-02</Date>
-          <Dates>
-         <Dates>                    
-        </ExerciseDates>
+          </Dates>
+         </Dates>                    
+        </ExerciseSchedule>
         ...
     </OptionData>
    ...
@@ -245,6 +283,104 @@ If a Swaption is cash-settled and has an \lstinline!ExerciseData! node with a \l
   
 \item A \lstinline!PaymentData! [Optional] node can be added which defines dates or rules-based settlement date(s) for cash-settled Swaptions.  Note that if rules-based, only \emph{Exercise} is allowed in the \lstinline!RelativeTo! field for Swaptions. See  \lstinline!PaymentData! in \ref{ss:option_data}
 
+
+\end{itemize}
+
+\subsubsection{Swaption Straddle}
+\label{ss:swaption_straddle}
+
+A Swaption Straddle is a combination of a payer swaption and a receiver swaption with the same underlying swap characteristics. This structure gives the buyer the right to enter 
+into either a payer swap (paying fixed, receiving floating) or a receiver swap (receiving fixed, paying floating) at expiry. 
+
+Note that only one side of the straddle needs to be represented,
+the system will internally for pricing create an additional Swaption identical to the booked one, but with all the leg directions on the underlying Swap reversed. The Straddle instrument is formed by the booked Swaption and the internally created Swaption together.
+
+Swaption Straddles are typically used when the buyer expects significant interest rate volatility but is uncertain about the direction.
+
+The \lstinline!SwaptionStraddleData! node is the trade data container for the \emph{SwaptionStraddle} trade type. The \lstinline!SwaptionStraddleData! node has one and exactly one \lstinline!OptionData! trade component sub-node, and at least one \lstinline!LegData! trade component sub-node. These trade components are outlined in section \ref{ss:option_data} and section \ref{ss:leg_data}.\\
+\vspace{5mm}
+The Swaption Straddle shares most characteristics with the standard Swaption (see section \ref{ss:swaption}). Supported exercise styles are \emph{European}, \emph{Bermudan}, 
+and \emph{American}. Swaption Straddles of all exercise styles can have an arbitrary number of legs, with each leg represented by a \lstinline!LegData! sub-node. 
+Cross currency swaption straddles are not supported for either exercise style, i.e. the Currency element must have the same value for all \lstinline!LegData! sub-nodes of a swaption straddle. 
+See Table \ref{tab:swaption_straddle_requirements} for further details on requirements for Swaption Straddles.\\
+\vspace{5mm}
+The structure of an example \lstinline!SwaptionStraddleData! node is shown in Listing \ref{lst:swaption_straddle_data}.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<SwaptionStraddleData>
+    <OptionData>
+        <LongShort>Long</LongShort>
+        <OptionType>Call</OptionType>
+        <Style>European</Style>
+        <Settlement>Cash</Settlement>
+        <PayOffAtExpiry>false</PayOffAtExpiry>
+        <ExerciseDates>
+            <ExerciseDate>2027-03-01</ExerciseDate>
+        </ExerciseDates>
+        <PremiumAmount>1090000</PremiumAmount>
+        <PremiumCurrency>EUR</PremiumCurrency>
+        <PremiumPayDate>2027-03-01</PremiumPayDate>
+    </OptionData>
+    <LegData>
+        <LegType>Floating</LegType>
+        <Payer>true</Payer>
+        <Currency>EUR</Currency>
+        <Notionals>
+            <Notional>10000000</Notional>
+        </Notionals>
+        ...
+    </LegData>
+    <LegData>
+        <LegType>Fixed</LegType>
+        <Payer>false</Payer>
+        <Currency>EUR</Currency>
+        <Notionals>
+            <Notional>10000000</Notional>
+        </Notionals>
+        ...
+    </LegData>
+</SwaptionStraddleData>
+\end{minted}
+\caption{Swaption Straddle data}
+\label{lst:swaption_straddle_data}
+\end{listing}
+
+\begin{table}[H]
+\centering
+\begin{tabular} {|l|p{10cm}|}
+    \hline
+        & \bfseries{A Swaption Straddle requires:} \\  \hline
+    \lstinline!LongShort!: & \emph{Long} or \emph{Short} \\ \hline
+    \lstinline!OptionData! & One \lstinline!OptionData! sub-node  \\  \hline
+    \lstinline!Style! &  \emph{European} or \emph{Bermudan} or \emph{American} \\ \hline
+    \lstinline!ExerciseDates! & \emph{European} swaption straddles can only have one \lstinline!ExerciseDate! child element. \emph{American} swaption straddles must have two \lstinline!ExerciseDate! child elements. \emph{Bermudan} swaption straddles must have at least two \lstinline!ExerciseDate! child elements, or a Rules or Dates based exercise schedule. \\ \hline
+    \lstinline!LegData! &  At least one \lstinline!LegData! sub-node \\ \hline
+    \lstinline!Currency! & The same currency for all \lstinline!LegData! sub-nodes.\\ \hline
+    \lstinline!LegType! & Allowed types are \emph{Cashflow}, \emph{Fixed} or \emph{Floating}. Floating coupons can be (capped / floored) Ibor, (capped / floored) compounded or averaged OIS, or BMA/SIFMA. Standalone options (nakedOption = true) are not allowed, neither are local OIS cap/floors. \\ \hline
+  \end{tabular}
+  \caption{Requirements for Swaption Straddles}
+  \label{tab:swaption_straddle_requirements}
+\end{table}
+
+The \lstinline!OptionData! trade component sub-node is outlined in section \ref{ss:option_data}. 
+The relevant fields in the \lstinline!OptionData! node for a Swaption Straddle are:
+
+\begin{itemize}
+
+\item \lstinline!OptionType![Optional]: This flag is optional for swaption straddles. Allowable values are \emph{Call} or \emph{Put}.
+
+\item  \lstinline!Style!: The exercise style of the Swaption Straddle. The allowable values are \emph{European}, \emph{Bermudan} or \emph{American}.
+
+\item  \lstinline!Settlement!: Delivery Type. The allowable values are \emph{Cash} or \emph{Physical}.
+
+\item \lstinline!SettlementMethod![Optional]: Specifies the method to calculate the settlement amount. Allowable values: \emph{PhysicalOTC}, \emph{PhysicalCleared}, \emph{CollateralizedCashPrice}, \emph{ParYieldCurve}. Defaults to \emph{ParYieldCurve} if Settlement is \emph{Cash} and defaults to \emph{PhysicalOTC} if Settlement is \emph{Physical}.
+
+\item An \lstinline!ExerciseDates! node where for \emph{European} style swaption straddles exactly one \lstinline!ExerciseDate! date element must be given, and for \emph{American} style swaption straddles exactly two \lstinline!ExerciseDate! date elements must be given, defining the start and the end of the American exercise period. \emph{Bermudan} style swaption straddles can have \lstinline!ExerciseDate! elements given directly (at least two \lstinline!ExerciseDate! elements must be given), or can use Rules or Dates based exercise dates using an \lstinline!ExerciseSchedule! node.
+
+\item \lstinline!Premiums! [Optional]: Option premium node with amounts paid by the option buyer to the option seller. Can also be specified using the legacy fields \lstinline!PremiumAmount!, \lstinline!PremiumCurrency!, and \lstinline!PremiumPayDate!.
+
+Allowable values: See section \ref{ss:premiums}
 
 \end{itemize}
 

@@ -13,6 +13,7 @@ notably in caps / floors (see section \ref{ss:capfloor}) and more generally in t
     <Amount>1000</Amount>
     <Currency>EUR</Currency>
     <PayDate>2021-01-27</PayDate>
+    <SettlementData>...</SettlementData>
   </Premium>
   <Premium>
     <Amount>5000</Amount>
@@ -34,6 +35,13 @@ The meanings and allowable values of the elements in the \lstinline!Premium! nod
   Allowable values:  See Table \ref{tab:currency} \lstinline!Currency!.
 \item PayDate: Date of the premium payment.\\
   Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+\item SettlementData [Optional]: Converts the premium into a currency different. It specifies the payment currency, the FX index to perform the conversion, and the date on which the FX rate is fixed. Its XML form is shown in listing \ref{lst:settlement_data_premiums}.
+\begin{itemize}
+  \item \lstinline!PayCurrency!: Currency in which the option premium will be settled.
+  \item \lstinline!FXIndex!: FX index used to convert from the premium currency into the settlement currency.
+  \item \lstinline!FixingDate! [Optional]: Date on which the FX rate is taken. If omitted, the engine will use the index convention to derive the fixing date from the payment date. 
+    It will subtract **FixingDays** from the payment date and adjust the resulting date for the holidays according to the fx index conventions.
+\end{itemize}
 \end{itemize}
 
 We support a deprecated schema to represent a single premium as shown in listing \ref{lst:premiums_deprecated} for
@@ -49,4 +57,17 @@ the new Premiums node to represent a single premium payment. The deprecated and 
 \end{minted}
 \caption{Deprecated Single Premium Representation}
 \label{lst:premiums_deprecated}
+\end{listing}
+
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<SettlementData>
+  <PayCurrency>USD</PayCurrency>
+  <FXIndex>FX-ECB-EUR-USD</FXIndex>
+  <FixingDate>2020-03-28</FixingDate>
+</SettlementData>
+\end{minted}
+\caption{SettlementData node for option premiums}
+\label{lst:settlement_data_premiums}
 \end{listing}

@@ -52,9 +52,9 @@ BOOST_AUTO_TEST_CASE(testBlackVolSurfaceDeltaConstantVol) {
     Matrix blackVolMatrix(2, 2, constVol);
 
     // dummy spot and zero yield curve
-    Handle<Quote> spot(boost::make_shared<SimpleQuote>(1.0));
-    Handle<YieldTermStructure> dts(boost::make_shared<FlatForward>(0, TARGET(), 0.011, ActualActual(ActualActual::ISDA)));
-    Handle<YieldTermStructure> fts(boost::make_shared<FlatForward>(0, TARGET(), 0.012, ActualActual(ActualActual::ISDA)));
+    Handle<Quote> spot(QuantLib::ext::make_shared<SimpleQuote>(1.0));
+    Handle<YieldTermStructure> dts(QuantLib::ext::make_shared<FlatForward>(0, TARGET(), 0.011, ActualActual(ActualActual::ISDA)));
+    Handle<YieldTermStructure> fts(QuantLib::ext::make_shared<FlatForward>(0, TARGET(), 0.012, ActualActual(ActualActual::ISDA)));
 
     // build a vol surface
     BOOST_TEST_MESSAGE("Build Surface");
@@ -89,11 +89,11 @@ BOOST_AUTO_TEST_CASE(testInterpolatedSmileSectionConstruction) {
     };
 
     // Construct the smile section
-    boost::shared_ptr<InterpolatedSmileSection> section;
+    QuantLib::ext::shared_ptr<InterpolatedSmileSection> section;
     for (auto method : methods) {
         BOOST_TEST_MESSAGE("Trying to construct InterpolatedSmileSection with interpolation method: " << Integer(method) << ".");
         BOOST_CHECK_NO_THROW(section =
-                                 boost::make_shared<InterpolatedSmileSection>(spot, rd, rf, t, strikes, vols, method));
+                                 QuantLib::ext::make_shared<InterpolatedSmileSection>(spot, rd, rf, t, strikes, vols, method));
         BOOST_CHECK_EQUAL(section->volatility(strikes.at(1)), vols.at(1));
     }
 }

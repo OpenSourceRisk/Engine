@@ -23,8 +23,8 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-PriceTermStructureAdapter::PriceTermStructureAdapter(const boost::shared_ptr<PriceTermStructure>& priceCurve,
-                                                     const boost::shared_ptr<YieldTermStructure>& discount,
+PriceTermStructureAdapter::PriceTermStructureAdapter(const QuantLib::ext::shared_ptr<PriceTermStructure>& priceCurve,
+                                                     const QuantLib::ext::shared_ptr<YieldTermStructure>& discount,
                                                      Natural spotDays, const Calendar& spotCalendar)
     : priceCurve_(priceCurve), discount_(discount), spotDays_(spotDays), spotCalendar_(spotCalendar) {
 
@@ -36,8 +36,8 @@ PriceTermStructureAdapter::PriceTermStructureAdapter(const boost::shared_ptr<Pri
     registerWith(discount_);
 }
 
-PriceTermStructureAdapter::PriceTermStructureAdapter(const boost::shared_ptr<PriceTermStructure>& priceCurve,
-                                                     const boost::shared_ptr<YieldTermStructure>& discount,
+PriceTermStructureAdapter::PriceTermStructureAdapter(const QuantLib::ext::shared_ptr<PriceTermStructure>& priceCurve,
+                                                     const QuantLib::ext::shared_ptr<YieldTermStructure>& discount,
                                                      const Handle<Quote>& spotQuote)
     : priceCurve_(priceCurve), discount_(discount), spotDays_(0), spotQuote_(spotQuote) {
 
@@ -65,9 +65,9 @@ const Date& PriceTermStructureAdapter::referenceDate() const {
 
 DayCounter PriceTermStructureAdapter::dayCounter() const { return priceCurve_->dayCounter(); }
 
-const boost::shared_ptr<PriceTermStructure>& PriceTermStructureAdapter::priceCurve() const { return priceCurve_; }
+const QuantLib::ext::shared_ptr<PriceTermStructure>& PriceTermStructureAdapter::priceCurve() const { return priceCurve_; }
 
-const boost::shared_ptr<YieldTermStructure>& PriceTermStructureAdapter::discount() const { return discount_; }
+const QuantLib::ext::shared_ptr<YieldTermStructure>& PriceTermStructureAdapter::discount() const { return discount_; }
 
 Natural PriceTermStructureAdapter::spotDays() const { return spotDays_; }
 

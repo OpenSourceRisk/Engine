@@ -17,32 +17,33 @@
 */
 
 #include <ored/portfolio/builders/scriptedtrade.hpp>
+#include <ored/scripting/astprinter.hpp>
+#include <ored/scripting/context.hpp>
+#include <ored/scripting/engines/scriptedinstrumentpricingengine.hpp>
+#include <ored/scripting/engines/scriptedinstrumentpricingenginecg.hpp>
 #include <ored/scripting/models/blackscholes.hpp>
+#include <ored/scripting/models/localvol.hpp>
+#include <ored/scripting/models/heston.hpp>
 #include <ored/scripting/models/blackscholescg.hpp>
-#include <ored/scripting/models/fdblackscholesbase.hpp>
 #include <ored/scripting/models/fdgaussiancam.hpp>
 #include <ored/scripting/models/gaussiancam.hpp>
 #include <ored/scripting/models/gaussiancamcg.hpp>
-#include <ored/scripting/models/localvol.hpp>
-#include <ored/scripting/engines/scriptedinstrumentpricingengine.hpp>
-#include <ored/scripting/engines/scriptedinstrumentpricingenginecg.hpp>
-#include <ored/scripting/astprinter.hpp>
-#include <ored/scripting/context.hpp>
-#include <ored/scripting/scriptparser.hpp>
 #include <ored/scripting/scriptedinstrument.hpp>
+#include <ored/scripting/scriptparser.hpp>
 
 #include <ored/configuration/correlationcurveconfig.hpp>
 #include <ored/marketdata/strike.hpp>
 #include <ored/model/blackscholesmodelbuilder.hpp>
 #include <ored/model/calibrationinstruments/cpicapfloor.hpp>
+#include <ored/model/hestonmodelbuilder.hpp>
 #include <ored/model/irlgmdata.hpp>
 #include <ored/model/localvolmodelbuilder.hpp>
 #include <ored/portfolio/referencedata.hpp>
 #include <ored/portfolio/schedule.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/log.hpp>
-#include <ored/utilities/to_string.hpp>
 #include <ored/utilities/marketdata.hpp>
+#include <ored/utilities/to_string.hpp>
 
 #include <qle/indexes/equityindex.hpp>
 #include <qle/indexes/fxindex.hpp>
@@ -50,6 +51,7 @@
 #include <qle/models/projectedcrossassetmodel.hpp>
 #include <qle/termstructures/flatcorrelation.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
+#include <qle/utilities/inflation.hpp>
 
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/termstructures/yield/zerospreadedtermstructure.hpp>
@@ -61,23 +63,38 @@ namespace data {
 
 using namespace QuantExt;
 
+// get model / engine qualifiers based on product tag, trade type and (optionally) an additional qualifier
+std::vector<std::string> ScriptedTradeEngineBuilder::getModelEngineQualifiers(const std::string& addQualifier) const {
+    std::vector<std::string> result;
+    if (!addQualifier.empty()) {
+        result.push_back(resolvedProductTag_ + "_" + tradeType_ + "_" + addQualifier);
+        result.push_back(resolvedProductTag_ + "_" + addQualifier);
+        result.push_back(tradeType_ + "_" + addQualifier);
+        result.push_back(addQualifier);
+    }
+    result.push_back(resolvedProductTag_ + "_" + tradeType_);
+    result.push_back(resolvedProductTag_);
+    result.push_back(tradeType_);
+    return result;
+}
+
 QuantLib::Handle<QuantExt::CorrelationTermStructure>
-ScriptedTradeEngineBuilder::correlationCurve(const std::string& index1, const std::string& index2) {
+ScriptedTradeEngineBuilder::correlationCurve(const std::string& index1, const std::string& index2) const {
     if (index1 == index2) {
         // need to handle this case here, we might have calls with index1 == index arising from COMM
         // indices with different spot / future reference, for which we expect the correlation on
         // the name level (i.e. for the spot index)
         return Handle<QuantExt::CorrelationTermStructure>(
-            boost::make_shared<FlatCorrelation>(0, NullCalendar(), 1.0, ActualActual(ActualActual::ISDA)));
+            QuantLib::ext::make_shared<FlatCorrelation>(0, NullCalendar(), 1.0, ActualActual(ActualActual::ISDA)));
     } else {
         return market_->correlationCurve(index1, index2, configuration(MarketContext::pricing));
     }
 }
 
-boost::shared_ptr<ScriptedInstrument::engine>
+QuantLib::ext::shared_ptr<ScriptedInstrument::engine>
 ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& scriptedTrade,
-                                   const boost::shared_ptr<ReferenceDataManager>& referenceData,
-                                   const IborFallbackConfig& iborFallbackConfig) {
+                                   const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
+                                   const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig) {
 
     const std::vector<ScriptedTradeEventData>& events = scriptedTrade.events();
     const std::vector<ScriptedTradeValueTypeData>& numbers = scriptedTrade.numbers();
@@ -96,26 +113,31 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
 
     deriveProductClass(indices);
 
-    // 1b get product tag from scripted trade or library and build resolved product tag
+    // 1b get product tag from scripted trade or library and build resolved product tag, get trade type
 
+    tradeType_ = scriptedTrade.tradeType();
     std::string productTag = getScript(scriptedTrade, ScriptLibraryStorage::instance().get(), "", false).first;
     resolvedProductTag_ = boost::replace_all_copy(productTag, "{AssetClass}", assetClassReplacement_);
     DLOG("got product tag '" << productTag << "', resolved product tag is '" << resolvedProductTag_);
 
-    // 2 populate model and engine parameters
+    // 2 define purpose, get suitable script and build ast (i.e. parse it or retrieve it from cache)
 
-    populateModelParameters();
+    engineParam_ = engineParameter("Engine", getModelEngineQualifiers());
 
-    // 3 define purpose, get suitable script and build ast (i.e. parse it or retrieve it from cache)
+    std::string purpose;
 
-    std::string purpose = "";
     if (buildingAmc_)
         purpose = "AMC";
+    else if (buildingAmcCg_)
+        purpose = "AMCCG";
     else if (engineParam_ == "FD")
         purpose = "FD";
 
     ScriptedTradeScriptData script =
         getScript(scriptedTrade, ScriptLibraryStorage::instance().get(), purpose, true).second;
+
+    modelParameterOverwrite_ = script.modelParameterOverwrite();
+    engineParameterOverwrite_ = script.engineParameterOverwrite();
 
     auto f = astCache_.find(script.code());
 
@@ -127,6 +149,10 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
         astCache_[script.code()] = ast_;
         DLOGGERSTREAM("built ast:\n" << to_string(ast_));
     }
+
+    // 3 populate model and engine parameters
+
+    populateModelParameters();
 
     // 4 set up context
 
@@ -140,13 +166,13 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
 
     // 4b set up calibration strike information
 
-    if (!buildingAmc_)
+    if (!buildingAmc_ && !buildingAmcCg_)
         setupCalibrationStrikes(script, context);
 
     // 5 run static analyser
 
     DLOG("Run static analyser on script");
-    staticAnalyser_ = boost::make_shared<StaticAnalyser>(ast_, context);
+    staticAnalyser_ = QuantLib::ext::make_shared<StaticAnalyser>(ast_, context);
     staticAnalyser_->run(script.code());
 
     // 6 extract eq, fx, ir indices from script
@@ -176,18 +202,30 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
 
     // 12 get the t0 curves for each model ccy
 
+    // We allow external discount_curve and security_spread and overwrite the first modelCurve entry. The original base
+    // ccy discount curve is stored in baseCcyModelCurve_ and used to set up drift in processes, i.e. the external
+    // discount curve + sec spread is only used for discounting and numeraire calc. This is not supported for CG at the
+    // moment. TODO can this be implemented in a cleaner way?
     std::string externalDiscountCurve = scriptedTrade.envelope().additionalField("discount_curve", false);
-    std::string externalSecuritySpread = scriptedTrade.envelope().additionalField("security_spreads", false);
+    std::string externalSecuritySpread = scriptedTrade.envelope().additionalField("security_spread", false);
+
+    QL_REQUIRE(!useCg_ || (externalDiscountCurve.empty() && externalSecuritySpread.empty()),
+               "useCg = true does not support external discount_curve or security_spread at the moment.");
+
     for (auto const& c : modelCcys_) {
         // for base ccy we account for an external discount curve and security spread if given
         Handle<YieldTermStructure> yts =
             externalDiscountCurve.empty() || c != baseCcy_
                 ? market_->discountCurve(c, configuration(MarketContext::pricing))
                 : indexOrYieldCurve(market_, externalDiscountCurve, configuration(MarketContext::pricing));
-        if (!externalSecuritySpread.empty() && c == baseCcy_)
-            yts = Handle<YieldTermStructure>(boost::make_shared<ZeroSpreadedTermStructure>(
+        if (!externalSecuritySpread.empty() && c == baseCcy_) {
+            yts = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(
                 yts, market_->securitySpread(externalSecuritySpread, configuration(MarketContext::pricing))));
+        }
         modelCurves_.push_back(yts);
+        // set original base ccy curve in any case (used to construct BS processes)
+        if (c == baseCcy_)
+            baseCcyModelCurve_ = market_->discountCurve(c, configuration(MarketContext::pricing));
         DLOG("curve for " << c << " added.");
     }
 
@@ -212,7 +250,7 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
 
     // 17 compile the processes (needed for BlackScholes, LocalVol only)
 
-    if (modelParam_ == "BlackScholes" || modelParam_ == "LocalVolDupire" || modelParam_ == "LocalVolAndreasenHuge")
+    if (modelParam_ == "BlackScholes" || modelParam_ == "LocalVolDupire" || modelParam_ == "LocalVolAndreasenHuge" || modelParam_ == "Heston")
         setupBlackScholesProcesses();
 
     // 18 setup IR reversion values (needed for Gaussian CAM only)
@@ -227,12 +265,12 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
 
     // 20 build the model adapter
 
-    QL_REQUIRE(!buildingAmc_ || modelParam_ == "GaussianCam",
-               "model/engine = GaussianCam/MC required to build an amc model, got " << modelParam_ << "/"
-                                                                                    << engineParam_);
+    QL_REQUIRE(!(buildingAmc_ || buildingAmcCg_) || modelParam_ == "GaussianCam",
+               "model/engine = GaussianCam/MC required to build an amc or amccg model, got " << modelParam_ << "/"
+                                                                                             << engineParam_);
 
-    if(staticAnalyser_->regressionDates().empty())
-        mcParams_.trainingSamples = Null<Size>();
+    if (staticAnalyser_->regressionDates().empty())
+        params_.trainingSamples = Null<Size>();
 
     if (modelParam_ == "BlackScholes" && engineParam_ == "MC") {
         buildBlackScholes(id, iborFallbackConfig);
@@ -240,6 +278,12 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
         buildFdBlackScholes(id, iborFallbackConfig);
     } else if ((modelParam_ == "LocalVolDupire" || modelParam_ == "LocalVolAndreasenHuge") && engineParam_ == "MC") {
         buildLocalVol(id, iborFallbackConfig);
+    } else if ((modelParam_ == "LocalVolDupire" || modelParam_ == "LocalVolAndreasenHuge") && engineParam_ == "FD") {
+        buildFdLocalVol(id, iborFallbackConfig);
+    } else if (modelParam_ == "Heston" && engineParam_ == "MC") {
+        buildHeston(id, iborFallbackConfig);
+    } else if (modelParam_ == "Heston" && engineParam_ == "FD") {
+        buildFdHeston(id, iborFallbackConfig);
     } else if (modelParam_ == "GaussianCam" && engineParam_ == "MC") {
         if (amcCam_) {
             buildGaussianCamAMC(id, iborFallbackConfig, script.conditionalExpectationModelStates());
@@ -264,6 +308,8 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
     DLOG("useCg                = " << std::boolalpha << useCg_);
     DLOG("useAd                = " << std::boolalpha << useAd_);
     DLOG("useExternalDevice    = " << std::boolalpha << useExternalComputeDevice_);
+    DLOG("useDblPrecExtCalc    = " << std::boolalpha << useDoublePrecisionForExternalCalculation_);
+    DLOG("extDeviceCompatMode  = " << std::boolalpha << externalDeviceCompatibilityMode_);
     DLOG("externalDevice       = " << (useExternalComputeDevice_ ? externalComputeDevice_ : "na"));
     DLOG("calibration          = " << calibration_);
     DLOG("base ccy             = " << baseCcy_);
@@ -277,25 +323,25 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
     DLOG("timeStepsPerYear     = " << timeStepsPerYear_);
     DLOG("fullDynamicFx        = " << std::boolalpha << fullDynamicFx_);
     if (engineParam_ == "MC") {
-        DLOG("seed                 = " << mcParams_.seed);
+        DLOG("seed                 = " << params_.seed);
         DLOG("paths                = " << modelSize_);
-        DLOG("regressionOrder      = " << mcParams_.regressionOrder);
-        DLOG("sequence type        = " << mcParams_.sequenceType);
-        DLOG("polynom type         = " << mcParams_.polynomType);
-        if (mcParams_.trainingSamples != Null<Size>()) {
-            DLOG("training seed        = " << mcParams_.trainingSeed);
-            DLOG("training paths       = " << mcParams_.trainingSamples);
-            DLOG("training seq. type   = " << mcParams_.trainingSequenceType);
+        DLOG("regressionOrder      = " << params_.regressionOrder);
+        DLOG("sequence type        = " << params_.sequenceType);
+        DLOG("polynom type         = " << params_.polynomType);
+        if (params_.trainingSamples != Null<Size>()) {
+            DLOG("training seed        = " << params_.trainingSeed);
+            DLOG("training paths       = " << params_.trainingSamples);
+            DLOG("training seq. type   = " << params_.trainingSequenceType);
         }
-        DLOG("sobol bb ordering    = " << mcParams_.sobolOrdering);
-        DLOG("sobol direction int. = " << mcParams_.sobolDirectionIntegers);
+        DLOG("sobol bb ordering    = " << params_.sobolOrdering);
+        DLOG("sobol direction int. = " << params_.sobolDirectionIntegers);
     } else if (engineParam_ == "FD") {
         DLOG("stateGridPoints      = " << modelSize_);
-        DLOG("mesherEpsilon        = " << mesherEpsilon_);
-        DLOG("mesherScaling        = " << mesherScaling_);
-        DLOG("mesherConcentration  = " << mesherConcentration_);
-        DLOG("mesherMaxConcentrPts = " << mesherMaxConcentratingPoints_);
-        DLOG("mesherIsStatic       = " << std::boolalpha << mesherIsStatic_);
+        DLOG("mesherEpsilon        = " << params_.mesherEpsilon);
+        DLOG("mesherScaling        = " << params_.mesherScaling);
+        DLOG("mesherConcentration  = " << params_.mesherConcentration);
+        DLOG("mesherMaxConcentrPts = " << params_.mesherMaxConcentratingPoints);
+        DLOG("mesherIsStatic       = " << std::boolalpha << params_.staticMesher);
     }
     if (modelParam_ == "GaussianCam") {
         DLOG("fullDynamicIr        = " << std::boolalpha << fullDynamicIr_);
@@ -306,6 +352,8 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
     } else if (modelParam_ == "LocalVolAndreasenHuge") {
         DLOG("moneyness points = " << calibrationMoneyness_.size());
     }
+    DLOG("indicatorSmoothingForValues      = " << indicatorSmoothingForValues_);
+    DLOG("indicatorSmoothingForDerivatives = " << indicatorSmoothingForDerivatives_);
 
     // 22 build the pricing engine and return it
 
@@ -315,19 +363,33 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
         generateAdditionalResults = parseBool(p->second);
     }
 
-    boost::shared_ptr<ScriptedInstrument::engine> engine;
+    QuantLib::ext::shared_ptr<ScriptedInstrument::engine> engine;
     if (model_) {
-        engine = boost::make_shared<ScriptedInstrumentPricingEngine>(
+        engine = QuantLib::ext::make_shared<ScriptedInstrumentPricingEngine>(
             script.npv(), script.results(), model_, ast_, context, script.code(), interactive_, amcCam_ != nullptr,
             std::set<std::string>(script.stickyCloseOutStates().begin(), script.stickyCloseOutStates().end()),
-            generateAdditionalResults);
+            generateAdditionalResults, includePastCashflows_, staticNpvMem_);
     } else if (modelCG_) {
         auto rt = globalParameters_.find("RunType");
-        bool useCachedSensis = useAd_ && (rt != globalParameters_.end() && rt->second == "SensitivityDelta");
+        std::string runType = rt != globalParameters_.end() ? rt->second : "<<no run type set>>";
+        bool useCachedSensis = useAd_ && (runType == "SensitivityDelta");
         bool useExternalDev = useExternalComputeDevice_ && !generateAdditionalResults && !useCachedSensis;
-        engine = boost::make_shared<ScriptedInstrumentPricingEngineCG>(
-            script.npv(), script.results(), modelCG_, ast_, context, mcParams_, script.code(), interactive_,
-            generateAdditionalResults, useCachedSensis, useExternalDev);
+        if (useAd_ && !useCachedSensis) {
+            WLOG("Will not apply AD although useAD is configured, because runType ("
+                 << runType << ") does not match SensitivitiyDelta");
+        }
+        if (useExternalComputeDevice_ && !useExternalDev) {
+            WLOG("Will not use exxternal compute deivce although useExternalComputeDevice is configured, because we "
+                 "are either applying AD ("
+                 << std::boolalpha << useCachedSensis << ") or we are generating add results ("
+                 << generateAdditionalResults << "), both of which do not support external devices at the moment.");
+        }
+        engine = QuantLib::ext::make_shared<ScriptedInstrumentPricingEngineCG>(
+            script.npv(), script.results(), modelCG_, std::set<std::string>(modelCcys_.begin(), modelCcys_.end()),
+            script.amcCgComponents(), script.amcCgTargetValue(), script.amcCgTargetDerivative(), ast_, context, params_,
+            indicatorSmoothingForValues_, indicatorSmoothingForDerivatives_, script.code(), interactive_,
+            generateAdditionalResults, includePastCashflows_, useCachedSensis, useExternalDev,
+            useDoublePrecisionForExternalCalculation_);
         if (useExternalDev) {
             ComputeEnvironment::instance().selectContext(externalComputeDevice_);
         }
@@ -335,6 +397,7 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
 
     LOG("engine built for model " << modelParam_ << " / " << engineParam_ << ", modelSize = " << modelSize_
                                   << ", interactive = " << interactive_ << ", amcEnabled = " << buildingAmc_
+                                  << ", amccgEnabled = " << buildingAmcCg_
                                   << ", generateAdditionalResults = " << generateAdditionalResults);
     return engine;
 }
@@ -360,10 +423,14 @@ void ScriptedTradeEngineBuilder::clear() {
     simulationDates_.clear();
     addDates_.clear();
     calibrationStrikes_.clear();
+    model_ = nullptr;
+    modelCG_ = nullptr;
+    modelParameterOverwrite_.clear();
+    engineParameterOverwrite_.clear();
 }
 
 void ScriptedTradeEngineBuilder::extractIndices(
-    const boost::shared_ptr<ore::data::ReferenceDataManager>& referenceData) {
+    const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData) {
     DLOG("Extract indices from script:");
     for (auto const& i : staticAnalyser_->indexEvalDates()) {
         IndexInfo ind(i.first);
@@ -462,29 +529,44 @@ void ScriptedTradeEngineBuilder::deriveProductClass(const std::vector<ScriptedTr
 }
 
 void ScriptedTradeEngineBuilder::populateModelParameters() {
-    DLOG("Retrieve model and engine parameters using product tag '" << resolvedProductTag_ << "'");
+    DLOG("Retrieve model and engine parameters using product tag '" << resolvedProductTag_ << "', trade type '"
+                                                                    << tradeType_ << "'");
 
     // mandatory parameters
 
-    modelParam_ = modelParameter("Model", {resolvedProductTag_});
-    baseCcyParam_ = modelParameter("BaseCcy", {resolvedProductTag_});
-    fullDynamicFx_ = parseBool(modelParameter("FullDynamicFx", {resolvedProductTag_}));
-    enforceBaseCcy_ = parseBool(modelParameter("EnforceBaseCcy", {resolvedProductTag_}));
-    gridCoarsening_ = modelParameter("GridCoarsening", {resolvedProductTag_});
+    modelParam_ = modelParameter("Model", getModelEngineQualifiers());
+    baseCcyParam_ = modelParameter("BaseCcy", getModelEngineQualifiers());
+    fullDynamicFx_ = parseBool(modelParameter("FullDynamicFx", getModelEngineQualifiers()));
+    enforceBaseCcy_ = parseBool(modelParameter("EnforceBaseCcy", getModelEngineQualifiers()));
+    gridCoarsening_ = modelParameter("GridCoarsening", getModelEngineQualifiers());
 
-    engineParam_ = engineParameter("Engine", {resolvedProductTag_});
-    timeStepsPerYear_ = parseInteger(engineParameter("TimeStepsPerYear", {resolvedProductTag_}));
-    interactive_ = parseBool(engineParameter("Interactive", {resolvedProductTag_}));
+    engineParam_ = engineParameter("Engine", getModelEngineQualifiers());
+    timeStepsPerYear_ = parseInteger(engineParameter("TimeStepsPerYear", getModelEngineQualifiers()));
+    interactive_ = parseBool(engineParameter("Interactive", getModelEngineQualifiers()));
 
     // optional parameters
 
-    zeroVolatility_ = parseBool(engineParameter("ZeroVolatility", {resolvedProductTag_}, false, "false"));
-    calibration_ = modelParameter("Calibration", {resolvedProductTag_}, false, "Deal");
-    useCg_ = parseBool(engineParameter("UseCG", {resolvedProductTag_}, false, "false"));
-    useAd_ = parseBool(engineParameter("UseAD", {resolvedProductTag_}, false, "false"));
+    zeroVolatility_ = parseBool(engineParameter("ZeroVolatility", getModelEngineQualifiers(), false, "false"));
+    calibration_ = modelParameter("Calibration", getModelEngineQualifiers(), false, "Deal");
+    useCg_ = parseBool(engineParameter("UseCG", getModelEngineQualifiers(), false, "false"));
+    useAd_ = parseBool(engineParameter("UseAD", getModelEngineQualifiers(), false, "false"));
     useExternalComputeDevice_ =
-        parseBool(engineParameter("UseExternalComputeDevice", {resolvedProductTag_}, false, "false"));
+        parseBool(engineParameter("UseExternalComputeDevice", getModelEngineQualifiers(), false, "false"));
+    useDoublePrecisionForExternalCalculation_ = parseBool(
+        engineParameter("UseDoublePrecisionForExternalCalculation", getModelEngineQualifiers(), false, "false"));
     externalComputeDevice_ = engineParameter("ExternalComputeDevice", {}, false, "");
+    externalDeviceCompatibilityMode_ =
+        parseBool(engineParameter("ExternalDeviceCompatibilityMode", {}, false, "false"));
+    includePastCashflows_ =
+        parseBool(engineParameter("IncludePastCashflows", getModelEngineQualifiers(), false, "false"));
+    staticNpvMem_ = parseBool(engineParameter("StaticNpvMem", getModelEngineQualifiers(), false, "false"));
+    params_.salvagingAlgorithm = parseSalvagingAlgorithmType(
+        engineParameter("SalvagingAlgorithm", getModelEngineQualifiers(), false, "Spectral"));
+    indicatorSmoothingForValues_ =
+        parseReal(engineParameter("IndicatorSmoothingForValues", getModelEngineQualifiers(), false, "0.0"));
+    indicatorSmoothingForDerivatives_ =
+        parseReal(engineParameter("IndicatorSmoothingForDerivatives", getModelEngineQualifiers(), false, "0.2"));
+    referenceCalibrationGrid_ = modelParameter("ReferenceCalibrationGrid", getModelEngineQualifiers(), false, "");
 
     // usage of ad or an external device implies usage of cg
     if (useAd_ || useExternalComputeDevice_)
@@ -493,57 +575,92 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
     // default values for parameters that are only read for specific models
 
     fullDynamicIr_ = false;
-    referenceCalibrationGrid_ = "";
     bootstrapTolerance_ = 0.0;
     infModelType_ = "DK";
-    mesherEpsilon_ = 1.0E-4;
-    mesherScaling_ = 1.5;
-    mesherConcentration_ = 0.1;
-    mesherMaxConcentratingPoints_ = 9999;
-    mesherIsStatic_ = false;
 
     // parameters only needed for certain model / engine pairs
 
     DLOG("Retrieve model / engine specific parameters for " << modelParam_ << " / " << engineParam_);
 
     if (modelParam_ == "GaussianCam") {
-        fullDynamicIr_ = parseBool(modelParameter("FullDynamicIr", {resolvedProductTag_}));
-        referenceCalibrationGrid_ = modelParameter("ReferenceCalibrationGrid", {resolvedProductTag_}, false, "");
-        bootstrapTolerance_ = parseReal(engineParameter("BootstrapTolerance", {resolvedProductTag_}));
-        infModelType_ = modelParameter("InfModelType", {resolvedProductTag_}, false, "DK");
+        fullDynamicIr_ = parseBool(modelParameter("FullDynamicIr", getModelEngineQualifiers()));
+        bootstrapTolerance_ = parseReal(engineParameter("BootstrapTolerance", getModelEngineQualifiers()));
+        infModelType_ = modelParameter("InfModelType", getModelEngineQualifiers(), false, "DK");
     } else if (modelParam_ == "LocalVolAndreasenHuge") {
         calibrationMoneyness_ =
-            parseListOfValues<Real>(engineParameter("CalibrationMoneyness", {resolvedProductTag_}), &parseReal);
+            parseListOfValues<Real>(engineParameter("CalibrationMoneyness", getModelEngineQualifiers()), &parseReal);
+    } else if (modelParam_ == "Heston") {
+        calibrationMoneyness_ =
+	  parseListOfValues<Real>(engineParameter("CalibrationMoneyness", getModelEngineQualifiers(), false, "-2.0,-1.5,-1.0,-0.5,0.0,0.5,1.0,1.5,2.0"), &parseReal);
+        hestonCalibrationExpiries_ =
+	  parseListOfValues<Period>(engineParameter("Heston.CalibrationExpiries", getModelEngineQualifiers(),false,""), &parsePeriod);
+        hestonCalibrationVarianceTerms_ =
+	  parseListOfValues<Period>(engineParameter("Heston.CalibrationVarianceTerms", getModelEngineQualifiers(), false, ""), &parsePeriod);
+        hestonInitialValues_ =
+	  parseListOfValues<Real>(engineParameter("Heston.InitialValues", getModelEngineQualifiers(), false, "0.04,1.0,0.5,-0.5,0.04"), &parseReal);
+        hestonFixedValues_ =
+	  parseListOfValues<bool>(engineParameter("Heston.FixedValues", getModelEngineQualifiers(), false, "N,N,N,N,N"), &parseBool);
+        hestonRelaxedFellerConstraint_ = parseReal(engineParameter("Heston.RelaxedFellerConstraint", getModelEngineQualifiers(), false, "0.25"));
+        hestonMaxCalibrationAttempts_ = parseInteger(engineParameter("Heston.MaxCalibrationAttempts", getModelEngineQualifiers(), false, "0"));
+        hestonMaximumInitialValues_ =
+	  parseListOfValues<Real>(engineParameter("Heston.MaximumInitialValues", getModelEngineQualifiers(), false, "0.1,20,3,0.9,0.1"), &parseReal);
+        hestonCalibrationMethod_ = engineParameter("Heston.CalibrationMethod", getModelEngineQualifiers(), false, "ConstantBestFit");
+        hestonEarlyExitThreshold_ = parseReal(engineParameter("Heston.EarlyExitThreshold", getModelEngineQualifiers(), false, "0.005"));
+        hestonMaxAcceptableError_ = parseReal(engineParameter("Heston.MaxAcceptableError", getModelEngineQualifiers(), false, "0.05"));
+        hestonProcessDiscretization_ =
+	  parseHestonProcessDiscretization(engineParameter("Heston.ProcessDiscretization", getModelEngineQualifiers(), false, "QuadraticExponential"));
+        hestonQuantoTimeStepsPerYear_ = parseInteger(engineParameter(
+            "HestonQuantoTimeStepsPerYear", getModelEngineQualifiers(), false, to_string(timeStepsPerYear_)));
+        try {
+            // We cannot use the above with to_string(hestonProcessDiscretization_), because discretization is an enum
+            // rather than an enum class
+            hestonQuantoProcessDiscretization_ = parseHestonProcessDiscretization(
+                engineParameter("Heston.QuantoProcessDiscretization", getModelEngineQualifiers()));
+        } catch (std::exception& e) {
+            hestonQuantoProcessDiscretization_ = hestonProcessDiscretization_;
+        }
+        debug_ = parseBool(engineParameter("Heston.Debug", getModelEngineQualifiers(), false, "false"));
     }
 
     if (engineParam_ == "MC") {
-        mcParams_.seed = parseInteger(engineParameter("Seed", {resolvedProductTag_}, false, "42"));
-        modelSize_ = parseInteger(engineParameter("Samples", {resolvedProductTag_}));
-        mcParams_.regressionOrder = parseInteger(engineParameter("RegressionOrder", {resolvedProductTag_}));
-        mcParams_.sequenceType =
-            parseSequenceType(engineParameter("SequenceType", {resolvedProductTag_}, false, "SobolBrownianBridge"));
-        mcParams_.polynomType =
-            parsePolynomType(engineParameter("PolynomType", {resolvedProductTag_}, false, "Monomial"));
-        mcParams_.trainingSequenceType =
-            parseSequenceType(engineParameter("TrainingSequenceType", {resolvedProductTag_}, false, "MersenneTwister"));
-        mcParams_.sobolOrdering = parseSobolBrownianGeneratorOrdering(
-            engineParameter("SobolOrdering", {resolvedProductTag_}, false, "Steps"));
-        mcParams_.sobolDirectionIntegers = parseSobolRsgDirectionIntegers(
-            engineParameter("SobolDirectionIntegers", {resolvedProductTag_}, false, "JoeKuoD7"));
-        if (auto tmp = engineParameter("TrainingSamples", {resolvedProductTag_}, false, ""); !tmp.empty()) {
-            mcParams_.trainingSamples = parseInteger(tmp);
-            mcParams_.trainingSeed = parseInteger(engineParameter("TrainingSeed", {resolvedProductTag_}, false, "43"));
+        params_.seed = parseInteger(engineParameter("Seed", getModelEngineQualifiers(), false, "42"));
+        modelSize_ = parseInteger(engineParameter("Samples", getModelEngineQualifiers()));
+        params_.regressionOrder = parseInteger(engineParameter("RegressionOrder", getModelEngineQualifiers()));
+        params_.sequenceType = parseSequenceType(
+            engineParameter("SequenceType", getModelEngineQualifiers(), false, "SobolBrownianBridge"));
+        params_.polynomType =
+            parsePolynomType(engineParameter("PolynomType", getModelEngineQualifiers(), false, "Monomial"));
+        params_.trainingSequenceType = parseSequenceType(
+            engineParameter("TrainingSequenceType", getModelEngineQualifiers(), false, "MersenneTwister"));
+        params_.sobolOrdering = parseSobolBrownianGeneratorOrdering(
+            engineParameter("SobolOrdering", getModelEngineQualifiers(), false, "Steps"));
+        params_.sobolDirectionIntegers = parseSobolRsgDirectionIntegers(
+            engineParameter("SobolDirectionIntegers", getModelEngineQualifiers(), false, "JoeKuoD7"));
+        if (auto tmp = engineParameter("TrainingSamples", getModelEngineQualifiers(), false, ""); !tmp.empty()) {
+            params_.trainingSamples = parseInteger(tmp);
+            params_.trainingSeed =
+                parseInteger(engineParameter("TrainingSeed", getModelEngineQualifiers(), false, "43"));
         } else {
-            mcParams_.trainingSamples = Null<Size>();
+            params_.trainingSamples = Null<Size>();
         }
+        params_.regressionVarianceCutoff = parseRealOrNull(
+            engineParameter("RegressionVarianceCutoff", getModelEngineQualifiers(), false, std::string()));
+        params_.externalDeviceCompatibilityMode = externalDeviceCompatibilityMode_;
     } else if (engineParam_ == "FD") {
-        modelSize_ = parseInteger(engineParameter("StateGridPoints", {resolvedProductTag_}));
-        mesherEpsilon_ = parseReal(engineParameter("MesherEpsilon", {resolvedProductTag_}, false, "1.0E-4"));
-        mesherScaling_ = parseReal(engineParameter("MesherScaling", {resolvedProductTag_}, false, "1.5"));
-        mesherConcentration_ = parseReal(engineParameter("MesherConcentration", {resolvedProductTag_}, false, "0.1"));
-        mesherMaxConcentratingPoints_ =
-            parseInteger(engineParameter("MesherMaxConcentratingPoints", {resolvedProductTag_}, false, "9999"));
-        mesherIsStatic_ = parseBool(engineParameter("MesherIsStatic", {resolvedProductTag_}, false, "false"));
+        params_.stateGridPoints = parseInteger(engineParameter("StateGridPoints", getModelEngineQualifiers()));
+	if (modelParam_ == "Heston") 
+	    params_.varianceStateGridPoints = parseInteger(engineParameter("VarianceStateGridPoints", getModelEngineQualifiers()));
+	else
+	    params_.varianceStateGridPoints = 1;
+        modelSize_ = params_.stateGridPoints * params_.varianceStateGridPoints;
+	params_.mesherEpsilon =
+	    parseReal(engineParameter("MesherEpsilon", getModelEngineQualifiers(), false, "1.0E-4"));
+        params_.mesherScaling = parseReal(engineParameter("MesherScaling", getModelEngineQualifiers(), false, "1.5"));
+        params_.mesherConcentration =
+            parseReal(engineParameter("MesherConcentration", getModelEngineQualifiers(), false, "0.1"));
+        params_.mesherMaxConcentratingPoints =
+            parseInteger(engineParameter("MesherMaxConcentratingPoints", getModelEngineQualifiers(), false, "9999"));
+        params_.staticMesher = parseBool(engineParameter("MesherIsStatic", getModelEngineQualifiers(), false, "false"));
     }
 
     // global parameters that are relevant
@@ -557,12 +674,16 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
     continueOnCalibrationError_ = globalParameters_.count("ContinueOnCalibrationError") > 0 &&
                                   parseBool(globalParameters_.at("ContinueOnCalibrationError"));
 
+    allowModelFallbacks_ =
+        globalParameters_.count("AllowModelFallbacks") > 0 && parseBool(globalParameters_.at("AllowModelFallbacks"));
+
     // sensitivity template
 
-    sensitivityTemplate_ = engineParameter("SensitivityTemplate", {resolvedProductTag_}, false, std::string());
+    sensitivityTemplate_ = engineParameter("SensitivityTemplate", getModelEngineQualifiers(), false, std::string());
 }
 
-void ScriptedTradeEngineBuilder::populateFixingsMap(const IborFallbackConfig& iborFallbackConfig) {
+void ScriptedTradeEngineBuilder::populateFixingsMap(
+    const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig) {
     DLOG("Populate fixing map");
 
     // this might be a superset of the actually required fixings, since index evaluations with fwd date are also
@@ -600,7 +721,6 @@ void ScriptedTradeEngineBuilder::populateFixingsMap(const IborFallbackConfig& ib
             // all other indices can be handled generically, notice for inf we include the scripting specific
             // suffixes #L, #F in the index name, this is handled in the scripted trade builder when populating the
             // required fixings
-
             if (i.irIborFallback(iborFallbackConfig)) {
                 // well, except ibor fallback indices that we handle here...
                 Size nIbor = 0, nRfr = 0;
@@ -608,7 +728,7 @@ void ScriptedTradeEngineBuilder::populateFixingsMap(const IborFallbackConfig& ib
                     d = i.index()->fixingCalendar().adjust(d, Preceding);
                     if (d >= i.irIborFallback(iborFallbackConfig)->switchDate()) {
                         auto fd = i.irIborFallback(iborFallbackConfig)->onCoupon(d)->fixingDates();
-                        fixings_[iborFallbackConfig.fallbackData(name).rfrIndex].insert(fd.begin(), fd.end());
+                        fixings_[iborFallbackConfig->fallbackData(name).rfrIndex].insert(fd.begin(), fd.end());
                         nRfr += fd.size();
                     } else {
                         fixings_[i.name()].insert(d);
@@ -622,7 +742,7 @@ void ScriptedTradeEngineBuilder::populateFixingsMap(const IborFallbackConfig& ib
                 for (auto [d, _] : fixings) {
                     d = i.index()->fixingCalendar().adjust(d, Preceding);
                     if (d >= i.irOvernightFallback(iborFallbackConfig)->switchDate()) {
-                        fixings_[iborFallbackConfig.fallbackData(name).rfrIndex].insert(d);
+                        fixings_[iborFallbackConfig->fallbackData(name).rfrIndex].insert(d);
                         nRfr++;
                     } else {
                         fixings_[i.name()].insert(d);
@@ -906,23 +1026,36 @@ void ScriptedTradeEngineBuilder::setupCorrelations() {
 
 void ScriptedTradeEngineBuilder::setLastRelevantDate() {
     lastRelevantDate_ = Date::minDate();
+    lastRelevantDateType_ = "Earliest Allowed Date";
     for (auto const& s : staticAnalyser_->indexEvalDates())
-        for (auto const& d : s.second)
+        for (auto const& d : s.second) {
             lastRelevantDate_ = std::max(lastRelevantDate_, d);
-    for (auto const& d : staticAnalyser_->regressionDates())
+            lastRelevantDateType_ = lastRelevantDate_ == d ? "Index Eval Date" : lastRelevantDateType_;
+        }
+    for (auto const& d : staticAnalyser_->regressionDates()) {
         lastRelevantDate_ = std::max(lastRelevantDate_, d);
+        lastRelevantDateType_ = lastRelevantDate_ == d ? "Regression Date" : lastRelevantDateType_;
+    }
     for (auto const& s : staticAnalyser_->payObsDates())
-        for (auto const& d : s.second)
+        for (auto const& d : s.second) {
             lastRelevantDate_ = std::max(lastRelevantDate_, d);
+            lastRelevantDateType_ = lastRelevantDate_ == d ? "Observation Date" : lastRelevantDateType_;
+        }
     for (auto const& s : staticAnalyser_->payPayDates())
-        for (auto const& d : s.second)
+        for (auto const& d : s.second) {
             lastRelevantDate_ = std::max(lastRelevantDate_, d);
+            lastRelevantDateType_ = lastRelevantDate_ == d ? "Pay Date" : lastRelevantDateType_;
+        }
     for (auto const& s : staticAnalyser_->discountObsDates())
-        for (auto const& d : s.second)
+        for (auto const& d : s.second) {
             lastRelevantDate_ = std::max(lastRelevantDate_, d);
+            lastRelevantDateType_ = lastRelevantDate_ == d ? "Discount Observation Date" : lastRelevantDateType_;
+        }
     for (auto const& s : staticAnalyser_->discountPayDates())
-        for (auto const& d : s.second)
+        for (auto const& d : s.second) {
             lastRelevantDate_ = std::max(lastRelevantDate_, d);
+            lastRelevantDateType_ = lastRelevantDate_ == d ? "Discount Pay Date" : lastRelevantDateType_;
+        }
     DLOG("last relevant date: " << lastRelevantDate_);
 }
 
@@ -930,7 +1063,7 @@ void ScriptedTradeEngineBuilder::setupBlackScholesProcesses() {
     Handle<BlackVolTermStructure> vol;
     if (zeroVolatility_) {
         vol = Handle<BlackVolTermStructure>(
-            boost::make_shared<BlackConstantVol>(0, NullCalendar(), 0.0, ActualActual(ActualActual::ISDA)));
+            QuantLib::ext::make_shared<BlackConstantVol>(0, NullCalendar(), 0.0, ActualActual(ActualActual::ISDA)));
         DLOG("using zero volatility processes");
     }
     for (Size i = 0; i < modelIndices_.size(); ++i) {
@@ -942,29 +1075,34 @@ void ScriptedTradeEngineBuilder::setupBlackScholesProcesses() {
             auto fc = market_->equityForecastCurve(name, configuration(MarketContext::pricing));
             if (!zeroVolatility_)
                 vol = market_->equityVol(name, configuration(MarketContext::pricing));
-            processes_.push_back(boost::make_shared<GeneralizedBlackScholesProcess>(spot, div, fc, vol));
+            processes_.push_back(QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(spot, div, fc, vol));
             DLOG("added process for equity " << name);
         } else if (ind.isComm()) {
             std::string name = ind.commName();
-            auto spot = Handle<Quote>(boost::make_shared<DerivedPriceQuote>(
+            auto spot = Handle<Quote>(QuantLib::ext::make_shared<DerivedPriceQuote>(
                 market_->commodityPriceCurve(name, configuration(MarketContext::pricing))));
             auto priceCurve = market_->commodityPriceCurve(name, configuration(MarketContext::pricing));
-            auto fc = market_->discountCurve(modelIndicesCurrencies_[i], configuration(MarketContext::pricing));
-            auto div = Handle<YieldTermStructure>(boost::make_shared<PriceTermStructureAdapter>(*priceCurve, *fc));
+            auto fc = modelIndicesCurrencies_[i] == baseCcy_
+                          ? baseCcyModelCurve_
+                          : market_->discountCurve(modelIndicesCurrencies_[i], configuration(MarketContext::pricing));
+            auto div =
+                Handle<YieldTermStructure>(QuantLib::ext::make_shared<PriceTermStructureAdapter>(*priceCurve, *fc));
             div->enableExtrapolation();
             if (!zeroVolatility_)
                 vol = market_->commodityVolatility(name, configuration(MarketContext::pricing));
-            processes_.push_back(boost::make_shared<GeneralizedBlackScholesProcess>(spot, div, fc, vol));
+            processes_.push_back(QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(spot, div, fc, vol));
             DLOG("added process for commodity " << name);
         } else if (ind.isFx()) {
             std::string targetCcy = ind.fx()->targetCurrency().code();
             std::string sourceCcy = ind.fx()->sourceCurrency().code();
             auto spot = market_->fxSpot(sourceCcy + targetCcy, configuration(MarketContext::pricing));
-            auto div = market_->discountCurve(sourceCcy, configuration(MarketContext::pricing));
-            auto fc = market_->discountCurve(targetCcy, configuration(MarketContext::pricing));
+            auto div = sourceCcy == baseCcy_ ? baseCcyModelCurve_
+                                             : market_->discountCurve(sourceCcy, configuration(MarketContext::pricing));
+            auto fc = targetCcy == baseCcy_ ? baseCcyModelCurve_
+                                            : market_->discountCurve(targetCcy, configuration(MarketContext::pricing));
             if (!zeroVolatility_)
                 vol = market_->fxVol(sourceCcy + targetCcy, configuration(MarketContext::pricing));
-            processes_.push_back(boost::make_shared<GeneralizedBlackScholesProcess>(spot, div, fc, vol));
+            processes_.push_back(QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(spot, div, fc, vol));
             DLOG("added process for fx " << sourceCcy << "-" << targetCcy);
         } else {
             QL_FAIL("unexpected model index " << ind);
@@ -986,9 +1124,9 @@ void ScriptedTradeEngineBuilder::setupIrReversions() {
         irCcys.insert(modelCcys_.begin(), modelCcys_.end());
     }
     for (auto const& ccy : irCcys) {
-        string revStr = modelParameter("IrReversion_" + ccy, {resolvedProductTag_}, false, "");
+        string revStr = modelParameter("IrReversion_" + ccy, getModelEngineQualifiers(), false, "");
         if (revStr.empty())
-            revStr = modelParameter("IrReversion", {resolvedProductTag_}, false, "");
+            revStr = modelParameter("IrReversion", getModelEngineQualifiers(), false, "");
         QL_REQUIRE(!revStr.empty(), "Did not find reversion for "
                                         << ccy
                                         << ", need IrReversion_CCY or IrReversion parameter in pricing engine config.");
@@ -998,9 +1136,9 @@ void ScriptedTradeEngineBuilder::setupIrReversions() {
 }
 
 namespace {
-boost::shared_ptr<ZeroInflationIndex>
+QuantLib::ext::shared_ptr<ZeroInflationIndex>
 getInfMarketIndex(const std::string& name,
-                  const std::vector<std::pair<std::string, boost::shared_ptr<ZeroInflationIndex>>>& indices) {
+                  const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& indices) {
     for (auto const& i : indices) {
         if (i.first == name)
             return i.second;
@@ -1023,16 +1161,28 @@ void ScriptedTradeEngineBuilder::compileSimulationAndAddDates() {
         if ((!info.isIr() && !info.isInf()) || modelParam_ == "GaussianCam") {
             if (info.isInf()) {
                 // inf needs special considerations
-                boost::shared_ptr<ZeroInflationIndex> marketIndex = getInfMarketIndex(info.name(), modelInfIndices_);
-                Size lag = getInflationSimulationLag(marketIndex);
+                QuantLib::ext::shared_ptr<ZeroInflationIndex> marketIndex =
+                    getInfMarketIndex(info.name(), modelInfIndices_);
+                // we have an simulation lag when simulating inf indices, the lag is the difference between the last
+                // observered fixing (base date of the t0 curve) and t0. We keep the lag constant throughout the
+                // simulation. At time t we simulated effectivly the index value at t - lag, so we need to add the lag
+                // to the relevant dates to make sure we have the required fixings in the simulation (the inflation
+                // models are continuous time models, so lag is applied as number of days and the lagged date is not
+                // moved to the beginning of the inflation period).
+                int lag = simulationLag(marketIndex->zeroInflationTermStructure());
                 for (auto const& d : s.second) {
                     auto lim = inflationPeriod(d, info.inf()->frequency());
                     simulationDates_.insert(lim.first + lag);
-                    QL_DEPRECATED_DISABLE_WARNING
-                    // This will be removed in a later release and all inf indices are then flat
-                    if (info.inf()->interpolated())
-                        simulationDates_.insert(d + lag);
-                    QL_DEPRECATED_ENABLE_WARNING
+                    DLOG("added " << io::iso_date(lim.first + lag) << " as simulation date for '" << info.name()
+                                  << "' (from index eval date [" << io::iso_date(d) << "], inf period start ["
+                                  << io::iso_date(lim.first) << "] + lag[" << lag << "])");
+                    // Allow interpolation of indices for convencience (avoid interpolation logic in script)
+                    if (info.infIsInterpolated())
+                        DLOG("index '" << info.name() << "' is interpolated, adding "
+                                       << io::iso_date(lim.second + 1 + lag) << "' (from index eval date ["
+                                       << io::iso_date(d) << "], start next inf period ["
+                                       << io::iso_date(lim.second + 1) << "] + lag[" << lag << "])");
+                        simulationDates_.insert(lim.second + 1 + lag);
                 }
             } else {
                 // for all other indices we just take the original dates
@@ -1124,7 +1274,7 @@ namespace {
 // filter out "dummy" strikes, such as up and out barriers set to 1E6 to indicate +inf
 std::map<std::string, std::vector<Real>> filterBlackScholesCalibrationStrikes(
     const std::map<std::string, std::vector<Real>>& strikes, const std::vector<std::string>& modelIndices,
-    const std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>>& processes, const Real T) {
+    const std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes, const Real T) {
     QL_REQUIRE(modelIndices.size() == processes.size(), "filterBlackScholesCalibrationStrikes: processes size ("
                                                             << processes.size() << ") must match modelIndices size ("
                                                             << modelIndices.size() << ")");
@@ -1175,44 +1325,44 @@ std::vector<std::vector<Real>> getCalibrationStrikesVector(const std::map<std::s
 
 } // namespace
 
-void ScriptedTradeEngineBuilder::buildBlackScholes(const std::string& id,
-                                                   const IborFallbackConfig& iborFallbackConfig) {
+void ScriptedTradeEngineBuilder::buildBlackScholes(
+    const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig) {
     Real T = modelCurves_.front()->timeFromReference(lastRelevantDate_);
     auto filteredStrikes = filterBlackScholesCalibrationStrikes(calibrationStrikes_, modelIndices_, processes_, T);
     // ignore timeStepsPerYear if we have no correlations, i.e. we can take large timesteps without changing anything
-    auto builder = boost::make_shared<BlackScholesModelBuilder>(
+    auto builder = QuantLib::ext::make_shared<BlackScholesModelBuilder>(
         modelCurves_, processes_, simulationDates_, addDates_, correlations_.empty() ? 0 : timeStepsPerYear_,
-        calibration_, getCalibrationStrikesVector(filteredStrikes, modelIndices_));
+        calibration_, getCalibrationStrikesVector(filteredStrikes, modelIndices_), baseCcyModelCurve_);
     if (useCg_) {
-        modelCG_ = boost::make_shared<BlackScholesCG>(
-            modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_, modelIndices_,
-            modelIndicesCurrencies_, builder->model(), correlations_, simulationDates_, iborFallbackConfig,
-            calibration_, filteredStrikes);
+        modelCG_ = QuantLib::ext::make_shared<BlackScholesCG>(
+            ModelCG::Type::MC, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
+            modelIndices_, modelIndicesCurrencies_, builder->model(), correlations_, simulationDates_,
+            iborFallbackConfig, calibration_, filteredStrikes);
     } else {
-        model_ = boost::make_shared<BlackScholes>(modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_,
-                                                  modelInfIndices_, modelIndices_, modelIndicesCurrencies_,
-                                                  builder->model(), correlations_, mcParams_, simulationDates_,
-                                                  iborFallbackConfig, calibration_, filteredStrikes);
+        model_ = QuantLib::ext::make_shared<BlackScholes>(
+            Model::Type::MC, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
+            modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_,
+            iborFallbackConfig, calibration_, filteredStrikes, params_);
     }
-    modelBuilders_.insert(std::make_pair(id, builder));
+    engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
 }
 
-void ScriptedTradeEngineBuilder::buildFdBlackScholes(const std::string& id,
-                                                     const IborFallbackConfig& iborFallbackConfig) {
+void ScriptedTradeEngineBuilder::buildFdBlackScholes(
+    const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig) {
     Real T = modelCurves_.front()->timeFromReference(lastRelevantDate_);
     auto filteredStrikes = filterBlackScholesCalibrationStrikes(calibrationStrikes_, modelIndices_, processes_, T);
-    auto builder = boost::make_shared<BlackScholesModelBuilder>(
+    auto builder = QuantLib::ext::make_shared<BlackScholesModelBuilder>(
         modelCurves_, processes_, simulationDates_, addDates_, timeStepsPerYear_, calibration_,
-        getCalibrationStrikesVector(filteredStrikes, modelIndices_));
-    model_ = boost::make_shared<FdBlackScholesBase>(
-        modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_, modelIndices_,
-        modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_, iborFallbackConfig,
-        calibration_, filteredStrikes, mesherEpsilon_, mesherScaling_, mesherConcentration_,
-        mesherMaxConcentratingPoints_, mesherIsStatic_);
-    modelBuilders_.insert(std::make_pair(id, builder));
+        getCalibrationStrikesVector(filteredStrikes, modelIndices_), baseCcyModelCurve_);
+    model_ = QuantLib::ext::make_shared<BlackScholes>(
+        Model::Type::FD, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
+        modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_,
+        iborFallbackConfig, calibration_, filteredStrikes, params_);
+    engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
 }
 
-void ScriptedTradeEngineBuilder::buildLocalVol(const std::string& id, const IborFallbackConfig& iborFallbackConfig) {
+void ScriptedTradeEngineBuilder::buildLocalVol(
+    const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig) {
     LocalVolModelBuilder::Type lvType;
     if (modelParam_ == "LocalVolDupire")
         lvType = LocalVolModelBuilder::Type::Dupire;
@@ -1221,13 +1371,111 @@ void ScriptedTradeEngineBuilder::buildLocalVol(const std::string& id, const Ibor
     else {
         QL_FAIL("local vol model type " << modelParam_ << " not recognised.");
     }
-    auto builder = boost::make_shared<LocalVolModelBuilder>(modelCurves_, processes_, simulationDates_, addDates_,
-                                                            timeStepsPerYear_, lvType, calibrationMoneyness_,
-                                                            !calibrate_ || zeroVolatility_);
-    model_ = boost::make_shared<LocalVol>(modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_,
-                                          modelInfIndices_, modelIndices_, modelIndicesCurrencies_, builder->model(),
-                                          correlations_, mcParams_, simulationDates_, iborFallbackConfig);
-    modelBuilders_.insert(std::make_pair(id, builder));
+
+    Real T = modelCurves_.front()->timeFromReference(lastRelevantDate_);
+    auto filteredStrikes = filterBlackScholesCalibrationStrikes(calibrationStrikes_, modelIndices_, processes_, T);
+    auto builder = QuantLib::ext::make_shared<LocalVolModelBuilder>(
+        modelCurves_, processes_, simulationDates_, addDates_, timeStepsPerYear_, lvType, calibrationMoneyness_,
+        referenceCalibrationGrid_, !calibrate_ || zeroVolatility_, baseCcyModelCurve_);
+    model_ = QuantLib::ext::make_shared<LocalVol>(
+        Model::Type::MC, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
+        modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_,
+        iborFallbackConfig, "Smile", filteredStrikes, params_);
+    engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
+}
+
+void ScriptedTradeEngineBuilder::buildFdLocalVol(
+    const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig) {
+    LocalVolModelBuilder::Type lvType;
+    if (modelParam_ == "LocalVolDupire")
+        lvType = LocalVolModelBuilder::Type::Dupire;
+    else if (modelParam_ == "LocalVolAndreasenHuge")
+        lvType = LocalVolModelBuilder::Type::AndreasenHuge;
+    else {
+        QL_FAIL("local vol model type " << modelParam_ << " not recognised.");
+    }
+
+    Real T = modelCurves_.front()->timeFromReference(lastRelevantDate_);
+    auto filteredStrikes = filterBlackScholesCalibrationStrikes(calibrationStrikes_, modelIndices_, processes_, T);
+    auto builder = QuantLib::ext::make_shared<LocalVolModelBuilder>(
+        modelCurves_, processes_, simulationDates_, addDates_, timeStepsPerYear_, lvType, calibrationMoneyness_,
+        referenceCalibrationGrid_, !calibrate_ || zeroVolatility_, baseCcyModelCurve_);
+    model_ = QuantLib::ext::make_shared<LocalVol>(
+        Model::Type::FD, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
+        modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_,
+        iborFallbackConfig, "Smile", filteredStrikes, params_);
+    engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
+}
+
+
+bool ScriptedTradeEngineBuilder::containsQuanto() {
+    Size n = modelIndices_.size();
+    std::vector<IndexInfo> indexInfo;
+    for (Size j = 0; j < n; ++j)
+        indexInfo.push_back(IndexInfo(modelIndices_[j]));
+    for (Size j = 0; j < n; ++j) {
+        if (!indexInfo[j].isFx()) {
+            for (Size jj = 0; jj < n; ++jj) {
+                if (indexInfo[jj].isFx()) {
+                    // Do we have an FX index that matches the EQ/COM index currency?
+                    if (modelIndicesCurrencies_[jj] == modelIndicesCurrencies_[j])
+                        return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+void ScriptedTradeEngineBuilder::buildHeston(const std::string& id,
+                                             const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig) {
+    LOG("ScriptedTradeEngineBuilder::buildHeston() called");
+    Real T = modelCurves_.front()->timeFromReference(lastRelevantDate_);
+    auto filteredStrikes = filterBlackScholesCalibrationStrikes(calibrationStrikes_, modelIndices_, processes_, T);
+    Size steps = timeStepsPerYear_;
+    HestonProcess::Discretization discretization = hestonProcessDiscretization_;
+    if (containsQuanto()) {
+        steps = hestonQuantoTimeStepsPerYear_;
+        discretization = hestonQuantoProcessDiscretization_;
+	ALOG("Overriding time steps and Heston process discretization with Heston Quanto values: "
+	     << steps << " and " << discretization);
+    }
+    auto builder = QuantLib::ext::make_shared<HestonModelBuilder>(
+        modelIndices_, modelCurves_, processes_, simulationDates_, addDates_, steps,
+        hestonCalibrationExpiries_, calibrationMoneyness_, hestonCalibrationVarianceTerms_, hestonInitialValues_,
+        hestonFixedValues_, hestonCalibrationMethod_, hestonMaximumInitialValues_, hestonRelaxedFellerConstraint_,
+        hestonMaxCalibrationAttempts_, hestonEarlyExitThreshold_, hestonMaxAcceptableError_,
+        discretization, referenceCalibrationGrid_, !calibrate_ || zeroVolatility_, baseCcyModelCurve_);
+    model_ = QuantLib::ext::make_shared<Heston>(
+        Model::Type::MC, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
+        modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_,
+        iborFallbackConfig, "Smile", filteredStrikes, params_, debug_);
+    engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
+    engineFactory()->scriptingModels().insert(std::make_pair(id, model_));
+    LOG("ScriptedTradeEngineBuilder::buildHeston() done");
+}
+
+void ScriptedTradeEngineBuilder::buildFdHeston(
+    const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig) {
+    Real T = modelCurves_.front()->timeFromReference(lastRelevantDate_);
+    auto filteredStrikes = filterBlackScholesCalibrationStrikes(calibrationStrikes_, modelIndices_, processes_, T);
+    Size steps = timeStepsPerYear_;
+    HestonProcess::Discretization discretization = hestonProcessDiscretization_;
+    if (containsQuanto()) {
+        steps = hestonQuantoTimeStepsPerYear_;
+        discretization = hestonQuantoProcessDiscretization_;
+    }
+    auto builder = QuantLib::ext::make_shared<HestonModelBuilder>(
+        modelIndices_, modelCurves_, processes_, simulationDates_, addDates_, steps,
+        hestonCalibrationExpiries_, calibrationMoneyness_, hestonCalibrationVarianceTerms_, hestonInitialValues_,
+        hestonFixedValues_, hestonCalibrationMethod_, hestonMaximumInitialValues_, hestonRelaxedFellerConstraint_,
+        hestonMaxCalibrationAttempts_, hestonEarlyExitThreshold_, hestonMaxAcceptableError_,
+        discretization, referenceCalibrationGrid_, !calibrate_ || zeroVolatility_, baseCcyModelCurve_);
+    model_ = QuantLib::ext::make_shared<Heston>(
+        Model::Type::FD, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
+        modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_,
+        iborFallbackConfig, "Smile", filteredStrikes, params_);
+    engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
 }
 
 namespace {
@@ -1243,8 +1491,9 @@ std::string getFirstIrIndexOrCcy(const std::string& ccy, const std::set<IndexInf
 }
 } // namespace
 
-void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const IborFallbackConfig& iborFallbackConfig,
-                                                  const std::vector<std::string>& conditionalExpectationModelStates) {
+void ScriptedTradeEngineBuilder::buildGaussianCam(
+    const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
+    const std::vector<std::string>& conditionalExpectationModelStates) {
     // compile cam correlation matrix
     // - we want to use the maximum tenor of an ir index in a correlation pair if several are given (to have
     //   a well defined rule how to derive the LGM IR correlations); to get there we store the correlations
@@ -1280,8 +1529,8 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
 
     map<CorrelationKey, Handle<Quote>> camCorrelations;
     for (auto const& c : tmpCorrelations) {
-        CorrelationFactor f_1 = parseCorrelationFactor(c.first.first);
-        CorrelationFactor f_2 = parseCorrelationFactor(c.first.second);
+        CorrelationFactor f_1 = parseCorrelationFactor(c.first.first, '#');
+        CorrelationFactor f_2 = parseCorrelationFactor(c.first.second, '#');
         // update index for JY from 0 to 1 (i.e. to the factor driving the inf index ("fx") process)
         // in all other cases the index 0 is fine, since there is only one driving factor always
         if (infModelType_ == "JY") {
@@ -1290,21 +1539,71 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
             if (f_2.type == CrossAssetModel::AssetType::INF)
                 f_2.index = 1;
         }
-        auto q = Handle<Quote>(boost::make_shared<CorrelationValue>(std::get<0>(c.second), 0.0));
+        auto q = Handle<Quote>(QuantLib::ext::make_shared<CorrelationValue>(std::get<0>(c.second), 0.0));
         camCorrelations[std::make_pair(f_1, f_2)] = q;
         DLOG("added correlation for " << c.first.first << "/" << c.first.second << ": " << q->value());
+    }
+
+    // correlation overwrite from pricing engine parameters
+
+    std::set<CorrelationFactor> allCorrRiskFactors;
+
+    for (auto const& m : modelIndices_)
+        allCorrRiskFactors.insert(parseCorrelationFactor(convertIndexToCamCorrelationEntry(m).first, '#'));
+    for (auto const& m : modelIrIndices_)
+        allCorrRiskFactors.insert(parseCorrelationFactor(convertIndexToCamCorrelationEntry(m.first).first, '#'));
+    for (auto const& m : modelInfIndices_)
+        allCorrRiskFactors.insert(parseCorrelationFactor(convertIndexToCamCorrelationEntry(m.first).first, '#'));
+    for (auto const& ccy : modelCcys_)
+        allCorrRiskFactors.insert({CrossAssetModel::AssetType::IR, ccy, 0});
+
+    for (auto const& c1 : allCorrRiskFactors) {
+        for (auto const& c2 : allCorrRiskFactors) {
+            // determine the number of driving factors for f_1 and f_2
+            Size nf_1 = c1.type == CrossAssetModel::AssetType::INF && infModelType_ == "JY" ? 2 : 1;
+            Size nf_2 = c2.type == CrossAssetModel::AssetType::INF && infModelType_ == "JY" ? 2 : 1;
+            for (Size k = 0; k < nf_1; ++k) {
+                for (Size l = 0; l < nf_2; ++l) {
+                    auto f_1 = c1;
+                    auto f_2 = c2;
+                    f_1.index = k;
+                    f_2.index = l;
+                    if (f_1 == f_2)
+                        continue;
+                    // lookup names are IR:GBP:0 and IR:GBP whenever the index is zero
+                    auto s_1 = ore::data::to_string(f_1);
+                    auto s_2 = ore::data::to_string(f_2);
+                    std::set<std::string> lookupnames1, lookupnames2;
+                    lookupnames1.insert(s_1);
+                    lookupnames2.insert(s_2);
+                    if (k == 0)
+                        lookupnames1.insert(s_1.substr(0, s_1.size() - 2));
+                    if (l == 0)
+                        lookupnames2.insert(s_2.substr(0, s_2.size() - 2));
+                    for (auto const& l1 : lookupnames1) {
+                        for (auto const& l2 : lookupnames2) {
+                            if (auto overwrite =
+                                    modelParameter("Correlation", getModelEngineQualifiers(l1 + "_" + l2), false);
+                                !overwrite.empty()) {
+                                camCorrelations[std::make_pair(f_1, f_2)] =
+                                    Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(parseReal(overwrite)));
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     // set up the cam and calibrate it using the cam builder
     // if for a non-base currency no fx index is given, we set up a zero vol FX process for this
     // if fullDynamicIr is false, we set up a zero vol IR process for currencies that are not irIndex currencies
 
-    std::vector<boost::shared_ptr<IrModelData>> irConfigs;
-    std::vector<boost::shared_ptr<InflationModelData>> infConfigs;
-    std::vector<boost::shared_ptr<FxBsData>> fxConfigs;
-    std::vector<boost::shared_ptr<EqBsData>> eqConfigs;
-    std::vector<boost::shared_ptr<CommoditySchwartzData>> comConfigs;
-    // TODO: populate comConfigs
+    std::vector<QuantLib::ext::shared_ptr<IrModelData>> irConfigs;
+    std::vector<QuantLib::ext::shared_ptr<InflationModelData>> infConfigs;
+    std::vector<QuantLib::ext::shared_ptr<FxData>> fxConfigs;
+    std::vector<QuantLib::ext::shared_ptr<EqBsData>> eqConfigs;
+    std::vector<QuantLib::ext::shared_ptr<CommoditySchwartzData>> comConfigs;
 
     // calibration expiries and terms for IR, INF, FX, EQ parametrisations (this will only work for a fixed reference
     // date, due to the way the cam builder and nested builders work, see ticket #940)
@@ -1329,10 +1628,11 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
 
     // IR configs
     for (Size i = 0; i < modelCcys_.size(); ++i) {
-        auto config = boost::make_shared<IrLgmData>();
+        auto config = QuantLib::ext::make_shared<IrLgmData>();
         config->qualifier() = getFirstIrIndexOrCcy(modelCcys_[i], irIndices_);
         config->reversionType() = LgmData::ReversionType::HullWhite;
-        config->volatilityType() = LgmData::VolatilityType::Hagan;
+        config->volatilityType() = parseVolatilityType(
+            modelParameter("IrVolatilityType", getModelEngineQualifiers(modelCcys_[i]), false, "Hagan"));
         config->calibrateH() = false;
         config->hParamType() = ParamType::Constant;
         config->hTimes() = std::vector<Real>();
@@ -1345,7 +1645,7 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
         if (calibrationExpiries.empty() || zeroVolatility_ ||
             (!fullDynamicIr_ &&
              std::find_if(modelIrIndices_.begin(), modelIrIndices_.end(),
-                          [&ccy](const std::pair<std::string, boost::shared_ptr<InterestRateIndex>>& index) {
+                          [&ccy](const std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>& index) {
                               return index.second->currency().code() == ccy;
                           }) == modelIrIndices_.end())) {
 
@@ -1378,49 +1678,117 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
 
     // INF configs
     for (Size i = 0; i < modelInfIndices_.size(); ++i) {
-        boost::shared_ptr<InflationModelData> config;
+        QuantLib::ext::shared_ptr<InflationModelData> config;
         if (zeroVolatility_) {
             // for both DK and JY we can just use a zero vol dk component
-            config = boost::make_shared<InfDkData>(
+            config = QuantLib::ext::make_shared<InfDkData>(
                 CalibrationType::None, std::vector<CalibrationBasket>(), modelInfIndices_[i].second->currency().code(),
                 IndexInfo(modelInfIndices_[i].first).infName(),
                 ReversionParameter(LgmData::ReversionType::Hagan, true, ParamType::Constant, {}, {0.60}),
                 VolatilityParameter(LgmData::VolatilityType::Hagan, false, ParamType::Constant, {}, {0.00}),
                 LgmReversionTransformation(), true);
         } else {
-            // build calibration basket (ATM CPI Floors)
-            std::vector<boost::shared_ptr<CalibrationInstrument>> calInstr;
-            for (auto const& d : calibrationDates)
-                calInstr.push_back(boost::make_shared<CpiCapFloor>(
-                    QuantLib::CapFloor::Type::Floor, d,
-                    boost::make_shared<AtmStrike>(QuantLib::DeltaVolQuote::AtmType::AtmFwd)));
+            // build calibration basket (CPI Floors at calibration strike or if that is not given, ATM strike)
+            QuantLib::ext::shared_ptr<BaseStrike> calibrationStrike;
+            if (auto k = calibrationStrikes_.find(modelInfIndices_[i].first);
+                k != calibrationStrikes_.end() && !k->second.empty()) {
+                calibrationStrike = QuantLib::ext::make_shared<AbsoluteStrike>(k->second.front());
+            } else {
+                calibrationStrike = QuantLib::ext::make_shared<AtmStrike>(QuantLib::DeltaVolQuote::AtmType::AtmFwd);
+            }
+            std::vector<QuantLib::ext::shared_ptr<CalibrationInstrument>> calInstr;
+            DLOG("building calibration basket for inflation index '" << modelInfIndices_[i].first);
+            for (auto const& d : calibrationDates){
+                auto simLag =  simulationLag(modelInfIndices_[i].second->zeroInflationTermStructure());
+                Date effectiveFixingDate = d - simLag;
+                auto cpiVolatility = market_->cpiInflationCapFloorVolatilitySurface(modelInfIndices_[i].first);
+                Date maturity = effectiveFixingDate + cpiVolatility->observationLag();
+                DLOG("processing calibration date " << d << " for inflation index '" << modelInfIndices_[i].first << "'"
+                     << " with simulationLag (days) " << simLag << ", effective fixing date " << effectiveFixingDate << " and maturity " << maturity);
+                if (maturity < referenceDate) {
+                    DLOG("skipping calibration instrument for inflation index '" << modelInfIndices_[i].first
+                         << "' with expiry " << d << " and effective fixing date " << effectiveFixingDate
+                         << " (maturity " << maturity << ") since maturity is before reference date");
+                    continue;
+                }
+                DLOG("adding calibration instrument for inflation index '" << modelInfIndices_[i].first
+                     << "' with expiry " << d << " and effective fixing date " << effectiveFixingDate << " (maturity " << maturity
+                     << ") and strike " << calibrationStrike->toString());
+                
+                calInstr.push_back(
+                    QuantLib::ext::make_shared<CpiCapFloor>(QuantLib::CapFloor::Type::Floor, maturity, calibrationStrike));
+            }
             std::vector<CalibrationBasket> calBaskets(1, CalibrationBasket(calInstr));
             if (infModelType_ == "DK") {
                 // build DK config
-                config = boost::make_shared<InfDkData>(
+                std::string infName = IndexInfo(modelInfIndices_[i].first).infName();
+                Real vol =
+                    parseReal(modelParameter("InfDkVolatility", getModelEngineQualifiers(infName), false, "0.0050"));
+                config = QuantLib::ext::make_shared<InfDkData>(
                     CalibrationType::Bootstrap, calBaskets, modelInfIndices_[i].second->currency().code(),
                     IndexInfo(modelInfIndices_[i].first).infName(),
                     ReversionParameter(LgmData::ReversionType::Hagan, true, ParamType::Piecewise, {}, {0.60}),
-                    VolatilityParameter(LgmData::VolatilityType::Hagan, false, ParamType::Piecewise, {}, {0.0050}),
+                    VolatilityParameter(LgmData::VolatilityType::Hagan, false, ParamType::Piecewise, {}, {vol}),
                     LgmReversionTransformation(),
                     // ignore duplicate expiry times among calibration instruments
                     true);
             } else if (infModelType_ == "JY") {
                 // build JY config
-                // we calibrate the index ("fx") process to CPI cap/floors and set the real rate process parameters
-                // to hardcoded values; TODO is this reasonable? (at least it seems simple and robust...)
-                config = boost::make_shared<InfJyData>(
-                    CalibrationType::Bootstrap, calBaskets, modelInfIndices_[i].second->currency().code(),
-                    IndexInfo(modelInfIndices_[i].first).infName(),
-                    // hardcoded real rate reversion 0.0, vol 0.0030, no calibration
-                    ReversionParameter(LgmData::ReversionType::HullWhite, false, ParamType::Piecewise, {}, {0.0}),
-                    VolatilityParameter(LgmData::VolatilityType::Hagan, false, ParamType::Piecewise, {}, {0.0030}),
-                    // index ("fx") vol, start value 0.10 for calibration
-                    VolatilityParameter(true, ParamType::Piecewise, {}, {0.10}),
-                    // no parameter trafo, no optimisation constraints (TODO do we need boundaries?)
-                    LgmReversionTransformation(), CalibrationConfiguration(),
-                    // ignore duplicate expiry times among calibration instruments
-                    true);
+                std::string infName = IndexInfo(modelInfIndices_[i].first).infName();
+                Size ccyIndex =
+                    std::distance(modelCcys_.begin(), std::find(modelCcys_.begin(), modelCcys_.end(),
+                                                                modelInfIndices_[i].second->currency().code()));
+                // check if vol / reversion is overwritten by pricing engine config parameters
+                if (auto tmp = modelParameter("InfJyTimes", getModelEngineQualifiers(infName), false, std::string());
+                    !tmp.empty()) {
+                    auto tmp2 = modelParameter("InfJyRealRateVol", getModelEngineQualifiers(infName), true);
+                    auto tmp3 = modelParameter("InfJyIndexVol", getModelEngineQualifiers(infName), true);
+                    auto tmp4 = modelParameter("InfJyRealRateReversion", getModelEngineQualifiers(infName), true);
+                    auto irVolType = *QuantLib::ext::static_pointer_cast<LgmData>(irConfigs[ccyIndex])
+                                          ->volatilityParameter()
+                                          .volatilityType();
+                    VolatilityParameter realRateVol(irVolType, false, ParamType::Piecewise,
+                                                    parseListOfValues<double>(tmp, parseReal),
+                                                    parseListOfValues<double>(tmp2, parseReal));
+                    VolatilityParameter indexVol(false, ParamType::Piecewise, parseListOfValues<double>(tmp, parseReal),
+                                                 parseListOfValues<double>(tmp3, parseReal));
+                    ReversionParameter realRateRev(LgmData::ReversionType::HullWhite, false, ParamType::Piecewise, {},
+                                                   {parseReal(tmp4)});
+                    config = QuantLib::ext::make_shared<InfJyData>(
+                        CalibrationType::None, std::vector<CalibrationBasket>{},
+                        modelInfIndices_[i].second->currency().code(), infName, realRateRev, realRateVol, indexVol,
+                        LgmReversionTransformation(), CalibrationConfiguration(), true, false);
+                } else {
+                    // we calibrate the index ("fx") process to CPI cap/floors and set the real rate process reversion
+                    // equal to the nominal process reversion. The real rate vol is set to a fixed multiple of nominal
+                    // rate vol, the multiplier is taken from the pe config model parameter "InfJyRealToNominalVolRatio"
+                    ReversionParameter realRateRev =
+                        QuantLib::ext::static_pointer_cast<LgmData>(irConfigs[ccyIndex])->reversionParameter();
+                    VolatilityParameter realRateVol =
+                        QuantLib::ext::static_pointer_cast<LgmData>(irConfigs[ccyIndex])->volatilityParameter();
+                    realRateRev.setCalibrate(false);
+                    realRateVol.setCalibrate(false);
+                    Real realRateToNominalRateRatio = parseReal(
+                        modelParameter("InfJyRealToNominalVolRatio", getModelEngineQualifiers(infName), false, "1.0"));
+                    QL_REQUIRE(ccyIndex < modelCcys_.size(),
+                               "ScriptedTrade::buildGaussianCam(): internal error, inflation index currency "
+                                   << modelInfIndices_[i].second->currency().code() << " not found in model ccy list.");
+                    realRateVol.mult(realRateToNominalRateRatio);
+                    config = QuantLib::ext::make_shared<InfJyData>(
+                        CalibrationType::Bootstrap, calBaskets, modelInfIndices_[i].second->currency().code(), infName,
+                        // real rate reversion and vol
+                        realRateRev, realRateVol,
+                        // index ("fx") vol, start value 0.10 for calibration
+                        VolatilityParameter(true, ParamType::Piecewise, {}, {0.10}),
+                        // no parameter trafo, no optimisation constraints (TODO do we need boundaries?)
+                        LgmReversionTransformation(), CalibrationConfiguration(),
+                        // ignore duplicate expiry times among calibration instruments
+                        true,
+                        // link real to nominal rate params
+                        true,
+                        // real rate to nominal rate ratio
+                        realRateToNominalRateRatio);
+                }
             } else {
                 QL_FAIL("invalid infModelType '" << infModelType_ << "', expected DK or JY");
             }
@@ -1430,9 +1798,9 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
 
     // FX configs
     for (Size i = 1; i < modelCcys_.size(); ++i) {
-        auto config = boost::make_shared<FxBsData>();
-        config->foreignCcy() = modelCcys_[i];
-        config->domesticCcy() = modelCcys_[0];
+        auto config = QuantLib::ext::make_shared<FxBsData>();
+        config->setForeignCcy(modelCcys_[i]);
+        config->setDomesticCcy(modelCcys_[0]);
         // if we do not have a FX index for the currency, we set up a zero vol process (FX indices are added above
         // for all non-base ccys if fullDynamicFx is specified)
         bool haveFxIndex = false;
@@ -1443,29 +1811,29 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
         if (calibrationExpiries.empty() || !haveFxIndex || zeroVolatility_) {
             DLOG("set up zero vol FxBsData for currency '" << modelCcys_[i] << "'");
             // zero vols
-            config->calibrationType() = CalibrationType::None;
-            config->calibrateSigma() = false;
-            config->sigmaParamType() = ParamType::Constant;
-            config->sigmaTimes() = std::vector<Real>();
-            config->sigmaValues() = {0.0};
+            config->setCalibrationType(CalibrationType::None);
+            config->setCalibrateSigma(false);
+            config->setSigmaParamType(ParamType::Constant);
+            config->setSigmaTimes(std::vector<Real>());
+            config->setSigmaValues({0.0});
         } else {
             DLOG("set up FxBsData for currency '" << modelCcys_[i] << "'");
             // bootstrapped on atm fx vols
-            config->calibrationType() = CalibrationType::Bootstrap;
-            config->calibrateSigma() = true;
-            config->sigmaParamType() = ParamType::Piecewise;
-            config->sigmaTimes() = calibrationTimes;
-            config->sigmaValues() = std::vector<Real>(calibrationTimes.size() + 1, 0.10); // start value for optimiser
-            config->optionExpiries() = calibrationExpiries;
-            config->optionStrikes() =
-                std::vector<std::string>(calibrationExpiries.size(), "ATMF"); // hardcoded ATMF calibration strike
+            config->setCalibrationType(CalibrationType::Bootstrap);
+            config->setCalibrateSigma(true);
+            config->setSigmaParamType(ParamType::Piecewise);
+            config->setSigmaTimes(calibrationTimes);
+            config->setSigmaValues(std::vector<Real>(calibrationTimes.size() + 1, 0.10)); // start value for optimiser
+            config->setOptionExpiries(calibrationExpiries);
+            config->setOptionStrikes(
+                std::vector<std::string>(calibrationExpiries.size(), "ATMF")); // hardcoded ATMF calibration strike
         }
         fxConfigs.push_back(config);
     }
 
     // EQ configs
     for (auto const& eq : eqIndices_) {
-        auto config = boost::make_shared<EqBsData>();
+        auto config = QuantLib::ext::make_shared<EqBsData>();
         config->currency() = getEqCcy(eq);
         config->eqName() = eq.eq()->name();
         if (calibrationExpiries.empty() || zeroVolatility_) {
@@ -1492,44 +1860,67 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
     }
 
     // TODO
-    std::vector<boost::shared_ptr<CrLgmData>> crLgmConfigs;
-    std::vector<boost::shared_ptr<CrCirData>> crCirConfigs;
+    std::vector<QuantLib::ext::shared_ptr<CrLgmData>> crLgmConfigs;
+    std::vector<QuantLib::ext::shared_ptr<CrCirData>> crCirConfigs;
 
-    // COMM configs, not supported at this point
-    QL_REQUIRE(commIndices_.empty(), "GaussianCam model does not support commodity underlyings currently");
+    // COMM configs
+    for (auto const& comm : commIndices_) {
+        auto config = QuantLib::ext::make_shared<CommoditySchwartzData>();
+        config->currency() = getCommCcy(comm);
+        config->name() = comm.commName();
+        if (calibrationExpiries.empty() || zeroVolatility_) {
+            config->calibrationType() = CalibrationType::None;
+            config->calibrateSigma() = false;
+            config->sigmaParamType() = ParamType::Constant;
+            config->sigmaValue() = 0.0;
+        } else {
+            config->calibrationType() = CalibrationType::BestFit;
+            config->calibrateSigma() = true;
+            config->sigmaParamType() = ParamType::Constant;
+            config->sigmaValue() = 0.10; // start value for optimizer
+            config->optionExpiries() = calibrationExpiries;
+            config->optionStrikes() =
+                std::vector<std::string>(calibrationExpiries.size(), "ATMF"); // hardcoded ATMF calibration strike
+        }
+        comConfigs.push_back(config);
+    }
+
+    auto rt = globalParameters_.find("RunType");
+    bool allowChangingFallbacks =
+        rt != globalParameters_.end() && rt->second != "SensitivityDelta" && rt->second != "SensitivityDeltaGamma";
 
     std::string configurationInCcy = configuration(MarketContext::irCalibration);
     std::string configurationXois = configuration(MarketContext::pricing);
     auto discretization = useCg_ ? CrossAssetModel::Discretization::Euler : CrossAssetModel::Discretization::Exact;
-    auto camBuilder = boost::make_shared<CrossAssetModelBuilder>(
+    auto camBuilder = QuantLib::ext::make_shared<CrossAssetModelBuilder>(
         market_,
-        boost::make_shared<CrossAssetModelData>(irConfigs, fxConfigs, eqConfigs, infConfigs, crLgmConfigs, crCirConfigs,
-                                                comConfigs, 0, camCorrelations, bootstrapTolerance_, "LGM",
-                                                discretization),
+        QuantLib::ext::make_shared<CrossAssetModelData>(
+            irConfigs, fxConfigs, eqConfigs, infConfigs, crLgmConfigs, crCirConfigs, comConfigs, 0, camCorrelations,
+            bootstrapTolerance_, "LGM", discretization, params_.salvagingAlgorithm),
         configurationInCcy, configurationXois, configurationXois, configurationInCcy, configurationInCcy,
-        configurationXois, !calibrate_ || zeroVolatility_, continueOnCalibrationError_, referenceCalibrationGrid_,
-        SalvagingAlgorithm::Spectral, id);
+        configurationXois, !calibrate_ || zeroVolatility_, continueOnCalibrationError_, referenceCalibrationGrid_, id,
+        allowChangingFallbacks, allowModelFallbacks_);
 
-    // effective time steps per year: zero for exact evolution, otherwise the pricing engine parameter
+    // effective time steps per year: 1 for exact evolution, otherwise the pricing engine parameter
     if (useCg_) {
-        modelCG_ = boost::make_shared<GaussianCamCG>(
+        modelCG_ = QuantLib::ext::make_shared<GaussianCamCG>(
             camBuilder->model(), modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
-            modelIndices_, modelIndicesCurrencies_, simulationDates_,
-            camBuilder->model()->discretization() == CrossAssetModel::Discretization::Exact ? 0 : timeStepsPerYear_,
-            iborFallbackConfig, std::vector<Size>(), conditionalExpectationModelStates);
+            modelIndices_, modelIndicesCurrencies_, simulationDates_, iborFallbackConfig, std::vector<Size>(),
+            conditionalExpectationModelStates, std::vector<Date>{},
+            camBuilder->model()->discretization() == CrossAssetModel::Discretization::Exact ? 0 : timeStepsPerYear_);
     } else {
-        model_ = boost::make_shared<GaussianCam>(
+        model_ = QuantLib::ext::make_shared<GaussianCam>(
             camBuilder->model(), modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
-            modelIndices_, modelIndicesCurrencies_, simulationDates_, mcParams_,
-            camBuilder->model()->discretization() == CrossAssetModel::Discretization::Exact ? 0 : timeStepsPerYear_,
-            iborFallbackConfig, std::vector<Size>(), conditionalExpectationModelStates);
+            modelIndices_, modelIndicesCurrencies_, simulationDates_, iborFallbackConfig, std::vector<Size>(),
+            conditionalExpectationModelStates, params_,
+            camBuilder->model()->discretization() == CrossAssetModel::Discretization::Exact ? 0 : timeStepsPerYear_);
     }
 
-    modelBuilders_.insert(std::make_pair(id, camBuilder));
+    engineFactory()->modelBuilders().insert(std::make_pair(id, camBuilder));
 }
 
-void ScriptedTradeEngineBuilder::buildFdGaussianCam(const std::string& id,
-                                                    const IborFallbackConfig& iborFallbackConfig) {
+void ScriptedTradeEngineBuilder::buildFdGaussianCam(
+    const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig) {
 
     Date referenceDate = modelCurves_.front()->referenceDate();
     std::vector<Date> calibrationDates;
@@ -1552,11 +1943,11 @@ void ScriptedTradeEngineBuilder::buildFdGaussianCam(const std::string& id,
 
     // determine calibration strike
     std::string calibrationStrike = "ATM";
-    if(calibration_ == "Deal") {
+    if (calibration_ == "Deal") {
         // first model index found in calibration strike spec and first specified strike therein is used
         for (auto const& m : modelIrIndices_) {
             if (auto f = calibrationStrikes_.find(m.first); f != calibrationStrikes_.end()) {
-                if(!f->second.empty()) {
+                if (!f->second.empty()) {
                     calibrationStrike = boost::lexical_cast<std::string>(f->second.front());
                 }
             }
@@ -1568,7 +1959,7 @@ void ScriptedTradeEngineBuilder::buildFdGaussianCam(const std::string& id,
                "ScriptedTradeEngineBuilder::buildFdGaussianCam(): only one ccy is supported, got "
                    << modelCcys_.size());
 
-    auto config = boost::make_shared<IrLgmData>();
+    auto config = QuantLib::ext::make_shared<IrLgmData>();
     config->qualifier() = getFirstIrIndexOrCcy(modelCcys_.front(), irIndices_);
     config->reversionType() = LgmData::ReversionType::HullWhite;
     config->volatilityType() = LgmData::VolatilityType::Hagan;
@@ -1579,7 +1970,7 @@ void ScriptedTradeEngineBuilder::buildFdGaussianCam(const std::string& id,
         modelCurves_.front()->timeFromReference(lastRelevantDate_) * 0.5; // TODO hardcode 0.5 here?
     config->scaling() = 1.0;
     std::string ccy = modelCcys_.front();
-    if (zeroVolatility_ ) {
+    if (zeroVolatility_) {
         DLOG("set up zero vol IrLgmData for currency '" << modelCcys_.front() << "'");
         // zero vol
         config->calibrationType() = CalibrationType::None;
@@ -1603,65 +1994,71 @@ void ScriptedTradeEngineBuilder::buildFdGaussianCam(const std::string& id,
         config->optionStrikes() = std::vector<std::string>(calibrationExpiries.size(), calibrationStrike);
     }
 
+    auto rt = globalParameters_.find("RunType");
+    bool allowChangingFallbacks =
+        rt != globalParameters_.end() && rt->second != "SensitivityDelta" && rt->second != "SensitivityDeltaGamma";
+
     std::string configurationInCcy = configuration(MarketContext::irCalibration);
     std::string configurationXois = configuration(MarketContext::pricing);
 
-    auto camBuilder = boost::make_shared<CrossAssetModelBuilder>(
+    auto camBuilder = QuantLib::ext::make_shared<CrossAssetModelBuilder>(
         market_,
-        boost::make_shared<CrossAssetModelData>(
-            std::vector<boost::shared_ptr<IrModelData>>{config}, std::vector<boost::shared_ptr<FxBsData>>{},
-            std::vector<boost::shared_ptr<EqBsData>>{}, std::vector<boost::shared_ptr<InflationModelData>>{},
-            std::vector<boost::shared_ptr<CrLgmData>>{}, std::vector<boost::shared_ptr<CrCirData>>{},
-            std::vector<boost::shared_ptr<CommoditySchwartzData>>{}, 0,
+        QuantLib::ext::make_shared<CrossAssetModelData>(
+            std::vector<QuantLib::ext::shared_ptr<IrModelData>>{config},
+            std::vector<QuantLib::ext::shared_ptr<FxData>>{}, std::vector<QuantLib::ext::shared_ptr<EqBsData>>{},
+            std::vector<QuantLib::ext::shared_ptr<InflationModelData>>{},
+            std::vector<QuantLib::ext::shared_ptr<CrLgmData>>{}, std::vector<QuantLib::ext::shared_ptr<CrCirData>>{},
+            std::vector<QuantLib::ext::shared_ptr<CommoditySchwartzData>>{}, 0,
             std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>>{}, bootstrapTolerance_, "LGM",
-            CrossAssetModel::Discretization::Exact),
+            CrossAssetModel::Discretization::Exact, params_.salvagingAlgorithm),
         configurationInCcy, configurationXois, configurationXois, configurationInCcy, configurationInCcy,
-        configurationXois, !calibrate_ || zeroVolatility_, continueOnCalibrationError_, referenceCalibrationGrid_,
-        SalvagingAlgorithm::Spectral, id);
+        configurationXois, !calibrate_ || zeroVolatility_, continueOnCalibrationError_, referenceCalibrationGrid_, id,
+        allowChangingFallbacks, allowModelFallbacks_);
 
-    model_ = boost::make_shared<FdGaussianCam>(camBuilder->model(), modelCcys_.front(), modelCurves_.front(),
-                                               modelIrIndices_, simulationDates_, modelSize_, timeStepsPerYear_,
-                                               mesherEpsilon_, iborFallbackConfig);
+    model_ = QuantLib::ext::make_shared<FdGaussianCam>(camBuilder->model(), modelCcys_.front(), modelCurves_.front(),
+                                                       modelIrIndices_, simulationDates_, modelSize_, timeStepsPerYear_,
+                                                       iborFallbackConfig, params_);
 
-    modelBuilders_.insert(std::make_pair(id, camBuilder));
+    engineFactory()->modelBuilders().insert(std::make_pair(id, camBuilder));
 }
 
-void ScriptedTradeEngineBuilder::buildAMCCGModel(const std::string& id, const IborFallbackConfig& iborFallbackConfig,
-                                                 const std::vector<std::string>& conditionalExpectationModelStates) {
+void ScriptedTradeEngineBuilder::buildAMCCGModel(
+    const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
+    const std::vector<std::string>& conditionalExpectationModelStates) {
     // nothing to build really, the resulting model is exactly the input model
     QL_REQUIRE(useCg_, "building gaussian cam from external amc cg model, useCg must be set to true in this case.");
     modelCG_ = amcCgModel_;
 }
 
 void ScriptedTradeEngineBuilder::buildGaussianCamAMC(
-    const std::string& id, const IborFallbackConfig& iborFallbackConfig,
+    const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
     const std::vector<std::string>& conditionalExpectationModelStates) {
 
     QL_REQUIRE(!useCg_, "building gaussian cam from external amc cam, useCg must be set to false in this case.");
 
-    std::vector<std::pair<CrossAssetModel::AssetType, Size>> selectedComponents;
+    std::set<std::pair<CrossAssetModel::AssetType, Size>> selectedComponents;
 
     // IR configs
     for (Size i = 0; i < modelCcys_.size(); ++i) {
-        selectedComponents.push_back(
+        selectedComponents.insert(
             std::make_pair(CrossAssetModel::AssetType::IR, amcCam_->ccyIndex(parseCurrency(modelCcys_[i]))));
     }
 
     // INF configs
     for (Size i = 0; i < modelInfIndices_.size(); ++i) {
-        selectedComponents.push_back(std::make_pair(CrossAssetModel::AssetType::INF,
-                                                    amcCam_->infIndex(IndexInfo(modelInfIndices_[i].first).infName())));
+        selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::INF,
+                                                 amcCam_->infIndex(IndexInfo(modelInfIndices_[i].first).infName())));
     }
 
     // FX configs
     for (Size i = 1; i < modelCcys_.size(); ++i) {
-        selectedComponents.push_back(
+        selectedComponents.insert(
             std::make_pair(CrossAssetModel::AssetType::FX, amcCam_->ccyIndex(parseCurrency(modelCcys_[i])) - 1));
     }
 
     // EQ configs
     for (auto const& eq : eqIndices_) {
-        selectedComponents.push_back(std::make_pair(CrossAssetModel::AssetType::EQ, amcCam_->eqIndex(eq.eq()->name())));
+        selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::EQ, amcCam_->eqIndex(eq.eq()->name())));
     }
 
     // COMM configs, not supported at this point
@@ -1673,17 +2070,17 @@ void ScriptedTradeEngineBuilder::buildGaussianCamAMC(
 
     // effective time steps per year: zero for exact evolution, otherwise the pricing engine parameter
     if (useCg_) {
-        modelCG_ = boost::make_shared<GaussianCamCG>(
+        modelCG_ = QuantLib::ext::make_shared<GaussianCamCG>(
             projectedModel, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
-            modelIndices_, modelIndicesCurrencies_, simulationDates_,
-            projectedModel->discretization() == CrossAssetModel::Discretization::Exact ? 0 : timeStepsPerYear_,
-            iborFallbackConfig, projectedStateProcessIndices, conditionalExpectationModelStates);
+            modelIndices_, modelIndicesCurrencies_, simulationDates_, iborFallbackConfig, projectedStateProcessIndices,
+            conditionalExpectationModelStates, std::vector<Date>{},
+            projectedModel->discretization() == CrossAssetModel::Discretization::Exact ? 0 : timeStepsPerYear_);
     } else {
-        model_ = boost::make_shared<GaussianCam>(
+        model_ = QuantLib::ext::make_shared<GaussianCam>(
             projectedModel, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
-            modelIndices_, modelIndicesCurrencies_, simulationDates_, mcParams_,
-            projectedModel->discretization() == CrossAssetModel::Discretization::Exact ? 0 : timeStepsPerYear_,
-            iborFallbackConfig, projectedStateProcessIndices, conditionalExpectationModelStates);
+            modelIndices_, modelIndicesCurrencies_, simulationDates_, iborFallbackConfig, projectedStateProcessIndices,
+            conditionalExpectationModelStates, params_,
+            projectedModel->discretization() == CrossAssetModel::Discretization::Exact ? 0 : timeStepsPerYear_);
     }
 
     DLOG("built GuassianCam model as projection of xva evolution model");
@@ -1691,19 +2088,37 @@ void ScriptedTradeEngineBuilder::buildGaussianCamAMC(
         DLOG("  got projected state process index: " << p);
 }
 
-void ScriptedTradeEngineBuilder::addAmcGridToContext(boost::shared_ptr<Context>& context) const {
+void ScriptedTradeEngineBuilder::addAmcGridToContext(QuantLib::ext::shared_ptr<Context>& context) const {
     // the amc grid might be empty, but we add the _AMC_SimDates variable to the context anyway, since
     // a script might rely on its existence
-    DLOG("adding amc date grid (" << amcGrid_.size() << ") to context as _AMC_SimDates");
+    DLOG("adding amc date grid with " << amcSimDates_.size() << " sim dates and " << amcStickyCloseOutDates_.size()
+                                      << " close out dates (set up for sticky runs only!) to context as _AMC_SimDates");
     std::vector<ValueType> tmp;
-    for (auto const& d : amcGrid_)
+    for (auto const& d : amcSimDates_)
         tmp.push_back(EventVec{modelSize_, d});
     context->arrays["_AMC_SimDates"] = tmp;
 }
 
 void ScriptedTradeEngineBuilder::setupCalibrationStrikes(const ScriptedTradeScriptData& script,
-                                                         const boost::shared_ptr<Context>& context) {
+                                                         const QuantLib::ext::shared_ptr<Context>& context) {
     calibrationStrikes_ = getCalibrationStrikes(script.calibrationSpec(), context);
+}
+
+std::string ScriptedTradeEngineBuilder::engineParameter(const std::string& p,
+                                                        const std::vector<std::string>& qualifiers,
+                                                        const bool mandatory, const std::string& defaultValue) const {
+    auto overwrite = getParameter(engineParameterOverwrite_, p, qualifiers, false, std::string());
+    if (!overwrite.empty())
+        return overwrite;
+    return getParameter(engineParameters_, p, qualifiers, mandatory, defaultValue);
+}
+
+std::string ScriptedTradeEngineBuilder::modelParameter(const std::string& p, const std::vector<std::string>& qualifiers,
+                                                       const bool mandatory, const std::string& defaultValue) const {
+    auto overwrite = getParameter(modelParameterOverwrite_, p, qualifiers, false, std::string());
+    if (!overwrite.empty())
+        return overwrite;
+    return getParameter(modelParameters_, p, qualifiers, mandatory, defaultValue);
 }
 
 } // namespace data

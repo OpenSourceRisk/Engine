@@ -34,7 +34,7 @@ public:
     //! constructor that builds a usual pricing engine
     CboMCEngineBuilder() : EngineBuilder("OneFactorCopula", "MonteCarloCBOEngine", {"CBO"}) {};
 
-    boost::shared_ptr<QuantLib::PricingEngine> engine(const boost::shared_ptr<QuantLib::Pool>& pool);
+    QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engine(const QuantLib::ext::shared_ptr<QuantLib::Pool>& pool);
 };
 
 } // namespace data

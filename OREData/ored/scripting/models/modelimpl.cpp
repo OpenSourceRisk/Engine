@@ -32,13 +32,15 @@ namespace data {
 
 using namespace QuantLib;
 
-ModelImpl::ModelImpl(const DayCounter& dayCounter, const Size size, const std::vector<std::string>& currencies,
-                     const std::vector<std::pair<std::string, boost::shared_ptr<InterestRateIndex>>>& irIndices,
-                     const std::vector<std::pair<std::string, boost::shared_ptr<ZeroInflationIndex>>>& infIndices,
-                     const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
-                     const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig)
-    : Model(size), dayCounter_(dayCounter), currencies_(currencies), indexCurrencies_(indexCurrencies),
-      simulationDates_(simulationDates), iborFallbackConfig_(iborFallbackConfig) {
+ModelImpl::ModelImpl(
+    const Type type, const Params& params, const DayCounter& dayCounter, const Size size,
+    const std::vector<std::string>& currencies,
+    const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
+    const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
+    const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
+    const std::set<Date>& simulationDates, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig)
+    : Model(size), type_(type), params_(params), dayCounter_(dayCounter), currencies_(currencies),
+      indexCurrencies_(indexCurrencies), simulationDates_(simulationDates), iborFallbackConfig_(iborFallbackConfig) {
 
     // populate index vectors
 
@@ -145,7 +147,7 @@ RandomVariable ModelImpl::discount(const Date& obsdate, const Date& paydate, con
 namespace {
 struct comp {
     comp(const std::string& indexInput) : indexInput_(indexInput) {}
-    template <typename T> bool operator()(const std::pair<IndexInfo, boost::shared_ptr<T>>& p) const {
+    template <typename T> bool operator()(const std::pair<IndexInfo, QuantLib::ext::shared_ptr<T>>& p) const {
         return p.first.name() == indexInput_;
     }
     const std::string indexInput_;
@@ -153,24 +155,24 @@ struct comp {
 } // namespace
 
 RandomVariable ModelImpl::getInflationIndexFixing(const bool returnMissingFixingAsNull, const std::string& indexInput,
-                                                  const boost::shared_ptr<ZeroInflationIndex>& infIndex,
-                                                  const Size indexNo, const Date& limDate, const Date& obsdate,
+                                                  const QuantLib::ext::shared_ptr<ZeroInflationIndex>& infIndex,
+                                                  const Size indexNo, const Date& effectiveFixingDate, const Date& obsdate,
                                                   const Date& fwddate, const Date& baseDate) const {
     RandomVariable res(size());
-    Real f = infIndex->timeSeries()[limDate];
+    Real historicalFixing = infIndex->timeSeries()[effectiveFixingDate];
     // we exclude historical fixings
     // - which are "impossible" to know (limDate > refDate)
     // - which have to be projected because a fwd date is given and they are later than the obsdate
-    if (f != Null<Real>() && !(limDate > referenceDate()) && (fwddate == Null<Date>() || limDate <= obsdate)) {
-        res = RandomVariable(size(), f);
+    if (historicalFixing != Null<Real>() && !(effectiveFixingDate > referenceDate()) && (fwddate == Null<Date>() || effectiveFixingDate <= obsdate)) {
+        res = RandomVariable(size(), historicalFixing);
     } else {
-        Date effectiveObsDate = std::min(obsdate, limDate);
+        Date effectiveObsDate = std::min(obsdate, effectiveFixingDate);
         if (effectiveObsDate >= baseDate) {
-            res = getInfIndexValue(indexNo, effectiveObsDate, limDate);
+            res = getInfIndexValue(indexNo, effectiveObsDate, effectiveFixingDate);
         } else if (returnMissingFixingAsNull) {
             return RandomVariable();
         } else {
-            QL_FAIL("missing " << indexInput << " fixing for " << QuantLib::io::iso_date(limDate) << " (obsdate="
+            QL_FAIL("missing " << indexInput << " fixing for " << QuantLib::io::iso_date(effectiveFixingDate) << " (obsdate="
                                << QuantLib::io::iso_date(obsdate) << ", fwddate=" << QuantLib::io::iso_date(fwddate)
                                << ", basedate=" << QuantLib::io::iso_date(baseDate) << ")");
         }
@@ -186,7 +188,6 @@ RandomVariable ModelImpl::eval(const std::string& indexInput, const Date& obsdat
     IndexInfo indexInfo(index);
 
     // 1 handle inflation indices
-    QL_DEPRECATED_DISABLE_WARNING
     // Remove in later version, scripts should take care of interpolation
     if (indexInfo.isInf()) {
         auto inf = std::find_if(infIndices_.begin(), infIndices_.end(), comp(indexInput));
@@ -199,20 +200,19 @@ RandomVariable ModelImpl::eval(const std::string& indexInput, const Date& obsdat
             getInflationIndexFixing(returnMissingFixingAsNull, indexInput, inf->second,
                                     std::distance(infIndices_.begin(), inf), lim.first, obsdate, fwddate, baseDate);
         // if the index is not interpolated we are done
-        if (!indexInfo.inf()->interpolated()) {
+        if (!indexInfo.infIsInterpolated()) {
             return indexStart;
         }
-        ALOG("Interpolated Inflation Indices are deprecated, adjust your script to handle interpolation there");
         // otherwise we need to get a second value and interpolate as in ZeroInflationIndex
         RandomVariable indexEnd = getInflationIndexFixing(returnMissingFixingAsNull, indexInput, inf->second,
                                                           std::distance(infIndices_.begin(), inf), lim.second + 1,
                                                           obsdate, fwddate, baseDate);
-        // this is not entirely correct, since we should use the days in the lagged period, but we don't know the lag
+        // this is not entirely correct, since we should use the days in the cashflow inflation period (no lag applied)
+        // but we dont know the lag
         return indexStart +
                (indexEnd - indexStart) * RandomVariable(size(), static_cast<Real>(effectiveFixingDate - lim.first) /
                                                                     static_cast<Real>(lim.second + 1 - lim.first));
     }
-    QL_DEPRECATED_ENABLE_WARNING
     // 2 handle non-inflation indices
 
     // 2a handle historical fixings and today's fixings (if given as a historical fixing)
@@ -232,7 +232,7 @@ RandomVariable ModelImpl::eval(const std::string& indexInput, const Date& obsdat
                 }
             } else {
                 // handle all other cases than ibor fallback indices
-                boost::shared_ptr<Index> idx = indexInfo.index(obsdate);
+                QuantLib::ext::shared_ptr<Index> idx = indexInfo.index(obsdate);
                 Real fixing = Null<Real>();
                 try {
                     fixing = idx->fixing(idx->fixingCalendar().adjust(obsdate, Preceding));

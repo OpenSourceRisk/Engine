@@ -85,7 +85,7 @@ protected:
     Array a_, err_, residuals_, standardErrors_, xMultiplier_, xShift_;
     Real yMultiplier_, yShift_;
     Method method_;
-    boost::shared_ptr<GeneralLinearLeastSquares> glls_;
+    QuantLib::ext::shared_ptr<GeneralLinearLeastSquares> glls_;
 
     template <class xContainer, class yContainer, class vContainer>
     void calculate(
@@ -164,7 +164,7 @@ void StabilisedGLLS::calculate(
         yData[i] = (y[i] + yShift_) * yMultiplier_;
     }
 
-    glls_ = boost::make_shared<GeneralLinearLeastSquares>(xData, yData, v);
+    glls_ = QuantLib::ext::make_shared<GeneralLinearLeastSquares>(xData, yData, v);
 }
 
 template <class xContainer, class yContainer, class vContainer>
@@ -241,7 +241,7 @@ void StabilisedGLLS::calculate(
         yData[i] = (y[i] + yShift_) * yMultiplier_;
     }
 
-    glls_ = boost::make_shared<GeneralLinearLeastSquares>(xData, yData, v);
+    glls_ = QuantLib::ext::make_shared<GeneralLinearLeastSquares>(xData, yData, v);
 }
 
 template <class xType, class vContainer>

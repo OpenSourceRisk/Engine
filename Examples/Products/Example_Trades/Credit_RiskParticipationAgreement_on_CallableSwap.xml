@@ -1,0 +1,109 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="RPA_CALLABLE">
+        <TradeType>RiskParticipationAgreement</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <RiskParticipationAgreementData>
+            <!-- RPA mandatory data -->
+            <ParticipationRate>0.9</ParticipationRate>
+            <ProtectionStart>2023-02-16</ProtectionStart>
+            <ProtectionEnd>2042-04-22</ProtectionEnd>
+            <CreditCurveId>RED:027A8A|SNRFOR|USD|XR14</CreditCurveId>
+            <!-- optional data -->
+            <IssuerId>CompanyXZY</IssuerId>
+            <SettlesAccrual>false</SettlesAccrual>
+            <FixedRecoveryRate>0.15</FixedRecoveryRate>
+            <!-- protection fee, if Payer = true protection is bought, otherwise sold -->
+            <ProtectionFee>
+                <LegData>
+                    <LegType>Cashflow</LegType>
+                    <Payer>true</Payer>
+                    <Currency>USD</Currency>
+                    <CashflowData>
+                        <Cashflow>
+                            <Amount date="2023-04-25">121171.72</Amount>
+                        </Cashflow>
+                    </CashflowData>
+                </LegData>
+            </ProtectionFee>
+            <!-- the underlying callable swap -->
+            <Underlying>
+                <OptionData>
+                    <LongShort>Short</LongShort>
+                    <Style>Bermudan</Style>
+                    <!-- notice date conventions -->
+                    <NoticePeriod>2D</NoticePeriod>
+                    <NoticeConvention>F</NoticeConvention>
+                    <NoticeCalendar>TARGET</NoticeCalendar>
+                    <Settlement>Physical</Settlement>
+                    <ExerciseDates>
+                        <ExerciseDate>2032-04-22</ExerciseDate>
+                        <ExerciseDate>2033-04-22</ExerciseDate>
+                        <ExerciseDate>2034-04-22</ExerciseDate>
+                        <ExerciseDate>2035-04-22</ExerciseDate>
+                        <ExerciseDate>2036-04-22</ExerciseDate>
+                        <ExerciseDate>2037-04-22</ExerciseDate>
+                    </ExerciseDates>
+                </OptionData>
+                <LegData>
+                    <LegType>Floating</LegType>
+                    <Payer>true</Payer>
+                    <Currency>EUR</Currency>
+                    <Notionals>
+                        <Notional>10000000</Notional>
+                    </Notionals>
+                    <DayCounter>A360</DayCounter>
+                    <PaymentConvention>ModifiedFollowing</PaymentConvention>
+                    <FloatingLegData>
+                        <Index>EUR-EURIBOR-3M</Index>
+                        <Spreads>
+                            <Spread>0.0</Spread>
+                        </Spreads>
+                    </FloatingLegData>
+                    <ScheduleData>
+                        <Rules>
+                            <StartDate>2032-04-22</StartDate>
+                            <EndDate>2042-04-22</EndDate>
+                            <Tenor>3M</Tenor>
+                            <Calendar>TARGET</Calendar>
+                            <Convention>ModifiedFollowing</Convention>
+                            <Rule>Forward</Rule>
+                        </Rules>
+                    </ScheduleData>
+                </LegData>
+                <LegData>
+                    <LegType>Fixed</LegType>
+                    <Payer>false</Payer>
+                    <Currency>EUR</Currency>
+                    <Notionals>
+                        <Notional>10000000</Notional>
+                    </Notionals>
+                    <DayCounter>ACT/ACT</DayCounter>
+                    <PaymentConvention>Following</PaymentConvention>
+                    <FixedLegData>
+                        <Rates>
+                            <Rate>0.05</Rate>
+                        </Rates>
+                    </FixedLegData>
+                    <ScheduleData>
+                        <Rules>
+                            <StartDate>2032-04-22</StartDate>
+                            <EndDate>2042-04-22</EndDate>
+                            <Tenor>1Y</Tenor>
+                            <Calendar>TARGET</Calendar>
+                            <Convention>Following</Convention>
+                            <Rule>Forward</Rule>
+                        </Rules>
+                    </ScheduleData>
+                </LegData>
+            </Underlying>
+        </RiskParticipationAgreementData>
+    </Trade>
+</Portfolio>

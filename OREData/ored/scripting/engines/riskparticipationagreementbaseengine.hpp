@@ -32,14 +32,16 @@ namespace data {
 
 using namespace QuantLib;
 
-    class RiskParticipationAgreementBaseEngine : public QuantExt::RiskParticipationAgreement::engine {
+class RiskParticipationAgreementBaseEngine : public QuantExt::RiskParticipationAgreement::engine {
 public:
+    enum class OptionExpiryPosition { Mid, Left };
     RiskParticipationAgreementBaseEngine(const std::string& baseCcy,
                                          const std::map<std::string, Handle<YieldTermStructure>>& discountCurves,
                                          const std::map<std::string, Handle<Quote>>& fxSpots,
                                          const Handle<DefaultProbabilityTermStructure>& defaultCurve,
                                          const Handle<Quote>& recoveryRate, const Size maxGapDays = Null<Size>(),
-                                         const Size maxDiscretizsationPoints = Null<Size>());
+                                         const Size maxDiscretizsationPoints = Null<Size>(),
+                                         const OptionExpiryPosition optionExpiryPosition = OptionExpiryPosition::Mid);
 
     static std::vector<Date> buildDiscretisationGrid(const Date& referenceDate, const Date& protectionStart,
                                                      const Date& protectionEnd, const std::vector<Leg>& underlying,
@@ -57,12 +59,15 @@ protected:
     Handle<DefaultProbabilityTermStructure> defaultCurve_;
     Handle<Quote> recoveryRate_;
     Size maxGapDays_, maxDiscretisationPoints_;
+    OptionExpiryPosition optionExpiryPosition_;
 
     // set by base engine, may be used by derived engines
     mutable std::vector<Date> gridDates_;
     mutable Date referenceDate_;
     mutable Real effectiveRecoveryRate_;
 };
+
+RiskParticipationAgreementBaseEngine::OptionExpiryPosition parseRpaOptionExpiryPosition(const std::string& s);
 
 } // namespace data
 } // namespace ore

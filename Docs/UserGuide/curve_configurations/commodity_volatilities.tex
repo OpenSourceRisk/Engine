@@ -71,7 +71,8 @@ Listing \ref{lst:comm_vol_curve_config} outlines the configuration for the one-d
 The meaning of each of the elements is given below. Elements that were defined for the previous configuration and are common to all of the configurations are not repeated.
 \begin{itemize}
 \item \lstinline!QuoteType! [Optional]: The allowable values in general for \lstinline!QuoteType! are \lstinline!ImpliedVolatility! and \lstinline!Premium!. Currently, only \lstinline!ImpliedVolatility! is supported for commodity volatility curves. This is the default for \lstinline!QuoteType! so this node may be omitted.
-\item \lstinline!VolatilityType! [Optional]: The allowable values in general for \lstinline!VolatilityType! are \lstinline!Lognormal!, \lstinline!ShiftedLognormal! and \lstinline!Normal!. Currently, only \lstinline!Lognormal! is supported for commodity volatility curves. This is the default for \lstinline!VolatilityType! so this node may be omitted.
+\item \lstinline!VolatilityType! [Optional]: The allowable values in general for \lstinline!VolatilityType! are \lstinline!Lognormal!, \lstinline!ShiftedLognormal! and \lstinline!Normal!.
+\lstinline!Normal!, \lstinline!ShiftedLognormal! and \lstinline!Lognormal! are supported for constant and absolute strike surfaces. For all other types only \lstinline!Lognormal! is supported. \lstinline!Lognormal! is the default for \lstinline!VolatilityType! so this node may be omitted.
 \item \lstinline!ExerciseType! [Optional]: This node is described below in the context of surfaces. For commodity volatility curves, it is ignored and should be omitted.
 \item \lstinline!Quotes!: A list of commodity option volatility quotes with different expiries to use in the commodity curve building. The commodity option volatility quotes are explained in Section \ref{md:commodity_option_iv}. As indicated above, any quote string used here much start with \lstinline!COMMODITY_OPTION/RATE_LNVOL!. A single regular expression \lstinline!Quote! is also supported here in place of a list of explicit \lstinline!Quote! strings. Note that if a list of explicit \lstinline!Quote! strings are provided, it is an error to have a duplicated option expiry date. If a regular expression is used, the first quote found is used and subsequent qutoes with the same expiry are discarded with a warning issued.
 \item \lstinline!Interpolation!: The interpolation to use to give volatilities between option expiry times. The allowable values are \lstinline!Linear!, \lstinline!Cubic! and \lstinline!LogLinear!. Note that the interpolation here is on the variance.
@@ -142,7 +143,7 @@ This can be a single wildcard value \lstinline!*! or a comma separated list of e
 This can be a single wildcard value \lstinline!*! or a comma separated list of expiry strings. We explain below how these expiries are combined with the other parameters in the configuration to give a list of commodity option quotes to search for in the market data. Note that as outlined in Section \ref{md:commodity_option_iv}, the \textit{Expiry} portion of the commodity option quote may be an explicit expiry date, an expiry tenor or a continuation expiry of the form \lstinline!cN! explained in the volatility curve section above.
 
 \item \lstinline!TimeInterpolation!:
-Indicates the interpolation in the time direction. There are quite a number of restrictions here. If either \lstinline!Strikes! or \lstinline!Expiries! use the single wildcard value \lstinline!*!, the interpolation in both the time and strike direction is linear regardless of the value passed here in the \lstinline!TimeInterpolation! node. If neither \lstinline!Strikes! nor \lstinline!Expiries! use the single wildcard value \lstinline!*!, \lstinline!TimeInterpolation! may be set to \lstinline!Linear! or \lstinline!Cubic! but \lstinline!StrikeInterpolation! must have the same value. If it does not, then \lstinline!Linear! is used for both. In other words, if neither \lstinline!Strikes! nor \lstinline!Expiries! use the single wildcard value \lstinline!*!, we can configure bilinear or bicubic interpolation. Again, in all cases, the interpolation is carried out on the variance.
+Indicates the interpolation in the time direction. The allowable values for \lstinline!TimeInterpolation! are \lstinline!Linear!, \lstinline!Cubic! and \lstinline!BackwardFlat!. If neither \lstinline!Strikes! nor \lstinline!Expiries! use the single wildcard value \lstinline!*!, \lstinline!TimeInterpolation! and \lstinline!StrikeInterpolation! must have the same value. If it does not, then \lstinline!Linear! is used for both. In other words, if neither \lstinline!Strikes! nor \lstinline!Expiries! use the single wildcard value \lstinline!*!, we can configure bilinear or bicubic interpolation. If either \lstinline!Strikes! or \lstinline!Expiries! use the single wildcard value \lstinline!*!, \lstinline!TimeInterpolation! and \lstinline!StrikeInterpolation! can be different. For backward compatibility, if either \lstinline!Strikes! or \lstinline!Expiries! use the single wildcard value \lstinline!*!, \lstinline!TimeInterpolation! and \lstinline!StrikeInterpolation! will use Linear as default value or when input values are not in allowable list. Again, in all cases, the interpolation is carried out on the variance.
 
 \item \lstinline!StrikeInterpolation!:
 Indicates the interpolation in the strike direction. The requirements are exactly as outlined for the \lstinline!TimeInterpolation! node.
@@ -151,8 +152,30 @@ Indicates the interpolation in the strike direction. The requirements are exactl
 A boolean value indicating if extrapolation is allowed.
 
 \item \lstinline!TimeExtrapolation!:
-Indicates the extrapolation in the time direction. The allowable values are \lstinline!None!, \lstinline!UseInterpolator!, \lstinline!Linear! and \lstinline!Flat!. If neither \lstinline!Strikes! nor \lstinline!Expiries! use the single wildcard value \lstinline!*!, the extrapolation in the time direction is flat regardless of the value passed here. If either \lstinline!Strikes! or \lstinline!Expiries! use the single wildcard value \lstinline!*!, both \lstinline!Flat! and \lstinline!None! give flat extrapolation in the time direction whereas \lstinline!UseInterpolator! and \lstinline!Linear! indicate that the configured interpolation (linear or cubic) should be continued in the time direction in order to extrapolate. \lstinline!Linear! is only allowable here for backward compatibility and \lstinline!UseInterpolator! should be preferred for clarity.
+Defines how to extrapolate in the time direction. Allowed values are:
+  \begin{itemize}
+    \item \lstinline!None!: No extrapolation.
+    \item \lstinline!Flat!: Keeps the volatility constant beyond the known range.
+    \item \lstinline!UseInterpolator!: Extends the configured interpolation (linear or cubic) into the extrapolated range.
+    \item \lstinline!Linear!: Legacy identifier and falls back to \lstinline!UseInterpolator!, but only for backward compatibility. Prefer \lstinline!UseInterpolator! for clarity.
+  \end{itemize}
+  Notes:
+  \begin{itemize}
+    \item Variance extrapolation works with linear and cubic interpolation.
+    \item Volatility extrapolation only works with linear interpolation.
+  \end{itemize}
 
+\item \lstinline!TimeExtrapolationVariance!:
+Specifies whether to extrapolate variance or volatility in the time direction. Allowed values are:
+  \begin{itemize}
+    \item \lstinline!True!: Extrapolates variance (default if omitted).
+    \item \lstinline!False!: Extrapolates volatility.
+  \end{itemize}
+  Notes:
+  \begin{itemize}
+    \item Ignored if \lstinline!TimeExtrapolation! is set to \lstinline!Flat!.
+    \item Volatility extrapolation in time works only with linear interpolation.
+  \end{itemize}
 \item \lstinline!StrikeExtrapolation!:
 Indicates the extrapolation in the strike direction. The allowable values are \lstinline!None!, \lstinline!UseInterpolator!, \lstinline!Linear! and \lstinline!Flat!. Both \lstinline!Flat! and \lstinline!None! give flat extrapolation in the strike direction. \lstinline!UseInterpolator! and \lstinline!Linear! indicate that the configured interpolation (linear or cubic) should be continued in the strike direction in order to extrapolate. \lstinline!Linear! is only allowable here for backward compatibility and \lstinline!UseInterpolator! should be preferred for clarity.
 
@@ -234,8 +257,25 @@ Only \lstinline!Linear! is currently supported here.
 A boolean value indicating if extrapolation is allowed.
 
 \item \lstinline!TimeExtrapolation!:
-Only \lstinline!Flat! is currently supported here giving flat extrapolation of the volatility.
+Defines how to extrapolate in the time direction. Allowed values are:
+  \begin{itemize}
+    \item \lstinline!None!: No extrapolation.
+    \item \lstinline!Flat!: Keeps the volatility constant beyond the known range.
+    \item \lstinline!UseInterpolator!: Extends the configured interpolation (linear) into the extrapolated range.
+    \item \lstinline!Linear!: Legacy identifier and falls back to \lstinline!UseInterpolator!, but only for backward compatibility. Prefer \lstinline!UseInterpolator! for clarity.
+  \end{itemize}
 
+\item \lstinline!TimeExtrapolationVariance!:
+Specifies whether to extrapolate variance or volatility in the time direction. Allowed values are:
+  \begin{itemize}
+    \item \lstinline!True!: Extrapolates variance (default if omitted).
+    \item \lstinline!False!: Extrapolates volatility.
+  \end{itemize}
+  Notes:
+  \begin{itemize}
+    \item Ignored if \lstinline!TimeExtrapolation! is set to \lstinline!Flat!.
+    \item Volatility extrapolation in time works only with linear interpolation.
+  \end{itemize}
 \item \lstinline!StrikeExtrapolation!:
 Indicates the extrapolation in the strike direction. The allowable values are \lstinline!None!, \lstinline!UseInterpolator!, \lstinline!Linear! and \lstinline!Flat!. Both \lstinline!Flat! and \lstinline!None! give flat extrapolation in the strike direction. \lstinline!UseInterpolator! and \lstinline!Linear! indicate that the configured interpolation (linear) should be continued in the strike direction in order to extrapolate.
 
@@ -301,10 +341,10 @@ The allowable supported values are \lstinline!AtmSpot!, \lstinline!AtmFwd! and \
 This is only needed if the \lstinline!AtmType! is \lstinline!AtmDeltaNeutral!.
 
 \item \lstinline!PutDeltas!:
-A comma separated list of one or more put deltas to use in the volatility surface. Note that the put deltas should be given without a sign e.g.\ \lstinline!<PutDeltas>0.10,0.20,0.30,0.40</PutDeltas>! would be an example.
+A comma separated list of one or more put deltas to use in the volatility surface. Note that the put deltas should be given without a sign e.g.\ \lstinline!<PutDeltas>0.10,0.20,0.30,0.40</PutDeltas>! would be an example. The delta should match exactly the quote i.e 0.1 != 0.10
 
 \item \lstinline!CallDeltas!:
-A comma separated list of one or more call deltas to use in the volatility surface.
+A comma separated list of one or more call deltas to use in the volatility surface. The delta should match exactly the quote i.e 0.1 != 0.10
 
 \item \lstinline!Expiries!:
 A comma separated list of one or more expiries (e.g. 1W, 1M) to load. Supports using the single wildcard value \lstinline!*!.
@@ -319,7 +359,25 @@ Allowable values are \lstinline!Linear!, \lstinline!NaturalCubic!, \lstinline!Fi
 A boolean value indicating if extrapolation is allowed.
 
 \item \lstinline!TimeExtrapolation!:
-Only \lstinline!Flat! is currently supported here giving flat extrapolation of the volatility.
+Defines how to extrapolate in the time direction. Allowed values are:
+  \begin{itemize}
+    \item \lstinline!None!: No extrapolation.
+    \item \lstinline!Flat!: Keeps the volatility constant beyond the known range.
+    \item \lstinline!UseInterpolator!: Extends the configured interpolation (linear) into the extrapolated range.
+    \item \lstinline!Linear!: Legacy identifier and falls back to \lstinline!UseInterpolator!, but only for backward compatibility. Prefer \lstinline!UseInterpolator! for clarity.
+  \end{itemize}
+
+\item \lstinline!TimeExtrapolationVariance!:
+Specifies whether to extrapolate variance or volatility in the time direction. Allowed values are:
+  \begin{itemize}
+    \item \lstinline!True!: Extrapolates variance (default if omitted).
+    \item \lstinline!False!: Extrapolates volatility.
+  \end{itemize}
+  Notes:
+  \begin{itemize}
+    \item Ignored if \lstinline!TimeExtrapolation! is set to \lstinline!Flat!.
+    \item Volatility extrapolation in time works only with linear interpolation.
+  \end{itemize}
 
 \item \lstinline!StrikeExtrapolation!:
 Indicates the extrapolation in the strike direction. The allowable values are \lstinline!None!, \lstinline!UseInterpolator!, \lstinline!Linear! and \lstinline!Flat!. Both \lstinline!Flat! and \lstinline!None! give flat extrapolation in the strike direction. \lstinline!UseInterpolator! and \lstinline!Linear! indicate that the configured interpolation should be continued in the strike direction in order to extrapolate.
@@ -334,7 +392,7 @@ This is required for a delta surface.
 
 Note that, similar to the procedure outlined above for the absolute strike surface, quote strings are created from the configuration to be looked up in the market. For the put deltas, quote strings of the form \lstinline!COMMODITY_OPTION/RATE_LNVOL/{N}/{C}/e_n/DEL/{T}/Put/d_m! are created. Here, \lstinline!d_m! are the \lstinline!PutDeltas! and \lstinline!{T}! is the delta type i.e.\ either \lstinline!Spot! or \lstinline!Fwd!. Similarly for the call deltas, quote strings of the form \lstinline!COMMODITY_OPTION/RATE_LNVOL/{N}/{C}/e_n/DEL/{T}/Call/d_j! are created where \lstinline!d_j! are the \lstinline!CallDeltas!. For ATM, quote strings of the form \lstinline!COMMODITY_OPTION/RATE_LNVOL/{N}/{C}/e_n/DEL/ATM/{A}[/DEL/{T}]! are created where \lstinline!{A}! is the \lstinline!AtmType! i.e.\ \lstinline!AtmSpot!, \lstinline!AtmFwd! or \lstinline!AtmDeltaNeutral! and \lstinline!{T}! is the optional delta type.
 
-Also, it is worth adding a note here on the interpolation for a delta based surface. Assume we want the volatility at time $t$ and absolute strike $s$ i.e. at the $(t, s)$ node. For the maturity time $t$, a delta "slice" i.e. a set of (delta, vol) pairs for that time $t$, is obtained by interpolating, or extrapolating, the variance in the time direction on each delta column. Then for each (delta, vol) pair at time $t$, an absolute strike value is deduced to give a slice at time $t$ in terms of absolute strike i.e. a set of (strike, vol) pairs at time $t$. This strike versus volatility curve is then interpolated, or extrapolated, to give the vol at the $(t, s)$.
+Also, it is worth adding a note here on the interpolation for a delta based surface. Assume we want the volatility at time $t$ and absolute strike $s$ i.e. at the $(t, s)$ node. For the maturity time $t$, a delta ``slice'' i.e. a set of (delta, vol) pairs for that time $t$, is obtained by interpolating, or extrapolating, the variance in the time direction on each delta column. Then for each (delta, vol) pair at time $t$, an absolute strike value is deduced to give a slice at time $t$ in terms of absolute strike i.e. a set of (strike, vol) pairs at time $t$. This strike versus volatility curve is then interpolated, or extrapolated, to give the vol at the $(t, s)$.
 
 Listing \ref{lst:comm_vol_apo_surface_config} outlines the configuration for the APO volatility surface. This currently only supports a \lstinline!QuoteType! of \lstinline!ImpliedVolatility! and \lstinline!VolatilityType! must be \lstinline!Lognormal!. This configuration takes a base commodity volatility surface and builds a surface that can be queried for volatilities to price APOs directly i.e.\ using the volatility directly in a Black 76 formula along with the average future price. It uses the approach described in the Section entitled \textit{Commodity Average Price Option - Future Settlement Prices} in the Product Catalogue to go from future option volatilities to APO volatilities.
 
@@ -386,8 +444,26 @@ The ID of an existing commodity price curve for the future settlement price refe
 \item \lstinline!FutureConventions!:
 This ID of the commodity future conventions for the future settlement price referenced in the APOs used in the generation of the volatilities for this surface.
 
-\item \lstinline!TimeInterpolation!:
-Only \lstinline!Linear! is currently supported here. Note that the interpolation is in terms of variance.
+\item \lstinline!TimeExtrapolation!:
+Defines how to extrapolate in the time direction. Allowed values are:
+  \begin{itemize}
+    \item \lstinline!None!: No extrapolation.
+    \item \lstinline!Flat!: Keeps the volatility constant beyond the known range.
+    \item \lstinline!UseInterpolator!: Extends the configured interpolation (linear) into the extrapolated range.
+    \item \lstinline!Linear!: Legacy identifier and falls back to \lstinline!UseInterpolator!, but only for backward compatibility. Prefer \lstinline!UseInterpolator! for clarity.
+  \end{itemize}
+
+\item \lstinline!TimeExtrapolationVariance!:
+Specifies whether to extrapolate variance or volatility in the time direction. Allowed values are:
+  \begin{itemize}
+    \item \lstinline!True!: Extrapolates variance (default if omitted).
+    \item \lstinline!False!: Extrapolates volatility.
+  \end{itemize}
+  Notes:
+  \begin{itemize}
+    \item Ignored if \lstinline!TimeExtrapolation! is set to \lstinline!Flat!.
+    \item Volatility extrapolation in time works only with linear interpolation.
+  \end{itemize}
 
 \item \lstinline!StrikeInterpolation!:
 Only \lstinline!Linear! is supported here. Note that the interpolation is in terms of variance.

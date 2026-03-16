@@ -29,7 +29,7 @@ using namespace QuantLib;
 namespace QuantExt {
 
 SubPeriodsCoupon1::SubPeriodsCoupon1(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate,
-                                     const boost::shared_ptr<InterestRateIndex>& index, Type type,
+                                     const QuantLib::ext::shared_ptr<InterestRateIndex>& index, Type type,
                                      BusinessDayConvention convention, Spread spread, const DayCounter& dayCounter,
                                      bool includeSpread, Real gearing)
     : FloatingRateCoupon(paymentDate, nominal, startDate, endDate, index->fixingDays(), index, gearing, spread, Date(),
@@ -63,6 +63,9 @@ SubPeriodsCoupon1::SubPeriodsCoupon1(const Date& paymentDate, Real nominal, cons
     for (Size i = 0; i < numPeriods_; ++i) {
         accrualFractions_[i] = dayCounter.yearFraction(valueDates_[i], valueDates_[i + 1]);
     }
+
+    // set fixing end date
+    fixingEndDate_ = index_->maturityDate(*std::next(valueDates_.end(), -2));
 }
 
 const std::vector<Rate>& SubPeriodsCoupon1::indexFixings() const {
@@ -85,7 +88,9 @@ void SubPeriodsCoupon1::accept(AcyclicVisitor& v) {
     }
 }
 
-SubPeriodsLeg1::SubPeriodsLeg1(const Schedule& schedule, const boost::shared_ptr<InterestRateIndex>& index)
+const Date& SubPeriodsCoupon1::fixingEndDate() const { return fixingEndDate_; }
+
+SubPeriodsLeg1::SubPeriodsLeg1(const Schedule& schedule, const QuantLib::ext::shared_ptr<InterestRateIndex>& index)
     : schedule_(schedule), index_(index), notionals_(std::vector<Real>(1, 1.0)), paymentAdjustment_(Following),
       paymentCalendar_(Calendar()), type_(SubPeriodsCoupon1::Compounding) {}
 
@@ -173,7 +178,7 @@ SubPeriodsLeg1::operator Leg() const {
         // of identifying it except parsing the exception text, which isn't a
         // clean solution either
         try {
-            boost::shared_ptr<SubPeriodsCoupon1> cashflow(
+            QuantLib::ext::shared_ptr<SubPeriodsCoupon1> cashflow(
                 new SubPeriodsCoupon1(paymentDate, detail::get(notionals_, i, notionals_.back()), startDate, endDate,
                                      index_, type_, paymentAdjustment_, detail::get(spreads_, i, 0.0),
                                      paymentDayCounter_, includeSpread_, detail::get(gearings_, i, 1.0)));
@@ -184,7 +189,7 @@ SubPeriodsLeg1::operator Leg() const {
         }
     }
 
-    boost::shared_ptr<SubPeriodsCouponPricer1> pricer(new SubPeriodsCouponPricer1);
+    QuantLib::ext::shared_ptr<SubPeriodsCouponPricer1> pricer(new SubPeriodsCouponPricer1);
     QuantExt::setCouponPricer(cashflows, pricer);
 
     return cashflows;

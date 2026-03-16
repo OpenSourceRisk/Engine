@@ -35,8 +35,14 @@ A Forward Bond is set up using a {\tt ForwardBondData} block as shown below and 
        \item Settlement [Optional]: Cash or Physical. Option, defaults to Physcial, except in case the settlement is
          defined by LockRate, in which case it defaults to Cash. \\
          Allowable values: Cash, Physical
-       \item Amount [Optional]: The settlement amount (also called strike) transferred at forward maturity in return for
-         the bond (physical delivery) or a cash amount equal to the dirty price of the bond (cash settlement). This is
+       \item Amount [Optional]: The settlement amount (also called strike) transferred at forward maturity in return for either:\\
+       \begin{sloppypar}  
+       (a) the bond (physical delivery) or \\
+       \end{sloppypar} 
+       \begin{sloppypar} 
+         (b) a cash amount equal to the dirty price of the bond (cash settlement). \\
+        \end{sloppypar} 
+         This is
          transferred from the party that is long to the party that is short (determined by \lstinline!LongInForward!)
          and cannot be a negative amount. It is assumed to be in the same currency as the underlying bond. Exactly one
          of the fields Amount, LockRate must be given. \\

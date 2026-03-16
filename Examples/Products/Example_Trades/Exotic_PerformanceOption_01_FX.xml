@@ -1,0 +1,51 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="FX_PERFORMANCEOPTION_01">
+        <TradeType>PerformanceOption_01</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <PerformanceOption01Data>
+            <NotionalAmount>62500000</NotionalAmount>
+            <ParticipationRate>1.0</ParticipationRate>
+            <ValuationDate>2027-06-15</ValuationDate>
+            <SettlementDate>2027-06-17</SettlementDate>
+            <Underlyings>
+                <Underlying>
+                    <Type>FX</Type>
+                    <Name>TR20H-CHF-EUR</Name>
+                    <Weight>0.34</Weight>
+                </Underlying>
+                <Underlying>
+                    <Type>FX</Type>
+                    <Name>TR20H-NOK-EUR</Name>
+                    <Weight>0.32</Weight>
+                </Underlying>
+                <Underlying>
+                    <Type>FX</Type>
+                    <Name>TR20H-SEK-EUR</Name>
+                    <Weight>0.24</Weight>
+                </Underlying>
+                <Underlying>
+                    <Type>FX</Type>
+                    <Name>TR20H-CZK-EUR</Name>
+                    <Weight>0.10</Weight>
+                </Underlying>
+            </Underlyings>
+            <StrikePrices>
+                <StrikePrice>0.900185</StrikePrice>
+                <StrikePrice>0.098095</StrikePrice>
+                <StrikePrice>0.097085</StrikePrice>
+                <StrikePrice>0.036047</StrikePrice>
+            </StrikePrices>
+            <Strike>1.1</Strike>
+            <Position>Long</Position>
+            <PayCcy>EUR</PayCcy>
+        </PerformanceOption01Data>
+    </Trade>
+</Portfolio>

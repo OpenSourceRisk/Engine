@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <ql/experimental/fx/deltavolquote.hpp>
+#include <ql/quotes/deltavolquote.hpp>
 #include <ql/option.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 
@@ -33,12 +33,12 @@ using namespace QuantLib;
 
 // get a strike from a delta on an existing vol smile
 Real getStrikeFromDelta(Option::Type optionType, Real delta, DeltaVolQuote::DeltaType dt, Real spot, Real domDiscount,
-                        Real forDiscount, boost::shared_ptr<BlackVolTermStructure> vol, Real t, Real accuracy = 1E-6,
-                        Size maxIterations = 1000);
+                        Real forDiscount, QuantLib::ext::shared_ptr<BlackVolTermStructure> vol, Real t,
+                        Real accuracy = 1E-6);
 
 // get an atm strike on an existing vol smile
 Real getAtmStrike(DeltaVolQuote::DeltaType dt, DeltaVolQuote::AtmType at, Real spot, Real domDiscount, Real forDiscount,
-                  boost::shared_ptr<BlackVolTermStructure> vol, Real t, Real accuracy = 1E-6,
+                  QuantLib::ext::shared_ptr<BlackVolTermStructure> vol, Real t, Real accuracy = 1E-6,
                   Size maxIterations = 1000);
 
 } // namespace QuantExt

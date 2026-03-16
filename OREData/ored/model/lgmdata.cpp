@@ -17,6 +17,7 @@
 */
 
 #include <ored/model/lgmdata.hpp>
+#include <ored/model/modelparameter.hpp>
 #include <ored/utilities/correlationmatrix.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -69,9 +70,9 @@ LgmData::ReversionType parseReversionType(const string& s) {
 
 std::ostream& operator<<(std::ostream& oss, const LgmData::ReversionType& type) {
     if (type == LgmData::ReversionType::HullWhite)
-        oss << "HULLWHITE";
+        oss << "HullWhite";
     else if (type == LgmData::ReversionType::Hagan)
-        oss << "HAGAN";
+        oss << "Hagan";
     else
         QL_FAIL("Reversion type not covered");
     return oss;
@@ -88,12 +89,23 @@ LgmData::VolatilityType parseVolatilityType(const string& s) {
 
 std::ostream& operator<<(std::ostream& oss, const LgmData::VolatilityType& type) {
     if (type == LgmData::VolatilityType::HullWhite)
-        oss << "HULLWHITE";
+        oss << "HullWhite";
     else if (type == LgmData::VolatilityType::Hagan)
-        oss << "HAGAN";
+        oss << "Hagan";
     else
         QL_FAIL("Volatility type not covered");
     return oss;
+}
+
+QuantExt::AnalyticLgmSwaptionEngine::FloatSpreadMapping parseFloatSpreadMapping(const string& s) {
+    if (boost::algorithm::to_upper_copy(s) == "NEXTCOUPON")
+        return QuantExt::AnalyticLgmSwaptionEngine::FloatSpreadMapping::nextCoupon;
+    else if (boost::algorithm::to_upper_copy(s) == "PRORATA")
+        return QuantExt::AnalyticLgmSwaptionEngine::FloatSpreadMapping::proRata;
+    else if (boost::algorithm::to_upper_copy(s) == "SIMPLE")
+        return QuantExt::AnalyticLgmSwaptionEngine::FloatSpreadMapping::simple;
+    else
+        QL_FAIL("FloatSpreadMapping '" << s << "' not recognized");
 }
 
 void LgmData::clear() {
@@ -116,7 +128,6 @@ void LgmData::reset() {
     aValues_ = {0.01};
     shiftHorizon_ = 0.0;
     scaling_ = 1.0;
-    
 }
 
 void LgmData::fromXML(XMLNode* node) {
@@ -173,6 +184,9 @@ void LgmData::fromXML(XMLNode* node) {
         scaling_ = 1.0;
     }
 
+    floatSpreadMapping_ =
+        parseFloatSpreadMapping(XMLUtils::getChildValue(node, "FloatSpreadMapping", false, "proRata"));
+
     IrModelData::fromXML(node);
 
     LOG("LgmData done");
@@ -209,22 +223,27 @@ XMLNode* LgmData::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, parameterTransformationNode, "ShiftHorizon", shiftHorizon_);
     XMLUtils::addChild(doc, parameterTransformationNode, "Scaling", scaling_);
 
+    XMLUtils::addChild(doc, lgmNode, "FloatSpreadMapping", to_string(floatSpreadMapping_));
+    
     return lgmNode;
 }
 
-LgmReversionTransformation::LgmReversionTransformation()
-    : horizon_(0.0), scaling_(1.0) {}
+ReversionParameter LgmData::reversionParameter() const {
+    return ReversionParameter(revType_, calibrateH_, hType_, hTimes_, hValues_);
+}
+
+VolatilityParameter LgmData::volatilityParameter() const {
+    return VolatilityParameter(volType_, calibrateA_, aType_, aTimes_, aValues_);
+}
+
+LgmReversionTransformation::LgmReversionTransformation() : horizon_(0.0), scaling_(1.0) {}
 
 LgmReversionTransformation::LgmReversionTransformation(Time horizon, Real scaling)
     : horizon_(horizon), scaling_(scaling) {}
 
-Time LgmReversionTransformation::horizon() const {
-    return horizon_;
-}
+Time LgmReversionTransformation::horizon() const { return horizon_; }
 
-Real LgmReversionTransformation::scaling() const {
-    return scaling_;
-}
+Real LgmReversionTransformation::scaling() const { return scaling_; }
 
 void LgmReversionTransformation::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "ParameterTransformation");

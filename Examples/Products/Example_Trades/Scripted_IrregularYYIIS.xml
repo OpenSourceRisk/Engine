@@ -1,0 +1,94 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="Irregular_YoY">
+        <TradeType>ScriptedTrade</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <IrregularYYIISData>
+            <Notional type="number">10000000</Notional>
+            <PayCurrency type="currency">EUR</PayCurrency>
+            <IborLegDayCounter type="dayCounter">ACT/360</IborLegDayCounter>
+            <IborSpread type="number">0.0070</IborSpread>
+            <IborIndex type="index">EUR-EURIBOR-6M</IborIndex>
+            <PayIborLeg type="bool">true</PayIborLeg>
+            <IborLegSchedule type="event">
+                <ScheduleData>
+                    <Rules>
+                        <StartDate>2025-01-04</StartDate>
+                        <EndDate>2030-01-04</EndDate>
+                        <Tenor>6M</Tenor>
+                        <Calendar>TARGET</Calendar>
+                        <Convention>ModifiedFollowing</Convention>
+                        <Rule>Forward</Rule>
+                    </Rules>
+                </ScheduleData>
+            </IborLegSchedule>
+            <IborLegFixingSchedule type="event">
+                <DerivedSchedule>
+                    <BaseSchedule>IborLegSchedule</BaseSchedule>
+                    <Shift>-2D</Shift>
+                    <Calendar>TARGET</Calendar>
+                    <Convention>ModifiedFollowing</Convention>
+                </DerivedSchedule>
+            </IborLegFixingSchedule>
+            <InflationLeg1_DayCounter type="dayCounter">1/1</InflationLeg1_DayCounter>
+            <InflationLeg1_CPI type="index">EUHICPXT</InflationLeg1_CPI>
+            <InflationLeg1_Schedule type="event">
+                <ScheduleData>
+                    <Rules>
+                        <StartDate>2025-01-04</StartDate>
+                        <EndDate>2030-01-04</EndDate>
+                        <Tenor>6M</Tenor>
+                        <Calendar>TARGET</Calendar>
+                        <Convention>ModifiedFollowing</Convention>
+                        <Rule>Forward</Rule>
+                    </Rules>
+                </ScheduleData>
+            </InflationLeg1_Schedule>
+            <InflationLeg1_Gearing type="number">0.00125</InflationLeg1_Gearing>
+            <InflationLeg1_Floor type="number">0</InflationLeg1_Floor>
+            <InflationLeg1_InitialCPI type="number">105.1</InflationLeg1_InitialCPI>
+            <InflationLeg1_SubtractNotional type="bool">false</InflationLeg1_SubtractNotional>
+            <InflationLeg1_FixingSchedule type="event">
+                <DerivedSchedule>
+                    <BaseSchedule>InflationLeg1_Schedule</BaseSchedule>
+                    <Shift>-3M</Shift>
+                    <Calendar>TARGET</Calendar>
+                    <Convention>ModifiedFollowing</Convention>
+                </DerivedSchedule>
+            </InflationLeg1_FixingSchedule>
+            <InflationLeg2_DayCounter type="dayCounter">1/1</InflationLeg2_DayCounter>
+            <InflationLeg2_CPI type="index">EUHICPXT</InflationLeg2_CPI>
+            <InflationLeg2_Schedule type="event">
+                <ScheduleData>
+                    <Rules>
+                        <StartDate>2025-01-04</StartDate>
+                        <EndDate>2030-01-04</EndDate>
+                        <Tenor>6M</Tenor>
+                        <Calendar>TARGET</Calendar>
+                        <Convention>ModifiedFollowing</Convention>
+                        <Rule>Forward</Rule>
+                    </Rules>
+                </ScheduleData>
+            </InflationLeg2_Schedule>
+            <InflationLeg2_Gearing type="number">1</InflationLeg2_Gearing>
+            <InflationLeg2_Floor type="number">0</InflationLeg2_Floor>
+            <InflationLeg2_InitialCPI type="number">105.1</InflationLeg2_InitialCPI>
+            <InflationLeg2_SubtractNotional type="bool">true</InflationLeg2_SubtractNotional>
+            <InflationLeg2_FixingSchedule type="event">
+                <DerivedSchedule>
+                    <BaseSchedule>InflationLeg2_Schedule</BaseSchedule>
+                    <Shift>-3M</Shift>
+                    <Calendar>TARGET</Calendar>
+                    <Convention>ModifiedFollowing</Convention>
+                </DerivedSchedule>
+            </InflationLeg2_FixingSchedule>
+        </IrregularYYIISData>
+    </Trade>
+</Portfolio>

@@ -28,7 +28,7 @@
 namespace ore {
 namespace data {
 
-boost::shared_ptr<FloatingRateCouponPricer>
+QuantLib::ext::shared_ptr<FloatingRateCouponPricer>
 CapFlooredOvernightIndexedCouponLegEngineBuilder::engineImpl(const std::string& index,
                                                              const QuantLib::Period& rateComputationPeriod) {
     std::string ccyCode = parseIborIndex(index)->currency().code();
@@ -42,13 +42,13 @@ CapFlooredOvernightIndexedCouponLegEngineBuilder::engineImpl(const std::string& 
         market_->capFloorVolIndexBase(index, configuration(MarketContext::pricing));
     if (volIndex == index && volRateComputationPeriod != rateComputationPeriod &&
         volRateComputationPeriod != 0 * Days && rateComputationPeriod != 0 * Days) {
-        ovs = Handle<OptionletVolatilityStructure>(boost::make_shared<QuantExt::ProxyOptionletVolatility>(
+        ovs = Handle<OptionletVolatilityStructure>(QuantLib::ext::make_shared<QuantExt::ProxyOptionletVolatility>(
             ovs, *market_->iborIndex(volIndex, configuration(MarketContext::pricing)),
             *market_->iborIndex(index, configuration(MarketContext::pricing)), volRateComputationPeriod,
             rateComputationPeriod));
     }
 
-    return boost::make_shared<QuantExt::BlackOvernightIndexedCouponPricer>(ovs);
+    return QuantLib::ext::make_shared<QuantExt::BlackOvernightIndexedCouponPricer>(ovs);
 }
 
 string CapFlooredOvernightIndexedCouponLegEngineBuilder::keyImpl(const string& index,

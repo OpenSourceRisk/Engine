@@ -45,13 +45,13 @@ public:
     //! Detailed constructor
     CpiCapFloor(QuantLib::CapFloor::Type type,
         const boost::variant<QuantLib::Date, QuantLib::Period> & maturity,
-        const boost::shared_ptr<BaseStrike>& strike);
+        const QuantLib::ext::shared_ptr<BaseStrike>& strike);
 
     //! \name Inspectors
     //@{
     QuantLib::CapFloor::Type type() const;
     const boost::variant<QuantLib::Date, QuantLib::Period>& maturity() const;
-    const boost::shared_ptr<BaseStrike>& strike() const;
+    const QuantLib::ext::shared_ptr<BaseStrike>& strike() const;
     //@}
 
     //! \name Serialisation
@@ -63,7 +63,7 @@ public:
 private:
     QuantLib::CapFloor::Type type_;
     boost::variant<QuantLib::Date, QuantLib::Period> maturity_;
-    boost::shared_ptr<BaseStrike> strike_;
+    QuantLib::ext::shared_ptr<BaseStrike> strike_;
 };
 
 } // namespace data

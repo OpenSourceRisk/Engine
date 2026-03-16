@@ -31,6 +31,7 @@
 #include <qle/models/crossassetmodel.hpp>
 
 #include <ql/processes/blackscholesprocess.hpp>
+#include <ql/processes/hestonprocess.hpp>
 
 namespace ore {
 namespace data {
@@ -41,25 +42,28 @@ public:
     ScriptedTradeEngineBuilder() : EngineBuilder("Generic", "Generic", {"ScriptedTrade"}) {}
 
     //! constructor that builds an AMC - enabled pricing engine
-    ScriptedTradeEngineBuilder(const boost::shared_ptr<QuantExt::CrossAssetModel>& amcCam,
-                               const std::vector<Date>& amcGrid)
+    ScriptedTradeEngineBuilder(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& amcCam,
+                               const std::vector<Date>& amcSimDates, const std::vector<Date>& amcStickyCloseOutDates)
         : EngineBuilder("Generic", "Generic", {"ScriptedTrade"}), buildingAmc_(true), amcCam_(amcCam),
-          amcGrid_(amcGrid) {}
+          amcSimDates_(amcSimDates), amcStickyCloseOutDates_(amcStickyCloseOutDates) {}
 
     //! constructor that builds an AMCCG pricing engine
-    ScriptedTradeEngineBuilder(const boost::shared_ptr<ore::data::ModelCG>& amcCgModel,
-                               const std::vector<Date>& amcGrid)
-        : EngineBuilder("Generic", "Generic", {"ScriptedTrade"}), buildingAmc_(true), amcCgModel_(amcCgModel),
-          amcGrid_(amcGrid) {}
+    ScriptedTradeEngineBuilder(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& amcCgModel,
+                               const std::vector<Date>& amcSimDates)
+        : EngineBuilder("Generic", "Generic", {"ScriptedTrade"}), buildingAmcCg_(true), amcCgModel_(amcCgModel),
+          amcSimDates_(amcSimDates) {}
 
-    boost::shared_ptr<QuantExt::ScriptedInstrument::engine>
+    QuantLib::ext::shared_ptr<QuantExt::ScriptedInstrument::engine>
     engine(const std::string& id, const ScriptedTrade& scriptedTrade,
-           const boost::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr,
-           const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig());
+           const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr,
+           const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
+               QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()));
 
     // these are guaranteed to be set only after engine() was called
     const std::string& npvCurrency() const { return model_ ? model_->baseCcy() : modelCG_->baseCcy(); }
     const QuantLib::Date& lastRelevantDate() const { return lastRelevantDate_; }
+    const std::string& lastRelevantDateType() const { return lastRelevantDateType_; }
+    bool includePastCashflows() const { return includePastCashflows_; }
     const std::string& simmProductClass() const { return simmProductClass_; }
     const std::string& scheduleProductClass() const { return scheduleProductClass_; }
     const std::string& sensitivityTemplate() const { return sensitivityTemplate_; }
@@ -69,14 +73,14 @@ protected:
     // hook for correlation retrieval - by default the correlation for a pair of indices is queried from the market
     // other implementations might want to estimate the correlation on the fly based on historical data
     virtual QuantLib::Handle<QuantExt::CorrelationTermStructure> correlationCurve(const std::string& index1,
-                                                                                  const std::string& index2);
+                                                                                  const std::string& index2) const;
 
     // sub tasks for engine building
     void clear();
-    void extractIndices(const boost::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr);
+    void extractIndices(const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr);
     void deriveProductClass(const std::vector<ScriptedTradeValueTypeData>& indices);
     void populateModelParameters();
-    void populateFixingsMap(const IborFallbackConfig& iborFallbackConfig);
+    void populateFixingsMap(const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig);
     void extractPayCcys();
     void determineBaseCcy();
     void compileModelCcyList();
@@ -86,18 +90,30 @@ protected:
     virtual void setupBlackScholesProcesses(); // hook for custom building of processes
     void setupIrReversions();
     void compileSimulationAndAddDates();
-    void buildBlackScholes(const std::string& id, const IborFallbackConfig& iborFallbackConfig);
-    void buildFdBlackScholes(const std::string& id, const IborFallbackConfig& iborFallbackConfig);
-    void buildLocalVol(const std::string& id, const IborFallbackConfig& iborFallbackConfig);
-    void buildGaussianCam(const std::string& id, const IborFallbackConfig& iborFallbackConfig,
+    void buildBlackScholes(const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig);
+    void buildFdBlackScholes(const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig);
+    void buildLocalVol(const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig);
+    void buildFdLocalVol(const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig);
+    void buildHeston(const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig);
+    void buildFdHeston(const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig);
+    void buildGaussianCam(const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
                           const std::vector<std::string>& conditionalExpectationModelStates);
-    void buildFdGaussianCam(const std::string& id, const IborFallbackConfig& iborFallbackConfig);
-    void buildGaussianCamAMC(const std::string& id, const IborFallbackConfig& iborFallbackConfig,
+    void buildFdGaussianCam(const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig);
+    void buildGaussianCamAMC(const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
                              const std::vector<std::string>& conditionalExpectationModelStates);
-    void buildAMCCGModel(const std::string& id, const IborFallbackConfig& iborFallbackConfig,
+    void buildAMCCGModel(const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
                          const std::vector<std::string>& conditionalExpectationModelStates);
-    void addAmcGridToContext(boost::shared_ptr<Context>& context) const;
-    void setupCalibrationStrikes(const ScriptedTradeScriptData& script, const boost::shared_ptr<Context>& context);
+    void addAmcGridToContext(QuantLib::ext::shared_ptr<Context>& context) const;
+    void setupCalibrationStrikes(const ScriptedTradeScriptData& script, const QuantLib::ext::shared_ptr<Context>& context);
+
+    // overwrite since engine and model parameters can be overwritten in scripted trade data
+    std::string engineParameter(const std::string& p, const std::vector<std::string>& qualifiers = {},
+                                const bool mandatory = true, const std::string& defaultValue = "") const override;
+    std::string modelParameter(const std::string& p, const std::vector<std::string>& qualifiers = {},
+                               const bool mandatory = true, const std::string& defaultValue = "") const override;
+
+    // get model / engine qualifiers based on product tag, trade type and (optionally) an additional qualifier
+    std::vector<std::string> getModelEngineQualifiers(const std::string& addQualifier = {}) const;
 
     // gets eq ccy from market
     std::string getEqCcy(const IndexInfo& e);
@@ -105,11 +121,15 @@ protected:
     // gets comm ccy from market
     std::string getCommCcy(const IndexInfo& e);
 
+    // Check whether the list of indices contains at least one that needs a quanto adjustment
+    bool containsQuanto();
+  
     // input data (for amc, amcCam_, amcCgModel_ are mutually exclusive)
     bool buildingAmc_ = false;
-    const boost::shared_ptr<QuantExt::CrossAssetModel> amcCam_;
-    const boost::shared_ptr<ore::data::ModelCG> amcCgModel_;
-    const std::vector<Date> amcGrid_;
+    bool buildingAmcCg_ = false;
+    const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> amcCam_;
+    const QuantLib::ext::shared_ptr<ore::data::ModelCG> amcCgModel_;
+    const std::vector<Date> amcSimDates_, amcStickyCloseOutDates_;
 
     // cache for parsed asts
     std::map<std::string, ASTNodePtr> astCache_;
@@ -118,41 +138,43 @@ protected:
     ASTNodePtr ast_;
     std::string npvCurrency_;
     QuantLib::Date lastRelevantDate_;
+    std::string lastRelevantDateType_;
     std::string simmProductClass_;
     std::string scheduleProductClass_;
     std::string sensitivityTemplate_;
     std::map<std::string, std::set<Date>> fixings_;
+    std::string tradeType_;
 
     // temporary variables used during engine building
-    boost::shared_ptr<StaticAnalyser> staticAnalyser_;
+    QuantLib::ext::shared_ptr<StaticAnalyser> staticAnalyser_;
     std::set<IndexInfo> eqIndices_, commIndices_, irIndices_, infIndices_, fxIndices_;
     std::string resolvedProductTag_, assetClassReplacement_;
     std::set<std::string> payCcys_;
     std::string baseCcy_;
     std::vector<std::string> modelCcys_;
     std::vector<Handle<YieldTermStructure>> modelCurves_;
+    Handle<YieldTermStructure> baseCcyModelCurve_;
     std::vector<Handle<Quote>> modelFxSpots_;
     std::vector<std::string> modelIndices_, modelIndicesCurrencies_;
-    std::vector<std::pair<std::string, boost::shared_ptr<InterestRateIndex>>> modelIrIndices_;
-    std::vector<std::pair<std::string, boost::shared_ptr<ZeroInflationIndex>>> modelInfIndices_;
+    std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>> modelIrIndices_;
+    std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>> modelInfIndices_;
     std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>> correlations_;
-    std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>> processes_;
+    std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>> processes_;
     std::map<std::string, Real> irReversions_;
     std::set<Date> simulationDates_, addDates_;
-    boost::shared_ptr<Model> model_;
-    boost::shared_ptr<ModelCG> modelCG_;
+    QuantLib::ext::shared_ptr<Model> model_;
+    QuantLib::ext::shared_ptr<ModelCG> modelCG_;
     std::map<std::string, std::vector<Real>> calibrationStrikes_;
 
     // model / engine parameters
+    std::map<std::string, std::string> modelParameterOverwrite_;
+    std::map<std::string, std::string> engineParameterOverwrite_;
     std::string modelParam_, infModelType_, engineParam_, baseCcyParam_, gridCoarsening_;
     bool fullDynamicFx_, fullDynamicIr_, enforceBaseCcy_;
     Size modelSize_, timeStepsPerYear_;
-    Model::McParams mcParams_;
-    bool interactive_, zeroVolatility_, continueOnCalibrationError_;
+    Model::Params params_;
+    bool interactive_, zeroVolatility_, continueOnCalibrationError_, allowModelFallbacks_;
     std::vector<Real> calibrationMoneyness_;
-    Real mesherEpsilon_, mesherScaling_, mesherConcentration_;
-    Size mesherMaxConcentratingPoints_;
-    bool mesherIsStatic_;
     std::string referenceCalibrationGrid_;
     Real bootstrapTolerance_;
     bool calibrate_;
@@ -160,7 +182,27 @@ protected:
     bool useCg_;
     bool useAd_;
     bool useExternalComputeDevice_;
+    bool useDoublePrecisionForExternalCalculation_;
+    bool externalDeviceCompatibilityMode_;
     std::string externalComputeDevice_;
+    bool includePastCashflows_;
+    bool staticNpvMem_;
+    Real indicatorSmoothingForValues_, indicatorSmoothingForDerivatives_;
+    // Heston related
+    std::vector<Period> hestonCalibrationExpiries_;
+    std::vector<Period> hestonCalibrationVarianceTerms_;
+    std::vector<Real> hestonInitialValues_; // order: theta, kappa, sigma, rho, v0
+    std::vector<bool> hestonFixedValues_; // same order as above
+    Real hestonRelaxedFellerConstraint_; // in [0,1], 0 means no constraint, 1 means Feller
+    Size hestonMaxCalibrationAttempts_; // Max. number of initial value sets
+    std::vector<Real> hestonMaximumInitialValues_;
+    std::string hestonCalibrationMethod_; 
+    Real hestonEarlyExitThreshold_; // Stop search when this is reached
+    Real hestonMaxAcceptableError_; // Throw if best solution's error exceeds this
+    HestonProcess::Discretization hestonProcessDiscretization_;
+    Size hestonQuantoTimeStepsPerYear_;
+    HestonProcess::Discretization hestonQuantoProcessDiscretization_;
+    bool debug_;
 };
 
 } // namespace data

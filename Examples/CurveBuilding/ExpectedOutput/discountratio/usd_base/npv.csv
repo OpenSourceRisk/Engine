@@ -1,0 +1,3 @@
+#TradeId,TradeType,Maturity,MaturityTime,NPV,NpvCurrency,NPV(Base),BaseCurrency,Notional,NotionalCurrency,Notional(Base),NettingSet,CounterParty
+FXFWD_1Y,FxForward,2017-02-06,1.003002,1099.555850,GBP,1533.451781,USD,11000000.00,EUR,12455707.00,NS,CP
+FXFWD_5Y,FxForward,2021-02-05,5.000262,5869.049847,GBP,8185.036661,USD,11000000.00,EUR,12455707.00,NS,CP

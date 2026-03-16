@@ -21,7 +21,7 @@
 
 namespace QuantExt {
 
-	InfDkVectorised::InfDkVectorised(const boost::shared_ptr<CrossAssetModel>& cam)
+	InfDkVectorised::InfDkVectorised(const QuantLib::ext::shared_ptr<CrossAssetModel>& cam)
     : cam_(cam) {
 
 	}
@@ -30,7 +30,6 @@ namespace QuantExt {
                                                                     const RandomVariable& z,
                                                                     const RandomVariable& y,
                                                                     bool indexIsInterpolated) const {
-            //
             
             Size n_samples = z.size();
 

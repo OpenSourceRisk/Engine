@@ -32,14 +32,14 @@ std::string AscotEngineBuilder::keyImpl(const std::string& id, const std::string
     return id;
 }
 
-boost::shared_ptr<QuantExt::PricingEngine> AscotIntrinsicEngineBuilder::engineImpl(
+QuantLib::ext::shared_ptr<QuantExt::PricingEngine> AscotIntrinsicEngineBuilder::engineImpl(
     const std::string& id, const std::string& ccy) {
 
     std::string config = this->configuration(ore::data::MarketContext::pricing);
 
     auto discountCurve = market_->discountCurve(ccy, config);
     
-    return boost::make_shared<QuantExt::IntrinsicAscotEngine>(discountCurve);
+    return QuantLib::ext::make_shared<QuantExt::IntrinsicAscotEngine>(discountCurve);
 }
 
 } // namespace data

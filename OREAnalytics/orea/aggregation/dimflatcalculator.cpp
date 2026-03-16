@@ -30,11 +30,11 @@ namespace ore {
 namespace analytics {
 
 FlatDynamicInitialMarginCalculator::FlatDynamicInitialMarginCalculator(
-    const boost::shared_ptr<InputParameters>& inputs,
-    const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<NPVCube>& cube,
-    const boost::shared_ptr<CubeInterpretation>& cubeInterpretation,
-    const boost::shared_ptr<AggregationScenarioData>& scenarioData)
-    : DynamicInitialMarginCalculator(inputs, portfolio, cube, cubeInterpretation, scenarioData) {
+    const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const QuantLib::ext::shared_ptr<NPVCube>& cube,
+    const QuantLib::ext::shared_ptr<CubeInterpretation>& cubeInterpretation,
+    const QuantLib::ext::shared_ptr<AggregationScenarioData>& scenarioData, 
+    const QuantLib::ext::shared_ptr<ore::data::CollateralBalances>& collateralBalances)
+    : DynamicInitialMarginCalculator(portfolio, cube, cubeInterpretation, scenarioData), collateralBalances_(collateralBalances) {
 }
 
 
@@ -49,10 +49,9 @@ const vector<Real>& FlatDynamicInitialMarginCalculator::dimResults(const std::st
 void FlatDynamicInitialMarginCalculator::build() {
     LOG("FlatDynamicInitialMarginCalculator:build() called");
 
-    Size stopDatesLoop = datesLoopSize_;
     Size samples = cube_->samples();
 
-    if (!inputs_->collateralBalances()) {
+    if (!collateralBalances_) {
         ALOG("collateral balances not set");
     }
     
@@ -60,12 +59,12 @@ void FlatDynamicInitialMarginCalculator::build() {
         LOG("Process netting set " << n);
 
         Real currentIM = 0;
-        if (inputs_->collateralBalances() && inputs_->collateralBalances()->has(n)) {
-            currentIM = inputs_->collateralBalances()->get(n)->initialMargin();
+        if (collateralBalances_ && collateralBalances_->has(n)) {
+            currentIM = collateralBalances_->get(n)->initialMargin();
             LOG("Found initial margin balance " << currentIM << " for netting set " << n);
         }
         
-        for (Size j = 0; j < stopDatesLoop; ++j) {
+        for (Size j = 0; j < cube_->dates().size(); ++j) {
             nettingSetExpectedDIM_[n][j] = currentIM;
             for (Size k = 0; k < samples; ++k)
                 nettingSetDIM_[n][j][k] = currentIM;                

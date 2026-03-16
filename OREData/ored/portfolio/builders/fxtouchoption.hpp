@@ -56,11 +56,11 @@ protected:
         return forCcy.code() + domCcy.code() + type + ore::data::to_string(payDate) + (flipResults ? "_1" : "_0");
     }
 
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy,
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy,
                                                         const string& type, const Date& payDate,
                                                         const bool flipResults) override {
         string pair = forCcy.code() + domCcy.code();
-        boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = boost::make_shared<GeneralizedBlackScholesProcess>(
+        QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> gbsp = QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
             market_->fxSpot(pair, configuration(ore::data::MarketContext::pricing)),
             market_->discountCurve(forCcy.code(),
                                    configuration(ore::data::MarketContext::pricing)), // dividend yield ~ foreign yield
@@ -68,9 +68,9 @@ protected:
             market_->fxVol(pair, configuration(ore::data::MarketContext::pricing)));
 
         if (type == "One-Touch") {
-            return boost::make_shared<QuantExt::AnalyticDigitalAmericanEngine>(gbsp, payDate, flipResults);
+            return QuantLib::ext::make_shared<QuantExt::AnalyticDigitalAmericanEngine>(gbsp, payDate, flipResults);
         } else if (type == "No-Touch") {
-            return boost::make_shared<QuantExt::AnalyticDigitalAmericanKOEngine>(gbsp, payDate, flipResults);
+            return QuantLib::ext::make_shared<QuantExt::AnalyticDigitalAmericanKOEngine>(gbsp, payDate, flipResults);
         } else {
             QL_FAIL("Unknown FX touch option type: " << type);
         }

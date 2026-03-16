@@ -81,28 +81,19 @@ map<Real, Option::Type, decltype(comp)> createStrikes(Real forward, const vector
 
 namespace QuantExt {
 
-OptionSurfaceStripper::OptionSurfaceStripper(
-    const boost::shared_ptr<OptionInterpolatorBase>& callSurface,
-    const boost::shared_ptr<OptionInterpolatorBase>& putSurface,
-    const Calendar& calendar,
-    const DayCounter& dayCounter,
-    Exercise::Type type,
-    bool lowerStrikeConstExtrap,
-    bool upperStrikeConstExtrap,
-    bool timeFlatExtrapolation,
-    bool preferOutOfTheMoney,
-    Solver1DOptions solverOptions)
-    : callSurface_(callSurface),
-      putSurface_(putSurface),
-      calendar_(calendar),
-      dayCounter_(dayCounter),
-      type_(type),
-      lowerStrikeConstExtrap_(lowerStrikeConstExtrap),
-      upperStrikeConstExtrap_(upperStrikeConstExtrap),
-      timeFlatExtrapolation_(timeFlatExtrapolation),
-      preferOutOfTheMoney_(preferOutOfTheMoney),
-      solverOptions_(solverOptions),
-      havePrices_(boost::dynamic_pointer_cast<OptionPriceSurface>(callSurface_)) {
+OptionSurfaceStripper::OptionSurfaceStripper(const QuantLib::ext::shared_ptr<OptionInterpolatorBase>& callSurface,
+                                             const QuantLib::ext::shared_ptr<OptionInterpolatorBase>& putSurface,
+                                             const Calendar& calendar, const DayCounter& dayCounter,
+                                             Exercise::Type type, bool lowerStrikeConstExtrap,
+                                             bool upperStrikeConstExtrap,
+                                             QuantLib::BlackVolTimeExtrapolation timeExtrapolation,
+                                             bool preferOutOfTheMoney, Solver1DOptions solverOptions,
+                                             QuantLib::VolatilityType volType, Real displacement)
+    : callSurface_(callSurface), putSurface_(putSurface), calendar_(calendar), dayCounter_(dayCounter), type_(type),
+      lowerStrikeConstExtrap_(lowerStrikeConstExtrap), upperStrikeConstExtrap_(upperStrikeConstExtrap),
+      timeExtrapolation_(timeExtrapolation), preferOutOfTheMoney_(preferOutOfTheMoney), volType_(volType),
+      displacement_(displacement), solverOptions_(solverOptions),
+      havePrices_(QuantLib::ext::dynamic_pointer_cast<OptionPriceSurface>(callSurface_)) {
 
     QL_REQUIRE(callSurface_->referenceDate() == putSurface_->referenceDate(),
         "Mismatch between Call and Put reference dates in OptionSurfaceStripper");
@@ -113,7 +104,7 @@ OptionSurfaceStripper::OptionSurfaceStripper(
     if (havePrices_) {
 
         // Check that there is also a put price surface
-        QL_REQUIRE(boost::dynamic_pointer_cast<OptionPriceSurface>(putSurface_),
+        QL_REQUIRE(QuantLib::ext::dynamic_pointer_cast<OptionPriceSurface>(putSurface_),
             "OptionSurfaceStripper: call price surface provided but no put price surface.");
 
         setUpSolver();
@@ -146,30 +137,32 @@ void OptionSurfaceStripper::performCalculations() const {
     tmp = putSurface_->expiries();
     allExpiries.insert(tmp.begin(), tmp.end());
 
-    boost::shared_ptr<BlackVarianceSurfaceSparse> callVolSurface;
-    boost::shared_ptr<BlackVarianceSurfaceSparse> putVolSurface;
+    QuantLib::ext::shared_ptr<BlackVarianceSurfaceSparse<>> callVolSurface;
+    QuantLib::ext::shared_ptr<BlackVarianceSurfaceSparse<>> putVolSurface;
 
     // Switch based on whether surface is direct volatilities or prices to be stripped.
-    boost::shared_ptr<PricingEngine> engine;
-    boost::shared_ptr<SimpleQuote> volQuote = boost::make_shared<SimpleQuote>(0.1);
+    QuantLib::ext::shared_ptr<PricingEngine> engine;
+    QuantLib::ext::shared_ptr<SimpleQuote> volQuote = QuantLib::ext::make_shared<SimpleQuote>(0.1);
     if (havePrices_) {
 
         // a black scholes process
-        boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = process(volQuote);
+        QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> gbsp = process(volQuote);
 
         // hard code the engines here
         if (type_ == Exercise::American) {
-            engine = boost::make_shared<QuantExt::BaroneAdesiWhaleyApproximationEngine>(gbsp);
+            QL_REQUIRE(volType_ == VolatilityType::ShiftedLognormal && close_enough(displacement_, 0.0),
+                "OptionSurfaceStripper: only LogNormal volatilities supported for American options.");
+            engine = QuantLib::ext::make_shared<QuantExt::BaroneAdesiWhaleyApproximationEngine>(gbsp);
         } else if (type_ == Exercise::European) {
-            engine = boost::make_shared<QuantExt::AnalyticEuropeanEngine>(gbsp);
+            engine = QuantLib::ext::make_shared<QuantExt::AnalyticEuropeanEngine>(gbsp, DiffusionModelType::AsInputVolatilityType, 0.0);
         } else {
             QL_FAIL("Unsupported exercise type for option stripping");
         }
 
     } else {
         // we have variance surfaces, explicitly cast so we can look up vol later
-        callVolSurface = boost::dynamic_pointer_cast<BlackVarianceSurfaceSparse>(callSurface_);
-        putVolSurface = boost::dynamic_pointer_cast<BlackVarianceSurfaceSparse>(putSurface_);
+        callVolSurface = QuantLib::ext::dynamic_pointer_cast<BlackVarianceSurfaceSparse<>>(callSurface_);
+        putVolSurface = QuantLib::ext::dynamic_pointer_cast<BlackVarianceSurfaceSparse<>>(putSurface_);
     }
 
     // Need to populate these below to feed to BlackVarianceSurfaceSparse
@@ -211,14 +204,14 @@ void OptionSurfaceStripper::performCalculations() const {
     }
 
     // Populate the variance surface.
-    volSurface_ = boost::make_shared<BlackVarianceSurfaceSparse>(
+    volSurface_ = QuantLib::ext::make_shared<BlackVarianceSurfaceSparse<>>(
         callSurface_->referenceDate(), calendar_, volExpiries, volStrikes, volData, dayCounter_,
-        lowerStrikeConstExtrap_, upperStrikeConstExtrap_, timeFlatExtrapolation_);
+        lowerStrikeConstExtrap_, upperStrikeConstExtrap_, timeExtrapolation_, volType_, displacement_);
 }
 
 vector<Real> OptionSurfaceStripper::strikes(const Date& expiry, bool isCall) const {
 
-    const boost::shared_ptr<OptionInterpolatorBase>& surface = isCall ? callSurface_ : putSurface_;
+    const QuantLib::ext::shared_ptr<OptionInterpolatorBase>& surface = isCall ? callSurface_ : putSurface_;
     auto expiries = surface->expiries();
     auto it = find(expiries.begin(), expiries.end(), expiry);
 
@@ -231,15 +224,15 @@ vector<Real> OptionSurfaceStripper::strikes(const Date& expiry, bool isCall) con
 }
 
 Real OptionSurfaceStripper::implyVol(Date expiry, Real strike, Option::Type type,
-    boost::shared_ptr<PricingEngine> engine, SimpleQuote& volQuote) const {
+    QuantLib::ext::shared_ptr<PricingEngine> engine, SimpleQuote& volQuote) const {
 
     // Create the option instrument used in the solver.
-    boost::shared_ptr<StrikedTypePayoff> payoff = boost::make_shared<PlainVanillaPayoff>(type, strike);
-    boost::shared_ptr<Exercise> exercise;
+    QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff = QuantLib::ext::make_shared<PlainVanillaPayoff>(type, strike);
+    QuantLib::ext::shared_ptr<Exercise> exercise;
     if (type_ == Exercise::American) {
-        exercise = boost::make_shared<AmericanExercise>(expiry);
+        exercise = QuantLib::ext::make_shared<AmericanExercise>(expiry);
     } else if (type_ == Exercise::European) {
-        exercise = boost::make_shared<EuropeanExercise>(expiry);
+        exercise = QuantLib::ext::make_shared<EuropeanExercise>(expiry);
     } else {
         QL_FAIL("OptionSurfaceStripper: unsupported exercise type for option stripping.");
     }
@@ -304,35 +297,30 @@ void OptionSurfaceStripper::setUpSolver() {
 
 }
 
-boost::shared_ptr<BlackVolTermStructure> OptionSurfaceStripper::volSurface() {
+QuantLib::ext::shared_ptr<BlackVolTermStructure> OptionSurfaceStripper::volSurface() {
     calculate();
     return volSurface_;
 }
 
 EquityOptionSurfaceStripper::EquityOptionSurfaceStripper(
     const Handle<QuantExt::EquityIndex2>& equityIndex,
-    const boost::shared_ptr<OptionInterpolatorBase>& callSurface,
-    const boost::shared_ptr<OptionInterpolatorBase>& putSurface,
-    const Calendar& calendar,
-    const DayCounter& dayCounter,
-    Exercise::Type type,
-    bool lowerStrikeConstExtrap,
-    bool upperStrikeConstExtrap,
-    bool timeFlatExtrapolation,
-    bool preferOutOfTheMoney,
-    Solver1DOptions solverOptions)
+    const QuantLib::ext::shared_ptr<OptionInterpolatorBase>& callSurface,
+    const QuantLib::ext::shared_ptr<OptionInterpolatorBase>& putSurface, const Calendar& calendar,
+    const DayCounter& dayCounter, Exercise::Type type, bool lowerStrikeConstExtrap, bool upperStrikeConstExtrap,
+    QuantLib::BlackVolTimeExtrapolation timeExtrapolation, bool preferOutOfTheMoney, Solver1DOptions solverOptions)
     : OptionSurfaceStripper(callSurface, putSurface, calendar, dayCounter, type, lowerStrikeConstExtrap,
-        upperStrikeConstExtrap, timeFlatExtrapolation, preferOutOfTheMoney, solverOptions), equityIndex_(equityIndex) {
+                            upperStrikeConstExtrap, timeExtrapolation, preferOutOfTheMoney, solverOptions, ShiftedLognormal, 0.0),
+      equityIndex_(equityIndex) {
     registerWith(equityIndex_);
 }
 
-boost::shared_ptr<GeneralizedBlackScholesProcess> EquityOptionSurfaceStripper::process(
-    const boost::shared_ptr<QuantLib::SimpleQuote>& volatilityQuote) const {
+QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> EquityOptionSurfaceStripper::process(
+    const QuantLib::ext::shared_ptr<QuantLib::SimpleQuote>& volatilityQuote) const {
 
-    Handle<BlackVolTermStructure> vts(boost::make_shared<BlackConstantVol>(
-        callSurface_->referenceDate(), calendar_, Handle<Quote>(volatilityQuote), dayCounter_));
+    Handle<BlackVolTermStructure> vts(QuantLib::ext::make_shared<BlackConstantVol>(
+        callSurface_->referenceDate(), calendar_, Handle<Quote>(volatilityQuote), dayCounter_, ShiftedLognormal, 0.0));
 
-    return boost::make_shared<BlackScholesMertonProcess>(equityIndex_->equitySpot(),
+    return QuantLib::ext::make_shared<BlackScholesMertonProcess>(equityIndex_->equitySpot(),
         equityIndex_->equityDividendCurve(), equityIndex_->equityForecastCurve(), vts);
 }
 
@@ -341,41 +329,35 @@ Real EquityOptionSurfaceStripper::forward(const Date& date) const {
 }
 
 CommodityOptionSurfaceStripper::CommodityOptionSurfaceStripper(
-    const Handle<PriceTermStructure>& priceCurve,
-    const Handle<YieldTermStructure>& discountCurve,
-    const boost::shared_ptr<OptionInterpolatorBase>& callSurface,
-    const boost::shared_ptr<OptionInterpolatorBase>& putSurface,
-    const Calendar& calendar,
-    const DayCounter& dayCounter,
-    Exercise::Type type,
-    bool lowerStrikeConstExtrap,
-    bool upperStrikeConstExtrap,
-    bool timeFlatExtrapolation,
-    bool preferOutOfTheMoney,
-    Solver1DOptions solverOptions)
+    const Handle<PriceTermStructure>& priceCurve, const Handle<YieldTermStructure>& discountCurve,
+    const QuantLib::ext::shared_ptr<OptionInterpolatorBase>& callSurface,
+    const QuantLib::ext::shared_ptr<OptionInterpolatorBase>& putSurface, const Calendar& calendar,
+    const DayCounter& dayCounter, Exercise::Type type, bool lowerStrikeConstExtrap, bool upperStrikeConstExtrap,
+    QuantLib::BlackVolTimeExtrapolation timeExtrapolation, bool preferOutOfTheMoney, Solver1DOptions solverOptions,
+    VolatilityType volType, Real shift)
     : OptionSurfaceStripper(callSurface, putSurface, calendar, dayCounter, type, lowerStrikeConstExtrap,
-        upperStrikeConstExtrap, timeFlatExtrapolation, preferOutOfTheMoney, solverOptions),
-        priceCurve_(priceCurve), discountCurve_(discountCurve) {
+                            upperStrikeConstExtrap, timeExtrapolation, preferOutOfTheMoney, solverOptions),
+      priceCurve_(priceCurve), discountCurve_(discountCurve)  {
     registerWith(priceCurve_);
     registerWith(discountCurve_);
 }
 
-boost::shared_ptr<GeneralizedBlackScholesProcess> CommodityOptionSurfaceStripper::process(
-    const boost::shared_ptr<QuantLib::SimpleQuote>& volatilityQuote) const {
+QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> CommodityOptionSurfaceStripper::process(
+    const QuantLib::ext::shared_ptr<QuantLib::SimpleQuote>& volatilityQuote) const {
 
     QL_REQUIRE(!priceCurve_.empty(), "CommodityOptionSurfaceStripper: price curve is empty");
     QL_REQUIRE(!discountCurve_.empty(), "CommodityOptionSurfaceStripper: discount curve is empty");
 
     // Volatility term structure for the process
-    Handle<BlackVolTermStructure> vts(boost::make_shared<BlackConstantVol>(
-        callSurface_->referenceDate(), calendar_, Handle<Quote>(volatilityQuote), dayCounter_));
+    Handle<BlackVolTermStructure> vts(QuantLib::ext::make_shared<BlackConstantVol>(
+        callSurface_->referenceDate(), calendar_, Handle<Quote>(volatilityQuote), dayCounter_, volType_, displacement_));
 
     // Generate "spot" and "yield" curve for the process.
-    Handle<Quote> spot(boost::make_shared<DerivedPriceQuote>(priceCurve_));
-    Handle<YieldTermStructure> yield(boost::make_shared<PriceTermStructureAdapter>(*priceCurve_, *discountCurve_));
+    Handle<Quote> spot(QuantLib::ext::make_shared<DerivedPriceQuote>(priceCurve_));
+    Handle<YieldTermStructure> yield(QuantLib::ext::make_shared<PriceTermStructureAdapter>(*priceCurve_, *discountCurve_));
     yield->enableExtrapolation();
 
-    return boost::make_shared<QuantLib::GeneralizedBlackScholesProcess>(spot, yield, discountCurve_, vts);
+    return QuantLib::ext::make_shared<QuantLib::GeneralizedBlackScholesProcess>(spot, yield, discountCurve_, vts);
 }
 
 Real CommodityOptionSurfaceStripper::forward(const Date& date) const {

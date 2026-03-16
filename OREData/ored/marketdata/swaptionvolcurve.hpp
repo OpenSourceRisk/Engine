@@ -44,8 +44,8 @@ public:
     //! Detailed constructor
     SwaptionVolCurve(Date asof, SwaptionVolatilityCurveSpec spec, const Loader& loader,
                      const CurveConfigurations& curveConfigs,
-                     const map<string, boost::shared_ptr<SwapIndex>>& requiredSwapIndices = {},
-                     const map<string, boost::shared_ptr<GenericYieldVolCurve>>& requiredVolCurves = {},
+                     const map<string, QuantLib::ext::shared_ptr<SwapIndex>>& requiredSwapIndices = {},
+                     const map<string, QuantLib::ext::shared_ptr<GenericYieldVolCurve>>& requiredVolCurves = {},
                      const bool buildCalibrationInfo = true);
     //@}
 

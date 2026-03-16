@@ -60,8 +60,8 @@ public:
         \warning No checks are performed for duplicate records from the stream. It is the stream's
                  responsibility to guard against duplicates if it needs to.
     */
-    void aggregate(SensitivityStream& ss, const boost::shared_ptr<ScenarioFilter>& filter =
-                                              boost::make_shared<ScenarioFilter>());
+    void aggregate(SensitivityStream& ss, const QuantLib::ext::shared_ptr<ScenarioFilter>& filter =
+                                              QuantLib::ext::make_shared<ScenarioFilter>());
 
     //! Reset the aggregator to it's initial state by clearing all aggregations
     void reset();

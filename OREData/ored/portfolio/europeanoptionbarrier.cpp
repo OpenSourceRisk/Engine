@@ -23,7 +23,7 @@
 namespace ore {
 namespace data {
 
-void EuropeanOptionBarrier::build(const boost::shared_ptr<EngineFactory>& factory) {
+void EuropeanOptionBarrier::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory) {
 
     // set script parameters
 

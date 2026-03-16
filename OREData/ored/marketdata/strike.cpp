@@ -32,6 +32,45 @@ using std::ostringstream;
 using std::string;
 using std::vector;
 
+namespace QuantLib {
+ostream& operator<<(ostream& os, DeltaVolQuote::DeltaType type) {
+    switch (type) {
+    case DeltaVolQuote::Spot:
+        return os << "Spot";
+    case DeltaVolQuote::Fwd:
+        return os << "Fwd";
+    case DeltaVolQuote::PaSpot:
+        return os << "PaSpot";
+    case DeltaVolQuote::PaFwd:
+        return os << "PaFwd";
+    default:
+        QL_FAIL("Unknown delta type");
+    }
+}
+
+ostream& operator<<(ostream& os, DeltaVolQuote::AtmType type) {
+    switch (type) {
+    case DeltaVolQuote::AtmNull:
+        return os << "AtmNull";
+    case DeltaVolQuote::AtmSpot:
+        return os << "AtmSpot";
+    case DeltaVolQuote::AtmFwd:
+        return os << "AtmFwd";
+    case DeltaVolQuote::AtmDeltaNeutral:
+        return os << "AtmDeltaNeutral";
+    case DeltaVolQuote::AtmVegaMax:
+        return os << "AtmVegaMax";
+    case DeltaVolQuote::AtmGammaMax:
+        return os << "AtmGammaMax";
+    case DeltaVolQuote::AtmPutCall50:
+        return os << "AtmPutCall50";
+    default:
+        QL_FAIL("Unknown atm type");
+    }
+}
+
+}
+
 namespace ore {
 namespace data {
 
@@ -104,7 +143,9 @@ AtmStrike::AtmStrike(DeltaVolQuote::AtmType atmType, boost::optional<DeltaVolQuo
 
 DeltaVolQuote::AtmType AtmStrike::atmType() const { return atmType_; }
 
-boost::optional<DeltaVolQuote::DeltaType> AtmStrike::deltaType() const { return deltaType_; }
+boost::optional<DeltaVolQuote::DeltaType> AtmStrike::deltaType() const {
+    return deltaType_;
+}
 
 void AtmStrike::fromString(const string& strStrike) {
 
@@ -202,41 +243,6 @@ bool MoneynessStrike::equal_to(const BaseStrike& other) const {
 
 ostream& operator<<(ostream& os, const BaseStrike& strike) { return os << strike.toString(); }
 
-ostream& operator<<(ostream& os, DeltaVolQuote::DeltaType type) {
-    switch (type) {
-    case DeltaVolQuote::Spot:
-        return os << "Spot";
-    case DeltaVolQuote::Fwd:
-        return os << "Fwd";
-    case DeltaVolQuote::PaSpot:
-        return os << "PaSpot";
-    case DeltaVolQuote::PaFwd:
-        return os << "PaFwd";
-    default:
-        QL_FAIL("Unknown delta type");
-    }
-}
-
-ostream& operator<<(ostream& os, DeltaVolQuote::AtmType type) {
-    switch (type) {
-    case DeltaVolQuote::AtmNull:
-        return os << "AtmNull";
-    case DeltaVolQuote::AtmSpot:
-        return os << "AtmSpot";
-    case DeltaVolQuote::AtmFwd:
-        return os << "AtmFwd";
-    case DeltaVolQuote::AtmDeltaNeutral:
-        return os << "AtmDeltaNeutral";
-    case DeltaVolQuote::AtmVegaMax:
-        return os << "AtmVegaMax";
-    case DeltaVolQuote::AtmGammaMax:
-        return os << "AtmGammaMax";
-    case DeltaVolQuote::AtmPutCall50:
-        return os << "AtmPutCall50";
-    default:
-        QL_FAIL("Unknown atm type");
-    }
-}
 
 ostream& operator<<(ostream& os, MoneynessStrike::Type type) {
     switch (type) {
@@ -259,9 +265,9 @@ MoneynessStrike::Type parseMoneynessType(const string& type) {
     }
 }
 
-boost::shared_ptr<BaseStrike> parseBaseStrike(const string& strStrike) {
+QuantLib::ext::shared_ptr<BaseStrike> parseBaseStrike(const string& strStrike) {
 
-    boost::shared_ptr<BaseStrike> strike;
+    QuantLib::ext::shared_ptr<BaseStrike> strike;
 
     // Expect strStrike to either:
     // 1. have a single token which means that we have an absolute strike, or
@@ -270,13 +276,13 @@ boost::shared_ptr<BaseStrike> parseBaseStrike(const string& strStrike) {
     boost::split(tokens, strStrike, boost::is_any_of("/"));
 
     if (tokens.size() == 1) {
-        strike = boost::make_shared<AbsoluteStrike>();
+        strike = QuantLib::ext::make_shared<AbsoluteStrike>();
     } else if (tokens[0] == "DEL") {
-        strike = boost::make_shared<DeltaStrike>();
+        strike = QuantLib::ext::make_shared<DeltaStrike>();
     } else if (tokens[0] == "ATM") {
-        strike = boost::make_shared<AtmStrike>();
+        strike = QuantLib::ext::make_shared<AtmStrike>();
     } else if (tokens[0] == "MNY") {
-        strike = boost::make_shared<MoneynessStrike>();
+        strike = QuantLib::ext::make_shared<MoneynessStrike>();
     } else {
         QL_FAIL("Could not parse strike string '" << strStrike << "'.");
     }

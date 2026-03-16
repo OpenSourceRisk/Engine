@@ -3,13 +3,19 @@
   <Product type="Swap">
     <Model>DiscountedCashflows</Model>
     <ModelParameters/>
-    <Engine>DiscountingSwapEngineOptimised</Engine>
+    <Engine>DiscountingSwapEngine</Engine>
     <EngineParameters/>
   </Product>
   <Product type="CrossCurrencySwap">
     <Model>DiscountedCashflows</Model>
     <ModelParameters/>
     <Engine>DiscountingCrossCurrencySwapEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="EquityLeg">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>EquityCouponPricer</Engine>
     <EngineParameters/>
   </Product>
   <Product type="FxForward">
@@ -132,6 +138,20 @@
       <Parameter name="TimingAdjustment">Black76</Parameter>
       <!-- Correlation Parameter for BivariateLognormal -->
       <Parameter name="Correlation">1.0</Parameter>
+    </EngineParameters>
+  </Product>
+  <!-- Formula Based Coupons -->
+  <Product type="FormulaBasedCoupon">
+    <Model>BrigoMercurio</Model>
+    <ModelParameters>
+      <Parameter name="FXSource">ECB</Parameter>
+    </ModelParameters>
+    <Engine>MC</Engine>
+    <EngineParameters>
+      <Parameter name="Samples">1000</Parameter>
+      <Parameter name="Seed">42</Parameter>
+      <Parameter name="Sobol">Y</Parameter>
+      <Parameter name="SalvagingAlgorithm">Spectral</Parameter>
     </EngineParameters>
   </Product>
   <Product type="EquityForward">
@@ -344,6 +364,59 @@
     <Engine>DiscountingBondTRSEngine</Engine>
     <EngineParameters>
       <Parameter name="TimestepPeriod">6M</Parameter>
+    </EngineParameters>
+  </Product>
+    <Product type="FlexiSwap">
+    <Model>LGM</Model>
+    <ModelParameters>
+      <Parameter name="Calibration">Bootstrap</Parameter>
+      <Parameter name="CalibrationStrategy">CoterminalDealStrike</Parameter>
+      <Parameter name="Reversion">0.0</Parameter>
+      <Parameter name="ReversionType">HullWhite</Parameter>
+      <Parameter name="Volatility">0.01</Parameter>
+      <Parameter name="VolatilityType">HullWhite</Parameter>
+      <!-- increased tolerance ! -->
+      <Parameter name="Tolerance">0.001</Parameter>
+    </ModelParameters>
+    <Engine>Grid</Engine>
+    <EngineParameters>
+      <!-- SingleSwaptions, SwaptionArray, Automatic -->
+      <Parameter name="method">Automatic</Parameter>
+      <!-- in Automatic mode, if the effective number of swaptions exceeds -->
+      <!-- this parameter, SwaptionArray is used, otherwise SingleSwaptions -->
+      <Parameter name="singleSwaptionThreshold">20.0</Parameter>
+      <!-- numeric integration parameters -->
+      <Parameter name="sy">5.0</Parameter>
+      <Parameter name="ny">20</Parameter>
+      <Parameter name="sx">5.0</Parameter>
+      <Parameter name="nx">20</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="BalanceGuaranteedSwap">
+    <Model>LGM-FlexiSwap</Model>
+    <ModelParameters>
+      <!-- Notional Bounds for FlexiSwap are built using the average CPR -->
+      <!-- multiplier with the Min/Max multiplier here -->
+      <Parameter name="MinCPRMultiplier">0.0</Parameter>
+      <Parameter name="MaxCPRMultiplier">2.0</Parameter>
+      <!-- these parameters are the same as for the FlexiSwap engine -->
+      <Parameter name="Calibration">Bootstrap</Parameter>
+      <Parameter name="CalibrationStrategy">CoterminalDealStrike</Parameter>
+      <Parameter name="Reversion">0.0</Parameter>
+      <Parameter name="ReversionType">HullWhite</Parameter>
+      <Parameter name="Volatility">0.01</Parameter>
+      <Parameter name="VolatilityType">HullWhite</Parameter>
+      <Parameter name="Tolerance">0.001</Parameter>
+    </ModelParameters>
+    <Engine>Grid</Engine>
+    <EngineParameters>
+      <!-- these parameters are the same as for the FlexiSwap engine -->
+      <Parameter name="method">Automatic</Parameter>
+      <Parameter name="singleSwaptionThreshold">20.0</Parameter>
+      <Parameter name="sy">5.0</Parameter>
+      <Parameter name="ny">20</Parameter>
+      <Parameter name="sx">5.0</Parameter>
+      <Parameter name="nx">20</Parameter>
     </EngineParameters>
   </Product>
   <GlobalParameters>

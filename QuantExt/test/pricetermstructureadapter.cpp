@@ -45,26 +45,26 @@ public:
     SavedSettings backup;
 
     Real tolerance;
-    boost::shared_ptr<SimpleQuote> flatZero;
+    QuantLib::ext::shared_ptr<SimpleQuote> flatZero;
     DayCounter dayCounter;
     vector<Period> priceTenors;
-    vector<boost::shared_ptr<SimpleQuote> > priceQuotes;
+    vector<QuantLib::ext::shared_ptr<SimpleQuote> > priceQuotes;
     USDCurrency currency;
 
     CommonData() : tolerance(1e-10), priceTenors(5), priceQuotes(5) {
-        flatZero = boost::make_shared<SimpleQuote>(0.015);
+        flatZero = QuantLib::ext::make_shared<SimpleQuote>(0.015);
         dayCounter = Actual365Fixed();
 
         priceTenors[0] = 0 * Days;
-        priceQuotes[0] = boost::make_shared<SimpleQuote>(14.5);
+        priceQuotes[0] = QuantLib::ext::make_shared<SimpleQuote>(14.5);
         priceTenors[1] = 6 * Months;
-        priceQuotes[1] = boost::make_shared<SimpleQuote>(16.7);
+        priceQuotes[1] = QuantLib::ext::make_shared<SimpleQuote>(16.7);
         priceTenors[2] = 1 * Years;
-        priceQuotes[2] = boost::make_shared<SimpleQuote>(19.9);
+        priceQuotes[2] = QuantLib::ext::make_shared<SimpleQuote>(19.9);
         priceTenors[3] = 2 * Years;
-        priceQuotes[3] = boost::make_shared<SimpleQuote>(28.5);
+        priceQuotes[3] = QuantLib::ext::make_shared<SimpleQuote>(28.5);
         priceTenors[4] = 5 * Years;
-        priceQuotes[4] = boost::make_shared<SimpleQuote>(38.8);
+        priceQuotes[4] = QuantLib::ext::make_shared<SimpleQuote>(38.8);
     }
 };
 
@@ -85,8 +85,8 @@ BOOST_AUTO_TEST_CASE(testImpliedZeroRates) {
     Settings::instance().evaluationDate() = asof;
 
     // Discount curve
-    boost::shared_ptr<YieldTermStructure> discount =
-        boost::make_shared<FlatForward>(0, NullCalendar(), Handle<Quote>(td.flatZero), td.dayCounter);
+    QuantLib::ext::shared_ptr<YieldTermStructure> discount =
+        QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), Handle<Quote>(td.flatZero), td.dayCounter);
 
     // Price curve
     vector<Time> times(td.priceTenors.size());
@@ -95,8 +95,8 @@ BOOST_AUTO_TEST_CASE(testImpliedZeroRates) {
         times[i] = td.dayCounter.yearFraction(asof, asof + td.priceTenors[i]);
         prices[i] = Handle<Quote>(td.priceQuotes[i]);
     }
-    boost::shared_ptr<PriceTermStructure> priceCurve =
-        boost::make_shared<InterpolatedPriceCurve<Linear> >(td.priceTenors, prices, td.dayCounter, td.currency);
+    QuantLib::ext::shared_ptr<PriceTermStructure> priceCurve =
+        QuantLib::ext::make_shared<InterpolatedPriceCurve<Linear> >(td.priceTenors, prices, td.dayCounter, td.currency);
 
     // Adapted price curve i.e. implied yield termstructure
     PriceTermStructureAdapter priceAdapter(priceCurve, discount);
@@ -143,8 +143,8 @@ BOOST_AUTO_TEST_CASE(testFloatingDiscountFixedPrice) {
     Settings::instance().evaluationDate() = asof;
 
     // Discount curve (floating reference)
-    boost::shared_ptr<YieldTermStructure> floatReferenceDiscountCurve =
-        boost::make_shared<FlatForward>(0, NullCalendar(), Handle<Quote>(td.flatZero), td.dayCounter);
+    QuantLib::ext::shared_ptr<YieldTermStructure> floatReferenceDiscountCurve =
+        QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), Handle<Quote>(td.flatZero), td.dayCounter);
 
     // Price curve (fixed reference)
     vector<Date> dates(td.priceTenors.size());
@@ -153,8 +153,8 @@ BOOST_AUTO_TEST_CASE(testFloatingDiscountFixedPrice) {
         dates[i] = asof + td.priceTenors[i];
         prices[i] = Handle<Quote>(td.priceQuotes[i]);
     }
-    boost::shared_ptr<PriceTermStructure> fixedReferencePriceCurve =
-        boost::make_shared<InterpolatedPriceCurve<Linear> >(asof, dates, prices, td.dayCounter, td.currency);
+    QuantLib::ext::shared_ptr<PriceTermStructure> fixedReferencePriceCurve =
+        QuantLib::ext::make_shared<InterpolatedPriceCurve<Linear> >(asof, dates, prices, td.dayCounter, td.currency);
 
     // Check construction of adapted price curve passes => reference dates same on construction
     BOOST_REQUIRE_NO_THROW(PriceTermStructureAdapter(fixedReferencePriceCurve, floatReferenceDiscountCurve));
@@ -180,16 +180,16 @@ BOOST_AUTO_TEST_CASE(testFixedDiscountFloatingPrice) {
     Settings::instance().evaluationDate() = asof;
 
     // Discount curve (fixed reference)
-    boost::shared_ptr<YieldTermStructure> floatReferenceDiscountCurve =
-        boost::make_shared<FlatForward>(asof, Handle<Quote>(td.flatZero), td.dayCounter);
+    QuantLib::ext::shared_ptr<YieldTermStructure> floatReferenceDiscountCurve =
+        QuantLib::ext::make_shared<FlatForward>(asof, Handle<Quote>(td.flatZero), td.dayCounter);
 
     // Price curve (floating reference)
     vector<Handle<Quote> > prices(td.priceTenors.size());
     for (Size i = 0; i < td.priceTenors.size(); i++) {
         prices[i] = Handle<Quote>(td.priceQuotes[i]);
     }
-    boost::shared_ptr<PriceTermStructure> fixedReferencePriceCurve =
-        boost::make_shared<InterpolatedPriceCurve<Linear> >(td.priceTenors, prices, td.dayCounter, td.currency);
+    QuantLib::ext::shared_ptr<PriceTermStructure> fixedReferencePriceCurve =
+        QuantLib::ext::make_shared<InterpolatedPriceCurve<Linear> >(td.priceTenors, prices, td.dayCounter, td.currency);
 
     // Check construction of adapted price curve passes => reference dates same on construction
     BOOST_REQUIRE_NO_THROW(PriceTermStructureAdapter(fixedReferencePriceCurve, floatReferenceDiscountCurve));
@@ -220,8 +220,8 @@ BOOST_AUTO_TEST_CASE(testExtrapolation) {
     zeroRates[0] = td.flatZero->value();
     zeroDates[1] = asof + 3 * Years;
     zeroRates[1] = td.flatZero->value();
-    boost::shared_ptr<YieldTermStructure> zeroCurve =
-        boost::make_shared<ZeroCurve>(zeroDates, zeroRates, td.dayCounter);
+    QuantLib::ext::shared_ptr<YieldTermStructure> zeroCurve =
+        QuantLib::ext::make_shared<ZeroCurve>(zeroDates, zeroRates, td.dayCounter);
 
     // Price curve: times in ~ [0, 5], turn off extrapolation
     vector<Time> times(td.priceTenors.size());
@@ -230,8 +230,8 @@ BOOST_AUTO_TEST_CASE(testExtrapolation) {
         times[i] = td.dayCounter.yearFraction(asof, asof + td.priceTenors[i]);
         prices[i] = Handle<Quote>(td.priceQuotes[i]);
     }
-    boost::shared_ptr<PriceTermStructure> priceCurve =
-        boost::make_shared<InterpolatedPriceCurve<Linear> >(td.priceTenors, prices, td.dayCounter, td.currency);
+    QuantLib::ext::shared_ptr<PriceTermStructure> priceCurve =
+        QuantLib::ext::make_shared<InterpolatedPriceCurve<Linear> >(td.priceTenors, prices, td.dayCounter, td.currency);
 
     // Check construction of adapted price curve passes
     BOOST_REQUIRE_NO_THROW(PriceTermStructureAdapter(priceCurve, zeroCurve));

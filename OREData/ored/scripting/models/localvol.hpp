@@ -16,59 +16,33 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/scripting/models/localvol.hpp
-    \brief local vol model for n underlyings (fx, equity or commodity)
+/*! \file ored/scripting/models/blackscholes.hpp
+    \brief black scholes / local vol model class for n underlyings (fx, equity or commodity)
     \ingroup utilities
 */
 
 #pragma once
 
-#include <ored/scripting/models/blackscholesbase.hpp>
-
-#include <qle/methods/multipathvariategenerator.hpp>
+#include <ored/scripting/models/blackscholeslocalvolbase.hpp>
 
 namespace ore {
 namespace data {
 
-class LocalVol : public BlackScholesBase {
+class LocalVol final : public BlackScholesLocalVolBase {
 public:
-    /* ctor for multiple underlyings, see BlackScholesBase, plus:
-       - processes: hold spot, rate and div ts and vol for each given index
-       - calibrationMoneyness: a vector of relative forward atm moneyness used to calibrate the Andrease-Huge volatility
-         surface to
-       - we assume that the given correlations are constant and read the value only at t = 0
-    */
-    LocalVol(
-        const Size paths, const std::vector<std::string>& currencies,
-        const std::vector<Handle<YieldTermStructure>>& curves, const std::vector<Handle<Quote>>& fxSpots,
-        const std::vector<std::pair<std::string, boost::shared_ptr<InterestRateIndex>>>& irIndices,
-        const std::vector<std::pair<std::string, boost::shared_ptr<ZeroInflationIndex>>>& infIndices,
-        const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
-        const Handle<BlackScholesModelWrapper>& model,
-        const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
-        const McParams& mcparams, const std::set<Date>& simulationDates,
-        const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig());
-
-    // ctor for a single underlying
-    LocalVol(const Size paths, const std::string& currency, const Handle<YieldTermStructure>& curve,
-             const std::string& index, const std::string& indexCurrency, const Handle<BlackScholesModelWrapper>& model,
-             const McParams& mcparams, const std::set<Date>& simulationDates,
-             const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig());
+    using BlackScholesLocalVolBase::BlackScholesLocalVolBase;
 
 private:
-    // ModelImpl interface implementation
-    RandomVariable getFutureBarrierProb(const std::string& index, const Date& obsdate1, const Date& obsdate2,
-                                        const RandomVariable& barrier, const bool above) const override;
+    void performModelCalculations() const override;
 
-    // BlackScholesBase interface implementation
-    void performCalculations() const override;
-
-    // helper method to populate path values
-    void populatePathValues(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
-                            const boost::shared_ptr<MultiPathVariateGeneratorBase>& gen, const Matrix& correlation,
-                            const Matrix& sqrtCorr, const std::vector<Array>& deterministicDrift,
-                            const std::vector<Size>& eqComIdx, const std::vector<Real>& t, const std::vector<Real>& dt,
-                            const std::vector<Real>& sqrtdt) const;
+    void performCalculationsMc() const;
+    void generatePaths() const;
+    void populatePathValuesLv(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
+                              const QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>& gen,
+                              const Matrix& correlation, const Matrix& sqrtCorr,
+                              const std::vector<Array>& deterministicDrift, const std::vector<Size>& eqComIdx,
+                              const std::vector<Real>& t, const std::vector<Real>& dt,
+                              const std::vector<Real>& sqrtdt) const;
 };
 
 } // namespace data

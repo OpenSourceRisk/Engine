@@ -42,7 +42,7 @@ namespace {
 
 // Shared check of arguments
 void check(const Date& expiryDate, const Date& paymentDate, bool automaticExercise,
-           const boost::shared_ptr<Index>& underlying, bool exercised, Real priceAtExercise) {
+           const QuantLib::ext::shared_ptr<Index>& underlying, bool exercised, Real priceAtExercise) {
 
     using QuantLib::io::iso_date;
 
@@ -67,12 +67,14 @@ namespace QuantExt {
 
 CashSettledEuropeanOption::CashSettledEuropeanOption(Option::Type type, Real strike, const Date& expiryDate,
                                                      const Date& paymentDate, bool automaticExercise,
-                                                     const boost::shared_ptr<Index>& underlying, bool exercised,
-                                                     Real priceAtExercise)
-    : VanillaOption(boost::make_shared<PlainVanillaPayoff>(type, strike),
-                    boost::make_shared<EuropeanExercise>(expiryDate)),
+                                                     const QuantLib::ext::shared_ptr<Index>& underlying, bool exercised,
+                                                     Real priceAtExercise,
+                                                     const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex,
+                                                     const std::optional<QuantLib::Date>& cashSettlementFxFixingDate)
+    : VanillaOption(QuantLib::ext::make_shared<PlainVanillaPayoff>(type, strike),
+                    QuantLib::ext::make_shared<EuropeanExercise>(expiryDate)),
       paymentDate_(paymentDate), automaticExercise_(automaticExercise), underlying_(underlying), exercised_(false),
-      priceAtExercise_(Null<Real>()) {
+      priceAtExercise_(Null<Real>()), fxIndex_(fxIndex), cashSettlementFxFixingDate_(cashSettlementFxFixingDate) {
 
     init(exercised, priceAtExercise);
 
@@ -82,12 +84,14 @@ CashSettledEuropeanOption::CashSettledEuropeanOption(Option::Type type, Real str
 CashSettledEuropeanOption::CashSettledEuropeanOption(Option::Type type, Real strike, const Date& expiryDate,
                                                      Natural paymentLag, const Calendar& paymentCalendar,
                                                      BusinessDayConvention paymentConvention, bool automaticExercise,
-                                                     const boost::shared_ptr<Index>& underlying, bool exercised,
-                                                     Real priceAtExercise)
-    : VanillaOption(boost::make_shared<PlainVanillaPayoff>(type, strike),
-                    boost::make_shared<EuropeanExercise>(expiryDate)),
+                                                     const QuantLib::ext::shared_ptr<Index>& underlying, bool exercised,
+                                                     Real priceAtExercise,
+                                                     const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex,
+                                                     const std::optional<QuantLib::Date>& cashSettlementFxFixingDate)
+    : VanillaOption(QuantLib::ext::make_shared<PlainVanillaPayoff>(type, strike),
+                    QuantLib::ext::make_shared<EuropeanExercise>(expiryDate)),
       automaticExercise_(automaticExercise), underlying_(underlying), exercised_(false),
-      priceAtExercise_(Null<Real>()) {
+      priceAtExercise_(Null<Real>()), fxIndex_(fxIndex), cashSettlementFxFixingDate_(cashSettlementFxFixingDate) { 
 
     init(exercised, priceAtExercise);
 
@@ -99,12 +103,14 @@ CashSettledEuropeanOption::CashSettledEuropeanOption(Option::Type type, Real str
 
 CashSettledEuropeanOption::CashSettledEuropeanOption(Option::Type type, Real strike, Real cashPayoff,
                                                      const Date& expiryDate, const Date& paymentDate,
-                                                     bool automaticExercise, const boost::shared_ptr<Index>& underlying,
-                                                     bool exercised, Real priceAtExercise)
-    : VanillaOption(boost::make_shared<CashOrNothingPayoff>(type, strike, cashPayoff),
-                    boost::make_shared<EuropeanExercise>(expiryDate)),
+                                                     bool automaticExercise, const QuantLib::ext::shared_ptr<Index>& underlying,
+                                                     bool exercised, Real priceAtExercise,
+                                                     const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex,
+                                                     const std::optional<QuantLib::Date>& cashSettlementFxFixingDate)
+    : VanillaOption(QuantLib::ext::make_shared<CashOrNothingPayoff>(type, strike, cashPayoff),
+                    QuantLib::ext::make_shared<EuropeanExercise>(expiryDate)),
       paymentDate_(paymentDate), automaticExercise_(automaticExercise), underlying_(underlying), exercised_(false),
-      priceAtExercise_(Null<Real>()) {
+      priceAtExercise_(Null<Real>()), fxIndex_(fxIndex), cashSettlementFxFixingDate_(cashSettlementFxFixingDate) {
 
     init(exercised, priceAtExercise);
 
@@ -115,12 +121,14 @@ CashSettledEuropeanOption::CashSettledEuropeanOption(Option::Type type, Real str
                                                      const Date& expiryDate, Natural paymentLag,
                                                      const Calendar& paymentCalendar,
                                                      BusinessDayConvention paymentConvention, bool automaticExercise,
-                                                     const boost::shared_ptr<Index>& underlying, bool exercised,
-                                                     Real priceAtExercise)
-    : VanillaOption(boost::make_shared<CashOrNothingPayoff>(type, strike, cashPayoff),
-                    boost::make_shared<EuropeanExercise>(expiryDate)),
+                                                     const QuantLib::ext::shared_ptr<Index>& underlying, bool exercised,
+                                                     Real priceAtExercise,
+                                                     const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex,
+                                                     const std::optional<QuantLib::Date>& cashSettlementFxFixingDate)
+    : VanillaOption(QuantLib::ext::make_shared<CashOrNothingPayoff>(type, strike, cashPayoff),
+                    QuantLib::ext::make_shared<EuropeanExercise>(expiryDate)),
       automaticExercise_(automaticExercise), underlying_(underlying), exercised_(false),
-      priceAtExercise_(Null<Real>()) {
+      priceAtExercise_(Null<Real>()), fxIndex_(fxIndex), cashSettlementFxFixingDate_(cashSettlementFxFixingDate) {
 
     init(exercised, priceAtExercise);
 
@@ -134,8 +142,8 @@ void CashSettledEuropeanOption::init(bool exercised, Real priceAtExercise) {
     if (exercised)
         exercise(priceAtExercise);
 
-    if (automaticExercise_ && underlying_)
-        registerWith(underlying_);
+    registerWith(underlying_);
+    registerWith(fxIndex_);
 }
 
 bool CashSettledEuropeanOption::isExpired() const { return QuantLib::detail::simple_event(paymentDate_).hasOccurred(); }
@@ -156,6 +164,8 @@ void CashSettledEuropeanOption::setupArguments(PricingEngine::arguments* args) c
     arguments->underlying = underlying_;
     arguments->exercised = exercised_;
     arguments->priceAtExercise = priceAtExercise_;
+    arguments->fxIndex = fxIndex_;
+    arguments->cashSettlementFxFixingDate = cashSettlementFxFixingDate_;
 }
 
 void CashSettledEuropeanOption::exercise(Real priceAtExercise) {
@@ -173,7 +183,7 @@ const Date& CashSettledEuropeanOption::paymentDate() const { return paymentDate_
 
 bool CashSettledEuropeanOption::automaticExercise() const { return automaticExercise_; }
 
-const boost::shared_ptr<Index>& CashSettledEuropeanOption::underlying() const { return underlying_; }
+const QuantLib::ext::shared_ptr<Index>& CashSettledEuropeanOption::underlying() const { return underlying_; }
 
 bool CashSettledEuropeanOption::exercised() const { return exercised_; }
 

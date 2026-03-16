@@ -51,8 +51,8 @@ SwaptionVolCube2::SwaptionVolCube2(const Handle<SwaptionVolatilityStructure>& at
                                    const std::vector<Period>& optionTenors, const std::vector<Period>& swapTenors,
                                    const std::vector<Spread>& strikeSpreads,
                                    const std::vector<std::vector<Handle<Quote> > >& volSpreads,
-                                   const boost::shared_ptr<SwapIndex>& swapIndexBase,
-                                   const boost::shared_ptr<SwapIndex>& shortSwapIndexBase, bool vegaWeightedSmileFit,
+                                   const QuantLib::ext::shared_ptr<SwapIndex>& swapIndexBase,
+                                   const QuantLib::ext::shared_ptr<SwapIndex>& shortSwapIndexBase, bool vegaWeightedSmileFit,
                                    bool flatExtrapolation, bool volsAreSpreads)
     : SwaptionVolatilityCube(atmVolStructure, optionTenors, swapTenors, strikeSpreads, volSpreads, swapIndexBase,
                              shortSwapIndexBase, vegaWeightedSmileFit),
@@ -78,14 +78,14 @@ void SwaptionVolCube2::performCalculations() const {
                 BilinearInterpolation(swapLengths_.begin(), swapLengths_.end(), optionTimes_.begin(),
                                       optionTimes_.end(), volSpreadsMatrix_[i]);
         else
-            volSpreadsInterpolator_[i] = FlatExtrapolator2D(boost::make_shared<BilinearInterpolation>(
+            volSpreadsInterpolator_[i] = FlatExtrapolator2D(QuantLib::ext::make_shared<BilinearInterpolation>(
                 swapLengths_.begin(), swapLengths_.end(), optionTimes_.begin(), optionTimes_.end(),
                 volSpreadsMatrix_[i]));
         volSpreadsInterpolator_[i].enableExtrapolation();
     }
 }
 
-boost::shared_ptr<SmileSection> SwaptionVolCube2::smileSectionImpl(Time optionTime, Time swapLength) const {
+QuantLib::ext::shared_ptr<SmileSection> SwaptionVolCube2::smileSectionImpl(Time optionTime, Time swapLength) const {
 
     calculate();
     Date optionDate = optionDateFromTime(optionTime);
@@ -98,7 +98,7 @@ boost::shared_ptr<SmileSection> SwaptionVolCube2::smileSectionImpl(Time optionTi
     return smileSectionImpl(optionDate, swapTenor);
 }
 
-boost::shared_ptr<SmileSection> SwaptionVolCube2::smileSectionImpl(const Date& optionDate,
+QuantLib::ext::shared_ptr<SmileSection> SwaptionVolCube2::smileSectionImpl(const Date& optionDate,
                                                                    const Period& swapTenor) const {
     calculate();
     Rate atmForward = atmStrike(optionDate, swapTenor);
@@ -115,10 +115,10 @@ boost::shared_ptr<SmileSection> SwaptionVolCube2::smileSectionImpl(const Date& o
     }
     Real shift = atmVol_->shift(optionTime, length);
     if (!flatExtrapolation_)
-        return boost::shared_ptr<SmileSection>(new InterpolatedSmileSection<Linear>(
+        return QuantLib::ext::shared_ptr<SmileSection>(new InterpolatedSmileSection<Linear>(
             optionTime, strikes, stdDevs, atmForward, Linear(), Actual365Fixed(), volatilityType(), shift));
     else
-        return boost::shared_ptr<SmileSection>(new InterpolatedSmileSection<LinearFlat>(
+        return QuantLib::ext::shared_ptr<SmileSection>(new InterpolatedSmileSection<LinearFlat>(
             optionTime, strikes, stdDevs, atmForward, LinearFlat(), Actual365Fixed(), volatilityType(), shift));
 }
 } // namespace QuantExt

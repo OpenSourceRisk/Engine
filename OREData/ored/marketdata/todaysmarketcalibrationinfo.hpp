@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <ored/portfolio/cashflowutils.hpp>
+
 #include <ql/math/array.hpp>
 #include <ql/time/date.hpp>
 #include <ql/time/period.hpp>
@@ -46,14 +48,19 @@ struct YieldCurveCalibrationInfo {
     std::string dayCounter;
     std::string currency;
 
+    // these are all curve pillar dates used for interpolation or overwritten by report config date list
     std::vector<QuantLib::Date> pillarDates;
     std::vector<double> zeroRates;
     std::vector<double> discountFactors;
     std::vector<double> times;
-};
 
-struct PiecewiseYieldCurveCalibrationInfo : public YieldCurveCalibrationInfo {
-    // ... add instrument types?
+    // a rate helper can have 0...n pillar dates associated to it in general
+    std::vector<std::set<QuantLib::Date>> rateHelperPillarDates;
+    std::vector<std::string> mdQuoteLabels;
+    std::vector<double> mdQuoteValues;
+    std::vector<std::string> rateHelperTypes;
+    std::vector<std::vector<TradeCashflowReportData>> rateHelperCashflows;
+    std::vector<double> rateHelperQuoteErrors;
 };
 
 struct FittedBondCurveCalibrationInfo : public YieldCurveCalibrationInfo {
@@ -79,6 +86,10 @@ struct InflationCurveCalibrationInfo {
     QuantLib::Date baseDate;
     std::vector<QuantLib::Date> pillarDates;
     std::vector<double> times;
+    std::vector<std::string> mdQuoteLabels;
+    std::vector<double> mdQuoteValues;
+    std::vector<std::string> rateHelperTypes;
+    std::vector<std::vector<TradeCashflowReportData>> rateHelperCashflows;
 };
 
 struct ZeroInflationCurveCalibrationInfo : public InflationCurveCalibrationInfo {
@@ -168,26 +179,48 @@ struct IrVolCalibrationInfo {
     std::vector<std::string> messages;
 };
 
+// cpi vols
+
+struct CpiVolCalibrationInfo {
+    std::string dayCounter;
+    std::string calendar;
+    bool isArbitrageFree;
+    std::vector<QuantLib::Date> expiryDates;
+    std::vector<QuantLib::Date> optionObservationDates;
+    std::vector<double> times;
+    std::vector<double> optionLifeTimes;
+    std::vector<double> forwards;
+    std::vector<double> strikes;
+    std::vector<std::vector<double>> strikeGridProb;
+    std::vector<std::vector<double>> strikeGridImpliedVolatility;
+    std::vector<std::vector<bool>> strikeGridCallSpreadArbitrage;
+    std::vector<std::vector<bool>> strikeGridButterflyArbitrage;
+    std::vector<double> forwardCPI;
+    std::vector<std::vector<double>> strikeCPI;
+};
+
 // main container
 
 struct TodaysMarketCalibrationInfo {
     QuantLib::Date asof;
     // discount, index and yield curves
-    std::map<std::string, boost::shared_ptr<YieldCurveCalibrationInfo>> yieldCurveCalibrationInfo;
+    std::map<std::string, QuantLib::ext::shared_ptr<YieldCurveCalibrationInfo>> yieldCurveCalibrationInfo;
     // equity dividend yield curves
-    std::map<std::string, boost::shared_ptr<YieldCurveCalibrationInfo>> dividendCurveCalibrationInfo;
+    std::map<std::string, QuantLib::ext::shared_ptr<YieldCurveCalibrationInfo>> dividendCurveCalibrationInfo;
     // inflation curves
-    std::map<std::string, boost::shared_ptr<InflationCurveCalibrationInfo>> inflationCurveCalibrationInfo;
+    std::map<std::string, QuantLib::ext::shared_ptr<InflationCurveCalibrationInfo>> inflationCurveCalibrationInfo;
     // commodity curves
-    std::map<std::string, boost::shared_ptr<CommodityCurveCalibrationInfo>> commodityCurveCalibrationInfo;
+    std::map<std::string, QuantLib::ext::shared_ptr<CommodityCurveCalibrationInfo>> commodityCurveCalibrationInfo;
     // fx vols
-    std::map<std::string, boost::shared_ptr<FxEqCommVolCalibrationInfo>> fxVolCalibrationInfo;
+    std::map<std::string, QuantLib::ext::shared_ptr<FxEqCommVolCalibrationInfo>> fxVolCalibrationInfo;
     // eq vols
-    std::map<std::string, boost::shared_ptr<FxEqCommVolCalibrationInfo>> eqVolCalibrationInfo;
+    std::map<std::string, QuantLib::ext::shared_ptr<FxEqCommVolCalibrationInfo>> eqVolCalibrationInfo;
     // ir vols (swaption, capfloor)
-    std::map<std::string, boost::shared_ptr<IrVolCalibrationInfo>> irVolCalibrationInfo;
+    std::map<std::string, QuantLib::ext::shared_ptr<IrVolCalibrationInfo>> irVolCalibrationInfo;
     // comm vols
-    std::map<std::string, boost::shared_ptr<FxEqCommVolCalibrationInfo>> commVolCalibrationInfo;
+    std::map<std::string, QuantLib::ext::shared_ptr<FxEqCommVolCalibrationInfo>> commVolCalibrationInfo;
+    // cpi vols
+    std::map<std::string, QuantLib::ext::shared_ptr<CpiVolCalibrationInfo>> cpiVolCalibrationInfo;
 };
 
 } // namespace data

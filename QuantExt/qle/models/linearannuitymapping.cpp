@@ -50,7 +50,7 @@ Real GsrG(const Real yf, const Real reversion) {
 }
 } // namespace
 
-boost::shared_ptr<AnnuityMapping> LinearAnnuityMappingBuilder::build(const Date& valuationDate, const Date& optionDate,
+QuantLib::ext::shared_ptr<AnnuityMapping> LinearAnnuityMappingBuilder::build(const Date& valuationDate, const Date& optionDate,
                                                                      const Date& paymentDate,
                                                                      const VanillaSwap& underlying,
                                                                      const Handle<YieldTermStructure>& discountCurve) {
@@ -58,17 +58,17 @@ boost::shared_ptr<AnnuityMapping> LinearAnnuityMappingBuilder::build(const Date&
     // no need for an actual mapping, since the coupon amount is deterministic, i.e. model-independent
 
     if (optionDate <= valuationDate)
-        return boost::make_shared<LinearAnnuityMapping>(0.0, 0.0);
+        return QuantLib::ext::make_shared<LinearAnnuityMapping>(0.0, 0.0);
 
     // build the mapping dependent on whether a, b or a reversion is given
 
     if (a_ != Null<Real>() && b_ != Null<Real>()) {
-        return boost::make_shared<LinearAnnuityMapping>(a_, b_);
+        return QuantLib::ext::make_shared<LinearAnnuityMapping>(a_, b_);
     } else if (!reversion_.empty()) {
         Real atmForward = underlying.fairRate();
         Real gx = 0.0, gy = 0.0;
         for (Size i = 0; i < underlying.fixedLeg().size(); i++) {
-            boost::shared_ptr<Coupon> c = boost::dynamic_pointer_cast<Coupon>(underlying.fixedLeg()[i]);
+            QuantLib::ext::shared_ptr<Coupon> c = QuantLib::ext::dynamic_pointer_cast<Coupon>(underlying.fixedLeg()[i]);
             Real yf = c->accrualPeriod();
             Real pv = yf * discountCurve->discount(c->date());
             gx += pv * GsrG(discountCurve->dayCounter().yearFraction(optionDate, c->date()), reversion_->value());
@@ -83,7 +83,7 @@ boost::shared_ptr<AnnuityMapping> LinearAnnuityMappingBuilder::build(const Date&
                  GsrG(discountCurve->dayCounter().yearFraction(optionDate, lastd), reversion_->value()) +
              atmForward * gy * gamma);
         Real b = discountCurve->discount(paymentDate) / gy - a * atmForward;
-        return boost::make_shared<LinearAnnuityMapping>(a, b);
+        return QuantLib::ext::make_shared<LinearAnnuityMapping>(a, b);
     } else {
         QL_FAIL("LinearAnnuityMapping::build(): failed, because neither a, b nor a reversion is given");
     }

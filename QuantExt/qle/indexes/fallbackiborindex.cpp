@@ -22,25 +22,25 @@
 */
 
 #include <qle/indexes/fallbackiborindex.hpp>
-
 #include <qle/termstructures/iborfallbackcurve.hpp>
 
 namespace QuantExt {
 
-FallbackIborIndex::FallbackIborIndex(const boost::shared_ptr<IborIndex> originalIndex,
-                                     const boost::shared_ptr<OvernightIndex> rfrIndex, const Real spread,
+FallbackIborIndex::FallbackIborIndex(const QuantLib::ext::shared_ptr<IborIndex> originalIndex,
+                                     const QuantLib::ext::shared_ptr<OvernightIndex> rfrIndex, const Real spread,
                                      const Date& switchDate, const bool useRfrCurve)
-    : FallbackIborIndex(originalIndex,
-                        useRfrCurve ? rfrIndex
-                                    : boost::dynamic_pointer_cast<OvernightIndex>(
-                                          rfrIndex->clone(originalIndex->forwardingTermStructure())),
-                        spread, switchDate,
-                        useRfrCurve ? Handle<YieldTermStructure>(boost::make_shared<IborFallbackCurve>(
-                                          originalIndex, rfrIndex, spread, switchDate))
-                                    : originalIndex->forwardingTermStructure()) {}
+    : FallbackIborIndex(
+          originalIndex,
+          useRfrCurve ? rfrIndex
+                      : QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(rfrIndex->clone(Handle<YieldTermStructure>(
+                            QuantLib::ext::make_shared<SpreadedIndexYieldCurve>(rfrIndex, originalIndex, spread, false)))),
+          spread, switchDate,
+          useRfrCurve ? Handle<YieldTermStructure>(
+                            QuantLib::ext::make_shared<IborFallbackCurve>(originalIndex, rfrIndex, spread, switchDate))
+                      : originalIndex->forwardingTermStructure()) {}
 
-FallbackIborIndex::FallbackIborIndex(const boost::shared_ptr<IborIndex> originalIndex,
-                                     const boost::shared_ptr<OvernightIndex> rfrIndex, const Real spread,
+FallbackIborIndex::FallbackIborIndex(const QuantLib::ext::shared_ptr<IborIndex> originalIndex,
+                                     const QuantLib::ext::shared_ptr<OvernightIndex> rfrIndex, const Real spread,
                                      const Date& switchDate, const Handle<YieldTermStructure>& forwardingCurve)
     : IborIndex(originalIndex->familyName(), originalIndex->tenor(), originalIndex->fixingDays(),
                 originalIndex->currency(), originalIndex->fixingCalendar(), originalIndex->businessDayConvention(),
@@ -61,16 +61,17 @@ void FallbackIborIndex::addFixing(const Date& fixingDate, Real fixing, bool forc
     }
 }
 
-boost::shared_ptr<OvernightIndexedCoupon> FallbackIborIndex::onCoupon(const Date& iborFixingDate,
-                                                                      const bool telescopicValueDates) const {
+QuantLib::ext::shared_ptr<OvernightIndexedCoupon> FallbackIborIndex::onCoupon(const Date& iborFixingDate,
+                                                                              const bool telescopicValueDates) const {
     QL_REQUIRE(iborFixingDate >= switchDate_, "FallbackIborIndex: onCoupon for ibor fixing date "
                                                   << iborFixingDate << " requested, which is before switch date "
                                                   << switchDate_ << " for index '" << name() << "'");
     Date valueDate = originalIndex_->valueDate(iborFixingDate);
     Date maturityDate = originalIndex_->maturityDate(valueDate);
-    return boost::make_shared<OvernightIndexedCoupon>(maturityDate, 1.0, valueDate, maturityDate, rfrIndex_, 1.0, 0.0,
-                                                      Date(), Date(), DayCounter(), telescopicValueDates, false,
-                                                      2 * Days, 0, Null<Size>());
+
+    return QuantLib::ext::make_shared<OvernightIndexedCoupon>(maturityDate, 1.0, valueDate, maturityDate, rfrIndex_,
+                                                              1.0, 0.0, Date(), Date(), DayCounter(),
+                                                              telescopicValueDates, false, 2 * Days, 0, Null<Size>());
 }
 
 Real FallbackIborIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {
@@ -81,11 +82,30 @@ Real FallbackIborIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing
     if (fixingDate > today) {
         return IborIndex::forecastFixing(fixingDate);
     } else {
-      if (boost::dynamic_pointer_cast<OvernightIndex>(originalIndex_))
-	  return rfrIndex_->fixing(fixingDate) + spread_;
-      else
-	  return onCoupon(fixingDate, true)->rate() + spread_;
+        if (QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(originalIndex_)) {
+            return rfrIndex_->fixing(fixingDate) + spread_;
+        } else {
+            return onCoupon(fixingDate, true)->rate() + spread_;
+        }
     }
+}
+
+bool FallbackIborIndex::hasHistoricalFixing(const Date& fixingDate) const {
+    Date today = Settings::instance().evaluationDate();
+    if (today < switchDate_) {
+        return originalIndex_->hasHistoricalFixing(fixingDate);
+    } else {
+        if (QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(originalIndex_)) {
+            return rfrIndex_->hasHistoricalFixing(fixingDate);
+        } else {
+            try {
+                return pastFixing(fixingDate) != Null<Rate>();
+            } catch (...) {
+                ; // Fall through and assume no fixing available;
+            }
+        }
+    }
+    return false;
 }
 
 Rate FallbackIborIndex::pastFixing(const Date& fixingDate) const {
@@ -96,8 +116,8 @@ Rate FallbackIborIndex::pastFixing(const Date& fixingDate) const {
     return fixing(fixingDate);
 }
 
-boost::shared_ptr<IborIndex> FallbackIborIndex::clone(const Handle<YieldTermStructure>& forwarding) const {
-    return boost::make_shared<FallbackIborIndex>(originalIndex_, rfrIndex_, spread_, switchDate_, forwarding);
+QuantLib::ext::shared_ptr<IborIndex> FallbackIborIndex::clone(const Handle<YieldTermStructure>& forwarding) const {
+    return QuantLib::ext::make_shared<FallbackIborIndex>(originalIndex_, rfrIndex_, spread_, switchDate_, forwarding);
 }
 
 Rate FallbackIborIndex::forecastFixing(const Date& valueDate, const Date& endDate, Time t) const {
@@ -111,9 +131,9 @@ Rate FallbackIborIndex::forecastFixing(const Date& valueDate, const Date& endDat
     return (disc1 / disc2 - 1.0) / t;
 }
 
-boost::shared_ptr<IborIndex> FallbackIborIndex::originalIndex() const { return originalIndex_; }
+QuantLib::ext::shared_ptr<IborIndex> FallbackIborIndex::originalIndex() const { return originalIndex_; }
 
-boost::shared_ptr<OvernightIndex> FallbackIborIndex::rfrIndex() const { return rfrIndex_; }
+QuantLib::ext::shared_ptr<OvernightIndex> FallbackIborIndex::rfrIndex() const { return rfrIndex_; }
 
 Real FallbackIborIndex::spread() const { return spread_; }
 

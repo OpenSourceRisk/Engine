@@ -1,0 +1,48 @@
+<Portfolio>
+  <Trade id="FixedRateBond">
+    <TradeType>Bond</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId />
+      <AdditionalFields />
+    </Envelope>
+    <BondData>
+      <IssuerId>CPTY</IssuerId>
+      <CreditCurveId>USD.CSB.DEFAULT_CURVE_SHIFTED</CreditCurveId>
+      <SecurityId>SECURITY_1</SecurityId>
+      <ReferenceCurveId>USD-FedFunds</ReferenceCurveId>
+      <SettlementDays>2</SettlementDays>
+      <Calendar>TARGET</Calendar>
+      <IssueDate>20150203</IssueDate>
+      <LegData>
+        <LegType>Fixed</LegType>
+        <Payer>false</Payer>
+        <Currency>USD</Currency>
+        <Notionals>
+          <Notional>10000000.000000</Notional>
+        </Notionals>
+        <DayCounter>ACT/ACT</DayCounter>
+        <PaymentConvention>F</PaymentConvention>
+        <FixedLegData>
+          <Rates>
+            <Rate>0.01</Rate>
+          </Rates>
+        </FixedLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>2015-02-05</StartDate>
+            <EndDate>2025-03-01</EndDate>
+            <Tenor>1Y</Tenor>
+            <Calendar>TARGET</Calendar>
+            <Convention>F</Convention>
+            <TermConvention>F</TermConvention>
+            <Rule>Backward</Rule>
+            <EndOfMonth />
+            <FirstDate />
+            <LastDate />
+          </Rules>
+        </ScheduleData>
+      </LegData>
+    </BondData>
+  </Trade>
+</Portfolio>

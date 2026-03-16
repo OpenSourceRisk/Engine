@@ -38,7 +38,7 @@ namespace QuantExt {
 class DatedStrippedOptionlet : public DatedStrippedOptionletBase {
 public:
     //! Construct from a StrippedOptionletBase object
-    DatedStrippedOptionlet(const Date& referenceDate, const boost::shared_ptr<StrippedOptionletBase>& s);
+    DatedStrippedOptionlet(const Date& referenceDate, const QuantLib::ext::shared_ptr<StrippedOptionletBase>& s);
     //! Construct from an explicitly provided optionlet surface
     DatedStrippedOptionlet(const Date& referenceDate, const Calendar& calendar, BusinessDayConvention bdc,
                            const vector<Date>& optionletDates, const vector<vector<Rate> >& strikes,

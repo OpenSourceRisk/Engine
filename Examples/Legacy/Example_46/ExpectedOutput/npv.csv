@@ -1,0 +1,2 @@
+#TradeId,TradeType,Maturity,MaturityTime,NPV,NpvCurrency,NPV(Base),BaseCurrency,Notional,NotionalCurrency,Notional(Base),NettingSet,CounterParty
+GenericTRS,TotalReturnSwap,2022-01-19,1.052047,1523409.255556,EUR,1523409.255556,EUR,4000000.00,EUR,4000000.00,,CPTY_C

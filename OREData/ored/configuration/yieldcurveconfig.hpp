@@ -26,22 +26,23 @@
 
 #include <ored/configuration/bootstrapconfig.hpp>
 #include <ored/configuration/curveconfig.hpp>
+#include <ored/configuration/iborfallbackconfig.hpp>
+#include <ored/configuration/reportconfig.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
 #include <ql/patterns/visitor.hpp>
 #include <ql/types.hpp>
 #include <ql/termstructures/bootstraphelper.hpp>
 
-#include <boost/none.hpp>
-#include <boost/optional.hpp>
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
+#include <ql/optional.hpp>
 
 #include <set>
 #include <map>
 
 namespace ore {
 namespace data {
-using boost::optional;
+using QuantLib::ext::optional;
 using ore::data::XMLNode;
 using QuantLib::AcyclicVisitor;
 using QuantLib::Real;
@@ -57,6 +58,24 @@ using std::vector;
 */
 class YieldCurveSegment : public XMLSerializable {
 public:
+    //! extended pillar choice
+    enum class PillarChoice {
+        NoPillar,
+        MaturityDate,     // maps to QuantLib::Pillar::Maturity
+        LastRelevantDate, // maps to QuantLib::Pillar::LastRelevantDate
+        StartDate,        // maps to QuantLib::Pillar::StartDate
+        StartDateAndMaturityDate,
+        StartDateAndLastRelevantDate
+    };
+
+    //! duplicate pillar handling
+    enum class DuplicatePillarPolicy {
+        KeepLast,
+        KeepFirst,
+        KeepAll,
+        ThrowError
+    };
+
     //! supported segment types
     enum class Type {
         Zero,
@@ -93,10 +112,9 @@ public:
     //! \name Inspectors
     //@{
     Type type() const { return type_; }
-    // TODO: why typeID?
-    const string& typeID() const { return typeID_; }
     const string& conventionsID() const { return conventionsID_; }
-    const QuantLib::Pillar::Choice pillarChoice() const { return pillarChoice_; }
+    PillarChoice pillarChoice() const { return pillarChoice_; }
+    DuplicatePillarPolicy duplicatePillarPolicy() const { return duplicatePillarPolicy_; }
     Size priority() const { return priority_; }
     Size minDistance() const { return minDistance_; }
     const vector<pair<string, bool>>& quotes() const { return quotes_; }
@@ -123,11 +141,10 @@ protected:
     pair<string, bool> quote(const string& name, bool opt = false) { return make_pair(name, opt); }
 
 private:
-    // TODO: why type and typeID?
     Type type_;
-    string typeID_;
     string conventionsID_;
-    QuantLib::Pillar::Choice pillarChoice_ = QuantLib::Pillar::LastRelevantDate;
+    PillarChoice pillarChoice_ = PillarChoice::LastRelevantDate;
+    DuplicatePillarPolicy duplicatePillarPolicy_ = DuplicatePillarPolicy::KeepLast;
     Size priority_ = 0;
     Size minDistance_ = 1;
 };
@@ -565,7 +582,7 @@ public:
     IborFallbackCurveSegment() {}
     //! Detailed constructor
     IborFallbackCurveSegment(const string& typeID, const string& iborIndex, const string& rfrCurve,
-                             const boost::optional<string>& rfrIndex, const boost::optional<Real>& spread);
+                             const QuantLib::ext::optional<string>& rfrIndex, const QuantLib::ext::optional<Real>& spread);
 
     //! \name Serialisation
     //@{
@@ -577,8 +594,8 @@ public:
     //@{
     const string& iborIndex() const { return iborIndex_; }
     const string& rfrCurve() const { return rfrCurve_; }
-    const boost::optional<string>& rfrIndex() const { return rfrIndex_; }
-    const boost::optional<Real>& spread() const { return spread_; }
+    const QuantLib::ext::optional<string>& rfrIndex() const { return rfrIndex_; }
+    const QuantLib::ext::optional<Real>& spread() const { return spread_; }
     //@}
 
     //! \name Visitability
@@ -589,8 +606,8 @@ public:
 private:
     string iborIndex_;
     string rfrCurve_;
-    boost::optional<string> rfrIndex_;
-    boost::optional<Real> spread_;
+    QuantLib::ext::optional<string> rfrIndex_;
+    QuantLib::ext::optional<Real> spread_;
 };
 
 //! Bond yield shifted yield curve segment
@@ -612,7 +629,7 @@ public:
     //! Default destructor
     virtual ~BondYieldShiftedYieldCurveSegment() {}
     //@}
-    
+
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
@@ -635,8 +652,8 @@ private:
     string referenceCurveID_;
     map<string, string> iborIndexCurves_;
     bool extrapolateFlat_;
-    boost::optional<Real> spread_;
-    boost::optional<Real> bondYield_;
+    QuantLib::ext::optional<Real> spread_;
+    QuantLib::ext::optional<Real> bondYield_;
 };
 
 //! Yield Curve configuration
@@ -650,14 +667,18 @@ public:
     //! \name Constructors/Destructors
     //@{
     //! Default constructor
-    YieldCurveConfig() {}
+    YieldCurveConfig(QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig = nullptr) : iborFallbackConfig_(
+        iborFallbackConfig) {}
     //! Detailed constructor
     YieldCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
-                     const string& discountCurveID, const vector<boost::shared_ptr<YieldCurveSegment>>& curveSegments,
+                     const string& discountCurveID,
+                     const vector<QuantLib::ext::shared_ptr<YieldCurveSegment>>& curveSegments,
                      const string& interpolationVariable = "Discount", const string& interpolationMethod = "LogLinear",
                      const string& zeroDayCounter = "A365", bool extrapolation = true,
+                     const string& extrapolationMethod = "ContinuousForward",
                      const BootstrapConfig& bootstrapConfig = BootstrapConfig(),
-                     const Size mixedInterpolationCutoff = 1);
+                     const Size mixedInterpolationCutoff = 1,
+                     QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig = nullptr);
     //! Default destructor
     virtual ~YieldCurveConfig() {}
     //@}
@@ -672,13 +693,15 @@ public:
     //@{
     const string& currency() const { return currency_; }
     const string& discountCurveID() const { return discountCurveID_; }
-    const vector<boost::shared_ptr<YieldCurveSegment>>& curveSegments() const { return curveSegments_; }
+    const vector<QuantLib::ext::shared_ptr<YieldCurveSegment>>& curveSegments() const { return curveSegments_; }
     const string& interpolationVariable() const { return interpolationVariable_; }
     const string& interpolationMethod() const { return interpolationMethod_; }
     Size mixedInterpolationCutoff() const { return mixedInterpolationCutoff_; }
     const string& zeroDayCounter() const { return zeroDayCounter_; }
     bool extrapolation() const { return extrapolation_; }
+    const string& extrapolationMethod() const { return extrapolationMethod_; }
     const BootstrapConfig& bootstrapConfig() const { return bootstrapConfig_; }
+    bool excludeT0FromInterpolation() const { return excludeT0FromInterpolation_; }
     //@}
 
     //! \name Setters
@@ -688,30 +711,36 @@ public:
     Size& mixedInterpolationCutoff() { return mixedInterpolationCutoff_; }
     string& zeroDayCounter() { return zeroDayCounter_; }
     bool& extrapolation() { return extrapolation_; }
+    string& extrapolationMethod() { return extrapolationMethod_; }
     void setBootstrapConfig(const BootstrapConfig& bootstrapConfig) { bootstrapConfig_ = bootstrapConfig; }
     //@}
+    const ReportConfig& reportConfig() const { return reportConfig_; }
 
     const vector<string>& quotes() override;
 
 private:
-    void populateRequiredCurveIds();
+    void populateRequiredIds() const override;
 
     // Mandatory members
     string currency_;
     string discountCurveID_;
-    vector<boost::shared_ptr<YieldCurveSegment>> curveSegments_;
+    vector<QuantLib::ext::shared_ptr<YieldCurveSegment>> curveSegments_;
 
     // Optional members
     string interpolationVariable_;
     string interpolationMethod_;
     string zeroDayCounter_;
-    bool extrapolation_;
+    bool extrapolation_ = true;
+    string extrapolationMethod_;
     BootstrapConfig bootstrapConfig_;
-    Size mixedInterpolationCutoff_;
+    Size mixedInterpolationCutoff_ = 1;
+    ReportConfig reportConfig_;
+    QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig_;
+    bool excludeT0FromInterpolation_ = false;
 };
 
 // Map form curveID to YieldCurveConfig
-using YieldCurveConfigMap = std::map<string, boost::shared_ptr<YieldCurveConfig>>;
+using YieldCurveConfigMap = std::map<string, QuantLib::ext::shared_ptr<YieldCurveConfig>>;
 
 } // namespace data
 } // namespace ore

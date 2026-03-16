@@ -1,0 +1,23 @@
+\subsubsection{Equity Swap}
+\label{pricing::eq_swap}
+
+An Equity Leg is priced by discounting cashflows based on the 
+equity forwarding curve:
+$$
+\NPV_{EqLeg} = \sum_{i=1}^n N(t_{i-1})\cdot \left(\frac{(s(t_i) + \delta(t_i)) \text{FX}_i - s(t_{i-1})\cdot \text{FX}_{i-1}
+  }{s(t_{i-1}) \cdot \text{FX}_{i-1}}\right) \cdot P(t_{p,i})
+$$
+where:
+\begin{itemize}
+\item $t_0, \ldots, t_n$ the times defining the equity fixing schedule
+\item $t_{p,1}, \ldots, t_{p,n}$ the times defining the coupon payment schedule
+\item $N(t_i)$: the notional at time $t_i$. If the notional is non-resettable this is given as a fixed number in the
+  terms of the swap. If the notional is resettable, we have
+  $$N(t_i) = \frac{N(t_0)}{s(t_0) \text{FX}_0} s(t_i) \text{FX}_i = q s(t_i) \text{FX}_i$$
+  with a quantity $q := N(t_0) / [ s(t_0) \text{FX}_0 ]$ that is fixed for all coupons.
+\item $s(t_i)$: the equity forward price at time $t_i$
+\item $\delta(t_i)$: the dividend between time $t_{i-1}$ and $t_i$ for Total Return Swap; $0$ for Price Return Swap 
+\item $P(t_{p,i})$: the discount factor for time $t_{p,i}$
+\item $\text{FX}_i$: the fx rate converting the equity ccy to the equity leg ccy (if FX conversion is applicable, otherwise set
+  this to $1$ in the above formula)
+\end{itemize}

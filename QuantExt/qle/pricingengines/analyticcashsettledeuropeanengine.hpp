@@ -37,13 +37,19 @@ class AnalyticCashSettledEuropeanEngine : public CashSettledEuropeanOption::engi
 public:
     /*! The risk-free rate in the given process \p bsp is used for both forecasting and discounting.
      */
-    AnalyticCashSettledEuropeanEngine(const boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess>& bsp);
+    AnalyticCashSettledEuropeanEngine(const QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess>& bsp,
+                                      const bool flipResults = false,
+                                      QuantLib::DiffusionModelType model = QuantLib::DiffusionModelType::AsInputVolatilityType,
+                                      const double displacement = 0.0);
 
     /*! As usual, the risk-free rate from the given process \p bsp is used for forecasting the forward price. The
         \p discountCurve is used for discounting.
     */
-    AnalyticCashSettledEuropeanEngine(const boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess>& bsp,
-                                      const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve);
+    AnalyticCashSettledEuropeanEngine(const QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess>& bsp,
+                                      const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
+                                      const bool flipResults = false,
+                                      QuantLib::DiffusionModelType model = QuantLib::DiffusionModelType::AsInputVolatilityType,
+                                      const double displacement = 0.0);
 
     //! \name PricingEngine interface
     //@{
@@ -54,9 +60,10 @@ private:
     //! Underlying engine that does the work.
     mutable QuantExt::AnalyticEuropeanForwardEngine underlyingEngine_;
     //! Underlying process
-    boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> bsp_;
+    QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> bsp_;
     //! Curve for discounting cashflows
     QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve_;
+    bool flipResults_;
 };
 
 } // namespace QuantExt

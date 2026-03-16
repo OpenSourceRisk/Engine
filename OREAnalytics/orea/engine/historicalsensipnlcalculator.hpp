@@ -48,7 +48,7 @@ namespace analytics {
 
 class PNLCalculator {
 public:
-    PNLCalculator(ore::data::TimePeriod pnlPeriod) : pnlPeriod_(pnlPeriod) {}
+    PNLCalculator(ore::data::TimePeriod pnlPeriod, bool runRiskFactorLevel = false) : pnlPeriod_(pnlPeriod) {}
     virtual ~PNLCalculator() {}
     virtual void writePNL(QuantLib::Size scenarioIdx, bool isCall,
                           const RiskFactorKey& key_1, QuantLib::Real shift_1, QuantLib::Real delta,
@@ -61,20 +61,33 @@ public:
                       const std::vector<QuantLib::Date>& startDates, const std::vector<QuantLib::Date>& endDates);
     
     using TradePnLStore = std::vector<std::vector<QuantLib::Real>>;
-    virtual void populateTradePNLs(const TradePnLStore& allPnls, const TradePnLStore& foPnls) {}
+    void populateTradePNLs(const TradePnLStore& allPnls, const TradePnLStore& foPnls);
 
     const std::vector<QuantLib::Real>& pnls() { return pnls_; };
     const std::vector<QuantLib::Real>& foPnls() { return foPnls_; };
 
+    const TradePnLStore& tradePnls() { return tradePnls_; }
+    const TradePnLStore& foTradePnls() { return foTradePnls_; }
+
+    using RiskFactorTradePnLStore = std::vector<std::map<std::string, std::vector<QuantLib::Real>>>;
+    void populateRiskFactorTradePNLs(const RiskFactorTradePnLStore& allPnls, const RiskFactorTradePnLStore& foPnls);
+
+    const RiskFactorTradePnLStore& riskFactorTradePnls() { return riskFactorTradePnls_; }
+    const RiskFactorTradePnLStore& riskFactorFoTradePnls() { return riskFactorFoTradePnls_; }
+    
     void clear() { 
         pnls_.clear();
         foPnls_.clear();
+        tradePnls_.clear();
+        foTradePnls_.clear();
     }
 
 protected:
     std::vector<QuantLib::Real> pnls_;
     std::vector<QuantLib::Real> foPnls_;
     ore::data::TimePeriod pnlPeriod_;
+    TradePnLStore tradePnls_, foTradePnls_;
+    RiskFactorTradePnLStore riskFactorTradePnls_, riskFactorFoTradePnls_;
 };
 
 class CovarianceCalculator {
@@ -84,25 +97,29 @@ public:
     void updateAccumulators(const QuantLib::ext::shared_ptr<NPVCube>& shiftCube, QuantLib::Date startDate, QuantLib::Date endDate, QuantLib::Size index);
     void populateCovariance(const std::set<std::pair<RiskFactorKey, QuantLib::Size>>& keys);
     const Matrix& covariance() const { return covariance_; }
+    const Matrix& correlation() const { return correlation_; }
 
 private:
     typedef boost::accumulators::accumulator_set<
         QuantLib::Real,
-        boost::accumulators::stats<boost::accumulators::tag::covariance<QuantLib::Real, boost::accumulators::tag::covariate1>>>
-        accumulator;
+        boost::accumulators::stats<
+            boost::accumulators::tag::covariance<QuantLib::Real, boost::accumulators::tag::covariate1>,
+            boost::accumulators::tag::variance>>accumulator;
     std::map<std::pair<QuantLib::Size, QuantLib::Size>, accumulator> accCov_;
     ore::data::TimePeriod covariancePeriod_;
     QuantLib::Matrix covariance_;
+    QuantLib::Matrix correlation_;
 };
 
 class HistoricalSensiPnlCalculator {
 public:
-    HistoricalSensiPnlCalculator(const boost::shared_ptr<HistoricalScenarioGenerator>& hisScenGen,
-                                 const boost::shared_ptr<SensitivityStream>& ss)
+    HistoricalSensiPnlCalculator(const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen,
+                                 const QuantLib::ext::shared_ptr<SensitivityStream>& ss)
         : hisScenGen_(hisScenGen), sensitivityStream_(ss) {}
     
     void populateSensiShifts(QuantLib::ext::shared_ptr<NPVCube>& cube, const vector<RiskFactorKey>& keys,
-                             QuantLib::ext::shared_ptr<ScenarioShiftCalculator> shiftCalculator);
+                             QuantLib::ext::shared_ptr<ScenarioShiftCalculator> shiftCalculator,
+                             const bool& supressError = false);
 
     void calculateSensiPnl(const std::set<SensitivityRecord>& srs,
         const std::vector<RiskFactorKey>& rfKeys,
@@ -111,7 +128,10 @@ public:
         const QuantLib::ext::shared_ptr<CovarianceCalculator>& covarianceCalculator,
         const std::vector<std::string>& tradeIds = {},
         const bool includeGammaMargin = true, const bool includeDeltaMargin = true, 
-        const bool tradeLevel = false);
+        const bool tradeLevel = false,
+        const bool runRiskFactorLevel = false);
+
+    int getScenarioNumber() const { return hisScenGen_->numScenarios(); }
 
 private:
     QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> hisScenGen_;

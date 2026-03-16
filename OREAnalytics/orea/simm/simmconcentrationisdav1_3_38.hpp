@@ -44,7 +44,7 @@ namespace analytics {
 class SimmConcentration_ISDA_V1_3_38 : public SimmConcentrationBase {
 public:
     //! Default constructor that adds fixed known mappings
-    SimmConcentration_ISDA_V1_3_38(const boost::shared_ptr<SimmBucketMapper>& simmBucketMapper);
+    SimmConcentration_ISDA_V1_3_38(const QuantLib::ext::shared_ptr<SimmBucketMapper>& simmBucketMapper);
 
     /*! Return the SIMM <em>concentration threshold</em> for a given SIMM
         <em>RiskType</em> and SIMM <em>Qualifier</em>.
@@ -56,7 +56,7 @@ public:
 
 private:
     //! Help getting SIMM buckets from SIMM qualifiers
-    boost::shared_ptr<SimmBucketMapper> simmBucketMapper_;
+    QuantLib::ext::shared_ptr<SimmBucketMapper> simmBucketMapper_;
 };
 
 } // namespace analytics

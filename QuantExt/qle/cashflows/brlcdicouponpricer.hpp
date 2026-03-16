@@ -54,7 +54,7 @@ private:
     const QuantExt::OvernightIndexedCoupon* couponQle_;
 
     //! The index underlying the coupon to be priced
-    boost::shared_ptr<BRLCdi> index_;
+    QuantLib::ext::shared_ptr<BRLCdi> index_;
 };
 
 } // namespace QuantExt

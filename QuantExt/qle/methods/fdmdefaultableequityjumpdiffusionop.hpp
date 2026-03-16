@@ -42,8 +42,8 @@ public:
           convertible bonds (in this context, the model credit curve will be the equity credit curve then).
      */
     FdmDefaultableEquityJumpDiffusionOp(
-        const boost::shared_ptr<QuantLib::FdmMesher>& mesher,
-        const boost::shared_ptr<DefaultableEquityJumpDiffusionModel>& model, const Size direction = 0,
+        const QuantLib::ext::shared_ptr<QuantLib::FdmMesher>& mesher,
+        const QuantLib::ext::shared_ptr<DefaultableEquityJumpDiffusionModel>& model, const Size direction = 0,
         const std::function<Real(Real, Real, Real)>& recovery = {},
         const Handle<QuantLib::YieldTermStructure>& discountingCurve = Handle<QuantLib::YieldTermStructure>(),
         const Handle<QuantLib::Quote>& discountingSpread = Handle<QuantLib::Quote>(),
@@ -68,8 +68,8 @@ public:
     void setConversionRatio(const std::function<Real(Real)>& conversionRatio);
 
 private:
-    boost::shared_ptr<QuantLib::FdmMesher> mesher_;
-    boost::shared_ptr<DefaultableEquityJumpDiffusionModel> model_;
+    QuantLib::ext::shared_ptr<QuantLib::FdmMesher> mesher_;
+    QuantLib::ext::shared_ptr<DefaultableEquityJumpDiffusionModel> model_;
     Size direction_;
     std::function<Real(Real, Real, Real)> recovery_;
     Handle<QuantLib::YieldTermStructure> discountingCurve_;

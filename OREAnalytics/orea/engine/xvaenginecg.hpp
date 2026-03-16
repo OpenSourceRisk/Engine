@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <orea/cube/sensicube.hpp>
 #include <orea/scenario/scenariogeneratordata.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
@@ -32,78 +33,315 @@
 #include <ored/marketdata/loader.hpp>
 #include <ored/model/crossassetmodelbuilder.hpp>
 #include <ored/portfolio/portfolio.hpp>
+#include <ored/report/inmemoryreport.hpp>
+#include <ored/scripting/engines/amccgpricingengine.hpp>
 #include <ored/scripting/models/gaussiancamcg.hpp>
 #include <ored/utilities/progressbar.hpp>
 
 #include <ored/marketdata/todaysmarket.hpp>
+
+#include <qle/ad/computationgraph.hpp>
+#include <qle/ad/external_randomvariable_ops.hpp>
+#include <qle/math/computeenvironment.hpp>
+#include <qle/methods/cclgmfxoptionvegaparconverter.hpp>
+#include <qle/methods/irdeltaparconverter.hpp>
+#include <qle/methods/lgmswaptionvegaparconverter.hpp>
 
 #include <ql/types.hpp>
 
 namespace ore {
 namespace analytics {
 
-using namespace QuantLib;
-using namespace ore::data;
-
 class XvaEngineCG : public ore::data::ProgressReporter {
 public:
-    XvaEngineCG(const Size nThreads, const Date& asof, const boost::shared_ptr<ore::data::Loader>& loader,
-                const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
-                const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
-                const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketData,
-                const boost::shared_ptr<ore::data::EngineData>& engineData,
-                const boost::shared_ptr<ore::analytics::CrossAssetModelData>& crossAssetModelData,
-                const boost::shared_ptr<ore::analytics::ScenarioGeneratorData>& scenarioGeneratorData,
-                const boost::shared_ptr<ore::data::Portfolio>& portfolio,
+    enum class Mode { Disabled, CubeGeneration, Full };
+
+    ~XvaEngineCG();
+    XvaEngineCG(const Mode mode, const Size nThreads, const Date& asof,
+                const QuantLib::ext::shared_ptr<ore::data::Loader>& loader,
+                const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
+                const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
+                const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketData,
+                const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData,
+                const QuantLib::ext::shared_ptr<ore::analytics::CrossAssetModelData>& crossAssetModelData,
+                const QuantLib::ext::shared_ptr<ore::analytics::ScenarioGeneratorData>& scenarioGeneratorData,
+                const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
                 const string& marketConfiguration = Market::defaultConfiguration,
                 const string& marketConfigurationInCcy = Market::inCcyConfiguration,
-                const boost::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityData = nullptr,
-                const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
-                const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
-                const bool continueOnCalibrationError = true, const bool continueOnError = true,
+                const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityData = nullptr,
+                const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
+                const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
+                    QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
+                const bool bumpCvaSensis = false, const bool enableDynamicIM = false, const Size dynamicIMStepSize = 1,
+                const Size regressionOrder = 4, const double regressionVarianceCutoff = Null<Real>(),
+                const Size regressionOrderDynamicIm = 4, const double regressionVarianceCutoffDynamicIm = Null<Real>(),
+                const bool tradeLevelBreakDown = true, const std::vector<Size>& regressionReportTimeStepsDynamicIM = {},
+                const bool useRedBlocks = true, const bool useExternalComputeDevice = false,
+                const bool externalDeviceCompatibilityMode = false,
+                const bool useDoublePrecisionForExternalCalculation = false,
+                const std::string& externalComputeDevice = std::string(), const bool usePythonIntegration = false,
+                const bool usePythonIntegrationDynamicIm = false, const bool continueOnCalibrationError = true,
+                const bool allowModelFallbacks = true, const bool continueOnError = true,
+                const bool useAtParCouponsCurves = true, const bool useAtParCouponsTrades = true,
                 const std::string& context = "xva engine cg");
 
-private:
-    void populateRandomVariates(std::vector<RandomVariable>& values) const;
-    void populateConstants(std::vector<RandomVariable>& values) const;
-    void populateModelParameters(std::vector<RandomVariable>& values,
-                                 const std::vector<std::pair<std::size_t, double>>& modelParameters) const;
+    // if nullptr, no offset scenario to be applied, otherwise the base market will be shifted by that scenario
+    void setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario);
 
-    // input parameters
+    // set asd - if not nullptr the container will be populated when running the engine
+    void setAggregationScenarioData(const QuantLib::ext::shared_ptr<ore::analytics::AggregationScenarioData>& asd);
+
+    // set npv output cube - if not nullptr, the cube will be populated when running the engine
+    void setNpvOutputCube(const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& npvOutputCube);
+
+    // set dynamic IM output cube - if not nullptr and dynamicIM is true, it will be populated with netting set IM
+    void setDynamicIMOutputCube(const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& dynamicIMOutputCube);
+
+    // run the engine, this is required before populateNpvCube() is called or reports are retrieved
+    void run();
+
+    // retrieve reports generated by the engine in mode Full (otherwise nullptr is returned)
+    QuantLib::ext::shared_ptr<InMemoryReport> exposureReport() const { return epeReport_; }
+    QuantLib::ext::shared_ptr<InMemoryReport> sensiReport() const { return sensiReport_; }
+    QuantLib::ext::shared_ptr<InMemoryReport> dynamicImRegressionReport() const { return dynamicImRegressionReport_; }
+
+private:
+    // main process steps
+
+    void buildT0Market();
+    void buildSsm();
+    void buildCam();
+    void buildPortfolio();
+
+    void buildCgPartB();
+    void buildCgPartC();
+    void buildCgDynamicIM();
+    void buildCgPP();
+    void buildAsdNodes();
+
+    void getExternalContext();
+    void setupValueContainers();
+
+    void doForwardEvaluation();
+
+    void calculateDynamicIM();
+    void calculateSensitivities();
+
+    void populateAsd();
+    void populateNpvOutputCube();
+    void populateDynamicIMOutputCube();
+
+    void generateXvaReports();
+    void generateSensiReports();
+    void generateDynamicImRegressionReport();
+
+    // helper functions
+
+    void cleanUpAfterCalcs();
+    void outputGraphStats();
+    void outputTimings();
+    void finalizeExternalCalculation();
+
+    void populateRandomVariates(std::vector<RandomVariable>& values,
+                                std::vector<ExternalRandomVariable>& valuesExternal) const;
+    void populateConstants(std::vector<RandomVariable>& values,
+                           std::vector<ExternalRandomVariable>& valuesExternal) const;
+    void populateModelParameters(const std::vector<std::pair<std::size_t, double>>& modelParameters,
+                                 std::vector<RandomVariable>& values,
+                                 std::vector<ExternalRandomVariable>& valuesExternal) const;
+
+    std::pair<std::set<std::size_t>, std::set<std::set<std::size_t>>>
+    getRegressors(const std::size_t dateIndex, const Date& obsDate, const std::set<std::pair<Size, Size>>& tradeIds,
+                  const bool regressors);
+
+    std::size_t createPortfolioExposureNode(const std::size_t dateIndex, const bool isValuationDate);
+    std::size_t createTradeExposureNode(const std::size_t dateIndex, const std::size_t tradeIndex,
+                                        const bool isValuationDate);
+
+    void dynamicImAddToPathSensis(const std::set<ModelCG::ModelParameter>& parameterGroup, const Date& valDate,
+                                  const double t, const std::map<std::string, std::size_t>& currencyLookup,
+                                  const std::vector<IrDeltaParConverter>& irDeltaConverter,
+                                  const std::vector<LgmSwaptionVegaParConverter>& irVegaConverter,
+                                  const std::vector<CcLgmFxOptionVegaParConverter>& fxVegaConverter,
+                                  std::vector<std::vector<RandomVariable>>& pathIrDelta,
+                                  std::vector<RandomVariable>& pathFxDelta,
+                                  std::vector<std::vector<RandomVariable>>& pathIrVega,
+                                  std::vector<std::vector<RandomVariable>>& pathFxVega);
+    void dynamicImAddToConvertedSensis(const std::size_t ccyIndex, const std::vector<RandomVariable>& tmpIrDelta,
+                                       const std::vector<RandomVariable>& tmpIrVega,
+                                       const std::vector<RandomVariable>& tmpFxVega, const RandomVariable& tmpFxDelta,
+                                       const std::vector<IrDeltaParConverter>& irDeltaConverter,
+                                       const std::vector<LgmSwaptionVegaParConverter>& irVegaConverter,
+                                       const std::vector<CcLgmFxOptionVegaParConverter>& fxVegaConverter,
+                                       std::vector<std::vector<RandomVariable>>& conditionalIrDelta,
+                                       std::vector<RandomVariable>& conditionalFxDelta,
+                                       std::vector<std::vector<RandomVariable>>& conditionalIrVega,
+                                       std::vector<std::vector<RandomVariable>>& conditionalFxVega);
+    RandomVariable dynamicImCombineComponents(const std::vector<const RandomVariable*>& componentDerivatives,
+                                              const Size tradeId, const Size k, const Size timeStep,
+                                              const std::string& label, const double multiplier);
+
+    // set via additional methods
+
+    QuantLib::ext::shared_ptr<ore::analytics::AggregationScenarioData> asd_;
+    QuantLib::ext::shared_ptr<ore::analytics::Scenario> offsetScenario_;
+    QuantLib::ext::shared_ptr<ore::analytics::NPVCube> npvOutputCube_;
+    QuantLib::ext::shared_ptr<ore::analytics::NPVCube> dynamicIMOutputCube_;
+
+    // input parameters from constructor
+
+    Mode mode_;
     Date asof_;
-    boost::shared_ptr<ore::data::Loader> loader_;
-    boost::shared_ptr<ore::data::CurveConfigurations> curveConfigs_;
-    boost::shared_ptr<ore::data::TodaysMarketParameters> todaysMarketParams_;
-    boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> simMarketData_;
-    boost::shared_ptr<ore::data::EngineData> engineData_;
-    boost::shared_ptr<ore::analytics::CrossAssetModelData> crossAssetModelData_;
-    boost::shared_ptr<ore::analytics::ScenarioGeneratorData> scenarioGeneratorData_;
-    boost::shared_ptr<ore::data::Portfolio> portfolio_;
+    QuantLib::ext::shared_ptr<ore::data::Loader> loader_;
+    QuantLib::ext::shared_ptr<ore::data::CurveConfigurations> curveConfigs_;
+    QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters> todaysMarketParams_;
+    QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> simMarketData_;
+    QuantLib::ext::shared_ptr<ore::data::EngineData> engineData_;
+    QuantLib::ext::shared_ptr<ore::analytics::CrossAssetModelData> crossAssetModelData_;
+    QuantLib::ext::shared_ptr<ore::analytics::ScenarioGeneratorData> scenarioGeneratorData_;
+    QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio_;
     std::string marketConfiguration_;
     std::string marketConfigurationInCcy_;
-    boost::shared_ptr<ore::analytics::SensitivityScenarioData> sensitivityData_;
-    boost::shared_ptr<ReferenceDataManager> referenceData_;
-    IborFallbackConfig iborFallbackConfig_;
+    QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> sensitivityData_;
+    QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData_;
+    QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig_;
+    bool bumpCvaSensis_;
+    bool enableDynamicIM_;
+    Size dynamicIMStepSize_;
+    Size regressionOrder_;
+    Real regressionVarianceCutoff_;
+    Size regressionOrderDynamicIm_;
+    Real regressionVarianceCutoffDynamicIm_;
+    bool tradeLevelBreakDown_;
+    std::vector<Size> regressionReportTimeStepsDynamicIM_;
+    bool useRedBlocks_;
+    bool useExternalComputeDevice_;
+    bool externalDeviceCompatibilityMode_;
+    bool useDoublePrecisionForExternalCalculation_;
+    std::string externalComputeDevice_;
+    bool usePythonIntegration_;
+    bool usePythonIntegrationDynamicIm_;
     bool continueOnCalibrationError_;
+    bool allowModelFallbacks_;
     bool continueOnError_;
+    bool useAtParCouponsCurves_;
+    bool useAtParCouponsTrades_;
     std::string context_;
 
-    std::vector<bool> nodesA_;
-    std::vector<bool> nodesB_;
-    std::vector<bool> nodesC_;
-    std::vector<bool> nodesD_;
+    // artefacts produced during lifetime of engine instance
 
-    // artefacts produced during run
-    boost::shared_ptr<ore::data::Market> initMarket_;
-    boost::shared_ptr<ore::analytics::ScenarioSimMarket> simMarket_;
-    boost::shared_ptr<SensitivityScenarioGenerator> sensiScenarioGenerator_;
-    boost::shared_ptr<CrossAssetModelBuilder> camBuilder_;
-    boost::shared_ptr<GaussianCamCG> model_;
+    bool firstRun_ = true;
+
+    QuantLib::ext::shared_ptr<ore::data::Market> initMarket_;
+    QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket> simMarket_;
+    QuantLib::ObservableValue<QuantLib::ext::shared_ptr<ore::data::Market>> simMarketObs_;
+    QuantLib::ext::shared_ptr<SensitivityScenarioGenerator> sensiScenarioGenerator_;
+    QuantLib::ext::shared_ptr<CrossAssetModelBuilder> camBuilder_;
+    QuantLib::ext::shared_ptr<GaussianCamCG> model_;
+    QuantLib::ext::shared_ptr<ore::data::EngineFactory> engineFactory_;
+
+    std::set<Date> simulationDates_;
+    std::vector<Date> stickyCloseOutDates_;
+    std::vector<Date> valuationDates_;
+    std::vector<Date> closeOutDates_;
+
     std::vector<std::pair<std::size_t, double>> baseModelParams_;
     std::vector<RandomVariableOpNodeRequirements> opNodeRequirements_;
     std::vector<RandomVariableOp> ops_;
     std::vector<RandomVariableGrad> grads_;
+    std::vector<ExternalRandomVariableOp> opsExternal_;
+    std::vector<ExternalRandomVariableGrad> gradsExternal_;
+    std::size_t externalCalculationId_ = 0;
+    QuantExt::ComputeContext::Settings externalComputeDeviceSettings_;
+
+    /* Per trade and time step the exposure of a trade, which is represented by a vector of TradeExposure
+       entries for the components of a trade (buildPartB()). It is guaranteed that the number of components
+       is constant across all time steps. Includes t = 0 as first time step.
+       The index of the outmost vector corresponds to the position of the trade in portfolio->trades(), and
+       there is an entry for each trade, possibly identically zero for trades that fail in the computation
+       graph build within this engine. */
+    std::vector<std::vector<std::vector<TradeExposure>>> tradeExposureValuation_;
+    std::vector<std::vector<std::vector<TradeExposure>>> tradeExposureCloseOut_;
+
+    /* Per trade vector of meta info (buildPartB()). outer vector size is guaranteed to be the same as for
+       tradeExposureValuation_, and tradeExposureCloseOut_ members, inner vector size is equal to components
+       per respective trade. */
+    std::vector<std::vector<TradeExposureMetaInfo>> tradeExposureMetaInfo_;
+
+    // per time step portfolio exposure as conditional expectation (buildPartC(), includes t=0)
+    std::vector<std::size_t> pfExposureValuation_;
+    std::vector<std::size_t> pfExposureCloseOut_;
+
+    /* if trade breakdown, per time step and trade the exposure, as conditional expectation (buildPartC(), includes t=0)
+       trade index is the same as above for tradeExposureValuation_ member */
+    std::vector<std::vector<std::size_t>> tradeExposureNodes_;
+    std::vector<std::vector<std::size_t>> tradeExposureCloseOutNodes_;
+
+    /* for dynamic im calculation */
+    struct DynamicImInfo {
+        // plain trade ids, i.e. trades without TradeExposure::targetConditionalExpectation
+        // the id is the pair of trade id and component
+        std::set<std::pair<std::size_t, std::size_t>> plainTradeIds;
+        // sum of path exposures for plain trades, grouped by relevant model parameters
+        std::map<std::set<ModelCG::ModelParameter>, std::size_t> plainTradeSumGrouped;
+        // set of regressor nodes and var groups for plain trades
+        std::set<std::size_t> plainTradeRegressors;
+        std::set<std::set<std::size_t>> plainTradeRegressorGroups;
+        // indices in tradeExposureValuation with TradeExposure::targetConditionalExpectation set
+        std::set<std::pair<std::size_t, std::size_t>> individualTradeIds;
+    };
+
+    // dynamic im info per valuation date,
+    std::vector<DynamicImInfo> dynamicImInfo_;
+
+    /* regressor groups, set for the npv()-nodes involved in the following members, to be used to set up ops_:
+       - pfExposureValuation
+       - pfExposureCloseOut   */
+    std::map<std::size_t, std::set<std::set<std::size_t>>> pfRegressorPosGroups_;
+
+    // dynamic im per netting set
+    std::map<std::string, std::vector<RandomVariable>> dynamicIM_;
+    std::map<std::string, std::vector<RandomVariable>> dynamicDeltaIM_;
+    std::map<std::string, std::vector<RandomVariable>> dynamicVegaIM_;
+    std::map<std::string, std::vector<RandomVariable>> dynamicCurvatureIM_;
+
+    // asd nodes
+    std::vector<std::size_t> asdNumeraire_;
+    std::vector<std::vector<std::size_t>> asdFx_, asdIndex_;
+
+    // nodes to keep in calculation graph algorightms
+    std::vector<bool> keepNodes_;
+
+    // the cva node from the cg-pp
+    std::size_t cvaNode_ = QuantExt::ComputationGraph::nan;
+
+    // containers that are allocated globally and reused across the calcs
+    std::vector<RandomVariable> values_;
+    std::vector<RandomVariable> xvaDerivatives_;
+    std::vector<RandomVariable> dynamicIMDerivatives_;
+    std::vector<ExternalRandomVariable> valuesExternal_;
+
+    std::vector<std::size_t> externalOutputNodes_;
+
+    QuantLib::ext::shared_ptr<DoublePrecisionSensiCube> sensiResultCube_;
+
+    boost::timer::nanosecond_type timing_t0_ = 0, timing_ssm_ = 0, timing_parta_ = 0, timing_pf_ = 0, timing_partb_ = 0,
+                                  timing_partc_ = 0,timing_partc2_ = 0, timing_partd_ = 0, timing_popparam_ = 0, timing_poprv_ = 0,
+                                  timing_fwd_ = 0, timing_dynamicIM_ = 0, timing_bwd_ = 0, timing_sensi_ = 0,
+                                  timing_asd_ = 0, timing_outcube_ = 0, timing_imcube_ = 0, timing_total_ = 0;
+    std::size_t numberOfRedNodes_, rvMemMax_;
+
+    // data to populate dynamicImRegressionReport_
+
+    std::vector<std::tuple<Size, std::string, std::string, std::vector<RandomVariable>>> dynamicImRegressionReportData_;
+
+    // output reports
+
+    QuantLib::ext::shared_ptr<InMemoryReport> epeReport_, sensiReport_, dynamicImRegressionReport_;
 };
+
+XvaEngineCG::Mode parseXvaEngineCgMode(const std::string& s);
+std::ostream& operator<<(std::ostream& os, XvaEngineCG::Mode m);
 
 } // namespace analytics
 } // namespace ore

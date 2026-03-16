@@ -52,7 +52,7 @@ public:
         Random default model for generating samples of default
         times for the portfolio of names
         */
-        boost::shared_ptr<RandomDefaultModel> rdm,
+        QuantLib::ext::shared_ptr<RandomDefaultModel> rdm,
         //! Number of Monte Carlo samples
         Size samples = 1000,
         //! Discretization for resulting distributions
@@ -91,7 +91,7 @@ private:
     //! Return dates on the CBO schedule that are closest to the requested \p lossDistributionPeriods
     std::map<QuantLib::Date, std::string> getLossDistributionDates(const QuantLib::Date& valuationDate) const;
 
-    boost::shared_ptr<RandomDefaultModel> rdm_;
+    QuantLib::ext::shared_ptr<RandomDefaultModel> rdm_;
     Size samples_;
     Size bins_;
     double errorTolerance_;

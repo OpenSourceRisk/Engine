@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 #include <ored/configuration/curveconfig.hpp>
 #include <ored/configuration/onedimsolverconfig.hpp>
 #include <ored/configuration/volatilityconfig.hpp>
@@ -43,18 +43,18 @@ public:
     //! Explicit constructor
     CommodityVolatilityConfig(const std::string& curveId, const std::string& curveDescription,
                               const std::string& currency,
-                              const std::vector<boost::shared_ptr<VolatilityConfig>>& volatilityConfig,
+                              const std::vector<QuantLib::ext::shared_ptr<VolatilityConfig>>& volatilityConfig,
                               const std::string& dayCounter = "A365", const std::string& calendar = "NullCalendar",
                               const std::string& futureConventionsId = "", QuantLib::Natural optionExpiryRollDays = 0,
                               const std::string& priceCurveId = "", const std::string& yieldCurveId = "",
                               const std::string& quoteSuffix = "",
                               const OneDimSolverConfig& solverConfig = OneDimSolverConfig(),
-                              const boost::optional<bool>& preferOutOfTheMoney = boost::none);
+                              const QuantLib::ext::optional<bool>& preferOutOfTheMoney = QuantLib::ext::nullopt);
 
     //! \name Inspectors
     //@{
     const std::string& currency() const;
-    const std::vector<boost::shared_ptr<VolatilityConfig>>& volatilityConfig() const;
+    const std::vector<QuantLib::ext::shared_ptr<VolatilityConfig>>& volatilityConfig() const;
     const std::string& dayCounter() const;
     const std::string& calendar() const;
     const std::string& futureConventionsId() const;
@@ -63,7 +63,7 @@ public:
     const std::string& yieldCurveId() const;
     const std::string& quoteSuffix() const;
     OneDimSolverConfig solverConfig() const;
-    const boost::optional<bool>& preferOutOfTheMoney() const;
+    const QuantLib::ext::optional<bool>& preferOutOfTheMoney() const;
     const ReportConfig& reportConfig() const { return reportConfig_; }
     //@}
 
@@ -74,10 +74,10 @@ public:
     //@}
 
 private:
-    void populateRequiredCurveIds();
+    void populateRequiredIds() const override;
 
     std::string currency_;
-    std::vector<boost::shared_ptr<VolatilityConfig>> volatilityConfig_;
+    std::vector<QuantLib::ext::shared_ptr<VolatilityConfig>> volatilityConfig_;
     std::string dayCounter_;
     std::string calendar_;
     std::string futureConventionsId_;
@@ -86,7 +86,7 @@ private:
     std::string yieldCurveId_;
     std::string quoteSuffix_;
     OneDimSolverConfig solverConfig_;
-    boost::optional<bool> preferOutOfTheMoney_;
+    QuantLib::ext::optional<bool> preferOutOfTheMoney_;
     ReportConfig reportConfig_;
 
     //! Populate CurveConfig::quotes_ with the required quotes.

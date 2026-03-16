@@ -42,14 +42,15 @@ public:
         : GenericYieldVolatilityCurveConfig("Bond", "YieldVolatility", "BOND_OPTION", "Qualifier", false, false) {}
     //! Detailed constructor
     YieldVolatilityCurveConfig(const string& curveID, const string& curveDescription, const string& qualifier,
-                               const Dimension& dimension, const VolatilityType& volatilityType, const bool extrapolate,
-                               const bool flatExtrapolation, const vector<string>& optionTenors,
+                               const Dimension& dimension, const VolatilityType volatilityType,
+                               const VolatilityType outputVolatilityType, const Interpolation interpolation,
+                               const Extrapolation extrapolation, const vector<string>& optionTenors,
                                const vector<string>& bondTenors, const DayCounter& dayCounter, const Calendar& calendar,
                                const BusinessDayConvention& businessDayConvention)
         : GenericYieldVolatilityCurveConfig("Bond", "YieldVolatility", "BOND_OPTION", "Qualifier", curveID,
-                                            curveDescription, qualifier, dimension, volatilityType, extrapolate,
-                                            flatExtrapolation, optionTenors, bondTenors, dayCounter, calendar,
-                                            businessDayConvention) {}
+                                            curveDescription, qualifier, dimension, volatilityType,
+                                            outputVolatilityType, interpolation, extrapolation, optionTenors,
+                                            bondTenors, dayCounter, calendar, businessDayConvention) {}
     //@}
 };
 

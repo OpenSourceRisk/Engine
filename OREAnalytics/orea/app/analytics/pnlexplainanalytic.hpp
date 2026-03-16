@@ -1,0 +1,76 @@
+/*
+ Copyright (C) 2024 Quaternion Risk Management Ltd
+ All rights reserved.
+
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
+
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
+*/
+
+/*! \file orea/app/analytics/pnlexplainanalytic.hpp
+    \brief ORE P&L Explain Analytic
+*/
+
+#pragma once
+
+#include <orea/app/analytic.hpp>
+#include <orea/app/analytics/analyticfactory.hpp>
+#include <orea/app/analytics/pnlanalytic.hpp>
+#include <orea/app/analytics/pricinganalytic.hpp>
+#include <orea/app/inputvariables.hpp>
+#include <orea/scenario/historicalscenarioreturn.hpp>
+
+namespace ore {
+namespace analytics {
+
+class InputParameters;
+
+struct PnlExplainVariables : public InputVariables {
+    void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
+    
+    QuantLib::ext::shared_ptr<ScenarioReader> scenarioReader_;
+    QuantLib::ext::shared_ptr<SensitivityScenarioData> sensiScenarioData_;
+    bool parSensitivity_ = false;
+    bool riskFactorLevel_ = false;
+    std::string portfolioFilter_;
+    QuantLib::ext::shared_ptr<ReturnConfiguration> returnConfiguration_;
+};
+
+class PnlExplainAnalyticImpl : public Analytic::Impl {
+public:
+    static constexpr const char* LABEL = "PNL_EXPLAIN";
+    static constexpr const char* sensiLookupKey = "SENSI";
+    static constexpr const char* pnlLookupKey = "PNL";
+    PnlExplainAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
+        : Analytic::Impl(inputs, QuantLib::ext::make_shared<PnlExplainVariables>()) {
+        setLabel(LABEL);
+    }
+
+    virtual void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
+                             const std::set<std::string>& runTypes = {}) override;
+    void setUpConfigurations() override;
+    void buildDependencies() override;
+
+private:
+    QuantLib::ext::shared_ptr<PnlVariables> pnlVariables_;
+};
+
+class PnlExplainAnalytic : public Analytic {
+public:
+    PnlExplainAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                       const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager)
+        : Analytic(std::make_unique<PnlExplainAnalyticImpl>(inputs), {"PNL_EXPLAIN"}, inputs, analyticsManager, true,
+                   true) {}
+};
+
+} // namespace analytics
+} // namespace ore

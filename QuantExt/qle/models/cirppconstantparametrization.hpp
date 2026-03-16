@@ -44,14 +44,14 @@ public:
     Real sigma(const Time t) const;
     Real y0(const Time t) const;
 
-    const boost::shared_ptr<Parameter> parameter(const Size) const;
+    const QuantLib::ext::shared_ptr<Parameter> parameter(const Size) const;
 
 protected:
     Real direct(const Size i, const Real x) const;
     Real inverse(const Size j, const Real y) const;
 
 private:
-    const boost::shared_ptr<PseudoParameter> kappa_, theta_, sigma_, y0_;
+    const QuantLib::ext::shared_ptr<PseudoParameter> kappa_, theta_, sigma_, y0_;
 };
 
 // implementation
@@ -64,9 +64,9 @@ CirppConstantParametrization<TS>::CirppConstantParametrization(const Currency& c
                                                                const bool shifted,
                                                                const std::string& name)
     : CirppParametrization<TS>(currency, termStructure, shifted, name),
-      kappa_(boost::make_shared<PseudoParameter>(1)),
-      theta_(boost::make_shared<PseudoParameter>(1)), sigma_(boost::make_shared<PseudoParameter>(1)),
-      y0_(boost::make_shared<PseudoParameter>(1)) {
+      kappa_(QuantLib::ext::make_shared<PseudoParameter>(1)),
+      theta_(QuantLib::ext::make_shared<PseudoParameter>(1)), sigma_(QuantLib::ext::make_shared<PseudoParameter>(1)),
+      y0_(QuantLib::ext::make_shared<PseudoParameter>(1)) {
     kappa_->setParam(0, inverse(0, kappa));
     theta_->setParam(0, inverse(1, theta));
     sigma_->setParam(0, inverse(2, sigma));
@@ -100,7 +100,7 @@ template <class TS> inline Real CirppConstantParametrization<TS>::y0(const Time)
 }
 
 template <class TS>
-inline const boost::shared_ptr<Parameter> CirppConstantParametrization<TS>::parameter(const Size i) const {
+inline const QuantLib::ext::shared_ptr<Parameter> CirppConstantParametrization<TS>::parameter(const Size i) const {
     QL_REQUIRE(i < 4, "parameter " << i << " does not exist, only have 0..3");
     if (i == 0)
         return kappa_;

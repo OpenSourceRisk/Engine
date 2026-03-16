@@ -42,7 +42,7 @@ public:
     CreditDefaultSwap(const Envelope& env, const CreditDefaultSwapData& swap)
         : Trade("CreditDefaultSwap", env), swap_(swap) {}
 
-    virtual void build(const boost::shared_ptr<EngineFactory>&) override;
+    virtual void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
     QuantLib::Real notional() const override;
 
     virtual void fromXML(XMLNode* node) override;
@@ -50,7 +50,7 @@ public:
 
     const CreditDefaultSwapData& swap() const { return swap_; }
 
-    const std::map<std::string,boost::any>& additionalData() const override;
+    const std::map<std::string,QuantLib::ext::any>& additionalData() const override;
 
 private:
     CreditDefaultSwapData swap_;

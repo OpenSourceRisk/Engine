@@ -29,13 +29,14 @@ namespace ore {
 namespace data {
 
 struct SimmCreditQualifierMapping {
-    SimmCreditQualifierMapping() {}
-    SimmCreditQualifierMapping(const std::string& targetQualifier, const std::string& creditGroup)
-        : targetQualifier(targetQualifier), creditGroup(creditGroup) {}
-    SimmCreditQualifierMapping(std::string&& targetQualifier, std::string&& creditGroup)
-        : targetQualifier(targetQualifier), creditGroup(creditGroup) {}
+    SimmCreditQualifierMapping() : hasCreditRisk(true) {}
+    SimmCreditQualifierMapping(const std::string& targetQualifier, const std::string& creditGroup, bool hasCreditRisk)
+        : targetQualifier(targetQualifier), creditGroup(creditGroup), hasCreditRisk(hasCreditRisk) {}
+    SimmCreditQualifierMapping(std::string&& targetQualifier, std::string&& creditGroup, bool hasCreditRisk)
+        : targetQualifier(targetQualifier), creditGroup(creditGroup), hasCreditRisk(hasCreditRisk) {}
     std::string targetQualifier;
     std::string creditGroup; // only required for CreditNonQ
+    bool hasCreditRisk; // stores the bond reference data field hasCreditRisk
 };
 
 } // namespace data

@@ -37,17 +37,18 @@ std::string getCurveName(const std::string& spec) {
 namespace ore {
 namespace analytics {
 
-MarketCalibrationReportBase::MarketCalibrationReportBase(const std::string& calibrationFilter) {
+MarketCalibrationReportBase::MarketCalibrationReportBase(const std::string& calibrationFilter, std::size_t precision)
+    : precision_(precision) {
     calibrationFilters_ = CalibrationFilters(calibrationFilter);
 }
 
-void MarketCalibrationReportBase::populateReport(const boost::shared_ptr<ore::data::Market>& market,
-                                             const boost::shared_ptr<TodaysMarketParameters>& todaysMarketParams,
+void MarketCalibrationReportBase::populateReport(const QuantLib::ext::shared_ptr<ore::data::Market>& market,
+                                             const QuantLib::ext::shared_ptr<TodaysMarketParameters>& todaysMarketParams,
                                              const std::string& label) {
     initialise(label);
     if (market == nullptr)
         return;
-    auto t = boost::dynamic_pointer_cast<TodaysMarket>(market);
+    auto t = QuantLib::ext::dynamic_pointer_cast<TodaysMarket>(market);
     if (!t) {
         DLOG("MarketCalibrationReportBase::populateReport() expected TodaysMarket");
         return;
@@ -85,8 +86,14 @@ void MarketCalibrationReportBase::populateReport(const boost::shared_ptr<ore::da
         if (todaysMarketParams->hasMarketObject(MarketObject::IndexCurve)) {
             for (auto it : todaysMarketParams->mapping(MarketObject::IndexCurve, Market::defaultConfiguration)) {
                 auto yts = calibrationInfo->yieldCurveCalibrationInfo.find(it.second);
-                if (yts != calibrationInfo->yieldCurveCalibrationInfo.end())
-                    addYieldCurve(calibrationInfo->asof, yts->second, getCurveName(it.second), false, label);
+                try {
+                    auto index = market->iborIndex(it.first);
+                    if (yts != calibrationInfo->yieldCurveCalibrationInfo.end())
+                        addYieldCurve(calibrationInfo->asof, yts->second, getCurveName(it.second), false, label, index);
+                } catch (...) {
+                    if (yts != calibrationInfo->yieldCurveCalibrationInfo.end())
+                        addYieldCurve(calibrationInfo->asof, yts->second, getCurveName(it.second), false, label);
+                }
             }
         }
     }
@@ -132,11 +139,21 @@ void MarketCalibrationReportBase::populateReport(const boost::shared_ptr<ore::da
             addIrVol(calibrationInfo->asof, c.second, c.first, label);
         }
     }
+
+    if (calibrationFilters_.mdFilterCpiVols) {
+        // cpi vols
+        for (auto const& c : calibrationInfo->cpiVolCalibrationInfo) {
+            addCpiVol(calibrationInfo->asof, c.second, getCurveName(c.first), label);
+        }
+    }
 }
 
-MarketCalibrationReport::MarketCalibrationReport(const std::string& calibrationFilter, 
-    const boost::shared_ptr<ore::data::Report>& report)
-    : ore::analytics::MarketCalibrationReportBase(calibrationFilter), report_(report) {
+MarketCalibrationReport::MarketCalibrationReport(const std::string& calibrationFilter,
+                                                 const QuantLib::ext::shared_ptr<ore::data::Report>& report,
+                                                 const QuantLib::ext::shared_ptr<ore::data::Report>& report_cashflows,
+                                                 std::size_t precision)
+    : ore::analytics::MarketCalibrationReportBase(calibrationFilter, precision), report_(report),
+      report_cashflows_(report_cashflows) {
     report_->addColumn("MarketObjectType", string())
         .addColumn("MarketObjectId", string())
         .addColumn("ResultId", string())
@@ -145,21 +162,51 @@ MarketCalibrationReport::MarketCalibrationReport(const std::string& calibrationF
         .addColumn("ResultKey3", string())
         .addColumn("ResultType", string())
         .addColumn("ResultValue", string());
+    // this is report is identical to trade cf report from CashflowNo through BaseCurrency
+    report_cashflows_->addColumn("MarketObjectType", string())
+        .addColumn("MarketObjectId", string())
+        .addColumn("PillarDate", Date())
+        .addColumn("RateHelperType", string())
+        .addColumn("MdLabel", string())
+        .addColumn("CashflowNo", Size())
+        .addColumn("LegNo", Size())
+        .addColumn("PayDate", Date())
+        .addColumn("FlowType", string())
+        .addColumn("Amount", double(), 10)
+        .addColumn("Currency", string())
+        .addColumn("Coupon", double(), 10)
+        .addColumn("Accrual", double(), 10)
+        .addColumn("AccrualStartDate", Date())
+        .addColumn("AccrualEndDate", Date())
+        .addColumn("AccruedAmount", double(), 10)
+        .addColumn("fixingDate", Date())
+        .addColumn("fixingValue", double(), 10)
+        .addColumn("Notional", double(), 4)
+        .addColumn("DiscountFactor", double(), 10)
+        .addColumn("PresentValue", double(), 10)
+        .addColumn("FXRate(Local-Base)", double(), 10)
+        .addColumn("PresentValue(Base)", double(), 10)
+        .addColumn("BaseCurrency", string());
 }
 
-boost::shared_ptr<Report> MarketCalibrationReport::outputCalibrationReport() { 
+QuantLib::ext::shared_ptr<Report> MarketCalibrationReport::outputCalibrationReport() { 
     report_->end();
     return report_;
 }
 
+QuantLib::ext::shared_ptr<Report> MarketCalibrationReport::outputCashflowReport() {
+    report_cashflows_->end();
+    return report_cashflows_;
+}
+
 void MarketCalibrationReport::addRowReport(const std::string& moType, const std::string& moId,
                         const std::string& resId, const std::string& key1, const std::string& key2,
-                        const std::string& key3, const boost::any& value) {
-    auto p = parseBoostAny(value);
+                        const std::string& key3, const QuantLib::ext::any& value) {
+    auto p = parseBoostAny(value, precision_);
     report_->next().add(moType).add(moId).add(resId).add(key1).add(key2).add(key3).add(p.first).add(p.second);
 }
 
-const bool MarketCalibrationReport::checkCalibrations(string label, string type, string id) const {
+const bool MarketCalibrationReportBase::checkCalibrations(string label, string type, string id) const {
     bool hasCalibration = false;
     if (calibrations_.find(label) != calibrations_.end() && calibrations_.at(label).find(type) != calibrations_.at(label).end()) {
         auto curves = calibrations_.at(label).at(type);
@@ -169,9 +216,131 @@ const bool MarketCalibrationReport::checkCalibrations(string label, string type,
     return hasCalibration;
 }
 
-void MarketCalibrationReport::addYieldCurve(const QuantLib::Date& refdate,
-                                            boost::shared_ptr<ore::data::YieldCurveCalibrationInfo> info,
-                                            const std::string& id, bool isDiscount, const std::string& label) {
+void MarketCalibrationReport::addYieldCurveImpl(const QuantLib::Date& refdate,
+    QuantLib::ext::shared_ptr<ore::data::YieldCurveCalibrationInfo> info,
+    const std::string& id, bool isDiscount, const std::string& label,
+    const string& type, QuantLib::Handle<QuantLib::IborIndex> iborIndex) {
+
+    addRowReport(type, id, "dayCounter", "", "", "", info->dayCounter);
+    addRowReport(type, id, "currency", "", "", "", info->currency);
+
+    /* add info on report pillar dates */
+
+    for (Size i = 0; i < info->pillarDates.size(); ++i) {
+
+        Date pillarDate = info->pillarDates[i];
+        std::string key1 = to_string(pillarDate);
+
+        bool hasQuote = false;
+        std::string quoteLabel;
+        Real quoteValue;
+        Real calibrationError;
+
+        for (Size j = 0; j < info->rateHelperPillarDates.size(); ++j) {
+            if (auto it =
+                    std::find(info->rateHelperPillarDates[j].begin(), info->rateHelperPillarDates[j].end(), pillarDate);
+                it != info->rateHelperPillarDates[j].end()) {
+                quoteLabel = info->mdQuoteLabels.at(j);
+                quoteValue = info->mdQuoteValues.at(j);
+                calibrationError = info->rateHelperQuoteErrors.at(j);
+                hasQuote = true;
+                break;
+            }
+        }
+
+        addRowReport(type, id, "time", key1, quoteLabel, "", info->times.at(i));
+        addRowReport(type, id, "zeroRate", key1, quoteLabel, "", info->zeroRates.at(i));
+        addRowReport(type, id, "discountFactor", key1, quoteLabel, "", info->discountFactors.at(i));
+
+        if (hasQuote) {
+            addRowReport(type, id, "mdQuote", key1, quoteLabel, "", quoteValue);
+            addRowReport(type, id, "calibrationError", key1, quoteLabel, "", calibrationError);
+        }
+
+        if (!iborIndex.empty())
+            addRowReport(type, id, "forwardRate", key1, !info->mdQuoteLabels.empty() ? info->mdQuoteLabels.at(i) : "",
+                         "", iborIndex->fixing(iborIndex->fixingCalendar().adjust(info->pillarDates[i], Preceding)));
+    }
+
+    /* add md quote info and error for rate helpers that are not covered above, i.e. those without a pillar date or a pilar date not
+       matching one of the report pillar dates */
+
+    for (Size i = 0; i < info->rateHelperPillarDates.size(); ++i) {
+        if (auto it = std::find_if(info->pillarDates.begin(), info->pillarDates.end(),
+                                   [info, i](const Date& d) {
+                                       return info->rateHelperPillarDates[i].find(d) !=
+                                              info->rateHelperPillarDates[i].end();
+                                   });
+            it == info->pillarDates.end()) {
+            std::string key1 = info->rateHelperPillarDates[i].empty()
+                                   ? "no-pillar"
+                                   : to_string(*info->rateHelperPillarDates[i].rbegin());
+            addRowReport(type, id, "mdQuote", key1, info->mdQuoteLabels.at(i), "", info->mdQuoteValues.at(i));
+            addRowReport(type, id, "calibrationError", key1, info->mdQuoteLabels.at(i), "",
+                         info->rateHelperQuoteErrors.at(i));
+        }
+    }
+
+    // fitted bond curve results
+    auto y = QuantLib::ext::dynamic_pointer_cast<FittedBondCurveCalibrationInfo>(info);
+    if (y) {
+        addRowReport(type, id, "fittedBondCurve.fittingMethod", "", "", "", y->fittingMethod);
+        for (Size k = 0; k < y->solution.size(); ++k) {
+            addRowReport(type, id, "fittedBondCurve.solution", std::to_string(k), "", "", y->solution[k]);
+        }
+        addRowReport(type, id, "fittedBondCurve.iterations", "", "", "", y->iterations);
+        addRowReport(type, id, "fittedBondCurve.costValue", "", "", "", y->costValue);
+        for (Size i = 0; i < y->securities.size(); ++i) {
+            addRowReport(type, id, "fittedBondCurve.bondMaturity", y->securities.at(i), "", "",
+                         y->securityMaturityDates.at(i));
+            addRowReport(type, id, "fittedBondCurve.marketPrice", y->securities.at(i), "", "",
+                         y->marketPrices.at(i));
+            addRowReport(type, id, "fittedBondCurve.modelPrice", y->securities.at(i), "", "",
+                         y->modelPrices.at(i));
+            addRowReport(type, id, "fittedBondCurve.marketYield", y->securities.at(i), "", "",
+                         y->marketYields.at(i));
+            addRowReport(type, id, "fittedBondCurve.modelYield", y->securities.at(i), "", "", y->modelYields.at(i));
+        }
+    }
+
+    // cashflow results
+    if (!info->rateHelperCashflows.empty()) {
+        for (Size i = 0; i < info->rateHelperPillarDates.size(); ++i) {
+            for (auto const& d : info->rateHelperCashflows[i]) {
+                report_cashflows_->next()
+                    .add(type)
+                    .add(id)
+                    .add(info->rateHelperPillarDates[i].empty() ? Date() : *info->rateHelperPillarDates[i].rbegin())
+                    .add(info->rateHelperTypes[i])
+                    .add(info->mdQuoteLabels[i])
+                    .add(d.cashflowNo)
+                    .add(d.legNo)
+                    .add(d.payDate)
+                    .add(d.flowType)
+                    .add(d.amount)
+                    .add(d.currency)
+                    .add(d.coupon)
+                    .add(d.accrual)
+                    .add(d.accrualStartDate)
+                    .add(d.accrualEndDate)
+                    .add(d.accruedAmount)
+                    .add(d.fixingDate)
+                    .add(d.fixingValue)
+                    .add(d.notional)
+                    .add(d.discountFactor)
+                    .add(d.presentValue)
+                    .add(d.fxRateLocalBase)
+                    .add(d.presentValueBase)
+                    .add(d.baseCurrency);
+            }
+        }
+    }
+}
+
+void MarketCalibrationReportBase::addYieldCurve(const QuantLib::Date& refdate,
+                                            QuantLib::ext::shared_ptr<ore::data::YieldCurveCalibrationInfo> info,
+                                            const std::string& id, bool isDiscount, const std::string& label,
+                                            QuantLib::Handle<QuantLib::IborIndex> iborIndex) {
     if (info == nullptr)
         return;
 
@@ -179,130 +348,144 @@ void MarketCalibrationReport::addYieldCurve(const QuantLib::Date& refdate,
 
     // check if we have already processed this curve
     if (checkCalibrations(label, yieldStr, id)) {
-        DLOG("Skipping curve " << id << " for label " << label << " as it has already been added");
+        LOG("Skipping curve " << id << " for label " << label << " as it has already been added");
         return;
     }
-
-    // common results
-    addRowReport(yieldStr, id, "dayCounter", "", "", "", info->dayCounter);
-    addRowReport(yieldStr, id, "currency", "", "", "", info->currency);
-
-    for (Size i = 0; i < info->pillarDates.size(); ++i) {
-        std::string key1 = to_string(info->pillarDates[i]);
-        addRowReport(yieldStr, id, "time", key1, "", "", info->times.at(i));
-        addRowReport(yieldStr, id, "zeroRate", key1, "", "", info->zeroRates.at(i));
-        addRowReport(yieldStr, id, "discountFactor", key1, "", "", info->discountFactors.at(i));
-    }
-
-    // fitted bond curve results
-    auto y = boost::dynamic_pointer_cast<FittedBondCurveCalibrationInfo>(info);
-    if (y) {
-        addRowReport(yieldStr, id, "fittedBondCurve.fittingMethod", "", "", "", y->fittingMethod);
-        for (Size k = 0; k < y->solution.size(); ++k) {
-            addRowReport(yieldStr, id, "fittedBondCurve.solution", std::to_string(k), "", "",
-                               y->solution[k]);
-        }
-        addRowReport(yieldStr, id, "fittedBondCurve.iterations", "", "", "", y->iterations);
-        addRowReport(yieldStr, id, "fittedBondCurve.costValue", "", "", "", y->costValue);
-        for (Size i = 0; i < y->securities.size(); ++i) {
-            addRowReport(yieldStr, id, "fittedBondCurve.bondMaturity", y->securities.at(i), "", "",
-                               y->securityMaturityDates.at(i));
-            addRowReport(yieldStr, id, "fittedBondCurve.marketPrice", y->securities.at(i), "", "",
-                               y->marketPrices.at(i));
-            addRowReport(yieldStr, id, "fittedBondCurve.modelPrice", y->securities.at(i), "", "",
-                               y->modelPrices.at(i));
-            addRowReport(yieldStr, id, "fittedBondCurve.marketYield", y->securities.at(i), "", "",
-                               y->marketYields.at(i));
-            addRowReport(yieldStr, id, "fittedBondCurve.modelYield", y->securities.at(i), "", "",
-                               y->modelYields.at(i));
-        }
-    }
+    addYieldCurveImpl(refdate, info, id, isDiscount, label, yieldStr, iborIndex);
+    
     calibrations_[label][yieldStr].insert(id);
 }
 
+void MarketCalibrationReport::addInflationCurveImpl(
+    const QuantLib::Date& refdate, QuantLib::ext::shared_ptr<ore::data::InflationCurveCalibrationInfo> info,
+    const std::string& id, const std::string& label, const std::string& type) {
+
+    // common results
+    addRowReport(type, id, "dayCounter", "", "", "", info->dayCounter);
+    addRowReport(type, id, "calendar", "", "", "", info->calendar);
+    addRowReport(type, id, "baseDate", "", "", "", info->baseDate);
+
+    // zero inflation
+    auto z = QuantLib::ext::dynamic_pointer_cast<ZeroInflationCurveCalibrationInfo>(info);
+    if (z) {
+        addRowReport(type, id, "baseCpi", "", "", "", z->baseCpi);
+        for (Size i = 0; i < z->pillarDates.size(); ++i) {
+            std::string key1 = ore::data::to_string(z->pillarDates[i]);
+            addRowReport(type, id, "time", key1, !z->mdQuoteLabels.empty() ? z->mdQuoteLabels.at(i) : "", "",
+                         z->times.at(i));
+            addRowReport(type, id, "zeroRate", key1, !z->mdQuoteLabels.empty() ? z->mdQuoteLabels.at(i) : "", "",
+                         z->zeroRates.at(i));
+            addRowReport(type, id, "cpi", key1, !z->mdQuoteLabels.empty() ? z->mdQuoteLabels.at(i) : "", "",
+                         z->forwardCpis.at(i));
+            if (!z->mdQuoteLabels.empty())
+                addRowReport(type, id, "mdQuote", key1, z->mdQuoteLabels.at(i), "", z->mdQuoteValues.at(i));
+        }
+    }
+
+    // yoy inflation
+    auto y = QuantLib::ext::dynamic_pointer_cast<YoYInflationCurveCalibrationInfo>(info);
+    if (y) {
+        for (Size i = 0; i < y->pillarDates.size(); ++i) {
+            std::string key1 = ore::data::to_string(y->pillarDates[i]);
+            addRowReport(type, id, "time", key1, !y->mdQuoteLabels.empty() ? y->mdQuoteLabels.at(i) : "", "",
+                         y->times.at(i));
+            addRowReport(type, id, "yoyRate", key1, !y->mdQuoteLabels.empty() ? y->mdQuoteLabels.at(i) : "", "",
+                         y->yoyRates.at(i));
+            if (!y->mdQuoteLabels.empty())
+                addRowReport(type, id, "mdQuote", key1, y->mdQuoteLabels.at(i), "", y->mdQuoteValues.at(i));
+        }
+    }
+
+    // cashflow results
+    if (!info->rateHelperCashflows.empty()) {
+        for (Size i = 0; i < info->pillarDates.size(); ++i) {
+            for (auto const& d : info->rateHelperCashflows[i]) {
+                report_cashflows_->next()
+                    .add(type)
+                    .add(id)
+                    .add(info->pillarDates[i])
+                    .add(info->rateHelperTypes[i])
+                    .add(info->mdQuoteLabels[i])
+                    .add(d.cashflowNo)
+                    .add(d.legNo)
+                    .add(d.payDate)
+                    .add(d.flowType)
+                    .add(d.amount)
+                    .add(d.currency)
+                    .add(d.coupon)
+                    .add(d.accrual)
+                    .add(d.accrualStartDate)
+                    .add(d.accrualEndDate)
+                    .add(d.accruedAmount)
+                    .add(d.fixingDate)
+                    .add(d.fixingValue)
+                    .add(d.notional)
+                    .add(d.discountFactor)
+                    .add(d.presentValue)
+                    .add(d.fxRateLocalBase)
+                    .add(d.presentValueBase)
+                    .add(d.baseCurrency);
+            }
+        }
+    }
+
+}
+
 // Add inflation curve data to array
-void MarketCalibrationReport::addInflationCurve(const QuantLib::Date& refdate,
-                                                boost::shared_ptr<ore::data::InflationCurveCalibrationInfo> info,
+void MarketCalibrationReportBase::addInflationCurve(const QuantLib::Date& refdate,
+                                                QuantLib::ext::shared_ptr<ore::data::InflationCurveCalibrationInfo> info,
                                                 const std::string& id, const std::string& label) {
     if (info == nullptr)
         return;
 
-    const string inflationStr = "inflationCuve";
+    const string inflationStr = "inflationCurve";
 
     // check if we have already processed this curve
     if (checkCalibrations(label, inflationStr, id)) {
         DLOG("Skipping curve " << id << " for label " << label << " as it has already been added");
         return;
     }
+    addInflationCurveImpl(refdate, info, id, label, inflationStr);
 
-    // common results
-    addRowReport(inflationStr, id, "dayCounter", "", "", "", info->dayCounter);
-    addRowReport(inflationStr, id, "calendar", "", "", "", info->calendar);
-    addRowReport(inflationStr, id, "baseDate", "", "", "", info->baseDate);
-
-    // zero inflation
-    auto z = boost::dynamic_pointer_cast<ZeroInflationCurveCalibrationInfo>(info);
-    if (z) {
-        addRowReport(inflationStr, id, "baseCpi", "", "", "", z->baseCpi);
-        for (Size i = 0; i < z->pillarDates.size(); ++i) {
-            std::string key1 = ore::data::to_string(z->pillarDates[i]);
-            addRowReport(inflationStr, id, "time", key1, "", "", z->times.at(i));
-            addRowReport(inflationStr, id, "zeroRate", key1, "", "", z->zeroRates.at(i));
-            addRowReport(inflationStr, id, "cpi", key1, "", "", z->forwardCpis.at(i));
-        }
-    }
-
-    // yoy inflation
-    auto y = boost::dynamic_pointer_cast<YoYInflationCurveCalibrationInfo>(info);
-    if (y) {
-        for (Size i = 0; i < y->pillarDates.size(); ++i) {
-            std::string key1 = ore::data::to_string(y->pillarDates[i]);
-            addRowReport(inflationStr, id, "time", key1, "", "", y->times.at(i));
-            addRowReport(inflationStr, id, "yoyRate", key1, "", "", y->yoyRates.at(i));
-        }
-    }
     calibrations_[label][inflationStr].insert(id);
 }
 
 // Add commodity curve data to array
-void MarketCalibrationReport::addCommodityCurve(const QuantLib::Date& refdate,
-                                                boost::shared_ptr<ore::data::CommodityCurveCalibrationInfo> info,
+void MarketCalibrationReport::addCommodityCurveImpl(
+    const QuantLib::Date& refdate, QuantLib::ext::shared_ptr<ore::data::CommodityCurveCalibrationInfo> info,
+    const std::string& id, const std::string& label, const std::string& type) {
+
+    addRowReport(type, id, "calendar", "", "", "", info->calendar);
+    addRowReport(type, id, "currenct", "", "", "", info->currency);
+    addRowReport(type, id, "interpolationMethod", "", "", "", info->interpolationMethod);
+
+    for (Size i = 0; i < info->pillarDates.size(); ++i) {
+        auto date = to_string(info->pillarDates.at(i));
+        addRowReport(type, id, "time", date, "", "", info->times.at(i));
+        addRowReport(type, id, "price", date, "", "", info->futurePrices.at(i));
+    }
+}
+
+void MarketCalibrationReportBase::addCommodityCurve(const QuantLib::Date& refdate,
+                                                QuantLib::ext::shared_ptr<ore::data::CommodityCurveCalibrationInfo> info,
                                                 const std::string& id, const std::string& label) {
     if (info == nullptr)
         return;
 
-    const string commodityStr = "commodityCuve";
+    const string commodityStr = "commodityCurve";
 
     // check if we have already processed this curve
     if (checkCalibrations(label, commodityStr, id)) {
         DLOG("Skipping curve " << id << " for label " << label << " as it has already been added");
         return;
     }
-
-    addRowReport(commodityStr, id, "calendar", "", "", "", info->calendar);
-    addRowReport(commodityStr, id, "currenct", "", "", "", info->currency);
-    addRowReport(commodityStr, id, "interpolationMethod", "", "", "", info->interpolationMethod);
-
-    for (Size i = 0; i < info->pillarDates.size(); ++i) {
-        auto date = to_string(info->pillarDates.at(i));
-        addRowReport(commodityStr, id, "time", date, "", "", info->times.at(i));
-        addRowReport(commodityStr, id, "price", date, "", "", info->futurePrices.at(i));
-    }
+    addCommodityCurveImpl(refdate, info, id, label, commodityStr);
     calibrations_[label][commodityStr].insert(id);
 }
 
-void MarketCalibrationReport::addEqFxVol(const string& type,
-                                         boost::shared_ptr<ore::data::FxEqCommVolCalibrationInfo> info,
-                                         const string& id, const string& label) {
-    if (info == nullptr)
-        return;
-
-    // check if we have already processed this curve
-    if (checkCalibrations(label, type, id)) {
-        DLOG("Skipping curve " << id << " for label " << label << " as it has already been added");
-        return;
-    }
-
+void MarketCalibrationReport::addEqFxVolImpl(const string& type,
+                                             QuantLib::ext::shared_ptr<ore::data::FxEqCommVolCalibrationInfo> info,
+                                             const string& id, const string& label) {
     addRowReport(type, id, "dayCounter", "", "", "", info->dayCounter);
     addRowReport(type, id, "calendar", "", "", "", info->calendar);
     addRowReport(type, id, "atmType", "", "", "", info->atmType);
@@ -332,9 +515,9 @@ void MarketCalibrationReport::addEqFxVol(const string& type,
             addRowReport(type, id, "call_premium", tStr, dStr, "", info->deltaCallPrices.at(i).at(j));
             addRowReport(type, id, "put_premium", tStr, dStr, "", info->deltaPutPrices.at(i).at(j));
             addRowReport(type, id, "callSpreadArb", tStr, dStr, "",
-                               static_cast<bool>(info->deltaGridCallSpreadArbitrage.at(i).at(j)));
+                         static_cast<bool>(info->deltaGridCallSpreadArbitrage.at(i).at(j)));
             addRowReport(type, id, "butterflyArb", tStr, dStr, "",
-                               static_cast<bool>(info->deltaGridButterflyArbitrage.at(i).at(j)));
+                         static_cast<bool>(info->deltaGridButterflyArbitrage.at(i).at(j)));
         }
     }
 
@@ -344,58 +527,58 @@ void MarketCalibrationReport::addEqFxVol(const string& type,
             std::string mStr = std::to_string(info->moneyness.at(j));
             addRowReport(type, id, "forward", tStr, mStr, "", info->forwards.at(i));
             addRowReport(type, id, "strike", tStr, mStr, "", info->moneynessGridStrikes.at(i).at(j));
-            addRowReport(type, id, "vol", tStr, mStr, "",
-                               info->moneynessGridImpliedVolatility.at(i).at(j));
+            addRowReport(type, id, "vol", tStr, mStr, "", info->moneynessGridImpliedVolatility.at(i).at(j));
             addRowReport(type, id, "call_premium", tStr, mStr, "", info->moneynessCallPrices.at(i).at(j));
-            addRowReport( type, id, "put_premium", tStr, mStr, "", info->moneynessPutPrices.at(i).at(j));
+            addRowReport(type, id, "put_premium", tStr, mStr, "", info->moneynessPutPrices.at(i).at(j));
             addRowReport(type, id, "prob", tStr, mStr, "", info->moneynessGridProb.at(i).at(j));
             addRowReport(type, id, "callSpreadArb", tStr, mStr, "",
-                               static_cast<bool>(info->moneynessGridCallSpreadArbitrage.at(i).at(j)));
+                         static_cast<bool>(info->moneynessGridCallSpreadArbitrage.at(i).at(j)));
             addRowReport(type, id, "butterflyArb", tStr, mStr, "",
-                               static_cast<bool>(info->moneynessGridButterflyArbitrage.at(i).at(j)));
+                         static_cast<bool>(info->moneynessGridButterflyArbitrage.at(i).at(j)));
             addRowReport(type, id, "calendarArb", tStr, mStr, "",
-                               static_cast<bool>(info->moneynessGridCalendarArbitrage.at(i).at(j)));
+                         static_cast<bool>(info->moneynessGridCalendarArbitrage.at(i).at(j)));
         }
     }
 }
 
-// Add fx/eq/comm vol curve data to array
-void MarketCalibrationReport::addFxVol(const QuantLib::Date& refdate,
-                                       boost::shared_ptr<ore::data::FxEqCommVolCalibrationInfo> info,
-                                       const std::string& id, const std::string& label) {
-    addEqFxVol("fxVol", info, id, label);
-    calibrations_[label]["fxVol"].insert(id);
-}
-
-void MarketCalibrationReport::addEqVol(const QuantLib::Date& refdate,
-                                       boost::shared_ptr<ore::data::FxEqCommVolCalibrationInfo> info,
-                                       const std::string& id, const std::string& label) {
-    addEqFxVol("eqVol", info, id, label);
-    calibrations_[label]["eqVol"].insert(id);
-}
-
-void MarketCalibrationReport::addCommVol(const QuantLib::Date& refdate,
-                                         boost::shared_ptr<ore::data::FxEqCommVolCalibrationInfo> info,
-                                         const std::string& id, const std::string& label) {
-    addEqFxVol("commVol", info, id, label);
-    calibrations_[label]["commVol"].insert(id);
-}
-
-// Add ir vol curve data to array
-void MarketCalibrationReport::addIrVol(const QuantLib::Date& refdate,
-                                       boost::shared_ptr<ore::data::IrVolCalibrationInfo> info, 
-                                       const std::string& id, const std::string& label) {
+void MarketCalibrationReportBase::addEqFxVol(const string& type,
+                                         QuantLib::ext::shared_ptr<ore::data::FxEqCommVolCalibrationInfo> info,
+                                         const string& id, const string& label) {
     if (info == nullptr)
         return;
 
-    string type = "irVol";
-    
     // check if we have already processed this curve
     if (checkCalibrations(label, type, id)) {
         DLOG("Skipping curve " << id << " for label " << label << " as it has already been added");
         return;
     }
+    addEqFxVolImpl(type, info, id, label);
+    calibrations_[label][type].insert(id);
+}
 
+// Add fx/eq/comm vol curve data to array
+void MarketCalibrationReportBase::addFxVol(const QuantLib::Date& refdate,
+                                       QuantLib::ext::shared_ptr<ore::data::FxEqCommVolCalibrationInfo> info,
+                                       const std::string& id, const std::string& label) {
+    addEqFxVol("fxVol", info, id, label);
+}
+
+void MarketCalibrationReportBase::addEqVol(const QuantLib::Date& refdate,
+                                       QuantLib::ext::shared_ptr<ore::data::FxEqCommVolCalibrationInfo> info,
+                                       const std::string& id, const std::string& label) {
+    addEqFxVol("eqVol", info, id, label);
+}
+
+void MarketCalibrationReportBase::addCommVol(const QuantLib::Date& refdate,
+                                         QuantLib::ext::shared_ptr<ore::data::FxEqCommVolCalibrationInfo> info,
+                                         const std::string& id, const std::string& label) {
+    addEqFxVol("commVol", info, id, label);
+}
+
+
+void MarketCalibrationReport::addIrVolImpl(const QuantLib::Date& refdate,
+                                       QuantLib::ext::shared_ptr<ore::data::IrVolCalibrationInfo> info,
+                                       const std::string& id, const std::string& label, const std::string& type) {
     addRowReport(type, id, "dayCounter", "", "", "", info->dayCounter);
     addRowReport(type, id, "calendar", "", "", "", info->calendar);
     addRowReport(type, id, "isArbitrageFree", "", "", "", info->isArbitrageFree);
@@ -409,8 +592,7 @@ void MarketCalibrationReport::addIrVol(const QuantLib::Date& refdate,
     }
 
     for (Size i = 0; i < info->underlyingTenors.size(); ++i) {
-        addRowReport(type, id, "tenor", std::to_string(i), "", "",
-                           ore::data::to_string(info->underlyingTenors.at(i)));
+        addRowReport(type, id, "tenor", std::to_string(i), "", "", ore::data::to_string(info->underlyingTenors.at(i)));
     }
 
     for (Size i = 0; i < info->times.size(); ++i) {
@@ -420,15 +602,13 @@ void MarketCalibrationReport::addIrVol(const QuantLib::Date& refdate,
             for (Size j = 0; j < info->strikes.size(); ++j) {
                 std::string kStr = std::to_string(info->strikes.at(j));
                 addRowReport(type, id, "forward", tStr, kStr, uStr, info->forwards.at(i).at(u));
-                addRowReport(type, id, "strike", tStr, kStr, uStr,
-                                   info->strikeGridStrikes.at(i).at(u).at(j));
-                addRowReport(type, id, "vol", tStr, kStr, uStr,
-                                   info->strikeGridImpliedVolatility.at(i).at(u).at(j));
+                addRowReport(type, id, "strike", tStr, kStr, uStr, info->strikeGridStrikes.at(i).at(u).at(j));
+                addRowReport(type, id, "vol", tStr, kStr, uStr, info->strikeGridImpliedVolatility.at(i).at(u).at(j));
                 addRowReport(type, id, "prob", tStr, kStr, uStr, info->strikeGridProb.at(i).at(u).at(j));
                 addRowReport(type, id, "callSpreadArb", tStr, kStr, uStr,
-                                   static_cast<bool>(info->strikeGridCallSpreadArbitrage.at(i).at(u).at(j)));
+                             static_cast<bool>(info->strikeGridCallSpreadArbitrage.at(i).at(u).at(j)));
                 addRowReport(type, id, "butterflyArb", tStr, kStr, uStr,
-                                   static_cast<bool>(info->strikeGridButterflyArbitrage.at(i).at(u).at(j)));
+                             static_cast<bool>(info->strikeGridButterflyArbitrage.at(i).at(u).at(j)));
             }
         }
     }
@@ -440,19 +620,86 @@ void MarketCalibrationReport::addIrVol(const QuantLib::Date& refdate,
             for (Size j = 0; j < info->strikeSpreads.size(); ++j) {
                 std::string kStr = std::to_string(info->strikeSpreads.at(j));
                 addRowReport(type, id, "forward", tStr, kStr, uStr, info->forwards.at(i).at(u));
-                addRowReport(type, id, "strike", tStr, kStr, uStr,
-                                   info->strikeSpreadGridStrikes.at(i).at(u).at(j));
+                addRowReport(type, id, "strike", tStr, kStr, uStr, info->strikeSpreadGridStrikes.at(i).at(u).at(j));
                 addRowReport(type, id, "vol", tStr, kStr, uStr,
-                                   info->strikeSpreadGridImpliedVolatility.at(i).at(u).at(j));
-                addRowReport(type, id, "prob", tStr, kStr, uStr,
-                                   info->strikeSpreadGridProb.at(i).at(u).at(j));
+                             info->strikeSpreadGridImpliedVolatility.at(i).at(u).at(j));
+                addRowReport(type, id, "prob", tStr, kStr, uStr, info->strikeSpreadGridProb.at(i).at(u).at(j));
                 addRowReport(type, id, "callSpreadArb", tStr, kStr, uStr,
-                                   static_cast<bool>(info->strikeSpreadGridCallSpreadArbitrage.at(i).at(u).at(j)));
+                             static_cast<bool>(info->strikeSpreadGridCallSpreadArbitrage.at(i).at(u).at(j)));
                 addRowReport(type, id, "butterflyArb", tStr, kStr, uStr,
-                                   static_cast<bool>(info->strikeSpreadGridButterflyArbitrage.at(i).at(u).at(j)));
+                             static_cast<bool>(info->strikeSpreadGridButterflyArbitrage.at(i).at(u).at(j)));
             }
         }
     }
+}
+
+// Add ir vol curve data to array
+void MarketCalibrationReportBase::addIrVol(const QuantLib::Date& refdate,
+                                       QuantLib::ext::shared_ptr<ore::data::IrVolCalibrationInfo> info, 
+                                       const std::string& id, const std::string& label) {
+    if (info == nullptr)
+        return;
+
+    string type = "irVol";
+    
+    // check if we have already processed this curve
+    if (checkCalibrations(label, type, id)) {
+        DLOG("Skipping curve " << id << " for label " << label << " as it has already been added");
+        return;
+    }
+    addIrVolImpl(refdate, info, id, label, type);    
+
+    calibrations_[label][type].insert(id);
+}
+
+void MarketCalibrationReport::addCpiVolImpl(const QuantLib::Date& refdate,
+                                        QuantLib::ext::shared_ptr<ore::data::CpiVolCalibrationInfo> info,
+                                        const std::string& id, const std::string& label, const string& type) {
+    addRowReport(type, id, "dayCounter", "", "", "", info->dayCounter);
+    addRowReport(type, id, "calendar", "", "", "", info->calendar);
+    addRowReport(type, id, "isArbitrageFree", "", "", "", info->isArbitrageFree);
+
+    for (Size i = 0; i < info->times.size(); ++i) {
+        std::string tStr = std::to_string(info->times.at(i));
+        addRowReport(type, id, "expiry", tStr, "", "", info->expiryDates.at(i));
+        addRowReport(type, id, "optionObservation", tStr, "", "", info->optionObservationDates.at(i));
+        addRowReport(type, id, "optionLifeTime", tStr, "", "", info->optionLifeTimes.at(i));
+        addRowReport(type, id, "forward", tStr, "", "", info->forwards.at(i));
+        addRowReport(type, id, "forwardCPI", tStr, "", "", info->forwardCPI.at(i));
+    }
+
+    for (Size i = 0; i < info->times.size(); ++i) {
+        std::string tStr = std::to_string(info->times.at(i));
+        for (Size j = 0; j < info->strikes.size(); ++j) {
+            std::string kStr = std::to_string(info->strikes.at(j));
+            addRowReport(type, id, "forward", tStr, kStr, "", info->forwards.at(i));
+            addRowReport(type, id, "vol", tStr, kStr, "", info->strikeGridImpliedVolatility.at(i).at(j));
+            addRowReport(type, id, "prob", tStr, kStr, "", info->strikeGridProb.at(i).at(j));
+            addRowReport(type, id, "strikeCPI", tStr, kStr, "", info->strikeCPI.at(i).at(j));
+            addRowReport(type, id, "callSpreadArb", tStr, kStr, "",
+                         static_cast<bool>(info->strikeGridCallSpreadArbitrage.at(i).at(j)));
+            addRowReport(type, id, "butterflyArb", tStr, kStr, "",
+                         static_cast<bool>(info->strikeGridButterflyArbitrage.at(i).at(j)));
+        }
+    }
+}
+
+// Add cpi vol curve data to array
+void MarketCalibrationReportBase::addCpiVol(const QuantLib::Date& refdate,
+    QuantLib::ext::shared_ptr<ore::data::CpiVolCalibrationInfo> info,
+    const std::string& id, const std::string& label) {
+
+    if (info == nullptr)
+        return;
+
+    string type = "cpiVol";
+
+    // check if we have already processed this curve
+    if (checkCalibrations(label, type, id)) {
+        DLOG("Skipping curve " << id << " for label " << label << " as it has already been added");
+        return;
+    }
+    addCpiVolImpl(refdate, info, id, label, type);
 
     calibrations_[label][type].insert(id);
 }

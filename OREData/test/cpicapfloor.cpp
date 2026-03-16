@@ -54,8 +54,8 @@ namespace {
 class F : public TopLevelFixture {
 public:
     Date today;
-    boost::shared_ptr<Conventions> conventions = boost::make_shared<Conventions>();
-    boost::shared_ptr<EngineFactory> engineFactory;
+    QuantLib::ext::shared_ptr<Conventions> conventions = QuantLib::ext::make_shared<Conventions>();
+    QuantLib::ext::shared_ptr<EngineFactory> engineFactory;
 
     F() {
         today = Date(31, Dec, 2018);
@@ -64,26 +64,26 @@ public:
         conventions->fromFile(TEST_INPUT_FILE("conventions.xml"));
         InstrumentConventions::instance().setConventions(conventions);
         
-        auto todaysMarketParams = boost::make_shared<TodaysMarketParameters>();
+        auto todaysMarketParams = QuantLib::ext::make_shared<TodaysMarketParameters>();
         todaysMarketParams->fromFile(TEST_INPUT_FILE("todaysmarket.xml"));
 
-        auto curveConfigs = boost::make_shared<CurveConfigurations>();
+        auto curveConfigs = QuantLib::ext::make_shared<CurveConfigurations>();
         curveConfigs->fromFile(TEST_INPUT_FILE("curveconfig.xml"));
 
         string marketFile = TEST_INPUT_FILE("market.txt");
         string fixingsFile = TEST_INPUT_FILE("fixings.txt");
-        auto loader = boost::make_shared<CSVLoader>(marketFile, fixingsFile, false);
+        auto loader = QuantLib::ext::make_shared<CSVLoader>(marketFile, fixingsFile, false);
 
         bool continueOnError = false;
-        boost::shared_ptr<TodaysMarket> market = boost::make_shared<TodaysMarket>(
+        QuantLib::ext::shared_ptr<TodaysMarket> market = QuantLib::ext::make_shared<TodaysMarket>(
             today, todaysMarketParams, loader, curveConfigs, continueOnError);
 
-        boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+        QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
         engineData->fromFile(TEST_INPUT_FILE("pricingengine.xml"));
 
-        engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+        engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
-        // Log::instance().registerLogger(boost::make_shared<FileLogger>(TEST_OUTPUT_FILE("log.txt")));
+        // Log::instance().registerLogger(QuantLib::ext::make_shared<FileLogger>(TEST_OUTPUT_FILE("log.txt")));
         // Log::instance().setMask(255);
         // Log::instance().switchOn();
     }
@@ -133,7 +133,7 @@ BOOST_DATA_TEST_CASE_F(F, testCapConsistency, bdata::make(testCases), testCase) 
         BOOST_TEST_MESSAGE("trade " << tradeId << " npv " << trade->instrument()->NPV());
         sum += trade->instrument()->NPV();
         minimumNPV = std::min(minimumNPV, fabs(trade->instrument()->NPV()));
-        auto cf = boost::dynamic_pointer_cast<ore::data::CapFloor>(trade);
+        auto cf = QuantLib::ext::dynamic_pointer_cast<ore::data::CapFloor>(trade);
         if (cf)
             BOOST_CHECK_NO_THROW(cf->additionalData());
     }

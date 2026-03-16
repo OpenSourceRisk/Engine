@@ -29,33 +29,35 @@ void EquityBarrierOption::checkBarriers() {
     QL_REQUIRE(barrier().style().empty() || barrier().style() == "American", "Only american barrier style suppported");
 }
 
-boost::shared_ptr<QuantLib::PricingEngine> EquityBarrierOption::vanillaPricingEngine(const boost::shared_ptr<EngineFactory>& ef,
+QuantLib::ext::shared_ptr<QuantLib::PricingEngine> EquityBarrierOption::vanillaPricingEngine(const QuantLib::ext::shared_ptr<EngineFactory>& ef,
     const QuantLib::Date& expiryDate, const QuantLib::Date& paymentDate) {    
 
-    boost::shared_ptr<EngineBuilder> builder = ef->builder("EquityOption");
+    QuantLib::ext::shared_ptr<EngineBuilder> builder = ef->builder("EquityOption");
     QL_REQUIRE(builder, "No builder found for EquityOption");
 
-    boost::shared_ptr<EquityEuropeanOptionEngineBuilder> eqOptBuilder =
-        boost::dynamic_pointer_cast<EquityEuropeanOptionEngineBuilder>(builder);
+    QuantLib::ext::shared_ptr<EquityEuropeanOptionEngineBuilder> eqOptBuilder =
+        QuantLib::ext::dynamic_pointer_cast<EquityEuropeanOptionEngineBuilder>(builder);
     QL_REQUIRE(eqOptBuilder, "No eqOptBuilder found");
 
     setSensitivityTemplate(*eqOptBuilder);
+    addProductModelEngine(*eqOptBuilder);
 
-    return eqOptBuilder->engine(equityName(), tradeCurrency(), expiryDate);
+    return eqOptBuilder->engine(equityName(), tradeCurrency(), envelope().additionalField("discount_curve", false, std::string()), expiryDate);
 }
 
-boost::shared_ptr<QuantLib::PricingEngine>
-EquityBarrierOption::barrierPricingEngine(const boost::shared_ptr<EngineFactory>& ef,
+QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
+EquityBarrierOption::barrierPricingEngine(const QuantLib::ext::shared_ptr<EngineFactory>& ef,
                                             const QuantLib::Date& expiryDate, const QuantLib::Date& paymentDate) {
 
-    boost::shared_ptr<EngineBuilder> builder = ef->builder(tradeType_);
+    QuantLib::ext::shared_ptr<EngineBuilder> builder = ef->builder(tradeType_);
     QL_REQUIRE(builder, "No builder found for " << tradeType_);
 
-    boost::shared_ptr<EquityBarrierOptionEngineBuilder> eqBarrierOptBuilder =
-        boost::dynamic_pointer_cast<EquityBarrierOptionEngineBuilder>(builder);
+    QuantLib::ext::shared_ptr<EquityBarrierOptionEngineBuilder> eqBarrierOptBuilder =
+        QuantLib::ext::dynamic_pointer_cast<EquityBarrierOptionEngineBuilder>(builder);
     QL_REQUIRE(eqBarrierOptBuilder, "No eqBarrierOptBuilder found");
 
     setSensitivityTemplate(*eqBarrierOptBuilder);
+    addProductModelEngine(*eqBarrierOptBuilder);
 
     return eqBarrierOptBuilder->engine(equityName(), tradeCurrency(), expiryDate);
 }

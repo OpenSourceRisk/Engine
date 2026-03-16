@@ -35,6 +35,7 @@ public:
         dummyResult_.set(0, 1.0); // make the result stochastic
     }
     Type type() const override { return Type::MC; }
+    const Params& params() const override { return params_; }
     RandomVariable pay(const RandomVariable& amount, const Date& obsdate, const Date& paydate,
                        const std::string& currency) const override {
         return dummyResult_;
@@ -43,7 +44,7 @@ public:
         return dummyResult_;
     }
     RandomVariable npv(const RandomVariable& amount, const Date& obsdate, const Filter& filter,
-                       const boost::optional<long>& memSlot, const RandomVariable& addRegressor1,
+                       const QuantLib::ext::optional<long>& memSlot, const RandomVariable& addRegressor1,
                        const RandomVariable& addRegressor2) const override {
         return dummyResult_;
     }
@@ -74,6 +75,7 @@ public:
     }
 
 private:
+    Params params_;
     RandomVariable dummyResult_;
 };
 

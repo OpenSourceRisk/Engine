@@ -23,25 +23,23 @@
 #pragma once
 
 #include <algorithm>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <boost/test/unit_test.hpp>
 #include <fstream>
 #include <iterator>
 #include <string>
 
-using boost::filesystem::exists;
-using boost::filesystem::filesystem_error;
-using boost::filesystem::path;
-using boost::filesystem::remove_all;
+using std::filesystem::exists;
+using std::filesystem::filesystem_error;
+using std::filesystem::path;
+using std::filesystem::remove_all;
 using std::equal;
 using std::ifstream;
 using std::istreambuf_iterator;
 using std::string;
 
-#ifdef BOOST_MSVC
+#if !defined(BOOST_ALL_NO_LIB) && defined(BOOST_MSVC)
 #define BOOST_LIB_NAME boost_system
-#include <boost/config/auto_link.hpp>
-#define BOOST_LIB_NAME boost_filesystem
 #include <boost/config/auto_link.hpp>
 #endif
 

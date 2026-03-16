@@ -16,30 +16,60 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/make_shared.hpp>
+#include <orea/scenario/scenarioutilities.hpp>
 #include <orea/scenario/simplescenario.hpp>
+
 #include <ored/utilities/log.hpp>
+
 #include <ql/errors.hpp>
+#include <ql/utilities/null.hpp>
+
+#include <boost/make_shared.hpp>
 
 namespace ore {
 namespace analytics {
 
-// Simple Scenario class
+SimpleScenario::SimpleScenario(QuantLib::Date asof, const std::string& label, QuantLib::Real numeraire,
+                               const QuantLib::ext::shared_ptr<SharedData>& sharedData)
+    : sharedData_(sharedData == nullptr ? QuantLib::ext::make_shared<SharedData>() : sharedData), asof_(asof),
+      label_(label), numeraire_(numeraire) {}
 
-bool SimpleScenario::has(const RiskFactorKey& key) const { return data_.find(key) != data_.end(); }
-
-void SimpleScenario::add(const RiskFactorKey& key, Real value) {
-    data_[key] = value; // key might already exist, so we cannot use insert/emplace
-    if (std::find(keys_.begin(), keys_.end(), key) == keys_.end())
-        keys_.emplace_back(key);
+bool SimpleScenario::has(const RiskFactorKey& key) const {
+    return sharedData_->keyIndex.find(key) != sharedData_->keyIndex.end();
 }
 
-Real SimpleScenario::get(const RiskFactorKey& key) const {
-    auto it = data_.find(key);
-    QL_REQUIRE(it != data_.end(), "Scenario does not provide data for key " << key);
-    return it->second;
+void SimpleScenario::add(const RiskFactorKey& key, QuantLib::Real value) {
+    QuantLib::Size dataIndex;
+    if (auto i = sharedData_->keyIndex.find(key); i != sharedData_->keyIndex.end()) {
+        dataIndex = i->second;
+    } else {
+        dataIndex = sharedData_->keyIndex[key] = sharedData_->keys.size();
+        sharedData_->keys.push_back(key);
+        boost::hash_combine(sharedData_->keysHash, key);
+    }
+
+    if (data_.size() <= dataIndex)
+        data_.resize(dataIndex + 1, QuantLib::Null<QuantLib::Real>());
+
+    data_[dataIndex] = value;
 }
 
-boost::shared_ptr<Scenario> SimpleScenario::clone() const { return boost::make_shared<SimpleScenario>(*this); }
+QuantLib::Real SimpleScenario::get(const RiskFactorKey& key) const {
+    auto i = sharedData_->keyIndex.find(key);
+    QL_REQUIRE(i != sharedData_->keyIndex.end(), "SimpleScenario does not provide data for key " << key);
+    return isAbsolute() ? sanitizeScenarioValue(key.keytype, isPar(), data_[i->second]) : data_[i->second];
+}
+
+QuantLib::ext::shared_ptr<Scenario> SimpleScenario::clone() const {
+    return QuantLib::ext::make_shared<SimpleScenario>(*this);
+}
+
+void SimpleScenario::setAbsolute(const bool isAbsolute) { isAbsolute_ = isAbsolute; }
+
+void SimpleScenario::setCoordinates(const RiskFactorKey::KeyType type, const std::string& name,
+                                    const std::vector<std::vector<QuantLib::Real>>& coordinates) {
+    sharedData_->coordinates[std::make_pair(type, name)] = coordinates;
+}
+
 } // namespace analytics
 } // namespace ore

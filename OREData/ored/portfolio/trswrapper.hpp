@@ -59,10 +59,11 @@ public:
        required, the respective index should be a nullptr. The fx indices can be given in any direction, i.e. this
        wrapper will figure out whether to apply the fixing or the inverse fixing.
     */
-    TRSWrapper(const std::vector<boost::shared_ptr<ore::data::Trade>>& underlying,
-               const std::vector<boost::shared_ptr<QuantLib::Index>>& underlyingIndex,
+    TRSWrapper(const std::vector<QuantLib::ext::shared_ptr<ore::data::Trade>>& underlying,
+               const std::vector<QuantLib::ext::shared_ptr<QuantLib::Index>>& underlyingIndex,
                const std::vector<QuantLib::Real> underlyingMultiplier, const bool includeUnderlyingCashflowsInReturn,
-               const QuantLib::Real initialPrice, const QuantLib::Currency& initialPriceCurrency,
+               const QuantLib::Real initialPrice, const QuantLib::Real portfolioInitialPrice, const std::string portfolioId,
+               const QuantLib::Currency& initialPriceCurrency,
                const std::vector<QuantLib::Currency>& assetCurrency, const QuantLib::Currency& returnCurrency,
                const std::vector<QuantLib::Date>& valuationSchedule, const std::vector<QuantLib::Date>& paymentSchedule,
                const std::vector<QuantLib::Leg>& fundingLegs,
@@ -70,10 +71,12 @@ public:
                const QuantLib::Currency& fundingCurrency, const QuantLib::Size fundingResetGracePeriod,
                const bool paysAsset, const bool paysFunding, const QuantLib::Leg& additionalCashflowLeg,
                const bool additionalCashflowLegPayer, const QuantLib::Currency& additionalCashflowCurrency,
-               const std::vector<boost::shared_ptr<QuantExt::FxIndex>>& fxIndexAsset,
-               const boost::shared_ptr<QuantExt::FxIndex>& fxIndexReturn,
-               const boost::shared_ptr<QuantExt::FxIndex>& fxIndexAdditionalCashflows,
-               const std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& addFxindices);
+               const std::vector<QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndexAsset,
+               const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndexReturn,
+               const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndexAdditionalCashflows,
+               const std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& addFxindices,
+               const QuantLib::ext::optional<TRS::FXConversion>& fxConversion);
+
 
     //! \name Instrument interface
     //@{
@@ -83,11 +86,13 @@ public:
     //@}
 
 private:
-    std::vector<boost::shared_ptr<ore::data::Trade>> underlying_;
-    std::vector<boost::shared_ptr<QuantLib::Index>> underlyingIndex_;
+    std::vector<QuantLib::ext::shared_ptr<ore::data::Trade>> underlying_;
+    std::vector<QuantLib::ext::shared_ptr<QuantLib::Index>> underlyingIndex_;
     std::vector<QuantLib::Real> underlyingMultiplier_;
     bool includeUnderlyingCashflowsInReturn_;
     QuantLib::Real initialPrice_;
+    QuantLib::Real portfolioInitialPrice_;
+    const std::string portfolioId_;
     const QuantLib::Currency initialPriceCurrency_;
     const std::vector<QuantLib::Currency> assetCurrency_;
     const QuantLib::Currency returnCurrency_;
@@ -100,9 +105,10 @@ private:
     QuantLib::Leg additionalCashflowLeg_;
     bool additionalCashflowLegPayer_;
     const QuantLib::Currency additionalCashflowCurrency_;
-    std::vector<boost::shared_ptr<QuantExt::FxIndex>> fxIndexAsset_;
-    boost::shared_ptr<QuantExt::FxIndex> fxIndexReturn_, fxIndexAdditionalCashflows_;
-    std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>> addFxIndices_;
+    std::vector<QuantLib::ext::shared_ptr<QuantExt::FxIndex>> fxIndexAsset_;
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndexReturn_, fxIndexAdditionalCashflows_;
+    std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>> addFxIndices_;
+    QuantLib::ext::optional<TRS::FXConversion> fxConversion_;
 
     Date lastDate_;
 };
@@ -110,11 +116,13 @@ private:
 class TRSWrapper::arguments : public virtual QuantLib::PricingEngine::arguments {
 public:
     // direct copy from the instrument
-    std::vector<boost::shared_ptr<ore::data::Trade>> underlying_;
-    std::vector<boost::shared_ptr<QuantLib::Index>> underlyingIndex_;
+    std::vector<QuantLib::ext::shared_ptr<ore::data::Trade>> underlying_;
+    std::vector<QuantLib::ext::shared_ptr<QuantLib::Index>> underlyingIndex_;
     std::vector<QuantLib::Real> underlyingMultiplier_;
     bool includeUnderlyingCashflowsInReturn_;
     QuantLib::Real initialPrice_;
+    QuantLib::Real portfolioInitialPrice_;
+    std::string portfolioId_;
     QuantLib::Currency initialPriceCurrency_;
     std::vector<QuantLib::Currency> assetCurrency_;
     QuantLib::Currency returnCurrency_;
@@ -127,10 +135,10 @@ public:
     QuantLib::Leg additionalCashflowLeg_;
     bool additionalCashflowLegPayer_;
     QuantLib::Currency additionalCashflowCurrency_;
-    std::vector<boost::shared_ptr<QuantExt::FxIndex>> fxIndexAsset_;
-    boost::shared_ptr<QuantExt::FxIndex> fxIndexReturn_, fxIndexAdditionalCashflows_;
-    std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>> addFxIndices_;
-
+    std::vector<QuantLib::ext::shared_ptr<QuantExt::FxIndex>> fxIndexAsset_;
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndexReturn_, fxIndexAdditionalCashflows_;
+    std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>> addFxIndices_;
+    QuantLib::ext::optional<TRS::FXConversion> fxConversion_;
     void validate() const override;
 };
 
@@ -143,9 +151,11 @@ class TRSWrapper::engine : public QuantLib::GenericEngine<TRSWrapper::arguments,
 
 class TRSWrapperAccrualEngine : public TRSWrapper::engine {
 public:
+    explicit TRSWrapperAccrualEngine(const Handle<YieldTermStructure>& additionalCashflowCurrencyDiscountCurve = {});
     void calculate() const override;
 
 private:
+    Handle<YieldTermStructure> additionalCashflowCurrencyDiscountCurve_;
     /* Computes underlying value, fx conversion for each underlying and the start date of the nth current
        valuation period. Notice there might be more than one "current" valuation period, if a payment lag
        is present and nth refers to the nth such period in order the associated valuation periods are
@@ -167,6 +177,12 @@ private:
 
     // return underlying #i fixing on date < today
     Real getUnderlyingFixing(const Size i, const QuantLib::Date& date, const bool enforceProjection) const;
+    Real getUnderlyingFixing(const Size i, const QuantLib::Date& date, const bool enforceProjection,
+                             std::map<std::string, QuantLib::ext::any>& fixingAdditionalData) const;
+
+    // return underlying #i npv on today
+    Real getUnderlyingNPV(const Size i) const;
+    Real getUnderlyingNPV(const Size i, std::map<std::string, QuantLib::ext::any>& fixingAdditionalData) const;
 
     // additional inspectors
     QuantLib::Real currentNotional() const;

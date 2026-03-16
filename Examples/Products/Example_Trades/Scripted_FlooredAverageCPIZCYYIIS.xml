@@ -1,0 +1,69 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="FlooredAverageCPIZCIIS">
+        <TradeType>ScriptedTrade</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <FlooredAverageCPIZCIISData>
+            <Notional type="number">10000000</Notional>
+            <PayCurrency type="currency">EUR</PayCurrency>
+            <FixedDayCounter type="dayCounter">Year</FixedDayCounter>
+            <FixedRate type="number">0.02398</FixedRate>
+            <PayFixLeg type="bool">true</PayFixLeg>
+            <FixedLegSchedule type="event">
+                <ScheduleData>
+                    <Rules>
+                        <StartDate>2012-10-03</StartDate>
+                        <EndDate>2051-10-04</EndDate>
+                        <Tenor>1Y</Tenor>
+                        <Calendar>TARGET</Calendar>
+                        <Convention>ModifiedFollowing</Convention>
+                        <Rule>Forward</Rule>
+                    </Rules>
+                </ScheduleData>
+            </FixedLegSchedule>
+            <FloatDayCounter type="dayCounter">1/1</FloatDayCounter>
+            <CPIIndex type="index">EUHICPXT</CPIIndex>
+            <FloatLegSchedule type="event">
+                <ScheduleData>
+                    <Rules>
+                        <StartDate>2012-10-03</StartDate>
+                        <EndDate>2051-10-04</EndDate>
+                        <Tenor>1Y</Tenor>
+                        <Calendar>TARGET</Calendar>
+                        <Convention>F</Convention>
+                        <Rule>Forward</Rule>
+                    </Rules>
+                </ScheduleData>
+            </FloatLegSchedule>
+            <Floor type="number">0.0</Floor>
+            <BaseCPI type="number">89.99</BaseCPI>
+            <ObservationSchedule type="event">
+                <ScheduleData>
+                    <Rules>
+                        <StartDate>2012-10-03</StartDate>
+                        <EndDate>2051-10-04</EndDate>
+                        <Tenor>1M</Tenor>
+                        <Calendar>TARGET</Calendar>
+                        <Convention>MF</Convention>
+                        <Rule>Forward</Rule>
+                    </Rules>
+                </ScheduleData>
+            </ObservationSchedule>
+            <FixingSchedule type="event">
+                <DerivedSchedule>
+                    <BaseSchedule>ObservationSchedule</BaseSchedule>
+                    <Shift>-3M</Shift>
+                    <Calendar>TARGET</Calendar>
+                    <Convention>ModifiedFollowing</Convention>
+                </DerivedSchedule>
+            </FixingSchedule>
+        </FlooredAverageCPIZCIISData>
+    </Trade>
+</Portfolio>

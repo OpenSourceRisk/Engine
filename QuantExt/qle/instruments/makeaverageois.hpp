@@ -38,12 +38,12 @@ using namespace QuantLib;
 */
 class MakeAverageOIS {
 public:
-    MakeAverageOIS(const Period& swapTenor, const boost::shared_ptr<OvernightIndex>& overnightIndex,
+    MakeAverageOIS(const Period& swapTenor, const QuantLib::ext::shared_ptr<OvernightIndex>& overnightIndex,
                    const Period& onTenor, Rate fixedRate, const Period& fixedTenor, const DayCounter& fixedDayCounter,
                    const Period& spotLagTenor = 2 * Days, const Period& forwardStart = 0 * Days);
 
     operator AverageOIS() const;
-    operator boost::shared_ptr<AverageOIS>() const;
+    operator QuantLib::ext::shared_ptr<AverageOIS>() const;
 
     // Swap.
     MakeAverageOIS& receiveFixed(bool receiveFixed = true);
@@ -82,13 +82,13 @@ public:
     MakeAverageOIS &withTelescopicValueDates(bool telescopicValueDates);
 
     // Pricing.
-    MakeAverageOIS& withONCouponPricer(const boost::shared_ptr<AverageONIndexedCouponPricer>& onCouponPricer);
+    MakeAverageOIS& withONCouponPricer(const QuantLib::ext::shared_ptr<AverageONIndexedCouponPricer>& onCouponPricer);
     MakeAverageOIS& withDiscountingTermStructure(const Handle<YieldTermStructure>& discountCurve);
-    MakeAverageOIS& withPricingEngine(const boost::shared_ptr<PricingEngine>& engine);
+    MakeAverageOIS& withPricingEngine(const QuantLib::ext::shared_ptr<PricingEngine>& engine);
 
 private:
     Period swapTenor_;
-    boost::shared_ptr<OvernightIndex> overnightIndex_;
+    QuantLib::ext::shared_ptr<OvernightIndex> overnightIndex_;
     Period onTenor_;
     Rate fixedRate_;
     Period fixedTenor_;
@@ -127,8 +127,8 @@ private:
     Calendar onPaymentCalendar_;
     bool telescopicValueDates_;
 
-    boost::shared_ptr<PricingEngine> engine_;
-    boost::shared_ptr<AverageONIndexedCouponPricer> onCouponPricer_;
+    QuantLib::ext::shared_ptr<PricingEngine> engine_;
+    QuantLib::ext::shared_ptr<AverageONIndexedCouponPricer> onCouponPricer_;
 };
 } // namespace QuantExt
 

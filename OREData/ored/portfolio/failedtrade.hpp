@@ -38,7 +38,7 @@ public:
     FailedTrade(const ore::data::Envelope& env);
 
     //! Trade Interface's build.
-    void build(const boost::shared_ptr<ore::data::EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>&) override;
 
     //! Set the original trade
     void setUnderlyingTradeType(const std::string& underlyingTradeType_);

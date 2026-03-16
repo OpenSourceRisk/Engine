@@ -35,7 +35,7 @@ namespace QuantExt {
  */
 class AnalyticCcLgmFxOptionEngine : public VanillaOption::engine {
 public:
-    AnalyticCcLgmFxOptionEngine(const boost::shared_ptr<CrossAssetModel>& model, const Size foreignCurrency);
+    AnalyticCcLgmFxOptionEngine(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, const Size foreignCurrency);
     void calculate() const override;
 
     /*! if cache is enabled, the integrals independent of fx
@@ -47,15 +47,24 @@ public:
     /*! the actual option price calculation, exposed to public,
       since it is useful to directly use the core computation
       sometimes */
-    Real value(const Time t0, const Time t, const boost::shared_ptr<StrikedTypePayoff> payoff,
+    Real value(const Time t0, const Time t, const QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff,
                const Real domesticDiscount, const Real fxForward) const;
 
+    /*! set a shift to be added to sigma for t in [t0, t1] */
+    void setSigmaShift(const Time t0, const Time t1, const Real shift) const;
+
+    /*! reset sigma shift */
+    void resetSigmaShift() const;
+
 private:
-    const boost::shared_ptr<CrossAssetModel> model_;
+    const QuantLib::ext::shared_ptr<CrossAssetModel> model_;
     const Size foreignCurrency_;
-    bool cacheEnabled_;
-    mutable bool cacheDirty_;
-    mutable Real cachedIntegrals_, cachedT0_, cachedT_;
+    bool cacheEnabled_ = false;
+    mutable bool cacheDirty_ = true;
+    mutable Real cachedIntegrals_ = 0.0, cachedT0_ = 0.0, cachedT_ = 0.0;
+
+    mutable Real sigmaShiftT0_ = 0.0, sigmaShiftT1_ = 0.0, sigmaShift_ = 0.0;
+    mutable bool applySigmaShift_ = false;
 };
 
 // inline

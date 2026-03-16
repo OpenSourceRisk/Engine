@@ -51,22 +51,32 @@ enum class CalibrationType {
       function (alpha) where jump times coincide with expiry dates in the swaption
       basket. Similarly, when calibrating an FX component to a series of FX Options.
       The calibration routine will throw an exception if no perfect match is
-      achieved.
-     */
+      achieved. */
     Bootstrap,
     /*! Choose this if no perfect match like above can be expected, for example when
       an IR component with constant parameters is calibrated to a basket of swaptions.
       The calibration routine will consequently not throw an exception when the match
-      is imperfect.
-     */
+      is imperfect. */
     BestFit,
+    /*! Choose this option to first perform a best fit calibration followed by a
+      bootstrap calibration. Supported only for COM components. First, Kappa and Sigma calibrated 
+      to a basket of commodity options by using BestFit. Then, piecewise seasonality is bootstrapped 
+      by using the same set of options.      
+     */
+    FirstBestFitThenBootstrap,
     /*! No calibration
      */
+    /*! For Hull-White, see HwPiecewiseStatisticalParametrization for details,
+        external calibration of reversion (kappa), pca factor loadings (v), and
+        pc volatility ratios to historical data, calibration of single piecewise
+        sigma0 to match an option strip */
+    StatisticalWithRiskNeutralVolatility,
+    /*! No calibration */
     None
 };
 
 //! Supported calibration strategies
-enum class CalibrationStrategy { CoterminalATM, CoterminalDealStrike, UnderlyingATM, UnderlyingDealStrike, None };
+enum class CalibrationStrategy { CoterminalATM, CoterminalDealStrike, UnderlyingATM, UnderlyingDealStrike, DeltaGammaAdjusted, None };
 
 //! Convert calibration type string into enumerated class value
 CalibrationType parseCalibrationType(const string& s);
@@ -109,6 +119,7 @@ public:
     //! \name Setters/Getters
     //@{
     const std::string& name() { return name_; }
+    const std::string& qualifier() const { return qualifier_; }
     std::string& qualifier() { return qualifier_; }
     CalibrationType& calibrationType() { return calibrationType_; }
 

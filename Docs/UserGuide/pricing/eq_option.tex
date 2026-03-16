@@ -1,0 +1,35 @@
+\subsubsection{European Equity Option}
+\label{pricing:eq_option}
+
+Vanilla European Equity Options are priced analytically using the Black-Scholes 
+model and log-normal volatilities. The equity forwarding curve is used for 
+respective underlying equity.
+
+\medskip
+The Black-Scholes model assumes that the spot price of the underlying equity $S$ 
+follows Geometric Brownian Motion:
+$$
+dS/S=\mu(t)dt+\sigma(t)\,dW
+$$
+The model is calibrated  such that the expected future equity spot price agrees 
+with today?s fair equity forward price for time T. This means that the equity 
+forward price $S(t,T)$ follows drift-free GBM under the T-forward measure:
+$$
+dS(t,T)/S(t,T)=\sigma(t)\,dW
+$$
+This leads a Black76 analytical solution for the present value of a European 
+equity option:
+$$
+\NPV=\mbox{Quantity}\cdot \mbox{Black}(K,S(0,T),\sigma \sqrt{T},\omega)\cdot P(T)
+$$
+where:
+\begin{itemize}
+\item Quantity: number of shares of the underlying equity
+\item $K$: strike price
+\item $S(0,T)$: the forward equity price for maturity T at time 0 (valuation date)
+\item $\sigma$: the volatility of the equity forward price
+\item $\omega$: 1 for a call option, -1 for a put option
+\item $P(T)$: the discount factor for maturity time $T$
+\end{itemize}
+
+See Black Model, Section \ref{models:black}.

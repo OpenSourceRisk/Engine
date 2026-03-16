@@ -22,25 +22,26 @@
 
 #pragma once
 
+#include <map>
 #include <ored/marketdata/inmemoryloader.hpp>
-#include <orea/app/inputparameters.hpp>
+#include <ored/portfolio/fixingdates.hpp>
+#include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
 
 namespace ore {
 namespace analytics {
 
+class InputParameters;
+
 typedef std::map<QuantLib::Date, std::set<std::string>> QuoteMap;
-typedef std::map<std::string, RequiredFixings::FixingDates> FixingMap;
+typedef std::map<std::string, ore::data::RequiredFixings::FixingDates> FixingMap;
 
 //! Utility class for Structured Fixing warnings
-class StructuredFixingWarningMessage : public StructuredMessage {
+class StructuredFixingWarningMessage : public ore::data::StructuredMessage {
 public:
     StructuredFixingWarningMessage(const std::string& fixingId, const QuantLib::Date& fixingDate,
-                                   const std::string& exceptionType, const std::string& exceptionWhat)
-        : StructuredMessage(Category::Warning, Group::Fixing, exceptionWhat,
-                            std::map<std::string, std::string>({{"exceptionType", exceptionType},
-                                                                {"fixingId", fixingId},
-                                                                {"fixingDate", ore::data::to_string(fixingDate)}})) {}
+                                   const std::string& exceptionType, const std::string& exceptionWhat,
+                                   const std::set<std::string>& tradeIds = {});
 };
 
 class MarketDataLoaderImpl {
@@ -49,57 +50,66 @@ public:
     virtual ~MarketDataLoaderImpl() {}
 
     //! load corporate action data
-    virtual void loadCorporateActionData(boost::shared_ptr<ore::data::InMemoryLoader>& loader, 
+    virtual void loadCorporateActionData(QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader, 
         const std::map<std::string, std::string>& equities) = 0;
 
     //! retrieve market data
-    virtual void retrieveMarketData(const boost::shared_ptr<ore::data::InMemoryLoader>& loader, 
+    virtual void retrieveMarketData(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader, 
         const QuoteMap& quotes,
                                     const QuantLib::Date& requestDate = QuantLib::Date()) = 0;
 
     //! retrieve fixings
-    virtual void retrieveFixings(const boost::shared_ptr<ore::data::InMemoryLoader>& loader, FixingMap fixings = {}, 
+    virtual void retrieveFixings(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader, FixingMap fixings = {}, 
         std::map<std::pair<std::string, QuantLib::Date>, std::set<QuantLib::Date>> lastAvailableFixingLookupMap = {}) = 0;
 };
 
 class MarketDataLoader {
 public:
-    MarketDataLoader(const boost::shared_ptr<InputParameters>& inputs, boost::shared_ptr<MarketDataLoaderImpl> impl)
+    MarketDataLoader(const QuantLib::ext::shared_ptr<InputParameters>& inputs, QuantLib::ext::shared_ptr<MarketDataLoaderImpl> impl = nullptr)
         : inputs_(inputs), impl_(impl) {
-        loader_ = boost::make_shared<ore::data::InMemoryLoader>();
+        loader_ = QuantLib::ext::make_shared<ore::data::InMemoryLoader>();
     }
     virtual ~MarketDataLoader() {}
 
     /*! Populate a market data \p loader. Gathers all the quotes needed based on the configs provided and calls the
         marketdata and fixing services
     */
-    void populateLoader(const std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters,
+    virtual void populateLoader(const std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters,
         const std::set<QuantLib::Date>& loaderDates);
+    
+    virtual void populateLoader(
+        const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParameters,
+        const std::set<QuantLib::Date>& loaderDates) {
+        std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> tmps;
+        tmps.push_back(todaysMarketParameters);
+        populateLoader(tmps, loaderDates);
+    }
 
     virtual void
-    populateFixings(const std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters,
+    populateFixings(const std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters,
                     const std::set<QuantLib::Date>& loaderDates = {});
 
-    virtual void addRelevantFixings(const std::pair<std::string, RequiredFixings::FixingDates>& fixing,
+    virtual void addRelevantFixings(const std::pair<std::string, ore::data::RequiredFixings::FixingDates>& fixing,
         std::map<std::pair<std::string, QuantLib::Date>, std::set<QuantLib::Date>>& lastAvailableFixingLookupMap);
 
     //! clear the loader
-    void resetLoader() { loader_ = boost::make_shared<ore::data::InMemoryLoader>(); };
+    void resetLoader() { loader_ = QuantLib::ext::make_shared<ore::data::InMemoryLoader>(); };
 
     //! getters
-    const boost::shared_ptr<ore::data::InMemoryLoader>& loader() const { return loader_; };
+    const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader() const { return loader_; };
     QuoteMap quotes() { return quotes_; }
+    FixingMap fixings() { return fixings_; }
 
 protected:
-    boost::shared_ptr<InputParameters> inputs_;
-    boost::shared_ptr<ore::data::InMemoryLoader> loader_;
+    QuantLib::ext::shared_ptr<InputParameters> inputs_;
+    QuantLib::ext::shared_ptr<ore::data::InMemoryLoader> loader_;
     QuoteMap quotes_;
     FixingMap fixings_;
 
-    const boost::shared_ptr<MarketDataLoaderImpl>& impl() const;
+    const QuantLib::ext::shared_ptr<MarketDataLoaderImpl>& impl() const;
 
 private:
-    boost::shared_ptr<MarketDataLoaderImpl> impl_;
+    QuantLib::ext::shared_ptr<MarketDataLoaderImpl> impl_;
 };
 
 } // namespace analytics

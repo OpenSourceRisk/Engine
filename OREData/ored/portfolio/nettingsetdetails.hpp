@@ -71,10 +71,11 @@ public:
     //! \name Utility
     //@{
     //! Check if the netting set details have been populated
-    bool empty() const { return nettingSetId_.empty(); }
+    bool empty() const { return nettingSetId_.empty() && emptyOptionalFields(); }
     bool emptyOptionalFields() const {
         return agreementType_.empty() && callType_.empty() && initialMarginType_.empty() && legalEntityId_.empty();
     }
+    void clear();
 
     //! Returns a map representation of the object
     const map<string, string> mapRepresentation() const;

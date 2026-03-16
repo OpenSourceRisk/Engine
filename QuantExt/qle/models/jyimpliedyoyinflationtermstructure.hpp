@@ -37,8 +37,10 @@ public:
     /*! Constructor taking the cross asset model, \p model, and the index of the relevant inflation component within
         the model, \p index.
     */
-    JyImpliedYoYInflationTermStructure(const boost::shared_ptr<CrossAssetModel>& model, QuantLib::Size index,
+    JyImpliedYoYInflationTermStructure(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, QuantLib::Size index,
         bool indexIsInterpolated);
+
+    void clearCache() const override { cache_C_.clear(); }
 
     //! \name YoYInflationModelTermStructure interface
     //@{
@@ -54,6 +56,8 @@ protected:
     //@{
     void checkState() const override;
     //@}
+
+    mutable std::map<std::tuple<Real,Real,Real>, Real> cache_C_;
 };
 
 }

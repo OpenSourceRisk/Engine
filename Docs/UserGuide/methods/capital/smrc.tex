@@ -1,0 +1,245 @@
+\section{Standardized Market Risk Capital (SMRC)}
+
+Calculating market risk capital requirements can be performed using the \emph{Standardized Market Risk Capital (SMRC)} method. This method is defined by the regulator and based on the formula
+\begin{align}
+	\operatorname{SMRC} = \operatorname{Notional} \times \operatorname{RiskWeight}
+	\label{EqDefSMRC}
+\end{align}
+for every trade in scope. 
+
+SMRC is currently supported in ORE for the following trade types (unsupported types
+are ignored in calculations):
+\begin{itemize}
+\item \emph{Bond}
+\item \emph{ForwardBond}
+\item \emph{BondOption}
+\item \emph{CommodityForward}
+\item \emph{CommodityOption}
+\item \emph{CommoditySwap}
+\item \emph{EquityOption}
+\item \emph{EquityPosition}
+\item \emph{EquityOptionPosition}
+\item \emph{FXForward}
+\item \emph{FXOption}
+\item \emph{TotalReturnSwap}
+\item \emph{ConvertibleBond}
+\item \emph{ForwardRateAgreement}
+\item \emph{CapFloor}
+\item \emph{Swap}
+\item \emph{Swaption}
+\end{itemize}
+
+\subsection{Risk Weights}
+
+The risk weight depends on the type and the currencies involved in the trade. All trades supported in ORE and the corresponding risk weights are shown in Table \ref{smrc_risk_weights}. The distinction between \emph{major} and \emph{minor} currencies is given by the following list:
+
+\begin{itemize}
+	\item \texttt{major}: USD, CAD, EUR, GBP, JPY, CHF
+	\item \texttt{minor}: Any currency that is not major.
+\end{itemize}
+
+For trade types, where multiple currencies are involved, such as FxForward, the trade currencies are only classified as \texttt{major} if all currencies involved are major, and minor otherwise.
+
+Trades which are based upon Swaps or Bonds depends upon the time until maturity of the underlying asset. As such trades with shorter time until maturity have smaller associated risk weights. Furthermore, in the case of trades dependent upon bonds, the rates are different for those which are based on US Government bonds.   
+
+\begin{table}[htpb]
+	\begin{tabular}{|l | c | c| c | c |}
+		\hline
+		Trade Type & Currencies & Underlying & Maturity Time (Years) & Risk Weight  \\ \hline
+		FxForward & major & - & - & 6\%  \\
+		FxForward & minor & - & - &  20\%  \\
+		FxOption & major & - & - &  6\%  \\
+		FxOption & minor & - & - &  20\%  \\
+		\hline
+		CommodityForward & all & - & - &  20\%  \\
+		CommoditySwap & all &  - & - & 20\%  \\
+		CommodityOption & all &  - & - & 20\%  \\
+		\hline
+		EquityPosition & all & all & - & 25\% \\
+		EquityOption & all & all & - & 25\% \\
+		EquityOptionPosition & all & all & - & 25\% \\
+		\hline
+		& all & all & $< 0.25$ & 0\%      \\
+		& all & all & $< 0.5$  & 0.5\%  \\
+		& all & all & $< 0.75$ & 0.75\% \\
+		& all & all & $< 1$    & 1\%   \\
+		Swap                 & all & all & $< 2$    & 1.5\%  \\
+		ForwardRateAgreement & all & all & $< 3$    & 2\%   \\
+		CapFloor             & all & all & $< 5$    & 3\%   \\
+		Swaption             & all & all & $< 10$   & 4\%   \\
+		& all & all & $< 15$   & 4.5\%  \\
+		& all & all & $< 20$   & 5\%   \\
+		& all & all & $< 25$   & 5.5\%  \\
+		& all & all & $>25$    & 6\% \\ 
+		\hline
+		ConvertibleBond & all & all & - & 15\% \\
+		\hline
+		& all & U.S. Govt. Bonds & $<5$  & 1.5\%  \\
+		& all & U.S. Govt. Bonds & $<10$ & 2.5\%  \\
+		& all & U.S. Govt. Bonds & $<15$ & 2.75\% \\
+		& all & U.S. Govt. Bonds & $>15$ & 3\%    \\
+		& all & Other Bonds     & $<1$  & 2\%    \\
+		Bond        & all & Other Bonds     & $<2$  & 3\%    \\
+		ForwardBond & all & Other Bonds     & $<3$  & 5\%    \\
+		BondOption  & all & Other Bonds     & $<5$  & 6\%    \\
+		& all & Other Bonds     & $<10$ & 7\%    \\
+		& all & Other Bonds     & $<15$ & 7.5\%  \\
+		& all & Other Bonds     & $<20$ & 8\%    \\
+		& all & Other Bonds     & $<25$ & 8.5\%  \\
+		& all & Other Bonds     & $>25$ & 9\% \\
+		\hline
+	\end{tabular}
+	\caption{Risk Weights}
+	\label{smrc_risk_weights}
+\end{table}
+
+\subsection{Notional}
+
+The calculation of the notional of a trade can be involved as it depends on the trade type and the choice of the pricing engine. We refer to the documentation of those for technical details. For the trade types in listed in Table \ref{smrc_risk_weights}, the high-level methodology is as follows:
+
+\begin{description}
+	\item[FxForward] The FxForward trade type has a \texttt{BoughtAmount} and a \texttt{SoldAmount} in a \texttt{BoughtCurrency} and a \texttt{SoldCurrency}. The notional is calculated by converting both amounts into \texttt{BaseCcy} using the FX spot rate and then choosing the bigger of the two, i.e.
+	\begin{align*}
+		\operatorname{Notional} = \max( \operatorname{FX}_{\text{base,bought}} \cdot \operatorname{BoughtAmount}, \operatorname{FX}_{\text{base,sold}} \cdot \operatorname{SoldAmount})
+	\end{align*}
+	\item[FxOption] The methodology is the same as for FxForward.
+	\item[CommodityForward] The CommodityForward trade type has a \texttt{Quantity} field and a \texttt{Strike} field. The notional is calculated as
+	\begin{align*}
+		\operatorname{Notional} = \operatorname{Strike} \cdot \operatorname{Quantity}.
+	\end{align*}
+	\item[CommoditySwap] The \texttt{CommoditySwap} trade type contains a collection of legs. Each leg results in a sequence of flow amount between inception and maturity. The commodity swap notional is the sum of the (signed) notionals of all of its CommodityFloating legs. The notional of a CommodityFloating leg is then calculated by taking the earliest future flow amount of that leg. For variable-quantity swaps, we take the average quantity (taking into account spreads and gearing), while assuming the price of the earliest flow.
+	\item[CommodityOption] For the \texttt{CommodityOption} trade type the notional is determined by the agreed \texttt{Strike} price times the corresponding \texttt{Quantity} value, both of which are provided in the trade data. 
+	\item[EquityPosition] The \texttt{EquityPosition} trade type consists of an underlying asset (or basket of assets) with associated asset weight/s. The notional of the trade is given by the additional field \texttt{smrc\_notional}. For each asset in the trade, $\text{SignedNotional} = \text{smrc\_notional} * {weight}$.
+	\item[EquityOption] In the case of \texttt{EquityOption} trades the notional is determined by the agreed \texttt{Strike} price times the corresponding \texttt{Quantity} value, both of which are provided in the trade data. 
+	\item[EquityOptionPosition] The methodology is the same as for \texttt{EquityOption}.
+	\item[ConvertibleBond] The \texttt{ConvertibleBond} trade type has a notional field which may have an amortising structure. In this case the first of these notional values which occur after the provided \texttt{asof} date is used.
+	\item[Bond] The methodology is the same as for \texttt{ConvertibleBond}.
+	\item[ForwardBond] The methodology is the same as for \texttt{ConvertibleBond}.
+	\item[BondOption] The BondOption trade type contains information regarding the underlying option data including the \texttt{Strike} and \texttt{Quantity} values which are multiplied by one another to give the notional value.
+	\item[Swap] The \texttt{Swap} trade type has a \texttt{Notional} field for each leg present in the trade, here the value obtained from the first leg which appears in the input portfolio is used to represent the trade notional.
+	\item[Swaption] The \texttt{Swaption} trade type contains a collection of legs. Each leg results in a sequence of flow amount between inception and maturity. The notional is defined by taking the maximum over all legs and all current flow amounts after the \texttt{asof} date of the calculation.
+	\item[ForwardRateAgreement] The \texttt{ForwardRateAgreement} trade type has a \texttt{Notional} field which is used in determining the value. 
+	\item[CapFloor] The methodology is the same as for \texttt{Swap}.
+\end{description}
+
+\subsection{Aggregation \& Offsetting of Positions}
+For each trade $i$ in the portfolio, the SMRC charge $\operatorname{SMRC}_i$ is calculated using \eqref{EqDefSMRC} and stored in a detailed report. The easiest aggregation of all the contributions of the trades into a single SMRC capital charge number is simply:
+\begin{align}
+	\operatorname{SMRC} := \sum_{i}{\operatorname{SMRC}_i}
+\end{align}
+Notice that this type of aggregation is very conservative as this formula does not take into account any offsetting effects between long and short positions of various trades in the portfolio. 
+
+Thus, we produce a second aggregated report, where offsetting between long and short positions of the same type of market risk is allowed. The precise definition of this depends on the trade type. We give a high-level overview of the methodology for some relevant trade types here:
+
+\begin{description}
+	\item[FxForward] An FxForward has a linear payoff, where one currency amount is bought and another is sold. We therefore think of an FxForward as having two legs - one that pays and one that receives. We compute the list of all currencies of all FxForwards in the portfolio and then for each currency $j$ define a currency bucket $\operatorname{CCY}_j$. In that bucket we sum up with a positive sign all the \texttt{boughtAmount}s of all FxForwards $i$ with \texttt{boughtCurrency} equal to $j$ and the same with the \texttt{soldAmount}s, but with a negative sign, thus calculating the total effective notional amount in that currency:
+	\begin{align*}
+		\operatorname{CCY}_{j,\text{bought}} & := \sum_{i, \operatorname{boughtCurrency}_i=j}{\operatorname{boughtAmount}_i \cdot \operatorname{FX}_{\text{base},\text{bought}_i}}, \\
+		\operatorname{CCY}_{j,\text{sold}} & :=\sum_{i, \operatorname{soldCurrency}_i=j}{\operatorname{soldAmount}_i \cdot \operatorname{FX}_{\text{base},\text{sold}_i}}, \\
+		\operatorname{CCY}_{j} &:= \operatorname{CCY}_{j,\text{bought}} - \operatorname{CCY}_{j,\text{sold}}.
+	\end{align*}
+	Finally, we aggregate the results of the currency buckets by weighing its absolute value with the $\operatorname{RiskWeight}_j$ of that currency, which is again $6\%$, if the currency is major and $20\%$ otherwise:
+	\begin{align*}
+		\operatorname{SMRC}_{\text{FxForward}} := \sum_{j}{\operatorname{RiskWeight}_j |\operatorname{CCY}_j|}.
+	\end{align*}
+	\item[FxOption] An FxOption is not a linear trade and thus it cannot be decomposed as easily into legs like the FxForward. Therefore, for each FxOption $i$ we compute the unordered set of the currency pair 
+	\begin{align*}
+		\{ \operatorname{BoughtCurrency}_i, \operatorname{SoldCurrency}_i \}
+	\end{align*}
+	and then for each such currency pair $\operatorname{CCYPair}_j$ we sum up the signed notionals of the long and short put and call options $i$ with that currency pair:
+	\begin{align*}
+		\operatorname{CCYPair}_{j} & := \sum_{i,\text{CCYPair}_i=j,}{\operatorname{SignedNotional}_i},
+	\end{align*}
+	where the $\operatorname{SignedNotional}_i$ of an option $i$ has the same absolute value as the notional and the sign is given by Table \ref{fx_option_notional_signs}.
+	Finally, we compute the risk weight $\operatorname{RiskWeight}_j$ of each currency pair $j$, which is again $6\%$ if both currencies are major and $20\%$ otherwise. We then aggregate analogously
+	\begin{align*}
+		\operatorname{SMRC}_{\text{FxOption}} := \sum_{j}{\operatorname{RiskWeight}_j |\operatorname{CCYPair}_{j}| }.
+	\end{align*}
+	\item[CommodityForward, CommoditySwap, CommodityOption] These trades each have an underlying commodity, $\operatorname{Commodity_i}$, which has an associated notional amount $\operatorname{SignedNotional_i}$. For each unique commodity, $\text{Commodity}_j$, we consider the portfolio netted total represented by $\operatorname{CommodityTotal}_j$ obtained by summing the signed notionals arising from trades associated with this commodity:
+	\begin{align*}
+		\operatorname{CommodityTotal}_{j} & := \sum_{i,\text{Commodity}_i=\text{Commodity}_j,}{\operatorname{SignedNotional}_i},
+	\end{align*}
+	where the $\operatorname{SignedNotional}_i$ of a trade $i$ has the same absolute value as the notional with sign given by Table \ref{fx_option_notional_signs}.
+	Finally, we compute the risk weight $\operatorname{RiskWeight}_j$ of each commodity $j$, which is $20\%$. We then aggregate analogously to obtain
+	\begin{align*}
+		\operatorname{SMRC}_{\text{Commodity}} := \sum_{j}{\operatorname{RiskWeight}_j |\operatorname{CommodityTotal}_{j}| }.
+	\end{align*}
+	\item[EquityOption, EquityOptionPosition] These trades depend upon an underlying equity, $\operatorname{Equity_i}$, which has an associated notional amount $\operatorname{SignedNotional_i}$. For each unique equity $\text{Equity}_j$ we consider the portfolio netted total represented by $\operatorname{EquityTotal}_j$ obtained by summing up the signed notionals arising from trades associated with this equity given by:
+	\begin{align*}
+		\operatorname{EquityTotal}_{j} & := \sum_{i,\text{Equity}_i=\text{Equity}_j,}{\operatorname{SignedNotional}_i},
+	\end{align*}
+	where the $\operatorname{SignedNotional}_i$ of a trade $i$ has the same absolute value as the notional and the sign is given by Table \ref{option_notional_signs} in the case of option based trades and simply positive (negative) for long (short) position trades.
+	Finally, we compute the risk weight $\operatorname{RiskWeight}_j$ of each equity $j$, which is $25\%$. We then aggregate analogously
+	\begin{align*}
+		\operatorname{SMRC}_{\text{Equity}} := \sum_{j}{\operatorname{RiskWeight}_j |\operatorname{EquityTotal}_{j}| }.
+	\end{align*}
+	\item[Swap, ForwardRateAgreement, CapFloor, Swaption] In the case of these trades we consider only floating legs, and consider the time until maturity of the contract. As such for each trade $i$ we consider the set of swap-maturity pairs $\{UnderlyingIndex_i, MaturityDate_i\}$ where the maturity times are considered on a discrete basis such that all trades with maturity within a certain window are grouped together, these windows are given in Table \ref{smrc_risk_weights}, e.g., all swaps for a certain index maturing in less than 0.25 years are grouped. Consequently for each swap-maturity pair $\operatorname{SwapMaturity}_j$ we sum up the signed notionals for each trade, which are determined by Table \ref{swaption_notional_signs} in the case of swaption based trades and simply positive (negative) for long (short) position trades, to obtain the total for said pair given by
+	\begin{align*}
+		\operatorname{SwapMaturityTotal}_{j} := \sum_{i, \text{SwapMaturity}_i = \text{SwapMaturity}_j} SignedNotional_i.
+	\end{align*}
+	Finally for each swap-maturity pair $j$ we compute the $\operatorname{RiskWeight}_j$ as given by Table \ref{smrc_risk_weights} and again aggregate across all trades via
+	\begin{align*}
+		\operatorname{SMRC}_{\text{SwapUnderlying}} := \sum_{j}{\operatorname{RiskWeight}_j |\operatorname{SwapMaturityTotal}_j|}.
+	\end{align*}
+	\item[ConvertibleBond] Trades based upon convertible bonds have an underlying asset, $\operatorname{BondUnderlying}_i$ which determines the returns of the trade. Each corresponding notional is multiplied by the $\operatorname{RiskWeight}_j$ which is always given by $15\%$ in this case and then aggregated analogously as
+	\begin{align*}
+		\operatorname{SMRC}_{\text{BondUnderlying}} := \sum_{j}{\operatorname{RiskWeight}_j |\operatorname{BondUnderlying}_j| }.
+	\end{align*}
+	\item[Bond, ForwardBond, BondOption] These trades are dependent upon an underlying bond asset, which itself has a given maturity date. As such for each trade $i$ we consider the set of bond-maturity pairs $\{UnderlyingBond_i, MaturityDate_i\}$ where the maturity times are considered on a discrete basis such that all trades with maturity within a certain window are grouped together, these windows are given in Table \ref{smrc_risk_weights}, e.g., all unique U.S. government bonds maturing in less than 5 years are grouped. Consequently for each bond-maturity pair $\operatorname{BondMaturity}_j$ we sum up the signed notionals for each trade, which are determined by Table \ref{option_notional_signs} in the case of option based trades and simply positive (negative) for long (short) position trades, to obtain the total for said pair given by
+	\begin{align*}
+		\operatorname{BondMaturityTotal}_{j} := \sum_{i, \text{BondMaturity}_i = \text{BondMaturity}_j} SignedNotional_i.
+	\end{align*}
+	The last distinction made is that those bonds issued by the U.~S. Government are treated differently from all others as demonstrated in Table \ref{smrc_risk_weights}. Finally for each bond maturity pair $j$ we compute the $\operatorname{RiskWeight}_j$ as given by Table \ref{smrc_risk_weights} and again aggregate across all trades via
+	\begin{align*}
+		\operatorname{SMRC}_{\text{BondUnderlying}} := \sum_{j}{\operatorname{RiskWeight}_j |\operatorname{BondMaturityTotal}_j|}.
+	\end{align*}
+\end{description}
+
+\begin{table}[htpb]
+	\begin{tabular}{|c | c | c| c| c|}
+		\hline
+		BoughtCcy & SoldCcy & Type & LongShort & Sign \\ \hline
+		X & Y & call & long & + \\
+		X & Y & call & short & - \\
+		Y & X & call & long & - \\
+		Y & X & call & short & + \\ \hline
+		X & Y & put & long & - \\
+		X & Y & put & short & + \\
+		Y & X & put & long & + \\
+		Y & X & put & short & - \\
+		\hline
+	\end{tabular}
+	\caption{FxOption Notional Signs}
+	\label{fx_option_notional_signs}
+\end{table}
+
+
+\begin{table}[htpb]
+	\begin{tabular}{| c| c| c|}
+		\hline
+		Type & LongShort & Sign \\ \hline
+		call & long & + \\
+		call & short & - \\
+		\hline
+		put & long & - \\
+		put & short & + \\
+		\hline
+	\end{tabular}
+	\caption{Option Notional Signs}
+	\label{option_notional_signs}
+\end{table}
+
+\begin{table}[htpb]
+	\begin{tabular}{| c| c| c|}
+		\hline
+		PayReceive & LongShort & Sign \\ \hline
+		pay & long & + \\
+		pay & short & - \\
+		\hline
+		receive & long & - \\
+		receive & short & + \\
+		\hline
+	\end{tabular}
+	\caption{Swaption Notional Signs}
+	\label{swaption_notional_signs}
+\end{table}

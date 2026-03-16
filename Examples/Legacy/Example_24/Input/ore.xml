@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<ORE>
+  <Setup>
+    <Parameter name="asofDate">2016-02-05</Parameter>
+    <Parameter name="inputPath">Input</Parameter>
+    <Parameter name="outputPath">Output</Parameter>
+    <Parameter name="logFile">log.txt</Parameter>
+    <Parameter name="logMask">63</Parameter>
+    <Parameter name="marketDataFile">../../../Input/market_20160205.txt</Parameter>
+    <Parameter name="fixingDataFile">../../../Input/fixings_20160205.txt</Parameter>
+    <Parameter name="implyTodaysFixings">N</Parameter>
+    <Parameter name="curveConfigFile">../../../Input/curveconfig.xml</Parameter>
+    <Parameter name="conventionsFile">../../../Input/conventions.xml</Parameter>
+    <Parameter name="marketConfigFile">../../../Input/todaysmarket.xml</Parameter>
+    <Parameter name="pricingEnginesFile">../../../Input/pricingengine.xml</Parameter>
+    <Parameter name="portfolioFile">portfolio.xml</Parameter>
+    <Parameter name="observationModel">None</Parameter>
+  </Setup>
+  <Markets>
+    <Parameter name="lgmcalibration">collateral_inccy</Parameter>
+    <Parameter name="fxcalibration">collateral_inccy</Parameter>
+    <Parameter name="pricing">collateral_inccy</Parameter>
+    <Parameter name="simulation">collateral_inccy</Parameter>
+    <Parameter name="sensitivity">collateral_inccy</Parameter>
+  </Markets>
+  <Analytics>
+    <Analytic type="npv">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="baseCurrency">USD</Parameter>
+      <Parameter name="outputFileName">npv.csv</Parameter>
+    </Analytic>
+    <Analytic type="cashflow">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="outputFileName">flows.csv</Parameter>
+    </Analytic>
+    <Analytic type="curves">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="configuration">default</Parameter>
+      <Parameter name="grid">240,1M</Parameter>
+      <Parameter name="outputFileName">curves.csv</Parameter>
+    </Analytic>
+    <Analytic type="sensitivity">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="marketConfigFile">simulation.xml</Parameter>
+      <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
+      <Parameter name="pricingEnginesFile">../../../Input/pricingengine.xml</Parameter>
+      <Parameter name="scenarioOutputFile">scenario.csv</Parameter>
+      <Parameter name="sensitivityOutputFile">sensitivity.csv</Parameter>
+      <Parameter name="outputSensitivityThreshold">0.000001</Parameter>
+      <Parameter name="recalibrateModels">Y</Parameter>
+    </Analytic>
+  </Analytics>
+</ORE>

@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(testSurvivalProbabilityCurve) {
     vector<Real> times;
     vector<Probability> sps;
     vector<Handle<Quote> > quotes;
-    vector<boost::shared_ptr<SimpleQuote> > simpleQuotes;
+    vector<QuantLib::ext::shared_ptr<SimpleQuote> > simpleQuotes;
 
     Size numYears = 30;
     int startYear = 2015;
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(testSurvivalProbabilityCurve) {
         // set up Quote of SurvivalProbabilities
         Probability sp = ::exp(-rate * t);
 
-        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(sp));
+        QuantLib::ext::shared_ptr<SimpleQuote> q(new SimpleQuote(sp));
         simpleQuotes.push_back(q);
         Handle<Quote> qh(q);
         quotes.push_back(qh);
@@ -74,12 +74,12 @@ BOOST_AUTO_TEST_CASE(testSurvivalProbabilityCurve) {
     }
 
     // Test against the QL curve
-    boost::shared_ptr<DefaultProbabilityTermStructure> dtsBase;
-    dtsBase = boost::shared_ptr<DefaultProbabilityTermStructure>(
+    QuantLib::ext::shared_ptr<DefaultProbabilityTermStructure> dtsBase;
+    dtsBase = QuantLib::ext::shared_ptr<DefaultProbabilityTermStructure>(
         new QuantLib::InterpolatedSurvivalProbabilityCurve<Linear>(dates, sps, dc, cal));
     dtsBase->enableExtrapolation();
 
-    boost::shared_ptr<DefaultProbabilityTermStructure> dtsTest(
+    QuantLib::ext::shared_ptr<DefaultProbabilityTermStructure> dtsTest(
         new QuantExt::SurvivalProbabilityCurve<Linear>(dates, quotes, dc, cal));
 
     // now check that they give the same survivalProbabilities (including extrapolation)

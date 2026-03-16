@@ -37,7 +37,8 @@ public:
     //! Constructor
     BootstrapConfig(QuantLib::Real accuracy = 1.0e-12, QuantLib::Real globalAccuracy = QuantLib::Null<QuantLib::Real>(),
                     bool dontThrow = false, QuantLib::Size maxAttempts = 5, QuantLib::Real maxFactor = 2.0,
-                    QuantLib::Real minFactor = 2.0, QuantLib::Size dontThrowSteps = 10);
+                    QuantLib::Real minFactor = 2.0, QuantLib::Size dontThrowSteps = 10, bool global = false,
+                    Real smoothnessLambda = 0.0);
 
     //! \name XMLSerializable interface
     //@{
@@ -54,6 +55,8 @@ public:
     QuantLib::Real maxFactor() const { return maxFactor_; }
     QuantLib::Real minFactor() const { return minFactor_; }
     QuantLib::Size dontThrowSteps() const { return dontThrowSteps_; }
+    bool global() const { return global_; }
+    QuantLib::Real smoothnessLambda() const { return smoothnessLambda_; }
     //@}
 
 private:
@@ -64,6 +67,8 @@ private:
     QuantLib::Real maxFactor_;
     QuantLib::Real minFactor_;
     QuantLib::Size dontThrowSteps_;
+    bool global_;
+    QuantLib::Real smoothnessLambda_;
 };
 
 } // namespace data

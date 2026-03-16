@@ -37,18 +37,19 @@ public:
     OISCapFloorHelper(CapFloorHelper::Type type, const QuantLib::Period& tenor,
                       const QuantLib::Period& rateComputationPeriod, QuantLib::Rate strike,
                       const QuantLib::Handle<QuantLib::Quote>& quote,
-                      const boost::shared_ptr<QuantLib::OvernightIndex>& index,
+                      const QuantLib::ext::shared_ptr<QuantLib::OvernightIndex>& index,
                       const QuantLib::Handle<QuantLib::YieldTermStructure>& discountingCurve, bool moving = true,
                       const QuantLib::Date& effectiveDate = QuantLib::Date(),
                       CapFloorHelper::QuoteType quoteType = CapFloorHelper::Premium,
                       QuantLib::VolatilityType quoteVolatilityType = QuantLib::Normal,
-                      QuantLib::Real quoteDisplacement = 0.0);
+                      QuantLib::Real quoteDisplacement = 0.0, const bool useEffectiveVolatility = false);
 
     Leg capFloor() const { return capFloor_; }
 
     void setTermStructure(QuantLib::OptionletVolatilityStructure* ovts) override;
     QuantLib::Real impliedQuote() const override;
     void accept(QuantLib::AcyclicVisitor&) override;
+    QuantLib::Real atmStrike() const;
 
 private:
     void initializeDates() override;
@@ -57,13 +58,14 @@ private:
     QuantLib::Period tenor_;
     QuantLib::Period rateComputationPeriod_;
     QuantLib::Rate strike_;
-    boost::shared_ptr<QuantLib::OvernightIndex> index_;
+    QuantLib::ext::shared_ptr<QuantLib::OvernightIndex> index_;
     QuantLib::Handle<QuantLib::YieldTermStructure> discountHandle_;
     bool moving_;
     QuantLib::Date effectiveDate_;
     CapFloorHelper::QuoteType quoteType_;
     QuantLib::VolatilityType quoteVolatilityType_;
     QuantLib::Real quoteDisplacement_;
+    bool useEffectiveVolatility_ = false;
     QuantLib::Handle<QuantLib::Quote> rawQuote_;
     bool initialised_;
 

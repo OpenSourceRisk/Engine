@@ -47,7 +47,7 @@ class SubPeriodsCoupon1 : public FloatingRateCoupon {
 public:
     enum Type { Averaging, Compounding };
     SubPeriodsCoupon1(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate,
-                     const boost::shared_ptr<InterestRateIndex>& index, Type type, BusinessDayConvention convention,
+                     const QuantLib::ext::shared_ptr<InterestRateIndex>& index, Type type, BusinessDayConvention convention,
                      Spread spread = 0.0, const DayCounter& dayCounter = DayCounter(), bool includeSpread = false,
                      Real gearing = 1.0);
     //! \name Inspectors
@@ -73,6 +73,8 @@ public:
     //! the date when the coupon is fully determined
     Date fixingDate() const override { return fixingDates_.back(); }
     //@}
+    //! End of the deposit period underlying the last coupon fixing
+    const Date& fixingEndDate() const;
     //! \name Visitability
     //@{
     void accept(AcyclicVisitor&) override;
@@ -84,6 +86,7 @@ private:
     mutable std::vector<Rate> fixings_;
     Size numPeriods_;
     std::vector<Time> accrualFractions_;
+    Date fixingEndDate_;
 };
 
 //! helper class building a sequence of sub-period coupons
@@ -92,7 +95,7 @@ private:
  */
 class SubPeriodsLeg1 {
 public:
-    SubPeriodsLeg1(const Schedule& schedule, const boost::shared_ptr<InterestRateIndex>& index);
+    SubPeriodsLeg1(const Schedule& schedule, const QuantLib::ext::shared_ptr<InterestRateIndex>& index);
     SubPeriodsLeg1& withNotional(Real notional);
     SubPeriodsLeg1& withNotionals(const std::vector<Real>& notionals);
     SubPeriodsLeg1& withPaymentDayCounter(const DayCounter& dayCounter);
@@ -108,7 +111,7 @@ public:
 
 private:
     Schedule schedule_;
-    boost::shared_ptr<InterestRateIndex> index_;
+    QuantLib::ext::shared_ptr<InterestRateIndex> index_;
     std::vector<Real> notionals_;
     DayCounter paymentDayCounter_;
     BusinessDayConvention paymentAdjustment_;

@@ -52,13 +52,13 @@ namespace QuantExt {
 class IndexCdsTrancheEngine : public QuantExt::SyntheticCDO::engine {
 public:
     IndexCdsTrancheEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
-        boost::optional<bool> includeSettlementDateFlows = boost::none);
+        QuantLib::ext::optional<bool> includeSettlementDateFlows = QuantLib::ext::nullopt);
 
     void calculate() const override;
 
 protected:
     QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve_;
-    boost::optional<bool> includeSettlementDateFlows_;
+    QuantLib::ext::optional<bool> includeSettlementDateFlows_;
 };
 
 }

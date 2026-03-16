@@ -39,28 +39,31 @@ class GaussianCam : public ModelImpl, public AmcModel {
 public:
     /* analogue to ModelImpl, plus:
        - cam: a handle to the underlying cross asset model
-       - the currencies, curves, fxSpots need to match those in the cam (FIXME, remove them from the ctor?)
+       - the currencies, curves, fxSpots need to match those in the cam (curves are used for discount and numeraire
+         calcs, if overwritten with other curves, which is used for the external discount_curve and security_spread
+         handling!)
        - simulationDates are the dates on which indices can be observed
        - regressionOrder is the regression order used to compute conditional expectations in npv()
-       - timeStepsPerYear time steps used for discretisation (overwritten by 1 if exact discretisation is used
+       - timeStepsPerYear time steps used for discretisation
        - disc: choose exact or Euler discretisation of state process
      */
     GaussianCam(const Handle<CrossAssetModel>& cam, const Size paths, const std::vector<std::string>& currencies,
                 const std::vector<Handle<YieldTermStructure>>& curves, const std::vector<Handle<Quote>>& fxSpots,
-                const std::vector<std::pair<std::string, boost::shared_ptr<InterestRateIndex>>>& irIndices,
-                const std::vector<std::pair<std::string, boost::shared_ptr<ZeroInflationIndex>>>& infIndices,
+                const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
+                const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
                 const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
-                const std::set<Date>& simulationDates, const McParams& mcParams, const Size timeStepsPerYear = 1,
-                const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+                const std::set<Date>& simulationDates,
+                const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
+                    QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
                 const std::vector<Size>& projectedStateProcessIndices = {},
-                const std::vector<std::string>& conditionalExpectationModelStates = {});
+                const std::vector<std::string>& conditionalExpectationModelStates = {}, const Params& params = {},
+                const Size timeStepsPerYear = 1);
 
     // Model interface implementation
-    Type type() const override { return Type::MC; }
     const Date& referenceDate() const override;
     Size size() const override;
     RandomVariable npv(const RandomVariable& amount, const Date& obsdate, const Filter& filter,
-                       const boost::optional<long>& memSlot, const RandomVariable& addRegressor1,
+                       const QuantLib::ext::optional<long>& memSlot, const RandomVariable& addRegressor1,
                        const RandomVariable& addRegressor2) const override;
     RandomVariable fwdCompAvg(const bool isAvg, const std::string& index, const Date& obsdate, const Date& start,
                               const Date& end, const Real spread, const Real gearing, const Integer lookback,
@@ -75,7 +78,7 @@ public:
     // AMCModel interface implementation
     void injectPaths(const std::vector<QuantLib::Real>* pathTimes,
                      const std::vector<std::vector<QuantExt::RandomVariable>>* paths,
-                     const std::vector<bool>* isRelevantTime, const bool stickyCloseOutRun) override;
+                     const std::vector<size_t>* pathIndexes, const std::vector<size_t>* timeIndexes) override;
 
 private:
     // ModelImpl interface implementation
@@ -104,12 +107,11 @@ private:
     const Handle<CrossAssetModel> cam_;
     const std::vector<Handle<YieldTermStructure>> curves_;
     const std::vector<Handle<Quote>> fxSpots_;
-    const McParams mcParams_;
     const Size timeStepsPerYear_;
     const std::vector<Size> projectedStateProcessIndices_; // if data is injected via the AMCModel interface
+    const Real regressionVarianceCutoff_ = Null<Real>();
 
     // computed values
-    mutable map<Size, std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>> basisFns_;
     mutable Date referenceDate_;                      // the model reference date
     mutable std::set<Date> effectiveSimulationDates_; // the dates effectively simulated (including today)
     mutable TimeGrid timeGrid_;                       // the (possibly refined) time grid for the simulation
@@ -130,6 +132,7 @@ private:
     mutable std::vector<Size> infIndexPositionInCam_;     // maps inf index no to inf idx in cam
     mutable std::vector<Size> currencyPositionInCam_;     // maps currency no to position in cam parametrizations
     mutable std::vector<Size> eqIndexInCam_;      // maps index no to eq position in cam (or null, if not an eq index)
+    mutable std::vector<Size> comIndexInCam_;     // maps index no to com position in cam (or null, if not a com index)
     mutable bool conditionalExpectationUseIr_;    // derived from input conditionalExpectationModelState
     mutable bool conditionalExpectationUseInf_;   // derived from input conditionalExpectationModelState
     mutable bool conditionalExpectationUseAsset_; // derived from input conditionalExpectationModelState
@@ -140,12 +143,12 @@ private:
     // data when paths are injected via the AMCModel interface
     const std::vector<QuantLib::Real>* injectedPathTimes_ = nullptr;
     const std::vector<std::vector<QuantExt::RandomVariable>>* injectedPaths_ = nullptr;
-    const std::vector<bool>* injectedPathIsRelevantTime_;
-    bool injectedPathStickyCloseOutRun_;
+    const std::vector<size_t>* injectedPathRelevantPathIndexes_;
+    const std::vector<size_t>* injectedPathRelevantTimeIndexes_;
     Size overwriteModelSize_ = Null<Size>();
 
-    // stored regression coefficients and state size
-    mutable std::map<long, std::pair<Array, Size>> storedRegressionCoeff_;
+    // stored regression coefficients, state size (before possible transform) and (optional) coordinate transform
+    mutable std::map<long, std::tuple<Array, Size, Matrix>> storedRegressionModel_;
 };
 
 } // namespace data

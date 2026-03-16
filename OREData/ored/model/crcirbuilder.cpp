@@ -38,10 +38,10 @@ using namespace std;
 namespace ore {
 namespace data {
 
-CrCirBuilder::CrCirBuilder(const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<CrCirData>& data,
+CrCirBuilder::CrCirBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& market, const QuantLib::ext::shared_ptr<CrCirData>& data,
                            const std::string& configuration)
     : market_(market), configuration_(configuration), data_(data),
-      optimizationMethod_(boost::shared_ptr<OptimizationMethod>(new LevenbergMarquardt(1E-8, 1E-8, 1E-8))),
+      optimizationMethod_(QuantLib::ext::shared_ptr<OptimizationMethod>(new LevenbergMarquardt(1E-8, 1E-8, 1E-8))),
       endCriteria_(EndCriteria(1000, 500, 1E-8, 1E-8, 1E-8)),
       calibrationErrorType_(BlackCalibrationHelper::RelativePriceError) {
 
@@ -56,17 +56,17 @@ CrCirBuilder::CrCirBuilder(const boost::shared_ptr<ore::data::Market>& market, c
     registerWith(recoveryRate_);
 
     // shifted CIR model hard coded here
-    parametrization_ = boost::make_shared<QuantExt::CrCirppConstantWithFellerParametrization>(
+    parametrization_ = QuantLib::ext::make_shared<QuantExt::CrCirppConstantWithFellerParametrization>(
         parseCurrency(data_->currency()), creditCurve_, data_->reversionValue(), data_->longTermValue(),
         data_->volatility(), data_->startValue(), true, data_->relaxedFeller(), data_->fellerFactor(),
         data_->name());
 
     // alternatively, use unconstrained parametrization (only positivity of all parameters is implied)
-    // parametrization_ = boost::make_shared<QuantExt::CrCirppConstantParametrization>(
+    // parametrization_ = QuantLib::ext::make_shared<QuantExt::CrCirppConstantParametrization>(
     //     parseCurrency(data_->currency()), creditCurve_, data_->reversionValue(), data_->longTermValue(),
     //     data_->volatility(), data_->startValue(), false);
 
-    model_ = boost::make_shared<QuantExt::CrCirpp>(parametrization_);
+    model_ = QuantLib::ext::make_shared<QuantExt::CrCirpp>(parametrization_);
 }
 
 } // namespace data

@@ -70,6 +70,7 @@ class CommodityIndexedAverageCashFlow;
 class CommodityIndexedCashFlow;
 class EquityMarginCoupon;
 class TRSCashFlow;
+class InterpolatedIborCoupon;
 } // namespace QuantExt
 
 namespace ore {
@@ -82,59 +83,41 @@ class RequiredFixings {
 public:    
     class FixingDates {
     public:
+        typedef std::map<QuantLib::Date, std::pair<bool, std::set<std::string>>> fixingMap;
+
         FixingDates() = default;
 
-        FixingDates(const std::set<QuantLib::Date>& dates, const bool mandatory) { addDates(dates, mandatory); }
+        FixingDates(const std::set<QuantLib::Date>& dates, const bool mandatory, const std::set<std::string>& tradeIds = {}) { addDates(dates, mandatory, tradeIds); }
 
-        FixingDates(const std::map<QuantLib::Date, bool>& dates) : data_(dates){}
+        FixingDates(const fixingMap& dates) : data_(dates) {}
 
         void clear() { data_.clear(); }
 
-        void addDate(const QuantLib::Date& date, const bool mandatory) {
-            auto exits = data_.find(date);
-            if (exits == data_.end() || exits->second == false) {
-                data_[date] = mandatory;
-            }
-        }
+        void addDate(const QuantLib::Date& date, const bool mandatory, const std::set<std::string>& tradeIds = {});
+        void addDate(const QuantLib::Date& date, const std::pair<bool, std::set<std::string>>& ids);
+        void addDates(const FixingDates& dates, const std::string& tradeId = std::string());
+        void addDates(const FixingDates& dates, bool mandatory, const std::set<std::string>& tradeIds = {});
+        void addDates(const std::set<QuantLib::Date>& dates, bool mandatory,
+                      const std::set<std::string>& tradeIds = {});
 
-        void addDates(const FixingDates& dates) {
-            for (const auto& [d, man] : dates) {
-                addDate(d, man);
-            }
-        }
-
-        void addDates(const FixingDates& dates, bool mandatory) {
-            for (const auto& [d, _] : dates) {
-                addDate(d, mandatory);
-            }
-        }
-
-        void addDates(const std::set<QuantLib::Date>& dates, bool mandatory) {
-            for (const QuantLib::Date& d : dates) {
-                addDate(d, mandatory);
-            }
-        }
-
-        FixingDates filterByDate(const QuantLib::Date& before) const {
-            std::map<QuantLib::Date, bool> results;
-            for (const auto& [d, mandatory] : data_) {
-                if (d < before) {
-                    results.insert({d,mandatory});
-                }
-            }
-            return FixingDates(results);
-        }
+        FixingDates filterByDate(const QuantLib::Date& before) const;
         
         //! Iterrator for range-base forloop
-        std::map<QuantLib::Date, bool>::const_iterator begin() const {return data_.begin();}
-        std::map<QuantLib::Date, bool>::const_iterator end() const {return data_.end();}
+        fixingMap::const_iterator begin() const {
+            return data_.begin();
+        }
+        fixingMap::const_iterator end() const {
+            return data_.end();
+        }
        
         size_t size() const { return data_.size(); }
 
         bool empty() const { return data_.empty(); }
 
+        const fixingMap& data() const { return data_; }
+
     private:
-        std::map<QuantLib::Date, bool> data_;
+        fixingMap data_;
     };
 
 
@@ -288,11 +271,13 @@ class FixingDateGetter : public QuantLib::AcyclicVisitor,
                          public QuantLib::Visitor<QuantExt::EquityMarginCoupon>,
                          public QuantLib::Visitor<QuantExt::CommodityCashFlow>,
                          public QuantLib::Visitor<QuantExt::BondTRSCashFlow>,
-                         public QuantLib::Visitor<QuantExt::TRSCashFlow> {
+                         public QuantLib::Visitor<QuantExt::TRSCashFlow>,
+                         public QuantLib::Visitor<QuantExt::InterpolatedIborCoupon> {
 
 public:
     //! Constructor
-    FixingDateGetter(RequiredFixings& requiredFixings) : requiredFixings_(requiredFixings) {}
+    FixingDateGetter(RequiredFixings& requiredFixings, const QuantLib::ext::shared_ptr<ore::data::Market>& market = nullptr, const QuantLib::Date& maturity = Null<Date>()) : 
+                        requiredFixings_(requiredFixings), market_(market), max_(maturity) {}
 
     //! \name Visitor interface
     //@{
@@ -330,6 +315,7 @@ public:
     void visit(QuantExt::CommodityCashFlow& c) override;
     void visit(QuantExt::BondTRSCashFlow& c) override;
     void visit(QuantExt::TRSCashFlow& c) override;
+    void visit(QuantExt::InterpolatedIborCoupon& c) override;
     //@}
         
     void setRequireFixingStartDates(const bool b) { requireFixingStartDates_ = b; }
@@ -338,16 +324,18 @@ public:
 protected:
     std::string oreIndexName(const std::string& qlIndexName) const;
     RequiredFixings& requiredFixings_;
+    QuantLib::ext::shared_ptr<ore::data::Market> market_;
 
 private:
     // flag to indicate if coupon start date fixings are always required, even if initial prices provided
     bool requireFixingStartDates_ = false;
+    QuantLib::Date max_;
     // We may need fixings for an additional FX Index at every fixing date
     QuantLib::ext::shared_ptr<QuantExt::FxIndex> additionalFxIndex_;
 };
 
 /*! Populates a RequiredFixings instance based on a given QuantLib::Leg */
-void addToRequiredFixings(const QuantLib::Leg& leg, const boost::shared_ptr<FixingDateGetter>& fixingDateGetter);
+void addToRequiredFixings(const QuantLib::Leg& leg, const QuantLib::ext::shared_ptr<FixingDateGetter>& fixingDateGetter);
 
 /*! Inflation fixings are generally available on a monthly, or coarser, frequency. When a portfolio is asked for its
     fixings, and it contains inflation fixings, ORE will by convention put the fixing date as the 1st day of the
@@ -383,7 +371,7 @@ void amendInflationFixingDates(std::map<std::string, RequiredFixings::FixingDate
 */
 void addMarketFixingDates(const QuantLib::Date& asof, std::map<std::string, RequiredFixings::FixingDates>& fixings,
                           const TodaysMarketParameters& mktParams,
-                          const QuantLib::Period& iborLookback = 5 * QuantLib::Days,
+                          const QuantLib::Period& iborLookback = 7 * QuantLib::Days,
                           const QuantLib::Period& oisLookback = 4 * QuantLib::Months,
                           const QuantLib::Period& bmaLookback = 2 * QuantLib::Weeks,
                           const QuantLib::Period& inflationLookback = 1 * QuantLib::Years);

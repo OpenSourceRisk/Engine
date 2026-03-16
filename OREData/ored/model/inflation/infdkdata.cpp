@@ -40,17 +40,9 @@ InfDkData::InfDkData(CalibrationType calibrationType,
       volatility_(volatility),
       reversionTransformation_(reversionTransformation) {}
 
-const ReversionParameter& InfDkData::reversion() const {
-    return reversion_;
-}
+void InfDkData::setReversion(ReversionParameter p) { reversion_ = std::move(p); }
 
-const VolatilityParameter& InfDkData::volatility() const {
-    return volatility_;
-}
-
-const LgmReversionTransformation& InfDkData::reversionTransformation() const {
-    return reversionTransformation_;
-}
+void InfDkData::setVolatility(VolatilityParameter p) { volatility_ = std::move(p); }
 
 void InfDkData::fromXML(XMLNode* node) {
     
@@ -113,11 +105,11 @@ void InfDkData::populateCalibrationBaskets(XMLNode* node) {
     }
 
     // Create a vector of CPI cap floor calibration instruments.
-    vector<boost::shared_ptr<CalibrationInstrument>> instruments;
+    vector<QuantLib::ext::shared_ptr<CalibrationInstrument>> instruments;
     for (Size i = 0; i < maturities.size(); ++i) {
         auto p = parseDateOrPeriod(maturities[i]);
-        boost::shared_ptr<BaseStrike> s = parseBaseStrike(strikes[i]);
-        instruments.push_back(boost::make_shared<CpiCapFloor>(type, p, s));
+        QuantLib::ext::shared_ptr<BaseStrike> s = parseBaseStrike(strikes[i]);
+        instruments.push_back(QuantLib::ext::make_shared<CpiCapFloor>(type, p, s));
     }
 
     // Populate the calibrationBaskets_ member.

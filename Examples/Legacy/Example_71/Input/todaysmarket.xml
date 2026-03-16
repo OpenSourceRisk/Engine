@@ -1,0 +1,32 @@
+<TodaysMarket>
+  <Configuration id="xois">
+    <DiscountingCurvesId>xois</DiscountingCurvesId>
+    <IndexForwardingCurvesId>default</IndexForwardingCurvesId>
+  </Configuration>
+  <YieldCurves/>
+  <DiscountingCurves id="default">
+    <DiscountingCurve currency="USD">Yield/USD/USD1D</DiscountingCurve>
+    <DiscountingCurve currency="EUR">Yield/EUR/EUR1D</DiscountingCurve>
+    <DiscountingCurve currency="GBP">Yield/GBP/GBP1D</DiscountingCurve>
+  </DiscountingCurves>
+  <DiscountingCurves id="xois">
+    <DiscountingCurve currency="USD">Yield/USD/USD1D</DiscountingCurve>
+    <DiscountingCurve currency="EUR">Yield/EUR/EUR-IN-USD</DiscountingCurve>
+    <DiscountingCurve currency="GBP">Yield/GBP/GBP-IN-USD</DiscountingCurve>
+  </DiscountingCurves>
+  <IndexForwardingCurves id="default">
+    <Index name="USD-FedFunds">Yield/USD/USD1D</Index>
+    <Index name="USD-LIBOR-3M">Yield/USD/USD3M</Index>
+    <Index name="EUR-EONIA">Yield/EUR/EUR1D</Index>
+    <Index name="EUR-EURIBOR-3M">Yield/EUR/EUR3M</Index>
+    <Index name="GBP-SONIA">Yield/GBP/GBP1D</Index>
+    <Index name="GBP-LIBOR-3M">Yield/GBP/GBP3M</Index>
+    <Index name="GBP-LIBOR-6M">Yield/GBP/GBP6M</Index>
+  </IndexForwardingCurves>
+  <SwapIndexCurves/>
+  <FxSpots id="default">
+    <FxSpot pair="GBPUSD">FX/GBP/USD</FxSpot>
+    <FxSpot pair="EURUSD">FX/EUR/USD</FxSpot>
+    <FxSpot pair="EURGBP">FX/EUR/GBP</FxSpot>
+  </FxSpots>
+</TodaysMarket>

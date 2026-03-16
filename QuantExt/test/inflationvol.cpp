@@ -24,6 +24,7 @@
 #include <ql/math/matrix.hpp>
 #include <ql/pricingengines/blackcalculator.hpp>
 #include <ql/termstructures/inflation/inflationhelpers.hpp>
+#include <ql/termstructures/inflation/piecewisezeroinflationcurve.hpp>
 #include <ql/termstructures/inflationtermstructure.hpp>
 #include <ql/termstructures/volatility/inflation/cpivolatilitystructure.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
@@ -31,7 +32,6 @@
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <qle/pricingengines/cpiblackcapfloorengine.hpp>
 #include <qle/termstructures/inflation/cpipricevolatilitysurface.hpp>
-#include <qle/termstructures/inflation/piecewisezeroinflationcurve.hpp>
 #include <qle/termstructures/interpolatedcpivolatilitysurface.hpp>
 #include <qle/utilities/inflation.hpp>
 
@@ -53,7 +53,7 @@ struct CommonData {
     std::vector<Period> zeroCouponPillars{1 * Years, 2 * Years, 3 * Years, 5 * Years};
     std::vector<Rate> zeroCouponQuotes{0.06, 0.04, 0.03, 0.02};
 
-    boost::shared_ptr<SimpleQuote> flatZero = boost::make_shared<SimpleQuote>(0.01);
+    QuantLib::ext::shared_ptr<SimpleQuote> flatZero = QuantLib::ext::make_shared<SimpleQuote>(0.01);
 
     Handle<YieldTermStructure> discountTS;
 
@@ -77,18 +77,18 @@ struct CommonData {
     std::vector<Period> tenors{1 * Years, 2 * Years, 3 * Years};
 
     vector<vector<Handle<Quote>>> vols{
-        {Handle<Quote>(boost::make_shared<SimpleQuote>(0.3)), Handle<Quote>(boost::make_shared<SimpleQuote>(0.32)),
-         Handle<Quote>(boost::make_shared<SimpleQuote>(0.34)), Handle<Quote>(boost::make_shared<SimpleQuote>(0.36))},
-        {Handle<Quote>(boost::make_shared<SimpleQuote>(0.35)), Handle<Quote>(boost::make_shared<SimpleQuote>(0.37)),
-         Handle<Quote>(boost::make_shared<SimpleQuote>(0.39)), Handle<Quote>(boost::make_shared<SimpleQuote>(0.41))},
-        {Handle<Quote>(boost::make_shared<SimpleQuote>(0.40)), Handle<Quote>(boost::make_shared<SimpleQuote>(0.42)),
-         Handle<Quote>(boost::make_shared<SimpleQuote>(0.44)), Handle<Quote>(boost::make_shared<SimpleQuote>(0.46))}};
+        {Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.3)), Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.32)),
+         Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.34)), Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.36))},
+        {Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.35)), Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.37)),
+         Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.39)), Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.41))},
+        {Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.40)), Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.42)),
+         Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.44)), Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.46))}};
 
     CommonData()
         : today(15, Aug, 2022), tolerance(1e-6), dayCounter(Actual365Fixed()), fixingCalendar(NullCalendar()),
           bdc(ModifiedFollowing), obsLag(2, Months),
           discountTS(Handle<YieldTermStructure>(
-              boost::make_shared<FlatForward>(0, NullCalendar(), Handle<Quote>(flatZero), dayCounter))) {
+              QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), Handle<Quote>(flatZero), dayCounter))) {
         Settings::instance().evaluationDate() = today;
     };
 };
@@ -101,9 +101,9 @@ struct CPICapFloorPriceData {
     QuantLib::Matrix fPrices;
 };
 
-boost::shared_ptr<ZeroInflationCurve>
-buildZeroInflationCurve(CommonData& cd, bool useLastKnownFixing, const boost::shared_ptr<ZeroInflationIndex>& index,
-                        const bool isInterpolated, const boost::shared_ptr<Seasonality>& seasonality = nullptr,
+QuantLib::ext::shared_ptr<ZeroInflationCurve>
+buildZeroInflationCurve(CommonData& cd, bool useLastKnownFixing, const QuantLib::ext::shared_ptr<ZeroInflationIndex>& index,
+                        const bool isInterpolated, const QuantLib::ext::shared_ptr<Seasonality>& seasonality = nullptr,
                         const QuantLib::Date& startDate = Date()) {
     Date today = Settings::instance().evaluationDate();
     Date start = startDate;
@@ -114,32 +114,31 @@ buildZeroInflationCurve(CommonData& cd, bool useLastKnownFixing, const boost::sh
 
     BusinessDayConvention bdc = ModifiedFollowing;
 
-    std::vector<boost::shared_ptr<QuantExt::ZeroInflationTraits::helper>> helpers;
+    std::vector<QuantLib::ext::shared_ptr<QuantExt::ZeroInflationTraits::helper>> helpers;
     for (size_t i = 0; i < cd.zeroCouponQuotes.size(); ++i) {
         Date maturity = start + cd.zeroCouponPillars[i];
         Rate quote = cd.zeroCouponQuotes[i];
-        boost::shared_ptr<QuantExt::ZeroInflationTraits::helper> instrument =
-            boost::make_shared<ZeroCouponInflationSwapHelper>(
-                Handle<Quote>(boost::make_shared<SimpleQuote>(quote)), cd.obsLag, maturity, cd.fixingCalendar, bdc, dc,
-                index, isInterpolated ? CPI::Linear : CPI::Flat, Handle<YieldTermStructure>(cd.discountTS), start);
+        QuantLib::ext::shared_ptr<QuantExt::ZeroInflationTraits::helper> instrument =
+            QuantLib::ext::make_shared<ZeroCouponInflationSwapHelper>(
+                Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(quote)), cd.obsLag, start, maturity, cd.fixingCalendar, bdc, dc,
+                index, isInterpolated ? CPI::Linear : CPI::Flat);
         helpers.push_back(instrument);
     }
-    Rate baseRate = QuantExt::ZeroInflation::guessCurveBaseRate(useLastKnownFixing, start, today, cd.zeroCouponPillars[0],
-                                                                cd.dayCounter, cd.obsLag, cd.zeroCouponQuotes[0],
-                                                                cd.obsLag, cd.dayCounter, index, isInterpolated);
-    boost::shared_ptr<ZeroInflationCurve> curve = boost::make_shared<QuantExt::PiecewiseZeroInflationCurve<Linear>>(
-        today, cd.fixingCalendar, dc, cd.obsLag, index->frequency(), baseRate, helpers, 1e-10, index,
-        useLastKnownFixing);
+    Date baseDate =
+        QuantExt::ZeroInflation::curveBaseDate(useLastKnownFixing, today, cd.obsLag, index->frequency(), index);
+    QuantLib::ext::shared_ptr<ZeroInflationCurve> curve =
+        QuantLib::ext::make_shared<QuantLib::PiecewiseZeroInflationCurve<Linear>>(today, baseDate, cd.obsLag, index->frequency(),
+                                                                                  dc, helpers, seasonality, 1e-10);
     if (seasonality) {
         curve->setSeasonality(seasonality);
     }
     return curve;
 }
 
-boost::shared_ptr<ZeroInflationIndex> buildIndexWithForwardTermStructure(CommonData& cd, bool useLastKnownFixing = true,
+QuantLib::ext::shared_ptr<ZeroInflationIndex> buildIndexWithForwardTermStructure(CommonData& cd, bool useLastKnownFixing = true,
                                                                          bool isInterpolated = false,
                                                                          const Date& startDate = Date()) {
-    boost::shared_ptr<ZeroInflationIndex> curveBuildIndex = boost::make_shared<QuantLib::EUHICPXT>(isInterpolated);
+    QuantLib::ext::shared_ptr<ZeroInflationIndex> curveBuildIndex = QuantLib::ext::make_shared<QuantLib::EUHICPXT>();
     for (const auto& [date, fixing] : cd.cpiFixings) {
         curveBuildIndex->addFixing(date, fixing);
     }
@@ -150,17 +149,17 @@ boost::shared_ptr<ZeroInflationIndex> buildIndexWithForwardTermStructure(CommonD
     return index;
 }
 
-boost::shared_ptr<CPIVolatilitySurface> buildVolSurface(CommonData& cd,
-                                                        const boost::shared_ptr<ZeroInflationIndex>& index,
+QuantLib::ext::shared_ptr<CPIVolatilitySurface> buildVolSurface(CommonData& cd,
+                                                        const QuantLib::ext::shared_ptr<ZeroInflationIndex>& index,
                                                         const QuantLib::Date& startDate = QuantLib::Date()) {
-    auto surface = boost::make_shared<QuantExt::InterpolatedCPIVolatilitySurface<Bilinear>>(
-        cd.tenors, cd.strikes, cd.vols, index, 0, cd.fixingCalendar, ModifiedFollowing, cd.dayCounter, cd.obsLag,
+    auto surface = QuantLib::ext::make_shared<QuantExt::InterpolatedCPIVolatilitySurface<Bilinear>>(
+        cd.tenors, cd.strikes, cd.vols, index, false, 0, cd.fixingCalendar, ModifiedFollowing, cd.dayCounter, cd.obsLag,
         startDate);
     surface->enableExtrapolation();
     return surface;
 }
 
-CPICapFloorPriceData pricesFromVolQuotes(CommonData& cd, const boost::shared_ptr<ZeroInflationIndex>& index,
+CPICapFloorPriceData pricesFromVolQuotes(CommonData& cd, const QuantLib::ext::shared_ptr<ZeroInflationIndex>& index,
                                          bool interpolated = false, const Date& startDate = Date()) {
 
     CPICapFloorPriceData priceData;
@@ -204,20 +203,19 @@ CPICapFloorPriceData pricesFromVolQuotes(CommonData& cd, const boost::shared_ptr
     return priceData;
 }
 
-boost::shared_ptr<CPIVolatilitySurface> buildVolSurfaceFromPrices(CommonData& cd, CPICapFloorPriceData& priceData,
-                                                                  const boost::shared_ptr<ZeroInflationIndex>& index,
-                                                                  const bool useLastKnownFixing,
+QuantLib::ext::shared_ptr<CPIVolatilitySurface> buildVolSurfaceFromPrices(CommonData& cd, CPICapFloorPriceData& priceData,
+                                                                  const QuantLib::ext::shared_ptr<ZeroInflationIndex>& index,
                                                                   const Date& startDate = Date(),
                                                                   bool ignoreMissingQuotes = false) {
 
-    boost::shared_ptr<QuantExt::CPIBlackCapFloorEngine> engine = boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(
-        cd.discountTS, QuantLib::Handle<QuantLib::CPIVolatilitySurface>(), useLastKnownFixing);
+    QuantLib::ext::shared_ptr<QuantExt::CPIBlackCapFloorEngine> engine = QuantLib::ext::make_shared<QuantExt::CPIBlackCapFloorEngine>(
+        cd.discountTS, QuantLib::Handle<QuantLib::CPIVolatilitySurface>());
 
-    boost::shared_ptr<QuantExt::CPIPriceVolatilitySurface<QuantLib::Linear, QuantLib::Linear>> cpiCapFloorVolSurface;
-    cpiCapFloorVolSurface = boost::make_shared<QuantExt::CPIPriceVolatilitySurface<QuantLib::Linear, QuantLib::Linear>>(
+    QuantLib::ext::shared_ptr<QuantExt::CPIPriceVolatilitySurface<QuantLib::Linear, QuantLib::Linear>> cpiCapFloorVolSurface;
+    cpiCapFloorVolSurface = QuantLib::ext::make_shared<QuantExt::CPIPriceVolatilitySurface<QuantLib::Linear, QuantLib::Linear>>(
         QuantExt::PriceQuotePreference::CapFloor, cd.obsLag, cd.fixingCalendar, cd.bdc, cd.dayCounter, index,
         cd.discountTS, priceData.cStrikes, priceData.fStrikes, priceData.tenors, priceData.cPrices, priceData.fPrices,
-        engine, startDate, ignoreMissingQuotes);
+        engine, false, startDate, ignoreMissingQuotes);
 
     cpiCapFloorVolSurface->enableExtrapolation();
     return cpiCapFloorVolSurface;
@@ -274,8 +272,8 @@ BOOST_AUTO_TEST_CASE(testCPIBlackCapFloorEngine) {
 
     auto priceData = pricesFromVolQuotes(cd, index, false, Date());
 
-    boost::shared_ptr<PricingEngine> engine = boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(
-        cd.discountTS, Handle<CPIVolatilitySurface>(volSurface), true);
+    QuantLib::ext::shared_ptr<PricingEngine> engine = QuantLib::ext::make_shared<QuantExt::CPIBlackCapFloorEngine>(
+        cd.discountTS, Handle<CPIVolatilitySurface>(volSurface));
 
     for (size_t i = 0; i < priceData.cStrikes.size(); ++i) {
         double strike = priceData.cStrikes[i];
@@ -313,8 +311,8 @@ BOOST_AUTO_TEST_CASE(testCPIBlackCapFloorEngineSeasonedCapFloors) {
 
     double baseCPI = index->fixing(volSurface->baseDate());
 
-    boost::shared_ptr<PricingEngine> engine = boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(
-        cd.discountTS, Handle<CPIVolatilitySurface>(volSurface), true);
+    QuantLib::ext::shared_ptr<PricingEngine> engine = QuantLib::ext::make_shared<QuantExt::CPIBlackCapFloorEngine>(
+        cd.discountTS, Handle<CPIVolatilitySurface>(volSurface));
 
     Date seasonedStartDate(15, Aug, 2021);
     Date seasonedMaturity(15, Aug, 2024);
@@ -351,7 +349,7 @@ BOOST_AUTO_TEST_CASE(testCPIPriceVolSurface) {
 
     auto priceData = pricesFromVolQuotes(cd, index, false, Date());
 
-    auto volSurface = buildVolSurfaceFromPrices(cd, priceData, index, true, Date(), false);
+    auto volSurface = buildVolSurfaceFromPrices(cd, priceData, index, Date(), false);
 
     for (size_t i = 0; i < cd.tenors.size(); ++i) {
         auto fixingDate = volSurface->baseDate() + cd.tenors[i];
@@ -377,7 +375,7 @@ BOOST_AUTO_TEST_CASE(testCPIPriceVolSurfaceMissingQuoteInterpolation) {
             priceData.cPrices[strikeIdx][tenorIdx] = Null<Real>();
             priceData.fPrices[strikeIdx][tenorIdx] = Null<Real>();
 
-            auto volSurface = buildVolSurfaceFromPrices(cd, priceData, index, true, Date(), true);
+            auto volSurface = buildVolSurfaceFromPrices(cd, priceData, index, Date(), true);
 
             double vol = volSurface->volatility(cd.tenors[tenorIdx], cd.strikes[strikeIdx]);
 
@@ -406,7 +404,7 @@ BOOST_AUTO_TEST_CASE(testCPIPriceVolSurfaceMissingQuoteExtrapolation) {
         priceData.cPrices[0][tenorIdx] = Null<Real>();
         priceData.fPrices[0][tenorIdx] = Null<Real>();
 
-        auto volSurface = buildVolSurfaceFromPrices(cd, priceData, index, true, Date(), true);
+        auto volSurface = buildVolSurfaceFromPrices(cd, priceData, index, Date(), true);
 
         double vol = volSurface->volatility(cd.tenors[tenorIdx], cd.strikes.front());
 
@@ -423,7 +421,7 @@ BOOST_AUTO_TEST_CASE(testCPIPriceVolSurfaceMissingQuoteExtrapolation) {
         priceData.cPrices[cd.strikes.size()-1][tenorIdx] = Null<Real>();
         priceData.fPrices[cd.strikes.size() - 1][tenorIdx] = Null<Real>();
 
-        auto volSurface = buildVolSurfaceFromPrices(cd, priceData, index, true, Date(), true);
+        auto volSurface = buildVolSurfaceFromPrices(cd, priceData, index, Date(), true);
 
         double vol = volSurface->volatility(cd.tenors[tenorIdx], cd.strikes.back());
 
@@ -443,7 +441,7 @@ BOOST_AUTO_TEST_CASE(testCPIPriceVolSurfaceMissingQuoteExtrapolation) {
         priceData.cPrices[1][tenorIdx] = Null<Real>();
         priceData.fPrices[1][tenorIdx] = Null<Real>();
 
-        auto volSurface = buildVolSurfaceFromPrices(cd, priceData, index, true, Date(), true);
+        auto volSurface = buildVolSurfaceFromPrices(cd, priceData, index, Date(), true);
 
         double vol = volSurface->volatility(cd.tenors[tenorIdx], cd.strikes.front());
 
@@ -469,7 +467,7 @@ BOOST_AUTO_TEST_CASE(testCPIPriceVolSurfaceAllButOneQuoteMissing) {
     priceData.cPrices[1][0] = priceDataAllQuotes.cPrices[1][0];
     priceData.fPrices[1][0] = priceDataAllQuotes.fPrices[1][0];
 
-    auto volSurface = buildVolSurfaceFromPrices(cd, priceData, index, true, Date(), true);
+    auto volSurface = buildVolSurfaceFromPrices(cd, priceData, index, Date(), true);
 
     double vol = volSurface->volatility(cd.tenors[0], cd.strikes[0]);
     double expectedVol = cd.vols[0][1]->value();
@@ -484,7 +482,7 @@ BOOST_AUTO_TEST_CASE(testCPIPriceVolSurfaceAllButOneQuoteMissing) {
         priceData.fPrices[1][tenorIdx] = priceDataAllQuotes.fPrices[1][tenorIdx];
     }
 
-    volSurface = buildVolSurfaceFromPrices(cd, priceData, index, true, Date(), true);
+    volSurface = buildVolSurfaceFromPrices(cd, priceData, index, Date(), true);
     for (Size tenorIdx = 0; tenorIdx < cd.tenors.size(); tenorIdx++) {
         double vol = volSurface->volatility(cd.tenors[tenorIdx], cd.strikes[0]);
         double expectedVol = cd.vols[tenorIdx][1]->value();
@@ -507,7 +505,7 @@ BOOST_AUTO_TEST_CASE(testVolatiltiySurfaceWithStartDate) {
     Date startDate(15, Jun, 2022);
     Date lastKnownFixing(1, Jan, 2022);
 
-    boost::shared_ptr<ZeroInflationIndex> curveBuildIndex = boost::make_shared<QuantLib::AUCPI>(Quarterly, true, false);
+    QuantLib::ext::shared_ptr<ZeroInflationIndex> curveBuildIndex = QuantLib::ext::make_shared<QuantLib::AUCPI>(Quarterly, true);
     for (const auto& [date, fixing] : fixings) {
         curveBuildIndex->addFixing(date, fixing);
     }
@@ -562,7 +560,7 @@ BOOST_AUTO_TEST_CASE(testVolatiltiySurfaceWithStartDate) {
     priceData.cStrikes = cd.strikes;
     priceData.fStrikes = cd.strikes;
 
-    auto priceSurface = buildVolSurfaceFromPrices(cd, priceData, index, true, startDate);
+    auto priceSurface = buildVolSurfaceFromPrices(cd, priceData, index, startDate);
 
     for (size_t i = 0; i < cd.strikes.size(); ++i) {
         for (size_t j = 0; j < cd.tenors.size(); ++j) {

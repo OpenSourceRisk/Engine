@@ -21,13 +21,17 @@
 
 namespace QuantExt {
 
-HwModel::HwModel(const boost::shared_ptr<IrHwParametrization>& parametrization, const Measure measure,
+HwModel::HwModel(const QuantLib::ext::shared_ptr<IrHwParametrization>& parametrization, const Measure measure,
                  const Discretization discretization, const bool evaluateBankAccount)
     : parametrization_(parametrization), measure_(measure), discretization_(discretization),
       evaluateBankAccount_(evaluateBankAccount) {
     QL_REQUIRE(parametrization_ != nullptr, "HwModel: parametrization is null");
     stateProcess_ =
-        boost::make_shared<IrHwStateProcess>(parametrization_, measure_, discretization_, evaluateBankAccount_);
+        QuantLib::ext::make_shared<IrHwStateProcess>(parametrization_, measure_, discretization_, evaluateBankAccount_);
+    arguments_.resize(2);
+    arguments_[0] = parametrization_->parameter(0);
+    arguments_[1] = parametrization_->parameter(1);
+    registerWith(parametrization_->termStructure());
 }
 
 QuantLib::Real HwModel::discountBond(const QuantLib::Time t, const QuantLib::Time T, const QuantLib::Array& x,
@@ -38,25 +42,32 @@ QuantLib::Real HwModel::discountBond(const QuantLib::Time t, const QuantLib::Tim
     QuantLib::Array gt = parametrization_->g(t, T);
     QuantLib::Matrix yt = parametrization_->y(t);
 
+    Real dp = 0.0;
+    for (Size i = 0; i < n(); ++i)
+        dp += gt[i] * x[i];
+
     return (discountCurve.empty()
                 ? parametrization_->termStructure()->discount(T) / parametrization_->termStructure()->discount(t)
                 : discountCurve->discount(T) / discountCurve->discount(t)) *
-           std::exp(-QuantLib::DotProduct(gt, x) - 0.5 * QuantLib::DotProduct(gt, yt * gt));
+           std::exp(-dp - 0.5 * QuantLib::DotProduct(gt, yt * gt));
 }
 
 QuantLib::Real HwModel::numeraire(const QuantLib::Time t, const QuantLib::Array& x,
-                                  const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
-                                  const QuantLib::Array& aux) const {
+                                  const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve) const {
     QL_REQUIRE(measure_ == IrModel::Measure::BA, "HwModel::numeraire() supports BA measure only currently.");
-    return std::exp(std::accumulate(aux.begin(), aux.end(), 0.0)) /
+    return std::exp(std::accumulate(std::next(x.begin(), n()), x.end(), 0.0)) /
            (discountCurve.empty() ? parametrization_->termStructure()->discount(t) : discountCurve->discount(t));
 }
 
 QuantLib::Real HwModel::shortRate(const QuantLib::Time t, const QuantLib::Array& x,
                                   const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve) const {
-    return std::accumulate(x.begin(), x.end(), 0.0) +
+    return std::accumulate(x.begin(), std::next(x.begin(), n()), 0.0) +
            (discountCurve.empty() ? parametrization_->termStructure()->forwardRate(t, t, Compounding::Continuous)
                                   : discountCurve->forwardRate(t, t, Compounding::Continuous));
+}
+
+Array HwModel::marginalStep(const Time t0, const Array& x0, const Time dt, const Array& dw) const {
+    return stateProcess_->evolve(t0, x0, dt, dw);
 }
 
 void HwModel::update() {
@@ -69,8 +80,16 @@ void HwModel::generateArguments() { update(); }
 Size HwModel::n() const { return parametrization_->n(); }
 Size HwModel::m() const { return parametrization_->m(); }
 Size HwModel::n_aux() const { return evaluateBankAccount_ && measure_ == Measure::BA ? n() : 0; }
-Size HwModel::m_aux() const {
-    return evaluateBankAccount_ && measure_ == Measure::BA && discretization_ == Discretization::Exact ? m() : 0;
+Size HwModel::m_aux() const { return 0.0; }
+
+void HwModel::calibrateVolatilitiesIterativeStatisticalWithRiskNeutralVolatility(
+    const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& helpers, OptimizationMethod& method,
+    const EndCriteria& endCriteria, const Constraint& constraint, const std::vector<Real>& weights) {
+    for (Size i = 0; i < helpers.size(); ++i) {
+        std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>> h(1, helpers[i]);
+        calibrate(h, method, endCriteria, constraint, weights, MoveVolatilityRaw(i));
+    }
+    update();
 }
 
 } // namespace QuantExt

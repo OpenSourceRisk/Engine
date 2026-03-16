@@ -49,15 +49,18 @@ class EqBsBuilder : public QuantExt::ModelBuilder {
 public:
     //! Constructor
     EqBsBuilder( //! Market object
-        const boost::shared_ptr<ore::data::Market>& market,
+        const QuantLib::ext::shared_ptr<ore::data::Market>& market,
         //! EQ model parameters/description
-        const boost::shared_ptr<EqBsData>& data,
+        const QuantLib::ext::shared_ptr<EqBsData>& data,
         //! base currency for calibration
         const QuantLib::Currency& baseCcy,
         //! Market configuration to use
         const std::string& configuration = Market::defaultConfiguration,
         //! the reference calibration grid
-        const std::string& referenceCalibrationGrid = "");
+        const std::string& referenceCalibrationGrid = "",
+        //! id of the builder
+        const std::string& id = "unknown"
+    );
 
     //! Return calibration error
     Real error() const;
@@ -65,8 +68,8 @@ public:
     //! \name Inspectors
     //@{
     std::string eqName() { return data_->eqName(); }
-    boost::shared_ptr<QuantExt::EqBsParametrization> parametrization() const;
-    std::vector<boost::shared_ptr<BlackCalibrationHelper>> optionBasket() const;
+    QuantLib::ext::shared_ptr<QuantExt::EqBsParametrization> parametrization() const;
+    std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>> optionBasket() const;
     //@}
 
     //! \name ModelBuilder interface
@@ -78,6 +81,7 @@ public:
     void setCalibrationDone() const;
 
 private:
+    void processException(const std::string& s, const std::exception& e);
     void performCalculations() const override;
     Real optionStrike(const Size j) const;
     Date optionExpiry(const Size j) const;
@@ -86,19 +90,20 @@ private:
     bool volSurfaceChanged(const bool updateCache) const;
 
     // input data
-    const boost::shared_ptr<ore::data::Market> market_;
+    const QuantLib::ext::shared_ptr<ore::data::Market> market_;
     const std::string configuration_;
-    const boost::shared_ptr<EqBsData> data_;
+    const QuantLib::ext::shared_ptr<EqBsData> data_;
     const std::string referenceCalibrationGrid_;
     const QuantLib::Currency baseCcy_;
+    const std::string id_;
 
     // computed
     Real error_;
-    mutable boost::shared_ptr<QuantExt::EqBsParametrization> parametrization_;
+    mutable QuantLib::ext::shared_ptr<QuantExt::EqBsParametrization> parametrization_;
 
     // which options in data->optionExpiries() are actually in the basket?
     mutable std::vector<bool> optionActive_;
-    mutable std::vector<boost::shared_ptr<BlackCalibrationHelper>> optionBasket_;
+    mutable std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>> optionBasket_;
     mutable Array optionExpiries_;
 
     // relevant market data
@@ -113,7 +118,7 @@ private:
     bool forceCalibration_ = false;
 
     // market observer
-    boost::shared_ptr<QuantExt::MarketObserver> marketObserver_;
+    QuantLib::ext::shared_ptr<QuantExt::MarketObserver> marketObserver_;
 };
 } // namespace data
 } // namespace ore

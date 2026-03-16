@@ -1,0 +1,37 @@
+\subsubsection{FX European Barrier Option}
+\label{pricing:fx_europeanbarrieroption}
+
+In a FX European Barrier Option both the barrier and the underlying option are European and have the same expiry
+date. The NPV can therefore be directly computed by replication of the payoff at expiry. The replication strategy makes
+use of the following four options
+
+\begin{enumerate}
+\item European FX Option Call(K) or Put(K) with strike $K$.
+\item European FX Option Call(B) or Put(B) with strike $B$.
+\item Digital FX Option DigiCall(K, abs(B-K)) with strike $K$ and payout $abs(B-K)$.
+\item Digital FX Option DigiCall(K, R) with strike $K$ and payout $R$.
+\end{enumerate}
+
+where $K$ is the strike, $B$ is the barrier and $R$ is the rebate of the FX European Barrier Option.
+
+The rebate is a Digital Option DigiCall(K, R) if barrier = UpOut or DownIn and a DigiPut(K, R) if barrier = UpIn or
+DownOut.  I.e. the rebate amount is paid when the underlying option cannot be exercised due to the barrier conditions at
+expiry.
+
+The barrier option itself is replicated as in table \ref{tab:fx_europeanbarrieroption_replication}
+
+\begin{table}[h]
+  \begin{tabular}{l|l|l|l}
+    Option Type & Barrier Type & Case & NPV \\ \hline
+    Call & UpIn or DownOut & $B > K$ & Call(B) + DigiCall(B, B-K) \\
+    Call & UpIn or DownOut & $B < K$ & Call(K) \\
+    Call & UpOut or DownIn & $B > K$ & Call(K)  - Call(B) -DigiCall(B, B-K) \\
+    Call & UpOut or DownIn & $B < K$ & $0$ \\
+    Put & UpIn or DownOut & $B > K$ & $0$ \\
+    Put & UpIn or DownOut & $B < K$ & Put(K) – Put(B) - DigiPut(B, K-B) \\
+    Put & UpOut or DownIn & $B > K$ & Put(K) \\
+    Put & UpOut or DownIn & $B < K$ & Put(B) + DigiPut(B, K-B) \\
+  \end{tabular}
+  \caption{FX European Barrier Option Replication}
+  \label{tab:fx_europeanbarrieroption_replication}
+\end{table}

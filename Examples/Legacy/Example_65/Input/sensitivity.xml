@@ -1,0 +1,94 @@
+<?xml version="1.0"?>
+<SensitivityAnalysis>
+  <!-- Discount curve shifts -->
+  <DiscountCurves>
+    <DiscountCurve ccy="EUR">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0010</ShiftSize>
+      <ShiftTenors>2W,1M,3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y</ShiftTenors>
+      <ParConversion>
+        <Instruments>DEP,DEP,DEP,DEP,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS</Instruments>
+        <SingleCurve>true</SingleCurve>
+        <Conventions>
+          <Convention id="DEP">EUR-EURIBOR-CONVENTIONS</Convention>
+          <Convention id="OIS">EUR-OIS-CONVENTIONS</Convention>
+        </Conventions>
+      </ParConversion>
+    </DiscountCurve>
+  </DiscountCurves>
+  <!-- Index curve shifts -->
+  <IndexCurves>
+    <IndexCurve index="EUR-EURIBOR-6M">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0010</ShiftSize>
+      <ShiftTenors>2W,1M,3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y</ShiftTenors>
+      <ParConversion>
+        <Instruments>DEP,DEP,DEP,DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments>
+        <SingleCurve>false</SingleCurve>
+        <Conventions>
+          <Convention id="DEP">EUR-EURIBOR-CONVENTIONS</Convention>
+          <Convention id="IRS">EUR-6M-SWAP-CONVENTIONS</Convention>
+        </Conventions>
+      </ParConversion>
+    </IndexCurve>
+    <IndexCurve index="EUR-EURIBOR-3M">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0010</ShiftSize>
+      <ShiftTenors>2W,1M,3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y</ShiftTenors>
+      <ParConversion>
+        <Instruments>DEP,DEP,DEP,DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments>
+        <SingleCurve>false</SingleCurve>
+        <Conventions>
+          <Convention id="DEP">EUR-EURIBOR-CONVENTIONS</Convention>
+          <Convention id="IRS">EUR-3M-SWAP-CONVENTIONS</Convention>
+        </Conventions>
+      </ParConversion>
+    </IndexCurve>
+    <IndexCurve index="EUR-EURIBOR-1M">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0010</ShiftSize>
+      <ShiftTenors>2W,1M,3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y</ShiftTenors>
+      <ParConversion>
+        <Instruments>DEP,DEP,DEP,DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments>
+        <SingleCurve>false</SingleCurve>
+        <Conventions>
+          <Convention id="DEP">EUR-EURIBOR-CONVENTIONS</Convention>
+          <Convention id="IRS">EUR-1M-SWAP-CONVENTIONS</Convention>
+        </Conventions>
+      </ParConversion>
+    </IndexCurve>
+    <IndexCurve index="EUR-EONIA">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0010</ShiftSize>
+      <ShiftTenors>2W,1M,3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y</ShiftTenors>
+      <ParConversion>
+        <Instruments>DEP,DEP,DEP,DEP,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS</Instruments>
+        <SingleCurve>false</SingleCurve>
+        <Conventions>
+          <Convention id="DEP">EUR-EURIBOR-CONVENTIONS</Convention>
+          <Convention id="OIS">EUR-OIS-CONVENTIONS</Convention>
+        </Conventions>
+      </ParConversion>
+    </IndexCurve>
+  </IndexCurves>
+  <YieldCurves/>
+  <FxSpots/>
+  <!-- Swaption ATM vol shifts -->
+  <SwaptionVolatilities>
+    <SwaptionVolatility key="EUR">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+      <ShiftExpiries>2W,1M,3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y</ShiftExpiries>
+      <ShiftStrikes>0.0</ShiftStrikes>
+      <ShiftTerms>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,30Y</ShiftTerms>
+    </SwaptionVolatility>
+  </SwaptionVolatilities>
+  <!-- Cap/Floor (Optionlet or Flat) vol surface shifts -->
+  <CapFloorVolatilities/>
+  <!-- Cross Gamma filter: Pairs of factor sub-strings -->
+  <CrossGammaFilter>
+    <!-- <Pair>DiscountCurve/EUR,DiscountCurve/EUR</Pair> -->
+    <!-- <Pair>IndexCurve/EUR,IndexCurve/EUR</Pair> -->
+    <!-- <Pair>DiscountCurve/EUR,IndexCurve/EUR</Pair> -->
+  </CrossGammaFilter>
+</SensitivityAnalysis>

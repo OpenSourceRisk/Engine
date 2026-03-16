@@ -28,12 +28,12 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
-boost::shared_ptr<FloatingRateCouponPricer>
+QuantLib::ext::shared_ptr<FloatingRateCouponPricer>
 CmsSpreadCouponPricerBuilder::engineImpl(const Currency& ccy, const string& index1, const string& index2,
-                                         const boost::shared_ptr<CmsCouponPricer>& cmsPricer) {
+                                         const QuantLib::ext::shared_ptr<CmsCouponPricer>& cmsPricer) {
 
     QuantLib::Handle<QuantExt::CorrelationTermStructure> corrCurve(
-        boost::make_shared<QuantExt::FlatCorrelation>(0, NullCalendar(), 0.0, Actual365Fixed()));
+        QuantLib::ext::make_shared<QuantExt::FlatCorrelation>(0, NullCalendar(), 0.0, Actual365Fixed()));
     try {
         corrCurve = market_->correlationCurve(index1, index2, configuration(MarketContext::pricing));
     } catch (...) {
@@ -41,7 +41,7 @@ CmsSpreadCouponPricerBuilder::engineImpl(const Currency& ccy, const string& inde
     }
 
     const string& ccyCode = ccy.code();
-    return boost::make_shared<QuantExt::LognormalCmsSpreadPricer>(
+    return QuantLib::ext::make_shared<QuantExt::LognormalCmsSpreadPricer>(
         cmsPricer, corrCurve, market_->discountCurve(ccyCode, configuration(MarketContext::pricing)),
         parseInteger(engineParameter("IntegrationPoints")));
 }

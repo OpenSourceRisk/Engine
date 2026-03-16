@@ -23,24 +23,38 @@
 namespace ore {
 namespace analytics {
 
-ClonedScenarioGenerator::ClonedScenarioGenerator(const boost::shared_ptr<ScenarioGenerator>& scenarioGenerator,
+ClonedScenarioGenerator::ClonedScenarioGenerator(const QuantLib::ext::shared_ptr<ScenarioGenerator>& scenarioGenerator,
                                                  const std::vector<Date>& dates, const Size nSamples) {
     DLOG("Build cloned scenario generator for " << dates.size() << " dates and " << nSamples << " samples.");
+    for (size_t i = 0; i < dates.size(); ++i) {
+        dates_[dates[i]] = i;
+    }
+    firstDate_ = dates.front();
     scenarioGenerator->reset();
-    scenarios_.resize(nSamples * dates.size());
+    scenarios_.resize(nSamples * dates_.size());
     for (Size i = 0; i < nSamples; ++i) {
         for (Size j = 0; j < dates.size(); ++j) {
             scenarios_[i * dates.size() + j] = scenarioGenerator->next(dates[j])->clone();
-	}
+        }
     }
 }
 
-boost::shared_ptr<Scenario> ClonedScenarioGenerator::next(const Date& d) {
-    QL_REQUIRE(i_ < scenarios_.size(), "ClonedScenarioGenerator::next(" << d << "): no more scenarios stored.");
-    return scenarios_[i_++];
+QuantLib::ext::shared_ptr<Scenario> ClonedScenarioGenerator::next(const Date& d) {
+    if (d == firstDate_) { // new path
+        ++nSim_;
+    }
+    auto stepIdx = dates_.find(d);
+    QL_REQUIRE(stepIdx != dates_.end(), "ClonedScenarioGenerator::next(" << d << "): invalid date " << d);
+    size_t timePos = stepIdx->second;
+    size_t currentStep = (nSim_ - 1) * dates_.size() + timePos;
+    QL_REQUIRE(currentStep < scenarios_.size(),
+               "ClonedScenarioGenerator::next(" << d << "): no more scenarios stored.");
+    return scenarios_[currentStep];
 }
 
-void ClonedScenarioGenerator::reset() { i_ = 0; }
+void ClonedScenarioGenerator::reset() { 
+    nSim_ = 0;
+}
 
 } // namespace analytics
 } // namespace ore

@@ -50,7 +50,8 @@ static CurveSpec::CurveType parseCurveSpecType(const string& s) {
         {"Security", CurveSpec::CurveType::Security},
         {"Commodity", CurveSpec::CurveType::Commodity},
         {"Correlation", CurveSpec::CurveType::Correlation},
-        {"CommodityVolatility", CurveSpec::CurveType::CommodityVolatility}};
+        {"CommodityVolatility", CurveSpec::CurveType::CommodityVolatility},
+        {"SwapIndex", CurveSpec::CurveType::SwapIndex}};
 
     auto it = b.find(s);
     if (it != b.end()) {
@@ -61,7 +62,7 @@ static CurveSpec::CurveType parseCurveSpecType(const string& s) {
 }
 
 //! function to convert a string into a curve spec
-boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
+QuantLib::ext::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
 
 
     boost::escaped_list_separator<char> sep('\\', '/', '\"');
@@ -69,7 +70,7 @@ boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
 
     vector<string> tokens(tokenSplit.begin(), tokenSplit.end());
 
-    QL_REQUIRE(tokens.size() > 1, "number of tokens too small in curve spec " << s);
+    QL_REQUIRE(tokens.size() > 0, "number of tokens too small in curve spec " << s);
 
     CurveSpec::CurveType curveType = parseCurveSpecType(tokens[0]);
 
@@ -83,7 +84,7 @@ boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
                                            << s);
         const string& ccy = tokens[1];
         const string& curveConfigID = tokens[2];
-        return boost::make_shared<YieldCurveSpec>(ccy, curveConfigID);
+        return QuantLib::ext::make_shared<YieldCurveSpec>(ccy, curveConfigID);
     }
 
     case CurveSpec::CurveType::Default: {
@@ -93,7 +94,7 @@ boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
                                            << s);
         const string& ccy = tokens[1];
         const string& curveConfigID = tokens[2];
-        return boost::make_shared<DefaultCurveSpec>(ccy, curveConfigID);
+        return QuantLib::ext::make_shared<DefaultCurveSpec>(ccy, curveConfigID);
     }
 
     case CurveSpec::CurveType::CDSVolatility: {
@@ -102,7 +103,7 @@ boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
                                        " of tokens in cds vol spec "
                                            << s);
         const string& curveConfigID = tokens[1];
-        return boost::make_shared<CDSVolatilityCurveSpec>(curveConfigID);
+        return QuantLib::ext::make_shared<CDSVolatilityCurveSpec>(curveConfigID);
     }
 
     case CurveSpec::CurveType::BaseCorrelation: {
@@ -111,7 +112,7 @@ boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
                                        " of tokens in cds vol spec "
                                            << s);
         const string& curveConfigID = tokens[1];
-        return boost::make_shared<BaseCorrelationCurveSpec>(curveConfigID);
+        return QuantLib::ext::make_shared<BaseCorrelationCurveSpec>(curveConfigID);
     }
 
     case CurveSpec::CurveType::FX: {
@@ -121,7 +122,7 @@ boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
                                            << s);
         const string& unitCcy = tokens[1];
         const string& ccy = tokens[2];
-        return boost::make_shared<FXSpotSpec>(unitCcy, ccy);
+        return QuantLib::ext::make_shared<FXSpotSpec>(unitCcy, ccy);
     }
 
     case CurveSpec::CurveType::FXVolatility: {
@@ -132,7 +133,7 @@ boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
         const string& unitCcy = tokens[1];
         const string& ccy = tokens[2];
         const string& curveConfigID = tokens[3];
-        return boost::make_shared<FXVolatilityCurveSpec>(unitCcy, ccy, curveConfigID);
+        return QuantLib::ext::make_shared<FXVolatilityCurveSpec>(unitCcy, ccy, curveConfigID);
     }
 
     case CurveSpec::CurveType::SwaptionVolatility: {
@@ -142,7 +143,7 @@ boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
                                            << s);
         const string& key = tokens[1];
         const string& curveConfigID = tokens[2];
-        return boost::make_shared<SwaptionVolatilityCurveSpec>(key, curveConfigID);
+        return QuantLib::ext::make_shared<SwaptionVolatilityCurveSpec>(key, curveConfigID);
     }
 
     case CurveSpec::CurveType::YieldVolatility: {
@@ -151,7 +152,7 @@ boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
                                        " of tokens in yield vol curve spec "
                                            << s);
         const string& curveConfigID = tokens[1];
-        return boost::make_shared<YieldVolatilityCurveSpec>(curveConfigID);
+        return QuantLib::ext::make_shared<YieldVolatilityCurveSpec>(curveConfigID);
     }
 
     case CurveSpec::CurveType::CapFloorVolatility: {
@@ -163,7 +164,7 @@ boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
                                            << s);
         const string& key = tokens[1];
         const string& curveConfigID = tokens[2];
-        return boost::make_shared<CapFloorVolatilityCurveSpec>(key, curveConfigID);
+        return QuantLib::ext::make_shared<CapFloorVolatilityCurveSpec>(key, curveConfigID);
     }
 
     case CurveSpec::CurveType::Inflation: {
@@ -173,7 +174,7 @@ boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
                                            << s);
         const string& index = tokens[1];
         const string& curveConfigID = tokens[2];
-        return boost::make_shared<InflationCurveSpec>(index, curveConfigID);
+        return QuantLib::ext::make_shared<InflationCurveSpec>(index, curveConfigID);
     }
 
     case CurveSpec::CurveType::InflationCapFloorVolatility: {
@@ -183,7 +184,7 @@ boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
                                            << s);
         const string& index = tokens[1];
         const string& curveConfigID = tokens[2];
-        return boost::make_shared<InflationCapFloorVolatilityCurveSpec>(index, curveConfigID);
+        return QuantLib::ext::make_shared<InflationCapFloorVolatilityCurveSpec>(index, curveConfigID);
     }
 
     case CurveSpec::CurveType::Equity: {
@@ -193,7 +194,7 @@ boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
                                            << s);
         const string& ccy = tokens[1];
         const string& curveConfigID = tokens[2];
-        return boost::make_shared<EquityCurveSpec>(ccy, curveConfigID);
+        return QuantLib::ext::make_shared<EquityCurveSpec>(ccy, curveConfigID);
     }
 
     case CurveSpec::CurveType::EquityVolatility: {
@@ -203,7 +204,7 @@ boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
                                            << s);
         const string& ccy = tokens[1];
         const string& curveConfigID = tokens[2];
-        return boost::make_shared<EquityVolatilityCurveSpec>(ccy, curveConfigID);
+        return QuantLib::ext::make_shared<EquityVolatilityCurveSpec>(ccy, curveConfigID);
     }
 
     case CurveSpec::CurveType::Security: {
@@ -212,29 +213,36 @@ boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
                                        " of tokens in Security Spread spec "
                                            << s);
         const string& securityID = tokens[1];
-        return boost::make_shared<SecuritySpec>(securityID);
+        return QuantLib::ext::make_shared<SecuritySpec>(securityID);
     }
 
     case CurveSpec::CurveType::Commodity: {
         // Commodity/CCY/CommodityCurveConfigId
         QL_REQUIRE(tokens.size() == 3, "Unexpected number of tokens in commodity curve spec " << s);
-        return boost::make_shared<CommodityCurveSpec>(tokens[1], tokens[2]);
+        return QuantLib::ext::make_shared<CommodityCurveSpec>(tokens[1], tokens[2]);
     }
 
     case CurveSpec::CurveType::CommodityVolatility: {
         // CommodityVolatility/CCY/CommodityVolatilityConfigId
         QL_REQUIRE(tokens.size() == 3, "Unexpected number of tokens in commodity volatility spec " << s);
-        return boost::make_shared<CommodityVolatilityCurveSpec>(tokens[1], tokens[2]);
+        return QuantLib::ext::make_shared<CommodityVolatilityCurveSpec>(tokens[1], tokens[2]);
     }
 
     case CurveSpec::CurveType::Correlation: {
         // Correlation/CorrelationCurveConfigId
         QL_REQUIRE(tokens.size() == 2, "Unexpected number of tokens in correlation spec " << s);
         string id = tokens[1];
-        return boost::make_shared<CorrelationCurveSpec>(id);
+        return QuantLib::ext::make_shared<CorrelationCurveSpec>(id);
     }
 
-        // TODO: the rest...
+    case CurveSpec::CurveType::SwapIndex: {
+        // Expected format: CurveConfigID
+        QL_REQUIRE(tokens.size() == 1, "Unexpected number"
+                                       " of tokens in yield curve spec "
+                                           << s);
+        return QuantLib::ext::make_shared<SwapIndexCurveSpec>(tokens[0]);
+    }
+        
     }
 
     QL_FAIL("Unable to convert \"" << s << "\" into CurveSpec");

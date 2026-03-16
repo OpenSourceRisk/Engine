@@ -49,7 +49,7 @@ using std::string;
 /*!
     \ingroup utilities
 */
-boost::shared_ptr<QuantExt::FxIndex>
+QuantLib::ext::shared_ptr<QuantExt::FxIndex>
 parseFxIndex(const string& s, const Handle<Quote>& fxSpot = Handle<Quote>(),
              const Handle<YieldTermStructure>& sourceYts = Handle<YieldTermStructure>(),
              const Handle<YieldTermStructure>& targetYts = Handle<YieldTermStructure>(),
@@ -59,7 +59,7 @@ parseFxIndex(const string& s, const Handle<Quote>& fxSpot = Handle<Quote>(),
 /*!
     \ingroup utilities
 */
-boost::shared_ptr<IborIndex> parseIborIndex(const string& s,
+QuantLib::ext::shared_ptr<IborIndex> parseIborIndex(const string& s,
                                             const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>());
 
 //! Convert std::string to QuantLib::IborIndex and return the tenor string component of the index
@@ -74,7 +74,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s,
 
     \ingroup utilities
 */
-boost::shared_ptr<IborIndex> parseIborIndex(
+QuantLib::ext::shared_ptr<IborIndex> parseIborIndex(
     const std::string& strIndex, std::string& outTenor,
     const QuantLib::Handle<QuantLib::YieldTermStructure>& h = QuantLib::Handle<QuantLib::YieldTermStructure>());
 
@@ -82,7 +82,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(
 /*!
     \ingroup utilities
 */
-bool tryParseIborIndex(const string& s, boost::shared_ptr<IborIndex>& index);
+bool tryParseIborIndex(const string& s, QuantLib::ext::shared_ptr<IborIndex>& index);
 
 //! Return true if the \p indexName is that of a generic ibor index, otherwise false
 /*!
@@ -99,7 +99,13 @@ bool isGenericIborIndex(const string& indexName);
 
     \ingroup utilities
 */
-std::pair<bool, boost::shared_ptr<QuantLib::ZeroInflationIndex>> isInflationIndex(const std::string& indexName);
+std::pair<bool, QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex>> isInflationIndex(const std::string& indexName);
+
+//! Return true if the \p indexName is that of an IborIndex, otherwise false
+/*!
+    \ingroup utilities
+*/
+bool isIborIndex(const std::string& indexName);
 
 //! Return true if the \p indexName is that of an EquityIndex, otherwise false
 /*!
@@ -113,6 +119,12 @@ bool isEquityIndex(const std::string& indexName);
 */
 bool isCommodityIndex(const std::string& indexName);
 
+//! Return true if the \p indexName is that of a BondFuturesIndex, otherwise false
+/*!
+    \ingroup utilities
+*/
+bool isBondFuturesIndex(const std::string& indexName);
+
 /*! Return true if the \p indexName is that of an GenericIndex, otherwise false
     \ingroup utilities
 */
@@ -122,13 +134,13 @@ bool isGenericIndex(const std::string& indexName);
 /*!
 \ingroup utilities
 */
-boost::shared_ptr<QuantExt::EquityIndex2> parseEquityIndex(const string& s);
+QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> parseEquityIndex(const string& s);
 
 //! Convert std::string to QuantLib::SwapIndex
 /*!
     \ingroup utilities
 */
-boost::shared_ptr<SwapIndex>
+QuantLib::ext::shared_ptr<SwapIndex>
 parseSwapIndex(const string& s, const Handle<YieldTermStructure>& forwarding = Handle<YieldTermStructure>(),
                const Handle<YieldTermStructure>& discounting = Handle<YieldTermStructure>());
 
@@ -136,25 +148,26 @@ parseSwapIndex(const string& s, const Handle<YieldTermStructure>& forwarding = H
 /*!
  \ingroup utilities
  */
-boost::shared_ptr<ZeroInflationIndex>
+QuantLib::ext::shared_ptr<ZeroInflationIndex>
 parseZeroInflationIndex(const string& s, const Handle<ZeroInflationTermStructure>& h = Handle<ZeroInflationTermStructure>());
 
-QL_DEPRECATED
-boost::shared_ptr<ZeroInflationIndex>
-parseZeroInflationIndex(const string& s, bool isInterpolated,
-                        const Handle<ZeroInflationTermStructure>& h = Handle<ZeroInflationTermStructure>());
-
-//! Convert std::string to QuantExt::BondIndex
+//! Convert std::string to QuantExt::BondIndex or BondFuturesIndex (if expiry is given in the name, deprecated)
 /*!
  \ingroup utilities
  */
-boost::shared_ptr<QuantExt::BondIndex> parseBondIndex(const string& s);
+QuantLib::ext::shared_ptr<QuantLib::Index> parseBondIndex(const string& s);
+
+//! Convert std::string to QuantExt::BondFuturesIndex
+/*!
+ \ingroup utilities
+ */
+QuantLib::ext::shared_ptr<QuantExt::BondFuturesIndex> parseBondFuturesIndex(const string& s);
 
 //! Convert std::string to QuantExt::ConstantMaturityBondIndex
 /*!
  \ingroup utilities
  */
-boost::shared_ptr<QuantExt::ConstantMaturityBondIndex> parseConstantMaturityBondIndex(const string& s);
+QuantLib::ext::shared_ptr<QuantExt::ConstantMaturityBondIndex> parseConstantMaturityBondIndex(const string& s);
 
 /*! Convert std::string to QuantExt::ComodityIndex
 
@@ -165,7 +178,7 @@ boost::shared_ptr<QuantExt::ConstantMaturityBondIndex> parseConstantMaturityBond
 
     \ingroup utilities
  */
-boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(
+QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(
     const std::string& name, bool hasPrefix = true,
     const QuantLib::Handle<QuantExt::PriceTermStructure>& ts = QuantLib::Handle<QuantExt::PriceTermStructure>(),
     const QuantLib::Calendar& cal = QuantLib::NullCalendar(), const bool enforceFutureIndex = true);
@@ -174,13 +187,13 @@ boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(
 /*!
     \ingroup utilities
 */
-boost::shared_ptr<QuantLib::Index> parseGenericIndex(const string& s);
+QuantLib::ext::shared_ptr<QuantLib::Index> parseGenericIndex(const string& s);
 
 //! Convert std::string to QuantLib::Index
 /*!
     \ingroup utilities
 */
-boost::shared_ptr<Index> parseIndex(const string& s);
+QuantLib::ext::shared_ptr<Index> parseIndex(const string& s);
 
 //! Return true if the \p indexName is that of an overnight index, otherwise false
 /*! \ingroup utilities

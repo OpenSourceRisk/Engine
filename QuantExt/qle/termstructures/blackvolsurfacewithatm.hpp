@@ -24,7 +24,7 @@
 #ifndef quantext_blackvolsurfacewithatm_hpp
 #define quantext_blackvolsurfacewithatm_hpp
 
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 #include <ql/quote.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
@@ -34,8 +34,9 @@ using namespace QuantLib;
 
 //! Wrapper class for a BlackVolTermStructure that easily exposes ATM vols.
 /*! This class implements BlackVolatilityTermStructure and takes a surface (well, any BlackVolTermStructure) as an
-    input. If asked for a volatility with strike=Null<Real>() or 0 it will calculate the forward value and use this as
-    the strike, this makes it easy to access ATMF values.
+    input. If asked for a volatility with strike=Null<Real>() it will calculate the forward value and use this as
+    the strike, this makes it easy to access ATMF values. Only Null<Real>() triggers ATM forward calculation; 
+    numeric strike values (including 0) are passed through unchanged to the underlying surface.
 
     The forward value is calculated using the input spot and yield curves, so can be used for both FX and Equity vols.
 
@@ -50,7 +51,7 @@ using namespace QuantLib;
 class BlackVolatilityWithATM : public BlackVolatilityTermStructure {
 public:
     //! Constructor. This is a floating term structure (settlement days is zero)
-    BlackVolatilityWithATM(const boost::shared_ptr<BlackVolTermStructure>& surface, const Handle<Quote>& spot,
+    BlackVolatilityWithATM(const QuantLib::ext::shared_ptr<BlackVolTermStructure>& surface, const Handle<Quote>& spot,
                            const Handle<YieldTermStructure>& yield1 = Handle<YieldTermStructure>(),
                            const Handle<YieldTermStructure>& yield2 = Handle<YieldTermStructure>());
 
@@ -72,7 +73,7 @@ public:
 
     //! \name Inspectors
     //@{
-    boost::shared_ptr<BlackVolTermStructure> surface() const { return surface_; }
+    QuantLib::ext::shared_ptr<BlackVolTermStructure> surface() const { return surface_; }
     Handle<Quote> spot() const { return spot_; }
     Handle<YieldTermStructure> yield1() const { return yield1_; }
     Handle<YieldTermStructure> yield2() const { return yield2_; }
@@ -83,7 +84,7 @@ protected:
     Volatility blackVolImpl(Time t, Real strike) const override;
 
 private:
-    boost::shared_ptr<BlackVolTermStructure> surface_;
+    QuantLib::ext::shared_ptr<BlackVolTermStructure> surface_;
     Handle<Quote> spot_;
     Handle<YieldTermStructure> yield1_, yield2_;
 };

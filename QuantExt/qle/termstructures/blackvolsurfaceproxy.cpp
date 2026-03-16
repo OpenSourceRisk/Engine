@@ -23,11 +23,11 @@ using namespace QuantLib;
 namespace QuantExt {
 
 BlackVolatilitySurfaceProxy::BlackVolatilitySurfaceProxy(
-    const boost::shared_ptr<BlackVolTermStructure>& proxySurface, const boost::shared_ptr<EqFxIndexBase>& index,
-    const boost::shared_ptr<EqFxIndexBase>& proxyIndex, const boost::shared_ptr<BlackVolTermStructure>& fxSurface,
-    const boost::shared_ptr<FxIndex>& fxIndex, const boost::shared_ptr<CorrelationTermStructure>& correlation)
+    const QuantLib::ext::shared_ptr<BlackVolTermStructure>& proxySurface, const QuantLib::ext::shared_ptr<EqFxIndexBase>& index,
+    const QuantLib::ext::shared_ptr<EqFxIndexBase>& proxyIndex, const QuantLib::ext::shared_ptr<BlackVolTermStructure>& fxSurface,
+    const QuantLib::ext::shared_ptr<FxIndex>& fxIndex, const QuantLib::ext::shared_ptr<CorrelationTermStructure>& correlation)
     : BlackVolatilityTermStructure(0, proxySurface->calendar(), proxySurface->businessDayConvention(),
-                                   proxySurface->dayCounter()),
+                                   proxySurface->dayCounter(), proxySurface->volType(), proxySurface->shift()),
       proxySurface_(proxySurface), index_(index), proxyIndex_(proxyIndex), fxSurface_(fxSurface), 
       fxIndex_(fxIndex), correlation_(correlation) {
 

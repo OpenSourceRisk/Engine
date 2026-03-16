@@ -39,10 +39,9 @@ EquityCurveConfig::EquityCurveConfig(const string& curveID, const string& curveD
       extrapolation_(extrapolation), exerciseStyle_(exerciseStyle) {
     quotes_ = fwdQuotes;
     quotes_.insert(quotes_.begin(), equitySpotQuote);
-    populateRequiredCurveIds();
 }
 
-void EquityCurveConfig::populateRequiredCurveIds() {
+void EquityCurveConfig::populateRequiredIds() const {
     if (!forecastingCurve().empty())
         requiredCurveIds_[CurveSpec::CurveType::Yield].insert(forecastingCurve());
 }
@@ -84,7 +83,7 @@ void EquityCurveConfig::fromXML(XMLNode* node) {
     } else {
         QL_REQUIRE(fwdQuotes_.size() > 0, "Invalid EquityCurveConfig, Quotes should be present when type!=NoDividends");
     }
-    populateRequiredCurveIds();
+    outputType_ = type_;
 }
 
 XMLNode* EquityCurveConfig::toXML(XMLDocument& doc) const {
@@ -94,17 +93,17 @@ XMLNode* EquityCurveConfig::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "Currency", currency_);
     XMLUtils::addChild(doc, node, "Calendar", calendar_);
     XMLUtils::addChild(doc, node, "ForecastingCurve", forecastingCurve_);
-    XMLUtils::addChild(doc, node, "Type", to_string(type_));
-    if (type_ == EquityCurveConfig::Type::OptionPremium)
+    XMLUtils::addChild(doc, node, "Type", to_string(outputType_));
+    if (outputType_ == EquityCurveConfig::Type::OptionPremium)
         XMLUtils::addChild(doc, node, "ExerciseStyle", to_string(exerciseStyle_));
     XMLUtils::addChild(doc, node, "SpotQuote", equitySpotQuoteID_);
-    XMLUtils::addChildren(doc, node, "Quotes", "Quote", fwdQuotes_);
     XMLUtils::addChild(doc, node, "DayCounter", dayCountID_);
 
-    if (type_ != Type::NoDividends) {
+    if (outputType_ != Type::NoDividends) {
         XMLNode* divInterpNode = XMLUtils::addChild(doc, node, "DividendInterpolation");
         XMLUtils::addChild(doc, divInterpNode, "InterpolationVariable", divInterpVariable_);
         XMLUtils::addChild(doc, divInterpNode, "InterpolationMethod", divInterpMethod_);
+        XMLUtils::addChildren(doc, node, "Quotes", "Quote", fwdQuotes_);
     }
     XMLUtils::addChild(doc, node, "DividendExtrapolation", dividendExtrapolation_);
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolation_);
@@ -141,17 +140,6 @@ EquityCurveConfig::Type parseEquityCurveConfigType(const std::string& str) {
     else if (str == "NoDividends")
         return EquityCurveConfig::Type::NoDividends;
     QL_FAIL("Invalid EquityCurveConfig::Type " << str);
-}
-
-std::ostream& operator<<(std::ostream& out, Exercise::Type t) {
-    switch (t) {
-    case Exercise::American:
-        return out << "American";
-    case Exercise::European:
-        return out << "European";
-    default:
-        QL_FAIL("invalid Exercise::Type(" << int(t) << ")");
-    }
 }
 
 } // namespace data

@@ -1,0 +1,21 @@
+{
+  "csv_settings": {
+    "files": {
+      ".*npv.*\\.csv": {
+        "keys": [
+          "TradeId"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "NPV",
+              "NPV(Base)"
+            ],
+            "abs_tol": 1e-02,
+            "rel_tol": 1e-12
+          }
+        ]
+      }
+    }
+  }
+}

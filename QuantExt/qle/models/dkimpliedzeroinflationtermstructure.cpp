@@ -25,19 +25,20 @@ using QuantLib::Time;
 namespace QuantExt {
 
 DkImpliedZeroInflationTermStructure::DkImpliedZeroInflationTermStructure(
-    const boost::shared_ptr<CrossAssetModel>& model, Size index)
-    : ZeroInflationModelTermStructure(model, index) {}
-
-QL_DEPRECATED_DISABLE_WARNING
-DkImpliedZeroInflationTermStructure::DkImpliedZeroInflationTermStructure(
-    const boost::shared_ptr<CrossAssetModel>& model, Size index, bool indexIsInterpolated)
-    : ZeroInflationModelTermStructure(model, index, indexIsInterpolated) {}
-QL_DEPRECATED_ENABLE_WARNING
+    const QuantLib::ext::shared_ptr<CrossAssetModel>& model, Size index, const std::optional<QuantLib::DayCounter>& simulationDayCounter)
+    : ZeroInflationModelTermStructure(model, index, simulationDayCounter) {}
 
 Real DkImpliedZeroInflationTermStructure::zeroRateImpl(Time t) const {
     QL_REQUIRE(t >= 0.0, "DkImpliedZeroInflationTermStructure::zeroRateImpl: negative time (" << t << ") given");
-    auto p = model_->infdkI(index_, relativeTime_, relativeTime_ + t, state_[0], state_[1]);
-    return std::pow(p.second, 1 / t) - 1;
+    auto [_, growth] = indexGrowth(t);
+    return std::pow(growth, 1 / t) - 1;
+}
+
+std::pair<QuantLib::Real, QuantLib::Real> DkImpliedZeroInflationTermStructure::indexGrowth(Time t) const {
+    QL_REQUIRE(t >= 0.0, "DkImpliedZeroInflationTermStructure::indexGrowth: negative time (" << t << ") given");
+    auto T = relativeTime_ + t + simulationLag();
+    auto p = model_->infdkI(index_, relativeTime_, T, state_[0], state_[1]);
+    return p;
 }
 
 void DkImpliedZeroInflationTermStructure::checkState() const {

@@ -42,11 +42,11 @@ BOOST_AUTO_TEST_CASE(testExpiryDate) {
     string strExpiry = expiry.toString();
 
     // Parse ExpiryDate from string
-    boost::shared_ptr<Expiry> parsedExpiry;
+    QuantLib::ext::shared_ptr<Expiry> parsedExpiry;
     BOOST_REQUIRE_NO_THROW(parsedExpiry = parseExpiry(strExpiry));
 
     // Check that we get back an ExpiryDate
-    boost::shared_ptr<ExpiryDate> castExpiry = boost::dynamic_pointer_cast<ExpiryDate>(parsedExpiry);
+    QuantLib::ext::shared_ptr<ExpiryDate> castExpiry = QuantLib::ext::dynamic_pointer_cast<ExpiryDate>(parsedExpiry);
     BOOST_CHECK(castExpiry);
 
     // Check its members
@@ -67,11 +67,11 @@ BOOST_AUTO_TEST_CASE(testExpiryPeriod) {
     string strExpiry = expiry.toString();
 
     // Parse ExpiryPeriod from string
-    boost::shared_ptr<Expiry> parsedExpiry;
+    QuantLib::ext::shared_ptr<Expiry> parsedExpiry;
     BOOST_REQUIRE_NO_THROW(parsedExpiry = parseExpiry(strExpiry));
 
     // Check that we get back an ExpiryDate
-    boost::shared_ptr<ExpiryPeriod> castExpiry = boost::dynamic_pointer_cast<ExpiryPeriod>(parsedExpiry);
+    QuantLib::ext::shared_ptr<ExpiryPeriod> castExpiry = QuantLib::ext::dynamic_pointer_cast<ExpiryPeriod>(parsedExpiry);
     BOOST_CHECK(castExpiry);
 
     // Check its members
@@ -92,12 +92,12 @@ BOOST_AUTO_TEST_CASE(testContinuationExpiry) {
     string strExpiry = expiry.toString();
 
     // Parse FutureContinuationExpiry from string
-    boost::shared_ptr<Expiry> parsedExpiry;
+    QuantLib::ext::shared_ptr<Expiry> parsedExpiry;
     BOOST_REQUIRE_NO_THROW(parsedExpiry = parseExpiry(strExpiry));
 
     // Check that we get back a FutureContinuationExpiry
-    boost::shared_ptr<FutureContinuationExpiry> castExpiry =
-        boost::dynamic_pointer_cast<FutureContinuationExpiry>(parsedExpiry);
+    QuantLib::ext::shared_ptr<FutureContinuationExpiry> castExpiry =
+        QuantLib::ext::dynamic_pointer_cast<FutureContinuationExpiry>(parsedExpiry);
     BOOST_CHECK(castExpiry);
 
     // Check its members

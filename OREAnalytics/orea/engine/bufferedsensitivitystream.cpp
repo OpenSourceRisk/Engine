@@ -21,11 +21,11 @@
 namespace ore {
 namespace analytics {
 
-BufferedSensitivityStream::BufferedSensitivityStream(const boost::shared_ptr<SensitivityStream>& stream)
+BufferedSensitivityStream::BufferedSensitivityStream(const QuantLib::ext::shared_ptr<SensitivityStream>& stream)
     : stream_(stream) {}
 
 SensitivityRecord BufferedSensitivityStream::next() {
-    if (index_ == QuantLib::Null<Size>()) {
+    if (index_ == QuantLib::Null<QuantLib::Size>()) {
         buffer_.push_back(stream_->next());
         return buffer_.back();
     }

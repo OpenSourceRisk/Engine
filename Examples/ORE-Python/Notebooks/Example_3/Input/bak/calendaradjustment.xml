@@ -1,0 +1,118 @@
+<CalendarAdjustments>
+    <Calendar name= "DKK">
+        <AdditionalHolidays>
+            <Date>2019-05-31</Date>
+            <Date>2019-12-24</Date>
+            <Date>2019-12-31</Date>
+            <Date>2020-05-22</Date>
+            <Date>2020-12-24</Date>
+            <Date>2020-12-31</Date>
+        </AdditionalHolidays>
+        <AdditionalBusinessDays/>
+    </Calendar>
+    <Calendar name= "CNH">
+        <AdditionalHolidays>
+            <Date>2019-02-04</Date>
+            <Date>2019-02-05</Date>
+            <Date>2019-02-06</Date>
+            <Date>2019-02-07</Date>
+            <Date>2019-02-08</Date>
+            <Date>2019-04-05</Date>
+            <Date>2019-05-01</Date>
+            <Date>2019-05-02</Date>
+            <Date>2019-05-03</Date>
+            <Date>2019-06-07</Date>
+            <Date>2019-09-13</Date>
+            <Date>2019-10-01</Date>
+            <Date>2019-10-02</Date>
+            <Date>2019-10-03</Date>
+            <Date>2019-10-04</Date>
+            <Date>2019-10-07</Date>
+            <Date>2020-01-24</Date>
+            <Date>2020-01-27</Date>
+            <Date>2020-01-28</Date>
+            <Date>2020-01-29</Date>
+            <Date>2020-01-30</Date>
+            <Date>2020-04-06</Date>
+            <Date>2020-05-01</Date>
+            <Date>2020-06-25</Date>
+            <Date>2020-06-26</Date>
+            <Date>2020-10-01</Date>
+            <Date>2020-10-02</Date>
+            <Date>2020-10-05</Date>
+            <Date>2020-10-06</Date>
+            <Date>2020-10-07</Date>
+        </AdditionalHolidays>
+        <AdditionalBusinessDays/>
+    </Calendar>
+    <Calendar name= "Japan">
+        <AdditionalHolidays>
+            <Date>2019-04-30</Date>
+            <Date>2019-05-01</Date>
+            <Date>2019-05-02</Date>
+            <Date>2019-10-22</Date>
+            <Date>2020-02-24</Date>
+            <Date>2020-07-23</Date>
+            <Date>2020-07-24</Date>
+            <Date>2020-08-10</Date>
+        </AdditionalHolidays>
+        <AdditionalBusinessDays>
+            <Date>2019-12-23</Date>
+            <Date>2020-07-20</Date>
+            <Date>2020-08-11</Date>
+            <Date>2020-10-12</Date>
+            <Date>2020-12-23</Date>
+        </AdditionalBusinessDays>
+    </Calendar>
+    <Calendar name= "FRA">
+        <AdditionalHolidays/>
+        <AdditionalBusinessDays>
+            <Date>2019-06-20</Date>
+        </AdditionalBusinessDays>
+    </Calendar>
+    <Calendar name= "ITL">
+        <AdditionalHolidays>
+            <Date>2019-04-19</Date>
+            <Date>2020-04-10</Date>
+        </AdditionalHolidays>
+        <AdditionalBusinessDays/>
+    </Calendar>
+    <Calendar name= "NZD">
+        <AdditionalHolidays>
+            <Date>2019-01-28</Date>
+            <Date>2020-01-27</Date>
+            <Date>2020-04-27</Date>
+        </AdditionalHolidays>
+        <AdditionalBusinessDays/>
+    </Calendar>
+    <Calendar name= "SGD">
+        <AdditionalHolidays>
+            <Date>2019-02-05</Date>
+            <Date>2019-02-06</Date>
+            <Date>2019-05-20</Date>
+            <Date>2019-06-05</Date>
+            <Date>2019-08-12</Date>
+            <Date>2019-10-28</Date>
+            <Date>2020-01-27</Date>
+            <Date>2020-05-07</Date>
+            <Date>2020-05-25</Date>
+            <Date>2020-07-31</Date>
+        </AdditionalHolidays>
+        <AdditionalBusinessDays/>
+    </Calendar>
+    <Calendar name= "SEK">
+        <AdditionalHolidays>
+            <Date>2019-06-06</Date>
+        </AdditionalHolidays>
+        <AdditionalBusinessDays/>
+    </Calendar>
+    <Calendar name= "CHF">
+        <AdditionalHolidays>
+            <Date>2019-12-24</Date>
+            <Date>2019-12-31</Date>
+            <Date>2020-12-24</Date>
+            <Date>2020-12-31</Date>
+        </AdditionalHolidays>
+        <AdditionalBusinessDays/>
+    </Calendar>
+</CalendarAdjustments>

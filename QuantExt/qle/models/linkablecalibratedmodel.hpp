@@ -50,23 +50,23 @@ public:
     /*! An additional constraint can be passed which must be
         satisfied in addition to the constraints of the model.
     */
-    virtual void calibrate(const std::vector<boost::shared_ptr<CalibrationHelper> >&, OptimizationMethod& method,
+    virtual void calibrate(const std::vector<QuantLib::ext::shared_ptr<CalibrationHelper> >&, OptimizationMethod& method,
                            const EndCriteria& endCriteria, const Constraint& constraint = Constraint(),
                            const std::vector<Real>& weights = std::vector<Real>(),
                            const std::vector<bool>& fixParameters = std::vector<bool>());
 
     //! for backward compatibility
-    virtual void calibrate(const std::vector<boost::shared_ptr<BlackCalibrationHelper> >&, OptimizationMethod& method,
+    virtual void calibrate(const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper> >&, OptimizationMethod& method,
                            const EndCriteria& endCriteria, const Constraint& constraint = Constraint(),
                            const std::vector<Real>& weights = std::vector<Real>(),
                            const std::vector<bool>& fixParameters = std::vector<bool>());
 
-    Real value(const Array& params, const std::vector<boost::shared_ptr<CalibrationHelper> >&);
+    Real value(const Array& params, const std::vector<QuantLib::ext::shared_ptr<CalibrationHelper> >&);
 
     //! for backward compatibility
-    Real value(const Array& params, const std::vector<boost::shared_ptr<BlackCalibrationHelper> >&);
+    Real value(const Array& params, const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper> >&);
 
-    const boost::shared_ptr<Constraint>& constraint() const;
+    const QuantLib::ext::shared_ptr<Constraint>& constraint() const;
 
     //! Returns end criteria result
     EndCriteria::Type endCriteria() const { return endCriteria_; }
@@ -82,8 +82,8 @@ public:
 
 protected:
     virtual void generateArguments() {}
-    std::vector<boost::shared_ptr<Parameter> > arguments_;
-    boost::shared_ptr<Constraint> constraint_;
+    std::vector<QuantLib::ext::shared_ptr<Parameter> > arguments_;
+    QuantLib::ext::shared_ptr<Constraint> constraint_;
     EndCriteria::Type endCriteria_;
     Array problemValues_;
 
@@ -102,7 +102,7 @@ class LinkableCalibratedModel::PrivateConstraint : public Constraint {
 private:
     class Impl : public Constraint::Impl {
     public:
-        Impl(const std::vector<boost::shared_ptr<Parameter> >& arguments) : arguments_(arguments) {}
+        Impl(const std::vector<QuantLib::ext::shared_ptr<Parameter> >& arguments) : arguments_(arguments) {}
 
         bool test(const Array& params) const override {
             Size k = 0;
@@ -156,12 +156,12 @@ private:
         }
 
     private:
-        const std::vector<boost::shared_ptr<Parameter> >& arguments_;
+        const std::vector<QuantLib::ext::shared_ptr<Parameter> >& arguments_;
     };
 
 public:
-    PrivateConstraint(const std::vector<boost::shared_ptr<Parameter> >& arguments)
-        : Constraint(boost::shared_ptr<Constraint::Impl>(new PrivateConstraint::Impl(arguments))) {}
+    PrivateConstraint(const std::vector<QuantLib::ext::shared_ptr<Parameter> >& arguments)
+        : Constraint(QuantLib::ext::shared_ptr<Constraint::Impl>(new PrivateConstraint::Impl(arguments))) {}
 };
 
 } // namespace QuantExt

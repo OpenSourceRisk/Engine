@@ -27,7 +27,7 @@ std::string CreditLinkedSwapEngineBuilder::keyImpl(const std::string& currency, 
     return currency + "_" + creditCurveId;
 }
 
-boost::shared_ptr<PricingEngine> CreditLinkedSwapEngineBuilder::engineImpl(const std::string& currency,
+QuantLib::ext::shared_ptr<PricingEngine> CreditLinkedSwapEngineBuilder::engineImpl(const std::string& currency,
                                                                            const std::string& creditCurveId) {
 
     auto irCurve = market_->discountCurve(currency, configuration(MarketContext::pricing));
@@ -40,7 +40,7 @@ boost::shared_ptr<PricingEngine> CreditLinkedSwapEngineBuilder::engineImpl(const
         generateAdditionalResults = parseBool(p->second);
     }
 
-    return boost::make_shared<QuantExt::DiscountingCreditLinkedSwapEngine>(
+    return QuantLib::ext::make_shared<QuantExt::DiscountingCreditLinkedSwapEngine>(
         irCurve, creditCurve, marketRecovery, parseInteger(engineParameter("TimeStepsPerYear")),
         generateAdditionalResults);
 }

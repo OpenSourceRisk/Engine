@@ -17,6 +17,7 @@
 */
 
 #include <boost/test/unit_test.hpp>
+#include <boost/log/attributes/scoped_attribute.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -135,7 +136,7 @@ BOOST_AUTO_TEST_CASE(testMarketDatumParser) {
         Real value = ore::data::parseReal(tokens[2]);
 
         BOOST_CHECK_NO_THROW(ore::data::parseMarketDatum(quoteDate, key, value));
-        boost::shared_ptr<ore::data::MarketDatum> md = ore::data::parseMarketDatum(quoteDate, key, value);
+        QuantLib::ext::shared_ptr<ore::data::MarketDatum> md = ore::data::parseMarketDatum(quoteDate, key, value);
         BOOST_CHECK(md);
         BOOST_CHECK_EQUAL(md->name(), key);
         BOOST_CHECK_EQUAL(md->asofDate(), quoteDate);
@@ -169,7 +170,7 @@ BOOST_AUTO_TEST_CASE(testEqCurveConfigLoad) {
 
     ore::data::CurveConfigurations cc;
     BOOST_CHECK_NO_THROW(cc.fromXML(node));
-    boost::shared_ptr<ore::data::EquityCurveConfig> ec = cc.equityCurveConfig("SP5");
+    QuantLib::ext::shared_ptr<ore::data::EquityCurveConfig> ec = cc.equityCurveConfig("SP5");
     BOOST_CHECK(ec);
     BOOST_CHECK_EQUAL("SP5", ec->curveID());
     BOOST_CHECK_EQUAL("SP 500 equity price projection curve", 
@@ -208,6 +209,8 @@ BOOST_AUTO_TEST_CASE(testEqCurveConfigBadLoad) {
     BOOST_CHECK_NO_THROW(ore::data::XMLUtils::checkNode(badNode, "CurveConfiguration"));
     ore::data::CurveConfigurations cc;    
     BOOST_CHECK_NO_THROW(cc.fromXML(badNode)); // the spot price is missing, but the correct behaviour is to log error and move on
+    // Disable console logging for this test as we expect errors
+    BOOST_LOG_SCOPED_THREAD_ATTR("NoConsole", boost::log::attributes::constant<bool>(true));
     BOOST_CHECK_THROW(cc.equityCurveConfig("SP5Mini"), QuantLib::Error); // this checks that the XML throws when we try to load
 }
 

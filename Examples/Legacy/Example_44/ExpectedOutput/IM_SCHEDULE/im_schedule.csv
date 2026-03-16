@@ -1,0 +1,7 @@
+#Portfolio,ProductClass,GrossIM,GrossCurrentRC,NetCurrentRC,NetToGrossRatio,Side,Regulation,ScheduleIM,Currency
+nettingSetId_1,Rates,989.66,#N/A,#N/A,#N/A,Call,Unspecified,989.66,USD
+nettingSetId_1,All,989.66,4804.86,501.06,0.104282,Call,Unspecified,457.79,USD
+All,All,#N/A,#N/A,#N/A,#N/A,Call,Unspecified,457.79,USD
+nettingSetId_1,Rates,989.66,#N/A,#N/A,#N/A,Post,Unspecified,989.66,USD
+nettingSetId_1,All,989.66,-4303.80,0.00,0.000000,Post,Unspecified,395.86,USD
+All,All,#N/A,#N/A,#N/A,#N/A,Post,Unspecified,395.86,USD

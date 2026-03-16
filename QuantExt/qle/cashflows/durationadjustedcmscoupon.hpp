@@ -37,24 +37,24 @@ public:
        The adjustment factor is defined as 1.0 if the duration is 0, otherwise it is
        sum_i 1 / (1+S)^i where the sum runs over i = 1, ... , duration */
     DurationAdjustedCmsCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate,
-                              Natural fixingDays, const boost::shared_ptr<SwapIndex>& index, Size duration = 0,
+                              Natural fixingDays, const QuantLib::ext::shared_ptr<SwapIndex>& index, Size duration = 0,
                               Real gearing = 1.0, Spread spread = 0.0, const Date& refPeriodStart = Date(),
                               const Date& refPeriodEnd = Date(), const DayCounter& dayCounter = DayCounter(),
                               bool isInArrears = false, const Date& exCouponDate = Date());
-    const boost::shared_ptr<SwapIndex>& swapIndex() const { return swapIndex_; }
+    const QuantLib::ext::shared_ptr<SwapIndex>& swapIndex() const { return swapIndex_; }
     Size duration() const;
     Real durationAdjustment() const;
     Rate indexFixing() const override;
     void accept(AcyclicVisitor&) override;
 
 private:
-    boost::shared_ptr<SwapIndex> swapIndex_;
+    QuantLib::ext::shared_ptr<SwapIndex> swapIndex_;
     Size duration_;
 };
 
 class DurationAdjustedCmsLeg {
 public:
-    DurationAdjustedCmsLeg(const Schedule& schedule, const boost::shared_ptr<SwapIndex>& swapIndex,
+    DurationAdjustedCmsLeg(const Schedule& schedule, const QuantLib::ext::shared_ptr<SwapIndex>& swapIndex,
                            const Size duration);
     DurationAdjustedCmsLeg& withNotionals(Real notional);
     DurationAdjustedCmsLeg& withNotionals(const std::vector<Real>& notionals);
@@ -82,7 +82,7 @@ public:
 
 private:
     Schedule schedule_;
-    boost::shared_ptr<SwapIndex> swapIndex_;
+    QuantLib::ext::shared_ptr<SwapIndex> swapIndex_;
     std::vector<Real> notionals_;
     DayCounter paymentDayCounter_;
     Natural paymentLag_;

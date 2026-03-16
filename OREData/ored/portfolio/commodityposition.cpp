@@ -44,7 +44,7 @@ XMLNode* CommodityPositionData::toXML(XMLDocument& doc) const {
     return n;
 }
 
-void CommodityPosition::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) {
+void CommodityPosition::build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory) {
 
     // ISDA taxonomy: not a derivative, but define the asset class at least
     // so that we can determine a TRS asset class that has an EQ position underlying
@@ -66,12 +66,13 @@ void CommodityPosition::build(const boost::shared_ptr<ore::data::EngineFactory>&
         QL_REQUIRE(!pts->currency().empty(),
                    "CommodityPosition, Currency not set in curve config for commodity curve'" << u.name() << "'. Skip this trade.");
         auto index = parseCommodityIndex(u.name(), false, pts, NullCalendar(), u.priceType() == "FutureSettlement");
-        boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
-        pair<bool, boost::shared_ptr<Convention>> p = conventions->get(u.name(), Convention::Type::CommodityFuture);
+        QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+        pair<bool, QuantLib::ext::shared_ptr<Convention>> p = conventions->get(u.name(), Convention::Type::CommodityFuture);
         if (u.priceType() == "FutureSettlement"  && p.first) {
-            auto convention = boost::dynamic_pointer_cast<CommodityFutureConvention>(p.second);
+            auto convention = QuantLib::ext::dynamic_pointer_cast<CommodityFutureConvention>(p.second);
             ConventionsBasedFutureExpiry feCalc(*convention);
             Date expiry = Settings::instance().evaluationDate();
+            Date optionExpiry = expiry;
             Size nOffset = u.futureMonthOffset() == Null<Size>() ? 0 : u.futureMonthOffset();
             if (u.deliveryRollDays() != Null<Size>()) {
                 auto cal =
@@ -90,8 +91,9 @@ void CommodityPosition::build(const boost::shared_ptr<ore::data::EngineFactory>&
             } else if (!u.futureExpiryDate().empty()) {
                 expiry = parseDate(u.futureExpiryDate());
                 expiry = feCalc.nextExpiry(true, expiry, nOffset, false);
+                optionExpiry = feCalc.priorExpiry(true, expiry, true);
             }
-            index = index->clone(expiry, pts);
+            index = index->clone(expiry, optionExpiry, pts);
         }
         indices_.push_back(index);
         weights_.push_back(u.weight());
@@ -113,10 +115,10 @@ void CommodityPosition::build(const boost::shared_ptr<ore::data::EngineFactory>&
 
     // set instrument
     auto qlInstr =
-        boost::make_shared<CommodityPositionInstrumentWrapper>(data_.quantity(), indices_, weights_, fxConversion_);
-    qlInstr->setPricingEngine(boost::make_shared<CommodityPositionInstrumentWrapperEngine>());
+        QuantLib::ext::make_shared<CommodityPositionInstrumentWrapper>(data_.quantity(), indices_, weights_, fxConversion_);
+    qlInstr->setPricingEngine(QuantLib::ext::make_shared<CommodityPositionInstrumentWrapperEngine>());
     setSensitivityTemplate(std::string());
-    instrument_ = boost::make_shared<VanillaInstrument>(qlInstr);
+    instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(qlInstr);
 
     // no sensible way to set these members
     maturity_ = Date::maxDate();
@@ -128,7 +130,7 @@ void CommodityPosition::build(const boost::shared_ptr<ore::data::EngineFactory>&
 
 void CommodityPosition::setNpvCurrencyConversion(const std::string& ccy, const Handle<Quote>& conversion) {
     npvCurrency_ = ccy;
-    boost::static_pointer_cast<CommodityPositionInstrumentWrapper>(instrument_->qlInstrument())
+    QuantLib::ext::static_pointer_cast<CommodityPositionInstrumentWrapper>(instrument_->qlInstrument())
         ->setNpvCurrencyConversion(conversion);
 }
 
@@ -144,7 +146,7 @@ XMLNode* CommodityPosition::toXML(XMLDocument& doc) const {
 }
 
 std::map<AssetClass, std::set<std::string>>
-CommodityPosition::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+CommodityPosition::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     std::map<AssetClass, std::set<std::string>> result;
     for (auto const& u : data_.underlyings()) {
         result[AssetClass::COM].insert(u.name());
@@ -153,7 +155,7 @@ CommodityPosition::underlyingIndices(const boost::shared_ptr<ReferenceDataManage
 }
 
 CommodityPositionInstrumentWrapper::CommodityPositionInstrumentWrapper(
-    const Real quantity, const std::vector<boost::shared_ptr<QuantExt::CommodityIndex>>& commodities,
+    const Real quantity, const std::vector<QuantLib::ext::shared_ptr<QuantExt::CommodityIndex>>& commodities,
     const std::vector<Real>& weights, const std::vector<Handle<Quote>>& fxConversion)
     : quantity_(quantity), commodities_(commodities), weights_(weights), fxConversion_(fxConversion) {
     QL_REQUIRE(commodities_.size() == weights_.size(), "CommodityPositionInstrumentWrapper: commodities size ("

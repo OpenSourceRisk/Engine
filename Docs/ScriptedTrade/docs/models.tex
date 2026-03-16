@@ -1,69 +1,90 @@
 \subsection{Pricing Engine Configuration}\label{pricingengine_config}
 
-An example pricing engine configuration looks as follows.
+wip An example pricing engine configuration looks as follows.
 
 \begin{minted}[fontsize=\footnotesize]{xml}
    <Product type="ScriptedTrade">
     <Model>Generic</Model>
     <ModelParameters>
-      <!-- shared parameters -->
       <Parameter name="Model">BlackScholes</Parameter>
-      <Parameter name="InfModelType">DK</Parameter>
       <Parameter name="BaseCcy">USD</Parameter>
       <Parameter name="EnforceBaseCcy">false</Parameter>
       <Parameter name="GridCoarsening">3M(1W),1Y(1M),5Y(3M),10Y(1Y),50Y(5Y)</Parameter>
-      <Parameter name="IrReversion">0.0</Parameter> <!-- fallback for other ccys -->
-      <Parameter name="IrReversion_EUR">0.0</Parameter>
-      <Parameter name="IrReversion_GBP">0.0</Parameter>
       <Parameter name="FullDynamicIr">true</Parameter>
       <Parameter name="FullDynamicFx">true</Parameter>
-      <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
       <Parameter name="Calibration">Deal</Parameter>
+      <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
       <!-- product specific parameters -->
       <Parameter name="Model_SingleAssetOption(EQ)">BlackScholes</Parameter>
-      <Parameter name="Model_SingleAssetOption(FX)">BlackScholes</Parameter>
-      <Parameter name="Model_SingleAssetOption(COMM)">BlackScholes</Parameter>
-      <Parameter name="Model_SingleAssetOptionBwd(EQ)">BlackScholes</Parameter>
-      <Parameter name="Model_SingleAssetOptionBwd(FX)">BlackScholes</Parameter>
-      <Parameter name="Model_SingleAssetOptionBwd(COMM)">BlackScholes</Parameter>
-      <Parameter name="Model_SingleUnderlyingIrOption">GaussianCam</Parameter>
-      <Parameter name="Model_SingleUnderlyingIrOptionBwd">GaussianCam</Parameter>
-      <Parameter name="Model_MultiUnderlyingIrOption">GaussianCam</Parameter>
-      <Parameter name="Model_IrHybrid(EQ)">GaussianCam</Parameter>
-      <Parameter name="Model_IrHybrid(FX)">GaussianCam</Parameter>
-      <Parameter name="Model_IrHybrid(COMM)">GaussianCam</Parameter>
+      <!-- correlation overwrite -->
+      <Parameter name="Correlation_IR:EUR_INF:DECPI:0">0.95</Parameter>
+      <!-- ir model specific parameter -->
+      <Parameter name="IrVolatilityType_EUR">HullWhite</Parameter>
+      <Parameter name="IrReversion">0.0</Parameter> <!-- fallback for other ccys -->
+      <Parameter name="IrReversion_EUR">0.0</Parameter>
+      <!-- inf model specific parameters -->
+      <Parameter name="InfModelType">DK</Parameter>
+      <Parameter name="InfDkVolatility_DECPI">0.0040</Parameter>
+      <Parameter name="InfJyTimes_DECPI">1.0,2.0,3.0</Parameter>
+      <Parameter name="InfJyRealRateVol_DECP">0.0030,0.0040,0.0050,0.00060</Parameter>
+      <Parameter name="InfJyIndexVol_DECP">0.03,0.04,0.05,0.06</Parameter>
+      <Parameter name="InfJyRealRateReversion_DECP">0.0080</Parameter>
+      <Parameter name="InfJyRealToNominalVolRatio_DECP">0.8</Parameter>
     </ModelParameters>
     <Engine>Generic</Engine>
     <EngineParameters>
-      <!-- shared parameters -->
       <Parameter name="Engine">MC</Parameter>
+      <Parameter name="TimeStepsPerYear">24</Parameter>
+      <Parameter name="Interactive">false</Parameter>
+      <Parameter name="BootstrapTolerance">0.1</Parameter>
+      <Parameter name="IncludePastCashflows">true</Parameter>
+      <Parameter name="StaticNpvMem">false</Parameter>
+      <Parameter name="SalvagingAlgorithm">Spectral</Parameter>
+      <Parameter name="IndicatorSmoothingForValues">0.0</Parameter>
+      <Parameter name="IndicatorSmoothingForDerivatives">0.0</Parameter>
+      <Parameter name="ZeroVolatility">false</Parameter>
+      <!-- MC parameter -->
+      <Parameter name="Seed">42</Parameter>
       <Parameter name="Samples">10000</Parameter>
+      <Parameter name="RegressionVarianceCutoff">1E-5</Parameter>
+      <Parameter name="RegressionOrder">2</Parameter>
+      <Parameter name="SequenceType">SobolBrownianBridge</Parameter>
+      <Parameter name="PolynomType">Monomial</Parameter>
+      <Parameter name="SobolOrdering">Steps</Parameter>
+      <Parameter name="SobolDirectionIntegers">JoeKuoD7</Parameter>
+      <Parameter name="TrainingSamples">10000</Parameter>
+      <Parameter name="TrainingSeed">43</Parameter>
+      <Parameter name="TrainingSequenceType">MersenneTwister</Parameter>
+      <!-- FD parameter -->
       <Parameter name="StateGridPoints">200</Parameter>
       <Parameter name="StateGridPoints_SingleUnderlyingIrOptionBwd">50</Parameter>
+      <Parameter name="VarianceStateGridPoints">50</Parameter>
       <Parameter name="MesherEpsilon">1E-4</Parameter>
       <Parameter name="MesherScaling">1.5</Parameter>
       <Parameter name="MesherConcentration">0.1</Parameter>
       <Parameter name="MesherMaxConcentratingPoints">9999</Parameter>
       <Parameter name="MesherIsStatic">true</Parameter>
-      <Parameter name="RegressionOrder">2</Parameter>
-      <Parameter name="TimeStepsPerYear">24</Parameter>
-      <Parameter name="Interactive">false</Parameter>
-      <Parameter name="BootstrapTolerance">0.1</Parameter>
-      <!-- product specific parameters -->
-      <Parameter name="RegressionOrder_SingleAssetOption(EQ)">6</Parameter>
-      <Parameter name="RegressionOrder_SingleAssetOption(FX)">6</Parameter>
-      <Parameter name="RegressionOrder_SingleAssetOption(COMM)">6</Parameter>
-      <Parameter name="Engine_SingleAssetOptionBwd(EQ)">FD</Parameter>
-      <Parameter name="Engine_SingleAssetOptionBwd(FX)">FD</Parameter>
-      <Parameter name="Engine_SingleAssetOptionBwd(COMM)">FD</Parameter>
-      <Parameter name="Engine_SingleUnderlyingIrOption">FD</Parameter>
-      <Parameter name="useAD_MultiAssetOptionAD(EQ)">true</Parameter>
-      <Parameter name="useAD_MultiAssetOptionAD(FX)">true</Parameter>
-      <Parameter name="useAD_MultiAssetOptionAD(COMM)">true</Parameter>
-      <!-- MultiUnderlyingIrOption -->
-      <!-- IrHybrid(EQ) -->
-      <!-- IrHybrid(FX) -->
-      <!-- IrHybrid(COMM) -->
+      <!-- cg, ad, external device settings -->
+      <Parameter name="UseCG">false</Parameter>
+      <Parameter name="UseAD">false</Parameter>
+      <Parameter name="UseExernalComputeDevice">false</Parameter>
+      <Parameter name="UseDoublePrecisionForExternalCalculation">true</Parameter>
+      <Parameter name="ExternalDeviceCompatibilityMode">false</Parameter>
+      <!-- Heston specific -->
+      <Parameter name="Heston.CalibrationMethod">PiecewiseBestFit</Parameter>
+      <Parameter name="Heston.CalibrationExpiries">3M</Parameter>
+      <Parameter name="Heston.CalibrationVarianceTerms">1M, 2M, 3M, 6M, 9M, 1Y</Parameter>
+      <Parameter name="Heston.InitialValues">0.04, 1.0, 0.5, -0.5, 0.04</Parameter> 
+      <Parameter name="Heston.FixedValues">N, N, N, N, N</Parameter>                
+      <Parameter name="Heston.RelaxedFellerConstraint">0.25</Parameter>             
+      <Parameter name="Heston.MaxCalibrationAttempts">0</Parameter>
+      <Parameter name="Heston.MaximumInitialValues">0.1, 20, 3, 0.9, 0.1</Parameter> 
+      <Parameter name="Heston.EarlyExitThreshold">0.005</Parameter>
+      <Parameter name="Heston.MaxAcceptableError">0.01</Parameter>
+      <Parameter name="Heston.ProcessDiscretization">QuadraticExponential</Parameter>
+      <Parameter name="Heston.QuantoProcessDiscretization">FullTruncation</Parameter>
+      <Parameter name="Heston.QuantoTimeStepsPerYear">100</Parameter>
+      <Parameter name="Heston.Debug">true</Parameter>
     </EngineParameters>
   </Product>
 \end{minted}
@@ -71,83 +92,185 @@ An example pricing engine configuration looks as follows.
 The model parameters have the following meaning:
 
 \begin{itemize}
-\item Model: The model to be used. Currently BlackScholes, LocalVolDupire, LocalVolAndreasenHuge, GaussianCam are
-  supported
+\item Model: The model to be used. Currently BlackScholes, LocalVolDupire, LocalVolAndreasenHuge, GaussianCam and
+  Heston are supported.
 \item BaseCcy: The default base ccy for the model. See \ref{baseccy_determination} for the way the base ccy is
   determined for a model.
 \item EnforceBaseCcy: Enforce the base ccy from the model settings to be used, see \ref{baseccy_determination} for more
   details.
-\item FullDynamicFx: by default, dynamic fx processes are generated only for FX indices on which the script explicitly
-  depends; if this parameter is true, dynamic fx processes are also generated for payment and equity / commodity ccys
-  not equal to the base ccy of the model or any of the currencies covered by those FX indices; if the parameter is false
-  on the other hand zero volatility paths are assumed for these additional ccys
+\item GridCoarsening: See \ref{grid_coarsening}.
 \item FullDynamicIr: by default, dynamic ir processes are generated only for currencies of the IR indices on which the
   script depends; if the parameter is true, dynamic ir processes are also generated for currencies from fx indices, and
   payment and equity / commodity ccys not equal to the base ccy of the model; if the parameter is false zero volatility
   paths are assumed for these ccys
-\item InfModelType: Optional, defaults to ``DK''. For the GaussianCam model two flavours of inflation models are
-  avaiable, Dodgson-Kainth (``DK'') and Jarrow-Yildrim (``JY''). This parameter selects the flavour to use. Only applies
-  to model = GaussianCam
-\item ReferenceCalibrationGrid: If given, only one calibration point per defined interval will be used (to avoid
+\item FullDynamicFx: by default, dynamic fx processes are generated only for FX indices on which the script explicitly
+  depends; if this parameter is true, dynamic fx processes are also generated for payment and equity / commodity ccys
+  not equal to the base ccy of the model or any of the currencies covered by those FX indices; if the parameter is false
+  on the other hand zero volatility paths are assumed for these additional ccys
+\item Calibration [Optional]: Deal or ATM. For Deal the calibration spec of a script is used to calibrate a model. For
+  ATM an ATM calibration is used. Optional, defaults to Deal.
+\item ReferenceCalibrationGrid [Optional]: If given, only one calibration point per defined interval will be used (to avoid
   oscillations in the calibrated model volatility function or also to improve the calibration speed), only applicable to
-  model = GaussianCam
-\item Calibration: Deal or ATM. For Deal the calibration spec of a script is used to calibrate a model. For ATM an ATM
-  calibration is used. Optional, defaults to Deal.
+  model = GaussianCam, LocalVolAndreasenHuge
+\item Correlation [Optional]: overwrite model correlation, the parameter label may contain a product tag and lookup names,
+  separated by underscore.
+\item IrVolatilityType [Optional]: volatility type used for IR LGM components, one of ``Hagan'', ``HullWhite'', default is
+  ``Hagan'', parameter label may contain product tag and model ccy.
+\item IrReversion [Optional]: ir reversion value, parameter label may contain product tag and ccy.
+\item InfModelType [Optional]: defaults to ``DK''. For the GaussianCam model two flavours of inflation models are
+  available, Dodgson-Kainth (``DK'') and Jarrow-Yildrim (``JY''). This parameter selects the flavour to use. Only applies
+  to model = GaussianCam
+\item InfDkVolatility [Optional]: the volatility of the INF DK model, defaults to $0.0050$, parameter label may contain
+  product tag and inf index name
+\item InfJyTimes [Optional]: if given, JY real rate and index vols are fixed w.r.t. this time grid and not calibrated,
+  parameter label may contain product tag and inf index name
+\item InfJyRealRateVol [Optional]: if InfJyTimes are given, the list of fixed real rate vols, parameter label may
+  contain product tag and inf index name
+\item InfJyIndexVol [Optional]: if InfJyTimes are given, the list of fixed index vols, parameter label may
+  contain product tag and inf index name
+\item InfJyRealRateReversion [Optional]: if InfJyTimes are given, the fixed value for real rate reversion (single
+  number), parameter label may contain product tag and inf index name
+\item InfJyRealToNominalVolRatio [Optional]: if InfJyTimes are not given, real rate vol is set to a constant ratio to
+  the (calibrated) ir vol, defaults to $1$ if not given, parameter label may contain product tag and inf index name
 \end{itemize}
 
 The engine parameters have the following meaning:
 
 \begin{itemize}
-\item Engine: The engine to be used. Currently MC and FD is supported.
+\item Engine: The engine to be used. Currently MC and FD is supported (for Heston only MC is supported).
 \item Samples: The number of MC samples used. Only relevant for Engine = MC.
 \item StateGridPoints: The number of grid points in state direction. Only relevant for Engine = FD.
-\item MesherEpsilon: The FD mesher epsilon, optional, defaults to 1E-4.
-\item MesherScaling: The FD mesher scaling factor, optional, defaults tp 1.5.
-\item MesherConcentration: The FD mesher concentration parameter, optional, defaults to 0.1
-\item MesherMaxConcentrationPoints: The maximum number of mesher concentration points to use, optional, defaults to
-  9999, in which all calibration strikes from a script are used. For 1 only the first strike from the list is used, for
-  2 the first two strikes, etc.
-\item MesherIsStatic: If true, the mesher is built only once and reused under scenario / sensitivity computations. If
-  false, the mesher is rebuilt for each repricing. Optional, defaults to false. For sensitivity runs it should be set to
-  true.
+\item VarianceStateGridPoints: The number of grid points in the variance state direction. Only relevant for Engine = FD and Model = Heston.
+\item MesherEpsilon [Optional]: The FD mesher epsilon, optional, defaults to 1E-4.
+\item MesherScaling [Optional]: The FD mesher scaling factor, optional, defaults tp 1.5.
+\item MesherConcentration [Optional]: The FD mesher concentration parameter, optional, defaults to 0.1
+\item MesherMaxConcentrationPoints [Optional]: The maximum number of mesher concentration points to use, optional,
+  defaults to 9999, in which all calibration strikes from a script are used. For 1 only the first strike from the list
+  is used, for 2 the first two strikes, etc.
+\item MesherIsStatic [Optional]: If true, the mesher is built only once and reused under scenario / sensitivity
+  computations. If false, the mesher is rebuilt for each repricing. Optional, defaults to false. For sensitivity runs it
+  should be set to true. Defaults to false.
 \item RegressionOrder: The order of the polynomial basis to compute conditional expectations via regression
   analysis. Applies to MC only.
-\item SequenceType: The sequence type used for pricing. Defaults to SobolBrownianBridge. Possible values
-  SobolBrownianBridge, Burley2020SobolBrownianBridge, MersenneTwister, MersenneTwisterAnithetic, Sobol,
+\item SequenceType [Optional]: The sequence type used for pricing. Defaults to SobolBrownianBridge. Possible values
+  SobolBrownianBridge, Burley2020\-Sobol\-Brownian\-Bridge, MersenneTwister, MersenneTwisterAnithetic, Sobol,
   Burley2020Sobol. Applies to MC only.
-\item PolynomType: The polynom type used for regression analysis. Defaults to Monomial. Possible values Monomial,
-  Laguerre, Hermite, Hyperbolic, Legendre, Chebyshev, Chebychev2nd. Applies to MC only.
-\item TrainingSamples: If given, pricing and training are separate phases and traning phase is using this number of
-  samples. Notice that NPVMEM() should be used to reuse regression coefficients from the training phase in the pricing
-  phase. Applies to MC only.
-\item TrainingSeed: The seed used for rng in training phase. Only applies if TrainingSamples are given (and thus
-  training and pricing phases are separate). Defaults to 43. Applies to MC only.
-\item TrainingSequenceType: The sequence type used for training. Only applies if TrainingSamples are given (and thus
-  training and pricing phases are separate). See SequenceType for possible values. Defaults to MersenneTwister. Applies
-  to MC only.
-\item SobolOrdering: Sobol sequence ordering for brownian bridge. Defaults to Steps. Possible values Steps, Factors,
-  Diagonal. Applies to MC only.
-\item SobolDirectionIntegers: Sobol direction integers. Defaults to JoeKuoD7. Possible values Unit, Jaeckel,
+\item PolynomType [Optional]: The polynom type used for regression analysis. Defaults to Monomial. Possible values
+  Monomial, Laguerre, Hermite, Hyperbolic, Legendre, Chebyshev, Chebychev2nd. Applies to MC only.
+\item TrainingSamples [Optional]: If given, pricing and training are separate phases and traning phase is using this
+  number of samples. Notice that NPVMEM() should be used to reuse regression coefficients from the training phase in the
+  pricing phase. Applies to MC only.
+\item TrainingSeed [Optional]: The seed used for rng in training phase. Only applies if TrainingSamples are given (and
+  thus training and pricing phases are separate). Defaults to 43. Applies to MC only.
+\item TrainingSequenceType [Optional]: The sequence type used for training. Only applies if TrainingSamples are given
+  (and thus training and pricing phases are separate). See SequenceType for possible values. Defaults to
+  MersenneTwister. Applies to MC only.
+\item SobolOrdering [Optional]: Sobol sequence ordering for brownian bridge. Defaults to Steps. Possible values Steps,
+  Factors, Diagonal. Applies to MC only.
+\item SobolDirectionIntegers [Optional]: Sobol direction integers. Defaults to JoeKuoD7. Possible values Unit, Jaeckel,
   SobolLevitan, SobolLevitanLemieux, JoeKuoD5, JoeKuoD6, JoeKuoD7, Kuo, Kuo2, Kuo3. Applies to MC only.
-\item Seed: The seed for rng in pricing phase. Defaults to 42. Applies to MC only.
+\item Seed [Optional]: The seed for rng in pricing phase. Defaults to 42. Applies to MC only.
 \item TimeStepsPerYear: The number of time steps used to discretise the process. For 0 only the relevant simulation
   times are used. Otherwise at least the given number of step are used in the discretisation grid per year.
-\item CalibrationMoneyness: Moneyness of options used for smile calibration. Applies to the LocalVolAndreasenHuge model
-  only. The moneyness is defined as a ``standardised moneyness'' $\ln(K/F) / \sigma\sqrt{t}$ with $K$ strike, $F$ ATMF
+\item CalibrationMoneyness: Moneyness of options used for smile calibration. Applies to the LocalVolAndreasenHuge and
+  Heston models. The moneyness is defined as a ``standardised moneyness'' $\ln(K/F) / \sigma\sqrt{t}$ with $K$ strike, $F$ ATMF
   forward, $\sigma$ ATMF market vol, $t$ option time to expiry
 \item BootstrapTolerance: tolerance for calibration bootstrap, only applies to model = GaussianCam
+\item IncludePastCashflows [Optional]: if true, LOGPAY() will generate cashflow information for pay dates on or before
+  the reference date. Optional, defaults to false.
+\item StaticNpvMem [Optional]: if true, NPVMEM() will trigger a single calibration for the lifetime of a pricing engine,
+  i.e. the regression model will e.g. be kept constant across sensitivity or stress scenarios. If false (default), the
+  regression model will be retrained on each calculation of the pricing engine. Howoever, notice that an AMC calculation
+  will always use the regression model from the main engine calculation if NPVMEM() is used.
+\item RegressionVarianceCutoff [Optional]: Optional. Only relevant for MC models. If given, a coordinate transform and
+  (possibly) a factor reduction is applied to the regressors used for conditional expectation calculation, such that
+  $1-\epsilon$ of the total variance of regressors is kept, where $\epsilon$ the given parameter. This helps dealing
+  with collinearity and also reducing the dimnensionality of the regression model.
 \item Interactive: If true an interactive session is started on script execution for debugging purposes; should be false
   except for debugging purposes
-\item UseAD: If true and RunType in the global pricing engine parameters is SensitivityDelta, a first order pnl
-  expansion using AD sensitivities is used to compute scenario NPVs.
-\item UseCG: If true a computation graph is used to price trades instead of the runtime interpreter . If UseAD or
-  UseExternalComputingDevice is true, this implies that UseCG is true irrespective of how it is configured.
-\item UseExternalComputingDevice: If true and RunType is not NPV (generating additional results) and AD sensitivities
-  are {\em not} used, an external compute device is used for the calculations.
-\item ExternalComputeDevice: The external compute device to use if UseExternalComputingDevice is effective.
+\item UseAD [Optional]: If true and RunType in the global pricing engine parameters is SensitivityDelta, a first order
+  pnl expansion using AD sensitivities is used to compute scenario NPVs. Defaults to false.
+\item UseCG [Optional]: If true a computation graph is used to price trades instead of the runtime interpreter . If
+  UseAD or UseExternalComputingDevice is true, this implies that UseCG is true irrespective of how it is
+  configured. Defaults to false.
+\item UseExternalComputingDevice [Optional]: If true and RunType is not NPV (generating additional results) and AD
+  sensitivities are {\em not} used, an external compute device is used for the calculations. Defaultsto false.
+\item UseDoublePrecisionForExternalCalculation [Optional]: Use double precision for external computations. Defaults to
+  false.
+\item ExternalDeviceCompatibilityMode [Optional]: Only applies if UseCG is enabled. Defaults to false. If enabled,
+  random number generation for internal calculations using the CG is aligned as closely as possible with what is usually
+  implemented for external calculations, i.e. if enabled, the MersenneTwister random number generation is done in
+  step-dimension-path order. If disabled, the ``classic'' order path-step-dimension is used.
+\item ExternalComputeDevice [Optional]: The external compute device to use if UseExternalComputingDevice is effective.
+\item SalvagingAlgorithm [Optional]: If the correlation matrix is not positive semi definite, an approximation of the
+  pseudo square root using asalvaging algorithm can be used.The SalvagingAlgorithm tag chooses this algorithm with the
+  following allowable values: None, Spectral, Hypersphere, LowerDiagonal or Highham. Defaults to Spectral.
+\item IndicatorSmoothingForValues [Optional]: smoothing parameter (according to Fries methodology, 2017, ``epsilon'')
+  applied to indicator functions in cg-based runs for values calculation. Defaults to $0$.
+\item IndicatorSmoothingForDerivatives: as above, smoothing parameter for derivatives calculation. Defaults to $0.2$.
+\item ZeroVolatility [Optional]: enforce zero volatility in model SDEs, default is false
+\item Heston-specific parameters [Optional]:
+  \begin{itemize}
+  \item Heston.CalibrationMethod: Choices are ``None'', ``ConstantBestFit'', ``PiecewiseBestFit'', ``PiecewiseBootstrap''. \\
+    ``None'' means no calibration, the initial parameter values are used; \\
+    ``ConstantBestFit'' means calibration of the Heston model with constant parameters only, possibly with restarts (see Heston.MaxCalibrationAttempts below); \\
+    ``PiecewiseBestFit'' means running the former first, followed by a calibration with piecewise constant $\sigma(t)$ and $\rho(t)$
+    Heston parameters for more flexibility in matching several expiries, the other parameters are kept fixed at the previous
+    ``ConstantBestFit'' results; \\
+    ``PiecewiseBootstrap'' is a variation of the former approach with a sequence of calibrations with piecewise constant
+    $\sigma(t)$ and $\rho(t)$, where each calibration in the sequence optimises one expiry or smile section at a time. \\
+    Default: ``ConstantBestFit''
+  \item Heston.CalibrationExpiries [Optional]: Comma-separated list of option expiry terms, will be used for Heston model calibration if provided.
+    Otherwise we use the effective simulation dates to determine calibration option expiries. \\
+    Default: empty list
+  \item Heston.CalibrationVarianceTerms [Optional]: Comma-separated list of terms where annualised variances are computed from the provided
+    option volatility surface; these are used for an initial guess of model parameters $\theta$, $\kappa$ and $v_0$. \\
+    Can be left blank which means we skip this step of generating initial guesses. \\
+    Default: empty list
+  \item Heston.InitialValues [Optional]: Initial values for the five (constant) model parameters in order $\theta$, $\kappa$, $\sigma$,
+    $\rho$, $v_0$. \\
+    Default: $0.04, 1.0, 0.5, -0.5, 0.04$
+  \item Heston.FixedValues [Optional]: Comma-separated list of booleans to indicate which of the five parameters above shall be kept
+    fixed in the ``ConstantBestFit'' calibration (see below), same order as the parmeters above. \\
+    Default: none fixed, i.e. ``N, N, N, N, N''
+  \item Heston.RelaxedFellerConstraint [Optional]: Constraint on $2\kappa\theta/\sigma^2$ to be used in the ``ConstantBestFit''
+    calibration, to be chosen in $[0,1]$; 1 means original Feller constraint, 0 means no constraint, anything in between
+    can be chosen representing a somewhat relaxed Feller constraint. \\
+    Default: 0.25 
+  \item Heston.MaxCalibrationAttempts [Optional]: If set to zero, we calibrate the Heston
+    parameters once (except for fixed parameters, see above), starting from the initial values/guesses; if positive,
+    we perform several calibrations as specified by ``Heston.MaxCalibrationAttempts'' with randomised initial values, keeping the best result. \\
+    Default: 0
+  \item Heston.MaximumInitialValues [Optional]: When using Heston.MaxCalibrationAttempts $>$ 0,  this comma-separated list specifies the range of the
+    initial values searched, in the order $\theta$, $\kappa$, $\sigma$, $\rho$, $v_0$. For $\theta$, $\kappa$, $\rho$,
+    the specified values are upper limits. For $\sigma$, we rather choose $\epsilon = 2\kappa\theta/\sigma^2$, given $\kappa$
+    and $\theta$, randomly between the relaxed Feller constraint (a value in (0,1]) and the specified upper limit ($>1$). \\
+    Default: $0.1, 20, 3, 0.9, 0.1$
+  \item Heston.EarlyExitThreshold [Optional]: When using HestonMaxCalibrationAttempts $>$ 0, exit the search when the calibration error
+    (root mean squared error of implied black volatilities) is below this tolerance. \\
+    Default: 0.005
+  \item Heston.MaxAcceptableError [Optional]: Log an error message if the (best) calibration error exceeds this value.\\
+    Default: 0.05
+  \item Heston.ProcessDiscretization [Optional]: Choice of the HestonProcess discretization (PartialTruncation, FullTruncation,
+    Reflection, NonCentral\-Chi\-SquareVariance, Quadratic\-Exponential, Quadratic\-Exponential\-Martingale,
+    Broadie\-Kaya\-Exact\-SchemeLobatto, Broadie\-Kaya\-Exact\-SchemeLaguerre, BroadieKayaExactSchemeTrapezoidal). \\
+    Default: QuadraticExponential
+  \item Heston.QuantoProcessDiscretization [Optional]: Choice of the HestonProcess discretization in case the indices contain
+    at least one that needs a quanto adjustment \\
+    Default: Use the value of HestonProcessDiscretization above, if missing
+  \item Heston.QuantoTimeStepsPerYear: The number of time steps used in case the indices contain
+    at least one that needs a quanto adjustment, i.e. the HestonQuantoProcessDiscretization might need a finer grid than
+    Heston.ProcessDiscretization \\
+    Default: Use the value of TimeStepsPerYear above, if missing
+  \item Heston.Debug [Optional]: If set to true or Y, we generate a report (assetmodel\_paths.csv) that contains the spot price realisations
+    across all indices, effective simulation dates and MC samples for each trade; moreover we perform additional consistency
+    checks during Heston path generation. \\
+    Default: false
+  \end{itemize}
 \end{itemize}
 
-\subsection{Product Tags und pricing engine configuration}\label{producttags_engineconfig}
+
+\subsection{Product Tags, trade types, additional qualifiers in the pricing engine configuration}\label{producttags_engineconfig}
 
 All parameters in the pricing engine configuration can be differentiated by product tags, see \ref{scriptNode} for how
 to add these to a script definition. If a script has a product tag \verb+TAG+ assigned, parameters with suffix
@@ -183,6 +306,39 @@ meant to mark scripts that are suitable for AAD sensitivity computations.
   \label{tab:producttag}
 \end{table}
 
+In addition to product tags, the trade type and for some parameters an additional qualifier can be used. The trade type
+is usually just ScriptedTrade, but for wrapped scripted trades, the trade type can be set to a different value, an
+example is the FxAccumulator trade type. Examples for additional qualifiers are index name pairs to overwrite
+correlations, a currency for the IrVolatilityType parameter, an inflation index name for InfDkVolatility, InfJyTimes,
+InfJyRealRateVol, InfJyIndexVol, InfJyRealRateReversion, InfJyRealToNominalVolRatio. The full waterfall of the parameter
+lookup in the presence of a product tag, trade type and additional qualifier is given by
+
+\begin{itemize}
+\item productTag\_tradeType\_addQualifier
+\item productTag\_addQualifier
+\item tradeType\_addQualifier
+\item addQualifier
+\item productTag\_tradeType
+\item productTag
+\item tradeType
+\end{itemize}
+
+As an example, assume we have a productTag = SingleAssetOption(EQ), tradeType = EqAccumulator, addQualifier =
+RIC:.SPX\_FX-GENERIC-EUR-USD. Then the Correlation parameter (overwriting correlations given as market data) is looked
+up in the following order:
+
+\begin{itemize}
+\item Correlation\_SingleAssetOption(EQ)\_EqAccumulator\_RIC:.SPX\_FX-GENERIC-EUR-USD
+\item Correlation\_SingleAssetOption(EQ)\_RIC:.SPX\_FX-GENERIC-EUR-USD
+\item Correlation\_EqAccumulator\_RIC:.SPX\_FX-GENERIC-EUR-USD
+\item Correlation\_RIC:.SPX\_FX-GENERIC-EUR-USD
+\item Correlation\_SingleAssetOption(EQ)\_EqAccumulator
+\item Correlation\_SingleAssetOption(EQ)
+\item Correlation\_EqAccumulator
+\end{itemize}
+
+Note: This example is fairly complicated, typical real-world use cases will have a much simpler form.
+
 \subsection{BlackScholes model}\label{blackscholes}
 
 Models black scholes processes for EQ, FX, COMM underlyings. The strike slice of the input volatility is chosen as ATMF
@@ -214,7 +370,143 @@ Calibration strike specifications (see \ref{calibration}) are not relevant for t
 See \ref{pricingengine_config} for the impact of the model parameter FullDynamicFx on the model setup.
 
 \smallskip
-Available Engine types: MC
+Available Engine types: MC, FD
+
+\subsection{Heston model}
+
+We model Heston processes
+\begin{align*}
+dS &= \mu\,S\,dt + \sqrt{V}\,S\,dW \\
+dV &= \kappa\,(\theta - V)\,dt + \sigma\,\sqrt{V}\,dZ \\
+dW\,dZ &= \rho\,dt
+\end{align*}
+for underlyings EQ, COM, or FX, with drifts $\mu$ chosen such that we match forward prices/rates.
+
+We first describe the case with constant (time-independent) parameters $\theta$, $\kappa$, $\sigma$,
+$\rho$ and $v_0=V(0)$. The case of time-dependent parameters (except for constant $v_0$) is covered at
+the end of this Heston Model section.
+
+\subsubsection*{Calibration}
+
+Each Heston model is calibrated to a section of the vo\-la\-ti\-lity surface,
+specified in terms of option expiries and log-moneyness in smile-direction, i.e. strike prices 
+$$
+K = K_{atm} \times \exp\left(\mbox{moneyness}\times\sigma_{atm}\times\sqrt{\mbox{time-to-expiry}}\right)
+$$
+with at-the-money forward $K_{atm}$ and volatility $\sigma_{atm}$ for the given option expiry.
+
+We currently support two calibration approaches:
+
+\begin{enumerate}
+\item Two-Step Approach:
+  \begin{itemize}
+  \item Fit $\theta$, $\kappa$ and $v_0$ to the variance curve, currently computed from the volatility surface
+    using functionality in the replication variance swap engine in Quant\-Ext (summing option prices across the
+    smile section), and using a simple analytic expression for the Heston-model-implied expected variance.
+  \item Use the above as reasonable initial values for a least-squares fit of all five model pa\-ra\-me\-ters,
+    using a gradient search (Levenberg Marquardt)
+  \end{itemize}
+\item Randomised Initial Values: Here we generate random initial values and perform multiple calibrations
+  using gradient search, keeping the best result. 
+\end{enumerate}
+
+\subsubsection*{Multi-Asset Process Correlation Structure}
+
+For the multi-asset Heston process we need to specify a correlation matrix that covers all stochastic processes
+involved, as in the case of Black-Scholes. The new challenge with multiple Heston processes is that each Heston
+model comes with two processes. In addition to the exogeneous spot-spot correlations (e.g. estimated from
+historical data), we have "internal" Heston model spot-variance correlations (fixed by calibration), and so far
+unspecified spot-variance and variance-variance correlations across the Heston models for different assets.
+We set those following the ``parismonious'' approach in \cite{dimitroff_2011},
+with partial independence assumption for the spot-variance and variance-variance correlations across Heston
+processes, i.e. a dependence structure across models that is induced by the spot-spot correlations $r_{ij}$
+across models, with 2-d block matrices $C_i$ along the diagonal and $C_{ij}$ off-diagonal within the large
+correlation matrix covering all processes:
+$$       
+C_i =\left(\begin{array}{cc} 1 & \rho_i \\ \rho_i & 1 \end{array} \right)
+       \qquad
+C_{ij} = r_{ij}\:\left(\begin{array}{cc} 1 & \rho_j \\ \rho_i & \rho_i \,\rho_j \end{array}\right)
+$$
+With this setup we can generate properly correlated random variates to drive all processes.
+
+\subsubsection*{Decorrelate for QuantLib's Heston Process}
+
+However, we use QuantLib's Heston process implementation, that expects two independent Wiener process increments
+$dW_{1,2}$ which are turned into correlated increments internally. How this is done depends on the chosen
+Heston discretisation: The ``simple'' {\em FullTruncation}, {\em PartialTruncation} and
+{\tt Reflection} schemes construct correlated variates using the lower triangular decomposition of the
+correlation matrix, $d\widetilde W_1=dW_1$ and $d\widetilde W_2=\rho\, dW_1 + \sqrt{1-\rho^2}\,dW_2$, or
+$$
+d\widetilde W = Q_L\:dW\qquad\mbox{with}\qquad
+Q_L = \left(\begin{array}{cc} 1 & 0 \\ \rho_i & \sqrt{1-\rho_i^2} \end{array} \right).
+$$
+The more complex {\em Brodie-Kaya} and {\em QuadraticExponential} schemes use the upper triangular
+decomposition instead, i.e. 
+$$
+d\widetilde W = Q_U\:dW \qquad\mbox{with}\qquad
+Q_U = \left(\begin{array}{cc} \sqrt{1-\rho_i^2} & \rho_i \\ 0 & 1 \end{array} \right).
+$$
+Starting with properly correlated increments $d\widetilde W$ generated by the ``outer'' multi-asset
+process, we need to ``decorrelate'' $d\widetilde W$ such that the follwing ``Heston-internal''
+correlation procedure recovers $d\widetilde W$, i.e. by applying the appropriate inverse
+matrix $Q_{L,U}^{-1}$
+$$
+dW = Q_{L,U}^{-1}\: d\widetilde W \qquad\mbox{so that}\qquad Q_{L,U} dW = Q_{L,U}Q^{-1}_{L,U} d\widetilde W = d\widetilde W
+$$
+with
+$$
+Q_L^{-1} = \left(\begin{array}{cc} 1 & 0 \\ \frac{-\rho}{\sqrt{1-\rho^2}} & \frac{1}{\sqrt{1-\rho^2}}\end{array} \right)  \qquad\mbox{respectively}\qquad
+Q_U^{-1} = \left(\begin{array}{cc} \frac{1}{\sqrt{1-\rho_i^2}} & \frac{-\rho}{\sqrt{1-\rho_i^2}} \\ 0 & 1 \end{array} \right).
+$$
+
+\subsubsection*{Foreign EQ/COM Drift Adjustments}
+
+For EQ/COM indices denoted in a currency other than base/domestic, the system of processes will
+contain at least one FX index that converts from that foreign into domestic/base currency of the calculation,
+which is also modelled with a Heston process. 
+The change of measure from the foreign equity's currency into domestic currency then causes drift adjustments
+in the foreign equity's Heston process \cite{cesarini_2014, stackexchange_40521},
+\begin{align*}
+  \mu(t) &\rightarrow \mu(t) - \rho_{SX}\:\sqrt{V(t)}\:\sqrt{V_X(t)} \\
+  \kappa\,\theta &\rightarrow \kappa\,\theta - \rho_{VX}\: \sigma\:\sqrt{V(t)}\:\sqrt{V_X(t)} 
+\end{align*}
+where $\rho_{SX}$ is the correlation between the EQ/COM spot price process and the FX spot process,
+$\rho_{VX} = \rho_{SX}\,\rho$ the correlation between variance process and FX (see above), and $V_X(t)$
+is the stochastic variance of the FX process. The negative signs of the adjustments are consistent with
+an FX quotation that converts foreign amounts into domestic currency by multiplication (the exchange rate
+is the value of 1 unit of foreign currency expressed in domestic currency). The inverse quotation would require
+flipping the signs. Note that the variance drift adjustment has the potential, depending on the sign of correlations,
+to push the variance process towards the boundary $V=0$, especially when working with relaxed Feller constraints
+-- to be controlled in the implementation of the variance process.
+
+If we set the {\tt FullDynamicFx} parameter in the pricing engine configuration to false, then our FX processes
+are deterministic (zero volatility), and the adjustments vanish.
+
+\medskip
+Available Engine types: MC, FD
+
+\medskip
+Limitations:
+\begin{itemize}
+\item The FD implementation can only handle single assets
+\item The quanto adustment in the MC implementation is applied on top of the discretization scheme chosen for the
+  underlying Heston process; if the adjustment leads to a negative variance, then this is truncated to variance = 0.
+\end{itemize}
+
+\subsubsection*{Time-dependent Parameters}
+
+While $v_0$ is still a constant parameter, we assume here that the remaining parameters $\theta(t)$, $\kappa(t)$,
+$\sigma(t)$ and $\rho(t)$ have a piecewise constant time-dependence with step times chosen to match the expiry
+times of the calibration options. This gives the model more flexibility to match each smile section. 
+
+The calibration process starts with a constant-parameter calibration though. The parameter results from this step
+are then used as initial values for the subsequent calibration with time-dependent parameters.
+The piecewise calibration step varies $\sigma(t)$ and $\rho(t)$ only in the current implementation in ORE,
+while the other parameters are actually kept constant at the previous step's results.
+
+Note that the generalisation to piecewise constant model parameters means that the multi-asset correlation matrices and
+sub-system decorrelation matrices have a piecewise constant time-dependence as well and need to be constructed for each segment
+of $\rho(t)$. 
 
 \subsection{GaussianCam models}
 
@@ -224,11 +516,12 @@ forward swap rate. Furthermore,
 
 \begin{itemize}
 \item For IR processes a strip of atm coterminal swaptions is used for the model calibration.
-\item For INF processes a strip of atm CPI cap/floors is used for the model calibration. For DK the reversion is
-  calibrated and the volatility is fixed at $0.00050$. For JY the index volatility is calibrated. The reversion of the
-  real rate process is fixed at $0$ and the volatility at $0.0030$. The real rate process is assumed to be uncorrelated
-  to the nominal rate and index process within the JY model, and also to all other IR, EQ, FX, COMM processes in the
-  model.
+\item For INF processes a strip of CPI cap/floors is used for the model calibration (strike read from calibration data,
+  see \ref{Calibration}). For DK the reversion is calibrated and the volatility is fixed (given as InfDkVolatility model
+  parameter). For JY the real rate volatility is set to a ratio of the nominal rate volatility (model parameter
+  InfJyRealToNominalVolRatio) and the index volatility is calibrated to the strip of CPI cap/floors. The reversion of
+  the real rate process is fixed (model parameter InfJyRealRateReversion). For JY the model parameters can also be fixed
+  (model parameter InfJyTimes is given along with InfJyRealRateVol, InfJyIndexVol, InfJyRealRateReversion).
 \end{itemize}
 
 Calibration strike specifications (see \ref{calibration}) are not yet supported by this model.
@@ -314,7 +607,7 @@ falls back to ATMF, meaning that ATMF instruments (coterminals for IR) are used 
     </Script>
 \end{minted}
 
-The node CalibrationSpec can have one subnode Calibration per Index occuring in the script. For each index a list of
+The node CalibrationSpec can have one subnode Calibration per Index occurring in the script. For each index a list of
 calibration strikes can be specified. The list should start with the most important calibration strike and continue with
 strikes of decreasing importance. In the example (which could be a typcial setup for barrier option) the most important
 strike is given by the Strike variable and a secondary strike is given by the KnockOutLevel.
@@ -323,7 +616,7 @@ The usage of the calibration strikes is twofold:
 
 \begin{itemize}
 \item For the determination of calibration strikes. This is only relevant / supported by the BlackScholes and
-  GaussianCam-FD model, which will use the first strike from the list to read the volatility from the market term
+  GaussianCam(-FD) model, which will use the first strike from the list to read the volatility from the market term
   structure (if Calibration is set to Deal in the model parameters).
 \item To determine concentration points for an FD mesher if \verb+Engine+ is set to \verb+FD+. The first $n$ strikes are
   used as concentration points where $n$ is the minimum of specified strikes and the engine parameter

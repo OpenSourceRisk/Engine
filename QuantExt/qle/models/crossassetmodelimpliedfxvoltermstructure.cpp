@@ -25,11 +25,11 @@
 namespace QuantExt {
 
 CrossAssetModelImpliedFxVolTermStructure::CrossAssetModelImpliedFxVolTermStructure(
-    const boost::shared_ptr<CrossAssetModel>& model, const Size foreignCurrencyIndex, BusinessDayConvention bdc,
+    const QuantLib::ext::shared_ptr<CrossAssetModel>& model, const Size foreignCurrencyIndex, BusinessDayConvention bdc,
     const DayCounter& dc, const bool purelyTimeBased)
     : BlackVolTermStructure(bdc, dc == DayCounter() ? model->irlgm1f(0)->termStructure()->dayCounter() : dc),
       model_(model), fxIndex_(foreignCurrencyIndex), purelyTimeBased_(purelyTimeBased),
-      engine_(boost::make_shared<AnalyticCcLgmFxOptionEngine>(model_, foreignCurrencyIndex)),
+      engine_(QuantLib::ext::make_shared<AnalyticCcLgmFxOptionEngine>(model_, foreignCurrencyIndex)),
       referenceDate_(purelyTimeBased ? Null<Date>() : model_->irlgm1f(0)->termStructure()->referenceDate()) {
 
     registerWith(model_);
@@ -55,7 +55,7 @@ Real CrossAssetModelImpliedFxVolTermStructure::blackVarianceImpl(Time t, Real st
 
     Option::Type type = tmpStrike >= atm ? Option::Call : Option::Put;
 
-    boost::shared_ptr<StrikedTypePayoff> payoff = boost::make_shared<PlainVanillaPayoff>(type, tmpStrike);
+    QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff = QuantLib::ext::make_shared<PlainVanillaPayoff>(type, tmpStrike);
 
     Real premium = engine_->value(relativeTime_, relativeTime_ + t, payoff, domDisc, atm);
 

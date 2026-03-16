@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <orea/app/inputparameters.hpp>
 #include <orea/app/marketdatainmemoryloader.hpp>
 #include <qle/termstructures/optionpricesurface.hpp>
 
@@ -25,29 +26,30 @@ using QuantExt::OptionPriceSurface;
 namespace ore {
 namespace analytics {
 
-void MarketDataInMemoryLoaderImpl::loadCorporateActionData(boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+void MarketDataInMemoryLoaderImpl::loadCorporateActionData(QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                                                            const map<string, string>& equities) {
     // TODO
 }
 
 void MarketDataInMemoryLoaderImpl::retrieveMarketData(
-    const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+    const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
     const map<Date, set<string>>& quotes,
     const Date& relabelDate) {        
 
     if (inputs_->entireMarket()) {
-        loadDataFromBuffers(*loader, marketData_, std::vector<std::string>(), inputs_->implyTodaysFixings());
+        loadDataFromBuffers(*loader, marketData_, std::vector<std::string>(), inputs_->implyTodaysFixings(), inputs_->fixingCutOffDate());
     } else {
         QL_FAIL("MarketDataInMemoryLoaderImpl::retrieveMarketData() requires inputs_->entireMarket()");
     }
 }
 
-void MarketDataInMemoryLoaderImpl::retrieveFixings(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+void MarketDataInMemoryLoaderImpl::retrieveFixings(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
         map<string, RequiredFixings::FixingDates> fixings,
         map<pair<string, Date>, set<Date>> lastAvailableFixingLookupMap) {
     
     if (inputs_->allFixings()) {
-        loadDataFromBuffers(*loader, std::vector<std::string>(), fixingData_, inputs_->implyTodaysFixings());
+        loadDataFromBuffers(*loader, std::vector<std::string>(), fixingData_, inputs_->implyTodaysFixings(),
+                            inputs_->fixingCutOffDate());
     } else {
         QL_FAIL("MarketDataInMemoryLoaderImpl::retrieveFixings() requires inputs_->allFixings()");
     }

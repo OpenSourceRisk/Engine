@@ -65,6 +65,7 @@ public:
 
     const string& getBaseCalendar(const string& calname) const;
 
+    void addCalendars();
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 

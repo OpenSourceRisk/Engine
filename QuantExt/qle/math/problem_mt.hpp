@@ -69,7 +69,7 @@ using namespace QuantLib;
           methods in this class are *not* thread safe, namely
           reset, setCurrentValue, setFunctionValue, setGradientNormValue,
           i.e. those can not be used from several threads in a mt optimizer */
-        Problem_MT(const std::vector<boost::shared_ptr<CostFunction>>& costFunctions,
+        Problem_MT(const std::vector<QuantLib::ext::shared_ptr<CostFunction>>& costFunctions,
                 Constraint& constraint,
                 const Array& initialValue = Array())
         : costFunctions_(costFunctions), constraint_(constraint),
@@ -102,10 +102,10 @@ using namespace QuantLib;
         Integer availableCostFunctions() const { return costFunctions_.size(); }
 
         //! Cost function
-        boost::shared_ptr<CostFunction> costFunction(const Size i) const { return costFunctions_.at(i); }
+        QuantLib::ext::shared_ptr<CostFunction> costFunction(const Size i) const { return costFunctions_.at(i); }
 
         //! Cost funcionts
-        const std::vector<boost::shared_ptr<CostFunction>>& costFunctions() const { return costFunctions_; }
+        const std::vector<QuantLib::ext::shared_ptr<CostFunction>>& costFunctions() const { return costFunctions_; }
 
         void setCurrentValue(const Array& currentValue) {
             currentValue_=currentValue;
@@ -135,7 +135,7 @@ using namespace QuantLib;
 
       protected:
         //! Unconstrained cost function
-        std::vector<boost::shared_ptr<CostFunction>> costFunctions_;
+        std::vector<QuantLib::ext::shared_ptr<CostFunction>> costFunctions_;
         //! Constraint
         Constraint& constraint_;
         //! current value of the local minimum

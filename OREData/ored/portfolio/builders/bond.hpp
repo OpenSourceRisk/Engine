@@ -40,20 +40,15 @@
 namespace ore {
 namespace data {
 
-//! Engine Builder base class for Bonds
-/*! Pricing engines are cached by security id
-\ingroup builders
-*/
-
-class BondEngineBuilder : public CachingPricingEngineBuilder<string, const Currency&, const string&, const bool,
+class BondEngineBuilder : public CachingPricingEngineBuilder<string, const Currency&, const string&, const string&,
                                                              const string&, const string&> {
 protected:
     BondEngineBuilder(const std::string& model, const std::string& engine)
         : CachingEngineBuilder(model, engine, {"Bond"}) {}
 
-    virtual string keyImpl(const Currency& ccy, const string& creditCurveId, const bool hasCreditRisk,
-                           const string& securityId, const string& referenceCurveId) override {
-        return ccy.code() + "_" + creditCurveId + "_" + securityId + "_" + referenceCurveId;
+    virtual string keyImpl(const Currency& ccy, const string& creditCurveId, const string& securityId,
+                           const string& referenceCurveId, const string& incomeCurveId) override {
+        return ccy.code() + "_" + creditCurveId + "_" + securityId + "_" + referenceCurveId + "_" + incomeCurveId;
     }
 };
 
@@ -67,13 +62,21 @@ public:
     BondDiscountingEngineBuilder() : BondEngineBuilder("DiscountedCashflows", "DiscountingRiskyBondEngine") {}
 
 protected:
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const string& creditCurveId,
-                                                        const bool hasCreditRisk, const string& securityId,
-                                                        const string& referenceCurveId) override {
+    virtual QuantLib::ext::shared_ptr<PricingEngine>
+    engineImpl(const Currency& ccy, const string& creditCurveId, const string& securityId,
+               const string& referenceCurveId, const string& incomeCurveId) override {
 
-        string tsperiodStr = engineParameter("TimestepPeriod");
-        Period tsperiod = parsePeriod(tsperiodStr);
         Handle<YieldTermStructure> yts = market_->yieldCurve(referenceCurveId, configuration(MarketContext::pricing));
+
+        Handle<YieldTermStructure> income;
+        try {
+            income = market_->yieldCurve(incomeCurveId.empty() ? referenceCurveId : incomeCurveId,
+                                         configuration(MarketContext::pricing));
+        } catch (...) {
+            // fallback on ref curve
+            income = yts;
+        }
+
         Handle<DefaultProbabilityTermStructure> dpts;
         // credit curve may not always be used. If credit curve ID is empty proceed without it
         if (!creditCurveId.empty())
@@ -98,11 +101,17 @@ protected:
         } catch (...) {
         }
 
-        if (!hasCreditRisk) {
-            dpts = Handle<DefaultProbabilityTermStructure>();
-        }
+        bool includePastCashflows =
+            parseBool(engineParameter("IncludePastCashflows", {}, false, "false"));
 
-        return boost::make_shared<QuantExt::DiscountingRiskyBondEngine>(yts, dpts, recovery, spread, tsperiod);
+        bool spreadOnIncome = parseBool(engineParameter("SpreadOnIncomeCurve", {}, false, "true"));
+        bool treatSecuritySpreadAsCreditSpread =
+            parseBool(modelParameter("TreatSecuritySpreadAsCreditSpread", {}, false, "false"));
+        Period tsperiod = parsePeriod(engineParameter("TimestepPeriod", {}, false, "3M"));
+
+        return QuantLib::ext::make_shared<QuantExt::DiscountingRiskyBondEngine>(
+            yts, dpts, recovery, spread, tsperiod, QuantLib::ext::nullopt, includePastCashflows, income, true, spreadOnIncome,
+            treatSecuritySpreadAsCreditSpread);
     }
 };
 
@@ -117,10 +126,11 @@ public:
         : BondEngineBuilder("DiscountedCashflows", "DiscountingRiskyBondEngineMultiState") {}
 
 protected:
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const string& creditCurveId,
-                                                        const bool hasCreditRisk, const string& securityId,
-                                                        const string& referenceCurveId) override {
-        string tsperiodStr = engineParameter("TimestepPeriod");
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const string& creditCurveId,
+                                                                const string& securityId,
+                                                                const string& referenceCurveId,
+                                                                const string& incomeCurveId) override {
+        string tsperiodStr = engineParameter("TimestepPeriod", {}, false, "3M");
         Period tsperiod = parsePeriod(tsperiodStr);
         Handle<YieldTermStructure> yts = market_->yieldCurve(referenceCurveId, configuration(MarketContext::pricing));
         Handle<Quote> spread;
@@ -151,7 +161,7 @@ protected:
             } else {
                 boost::split(tokens, rule, boost::is_any_of(","));
                 QL_REQUIRE(tokens.size() == 2, "invalid rule: " << rule);
-                stateCreditCurveId = regex_replace(creditCurveId, std::regex(tokens[0]), tokens[1]);
+                stateCreditCurveId = std::regex_replace(creditCurveId, std::regex(tokens[0]), tokens[1]);
                 DLOG("Apply " << rule_s.str() << " => " << tokens[0] << " in " << creditCurveId << " yields state #"
                               << i << " creditCurve id " << stateCreditCurveId);
             }
@@ -161,7 +171,7 @@ protected:
             }
             Handle<DefaultProbabilityTermStructure> this_dpts;
             Handle<Quote> this_recovery;
-            if (!stateCreditCurveId.empty() && hasCreditRisk) {
+            if (!stateCreditCurveId.empty()) {
                 this_dpts = market_->defaultCurve(stateCreditCurveId, configuration(MarketContext::pricing))->curve();
                 this_recovery = market_->recoveryRate(stateCreditCurveId, configuration(MarketContext::pricing));
             }
@@ -172,7 +182,7 @@ protected:
         if (i == 0) {
             Handle<DefaultProbabilityTermStructure> this_dpts;
             Handle<Quote> this_recovery;
-            if (!creditCurveId.empty() && hasCreditRisk) {
+            if (!creditCurveId.empty()) {
                 this_dpts = market_->defaultCurve(creditCurveId, configuration(MarketContext::pricing))->curve();
                 this_recovery = market_->recoveryRate(creditCurveId, configuration(MarketContext::pricing));
             }
@@ -185,9 +195,31 @@ protected:
         QL_REQUIRE(mainResultState != Null<Size>(),
                    "BondMultiStateEngineBuilder: No main state found for " << securityId << " / " << creditCurveId);
         // return engine
-        return boost::make_shared<QuantExt::DiscountingRiskyBondEngineMultiState>(yts, dpts, recovery, mainResultState,
+        return QuantLib::ext::make_shared<QuantExt::DiscountingRiskyBondEngineMultiState>(yts, dpts, recovery, mainResultState,
                                                                                   spread, tsperiod);
     }
+};
+
+class CamAmcBondEngineBuilder : public BondEngineBuilder {
+public:
+    CamAmcBondEngineBuilder(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam,
+                            const std::vector<Date>& simulationDates, const std::vector<Date>& stickyCloseOutDates)
+        : BondEngineBuilder("CrossAssetModel", "AMC"), cam_(cam), simulationDates_(simulationDates),
+          stickyCloseOutDates_(stickyCloseOutDates) {}
+
+protected:
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const string& creditCurveId,
+                                                                const string& securityId,
+                                                                const string& referenceCurveId,
+                                                                const string& incomeCurveId) override;
+
+private:
+    QuantLib::ext::shared_ptr<PricingEngine> buildMcEngine(const QuantLib::ext::shared_ptr<QuantExt::LGM>& lgm,
+                                                           const Handle<YieldTermStructure>& discountCurve,
+                                                           const std::vector<Size>& externalModelIndices);
+    const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> cam_;
+    const std::vector<Date> simulationDates_;
+    const std::vector<Date> stickyCloseOutDates_;
 };
 
 } // namespace data

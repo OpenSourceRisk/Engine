@@ -41,16 +41,17 @@ public:
     /* see GaussianCam, this is the FD variant for a single underlying IR model */
     FdGaussianCam(const Handle<CrossAssetModel>& cam, const std::string& currency,
                   const Handle<YieldTermStructure>& curve,
-                  const std::vector<std::pair<std::string, boost::shared_ptr<InterestRateIndex>>>& irIndices,
+                  const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
                   const std::set<Date>& simulationDates, const Size stateGridPoints = 50,
-                  const Size timeStepsPerYear = 24, const Real mesherEpsilon = 1E-4,
-                  const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig());
+                  const Size timeStepsPerYear = 24,
+                  const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
+                      QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
+                  const Params& params = {});
 
     // Model interface implementation
-    Type type() const override { return Type::FD; }
     const Date& referenceDate() const override;
     RandomVariable npv(const RandomVariable& amount, const Date& obsdate, const Filter& filter,
-                       const boost::optional<long>& memSlot, const RandomVariable& addRegressor1,
+                       const QuantLib::ext::optional<long>& memSlot, const RandomVariable& addRegressor1,
                        const RandomVariable& addRegressor2) const override;
     RandomVariable fwdCompAvg(const bool isAvg, const std::string& index, const Date& obsdate, const Date& start,
                               const Date& end, const Real spread, const Real gearing, const Integer lookback,
@@ -83,8 +84,7 @@ private:
     std::set<Date> simulationDates_;
     Size stateGridPoints_;
     Size timeStepsPerYear_;
-    Real mesherEpsilon_;
-    IborFallbackConfig iborFallbackConfig_;
+    QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig_;
 
     // computed values
     mutable Date referenceDate_;                        // the model reference date

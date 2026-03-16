@@ -17,12 +17,24 @@
 */
 
 #include <ored/configuration/conventions.hpp>
+
 #include <ored/utilities/currencyparser.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
-#include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/indexnametranslator.hpp>
+#include <ored/utilities/marketdata.hpp>
+
+#include <ored/portfolio/bondutils.hpp>
+
+#include <qle/indexes/fxindex.hpp>
+
+#include <ql/time/imm.hpp>
+#include <ql/termstructures/yield/flatforward.hpp>
+#include <ql/time/calendars/canada.hpp>
+#include <ql/time/calendars/unitedkingdom.hpp>
+#include <ql/time/calendars/jointcalendar.hpp>
 
 #include <boost/algorithm/string.hpp>
 
@@ -38,13 +50,13 @@ const string xccyCurveNamePrefix = "__XCCY__";
 
 string xccyCurveName(const string& ccyCode) { return xccyCurveNamePrefix + "-" + ccyCode; }
 
-Handle<YieldTermStructure> xccyYieldCurve(const boost::shared_ptr<Market>& market, const string& ccyCode,
+Handle<YieldTermStructure> xccyYieldCurve(const QuantLib::ext::shared_ptr<Market>& market, const string& ccyCode,
                                           const string& configuration) {
     bool dummy;
     return xccyYieldCurve(market, ccyCode, dummy, configuration);
 }
 
-Handle<YieldTermStructure> xccyYieldCurve(const boost::shared_ptr<Market>& market, const string& ccyCode,
+Handle<YieldTermStructure> xccyYieldCurve(const QuantLib::ext::shared_ptr<Market>& market, const string& ccyCode,
                                           bool& outXccyExists, const string& configuration) {
 
     Handle<YieldTermStructure> curve;
@@ -62,8 +74,12 @@ Handle<YieldTermStructure> xccyYieldCurve(const boost::shared_ptr<Market>& marke
     return curve;
 }
 
-Handle<YieldTermStructure> indexOrYieldCurve(const boost::shared_ptr<Market>& market, const std::string& name,
+Handle<YieldTermStructure> indexOrYieldCurve(const QuantLib::ext::shared_ptr<Market>& market, const std::string& name,
                                              const std::string& configuration) {
+    if (name == "NULLCURVE") {
+        return Handle<YieldTermStructure>(
+            QuantLib::ext::make_shared<QuantLib::FlatForward>(0, NullCalendar(), 0.0, Actual365Fixed()));
+    }
     try {
         return market->iborIndex(name, configuration)->forwardingTermStructure();
     } catch (...) {
@@ -76,8 +92,30 @@ Handle<YieldTermStructure> indexOrYieldCurve(const boost::shared_ptr<Market>& ma
                                                               << "' or default configuration.");
 }
 
+std::string indexTrancheSpecificCreditCurveName(const std::string& creditCurveId, const double assumedRecoveryRate){
+    std::ostringstream oss;
+    oss << "__CDO_" << creditCurveId << "_&_REC_" << std::fixed << std::setprecision(2) << assumedRecoveryRate << "_&_";
+    return oss.str();
+}
+
+QuantLib::Handle<QuantExt::CreditCurve> indexTrancheSpecificCreditCurve(const QuantLib::ext::shared_ptr<Market>& market,
+                                                                        const std::string& creditCurveId,
+                                                                        const std::string& configuration,
+                                                                        const double assumedRecoveryRate) {
+    Handle<QuantExt::CreditCurve> curve;
+    std::string name = indexTrancheSpecificCreditCurveName(creditCurveId, assumedRecoveryRate);
+    try {
+        curve = market->defaultCurve(name, configuration);
+    } catch (const std::exception&) {
+        DLOG("Could not find index tranche specific credit curve " << name << " so just using "
+                               << creditCurveId << " default curve.");
+        curve = market->defaultCurve(creditCurveId, configuration);
+    }
+    return curve;
+}
+
 std::string securitySpecificCreditCurveName(const std::string& securityId, const std::string& creditCurveId) {
-    auto tmp = "__SECCRCRV_" + securityId + "_&_" + creditCurveId + "_&_";
+    auto tmp = "__SECCRCRV_" + StructuredSecurityId(securityId).securityId() + "_&_" + creditCurveId + "_&_";
     return tmp;
 }
 
@@ -95,7 +133,7 @@ std::string creditCurveNameFromSecuritySpecificCreditCurveName(const std::string
     return name;
 }
 
-QuantLib::Handle<QuantExt::CreditCurve> securitySpecificCreditCurve(const boost::shared_ptr<Market>& market,
+QuantLib::Handle<QuantExt::CreditCurve> securitySpecificCreditCurve(const QuantLib::ext::shared_ptr<Market>& market,
                                                                     const std::string& securityId,
                                                                     const std::string& creditCurveId,
                                                                     const std::string& configuration) {
@@ -130,12 +168,24 @@ std::string prettyPrintInternalCurveName(std::string name) {
                 }
             }
         }
+        else if(pos2 = name.find("__CDO_", pos); pos != std::string::npos) {
+            std::size_t pos3 = name.find("_&_REC_", pos2);
+            if (pos3 != std::string::npos) {
+                std::size_t pos4 = name.find("_&_", pos3 + 7);
+                if (pos4 != std::string::npos) {
+                    name.replace(pos2, pos4 + 3 - pos2,
+                                 name.substr(pos2 + 6, pos3 - (pos2 + 6)));
+                    pos = pos + pos3 - pos2 - 6;
+                    found = true;
+                }
+            }
+        }
     } while (found);
     return name;
 }
 
-boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const string& domestic, const string& foreign,
-                                                  const boost::shared_ptr<Market>& market, const string& configuration,
+QuantLib::ext::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const string& domestic, const string& foreign,
+                                                  const QuantLib::ext::shared_ptr<Market>& market, const string& configuration,
                                                   bool useXbsCurves) {
 
     auto fxInd = parseFxIndex(fxIndex);
@@ -144,7 +194,7 @@ boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const s
     string target = fxInd->targetCurrency().code();
     string family = fxInd->familyName();
 
-    fxInd = *market->fxIndex("FX-" + family + "-" + foreign + "-" + domestic);
+    fxInd = *market->fxIndex("FX-" + family + "-" + foreign + "-" + domestic, configuration);
 
     QL_REQUIRE((domestic == target && foreign == source) || (domestic == source && foreign == target),
                "buildFxIndex(): index '" << fxIndex << "' does not match given currencies " << domestic << ", "
@@ -177,8 +227,8 @@ std::tuple<Natural, Calendar, BusinessDayConvention> getFxIndexConventions(const
     if (ccy1 == ccy2)
         return std::make_tuple(0, NullCalendar(), Unadjusted);
 
-    const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
-    boost::shared_ptr<Convention> con;
+    const QuantLib::ext::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
+    QuantLib::ext::shared_ptr<Convention> con;
     // first look for the index and inverse index directly
     try {
         con = conventions->get("FX-" + fixingSource + "-" + ccy1 + "-" + ccy2);
@@ -197,11 +247,11 @@ std::tuple<Natural, Calendar, BusinessDayConvention> getFxIndexConventions(const
         } catch (...) {
         }
     }
-    if (auto fxCon = boost::dynamic_pointer_cast<FXConvention>(con)) {
+    if (auto fxCon = QuantLib::ext::dynamic_pointer_cast<FXConvention>(con)) {
         TLOG("getFxIndexConvention(" << index << "): " << fxCon->spotDays() << " / " << fxCon->advanceCalendar().name()
                                      << " from convention.");
         return std::make_tuple(fxCon->spotDays(), fxCon->advanceCalendar(), fxCon->convention());
-    } else if (auto comCon = boost::dynamic_pointer_cast<CommodityForwardConvention>(con); comCon !=nullptr
+    } else if (auto comCon = QuantLib::ext::dynamic_pointer_cast<CommodityForwardConvention>(con); comCon !=nullptr
                && (isPseudoCurrency(ccy1) || isPseudoCurrency(ccy2))) {
         TLOG("getFxIndexConvention(" << index << "): " << fxCon->spotDays() << " / " << fxCon->advanceCalendar().name()
                                      << " from convention.");
@@ -240,7 +290,7 @@ std::pair<std::string, QuantLib::Period> splitCurveIdWithTenor(const std::string
     return make_pair(creditCurveId, 0 * Days);
 }
 
-QuantLib::Handle<QuantExt::CreditCurve> indexCdsDefaultCurve(const boost::shared_ptr<Market>& market,
+QuantLib::Handle<QuantExt::CreditCurve> indexCdsDefaultCurve(const QuantLib::ext::shared_ptr<Market>& market,
                                                              const std::string& creditCurveId,
                                                              const std::string& config) {
     try {
@@ -251,6 +301,91 @@ QuantLib::Handle<QuantExt::CreditCurve> indexCdsDefaultCurve(const boost::shared
 
     auto p = splitCurveIdWithTenor(creditCurveId);
     return market->defaultCurve(p.first, config);
+}
+
+Handle<QuantExt::BaseCorrelationTermStructure>
+indexTrancheBaseCorrelationCurve(const QuantLib::ext::shared_ptr<Market>& market,
+                                 const std::string& baseCorrelationCurveId, const std::string& configuration) {
+    Handle<QuantExt::BaseCorrelationTermStructure> curve;
+    try {
+        return market->baseCorrelation(baseCorrelationCurveId, configuration);
+    } catch (const std::exception&) {
+        DLOG("Could not find base correlation curve " << baseCorrelationCurveId
+                                                      << ", fall back on curve id without tenor.");
+    }
+    auto p = splitCurveIdWithTenor(baseCorrelationCurveId);
+    return market->baseCorrelation(p.first, configuration);
+}
+
+// will have to split the date into month and year in caller.  are there any utilities to do this?
+// Is the FutureConvention rule available from caller?
+std::pair<Date, Date> getOiFutureStartEndDate(QuantLib::Month expiryMonth, QuantLib::Natural expiryYear, QuantLib::Period tenor,
+                                              FutureConvention::DateGenerationRule rule, const Calendar& calendar) {
+    // Create a Overnight index future helper
+    Date startDate, endDate;
+    if (rule == FutureConvention::DateGenerationRule::IMM) {
+        Date refEnd = Date(1, expiryMonth, expiryYear);
+        Date refStart = refEnd - tenor;
+        startDate = IMM::nextDate(refStart, false);
+        endDate = IMM::nextDate(refEnd, false);
+    } else if (rule  == FutureConvention::DateGenerationRule::FirstDayOfMonth) {
+        endDate = calendar.adjust(Date(1, expiryMonth, expiryYear) + 1 * Months, Following);
+        startDate = calendar.adjust(Date(1, expiryMonth, expiryYear) + 1 * Months - tenor, Following);
+    }
+    return std::make_pair(startDate, endDate);
+}
+
+Date getMmFutureExpiryDate(QuantLib::Month expiryMonth, QuantLib::Natural expiryYear,
+                           FutureConvention::DateGenerationRule rule) {
+    Date refDate(1, expiryMonth, expiryYear);
+
+    if (rule == FutureConvention::DateGenerationRule::IMM) {
+        return IMM::nextDate(refDate, false);  // Third Wednesday
+    } else if (rule == FutureConvention::DateGenerationRule::IMMAUD) {
+        // Second Thursday of the expiry month (e.g. AUD-BBSW-3M futures).
+        return Date::nthWeekday(2, Thursday, expiryMonth, expiryYear);
+    } else if (rule == FutureConvention::DateGenerationRule::IMMNZD) {
+        // First Wednesday on or after the 9th: the 2nd Wednesday if it falls on day >= 9, otherwise the 3rd.
+        Date w2 = Date::nthWeekday(2, Wednesday, expiryMonth, expiryYear);
+        return w2 >= Date(9, expiryMonth, expiryYear) ? w2 : Date::nthWeekday(3, Wednesday, expiryMonth, expiryYear);
+    } else if (rule == FutureConvention::DateGenerationRule::IMMCAD) {
+        // Two GB+CA business days before the third Wednesday of the expiry month.
+        return JointCalendar(std::vector<Calendar>{UnitedKingdom(), Canada()})
+            .advance(Date::nthWeekday(3, Wednesday, expiryMonth, expiryYear), -2, Days, Preceding);
+    } else {
+        QL_FAIL("getMmFutureExpiryDate: DateGenerationRule '" << rule << "' not supported for MM Futures");
+    }
+}
+
+std::string fxIndexNameForDailyLowsOrHighs(const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex, bool lows) {
+    if (fxIndex == nullptr) {
+        WLOG("fxIndexNameForDailyLowsOrHighs: fxIndex is null, can not derive index name for lows");
+        return std::string();
+    }
+    std::string oreName;
+    std::string indexFamilyName = fxIndex->familyName();
+    try {
+        oreName = IndexNameTranslator::instance().oreName(fxIndex->name());
+    } catch (const std::exception& e) {
+        WLOG("fxIndexNameForDailyLowsOrHighs: could not get ore name for fx index " << fxIndex->name());
+        return std::string();
+    }
+    // Dont support generic indices
+    if (!isFxIndex(oreName)) {
+        return std::string();
+    }
+
+    DLOG("Got oreName " << oreName);
+    std::string lowHigh = lows ? "_LOW" : "_HIGH";
+    return oreName.replace(oreName.find(indexFamilyName), indexFamilyName.size(), indexFamilyName + lowHigh);
+}
+
+std::string fxIndexNameForDailyLows(const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex) {
+    return fxIndexNameForDailyLowsOrHighs(fxIndex, true);
+}
+
+std::string fxIndexNameForDailyHighs(const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex) {
+    return fxIndexNameForDailyLowsOrHighs(fxIndex, false);
 }
 
 } // namespace data

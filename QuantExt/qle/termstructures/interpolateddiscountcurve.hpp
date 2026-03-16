@@ -73,7 +73,7 @@ private:
         QL_REQUIRE(times_[0] == 0.0, "First time must be 0, got " << times_[0]); // or date=asof
         QL_REQUIRE(times_.size() == quotes.size(), "size of time and quote vectors do not match");
         for (Size i = 0; i < quotes.size(); ++i) {
-            quotes_.push_back(boost::make_shared<LogQuote>(quotes[i]));
+            quotes_.push_back(QuantLib::ext::make_shared<LogQuote>(quotes[i]));
         }
         for (Size i = 0; i < times_.size() - 1; ++i)
             timeDiffs_.push_back(times_[i + 1] - times_[i]);
@@ -108,7 +108,7 @@ protected:
 private:
     std::vector<Time> times_;
     std::vector<Time> timeDiffs_;
-    std::vector<boost::shared_ptr<Quote>> quotes_;
+    std::vector<QuantLib::ext::shared_ptr<Quote>> quotes_;
     Interpolation interpolation_;
     Extrapolation extrapolation_;
 };

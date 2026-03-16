@@ -40,15 +40,15 @@ public:
     //! Detailed constructor
     CommodityDigitalOption(const Envelope& env, const OptionData& optionData, const std::string& commodityName,
 			   const std::string& currency, QuantLib::Real strike, QuantLib::Real payoff,
-			   const boost::optional<bool>& isFuturePrice = boost::none,
+			   const QuantLib::ext::optional<bool>& isFuturePrice = QuantLib::ext::nullopt,
 			   const QuantLib::Date& futureExpiryDate = QuantLib::Date());
 
     //! Build underlying instrument and link pricing engine
-    void build(const boost::shared_ptr<EngineFactory>& engineFactory) override;
+    void build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) override;
 
     //! Add underlying Commodity names
     std::map<AssetClass, std::set<std::string>>
-    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
     //! \name Serialisation
     //@{
@@ -56,15 +56,13 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
-    //! \name Trade
-    //@{
-    bool hasCashflows() const override { return false; }
-    //@}
-
     //! \name Inspectors
     //@{
-    const boost::optional<bool>& isFuturePrice() const { return isFuturePrice_; }
+    const QuantLib::ext::optional<bool>& isFuturePrice() const { return isFuturePrice_; }
     const QuantLib::Date& futureExpiryDate() const { return futureExpiryDate_; }
+    const OptionData& option() const { return optionData_; }
+    const std::string& commodityName() const { return name_; }
+    Real strike() { return strike_; }
     //@}
 
 private:
@@ -77,7 +75,7 @@ private:
     /*! Indicates if the option underlying is a commodity future settlement price, \c true, or a spot price \c false.
         If not explicitly set, it is assumed to be \c true.
     */
-    boost::optional<bool> isFuturePrice_;
+    QuantLib::ext::optional<bool> isFuturePrice_;
 
     /*! An explicit expiry date for the underlying future contract. This can be used if the option trade references a
         future contract settlement price and the option's expiry date does not match the future contract expiry date.
@@ -85,7 +83,7 @@ private:
     QuantLib::Date futureExpiryDate_;
 
     //! An index is needed if the option is to be automatically exercised on expiry.
-    boost::shared_ptr<QuantLib::Index> index_;
+    QuantLib::ext::shared_ptr<QuantLib::Index> index_;
 
     //! Hold the external index name if needed e.g. in the case of an FX index.
     std::string indexName_;

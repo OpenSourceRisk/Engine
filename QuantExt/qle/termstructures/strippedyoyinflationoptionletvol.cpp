@@ -90,13 +90,13 @@ Volatility StrippedYoYInflationOptionletVol::volatilityImpl(Time length, Rate st
         const std::vector<Rate>& yoyoptionletStrikes = StrippedYoYInflationOptionletVol::yoyoptionletStrikes(i);
         const std::vector<Volatility>& yoyoptionletVolatilities =
             StrippedYoYInflationOptionletVol::yoyoptionletVolatilities(i);
-        boost::shared_ptr<LinearInterpolation> tmp(new LinearInterpolation(
+        QuantLib::ext::shared_ptr<LinearInterpolation> tmp(new LinearInterpolation(
             yoyoptionletStrikes.begin(), yoyoptionletStrikes.end(), yoyoptionletVolatilities.begin()));
         vol[i] = tmp->operator()(strike, true);
     }
 
     const std::vector<Time>& yoyoptionletTimes = yoyoptionletFixingTimes();
-    boost::shared_ptr<LinearInterpolation> timeVolInterpolator(
+    QuantLib::ext::shared_ptr<LinearInterpolation> timeVolInterpolator(
         new LinearInterpolation(yoyoptionletTimes.begin(), yoyoptionletTimes.end(), vol.begin()));
     return timeVolInterpolator->operator()(length, true);
 }

@@ -18,6 +18,9 @@
 
 #include <qle/models/crossassetanalytics.hpp>
 #include <qle/models/crossassetmodel.hpp>
+#include <qle/processes/irhwstateprocess.hpp>
+#include <qle/utilities/inflation.hpp>
+#include <qle/utilities/time.hpp>
 
 #include <ql/math/matrixutilities/pseudosqrt.hpp>
 #include <ql/processes/eulerdiscretization.hpp>
@@ -33,7 +36,8 @@ using namespace QuantLib;
 
 namespace {
 
-inline void setValue(Matrix& m, const Real& value, const boost::shared_ptr<const QuantExt::CrossAssetModel>& model,
+inline void setValue(Matrix& m, const Real& value,
+                     const QuantLib::ext::shared_ptr<const QuantExt::CrossAssetModel>& model,
                      const QuantExt::CrossAssetModel::AssetType& t1, const Size& i1,
                      const QuantExt::CrossAssetModel::AssetType& t2, const Size& i2, const Size& offset1 = 0,
                      const Size& offset2 = 0) {
@@ -42,7 +46,8 @@ inline void setValue(Matrix& m, const Real& value, const boost::shared_ptr<const
     m[i][j] = m[j][i] = value;
 }
 
-inline void setValue2(Matrix& m, const Real& value, const boost::shared_ptr<const QuantExt::CrossAssetModel>& model,
+inline void setValue2(Matrix& m, const Real& value,
+                      const QuantLib::ext::shared_ptr<const QuantExt::CrossAssetModel>& model,
                       const QuantExt::CrossAssetModel::AssetType& t1, const Size& i1,
                       const QuantExt::CrossAssetModel::AssetType& t2, const Size& i2, const Size& offset1 = 0,
                       const Size& offset2 = 0) {
@@ -50,16 +55,24 @@ inline void setValue2(Matrix& m, const Real& value, const boost::shared_ptr<cons
     Size j = model->wIdx(t2, i2, offset2);
     m[i][j] = value;
 }
-} // anonymous namespace
 
-CrossAssetStateProcess::CrossAssetStateProcess(boost::shared_ptr<const CrossAssetModel> model)
-    : StochasticProcess(), model_(std::move(model)), cirppCount_(0) {
+inline Array getProjectedArray(const Array& source, Size start, Size length) {
+    QL_REQUIRE(source.size() >= start + length, "getProjectedArray(): internal errors: source size "
+                                                    << source.size() << ", start" << start << ", length " << length);
+    return Array(std::next(source.begin(), start), std::next(source.begin(), start + length));
+}
 
-    if (model_->discretization() == CrossAssetModel::Discretization::Euler) {
-        discretization_ = boost::make_shared<EulerDiscretization>();
+} // namespace
+
+CrossAssetStateProcess::CrossAssetStateProcess(QuantLib::ext::shared_ptr<const CrossAssetModel> model,
+                                               const std::optional<DayCounter>& gridDayCounter)
+    : StochasticProcess(), model_(std::move(model)), gridDayCounter_(gridDayCounter), cirppCount_(0) {
+
+    if (model_->discretization() != CrossAssetModel::Discretization::Exact) {
+        discretization_ = QuantLib::ext::make_shared<EulerDiscretization>();
     } else {
-        discretization_ =
-            boost::make_shared<CrossAssetStateProcess::ExactDiscretization>(model_, model_->salvagingAlgorithm());
+        discretization_ = QuantLib::ext::make_shared<CrossAssetStateProcess::ExactDiscretization>(
+            model_, gridDayCounter_, model_->salvagingAlgorithm());
     }
 
     updateSqrtCorrelation();
@@ -70,8 +83,17 @@ CrossAssetStateProcess::CrossAssetStateProcess(boost::shared_ptr<const CrossAsse
             crCirpp_.push_back(model_->crcirppModel(i)->stateProcess());
             cirppCount_++;
         } else {
-            crCirpp_.push_back(boost::shared_ptr<CrCirppStateProcess>());
+            crCirpp_.push_back(QuantLib::ext::shared_ptr<CrCirppStateProcess>());
         }
+    }
+
+    /* Check whether we can cache path-independent parts for drift and diffusion. To keep it simple, we disable the cache for all components
+       as soon as we find one component that does not allow path-independent caching. The cache is for the legacy evolution of the process
+       anyway, the new model-component based evolution handles its own caching. */
+    cacheApplicable_ = true;
+    for (Size i = 0; i < model_->components(CrossAssetModel::AssetType::FX); ++i) {
+        cacheApplicable_ =
+            cacheApplicable_ && model_->modelType(CrossAssetModel::AssetType::FX, i) != CrossAssetModel::ModelType::LV;
     }
 }
 
@@ -80,18 +102,24 @@ Size CrossAssetStateProcess::size() const { return model_->dimension(); }
 Size CrossAssetStateProcess::factors() const { return model_->brownians() + model_->auxBrownians(); }
 
 void CrossAssetStateProcess::resetCache(const Size timeSteps) const {
+    updateSqrtCorrelation();
+    if (!cacheApplicable_)
+        return;
     cacheNotReady_m_ = cacheNotReady_d_ = true;
     timeStepsToCache_m_ = timeStepsToCache_d_ = timeSteps;
     timeStepCache_m_ = timeStepCache_d_ = 0;
     cache_m_.clear();
     cache_d_.clear();
-    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess::ExactDiscretization>(discretization_))
+    if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess::ExactDiscretization>(discretization_))
         tmp->resetCache(timeSteps);
-    updateSqrtCorrelation();
+    for (Size i = 0; i < model_->components(CrossAssetModel::AssetType::IR); ++i) {
+        if (auto p = QuantLib::ext::dynamic_pointer_cast<IrHwStateProcess>(model_->irModel(i)->stateProcess()))
+            p->resetCache(timeSteps);
+    }
 }
 
 void CrossAssetStateProcess::updateSqrtCorrelation() const {
-    if (model_->discretization() != CrossAssetModel::Discretization::Euler)
+    if (model_->discretization() == CrossAssetModel::Discretization::Exact)
         return;
     sqrtCorrelation_ = pseudoSqrt(model_->correlation(), model_->salvagingAlgorithm());
 }
@@ -100,8 +128,8 @@ Array CrossAssetStateProcess::initialValues() const {
     Array res(model_->dimension(), 0.0);
     /* irlgm1f / irhw processes have initial value 0 */
     for (Size i = 0; i < model_->components(CrossAssetModel::AssetType::FX); ++i) {
-        /* fxbs processes are in log spot */
-        res[model_->pIdx(CrossAssetModel::AssetType::FX, i, 0)] = std::log(model_->fxbs(i)->fxSpotToday()->value());
+        /* fx processes are in log spot */
+        res[model_->pIdx(CrossAssetModel::AssetType::FX, i, 0)] = std::log(model_->fxModel(i)->fxSpotToday()->value());
     }
     for (Size i = 0; i < model_->components(CrossAssetModel::AssetType::EQ); ++i) {
         /* eqbs processes are in log spot */
@@ -132,6 +160,7 @@ Array CrossAssetStateProcess::drift(Time t, const Array& x) const {
     Array res(model_->dimension(), 0.0);
     Size n = model_->components(CrossAssetModel::AssetType::IR);
     Size n_eq = model_->components(CrossAssetModel::AssetType::EQ);
+    Size n_com = model_->components(CrossAssetModel::AssetType::COM);
     Real H0 = model_->irlgm1f(0)->H(t);
     Real Hprime0 = model_->irlgm1f(0)->Hprime(t);
     Real alpha0 = model_->irlgm1f(0)->alpha(t);
@@ -148,7 +177,9 @@ Array CrossAssetStateProcess::drift(Time t, const Array& x) const {
                 res[model_->pIdx(CrossAssetModel::AssetType::IR, i, 1)] = 0.0;
             }
             if (i > 0) {
-                Real sigmai = model_->fxbs(i - 1)->sigma(t);
+                Real sigmai = model_->fxModel(i - 1)->volatility(
+                    t, getProjectedArray(x, model_->pIdx(CrossAssetModel::AssetType::FX, i - 1, 0),
+                                         model_->fxModel(i - 1)->n()));
                 // ir-ir
                 Real rhozz0i =
                     model_->correlation(CrossAssetModel::AssetType::IR, 0, CrossAssetModel::AssetType::IR, i);
@@ -182,7 +213,11 @@ Array CrossAssetStateProcess::drift(Time t, const Array& x) const {
             // eq vol
             Real sigmask = model_->eqbs(k)->sigma(t);
             // fx vol (eq ccy / base ccy)
-            Real sigmaxi = (i == 0) ? 0.0 : model_->fxbs(i - 1)->sigma(t);
+            Real sigmaxi = (i == 0)
+                               ? 0.0
+                               : model_->fxModel(i - 1)->volatility(
+                                     t, getProjectedArray(x, model_->pIdx(CrossAssetModel::AssetType::FX, i - 1, 0),
+                                                          model_->fxModel(i - 1)->n()));
             // ir-eq corr
             // Real rhozsik = model_->correlation(EQ, k, CrossAssetModel::AssetType::IR, i); // eq cur
             Real rhozs0k =
@@ -199,6 +234,30 @@ Array CrossAssetStateProcess::drift(Time t, const Array& x) const {
                                                                       (eps_ccy * rhoxsik * sigmaxi * sigmask) -
                                                                       (0.5 * sigmask * sigmask);
         }
+        /* com drifts (the cache-able parts) */
+        for (Size k = 0; k < n_com; ++k) {
+            auto cm = QuantLib::ext::dynamic_pointer_cast<CommoditySchwartzModel>(model_->comModel(k));
+            Size i = model_->ccyIndex(model_->comModel(k)->currency());
+            // ir-com corr
+            Real rhozc0k =
+                model_->correlation(CrossAssetModel::AssetType::IR, 0, CrossAssetModel::AssetType::COM, k); // base cur
+            // fx-com corr
+            Real rhoxcik = (i == 0) ? 0.0 : // no fx process for base-ccy
+                model_->correlation(CrossAssetModel::AssetType::FX, i - 1, CrossAssetModel::AssetType::COM, k);
+            // com vol
+            Real sigmack = cm->parametrization()->sigma(t);
+            // fx vol (eq ccy / base ccy)
+            Real sigmaxi = (i == 0)
+                               ? 0.0
+                               : model_->fxModel(i - 1)->volatility(
+                                     t, getProjectedArray(x, model_->pIdx(CrossAssetModel::AssetType::FX, i - 1, 0),
+                                                          model_->fxModel(i - 1)->n()));
+
+            Real eps_ccy = (i == 0) ? 0.0 : 1.0;
+            res[model_->pIdx(CrossAssetModel::AssetType::COM, k, 0)] = 
+                (rhozc0k * H0 * alpha0 * sigmack)
+                -(eps_ccy * rhoxcik * sigmaxi * sigmack);
+            }
 
         // State independent pieces of JY inflation model, if there is a CAM JY component.
         for (Size j = 0; j < model_->components(CrossAssetModel::AssetType::INF); ++j) {
@@ -233,7 +292,9 @@ Array CrossAssetStateProcess::drift(Time t, const Array& x) const {
                                rho_yc_ij * alpha_y_j * sigma_c_j;
 
                 if (i_j > 0) {
-                    Real sigma_x_i_j = model_->fxbs(i_j - 1)->sigma(t);
+                    Real sigma_x_i_j = model_->fxModel(i_j - 1)->volatility(
+                        t, getProjectedArray(x, model_->pIdx(CrossAssetModel::AssetType::FX, i_j - 1, 0),
+                                             model_->fxModel(i_j - 1)->n()));
                     Real rho_yx_j_i_j = model_->correlation(CrossAssetModel::AssetType::INF, j,
                                                             CrossAssetModel::AssetType::FX, i_j - 1, 0, 0);
                     rrDrift -= rho_yx_j_i_j * alpha_y_j * sigma_x_i_j;
@@ -247,17 +308,31 @@ Array CrossAssetStateProcess::drift(Time t, const Array& x) const {
 
                 // Add on the f_n(0, t) - f_r(0, t) piece using the initial zero inflation term structure.
                 // Use the same dt below that is used in yield forward rate calculations.
+                // Take the simulation lag into account
                 auto ts = p->realRate()->termStructure();
+                // Use grid day counter for time-to-date conversion since t is in grid time
+                auto gridDc = gridDayCounter_.value_or(ts->dayCounter());
+                auto lagInGridDc = gridDc.yearFraction(ts->baseDate(), ts->referenceDate());
+                auto laggedObservationDate = lowerDate(t - lagInGridDc, ts->referenceDate(), gridDc);
+                // Use inflation day counter for tau and seasonality
+                const auto& infDayCounter = ts->dayCounter();
+                Time laggedt = infDayCounter.yearFraction(ts->referenceDate(), laggedObservationDate);
+                Time tau = infDayCounter.yearFraction(ts->baseDate(), laggedObservationDate);
+                // Use unadjusted zero rates (no seasonality) - seasonality is applied when 
+                // computing CPI fixings from the simulated state. This avoids issues with
+                // discontinuous seasonality factors in the discrete Euler scheme.
                 Time dt = 0.0001;
-                Time t1 = std::max(t - dt / 2.0, 0.0);
+                Time t1 = std::max(laggedt - dt / 2.0, 0.0);
                 Time t2 = t1 + dt;
-                auto z_t = ts->zeroRate(t);
+                auto z_t = ts->zeroRate(laggedt);
                 auto z_t1 = ts->zeroRate(t1);
                 auto z_t2 = ts->zeroRate(t2);
-                indexDrift += std::log(1 + z_t) + (t / (1 + z_t)) * ((z_t2 - z_t1) / dt);
+                indexDrift += std::log(1 + z_t) + (tau / (1 + z_t)) * ((z_t2 - z_t1) / dt);
 
                 if (i_j > 0) {
-                    Real sigma_x_i_j = model_->fxbs(i_j - 1)->sigma(t);
+                    Real sigma_x_i_j = model_->fxModel(i_j - 1)->volatility(
+                        t, getProjectedArray(x, model_->pIdx(CrossAssetModel::AssetType::FX, i_j - 1, 0),
+                                             model_->fxModel(i_j - 1)->n()));
                     Real rho_cx_j_i_j = model_->correlation(CrossAssetModel::AssetType::INF, j,
                                                             CrossAssetModel::AssetType::FX, i_j - 1, 1, 0);
                     indexDrift -= rho_cx_j_i_j * sigma_c_j * sigma_x_i_j;
@@ -319,9 +394,8 @@ Array CrossAssetStateProcess::drift(Time t, const Array& x) const {
     }
 
     // COM drift
-    Size n_com = model_->components(CrossAssetModel::AssetType::COM);
     for (Size k = 0; k < n_com; ++k) {
-        auto cm = boost::dynamic_pointer_cast<CommoditySchwartzModel>(model_->comModel(k));
+        auto cm = QuantLib::ext::dynamic_pointer_cast<CommoditySchwartzModel>(model_->comModel(k));
         QL_REQUIRE(cm, "CommoditySchwartzModel not set");
         if (!cm->parametrization()->driftFreeState()) {
             // Ornstein-Uhlenbeck drift
@@ -332,7 +406,6 @@ Array CrossAssetStateProcess::drift(Time t, const Array& x) const {
             // zero drift
         }
     }
-
     /* no drift for infdk, crlgm1f, crstate components */
     return res;
 }
@@ -358,7 +431,7 @@ Matrix CrossAssetStateProcess::diffusionOnCorrelatedBrownians(Time t, const Arra
     }
 }
 
-Matrix CrossAssetStateProcess::diffusionOnCorrelatedBrowniansImpl(Time t, const Array&) const {
+Matrix CrossAssetStateProcess::diffusionOnCorrelatedBrowniansImpl(Time t, const Array& x) const {
     Matrix res(model_->dimension(), model_->brownians(), 0.0);
     Size n = model_->components(CrossAssetModel::AssetType::IR);
     Size m = model_->components(CrossAssetModel::AssetType::FX);
@@ -374,7 +447,8 @@ Matrix CrossAssetStateProcess::diffusionOnCorrelatedBrowniansImpl(Time t, const 
     }
     // fx-fx
     for (Size i = 0; i < m; ++i) {
-        Real sigmai = model_->fxbs(i)->sigma(t);
+        Real sigmai = model_->fxModel(i)->volatility(
+            t, getProjectedArray(x, model_->pIdx(CrossAssetModel::AssetType::FX, i, 0), model_->fxModel(i)->n()));
         setValue2(res, sigmai, model_, CrossAssetModel::AssetType::FX, i, CrossAssetModel::AssetType::FX, i, 0, 0);
     }
     // inf-inf
@@ -436,35 +510,32 @@ Matrix CrossAssetStateProcess::diffusionOnCorrelatedBrowniansImpl(Time t, const 
 }
 
 namespace {
-Array getProjectedArray(const Array& source, Size start, Size length) {
-    QL_REQUIRE(source.size() >= start + length, "getProjectedArray(): internal errors: source size "
-                                                    << source.size() << ", start" << start << ", length " << length);
-    return Array(std::next(source.begin(), start), std::next(source.begin(), start + length));
-}
-
-void applyFxDriftAdjustment(Array& state, const boost::shared_ptr<const CrossAssetModel>& model, Size i, Time t0,
-                            Time dt) {
+void applyFxDriftAdjustment(Array& state, const QuantLib::ext::shared_ptr<const CrossAssetModel>& model, Size i,
+                            Time t0, Time dt) {
 
     // the specifics depend on the ir and fx model types and their discretizations
 
-    if (model->modelType(CrossAssetModel::AssetType::IR, i) == CrossAssetModel::ModelType::HW &&
-        model->modelType(CrossAssetModel::AssetType::FX, i - 1) == CrossAssetModel::ModelType::BS) {
+    if (model->modelType(CrossAssetModel::AssetType::IR, i) == CrossAssetModel::ModelType::HW) {
 
-        QL_REQUIRE(model->discretization() == CrossAssetModel::Discretization::Euler,
-                   "applyFxDrifAdjustment(): can only handle discretization Euler at the moment.");
+        QL_REQUIRE(model->discretization() != CrossAssetModel::Discretization::Exact,
+                   "applyFxDrifAdjustment(): can not handle exact discretization.");
         Matrix corrTmp(model->irModel(i)->m(), 1);
         for (Size k = 0; k < model->irModel(i)->m(); ++k) {
             corrTmp(k, 0) =
                 model->correlation(CrossAssetModel::AssetType::IR, i, CrossAssetModel::AssetType::FX, i - 1, k, 0);
         }
-        Matrix driftAdj = dt * model->fxbs(i - 1)->sigma(t0) * (transpose(model->irhw(i)->sigma_x(t0)) * corrTmp);
+        Matrix driftAdj = dt *
+                          model->fxModel(i - 1)->volatility(
+                              t0, getProjectedArray(state, model->pIdx(CrossAssetModel::AssetType::FX, i - 1, 0),
+                                                    model->fxModel(i - 1)->n())) *
+                          (transpose(model->irhw(i)->sigma_x(t0)) * corrTmp);
         auto s = std::next(state.begin(), model->pIdx(CrossAssetModel::AssetType::IR, i, 0));
         for (auto c = driftAdj.column_begin(0); c != driftAdj.column_end(0); ++c, ++s) {
             *s += *c;
         }
 
     } else {
-        QL_FAIL("applyFxDriftAdjustment(): can only handle ir model type HW and fx model type BS currently.");
+        QL_FAIL("applyFxDriftAdjustment(): can only handle ir model type HW currently.");
     }
 }
 } // namespace
@@ -477,8 +548,8 @@ Array CrossAssetStateProcess::evolve(Time t0, const Array& x0, Time dt, const Ar
 
     if (model_->modelType(CrossAssetModel::AssetType::IR, 0) == CrossAssetModel::ModelType::HW) {
 
-        QL_REQUIRE(model_->discretization() == CrossAssetModel::Discretization::Euler,
-                   "CrossAssetStateProcess::evolve(): hw-based model only supports Euler discretization.");
+        QL_REQUIRE(model_->discretization() != CrossAssetModel::Discretization::Exact,
+                   "CrossAssetStateProcess::evolve(): hw-based model does not support exact discretization.");
 
         const Array dz = sqrtCorrelation_ * dw;
 
@@ -509,7 +580,7 @@ Array CrossAssetStateProcess::evolve(Time t0, const Array& x0, Time dt, const Ar
         // eolve fx processes
 
         for (Size i = 0; i < model_->components(CrossAssetModel::AssetType::FX); ++i) {
-            auto r = model_->fxModel(i)->eulerStep(
+            auto r = model_->fxModel(i)->marginalStep(
                 t0, getProjectedArray(x0, model_->pIdx(CrossAssetModel::AssetType::FX, i, 0), model_->fxModel(i)->n()),
                 dt, getProjectedArray(dz, model_->wIdx(CrossAssetModel::AssetType::FX, i, 0), model_->fxModel(i)->m()),
                 shortRates[0], shortRates[i + 1]);
@@ -540,7 +611,8 @@ Array CrossAssetStateProcess::evolve(Time t0, const Array& x0, Time dt, const Ar
 
     // handle LGM1F based model
 
-    if (model_->discretization() == CrossAssetModel::Discretization::Euler) {
+    if (model_->discretization() != CrossAssetModel::Discretization::Exact) {
+
         const Array dz = sqrtCorrelation_ * dw;
         const Matrix df = diffusionOnCorrelatedBrownians(t0, x0);
         res = apply(expectation(t0, x0, dt), df * dz * std::sqrt(dt));
@@ -574,9 +646,10 @@ Array CrossAssetStateProcess::evolve(Time t0, const Array& x0, Time dt, const Ar
     return res;
 }
 
-CrossAssetStateProcess::ExactDiscretization::ExactDiscretization(boost::shared_ptr<const CrossAssetModel> model,
+CrossAssetStateProcess::ExactDiscretization::ExactDiscretization(QuantLib::ext::shared_ptr<const CrossAssetModel> model,
+                                                                 const std::optional<DayCounter>& gridDayCounter,
                                                                  SalvagingAlgorithm::Type salvaging)
-    : model_(std::move(model)), salvaging_(salvaging) {
+    : model_(std::move(model)), gridDayCounter_(gridDayCounter), salvaging_(salvaging) {
 
     QL_REQUIRE(model_->modelType(CrossAssetModel::AssetType::IR, 0) == CrossAssetModel::ModelType::LGM1F,
                "CrossAssetStateProces::ExactDiscretization is only supported by LGM1F IR model types.");
@@ -646,6 +719,7 @@ Array CrossAssetStateProcess::ExactDiscretization::driftImpl1(const StochasticPr
     Size n = model_->components(CrossAssetModel::AssetType::IR);
     Size m = model_->components(CrossAssetModel::AssetType::FX);
     Size e = model_->components(CrossAssetModel::AssetType::EQ);
+    Size c = model_->components(CrossAssetModel::AssetType::COM);
     Array res(model_->dimension(), 0.0);
     for (Size i = 0; i < n; ++i) {
         res[model_->pIdx(CrossAssetModel::AssetType::IR, i, 0)] = ir_expectation_1(*model_, i, t0, dt);
@@ -656,18 +730,20 @@ Array CrossAssetStateProcess::ExactDiscretization::driftImpl1(const StochasticPr
     for (Size k = 0; k < e; ++k) {
         res[model_->pIdx(CrossAssetModel::AssetType::EQ, k, 0)] = eq_expectation_1(*model_, k, t0, dt);
     }
+    for (Size k = 0; k < c; ++k) {
+        res[model_->pIdx(CrossAssetModel::AssetType::COM, k, 0)] = com_expectation_1(*model_, k, t0, dt);
+    }
 
     // If inflation is JY, need to take account of the drift.
     for (Size i = 0; i < model_->components(CrossAssetModel::AssetType::INF); ++i) {
         if (model_->modelType(CrossAssetModel::AssetType::INF, i) == CrossAssetModel::ModelType::JY) {
             std::tie(res[model_->pIdx(CrossAssetModel::AssetType::INF, i, 0)],
                      res[model_->pIdx(CrossAssetModel::AssetType::INF, i, 1)]) =
-                inf_jy_expectation_1(*model_, i, t0, dt);
+                inf_jy_expectation_1(*model_, i, t0, dt, gridDayCounter_);
         }
     }
 
-    /* no COM driftImpl1 contribution for one-factor non mean-reverting commodity case,
-       no crstate contribution */
+    /* no crstate contribution */
 
     return res;
 }
@@ -735,7 +811,7 @@ Array CrossAssetStateProcess::ExactDiscretization::driftImpl2(const StochasticPr
     for (Size i = 0; i < com; ++i) {
         // res[model_->pIdx(CrossAssetModel::AssetType::COM, i, 0)] =
         //     x0[model_->pIdx(CrossAssetModel::AssetType::COM, i, 0)];
-        auto cm = boost::dynamic_pointer_cast<CommoditySchwartzModel>(model_->comModel(i));
+        auto cm = QuantLib::ext::dynamic_pointer_cast<CommoditySchwartzModel>(model_->comModel(i));
         QL_REQUIRE(cm, "CommoditySchwartzModel not set");
         Real com0 = x0[model_->pIdx(CrossAssetModel::AssetType::COM, i, 0)];
         if (cm->parametrization()->driftFreeState()) {

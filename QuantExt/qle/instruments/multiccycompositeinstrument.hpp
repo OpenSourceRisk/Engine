@@ -51,10 +51,10 @@ class MultiCcyCompositeInstrument : public Instrument {
 public:
     //! adds an instrument to the composite
     void add(const ext::shared_ptr<Instrument>& instrument, Real multiplier = 1.0,
-             const Handle<Quote>& fx = Handle<Quote>(boost::make_shared<SimpleQuote>(1.0)));
+             const Handle<Quote>& fx = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0)));
     //! shorts an instrument from the composite
     void subtract(const ext::shared_ptr<Instrument>& instrument, Real multiplier = 1.0,
-                  const Handle<Quote>& fx = Handle<Quote>(boost::make_shared<SimpleQuote>(1.0)));
+                  const Handle<Quote>& fx = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0)));
     //! \name Observer interface
     //@{
     void deepUpdate() override;
@@ -68,6 +68,8 @@ protected:
     //@}
 private:
     std::list<component> components_;
+    //! Store the additional results from the underlying components.
+    void updateAdditionalResults() const;
 };
 
 } // namespace QuantExt

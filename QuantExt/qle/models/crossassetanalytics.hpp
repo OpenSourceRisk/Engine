@@ -75,7 +75,8 @@ Real ir_expectation_2(const CrossAssetModel& model, const Size i, const Real zi_
     process and the second element of the pair relates to the inflation index process.
 */
 std::pair<QuantLib::Real, QuantLib::Real> inf_jy_expectation_1(const CrossAssetModel& model, QuantLib::Size i,
-                                                               QuantLib::Time t0, QuantLib::Real dt);
+                                                               QuantLib::Time t0, QuantLib::Real dt,
+                                                               const std::optional<DayCounter>& gridDayCounter);
 
 /*! State dependent portion of the JY inflation drift. The first element of the pair relates to the real rate
     process and the second element of the pair relates to the inflation index process.
@@ -160,6 +161,10 @@ This function covers the state-dependent part of the EQ expectation (see overall
 */
 Real eq_expectation_2(const CrossAssetModel& model, const Size k, const Time t0, const Real si_0, const Real zi_0,
                       const Real dt);
+/*
+This function covers the state-independent part of the COM expectation
+*/
+Real com_expectation_1(const CrossAssetModel& model, const Size i, const Time t0, const Real dt);
 
 /*! IR-IR Covariance
 
@@ -584,6 +589,23 @@ struct coms {
     const Size i_;
 };
 
+/*! COM diffusion component in stochastic integral */
+struct comDiffusionIntegrand {
+    comDiffusionIntegrand(const Time t, const Size i) : t_(t), i_(i) {}
+    Real eval(const CrossAssetModel& x, const Real u) const 
+    { 
+        if (x.combs(i_)->driftFreeState())
+            return x.combs(i_)->sigma(u);
+        else{
+            Real sigma = x.combs(i_)->sigmaParameter();
+            Real kappa = x.combs(i_)->kappaParameter();
+            return sigma * std::exp(-kappa*(t_-u));  
+        }
+    }
+    const Time t_;
+    const Size i_;
+};
+
 /*! IR-IR correlation component */
 struct rzz {
     rzz(const Size i, const Size j) : i_(i), j_(j) {}
@@ -749,6 +771,54 @@ struct rcc {
     rcc(const Size i, const Size j) : i_(i), j_(j) {}
     Real eval(const CrossAssetModel& x, const Real) const {
         return x.correlation(CrossAssetModel::AssetType::COM, i_, CrossAssetModel::AssetType::COM, j_, 0, 0);
+    }
+    const Size i_, j_;
+};
+
+/*! IR-COM correlation component, single-factor case */
+struct rzc {
+    rzc(const Size i, const Size j) : i_(i), j_(j) {}
+    Real eval(const CrossAssetModel& x, const Real) const {
+        return x.correlation(CrossAssetModel::AssetType::IR, i_, CrossAssetModel::AssetType::COM, j_, 0, 0);
+    }
+    const Size i_, j_;
+};
+
+/*! FX-COM correlation component, single-factor case */
+struct rxc {
+    rxc(const Size i, const Size j) : i_(i), j_(j) {}
+    Real eval(const CrossAssetModel& x, const Real) const {
+        return x.correlation(CrossAssetModel::AssetType::FX, i_, CrossAssetModel::AssetType::COM, j_, 0, 0);
+    }
+    const Size i_, j_;
+};
+
+/*! INF-COM correlation component */
+struct ryc {
+    ryc(const Size i, const Size j, QuantLib::Size iOffset = 0) : i_(i), j_(j), iOffset_(iOffset) {}
+
+    Real eval(const CrossAssetModel& x, const Real) const {
+        return x.correlation(CrossAssetModel::AssetType::INF, i_, CrossAssetModel::AssetType::COM, j_, iOffset_, 0);
+    }
+
+    const Size i_, j_;
+    QuantLib::Size iOffset_;
+};
+
+/*! EQ-COM correlation component, single-factor case */
+struct rsc {
+    rsc(const Size i, const Size j) : i_(i), j_(j) {}
+    Real eval(const CrossAssetModel& x, const Real) const {
+        return x.correlation(CrossAssetModel::AssetType::EQ, i_, CrossAssetModel::AssetType::COM, j_, 0, 0);
+    }
+    const Size i_, j_;
+};
+
+/*! CR-COM correlation component */
+struct rlc {
+    rlc(const Size i, const Size j) : i_(i), j_(j) {}
+    Real eval(const CrossAssetModel& x, const Real) const {
+        return x.correlation(CrossAssetModel::AssetType::CR, i_, CrossAssetModel::AssetType::COM, j_, 0, 0);
     }
     const Size i_, j_;
 };

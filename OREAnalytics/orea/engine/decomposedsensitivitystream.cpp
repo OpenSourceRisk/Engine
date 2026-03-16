@@ -19,6 +19,7 @@
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <orea/engine/decomposedsensitivitystream.hpp>
+#include <orea/engine/creditindexdecomposition.hpp>
 #include <ored/utilities/currencyhedgedequityindexdecomposition.hpp>
 #include <ored/utilities/to_string.hpp>
 
@@ -28,19 +29,54 @@ namespace analytics {
 namespace {} // namespace
 
 DecomposedSensitivityStream::DecomposedSensitivityStream(
-    const boost::shared_ptr<SensitivityStream>& ss, const std::string& baseCurrency,
-    std::map<std::string, std::map<std::string, double>> defaultRiskDecompositionWeights,
-    const std::set<std::string>& eqComDecompositionTradeIds,
-    const std::map<std::string, std::map<std::string, double>>& currencyHedgedIndexQuantities,
-    const boost::shared_ptr<ore::data::ReferenceDataManager>& refDataManager,
-    const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
-    const boost::shared_ptr<SensitivityScenarioData>& scenarioData,
-    const boost::shared_ptr<ore::data::Market>& todaysMarket)
-    : ss_(ss), baseCurrency_(baseCurrency), defaultRiskDecompositionWeights_(defaultRiskDecompositionWeights),
-      eqComDecompositionTradeIds_(eqComDecompositionTradeIds),
-      currencyHedgedIndexQuantities_(currencyHedgedIndexQuantities), refDataManager_(refDataManager),
-      curveConfigs_(curveConfigs), ssd_(scenarioData), todaysMarket_(todaysMarket) {
+    const QuantLib::ext::shared_ptr<SensitivityStream>& ss, const std::string& baseCurrency,
+    const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
+    const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& refDataManager,
+    const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
+    const QuantLib::ext::shared_ptr<SensitivityScenarioData>& scenarioData,
+    const QuantLib::ext::shared_ptr<ore::data::Market>& todaysMarket)
+    : ss_(ss), baseCurrency_(baseCurrency), refDataManager_(refDataManager), curveConfigs_(curveConfigs),
+      ssd_(scenarioData), todaysMarket_(todaysMarket) {
     reset();
+    for (const auto& [tradeId, trade] : portfolio->trades()) {
+        bool decomposeCredit = false;
+        std::map<string, double> sensitivityDecompositionWeights;
+        const map<string, string>& additionalFields = trade->envelope().additionalFields();
+        auto itAddFields = additionalFields.find("index_decomposition");
+        bool decomposeEquityCommodities = false;
+
+        if (itAddFields != additionalFields.end() && !itAddFields->second.empty()) {
+            try {
+                decomposeEquityCommodities = ore::data::parseBool(itAddFields->second);
+            } catch (const std::exception&) {
+                StructuredAnalyticsWarningMessage("DecomposedSensitivityStream",
+                                                  "index_decomposition field parse error",
+                                                  "Cannot parse index_decomposition field for trade: " + tradeId +
+                                                      ". Continuing without decomposition.")
+                    .log();
+            }
+            if (decomposeEquityCommodities) {
+                eqComDecompositionTradeIds_.insert(tradeId);
+            }
+        }
+        if (decomposeEquityCommodities &&
+            (trade->tradeType() == "TotalReturnSwap" || trade->tradeType() == "ContractForDifference")) {
+            std::map<std::string, double> decompositionIndexQuanities;
+            for (const auto& [datum, value] : trade->additionalData()) {
+                if (value.has_value() && boost::starts_with(datum, "underlying_quantity_")) {
+                    decompositionIndexQuanities[datum.substr(20)] = QuantLib::ext::any_cast<double>(value);
+                }
+            }
+            if (!decompositionIndexQuanities.empty()) {
+                currencyHedgedIndexQuantities_[tradeId] = decompositionIndexQuanities;
+            }
+        }
+
+        decomposeCreditIndex(trade, todaysMarket_, sensitivityDecompositionWeights, decomposeCredit);
+        if (decomposeCredit) {
+            defaultRiskDecompositionWeights_[tradeId] = sensitivityDecompositionWeights;
+        }
+    }
     decompose_ = !defaultRiskDecompositionWeights_.empty() || !eqComDecompositionTradeIds_.empty();
 }
 
@@ -76,6 +112,12 @@ std::vector<SensitivityRecord> DecomposedSensitivityStream::decompose(const Sens
                                   refDataManager_ != nullptr &&
                                   refDataManager_->hasData("CommodityIndex", record.key_1.name);
 
+    if (isEquitySpotSensi && refDataManager_->hasData("Equity", record.key_1.name)) {
+        auto eqRefData = QuantLib::ext::dynamic_pointer_cast<ore::data::EquityReferenceDatum>(
+                refDataManager_->getData("Equity", record.key_1.name));
+        isEquitySpotSensi = eqRefData->equityData().isIndex;       
+    }
+
     try {
         if (tradeMarkedForDecompositionDefaultRisk && isSurvivalProbSensi && isNotCrossGamma) {
             return decomposeSurvivalProbability(record);
@@ -91,7 +133,7 @@ std::vector<SensitivityRecord> DecomposedSensitivityStream::decompose(const Sens
                 indexDecomposition(record.delta, record.key_1.name, ore::data::CurveSpec::CurveType::Commodity);
             return sensitivityRecords(decompResults.spotRisk, decompResults.fxRisk, decompResults.indexCurrency,
                                       record);
-        } else if (tradeMarkedForDecomposition && (isCommoditySpotSensi || isEquitySpotSensi) && isNotCrossGamma) {
+        } else if (tradeMarkedForDecomposition && (isCommoditySpotSensi || isEquitySpotSensi ) && isNotCrossGamma) {
             auto subFields = std::map<std::string, std::string>({{"tradeId", record.tradeId}});
             StructuredAnalyticsErrorMessage(
                 "Sensitivity Decomposition", "Index decomposition failed",
@@ -123,7 +165,10 @@ DecomposedSensitivityStream::decomposeSurvivalProbability(const SensitivityRecor
     for (const auto& [constituent, weight] : defaultRiskDecompositionWeights_.at(record.tradeId)) {
         decompRecord.key_1 = RiskFactorKey(record.key_1.keytype, constituent, record.key_1.index);
         decompRecord.delta = record.delta * weight;
-        decompRecord.gamma = record.gamma * weight;
+        decompRecord.gamma = record.gamma;
+        if (decompRecord.gamma != QuantLib::Null<QuantLib::Real>()) {
+            decompRecord.gamma *= weight;
+        }
         results.push_back(decompRecord);
     }
     return results;
@@ -160,9 +205,9 @@ double DecomposedSensitivityStream::fxRiskShiftSize(const std::string ccy) const
     auto fxpair = ccy + baseCurrency_;
     auto fxShiftSizeIt = ssd_->fxShiftData().find(fxpair);
     QL_REQUIRE(fxShiftSizeIt != ssd_->fxShiftData().end(), "Couldn't find shiftsize for " << fxpair);
-    QL_REQUIRE(fxShiftSizeIt->second.shiftType == ore::analytics::ShiftType::Relative,
+    QL_REQUIRE(fxShiftSizeIt->second->shiftType == ore::analytics::ShiftType::Relative,
                "Requires a relative fxSpot shift for index decomposition");
-    return fxShiftSizeIt->second.shiftSize;
+    return fxShiftSizeIt->second->shiftSize;
 }
 
 std::map<std::string, double>
@@ -180,9 +225,9 @@ DecomposedSensitivityStream::fxRiskShiftSizes(const std::map<std::string, std::v
 double DecomposedSensitivityStream::equitySpotShiftSize(const std::string name) const {
     auto eqShiftSizeIt = ssd_->equityShiftData().find(name);
     QL_REQUIRE(eqShiftSizeIt != ssd_->equityShiftData().end(), "Couldn't find a equity shift size for " << name);
-    QL_REQUIRE(eqShiftSizeIt->second.shiftType == ore::analytics::ShiftType::Relative,
+    QL_REQUIRE(eqShiftSizeIt->second->shiftType == ore::analytics::ShiftType::Relative,
                "Requires a relative eqSpot shift for index decomposition");
-    return eqShiftSizeIt->second.shiftSize;
+    return eqShiftSizeIt->second->shiftSize;
 }
 
 double DecomposedSensitivityStream::assetSpotShiftSize(const std::string indexName,
@@ -244,7 +289,7 @@ DecomposedSensitivityStream::indexDecomposition(double delta, const std::string&
                    << indexName << ") for trade: no reference data found. Continuing without decomposition.");
 
     auto refDatum = refDataManager_->getData(refDataType, indexName);
-    auto indexRefDatum = boost::dynamic_pointer_cast<ore::data::IndexReferenceDatum>(refDatum);
+    auto indexRefDatum = QuantLib::ext::dynamic_pointer_cast<ore::data::IndexReferenceDatum>(refDatum);
     std::string indexCurrency = curveCurrency(indexName, curveType);
     std::map<string, double> indexWeights = indexRefDatum->underlyings();
     auto spotRisk = constituentSpotRiskFromDecomposition(delta, indexWeights);
@@ -264,7 +309,7 @@ DecomposedSensitivityStream::decomposeCurrencyHedgedIndexRisk(const SensitivityR
     auto indexName = sr.key_1.name;
     auto indexCurrency = curveCurrency(indexName, ore::data::CurveSpec::CurveType::Equity);
 
-    boost::shared_ptr<ore::data::CurrencyHedgedEquityIndexDecomposition> decomposeCurrencyHedgedIndexHelper;
+    QuantLib::ext::shared_ptr<ore::data::CurrencyHedgedEquityIndexDecomposition> decomposeCurrencyHedgedIndexHelper;
     decomposeCurrencyHedgedIndexHelper =
         loadCurrencyHedgedIndexDecomposition(indexName, refDataManager_, curveConfigs_);
     if (decomposeCurrencyHedgedIndexHelper != nullptr) {
@@ -278,7 +323,7 @@ DecomposedSensitivityStream::decomposeCurrencyHedgedIndexRisk(const SensitivityR
                    "CurrencyHedgedIndexDecomposition failed, there is no market given quantity for trade "
                        << sr.tradeId);
 
-        Date today = QuantLib::Settings::instance().evaluationDate();
+        QuantLib::Date today = QuantLib::Settings::instance().evaluationDate();
 
         auto quantity = currencyHedgedIndexQuantities_.at(sr.tradeId).find("EQ-" + indexName)->second;
 

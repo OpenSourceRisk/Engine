@@ -40,7 +40,7 @@ public:
 
 protected:
     static bool instrumentIsHandled(const std::vector<Leg>& legs, const std::vector<bool>& payer,
-                                    const std::vector<Currency>& currency, const boost::shared_ptr<Exercise>& exercise,
+                                    const std::vector<Currency>& currency, const QuantLib::ext::shared_ptr<Exercise>& exercise,
                                     const Settlement::Type& settlementType, const Settlement::Method& settlementMethod,
                                     std::vector<std::string>& messages);
 
@@ -54,13 +54,17 @@ protected:
     mutable std::vector<Leg> legs_;
     mutable std::vector<bool> payer_;
     mutable std::vector<Currency> currency_;
-    mutable boost::shared_ptr<Exercise> exercise_;
+    mutable QuantLib::ext::shared_ptr<Exercise> exercise_;
     mutable Settlement::Type settlementType_;
     mutable Settlement::Method settlementMethod_;
+    mutable bool midCouponExercise_;
+    mutable Period noticePeriod_;
+    mutable Calendar noticeCalendar_;
+    mutable BusinessDayConvention noticeConvention_;
 
     // outputs
     mutable Real npv_, underlyingNpv_;
-    mutable std::map<std::string, boost::any> additionalResults_;
+    mutable std::map<std::string, QuantLib::ext::any> additionalResults_;
 };
 
 class BlackMultiLegOptionEngine : public QuantLib::GenericEngine<MultiLegOption::arguments, MultiLegOption::results>,

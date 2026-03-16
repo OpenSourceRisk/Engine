@@ -22,7 +22,7 @@ namespace QuantExt {
 
 Peru::Peru(Market market) {
     // all calendar instances share the same implementation instance
-    static boost::shared_ptr<Calendar::Impl> impl(new Peru::LseImpl);
+    static QuantLib::ext::shared_ptr<Calendar::Impl> impl(new Peru::LseImpl);
     impl_ = impl;
 }
 

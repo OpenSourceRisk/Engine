@@ -29,9 +29,9 @@
 
 #include <ored/marketdata/market.hpp>
 #include <ored/model/fxbsdata.hpp>
+#include <qle/models/crossassetmodel.hpp>
 #include <qle/models/marketobserver.hpp>
 #include <qle/models/modelbuilder.hpp>
-#include <qle/models/crossassetmodel.hpp>
 
 namespace ore {
 namespace data {
@@ -49,13 +49,16 @@ class FxBsBuilder : public QuantExt::ModelBuilder {
 public:
     //! Constructor
     FxBsBuilder( //! Market object
-        const boost::shared_ptr<ore::data::Market>& market,
+        const QuantLib::ext::shared_ptr<ore::data::Market>& market,
         //! FX model parameters/description
-        const boost::shared_ptr<FxBsData>& data,
+        const QuantLib::ext::shared_ptr<FxBsData>& data,
         //! Market configuration to use
         const std::string& configuration = Market::defaultConfiguration,
         //! the reference calibration grid
-        const std::string& referenceCalibrationGrid = "");
+        const std::string& referenceCalibrationGrid = "",
+        //! id of the builder
+        const std::string& id = "unknown"
+    );
 
     //! Return calibration error
     Real error() const;
@@ -63,8 +66,8 @@ public:
     //! \name Inspectors
     //@{
     std::string foreignCurrency() { return data_->foreignCcy(); }
-    boost::shared_ptr<QuantExt::FxBsParametrization> parametrization() const;
-    std::vector<boost::shared_ptr<BlackCalibrationHelper>> optionBasket() const;
+    QuantLib::ext::shared_ptr<QuantExt::FxBsParametrization> parametrization() const;
+    std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>> optionBasket() const;
     //@}
 
     //! \name ModelBuilder interface
@@ -72,10 +75,11 @@ public:
     void forceRecalculate() override;
     bool requiresRecalibration() const override;
     //@}
-    
+
     void setCalibrationDone() const;
 
 private:
+    void processException(const std::string& s, const std::exception& e);
     void performCalculations() const override;
     Real optionStrike(const Size j) const;
     Date optionExpiry(const Size j) const;
@@ -84,18 +88,19 @@ private:
     bool volSurfaceChanged(const bool updateCache) const;
 
     // input data
-    const boost::shared_ptr<ore::data::Market> market_;
+    const QuantLib::ext::shared_ptr<ore::data::Market> market_;
     const std::string configuration_;
-    const boost::shared_ptr<FxBsData> data_;
+    const QuantLib::ext::shared_ptr<FxBsData> data_;
     const std::string referenceCalibrationGrid_;
+    const std::string id_;
 
     // computed
     mutable Real error_;
-    boost::shared_ptr<QuantExt::FxBsParametrization> parametrization_;
+    QuantLib::ext::shared_ptr<QuantExt::FxBsParametrization> parametrization_;
 
     // which options in data->optionExpiries() are actually in the basket?
     mutable std::vector<bool> optionActive_;
-    mutable std::vector<boost::shared_ptr<BlackCalibrationHelper>> optionBasket_;
+    mutable std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>> optionBasket_;
     mutable Array optionExpiries_;
 
     // relevant market data
@@ -110,7 +115,7 @@ private:
     bool forceCalibration_ = false;
 
     // market observer
-    boost::shared_ptr<QuantExt::MarketObserver> marketObserver_;
+    QuantLib::ext::shared_ptr<QuantExt::MarketObserver> marketObserver_;
 };
 
 } // namespace data

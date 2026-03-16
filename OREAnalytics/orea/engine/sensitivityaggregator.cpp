@@ -49,7 +49,7 @@ SensitivityAggregator::SensitivityAggregator(const map<string, function<bool(str
     init();
 }
 
-void SensitivityAggregator::aggregate(SensitivityStream& ss, const boost::shared_ptr<ScenarioFilter>& filter) {
+void SensitivityAggregator::aggregate(SensitivityStream& ss, const QuantLib::ext::shared_ptr<ScenarioFilter>& filter) {
     // Ensure at start of stream
     ss.reset();
 

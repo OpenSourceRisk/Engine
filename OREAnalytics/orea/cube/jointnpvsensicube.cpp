@@ -17,20 +17,19 @@
 */
 
 #include <orea/cube/jointnpvsensicube.hpp>
-
 #include <ql/errors.hpp>
-
+#include <algorithm>
 #include <numeric>
 #include <set>
 
 namespace ore {
 namespace analytics {
 
-JointNPVSensiCube::JointNPVSensiCube(const boost::shared_ptr<NPVSensiCube>& cube1,
-                                     const boost::shared_ptr<NPVSensiCube>& cube2, const std::set<std::string>& ids)
+JointNPVSensiCube::JointNPVSensiCube(const QuantLib::ext::shared_ptr<NPVSensiCube>& cube1,
+                                     const QuantLib::ext::shared_ptr<NPVSensiCube>& cube2, const std::set<std::string>& ids)
     : JointNPVSensiCube({cube1, cube2}, ids) {}
 
-JointNPVSensiCube::JointNPVSensiCube(const std::vector<boost::shared_ptr<NPVSensiCube>>& cubes,
+JointNPVSensiCube::JointNPVSensiCube(const std::vector<QuantLib::ext::shared_ptr<NPVSensiCube>>& cubes,
                                      const std::set<std::string>& ids)
     : NPVSensiCube(), cubes_(cubes) {
 
@@ -101,7 +100,7 @@ const std::vector<QuantLib::Date>& JointNPVSensiCube::dates() const { return cub
 
 QuantLib::Date JointNPVSensiCube::asof() const { return cubes_[0]->asof(); }
 
-const std::pair<boost::shared_ptr<NPVSensiCube>, Size>& JointNPVSensiCube::cubeAndId(Size id) const {
+const std::pair<QuantLib::ext::shared_ptr<NPVSensiCube>, Size>& JointNPVSensiCube::cubeAndId(Size id) const {
     QL_REQUIRE(id < cubeAndId_.size(),
                "JointNPVSensiCube: id (" << id << ") out of range, have " << cubeAndId_.size() << " ids");
     return cubeAndId_[id];
@@ -141,14 +140,19 @@ std::set<QuantLib::Size> JointNPVSensiCube::relevantScenarios() const {
     return tmp;
 }
 
-void JointNPVSensiCube::remove(Size id) {
+void JointNPVSensiCube::removeT0(Size id) {
     const auto& c = cubeAndId(id);
-    c.first->remove(c.second);
+    c.first->removeT0(c.second);
 }
 
-void JointNPVSensiCube::remove(Size id, Size sample) {
+void JointNPVSensiCube::remove(Size id, Size sample, bool useT0) {
     const auto& c = cubeAndId(id);
-    c.first->remove(c.second, sample);
+    c.first->remove(c.second, sample, useT0);
+}
+
+bool JointNPVSensiCube::usesDoublePrecision() const {
+    return std::all_of(cubes_.begin(), cubes_.end(),
+                       [](const QuantLib::ext::shared_ptr<NPVCube>& c) { return c->usesDoublePrecision(); });
 }
 
 } // namespace analytics

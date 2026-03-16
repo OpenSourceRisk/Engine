@@ -1,0 +1,325 @@
+<?xml version="1.0"?>
+<Portfolio>
+  <Trade id="Flexi-Swap">
+    <TradeType>FlexiSwap</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <FlexiSwapData>
+      <LowerNotionalBounds>
+        <Notional>478389819.115875</Notional>
+        <Notional startDate="20160405">455461514.160842</Notional>
+        <Notional startDate="20160505">430598272.450459</Notional>
+        <Notional startDate="20160605">406834728.684931</Notional>
+        <Notional startDate="20160705">383030020.186236</Notional>
+        <Notional startDate="20160805">359759060.449326</Notional>
+        <Notional startDate="20160905">338234505.8203</Notional>
+        <Notional startDate="20161005">319055955.129439</Notional>
+        <Notional startDate="20161105">300031066.197307</Notional>
+        <Notional startDate="20161205">280741342.070088</Notional>
+        <Notional startDate="20170105">262654026.37368</Notional>
+        <Notional startDate="20170205">245109900.078241</Notional>
+        <Notional startDate="20170305">228563346.129247</Notional>
+        <Notional startDate="20170405">213096961.45315</Notional>
+        <Notional startDate="20170505">195821613.26902</Notional>
+        <Notional startDate="20170605">179966966.708127</Notional>
+        <Notional startDate="20170705">164730530.642063</Notional>
+        <Notional startDate="20170805">149341537.751244</Notional>
+        <Notional startDate="20170905">135305158.201439</Notional>
+        <Notional startDate="20171005">123459194.378938</Notional>
+        <Notional startDate="20171105">112506739.29705</Notional>
+        <Notional startDate="20171205">101712821.124484</Notional>
+        <Notional startDate="20180105">91663845.5372295</Notional>
+        <Notional startDate="20180205">82243452.5368411</Notional>
+        <Notional startDate="20180305">72687748.4266488</Notional>
+        <Notional startDate="20180405">61325468.3673149</Notional>
+        <Notional startDate="20180505">48125737.5367252</Notional>
+        <Notional startDate="20180605">34869356.3719444</Notional>
+        <Notional startDate="20180705">20417222.3242845</Notional>
+        <Notional startDate="20180805">6679756.33305819</Notional>
+        <Notional startDate="20180905">0</Notional>
+        <Notional startDate="20181005">0</Notional>
+        <Notional startDate="20181105">0</Notional>
+        <Notional startDate="20181205">0</Notional>
+        <Notional startDate="20190105">0</Notional>
+      </LowerNotionalBounds>
+      <OptionLongShort>Short</OptionLongShort>
+      <LegData>
+        <LegType>Fixed</LegType>
+        <Payer>false</Payer>
+        <Currency>EUR</Currency>
+        <Notionals>
+          <Notional>478389819.115875</Notional>
+          <Notional startDate="20160405">455461514.160842</Notional>
+          <Notional startDate="20160505">430598272.450459</Notional>
+          <Notional startDate="20160605">406834728.684931</Notional>
+          <Notional startDate="20160705">383030020.186236</Notional>
+          <Notional startDate="20160805">359759060.449326</Notional>
+          <Notional startDate="20160905">338234505.8203</Notional>
+          <Notional startDate="20161005">319055955.129439</Notional>
+          <Notional startDate="20161105">300031066.197307</Notional>
+          <Notional startDate="20161205">280741342.070088</Notional>
+          <Notional startDate="20170105">262654026.37368</Notional>
+          <Notional startDate="20170205">245109900.078241</Notional>
+          <Notional startDate="20170305">228563346.129247</Notional>
+          <Notional startDate="20170405">213096961.45315</Notional>
+          <Notional startDate="20170505">195821613.26902</Notional>
+          <Notional startDate="20170605">179966966.708127</Notional>
+          <Notional startDate="20170705">164730530.642063</Notional>
+          <Notional startDate="20170805">149341537.751244</Notional>
+          <Notional startDate="20170905">135305158.201439</Notional>
+          <Notional startDate="20171005">123459194.378938</Notional>
+          <Notional startDate="20171105">112506739.29705</Notional>
+          <Notional startDate="20171205">101712821.124484</Notional>
+          <Notional startDate="20180105">91663845.5372295</Notional>
+          <Notional startDate="20180205">82243452.5368411</Notional>
+          <Notional startDate="20180305">72687748.4266488</Notional>
+          <Notional startDate="20180405">61325468.3673149</Notional>
+          <Notional startDate="20180505">48125737.5367252</Notional>
+          <Notional startDate="20180605">34869356.3719444</Notional>
+          <Notional startDate="20180705">20417222.3242845</Notional>
+          <Notional startDate="20180805">6679756.33305819</Notional>
+          <Notional startDate="20180905">0</Notional>
+          <Notional startDate="20181005">0</Notional>
+          <Notional startDate="20181105">0</Notional>
+          <Notional startDate="20181205">0</Notional>
+          <Notional startDate="20190105">0</Notional>
+        </Notionals>
+        <DayCounter>A360</DayCounter>
+        <PaymentConvention>F</PaymentConvention>
+        <FixedLegData>
+          <Rates>
+            <Rate>0.0020</Rate>
+          </Rates>
+        </FixedLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>20160309</StartDate>
+            <EndDate>20190209</EndDate>
+            <Tenor>1M</Tenor>
+            <Calendar>TARGET</Calendar>
+            <Convention>MF</Convention>
+            <TermConvention>MF</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+      <LegData>
+        <LegType>Floating</LegType>
+        <Payer>true</Payer>
+        <Currency>EUR</Currency>
+        <Notionals>
+          <Notional>478389819.115875</Notional>
+          <Notional startDate="20160405">455461514.160842</Notional>
+          <Notional startDate="20160505">430598272.450459</Notional>
+          <Notional startDate="20160605">406834728.684931</Notional>
+          <Notional startDate="20160705">383030020.186236</Notional>
+          <Notional startDate="20160805">359759060.449326</Notional>
+          <Notional startDate="20160905">338234505.8203</Notional>
+          <Notional startDate="20161005">319055955.129439</Notional>
+          <Notional startDate="20161105">300031066.197307</Notional>
+          <Notional startDate="20161205">280741342.070088</Notional>
+          <Notional startDate="20170105">262654026.37368</Notional>
+          <Notional startDate="20170205">245109900.078241</Notional>
+          <Notional startDate="20170305">228563346.129247</Notional>
+          <Notional startDate="20170405">213096961.45315</Notional>
+          <Notional startDate="20170505">195821613.26902</Notional>
+          <Notional startDate="20170605">179966966.708127</Notional>
+          <Notional startDate="20170705">164730530.642063</Notional>
+          <Notional startDate="20170805">149341537.751244</Notional>
+          <Notional startDate="20170905">135305158.201439</Notional>
+          <Notional startDate="20171005">123459194.378938</Notional>
+          <Notional startDate="20171105">112506739.29705</Notional>
+          <Notional startDate="20171205">101712821.124484</Notional>
+          <Notional startDate="20180105">91663845.5372295</Notional>
+          <Notional startDate="20180205">82243452.5368411</Notional>
+          <Notional startDate="20180305">72687748.4266488</Notional>
+          <Notional startDate="20180405">61325468.3673149</Notional>
+          <Notional startDate="20180505">48125737.5367252</Notional>
+          <Notional startDate="20180605">34869356.3719444</Notional>
+          <Notional startDate="20180705">20417222.3242845</Notional>
+          <Notional startDate="20180805">6679756.33305819</Notional>
+          <Notional startDate="20180905">0</Notional>
+          <Notional startDate="20181005">0</Notional>
+          <Notional startDate="20181105">0</Notional>
+          <Notional startDate="20181205">0</Notional>
+          <Notional startDate="20190105">0</Notional>
+        </Notionals>
+        <DayCounter>A360</DayCounter>
+        <PaymentConvention>MF</PaymentConvention>
+        <FloatingLegData>
+          <Index>EUR-EURIBOR-1M</Index>
+          <Spreads>
+            <Spread>0.0029</Spread>
+          </Spreads>
+          <Floors>
+            <Floor>0.0</Floor>
+          </Floors>
+          <IsInArrears>false</IsInArrears>
+          <FixingDays>2</FixingDays>
+        </FloatingLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>20160309</StartDate>
+            <EndDate>20190209</EndDate>
+            <Tenor>1M</Tenor>
+            <Calendar>TARGET</Calendar>
+            <Convention>MF</Convention>
+            <TermConvention>MF</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+    </FlexiSwapData>
+  </Trade>
+  <Trade id="Vanilla-Swap">
+    <TradeType>Swap</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <SwapData>
+      <LegData>
+        <LegType>Fixed</LegType>
+        <Payer>false</Payer>
+        <Currency>EUR</Currency>
+        <Notionals>
+          <Notional>478389819.115875</Notional>
+          <Notional startDate="20160405">455461514.160842</Notional>
+          <Notional startDate="20160505">430598272.450459</Notional>
+          <Notional startDate="20160605">406834728.684931</Notional>
+          <Notional startDate="20160705">383030020.186236</Notional>
+          <Notional startDate="20160805">359759060.449326</Notional>
+          <Notional startDate="20160905">338234505.8203</Notional>
+          <Notional startDate="20161005">319055955.129439</Notional>
+          <Notional startDate="20161105">300031066.197307</Notional>
+          <Notional startDate="20161205">280741342.070088</Notional>
+          <Notional startDate="20170105">262654026.37368</Notional>
+          <Notional startDate="20170205">245109900.078241</Notional>
+          <Notional startDate="20170305">228563346.129247</Notional>
+          <Notional startDate="20170405">213096961.45315</Notional>
+          <Notional startDate="20170505">195821613.26902</Notional>
+          <Notional startDate="20170605">179966966.708127</Notional>
+          <Notional startDate="20170705">164730530.642063</Notional>
+          <Notional startDate="20170805">149341537.751244</Notional>
+          <Notional startDate="20170905">135305158.201439</Notional>
+          <Notional startDate="20171005">123459194.378938</Notional>
+          <Notional startDate="20171105">112506739.29705</Notional>
+          <Notional startDate="20171205">101712821.124484</Notional>
+          <Notional startDate="20180105">91663845.5372295</Notional>
+          <Notional startDate="20180205">82243452.5368411</Notional>
+          <Notional startDate="20180305">72687748.4266488</Notional>
+          <Notional startDate="20180405">61325468.3673149</Notional>
+          <Notional startDate="20180505">48125737.5367252</Notional>
+          <Notional startDate="20180605">34869356.3719444</Notional>
+          <Notional startDate="20180705">20417222.3242845</Notional>
+          <Notional startDate="20180805">6679756.33305819</Notional>
+          <Notional startDate="20180905">0</Notional>
+          <Notional startDate="20181005">0</Notional>
+          <Notional startDate="20181105">0</Notional>
+          <Notional startDate="20181205">0</Notional>
+          <Notional startDate="20190105">0</Notional>
+        </Notionals>
+        <DayCounter>A360</DayCounter>
+        <PaymentConvention>F</PaymentConvention>
+        <FixedLegData>
+          <Rates>
+            <Rate>0.0020</Rate>
+          </Rates>
+        </FixedLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>20160309</StartDate>
+            <EndDate>20190209</EndDate>
+            <Tenor>1M</Tenor>
+            <Calendar>TARGET</Calendar>
+            <Convention>MF</Convention>
+            <TermConvention>MF</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+      <LegData>
+        <LegType>Floating</LegType>
+        <Payer>true</Payer>
+        <Currency>EUR</Currency>
+        <Notionals>
+          <Notional>478389819.115875</Notional>
+          <Notional startDate="20160405">455461514.160842</Notional>
+          <Notional startDate="20160505">430598272.450459</Notional>
+          <Notional startDate="20160605">406834728.684931</Notional>
+          <Notional startDate="20160705">383030020.186236</Notional>
+          <Notional startDate="20160805">359759060.449326</Notional>
+          <Notional startDate="20160905">338234505.8203</Notional>
+          <Notional startDate="20161005">319055955.129439</Notional>
+          <Notional startDate="20161105">300031066.197307</Notional>
+          <Notional startDate="20161205">280741342.070088</Notional>
+          <Notional startDate="20170105">262654026.37368</Notional>
+          <Notional startDate="20170205">245109900.078241</Notional>
+          <Notional startDate="20170305">228563346.129247</Notional>
+          <Notional startDate="20170405">213096961.45315</Notional>
+          <Notional startDate="20170505">195821613.26902</Notional>
+          <Notional startDate="20170605">179966966.708127</Notional>
+          <Notional startDate="20170705">164730530.642063</Notional>
+          <Notional startDate="20170805">149341537.751244</Notional>
+          <Notional startDate="20170905">135305158.201439</Notional>
+          <Notional startDate="20171005">123459194.378938</Notional>
+          <Notional startDate="20171105">112506739.29705</Notional>
+          <Notional startDate="20171205">101712821.124484</Notional>
+          <Notional startDate="20180105">91663845.5372295</Notional>
+          <Notional startDate="20180205">82243452.5368411</Notional>
+          <Notional startDate="20180305">72687748.4266488</Notional>
+          <Notional startDate="20180405">61325468.3673149</Notional>
+          <Notional startDate="20180505">48125737.5367252</Notional>
+          <Notional startDate="20180605">34869356.3719444</Notional>
+          <Notional startDate="20180705">20417222.3242845</Notional>
+          <Notional startDate="20180805">6679756.33305819</Notional>
+          <Notional startDate="20180905">0</Notional>
+          <Notional startDate="20181005">0</Notional>
+          <Notional startDate="20181105">0</Notional>
+          <Notional startDate="20181205">0</Notional>
+          <Notional startDate="20190105">0</Notional>
+        </Notionals>
+        <DayCounter>A360</DayCounter>
+        <PaymentConvention>MF</PaymentConvention>
+        <FloatingLegData>
+          <Index>EUR-EURIBOR-1M</Index>
+          <Spreads>
+            <Spread>0.0029</Spread>
+          </Spreads>
+          <Floors>
+            <Floor>0.0</Floor>
+          </Floors>
+          <IsInArrears>false</IsInArrears>
+          <FixingDays>2</FixingDays>
+        </FloatingLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>20160309</StartDate>
+            <EndDate>20190209</EndDate>
+            <Tenor>1M</Tenor>
+            <Calendar>TARGET</Calendar>
+            <Convention>MF</Convention>
+            <TermConvention>MF</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+    </SwapData>
+  </Trade>
+</Portfolio>

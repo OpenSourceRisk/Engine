@@ -1,6 +1,8 @@
 \subsubsection{Composite Trade}
 
-The \lstinline!CompositeTradeData!  node is the trade data container for the  \emph{CompositeTrade} trade type.   A composite trade is a hybrid position consisting of multiple component trades. The structure of an example \lstinline!CompositeTradeData! node for a commodity option is shown in 
+A composite trade is a hybrid position consisting of multiple component subtrades. As such it inherits the characteristics of the trades defined within it. Examples of Composite Trades include combinations of vanilla options like straddles.
+
+The \lstinline!CompositeTradeData!  node is the trade data container for the  \emph{CompositeTrade} trade type.   A composite trade is a hybrid position consisting of multiple component subtrades. The structure of an example \lstinline!CompositeTradeData! node for a commodity option is shown in 
 Listing \ref{lst:compositetrade_data}.
 
 \begin{listing}[H]
@@ -10,17 +12,31 @@ Listing \ref{lst:compositetrade_data}.
 		  <Currency>USD</Currency>
 		  <NotionalCalculation>Sum</NotionalCalculation>
 		  <Components>
-		    <Trade id="">
+		    <SubTrade id="">
 		      <!-- A valid trade xml -->
-		    </Trade>
-		    <Trade id="">
+		    </SubTrade>
+		    <SubTrade id="">
 		      <!-- A valid trade xml -->
-		    </Trade>
+		    </SubTrade>
 		  </Components>
 		</CompositeTradeData>
 	\end{minted}
 	\caption{Composite trade data}
 	\label{lst:compositetrade_data}
+\end{listing}
+
+\begin{listing}[H]
+	%\hrule\medskip
+	\begin{minted}[fontsize=\footnotesize]{xml}
+		<CompositeTradeData>
+		  <Currency>USD</Currency>
+		  <NotionalCalculation>Sum</NotionalCalculation>
+		  <PortfolioBasket>true</PortfolioBasket>
+		  <BasketName>NAME</BasketName>
+          <IndexQuantity>100</IndexQuantity>
+		</CompositeTradeData>
+	\end{minted}
+	\caption{Composite trade data with Portfolio Reference Data}
 \end{listing}
 
 The meanings and allowable values of the elements in the \lstinline!CompositeTradeData!  node follow below.
@@ -43,4 +59,9 @@ The meanings and allowable values of the elements in the \lstinline!CompositeTra
       Allowable values: Any non-negative real number.
 	\item Components: The portfolio of trades that make up the composite trade. \\
       Allowable values: These trades should be valid xmls that could otherwise be entered into the portfolio, with the exception that they can have empty ids.
+    \item PortfolioBasket [Optional]: Indicate if the Component represent a portfolio basket. \\
+    Allowable values: Boolean true or false.
+    \item BasketName [Optional]: The portfolio Id. \\
+    Allowable values: Any string. Note that if PortfolioBasket is True then there must be a BasketName. We look up the Basket within the reference data.
+    \item IndexQuantity [Optional]: Number of shares of the index.
 \end{itemize}

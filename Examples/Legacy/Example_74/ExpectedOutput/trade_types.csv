@@ -1,0 +1,10 @@
+#TradeTypes,Count
+"Bond",2
+"CapFloor",4
+"CreditDefaultSwap",1
+"EquityForward",2
+"EquityOption",4
+"FxForward",1
+"FxOption",2
+"Swap",5
+"Swaption",2

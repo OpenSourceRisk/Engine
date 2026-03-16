@@ -26,9 +26,9 @@
 namespace ore {
 namespace data {
 
-void BasketVarianceSwap::build(const boost::shared_ptr<EngineFactory>& factory) {
+void BasketVarianceSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory) {
 
-    auto builder = boost::dynamic_pointer_cast<ScriptedTradeEngineBuilder>(factory->builder("ScriptedTrade"));
+    auto builder = QuantLib::ext::dynamic_pointer_cast<ScriptedTradeEngineBuilder>(factory->builder("ScriptedTrade"));
 
     // set script parameters
 
@@ -149,7 +149,7 @@ void BasketVarianceSwap::setIsdaTaxonomyFields() {
 
     // ISDA taxonomy
     // asset class set in the base class already
-    std::string assetClass = boost::any_cast<std::string>(additionalData_["isdaAssetClass"]);
+    std::string assetClass = QuantLib::ext::any_cast<std::string>(additionalData_["isdaAssetClass"]);
     if (assetClass == "Equity") {
         additionalData_["isdaBaseProduct"] = string("Swap");
         additionalData_["isdaSubProduct"] = string("Parameter Return Variance");

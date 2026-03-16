@@ -1,0 +1,12 @@
+<TodaysMarket>
+  <YieldCurves id="default"/>
+  <DiscountingCurves id="default">
+    <DiscountingCurve currency="GBP">Yield/GBP/GBP-SONIA</DiscountingCurve>
+  </DiscountingCurves>
+  <IndexForwardingCurves id="default">
+    <Index name="GBP-SONIA">Yield/GBP/GBP-SONIA</Index>
+  </IndexForwardingCurves>
+  <ZeroInflationIndexCurves id="default">
+    <ZeroInflationIndexCurve name="UKRPI">Inflation/UKRPI/UKRPI_ZC_Swaps</ZeroInflationIndexCurve>
+  </ZeroInflationIndexCurves>
+</TodaysMarket>

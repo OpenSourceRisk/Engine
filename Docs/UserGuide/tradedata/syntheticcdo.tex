@@ -1,13 +1,22 @@
 \subsubsection{Synthetic CDO}
 
-A Synthetic Collateralized Debt Obligation (CDO), uses trade type \emph{SyntheticCDO} and is set up using a {\tt  CdoData} block as shown in listing \ref{lst:cdodata}.
+{\bf Payoff}
 
 A synthetic CDO is a basket credit derivative, where
 the protection seller receives a premium cash flow in exchange for providing (notional)
 protection against portfolio losses due to defaults in a specific tranche characterized by
 the attachment point A and detachment point D.
+Attachment point A is the fraction of the portfolio loss-given-default
+(LGD) where the protection starts, and the detachment
+point is the corresponding fraction where protection stops. The LGD is
+given by the sum of defaulted asset notional amounts $N_i$, reduced by
+their respective recovery rate $R_i$,i.e. $\LGD_i =(1-R_i)\,N_i$.
 
 CDOs can refer to the constituents of an index such as CDX or iTraxx, or be bespoke, i.e. refer to a bespoke basket of underlying credit names, using the \lstinline!BasketData! sub-node, (see section \ref{ss:basket_data})
+
+{\bf Input}
+
+A Synthetic Collateralized Debt Obligation (CDO), uses trade type \emph{SyntheticCDO} and is set up using a {\tt  CdoData} block as shown in listing \ref{lst:cdodata}.
 
 \begin{listing}[H]
 %\hrule\medskip

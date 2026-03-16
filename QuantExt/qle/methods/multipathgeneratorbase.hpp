@@ -51,6 +51,7 @@ public:
     virtual ~MultiPathGeneratorBase() {}
     virtual const Sample<MultiPath>& next() const = 0;
     virtual void reset() = 0;
+    virtual const TimeGrid& timeGrid() const = 0;
 };
 
 //! Instantiation of MultiPathGenerator with standard PseudoRandom traits
@@ -58,18 +59,19 @@ public:
  */
 class MultiPathGeneratorMersenneTwister : public MultiPathGeneratorBase {
 public:
-    MultiPathGeneratorMersenneTwister(const boost::shared_ptr<StochasticProcess>&, const TimeGrid&, BigNatural seed = 0,
+    MultiPathGeneratorMersenneTwister(const QuantLib::ext::shared_ptr<StochasticProcess>&, const TimeGrid&, BigNatural seed = 0,
                                       bool antitheticSampling = false);
     const Sample<MultiPath>& next() const override;
     void reset() override;
+    const TimeGrid& timeGrid() const override { return grid_; }
 
 private:
-    const boost::shared_ptr<StochasticProcess> process_;
+    const QuantLib::ext::shared_ptr<StochasticProcess> process_;
     TimeGrid grid_;
     BigNatural seed_;
 
-    boost::shared_ptr<MultiPathGenerator<PseudoRandom::rsg_type>> pg_;
-    boost::shared_ptr<PathGenerator<PseudoRandom::rsg_type>> pg1D_;
+    QuantLib::ext::shared_ptr<MultiPathGenerator<PseudoRandom::rsg_type>> pg_;
+    QuantLib::ext::shared_ptr<PathGenerator<PseudoRandom::rsg_type>> pg1D_;
     bool antitheticSampling_;
     mutable bool antitheticVariate_;
     mutable Sample<MultiPath> next_;
@@ -77,7 +79,7 @@ private:
 
 class MultiPathGeneratorMersenneTwisterAntithetic : public MultiPathGeneratorMersenneTwister {
 public:
-    MultiPathGeneratorMersenneTwisterAntithetic(const boost::shared_ptr<StochasticProcess>& p, const TimeGrid& grid,
+    MultiPathGeneratorMersenneTwisterAntithetic(const QuantLib::ext::shared_ptr<StochasticProcess>& p, const TimeGrid& grid,
                                                 BigNatural seed = 0)
         : MultiPathGeneratorMersenneTwister(p, grid, seed, true) {}
 };
@@ -90,19 +92,20 @@ for the use of the seed, see ql/math/randomnumbers/sobolrsg.cpp
 */
 class MultiPathGeneratorSobol : public MultiPathGeneratorBase {
 public:
-    MultiPathGeneratorSobol(const boost::shared_ptr<StochasticProcess>&, const TimeGrid&, BigNatural seed = 0,
+    MultiPathGeneratorSobol(const QuantLib::ext::shared_ptr<StochasticProcess>&, const TimeGrid&, BigNatural seed = 0,
                             SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7);
     const Sample<MultiPath>& next() const override;
     void reset() override;
+    const TimeGrid& timeGrid() const override { return grid_; }
 
 private:
-    const boost::shared_ptr<StochasticProcess> process_;
+    const QuantLib::ext::shared_ptr<StochasticProcess> process_;
     TimeGrid grid_;
     BigNatural seed_;
     SobolRsg::DirectionIntegers directionIntegers_;
 
-    boost::shared_ptr<MultiPathGenerator<LowDiscrepancy::rsg_type>> pg_;
-    boost::shared_ptr<PathGenerator<LowDiscrepancy::rsg_type>> pg1D_;
+    QuantLib::ext::shared_ptr<MultiPathGenerator<LowDiscrepancy::rsg_type>> pg_;
+    QuantLib::ext::shared_ptr<PathGenerator<LowDiscrepancy::rsg_type>> pg1D_;
     mutable Sample<MultiPath> next_;
 };
 
@@ -114,22 +117,23 @@ for the use of the seed, see ql/math/randomnumbers/sobolrsg.cpp
 */
 class MultiPathGeneratorBurley2020Sobol : public MultiPathGeneratorBase {
 public:
-    MultiPathGeneratorBurley2020Sobol(const boost::shared_ptr<StochasticProcess>&, const TimeGrid&,
+    MultiPathGeneratorBurley2020Sobol(const QuantLib::ext::shared_ptr<StochasticProcess>&, const TimeGrid&,
                                       BigNatural seed = 42,
                                       SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7,
                                       BigNatural scrambleSeed = 43);
     const Sample<MultiPath>& next() const override;
     void reset() override;
+    const TimeGrid& timeGrid() const override { return grid_; }
 
 private:
-    const boost::shared_ptr<StochasticProcess> process_;
+    const QuantLib::ext::shared_ptr<StochasticProcess> process_;
     TimeGrid grid_;
     BigNatural seed_;
     SobolRsg::DirectionIntegers directionIntegers_;
     BigNatural scrambleSeed_;
 
-    boost::shared_ptr<MultiPathGenerator<InverseCumulativeRsg<Burley2020SobolRsg, InverseCumulativeNormal>>> pg_;
-    boost::shared_ptr<PathGenerator<InverseCumulativeRsg<Burley2020SobolRsg, InverseCumulativeNormal>>> pg1D_;
+    QuantLib::ext::shared_ptr<MultiPathGenerator<InverseCumulativeRsg<Burley2020SobolRsg, InverseCumulativeNormal>>> pg_;
+    QuantLib::ext::shared_ptr<PathGenerator<InverseCumulativeRsg<Burley2020SobolRsg, InverseCumulativeNormal>>> pg1D_;
     mutable Sample<MultiPath> next_;
 };
 
@@ -138,21 +142,22 @@ private:
  */
 class MultiPathGeneratorSobolBrownianBridgeBase : public MultiPathGeneratorBase {
 public:
-    MultiPathGeneratorSobolBrownianBridgeBase(const boost::shared_ptr<StochasticProcess>&, const TimeGrid&,
+    MultiPathGeneratorSobolBrownianBridgeBase(const QuantLib::ext::shared_ptr<StochasticProcess>&, const TimeGrid&,
                                               SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Steps,
                                               BigNatural seed = 0,
                                               SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7);
     const Sample<MultiPath>& next() const override;
+    const TimeGrid& timeGrid() const override { return grid_; }
 
 protected:
-    const boost::shared_ptr<StochasticProcess> process_;
+    const QuantLib::ext::shared_ptr<StochasticProcess> process_;
     TimeGrid grid_;
     SobolBrownianGenerator::Ordering ordering_;
     BigNatural seed_;
     SobolRsg::DirectionIntegers directionIntegers_;
-    boost::shared_ptr<SobolBrownianGeneratorBase> gen_;
+    QuantLib::ext::shared_ptr<SobolBrownianGeneratorBase> gen_;
     mutable Sample<MultiPath> next_;
-    boost::shared_ptr<StochasticProcess1D> process1D_;
+    QuantLib::ext::shared_ptr<StochasticProcess1D> process1D_;
 };
 
 //! Instantiation using SobolBrownianGenerator from  models/marketmodels/browniangenerators
@@ -160,7 +165,7 @@ protected:
  */
 class MultiPathGeneratorSobolBrownianBridge : public MultiPathGeneratorSobolBrownianBridgeBase {
 public:
-    MultiPathGeneratorSobolBrownianBridge(const boost::shared_ptr<StochasticProcess>&, const TimeGrid&,
+    MultiPathGeneratorSobolBrownianBridge(const QuantLib::ext::shared_ptr<StochasticProcess>&, const TimeGrid&,
                                           SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Steps,
                                           BigNatural seed = 0,
                                           SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7);
@@ -173,7 +178,7 @@ public:
 class MultiPathGeneratorBurley2020SobolBrownianBridge : public MultiPathGeneratorSobolBrownianBridgeBase {
 public:
     MultiPathGeneratorBurley2020SobolBrownianBridge(
-        const boost::shared_ptr<StochasticProcess>&, const TimeGrid&,
+        const QuantLib::ext::shared_ptr<StochasticProcess>&, const TimeGrid&,
         SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Steps, BigNatural seed = 42,
         SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7, BigNatural scrambleSeed = 43);
     void reset() override final;
@@ -182,9 +187,24 @@ protected:
     BigNatural scrambleSeed_;
 };
 
+//! Instantiation of MultiPathGenerator which generate t0 paths only
+/*! \ingroup methods
+ */
+class MultiPathGeneratorT0Only : public MultiPathGeneratorBase {
+public:
+    explicit MultiPathGeneratorT0Only(const QuantLib::ext::shared_ptr<StochasticProcess>&);
+    const Sample<MultiPath>& next() const override;
+    void reset() override;
+    const TimeGrid& timeGrid() const override;
+
+private:
+    const QuantLib::ext::shared_ptr<StochasticProcess> process_;
+    mutable Sample<MultiPath> next_;
+};
+
 //! Make function for path generators
-boost::shared_ptr<MultiPathGeneratorBase>
-makeMultiPathGenerator(const SequenceType s, const boost::shared_ptr<StochasticProcess>& process,
+QuantLib::ext::shared_ptr<MultiPathGeneratorBase>
+makeMultiPathGenerator(const SequenceType s, const QuantLib::ext::shared_ptr<StochasticProcess>& process,
                        const TimeGrid& timeGrid, const BigNatural seed,
                        const SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Steps,
                        const SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7);

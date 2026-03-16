@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include <boost/optional/optional.hpp>
+#include <ql/optional.hpp>
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/quote.hpp>
@@ -41,12 +41,12 @@ public:
     BaseCorrelationTermStructure(const Date& referenceDate, const Calendar& cal, BusinessDayConvention bdc,
                                  const std::vector<Period>& tenors, const std::vector<double>& detachmentPoints,
                                  const DayCounter& dc = DayCounter(), const Date& startDate = Date(),
-                                 boost::optional<DateGeneration::Rule> rule = boost::none);
+                                 QuantLib::ext::optional<DateGeneration::Rule> rule = QuantLib::ext::nullopt);
 
     BaseCorrelationTermStructure(Natural settlementDays, const Calendar& cal, BusinessDayConvention bdc,
                                  const std::vector<Period>& tenors, const std::vector<double>& detachmentPoints,
                                  const DayCounter& dc = DayCounter(), const Date& startDate = Date(),
-                                 boost::optional<DateGeneration::Rule> rule = boost::none);
+                                 QuantLib::ext::optional<DateGeneration::Rule> rule = QuantLib::ext::nullopt);
 
     virtual ~BaseCorrelationTermStructure() = default;
 
@@ -69,12 +69,12 @@ public:
 
     Date startDate() const { return startDate_; }
 
-    boost::optional<DateGeneration::Rule> rule() const { return rule_; }
+    QuantLib::ext::optional<DateGeneration::Rule> rule() const { return rule_; }
 
 private:
     BusinessDayConvention bdc_;
     Date startDate_;
-    boost::optional<DateGeneration::Rule> rule_;
+    QuantLib::ext::optional<DateGeneration::Rule> rule_;
 
     void validate() const;
 
@@ -97,7 +97,7 @@ public:
                                              const std::vector<Real>& detachmentPoints,
                                              const std::vector<std::vector<Handle<Quote>>>& baseCorrelations,
                                              const DayCounter& dc = DayCounter(), const Date& startDate = Date(),
-                                             boost::optional<DateGeneration::Rule> rule = boost::none,
+                                             QuantLib::ext::optional<DateGeneration::Rule> rule = QuantLib::ext::nullopt,
                                              Interpolator interpolator = Interpolator())
         : BaseCorrelationTermStructure(settlementDays, cal, bdc, tenors, detachmentPoints, dc, startDate, rule),
           quotes_(baseCorrelations), data_(detachmentPoints.size(), tenors.size(), 0.0), interpolator_(interpolator) {

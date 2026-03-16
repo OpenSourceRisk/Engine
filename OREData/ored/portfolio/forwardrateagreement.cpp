@@ -18,7 +18,9 @@
 
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/forwardrateagreement.hpp>
+#include <ored/portfolio/structuredtradewarning.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <qle/cashflows/iborfracoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 
@@ -28,7 +30,7 @@ using namespace std;
 namespace ore {
 namespace data {
 
-void ForwardRateAgreement::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void ForwardRateAgreement::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     // ISDA taxonomy
     additionalData_["isdaAssetClass"] = string("Interest Rate");
@@ -36,22 +38,22 @@ void ForwardRateAgreement::build(const boost::shared_ptr<EngineFactory>& engineF
     additionalData_["isdaSubProduct"] = string("");
     additionalData_["isdaTransaction"] = string("");
 
-    const boost::shared_ptr<Market> market = engineFactory->market();
+    const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
 
     Date startDate = parseDate(startDate_);
     Date endDate = parseDate(endDate_);
     Position::Type positionType = parsePositionType(longShort_);
     auto index = market->iborIndex(index_);
-    
-    boost::shared_ptr<FloatingRateCoupon> cpn;
-    if (auto overnightIndex = boost::dynamic_pointer_cast<QuantLib::OvernightIndex>(*index)) {
-        cpn = boost::make_shared<QuantExt::OvernightIndexedCoupon>(endDate, amount_, startDate, endDate, overnightIndex,
-                                                                   1.0, -strike_);
-        cpn->setPricer(boost::make_shared<QuantExt::OvernightIndexedCouponPricer>());
+
+    QuantLib::ext::shared_ptr<FloatingRateCoupon> cpn;
+    if (auto overnightIndex = QuantLib::ext::dynamic_pointer_cast<QuantLib::OvernightIndex>(*index)) {
+        cpn = QuantLib::ext::make_shared<QuantExt::OvernightIndexedCoupon>(endDate, amount_, startDate, endDate,
+                                                                           overnightIndex, 1.0, -strike_);
+        cpn->setPricer(QuantLib::ext::make_shared<QuantExt::OvernightIndexedCouponPricer>());
     } else {
         bool useIndexedCoupon = true;
-        cpn = boost::make_shared<QuantExt::IborFraCoupon>(startDate, endDate, amount_, *index, strike_);
-        cpn->setPricer(boost::make_shared<BlackIborCouponPricer>(
+        cpn = QuantLib::ext::make_shared<QuantExt::IborFraCoupon>(startDate, endDate, amount_, *index, strike_);
+        cpn->setPricer(QuantLib::ext::make_shared<BlackIborCouponPricer>(
             Handle<OptionletVolatilityStructure>(), BlackIborCouponPricer::TimingAdjustment::Black76,
             Handle<Quote>(ext::shared_ptr<Quote>(new SimpleQuote(1.0))), useIndexedCoupon));
     }
@@ -65,14 +67,49 @@ void ForwardRateAgreement::build(const boost::shared_ptr<EngineFactory>& engineF
     npvCurrency_ = npvCcy.code();
     notionalCurrency_ = npvCcy.code();
 
-    boost::shared_ptr<QuantLib::Swap> swap(new QuantLib::Swap(legs_, legPayers_));
-    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("Swap");
-    boost::shared_ptr<SwapEngineBuilderBase> swapBuilder = boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
+    QuantLib::ext::shared_ptr<QuantLib::Swap> swap(new QuantLib::Swap(legs_, legPayers_));
+    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("Swap");
+    QuantLib::ext::shared_ptr<SwapEngineBuilderBase> swapBuilder =
+        QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
     QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
-    swap->setPricingEngine(swapBuilder->engine(npvCcy, std::string(), std::string()));
+    swap->setPricingEngine(swapBuilder->engine(
+        npvCcy, envelope().additionalField("discount_curve", false, std::string()), std::string(), {}));
     setSensitivityTemplate(*swapBuilder);
+    addProductModelEngine(*swapBuilder);
     instrument_.reset(new VanillaInstrument(swap));
     maturity_ = endDate;
+    maturityType_ = "End Date";
+}
+
+const std::map<std::string, QuantLib::ext::any>& ForwardRateAgreement::additionalData() const {
+    QL_REQUIRE(instrument_ != nullptr, "no internal instrument set");
+    QuantLib::ext::shared_ptr<QuantLib::Swap> swap =
+        QuantLib::ext::dynamic_pointer_cast<QuantLib::Swap>(instrument_->qlInstrument());
+    QL_REQUIRE(swap != nullptr, "expect underlying ql instrument to be a swap");
+    QL_REQUIRE(swap->numberOfLegs() == 1, "expect underlying ql instrument to be a swap with one leg");
+    QL_REQUIRE(swap->leg(0).size() == 1, "expect that the underlying instrument is a swap with exaclty one cashflow");
+    const auto& cf = swap->leg(0)[0];
+    auto oncpn = QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(cf);
+    auto iborcpn = QuantLib::ext::dynamic_pointer_cast<QuantExt::IborFraCoupon>(cf);
+    QL_REQUIRE(oncpn != nullptr || iborcpn != nullptr,
+               "unexpected coupon type, expect OvernightIndexedCoupon or IborFraCoupon, contact dev, skip adding "
+               "implied_future_rate to additional results");
+    try {
+        double fairRate = 0.0;
+        if (oncpn != nullptr) {
+            fairRate = oncpn->effectiveIndexFixing();
+        } else {
+            fairRate = iborcpn->indexFixing();
+        }
+        additionalData_["implied_future_rate"] = 100. * (1.0 - fairRate);
+    } catch (const std::exception& e) {
+        StructuredTradeWarningMessage(
+            id(), tradeType(), "Internal warning",
+            "additionalData(): skip adding implied_future_rate to additional results, got unexpected error:" +
+                ore::data::to_string(e.what()))
+            .log();
+    }
+    return additionalData_;
 }
 
 void ForwardRateAgreement::fromXML(XMLNode* node) {
@@ -99,6 +136,28 @@ XMLNode* ForwardRateAgreement::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, fNode, "Strike", strike_);
     XMLUtils::addChild(doc, fNode, "Notional", amount_);
     return node;
+}
+
+map<AssetClass, set<string>>
+ForwardRateAgreement::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+    map<AssetClass, set<string>> result;
+    if (!instrument_)
+        return result;
+
+    QuantLib::ext::shared_ptr<QuantLib::Swap> swap =
+        QuantLib::ext::dynamic_pointer_cast<QuantLib::Swap>(instrument_->qlInstrument());
+    if (!swap)
+        return result;
+    if (swap->numberOfLegs() != 1 || swap->leg(0).size() != 1)
+        return result;
+    
+    const auto& cf = swap->leg(0)[0];
+    if (auto oncpn = QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(cf))
+        result[AssetClass::IR].insert(oncpn->index()->name());
+    else if (auto iborcpn = QuantLib::ext::dynamic_pointer_cast<QuantExt::IborFraCoupon>(cf))
+        result[AssetClass::IR].insert(iborcpn->index()->name());
+
+    return result;
 }
 } // namespace data
 } // namespace ore

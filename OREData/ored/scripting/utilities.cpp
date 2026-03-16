@@ -20,6 +20,8 @@
 #include <ored/scripting/utilities.hpp>
 
 #include <qle/math/randomvariablelsmbasissystem.hpp>
+#include <qle/methods/multipathgeneratorbase.hpp>
+#include <qle/utilities/inflation.hpp>
 
 #include <ored/utilities/conventionsbasedfutureexpiry.hpp>
 #include <ored/utilities/indexparser.hpp>
@@ -29,10 +31,9 @@
 
 #include <ql/models/marketmodels/browniangenerators/mtbrowniangenerator.hpp>
 #include <ql/settings.hpp>
-#include <qle/methods/multipathgeneratorbase.hpp>
+#include <ql/optional.hpp>
 
 #include <boost/algorithm/string.hpp>
-
 namespace ore {
 namespace data {
 using namespace QuantLib;
@@ -138,29 +139,31 @@ ASTNodePtr parseScript(const std::string& code) {
 std::pair<std::string, Period> convertIndexToCamCorrelationEntry(const std::string& i) {
     IndexInfo info(i);
     if (info.isIr()) {
-        return std::make_pair("IR:" + info.ir()->currency().code(), info.ir()->tenor());
+        return std::make_pair("IR#" + info.ir()->currency().code(), info.ir()->tenor());
     } else if (info.isInf()) {
-        return std::make_pair("INF:" + info.infName(), 0 * Days);
+        return std::make_pair("INF#" + info.infName(), 0 * Days);
     } else if (info.isFx()) {
-        return std::make_pair("FX:" + info.fx()->sourceCurrency().code() + info.fx()->targetCurrency().code(),
+        return std::make_pair("FX#" + info.fx()->sourceCurrency().code() + info.fx()->targetCurrency().code(),
                               0 * Days);
     } else if (info.isEq()) {
-        return std::make_pair("EQ:" + info.eq()->name(), 0 * Days);
+        return std::make_pair("EQ#" + info.eq()->name(), 0 * Days);
+    } else if (info.isComm()) {
+        return std::make_pair("COM#" + info.commName(), 0 * Days);
     } else {
         QL_FAIL("convertIndextoCamCorrelationEntry(): index '" << i << "' not recognised");
     }
 }
 
-void checkDuplicateName(const boost::shared_ptr<Context> context, const std::string& name) {
+void checkDuplicateName(const QuantLib::ext::shared_ptr<Context> context, const std::string& name) {
     auto scalar = context->scalars.find(name);
     auto array = context->arrays.find(name);
     QL_REQUIRE(scalar == context->scalars.end() && array == context->arrays.end(),
                "variable '" << name << "' already declared.");
 }
 
-boost::shared_ptr<Context> makeContext(Size nPaths, const std::string& gridCoarsening,
+QuantLib::ext::shared_ptr<Context> makeContext(Size nPaths, const std::string& gridCoarsening,
                                        const std::vector<std::string>& schedulesEligibleForCoarsening,
-                                       const boost::shared_ptr<ReferenceDataManager>& referenceData,
+                                       const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                                        const std::vector<ScriptedTradeEventData>& events,
                                        const std::vector<ScriptedTradeValueTypeData>& numbers,
                                        const std::vector<ScriptedTradeValueTypeData>& indices,
@@ -169,7 +172,7 @@ boost::shared_ptr<Context> makeContext(Size nPaths, const std::string& gridCoars
 
     TLOG("make context");
 
-    auto context = boost::make_shared<Context>();
+    auto context = QuantLib::ext::make_shared<Context>();
 
 
     map<string, ScriptedTradeEventData> derivedSchedules;
@@ -317,7 +320,7 @@ boost::shared_ptr<Context> makeContext(Size nPaths, const std::string& gridCoars
     return context;
 }
 
-void addNewSchedulesToContext(boost::shared_ptr<Context> context,
+void addNewSchedulesToContext(QuantLib::ext::shared_ptr<Context> context,
                               const std::vector<ScriptedTradeScriptData::NewScheduleData>& newSchedules) {
     for (auto const& x : newSchedules) {
         DLOG("adding new schedule " << x.name());
@@ -374,7 +377,7 @@ private:
 
 } // namespace
 
-void amendContextVariablesSizes(boost::shared_ptr<Context> context, const Size newSize) {
+void amendContextVariablesSizes(QuantLib::ext::shared_ptr<Context> context, const Size newSize) {
     SizeSetter setter(newSize);
     for (auto& x : context->scalars)
         boost::apply_visitor(setter, x.second);
@@ -383,8 +386,8 @@ void amendContextVariablesSizes(boost::shared_ptr<Context> context, const Size n
             boost::apply_visitor(setter, x);
 }
 
-IndexInfo::IndexInfo(const std::string& name, const boost::shared_ptr<Market>& market) : name_(name), market_(market) {
-    isFx_ = isEq_ = isComm_ = isIr_ = isInf_ = isIrIbor_ = isIrSwap_ = isGeneric_ = false;
+IndexInfo::IndexInfo(const std::string& name, const QuantLib::ext::shared_ptr<Market>& market) : name_(name), market_(market) {
+    isFx_ = isEq_ = isComm_ = isIr_ = isInf_ = isIrIbor_ = isIrSwap_ = isGeneric_ = infIsInterpolated_ = false;
     bool done = false;
     // first handle the index types that we can recognise by a prefix
     if (boost::starts_with(name, "COMM-")) {
@@ -432,9 +435,7 @@ IndexInfo::IndexInfo(const std::string& name, const boost::shared_ptr<Market>& m
     // and same for inflation
     if (!done) {
         try {
-            auto res = parseScriptedInflationIndex(name);
-            inf_ = res.first;
-            infName_ = res.second;
+            std::tie(inf_, infName_, infIsInterpolated_) = parseScriptedInflationIndex(name);
             isInf_ = done = true;
         } catch (...) {
         }
@@ -444,7 +445,7 @@ IndexInfo::IndexInfo(const std::string& name, const boost::shared_ptr<Market>& m
                          << "', expected a valid COMM, FX, EQ, GENERIC, Ibor, Swap, Inflation index identifier.");
 }
 
-boost::shared_ptr<Index> IndexInfo::index(const Date& obsDate) const {
+QuantLib::ext::shared_ptr<Index> IndexInfo::index(const Date& obsDate) const {
     if (isFx_)
         return fx_;
     else if (isEq_)
@@ -462,7 +463,7 @@ boost::shared_ptr<Index> IndexInfo::index(const Date& obsDate) const {
     }
 }
 
-boost::shared_ptr<CommodityIndex> IndexInfo::comm(const Date& obsDate) const {
+QuantLib::ext::shared_ptr<CommodityIndex> IndexInfo::comm(const Date& obsDate) const {
     if (isComm())
         return parseScriptedCommodityIndex(name(), obsDate);
     else
@@ -496,48 +497,50 @@ std::ostream& operator<<(std::ostream& o, const IndexInfo& i) {
     return o;
 }
 
-boost::shared_ptr<FallbackIborIndex> IndexInfo::irIborFallback(const IborFallbackConfig& iborFallbackConfig,
+QuantLib::ext::shared_ptr<FallbackIborIndex> IndexInfo::irIborFallback(const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
                                                                const Date& asof) const {
-    if (isIrIbor_ && iborFallbackConfig.isIndexReplaced(name_, asof)) {
-        auto data = iborFallbackConfig.fallbackData(name_);
+    if (isIrIbor_ && iborFallbackConfig->isIndexReplaced(name_, asof)) {
+        auto data = iborFallbackConfig->fallbackData(name_);
         // we don't support convention based rfr fallback indices, with ore ticket 1758 this might change
-        auto on = boost::dynamic_pointer_cast<OvernightIndex>(parseIborIndex(data.rfrIndex));
+        auto on = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(parseIborIndex(data.rfrIndex));
         QL_REQUIRE(on, "IndexInfo::irIborFallback(): could not cast rfr index '"
                            << data.rfrIndex << "' for ibor fallback index '" << name_ << "' to an overnight index");
-        return boost::make_shared<FallbackIborIndex>(irIbor_, on, data.spread, data.switchDate, false);
+        return QuantLib::ext::make_shared<FallbackIborIndex>(irIbor_, on, data.spread, data.switchDate, irIbor_->forwardingTermStructure());
     }
     return nullptr;
 }
 
-boost::shared_ptr<FallbackOvernightIndex> IndexInfo::irOvernightFallback(const IborFallbackConfig& iborFallbackConfig,
+QuantLib::ext::shared_ptr<FallbackOvernightIndex>
+IndexInfo::irOvernightFallback(const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
 									 const Date& asof) const {
-    if (isIrIbor_ && iborFallbackConfig.isIndexReplaced(name_, asof)) {
-        auto data = iborFallbackConfig.fallbackData(name_);
+    if (isIrIbor_ && iborFallbackConfig->isIndexReplaced(name_, asof)) {
+        auto data = iborFallbackConfig->fallbackData(name_);
         // we don't support convention based rfr fallback indices, with ore ticket 1758 this might change
-        auto on = boost::dynamic_pointer_cast<OvernightIndex>(parseIborIndex(data.rfrIndex));
+        auto on = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(parseIborIndex(data.rfrIndex));
         QL_REQUIRE(on, "IndexInfo::irIborFallback(): could not cast rfr index '"
                            << data.rfrIndex << "' for ibor fallback index '" << name_ << "' to an overnight index");
-        if (auto original = boost::dynamic_pointer_cast<OvernightIndex>(irIbor_))
-	    return boost::make_shared<FallbackOvernightIndex>(original, on, data.spread, data.switchDate, false);
+        if (auto original = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(irIbor_))
+            return QuantLib::ext::make_shared<FallbackOvernightIndex>(original, on, data.spread, data.switchDate,
+                                                                 original->forwardingTermStructure());
 	else
 	    return nullptr;
     }
     return nullptr;
 }
 
-boost::shared_ptr<QuantExt::CommodityIndex> parseScriptedCommodityIndex(const std::string& indexName,
+QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> parseScriptedCommodityIndex(const std::string& indexName,
                                                                         const QuantLib::Date& obsDate) {
 
     QL_REQUIRE(!indexName.empty(), "parseScriptedCommodityIndex(): empty index name");
-    boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+    QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
     std::vector<std::string> tokens;
     boost::split(tokens, indexName, boost::is_any_of("#!"));
     std::string plainIndexName = tokens.front();
     std::string commName = parseCommodityIndex(plainIndexName)->underlyingName();
 
-    boost::shared_ptr<CommodityFutureConvention> convention;
+    QuantLib::ext::shared_ptr<CommodityFutureConvention> convention;
     if (conventions->has(commName)) {
-        convention = boost::dynamic_pointer_cast<CommodityFutureConvention>(conventions->get(commName));
+        convention = QuantLib::ext::dynamic_pointer_cast<CommodityFutureConvention>(conventions->get(commName));
     }
     Calendar fixingCalendar = convention ? convention->calendar() : NullCalendar();
 
@@ -546,7 +549,7 @@ boost::shared_ptr<QuantExt::CommodityIndex> parseScriptedCommodityIndex(const st
     std::vector<std::string> tokens2;
     boost::split(tokens2, indexName, boost::is_any_of("!"));
 
-    boost::shared_ptr<CommodityIndex> res;
+    QuantLib::ext::shared_ptr<CommodityIndex> res;
     if (tokens1.size() >= 2) {
         // handle form 3)- 5), i.e. COMM-name#N#D#Cal, COMM-name#N#D, COMM-name#N
         QL_REQUIRE(tokens.size() <= 4,
@@ -585,9 +588,9 @@ boost::shared_ptr<QuantExt::CommodityIndex> parseScriptedCommodityIndex(const st
     return res;
 }
 
-QL_DEPRECATED_DISABLE_WARNING
+
 // Remove in the next release, interpolation has to happen in the coupon (script) and not in the index
-std::pair<boost::shared_ptr<QuantLib::ZeroInflationIndex>, std::string>
+std::tuple<QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex>, std::string, bool>
 parseScriptedInflationIndex(const std::string& indexName) {
     QL_REQUIRE(!indexName.empty(), "parseScriptedInflationIndex(): empty index name");
     std::vector<std::string> tokens;
@@ -603,20 +606,18 @@ parseScriptedInflationIndex(const std::string& indexName) {
     } else {
         QL_FAIL("parseScriptedInflationIndex(): expected IndexName or IndexName#[F|L], got '" << indexName << "'");
     }
-    return std::make_pair(
-        parseZeroInflationIndex(plainIndexName, interpolated, Handle<ZeroInflationTermStructure>()),
-        plainIndexName);
+    return std::make_tuple(parseZeroInflationIndex(plainIndexName, Handle<ZeroInflationTermStructure>()),
+                                     plainIndexName, interpolated);
 }
-QL_DEPRECATED_ENABLE_WARNING
 
-std::string scriptedIndexName(const boost::shared_ptr<Underlying>& underlying) {
+std::string scriptedIndexName(const QuantLib::ext::shared_ptr<Underlying>& underlying) {
     if (underlying->type() == "Equity") {
         return "EQ-" + underlying->name();
     } else if (underlying->type() == "FX") {
         return "FX-" + underlying->name();
     } else if (underlying->type() == "Commodity") {
-        boost::shared_ptr<CommodityUnderlying> comUnderlying =
-            boost::dynamic_pointer_cast<CommodityUnderlying>(underlying);
+        QuantLib::ext::shared_ptr<CommodityUnderlying> comUnderlying =
+            QuantLib::ext::dynamic_pointer_cast<CommodityUnderlying>(underlying);
         std::string tmp = "COMM-" + comUnderlying->name();
         if (comUnderlying->priceType().empty() || comUnderlying->priceType() == "Spot") {
             return tmp;
@@ -638,8 +639,8 @@ std::string scriptedIndexName(const boost::shared_ptr<Underlying>& underlying) {
     } else if (underlying->type() == "InterestRate") {
         return underlying->name();
     } else if (underlying->type() == "Inflation") {
-        boost::shared_ptr<InflationUnderlying> infUnderlying =
-            boost::dynamic_pointer_cast<InflationUnderlying>(underlying);
+        QuantLib::ext::shared_ptr<InflationUnderlying> infUnderlying =
+            QuantLib::ext::dynamic_pointer_cast<InflationUnderlying>(underlying);
         if (infUnderlying->interpolation() == QuantLib::CPI::InterpolationType::Linear)
             return underlying->name() + "#L";
         else if (infUnderlying->interpolation() == QuantLib::CPI::InterpolationType::Flat)
@@ -655,21 +656,9 @@ std::string scriptedIndexName(const boost::shared_ptr<Underlying>& underlying) {
     }
 }
 
-Size getInflationSimulationLag(const boost::shared_ptr<ZeroInflationIndex>& index) {
-    // this is consistent with the lag computation in CrossAssetModel::infDki()
-    Date d1 = index->zeroInflationTermStructure()->baseDate();
-    Date d2 = index->zeroInflationTermStructure()->referenceDate();
-    QL_DEPRECATED_DISABLE_WARNING
-    if (!index->interpolated()) {
-        d2 = inflationPeriod(d2, index->frequency()).first;
-    }
-    QL_DEPRECATED_ENABLE_WARNING
-    return d2 - d1;
-}
-
 std::map<std::string, std::vector<Real>>
 getCalibrationStrikes(const std::vector<ScriptedTradeScriptData::CalibrationData>& calibrationSpec,
-                      const boost::shared_ptr<Context>& context) {
+                      const QuantLib::ext::shared_ptr<Context>& context) {
     std::map<std::string, std::vector<Real>> result;
     for (auto const& c : calibrationSpec) {
 

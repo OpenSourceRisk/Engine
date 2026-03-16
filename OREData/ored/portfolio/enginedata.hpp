@@ -60,11 +60,16 @@ public:
 
     //! \name Setters
     //@{
-    string& model(const string& productName) { return model_[productName]; }
-    map<string, string>& modelParameters(const string& productName) { return modelParams_[productName]; }
-    string& engine(const string& productName) { return engine_[productName]; }
-    map<string, string>& engineParameters(const string& productName) { return engineParams_[productName]; }
+    std::string& model(const std::string& productName) { return model_[productName]; }
+    void setModel(const std::string& productName, const std::string& model) { model_[productName] = model; }
+    std::map<std::string, std::string>& modelParameters(const std::string& productName) { return modelParams_[productName]; }
+    void setModelParameters(const std::string& productName, const std::map<std::string, std::string>& params) { modelParams_[productName] = params; }
+    std::string& engine(const std::string& productName) { return engine_[productName]; }
+    void setEngine(const std::string& productName, const std::string& engine) { engine_[productName] = engine; }
+    std::map<std::string, std::string>& engineParameters(const std::string& productName) { return engineParams_[productName]; }
+    void setEngineParameters(const std::string& productName, const std::map<std::string, std::string>& params) { engineParams_[productName] = params; }
     std::map<std::string, std::string>& globalParameters() { return globalParams_; }
+    void setGlobalParameter(const std::string& name, const std::string& param) { globalParams_[name] = param; }
     //@}
 
     //! Clear all data
@@ -77,10 +82,10 @@ public:
     //@}
 
 private:
-    map<string, string> model_;
-    map<string, map<string, string>> modelParams_;
-    map<string, string> engine_;
-    map<string, map<string, string>> engineParams_;
+    std::map<std::string, std::string> model_;
+    std::map<std::string, std::map<std::string, std::string>> modelParams_;
+    std::map<std::string, std::string> engine_;
+    std::map<std::string, std::map<std::string, std::string>> engineParams_;
     std::map<std::string, std::string> globalParams_;
 };
 

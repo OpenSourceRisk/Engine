@@ -73,7 +73,7 @@ public:
     // BondBasket() {}
     BondBasket(
         //! map of QuantLib bonds
-        const std::map<std::string, boost::shared_ptr<QuantLib::Bond>>& qlBonds,
+        const std::map<std::string, QuantLib::ext::shared_ptr<QuantLib::Bond>>& qlBonds,
         //! recoveries per bonds
         const std::map<std::string, double>& recoveries,
         //! multipliers per bonds
@@ -83,11 +83,11 @@ public:
         //! currencies per bonds
         const std::map<std::string, Currency>& currencies,
         //! Pool storing default time for all names involved in the basekt above
-        const boost::shared_ptr<QuantLib::Pool> pool,
+        const QuantLib::ext::shared_ptr<QuantLib::Pool> pool,
         //! Base currency
         Currency baseCcy,
         //! Forex structure to compute spot and forward FX rates
-        const std::map <std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndexMap,
+        const std::map <std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndexMap,
         //! end of reinvestment period
         const QuantLib::Date & reinvestmentEndDate,
         //! scalar for reinvestment period per bonds
@@ -97,11 +97,11 @@ public:
     //! Inspectors
     //@{
     /*! Vector of risky bonds */
-    const std::map<std::string, boost::shared_ptr<QuantLib::Bond>>& bonds() const { return qlBonds_; }
+    const std::map<std::string, QuantLib::ext::shared_ptr<QuantLib::Bond>>& bonds() const { return qlBonds_; }
     /*! Pool of names with associated default times */
-    const boost::shared_ptr<QuantLib::Pool>& pool() const;
+    const QuantLib::ext::shared_ptr<QuantLib::Pool>& pool() const;
     /*! Forex structure */
-    const std::map <std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndexMap() const { return fxIndexMap_;}
+    const std::map <std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndexMap() const { return fxIndexMap_;}
     /*! Unique currencies involved */
     const std::set<QuantLib::Currency> unique_currencies() const { return unique_currencies_; }
     /*! Recovery rate for given name */
@@ -133,17 +133,17 @@ private:
     const Currency currency(const std::string& name) const;
     const std::vector<double> reinvestmentScalar(const std::string& name) const;
     const std::string flowType(const std::string& name, int idx) const;
-    const boost::shared_ptr<QuantExt::FxIndex> fxIndex(const std::string& name) const;
+    const QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex(const std::string& name) const;
 
     //members filled by input arguments
-    const std::map<std::string, boost::shared_ptr<QuantLib::Bond>> qlBonds_;
+    const std::map<std::string, QuantLib::ext::shared_ptr<QuantLib::Bond>> qlBonds_;
     const std::map<std::string, double> recoveries_;
     const std::map<std::string, double> multipliers_;
     const std::map<std::string, QuantLib::Handle<QuantLib::YieldTermStructure>> yieldTermStructures_;
     const std::map<std::string, QuantLib::Currency> currencies_;
-    const boost::shared_ptr<QuantLib::Pool> pool_;
+    const QuantLib::ext::shared_ptr<QuantLib::Pool> pool_;
     const Currency baseCcy_;
-    const std::map <std::string, boost::shared_ptr<QuantExt::FxIndex>> fxIndexMap_;
+    const std::map <std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>> fxIndexMap_;
     const Date reinvestmentEndDate_;
     const std::map<std::string, std::vector<double>> reinvestmentScalar_;
     const std::map<std::string, std::vector<std::string>> flowType_;

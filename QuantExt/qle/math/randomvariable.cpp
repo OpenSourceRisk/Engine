@@ -19,22 +19,29 @@
 #include <qle/math/randomvariable.hpp>
 #include <qle/math/randomvariablelsmbasissystem.hpp>
 
+#include <ql/experimental/math/moorepenroseinverse.hpp>
 #include <ql/math/comparison.hpp>
 #include <ql/math/generallinearleastsquares.hpp>
 #include <ql/math/matrixutilities/qrdecomposition.hpp>
+#include <ql/math/matrixutilities/symmetricschurdecomposition.hpp>
+#include <ql/math/rounding.hpp>
 
 #include <boost/math/distributions/normal.hpp>
 
 #include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics/covariance.hpp>
 #include <boost/accumulators/statistics/mean.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
 #include <boost/accumulators/statistics/variance.hpp>
+#include <boost/accumulators/statistics/variates/covariate.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/functional/hash.hpp>
 
-#include <iostream>
 #include <map>
 
 // if defined, RandomVariableStats are updated (this might impact perfomance!), default is undefined
-//#define ENABLE_RANDOMVARIABLE_STATS
+// #define ENABLE_RANDOMVARIABLE_STATS
 
 namespace QuantExt {
 
@@ -120,10 +127,9 @@ Filter& Filter::operator=(const Filter& r) {
             data_ = nullptr;
         }
     } else {
-        deterministic_ = false;
         if (r.n_ != 0) {
             resumeDataStats();
-            if (n_ != r.n_) {
+            if (n_ != r.n_ || deterministic_) {
                 if (data_)
                     delete[] data_;
                 data_ = new bool[r.n_];
@@ -137,6 +143,7 @@ Filter& Filter::operator=(const Filter& r) {
                 data_ = nullptr;
             }
         }
+        deterministic_ = false;
     }
     n_ = r.n_;
     constantData_ = r.constantData_;
@@ -171,13 +178,13 @@ void Filter::updateDeterministic() {
     if (deterministic_ || !initialised())
         return;
     resumeCalcStats();
-    for (Size i = 0; i < n_; ++i) {
-        if (data_[i] != constantData_) {
-            stopCalcStats(i);
+    for (Size i = 1; i < n_; ++i) {
+        if (data_[i] != data_[0]) {
+            stopCalcStats(i - 1);
             return;
         }
     }
-    setAll(constantData_);
+    setAll(data_[0]);
     stopCalcStats(n_);
 }
 
@@ -335,16 +342,15 @@ RandomVariable::RandomVariable(RandomVariable&& r) {
 
 RandomVariable& RandomVariable::operator=(const RandomVariable& r) {
     if (r.deterministic_) {
-        deterministic_ = true;
         if (data_) {
             delete[] data_;
             data_ = nullptr;
         }
+        deterministic_ = true;
     } else {
-        deterministic_ = false;
         if (r.n_ != 0) {
             resumeDataStats();
-            if (n_ != r.n_) {
+            if (n_ != r.n_ || deterministic_) {
                 if (data_)
                     delete[] data_;
                 data_ = new double[r.n_];
@@ -358,6 +364,7 @@ RandomVariable& RandomVariable::operator=(const RandomVariable& r) {
                 data_ = nullptr;
             }
         }
+        deterministic_ = false;
     }
     n_ = r.n_;
     constantData_ = r.constantData_;
@@ -403,21 +410,27 @@ RandomVariable::RandomVariable(const Filter& f, const Real valueTrue, const Real
     time_ = time;
 }
 
-RandomVariable::RandomVariable(const QuantLib::Array& array, const Real time) {
-    n_ = array.size();
+RandomVariable::RandomVariable(const Size n, const Real* const data, const Real time) {
+    n_ = n;
     deterministic_ = false;
     time_ = time;
     if (n_ != 0) {
         resumeDataStats();
         data_ = new double[n_];
         // std::memcpy(data_, array.begin(), n_ * sizeof(double));
-        std::copy(array.begin(), array.end(), data_);
+        std::copy(data, data + n_, data_);
         stopDataStats(n_);
     } else {
         data_ = nullptr;
     }
     constantData_ = 0.0;
 }
+
+RandomVariable::RandomVariable(const std::vector<Real>& data, const Real time)
+    : RandomVariable(data.size(), &data[0], time) {}
+
+RandomVariable::RandomVariable(const QuantLib::Array& data, const Real time)
+    : RandomVariable(data.size(), data.begin(), time) {}
 
 void RandomVariable::copyToMatrixCol(QuantLib::Matrix& m, const Size j) const {
     if (deterministic_)
@@ -429,7 +442,8 @@ void RandomVariable::copyToMatrixCol(QuantLib::Matrix& m, const Size j) const {
     }
 }
 
-void RandomVariable::copyToArray(QuantLib::Array& array) const {
+RandomVariable::operator Array() const {
+    Array array(n_);
     if (deterministic_)
         std::fill(array.begin(), array.end(), constantData_);
     else if (n_ != 0) {
@@ -438,6 +452,7 @@ void RandomVariable::copyToArray(QuantLib::Array& array) const {
         std::copy(data_, data_ + n_, array.begin());
         stopDataStats(n_);
     }
+    return array;
 }
 
 void RandomVariable::clear() {
@@ -454,14 +469,14 @@ void RandomVariable::clear() {
 void RandomVariable::updateDeterministic() {
     if (deterministic_ || !initialised())
         return;
-    for (Size i = 0; i < n_; ++i) {
+    for (Size i = 1; i < n_; ++i) {
         resumeCalcStats();
-        if (!QuantLib::close_enough(data_[i], constantData_)) {
-            stopCalcStats(i);
+        if (!QuantLib::close_enough(data_[i], data_[0])) {
+            stopCalcStats(i - 1);
             return;
         }
     }
-    setAll(constantData_);
+    setAll(data_[0]);
     stopCalcStats(n_);
 }
 
@@ -488,6 +503,17 @@ void RandomVariable::expand() {
     data_ = new double[n_];
     std::fill(data_, data_ + n_, constantData_);
     stopDataStats(n_);
+}
+
+bool RandomVariable::isfinite() const {
+    if (deterministic_)
+        return std::isfinite(constantData_);
+    for (Size i = 0; i < n_; ++i) {
+        if (!std::isfinite(data_[i])) {
+            return false;
+        }
+    }
+    return true;
 }
 
 void RandomVariable::checkTimeConsistencyAndUpdate(const Real t) {
@@ -544,6 +570,8 @@ RandomVariable& RandomVariable::operator+=(const RandomVariable& y) {
     return *this;
 }
 
+RandomVariable& RandomVariable::operator+=(const Real y) { return operator+=(RandomVariable(size(), y)); }
+
 RandomVariable& RandomVariable::operator-=(const RandomVariable& y) {
     if (!y.initialised())
         clear();
@@ -568,6 +596,8 @@ RandomVariable& RandomVariable::operator-=(const RandomVariable& y) {
     return *this;
 }
 
+RandomVariable& RandomVariable::operator-=(const Real y) { return operator-=(RandomVariable(size(), y)); }
+
 RandomVariable& RandomVariable::operator*=(const RandomVariable& y) {
     if (!y.initialised())
         clear();
@@ -585,12 +615,17 @@ RandomVariable& RandomVariable::operator*=(const RandomVariable& y) {
     else {
         resumeCalcStats();
         for (Size i = 0; i < n_; ++i) {
-            data_[i] *= y[i];
+            if (y[i] == 0.0 || data_[i] == 0.0)
+                data_[i] = 0.0;
+            else
+                data_[i] *= y[i];
         }
         stopCalcStats(n_);
     }
     return *this;
 }
+
+RandomVariable& RandomVariable::operator*=(const Real y) { return operator*=(RandomVariable(size(), y)); }
 
 RandomVariable& RandomVariable::operator/=(const RandomVariable& y) {
     if (!y.initialised())
@@ -616,12 +651,17 @@ RandomVariable& RandomVariable::operator/=(const RandomVariable& y) {
     return *this;
 }
 
+RandomVariable& RandomVariable::operator/=(const Real y) { return operator/=(RandomVariable(size(), y)); }
+
 RandomVariable operator+(RandomVariable x, const RandomVariable& y) {
     if (!x.initialised() || !y.initialised())
         return RandomVariable();
     x += y;
     return x;
 }
+
+RandomVariable operator+(Real y, RandomVariable x) { return std::move(x) + RandomVariable(x.size(), y); }
+RandomVariable operator+(RandomVariable x, Real y) { return std::move(x) + RandomVariable(x.size(), y); }
 
 RandomVariable operator-(RandomVariable x, const RandomVariable& y) {
     if (!x.initialised() || !y.initialised())
@@ -630,6 +670,9 @@ RandomVariable operator-(RandomVariable x, const RandomVariable& y) {
     return x;
 }
 
+RandomVariable operator-(Real y, RandomVariable x) { return RandomVariable(x.size(), y) - std::move(x); }
+RandomVariable operator-(RandomVariable x, Real y) { return std::move(x) - RandomVariable(x.size(), y); }
+
 RandomVariable operator*(RandomVariable x, const RandomVariable& y) {
     if (!x.initialised() || !y.initialised())
         return RandomVariable();
@@ -637,12 +680,18 @@ RandomVariable operator*(RandomVariable x, const RandomVariable& y) {
     return x;
 }
 
+RandomVariable operator*(Real y, RandomVariable x) { return std::move(x) * RandomVariable(x.size(), y); }
+RandomVariable operator*(RandomVariable x, Real y) { return std::move(x) * RandomVariable(x.size(), y); }
+
 RandomVariable operator/(RandomVariable x, const RandomVariable& y) {
     if (!x.initialised() || !y.initialised())
         return RandomVariable();
     x /= y;
     return x;
 }
+
+RandomVariable operator/(Real y, RandomVariable x) { return RandomVariable(x.size(), y) / std::move(x); }
+RandomVariable operator/(RandomVariable x, Real y) { return std::move(x) / RandomVariable(x.size(), y); }
 
 RandomVariable max(RandomVariable x, const RandomVariable& y) {
     if (!x.initialised() || !y.initialised())
@@ -664,6 +713,9 @@ RandomVariable max(RandomVariable x, const RandomVariable& y) {
     return x;
 }
 
+RandomVariable max(const Real y, RandomVariable x) { return max(RandomVariable(x.size(), y), std::move(x)); }
+RandomVariable max(RandomVariable x, const Real y) { return max(RandomVariable(x.size(), y), std::move(x)); }
+
 RandomVariable min(RandomVariable x, const RandomVariable& y) {
     if (!x.initialised() || !y.initialised())
         return RandomVariable();
@@ -683,6 +735,9 @@ RandomVariable min(RandomVariable x, const RandomVariable& y) {
     }
     return x;
 }
+
+RandomVariable min(const Real y, RandomVariable x) { return min(RandomVariable(x.size(), y), std::move(x)); }
+RandomVariable min(RandomVariable x, const Real y) { return min(RandomVariable(x.size(), y), std::move(x)); }
 
 RandomVariable pow(RandomVariable x, const RandomVariable& y) {
     if (!x.initialised() || !y.initialised())
@@ -705,6 +760,33 @@ RandomVariable pow(RandomVariable x, const RandomVariable& y) {
     }
     return x;
 }
+
+RandomVariable pow(RandomVariable x, const Real y) { return pow(std::move(x), RandomVariable(x.size(), y)); }
+
+RandomVariable round(RandomVariable x, const RandomVariable& y) {
+    if (!x.initialised() || !y.initialised())
+        return RandomVariable();
+    QL_REQUIRE(x.size() == y.size(),
+               "RandomVariable: round(x,y): x size (" << x.size() << ") must be equal to y size (" << y.size() << ")");
+    x.checkTimeConsistencyAndUpdate(y.time());
+    if (!y.deterministic_)
+        x.expand();
+    if (x.deterministic()){
+        QuantLib::Rounding rnd(y.constantData_, QuantLib::Rounding::Closest, 5);
+        x.constantData_ = rnd(x.constantData_);
+    }
+    else {
+        resumeCalcStats();
+        for (Size i = 0; i < x.size(); ++i) {
+            QuantLib::Rounding rnd(y.constantData_, QuantLib::Rounding::Closest, 5);
+            x.data_[i] = rnd(x.constantData_);
+        }
+        stopCalcStats(x.size());
+    }
+    return x;
+}
+
+RandomVariable round(RandomVariable x, const Real y) { return round(std::move(x), RandomVariable(x.size(), y)); }
 
 RandomVariable operator-(RandomVariable x) {
     if (x.deterministic_)
@@ -765,6 +847,20 @@ RandomVariable sqrt(RandomVariable x) {
         resumeCalcStats();
         for (Size i = 0; i < x.n_; ++i) {
             x.data_[i] = std::sqrt(x.data_[i]);
+        }
+        stopCalcStats(x.n_);
+    }
+    return x;
+}
+
+RandomVariable frac(RandomVariable x) {
+    double iptr;
+    if (x.deterministic_)
+        x.constantData_ = std::modf(x.constantData_, &iptr);
+    else {
+        resumeCalcStats();
+        for (Size i = 0; i < x.n_; ++i) {
+            x.data_[i] = std::modf(x.data_[i], &iptr);
         }
         stopCalcStats(x.n_);
     }
@@ -866,9 +962,14 @@ RandomVariable conditionalResult(const Filter& f, RandomVariable x, const Random
                "conditionalResult(f,x,y): f size (" << f.size() << ") must match x size (" << x.size() << ")");
     QL_REQUIRE(f.size() == y.size(),
                "conditionalResult(f,x,y): f size (" << f.size() << ") must match y size (" << y.size() << ")");
+    if (f.deterministic()) {
+        if (f.at(0))
+            return x;
+        else {
+            return y;
+        }
+    }
     x.checkTimeConsistencyAndUpdate(y.time());
-    if (f.deterministic())
-        return f.at(0) ? x : y;
     resumeCalcStats();
     x.expand();
     for (Size i = 0; i < f.size(); ++i) {
@@ -1099,8 +1200,59 @@ RandomVariable applyInverseFilter(RandomVariable x, const Filter& f) {
     return x;
 }
 
+Matrix pcaCoordinateTransform(const std::vector<const RandomVariable*>& regressor, const Real varianceCutoff) {
+    if (regressor.empty())
+        return {};
+
+    Matrix cov(regressor.size(), regressor.size());
+    for (Size i = 0; i < regressor.size(); ++i) {
+        cov(i, i) = variance(*regressor[i]).at(0);
+        for (Size j = 0; j < i; ++j) {
+            cov(i, j) = cov(j, i) = covariance(*regressor[i], *regressor[j]).at(0);
+        }
+    }
+
+    QuantLib::SymmetricSchurDecomposition schur(cov);
+    Real totalVariance = std::accumulate(schur.eigenvalues().begin(), schur.eigenvalues().end(), 0.0);
+
+    Size keep = 0;
+    Real explainedVariance = 0.0;
+    while (keep < schur.eigenvalues().size() && explainedVariance < totalVariance * (1.0 - varianceCutoff)) {
+        explainedVariance += schur.eigenvalues()[keep++];
+    }
+
+    Matrix result(keep, regressor.size());
+    for (Size i = 0; i < keep; ++i) {
+        std::copy(schur.eigenvectors().column_begin(i), schur.eigenvectors().column_end(i), result.row_begin(i));
+    }
+    return result;
+}
+
+std::vector<RandomVariable> applyCoordinateTransform(const std::vector<const RandomVariable*>& regressor,
+                                                     const Matrix& transform) {
+    QL_REQUIRE(transform.columns() == regressor.size(),
+               "applyCoordinateTransform(): number of random variables ("
+                   << regressor.size() << ") does not match number of columns in transform (" << transform.columns());
+    if (regressor.empty())
+        return {};
+    Size n = regressor.front()->size();
+    std::vector<RandomVariable> result(transform.rows(), RandomVariable(n, 0.0));
+    for (Size i = 0; i < transform.rows(); ++i) {
+        for (Size j = 0; j < transform.columns(); ++j) {
+            result[i] += RandomVariable(n, transform(i, j)) * (*regressor[j]);
+        }
+    }
+    return result;
+}
+
+std::vector<const RandomVariable*> vec2vecptr(const std::vector<RandomVariable>& values) {
+    std::vector<const RandomVariable*> result(values.size());
+    std::transform(values.begin(), values.end(), result.begin(), [](const RandomVariable& v) { return &v; });
+    return result;
+}
+
 Array regressionCoefficients(
-    RandomVariable r, const std::vector<const RandomVariable*>& regressor,
+    RandomVariable r, std::vector<const RandomVariable*> regressor,
     const std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>& basisFn,
     const Filter& filter, const RandomVariableRegressionMethod regressionMethod, const std::string& debugLabel) {
 
@@ -1130,28 +1282,14 @@ Array regressionCoefficients(
             a.copyToMatrixCol(A, j);
     }
 
-    if (!debugLabel.empty()) {
-        for (Size i = 0; i < r.size(); ++i) {
-            std::cout << debugLabel << "," << r[i] << ",";
-            for (Size j = 0; j < regressor.size(); ++j) {
-                std::cout << regressor[j]->operator[](i) << (j == regressor.size() - 1 ? "\n" : ",");
-            }
-        }
-        std::cout << std::flush;
-    }
-
     if (filter.size() > 0) {
         r = applyFilter(r, filter);
     }
 
-    Array b(r.size());
-    if (r.deterministic())
-        std::fill(b.begin(), b.end(), r[0]);
-    else
-        r.copyToArray(b);
+    Array b = static_cast<Array>(r);
 
     Array res;
-    if (regressionMethod == RandomVariableRegressionMethod::SVI) {
+    if (regressionMethod == RandomVariableRegressionMethod::SVD) {
         SVD svd(A);
         const Matrix& V = svd.V();
         const Matrix& U = svd.U();
@@ -1169,10 +1307,23 @@ Array regressionCoefficients(
     } else if (regressionMethod == RandomVariableRegressionMethod::QR) {
         res = qrSolve(A, b);
     } else {
-        QL_FAIL("regressionCoefficients(): unknown regression method, expected SVI or QR.");
+        QL_FAIL("regressionCoefficients(): unknown regression method, expected SVD or QR");
     }
 
-    // rough estimate, SVI is O(mn min(m,n))
+    if (!debugLabel.empty()) {
+        RandomVariable y(r.size(), 0.0);
+        for (Size i = 0; i < res.size(); ++i)
+            y += RandomVariable(r.size(), res[i]) * basisFn[i](regressor);
+        for (Size i = 0; i < r.size(); ++i) {
+            std::cout << debugLabel << "," << r[i] << "," << y[i] << ",";
+            for (Size j = 0; j < regressor.size(); ++j) {
+                std::cout << regressor[j]->operator[](i) << (j == regressor.size() - 1 ? "\n" : ",");
+            }
+        }
+        std::cout << std::flush;
+    }
+
+    // rough estimate, SVD is O(mn min(m,n))
     stopCalcStats(r.size() * basisFn.size() * std::min(r.size(), basisFn.size()));
     return res;
 }
@@ -1184,6 +1335,7 @@ RandomVariable conditionalExpectation(
     QL_REQUIRE(!regressor.empty(), "regressor vector is empty");
     Size n = regressor.front()->size();
     for (Size i = 1; i < regressor.size(); ++i) {
+        QL_REQUIRE(regressor[i] != nullptr, "regressor #" << i << " is null.");
         QL_REQUIRE(n == regressor[i]->size(), "regressor #" << i << " size (" << regressor[i]->size()
                                                             << ") must match regressor #0 size (" << n << ")");
     }
@@ -1228,6 +1380,23 @@ RandomVariable variance(const RandomVariable& r) {
     return RandomVariable(r.size(), boost::accumulators::variance(acc));
 }
 
+RandomVariable covariance(const RandomVariable& r, const RandomVariable& s) {
+    QL_REQUIRE(r.size() == s.size(), "covariance(RandomVariable r, RandomVariable s): inconsistent sizes r ("
+                                         << r.size() << "), s(" << s.size() << ")");
+    if (r.deterministic() || s.deterministic())
+        return RandomVariable(r.size(), 0.0);
+    resumeCalcStats();
+    boost::accumulators::accumulator_set<
+        double,
+        boost::accumulators::stats<boost::accumulators::tag::covariance<double, boost::accumulators::tag::covariate1>>>
+        acc;
+    for (Size i = 0; i < r.size(); ++i) {
+        acc(r[i], boost::accumulators::covariate1 = s[i]);
+    }
+    stopCalcStats(r.size());
+    return RandomVariable(r.size(), boost::accumulators::covariance(acc));
+}
+
 RandomVariable black(const RandomVariable& omega, const RandomVariable& t, const RandomVariable& strike,
                      const RandomVariable& forward, const RandomVariable& impliedVol) {
     Filter zeroStrike = close_enough(strike, RandomVariable(omega.size(), 0.0));
@@ -1265,8 +1434,9 @@ RandomVariable indicatorDerivative(const RandomVariable& x, const double eps) {
 
         // logistic function
         // f(x)  = 1 / (1 + exp(-x / delta))
-        // f'(x) = exp(-x/delta) / (delta * (1 + exp(-x / delta))^2), this is an even function
-        tmp.set(i, std::exp(-1.0 / delta * x[i]) / (delta * std::pow(1.0 + std::exp(-1.0 / delta * x[i]), 2.0)));
+        // f'(x) = exp(-x/delta) / (delta * (1 + exp(-x / delta))^2)
+        //       = 1.0 / (delta * ( 2 + exp(x / delta) + exp(-x / delta) )
+        tmp.set(i, 1.0 / (delta * (2.0 + std::exp(1.0 / delta * x[i]) + std::exp(-1.0 / delta * x[i]))));
     }
 
     stopCalcStats(x.size() * 8);
@@ -1278,21 +1448,72 @@ std::function<void(RandomVariable&)> RandomVariable::deleter =
     std::function<void(RandomVariable&)>([](RandomVariable& x) { x.clear(); });
 
 std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>
-multiPathBasisSystem(Size dim, Size order, QuantLib::LsmBasisSystem::PolynomialType type, Size basisSystemSizeBound) {
-    thread_local static std::map<std::pair<Size, Size>,
+multiPathBasisSystem(Size dim, Size order, QuantLib::LsmBasisSystem::PolynomialType type,
+                     const std::set<std::set<Size>>& varGroups, Size basisSystemSizeBound) {
+
+    thread_local static std::map<std::size_t,
                                  std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>>
         cache;
+
     QL_REQUIRE(order > 0, "multiPathBasisSystem: order must be > 0");
     if (basisSystemSizeBound != Null<Size>()) {
-        while (RandomVariableLsmBasisSystem::size(dim, order) > static_cast<Real>(basisSystemSizeBound) && order > 1) {
+        while (RandomVariableLsmBasisSystem::size(dim, order, varGroups) > static_cast<Real>(basisSystemSizeBound) &&
+               order > 1) {
             --order;
         }
     }
-    if (auto c = cache.find(std::make_pair(dim, order)); c != cache.end())
+
+    std::size_t h = 0;
+    boost::hash_combine(h, dim);
+    boost::hash_combine(h, order);
+    for (auto const& g : varGroups)
+        for (auto const& v : g)
+            boost::hash_combine(h, v);
+
+    if (auto c = cache.find(h); c != cache.end())
         return c->second;
-    auto tmp = RandomVariableLsmBasisSystem::multiPathBasisSystem(dim, order, type);
-    cache[std::make_pair(dim, order)] = tmp;
+    auto tmp = RandomVariableLsmBasisSystem::multiPathBasisSystem(dim, order, type, varGroups);
+    cache[h] = tmp;
     return tmp;
 }
 
+template <class Archive> void Filter::serialize(Archive& ar, const unsigned int version) {
+    ar & n_;
+    ar & deterministic_;
+    if (deterministic_) {
+        if (Archive::is_loading::value)
+            data_ = nullptr;
+        ar & constantData_;
+    } else if (n_ > 0) {
+        if (Archive::is_loading::value)
+            data_ = new bool[n_];
+        auto tmpData = boost::serialization::make_array(data_, n_);
+        ar & tmpData;
+    }
+}
+
+template <class Archive> void RandomVariable::serialize(Archive& ar, const unsigned int version) {
+    ar & n_;
+    ar & deterministic_;
+    ar & time_;
+    if (deterministic_) {
+        if (Archive::is_loading::value)
+            data_ = nullptr;
+        ar & constantData_;
+    } else if (n_ > 0) {
+        if (Archive::is_loading::value)
+            data_ = new double[n_];
+        auto tmpData = boost::serialization::make_array(data_, n_);
+        ar & tmpData;
+    }
+}
+
+template void Filter::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void Filter::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void RandomVariable::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void RandomVariable::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+
 } // namespace QuantExt
+
+BOOST_CLASS_EXPORT_IMPLEMENT(QuantExt::Filter);
+BOOST_CLASS_EXPORT_IMPLEMENT(QuantExt::RandomVariable);

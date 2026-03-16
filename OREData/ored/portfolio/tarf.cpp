@@ -245,7 +245,7 @@ using namespace QuantExt;
 
 TaRF::TaRF(const std::string& currency, const std::string& fixingAmount, const std::string& targetAmount,
            const std::string& targetPoints, const std::vector<std::string>& strikes,
-           const std::vector<std::string>& strikeDates, const boost::shared_ptr<Underlying>& underlying,
+           const std::vector<std::string>& strikeDates, const QuantLib::ext::shared_ptr<Underlying>& underlying,
            const ScheduleData& fixingDates, const std::string& settlementLag, const std::string& settlementCalendar,
            const std::string& settlementConvention, OptionData& optionData,
            const std::vector<std::vector<RangeBound>>& rangeBoundSet,
@@ -265,7 +265,7 @@ TaRF::TaRF(const std::string& currency, const std::string& fixingAmount, const s
     initIndices();
 }
 
-void TaRF::build(const boost::shared_ptr<EngineFactory>& factory) {
+void TaRF::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory) {
 
     // 1 inits
 
@@ -344,6 +344,7 @@ void TaRF::build(const boost::shared_ptr<EngineFactory>& factory) {
     std::string knockOutProfitAmount = "0", knockOutProfitAmountPoints = "0", knockOutProfitEvents = "0";
     for (auto const& b : barriers_) {
         QL_REQUIRE(b.style().empty() || b.style() == "European", "only european barrier style supported");
+        QL_REQUIRE(!b.overrideTriggered(), "OverrideTriggered is not supported");
         if (b.type() == "CumulatedProfitCap" && !b.levels().empty())
             knockOutProfitAmount = boost::lexical_cast<std::string>(b.levels().front().value());
         else if (b.type() == "CumulatedProfitCapPoints" && !b.levels().empty())

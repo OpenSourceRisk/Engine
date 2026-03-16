@@ -7,51 +7,91 @@ aggregation/creditmigrationhelper.cpp
 aggregation/creditsimulationparameters.cpp
 aggregation/cvaspreadsensitivitycalculator.cpp
 aggregation/dimcalculator.cpp
+aggregation/dimdirectcalculator.cpp
 aggregation/dimflatcalculator.cpp
+aggregation/dimhelper.cpp
 aggregation/dimregressioncalculator.cpp
 aggregation/dynamiccreditxvacalculator.cpp
+aggregation/dynamicdeltavarcalculator.cpp
+aggregation/dynamicsimmcalculator.cpp
 aggregation/exposureallocator.cpp
 aggregation/exposurecalculator.cpp
 aggregation/nettedexposurecalculator.cpp
 aggregation/postprocess.cpp
+aggregation/simmhelper.cpp
 aggregation/staticcreditxvacalculator.cpp
 aggregation/xvacalculator.cpp
 app/analytic.cpp
+app/analytics/analyticfactory.cpp
+app/analytics/bacvaanalytic.cpp
+app/analytics/calibrationanalytic.cpp
+app/analytics/correlationanalytic.cpp
+app/analytics/crifanalytic.cpp
+app/analytics/imscheduleanalytic.cpp
 app/analytics/parconversionanalytic.cpp
+app/analytics/parscenarioanalytic.cpp
+app/analytics/parstressconversionanalytic.cpp
+app/analytics/pnlanalytic.cpp
+app/analytics/pnlexplainanalytic.cpp
+app/analytics/portfoliodetailsanalytic.cpp
 app/analytics/pricinganalytic.cpp
+app/analytics/saccranalytic.cpp
+app/analytics/sacvaanalytic.cpp
 app/analytics/scenarioanalytic.cpp
-app/analytics/scenariostatisticsanalytic.cpp
+app/analytics/scenariogenerationanalytic.cpp
+app/analytics/sensitivitystressanalytic.cpp
 app/analytics/simmanalytic.cpp
+app/analytics/smrcanalytic.cpp
+app/analytics/stresstestanalytic.cpp
+app/analytics/utilities.cpp
 app/analytics/varanalytic.cpp
 app/analytics/xvaanalytic.cpp
+app/analytics/xvaexplainanalytic.cpp
+app/analytics/xvasensitivityanalytic.cpp
+app/analytics/xvastressanalytic.cpp
+app/analytics/zerotoparshiftanalytic.cpp
 app/analyticsmanager.cpp
+app/cleanupsingletons.cpp
+app/hwhistoricalcalibrationdataloader.cpp
+app/initbuilders.cpp
 app/inputparameters.cpp
+app/inputvariables.cpp
 app/marketcalibrationreport.cpp
 app/marketdatacsvloader.cpp
 app/marketdatainmemoryloader.cpp
 app/marketdataloader.cpp
 app/oreapp.cpp
 app/parameters.cpp
+app/portfolioanalyser.cpp
 app/reportwriter.cpp
-app/sensitivityrunner.cpp
-app/xvarunner.cpp
 app/zerosensitivityloader.cpp
 cube/cube_io.cpp
 cube/cubecsvreader.cpp
 cube/cubeinterpretation.cpp
 cube/cubewriter.cpp
+cube/inmemorycubeopt.cpp
+cube/jaggedcube.cpp
 cube/jointnpvcube.cpp
 cube/jointnpvsensicube.cpp
+cube/overlaynpvcube.cpp
+cube/sensicube.cpp
 cube/sensitivitycube.cpp
 cube/sparsenpvcube.cpp
 engine/amcvaluationengine.cpp
+engine/bacvacalculator.cpp
 engine/bufferedsensitivitystream.cpp
+engine/correlationreport.cpp
 engine/cptycalculator.cpp
+engine/creditindexdecomposition.cpp
+engine/cvasensitivitycubestream.cpp
+engine/cvasensitivityrecord.cpp
 engine/decomposedsensitivitystream.cpp
+engine/dependencymarket.cpp
 engine/filteredsensitivitystream.cpp
 engine/historicalpnlgenerator.cpp
 engine/historicalsensipnlcalculator.cpp
 engine/historicalsimulationvar.cpp
+engine/marketriskbacktest.cpp
 engine/marketriskreport.cpp
 engine/mporcalculator.cpp
 engine/multistatenpvcalculator.cpp
@@ -60,37 +100,60 @@ engine/npvrecord.cpp
 engine/parametricvar.cpp
 engine/parsensitivityanalysis.cpp
 engine/parsensitivitycubestream.cpp
+engine/parsensitivityinstrumentbuilder.cpp
+engine/parsensitivityutilities.cpp
+engine/parstressconverter.cpp
+engine/parstressscenarioconverter.cpp
+engine/pnlexplainreport.cpp
 engine/riskfilter.cpp
+engine/saccrcalculator.cpp
+engine/saccrcrifgenerator.cpp
+engine/saccrtradedata.cpp
+engine/sacvasensitivityloader.cpp
+engine/sacvasensitivityrecord.cpp
 engine/sensitivityaggregator.cpp
 engine/sensitivityanalysis.cpp
+engine/sensitivitycalculator.cpp
 engine/sensitivitycubestream.cpp
 engine/sensitivityfilestream.cpp
 engine/sensitivityinmemorystream.cpp
 engine/sensitivityrecord.cpp
 engine/sensitivityreportstream.cpp
+engine/sensitivitystoragemanager.cpp
+engine/simmsensitivitystoragemanager.cpp
+engine/simpledynamicsimm.cpp
+engine/smrc.cpp
+engine/standardapproachcvacalculator.cpp
 engine/stresstest.cpp
 engine/valuationcalculator.cpp
 engine/valuationengine.cpp
+engine/varbacktest.cpp
 engine/varcalculator.cpp
 engine/xvaenginecg.cpp
 engine/zerotoparcube.cpp
+engine/zerotoparshift.cpp
 scenario/clonedscenariogenerator.cpp
 scenario/clonescenariofactory.cpp
 scenario/crossassetmodelscenariogenerator.cpp
 scenario/csvscenariogenerator.cpp
+scenario/cvascenario.cpp
+scenario/cvascenarioloader.cpp
 scenario/deltascenario.cpp
 scenario/deltascenariofactory.cpp
-scenario/historicalscenariofilereader.cpp
 scenario/historicalscenariogenerator.cpp
-scenario/historicalscenarioloader.cpp
+scenario/historicalscenarioreturn.cpp
 scenario/lgmscenariogenerator.cpp
 scenario/scenario.cpp
+scenario/scenariofilereader.cpp
+scenario/scenariogenerator.cpp
 scenario/scenariogeneratorbuilder.cpp
 scenario/scenariogeneratordata.cpp
 scenario/scenariogeneratortransform.cpp
+scenario/scenarioloader.cpp
 scenario/scenarioshiftcalculator.cpp
 scenario/scenariosimmarket.cpp
 scenario/scenariosimmarketparameters.cpp
+scenario/scenarioutilities.cpp
 scenario/scenariowriter.cpp
 scenario/sensitivityscenariodata.cpp
 scenario/sensitivityscenariogenerator.cpp
@@ -98,9 +161,17 @@ scenario/shiftscenariogenerator.cpp
 scenario/simplescenario.cpp
 scenario/stressscenariodata.cpp
 scenario/stressscenariogenerator.cpp
+scenario/zerotoparscenariogenerator.cpp
 simm/crif.cpp
+simm/crifconfiguration.cpp
+simm/crifgenerator.cpp
 simm/crifloader.cpp
+simm/crifmarket.cpp
 simm/crifrecord.cpp
+simm/crifrecordgenerator.cpp
+simm/imschedulecalculator.cpp
+simm/imscheduleresults.cpp
+simm/portfoliomodifier.cpp
 simm/simmbasicnamemapper.cpp
 simm/simmbucketmapperbase.cpp
 simm/simmcalculator.cpp
@@ -117,6 +188,9 @@ simm/simmconcentrationisdav2_3_8.cpp
 simm/simmconcentrationisdav2_5.cpp
 simm/simmconcentrationisdav2_5a.cpp
 simm/simmconcentrationisdav2_6.cpp
+simm/simmconcentrationisdav2_6_5.cpp
+simm/simmconcentrationisdav2_7_2412.cpp
+simm/simmconcentrationisdav2_8_2506.cpp
 simm/simmconfiguration.cpp
 simm/simmconfigurationbase.cpp
 simm/simmconfigurationcalibration.cpp
@@ -131,7 +205,11 @@ simm/simmconfigurationisdav2_3_8.cpp
 simm/simmconfigurationisdav2_5.cpp
 simm/simmconfigurationisdav2_5a.cpp
 simm/simmconfigurationisdav2_6.cpp
+simm/simmconfigurationisdav2_6_5.cpp
+simm/simmconfigurationisdav2_7_2412.cpp
+simm/simmconfigurationisdav2_8_2506.cpp
 simm/simmresults.cpp
+simm/simmtradedata.cpp
 simm/utilities.cpp
 simulation/fixingmanager.cpp
 simulation/simmarket.cpp)
@@ -145,36 +223,67 @@ aggregation/creditmigrationhelper.hpp
 aggregation/creditsimulationparameters.hpp
 aggregation/cvaspreadsensitivitycalculator.hpp
 aggregation/dimcalculator.hpp
+aggregation/dimdirectcalculator.hpp
 aggregation/dimflatcalculator.hpp
+aggregation/dimhelper.hpp
 aggregation/dimregressioncalculator.hpp
 aggregation/dynamiccreditxvacalculator.hpp
+aggregation/dynamicdeltavarcalculator.hpp
+aggregation/dynamicsimmcalculator.hpp
 aggregation/exposureallocator.hpp
 aggregation/exposurecalculator.hpp
 aggregation/nettedexposurecalculator.hpp
 aggregation/postprocess.hpp
+aggregation/simmhelper.hpp
 aggregation/staticcreditxvacalculator.hpp
 aggregation/xvacalculator.hpp
 app/analytic.hpp
+app/analytics/analyticfactory.hpp
+app/analytics/bacvaanalytic.hpp
+app/analytics/calibrationanalytic.hpp
+app/analytics/correlationanalytic.hpp
+app/analytics/crifanalytic.hpp
+app/analytics/imscheduleanalytic.hpp
 app/analytics/parconversionanalytic.hpp
+app/analytics/parscenarioanalytic.hpp
+app/analytics/parstressconversionanalytic.hpp
+app/analytics/pnlanalytic.hpp
+app/analytics/pnlexplainanalytic.hpp
+app/analytics/portfoliodetailsanalytic.hpp
 app/analytics/pricinganalytic.hpp
+app/analytics/saccranalytic.hpp
+app/analytics/sacvaanalytic.hpp
 app/analytics/scenarioanalytic.hpp
-app/analytics/scenariostatisticsanalytic.hpp
+app/analytics/scenariogenerationanalytic.hpp
+app/analytics/sensitivitystressanalytic.hpp
 app/analytics/simmanalytic.hpp
+app/analytics/smrcanalytic.hpp
+app/analytics/stresstestanalytic.hpp
+app/analytics/utilities.hpp
 app/analytics/varanalytic.hpp
 app/analytics/xvaanalytic.hpp
+app/analytics/xvaexplainanalytic.hpp
+app/analytics/xvasensitivityanalytic.hpp
+app/analytics/xvastressanalytic.hpp
+app/analytics/zerotoparshiftanalytic.hpp
 app/analyticsmanager.hpp
+app/cleanupsingletons.hpp
+app/dummymarketdataloader.hpp
+app/hwhistoricalcalibrationdataloader.hpp
+app/initbuilders.hpp
 app/inputparameters.hpp
+app/inputvariables.hpp
 app/marketcalibrationreport.hpp
+app/marketdatabinaryloader.hpp
 app/marketdatacsvloader.hpp
 app/marketdatainmemoryloader.hpp
 app/marketdataloader.hpp
 app/oreapp.hpp
 app/parameters.hpp
+app/portfolioanalyser.hpp
 app/reportwriter.hpp
-app/sensitivityrunner.hpp
 app/structuredanalyticserror.hpp
 app/structuredanalyticswarning.hpp
-app/xvarunner.hpp
 app/zerosensitivityloader.hpp
 auto_link.hpp
 cube/cube_io.hpp
@@ -182,22 +291,31 @@ cube/cubecsvreader.hpp
 cube/cubeinterpretation.hpp
 cube/cubewriter.hpp
 cube/inmemorycube.hpp
+cube/inmemorycubeopt.hpp
 cube/jaggedcube.hpp
 cube/jointnpvcube.hpp
 cube/jointnpvsensicube.hpp
 cube/npvcube.hpp
 cube/npvsensicube.hpp
+cube/overlaynpvcube.hpp
 cube/sensicube.hpp
 cube/sensitivitycube.hpp
 cube/sparsenpvcube.hpp
 engine/amcvaluationengine.hpp
+engine/bacvacalculator.hpp
 engine/bufferedsensitivitystream.hpp
+engine/correlationreport.hpp
 engine/cptycalculator.hpp
+engine/creditindexdecomposition.hpp
+engine/cvasensitivitycubestream.hpp
+engine/cvasensitivityrecord.hpp
 engine/decomposedsensitivitystream.hpp
+engine/dependencymarket.hpp
 engine/filteredsensitivitystream.hpp
 engine/historicalpnlgenerator.hpp
 engine/historicalsensipnlcalculator.hpp
 engine/historicalsimulationvar.hpp
+engine/marketriskbacktest.hpp
 engine/marketriskreport.hpp
 engine/mporcalculator.hpp
 engine/multistatenpvcalculator.hpp
@@ -207,43 +325,66 @@ engine/observationmode.hpp
 engine/parametricvar.hpp
 engine/parsensitivityanalysis.hpp
 engine/parsensitivitycubestream.hpp
+engine/parsensitivityinstrumentbuilder.hpp
+engine/parsensitivityutilities.hpp
+engine/parstressconverter.hpp
+engine/parstressscenarioconverter.hpp
+engine/pathdata.hpp
+engine/pnlexplainreport.hpp
 engine/riskfilter.hpp
+engine/saccrcalculator.hpp
+engine/saccrcrifgenerator.hpp
+engine/saccrtradedata.hpp
+engine/sacvasensitivityloader.hpp
+engine/sacvasensitivityrecord.hpp
 engine/sensitivityaggregator.hpp
 engine/sensitivityanalysis.hpp
+engine/sensitivitycalculator.hpp
 engine/sensitivitycubestream.hpp
 engine/sensitivityfilestream.hpp
 engine/sensitivityinmemorystream.hpp
 engine/sensitivityrecord.hpp
 engine/sensitivityreportstream.hpp
+engine/sensitivitystoragemanager.hpp
 engine/sensitivitystream.hpp
+engine/simmsensitivitystoragemanager.hpp
+engine/simpledynamicsimm.hpp
+engine/smrc.hpp
+engine/standardapproachcvacalculator.hpp
 engine/stresstest.hpp
 engine/valuationcalculator.hpp
 engine/valuationengine.hpp
+engine/varbacktest.hpp
 engine/varcalculator.hpp
 engine/xvaenginecg.hpp
 engine/zerotoparcube.hpp
+engine/zerotoparshift.hpp
 scenario/aggregationscenariodata.hpp
 scenario/clonedscenariogenerator.hpp
 scenario/clonescenariofactory.hpp
 scenario/crossassetmodelscenariogenerator.hpp
 scenario/csvscenariogenerator.hpp
+scenario/cvascenario.hpp
+scenario/cvascenarioloader.hpp
 scenario/deltascenario.hpp
 scenario/deltascenariofactory.hpp
-scenario/historicalscenariofilereader.hpp
 scenario/historicalscenariogenerator.hpp
-scenario/historicalscenarioloader.hpp
-scenario/historicalscenarioreader.hpp
+scenario/historicalscenarioreturn.hpp
 scenario/lgmscenariogenerator.hpp
 scenario/scenario.hpp
 scenario/scenariofactory.hpp
+scenario/scenariofilereader.hpp
 scenario/scenariofilter.hpp
 scenario/scenariogenerator.hpp
 scenario/scenariogeneratorbuilder.hpp
 scenario/scenariogeneratordata.hpp
 scenario/scenariogeneratortransform.hpp
+scenario/scenarioloader.hpp
+scenario/scenarioreader.hpp
 scenario/scenarioshiftcalculator.hpp
 scenario/scenariosimmarket.hpp
 scenario/scenariosimmarketparameters.hpp
+scenario/scenarioutilities.hpp
 scenario/scenariowriter.hpp
 scenario/sensitivityscenariodata.hpp
 scenario/sensitivityscenariogenerator.hpp
@@ -252,9 +393,17 @@ scenario/simplescenario.hpp
 scenario/simplescenariofactory.hpp
 scenario/stressscenariodata.hpp
 scenario/stressscenariogenerator.hpp
+scenario/zerotoparscenariogenerator.hpp
 simm/crif.hpp
+simm/crifconfiguration.hpp
+simm/crifgenerator.hpp
 simm/crifloader.hpp
+simm/crifmarket.hpp
 simm/crifrecord.hpp
+simm/crifrecordgenerator.hpp
+simm/imschedulecalculator.hpp
+simm/imscheduleresults.hpp
+simm/portfoliomodifier.hpp
 simm/simmbasicnamemapper.hpp
 simm/simmbucketmapper.hpp
 simm/simmbucketmapperbase.hpp
@@ -272,6 +421,9 @@ simm/simmconcentrationisdav2_3_8.hpp
 simm/simmconcentrationisdav2_5.hpp
 simm/simmconcentrationisdav2_5a.hpp
 simm/simmconcentrationisdav2_6.hpp
+simm/simmconcentrationisdav2_6_5.hpp
+simm/simmconcentrationisdav2_7_2412.hpp
+simm/simmconcentrationisdav2_8_2506.hpp
 simm/simmconfiguration.hpp
 simm/simmconfigurationbase.hpp
 simm/simmconfigurationcalibration.hpp
@@ -286,36 +438,54 @@ simm/simmconfigurationisdav2_3_8.hpp
 simm/simmconfigurationisdav2_5.hpp
 simm/simmconfigurationisdav2_5a.hpp
 simm/simmconfigurationisdav2_6.hpp
+simm/simmconfigurationisdav2_6_5.hpp
+simm/simmconfigurationisdav2_7_2412.hpp
+simm/simmconfigurationisdav2_8_2506.hpp
 simm/simmnamemapper.hpp
 simm/simmresults.hpp
+simm/simmtradedata.hpp
 simm/utilities.hpp
 simulation/fixingmanager.hpp
 simulation/simmarket.hpp
 version.hpp)
 
-writeAll("orea" "orea.hpp" "auto_link.hpp" "${OREAnalytics_HDR}")
-add_library(${OREA_LIB_NAME} ${OREAnalytics_SRC})
-target_link_libraries(${OREA_LIB_NAME} ${QL_LIB_NAME})
-target_link_libraries(${OREA_LIB_NAME} ${QLE_LIB_NAME})
-target_link_libraries(${OREA_LIB_NAME} ${ORED_LIB_NAME})
-target_link_libraries(${OREA_LIB_NAME} ${Boost_LIBRARIES})
+writeAll("orea" "${CMAKE_CURRENT_LIST_DIR}/orea.hpp" "auto_link.hpp" "${OREAnalytics_HDR}")
+add_library(${OREA_LIB_NAME} ${OREAnalytics_SRC} ${OREAnalytics_HDR} "orea.hpp")
+add_library(${ORE_PACKAGE_NAME}::${OREA_LIB_NAME} ALIAS ${OREA_LIB_NAME})
+target_link_libraries(${OREA_LIB_NAME}
+    PUBLIC
+        ${ORE_PACKAGE_NAME}::${ORED_LIB_NAME}
+    PRIVATE
+        Boost::iostreams
+)
+
+target_include_directories(${OREA_LIB_NAME} PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+
 if(ORE_USE_ZLIB)
-    target_link_libraries(${OREA_LIB_NAME} ${ZLIB_LIBRARIES})
-    add_definitions(-DORE_USE_ZLIB)
+    target_link_libraries(${OREA_LIB_NAME} PRIVATE ZLIB::ZLIB)
+    target_compile_definitions(${OREA_LIB_NAME} PRIVATE ORE_USE_ZLIB)
+endif()
+
+if(ORE_MULTITHREADING_CPU_AFFINITY)
+    target_compile_definitions(${OREA_LIB_NAME} PRIVATE ORE_MULTITHREADING_CPU_AFFINITY)
 endif()
 
 if (QL_USE_PCH)
-target_precompile_headers(${OREA_LIB_NAME}
-  PUBLIC
-    <orea/app/inputparameters.hpp>
-    <orea/scenario/scenariosimmarketparameters.hpp>)
+    target_precompile_headers(${OREA_LIB_NAME}
+        PUBLIC
+            $<BUILD_INTERFACE:<orea/app/inputparameters.hpp$<ANGLE-R>>
+            $<BUILD_INTERFACE:<orea/scenario/scenariosimmarketparameters.hpp$<ANGLE-R>>
+    )
 endif()
 
-install(DIRECTORY . DESTINATION include/orea
-        FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h")
+# Installation properties.
+install(TARGETS ${OREA_LIB_NAME} EXPORT ${ORE_PACKAGE_NAME}Targets)
 
-install(TARGETS ${OREA_LIB_NAME}
-        ARCHIVE DESTINATION lib
-        LIBRARY DESTINATION lib
-        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
-        )
+install(
+    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
+)

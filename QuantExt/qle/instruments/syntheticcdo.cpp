@@ -37,14 +37,14 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-SyntheticCDO::SyntheticCDO(const boost::shared_ptr<QuantExt::Basket>& basket, Protection::Side side,
+SyntheticCDO::SyntheticCDO(const QuantLib::ext::shared_ptr<QuantExt::Basket>& basket, Protection::Side side,
                            const Schedule& schedule, Rate upfrontRate, Rate runningRate, const DayCounter& dayCounter,
                            BusinessDayConvention paymentConvention, bool settlesAccrual,
                            CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime, Date protectionStart,
-                           Date upfrontDate, boost::optional<Real> notional, Real recoveryRate,
+                           Date upfrontDate, QuantLib::ext::optional<Real> notional, Real recoveryRate,
                            const DayCounter& lastPeriodDayCounter)
     : basket_(basket), side_(side), upfrontRate_(upfrontRate), runningRate_(runningRate),
-      leverageFactor_(notional ? notional.get() / basket->trancheNotional() : 1.), dayCounter_(dayCounter),
+      leverageFactor_(notional ? notional.value() / basket->trancheNotional() : 1.), dayCounter_(dayCounter),
       paymentConvention_(paymentConvention), settlesAccrual_(settlesAccrual),
       protectionPaymentTime_(protectionPaymentTime),
       protectionStart_(protectionStart == Null<Date>() ? schedule[0] : protectionStart),
@@ -81,10 +81,10 @@ SyntheticCDO::SyntheticCDO(const boost::shared_ptr<QuantExt::Basket>& basket, Pr
     QL_REQUIRE(upfrontPayment_->date() >= protectionStart_, "upfront can not be due before contract start");
 
     if (schedule.rule() == DateGeneration::CDS || schedule.rule() == DateGeneration::CDS2015) {
-            accrualRebate_= boost::make_shared<SimpleCashFlow>(QuantLib::CashFlows::accruedAmount(normalizedLeg_, false, protectionStart_+1),
+            accrualRebate_= QuantLib::ext::make_shared<SimpleCashFlow>(QuantLib::CashFlows::accruedAmount(normalizedLeg_, false, protectionStart_+1),
                                                                effectiveUpfrontDate);      
             Date current = std::max((Date)Settings::instance().evaluationDate(), protectionStart_);
-            accrualRebateCurrent_ = boost::make_shared<SimpleCashFlow>(
+            accrualRebateCurrent_ = QuantLib::ext::make_shared<SimpleCashFlow>(
                 CashFlows::accruedAmount(normalizedLeg_, false, current + 1),
                 schedule.calendar().advance(current, 3, Days, paymentConvention));
 
@@ -136,7 +136,7 @@ Real SyntheticCDO::protectionLegNPV() const {
     calculate();
     if (side_ == Protection::Buyer)
         return -protectionValue_;
-    return premiumValue_;
+    return protectionValue_;
 }
 
 Rate SyntheticCDO::fairPremium() const {
@@ -168,6 +168,24 @@ bool SyntheticCDO::isExpired() const {
 Real SyntheticCDO::remainingNotional() const {
     calculate();
     return remainingNotional_;
+}
+
+Real SyntheticCDO::accrualRebateNPV() const {
+    calculate();
+    return accrualRebateNPV_;
+}
+Real SyntheticCDO::accrualRebateNPVCurrent() const {
+    calculate();
+    return accrualRebateNPVCurrent_;
+}
+Real SyntheticCDO::cleanNPV() const {
+    calculate();
+    return cleanNPV_;
+}
+
+Real SyntheticCDO::upfrontPremiumValue() const {
+    calculate();
+    return upfrontPremiumValue_;
 }
 
 void SyntheticCDO::setupArguments(PricingEngine::arguments* args) const {
@@ -204,6 +222,9 @@ void SyntheticCDO::fetchResults(const PricingEngine::results* r) const {
     remainingNotional_ = results->remainingNotional;
     error_ = results->error;
     expectedTrancheLoss_ = results->expectedTrancheLoss;
+    accrualRebateNPV_ = results->accrualRebateValue;
+    accrualRebateNPVCurrent_ = results->accrualRebateCurrentValue;
+    cleanNPV_ = results->cleanNPV;
 }
 
 void SyntheticCDO::setupExpired() const {
@@ -259,9 +280,9 @@ private:
 Real SyntheticCDO::implicitCorrelation(const std::vector<Real>& recoveries,
                                        const Handle<YieldTermStructure>& discountCurve, Real targetNPV,
                                        Real accuracy) const {
-    boost::shared_ptr<SimpleQuote> correl(new SimpleQuote(0.0));
+    QuantLib::ext::shared_ptr<SimpleQuote> correl(new SimpleQuote(0.0));
 
-    boost::shared_ptr<GaussianLHPLossModel> lhp(new GaussianLHPLossModel(Handle<Quote>(correl), recoveries));
+    QuantLib::ext::shared_ptr<GaussianLHPLossModel> lhp(new GaussianLHPLossModel(Handle<Quote>(correl), recoveries));
 
     // lock
     basket_->setLossModel(lhp);

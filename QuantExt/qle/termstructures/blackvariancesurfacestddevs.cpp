@@ -28,9 +28,11 @@ namespace QuantExt {
 BlackVarianceSurfaceStdDevs::BlackVarianceSurfaceStdDevs(
     const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times, const std::vector<Real>& stdDevs,
     const std::vector<std::vector<Handle<Quote>>>& blackVolMatrix, const DayCounter& dayCounter,
-    const boost::shared_ptr<EqFxIndexBase>& index, bool stickyStrike, bool flatExtrapMoneyness)
-    : BlackVarianceSurfaceMoneyness(cal, spot, times, stdDevs, blackVolMatrix, dayCounter, stickyStrike), index_(index),
-      flatExtrapolateMoneyness_(flatExtrapMoneyness) {
+    const QuantLib::ext::shared_ptr<EqFxIndexBase>& index, bool stickyStrike, bool flatExtrapMoneyness,
+    BlackVolTimeExtrapolation timeExtrapolation, const VolatilityType type, const Real shift)
+    : BlackVarianceSurfaceMoneyness(cal, spot, times, stdDevs, blackVolMatrix, dayCounter, stickyStrike,
+                                    flatExtrapMoneyness, timeExtrapolation, type, shift),
+      index_(index), flatExtrapolateMoneyness_(flatExtrapMoneyness) {
 
     // set up atm variance curve - maybe just take ATM vols in
     vector<Real>::const_iterator it = find(stdDevs.begin(), stdDevs.end(), 0.0);
@@ -113,7 +115,7 @@ void BlackVarianceSurfaceStdDevs::populateVolMatrix(
         for (Size i = 0; i < stdDevPoints.size(); i++) {
             Real tmpStrike = forwardCurve(times[j]) * exp(atmVolCurve(times[j]) * sqrt(times[j]) * stdDevPoints[i]);
             Volatility vol = termStructre->blackVol(times[j], tmpStrike, true);
-            boost::shared_ptr<QuantLib::SimpleQuote> q(new SimpleQuote(vol));
+            QuantLib::ext::shared_ptr<QuantLib::SimpleQuote> q(new SimpleQuote(vol));
             quotesToPopulate[i][j] = Handle<Quote>(q);
         }
     }

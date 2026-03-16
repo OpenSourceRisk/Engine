@@ -55,35 +55,35 @@ class RepresentativeSwaptionMatcher {
 public:
     enum class InclusionCriterion { AccrualStartGeqExercise, PayDateGtExercise };
     RepresentativeSwaptionMatcher(const std::vector<Leg>& underlying, const std::vector<bool>& isPayer,
-                                  const boost::shared_ptr<SwapIndex>& standardSwapIndexBase,
+                                  const QuantLib::ext::shared_ptr<SwapIndex>& standardSwapIndexBase,
                                   const bool useUnderlyingIborIndex, const Handle<YieldTermStructure>& discountCurve,
                                   const Real reversion, const Real volatility = 0.0050,
                                   const Real flatRate = Null<Real>());
 
     /*! find representative swaption for all specified underlying cashflows
         a null pointer is returned if there are no live cashflows found */
-    boost::shared_ptr<Swaption>
+    QuantLib::ext::shared_ptr<Swaption>
     representativeSwaption(Date exerciseDate,
                            const InclusionCriterion criterion = InclusionCriterion::AccrualStartGeqExercise);
 
 private:
-    QuantLib::Date valueDate(const QuantLib::Date& fixingDate, const boost::shared_ptr<QuantLib::FloatingRateCoupon>& cpn) const;
+    QuantLib::Date valueDate(const QuantLib::Date& fixingDate, const QuantLib::ext::shared_ptr<QuantLib::FloatingRateCoupon>& cpn) const;
     
     const std::vector<Leg> underlying_;
     const std::vector<bool> isPayer_;
-    const boost::shared_ptr<SwapIndex> swapIndexBase_;
+    const QuantLib::ext::shared_ptr<SwapIndex> swapIndexBase_;
     const bool useUnderlyingIborIndex_;
     const Handle<YieldTermStructure> discountCurve_;
     const Real reversion_, volatility_, flatRate_;
     //
-    boost::shared_ptr<LGM> model_;
+    QuantLib::ext::shared_ptr<LGM> model_;
     Leg modelLinkedUnderlying_;
     std::vector<bool> modelLinkedUnderlyingIsPayer_;
 
-    std::map<std::string, boost::shared_ptr<LgmImpliedYtsFwdFwdCorrected>> modelForwardCurves_;
-    boost::shared_ptr<LgmImpliedYtsFwdFwdCorrected> modelDiscountCurve_, modelSwapIndexForwardCurve_,
+    std::map<std::string, QuantLib::ext::shared_ptr<LgmImpliedYtsFwdFwdCorrected>> modelForwardCurves_;
+    QuantLib::ext::shared_ptr<LgmImpliedYtsFwdFwdCorrected> modelDiscountCurve_, modelSwapIndexForwardCurve_,
         modelSwapIndexDiscountCurve_;
-    boost::shared_ptr<SwapIndex> swapIndexBaseFinal_, modelSwapIndexBase_;
+    QuantLib::ext::shared_ptr<SwapIndex> swapIndexBaseFinal_, modelSwapIndexBase_;
 };
 
 } // namespace QuantExt

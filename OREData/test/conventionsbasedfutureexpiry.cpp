@@ -48,7 +48,8 @@ vector<string> commodityNames = {
     "ice_eiw",
     "ice_hen_basis",
     "ice_his_basis",
-    "cme_myr_palm_oil"
+    "cme_myr_palm_oil",
+    "ice_ttf"
 };
 
 BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
@@ -66,7 +67,7 @@ BOOST_DATA_TEST_CASE(testExpiryDates, bdata::make(commodityNames), commodityName
 
     // Create the conventions based expiry calculator
     BOOST_TEST_REQUIRE(conventions.has(commodityName));
-    auto convention = boost::dynamic_pointer_cast<CommodityFutureConvention>(conventions.get(commodityName));
+    auto convention = QuantLib::ext::dynamic_pointer_cast<CommodityFutureConvention>(conventions.get(commodityName));
     BOOST_TEST_REQUIRE(convention);
     ConventionsBasedFutureExpiry cbfe(*convention);
 

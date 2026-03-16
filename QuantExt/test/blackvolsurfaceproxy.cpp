@@ -76,34 +76,34 @@ BOOST_AUTO_TEST_CASE(testBlackVolSurfaceProxy) {
     vols[2][3] = 0.43;
 
     // spots for the index and underlying
-    Handle<Quote> indexSpot = Handle<Quote>(boost::shared_ptr<Quote>(new SimpleQuote(1000)));
-    Handle<Quote> underlyingSpot = Handle<Quote>(boost::shared_ptr<Quote>(new SimpleQuote(150)));
+    Handle<Quote> indexSpot = Handle<Quote>(QuantLib::ext::shared_ptr<Quote>(new SimpleQuote(1000)));
+    Handle<Quote> underlyingSpot = Handle<Quote>(QuantLib::ext::shared_ptr<Quote>(new SimpleQuote(150)));
 
     // forecast and dividend yields for the index
     Handle<YieldTermStructure> indexForecast = Handle<YieldTermStructure>(
-        boost::make_shared<FlatForward>(today, Handle<Quote>(boost::make_shared<SimpleQuote>(0.03)), dc));
+        QuantLib::ext::make_shared<FlatForward>(today, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.03)), dc));
     Handle<YieldTermStructure> indexDividend = Handle<YieldTermStructure>(
-        boost::make_shared<FlatForward>(today, Handle<Quote>(boost::make_shared<SimpleQuote>(0.02)), dc));
+        QuantLib::ext::make_shared<FlatForward>(today, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.02)), dc));
 
     // forecast and dividend yields for the underlying
     Handle<YieldTermStructure> underlyingForecast = Handle<YieldTermStructure>(
-        boost::make_shared<FlatForward>(today, Handle<Quote>(boost::make_shared<SimpleQuote>(0.02)), dc));
+        QuantLib::ext::make_shared<FlatForward>(today, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.02)), dc));
     Handle<YieldTermStructure> underlyingDividend = Handle<YieldTermStructure>(
-        boost::make_shared<FlatForward>(today, Handle<Quote>(boost::make_shared<SimpleQuote>(0.01)), dc));
+        QuantLib::ext::make_shared<FlatForward>(today, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.01)), dc));
 
     // set up EquityIndexes for the index and underlying
-    boost::shared_ptr<EquityIndex2> index = boost::make_shared<EquityIndex2>("Index", UnitedStates(UnitedStates::Settlement), USDCurrency(),
+    QuantLib::ext::shared_ptr<EquityIndex2> index = QuantLib::ext::make_shared<EquityIndex2>("Index", UnitedStates(UnitedStates::Settlement), USDCurrency(),
                                                                            indexSpot, indexForecast, indexDividend);
-    boost::shared_ptr<EquityIndex2> underlying = boost::make_shared<EquityIndex2>(
+    QuantLib::ext::shared_ptr<EquityIndex2> underlying = QuantLib::ext::make_shared<EquityIndex2>(
         "Underlying", UnitedStates(UnitedStates::Settlement), USDCurrency(), underlyingSpot, underlyingForecast, underlyingDividend);
 
     // set up a vol surface for the index
-    boost::shared_ptr<BlackVolTermStructure> indexVolSurface =
-        boost::make_shared<BlackVarianceSurface>(today, UnitedStates(UnitedStates::Settlement), dates, strikes, vols, dc);
+    QuantLib::ext::shared_ptr<BlackVolTermStructure> indexVolSurface =
+        QuantLib::ext::make_shared<BlackVarianceSurface>(today, UnitedStates(UnitedStates::Settlement), dates, strikes, vols, dc);
 
     // set up a vol surface for the underlying, to be proxied from the index surface
-    boost::shared_ptr<BlackVolatilitySurfaceProxy> underlyingVolSurface =
-        boost::make_shared<BlackVolatilitySurfaceProxy>(indexVolSurface, underlying, index);
+    QuantLib::ext::shared_ptr<BlackVolatilitySurfaceProxy> underlyingVolSurface =
+        QuantLib::ext::make_shared<BlackVolatilitySurfaceProxy>(indexVolSurface, underlying, index);
 
     // Check the ATM forward vols
     for (auto d : dates) {

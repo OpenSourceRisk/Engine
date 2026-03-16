@@ -21,6 +21,6 @@
 namespace QuantExt {
 
 Parametrization::Parametrization(const Currency& currency, const std::string& name)
-    : h_(1.0E-6), h2_(1.0E-4), currency_(currency), name_(name), emptyParameter_(boost::make_shared<NullParameter>()) {}
+    : h_(1.0E-6), h2_(1.0E-4), currency_(currency), name_(name), emptyParameter_(QuantLib::ext::make_shared<NullParameter>()) {}
 
 } // namespace QuantExt

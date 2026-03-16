@@ -23,16 +23,16 @@
 namespace ore {
 namespace data {
 
-boost::shared_ptr<QuantLib::PricingEngine>
+QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
 DiscountingBondRepoEngineBuilder::engineImpl(const std::string& repoCurveId) {
     bool includeSecurityLeg = parseBool(modelParameter("IncludeSecurityLeg"));
-    return boost::make_shared<QuantExt::DiscountingBondRepoEngine>(
+    return QuantLib::ext::make_shared<QuantExt::DiscountingBondRepoEngine>(
         market_->yieldCurve(repoCurveId, configuration(MarketContext::pricing)), includeSecurityLeg);
 }
 
-boost::shared_ptr<QuantLib::PricingEngine> AccrualBondRepoEngineBuilder::engineImpl(const std::string&) {
+QuantLib::ext::shared_ptr<QuantLib::PricingEngine> AccrualBondRepoEngineBuilder::engineImpl(const std::string&) {
     bool includeSecurityLeg = parseBool(modelParameter("IncludeSecurityLeg"));
-    return boost::make_shared<QuantExt::AccrualBondRepoEngine>(includeSecurityLeg);
+    return QuantLib::ext::make_shared<QuantExt::AccrualBondRepoEngine>(includeSecurityLeg);
 }
 
 } // namespace data

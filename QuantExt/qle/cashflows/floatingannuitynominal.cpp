@@ -23,10 +23,10 @@ namespace QuantExt {
 Leg makeFloatingAnnuityNominalLeg(const Leg& floatingAnnuityLeg) {
     Leg leg;
     for (Size i = 0; i < floatingAnnuityLeg.size(); i++) {
-        boost::shared_ptr<FloatingAnnuityCoupon> coupon =
-            boost::dynamic_pointer_cast<FloatingAnnuityCoupon>(floatingAnnuityLeg[i]);
+        QuantLib::ext::shared_ptr<FloatingAnnuityCoupon> coupon =
+            QuantLib::ext::dynamic_pointer_cast<FloatingAnnuityCoupon>(floatingAnnuityLeg[i]);
         if (coupon)
-            leg.push_back(boost::shared_ptr<CashFlow>(new FloatingAnnuityNominal(coupon)));
+            leg.push_back(QuantLib::ext::shared_ptr<CashFlow>(new FloatingAnnuityNominal(coupon)));
     }
     return leg;
 }

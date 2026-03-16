@@ -1,0 +1,2 @@
+#TradeId,TradeType,Maturity,MaturityTime,NPV,NpvCurrency,NPV(Base),BaseCurrency,Notional,NotionalCurrency,Notional(Base),NettingSet,CounterParty
+FixedRateBond,Bond,2025-03-03,3.005479,8757660.153072,USD,8757660.153072,USD,10000000.00,USD,10000000.00,,CPTY

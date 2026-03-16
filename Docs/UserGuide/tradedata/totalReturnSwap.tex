@@ -46,37 +46,49 @@ or equities, CFDs on an underlying basket of EquityPositions, proprietary indice
 indices.
 
 \begin{itemize}
-\item The {\tt UnderlyingData} block specifies on or more underlyings, which can be a trades of one of the following
-  types. See the trade type specific sections for details on the setup of these underlyings.
-  \begin{itemize}
-  \item Bond: See \ref{ss:bond}, the trade data is given in a BondData sub node.
-  \item ForwardBond: See \ref{ss:BondForward_refdata}, the trade data is given in a ForwardBondData sub node.
+\item The {\tt UnderlyingData} block specifies one or more underlyings, which can be a trade of one of the following
+  types (see the trade type specific sections), or structures with the Derivative or PortfolioIndexTradeData subnode. 
+    \begin{itemize}
+  \item Bond: See \ref{ss:bond}, the trade data is given in a BondData sub node for a single Bond.
+  \item BondFuture: See \ref{ss:bondfuture}, the trade data is given in a BondFuture sub node.
+  \item ForwardBond: See \ref{ss:BondForward_refdata}, the trade data is given in a ForwardBondData sub node. Deprecated way of representing bond future trs, consider using BondFuture as the underlying.
   \item CBO: See \ref{ss:CBOData}, the trade data is given in a CBOData sub node.
   \item CommodityPosition: See \ref{ss:commodity_position}, the trade data is given in a CommodityPositionData sub node.
   \item ConvertibleBond: See \ref{ss:convertible_bond}, the trade data is given in a ConvertibleBondData sub
-    node. When using reference data, a TRS on a convertible bond can also be captured as a TRS on a bond, i.e. there is
-    no need to distinguish between a TRS on a Bond and a TRS on a convertible Bond in this case, the pricer will figure
+    node. When using reference data, a TRS on a Convertible Bond can also be captured as a TRS on a Bond, i.e. there is
+    no need to distinguish between a TRS on a Bond and a TRS on a Convertible Bond in this case, the pricer will figure
     out which underlying to set up based on the type of reference data that is set up for the ISIN referenced in the
     security id field.
+  \item CallableBond: See \ref{ss:callable_bond}, the trade data is given in a CallableBond sub node. When using reference data, 
+  a TRS on a Callable Bond can also be captured as a TRS on a bond, i.e. there is no need to distinguish between a TRS on a Bond and a TRS on a Callable Bond.  
+  The pricer will figure out which underlying to set up based on the type of reference data that is set up for the ISIN referenced in the security id field.   
   \item EquityPosition: See \ref{ss:equity_position}, the trade data is given in a EquityPositionData sub
-    node. Notice that the equities given in the basket must be available as quoted market data.
+    node. Notice that the equities given in the basket must be available as quoted market data. To represent a TRS on an Equity Futures position, one or multiple EquityPosition underlyings are used, where the equity positions cover the underlying equity of the futures position.
+
   \item EquityOptionPosition: See \ref{ss:equity_option_position}, the trade data is given in a EquityOptionPositionData
     sub node.
-  \item BondPosition: See \ref{ss:bond_position}, the trade data is given in a BondBasketData sub node.
-  \item Derivative: An arbitrary underlying derivative trade (of any type covered by ORE), allowing the set up of a so called Portfolio Swap with multiple underlying derivatives. The derivative subnode has
-    exactly two subnodes
-    \begin{itemize}
-      \item Id: A unqiue identifier for the derivative position. Historical prices must be given under the fixing name
-        ``GENERIC-$<Id>$''.
+  \item BondPosition: See \ref{ss:bond_position}, the trade data is given in a BondBasketData sub node for multiple underlying Bonds.
+  \item CashPosition: See \ref{ss:cash_position}, the trade data is given in a CashPositionData sub
+  node.
+  \item Derivative: An arbitrary underlying derivative trade (of any type covered by ORE), allowing the set up of a so called Portfolio Swap with multiple underlying derivatives. The Derivative subnode has exactly two subnodes:
+      \begin{itemize}
+      \item Id: A string with a unique identifier for the derivative position, typically starting with \emph{DERIV:}. 
+      %Historical prices must be given under the fixing name ``GENERIC-$<Id>$''.
       \item Trade: The root node of a derivative trade.
     \end{itemize}
-
+  \item PortfolioIndexTradeData: This is a Portfolio Swap that references an underlying Basket via the \lstinline!BasketName! identifier. The underlying basket can have an arbitrary number underlying derivatives of any supported TradeType. The PortfolioIndexTradeData subnode has one subnode:
+    \begin{itemize}
+      \item BasketName: A string with a unique identifier for the portfolioIndex, matching the underlying reference basket. 
+      %Historical prices must be given under the fixing name ``GENERIC-$<BasketName>$''.
+      \item IndexQuantity: Number of shares of the index.
+    \end{itemize}
   \end{itemize}
 
-  Each trade is specified by a \verb+TradeType+ and a trade type dependent data block as listed above. Listing
+  Except for PortfolioIndexTradeData, each trade is specified by a \verb+TradeType+ and a trade type dependent data block as listed above. Listing
   \ref{lst:trsdata} shows an example for a convertible bond underlying. Listing \ref{lst:trsdata2} shows an example for
   an equity basket underlying. Listing \ref{lst:trsdata3} shows an example for a bond basket underlying. Listing
-  \ref{lst:trsdata4} shows an example for a derivative underlying (a swaption in this case).
+  \ref{lst:trsdata4} shows an example for a Derivative underlying (with 3 underlying trades in this case). Listing
+  \ref{lst:trsdata_portfolio} shows an example for a PortfolioIndexTradeData underlying.
 
 \item The {\tt ReturnData} block specifies the details of the return leg.
   \begin{itemize}
@@ -148,7 +160,9 @@ indices.
       \begin{itemize}
       \item Percentage of Par: the InitialPrice should be given as e.g. $1.02$ for $102\%$ relative dirty price
       \item Currency per Unit: the InitialPrice should be given as e.g. $0.51$ for a dirty amount of $51$ USD per unit
-        of the bond worth (say) $50.0$ USD.
+        of the bond worth (say) $50.0$ USD. 
+        
+        Note that Korean bonds typically use Currency per Unit quotation method, whereas other bonds typically use Percentage of Par.
       \end{itemize}
       \item the weighted price of one unit of the bond underlying basket, notice that this is always a ``percentage of
         par'' price regardless of the quotation style of the single bonds in the basket
@@ -202,6 +216,22 @@ indices.
 \label{lst:fxterms}
 \end{listing}
 
+\item FXConversion [Optional]: Determines what Fx rate is used in the payoff calculation, the rate at the  \emph{Start} of 
+the period (default) or the rate at the \emph{End}.  Only has an impact If the underlying asset currency is different from 
+the return currency.
+
+With the default FXConversion \emph{Start} the accrual pricing return is:\\
+(Ntl x today's price x today's Fx rate) - (Ntl x initial price x initial Fx rate)\\
+When the as of date is the date of the final price (end of period) we have:\\
+(Ntl x final price x final Fx rate) - (Ntl x initial price x initial Fx rate)
+
+With the FXConversion \emph{End}  the accrual pricing return is:\\
+(Ntl x todays price x today's Fx rate) - (Ntl x initial price x today's Fx rate)\\
+When the as of date is the date of the final price (end of period) we have:\\
+(Ntl x final price x final Fx rate) - (Ntl x initial price x final Fx rate)
+
+Allowable values: \emph{Start}, \emph{End}. Defaults to \emph{Start} if omitted.
+
   \item PayUnderlyingCashFlowsImmediately [Optional]: If true, underlying cashflows like coupon or amortisation payments
     from bonds or dividend payments from equities, are paid when they occur. If false, these cashflows are paid together
     with the next return payment. If omitted, the default value is false for trade type TotalReturnSwap and true for
@@ -220,6 +250,7 @@ indices.
   \item Floating
   \item CMS
   \item CMB
+  \item ZeroCouponFixed
   \end{itemize}
   The number of coupons defined by the legs often match the number of periods of the return schedule, but this is not a
   strict requirement. All funding legs must share the same payment currency.
@@ -315,6 +346,32 @@ indices.
 \label{lst:trsdata}
 \end{listing}
 
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <TotalReturnSwapData>
+      <UnderlyingData>
+        <Trade>
+          <TradeType>CallableBond</TradeType>
+          <CallableBondData>
+            <BondData>
+              <SecurityId>ISIN:XS0123456789</SecurityId>
+              <BondNotional>100000000</BondNotional>
+            </BondData>
+          </CallableBondData>
+        </Trade>
+      </UnderlyingData>
+      <!-- omitting ReturnData, FundingData, AdditionalCashflowData -->
+    </TotalReturnSwapData>
+  </Trade>
+\end{minted}
+\caption{Generic Total Return Swap with Callable Bond underlying}
+\label{lst:trsdata15}
+\end{listing}
+
+
+
 \begin{listing}[H]
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
@@ -371,7 +428,7 @@ indices.
     </TotalReturnSwapData>
   </Trade>
 \end{minted}
-\caption{Generic Total Return Swap with equity basket underlying}
+\caption{Generic Total Return Swap with Equity Basket underlying}
 \label{lst:trsdata2}
 \end{listing}
 
@@ -392,7 +449,7 @@ indices.
     </TotalReturnSwapData>
   </Trade>
 \end{minted}
-\caption{Generic Total Return Swap with bond basket underlying}
+\caption{Generic Total Return Swap with Bond Basket underlying}
 \label{lst:trsdata3}
 \end{listing}
 
@@ -401,21 +458,75 @@ indices.
 \begin{minted}[fontsize=\footnotesize]{xml}
     <TotalReturnSwapData>
       <UnderlyingData>
-        <Derivative>
-          <Id>DERIV:XR3JF32BFD</Id>
-          <Trade>
-            <TradeType>Swaption</TradeType>
-              <SwaptionData> ... </SwaptionData>
-          </Trade>
-        </Derivative>
+        <Trade>
+          <TradeType>BondFuture</TradeType>
+          <BondFutureData>
+            <ContractName>TYH25</ContractName>
+            <ContractNotional>100000000</ContractNotional>
+            <LongShort>L</LongShort>
+          </BondFutureData>
+        </Trade>
       </UnderlyingData>
       <!-- omitting ReturnData, FundingData, AdditionalCashflowData -->
     </TotalReturnSwapData>
   </Trade>
 \end{minted}
-\caption{Generic Total Return Swap on a derivative underlying}
+\caption{Generic Total Return Swap with Bond Future underlying}
+\label{lst:trsdata35}
+\end{listing}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <TotalReturnSwapData>
+      <UnderlyingData>
+        <Derivative>
+          <Id>DERIV:TEST1</Id>
+          <Trade>
+            <TradeType>Swaption</TradeType>
+              <SwaptionData> ... </SwaptionData>
+          </Trade>
+        </Derivative>
+        <Derivative>
+          <Id>DERIV:TEST2</Id>
+          <Trade>
+            <TradeType>Swap</TradeType>
+              <SwapData> ... </SwapData>
+          </Trade>
+        </Derivative> 
+         <Derivative>
+          <Id>DERIV:TEST3</Id>
+          <Trade>
+            <TradeType>EquityPosition</TradeType>
+              <EquityPositionData> ... </EquityPositionData>
+          </Trade>
+        </Derivative>               
+      </UnderlyingData>
+      <!-- omitting ReturnData, FundingData, AdditionalCashflowData -->
+    </TotalReturnSwapData>
+  </Trade>
+\end{minted}
+\caption{Generic Total Return Swap on a Derivative underlying}
 \label{lst:trsdata4}
 \end{listing}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <TotalReturnSwapData>
+      <UnderlyingData>
+        <PortfolioIndexTradeData>
+          <BasketName>MSFDSJP</BasketName>
+        </PortfolioIndexTradeData>
+      </UnderlyingData>
+      <!-- omitting ReturnData, FundingData, AdditionalCashflowData -->
+    </TotalReturnSwapData>
+  </Trade>
+\end{minted}
+\caption{Generic Total Return Swap on a PortfolioIndexTradeData underlying}
+\label{lst:trsdata_portfolio}
+\end{listing}
+
 
 \begin{listing}[H]
 %\hrule\medskip

@@ -41,7 +41,7 @@ public:
                  // Fixed leg
                  const Schedule& fixedSchedule, Rate fixedRate, const DayCounter& fixedDayCount,
                  // BMA leg
-                 const Schedule& bmaSchedule, const boost::shared_ptr<BMAIndex>& bmaIndex,
+                 const Schedule& bmaSchedule, const QuantLib::ext::shared_ptr<BMAIndex>& bmaIndex,
                  const DayCounter& bmaDayCount);
 
     //! \name Inspectors
@@ -85,11 +85,11 @@ class FixedBMASwap::engine : GenericEngine<FixedBMASwap::arguments, FixedBMASwap
 
 class MakeFixedBMASwap {
 public:
-    MakeFixedBMASwap(const Period& swapTenor, const boost::shared_ptr<BMAIndex>& bmaIndex,
+    MakeFixedBMASwap(const Period& swapTenor, const QuantLib::ext::shared_ptr<BMAIndex>& bmaIndex,
                      Rate fixedRate = Null<Rate>(), const Period& forwardStart = 0 * Days);
 
     operator FixedBMASwap() const;
-    operator boost::shared_ptr<FixedBMASwap>() const;
+    operator QuantLib::ext::shared_ptr<FixedBMASwap>() const;
 
     // We regard the BMA leg parameters as fixed by convention apart from tenor
     // and provide a factory for the fixed leg per MakeVanillaSwap
@@ -114,11 +114,11 @@ public:
     MakeFixedBMASwap& withFixedLegDayCount(const DayCounter& dc);
 
     MakeFixedBMASwap& withDiscountingTermStructure(const Handle<YieldTermStructure>& discountCurve);
-    MakeFixedBMASwap& withPricingEngine(const boost::shared_ptr<PricingEngine>& engine);
+    MakeFixedBMASwap& withPricingEngine(const QuantLib::ext::shared_ptr<PricingEngine>& engine);
 
 private:
     Period swapTenor_;
-    boost::shared_ptr<BMAIndex> bmaIndex_;
+    QuantLib::ext::shared_ptr<BMAIndex> bmaIndex_;
     Rate fixedRate_;
     Period fixedTenor_;
     Period forwardStart_;
@@ -138,7 +138,7 @@ private:
     Date bmaFirstDate_, bmaNextToLastDate_;
     DayCounter fixedDayCount_, bmaDayCount_;
 
-    boost::shared_ptr<PricingEngine> engine_;
+    QuantLib::ext::shared_ptr<PricingEngine> engine_;
 };
 } // namespace QuantExt
 

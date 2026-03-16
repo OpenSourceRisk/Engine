@@ -1,0 +1,248 @@
+<Simulation>
+  <Parameters>
+    <Discretization>Exact</Discretization>
+    <Grid>81,3M</Grid>
+    <Calendar>EUR,GBP</Calendar>
+    <Sequence>SobolBrownianBridge</Sequence>
+    <Scenario>Simple</Scenario>
+    <Seed>42</Seed>
+    <Samples>1000</Samples>
+  </Parameters>
+  <CrossAssetModel>
+    <DomesticCcy>EUR</DomesticCcy>
+    <Currencies>
+      <Currency>EUR</Currency>
+      <Currency>GBP</Currency>
+    </Currencies>
+    <InflationIndices>
+      <InflationIndex>EUHICPXT</InflationIndex>
+      <InflationIndex>UKRPI</InflationIndex>
+    </InflationIndices>
+    <BootstrapTolerance>0.0001</BootstrapTolerance>
+    <InterestRateModels>
+      <LGM ccy="EUR">
+        <CalibrationType>Bootstrap</CalibrationType>
+        <Volatility>
+          <Calibrate>Y</Calibrate>
+          <VolatilityType>Hagan</VolatilityType>
+          <ParamType>Piecewise</ParamType>
+          <TimeGrid/>
+          <InitialValue>0.01</InitialValue>
+        </Volatility>
+        <Reversion>
+          <Calibrate>N</Calibrate>
+          <ReversionType>HullWhite</ReversionType>
+          <ParamType>Constant</ParamType>
+          <TimeGrid/>
+          <InitialValue>0.03</InitialValue>
+        </Reversion>
+        <CalibrationSwaptions>
+          <Expiries>5Y,10Y,15Y</Expiries>
+          <Terms>15Y,10Y,5Y</Terms>
+          <Strikes/>
+        </CalibrationSwaptions>
+        <ParameterTransformation>
+          <ShiftHorizon>0.0</ShiftHorizon>
+          <Scaling>1.0</Scaling>
+        </ParameterTransformation>
+      </LGM>
+      <LGM ccy="GBP">
+        <CalibrationType>Bootstrap</CalibrationType>
+        <Volatility>
+          <Calibrate>Y</Calibrate>
+          <VolatilityType>Hagan</VolatilityType>
+          <ParamType>Piecewise</ParamType>
+          <TimeGrid/>
+          <InitialValue>0.01</InitialValue>
+        </Volatility>
+        <Reversion>
+          <Calibrate>N</Calibrate>
+          <ReversionType>HullWhite</ReversionType>
+          <ParamType>Constant</ParamType>
+          <TimeGrid/>
+          <InitialValue>0.03</InitialValue>
+        </Reversion>
+        <CalibrationSwaptions>
+          <Expiries>5Y,10Y,15Y</Expiries>
+          <Terms>15Y,10Y,5Y</Terms>
+          <Strikes/>
+        </CalibrationSwaptions>
+        <ParameterTransformation>
+          <ShiftHorizon>0.0</ShiftHorizon>
+          <Scaling>1.0</Scaling>
+        </ParameterTransformation>
+      </LGM>
+    </InterestRateModels>
+    <ForeignExchangeModels>
+      <CrossCcyLGM foreignCcy="GBP">
+        <DomesticCcy>EUR</DomesticCcy>
+        <CalibrationType>Bootstrap</CalibrationType>
+        <Sigma>
+          <Calibrate>Y</Calibrate>
+          <ParamType>Piecewise</ParamType>
+          <TimeGrid/>
+          <InitialValue>0.1</InitialValue>
+        </Sigma>
+        <CalibrationOptions>
+          <Expiries>2Y,5Y,7Y,10Y</Expiries>
+          <Strikes/>
+        </CalibrationOptions>
+      </CrossCcyLGM>
+    </ForeignExchangeModels>
+    <InflationIndexModels>
+      <LGM index="EUHICPXT">
+	<Currency>EUR</Currency>
+        <CalibrationType>Bootstrap</CalibrationType>
+        <Volatility>
+          <Calibrate>N</Calibrate>
+          <VolatilityType>Hagan</VolatilityType>
+          <ParamType>Piecewise</ParamType>
+          <TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
+          <InitialValue>0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01</InitialValue>
+        </Volatility>
+        <Reversion>
+          <Calibrate>Y</Calibrate>
+          <ReversionType>Hagan</ReversionType>
+          <ParamType>Piecewise</ParamType>
+          <TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
+          <InitialValue>1, 1, 1, 1, 1, 1, 1, 1</InitialValue>
+        </Reversion>
+        <CalibrationCapFloors>
+	  <CapFloor>Floor</CapFloor>
+          <Expiries> 2Y, 5Y, 6Y, 7Y, 10Y, 20Y</Expiries>
+          <Strikes>0.0, 0.0, 0.0, 0.0, 0.0, 0.0</Strikes>
+        </CalibrationCapFloors>
+        <ParameterTransformation>
+          <ShiftHorizon>0.0</ShiftHorizon>
+          <Scaling>1.0</Scaling>
+        </ParameterTransformation>
+      </LGM>
+      <LGM index="UKRPI">
+	<Currency>GBP</Currency>
+        <CalibrationType>Bootstrap</CalibrationType>
+        <Volatility>
+          <Calibrate>N</Calibrate>
+          <VolatilityType>Hagan</VolatilityType>
+          <ParamType>Piecewise</ParamType>
+          <TimeGrid>2.0, 5.0, 7.0, 10.0, 20.0</TimeGrid>
+          <InitialValue>0.01, 0.01, 0.01, 0.01, 0.01, 0.01</InitialValue>
+        </Volatility>
+        <Reversion>
+          <Calibrate>Y</Calibrate>
+          <ReversionType>Hagan</ReversionType>
+          <ParamType>Piecewise</ParamType>
+          <TimeGrid>2.0, 5.0, 7.0, 10.0, 20.0</TimeGrid>
+          <InitialValue>0.6, 0.6, 0.6, 0.6, 0.6, 0.6</InitialValue>
+        </Reversion>
+        <CalibrationCapFloors>
+	  <CapFloor>Floor</CapFloor>
+          <Expiries> 2Y, 5Y, 7Y, 10Y, 20Y</Expiries>
+          <Strikes>0.0, 0.0, 0.0, 0.0, 0.0</Strikes>
+        </CalibrationCapFloors>
+        <ParameterTransformation>
+          <ShiftHorizon>0.0</ShiftHorizon>
+          <Scaling>1.0</Scaling>
+        </ParameterTransformation>
+      </LGM>
+    </InflationIndexModels>
+
+    <InstantaneousCorrelations>
+      <Correlation factor1="IR:EUR" factor2="IR:GBP">0.3</Correlation>
+      <Correlation factor1="IR:EUR" factor2="FX:GBPEUR">0.0</Correlation>
+      <Correlation factor1="IR:GBP" factor2="FX:GBPEUR">0.0</Correlation>
+      <Correlation factor1="INF:UKRPI" factor2="INF:EUHICPXT" index1="0" index2="0">0.0</Correlation>
+      <Correlation factor1="INF:UKRPI" factor2="INF:EUHICPXT" index1="0" index2="1">0.0</Correlation>
+      <Correlation factor1="INF:UKRPI" factor2="INF:EUHICPXT" index1="1" index2="0">0.0</Correlation>
+      <Correlation factor1="INF:UKRPI" factor2="INF:EUHICPXT" index1="1" index2="1">0.0</Correlation>
+      <Correlation factor1="INF:UKRPI" factor2="INF:UKRPI" index1="0" index2="1">0.0</Correlation>
+      <Correlation factor1="INF:EUHICPXT" factor2="INF:EUHICPXT" index1="0" index2="1">0.0</Correlation>
+      <Correlation factor1="INF:UKRPI" factor2="IR:GBP" index1="0">0.0</Correlation>
+      <Correlation factor1="INF:UKRPI" factor2="IR:GBP" index1="1">0.0</Correlation>
+      <Correlation factor1="INF:UKRPI" factor2="IR:EUR" index1="0">0.0</Correlation>
+      <Correlation factor1="INF:UKRPI" factor2="IR:EUR" index1="1">0.0</Correlation>
+      <Correlation factor1="INF:UKRPI" factor2="FX:GBPEUR" index1="0">0.0</Correlation>
+      <Correlation factor1="INF:UKRPI" factor2="FX:GBPEUR" index1="1">0.0</Correlation>
+      <Correlation factor1="INF:EUHICPXT" factor2="IR:EUR" index1="0">0.0</Correlation>
+      <Correlation factor1="INF:EUHICPXT" factor2="IR:EUR" index1="1">0.0</Correlation>
+      <Correlation factor1="INF:EUHICPXT" factor2="IR:GBP" index1="0">0.0</Correlation>
+      <Correlation factor1="INF:EUHICPXT" factor2="IR:GBP" index1="1">0.0</Correlation>
+      <Correlation factor1="INF:EUHICPXT" factor2="FX:GBPEUR" index1="0">0.0</Correlation>
+      <Correlation factor1="INF:EUHICPXT" factor2="FX:GBPEUR" index1="1">0.0</Correlation>
+    </InstantaneousCorrelations>
+  </CrossAssetModel>
+  <Market>
+    <BaseCurrency>EUR</BaseCurrency>
+    <Currencies>
+      <Currency>EUR</Currency>
+      <Currency>GBP</Currency>
+    </Currencies>
+    <YieldCurves>
+      <Configuration>
+        <Tenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</Tenors>
+        <Interpolation>LogLinear</Interpolation>
+        <Extrapolation>Y</Extrapolation>
+      </Configuration>
+    </YieldCurves>
+    <Indices>
+      <Index>EUR-EURIBOR-6M</Index>
+      <Index>EUR-EURIBOR-3M</Index>
+      <Index>EUR-EONIA</Index>
+      <Index>GBP-LIBOR-6M</Index>
+      <Index>GBP-LIBOR-3M</Index>
+      <Index>GBP-SONIA</Index>
+    </Indices>
+    <SwapIndices>
+      <SwapIndex>
+        <Name>EUR-CMS-1Y</Name>
+        <DiscountingIndex>EUR-EONIA</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>EUR-CMS-30Y</Name>
+        <DiscountingIndex>EUR-EONIA</DiscountingIndex>
+      </SwapIndex>
+    </SwapIndices>
+    <SwaptionVolatilities>
+      <Simulate>false</Simulate>
+      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+      <Currencies>
+        <Currency>EUR</Currency>
+        <Currency>GBP</Currency>
+      </Currencies>
+      <Expiries>6M,1Y,2Y,3Y,5Y,10Y,12Y,15Y,20Y</Expiries>
+      <Terms>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,30Y</Terms>
+    </SwaptionVolatilities>
+    <FxVolatilities>
+      <Simulate>false</Simulate>
+      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+      <CurrencyPairs>
+        <CurrencyPair>EURGBP</CurrencyPair>
+      </CurrencyPairs>
+      <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
+    </FxVolatilities>
+    <CpiIndices>
+      <Index>EUHICPXT</Index>
+      <Index>UKRPI</Index>
+    </CpiIndices>
+    <ZeroInflationIndexCurves>
+      <Names>
+        <Name>EUHICPXT</Name>
+        <Name>UKRPI</Name>
+      </Names>
+      <Tenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</Tenors>
+    </ZeroInflationIndexCurves>
+    <YYInflationIndexCurves>
+      <Names>
+        <Name>EUHICPXT</Name>
+        <Name>UKRPI</Name>
+      </Names>
+      <Tenors>1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</Tenors>
+    </YYInflationIndexCurves>
+    <AggregationScenarioDataCurrencies>
+      <Currency>EUR</Currency>
+    </AggregationScenarioDataCurrencies>
+    <AggregationScenarioDataIndices>
+      <Index>EUR-EURIBOR-3M</Index>
+      <Index>EUR-EONIA</Index>
+    </AggregationScenarioDataIndices>
+  </Market>
+</Simulation>

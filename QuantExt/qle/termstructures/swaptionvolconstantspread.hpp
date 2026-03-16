@@ -26,7 +26,7 @@
 
 #include <ql/termstructures/volatility/swaption/swaptionvolcube.hpp>
 
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -53,7 +53,7 @@ protected:
 private:
     const Handle<SwaptionVolatilityStructure> atm_, cube_;
     const Real swapLength_;
-    const boost::shared_ptr<SmileSection> section_;
+    const QuantLib::ext::shared_ptr<SmileSection> section_;
     const Real atmStrike_;
 };
 
@@ -103,7 +103,7 @@ public:
     const Handle<SwaptionVolatilityStructure>& cube() { return cube_; }
 
 protected:
-    boost::shared_ptr<SmileSection> smileSectionImpl(Time optionTime, Time swapLength) const override;
+    QuantLib::ext::shared_ptr<SmileSection> smileSectionImpl(Time optionTime, Time swapLength) const override;
 
     Volatility volatilityImpl(Time optionTime, Time swapLength, Rate strike) const override;
 

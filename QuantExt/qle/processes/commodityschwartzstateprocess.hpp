@@ -36,7 +36,7 @@ using namespace QuantLib;
  */
 class CommoditySchwartzStateProcess : public StochasticProcess1D {
 public:
-    CommoditySchwartzStateProcess(const boost::shared_ptr<CommoditySchwartzParametrization>& parametrization,
+    CommoditySchwartzStateProcess(const QuantLib::ext::shared_ptr<CommoditySchwartzParametrization>& parametrization,
                                   const CommoditySchwartzModel::Discretization discretization);
     //! \name StochasticProcess interface
     //@{
@@ -47,17 +47,17 @@ public:
 
     class ExactDiscretization : public StochasticProcess1D::discretization {
     public:
-        ExactDiscretization(const boost::shared_ptr<CommoditySchwartzParametrization>& p) : p_(p) {}
+        ExactDiscretization(const QuantLib::ext::shared_ptr<CommoditySchwartzParametrization>& p) : p_(p) {}
         Real drift(const StochasticProcess1D& p, Time t0, Real x0, Time dt) const override;
         Real diffusion(const StochasticProcess1D& p, Time t0, Real x0, Time dt) const override;
         Real variance(const StochasticProcess1D& p, Time t0, Real x0, Time dt) const override;
 
     private:
-        const boost::shared_ptr<CommoditySchwartzParametrization> p_;
+        const QuantLib::ext::shared_ptr<CommoditySchwartzParametrization> p_;
     };
 
 private:
-    const boost::shared_ptr<CommoditySchwartzParametrization> p_;
+    const QuantLib::ext::shared_ptr<CommoditySchwartzParametrization> p_;
 };
 
 } // namespace QuantExt

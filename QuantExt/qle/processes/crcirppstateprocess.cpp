@@ -27,7 +27,7 @@ namespace QuantExt {
 
 CrCirppStateProcess::CrCirppStateProcess(CrCirpp* const model,
                                          CrCirppStateProcess::Discretization disc)
-    : StochasticProcess(boost::shared_ptr<StochasticProcess::discretization>(new EulerDiscretization)), model_(model),
+    : StochasticProcess(QuantLib::ext::shared_ptr<StochasticProcess::discretization>(new EulerDiscretization)), model_(model),
       discretization_(disc) {}
 
 Size CrCirppStateProcess::size() const { return 2; }

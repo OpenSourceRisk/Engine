@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<ORE>
+  <Setup>
+    <Parameter name="asofDate">2019-12-30</Parameter>
+    <Parameter name="inputPath">Input/HistSimVar</Parameter>
+    <Parameter name="outputPath">Output/HistSimVar</Parameter>
+    <Parameter name="logFile">log.txt</Parameter>
+    <Parameter name="logMask">31</Parameter>
+    <Parameter name="marketDataFile">market.txt</Parameter>
+    <Parameter name="fixingDataFile">fixings.txt</Parameter>
+    <Parameter name="implyTodaysFixings">N</Parameter>
+    <Parameter name="curveConfigFile">curveconfig.xml</Parameter>
+    <Parameter name="conventionsFile">conventions.xml</Parameter>
+    <Parameter name="marketConfigFile">todaysmarket.xml</Parameter>
+    <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
+    <Parameter name="observationModel">None</Parameter>
+    <Parameter name="baseCurrency">EUR</Parameter>
+    <Parameter name="portfolioFile">portfolio.xml</Parameter>
+    <Parameter name="nThreads">1</Parameter>
+  </Setup>
+  <Markets>
+    <Parameter name="lgmcalibration">default</Parameter>
+    <Parameter name="fxcalibration">default</Parameter>
+    <Parameter name="pricing">default</Parameter>
+    <Parameter name="simulation">default</Parameter>
+    <Parameter name="sensitivity">default</Parameter>
+  </Markets>
+  <Analytics>
+    <Analytic type="historicalSimulationVar">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="historicalScenarioFile">scenarios.csv</Parameter>
+      <Parameter name="simulationConfigFile">simulation.xml</Parameter>
+      <Parameter name="historicalPeriod">2017-01-17,2019-12-30</Parameter>
+      <Parameter name="mporDays">10</Parameter>
+      <Parameter name="mporCalendar">USD</Parameter>
+      <Parameter name="mporOverlappingPeriods">true</Parameter>
+      <Parameter name="quantiles">0.01,0.05,0.95,0.99</Parameter>
+      <Parameter name="includeExpectedShortfall">Y</Parameter>
+      <!--<Parameter name="breakdown">Y</Parameter>-->
+      <Parameter name="tradePnl">N</Parameter>
+      <!--<Parameter name="riskFactorBreakdown">Y</Parameter>-->
+      <!--<Parameter name="portfolioFilter">PF1</Parameter>-->
+      <Parameter name="outputFile">var.csv</Parameter>
+    </Analytic>
+  </Analytics>
+</ORE>

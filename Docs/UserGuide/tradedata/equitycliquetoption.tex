@@ -1,9 +1,9 @@
 \subsubsection{Equity Cliquet Option}
 \label{SubSectionEqCliquetOption}
 
-The \lstinline!EquityCliquetOptionData! node is the trade data container for the \emph{EquityCliquetOption}  trade type. A cliquet option consists of a series of consecutive forward starting equity options, with each option being struck at a given moneyness (commonly at-the-money) when it becomes active.
+\ifdefined\IncludePayoff{{\bf Payoff}
 
-The payoff is:
+A cliquet option is an exotic option consisting of a series of consecutive forward start options, with each option being struck at-the-money when it becomes active. The Cliquet Option's payoff is:
 
 $$
 N \cdot \min\left( cap_{g}, \max \left(  floor_{g}, \sum_{i=1}^{n} \delta \cdot \min \left( cap_{l}, \max \left( floor_{l}, S_{t_{i}} / S_{t_{i-1}} - M \right) \right) \right) \right)
@@ -22,6 +22,10 @@ where
 \item $N$: Notional
 \end{itemize}
 
+
+{\bf Input}}\fi
+
+The \lstinline!EquityCliquetOptionData! node is the trade data container for the \emph{EquityCliquetOption}  trade type. A cliquet option consists of a series of consecutive forward starting equity options, with each option being struck at a given moneyness (commonly at-the-money) when it becomes active.
 
 The structure of an example \lstinline!EquityCliquetOptionData! node for an equity cliquet option is shown in Listing \ref{lst:cliquetoption_data}.
 

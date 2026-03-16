@@ -1,0 +1,2 @@
+#TradeId,TradeType,Maturity,MaturityTime,NPV,NpvCurrency,NPV(Base),BaseCurrency,Notional,NotionalCurrency,Notional(Base),NettingSet,CounterParty
+SCRIPTED_FX_TARF,FxTaRF,2023-02-21,1.057534,-8684.565189,USD,-8684.565189,USD,1030000.00,USD,1030000.00,CPTY_A,CPTY_A

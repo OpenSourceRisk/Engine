@@ -21,32 +21,32 @@
 namespace QuantExt {
 
 SwedenRegion::SwedenRegion() {
-    static boost::shared_ptr<Data> SEdata(new Data("Sweden", "SE"));
+    static QuantLib::ext::shared_ptr<Data> SEdata(new Data("Sweden", "SE"));
     data_ = SEdata;
 }
 
 DenmarkRegion::DenmarkRegion() {
-    static boost::shared_ptr<Data> DKdata(new Data("Denmark", "DK"));
+    static QuantLib::ext::shared_ptr<Data> DKdata(new Data("Denmark", "DK"));
     data_ = DKdata;
 }
 
 CanadaRegion::CanadaRegion() {
-    static boost::shared_ptr<Data> CAdata = boost::make_shared<Data>("Canada", "CA");
+    static QuantLib::ext::shared_ptr<Data> CAdata = QuantLib::ext::make_shared<Data>("Canada", "CA");
     data_ = CAdata;
 }
 
 SpainRegion::SpainRegion() {
-    static boost::shared_ptr<Data> ESdata = boost::make_shared<Data>("Spain", "ES");
+    static QuantLib::ext::shared_ptr<Data> ESdata = QuantLib::ext::make_shared<Data>("Spain", "ES");
     data_ = ESdata;
 }
 
 GermanyRegion::GermanyRegion() {
-    static boost::shared_ptr<Data> DEdata = boost::make_shared<Data>("Germany","DE");
+    static QuantLib::ext::shared_ptr<Data> DEdata = QuantLib::ext::make_shared<Data>("Germany","DE");
     data_ = DEdata;
 }
 
 BelgiumRegion::BelgiumRegion() {
-    static boost::shared_ptr<Data> BEdata = boost::make_shared<Data>("Belgium", "BE");
+    static QuantLib::ext::shared_ptr<Data> BEdata = QuantLib::ext::make_shared<Data>("Belgium", "BE");
     data_ = BEdata;
 }
 

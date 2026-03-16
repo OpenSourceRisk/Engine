@@ -66,10 +66,10 @@ BOOST_AUTO_TEST_CASE(testStandardUnderlying) {
     Date today(6, Jun, 2019);
     Settings::instance().evaluationDate() = today;
 
-    auto dsc = Handle<YieldTermStructure>(boost::make_shared<FlatForward>(today, 0.01, ActualActual(ActualActual::ISDA)));
-    auto fwd = Handle<YieldTermStructure>(boost::make_shared<FlatForward>(today, 0.02, ActualActual(ActualActual::ISDA)));
+    auto dsc = Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(today, 0.01, ActualActual(ActualActual::ISDA)));
+    auto fwd = Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(today, 0.02, ActualActual(ActualActual::ISDA)));
 
-    auto swapIndexBase = boost::make_shared<EuriborSwapIsdaFixA>(10 * Years, fwd, dsc);
+    auto swapIndexBase = QuantLib::ext::make_shared<EuriborSwapIsdaFixA>(10 * Years, fwd, dsc);
 
     for (Size i = 1; i <= 19; ++i) {
 
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(testStandardUnderlying) {
 
         BOOST_REQUIRE_EQUAL(w->exercise()->dates().size(), 1);
         BOOST_CHECK_EQUAL(w->exercise()->date(0), exerciseDate);
-        auto s = w->underlyingSwap();
+        auto s = w->underlying();
         BOOST_CHECK_EQUAL(s->type(), VanillaSwap::Payer);
         BOOST_CHECK_CLOSE(s->nominal(), 10000.0, tol);
         BOOST_CHECK_CLOSE(s->fixedRate(), 0.03, tol);
@@ -111,13 +111,13 @@ void runTest(const std::vector<Real>& nominals, const bool isPayer, const Real e
     Date today(6, Jun, 2019);
     Settings::instance().evaluationDate() = today;
 
-    auto dsc = Handle<YieldTermStructure>(boost::make_shared<FlatForward>(today, 0.01, ActualActual(ActualActual::ISDA)));
-    auto fwd = Handle<YieldTermStructure>(boost::make_shared<FlatForward>(today, 0.02, ActualActual(ActualActual::ISDA)));
+    auto dsc = Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(today, 0.01, ActualActual(ActualActual::ISDA)));
+    auto fwd = Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(today, 0.02, ActualActual(ActualActual::ISDA)));
     auto blackVol = Handle<SwaptionVolatilityStructure>(
-        boost::make_shared<ConstantSwaptionVolatility>(today, TARGET(), Following, 0.0050, ActualActual(ActualActual::ISDA), Normal));
-    auto blackEngine = boost::make_shared<BachelierSwaptionEngine>(dsc, blackVol);
+        QuantLib::ext::make_shared<ConstantSwaptionVolatility>(today, TARGET(), Following, 0.0050, ActualActual(ActualActual::ISDA), Normal));
+    auto blackEngine = QuantLib::ext::make_shared<BachelierSwaptionEngine>(dsc, blackVol);
 
-    auto swapIndexBase = boost::make_shared<EuriborSwapIsdaFixA>(10 * Years, fwd, dsc);
+    auto swapIndexBase = QuantLib::ext::make_shared<EuriborSwapIsdaFixA>(10 * Years, fwd, dsc);
 
     // create swap
 
@@ -130,8 +130,8 @@ void runTest(const std::vector<Real>& nominals, const bool isPayer, const Real e
         floatNominals.push_back(n);
     }
 
-    boost::shared_ptr<VanillaSwap> tmp = MakeVanillaSwap(20 * Years, swapIndexBase->iborIndex(), 0.03);
-    boost::shared_ptr<Swap> underlying = boost::make_shared<NonstandardSwap>(
+    QuantLib::ext::shared_ptr<VanillaSwap> tmp = MakeVanillaSwap(20 * Years, swapIndexBase->iborIndex(), 0.03);
+    QuantLib::ext::shared_ptr<Swap> underlying = QuantLib::ext::make_shared<NonstandardSwap>(
         isPayer ? VanillaSwap::Payer : VanillaSwap::Receiver, fixedNominals, floatNominals, tmp->fixedSchedule(),
         fixedRates, tmp->fixedDayCount(), tmp->floatingSchedule(), tmp->iborIndex(), std::vector<Real>(40, 1.0),
         std::vector<Real>(40, 0.0), tmp->floatingDayCount());
@@ -159,6 +159,7 @@ void runTest(const std::vector<Real>& nominals, const bool isPayer, const Real e
         Real npv = 0.0;
         auto w = matcher.representativeSwaption(evalDates[i],
                                                 RepresentativeSwaptionMatcher::InclusionCriterion::PayDateGtExercise);
+
         if (w) {
             w->setPricingEngine(blackEngine);
             npv = w->NPV();
@@ -174,29 +175,29 @@ void runTest(const std::vector<Real>& nominals, const bool isPayer, const Real e
         Size nPaths = 10000;
         TimeGrid grid(evalTimes.begin(), evalTimes.end());
 
-        std::vector<boost::shared_ptr<BlackCalibrationHelper>> basket;
+        std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>> basket;
         std::vector<Date> expiryDates;
         for (Size i = 1; i < 20; ++i) {
-            boost::shared_ptr<BlackCalibrationHelper> helper = boost::make_shared<SwaptionHelper>(
-                i * Years, (20 - i) * Years, Handle<Quote>(boost::make_shared<SimpleQuote>(0.0050)),
+            QuantLib::ext::shared_ptr<BlackCalibrationHelper> helper = QuantLib::ext::make_shared<SwaptionHelper>(
+                i * Years, (20 - i) * Years, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.0050)),
                 swapIndexBase->iborIndex(), 1 * Years, swapIndexBase->dayCounter(),
                 swapIndexBase->iborIndex()->dayCounter(), dsc, BlackCalibrationHelper::RelativePriceError,
                 fixedRates.front(), 1.0, Normal);
             basket.push_back(helper);
             expiryDates.push_back(
-                boost::static_pointer_cast<SwaptionHelper>(helper)->swaption()->exercise()->dates().back());
+                QuantLib::ext::static_pointer_cast<SwaptionHelper>(helper)->swaption()->exercise()->dates().back());
         }
         std::vector<Date> stepDates(expiryDates.begin(), expiryDates.end() - 1);
         Array stepTimes(stepDates.size());
         for (Size i = 0; i < stepDates.size(); ++i) {
             stepTimes[i] = dsc->timeFromReference(stepDates[i]);
         }
-        auto lgm_p = boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
+        auto lgm_p = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
             EURCurrency(), dsc, stepTimes, Array(stepTimes.size() + 1, 0.0050), stepTimes,
             Array(stepTimes.size() + 1, 0.0));
         lgm_p->shift() = -lgm_p->H(20.0);
-        auto lgm = boost::make_shared<LGM>(lgm_p);
-        auto swaptionEngineLgm = boost::make_shared<AnalyticLgmSwaptionEngine>(lgm);
+        auto lgm = QuantLib::ext::make_shared<LGM>(lgm_p);
+        auto swaptionEngineLgm = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(lgm);
         for (Size i = 0; i < basket.size(); ++i) {
             basket[i]->setPricingEngine(swaptionEngineLgm);
         }
@@ -206,8 +207,8 @@ void runTest(const std::vector<Real>& nominals, const bool isPayer, const Real e
 
         MultiPathGeneratorSobolBrownianBridge pgen(lgm->stateProcess(), grid);
 
-        auto lgm_dsc = boost::make_shared<LgmImpliedYtsFwdFwdCorrected>(lgm, dsc);
-        auto lgm_fwd = boost::make_shared<LgmImpliedYtsFwdFwdCorrected>(lgm, fwd);
+        auto lgm_dsc = QuantLib::ext::make_shared<LgmImpliedYtsFwdFwdCorrected>(lgm, dsc);
+        auto lgm_fwd = QuantLib::ext::make_shared<LgmImpliedYtsFwdFwdCorrected>(lgm, fwd);
 
         auto lgmEuribor = swapIndexBase->iborIndex()->clone(Handle<YieldTermStructure>(lgm_fwd));
 
@@ -215,14 +216,14 @@ void runTest(const std::vector<Real>& nominals, const bool isPayer, const Real e
         std::set<Date> requiredFixings;
         for (Size i = 0; i < 2; ++i) {
             for (auto const& c : underlying->leg(i)) {
-                auto f = boost::dynamic_pointer_cast<IborCoupon>(c);
+                auto f = QuantLib::ext::dynamic_pointer_cast<IborCoupon>(c);
                 if (f) {
                     requiredFixings.insert(f->fixingDate());
-                    auto ic = boost::make_shared<IborCoupon>(
+                    auto ic = QuantLib::ext::make_shared<IborCoupon>(
                         f->date(), f->nominal(), f->accrualStartDate(), f->accrualEndDate(), f->fixingDays(),
                         lgmEuribor, f->gearing(), f->spread(), f->referencePeriodStart(), f->referencePeriodEnd(),
                         f->dayCounter(), f->isInArrears());
-                    ic->setPricer(boost::make_shared<BlackIborCouponPricer>());
+                    ic->setPricer(QuantLib::ext::make_shared<BlackIborCouponPricer>());
                     lgmLinkedUnderlying[i].push_back(ic);
                 } else
                     lgmLinkedUnderlying[i].push_back(c);
@@ -232,7 +233,7 @@ void runTest(const std::vector<Real>& nominals, const bool isPayer, const Real e
         Swap lgmUnderlying(lgmLinkedUnderlying, {isPayer, !isPayer});
 
         timer.start();
-        auto lgmSwapEngine = boost::make_shared<DiscountingSwapEngine>(Handle<YieldTermStructure>(lgm_dsc));
+        auto lgmSwapEngine = QuantLib::ext::make_shared<DiscountingSwapEngine>(Handle<YieldTermStructure>(lgm_dsc));
         lgmUnderlying.setPricingEngine(lgmSwapEngine);
         std::vector<accumulator_set<double, stats<tag::mean>>> acc(nTimes);
         for (Size p = 0; p < nPaths; ++p) {
@@ -251,7 +252,9 @@ void runTest(const std::vector<Real>& nominals, const bool isPayer, const Real e
                 acc[i](std::max(lgmUnderlying.NPV(), 0.0) / lgm->numeraire(evalTimes[i], path[0][i + 1]));
             }
             Settings::instance().evaluationDate() = today;
+            QL_DEPRECATED_DISABLE_WARNING
             IndexManager::instance().clearHistory(lgmEuribor->name());
+            QL_DEPRECATED_ENABLE_WARNING
         }
         for (Size i = 0; i < nTimes; ++i) {
             epe_sim[i] = mean(acc[i]);

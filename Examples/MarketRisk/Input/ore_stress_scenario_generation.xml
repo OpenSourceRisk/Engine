@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<ORE>
+  <Setup>
+    <Parameter name="asofDate">2016-02-05</Parameter>
+    <Parameter name="inputPath">Input</Parameter>
+    <Parameter name="outputPath">Output/StressScenarioGeneration</Parameter>
+    <Parameter name="logFile">log.txt</Parameter>
+    <Parameter name="logMask">31</Parameter>
+    <Parameter name="marketDataFile">../../Input/market_20160205.txt</Parameter>
+    <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>
+    <Parameter name="implyTodaysFixings">N</Parameter>
+    <Parameter name="curveConfigFile">../../Input/curveconfig.xml</Parameter>
+    <Parameter name="conventionsFile">conventions.xml</Parameter>
+    <Parameter name="marketConfigFile">todaysmarket.xml</Parameter>
+    <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
+    <Parameter name="portfolioFile">portfolio_stress.xml</Parameter>
+    <Parameter name="observationModel">None</Parameter>
+  </Setup>
+  <Markets>
+    <Parameter name="lgmcalibration">collateral_inccy</Parameter>
+    <Parameter name="fxcalibration">xois_eur</Parameter>
+    <Parameter name="pricing">xois_eur</Parameter>
+    <Parameter name="simulation">xois_eur</Parameter>
+    <Parameter name="sensitivity">xois_eur</Parameter>
+  </Markets>
+  <Analytics>
+    <Analytic type="scenarioGeneration">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="scenarioType">stress</Parameter>
+      <Parameter name="stressConfigFile">stresstest.xml</Parameter>
+      <Parameter name="simulationConfigFile">stressmarket.xml</Parameter>
+      <Parameter name="scenarioOutputFile">stress_scenarios.csv</Parameter>
+      <Parameter name="scenarioPrecision">12</Parameter>
+      <Parameter name="outputStatistics">N</Parameter>
+      <Parameter name="outputDistributions">N</Parameter>	  
+    </Analytic>
+  </Analytics>
+</ORE>

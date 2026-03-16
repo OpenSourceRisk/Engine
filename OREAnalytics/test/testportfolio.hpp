@@ -36,96 +36,124 @@ namespace testsuite {
 
 string toString(Date d);
 
-boost::shared_ptr<Trade> buildSwap(string id, string ccy, bool isPayer, Real notional, int start, Size term, Real rate,
+QuantLib::ext::shared_ptr<Trade> buildSwap(string id, string ccy, bool isPayer, Real notional, int start, Size term, Real rate,
                                    Real spread, string fixedFreq, string fixedDC, string floatFreq, string floatDC,
                                    string index, Calendar cal = TARGET(),
                                    QuantLib::Natural fixingDays = 2, bool spotStartLag = false);
 
-boost::shared_ptr<Trade> buildEuropeanSwaption(string id, string longShort, string ccy, bool isPayer, Real notional,
+QuantLib::ext::shared_ptr<Trade> buildEuropeanSwaption(string id, string longShort, string ccy, bool isPayer, Real notional,
                                                int start, Size term, Real rate, Real spread, string fixedFreq,
                                                string fixedDC, string floatFreq, string floatDC, string index,
                                                string cashPhysical = "Cash", Real premium = 0.0, string premiumCcy = "",
                                                string premiumDate = "");
 
-boost::shared_ptr<Trade> buildBermudanSwaption(string id, string longShort, string ccy, bool isPayer, Real notional,
+QuantLib::ext::shared_ptr<Trade> buildBermudanSwaption(string id, string longShort, string ccy, bool isPayer, Real notional,
                                                Size exercises, int start, Size term, Real rate, Real spread,
                                                string fixedFreq, string fixedDC, string floatFreq, string floatDC,
                                                string index, string cashPhysical = "Cash", Real premium = 0.0,
                                                string premiumCcy = "", string premiumDate = "");
 
-boost::shared_ptr<Trade> buildFxOption(string id, string longShort, string putCall, Size expiry, string boughtCcy,
-                                       Real boughtAmount, string soldCcy, Real soldAmount, Real premium = 0.0,
-                                       string premiumCcy = "", string premiumDate = "");
+QuantLib::ext::shared_ptr<Trade> buildFxOption(string id, string longShort, string putCall, Size expiry, string boughtCcy,
+					       Real boughtAmount, string soldCcy, Real soldAmount, Real premium = 0.0,
+					       string premiumCcy = "", string premiumDate = "", string nettingSet = "");
 
-boost::shared_ptr<Trade> buildEquityOption(string id, string longShort, string putCall, Size expiry, string equityName,
+QuantLib::ext::shared_ptr<Trade> buildFxForward(string id, Size expiry,
+						string boughtCcy, Real boughtAmount, string soldCcy, Real soldAmount,
+						string nettingSet = "");
+
+QuantLib::ext::shared_ptr<Trade> buildEquityOption(string id, string longShort, string putCall, Size expiry, string equityName,
                                            string currency, Real strike, Real quantity, Real premium = 0.0,
                                            string premiumCcy = "", string premiumDate = "");
 
-boost::shared_ptr<Trade> buildEquityForward(string id, string longShort, Size expiry, string equityName,
+QuantLib::ext::shared_ptr<Trade> buildEquityForward(string id, string longShort, Size expiry, string equityName,
                                             string currency, Real strike, Real quantity);
 
-boost::shared_ptr<Trade> buildCap(string id, string ccy, string longShort, Real capRate, Real notional, int start,
+QuantLib::ext::shared_ptr<Trade> buildCap(string id, string ccy, string longShort, Real capRate, Real notional, int start,
                                   Size term, string floatFreq, string floatDC, string index,
                                   Calendar cal = TARGET(), QuantLib::Natural fixingDays = 2,
                                   bool spotStartLag = false);
 
-boost::shared_ptr<Trade> buildFloor(string id, string ccy, string longShort, Real floorRate, Real notional, int start,
+QuantLib::ext::shared_ptr<Trade> buildFloor(string id, string ccy, string longShort, Real floorRate, Real notional, int start,
                                     Size term, string floatFreq, string floatDC, string index,
                                     Calendar cal = TARGET(), QuantLib::Natural fixingDays = 2,
                                     bool spotStartLag = false);
 
-boost::shared_ptr<Trade> buildCapFloor(string id, string ccy, string longShort, vector<Real> capRates,
+QuantLib::ext::shared_ptr<Trade> buildCapFloor(string id, string ccy, string longShort, vector<Real> capRates,
                                        vector<Real> floorRates, Real notional, int start, Size term, string floatFreq,
                                        string floatDC, string index,
                                        Calendar cal = TARGET(), QuantLib::Natural fixingDays = 2,
                                        bool spotStartLag = false);
 
-boost::shared_ptr<Trade> buildCrossCcyBasisSwap(
+QuantLib::ext::shared_ptr<Trade> buildCrossCcyBasisSwap(
         string id, string recCcy, Real recNotional, string payCcy, Real payNotional, int start, Size term,
         Real recLegSpread, Real payLegSpread, string recFreq, string recDC, string recIndex, Calendar recCalendar,
         string payFreq, string payDC, string payIndex, Calendar payCalendar, QuantLib::Natural spotDays = 2,
         bool spotStartLag = false, bool notionalInitialExchange = false, bool notionalFinalExchange = false,
-        bool notionalAmortizingExchange = false, bool isRecLegFXResettable = false, bool isPayLegFXResettable = false);
+        bool notionalAmortizingExchange = false, bool isRecLegFXResettable = false, bool isPayLegFXResettable = false,
+	string nettingSet = "", bool amortizingNotional = false, string amortizingTerm = "");
     
-boost::shared_ptr<Trade> buildZeroBond(string id, string ccy, Real notional, Size term, string suffix = "1");
+QuantLib::ext::shared_ptr<Trade> buildZeroBond(string id, string ccy, Real notional, Size term, string suffix = "1");
 
-boost::shared_ptr<Trade> buildCreditDefaultSwap(string id, string ccy, string issuerId, string creditCurveId,
+QuantLib::ext::shared_ptr<Trade> buildCreditDefaultSwap(string id, string ccy, string issuerId, string creditCurveId,
                                                 bool isPayer, Real notional, int start, Size term, Real rate,
                                                 Real spread, string fixedFreq, string fixedDC);
 
-boost::shared_ptr<Trade> buildSyntheticCDO(string id, string name, vector<string> names, string longShort,
+QuantLib::ext::shared_ptr<Trade> buildSyntheticCDO(string id, string name, vector<string> names, string longShort,
                                            string ccy, vector<string> ccys, bool isPayer,
                                            vector<Real> notionals, Real notional, int start, Size term,
                                            Real rate, Real spread, string fixedFreq, string fixedDC);
 
-boost::shared_ptr<Trade> buildCmsCapFloor(string id, string ccy, string indexId, bool isPayer, Real notional,
+QuantLib::ext::shared_ptr<Trade> buildCmsCapFloor(string id, string ccy, string indexId, bool isPayer, Real notional,
                                           int start, Size term, Real capRate, Real floorRate, Real spread,
                                           string freq, string dc);
 
-boost::shared_ptr<Trade> buildCPIInflationSwap(string id, string ccy, bool isPayer, Real notional, int start, Size term,
+QuantLib::ext::shared_ptr<Trade> buildCPIInflationSwap(string id, string ccy, bool isPayer, Real notional, int start, Size term,
                                                Real spread, string floatFreq, string floatDC, string index,
                                                string cpiFreq, string cpiDC, string cpiIndex, Real baseRate,
                                                string observationLag, bool interpolated, Real cpiRate);
 
-boost::shared_ptr<Trade> buildYYInflationSwap(string id, string ccy, bool isPayer, Real notional, int start, Size term,
+QuantLib::ext::shared_ptr<Trade> buildYYInflationSwap(string id, string ccy, bool isPayer, Real notional, int start, Size term,
                                               Real spread, string floatFreq, string floatDC, string index,
                                               string yyFreq, string yyDC, string yyIndex, string observationLag,
                                               Size fixDays);
 
-boost::shared_ptr<Trade> buildYYInflationCapFloor(string id, string ccy, Real notional, bool isCap,
+QuantLib::ext::shared_ptr<Trade> buildYYInflationCapFloor(string id, string ccy, Real notional, bool isCap,
                                                   bool isLong, Real capFloorRate, int start, Size term,
                                                   string yyFreq, string yyDC, string yyIndex,
                                                   string observationLag, Size fixDays);
 
-boost::shared_ptr<Trade> buildCommodityForward(const std::string& id, const std::string& position, Size term,
+QuantLib::ext::shared_ptr<Trade> buildCommodityForward(const std::string& id, const std::string& position, Size term,
                                                const std::string& commodityName, const std::string& currency,
                                                Real strike, Real quantity);
 
-boost::shared_ptr<Trade> buildCommodityOption(const std::string& id, const std::string& longShort,
+QuantLib::ext::shared_ptr<Trade> buildCommodityForward(string id, string ccy, string commodityName, Real quantity, Size term,
+						       Real strike, string position, string nettingSet, Calendar calendar);
+
+QuantLib::ext::shared_ptr<Trade> buildCommoditySwap(string id, string ccy, bool isPayer, Real quantity, int start,
+						    Size term, Real price, string fixedFreq,
+						    string fixedDC, string floatFreq, string floatDC, string index,
+						    Calendar calendar, Size spotDays, bool spotStartLag,
+						    string nettingSet, Real fixedPrice);
+
+QuantLib::ext::shared_ptr<Trade> buildCommodityBasisSwap(string id, string ccy, bool isPayer, Real quantity, int start,
+							 Size term, string floatFreq, string floatDC, string index_1,
+							 string index_2,
+							 Calendar calendar, Size spotDays, bool spotStartLag,
+							 string nettingSet);
+
+QuantLib::ext::shared_ptr<Trade> buildCommodityOption(const std::string& id, const std::string& longShort,
                                               const std::string& putCall, QuantLib::Size term,
                                               const std::string& commodityName, const std::string& currency,
                                               QuantLib::Real strike, QuantLib::Real quantity,
                                               QuantLib::Real premium = 0.0, const std::string& premiumCcy = "",
                                               const std::string& premiumDate = "");
+
+QuantLib::ext::shared_ptr<Trade> buildFxBarrierOption(string id, string longShort, string putCall, Size expiry,
+						      string boughtCcy, Real boughtAmount, string soldCcy, Real soldAmount,
+						      string nettingSet, string barrierType, Real barrier);
+
+QuantLib::ext::shared_ptr<Trade> buildFxTouchOption(string id, string longShort, Size expiry,
+						    string boughtCcy, string soldCcy,Real payoffAmount, 
+						    string nettingSet, string barrierType, Real barrier);
 
 } // namespace testsuite

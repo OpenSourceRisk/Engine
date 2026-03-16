@@ -40,7 +40,7 @@ using namespace QuantLib;
 
 class DynamicCPIVolatilitySurface : public CPIVolatilitySurface {
 public:
-    DynamicCPIVolatilitySurface(const boost::shared_ptr<CPIVolatilitySurface>& source,
+    DynamicCPIVolatilitySurface(const QuantLib::ext::shared_ptr<CPIVolatilitySurface>& source,
                                 ReactionToTimeDecay decayMode = ConstantVariance);
 
 protected:
@@ -66,7 +66,7 @@ protected:
     //@}
 
 private:
-    const boost::shared_ptr<CPIVolatilitySurface> source_;
+    const QuantLib::ext::shared_ptr<CPIVolatilitySurface> source_;
     ReactionToTimeDecay decayMode_;
     const Date originalReferenceDate_;
 };

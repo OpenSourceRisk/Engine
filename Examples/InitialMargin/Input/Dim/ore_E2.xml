@@ -1,0 +1,82 @@
+<?xml version="1.0"?>
+<ORE>
+  <Setup>
+    <Parameter name="asofDate">2016-02-05</Parameter>
+    <Parameter name="inputPath">Input/Dim</Parameter>
+    <Parameter name="outputPath">Output/dim/E2</Parameter>
+    <Parameter name="logFile">log.txt</Parameter>
+    <Parameter name="marketDataFile">../../../Input/market_20160205_flat.txt</Parameter>
+    <Parameter name="fixingDataFile">../../../Input/fixings_20160205.txt</Parameter>
+    <Parameter name="implyTodaysFixings">Y</Parameter>
+    <Parameter name="curveConfigFile">../../../Input/curveconfig.xml</Parameter>
+    <Parameter name="conventionsFile">../../../Input/conventions.xml</Parameter>
+    <Parameter name="marketConfigFile">../../../Input/todaysmarket.xml</Parameter>
+    <Parameter name="pricingEnginesFile">../../../Input/pricingengine.xml</Parameter>
+    <Parameter name="portfolioFile">fxoption.xml</Parameter>
+    <Parameter name="observationModel">Disable</Parameter>
+  </Setup>
+  <Markets>
+    <Parameter name="lgmcalibration">libor</Parameter>
+    <Parameter name="fxcalibration">libor</Parameter>
+    <Parameter name="pricing">libor</Parameter>
+    <Parameter name="simulation">libor</Parameter>
+  </Markets>
+  <Analytics>
+    <Analytic type="npv">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="baseCurrency">EUR</Parameter>
+      <Parameter name="outputFileName">npv.csv</Parameter>
+    </Analytic>
+    <Analytic type="cashflow">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="outputFileName">flows.csv</Parameter>
+    </Analytic>
+    <Analytic type="curves">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="configuration">libor</Parameter>
+      <Parameter name="grid">240,1M</Parameter>
+      <Parameter name="outputFileName">curves.csv</Parameter>
+    </Analytic>
+    <Analytic type="simulation">
+      <Parameter name="active">N</Parameter>
+      <Parameter name="simulationConfigFile">simulation_E.xml</Parameter>
+      <Parameter name="pricingEnginesFile">../../../Input/pricingengine.xml</Parameter>
+      <Parameter name="baseCurrency">EUR</Parameter>
+      <Parameter name="storeFlows">Y</Parameter>
+      <Parameter name="cubeFile">cube.csv.gz</Parameter>
+      <Parameter name="aggregationScenarioDataFileName">scenariodata.csv.gz</Parameter>
+    </Analytic>
+    <Analytic type="xva">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="csaFile">netting.xml</Parameter>
+      <Parameter name="cubeFile">../E0/cube.csv.gz</Parameter>
+      <Parameter name="scenarioFile">../E0/scenariodata.csv.gz</Parameter>
+      <Parameter name="baseCurrency">EUR</Parameter>
+      <Parameter name="exposureProfiles">Y</Parameter>
+      <Parameter name="exposureProfilesByTrade">Y</Parameter>
+      <Parameter name="quantile">0.95</Parameter>
+      <Parameter name="calculationType">NoLag</Parameter>
+      <Parameter name="allocationMethod">Marginal</Parameter>
+      <Parameter name="marginalAllocationLimit">1.0</Parameter>
+      <Parameter name="exerciseNextBreak">N</Parameter>
+      <Parameter name="cva">Y</Parameter>
+      <Parameter name="dvaName">BANK</Parameter>
+      <Parameter name="dva">N</Parameter>
+      <Parameter name="dim">Y</Parameter>
+      <Parameter name="fva">N</Parameter>
+      <Parameter name="fvaBorrowingCurve">BANK_EUR_BORROW</Parameter>
+      <Parameter name="mva">Y</Parameter>
+      <Parameter name="dimQuantile">0.99</Parameter>
+      <Parameter name="dimRegressionOrder">2</Parameter>
+      <!-- <Parameter name="dimRegressors">USD,GBP,EUR-EURIBOR-3M,USD-LIBOR-3M,GBP-LIBOR-3M</Parameter> -->
+      <Parameter name="dimRegressors"></Parameter>
+      <Parameter name="dimScaling">1.0</Parameter>
+      <Parameter name="dimEvolutionFile">dim_evolution.csv</Parameter>
+      <Parameter name="dimRegressionFiles">dim_regression.csv</Parameter>
+      <Parameter name="dimOutputNettingSet">CPTY_A</Parameter>
+      <Parameter name="dimOutputGridPoints">100</Parameter>
+      <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
+      <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
+    </Analytic>
+  </Analytics>
+</ORE>

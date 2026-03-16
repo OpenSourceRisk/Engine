@@ -27,9 +27,6 @@
 #include <ql/math/comparison.hpp>
 #include <ql/math/matrix.hpp>
 #include <ql/math/matrixutilities/symmetricschurdecomposition.hpp>
-#include <qle/indexes/ibor/termrateindex.hpp>
-
-#include <boost/algorithm/string/predicate.hpp>
 
 using namespace QuantLib;
 
@@ -66,28 +63,7 @@ std::ostream& operator<<(std::ostream& out, const tuple<string, string, string>&
                << std::get<2>(tup) << "']";
 }
 
-string periodToLabels2(const QuantLib::Period& p) {
-    if ((p.units() == Months && p.length() == 3) || (p.units() == Weeks && p.length() == 13)) {
-        return "Libor3m";
-    } else if ((p.units() == Months && p.length() == 6) || (p.units() == Weeks && p.length() == 26)) {
-        return "Libor6m";
-    } else if ((p.units() == Days && p.length() == 1) || p == 1 * Weeks) {
-        // 7 days here is based on ISDA SIMM FAQ and Implementation Questions, Sep 4, 2019 Section E.9
-        // Sub curve to be used for CNY seven-day repo rate (closest is OIS).
-        return "OIS";
-    } else if ((p.units() == Months && p.length() == 1) || (p.units() == Weeks && p.length() == 2) ||
-               (p.units() == Weeks && p.length() == 4) || (p.units() == Days && p.length() >= 28 && p.length() <= 31)) {
-        // 2 weeks here is based on ISDA SIMM Methodology paragraph 14:
-        // "Any sub curve not given on the above list should be mapped to its closest equivalent."
-        // A 2 week rate is more like sub-period than OIS.
-        return "Libor1m";
-    } else if ((p.units() == Months && p.length() == 12) || (p.units() == Years && p.length() == 1) ||
-               (p.units() == Weeks && p.length() == 52)) {
-        return "Libor12m";
-    } else {
-        return "";
-    }
-}
+
 
 } // anonymous namespace
 
@@ -96,7 +72,7 @@ const tuple<string, string, string> SimmConfigurationBase::makeKey(const string&
     return std::make_tuple(bucket, label1, label2);
 }
 
-SimmConfigurationBase::SimmConfigurationBase(const boost::shared_ptr<SimmBucketMapper>& simmBucketMapper,
+SimmConfigurationBase::SimmConfigurationBase(const QuantLib::ext::shared_ptr<SimmBucketMapper>& simmBucketMapper,
                                              const std::string& name, const std::string version, Size mporDays)
     : name_(name), version_(version), simmBucketMapper_(simmBucketMapper), mporDays_(mporDays) {}
 
@@ -129,33 +105,8 @@ vector<string> SimmConfigurationBase::labels2(const RiskType& rt) const {
     return lookup(rt, mapLabels_2_);
 }
 
-string SimmConfigurationBase::labels2(const QuantLib::Period& p) const {
-    string label2 = periodToLabels2(p);
-    QL_REQUIRE(!label2.empty(), "Could not determine SIMM Label2 for period " << p);
-    return label2;
-}
-
-string SimmConfigurationBase::labels2(const boost::shared_ptr<InterestRateIndex>& irIndex) const {
-
-    string label2;
-    if (boost::algorithm::starts_with(irIndex->name(), "BMA")) {
-        // There was no municipal until later so override this in
-        // derived configurations and use 'Prime' in base
-        label2 = "Prime";
-    } else if (irIndex->familyName() == "Prime") {
-        label2 = "Prime";
-    } else if(boost::dynamic_pointer_cast<QuantExt::TermRateIndex>(irIndex) != nullptr) {
-	// see ISDA-SIMM-FAQ_Methodology-and-Implementation_20220323_clean.pdf: E.8 Term RFR rate risk should be treated as RFR rate risk
-        label2 = "OIS";
-    } else {
-        label2 = periodToLabels2(irIndex->tenor());
-        QL_REQUIRE(!label2.empty(), "Could not determine SIMM Label2 for index " << irIndex->name());
-    }
-    return label2;
-}
-
-QuantLib::Real SimmConfigurationBase::weight(const RiskType& rt, boost::optional<string> qualifier,
-                                             boost::optional<std::string> label_1, const std::string&) const {
+QuantLib::Real SimmConfigurationBase::weight(const RiskType& rt, QuantLib::ext::optional<string> qualifier,
+                                             QuantLib::ext::optional<std::string> label_1, const std::string&) const {
 
     QL_REQUIRE(isValidRiskType(rt),
                "The risk type " << rt << " is not valid for SIMM configuration with name" << name_);
@@ -195,8 +146,8 @@ QuantLib::Real SimmConfigurationBase::weight(const RiskType& rt, boost::optional
     }
 
     // If we get to here, we have failed to get a risk weight
-    QL_FAIL("Could not find a risk weight for (risk type, qualifier, Label1) = (" << rt << "," << qualifier << ","
-                                                                                  << label_1 << ")");
+    QL_FAIL("Could not find a risk weight for (risk type, qualifier, Label1) = (" << rt << "," << qualifier.value_or("") << ","
+                                                                                  << label_1.value_or("") << ")");
 }
 
 QuantLib::Real SimmConfigurationBase::curvatureWeight(const RiskType& rt, const std::string& label_1) const {
@@ -223,8 +174,8 @@ Real SimmConfigurationBase::historicalVolatilityRatio(const RiskType& rt) const 
     }
 }
 
-Real SimmConfigurationBase::sigma(const RiskType& rt, boost::optional<std::string> qualifier,
-                                  boost::optional<std::string> label_1, const std::string& calculationCurrency) const {
+Real SimmConfigurationBase::sigma(const RiskType& rt, QuantLib::ext::optional<std::string> qualifier,
+                                  QuantLib::ext::optional<std::string> label_1, const std::string& calculationCurrency) const {
 
     Real sigmaMultiplier = SimmConfigurationBase::sigmaMultiplier();
 
@@ -263,8 +214,9 @@ Real SimmConfigurationBase::sigma(const RiskType& rt, boost::optional<std::strin
 }
 
 QuantLib::Real SimmConfigurationBase::correlation(const RiskType& firstRt, const string& firstQualifier,
-                                                  const string& firstLabel_1, const string& firstLabel_2,
-                                                  const RiskType& secondRt, const string& secondQualifier,
+                                                  const string& firstBucket, const string& firstLabel_1,
+                                                  const string& firstLabel_2, const RiskType& secondRt,
+                                                  const string& secondQualifier, const string& secondBucket,
                                                   const string& secondLabel_1, const string& secondLabel_2,
                                                   const std::string&) const {
 
@@ -275,9 +227,134 @@ QuantLib::Real SimmConfigurationBase::correlation(const RiskType& firstRt, const
                "The risk type " << secondRt << " is not valid for SIMM configuration with name" << name());
 
     // Deal with trivial case of everything equal
-    if (firstRt == secondRt && firstQualifier == secondQualifier && firstLabel_1 == secondLabel_1 &&
-        firstLabel_2 == secondLabel_2) {
+    if (firstRt == secondRt && firstQualifier == secondQualifier && firstBucket == secondBucket &&
+        firstLabel_1 == secondLabel_1 && firstLabel_2 == secondLabel_2) {
         return 1.0;
+    }
+
+    // Deal with Equity correlations
+    if ((firstRt == RiskType::Equity && secondRt == RiskType::Equity) ||
+        (firstRt == RiskType::EquityVol && secondRt == RiskType::EquityVol)) {
+
+        // Get the bucket of each qualifier
+        string bucket_1 = firstBucket.empty() ? simmBucketMapper_->bucket(firstRt, firstQualifier) : firstBucket;
+        string bucket_2 = secondBucket.empty() ? simmBucketMapper_->bucket(secondRt, secondQualifier) : secondBucket;
+
+        // Residual is special, 0 correlation inter and intra except if same qualifier
+        if (bucket_1 == "Residual" || bucket_2 == "Residual") {
+            return firstQualifier == secondQualifier ? 1.0 : 0.0;
+        }
+
+        // Non-residual
+        // Get the bucket index of each qualifier
+        if (bucket_1 == bucket_2) {
+            auto bucketKey = makeKey(bucket_1, "", "");
+            // If same bucket, return the intra-bucket correlation
+            return firstQualifier == secondQualifier ? 1.0 : intraBucketCorrelation_.at(RiskType::Equity).at(bucketKey);
+        } else {
+            // If different buckets, return the inter-bucket correlation
+            auto label12Key = makeKey("", bucket_1, bucket_2);
+            return interBucketCorrelation_.at(RiskType::Equity).at(label12Key);
+        }
+    }
+
+    // Deal with CreditQ correlations
+    if ((firstRt == RiskType::CreditQ && secondRt == RiskType::CreditQ) ||
+        (firstRt == RiskType::CreditVol && secondRt == RiskType::CreditVol)) {
+
+        // Get the bucket of each qualifier
+        string bucket_1 = firstBucket.empty() ? simmBucketMapper_->bucket(firstRt, firstQualifier) : firstBucket;
+        string bucket_2 = secondBucket.empty() ? simmBucketMapper_->bucket(secondRt, secondQualifier) : secondBucket;
+
+        // Residual is special
+        if (bucket_1 == "Residual" || bucket_2 == "Residual") {
+            if (bucket_1 == bucket_2) {
+                // Both Residual
+                return crqResidualIntraCorr_;
+            } else {
+                // One is a residual bucket and the other is not
+                return 0.0;
+            }
+        }
+
+        // Non-residual
+        if (bucket_1 == bucket_2) {
+            // If same bucket
+            if (firstQualifier != secondQualifier) {
+                // If different qualifier (i.e. here issuer/seniority)
+                return crqDiffIntraCorr_;
+            } else {
+                // If same qualifier (i.e. here issuer/seniority)
+                return crqSameIntraCorr_;
+            }
+        } else {
+            // Get the bucket indices of each qualifier for reading the matrix
+            RiskType rt = RiskType::CreditQ;
+            auto label12Key = makeKey("", bucket_1, bucket_2);
+            if (interBucketCorrelation_.at(rt).find(label12Key) != interBucketCorrelation_.at(rt).end())
+                return interBucketCorrelation_.at(rt).at(label12Key);
+            else
+                QL_FAIL("Could not find correlation for risk type " << rt << " and key " << label12Key);
+        }
+    }
+
+    // Deal with CreditNonQ correlations
+    if ((firstRt == RiskType::CreditNonQ && secondRt == RiskType::CreditNonQ) ||
+        (firstRt == RiskType::CreditVolNonQ && secondRt == RiskType::CreditVolNonQ)) {
+
+        // Get the bucket of each qualifier
+        string bucket_1 = firstBucket.empty() ? simmBucketMapper_->bucket(firstRt, firstQualifier) : firstBucket;
+        string bucket_2 = secondBucket.empty() ? simmBucketMapper_->bucket(secondRt, secondQualifier) : secondBucket;
+
+        // Residual is special
+        if (bucket_1 == "Residual" || bucket_2 == "Residual") {
+            if (bucket_1 == bucket_2) {
+                // Both Residual
+                return crnqResidualIntraCorr_;
+            } else {
+                // One is a residual bucket and the other is not
+                return 0.0;
+            }
+        }
+
+        // Non-residual
+        if (bucket_1 == bucket_2) {
+            SimmVersion thresholdVersion = SimmVersion::V2_2;
+            if (isSimmConfigCalibration() || parseSimmVersion(version_) >= thresholdVersion) {
+                // In ISDA SIMM version 2.2 or greater, the CRNQ correlations differ depending on whether or not
+                // the entities have the same group name i.e. CMBX.
+                return firstLabel_2 == secondLabel_2 ? crnqSameIntraCorr_ : crnqDiffIntraCorr_;
+            }
+            // TODO:
+            // If same bucket. For ISDA SIMM < 2.2 there is a section in the documentation where
+            // you choose between a correlation if the underlying names are the same and another
+            // correlation if the underlying names are different. The underlying names being the
+            // same is defined in terms of an overlap of 80% in notional terms in underlying names.
+            // Don't know how to pass this down yet so we just go on qualifiers here.
+            return firstQualifier == secondQualifier ? crnqSameIntraCorr_ : crnqDiffIntraCorr_;
+        } else {
+            // If different buckets, return the inter-bucket correlation
+            return crnqInterCorr_;
+        }
+    }
+
+    // Deal with Commodity correlations
+    if ((firstRt == RiskType::Commodity && secondRt == RiskType::Commodity) ||
+        (firstRt == RiskType::CommodityVol && secondRt == RiskType::CommodityVol)) {
+
+        // Get the bucket index of each qualifier
+        string bucket_1 = firstBucket.empty() ? simmBucketMapper_->bucket(firstRt, firstQualifier) : firstBucket;
+        string bucket_2 = secondBucket.empty() ? simmBucketMapper_->bucket(secondRt, secondQualifier) : secondBucket;
+
+        if (bucket_1 == bucket_2) {
+            auto bucketKey = makeKey(bucket_1, "", "");
+            // If same bucket, return the intra-bucket correlation
+            return firstQualifier == secondQualifier ? 1.0 : intraBucketCorrelation_.at(RiskType::Commodity).at(bucketKey);
+        } else {
+            // If different buckets, return the inter-bucket correlation
+            auto label12Key = makeKey("", bucket_1, bucket_2);
+            return interBucketCorrelation_.at(RiskType::Commodity).at(label12Key);
+        }
     }
 
     // Deal with case of different risk types
@@ -333,131 +410,6 @@ QuantLib::Real SimmConfigurationBase::correlation(const RiskType& firstRt, const
         return 1.0;
     }
 
-    // Deal with CreditQ correlations
-    if ((firstRt == RiskType::CreditQ && secondRt == RiskType::CreditQ) ||
-        (firstRt == RiskType::CreditVol && secondRt == RiskType::CreditVol)) {
-
-        // Get the bucket of each qualifier
-        string bucket_1 = simmBucketMapper_->bucket(firstRt, firstQualifier);
-        string bucket_2 = simmBucketMapper_->bucket(secondRt, secondQualifier);
-
-        // Residual is special
-        if (bucket_1 == "Residual" || bucket_2 == "Residual") {
-            if (bucket_1 == bucket_2) {
-                // Both Residual
-                return crqResidualIntraCorr_;
-            } else {
-                // One is a residual bucket and the other is not
-                return 0.0;
-            }
-        }
-
-        // Non-residual
-        if (bucket_1 == bucket_2) {
-            // If same bucket
-            if (firstQualifier != secondQualifier) {
-                // If different qualifier (i.e. here issuer/seniority)
-                return crqDiffIntraCorr_;
-            } else {
-                // If same qualifier (i.e. here issuer/seniority)
-                return crqSameIntraCorr_;
-            }
-        } else {
-            // Get the bucket indices of each qualifier for reading the matrix
-            RiskType rt = RiskType::CreditQ;
-            auto label12Key = makeKey("", bucket_1, bucket_2);
-            if (interBucketCorrelation_.at(rt).find(label12Key) != interBucketCorrelation_.at(rt).end())
-                return interBucketCorrelation_.at(rt).at(label12Key);
-            else
-                QL_FAIL("Could not find correlation for risk type " << rt << " and key " << label12Key);
-        }
-    }
-
-    // Deal with CreditNonQ correlations
-    if ((firstRt == RiskType::CreditNonQ && secondRt == RiskType::CreditNonQ) ||
-        (firstRt == RiskType::CreditVolNonQ && secondRt == RiskType::CreditVolNonQ)) {
-
-        // Get the bucket of each qualifier
-        string bucket_1 = simmBucketMapper_->bucket(firstRt, firstQualifier);
-        string bucket_2 = simmBucketMapper_->bucket(secondRt, secondQualifier);
-
-        // Residual is special
-        if (bucket_1 == "Residual" || bucket_2 == "Residual") {
-            if (bucket_1 == bucket_2) {
-                // Both Residual
-                return crnqResidualIntraCorr_;
-            } else {
-                // One is a residual bucket and the other is not
-                return 0.0;
-            }
-        }
-
-        // Non-residual
-        if (bucket_1 == bucket_2) {
-            SimmVersion thresholdVersion = SimmVersion::V2_2;
-            if (isSimmConfigCalibration() || parseSimmVersion(version_) >= thresholdVersion) {
-                // In ISDA SIMM version 2.2 or greater, the CRNQ correlations differ depending on whether or not
-                // the entities have the same group name i.e. CMBX.
-                return firstLabel_2 == secondLabel_2 ? crnqSameIntraCorr_ : crnqDiffIntraCorr_;
-            }
-            // TODO:
-            // If same bucket. For ISDA SIMM < 2.2 there is a section in the documentation where
-            // you choose between a correlation if the underlying names are the same and another
-            // correlation if the underlying names are different. The underlying names being the
-            // same is defined in terms of an overlap of 80% in notional terms in underlying names.
-            // Don't know how to pass this down yet so we just go on qualifiers here.
-            return firstQualifier == secondQualifier ? crnqSameIntraCorr_ : crnqDiffIntraCorr_;
-        } else {
-            // If different buckets, return the inter-bucket correlation
-            return crnqInterCorr_;
-        }
-    }
-
-    // Deal with Equity correlations
-    if ((firstRt == RiskType::Equity && secondRt == RiskType::Equity) ||
-        (firstRt == RiskType::EquityVol && secondRt == RiskType::EquityVol)) {
-
-        // Get the bucket of each qualifier
-        string bucket_1 = simmBucketMapper_->bucket(firstRt, firstQualifier);
-        string bucket_2 = simmBucketMapper_->bucket(secondRt, secondQualifier);
-
-        // Residual is special, 0 correlation inter and intra except if same qualifier
-        if (bucket_1 == "Residual" || bucket_2 == "Residual") {
-            return firstQualifier == secondQualifier ? 1.0 : 0.0;
-        }
-
-        // Non-residual
-        // Get the bucket index of each qualifier
-        if (bucket_1 == bucket_2) {
-            auto bucketKey = makeKey(bucket_1, "", "");
-            // If same bucket, return the intra-bucket correlation
-            return firstQualifier == secondQualifier ? 1.0 : intraBucketCorrelation_.at(RiskType::Equity).at(bucketKey);
-        } else {
-            // If different buckets, return the inter-bucket correlation
-            auto label12Key = makeKey("", bucket_1, bucket_2);
-            return interBucketCorrelation_.at(RiskType::Equity).at(label12Key);
-        }
-    }
-
-    // Deal with Commodity correlations
-    if ((firstRt == RiskType::Commodity && secondRt == RiskType::Commodity) ||
-        (firstRt == RiskType::CommodityVol && secondRt == RiskType::CommodityVol)) {
-
-        // Get the bucket index of each qualifier
-        const string& bucket_1 = simmBucketMapper_->bucket(firstRt, firstQualifier);
-        const string& bucket_2 = simmBucketMapper_->bucket(secondRt, secondQualifier);
-
-        if (bucket_1 == bucket_2) {
-            auto bucketKey = makeKey(bucket_1, "", "");
-            // If same bucket, return the intra-bucket correlation
-            return firstQualifier == secondQualifier ? 1.0 : intraBucketCorrelation_.at(RiskType::Commodity).at(bucketKey);
-        } else {
-            // If different buckets, return the inter-bucket correlation
-            auto label12Key = makeKey("", bucket_1, bucket_2);
-            return interBucketCorrelation_.at(RiskType::Commodity).at(label12Key);
-        }
-    }
-
     // Deal with FX correlations
     // TODO:
     // For FXVol, qualifier is a currency pair. Is it possible to get here
@@ -485,7 +437,7 @@ Real SimmConfigurationBase::sigmaMultiplier() const {
     /* We write sqrt(365.0 / (1.4 * mporDays_)) so that this function is
        sqrt(365.0 / 14) for MPOR = 10 as expected and sqrt(365.0 / 1.4) for MPOR = 1.
        This is described in SIMM:Technical Paper (Version 10), Section I.2 */
-    return sqrt(365.0 / (1.4 * mporDays_)) / boost::math::quantile(boost::math::normal(), 0.99);
+    return std::sqrt(365.0 / (1.4 * mporDays_)) / boost::math::quantile(boost::math::normal(), 0.99);
 }
 
 QuantLib::Real SimmConfigurationBase::correlationRiskClasses(const RiskClass& rc_1, const RiskClass& rc_2) const {

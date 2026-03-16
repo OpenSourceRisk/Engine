@@ -25,12 +25,11 @@
 
 #include <qle/cashflows/couponpricer.hpp>
 #include <qle/cashflows/formulabasedcoupon.hpp>
-#include <qle/cashflows/couponpricer.hpp>
 
-#include <ored/utilities/indexnametranslator.hpp>
 #include <ored/portfolio/builders/capfloorediborleg.hpp>
 #include <ored/portfolio/builders/cms.hpp>
 #include <ored/portfolio/legdata.hpp>
+#include <ored/utilities/indexnametranslator.hpp>
 
 #include <ql/cashflows/capflooredcoupon.hpp>
 #include <ql/cashflows/cashflowvectors.hpp>
@@ -78,35 +77,47 @@ void FormulaBasedLegData::initIndices() {
 }
 
 namespace {
-boost::shared_ptr<QuantLib::FloatingRateCouponPricer>
-getFormulaBasedCouponPricer(const boost::shared_ptr<QuantExt::FormulaBasedIndex>& formulaBasedIndex,
-                            const Currency& paymentCurrency, const boost::shared_ptr<EngineFactory>& engineFactory,
-                            const std::map<std::string, boost::shared_ptr<QuantLib::InterestRateIndex>>& indexMaps) {
-    auto builder =
-        boost::dynamic_pointer_cast<FormulaBasedCouponPricerBuilder>(engineFactory->builder("FormulaBasedCoupon"));
+QuantLib::ext::shared_ptr<QuantLib::FloatingRateCouponPricer> getFormulaBasedCouponPricer(
+    const QuantLib::ext::shared_ptr<QuantExt::FormulaBasedIndex>& formulaBasedIndex, const Currency& paymentCurrency,
+    const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+    const std::map<std::string, QuantLib::ext::shared_ptr<QuantLib::InterestRateIndex>>& indexMaps,
+    std::set<std::tuple<std::set<std::string>, std::string, std::string>>* productModelEngine) {
+    auto builder = QuantLib::ext::dynamic_pointer_cast<FormulaBasedCouponPricerBuilder>(
+        engineFactory->builder("FormulaBasedCoupon"));
     QL_REQUIRE(builder != nullptr, "makeFormulaBasedLeg(): no builder found for FormulaBasedCoupon");
 
-    std::map<std::string, boost::shared_ptr<IborCouponPricer>> iborPricers;
-    std::map<std::string, boost::shared_ptr<CmsCouponPricer>> cmsPricers;
+    std::map<std::string, QuantLib::ext::shared_ptr<IborCouponPricer>> iborPricers;
+    std::map<std::string, QuantLib::ext::shared_ptr<CmsCouponPricer>> cmsPricers;
     for (auto const& i : formulaBasedIndex->indices()) {
         // add ibor pricer for index
-        if (auto ibor = boost::dynamic_pointer_cast<QuantLib::IborIndex>(i)) {
-            auto iborBuilder = boost::dynamic_pointer_cast<CapFlooredIborLegEngineBuilder>(
+        if (auto ibor = QuantLib::ext::dynamic_pointer_cast<QuantLib::IborIndex>(i)) {
+            auto iborBuilder = QuantLib::ext::dynamic_pointer_cast<CapFlooredIborLegEngineBuilder>(
                 engineFactory->builder("CapFlooredIborLeg"));
             QL_REQUIRE(iborBuilder != nullptr, "makeFormulaBasedLeg(): No builder found for CapFlooredIborLeg");
             auto pricerKey = IndexNameTranslator::instance().oreName(ibor->name());
-            auto iborPricer = boost::dynamic_pointer_cast<IborCouponPricer>(iborBuilder->engine(pricerKey));
+            auto iborPricer = QuantLib::ext::dynamic_pointer_cast<IborCouponPricer>(iborBuilder->engine(pricerKey));
             QL_REQUIRE(iborPricer != nullptr, "makeFormulaBasedLeg(): expected ibor coupon pricer");
             iborPricers[i->name()] = iborPricer;
+            if (productModelEngine) {
+                productModelEngine->insert(
+                    std::make_tuple(iborBuilder->tradeTypes(), iborBuilder->model(),
+                                    QuantLib::ext::static_pointer_cast<EngineBuilder>(iborBuilder)->engine()));
+            }
         }
         // add cms pricer for index
-        if (auto cms = boost::dynamic_pointer_cast<QuantLib::SwapIndex>(i)) {
-            auto cmsBuilder = boost::dynamic_pointer_cast<CmsCouponPricerBuilder>(engineFactory->builder("CMS"));
+        if (auto cms = QuantLib::ext::dynamic_pointer_cast<QuantLib::SwapIndex>(i)) {
+            auto cmsBuilder =
+                QuantLib::ext::dynamic_pointer_cast<CmsCouponPricerBuilder>(engineFactory->builder("CMS"));
             QL_REQUIRE(cmsBuilder, "makeFormulaBasedLeg(): No builder found for CmsLeg");
             auto pricerKey = IndexNameTranslator::instance().oreName(cms->iborIndex()->name());
-            auto cmsPricer = boost::dynamic_pointer_cast<CmsCouponPricer>(cmsBuilder->engine(pricerKey));
+            auto cmsPricer = QuantLib::ext::dynamic_pointer_cast<CmsCouponPricer>(cmsBuilder->engine(pricerKey));
             QL_REQUIRE(cmsPricer != nullptr, "makeFormulaBasedLeg(): expected cms coupon pricer");
             cmsPricers[cms->iborIndex()->name()] = cmsPricer;
+            if (productModelEngine) {
+                productModelEngine->insert(
+                    std::make_tuple(cmsBuilder->tradeTypes(), cmsBuilder->model(),
+                                    QuantLib::ext::static_pointer_cast<EngineBuilder>(cmsBuilder)->engine()));
+            }
         }
     }
 
@@ -114,11 +125,13 @@ getFormulaBasedCouponPricer(const boost::shared_ptr<QuantExt::FormulaBasedIndex>
 }
 } // namespace
 
-Leg makeFormulaBasedLeg(const LegData& data, const boost::shared_ptr<QuantExt::FormulaBasedIndex>& formulaBasedIndex,
-                        const boost::shared_ptr<EngineFactory>& engineFactory,
-                        const std::map<std::string, boost::shared_ptr<QuantLib::InterestRateIndex>>& indexMaps,
-                        const QuantLib::Date& openEndDateReplacement) {
-    auto formulaBasedData = boost::dynamic_pointer_cast<FormulaBasedLegData>(data.concreteLegData());
+Leg makeFormulaBasedLeg(const LegData& data,
+                        const QuantLib::ext::shared_ptr<QuantExt::FormulaBasedIndex>& formulaBasedIndex,
+                        const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                        const std::map<std::string, QuantLib::ext::shared_ptr<QuantLib::InterestRateIndex>>& indexMaps,
+                        const QuantLib::Date& openEndDateReplacement, const bool attachPricer,
+                        std::set<std::tuple<std::set<std::string>, std::string, std::string>>* productModelEngine) {
+    auto formulaBasedData = QuantLib::ext::dynamic_pointer_cast<FormulaBasedLegData>(data.concreteLegData());
     QL_REQUIRE(formulaBasedData, "Wrong LegType, expected FormulaBased, got " << data.legType());
     Currency paymentCurrency = parseCurrency(data.currency());
     Schedule schedule = makeSchedule(data.schedule(), openEndDateReplacement);
@@ -136,7 +149,7 @@ Leg makeFormulaBasedLeg(const LegData& data, const boost::shared_ptr<QuantExt::F
     // bdc is optional too, but all the other legs just do this, too ?!
     // FIXME, to be solved for all leg types, here we do as in the other legs
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
-    auto formulaBasedLegData = boost::dynamic_pointer_cast<FormulaBasedLegData>(data.concreteLegData());
+    auto formulaBasedLegData = QuantLib::ext::dynamic_pointer_cast<FormulaBasedLegData>(data.concreteLegData());
     vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
 
     ore::data::applyAmortization(notionals, data, schedule);
@@ -159,7 +172,11 @@ Leg makeFormulaBasedLeg(const LegData& data, const boost::shared_ptr<QuantExt::F
             .withFixingDays(formulaBasedData->fixingDays())
             .inArrears(formulaBasedData->isInArrears());
 
-    auto couponPricer = getFormulaBasedCouponPricer(formulaBasedIndex, paymentCurrency, engineFactory, indexMaps);
+    if (!attachPricer)
+        return formulaBasedLeg;
+
+    auto couponPricer =
+        getFormulaBasedCouponPricer(formulaBasedIndex, paymentCurrency, engineFactory, indexMaps, productModelEngine);
 
     // make sure leg is built before pricers are set...
     Leg tmp = formulaBasedLeg;

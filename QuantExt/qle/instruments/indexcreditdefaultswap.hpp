@@ -50,7 +50,7 @@ public:
                            const DayCounter& dayCounter, bool settlesAccrual = true,
                            ProtectionPaymentTime protectionPaymentTime = atDefault,
                            const Date& protectionStart = Date(),
-                           const boost::shared_ptr<Claim>& claim = boost::shared_ptr<Claim>(),
+                           const QuantLib::ext::shared_ptr<Claim>& claim = QuantLib::ext::shared_ptr<Claim>(),
                            const DayCounter& lastPeriodDayCounter = DayCounter(),
                            bool rebatesAccrual = true,
                            const Date& tradeDate = Date(),
@@ -65,7 +65,7 @@ public:
                            const DayCounter& dayCounter, bool settlesAccrual = true,
                            ProtectionPaymentTime protectionPaymentTime = atDefault,
                            const Date& protectionStart = Date(), const Date& upfrontDate = Date(),
-                           const boost::shared_ptr<Claim>& claim = boost::shared_ptr<Claim>(),
+                           const QuantLib::ext::shared_ptr<Claim>& claim = QuantLib::ext::shared_ptr<Claim>(),
                            const DayCounter& lastPeriodDayCounter = DayCounter(),
                            bool rebatesAccrual = true,
                            const Date& tradeDate = Date(),
@@ -91,7 +91,7 @@ protected:
     std::vector<Real> underlyingNotionals_;
     //! \name Additional interface
     //@{
-    virtual boost::shared_ptr<PricingEngine> buildPricingEngine(const Handle<DefaultProbabilityTermStructure>& p,
+    virtual QuantLib::ext::shared_ptr<PricingEngine> buildPricingEngine(const Handle<DefaultProbabilityTermStructure>& p,
                                                                 Real r, const Handle<YieldTermStructure>& d,
 								PricingModel model = Midpoint) const override;
     //@}

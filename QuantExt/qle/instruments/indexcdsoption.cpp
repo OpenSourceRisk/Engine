@@ -40,12 +40,12 @@ public:
                      const Handle<YieldTermStructure>& termStructureTradeCollateral, Real targetValue)
         : targetValue_(targetValue) {
 
-        vol_ = boost::shared_ptr<SimpleQuote>(new SimpleQuote(0.0));
+        vol_ = QuantLib::ext::shared_ptr<SimpleQuote>(new SimpleQuote(0.0));
         Handle<BlackVolTermStructure> h(
-            boost::make_shared<BlackConstantVol>(0, NullCalendar(), Handle<Quote>(vol_), Actual365Fixed()));
-        engine_ = boost::make_shared<QuantExt::BlackIndexCdsOptionEngine>(
+            QuantLib::ext::make_shared<BlackConstantVol>(0, NullCalendar(), Handle<Quote>(vol_), Actual365Fixed()));
+        engine_ = QuantLib::ext::make_shared<QuantExt::BlackIndexCdsOptionEngine>(
             probability, recoveryRate, termStructureSwapCurrency, termStructureTradeCollateral,
-            Handle<CreditVolCurve>(boost::make_shared<CreditVolCurveWrapper>(h)));
+            Handle<CreditVolCurve>(QuantLib::ext::make_shared<CreditVolCurveWrapper>(h)));
         cdsoption.setupArguments(engine_->getArguments());
 
         results_ = dynamic_cast<const Instrument::results*>(engine_->getResults());
@@ -57,20 +57,20 @@ public:
     }
 
 private:
-    boost::shared_ptr<PricingEngine> engine_;
+    QuantLib::ext::shared_ptr<PricingEngine> engine_;
     Real targetValue_;
-    boost::shared_ptr<SimpleQuote> vol_;
+    QuantLib::ext::shared_ptr<SimpleQuote> vol_;
     const Instrument::results* results_;
 };
 
 }
 
-IndexCdsOption::IndexCdsOption(const boost::shared_ptr<IndexCreditDefaultSwap>& swap,
-                               const boost::shared_ptr<Exercise>& exercise, Real strike,
+IndexCdsOption::IndexCdsOption(const QuantLib::ext::shared_ptr<IndexCreditDefaultSwap>& swap,
+                               const QuantLib::ext::shared_ptr<Exercise>& exercise, Real strike,
                                CdsOption::StrikeType strikeType, const Settlement::Type settlementType,
-                               Real tradeDateNtl, Real realisedFep, bool knocksOut, const QuantLib::Period& indexTerm)
-    : Option(boost::make_shared<NullPayoff>(), exercise), swap_(swap), strike_(strike), strikeType_(strikeType),
-      settlementType_(settlementType), tradeDateNtl_(tradeDateNtl), realisedFep_(realisedFep), knocksOut_(knocksOut),
+                               Real tradeDateNtl, Real realisedFep, const QuantLib::Period& indexTerm)
+    : Option(QuantLib::ext::make_shared<NullPayoff>(), exercise), swap_(swap), strike_(strike), strikeType_(strikeType),
+      settlementType_(settlementType), tradeDateNtl_(tradeDateNtl), realisedFep_(realisedFep),
       indexTerm_(indexTerm), riskyAnnuity_(0.0) {
     registerWith(swap_);
 }
@@ -96,7 +96,6 @@ void IndexCdsOption::setupArguments(PricingEngine::arguments* args) const {
     arguments->settlementType = settlementType_;
     arguments->tradeDateNtl = tradeDateNtl_;
     arguments->realisedFep = realisedFep_;
-    arguments->knocksOut = knocksOut_;
     arguments->indexTerm = indexTerm_;
 }
 

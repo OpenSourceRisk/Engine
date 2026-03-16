@@ -21,14 +21,15 @@
 
 namespace QuantExt {
 
-CommoditySchwartzModel::CommoditySchwartzModel(const boost::shared_ptr<CommoditySchwartzParametrization>& parametrization, 
+CommoditySchwartzModel::CommoditySchwartzModel(const QuantLib::ext::shared_ptr<CommoditySchwartzParametrization>& parametrization, 
                                                const Discretization discretization)
     : parametrization_(parametrization), discretization_(discretization) {
     QL_REQUIRE(parametrization_ != nullptr, "CommoditySchwartzModel: parametrization is null");
-    arguments_.resize(2);
+    arguments_.resize(3);
     arguments_[0] = parametrization_->parameter(0);
     arguments_[1] = parametrization_->parameter(1);
-    stateProcess_ = boost::make_shared<CommoditySchwartzStateProcess>(parametrization_, discretization_);
+    arguments_[2] = parametrization_->parameter(2);
+    stateProcess_ = QuantLib::ext::make_shared<CommoditySchwartzStateProcess>(parametrization_, discretization_);
 }
 
 QuantLib::Real CommoditySchwartzModel::forwardPrice(const QuantLib::Time t, const QuantLib::Time T, const QuantLib::Array& state,
@@ -37,11 +38,12 @@ QuantLib::Real CommoditySchwartzModel::forwardPrice(const QuantLib::Time t, cons
     Real f0T = priceCurve.empty() ? parametrization_->priceCurve()->price(T) : priceCurve->price(T);
     Real VtT = parametrization_->VtT(t, T);
     Real V0T = parametrization_->VtT(0, T);
+    Real mT = parametrization_->m(T);
     Real k = parametrization_->kappaParameter();
     if (parametrization_->driftFreeState())
-        return f0T * std::exp(-state[0] * std::exp(-k*T) - 0.5 * (V0T - VtT));
+        return f0T * std::exp(state[0] * mT * std::exp(-k*T) - 0.5 * (V0T - VtT));
     else
-        return f0T * std::exp(-state[0] * std::exp(-k*(T-t)) - 0.5 * (V0T - VtT));
+        return f0T * std::exp(state[0] * mT * std::exp(-k*(T-t)) - 0.5 * (V0T - VtT));
 }
 
 void CommoditySchwartzModel::update() {

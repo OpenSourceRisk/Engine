@@ -47,7 +47,7 @@ public:
     DiscountingBondRepoEngineBuilder() : BondRepoEngineBuilderBase("DiscountedCashflows", "DiscountingRepoEngine") {}
 
 protected:
-    boost::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::string& repoCurveId) override;
+    QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::string& repoCurveId) override;
 };
 
 //! Accrual Bond Repo Engine Builder
@@ -56,7 +56,7 @@ public:
     AccrualBondRepoEngineBuilder() : BondRepoEngineBuilderBase("Accrual", "AccrualRepoEngine") {}
 
 protected:
-    boost::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::string&) override;
+    QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::string&) override;
 };
 
 } // namespace data

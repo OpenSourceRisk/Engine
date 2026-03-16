@@ -1,0 +1,8 @@
+\subsubsection{Performance Option Type 01}
+\label{pricing::performanceoption_01}
+
+The performance option of type 01 is priced using correlated Black-Scholes processes for the underlyings. Each process
+is calibrated to the underlying's quoted market ATM volatility. The correlations are externally given parameters. The
+valuation is done using a Monte Carlo simulation.
+
+See \ref{pricing::scriptedtrade_mc} for more details, the relevant product classification is MultiAssetOption.

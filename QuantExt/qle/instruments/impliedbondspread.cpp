@@ -52,9 +52,9 @@ Real PriceError::operator()(Real spread) const {
 
 namespace detail {
 
-Real ImpliedBondSpreadHelper::calculate(const boost::shared_ptr<Bond>& bond,
-                                        const boost::shared_ptr<PricingEngine>& engine,
-                                        const boost::shared_ptr<SimpleQuote>& spreadQuote, Real targetValue,
+Real ImpliedBondSpreadHelper::calculate(const QuantLib::ext::shared_ptr<Bond>& bond,
+                                        const QuantLib::ext::shared_ptr<PricingEngine>& engine,
+                                        const QuantLib::ext::shared_ptr<SimpleQuote>& spreadQuote, Real targetValue,
                                         bool isCleanPrice, Real accuracy, Natural maxEvaluations, Real minSpread,
                                         Real maxSpread) {
 

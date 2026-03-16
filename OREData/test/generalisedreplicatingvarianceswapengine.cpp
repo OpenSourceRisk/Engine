@@ -70,9 +70,7 @@
 #include <qle/pricingengines/discountingequityforwardengine.hpp>
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
 #include <qle/pricingengines/discountingriskybondengine.hpp>
-#include <qle/pricingengines/discountingswapenginemulticurve.hpp>
 #include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
-#include <qle/pricingengines/oiccbasisswapengine.hpp>
 #include <qle/pricingengines/paymentdiscountingengine.hpp>
 
 #include <ql/pricingengines/credit/midpointcdsengine.hpp>
@@ -150,23 +148,23 @@ BOOST_AUTO_TEST_CASE(testT0Pricing) {
 
     BOOST_TEST_MESSAGE("Testing t0 pricing of the QuantExt VarSwap engine, as per Demeterfi et. al (1999).");
     std::string equityName = "STE";
-    boost::shared_ptr<SimpleQuote> spot(new SimpleQuote(0.0));
-    Handle<Quote> equityPrice = Handle<Quote>(boost::make_shared<SimpleQuote>(100.0));
+    QuantLib::ext::shared_ptr<SimpleQuote> spot(new SimpleQuote(0.0));
+    Handle<Quote> equityPrice = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(100.0));
     Handle<YieldTermStructure> yieldTS =
-        Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, NullCalendar(), 0.05, dc));
+        Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.05, dc));
     Handle<YieldTermStructure> dividendTS =
-        Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, NullCalendar(), 0.0, dc));
+        Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.0, dc));
     Handle<BlackVolTermStructure> volTS = Handle<BlackVolTermStructure>(
-        boost::make_shared<BlackVarianceSurface>(today, NullCalendar(), dates, strikes, vols, dc));
+        QuantLib::ext::make_shared<BlackVarianceSurface>(today, NullCalendar(), dates, strikes, vols, dc));
     Handle<YieldTermStructure> discountingTS =
-        Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, NullCalendar(), 0.05, dc));
-    boost::shared_ptr<Index> eqIndex =
-        boost::make_shared<EquityIndex2>(equityName, cal, EURCurrency(), equityPrice, yieldTS, dividendTS);
+        Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.05, dc));
+    QuantLib::ext::shared_ptr<Index> eqIndex =
+        QuantLib::ext::make_shared<EquityIndex2>(equityName, cal, EURCurrency(), equityPrice, yieldTS, dividendTS);
 
-    boost::shared_ptr<GeneralizedBlackScholesProcess> stochProcess(
+    QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> stochProcess(
         new BlackScholesMertonProcess(equityPrice, dividendTS, discountingTS, volTS));
 
-    boost::shared_ptr<PricingEngine> engine(new GeneralisedReplicatingVarianceSwapEngine(
+    QuantLib::ext::shared_ptr<PricingEngine> engine(new GeneralisedReplicatingVarianceSwapEngine(
         eqIndex, stochProcess, discountingTS, GeneralisedReplicatingVarianceSwapEngine::VarSwapSettings()));
 
     QuantExt::VarianceSwap2 varianceSwap(Position::Long, varianceStrike, varianceNotional, today, exDate, cal, false);
@@ -206,8 +204,9 @@ BOOST_AUTO_TEST_CASE(testSeasonedSwapPricing) {
     Real arrFixings[] = {98.5, 98.0, 99.0, 100.2, 99.4, 98.2};
     std::vector<Real> fixings(arrFixings, arrFixings + sizeof(arrFixings) / sizeof(Real));
     TimeSeries<Real> fixingHistory(pastDates.begin(), pastDates.end(), fixings.begin());
+    QL_DEPRECATED_DISABLE_WARNING
     IndexManager::instance().setHistory(equityName, fixingHistory);
-
+    QL_DEPRECATED_ENABLE_WARNING
     // add strikes in C++98 compatible way
     Real arrStrikes[] = {50.0,  55.0,  60.0,  65.0,  70.0,  75.0,  80.0, 85.0, 90.0, 95.0, 100.0, // Put Strikes
                          105.0, 110.0, 115.0, 120.0, 125.0, 130.0, 135.0};                        // Call Strikes
@@ -219,22 +218,22 @@ BOOST_AUTO_TEST_CASE(testSeasonedSwapPricing) {
     Matrix vols(18, 1, volsVector.begin(), volsVector.end());
 
     BOOST_TEST_MESSAGE("Testing seasoned swap pricing of the QuantExt VarSwap engine.");
-    boost::shared_ptr<SimpleQuote> spot(new SimpleQuote(0.0));
-    Handle<Quote> equityPrice = Handle<Quote>(boost::make_shared<SimpleQuote>(100.0));
-    Handle<YieldTermStructure> yieldTS = Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, cal, 0.05, dc));
+    QuantLib::ext::shared_ptr<SimpleQuote> spot(new SimpleQuote(0.0));
+    Handle<Quote> equityPrice = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(100.0));
+    Handle<YieldTermStructure> yieldTS = Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(0, cal, 0.05, dc));
     Handle<YieldTermStructure> dividendTS =
-        Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, cal, 0.0, dc));
+        Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(0, cal, 0.0, dc));
     Handle<BlackVolTermStructure> volTS =
-        Handle<BlackVolTermStructure>(boost::make_shared<BlackVarianceSurface>(today, cal, dates, strikes, vols, dc));
+        Handle<BlackVolTermStructure>(QuantLib::ext::make_shared<BlackVarianceSurface>(today, cal, dates, strikes, vols, dc));
     Handle<YieldTermStructure> discountingTS =
-        Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, cal, 0.05, dc));
-    boost::shared_ptr<Index> eqIndex =
-        boost::make_shared<EquityIndex2>(equityName, cal, EURCurrency(), equityPrice, yieldTS, dividendTS);
+        Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(0, cal, 0.05, dc));
+    QuantLib::ext::shared_ptr<Index> eqIndex =
+        QuantLib::ext::make_shared<EquityIndex2>(equityName, cal, EURCurrency(), equityPrice, yieldTS, dividendTS);
 
-    boost::shared_ptr<GeneralizedBlackScholesProcess> stochProcess(
+    QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> stochProcess(
         new BlackScholesMertonProcess(equityPrice, dividendTS, yieldTS, volTS));
 
-    boost::shared_ptr<PricingEngine> engine(new GeneralisedReplicatingVarianceSwapEngine(
+    QuantLib::ext::shared_ptr<PricingEngine> engine(new GeneralisedReplicatingVarianceSwapEngine(
         eqIndex, stochProcess, discountingTS, GeneralisedReplicatingVarianceSwapEngine::VarSwapSettings()));
 
     QuantExt::VarianceSwap2 varianceSwap(Position::Long, varianceStrike, varianceNotional, startDate, exDate, cal,
@@ -250,7 +249,9 @@ BOOST_AUTO_TEST_CASE(testSeasonedSwapPricing) {
     BOOST_CHECK_CLOSE(result, expected, tol);
 
     // A little clean up of the environment.
+    QL_DEPRECATED_DISABLE_WARNING
     IndexManager::instance().clearHistory("EQ/" + equityName);
+    QL_DEPRECATED_ENABLE_WARNING
 }
 
 BOOST_AUTO_TEST_CASE(testForwardStartPricing) {
@@ -280,23 +281,23 @@ BOOST_AUTO_TEST_CASE(testForwardStartPricing) {
     BOOST_TEST_MESSAGE(
         "Testing future starting pricing of the QuantExt VarSwap engine, as per Demeterfi et. al (1999).");
     std::string equityName = "STE";
-    boost::shared_ptr<SimpleQuote> spot(new SimpleQuote(0.0));
-    Handle<Quote> equityPrice = Handle<Quote>(boost::make_shared<SimpleQuote>(100.0));
+    QuantLib::ext::shared_ptr<SimpleQuote> spot(new SimpleQuote(0.0));
+    Handle<Quote> equityPrice = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(100.0));
     Handle<YieldTermStructure> yieldTS =
-        Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, NullCalendar(), 0.05, dc));
+        Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.05, dc));
     Handle<YieldTermStructure> dividendTS =
-        Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, NullCalendar(), 0.0, dc));
+        Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.0, dc));
     Handle<BlackVolTermStructure> volTS = Handle<BlackVolTermStructure>(
-        boost::make_shared<BlackVarianceSurface>(today, NullCalendar(), dates, strikes, vols, dc));
+        QuantLib::ext::make_shared<BlackVarianceSurface>(today, NullCalendar(), dates, strikes, vols, dc));
     Handle<YieldTermStructure> discountingTS =
-        Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, NullCalendar(), 0.05, dc));
-    boost::shared_ptr<Index> eqIndex =
-        boost::make_shared<EquityIndex2>(equityName, cal, EURCurrency(), equityPrice, yieldTS, dividendTS);
+        Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.05, dc));
+    QuantLib::ext::shared_ptr<Index> eqIndex =
+        QuantLib::ext::make_shared<EquityIndex2>(equityName, cal, EURCurrency(), equityPrice, yieldTS, dividendTS);
 
-    boost::shared_ptr<GeneralizedBlackScholesProcess> stochProcess(
+    QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> stochProcess(
         new BlackScholesMertonProcess(equityPrice, dividendTS, discountingTS, volTS));
 
-    boost::shared_ptr<PricingEngine> engine(new GeneralisedReplicatingVarianceSwapEngine(
+    QuantLib::ext::shared_ptr<PricingEngine> engine(new GeneralisedReplicatingVarianceSwapEngine(
         eqIndex, stochProcess, discountingTS, GeneralisedReplicatingVarianceSwapEngine::VarSwapSettings()));
 
     QuantExt::VarianceSwap2 varianceSwap(Position::Long, varianceStrike, varianceNotional, today + 7, exDate, cal,
@@ -345,13 +346,13 @@ BOOST_AUTO_TEST_CASE(testReplicatingVarianceSwap) {
     Date today = Date::todaysDate();
     Settings::instance().evaluationDate() = today;
 
-    boost::shared_ptr<SimpleQuote> spot(new SimpleQuote(0.0));
-    boost::shared_ptr<SimpleQuote> qRate(new SimpleQuote(0.0));
-    boost::shared_ptr<YieldTermStructure> qTS =
-        boost::shared_ptr<YieldTermStructure>(new FlatForward(today, Handle<Quote>(qRate), dc));
-    boost::shared_ptr<SimpleQuote> rRate(new SimpleQuote(0.0));
-    boost::shared_ptr<YieldTermStructure> rTS =
-        boost::shared_ptr<YieldTermStructure>(new FlatForward(today, Handle<Quote>(rRate), dc));
+    QuantLib::ext::shared_ptr<SimpleQuote> spot(new SimpleQuote(0.0));
+    QuantLib::ext::shared_ptr<SimpleQuote> qRate(new SimpleQuote(0.0));
+    QuantLib::ext::shared_ptr<YieldTermStructure> qTS =
+        QuantLib::ext::shared_ptr<YieldTermStructure>(new FlatForward(today, Handle<Quote>(qRate), dc));
+    QuantLib::ext::shared_ptr<SimpleQuote> rRate(new SimpleQuote(0.0));
+    QuantLib::ext::shared_ptr<YieldTermStructure> rTS =
+        QuantLib::ext::shared_ptr<YieldTermStructure>(new FlatForward(today, Handle<Quote>(rRate), dc));
 
     for (Size i = 0; i < LENGTH(values); i++) {
         Date exDate = today + Integer(values[i].t * 365 + 0.5);
@@ -392,14 +393,14 @@ BOOST_AUTO_TEST_CASE(testReplicatingVarianceSwap) {
             strikes.push_back(callStrikes[k]);
         }
 
-        boost::shared_ptr<BlackVolTermStructure> volTS(
+        QuantLib::ext::shared_ptr<BlackVolTermStructure> volTS(
             new BlackVarianceSurface(today, NullCalendar(), dates, strikes, vols, dc));
 
-        boost::shared_ptr<GeneralizedBlackScholesProcess> stochProcess(
+        QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> stochProcess(
             new BlackScholesMertonProcess(Handle<Quote>(spot), Handle<YieldTermStructure>(qTS),
                                           Handle<YieldTermStructure>(rTS), Handle<BlackVolTermStructure>(volTS)));
 
-        boost::shared_ptr<PricingEngine> engine(
+        QuantLib::ext::shared_ptr<PricingEngine> engine(
             new ReplicatingVarianceSwapEngine(stochProcess, 5.0, callStrikes, putStrikes));
 
         QuantLib::VarianceSwap varianceSwap(values[i].type, values[i].varStrike, values[i].nominal, today, exDate);

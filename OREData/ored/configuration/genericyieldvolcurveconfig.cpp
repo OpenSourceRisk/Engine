@@ -16,14 +16,18 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/algorithm/string.hpp>
 #include <ored/configuration/genericyieldvolcurveconfig.hpp>
 #include <ored/marketdata/curvespecparser.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ored/utilities/xmlutils.hpp>
+
+#include <qle/termstructures/parametricvolatility.hpp>
+
 #include <ql/errors.hpp>
+
+#include <boost/algorithm/string.hpp>
 
 namespace ore {
 namespace data {
@@ -44,20 +48,22 @@ std::ostream& operator<<(std::ostream& out, GenericYieldVolatilityCurveConfig::V
 GenericYieldVolatilityCurveConfig::GenericYieldVolatilityCurveConfig(
     const std::string& underlyingLabel, const std::string& rootNodeLabel, const std::string& marketDatumInstrumentLabel,
     const std::string& qualifierLabel, const string& curveID, const string& curveDescription,
-    const std::string& qualifier, const Dimension& dimension, const VolatilityType& volatilityType,
-    const bool extrapolate, const bool flatExtrapolation, const vector<string>& optionTenors,
-    const vector<string>& underlyingTenors, const DayCounter& dayCounter, const Calendar& calendar,
-    const BusinessDayConvention& businessDayConvention, const string& shortSwapIndexBase, const string& swapIndexBase,
-    const vector<string>& smileOptionTenors, const vector<string>& smileUnderlyingTenors,
-    const vector<string>& smileSpreads)
+    const std::string& qualifier, const Dimension dimension, const VolatilityType volatilityType,
+    const VolatilityType outputVolatilityType, const Interpolation interpolation, const Extrapolation extrapolation,
+    const vector<string>& optionTenors, const vector<string>& underlyingTenors, const DayCounter& dayCounter,
+    const Calendar& calendar, const BusinessDayConvention& businessDayConvention, const string& shortSwapIndexBase,
+    const string& swapIndexBase, const vector<string>& smileOptionTenors, const vector<string>& smileUnderlyingTenors,
+    const vector<string>& smileSpreads,
+    const QuantLib::ext::optional<ParametricSmileConfiguration>& parametricSmileConfiguration)
     : CurveConfig(curveID, curveDescription), underlyingLabel_(underlyingLabel), rootNodeLabel_(rootNodeLabel),
       marketDatumInstrumentLabel_(marketDatumInstrumentLabel), qualifierLabel_(qualifierLabel), allowSmile_(true),
       requireSwapIndexBases_(false), qualifier_(qualifier), dimension_(dimension), volatilityType_(volatilityType),
-      extrapolate_(extrapolate), flatExtrapolation_(flatExtrapolation), optionTenors_(optionTenors),
-      underlyingTenors_(underlyingTenors), dayCounter_(dayCounter), calendar_(calendar),
+      outputVolatilityType_(outputVolatilityType), interpolation_(interpolation), extrapolation_(extrapolation),
+      optionTenors_(optionTenors), underlyingTenors_(underlyingTenors), dayCounter_(dayCounter), calendar_(calendar),
       businessDayConvention_(businessDayConvention), shortSwapIndexBase_(shortSwapIndexBase),
       swapIndexBase_(swapIndexBase), smileOptionTenors_(smileOptionTenors),
-      smileUnderlyingTenors_(smileUnderlyingTenors), smileSpreads_(smileSpreads) {
+      smileUnderlyingTenors_(smileUnderlyingTenors), smileSpreads_(smileSpreads),
+      parametricSmileConfiguration_(parametricSmileConfiguration) {
 
     QL_REQUIRE(dimension == Dimension::ATM || dimension == Dimension::Smile, "Invalid dimension");
 
@@ -87,11 +93,21 @@ GenericYieldVolatilityCurveConfig::GenericYieldVolatilityCurveConfig(
     if (qualifier_.empty()) {
         qualifier_ = ccyFromSwapIndexBase(proxyTargetSwapIndexBase_);
     }
-
-    populateRequiredCurveIds();
 }
 
-void GenericYieldVolatilityCurveConfig::populateRequiredCurveIds() {
+void GenericYieldVolatilityCurveConfig::populateRequiredIds() const {
+    if (!shortSwapIndexBase_.empty())
+        requiredCurveIds_[CurveSpec::CurveType::SwapIndex].insert(shortSwapIndexBase_);
+    if (!swapIndexBase_.empty())
+        requiredCurveIds_[CurveSpec::CurveType::SwapIndex].insert(swapIndexBase_);
+    if (!proxySourceShortSwapIndexBase_.empty())
+        requiredCurveIds_[CurveSpec::CurveType::SwapIndex].insert(proxySourceShortSwapIndexBase_);
+    if (!proxySourceSwapIndexBase_.empty())
+        requiredCurveIds_[CurveSpec::CurveType::SwapIndex].insert(proxySourceSwapIndexBase_);
+    if (!proxyTargetShortSwapIndexBase_.empty())
+        requiredCurveIds_[CurveSpec::CurveType::SwapIndex].insert(proxyTargetShortSwapIndexBase_);
+    if (!proxyTargetSwapIndexBase_.empty())
+        requiredCurveIds_[CurveSpec::CurveType::SwapIndex].insert(proxyTargetSwapIndexBase_);
     if (!proxySourceCurveId_.empty()) {
         requiredCurveIds_[CurveSpec::CurveType::SwaptionVolatility].insert(
             parseCurveSpec(proxySourceCurveId_)->curveConfigID());
@@ -172,8 +188,6 @@ void GenericYieldVolatilityCurveConfig::fromXML(XMLNode* node) {
         proxyTargetShortSwapIndexBase_ = XMLUtils::getChildValue(target, "ShortSwapIndexBase");
         proxyTargetSwapIndexBase_ = XMLUtils::getChildValue(target, "SwapIndexBase");
 
-        populateRequiredCurveIds();
-
     } else {
         // read in quote-based config
         if (allowSmile_) {
@@ -197,24 +211,52 @@ void GenericYieldVolatilityCurveConfig::fromXML(XMLNode* node) {
         } else if (volType == "ShiftedLognormal") {
             volatilityType_ = VolatilityType::ShiftedLognormal;
         } else {
-            QL_FAIL("Volatility type " << volType << " not recognized");
+            QL_FAIL(
+                "VolatilityType '" << volType
+                                   << "' not recognized. Expected one of 'Normal', 'Lognormal', 'ShiftedLognormal'.");
         }
 
-        string extr = XMLUtils::getChildValue(node, "Extrapolation", true);
-        extrapolate_ = true;
-        flatExtrapolation_ = true;
-        if (extr == "Linear") {
-            flatExtrapolation_ = false;
-        } else if (extr == "Flat") {
-            flatExtrapolation_ = true;
-        } else if (extr == "None") {
-            extrapolate_ = false;
+        string outVolType = XMLUtils::getChildValue(node, "OutputVolatilityType", false);
+        if (outVolType.empty())
+            outputVolatilityType_ = volatilityType_;
+        else if (outVolType == "Normal") {
+            outputVolatilityType_ = VolatilityType::Normal;
+        } else if (outVolType == "Lognormal") {
+            outputVolatilityType_ = VolatilityType::Lognormal;
+        } else if (outVolType == "ShiftedLognormal") {
+            outputVolatilityType_ = VolatilityType::ShiftedLognormal;
         } else {
-            QL_FAIL("Extrapolation " << extr << " not recognized");
+            QL_FAIL("OutputVolatilityType '"
+                    << outVolType << "' not recognized. Expected one of 'Normal', 'Lognormal', 'ShiftedLognormal'.");
+        }
+
+        modelShift_ = XMLUtils::getChildrenValuesAsDoublesCompact(node, "ModelShift", false);
+        outputShift_ = XMLUtils::getChildrenValuesAsDoublesCompact(node, "OutputShift", false);
+
+        string interp = XMLUtils::getChildValue(node, "Interpolation", false, "Linear");
+        if (interp == "Linear") {
+            interpolation_ = Interpolation::Linear;
+        } else {
+            try {
+                interpolation_ = Interpolation(static_cast<int>(parseSabrParametricVolatilityModelVariant(interp)));
+            } catch (const std::exception& e) {
+                QL_FAIL("Interpolation '" << interp << "' not recognized. Expected 'Linear' or a SABR variant ("
+                                          << e.what() << ")");
+            }
+        }
+
+        string extr = XMLUtils::getChildValue(node, "Extrapolation", false, "Flat");
+        if (extr == "Linear") {
+            extrapolation_ = Extrapolation::Linear;
+        } else if (extr == "Flat") {
+            extrapolation_ = Extrapolation::Flat;
+        } else if (extr == "None") {
+            extrapolation_ = Extrapolation::None;
+        } else  {
+            QL_FAIL("Extrapolation " << extr << " not recognized, expected one of 'Linear', 'Flat', 'None'.");
         }
 
         optionTenors_ = XMLUtils::getChildrenValuesAsStrings(node, "OptionTenors", true);
-
         underlyingTenors_ = XMLUtils::getChildrenValuesAsStrings(node, underlyingLabel_ + "Tenors", false);
 
         string cal = XMLUtils::getChildValue(node, "Calendar", true);
@@ -250,6 +292,11 @@ void GenericYieldVolatilityCurveConfig::fromXML(XMLNode* node) {
         // optional quote tag to include
         quoteTag_ = XMLUtils::getChildValue(node, "QuoteTag", false);
 
+        // Optional parametric smile configuration
+        if(XMLNode* n = XMLUtils::getChildNode(node, "ParametricSmileConfiguration")) {
+            parametricSmileConfiguration_ = ParametricSmileConfiguration();
+            parametricSmileConfiguration_->fromXML(n);
+        }
     }
 
     if (auto tmp = XMLUtils::getChildNode(node, "Report")) {
@@ -295,10 +342,39 @@ XMLNode* GenericYieldVolatilityCurveConfig::toXML(XMLDocument& doc) const {
             QL_FAIL("Unknown VolatilityType in GenericYieldVolatilityCurveConfig::toXML()");
         }
 
-        string extr_str = flatExtrapolation_ ? "Flat" : "Linear";
-        if (!extrapolate_)
-            extr_str = "None";
-        XMLUtils::addChild(doc, node, "Extrapolation", extr_str);
+        if (outputVolatilityType_ == VolatilityType::Normal) {
+            XMLUtils::addChild(doc, node, "OutputVolatilityType", "Normal");
+        } else if (outputVolatilityType_ == VolatilityType::Lognormal) {
+            XMLUtils::addChild(doc, node, "OutputVolatilityType", "Lognormal");
+        } else if (outputVolatilityType_ == VolatilityType::ShiftedLognormal) {
+            XMLUtils::addChild(doc, node, "OutputVolatilityType", "ShiftedLognormal");
+        } else {
+            QL_FAIL("Unknown OutputVolatilityType in GenericYieldVolatilityCurveConfig::toXML()");
+        }
+
+        if (!modelShift_.empty()) {
+            vector<string> tmp;
+            std::transform(modelShift_.begin(), modelShift_.end(), std::back_inserter(tmp),
+                           [](Real x) { return XMLUtils::convertToString(x); });
+            XMLUtils::addChild(doc,node,"ModelShift", boost::join(tmp, ","));
+        }
+
+        if (!outputShift_.empty()) {
+            vector<string> tmp;
+            std::transform(outputShift_.begin(), outputShift_.end(), std::back_inserter(tmp),
+                           [](Real x) { return XMLUtils::convertToString(x); });
+            XMLUtils::addChild(doc, node, "OutputShift", boost::join(tmp, ","));
+        }
+
+        std::string extr_string;
+        if (extrapolation_ == Extrapolation::None) {
+            extr_string = "None";
+        } else if (extrapolation_ == Extrapolation::Linear) {
+            extr_string = "Linear";
+        } else if (extrapolation_ == Extrapolation::Flat) {
+            extr_string = "Flat";
+        }
+        XMLUtils::addChild(doc, node, "Extrapolation", extr_string);
 
         XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
         XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));

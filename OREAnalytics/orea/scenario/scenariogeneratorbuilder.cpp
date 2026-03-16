@@ -38,12 +38,12 @@ using namespace QuantExt;
 namespace ore {
 namespace analytics {
 
-boost::shared_ptr<ScenarioGenerator>
-ScenarioGeneratorBuilder::build(boost::shared_ptr<QuantExt::CrossAssetModel> model,
-                                boost::shared_ptr<ScenarioFactory> scenarioFactory,
-                                boost::shared_ptr<ScenarioSimMarketParameters> marketConfig, Date asof,
-                                boost::shared_ptr<ore::data::Market> initMarket, const std::string& configuration,
-                                const boost::shared_ptr<PathGeneratorFactory>& pf) {
+QuantLib::ext::shared_ptr<ScenarioGenerator>
+ScenarioGeneratorBuilder::build(QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model,
+                                QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory,
+                                QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> marketConfig, Date asof,
+                                QuantLib::ext::shared_ptr<ore::data::Market> initMarket, const std::string& configuration,
+                                const QuantLib::ext::shared_ptr<PathGeneratorFactory>& pf, const std::string& amcPathDataInput) {
 
     LOG("ScenarioGeneratorBuilder::build() called");
 
@@ -51,15 +51,21 @@ ScenarioGeneratorBuilder::build(boost::shared_ptr<QuantExt::CrossAssetModel> mod
 
     // enable cache
     auto process = model->stateProcess();
-    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process)) {
+    if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(process)) {
         tmp->resetCache(data_->getGrid()->timeGrid().size() - 1);
     }
 
-    auto pathGen = pf->build(data_->sequenceType(), process, data_->getGrid()->timeGrid(), data_->seed(),
-                             data_->ordering(), data_->directionIntegers());
+    Size timeStepsPerYear = data_->timeStepsPerYear() == Null<Size>() ? 0 : data_->timeStepsPerYear();
+    Size steps = std::max(std::lround(timeStepsPerYear * data_->getGrid()->timeGrid().back() + 0.5), 1l);
+    std::vector<double> times(data_->getGrid()->timeGrid().begin(), data_->getGrid()->timeGrid().end());
+    TimeGrid processTimeGrid(times.begin(), times.end(), steps);
 
-    return boost::make_shared<CrossAssetModelScenarioGenerator>(model, pathGen, scenarioFactory, marketConfig, asof,
-                                                                data_->getGrid(), initMarket, configuration);
+    auto pathGen = pf->build(data_->sequenceType(), process, processTimeGrid, data_->seed(), data_->ordering(),
+                             data_->directionIntegers());
+
+    return QuantLib::ext::make_shared<CrossAssetModelScenarioGenerator>(
+        model, pathGen, scenarioFactory, marketConfig, asof, data_->getGrid(), initMarket, configuration,
+        amcPathDataInput, data_->samples());
 }
 } // namespace analytics
 } // namespace ore

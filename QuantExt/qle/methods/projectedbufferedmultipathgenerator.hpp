@@ -37,13 +37,15 @@ public:
       the state process component index of the original model. */
     ProjectedBufferedMultiPathGenerator(
         const std::vector<Size>& stateProcessProjection,
-        const boost::shared_ptr<std::vector<std::vector<QuantLib::Path>>>& bufferedPaths);
+        const QuantLib::ext::shared_ptr<std::vector<std::vector<QuantLib::Path>>>& bufferedPaths);
     const Sample<MultiPath>& next() const override;
     void reset() override;
+    const TimeGrid& timeGrid() const override { return grid_; }
 
 private:
     const std::vector<Size> stateProcessProjection_;
-    const boost::shared_ptr<std::vector<std::vector<QuantLib::Path>>> bufferedPaths_;
+    TimeGrid grid_;
+    const QuantLib::ext::shared_ptr<std::vector<std::vector<QuantLib::Path>>> bufferedPaths_;
     Size maxTargetIndex_;
     mutable Size currentPath_;
     mutable Sample<MultiPath> next_;

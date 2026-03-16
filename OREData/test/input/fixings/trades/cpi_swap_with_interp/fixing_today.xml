@@ -64,7 +64,6 @@
           <Rates>
             <Rate>0.01</Rate>
           </Rates>
-          <BaseCPI>236.00</BaseCPI>
           <StartDate>2017-05-12</StartDate>
           <ObservationLag>3M</ObservationLag>
           <Interpolation>Linear</Interpolation>

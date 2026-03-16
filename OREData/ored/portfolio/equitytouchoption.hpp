@@ -44,7 +44,11 @@ public:
                       string eqIndex = "");
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
-    void build(const boost::shared_ptr<EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
+
+    //! Add underlying Equity names
+    std::map<AssetClass, std::set<std::string>> underlyingIndices(
+        const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
     //! \name Inspectors
     //@{
@@ -56,6 +60,7 @@ public:
     const string& startDate() const { return startDate_; }
     const string& calendar() const { return calendar_; }
     const string& eqIndex() const { return eqIndex_; }
+    Real strike() const;
     //@}
 
     //! \name Serialisation
@@ -64,8 +69,6 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 private:
-    bool checkBarrier(Real spot, Barrier::Type type, Real level);
-
     OptionData option_;
     BarrierData barrier_;
     string startDate_;

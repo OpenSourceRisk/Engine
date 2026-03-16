@@ -26,7 +26,7 @@ MakeOISCapFloor::MakeOISCapFloor(CapFloor::Type type, const Period& tenor, const
                                  const Period& rateComputationPeriod, Rate strike,
                                  const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve)
     : type_(type), tenor_(tenor), index_(index), rateComputationPeriod_(rateComputationPeriod), strike_(strike),
-      nominal_(1.0), settlementDays_(2), calendar_(index->fixingCalendar()), convention_(ModifiedFollowing),
+      nominal_(1.0), settlementDays_(0), calendar_(index->fixingCalendar()), convention_(ModifiedFollowing),
       rule_(DateGeneration::Backward), dayCounter_(index->dayCounter()), telescopicValueDates_(false),
       discountCurve_(discountCurve) {}
 
@@ -43,8 +43,8 @@ MakeOISCapFloor::operator Leg() const {
 
     Date endDate = calendar.adjust(startDate + tenor_, ModifiedFollowing);
 
-    Schedule schedule(startDate, endDate, rateComputationPeriod_, calendar, ModifiedFollowing, ModifiedFollowing,
-                      DateGeneration::Backward, false);
+    Schedule schedule(startDate, endDate, rateComputationPeriod_, calendar, ModifiedFollowing, ModifiedFollowing, rule_,
+                      false);
 
     // determine atm strike if required
     Real effectiveStrike = strike_;
@@ -79,7 +79,7 @@ MakeOISCapFloor::operator Leg() const {
 
     if (pricer_) {
         for (auto &c : leg) {
-            auto f = boost::dynamic_pointer_cast<FloatingRateCoupon>(c);
+            auto f = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(c);
             if (f) {
                 f->setPricer(pricer_);
             }
@@ -138,7 +138,7 @@ MakeOISCapFloor::withCouponPricer(const ext::shared_ptr<CappedFlooredOvernightIn
 Leg getOisCapFloorUnderlying(const Leg& oisCapFloor) {
     Leg underlying;
     for (auto const& c : oisCapFloor) {
-        auto cfon = boost::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(c);
+        auto cfon = QuantLib::ext::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(c);
         QL_REQUIRE(cfon, "getOisCapFloorUnderlying(): expected CappedFlooredOvernightIndexedCoupon");
         underlying.push_back(cfon->underlying());
     }
@@ -148,7 +148,7 @@ Leg getOisCapFloorUnderlying(const Leg& oisCapFloor) {
 std::vector<std::pair<Real, Real>> getOisCapFloorStrikes(const Leg& oisCapFloor) {
     std::vector<std::pair<Real, Real>> result;
     for (auto const& c : oisCapFloor) {
-        auto cfon = boost::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(c);
+        auto cfon = QuantLib::ext::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(c);
         QL_REQUIRE(cfon, "getOisCapFloorUnderlying(): expected CappedFlooredOvernightIndexedCoupon");
         result.push_back(std::make_pair(cfon->cap(), cfon->floor()));
     }

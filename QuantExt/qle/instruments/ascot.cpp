@@ -42,7 +42,7 @@ Ascot::Ascot(Option::Type callPut, const ext::shared_ptr<Exercise>& exercise, co
     registerWith(Settings::instance().evaluationDate());
     for (auto& c : fundingLeg_) {
         registerWith(c);
-        if (auto lazy = boost::dynamic_pointer_cast<LazyObject>(c))
+        if (auto lazy = QuantLib::ext::dynamic_pointer_cast<LazyObject>(c))
             lazy->alwaysForwardNotifications();
     }
 }

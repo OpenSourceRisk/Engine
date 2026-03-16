@@ -26,7 +26,8 @@ SpreadedBlackVolatilityCurve::SpreadedBlackVolatilityCurve(const Handle<BlackVol
                                                            const std::vector<Time>& times,
                                                            const std::vector<Handle<Quote>>& volSpreads,
                                                            const bool useAtmReferenceVolsOnly)
-    : BlackVolatilityTermStructure(referenceVol->businessDayConvention(), referenceVol->dayCounter()),
+    : BlackVolatilityTermStructure(referenceVol->businessDayConvention(), referenceVol->dayCounter(),
+                                   referenceVol->volType(), referenceVol->shift()),
       referenceVol_(referenceVol), times_(times), volSpreads_(volSpreads),
       useAtmReferenceVolsOnly_(useAtmReferenceVolsOnly), data_(times.size(), 0.0) {
     registerWith(referenceVol_);
@@ -34,8 +35,8 @@ SpreadedBlackVolatilityCurve::SpreadedBlackVolatilityCurve(const Handle<BlackVol
     QL_REQUIRE(times_.size() == volSpreads_.size(), "size of time and quote vectors do not match");
     for (Size i = 0; i < volSpreads_.size(); ++i)
         registerWith(volSpreads_[i]);
-    interpolation_ = boost::make_shared<FlatExtrapolation>(
-        boost::make_shared<LinearInterpolation>(times_.begin(), times_.end(), data_.begin()));
+    interpolation_ = QuantLib::ext::make_shared<FlatExtrapolation>(
+        QuantLib::ext::make_shared<LinearInterpolation>(times_.begin(), times_.end(), data_.begin()));
     interpolation_->enableExtrapolation();
 }
 
@@ -66,7 +67,8 @@ void SpreadedBlackVolatilityCurve::performCalculations() const {
 
 Real SpreadedBlackVolatilityCurve::blackVolImpl(Time t, Real k) const {
     calculate();
-    return referenceVol_->blackVol(t, useAtmReferenceVolsOnly_ ? Null<Real>() : k) + (*interpolation_)(t);
+    return std::max(0.0,
+                    referenceVol_->blackVol(t, useAtmReferenceVolsOnly_ ? Null<Real>() : k) + (*interpolation_)(t));
 }
 
 } // namespace QuantExt

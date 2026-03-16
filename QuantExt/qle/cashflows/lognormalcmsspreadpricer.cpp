@@ -57,11 +57,11 @@ public:
     Real operator()(Real x) const { return pricer->integrand(x); }
 };
 
-LognormalCmsSpreadPricer::LognormalCmsSpreadPricer(const boost::shared_ptr<CmsCouponPricer> cmsPricer,
+LognormalCmsSpreadPricer::LognormalCmsSpreadPricer(const QuantLib::ext::shared_ptr<CmsCouponPricer> cmsPricer,
                                                    const Handle<QuantExt::CorrelationTermStructure>& correlation,
                                                    const Handle<YieldTermStructure>& couponDiscountCurve,
                                                    const Size integrationPoints,
-                                                   const boost::optional<VolatilityType> volatilityType,
+                                                   const QuantLib::ext::optional<VolatilityType> volatilityType,
                                                    const Real shift1, const Real shift2)
     : CmsSpreadCouponPricer2(correlation), cmsPricer_(cmsPricer), couponDiscountCurve_(couponDiscountCurve) {
 
@@ -70,11 +70,11 @@ LognormalCmsSpreadPricer::LognormalCmsSpreadPricer(const boost::shared_ptr<CmsCo
     registerWith(cmsPricer_);
 
     QL_REQUIRE(integrationPoints >= 4, "at least 4 integration points should be used (" << integrationPoints << ")");
-    integrator_ = boost::make_shared<GaussHermiteIntegration>(integrationPoints);
+    integrator_ = QuantLib::ext::make_shared<GaussHermiteIntegration>(integrationPoints);
 
-    cnd_ = boost::make_shared<CumulativeNormalDistribution>(0.0, 1.0);
+    cnd_ = QuantLib::ext::make_shared<CumulativeNormalDistribution>(0.0, 1.0);
 
-    if (volatilityType == boost::none) {
+    if (volatilityType == QuantLib::ext::nullopt) {
         QL_REQUIRE(shift1 == Null<Real>() && shift2 == Null<Real>(),
                    "if volatility type is inherited, no shifts should be "
                    "specified");
@@ -164,12 +164,12 @@ void LognormalCmsSpreadPricer::initialize(const FloatingRateCoupon& coupon) {
     QL_REQUIRE(gearing1_ > 0.0 && gearing2_ < 0.0, "gearing1 (" << gearing1_ << ") should be positive while gearing2 ("
                                                                 << gearing2_ << ") should be negative");
 
-    c1_ = boost::shared_ptr<CmsCoupon>(
+    c1_ = QuantLib::ext::shared_ptr<CmsCoupon>(
         new CmsCoupon(coupon_->date(), coupon_->nominal(), coupon_->accrualStartDate(), coupon_->accrualEndDate(),
                       coupon_->fixingDays(), index_->swapIndex1(), 1.0, 0.0, coupon_->referencePeriodStart(),
                       coupon_->referencePeriodEnd(), coupon_->dayCounter(), coupon_->isInArrears()));
 
-    c2_ = boost::shared_ptr<CmsCoupon>(
+    c2_ = QuantLib::ext::shared_ptr<CmsCoupon>(
         new CmsCoupon(coupon_->date(), coupon_->nominal(), coupon_->accrualStartDate(), coupon_->accrualEndDate(),
                       coupon_->fixingDays(), index_->swapIndex2(), 1.0, 0.0, coupon_->referencePeriodStart(),
                       coupon_->referencePeriodEnd(), coupon_->dayCounter(), coupon_->isInArrears()));
@@ -177,18 +177,17 @@ void LognormalCmsSpreadPricer::initialize(const FloatingRateCoupon& coupon) {
     c1_->setPricer(cmsPricer_);
     c2_->setPricer(cmsPricer_);
 
+    fixingTime_ = cmsPricer_->swaptionVolatility()->timeFromReference(fixingDate_);
+    swapRate1_ = c1_->indexFixing();
+    swapRate2_ = c2_->indexFixing();
+
     if (fixingDate_ > today_) {
-
-        fixingTime_ = cmsPricer_->swaptionVolatility()->timeFromReference(fixingDate_);
-
-        swapRate1_ = c1_->indexFixing();
-        swapRate2_ = c2_->indexFixing();
 
         adjustedRate1_ = c1_->adjustedFixing();
         adjustedRate2_ = c2_->adjustedFixing();
 
-        boost::shared_ptr<SwaptionVolatilityStructure> swvol = *cmsPricer_->swaptionVolatility();
-        boost::shared_ptr<SwaptionVolatilityCube> swcub = boost::dynamic_pointer_cast<SwaptionVolatilityCube>(swvol);
+        QuantLib::ext::shared_ptr<SwaptionVolatilityStructure> swvol = *cmsPricer_->swaptionVolatility();
+        QuantLib::ext::shared_ptr<SwaptionVolatilityCube> swcub = QuantLib::ext::dynamic_pointer_cast<SwaptionVolatilityCube>(swvol);
 
         if (inheritedVolatilityType_ && volType_ == ShiftedLognormal) {
             shift1_ = swvol->shift(fixingDate_, index_->swapIndex1()->tenor());
@@ -216,11 +215,26 @@ void LognormalCmsSpreadPricer::initialize(const FloatingRateCoupon& coupon) {
         // for the normal volatility case we do not need the drifts
         // but rather use adjusted rates directly in the integrand
 
+        coupon_->additionalResults()["volatility1"] = vol1_;
+        coupon_->additionalResults()["volatility2"] = vol2_;
+        coupon_->additionalResults()["correlation"] = rho();
+        coupon_->additionalResults()["shift1"] = shift1_;
+        coupon_->additionalResults()["shift2"] = shift2_;
+        coupon_->additionalResults()["volType"] =
+            volType_ == ShiftedLognormal ? std::string("ShiftedLognormal") : std::string("Normal");
+
     } else {
         // fixing is in the past or today
-        adjustedRate1_ = c1_->indexFixing();
-        adjustedRate2_ = c2_->indexFixing();
+        adjustedRate1_ = swapRate1_;
+        adjustedRate2_ = swapRate2_;
     }
+
+    coupon_->additionalResults()["fixingDate"] = fixingDate_;
+    coupon_->additionalResults()["fixingTime"] = fixingTime_;
+    coupon_->additionalResults()["swapRate1"] = swapRate1_;
+    coupon_->additionalResults()["swapRate2"] = swapRate2_;
+    coupon_->additionalResults()["adjustedSwapRate1"] = adjustedRate1_;
+    coupon_->additionalResults()["adjustedSwapRate2"] = adjustedRate2_;
 }
 
 Real LognormalCmsSpreadPricer::optionletPrice(Option::Type optionType, Real strike) const {
@@ -260,7 +274,9 @@ Real LognormalCmsSpreadPricer::optionletPrice(Option::Type optionType, Real stri
             std::sqrt(fixingTime_ * (gearing1_ * gearing1_ * vol1_ * vol1_ + gearing2_ * gearing2_ * vol2_ * vol2_ +
                                      2.0 * gearing1_ * gearing2_ * rho() * vol1_ * vol2_));
         res = bachelierBlackFormula(optionType_, strike, forward, stddev, 1.0);
+        coupon_->additionalResults()["stddev"] = stddev;
     }
+    coupon_->additionalResults()["discountFactor"] = discount_;
     return res * discount_ * coupon_->accrualPeriod();
 }
 

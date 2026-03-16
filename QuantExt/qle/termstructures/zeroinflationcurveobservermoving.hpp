@@ -41,10 +41,10 @@ class ZeroInflationCurveObserverMoving : public ZeroInflationTermStructure,
                                          public LazyObject {
 public:
     ZeroInflationCurveObserverMoving(
-        Natural settlementDays, const Calendar& calendar, const DayCounter& dayCounter, const Period& lag,
-        Frequency frequency, bool indexIsInterpolated, const std::vector<Time>& times,
+        Natural settlementDays, const Calendar& calendar, const DayCounter& dayCounter, const int simulationLag,
+        const Period& observationLag, Frequency frequency, bool indexIsInterpolated, const std::vector<Period>& tenors,
         const std::vector<Handle<Quote>>& rates,
-        const boost::shared_ptr<Seasonality>& seasonality = boost::shared_ptr<Seasonality>(),
+        const QuantLib::ext::shared_ptr<Seasonality>& seasonality = QuantLib::ext::shared_ptr<Seasonality>(),
         const Interpolator& interpolator = Interpolator());
 
     //! \name InflationTermStructure interface
@@ -60,7 +60,7 @@ public:
     const std::vector<Real>& data() const;
     const std::vector<Rate>& rates() const;
     // std::vector<std::pair<Time, Rate> > nodes() const;
-    const std::vector<Handle<Quote> >& quotes() const { return quotes_; };
+    const std::vector<Handle<Quote>>& quotes() const { return quotes_; };
     //@}
 
     //! \name Observer interface
@@ -72,6 +72,7 @@ private:
     //! \name LazyObject interface
     //@{
     void performCalculations() const override;
+    void updateBaseDate() const;
     //@}
 
 protected:
@@ -79,28 +80,34 @@ protected:
     //@{
     Rate zeroRateImpl(Time t) const override;
     //@}
-    std::vector<Handle<Quote> > quotes_;
-    bool indexIsInterpolated_;
+    std::vector<Handle<Quote>> quotes_;
+    std::vector<Period> tenors_;
     mutable Date baseDate_;
+    Period observationLag_;
+    int simulationLag_;
 };
 
 // template definitions
 
 template <class Interpolator>
 ZeroInflationCurveObserverMoving<Interpolator>::ZeroInflationCurveObserverMoving(
-    Natural settlementDays, const Calendar& calendar, const DayCounter& dayCounter, const Period& lag,
-    Frequency frequency, bool indexIsInterpolated, const std::vector<Time>& times,
-    const std::vector<Handle<Quote>>& rates, const boost::shared_ptr<Seasonality>& seasonality,
+    Natural settlementDays, const Calendar& calendar, const DayCounter& dayCounter, const int simulationLag,
+    const Period& observationLag, Frequency frequency, bool indexIsInterpolated, const std::vector<Period>& tenors,
+    const std::vector<Handle<Quote>>& rates, const QuantLib::ext::shared_ptr<Seasonality>& seasonality,
     const Interpolator& interpolator)
-    : ZeroInflationTermStructure(settlementDays, calendar, dayCounter, rates[0]->value(), lag, frequency, seasonality),
-      InterpolatedCurve<Interpolator>(std::vector<Time>(), std::vector<Real>(), interpolator), quotes_(rates), indexIsInterpolated_(indexIsInterpolated) {
+    : ZeroInflationTermStructure(settlementDays, calendar, Date(), observationLag, frequency, dayCounter, seasonality),
+      InterpolatedCurve<Interpolator>(std::vector<Time>(), std::vector<Real>(), interpolator), quotes_(rates),
+      tenors_(tenors), observationLag_(observationLag), simulationLag_(simulationLag) {
 
-    QL_REQUIRE(times.size() > 1, "too few times: " << times.size());
-    this->times_.resize(times.size());
-    this->times_[0] = times[0];
-    for (Size i = 1; i < times.size(); i++) {
-        QL_REQUIRE(times[i] > times[i - 1], "times not sorted");
-        this->times_[i] = times[i];
+    QL_REQUIRE(tenors.size() > 1, "too few tenors: " << tenors.size());
+    //std::cout << "update base date"<<std::endl;
+    this->times_.resize(tenors_.size());
+    updateBaseDate();
+    for (Size i = 0; i < tenors_.size(); i++) {
+        this->times_[i] = dayCounter.yearFraction(
+            referenceDate(), inflationPeriod(referenceDate() + tenors_[i] - observationLag_, frequency).first);
+        QL_REQUIRE(i == 0 || this->times_[i] > this->times_[i - 1],
+                   "non increasing times: " << this->times_[i - 1] << " vs " << this->times_[i]);
     }
 
     QL_REQUIRE(this->quotes_.size() == this->times_.size(),
@@ -155,21 +162,23 @@ template <class T> inline void ZeroInflationCurveObserverMoving<T>::update() {
 }
 
 template <class T> inline void ZeroInflationCurveObserverMoving<T>::performCalculations() const {
-
-    Date d = Settings::instance().evaluationDate();
-    Date d0 = d - this->observationLag();
-    if (!indexIsInterpolated_) {
-        baseDate_ = inflationPeriod(d0, this->frequency_).first;
-    } else {
-        baseDate_ = d0;
-    }
-
+    updateBaseDate();
     for (Size i = 0; i < this->times_.size(); ++i)
         this->data_[i] = quotes_[i]->value();
     this->interpolation_ =
         this->interpolator_.interpolate(this->times_.begin(), this->times_.end(), this->data_.begin());
     this->interpolation_.update();
 }
+
+template <class T> inline void ZeroInflationCurveObserverMoving<T>::updateBaseDate() const {
+    Date d = Settings::instance().evaluationDate();
+    baseDate_ = inflationPeriod(d - simulationLag_, frequency()).first;
+    for (Size i = 0; i < tenors_.size(); i++) {
+        this->times_[i] = dayCounter().yearFraction(
+            referenceDate(), inflationPeriod(referenceDate() + tenors_[i] - observationLag_, frequency()).first);
+    }
+}
+
 } // namespace QuantExt
 
 #endif

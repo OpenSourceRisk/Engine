@@ -22,9 +22,10 @@
 // clang-format on
 #include <boost/timer/timer.hpp>
 
+#include <ored/scripting/astprinter.hpp>
 #include <ored/scripting/models/blackscholes.hpp>
 #include <ored/scripting/models/dummymodel.hpp>
-#include <ored/scripting/astprinter.hpp>
+#include <ored/scripting/models/heston.hpp>
 #include <ored/scripting/scriptengine.hpp>
 #include <ored/scripting/scriptparser.hpp>
 #include <ored/scripting/staticanalyser.hpp>
@@ -32,6 +33,7 @@
 #include <oret/toplevelfixture.hpp>
 
 #include <ored/model/blackscholesmodelbuilder.hpp>
+#include <ored/model/hestonmodelbuilder.hpp>
 
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
@@ -41,12 +43,16 @@
 #include <ql/instruments/vanillaoption.hpp>
 #include <ql/pricingengines/blackformula.hpp>
 #include <ql/pricingengines/vanilla/fdblackscholesvanillaengine.hpp>
+#include <ql/pricingengines/vanilla/fdhestonvanillaengine.hpp>
+#include <ql/pricingengines/vanilla/mceuropeanhestonengine.hpp>
 #include <ql/processes/stochasticprocessarray.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
+#include <ql/methods/finitedifferences/operators/fdmlinearoplayout.hpp>
+#include <ql/methods/finitedifferences/meshers/fdmmeshercomposite.hpp>
 
 #include <iomanip>
 #include <iostream>
@@ -67,7 +73,7 @@ BOOST_AUTO_TEST_CASE(testSimpleScript) {
     BOOST_REQUIRE(parser.success());
     BOOST_TEST_MESSAGE("Parsing successful, AST:\n" << to_string(parser.ast()));
 
-    auto context = boost::make_shared<Context>();
+    auto context = QuantLib::ext::make_shared<Context>();
     ScriptEngine engine(parser.ast(), context);
     BOOST_REQUIRE_NO_THROW(engine.run());
     BOOST_TEST_MESSAGE("Script Engine successfully run, context is:\n" << *context);
@@ -81,11 +87,11 @@ BOOST_AUTO_TEST_CASE(testSimpleScript) {
 
 namespace {
 // helper for testFunctions
-RandomVariable executeScript(const std::string& script, const boost::shared_ptr<Context> initialContext) {
+RandomVariable executeScript(const std::string& script, const QuantLib::ext::shared_ptr<Context> initialContext) {
     ScriptParser parser(script);
     BOOST_REQUIRE(parser.success());
-    auto context = boost::make_shared<Context>(*initialContext);
-    ScriptEngine engine(parser.ast(), context, boost::make_shared<DummyModel>(1));
+    auto context = QuantLib::ext::make_shared<Context>(*initialContext);
+    ScriptEngine engine(parser.ast(), context, QuantLib::ext::make_shared<DummyModel>(1));
     BOOST_REQUIRE_NO_THROW(engine.run());
     BOOST_REQUIRE(context->scalars.find("result") != context->scalars.end());
     BOOST_REQUIRE(context->scalars.at("result").which() == ValueTypeWhich::Number);
@@ -96,7 +102,7 @@ RandomVariable executeScript(const std::string& script, const boost::shared_ptr<
 BOOST_AUTO_TEST_CASE(testFunctions) {
     BOOST_TEST_MESSAGE("Testing functions...");
 
-    auto c = boost::make_shared<Context>();
+    auto c = QuantLib::ext::make_shared<Context>();
     RandomVariable x(1, 2.0);
     RandomVariable y(1, -2.0);
     RandomVariable result(1, 0.0);
@@ -143,7 +149,7 @@ BOOST_AUTO_TEST_CASE(testDaycounterFunctions) {
     Date d1(15, Sep, 2019), d2(8, Jan, 2033);
     Actual365Fixed dc;
 
-    auto c = boost::make_shared<Context>();
+    auto c = QuantLib::ext::make_shared<Context>();
     EventVec date1{1, d1};
     EventVec date2{1, d2};
     DaycounterVec daycounter{1, "A365F"};
@@ -163,14 +169,14 @@ BOOST_AUTO_TEST_CASE(testSortFunction) {
     constexpr Real tol = 1E-14;
 
     RandomVariable x1(2), x2(2), x3(2), x4(2);
-    x1.set(0,3.0);
-    x1.set(1,1.0);
-    x2.set(0,4.0);
-    x2.set(1,2.0);
-    x3.set(0,2.0);
-    x3.set(1,4.0);
-    x4.set(0,1.0);
-    x4.set(1,3.0);
+    x1.set(0, 3.0);
+    x1.set(1, 1.0);
+    x2.set(0, 4.0);
+    x2.set(1, 2.0);
+    x3.set(0, 2.0);
+    x3.set(1, 4.0);
+    x4.set(0, 1.0);
+    x4.set(1, 3.0);
 
     std::vector<RandomVariable> x{x1, x2, x3, x4};
     std::vector<ValueType> xv;
@@ -179,14 +185,14 @@ BOOST_AUTO_TEST_CASE(testSortFunction) {
 
     std::vector<ValueType> y(4, RandomVariable(2)), i(4, RandomVariable(2));
 
-    auto c0 = boost::make_shared<Context>();
+    auto c0 = QuantLib::ext::make_shared<Context>();
     c0->arrays["x"] = xv;
     c0->arrays["y"] = y;
     c0->arrays["i"] = i;
 
     // sort x, write result back to x
-    auto c = boost::make_shared<Context>(*c0);
-    ScriptEngine engine(ScriptParser("SORT (x);").ast(), c, boost::make_shared<DummyModel>(2));
+    auto c = QuantLib::ext::make_shared<Context>(*c0);
+    ScriptEngine engine(ScriptParser("SORT (x);").ast(), c, QuantLib::ext::make_shared<DummyModel>(2));
     BOOST_REQUIRE_NO_THROW(engine.run());
     std::vector<ValueType> result = c->arrays.at("x");
     BOOST_REQUIRE(result.size() == x.size());                                         // check array size
@@ -202,8 +208,8 @@ BOOST_AUTO_TEST_CASE(testSortFunction) {
     BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(3)).at(1), 4.0, tol);
 
     // sort x, but store result in y
-    c = boost::make_shared<Context>(*c0);
-    ScriptEngine engine2(ScriptParser("SORT ( x, y );").ast(), c, boost::make_shared<DummyModel>(2));
+    c = QuantLib::ext::make_shared<Context>(*c0);
+    ScriptEngine engine2(ScriptParser("SORT ( x, y );").ast(), c, QuantLib::ext::make_shared<DummyModel>(2));
     BOOST_REQUIRE_NO_THROW(engine2.run());
     result = c->arrays.at("x");
     BOOST_REQUIRE(result.size() == x.size());                                         // check array size
@@ -231,8 +237,8 @@ BOOST_AUTO_TEST_CASE(testSortFunction) {
     BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(3)).at(1), 4.0, tol);
 
     // sort x, store result in y and index permutation in i
-    c = boost::make_shared<Context>(*c0);
-    ScriptEngine engine3(ScriptParser("SORT ( x, y, i );").ast(), c, boost::make_shared<DummyModel>(2));
+    c = QuantLib::ext::make_shared<Context>(*c0);
+    ScriptEngine engine3(ScriptParser("SORT ( x, y, i );").ast(), c, QuantLib::ext::make_shared<DummyModel>(2));
     BOOST_REQUIRE_NO_THROW(engine3.run());
     result = c->arrays.at("x");
     BOOST_REQUIRE(result.size() == x.size());                                         // check array size
@@ -272,15 +278,15 @@ BOOST_AUTO_TEST_CASE(testSortFunction) {
     BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(3)).at(1), 3.0, tol);
 
     // check illegal call with y having a different size from x
-    c = boost::make_shared<Context>(*c0);
+    c = QuantLib::ext::make_shared<Context>(*c0);
     c->arrays["y"] = std::vector<ValueType>(3);
-    ScriptEngine engine4(ScriptParser("SORT(x,y);").ast(), c, boost::make_shared<DummyModel>(2));
+    ScriptEngine engine4(ScriptParser("SORT(x,y);").ast(), c, QuantLib::ext::make_shared<DummyModel>(2));
     BOOST_REQUIRE_THROW(engine4.run(), std::exception);
 
     // check illegal call with i having a different size from x (but y has the correct size)
-    c = boost::make_shared<Context>(*c0);
+    c = QuantLib::ext::make_shared<Context>(*c0);
     c->arrays["i"] = std::vector<ValueType>(3);
-    ScriptEngine engine5(ScriptParser("SORT(x,y,i);").ast(), c, boost::make_shared<DummyModel>(2));
+    ScriptEngine engine5(ScriptParser("SORT(x,y,i);").ast(), c, QuantLib::ext::make_shared<DummyModel>(2));
     BOOST_REQUIRE_THROW(engine5.run(), std::exception);
 }
 
@@ -290,24 +296,24 @@ BOOST_AUTO_TEST_CASE(testPermuteFunction) {
     constexpr Real tol = 1E-14;
 
     RandomVariable x1(2), x2(2), x3(2), x4(2);
-    x1.set(0,3.0);
-    x1.set(1,1.0);
-    x2.set(0,4.0);
-    x2.set(1,2.0);
-    x3.set(0,2.0);
-    x3.set(1,4.0);
-    x4.set(0,1.0);
-    x4.set(1,3.0);
+    x1.set(0, 3.0);
+    x1.set(1, 1.0);
+    x2.set(0, 4.0);
+    x2.set(1, 2.0);
+    x3.set(0, 2.0);
+    x3.set(1, 4.0);
+    x4.set(0, 1.0);
+    x4.set(1, 3.0);
 
     RandomVariable p1(2), p2(2), p3(2), p4(2);
-    p1.set(0,4.0);
-    p1.set(1,1.0);
-    p2.set(0,3.0);
-    p2.set(1,2.0);
-    p3.set(0,1.0);
-    p3.set(1,4.0);
-    p4.set(0,2.0);
-    p4.set(1,3.0);
+    p1.set(0, 4.0);
+    p1.set(1, 1.0);
+    p2.set(0, 3.0);
+    p2.set(1, 2.0);
+    p3.set(0, 1.0);
+    p3.set(1, 4.0);
+    p4.set(0, 2.0);
+    p4.set(1, 3.0);
 
     std::vector<RandomVariable> x{x1, x2, x3, x4};
     std::vector<RandomVariable> p{p1, p2, p3, p4};
@@ -319,14 +325,14 @@ BOOST_AUTO_TEST_CASE(testPermuteFunction) {
 
     std::vector<ValueType> yv(4, RandomVariable(2));
 
-    auto c0 = boost::make_shared<Context>();
+    auto c0 = QuantLib::ext::make_shared<Context>();
     c0->arrays["x"] = xv;
     c0->arrays["y"] = yv;
     c0->arrays["p"] = pv;
 
     // permute x, write result back to x
-    auto c = boost::make_shared<Context>(*c0);
-    ScriptEngine engine(ScriptParser("PERMUTE (x,p);").ast(), c, boost::make_shared<DummyModel>(2));
+    auto c = QuantLib::ext::make_shared<Context>(*c0);
+    ScriptEngine engine(ScriptParser("PERMUTE (x,p);").ast(), c, QuantLib::ext::make_shared<DummyModel>(2));
     BOOST_REQUIRE_NO_THROW(engine.run());
     std::vector<ValueType> result = c->arrays.at("x");
     BOOST_REQUIRE(result.size() == x.size());                                         // check array size
@@ -342,8 +348,8 @@ BOOST_AUTO_TEST_CASE(testPermuteFunction) {
     BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(3)).at(1), 4.0, tol);
 
     // permute x, but store result in y
-    c = boost::make_shared<Context>(*c0);
-    ScriptEngine engine2(ScriptParser("PERMUTE ( x, y, p);").ast(), c, boost::make_shared<DummyModel>(2));
+    c = QuantLib::ext::make_shared<Context>(*c0);
+    ScriptEngine engine2(ScriptParser("PERMUTE ( x, y, p);").ast(), c, QuantLib::ext::make_shared<DummyModel>(2));
     BOOST_REQUIRE_NO_THROW(engine2.run());
     result = c->arrays.at("x");
     BOOST_REQUIRE(result.size() == x.size());                                         // check array size
@@ -371,23 +377,23 @@ BOOST_AUTO_TEST_CASE(testPermuteFunction) {
     BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(3)).at(1), 4.0, tol);
 
     // check illegal call with p having a different size from x
-    c = boost::make_shared<Context>(*c0);
+    c = QuantLib::ext::make_shared<Context>(*c0);
     c->arrays["p"] = std::vector<ValueType>(5);
-    ScriptEngine engine3(ScriptParser("PERMUTE(x,p);").ast(), c, boost::make_shared<DummyModel>(2));
+    ScriptEngine engine3(ScriptParser("PERMUTE(x,p);").ast(), c, QuantLib::ext::make_shared<DummyModel>(2));
     BOOST_REQUIRE_THROW(engine3.run(), std::exception);
 
     // check illegal call with y having a different size from x, but p having the correct size
-    c = boost::make_shared<Context>(*c0);
+    c = QuantLib::ext::make_shared<Context>(*c0);
     c->arrays["y"] = std::vector<ValueType>(5);
-    ScriptEngine engine4(ScriptParser("PERMUTE(x,y,p);").ast(), c, boost::make_shared<DummyModel>(2));
+    ScriptEngine engine4(ScriptParser("PERMUTE(x,y,p);").ast(), c, QuantLib::ext::make_shared<DummyModel>(2));
     BOOST_REQUIRE_THROW(engine4.run(), std::exception);
 
     // check illegal call with p having the correct size, but containing an illegal permutation index
-    c = boost::make_shared<Context>(*c0);
+    c = QuantLib::ext::make_shared<Context>(*c0);
     std::vector<ValueType> pv2 = pv;
     boost::get<RandomVariable>(pv2[2]).set(1, 5.0);
     c->arrays["p"] = pv2;
-    ScriptEngine engine5(ScriptParser("PERMUTE(x,p);").ast(), c, boost::make_shared<DummyModel>(2));
+    ScriptEngine engine5(ScriptParser("PERMUTE(x,p);").ast(), c, QuantLib::ext::make_shared<DummyModel>(2));
     BOOST_REQUIRE_THROW(engine5.run(), std::exception);
 }
 
@@ -397,24 +403,24 @@ BOOST_AUTO_TEST_CASE(testSortPermuteFunctionsWithFilter) {
     constexpr Real tol = 1E-14;
 
     RandomVariable x1(2), x2(2), x3(2), x4(2);
-    x1.set(0,3.0);
-    x1.set(1,1.0);
-    x2.set(0,4.0);
-    x2.set(1,2.0);
-    x3.set(0,2.0);
-    x3.set(1,4.0);
-    x4.set(0,1.0);
-    x4.set(1,3.0);
+    x1.set(0, 3.0);
+    x1.set(1, 1.0);
+    x2.set(0, 4.0);
+    x2.set(1, 2.0);
+    x3.set(0, 2.0);
+    x3.set(1, 4.0);
+    x4.set(0, 1.0);
+    x4.set(1, 3.0);
 
     RandomVariable p1(2), p2(2), p3(2), p4(2);
-    p1.set(0,4.0);
-    p1.set(1,1.0);
-    p2.set(0,3.0);
-    p2.set(1,2.0);
-    p3.set(0,1.0);
-    p3.set(1,4.0);
-    p4.set(0,2.0);
-    p4.set(1,3.0);
+    p1.set(0, 4.0);
+    p1.set(1, 1.0);
+    p2.set(0, 3.0);
+    p2.set(1, 2.0);
+    p3.set(0, 1.0);
+    p3.set(1, 4.0);
+    p4.set(0, 2.0);
+    p4.set(1, 3.0);
 
     std::vector<RandomVariable> x{x1, x2, x3, x4};
     std::vector<RandomVariable> p{p1, p2, p3, p4};
@@ -428,15 +434,15 @@ BOOST_AUTO_TEST_CASE(testSortPermuteFunctionsWithFilter) {
     indicator.set(0, 0.0);
     indicator.set(1, 1.0);
 
-    auto c0 = boost::make_shared<Context>();
+    auto c0 = QuantLib::ext::make_shared<Context>();
     c0->arrays["x"] = xv;
     c0->arrays["p"] = xv;
     c0->scalars["indicator"] = indicator;
 
     // sort x if y is positive, i.e. on path #1, but not on path #0
-    auto c = boost::make_shared<Context>(*c0);
+    auto c = QuantLib::ext::make_shared<Context>(*c0);
     ScriptEngine engine(ScriptParser("IF indicator > 0 THEN SORT (x); END;").ast(), c,
-                        boost::make_shared<DummyModel>(2));
+                        QuantLib::ext::make_shared<DummyModel>(2));
     BOOST_REQUIRE_NO_THROW(engine.run());
     std::vector<ValueType> result = c->arrays.at("x");
     BOOST_REQUIRE(result.size() == x.size());                                         // check array size
@@ -452,9 +458,9 @@ BOOST_AUTO_TEST_CASE(testSortPermuteFunctionsWithFilter) {
     BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(3)).at(1), 4.0, tol);
 
     // permute x if y is positive, i.e. again on path #1, but not on path#0
-    c = boost::make_shared<Context>(*c0);
+    c = QuantLib::ext::make_shared<Context>(*c0);
     ScriptEngine engine2(ScriptParser("IF indicator > 0 THEN PERMUTE (x,p); END;").ast(), c,
-                         boost::make_shared<DummyModel>(2));
+                         QuantLib::ext::make_shared<DummyModel>(2));
     BOOST_REQUIRE_NO_THROW(engine2.run());
     result = c->arrays.at("x");
     BOOST_REQUIRE(result.size() == x.size());                                         // check array size
@@ -483,7 +489,7 @@ BOOST_AUTO_TEST_CASE(testHistoricFixingsFunction) {
 
     constexpr Size nPaths = 50000;
 
-    auto context = boost::make_shared<Context>();
+    auto context = QuantLib::ext::make_shared<Context>();
     context->scalars["Underlying"] = IndexVec{nPaths, "EQ-SP5"};
     context->scalars["date1"] = EventVec{nPaths, Date(7, May, 2019)};
     context->scalars["date2"] = EventVec{nPaths, Date(8, May, 2019)};
@@ -497,7 +503,7 @@ BOOST_AUTO_TEST_CASE(testHistoricFixingsFunction) {
         }
     };
 
-    auto model = boost::make_shared<MyModel>(nPaths);
+    auto model = QuantLib::ext::make_shared<MyModel>(nPaths);
 
     EquityIndex2 ind("SP5", NullCalendar(), Currency());
     ind.addFixing(Date(8, May, 2019), 100.0);
@@ -535,14 +541,14 @@ BOOST_AUTO_TEST_CASE(testDateIndexFunctionEq) {
     constexpr Size nPaths = 10;
     constexpr Real tol = 1E-10;
 
-    auto model = boost::make_shared<DummyModel>(nPaths);
+    auto model = QuantLib::ext::make_shared<DummyModel>(nPaths);
 
     std::vector<ValueType> dates;
     dates.push_back(EventVec{nPaths, Date(7, May, 2019)});
     dates.push_back(EventVec{nPaths, Date(10, June, 2020)});
 
     // find date at index 1
-    auto context1 = boost::make_shared<Context>();
+    auto context1 = QuantLib::ext::make_shared<Context>();
     context1->arrays["a"] = dates;
     context1->scalars["d"] = EventVec{nPaths, Date(7, May, 2019)};
     ScriptEngine engine1(parser.ast(), context1, model);
@@ -553,7 +559,7 @@ BOOST_AUTO_TEST_CASE(testDateIndexFunctionEq) {
     BOOST_CHECK_CLOSE(rv1.at(0), 1.0, tol);
 
     // find date at index 2
-    auto context2 = boost::make_shared<Context>();
+    auto context2 = QuantLib::ext::make_shared<Context>();
     context2->arrays["a"] = dates;
     context2->scalars["d"] = EventVec{nPaths, Date(10, June, 2020)};
     ScriptEngine engine2(parser.ast(), context2, model);
@@ -564,7 +570,7 @@ BOOST_AUTO_TEST_CASE(testDateIndexFunctionEq) {
     BOOST_CHECK_CLOSE(rv2.at(0), 2.0, tol);
 
     // do not find date
-    auto context3 = boost::make_shared<Context>();
+    auto context3 = QuantLib::ext::make_shared<Context>();
     context3->arrays["a"] = dates;
     context3->scalars["d"] = EventVec{nPaths, Date(15, June, 2020)};
     ScriptEngine engine3(parser.ast(), context3, model);
@@ -575,7 +581,7 @@ BOOST_AUTO_TEST_CASE(testDateIndexFunctionEq) {
     BOOST_CHECK_CLOSE(rv3.at(0), 0.0, tol);
 
     // search in a number array => expect to not find date (but no error)
-    auto context4 = boost::make_shared<Context>();
+    auto context4 = QuantLib::ext::make_shared<Context>();
     std::vector<ValueType> numbers(5, RandomVariable(nPaths));
     context4->arrays["a"] = numbers;
     context4->scalars["d"] = EventVec{nPaths, Date(15, June, 2020)};
@@ -587,14 +593,14 @@ BOOST_AUTO_TEST_CASE(testDateIndexFunctionEq) {
     BOOST_CHECK_CLOSE(rv4.at(0), 0.0, tol);
 
     // value to find is not a date => error
-    auto context5 = boost::make_shared<Context>();
+    auto context5 = QuantLib::ext::make_shared<Context>();
     context5->arrays["a"] = dates;
     context5->scalars["d"] = RandomVariable(nPaths);
     ScriptEngine engine5(parser.ast(), context5, model);
     BOOST_CHECK_THROW(engine5.run(), QuantLib::Error);
 
     // search array is actually a scalar => error
-    auto context6 = boost::make_shared<Context>();
+    auto context6 = QuantLib::ext::make_shared<Context>();
     context6->scalars["a"] = EventVec{nPaths, Date(15, June, 2020)};
     context6->scalars["d"] = EventVec{nPaths, Date(15, June, 2020)};
     ScriptEngine engine6(parser.ast(), context6, model);
@@ -613,14 +619,14 @@ BOOST_AUTO_TEST_CASE(testDateIndexFunctionGeq) {
     constexpr Size nPaths = 10;
     constexpr Real tol = 1E-10;
 
-    auto model = boost::make_shared<DummyModel>(nPaths);
+    auto model = QuantLib::ext::make_shared<DummyModel>(nPaths);
 
     std::vector<ValueType> dates;
     dates.push_back(EventVec{nPaths, Date(7, May, 2019)});
     dates.push_back(EventVec{nPaths, Date(10, June, 2020)});
 
     // find date at index 1 (exact match)
-    auto context1 = boost::make_shared<Context>();
+    auto context1 = QuantLib::ext::make_shared<Context>();
     context1->arrays["a"] = dates;
     context1->scalars["d"] = EventVec{nPaths, Date(7, May, 2019)};
     ScriptEngine engine1(parser.ast(), context1, model);
@@ -631,7 +637,7 @@ BOOST_AUTO_TEST_CASE(testDateIndexFunctionGeq) {
     BOOST_CHECK_CLOSE(rv1.at(0), 1.0, tol);
 
     // find date at index 2 (exact match)
-    auto context2 = boost::make_shared<Context>();
+    auto context2 = QuantLib::ext::make_shared<Context>();
     context2->arrays["a"] = dates;
     context2->scalars["d"] = EventVec{nPaths, Date(10, June, 2020)};
     ScriptEngine engine2(parser.ast(), context2, model);
@@ -642,7 +648,7 @@ BOOST_AUTO_TEST_CASE(testDateIndexFunctionGeq) {
     BOOST_CHECK_CLOSE(rv2.at(0), 2.0, tol);
 
     // do not find date
-    auto context3 = boost::make_shared<Context>();
+    auto context3 = QuantLib::ext::make_shared<Context>();
     context3->arrays["a"] = dates;
     context3->scalars["d"] = EventVec{nPaths, Date(15, June, 2020)};
     ScriptEngine engine3(parser.ast(), context3, model);
@@ -653,7 +659,7 @@ BOOST_AUTO_TEST_CASE(testDateIndexFunctionGeq) {
     BOOST_CHECK_CLOSE(rv3.at(0), 3.0, tol);
 
     // find date at index1 (from earlier date)
-    auto context4 = boost::make_shared<Context>();
+    auto context4 = QuantLib::ext::make_shared<Context>();
     context4->arrays["a"] = dates;
     context4->scalars["d"] = EventVec{nPaths, Date(2, May, 2019)};
     ScriptEngine engine4(parser.ast(), context4, model);
@@ -664,7 +670,7 @@ BOOST_AUTO_TEST_CASE(testDateIndexFunctionGeq) {
     BOOST_CHECK_CLOSE(rv4.at(0), 1.0, tol);
 
     // find date at index2 (from earlier date)
-    auto context5 = boost::make_shared<Context>();
+    auto context5 = QuantLib::ext::make_shared<Context>();
     context5->arrays["a"] = dates;
     context5->scalars["d"] = EventVec{nPaths, Date(2, June, 2020)};
     ScriptEngine engine5(parser.ast(), context5, model);
@@ -689,8 +695,9 @@ BOOST_AUTO_TEST_CASE(testFwdCompFunction) {
 
     constexpr Size nPaths = 10; // does not matter, we use a model with deterministic rates below
 
-    Handle<YieldTermStructure> yts(boost::make_shared<FlatForward>(ref, 0.02, ActualActual(ActualActual::ISDA)));
-    auto on = boost::make_shared<Eonia>(yts);
+    Handle<YieldTermStructure> yts(
+        QuantLib::ext::make_shared<FlatForward>(ref, 0.02, ActualActual(ActualActual::ISDA)));
+    auto on = QuantLib::ext::make_shared<Eonia>(yts);
 
     Date start = Date(10, October, 2018);
     Date end = Date(10, October, 2019);
@@ -698,19 +705,21 @@ BOOST_AUTO_TEST_CASE(testFwdCompFunction) {
     Real spread = 0.0;
     Real gearing = 1.0;
 
-    std::vector<std::pair<std::string, boost::shared_ptr<InterestRateIndex>>> irIndices;
+    std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>> irIndices;
     irIndices.push_back(std::make_pair(indexName, on));
-    Model::McParams mcParams;
-    mcParams.regressionOrder = 1;
-    auto model = boost::make_shared<BlackScholes>(
-        nPaths, std::vector<std::string>{"EUR"}, std::vector<Handle<YieldTermStructure>>{yts},
+    Model::Params params;
+    params.regressionOrder = 1;
+    auto model = QuantLib::ext::make_shared<BlackScholes>(
+        Model::Type::MC, nPaths, std::vector<std::string>{"EUR"}, std::vector<Handle<YieldTermStructure>>{yts},
         std::vector<Handle<Quote>>(), irIndices,
-        std::vector<std::pair<std::string, boost::shared_ptr<ZeroInflationIndex>>>(), std::vector<std::string>(),
-        std::vector<std::string>(), Handle<BlackScholesModelWrapper>(boost::make_shared<BlackScholesModelWrapper>()),
-        std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>(), mcParams,
-        std::set<Date>{});
+        std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>(),
+        std::vector<std::string>(), std::vector<std::string>(), std::set<std::string>{"EUR"},
+        Handle<AssetModelWrapper>(QuantLib::ext::make_shared<AssetModelWrapper>()),
+        std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>(), std::set<Date>{},
+        QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()), "ATM",
+        std::map<std::string, std::vector<Real>>(), params);
 
-    auto context = boost::make_shared<Context>();
+    auto context = QuantLib::ext::make_shared<Context>();
     context->scalars["underlying"] = IndexVec{nPaths, indexName};
     context->scalars["obs"] = EventVec{nPaths, start};
     context->scalars["start"] = EventVec{nPaths, start};
@@ -720,7 +729,7 @@ BOOST_AUTO_TEST_CASE(testFwdCompFunction) {
 
     QuantExt::OvernightIndexedCoupon coupon(end, 1.0, start, end, on, gearing, spread);
 
-    auto indexInfo = boost::make_shared<StaticAnalyser>(parser.ast(), context);
+    auto indexInfo = QuantLib::ext::make_shared<StaticAnalyser>(parser.ast(), context);
     BOOST_REQUIRE_NO_THROW(indexInfo->run(););
     BOOST_REQUIRE_EQUAL(indexInfo->fwdCompAvgFixingDates().size(), 1);
     BOOST_REQUIRE(indexInfo->fwdCompAvgFixingDates().at(indexName).size() == coupon.fixingDates().size());
@@ -771,7 +780,7 @@ BOOST_AUTO_TEST_CASE(testProbFunctions) {
     Real barrierUp = 110.0;
     Real barrierDown = 80.0;
 
-    auto context = boost::make_shared<Context>();
+    auto context = QuantLib::ext::make_shared<Context>();
     context->scalars["Underlying"] = IndexVec{nPaths, "EQ-Dummy"};
     context->scalars["Date1"] = EventVec{nPaths, date1};
     context->scalars["Date2"] = EventVec{nPaths, date2};
@@ -780,17 +789,20 @@ BOOST_AUTO_TEST_CASE(testProbFunctions) {
     context->scalars["AboveProb"] = RandomVariable(nPaths, barrierUp);
     context->scalars["BelowProb"] = RandomVariable(nPaths, barrierDown);
 
-    Handle<YieldTermStructure> yts0(boost::make_shared<FlatForward>(ref, 0.0, ActualActual(ActualActual::ISDA)));
+    Handle<YieldTermStructure> yts0(
+        QuantLib::ext::make_shared<FlatForward>(ref, 0.0, ActualActual(ActualActual::ISDA)));
     Handle<BlackVolTermStructure> volts(
-        boost::make_shared<BlackConstantVol>(ref, NullCalendar(), vol, ActualActual(ActualActual::ISDA)));
-    auto process = boost::make_shared<GeneralizedBlackScholesProcess>(
-        Handle<Quote>(boost::make_shared<SimpleQuote>(s0)), yts0, yts0, volts);
+        QuantLib::ext::make_shared<BlackConstantVol>(ref, NullCalendar(), vol, ActualActual(ActualActual::ISDA)));
+    auto process = QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
+        Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(s0)), yts0, yts0, volts);
     std::set<Date> simulationDates = {date1, date2};
-    Model::McParams mcParams;
-    mcParams.regressionOrder = 1;
-    auto model = boost::make_shared<BlackScholes>(
-        nPaths, "USD", yts0, "EQ-Dummy", "USD",
-        BlackScholesModelBuilder(yts0, process, simulationDates, std::set<Date>(), 1).model(), mcParams, simulationDates);
+    Model::Params params;
+    params.regressionOrder = 1;
+    auto model = QuantLib::ext::make_shared<BlackScholes>(
+        Model::Type::MC, nPaths, "USD", yts0, "EQ-Dummy", "USD",
+        BlackScholesModelBuilder(yts0, process, simulationDates, std::set<Date>(), 1).model(), simulationDates,
+        QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()), "ATM", std::vector<Real>(),
+        params);
 
     ScriptEngine engine(parser.ast(), context, model);
     BOOST_REQUIRE_NO_THROW(engine.run());
@@ -887,7 +899,7 @@ BOOST_AUTO_TEST_CASE(testEuropeanOption) {
 
     constexpr Size nPaths = 50000;
 
-    auto context = boost::make_shared<Context>();
+    auto context = QuantLib::ext::make_shared<Context>();
     context->scalars["Quantity"] = RandomVariable(nPaths, quantity);
     context->scalars["PutCall"] = RandomVariable(nPaths, putcall);
     context->scalars["Strike"] = RandomVariable(nPaths, strike);
@@ -897,7 +909,7 @@ BOOST_AUTO_TEST_CASE(testEuropeanOption) {
     context->scalars["PayCcy"] = CurrencyVec{nPaths, "USD"};
     context->scalars["Option"] = RandomVariable(nPaths, 0.0);
 
-    auto indexInfo = boost::make_shared<StaticAnalyser>(parser.ast(), context);
+    auto indexInfo = QuantLib::ext::make_shared<StaticAnalyser>(parser.ast(), context);
     BOOST_REQUIRE_NO_THROW(indexInfo->run());
     BOOST_REQUIRE_EQUAL(indexInfo->indexEvalDates().size(), 1);
     BOOST_CHECK_EQUAL(indexInfo->indexEvalDates().begin()->first, "EQ-SP5");
@@ -913,12 +925,14 @@ BOOST_AUTO_TEST_CASE(testEuropeanOption) {
     BOOST_CHECK_EQUAL(*indexInfo->payPayDates().begin()->second.begin(), settlement);
     BOOST_CHECK(indexInfo->regressionDates().empty());
 
-    Handle<YieldTermStructure> yts(boost::make_shared<FlatForward>(ref, rate, ActualActual(ActualActual::ISDA)));
-    Handle<YieldTermStructure> yts0(boost::make_shared<FlatForward>(ref, 0.0, ActualActual(ActualActual::ISDA)));
+    Handle<YieldTermStructure> yts(
+        QuantLib::ext::make_shared<FlatForward>(ref, rate, ActualActual(ActualActual::ISDA)));
+    Handle<YieldTermStructure> yts0(
+        QuantLib::ext::make_shared<FlatForward>(ref, 0.0, ActualActual(ActualActual::ISDA)));
     Handle<BlackVolTermStructure> volts(
-        boost::make_shared<BlackConstantVol>(ref, NullCalendar(), vol, ActualActual(ActualActual::ISDA)));
-    auto process = boost::make_shared<GeneralizedBlackScholesProcess>(
-        Handle<Quote>(boost::make_shared<SimpleQuote>(s0)), yts0, yts, volts);
+        QuantLib::ext::make_shared<BlackConstantVol>(ref, NullCalendar(), vol, ActualActual(ActualActual::ISDA)));
+    auto process = QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
+        Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(s0)), yts0, yts, volts);
 
     // compile the sim and pay dates required by the BS model ctor below
     std::set<Date> simulationDates, payDates;
@@ -931,11 +945,13 @@ BOOST_AUTO_TEST_CASE(testEuropeanOption) {
         payDates.insert(s.second.begin(), s.second.end());
 
     cpu_timer timer;
-    Model::McParams mcParams;
-    mcParams.regressionOrder = 6;
-    auto model = boost::make_shared<BlackScholes>(
-        nPaths, "USD", yts, "EQ-SP5", "USD",
-        BlackScholesModelBuilder(yts, process, simulationDates, payDates, 1).model(), mcParams, simulationDates);
+    Model::Params params;
+    params.regressionOrder = 6;
+    auto model = QuantLib::ext::make_shared<BlackScholes>(
+        Model::Type::MC, nPaths, "USD", yts, "EQ-SP5", "USD",
+        BlackScholesModelBuilder(yts, process, simulationDates, payDates, 1).model(), simulationDates,
+        QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()), "ATM", std::vector<Real>(),
+        params);
     ScriptEngine engine(parser.ast(), context, model);
     BOOST_REQUIRE_NO_THROW(engine.run());
     BOOST_REQUIRE(context->scalars["Option"].which() == ValueTypeWhich::Number);
@@ -979,7 +995,7 @@ BOOST_AUTO_TEST_CASE(testAmericanOption) {
 
     std::string script = "NUMBER Exercise;\n"
                          "NUMBER i;\n"
-                         "FOR i IN (SIZE(Expiry), 1, -11) DO\n"
+                         "FOR i IN (SIZE(Expiry), 1, -1) DO\n"
                          "    Exercise = PAY( PutCall * (Underlying(Expiry[i]) - Strike),\n"
                          "                    Expiry[i], Settlement[i], PayCcy );\n"
                          "    IF Exercise > NPV( Option, Expiry[i], Exercise > 0 ) AND Exercise > 0 THEN\n"
@@ -1009,7 +1025,7 @@ BOOST_AUTO_TEST_CASE(testAmericanOption) {
         settlDates.push_back(EventVec{nPaths, d /* + 2*/}); // for comparison with fd engine set settlment = expiry
     }
 
-    auto context = boost::make_shared<Context>();
+    auto context = QuantLib::ext::make_shared<Context>();
     context->scalars["Quantity"] = RandomVariable(nPaths, quantity);
     context->scalars["PutCall"] = RandomVariable(nPaths, putcall);
     context->scalars["Strike"] = RandomVariable(nPaths, strike);
@@ -1019,7 +1035,7 @@ BOOST_AUTO_TEST_CASE(testAmericanOption) {
     context->scalars["PayCcy"] = CurrencyVec{nPaths, "USD"};
     context->scalars["Option"] = RandomVariable(nPaths, 0.0);
 
-    auto indexInfo = boost::make_shared<StaticAnalyser>(parser.ast(), context);
+    auto indexInfo = QuantLib::ext::make_shared<StaticAnalyser>(parser.ast(), context);
     BOOST_REQUIRE_NO_THROW(indexInfo->run());
 
     // compile the sim and pay dates required by the BS model ctor below
@@ -1034,19 +1050,23 @@ BOOST_AUTO_TEST_CASE(testAmericanOption) {
 
     BOOST_REQUIRE_EQUAL(simulationDates.size(), expiryDates.size());
 
-    Handle<YieldTermStructure> yts(boost::make_shared<FlatForward>(ref, rate, ActualActual(ActualActual::ISDA)));
-    Handle<YieldTermStructure> yts0(boost::make_shared<FlatForward>(ref, 0.0, ActualActual(ActualActual::ISDA)));
+    Handle<YieldTermStructure> yts(
+        QuantLib::ext::make_shared<FlatForward>(ref, rate, ActualActual(ActualActual::ISDA)));
+    Handle<YieldTermStructure> yts0(
+        QuantLib::ext::make_shared<FlatForward>(ref, 0.0, ActualActual(ActualActual::ISDA)));
     Handle<BlackVolTermStructure> volts(
-        boost::make_shared<BlackConstantVol>(ref, NullCalendar(), vol, ActualActual(ActualActual::ISDA)));
-    auto process = boost::make_shared<GeneralizedBlackScholesProcess>(
-        Handle<Quote>(boost::make_shared<SimpleQuote>(s0)), yts0, yts, volts);
+        QuantLib::ext::make_shared<BlackConstantVol>(ref, NullCalendar(), vol, ActualActual(ActualActual::ISDA)));
+    auto process = QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
+        Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(s0)), yts0, yts, volts);
 
     cpu_timer timer;
-    Model::McParams mcParams;
-    mcParams.regressionOrder = 6;
-    auto model = boost::make_shared<BlackScholes>(
-        nPaths, "USD", yts, "EQ-SP5", "USD",
-        BlackScholesModelBuilder(yts, process, simulationDates, payDates, 1).model(), mcParams, simulationDates);
+    Model::Params params;
+    params.regressionOrder = 6;
+    auto model = QuantLib::ext::make_shared<BlackScholes>(
+        Model::Type::MC, nPaths, "USD", yts, "EQ-SP5", "USD",
+        BlackScholesModelBuilder(yts, process, simulationDates, payDates, 1).model(), simulationDates,
+        QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()), "ATM", std::vector<Real>(),
+        params);
     ScriptEngine engine(parser.ast(), context, model);
     BOOST_REQUIRE_NO_THROW(engine.run());
     BOOST_TEST_MESSAGE(*context);
@@ -1058,15 +1078,356 @@ BOOST_AUTO_TEST_CASE(testAmericanOption) {
     BOOST_TEST_MESSAGE("option value estimation " << avg << " (timing " << timer.format(default_places, "%w") << "s)");
 
     // compare with result from fd engine
-    auto fdEngine = boost::make_shared<FdBlackScholesVanillaEngine>(process, 100, 100);
-    VanillaOption option(boost::make_shared<PlainVanillaPayoff>(putcall > 0.0 ? Option::Call : Option::Put, strike),
-                         boost::make_shared<AmericanExercise>(ref, expirySchedule.dates().back()));
+    auto fdEngine = QuantLib::ext::make_shared<FdBlackScholesVanillaEngine>(process, 100, 100);
+    VanillaOption option(
+        QuantLib::ext::make_shared<PlainVanillaPayoff>(putcall > 0.0 ? Option::Call : Option::Put, strike),
+        QuantLib::ext::make_shared<AmericanExercise>(ref, expirySchedule.dates().back()));
     option.setPricingEngine(fdEngine);
     timer.start();
     Real fdNpv = option.NPV() * quantity;
     timer.stop();
     BOOST_TEST_MESSAGE("fd engine result " << fdNpv << " (timing " << timer.format(default_places, "%w") << "s)");
     BOOST_CHECK_CLOSE(avg, fdNpv, 5.0);
+}
+
+void testAmericanOptionHeston(Model::Type modelType, std::string script) {
+    Date ref(7, May, 2019);
+    Settings::instance().evaluationDate() = ref;
+
+    ScriptParser parser(script);
+    BOOST_REQUIRE(parser.success());
+    BOOST_TEST_MESSAGE("Parsing successful, AST:\n" << to_string(parser.ast()));
+
+    Real blackVol = 0.15;
+    Real s0 = 4338;
+    Real theta = 0.03;
+    Real kappa = 19;
+    Real sigma = 2.4;
+    Real rho = -0.6;
+    Real v0 = 0.03;
+    BOOST_TEST_MESSAGE("Feller: " << 2.0 * theta * kappa / (sigma*sigma));
+
+    std::vector<Real> initialValues = {theta, kappa, sigma, rho, v0};
+    std::vector<bool> fixedValues(5, true);
+
+    Real rate = 0.01;
+    Real quantity = 10.0;
+    Real putcall = -1.0;
+    Real strike = 4350;
+
+    std::vector<Real> calibrationStrikes = { 4350 };
+
+    Size nSteps = 50;
+    constexpr Size nPaths = 100000;
+    // FD specification for the benchmark QuantLib engine
+    Size xGrid = 100;
+    Size vGrid = 100;
+    Size dampingSteps = 0;
+    FdmSchemeDesc scheme = FdmSchemeDesc::Hundsdorfer();
+
+    Size modelSize = modelType == Model::Type::MC ? nPaths : xGrid * vGrid;
+    Model::Params params;
+    params.regressionOrder = 6;
+    params.stateGridPoints = xGrid;
+    params.varianceStateGridPoints = vGrid;
+
+    Schedule expirySchedule(Date(8, May, 2019), Date(9, May, 2020), 1 * Weeks, NullCalendar(), Unadjusted, Unadjusted,
+                            DateGeneration::Forward, false);
+    std::vector<ValueType> expiryDates, settlDates;
+    for (auto const& d : expirySchedule.dates()) {
+        expiryDates.push_back(EventVec{modelSize, d});
+        settlDates.push_back(EventVec{modelSize, d /* + 2*/}); // for comparison with fd engine set settlment = expiry
+    }
+    BOOST_TEST_MESSAGE("expiry schedule size: " <<  expirySchedule.dates().size());
+    
+    auto context = QuantLib::ext::make_shared<Context>();
+    context->scalars["Quantity"] = RandomVariable(modelSize, quantity);
+    context->scalars["PutCall"] = RandomVariable(modelSize, putcall);
+    context->scalars["Strike"] = RandomVariable(modelSize, strike);
+    context->scalars["Underlying"] = IndexVec{modelSize, "EQ-STOXX"};
+    context->arrays["Expiry"] = expiryDates;
+    context->arrays["Settlement"] = settlDates;
+    context->scalars["PayCcy"] = CurrencyVec{modelSize, "EUR"};
+    context->scalars["Option"] = RandomVariable(modelSize, 0.0);
+
+    auto indexInfo = QuantLib::ext::make_shared<StaticAnalyser>(parser.ast(), context);
+    BOOST_REQUIRE_NO_THROW(indexInfo->run());
+
+    // compile the sim and pay dates required by the model ctor below
+    std::set<Date> simulationDates, payDates;
+    for (auto const& s : indexInfo->indexEvalDates())
+        simulationDates.insert(s.second.begin(), s.second.end());
+    for (auto const& s : indexInfo->payObsDates())
+        simulationDates.insert(s.second.begin(), s.second.end());
+    simulationDates.insert(indexInfo->regressionDates().begin(), indexInfo->regressionDates().end());
+    for (auto const& s : indexInfo->payPayDates())
+        payDates.insert(s.second.begin(), s.second.end());
+
+    BOOST_REQUIRE_EQUAL(simulationDates.size(), expiryDates.size());
+
+    Handle<YieldTermStructure> yts(
+        QuantLib::ext::make_shared<FlatForward>(ref, rate, ActualActual(ActualActual::ISDA)));
+    Handle<YieldTermStructure> yts0(
+        QuantLib::ext::make_shared<FlatForward>(ref, 0.0, ActualActual(ActualActual::ISDA)));
+    Handle<BlackVolTermStructure> volts(
+        QuantLib::ext::make_shared<BlackConstantVol>(ref, NullCalendar(), blackVol, ActualActual(ActualActual::ISDA)));
+    auto bsProcess = QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
+        Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(s0)), yts0, yts, volts);
+
+    cpu_timer timer;
+    auto iborFallbackConfig = QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig());
+    std::vector<std::string> indices = {"EQ-STOXX"};
+    auto modelBuilder = QuantLib::ext::make_shared<HestonModelBuilder>(
+        indices, yts, bsProcess, simulationDates, std::set<Date>(), nSteps, std::vector<Period>(), std::vector<Real>(),
+        std::vector<Period>(), initialValues, fixedValues, "None");
+    auto model =
+        QuantLib::ext::make_shared<Heston>(modelType, modelSize, "EUR", yts, "EQ-STOXX", "EUR", modelBuilder->model(),
+                                           simulationDates, iborFallbackConfig, "Smile", calibrationStrikes, params);
+
+    ScriptEngine engine(parser.ast(), context, model);
+    BOOST_REQUIRE_NO_THROW(engine.run());
+    BOOST_TEST_MESSAGE(*context);
+    BOOST_REQUIRE(context->scalars["Option"].which() == ValueTypeWhich::Number);
+    RandomVariable rv = boost::get<RandomVariable>(context->scalars["Option"]);
+    BOOST_REQUIRE(rv.size() == modelSize);
+    Real avg = model->extractT0Result(rv);    
+    timer.stop();
+    BOOST_TEST_MESSAGE("option value estimation " << avg << " (timing " << timer.format(default_places, "%w") << "s)");
+    
+    // compare with result from fd engine
+    auto hestonProcess = modelBuilder->model()->hestonProcesses().front();
+    auto hestonModel = QuantLib::ext::make_shared<HestonModel>(hestonProcess);
+    auto fdEngine = QuantLib::ext::make_shared<FdHestonVanillaEngine>(hestonModel, nSteps, xGrid, vGrid, dampingSteps, scheme);
+    
+    VanillaOption option(
+        QuantLib::ext::make_shared<PlainVanillaPayoff>(putcall > 0.0 ? Option::Call : Option::Put, strike),
+        QuantLib::ext::make_shared<AmericanExercise>(ref, expirySchedule.dates().back()));
+    option.setPricingEngine(fdEngine);
+    timer.start();
+    Real fdNpv = option.NPV() * quantity;
+    timer.stop();
+    BOOST_TEST_MESSAGE("fd engine result " << fdNpv << " (timing " << timer.format(default_places, "%w") << "s)");
+    BOOST_CHECK_CLOSE(avg, fdNpv, 1.0);
+}
+
+BOOST_AUTO_TEST_CASE(testAmericanOptionHestonMC) {
+    BOOST_TEST_MESSAGE("Testing American option with Heston model using MC vs QuantLib FD engine...");
+
+    std::string scriptMC = "NUMBER Payoff;\n"
+                           "NUMBER i;\n"
+                           "FOR i IN (SIZE(Expiry), 1, -1) DO\n"
+                           "    Payoff = PAY( PutCall * (Underlying(Expiry[i]) - Strike),\n"
+                           "                    Expiry[i], Settlement[i], PayCcy );\n"
+                           "    IF Payoff > NPV( Option, Expiry[i], Payoff > 0 ) AND Payoff > 0 THEN\n"
+                           "        Option = Payoff;\n"
+                           "    END;\n"
+                           "END;\n"
+                           "Option = Quantity * Option;\n";
+
+    testAmericanOptionHeston(Model::Type::MC, scriptMC);
+}
+
+BOOST_AUTO_TEST_CASE(testAmericanOptionHestonFD) {
+    BOOST_TEST_MESSAGE("Testing American option with Heston model using FD vs QuantLib FD engine...");
+
+    std::string scriptFD = "NUMBER Payoff;\n"
+                           "NUMBER i;\n"
+                           "NUMBER ContinuationValue;\n"
+                           "Option = 0 * Underlying(Expiry[SIZE(Expiry)]);"
+                           "FOR i IN (SIZE(Expiry), 1, -1) DO\n"
+                           "    Payoff = PAY( PutCall * (Underlying(Expiry[i]) - Strike),\n"
+                           "                    Expiry[i], Settlement[i], PayCcy );\n"
+                           "    ContinuationValue = NPV( Option, Expiry[i] );\n"
+                           "    IF Payoff > ContinuationValue AND Payoff > 0 THEN\n"
+                           "        Option = Payoff;\n"
+                           "    ELSE \n"
+                           "        Option = ContinuationValue; \n"
+                           "    END;\n"
+                           "END;\n"
+                           "Option = Quantity * Option;\n";
+
+    testAmericanOptionHeston(Model::Type::FD, scriptFD);
+}
+
+void logMesh(const QuantLib::ext::shared_ptr<FdmMesher>& mesher, const std::string& label) {
+  BOOST_TEST_MESSAGE(label);
+  std::vector<Real> x, y;
+    x.reserve(mesher->layout()->dim()[0]);
+    y.reserve(mesher->layout()->dim()[1]);
+    for (const auto& iter : *mesher->layout()) {
+        if (iter.coordinates()[1] == 0U)
+            x.push_back(mesher->location(iter, 0));
+        if (iter.coordinates()[0] == 0U)
+            y.push_back(mesher->location(iter, 1));
+    }
+    for (Size i = 0; i < x.size(); ++i) {
+        BOOST_TEST_MESSAGE(label << " x " << i << " " << x[i]);
+    }
+    for (Size i = 0; i < y.size(); ++i) {
+        BOOST_TEST_MESSAGE(label << " y " << i << " " << y[i]);
+    }
+}
+
+void testEuropeanOptionHeston(Model::Type modelType) {
+  
+    BOOST_REQUIRE(modelType == Model::Type::MC || modelType == Model::Type::FD);
+
+    Date ref(7, May, 2019);
+    Settings::instance().evaluationDate() = ref;
+
+    std::string script = "Option = Quantity * PAY(max( PutCall * (Underlying(Expiry) - Strike), 0 ),\n"
+                         "                        Expiry, Settlement, PayCcy);";
+
+    std::vector<Real> calibrationStrikes = { 4350 };
+    
+    ScriptParser parser(script);
+	
+    BOOST_REQUIRE(parser.success());
+    BOOST_TEST_MESSAGE("Parsing successful, AST:\n" << to_string(parser.ast()));
+
+    Real blackVol = 0.15;
+    Real s0 = 4338;
+    Real theta = 0.03;
+    Real kappa = 19;
+    Real sigma = 2.4;
+    Real rho = -0.6;
+    Real v0 = 0.03;
+    BOOST_TEST_MESSAGE("Feller: " << 2.0 * theta * kappa / (sigma*sigma));
+
+    std::vector<Real> initialValues = {theta, kappa, sigma, rho, v0};
+    std::vector<bool> fixedValues(5, true);
+
+    Real rate = 0.01; // 0.01
+    Real quantity = 10.0;
+    Real putcall = -1.0;
+    Real strike = 4350;
+    Date expiry(7, May, 2020);
+    Date settlement(9, May, 2020);
+
+    Size nSteps = 50;
+    constexpr Size nPaths = 100000;
+    
+    // FD specification for the benchmark QuantLib engine
+    Size xGrid = 100; 
+    Size vGrid = 100; 
+    Size dampingSteps = 0;
+    FdmSchemeDesc scheme = FdmSchemeDesc::Hundsdorfer();
+
+    Size modelSize = modelType == Model::Type::MC ? nPaths : xGrid * vGrid;
+    Model::Params params;
+    params.regressionOrder = 6;
+    params.stateGridPoints = xGrid;
+    params.varianceStateGridPoints = vGrid;
+
+    auto context = QuantLib::ext::make_shared<Context>();
+    context->scalars["Quantity"] = RandomVariable(modelSize, quantity);
+    context->scalars["PutCall"] = RandomVariable(modelSize, putcall);
+    context->scalars["Strike"] = RandomVariable(modelSize, strike);
+    context->scalars["Underlying"] = IndexVec{modelSize, "EQ-STOXX"};
+    context->scalars["Expiry"] = EventVec{modelSize, expiry};
+    context->scalars["Settlement"] = EventVec{modelSize, settlement};
+    context->scalars["PayCcy"] = CurrencyVec{modelSize, "EUR"};
+    context->scalars["Option"] = RandomVariable(modelSize, 0.0);
+
+    auto indexInfo = QuantLib::ext::make_shared<StaticAnalyser>(parser.ast(), context);
+    BOOST_REQUIRE_NO_THROW(indexInfo->run());
+    BOOST_REQUIRE_EQUAL(indexInfo->indexEvalDates().size(), 1);
+    BOOST_CHECK_EQUAL(indexInfo->indexEvalDates().begin()->first, "EQ-STOXX");
+    BOOST_CHECK_EQUAL(indexInfo->indexEvalDates().begin()->second.size(), 1);
+    BOOST_CHECK_EQUAL(*indexInfo->indexEvalDates().begin()->second.begin(), expiry);
+    BOOST_REQUIRE_EQUAL(indexInfo->payObsDates().size(), 1);
+    BOOST_CHECK_EQUAL(indexInfo->payObsDates().begin()->first, "EUR");
+    BOOST_CHECK_EQUAL(indexInfo->payObsDates().begin()->second.size(), 1);
+    BOOST_CHECK_EQUAL(*indexInfo->payObsDates().begin()->second.begin(), expiry);
+    BOOST_REQUIRE_EQUAL(indexInfo->payPayDates().size(), 1);
+    BOOST_CHECK_EQUAL(indexInfo->payPayDates().begin()->first, "EUR");
+    BOOST_CHECK_EQUAL(indexInfo->payPayDates().begin()->second.size(), 1);
+    BOOST_CHECK_EQUAL(*indexInfo->payPayDates().begin()->second.begin(), settlement);
+    BOOST_CHECK(indexInfo->regressionDates().empty());
+
+    Handle<YieldTermStructure> yts(
+        QuantLib::ext::make_shared<FlatForward>(ref, rate, ActualActual(ActualActual::ISDA)));
+    Handle<YieldTermStructure> yts0(
+        QuantLib::ext::make_shared<FlatForward>(ref, 0.0, ActualActual(ActualActual::ISDA)));
+    Handle<BlackVolTermStructure> volts(
+        QuantLib::ext::make_shared<BlackConstantVol>(ref, NullCalendar(), blackVol, ActualActual(ActualActual::ISDA)));
+    auto bsProcess = QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
+        Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(s0)), yts0, yts, volts);
+
+    // compile the sim and pay dates required by the BS model ctor below
+    std::set<Date> simulationDates, payDates;
+    for (auto const& s : indexInfo->indexEvalDates())
+        simulationDates.insert(s.second.begin(), s.second.end());
+    for (auto const& s : indexInfo->payObsDates())
+        simulationDates.insert(s.second.begin(), s.second.end());
+    simulationDates.insert(indexInfo->regressionDates().begin(), indexInfo->regressionDates().end());
+    for (auto const& s : indexInfo->payPayDates())
+        payDates.insert(s.second.begin(), s.second.end());
+
+    cpu_timer timer;
+
+    auto iborFallbackConfig = QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig());
+    std::vector<std::string> indices = {"EQ-STOXX"};    
+    auto modelBuilder = QuantLib::ext::make_shared<HestonModelBuilder>(
+        indices, yts, bsProcess, simulationDates, std::set<Date>(), nSteps, std::vector<Period>(), std::vector<Real>(),
+        std::vector<Period>(), initialValues, fixedValues, "None");
+    auto model =
+        QuantLib::ext::make_shared<Heston>(modelType, modelSize, "EUR", yts, "EQ-STOXX", "EUR", modelBuilder->model(),
+                                           simulationDates, iborFallbackConfig, "Smile", calibrationStrikes, params);
+
+    ScriptEngine engine(parser.ast(), context, model);
+    BOOST_REQUIRE_NO_THROW(engine.run());
+    BOOST_TEST_MESSAGE(*context);
+    BOOST_REQUIRE(context->scalars["Option"].which() == ValueTypeWhich::Number);
+    RandomVariable rv = boost::get<RandomVariable>(context->scalars["Option"]);
+    BOOST_REQUIRE(rv.size() == modelSize);
+    //Real avg = expectation(rv).at(0);
+    Real avg = model->extractT0Result(rv);    
+    timer.stop();
+    BOOST_TEST_MESSAGE("option value estimation " << avg << " (timing " << timer.format(default_places, "%w") << "s)");
+    
+    // compare with result from fd engine
+    auto hestonProcess = modelBuilder->model()->hestonProcesses().front();
+    auto hestonModel = QuantLib::ext::make_shared<HestonModel>(hestonProcess);
+    auto fdEngine = QuantLib::ext::make_shared<FdHestonVanillaEngine>(hestonModel, nSteps, xGrid, vGrid, dampingSteps, scheme);
+    auto mcEngine = MakeMCEuropeanHestonEngine<PseudoRandom>(hestonProcess)
+      .withStepsPerYear(nSteps)
+      .withAntitheticVariate()
+      .withSamples(nPaths)
+      .withSeed(1234);
+    
+    VanillaOption option(
+        QuantLib::ext::make_shared<PlainVanillaPayoff>(putcall > 0.0 ? Option::Call : Option::Put, strike),
+        QuantLib::ext::make_shared<EuropeanExercise>(expiry));
+    option.setPricingEngine(fdEngine);
+    timer.start();
+    Real fdNpv = option.NPV() * quantity;
+    timer.stop();
+    
+    Real tolerance = 1.0;
+
+    BOOST_TEST_MESSAGE("fd engine result " << fdNpv << " (timing " << timer.format(default_places, "%w") << "s)");
+    BOOST_CHECK_CLOSE(avg, fdNpv, tolerance);
+
+    option.setPricingEngine(mcEngine);
+    timer.start();
+    Real mcNpv = option.NPV() * quantity;
+    timer.stop();
+    BOOST_TEST_MESSAGE("ql mc engine result " << mcNpv << " (timing " << timer.format(default_places, "%w") << "s)");
+    BOOST_CHECK_CLOSE(avg, mcNpv, tolerance);
+
+    // logMesh(model->mesher(), "ST");
+    // logMesh(fdEngine->mesher(), "QL");
+}
+
+BOOST_AUTO_TEST_CASE(testEuropeanOptionHestonMC) {
+    BOOST_TEST_MESSAGE("Testing European option with Heston model using MC vs QuantLib FD pricer");
+    testEuropeanOptionHeston(Model::Type::MC);
+}
+
+BOOST_AUTO_TEST_CASE(testEuropeanOptionHestonFD) {
+    BOOST_TEST_MESSAGE("Testing European option with Heston model using MC vs QuantLib FD pricer");
+    testEuropeanOptionHeston(Model::Type::FD);
 }
 
 BOOST_AUTO_TEST_CASE(testAsianOption) {
@@ -1101,7 +1462,7 @@ BOOST_AUTO_TEST_CASE(testAsianOption) {
     for (auto const& d : observationSchedule.dates())
         observationDates.push_back(EventVec{nPaths, d});
 
-    auto context = boost::make_shared<Context>();
+    auto context = QuantLib::ext::make_shared<Context>();
     context->scalars["Quantity"] = RandomVariable(nPaths, quantity);
     context->scalars["PutCall"] = RandomVariable(nPaths, putcall);
     context->scalars["Strike"] = RandomVariable(nPaths, strike);
@@ -1111,7 +1472,7 @@ BOOST_AUTO_TEST_CASE(testAsianOption) {
     context->scalars["PayCcy"] = CurrencyVec{nPaths, "USD"};
     context->scalars["Option"] = RandomVariable(nPaths, 0.0);
 
-    auto indexInfo = boost::make_shared<StaticAnalyser>(parser.ast(), context);
+    auto indexInfo = QuantLib::ext::make_shared<StaticAnalyser>(parser.ast(), context);
     BOOST_REQUIRE_NO_THROW(indexInfo->run());
 
     // compile the sim and pay dates required by the BS model ctor below
@@ -1131,19 +1492,23 @@ BOOST_AUTO_TEST_CASE(testAsianOption) {
     for (auto const& d : simulationDates)
         BOOST_CHECK_EQUAL(d, boost::get<EventVec>(observationDates[i++]).value);
 
-    Handle<YieldTermStructure> yts(boost::make_shared<FlatForward>(ref, rate, ActualActual(ActualActual::ISDA)));
-    Handle<YieldTermStructure> yts0(boost::make_shared<FlatForward>(ref, 0.0, ActualActual(ActualActual::ISDA)));
+    Handle<YieldTermStructure> yts(
+        QuantLib::ext::make_shared<FlatForward>(ref, rate, ActualActual(ActualActual::ISDA)));
+    Handle<YieldTermStructure> yts0(
+        QuantLib::ext::make_shared<FlatForward>(ref, 0.0, ActualActual(ActualActual::ISDA)));
     Handle<BlackVolTermStructure> volts(
-        boost::make_shared<BlackConstantVol>(ref, NullCalendar(), vol, ActualActual(ActualActual::ISDA)));
-    auto process = boost::make_shared<GeneralizedBlackScholesProcess>(
-        Handle<Quote>(boost::make_shared<SimpleQuote>(s0)), yts0, yts, volts);
+        QuantLib::ext::make_shared<BlackConstantVol>(ref, NullCalendar(), vol, ActualActual(ActualActual::ISDA)));
+    auto process = QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
+        Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(s0)), yts0, yts, volts);
 
     cpu_timer timer;
-    Model::McParams mcParams;
-    mcParams.regressionOrder = 6;
-    auto model = boost::make_shared<BlackScholes>(
-        nPaths, "USD", yts, "EQ-SP5", "USD",
-        BlackScholesModelBuilder(yts, process, simulationDates, payDates, 1).model(), mcParams, simulationDates);
+    Model::Params params;
+    params.regressionOrder = 6;
+    auto model = QuantLib::ext::make_shared<BlackScholes>(
+        Model::Type::MC, nPaths, "USD", yts, "EQ-SP5", "USD",
+        BlackScholesModelBuilder(yts, process, simulationDates, payDates, 1).model(), simulationDates,
+        QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()), "ATM", std::vector<Real>(),
+        params);
     ScriptEngine engine(parser.ast(), context, model);
     BOOST_REQUIRE_NO_THROW(engine.run());
     BOOST_REQUIRE(context->scalars["Option"].which() == ValueTypeWhich::Number);
@@ -1241,7 +1606,7 @@ BOOST_AUTO_TEST_CASE(testAutocallable) {
     for (auto const& i : indicesStr)
         indices.push_back(IndexVec{nPaths, i});
 
-    auto context = boost::make_shared<Context>();
+    auto context = QuantLib::ext::make_shared<Context>();
     context->scalars["Notional"] = RandomVariable(nPaths, notional);
     context->scalars["Strike"] = RandomVariable(nPaths, strike);
     context->scalars["StrikeDate"] = EventVec{nPaths, observationSchedule.dates().front()};
@@ -1252,7 +1617,7 @@ BOOST_AUTO_TEST_CASE(testAutocallable) {
     context->scalars["PayCcy"] = CurrencyVec{nPaths, "USD"};
     context->scalars["Option"] = RandomVariable(nPaths, 0.0);
 
-    auto indexInfo = boost::make_shared<StaticAnalyser>(parser.ast(), context);
+    auto indexInfo = QuantLib::ext::make_shared<StaticAnalyser>(parser.ast(), context);
     BOOST_REQUIRE_NO_THROW(indexInfo->run());
     BOOST_REQUIRE_EQUAL(indexInfo->indexEvalDates().size(), 3);
     Size i = 0;
@@ -1289,35 +1654,42 @@ BOOST_AUTO_TEST_CASE(testAutocallable) {
     for (auto const& s : indexInfo->payPayDates())
         payDates.insert(s.second.begin(), s.second.end());
 
-    Handle<YieldTermStructure> yts(boost::make_shared<FlatForward>(ref, rate, ActualActual(ActualActual::ISDA)));
-    Handle<YieldTermStructure> yts0(boost::make_shared<FlatForward>(ref, 0.0, ActualActual(ActualActual::ISDA)));
+    Handle<YieldTermStructure> yts(
+        QuantLib::ext::make_shared<FlatForward>(ref, rate, ActualActual(ActualActual::ISDA)));
+    Handle<YieldTermStructure> yts0(
+        QuantLib::ext::make_shared<FlatForward>(ref, 0.0, ActualActual(ActualActual::ISDA)));
     Handle<BlackVolTermStructure> volts(
-        boost::make_shared<BlackConstantVol>(ref, NullCalendar(), vol, ActualActual(ActualActual::ISDA)));
-    auto process1 = boost::make_shared<GeneralizedBlackScholesProcess>(
-        Handle<Quote>(boost::make_shared<SimpleQuote>(s0)), yts0, yts, volts);
-    auto process2 = boost::make_shared<GeneralizedBlackScholesProcess>(
-        Handle<Quote>(boost::make_shared<SimpleQuote>(s0)), yts0, yts, volts);
-    auto process3 = boost::make_shared<GeneralizedBlackScholesProcess>(
-        Handle<Quote>(boost::make_shared<SimpleQuote>(s0)), yts0, yts, volts);
-    std::vector<boost::shared_ptr<QuantLib::StochasticProcess1D>> processes = {process1, process2, process3};
-    std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>> processesBs = {process1, process2, process3};
+        QuantLib::ext::make_shared<BlackConstantVol>(ref, NullCalendar(), vol, ActualActual(ActualActual::ISDA)));
+    auto process1 = QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
+        Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(s0)), yts0, yts, volts);
+    auto process2 = QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
+        Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(s0)), yts0, yts, volts);
+    auto process3 = QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
+        Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(s0)), yts0, yts, volts);
+    std::vector<QuantLib::ext::shared_ptr<QuantLib::StochasticProcess1D>> processes = {process1, process2, process3};
+    std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>> processesBs = {process1, process2, process3};
     std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>> correlations;
-    correlations[std::make_pair("EQ-1", "EQ-2")] = Handle<QuantExt::CorrelationTermStructure>(
-        boost::make_shared<QuantExt::FlatCorrelation>(0, NullCalendar(), 0.5, ActualActual(ActualActual::ISDA)));
-    correlations[std::make_pair("EQ-1", "EQ-3")] = Handle<QuantExt::CorrelationTermStructure>(
-        boost::make_shared<QuantExt::FlatCorrelation>(0, NullCalendar(), 0.4, ActualActual(ActualActual::ISDA)));
-    correlations[std::make_pair("EQ-2", "EQ-3")] = Handle<QuantExt::CorrelationTermStructure>(
-        boost::make_shared<QuantExt::FlatCorrelation>(0, NullCalendar(), 0.6, ActualActual(ActualActual::ISDA)));
+    correlations[std::make_pair("EQ-1", "EQ-2")] =
+        Handle<QuantExt::CorrelationTermStructure>(QuantLib::ext::make_shared<QuantExt::FlatCorrelation>(
+            0, NullCalendar(), 0.5, ActualActual(ActualActual::ISDA)));
+    correlations[std::make_pair("EQ-1", "EQ-3")] =
+        Handle<QuantExt::CorrelationTermStructure>(QuantLib::ext::make_shared<QuantExt::FlatCorrelation>(
+            0, NullCalendar(), 0.4, ActualActual(ActualActual::ISDA)));
+    correlations[std::make_pair("EQ-2", "EQ-3")] =
+        Handle<QuantExt::CorrelationTermStructure>(QuantLib::ext::make_shared<QuantExt::FlatCorrelation>(
+            0, NullCalendar(), 0.6, ActualActual(ActualActual::ISDA)));
     cpu_timer timer;
-    Model::McParams mcParams;
-    mcParams.regressionOrder = 6;
-    auto model = boost::make_shared<BlackScholes>(
-        nPaths, std::vector<std::string>(1, "USD"), std::vector<Handle<YieldTermStructure>>(1, yts),
-        std::vector<Handle<Quote>>(), std::vector<std::pair<std::string, boost::shared_ptr<InterestRateIndex>>>(),
-        std::vector<std::pair<std::string, boost::shared_ptr<ZeroInflationIndex>>>(), indicesStr,
-        std::vector<std::string>(3, "USD"),
-        BlackScholesModelBuilder({yts}, processesBs, simulationDates, payDates, 24).model(), correlations, mcParams,
-        simulationDates);
+    Model::Params params;
+    params.regressionOrder = 6;
+    auto model = QuantLib::ext::make_shared<BlackScholes>(
+        Model::Type::MC, nPaths, std::vector<std::string>(1, "USD"), std::vector<Handle<YieldTermStructure>>(1, yts),
+        std::vector<Handle<Quote>>(),
+        std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>(),
+        std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>(), indicesStr,
+        std::vector<std::string>(3, "USD"), std::set<std::string>{"USD"},
+        BlackScholesModelBuilder({yts}, processesBs, simulationDates, payDates, 24).model(), correlations,
+        simulationDates, QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()), "ATM",
+        std::map<string, std::vector<Real>>(), params);
     ScriptEngine engine(parser.ast(), context, model);
     BOOST_REQUIRE_NO_THROW(engine.run());
     BOOST_REQUIRE(context->scalars["Option"].which() == ValueTypeWhich::Number);
@@ -1343,7 +1715,7 @@ BOOST_AUTO_TEST_CASE(testAutocallable) {
         BOOST_TEST_MESSAGE("grid point #" << i << ": " << grid[i]);
 
     Matrix correlation{{1.0, 0.5, 0.4}, {0.5, 1.0, 0.6}, {0.4, 0.6, 1.0}};
-    auto process = boost::make_shared<StochasticProcessArray>(processes, correlation);
+    auto process = QuantLib::ext::make_shared<StochasticProcessArray>(processes, correlation);
     auto pg = makeMultiPathGenerator(SobolBrownianBridge, process, grid, SobolBrownianGenerator::Steps);
     double avg2 = 0.0;
     timer.start();
@@ -1462,7 +1834,7 @@ BOOST_AUTO_TEST_CASE(testNestedIfThenElse) {
     BOOST_REQUIRE(parser.success());
     BOOST_TEST_MESSAGE("Parsing successful, AST:\n" << to_string(parser.ast()));
 
-    auto context = boost::make_shared<Context>();
+    auto context = QuantLib::ext::make_shared<Context>();
 
     RandomVariable x(16), y(16);
     for (Size i = 0; i < 16; ++i)
@@ -1471,7 +1843,7 @@ BOOST_AUTO_TEST_CASE(testNestedIfThenElse) {
     context->scalars["x"] = x;
     context->scalars["y"] = y;
 
-    ScriptEngine engine(parser.ast(), context, boost::make_shared<DummyModel>(16));
+    ScriptEngine engine(parser.ast(), context, QuantLib::ext::make_shared<DummyModel>(16));
     BOOST_REQUIRE_NO_THROW(engine.run());
     BOOST_TEST_MESSAGE("Script Engine successfully run, context is:\n" << *context);
 
@@ -1499,7 +1871,7 @@ BOOST_AUTO_TEST_CASE(testInteractive, *boost::unit_test::disabled()) {
         std::cerr << "Parsing failed\n" << parser.error();
     }
 
-    auto context = boost::make_shared<Context>();
+    auto context = QuantLib::ext::make_shared<Context>();
     ScriptEngine engine(parser.ast(), context, nullptr);
     try {
         engine.run();

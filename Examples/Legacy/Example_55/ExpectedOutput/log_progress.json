@@ -1,0 +1,12 @@
+{ "@timestamp": "2024-09-24T13:06:02.028230", "key": "Running XVA Analytic", "progress": 0, "total": 1 }
+{ "@timestamp": "2024-09-24T13:06:02.029233", "key": "XVA: Build Today's Market", "progress": 0, "total": 1 }
+{ "@timestamp": "2024-09-24T13:06:02.040885", "key": "XVA: Build Today's Market", "progress": 1, "total": 1 }
+{ "@timestamp": "2024-09-24T13:06:02.223658", "key": "XVA: Build AMC portfolio", "progress": 0, "total": 1 }
+{ "@timestamp": "2024-09-24T13:06:02.243791", "key": "XVA: Build AMC portfolio", "progress": 1, "total": 1 }
+{ "@timestamp": "2024-09-24T13:06:02.442233", "detail": "1 trade", "key": "XVA: Build AMC Cube...", "progress": 0, "total": 1 }
+{ "@timestamp": "2024-09-24T13:06:02.767250", "detail": "1 trade", "key": "XVA: Build AMC Cube...", "progress": 1, "total": 1 }
+{ "@timestamp": "2024-09-24T13:06:02.797708", "key": "XVA: Aggregation", "progress": 0, "total": 1 }
+{ "@timestamp": "2024-09-24T13:06:08.316020", "key": "XVA: Aggregation", "progress": 1, "total": 1 }
+{ "@timestamp": "2024-09-24T13:06:08.316079", "key": "XVA: Reports", "progress": 0, "total": 1 }
+{ "@timestamp": "2024-09-24T13:06:08.345222", "key": "XVA: Reports", "progress": 1, "total": 1 }
+{ "@timestamp": "2024-09-24T13:06:08.345293", "key": "Running XVA Analytic", "progress": 1, "total": 1 }

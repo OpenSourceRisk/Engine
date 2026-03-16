@@ -23,14 +23,14 @@
 
 namespace QuantExt {
 
-LinearGaussMarkovModel::LinearGaussMarkovModel(const boost::shared_ptr<IrLgm1fParametrization>& parametrization,
+LinearGaussMarkovModel::LinearGaussMarkovModel(const QuantLib::ext::shared_ptr<IrLgm1fParametrization>& parametrization,
                                                const Measure measure, const Discretization discretization,
                                                const bool evaluateBankAccount,
-                                               const boost::shared_ptr<Integrator>& integrator)
+                                               const QuantLib::ext::shared_ptr<Integrator>& integrator)
     : parametrization_(parametrization), measure_(measure), discretization_(discretization),
       evaluateBankAccount_(evaluateBankAccount) {
     QL_REQUIRE(parametrization_ != nullptr, "HwModel: parametrization is null");
-    stateProcess_ = boost::make_shared<IrLgm1fStateProcess>(parametrization_);
+    stateProcess_ = QuantLib::ext::make_shared<IrLgm1fStateProcess>(parametrization_);
     arguments_.resize(2);
     arguments_[0] = parametrization_->parameter(0);
     arguments_[1] = parametrization_->parameter(1);
@@ -41,7 +41,7 @@ LinearGaussMarkovModel::LinearGaussMarkovModel(const boost::shared_ptr<IrLgm1fPa
         allTimes.insert(allTimes.end(), parametrization_->parameterTimes(i).begin(),
                         parametrization_->parameterTimes(i).end());
 
-    integrator_ = boost::make_shared<PiecewiseIntegral>(integrator, allTimes, true);
+    integrator_ = QuantLib::ext::make_shared<PiecewiseIntegral>(integrator, allTimes, true);
 }
 
 Real LinearGaussMarkovModel::bankAccountNumeraire(const Time t, const Real x, const Real y,
@@ -59,7 +59,23 @@ Size LinearGaussMarkovModel::n() const { return 1; }
 Size LinearGaussMarkovModel::m() const { return 1; }
 Size LinearGaussMarkovModel::n_aux() const { return evaluateBankAccount_ && measure_ == Measure::BA ? 1 : 0; }
 Size LinearGaussMarkovModel::m_aux() const {
-    return evaluateBankAccount_ && measure_ == Measure::BA && discretization_ == Discretization::Exact ? 1 : 0;
+    return evaluateBankAccount_ && measure_ == Measure::BA && discretization_ == Discretization::ExactGlobal ? 1 : 0;
+}
+
+Array LinearGaussMarkovModel::marginalStep(const Time t0, const Array& x0, const Time dt, const Array& dw) const {
+    if (measure_ == IrModel::Measure::LGM || (measure_ == IrModel::Measure::BA && !evaluateBankAccount_)) {
+        return Array(1, x0[0] + std::sqrt(parametrization_->zeta(t0 + dt) - parametrization_->zeta(t0)) * dw[0]);
+    } else if (measure_ == IrModel::Measure::BA && evaluateBankAccount_) {
+        Array res(2);
+        Real H = parametrization_->H(t0);
+        Real alpha = parametrization_->alpha(t0);
+        res[0] = x0[0] - dt * H * alpha * alpha +
+                 std::sqrt(parametrization_->zeta(t0 + dt) - parametrization_->zeta(t0)) * dw[0];
+        res[1] = x0[1] + alpha * H * std::sqrt(dt) * dw[0];
+        return res;
+    } else {
+        QL_FAIL("LinearGaussMarkovModel::marginalStep(): measure " << static_cast<int>(measure_) << " not handled.");
+    }
 }
 
 } // namespace QuantExt

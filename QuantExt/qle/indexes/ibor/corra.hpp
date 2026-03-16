@@ -46,7 +46,7 @@ class CORRATerm : public TermRateIndex {
 public:
     CORRATerm(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
         : TermRateIndex("CAD-CORRATerm", tenor, 2, CADCurrency(), Canada(), ModifiedFollowing, false, Actual365Fixed(), h,
-                        boost::make_shared<CORRA>(h)) {}
+                        QuantLib::ext::make_shared<CORRA>(h)) {}
 };
 } // namespace QuantExt
 

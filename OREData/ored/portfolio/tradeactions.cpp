@@ -32,10 +32,12 @@ void TradeAction::fromXML(XMLNode* node) {
 
 XMLNode* TradeAction::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("TradeAction");
-    QL_REQUIRE(node, "Failed to create trade node");
+    QL_REQUIRE(node, "Failed to create TradeAction node");
     XMLUtils::addChild(doc, node, "Type", type_);
     XMLUtils::addChild(doc, node, "Owner", owner_);
-    XMLUtils::appendNode(node, schedule_.toXML(doc));
+    auto s = schedule_.toXML(doc);
+    XMLUtils::setNodeName(doc, s, "Schedule");
+    XMLUtils::appendNode(node, s);
     return node;
 }
 

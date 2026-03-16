@@ -1,0 +1,19 @@
+<Conventions>
+  <CommodityFuture>
+    <Id>ice_ttf</Id>
+    <AnchorDay>
+      <DayOfMonth>1</DayOfMonth>
+    </AnchorDay>
+    <ContractFrequency>Monthly</ContractFrequency>
+    <Calendar>UK</Calendar>
+    <ExpiryCalendar>UK</ExpiryCalendar>
+    <ExpiryMonthLag>0</ExpiryMonthLag>
+    <OffsetDays>2</OffsetDays>
+    <BusinessDayConvention>Preceding</BusinessDayConvention>
+    <AdjustBeforeOffset>false</AdjustBeforeOffset>
+    <IsAveraging>false</IsAveraging>
+    <OptionCalendarDaysBefore>5</OptionCalendarDaysBefore>
+    <OptionBusinessDayConvention>Preceding</OptionBusinessDayConvention>
+    <OptionMinBusinessDaysBefore>1</OptionMinBusinessDaysBefore>
+  </CommodityFuture>
+</Conventions>

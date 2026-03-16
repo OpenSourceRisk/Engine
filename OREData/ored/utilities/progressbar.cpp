@@ -24,11 +24,11 @@
 namespace ore {
 namespace data {
 
-void ProgressReporter::registerProgressIndicator(const boost::shared_ptr<ProgressIndicator>& indicator) {
+void ProgressReporter::registerProgressIndicator(const QuantLib::ext::shared_ptr<ProgressIndicator>& indicator) {
     indicators_.insert(indicator);
 }
 
-void ProgressReporter::unregisterProgressIndicator(const boost::shared_ptr<ProgressIndicator>& indicator) {
+void ProgressReporter::unregisterProgressIndicator(const QuantLib::ext::shared_ptr<ProgressIndicator>& indicator) {
     indicators_.erase(indicator);
 }
 
@@ -112,7 +112,7 @@ void ProgressLog::updateProgress(const unsigned long progress, const unsigned lo
 void ProgressLog::reset() { messageCounter_ = 0; }
 
 MultiThreadedProgressIndicator::MultiThreadedProgressIndicator(
-    const std::set<boost::shared_ptr<ProgressIndicator>>& indicators)
+    const std::set<QuantLib::ext::shared_ptr<ProgressIndicator>>& indicators)
     : indicators_(indicators) {}
 
 void MultiThreadedProgressIndicator::updateProgress(const unsigned long progress, const unsigned long total, const std::string& detail) {

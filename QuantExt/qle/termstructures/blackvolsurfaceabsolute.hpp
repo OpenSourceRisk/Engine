@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include <ql/experimental/fx/deltavolquote.hpp>
+#include <ql/quotes/deltavolquote.hpp>
 #include <ql/math/interpolation.hpp>
 #include <ql/option.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
@@ -83,7 +83,7 @@ private:
     DeltaVolQuote::DeltaType ltdt_;
     DeltaVolQuote::AtmType ltat_;
     SmileInterpolation smileInterpolation_;
-    std::vector<boost::shared_ptr<Interpolation>> interpolation_;
+    std::vector<QuantLib::ext::shared_ptr<Interpolation>> interpolation_;
     bool flatExtrapolation_;
 
     mutable std::vector<Real> expiryTimes_;

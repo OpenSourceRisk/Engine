@@ -29,6 +29,11 @@
 #include <ql/math/array.hpp>
 #include <ql/methods/montecarlo/multipath.hpp>
 
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/assume_abstract.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+
 namespace QuantExt {
 
 /*! amc interface */
@@ -40,13 +45,22 @@ public:
     virtual QuantLib::Currency npvCurrency() = 0;
 
     /*! - simulate paths on given times and return simulated npvs for all paths
-        - isRelevantTime marks the entries in paths that should be simulated in the end
-        - if stickyCloseOutRun is true, the simulation times should be taken from the previous index
+        - relevantPathIndex gives the relevant entries in the paths that should be simulated in the end
+        - relevantTimeIndex gives the corrosponding time indexes for a sticky closeOut run
+        - if stickyCloseOutRun is true, the simulation times should be taken relevantTimeIndexes
      */
     virtual std::vector<QuantExt::RandomVariable>
     simulatePath(const std::vector<QuantLib::Real>& pathTimes,
-                 std::vector<std::vector<QuantExt::RandomVariable>>& paths, const std::vector<bool>& isRelevantTime,
-                 const bool stickyCloseOutRun) = 0;
+                 const std::vector<std::vector<QuantExt::RandomVariable>>& paths,
+                 const std::vector<size_t>& relevantPathIndex, const std::vector<size_t>& relevantTimeIndex) = 0;
+
+    friend class boost::serialization::access;
+    template <class Archive> void serialize(Archive& ar, const unsigned int version) {};
 };
+
+template void AmcCalculator::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void AmcCalculator::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+
+BOOST_SERIALIZATION_ASSUME_ABSTRACT(AmcCalculator);
 
 } // namespace QuantExt

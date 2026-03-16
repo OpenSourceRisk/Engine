@@ -22,6 +22,7 @@
 
 #include <ql/errors.hpp>
 #include <ql/math/comparison.hpp>
+#include <ql/math/rounding.hpp>
 
 #include <boost/math/distributions/normal.hpp>
 
@@ -63,15 +64,15 @@ std::size_t ComputationGraph::insert(const std::vector<std::size_t>& predecessor
     predecessors_.push_back(predecessors);
     opId_.push_back(opId);
     for (auto const& p : predecessors) {
+        QL_REQUIRE(p < node,
+                   "ComputationGraph::insert(): illegal predecessor node id (" << p << ") while adding node " << node);
         maxNodeRequiringArg_[p] = node;
     }
     maxNodeRequiringArg_.push_back(0);
     redBlockId_.push_back(currentRedBlockId_);
-    if (currentRedBlockId_ != 0) {
-        for (auto const& p : predecessors) {
-            if (redBlockId(p) != currentRedBlockId_) {
-                redBlockDependencies_.insert(p);
-            }
+    for (auto const& p : predecessors) {
+        if (redBlockId(p) != 0 && redBlockId(p) != currentRedBlockId_) {
+            redBlockDependencies_.insert(p);
         }
     }
     isConstant_.push_back(false);
@@ -202,6 +203,16 @@ std::size_t cg_add(ComputationGraph& g, const std::size_t a, const std::size_t b
     return g.insert({a, b}, RandomVariableOpCode::Add, label);
 }
 
+std::size_t cg_add(ComputationGraph& g, const std::vector<std::size_t>& a, const std::string& label) {
+    if (a.empty())
+        return cg_const(g, 0.0);
+    if (a.size() == 1)
+        return a[0];
+    if (a.size() == 2)
+        return cg_add(g, a[0], a[1], label);
+    return g.insert(a, RandomVariableOpCode::Add, label);
+}
+
 std::size_t cg_subtract(ComputationGraph& g, const std::size_t a, const std::size_t b, const std::string& label) {
     if (a == b)
         return cg_const(g, 0.0);
@@ -311,6 +322,22 @@ std::size_t cg_sqrt(ComputationGraph& g, const std::size_t a, const std::string&
     return g.insert({a}, RandomVariableOpCode::Sqrt, label);
 }
 
+std::size_t cg_frac(ComputationGraph& g, const std::size_t a, const std::string& label) {
+    if (g.isConstant(a)){
+        double intPart;
+        return cg_const(g, std::modf(g.constantValue(a), &intPart));
+    } 
+    return g.insert({a}, RandomVariableOpCode::Frac, label);
+}
+
+std::size_t cg_round(ComputationGraph& g, const std::size_t a, const std::size_t b, const std::string& label) {
+    if (g.isConstant(a) && g.isConstant(b)){
+        QuantLib::Rounding rnd(g.constantValue(b), QuantLib::Rounding::Closest, 5);
+        return cg_const(g, rnd(g.constantValue(a)));
+    }
+    return g.insert({a, b}, RandomVariableOpCode::Round, label);
+}
+
 std::size_t cg_log(ComputationGraph& g, const std::size_t a, const std::string& label) {
     if (g.isConstant(a))
         return cg_const(g, std::log(g.constantValue(a)));
@@ -318,8 +345,33 @@ std::size_t cg_log(ComputationGraph& g, const std::size_t a, const std::string& 
 }
 
 std::size_t cg_pow(ComputationGraph& g, const std::size_t a, const std::size_t b, const std::string& label) {
-    if (g.isConstant(a) && g.isConstant(b))
+    // both inputs are constants, use std function
+    if (g.isConstant(a) && g.isConstant(b)) {
         return cg_const(g, std::pow(g.constantValue(a), g.constantValue(b)));
+    }
+    // more robust handling of constant integer exponents
+    if (g.isConstant(b) && QuantLib::close_enough(std::round(g.constantValue(b)), g.constantValue(b))) {
+        long p = std::lround(g.constantValue(b));
+        if (p == 0) {
+            return cg_const(g, 1.0);
+        }
+        bool isNegative = p < 0;
+        p = std::abs(p);
+        std::size_t p_node = a, r_node = ComputationGraph::nan;
+        while (p > 0) {
+            if (p & 1)
+                r_node = r_node == ComputationGraph::nan
+                             ? p_node
+                             : g.insert({r_node, p_node}, RandomVariableOpCode::Mult, label);
+            p = p >> 1;
+            if (p > 0)
+                p_node = g.insert({p_node, p_node}, RandomVariableOpCode::Mult, label);
+        }
+        if (isNegative)
+            r_node = g.insert({cg_const(g, 1.0), r_node}, RandomVariableOpCode::Div, label);
+        return r_node;
+    }
+    // default handling
     return g.insert({a, b}, RandomVariableOpCode::Pow, label);
 }
 
@@ -335,6 +387,17 @@ std::size_t cg_normalPdf(ComputationGraph& g, const std::size_t a, const std::st
     if (g.isConstant(a))
         return cg_const(g, boost::math::pdf(n, g.constantValue(a)));
     return g.insert({a}, RandomVariableOpCode::NormalPdf, label);
+}
+
+std::set<std::size_t> dependentNodes(const ComputationGraph& g, const std::size_t start, const std::size_t end) {
+    std::set<std::size_t> nodes;
+    for (std::size_t n = start; n < end; ++n) {
+        std::for_each(g.predecessors(n).begin(), g.predecessors(n).end(), [&nodes, start](const std::size_t p) {
+            if (p < start)
+                nodes.insert(p);
+        });
+    }
+    return nodes;
 }
 
 } // namespace QuantExt

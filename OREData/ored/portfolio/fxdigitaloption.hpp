@@ -52,7 +52,7 @@ public:
           strike_(strike), payoffCurrency_(), payoffAmount_(payoffAmount) {}
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
-    void build(const boost::shared_ptr<EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
 
     //! \name Inspectors
     //@{
@@ -72,6 +72,7 @@ private:
     Real strike_;
     string payoffCurrency_;
     Real payoffAmount_;
+    std::string fxIndex_;
 };
 } // namespace data
 } // namespace oreplus

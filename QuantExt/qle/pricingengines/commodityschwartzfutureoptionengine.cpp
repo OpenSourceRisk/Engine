@@ -23,16 +23,16 @@
 namespace QuantExt {
 
 CommoditySchwartzFutureOptionEngine::CommoditySchwartzFutureOptionEngine(
-    const boost::shared_ptr<CommoditySchwartzModel>& model) : model_(model) {}
+    const QuantLib::ext::shared_ptr<CommoditySchwartzModel>& model) : model_(model) {}
 
 void CommoditySchwartzFutureOptionEngine::calculate() const {
 
     QL_REQUIRE(arguments_.exercise->type() == Exercise::European, "only European options are allowed");
 
-    boost::shared_ptr<StrikedTypePayoff> payoff = boost::dynamic_pointer_cast<StrikedTypePayoff>(arguments_.payoff);
+    QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff = QuantLib::ext::dynamic_pointer_cast<StrikedTypePayoff>(arguments_.payoff);
     QL_REQUIRE(payoff != NULL, "only striked payoff is allowed");
 
-    boost::shared_ptr<CommoditySchwartzParametrization> param = model_->parametrization();
+    QuantLib::ext::shared_ptr<CommoditySchwartzParametrization> param = model_->parametrization();
     
     Date expiry = arguments_.exercise->lastDate();
     Time T = param->priceCurve()->timeFromReference(expiry);

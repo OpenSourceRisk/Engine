@@ -70,7 +70,7 @@ bool Wildcard::matches(const std::string& s) const {
         return s.substr(0, (*prefixString_).size()) == (*prefixString_);
     } else if (regexString_) {
         if (regex_ == nullptr)
-            regex_ = boost::make_shared<std::regex>(*regexString_);
+            regex_ = QuantLib::ext::make_shared<std::regex>(*regexString_);
         return std::regex_match(s, *regex_);
     } else {
         return s == pattern_;
@@ -118,6 +118,20 @@ void partitionQuotes(const set<string>& quoteNames, set<string>& names, set<stri
             names.insert(n);
     }
 }
+
+bool operator<(const Wildcard& w1, const Wildcard& w2) {
+    if (w1.pattern() != w2.pattern())
+        return w1.pattern() < w2.pattern();
+    else if (w1.usePrefixes() && !w2.usePrefixes())
+        return true;
+    else if (w1.aggressivePrefixes() && !w2.aggressivePrefixes())
+        return true;
+    return false;
+}
+
+bool Wildcard::usePrefixes() const { return usePrefixes_; }
+
+bool Wildcard::aggressivePrefixes() const { return aggressivePrefixes_; }
 
 } // namespace data
 } // namespace ore

@@ -20,6 +20,8 @@
 
 #include <ored/utilities/to_string.hpp>
 
+#include <tuple>
+
 #include <iomanip>
 #include <sstream>
 

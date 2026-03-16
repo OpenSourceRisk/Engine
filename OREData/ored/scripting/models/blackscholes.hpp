@@ -17,65 +17,35 @@
 */
 
 /*! \file ored/scripting/models/blackscholes.hpp
-    \brief black scholes model for n underlyings (fx, equity or commodity)
+    \brief black scholes model class for n underlyings (fx, equity or commodity)
     \ingroup utilities
 */
 
 #pragma once
 
-#include <ored/scripting/models/blackscholesbase.hpp>
-
-#include <qle/methods/multipathvariategenerator.hpp>
+#include <ored/scripting/models/blackscholeslocalvolbase.hpp>
 
 namespace ore {
 namespace data {
 
-class BlackScholes : public BlackScholesBase {
+class BlackScholes final : public BlackScholesLocalVolBase {
 public:
-    /* ctor for multiple underlyings, see BlackScholesBase, plus:
-       - processes: hold spot, rate and div ts and vol for each given index
-       - we assume that the given correlations are constant and read the value only at t = 0
-       - calibration strikes are given as a map indexName => strike, if an index is missing in this map, the calibration
-         strike will be atmf */
-    BlackScholes(
-        const Size paths, const std::vector<std::string>& currencies,
-        const std::vector<Handle<YieldTermStructure>>& curves, const std::vector<Handle<Quote>>& fxSpots,
-        const std::vector<std::pair<std::string, boost::shared_ptr<InterestRateIndex>>>& irIndices,
-        const std::vector<std::pair<std::string, boost::shared_ptr<ZeroInflationIndex>>>& infIndices,
-        const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
-        const Handle<BlackScholesModelWrapper>& model,
-        const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
-        const McParams& mcParams, const std::set<Date>& simulationDates,
-        const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
-        const std::string& calibration = "ATM",
-        const std::map<std::string, std::vector<Real>>& calibrationStrikes = {});
-
-    // ctor for one underlying
-    BlackScholes(const Size paths, const std::string& currency, const Handle<YieldTermStructure>& curve,
-                 const std::string& index, const std::string& indexCurrency,
-                 const Handle<BlackScholesModelWrapper>& model, const McParams& mcParams,
-                 const std::set<Date>& simulationDates,
-                 const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
-                 const std::string& calibration = "ATM", const std::vector<Real>& calibrationStrikes = {});
+    using BlackScholesLocalVolBase::BlackScholesLocalVolBase;
 
 private:
-    // ModelImpl interface implementation
+    void performModelCalculations() const override;
+
     RandomVariable getFutureBarrierProb(const std::string& index, const Date& obsdate1, const Date& obsdate2,
                                         const RandomVariable& barrier, const bool above) const override;
-    // BlackScholesBase interface implementation
-    void performCalculations() const override;
 
+    void performCalculationsMc() const;
+    void generatePaths() const;
     void populatePathValues(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
-                            const boost::shared_ptr<MultiPathVariateGeneratorBase>& gen,
+                            const QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>& gen,
                             const std::vector<Array>& drift, const std::vector<Matrix>& sqrtCov) const;
-    // covariance per effective simulation date
-    mutable std::vector<Matrix> covariance_;
 
-    // the calibration to use, ATM or Deal
-    const std::string calibration_;
-
-    // map indexName => calibration strike (for missing indices we'll assume atmf)
-    const std::map<std::string, std::vector<Real>> calibrationStrikes_;
+    // only used for MC
+    mutable std::vector<Matrix> covariance_; // covariance per effective simulation date
 };
 
 } // namespace data

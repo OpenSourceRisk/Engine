@@ -1,0 +1,118 @@
+<?xml version="1.0"?>
+<Simulation>
+
+  <Market>
+
+    <BaseCurrency>EUR</BaseCurrency>
+
+    <Currencies>
+      <Currency>EUR</Currency>
+      <Currency>USD</Currency>
+    </Currencies>
+
+    <YieldCurves>
+      <Configuration>
+        <!--<Tenors>3M,6M,1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,30Y,40Y,50Y</Tenors>-->
+        <Tenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</Tenors>
+        <Interpolation>LogLinear</Interpolation>
+        <!-- Alternative: LinearZero -->
+        <Extrapolation>Y</Extrapolation>
+      </Configuration>
+    </YieldCurves>
+
+    <BenchmarkCurves>
+      <BenchmarkCurve>
+	<Currency>EUR</Currency>
+	<Name>BENCHMARK_EUR</Name>
+      </BenchmarkCurve>
+    </BenchmarkCurves>
+    
+    <FxRates>
+      <CurrencyPairs>
+        <CurrencyPair>USDEUR</CurrencyPair>
+      </CurrencyPairs>      
+    </FxRates>  
+
+    <Indices>
+      <Index>EUR-EURIBOR-6M</Index>
+      <Index>EUR-EURIBOR-3M</Index>
+      <Index>EUR-EONIA</Index>
+      <Index>USD-FedFunds</Index>
+      <Index>USD-LIBOR-3M</Index>      
+    </Indices>
+
+    <SwapIndices>
+      <SwapIndex>
+        <Name>EUR-CMS-1Y</Name>
+        <DiscountingIndex>EUR-EONIA</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>EUR-CMS-10Y</Name>
+        <DiscountingIndex>EUR-EONIA</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>EUR-CMS-30Y</Name>
+        <DiscountingIndex>EUR-EONIA</DiscountingIndex>
+      </SwapIndex>
+    </SwapIndices>
+
+    <DefaultCurves>
+      <Names>
+        <Name>CPTY_A</Name>
+      </Names>
+      <Tenors>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y</Tenors>
+      <SimulateSurvivalProbabilities>true</SimulateSurvivalProbabilities>
+    </DefaultCurves>
+
+    <!-- Even if we do not simulate them - option pricing needs vol
+	   surfaces, so we need to specify here how we propagate the
+	   vol structure and what its composition will be -->
+    <SwaptionVolatilities>
+      <Simulate>true</Simulate>
+      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+      <!-- Alternative: ConstantVariance -->
+      <Keys>
+        <Key>EUR</Key>
+      </Keys>
+      <Expiries>6M,1Y,2Y,3Y,5Y,10Y,12Y,15Y,20Y</Expiries>
+      <Terms>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,30Y</Terms>
+    </SwaptionVolatilities>
+    
+    <CapFloorVolatilities>
+      <Simulate>true</Simulate>
+      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+      <Keys>
+        <Key>EUR</Key>
+      </Keys>
+      <Expiries>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</Expiries>
+      <Strikes>0.00,0.01,0.02,0.03,0.04,0.05,0.06</Strikes>
+    </CapFloorVolatilities>
+	
+    <Securities>
+      <Simulate>true</Simulate>
+      <Names>
+        <Name>SECURITY_1</Name>
+      </Names>
+    </Securities>
+
+    <!-- Additional data that is recorded during simulation for later
+	   use in the post processor -->
+    <AggregationScenarioDataCurrencies>
+      <Currency>EUR</Currency>
+    </AggregationScenarioDataCurrencies>
+
+    <AggregationScenarioDataIndices>
+      <Index>EUR-EURIBOR-3M</Index>
+      <Index>EUR-EONIA</Index>
+    </AggregationScenarioDataIndices>
+
+    <Correlations>
+      <Simulate>true</Simulate>
+      <Pairs>
+	<Pair>EUR-CMS-10Y:EUR-CMS-1Y</Pair>
+      </Pairs>
+      <Expiries>1Y</Expiries>
+    </Correlations>
+  </Market>
+
+</Simulation>

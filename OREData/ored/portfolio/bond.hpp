@@ -101,17 +101,18 @@ public:
     Real faceAmount() const { return faceAmount_; }
     const string& maturityDate() const { return maturityDate_; }
     const string& subType() const { return subType_; }
+    const std::optional<QuantLib::Bond::Price::Type>& quotedDirtyPrices() const { return quotedDirtyPrices_; }
 
     //! XMLSerializable interface
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 
     //! populate data from reference datum and check data for completeness
-    void populateFromBondReferenceData(const boost::shared_ptr<BondReferenceDatum>& referenceDatum,
+    void populateFromBondReferenceData(const QuantLib::ext::shared_ptr<BondReferenceDatum>& referenceDatum,
 				       const std::string& startDate = "", const std::string& endDate = "");
 
     //! look up reference datum in ref data manager and populate, check data for completeness
-    void populateFromBondReferenceData(const boost::shared_ptr<ReferenceDataManager>& referenceData,
+    void populateFromBondReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
 				       const std::string& startDate = "", const std::string& endDate = "");
 
     //! check data for completeness
@@ -144,6 +145,7 @@ private:
     bool isPayer_;
     bool isInflationLinked_;
     string subType_;
+    std::optional<QuantLib::Bond::Price::Type> quotedDirtyPrices_ = std::nullopt;
 };
 
 //! Serializable Bond
@@ -160,14 +162,14 @@ public:
         : Trade("Bond", env), originalBondData_(bondData), bondData_(bondData) {}
 
     //! Trade interface
-    virtual void build(const boost::shared_ptr<EngineFactory>&) override;
+    virtual void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
 
     //! inspectors
     const BondData& bondData() const { return bondData_; }
 
     //! Add underlying Bond names
     std::map<AssetClass, std::set<std::string>>
-    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
     //! XMLSerializable interface
     virtual void fromXML(XMLNode* node) override;
@@ -182,8 +184,10 @@ private:
 struct BondBuilder {
     struct Result {
         std::string builderLabel;
-        boost::shared_ptr<QuantLib::Bond> bond;
-        boost::shared_ptr<QuantExt::ModelBuilder> modelBuilder; // might be nullptr
+        QuantLib::ext::shared_ptr<QuantLib::Bond> bond;
+        QuantLib::ext::shared_ptr<ore::data::Trade> trade;
+        BondData bondData;
+        QuantLib::ext::shared_ptr<QuantExt::ModelBuilder> modelBuilder; // might be nullptr
         bool isInflationLinked = false;
         bool hasCreditRisk = true;
         std::string currency;
@@ -192,30 +196,31 @@ struct BondBuilder {
         std::string creditGroup;
         QuantExt::BondIndex::PriceQuoteMethod priceQuoteMethod = QuantExt::BondIndex::PriceQuoteMethod::PercentageOfPar;
         double priceQuoteBaseValue = 1.0;
+        std::optional<QuantLib::Bond::Price::Type> quotedDirtyPrices;
 
         double inflationFactor() const;
     };
     virtual ~BondBuilder() {}
-    virtual Result build(const boost::shared_ptr<EngineFactory>& engineFactory,
-                         const boost::shared_ptr<ReferenceDataManager>& referenceData,
+    virtual Result build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                         const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                          const std::string& securityId) const = 0;
 };
 
 class BondFactory : public QuantLib::Singleton<BondFactory, std::integral_constant<bool, true>> {
-    map<std::string, boost::shared_ptr<BondBuilder>> builders_;
+    map<std::string, QuantLib::ext::shared_ptr<BondBuilder>> builders_;
     mutable boost::shared_mutex mutex_;
 
 public:
-    BondBuilder::Result build(const boost::shared_ptr<EngineFactory>& engineFactory,
-                              const boost::shared_ptr<ReferenceDataManager>& referenceData,
+    BondBuilder::Result build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                              const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                               const std::string& securityId) const;
-    void addBuilder(const std::string& referenceDataType, const boost::shared_ptr<BondBuilder>& builder,
+    void addBuilder(const std::string& referenceDataType, const QuantLib::ext::shared_ptr<BondBuilder>& builder,
                     const bool allowOverwrite = false);
 };
 
 struct VanillaBondBuilder : public BondBuilder {
-    virtual Result build(const boost::shared_ptr<EngineFactory>& engineFactory,
-                         const boost::shared_ptr<ReferenceDataManager>& referenceData,
+    virtual Result build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                         const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                          const std::string& securityId) const override;
 };
 

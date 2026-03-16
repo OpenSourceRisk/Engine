@@ -53,9 +53,9 @@ protected:
         return assetName + ccy.code() + type;
     }
 
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
                                                         const string& type) override {
-        boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = boost::make_shared<GeneralizedBlackScholesProcess>(
+        QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> gbsp = QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
             market_->equitySpot(assetName, configuration(ore::data::MarketContext::pricing)),
             market_->equityDividendCurve(assetName, configuration(ore::data::MarketContext::pricing)),
             market_->equityForecastCurve(assetName, configuration(ore::data::MarketContext::pricing)),
@@ -63,10 +63,10 @@ protected:
 
         if (type == "One-Touch") {
             engine_ = "AnalyticDigitalAmericanEngine";
-            return boost::make_shared<QuantLib::AnalyticDigitalAmericanEngine>(gbsp);
+            return QuantLib::ext::make_shared<QuantLib::AnalyticDigitalAmericanEngine>(gbsp);
         } else if (type == "No-Touch") {
             engine_ = "AnalyticDigitalAmericanKOEngine";
-            return boost::make_shared<QuantLib::AnalyticDigitalAmericanKOEngine>(gbsp);
+            return QuantLib::ext::make_shared<QuantLib::AnalyticDigitalAmericanKOEngine>(gbsp);
         } else {
             QL_FAIL("Unknwon EQ touch option type: " << type);
         }

@@ -35,7 +35,7 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/directed_graph.hpp>
 #include <boost/graph/graph_traits.hpp>
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 
 #include <map>
@@ -79,15 +79,14 @@ class CorrelationCurve;
  */
 class TodaysMarket : public MarketImpl {
 public:
-    //! Constructor taking pointers and allowing for a lazy build of the market objects
     TodaysMarket( //! Valuation date
         const Date& asof,
         //! Description of the market composition
-        const boost::shared_ptr<TodaysMarketParameters>& params,
+        const QuantLib::ext::shared_ptr<TodaysMarketParameters>& params,
         //! Market data loader
-        const boost::shared_ptr<Loader>& loader,
+        const QuantLib::ext::shared_ptr<Loader>& loader,
         //! Description of curve compositions
-        const boost::shared_ptr<CurveConfigurations>& curveConfigs,
+        const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigs,
         //! Continue even if build errors occur
         const bool continueOnError = false,
         //! Optional Load Fixings
@@ -95,17 +94,20 @@ public:
         //! If yes, build market objects lazily
         const bool lazyBuild = false,
         //! Optional reference data manager, needed to build fitted bond curves
-        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
+        const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
         //! If true, preserve link to loader quotes, this might heavily interfere with XVA simulations!
         const bool preserveQuoteLinkage = false,
         //! the ibor fallback config
-        const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+        const QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig>& iborFallbackConfig =
+            QuantLib::ext::make_shared<ore::data::IborFallbackConfig>(ore::data::IborFallbackConfig::defaultConfig()),
         //! build calibration info?
         const bool buildCalibrationInfo = true,
         //! support pseudo currencies
-        const bool handlePseudoCurrencies = true);
+        const bool handlePseudoCurrencies = true,
+        //! use at par coupon convention for rate curve building
+        const bool useAtParCoupons = true);
 
-    boost::shared_ptr<TodaysMarketCalibrationInfo> calibrationInfo() const { return calibrationInfo_; }
+    QuantLib::ext::shared_ptr<TodaysMarketCalibrationInfo> calibrationInfo() const { return calibrationInfo_; }
 
 private:
     // MarketImpl interface
@@ -114,17 +116,18 @@ private:
 
     // input parameters
 
-    const boost::shared_ptr<TodaysMarketParameters> params_;
-    const boost::shared_ptr<Loader> loader_;
-    const boost::shared_ptr<const CurveConfigurations> curveConfigs_;
+    QuantLib::ext::shared_ptr<TodaysMarketParameters> params_;
+    QuantLib::ext::shared_ptr<Loader> loader_;
+    QuantLib::ext::shared_ptr<const CurveConfigurations> curveConfigs_;
 
-    const bool continueOnError_;
-    const bool loadFixings_;
-    const bool lazyBuild_;
-    const bool preserveQuoteLinkage_;
-    const boost::shared_ptr<ReferenceDataManager> referenceData_;
-    const IborFallbackConfig iborFallbackConfig_;
-    const bool buildCalibrationInfo_;
+    bool continueOnError_;
+    bool loadFixings_;
+    bool lazyBuild_;
+    bool preserveQuoteLinkage_;
+    QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData_;
+    QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig> iborFallbackConfig_;
+    bool buildCalibrationInfo_;
+    bool useAtParCoupons_;
 
     // initialise market
     void initialise(const Date& asof);
@@ -135,38 +138,41 @@ private:
     using IndexMap = boost::property_map<Graph, boost::vertex_index_t>::type;
     using Vertex = boost::graph_traits<Graph>::vertex_descriptor;
     using VertexIterator = boost::graph_traits<Graph>::vertex_iterator;
+    using ReducedNode = DependencyGraph::ReducedNode;
+    using ReducedGraph = boost::directed_graph<ReducedNode>;
+    using ReducedIndexMap = boost::property_map<ReducedGraph, boost::vertex_index_t>::type;
+    using ReducedVertex = boost::graph_traits<ReducedGraph>::vertex_descriptor;
+    using ReducedVertexIterator = boost::graph_traits<ReducedGraph>::vertex_iterator;
 
     // the dependency graphs for each configuration
-    mutable std::map<std::string, Graph> dependencies_;
+    mutable std::map<std::string, ReducedGraph> dependencies_;
 
     // build a single market object
-    void buildNode(const std::string& configuration, Node& node) const;
+    void buildNode(const std::string& configuration, ReducedNode& reducedNode) const;
 
     // calibration results
-    boost::shared_ptr<TodaysMarketCalibrationInfo> calibrationInfo_;
+    QuantLib::ext::shared_ptr<TodaysMarketCalibrationInfo> calibrationInfo_;
 
-    // cached market objects, the key of the maps is the curve spec name, except for swap indices, see below
-    mutable map<string, boost::shared_ptr<YieldCurve>> requiredYieldCurves_;
-    mutable map<string, boost::shared_ptr<FXVolCurve>> requiredFxVolCurves_;
-    mutable map<string, boost::shared_ptr<GenericYieldVolCurve>> requiredGenericYieldVolCurves_;
-    mutable map<string, std::pair<boost::shared_ptr<CapFloorVolCurve>, std::pair<std::string, QuantLib::Period>>>
+    // cached market objects, the key of the maps is the curve spec name
+    mutable map<string, QuantLib::ext::shared_ptr<YieldCurve>> requiredYieldCurves_;
+    mutable map<string, QuantLib::ext::shared_ptr<FXVolCurve>> requiredFxVolCurves_;
+    mutable map<string, QuantLib::ext::shared_ptr<GenericYieldVolCurve>> requiredGenericYieldVolCurves_;
+    mutable map<string, std::pair<QuantLib::ext::shared_ptr<CapFloorVolCurve>, std::pair<std::string, QuantLib::Period>>>
         requiredCapFloorVolCurves_;
-    mutable map<string, boost::shared_ptr<DefaultCurve>> requiredDefaultCurves_;
-    mutable map<string, boost::shared_ptr<CDSVolCurve>> requiredCDSVolCurves_;
-    mutable map<string, boost::shared_ptr<BaseCorrelationCurve>> requiredBaseCorrelationCurves_;
-    mutable map<string, boost::shared_ptr<InflationCurve>> requiredInflationCurves_;
-    mutable map<string, boost::shared_ptr<InflationCapFloorVolCurve>> requiredInflationCapFloorVolCurves_;
-    mutable map<string, boost::shared_ptr<EquityCurve>> requiredEquityCurves_;
-    mutable map<string, boost::shared_ptr<EquityVolCurve>> requiredEquityVolCurves_;
-    mutable map<string, boost::shared_ptr<Security>> requiredSecurities_;
-    mutable map<string, boost::shared_ptr<CommodityCurve>> requiredCommodityCurves_;
-    mutable map<string, boost::shared_ptr<CommodityVolCurve>> requiredCommodityVolCurves_;
-    mutable map<string, boost::shared_ptr<CorrelationCurve>> requiredCorrelationCurves_;
-    // for swap indices we map the configuration name to a map (swap index name => index)
-    mutable map<string, map<string, boost::shared_ptr<SwapIndex>>> requiredSwapIndices_;
+    mutable map<string, QuantLib::ext::shared_ptr<DefaultCurve>> requiredDefaultCurves_;
+    mutable map<string, QuantLib::ext::shared_ptr<CDSVolCurve>> requiredCDSVolCurves_;
+    mutable map<string, QuantLib::ext::shared_ptr<BaseCorrelationCurve>> requiredBaseCorrelationCurves_;
+    mutable map<string, QuantLib::ext::shared_ptr<InflationCurve>> requiredInflationCurves_;
+    mutable map<string, QuantLib::ext::shared_ptr<InflationCapFloorVolCurve>> requiredInflationCapFloorVolCurves_;
+    mutable map<string, QuantLib::ext::shared_ptr<EquityCurve>> requiredEquityCurves_;
+    mutable map<string, QuantLib::ext::shared_ptr<Security>> requiredSecurities_;
+    mutable map<string, QuantLib::ext::shared_ptr<CommodityCurve>> requiredCommodityCurves_;
+    mutable map<string, QuantLib::ext::shared_ptr<CorrelationCurve>> requiredCorrelationCurves_;
+    // cached market objects, with configuration added to the key (outer map)
+    mutable map<string, map<string, QuantLib::ext::shared_ptr<CommodityVolCurve>>> requiredCommodityVolCurves_;
+    mutable map<string, map<string, QuantLib::ext::shared_ptr<EquityVolCurve>>> requiredEquityVolCurves_;
+    mutable map<string, map<string, QuantLib::ext::shared_ptr<SwapIndex>>> requiredSwapIndices_;
 };
-
-std::ostream& operator<<(std::ostream& o, const DependencyGraph::Node& n);
 
 } // namespace data
 } // namespace ore

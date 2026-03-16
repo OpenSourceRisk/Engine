@@ -42,7 +42,7 @@ public:
         : Trade("CapFloor", env), longShort_(longShort), legData_(leg), caps_(caps), floors_(floors),
           premiumData_(premiumData) {}
 
-    virtual void build(const boost::shared_ptr<EngineFactory>&) override;
+    virtual void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
 
     //! Inspectors
     //@{
@@ -55,19 +55,20 @@ public:
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 
-    //! \name Trade
-    //@{
-    bool hasCashflows() const override { return true; }
-    //@}
-
-    const std::map<std::string, boost::any>& additionalData() const override;
+    const std::map<std::string, QuantLib::ext::any>& additionalData() const override;
 
 private:
     string longShort_;
     LegData legData_;
     vector<double> caps_;
+    vector<string> capDates_;
     vector<double> floors_;
+    vector<string> floorDates_;
     PremiumData premiumData_;
+
+    // For fair rate calculation
+    mutable QuantLib::Leg plainFloatingLeg_;
+    mutable QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve_;
 };
 } // namespace data
 } // namespace ore

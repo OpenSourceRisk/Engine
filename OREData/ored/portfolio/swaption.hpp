@@ -42,7 +42,7 @@ public:
     Swaption(const Envelope& env, const OptionData& optionData, const vector<LegData>& legData)
         : Trade("Swaption", env), optionData_(optionData), legData_(legData) {}
 
-    void build(const boost::shared_ptr<EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
 
     //! \name Inspectors
     //@{
@@ -57,24 +57,28 @@ public:
     //@}
 
     QuantLib::Real notional() const override;
-    const std::map<std::string, boost::any>& additionalData() const override;
-    bool hasCashflows() const override { return false; }
+    const std::map<std::string, QuantLib::ext::any>& additionalData() const override;
 
     bool isExercised() const;
 
     std::map<AssetClass, std::set<std::string>>
-    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
 private:
     OptionData optionData_;
     vector<LegData> legData_;
 
     //! build underlying swaps for exposure simulation
-    std::vector<boost::shared_ptr<Instrument>> buildUnderlyingSwaps(const boost::shared_ptr<PricingEngine>&,
-                                                                    const std::vector<Date>&);
+    std::vector<QuantLib::ext::shared_ptr<Instrument>>
+    buildUnderlyingSwaps(const QuantLib::ext::shared_ptr<PricingEngine>&, const std::vector<Date>&);
 
-    boost::shared_ptr<ore::data::Swap> underlying_;
-    boost::shared_ptr<ExerciseBuilder> exerciseBuilder_;
+    //! build underlying swaps for calibation under delta-gamma-adjusted method
+    std::vector<QuantLib::ext::shared_ptr<FixedVsFloatingSwap>>
+    buildRepresentativeSwaps(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                             const std::string& qualifier);
+
+    QuantLib::ext::shared_ptr<ore::data::Swap> underlying_;
+    QuantLib::ext::shared_ptr<ExerciseBuilder> exerciseBuilder_;
     Position::Type positionType_;
     Exercise::Type exerciseType_;
     Settlement::Type settlementType_;

@@ -1,0 +1,50 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="CDS">
+        <TradeType>CreditDefaultSwap</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <CreditDefaultSwapData>
+            <IssuerId>Berkshire Hathaway Inc.</IssuerId>
+            <CreditCurveId>RED:08CAD7|SNRFOR|USD|MR14</CreditCurveId>
+            <SettlesAccrual>Y</SettlesAccrual>
+            <ProtectionPaymentTime>atDefault</ProtectionPaymentTime>
+            <ProtectionStart>2023-01-28</ProtectionStart>
+            <UpfrontDate>2023-01-30</UpfrontDate>
+            <UpfrontFee>0.0</UpfrontFee>
+            <!-- expressed as a rate, to be multiplied by notional amount -->
+            <LegData>
+                <LegType>Fixed</LegType>
+                <Payer>true</Payer>
+                <Currency>USD</Currency>
+                <Notionals>
+                    <Notional>10000000.000000</Notional>
+                </Notionals>
+                <DayCounter>A360</DayCounter>
+                <PaymentConvention>F</PaymentConvention>
+                <FixedLegData>
+                    <Rates>
+                        <Rate>0.01</Rate>
+                        <!-- running premium, in addition to the upfront fee -->
+                    </Rates>
+                </FixedLegData>
+                <ScheduleData>
+                    <Rules>
+                        <StartDate>2023-01-27</StartDate>
+                        <EndDate>2033-01-27</EndDate>
+                        <Tenor>3M</Tenor>
+                        <Calendar>US</Calendar>
+                        <Convention>F</Convention>
+                        <Rule>CDS2015</Rule>
+                    </Rules>
+                </ScheduleData>
+            </LegData>
+        </CreditDefaultSwapData>
+    </Trade>
+</Portfolio>

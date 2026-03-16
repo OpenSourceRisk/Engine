@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<ORE>
+  <Setup>
+    <Parameter name="asofDate">2016-02-05</Parameter>
+    <Parameter name="inputPath">Input</Parameter>
+    <Parameter name="outputPath">Output/ParametricVar</Parameter>
+    <Parameter name="logFile">log.txt</Parameter>
+    <Parameter name="logMask">31</Parameter>
+    <Parameter name="marketDataFile">../../Input/market_20160205.txt</Parameter>
+    <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>
+    <Parameter name="implyTodaysFixings">N</Parameter>
+    <Parameter name="curveConfigFile">../../Input/curveconfig.xml</Parameter>
+    <Parameter name="conventionsFile">../../Input/conventions.xml</Parameter>
+    <Parameter name="marketConfigFile">../../Input/todaysmarket.xml</Parameter>
+    <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
+    <Parameter name="portfolioFile">portfolio.xml</Parameter>
+    <Parameter name="observationModel">None</Parameter>
+  </Setup>
+  <Markets>
+    <Parameter name="lgmcalibration">collateral_inccy</Parameter>
+    <Parameter name="fxcalibration">xois_eur</Parameter>
+    <Parameter name="pricing">xois_eur</Parameter>
+    <Parameter name="simulation">xois_eur</Parameter>
+    <Parameter name="sensitivity">xois_eur</Parameter>
+  </Markets>
+  <Analytics>
+    <Analytic type="npv">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="baseCurrency">EUR</Parameter>
+      <Parameter name="outputFileName">npv.csv</Parameter>
+    </Analytic>
+    <Analytic type="cashflow">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="outputFileName">flows.csv</Parameter>
+    </Analytic>
+    <Analytic type="curves">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="configuration">default</Parameter>
+      <Parameter name="grid">240,1M</Parameter>
+      <Parameter name="outputFileName">curves.csv</Parameter>
+    </Analytic>
+    <Analytic type="parametricVar">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="sensitivityInputFile">ParametricVar/sensitivity.csv</Parameter>
+      <Parameter name="covarianceInputFile">covariance.csv</Parameter>
+      <Parameter name="quantiles">0.01,0.05,0.95,0.99</Parameter>
+      <!-- Breakdown of risk classes and types -->
+      <Parameter name="breakdown">Y</Parameter>
+      <!-- Portfolio filter (regex), may be empty or not given -->
+      <Parameter name="portfolioFilter">PF1|PF2</Parameter>
+      <!-- VaR method (Delta, DeltaGammaNormal, MonteCarlo) -->
+      <Parameter name="method">DeltaGammaNormal</Parameter>
+      <!-- Only required for method = MonteCarlo -->
+      <!-- <Parameter name="mcSamples">100000</Parameter> -->
+      <!-- <Parameter name="mcSeed">42</Parameter> -->
+      <Parameter name="outputFile">var.csv</Parameter>
+    </Analytic>
+  </Analytics>
+</ORE>

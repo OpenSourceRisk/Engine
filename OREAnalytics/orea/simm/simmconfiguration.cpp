@@ -69,24 +69,9 @@ const bm<SimmConfiguration::MarginType> marginTypeMap =
         SimmConfiguration::MarginType::BaseCorr, "BaseCorr")(SimmConfiguration::MarginType::AdditionalIM, "AdditionalIM")(
         SimmConfiguration::MarginType::All, "All");
 
-const bm<SimmConfiguration::IMModel> imModelMap =
-    list_of<bm<SimmConfiguration::IMModel>::value_type>(SimmConfiguration::IMModel::Schedule, "Schedule")(
-        SimmConfiguration::IMModel::SIMM, "SIMM")(SimmConfiguration::IMModel::SIMM_P, "SIMM-P")(
-        SimmConfiguration::IMModel::SIMM_R, "SIMM-R");
-
-const bm<SimmConfiguration::Regulation> regulationsMap = list_of<bm<SimmConfiguration::Regulation>::value_type>(SimmConfiguration::Regulation::APRA, "APRA")
-        (SimmConfiguration::Regulation::CFTC, "CFTC")(SimmConfiguration::Regulation::ESA, "ESA")(SimmConfiguration::Regulation::FINMA, "FINMA")
-        (SimmConfiguration::Regulation::KFSC, "KFSC")(SimmConfiguration::Regulation::HKMA, "HKMA")(SimmConfiguration::Regulation::JFSA, "JFSA")
-        (SimmConfiguration::Regulation::MAS, "MAS")(SimmConfiguration::Regulation::OSFI, "OSFI")(SimmConfiguration::Regulation::RBI, "RBI")
-        (SimmConfiguration::Regulation::SEC, "SEC")(SimmConfiguration::Regulation::SEC_unseg, "SEC-unseg")(SimmConfiguration::Regulation::USPR, "USPR")
-        (SimmConfiguration::Regulation::NONREG, "NONREG")(SimmConfiguration::Regulation::BACEN, "BACEN")(SimmConfiguration::Regulation::SANT, "SANT")
-        (SimmConfiguration::Regulation::SFC, "SFC")(SimmConfiguration::Regulation::UK, "UK")(SimmConfiguration::Regulation::AMFQ, "AMFQ")
-        (SimmConfiguration::Regulation::Included, "Included")(SimmConfiguration::Regulation::Unspecified, "Unspecified")(SimmConfiguration::Regulation::Invalid, "Invalid");
-
 // Initialise the counts
 const Size SimmConfiguration::numberOfRiskClasses = riskClassMap.size();
 const Size SimmConfiguration::numberOfMarginTypes = marginTypeMap.size();
-const Size SimmConfiguration::numberOfRegulations = regulationsMap.size();
 
 set<SimmConfiguration::RiskClass> SimmConfiguration::riskClasses(bool includeAll) {
 
@@ -250,19 +235,6 @@ ostream& operator<<(ostream& out, const SimmConfiguration::MarginType& mt) {
     return out << marginTypeMap.left.at(mt);
 }
 
-ostream& operator<<(ostream& out, const SimmConfiguration::IMModel& model) {
-    QL_REQUIRE(imModelMap.left.count(model) > 0, "Product class not a valid SimmConfiguration::IMModel");
-    if (model == SimmConfiguration::IMModel::SIMM_P || model == SimmConfiguration::IMModel::SIMM_R)
-        return out << "SIMM";
-    else
-        return out << imModelMap.left.at(model);
-}
-
-ostream& operator<<(ostream& out, const SimmConfiguration::Regulation& regulation) {
-    QL_REQUIRE(regulationsMap.left.count(regulation) > 0, "Product class not a valid SimmConfiguration::Regulation");
-    return out << regulationsMap.left.at(regulation);
-}
-
 SimmConfiguration::SimmSide parseSimmSide(const string& side) {
     if (side == "Call") {
         return SimmConfiguration::SimmSide::Call;
@@ -283,119 +255,6 @@ SimmConfiguration::MarginType parseSimmMarginType(const string& mt) {
     QL_REQUIRE(marginTypeMap.right.count(mt) > 0,
                "Margin type string " << mt << " does not correspond to a valid SimmConfiguration::MarginType");
     return marginTypeMap.right.at(mt);
-}
-
-SimmConfiguration::IMModel parseIMModel(const string& model) {
-    for (auto it = imModelMap.right.begin(); it != imModelMap.right.end(); it++) {
-        if (boost::to_lower_copy(model) == boost::to_lower_copy(it->first))
-            return it->second;
-    }
-
-    // If we reach this point, then the IM modelprovided was not found
-    QL_FAIL("IM model string " << model << " does not correspond to a valid SimmConfiguration::IMModel");
-}
-
-SimmConfiguration::Regulation parseRegulation(const string& regulation) {
-    if (regulationsMap.right.count(regulation) == 0) {
-        return SimmConfiguration::Regulation::Invalid;
-    } else {
-        return regulationsMap.right.at(regulation);
-    }
-}
-
-string combineRegulations(const string& regs1, const string& regs2) {
-    if (regs1.empty())
-        return regs2;
-    if (regs2.empty())
-        return regs1;
-
-    return regs1 + ',' + regs2;
-}
-
-set<string> parseRegulationString(const string& regsString, const set<string>& valueIfEmpty) {
-    set<string> uniqueRegNames;
-
-    // "," is a delimiter; "[" and "]" are possible characters, but are not needed in processing
-    vector<string> regNames;
-    boost::split(regNames, regsString, boost::is_any_of(",[] "));
-
-    // Remove any resultant blank strings
-    regNames.erase(std::remove(regNames.begin(), regNames.end(), ""), regNames.end());
-    
-    // One last trim for good measure
-    for (string& r : regNames)
-        boost::trim(r);
-
-    // Sort the elements to prevent different permutations of the same regulations being treated differently
-    // e.g. "APRA,USPR" and "USPR,APRA" should ultimately be treated as the same.
-    std::sort(regNames.begin(), regNames.end());
-
-    uniqueRegNames = set<string>(regNames.begin(), regNames.end());
-
-    // If no (valid) regulations provided, we consider the regulation to be unspecified
-    if (uniqueRegNames.empty())
-        return valueIfEmpty;
-    else
-        return uniqueRegNames;
-}
-
-string sortRegulationString(const string& regsString) {
-    // This method will sort the regulations
-    set<string> uniqueRegNames = parseRegulationString(regsString);
-
-    if (uniqueRegNames.size() == 0 ||
-        (uniqueRegNames.size() == 1 && uniqueRegNames.count("Unspecified") > 0)) {
-        return string();
-    } else {
-        return boost::algorithm::join(uniqueRegNames, ",");
-    }
-}
-
-string removeRegulations(const string& regsString, const vector<string>& regsToRemove) {
-    set<string> uniqueRegNames = parseRegulationString(regsString);
-
-    for (const string& r : regsToRemove) {
-        auto it = uniqueRegNames.find(r);
-        if (it != uniqueRegNames.end())
-            uniqueRegNames.erase(it);
-    }
-
-    if (!uniqueRegNames.empty())
-        return boost::algorithm::join(uniqueRegNames, ",");
-    else
-        return string();
-}
-
-string filterRegulations(const string& regsString, const vector<string>& regsToFilter) {
-    set<string> uniqueRegNames = parseRegulationString(regsString);
-    set<string> filteredRegs;
-
-    for (const string& r : uniqueRegNames) {
-        auto it = std::find(regsToFilter.begin(), regsToFilter.end(), r);
-        if (it != regsToFilter.end())
-            filteredRegs.insert(*it);
-    }
-
-    if (!filteredRegs.empty())
-        return boost::algorithm::join(filteredRegs, ",");
-    else
-        return string();
-}
-
-SimmConfiguration::Regulation getWinningRegulation(const std::vector<string>& winningRegulations) {
-
-    vector<SimmConfiguration::Regulation> mappedRegulations;
-
-    for (const string& reg : winningRegulations)
-        mappedRegulations.push_back(parseRegulation(reg));
-
-    SimmConfiguration::Regulation winningRegulation = mappedRegulations.front();
-    for (const auto& reg : mappedRegulations) {
-        if (reg < winningRegulation)
-            winningRegulation = reg;
-    }
-
-    return winningRegulation;
 }
 
 //! Define ordering for ProductClass

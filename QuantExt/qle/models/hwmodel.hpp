@@ -25,6 +25,7 @@
 
 #include <qle/models/hwparametrization.hpp>
 #include <qle/models/irmodel.hpp>
+#include <qle/models/irmodelcalibrationinfo.hpp>
 
 #include <ql/math/comparison.hpp>
 
@@ -34,14 +35,14 @@ class HwModel : public IrModel {
 public:
     enum class Discretization { Euler, Exact };
 
-    HwModel(const boost::shared_ptr<IrHwParametrization>& parametrization, const Measure measure = Measure::BA,
+    HwModel(const QuantLib::ext::shared_ptr<IrHwParametrization>& parametrization, const Measure measure = Measure::BA,
             const Discretization discretization = Discretization::Euler, const bool evaluateBankAccount = true);
 
     // IrModel interface
 
     Measure measure() const override { return measure_; }
 
-    const boost::shared_ptr<Parametrization> parametrizationBase() const override { return parametrization_; }
+    const QuantLib::ext::shared_ptr<Parametrization> parametrizationBase() const override { return parametrization_; }
 
     Handle<YieldTermStructure> termStructure() const override { return parametrization_->termStructure(); }
 
@@ -50,35 +51,59 @@ public:
     Size n_aux() const override;
     Size m_aux() const override;
 
-    boost::shared_ptr<StochasticProcess> stateProcess() const override { return stateProcess_; }
+    QuantLib::ext::shared_ptr<StochasticProcess> stateProcess() const override { return stateProcess_; }
 
     QuantLib::Real discountBond(const QuantLib::Time t, const QuantLib::Time T, const QuantLib::Array& x,
                                 const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve =
                                     Handle<YieldTermStructure>()) const override;
 
-    QuantLib::Real
-    numeraire(const QuantLib::Time t, const QuantLib::Array& x,
-              const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
-              const QuantLib::Array& aux = Array()) const override;
+    QuantLib::Real numeraire(const QuantLib::Time t, const QuantLib::Array& x,
+                             const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve =
+                                 Handle<YieldTermStructure>()) const override;
 
     QuantLib::Real shortRate(const QuantLib::Time t, const QuantLib::Array& x,
                              const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve =
                                  Handle<YieldTermStructure>()) const override;
 
+    Array marginalStep(const Time t0, const Array& x0, const Time dt, const Array& dw) const override;
+
     // HwModel specific methods
 
-    const boost::shared_ptr<IrHwParametrization> parametrization() const { return parametrization_; }
+    const QuantLib::ext::shared_ptr<IrHwParametrization> parametrization() const { return parametrization_; }
+
+    /*! calibrate volatilities to a sequence of ir options with
+        expiry times equal to step times in the parametrization
+        and following the procedure in HwPiecewiseStatisticalParametrization */
+    void calibrateVolatilitiesIterativeStatisticalWithRiskNeutralVolatility(
+        const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& helpers, OptimizationMethod& method,
+        const EndCriteria& endCriteria, const Constraint& constraint = {}, const std::vector<Real>& weights = {});
+
+    /*! calibration constraints, these can be used directly, or
+        through the customized calibrate methods above */
+    std::vector<bool> MoveVolatilityRaw(const Size i) {
+        QL_REQUIRE(i < parametrization_->parameter(0)->size(),
+                   "volatility index (" << i << ") out of range 0..." << parametrization_->parameter(0)->size() - 1);
+        std::vector<bool> res(parametrization_->parameter(0)->size() + parametrization_->parameter(1)->size(), true);
+        res[i] = false;
+        return res;
+    }
+
+    /*! set info on how the model was calibrated */
+    void setCalibrationInfo(const HwCalibrationInfo& calibrationInfo) { calibrationInfo_ = calibrationInfo; }
+    /*! get info on how the model was calibrated */
+    const HwCalibrationInfo& getCalibrationInfo() const { return calibrationInfo_; }
 
     /*! observer and linked calibrated model interface */
     void update() override;
     void generateArguments() override;
 
 private:
-    boost::shared_ptr<IrHwParametrization> parametrization_;
+    QuantLib::ext::shared_ptr<IrHwParametrization> parametrization_;
     Measure measure_;
     Discretization discretization_;
-    boost::shared_ptr<StochasticProcess> stateProcess_;
+    QuantLib::ext::shared_ptr<StochasticProcess> stateProcess_;
     bool evaluateBankAccount_;
+    HwCalibrationInfo calibrationInfo_;
 };
 
 } // namespace QuantExt

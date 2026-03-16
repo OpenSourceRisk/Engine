@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<Portfolio>
+  
+  <Trade id="FXFWD_EURUSD">
+    <TradeType>FxForward</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <FxForwardData>
+      <ValueDate>2030-03-10</ValueDate>
+      <BoughtCurrency>EUR</BoughtCurrency>
+      <BoughtAmount>1000000</BoughtAmount>
+      <SoldCurrency>USD</SoldCurrency>
+      <SoldAmount>1030750</SoldAmount>
+      <Settlement>Cash</Settlement>
+    </FxForwardData>
+  </Trade>
+  
+</Portfolio>

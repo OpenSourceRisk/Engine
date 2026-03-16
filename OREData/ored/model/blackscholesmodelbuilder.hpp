@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <ored/model/blackscholesmodelbuilderbase.hpp>
+#include <ored/model/assetmodelbuilderbase.hpp>
 
 namespace ore {
 namespace data {
@@ -31,20 +31,24 @@ namespace data {
 using namespace ore::data;
 using namespace QuantLib;
 
-class BlackScholesModelBuilder : public BlackScholesModelBuilderBase {
+class BlackScholesModelBuilder final : public AssetModelBuilderBase {
 public:
     BlackScholesModelBuilder(const std::vector<Handle<YieldTermStructure>>& curves,
-                             const std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
+                             const std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
                              const std::set<Date>& simulationDates, const std::set<Date>& addDates,
                              const Size timeStepsPerYear = 0, const std::string& calibration = "ATM",
-                             const std::vector<std::vector<Real>>& calibrationStrikes = {});
+                             const std::vector<std::vector<Real>>& calibrationStrikes = {},
+                             const Handle<YieldTermStructure>& baseCurve = {}, const bool observeContinuum = false);
     BlackScholesModelBuilder(const Handle<YieldTermStructure>& curve,
-                             const boost::shared_ptr<GeneralizedBlackScholesProcess>& process,
+                             const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
                              const std::set<Date>& simulationDates, const std::set<Date>& addDates,
                              const Size timeStepsPerYear = 0, const std::string& calibration = "ATM",
-                             const std::vector<Real>& calibrationStrikes = {});
+                             const std::vector<Real>& calibrationStrikes = {},
+                             const Handle<YieldTermStructure>& baseCurve = {}, const bool observeContinuum = false);
 
-    std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>> getCalibratedProcesses() const override;
+    std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> getCalibratedProcesses() const override;
+
+    AssetModelWrapper::ProcessType processType() const override;
 
 protected:
     std::vector<std::vector<Real>> getCurveTimes() const override;

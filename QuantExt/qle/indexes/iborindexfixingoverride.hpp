@@ -30,7 +30,7 @@ namespace QuantExt {
 //! wrapper for ibor index wit individiual trade level fixings
 class IborIndexWithFixingOverride : public QuantLib::IborIndex {
 public:
-    IborIndexWithFixingOverride(const boost::shared_ptr<QuantLib::IborIndex>& index,
+    IborIndexWithFixingOverride(const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index,
                                 const std::map<QuantLib::Date, double>& fixingOverrides)
         : IborIndexWithFixingOverride(index->familyName(), index->tenor(), index->fixingDays(), index->currency(),
                                       index->fixingCalendar(), index->businessDayConvention(), index->endOfMonth(),
@@ -48,7 +48,7 @@ public:
     //! \name InterestRateIndex interface
     //@{
 
-    boost::shared_ptr<QuantLib::IborIndex>
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex>
     clone(const QuantLib::Handle<QuantLib::YieldTermStructure>& forwarding) const override {
         return ext::make_shared<IborIndexWithFixingOverride>(familyName(), tenor(), fixingDays(), currency(),
                                                              fixingCalendar(), businessDayConvention(), endOfMonth(),
@@ -71,7 +71,7 @@ private:
 
 class OvernightIndexWithFixingOverride : public QuantLib::OvernightIndex {
 public:
-    OvernightIndexWithFixingOverride(const boost::shared_ptr<QuantLib::OvernightIndex>& index,
+    OvernightIndexWithFixingOverride(const QuantLib::ext::shared_ptr<QuantLib::OvernightIndex>& index,
                                      const std::map<QuantLib::Date, double>& fixingOverrides)
         : OvernightIndexWithFixingOverride(index->familyName(), index->fixingDays(), index->currency(),
                                            index->fixingCalendar(), index->dayCounter(),
@@ -85,7 +85,7 @@ public:
         : QuantLib::OvernightIndex(familyName, settlementDays, currency, fixingCalendar, dayCounter, h),
           fixingOverrides_(fixingOverrides) {}
 
-    boost::shared_ptr<QuantLib::IborIndex>
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex>
     clone(const QuantLib::Handle<QuantLib::YieldTermStructure>& forwarding) const override {
         return ext::make_shared<OvernightIndexWithFixingOverride>(
             familyName(), fixingDays(), currency(), fixingCalendar(), dayCounter(), forwarding, fixingOverrides_);

@@ -52,17 +52,17 @@ public:
     EquityVolatilityCurveConfig() {}
     //! Detailed constructor
     EquityVolatilityCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
-                                const std::vector<boost::shared_ptr<VolatilityConfig>>& volatilityConfig,
+                                const std::vector<QuantLib::ext::shared_ptr<VolatilityConfig>>& volatilityConfig,
                                 const string& equityId = string(),
                                 const string& dayCounter = "A365", const string& calendar = "NullCalendar",
                                 const OneDimSolverConfig& solverConfig = OneDimSolverConfig(),
-                                const boost::optional<bool>& preferOutOfTheMoney = boost::none);
+                                const QuantLib::ext::optional<bool>& preferOutOfTheMoney = QuantLib::ext::nullopt);
     EquityVolatilityCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
-                                const boost::shared_ptr<VolatilityConfig>& volatilityConfig,
+                                const QuantLib::ext::shared_ptr<VolatilityConfig>& volatilityConfig,
                                 const string& equityId = string(),
                                 const string& dayCounter = "A365", const string& calendar = "NullCalendar",
                                 const OneDimSolverConfig& solverConfig = OneDimSolverConfig(),
-                                const boost::optional<bool>& preferOutOfTheMoney = boost::none);
+                                const QuantLib::ext::optional<bool>& preferOutOfTheMoney = QuantLib::ext::nullopt);
     //@}
 
     //! \name Serialisation
@@ -77,12 +77,12 @@ public:
     const string& ccy() const { return parseCurrencyWithMinors(ccy_).code(); }
     const string& dayCounter() const { return dayCounter_; }
     const string& calendar() const { return calendar_; }
-    const std::vector<boost::shared_ptr<VolatilityConfig>>& volatilityConfig() const { return volatilityConfig_; }
+    const std::vector<QuantLib::ext::shared_ptr<VolatilityConfig>>& volatilityConfig() const { return volatilityConfig_; }
     const string quoteStem(const std::string& volType) const;
     void populateQuotes();
     bool isProxySurface();
     OneDimSolverConfig solverConfig() const;
-    const boost::optional<bool>& preferOutOfTheMoney() const {
+    const QuantLib::ext::optional<bool>& preferOutOfTheMoney() const {
         return preferOutOfTheMoney_;
     }
     const ReportConfig& reportConfig() const { return reportConfig_; }
@@ -95,15 +95,15 @@ public:
     //@}
 
 private:
-    void populateRequiredCurveIds();
+    void populateRequiredIds() const override;
 
     string ccy_;
-    std::vector<boost::shared_ptr<VolatilityConfig>> volatilityConfig_;
+    std::vector<QuantLib::ext::shared_ptr<VolatilityConfig>> volatilityConfig_;
     string equityId_;
     string dayCounter_;
     string calendar_;
     OneDimSolverConfig solverConfig_;
-    boost::optional<bool> preferOutOfTheMoney_;
+    QuantLib::ext::optional<bool> preferOutOfTheMoney_;
     ReportConfig reportConfig_;
 
     // Return a default solver configuration. Used by solverConfig() if solverConfig_ is empty.

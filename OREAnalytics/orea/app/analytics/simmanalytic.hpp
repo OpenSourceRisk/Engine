@@ -23,43 +23,44 @@
 
 #include <orea/app/analytic.hpp>
 #include <orea/simm/crif.hpp>
+#include <orea/app/analytics/crifanalytic.hpp>
+#include <orea/app/analytics/analyticfactory.hpp>
 
 namespace ore {
 namespace analytics {
+
+class InputParameters;
 
 class SimmAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "SIMM";
 
-    SimmAnalyticImpl(const boost::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) {
+    SimmAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) {
         setLabel(LABEL);
     }
-    void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+    void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                      const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
 };
 
 class SimmAnalytic : public Analytic {
 public:
-    SimmAnalytic(const boost::shared_ptr<InputParameters>& inputs, const Crif& crif = Crif(),
-                 const bool hasNettingSetDetails = false,
-                 const bool determineWinningRegulations = true)
-        : Analytic(std::make_unique<SimmAnalyticImpl>(inputs), {"SIMM"}, inputs, false, false, false, false),
-          crif_(crif),
-          hasNettingSetDetails_(hasNettingSetDetails),
-          determineWinningRegulations_(determineWinningRegulations) {
-        setWriteIntermediateReports(inputs->writeSimmIntermediateReports());
-    }
+    static constexpr const char* crifLookupKey = "CRIF";
+  
+    SimmAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                 const QuantLib::ext::weak_ptr<AnalyticsManager>& analyticsManager,
+                 const QuantLib::ext::shared_ptr<Crif>& crif = nullptr, const bool hasNettingSetDetails = false,
+                 const bool determineWinningRegulations = true);
 
-    const Crif& crif() const { return crif_; }
+    const QuantLib::ext::shared_ptr<Crif>& crif() const { return crif_; }
     bool hasNettingSetDetails() { return hasNettingSetDetails_; }
     bool determineWinningRegulations() { return determineWinningRegulations_; }
     
     //! Load CRIF from external source, override to generate CRIF
-    virtual void loadCrifRecords(const boost::shared_ptr<ore::data::InMemoryLoader>& loader);
+    virtual void loadCrifRecords(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader);
 
 private:
-    Crif crif_;
+    QuantLib::ext::shared_ptr<Crif> crif_;
     bool hasNettingSetDetails_;
     bool determineWinningRegulations_;
 };

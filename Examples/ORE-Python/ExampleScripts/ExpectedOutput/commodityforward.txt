@@ -1,0 +1,2 @@
+RUN commodityforward.py
+Commodity Forward, Name='Natural Gas', NPV=3.59 EUR

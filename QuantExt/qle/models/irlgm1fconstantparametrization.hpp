@@ -41,14 +41,14 @@ public:
     Real kappa(const Time t) const override;
     Real Hprime(const Time t) const override;
     Real Hprime2(const Time t) const override;
-    const boost::shared_ptr<Parameter> parameter(const Size) const override;
+    const QuantLib::ext::shared_ptr<Parameter> parameter(const Size) const override;
 
 protected:
     Real direct(const Size i, const Real x) const override;
     Real inverse(const Size j, const Real y) const override;
 
 private:
-    const boost::shared_ptr<PseudoParameter> alpha_, kappa_;
+    const QuantLib::ext::shared_ptr<PseudoParameter> alpha_, kappa_;
     const Real zeroKappaCutoff_;
 };
 
@@ -58,8 +58,8 @@ template <class TS>
 Lgm1fConstantParametrization<TS>::Lgm1fConstantParametrization(const Currency& currency,
                                                                const Handle<TS>& termStructure, const Real alpha,
                                                                const Real kappa, const std::string& name)
-    : Lgm1fParametrization<TS>(currency, termStructure, name), alpha_(boost::make_shared<PseudoParameter>(1)),
-      kappa_(boost::make_shared<PseudoParameter>(1)), zeroKappaCutoff_(1.0E-6) {
+    : Lgm1fParametrization<TS>(currency, termStructure, name), alpha_(QuantLib::ext::make_shared<PseudoParameter>(1)),
+      kappa_(QuantLib::ext::make_shared<PseudoParameter>(1)), zeroKappaCutoff_(1.0E-6) {
     alpha_->setParam(0, inverse(0, alpha));
     kappa_->setParam(0, inverse(1, kappa));
 }
@@ -103,7 +103,7 @@ template <class TS> inline Real Lgm1fConstantParametrization<TS>::Hprime2(const 
 }
 
 template <class TS>
-inline const boost::shared_ptr<Parameter> Lgm1fConstantParametrization<TS>::parameter(const Size i) const {
+inline const QuantLib::ext::shared_ptr<Parameter> Lgm1fConstantParametrization<TS>::parameter(const Size i) const {
     QL_REQUIRE(i < 2, "parameter " << i << " does not exist, only have 0..1");
     if (i == 0)
         return alpha_;

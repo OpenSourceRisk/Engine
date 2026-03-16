@@ -22,7 +22,7 @@ namespace ore {
 namespace data {
 
 CompositeInstrumentWrapper::CompositeInstrumentWrapper(
-    const std::vector<boost::shared_ptr<InstrumentWrapper>>& wrappers, const std::vector<Handle<Quote>>& fxRates,
+    const std::vector<QuantLib::ext::shared_ptr<InstrumentWrapper>>& wrappers, const std::vector<Handle<Quote>>& fxRates,
     const Date& valuationDate)
     : InstrumentWrapper(), wrappers_(wrappers), fxRates_(fxRates), valuationDate_(valuationDate) {
 
@@ -65,7 +65,7 @@ QuantLib::Real CompositeInstrumentWrapper::NPV() const {
     return npv;
 }
 
-const std::map<std::string, boost::any>& CompositeInstrumentWrapper::additionalResults() const {
+const std::map<std::string, QuantLib::ext::any>& CompositeInstrumentWrapper::additionalResults() const {
     additionalResults_.clear();
     for (auto const& w : wrappers_) {
         additionalResults_.insert(w->additionalResults().begin(), w->additionalResults().end());

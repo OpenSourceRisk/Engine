@@ -32,4 +32,9 @@ void BondOption::setupArguments(PricingEngine::arguments* args) const {
 
 void BondOption::arguments::validate() const { QL_REQUIRE(underlying, "null underlying"); }
 
+void BondOption::calculate() const {
+    Instrument::calculate();
+    setCalculated(true);
+}
+
 } // namespace QuantExt

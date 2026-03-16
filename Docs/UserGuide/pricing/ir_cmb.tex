@@ -1,0 +1,11 @@
+\subsubsection{CMB Swap}
+\label{pricing:ir_cmb}
+
+Constant Maturity Bond (CMB)-linked coupons (linked to an index of form CMB-FAMILY-TENOR)
+are priced using simple projection of a bond yields, i.e. computing the yield of a forward starting bond with
+start date on the coupon's fixing date and same tenor as specified in the index' name.
+The forward yield calculation is determined by the reference data maintained for the Bond family, its
+associated yield curve (stripped from benchmark bonds prices or yields of that family) and the
+conventions for converting bond prices into yields.
+
+Note that in contrast CMS index projections, we currently do not apply convexity adjustments to projected CMB indices.

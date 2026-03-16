@@ -45,7 +45,7 @@ using namespace QuantLib;
 
 class ModelImpliedPriceTermStructure : public PriceTermStructure {
 public:
-    ModelImpliedPriceTermStructure(const boost::shared_ptr<CommodityModel>& model, const DayCounter& dc = DayCounter(),
+    ModelImpliedPriceTermStructure(const QuantLib::ext::shared_ptr<CommodityModel>& model, const DayCounter& dc = DayCounter(),
                                    const bool purelyTimeBased = false);
 
     Date maxDate() const override;
@@ -68,7 +68,7 @@ public:
 protected:
     Real priceImpl(Time t) const override;
 
-    const boost::shared_ptr<CommodityModel> model_;
+    const QuantLib::ext::shared_ptr<CommodityModel> model_;
     const bool purelyTimeBased_;
     Date referenceDate_;
     Real relativeTime_;

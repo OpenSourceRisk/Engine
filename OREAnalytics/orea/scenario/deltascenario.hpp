@@ -25,10 +25,7 @@
 
 #include <orea/scenario/scenario.hpp>
 
-#include <boost/make_shared.hpp>
-#include <boost/serialization/export.hpp>
-#include <boost/serialization/map.hpp>
-#include <boost/serialization/vector.hpp>
+#include <string>
 
 namespace ore {
 namespace analytics {
@@ -43,22 +40,21 @@ using namespace QuantLib;
 
   \ingroup scenario
 */
-class DeltaScenario : public virtual ore::analytics::Scenario {
+class DeltaScenario : public virtual QuantExt::Scenario {
 public:
     //! Constructor
     DeltaScenario() {}
     //! Constructor
-    DeltaScenario(const boost::shared_ptr<ore::analytics::Scenario>& baseScenario,
-                  const boost::shared_ptr<ore::analytics::Scenario>& incrementalScenario)
-        : baseScenario_(baseScenario), delta_(incrementalScenario) {}
+    DeltaScenario(const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& baseScenario,
+                  const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& incrementalScenario);
 
-    //! Return the scenario asof date
     const Date& asof() const override { return delta_->asof(); }
+    void setAsof(const Date& d) override { delta_->setAsof(d); }
 
     //! Return the scenario label
     const std::string& label() const override { return delta_->label(); }
     //! set the label
-    void label(const string& s) override { delta_->label(s); }
+    void label(const std::string& s) override { delta_->label(s); }
 
     //! Get Numeraire ratio n = N(t) / N(0) so that Price(0) = N(0) * E [Price(t) / N(t) ]
     Real getNumeraire() const override;
@@ -68,27 +64,34 @@ public:
     //! Check, get, add a single market point
     bool has(const ore::analytics::RiskFactorKey& key) const override { return baseScenario_->has(key); }
     const std::vector<ore::analytics::RiskFactorKey>& keys() const override { return baseScenario_->keys(); }
+    const std::vector<ore::analytics::RiskFactorKey>& delta_keys() const { return delta_->keys(); }
     void add(const ore::analytics::RiskFactorKey& key, Real value) override;
     Real get(const ore::analytics::RiskFactorKey& key) const override;
 
+    const bool isAbsolute() const override { return baseScenario_->isAbsolute(); }
+    void setAbsolute(const bool b) override { baseScenario_->setAbsolute(b); }
+    const bool isPar() const override { return baseScenario_->isPar(); }
+    void setPar(const bool b) override { baseScenario_->setPar(b); }
+
+    const std::map<std::pair<RiskFactorKey::KeyType, std::string>, std::vector<std::vector<Real>>>&
+    coordinates() const override {
+        return baseScenario_->coordinates();
+    }
+
+    //! Get base
+    QuantLib::ext::shared_ptr<Scenario> base() const { return baseScenario_; }
+
     //! Get delta
-    boost::shared_ptr<Scenario> delta() const { return delta_; }
+    QuantLib::ext::shared_ptr<Scenario> delta() const { return delta_; }
 
-    boost::shared_ptr<Scenario> clone() const override;
+    QuantLib::ext::shared_ptr<Scenario> clone() const override;
 
-    bool isCloseEnough(const boost::shared_ptr<Scenario>& s) const override;
+    bool isCloseEnough(const QuantLib::ext::shared_ptr<Scenario>& s) const override;
 
 protected:
-    boost::shared_ptr<Scenario> baseScenario_;
-    boost::shared_ptr<Scenario> delta_;
-
-private:
-    friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int) {
-        ar& boost::serialization::base_object<Scenario>(*this);
-        ar& baseScenario_;
-        ar& delta_;
-    }
+    QuantLib::ext::shared_ptr<Scenario> baseScenario_;
+    QuantLib::ext::shared_ptr<Scenario> delta_;
 };
-} // namespace sensitivity
+
+} // namespace analytics
 } // namespace ore

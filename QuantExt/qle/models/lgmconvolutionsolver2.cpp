@@ -22,7 +22,7 @@
 
 namespace QuantExt {
 
-LgmConvolutionSolver2::LgmConvolutionSolver2(const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real sy,
+LgmConvolutionSolver2::LgmConvolutionSolver2(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const Real sy,
                                              const Size ny, const Real sx, const Size nx)
     : model_(model), nx_(static_cast<int>(nx)) {
 

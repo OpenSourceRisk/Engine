@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+<SensitivityAnalysis>
+  <DiscountCurves>
+    <DiscountCurve ccy="EUR">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>1E-6</ShiftSize>
+      <ShiftTenors>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</ShiftTenors>
+      <ParConversion>
+        <Instruments>DEP, DEP, DEP, DEP, OIS, OIS, OIS, OIS, OIS, OIS, OIS, OIS</Instruments>
+        <SingleCurve>true</SingleCurve>
+        <Conventions>
+          <Convention id="DEP">EUR-ON-DEPOSIT</Convention>
+          <Convention id="OIS">EUR-OIS</Convention>
+        </Conventions>
+      </ParConversion>
+    </DiscountCurve>
+  </DiscountCurves>
+  <IndexCurves>
+    <IndexCurve index="EUR-EONIA">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>1E-6</ShiftSize>
+      <ShiftTenors>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</ShiftTenors>
+      <ParConversion>
+        <Instruments>DEP, DEP, DEP, DEP, OIS, OIS, OIS, OIS, OIS, OIS, OIS, OIS</Instruments>
+        <SingleCurve>true</SingleCurve>
+        <Conventions>
+          <Convention id="DEP">EUR-ON-DEPOSIT</Convention>
+          <Convention id="OIS">EUR-OIS</Convention>
+        </Conventions>
+      </ParConversion>
+    </IndexCurve>
+    <IndexCurve index="EUR-EURIBOR-3M">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>1E-6</ShiftSize>
+      <ShiftTenors>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</ShiftTenors>
+      <ParConversion>
+        <Instruments>DEP, DEP, DEP, DEP, IRS, IRS, IRS, IRS, IRS, IRS, IRS, IRS</Instruments>
+        <SingleCurve>false</SingleCurve>
+        <Conventions>
+          <Convention id="DEP">EUR-DEPOSIT</Convention>
+          <Convention id="IRS">EUR-EURIBOR-3M-SWAP</Convention>
+        </Conventions>
+      </ParConversion>
+    </IndexCurve>
+    <IndexCurve index="EUR-EURIBOR-6M">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>1E-6</ShiftSize>
+      <ShiftTenors>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</ShiftTenors>
+      <ParConversion>
+        <Instruments>DEP, DEP, DEP, DEP, IRS, IRS, IRS, IRS, IRS, IRS, IRS, IRS</Instruments>
+        <SingleCurve>false</SingleCurve>
+        <Conventions>
+          <Convention id="DEP">EUR-DEPOSIT</Convention>
+          <Convention id="IRS">EUR-EURIBOR-6M-SWAP</Convention>
+        </Conventions>
+      </ParConversion>
+    </IndexCurve>
+  </IndexCurves>
+  <CreditCurves>
+    <CreditCurve name="BANK">
+      <Currency>EUR</Currency>
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>1E-6</ShiftSize>
+      <ShiftTenors>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</ShiftTenors>
+    </CreditCurve>
+  </CreditCurves>
+  <SwaptionVolatilities>
+    <SwaptionVolatility ccy="EUR">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>1E-6</ShiftSize>
+      <ShiftExpiries>1Y,  2Y,  3Y, 4Y, 5Y, 7Y, 10Y, 12Y, 15Y, 20Y, 30Y</ShiftExpiries>
+      <ShiftStrikes>0.000000</ShiftStrikes>
+      <ShiftTerms>1Y,  2Y,  3Y, 4Y, 5Y, 7Y, 10Y, 12Y, 15Y, 20Y, 30Y</ShiftTerms>
+    </SwaptionVolatility>
+  </SwaptionVolatilities>
+  <ComputeGamma>false</ComputeGamma>
+  <UseSpreadedTermStructures>true</UseSpreadedTermStructures>
+  <TwoSidedDeltaKeyTypes>
+    <RiskFactorKeyType>FXSpot</RiskFactorKeyType>
+  </TwoSidedDeltaKeyTypes>
+</SensitivityAnalysis>

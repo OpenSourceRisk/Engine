@@ -1,0 +1,58 @@
+\subsubsection{Equity Digital Option}
+\label{pricing:eq_digitaloption}
+
+Equity Digital Options are cash-or-nothing instruments on an underlying Equity spot rate.
+They can be either priced 
+\begin{itemize}
+\item analytically using formulas developed by \cite{Rubinstein_1991} 
+based on the Black-Scholes framework, see \cite{Haug_1997} Ch 4.19.2, or
+\item as call respectively put spreads
+\end{itemize}
+
+In the current implementation, Equity Digital Options are priced analytically as described in section
+\ref{pricing:eq_option_digital_analytical}.
+
+\subsubsection*{Analytical Equity Digital Option}\label{pricing:eq_option_digital_analytical}
+
+The NPV of a Equity Digital Option can be expressed as:
+$$
+\NPV = \mbox{Quantity}\cdot N \cdot P(T)\cdot \Phi(\omega\,d), \qquad d = \frac{1}{\sigma\sqrt{T}}\left(\ln\frac{S(0,T)}{K} - \frac{\sigma^2 T}{2}\right)
+$$
+where:
+\begin{itemize}
+\item Quantity: number of shares of the underlying equity
+\item $N$: the amount per number of shares to be paid at expiration if the option is in-the-money
+\item $P(T)$: the discount factor for option expiry time $T$
+\item $\Phi(\cdot)$: the cumulative standard normal distribution
+\item $\omega$: 1 for a call option, -1 for a put option
+\item $S(0,T)$: the forward equity price for maturity T at time 0 (valuation date)
+\item $K$: strike price
+\item $\sigma$: the volatility of the equity forward price
+\end{itemize}
+
+\subsubsection*{Equity Digital Option as Call/Put Spread}\label{pricing:eq_option_digital_callspread}
+
+Alternatively, when a more accurate reflection of volatility smiles is a priority, 
+Equity Digital Options can be priced using call/put spreads (i.e. by approximating 
+the Equity Digital Option payment with the difference between two European Vanilla 
+Equity Options). Given a Digital Call/Put option with strike price K, the two V
+anilla Call/Put Options will have strikes $K_- \leq K$ and $K_+\geq K$, where 
+$K_\pm=K \pm\epsilon$ and $\epsilon$ is small.
+
+The present value of one Equity Digital Call and Put Options with strike K and payout 
+amount $M$ in payoff currency A, can be expressed in terms of bought and sold Vanilla 
+Equity Calls/Puts with underlying quantity $Q$ and strike $K_\pm$ 
+in currency A. All PVs are expressed in currency A:
+\begin{align*}
+\NPV_{DigitalCall}(M,K) &\approx\NPV_{Call}(Q,K_-) - \NPV_{Call}(Q,K_+) \\
+\NPV_{DigitalPut}(M,K) &\approx\NPV_{Put}(Q,K_+) - \NPV_{Put}(Q,K_-) 
+\end{align*}
+where:
+\begin{itemize}
+\item $M$: the amount in payoff currency A to be paid at expiration if the Digital 
+Call/Put is in-the-money
+\item $Q = M/(K_+ - K_-)$
+\end{itemize}
+
+The European Vanilla Equity Options are priced with the Black-Scholes / Black76
+analytic formula (Section \ref{pricing:eq_option}).

@@ -35,7 +35,7 @@ using namespace QuantLib;
  */
 class IrLgm1fStateProcess : public StochasticProcess1D {
 public:
-    IrLgm1fStateProcess(const boost::shared_ptr<IrLgm1fParametrization>& parametrization);
+    IrLgm1fStateProcess(const QuantLib::ext::shared_ptr<IrLgm1fParametrization>& parametrization);
     //! \name StochasticProcess interface
     //@{
     Real x0() const override;
@@ -49,7 +49,7 @@ public:
     void resetCache(const Size timeSteps) const;
     //@}
 private:
-    const boost::shared_ptr<IrLgm1fParametrization> p_;
+    const QuantLib::ext::shared_ptr<IrLgm1fParametrization> p_;
     mutable bool cacheNotReady_d_ = true;
     mutable bool cacheNotReady_v_ = true;
     mutable Size timeStepsToCache_d_ = 0;

@@ -18,75 +18,36 @@
 
 #include <ored/scripting/models/localvol.hpp>
 
-#include <qle/methods/multipathgeneratorbase.hpp>
-
-#include <ql/exercise.hpp>
-#include <ql/math/comparison.hpp>
-#include <ql/math/matrixutilities/pseudosqrt.hpp>
-#include <ql/quotes/simplequote.hpp>
-
 namespace ore {
 namespace data {
 
 using namespace QuantLib;
 using namespace QuantExt;
 
-LocalVol::LocalVol(const Size paths, const std::string& currency, const Handle<YieldTermStructure>& curve,
-                   const std::string& index, const std::string& indexCurrency,
-                   const Handle<BlackScholesModelWrapper>& model, const McParams& mcParams,
-                   const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig)
-    : LocalVol(paths, {currency}, {curve}, {}, {}, {}, {index}, {indexCurrency}, model, {}, mcParams, simulationDates,
-               iborFallbackConfig) {}
+void LocalVol::performModelCalculations() const {
+    if (type_ == Model::Type::MC)
+        performCalculationsMc();
+    else if (type_ == Model::Type::FD)
+        performCalculationsFd(true);
+}
 
-LocalVol::LocalVol(
-    const Size paths, const std::vector<std::string>& currencies, const std::vector<Handle<YieldTermStructure>>& curves,
-    const std::vector<Handle<Quote>>& fxSpots,
-    const std::vector<std::pair<std::string, boost::shared_ptr<InterestRateIndex>>>& irIndices,
-    const std::vector<std::pair<std::string, boost::shared_ptr<ZeroInflationIndex>>>& infIndices,
-    const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
-    const Handle<BlackScholesModelWrapper>& model,
-    const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
-    const McParams& mcParams, const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig)
-    : BlackScholesBase(paths, currencies, curves, fxSpots, irIndices, infIndices, indices, indexCurrencies, model,
-                       correlations, mcParams, simulationDates, iborFallbackConfig) {}
-
-void LocalVol::performCalculations() const {
-
-    BlackScholesBase::performCalculations();
-
-    // nothing to do if we do not have any indices
-
-    if (indices_.empty())
+void LocalVol::performCalculationsMc() const {
+    initUnderlyingPathsMc();
+    setReferenceDateValuesMc();
+    if (effectiveSimulationDates_.size() == 1)
         return;
+    generatePaths();
+}
 
-    // init underlying path where we map a date to a randomvariable representing the path values
-
-    for (auto const& d : effectiveSimulationDates_) {
-        underlyingPaths_[d] = std::vector<RandomVariable>(model_->processes().size(), RandomVariable(size(), 0.0));
-        if (trainingSamples() != Null<Size>())
-            underlyingPathsTraining_[d] =
-                std::vector<RandomVariable>(model_->processes().size(), RandomVariable(trainingSamples(), 0.0));
-    }
+void LocalVol::generatePaths() const {
 
     // compile the correlation matrix
 
     Matrix correlation = getCorrelation();
 
-    // set reference date values, if there are no future simulation dates we are done
-
-    for (Size l = 0; l < indices_.size(); ++l) {
-        underlyingPaths_[*effectiveSimulationDates_.begin()][l].setAll(model_->processes()[l]->x0());
-        if (trainingSamples() != Null<Size>()) {
-            underlyingPathsTraining_[*effectiveSimulationDates_.begin()][l].setAll(model_->processes()[l]->x0());
-        }
-    }
-
-    if (effectiveSimulationDates_.size() == 1)
-        return;
-
     // compute the sqrt correlation
 
-    Matrix sqrtCorr = pseudoSqrt(correlation, SalvagingAlgorithm::Spectral);
+    Matrix sqrtCorr = pseudoSqrt(correlation, params_.salvagingAlgorithm);
 
     // precompute the deterministic part of the drift on each time step
 
@@ -96,10 +57,11 @@ void LocalVol::performCalculations() const {
         for (Size j = 0; j < indices_.size(); ++j) {
             Real t0 = timeGrid_[i];
             Real t1 = timeGrid_[i + 1];
-            deterministicDrift[i][j] = -std::log(model_->processes()[j]->riskFreeRate()->discount(t1) /
-                                                 model_->processes()[j]->dividendYield()->discount(t1) /
-                                                 (model_->processes()[j]->riskFreeRate()->discount(t0) /
-                                                  model_->processes()[j]->dividendYield()->discount(t0)));
+            deterministicDrift[i][j] =
+                -std::log(model_->generalizedBlackScholesProcesses()[j]->riskFreeRate()->discount(t1) /
+                          model_->generalizedBlackScholesProcesses()[j]->dividendYield()->discount(t1) /
+                          (model_->generalizedBlackScholesProcesses()[j]->riskFreeRate()->discount(t0) /
+                           model_->generalizedBlackScholesProcesses()[j]->dividendYield()->discount(t0)));
         }
     }
 
@@ -131,32 +93,33 @@ void LocalVol::performCalculations() const {
 
     // evolve the process using correlated normal variates and set the underlying path values
 
-    populatePathValues(size(), underlyingPaths_,
-                       makeMultiPathVariateGenerator(mcParams_.sequenceType, indices_.size(), timeGrid_.size() - 1,
-                                                     mcParams_.seed, mcParams_.sobolOrdering,
-                                                     mcParams_.sobolDirectionIntegers),
-                       correlation, sqrtCorr, deterministicDrift, eqComIdx, t, dt, sqrtdt);
+    populatePathValuesLv(size(), underlyingPaths_,
+                         makeMultiPathVariateGenerator(params_.sequenceType, indices_.size(), timeGrid_.size() - 1,
+                                                       params_.seed, params_.sobolOrdering,
+                                                       params_.sobolDirectionIntegers),
+                         correlation, sqrtCorr, deterministicDrift, eqComIdx, t, dt, sqrtdt);
 
     if (trainingSamples() != Null<Size>()) {
-        populatePathValues(trainingSamples(), underlyingPathsTraining_,
-                           makeMultiPathVariateGenerator(mcParams_.trainingSequenceType, indices_.size(),
-                                                         timeGrid_.size() - 1, mcParams_.trainingSeed,
-                                                         mcParams_.sobolOrdering, mcParams_.sobolDirectionIntegers),
-                           correlation, sqrtCorr, deterministicDrift, eqComIdx, t, dt, sqrtdt);
+        populatePathValuesLv(trainingSamples(), underlyingPathsTraining_,
+                             makeMultiPathVariateGenerator(params_.trainingSequenceType, indices_.size(),
+                                                           timeGrid_.size() - 1, params_.trainingSeed,
+                                                           params_.sobolOrdering, params_.sobolDirectionIntegers),
+                             correlation, sqrtCorr, deterministicDrift, eqComIdx, t, dt, sqrtdt);
     }
 
-} // initPaths()
+    setAdditionalResults(true);
+} // generatePathsLv()
 
-void LocalVol::populatePathValues(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
-                                  const boost::shared_ptr<MultiPathVariateGeneratorBase>& gen,
-                                  const Matrix& correlation, const Matrix& sqrtCorr,
-                                  const std::vector<Array>& deterministicDrift, const std::vector<Size>& eqComIdx,
-                                  const std::vector<Real>& t, const std::vector<Real>& dt,
-                                  const std::vector<Real>& sqrtdt) const {
+void LocalVol::populatePathValuesLv(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
+                                    const QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>& gen,
+                                    const Matrix& correlation, const Matrix& sqrtCorr,
+                                    const std::vector<Array>& deterministicDrift, const std::vector<Size>& eqComIdx,
+                                    const std::vector<Real>& t, const std::vector<Real>& dt,
+                                    const std::vector<Real>& sqrtdt) const {
 
     Array stateDiff(indices_.size()), logState(indices_.size()), logState0(indices_.size());
     for (Size j = 0; j < indices_.size(); ++j) {
-        logState0[j] = std::log(model_->processes()[j]->x0());
+        logState0[j] = std::log(model_->generalizedBlackScholesProcesses()[j]->x0());
     }
 
     std::vector<std::vector<RandomVariable*>> rvs(indices_.size(),
@@ -183,7 +146,8 @@ void LocalVol::populatePathValues(const Size nSamples, std::map<Date, std::vecto
                 // by setting the local vol to zero
                 Real volj = 0.0;
                 try {
-                    volj = model_->processes()[j]->localVolatility()->localVol(t[i], std::exp(logState[j]));
+                    volj = model_->generalizedBlackScholesProcesses()[j]->localVolatility()->localVol(
+                        t[i], std::exp(logState[j]));
                 } catch (...) {
                 }
                 if (!std::isfinite(volj))
@@ -195,7 +159,7 @@ void LocalVol::populatePathValues(const Size nSamples, std::map<Date, std::vecto
                 stateDiff[j] = volj * dw * sqrtdt[i] - 0.5 * volj * volj * dt[i];
                 // drift adjustment for eq / com indices that are not in base ccy
                 if (eqComIdx[j] != Null<Size>()) {
-                    Real volIdx = model_->processes()[eqComIdx[j]]->localVolatility()->localVol(
+                    Real volIdx = model_->generalizedBlackScholesProcesses()[eqComIdx[j]]->localVolatility()->localVol(
                         t[i], std::exp(logState[eqComIdx[j]]));
                     stateDiff[j] -= correlation[eqComIdx[j]][j] * volIdx * volj * dt[i];
                 }
@@ -211,12 +175,7 @@ void LocalVol::populatePathValues(const Size nSamples, std::map<Date, std::vecto
             }
         }
     }
-} // populatePathValues()
-
-RandomVariable LocalVol::getFutureBarrierProb(const std::string& index, const Date& obsdate1, const Date& obsdate2,
-                                              const RandomVariable& barrier, const bool above) const {
-    QL_FAIL("getFutureBarrierProb not implemented by LocalVol");
-}
+} // populatePathValuesLV()
 
 } // namespace data
 } // namespace ore

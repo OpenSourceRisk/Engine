@@ -59,9 +59,9 @@ public:
     //! Curve constructed from dates and quotes
     CommodityBasisPriceCurve(const QuantLib::Date& referenceDate,
                              const std::map<QuantLib::Date, QuantLib::Handle<QuantLib::Quote>>& basisData,
-                             const boost::shared_ptr<FutureExpiryCalculator>& basisFec,
-                             const boost::shared_ptr<CommodityIndex>& baseIndex,
-                             const boost::shared_ptr<FutureExpiryCalculator>& baseFec, bool addBasis = true,
+                             const QuantLib::ext::shared_ptr<FutureExpiryCalculator>& basisFec,
+                             const QuantLib::ext::shared_ptr<CommodityIndex>& baseIndex,
+                             const QuantLib::ext::shared_ptr<FutureExpiryCalculator>& baseFec, bool addBasis = true,
                              QuantLib::Size monthOffset = 0, bool priceAsHistFixing = true,
                              const Interpolator& interpolator = Interpolator());
     //@}
@@ -113,7 +113,7 @@ private:
     mutable Interpolation basisInterpolation_;
 
     //! The commodity cashflows will give the base curve prices.
-    std::map<QuantLib::Date, boost::shared_ptr<CashFlow>> baseLeg_;
+    std::map<QuantLib::Date, QuantLib::ext::shared_ptr<CashFlow>> baseLeg_;
 
     /*! Map where the key is the index of a time in the times_ vector and the value is the index of the
         cashflow in the baseLeg_ to associate with that time.
@@ -124,8 +124,8 @@ private:
 template <class Interpolator>
 CommodityBasisPriceCurve<Interpolator>::CommodityBasisPriceCurve(
     const QuantLib::Date& referenceDate, const std::map<QuantLib::Date, QuantLib::Handle<QuantLib::Quote>>& basisData,
-    const boost::shared_ptr<FutureExpiryCalculator>& basisFec, const boost::shared_ptr<CommodityIndex>& baseIndex,
-    const boost::shared_ptr<FutureExpiryCalculator>& baseFec, bool addBasis, QuantLib::Size monthOffset,
+    const QuantLib::ext::shared_ptr<FutureExpiryCalculator>& basisFec, const QuantLib::ext::shared_ptr<CommodityIndex>& baseIndex,
+    const QuantLib::ext::shared_ptr<FutureExpiryCalculator>& baseFec, bool addBasis, QuantLib::Size monthOffset,
     bool priceAsHistFixing, const Interpolator& interpolator)
     : CommodityBasisPriceTermStructure(referenceDate, basisFec, baseIndex, baseFec, addBasis, monthOffset, false,
                                        priceAsHistFixing),

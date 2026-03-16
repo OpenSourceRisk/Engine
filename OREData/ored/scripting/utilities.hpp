@@ -20,7 +20,7 @@
     \brief some utility functions
     \ingroup utilities
 */
-
+#include <tuple>
 #include <ored/portfolio/scriptedtrade.hpp>
 #include <ored/scripting/ast.hpp>
 #include <ored/scripting/context.hpp>
@@ -65,12 +65,12 @@ std::pair<std::string, Period>
 convertIndexToCamCorrelationEntry(const std::string& i);
 
 /*! check whether variable name is already present in given context, if yes throw an exception */
-void checkDuplicateName(const boost::shared_ptr<Context> context, const std::string& name);
+void checkDuplicateName(const QuantLib::ext::shared_ptr<Context> context, const std::string& name);
 
 /*! build a context from the given data and apply the given gridCoarsening rule, if required */
-boost::shared_ptr<Context> makeContext(const Size nPaths, const std::string& gridCoarsening,
+QuantLib::ext::shared_ptr<Context> makeContext(const Size nPaths, const std::string& gridCoarsening,
                                        const std::vector<std::string>& schedulesEligibleForCoarsening,
-                                       const boost::shared_ptr<ReferenceDataManager>& referenceData,
+                                       const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                                        const std::vector<ScriptedTradeEventData>& events,
                                        const std::vector<ScriptedTradeValueTypeData>& numbers,
                                        const std::vector<ScriptedTradeValueTypeData>& indices,
@@ -78,11 +78,11 @@ boost::shared_ptr<Context> makeContext(const Size nPaths, const std::string& gri
                                        const std::vector<ScriptedTradeValueTypeData>& daycounters);
 
 /*! add new schedules (as specified in the script node) to schedules */
-void addNewSchedulesToContext(boost::shared_ptr<Context> context,
+void addNewSchedulesToContext(QuantLib::ext::shared_ptr<Context> context,
                               const std::vector<ScriptedTradeScriptData::NewScheduleData>& newSchedules);
 
 /*! maend the variables sizes in a context to a new size, this is only possible for deterministic variables */
-void amendContextVariablesSizes(boost::shared_ptr<Context> context, const Size newSize);
+void amendContextVariablesSizes(QuantLib::ext::shared_ptr<Context> context, const Size newSize);
 
 /*! - helper class that takes and index name string and provides the index type and a parsed version of
       the index with no market data attached
@@ -93,7 +93,7 @@ void amendContextVariablesSizes(boost::shared_ptr<Context> context, const Size n
 class IndexInfo {
 public:
     // ctor taking the ORE name of an index and conventions
-    explicit IndexInfo(const std::string& name, const boost::shared_ptr<Market>& market = nullptr);
+    explicit IndexInfo(const std::string& name, const QuantLib::ext::shared_ptr<Market>& market = nullptr);
     // the (ORE, i.e. Input) name of the index
     std::string name() const { return name_; }
     // type of index
@@ -106,29 +106,32 @@ public:
     bool isInf() const { return isInf_; }
     bool isGeneric() const { return isGeneric_; }
     // get parsed version of index, or null if na
-    boost::shared_ptr<FxIndex> fx() const { return fx_; }
-    boost::shared_ptr<EquityIndex2> eq() const { return eq_; }
-    boost::shared_ptr<QuantExt::CommodityIndex>
+    QuantLib::ext::shared_ptr<FxIndex> fx() const { return fx_; }
+    QuantLib::ext::shared_ptr<EquityIndex2> eq() const { return eq_; }
+    QuantLib::ext::shared_ptr<QuantExt::CommodityIndex>
     // requires obsDate + conventions for forms 3-6 below, throws otherwise
     comm(const Date& obsDate = Date()) const;
-    boost::shared_ptr<InterestRateIndex> ir() const { return ir_; }
-    boost::shared_ptr<IborIndex> irIbor() const { return irIbor_; }
+    QuantLib::ext::shared_ptr<InterestRateIndex> ir() const { return ir_; }
+    QuantLib::ext::shared_ptr<IborIndex> irIbor() const { return irIbor_; }
     // nullptr if it is no ibor fallback index
-    boost::shared_ptr<FallbackIborIndex> irIborFallback(const IborFallbackConfig& iborFallbackConfig,
+    QuantLib::ext::shared_ptr<FallbackIborIndex> irIborFallback(const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
                                                         const Date& asof = QuantLib::Date::maxDate()) const;
     // nullptr if it is no overnight fallback index
-    boost::shared_ptr<FallbackOvernightIndex> irOvernightFallback(const IborFallbackConfig& iborFallbackConfig,
+    QuantLib::ext::shared_ptr<FallbackOvernightIndex>
+    irOvernightFallback(const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
 								  const Date& asof = QuantLib::Date::maxDate()) const;
-    boost::shared_ptr<SwapIndex> irSwap() const { return irSwap_; }
-    boost::shared_ptr<ZeroInflationIndex> inf() const { return inf_; }
-    boost::shared_ptr<Index> generic() const { return generic_; }
+    QuantLib::ext::shared_ptr<SwapIndex> irSwap() const { return irSwap_; }
+    QuantLib::ext::shared_ptr<ZeroInflationIndex> inf() const { return inf_; }
+    QuantLib::ext::shared_ptr<Index> generic() const { return generic_; }
     // get ptr to base class (comm forms 3-6 below require obsDate + conventions, will throw otherwise)
-    boost::shared_ptr<Index>
+    QuantLib::ext::shared_ptr<Index>
     index(const Date& obsDate = Date()) const;
     // get comm underlying name NYMEX:CL (no COMM- prefix, no suffixes)
     std::string commName() const;
     // get inf name INF-EUHICP (i.e. without the #L, #F suffix)
     std::string infName() const;
+    // get if inf fixing should be interpolated
+    bool infIsInterpolated() const { return infIsInterpolated_; }
     // comparisons (based on the name)
     bool operator==(const IndexInfo& j) const { return name() == j.name(); }
     bool operator!=(const IndexInfo& j) const { return !(*this == j); }
@@ -139,37 +142,40 @@ public:
 
 private:
     std::string name_;
-    boost::shared_ptr<Market> market_; // might be null
+    QuantLib::ext::shared_ptr<Market> market_; // might be null
     bool isFx_, isEq_, isComm_, isIr_, isInf_, isIrIbor_, isIrSwap_, isGeneric_;
-    boost::shared_ptr<FxIndex> fx_;
-    boost::shared_ptr<EquityIndex2> eq_;
-    boost::shared_ptr<InterestRateIndex> ir_;
-    boost::shared_ptr<IborIndex> irIbor_;
-    boost::shared_ptr<SwapIndex> irSwap_;
-    boost::shared_ptr<ZeroInflationIndex> inf_;
-    boost::shared_ptr<Index> generic_;
+    QuantLib::ext::shared_ptr<FxIndex> fx_;
+    QuantLib::ext::shared_ptr<EquityIndex2> eq_;
+    QuantLib::ext::shared_ptr<InterestRateIndex> ir_;
+    QuantLib::ext::shared_ptr<IborIndex> irIbor_;
+    QuantLib::ext::shared_ptr<SwapIndex> irSwap_;
+    QuantLib::ext::shared_ptr<ZeroInflationIndex> inf_;
+    QuantLib::ext::shared_ptr<Index> generic_;
     std::string commName_, infName_;
+    // Inflation indices are never interpolated but coupons can use an interpolated fixing
+    // for convencience we define indexes which are will return interpolated fixings instead of flat fixings.
+    bool infIsInterpolated_;
 };
 
 std::ostream& operator<<(std::ostream& o, const IndexInfo& i);
 
 /*! This method tries to parse an commodity index name used in the scripting context
 
+    \verbatim
     0) COMM-name
     1) COMM-name-YYYY-MM-DD
     2) COMM-name-YYYY-MM
-    ===
     3) CMMM-name#N#D#Cal
     4) COMM-name#N#D
     5) COMM-name#N
-    ===
     6) COMM-name!N
+    \endverbatim
 
     Here 0) - 2) are corresponding to the usual ORE conventions while 3) - 6) are specific to the scripting
     module: Expressions of the form 3) - 5) are resolved to one of the forms 1) and 2) using a given commodity
     future expiry calculator as follows:
 
-    3) COMM-name#N#D#Cal is resolved to the (N+1)th future with expiry greater than the given obsDate advanced by D
+    3) COMM-name\#N\#D\#Cal is resolved to the (N+1)th future with expiry greater than the given obsDate advanced by D
                          business days w.r.t. Calendar Cal, N >= 0
     4) as 3), Cal is taken as the commodity index's fixing calendar
     5) as 4), D is set to 0 if not given
@@ -186,34 +192,33 @@ std::ostream& operator<<(std::ostream& o, const IndexInfo& i);
     Forms 3) to 6) on the other hand require a commodity future convention in any case, and an obsDate.
 */
 
-boost::shared_ptr<QuantExt::CommodityIndex> parseScriptedCommodityIndex(const std::string& indexName,
+QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> parseScriptedCommodityIndex(const std::string& indexName,
                                                                         const QuantLib::Date& obsDate = Date());
 
 /*! This method tries to parse an inflation index name used in the scripting context
 
+  \verbatim
   1) EUHICPXT
   2) EUHICPXT#F
   3) EUHICPXT#L
+  \endverbatim
 
   Here 1)   is the original form used in ORE. This represents a non-interpolated index.
        2,3) is the extended form including a flag indicating the interpolation F (flat, =1) or L (linear)
 
   The function returns a ql inflation index accounting for the interpolation (but without ts attached),
-  and the ORE index name without the #F, #L suffix.
+  and the ORE index name without the \#F, \#L suffix.
 */
-std::pair<boost::shared_ptr<QuantLib::ZeroInflationIndex>, std::string>
+std::tuple<QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex>, std::string, bool>
 parseScriptedInflationIndex(const std::string& indexName);
 
 /*! Builds an index (EQ-SP5-EUR, FX-ECB-EUR-USD, ...) that can be used in scripted trades, from an underlying */
-std::string scriptedIndexName(const boost::shared_ptr<Underlying>& underlying);
-
-/*! Get inflation simulation lag in calendar days */
-Size getInflationSimulationLag(const boost::shared_ptr<ZeroInflationIndex>& index);
+std::string scriptedIndexName(const QuantLib::ext::shared_ptr<Underlying>& underlying);
 
 /*! Get map index => calibration strikes as vector<Real> from calibration spec and context */
 std::map<std::string, std::vector<Real>>
 getCalibrationStrikes(const std::vector<ScriptedTradeScriptData::CalibrationData>& calibrationSpec,
-                      const boost::shared_ptr<Context>& context);
+                      const QuantLib::ext::shared_ptr<Context>& context);
 
 } // namespace data
 } // namespace ore

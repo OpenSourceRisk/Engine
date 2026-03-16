@@ -23,11 +23,16 @@
 #include <ql/instruments/swaption.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 
+#include <qle/cashflows/scaledcoupon.hpp> 
 #include <qle/instruments/multilegoption.hpp>
 #include <qle/instruments/rebatedexercise.hpp>
 #include <qle/pricingengines/blackmultilegoptionengine.hpp>
 #include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
+#include <qle/cashflows/averageonindexedcouponpricer.hpp>
+#include <qle/cashflows/interpolatediborcoupon.hpp>
+#include <qle/cashflows/overnightindexedcoupon.hpp>
 
+#include <ored/model/irmodeldata.hpp>
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
 #include <ored/portfolio/optionwrapper.hpp>
@@ -40,6 +45,8 @@
 #include <boost/timer/timer.hpp>
 
 #include <algorithm>
+
+#include <qle/models/representativeswaption.hpp>
 
 using boost::timer::cpu_timer;
 using boost::timer::default_places;
@@ -59,7 +66,77 @@ QuantLib::Settlement::Method defaultSettlementMethod(const QuantLib::Settlement:
 }
 } // namespace
 
-void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+// This helper functionality checks for constant definitions of the given 
+// notional, the rates and the spreads. Those fields must have the same values everywhere on all legs.
+// Additional to this, the gearing must be equal to one on all floating legs.
+// Finally, the floating legs must be of type IborCoupon, InterpolatedIborCoupon,
+// OvernightIndexedCoupon or AverageONIndexedCoupon.
+// If all those conditions are met, the trade is called standard.
+bool areStandardLegs(const vector<vector<ext::shared_ptr<CashFlow>>> &legs)
+{
+
+    // Fields to be checked on the fixed legs
+    Real constNotional = Null<Real>();
+    Real constRate = Null<Real>();
+
+    // Fields to be checked on the floating legs
+    Real constSpread = Null<Real>();
+
+    for (Size i = 0; i < legs.size(); ++i) {
+        for (auto const& c : legs[i]) { 
+           
+            if (auto cpn = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(c)) {
+                if(constNotional == Null<Real>()) 
+                    constNotional = cpn->nominal();
+                else if (!QuantLib::close_enough(cpn->nominal(), constNotional))
+                    return false;
+
+                if (!QuantLib::close_enough(cpn->gearing() , 1.00))
+                    return false;
+   
+                if(constSpread == Null<Real>())
+                    constSpread = cpn->spread();
+                else if (!QuantLib::close_enough(cpn->spread(), constSpread))
+                    return false;
+                
+                if (                    
+                    !(QuantLib::ext::dynamic_pointer_cast<IborCoupon>(c))
+                    && !(QuantLib::ext::dynamic_pointer_cast<QuantExt::InterpolatedIborCoupon>(c))
+                    && !(QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(c))
+                    && !(QuantLib::ext::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(c))
+                )
+                    return false; // The trade must then be a non-standard type like e.g. CMS coupon
+
+                continue;
+            }
+
+            if (auto cpn = QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(c)) {
+                if(constNotional == Null<Real>()) 
+                    constNotional = cpn->nominal();
+                else if (!QuantLib::close_enough(cpn->nominal(), constNotional))
+                    return false;
+   
+                if(constRate == Null<Real>())
+                    constRate = cpn->rate();
+                else if (!QuantLib::close_enough(cpn->rate(), constRate))
+                    return false;
+                
+                continue;
+            }
+
+            return false; // Coupon could not be cast to one of the two main types
+        }
+    }
+
+    // Both legs and fields must have been there at least once
+    if(constNotional == Null<Real>() || constRate == Null<Real>() || constSpread == Null<Real>())
+        return false; 
+
+    // If no non-constant field and no other subtlety was found return true
+    return true;
+}
+
+void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     DLOG("Swaption::build() for " << id());
 
@@ -70,25 +147,7 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     additionalData_["isdaSubProduct"] = string("Swaption");
     additionalData_["isdaTransaction"] = string("");
 
-    // 2 build underlying swap and copy its required fixings
-
-    underlying_ = boost::make_shared<ore::data::Swap>(Envelope(), legData_);
-    underlying_->build(engineFactory);
-    requiredFixings_.addData(underlying_->requiredFixings());
-
-    // 3 build the exercise and parse some fields
-
-    DLOG("Swaption::build() for " << id() << ": build exercise");
-
-    exerciseBuilder_ = boost::make_shared<ExerciseBuilder>(optionData_, underlying_->legs());
-
-    exerciseType_ = parseExerciseType(optionData_.style());
-    settlementType_ = parseSettlementType(optionData_.settlement());
-    settlementMethod_ = optionData_.settlementMethod() == "" ? defaultSettlementMethod(settlementType_)
-                                                             : parseSettlementMethod(optionData_.settlementMethod());
-    positionType_ = parsePositionType(optionData_.longShort());
-
-    // 4 fill currencies and set notional to null (will be retrieved via notional())
+    // 1a fill currencies and set notional to null (will be retrieved via notional())
 
     npvCurrency_ = notionalCurrency_ = "USD"; // only if no legs are given, not relevant in this case
 
@@ -96,16 +155,35 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         npvCurrency_ = notionalCurrency_ = legData_[0].currency();
     }
 
+    // 2 build underlying swap and copy its required fixings
+
+    underlying_ = QuantLib::ext::make_shared<ore::data::Swap>(Envelope(), legData_);
+    underlying_->build(engineFactory);
+    requiredFixings_.addData(underlying_->requiredFixings());
+
+    // 3 build the exercise and parse some fields
+
+    DLOG("Swaption::build() for " << id() << ": build exercise");
+
+    exerciseBuilder_ = QuantLib::ext::make_shared<ExerciseBuilder>(optionData_, underlying_->legs());
+
+    exerciseType_ = parseExerciseType(optionData_.style());
+    settlementType_ = parseSettlementType(optionData_.settlement());
+    settlementMethod_ = optionData_.settlementMethod() == "" ? defaultSettlementMethod(settlementType_)
+                                                             : parseSettlementMethod(optionData_.settlementMethod());
+    positionType_ = parsePositionType(optionData_.longShort());
+
     notional_ = Null<Real>();
 
     Date today = Settings::instance().evaluationDate();
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
 
     // 5 if the swaption is exercised (as per option data / exercise data), build the cashflows that remain to be paid
 
     if (exerciseBuilder_->isExercised()) {
         Date exerciseDate = exerciseBuilder_->exerciseDate();
         maturity_ = std::max(today, exerciseDate); // will be updated below
-
+        maturityType_ = maturity_ == today ? "Today" : "Exercise Date";
         if (optionData_.settlement() == "Physical") {
 
             // 5.1 if physical exercise, inlcude the "exercise-into" cashflows of the underlying
@@ -115,16 +193,33 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                 legCurrencies_.push_back(underlying_->legCurrencies()[i]);
                 legPayers_.push_back(underlying_->legPayers()[i]);
                 for (auto const& c : underlying_->legs()[i]) {
-                    if (auto cpn = boost::dynamic_pointer_cast<Coupon>(c)) {
-                        if (exerciseDate <= cpn->accrualStartDate()) {
-                            legs_.back().push_back(c);
+                    if (auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(c)) {
+                        Date exerciseAccrualStart = optionData_.midCouponExercise()
+                                                        ? exerciseBuilder_->noticeCalendar().advance(
+                                                              exerciseDate, exerciseBuilder_->noticePeriod(),
+                                                              exerciseBuilder_->noticeConvention())
+                                                        : cpn->accrualStartDate();
+                        if (exerciseDate <= exerciseAccrualStart && exerciseAccrualStart < cpn->accrualEndDate()) {
+                            if(optionData_.midCouponExercise()) {
+                                Real midCouponMultiplier =
+                                    cpn->dayCounter().yearFraction(exerciseAccrualStart, cpn->accrualEndDate()) /
+                                    cpn->dayCounter().yearFraction(cpn->accrualStartDate(), cpn->accrualEndDate());
+                                legs_.back().push_back(
+                                    QuantLib::ext::make_shared<QuantExt::ScaledCoupon>(midCouponMultiplier, cpn));
+                            } else {
+                                legs_.back().push_back(c);
+                            }
                             maturity_ = std::max(maturity_, c->date());
+                            if (maturity_ == c->date())
+                                maturityType_ = "Coupon Date";
                             if (notional_ == Null<Real>())
                                 notional_ = cpn->nominal();
                         }
                     } else if (exerciseDate <= c->date()) {
                         legs_.back().push_back(c);
                         maturity_ = std::max(maturity_, c->date());
+                        if (maturity_ == c->date())
+                            maturityType_ = "Coupon Date";
                     }
                 }
             }
@@ -139,6 +234,8 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                 legCurrencies_.push_back(npvCurrency_);
                 legPayers_.push_back(false);
                 maturity_ = std::max(maturity_, exerciseBuilder_->cashSettlement()->date());
+                if (maturity_ == exerciseBuilder_->cashSettlement()->date())
+                    maturityType_ = "Cash Settlement Date";
             }
         }
 
@@ -150,26 +247,31 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             legCurrencies_.push_back(npvCurrency_);
             legPayers_.push_back(true);
             maturity_ = std::max(maturity_, exerciseBuilder_->feeSettlement()->date());
+            if (maturity_ == exerciseBuilder_->feeSettlement()->date())
+                maturityType_ = "Fee Settlement Date";
         }
 
         // 5.4 add unconditional premiums, build instrument (as swap) and exit
 
-        std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
+        std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
         std::vector<Real> additionalMultipliers;
         Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, Position::Long ? 1.0 : -1.0,
                                            optionData_.premiumData(), positionType_ == Position::Long ? -1.0 : 1.0,
-                                           parseCurrency(npvCurrency_), engineFactory,
+                                           parseCurrency(npvCurrency_), discountCurve, engineFactory,
                                            engineFactory->configuration(MarketContext::pricing));
-        auto builder = boost::dynamic_pointer_cast<SwapEngineBuilderBase>(engineFactory->builder("Swap"));
+        auto builder = QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(engineFactory->builder("Swap"));
         QL_REQUIRE(builder, "could not get swap builder to build exercised swaption instrument.");
-        auto swap = boost::make_shared<QuantLib::Swap>(legs_, legPayers_);
+        auto swap = QuantLib::ext::make_shared<QuantLib::Swap>(legs_, legPayers_);
         swap->setPricingEngine(builder->engine(parseCurrency(npvCurrency_),
                                                envelope().additionalField("discount_curve", false),
-                                               envelope().additionalField("security_spread", false)));
+                                               envelope().additionalField("security_spread", false), {}));
         setSensitivityTemplate(*builder);
-        instrument_ = boost::make_shared<VanillaInstrument>(swap, positionType_ == Position::Long ? 1.0 : -1.0,
+        addProductModelEngine(*builder);
+        instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(swap, positionType_ == Position::Long ? 1.0 : -1.0,
                                                             additionalInstruments, additionalMultipliers);
         maturity_ = std::max(maturity_, lastPremiumDate);
+        if (maturity_ == lastPremiumDate)
+            maturityType_ = "Last Premium Date";
         DLOG("Building exercised swaption done.");
         return;
     }
@@ -178,26 +280,31 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     if (exerciseBuilder_->exercise() == nullptr || exerciseBuilder_->exercise()->dates().empty() ||
         exerciseBuilder_->exercise()->dates().back() <= today || legData_.empty()) {
-        legs_ = {{boost::make_shared<QuantLib::SimpleCashFlow>(0.0, today)}};
+
+        legs_ = {{QuantLib::ext::make_shared<QuantLib::SimpleCashFlow>(0.0, today)}};
         legCurrencies_.push_back(npvCurrency_);
         legPayers_.push_back(false);
         maturity_ = today;
-        std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
+        maturityType_ = "Today";
+        std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
         std::vector<Real> additionalMultipliers;
         Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, Position::Long ? 1.0 : -1.0,
                                            optionData_.premiumData(), positionType_ == Position::Long ? -1.0 : 1.0,
-                                           parseCurrency(npvCurrency_), engineFactory,
+                                           parseCurrency(npvCurrency_), discountCurve, engineFactory,
                                            engineFactory->configuration(MarketContext::pricing));
-        auto builder = boost::dynamic_pointer_cast<SwapEngineBuilderBase>(engineFactory->builder("Swap"));
+        auto builder = QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(engineFactory->builder("Swap"));
         QL_REQUIRE(builder, "could not get swap builder to build expired swaption instrument.");
-        auto swap = boost::make_shared<QuantLib::Swap>(legs_, legPayers_);
+        auto swap = QuantLib::ext::make_shared<QuantLib::Swap>(legs_, legPayers_);
         swap->setPricingEngine(builder->engine(parseCurrency(npvCurrency_),
                                                envelope().additionalField("discount_curve", false),
-                                               envelope().additionalField("security_spread", false)));
-        instrument_ = boost::make_shared<VanillaInstrument>(swap, positionType_ == Position::Long ? 1.0 : -1.0,
+                                               envelope().additionalField("security_spread", false), {}));
+        instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(swap, positionType_ == Position::Long ? 1.0 : -1.0,
                                                             additionalInstruments, additionalMultipliers);
         setSensitivityTemplate(*builder);
+        addProductModelEngine(*builder);
         maturity_ = std::max(maturity_, lastPremiumDate);
+        if (maturity_ == lastPremiumDate)
+            maturityType_ = "Last Premium Date";
         DLOG("Building (non-exercised) swaption without alive exercise dates done.");
         return;
     }
@@ -211,7 +318,7 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     for (auto const& l : underlying_->legs()) {
         legs_.push_back(Leg());
         for (auto const& c : l) {
-            if (auto cpn = boost::dynamic_pointer_cast<Coupon>(c)) {
+            if (auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(c)) {
                 if (firstExerciseDate <= cpn->accrualStartDate()) {
                     legs_.back().push_back(c);
                 }
@@ -223,10 +330,21 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // 8 build swaption
 
-    if (settlementType_ == Settlement::Physical)
+    if (settlementType_ == Settlement::Physical) {
         maturity_ = underlying_->maturity();
-    else
+        maturityType_ = "Underlying Maturity";
+    }
+    else {
         maturity_ = exerciseBuilder_->noticeDates().back();
+        maturityType_ = "Last Notice Date";
+        // cash settlement date if provided
+	for (auto d : exerciseBuilder_->settlementDates()) {
+	    if (d > maturity_) {
+                maturity_ = d;
+                maturityType_ = "Cash Settlement";
+            }
+        }
+    }
 
     if (exerciseType_ != Exercise::European && settlementType_ == Settlement::Cash &&
         settlementMethod_ == Settlement::ParYieldCurve)
@@ -237,26 +355,45 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     std::vector<QuantLib::Currency> ccys;
     for (auto const& c : underlying_->legCurrencies())
         ccys.push_back(parseCurrency(c));
-    auto swaption =
-        boost::make_shared<QuantExt::MultiLegOption>(underlying_->legs(), underlying_->legPayers(), ccys,
-                                                     exerciseBuilder_->exercise(), settlementType_, settlementMethod_);
+    auto swaption = QuantLib::ext::make_shared<QuantExt::MultiLegOption>(
+        underlying_->legs(), underlying_->legPayers(), ccys, exerciseBuilder_->exercise(), settlementType_,
+        settlementMethod_, exerciseBuilder_->settlementDates(), optionData_.midCouponExercise(),
+        exerciseBuilder_->noticePeriod(), exerciseBuilder_->noticeCalendar(), exerciseBuilder_->noticeConvention());
 
     std::string builderType;
     std::vector<std::string> builderPrecheckMessages;
     // for European swaptions that are not handled by the black pricer, we fall back to the numeric Bermudan pricer
     if (exerciseType_ == Exercise::European &&
         QuantExt::BlackMultiLegOptionEngineBase::instrumentIsHandled(*swaption, builderPrecheckMessages)) {
-        builderType = "EuropeanSwaption";
+        if(areStandardLegs(underlying_->legs()))
+            builderType = "EuropeanSwaption";
+        else
+            builderType = "EuropeanSwaption_NonStandard";
     } else {
         QL_REQUIRE(
             QuantExt::NumericLgmMultiLegOptionEngineBase::instrumentIsHandled(*swaption, builderPrecheckMessages),
             "Swaption::build(): instrument is not handled by the available engines: " +
                 boost::join(builderPrecheckMessages, ", "));
+       
         if (exerciseType_ == Exercise::European || exerciseType_ == Exercise::Bermudan)
-            builderType = "BermudanSwaption";
+        {           
+            if(areStandardLegs(underlying_->legs()))
+                builderType = "BermudanSwaption";
+            else
+                builderType = "BermudanSwaption_NonStandard";
+        }
         else if (exerciseType_ == Exercise::American)
-            builderType = "AmericanSwaption";
+        { 
+            if(areStandardLegs(underlying_->legs()))
+                builderType = "AmericanSwaption";
+            else
+                builderType = "AmericanSwaption_NonStandard";
+        }
     }
+
+    string pricingProductType = envelope().additionalField("pricing_product_type", false);
+    if (!pricingProductType.empty()) 
+        builderType = pricingProductType;
 
     DLOG("Getting builder for '" << builderType << "', got " << builderPrecheckMessages.size()
                                  << " builder precheck messages:");
@@ -264,28 +401,28 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         DLOG(m);
     }
 
-    auto swaptionBuilder = boost::dynamic_pointer_cast<SwaptionEngineBuilder>(engineFactory->builder(builderType));
+    auto swaptionBuilder = QuantLib::ext::dynamic_pointer_cast<SwaptionEngineBuilder>(engineFactory->builder(builderType));
     QL_REQUIRE(swaptionBuilder, "Swaption::build(): internal error: could not cast to SwaptionEngineBuilder");
 
-    auto swapBuilder = boost::dynamic_pointer_cast<SwapEngineBuilderBase>(engineFactory->builder("Swap"));
+    auto swapBuilder = QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(engineFactory->builder("Swap"));
     QL_REQUIRE(swapBuilder, "Swaption::build(): internal error: could not cast to SwapEngineBuilder");
 
     // 9.1  determine index (if several, pick first) got get the engine
 
-    boost::shared_ptr<InterestRateIndex> index;
+    QuantLib::ext::shared_ptr<InterestRateIndex> index;
 
     for (auto const& l : underlying_->legs()) {
         for (auto const& c : l) {
-            if (auto cpn = boost::dynamic_pointer_cast<FloatingRateCoupon>(c)) {
+            if (auto cpn = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(c)) {
                 if (index == nullptr) {
-                    if (auto tmp = boost::dynamic_pointer_cast<IborIndex>(cpn->index())) {
+                    if (auto tmp = QuantLib::ext::dynamic_pointer_cast<IborIndex>(cpn->index())) {
                         DLOG("found ibor / ois index '" << tmp->name() << "'");
                         index = tmp;
-                    } else if (auto tmp = boost::dynamic_pointer_cast<SwapIndex>(cpn->index())) {
+                    } else if (auto tmp = QuantLib::ext::dynamic_pointer_cast<SwapIndex>(cpn->index())) {
                         DLOG("found cms index " << tmp->name() << ", use key '" << tmp->iborIndex()->name()
                                                 << "' to look up vol");
                         index = tmp->iborIndex();
-                    } else if (auto tmp = boost::dynamic_pointer_cast<BMAIndex>(cpn->index())) {
+                    } else if (auto tmp = QuantLib::ext::dynamic_pointer_cast<BMAIndex>(cpn->index())) {
                         DLOG("found bma/sifma index '" << tmp->name() << "'");
                         index = tmp;
                     }
@@ -304,26 +441,31 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     for (Size i = 0; i < exerciseBuilder_->noticeDates().size(); ++i) {
         Real firstFixedRate = Null<Real>(), lastFixedRate = Null<Real>();
         Real firstFloatSpread = Null<Real>(), lastFloatSpread = Null<Real>();
+        Real firstGearing = Null<Real>(), lastGearing = Null<Real>();
+
         for (auto const& l : underlying_->legs()) {
             for (auto const& c : l) {
-                if (auto cpn = boost::dynamic_pointer_cast<FixedRateCoupon>(c)) {
+                if (auto cpn = QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(c)) {
                     if (cpn->accrualStartDate() >= exerciseBuilder_->noticeDates()[i] && firstFixedRate == Null<Real>())
                         firstFixedRate = cpn->rate();
                     lastFixedRate = cpn->rate();
-                } else if (auto cpn = boost::dynamic_pointer_cast<FloatingRateCoupon>(c)) {
+                } else if (auto cpn = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(c)) {
                     if (cpn->accrualStartDate() >= exerciseBuilder_->noticeDates()[i] &&
-                        firstFloatSpread == Null<Real>())
+                        firstFloatSpread == Null<Real>()) {
                         firstFloatSpread = cpn->spread();
+                        firstGearing = cpn->gearing();
+                    }
                     lastFloatSpread = cpn->spread();
+                    lastGearing = cpn->gearing();
                     if (index == nullptr) {
-                        if (auto tmp = boost::dynamic_pointer_cast<IborIndex>(cpn->index())) {
+                        if (auto tmp = QuantLib::ext::dynamic_pointer_cast<IborIndex>(cpn->index())) {
                             DLOG("found ibor / ois index '" << tmp->name() << "'");
                             index = tmp;
-                        } else if (auto tmp = boost::dynamic_pointer_cast<SwapIndex>(cpn->index())) {
+                        } else if (auto tmp = QuantLib::ext::dynamic_pointer_cast<SwapIndex>(cpn->index())) {
                             DLOG("found cms index " << tmp->name() << ", use key '" << tmp->iborIndex()->name()
                                                     << "' to look up vol");
                             index = tmp->iborIndex();
-                        } else if (auto tmp = boost::dynamic_pointer_cast<BMAIndex>(cpn->index())) {
+                        } else if (auto tmp = QuantLib::ext::dynamic_pointer_cast<BMAIndex>(cpn->index())) {
                             DLOG("found bma/sifma index '" << tmp->name() << "'");
                             index = tmp;
                         }
@@ -336,6 +478,9 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             firstFixedRate = lastFixedRate;
         if(firstFloatSpread == Null<Real>())
             firstFloatSpread = lastFloatSpread;
+        // if no first gearing was found, fall back on the last value
+        if(firstGearing == Null<Real>())
+            firstGearing = lastGearing;
         // construct calibration strike
         if (firstFixedRate != Null<Real>()) {
             strikes[i] = firstFixedRate;
@@ -343,64 +488,119 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                 strikes[i] -= firstFloatSpread;
             }
         }
+        if (firstGearing != Null<Real>())
+            strikes[i] /= firstGearing;
         DLOG("calibration strike for ex date "
              << QuantLib::io::iso_date(exerciseBuilder_->noticeDates()[i]) << " is "
              << (strikes[i] == Null<Real>() ? "ATMF" : std::to_string(strikes[i])) << " (fixed rate "
              << (firstFixedRate == Null<Real>() ? "NA" : std::to_string(firstFixedRate)) << ", spread "
-             << (firstFloatSpread == Null<Real>() ? "NA" : std::to_string(firstFloatSpread)) << ")");
+             << (firstFloatSpread == Null<Real>() ? "NA" : std::to_string(firstFloatSpread)) << ", gearing "
+             << (firstGearing == Null<Real>() ? "NA" : std::to_string(firstGearing)) << ")");
     }
 
-    // 9.3 get engine and set it
-
-    cpu_timer timer;
-    // use ibor / ois index as key, if possible, otherwise the npv currency
-    auto swaptionEngine = swaptionBuilder->engine(
-        id(), index == nullptr ? npvCurrency_ : IndexNameTranslator::instance().oreName(index->name()),
-        exerciseBuilder_->noticeDates(), underlying_->maturity(), strikes, exerciseType_ == Exercise::American,
-        envelope().additionalField("discount_curve", false), envelope().additionalField("security_spread", false));
-    timer.stop();
-    DLOG("Swaption model calibration time: " << timer.format(default_places, "%w") << " s");
-    swaption->setPricingEngine(swaptionEngine);
-    setSensitivityTemplate(*swaptionBuilder);
-
-    // 9.4 build underlying swaps, add premiums, build option wrapper
+    // 9.3 build underlying swaps, add premiums, build option wrapper
 
     auto swapEngine =
         swapBuilder->engine(parseCurrency(npvCurrency_), envelope().additionalField("discount_curve", false),
-                            envelope().additionalField("security_spread", false));
+                            envelope().additionalField("security_spread", false), {});
+    
+    std::vector<QuantLib::ext::shared_ptr<Instrument>> underlyingSwaps = buildUnderlyingSwaps(swapEngine, exerciseBuilder_->noticeDates());
 
-    std::vector<boost::shared_ptr<Instrument>> underlyingSwaps =
-        buildUnderlyingSwaps(swapEngine, exerciseBuilder_->noticeDates());
-
-    std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
+    std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
     Real multiplier = positionType_ == Position::Long ? 1.0 : -1.0;
     Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, Position::Long ? 1.0 : -1.0,
-                                       optionData_.premiumData(), -multiplier, parseCurrency(npvCurrency_),
+                                       optionData_.premiumData(), -multiplier, parseCurrency(npvCurrency_), discountCurve,
                                        engineFactory, swaptionBuilder->configuration(MarketContext::pricing));
 
-    instrument_ = boost::make_shared<BermudanOptionWrapper>(
+    instrument_ = QuantLib::ext::make_shared<BermudanOptionWrapper>(
         swaption, positionType_ == Position::Long ? true : false, exerciseBuilder_->noticeDates(),
-        settlementType_ == Settlement::Physical ? true : false, underlyingSwaps, 1.0, 1.0, additionalInstruments,
-        additionalMultipliers);
+        exerciseBuilder_->settlementDates(), settlementType_ == Settlement::Physical ? true : false,
+	    underlyingSwaps, 1.0, 1.0, additionalInstruments, additionalMultipliers);
 
     maturity_ = std::max(maturity_, lastPremiumDate);
+    if (maturity_ == lastPremiumDate)
+        maturityType_ = "Last Premium Date";
+
+    // 9.4 get engine and set it
+
+    cpu_timer timer;
+    auto calibrationStrategy =
+        parseCalibrationStrategy(swaptionBuilder->modelParameter("CalibrationStrategy", {}, false, "None"));
+    QuantLib::ext::shared_ptr<PricingEngine> swaptionEngine; 
+    std::vector<Date> maturitiesEngine;
+    std::vector<Rate> strikesEngine;
+
+    if (calibrationStrategy != CalibrationStrategy::DeltaGammaAdjusted) {
+        maturitiesEngine = std::vector<Date>(exerciseBuilder_->noticeDates().size(), underlying_->maturity());
+        strikesEngine = strikes;
+    } else {
+        string qualifier = index == nullptr ? npvCurrency_ : IndexNameTranslator::instance().oreName(index->name());
+        std::vector<QuantLib::ext::shared_ptr<FixedVsFloatingSwap>> underlyingMatched =
+            buildRepresentativeSwaps(engineFactory, qualifier);
+        for (const auto& swap : underlyingMatched) {
+            maturitiesEngine.push_back(swap->maturityDate());
+            strikesEngine.push_back(swap->fixedRate());
+        }
+    }
+
+    // use ibor / ois index as key, if possible, otherwise the npv currency
+    swaptionEngine = swaptionBuilder->engine(
+        id(), index == nullptr ? npvCurrency_ : IndexNameTranslator::instance().oreName(index->name()),
+        exerciseBuilder_->noticeDates(), maturitiesEngine, strikesEngine, exerciseType_ == Exercise::American,
+        envelope().additionalField("discount_curve", false), envelope().additionalField("security_spread", false));
+
+    timer.stop();
+    DLOG("Swaption model calibration time: " << timer.format(default_places, "%w") << " s");
+    
+    swaption->setPricingEngine(swaptionEngine);
+    setSensitivityTemplate(*swaptionBuilder);
+    addProductModelEngine(*swaptionBuilder);
 
     DLOG("Building Swaption done");
 }
 
-std::vector<boost::shared_ptr<Instrument>>
-Swaption::buildUnderlyingSwaps(const boost::shared_ptr<PricingEngine>& swapEngine,
+std::vector<QuantLib::ext::shared_ptr<FixedVsFloatingSwap>>
+Swaption::buildRepresentativeSwaps(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                                   const std::string& qualifier) {
+    DLOG("build representative swaps.")
+    auto market = QuantLib::ext::dynamic_pointer_cast<Market>(engineFactory->market());
+    auto configuration = engineFactory->configuration(MarketContext::irCalibration);
+    Handle<YieldTermStructure> discountCurve = market->discountCurve(npvCurrency_, configuration);
+    Handle<SwapIndex> swapIndex = market->swapIndex(market->swapIndexBase(qualifier, configuration), configuration);
+    QuantExt::RepresentativeSwaptionMatcher matcher(underlying_->legs(), underlying_->legPayers(), *swapIndex, true,
+                                                    discountCurve, 0.0);
+    std::vector<QuantLib::ext::shared_ptr<FixedVsFloatingSwap>> swaps;
+    for (Size i = 0; i < exerciseBuilder_->noticeDates().size(); ++i) {
+        Date ed = exerciseBuilder_->noticeDates()[i];
+        swaps.push_back(
+            matcher
+                .representativeSwaption(
+                    ed, QuantExt::RepresentativeSwaptionMatcher::InclusionCriterion::AccrualStartGeqExercise)
+                ->underlying());
+        DLOG("representative swap for exercise date " << ed << ": fixed rate = " << swaps.back()->fixedRate()
+                                                      << ", maturity = " << swaps.back()->maturityDate()
+                                                      << ", notional = " << swaps.back()->nominal());
+    }
+    return swaps;
+}
+
+std::vector<QuantLib::ext::shared_ptr<Instrument>>
+Swaption::buildUnderlyingSwaps(const QuantLib::ext::shared_ptr<PricingEngine>& swapEngine,
                                const std::vector<Date>& exerciseDates) {
-    std::vector<boost::shared_ptr<Instrument>> swaps;
+
+    std::vector<QuantLib::ext::shared_ptr<Instrument>> swaps;
+
     for (Size i = 0; i < exerciseDates.size(); ++i) {
+
         std::vector<Leg> legs = underlying_->legs();
         std::vector<bool> payer = underlying_->legPayers();
+
         for (Size j = 0; j < legs.size(); ++j) {
             Date ed = exerciseDates[i];
             auto it = std::lower_bound(legs[j].begin(), legs[j].end(), exerciseDates[i],
-                                       [&ed](const boost::shared_ptr<CashFlow>& c, const Date& d) {
-                                           if (auto cpn = boost::dynamic_pointer_cast<Coupon>(c)) {
+                                       [&ed](const QuantLib::ext::shared_ptr<CashFlow>& c, const Date& d) {
+                                           if (auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(c)) {
                                                return cpn->accrualStartDate() < ed;
                                            } else {
                                                return c->date() < ed;
@@ -410,18 +610,22 @@ Swaption::buildUnderlyingSwaps(const boost::shared_ptr<PricingEngine>& swapEngin
                 --it;
             legs[j].erase(legs[j].begin(), it);
         }
-        auto newSwap = boost::make_shared<QuantLib::Swap>(legs, payer);
+
+        auto newSwap = QuantLib::ext::make_shared<QuantLib::Swap>(legs, payer);
+
         if (swapEngine != nullptr) {
             newSwap->setPricingEngine(swapEngine);
         }
+
         swaps.push_back(newSwap);
+
         for (auto const& l : legs) {
             if (l.empty()) {
                 WLOG("Added empty leg to underlying swap for exercise " << QuantLib::io::iso_date(exerciseDates[i])
                                                                         << "!");
             } else {
                 Date d;
-                if (auto cpn = boost::dynamic_pointer_cast<Coupon>(l.front())) {
+                if (auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(l.front())) {
                     d = cpn->accrualStartDate();
                 } else {
                     d = l.front()->date();
@@ -444,25 +648,26 @@ QuantLib::Real Swaption::notional() const {
 
 bool Swaption::isExercised() const { return exerciseBuilder_->isExercised(); }
 
-const std::map<std::string, boost::any>& Swaption::additionalData() const {
+const std::map<std::string, QuantLib::ext::any>& Swaption::additionalData() const {
     // use the build time as of date to determine current notionals
     Date asof = Settings::instance().evaluationDate();
     for (Size i = 0; i < std::min(legData_.size(), legs_.size()); ++i) {
         string legID = to_string(i + 1);
-        additionalData_["legType[" + legID + "]"] = legData_[i].legType();
+        additionalData_["legType[" + legID + "]"] = ore::data::to_string(legData_[i].legType());
         additionalData_["isPayer[" + legID + "]"] = legData_[i].isPayer();
         additionalData_["notionalCurrency[" + legID + "]"] = legData_[i].currency();
         for (Size j = 0; j < legs_[i].size(); ++j) {
-            boost::shared_ptr<CashFlow> flow = legs_[i][j];
-            // pick flow with earliest future payment date on this leg
-            if (flow->date() > asof) {
+            QuantLib::ext::shared_ptr<CashFlow> flow = legs_[i][j];
+            QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow);
+            // pick flow with the earliest future accrual period end date on this leg
+            auto date = (coupon) ? coupon->accrualEndDate() : flow->date();
+            if (date > asof) {
                 additionalData_["amount[" + legID + "]"] = flow->amount();
                 additionalData_["paymentDate[" + legID + "]"] = to_string(flow->date());
-                boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(flow);
                 if (coupon) {
                     additionalData_["currentNotional[" + legID + "]"] = coupon->nominal();
                     additionalData_["rate[" + legID + "]"] = coupon->rate();
-                    boost::shared_ptr<FloatingRateCoupon> frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(flow);
+                    QuantLib::ext::shared_ptr<FloatingRateCoupon> frc = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(flow);
                     if (frc) {
                         additionalData_["index[" + legID + "]"] = frc->index()->name();
                         additionalData_["spread[" + legID + "]"] = frc->spread();
@@ -472,11 +677,31 @@ const std::map<std::string, boost::any>& Swaption::additionalData() const {
             }
         }
         if (legs_[i].size() > 0) {
-            boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(legs_[i][0]);
+            QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(legs_[i][0]);
             if (coupon)
                 additionalData_["originalNotional[" + legID + "]"] = coupon->nominal();
         }
     }
+
+    // ATM forward and spread correction of the full underlying swap
+    if (underlying_) {
+        try {
+            const auto& underlyingAd = underlying_->additionalData();
+            auto itAtm = underlyingAd.find("atmForward");
+            if (itAtm != underlyingAd.end()) {
+                additionalData_["atmForward"] = itAtm->second;
+            }
+            auto itSpread = underlyingAd.find("spreadCorrection");
+            if (itSpread != underlyingAd.end()) {
+                additionalData_["spreadCorrection"] = itSpread->second;
+            }
+        } catch (const std::exception& e) {
+            DLOG("Could not retrieve atmForward/spreadCorrection from underlying swap for Swaption " << id()
+                                                                                                       << ": "
+                                                                                                       << e.what());
+        }
+    }
+
     return additionalData_;
 }
 
@@ -506,8 +731,10 @@ XMLNode* Swaption::toXML(XMLDocument& doc) const {
 }
 
 map<AssetClass, set<string>>
-Swaption::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+Swaption::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     map<AssetClass, set<string>> result;
+    if (underlying_)
+        result = underlying_->underlyingIndices();
     if (auto s = envelope().additionalField("security_spread", false); !s.empty())
         result[AssetClass::BOND] = {s};
     return result;

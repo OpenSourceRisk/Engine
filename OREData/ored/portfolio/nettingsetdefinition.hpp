@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <boost/optional.hpp>
+#include <ql/optional.hpp>
 #include <ored/portfolio/nettingsetdetails.hpp>
 #include <ored/utilities/xmlutils.hpp>
 #include <ql/time/period.hpp>
@@ -34,6 +34,8 @@ using ore::data::NettingSetDetails;
 namespace ore {
 namespace data {
 using namespace QuantLib;
+
+NettingSetDetails getNettingSetDetails(XMLNode* node);
 
 class CSA {
 public:
@@ -145,6 +147,7 @@ std::ostream& operator<<(std::ostream& out, CSA::Type t);
 */
 class NettingSetDefinition : public XMLSerializable {
 public:
+    NettingSetDefinition(){}
     /*!
       builds a NettingSetDefinition from an XML input
     */
@@ -215,7 +218,7 @@ public:
     /*! boolean specifying if ISDA agreement is covered by a Credit Support Annex */
     bool activeCsaFlag() const { return activeCsaFlag_; }
     /*! CSA details, if active */
-    const boost::shared_ptr<CSA>& csaDetails() { return csa_; }
+    const QuantLib::ext::shared_ptr<CSA>& csaDetails() { return csa_; }
 
     // /*! Nature of CSA margining agreement (e.g. Bilateral, PostOnly, CallOnly) */
     // CSAType csaType() const {
@@ -259,10 +262,10 @@ private:
     string nettingSetId_;
     NettingSetDetails nettingSetDetails_;
     bool activeCsaFlag_;
-    boost::shared_ptr<CSA> csa_;
+    QuantLib::ext::shared_ptr<CSA> csa_;
 
     // string csaTypeStr_;                // staging value for csaType_
-    // boost::optional<CSAType> csaType_; // initialised during build()
+    // QuantLib::ext::optional<CSAType> csaType_; // initialised during build()
     // string csaCurrency_;
     // string index_;
     // Real thresholdPay_;

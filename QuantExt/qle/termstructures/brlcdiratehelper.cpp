@@ -20,24 +20,28 @@
 #include <ql/utilities/null_deleter.hpp>
 #include <qle/instruments/brlcdiswap.hpp>
 #include <qle/termstructures/brlcdiratehelper.hpp>
+#include <qle/utilities/ratehelpers.hpp>
 
 using namespace QuantLib;
 
 namespace QuantExt {
 
 BRLCdiRateHelper::BRLCdiRateHelper(const Period& swapTenor, const Handle<Quote>& fixedRate,
-                                   const boost::shared_ptr<BRLCdi>& brlCdiIndex,
-                                   const Handle<YieldTermStructure>& discountingCurve, bool telescopicValueDates)
+                                   const QuantLib::ext::shared_ptr<BRLCdi>& brlCdiIndex, const bool brlCdiIndexGiven,
+                                   const Handle<YieldTermStructure>& discountingCurve, const bool discountCurveGiven,
+                                   const bool telescopicValueDates, QuantLib::Pillar::Choice pillarChoice,
+                                   const Date& customPillarDate)
     : RelativeDateRateHelper(fixedRate), swapTenor_(swapTenor), brlCdiIndex_(brlCdiIndex),
-      telescopicValueDates_(telescopicValueDates), discountHandle_(discountingCurve) {
+      brlCdiIndexGiven_(brlCdiIndexGiven), telescopicValueDates_(telescopicValueDates), pillarChoice_(pillarChoice),
+      discountHandle_(discountingCurve), discountCurveGiven_(discountCurveGiven) {
 
-    bool onIndexHasCurve = !brlCdiIndex_->forwardingTermStructure().empty();
-    bool haveDiscountCurve = !discountHandle_.empty();
-    QL_REQUIRE(!(onIndexHasCurve && haveDiscountCurve), "Have both curves nothing to solve for.");
+    pillarDate_ = customPillarDate;
 
-    if (!onIndexHasCurve) {
-        boost::shared_ptr<IborIndex> clonedIborIndex(brlCdiIndex_->clone(termStructureHandle_));
-        brlCdiIndex_ = boost::dynamic_pointer_cast<BRLCdi>(clonedIborIndex);
+    QL_REQUIRE(!(brlCdiIndexGiven_ && discountCurveGiven_), "Have both curves nothing to solve for.");
+
+    if (!brlCdiIndexGiven_) {
+        QuantLib::ext::shared_ptr<IborIndex> clonedIborIndex(brlCdiIndex_->clone(termStructureHandle_));
+        brlCdiIndex_ = QuantLib::ext::dynamic_pointer_cast<BRLCdi>(clonedIborIndex);
         brlCdiIndex_->unregisterWith(termStructureHandle_);
     }
 
@@ -63,24 +67,30 @@ void BRLCdiRateHelper::initializeDates() {
     Date endDate = startDate + swapTenor_;
 
     // Create the BRL CDI swap
-    swap_ = boost::make_shared<BRLCdiSwap>(OvernightIndexedSwap::Payer, 1.0, startDate, endDate, 0.01, brlCdiIndex_,
-                                           0.0, telescopicValueDates_);
+    swap_ = QuantLib::ext::make_shared<BRLCdiSwap>(OvernightIndexedSwap::Payer, 1.0, startDate, endDate,
+                                                   quote().empty() || !quote()->isValid() ? 0.01 : quote()->value(),
+                                                   brlCdiIndex_, 0.0, telescopicValueDates_);
 
     // Set the pricing engine
-    swap_->setPricingEngine(boost::make_shared<DiscountingSwapEngine>(discountRelinkableHandle_));
+    swap_->setPricingEngine(QuantLib::ext::make_shared<DiscountingSwapEngine>(discountRelinkableHandle_));
 
-    // Update earliest and latest dates
     earliestDate_ = swap_->startDate();
-    latestDate_ = swap_->maturityDate();
+    maturityDate_ = swap_->maturityDate();
+
+    Date lastPaymentDate = std::max(swap_->overnightLeg().back()->date(), swap_->fixedLeg().back()->date());
+    latestRelevantDate_ = std::max(maturityDate_, lastPaymentDate);
+
+    latestDate_ = pillarDate_ =
+        determinePillarDate(pillarDate_, pillarChoice_, earliestDate_, maturityDate_, latestRelevantDate_);
 }
 
 void BRLCdiRateHelper::setTermStructure(YieldTermStructure* t) {
 
     bool observer = false;
-    boost::shared_ptr<YieldTermStructure> temp(t, null_deleter());
+    QuantLib::ext::shared_ptr<YieldTermStructure> temp(t, null_deleter());
     termStructureHandle_.linkTo(temp, observer);
 
-    if (discountHandle_.empty())
+    if (!discountCurveGiven_)
         discountRelinkableHandle_.linkTo(temp, observer);
     else
         discountRelinkableHandle_.linkTo(*discountHandle_, observer);
@@ -102,30 +112,30 @@ void BRLCdiRateHelper::accept(AcyclicVisitor& v) {
 }
 
 DatedBRLCdiRateHelper::DatedBRLCdiRateHelper(const Date& startDate, const Date& endDate, const Handle<Quote>& fixedRate,
-                                             const boost::shared_ptr<BRLCdi>& brlCdiIndex,
+                                             const QuantLib::ext::shared_ptr<BRLCdi>& brlCdiIndex,
+                                             const bool brlCdiIndexGiven,
                                              const Handle<YieldTermStructure>& discountingCurve,
-                                             bool telescopicValueDates)
-    : RateHelper(fixedRate), brlCdiIndex_(brlCdiIndex), telescopicValueDates_(telescopicValueDates),
-      discountHandle_(discountingCurve) {
+                                             const bool discountCurveGiven, bool telescopicValueDates)
+    : RateHelper(fixedRate), brlCdiIndex_(brlCdiIndex), brlCdiIndexGiven_(brlCdiIndexGiven),
+      telescopicValueDates_(telescopicValueDates), discountHandle_(discountingCurve),
+      discountCurveGiven_(discountCurveGiven) {
 
-    bool onIndexHasCurve = !brlCdiIndex_->forwardingTermStructure().empty();
-    bool haveDiscountCurve = !discountHandle_.empty();
-    QL_REQUIRE(!(onIndexHasCurve && haveDiscountCurve), "Have both curves nothing to solve for.");
+    QL_REQUIRE(!(brlCdiIndexGiven_ && discountCurveGiven_), "Have both curves nothing to solve for.");
 
-    if (!onIndexHasCurve) {
-        boost::shared_ptr<IborIndex> clonedIborIndex(brlCdiIndex_->clone(termStructureHandle_));
-        brlCdiIndex_ = boost::dynamic_pointer_cast<BRLCdi>(clonedIborIndex);
+    if (!brlCdiIndexGiven_) {
+        QuantLib::ext::shared_ptr<IborIndex> clonedIborIndex(brlCdiIndex_->clone(termStructureHandle_));
+        brlCdiIndex_ = QuantLib::ext::dynamic_pointer_cast<BRLCdi>(clonedIborIndex);
         brlCdiIndex_->unregisterWith(termStructureHandle_);
     }
 
     registerWith(brlCdiIndex_);
     registerWith(discountHandle_);
 
-    swap_ = boost::make_shared<BRLCdiSwap>(OvernightIndexedSwap::Payer, 1.0, startDate, endDate, 0.01, brlCdiIndex_,
+    swap_ = QuantLib::ext::make_shared<BRLCdiSwap>(OvernightIndexedSwap::Payer, 1.0, startDate, endDate, 0.01, brlCdiIndex_,
                                            0.0, telescopicValueDates_);
 
     // Set the pricing engine
-    swap_->setPricingEngine(boost::make_shared<DiscountingSwapEngine>(discountRelinkableHandle_));
+    swap_->setPricingEngine(QuantLib::ext::make_shared<DiscountingSwapEngine>(discountRelinkableHandle_));
 
     // Update earliest and latest dates
     earliestDate_ = swap_->startDate();
@@ -135,10 +145,10 @@ DatedBRLCdiRateHelper::DatedBRLCdiRateHelper(const Date& startDate, const Date& 
 void DatedBRLCdiRateHelper::setTermStructure(YieldTermStructure* t) {
 
     bool observer = false;
-    boost::shared_ptr<YieldTermStructure> temp(t, null_deleter());
+    QuantLib::ext::shared_ptr<YieldTermStructure> temp(t, null_deleter());
     termStructureHandle_.linkTo(temp, observer);
 
-    if (discountHandle_.empty())
+    if (!discountCurveGiven_)
         discountRelinkableHandle_.linkTo(temp, observer);
     else
         discountRelinkableHandle_.linkTo(*discountHandle_, observer);

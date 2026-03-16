@@ -25,11 +25,12 @@
 
 #include <qle/instruments/commodityspreadoption.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
-#include <qle/models/blackscholesmodelwrapper.hpp>
+#include <qle/models/assetmodelwrapper.hpp>
 
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <qle/termstructures/correlationtermstructure.hpp>
+#include <ql/pricingengines/diffusioncalculator.hpp>
 
 namespace QuantExt {
 
@@ -45,7 +46,9 @@ public:
                                           const QuantLib::Handle<QuantLib::BlackVolTermStructure>& volTSLongAsset,
                                           const QuantLib::Handle<QuantLib::BlackVolTermStructure>& volTSShortAsset,
                                           const QuantLib::Handle<QuantExt::CorrelationTermStructure>& rho,
-                                          Real beta = 0.0);
+                                          Real beta = 0.0,
+                                          QuantLib::DiffusionModelType modelType = QuantLib::DiffusionModelType::AsInputVolatilityType,
+                                          Real displacement = 0.0);
     void calculate() const override;
 
 private:
@@ -53,6 +56,8 @@ private:
         Time tn;
         Real atm;
         Real sigma;
+        QuantLib::VolatilityType volType;
+        QuantLib::Real displacement;
         Real accruals;
         std::vector<QuantLib::Date> pricingDates;
         std::vector<std::string> indexNames;
@@ -62,6 +67,7 @@ private:
 
     PricingParameter derivePricingParameterFromFlow(const ext::shared_ptr<CommodityCashFlow>& flow,
                                                     const ext::shared_ptr<BlackVolTermStructure>& vol,
+                                                    const Date& expiryDate,
                                                     const ext::shared_ptr<FxIndex>& fxIndex) const;
 
     //! Return the correlation between two future expiry dates \p ed_1 and \p ed_2
@@ -76,6 +82,9 @@ protected:
     QuantLib::Handle<QuantLib::BlackVolTermStructure> volTSShortAsset_;
     const QuantLib::Handle<QuantExt::CorrelationTermStructure> rho_;
     QuantLib::Real beta_;
+    QuantLib::DiffusionModelType modelType_;
+    QuantLib::Real displacement_;
+    
 };
 
 } // namespace QuantExt

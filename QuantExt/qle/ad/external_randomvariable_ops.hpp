@@ -24,6 +24,8 @@
 
 #include <qle/math/randomvariable_ops.hpp>
 
+#include <ostream>
+
 namespace QuantExt {
 
 class ExternalRandomVariable {
@@ -34,32 +36,35 @@ public:
     ExternalRandomVariable(const std::size_t randomVariableOpCode,
                            const std::vector<const ExternalRandomVariable*>& args);
     void clear();
+    void free();
     bool initialised() const { return initialized_; }
+    bool freed() const { return freed_; }
     void declareAsOutput() const;
     std::size_t id() const;
 
+    static std::function<void(ExternalRandomVariable&)> preDeleter;
     static std::function<void(ExternalRandomVariable&)> deleter;
 
 private:
     bool initialized_ = false;
+    bool freed_ = false;
     double v_;
     std::size_t id_;
 };
 
 // is the given random variable deterministic and zero?
-inline bool isDeterministicAndZero(const ExternalRandomVariable& x) {
-    return false;
-}
+inline bool isDeterministicAndZero(const ExternalRandomVariable& x) { return false; }
 
 using ExternalRandomVariableOp =
-    std::function<ExternalRandomVariable(const std::vector<const ExternalRandomVariable*>&)>;
+    std::function<ExternalRandomVariable(const std::vector<const ExternalRandomVariable*>&, const Size)>;
 
 std::vector<ExternalRandomVariableOp> getExternalRandomVariableOps();
 
 using ExternalRandomVariableGrad = std::function<std::vector<ExternalRandomVariable>(
-    const std::vector<const ExternalRandomVariable*>&, const ExternalRandomVariable*)>;
+    const std::vector<const ExternalRandomVariable*>&, const ExternalRandomVariable*, const Size)>;
 
 std::vector<ExternalRandomVariableGrad> getExternalRandomVariableGradients();
 
+std::ostream& operator<<(std::ostream& out, const ExternalRandomVariable& a);
 
 } // namespace QuantExt

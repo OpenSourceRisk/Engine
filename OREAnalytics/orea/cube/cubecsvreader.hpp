@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 #include <map>
 #include <orea/cube/npvcube.hpp>
 #include <string>
@@ -37,16 +37,17 @@ namespace analytics {
 class CubeCsvReader {
 public:
     //! ctor
-    CubeCsvReader(const std::string& filename);
+    explicit CubeCsvReader(const std::string& filename, const bool useDoublePrecision = false);
 
     //! Return the filename this reader is reader from
     const std::string& filename() const { return filename_; }
 
     //! Read a cube from a csv file
-    void read(boost::shared_ptr<ore::analytics::NPVCube>& cube, std::map<std::string, std::string>& nettingSetMap);
+    void read(QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& cube, std::map<std::string, std::string>& nettingSetMap);
 
 private:
     std::string filename_;
+    bool useDoublePrecision_ = false;
 };
 } // namespace analytics
 } // namespace ore

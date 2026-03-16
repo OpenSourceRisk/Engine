@@ -34,10 +34,10 @@ using namespace QuantLib;
 
 /*! builds a formula based index using the ibor and swap indices in the given market, the fixing
   calendar is the joint holiday calendar of all constituents of the resulting index */
-boost::shared_ptr<QuantExt::FormulaBasedIndex>
-makeFormulaBasedIndex(const std::string& formula, const boost::shared_ptr<ore::data::Market> market,
+QuantLib::ext::shared_ptr<QuantExt::FormulaBasedIndex>
+makeFormulaBasedIndex(const std::string& formula, const QuantLib::ext::shared_ptr<ore::data::Market> market,
                       const std::string& configuration,
-                      std::map<std::string, boost::shared_ptr<QuantLib::InterestRateIndex>>& indexMaps,
+                      std::map<std::string, QuantLib::ext::shared_ptr<QuantLib::InterestRateIndex>>& indexMaps,
                       const Calendar& fixingCalendar = Calendar());
 
 } // namespace data

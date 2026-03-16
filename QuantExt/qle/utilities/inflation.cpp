@@ -18,9 +18,11 @@
 
 #include <ql/cashflows/cpicoupon.hpp>
 #include <ql/math/solvers1d/brent.hpp>
-#include <qle/utilities/inflation.hpp>
 #include <ql/termstructures/inflation/interpolatedzeroinflationcurve.hpp>
+#include <ql/termstructures/inflation/seasonality.hpp>
 #include <qle/termstructures/inflation/cpivolatilitystructure.hpp>
+#include <qle/utilities/inflation.hpp>
+#include <qle/utilities/time.hpp>
 
 using QuantLib::Date;
 using QuantLib::DayCounter;
@@ -54,60 +56,168 @@ void checkIfFixingAvailable(const Date& maturity, const Period obsLag, bool inte
     if (interpolated)
         throwExceptionIfHistoricalFixingMissing(fixingPeriod.second + 1 * Days, index);
 }
-}
+} // namespace
 
 namespace QuantExt {
 
-Time inflationTime(const Date& date,
-    const boost::shared_ptr<InflationTermStructure>& inflationTs,
-    bool indexIsInterpolated,               
-    const DayCounter& dayCounter) {
+double scenarioInflationZeroRateFromModelTs(const Date& simDate, const Period tenor, const Period observationLag,
+                                            const QuantLib::ext::shared_ptr<ZeroInflationIndex> index,
+                                            const QuantLib::ext::shared_ptr<ZeroInflationModelTermStructure> modelTs,
+                                            const CrossAssetModel::ModelType modelType, const DayCounter simulationDc) {
+    
+    auto zits = index->zeroInflationTermStructure();
+    auto fixingDate = inflationPeriod(simDate + tenor- observationLag, zits->frequency()).first;
+    auto T2_fixing = simulationDc.yearFraction(simDate, fixingDate);
+    auto [baseCpi, growth] = modelTs->indexGrowth(T2_fixing);
+    auto baseDateT1 = inflationPeriod(simDate - simulationLag(zits), zits->frequency()).first;
+    auto tau = zits->dayCounter().yearFraction(baseDateT1, fixingDate);
+    return std::pow(growth, 1.0 / tau) - 1.0;
+}
+
+
+double scenarioBaseCpi(const Real y, const Real z, const QuantLib::Date& date,
+                       const QuantLib::ext::shared_ptr<CrossAssetModel>& model, const Size modelIdx,
+                       const DayCounter& simulationDc, const QuantLib::ext::shared_ptr<ZeroInflationIndex>& index) {
+    auto cpi = 1.0;
+    auto zits = index->zeroInflationTermStructure();
+    auto modelType = model->modelType(CrossAssetModel::AssetType::INF, modelIdx);
+    if (modelType == CrossAssetModel::ModelType::JY) {
+        cpi = std::exp(y);
+    } else if (modelType == CrossAssetModel::ModelType::DK) {
+        Date baseDate = zits->baseDate();
+        Time relativeTime = simulationDc.yearFraction(zits->referenceDate(), date);
+        std::tie(cpi, std::ignore) = model->infdkI(modelIdx, relativeTime, relativeTime, z, y);
+        cpi *= deseasonalizeCPI(baseDate, index->fixing(baseDate), zits);
+
+    } else {
+        QL_FAIL("CrossAssetModelScenarioGenerator: expected inflation model to be JY or DK.");
+    }
+    return cpi;
+}
+
+Time inflationTime(const Date& date, const QuantLib::ext::shared_ptr<InflationTermStructure>& inflationTs,
+                   bool indexIsInterpolated, const DayCounter& dayCounter) {
 
     DayCounter dc = inflationTs->dayCounter();
     if (dayCounter != DayCounter())
         dc = dayCounter;
-
-    return inflationYearFraction(inflationTs->frequency(), indexIsInterpolated, 
-        dc, inflationTs->baseDate(), date);
+    return inflationYearFraction(inflationTs->frequency(), indexIsInterpolated, dc, inflationTs->baseDate(), date);
 }
 
-Real inflationGrowth(const Handle<ZeroInflationTermStructure>& ts, Time t, const DayCounter& dc, bool indexIsInterpolated) {
-    auto lag = inflationTime(ts->referenceDate(), *ts, indexIsInterpolated, dc);
-    return pow(1.0 + ts->zeroRate(t - lag), t);
+Real inflationGrowth(const Handle<ZeroInflationTermStructure>& ts, Time t, const std::optional<DayCounter>& dc, bool indexIsInterpolated) {
+    // in the simulation at time t we effectively observe the inflation zero rate at time t - simLag
+    // this is due to the publishing lag of CPI indices, the simulation lag is the difference between
+    // the last known cpi fixing date and today (t0).
+    if(!dc.has_value())
+        QL_FAIL("Not simulation day counter given");
+    auto effectiveDayCounter = dc.value_or(ts->dayCounter());
+    // TODO refactor this code once we refactored the yoy model curves and can get rid of the indexIsInterpolated flag
+    auto lag = inflationTime(ts->referenceDate(), ts.currentLink(), indexIsInterpolated, effectiveDayCounter);
+    auto effectiveObservationTime = t - lag;
+    auto effectiveObservationDate = lowerDate(effectiveObservationTime, ts->referenceDate(), effectiveDayCounter);
+    auto observationTime = ts->dayCounter().yearFraction(ts->referenceDate(), effectiveObservationDate);
+    auto zeroRate = ts->zeroRate(observationTime);
+    auto tau = ts->dayCounter().yearFraction(ts->baseDate(), effectiveObservationDate);
+    return std::pow(1.0 + zeroRate, tau);
 }
 
 Real inflationGrowth(const Handle<ZeroInflationTermStructure>& ts, Time t, bool indexIsInterpolated) {
     return inflationGrowth(ts, t, ts->dayCounter(), indexIsInterpolated);
 }
 
-Real inflationLinkedBondQuoteFactor(const boost::shared_ptr<QuantLib::Bond>& bond) {
+int simulationLag(const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts) {
+    return simulationLag(ts.currentLink());
+}
+
+int simulationLag(const QuantLib::ext::shared_ptr<ZeroInflationTermStructure>& ts) {
+    QL_REQUIRE(ts != nullptr, "simulationLag can not be computed, no curve given");
+    return ts->referenceDate() - ts->baseDate();
+}
+
+double simulationLagTime(const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts,
+                         const std::optional<QuantLib::DayCounter>& dc) {
+    return simulationLagTime(ts.currentLink(), dc);
+}
+
+double simulationLagTime(const QuantLib::ext::shared_ptr<ZeroInflationTermStructure>& ts,
+                         const std::optional<QuantLib::DayCounter>& dc) {
+    QL_REQUIRE(ts != nullptr, "simulationLag can not be computed, no curve given");
+    return dc.value_or(ts->dayCounter()).yearFraction(ts->baseDate(), ts->referenceDate());
+}
+
+Real continuousSeasonalityAdjustment(const Date& baseDate, const Date& observationDate, Rate unadjustedZeroRate,
+                                     Time tau, const QuantLib::ext::shared_ptr<ZeroInflationTermStructure>& ts) {
+    if (ts->seasonality() == nullptr) {
+        return unadjustedZeroRate;
+    }
+    auto seasonCurve = QuantLib::ext::dynamic_pointer_cast<QuantLib::MultiplicativePriceSeasonality>(ts->seasonality());
+    double baseFactor = seasonCurve->seasonalityFactor(baseDate);
+    double obsFactor = seasonCurve->seasonalityFactor(observationDate);
+    Real seasonalityAt = obsFactor / baseFactor;
+    auto f = std::pow(seasonalityAt, 1. / tau);
+    return (unadjustedZeroRate + 1) * f - 1.0;
+}
+
+Real seasonalizeCPI(const Date& observationDate, const Real CPI,
+                    const QuantLib::Handle<ZeroInflationTermStructure>& ts) {
+    return seasonalizeCPI(observationDate, CPI, ts.currentLink());
+}
+
+Real seasonalizeCPI(const Date& observationDate, const Real CPI,
+                    const QuantLib::ext::shared_ptr<ZeroInflationTermStructure>& ts) {
+    if (ts->seasonality() == nullptr) {
+        return CPI;
+    }
+    auto seasonCurve = QuantLib::ext::dynamic_pointer_cast<QuantLib::MultiplicativePriceSeasonality>(ts->seasonality());
+    QL_REQUIRE(seasonCurve != nullptr, "Seasonality curve is not of type MultiplicativePriceSeasonality");
+    return CPI * seasonCurve->seasonalityFactor(observationDate);
+}
+
+Real deseasonalizeCPI(const Date& observationDate, const Real CPI,
+                      const QuantLib::Handle<ZeroInflationTermStructure>& ts) {
+    return deseasonalizeCPI(observationDate, CPI, ts.currentLink());
+}
+
+Real deseasonalizeCPI(const Date& observationDate, const Real CPI,
+                      const QuantLib::ext::shared_ptr<ZeroInflationTermStructure>& ts) {
+    if (ts->seasonality() == nullptr) {
+        return CPI;
+    }
+    auto seasonCurve = QuantLib::ext::dynamic_pointer_cast<QuantLib::MultiplicativePriceSeasonality>(ts->seasonality());
+    QL_REQUIRE(seasonCurve != nullptr, "Seasonality curve is not of type MultiplicativePriceSeasonality");
+    QL_REQUIRE(!QuantLib::close_enough(seasonCurve->seasonalityFactor(observationDate), 0.0),
+               "Seasonality factor is zero for date " << observationDate);
+    return CPI / seasonCurve->seasonalityFactor(observationDate);
+}
+
+Real inflationLinkedBondQuoteFactor(const QuantLib::ext::shared_ptr<QuantLib::Bond>& bond) {
     QuantLib::Real inflFactor = 1;
     for (auto& cf : bond->cashflows()) {
-        if (auto inflCpn = boost::dynamic_pointer_cast<QuantLib::CPICoupon>(cf)) {
-            const auto& inflationIndex = boost::dynamic_pointer_cast<QuantLib::ZeroInflationIndex>(inflCpn->index());
+        if (auto inflCpn = QuantLib::ext::dynamic_pointer_cast<QuantLib::CPICoupon>(cf)) {
+            const auto& inflationIndex =
+                QuantLib::ext::dynamic_pointer_cast<QuantLib::ZeroInflationIndex>(inflCpn->index());
             Date settlementDate = bond->settlementDate();
             std::pair<Date, Date> currentInflationPeriod = inflationPeriod(settlementDate, inflationIndex->frequency());
-            std::pair<Date, Date> settlementFixingPeriod = inflationPeriod(settlementDate - inflCpn->observationLag(), inflationIndex->frequency());
+            std::pair<Date, Date> settlementFixingPeriod =
+                inflationPeriod(settlementDate - inflCpn->observationLag(), inflationIndex->frequency());
             Date curveBaseDate = settlementFixingPeriod.first;
-            //Date curveBaseDate = inflationIndex->zeroInflationTermStructure()->baseDate();
+            // Date curveBaseDate = inflationIndex->zeroInflationTermStructure()->baseDate();
             Real todaysCPI = inflationIndex->fixing(curveBaseDate);
             if (inflCpn->observationInterpolation() == QuantLib::CPI::Linear) {
-                
+
                 std::pair<Date, Date> observationPeriod = inflationPeriod(curveBaseDate, inflationIndex->frequency());
-                
+
                 Real indexStart = inflationIndex->fixing(observationPeriod.first);
                 Real indexEnd = inflationIndex->fixing(observationPeriod.second + 1 * QuantLib::Days);
-                
-                todaysCPI = indexStart + (settlementDate - currentInflationPeriod.first) *
-                                             (indexEnd - indexStart) /
+
+                todaysCPI = indexStart + (settlementDate - currentInflationPeriod.first) * (indexEnd - indexStart) /
                                              (Real)(currentInflationPeriod.second - currentInflationPeriod.first);
             }
             QuantLib::Rate baseCPI = inflCpn->baseCPI();
             if (baseCPI == QuantLib::Null<QuantLib::Rate>()) {
                 baseCPI =
                     QuantLib::CPI::laggedFixing(inflCpn->cpiIndex(), inflCpn->baseDate() + inflCpn->observationLag(),
-                                                inflCpn->observationLag(),
-                                                inflCpn->observationInterpolation());
+                                                inflCpn->observationLag(), inflCpn->observationInterpolation());
             }
             inflFactor = todaysCPI / baseCPI;
             break;
@@ -118,11 +228,11 @@ Real inflationLinkedBondQuoteFactor(const boost::shared_ptr<QuantLib::Bond>& bon
 
 void addInflationIndexToMap(
     std::map<std::tuple<std::string, QuantLib::CPI::InterpolationType, QuantLib::Frequency, QuantLib::Period>,
-             boost::shared_ptr<QuantLib::ZeroInflationIndex>>& inflationIndices,
-    const boost::shared_ptr<QuantLib::Index>& index, QuantLib::CPI::InterpolationType interpolation,
+             QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex>>& inflationIndices,
+    const QuantLib::ext::shared_ptr<QuantLib::Index>& index, QuantLib::CPI::InterpolationType interpolation,
     Frequency couponFrequency, Period observationLag) {
     if (index != nullptr) {
-        const auto zInfIndex = boost::dynamic_pointer_cast<QuantLib::ZeroInflationIndex>(index);
+        const auto zInfIndex = QuantLib::ext::dynamic_pointer_cast<QuantLib::ZeroInflationIndex>(index);
         std::string name = index->name();
         const auto key = std::make_tuple(name, interpolation, couponFrequency, observationLag);
         if (zInfIndex != nullptr && inflationIndices.count(key) == 0) {
@@ -132,18 +242,18 @@ void addInflationIndexToMap(
 };
 
 std::map<std::tuple<std::string, QuantLib::CPI::InterpolationType, QuantLib::Frequency, QuantLib::Period>,
-         boost::shared_ptr<QuantLib::ZeroInflationIndex>>
-extractAllInflationUnderlyingFromBond(const boost::shared_ptr<QuantLib::Bond>& bond) {
+         QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex>>
+extractAllInflationUnderlyingFromBond(const QuantLib::ext::shared_ptr<QuantLib::Bond>& bond) {
 
     std::map<std::tuple<std::string, QuantLib::CPI::InterpolationType, Frequency, Period>,
-             boost::shared_ptr<QuantLib::ZeroInflationIndex>>
+             QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex>>
         inflationIndices;
     if (bond != nullptr) {
         for (const auto& cf : bond->cashflows()) {
-            if (auto cp = boost::dynamic_pointer_cast<QuantLib::CPICoupon>(cf)) {
+            if (auto cp = QuantLib::ext::dynamic_pointer_cast<QuantLib::CPICoupon>(cf)) {
                 addInflationIndexToMap(inflationIndices, cp->index(), cp->observationInterpolation(),
                                        cp->index()->frequency(), cp->observationLag());
-            } else if (auto cp = boost::dynamic_pointer_cast<QuantLib::CPICashFlow>(cf)) {
+            } else if (auto cp = QuantLib::ext::dynamic_pointer_cast<QuantLib::CPICashFlow>(cf)) {
                 addInflationIndexToMap(inflationIndices, cp->index(), cp->interpolation(), cp->frequency(),
                                        cp->observationLag());
             }
@@ -153,7 +263,7 @@ extractAllInflationUnderlyingFromBond(const boost::shared_ptr<QuantLib::Bond>& b
 }
 namespace ZeroInflation {
 
-QuantLib::Date lastAvailableFixing(const QuantLib::ZeroInflationIndex& index, const QuantLib::Date& asof) {
+QuantLib::Date lastAvailableFixing(const QuantLib::InflationIndex& index, const QuantLib::Date& asof) {
     Date availbilityLagFixingDate = inflationPeriod(asof - index.availabilityLag(), index.frequency()).first;
     if (index.hasHistoricalFixing(availbilityLagFixingDate)) {
         return availbilityLagFixingDate;
@@ -163,15 +273,15 @@ QuantLib::Date lastAvailableFixing(const QuantLib::ZeroInflationIndex& index, co
     }
 }
 
-QuantLib::Rate cpiFixing(const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index, const QuantLib::Date& maturity,
-                         const QuantLib::Period& obsLag, bool interpolated) {
+QuantLib::Rate cpiFixing(const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex>& index,
+                         const QuantLib::Date& maturity, const QuantLib::Period& obsLag, bool interpolated) {
     QuantLib::CPI::InterpolationType interpolation = interpolated ? QuantLib::CPI::Linear : QuantLib::CPI::Flat;
     return QuantLib::CPI::laggedFixing(index, maturity, obsLag, interpolation);
 }
 
 QuantLib::Date curveBaseDate(const bool baseDateLastKnownFixing, const QuantLib::Date& refDate,
                              const QuantLib::Period obsLagCurve, const QuantLib::Frequency curveFreq,
-                             const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index) {
+                             const QuantLib::ext::shared_ptr<QuantLib::InflationIndex>& index) {
     if (baseDateLastKnownFixing) {
         QL_REQUIRE(index, "can not compute curve base date based on the last known index fixing if no index provided");
         return lastAvailableFixing(*index, refDate);
@@ -189,16 +299,18 @@ QuantLib::Date fixingDate(const QuantLib::Date& d, const QuantLib::Period obsLag
 }
 
 QuantLib::Rate guessCurveBaseRate(const bool baseDateLastKnownFixing, const QuantLib::Date& swapStart,
-                                  const QuantLib::Date& asof,
-                                  const QuantLib::Period& swapTenor, const QuantLib::DayCounter& swapZCLegDayCounter,
-                                  const QuantLib::Period& swapObsLag, const QuantLib::Rate zeroCouponRate,
-                                  const QuantLib::Period& curveObsLag, const QuantLib::DayCounter& curveDayCounter,
-                                  const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index, const bool interpolated,
-                                  const boost::shared_ptr<QuantLib::Seasonality>& seasonality) {
-    boost::shared_ptr<QuantLib::MultiplicativePriceSeasonality> multiplicativeSeasonality =
-        seasonality ? boost::dynamic_pointer_cast<QuantLib::MultiplicativePriceSeasonality>(seasonality) : nullptr;  
-    
-    QL_REQUIRE(seasonality ==  nullptr || multiplicativeSeasonality,
+                                  const QuantLib::Date& asof, const QuantLib::Period& swapTenor,
+                                  const QuantLib::DayCounter& swapZCLegDayCounter, const QuantLib::Period& swapObsLag,
+                                  const QuantLib::Rate zeroCouponRate, const QuantLib::Period& curveObsLag,
+                                  const QuantLib::DayCounter& curveDayCounter,
+                                  const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex>& index,
+                                  const bool interpolated,
+                                  const QuantLib::ext::shared_ptr<QuantLib::Seasonality>& seasonality) {
+    QuantLib::ext::shared_ptr<QuantLib::MultiplicativePriceSeasonality> multiplicativeSeasonality =
+        seasonality ? QuantLib::ext::dynamic_pointer_cast<QuantLib::MultiplicativePriceSeasonality>(seasonality)
+                    : nullptr;
+
+    QL_REQUIRE(seasonality == nullptr || multiplicativeSeasonality,
                "Only multiplicative seasonality supported at the moment");
 
     Date swapBaseDate = ZeroInflation::fixingDate(swapStart, swapObsLag, index->frequency(), interpolated);
@@ -209,10 +321,10 @@ QuantLib::Rate guessCurveBaseRate(const bool baseDateLastKnownFixing, const Quan
     // If the baseDate in Curve is today - obsLag then the quoted zeroRate should be used
     if (!baseDateLastKnownFixing && swapBaseDate == curveBaseDate)
         return zeroCouponRate;
-    
+
     QL_REQUIRE(index, "can not compute base cpi of the zero coupon swap");
-    // Otherwise we need to take into account the accrued inflation between rate helper base date and curve base date
-    // Check if historical fixings available
+    // Otherwise we need to take into account the accrued inflation between rate helper base date and curve base
+    // date Check if historical fixings available
     try {
         checkIfFixingAvailable(swapStart, swapObsLag, interpolated, *index);
     } catch (const std::exception& e) {
@@ -235,7 +347,7 @@ QuantLib::Rate guessCurveBaseRate(const bool baseDateLastKnownFixing, const Quan
         Time timeFromCurveBase = inflationYearFraction(index->frequency(), interpolated, curveDayCounter, curveBaseDate,
                                                        swapObservationDate);
         double rateWithSeasonality = std::pow(fwdCPI / curveBaseFixing, 1.0 / timeFromCurveBase) - 1.0;
-        
+
         if (multiplicativeSeasonality) {
             double factorAt = multiplicativeSeasonality->seasonalityFactor(swapObservationDate);
             double factorBase = multiplicativeSeasonality->seasonalityFactor(curveBaseDate);
@@ -252,7 +364,7 @@ QuantLib::Rate guessCurveBaseRate(const bool baseDateLastKnownFixing, const Quan
         Time timeToFixing1 =
             inflationYearFraction(index->frequency(), false, curveDayCounter, curveBaseDate, fixingPeriod.first);
         Time timeToFixing2 = inflationYearFraction(index->frequency(), false, curveDayCounter, curveBaseDate,
-                                        fixingPeriod.second + 1 * Days);
+                                                   fixingPeriod.second + 1 * Days);
 
         // Time interpolation
         Time timeToPayment =
@@ -260,7 +372,7 @@ QuantLib::Rate guessCurveBaseRate(const bool baseDateLastKnownFixing, const Quan
         Time timeToStartPaymentPeriod =
             inflationYearFraction(index->frequency(), false, curveDayCounter, curveBaseDate, paymentPeriod.first);
         Time timeToEndPaymenetPeriod = inflationYearFraction(index->frequency(), false, curveDayCounter, curveBaseDate,
-                                        paymentPeriod.second + 1 * Days);
+                                                             paymentPeriod.second + 1 * Days);
         Time interpolationFactor =
             (timeToPayment - timeToStartPaymentPeriod) / (timeToEndPaymenetPeriod - timeToStartPaymentPeriod);
 
@@ -278,10 +390,9 @@ QuantLib::Rate guessCurveBaseRate(const bool baseDateLastKnownFixing, const Quan
             seasonalityFactor2 = factorAt2 / factorBase;
         }
 
-
         std::function<double(double)> objectiveFunction = [&timeToFixing1, &timeToFixing2, &interpolationFactor,
                                                            &target, &seasonalityFactor1, &seasonalityFactor2](Rate r) {
-            return target - (std::pow(1 + r, timeToFixing1) * seasonalityFactor1  +
+            return target - (std::pow(1 + r, timeToFixing1) * seasonalityFactor1 +
                              (std::pow(1 + r, timeToFixing2) * seasonalityFactor2 -
                               std::pow(1 + r, timeToFixing1) * seasonalityFactor1) *
                                  interpolationFactor);
@@ -299,8 +410,8 @@ QuantLib::Rate guessCurveBaseRate(const bool baseDateLastKnownFixing, const Quan
     }
 }
 
-bool isCPIVolSurfaceLogNormal(const boost::shared_ptr<QuantLib::CPIVolatilitySurface>& surface) {
-    if (auto qvs = boost::dynamic_pointer_cast<QuantExt::CPIVolatilitySurface>(surface)) {
+bool isCPIVolSurfaceLogNormal(const QuantLib::ext::shared_ptr<QuantLib::CPIVolatilitySurface>& surface) {
+    if (auto qvs = QuantLib::ext::dynamic_pointer_cast<QuantExt::CPIVolatilitySurface>(surface)) {
         return qvs->isLogNormal();
     } else {
         // QuantLib::CPIVolatilitySurface doesn't support volType so assume it's log normal

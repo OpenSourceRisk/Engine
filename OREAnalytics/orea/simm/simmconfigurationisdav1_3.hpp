@@ -36,7 +36,7 @@ namespace analytics {
 */
 class SimmConfiguration_ISDA_V1_3 : public SimmConfiguration_ISDA_V1_0 {
 public:
-    SimmConfiguration_ISDA_V1_3(const boost::shared_ptr<SimmBucketMapper>& simmBucketMapper,
+    SimmConfiguration_ISDA_V1_3(const QuantLib::ext::shared_ptr<SimmBucketMapper>& simmBucketMapper,
                                 const std::string& name = "SIMM ISDA V1_3 (1 April 2017)",
                                 const std::string version = "1.3");
 };

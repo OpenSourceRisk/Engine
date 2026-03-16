@@ -28,10 +28,10 @@ void IndexCreditDefaultSwap::setupArguments(PricingEngine::arguments* args) cons
     arguments->underlyingNotionals = underlyingNotionals_;
 }
 
-boost::shared_ptr<PricingEngine>
+QuantLib::ext::shared_ptr<PricingEngine>
 IndexCreditDefaultSwap::buildPricingEngine(const Handle<DefaultProbabilityTermStructure>& p, Real r,
                                            const Handle<YieldTermStructure>& d, PricingModel model) const {
-    return boost::make_shared<MidPointIndexCdsEngine>(p, r, d, true);
+    return QuantLib::ext::make_shared<MidPointIndexCdsEngine>(p, r, d, true);
 }
 
 } // namespace QuantExt

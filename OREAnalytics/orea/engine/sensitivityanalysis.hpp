@@ -64,32 +64,42 @@ class ValuationCalculator;
 class SensitivityAnalysis : public ore::data::ProgressReporter {
 public:
     //! Constructor using single-threaded engine
-    SensitivityAnalysis(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
-                        const boost::shared_ptr<ore::data::Market>& market, const string& marketConfiguration,
-                        const boost::shared_ptr<ore::data::EngineData>& engineData,
-                        const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-                        const boost::shared_ptr<SensitivityScenarioData>& sensitivityData, const bool recalibrateModels,
-                        const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs = nullptr,
-                        const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams = nullptr,
-                        const bool nonShiftedBaseCurrencyConversion = false,
-                        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
-                        const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
-                        const bool continueOnError = false, bool dryRun = false);
+    SensitivityAnalysis(
+        const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
+        const QuantLib::ext::shared_ptr<ore::data::Market>& market, const string& marketConfiguration,
+        const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData,
+        const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+        const QuantLib::ext::shared_ptr<SensitivityScenarioData>& sensitivityData, const bool recalibrateModels,
+        const bool laxFxConversion = false,
+
+        const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs = nullptr,
+        const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams = nullptr,
+        const bool nonShiftedBaseCurrencyConversion = false,
+        const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
+        const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
+            QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
+        const bool continueOnError = false, const bool dryRun = false, const bool useAtParCouponsTrades = true, 
+        const bool computeTheta = false, const Period thetaPeriod = Period(1,Days));
 
     //! Constructor using multi-threaded engine
-    SensitivityAnalysis(const Size nThreads, const Date& asof, const boost::shared_ptr<ore::data::Loader>& loader,
-                        const boost::shared_ptr<ore::data::Portfolio>& portfolio, const string& marketConfiguration,
-                        const boost::shared_ptr<ore::data::EngineData>& engineData,
-                        const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketData,
-                        const boost::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityData,
-                        const bool recalibrateModels,
-                        const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
-                        const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
+    SensitivityAnalysis(const Size nThreads, const Date& asof,
+                        const QuantLib::ext::shared_ptr<ore::data::Loader>& loader,
+                        const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
+                        const string& marketConfiguration,
+                        const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData,
+                        const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketData,
+                        const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityData,
+                        const bool recalibrateModels, const bool laxFxConversion,
+                        const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
+                        const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
                         const bool nonShiftedBaseCurrencyConversion = false,
-                        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
-                        const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+                        const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
+                        const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
+                            QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
                         const bool continueOnError = false, bool dryRun = false,
-                        const std::string& context = "sensi analysis");
+                        const std::string& context = "sensi analysis", const bool useAtParCouponsCurves = true,
+                        const bool useAtParCouponsTrades = true,
+                        const bool computeTheta = false, const Period thetaPeriod = Period(1,Days));
 
     virtual ~SensitivityAnalysis() {}
 
@@ -103,78 +113,96 @@ public:
     const std::string marketConfiguration() const { return marketConfiguration_; }
 
     //! A getter for the sim market
-    const boost::shared_ptr<ScenarioSimMarket> simMarket() const { return simMarket_; }
+    const QuantLib::ext::shared_ptr<ScenarioSimMarket> simMarket() const { return simMarket_; }
 
     //! A getter for SensitivityScenarioGenerator (the main one, without possibly customized shifts)
-    const boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator() const { return scenarioGenerator_; }
+    const QuantLib::ext::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator() const { return scenarioGenerator_; }
 
     //! A getter for ScenarioSimMarketParameters
-    const boost::shared_ptr<ScenarioSimMarketParameters> simMarketData() const { return simMarketData_; }
+    const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketData() const { return simMarketData_; }
 
     //! A getter for SensitivityScenarioData
-    const boost::shared_ptr<SensitivityScenarioData> sensitivityData() const { return sensitivityData_; }
+    const QuantLib::ext::shared_ptr<SensitivityScenarioData> sensitivityData() const { return sensitivityData_; }
 
     //! override shift tenors with sim market tenors
     void overrideTenors(const bool b) { overrideTenors_ = b; }
 
     //! the portfolio of trades
-    boost::shared_ptr<Portfolio> portfolio() const { return portfolio_; }
+    QuantLib::ext::shared_ptr<Portfolio> portfolio() const { return portfolio_; }
 
     //! a wrapper for the sensitivity results cubes (one per shift configuration)
-    std::vector<boost::shared_ptr<SensitivityCube>> sensiCubes() const { return sensiCubes_; }
+    std::vector<QuantLib::ext::shared_ptr<SensitivityCube>> sensiCubes() const { return sensiCubes_; }
 
     //! a wrapper for the first sensitivity result cube (if that is unique, otherwise throws, for bwd compatibility)
-    boost::shared_ptr<SensitivityCube> sensiCube() const {
+    QuantLib::ext::shared_ptr<SensitivityCube> sensiCube() const {
         QL_REQUIRE(sensiCubes_.size() == 1, "SensitivityAnalysis: sensiCube() called, but got "
                                                 << sensiCubes_.size() << " sensi cubes. Check the calling code.");
         return sensiCubes_.front();
     }
 
+    //! A setter for the offset simMarket scenario
+    void setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario) {
+        offsetScenario_ = offsetScenario;
+    }
+
+    //! A setter for the offset simMarket parameters
+    void setOffsetSimMarketParams(
+        const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams) {
+        offsetSimMarketParams_ = offsetSimMarketParams;
+    }
+
 private:
-    boost::shared_ptr<ore::data::Market> market_;
+    QuantLib::ext::shared_ptr<ore::data::Market> market_;
     std::string marketConfiguration_;
     Date asof_;
-    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator_;
-    boost::shared_ptr<ScenarioSimMarket> simMarket_;
-    boost::shared_ptr<ScenarioSimMarketParameters> simMarketData_;
-    boost::shared_ptr<SensitivityScenarioData> sensitivityData_;
+    QuantLib::ext::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator_;
+    QuantLib::ext::shared_ptr<ScenarioSimMarket> simMarket_;
+    QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketData_;
+    QuantLib::ext::shared_ptr<SensitivityScenarioData> sensitivityData_;
     bool recalibrateModels_;
+    bool laxFxConversion_;
     //! Optional curve configurations. Used in building the scenario sim market.
-    boost::shared_ptr<ore::data::CurveConfigurations> curveConfigs_;
+    QuantLib::ext::shared_ptr<ore::data::CurveConfigurations> curveConfigs_;
     //! Optional todays market parameters. Used in building the scenario sim market.
-    boost::shared_ptr<ore::data::TodaysMarketParameters> todaysMarketParams_;
+    QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters> todaysMarketParams_;
     bool overrideTenors_;
 
     // if true, convert sensis to base currency using the original (non-shifted) FX rate
     bool nonShiftedBaseCurrencyConversion_;
-    boost::shared_ptr<ore::data::ReferenceDataManager> referenceData_;
-    IborFallbackConfig iborFallbackConfig_;
+    QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager> referenceData_;
+    QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig_;
     // if true, the processing is continued even on build errors
     bool continueOnError_;
     //! the engine data (provided as input, needed to construct the engine factory)
-    boost::shared_ptr<EngineData> engineData_;
+    QuantLib::ext::shared_ptr<EngineData> engineData_;
     //! the portfolio (provided as input)
-    boost::shared_ptr<Portfolio> portfolio_;
+    QuantLib::ext::shared_ptr<Portfolio> portfolio_;
     //! do dry run
     bool dryRun_;
 
-    //! model builders
-    std::set<std::pair<string, boost::shared_ptr<QuantExt::ModelBuilder>>> modelBuilders_;
     //! sensitivityCube
-    std::vector<boost::shared_ptr<SensitivityCube>> sensiCubes_;
+    std::vector<QuantLib::ext::shared_ptr<SensitivityCube>> sensiCubes_;
 
     bool useSingleThreadedEngine_;
     // additional members needed for multihreaded constructor
     Size nThreads_;
-    boost::shared_ptr<ore::data::Loader> loader_;
+    QuantLib::ext::shared_ptr<ore::data::Loader> loader_;
     std::string context_;
+    bool useAtParCouponsCurves_ = true;
+    bool useAtParCouponsTrades_ = true;
+    bool computeTheta_ = false;
+    Period thetaPeriod_ = Period(1,Days);
+
+protected:
+    QuantLib::ext::shared_ptr<Scenario> offsetScenario_;
+    QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> offsetSimMarketParams_;
 };
 
 /*! Returns the absolute shift size corresponding to a particular risk factor \p key
     given sensitivity parameters \p sensiParams and a simulation market \p simMarket
 */
 Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensiParams,
-                  const boost::shared_ptr<ScenarioSimMarket>& simMarket, const std::string& marketConfiguration = "");
+                  const QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket, const std::string& marketConfiguration = "");
 
 } // namespace analytics
 } // namespace ore

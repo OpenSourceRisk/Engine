@@ -99,8 +99,8 @@ private:
     /*! Calculate the cross terms involved in expASquared. Quantities in the calculation are divided by the
         \p normFactor to guard against numerical blow up.
     */
-    QuantLib::Real crossTerms(const boost::shared_ptr<QuantLib::CashFlow>& cf_1,
-                              const boost::shared_ptr<QuantLib::CashFlow>& cf_2, bool isAveraging,
+    QuantLib::Real crossTerms(const QuantLib::ext::shared_ptr<QuantLib::CashFlow>& cf_1,
+                              const QuantLib::ext::shared_ptr<QuantLib::CashFlow>& cf_2, bool isAveraging,
                               QuantLib::Real strike, QuantLib::Real normFactor) const;
 
     /*! Return the maximum quantity over all cashflows on the commodity floating leg. This is used as a

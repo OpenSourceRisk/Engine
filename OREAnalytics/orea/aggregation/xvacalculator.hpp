@@ -30,7 +30,7 @@
 
 #include <ql/time/date.hpp>
 
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 
 namespace ore {
 namespace analytics {
@@ -50,9 +50,9 @@ public:
 
     ValueAdjustmentCalculator(
         //! Driving portfolio consistent with the cube below
-        const boost::shared_ptr<Portfolio> portfolio,
+        const QuantLib::ext::shared_ptr<Portfolio> portfolio,
 	    //! Today's market
-        const boost::shared_ptr<Market> market,
+        const QuantLib::ext::shared_ptr<Market> market,
 	    //! Market configuration to be used
         const string& configuration,
 	    //! Base currency amounts will be converted to
@@ -66,11 +66,11 @@ public:
 	    //! Deactivate initial margin calculation even if active at netting set level
         const bool applyDynamicInitialMargin,
 	    //! Dynamic Initial Margin calculator
-        const boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator,
+        const QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator> dimCalculator,
 	    //! Storage ofdefault NPVs, close-out NPVs, cash flows at trade level
-        const boost::shared_ptr<NPVCube> tradeExposureCube,
+        const QuantLib::ext::shared_ptr<NPVCube> tradeExposureCube,
 	    //! Storage of sensitivity vectors at netting set level
-        const boost::shared_ptr<NPVCube> nettingSetExposureCube,
+        const QuantLib::ext::shared_ptr<NPVCube> nettingSetExposureCube,
 	    //! Index of the trade EPE storage in the internal exposure cube
 	    const Size tradeEpeIndex = 0,
 	    //! Index of the trade ENE storage in the internal exposure cube
@@ -193,17 +193,17 @@ public:
     const Real& nettingSetMva(const string& nettingSet);
 
 protected:
-    boost::shared_ptr<Portfolio> portfolio_;
-    boost::shared_ptr<Market> market_;
+    QuantLib::ext::shared_ptr<Portfolio> portfolio_;
+    QuantLib::ext::shared_ptr<Market> market_;
     string configuration_;
     string baseCurrency_;
     string dvaName_;
     string fvaBorrowingCurve_;
     string fvaLendingCurve_;
     bool applyDynamicInitialMargin_;
-    boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator_;
-    const boost::shared_ptr<NPVCube> tradeExposureCube_;
-    const boost::shared_ptr<NPVCube> nettingSetExposureCube_;
+    QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator> dimCalculator_;
+    const QuantLib::ext::shared_ptr<NPVCube> tradeExposureCube_;
+    const QuantLib::ext::shared_ptr<NPVCube> nettingSetExposureCube_;
     Size tradeEpeIndex_;
     Size tradeEneIndex_;
     Size nettingSetEpeIndex_;

@@ -55,7 +55,7 @@ protected:
     Real gearing_;
     Spread spread_;
     Time accrualPeriod_;
-    boost::shared_ptr<OvernightIndex> overnightIndex_;
+    QuantLib::ext::shared_ptr<OvernightIndex> overnightIndex_;
 
     const AverageONIndexedCoupon* coupon_;
 };

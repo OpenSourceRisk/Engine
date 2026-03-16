@@ -26,23 +26,17 @@ using QuantLib::Time;
 
 namespace QuantExt {
 
-QL_DEPRECATED_DISABLE_WARNING
-ZeroInflationModelTermStructure::ZeroInflationModelTermStructure(const boost::shared_ptr<CrossAssetModel>& model,
-                                                                 Size index)
-    : ZeroInflationModelTermStructure(model, index, false) {}
-
-
-ZeroInflationModelTermStructure::ZeroInflationModelTermStructure(const boost::shared_ptr<CrossAssetModel>& model,
-                                                                 Size index, bool indexIsInterpolated)
+ZeroInflationModelTermStructure::ZeroInflationModelTermStructure(
+    const QuantLib::ext::shared_ptr<CrossAssetModel>& model, Size index,
+    const std::optional<QuantLib::DayCounter>& simulationDayCounter)
     : ZeroInflationTermStructure(
-          inflationTermStructure(model, index)->dayCounter(), inflationTermStructure(model, index)->baseRate(),
-          inflationTermStructure(model, index)->observationLag(), inflationTermStructure(model, index)->frequency()),
-      model_(model), index_(index), indexIsInterpolated_(indexIsInterpolated),
+          inflationTermStructure(model, index)->baseDate(), inflationTermStructure(model, index)->observationLag(),
+          inflationTermStructure(model, index)->frequency(), inflationTermStructure(model, index)->dayCounter()),
+      model_(model), index_(index), simulationDayCounter_(simulationDayCounter),
       referenceDate_(inflationTermStructure(model_, index_)->referenceDate()), relativeTime_(0.0) {
     registerWith(model_);
     update();
 }
-QL_DEPRECATED_ENABLE_WARNING
 
 void ZeroInflationModelTermStructure::update() {
     notifyObservers();
@@ -63,18 +57,15 @@ const Date& ZeroInflationModelTermStructure::referenceDate() const {
 }
 
 Date ZeroInflationModelTermStructure::baseDate() const {
-    QL_DEPRECATED_DISABLE_WARNING
-    if (indexIsInterpolated_) {
-        return referenceDate_ - observationLag_;
-    } else {
-        return inflationPeriod(referenceDate_ - observationLag_, frequency()).first;
-    }
-    QL_DEPRECATED_ENABLE_WARNING
+    // The inflation models are continous time, we need to keep the initial lag here constant
+    return referenceDate_ - simulationLagDays();
 }
 
 void ZeroInflationModelTermStructure::referenceDate(const Date& d) {
     referenceDate_ = d;
-    relativeTime_ = dayCounter().yearFraction(inflationTermStructure(model_, index_)->referenceDate(), referenceDate_);
+    // we use the simulation day counter, otherwise both times could be from different times
+    relativeTime_ = simulationDayCounter_.value_or(dayCounter())
+                        .yearFraction(inflationTermStructure(model_, index_)->referenceDate(), referenceDate_);
     update();
 }
 

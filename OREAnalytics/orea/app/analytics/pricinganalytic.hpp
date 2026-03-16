@@ -16,16 +16,31 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/app/analytic.hpp
-    \brief ORE Analytics Manager
+/*! \file orea/app/analytics/pricinganalytic.hpp
+    \brief Pricing Analytic
 */
 
 #pragma once
 
 #include <orea/app/analytic.hpp>
+#include <orea/app/inputvariables.hpp>
+#include <orea/engine/parsensitivityanalysis.hpp>
 
 namespace ore {
 namespace analytics {
+
+class InputParameters;
+
+ struct PricingVariables : public InputVariables {
+    void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
+
+    bool computeTheta_ = false;
+    Period thetaPeriod_ = Period(1, Days);
+    bool outputCurves_ = false;
+    std::string curvesMarketConfig_ = Market::defaultConfiguration;
+    std::string curvesGrid_ = "240,1M";
+    std::string curvesCalendar_ = "TARGET";
+};
 
 /*! Pricing-type analytics
   \todo align pillars for par sensitivity analysis
@@ -34,20 +49,44 @@ class PricingAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "PRICING";
 
-    PricingAnalyticImpl(const boost::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) { setLabel(LABEL); }
-    void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader, 
+    PricingAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs, QuantLib::ext::make_shared<PricingVariables>()) { setLabel(LABEL); }
+    void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader, 
         const std::set<std::string>& runTypes = {}) override;
 
     void setUpConfigurations() override;
+    const QuantLib::ext::shared_ptr<SensitivityAnalysis>& sensiAnalysis() { return sensiAnalysis_; }
+    const QuantLib::ext::shared_ptr<ParSensitivityAnalysis>& parAnalysis() { return parAnalysis_; }
+
+    void setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario) {
+        offsetScenario_ = offsetScenario;
+    }
+
+    void setOffsetSimMarketParams(
+        const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams) {
+        offsetSimMarketParams_ = offsetSimMarketParams;
+    }
+
+    void overwriteResultCurrency(const std::string& ccy);
+
+private:
+    QuantLib::ext::shared_ptr<SensitivityAnalysis> sensiAnalysis_;
+    QuantLib::ext::shared_ptr<ParSensitivityAnalysis> parAnalysis_;
+
+protected:
+    QuantLib::ext::shared_ptr<Scenario> offsetScenario_;
+    QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> offsetSimMarketParams_;
+    std::optional<std::string> overwriteResultCurrency_;
 };
+
+static const std::set<std::string> pricingAnalyticSubAnalytics {"NPV", "CASHFLOW", "CASHFLOWNPV", "SENSITIVITY"};
 
 class PricingAnalytic : public Analytic {
 public:
-    PricingAnalytic(const boost::shared_ptr<InputParameters>& inputs)
-        : Analytic(std::make_unique<PricingAnalyticImpl>(inputs),
-            {"NPV", "CASHFLOW", "CASHFLOWNPV", "SENSITIVITY", "STRESS"},
-                   inputs) {}
+    PricingAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                    const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager)
+        : Analytic(std::make_unique<PricingAnalyticImpl>(inputs), pricingAnalyticSubAnalytics, inputs,
+                   analyticsManager) {}
 };
  
 } // namespace analytics
-} // namespace oreplus
+} // namespace ore

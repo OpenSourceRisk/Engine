@@ -1,0 +1,70 @@
+%--------------------------------------------------------------------------------
+\subsubsection{CDS Option}
+\label{pricing:cr_cdsoption}
+
+The BlackCdsOptionEngine does not support valuation of single name options quoted in terms of strike price.
+
+Generally, the option payoff at expiry $t_e$ is given by
+
+$$
+\NPV_{CDSO}(t_e)=\left[ U_{CDS}\left( t_e \right) - U_{strike}\left( t_e \right) \right]^+ \textbf{1}_{\tau>t}
+$$
+
+where $U_{CDS}$ is the price / upfront amount of the underlying CDS defined as
+\begin{equation}
+U_{CDS}\left( t_e \right) = \left( S_{t_e,t_m} - c \right) \cdot RA
+\end{equation}
+where $S_{t_e,t_m}$ is the CDS par spread with start date $t_e$  and maturity date $t_m$,
+$c$ is the standardized coupon, $RA$ is the associated risky annuity as defined in \ref{pricing:cr_indexcdsoption_risky_annuity}
+
+
+and $U_{strike}$ being the exercise price / strike upfront amount defined as:
+\begin{equation}
+U_{strike}\left( t_e \right) = \left( K - c \right) \cdot RA_K
+\end{equation}
+with strike spread $K$ and $ RA_K$ being the risky strike annuity, as defined in \ref{pricing:cr_indexcdsoption_strike_annuity}.
+
+
+The option value at expiry $t_e$ then given by
+$$
+\NPV_{CDSO}(t_e)=\left[ \left( S_{t_e,t_m} - c \right) \cdot RA_S - \left( K - c \right) \cdot RA_K\left( t_e \right) \right]^+ \textbf{1}_{\tau>t}
+$$
+
+If we define the adjusted strike spread $K'(K)$ similar to \ref{pricing:cr_adjusted_strike_spread}
+we can rearrange the option value to
+$$
+\NPV_{CDSO}(t_e)=\left[ S_{t_e,t_m} - K' \right]^+ \textbf{1}_{\tau>t}
+$$
+
+The option price in the risky annuity measure is then
+$$
+\NPV_{CDSO}(t) = P_{OIS,t}(t,t_e) \cdot RA \cdot \:\E^A_t\left[(S(T)-K')^+ \right]
+$$
+
+Assuming log-normal dynamics for the forward CDS spread $S(t)$ we
+arrive at a Black formula for today's CDS Option price
+\begin{equation}
+\NPV_{CDSO} = N \cdot P_{OIS,t}(0,t_e) \cdot RA \cdot \mbox{Black}(K', S_{t_e,t_m}, \sigma_{t_s,t_m} \sqrt{t_s},\omega)
+\end{equation}
+with notional $N$, volatility of the forward CDS spread $\sigma_{t_s,t_m}$ and $\omega$ as protection buyer/seller flag
+
+This is almost similar to the black formula for index cdso with spread-volatility, compare \ref{pricing:cr_black_spread-volatility}.
+But we can neglect the FEP-adjusted forward spread and the careful Notation of notionals.
+
+See Black Model, Section \ref{models:black}, for more details.
+
+\medskip
+If the CDS Option contract contains {\em front end protection} and the
+underlying CDS is a protection buyer, then we add the value contribution
+\begin{equation}
+N\cdot \LGD\cdot (1-SP(t_s))\cdot P(t_s)
+\end{equation}
+
+with survival probability $SP$ and discount factor $P$ as of time $t_s$.
+
+\medskip
+Apart from discount curve, default/survival probability curves and
+LGDs, CDS Option pricing requires Black volatilities which may be
+available only for index CDS Options for a limited range of indices
+and short expiries.
+

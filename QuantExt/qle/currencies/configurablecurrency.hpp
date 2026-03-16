@@ -38,12 +38,14 @@ public:
     enum class Type { Major, Metal, Crypto };
     ConfigurableCurrency(const std::string& name, const std::string& code, Integer numericCode,
                          const std::string& symbol, const std::string& fractionSymbol, Integer fractionsPerUnit,
-                         const Rounding& rounding, const std::string& formatString, 
+                         const Rounding& rounding, 
                          const std::set<std::string>& minorUnitCodes, Type currencyType = Type::Major);
     Type currencyType() const { return currencyType_; }
+    std::string currencyName() const { return currencyName_; }
 
 private:
     ConfigurableCurrency::Type currencyType_;
+    std::string currencyName_;
 };
 
 std::ostream& operator<<(std::ostream& os, QuantExt::ConfigurableCurrency::Type ccytype);

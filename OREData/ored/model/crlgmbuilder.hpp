@@ -38,19 +38,19 @@ public:
       alternative discounting curves are then usually set in the pricing
       engines for swaptions etc. */
     /*! this builder should be replaced by the OREData standard builder for cr lgm */
-    CrLgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<CrLgmData>& data,
+    CrLgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& market, const QuantLib::ext::shared_ptr<CrLgmData>& data,
                  const std::string& configuration = Market::defaultConfiguration);
-    boost::shared_ptr<QuantExt::CrLgm1fParametrization> parametrization() const { return parametrization_; }
+    QuantLib::ext::shared_ptr<QuantExt::CrLgm1fParametrization> parametrization() const { return parametrization_; }
 
     bool requiresRecalibration() const override { return false; }
     void performCalculations() const override {}
 
 private:
     // void buildOptionBasket();
-    boost::shared_ptr<ore::data::Market> market_;
+    QuantLib::ext::shared_ptr<ore::data::Market> market_;
     const std::string configuration_;
-    boost::shared_ptr<CrLgmData> data_;
-    boost::shared_ptr<QuantExt::CrLgm1fParametrization> parametrization_;
+    QuantLib::ext::shared_ptr<CrLgmData> data_;
+    QuantLib::ext::shared_ptr<QuantExt::CrLgm1fParametrization> parametrization_;
     RelinkableHandle<DefaultProbabilityTermStructure> modelDefaultCurve_;
 };
 

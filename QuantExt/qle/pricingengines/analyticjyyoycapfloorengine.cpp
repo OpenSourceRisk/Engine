@@ -48,7 +48,7 @@ using std::sqrt;
 
 namespace QuantExt {
 
-AnalyticJyYoYCapFloorEngine::AnalyticJyYoYCapFloorEngine(const boost::shared_ptr<CrossAssetModel>& model, Size index,
+AnalyticJyYoYCapFloorEngine::AnalyticJyYoYCapFloorEngine(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, Size index,
                                                          bool indexIsInterpolated)
     : model_(model), index_(index), indexIsInterpolated_(indexIsInterpolated) {}
 

@@ -1,0 +1,82 @@
+<ORE>
+  <Setup>
+    <Parameter name="asofDate">2025-02-10</Parameter>
+    <Parameter name="inputPath">Input/Dim2</Parameter>
+    <Parameter name="outputPath">Output/Dim2/AmcReg</Parameter>
+    <Parameter name="logFile">log.txt</Parameter>
+    <Parameter name="logMask">31</Parameter>
+    <Parameter name="marketDataFile">marketdata_flatvol.csv</Parameter>
+    <Parameter name="fixingDataFile">fixings.csv</Parameter>
+    <Parameter name="implyTodaysFixings">N</Parameter>
+    <Parameter name="curveConfigFile">curveconfig.xml</Parameter>
+    <Parameter name="conventionsFile">conventions.xml</Parameter>
+    <Parameter name="marketConfigFile">todaysmarket.xml</Parameter>
+    <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
+    <Parameter name="portfolioFile">portfolio_swap.xml</Parameter>
+    <Parameter name="scriptLibrary">scriptlibrary.xml</Parameter>
+    <Parameter name="observationModel">None</Parameter>
+    <Parameter name="continueOnError">false</Parameter>
+    <Parameter name="buildFailedTrades">true</Parameter>
+  </Setup>
+  <Markets>
+    <Parameter name="lgmcalibration">default</Parameter>
+    <Parameter name="fxcalibration">default</Parameter>
+    <Parameter name="infcalibration">default</Parameter>
+    <Parameter name="pricing">default</Parameter>
+    <Parameter name="simulation">default</Parameter>
+    <Parameter name="sensitivity">default</Parameter>
+  </Markets>
+  <Analytics>
+    <Analytic type="npv">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="baseCurrency">EUR</Parameter>
+      <Parameter name="outputFileName">npv.csv</Parameter>
+      <Parameter name="additionalResults">Y</Parameter>
+      <Parameter name="additionalResultsReportPrecision">12</Parameter>
+    </Analytic>
+    <Analytic type="simulation">
+      <Parameter name="active">N</Parameter>
+      <Parameter name="simulationConfigFile">simulation_regression.xml</Parameter>
+      <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
+      <Parameter name="storeFlows">Y</Parameter>
+      <Parameter name="cubeFile">cube.csv.gz</Parameter>
+      <Parameter name="aggregationScenarioDataFileName">scenariodata.csv.gz</Parameter>
+      <Parameter name="baseCurrency">EUR</Parameter>
+    </Analytic>
+    <Analytic type="xva">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="csaFile">netting.xml</Parameter>
+      <Parameter name="cubeFile">../AmcRegUnscaled/cube.csv.gz</Parameter>
+      <Parameter name="scenarioFile">../AmcRegUnscaled/scenariodata.csv.gz</Parameter>
+      <Parameter name="collateralBalancesFile">collateralbalances.xml</Parameter>
+      <Parameter name="baseCurrency">EUR</Parameter>
+      <Parameter name="exposureProfiles">Y</Parameter>
+      <Parameter name="exposureProfilesByTrade">Y</Parameter>
+      <Parameter name="quantile">0.95</Parameter>
+      <Parameter name="calculationType">NoLag</Parameter>
+      <Parameter name="allocationMethod">None</Parameter>
+      <Parameter name="marginalAllocationLimit">1.0</Parameter>
+      <Parameter name="exerciseNextBreak">N</Parameter>
+      <Parameter name="fullInitialCollateralisation">Y</Parameter>
+      <Parameter name="cva">Y</Parameter>
+      <Parameter name="collateralSpread">0.0000</Parameter>
+      <Parameter name="collateralFloor">N</Parameter>
+      <Parameter name="dim">N</Parameter>
+      <Parameter name="dimModel">Regression</Parameter>
+      <Parameter name="dimQuantile">0.99</Parameter>
+      <Parameter name="dimHorizonCalendarDays">14</Parameter>
+      <Parameter name="dimRegressionOrder">2</Parameter>
+      <Parameter name="dimRegressors">NPV</Parameter>
+      <Parameter name="dimEvolutionFile">dim_evolution.csv</Parameter>
+      <Parameter name="dimRegressionFiles">dim_regression.csv</Parameter>
+      <Parameter name="dimOutputNettingSet">CPTY_A</Parameter>
+      <Parameter name="dimOutputGridPoints">0</Parameter>
+      <!-- cover n std devs around mean of the data in dim distribution output, or "inf" to cover all of the  data -->
+      <Parameter name="dimDistributionCoveredStdDevs">3</Parameter>
+      <!-- grid size for dim distribution report -->
+      <Parameter name="dimDistributionGridSize">50</Parameter>
+      <Parameter name="dimLocalRegressionEvaluations">0</Parameter>
+      <Parameter name="dimLocalRegressionBandwidth">1.0</Parameter>
+    </Analytic>
+  </Analytics>
+</ORE>

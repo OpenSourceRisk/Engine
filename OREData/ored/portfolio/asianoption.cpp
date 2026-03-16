@@ -32,7 +32,7 @@
 namespace ore {
 namespace data {
 
-void AsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void AsianOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     // ISDA taxonomy
     if (underlying_->type() == "Equity") {
@@ -84,12 +84,12 @@ void AsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         QL_FAIL("payoff type must be 'Asian' or 'AverageStrike'");
     }
 
-    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeTypeBuilder);
+    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeTypeBuilder);
     QL_REQUIRE(builder, "No builder found for " << tradeTypeBuilder);
 
     // check for delegating engine builder
 
-    if (auto db = boost::dynamic_pointer_cast<DelegatingEngineBuilder>(builder)) {
+    if (auto db = QuantLib::ext::dynamic_pointer_cast<DelegatingEngineBuilder>(builder)) {
 
         // let the delegating builder build the trade and link the results to this trade
 
@@ -101,6 +101,7 @@ void AsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         additionalData_ = delegatingBuilderTrade_->additionalData();
 	requiredFixings_ = delegatingBuilderTrade_->requiredFixings();
         setSensitivityTemplate(delegatingBuilderTrade_->sensitivityTemplate());
+        addProductModelEngine(delegatingBuilderTrade_->productModelEngine());
 
         // notional and notional currency are defined in overriden methods!
 
@@ -109,32 +110,32 @@ void AsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // we do not have a delegating engine builder
 
-    boost::shared_ptr<AsianOptionEngineBuilder> asianOptionBuilder =
-        boost::dynamic_pointer_cast<AsianOptionEngineBuilder>(builder);
+    QuantLib::ext::shared_ptr<AsianOptionEngineBuilder> asianOptionBuilder =
+        QuantLib::ext::dynamic_pointer_cast<AsianOptionEngineBuilder>(builder);
 
     QL_REQUIRE(asianOptionBuilder, "engine builder is not an AsianOption engine builder" << tradeTypeBuilder);
 
     std::string processType = asianOptionBuilder->processType();
     QL_REQUIRE(!processType.empty(), "ProcessType must be configured, this is unexpected");
 
-    boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, tradeStrike_.value()));
+    QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, tradeStrike_.value()));
 
     auto index = parseIndex(indexName());
 
-    if (auto fxIndex = boost::dynamic_pointer_cast<QuantExt::FxIndex>(index)) {
+    if (auto fxIndex = QuantLib::ext::dynamic_pointer_cast<QuantExt::FxIndex>(index)) {
         QL_REQUIRE(fxIndex->targetCurrency() == payCcy,
                    "FX domestic ccy " << fxIndex->targetCurrency() << " must match pay ccy " << payCcy);
         assetName_ = fxIndex->sourceCurrency().code();
-    } else if (auto eqIndex = boost::dynamic_pointer_cast<QuantExt::EquityIndex2>(index)) {
+    } else if (auto eqIndex = QuantLib::ext::dynamic_pointer_cast<QuantExt::EquityIndex2>(index)) {
         // FIXME for EQ and COMM indices check whether EQ, COMM ccy = payCcy (in the engine builders probably)
         assetName_ = eqIndex->name();
-    } else if (auto commIndex = boost::dynamic_pointer_cast<QuantExt::CommodityIndex>(index)) {
+    } else if (auto commIndex = QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityIndex>(index)) {
         assetName_ = commIndex->underlyingName();
     }
 
     // FIXME the engine should handle the historical part of the averaging as well!
-    boost::shared_ptr<QuantLib::Instrument> asian;
-    auto exercise = boost::make_shared<QuantLib::EuropeanExercise>(expiryDate);
+    QuantLib::ext::shared_ptr<QuantLib::Instrument> asian;
+    auto exercise = QuantLib::ext::make_shared<QuantLib::EuropeanExercise>(expiryDate);
     if (processType == "Discrete") {
         QuantLib::Date today = engineFactory->market()->asofDate();
         Real runningAccumulator = option_.payoffType2() == "Geometric" ? 1.0 : 0.0;
@@ -160,13 +161,13 @@ void AsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                 ++pastFixings;
             }
         }
-        asian = boost::make_shared<QuantLib::DiscreteAveragingAsianOption>(
+        asian = QuantLib::ext::make_shared<QuantLib::DiscreteAveragingAsianOption>(
             option_.payoffType2() == "Geometric" ? QuantLib::Average::Type::Geometric
                                                  : QuantLib::Average::Type::Arithmetic,
             runningAccumulator, pastFixings, observationDates, payoff, exercise);
     } else if (processType == "Continuous") {
         // FIXME how is the accumulated average handled in this case?
-        asian = boost::make_shared<QuantLib::ContinuousAveragingAsianOption>(option_.payoffType2() == "Geometric"
+        asian = QuantLib::ext::make_shared<QuantLib::ContinuousAveragingAsianOption>(option_.payoffType2() == "Geometric"
                                                                                  ? QuantLib::Average::Type::Geometric
                                                                                  : QuantLib::Average::Type::Arithmetic,
                                                                              payoff, exercise);
@@ -180,6 +181,7 @@ void AsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     if (!asian->isExpired()) {
         asian->setPricingEngine(asianOptionBuilder->engine(assetName_, payCcy, expiryDate));
         setSensitivityTemplate(*asianOptionBuilder);
+        addProductModelEngine(*asianOptionBuilder);
     } else {
         DLOG("No engine attached for option on trade " << id() << " with expiry date " << io::iso_date(expiryDate)
                                                        << " because it is expired.");
@@ -189,15 +191,19 @@ void AsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
     Real mult = quantity_ * bsInd;
 
-    std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
+    std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
     maturity_ = expiryDate;
-    maturity_ =
-        std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, mult, option_.premiumData(),
-                                        positionType == QuantLib::Position::Long ? -1.0 : 1.0, payCcy, engineFactory,
-                                        configuration));
+    maturityType_ = "Expiry Date";
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
+    Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, mult, option_.premiumData(),
+                                       positionType == QuantLib::Position::Long ? -1.0 : 1.0, payCcy, discountCurve,
+                                       engineFactory, configuration);
+    maturity_ = std::max(maturity_, lastPremiumDate);
+    if (maturity_ == lastPremiumDate)
+        maturityType_ = "Last Premium Date";
 
-    instrument_ = boost::make_shared<VanillaInstrument>(asian, mult, additionalInstruments, additionalMultipliers);
+    instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(asian, mult, additionalInstruments, additionalMultipliers);
 
     npvCurrency_ = currency_;
     notional_ = tradeStrike_.value() * quantity_;
@@ -247,7 +253,7 @@ XMLNode* AsianOption::toXML(XMLDocument& doc) const {
 }
 
 std::map<AssetClass, std::set<std::string>>
-AsianOption::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+AsianOption::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     std::map<AssetClass, std::set<std::string>> result;
     if (isEquityIndex(indexName())) {
         result[AssetClass::EQ].insert(indexName());
@@ -267,8 +273,8 @@ void AsianOption::populateIndexName() const {
     } else if (underlying_->type() == "FX") {
         indexName_ = "FX-" + underlying_->name();
     } else if (underlying_->type() == "Commodity") {
-        boost::shared_ptr<CommodityUnderlying> comUnderlying =
-            boost::dynamic_pointer_cast<CommodityUnderlying>(underlying_);
+        QuantLib::ext::shared_ptr<CommodityUnderlying> comUnderlying =
+            QuantLib::ext::dynamic_pointer_cast<CommodityUnderlying>(underlying_);
         std::string tmp = "COMM-" + comUnderlying->name();
         if (comUnderlying->priceType().empty() || comUnderlying->priceType() == "Spot") {
             indexName_ = tmp;
@@ -277,7 +283,7 @@ void AsianOption::populateIndexName() const {
             QL_REQUIRE(conventions->has(comUnderlying->name()),
                        "future settlement requires conventions for commodity '" << comUnderlying->name() << "'");
             auto convention =
-                boost::dynamic_pointer_cast<CommodityFutureConvention>(conventions->get(comUnderlying->name()));
+                QuantLib::ext::dynamic_pointer_cast<CommodityFutureConvention>(conventions->get(comUnderlying->name()));
             Size futureMonthsOffset =
                 comUnderlying->futureMonthOffset() == Null<Size>() ? 0 : comUnderlying->futureMonthOffset();
             Size deliveryRollDays =

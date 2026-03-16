@@ -1,0 +1,15 @@
+NettingSet,RiskType,CvaType,MarginType,RiskFactor,Bucket,Value
+CPTY_A,ForeignExchange,CvaAggregate,Vega,FXVolatility,BRL, 165.16 
+CPTY_A,ForeignExchange,CvaAggregate,Vega,FXVolatility,EUR, 204.10 
+CPTY_A,ForeignExchange,CvaAggregate,Vega,FXVolatility,GBP, 161.34 
+CPTY_A,ForeignExchange,CvaAggregate,Vega,FXVolatility,HKD, 279.47 
+CPTY_A,ForeignExchange,CvaAggregate,Vega,FXVolatility,HUF, 111.74 
+CPTY_A,ForeignExchange,CvaAggregate,Vega,FXVolatility,IND, 15.82 
+CPTY_A,ForeignExchange,CvaAggregate,Vega,FXVolatility,JPY, 56.75 
+CPTY_A,ForeignExchange,CvaHedge,Vega,FXVolatility,BRL,115.612
+CPTY_A,ForeignExchange,CvaHedge,Vega,FXVolatility,EUR,142.87
+CPTY_A,ForeignExchange,CvaHedge,Vega,FXVolatility,GBP,112.938
+CPTY_A,ForeignExchange,CvaHedge,Vega,FXVolatility,HKD,195.629
+CPTY_A,ForeignExchange,CvaHedge,Vega,FXVolatility,HUF,78.218
+CPTY_A,ForeignExchange,CvaHedge,Vega,FXVolatility,IND,11.074
+CPTY_A,ForeignExchange,CvaHedge,Vega,FXVolatility,JPY,39.725

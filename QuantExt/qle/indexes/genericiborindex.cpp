@@ -30,8 +30,8 @@ Rate GenericIborIndex::pastFixing(const Date& fixingDate) const {
     return fixing(fixDate, true);
 }
 
-boost::shared_ptr<IborIndex> GenericIborIndex::clone(const Handle<YieldTermStructure>& h) const {
-    return boost::make_shared<GenericIborIndex>(tenor(), currency(), h);
+QuantLib::ext::shared_ptr<IborIndex> GenericIborIndex::clone(const Handle<YieldTermStructure>& h) const {
+    return QuantLib::ext::make_shared<GenericIborIndex>(tenor(), currency(), h);
 }
 
 } // namespace QuantExt

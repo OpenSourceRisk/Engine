@@ -43,7 +43,8 @@ public:
     /*! This will work with both a floating and fixed reference date underlying surface,
         since we are reimplementing the reference date and update methods */
     BlackMonotoneVarVolTermStructure(const Handle<BlackVolTermStructure>& vol, const std::vector<Time>& timePoints)
-        : BlackVolTermStructure(vol->businessDayConvention(), vol->dayCounter()), vol_(vol), timePoints_(timePoints) {
+        : BlackVolTermStructure(vol->businessDayConvention(), vol->dayCounter(), vol->volType(), vol->shift()),
+          vol_(vol), timePoints_(timePoints) {
         registerWith(vol_);
     }
 

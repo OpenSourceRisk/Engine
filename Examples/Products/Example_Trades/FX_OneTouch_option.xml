@@ -1,0 +1,34 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="FX_ONE-TOUCH_OPTION">
+        <TradeType>FxTouchOption</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <FxTouchOptionData>
+            <OptionData>
+                <LongShort>Long</LongShort>
+                <OptionType>Put</OptionType>
+                <PayOffAtExpiry>true</PayOffAtExpiry>
+                <ExerciseDates>
+                    <ExerciseDate>2027-07-24</ExerciseDate>
+                </ExerciseDates>
+            </OptionData>
+            <BarrierData>
+                <Type>DownAndIn</Type>
+                <Levels>
+                    <Level>0.009</Level>
+                </Levels>
+            </BarrierData>
+            <ForeignCurrency>JPY</ForeignCurrency>
+            <DomesticCurrency>USD</DomesticCurrency>
+            <PayoffCurrency>USD</PayoffCurrency>
+            <PayoffAmount>10000000</PayoffAmount>
+        </FxTouchOptionData>
+    </Trade>
+</Portfolio>

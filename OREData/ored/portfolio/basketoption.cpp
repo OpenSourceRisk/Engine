@@ -173,7 +173,7 @@ namespace data {
 
 // clang-format on
 
-void BasketOption::build(const boost::shared_ptr<EngineFactory>& factory) {
+void BasketOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory) {
 
     // set script parameters
 
@@ -246,7 +246,7 @@ void BasketOption::setIsdaTaxonomyFields() {
 
     // ISDA taxonomy
     // asset class set in the base class already
-    std::string assetClass = boost::any_cast<std::string>(additionalData_["isdaAssetClass"]);
+    std::string assetClass = QuantLib::ext::any_cast<std::string>(additionalData_["isdaAssetClass"]);
     if (assetClass == "Equity") {
         additionalData_["isdaBaseProduct"] = string("Option");
         additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");

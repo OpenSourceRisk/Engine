@@ -34,6 +34,7 @@
 #include <ored/configuration/equityvolcurveconfig.hpp>
 #include <ored/configuration/fxspotconfig.hpp>
 #include <ored/configuration/fxvolcurveconfig.hpp>
+#include <ored/configuration/iborfallbackconfig.hpp>
 #include <ored/configuration/inflationcapfloorvolcurveconfig.hpp>
 #include <ored/configuration/inflationcurveconfig.hpp>
 #include <ored/configuration/securityconfig.hpp>
@@ -42,6 +43,7 @@
 #include <ored/configuration/yieldvolcurveconfig.hpp>
 #include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
+#include <ored/portfolio/referencedata.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
 #include <typeindex>
@@ -59,7 +61,10 @@ using ore::data::XMLSerializable;
 class CurveConfigurations : public XMLSerializable {
 public:
     //! Default constructor
-    CurveConfigurations() {}
+    CurveConfigurations(const QuantLib::ext::shared_ptr<ReferenceDataManager>& refDataManager = nullptr,
+                        const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig = nullptr,
+                        const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigOverride = nullptr)
+        : refDataManager_(refDataManager), iborFallbackConfig_(iborFallbackConfig), curveConfigOverride_(curveConfigOverride) {}
 
     //! \name Setters and Getters
     //@{
@@ -68,61 +73,67 @@ public:
     const ReportConfig& reportConfigCommVols() const { return reportConfigCommVols_; }
     const ReportConfig& reportConfigIrCapFloorVols() const { return reportConfigIrCapFloorVols_; }
     const ReportConfig& reportConfigIrSwaptionVols() const { return reportConfigIrSwaptionVols_; }
+    const ReportConfig& reportConfigYieldCurves() const { return reportConfigYieldCurves_; }
+    const ReportConfig& reportConfigInflationCapFloorVols() const { return reportConfigInflationCapFloorVols_; }
+
+    void setCurveConfigOverride(const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigOverride) {
+        curveConfigOverride_ = curveConfigOverride;
+    }
 
     bool hasYieldCurveConfig(const std::string& curveID) const;
-    boost::shared_ptr<YieldCurveConfig> yieldCurveConfig(const string& curveID) const;
+    QuantLib::ext::shared_ptr<YieldCurveConfig> yieldCurveConfig(const string& curveID) const;
 
     bool hasFxVolCurveConfig(const std::string& curveID) const;
-    boost::shared_ptr<FXVolatilityCurveConfig> fxVolCurveConfig(const string& curveID) const;
+    QuantLib::ext::shared_ptr<FXVolatilityCurveConfig> fxVolCurveConfig(const string& curveID) const;
 
     bool hasSwaptionVolCurveConfig(const std::string& curveID) const;
-    boost::shared_ptr<SwaptionVolatilityCurveConfig> swaptionVolCurveConfig(const string& curveID) const;
+    QuantLib::ext::shared_ptr<SwaptionVolatilityCurveConfig> swaptionVolCurveConfig(const string& curveID) const;
 
     bool hasYieldVolCurveConfig(const std::string& curveID) const;
-    boost::shared_ptr<YieldVolatilityCurveConfig> yieldVolCurveConfig(const string& curveID) const;
+    QuantLib::ext::shared_ptr<YieldVolatilityCurveConfig> yieldVolCurveConfig(const string& curveID) const;
 
     bool hasCapFloorVolCurveConfig(const std::string& curveID) const;
-    boost::shared_ptr<CapFloorVolatilityCurveConfig> capFloorVolCurveConfig(const string& curveID) const;
+    QuantLib::ext::shared_ptr<CapFloorVolatilityCurveConfig> capFloorVolCurveConfig(const string& curveID) const;
 
     bool hasDefaultCurveConfig(const std::string& curveID) const;
-    boost::shared_ptr<DefaultCurveConfig> defaultCurveConfig(const string& curveID) const;
+    QuantLib::ext::shared_ptr<DefaultCurveConfig> defaultCurveConfig(const string& curveID) const;
 
     bool hasCdsVolCurveConfig(const std::string& curveID) const;
-    boost::shared_ptr<CDSVolatilityCurveConfig> cdsVolCurveConfig(const string& curveID) const;
+    QuantLib::ext::shared_ptr<CDSVolatilityCurveConfig> cdsVolCurveConfig(const string& curveID) const;
 
     bool hasBaseCorrelationCurveConfig(const std::string& curveID) const;
-    boost::shared_ptr<BaseCorrelationCurveConfig> baseCorrelationCurveConfig(const string& curveID) const;
+    QuantLib::ext::shared_ptr<BaseCorrelationCurveConfig> baseCorrelationCurveConfig(const string& curveID) const;
 
     bool hasInflationCurveConfig(const std::string& curveID) const;
-    boost::shared_ptr<InflationCurveConfig> inflationCurveConfig(const string& curveID) const;
+    QuantLib::ext::shared_ptr<InflationCurveConfig> inflationCurveConfig(const string& curveID) const;
 
     bool hasInflationCapFloorVolCurveConfig(const std::string& curveID) const;
-    boost::shared_ptr<InflationCapFloorVolatilityCurveConfig>
+    QuantLib::ext::shared_ptr<InflationCapFloorVolatilityCurveConfig>
     inflationCapFloorVolCurveConfig(const string& curveID) const;
 
     bool hasEquityCurveConfig(const std::string& curveID) const;
-    boost::shared_ptr<EquityCurveConfig> equityCurveConfig(const string& curveID) const;
+    QuantLib::ext::shared_ptr<EquityCurveConfig> equityCurveConfig(const string& curveID) const;
 
     bool hasEquityVolCurveConfig(const std::string& curveID) const;
-    boost::shared_ptr<EquityVolatilityCurveConfig> equityVolCurveConfig(const string& curveID) const;
+    QuantLib::ext::shared_ptr<EquityVolatilityCurveConfig> equityVolCurveConfig(const string& curveID) const;
 
     bool hasSecurityConfig(const std::string& curveID) const;
-    boost::shared_ptr<SecurityConfig> securityConfig(const string& curveID) const;
+    QuantLib::ext::shared_ptr<SecurityConfig> securityConfig(const string& curveID) const;
 
     bool hasFxSpotConfig(const std::string& curveID) const;
-    boost::shared_ptr<FXSpotConfig> fxSpotConfig(const string& curveID) const;
+    QuantLib::ext::shared_ptr<FXSpotConfig> fxSpotConfig(const string& curveID) const;
 
     bool hasCommodityCurveConfig(const std::string& curveID) const;
-    boost::shared_ptr<CommodityCurveConfig> commodityCurveConfig(const std::string& curveID) const;
+    QuantLib::ext::shared_ptr<CommodityCurveConfig> commodityCurveConfig(const std::string& curveID) const;
 
     bool hasCommodityVolatilityConfig(const std::string& curveID) const;
-    boost::shared_ptr<CommodityVolatilityConfig> commodityVolatilityConfig(const std::string& curveID) const;
+    QuantLib::ext::shared_ptr<CommodityVolatilityConfig> commodityVolatilityConfig(const std::string& curveID) const;
 
     bool hasCorrelationCurveConfig(const std::string& curveID) const;
-    boost::shared_ptr<CorrelationCurveConfig> correlationCurveConfig(const std::string& curveID) const;
+    QuantLib::ext::shared_ptr<CorrelationCurveConfig> correlationCurveConfig(const std::string& curveID) const;
 
-    boost::shared_ptr<CurveConfigurations>
-    minimalCurveConfig(const boost::shared_ptr<TodaysMarketParameters> todaysMarketParams,
+    QuantLib::ext::shared_ptr<CurveConfigurations>
+    minimalCurveConfig(const QuantLib::ext::shared_ptr<TodaysMarketParameters> todaysMarketParams,
                        const std::set<std::string>& configurations = {""}) const;
 
     /*! Return the set of quotes that are required by the CurveConfig elements in CurveConfigurations.
@@ -130,25 +141,37 @@ public:
         The set of quotes required by only those CurveConfig elements appearing
         in \p todaysMarketParams for the given configuration(s) is returned.
     */
-    std::set<string> quotes(const boost::shared_ptr<TodaysMarketParameters> todaysMarketParams,
+    std::set<string> quotes(const QuantLib::ext::shared_ptr<TodaysMarketParameters> todaysMarketParams,
                             const std::set<std::string>& configurations = {""}) const;
     std::set<string> quotes() const;
 
-    std::set<string> conventions(const boost::shared_ptr<TodaysMarketParameters> todaysMarketParams,
+    std::set<string> conventions(const QuantLib::ext::shared_ptr<TodaysMarketParameters> todaysMarketParams,
                                  const std::set<std::string>& configurations = {""}) const;
     std::set<string> conventions() const;
 
     /*! Return the Yields curves available */
     std::set<string> yieldCurveConfigIds();
+  
+    /*! Return an inflation curveconfig based on a name lookup */
+    QuantLib::ext::shared_ptr<CurveConfig> findInflationCurveConfig(const string& id,
+        InflationCurveConfig::Type type) const;
+    QuantLib::ext::shared_ptr<CurveConfig> findInflationVolCurveConfig(const string& id, 
+        InflationCapFloorVolatilityCurveConfig::Type type);
 
     /*! Return all curve ids required by a given curve id of a given type */
     std::map<CurveSpec::CurveType, std::set<string>> requiredCurveIds(const CurveSpec::CurveType& type,
                                                                       const std::string& curveId) const;
+
+    /*! Return all names (this is the LHS of tmp assignments) required by a given curve id of a given type 
+        in a given market configuration */
+    std::map<MarketObject, std::set<string>> requiredNames(const CurveSpec::CurveType& type, const std::string& curveId,
+                                                           const std::string& configuration) const;
+    std::map<std::pair<MarketObject, std::string>, std::set<string>> requiredNames(const CurveSpec::CurveType& type, const std::string& curveId) const;
     //@}
 
-    void add(const CurveSpec::CurveType& type, const string& curveId, const boost::shared_ptr<CurveConfig>& config);    
+    void add(const CurveSpec::CurveType& type, const string& curveId, const QuantLib::ext::shared_ptr<CurveConfig>& config);    
     bool has(const CurveSpec::CurveType& type, const string& curveId) const;
-    const boost::shared_ptr<CurveConfig>& get(const CurveSpec::CurveType& type, const string& curveId) const;
+    const QuantLib::ext::shared_ptr<CurveConfig>& get(const CurveSpec::CurveType& type, const string& curveId) const;
     void parseAll();
 
     /*! add curve configs from given container that are not present in this container */
@@ -161,13 +184,19 @@ public:
     //@}
 
  private:
+    QuantLib::ext::shared_ptr<ReferenceDataManager> refDataManager_;
+    QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig_;
+    QuantLib::ext::shared_ptr<CurveConfigurations> curveConfigOverride_;
+
     ReportConfig reportConfigEqVols_;
     ReportConfig reportConfigFxVols_;
     ReportConfig reportConfigCommVols_;
     ReportConfig reportConfigIrCapFloorVols_;
     ReportConfig reportConfigIrSwaptionVols_;
+    ReportConfig reportConfigYieldCurves_;
+    ReportConfig reportConfigInflationCapFloorVols_;
 
-    mutable std::map<CurveSpec::CurveType, std::map<std::string, boost::shared_ptr<CurveConfig>>> configs_;
+    mutable std::map<CurveSpec::CurveType, std::map<std::string, QuantLib::ext::shared_ptr<CurveConfig>>> configs_;
     mutable std::map<CurveSpec::CurveType, std::map<std::string, std::string>> unparsed_;
 
     // utility function for parsing a node of name "parentName" and storing the result in the map
@@ -178,13 +207,15 @@ public:
 
     // add to XML doc
     void addNodes(XMLDocument& doc, XMLNode* parent, const char* nodeName) const;
+    void addReportConfigurationNode(XMLDocument& doc, XMLNode* parent) const;
 };
 
 class CurveConfigurationsManager {
 public:
-    CurveConfigurationsManager() {}
+    CurveConfigurationsManager(const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigOverride = nullptr) : override_(curveConfigOverride) {}
 
     // add a curve config, if no id provided it gets added as a default
+    void setOverride(const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigOverride);
     void add(const QuantLib::ext::shared_ptr<CurveConfigurations>& config, std::string id = std::string());
     const QuantLib::ext::shared_ptr<CurveConfigurations>& get(std::string id = std::string()) const;
     const bool has(std::string id = std::string()) const;
@@ -193,6 +224,7 @@ public:
 
 private:
     std::map<std::string, QuantLib::ext::shared_ptr<CurveConfigurations>> configs_;
+    QuantLib::ext::shared_ptr<CurveConfigurations> override_;
 };
 
 } // namespace data

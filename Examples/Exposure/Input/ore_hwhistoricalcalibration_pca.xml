@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ORE>
+  <Setup>
+	<Parameter name="asofDate">2022-09-28</Parameter>
+    <Parameter name="inputPath">Input</Parameter>
+    <Parameter name="outputPath">Output/hwhistoricalcalibration_pca</Parameter>
+    <Parameter name="logFile">log.txt</Parameter>
+	<Parameter name="logMask">255</Parameter>
+    <Parameter name="continueOnError">true</Parameter>
+	<Parameter name="baseCurrency">USD</Parameter>
+    <Parameter name="calendarAdjustment"/>
+  </Setup>
+  <Analytics>
+    <Analytic type="calibration">
+      <Parameter name="active">Y</Parameter>
+	  <Parameter name="model">HW</Parameter>
+	  <Parameter name="mode">historical</Parameter>
+	  <Parameter name="foreignCurrencies">EUR,GBP</Parameter>
+	  <Parameter name="pcaCalibration">N</Parameter>
+	  <Parameter name="curveTenors">1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y</Parameter>
+	  <Parameter name="useForwardOrZeroRate">zero</Parameter>
+	  <Parameter name="pcaInputFileName">pca_USD.csv,pca_EUR.csv,pca_GBP.csv</Parameter>
+	  <Parameter name="meanReversionCalibration">Y</Parameter>
+	  <Parameter name="basisFunctionNumber">2</Parameter>
+	  <Parameter name="kappaUpperBound">5.0</Parameter>
+	  <Parameter name="haltonMaxGuess">500</Parameter>
+	  <Parameter name="meanReversionOutputFileName">meanReversion.csv</Parameter>
+    </Analytic>
+  </Analytics>
+</ORE>

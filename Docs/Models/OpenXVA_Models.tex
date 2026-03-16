@@ -84,7 +84,7 @@ Each of these classes provides an interface to model parameters and derived quan
 \normalsize
 \medskip
 
-As a minimum requirement, a concrete parametrization must implement \verb+zeta+ and \verb+H+ to specify the model. The other methods provide quantities that are essential in later model calculations (except \verb+hullWhiteSigma+). They are implemented using simple numerical differentiation schemes in \verb+IrLgm1fParametrization+, but should be (and are) overriden if a more efficient implementation is possible. One example for a concrete implementation is \verb+IrLgm1fPiecewiseConstantParametrization+ with constructor
+As a minimum requirement, a concrete parametrization must implement \verb+zeta+ and \verb+H+ to specify the model. The other methods provide quantities that are essential in later model calculations (except \verb+hullWhiteSigma+). They are implemented using simple numerical differentiation schemes in \verb+IrLgm1fParametrization+, but should be (and are) overridden if a more efficient implementation is possible. One example for a concrete implementation is \verb+IrLgm1fPiecewiseConstantParametrization+ with constructor
 
 \medskip
 \scriptsize
@@ -134,9 +134,9 @@ The full list of available parametrizations is as follows
 
 \subsection{Unconstrained Optimization}
 
-If parameters are constrained (e.g. by positivity) this can be specified by QL's \verb+Contraint+ and this constrain will be ensured during model calibration. However this is done by simply rejecting non-admissable points in an otherwise unconstrained optimizer (usually Levenberg Marquardt or Simplex).
+If parameters are constrained (e.g. by positivity) this can be specified by QL's \verb+Constraint+ and this constraint will be ensured during model calibration. However this is done by simply rejecting non-admissable points in an otherwise unconstrained optimizer (usually Levenberg Marquardt or Simplex).
 
-A better way of doing the optimization under constraints with unconstrained optimizers is to perform the optimization in transformed variables with unconstrained domaain. For example, positivity can be ensured by optimizing $x\in(-\infty,\infty)$, but interpreting $x^2\in(0,\infty)$ as the actual parameter value.
+A better way of doing the optimization under constraints with unconstrained optimizers is to perform the optimization in transformed variables with unconstrained domain. For example, positivity can be ensured by optimizing $x\in(-\infty,\infty)$, but interpreting $x^2\in(0,\infty)$ as the actual parameter value.
 
 Other than in \verb+Parameter+ this is natively supported in parametrizations, which are equipped with \verb+direct+ and \verb+inverse+ methods that transform raw values (on which the optimization is done) into actual parameter values (with the direct method) and vice versa (with the inverse method).
 
@@ -162,7 +162,7 @@ The \verb+XAssetModel+ combines a set of single parametrizations to provide a cr
 \medskip
 \scriptsize
 \begin{minted}[bgcolor=mintedBg]{c++}
-    XAssetModel(const std::vector<boost::shared_ptr<Parametrization> >
+    XAssetModel(const std::vector<ext::shared_ptr<Parametrization> >
                     &parametrizations,
                 const Matrix &correlation, SalvagingAlgorithm::Type salvaging =
                                                SalvagingAlgorithm::Spectral);
@@ -180,7 +180,7 @@ The xasset model provides two flavours of the state process,
 \scriptsize
 \begin{minted}[bgcolor=mintedBg]{c++}
     /*! returns the state process with a given discretization */
-    const boost::shared_ptr<StochasticProcess>
+    const ext::shared_ptr<StochasticProcess>
     stateProcess(XAssetStateProcess::discretization disc =
                      XAssetStateProcess::exact) const;
 \end{minted}
@@ -202,7 +202,7 @@ The xasset model is calibrated by using one of the calibration methods provided.
         expiry times equal to step times in the parametrization */
     void calibrateIrLgm1fVolatilitiesIterative(
         const Size ccy,
-        const std::vector<boost::shared_ptr<CalibrationHelper> > &helpers,
+        const std::vector<ext::shared_ptr<CalibrationHelper> > &helpers,
         OptimizationMethod &method, const EndCriteria &endCriteria,
         const Constraint &constraint = Constraint(),
         const std::vector<Real> &weights = std::vector<Real>());
@@ -211,21 +211,21 @@ The xasset model is calibrated by using one of the calibration methods provided.
         maturities equal to step times in the parametrization */
     void calibrateIrLgm1fReversionsIterative(
         const Size ccy,
-        const std::vector<boost::shared_ptr<CalibrationHelper> > &helpers,
+        const std::vector<ext::shared_ptr<CalibrationHelper> > &helpers,
         /* ... */);
 
     /*! calibrate irlgm1f parameters for one ccy globally to a set
         of ir options */
     void calibrateIrLgm1fGlobal(
         const Size ccy,
-        const std::vector<boost::shared_ptr<CalibrationHelper> > &helpers,
+        const std::vector<ext::shared_ptr<CalibrationHelper> > &helpers,
         /* ... */);
 
     /*! calibrate fx volatilities to a sequence of fx options with
             expiry times equal to step times in the parametrization */
     void calibrateFxBsVolatilitiesIterative(
         const Size ccy,
-        const std::vector<boost::shared_ptr<CalibrationHelper> > &helpers,
+        const std::vector<ext::shared_ptr<CalibrationHelper> > &helpers,
         /* ... */);
 \end{minted}
 \normalsize
@@ -253,8 +253,8 @@ Although a LGM 1f model can be constructed using the xasset model class, for con
 \medskip
 \scriptsize
 \begin{minted}[bgcolor=mintedBg]{c++}
-    Lgm(const boost::shared_ptr<IrLgm1fParametrization> &parametrization);
-    Lgm(const boost::shared_ptr<XAssetModel> &model, const Size ccy);
+    Lgm(const ext::shared_ptr<IrLgm1fParametrization> &parametrization);
+    Lgm(const ext::shared_ptr<XAssetModel> &model, const Size ccy);
 \end{minted}
 \normalsize
 \medskip
@@ -286,21 +286,21 @@ This engine uses a Jamshidian decomposition to price european swaptions. It can 
 \begin{minted}[bgcolor=mintedBg]{c++}
     /*! Lgm model based constructor */
     AnalyticLgmSwaptionEngine(
-        const boost::shared_ptr<Lgm> &model,
+        const ext::shared_ptr<Lgm> &model,
         const Handle<YieldTermStructure> &discountCurve =
             Handle<YieldTermStructure>(),
         const FloatSpreadMapping floatSpreadMapping = proRata);
 
     /*! XAsset model based constructor */
     AnalyticLgmSwaptionEngine(
-        const boost::shared_ptr<XAssetModel> &model, const Size ccy,
+        const ext::shared_ptr<XAssetModel> &model, const Size ccy,
         const Handle<YieldTermStructure> &discountCurve =
             Handle<YieldTermStructure>(),
         const FloatSpreadMapping floatSpreadMapping = proRata);
 
     /*! parametrization based constructor */
     AnalyticLgmSwaptionEngine(
-        const boost::shared_ptr<IrLgm1fParametrization> irlgm1f,
+        const ext::shared_ptr<IrLgm1fParametrization> irlgm1f,
         const Handle<YieldTermStructure> &discountCurve =
             Handle<YieldTermStructure>(),
         const FloatSpreadMapping floatSpreadMapping = proRata);
@@ -317,7 +317,7 @@ This engine prices fx options in a 3d LGM / Black Scholes model (possibly seen a
 \medskip
 \scriptsize
 \begin{minted}[bgcolor=mintedBg]{c++}
-    AnalyticCcLgmFxOptionEngine(const boost::shared_ptr<XAssetModel> &model,
+    AnalyticCcLgmFxOptionEngine(const ext::shared_ptr<XAssetModel> &model,
                                 const Size foreignCurrency);
 \end{minted}
 \normalsize

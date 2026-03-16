@@ -45,20 +45,8 @@ class InterpolatedCPIVolatilitySurface : public QuantExt::CPIVolatilitySurface, 
 public:
     InterpolatedCPIVolatilitySurface(const std::vector<Period>& optionTenors, const std::vector<Real>& strikes,
                                      const std::vector<std::vector<Handle<Quote>>> quotes,
-                                     const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index,
+                                     const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex>& index,
                                      const bool quotedInstrumentsAreInterpolated,
-                                     const Natural settlementDays, const Calendar& cal, BusinessDayConvention bdc,
-                                     const DayCounter& dc, const Period& observationLag,
-                                     const Date& capFloorStartDate = Date(),
-                                     const Interpolator2D& interpolator2d = Interpolator2D(),
-                                     const QuantLib::VolatilityType volType = QuantLib::ShiftedLognormal,
-                                     const double displacement = 0.0);
-
-
-    QL_DEPRECATED
-    InterpolatedCPIVolatilitySurface(const std::vector<Period>& optionTenors, const std::vector<Real>& strikes,
-                                     const std::vector<std::vector<Handle<Quote>>> quotes,
-                                     const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index,
                                      const Natural settlementDays, const Calendar& cal, BusinessDayConvention bdc,
                                      const DayCounter& dc, const Period& observationLag,
                                      const Date& capFloorStartDate = Date(),
@@ -104,7 +92,7 @@ private:
     mutable std::vector<QuantLib::Time> optionTimes_;
     mutable std::vector<QuantLib::Rate> strikes_;
     mutable std::vector<std::vector<Handle<Quote> > > quotes_;
-    boost::shared_ptr<QuantLib::ZeroInflationIndex> index_;
+    QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex> index_;
     mutable Matrix volData_;
     mutable QuantLib::Interpolation2D vols_;
     Interpolator2D interpolator2d_;
@@ -114,7 +102,7 @@ private:
 template <class Interpolator2D>
 InterpolatedCPIVolatilitySurface<Interpolator2D>::InterpolatedCPIVolatilitySurface(
     const std::vector<Period>& optionTenors, const std::vector<Real>& strikes,
-    const std::vector<std::vector<Handle<Quote>>> quotes, const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index,
+    const std::vector<std::vector<Handle<Quote>>> quotes, const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex>& index,
     const bool quotedInstrumentsOberserveInterpolated, const Natural settlementDays, const Calendar& cal, BusinessDayConvention bdc, const DayCounter& dc,
     const Period& observationLag, const Date& capFloorStartDate, const Interpolator2D& interpolator2d,
     const QuantLib::VolatilityType volType, const double displacement)
@@ -127,27 +115,7 @@ InterpolatedCPIVolatilitySurface<Interpolator2D>::InterpolatedCPIVolatilitySurfa
         for (Size j = 0; j < strikes_.size(); ++j)
             registerWith(quotes_[i][j]);
     }
-}
-
-
-QL_DEPRECATED_DISABLE_WARNING
-template <class Interpolator2D>
-InterpolatedCPIVolatilitySurface<Interpolator2D>::InterpolatedCPIVolatilitySurface(
-    const std::vector<Period>& optionTenors, const std::vector<Real>& strikes,
-    const std::vector<std::vector<Handle<Quote>>> quotes, const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index,
-    const Natural settlementDays, const Calendar& cal, BusinessDayConvention bdc, const DayCounter& dc,
-    const Period& observationLag, const Date& capFloorStartDate, const Interpolator2D& interpolator2d,
-    const QuantLib::VolatilityType volType, const double displacement)
-    : CPIVolatilitySurface(settlementDays, cal, bdc, dc, observationLag, index->frequency(), index->interpolated(),
-                           capFloorStartDate, volType, displacement),
-      optionTenors_(optionTenors), strikes_(strikes), quotes_(quotes), index_(index), interpolator2d_(interpolator2d) {
-    for (Size i = 0; i < optionTenors_.size(); ++i) {
-        QL_REQUIRE(quotes_[i].size() == strikes_.size(), "quotes row " << i << " length does not match strikes size");
-        for (Size j = 0; j < strikes_.size(); ++j)
-            registerWith(quotes_[i][j]);
-    }
-}
-QL_DEPRECATED_ENABLE_WARNING   
+} 
 
 template <class Interpolator2D> void InterpolatedCPIVolatilitySurface<Interpolator2D>::performCalculations() const {
     volData_ = QuantLib::Matrix(strikes_.size(), optionTenors_.size(), QuantLib::Null<QuantLib::Real>());

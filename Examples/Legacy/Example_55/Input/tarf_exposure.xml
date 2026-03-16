@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Portfolio>
+  <Trade id="SCRIPTED_FX_TARF">
+    <TradeType>FxTaRF</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <FxTaRFData>
+      <Currency>USD</Currency>
+      <FixingAmount>1000000</FixingAmount>
+      <!-- <TargetAmount>100000</TargetAmount> -->
+      <TargetPoints>0.1</TargetPoints>
+      <Strikes>
+        <Strike>1.03</Strike>
+      </Strikes>
+      <Underlying>
+        <Type>FX</Type>
+        <Name>ECB-EUR-USD</Name>
+      </Underlying>
+      <ScheduleData>
+        <Dates>
+          <Dates>
+            <Date>2022-02-21</Date>
+            <Date>2022-03-21</Date>
+            <Date>2022-04-21</Date>
+            <Date>2022-05-21</Date>
+            <Date>2022-06-21</Date>
+            <Date>2022-07-21</Date>
+            <Date>2022-08-21</Date>
+            <Date>2022-09-21</Date>
+            <Date>2022-10-21</Date>
+            <Date>2022-11-21</Date>
+            <Date>2022-12-21</Date>
+            <Date>2023-01-21</Date>
+            <Date>2023-02-21</Date>
+          </Dates>
+        </Dates>
+      </ScheduleData>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <PayoffType>TargetExact</PayoffType>
+      </OptionData>
+      <RangeBoundSet>
+        <RangeBounds>
+          <RangeBound>
+            <RangeTo>1.05</RangeTo>
+            <Leverage>2</Leverage>
+          </RangeBound>
+          <RangeBound>
+            <RangeFrom>1.1</RangeFrom>
+            <Leverage>1</Leverage>
+          </RangeBound>
+        </RangeBounds>
+      </RangeBoundSet>
+      <Barriers>
+        <BarrierData>
+          <!-- <Type>CumulatedProfitCap</Type> -->
+          <!-- <Levels> -->
+          <!--   <Level>100000</Level> -->
+          <!-- </Levels> -->
+          <Type>CumulatedProfitCapPoints</Type>
+          <Levels>
+            <Level>0.1</Level>
+          </Levels>
+        </BarrierData>
+      </Barriers>
+    </FxTaRFData>
+  </Trade>
+</Portfolio>

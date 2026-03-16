@@ -55,7 +55,7 @@ struct OptionletTraits {
         }
 
         // First iteration, not sure if we can do any better here.
-        if (i == 1) {
+        if (i==0 || i == 1) {
             if (c->volatilityType() == QuantLib::Normal) {
                 return 0.0020;
             } else {
@@ -95,6 +95,10 @@ struct OptionletTraits {
 
     //! Maximum number of iterations to perform in search for root
     static QuantLib::Size maxIterations() { return 100; }
+
+    // transformation to add constraints to an unconstrained optimization
+    template <class C> static Real transformDirect(Real x, Size i, const C* c) { return std::exp(x); }
+    template <class C> static Real transformInverse(Real x, Size i, const C* c) { return std::log(x); }
 };
 
 template <class Interpolator, template <class> class Bootstrap = QuantExt::IterativeBootstrap>
@@ -111,21 +115,21 @@ public:
     //! \name Constructors
     //@{
     PiecewiseOptionletCurve(const QuantLib::Date& referenceDate,
-                            const std::vector<boost::shared_ptr<helper> >& instruments,
+                            const std::vector<QuantLib::ext::shared_ptr<helper>>& instruments,
                             const QuantLib::Calendar& calendar, QuantLib::BusinessDayConvention bdc,
                             const QuantLib::DayCounter& dayCounter,
                             QuantLib::VolatilityType volatilityType = QuantLib::Normal,
                             QuantLib::Real displacement = 0.0, bool flatFirstPeriod = true,
-                            const Interpolator& i = Interpolator(),
+                            bool useEffectiveVolatility = false, const Interpolator& i = Interpolator(),
                             const Bootstrap<this_curve>& bootstrap = Bootstrap<this_curve>());
 
     PiecewiseOptionletCurve(QuantLib::Natural settlementDays,
-                            const std::vector<boost::shared_ptr<helper> >& instruments,
+                            const std::vector<QuantLib::ext::shared_ptr<helper>>& instruments,
                             const QuantLib::Calendar& calendar, QuantLib::BusinessDayConvention bdc,
                             const QuantLib::DayCounter& dayCounter,
                             QuantLib::VolatilityType volatilityType = QuantLib::Normal,
                             QuantLib::Real displacement = 0.0, bool flatFirstPeriod = true,
-                            const Interpolator& i = Interpolator(),
+                            bool useEffectiveVolatility = false, const Interpolator& i = Interpolator(),
                             const Bootstrap<this_curve>& bootstrap = Bootstrap<this_curve>());
     //@}
 
@@ -161,37 +165,37 @@ private:
     //@}
 
     //! Vector of helper instruments to be matched
-    std::vector<boost::shared_ptr<helper> > instruments_;
+    std::vector<QuantLib::ext::shared_ptr<helper> > instruments_;
 
     //! Accuracy of the match
     QuantLib::Real accuracy_;
 
     // Bootstrapper classes are declared as friend to manipulate the curve data
     friend class Bootstrap<this_curve>;
-    friend class BootstrapError<this_curve>;
-    friend class PenaltyFunction<this_curve>;
 
     Bootstrap<this_curve> bootstrap_;
 };
 
 template <class Interpolator, template <class> class Bootstrap>
 PiecewiseOptionletCurve<Interpolator, Bootstrap>::PiecewiseOptionletCurve(
-    const QuantLib::Date& referenceDate, const std::vector<boost::shared_ptr<helper> >& instruments,
+    const QuantLib::Date& referenceDate, const std::vector<QuantLib::ext::shared_ptr<helper>>& instruments,
     const QuantLib::Calendar& calendar, QuantLib::BusinessDayConvention bdc, const QuantLib::DayCounter& dayCounter,
-    QuantLib::VolatilityType volatilityType, QuantLib::Real displacement, bool flatFirstPeriod, const Interpolator& i,
-    const Bootstrap<this_curve>& bootstrap)
-    : base_curve(referenceDate, calendar, bdc, dayCounter, volatilityType, displacement, flatFirstPeriod, i),
+    QuantLib::VolatilityType volatilityType, QuantLib::Real displacement, bool flatFirstPeriod,
+    bool useEffectiveVolatility, const Interpolator& i, const Bootstrap<this_curve>& bootstrap)
+    : base_curve(referenceDate, calendar, bdc, dayCounter, volatilityType, displacement, flatFirstPeriod,
+                 useEffectiveVolatility, i),
       instruments_(instruments), accuracy_(1e-12), bootstrap_(bootstrap) {
     bootstrap_.setup(this);
 }
 
 template <class Interpolator, template <class> class Bootstrap>
 PiecewiseOptionletCurve<Interpolator, Bootstrap>::PiecewiseOptionletCurve(
-    QuantLib::Natural settlementDays, const std::vector<boost::shared_ptr<helper> >& instruments,
+    QuantLib::Natural settlementDays, const std::vector<QuantLib::ext::shared_ptr<helper>>& instruments,
     const QuantLib::Calendar& calendar, QuantLib::BusinessDayConvention bdc, const QuantLib::DayCounter& dayCounter,
-    QuantLib::VolatilityType volatilityType, QuantLib::Real displacement, bool flatFirstPeriod, const Interpolator& i,
-    const Bootstrap<this_curve>& bootstrap)
-    : base_curve(settlementDays, calendar, bdc, dayCounter, volatilityType, displacement, flatFirstPeriod, i),
+    QuantLib::VolatilityType volatilityType, QuantLib::Real displacement, bool flatFirstPeriod,
+    bool useEffectiveVolatility, const Interpolator& i, const Bootstrap<this_curve>& bootstrap)
+    : base_curve(settlementDays, calendar, bdc, dayCounter, volatilityType, displacement, flatFirstPeriod,
+                 useEffectiveVolatility, i),
       instruments_(instruments), accuracy_(1e-12), bootstrap_(bootstrap) {
     bootstrap_.setup(this);
 }

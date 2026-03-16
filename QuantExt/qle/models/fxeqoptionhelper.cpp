@@ -55,9 +55,9 @@ void FxEqOptionHelper::performCalculations() const {
     if (effStrike_ == Null<Real>())
         effStrike_ = atm_;
     type_ = effStrike_ >= atm_ ? Option::Call : Option::Put;
-    boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type_, effStrike_));
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(exerciseDate_);
-    option_ = boost::shared_ptr<VanillaOption>(new VanillaOption(payoff, exercise));
+    QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type_, effStrike_));
+    QuantLib::ext::shared_ptr<Exercise> exercise = QuantLib::ext::make_shared<EuropeanExercise>(exerciseDate_);
+    option_ = QuantLib::ext::shared_ptr<VanillaOption>(new VanillaOption(payoff, exercise));
     BlackCalibrationHelper::performCalculations();
 }
 

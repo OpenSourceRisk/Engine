@@ -26,7 +26,7 @@
 #include <ql/exercise.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
 
-#include <boost/optional.hpp>
+#include <ql/optional.hpp>
 
 namespace QuantExt {
 
@@ -53,6 +53,9 @@ public:
     RebatedExercise(const Exercise& exercise, const std::vector<Date>& exerciseDates, const std::vector<Real>& rebates,
                     const Period& rebateSettlementPeriod, const Calendar& rebatePaymentCalendar = NullCalendar(),
                     const BusinessDayConvention rebatePaymentConvention = Following);
+    const Period& rebateSettlementPeriod() const { return rebateSettlementPeriod_; }
+    const Calendar& rebatePaymentCalendar() const { return rebatePaymentCalendar_; }
+    BusinessDayConvention rebatePaymentConvention() const { return rebatePaymentConvention_; }
     Real rebate(Size index) const;
     Date rebatePaymentDate(Size index) const;
     Date rebatePaymentDate(const Date& exerciseDate) const;

@@ -50,14 +50,14 @@ public:
         QuantExt::CommodityQuantityFrequency commodityQuantityFrequency =
             QuantExt::CommodityQuantityFrequency::PerCalculationPeriod,
         CommodityPayRelativeTo commodityPayRelativeTo = CommodityPayRelativeTo::CalculationPeriodEndDate,
-        QuantLib::Natural futureMonthOffset = 0, QuantLib::Natural deliveryRollDays = 0, bool includePeriodEnd = true,
+        QuantLib::Integer futureMonthOffset = 0, QuantLib::Natural deliveryRollDays = 0, bool includePeriodEnd = true,
         const BarrierData& barrierData = {}, const std::string& fxIndex = "");
 
-    void build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) override;
+    void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory) override;
 
     //! Add underlying Commodity names
     std::map<AssetClass, std::set<std::string>>
-    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
     //! \name Inspectors
     //@{
@@ -79,7 +79,7 @@ public:
     QuantLib::Spread spread() const { return spread_; }
     QuantExt::CommodityQuantityFrequency commodityQuantityFrequency() const { return commodityQuantityFrequency_; }
     CommodityPayRelativeTo commodityPayRelativeTo() const { return commodityPayRelativeTo_; }
-    QuantLib::Natural futureMonthOffset() const { return futureMonthOffset_; }
+    QuantLib::Integer futureMonthOffset() const { return futureMonthOffset_; }
     QuantLib::Natural deliveryRollDays() const { return deliveryRollDays_; }
     bool includePeriodEnd() const { return includePeriodEnd_; }
     const std::string& fxIndex() const { return fxIndex_; }
@@ -89,11 +89,6 @@ public:
     //@{
     virtual void fromXML(ore::data::XMLNode* node) override;
     virtual ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
-    //@}
-
-    //! \name Trade
-    //@{
-    bool hasCashflows() const override { return false; }
     //@}
 
 private:
@@ -115,7 +110,7 @@ private:
     QuantLib::Spread spread_;
     QuantExt::CommodityQuantityFrequency commodityQuantityFrequency_;
     CommodityPayRelativeTo commodityPayRelativeTo_;
-    QuantLib::Natural futureMonthOffset_;
+    QuantLib::Integer futureMonthOffset_;
     QuantLib::Natural deliveryRollDays_;
     bool includePeriodEnd_;
     std::string fxIndex_;
@@ -127,16 +122,16 @@ private:
 
     /*! Build a commodity floating leg to extract the single commodity averaging flow
      */
-    QuantLib::Leg buildLeg(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory,
+    QuantLib::Leg buildLeg(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory,
                            const std::string& configuration);
 
     //! Build a standard option
-    void buildStandardOption(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory, const QuantLib::Leg& leg,
+    void buildStandardOption(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory, const QuantLib::Leg& leg,
                              QuantLib::Date exerciseDate);
 
     //! Build an average price option
-    void buildApo(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory, const QuantLib::Leg& leg,
-                  QuantLib::Date exerciseDate, const boost::shared_ptr<ore::data::EngineBuilder>& builder);
+    void buildApo(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory, const QuantLib::Leg& leg,
+                  QuantLib::Date exerciseDate, const QuantLib::ext::shared_ptr<ore::data::EngineBuilder>& builder);
 };
 
 } // namespace data

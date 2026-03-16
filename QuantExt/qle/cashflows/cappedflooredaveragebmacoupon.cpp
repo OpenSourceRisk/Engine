@@ -51,11 +51,13 @@ void CappedFlooredAverageBMACoupon::performCalculations() const {
     if (cap_ != Null<Real>())
         capletRate = (nakedOption_ && floor_ == Null<Real>() ? -1.0 : 1.0) * pricer()->capletRate(effectiveCap());
     rate_ = swapletRate + floorletRate - capletRate;
-    auto p = boost::dynamic_pointer_cast<CapFlooredAverageBMACouponPricer>(pricer());
+    auto p = QuantLib::ext::dynamic_pointer_cast<CapFlooredAverageBMACouponPricer>(pricer());
     QL_REQUIRE(p, "CapFlooredAverageBMACoupon::performCalculations(): internal error, could not cast to "
                   "CapFlooredAverageBMACouponPricer");
     effectiveCapletVolatility_ = p->effectiveCapletVolatility();
     effectiveFloorletVolatility_ = p->effectiveFloorletVolatility();
+    strippedCapletVolatility_ = p->strippedCapletVolatility();
+    strippedFloorletVolatility_ = p->strippedFloorletVolatility();
 }
 
 Rate CappedFlooredAverageBMACoupon::cap() const { return gearing_ > 0.0 ? cap_ : floor_; }
@@ -102,6 +104,16 @@ Real CappedFlooredAverageBMACoupon::effectiveFloorletVolatility() const {
     return effectiveFloorletVolatility_;
 }
 
+Real CappedFlooredAverageBMACoupon::strippedCapletVolatility() const {
+    calculate();
+    return strippedCapletVolatility_;
+}
+
+Real CappedFlooredAverageBMACoupon::strippedFloorletVolatility() const {
+    calculate();
+    return strippedFloorletVolatility_;
+}
+
 void CappedFlooredAverageBMACoupon::accept(AcyclicVisitor& v) {
     Visitor<CappedFlooredAverageBMACoupon>* v1 = dynamic_cast<Visitor<CappedFlooredAverageBMACoupon>*>(&v);
     if (v1 != 0)
@@ -127,17 +139,18 @@ CappedFlooredAverageBMACoupon::CappedFlooredAverageBMACoupon(const ext::shared_p
 
 // capped floored average on coupon pricer base class implementation
 
-CapFlooredAverageBMACouponPricer::CapFlooredAverageBMACouponPricer(const Handle<OptionletVolatilityStructure>& v,
-                                                                   const bool effectiveVolatilityInput)
-    : capletVol_(v), effectiveVolatilityInput_(effectiveVolatilityInput) {
+CapFlooredAverageBMACouponPricer::CapFlooredAverageBMACouponPricer(const Handle<OptionletVolatilityStructure>& v)
+    : capletVol_(v) {
     registerWith(capletVol_);
 }
-
-bool CapFlooredAverageBMACouponPricer::effectiveVolatilityInput() const { return effectiveVolatilityInput_; }
 
 Real CapFlooredAverageBMACouponPricer::effectiveCapletVolatility() const { return effectiveCapletVolatility_; }
 
 Real CapFlooredAverageBMACouponPricer::effectiveFloorletVolatility() const { return effectiveFloorletVolatility_; }
+
+Real CapFlooredAverageBMACouponPricer::strippedCapletVolatility() const { return strippedCapletVolatility_; }
+
+Real CapFlooredAverageBMACouponPricer::strippedFloorletVolatility() const { return strippedFloorletVolatility_; }
 
 Handle<OptionletVolatilityStructure> CapFlooredAverageBMACouponPricer::capletVolatility() const { return capletVol_; }
 

@@ -30,7 +30,10 @@
 
 #include <ql/cashflow.hpp>
 #include <ql/exercise.hpp>
+#include <ql/time/businessdayconvention.hpp>
+#include <ql/time/calendar.hpp>
 #include <ql/time/date.hpp>
+#include <ql/time/period.hpp>
 
 namespace ore {
 namespace data {
@@ -42,19 +45,22 @@ namespace data {
 class OptionData : public XMLSerializable {
 public:
     //! Default constructor
-    OptionData() : payoffAtExpiry_(true), automaticExercise_(false) {}
+    OptionData() : payoffAtExpiry_(true), automaticExercise_(false), midCouponExercise_(false) {}
     //! Constructor
     OptionData(string longShort, string callPut, string style, bool payoffAtExpiry, vector<string> exerciseDates,
-               string settlement = "Cash", string settlementMethod = "", const PremiumData& premiumData = {},
+               string settlement = "Cash", string settlementMethod = std::string(), const PremiumData& premiumData = {},
                vector<double> exerciseFees = vector<Real>(), vector<double> exercisePrices = vector<Real>(),
-               string noticePeriod = "", string noticeCalendar = "", string noticeConvention = "",
+               string noticePeriod = std::string(), string noticeCalendar = std::string(), string noticeConvention = std::string(),
                const vector<string>& exerciseFeeDates = vector<string>(),
-               const vector<string>& exerciseFeeTypes = vector<string>(), string exerciseFeeSettlementPeriod = "",
-               string exerciseFeeSettlementCalendar = "", string exerciseFeeSettlementConvention = "",
-               string payoffType = "", string payoffType2 = "",
-               const boost::optional<bool>& automaticExercise = boost::none,
-               const boost::optional<OptionExerciseData>& exerciseData = boost::none,
-               const boost::optional<OptionPaymentData>& paymentData = boost::none)
+               const vector<string>& exerciseFeeTypes = vector<string>(), string exerciseFeeSettlementPeriod = std::string(),
+               string exerciseFeeSettlementCalendar = std::string(), string exerciseFeeSettlementConvention = std::string(),
+               string payoffType = std::string(), string payoffType2 = std::string(),
+               const QuantLib::ext::optional<bool>& automaticExercise = QuantLib::ext::nullopt,
+               const QuantLib::ext::optional<OptionExerciseData>& exerciseData = QuantLib::ext::nullopt,
+               const QuantLib::ext::optional<OptionPaymentData>& paymentData = QuantLib::ext::nullopt,
+               const bool midCouponExercise = false, const std::string& cashSettlementCurrency = std::string(),
+               const std::string& cashSettlementFxIndex = std::string(),
+               const std::string& cashSettlementFixingDate = std::string())
         : longShort_(longShort), callPut_(callPut), payoffType_(payoffType), payoffType2_(payoffType2), style_(style),
           payoffAtExpiry_(payoffAtExpiry), exerciseDates_(exerciseDates), noticePeriod_(noticePeriod),
           noticeCalendar_(noticeCalendar), noticeConvention_(noticeConvention), settlement_(settlement),
@@ -63,7 +69,9 @@ public:
           exerciseFeeSettlementPeriod_(exerciseFeeSettlementPeriod),
           exerciseFeeSettlementCalendar_(exerciseFeeSettlementCalendar),
           exerciseFeeSettlementConvention_(exerciseFeeSettlementConvention), exercisePrices_(exercisePrices),
-          automaticExercise_(automaticExercise), exerciseData_(exerciseData), paymentData_(paymentData) {}
+          automaticExercise_(automaticExercise), exerciseData_(exerciseData), paymentData_(paymentData),
+          midCouponExercise_(midCouponExercise), cashSettlementCurrency_(cashSettlementCurrency), 
+          cashSettlementFxIndex_(cashSettlementFxIndex), cashSettlementFixingDate_(cashSettlementFixingDate) {}
 
     //! \name Inspectors
     //@{
@@ -88,9 +96,13 @@ public:
     const string& exerciseFeeSettlementCalendar() const { return exerciseFeeSettlementCalendar_; }
     const string& exerciseFeeSettlementConvention() const { return exerciseFeeSettlementConvention_; }
     const vector<double>& exercisePrices() const { return exercisePrices_; }
-    boost::optional<bool> automaticExercise() const { return automaticExercise_; }
-    const boost::optional<OptionExerciseData>& exerciseData() const { return exerciseData_; }
-    const boost::optional<OptionPaymentData>& paymentData() const { return paymentData_; }
+    QuantLib::ext::optional<bool> automaticExercise() const { return automaticExercise_; }
+    const QuantLib::ext::optional<OptionExerciseData>& exerciseData() const { return exerciseData_; }
+    const QuantLib::ext::optional<OptionPaymentData>& paymentData() const { return paymentData_; }
+    const bool midCouponExercise() const { return midCouponExercise_; }
+    const string& cashSettlementCurrency() const { return cashSettlementCurrency_; }
+    const string& cashSettlementFxIndex() const { return cashSettlementFxIndex_; }
+    const string& cashSettlementFixingDate() const { return cashSettlementFixingDate_; }
     //@}
 
     //! \name Setters
@@ -105,6 +117,15 @@ public:
     void setPayoffAtExpiry(const bool payoffAtExpiry) { payoffAtExpiry_ = payoffAtExpiry; }
     void setNoticePeriod(const std::string& noticePeriod) { noticePeriod_ = noticePeriod; }
     void setSettlement(const std::string& settlement) { settlement_ = settlement; }
+    void setCashSettlementCurrency(const std::string& cashSettlementCurrency) {
+        cashSettlementCurrency_ = cashSettlementCurrency;
+    }
+    void setCashSettlementFxIndex(const std::string& cashSettlementFxIndex) {
+        cashSettlementFxIndex_ = cashSettlementFxIndex;
+    }
+    void setCashSettlementFixingDate(const std::string& cashSettlementFixingDate) {
+        cashSettlementFixingDate_ = cashSettlementFixingDate;
+    }
     //@}
 
     //! \name Serialisation
@@ -138,9 +159,13 @@ private:
     string exerciseFeeSettlementCalendar_;
     string exerciseFeeSettlementConvention_;
     vector<double> exercisePrices_;
-    boost::optional<bool> automaticExercise_;
-    boost::optional<OptionExerciseData> exerciseData_;
-    boost::optional<OptionPaymentData> paymentData_;
+    QuantLib::ext::optional<bool> automaticExercise_;
+    QuantLib::ext::optional<OptionExerciseData> exerciseData_;
+    QuantLib::ext::optional<OptionPaymentData> paymentData_;
+    bool midCouponExercise_;
+    string cashSettlementCurrency_;
+    string cashSettlementFxIndex_; 
+    string cashSettlementFixingDate_; 
 };
 
 // Helper class to build an exercise instance for Bermudan swaptions and related instruments from given option data.
@@ -154,31 +179,41 @@ public:
                     bool removeNoticeDatesAfterLastAccrualStart = true);
 
     // null if exercsied or no alive exercise dates
-    boost::shared_ptr<QuantLib::Exercise> exercise() const { return exercise_; }
+    QuantLib::ext::shared_ptr<QuantLib::Exercise> exercise() const { return exercise_; }
     // exercise dates associated to alive notice dates, for American style -> only start, end exercise date
     const std::vector<QuantLib::Date>& exerciseDates() const { return exerciseDates_; }
     /* alive notice dates (w.r.t. global eval date), for American style -> only start, end notice date */
     const std::vector<QuantLib::Date>& noticeDates() const { return noticeDates_; }
+    // alive (cash) settlement dates
+    const std::vector<QuantLib::Date>& settlementDates() const { return settlementDates_; }
 
     // true if exercised
     bool isExercised() const { return isExercised_; }
     // only for exercised option: The applicable exercise date
     const QuantLib::Date& exerciseDate() const { return exerciseDate_; }
     // only for exercised options: cash settlement amount or null
-    boost::shared_ptr<QuantLib::CashFlow> cashSettlement() const { return cashSettlement_; }
+    QuantLib::ext::shared_ptr<QuantLib::CashFlow> cashSettlement() const { return cashSettlement_; }
     // only for exercised options: exercise fee amount or null
-    boost::shared_ptr<QuantLib::CashFlow> feeSettlement() const { return feeSettlement_; }
+    QuantLib::ext::shared_ptr<QuantLib::CashFlow> feeSettlement() const { return feeSettlement_; }
+
+    const QuantLib::Period& noticePeriod() const { return noticePeriod_; }
+    const QuantLib::Calendar& noticeCalendar() const { return noticeCalendar_; }
+    const QuantLib::BusinessDayConvention& noticeConvention() const { return noticeConvention_; }
 
 private:
-    boost::shared_ptr<QuantLib::Exercise> exercise_;
+    QuantLib::ext::shared_ptr<QuantLib::Exercise> exercise_;
 
     std::vector<QuantLib::Date> exerciseDates_;
     std::vector<QuantLib::Date> noticeDates_;
+    std::vector<QuantLib::Date> settlementDates_;
+    QuantLib::Period noticePeriod_;
+    QuantLib::Calendar noticeCalendar_;
+    QuantLib::BusinessDayConvention noticeConvention_;
 
     bool isExercised_ = false;
     QuantLib::Date exerciseDate_;
-    boost::shared_ptr<QuantLib::CashFlow> cashSettlement_;
-    boost::shared_ptr<QuantLib::CashFlow> feeSettlement_;
+    QuantLib::ext::shared_ptr<QuantLib::CashFlow> cashSettlement_;
+    QuantLib::ext::shared_ptr<QuantLib::CashFlow> feeSettlement_;
 
     // index in all exercise date vector if exercised
     Size exerciseDateIndex_ = QuantLib::Null<QuantLib::Size>();

@@ -90,15 +90,31 @@ OvernightIndexedCoupon::OvernightIndexedCoupon(const Date& paymentDate, Real nom
         tmpEndDate = overnightIndex->fixingCalendar().advance(std::max(valueStart, evalDate), 7, Days, Following);
         tmpEndDate = std::min(tmpEndDate, valueEnd);
     }
-    Schedule sch = MakeSchedule()
-                       .from(valueStart)
-                       // .to(valueEnd)
-                       .to(tmpEndDate)
-                       .withTenor(1 * Days)
-                       .withCalendar(overnightIndex->fixingCalendar())
-                       .withConvention(overnightIndex->businessDayConvention())
-                       .backwards();
-    valueDates_ = sch.dates();
+
+    QL_REQUIRE(valueStart < tmpEndDate, "OvernightIndexedCoupon: valueStart ("
+                                            << valueStart << ") must be earlier than valueEnd (" << tmpEndDate << ")");
+
+    try {
+        Schedule sch = MakeSchedule()
+                           .from(valueStart)
+                           // .to(valueEnd)
+                           .to(tmpEndDate)
+                           .withTenor(1 * Days)
+                           .withCalendar(overnightIndex->fixingCalendar())
+                           .withConvention(overnightIndex->businessDayConvention())
+                           .backwards();
+        valueDates_ = sch.dates();
+    } catch (...) {
+        // handle degenerate schedules
+        valueDates_ = {valueStart, tmpEndDate};
+    }
+
+    // Legs with LastRecentPeriod can generate coupons with start date which is a holiday
+    // in the index fixing calendar
+    // Previous fixing date will be used in calculation of compoundFactor
+    if (valueDates_.front() != valueStart) {
+        valueDates_.insert(valueDates_.begin(), valueStart);
+    }
 
     if (telescopicValueDates) {
         // build optimised value dates schedule: back stub
@@ -358,11 +374,13 @@ void CappedFlooredOvernightIndexedCoupon::performCalculations() const {
     if (cap_ != Null<Real>())
         capletRate = (nakedOption_ && floor_ == Null<Real>() ? -1.0 : 1.0) * pricer()->capletRate(effectiveCap());
     rate_ = swapletRate + floorletRate - capletRate;
-    auto p = boost::dynamic_pointer_cast<CappedFlooredOvernightIndexedCouponPricer>(pricer());
+    auto p = QuantLib::ext::dynamic_pointer_cast<CappedFlooredOvernightIndexedCouponPricer>(pricer());
     QL_REQUIRE(p, "CappedFlooredOvernightIndexedCoupon::performCalculations(): internal error, could not cast to "
                   "CappedFlooredOvernightIndexedCouponPricer");
     effectiveCapletVolatility_ = p->effectiveCapletVolatility();
     effectiveFloorletVolatility_ = p->effectiveFloorletVolatility();
+    strippedCapletVolatility_ = p->strippedCapletVolatility();
+    strippedFloorletVolatility_ = p->strippedFloorletVolatility();
 }
 
 Rate CappedFlooredOvernightIndexedCoupon::cap() const { return gearing_ > 0.0 ? cap_ : floor_; }
@@ -436,6 +454,16 @@ Real CappedFlooredOvernightIndexedCoupon::effectiveFloorletVolatility() const {
     return effectiveFloorletVolatility_;
 }
 
+Real CappedFlooredOvernightIndexedCoupon::strippedCapletVolatility() const {
+    calculate();
+    return strippedCapletVolatility_;
+}
+
+Real CappedFlooredOvernightIndexedCoupon::strippedFloorletVolatility() const {
+    calculate();
+    return strippedFloorletVolatility_;
+}
+
 void CappedFlooredOvernightIndexedCoupon::accept(AcyclicVisitor& v) {
     Visitor<CappedFlooredOvernightIndexedCoupon>* v1 = dynamic_cast<Visitor<CappedFlooredOvernightIndexedCoupon>*>(&v);
     if (v1 != 0)
@@ -447,17 +475,21 @@ void CappedFlooredOvernightIndexedCoupon::accept(AcyclicVisitor& v) {
 // CappedFlooredOvernightIndexedCouponPricer implementation (this is the base class only)
 
 CappedFlooredOvernightIndexedCouponPricer::CappedFlooredOvernightIndexedCouponPricer(
-    const Handle<OptionletVolatilityStructure>& v, const bool effectiveVolatilityInput)
-    : capletVol_(v), effectiveVolatilityInput_(effectiveVolatilityInput) {
+    const Handle<OptionletVolatilityStructure>& v)
+    : capletVol_(v) {
     registerWith(capletVol_);
 }
-
-bool CappedFlooredOvernightIndexedCouponPricer::effectiveVolatilityInput() const { return effectiveVolatilityInput_; }
 
 Real CappedFlooredOvernightIndexedCouponPricer::effectiveCapletVolatility() const { return effectiveCapletVolatility_; }
 
 Real CappedFlooredOvernightIndexedCouponPricer::effectiveFloorletVolatility() const {
     return effectiveFloorletVolatility_;
+}
+
+Real CappedFlooredOvernightIndexedCouponPricer::strippedCapletVolatility() const { return strippedCapletVolatility_; }
+
+Real CappedFlooredOvernightIndexedCouponPricer::strippedFloorletVolatility() const {
+    return strippedFloorletVolatility_;
 }
 
 Handle<OptionletVolatilityStructure> CappedFlooredOvernightIndexedCouponPricer::capletVolatility() const {
@@ -581,7 +613,7 @@ OvernightLeg& OvernightLeg::withInArrears(const bool inArrears) {
     return *this;
 }
 
-OvernightLeg& OvernightLeg::withLastRecentPeriod(const boost::optional<Period>& lastRecentPeriod) {
+OvernightLeg& OvernightLeg::withLastRecentPeriod(const QuantLib::ext::optional<Period>& lastRecentPeriod) {
     lastRecentPeriod_ = lastRecentPeriod;
     return *this;
 }
@@ -597,13 +629,13 @@ OvernightLeg& OvernightLeg::withPaymentDates(const std::vector<Date>& paymentDat
 }
 
 OvernightLeg&
-OvernightLeg::withOvernightIndexedCouponPricer(const boost::shared_ptr<OvernightIndexedCouponPricer>& couponPricer) {
+OvernightLeg::withOvernightIndexedCouponPricer(const QuantLib::ext::shared_ptr<OvernightIndexedCouponPricer>& couponPricer) {
     couponPricer_ = couponPricer;
     return *this;
 }
 
 OvernightLeg& OvernightLeg::withCapFlooredOvernightIndexedCouponPricer(
-    const boost::shared_ptr<CappedFlooredOvernightIndexedCouponPricer>& couponPricer) {
+    const QuantLib::ext::shared_ptr<CappedFlooredOvernightIndexedCouponPricer>& couponPricer) {
     capFlooredCouponPricer_ = couponPricer;
     return *this;
 }
@@ -690,7 +722,7 @@ OvernightLeg::operator Leg() const {
 
         if (close_enough(detail::get(gearings_, i, 1.0), 0.0)) {
             // fixed coupon
-            cashflows.push_back(boost::make_shared<FixedRateCoupon>(
+            cashflows.push_back(QuantLib::ext::make_shared<FixedRateCoupon>(
                 paymentDate, detail::get(notionals_, i, 1.0), detail::effectiveFixedRate(spreads_, caps_, floors_, i),
                 paymentDayCounter_, start, end, refStart, refEnd));
         } else {

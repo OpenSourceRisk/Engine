@@ -55,6 +55,8 @@ public:
         bool includeAccrual;
         bool isSoft;
         Real softTriggerRatio;
+        Real softTriggerN;
+        Real softTriggerM;
     };
 
     struct MakeWholeData {
@@ -64,7 +66,7 @@ public:
             std::vector<Date> effectiveDates;
             std::vector<std::vector<Real>> crIncrease;
         };
-        boost::optional<CrIncreaseData> crIncreaseData;
+        QuantLib::ext::optional<CrIncreaseData> crIncreaseData;
     };
 
     struct ConversionRatioData {

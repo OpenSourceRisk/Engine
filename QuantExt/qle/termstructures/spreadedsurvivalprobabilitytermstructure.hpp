@@ -60,7 +60,7 @@ private:
     std::vector<Time> times_;
     std::vector<Handle<Quote>> spreads_;
     mutable std::vector<Real> data_;
-    boost::shared_ptr<Interpolation> interpolation_;
+    QuantLib::ext::shared_ptr<Interpolation> interpolation_;
     Extrapolation extrapolation_;
 };
 

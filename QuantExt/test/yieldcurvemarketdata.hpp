@@ -74,9 +74,9 @@ struct YieldCurveEUR {
         disc6M[6] = 0.794115491;
 
         // Create the discount curves
-        discountEonia = Handle<YieldTermStructure>(boost::make_shared<DiscountCurve>(dates, discEonia, dayCounter));
-        forward3M = Handle<YieldTermStructure>(boost::make_shared<DiscountCurve>(dates, disc3M, dayCounter));
-        forward6M = Handle<YieldTermStructure>(boost::make_shared<DiscountCurve>(dates, disc6M, dayCounter));
+        discountEonia = Handle<YieldTermStructure>(QuantLib::ext::make_shared<DiscountCurve>(dates, discEonia, dayCounter));
+        forward3M = Handle<YieldTermStructure>(QuantLib::ext::make_shared<DiscountCurve>(dates, disc3M, dayCounter));
+        forward6M = Handle<YieldTermStructure>(QuantLib::ext::make_shared<DiscountCurve>(dates, disc6M, dayCounter));
 
         // Enable extrapolation on all curves by default
         discountEonia->enableExtrapolation();

@@ -76,7 +76,7 @@ SVC,SYP,SZL,THB,TJS,TMT,TND,TOP,TRY,TTD,
 TWD,TZS,UAH,UGX,USD,USN,UYI,UYU,UYW,UZS,
 VES,VND,VUV,WST,XAF,XAU,XCD,XOF,
 XPF,XSU,XUA,YER,ZAR,ZMW,ZWL}
-\\ \hline Minor Currencies &  \makecell[l]{\emph{GBp, GBX} (for pennies of GBP) \\ \emph{ILa, ILX} (for agorot of ILS)  \\ \emph{ZAc, ZAC, ZAX} (for cents of ZAR) \\ 
+\\ \hline Minor Currencies &  \makecell[l]{\emph{GBp, GBX} (for pennies of GBP) \\ \emph{ILa, ILX, ILs, ILA} (for agorot of ILS)  \\ \emph{ZAc, ZAC, ZAX} (for cents of ZAR) \\ 
     Note: Minor Currency codes are only supported for equity products. } \\ \hline
 %Pre-Eurozone Currencies   &  \emph{ATS, BEF, DEM, ESP, FIM, FRF, GRD, IEP, ITL, LUF, NLG, PTE} \\ \hline
 Precious Metals treated as Currencies   &   \emph{XAG, XAU, XPD, XPT}  \\ \hline
@@ -146,6 +146,7 @@ Note: Currency codes must also match available currencies in the {\tt simulation
     \emph{US-NYSE, New York stock exchange} & US NYSE Calendar \\ \hline
     \emph{US with Libor impact} & US Calendar for Libor fixings \\ \hline
     \emph{US-NERC} & US NERC Calendar \\ \hline  
+    \emph{US-SOFR} & US SOFR fixing Calendar \\ \hline
     \emph{AR, ARG, ARS} & Argentina Calendar \\ \hline    
     \emph{AU, AUD, AUS} & Australia Calendar \\ \hline
     \emph{AT, AUT, ATS} & Austria Calendar \\ \hline    
@@ -211,8 +212,11 @@ Note: Currency codes must also match available currencies in the {\tt simulation
     \emph{XLON} & UK London Stock Exchange \\ \hline
     \emph{XLME} & UK London Metal Exchange \\ \hline
     \emph{XNYS} & US New York Stock Exchange Calendar \\ \hline
-    \emph{WMR} & Thomson Reuters QM/Reuters Spot \\ \hline
+    \emph{XPAR} & Paris stock exchange \\ \hline
+    \emph{WMR} & Thomson Reuters WM/Reuters Spot \\ \hline
+    \emph{IslamicWeekendsOnly} & Islamic Weekends Only Calendar \\ \hline
     \emph{WeekendsOnly} & Weekends Only Calendar \\ \hline
+    \emph{IslamicWeekendsOnly} & Islamic Weekends Only Calendar \\ \hline
     \emph{ICE\_FuturesUS} & ICE Futures U.S. Currency, Stock and Credit Index, Metal, Nat Gas, Power, Oil and Environmental \\ \hline
     \emph{ICE\_FuturesUS\_1} & ICE Futures U.S. Sugar, Cocoa, Coffee, Cotton and FCOJ \\ \hline
     \emph{ICE\_FuturesUS\_2} & ICE Futures U.S. Canola \\ \hline
@@ -235,7 +239,7 @@ Note: Currency codes must also match available currencies in the {\tt simulation
     % \emph{LNB\_NYB\_ZUB} & UK, US and Switzerland Calendar \\ \hline
     % \emph{LNB\_NYB\_TRB} & UK, US and Canada Calendar \\ \hline 
     % \emph{LNB\_NYB\_TKB} & UK, US and Japan Calendar \\ \hline   
-    % \emph{NullCalendar} & Null Calendar, i.e. all days are business days \\ \hline                 
+    \emph{NullCalendar, Null} & Null Calendar, i.e. all days are business days \\ \hline                 
   \caption{Allowable Values for Calendar. Combinations of calendars can be provided using comma separated calendar names.}
   \label{tab:calendar}
 \end{longtable}
@@ -254,6 +258,7 @@ Note: Currency codes must also match available currencies in the {\tt simulation
     \emph{Actual/365 (No Leap), Act/365 (NL), NL/365, Actual/365 (JGB)} & Actual 365 Fixed (No Leap Year)\\ \hline
     \emph{Act/365 (Canadian Bond)} & Actual 365 Fixed (Canadian Bond)\\ \hline
     \emph{T360, 30/360, ACT/nACT, 30/360 US, 30/360 (US), 30U/360, 30US/360} & Thirty 360 (US) \\ \hline
+    \emph{30/360 NASD} & Thirty 360 (NASD) \\ \hline
     \emph{30/360 (Bond Basis)} & Thirty 360 (Bond Basis) \\ \hline
     \emph{30E/360 (Eurobond Basis), 30E/360, 30/360 AIBD (Euro), 30E/360.ICMA, 30E/360 ICMA} & Thirty 360 (European) \\ \hline
     \emph{30E/360E, 30E/360 ISDA, 30E/360.ISDA, 30/360 German, 30/360 (German)} & Thirty 360 (German) \\ \hline

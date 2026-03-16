@@ -61,15 +61,15 @@ namespace QuantExt {
 
             for (size_t j = 0; j < leg.size(); j++) {
 
-                boost::shared_ptr<QuantLib::CashFlow> ptrFlow = leg[j];
+                QuantLib::ext::shared_ptr<QuantLib::CashFlow> ptrFlow = leg[j];
 
                 if(flowType(name,j) == "int"){
 
-                    boost::shared_ptr<QuantLib::Coupon> ptrCoupon =
-                            boost::dynamic_pointer_cast<QuantLib::Coupon>(ptrFlow);
+                    QuantLib::ext::shared_ptr<QuantLib::Coupon> ptrCoupon =
+                            QuantLib::ext::dynamic_pointer_cast<QuantLib::Coupon>(ptrFlow);
                     QL_REQUIRE(ptrCoupon, "expected couopn type");
 
-                    boost::shared_ptr<QuantExt::ScaledCoupon> newPtr( new QuantExt::ScaledCoupon(multi * scalar[j], ptrCoupon ));
+                    QuantLib::ext::shared_ptr<QuantExt::ScaledCoupon> newPtr( new QuantExt::ScaledCoupon(multi * scalar[j], ptrCoupon ));
                     interestFlows.push_back(newPtr);
                     cashflows.push_back(newPtr);
 
@@ -127,14 +127,14 @@ namespace QuantExt {
         }
     }
 
-    BondBasket::BondBasket(const std::map<std::string, boost::shared_ptr<QuantLib::Bond>>& qlBonds,
+    BondBasket::BondBasket(const std::map<std::string, QuantLib::ext::shared_ptr<QuantLib::Bond>>& qlBonds,
                             const std::map<std::string, double>& recoveries,
                             const std::map<std::string, double>& multipliers,
                             const std::map<std::string, QuantLib::Handle<QuantLib::YieldTermStructure>>& yieldTermStructures,
                             const std::map<std::string, Currency>& currencies,
-                            const boost::shared_ptr<Pool> pool,
+                            const QuantLib::ext::shared_ptr<Pool> pool,
                             Currency baseCcy,
-                            const std::map <string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndexMap,
+                            const std::map <string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndexMap,
                             const QuantLib::Date & reinvestmentEndDate,
                             const std::map<std::string, std::vector<double>>& reinvestmentScalar,
                             const std::map<std::string, std::vector<std::string>>& flowType)
@@ -164,7 +164,7 @@ namespace QuantExt {
 
     }
 
-    const boost::shared_ptr<Pool>& BondBasket::pool() const {
+    const QuantLib::ext::shared_ptr<Pool>& BondBasket::pool() const {
         return pool_;
     }
 
@@ -210,7 +210,7 @@ namespace QuantExt {
         QL_FAIL("no flowType for bond " << name);
     }
 
-    const boost::shared_ptr<QuantExt::FxIndex> BondBasket::fxIndex(const std::string& name) const{
+    const QuantLib::ext::shared_ptr<QuantExt::FxIndex> BondBasket::fxIndex(const std::string& name) const{
         auto it = fxIndexMap_.find(name);
         if(it != fxIndexMap_.end())
             return it->second;

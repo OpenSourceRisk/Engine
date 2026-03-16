@@ -1,0 +1,45 @@
+\section{Scripted Trade}
+\label{app:scriptedtrade}
+
+The scripted trade provides a generic interface for representing exotic
+products.  
+
+The trade's payoff is defined in terms of a {\em payoff
+script} using a {\em scripting langage} described in appendix
+\ref{app:scriptinglanguage}.
+The payoff script can depend on single variables or sets of
+variables in a single risk class or across several risk classes. The
+payoff script currently supports EQ, FX (including Precious Metals),
+Commodity, Inflation and IR variables, i.e. Equity spot prices, FX spot rates,
+Commodity spot or future prices, IBOR index or CMS index fixings.
+
+\subsection{General Structure}\label{generalStructure}
+
+\input{ScriptedTrade/docs/generalstructure.tex}
+
+\subsection{Data Types}\label{appDataNode}
+\input{ScriptedTrade/docs/datanode.tex}
+
+\subsubsection{Event}
+\input{ScriptedTrade/docs/event.tex}
+
+\subsubsection{Number}
+\input{ScriptedTrade/docs/number.tex}
+
+\subsubsection{Index}\label{data_index}
+\input{ScriptedTrade/docs/index.tex}
+
+\subsubsection{Currency}
+\input{ScriptedTrade/docs/currency.tex}
+
+\subsubsection{Daycounter}
+\input{ScriptedTrade/docs/daycounter.tex}
+
+\subsection{Compact Trade XML}\label{compactXml}
+\input{ScriptedTrade/docs/compacttradexml.tex}
+
+\subsection{A comment on the Payment Currency in Scripted Trades}\label{sss:payccy_st}
+\input{ScriptedTrade/docs/noteonpayccy.tex}
+
+\subsection{Payoff Scripting Language}\label{app:scriptinglanguage}
+\input{ScriptedTrade/docs/language.tex}

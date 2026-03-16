@@ -25,12 +25,15 @@
 #include <ql/methods/montecarlo/lsmbasissystem.hpp>
 #include <ql/patterns/singleton.hpp>
 #include <ql/types.hpp>
+#include <functional>
 
-#include <boost/function.hpp>
 #include <boost/timer/timer.hpp>
+#include <boost/serialization/array.hpp>
+#include <boost/serialization/export.hpp>
 
 #include <initializer_list>
 #include <vector>
+#include <set>
 
 namespace QuantExt {
 
@@ -45,6 +48,15 @@ struct RandomVariableStats : public QuantLib::Singleton<RandomVariableStats> {
         calc_timer.start();
         calc_timer.stop();
     }
+
+    void reset() {
+      enabled = false;
+      data_ops = 0;
+      calc_ops = 0;
+      data_timer.stop();
+      calc_timer.stop();
+    }
+
     bool enabled = false;
     std::size_t data_ops = 0;
     std::size_t calc_ops = 0;
@@ -98,6 +110,9 @@ private:
     bool constantData_;
     bool* data_;
     bool deterministic_;
+    // serialization
+    friend class boost::serialization::access;
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 // inline element-wise access operators
@@ -152,10 +167,12 @@ struct RandomVariable {
     explicit RandomVariable(const Size n, const Real value = 0.0, const Real time = Null<Real>());
     explicit RandomVariable(const Filter& f, const Real valueTrue = 1.0, const Real valueFalse = 0.0,
                             const Real time = Null<Real>());
+    explicit RandomVariable(const Size n, const Real* const data, const Real time = Null<Real>());
+    explicit RandomVariable(const std::vector<double>& data, const Real time = Null<Real>());
     // interop with ql classes
-    explicit RandomVariable(const QuantLib::Array& array, const Real time = Null<Real>());
+    explicit RandomVariable(const QuantLib::Array& data, const Real time = Null<Real>());
+    explicit operator Array() const;
     void copyToMatrixCol(QuantLib::Matrix&, const Size j) const;
-    void copyToArray(QuantLib::Array& array) const;
     // modifiers
     void clear();
     void set(const Size i, const Real v);
@@ -169,25 +186,46 @@ struct RandomVariable {
     bool deterministic() const { return deterministic_; }
     void updateDeterministic();
     bool initialised() const { return n_ != 0; }
+    bool isfinite() const;
     Size size() const { return n_; }
     Real operator[](const Size i) const; // undefined if uninitialized or i out of bounds
     Real at(const Size i) const;         // with checks for initialized, i within bounds
     Real time() const { return time_; }
     RandomVariable& operator+=(const RandomVariable&);
+    RandomVariable& operator+=(const Real);
     RandomVariable& operator-=(const RandomVariable&);
+    RandomVariable& operator-=(const Real);
     RandomVariable& operator*=(const RandomVariable&);
+    RandomVariable& operator*=(const Real);
     RandomVariable& operator/=(const RandomVariable&);
+    RandomVariable& operator/=(const Real);
     friend bool operator==(const RandomVariable&, const RandomVariable&);
     friend RandomVariable operator+(RandomVariable, const RandomVariable&);
+    friend RandomVariable operator+(Real,RandomVariable);
+    friend RandomVariable operator+(RandomVariable,Real);
     friend RandomVariable operator-(RandomVariable, const RandomVariable&);
+    friend RandomVariable operator-(Real,RandomVariable);
+    friend RandomVariable operator-(RandomVariable,Real);
     friend RandomVariable operator*(RandomVariable, const RandomVariable&);
+    friend RandomVariable operator*(Real, RandomVariable);
+    friend RandomVariable operator*(RandomVariable, Real);
     friend RandomVariable operator/(RandomVariable, const RandomVariable&);
+    friend RandomVariable operator/(Real, RandomVariable);
+    friend RandomVariable operator/(RandomVariable, Real);
     friend RandomVariable max(RandomVariable, const RandomVariable&);
+    friend RandomVariable max(RandomVariable, const Real);
+    friend RandomVariable max(const Real, RandomVariable);
     friend RandomVariable min(RandomVariable, const RandomVariable&);
+    friend RandomVariable min(RandomVariable, const Real);
+    friend RandomVariable min(const Real, RandomVariable);
     friend RandomVariable pow(RandomVariable, const RandomVariable&);
+    friend RandomVariable pow(RandomVariable, const Real);
+    friend RandomVariable round(RandomVariable, const RandomVariable&);
+    friend RandomVariable round(RandomVariable, const Real);
     friend RandomVariable operator-(RandomVariable);
     friend RandomVariable abs(RandomVariable);
     friend RandomVariable exp(RandomVariable);
+    friend RandomVariable frac(RandomVariable);
     friend RandomVariable log(RandomVariable);
     friend RandomVariable sqrt(RandomVariable);
     friend RandomVariable sin(RandomVariable);
@@ -237,21 +275,40 @@ private:
     double* data_;
     bool deterministic_;
     Real time_;
+    // serialization
+    friend class boost::serialization::access;
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 bool operator==(const RandomVariable& a, const RandomVariable& b);
 bool operator!=(const RandomVariable& a, const RandomVariable& b);
 
 RandomVariable operator+(RandomVariable, const RandomVariable&);
+RandomVariable operator+(Real,RandomVariable);
+RandomVariable operator+(RandomVariable,Real);
 RandomVariable operator-(RandomVariable, const RandomVariable&);
+RandomVariable operator-(Real,RandomVariable);
+RandomVariable operator-(RandomVariable, Real);
 RandomVariable operator*(RandomVariable, const RandomVariable&);
+RandomVariable operator*(Real, RandomVariable);
+RandomVariable operator*(RandomVariable, Real);
 RandomVariable operator/(RandomVariable, const RandomVariable&);
+RandomVariable operator/(Real, RandomVariable);
+RandomVariable operator/(RandomVariable, Real);
 RandomVariable max(RandomVariable, const RandomVariable&);
+RandomVariable max(RandomVariable, const Real);
+RandomVariable max(const Real, RandomVariable);
 RandomVariable min(RandomVariable, const RandomVariable&);
+RandomVariable min(RandomVariable, const Real);
+RandomVariable min(Real, RandomVariable);
 RandomVariable pow(RandomVariable, const RandomVariable&);
+RandomVariable pow(RandomVariable, const Real);
+RandomVariable round(RandomVariable, const RandomVariable&);
+RandomVariable round(RandomVariable, const Real);
 RandomVariable operator-(RandomVariable);
 RandomVariable abs(RandomVariable);
 RandomVariable exp(RandomVariable);
+RandomVariable frac(RandomVariable);
 RandomVariable log(RandomVariable);
 RandomVariable sqrt(RandomVariable);
 RandomVariable sin(RandomVariable);
@@ -276,10 +333,23 @@ RandomVariable applyFilter(RandomVariable, const Filter&);
 // set all entries to 0 where filter = true, leave the others unchanged
 RandomVariable applyInverseFilter(RandomVariable, const Filter&);
 
+/* Perform a factor reduction: We keep m factors so that "1 - varianceCutoff" of the total variance of the n regressor
+   variables is explained by the m factors. The return value is m x n transforming from original coordinates to new
+   coordinates. This can be a useful preprocessing step for linear regression to reduce the dimensionality or also to
+   handle collinear regressors. */
+Matrix pcaCoordinateTransform(const std::vector<const RandomVariable*>& regressor, const Real varianceCutoff = 1E-5);
+
+/* Apply a coordinate transform */
+std::vector<RandomVariable> applyCoordinateTransform(const std::vector<const RandomVariable*>& regressor,
+                                                     const Matrix& transform);
+
+/* Create vector of pointers to rvs from vector of rvs */
+std::vector<const RandomVariable*> vec2vecptr(const std::vector<RandomVariable>& values);
+
 // compute regression coefficients
-enum class RandomVariableRegressionMethod { QR, SVI };
+enum class RandomVariableRegressionMethod { QR, SVD };
 Array regressionCoefficients(
-    RandomVariable r, const std::vector<const RandomVariable*>& regressor,
+    RandomVariable r, std::vector<const RandomVariable*> regressor,
     const std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>& basisFn,
     const Filter& filter = Filter(), const RandomVariableRegressionMethod = RandomVariableRegressionMethod::QR,
     const std::string& debugLabel = std::string());
@@ -301,6 +371,9 @@ RandomVariable expectation(const RandomVariable& r);
 
 // time zero variance
 RandomVariable variance(const RandomVariable& r);
+
+// time zero covariance
+RandomVariable covariance(const RandomVariable& r, const RandomVariable& s);
 
 // black formula
 RandomVariable black(const RandomVariable& omega, const RandomVariable& t, const RandomVariable& strike,
@@ -349,6 +422,9 @@ inline double* RandomVariable::data() { return data_; }
   the size of the basis system is not greater than the given bound (if this is not null) or the order is 1 */
 std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>
 multiPathBasisSystem(Size dim, Size order, QuantLib::LsmBasisSystem::PolynomialType type,
-                     Size basisSystemSizeBound = Null<Size>());
+                     const std::set<std::set<Size>>& varGroups = {}, Size basisSystemSizeBound = Null<Size>());
 
 } // namespace QuantExt
+
+BOOST_CLASS_EXPORT_KEY(QuantExt::Filter);
+BOOST_CLASS_EXPORT_KEY(QuantExt::RandomVariable);

@@ -32,7 +32,7 @@ namespace analytics {
 // Ease syntax
 using RiskType = CrifRecord::RiskType;
 
-SimmConcentration_ISDA_V2_0::SimmConcentration_ISDA_V2_0(const boost::shared_ptr<SimmBucketMapper>& simmBucketMapper)
+SimmConcentration_ISDA_V2_0::SimmConcentration_ISDA_V2_0(const QuantLib::ext::shared_ptr<SimmBucketMapper>& simmBucketMapper)
     : simmBucketMapper_(simmBucketMapper) {
 
     // Populate IR categories that are used for concentration thresholds

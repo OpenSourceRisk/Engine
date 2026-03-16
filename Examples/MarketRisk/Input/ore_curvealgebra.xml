@@ -1,0 +1,78 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<ORE>
+    <Setup>
+        <Parameter name="asofDate">2025-09-19</Parameter>
+        <Parameter name="inputPath">Input/Curvealgebra</Parameter>
+        <Parameter name="outputPath">Output/CurveAlgebra</Parameter>
+        <Parameter name="logFile">log.txt</Parameter>
+        <Parameter name="logMask">31</Parameter>
+        <Parameter name="marketDataFile">market.txt</Parameter>
+        <Parameter name="fixingDataFile">fixings.txt</Parameter>
+        <Parameter name="implyTodaysFixings">N</Parameter>
+        <Parameter name="curveConfigFile">curveconfig.xml</Parameter>
+        <Parameter name="conventionsFile">conventions.xml</Parameter>
+        <Parameter name="marketConfigFile">todaysmarket.xml</Parameter>
+        <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
+        <Parameter name="calendarAdjustment">calendar_adjustment.xml</Parameter>
+        <Parameter name="portfolioFile">portfolio.xml</Parameter>
+        <Parameter name="observationModel">None</Parameter>
+        <Parameter name="iborFallbackConfig">ibor_fallback.xml</Parameter>
+        <Parameter name="continueOnError">true</Parameter>
+        <Parameter name="nThreads">10</Parameter>
+        <Parameter name="enrichIndexFixings">false</Parameter>
+        <Parameter name="ignoreFixingLag">3</Parameter>
+    </Setup>
+    <Markets>
+        <Parameter name="lgmcalibration">default</Parameter>
+        <Parameter name="fxcalibration">default</Parameter>
+        <Parameter name="pricing">default</Parameter>
+        <Parameter name="simulation">default</Parameter>
+    </Markets>
+    <Analytics>
+        <Analytic type="npv">
+            <Parameter name="active">Y</Parameter>
+            <Parameter name="baseCurrency">USD</Parameter>
+            <Parameter name="outputFileName">npv.csv</Parameter>
+            <Parameter name="additionalResults">Y</Parameter>
+            <Parameter name="additionalResultsReportPrecision">9</Parameter>
+        </Analytic>
+        <Analytic type="cashflow">
+            <Parameter name="active">Y</Parameter>
+            <Parameter name="outputFileName">flows.csv</Parameter>
+            <Parameter name="includePastCashflows">Y</Parameter>
+        </Analytic>
+        <Analytic type="curves">
+            <Parameter name="active">N</Parameter>
+            <Parameter name="configuration">default</Parameter>
+            <Parameter name="grid">360,1M</Parameter>
+            <Parameter name="outputFileName">curves.csv</Parameter>
+            <Parameter name="outputTodaysMarketCalibration">false</Parameter>
+        </Analytic>
+        <Analytic type="sensitivity">
+            <Parameter name="active">Y</Parameter>
+            <Parameter name="marketConfigFile">simulation.xml</Parameter>
+            <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
+            <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
+            <Parameter name="sensitivityOutputFile">sensitivity.csv</Parameter>
+            <Parameter name="crossGammaOutputFile">crossgamma.csv</Parameter>
+            <Parameter name="recalibrateModels">N</Parameter>
+            <Parameter name="outputSensitivityThreshold">0</Parameter>
+            <Parameter name="parSensitivity">N</Parameter>
+            <Parameter name="parSensitivityOutputFile">parsensitivity.csv</Parameter>
+            <Parameter name="outputJacobi">N</Parameter>
+            <Parameter name="jacobiOutputFile">jacobi.csv</Parameter>
+            <Parameter name="jacobiInverseOutputFile">jacobi_inverse.csv</Parameter>
+        </Analytic>
+        <Analytic type="stress">
+            <Parameter name="active">Y</Parameter>
+            <Parameter name="precision">6</Parameter>
+            <Parameter name="marketConfigFile">simulation.xml</Parameter>
+            <Parameter name="stressConfigFile">stresstest.xml</Parameter>
+            <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
+            <Parameter name="scenarioOutputFile">stresstest.csv</Parameter>
+            <Parameter name="outputThreshold">0.000001</Parameter>
+            <Parameter name="generateCashflows">Y</Parameter>
+            <Parameter name="scenarioCashflowOutputFile">stresstest_flows.csv</Parameter>
+        </Analytic>
+    </Analytics>
+</ORE>

@@ -25,9 +25,6 @@
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 
-using ore::analytics::parseShiftType;
-using ore::analytics::RiskFactorKey;
-using ore::analytics::Scenario;
 using ore::analytics::ScenarioSimMarketParameters;
 using ore::analytics::SensitivityScenarioData;
 using ore::analytics::ShiftScenarioGenerator;
@@ -41,16 +38,22 @@ namespace analytics {
 using RFType = RiskFactorKey::KeyType;
 using ShiftData = SensitivityScenarioData::ShiftData;
 
-ScenarioShiftCalculator::ScenarioShiftCalculator(const boost::shared_ptr<SensitivityScenarioData>& sensitivityConfig,
-                                                 const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketConfig,
-						 const boost::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket)
+ScenarioShiftCalculator::ScenarioShiftCalculator(const QuantLib::ext::shared_ptr<SensitivityScenarioData>& sensitivityConfig,
+                                                 const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketConfig,
+						 const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket)
     : sensitivityConfig_(sensitivityConfig), simMarketConfig_(simMarketConfig), simMarket_(simMarket) {}
 
-Real ScenarioShiftCalculator::shift(const RiskFactorKey& key, const Scenario& s_1, const Scenario& s_2) const {
+Real ScenarioShiftCalculator::shift(const RiskFactorKey& key, const Scenario& s_1, const Scenario& s_2, bool isPar) const {
 
     // Get the respective (transformed) scenario values
-    Real v_1 = transform(key, s_1.get(key), s_1.asof());
-    Real v_2 = transform(key, s_2.get(key), s_2.asof());
+    Real v_1 = s_1.get(key);
+    Real v_2 = s_2.get(key);
+    
+    // we only need to transform zero rates
+    if (!isPar) {
+        v_1 = transform(key, v_1, s_1.asof());
+        v_2 = transform(key, v_2, s_2.asof());
+    }
 
     // If for any reason v_1 or v_2 are not finite or nan, log an alert and return 0
     if (!std::isfinite(v_1) || std::isnan(v_1)) {
@@ -129,7 +132,7 @@ Real ScenarioShiftCalculator::transform(const RiskFactorKey& key, Real value, co
         return 0.0;
     }
 
-    return -log(value) / t;
+    return -std::log(value) / t;
 }
 
 } // namespace analytics

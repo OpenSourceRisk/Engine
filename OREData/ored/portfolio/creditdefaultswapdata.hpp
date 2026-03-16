@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <boost/optional.hpp>
+#include <ql/optional.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/trade.hpp>
 
@@ -80,7 +80,7 @@ public:
 
     //! Detailed constructor
     CdsReferenceInformation(const std::string& referenceEntityId, CdsTier tier, const QuantLib::Currency& currency,
-                            boost::optional<CdsDocClause> docClause = boost::none);
+                            QuantLib::ext::optional<CdsDocClause> docClause = QuantLib::ext::nullopt);
 
     //! \name XMLSerializable interface
     //@{
@@ -106,7 +106,7 @@ private:
     std::string referenceEntityId_;
     CdsTier tier_;
     QuantLib::Currency currency_;
-    boost::optional<CdsDocClause> docClause_;
+    QuantLib::ext::optional<CdsDocClause> docClause_;
     std::string id_;
 
     //! Populate the \c id_ member
@@ -188,7 +188,7 @@ public:
 
     /*! CDS reference information. This will be empty if an explicit credit curve ID has been used.
      */
-    const boost::optional<CdsReferenceInformation>& referenceInformation() const { return referenceInformation_; }
+    const QuantLib::ext::optional<CdsReferenceInformation>& referenceInformation() const { return referenceInformation_; }
 
 protected:
     virtual void check(XMLNode* node) const;
@@ -213,7 +213,7 @@ private:
     std::string strCashSettlementDays_;
     QuantLib::Natural cashSettlementDays_;
 
-    boost::optional<CdsReferenceInformation> referenceInformation_;
+    QuantLib::ext::optional<CdsReferenceInformation> referenceInformation_;
 };
 
 } // namespace data

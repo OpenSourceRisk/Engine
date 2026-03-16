@@ -39,19 +39,23 @@ class Accumulator : public ScriptedTrade {
 public:
     explicit Accumulator(const std::string& tradeType = "Accumulator") : ScriptedTrade(tradeType) {}
     Accumulator(const std::string& currency, const std::string& fixingAmount, const TradeStrike& strike,
-                const boost::shared_ptr<Underlying>& underlying, const OptionData& optionData,
+                const QuantLib::ext::shared_ptr<Underlying>& underlying, const OptionData& optionData,
                 const std::string& startDate, const ScheduleData& observationDates, const ScheduleData& pricingDates,
                 const ScheduleData& settlementDates, const std::string& settlementLag,
                 const std::string& settlementCalendar, const std::string& settlementConvention,
-                const std::vector<RangeBound>& rangeBounds, const std::vector<BarrierData>& barriers)
+                const std::vector<RangeBound>& rangeBounds, const std::vector<BarrierData>& barriers,
+                bool knockOutSettlementAtPeriodEnd, bool knockOutFixingAtKOSettlement,
+                const QuantLib::ext::shared_ptr<Underlying>& fxUnderlying)
         : currency_(currency), fixingAmount_(fixingAmount), strike_(strike), underlying_(underlying),
           optionData_(optionData), startDate_(startDate), observationDates_(observationDates),
           pricingDates_(pricingDates), settlementDates_(settlementDates), settlementLag_(settlementLag),
           settlementCalendar_(settlementCalendar), settlementConvention_(settlementConvention),
-          rangeBounds_(rangeBounds), barriers_(barriers) {
+          knockOutSettlementAtPeriodEnd_(knockOutSettlementAtPeriodEnd),
+          knockOutFixingAtKOSettlement_(knockOutFixingAtKOSettlement), compositeOption_(fxUnderlying != nullptr),
+          fxUnderlying_(fxUnderlying), rangeBounds_(rangeBounds), barriers_(barriers) {
         initIndices();
     }
-    void build(const boost::shared_ptr<EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
     void setIsdaTaxonomyFields() override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
@@ -65,16 +69,20 @@ private:
     void initIndices();
     std::string currency_, fixingAmount_;
     TradeStrike strike_;
-    boost::shared_ptr<Underlying> underlying_;
+    QuantLib::ext::shared_ptr<Underlying> underlying_;
     OptionData optionData_;
     std::string startDate_;
     ScheduleData observationDates_, pricingDates_, settlementDates_;
     std::string settlementLag_, settlementCalendar_, settlementConvention_;
     bool nakedOption_ = false;
     bool dailyFixingAmount_ = false;
-
+    bool knockOutSettlementAtPeriodEnd_ = false;
+    bool knockOutFixingAtKOSettlement_ = false;
+    bool compositeOption_ = false;
+    QuantLib::ext::shared_ptr<Underlying> fxUnderlying_;
     std::vector<RangeBound> rangeBounds_;
     std::vector<BarrierData> barriers_;
+    
 };
 
 class EquityAccumulator : public Accumulator {

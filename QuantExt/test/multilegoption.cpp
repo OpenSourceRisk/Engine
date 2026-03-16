@@ -48,24 +48,24 @@ using namespace boost::unit_test_framework;
 namespace {
 struct BermudanTestData : public qle::test::TopLevelFixture {
     BermudanTestData()
-        : evalDate(12, January, 2015), yts(boost::make_shared<FlatForward>(evalDate, 0.02, Actual365Fixed())),
-          euribor6m(boost::make_shared<Euribor>(6 * Months, yts)), effectiveDate(TARGET().advance(evalDate, 2 * Days)),
+        : evalDate(12, January, 2015), yts(QuantLib::ext::make_shared<FlatForward>(evalDate, 0.02, Actual365Fixed())),
+          euribor6m(QuantLib::ext::make_shared<Euribor>(6 * Months, yts)), effectiveDate(TARGET().advance(evalDate, 2 * Days)),
           startDate(TARGET().advance(effectiveDate, 1 * Years)), maturityDate(TARGET().advance(startDate, 9 * Years)),
           fixedSchedule(startDate, maturityDate, 1 * Years, TARGET(), ModifiedFollowing, ModifiedFollowing,
                         DateGeneration::Forward, false),
           floatingSchedule(startDate, maturityDate, 6 * Months, TARGET(), ModifiedFollowing, ModifiedFollowing,
                            DateGeneration::Forward, false),
           underlying(
-              boost::make_shared<VanillaSwap>(VanillaSwap(VanillaSwap::Payer, 1.0, fixedSchedule, 0.02, Thirty360(Thirty360::BondBasis),
+              QuantLib::ext::make_shared<VanillaSwap>(VanillaSwap(VanillaSwap::Payer, 1.0, fixedSchedule, 0.02, Thirty360(Thirty360::BondBasis),
                                                           floatingSchedule, euribor6m, 0.0, Actual360()))),
           reversion(0.03) {
         Settings::instance().evaluationDate() = evalDate;
         for (Size i = 0; i < 9; ++i) {
             exerciseDates.push_back(TARGET().advance(fixedSchedule[i], -2 * Days));
         }
-        exercise = boost::make_shared<BermudanExercise>(exerciseDates, false);
+        exercise = QuantLib::ext::make_shared<BermudanExercise>(exerciseDates, false);
 
-        swaption = boost::make_shared<Swaption>(underlying, exercise);
+        swaption = QuantLib::ext::make_shared<Swaption>(underlying, exercise);
         stepDates = std::vector<Date>(exerciseDates.begin(), exerciseDates.end() - 1);
         sigmas = std::vector<Real>(stepDates.size() + 1);
         for (Size i = 0; i < sigmas.size(); ++i) {
@@ -80,14 +80,14 @@ struct BermudanTestData : public qle::test::TopLevelFixture {
     }
     Date evalDate;
     Handle<YieldTermStructure> yts;
-    boost::shared_ptr<IborIndex> euribor6m;
+    QuantLib::ext::shared_ptr<IborIndex> euribor6m;
     Date effectiveDate, startDate, maturityDate;
     Schedule fixedSchedule, floatingSchedule;
-    boost::shared_ptr<VanillaSwap> underlying;
+    QuantLib::ext::shared_ptr<VanillaSwap> underlying;
     std::vector<Date> exerciseDates, stepDates;
     std::vector<Real> sigmas;
-    boost::shared_ptr<Exercise> exercise;
-    boost::shared_ptr<Swaption> swaption;
+    QuantLib::ext::shared_ptr<Exercise> exercise;
+    QuantLib::ext::shared_ptr<Swaption> swaption;
     Array stepTimes_a, sigmas_a, kappas_a;
     Real reversion;
 }; // BermudanTestData
@@ -101,21 +101,21 @@ BOOST_FIXTURE_TEST_CASE(testBermudanSwaption, BermudanTestData) {
 
     BOOST_TEST_MESSAGE("Testing pricing of bermudan swaption as multi leg option vs numeric swaption engine");
 
-    auto multiLegOption = boost::make_shared<MultiLegOption>(
+    auto multiLegOption = QuantLib::ext::make_shared<MultiLegOption>(
         std::vector<Leg>{underlying->leg(0), underlying->leg(1)}, std::vector<bool>{true, false},
         std::vector<Currency>{EURCurrency(), EURCurrency()}, exercise);
 
-    auto lgm_p = boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(EURCurrency(), yts, stepTimes_a, sigmas_a,
+    auto lgm_p = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(EURCurrency(), yts, stepTimes_a, sigmas_a,
                                                                               stepTimes_a, kappas_a);
 
     auto xasset = Handle<CrossAssetModel>(
-        boost::make_shared<CrossAssetModel>(std::vector<boost::shared_ptr<Parametrization>>{lgm_p}));
-    auto lgm = boost::make_shared<LinearGaussMarkovModel>(lgm_p);
+        QuantLib::ext::make_shared<CrossAssetModel>(std::vector<QuantLib::ext::shared_ptr<Parametrization>>{lgm_p}));
+    auto lgm = QuantLib::ext::make_shared<LinearGaussMarkovModel>(lgm_p);
 
-    auto swaptionEngineLgm = boost::make_shared<NumericLgmSwaptionEngine>(lgm, 7.0, 16, 7.0, 32);
-    auto swapEngine = boost::make_shared<DiscountingSwapEngine>(yts);
+    auto swaptionEngineLgm = QuantLib::ext::make_shared<NumericLgmSwaptionEngine>(lgm, 7.0, 16, 7.0, 32);
+    auto swapEngine = QuantLib::ext::make_shared<DiscountingSwapEngine>(yts);
 
-    auto mcMultiLegOptionEngine = boost::make_shared<McMultiLegOptionEngine>(
+    auto mcMultiLegOptionEngine = QuantLib::ext::make_shared<McMultiLegOptionEngine>(
         xasset, SobolBrownianBridge, SobolBrownianBridge, 25000, 0, 42, 42, 4, LsmBasisSystem::Monomial);
 
     underlying->setPricingEngine(swapEngine);
@@ -145,15 +145,15 @@ BOOST_AUTO_TEST_CASE(testFxOption) {
     Date refDate(12, January, 2015);
     Settings::instance().evaluationDate() = refDate;
 
-    auto yts_eur = Handle<YieldTermStructure>(boost::make_shared<FlatForward>(refDate, 0.02, Actual365Fixed()));
-    auto yts_usd = Handle<YieldTermStructure>(boost::make_shared<FlatForward>(refDate, 0.03, Actual365Fixed()));
+    auto yts_eur = Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(refDate, 0.02, Actual365Fixed()));
+    auto yts_usd = Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(refDate, 0.03, Actual365Fixed()));
 
-    auto lgm_eur_p = boost::make_shared<IrLgm1fConstantParametrization>(EURCurrency(), yts_eur, 0.01, 0.01);
-    auto lgm_usd_p = boost::make_shared<IrLgm1fConstantParametrization>(USDCurrency(), yts_usd, 0.01, 0.01);
+    auto lgm_eur_p = QuantLib::ext::make_shared<IrLgm1fConstantParametrization>(EURCurrency(), yts_eur, 0.01, 0.01);
+    auto lgm_usd_p = QuantLib::ext::make_shared<IrLgm1fConstantParametrization>(USDCurrency(), yts_usd, 0.01, 0.01);
 
-    Handle<Quote> fxspot(boost::make_shared<SimpleQuote>(0.9));
+    Handle<Quote> fxspot(QuantLib::ext::make_shared<SimpleQuote>(0.9));
 
-    auto fx_p = boost::make_shared<FxBsConstantParametrization>(USDCurrency(), fxspot, 0.15);
+    auto fx_p = QuantLib::ext::make_shared<FxBsConstantParametrization>(USDCurrency(), fxspot, 0.15);
 
     Matrix corr(3, 3);
     // clang-format off
@@ -162,29 +162,29 @@ BOOST_AUTO_TEST_CASE(testFxOption) {
     corr[2][0] = 0.5; corr[2][1] = 0.4; corr[2][2] = 1.0;
     // clang-format on
 
-    auto xasset = Handle<CrossAssetModel>(boost::make_shared<CrossAssetModel>(
-        std::vector<boost::shared_ptr<Parametrization>>{lgm_eur_p, lgm_usd_p, fx_p}, corr));
+    auto xasset = Handle<CrossAssetModel>(QuantLib::ext::make_shared<CrossAssetModel>(
+        std::vector<QuantLib::ext::shared_ptr<Parametrization>>{lgm_eur_p, lgm_usd_p, fx_p}, corr));
 
     Date exDate(12, January, 2020);
-    auto exercise = boost::make_shared<EuropeanExercise>(exDate);
+    auto exercise = QuantLib::ext::make_shared<EuropeanExercise>(exDate);
     auto fxOption =
-        boost::make_shared<VanillaOption>(boost::make_shared<PlainVanillaPayoff>(Option::Call, 0.8), exercise);
+        QuantLib::ext::make_shared<VanillaOption>(QuantLib::ext::make_shared<PlainVanillaPayoff>(Option::Call, 0.8), exercise);
 
     Leg usdFlow, eurFlow;
-    usdFlow.push_back(boost::make_shared<SimpleCashFlow>(1.0, exDate + 1));
-    eurFlow.push_back(boost::make_shared<SimpleCashFlow>(-0.8, exDate + 1));
+    usdFlow.push_back(QuantLib::ext::make_shared<SimpleCashFlow>(1.0, exDate + 1));
+    eurFlow.push_back(QuantLib::ext::make_shared<SimpleCashFlow>(-0.8, exDate + 1));
 
     auto multiLegOption =
-        boost::make_shared<MultiLegOption>(std::vector<Leg>{eurFlow, usdFlow}, std::vector<bool>{false, false},
+        QuantLib::ext::make_shared<MultiLegOption>(std::vector<Leg>{eurFlow, usdFlow}, std::vector<bool>{false, false},
                                            std::vector<Currency>{EURCurrency(), USDCurrency()}, exercise);
 
-    auto analyticFxOptionEngine = boost::make_shared<AnalyticCcLgmFxOptionEngine>(*xasset, 0);
+    auto analyticFxOptionEngine = QuantLib::ext::make_shared<AnalyticCcLgmFxOptionEngine>(*xasset, 0);
     fxOption->setPricingEngine(analyticFxOptionEngine);
     Real npv0 = fxOption->NPV();
     BOOST_TEST_MESSAGE("npv (analytic cclgm fx option engine): " << npv0);
 
     // for european options there is no traning phase actually
-    auto mcMultiLegOptionEngine = boost::make_shared<McMultiLegOptionEngine>(
+    auto mcMultiLegOptionEngine = QuantLib::ext::make_shared<McMultiLegOptionEngine>(
         xasset, SobolBrownianBridge, SobolBrownianBridge, 25000, 0, 42, 42, 4, LsmBasisSystem::Monomial);
 
     multiLegOption->setPricingEngine(mcMultiLegOptionEngine);

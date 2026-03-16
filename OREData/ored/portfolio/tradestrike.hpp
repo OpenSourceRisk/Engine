@@ -21,6 +21,7 @@
 
 #include <ored/portfolio/trademonetary.hpp>
 #include <ql/interestrate.hpp>
+#include <tuple>
 #include <boost/variant.hpp>
 
 namespace ore {

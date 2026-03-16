@@ -105,7 +105,7 @@ public:
                               const QuantLib::Real strike, const Type& targetType) const override;
 
 private:
-    using Smile = std::pair<QuantLib::Real, boost::shared_ptr<QuantLib::Interpolation>>;
+    using Smile = std::pair<QuantLib::Real, QuantLib::ext::shared_ptr<QuantLib::Interpolation>>;
     using Key = std::pair<QuantLib::Date, QuantLib::Period>;
 
     void init();
@@ -163,7 +163,7 @@ private:
 
     mutable std::vector<QuantLib::Real> times_;
     mutable std::vector<QuantLib::Real> spreadValues_;
-    mutable boost::shared_ptr<QuantLib::Interpolation> interpolatedSpreads_;
+    mutable QuantLib::ext::shared_ptr<QuantLib::Interpolation> interpolatedSpreads_;
 };
 
 class CreditVolCurveWrapper : public CreditVolCurve {

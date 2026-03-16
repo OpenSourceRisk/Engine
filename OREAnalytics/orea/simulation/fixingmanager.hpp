@@ -33,7 +33,7 @@ using ore::data::Portfolio;
 
 namespace detail {
 struct IndexComparator {
-    bool operator()(const boost::shared_ptr<Index>& a, const boost::shared_ptr<Index>& b) const {
+    bool operator()(const QuantLib::ext::shared_ptr<Index>& a, const QuantLib::ext::shared_ptr<Index>& b) const {
         return a->name() < b->name();
     }
 };
@@ -60,7 +60,7 @@ public:
     virtual ~FixingManager() {}
 
     //! Initialise the manager with these flows and indices from the given portfolio
-    void initialise(const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<Market>& market,
+    void initialise(const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const QuantLib::ext::shared_ptr<Market>& market,
                     const std::string& configuration = Market::defaultConfiguration);
 
     //! Update fixings to date d
@@ -71,7 +71,7 @@ public:
 
     //! Cashflow handler type definitions
 
-    using FixingMap = std::map<boost::shared_ptr<Index>, std::set<Date>, detail::IndexComparator>;
+    using FixingMap = std::map<QuantLib::ext::shared_ptr<Index>, std::set<Date>, detail::IndexComparator>;
 
 private:
     void applyFixings(Date start, Date end);
@@ -79,7 +79,7 @@ private:
     Date today_, fixingsEnd_;
     bool modifiedFixingHistory_;
 
-    using FixingCache = std::map<boost::shared_ptr<Index>, TimeSeries<Real>, detail::IndexComparator>;
+    using FixingCache = std::map<QuantLib::ext::shared_ptr<Index>, TimeSeries<Real>, detail::IndexComparator>;
 
     FixingMap fixingMap_;
     FixingCache fixingCache_;

@@ -23,7 +23,7 @@
 namespace QuantExt {
 
 DynamicSwaptionVolatilityMatrix::DynamicSwaptionVolatilityMatrix(
-    const boost::shared_ptr<SwaptionVolatilityStructure>& source, Natural settlementDays, const Calendar& calendar,
+    const QuantLib::ext::shared_ptr<SwaptionVolatilityStructure>& source, Natural settlementDays, const Calendar& calendar,
     ReactionToTimeDecay decayMode)
     : SwaptionVolatilityStructure(settlementDays, calendar, source->businessDayConvention(), source->dayCounter()),
       source_(source), decayMode_(decayMode), originalReferenceDate_(source->referenceDate()),
@@ -31,10 +31,10 @@ DynamicSwaptionVolatilityMatrix::DynamicSwaptionVolatilityMatrix(
 
 const Period& DynamicSwaptionVolatilityMatrix::maxSwapTenor() const { return source_->maxSwapTenor(); }
 
-boost::shared_ptr<SmileSection> DynamicSwaptionVolatilityMatrix::smileSectionImpl(Time optionTime,
+QuantLib::ext::shared_ptr<SmileSection> DynamicSwaptionVolatilityMatrix::smileSectionImpl(Time optionTime,
                                                                                   Time swapLength) const {
     // null strike to indicate ATM
-    return boost::make_shared<FlatSmileSection>(optionTime, volatilityImpl(optionTime, swapLength, Null<Real>()),
+    return QuantLib::ext::make_shared<FlatSmileSection>(optionTime, volatilityImpl(optionTime, swapLength, Null<Real>()),
                                                 source_->dayCounter(), Null<Real>(), source_->volatilityType(),
                                                 shiftImpl(optionTime, swapLength));
 }

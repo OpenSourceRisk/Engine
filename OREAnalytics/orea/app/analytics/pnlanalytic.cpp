@@ -1,0 +1,469 @@
+/*
+ Copyright (C) 2023 Quaternion Risk Management Ltd
+ All rights reserved.
+
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
+
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
+*/
+
+#include <orea/app/analytics/pnlanalytic.hpp>
+#include <orea/app/analytics/scenarioanalytic.hpp>
+#include <orea/app/analytics/utilities.hpp>
+#include <orea/app/inputparameters.hpp>
+#include <orea/app/reportwriter.hpp>
+#include <orea/engine/filteredsensitivitystream.hpp>
+#include <orea/engine/observationmode.hpp>
+#include <orea/engine/sensitivityreportstream.hpp>
+#include <orea/scenario/simplescenario.hpp>
+#include <orea/scenario/scenariowriter.hpp>
+#include <orea/scenario/scenarioutilities.hpp>
+
+#include <ored/marketdata/structuredcurveerror.hpp>
+#include <ored/report/inmemoryreport.hpp>
+
+using RFType = ore::analytics::RiskFactorKey::KeyType;
+
+namespace ore {
+namespace analytics {
+
+void PnlVariables::loadVariablesImpl(const ext::shared_ptr<InputParameters>& inputs) {
+
+    vector<string> pnlParams = {"pnl", "pnlExplain"};
+    
+    inputs->loadParameter<Date>(pnlDate_, pnlParams, vector<string>({"mporDate", "pnlDate"}), false, parseDate);
+    inputs->loadParameter<Size>(horizonDays_, pnlParams, vector<string>({"horizonDays", "mporDays"}), false, parseInteger);
+    inputs->loadParameter<Calendar>(horizonCalendar_, pnlParams, vector<string>({"horizonCalendar", "mporCalendar"}), false, parseCalendar);
+    inputs->loadParameter<bool>(horizonOverlappingPeriods_, pnlParams, vector<string>({"horizonOverlappingPeriods", "mporOverlappingPeriods"}), false, parseBool);
+
+    inputs->loadParameterXML<ScenarioSimMarketParameters>(simMarketParams_, pnlParams, "simulationConfigFile");
+    if (!simMarketParams_)
+        simMarketParams_ = inputs->scenarioSimMarketParams();
+    
+    inputs->loadParameterXML<Conventions>(pnlConventions_, pnlParams, vector<string>({"conventionsMporFile", "conventionsPnlFile"}));
+    if (pnlConventions_)
+        InstrumentConventions::instance().setConventions(pnlConventions_, pnlDate_);
+
+    ext::shared_ptr<Conventions> conventionsOverride;
+    inputs->loadParameterXML<Conventions>(conventionsOverride, pnlParams, "conventionsPnlOverride");
+    if (pnlConventions_ && conventionsOverride)
+        pnlConventions_->setConventionsOverride(conventionsOverride);
+
+    inputs->loadParameterXML<CurveConfigurations>(
+        pnlCurveConfig_, pnlParams, vector<string>({"curveConfigMporFile", "curveConfigPnlFile"}), false, 
+        inputs->setupVariables().refDataManager_, inputs->setupVariables().iborFallbackConfig_);
+    ext::shared_ptr<CurveConfigurations> ccOverride;
+    inputs->loadParameterXML<CurveConfigurations>(ccOverride, pnlParams, vector<string>({"curveConfigMporOverride", "curveConfigPnlOverride"}), false,
+        inputs->setupVariables().refDataManager_, inputs->setupVariables().iborFallbackConfig_);
+    if (pnlCurveConfig_) {
+        inputs->curveConfigs().add(pnlCurveConfig_, "mpor");
+        if (ccOverride)
+            pnlCurveConfig_->setCurveConfigOverride(ccOverride);
+    }
+    if (!pnlCurveConfig_)
+        pnlCurveConfig_ = inputs->curveConfigs().get();
+    
+    inputs->loadParameterXML<Portfolio>(pnlPortfolio_, pnlParams,  vector<string>({"portfolioPnlFile", "portfolioMporFile"}));    
+    inputs->loadParameter<vector<RiskFactorKey::KeyType>>(pnlDateAdjustedRiskFactors_, pnlParams, "dateAdjustedRiskFactors", false, parseListOfRiskFactorKeyValues);    
+
+}
+
+void PnlAnalyticImpl::setUpConfigurations() {
+    auto pnlVars = ext::dynamic_pointer_cast<PnlVariables>(inputVariables_);
+    analytic()->configurations().simulationConfigRequired = true;
+
+    analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
+    analytic()->configurations().simMarketParams = pnlVars->simMarketParams_;
+
+    setGenerateAdditionalResults(true);
+
+    if (pnlVars->pnlDate_ == Date())
+        pnlVars->pnlDate_ = calculateMporDate(pnlVars->horizonDays_, pnlVars->horizonCalendar_, inputs_->asof());
+}
+
+void PnlAnalyticImpl::buildDependencies() {
+    auto pnlVars = ext::dynamic_pointer_cast<PnlVariables>(inputVariables_);
+    auto mporAnalytic = AnalyticFactory::instance().build("SCENARIO", inputs_, analytic()->analyticsManager(), false);
+    if (mporAnalytic.second) {
+        mporAnalytic.second->configurations().curveConfig = pnlVars->pnlCurveConfig_;
+        auto sai = static_cast<ScenarioAnalyticImpl*>(mporAnalytic.second->impl().get());
+        sai->setUseSpreadedTermStructures(true);
+        addDependentAnalytic(mporLookupKey, mporAnalytic.second);
+    }
+    auto sensiAnalytic =
+        AnalyticFactory::instance().build("SENSITIVITY", inputs_, analytic()->analyticsManager(), false);
+    if (sensiAnalytic.second)
+        addDependentAnalytic(sensiLookupKey, sensiAnalytic.second);
+}
+
+void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
+    const std::set<std::string>& runTypes) {
+    auto pnlVars = ext::dynamic_pointer_cast<PnlVariables>(inputVariables_);
+
+    Settings::instance().evaluationDate() = inputs_->asof();
+    analytic()->configurations().asofDate = inputs_->asof();
+    ObservationMode::instance().setMode(inputs_->observationModel());
+
+    QL_REQUIRE(inputs_->portfolio(), "PnlAnalytic::run: No portfolio loaded.");
+    QL_REQUIRE(inputs_->portfolio()->size() > 0, "PnlAnalytic::run: Portfolio is empty.");
+
+    std::string effectiveResultCurrency =
+        inputs_->resultCurrency().empty() ? inputs_->baseCurrency() : inputs_->resultCurrency();
+
+    /*******************************
+     *
+     * 0. Build market and portfolio
+     *
+     *******************************/
+
+    analytic()->buildMarket(loader);
+
+    /****************************************************
+     *
+     * 1. Write the t0 NPV and Additional Results reports
+     *
+     ****************************************************/
+
+    auto marketConfig = inputs_->marketConfig("pricing");
+
+    // Build a simMarket on the asof date
+    QL_REQUIRE(analytic()->configurations().simMarketParams, "scenario sim market parameters not set");
+    QL_REQUIRE(analytic()->configurations().todaysMarketParams, "today's market parameters not set");
+    
+    t0SimMarket_ = QuantLib::ext::make_shared<ScenarioSimMarket>(
+        analytic()->market(), analytic()->configurations().simMarketParams, marketConfig,
+        *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams,
+        inputs_->continueOnError(), useSpreadedTermStructures(), false, false, inputs_->iborFallbackConfig());
+    auto sgen = QuantLib::ext::make_shared<StaticScenarioGenerator>();
+    t0SimMarket_->scenarioGenerator() = sgen;
+
+    analytic()->setMarket(t0SimMarket_);
+    analytic()->buildPortfolio();
+
+    QuantLib::ext::shared_ptr<InMemoryReport> t0NpvReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+    ReportWriter(inputs_->reportNaString())
+        .writeNpv(*t0NpvReport, effectiveResultCurrency, analytic()->market(), marketConfig,
+                  analytic()->portfolio());
+    analytic()->addReport(LABEL, "pnl_npv_t0", t0NpvReport);
+
+    if (inputs_->outputAdditionalResults()) {
+        CONSOLEW("Pricing: Additional Results t0");
+        QuantLib::ext::shared_ptr<InMemoryReport> t0AddReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+        ReportWriter(inputs_->reportNaString())
+            .writeAdditionalResultsReport(*t0AddReport, analytic()->portfolio(), analytic()->market(),
+                                          marketConfig, effectiveResultCurrency);
+        analytic()->addReport(LABEL, "pnl_additional_results_t0", t0AddReport);
+        CONSOLE("OK");
+    }
+
+    /****************************************************
+     *
+     * 2. Write cash flow report for the clean actual P&L 
+     *
+     ****************************************************/
+
+    QuantLib::ext::shared_ptr<InMemoryReport> t0CashFlowReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+    ReportWriter(inputs_->reportNaString())
+      .writeCashflow(*t0CashFlowReport, effectiveResultCurrency, analytic()->portfolio(),
+		     analytic()->market(), marketConfig, inputs_->includePastCashflows());
+    analytic()->addReport(LABEL, "pnl_cashflow", t0CashFlowReport);
+    
+    /*******************************************************************************************
+     *
+     * 3. Prepare "NPV lagged" calculations by creating shift scenarios
+     *    - to price the t0 portfolio as of t0 using the t1 market (risk hypothetical clean P&L)
+     *    - to price the t0 portfolio as of t1 using the t0 market (theta, time decay)
+     *
+     *******************************************************************************************/
+
+    // Set evaluationDate to t1 > t0
+    Settings::instance().evaluationDate() = pnlVars->pnlDate_;
+
+    // Set the configurations asof date for the mpor analytic to t1, too
+    auto mporAnalytic = dependentAnalytic(mporLookupKey);
+    mporAnalytic->configurations().asofDate = pnlVars->pnlDate_;
+    mporAnalytic->configurations().todaysMarketParams = analytic()->configurations().todaysMarketParams;
+    QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> mporSimMarketParams = analytic()->configurations().simMarketParams;
+
+    std::vector<RFType> dateAdjustedRiskFactors = pnlVars->pnlDateAdjustedRiskFactors_;
+    if (dateAdjustedRiskFactors.size() > 0) {
+        std::vector<QuantLib::Period> shiftedTenors;
+        for (const auto& rt : dateAdjustedRiskFactors) {
+            if (rt == RFType::CommodityCurve){
+                DLOG("PnlAnalytic::run: Using date adjusted risk factors for " << rt);
+                for (const auto& commodityName : mporSimMarketParams->commodityNames()) {
+                    shiftedTenors = getShiftedTenors(mporSimMarketParams->commodityCurveTenors(commodityName), inputs_->asof(), pnlVars->pnlDate_);
+                    mporSimMarketParams->setCommodityCurveTenors(commodityName, shiftedTenors);
+                }
+            }
+            else 
+                WLOG("PnlAnalytic::run: Date adjusted risk factor is not supported for "<< rt);
+        }
+    }
+    mporAnalytic->configurations().simMarketParams = mporSimMarketParams;
+    // Run the mpor analytic to generate the market scenario as of t1
+    mporAnalytic->runAnalytic(loader);
+
+    // Set the evaluation date back to t0
+    Settings::instance().evaluationDate() = inputs_->asof();
+        
+    QuantLib::ext::shared_ptr<Scenario> asofBaseScenario = t0SimMarket_->baseScenarioAbsolute();
+    auto sai = static_cast<ScenarioAnalyticImpl*>(mporAnalytic->impl().get());
+    QuantLib::ext::shared_ptr<Scenario> mporBaseScenario = sai->scenarioSimMarket()->baseScenarioAbsolute();
+
+    QuantLib::ext::shared_ptr<ore::analytics::Scenario> t0Scenario =
+        getDifferenceScenario(asofBaseScenario, mporBaseScenario, inputs_->asof(), 1.0); 
+    setT0Scenario(asofBaseScenario);
+
+    // Create the inverse shift scenario as spread between t0 market and t1 market, to be applied to t1
+
+    QuantLib::ext::shared_ptr<ore::analytics::Scenario> t1Scenario =
+        getDifferenceScenario(mporBaseScenario, asofBaseScenario, mporDate(), 1.0); 
+    setT1Scenario(mporBaseScenario);
+
+    /********************************************************************************************
+     *
+     * 4. Price the t0 portfolio as of t0 using the t1 market for the risk-hypothetical clean P&L
+     *
+     ********************************************************************************************/
+
+    // Now update simMarket on asof date t0, with the t0 shift scenario
+    sgen->setScenario(t0Scenario);
+    t0SimMarket_->update(t0SimMarket_->asofDate());
+    analytic()->setMarket(t0SimMarket_);
+
+    // Build the portfolio, linked to the shifted market
+    analytic()->buildPortfolio();
+
+    // This hook allows modifying the portfolio in derived classes before running the analytics below
+    analytic()->modifyPortfolio();
+    
+    // t0m0p0NpvReport renamed from t0NpvLaggedReport
+    QuantLib::ext::shared_ptr<InMemoryReport> t0m0p0NpvReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+    ReportWriter(inputs_->reportNaString())
+        .writeNpv(*t0m0p0NpvReport, effectiveResultCurrency, analytic()->market(), marketConfig,
+                  analytic()->portfolio());
+
+    analytic()->addReport(LABEL, "pnl_npv_t0_m0_p0", t0m0p0NpvReport);
+
+    if (inputs_->outputAdditionalResults()) {
+        CONSOLEW("Pricing: Additional Results t0,m0,p0");
+        QuantLib::ext::shared_ptr<InMemoryReport> t0m0p0AddReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+        ReportWriter(inputs_->reportNaString())
+            .writeAdditionalResultsReport(*t0m0p0AddReport, analytic()->portfolio(), analytic()->market(),
+                                          marketConfig, effectiveResultCurrency);
+        analytic()->addReport(LABEL, "pnl_additional_results_t0_m0_p0", t0m0p0AddReport);
+        CONSOLE("OK");
+    }
+
+    /***********************************************************************************************
+     *
+     * 5. Price the t0 portfolio as of t1 using the t0 market for the theta / time decay calculation
+     *    Reusing the mpor analytic setup here which is as of t1 already.
+     *
+     ***********************************************************************************************/
+
+    Date d1 = mporDate();
+    Settings::instance().evaluationDate() = d1;
+    analytic()->configurations().asofDate = d1;
+    auto simMarket1 = sai->scenarioSimMarket();
+    auto sgen1 = QuantLib::ext::make_shared<StaticScenarioGenerator>();
+    analytic()->setMarket(simMarket1);
+    sgen1->setScenario(t1Scenario);
+    simMarket1->scenarioGenerator() = sgen1;
+    simMarket1->update(d1);
+    analytic()->buildPortfolio();
+
+    // t1m0p0NpvReport renamed from t1NpvLaggedReport
+    QuantLib::ext::shared_ptr<InMemoryReport> t1m0p0NpvReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+    ReportWriter(inputs_->reportNaString())
+        .writeNpv(*t1m0p0NpvReport, effectiveResultCurrency, analytic()->market(), marketConfig,
+                  analytic()->portfolio());
+
+    analytic()->addReport(LABEL, "pnl_npv_t1_m0_p0", t1m0p0NpvReport);
+
+    QuantLib::ext::shared_ptr<InMemoryReport> t1m0p0AddReport;
+    if (inputs_->outputAdditionalResults()) {
+        CONSOLEW("Pricing: Additional Results t1,m0,p0");
+        t1m0p0AddReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+        ReportWriter(inputs_->reportNaString())
+            .writeAdditionalResultsReport(*t1m0p0AddReport, analytic()->portfolio(), analytic()->market(),
+                                          marketConfig, effectiveResultCurrency);
+        analytic()->addReport(LABEL, "pnl_additional_results_t1_m0_p0", t1m0p0AddReport);
+        CONSOLE("OK");
+    }
+
+    /***************************************************************************************
+     *
+     * 6. Price the t0 portfolio as of t1 using the t1 market for the actual P&L calculation
+     *
+     ***************************************************************************************/
+        
+    sgen1->setScenario(sai->scenarioSimMarket()->baseScenario());
+    simMarket1->scenarioGenerator() = sgen1;
+    simMarket1->update(d1);
+
+    analytic()->buildPortfolio();
+
+    // t1m1p0NpvReport renamed from t1Npvt0PortReport
+    QuantLib::ext::shared_ptr<InMemoryReport> t1m1p0NpvReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+    ReportWriter(inputs_->reportNaString())
+        .writeNpv(*t1m1p0NpvReport, effectiveResultCurrency, analytic()->market(), marketConfig,
+                  analytic()->portfolio());
+
+    analytic()->addReport(LABEL, "pnl_npv_t1_m1_p0", t1m1p0NpvReport);
+
+    QuantLib::ext::shared_ptr<InMemoryReport> t1m1p0AddReport;
+    if (inputs_->outputAdditionalResults()) {
+        CONSOLEW("Pricing: Additional Results t1,m1,p0");
+        t1m1p0AddReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+        ReportWriter(inputs_->reportNaString())
+            .writeAdditionalResultsReport(*t1m1p0AddReport, analytic()->portfolio(), analytic()->market(),
+                                          marketConfig, effectiveResultCurrency);
+        analytic()->addReport(LABEL, "pnl_additional_results_t1_m1_p0", t1m1p0AddReport);
+        CONSOLE("OK");
+    }
+
+    /***************************************************************************************
+     *
+     * 7. Price the t1 portfolio as of t1 using the t0 market for Day1 P&L calculation
+     *    Run Sensi(t1,m0,p1)
+     *
+     ***************************************************************************************/
+
+    simMarket1 = sai->scenarioSimMarket();
+    analytic()->setMarket(simMarket1);
+    sgen1->setScenario(t1Scenario);
+    simMarket1->scenarioGenerator() = sgen1;
+    simMarket1->update(d1);
+
+    QuantLib::ext::shared_ptr<InMemoryReport> t1m0p1NpvReport;
+    QuantLib::ext::shared_ptr<InMemoryReport> t1m0p1AddReport;
+    if (pnlVars->pnlPortfolio_) {
+
+        analytic()->setPortfolio(pnlVars->pnlPortfolio_);
+        analytic()->buildPortfolio();
+
+        t1m0p1NpvReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+        ReportWriter(inputs_->reportNaString())
+            .writeNpv(*t1m0p1NpvReport, effectiveResultCurrency, analytic()->market(), marketConfig,
+                      analytic()->portfolio());
+
+        if (inputs_->outputAdditionalResults()) {
+            CONSOLEW("Pricing: Additional Results t1;m0;p1");
+            t1m0p1AddReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+            ReportWriter(inputs_->reportNaString())
+                .writeAdditionalResultsReport(*t1m0p1AddReport, analytic()->portfolio(), analytic()->market(),
+                                              marketConfig, effectiveResultCurrency);
+            CONSOLE("OK");
+        }
+    } else {
+        t1m0p1NpvReport = t1m0p0NpvReport;
+        t1m0p1AddReport = t1m0p0AddReport;
+    }
+
+    analytic()->addReport(LABEL, "pnl_npv_t1_m0_p1", t1m0p1NpvReport);
+    if (inputs_->outputAdditionalResults() && t1m0p1AddReport)
+        analytic()->addReport(LABEL, "pnl_additional_results_t1_m0_p1", t1m0p1AddReport);
+
+    // remove existing trades from t1 portfolio
+    auto mporPortfolioNew = QuantLib::ext::make_shared<Portfolio>();
+    if (pnlVars->pnlPortfolio_)
+        for (const auto& [tradeId, trade] : pnlVars->pnlPortfolio_->trades())
+            if (!inputs_->portfolio()->has(tradeId))
+                mporPortfolioNew->add(trade);
+
+    // create sensi analytic
+    if (analytic()->configurations().sensiScenarioData && !mporPortfolioNew->empty()) {
+        auto sensiAnalytic = dependentAnalytic(sensiLookupKey);
+        sensiAnalytic->setMarket(simMarket1);
+        sensiAnalytic->configurations().simMarketParams = analytic()->configurations().simMarketParams;
+        sensiAnalytic->configurations().sensiScenarioData = analytic()->configurations().sensiScenarioData;
+        mporPortfolioNew->build(analytic()->impl()->engineFactory(), "portfolio_t1_m0_p1_new", true,
+                                inputs_->useAtParCouponsTrades());
+        sensiAnalytic->setPortfolio(mporPortfolioNew);
+        sensiAnalytic->buildPortfolio();
+
+        sensiAnalytic->runAnalytic(loader, {"SENSITIVITY"});
+        QuantLib::ext::shared_ptr<InMemoryReport> sensireport;
+        QuantLib::ext::shared_ptr<ParSensitivityAnalysis> parSensiAnalysis;
+        sensireport = sensiAnalytic->getReport("SENSITIVITY", "sensitivity");
+        analytic()->addReport(label_, "sensitivity_t1_m0_p1", sensireport);
+    }
+
+    /***************************************************************************************
+     *
+     * 8. Price the t1 portfolio as of t1 using the t1 market for the actual P&L calculation
+     *
+     ***************************************************************************************/
+
+    sgen1->setScenario(sai->scenarioSimMarket()->baseScenario());
+    simMarket1->scenarioGenerator() = sgen1;
+    simMarket1->update(d1);
+
+    QuantLib::ext::shared_ptr<InMemoryReport> t1m1p1NpvReport;
+    QuantLib::ext::shared_ptr<InMemoryReport> t1m1p1AddReport;
+    if (pnlVars->pnlPortfolio_) {
+
+        analytic()->setPortfolio(pnlVars->pnlPortfolio_);
+        analytic()->buildPortfolio();
+
+        t1m1p1NpvReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+        ReportWriter(inputs_->reportNaString())
+            .writeNpv(*t1m1p1NpvReport, effectiveResultCurrency, analytic()->market(), marketConfig,
+                      analytic()->portfolio());
+
+        if (inputs_->outputAdditionalResults()) {
+            CONSOLEW("Pricing: Additional Results t1,m1,p1");
+            t1m1p1AddReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+            ReportWriter(inputs_->reportNaString())
+                .writeAdditionalResultsReport(*t1m1p1AddReport, analytic()->portfolio(), analytic()->market(),
+                                              marketConfig, effectiveResultCurrency);            
+            CONSOLE("OK");
+        }
+    } else {
+        t1m1p1NpvReport = t1m1p0NpvReport;
+        t1m1p1AddReport = t1m1p0AddReport;
+    }
+
+    analytic()->addReport(LABEL, "pnl_npv_t1_m1_p1", t1m1p1NpvReport);
+    if (inputs_->outputAdditionalResults() && t1m1p1AddReport)
+        analytic()->addReport(LABEL, "pnl_additional_results_t1_m1_p1", t1m1p1AddReport);
+
+    /****************************
+     *
+     * 9. Generate the P&L report
+     *
+     ****************************/
+
+    // FIXME: check which market and which portfolio to pass to the report writer
+    QuantLib::ext::shared_ptr<InMemoryReport> pnlReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+    ReportWriter(inputs_->reportNaString())
+        .writePnlReport(*pnlReport, t0NpvReport, t0m0p0NpvReport, t1m0p0NpvReport, t1m1p0NpvReport, t1m0p1NpvReport, t1m1p1NpvReport,
+			t0CashFlowReport, inputs_->asof(), mporDate(), effectiveResultCurrency, analytic()->market(), 
+            marketConfig, analytic()->portfolio());
+    analytic()->addReport(LABEL, "pnl", pnlReport);
+
+    /***************************
+     *
+     * 10. Write Scenario Reports
+     *
+     ***************************/
+    QuantLib::ext::shared_ptr<InMemoryReport> scenarioReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+    auto sw = ScenarioWriter(nullptr, scenarioReport);
+    sw.writeScenario(asofBaseScenario, true);
+    sw.writeScenario(mporBaseScenario, false);
+    analytic()->addReport(label(), "zero_scenarios", scenarioReport);
+}
+
+} // namespace analytics
+} // namespace ore

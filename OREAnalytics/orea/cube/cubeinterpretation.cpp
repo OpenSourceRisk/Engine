@@ -24,10 +24,10 @@ namespace ore {
 namespace analytics {
 
 CubeInterpretation::CubeInterpretation(const bool storeFlows, const bool withCloseOutLag,
-                                       const QuantLib::Handle<AggregationScenarioData>& aggregationScenarioData,
-                                       const boost::shared_ptr<DateGrid>& dateGrid, const Size storeCreditStateNPVs,
-                                       const bool flipViewXVA)
-    : storeFlows_(storeFlows), withCloseOutLag_(withCloseOutLag), aggregationScenarioData_(aggregationScenarioData),
+				       const bool withExerciseValue,
+                                       const QuantLib::ext::shared_ptr<DateGrid>& dateGrid,
+                                       const Size storeCreditStateNPVs, const bool flipViewXVA)
+    : storeFlows_(storeFlows), withCloseOutLag_(withCloseOutLag), withExerciseValue_(withExerciseValue),
       dateGrid_(dateGrid), storeCreditStateNPVs_(storeCreditStateNPVs), flipViewXVA_(flipViewXVA) {
 
     // determine required cube depth and layout
@@ -38,6 +38,10 @@ CubeInterpretation::CubeInterpretation(const bool storeFlows, const bool withClo
     if (withCloseOutLag_) {
         closeOutDateNpvIndex_ = requiredCubeDepth_++;
         QL_REQUIRE(dateGrid_ != nullptr, "CubeInterpretation: dateGrid is required when withCloseOutLag is true");
+    }
+
+    if (withExerciseValue_) {
+        exerciseValueIndex_ = requiredCubeDepth_++;
     }
 
     if (storeFlows_) {
@@ -55,13 +59,11 @@ bool CubeInterpretation::storeFlows() const { return storeFlows_; }
 
 bool CubeInterpretation::withCloseOutLag() const { return withCloseOutLag_; }
 
+bool CubeInterpretation::withExerciseValue() const { return withExerciseValue_; }
+
 Size CubeInterpretation::storeCreditStateNPVs() const { return storeCreditStateNPVs_; }
 
-const QuantLib::Handle<AggregationScenarioData>& CubeInterpretation::aggregationScenarioData() const {
-    return aggregationScenarioData_;
-}
-
-const boost::shared_ptr<DateGrid>& CubeInterpretation::dateGrid() const { return dateGrid_; }
+const QuantLib::ext::shared_ptr<DateGrid>& CubeInterpretation::dateGrid() const { return dateGrid_; }
 
 bool CubeInterpretation::flipViewXVA() const { return flipViewXVA_; }
 
@@ -69,10 +71,11 @@ Size CubeInterpretation::requiredNpvCubeDepth() const { return requiredCubeDepth
 
 Size CubeInterpretation::defaultDateNpvIndex() const { return defaultDateNpvIndex_; }
 Size CubeInterpretation::closeOutDateNpvIndex() const { return closeOutDateNpvIndex_; }
+Size CubeInterpretation::exerciseValueIndex() const { return exerciseValueIndex_; }
 Size CubeInterpretation::mporFlowsIndex() const { return mporFlowsIndex_; }
 Size CubeInterpretation::creditStateNPVsIndex() const { return creditStateNPVsIndex_; }
 
-Real CubeInterpretation::getGenericValue(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx,
+Real CubeInterpretation::getGenericValue(const QuantLib::ext::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx,
                                          Size sampleIdx, Size depth) const {
     if (flipViewXVA_) {
         return -cube->get(tradeIdx, dateIdx, sampleIdx, depth);
@@ -81,21 +84,27 @@ Real CubeInterpretation::getGenericValue(const boost::shared_ptr<NPVCube>& cube,
     }
 }
 
-Real CubeInterpretation::getDefaultNpv(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx,
+Real CubeInterpretation::getDefaultNpv(const QuantLib::ext::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx,
                                        Size sampleIdx) const {
     return getGenericValue(cube, tradeIdx, dateIdx, sampleIdx, defaultDateNpvIndex_);
 }
 
-Real CubeInterpretation::getCloseOutNpv(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx,
-                                        Size sampleIdx) const {
+Real CubeInterpretation::getCloseOutNpv(const QuantLib::ext::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx,
+                                        Size sampleIdx,
+                                        const QuantLib::ext::shared_ptr<AggregationScenarioData>& data) const {
     if (withCloseOutLag_)
         return getGenericValue(cube, tradeIdx, dateIdx, sampleIdx, closeOutDateNpvIndex_) /
-               getCloseOutAggregationScenarioData(AggregationScenarioDataType::Numeraire, dateIdx, sampleIdx);
+               getCloseOutAggregationScenarioData(data, AggregationScenarioDataType::Numeraire, dateIdx, sampleIdx);
     else
         return getGenericValue(cube, tradeIdx, dateIdx + 1, sampleIdx, defaultDateNpvIndex_);
 }
 
-Real CubeInterpretation::getMporPositiveFlows(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx,
+Real CubeInterpretation::getExerciseValue(const QuantLib::ext::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx,
+                                       Size sampleIdx) const {
+    return getGenericValue(cube, tradeIdx, dateIdx, sampleIdx, exerciseValueIndex_);
+}
+
+Real CubeInterpretation::getMporPositiveFlows(const QuantLib::ext::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx,
                                              Size sampleIdx) const {
     if (mporFlowsIndex_ == QuantLib::Null<Size>())
         return 0.0;
@@ -109,7 +118,7 @@ Real CubeInterpretation::getMporPositiveFlows(const boost::shared_ptr<NPVCube>& 
     return aggMporFlowsVal;
 }
 
-Real CubeInterpretation::getMporNegativeFlows(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx,
+Real CubeInterpretation::getMporNegativeFlows(const QuantLib::ext::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx,
                                              Size sampleIdx) const {
     if (mporFlowsIndex_ == QuantLib::Null<Size>())
         return 0.0;
@@ -123,33 +132,31 @@ Real CubeInterpretation::getMporNegativeFlows(const boost::shared_ptr<NPVCube>& 
     return aggMporFlowsVal;
 }
 
-Real CubeInterpretation::getMporFlows(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx,
+Real CubeInterpretation::getMporFlows(const QuantLib::ext::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx,
                                       Size sampleIdx) const {
     return getMporPositiveFlows(cube, tradeIdx, dateIdx, sampleIdx) + getMporNegativeFlows(cube, tradeIdx, dateIdx, sampleIdx) ;
 }
 
-Real CubeInterpretation::getDefaultAggregationScenarioData(const AggregationScenarioDataType& dataType, Size dateIdx,
-                                                           Size sampleIdx, const std::string& qualifier) const {
-    QL_REQUIRE(!aggregationScenarioData_.empty(),
-               "CubeInterpretation::getDefaultAggregationScenarioData(): no aggregation scenario data given");
-    return aggregationScenarioData_->get(dateIdx, sampleIdx, dataType, qualifier);
+Real CubeInterpretation::getDefaultAggregationScenarioData(
+    const QuantLib::ext::shared_ptr<AggregationScenarioData>& data, const AggregationScenarioDataType& dataType,
+    Size dateIdx, Size sampleIdx, const std::string& qualifier) const {
+    return data->get(dateIdx, sampleIdx, dataType, qualifier);
 }
 
-Real CubeInterpretation::getCloseOutAggregationScenarioData(const AggregationScenarioDataType& dataType, Size dateIdx,
-                                                            Size sampleIdx, const std::string& qualifier) const {
+Real CubeInterpretation::getCloseOutAggregationScenarioData(
+    const QuantLib::ext::shared_ptr<AggregationScenarioData>& data, const AggregationScenarioDataType& dataType,
+    Size dateIdx, Size sampleIdx, const std::string& qualifier) const {
     if (withCloseOutLag_) {
         QL_REQUIRE(dataType == AggregationScenarioDataType::Numeraire,
                    "close out aggr scen data only available for numeraire");
         // this is an approximation
-        return getDefaultAggregationScenarioData(dataType, dateIdx, sampleIdx, qualifier);
+        return getDefaultAggregationScenarioData(data, dataType, dateIdx, sampleIdx, qualifier);
     } else {
-        QL_REQUIRE(!aggregationScenarioData_.empty(), "CubeInterpretation::getCloseOutAggregationScenarioData(): no "
-                                                      "aggregation scenario data given");
-        return aggregationScenarioData_->get(dateIdx + 1, sampleIdx, dataType, qualifier);
+        return data->get(dateIdx + 1, sampleIdx, dataType, qualifier);
     }
 }
 
-Size CubeInterpretation::getMporCalendarDays(const boost::shared_ptr<NPVCube>& cube, Size dateIdx) const {
+Size CubeInterpretation::getMporCalendarDays(const QuantLib::ext::shared_ptr<NPVCube>& cube, Size dateIdx) const {
     if (withCloseOutLag_) {
         QuantLib::Date dd = dateGrid_->valuationDates()[dateIdx];
         QuantLib::Date cd = dateGrid_->closeOutDates()[dateIdx];

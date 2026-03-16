@@ -16,34 +16,38 @@
   FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/make_shared.hpp>
 #include <ored/portfolio/barrieroptionwrapper.hpp>
-#include <ored/portfolio/builders/fxoption.hpp>
 #include <ored/portfolio/builders/fxbarrieroption.hpp>
 #include <ored/portfolio/builders/fxdoublebarrieroption.hpp>
+#include <ored/portfolio/builders/fxoption.hpp>
 #include <ored/portfolio/compositeinstrumentwrapper.hpp>
+#include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/fxdoublebarrieroption.hpp>
 #include <ored/portfolio/fxkikobarrieroption.hpp>
-#include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/fxoption.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+
+#include <qle/indexes/fxindex.hpp>
+#include <qle/instruments/multiccycompositeinstrument.hpp>
+#include <qle/utilities/barrier.hpp>
+
 #include <ql/errors.hpp>
 #include <ql/exercise.hpp>
 #include <ql/instruments/barrieroption.hpp>
 #include <ql/instruments/barriertype.hpp>
 #include <ql/instruments/compositeinstrument.hpp>
 #include <ql/instruments/vanillaoption.hpp>
-#include <qle/indexes/fxindex.hpp>
-#include <qle/instruments/multiccycompositeinstrument.hpp>
+
+#include <boost/make_shared.hpp>
 
 using namespace QuantLib;
 
 namespace ore {
 namespace data {
 
-void FxKIKOBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void FxKIKOBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     // ISDA taxonomy
     additionalData_["isdaAssetClass"] = string("Foreign Exchange");
@@ -51,8 +55,17 @@ void FxKIKOBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFa
     additionalData_["isdaSubProduct"] = string("Barrier");  
     additionalData_["isdaTransaction"] = string("");  
 
+    additionalData_["boughAmount"] = boughtAmount_;
+    additionalData_["boughtCurrency"] = boughtCurrency_;
+    additionalData_["soldAmount"] = soldAmount_;
+    additionalData_["soldCurrency"] = soldCurrency_;
+
+    npvCurrency_ = soldCurrency_; // sold is the domestic
+    notional_ = soldAmount_;
+    notionalCurrency_ = soldCurrency_;
+
     Date today = Settings::instance().evaluationDate();
-    const boost::shared_ptr<Market> market = engineFactory->market();
+    const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
     Date start = ore::data::parseDate(startDate_);
     Calendar cal = ore::data::parseCalendar(calendar_);
 
@@ -69,21 +82,52 @@ void FxKIKOBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFa
     QL_REQUIRE(barriers_[1].style().empty() || barriers_[1].style() == "American",
                "only american barrier style supported");
     QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for FxBarrierOption");
+    QL_REQUIRE(!barriers_[0].overrideTriggered() && !barriers_[1].overrideTriggered(),
+               "FxKIKOBarrierOption::build(): OverrideTriggered not supported by this instrument type.");
+
+    
+    QuantLib::ext::shared_ptr<FxBarrierOptionScriptedEngineBuilder> fxEuropeanBarrierOptionBuilder;
+    try {
+        fxEuropeanBarrierOptionBuilder = QuantLib::ext::dynamic_pointer_cast<FxBarrierOptionScriptedEngineBuilder>(
+            engineFactory->builder("FxBarrierOption"));
+        DLOG("FxEuropeanBarrierOptionScriptedEngineBuilder found for trade " << tradeType_);
+    } catch (...) {
+        // no delegating builder found
+    }
+    if (fxEuropeanBarrierOptionBuilder) {
+        // We have a delegating builder for this trade
+        auto delegatingBuilderTrade_ = fxEuropeanBarrierOptionBuilder->build(this, engineFactory);
+        instrument_ = delegatingBuilderTrade_->instrument();
+        maturity_ = delegatingBuilderTrade_->maturity();
+        npvCurrency_ = delegatingBuilderTrade_->npvCurrency();
+        additionalData_ = delegatingBuilderTrade_->additionalData();
+        requiredFixings_ = delegatingBuilderTrade_->requiredFixings();
+        setSensitivityTemplate(delegatingBuilderTrade_->sensitivityTemplate());
+        addProductModelEngine(delegatingBuilderTrade_->productModelEngine());
+
+        // notional and notional currency are defined in overriden methods!
+
+        return;
+    }
+    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("FxOption");
+    QL_REQUIRE(builder, "No FxOption builder found");
 
     Currency boughtCcy = parseCurrency(boughtCurrency_);
     Currency soldCcy = parseCurrency(soldCurrency_);
 
     // Payoff
-    Real strike = soldAmount_ / boughtAmount_;
     Option::Type type = parseOptionType(option_.callPut());
-    boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, strike));
+    QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, strike()));
 
     // Exercise
     Date expiryDate = parseDate(option_.exerciseDates().front());
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(expiryDate);
+    maturity_ = std::max(expiryDate, option_.premiumData().latestPremiumDate());
+    maturityType_ = maturity_ == expiryDate ? "Expiry Date" : "Option's Latest Premium Date";
+
+    QuantLib::ext::shared_ptr<Exercise> exercise = QuantLib::ext::make_shared<EuropeanExercise>(expiryDate);
 
     // build underlying vanilla option
-    boost::shared_ptr<Instrument> vanilla = boost::make_shared<VanillaOption>(payoff, exercise);
+    QuantLib::ext::shared_ptr<Instrument> vanilla = QuantLib::ext::make_shared<VanillaOption>(payoff, exercise);
 
     // we extract our KnockIn/KnockOut barrier data
     Size knockInIndex;
@@ -93,6 +137,8 @@ void FxKIKOBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFa
     Barrier::Type knockOutType;
 
     Barrier::Type tmpBarrier = parseBarrierType(barriers_[0].type());
+    int strictBarrier = 0, strictBarrierIn = 0, strictBarrierOut = 0;
+
     switch (tmpBarrier) {
     case Barrier::Type::UpIn:
     case Barrier::Type::DownIn:
@@ -100,6 +146,15 @@ void FxKIKOBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFa
         knockOutIndex = 1;
         knockInType = tmpBarrier;
         knockOutType = parseBarrierType(barriers_[1].type());
+        if (barriers_[1].strictComparison()) {
+            strictBarrierOut = boost::lexical_cast<int>(barriers_[1].strictComparison().value());
+        }
+        if (barriers_[0].strictComparison()) {
+            strictBarrierIn = boost::lexical_cast<int>(barriers_[0].strictComparison().value());
+        }
+        strictBarrierOut = strictBarrierIn == 1 ? 1 : strictBarrierOut;
+        strictBarrierIn = strictBarrierOut == 1 ? 1 : strictBarrierIn;
+        strictBarrier = strictBarrierIn;
         break;
     case Barrier::Type::UpOut:
     case Barrier::Type::DownOut:
@@ -107,6 +162,15 @@ void FxKIKOBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFa
         knockOutIndex = 0;
         knockOutType = tmpBarrier;
         knockInType = parseBarrierType(barriers_[1].type());
+        if (barriers_[0].strictComparison()) {
+            strictBarrierOut = boost::lexical_cast<int>(barriers_[0].strictComparison().value());
+        }
+        if (barriers_[1].strictComparison()) {
+            strictBarrierIn = boost::lexical_cast<int>(barriers_[1].strictComparison().value());
+        }
+        strictBarrierOut = strictBarrierIn == 1 ? 1 : strictBarrierOut;
+        strictBarrierIn = strictBarrierOut == 1 ? 1 : strictBarrierIn;
+        strictBarrier = strictBarrierIn;
         break;
     default:
         QL_FAIL("unsupported barrier type provided");
@@ -115,7 +179,7 @@ void FxKIKOBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFa
                "KIKO barrier requires one KnockOut barrier");
     QL_REQUIRE(knockInType == Barrier::Type::UpIn || knockInType == Barrier::Type::DownIn,
                "KIKO barrier requires one KnockIn barrier");
-
+    
     Real knockInLevel = barriers_[knockInIndex].levels()[0].value();
     Real knockOutLevel = barriers_[knockOutIndex].levels()[0].value();
 
@@ -125,7 +189,7 @@ void FxKIKOBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFa
     bool knockedOut = false;
     Handle<Quote> spot = market->fxSpot(boughtCurrency_ + soldCurrency_);
     
-    boost::shared_ptr<QuantExt::FxIndex> fxIndex;
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex;
     if (!fxIndex_.empty()) {
         auto fxi = market->fxIndex(fxIndex_);
         if (!fxi.empty()) {
@@ -159,51 +223,53 @@ void FxKIKOBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFa
             } else {
                 if (inverted)
                     fixing = 1.0 / fixing;
-                ALOG("Checking FX fixing for index " << fxIndex_ << " on " << d << ", value " << fixing);
+                LOG("Checking FX fixing for index " << fxIndex_ << " on " << d << ", value " << fixing);
 
                 if (!knockedIn)
-                    knockedIn = checkBarrier(fixing, knockInType, knockInLevel);
+                    knockedIn = QuantExt::checkBarrier(fixing, knockInType, knockInLevel, strictBarrier);
                 if (!knockedOut)
-                    knockedOut = checkBarrier(fixing, knockOutType, knockOutLevel);
+                    knockedOut = QuantExt::checkBarrier(fixing, knockOutType, knockOutLevel, strictBarrier);
             }
             d = cal.advance(d, 1, Days);
         }
     }
 
     // All possible instruments require an underlying vanilla option so we set this up
-    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("FxOption");
-    QL_REQUIRE(builder, "No FxOption builder found");
-    boost::shared_ptr<FxEuropeanOptionEngineBuilder> fxOptBuilder =
-        boost::dynamic_pointer_cast<FxEuropeanOptionEngineBuilder>(builder);
-    vanilla->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, expiryDate));
+    
+    QuantLib::ext::shared_ptr<FxEuropeanOptionEngineBuilder> fxOptBuilder =
+        QuantLib::ext::dynamic_pointer_cast<FxEuropeanOptionEngineBuilder>(builder);
+    vanilla->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, envelope().additionalField("discount_curve", false, std::string()), expiryDate));
 
     // Add additional premium payments
     Position::Type positionType = parsePositionType(option_.longShort());
     Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
 
-    std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
+    std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
-    Date lastPremiumDate = addPremiums(
-        additionalInstruments, additionalMultipliers, (positionType == Position::Long ? 1.0 : -1.0) * boughtAmount_,
-        option_.premiumData(), -bsInd, soldCcy, engineFactory, fxOptBuilder->configuration(MarketContext::pricing));
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
+    addPremiums(additionalInstruments, additionalMultipliers,
+                (positionType == Position::Long ? 1.0 : -1.0) * boughtAmount_, option_.premiumData(), -bsInd, soldCcy,
+                discountCurve, engineFactory, fxOptBuilder->configuration(MarketContext::pricing));
 
     // we build a knock out option
-    boost::shared_ptr<Instrument> barrier =
-        boost::make_shared<QuantLib::BarrierOption>(knockOutType, knockOutLevel, 0, payoff, exercise);
+    QuantLib::ext::shared_ptr<Instrument> barrier =
+        QuantLib::ext::make_shared<QuantLib::BarrierOption>(knockOutType, knockOutLevel, 0, payoff, exercise);
 
     builder = engineFactory->builder("FxBarrierOption");
     QL_REQUIRE(builder, "No FxBarrierOption builder found");
-    boost::shared_ptr<FxBarrierOptionEngineBuilder> fxBarrierOptBuilder =
-        boost::dynamic_pointer_cast<FxBarrierOptionEngineBuilder>(builder);
+    QuantLib::ext::shared_ptr<FxBarrierOptionEngineBuilder> fxBarrierOptBuilder =
+        QuantLib::ext::dynamic_pointer_cast<FxBarrierOptionEngineBuilder>(builder);
     barrier->setPricingEngine(fxBarrierOptBuilder->engine(boughtCcy, soldCcy, expiryDate, expiryDate));
     setSensitivityTemplate(*fxBarrierOptBuilder);
+    addProductModelEngine(*fxBarrierOptBuilder);
     Settlement::Type settleType = parseSettlementType(option_.settlement());
 
-    boost::shared_ptr<InstrumentWrapper> koInstrument =
-        boost::shared_ptr<InstrumentWrapper>(new SingleBarrierOptionWrapper(
-            barrier, positionType == Position::Long ? true : false, expiryDate,
+    QuantLib::ext::shared_ptr<InstrumentWrapper> koInstrument =
+        QuantLib::ext::shared_ptr<InstrumentWrapper>(new SingleBarrierOptionWrapper(
+	    barrier, positionType == Position::Long ? true : false, expiryDate, expiryDate, 
             settleType == Settlement::Physical ? true : false, vanilla, knockOutType, spot, knockOutLevel, 0, soldCcy,
-            start, fxIndex, cal, boughtAmount_, boughtAmount_, additionalInstruments, additionalMultipliers));
+            start, fxIndex, cal, boughtAmount_, boughtAmount_, additionalInstruments, additionalMultipliers,
+            std::nullopt, nullptr, nullptr, strictBarrier));
 
     // if the trade is knocked in this is all we price
     if (knockedIn || knockedOut) {
@@ -212,8 +278,8 @@ void FxKIKOBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFa
         // Otherwise we build a composite instrument
     } else {
 
-        Handle<Quote> fx = Handle<Quote>(boost::make_shared<SimpleQuote>(1.0));
-        vector<boost::shared_ptr<InstrumentWrapper>> iw;
+        Handle<Quote> fx = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
+        vector<QuantLib::ext::shared_ptr<InstrumentWrapper>> iw;
         std::vector<Handle<Quote>> fxRates;
 
         DLOG("adding a knock out option to our composite trade");
@@ -233,15 +299,17 @@ void FxKIKOBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFa
             (knockOutType == Barrier::Type::DownOut && knockInType == Barrier::Type::DownIn)) {
             DLOG("Barrier Types are UpIn/UpOut or DownIn/DownOut, we add a single Barrier Knock Out Option to our composite trade");
 
-            boost::shared_ptr<Instrument> barrier2 =
-                boost::make_shared<QuantLib::BarrierOption>(knockOutType, knockInLevel, 0, payoff, exercise);
+            QuantLib::ext::shared_ptr<Instrument> barrier2 =
+                QuantLib::ext::make_shared<QuantLib::BarrierOption>(knockOutType, knockInLevel, 0, payoff, exercise);
             barrier2->setPricingEngine(fxBarrierOptBuilder->engine(boughtCcy, soldCcy, expiryDate, expiryDate));
             setSensitivityTemplate(*fxBarrierOptBuilder);
-            boost::shared_ptr<InstrumentWrapper> koInstrument2 =
-                boost::shared_ptr<InstrumentWrapper>(new SingleBarrierOptionWrapper(
-                    barrier2, positionType == Position::Long ? false : true, expiryDate,
+            addProductModelEngine(*fxBarrierOptBuilder);
+            QuantLib::ext::shared_ptr<InstrumentWrapper> koInstrument2 =
+                QuantLib::ext::shared_ptr<InstrumentWrapper>(new SingleBarrierOptionWrapper(
+		    barrier2, positionType == Position::Long ? false : true, expiryDate, expiryDate,
                     settleType == Settlement::Physical ? true : false, vanilla, knockOutType, spot, knockInLevel, 0,
-                    soldCcy, start, fxIndex, cal, boughtAmount_, boughtAmount_, additionalInstruments, flippedAdditionalMultipliers));
+                    soldCcy, start, fxIndex, cal, boughtAmount_, boughtAmount_, additionalInstruments, flippedAdditionalMultipliers,
+                    std::nullopt, nullptr, nullptr, strictBarrier));
 
             iw.push_back(koInstrument2);
             fxRates.push_back(fx);
@@ -253,54 +321,32 @@ void FxKIKOBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFa
             DLOG("We add a Double Barrier Knock Out Option to our composite trade");
             builder = engineFactory->builder("FxDoubleBarrierOption");
             QL_REQUIRE(builder, "No FxDoubleBarrierOption builder found");
-            boost::shared_ptr<FxDoubleBarrierOptionEngineBuilder> fxDoubleBarrierOptBuilder =
-                boost::dynamic_pointer_cast<FxDoubleBarrierOptionEngineBuilder>(builder);
+            QuantLib::ext::shared_ptr<FxDoubleBarrierOptionEngineBuilder> fxDoubleBarrierOptBuilder =
+                QuantLib::ext::dynamic_pointer_cast<FxDoubleBarrierOptionEngineBuilder>(builder);
 
-            boost::shared_ptr<Instrument> doubleBarrier = boost::make_shared<DoubleBarrierOption>(
+            QuantLib::ext::shared_ptr<Instrument> doubleBarrier = QuantLib::ext::make_shared<DoubleBarrierOption>(
                 DoubleBarrier::Type::KnockOut, std::min(knockInLevel, knockOutLevel),
                 std::max(knockInLevel, knockOutLevel), 0, payoff, exercise);
             doubleBarrier->setPricingEngine(fxDoubleBarrierOptBuilder->engine(boughtCcy, soldCcy, expiryDate));
             setSensitivityTemplate(*fxDoubleBarrierOptBuilder);
-
-            boost::shared_ptr<InstrumentWrapper> dkoInstrument =
-                boost::shared_ptr<InstrumentWrapper>(new DoubleBarrierOptionWrapper(
-                    doubleBarrier, positionType == Position::Long ? false : true, expiryDate,
+            addProductModelEngine(*fxDoubleBarrierOptBuilder);
+            QuantLib::ext::shared_ptr<InstrumentWrapper> dkoInstrument =
+                QuantLib::ext::shared_ptr<InstrumentWrapper>(new DoubleBarrierOptionWrapper(
+		    doubleBarrier, positionType == Position::Long ? false : true, expiryDate, expiryDate, 
                     settleType == Settlement::Physical ? true : false, vanilla, DoubleBarrier::Type::KnockOut, spot,
-                    std::min(knockInLevel, knockOutLevel), std::max(knockInLevel, knockOutLevel), 0, soldCcy,
-                    start, fxIndex, cal, boughtAmount_, boughtAmount_, additionalInstruments, flippedAdditionalMultipliers));
+                    std::min(knockInLevel, knockOutLevel), std::max(knockInLevel, knockOutLevel), 0, soldCcy, start,
+                    fxIndex, cal, boughtAmount_, boughtAmount_, additionalInstruments, flippedAdditionalMultipliers,
+                    std::nullopt, nullptr, nullptr, strictBarrier));
 
             iw.push_back(dkoInstrument);
             fxRates.push_back(fx);
         }
-        instrument_ = boost::shared_ptr<InstrumentWrapper>(new CompositeInstrumentWrapper(iw, fxRates, today));
+        instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(new CompositeInstrumentWrapper(iw, fxRates));
     }
-
-    npvCurrency_ = soldCurrency_; // sold is the domestic
-    notional_ = soldAmount_;
-    notionalCurrency_ = soldCurrency_;
-    maturity_ = std::max(expiryDate, lastPremiumDate);
 
     if (start != Date()) {
         for (Date d = start; d <= expiryDate; d = cal.advance(d, 1 * Days))
             requiredFixings_.addFixingDate(d, fxIndex_, expiryDate);
-    }
-
-    additionalData_["boughAmount"] = boughtAmount_;
-    additionalData_["boughtCurrency"] = boughtCurrency_;
-    additionalData_["soldAmount"] = soldAmount_;
-    additionalData_["soldCurrency"] = soldCurrency_;
-}
-
-bool FxKIKOBarrierOption::checkBarrier(Real spot, Barrier::Type type, Real barrier) {
-    switch (type) {
-    case Barrier::DownIn:
-    case Barrier::DownOut:
-        return spot <= barrier;
-    case Barrier::UpIn:
-    case Barrier::UpOut:
-        return spot >= barrier;
-    default:
-        QL_FAIL("unknown barrier type " << type);
     }
 }
 
@@ -349,6 +395,15 @@ XMLNode* FxKIKOBarrierOption::toXML(XMLDocument& doc) const {
 
     return node;
 }
+
+QuantLib::Real FxKIKOBarrierOption::notional() const {
+    return delegatingBuilderTrade_ != nullptr ? delegatingBuilderTrade_->notional() : Trade::notional();
+}
+
+string FxKIKOBarrierOption::notionalCurrency() const {
+    return delegatingBuilderTrade_ != nullptr ? delegatingBuilderTrade_->notionalCurrency() : Trade::notionalCurrency();
+}
+
 
 } // namespace data
 } // namespace oreplus

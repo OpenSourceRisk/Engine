@@ -1,0 +1,126 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="generic_fx_barrier_option">
+        <TradeType>FxGenericBarrierOption</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <FxGenericBarrierOptionData>
+            <!-- The underlying on which the option is written, supported are
+           FX, Equity, Commodity -->
+            <Underlying>
+                <Type>FX</Type>
+                <!-- The order of the currencies in the Name defines the
+             observed underlying, i.e.:
+             - for EUR-USD the observed underlying value would be 1.2
+             - for USD-EUR the observed underlying value would be 0.8
+             The engine will take care of reading the appropriate historical
+             fixings and take the reciprocal if necessary. -->
+                <Name>TR20H-EUR-USD</Name>
+            </Underlying>
+            <!-- The pay ccy, this is required for all Payoff Types and is usually
+           - the domestic currency if underlying = FX
+           - the eq / comm currency if underlying = Equity, Commodity
+           But we allow for quanto payoffs as well, i.e.
+           - the foreign currency if underlying = FX or also
+           - a third currency if underlying = FX and
+           - a currency != the equity, commodity currency for these underlying types.
+           See payoff description which amount is paid in which currency dependent
+           on the type. -->
+            <PayCurrency>USD</PayCurrency>
+            <OptionData>
+                <!-- Long, Short -->
+                <LongShort>Long</LongShort>
+                <!-- Vanilla:         (S-K) paid in PayCurrency
+             AssetOrNoathing: S paid in PayCurrency
+             CashOrNothing:   Amount in PayCurrency -->
+                <PayoffType>Vanilla</PayoffType>
+                <!--  Call, Put, only required for Vanilla -->
+                <OptionType>Call</OptionType>
+                <!-- The underlying vanila option expiry date -->
+                <ExerciseDates>
+                    <ExerciseDate>2028-12-20</ExerciseDate>
+                </ExerciseDates>
+                <!-- Premiums to be paid unconditionally -->
+                <Premiums>
+                    <Premium>
+                        <Amount>100000</Amount>
+                        <Currency>EUR</Currency>
+                        <PayDate>2023-11-21</PayDate>
+                    </Premium>
+                </Premiums>
+            </OptionData>
+            <!-- The settlement date. -->
+            <SettlementDate>2028-12-22</SettlementDate>
+            <!-- Required for PayoffType = AssetOrNothing, Vanilla.
+           For FX this is the amount in foreign currency.
+           For Equity, Commodity this is the number of equities, commodities. -->
+            <Quantity>100000000</Quantity>
+            <!-- Only required for PayoffType = Vanilla -->
+            <Strike>1.2</Strike>
+            <!-- Only required for PayoffType = CashOrNothing -->
+            <!-- <Amount>0</Amount> -->
+            <Barriers>
+                <!-- 0, 1 or 2 barriers of type UpAndIn, UpAndOut, DownAndIn, DownAndOut
+             with exactly one level each and with optional rebate amount.
+             Barriers are monitored on the given schedule -->
+                <ScheduleData>
+                    <Rules>
+                        <StartDate>2027-01-24</StartDate>
+                        <EndDate>2028-12-20</EndDate>
+                        <Tenor>1D</Tenor>
+                        <Calendar>TGT,US</Calendar>
+                        <Convention>F</Convention>
+                        <Rule>Forward</Rule>
+                    </Rules>
+                </ScheduleData>
+                <BarrierData>
+                    <Type>DownAndOut</Type>
+                    <Levels>
+                        <Level>1.1</Level>
+                    </Levels>
+                    <!-- Optional Rebate, must be identical across all in barriers, can be different
+               for different out barriers. Rebates are not allowed if both KI and KO barriers
+               are defined. -->
+                    <Rebate>1000000</Rebate>
+                    <!-- Optional, defaults to PayCurrency -->
+                    <RebateCurrency>USD</RebateCurrency>
+                    <!-- Optional, atHit (only for "out" barriers), atExpiry defaults to atExpiry -->
+                    <RebatePayTime>atExpiry</RebatePayTime>
+                </BarrierData>
+                <BarrierData>
+                    <Type>UpAndIn</Type>
+                    <Levels>
+                        <Level>1.3</Level>
+                    </Levels>
+                    <Rebate>1000000</Rebate>
+                    <RebateCurrency>USD</RebateCurrency>
+                    <RebatePayTime>atExpiry</RebatePayTime>
+                </BarrierData>
+                <!-- KIKO Type, only required if we have 2 barriers, one "in" and one "out"
+             KoAlways     Knock Out can always happen
+             KoBeforeKi   Knock Out can only happen before KI
+             KoAfterKi    Knock Out can only happen after KI    -->
+                <KikoType>KoAfterKi</KikoType>
+            </Barriers>
+            <!-- Optional, single additional barrier that is checked on the option expiry
+           and activates ("in") or zeros the option payoff ("out").
+           Only type and level are relevant, no rebate is allowed here. -->
+            <TransatlanticBarrier>
+                <BarrierData>
+                    <Type>UpAndOut</Type>
+                    <Levels>
+                        <Level>1.3</Level>
+                    </Levels>
+                    <Rebate>2000000</Rebate>
+                    <RebateCurrency>USD</RebateCurrency>
+                </BarrierData>
+            </TransatlanticBarrier>
+        </FxGenericBarrierOptionData>
+    </Trade>
+</Portfolio>

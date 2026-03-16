@@ -42,13 +42,13 @@ CommodityDigitalOption::CommodityDigitalOption() { tradeType_ = "CommodityDigita
 
 CommodityDigitalOption::CommodityDigitalOption(const Envelope& env, const OptionData& optionData, const string& name,
 					       const string& currency, Real strike, Real payoff,
-					       const boost::optional<bool>& isFuturePrice, const Date& futureExpiryDate)
+					       const QuantLib::ext::optional<bool>& isFuturePrice, const Date& futureExpiryDate)
     : optionData_(optionData), name_(name), currency_(currency), strike_(strike), payoff_(payoff),
       isFuturePrice_(isFuturePrice), futureExpiryDate_(futureExpiryDate) {
     tradeType_ = "CommodityDigitalOption";
 }
 
-void CommodityDigitalOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void CommodityDigitalOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     // ISDA taxonomy, assuming Commodity follows the Equity template
     additionalData_["isdaAssetClass"] = std::string("Commodity");
@@ -65,7 +65,7 @@ void CommodityDigitalOption::build(const boost::shared_ptr<EngineFactory>& engin
 
     // Populate the index_ in case the option is automatic exercise.
     // Intentionally use null calendar because we will ask for index value on the expiry date without adjustment.
-    const boost::shared_ptr<Market>& market = engineFactory->market();
+    const QuantLib::ext::shared_ptr<Market>& market = engineFactory->market();
     index_ = *market->commodityIndex(name_, engineFactory->configuration(MarketContext::pricing));
     if (!isFuturePrice_ || *isFuturePrice_) {
 
@@ -91,13 +91,18 @@ void CommodityDigitalOption::build(const boost::shared_ptr<EngineFactory>& engin
         // CommoditySpotIndex at this point so check. Also, will only work for European exercise.
         auto et = parseExerciseType(optionData_.style());
 	QL_REQUIRE(et == Exercise::European, "European style expected for CommodityDigitalOption");
-        if (et == Exercise::European && boost::dynamic_pointer_cast<CommodityFuturesIndex>(index_)) {
+        if (et == Exercise::European && QuantLib::ext::dynamic_pointer_cast<CommodityFuturesIndex>(index_)) {
             forwardDate_ = expiryDate;
         }
     }
 
+    Real spread = 0.01;
+    if (engineFactory->engineData()->globalParameters().find("StrikeSpread") !=
+        engineFactory->engineData()->globalParameters().end()) {
+        spread = parseReal(engineFactory->engineData()->globalParameters().find("StrikeSpread")->second);
+    }
     // Build digital as call or put spread 
-    Real strikeSpread = strike_ * 0.01; // FIXME, what is a usual spread here, and where should we put it?
+    Real strikeSpread = strike_ * spread; 
     Real strike1 = strike_ - strikeSpread/2;
     Real strike2 = strike_ + strikeSpread/2;
     CommodityOption opt1(envelope(), optionData_, name_, currency_, 1.0, TradeStrike(strike1, currency_), isFuturePrice_, futureExpiryDate_);
@@ -105,12 +110,13 @@ void CommodityDigitalOption::build(const boost::shared_ptr<EngineFactory>& engin
                          isFuturePrice_, futureExpiryDate_);
     opt1.build(engineFactory);
     opt2.build(engineFactory);
-    boost::shared_ptr<Instrument> inst1 = opt1.instrument()->qlInstrument();
-    boost::shared_ptr<Instrument> inst2 = opt2.instrument()->qlInstrument();
+    QuantLib::ext::shared_ptr<Instrument> inst1 = opt1.instrument()->qlInstrument();
+    QuantLib::ext::shared_ptr<Instrument> inst2 = opt2.instrument()->qlInstrument();
 
     setSensitivityTemplate(opt1.sensitivityTemplate());
+    addProductModelEngine(opt1.productModelEngine());
 
-    boost::shared_ptr<CompositeInstrument> composite = boost::make_shared<CompositeInstrument>();
+    QuantLib::ext::shared_ptr<CompositeInstrument> composite = QuantLib::ext::make_shared<CompositeInstrument>();
     // add and subtract such that the long call spread and long put spread have positive values
     if (optionData_.callPut() == "Call") {
         composite->add(inst1);
@@ -127,15 +133,19 @@ void CommodityDigitalOption::build(const boost::shared_ptr<EngineFactory>& engin
     Position::Type positionType = parsePositionType(optionData_.longShort());
     Real bsIndicator = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
     Real multiplier = payoff_ * bsIndicator / strikeSpread;
-    std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
+    std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
     // FIXME: Do we need to retrieve the engine builder's configuration
     string configuration = Market::defaultConfiguration; 
     Currency ccy = parseCurrencyWithMinors(currency_);
-    maturity_ = std::max(expiryDate_, addPremiums(additionalInstruments, additionalMultipliers, multiplier,
-						  optionData_.premiumData(), -bsIndicator, ccy, engineFactory, configuration));
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
+    Date lastPremiumDate =
+        addPremiums(additionalInstruments, additionalMultipliers, multiplier, optionData_.premiumData(), -bsIndicator,
+                    ccy, discountCurve, engineFactory, configuration);
+    maturity_ = std::max(expiryDate_, lastPremiumDate);
+    maturityType_ = maturity_ == expiryDate_ ? "Expiry Date" : "Last Premium Date";
 
-    instrument_ = boost::shared_ptr<InstrumentWrapper>(
+    instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(
         new VanillaInstrument(composite, multiplier, additionalInstruments, additionalMultipliers));
 
     npvCurrency_ = currency_;
@@ -150,13 +160,14 @@ void CommodityDigitalOption::build(const boost::shared_ptr<EngineFactory>& engin
     }
 
     additionalData_["payoff"] = payoff_;
+    additionalData_["spread"] = spread;
     additionalData_["strike"] = strike_;
     additionalData_["optionType"] = optionData_.callPut();
     additionalData_["strikeCurrency"] = currency_;    
 }
 
 std::map<AssetClass, std::set<std::string>>
-CommodityDigitalOption::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+CommodityDigitalOption::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     return {{AssetClass::COM, std::set<std::string>({name_})}};
 }
 
@@ -174,7 +185,7 @@ void CommodityDigitalOption::fromXML(XMLNode* node) {
     strike_ = XMLUtils::getChildValueAsDouble(commodityNode, "Strike", true);
     payoff_ = XMLUtils::getChildValueAsDouble(commodityNode, "Payoff", true);
 
-    isFuturePrice_ = boost::none;
+    isFuturePrice_ = QuantLib::ext::nullopt;
     if (XMLNode* n = XMLUtils::getChildNode(commodityNode, "IsFuturePrice"))
         isFuturePrice_ = parseBool(XMLUtils::getNodeValue(n));
 

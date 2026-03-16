@@ -61,11 +61,11 @@ public:
         \param fixingDate        If cash settled, the fixing date
         \param fxIndex           If cash settled, the FX index from which to take the fixing on the fixing date
     */
-    CommodityForward(const boost::shared_ptr<CommodityIndex>& index, const QuantLib::Currency& currency,
+    CommodityForward(const QuantLib::ext::shared_ptr<CommodityIndex>& index, const QuantLib::Currency& currency,
                      QuantLib::Position::Type position, QuantLib::Real quantity, const QuantLib::Date& maturityDate,
                      QuantLib::Real strike, bool physicallySettled = true, const Date& paymentDate = Date(),
                      const QuantLib::Currency& payCcy = Currency(), const Date& fixingDate = Date(),
-                     const boost::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr);
+                     const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr);
     //@}
 
     //! \name Instrument interface
@@ -76,7 +76,7 @@ public:
 
     //! \name Inspectors
     //@{
-    const boost::shared_ptr<CommodityIndex>& index() const { return index_; }
+    const QuantLib::ext::shared_ptr<CommodityIndex>& index() const { return index_; }
     const QuantLib::Currency& currency() const { return currency_; }
     QuantLib::Position::Type position() const { return position_; }
     QuantLib::Real quantity() const { return quantity_; }
@@ -86,11 +86,11 @@ public:
     const QuantLib::Date& paymentDate() const { return paymentDate_; }
     Currency payCcy() const { return payCcy_; }
     Date fixingDate() const { return fixingDate_; }
-    boost::shared_ptr<QuantExt::FxIndex> fxIndex() const { return fxIndex_; }
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex() const { return fxIndex_; }
     //@}
 
 private:
-    boost::shared_ptr<CommodityIndex> index_;
+    QuantLib::ext::shared_ptr<CommodityIndex> index_;
     QuantLib::Currency currency_;
     QuantLib::Position::Type position_;
     QuantLib::Real quantity_;
@@ -99,14 +99,14 @@ private:
     bool physicallySettled_;
     QuantLib::Date paymentDate_;
     Currency payCcy_;
-    boost::shared_ptr<FxIndex> fxIndex_;
+    QuantLib::ext::shared_ptr<FxIndex> fxIndex_;
     Date fixingDate_;
 };
 
 //! \ingroup instruments
 class CommodityForward::arguments : public virtual QuantLib::PricingEngine::arguments {
 public:
-    boost::shared_ptr<CommodityIndex> index;
+    QuantLib::ext::shared_ptr<CommodityIndex> index;
     QuantLib::Currency currency;
     QuantLib::Position::Type position;
     QuantLib::Real quantity;
@@ -115,7 +115,7 @@ public:
     bool physicallySettled;
     QuantLib::Date paymentDate;
     Currency payCcy;
-    boost::shared_ptr<FxIndex> fxIndex;
+    QuantLib::ext::shared_ptr<FxIndex> fxIndex;
     Date fixingDate;
     void validate() const override;
 };

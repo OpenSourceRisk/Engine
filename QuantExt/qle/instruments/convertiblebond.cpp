@@ -34,7 +34,7 @@
 namespace QuantExt {
 
 ConvertibleBond::ConvertibleBond(Natural settlementDays, const Calendar& calendar, const Date& issueDate,
-                                 const Leg& coupons, const boost::shared_ptr<Exercise>& exercise,
+                                 const Leg& coupons, const QuantLib::ext::shared_ptr<Exercise>& exercise,
                                  const Real conversionRatio, const DividendSchedule& dividends,
                                  const CallabilitySchedule& callability)
     : Bond(settlementDays, calendar, issueDate, coupons), exercise_(exercise), conversionRatio_(conversionRatio),
@@ -49,7 +49,7 @@ ConvertibleBond::ConvertibleBond(Natural settlementDays, const Calendar& calenda
     QL_REQUIRE(exercise_, "no exercise for conversion given");
     QL_REQUIRE(!exercise_->dates().empty(), "exercise does not contain any conversion dates");
 
-    option_ = boost::make_shared<option>(this);
+    option_ = QuantLib::ext::make_shared<option>(this);
 }
 
 void ConvertibleBond::performCalculations() const {
@@ -60,11 +60,11 @@ void ConvertibleBond::performCalculations() const {
 }
 
 ConvertibleBond::option::option(const ConvertibleBond* bond)
-    : OneAssetOption(boost::shared_ptr<StrikedTypePayoff>(
+    : OneAssetOption(QuantLib::ext::shared_ptr<StrikedTypePayoff>(
                          new PlainVanillaPayoff(Option::Call, bond->notionals().front() / bond->conversionRatio())),
                      bond->exercise()),
       bond_(bond) {
-    registerWith(boost::shared_ptr<ConvertibleBond>(const_cast<ConvertibleBond*>(bond), null_deleter()));
+    registerWith(QuantLib::ext::shared_ptr<ConvertibleBond>(const_cast<ConvertibleBond*>(bond), null_deleter()));
 }
 
 bool ConvertibleBond::option::isExpired() const { return bond_->isExpired(); }
@@ -101,8 +101,8 @@ void ConvertibleBond::option::setupArguments(PricingEngine::arguments* args) con
             if (bond_->callability()[i]->price().type() == Bond::Price::Clean)
                 moreArgs->callabilityPrices.back() += bond_->accruedAmount(bond_->callability()[i]->date()) / 100.0 *
                                                       bond_->notional(bond_->callability()[i]->date());
-            boost::shared_ptr<SoftCallability> softCall =
-                boost::dynamic_pointer_cast<SoftCallability>(bond_->callability()[i]);
+            QuantLib::ext::shared_ptr<SoftCallability> softCall =
+                QuantLib::ext::dynamic_pointer_cast<SoftCallability>(bond_->callability()[i]);
             if (softCall)
                 moreArgs->callabilityTriggers.push_back(softCall->trigger());
             else
@@ -124,7 +124,7 @@ void ConvertibleBond::option::setupArguments(PricingEngine::arguments* args) con
     moreArgs->notionals.clear();
     moreArgs->notionalDates.clear();
     Real currentNotional = 0.0;
-    for (std::vector<boost::shared_ptr<CashFlow>>::const_reverse_iterator r = bond_->redemptions().rbegin();
+    for (std::vector<QuantLib::ext::shared_ptr<CashFlow>>::const_reverse_iterator r = bond_->redemptions().rbegin();
          r != bond_->redemptions().rend(); ++r) {
         moreArgs->notionals.insert(moreArgs->notionals.begin(), currentNotional);
         moreArgs->notionalDates.insert(moreArgs->notionalDates.begin(), (*r)->date());

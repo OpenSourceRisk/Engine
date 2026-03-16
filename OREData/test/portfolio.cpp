@@ -32,9 +32,9 @@ BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 BOOST_AUTO_TEST_SUITE(PortfolioTests)
 
 BOOST_AUTO_TEST_CASE(testAddTrades) {
-    boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
-    boost::shared_ptr<FxForward> trade1 = boost::make_shared<FxForward>();
-    boost::shared_ptr<FxForward> trade2 = boost::make_shared<FxForward>();
+    QuantLib::ext::shared_ptr<Portfolio> portfolio = QuantLib::ext::make_shared<Portfolio>();
+    QuantLib::ext::shared_ptr<FxForward> trade1 = QuantLib::ext::make_shared<FxForward>();
+    QuantLib::ext::shared_ptr<FxForward> trade2 = QuantLib::ext::make_shared<FxForward>();
     trade1->id() = "1";
     trade2->id() = "2";
     BOOST_CHECK_EQUAL(portfolio->has(trade1->id()), false);
@@ -48,16 +48,16 @@ BOOST_AUTO_TEST_CASE(testAddTrades) {
 }
 
 BOOST_AUTO_TEST_CASE(testAddTradeWithExistingId) {
-    boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
-    boost::shared_ptr<FxForward> trade1 = boost::make_shared<FxForward>();
-    boost::shared_ptr<FxForward> trade2 = boost::make_shared<FxForward>();
+    QuantLib::ext::shared_ptr<Portfolio> portfolio = QuantLib::ext::make_shared<Portfolio>();
+    QuantLib::ext::shared_ptr<FxForward> trade1 = QuantLib::ext::make_shared<FxForward>();
+    QuantLib::ext::shared_ptr<FxForward> trade2 = QuantLib::ext::make_shared<FxForward>();
     portfolio->add(trade1);
     BOOST_CHECK_THROW(portfolio->add(trade2), exception);
 }
 
 BOOST_AUTO_TEST_CASE(testClear) {
-    boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
-    boost::shared_ptr<FxForward> trade = boost::make_shared<FxForward>();
+    QuantLib::ext::shared_ptr<Portfolio> portfolio = QuantLib::ext::make_shared<Portfolio>();
+    QuantLib::ext::shared_ptr<FxForward> trade = QuantLib::ext::make_shared<FxForward>();
     portfolio->add(trade);
     BOOST_CHECK_EQUAL(portfolio->size(), 1);
     portfolio->clear();
@@ -65,9 +65,9 @@ BOOST_AUTO_TEST_CASE(testClear) {
 }
 
 BOOST_AUTO_TEST_CASE(testSize) {
-    boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
-    boost::shared_ptr<FxForward> trade1 = boost::make_shared<FxForward>();
-    boost::shared_ptr<FxForward> trade2 = boost::make_shared<FxForward>();
+    QuantLib::ext::shared_ptr<Portfolio> portfolio = QuantLib::ext::make_shared<Portfolio>();
+    QuantLib::ext::shared_ptr<FxForward> trade1 = QuantLib::ext::make_shared<FxForward>();
+    QuantLib::ext::shared_ptr<FxForward> trade2 = QuantLib::ext::make_shared<FxForward>();
     trade1->id() = "1";
     trade2->id() = "2";
     BOOST_CHECK_EQUAL(portfolio->size(), 0);
@@ -78,8 +78,8 @@ BOOST_AUTO_TEST_CASE(testSize) {
 }
 
 BOOST_AUTO_TEST_CASE(testRemove) {
-    boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
-    boost::shared_ptr<FxForward> trade = boost::make_shared<FxForward>();
+    QuantLib::ext::shared_ptr<Portfolio> portfolio = QuantLib::ext::make_shared<Portfolio>();
+    QuantLib::ext::shared_ptr<FxForward> trade = QuantLib::ext::make_shared<FxForward>();
     BOOST_CHECK_EQUAL(portfolio->has(trade->id()), false);
     portfolio->add(trade);
     BOOST_CHECK_EQUAL(portfolio->has(trade->id()), true);
@@ -88,10 +88,10 @@ BOOST_AUTO_TEST_CASE(testRemove) {
 }
 
 BOOST_AUTO_TEST_CASE(testTrades) {
-    boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
-    boost::shared_ptr<FxForward> trade1 = boost::make_shared<FxForward>();
-    boost::shared_ptr<FxForward> trade2 = boost::make_shared<FxForward>();
-    std::map<std::string, boost::shared_ptr<Trade>> trade_list;
+    QuantLib::ext::shared_ptr<Portfolio> portfolio = QuantLib::ext::make_shared<Portfolio>();
+    QuantLib::ext::shared_ptr<FxForward> trade1 = QuantLib::ext::make_shared<FxForward>();
+    QuantLib::ext::shared_ptr<FxForward> trade2 = QuantLib::ext::make_shared<FxForward>();
+    std::map<std::string, QuantLib::ext::shared_ptr<Trade>> trade_list;
     trade1->id() = "1";
     trade2->id() = "2";
     BOOST_CHECK(portfolio->trades() == trade_list);
@@ -104,9 +104,9 @@ BOOST_AUTO_TEST_CASE(testTrades) {
 }
 
 BOOST_AUTO_TEST_CASE(testIds) {
-    boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
-    boost::shared_ptr<FxForward> trade1 = boost::make_shared<FxForward>();
-    boost::shared_ptr<FxForward> trade2 = boost::make_shared<FxForward>();
+    QuantLib::ext::shared_ptr<Portfolio> portfolio = QuantLib::ext::make_shared<Portfolio>();
+    QuantLib::ext::shared_ptr<FxForward> trade1 = QuantLib::ext::make_shared<FxForward>();
+    QuantLib::ext::shared_ptr<FxForward> trade2 = QuantLib::ext::make_shared<FxForward>();
     trade1->id() = "1";
     trade2->id() = "2";
     std::set<std::string> trade_ids;

@@ -48,8 +48,8 @@
 #include <boost/log/sources/global_logger_storage.hpp>
 #include <boost/log/sources/record_ostream.hpp>
 #include <boost/log/sources/severity_logger.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/shared_ptr.hpp>
+#include <filesystem>
+#include <ql/shared_ptr.hpp>
 #include <map>
 #include <ql/qldefines.hpp>
 #include <queue>
@@ -63,7 +63,7 @@
 #include <ql/patterns/singleton.hpp>
 #include <sstream>
 
-#include <boost/any.hpp>
+#include <ql/any.hpp>
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/thread/lock_types.hpp>
 
@@ -281,8 +281,12 @@ protected:
     IndependentLogger(const std::string& name) : name_(name) {}
     std::vector<std::string> messages_;
 
+    //! mutex to acquire locks
+    boost::shared_mutex& mutex() { return mutex_; }
+
 private:
     std::string name_;
+    mutable boost::shared_mutex mutex_;
 };
 
 //! ProgressLogger
@@ -301,7 +305,7 @@ public:
     //! Destructor
     virtual void removeSinks() override;
     void setCoutLog(bool flag);
-    void setFileLog(const std::string& filepath, const boost::filesystem::path& dir, QuantLib::Size rotationSize = 0);
+    void setFileLog(const std::string& filepath, const std::filesystem::path& dir, QuantLib::Size rotationSize = 0);
 
 private:
     boost::shared_ptr<file_sink> fileSink_;
@@ -322,7 +326,7 @@ public:
     const boost::shared_ptr<text_sink>& cacheSink() { return cacheSink_; }
     //! Destructor
     virtual void removeSinks() override;
-    void setFileLog(const std::string& filepath, const boost::filesystem::path& dir, QuantLib::Size rotationSize = 0);
+    void setFileLog(const std::string& filepath, const std::filesystem::path& dir, QuantLib::Size rotationSize = 0);
 
 private:
     boost::shared_ptr<file_sink> fileSink_;
@@ -377,7 +381,7 @@ private:
   <pre>
       std::cout << "Begin Log Messages:" << std::endl;
 
-      boost::shared_ptr<BufferLogger> bl = boost::dynamic_pointer_cast<BufferLogger>
+      boost::shared_ptr<BufferLogger> bl = QuantLib::ext::dynamic_pointer_cast<BufferLogger>
         (Log::instance().logger(BufferLogger::name));
 
       while (bl.hasNext())
@@ -397,8 +401,9 @@ public:
       This method will throw if a logger with the same name is already registered.
       \param logger the logger to add
      */
-    void registerLogger(const boost::shared_ptr<Logger>& logger);
-    void registerIndependentLogger(const boost::shared_ptr<IndependentLogger>& logger);
+    void registerLogger(const QuantLib::ext::shared_ptr<Logger>& logger);
+    void registerIndependentLogger(const QuantLib::ext::shared_ptr<IndependentLogger>& logger);
+    void clearAllIndependentLoggers();
 
     //! Check if logger exists
     const bool hasLogger(const std::string& name) const;
@@ -408,11 +413,11 @@ public:
     /*!
       Retrieve a Logger by it's name, for example to retrieve the StderrLogger (assuming it is registered)
       <pre>
-      boost::shared_ptr<Logger> slogger = Log::instance().logger(StderrLogger::name);
+      QuantLib::ext::shared_ptr<Logger> slogger = Log::instance().logger(StderrLogger::name);
       </pre>
       */
-    boost::shared_ptr<Logger>& logger(const std::string& name);
-    boost::shared_ptr<IndependentLogger>& independentLogger(const std::string& name);
+    QuantLib::ext::shared_ptr<Logger>& logger(const std::string& name);
+    QuantLib::ext::shared_ptr<IndependentLogger>& independentLogger(const std::string& name);
 
     //! Remove a Logger
     /*!
@@ -457,11 +462,11 @@ public:
         boost::unique_lock<boost::shared_mutex> lock(mutex());
         mask_ = mask;
     }
-    const boost::filesystem::path& rootPath() {
+    const std::filesystem::path& rootPath() {
         boost::shared_lock<boost::shared_mutex> lock(mutex());
         return rootPath_;
     }
-    void setRootPath(const boost::filesystem::path& pth) {
+    void setRootPath(const std::filesystem::path& pth) {
         boost::unique_lock<boost::shared_mutex> lock(mutex());
         rootPath_ = pth;
     }
@@ -501,11 +506,11 @@ private:
     // not thread safe
     std::string source(const char* filename, int lineNo) const;
 
-    std::map<std::string, boost::shared_ptr<Logger>> loggers_;
-    std::map<std::string, boost::shared_ptr<IndependentLogger>> independentLoggers_;
+    std::map<std::string, QuantLib::ext::shared_ptr<Logger>> loggers_;
+    std::map<std::string, QuantLib::ext::shared_ptr<IndependentLogger>> independentLoggers_;
     bool enabled_;
     unsigned mask_;
-    boost::filesystem::path rootPath_;
+    std::filesystem::path rootPath_;
     std::ostringstream ls_;
 
     int maxLen_ = 45;
@@ -555,15 +560,17 @@ private:
 #define TLOG(text) MLOG(oreSeverity::data, text)
 
 //! Logging macro specifically for logging memory usage
-#define MEM_LOG MEM_LOG_USING_LEVEL(oreSeverity::memory)
+#define MEM_LOG MEM_LOG_USING_LEVEL(oreSeverity::memory, "")
 
-#define MEM_LOG_USING_LEVEL(LEVEL)                                                                                      \
+#define MEM_LOG_USING_LEVEL(LEVEL, MSG)                                                                                 \
     {                                                                                                                   \
         if (ore::data::Log::instance().enabled() && ore::data::Log::instance().filter(LEVEL)) {                         \
             boost::unique_lock<boost::shared_mutex> lock(ore::data::Log::instance().mutex());                           \
             ore::data::Log::instance().header(LEVEL, __FILE__, __LINE__);                                               \
+            ore::data::Log::instance().logStream() << MSG << ": ";                                                      \
             ore::data::Log::instance().logStream() << std::to_string(ore::data::os::getPeakMemoryUsageBytes()) << "|";  \
             ore::data::Log::instance().logStream() << std::to_string(ore::data::os::getMemoryUsageBytes());             \
+            ore::data::Log::instance().logStream() << " (peakMemoryUsage (bytes) | memoryUsage (bytes))";               \
             ore::data::Log::instance().log(LEVEL);                                                                      \
         }                                                                                                               \
     }
@@ -640,14 +647,15 @@ public:
     void log() const;
     //! create JSON-like output from the data
     const std::string json() const { return jsonify(data_); }
-    void set(const std::string& key, const boost::any& value) { data_[key] = value; }
+    void set(const std::string& key, const QuantLib::ext::any& value) { data_[key] = value; }
+    virtual void emitLog() const = 0;
 
 protected:
     //! generate Boost log record - this method is called by log()
-    virtual void emitLog() const = 0;
-    static std::string jsonify(const boost::any&);
+    static std::string jsonify(const QuantLib::ext::any&);
 
-    std::map<std::string, boost::any> data_;
+    std::map<std::string, QuantLib::ext::any> data_;
+    mutable bool logged_ = false;
 };
 
 // This can be used directly in log messages, e.g.
@@ -677,7 +685,7 @@ class StructuredMessage : public JSONMessage {
 public:
     enum class Category { Error, Warning, Unknown };
 
-    enum class Group { Analytics, Configuration, Model, Curve, Trade, Fixing, Logging, ReferenceData, Unknown };
+    enum class Group { Analytics, Configuration, Model, Curve, Convention, Trade, Fixing, Logging, ReferenceData, Input, Unknown };
 
     StructuredMessage(const Category& category, const Group& group, const std::string& message,
                       const std::map<std::string, std::string>& subFields = std::map<std::string, std::string>());
@@ -686,16 +694,16 @@ public:
                       const std::pair<std::string, std::string>& subField = std::pair<std::string, std::string>())
         : StructuredMessage(category, group, message, std::map<std::string, std::string>({subField})) {}
 
-    virtual ~StructuredMessage() {}
+    virtual ~StructuredMessage();
 
     static constexpr const char* name = "StructuredMessage";
 
     //! return a std::string for the log file
-    std::string msg() const { return std::string(name) + std::string(" ") + json(); }
+    std::string msg() const override { return std::string(name) + std::string(" ") + json(); }
     //! generate Boost log record to pass to corresponding sinks
-    void emitLog() const;
 
 protected:
+    void emitLog() const override;
     void addSubFields(const std::map<std::string, std::string>&);
 };
 
@@ -712,7 +720,7 @@ public:
 
 class EventMessage : public JSONMessage {
 public:
-    EventMessage(const std::string& msg, const std::string& msgKey, const std::map<std::string, boost::any> data = {}) {
+    EventMessage(const std::string& msg, const std::string& msgKey, const std::map<std::string, QuantLib::ext::any> data = {}) {
         data_ = data;
         data_[msgKey] = msg;
     }
@@ -720,9 +728,11 @@ public:
     static constexpr const char* name = "EventMessage";
 
     //! return a std::string for the log file
-    std::string msg() const { return std::string(name) + std::string(" ") + json(); }
+    std::string msg() const override { return std::string(name) + std::string(" ") + json(); }
     //! generate Boost log record to pass to corresponding sinks
-    void emitLog() const;
+
+protected:
+    void emitLog() const override;
 
 private:
     std::string message_;
@@ -735,9 +745,11 @@ public:
     static constexpr const char* name = "ProgressMessage";
 
     //! return a std::string for the log file
-    std::string msg() const { return std::string(name) + std::string(" ") + json(); }
+    std::string msg() const override { return std::string(name) + std::string(" ") + json(); }
     //! generate Boost log record to pass to corresponding sinks
-    void emitLog() const;
+
+protected:
+    void emitLog() const override;
 };
 
 //! Singleton to control console logging

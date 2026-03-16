@@ -1,0 +1,48 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="Inflation_YoY_Floor_AUCPI">
+        <TradeType>CapFloor</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <valuation_date>2025-02-10</valuation_date>
+                <party_id>party</party_id>
+            </AdditionalFields>
+        </Envelope>
+        <CapFloorData>
+            <LongShort>Long</LongShort>
+            <LegData>
+                <LegType>YY</LegType>
+                <Payer>false</Payer>
+                <Currency>AUD</Currency>
+                <Notionals>
+                    <Notional>1000000</Notional>
+                    <Exchanges>
+                        <NotionalFinalExchange>true</NotionalFinalExchange>
+                    </Exchanges>
+                </Notionals>
+                <DayCounter>30/360</DayCounter>
+                <PaymentConvention>F</PaymentConvention>
+                <ScheduleData>
+                    <Rules>
+                        <StartDate>2027-09-14</StartDate>
+                        <EndDate>2032-09-13</EndDate>
+                        <Tenor>1Y</Tenor>
+                        <Calendar>AUD</Calendar>
+                        <Convention>F</Convention>
+                        <Rule>Backward</Rule>
+                    </Rules>
+                </ScheduleData>
+                <YYLegData>
+                    <Index>AUCPI</Index>
+                    <FixingDays>0</FixingDays>
+                    <ObservationLag>3M</ObservationLag>
+                </YYLegData>
+            </LegData>
+            <Floors>
+                <Floor>0.0</Floor>
+            </Floors>
+        </CapFloorData>
+    </Trade>
+</Portfolio>

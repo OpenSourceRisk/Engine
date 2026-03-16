@@ -24,9 +24,9 @@
 namespace QuantExt {
 
 FloatingAnnuityCoupon::FloatingAnnuityCoupon(Real annuity, bool underflow,
-                                             const boost::shared_ptr<Coupon>& previousCoupon, const Date& paymentDate,
+                                             const QuantLib::ext::shared_ptr<Coupon>& previousCoupon, const Date& paymentDate,
                                              const Date& startDate, const Date& endDate, Natural fixingDays,
-                                             const boost::shared_ptr<InterestRateIndex>& index, Real gearing,
+                                             const QuantLib::ext::shared_ptr<InterestRateIndex>& index, Real gearing,
                                              Spread spread, const Date& refPeriodStart, const Date& refPeriodEnd,
                                              const DayCounter& dayCounter, bool isInArrears)
     : Coupon(paymentDate, 0.0, startDate, endDate, refPeriodStart, refPeriodEnd), annuity_(annuity),
@@ -45,7 +45,7 @@ FloatingAnnuityCoupon::FloatingAnnuityCoupon(Real annuity, bool underflow,
 void FloatingAnnuityCoupon::performCalculations() const {
     // If the previous coupon was a FloatingAnnuityCoupon we need to cast here in order to get its mutable nominal.
     // Using the Coupon interface previousCoupon_->nominal() would return zero.
-    boost::shared_ptr<FloatingAnnuityCoupon> c = boost::dynamic_pointer_cast<FloatingAnnuityCoupon>(previousCoupon_);
+    QuantLib::ext::shared_ptr<FloatingAnnuityCoupon> c = QuantLib::ext::dynamic_pointer_cast<FloatingAnnuityCoupon>(previousCoupon_);
     if (c)
         this->nominal_ = c->nominal() + c->amount() - annuity_;
     else

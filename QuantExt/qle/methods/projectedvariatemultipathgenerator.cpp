@@ -21,9 +21,9 @@
 namespace QuantExt {
 
 ProjectedVariateMultiPathGenerator::ProjectedVariateMultiPathGenerator(
-    const boost::shared_ptr<StochasticProcess>& process, const TimeGrid& timeGrid,
+    const QuantLib::ext::shared_ptr<StochasticProcess>& process, const TimeGrid& timeGrid,
     const std::vector<Size>& stateProcessProjection,
-    const boost::shared_ptr<MultiPathVariateGeneratorBase>& variateGenerator)
+    const QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>& variateGenerator)
     : process_(process), timeGrid_(timeGrid), stateProcessProjection_(stateProcessProjection),
       variateGenerator_(variateGenerator), next_(MultiPath(process->size(), timeGrid), 1.0) {
 

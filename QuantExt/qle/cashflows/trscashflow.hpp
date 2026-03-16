@@ -35,11 +35,12 @@ namespace QuantExt {
 using namespace QuantLib;
 
 //! bond trs cashflow
-class TRSCashFlow : public CashFlow, public Observer {
+class TRSCashFlow : public CashFlow {
 public:
     TRSCashFlow(const Date& paymentDate, const Date& fixingStartDate, const Date& fixingEndDate,
-                const Real notional, const boost::shared_ptr<Index>& Index,
-                const Real initialPrice = Null<Real>(), const boost::shared_ptr<FxIndex>& fxIndex = nullptr);
+                const Real notional, const QuantLib::ext::shared_ptr<Index>& Index,
+                const Real initialPrice = Null<Real>(), const QuantLib::ext::shared_ptr<FxIndex>& fxIndex = nullptr,
+                const bool applyFXIndexFixingDays = false);
 
     //! \name CashFlow interface
     //@{
@@ -53,13 +54,16 @@ public:
     const Date& fixingEndDate() const { return fixingEndDate_; }
     virtual const Real notional() const { return notional_; }
     virtual const Real notional(Date date) const { return notional_; }
-    const boost::shared_ptr<Index>& index() const { return index_; }
+    const QuantLib::ext::shared_ptr<Index>& index() const { return index_; }
     const Real initialPrice() const { return initialPrice_; }
-    const boost::shared_ptr<FxIndex>& fxIndex() const { return fxIndex_; }
+    const QuantLib::ext::shared_ptr<FxIndex>& fxIndex() const { return fxIndex_; }
+    Date fxFixingStartDate() const;
+    Date fxFixingEndDate() const;
     Real fxStart() const;
     Real fxEnd() const;
     Real assetStart() const;
     Real assetEnd() const;
+    bool applyFXIndexFixingDays() const { return applyFXIndexFixingDays_; }
     //@}
 
     //! \name Observer interface
@@ -75,9 +79,10 @@ public:
 protected:
     Date paymentDate_, fixingStartDate_, fixingEndDate_;
     Real notional_;
-    boost::shared_ptr<Index> index_;
+    QuantLib::ext::shared_ptr<Index> index_;
     Real initialPrice_ = QuantLib::Null<Real>();
-    boost::shared_ptr<FxIndex> fxIndex_;
+    QuantLib::ext::shared_ptr<FxIndex> fxIndex_;
+    bool applyFXIndexFixingDays_ = false;
 };
 
 //! helper class building a sequence of trs cashflows
@@ -86,17 +91,19 @@ protected:
 class TRSLeg {
 public:
     TRSLeg(const std::vector<Date>& valuationDates, const std::vector<Date>& paymentDates, const Real notional,
-               const boost::shared_ptr<Index>& index, const boost::shared_ptr<FxIndex>& fxIndex = nullptr);
+               const QuantLib::ext::shared_ptr<Index>& index, const QuantLib::ext::shared_ptr<FxIndex>& fxIndex = nullptr);
     TRSLeg& withInitialPrice(Real);
+    TRSLeg& withApplyFXIndexFixingDays(bool);
     operator Leg() const;
 
 private:
     std::vector<Date> valuationDates_;
     std::vector<Date> paymentDates_;
     Real notional_;
-    boost::shared_ptr<Index> index_;
-    boost::shared_ptr<FxIndex> fxIndex_;
+    QuantLib::ext::shared_ptr<Index> index_;
+    QuantLib::ext::shared_ptr<FxIndex> fxIndex_;
     Real initialPrice_;
+    bool applyFXIndexFixingDays_ = false;
 };
 
 } // namespace QuantExt

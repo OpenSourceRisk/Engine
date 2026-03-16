@@ -40,17 +40,15 @@ namespace data {
 using namespace QuantLib;
 using namespace QuantExt;
 
-FdGaussianCam::FdGaussianCam(const Handle<CrossAssetModel>& cam, const std::string& currency,
-                             const Handle<YieldTermStructure>& curve,
-                             const std::vector<std::pair<std::string, boost::shared_ptr<InterestRateIndex>>>& irIndices,
-                             const std::set<Date>& simulationDates, const Size stateGridPoints,
-                             const Size timeStepsPerYear, const Real mesherEpsilon,
-                             const IborFallbackConfig& iborFallbackConfig)
-    : ModelImpl(curve->dayCounter(), stateGridPoints, {currency}, irIndices, {}, {}, {}, simulationDates,
-                iborFallbackConfig),
+FdGaussianCam::FdGaussianCam(
+    const Handle<CrossAssetModel>& cam, const std::string& currency, const Handle<YieldTermStructure>& curve,
+    const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
+    const std::set<Date>& simulationDates, const Size stateGridPoints, const Size timeStepsPerYear,
+    const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig, const Params& params)
+    : ModelImpl(Model::Type::FD, params, curve->dayCounter(), stateGridPoints, {currency}, irIndices, {}, {}, {},
+                simulationDates, iborFallbackConfig),
       cam_(cam), currency_(currency), curve_(curve), simulationDates_(simulationDates),
-      stateGridPoints_(stateGridPoints), timeStepsPerYear_(timeStepsPerYear), mesherEpsilon_(mesherEpsilon),
-      iborFallbackConfig_(iborFallbackConfig) {
+      stateGridPoints_(stateGridPoints), timeStepsPerYear_(timeStepsPerYear), iborFallbackConfig_(iborFallbackConfig) {
 
     // check inputs
 
@@ -82,7 +80,7 @@ void FdGaussianCam::performCalculations() const {
 
     solver_ = std::unique_ptr<LgmBackwardSolver>(
         new LgmFdSolver(cam_->lgm(0), timeFromReference(*simulationDates_.rbegin()), QuantLib::FdmSchemeDesc::Douglas(),
-                        stateGridPoints_, timeStepsPerYear_, mesherEpsilon_));
+                        stateGridPoints_, timeStepsPerYear_, params_.mesherEpsilon));
 
     // set up eff sim dates
 
@@ -139,16 +137,16 @@ RandomVariable FdGaussianCam::fwdCompAvg(const bool isAvg, const std::string& in
                                          const bool nakedOption, const bool localCapFloor) const {
     calculate();
     auto ir = std::find_if(irIndices_.begin(), irIndices_.end(),
-                           [&indexInput](const std::pair<IndexInfo, boost::shared_ptr<InterestRateIndex>>& p) {
+                           [&indexInput](const std::pair<IndexInfo, QuantLib::ext::shared_ptr<InterestRateIndex>>& p) {
                                return p.first.name() == indexInput;
                            });
     QL_REQUIRE(ir != irIndices_.end(),
                "FdGaussianCam::fwdComp() ir index " << indexInput << " not found, this is unexpected");
     LgmVectorised lgmv(cam_->lgm(0)->parametrization());
-    auto on = boost::dynamic_pointer_cast<OvernightIndex>(ir->second);
+    auto on = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(ir->second);
     QL_REQUIRE(on, "FdGaussianCam::fwdCompAvg(): expected on index for " << indexInput);
     // only used to extract fixing and value dates
-    auto coupon = boost::make_shared<QuantExt::OvernightIndexedCoupon>(
+    auto coupon = QuantLib::ext::make_shared<QuantExt::OvernightIndexedCoupon>(
         end, 1.0, start, end, on, gearing, spread, Date(), Date(), DayCounter(), false, includeSpread, lookback * Days,
         rateCutoff, fixingDays);
     // get model time and state
@@ -189,7 +187,7 @@ RandomVariable FdGaussianCam::pay(const RandomVariable& amount, const Date& obsd
 }
 
 RandomVariable FdGaussianCam::npv(const RandomVariable& amount, const Date& obsdate, const Filter& filter,
-                                  const boost::optional<long>& memSlot, const RandomVariable& addRegressor1,
+                                  const QuantLib::ext::optional<long>& memSlot, const RandomVariable& addRegressor1,
                                   const RandomVariable& addRegressor2) const {
 
     QL_REQUIRE(!memSlot, "FdGaussianCam::npv(): mem slot not allowed.");
@@ -225,7 +223,7 @@ Real FdGaussianCam::extractT0Result(const RandomVariable& result) const {
 
     // roll back to today (if necessary)
 
-    RandomVariable r = npv(result, referenceDate(), Filter(), boost::none, RandomVariable(), RandomVariable());
+    RandomVariable r = npv(result, referenceDate(), Filter(), QuantLib::ext::nullopt, RandomVariable(), RandomVariable());
 
     // we expect the results to be determinstic as per LgmBackwardSolver interface
 

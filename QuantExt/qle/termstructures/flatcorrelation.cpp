@@ -31,7 +31,7 @@ FlatCorrelation::FlatCorrelation(const Date& referenceDate, const Handle<Quote>&
 
 FlatCorrelation::FlatCorrelation(const Date& referenceDate, Real correlation, const DayCounter& dayCounter)
     : CorrelationTermStructure(referenceDate, NullCalendar(), dayCounter),
-      correlation_(boost::shared_ptr<Quote>(new SimpleQuote(correlation))) {}
+      correlation_(QuantLib::ext::shared_ptr<Quote>(new SimpleQuote(correlation))) {}
 
 FlatCorrelation::FlatCorrelation(Natural settlementDays, const Calendar& calendar, const Handle<Quote>& correlation,
                                  const DayCounter& dayCounter)
@@ -42,6 +42,6 @@ FlatCorrelation::FlatCorrelation(Natural settlementDays, const Calendar& calenda
 FlatCorrelation::FlatCorrelation(Natural settlementDays, const Calendar& calendar, Real correlation,
                                  const DayCounter& dayCounter)
     : CorrelationTermStructure(settlementDays, calendar, dayCounter),
-      correlation_(boost::shared_ptr<Quote>(new SimpleQuote(correlation))) {}
+      correlation_(QuantLib::ext::shared_ptr<Quote>(new SimpleQuote(correlation))) {}
 
 } // namespace QuantExt

@@ -34,9 +34,9 @@ SpreadedDiscountCurve::SpreadedDiscountCurve(const Handle<YieldTermStructure>& r
         registerWith(quotes_[i]);
     }
     if (interpolation_ == Interpolation::logLinear) {
-        dataInterpolation_ = boost::make_shared<LogLinearInterpolation>(times_.begin(), times_.end(), data_.begin());
+        dataInterpolation_ = QuantLib::ext::make_shared<LogLinearInterpolation>(times_.begin(), times_.end(), data_.begin());
     } else {
-        dataInterpolation_ = boost::make_shared<LinearInterpolation>(times_.begin(), times_.end(), data_.begin());
+        dataInterpolation_ = QuantLib::ext::make_shared<LinearInterpolation>(times_.begin(), times_.end(), data_.begin());
     }
     dataInterpolation_->enableExtrapolation();
     registerWith(referenceCurve_);
@@ -59,6 +59,9 @@ void SpreadedDiscountCurve::performCalculations() const {
     for (Size i = 0; i < times_.size(); ++i) {
         QL_REQUIRE(!quotes_[i].empty(), "SpreadedDiscountCurve: quote at index " << i << " is empty");
         data_[i] = quotes_[i]->value();
+        for (Size j = 0; j < bases_.size(); ++j) {
+            data_[i] *= std::pow(bases_[j]->discount(times_[i]) / basesOffset_[j][i], multiplier_[j]);
+        }
         QL_REQUIRE(data_[i] > 0, "SpreadedDiscountCurve: invalid value " << data_[i] << " at index " << i);
     }
     if (interpolation_ == Interpolation::linearZero) {
@@ -87,6 +90,32 @@ DiscountFactor SpreadedDiscountCurve::discountImpl(Time t) const {
     } else {
         return referenceCurve_->discount(t) * std::pow(dMax, t / tMax);
     }
+}
+
+void SpreadedDiscountCurve::makeThisCurveSpreaded(const std::vector<Handle<YieldTermStructure>>& bases,
+                                                  const std::vector<double>& multiplier) {
+
+    for (auto const& b : bases_)
+        unregisterWith(b);
+
+    bases_ = bases;
+    multiplier_ = multiplier;
+    QL_REQUIRE(bases_.size() == multiplier_.size(), "SpreadedDiscountCurve::makeThisCurveSpreaded(): bases size ("
+                                                        << bases_.size() << ") does not match multiplier size ("
+                                                        << multiplier_.size() << ")");
+
+    for (auto const& b : bases_)
+        registerWith(b);
+
+    basesOffset_.resize(bases.size());
+    for (Size i = 0; i < bases_.size(); ++i) {
+        basesOffset_[i].resize(times_.size());
+        for (Size j = 0; j < times_.size(); ++j) {
+            basesOffset_[i][j] = bases_[i].empty() ? 1.0 : bases_[i]->discount(times_[j]);
+        }
+    }
+
+    update();
 }
 
 } // namespace QuantExt

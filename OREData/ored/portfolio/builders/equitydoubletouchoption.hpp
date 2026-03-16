@@ -52,16 +52,16 @@ protected:
         return assetName + ccy.code();
     }
 
-    boost::shared_ptr<GeneralizedBlackScholesProcess>
+    QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>
     getBlackScholesProcess(const string& assetName, const Currency& ccy, const std::vector<Time>& timePoints = {}) {
         Handle<BlackVolTermStructure> vol =
             market_->equityVol(assetName, configuration(ore::data::MarketContext::pricing));
         if (!timePoints.empty()) {
             vol = Handle<BlackVolTermStructure>(
-                boost::make_shared<QuantExt::BlackMonotoneVarVolTermStructure>(vol, timePoints));
+                QuantLib::ext::make_shared<QuantExt::BlackMonotoneVarVolTermStructure>(vol, timePoints));
             vol->enableExtrapolation();
         }
-        return boost::make_shared<GeneralizedBlackScholesProcess>(
+        return QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
             market_->equitySpot(assetName, configuration(ore::data::MarketContext::pricing)),
             market_->equityDividendCurve(assetName,configuration(ore::data::MarketContext::pricing)),
             market_->equityForecastCurve(assetName, configuration(ore::data::MarketContext::pricing)), vol);
@@ -79,11 +79,11 @@ public:
         : EquityDoubleTouchOptionEngineBuilder("GarmanKohlhagen", "AnalyticDoubleBarrierBinaryEngine") {}
 
 protected:
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy) override {
-        boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = getBlackScholesProcess(assetName, ccy);
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy) override {
+        QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> gbsp = getBlackScholesProcess(assetName, ccy);
 
         engine_ = "AnalyticDoubleBarrierBinaryEngine";
-        return boost::make_shared<QuantLib::AnalyticDoubleBarrierBinaryEngine>(gbsp);
+        return QuantLib::ext::make_shared<QuantLib::AnalyticDoubleBarrierBinaryEngine>(gbsp);
     }
 };
 

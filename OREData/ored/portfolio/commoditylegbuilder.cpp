@@ -48,16 +48,35 @@ namespace {
 // that gives the prices of averaging futures.
 void updateQuantities(Leg& leg, bool isAveragingFuture, CommodityQuantityFrequency cqf, const Schedule& schedule,
                       bool excludePeriodStart, bool includePeriodEnd,
-                      const boost::shared_ptr<CommodityFutureConvention>& conv,
-                      const boost::shared_ptr<FutureExpiryCalculator>& calc, Natural hoursPerDay, bool useBusinessDays,
+                      const QuantLib::ext::shared_ptr<CommodityFutureConvention>& conv,
+                      const QuantLib::ext::shared_ptr<FutureExpiryCalculator>& calc, Natural hoursPerDay, bool useBusinessDays,
                       const std::string& daylightSavingLocation, const string& commName, bool unrealisedQuantity,
-                      const boost::optional<pair<Calendar, Real>>& offPeakPowerData) {
+                      const QuantLib::ext::optional<pair<Calendar, Real>>& offPeakPowerData) {
+
+    using CQF = CommodityQuantityFrequency;
+    
+    // We allow a special case where the schedule has only one date, which is the pricing date.
+    if (schedule.size() == 1 && leg.size() == 1) {
+        auto ccf = QuantLib::ext::dynamic_pointer_cast<CommodityIndexedCashFlow>(leg[0]);
+        Date pricingDate = ccf->pricingDate();
+        if (cqf == CQF::PerHourAndCalendarDay || cqf == CQF::PerHour){
+            if (offPeakPowerData) {
+                auto hours = offPeakPowerData->first.isHoliday(pricingDate) ? 24.0 : offPeakPowerData->second ;
+                ccf->setPeriodQuantity(hours * ccf->quantity());
+                return;
+            }
+            ccf->setPeriodQuantity(hoursPerDay * ccf->quantity());
+            return;
+        }
+        DLOG("Commodity leg has only one cashflow, derived from a single date, so no quantities to update.");
+        return;
+    }
 
     QL_REQUIRE(leg.size() == schedule.size() - 1, "The number of schedule periods (" << (schedule.size() - 1) <<
         ") was expected to equal the number of leg cashflows (" << leg.size() << ") when updating quantities" <<
         " for commodity " << commName << ".");
 
-    using CQF = CommodityQuantityFrequency;
+    
     if (cqf == CQF::PerCalculationPeriod) {
 
         if (unrealisedQuantity) {
@@ -74,7 +93,7 @@ void updateQuantities(Leg& leg, bool isAveragingFuture, CommodityQuantityFrequen
                 Size numberCashflows = leg.size();
                 for (Size i = 0; i < numberCashflows; ++i) {
 
-                    auto ccf = boost::dynamic_pointer_cast<CommodityIndexedCashFlow>(leg[i]);
+                    auto ccf = QuantLib::ext::dynamic_pointer_cast<CommodityIndexedCashFlow>(leg[i]);
                     QL_REQUIRE(ccf, io::ordinal(i + 1) << " quantity for commodity " << commName <<
                         ", expected a valid CommodityIndexedCashFlow.");
                     Date pricingDate = ccf->pricingDate();
@@ -155,7 +174,7 @@ void updateQuantities(Leg& leg, bool isAveragingFuture, CommodityQuantityFrequen
             Date end = schedule.date(i + 1);
             bool excludeStart = i == 0 ? false : excludePeriodStart;
             bool includeEnd = i == numberCashflows - 1 ? true : includePeriodEnd;
-            auto ccf = boost::dynamic_pointer_cast<CommodityIndexedCashFlow>(leg[i]);
+            auto ccf = QuantLib::ext::dynamic_pointer_cast<CommodityIndexedCashFlow>(leg[i]);
             QL_REQUIRE(ccf, "Updating " << io::ordinal(i + 1) << " quantity for commodity " << commName <<
                 ", expected a valid CommodityIndexedCashFlow.");
             Real newQuantity = ccf->quantity() * ((end - start - 1.0) +
@@ -175,9 +194,9 @@ void updateQuantities(Leg& leg, bool isAveragingFuture, CommodityQuantityFrequen
         // Store the original quantities and CommodityIndexedCashFlow pointers
         Size numberCashflows = leg.size();
         vector<Real> quantities(numberCashflows, 0.0);
-        vector<boost::shared_ptr<CommodityIndexedCashFlow>> ccfs(numberCashflows);
+        vector<QuantLib::ext::shared_ptr<CommodityIndexedCashFlow>> ccfs(numberCashflows);
         for (Size i = 0; i < numberCashflows; ++i) {
-            auto ccf = boost::dynamic_pointer_cast<CommodityIndexedCashFlow>(leg[i]);
+            auto ccf = QuantLib::ext::dynamic_pointer_cast<CommodityIndexedCashFlow>(leg[i]);
             QL_REQUIRE(ccf, "Updating " << io::ordinal(i + 1) << " quantity for commodity " << commName <<
                 ", expected a valid CommodityIndexedCashFlow.");
             ccfs[i] = ccf;
@@ -308,12 +327,14 @@ void updateQuantities(Leg& leg, bool isAveragingFuture, CommodityQuantityFrequen
 namespace ore {
 namespace data {
 
-Leg CommodityFixedLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
-                                       RequiredFixings& requiredFixings, const string& configuration,
-                                       const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves) const {
+Leg CommodityFixedLegBuilder::buildLeg(
+    const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+    RequiredFixings& requiredFixings, const string& configuration, const QuantLib::Date& openEndDateReplacement,
+    const bool useXbsCurves, const bool attachPricer,
+    std::set<std::tuple<std::set<std::string>, std::string, std::string>>* productModelEngine) const {
 
     // Check that our leg data has commodity fixed leg data
-    auto fixedLegData = boost::dynamic_pointer_cast<CommodityFixedLegData>(data.concreteLegData());
+    auto fixedLegData = QuantLib::ext::dynamic_pointer_cast<CommodityFixedLegData>(data.concreteLegData());
     QL_REQUIRE(fixedLegData, "Wrong LegType, expected CommodityFixed, got " << data.legType());
 
     // Build our schedule and get the quantities and prices
@@ -321,16 +342,23 @@ Leg CommodityFixedLegBuilder::buildLeg(const LegData& data, const boost::shared_
     vector<Real> prices = buildScheduledVector(fixedLegData->prices(), fixedLegData->priceDates(), schedule);
     vector<Real> quantities = buildScheduledVector(fixedLegData->quantities(), fixedLegData->quantityDates(), schedule);
 
-    // Build fixed rate leg with 1/1 day counter, prices as rates and quantities as notionals so that we have price x
-    // notional in each period as the amount. We don't make any payment date adjustments yet as they come later.
+    Leg fixedRateLeg;
     OneDayCounter dc;
-    Leg fixedRateLeg = FixedRateLeg(schedule)
+    // Special case when the schedule has only one date, which is the pricing date.
+    if (schedule.size() == 1 && prices.size() == 1 && quantities.size() == 1) {
+        fixedRateLeg.push_back(QuantLib::ext::make_shared<FixedRateCoupon>(schedule.date(0), quantities[0], prices[0],
+                                                                           dc, schedule.date(0), schedule.date(0)));
+    } else {
+        // Build fixed rate leg with 1/1 day counter, prices as rates and quantities as notionals so that we have price
+        // x notional in each period as the amount. We don't make any payment date adjustments yet as they come later.
+
+        fixedRateLeg = FixedRateLeg(schedule)
                            .withNotionals(quantities)
                            .withCouponRates(prices, dc)
                            .withPaymentAdjustment(Unadjusted)
                            .withPaymentLag(0)
                            .withPaymentCalendar(NullCalendar());
-
+    }
     // Get explicit payment dates which in most cases should be empty
     vector<Date> paymentDates;
     if (!data.paymentDates().empty()) {
@@ -354,7 +382,7 @@ Leg CommodityFixedLegBuilder::buildLeg(const LegData& data, const boost::shared_
     Leg commodityFixedLeg;
     for (Size i = 0; i < fixedRateLeg.size(); i++) {
 
-        auto cp = boost::dynamic_pointer_cast<FixedRateCoupon>(fixedRateLeg[i]);
+        auto cp = QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(fixedRateLeg[i]);
 
         // Get payment date
         Date pmtDate;
@@ -397,48 +425,50 @@ Leg CommodityFixedLegBuilder::buildLeg(const LegData& data, const boost::shared_
         }
 
         // Create the fixed cashflow for this period
-        commodityFixedLeg.push_back(boost::make_shared<SimpleCashFlow>(cp->amount(), pmtDate));
+        commodityFixedLeg.push_back(QuantLib::ext::make_shared<SimpleCashFlow>(cp->amount(), pmtDate));
     }
 
     applyIndexing(commodityFixedLeg, data, engineFactory, requiredFixings, openEndDateReplacement, useXbsCurves);
-    addToRequiredFixings(commodityFixedLeg, boost::make_shared<FixingDateGetter>(requiredFixings));
+    addToRequiredFixings(commodityFixedLeg, QuantLib::ext::make_shared<FixingDateGetter>(requiredFixings));
 
-    addToRequiredFixings(commodityFixedLeg, boost::make_shared<ore::data::FixingDateGetter>(requiredFixings));
+    addToRequiredFixings(commodityFixedLeg, QuantLib::ext::make_shared<ore::data::FixingDateGetter>(requiredFixings));
 
     return commodityFixedLeg;
 }
 
-Leg CommodityFloatingLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
-                                          RequiredFixings& requiredFixings, const string& configuration,
-                                          const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves) const {
+Leg CommodityFloatingLegBuilder::buildLeg(
+    const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+    RequiredFixings& requiredFixings, const string& configuration, const QuantLib::Date& openEndDateReplacement,
+    const bool useXbsCurves, const bool attachPricer,
+    std::set<std::tuple<std::set<std::string>, std::string, std::string>>* productModelEngine) const {
 
     // allAveraging_ flag should be reset to false before each build. If we do not do this, the allAveraging_
     // flag may have been set from building a different leg previously
     allAveraging_ = false;
 
-    auto floatingLegData = boost::dynamic_pointer_cast<CommodityFloatingLegData>(data.concreteLegData());
+    auto floatingLegData = QuantLib::ext::dynamic_pointer_cast<CommodityFloatingLegData>(data.concreteLegData());
     QL_REQUIRE(floatingLegData, "Wrong LegType: expected CommodityFloating but got " << data.legType());
 
     // Commodity name and its conventions.
     // Default weekends only calendar used to create the "index". Attempt to populate with sth sensible here.
     string commName = floatingLegData->name();
     Calendar commCal = WeekendsOnly();
-    boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
-    boost::shared_ptr<CommodityFutureConvention> commFutureConv;
-    boost::optional<pair<Calendar, Real>> offPeakPowerData;
+    QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+    QuantLib::ext::shared_ptr<CommodityFutureConvention> commFutureConv;
+    QuantLib::ext::optional<pair<Calendar, Real>> offPeakPowerData;
     bool balanceOfTheMonth = false;
     if (conventions->has(commName)) {
-        boost::shared_ptr<Convention> commConv = conventions->get(commName);
+        QuantLib::ext::shared_ptr<Convention> commConv = conventions->get(commName);
 
         // If commodity forward convention
-        if (auto c = boost::dynamic_pointer_cast<CommodityForwardConvention>(commConv)) {
+        if (auto c = QuantLib::ext::dynamic_pointer_cast<CommodityForwardConvention>(commConv)) {
             if (c->advanceCalendar() != NullCalendar()) {
                 commCal = c->advanceCalendar();
             }
         }
 
         // If commodity future convention
-        commFutureConv = boost::dynamic_pointer_cast<CommodityFutureConvention>(commConv);
+        commFutureConv = QuantLib::ext::dynamic_pointer_cast<CommodityFutureConvention>(commConv);
         if (commFutureConv) {
             balanceOfTheMonth = commFutureConv->balanceOfTheMonth();
             commCal = commFutureConv->calendar();
@@ -452,13 +482,13 @@ Leg CommodityFloatingLegBuilder::buildLeg(const LegData& data, const boost::shar
     CommodityPriceType priceType = floatingLegData->priceType();
 
     // If referencing a future settlement price, we will need a valid FutureExpiryCalculator below.
-    boost::shared_ptr<FutureExpiryCalculator> feCalc;
+    QuantLib::ext::shared_ptr<FutureExpiryCalculator> feCalc;
     if (priceType == CommodityPriceType::FutureSettlement) {
 
         // We should have a valid commodity future convention in this case but check anyway
         QL_REQUIRE(commFutureConv, "Expected to have a commodity future convention for commodity " << commName);
 
-        feCalc = boost::make_shared<ConventionsBasedFutureExpiry>(*commFutureConv);
+        feCalc = QuantLib::ext::make_shared<ConventionsBasedFutureExpiry>(*commFutureConv);
 
         // If the future contract is averaging but the trade is not averaging, we can't price the trade
         // TODO: Should we just issue a warning here, switch the trade to averaging and price it?
@@ -551,7 +581,7 @@ Leg CommodityFloatingLegBuilder::buildLeg(const LegData& data, const boost::shar
                 << commName);
         daylightSavingLocation = commFutureConv->savingsTime();
     }
-    boost::shared_ptr<FxIndex> fxIndex;
+    QuantLib::ext::shared_ptr<FxIndex> fxIndex;
     // Build the leg. Different ctor depending on whether cashflow is averaging or not.
     Leg leg;
 
@@ -569,12 +599,17 @@ Leg CommodityFloatingLegBuilder::buildLeg(const LegData& data, const boost::shar
                        << commFutureConv->contractFrequency() << ")");
     }
 
-    if (!floatingLegData->fxIndex().empty()) { // build the fxIndex for daily average conversion
-        auto underlyingCcy = priceCurve->currency().code();
-        auto npvCurrency = data.currency();
-        if (underlyingCcy != npvCurrency) // only need an FX Index if currencies differ
-            fxIndex = buildFxIndex(floatingLegData->fxIndex(), npvCurrency, underlyingCcy, engineFactory->market(),
+    std::string underlyingCcy = priceCurve->currency().code();
+    std::string npvCcy = data.currency();
+    // only need an FX Index if currencies differ
+    if (underlyingCcy != npvCcy) {
+        // build the fxIndex for daily average conversion
+        if (!floatingLegData->fxIndex().empty())
+            fxIndex = buildFxIndex(floatingLegData->fxIndex(), npvCcy, underlyingCcy, engineFactory->market(),
                                    engineFactory->configuration(MarketContext::pricing));
+        // Check if settlementData exist. If yes, store the foreign currency into legdata for fx conversion
+        else if (!data.settlementFxIndex().empty())
+            floatingLegData->setForeignCurrency(underlyingCcy);
     }
 
     if (isCashFlowAveraged) {
@@ -615,7 +650,8 @@ Leg CommodityFloatingLegBuilder::buildLeg(const LegData& data, const boost::shar
                   .withDailyExpiryOffset(dailyExpOffset)
                   .unrealisedQuantity(floatingLegData->unrealisedQuantity())
                   .withOffPeakPowerData(offPeakPowerData)
-                  .withFxIndex(fxIndex);
+                  .withFxIndex(fxIndex)
+                  .withAvgPricePrecision(floatingLegData->avgPricePrecision());
     } else {
         CommodityIndexedCashFlow::PaymentTiming paymentTiming = CommodityIndexedCashFlow::PaymentTiming::InArrears;
         if (floatingLegData->commodityPayRelativeTo() == CommodityPayRelativeTo::CalculationPeriodStartDate) {
@@ -659,7 +695,7 @@ Leg CommodityFloatingLegBuilder::buildLeg(const LegData& data, const boost::shar
                          floatingLegData->excludePeriodStart(), floatingLegData->includePeriodEnd(), commFutureConv,
                          feCalc, hoursPerDay, floatingLegData->useBusinessDays(), daylightSavingLocation, commName,
                          floatingLegData->unrealisedQuantity(), offPeakPowerData);
-
+        DLOG("Quantities updates");
         // If lastNDays is set, amend each cashflow in the leg to an averaging cashflow over the lastNDays.
         auto lastNDays = floatingLegData->lastNDays();
         if (lastNDays != Null<Natural>() && lastNDays > 1) {
@@ -674,12 +710,12 @@ Leg CommodityFloatingLegBuilder::buildLeg(const LegData& data, const boost::shar
                     DLOG("Amending cashflows to account for LastNDays (" << lastNDays << ").");
                     const auto& cal = commFutureConv->calendar();
                     for (auto& cf : leg) {
-                        auto ccf = boost::dynamic_pointer_cast<CommodityIndexedCashFlow>(cf);
+                        auto ccf = QuantLib::ext::dynamic_pointer_cast<CommodityIndexedCashFlow>(cf);
                         const Date& endDate = ccf->pricingDate();
                         Date startDate = cal.advance(endDate, -static_cast<Integer>(lastNDays) + 1, Days, Preceding);
                         TLOG("Creating cashflow averaging over period [" << io::iso_date(startDate) <<
                             "," << io::iso_date(endDate) << "]");
-                        cf = boost::make_shared<CommodityIndexedAverageCashFlow>(ccf->periodQuantity(), startDate,
+                        cf = QuantLib::ext::make_shared<CommodityIndexedAverageCashFlow>(ccf->periodQuantity(), startDate,
                             endDate, ccf->date(), ccf->index(), cal, ccf->spread(), ccf->gearing(),
                             ccf->useFuturePrice(), 0, 0, feCalc, true, false);
                     }
@@ -694,7 +730,7 @@ Leg CommodityFloatingLegBuilder::buildLeg(const LegData& data, const boost::shar
     if (fxIndex) {
         // fx daily indexing needed
         for (auto cf : leg) {
-            auto cacf = boost::dynamic_pointer_cast<CommodityCashFlow>(cf);
+            auto cacf = QuantLib::ext::dynamic_pointer_cast<CommodityCashFlow>(cf);
             QL_REQUIRE(cacf, "Commodity Indexed averaged cashflow is required to compute daily converted average.");
             for (auto kv : cacf->indices()) {
                 if (!fxIndex->fixingCalendar().isBusinessDay(
@@ -712,7 +748,7 @@ Leg CommodityFloatingLegBuilder::buildLeg(const LegData& data, const boost::shar
         applyIndexing(leg, data, engineFactory, requiredFixings, openEndDateReplacement, useXbsCurves);
     }
 
-    addToRequiredFixings(leg, boost::make_shared<FixingDateGetter>(requiredFixings));
+    addToRequiredFixings(leg, QuantLib::ext::make_shared<FixingDateGetter>(requiredFixings));
     return leg;
 }
 } // namespace data

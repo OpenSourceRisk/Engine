@@ -51,17 +51,17 @@ BOOST_AUTO_TEST_CASE(testStandardCurves) {
     // Base curve with fixed reference date of 15th Aug 2018
     vector<Date> baseDates = list_of(today)(today + 1 * Years);
     vector<Real> baseDfs = list_of(1.0)(0.98);
-    Handle<YieldTermStructure> baseCurve(boost::make_shared<DiscountCurve>(baseDates, baseDfs, dc));
+    Handle<YieldTermStructure> baseCurve(QuantLib::ext::make_shared<DiscountCurve>(baseDates, baseDfs, dc));
     baseCurve->enableExtrapolation();
 
     // Numerator curve with fixed reference date of 15th Aug 2018
     vector<Date> numDates = list_of(today)(today + 1 * Years)(today + 2 * Years);
     vector<Real> numZeroes = list_of(0.025)(0.025)(0.026);
-    Handle<YieldTermStructure> numCurve(boost::make_shared<ZeroCurve>(numDates, numZeroes, dc));
+    Handle<YieldTermStructure> numCurve(QuantLib::ext::make_shared<ZeroCurve>(numDates, numZeroes, dc));
     numCurve->enableExtrapolation();
 
     // Denominator curve with floating reference date
-    Handle<YieldTermStructure> denCurve(boost::make_shared<FlatForward>(0, NullCalendar(), 0.0255, dc));
+    Handle<YieldTermStructure> denCurve(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.0255, dc));
 
     DiscountRatioModifiedCurve curve(baseCurve, numCurve, denCurve);
 
@@ -103,15 +103,15 @@ BOOST_AUTO_TEST_CASE(testExtrapolationSettings) {
     // Base curve with fixed reference date of 15th Aug 2018
     vector<Date> baseDates = list_of(today)(Date(15, Aug, 2019));
     vector<Real> baseDfs = list_of(1.0)(0.98);
-    Handle<YieldTermStructure> baseCurve(boost::make_shared<DiscountCurve>(baseDates, baseDfs, dc));
+    Handle<YieldTermStructure> baseCurve(QuantLib::ext::make_shared<DiscountCurve>(baseDates, baseDfs, dc));
 
     // Numerator curve with fixed reference date of 15th Aug 2018
     vector<Date> numDates = list_of(today)(Date(15, Aug, 2019))(Date(15, Aug, 2020));
     vector<Real> numZeroes = list_of(0.025)(0.025)(0.026);
-    Handle<YieldTermStructure> numCurve(boost::make_shared<ZeroCurve>(numDates, numZeroes, dc));
+    Handle<YieldTermStructure> numCurve(QuantLib::ext::make_shared<ZeroCurve>(numDates, numZeroes, dc));
 
     // Denominator curve with floating reference date
-    Handle<YieldTermStructure> denCurve(boost::make_shared<FlatForward>(0, NullCalendar(), 0.0255, dc));
+    Handle<YieldTermStructure> denCurve(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.0255, dc));
 
     // Create the discount ratio curve
     DiscountRatioModifiedCurve curve(baseCurve, numCurve, denCurve);
@@ -136,58 +136,58 @@ BOOST_AUTO_TEST_CASE(testConstructionNullUnderlyingCurvesThrow) {
 
     BOOST_TEST_MESSAGE("Testing construction with null underlying curves throw");
 
-    boost::shared_ptr<DiscountRatioModifiedCurve> curve;
+    QuantLib::ext::shared_ptr<DiscountRatioModifiedCurve> curve;
 
     // All empty handles throw
     Handle<YieldTermStructure> baseCurve;
     Handle<YieldTermStructure> numCurve;
     Handle<YieldTermStructure> denCurve;
-    BOOST_CHECK_THROW(curve = boost::make_shared<DiscountRatioModifiedCurve>(baseCurve, numCurve, denCurve),
+    BOOST_CHECK_THROW(curve = QuantLib::ext::make_shared<DiscountRatioModifiedCurve>(baseCurve, numCurve, denCurve),
                       QuantLib::Error);
 
     // Numerator and denominator empty handles throw
     Handle<YieldTermStructure> baseCurve_1(
-        boost::make_shared<FlatForward>(0, NullCalendar(), 0.0255, Actual365Fixed()));
-    BOOST_CHECK_THROW(curve = boost::make_shared<DiscountRatioModifiedCurve>(baseCurve_1, numCurve, denCurve),
+        QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.0255, Actual365Fixed()));
+    BOOST_CHECK_THROW(curve = QuantLib::ext::make_shared<DiscountRatioModifiedCurve>(baseCurve_1, numCurve, denCurve),
                       QuantLib::Error);
 
     // Denominator empty handles throw
-    Handle<YieldTermStructure> numCurve_1(boost::make_shared<FlatForward>(0, NullCalendar(), 0.0255, Actual365Fixed()));
-    BOOST_CHECK_THROW(curve = boost::make_shared<DiscountRatioModifiedCurve>(baseCurve_1, numCurve_1, denCurve),
+    Handle<YieldTermStructure> numCurve_1(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.0255, Actual365Fixed()));
+    BOOST_CHECK_THROW(curve = QuantLib::ext::make_shared<DiscountRatioModifiedCurve>(baseCurve_1, numCurve_1, denCurve),
                       QuantLib::Error);
 
     // No empty handles succeeds
-    Handle<YieldTermStructure> denCurve_1(boost::make_shared<FlatForward>(0, NullCalendar(), 0.0255, Actual365Fixed()));
-    BOOST_CHECK_NO_THROW(curve = boost::make_shared<DiscountRatioModifiedCurve>(baseCurve_1, numCurve_1, denCurve_1));
+    Handle<YieldTermStructure> denCurve_1(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.0255, Actual365Fixed()));
+    BOOST_CHECK_NO_THROW(curve = QuantLib::ext::make_shared<DiscountRatioModifiedCurve>(baseCurve_1, numCurve_1, denCurve_1));
 }
 
 BOOST_AUTO_TEST_CASE(testLinkingNullUnderlyingCurvesThrow) {
 
     BOOST_TEST_MESSAGE("Testing that linking with null underlying curves throw");
 
-    boost::shared_ptr<DiscountRatioModifiedCurve> curve;
+    QuantLib::ext::shared_ptr<DiscountRatioModifiedCurve> curve;
 
     // All empty handles throw
     RelinkableHandle<YieldTermStructure> baseCurve(
-        boost::make_shared<FlatForward>(0, NullCalendar(), 0.0255, Actual365Fixed()));
+        QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.0255, Actual365Fixed()));
     RelinkableHandle<YieldTermStructure> numCurve(
-        boost::make_shared<FlatForward>(0, NullCalendar(), 0.0255, Actual365Fixed()));
+        QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.0255, Actual365Fixed()));
     RelinkableHandle<YieldTermStructure> denCurve(
-        boost::make_shared<FlatForward>(0, NullCalendar(), 0.0255, Actual365Fixed()));
+        QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.0255, Actual365Fixed()));
 
     // Curve building succeeds since no empty handles
-    BOOST_CHECK_NO_THROW(curve = boost::make_shared<DiscountRatioModifiedCurve>(baseCurve, numCurve, denCurve));
+    BOOST_CHECK_NO_THROW(curve = QuantLib::ext::make_shared<DiscountRatioModifiedCurve>(baseCurve, numCurve, denCurve));
 
     // Switching base curve to empty handle should give a failure
-    BOOST_CHECK_THROW(baseCurve.linkTo(boost::shared_ptr<YieldTermStructure>()), QuantLib::Error);
+    BOOST_CHECK_THROW(baseCurve.linkTo(QuantLib::ext::shared_ptr<YieldTermStructure>()), QuantLib::Error);
     BOOST_CHECK_NO_THROW(baseCurve.linkTo(*numCurve));
 
     // Switching numerator curve to empty handle should give a failure
-    BOOST_CHECK_THROW(numCurve.linkTo(boost::shared_ptr<YieldTermStructure>()), QuantLib::Error);
+    BOOST_CHECK_THROW(numCurve.linkTo(QuantLib::ext::shared_ptr<YieldTermStructure>()), QuantLib::Error);
     BOOST_CHECK_NO_THROW(numCurve.linkTo(*denCurve));
 
     // Switching denominator curve to empty handle should give a failure
-    BOOST_CHECK_THROW(denCurve.linkTo(boost::shared_ptr<YieldTermStructure>()), QuantLib::Error);
+    BOOST_CHECK_THROW(denCurve.linkTo(QuantLib::ext::shared_ptr<YieldTermStructure>()), QuantLib::Error);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

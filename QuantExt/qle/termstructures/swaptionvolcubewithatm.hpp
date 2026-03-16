@@ -26,7 +26,7 @@
 
 #include <ql/termstructures/volatility/swaption/swaptionvolcube.hpp>
 
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -44,9 +44,10 @@ class SwaptionVolCubeWithATM : public SwaptionVolatilityStructure {
 public:
     //! Constructor. This is a floating term structure (settlement days is zero) to match
     //! QuantLib::SwaptionVolatilityCube
-    SwaptionVolCubeWithATM(const boost::shared_ptr<SwaptionVolatilityCube>& cube)
+    SwaptionVolCubeWithATM(const QuantLib::ext::shared_ptr<SwaptionVolatilityCube>& cube,
+                           const bool useAtmSubStructure = true)
         : SwaptionVolatilityStructure(0, cube->calendar(), cube->businessDayConvention(), cube->dayCounter()),
-          cube_(cube) {
+          cube_(cube), useAtmSubStructure_(useAtmSubStructure) {
         enableExtrapolation(cube_->allowsExtrapolation());
         registerWith(cube);
     }
@@ -70,17 +71,17 @@ public:
     VolatilityType volatilityType() const override { return cube_->volatilityType(); }
     //@}
 
-    boost::shared_ptr<SwaptionVolatilityCube> cube() const { return cube_; }
+    QuantLib::ext::shared_ptr<SwaptionVolatilityCube> cube() const { return cube_; }
 
 protected:
     // Nothing to do here, just ask the cube
-    boost::shared_ptr<SmileSection> smileSectionImpl(Time optionTime, Time swapLength) const override {
+    QuantLib::ext::shared_ptr<SmileSection> smileSectionImpl(Time optionTime, Time swapLength) const override {
         return cube_->smileSection(optionTime, swapLength);
     }
 
     // Here we check if strike is Null<Real>() and ask the ATM surface if so.
     Volatility volatilityImpl(Time optionTime, Time swapLength, Rate strike) const override {
-        if (strike == Null<Real>()) {
+        if (strike == Null<Real>() && useAtmSubStructure_) {
             return cube_->atmVol()->volatility(optionTime, swapLength, 0.0);
         } else {
             return cube_->volatility(optionTime, swapLength, strike);
@@ -90,7 +91,8 @@ protected:
     Real shiftImpl(Time optionTime, Time swapLength) const override { return cube_->shift(optionTime, swapLength); }
 
 private:
-    boost::shared_ptr<SwaptionVolatilityCube> cube_;
+    QuantLib::ext::shared_ptr<SwaptionVolatilityCube> cube_;
+    bool useAtmSubStructure_ = false;
 };
 
 } // namespace QuantExt

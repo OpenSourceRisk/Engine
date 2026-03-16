@@ -1,0 +1,63 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="Repo">
+        <TradeType>BondRepo</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <BondRepoData>
+            <BondData>
+                <SecurityId>ISIN:US912828X703</SecurityId>
+                <!-- chosen so that the cash leg nominal is matched by bond dirty x BondNotional x (1 - Haircut) -->
+                <BondNotional>27807597.777444</BondNotional>
+            </BondData>
+            <RepoData>
+                <LegData>
+                    <LegType>Fixed</LegType>
+                    <Payer>true</Payer>
+                    <Currency>USD</Currency>
+                    <Notionals>
+                        <Notional>28371509.989758</Notional>
+                    </Notionals>
+                    <ScheduleData>
+                        <Rules>
+                            <StartDate>2024-02-12</StartDate>
+                            <EndDate>2026-05-14</EndDate>
+                            <Tenor>1Y</Tenor>
+                            <Calendar>US</Calendar>
+                            <Convention>MF</Convention>
+                            <Rule>Forward</Rule>
+                        </Rules>
+                    </ScheduleData>
+                    <DayCounter>A360</DayCounter>
+                    <PaymentConvention>F</PaymentConvention>
+                    <FixedLegData>
+                        <Rates>
+                            <Rate>0.0178</Rate>
+                        </Rates>
+                    </FixedLegData>
+                </LegData>
+            </RepoData>
+        </BondRepoData>
+    </Trade>
+    <Trade id="Security">
+        <TradeType>Bond</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <BondData>
+            <SecurityId>ISIN:US912828X703</SecurityId>
+            <BondNotional>27807597.777444</BondNotional>
+        </BondData>
+    </Trade>
+</Portfolio>

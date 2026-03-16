@@ -36,14 +36,16 @@ namespace QuantExt {
 class BRLCdiRateHelper : public QuantLib::RelativeDateRateHelper {
 public:
     BRLCdiRateHelper(const QuantLib::Period& swapTenor, const QuantLib::Handle<QuantLib::Quote>& fixedRate,
-                     const boost::shared_ptr<BRLCdi>& brlCdiIndex,
+                     const QuantLib::ext::shared_ptr<BRLCdi>& brlCdiIndex, const bool brlCdiindexGiven,
                      const QuantLib::Handle<QuantLib::YieldTermStructure>& discountingCurve =
                          QuantLib::Handle<QuantLib::YieldTermStructure>(),
-                     bool telescopicValueDates = false);
+                     bool discountCurveGiven = false, bool telescopicValueDates = false,
+                     QuantLib::Pillar::Choice pillar = QuantLib::Pillar::LastRelevantDate,
+                     const QuantLib::Date& customPillarDate = QuantLib::Date());
 
     //! \name inspectors
     //@{
-    boost::shared_ptr<BRLCdiSwap> swap() const { return swap_; }
+    QuantLib::ext::shared_ptr<BRLCdiSwap> swap() const { return swap_; }
     //@}
 
     //! \name RateHelper interface
@@ -61,12 +63,15 @@ protected:
     void initializeDates() override;
 
     QuantLib::Period swapTenor_;
-    boost::shared_ptr<BRLCdi> brlCdiIndex_;
-    boost::shared_ptr<BRLCdiSwap> swap_;
+    QuantLib::ext::shared_ptr<BRLCdi> brlCdiIndex_;
+    bool brlCdiIndexGiven_;
+    QuantLib::ext::shared_ptr<BRLCdiSwap> swap_;
     bool telescopicValueDates_;
+    QuantLib::Pillar::Choice pillarChoice_;
 
     QuantLib::RelinkableHandle<QuantLib::YieldTermStructure> termStructureHandle_;
     QuantLib::Handle<QuantLib::YieldTermStructure> discountHandle_;
+    bool discountCurveGiven_;
     QuantLib::RelinkableHandle<QuantLib::YieldTermStructure> discountRelinkableHandle_;
 };
 
@@ -77,14 +82,14 @@ class DatedBRLCdiRateHelper : public QuantLib::RateHelper {
 public:
     DatedBRLCdiRateHelper(const QuantLib::Date& startDate, const QuantLib::Date& endDate,
                           const QuantLib::Handle<QuantLib::Quote>& fixedRate,
-                          const boost::shared_ptr<BRLCdi>& brlCdiIndex,
+                          const QuantLib::ext::shared_ptr<BRLCdi>& brlCdiIndex, const bool brlCdiindexGiven,
                           const QuantLib::Handle<QuantLib::YieldTermStructure>& discountingCurve =
                               QuantLib::Handle<QuantLib::YieldTermStructure>(),
-                          bool telescopicValueDates = false);
+                          const bool discountCurveGiven = false, bool telescopicValueDates = false);
 
     //! \name inspectors
     //@{
-    boost::shared_ptr<BRLCdiSwap> swap() const { return swap_; }
+    QuantLib::ext::shared_ptr<BRLCdiSwap> swap() const { return swap_; }
     //@}
 
     //! \name RateHelper interface
@@ -99,12 +104,14 @@ public:
     //@}
 
 protected:
-    boost::shared_ptr<BRLCdi> brlCdiIndex_;
-    boost::shared_ptr<BRLCdiSwap> swap_;
+    QuantLib::ext::shared_ptr<BRLCdi> brlCdiIndex_;
+    bool brlCdiIndexGiven_;
+    QuantLib::ext::shared_ptr<BRLCdiSwap> swap_;
     bool telescopicValueDates_;
 
     QuantLib::RelinkableHandle<QuantLib::YieldTermStructure> termStructureHandle_;
     QuantLib::Handle<QuantLib::YieldTermStructure> discountHandle_;
+    bool discountCurveGiven_;
     QuantLib::RelinkableHandle<QuantLib::YieldTermStructure> discountRelinkableHandle_;
 };
 

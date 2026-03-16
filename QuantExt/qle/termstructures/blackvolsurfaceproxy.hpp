@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <qle/termstructures/correlationtermstructure.hpp>
@@ -62,12 +62,12 @@ using namespace QuantLib;
 class BlackVolatilitySurfaceProxy : public BlackVolatilityTermStructure {
 public:
     //! Constructor. This is a floating term structure (settlement days is zero)
-    BlackVolatilitySurfaceProxy(const boost::shared_ptr<BlackVolTermStructure>& proxySurface,
-                                const boost::shared_ptr<EqFxIndexBase>& index,
-                                const boost::shared_ptr<EqFxIndexBase>& proxyIndex,
-                                const boost::shared_ptr<BlackVolTermStructure>& fxSurface = nullptr,
-                                const boost::shared_ptr<FxIndex>& fxIndex = nullptr,
-                                const boost::shared_ptr<CorrelationTermStructure>& correlation = nullptr);
+    BlackVolatilitySurfaceProxy(const QuantLib::ext::shared_ptr<BlackVolTermStructure>& proxySurface,
+                                const QuantLib::ext::shared_ptr<EqFxIndexBase>& index,
+                                const QuantLib::ext::shared_ptr<EqFxIndexBase>& proxyIndex,
+                                const QuantLib::ext::shared_ptr<BlackVolTermStructure>& fxSurface = nullptr,
+                                const QuantLib::ext::shared_ptr<FxIndex>& fxIndex = nullptr,
+                                const QuantLib::ext::shared_ptr<CorrelationTermStructure>& correlation = nullptr);
 
     //! \name TermStructure interface
     //@{
@@ -87,9 +87,9 @@ public:
 
     //! \name Inspectors
     //@{
-    boost::shared_ptr<BlackVolTermStructure> proxySurface() const { return proxySurface_; }
-    boost::shared_ptr<EqFxIndexBase> index() const { return index_; }
-    boost::shared_ptr<EqFxIndexBase> proxyIndex() const { return proxyIndex_; }
+    QuantLib::ext::shared_ptr<BlackVolTermStructure> proxySurface() const { return proxySurface_; }
+    QuantLib::ext::shared_ptr<EqFxIndexBase> index() const { return index_; }
+    QuantLib::ext::shared_ptr<EqFxIndexBase> proxyIndex() const { return proxyIndex_; }
     //@}
 
 protected:
@@ -97,11 +97,11 @@ protected:
     Volatility blackVolImpl(Time t, Real strike) const override;
 
 private:
-    boost::shared_ptr<BlackVolTermStructure> proxySurface_;
-    boost::shared_ptr<EqFxIndexBase> index_, proxyIndex_;
-    boost::shared_ptr<BlackVolTermStructure> fxSurface_;
-    boost::shared_ptr<FxIndex> fxIndex_;
-    boost::shared_ptr<CorrelationTermStructure> correlation_;
+    QuantLib::ext::shared_ptr<BlackVolTermStructure> proxySurface_;
+    QuantLib::ext::shared_ptr<EqFxIndexBase> index_, proxyIndex_;
+    QuantLib::ext::shared_ptr<BlackVolTermStructure> fxSurface_;
+    QuantLib::ext::shared_ptr<FxIndex> fxIndex_;
+    QuantLib::ext::shared_ptr<CorrelationTermStructure> correlation_;
 };
 
 } // namespace QuantExt

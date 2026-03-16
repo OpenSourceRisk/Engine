@@ -43,12 +43,12 @@ public:
                                const std::set<std::string>& tradeTypes, const ore::data::AssetClass& assetClass)
         : CachingOptionEngineBuilder(model, engine, tradeTypes, assetClass) {}
 
-    boost::shared_ptr<QuantLib::PricingEngine> engine(const std::string& assetName, const QuantLib::Currency& ccy) {
+    QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engine(const std::string& assetName, const QuantLib::Currency& ccy) {
         return ore::data::CachingOptionEngineBuilder<std::string, const std::string&, const QuantLib::Currency&,
                                                      const ore::data::AssetClass&>::engine(assetName, ccy, assetClass_);
     }
 
-    boost::shared_ptr<QuantLib::PricingEngine> engine(const QuantLib::Currency& ccy1, const QuantLib::Currency& ccy2) {
+    QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engine(const QuantLib::Currency& ccy1, const QuantLib::Currency& ccy2) {
         return ore::data::CachingOptionEngineBuilder<std::string, const std::string&, const QuantLib::Currency&,
                                                      const ore::data::AssetClass&>::engine(ccy1.code(), ccy2,
                                                                                            assetClass_);
@@ -76,7 +76,7 @@ public:
     EquityCliquetOptionMcScriptEngineBuilder() : EquityCliquetOptionEngineBuilder("BlackScholes", "MCScript") {}
 
 protected:
-    boost::shared_ptr<PricingEngine> engineImpl(const std::string& assetName, const QuantLib::Currency& ccy,
+    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const std::string& assetName, const QuantLib::Currency& ccy,
                                                 const ore::data::AssetClass& assetClass) override;
 };
 

@@ -23,19 +23,20 @@
 
 #pragma once
 
+#include <ored/portfolio/cashflowutils.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/envelope.hpp>
 #include <ored/portfolio/fixingdates.hpp>
 #include <ored/portfolio/instrumentwrapper.hpp>
 #include <ored/portfolio/premiumdata.hpp>
 #include <ored/portfolio/tradeactions.hpp>
-#include <ored/portfolio/tradefactory.hpp> // just convenience so that client code needs to include trade.hpp only
-
+#include <ored/portfolio/tradefactory.hpp>
 #include <ored/utilities/parsers.hpp>
 
 #include <ql/cashflow.hpp>
 #include <ql/instrument.hpp>
 #include <ql/time/date.hpp>
+#include <ql/cashflow.hpp>
 
 namespace ore {
 namespace data {
@@ -69,7 +70,7 @@ public:
 
     /*! Build QuantLib/QuantExt instrument, link pricing engine. If build() is called multiple times, reset() should
         be called between these calls. */
-    virtual void build(const boost::shared_ptr<EngineFactory>&) = 0;
+    virtual void build(const QuantLib::ext::shared_ptr<EngineFactory>&) = 0;
 
     /*! Return the fixings that will be requested in order to price this Trade given the \p settlementDate.
 
@@ -90,7 +91,7 @@ public:
     const RequiredFixings& requiredFixings() const { return requiredFixings_; }
 
     virtual std::map<AssetClass, std::set<std::string>>
-    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const {
+    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const {
         return {};
     }
 
@@ -116,11 +117,13 @@ public:
     //@{
     //! Set the trade id
     string& id() { return id_; }
+    void setId(const std::string& id) { id_ = id; };
 
+    bool& isSubTrade() { return isSubTrade_; }
     //! Set the envelope with counterparty and portfolio info
     void setEnvelope(const Envelope& envelope);
 
-    void setAdditionalData(const std::map<std::string, boost::any>& additionalData);
+    void setAdditionalData(const std::map<std::string, QuantLib::ext::any>& additionalData);
 
     //! Set the trade actions
     TradeActions& tradeActions() { return tradeActions_; }
@@ -138,13 +141,17 @@ public:
 
     const TradeActions& tradeActions() const { return tradeActions_; }
 
-    const boost::shared_ptr<InstrumentWrapper>& instrument() const { return instrument_; }
+    const QuantLib::ext::shared_ptr<InstrumentWrapper>& instrument() const { return instrument_; }
 
     const std::vector<QuantLib::Leg>& legs() const { return legs_; }
 
     const std::vector<string>& legCurrencies() const { return legCurrencies_; }
 
     const std::vector<bool>& legPayers() const { return legPayers_; }
+
+    // default if leg is not listed in map: IfNoEngineCashflows
+    enum class LegCashflowInclusion { IfNoEngineCashflows, Never, Always };
+    const std::map<size_t, LegCashflowInclusion>& legCashflowInclusion() const { return legCashflowInclusion_; }
 
     const string& npvCurrency() const { return npvCurrency_; }
 
@@ -156,31 +163,37 @@ public:
 
     const Date& maturity() const { return maturity_; }
 
-    virtual bool isExpired(const Date& d) { return d >= maturity_; }
+    const string& maturityType() const { return maturityType_; }
+
+    virtual bool isExpired(const Date& d) const {
+        QuantLib::ext::optional<bool> inc = Settings::instance().includeTodaysCashFlows();
+        if(lastRelevantDate_!=Null<Date>()){
+            return QuantLib::detail::simple_event(lastRelevantDate_).hasOccurred(d, inc);
+        }else{
+            return QuantLib::detail::simple_event(maturity_).hasOccurred(d, inc);
+        } 
+    }
 
     const string& issuer() const { return issuer_; }
 
     //! returns any additional datum.
     template <typename T> T additionalDatum(const std::string& tag) const;
     //! returns all additional data returned by the trade once built
-    const virtual std::map<std::string,boost::any>& additionalData() const;
+    const virtual std::map<std::string,QuantLib::ext::any>& additionalData() const;
 
     /*! returns the sensi template, e.g. "IR_Analytical" for this trade,
         this is only available after build() has been called */
     const std::string& sensitivityTemplate() const;
+
+    /*! return the product(s),model,engine triplet(s) of the engine builders of this trade,
+       this is only available after build() has been called */
+    const std::set<std::tuple<std::set<std::string>, std::string, std::string>>& productModelEngine() const;
     //@}
 
     //! \name Utility
     //@{
     //! Utility to validate that everything that needs to be set in this base class is actually set
     void validate() const;
-
-    /*! Utility method indicating if the trade has cashflows for the cashflow report. The default implementation
-        returns \c true so that a trade is automatically considered when cashflows are being written. To prevent a
-        trade from being asked for its cashflows, the method can be overridden to return \c false.
-    */
-    virtual bool hasCashflows() const { return true; }
-    //@}
 
     //! Get cumulative timing spent on pricing
     boost::timer::nanosecond_type getCumulativePricingTime() const {
@@ -192,59 +205,87 @@ public:
         return savedNumberOfPricings_ + (instrument_ != nullptr ? instrument_->getNumberOfPricings() : 0);
     }
 
+    bool isSubTrade() const { return isSubTrade_; }
+
+    /* add additional data on product types, model, engine from builder */
+    void addProductModelEngine(const EngineBuilder& builder);
+    void addProductModelEngine(
+        const std::set<std::tuple<std::set<std::string>, std::string, std::string>>& productModelEngine);
+
+    /* sets the sensitivity template for this trade */
+    void setSensitivityTemplate(const EngineBuilder& builder);
+    void setSensitivityTemplate(const std::string& id);
+
+    /* get the set of cashflows for the trade */
+    virtual std::vector<TradeCashflowReportData> cashflows(const std::string& baseCurrency,
+                                                           const QuantLib::ext::shared_ptr<ore::data::Market>& market,
+                                                           const std::string& configuration,
+                                                           const bool includePastCashflows) const;
+
+    /* set build status, this flag is maintained in buildTrade() and Trade::reset(), i.e. _not_ in Trade::build() */
+    void setBuilt(const bool b = true) const { isBuilt_ = b; }
+
+    /* get build status */
+    bool isBuilt() const { return isBuilt_; }
+
 protected:
     string tradeType_; // class name of the derived class
-    boost::shared_ptr<InstrumentWrapper> instrument_;
+    QuantLib::ext::shared_ptr<InstrumentWrapper> instrument_;
     std::vector<QuantLib::Leg> legs_;
     std::vector<string> legCurrencies_;
     std::vector<bool> legPayers_;
+    std::map<std::size_t, LegCashflowInclusion> legCashflowInclusion_;
+
     string npvCurrency_;
     QuantLib::Real notional_;
     string notionalCurrency_;
     Date maturity_;
+    string maturityType_;
     string issuer_;
     string sensitivityTemplate_;
     bool sensitivityTemplateSet_ = false;
+    std::set<std::tuple<std::set<std::string>, std::string, std::string>> productModelEngine_;
+    Date lastRelevantDate_ = Null<Date>();
 
     std::size_t savedNumberOfPricings_ = 0;
     boost::timer::nanosecond_type savedCumulativePricingTime_ = 0;
-
+    bool isSubTrade_ = false;
     // Utility to add premiums such that they are taken into account in pricing and cash flow projection.
     // For example, an option premium flow is not covered by the underlying option instrument in
     // QuantLib and needs to be represented separately. This is done by inserting it as an additional instrument
     // into the InstrumentWrapper. This utility creates the additional instrument. The actual insertion into the
     // instrument wrapper is done in the individual trade builders when they instantiate the InstrumentWrapper.
     // The returned date is the latest premium payment date added.
-    Date addPremiums(std::vector<boost::shared_ptr<Instrument>>& instruments, std::vector<Real>& multipliers,
+    Date addPremiums(std::vector<QuantLib::ext::shared_ptr<Instrument>>& instruments, std::vector<Real>& multipliers,
                      const Real tradeMultiplier, const PremiumData& premiumData, const Real premiumMultiplier,
-                     const Currency& tradeCurrency, const boost::shared_ptr<EngineFactory>& factory,
+                     const Currency& tradeCurrency, const string& discountCurve, const QuantLib::ext::shared_ptr<EngineFactory>& factory,
                      const string& configuration);
 
     RequiredFixings requiredFixings_;
-    mutable std::map<std::string,boost::any> additionalData_;
+    mutable std::map<std::string,QuantLib::ext::any> additionalData_;
 
     /* sets additional data based on given internal legNo (0, 1, ...), the result leg id is derived from this
        as "legNo + 1", i.e. starting with 1 (1, 2, ...). The result leg id can be overwriten using the second
        parameter resultLegId. */
     void setLegBasedAdditionalData(const Size legNo, Size resultLegId = Null<Size>()) const;
 
-    /* sets the sensitivity template for this trade */
-    void setSensitivityTemplate(const EngineBuilder& builder);
-    void setSensitivityTemplate(const std::string& id);
+    // update additional data based on stored product, model, engine
+    void updateProductModelEngineAdditionalData();
 
 private:
     string id_;
     Envelope envelope_;
     TradeActions tradeActions_;
+    mutable bool isBuilt_ = false;
 };
 
 template <class T>
 inline T Trade::additionalDatum(const std::string& tag) const {
-    std::map<std::string,boost::any>::const_iterator value =
+    std::map<std::string,QuantLib::ext::any>::const_iterator value =
         additionalData_.find(tag);
     QL_REQUIRE(value != additionalData_.end(),
                tag << " not provided");
-    return boost::any_cast<T>(value->second);
+    return QuantLib::ext::any_cast<T>(value->second);
 }
 
 } // namespace data

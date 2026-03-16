@@ -34,7 +34,7 @@ namespace QuantExt {
 class CommodityModel : public LinkableCalibratedModel {
 public:
     /*! parametrization (as base class) */
-    virtual const boost::shared_ptr<Parametrization> parametrizationBase() const = 0;
+    virtual const QuantLib::ext::shared_ptr<Parametrization> parametrizationBase() const = 0;
 
     /*! price term structure to which the model is (initially) calibrated */
     virtual Handle<PriceTermStructure> termStructure() const = 0;
@@ -49,7 +49,7 @@ public:
     virtual Size m() const = 0;
 
     /*! stochastic process, this has dimension n() and m() Brownian drivers */
-    virtual boost::shared_ptr<StochasticProcess> stateProcess() const = 0;
+    virtual QuantLib::ext::shared_ptr<StochasticProcess> stateProcess() const = 0;
 
     /*! stochastic forward price curve F(t,T) at future time t depending on state (of dimension n()) */
     virtual QuantLib::Real forwardPrice(

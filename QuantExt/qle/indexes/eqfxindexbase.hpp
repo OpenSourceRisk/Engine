@@ -36,7 +36,7 @@ using namespace QuantLib;
 
 //! Equity Index
 /*! \ingroup indexes */
-class EqFxIndexBase : public Index, public Observer {
+class EqFxIndexBase : public Index {
 public:
     virtual ~EqFxIndexBase() {}
 

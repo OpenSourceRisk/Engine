@@ -52,17 +52,20 @@ public:
           boughtAmount_(boughtAmount), soldAmount_(soldAmount) {}
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
-    void build(const boost::shared_ptr<EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
 
     //! \name Inspectors
     //@{
     const OptionData& option() const { return option_; }
     const vector<BarrierData>& barriers() const { return barriers_; }
-    double boughtAmount() const { return boughtAmount_; }
-    double soldAmount() const { return soldAmount_; }
+    QuantLib::Real boughtAmount() const { return boughtAmount_; }
+    QuantLib::Real soldAmount() const { return soldAmount_; }
     const string& startDate() const { return startDate_; }
     const string& calendar() const { return calendar_; }
     const string& fxIndex() const { return fxIndex_; }
+    QuantLib::Real strike() const { return soldAmount_ / boughtAmount_; }
+    QuantLib::Real notional() const override;
+    string notionalCurrency() const override;
     //@}
 
     //! \name Serialisation
@@ -71,14 +74,14 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 private:
-    bool checkBarrier(Real spot, Barrier::Type type, Real level);
     OptionData option_;
     vector<BarrierData> barriers_;
     string startDate_;
     string calendar_;
     string fxIndex_;
-    double boughtAmount_;
-    double soldAmount_;
+    QuantLib::Real boughtAmount_;
+    QuantLib::Real soldAmount_;
+    QuantLib::ext::shared_ptr<Trade> delegatingBuilderTrade_;
 };
 } // namespace data
 } // namespace oreplus

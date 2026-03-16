@@ -131,8 +131,8 @@ void loadFixings(const map<string, RequiredFixings::FixingDates>& requestedFixin
 class F : public TopLevelFixture {
 public:
     Date today;
-    boost::shared_ptr<Conventions> conventions = boost::make_shared<Conventions>();
-    boost::shared_ptr<EngineFactory> engineFactory;
+    QuantLib::ext::shared_ptr<Conventions> conventions = QuantLib::ext::make_shared<Conventions>();
+    QuantLib::ext::shared_ptr<EngineFactory> engineFactory;
 
     F() {
         today = Date(12, Feb, 2019);
@@ -141,25 +141,25 @@ public:
         conventions->fromFile(TEST_INPUT_FILE("market/conventions.xml"));
         InstrumentConventions::instance().setConventions(conventions);
         
-        auto todaysMarketParams = boost::make_shared<TodaysMarketParameters>();
+        auto todaysMarketParams = QuantLib::ext::make_shared<TodaysMarketParameters>();
         todaysMarketParams->fromFile(TEST_INPUT_FILE("market/todaysmarket.xml"));
 
-        auto curveConfigs = boost::make_shared<CurveConfigurations>();
+        auto curveConfigs = QuantLib::ext::make_shared<CurveConfigurations>();
         curveConfigs->fromFile(TEST_INPUT_FILE("market/curveconfig.xml"));
 
         string marketFile = TEST_INPUT_FILE("market/market.txt");
         string fixingsFile = TEST_INPUT_FILE("market/fixings_for_bootstrap.txt");
         string dividendsFile = TEST_INPUT_FILE("market/dividends.txt");
-        auto loader = boost::make_shared<CSVLoader>(marketFile, fixingsFile, dividendsFile, false);
+        auto loader = QuantLib::ext::make_shared<CSVLoader>(marketFile, fixingsFile, dividendsFile, false);
 
         bool continueOnError = false;
-        boost::shared_ptr<TodaysMarket> market = boost::make_shared<TodaysMarket>(
+        QuantLib::ext::shared_ptr<TodaysMarket> market = QuantLib::ext::make_shared<TodaysMarket>(
             today, todaysMarketParams, loader, curveConfigs, continueOnError);
 
-        boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+        QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
         engineData->fromFile(TEST_INPUT_FILE("market/pricingengine.xml"));
 
-        engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+        engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
     }
 
     ~F() {}
@@ -210,13 +210,19 @@ BOOST_DATA_TEST_CASE_F(F, testTradeTypes,
     // Build the portfolio and retrieve the fixings
     p.build(engineFactory);
     m = p.fixings(today);
-
     // Check the retrieved fixings against the expected results
     auto exp = tradeTypeExpected();
     auto key = make_tuple(tradeType, tradeCase, includeSettlementDateFlows, enforcesTodaysHistoricFixings);
     if (exp.count(key) == 0) {
+        size_t mandatoryFixings = 0;
+        for (const auto& [index, requiredFixingDates] : m) {
+            for (const auto& [date, mandatoryFixing] : requiredFixingDates) {
+                if (mandatoryFixing.first)
+                    ++mandatoryFixings;
+            }
+        }
         // Expected result is no required fixings
-        BOOST_CHECK_MESSAGE(m.empty(), "Expected no required fixings for ["
+        BOOST_CHECK_MESSAGE(mandatoryFixings == 0, "Expected no required fixings for ["
                                            << tradeType << ", " << tradeCase << ", "
                                            << ore::data::to_string(includeSettlementDateFlows) << ", "
                                            << ore::data::to_string(enforcesTodaysHistoricFixings)
@@ -325,14 +331,13 @@ BOOST_AUTO_TEST_CASE(testAddMarketFixings) {
                                 Date(1, Oct, 2018), Date(1, Sep, 2018), Date(1, Aug, 2018), Date(1, Jul, 2018),
                                 Date(1, Jun, 2018), Date(1, May, 2018), Date(1, Apr, 2018), Date(1, Mar, 2018),
                                 Date(1, Feb, 2018)};
-    set<Date> iborDates = {Date(21, Feb, 2019), Date(20, Feb, 2019), Date(19, Feb, 2019),
-                           Date(18, Feb, 2019), Date(15, Feb, 2019), Date(14, Feb, 2019)};
+    set<Date> iborDates = {Date(21, Feb, 2019), Date(20, Feb, 2019), Date(19, Feb, 2019), Date(18, Feb, 2019),
+                           Date(17, Feb, 2019), Date(16, Feb, 2019), Date(15, Feb, 2019), Date(14, Feb, 2019)};
 
     // Default for OIS dates is a lookback of 4 months on weekend only calendar => 21 Feb 2019 -> 21 Oct 2018.
-    // 21 Oct 2018 is a Sunday => 22 Oct 2018 is the start of the lookback.
     set<Date> oisDates;
-    Date oisDate(22, Oct, 2018);
-    WeekendsOnly cal;
+    Date oisDate(21, Oct, 2018);
+    NullCalendar cal;
     while (oisDate <= asof) {
         oisDates.insert(oisDate);
         oisDate = cal.advance(oisDate, 1 * Days);

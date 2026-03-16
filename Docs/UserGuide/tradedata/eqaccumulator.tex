@@ -1,0 +1,93 @@
+\subsubsection{EQ Accumulator}
+
+EQ Accumulators are represented as scripted trades, refer to appendix A for an introduction. Listing \ref{lst:eqaccumulator} shows the structure of an example.
+The \verb+PerformanceOption_01+ node is the trade data container for the PerformanceOption\_01 trade type, listing
+\ref{lst:eqaccumulator} shows the structure of an example.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Trade id="SCRIPTED_EQ_ACCUMULATOR">
+  <TradeType>ScriptedTrade</TradeType>
+  <Envelope>
+    <CounterParty>CPTY_A</CounterParty>
+    <NettingSetId>CPTY_A</NettingSetId>
+    <AdditionalFields/>
+  </Envelope>
+  <AccumulatorData>
+    <Strike type="number">12.24</Strike>
+    <FixingAmount type="number">775</FixingAmount>
+    <LongShort type="longShort">Long</LongShort>
+    <Underlying type="index">EQ-Lufthansa</Underlying>
+    <PayCcy type="currency">EUR</PayCcy>
+    <FixingDates type="event">
+      <ScheduleData>
+        <Dates>
+          <Dates>
+            <Date>2021-01-29</Date>
+          </Dates>
+        </Dates>
+      </ScheduleData>
+      <ApplyCoarsening>true</ApplyCoarsening>
+    </FixingDates>
+    <RangeUpperBounds type="number">
+      <Value>10000</Value>
+    </RangeUpperBounds>
+    <RangeLowerBounds type="number">
+      <Value>0</Value>
+    </RangeLowerBounds>
+    <RangeLeverages type="number">
+      <Value>1</Value>
+    </RangeLeverages>
+    <KnockOutLevel type="number">1000</KnockOutLevel>
+    <GuaranteedFixings type="number">1</GuaranteedFixings> 
+  </AccumulatorData>
+</Trade>
+\end{minted}
+\caption{EQ Accumulator Scripted Representation}
+\label{lst:eqaccumulator}
+\end{listing}
+
+The meanings and allowable values of the elements in the \verb+EQ Accumulator+  representation follow below.
+
+\begin{itemize}
+\item Strike: The strike value the equity is purchased at.
+\item FixedAmount: The unleveraged quantity accumulated at each fixing date
+\item LongShort: 1 for a long, -1 for a short position
+\item Underlying: The underlying EQ Index. This must be of the form "EQ-NAME"
+\item PayCcy: The payment currency of the trade
+\item FixingDates: The fixing dates, given as a ScheduleData node
+\item RangeUpperBound: Values of upperbounds for the leverage ranges. If a given range has no upperbound add 100000
+\item RangeLowerBound: Values of lowerbounds for the leverage ranges. If a given range has no lowerbound add 0
+\item RangeLeverages: Values of leverages for the leverage ranges.
+\item KnockOutLevel: The KnockOut Barrier level
+\item GuaranteedFixings: Number of the first n Fixings that are guaranteed, regardless of whether or not the trade has been knocked out.
+\end{itemize}
+
+The script `Accumulator' referenced in the trade above is shown in Listing \ref{lst:accumulator_script}.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+
+NUMBER Payoff, fix, d, r, Triggered;
+Payoff = 0;
+Triggered = -1;
+FOR d IN (1, SIZE(FixingDates)) DO
+    fix = Underlying(FixingDates[d]);
+    
+    IF fix >= KnockOutLevel THEN
+      Triggered = 1;
+    END;
+    IF Triggered != 1 OR d <= GuaranteedFixings THEN
+        FOR r IN (1, SIZE(RangeUpperBounds)) DO
+            IF fix > RangeLowerBounds[r] AND fix <= RangeUpperBounds[r] THEN
+                Payoff = Payoff + PAY(RangeLeverages[r] * FixingAmount * (fix - Strike), FixingDates[d], FixingDates[d], PayCcy);
+            END;
+        END;
+    END;
+END;
+value = LongShort * Payoff;
+\end{minted}
+\caption{Accumulator Script}
+\label{lst:accumulator_script}
+\end{listing}
+

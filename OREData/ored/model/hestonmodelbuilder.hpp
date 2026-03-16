@@ -1,0 +1,116 @@
+/*
+ Copyright (C) 2025 Quaternion Risk Management Ltd
+ All rights reserved.
+
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
+
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
+*/
+
+/*! \file ored/model/hestonmodelbuilder.hpp
+    \brief builder for an array of heston processes
+    \ingroup utilities
+*/
+
+#pragma once
+
+#include <ored/model/assetmodelbuilderbase.hpp>
+#include <ored/model/hestonmodelcalibration.hpp>
+#include <qle/pricingengines/varianceswapgeneralreplicationengine.hpp>
+
+
+namespace ore {
+namespace data {
+
+using namespace QuantLib;
+
+/*!
+  This class delegates calibration of individual Heston models for each asset to
+  the HestonModelCalibration class. 
+ */
+class HestonModelBuilder final : public AssetModelBuilderBase {
+public:
+    HestonModelBuilder(const std::vector<std::string>& indices, const std::vector<Handle<YieldTermStructure>>& curves,
+                       const std::vector<ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
+                       const std::set<Date>& simulationDates = {}, const std::set<Date>& addDates = {},
+                       const Size timeStepsPerYear = 1,
+                       const std::vector<Period>& calibrationExpiries = {3 * Months, 6 * Months, 1 * Years, 2 * Years,
+                                                                         3 * Years, 5 * Years},
+                       const std::vector<Real>& calibrationMoneyness = {-2.0, -1.0, 0.0, 1.0, 2.0},
+                       const std::vector<Period>& calibrationVarianceTerms = {1 * Months, 3 * Months, 6 * Months,
+                                                                              1 * Years, 2 * Years, 3 * Years},
+                       // theta, kappa, sigma, rho, v0 (same order as in the Heston model, not the Heston process)
+                       const std::vector<Real>& initialValues = {0.04, 1.0, 0.5, -0.5, 0.04},
+                       const std::vector<bool>& fixedValues = {false, false, false, false, false},
+                       const std::string& calibrationMethod = "ConstantBestFit",
+                       const std::vector<Real>& maximumInitialValues = {0.1, 20.0, 10.0, 0.9, 0.1},
+                       Real relaxedFellerConstraint = 1.0, Size maxCalibrationAttempts = 50,
+                       Real earlyExitThreshold = 0.005, Real maxAcceptableError = 0.05,
+                       const HestonProcess::Discretization& discretization = HestonProcess::QuadraticExponential,
+                       const std::string& referenceCalibrationGrid = "", const bool dontCalibrate = false,
+                       const Handle<YieldTermStructure>& baseCurve = {}, const bool observeContinuum = false);
+    HestonModelBuilder(const std::vector<std::string>& indices, const Handle<YieldTermStructure>& curve,
+                       const ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
+                       const std::set<Date>& simulationDates = {}, const std::set<Date>& addDates = {},
+                       const Size timeStepsPerYear = 1,
+                       const std::vector<Period>& calibrationExpiries = {3 * Months, 6 * Months, 1 * Years, 2 * Years,
+                                                                         3 * Years, 5 * Years},
+                       const std::vector<Real>& calibrationMoneyness = {-2.0, -1.0, 0.0, 1.0, 2.0},
+                       const std::vector<Period>& calibrationVarianceTerms = {1 * Months, 3 * Months, 6 * Months,
+                                                                              1 * Years, 2 * Years, 3 * Years},
+                       // theta, kappa, sigma, rho, v0 (same order as in the Heston model, not the Heston process)
+                       const std::vector<Real>& initialValues = {0.04, 1.0, 0.5, -0.5, 0.04},
+                       const std::vector<bool>& fixedValues = {false, false, false, false, false},
+                       const std::string& calibrationMethod = "ConstantBestFit",
+                       const std::vector<Real>& maximumInitialValues = {0.1, 20.0, 3.0, 0.9, 0.1},
+                       Real relaxedFellerConstraint = 1.0, Size maxCalibrationAttempts = 50,
+                       Real earlyExitThreshold = 0.005, Real maxAcceptableError = 0.05,
+                       const HestonProcess::Discretization& discretization = HestonProcess::QuadraticExponential,
+                       const std::string& referenceCalibrationGrid = "", const bool dontCalibrate = false,
+                       const Handle<YieldTermStructure>& baseCurve = {}, const bool observeContinuum = false)
+        : HestonModelBuilder(indices, std::vector<Handle<YieldTermStructure>>{curve},
+                             std::vector<ext::shared_ptr<GeneralizedBlackScholesProcess>>{process}, simulationDates,
+                             addDates, timeStepsPerYear, calibrationExpiries, calibrationMoneyness,
+                             calibrationVarianceTerms, initialValues, fixedValues, calibrationMethod,
+                             maximumInitialValues, relaxedFellerConstraint, maxCalibrationAttempts, earlyExitThreshold,
+                             maxAcceptableError, discretization, referenceCalibrationGrid, dontCalibrate, baseCurve,
+                             observeContinuum) {}
+
+    std::vector<ext::shared_ptr<StochasticProcess>> getCalibratedProcesses() const override;
+
+    AssetModelWrapper::ProcessType processType() const override;
+
+protected:
+    std::vector<std::vector<Real>> getCurveTimes() const override;
+    std::vector<std::vector<std::pair<Real, Real>>> getVolTimesStrikes() const override;
+
+private:
+    std::vector<std::string> indices_;
+    std::vector<Period> calibrationExpiries_;
+    std::vector<Real> calibrationMoneyness_;
+    std::vector<Period> calibrationVarianceTerms_;
+    std::vector<Real> initialValues_;
+    std::vector<bool> fixedValues_;
+    std::string calibrationMethod_;
+    std::vector<Real> maximumInitialValues_;
+    Real relaxedFellerConstraint_;
+    Size maxCalibrationAttempts_;
+    Real earlyExitThreshold_;
+    Real maxAcceptableError_;
+    HestonProcess::Discretization discretization_;
+    std::string referenceCalibrationGrid_;
+    bool dontCalibrate_;
+    mutable AssetModelWrapper::ProcessType processType_;
+};
+
+} // namespace data
+} // namespace ore

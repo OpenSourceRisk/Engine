@@ -51,13 +51,13 @@ struct TestData {
         atmVols[1][1] = 0.0160; // opt 2y
 
         // atm surface
-        atmSurface = boost::make_shared<SwaptionVolatilityMatrix>(origRefDate, TARGET(), Following, optionTenors,
+        atmSurface = QuantLib::ext::make_shared<SwaptionVolatilityMatrix>(origRefDate, TARGET(), Following, optionTenors,
                                                                   swapTenors, atmVols, Actual365Fixed(), false, Normal);
     }
 
     SavedSettings backup;
     const Date origRefDate;
-    boost::shared_ptr<SwaptionVolatilityStructure> atmSurface;
+    QuantLib::ext::shared_ptr<SwaptionVolatilityStructure> atmSurface;
     std::vector<Period> optionTenors, swapTenors;
     Matrix atmVols;
 };
@@ -75,8 +75,8 @@ BOOST_AUTO_TEST_CASE(testConstantVariance) {
 
     TestData d;
 
-    boost::shared_ptr<SwaptionVolatilityStructure> dyn =
-        boost::make_shared<DynamicSwaptionVolatilityMatrix>(d.atmSurface, 0, TARGET(), ConstantVariance);
+    QuantLib::ext::shared_ptr<SwaptionVolatilityStructure> dyn =
+        QuantLib::ext::make_shared<DynamicSwaptionVolatilityMatrix>(d.atmSurface, 0, TARGET(), ConstantVariance);
 
     dyn->enableExtrapolation();
 
@@ -112,8 +112,8 @@ BOOST_AUTO_TEST_CASE(testForwardForwardVariance) {
                        "DynamicSwaptionVolatilityMatrix");
     TestData d;
 
-    boost::shared_ptr<SwaptionVolatilityStructure> dyn =
-        boost::make_shared<DynamicSwaptionVolatilityMatrix>(d.atmSurface, 0, TARGET(), ForwardForwardVariance);
+    QuantLib::ext::shared_ptr<SwaptionVolatilityStructure> dyn =
+        QuantLib::ext::make_shared<DynamicSwaptionVolatilityMatrix>(d.atmSurface, 0, TARGET(), ForwardForwardVariance);
 
     dyn->enableExtrapolation();
 

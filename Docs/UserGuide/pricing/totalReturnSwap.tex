@@ -1,0 +1,145 @@
+\subsubsection{Generic Total Return Swap / Contract for Difference (CFD)}
+
+A generic total return swap is priced using the accrual method, i.e.
+
+\begin{itemize}
+\item The return leg NPV is computed as the difference between the price of the underlying asset today and the price at
+  the valuation start date of the current return period. If the asset currency is not equal to the swap currency, both
+  prices are converted to the swap currency before taking the difference, using the FX rates at the valuation start date
+  and today, respectively. If the underlying asset has paid cashflows (dividends, coupons, amortisation payments) in the
+  current return period, the sum of these cashflows is added to the return leg NPV (converted to the swap currency using
+  today's FX rate).
+\item The funding leg NPV is computed as the accrued interest of the current coupon period.
+\item If any additional future cashflows are given, their NPV is the sum of their amounts, converted to the swap
+  currency using today's FX rate.
+\end{itemize}
+
+The swap NPV is the difference between the return and the funding leg (if the return is received) or vice versa (if the
+return is paid). The additional results provided together with the NPV are described in table
+\ref{tab:additional_results_generic_trs}. In terms of these result labels, the NPV of the swap is the sum of
+assetLegNpv, fundingLegNpv and additionalCashflowLegNpv.
+
+\begin{table}[H]
+\begin{center}
+\begin{tabular}{|p{5cm}|p{10cm}|}
+  \hline
+  Result Label & Description \\
+  \hline
+  underlyingCurrency & The currency of the underlying. \\
+  \hline
+  returnCurrency & The currency of the return payments. \\
+  \hline
+  fundingCurrency & The currency of the funding payments. \\
+  \hline
+  pnlCurrency & The currency in which the pnl is expressed, this is always the funding currency. \\
+  \hline
+  s0 & The value of the underlying at the start of the current valuation period, in underlyingCurrency. \\
+  \hline
+  s1 & The value of the underlying today, in underlyingCurrency. \\
+  \hline
+  fx0 & The FX conversion factor from underlyingCurrency to returnCurrency at the start of the current valuation period.
+        If initialPrice is given and in returnCurrency, the value will be 1 instead\\
+  \hline
+  fx1 & The FX conversion factor from underlyingCurrency to returnCurrency at the end of the current valuation period.  \\
+  \hline
+  assetLegNpv & The npv of the return leg in return currency. This is s1 x fx1 - s0 x fx0 + underlyingCashflows x fx1 if the leg is received. \\
+  \hline
+  fundingLegNpv & The npv of the funding leg in funding currency . This is the accrued amount on the funding leg (for a unit notional) x
+                  fundingLegNotionalFactor x fundingLegFxFactor, if the leg is received. \\
+  \hline
+  fundingLegFxFactor & The FX conversion factor to the funding currency at the start of the funding leg period.  \\
+  \hline
+  fundingLegNotionalFactor & If an initialPrice is given for this funding period, initialPrice x underlyingMultiplier. Otherwise, the underlying price at the start of this funding leg period multiplied by UnderlyingMultiplier. \\
+  \hline
+  underlyingCashflows & Sum of underlying cashflows paid in the current valuation period (up to and including today), in
+                        underlyingCurrency. These can be bond cashflows (for bond underlyings) or dividends (for equity
+                        basket underlyings). \\
+  \hline
+  underlyingMultiplier & For (convertible) bond underlyings, the number of bonds (BondNotional), for equity (option)
+                         baskets the quantity. \\
+  \hline
+  additionalCashflowLegNpv & The sum of future additional cashflows in additional cashflows currency. \\
+  \hline
+  currentNotional & The current period's notional in pnl currency. This is s0 x fx0 x fx(returnCcy $\rightarrow$ pnlCcy). \\
+  \hline
+  fxConversionAssetLegNpvToPnlCurrency & Today's FX conversion factor from return currency to pnl currency. \\
+  \hline
+  fxConversionAdditionalCashflowLegNpvToPnlCurrency & Today's FX conversion factor from additional cashflows currency to pnl currency \\
+  \hline
+\end{tabular}
+\end{center}
+\caption{Additional Results Generic Total Return Swap Pricing}
+\label{tab:additional_results_generic_trs}
+\end{table}
+
+
+\underline{Rationale for the accrual method}
+
+If the swap contains the right to unwind the position on a daily basis, the accrual method is an obvious choice. In the
+following we give a rationale for this method even ignoring these unwind rights to highlight the differences to a full
+discounting valuation approach:
+
+Consider one return period with pricing dates $t_1 < t_2$. The return leg pays (assuming it is the receiver leg)
+
+\begin{equation}
+  S(t_2) - S(t_1)
+\end{equation}
+
+on $t_2$. Here, $S(t)$ denotes the underlying asset price, including all income (e.g. dividends) and - in case of a
+composite swap - converted to the return currency using the prevailing market FX spot rate $X(t)$. The funding leg pays
+(the minus sign indicating that it is the payer leg)
+
+\begin{equation}
+  - \left( S(t_1) e^{\int_{t_1}^{t_2} r(s) ds} - S(t_1) \right)
+\end{equation}
+
+on $t_2$ where $r(s)$ is the interest short rate. Notice that the funded amount is $S(t_1)$ due to the resetting nature
+of a total return swap. Furthermore, we assume $r(s)$ is determinisitc and the funding rate is consistent with the
+market rate, i.e. in practical terms we fund ``at Libor flat'' and there is no fixing risk.
+
+Let's add cashflows to the return leg
+
+\begin{equation}
+  -S(t_1) \text{ at }  t_1, S(t_1) \text{ at } t_2
+\end{equation}
+
+and to the funding leg
+
+\begin{equation}
+ S(t_1) \text{ at }  t_1, -S(t_1) \text{ at } t_2
+\end{equation}
+
+which cancel out, i.e. they do not change the trade. The return leg now has cashflows
+
+\begin{equation}
+  -S(t_1) \text{ at } t_1, S(t_2) \text{ at } t_2
+\end{equation}
+
+and the funding leg has cashflows
+
+\begin{equation}
+  S(t_1) \text{ at } t_1, - S(t_1) e^{\int_{t_1}^{t_2} r(s) ds} \text{ at } t_2
+\end{equation}
+
+Both legs are obviously worth zero at $t_1$. The valuation of a total return swap therefore reduces to the valuation of
+the cashflows for the current return period with pricing dates $t_1 < t < t_2$.
+
+On the return leg we have a future payment $S(t_2)$ at $t_2$ which evaluates to $S(t)$. On the funding leg we have a
+future payment $- S(t_1) e^{\int_{t_1}^{t_2} r(s) ds}$ which evaluates to $-S(t_1)e^{\int_{t_1}^{t} r(s) ds}$.
+cashflows $-S(t_1)$ to the return leg and $S(t_1)$ to the funding leg, both paid at $t$ we see that the return leg value
+can be written as
+
+\begin{equation}
+  S(t) - S(t_1)
+\end{equation}
+
+and the funding leg value as
+
+\begin{equation}
+-\left( S(t_1)e^{\int_{t_1}^{t} r(s) ds} - S(t_1) \right)
+\end{equation}
+
+The latter expression represents the accrued amount on the funding leg between $t_1$ and $t$, which is apprxoimated by
+the linear accrued amount of the current funding coupon in the practical computation. This shows that under the
+assumptions stated above the valuation of a total return swap under the accrual method is equivalent to the usual
+no-arbitrage valuation.

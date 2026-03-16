@@ -25,6 +25,15 @@ namespace analytics {
 
 // Delta Scenario class
 
+DeltaScenario::DeltaScenario(const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& baseScenario,
+                             const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& incrementalScenario)
+    : baseScenario_(baseScenario), delta_(incrementalScenario) {
+    QL_REQUIRE(
+        baseScenario->isAbsolute() == incrementalScenario->isAbsolute(),
+        "DeltaScenario(): base and incremental scenario must be both absolute or both difference, got isAbsolute = "
+            << std::boolalpha << baseScenario->isAbsolute() << ", " << incrementalScenario->isAbsolute());
+}
+
 void DeltaScenario::add(const ore::analytics::RiskFactorKey& key, Real value) {
     QL_REQUIRE(baseScenario_->has(key), "base scenario must also possess key");
     if (baseScenario_->get(key) != value)
@@ -39,10 +48,10 @@ Real DeltaScenario::get(const ore::analytics::RiskFactorKey& key) const {
     }
 }
 
-boost::shared_ptr<ore::analytics::Scenario> DeltaScenario::clone() const {
+QuantLib::ext::shared_ptr<ore::analytics::Scenario> DeltaScenario::clone() const {
     // NOTE - we are not cloning the base here (is this appropriate?)
-    boost::shared_ptr<Scenario> newDelta = delta_->clone();
-    return boost::make_shared<DeltaScenario>(baseScenario_, newDelta);
+    QuantLib::ext::shared_ptr<Scenario> newDelta = delta_->clone();
+    return QuantLib::ext::make_shared<DeltaScenario>(baseScenario_, newDelta);
 }
 
 Real DeltaScenario::getNumeraire() const {
@@ -52,8 +61,8 @@ Real DeltaScenario::getNumeraire() const {
     return deltaNum;
 }
 
-bool DeltaScenario::isCloseEnough(const boost::shared_ptr<Scenario>& s) const {
-    if (auto d = boost::dynamic_pointer_cast<DeltaScenario>(s)) {
+bool DeltaScenario::isCloseEnough(const QuantLib::ext::shared_ptr<Scenario>& s) const {
+    if (auto d = QuantLib::ext::dynamic_pointer_cast<DeltaScenario>(s)) {
         return (baseScenario_.get() == d->baseScenario_.get() || baseScenario_->isCloseEnough(s)) &&
                (delta_.get() == d->delta_.get() || delta_->isCloseEnough(s));
     } else {

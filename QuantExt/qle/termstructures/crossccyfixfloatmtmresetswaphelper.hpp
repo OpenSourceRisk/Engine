@@ -52,18 +52,26 @@ namespace QuantExt {
 */
 class CrossCcyFixFloatMtMResetSwapHelper : public RelativeDateRateHelper {
 public:
-    CrossCcyFixFloatMtMResetSwapHelper(
-        const QuantLib::Handle<QuantLib::Quote>& rate,
-        const QuantLib::Handle<QuantLib::Quote>& spotFx, QuantLib::Natural settlementDays,
-        const QuantLib::Calendar& paymentCalendar,
-        QuantLib::BusinessDayConvention paymentConvention, const QuantLib::Period& tenor,
-        const QuantLib::Currency& fixedCurrency, QuantLib::Frequency fixedFrequency,
-        QuantLib::BusinessDayConvention fixedConvention,
-        const QuantLib::DayCounter& fixedDayCount,
-        const boost::shared_ptr<QuantLib::IborIndex>& index,
-        const QuantLib::Handle<QuantLib::YieldTermStructure>& floatDiscount,
-        const Handle<Quote>& spread = Handle<Quote>(), bool endOfMonth = false, 
-        bool resetsOnFloatLeg = true);
+    CrossCcyFixFloatMtMResetSwapHelper(const QuantLib::Handle<QuantLib::Quote>& rate,
+                                       const QuantLib::Handle<QuantLib::Quote>& spotFx,
+                                       QuantLib::Natural settlementDays, const QuantLib::Calendar& paymentCalendar,
+                                       QuantLib::BusinessDayConvention paymentConvention, const QuantLib::Period& tenor,
+                                       const QuantLib::Currency& fixedCurrency, QuantLib::Frequency fixedFrequency,
+                                       QuantLib::BusinessDayConvention fixedConvention,
+                                       const QuantLib::DayCounter& fixedDayCount,
+                                       const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index,
+                                       const QuantLib::Handle<QuantLib::YieldTermStructure>& floatDiscount,
+                                       const Handle<Quote>& spread = Handle<Quote>(), bool endOfMonth = false,
+                                       bool resetsOnFloatLeg = true, bool telescopicValueDates = false,
+                                       const QuantLib::Pillar::Choice pillarChoice = QuantLib::Pillar::LastRelevantDate,
+                                       const QuantLib::Date& customPillarDate = Date(),
+                                       const std::vector<Natural>& spotFXSettleDaysVec = std::vector<Natural>(),
+                                       const std::vector<Calendar>& spotFXSettleCalendarVec = std::vector<Calendar>(),
+                                       QuantLib::ext::optional<bool> includeSpread = QuantLib::ext::nullopt,
+                                       QuantLib::ext::optional<Period> lookback = QuantLib::ext::nullopt,
+                                       QuantLib::ext::optional<Size> fixingDays = QuantLib::ext::nullopt,
+                                       QuantLib::ext::optional<Size> rateCutoff = QuantLib::ext::nullopt,
+                                       QuantLib::ext::optional<bool> isAveraged = QuantLib::ext::nullopt);
     //! \name RateHelper interface
     //@{
     Real impliedQuote() const override;
@@ -75,7 +83,7 @@ public:
     //@}
     //! \name inspectors
     //@{
-    boost::shared_ptr<CrossCcyFixFloatMtMResetSwap> swap() const { return swap_; }
+    QuantLib::ext::shared_ptr<CrossCcyFixFloatMtMResetSwap> swap() const { return swap_; }
     //@}
     //! \name Visitability
     //@{
@@ -94,13 +102,22 @@ protected:
     QuantLib::Frequency fixedFrequency_;
     QuantLib::BusinessDayConvention fixedConvention_;
     QuantLib::DayCounter fixedDayCount_;
-    boost::shared_ptr<QuantLib::IborIndex> index_;
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex> index_;
     QuantLib::Handle<QuantLib::YieldTermStructure> floatDiscount_;
     QuantLib::Handle<QuantLib::Quote> spread_;
     bool endOfMonth_;
     bool resetsOnFloatLeg_;
+    bool telescopicValueDates_;
+    QuantLib::Pillar::Choice pillarChoice_;
+    QuantLib::ext::optional<bool> includeSpread_;
+    std::vector<Natural> spotFXSettleDaysVec_;
+    std::vector<Calendar> spotFXSettleCalendarVec_;
+    QuantLib::ext::optional<Period> lookback_;
+    QuantLib::ext::optional<Size> fixingDays_;
+    QuantLib::ext::optional<Size> rateCutoff_;
+    QuantLib::ext::optional<bool> isAveraged_;
 
-    boost::shared_ptr<CrossCcyFixFloatMtMResetSwap> swap_;
+    QuantLib::ext::shared_ptr<CrossCcyFixFloatMtMResetSwap> swap_;
 
     RelinkableHandle<YieldTermStructure> termStructureHandle_;
 };

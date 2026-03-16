@@ -37,9 +37,11 @@ namespace analytics {
 class SensitivityCubeStream : public SensitivityStream {
 public:
     /*! Constructor providing the sensitivity \p cube and currency of the sensitivities */
-    SensitivityCubeStream(const boost::shared_ptr<SensitivityCube>& cube, const std::string& currency);
-    /*! Constructor providing the sensitivity \p cubes and currency of the sensitivities */
-    SensitivityCubeStream(const std::vector<boost::shared_ptr<SensitivityCube>>& cubes, const std::string& currency);
+    SensitivityCubeStream(const QuantLib::ext::shared_ptr<SensitivityCube>& cube, const std::string& currency,
+                          const QuantLib::ext::shared_ptr<Portfolio>& portfolio = nullptr);
+    /*! Constructor providing the sensitivity \p cubes, base currency of the sensitivities, and trade currency for each trade*/
+    SensitivityCubeStream(const std::vector<QuantLib::ext::shared_ptr<SensitivityCube>>& cubes,
+                          const std::string& currency, const QuantLib::ext::shared_ptr<Portfolio>& portfolio = nullptr);
 
     /*! Returns the next SensitivityRecord in the stream
 
@@ -54,9 +56,14 @@ private:
     void updateForNewTrade();
 
     //! Handle on the SensitivityCubes
-    std::vector<boost::shared_ptr<SensitivityCube>> cubes_;
+    std::vector<QuantLib::ext::shared_ptr<SensitivityCube>> cubes_;
     //! Currency of the sensitivities in the SensitivityCubes
     std::string currency_;
+    // Trade Portfolio
+    QuantLib::ext::shared_ptr<Portfolio> portfolio_;
+    // Trade currency of each trade by tradeId
+    std::unordered_map<std::string, std::string> tradeCurrency_;
+    std::string currentTradeCurrency_;
 
     //! Current cube index in vector
     Size currentCubeIdx_;
@@ -73,6 +80,9 @@ private:
 
     //! Can only compute gamma if the up and down risk factors align
     bool canComputeGamma_;
+
+    //! Flag to emit a theta record before the delta/gamma records for a new trade
+    bool emitThetaNext_;
 };
 
 } // namespace analytics

@@ -52,14 +52,14 @@ namespace QuantExt {
 class PriceTermStructureAdapter : public QuantLib::YieldTermStructure {
 
 public:
-    PriceTermStructureAdapter(const boost::shared_ptr<PriceTermStructure>& priceCurve,
-                              const boost::shared_ptr<QuantLib::YieldTermStructure>& discount,
+    PriceTermStructureAdapter(const QuantLib::ext::shared_ptr<PriceTermStructure>& priceCurve,
+                              const QuantLib::ext::shared_ptr<QuantLib::YieldTermStructure>& discount,
                               QuantLib::Natural spotDays = 0,
                               const QuantLib::Calendar& spotCalendar = QuantLib::NullCalendar());
 
     // Alternative ctor where the spot quote handle is explicitly set
-    PriceTermStructureAdapter(const boost::shared_ptr<PriceTermStructure>& priceCurve,
-                              const boost::shared_ptr<QuantLib::YieldTermStructure>& discount,
+    PriceTermStructureAdapter(const QuantLib::ext::shared_ptr<PriceTermStructure>& priceCurve,
+                              const QuantLib::ext::shared_ptr<QuantLib::YieldTermStructure>& discount,
                               const QuantLib::Handle<QuantLib::Quote>& spotQuote);
 
     //! \name TermStructure interface
@@ -71,8 +71,8 @@ public:
 
     //! \name Inspectors
     //@{
-    const boost::shared_ptr<PriceTermStructure>& priceCurve() const;
-    const boost::shared_ptr<QuantLib::YieldTermStructure>& discount() const;
+    const QuantLib::ext::shared_ptr<PriceTermStructure>& priceCurve() const;
+    const QuantLib::ext::shared_ptr<QuantLib::YieldTermStructure>& discount() const;
     QuantLib::Natural spotDays() const;
     const QuantLib::Calendar& spotCalendar() const;
     //@}
@@ -84,8 +84,8 @@ protected:
     //@}
 
 private:
-    boost::shared_ptr<PriceTermStructure> priceCurve_;
-    boost::shared_ptr<QuantLib::YieldTermStructure> discount_;
+    QuantLib::ext::shared_ptr<PriceTermStructure> priceCurve_;
+    QuantLib::ext::shared_ptr<QuantLib::YieldTermStructure> discount_;
     QuantLib::Natural spotDays_;
     QuantLib::Calendar spotCalendar_;
     QuantLib::Handle<QuantLib::Quote> spotQuote_;

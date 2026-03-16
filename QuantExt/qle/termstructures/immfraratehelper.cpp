@@ -32,7 +32,7 @@ Date getImmDate(Date asof, Size i) {
 }
 
 ImmFraRateHelper::ImmFraRateHelper(const Handle<Quote>& rate, const Size imm1, const Size imm2,
-                                   const boost::shared_ptr<IborIndex>& i, Pillar::Choice pillarChoice,
+                                   const QuantLib::ext::shared_ptr<IborIndex>& i, Pillar::Choice pillarChoice,
                                    Date customPillarDate)
     : RelativeDateRateHelper(rate), imm1_(imm1), imm2_(imm2), pillarChoice_(pillarChoice) {
     // take fixing into account
@@ -54,7 +54,7 @@ void ImmFraRateHelper::setTermStructure(YieldTermStructure* t) {
     // force recalculation when needed---the index is not lazy
     bool observer = false;
 
-    boost::shared_ptr<YieldTermStructure> temp(t, null_deleter());
+    QuantLib::ext::shared_ptr<YieldTermStructure> temp(t, null_deleter());
     termStructureHandle_.linkTo(temp, observer);
 
     RelativeDateRateHelper::setTermStructure(t);

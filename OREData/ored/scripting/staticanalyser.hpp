@@ -35,7 +35,7 @@ namespace data {
   event or index are allowed in a script. */
 class StaticAnalyser {
 public:
-    StaticAnalyser(const ASTNodePtr root, const boost::shared_ptr<Context> context)
+    StaticAnalyser(const ASTNodePtr root, const QuantLib::ext::shared_ptr<Context> context)
         : root_(root), context_(context) {}
     void run(const std::string& script = "");
 
@@ -77,7 +77,7 @@ public:
 
 private:
     const ASTNodePtr root_;
-    const boost::shared_ptr<Context> context_;
+    const QuantLib::ext::shared_ptr<Context> context_;
     //
     std::map<std::string, std::set<QuantLib::Date>> indexEvalDates_, indexFwdDates_, payObsDates_, payPayDates_,
         discountObsDates_, discountPayDates_, fwdCompAvgFixingDates_, fwdCompAvgEvalDates_, fwdCompAvgStartEndDates_,

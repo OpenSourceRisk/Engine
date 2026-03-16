@@ -35,13 +35,13 @@ namespace ore {
 using namespace data;
 namespace analytics {
 
-CollateralAccount::CollateralAccount(const boost::shared_ptr<NettingSetDefinition>& csaDef, const Date& date_t0)
+CollateralAccount::CollateralAccount(const QuantLib::ext::shared_ptr<NettingSetDefinition>& csaDef, const Date& date_t0)
     : csaDef_(csaDef), balance_t0_(0.0) {
     accountBalances_.push_back(balance_t0_);
     accountDates_.push_back(date_t0);
 }
 
-CollateralAccount::CollateralAccount(const boost::shared_ptr<NettingSetDefinition>& csaDef, const Real& balance_t0,
+CollateralAccount::CollateralAccount(const QuantLib::ext::shared_ptr<NettingSetDefinition>& csaDef, const Real& balance_t0,
                                      const Date& date_t0)
     : csaDef_(csaDef), balance_t0_(balance_t0) {
     accountBalances_.push_back(balance_t0_);
@@ -115,15 +115,8 @@ Real CollateralAccount::accountBalance(const Date& date) const {
     QL_REQUIRE(accountDates_.front() <= date, "CollateralAccount error, invalid date for balance request");
     if (date >= accountDates_.back())
         return accountBalances_.back(); // flat extrapolation at far end
-    for (unsigned i = 0; i < accountDates_.size(); i++) {
-        if (date == accountDates_[i])
-            return accountBalances_[i];
-        else if (date > accountDates_[i] && date < accountDates_[i + 1])
-            return accountBalances_[i];
-        else
-            continue;
-    }
-    QL_FAIL("CollateralAccount error, balance not found for date " << date);
+    return accountBalances_[std::distance(accountDates_.begin(),
+                                          std::lower_bound(accountDates_.begin(), accountDates_.end(), date))];
 }
 
 Real CollateralAccount::outstandingMarginAmount(const Date& simulationDate) const {

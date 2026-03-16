@@ -25,8 +25,6 @@
 #include <ql/math/comparison.hpp>
 #include <ql/math/rounding.hpp>
 
-#include <boost/filesystem/operations.hpp>
-#include <boost/filesystem/path.hpp>
 #include <boost/variant/static_visitor.hpp>
 #include <boost/algorithm/string/join.hpp>
 
@@ -38,8 +36,10 @@ namespace data {
 // Local class for printing each report type via fprintf
 class ReportTypePrinter : public boost::static_visitor<> {
 public:
-    ReportTypePrinter(FILE* fp, int prec, char quoteChar = '\0', const string& nullString = "#N/A")
-        : fp_(fp), rounding_(prec, QuantLib::Rounding::Closest), quoteChar_(quoteChar), null_(nullString) {}
+    ReportTypePrinter(FILE* fp, int prec, bool scientific, char quoteChar = '\0', char sep = ',',
+                      const string& nullString = "#N/A")
+        : fp_(fp), rounding_(prec, QuantLib::Rounding::Closest), scientific_(scientific), quoteChar_(quoteChar),
+          sep_(sep), null_(nullString) {}
 
     void operator()(const Size i) const {
         if (i == QuantLib::Null<Size>()) {
@@ -52,8 +52,12 @@ public:
         if (d == QuantLib::Null<Real>() || !std::isfinite(d)) {
             fprintNull();
         } else {
-            Real r = rounding_(d);
-            fprintf(fp_, "%.*f", rounding_.precision(), QuantLib::close_enough(r, 0.0) ? 0.0 : r);
+            if(scientific_) {
+                fprintf(fp_, "%.*e", rounding_.precision(), d);
+            } else {
+                Real r = rounding_(d);
+                fprintf(fp_, "%.*f", rounding_.precision(), QuantLib::close_enough(r, 0.0) ? 0.0 : r);
+            }
         }
     }
     void operator()(const string& s) const { fprintString(s); }
@@ -78,16 +82,33 @@ private:
     // Shared implementation to include the quote character.
     void fprintString(const string& s) const {
         bool quoted = s.size() > 1 && s[0] == quoteChar_ && s[s.size() - 1] == quoteChar_;
-        if (!quoted && quoteChar_ != '\0')
-            fputc(quoteChar_, fp_);
-        fprintf(fp_, "%s", s.c_str());
-        if (!quoted && quoteChar_ != '\0')
-            fputc(quoteChar_, fp_);
+        string sc = quoted ? s.substr(1, s.size() - 2) : s;
+
+        bool containsSep = sc.find(sep_) != std::string::npos;
+        
+        boost::replace_all(sc, "\n", "\\n");
+        boost::replace_all(sc, "\t", "\\t");
+
+        // If quote character is \0, use double quotes instead
+        char effectiveQuoteChar = (quoteChar_ == '\0' && containsSep) ? '"' : quoteChar_;
+
+        if (effectiveQuoteChar != '\0') {
+            if (effectiveQuoteChar == '"')
+                boost::replace_all(sc, "\"", "\"\"");            
+            fputc(effectiveQuoteChar, fp_);
+        }
+
+        fprintf(fp_, "%s", sc.c_str());
+
+        if (effectiveQuoteChar != '\0')
+            fputc(effectiveQuoteChar, fp_);
     }
 
     FILE* fp_;
     QuantLib::Rounding rounding_;
+    bool scientific_;
     char quoteChar_;
+    char sep_;
     string null_;
 };
 
@@ -119,10 +140,10 @@ void CSVFileReport::rollover() {
     checkIsOpen("rollover()");
     end();
     version_++;
-    boost::filesystem::path p(baseFilename_);
-    boost::filesystem::path newFilepath =
+    std::filesystem::path p(baseFilename_);
+    std::filesystem::path newFilepath =
         p.parent_path() /
-        boost::filesystem::path(p.stem().string() + "_" + to_string(version_) + p.extension().string());
+        std::filesystem::path(p.stem().string() + "_" + to_string(version_) + p.extension().string());
     filename_ = newFilepath.string();
     open();
 }
@@ -133,11 +154,11 @@ void CSVFileReport::flush() {
     fflush(fp_);
 }
 
-Report& CSVFileReport::addColumn(const string& name, const ReportType& rt, Size precision) {
+Report& CSVFileReport::addColumn(const string& name, const ReportType& rt, Size precision, bool scientific) {
     checkIsOpen("addColumn(" + name + ")");
     columnTypes_.push_back(rt);
     headers_.push_back(name);
-    printers_.push_back(ReportTypePrinter(fp_, precision, quoteChar_, nullString_));
+    printers_.push_back(ReportTypePrinter(fp_, precision, scientific, quoteChar_, sep_, nullString_));
     if (i_ == 0 && commentCharacter_)
         fprintf(fp_, "#");
     if (i_ > 0)
@@ -154,7 +175,7 @@ Report& CSVFileReport::next() {
     // check the filesize every for every 1000 rows, and roll if necessary
     if (rolloverSize_ != QuantLib::Null<Size>()) {
         if (j_ >= 10000) {
-            auto fileSize = boost::filesystem::file_size(filename_);
+            auto fileSize = std::filesystem::file_size(filename_);
             TLOG("CSV size of " << filename_ << " is " << fileSize);
             if (fileSize > rolloverSize_ * 1024 * 1024)
                 rollover();

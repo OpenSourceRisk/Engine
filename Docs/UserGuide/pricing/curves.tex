@@ -1,0 +1,520 @@
+\section{Curve Building}
+\label{sec:curves}
+
+Curve construction is comprised of the following fundamental steps:
+\begin{itemize}
+\item Determine the financial instruments that will provide the best indication 
+of the curve rates for each section of the curve.
+\item Determine the discount curve to apply to the quotes given by the selected 
+financial instruments.
+\item Use a numerical method to compute fair rates of constituent
+  financial instruments given ```discount'' and ``forward'' curves
+\item Use bootstrapping techniques (iterative procedures) to determine
+  the discount or forward curve that yields the implied fair rates
+  (see above) consistent with the given market quotes
+\item The bootstrap also involves the choice of interpolation methods
+  (linear, log-linear, cubic spline, financial cubic spline, etc.) and
+  interpoaltion domains (discount factors, zero rates, forward rates)
+  to determine curve rates for maturities other  than those of the given quotes.
+\end{itemize}
+
+%--------------------------------------------------------------------------------
+\subsection{Interest Rates}
+
+The yield curve construction described here assumes perfect CSAs with cash collateral
+in a single unique currency (CSA currency), daily margining and vanishing 
+thresholds and minimum transfer amounts. Any deviation from these assumptions
+requires the calculation of value adjustments to take CSA imperfections into account.
+
+\medskip
+Each CSA currency then determines a coherent set of yield curves that allow consistent 
+pricing of single and cross currency derivatives.
+
+\medskip
+Four main types of IR curves are built for such a curve set:
+\begin{itemize}
+\item Overnight Index Swap curves (OIS curves). These curves are
+  constructed from Overnight Deposit, Futures and OIS quotes, and they
+  are used in  Overnight Index Swap pricing. The CSA  currency OIS
+  curve moreover forms the ``domestic'' discount curve of the set,
+  i.e. it is used to discount  cash flows in CSA currency. 
+  OIS markets are available in  a limited number of economies including
+  EUR, USD, GBP, CHF, JPY, AUD, CAD, SGD, HKD, with the first
+  four being the most developed with longest maturity swaps.
+  
+\item IBOR index curves for index tenors longer than overnight (1M,
+  3M, 6M, etc.). These curves are constructed from Deposit, Forward
+  Rate Agreement, Interest Rate Swap quotes, and/or Single Currency
+  Basis Swap quotes, and they  are used in Interest Rate Swap and
+  Basis Swap pricing.
+  
+\item ``Foreign'' currency discount curves, for discounting derivative
+  cashflows in a currency different from the CSA Currency; these
+  curves are implied from FX Forwards and Cross-Currency (Basis) Swaps
+  where available
+  
+ \item LIBOR Fallback curves. Since the Libor cessation on 30 June 2023, some LIBOR curves have ceased. The fallback for the ceased curves is the OIS RFR index of the respective LIBOR index plus a defined fallback spread specific to the index. 
+  
+%\item Bond Market Association Swap Curves (BMA Curves), used to
+%  project the BMA index in BMA Swaps (specific for the US market). 
+\end{itemize}
+
+%By default, log-linear interpolation of discount factors is used (i.e. piecewise
+%flat forward interpolation) for all curves, though further schemes are available 
+%(linear interpolation, natural or financial cubic spline interpolation, etc., 
+%applied to a domain of choice including Zero Rates, Forward Rates and Discount 
+%Factors). When extrapolation is enabled, extrapolation is flat.
+
+\medskip
+As a tangible example, consider the CSA currency USD, and the
+following curve building sequence in ORE \cite{ORE}.
+ 
+\medskip
+\paragraph*{Step 1:} The USD OIS curve can be either the USD-FedFunds curve or the USD-SOFR curve
+
+The USD-FedFunds curve building would
+typically take  Overnight Deposit and OIS quotes (Swaps with a Overnight tenor) into account 
+
+{\small
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+Term & Instrument \\
+\hline
+\hline
+1D & MM/RATE/USD/0D/1D \\
+\hline
+1M & IR\_SWAP/RATE/USD/2D/1D/1M \\
+3M & IR\_SWAP/RATE/USD/2D/1D/3M \\
+6M & IR\_SWAP/RATE/USD/2D/1D/6M \\
+9M & IR\_SWAP/RATE/USD/2D/1D/9M \\
+1Y & IR\_SWAP/RATE/USD/2D/1D/1Y \\
+15M & IR\_SWAP/RATE/USD/2D/1D/1Y3M \\
+18M & IR\_SWAP/RATE/USD/2D/1D/1Y6M \\
+21M & IR\_SWAP/RATE/USD/2D/1D/1Y9M \\
+2Y & IR\_SWAP/RATE/USD/2D/1D/2Y \\
+\dots& \dots \\
+50Y & IR\_SWAP/RATE/USD/2D/1D/50Y \\ 
+\hline
+\end{tabular}
+\end{center}
+}
+
+
+The USD-SOFR curve building would
+typically take Overnight Deposit, Futures and OIS quotes into account 
+
+{\small
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+Term & Instrument \\
+\hline
+\hline
+1D & MM/RATE/USD/0D/1D \\
+\hline
+1M to 2Y & OI\_FUTURE/PRICE/USD/YYYY-MM/XCME:SRA/3M \\
+\hline
+2Y & IR\_SWAP/RATE/USD/2D/1D/2Y \\
+3Y & IR\_SWAP/RATE/USD/2D/1D/3Y \\
+4Y & IR\_SWAP/RATE/USD/2D/1D/4Y \\
+\dots& \dots \\
+50Y & IR\_SWAP/RATE/USD/2D/1D/50Y \\ 
+\hline
+\end{tabular}
+\end{center}
+}
+
+%In the US, the Fed Funds Arithmetic Average Overnight Index Basis
+%Swaps (exchanging average O/N fixings for Libor plus a spread) have
+%become more liquid than usual OIS. To utilize these for OIS curve
+%building we can use composite quotes that consist
+%of 3M tenor Interest Rate Swap quotes (IR\_SWAP/RATE/USD/2D/3M/*) 
+%and Overnight Index Basis Swap quotes (BASIS\_SWAP/BASIS\_SPREAD/3M/1D/USD/*).
+%In any case, we use the approximation in \cite{Takada_2011}  on the Fed Funds leg for speed of computation. 
+
+\medskip
+\paragraph*{Step 2:} Build the IBOR curve. Before LIBOR cessation step 2 would be to build a USD-LIBOR-3M index curve where the USD OIS curve built in step 1 would be used for
+discounting. This is no longer required for USD. But as an example of an IBOR curve build in step 2, we use the EUR-EURIBOR-3M index curve assuming the EUR OIS was built in step 1. The EUR-EURIBOR-3M index curve is typically built using Deposits, Futures, and Interest Rate Swaps, where the EUR OIS curve is used for discounting. The curve building yields the index projection curve as a result.
+
+{\small
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+Term & Instrument \\
+\hline
+3M & MM/RATE/EUR/2D/3M \\
+\hline
+3M to 2Y & OI\_FUTURE/PRICE/EUR/YYYY-MM/XICE:FEI/3M \\
+\hline
+2Y & IR\_SWAP/RATE/EUR/2D/3M/2Y \\
+3Y & IR\_SWAP/RATE/EUR/2D/3M/3Y \\
+4Y & IR\_SWAP/RATE/EUR/2D/3M/4Y \\
+5Y & IR\_SWAP/RATE/EUR/2D/3M/5Y \\
+\dots & \dots \\
+60Y & IR\_SWAP/RATE/EUR/2D/3M/60Y \\ 
+\hline
+\end{tabular}
+\end{center}
+}
+
+Similarly, we would build index curves for other tenors and currencies
+such as EUR-EURIBOR-6M, AUD-BBSW-6M, etc. using the respective
+currency's OIS curve (EUR Eonia/Ester, AUD Aonia) for discounting.  
+ 
+\medskip
+\paragraph*{Step 3:} Build the ``foreign'' currency discount curve -- for
+example for cash flows in EUR -- from FX Spot, FX Forward, and Cross
+Currency Basis Swap quotes: 
+
+{
+\small
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+Term & Instrument \\
+\hline
+FXSPOT & FXSPOT/EUR/USD  \\
+FXON & FXON/EUR/USD  \\
+FXTN & FXTN/EUR/USD  \\
+1W & FXFWD/RATE/EUR/USD/1W \\
+2W & FXFWD/RATE/EUR/USD/2W \\
+3W & FXFWD/RATE/EUR/USD/3W \\
+1M & FXFWD/RATE/EUR/USD/1M \\
+\dots & \dots \\
+1Y  & FXFWD/RATE/EUR/USD/1Y \\
+15M & FXFWD/RATE/EUR/USD/15M \\
+18M & FXFWD/RATE/EUR/USD/18M \\
+21M & FXFWD/RATE/EUR/USD/21M \\
+\hline
+2Y & CC\_BASIS\_SWAP/BASIS\_SPREAD/USD/1D/EUR/1D/2Y \\
+3Y & CC\_BASIS\_SWAP/BASIS\_SPREAD/USD/1D/EUR/1D/3Y \\
+\dots & \dots \\
+30Y & CC\_BASIS\_SWAP/BASIS\_SPREAD/USD/1D/EUR/1D/30Y \\
+40Y & CC\_BASIS\_SWAP/BASIS\_SPREAD/USD/1D/EUR/1D/40Y \\
+50Y & CC\_BASIS\_SWAP/BASIS\_SPREAD/USD/1D/EUR/1D/50Y \\
+\hline
+\end{tabular}
+\end{center}
+}
+
+This bootstrap takes the USD-SOFR and
+EUR-ESTER index curves as an input and yields the EUR discount
+curve (``EUR-IN-USD'') that needs to be applied under USD collateral. 
+
+\medskip
+A similar construction is done for any other non-CSA currency
+discount curve (``GBP-IN-USD'', ``TRY-IN-USD'',
+``CNH-IN-USD''  etc). Cross Currency Basis Swaps are used where
+available. In some economies such as TRY or CNH, we might use
+fixed-float Cross Currency Swap quotes instead where floating rate
+legs in USD are exchanged for fixed rate legs in the foreign
+currency. Or the curve could be built from FX quotes only if discount
+factors are required for moderate times to maturity only.
+
+% For example, consider the curve building sequence for CSA currency USD: 
+% \begin{itemize}
+% \item Curve building then starts with the OIS curve of the CSA Currency (e.g. USD). 
+% The USD OIS curve is built from an Overnight Deposit and 
+% OIS Swap instruments using single curve bootstrap  (i.e. the discounting curve 
+% used for the bootstrap is the OIS curve itself). For more details on building the 
+% OIS curve, see (Lichters, Stamm, Gallagher, 2015) Ch. 3.3.
+% \item Next, the USD standard tenor (3M LIBOR) swap curve is built using the USD 
+% OIS curve for discounting, and Deposits, Forward Rate Agreements (FRAs), and USD 
+% Interest Rate Swaps with a 3M tenor. The standard tenor is the most liquid one and 
+% used as basis to calculate other tenors.
+% \item We then build USD curves for tenors other than 3M; the USD OIS curve is still 
+% used for discounting, and Deposits and FRAs for the shorter end of the curve. 
+% For the longer end of the curve, either Basis Swaps between 3M and the desired 
+% tenor are used, or swaps of the desired tenor are used directly.
+% Typically, Deposits are used up to 2M/3M, FRAs up to 2Y/3Y, and then IR Swaps.
+% \item For foreign (i.e. non-USD) currencies, the OIS curve is built in the same way as 
+% USD OIS curve above (i.e. using single curve bootstrap), using an Overnight Deposit
+% quote for the first day, and OIS Swap quotes for the rest of the curve. 
+% \item For foreign currencies and longer IBOR tenors, using foreign currency 
+% collateralization, the foreign OIS curve is used for discounting, and Deposits 
+% and FRAs are used for the shorter end of the curve. For the longer end of the curve, 
+% swaps are used for the standard IBOR tenor, and for other tenors either Basis Swaps 
+% between the standard tenor and the desired tenor are used, or swaps of the desired 
+% tenor directly.
+% \item For currencies where no OIS curve is available, per respective currency, a suitable 
+% liquid IBOR curve is used that is built with single curve discounting.
+% \item Additionally, for foreign currencies, ``Foreign Currency'' Discount curves are 
+% built. Here, the foreign currency is used for discounting non-USD cashflows, while the 
+% collateral is USD cash collateral. The curves are built from quoted FX Forwards and 
+% Cross Currency Basis Swaps for the desired foreign currency and tenor respectively.
+% \end{itemize}
+
+%--------------------------------------------------------------------------------
+\subsection{Foreign Exchange}
+
+FX forward rates are calculated from the FX spot rate, and discount curves for the 
+two currencies in question. That is, the OIS curve for the CSA currency and the 
+Foreign Currency Discount curve for any other currency.
+$$
+F(t,T)=X(t) \frac{P^A(t,T)}{P^B(t,T)}
+$$
+Where:
+\begin{itemize}
+\item $F(t,T)$: the forward projected FX rate between currency A and B for maturity 
+$T$ at time $t$ 
+\item $X(t)$: the FX spot rate between currency A and currency B at time $t$
+\item $P^A(t,T)$: the discount factor for currency A from time $T$ to time $t$
+\item $P^B(t,T)$: the discount factor for currency B from time $T$ to time $t$
+\end{itemize}
+
+Since the Foreign Currency Discount curves are built from quoted FX Forwards and
+Cross Currency Basis Swaps, the implied FX Forward above is consistent with the 
+market by construction.
+
+%--------------------------------------------------------------------------------
+\subsection{Inflation}
+
+There are two types of inflation curves:
+\begin{itemize}
+\item Zero-Coupon Inflation Index curves, built from CPI Swap (or Zero Coupon 
+Inflation Swap) quotes, used to price CPI-linked instruments
+\item Year-on-Year Inflation Index curves, built from Year-on-Year Inflation Swap 
+quotes, used to price instruments linked to YoY inflation indices
+\end{itemize}
+
+%Curve construction methodology applies the following key elements:
+%\begin{itemize}
+%\item An inflation base rate
+%\item The following instruments and quotes are used per curve type to build the inflation curves: 
+%\end{itemize}
+%
+%Table 19: Instruments used to build inflation curves
+%Curve Type 	Quotes/Instruments used ? Entire curve
+%Zero Coupon Inflation Index	Zero Coupon Inflation Swap market quotes
+%Year-on-Year Inflation Index	Year-on-Year Swap market quotes, or zero-coupon inflation quotes converted to YoY
+%
+%?	The OIS curve in respective currency is used for discounting in the bootstrapping of inflation curves
+%?	Log linear interpolation is used
+
+Zero-Coupon Inflation Index curve interpolate the zero inflation rate linearly, Year-on-Year Inflation Index curves
+interpolate the Year-on-Year rate linearly. Before the first pillar extrapolation is usually flat, if a base rate is
+specified the first curve segment is interpolated linearly between this rate and the first market quote. Extrapolation
+(if enabled) beyond the last curve pillar is linear.
+
+A multiplicative seasonality adjustment can be applied to projected zero inflation rates. The adjusted zero rate $r_a$ at
+a date $d$ is given by
+
+\begin{equation}
+  r_a = (1+r_u)f-1
+\end{equation}
+
+where $r_u$ is the unadjusted rate and $f$ is the adjustment factor
+
+\begin{equation}
+  f = \left( \frac{s(d-l)}{s(d_b)} \right) ^ {1/t}
+\end{equation}
+
+where $t$ is the time from the curve base date $d_b$ to the date $d$ minus the observation lag $l$ and $s(\cdot)$
+denotes the externally given seasonality factor for a specific date. The following relation between the unadjusted and
+the adjusted zero rates hold, for any given fixing $b$ at the base date:
+
+\begin{equation}
+b (1 + r_u) ^ t \left( \frac{s(d-l)}{s(d_b)} \right)  = b  ( 1 + r_a) ^ t
+\end{equation}
+
+%--------------------------------------------------------------------------------
+\subsection{Equity}
+
+Equity forward price curves can be built in two ways:
+\begin{itemize}
+\item From two externally provided curves, a forecasting IR curve and dividend 
+yield term structure; no bootstrap is required in this case 
+\item Alternatively, from a forecasting IR curve and market equity forward/futures 
+price quotes; in this case the dividend yield curve is bootstrapped from the 
+provided quotes
+\end{itemize}
+
+In both cases the equity spot price is required to start the curve building at the 
+short end.
+
+\medskip
+By default, log-linear interpolation in the discount factor domain is used (i.e. 
+piecewise flat forward interpolation) for all curves, though further schemes are 
+available.  When extrapolation is enabled, extrapolation is flat.
+
+If the dividend curve is bootstrapped from forward/futures price quotes, it interpolates the implied dividends on the
+pillars defined by the forward/future expiries.
+
+%--------------------------------------------------------------------------------
+\subsection{Credit}
+
+There are two main types of default probability curves: 
+\begin{itemize}
+\item Default probability curves bootstrapped from quoted CDS instruments (recovery 
+rate and running CDS spreads by available maturity). 
+\item Default probability curves obtained directly from hazard rates (loss 
+given default and externally estimated hazard rates). 
+\end{itemize}
+
+\medskip
+Curve construction methodology applies the following key elements:
+\begin{itemize}
+\item Quoted fixed recovery rates or LGDs are required for each reference entity
+%?	The following instruments and quotes are used per curve type to build the entire default curve:
+%
+%Table 21: Instruments used to build Default probability curves
+%Curve Type 	Quotes/Instruments used ? Entire curve
+%Default probability from CDS quotes	CDS spreads
+%Default probability from Hazard rates	Hazard rates
+%
+\item The OIS curve in respective currency is used for discounting in the 
+bootstrapping of default probability curves
+%\item For default times that to fall into the middle of CDS premium payment periods, 
+%log linear interpolation of the survival probability is used.
+\item Log linear interpolation of survival probabilities is used
+\item Flat extrapolation is used when extrapolation is enabled
+\item Reference entities can be single name CDS or CDS Indices. In the latter case, 
+an Index CDS curve can be bootstrapped from Index CDS quotes in the same way as for 
+a single name.
+\end{itemize}
+
+Default probability curves use log linear interpolation in the survival probability (equivalent to backward flat
+interpolation of the instantaneous hazard rate).
+
+%--------------------------------------------------------------------------------
+\subsection{Commodity}
+
+Commodity forward curves are built directly from market commodity forward quotes 
+for each respective commodity.
+
+Curve construction methodology applies the following key elements:
+\begin{itemize}
+\item Quoted commodity spot price
+\item Commodity forward price quotes as far as available 
+\item Bootstrapping is not applied as the commodity forward quotes are used directly 
+\item Linear interpolation is used on the forward price quotes
+\item Flat extrapolation is used when extrapolation is enabled
+\end{itemize}
+
+The forward price is interpolated and extrapolated linearly by default, log-linear interpolation is also available.
+
+%--------------------------------------------------------------------------------
+\subsection{Volatility Structures}
+
+Spacing and frequency of strikes, tenors, and expiries forming volatility curves 
+and cubes depend on currency and underlying asset.
+
+Interpolation is linear and depends on the product type and volatility structure, 
+detailed in the following subsections.
+
+%--------------------------------------------------------------------------------
+\subsubsection{Interest Rates - Cap/Floor}
+
+For each currency, there are cap/floor volatilities for just one index tenor. 
+For each index tenor / currency, the cap/floor volatility surface is composed of 
+the following two dimensions:
+\begin{itemize}
+\item Absolute strikes
+\item Option expiries
+\end{itemize}
+
+Note that cap/floor prices may be given for each point on the surface, instead of 
+volatilities. In this case, the volatility for each point is derived from the price.
+
+\medskip
+Caplet/floorlet volatilities are bootstrapped from quoted ``flat'' caps/floors.
+
+\medskip
+Interpolation is bilinear between the two closest expiries and strikes (i.e. ``2D'' 
+interpolation)
+
+\medskip
+IR cap/floor volatilities can be normal or log-normal (including shifted log-normal).
+
+%--------------------------------------------------------------------------------
+\subsubsection{Interest Rates - Swaption}
+The swaption volatility cube has the following 3 dimensions:
+\begin{itemize}
+\item Strikes, quoted as fixed percentage offsets from the ATM forward strike
+\item Option expiries
+\item Maturities of the underlying swap
+\end{itemize}
+
+Interpolation starts by linear 2D interpolation on the ATM surface for the two 
+closest expiries and maturities. Then, the skew or offset from ATM is linearly 
+interpolated. 
+
+\medskip
+Swaption volatilities can be normal or log-normal (including shifted log-normal).
+
+%--------------------------------------------------------------------------------
+\subsubsection{Foreign Exchange}
+
+The FX Volatility surface has the following dimensions:
+\begin{itemize}
+\item Strikes for the ATM, and the Risk Reversal (RR), Vega Weighted 
+Butterfly (VWBF) points. Then the Vanna Volga approach (Castagna, 2006) is used to 
+extend the three strike points to a full smile.
+\item Option expiries
+\end{itemize}
+
+Linear interpolation is done separately on the ATM, RR, and VWBF term structures, 
+and the resulting points are used to build a Vanna Volga smile for the required 
+volatility. 
+
+\medskip
+FX Volatilities are log-normal.
+
+%--------------------------------------------------------------------------------
+\subsubsection{Inflation - Cap/Floor}
+
+Cap/floors on both CPI and Year-on-Year inflation have a volatility surface of 
+the following two dimensions:
+\begin{itemize}
+\item Absolute strikes
+\item Option expiries
+\end{itemize}
+
+Note that cap/floor prices may be given for each point on the surface, instead 
+of volatilities. In this case, the volatility for each point is derived from 
+the price.
+
+\medskip
+Inflation caplet/floorlet volatilities are bootstrapped from quoted ``flat'' 
+inflation caps/floors.
+
+\medskip
+Interpolation is bilinear between the two closest expiries and strikes (i.e. 
+``2D'' interpolation)
+
+\medskip
+Inflation cap/floor volatilities can be normal or log-normal (including shifted 
+log-normal).
+
+%--------------------------------------------------------------------------------
+\subsubsection{Equity}
+The equity volatility surface has the following 2 dimensions:
+\begin{itemize}
+\item Absolute strikes
+\item Option expiries
+\end{itemize}
+
+Interpolation is done linearly between the two closest expiries and strikes (i.e. 
+``2D'' interpolation)
+
+\medskip
+Equity volatilities are log-normal.
+
+%--------------------------------------------------------------------------------
+\subsubsection{Commodity}
+
+The commodity volatility surface has two dimensions:
+\begin{itemize}
+\item Absolute strikes, Relative strikes, or Delta quotes
+\item Option expiries
+\end{itemize}
+
+Interpolation is done linearly between the two closest expiries and strikes (i.e. 
+``2D'' interpolation).
+
+For delta quotes, assume we want the volatility at time t and absolute strike s i.e. at the (t, s) node. For the maturity time t, a delta slice i.e. a set of (delta, vol) pairs for that time t, is obtained by interpolating (or extrapolating) the variance in the time direction on each delta column. Then for each (delta, vol) pair at time t, an absolute strike value is deduced to give a slice at time t in terms of absolute strike i.e. a set of (strike, vol) pairs at time t. This strike vs. vol curve is then interpolated (or extrapolated) to give the vol at the (t, s).
+
+\medskip
+Commodity volatilities are log-normal.
+

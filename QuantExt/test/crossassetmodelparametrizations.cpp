@@ -27,7 +27,6 @@
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
-#include <qle/models/cdsoptionhelper.hpp>
 #include <qle/models/cpicapfloorhelper.hpp>
 #include <qle/models/crlgm1fparametrization.hpp>
 #include <qle/models/crossassetanalytics.hpp>
@@ -282,7 +281,7 @@ BOOST_AUTO_TEST_CASE(testParametrizationBaseClasses) {
 
     // check dates based constructor
 
-    Handle<YieldTermStructure> yts(boost::make_shared<FlatForward>(0, NullCalendar(), 0.0, Actual365Fixed()));
+    Handle<YieldTermStructure> yts(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.0, Actual365Fixed()));
     std::vector<Date> dates;
     dates.push_back(yts->referenceDate() + 100);
     dates.push_back(yts->referenceDate() + 200);
@@ -339,7 +338,7 @@ BOOST_AUTO_TEST_CASE(testIrLgm1fParametrizations) {
 
     // check the irlgm1f parametrizations
 
-    Handle<YieldTermStructure> flatYts(boost::make_shared<FlatForward>(0, NullCalendar(), 0.02, Actual365Fixed()));
+    Handle<YieldTermStructure> flatYts(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.02, Actual365Fixed()));
 
     IrLgm1fConstantParametrization irlgm1f_2(EURCurrency(), flatYts, 0.01, 0.01);
     IrLgm1fConstantParametrization irlgm1f_3(EURCurrency(), flatYts, 0.01, 0.00);
@@ -468,7 +467,7 @@ BOOST_AUTO_TEST_CASE(testFxBsParametrizations) {
 
     BOOST_TEST_MESSAGE("Testing CrossAssetModel parametrizations (fxbs)...");
 
-    FxBsConstantParametrization fxbs_0(USDCurrency(), Handle<Quote>(boost::make_shared<SimpleQuote>(1.10)), 0.10);
+    FxBsConstantParametrization fxbs_0(USDCurrency(), Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.10)), 0.10);
 
     check("fxbs_0.variance", 0.0, fxbs_0.variance(0.0), 0.0);
     check("fxbs_0.variance", 1.0, fxbs_0.variance(1.0), 0.01 * 1.0);
@@ -492,7 +491,7 @@ BOOST_AUTO_TEST_CASE(testFxBsParametrizations) {
     sigma[2] = 0.0;
     sigma[3] = 0.15;
 
-    FxBsPiecewiseConstantParametrization fxbs_1(USDCurrency(), Handle<Quote>(boost::make_shared<SimpleQuote>(1.10)),
+    FxBsPiecewiseConstantParametrization fxbs_1(USDCurrency(), Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.10)),
                                                 times, sigma);
 
     check("fxbs_1.variance", 0.0, fxbs_1.variance(0.0), 0.0);

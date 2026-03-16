@@ -50,8 +50,8 @@ protected:
     const EquityMarginCoupon* coupon_;
     Real marginFactor_;
     InterestRate fixedRate_;
-    boost::shared_ptr<EquityIndex2> equityCurve_;
-    boost::shared_ptr<FxIndex> fxIndex_;
+    QuantLib::ext::shared_ptr<EquityIndex2> equityCurve_;
+    QuantLib::ext::shared_ptr<FxIndex> fxIndex_;
     bool isTotalReturn_;
     Real dividendFactor_;
     Real initialPrice_;

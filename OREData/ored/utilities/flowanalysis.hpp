@@ -22,7 +22,7 @@
 */
 #pragma once
 
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 #include <ql/cashflow.hpp>
 #include <ql/time/date.hpp>
 

@@ -18,7 +18,6 @@
 
 #include <iomanip>
 #include <iostream>
-#include <oret/config.hpp>
 
 // Boost
 #include <boost/make_shared.hpp>
@@ -43,14 +42,12 @@ using boost::unit_test::framework::master_test_suite;
 using ore::test::getBaseDataPath;
 using ore::test::setupTestLogging;
 
-#ifdef BOOST_MSVC
+#if !defined(BOOST_ALL_NO_LIB) && defined(BOOST_MSVC)
 #include <orea/auto_link.hpp>
 #include <ored/auto_link.hpp>
 #include <ql/auto_link.hpp>
 #include <qle/auto_link.hpp>
 #define BOOST_LIB_NAME boost_serialization
-#include <boost/config/auto_link.hpp>
-#define BOOST_LIB_NAME boost_regex
 #include <boost/config/auto_link.hpp>
 #define BOOST_LIB_NAME boost_timer
 #include <boost/config/auto_link.hpp>
@@ -84,7 +81,7 @@ public:
         seconds -= hours * 3600;
         int minutes = int(seconds / 60);
         seconds -= minutes * 60;
-        std::cout << std::endl << "OREData tests completed in ";
+        std::cout << std::endl << "OREAnalytics tests completed in ";
         if (hours > 0)
             std::cout << hours << " h ";
         if (hours > 0 || minutes > 0)

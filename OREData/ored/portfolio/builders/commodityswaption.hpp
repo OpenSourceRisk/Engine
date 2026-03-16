@@ -53,13 +53,13 @@ public:
     CommoditySwaptionAnalyticalEngineBuilder() : CommoditySwaptionEngineBuilder("AnalyticalApproximation") {}
 
 protected:
-    boost::shared_ptr<QuantLib::PricingEngine> engineImpl(const Currency& ccy, const string& name) override {
+    QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const Currency& ccy, const string& name) override {
         Handle<QuantLib::BlackVolTermStructure> vol =
             market_->commodityVolatility(name, configuration(MarketContext::pricing));
         Handle<YieldTermStructure> yts = market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
         Real beta = parseReal(engineParameter("beta"));
         QL_REQUIRE(beta >= 0.0, "CommoditySwaptionAnalyticalEngineBuilder: beta must be non-negative");
-        return boost::make_shared<QuantExt::CommoditySwaptionEngine>(yts, vol, beta);
+        return QuantLib::ext::make_shared<QuantExt::CommoditySwaptionEngine>(yts, vol, beta);
     }
 };
 //! Monte Carlo Engine builder for Commodity Swaptions
@@ -71,7 +71,7 @@ public:
     CommoditySwaptionMonteCarloEngineBuilder() : CommoditySwaptionEngineBuilder("MonteCarlo") {}
 
 protected:
-    boost::shared_ptr<QuantLib::PricingEngine> engineImpl(const Currency& ccy, const string& name) override {
+    QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const Currency& ccy, const string& name) override {
         Handle<QuantLib::BlackVolTermStructure> vol =
             market_->commodityVolatility(name, configuration(MarketContext::pricing));
         Handle<YieldTermStructure> yts = market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
@@ -79,7 +79,7 @@ protected:
         QL_REQUIRE(beta >= 0.0, "CommoditySwaptionAnalyticalEngineBuilder: beta must be non-negative");
         Size samples = parseInteger(engineParameter("samples"));
         long seed = parseInteger(engineParameter("seed"));
-        return boost::make_shared<QuantExt::CommoditySwaptionMonteCarloEngine>(yts, vol, samples, beta, seed);
+        return QuantLib::ext::make_shared<QuantExt::CommoditySwaptionMonteCarloEngine>(yts, vol, samples, beta, seed);
     }
 
 private:

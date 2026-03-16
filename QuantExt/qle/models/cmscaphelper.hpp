@@ -36,12 +36,12 @@ namespace QuantExt {
 using namespace QuantLib;
 class CmsCapHelper : public LazyObject, public CalibrationHelper {
 public:
-    CmsCapHelper(Date asof, boost::shared_ptr<SwapIndex>& index1, boost::shared_ptr<SwapIndex>& index2,
+    CmsCapHelper(Date asof, QuantLib::ext::shared_ptr<SwapIndex>& index1, QuantLib::ext::shared_ptr<SwapIndex>& index2,
                  const Handle<YieldTermStructure>& yts, const Handle<Quote>& price, const Handle<Quote>& correlation,
                  const Period& length, const Period& forwardStart, const Period& spotDays, const Period& cmsTenor,
                  Natural fixingDays, const Calendar& calendar, const DayCounter& daycounter,
-                 const BusinessDayConvention& convention, boost::shared_ptr<FloatingRateCouponPricer>& pricer,
-                 boost::shared_ptr<QuantLib::CmsCouponPricer>& cmsPricer)
+                 const BusinessDayConvention& convention, QuantLib::ext::shared_ptr<FloatingRateCouponPricer>& pricer,
+                 QuantLib::ext::shared_ptr<QuantLib::CmsCouponPricer>& cmsPricer)
         : asof_(asof), index1_(index1), index2_(index2), discountCurve_(yts), marketValue_(price->value()),
           correlation_(correlation), length_(length), forwardStart_(forwardStart), spotDays_(spotDays),
           cmsTenor_(cmsTenor), fixingDays_(fixingDays), calendar_(calendar), dayCounter_(daycounter),
@@ -63,8 +63,8 @@ public:
 
 protected:
     Date asof_;
-    boost::shared_ptr<SwapIndex> index1_;
-    boost::shared_ptr<SwapIndex> index2_;
+    QuantLib::ext::shared_ptr<SwapIndex> index1_;
+    QuantLib::ext::shared_ptr<SwapIndex> index2_;
     Handle<YieldTermStructure> discountCurve_;
     Real marketValue_;
     Handle<Quote> correlation_;
@@ -78,11 +78,11 @@ protected:
     DayCounter dayCounter_;
     BusinessDayConvention convention_;
 
-    boost::shared_ptr<FloatingRateCouponPricer> pricer_;
-    boost::shared_ptr<QuantLib::CmsCouponPricer> cmsPricer_;
+    QuantLib::ext::shared_ptr<FloatingRateCouponPricer> pricer_;
+    QuantLib::ext::shared_ptr<QuantLib::CmsCouponPricer> cmsPricer_;
 
 private:
-    mutable boost::shared_ptr<QuantLib::Swap> cap_;
+    mutable QuantLib::ext::shared_ptr<QuantLib::Swap> cap_;
 };
 
 } // namespace QuantExt

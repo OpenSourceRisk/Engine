@@ -57,6 +57,9 @@ inline double max(const double x, const double y) { return std::max(x, y); }
 inline double min(const double x, const double y) { return std::min(x, y); }
 
 using std::abs;
+using std::log;
+using std::exp;
+using std::pow;
 
 // implementation
 template <class T> T parseFormula(const std::string& text, const std::function<T(std::string)>& variableMapping) {
@@ -74,7 +77,7 @@ template <class T> T parseFormula(const std::string& text, const std::function<T
     using qi::double_;
     using qi::lexeme;
     using qi::lit;
-    using namespace qi::labels;
+    using namespace boost::spirit::qi::labels;
 
     qi::rule<Iterator, std::string(), ascii::space_type> variable;
     qi::rule<Iterator, ascii::space_type> factor;

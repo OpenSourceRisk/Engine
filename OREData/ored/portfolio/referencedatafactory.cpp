@@ -25,7 +25,7 @@ using std::string;
 namespace ore {
 namespace data {
 
-boost::shared_ptr<ReferenceDatum> ReferenceDatumFactory::build(const string& refDatumType) {
+QuantLib::ext::shared_ptr<ReferenceDatum> ReferenceDatumFactory::build(const string& refDatumType) {
     boost::shared_lock<boost::shared_mutex> lock(mutex_);
     auto it = map_.find(refDatumType);
     if (it == map_.end())
@@ -34,7 +34,7 @@ boost::shared_ptr<ReferenceDatum> ReferenceDatumFactory::build(const string& ref
 }
 
 void ReferenceDatumFactory::addBuilder(const string& refDatumType,
-                                       std::function<boost::shared_ptr<AbstractReferenceDatumBuilder>()> builder,
+                                       std::function<QuantLib::ext::shared_ptr<AbstractReferenceDatumBuilder>()> builder,
                                        const bool allowOverwrite) {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
     QL_REQUIRE(map_.insert(std::make_pair(refDatumType, builder)).second,

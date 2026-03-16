@@ -14,13 +14,17 @@ A script is described by
   \item Operation: an operation to perform, only Join is supported currently
   \item Schedules: a list of source schedules
   \end{itemize}
-\item an optional StickyCloseOutStates node specifying variables that should be held constant during an AMC exposure run
-  with sticky close-out mpor mode, usually a list of exercise / barrier hit indicators, see \ref{scripting_amc} for more
-  details on this
+\item an optional StickyCloseOutStates node specifying variables that should be held constant during an AMC / AMC-CG
+  exposure run with sticky close-out mpor mode, usually a list of exercise / barrier hit indicators, see
+  \ref{scripting_amc} for more details on this
+\item an optional AmcCg node specifying the components of a trade for the calculation of the conditional expectation of
+  the npv and aad-based derivatives, see \ref{scripting_amc} for more details on this
 \item an optional ConditionalExpectation node specifying a filter on model states to be used in NPV() and NPVMEM()
   functions. The filter is specified as a subnode ModelStates with one or several ModelState subnodes ``Asset'' (use EQ,
   FX, COMM components), ``IR'' (use interest rate states), ``INF'' (use inflation states). Applies to GaussianCam model
   only. If left empty, the full model state is used for conditional npv calculation.
+\item an optional PricingEngineConfigOverwrite node that allows to overwrite the global pricing engine config with
+  script specific parameters
 \end{itemize}
 
 Several script nodes can be used in parallel and are distinguished by an optional \verb+purpose+ attribute then. There
@@ -84,10 +88,27 @@ The following additional results have a special meaning.
       <StickyCloseOutStates>
         <StickyCLoseOutState>ExerciseIndicator</StickyCloseOutState>
       </StickyCloseOutstates>
+      <AmcCg>
+        <Components>
+          <Component>exercisedValue</Component>
+          <Component>futureOptionValue</Component>
+        </Components>
+        <Target>
+          <Value>targetValue</Value>
+          <Derivative>targetDerivative</Derivative>
+          </Target>
+      </AmcCg>
       <ConditionalExpectation>
         <ModelStates>
           <ModelState>Asset</ModelState>
         </ModelStates>
       </ConditionalExpectation>
+      <PricingEngineConfigOverwrite>
+        <ModelParameters/>
+        <EngineParameters>
+          <Parameter name="IndicatorSmoothingForValues">0.0</Parameter>
+          <Parameter name="IndicatorSmoothingForDerivatives">0.0</Parameter>
+        </EngineParameters>
+      </PricingEngineConfigOverwrite>
     </Script>
 \end{minted}

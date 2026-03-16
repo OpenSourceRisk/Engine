@@ -66,7 +66,7 @@ public:
     typedef boost::variant<Size, Real, string, Date, Period> ReportType;
 
     virtual ~Report() {}
-    virtual Report& addColumn(const string& name, const ReportType&, Size precision = 0) = 0;
+    virtual Report& addColumn(const string& name, const ReportType&, Size precision = 0, bool scientific = false) = 0;
     virtual Report& next() = 0;
     virtual Report& add(const ReportType& rt) = 0;
     virtual void end() = 0;

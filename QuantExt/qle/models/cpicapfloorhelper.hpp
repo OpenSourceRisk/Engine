@@ -49,10 +49,10 @@ public:
     Real blackPrice(Volatility volatility) const override;
     void addTimesTo(std::list<Time>&) const override {}
 
-    boost::shared_ptr<CPICapFloor> instrument() const { return instrument_; }
+    QuantLib::ext::shared_ptr<CPICapFloor> instrument() const { return instrument_; }
 
 private:
-    boost::shared_ptr<CPICapFloor> instrument_;
+    QuantLib::ext::shared_ptr<CPICapFloor> instrument_;
 };
 
 } // namespace QuantExt

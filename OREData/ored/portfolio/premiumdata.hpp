@@ -43,12 +43,17 @@ public:
         double amount = QuantLib::Null<double>();
         string ccy;
         QuantLib::Date payDate;
+        string payCurrency;
+        string fxIndex;
+        string fixingDate;
     };
 
     PremiumData() {}
     PremiumData(double amount, const string& ccy, const QuantLib::Date& payDate)
         : premiumData_(1, PremiumDatum(amount, ccy, payDate)) {}
     explicit PremiumData(const std::vector<PremiumDatum>& premiumData) : premiumData_(premiumData) {}
+
+    QuantLib::Date latestPremiumDate() const;
 
     //! \name Inspectors
     //@{

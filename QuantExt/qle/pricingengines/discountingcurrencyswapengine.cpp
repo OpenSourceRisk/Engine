@@ -31,7 +31,7 @@ namespace QuantExt {
 DiscountingCurrencySwapEngine::DiscountingCurrencySwapEngine(
     const std::vector<Handle<YieldTermStructure> >& discountCurves, const std::vector<Handle<Quote> >& fxQuotes,
     const std::vector<Currency>& currencies, const Currency& npvCurrency,
-    boost::optional<bool> includeSettlementDateFlows, Date settlementDate, Date npvDate,
+    QuantLib::ext::optional<bool> includeSettlementDateFlows, Date settlementDate, Date npvDate,
     const std::vector<Date>& spotFXSettleDateVec)
     : discountCurves_(discountCurves), fxQuotes_(fxQuotes), currencies_(currencies), npvCurrency_(npvCurrency),
       includeSettlementDateFlows_(includeSettlementDateFlows), settlementDate_(settlementDate), npvDate_(npvDate),

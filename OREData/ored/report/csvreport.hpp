@@ -54,7 +54,7 @@ public:
 
     void open();
     void rollover();
-    Report& addColumn(const string& name, const ReportType& rt, Size precision = 0) override;
+    Report& addColumn(const string& name, const ReportType& rt, Size precision = 0, bool scientific = false) override;
     Report& next() override;
     Report& add(const ReportType& rt) override;
     void end() override;

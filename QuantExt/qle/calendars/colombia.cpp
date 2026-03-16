@@ -22,7 +22,7 @@ namespace QuantLib {
 
 Colombia::Colombia(Market market) {
     // all calendar instances share the same implementation instance
-    static boost::shared_ptr<Calendar::Impl> impl(new Colombia::CseImpl);
+    static QuantLib::ext::shared_ptr<Calendar::Impl> impl(new Colombia::CseImpl);
     impl_ = impl;
 }
 
