@@ -43,8 +43,8 @@ public:
                            const QuantLib::ext::shared_ptr<OvernightIndex>& overnightIndex, Real gearing = 1.0,
                            Spread spread = 0.0, Natural rateCutoff = 0, const DayCounter& dayCounter = DayCounter(),
                            const Period& lookback = 0 * Days, const Size fixingDays = Null<Size>(),
-                           const Date& rateComputationStartDate = Null<Date>(),
-                           const Date& rateComputationEndDate = Null<Date>(), const bool telescopicValueDates = false,
+                           const Date& rateComputationStartDate = Date(),
+                           const Date& rateComputationEndDate = Date(), const bool telescopicValueDates = false,
                            bool observationShift = true);
     //! \name Visitability
     //@{

@@ -65,8 +65,8 @@ public:
                            Spread spread = 0.0, const Date& refPeriodStart = Date(), const Date& refPeriodEnd = Date(),
                            const DayCounter& dayCounter = DayCounter(), bool telescopicValueDates = false,
                            bool includeSpread = false, const Period& lookback = 0 * Days, const Natural rateCutoff = 0,
-                           const Natural fixingDays = Null<Size>(), const Date& rateComputationStartDate = Null<Date>(),
-                           const Date& rateComputationEndDate = Null<Date>(), bool observationShift = true);
+                           const Natural fixingDays = Null<Size>(), const Date& rateComputationStartDate = Date(),
+                           const Date& rateComputationEndDate = Date(), bool observationShift = true);
     //! \name Inspectors
     //@{
     /** If `true`, the spread is included in the daily compounding. If `false` the compounding is performed without the 

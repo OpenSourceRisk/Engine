@@ -71,12 +71,12 @@ OvernightIndexedCouponBase::OvernightIndexedCouponBase(Type type, const Date& pa
     observationShift_ = observationShift_ && lookback.length() != 0;
 
     // Record if we have a rate computation period separate from the main coupon accrual period.
-    separateRateCompPeriod_ = (rateComputationStartDate_ != Null<Date>() && rateComputationStartDate_ != startDate) ||
-        (rateComputationEndDate_ != Null<Date>() && rateComputationEndDate_ != endDate);
+    separateRateCompPeriod_ = (rateComputationStartDate_ != Date() && rateComputationStartDate_ != startDate) ||
+        (rateComputationEndDate_ != Date() && rateComputationEndDate_ != endDate);
 
     // Unadjusted interest start and end dates.
-    Date intStart = rateComputationStartDate_ == Null<Date>() ? startDate : rateComputationStartDate_;
-    Date intEnd = rateComputationEndDate_ == Null<Date>() ? endDate : rateComputationEndDate_;
+    Date intStart = rateComputationStartDate_ == Date() ? startDate : rateComputationStartDate_;
+    Date intEnd = rateComputationEndDate_ == Date() ? endDate : rateComputationEndDate_;
     QL_REQUIRE(intStart < intEnd, "OvernightIndexedCoupon: start date ("
         << intStart << ") must be earlier than end date (" << intEnd << ")");
 

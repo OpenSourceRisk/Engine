@@ -81,7 +81,7 @@ BOOST_DATA_TEST_CASE(testCpnAccruals, idxCpnVariants, lb, os, ts, useApprox, rco
     Real notional = 100000000;
 
     AOIC cpn(tcd.pmt, notional, tcd.start, tcd.end, tcd.sofr, 1.0, 0.0, rco, DayCounter(), lb * Days,
-        Null<Natural>(), Null<Date>(), Null<Date>(), ts, os);
+        Null<Natural>(), Date(), Date(), ts, os);
 
     if (!useApprox)
         cpn.setPricer(ext::make_shared<AOICPricer>(AOICPricer::None));
@@ -124,7 +124,7 @@ BOOST_DATA_TEST_CASE(testCpnAccrualsGearingSpread, idxGsCpnVariants, gearing, sp
     Date end = eibd ? Date(28, Nov, 2025) : tcd.end;
 
     AOIC cpn(tcd.pmt, notional, start, end, tcd.sofr, gearing, spread / 10000, 0, DayCounter(), 0 * Days,
-        Null<Natural>(), Null<Date>(), Null<Date>(), ts, false);
+        Null<Natural>(), Date(), Date(), ts, false);
 
     if (!useApprox)
         cpn.setPricer(ext::make_shared<AOICPricer>(AOICPricer::None));
@@ -152,7 +152,7 @@ BOOST_DATA_TEST_CASE(testCpnAccrualsAll, bdata::make({true, false}) ^ bdata::xra
     Date start = Date(3, Nov, 2025);
     Date end = Date(28, Nov, 2025);
     AOIC cpn(tcd.pmt, notional, start, end, tcd.sofr, 1.5, 0.0010, 3, DayCounter(), 2 * Days, 1,
-        Null<Date>(), Null<Date>(), false, true);
+        Date(), Date(), false, true);
 
     if (!useApprox)
         cpn.setPricer(ext::make_shared<AOICPricer>(AOICPricer::None));

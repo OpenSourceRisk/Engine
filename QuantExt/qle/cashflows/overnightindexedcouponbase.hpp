@@ -142,8 +142,8 @@ protected:
         const QuantLib::Period& lookback = 0 * QuantLib::Days,
         const QuantLib::Natural rateCutoff = 0,
         const QuantLib::Natural fixingDays = QuantLib::Null<QuantLib::Size>(),
-        const QuantLib::Date& rateComputationStartDate = QuantLib::Null<QuantLib::Date>(),
-        const QuantLib::Date& rateComputationEndDate = QuantLib::Null<QuantLib::Date>(),
+        const QuantLib::Date& rateComputationStartDate = QuantLib::Date(),
+        const QuantLib::Date& rateComputationEndDate = QuantLib::Date(),
         bool observationShift = true);
 
 public:

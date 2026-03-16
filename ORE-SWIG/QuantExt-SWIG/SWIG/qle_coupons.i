@@ -72,8 +72,8 @@ class AverageONIndexedCoupon : public OvernightIndexedCouponBase {
         const DayCounter& dayCounter = DayCounter(),
         const Period& lookback = 0 * Days,
         const Size fixingDays = Null<Size>(),
-        const Date& rateComputationStartDate = Null<Date>(),
-        const Date& rateComputationEndDate = Null<Date>(),
+        const Date& rateComputationStartDate = Date(),
+        const Date& rateComputationEndDate = Date(),
         const bool telescopicValueDates = false,
         bool observationShift = true);
 };
@@ -145,8 +145,8 @@ class OvernightIndexedCoupon : public OvernightIndexedCouponBase {
         const Period& lookback = 0 * Days,
         const Natural rateCutoff = 0,
         const Natural fixingDays = Null<Size>(),
-        const Date& rateComputationStartDate = Null<Date>(),
-        const Date& rateComputationEndDate = Null<Date>(),
+        const Date& rateComputationStartDate = Date(),
+        const Date& rateComputationEndDate = Date(),
         bool observationShift = true);
 
     bool includeSpread() const;

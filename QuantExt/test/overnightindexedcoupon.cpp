@@ -1235,7 +1235,7 @@ OIC createCoupon(Natural lbDays = 0, bool obsShift = false, bool telescopic = fa
     Date end = adjustEnd ? onFixCal.adjust(tcd.end, Following) : tcd.end;
 
     return OIC(tcd.pmt, tcd.notional, start, end, tcd.sofr, 1.0, 0.0, Date(), Date(), DayCounter(),
-        telescopic, false, lbDays * Days, rcoDays, fixingDays, Null<Date>(), Null<Date>(), obsShift);
+        telescopic, false, lbDays * Days, rcoDays, fixingDays, Date(), Date(), obsShift);
 }
 
 // Used for expected results in tests below.
@@ -1780,7 +1780,7 @@ BOOST_AUTO_TEST_CASE(testShortCouponsTs)
     {
         bool obsShift = lbDays != 0;
         return OIC(tcd.pmt, tcd.notional, start, end, tcd.sofr, 1.0, 0.0, Date(), Date(), DayCounter(), true, false,
-                lbDays * Days, rcoDays, Null<Natural>(), Null<Date>(), Null<Date>(), obsShift);
+                lbDays * Days, rcoDays, Null<Natural>(), Date(), Date(), obsShift);
     };
 
     // 1 period coupon, start and end business days.
@@ -1856,22 +1856,22 @@ BOOST_AUTO_TEST_CASE(testTelescopicSetting)
     TestCouponData tcd;
 
     OIC cpn(tcd.pmt, 1.0, tcd.start, tcd.end, tcd.sofr, 1.0, 0.0, Date(), Date(), DayCounter(), true, false,
-            0 * Days, 0, Null<Natural>(), Null<Date>(), Null<Date>(), false);
+            0 * Days, 0, Null<Natural>(), Date(), Date(), false);
     BOOST_CHECK_MESSAGE(cpn.telescopicDates(), "Expected telescopic dates to be true when no lookback, no "
         "observation shift, and no external fixing lag.");
 
     cpn = OIC(tcd.pmt, 1.0, tcd.start, tcd.end, tcd.sofr, 1.0, 0.0, Date(), Date(), DayCounter(), true, false,
-        2 * Days, 0, Null<Natural>(), Null<Date>(), Null<Date>(), true);
+        2 * Days, 0, Null<Natural>(), Date(), Date(), true);
     BOOST_CHECK_MESSAGE(cpn.telescopicDates(), "Expected telescopic dates to be true when non-zero lookback with "
         "observation shift, and no external fixing lag.");
 
     cpn = OIC(tcd.pmt, 1.0, tcd.start, tcd.end, tcd.sofr, 1.0, 0.0, Date(), Date(), DayCounter(), true, false,
-        2 * Days, 0, Null<Natural>(), Null<Date>(), Null<Date>(), false);
+        2 * Days, 0, Null<Natural>(), Date(), Date(), false);
     BOOST_CHECK_MESSAGE(!cpn.telescopicDates(), "Expected telescopic dates to be false when non-zero lookback "
         "without observation shift, and no external fixing lag.");
 
     cpn = OIC(tcd.pmt, 1.0, tcd.start, tcd.end, tcd.sofr, 1.0, 0.0, Date(), Date(), DayCounter(), true, false,
-        0 * Days, 0, 1, Null<Date>(), Null<Date>(), false);
+        0 * Days, 0, 1, Date(), Date(), false);
     BOOST_CHECK_MESSAGE(!cpn.telescopicDates(), "Expected telescopic dates to be false when there is an external "
         "fixing lag different from the index fixing lag.");
 }
@@ -1913,7 +1913,7 @@ BOOST_DATA_TEST_CASE(testCpnAccruals, idxCpnVariants, lb, os, ts, rco, idx)
     Real notional = 100000000;
 
     OIC cpn(tcd.pmt, notional, tcd.start, tcd.end, tcd.sofr, 1.0, 0.0, Date(), Date(), DayCounter(), ts, false,
-            lb * Days, rco, Null<Natural>(), Null<Date>(), Null<Date>(), os);
+            lb * Days, rco, Null<Natural>(), Date(), Date(), os);
 
     auto [outFilePath, expFilePath] = filePaths(cpnName);
     OnIndexCouponTest::runCpnAccrualTest(cpn, outFilePath, expFilePath);
@@ -1948,7 +1948,7 @@ BOOST_DATA_TEST_CASE(testCpnAccrualsGearingSpread, idxGsCpnVariants, gearing, sp
     Date start = sibd ? Date(3, Nov, 2025) : tcd.start;
     Date end = eibd ? Date(28, Nov, 2025) : tcd.end;
     OIC cpn(tcd.pmt, notional, start, end, tcd.sofr, gearing, spread / 10000, Date(), Date(), DayCounter(), ts, incSpr,
-            0 * Days, 0, Null<Natural>(), Null<Date>(), Null<Date>(), false);
+            0 * Days, 0, Null<Natural>(), Date(), Date(), false);
 
     auto [outFilePath, expFilePath] = filePaths(cpnName);
     OnIndexCouponTest::runCpnAccrualTest(cpn, outFilePath, expFilePath);
@@ -1968,7 +1968,7 @@ BOOST_AUTO_TEST_CASE(testCpnAccrualsAll)
     Date start = Date(3, Nov, 2025);
     Date end = Date(28, Nov, 2025);
     OIC cpn(tcd.pmt, notional, start, end, tcd.sofr, 1.5, 0.0010, Date(), Date(), DayCounter(), false, false, 2 * Days,
-            3, 1, Null<Date>(), Null<Date>(), true);
+            3, 1, Date(), Date(), true);
 
     auto [outFilePath, expFilePath] = filePaths(cpnName);
     OnIndexCouponTest::runCpnAccrualTest(cpn, outFilePath, expFilePath);
