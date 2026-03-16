@@ -38,6 +38,9 @@
 #include <qle/cashflows/interpolatediborcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
+#include <qle/math/computeenvironment.hpp>
+#include <qle/math/randomvariable.hpp>
+#include <qle/math/randomvariable_ops.hpp>
 #include <qle/methods/multipathvariategenerator.hpp>
 
 #include <ql/cashflows/averagebmacoupon.hpp>

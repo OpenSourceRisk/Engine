@@ -19,17 +19,15 @@
 #include <ored/scripting/engines/scriptedinstrumentamccalculator.hpp>
 #include <ored/scripting/engines/scriptedinstrumentpricingenginecg.hpp>
 #include <ored/scripting/utilities.hpp>
+#include <ored/utilities/log.hpp>
 
 #include <qle/ad/backwardderivatives.hpp>
 #include <qle/ad/forwardevaluation.hpp>
 #include <qle/ad/ssaform.hpp>
-#include <qle/methods/multipathvariategenerator.hpp>
-
-#include <ored/utilities/log.hpp>
-
 #include <qle/instruments/cashflowresults.hpp>
 #include <qle/math/computeenvironment.hpp>
 #include <qle/math/randomvariable.hpp>
+#include <qle/methods/multipathvariategenerator.hpp>
 
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/mean.hpp>
