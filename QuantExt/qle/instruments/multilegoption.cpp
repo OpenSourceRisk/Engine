@@ -17,6 +17,7 @@
 */
 
 #include <qle/instruments/multilegoption.hpp>
+#include <qle/cashflows/scaledcoupon.hpp>
 
 #include <ql/cashflows/floatingratecoupon.hpp>
 
@@ -50,8 +51,11 @@ MultiLegOption::MultiLegOption(const std::vector<Leg>& legs, const std::vector<b
     // register with underlying cashflows
 
     for (auto const& l : legs_) {
-        for (auto const& c : l) {
+        for (auto c : l) {
             registerWith(c);
+            if (auto s = QuantLib::ext::dynamic_pointer_cast<ScaledCoupon>(c)) {
+                c = s->underlyingCoupon();
+            }
             if (auto lazy = QuantLib::ext::dynamic_pointer_cast<LazyObject>(c))
                 lazy->alwaysForwardNotifications();
         }
