@@ -32,11 +32,25 @@ namespace data {
 
 class AmcCgFxForwardEngine : public QuantExt::FxForward::engine, public AmcCgBaseEngine {
 public:
+    // non-amc use
     AmcCgFxForwardEngine(const std::string& domCcy, const std::string& forCcy,
-                         const QuantLib::ext::shared_ptr<ModelCG>& modelCg, const std::vector<Date>& simulationDates)
-        : AmcCgBaseEngine(modelCg, simulationDates, false), domCcy_(domCcy), forCcy_(forCcy) {
-        registerWith(modelCg);
+                         const QuantLib::ext::shared_ptr<ModelCG>& modelCg, const Model::Params& mcParams,
+                         const double indicatorSmoothingForValues, const double indicatorSmoothingForDerivatives,
+                         const bool useCachedSensis, const bool useExternalComputeFramework,
+                         const bool useDoublePrecisionForExternalCalculation)
+        : AmcCgBaseEngine(modelCg, mcParams, indicatorSmoothingForValues, indicatorSmoothingForDerivatives,
+                          useCachedSensis, useExternalComputeFramework, useDoublePrecisionForExternalCalculation),
+          domCcy_(domCcy), forCcy_(forCcy) {
+        registerWith(modelCg_);
     }
+    // amc use
+    AmcCgFxForwardEngine(const std::string& domCcy, const std::string& forCcy,
+                         const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
+                         const std::vector<QuantLib::Date>& simulationDates = {})
+        : AmcCgBaseEngine(modelCg, simulationDates, false), domCcy_(domCcy), forCcy_(forCcy) {
+        registerWith(modelCg_);
+    }
+
     void calculate() const override;
 
 private:

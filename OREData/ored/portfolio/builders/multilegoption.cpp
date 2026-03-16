@@ -343,11 +343,7 @@ QuantLib::ext::shared_ptr<PricingEngine> AmcCgMultiLegOptionEngineBuilder::engin
     const std::vector<Currency>& currencies, const std::vector<Date>& fixingDates,
     const std::vector<QuantLib::ext::shared_ptr<QuantLib::InterestRateIndex>>& indexes) {
 
-    std::vector<std::string> ccys;
-    std::transform(currencies.begin(), currencies.end(), std::back_inserter(ccys),
-                   [](const Currency& c) { return c.code(); });
-
-    DLOG("Building multi leg option engine for ccys " << boost::join(ccys, ",") << " (from externally given CAM)");
+    DLOG("Building multi leg option engine (from externally given CAM)");
 
     QL_REQUIRE(!currencies.empty(), "CamMcMultiLegOptionEngineBuilder: no currencies given");
     QL_REQUIRE(fixingDates.size() == indexes.size(), "CamMcMultiLegOptionEngineBuilder: fixing dates size ("
@@ -355,8 +351,7 @@ QuantLib::ext::shared_ptr<PricingEngine> AmcCgMultiLegOptionEngineBuilder::engin
                                                          << indexes.size() << ")");
 
     return QuantLib::ext::make_shared<AmcCgMultiLegOptionEngine>(
-        ccys, modelCg_, simulationDates_,
-        parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")));
+        modelCg_, simulationDates_, parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")));
 }
 
 } // namespace data

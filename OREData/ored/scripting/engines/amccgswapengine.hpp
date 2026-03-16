@@ -33,6 +33,17 @@ namespace data {
 class AmcCgSwapEngine : public QuantLib::GenericEngine<QuantLib::Swap::arguments, QuantLib::Swap::results>,
                         public AmcCgBaseEngine {
 public:
+    // non-amc use
+    AmcCgSwapEngine(const std::string& ccy, const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
+                    const Model::Params& mcParams, const double indicatorSmoothingForValues,
+                    const double indicatorSmoothingForDerivatives, const bool useCachedSensis,
+                    const bool useExternalComputeFramework, const bool useDoublePrecisionForExternalCalculation)
+        : AmcCgBaseEngine(modelCg, mcParams, indicatorSmoothingForValues, indicatorSmoothingForDerivatives,
+                          useCachedSensis, useExternalComputeFramework, useDoublePrecisionForExternalCalculation),
+          ccy_(ccy) {
+        registerWith(modelCg_);
+    }
+    // amc use
     AmcCgSwapEngine(const std::string& ccy, const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
                     const std::vector<Date>& simulationDates)
         : QuantLib::GenericEngine<QuantLib::Swap::arguments, QuantLib::Swap::results>(),

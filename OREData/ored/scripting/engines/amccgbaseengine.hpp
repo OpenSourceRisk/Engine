@@ -40,9 +40,15 @@ using QuantLib::Size;
 
 class AmcCgBaseEngine : public AmcCgPricingEngine {
 public:
+    // non-amc use
+    AmcCgBaseEngine(const QuantLib::ext::shared_ptr<ModelCG>& modelCg, const Model::Params& mcParams,
+                    const double indicatorSmoothingForValues, const double indicatorSmoothingForDerivatives,
+                    const bool useCachedSensis, const bool useExternalComputeFramework,
+                    const bool useDoublePrecisionForExternalCalculation);
+    // amc use
     AmcCgBaseEngine(const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
-                    const std::vector<QuantLib::Date>& simulationDates,
-                    const bool reevaluateExerciseInStickyCloseOutDateRun);
+                    const std::vector<QuantLib::Date>& simulationDates = {},
+                    const bool reevaluateExerciseInStickyCloseOutDateRun = false);
 
     void buildComputationGraph(const bool stickyCloseOutDateRun = false,
                                std::vector<TradeExposure>* tradeExposure = nullptr,
@@ -52,8 +58,22 @@ public:
 protected:
     // input to this class via ctor
     QuantLib::ext::shared_ptr<ModelCG> modelCg_;
+    bool amcEnabled_;
+    // ... non-amc
+    Model::Params mcParams_;
+    double indicatorSmoothingForValues_;
+    double indicatorSmoothingForDerivatives_;
+    bool useCachedSensis_ = false;
+    bool useExternalComputeFramework_ = false;
+    bool useDoublePrecisionForExternalCalculation_ = false;
+    // ... amc
     std::vector<QuantLib::Date> simulationDates_;
     bool reevaluateExerciseInStickyCloseOutDateRun_;
+
+    // cg utilities
+    mutable std::vector<RandomVariableOpNodeRequirements> opNodeRequirements_;
+    mutable std::vector<RandomVariableOp> ops_;
+    mutable std::vector<RandomVariableGrad> grads_;
 
     // input data from the derived pricing engines, to be set in these engines
     mutable std::vector<QuantLib::Leg> leg_;
@@ -70,9 +90,19 @@ protected:
 
     // set by engine
     mutable std::set<std::string> relevantCurrencies_;
+    mutable std::size_t npv_;
+    mutable double npvValue_;
 
     // cached exercise indicators to be used in sticky close-out date run
     mutable std::vector<std::size_t> cachedExerciseIndicators_;
+
+    // remaining state
+    mutable std::size_t cgVersion_ = 0;
+    mutable bool cgForStickyCloseOutDateRunIsBuilt_ = false;
+    mutable bool haveBaseValues_ = false;
+    mutable double baseNpv_;
+    mutable std::vector<std::pair<std::size_t, double>> baseModelParams_;
+    mutable std::vector<double> sensis_;
 
 private:
     // data structure storing info needed to generate the amount for a cashflow

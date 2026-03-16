@@ -25,7 +25,10 @@
 
 #include <ored/utilities/indexnametranslator.hpp>
 
+#include <qle/ad/backwardderivatives.hpp>
 #include <qle/ad/computationgraph.hpp>
+#include <qle/ad/forwardevaluation.hpp>
+#include <qle/ad/ssaform.hpp>
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/cappedflooredaveragebmacoupon.hpp>
 #include <qle/cashflows/fixedratefxlinkednotionalcoupon.hpp>
@@ -35,6 +38,7 @@
 #include <qle/cashflows/interpolatediborcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
+#include <qle/methods/multipathvariategenerator.hpp>
 
 #include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/capflooredcoupon.hpp>
@@ -54,10 +58,28 @@ namespace data {
 using namespace QuantLib;
 using namespace QuantExt;
 
+AmcCgBaseEngine::AmcCgBaseEngine(const QuantLib::ext::shared_ptr<ModelCG>& modelCg, const Model::Params& mcParams,
+                                 const double indicatorSmoothingForValues,
+                                 const double indicatorSmoothingForDerivatives, const bool useCachedSensis,
+                                 const bool useExternalComputeFramework,
+                                 const bool useDoublePrecisionForExternalCalculation)
+    : modelCg_(modelCg), amcEnabled_(false), mcParams_(mcParams),
+      indicatorSmoothingForValues_(indicatorSmoothingForValues),
+      indicatorSmoothingForDerivatives_(indicatorSmoothingForDerivatives), useCachedSensis_(useCachedSensis),
+      useExternalComputeFramework_(useExternalComputeFramework),
+      useDoublePrecisionForExternalCalculation_(useDoublePrecisionForExternalCalculation) {
+
+    opNodeRequirements_ = getRandomVariableOpNodeRequirements();
+    ops_ = getRandomVariableOps(modelCg_->size(), mcParams_.regressionOrder, mcParams_.polynomType,
+                                indicatorSmoothingForValues_, mcParams_.regressionVarianceCutoff);
+    grads_ = getRandomVariableGradients(modelCg_->size(), mcParams_.regressionOrder, mcParams_.polynomType,
+                                        indicatorSmoothingForDerivatives_, mcParams_.regressionVarianceCutoff);
+}
+
 AmcCgBaseEngine::AmcCgBaseEngine(const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
                                  const std::vector<QuantLib::Date>& simulationDates,
                                  const bool reevaluateExerciseInStickyCloseOutDateRun)
-    : modelCg_(modelCg), simulationDates_(simulationDates),
+    : modelCg_(modelCg), amcEnabled_(true), simulationDates_(simulationDates),
       reevaluateExerciseInStickyCloseOutDateRun_(reevaluateExerciseInStickyCloseOutDateRun) {}
 
 Real AmcCgBaseEngine::time(const Date& d) const {
@@ -200,10 +222,10 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
     }
 
     if (auto ibor = QuantLib::ext::dynamic_pointer_cast<InterpolatedIborCoupon>(flow)) {
-        std::string indexNameShort = IndexNameTranslator::instance().oreName(
-            ibor->interpolatedIborIndex()->shortIndex()->name());
-        std::string indexNameLong = IndexNameTranslator::instance().oreName(
-            ibor->interpolatedIborIndex()->longIndex()->name());
+        std::string indexNameShort =
+            IndexNameTranslator::instance().oreName(ibor->interpolatedIborIndex()->shortIndex()->name());
+        std::string indexNameLong =
+            IndexNameTranslator::instance().oreName(ibor->interpolatedIborIndex()->longIndex()->name());
         std::size_t fixingShort = modelCg_->eval(indexNameShort, ibor->fixingDate(), Null<Date>());
         std::size_t fixingLong = modelCg_->eval(indexNameLong, ibor->fixingDate(), Null<Date>());
         std::size_t shortWeight = cg_const(g, ibor->interpolatedIborIndex()->shortWeight(ibor->fixingDate()));
@@ -463,15 +485,18 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
     QL_FAIL("McMultiLegBaseEngine::createCashflowInfo(): unhandled coupon leg " << legNo << " cashflow " << cfNo);
 }
 
-void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
-                                            std::vector<TradeExposure>* tradeExposure,
+void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun, std::vector<TradeExposure>* tradeExposure,
                                             TradeExposureMetaInfo* tradeExposureMetaInfo) const {
 
-    QL_REQUIRE(tradeExposure, "AmcCgBaseEngine::buildComputationGraph(): tradeExposure is null, this is unexpected");
-    QL_REQUIRE(tradeExposureMetaInfo,
-               "AmcCgBaseEngine::buildComputationGraph(): tradeExposureMetaInfo is null, this is unexpected");
+    QL_REQUIRE((tradeExposure == nullptr) == (tradeExposureMetaInfo == nullptr),
+               "AmcCgBaseEngine::buildComputationGraph(): tradeExposure and tradeExposureMetaInfo must both be null or "
+               "both != null");
 
-    // build graph
+    if (cgVersion_ == modelCg_->cgVersion() && (!stickyCloseOutDateRun || cgForStickyCloseOutDateRunIsBuilt_))
+        return;
+
+    cgForStickyCloseOutDateRunIsBuilt_ = stickyCloseOutDateRun;
+    cgVersion_ = modelCg_->cgVersion();
 
     QuantExt::ComputationGraph& g = *modelCg_->computationGraph();
 
@@ -520,22 +545,24 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
 
     // populate trade exposure meta info
 
-    tradeExposureMetaInfo->hasVega = exercise_ != nullptr;
-    tradeExposureMetaInfo->relevantCurrencies = relevantCurrencies_;
+    if (tradeExposureMetaInfo != nullptr) {
+        tradeExposureMetaInfo->hasVega = exercise_ != nullptr;
+        tradeExposureMetaInfo->relevantCurrencies = relevantCurrencies_;
 
-    for (auto const& ccy : relevantCurrencies_) {
-        tradeExposureMetaInfo->relevantModelParameters.insert(
-            ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, ccy));
-        if (ccy != modelCg_->baseCcy()) {
+        for (auto const& ccy : relevantCurrencies_) {
             tradeExposureMetaInfo->relevantModelParameters.insert(
-                ModelCG::ModelParameter(ModelCG::ModelParameter::Type::logFxSpot, ccy));
-        }
-        if (tradeExposureMetaInfo->hasVega) {
-            tradeExposureMetaInfo->relevantModelParameters.insert(
-                ModelCG::ModelParameter(ModelCG::ModelParameter::Type::lgm_zeta, ccy));
+                ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, ccy));
             if (ccy != modelCg_->baseCcy()) {
                 tradeExposureMetaInfo->relevantModelParameters.insert(
-                    ModelCG::ModelParameter(ModelCG::ModelParameter::Type::fxbs_sigma, ccy));
+                    ModelCG::ModelParameter(ModelCG::ModelParameter::Type::logFxSpot, ccy));
+            }
+            if (tradeExposureMetaInfo->hasVega) {
+                tradeExposureMetaInfo->relevantModelParameters.insert(
+                    ModelCG::ModelParameter(ModelCG::ModelParameter::Type::lgm_zeta, ccy));
+                if (ccy != modelCg_->baseCcy()) {
+                    tradeExposureMetaInfo->relevantModelParameters.insert(
+                        ModelCG::ModelParameter(ModelCG::ModelParameter::Type::fxbs_sigma, ccy));
+                }
             }
         }
     }
@@ -567,8 +594,10 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
     std::set_union(simDates.begin(), simDates.end(), exerciseDates.begin(), exerciseDates.end(),
                    std::inserter(simExDates, simExDates.end()));
 
-    tradeExposure->clear();
-    tradeExposure->resize(simDates.size() + 1);
+    if (tradeExposure != nullptr) {
+        tradeExposure->clear();
+        tradeExposure->resize(simDates.size() + 1);
+    }
 
     // create the path values
 
@@ -723,9 +752,14 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
 
     // set the npv at t0
 
-    (*tradeExposure)[0].componentPathValues = {exercise_ == nullptr ? pathValueUndDirtyRunning : pathValueOption[0]};
+    npv_ = exercise_ == nullptr ? pathValueUndDirtyRunning : pathValueOption[0];
 
     // generate the exposure at simulation dates
+
+    if (tradeExposure == nullptr)
+        return;
+
+    (*tradeExposure)[0].componentPathValues = {npv_};
 
     if (exerciseDates.empty()) {
 
@@ -880,7 +914,130 @@ std::size_t AmcCgBaseEngine::createRegressionModel(const std::size_t amount, con
     return modelCg_->npv(amount, d, filter, std::nullopt, {}, regressors);
 }
 
-void AmcCgBaseEngine::calculate() const {}
+void AmcCgBaseEngine::calculate() const {
+
+    if (amcEnabled_)
+        return;
+
+    QL_REQUIRE(!useExternalComputeFramework_,
+               "AmcCgBaseEngine::calculate(): external compute framework not yet supported.");
+    // QL_REQUIRE(!useExternalComputeFramework_ || !useCachedSensis_,
+    //            "ScriptedInstrumentPricingEngineCG: when using external compute framework, usage of cached sensis is "
+    //            "not supported yet");
+
+    buildComputationGraph(false);
+
+    if (!haveBaseValues_ || !useCachedSensis_) {
+
+        // calculate NPV and Sensis ("base scenario"), store base npv + sensis + base model params
+
+        auto g = modelCg_->computationGraph();
+
+        // populate values
+
+        std::vector<RandomVariable> values(g->size(), RandomVariable(modelCg_->size()));
+
+        // set constants
+
+        for (auto const& c : g->constants()) {
+            values[c.second] = RandomVariable(modelCg_->size(), c.first);
+        }
+
+        // set model parameters
+
+        baseModelParams_.clear();
+        for (auto const& p : modelCg_->modelParameters()) {
+            double v = p.eval();
+            TLOG("setting model parameter " << p << "  at node " << p.node() << " to value " << std::setprecision(16)
+                                            << v);
+            baseModelParams_.push_back(std::make_pair(p.node(), v));
+            values[p.node()] = RandomVariable(modelCg_->size(), v);
+        }
+        DLOG("set " << baseModelParams_.size() << " model parameters");
+
+        // set random variates
+
+        auto const& rv = modelCg_->randomVariates();
+        if (!rv.empty()) {
+            auto gen = makeMultiPathVariateGenerator(mcParams_.sequenceType, rv.size(), rv.front().size(), mcParams_.seed,
+                                                     mcParams_.sobolOrdering, mcParams_.sobolDirectionIntegers);
+            for (Size path = 0; path < modelCg_->size(); ++path) {
+                auto p = gen->next();
+                for (Size j = 0; j < rv.front().size(); ++j) {
+                    for (Size k = 0; k < rv.size(); ++k) {
+                        values[rv[k][j]].set(path, p.value[j][k]);
+                    }
+                }
+            }
+        }
+        DLOG("generated random variates for dim = " << rv.size() << ", steps = " << rv.front().size());
+
+        // set flags for nodes we want to keep (model params, npv and additional results)
+
+        std::vector<bool> keepNodes(g->size(), false);
+
+        keepNodes[npv_] = true;
+
+        for (auto const& [n, _] : baseModelParams_)
+            keepNodes[n] = true;
+
+        // run the forward evaluation
+
+        forwardEvaluation(*g, values, ops_, RandomVariable::deleter, useCachedSensis_, opNodeRequirements_, keepNodes);
+        DLOG("ran forward evaluation");
+
+        TLOGGERSTREAM(ssaForm(*g, getRandomVariableOpLabels(), values));
+
+        // extract npv result and set it
+
+        npvValue_ = modelCg_->extractT0Result(values[npv_]);
+        DLOG("got NPV = " << npvValue_ << " " << modelCg_->baseCcy());
+
+        if (useCachedSensis_) {
+
+            // extract sensis and store them
+
+            std::vector<RandomVariable> derivatives(g->size(), RandomVariable(modelCg_->size(), 0.0));
+            derivatives[npv_] = RandomVariable(modelCg_->size(), 1.0);
+            backwardDerivatives(*g, values, derivatives, grads_, RandomVariable::deleter, keepNodes);
+
+            sensis_.resize(baseModelParams_.size());
+            for (Size i = 0; i < baseModelParams_.size(); ++i) {
+                sensis_[i] = modelCg_->extractT0Result(derivatives[baseModelParams_[i].first]);
+            }
+            DLOG("got backward sensitivities");
+
+            // set flag indicating that we can use cached sensis in subsequent calculations
+
+            haveBaseValues_ = true;
+        }
+
+    } else {
+
+        // useCachedSensis => calculate npv from stored base npv, sensis, model params
+
+        std::vector<std::pair<std::size_t, double>> modelParams;
+        for (auto const& p : modelCg_->modelParameters()) {
+            modelParams.push_back(std::make_pair(p.node(), p.eval()));
+        }
+
+        double npv = npvValue_;
+        DLOG("computing npv using baseNpv " << npvValue_ << " and sensis.");
+
+        for (Size i = 0; i < baseModelParams_.size(); ++i) {
+            QL_REQUIRE(modelParams[i].first == baseModelParams_[i].first,
+                       "internal error: modelParams[" << i << "] node " << modelParams[i].first
+                                                      << ") does not match baseModelParams node "
+                                                      << baseModelParams_[i].first);
+            Real tmp = sensis_[i] * (modelParams[i].second - baseModelParams_[i].second);
+            npv += tmp;
+            TLOG("node " << modelParams[i].first << ": " << modelParams[i].second << " (current) - "
+                         << baseModelParams_[i].second << " (base) ] * " << sensis_[i] << " (delta) => " << tmp);
+        }
+
+        npvValue_ = npv;
+    }
+}
 
 } // namespace data
 } // namespace ore
