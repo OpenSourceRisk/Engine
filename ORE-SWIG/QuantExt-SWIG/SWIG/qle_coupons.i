@@ -152,7 +152,7 @@ class AverageONLeg {
 
 namespace QuantExt {
 
-%rename(QleOvernightIndexedCoupon) OvernightIndexedCoupon;
+%rename(QLEOvernightIndexedCoupon) OvernightIndexedCoupon;
 %shared_ptr(OvernightIndexedCoupon)
 class OvernightIndexedCoupon : public OvernightIndexedCouponBase {
   public:
@@ -181,7 +181,7 @@ class OvernightIndexedCoupon : public OvernightIndexedCouponBase {
     Real effectiveIndexFixing() const;
 };
 
-%rename(QleOvernightIndexedCouponPricer) OvernightIndexedCouponPricer;
+%rename(QLEOvernightIndexedCouponPricer) OvernightIndexedCouponPricer;
 %shared_ptr(OvernightIndexedCouponPricer)
 class OvernightIndexedCouponPricer : public FloatingRateCouponPricer {
   public:
@@ -191,7 +191,7 @@ class OvernightIndexedCouponPricer : public FloatingRateCouponPricer {
     std::tuple<Rate, Spread, Rate> rateSpreadFixing() const;
 };
 
-%rename(QleCappedFlooredOvernightIndexedCoupon) CappedFlooredOvernightIndexedCoupon;
+%rename(QLECappedFlooredOvernightIndexedCoupon) CappedFlooredOvernightIndexedCoupon;
 %shared_ptr(CappedFlooredOvernightIndexedCoupon)
 class CappedFlooredOvernightIndexedCoupon : public FloatingRateCoupon {
   public:
@@ -218,7 +218,7 @@ class CappedFlooredOvernightIndexedCoupon : public FloatingRateCoupon {
     bool localCapFloor() const;
 };
 
-%rename(QleCappedFlooredOvernightIndexedCouponPricer) CappedFlooredOvernightIndexedCouponPricer;
+%rename(QLECappedFlooredOvernightIndexedCouponPricer) CappedFlooredOvernightIndexedCouponPricer;
 %shared_ptr(CappedFlooredOvernightIndexedCouponPricer)
 class CappedFlooredOvernightIndexedCouponPricer : public FloatingRateCouponPricer {
 public:
@@ -230,7 +230,7 @@ public:
     Real strippedFloorletVolatility() const;
 };
 
-%rename(QleOvernightLeg) OvernightLeg;
+%rename(QLEOvernightLeg) OvernightLeg;
 %shared_ptr(OvernightLeg)
 class OvernightLeg {
   public:
