@@ -28,8 +28,10 @@ using QuantExt::OvernightIndexedCouponBase;
 using QuantExt::AverageONIndexedCoupon;
 using QuantExt::AverageONIndexedCouponPricer;
 using QuantExt::CappedFlooredAverageONIndexedCoupon;
-// CapFlooredAverageONIndexedCouponPricer is currently an abstract class.
-// using QuantExt::CapFlooredAverageONIndexedCouponPricer;
+using QuantExt::CappedFlooredOvernightIndexedCouponPricer;
+using QuantExt::BlackOvernightIndexedCouponPricer;
+using QuantExt::CapFlooredAverageONIndexedCouponPricer;
+using QuantExt::BlackAverageONIndexedCouponPricer;
 using QuantExt::AverageONLeg;
 using namespace std;
 %}
@@ -105,23 +107,45 @@ class CappedFlooredAverageONIndexedCoupon : public FloatingRateCoupon {
     bool includeSpread();
 };
 
-// CapFlooredAverageONIndexedCouponPricer is currently an abstract class.
-// %shared_ptr(CapFlooredAverageONIndexedCouponPricer)
-// class CapFlooredAverageONIndexedCouponPricer : public FloatingRateCouponPricer {
-//   public:
-//     CapFlooredAverageONIndexedCouponPricer(const Handle<OptionletVolatilityStructure>& v);
-//     Handle<OptionletVolatilityStructure> capletVolatility() const;
-//     Real effectiveCapletVolatility() const;
-//     Real effectiveFloorletVolatility() const;
-//     Real strippedCapletVolatility() const;
-//     Real strippedFloorletVolatility() const;
-// };
+%shared_ptr(CappedFlooredOvernightIndexedCouponPricer)
+class CappedFlooredOvernightIndexedCouponPricer : public FloatingRateCouponPricer {
+  private:
+    CappedFlooredOvernightIndexedCouponPricer();
+  public:
+    Handle<OptionletVolatilityStructure> capletVolatility() const;
+    Real effectiveCapletVolatility() const;
+    Real effectiveFloorletVolatility() const;
+    Real strippedCapletVolatility() const;
+    Real strippedFloorletVolatility() const;
+};
+
+%shared_ptr(BlackOvernightIndexedCouponPricer)
+class BlackOvernightIndexedCouponPricer : public CappedFlooredOvernightIndexedCouponPricer {
+  public:
+    BlackOvernightIndexedCouponPricer(const Handle<OptionletVolatilityStructure>& v);
+};
+
+%shared_ptr(CapFlooredAverageONIndexedCouponPricer)
+class CapFlooredAverageONIndexedCouponPricer : public FloatingRateCouponPricer {
+  private:
+    CapFlooredAverageONIndexedCouponPricer();
+  public:
+    Handle<OptionletVolatilityStructure> capletVolatility() const;
+    Real effectiveCapletVolatility() const;
+    Real effectiveFloorletVolatility() const;
+    Real strippedCapletVolatility() const;
+    Real strippedFloorletVolatility() const;
+};
+
+%shared_ptr(BlackAverageONIndexedCouponPricer)
+class BlackAverageONIndexedCouponPricer : public CapFlooredAverageONIndexedCouponPricer {
+  public:
+    BlackAverageONIndexedCouponPricer(const Handle<OptionletVolatilityStructure>& v);
+};
 
 %shared_ptr(QuantExt::OvernightIndexedCoupon)
 %shared_ptr(QuantExt::OvernightIndexedCouponPricer)
 %shared_ptr(QuantExt::CappedFlooredOvernightIndexedCoupon)
-// CappedFlooredOvernightIndexedCouponPricer is currently an abstract class.
-// %shared_ptr(QuantExt::CappedFlooredOvernightIndexedCouponPricer)
 %shared_ptr(QuantExt::OvernightLeg)
 
 namespace QuantExt {
@@ -189,18 +213,6 @@ class CappedFlooredOvernightIndexedCoupon : public FloatingRateCoupon {
     bool localCapFloor() const;
 };
 
-// CappedFlooredOvernightIndexedCouponPricer is currently an abstract class.
-// %rename(QLECappedFlooredOvernightIndexedCouponPricer) CappedFlooredOvernightIndexedCouponPricer;
-// class CappedFlooredOvernightIndexedCouponPricer : public FloatingRateCouponPricer {
-//   public:
-//     CappedFlooredOvernightIndexedCouponPricer(const Handle<OptionletVolatilityStructure>& v);
-//     Handle<OptionletVolatilityStructure> capletVolatility() const;
-//     Real effectiveCapletVolatility() const;
-//     Real effectiveFloorletVolatility() const;
-//     Real strippedCapletVolatility() const;
-//     Real strippedFloorletVolatility() const;
-// };
-
 } // namespace QuantExt
 
 // Add the Legs also similar to QuantLib.
@@ -231,7 +243,6 @@ Leg _AverageONLeg(
     const ext::optional<Period>& lastRecentPeriod = ext::nullopt,
     const Calendar& lastRecentPeriodCalendar = Calendar(),
     const std::vector<Date>& paymentDates = {},
-    const ext::shared_ptr<AverageONIndexedCouponPricer>& couponPricer = nullptr,
     bool observationShift = true)
 {
     return QuantExt::AverageONLeg(schedule, index)
@@ -255,7 +266,6 @@ Leg _AverageONLeg(
         .withLastRecentPeriod(lastRecentPeriod)
         .withLastRecentPeriodCalendar(lastRecentPeriodCalendar)
         .withPaymentDates(paymentDates)
-        .withAverageONIndexedCouponPricer(couponPricer)
         .withObservationShift(observationShift);
 }
 %}
@@ -287,7 +297,6 @@ Leg _AverageONLeg(
     const ext::optional<Period>& lastRecentPeriod = ext::nullopt,
     const Calendar& lastRecentPeriodCalendar = Calendar(),
     const std::vector<Date>& paymentDates = {},
-    const ext::shared_ptr<AverageONIndexedCouponPricer>& couponPricer = nullptr,
     bool observationShift = true);
 
 // QuantExt::OvernightLeg
@@ -315,7 +324,6 @@ Leg _QLEOvernightLeg(
     bool inArrears = true,
     const ext::optional<Period>& lastRecentPeriod = ext::nullopt,
     const Calendar& lastRecentPeriodCalendar = Calendar(),
-    const ext::shared_ptr<QuantExt::OvernightIndexedCouponPricer>& couponPricer = nullptr,
     bool observationShift = true,
     const std::vector<Date>& paymentDates = {})
 {
@@ -339,7 +347,6 @@ Leg _QLEOvernightLeg(
         .withInArrears(inArrears)
         .withLastRecentPeriod(lastRecentPeriod)
         .withLastRecentPeriodCalendar(lastRecentPeriodCalendar)
-        .withOvernightIndexedCouponPricer(couponPricer)
         .withPaymentDates(paymentDates)
         .withObservationShift(observationShift);
 }
@@ -371,7 +378,6 @@ Leg _QLEOvernightLeg(
     bool inArrears = true,
     const ext::optional<Period>& lastRecentPeriod = ext::nullopt,
     const Calendar& lastRecentPeriodCalendar = Calendar(),
-    const ext::shared_ptr<QuantExt::OvernightIndexedCouponPricer>& couponPricer = nullptr,
     bool observationShift = true,
     const std::vector<Date>& paymentDates = {});
 
