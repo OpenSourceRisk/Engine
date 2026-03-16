@@ -26,8 +26,10 @@
 %{
 using QuantExt::OvernightIndexedCouponBase;
 using QuantExt::AverageONIndexedCoupon;
+using QuantExt::AverageONIndexedCouponPricer;
 using QuantExt::CappedFlooredAverageONIndexedCoupon;
-using QuantExt::CapFlooredAverageONIndexedCouponPricer;
+// CapFlooredAverageONIndexedCouponPricer is currently an abstract class.
+// using QuantExt::CapFlooredAverageONIndexedCouponPricer;
 using QuantExt::AverageONLeg;
 using namespace std;
 %}
@@ -103,57 +105,28 @@ class CappedFlooredAverageONIndexedCoupon : public FloatingRateCoupon {
     bool includeSpread();
 };
 
-%shared_ptr(CapFlooredAverageONIndexedCouponPricer)
-class CapFlooredAverageONIndexedCouponPricer : public FloatingRateCouponPricer {
-  public:
-    CapFlooredAverageONIndexedCouponPricer(const Handle<OptionletVolatilityStructure>& v);
-    Handle<OptionletVolatilityStructure> capletVolatility() const;
-    Real effectiveCapletVolatility() const;
-    Real effectiveFloorletVolatility() const;
-    Real strippedCapletVolatility() const;
-    Real strippedFloorletVolatility() const;
-};
+// CapFlooredAverageONIndexedCouponPricer is currently an abstract class.
+// %shared_ptr(CapFlooredAverageONIndexedCouponPricer)
+// class CapFlooredAverageONIndexedCouponPricer : public FloatingRateCouponPricer {
+//   public:
+//     CapFlooredAverageONIndexedCouponPricer(const Handle<OptionletVolatilityStructure>& v);
+//     Handle<OptionletVolatilityStructure> capletVolatility() const;
+//     Real effectiveCapletVolatility() const;
+//     Real effectiveFloorletVolatility() const;
+//     Real strippedCapletVolatility() const;
+//     Real strippedFloorletVolatility() const;
+// };
 
-%shared_ptr(AverageONLeg)
-class AverageONLeg {
-  public:
-    AverageONLeg(const Schedule& schedule, const ext::shared_ptr<OvernightIndex>& overnightIndex);
-    AverageONLeg& withNotional(Real notional);
-    AverageONLeg& withNotionals(const std::vector<Real>& notionals);
-    AverageONLeg& withPaymentDayCounter(const DayCounter& dayCounter);
-    AverageONLeg& withPaymentAdjustment(BusinessDayConvention convention);
-    AverageONLeg& withGearing(Real gearing);
-    AverageONLeg& withGearings(const std::vector<Real>& gearings);
-    AverageONLeg& withSpread(Spread spread);
-    AverageONLeg& withSpreads(const std::vector<Spread>& spreads);
-    AverageONLeg& withTelescopicValueDates(bool telescopicValueDates);
-    AverageONLeg& withRateCutoff(Natural rateCutoff);
-    AverageONLeg& withPaymentCalendar(const Calendar& calendar);
-    AverageONLeg& withPaymentLag(Natural lag);
-    AverageONLeg& withLookback(const Period& lookback);
-    AverageONLeg& withFixingDays(const Size fixingDays);
-    AverageONLeg& withCaps(Rate cap);
-    AverageONLeg& withCaps(const std::vector<Rate>& caps);
-    AverageONLeg& withFloors(Rate floor);
-    AverageONLeg& withFloors(const std::vector<Rate>& floors);
-    AverageONLeg& includeSpreadInCapFloors(bool includeSpread);
-    AverageONLeg& withNakedOption(const bool nakedOption);
-    AverageONLeg& withLocalCapFloor(const bool localCapFloor);
-    AverageONLeg& withInArrears(const bool inArrears);
-    AverageONLeg& withLastRecentPeriod(const QuantLib::ext::optional<Period>& lastRecentPeriod);
-    AverageONLeg& withLastRecentPeriodCalendar(const Calendar& lastRecentPeriodCalendar);
-    AverageONLeg& withAverageONIndexedCouponPricer(const ext::shared_ptr<AverageONIndexedCouponPricer>& couponPricer);
-    AverageONLeg& withCapFlooredAverageONIndexedCouponPricer(
-        const ext::shared_ptr<CapFlooredAverageONIndexedCouponPricer>& couponPricer);
-    AverageONLeg& withObservationShift(bool observationShift);
-    operator Leg() const;
-};
-
+%shared_ptr(QuantExt::OvernightIndexedCoupon)
+%shared_ptr(QuantExt::OvernightIndexedCouponPricer)
+%shared_ptr(QuantExt::CappedFlooredOvernightIndexedCoupon)
+// CappedFlooredOvernightIndexedCouponPricer is currently an abstract class.
+// %shared_ptr(QuantExt::CappedFlooredOvernightIndexedCouponPricer)
+%shared_ptr(QuantExt::OvernightLeg)
 
 namespace QuantExt {
 
 %rename(QLEOvernightIndexedCoupon) OvernightIndexedCoupon;
-%shared_ptr(OvernightIndexedCoupon)
 class OvernightIndexedCoupon : public OvernightIndexedCouponBase {
   public:
     OvernightIndexedCoupon(
@@ -182,7 +155,6 @@ class OvernightIndexedCoupon : public OvernightIndexedCouponBase {
 };
 
 %rename(QLEOvernightIndexedCouponPricer) OvernightIndexedCouponPricer;
-%shared_ptr(OvernightIndexedCouponPricer)
 class OvernightIndexedCouponPricer : public FloatingRateCouponPricer {
   public:
     Rate effectiveSpread() const;
@@ -192,7 +164,6 @@ class OvernightIndexedCouponPricer : public FloatingRateCouponPricer {
 };
 
 %rename(QLECappedFlooredOvernightIndexedCoupon) CappedFlooredOvernightIndexedCoupon;
-%shared_ptr(CappedFlooredOvernightIndexedCoupon)
 class CappedFlooredOvernightIndexedCoupon : public FloatingRateCoupon {
   public:
     CappedFlooredOvernightIndexedCoupon(
@@ -218,54 +189,190 @@ class CappedFlooredOvernightIndexedCoupon : public FloatingRateCoupon {
     bool localCapFloor() const;
 };
 
-%rename(QLECappedFlooredOvernightIndexedCouponPricer) CappedFlooredOvernightIndexedCouponPricer;
-%shared_ptr(CappedFlooredOvernightIndexedCouponPricer)
-class CappedFlooredOvernightIndexedCouponPricer : public FloatingRateCouponPricer {
-public:
-    CappedFlooredOvernightIndexedCouponPricer(const Handle<OptionletVolatilityStructure>& v);
-    Handle<OptionletVolatilityStructure> capletVolatility() const;
-    Real effectiveCapletVolatility() const;
-    Real effectiveFloorletVolatility() const;
-    Real strippedCapletVolatility() const;
-    Real strippedFloorletVolatility() const;
-};
+// CappedFlooredOvernightIndexedCouponPricer is currently an abstract class.
+// %rename(QLECappedFlooredOvernightIndexedCouponPricer) CappedFlooredOvernightIndexedCouponPricer;
+// class CappedFlooredOvernightIndexedCouponPricer : public FloatingRateCouponPricer {
+//   public:
+//     CappedFlooredOvernightIndexedCouponPricer(const Handle<OptionletVolatilityStructure>& v);
+//     Handle<OptionletVolatilityStructure> capletVolatility() const;
+//     Real effectiveCapletVolatility() const;
+//     Real effectiveFloorletVolatility() const;
+//     Real strippedCapletVolatility() const;
+//     Real strippedFloorletVolatility() const;
+// };
 
-%rename(QLEOvernightLeg) OvernightLeg;
-%shared_ptr(OvernightLeg)
-class OvernightLeg {
-  public:
-    OvernightLeg(const Schedule& schedule, const ext::shared_ptr<OvernightIndex>& overnightIndex);
-    OvernightLeg& withNotionals(Real notional);
-    OvernightLeg& withNotionals(const std::vector<Real>& notionals);
-    OvernightLeg& withPaymentDayCounter(const DayCounter&);
-    OvernightLeg& withPaymentAdjustment(BusinessDayConvention);
-    OvernightLeg& withPaymentCalendar(const Calendar&);
-    OvernightLeg& withPaymentLag(Natural lag);
-    OvernightLeg& withGearings(Real gearing);
-    OvernightLeg& withGearings(const std::vector<Real>& gearings);
-    OvernightLeg& withSpreads(Spread spread);
-    OvernightLeg& withSpreads(const std::vector<Spread>& spreads);
-    OvernightLeg& withTelescopicValueDates(bool telescopicValueDates);
-    OvernightLeg& includeSpread(bool includeSpread);
-    OvernightLeg& withLookback(const Period& lookback);
-    OvernightLeg& withRateCutoff(const Natural rateCutoff);
-    OvernightLeg& withFixingDays(const Natural fixingDays);
-    OvernightLeg& withCaps(Rate cap);
-    OvernightLeg& withCaps(const std::vector<Rate>& caps);
-    OvernightLeg& withFloors(Rate floor);
-    OvernightLeg& withFloors(const std::vector<Rate>& floors);
-    OvernightLeg& withNakedOption(const bool nakedOption);
-    OvernightLeg& withLocalCapFloor(const bool localCapFloor);
-    OvernightLeg& withInArrears(const bool inArrears);
-    OvernightLeg& withLastRecentPeriod(const QuantLib::ext::optional<Period>& lastRecentPeriod);
-    OvernightLeg& withLastRecentPeriodCalendar(const Calendar& lastRecentPeriodCalendar);
-    OvernightLeg& withOvernightIndexedCouponPricer(
-        const ext::shared_ptr<OvernightIndexedCouponPricer>& couponPricer);
-    OvernightLeg& withPaymentDates(const std::vector<Date>& paymentDates);
-    OvernightLeg& withCapFlooredOvernightIndexedCouponPricer(
-        const ext::shared_ptr<CappedFlooredOvernightIndexedCouponPricer>& couponPricer);
-    OvernightLeg& withObservationShift(bool observationShift);
-    operator Leg() const;
-};
+} // namespace QuantExt
 
+// Add the Legs also similar to QuantLib.
+
+// QuantExt::AverageONLeg
+%{
+// No CapFlooredAverageONIndexedCouponPricer because it is currently an abstract class.
+Leg _AverageONLeg(
+    const Schedule& schedule,
+    const ext::shared_ptr<OvernightIndex>& index,
+    const std::vector<Real>& nominals,
+    const DayCounter& paymentDayCounter = DayCounter(),
+    const BusinessDayConvention paymentConvention = Following,
+    const std::vector<Real>& gearings = {},
+    const std::vector<Spread>& spreads = {},
+    bool telescopicValueDates = false,
+    Natural rateCutoff = 0,
+    const Calendar& paymentCalendar = Calendar(),
+    const Integer paymentLag = 0,
+    const Period& lookback = 0 * Days,
+    Natural fixingDays = Null<Natural>(),
+    const std::vector<Rate>& caps = {},
+    const std::vector<Rate>& floors = {},
+    bool includeSpread = false,
+    bool nakedOption = false,
+    bool localCapFloor = false,
+    bool inArrears = true,
+    const ext::optional<Period>& lastRecentPeriod = ext::nullopt,
+    const Calendar& lastRecentPeriodCalendar = Calendar(),
+    const std::vector<Date>& paymentDates = {},
+    const ext::shared_ptr<AverageONIndexedCouponPricer>& couponPricer = nullptr,
+    bool observationShift = true)
+{
+    return QuantExt::AverageONLeg(schedule, index)
+        .withNotionals(nominals)
+        .withPaymentDayCounter(paymentDayCounter)
+        .withPaymentAdjustment(paymentConvention)
+        .withGearings(gearings)
+        .withSpreads(spreads)
+        .withTelescopicValueDates(telescopicValueDates)
+        .withRateCutoff(rateCutoff)
+        .withPaymentCalendar(paymentCalendar.empty() ? schedule.calendar() : paymentCalendar)
+        .withPaymentLag(paymentLag)
+        .withLookback(lookback)
+        .withFixingDays(fixingDays)
+        .withCaps(caps)
+        .withFloors(floors)
+        .includeSpreadInCapFloors(includeSpread)
+        .withNakedOption(nakedOption)
+        .withLocalCapFloor(localCapFloor)
+        .withInArrears(inArrears)
+        .withLastRecentPeriod(lastRecentPeriod)
+        .withLastRecentPeriodCalendar(lastRecentPeriodCalendar)
+        .withPaymentDates(paymentDates)
+        .withAverageONIndexedCouponPricer(couponPricer)
+        .withObservationShift(observationShift);
 }
+%}
+
+#if !defined(SWIGJAVA) && !defined(SWIGCSHARP)
+%feature("kwargs") _AverageONLeg;
+#endif
+%rename(AverageONLeg) _AverageONLeg;
+Leg _AverageONLeg(
+    const Schedule& schedule,
+    const ext::shared_ptr<OvernightIndex>& index,
+    const std::vector<Real>& nominals,
+    const DayCounter& paymentDayCounter = DayCounter(),
+    const BusinessDayConvention paymentConvention = Following,
+    const std::vector<Real>& gearings = {},
+    const std::vector<Spread>& spreads = {},
+    bool telescopicValueDates = false,
+    Natural rateCutoff = 0,
+    const Calendar& paymentCalendar = Calendar(),
+    const Integer paymentLag = 0,
+    const Period& lookback = 0 * Days,
+    Natural fixingDays = Null<Natural>(),
+    const std::vector<Rate>& caps = {},
+    const std::vector<Rate>& floors = {},
+    bool includeSpread = false,
+    bool nakedOption = false,
+    bool localCapFloor = false,
+    bool inArrears = true,
+    const ext::optional<Period>& lastRecentPeriod = ext::nullopt,
+    const Calendar& lastRecentPeriodCalendar = Calendar(),
+    const std::vector<Date>& paymentDates = {},
+    const ext::shared_ptr<AverageONIndexedCouponPricer>& couponPricer = nullptr,
+    bool observationShift = true);
+
+// QuantExt::OvernightLeg
+%{
+// No CappedFlooredOvernightIndexedCouponPricer because it is currently an abstract class.
+Leg _QLEOvernightLeg(
+    const Schedule& schedule,
+    const ext::shared_ptr<OvernightIndex>& index,
+    const std::vector<Real>& nominals,
+    const DayCounter& paymentDayCounter = DayCounter(),
+    const BusinessDayConvention paymentConvention = Following,
+    const Calendar& paymentCalendar = Calendar(),
+    const Integer paymentLag = 0,
+    const std::vector<Real>& gearings = {},
+    const std::vector<Spread>& spreads = {},
+    bool telescopicValueDates = false,
+    bool includeSpread = false,
+    const Period& lookback = 0 * Days,
+    Natural rateCutoff = 0,
+    Natural fixingDays = Null<Natural>(),
+    const std::vector<Rate>& caps = {},
+    const std::vector<Rate>& floors = {},
+    bool nakedOption = false,
+    bool localCapFloor = false,
+    bool inArrears = true,
+    const ext::optional<Period>& lastRecentPeriod = ext::nullopt,
+    const Calendar& lastRecentPeriodCalendar = Calendar(),
+    const ext::shared_ptr<QuantExt::OvernightIndexedCouponPricer>& couponPricer = nullptr,
+    bool observationShift = true,
+    const std::vector<Date>& paymentDates = {})
+{
+    return QuantExt::OvernightLeg(schedule, index)
+        .withNotionals(nominals)
+        .withPaymentDayCounter(paymentDayCounter)
+        .withPaymentAdjustment(paymentConvention)
+        .withPaymentCalendar(paymentCalendar.empty() ? schedule.calendar() : paymentCalendar)
+        .withPaymentLag(paymentLag)
+        .withGearings(gearings)
+        .withSpreads(spreads)
+        .withTelescopicValueDates(telescopicValueDates)
+        .includeSpread(includeSpread)
+        .withLookback(lookback)
+        .withRateCutoff(rateCutoff)
+        .withFixingDays(fixingDays)
+        .withCaps(caps)
+        .withFloors(floors)
+        .withNakedOption(nakedOption)
+        .withLocalCapFloor(localCapFloor)
+        .withInArrears(inArrears)
+        .withLastRecentPeriod(lastRecentPeriod)
+        .withLastRecentPeriodCalendar(lastRecentPeriodCalendar)
+        .withOvernightIndexedCouponPricer(couponPricer)
+        .withPaymentDates(paymentDates)
+        .withObservationShift(observationShift);
+}
+%}
+
+#if !defined(SWIGJAVA) && !defined(SWIGCSHARP)
+%feature("kwargs") _QLEOvernightLeg;
+#endif
+%rename(QLEOvernightLeg) _QLEOvernightLeg;
+Leg _QLEOvernightLeg(
+    const Schedule& schedule,
+    const ext::shared_ptr<OvernightIndex>& index,
+    const std::vector<Real>& nominals,
+    const DayCounter& paymentDayCounter = DayCounter(),
+    const BusinessDayConvention paymentConvention = Following,
+    const Calendar& paymentCalendar = Calendar(),
+    const Integer paymentLag = 0,
+    const std::vector<Real>& gearings = {},
+    const std::vector<Spread>& spreads = {},
+    bool telescopicValueDates = false,
+    bool includeSpread = false,
+    const Period& lookback = 0 * Days,
+    Natural rateCutoff = 0,
+    Natural fixingDays = Null<Natural>(),
+    const std::vector<Rate>& caps = {},
+    const std::vector<Rate>& floors = {},
+    bool nakedOption = false,
+    bool localCapFloor = false,
+    bool inArrears = true,
+    const ext::optional<Period>& lastRecentPeriod = ext::nullopt,
+    const Calendar& lastRecentPeriodCalendar = Calendar(),
+    const ext::shared_ptr<QuantExt::OvernightIndexedCouponPricer>& couponPricer = nullptr,
+    bool observationShift = true,
+    const std::vector<Date>& paymentDates = {});
+
+#endif
