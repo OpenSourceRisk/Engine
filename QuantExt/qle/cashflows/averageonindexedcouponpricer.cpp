@@ -126,11 +126,6 @@ Rate AverageONIndexedCouponPricer::effectiveRate(const Date& date) const {
         return rco > 0 && fixDates.size() - rco - 1 <= currPeriodIdx;
     };
 
-    auto onRateGivenDates = [&](const Date& start, const Date& end) {
-        return start == end ? 0.0 :
-            (curve->discount(start) / curve->discount(end) - 1.0) / indexDc.yearFraction(start, end);
-    };
-
     auto onRate = [&](bool inRcoPeriod = false) {
         Date end = inRcoPeriod ? valDates.back() : valDates[currPeriodIdx + 1];
         const Date& start = valDates[currPeriodIdx];

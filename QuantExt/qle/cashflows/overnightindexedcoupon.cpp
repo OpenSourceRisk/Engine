@@ -157,8 +157,6 @@ tuple<Rate, Spread, Rate> OvernightIndexedCouponPricer::compute(const Date& date
     const Date& cpnAccStart = coupon_->separateRateCompPeriod() ? intDates.front() : coupon_->accrualStartDate();
     const Date& cpnAccEnd = coupon_->separateRateCompPeriod() ? intDates.back() : coupon_->accrualEndDate();
     const DayCounter& indexDc = index->dayCounter();
-    const Natural indexFixDays = index->fixingDays();
-    const Natural cpnFixDays = coupon_->fixingDays();
 
     // Compound factor with and without spread which will be calculated below.
     Real compFac = 1.0;
@@ -197,7 +195,7 @@ tuple<Rate, Spread, Rate> OvernightIndexedCouponPricer::compute(const Date& date
         }
     };
 
-    auto updateFactorsRate = [&](Rate onRate) {
+    auto updateCompFactors = [&](Rate onRate) {
         Time dcf = dt[currPeriodIdx];
         Real scale = currPeriodIdx < numPeriods - 1 ? 1.0 : brokenPeriodScale();
         if (incSpread) {
@@ -207,26 +205,6 @@ tuple<Rate, Spread, Rate> OvernightIndexedCouponPricer::compute(const Date& date
             compFac *= 1.0 + onRate * scale * dcf;
         }
         currPeriodIdx++;
-    };
-
-    auto updateFactorsGrowth = [&](Real onFactor) {
-        // If the compounding factor can be applied directly, apply it. The coupon cannot include spread, can't be in the 
-        // last period we are calculating (as that may be broken), if it has a lookback it must have observation shift, 
-        // can't have an externally supplied fixing lag different from the fixing lag of the index.
-        if (!incSpread
-            && (currPeriodIdx < numPeriods - 1)
-            && (lookback.length() == 0 || obsShift)
-            && cpnFixDays == indexFixDays)
-        {
-            compFac *= onFactor;
-            currPeriodIdx++;
-        } else {
-            bool inRcoPeriod = rco > 0 && fixDates.size() - rco - 1 <= currPeriodIdx;
-            Date endValDate = inRcoPeriod ? valDates.back() : valDates[currPeriodIdx + 1];
-            Time dcf = indexDc.yearFraction(valDates[currPeriodIdx], endValDate);
-            Rate onRate = (onFactor - 1.0) / dcf;
-            updateFactorsRate(onRate);
-        }
     };
 
     auto inRateCutoffPeriod = [&]() {
@@ -312,10 +290,10 @@ tuple<Rate, Spread, Rate> OvernightIndexedCouponPricer::compute(const Date& date
         Rate fixing = index->pastFixing(fixDate);
         QL_REQUIRE(fixing != Null<Real>(), "OvernightIndexedCouponPricer: missing " << index->name() <<
             " fixing for fixing date " << fixDate << ".");
-        // Check if in rate cut-off period before updating currPeriodIdx in call to updateFactorsRate.
+        // Check if in rate cut-off period before updating currPeriodIdx in call to updateCompFactors.
         if (inRateCutoffPeriod())
             rcoRate = fixing;
-        updateFactorsRate(fixing);
+        updateCompFactors(fixing);
         // If we are in the rate cut-off period, remaining periods will be handled below.
         if (rcoRate)
             break;
@@ -329,7 +307,7 @@ tuple<Rate, Spread, Rate> OvernightIndexedCouponPricer::compute(const Date& date
             if (fixing != Null<Real>()) {
                 if (inRateCutoffPeriod())
                     rcoRate = fixing;
-                updateFactorsRate(fixing);
+                updateCompFactors(fixing);
             }
         } catch (Error&) {
         }
@@ -343,7 +321,7 @@ tuple<Rate, Spread, Rate> OvernightIndexedCouponPricer::compute(const Date& date
     // fixing look up failed and we need to forecast today's fixing. We have the value dates for it, so we do it.
     if (!rcoRate && currPeriodIdx < numPeriods && fixDates[currPeriodIdx] == today) {
         auto [onRate, inRcoPeriod] = onRateRcoInd();
-        updateFactorsRate(onRate);
+        updateCompFactors(onRate);
         if (inRcoPeriod)
             rcoRate = onRate;
     }
@@ -353,7 +331,7 @@ tuple<Rate, Spread, Rate> OvernightIndexedCouponPricer::compute(const Date& date
         // If can't apply telescopic formula, loop over remaining periods and forecast the fixings.
         while (currPeriodIdx < numPeriods) {
             auto [onRate, inRcoPeriod] = onRateRcoInd();
-            updateFactorsRate(onRate);
+            updateCompFactors(onRate);
             if (inRcoPeriod) {
                 rcoRate = onRate;
                 break;
@@ -374,7 +352,7 @@ tuple<Rate, Spread, Rate> OvernightIndexedCouponPricer::compute(const Date& date
             } else {
                 // May have rate cut-off periods, final / initial stub period or telescopic period may have been 1D.
                 auto [onRate, inRcoPeriod] = onRateRcoInd();
-                updateFactorsRate(onRate);
+                updateCompFactors(onRate);
                 if (inRcoPeriod) {
                     rcoRate = onRate;
                     break;
@@ -386,7 +364,7 @@ tuple<Rate, Spread, Rate> OvernightIndexedCouponPricer::compute(const Date& date
     // We may still have rate cut-off periods to cover.
     if (rcoRate) {
         while (currPeriodIdx < numPeriods) {
-            updateFactorsRate(*rcoRate);
+            updateCompFactors(*rcoRate);
         }
     }
 
