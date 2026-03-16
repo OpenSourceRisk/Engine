@@ -81,13 +81,38 @@ buildMcCgEngine(const Handle<CrossAssetModel>& model, const std::vector<std::str
                 const std::vector<Handle<YieldTermStructure>>& discountCurves,
                 const std::vector<Handle<Quote>>& fxSpots,
                 const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
-                const EngineBuilder* builder) {
+                const std::set<Date> simulationDates, const EngineBuilder* builder) {
+    Model::Params mcParams;
+    mcParams.seed = parseReal(builder->engineParameter("Training.Seed", {}, true));
+    mcParams.sequenceType =
+        parseSequenceType(builder->engineParameter("Training.Sequence", {}, false, "SobolBrownianBridge"));
+    mcParams.regressionOrder =
+        parseInteger(builder->engineParameter("Training.BasisFunctionOrder", {}, true, std::string()));
+    mcParams.polynomType =
+        parsePolynomType(builder->engineParameter("Training.BasisFunction", {}, true, std::string()));
+    mcParams.sobolOrdering =
+        parseSobolBrownianGeneratorOrdering(builder->engineParameter("BrownianBridgeOrdering", {}, false, "Steps"));
+    mcParams.sobolDirectionIntegers =
+        parseSobolRsgDirectionIntegers(builder->engineParameter("SobolDirectionIntegers", {}, false, "JoeKuoD7"));
+    mcParams.regressionVarianceCutoff =
+        parseRealOrNull(builder->engineParameter("RegressionVarianceCutoff", {}, false, std::string()));
+
     auto camCg = QuantLib::ext::make_shared<GaussianCamCG>(
         model, parseInteger(builder->engineParameter("Training.Samples", {}, true, std::string())), currencies,
         discountCurves, fxSpots, irIndices,
         std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>{},
-        std::vector<std::string>{}, std::vector<std::string>{}, std::set<Date>{});
-    return QuantLib::ext::make_shared<AmcCgMultiLegOptionEngine>(camCg, std::vector<Date>{}, false);
+        std::vector<std::string>{}, std::vector<std::string>{}, simulationDates,
+        builder->engineFactory()->iborFallbackConfig(), std::vector<std::string>{}, std::vector<Date>{},
+        parseInteger(builder->engineParameter("TimeStepsPerYear", {}, true)));
+
+    auto rt = builder->globalParameters().find("RunType");
+    std::string runType = rt != builder->globalParameters().end() ? rt->second : "<<no run type set>>";
+    bool useCachedSensis = parseBool(builder->engineParameter("UseAD", {}, true)) && (runType == "SensitivityDelta");
+
+    return QuantLib::ext::make_shared<AmcCgMultiLegOptionEngine>(
+        camCg, mcParams, parseReal(builder->engineParameter("IndicatorSmoothingForValues", {}, false, "0.0")),
+        parseReal(builder->engineParameter("IndicatorSmoothingForDerivatives", {}, false, "0.0")), useCachedSensis,
+        false, true);
 }
 
 } // namespace
@@ -606,7 +631,15 @@ QuantLib::ext::shared_ptr<PricingEngine> CamMCCgSwaptionEngineBuilder::engineImp
             fxSpots.push_back(market_->fxRate(ccy + currencies.front(), configuration(MarketContext::pricing)));
     }
 
-    return buildMcCgEngine(cam, currencies, discountCurves, fxSpots, irIndices, this);
+    std::set<Date> simulationDates;
+    Date maxDate = *std::max_element(maturities.begin(), maturities.end());
+    Date d = market_->asofDate();
+    do {
+        d += Period(1, TimeUnit::Months);
+        simulationDates.insert(d);
+    } while (d < maxDate);
+
+    return buildMcCgEngine(cam, currencies, discountCurves, fxSpots, irIndices, simulationDates, this);
 
 } // LgmMc engineImpl()
 
