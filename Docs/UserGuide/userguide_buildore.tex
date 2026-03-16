@@ -334,7 +334,7 @@ Quantlib Flags
     \hline
     QL\_USE\_STD\_ANY & Use std::any instead of boost::any & ON\textsuperscript{*} \\
     \hline
-    QL\_USE\_STD\_OPTIONAL & Use std::optional isntead of boost::optional & ON\textsuperscript{*} \\
+    QL\_USE\_STD\_OPTIONAL & Use std::optional instead of boost::optional & ON\textsuperscript{*} \\
     \hline
     QL\_USE\_STD\_SHARED\_PTR & Use standard smart pointers intead of Boost ones & OFF\textsuperscript{*} \\
     \hline
@@ -362,6 +362,8 @@ Quantlib Flags
 \end{tabular}
 }
 \scriptsize{ \textsuperscript{*}Default values indicated should not be modified.}
+\scriptsize{ Boost::shared\_ptrs are preferred due to our definition of BOOST\_ENABLE\_ASSERT\_HANDLER. }
+\scriptsize{ Changing QL\_USE\_STD\_OPTIONAL would require code modifications of all occurences of member function has\_value.}
 
 
 \subsubsection*{Linux and macOS}
