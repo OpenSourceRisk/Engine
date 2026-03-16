@@ -476,6 +476,7 @@ void dataBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(LGMGridSwaptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(LGMFDSwaptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CamMCSwaptionEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(CamMCCgSwaptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(VarSwapEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(FxDoubleTouchOptionAnalyticEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(FxDoubleBarrierOptionAnalyticEngineBuilder, false)
