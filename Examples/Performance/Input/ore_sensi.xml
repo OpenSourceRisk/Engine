@@ -16,7 +16,7 @@
     <Parameter name="portfolioFile">portfolio_sensi.xml</Parameter>
     <Parameter name="observationModel">None</Parameter>
     <Parameter name="continueOnError">false</Parameter>
-    <Parameter name="scriptLibrary">scriptlibrary.xml</Parameter> 
+    <Parameter name="scriptLibrary">scriptlibrary.xml</Parameter>
   </Setup>
   <Markets>
     <Parameter name="pricing">inccy</Parameter>
@@ -52,6 +52,7 @@
       <Parameter name="sensitivityOutputFile">sensitivity.csv</Parameter>
       <Parameter name="outputSensitivityThreshold">0.000001</Parameter>
       <Parameter name="recalibrateModels">Y</Parameter>
+      <Parameter name="computeTheta">Y</Parameter>
     </Analytic>
   </Analytics>
 </ORE>

@@ -196,6 +196,10 @@ void SetupVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputPara
     if (!includePastCashflows_)
         inputs->loadParameter<bool>(includePastCashflows_, "cashflow", "includePastCashflows", false, parseBool);
 
+    inputs->loadParameter<bool>(computeTheta_, "sensitivity", "computeTheta", false, parseBool);
+    if(!computeTheta_)
+        inputs->loadParameter<Period>(thetaPeriod_, "sensitivity", "thetaPeriod", false, parsePeriod);
+
 }
 
 void scaleUpPortfolio(ext::shared_ptr<ore::data::Portfolio>& p) {

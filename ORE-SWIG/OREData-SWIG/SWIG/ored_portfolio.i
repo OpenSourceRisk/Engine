@@ -48,12 +48,25 @@ using namespace std;
 
 using ore::data::ScheduleRules;
 using ore::data::ScheduleData;
+
+using QuantExt::EquityReturnType;
 using ore::data::LegAdditionalData;
+using ore::data::CashflowData;
 using ore::data::FixedLegData;
+using ore::data::ZeroCouponFixedLegData;
 using ore::data::FloatingLegData;
+using ore::data::CPILegData;
+using ore::data::YoYLegData;
+using ore::data::CMSLegData;
+using ore::data::DigitalCMSLegData;
+using ore::data::CMSSpreadLegData;
+using ore::data::DigitalCMSSpreadLegData;
+using ore::data::CMBLegData;
+using ore::data::EquityLegData;
 using ore::data::AmortizationData;
-using ore::data::Indexing;
 using ore::data::LegData;
+
+using ore::data::Indexing;
 using ore::data::PremiumData;
 using ore::data::OptionData;
 using ore::data::OptionExerciseData;
@@ -70,16 +83,15 @@ using OREEquityForward = ore::data::EquityForward;
 using ORECapFloor = ore::data::CapFloor;
 using ore::data::BondData;
 using OREBond = ore::data::Bond;
+using ore::data::CdsTier;
+using ore::data::CdsDocClause;
+using ore::data::CdsReferenceInformation;
 using ore::data::CreditDefaultSwapData;
 using ORECreditDefaultSwap = ore::data::CreditDefaultSwap;
 using ore::data::BasketConstituent;
 using ore::data::BasketData;
 using ore::data::IndexCreditDefaultSwapData;
 using ore::data::SyntheticCDO;
-using ore::data::CMSLegData;
-using ORECapFloor = ore::data::CapFloor;
-using ore::data::CPILegData;
-using ore::data::YoYLegData;
 using ORECommodityForward = ore::data::CommodityForward;
 using ore::data::CommodityPayRelativeTo;
 using ore::data::CommodityPriceType;
@@ -167,10 +179,30 @@ public:
 class LegAdditionalData : public XMLSerializable {
 };
 
+%shared_ptr(CashflowData)
+class CashflowData : public LegAdditionalData {
+public:
+    CashflowData();
+    CashflowData(const vector<double>& amounts, const vector<string>& dates);
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
+};
+
 %shared_ptr(FixedLegData)
 class FixedLegData : public LegAdditionalData {
   public:
+    FixedLegData();
     FixedLegData(const vector<double>& rates, const vector<string>& rateDates = vector<string>());
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
+};
+
+%shared_ptr(ZeroCouponFixedLegData)
+class ZeroCouponFixedLegData : public LegAdditionalData {
+public:
+    ZeroCouponFixedLegData();
+    ZeroCouponFixedLegData(const vector<double>& rates, const vector<string>& rateDates = vector<string>(),
+                           const string& compounding = "Compounded", const bool subtractNotional = true);
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
@@ -178,6 +210,7 @@ class FixedLegData : public LegAdditionalData {
 %shared_ptr(FloatingLegData)
 class FloatingLegData : public LegAdditionalData {
 public:
+    FloatingLegData();
     FloatingLegData(const string& index, QuantLib::Size fixingDays, bool isInArrears, const vector<double>& spreads,
                     const vector<string>& spreadDates = vector<string>(), const vector<double>& caps = vector<double>(),
                     const vector<string>& capDates = vector<string>(), const vector<double>& floors = vector<double>(),
@@ -198,9 +231,136 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
 
+%shared_ptr(CPILegData)
+class CPILegData : public LegAdditionalData {
+  public:
+    CPILegData();
+    CPILegData(string index, string startDate, double baseCPI, string observationLag, string interpolation,
+               const vector<double>& rates, const vector<string>& rateDates = std::vector<string>(),
+               bool subtractInflationNominal = true, const vector<double>& caps = vector<double>(),
+               const vector<string>& capDates = vector<string>(), const vector<double>& floors = vector<double>(),
+               const vector<string>& floorDates = vector<string>(), double finalFlowCap = Null<Real>(),
+               double finalFlowFloor = Null<Real>(), bool nakedOption = false,
+               bool subtractInflationNominalCoupons = false);
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
+};
+
+%shared_ptr(YoYLegData)
+class YoYLegData : public LegAdditionalData {
+  public:
+    YoYLegData();
+    YoYLegData(string index, string observationLag, Size fixingDays,
+               const vector<double>& gearings = std::vector<double>(),
+               const vector<string>& gearingDates = std::vector<string>(),
+               const vector<double>& spreads = std::vector<double>(),
+               const vector<string>& spreadDates = std::vector<string>(), const vector<double>& caps = vector<double>(),
+               const vector<string>& capDates = vector<string>(), const vector<double>& floors = vector<double>(),
+               const vector<string>& floorDates = vector<string>(), bool nakedOption = false,
+               bool addInflationNotional = false, bool irregularYoY = false);
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
+};
+
+%shared_ptr(CMSLegData)
+class CMSLegData : public LegAdditionalData {
+  public:
+    CMSLegData();
+    CMSLegData(const string& swapIndex, Size fixingDays, bool isInArrears, const vector<double>& spreads,
+               const vector<string>& spreadDates = vector<string>(), const vector<double>& caps = vector<double>(),
+               const vector<string>& capDates = vector<string>(), const vector<double>& floors = vector<double>(),
+               const vector<string>& floorDates = vector<string>(), const vector<double>& gearings = vector<double>(),
+               const vector<string>& gearingDates = vector<string>(), bool nakedOption = false);
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
+};
+
+%shared_ptr(DigitalCMSLegData)
+class DigitalCMSLegData : public LegAdditionalData {
+public:
+    DigitalCMSLegData();
+    DigitalCMSLegData(
+        const ext::shared_ptr<CMSLegData>& underlying, Position::Type callPosition = Position::Long,
+        bool isCallATMIncluded = false, const vector<double> callStrikes = vector<double>(),
+        const vector<string> callStrikeDates = vector<string>(), const vector<double> callPayoffs = vector<double>(),
+        const vector<string> callPayoffDates = vector<string>(), Position::Type putPosition = Position::Long,
+        bool isPutATMIncluded = false, const vector<double> putStrikes = vector<double>(),
+        const vector<string> putStrikeDates = vector<string>(), const vector<double> putPayoffs = vector<double>(),
+        const vector<string> putPayoffDates = vector<string>());
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
+};
+
+%shared_ptr(CMSSpreadLegData)
+class CMSSpreadLegData : public LegAdditionalData {
+public:
+    CMSSpreadLegData();
+    CMSSpreadLegData(const string& swapIndex1, const string& swapIndex2, Size fixingDays, bool isInArrears,
+                     const vector<double>& spreads, const vector<string>& spreadDates = vector<string>(),
+                     const vector<double>& caps = vector<double>(), const vector<string>& capDates = vector<string>(),
+                     const vector<double>& floors = vector<double>(),
+                     const vector<string>& floorDates = vector<string>(),
+                     const vector<double>& gearings = vector<double>(),
+                     const vector<string>& gearingDates = vector<string>(), bool nakedOption = false);
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
+};
+
+%shared_ptr(DigitalCMSSpreadLegData)
+class DigitalCMSSpreadLegData : public LegAdditionalData {
+public:
+    DigitalCMSSpreadLegData();
+    DigitalCMSSpreadLegData(
+        const ext::shared_ptr<CMSSpreadLegData>& underlying, Position::Type callPosition = Position::Long,
+        bool isCallATMIncluded = false, const vector<double> callStrikes = vector<double>(),
+        const vector<string> callStrikeDates = vector<string>(), const vector<double> callPayoffs = vector<double>(),
+        const vector<string> callPayoffDates = vector<string>(), Position::Type putPosition = Position::Long,
+        bool isPutATMIncluded = false, const vector<double> putStrikes = vector<double>(),
+        const vector<string> putStrikeDates = vector<string>(), const vector<double> putPayoffs = vector<double>(),
+        const vector<string> putPayoffDates = vector<string>());
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
+};
+
+%shared_ptr(CMBLegData)
+class CMBLegData : public LegAdditionalData {
+public:
+    CMBLegData();
+    CMBLegData(const string& genericBond, bool hasCreditRisk, Size fixingDays, bool isInArrears,
+               const vector<double>& spreads, const vector<string>& spreadDates = vector<string>(),
+               const vector<double>& caps = vector<double>(), const vector<string>& capDates = vector<string>(),
+               const vector<double>& floors = vector<double>(), const vector<string>& floorDates = vector<string>(),
+               const vector<double>& gearings = vector<double>(), const vector<string>& gearingDates = vector<string>(),
+               bool nakedOption = false);
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
+};
+
+// Export enum EquityReturnType, defined in file ore/QuantExt/qle/cashflows/equitycoupon.hpp
+enum class EquityReturnType { Price, Total, Absolute, Dividend };
+
+%shared_ptr(EquityLegData)
+class EquityLegData : public LegAdditionalData {
+public:
+    EquityLegData();
+    EquityLegData(EquityReturnType returnType, Real dividendFactor,
+                  // The underlying C++ code declares parameter equityUnderlying as pass by value.
+                  // SWIG stores this value as shared_ptr<EquityUnderlying> and is not able to convert to EquityUnderlying.
+                  // Instead, declare the parameter as a const reference, because SWIG converts automatically
+                  // from shared_ptr<EquityUnderlying> to const EquityUnderlying&.
+                  //EquityUnderlying equityUnderlying,
+                  const EquityUnderlying& equityUnderlying,
+                  Real initialPrice, bool notionalReset, Natural fixingDays = 0,
+                  const ScheduleData& valuationSchedule = ScheduleData(), string eqCurrency = "", string fxIndex = "",
+                  Real quantity = Null<Real>(), string initialPriceCurrency = "");
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
+};
+
 %shared_ptr(AmortizationData)
 class AmortizationData : public XMLSerializable {
 public:
+    AmortizationData();
     AmortizationData(string type, double value, string startDate, string endDate, string frequency, bool underflow);
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
@@ -210,6 +370,7 @@ public:
 %shared_ptr(LegData)
 class LegData : public XMLSerializable {
   public:
+    LegData();
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
@@ -340,6 +501,7 @@ class InstrumentWrapper {
     Real NPV() const;
     ext::shared_ptr<QuantLib::Instrument> qlInstrument() const;
 };
+%template(InstrumentWrapperVector) vector<ext::shared_ptr<InstrumentWrapper>>;
 
 // Trade pointer required as a return type only
 %shared_ptr(Trade)
@@ -356,6 +518,7 @@ class Trade : public XMLSerializable {
     const QuantLib::Date& maturity();
     Real notional();
 };
+%template(TradeVector) vector<ext::shared_ptr<Trade>>;
 
 // Portfolio
 %shared_ptr(Portfolio)
@@ -439,7 +602,7 @@ public:
 }
 
 %shared_ptr(VanillaOptionTrade)
-class VanillaOptionTrade : public Trade { };
+class VanillaOptionTrade : public Trade {};
 
 %shared_ptr(FxOption)
 class FxOption : public VanillaOptionTrade {
@@ -454,6 +617,7 @@ public:
 %shared_ptr(OREFxForward)
 class OREFxForward : public Trade {
 public:
+    OREFxForward();
     OREFxForward(const Envelope& env, const string& maturityDate, const string& boughtCurrency, double boughtAmount,
               const string& soldCurrency, double soldAmount, const string& settlement = "Physical",
               const string& fxIndex = "", const string& payDate = "");
@@ -479,12 +643,17 @@ public:
     virtual void fromXML(ore::data::XMLNode* node) override;
     virtual ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 };
+%template(UnderlyingVector) vector<ext::shared_ptr<Underlying>>;
 
 %shared_ptr(EquityUnderlying)
 class EquityUnderlying : public Underlying {
 public:
+    EquityUnderlying();
     explicit EquityUnderlying(const std::string& equityName);
+    EquityUnderlying(const std::string& name, const std::string& identifierType, const std::string& currency,
+                     const std::string& exchange, const QuantLib::Real weight);
 };
+%template(EquityUnderlyingVector) vector<ext::shared_ptr<EquityUnderlying>>;
 
 %shared_ptr(EquityOption)
 class EquityOption : public VanillaOptionTrade {
@@ -499,6 +668,7 @@ public:
 %shared_ptr(OREEquityForward)
 class OREEquityForward : public Trade {
 public:
+    OREEquityForward();
     OREEquityForward(Envelope& env, const string& longShort, EquityUnderlying equityUnderlying, const string& currency,
                   QuantLib::Real quantity, const string& maturityDate, QuantLib::Real strike,
                   const string& strikeCurrency = "", const std::string& fxIndex = "", const std::string& payDate = "",
@@ -511,6 +681,7 @@ public:
 %shared_ptr(ORECapFloor)
 class ORECapFloor : public Trade {
 public:
+    ORECapFloor();
     ORECapFloor(const Envelope& env, const string& longShort, const LegData& leg, const vector<double>& caps,
              const vector<double>& floors, const PremiumData& premiumData = {});
     void build(const ext::shared_ptr<EngineFactory>&) override;
@@ -531,6 +702,7 @@ public:
 %shared_ptr(OREBond)
 class OREBond : public Trade {
 public:
+    OREBond();
     OREBond(Envelope env, const BondData& bondData);
     void build(const ext::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
@@ -546,6 +718,19 @@ public:
     };
 }
 
+enum class CdsTier { SNRFOR, SUBLT2, SNRLAC, SECDOM, JRSUBUT2, PREFT1, LIEN1, LIEN2, LIEN3 };
+enum class CdsDocClause { CR, MM, MR, XR, CR14, MM14, MR14, XR14 };
+
+%shared_ptr(CdsReferenceInformation)
+class CdsReferenceInformation : public XMLSerializable {
+public:
+    CdsReferenceInformation();
+    CdsReferenceInformation(const std::string& referenceEntityId, CdsTier tier, const Currency& currency,
+                            ext::optional<CdsDocClause> docClause = ext::nullopt);
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
+};
+
 %shared_ptr(CreditDefaultSwapData)
 class CreditDefaultSwapData : public XMLSerializable {
 public:
@@ -555,6 +740,17 @@ public:
                           const PPT protectionPaymentTime = PPT::atDefault,
                           const Date& protectionStart = Date(), const Date& upfrontDate = Date(),
                           const Real upfrontFee = Null<Real>(),
+                          QuantLib::Real recoveryRate = QuantLib::Null<QuantLib::Real>(),
+                          const std::string& referenceObligation = "",
+                          const Date& tradeDate = Date(),
+                          const std::string& cashSettlementDays = "",
+                          const bool rebatesAccrual = true);
+    CreditDefaultSwapData(const std::string& issuerId, const CdsReferenceInformation& referenceInformation,
+                          const LegData& leg, bool settlesAccrual = true,
+                          const PPT protectionPaymentTime = PPT::atDefault,
+                          const QuantLib::Date& protectionStart = QuantLib::Date(),
+                          const QuantLib::Date& upfrontDate = QuantLib::Date(),
+                          QuantLib::Real upfrontFee = QuantLib::Null<QuantLib::Real>(),
                           QuantLib::Real recoveryRate = QuantLib::Null<QuantLib::Real>(),
                           const std::string& referenceObligation = "",
                           const Date& tradeDate = Date(),
@@ -635,18 +831,6 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(CMSLegData)
-class CMSLegData : public LegAdditionalData {
-  public:
-    CMSLegData(const string& swapIndex, Size fixingDays, bool isInArrears, const vector<double>& spreads,
-               const vector<string>& spreadDates = vector<string>(), const vector<double>& caps = vector<double>(),
-               const vector<string>& capDates = vector<string>(), const vector<double>& floors = vector<double>(),
-               const vector<string>& floorDates = vector<string>(), const vector<double>& gearings = vector<double>(),
-               const vector<string>& gearingDates = vector<string>(), bool nakedOption = false);
-    virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) const override;
-};
-
 %shared_ptr(ORECapFloor)
 class ORECapFloor : public Trade {
 public:
@@ -657,41 +841,24 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(CPILegData)
-class CPILegData : public LegAdditionalData {
-  public:
-    CPILegData(string index, string startDate, double baseCPI, string observationLag, string interpolation,
-               const vector<double>& rates, const vector<string>& rateDates = std::vector<string>(),
-               bool subtractInflationNominal = true, const vector<double>& caps = vector<double>(),
-               const vector<string>& capDates = vector<string>(), const vector<double>& floors = vector<double>(),
-               const vector<string>& floorDates = vector<string>(), double finalFlowCap = Null<Real>(),
-               double finalFlowFloor = Null<Real>(), bool nakedOption = false,
-               bool subtractInflationNominalCoupons = false);
-    virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) const override;
-};
-
-%shared_ptr(YoYLegData)
-class YoYLegData : public LegAdditionalData {
-  public:
-    YoYLegData(string index, string observationLag, Size fixingDays,
-               const vector<double>& gearings = std::vector<double>(),
-               const vector<string>& gearingDates = std::vector<string>(),
-               const vector<double>& spreads = std::vector<double>(),
-               const vector<string>& spreadDates = std::vector<string>(), const vector<double>& caps = vector<double>(),
-               const vector<string>& capDates = vector<string>(), const vector<double>& floors = vector<double>(),
-               const vector<string>& floorDates = vector<string>(), bool nakedOption = false,
-               bool addInflationNotional = false, bool irregularYoY = false);
-    virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) const override;
-};
-
 %shared_ptr(ORECommodityForward)
 class ORECommodityForward : public Trade {
 public:
+    ORECommodityForward();
     ORECommodityForward(const Envelope& envelope, const std::string& position, const std::string& commodityName,
                      const std::string& currency, QuantLib::Real quantity, const std::string& maturityDate,
                      QuantLib::Real strike);
+    ORECommodityForward(const Envelope& envelope, const std::string& position, const std::string& commodityName,
+                     const std::string& currency, QuantLib::Real quantity, const std::string& maturityDate,
+                     QuantLib::Real strike, const QuantLib::Date& futureExpiryDate,
+                     const QuantLib::ext::optional<bool>& physicallySettled = true,
+                     const Date& paymentDate = Date());
+    ORECommodityForward(const Envelope& envelope, const std::string& position, const std::string& commodityName,
+                     const std::string& currency, QuantLib::Real quantity, const std::string& maturityDate,
+                     QuantLib::Real strike, const QuantLib::Period& futureExpiryOffset,
+                     const QuantLib::Calendar& offsetCalendar,
+                     const QuantLib::ext::optional<bool>& physicallySettled = true,
+                     const Date& paymentDate = Date());
     void build(const ext::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
@@ -788,6 +955,7 @@ public:
             style, strictComparison, overrideTriggered);
     }
 }
+%template(BarrierDataVector) vector<ext::shared_ptr<BarrierData>>;
 
 %shared_ptr(FxBarrierOption)
 class FxBarrierOption : public Trade {
