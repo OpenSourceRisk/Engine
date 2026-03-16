@@ -15,13 +15,16 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/scaledcoupon.hpp>
+#include <qle/cashflows/indexedcoupon.hpp>
 #include <qle/instruments/flexiswapreplication.hpp>
 #include <qle/instruments/rebatedexercise.hpp>
 
 #include <ql/cashflows/couponpricer.hpp>
 #include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
+#include <ql/experimental/coupons/strippedcapflooredcoupon.hpp>
 
 using namespace QuantLib;
 
@@ -80,7 +83,33 @@ void rescaleLeg(Leg& l, Real amount) {
 }
 
 void unregisterWithCouponPricers(Leg& l) {
-    std::for_each(l.begin(), l.end(), [](ext::shared_ptr<CashFlow>& c) {
+    std::for_each(l.begin(), l.end(), [](ext::shared_ptr<CashFlow> c) {
+        bool foundWrapper;
+        do {
+            foundWrapper = false;
+            if (auto cpn = ext::dynamic_pointer_cast<ScaledCoupon>(c)) {
+                c = cpn->underlyingCoupon();
+                foundWrapper = true;
+            }
+            if (auto cpn = ext::dynamic_pointer_cast<FloatingRateFXLinkedNotionalCoupon>(c)) {
+                c = cpn->underlying();
+                foundWrapper = true;
+            }
+            if (auto cpn = ext::dynamic_pointer_cast<IndexedCoupon>(c)) {
+                c = cpn->underlying();
+                foundWrapper = true;
+            }
+            if (auto cpn = ext::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(c)) {
+                cpn->unregisterWith(cpn->pricer());
+                c = cpn->underlying();
+                foundWrapper = true;
+            }
+            if (auto cpn = ext::dynamic_pointer_cast<CappedFlooredCoupon>(c)) {
+                cpn->unregisterWith(cpn->pricer());
+                c = cpn->underlying();
+                foundWrapper = true;
+            }
+        } while (foundWrapper);
         if (auto cpn = ext::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(c)) {
             cpn->unregisterWith(cpn->pricer());
         }
