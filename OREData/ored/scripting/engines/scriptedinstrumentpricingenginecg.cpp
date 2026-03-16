@@ -44,7 +44,9 @@ namespace {
 // helper that converts a context value to a ql additional result (i.e. QuantLib::ext::any)
 
 struct anyGetterCg : public boost::static_visitor<QuantLib::ext::any> {
-    QuantLib::ext::any operator()(const RandomVariable& x) const { QL_FAIL("unexpected call to anyGetter (RandomVariable)"); }
+    QuantLib::ext::any operator()(const RandomVariable& x) const {
+        QL_FAIL("unexpected call to anyGetter (RandomVariable)");
+    }
     QuantLib::ext::any operator()(const EventVec& x) const { return x.value; }
     QuantLib::ext::any operator()(const IndexVec& x) const { return x.value; }
     QuantLib::ext::any operator()(const CurrencyVec& x) const { return x.value; }
@@ -113,168 +115,166 @@ void ScriptedInstrumentPricingEngineCG::buildComputationGraph(const bool stickyC
 
     // TODO add sticky close-out states
 
-    if (cgVersion_ != model_->cgVersion() || (stickyCloseOutDateRun && !cgForStickyCloseOutDateRunIsBuilt_)) {
+    if (cgVersion_ == model_->cgVersion() && (!stickyCloseOutDateRun || cgForStickyCloseOutDateRunIsBuilt_))
+        return;
 
-        cgForStickyCloseOutDateRunIsBuilt_ = stickyCloseOutDateRun;
+    cgForStickyCloseOutDateRunIsBuilt_ = stickyCloseOutDateRun;
 
-        auto g = model_->computationGraph();
+    auto g = model_->computationGraph();
 
-        // clear NPVMem() regression coefficients
+    // clear NPVMem() regression coefficients
 
-        model_->resetNPVMem();
+    model_->resetNPVMem();
 
-        // set up copy of initial context to run the cg builder against
+    // set up copy of initial context to run the cg builder against
 
-        workingContext_ = QuantLib::ext::make_shared<Context>(*context_);
+    workingContext_ = QuantLib::ext::make_shared<Context>(*context_);
 
-        // set TODAY in the context
+    // set TODAY in the context
 
-        checkDuplicateName(workingContext_, "TODAY");
-        Date referenceDate = model_->referenceDate();
-        workingContext_->scalars["TODAY"] = EventVec{model_->size(), referenceDate};
-        workingContext_->constants.insert("TODAY");
+    checkDuplicateName(workingContext_, "TODAY");
+    Date referenceDate = model_->referenceDate();
+    workingContext_->scalars["TODAY"] = EventVec{model_->size(), referenceDate};
+    workingContext_->constants.insert("TODAY");
 
-        // set variables from initial context
+    // set variables from initial context
 
-        for (auto const& v : workingContext_->scalars) {
-            if (v.second.which() == ValueTypeWhich::Number) {
-                auto r = boost::get<RandomVariable>(v.second);
+    for (auto const& v : workingContext_->scalars) {
+        if (v.second.which() == ValueTypeWhich::Number) {
+            auto r = boost::get<RandomVariable>(v.second);
+            QL_REQUIRE(r.deterministic(), "ScriptedInstrumentPricingEngineCG::calculate(): expected variable '"
+                                              << v.first << "' from initial context to be deterministic, got " << r);
+            g->setVariable(v.first + "_0", cg_const(*g, r.at(0)));
+        }
+    }
+
+    for (auto const& a : workingContext_->arrays) {
+        for (Size i = 0; i < a.second.size(); ++i) {
+            if (a.second[i].which() == ValueTypeWhich::Number) {
+                auto r = boost::get<RandomVariable>(a.second[i]);
                 QL_REQUIRE(r.deterministic(), "ScriptedInstrumentPricingEngineCG::calculate(): expected variable '"
-                                                  << v.first << "' from initial context to be deterministic, got "
-                                                  << r);
-                g->setVariable(v.first + "_0", cg_const(*g, r.at(0)));
+                                                  << a.first << "[" << i
+                                                  << "]' from initial context to be deterministic, got " << r);
+                g->setVariable(a.first + "_" + std::to_string(i), cg_const(*g, r.at(0)));
             }
         }
+    }
 
-        for (auto const& a : workingContext_->arrays) {
-            for (Size i = 0; i < a.second.size(); ++i) {
-                if (a.second[i].which() == ValueTypeWhich::Number) {
-                    auto r = boost::get<RandomVariable>(a.second[i]);
-                    QL_REQUIRE(r.deterministic(), "ScriptedInstrumentPricingEngineCG::calculate(): expected variable '"
-                                                      << a.first << "[" << i
-                                                      << "]' from initial context to be deterministic, got " << r);
-                    g->setVariable(a.first + "_" + std::to_string(i), cg_const(*g, r.at(0)));
-                }
+    // build graph
+
+    ComputationGraphBuilder cgBuilder(*g, getRandomVariableOpLabels(), ast_, workingContext_, model_,
+                                      minimalModelCcys_);
+    cgBuilder.run(generateAdditionalResults_, includePastCashflows_, script_, interactive_);
+    cgVersion_ = model_->cgVersion();
+    DLOG("Built computation graph version " << cgVersion_ << " size is " << g->size());
+    TLOGGERSTREAM(ssaForm(*g, getRandomVariableOpLabels()));
+    keepNodes_ = cgBuilder.keepNodes();
+    payLogEntries_ = cgBuilder.payLogEntries();
+
+    // clear stored base model params
+
+    haveBaseValues_ = false;
+
+    // populate exposure results
+
+    if (tradeExposure != nullptr) {
+
+        auto s = workingContext_->arrays.find("_AMC_SimDates");
+        QL_REQUIRE(s != workingContext_->arrays.end(),
+                   "ScriptedInstrumentPricingEngineCG::calculate(): did not find amc exposure result _AMC_NPV");
+
+        tradeExposure->clear();
+        tradeExposure->resize(s->second.size() + 1);
+
+        if (amcCgComponents_.empty()) {
+
+            for (Size i = 0; i < tradeExposure->size(); ++i) {
+
+                Date valDate = i == 0 ? model_->referenceDate() : boost::get<EventVec>(s->second[i - 1]).value;
+                std::string name = i == 0 ? npv_ : "_AMC_NPV_" + std::to_string(i - 1);
+
+                std::size_t n = g->variable(name, ComputationGraph::VarDoesntExist::Nan);
+                QL_REQUIRE(n != ComputationGraph::nan,
+                           "ScriptedInstrumentPricingEngineCG::buildComputationGraph(): variable "
+                               << name << " (arrays are written with suffix _{index}) not found.");
+
+                (*tradeExposure)[i].componentPathValues.resize(1);
+                (*tradeExposure)[i].componentPathValues[0] = n;
+
+                (*tradeExposure)[i].regressors = model_->npvRegressors(valDate, minimalModelCcys_);
             }
-        }
 
-        // build graph
+        } else {
 
-        ComputationGraphBuilder cgBuilder(*g, getRandomVariableOpLabels(), ast_, workingContext_, model_,
-                                          minimalModelCcys_);
-        cgBuilder.run(generateAdditionalResults_, includePastCashflows_, script_, interactive_);
-        cgVersion_ = model_->cgVersion();
-        DLOG("Built computation graph version " << cgVersion_ << " size is " << g->size());
-        TLOGGERSTREAM(ssaForm(*g, getRandomVariableOpLabels()));
-        keepNodes_ = cgBuilder.keepNodes();
-        payLogEntries_ = cgBuilder.payLogEntries();
+            QL_REQUIRE(!amcCgTargetValue_.empty(),
+                       "ScriptedInstrumentPricingEngineCG::buildComputationGraph(): non-empty components vector "
+                       "found, but no targetValue specification.");
 
-        // clear stored base model params
+            std::string effectiveAmcCgTargetDerivative =
+                amcCgTargetDerivative_.empty() ? amcCgTargetValue_ : amcCgTargetDerivative_;
 
-        haveBaseValues_ = false;
+            for (Size i = 0; i < tradeExposure->size(); ++i) {
 
-        // populate exposure results
-
-        if (tradeExposure != nullptr) {
-
-            auto s = workingContext_->arrays.find("_AMC_SimDates");
-            QL_REQUIRE(s != workingContext_->arrays.end(),
-                       "ScriptedInstrumentPricingEngineCG::calculate(): did not find amc exposure result _AMC_NPV");
-
-            tradeExposure->clear();
-            tradeExposure->resize(s->second.size() + 1);
-
-            if (amcCgComponents_.empty()) {
-
-                for (Size i = 0; i < tradeExposure->size(); ++i) {
-
-                    Date valDate = i == 0 ? model_->referenceDate() : boost::get<EventVec>(s->second[i - 1]).value;
-                    std::string name = i == 0 ? npv_ : "_AMC_NPV_" + std::to_string(i - 1);
-
-                    std::size_t n = g->variable(name, ComputationGraph::VarDoesntExist::Nan);
+                if (i == 0) {
+                    (*tradeExposure)[i].componentPathValues.resize(1);
+                    std::size_t n = g->variable(npv_, ComputationGraph::VarDoesntExist::Nan);
                     QL_REQUIRE(n != ComputationGraph::nan,
                                "ScriptedInstrumentPricingEngineCG::buildComputationGraph(): variable "
-                                   << name << " (arrays are written with suffix _{index}) not found.");
+                                   << npv_ << " not found.");
 
                     (*tradeExposure)[i].componentPathValues.resize(1);
                     (*tradeExposure)[i].componentPathValues[0] = n;
 
-                    (*tradeExposure)[i].regressors = model_->npvRegressors(valDate, minimalModelCcys_);
+                    (*tradeExposure)[i].regressors = model_->npvRegressors(model_->referenceDate(), minimalModelCcys_);
+                    continue;
                 }
 
-            } else {
+                (*tradeExposure)[i].componentPathValues.resize(amcCgComponents_.size());
 
-                QL_REQUIRE(!amcCgTargetValue_.empty(),
-                           "ScriptedInstrumentPricingEngineCG::buildComputationGraph(): non-empty components vector "
-                           "found, but no targetValue specification.");
-
-                std::string effectiveAmcCgTargetDerivative =
-                    amcCgTargetDerivative_.empty() ? amcCgTargetValue_ : amcCgTargetDerivative_;
-
-                for (Size i = 0; i < tradeExposure->size(); ++i) {
-
-                    if (i == 0) {
-                        (*tradeExposure)[i].componentPathValues.resize(1);
-                        std::size_t n = g->variable(npv_, ComputationGraph::VarDoesntExist::Nan);
-                        QL_REQUIRE(n != ComputationGraph::nan,
-                                   "ScriptedInstrumentPricingEngineCG::buildComputationGraph(): variable "
-                                       << npv_ << " not found.");
-
-                        (*tradeExposure)[i].componentPathValues.resize(1);
-                        (*tradeExposure)[i].componentPathValues[0] = n;
-
-                        (*tradeExposure)[i].regressors =
-                            model_->npvRegressors(model_->referenceDate(), minimalModelCcys_);
-                        continue;
-                    }
-
-                    (*tradeExposure)[i].componentPathValues.resize(amcCgComponents_.size());
-
-                    for (Size c = 0; c < amcCgComponents_.size(); ++c) {
-                        std::size_t n = g->variable(amcCgComponents_[c] + "_" + std::to_string(i - 1),
-                                                    ComputationGraph::VarDoesntExist::Nan);
-                        QL_REQUIRE(n != ComputationGraph::nan,
-                                   "ScriptedInstrumentPricingEngineCG::buildComputationGraph(): array "
-                                       << amcCgComponents_[c] << " at index " << i << " not found.");
-                        (*tradeExposure)[i].componentPathValues[c] = n;
-                    }
-
-                    std::size_t n = g->variable(amcCgTargetValue_ + "_" + std::to_string(i - 1),
+                for (Size c = 0; c < amcCgComponents_.size(); ++c) {
+                    std::size_t n = g->variable(amcCgComponents_[c] + "_" + std::to_string(i - 1),
                                                 ComputationGraph::VarDoesntExist::Nan);
                     QL_REQUIRE(n != ComputationGraph::nan,
                                "ScriptedInstrumentPricingEngineCG::buildComputationGraph(): array "
-                                   << amcCgTargetValue_ << " at index " << (i + 1) << " not found.");
-                    (*tradeExposure)[i].targetConditionalExpectation = n;
-
-                    n = g->variable(effectiveAmcCgTargetDerivative + "_" + std::to_string(i - 1),
-                                    ComputationGraph::VarDoesntExist::Nan);
-                    QL_REQUIRE(n != ComputationGraph::nan,
-                               "ScriptedInstrumentPricingEngineCG::buildComputationGraph(): array "
-                                   << effectiveAmcCgTargetDerivative << " at index " << i << " not found.");
-                    (*tradeExposure)[i + 1].targetConditionalExpectationDerivative = n;
+                                   << amcCgComponents_[c] << " at index " << i << " not found.");
+                    (*tradeExposure)[i].componentPathValues[c] = n;
                 }
+
+                std::size_t n =
+                    g->variable(amcCgTargetValue_ + "_" + std::to_string(i - 1), ComputationGraph::VarDoesntExist::Nan);
+                QL_REQUIRE(n != ComputationGraph::nan,
+                           "ScriptedInstrumentPricingEngineCG::buildComputationGraph(): array "
+                               << amcCgTargetValue_ << " at index " << (i + 1) << " not found.");
+                (*tradeExposure)[i].targetConditionalExpectation = n;
+
+                n = g->variable(effectiveAmcCgTargetDerivative + "_" + std::to_string(i - 1),
+                                ComputationGraph::VarDoesntExist::Nan);
+                QL_REQUIRE(n != ComputationGraph::nan,
+                           "ScriptedInstrumentPricingEngineCG::buildComputationGraph(): array "
+                               << effectiveAmcCgTargetDerivative << " at index " << i << " not found.");
+                (*tradeExposure)[i + 1].targetConditionalExpectationDerivative = n;
             }
         }
+    }
 
-        if (tradeExposureMetaInfo != nullptr) {
+    if (tradeExposureMetaInfo != nullptr) {
 
-            tradeExposureMetaInfo->hasVega = true;
-            tradeExposureMetaInfo->relevantCurrencies = minimalModelCcys_;
+        tradeExposureMetaInfo->hasVega = true;
+        tradeExposureMetaInfo->relevantCurrencies = minimalModelCcys_;
 
-            for (auto const& ccy : minimalModelCcys_) {
+        for (auto const& ccy : minimalModelCcys_) {
+            tradeExposureMetaInfo->relevantModelParameters.insert(
+                ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, ccy));
+            if (ccy != model_->baseCcy()) {
                 tradeExposureMetaInfo->relevantModelParameters.insert(
-                    ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, ccy));
+                    ModelCG::ModelParameter(ModelCG::ModelParameter::Type::logFxSpot, ccy));
+            }
+            if (tradeExposureMetaInfo->hasVega) {
+                tradeExposureMetaInfo->relevantModelParameters.insert(
+                    ModelCG::ModelParameter(ModelCG::ModelParameter::Type::lgm_zeta, ccy));
                 if (ccy != model_->baseCcy()) {
                     tradeExposureMetaInfo->relevantModelParameters.insert(
-                        ModelCG::ModelParameter(ModelCG::ModelParameter::Type::logFxSpot, ccy));
-                }
-                if (tradeExposureMetaInfo->hasVega) {
-                    tradeExposureMetaInfo->relevantModelParameters.insert(
-                        ModelCG::ModelParameter(ModelCG::ModelParameter::Type::lgm_zeta, ccy));
-                    if (ccy != model_->baseCcy()) {
-                        tradeExposureMetaInfo->relevantModelParameters.insert(
-                            ModelCG::ModelParameter(ModelCG::ModelParameter::Type::fxbs_sigma, ccy));
-                    }
+                        ModelCG::ModelParameter(ModelCG::ModelParameter::Type::fxbs_sigma, ccy));
                 }
             }
         }
