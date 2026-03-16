@@ -39,7 +39,7 @@ def buildSwap(trade_id, ccy, isPayer, notional, start, term, rate, spread,
     trade.setId(trade_id)
     return trade;
 
-buildSwap("1_Swap_EUR", "EUR", True, 10000000.0, 0, 10, 0.03, 0.00, "1Y",
+swap0 = buildSwap("1_Swap_EUR", "EUR", True, 10000000.0, 0, 10, 0.03, 0.00, "1Y",
           "30/360", "6M", "A360", "EUR-EURIBOR-6M")
 
 def buildEuropeanSwaption(trade_id, longShort, ccy, isPayer, notional, start,
@@ -80,8 +80,9 @@ def buildEuropeanSwaption(trade_id, longShort, ccy, isPayer, notional, start,
     trade.setId(trade_id)
     return trade;
 
-buildEuropeanSwaption("5_Swaption_EUR", "Long", "EUR", True, 1000000.0, 10, 10,
+swap1 = buildEuropeanSwaption("5_Swaption_EUR", "Long", "EUR", True, 1000000.0, 10, 10,
                       0.03, 0.00, "1Y", "30/360", "6M", "A360", "EUR-EURIBOR-6M")
+ql.CallableSwap(ql.Envelope("CP"), swap0, swap1)
 
 def buildBermudanSwaption(trade_id, longShort, ccy, isPayer, notional,
                           exercises, start, term, rate, spread, fixedFreq,
