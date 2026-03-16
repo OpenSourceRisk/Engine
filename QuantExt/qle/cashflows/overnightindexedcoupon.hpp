@@ -44,10 +44,13 @@
 #include <qle/cashflows/overnightindexedcouponbase.hpp>
 #include <ql/cashflows/couponpricer.hpp>
 
+namespace QuantLib {
+class OptionletVolatilityStructure;
+}
+
 namespace QuantExt {
 
 using namespace QuantLib;
-class QuantLib::OptionletVolatilityStructure;
 class OvernightIndexedCouponPricer;
 
 /** Overnight (compounding) coupon.
