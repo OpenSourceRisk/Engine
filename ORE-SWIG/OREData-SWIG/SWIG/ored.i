@@ -54,6 +54,7 @@
 %include ored_marketdatum.i
 %include ored_parsers.i
 %include ored_portfolio.i
+%include ored_portfolio2.i
 %include ored_reports.i
 %include ored_referencedatamanager.i
 %include ored_todaysmarketparameters.i
