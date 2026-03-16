@@ -666,16 +666,19 @@ void CrossAssetModelBuilder::buildModel() const {
 
         DLOG("FX Calibration " << i);
 
+        auto bsBuilder = QuantLib::ext::dynamic_pointer_cast<ore::data::FxBsBuilder>(fxBuilder[i]);
+        auto lvBuilder = QuantLib::ext::dynamic_pointer_cast<ore::data::LocalVolModelBuilder>(fxBuilder[i]);
+
         if (!fxBuilder[i]->requiresRecalibration() &&
             recalibratedCurrencies.find(fxParametrizations[i]->currency().code()) == recalibratedCurrencies.end() &&
             recalibratedCurrencies.find(domesticCcy.code()) == recalibratedCurrencies.end() &&
-            !fxLocalVolHandle[i].empty()) {
+            (!lvBuilder || !fxLocalVolHandle[i].empty())) {
             DLOG("FX Calibration "
                  << i << " skipped, since neither fx builder nor ir models in dom / for ccy were recalibrated.");
             continue;
         }
 
-        if (auto builder = QuantLib::ext::dynamic_pointer_cast<ore::data::FxBsBuilder>(fxBuilder[i])) {
+        if (bsBuilder) {
 
             auto fx = QuantLib::ext::dynamic_pointer_cast<FxBsData>(config_->fxConfigs()[i]);
 
@@ -720,26 +723,27 @@ void CrossAssetModelBuilder::buildModel() const {
                     }
                 }
             }
-            builder->setCalibrationDone();
+            bsBuilder->setCalibrationDone();
 
-        } else if (auto builder = QuantLib::ext::dynamic_pointer_cast<ore::data::LocalVolModelBuilder>(fxBuilder[i])) {
+        } else if (lvBuilder) {
 
             auto config = QuantLib::ext::dynamic_pointer_cast<FxLvData>(config_->fxConfigs()[i]);
 
             if (config->stochasticRatesCorrection() == "None") {
 
                 fxLocalVolHandle[i].linkTo(
-                    *builder->model()->generalizedBlackScholesProcesses().front()->localVolatility());
+                    *lvBuilder->model()->generalizedBlackScholesProcesses().front()->localVolatility());
 
             } else if (config->stochasticRatesCorrection() == "SimpleMc") {
 
-                Real maxTime = irDiscountCurves[0]->timeFromReference(*builder->simulationDates().rbegin());
+                Real maxTime = irDiscountCurves[0]->timeFromReference(*lvBuilder->simulationDates().rbegin());
 
                 fxLocalVolHandle[i].linkTo(QuantLib::ext::make_shared<SimpleMcLocalVolStochasticRatesCorrection>(
-                    builder->model()->generalizedBlackScholesProcesses().front()->blackVolatility(),
-                    builder->model()->generalizedBlackScholesProcesses().front()->localVolatility(), model_->irModel(0),
-                    model_->irModel(i + 1), model_->fxModel(i), irDiscountCurves[0], irDiscountCurves[i + 1],
-                    model_->correlation(), maxTime, config->simpleMcParameters().calibrationMoneynessMin(),
+                    lvBuilder->model()->generalizedBlackScholesProcesses().front()->blackVolatility(),
+                    lvBuilder->model()->generalizedBlackScholesProcesses().front()->localVolatility(),
+                    model_->irModel(0), model_->irModel(i + 1), model_->fxModel(i), irDiscountCurves[0],
+                    irDiscountCurves[i + 1], model_->correlation(), maxTime,
+                    config->simpleMcParameters().calibrationMoneynessMin(),
                     config->simpleMcParameters().calibrationMoneynessMax(),
                     config->simpleMcParameters().timeStepsPerYear(), config->simpleMcParameters().nStrikes(),
                     config->simpleMcParameters().samples(), config->simpleMcParameters().d2CdK2Threshold(),
