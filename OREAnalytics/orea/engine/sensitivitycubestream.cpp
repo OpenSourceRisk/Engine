@@ -99,7 +99,7 @@ SensitivityRecord SensitivityCubeStream::next() {
     if (emitThetaNext_) {
         emitThetaNext_ = false;
         auto thetaPeriod = cubes_[currentCubeIdx_]->thetaPeriod();
-        sr.key_1 = RiskFactorKey(RiskFactorKey::KeyType::Theta, sr.currency, 0);
+        sr.key_1 = RiskFactorKey(RiskFactorKey::KeyType::Theta, "", 0);
         sr.desc_1 = ore::data::to_string(thetaPeriod);
         sr.shift_1 = QuantExt::periodToTime(thetaPeriod);
         sr.delta = cubes_[currentCubeIdx_]->theta(sr.tradeId);
