@@ -418,8 +418,7 @@ SwaptionModel SwaptionEngineBuilder::model(const string& id, const std::vector<s
 
         auto calib = ext::make_shared<CrossAssetModelBuilder>(
             market(),
-            ext::make_shared<CrossAssetModelData>(irData, fxData, camCorr, tolerance, "LGM",
-                                                  CrossAssetModel::Discretization::Exact,
+            ext::make_shared<CrossAssetModelData>(irData, fxData, camCorr, tolerance, "LGM", discretization_,
                                                   QuantLib::SalvagingAlgorithm::Spectral),
             configurationInCcy, configurationXois, configurationXois, configurationInCcy, configurationInCcy,
             configurationXois, dontCalibrate, continueOnCalibrationError, referenceCalibrationGrid, id,
@@ -640,8 +639,7 @@ QuantLib::ext::shared_ptr<PricingEngine> CamMCCgSwaptionEngineBuilder::engineImp
     } while (d < maxDate);
 
     return buildMcCgEngine(cam, currencies, discountCurves, fxSpots, irIndices, simulationDates, this);
-
-} // LgmMc engineImpl()
+}
 
 QuantLib::ext::shared_ptr<PricingEngine> AmcCgSwaptionEngineBuilder::engineImpl(
     const string& id, const std::vector<string>& keys, const std::vector<Date>& dates,

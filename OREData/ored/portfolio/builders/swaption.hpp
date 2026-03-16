@@ -54,12 +54,14 @@ public:
                         const std::vector<Date>& maturities, const std::vector<std::vector<Real>>& strikes,
                         const std::vector<std::vector<Real>>& fxStrikes, const bool isAmerican) const;
 
+protected:
+    CrossAssetModel::Discretization discretization_ = CrossAssetModel::Discretization::Exact;
+
 private:
     string keyImpl(const string& id, const std::vector<string>& keys, const std::vector<Date>& dates,
                    const std::vector<Date>& maturities, const std::vector<std::vector<Real>>& strikes,
                    const std::vector<std::vector<Real>>& fxStrikes, const bool isAmerican,
                    const std::string& discountCurve, const std::string& securitySpread, const SwaptionModel&) override;
-
     bool idBasedKey_ = true;
 };
 
@@ -166,7 +168,9 @@ private:
 // CAM MCCG engine
 class CamMCCgSwaptionEngineBuilder final : public CamSwaptionEngineBuilder {
 public:
-    CamMCCgSwaptionEngineBuilder() : CamSwaptionEngineBuilder("MCCG") {}
+    CamMCCgSwaptionEngineBuilder() : CamSwaptionEngineBuilder("MCCG") {
+        discretization_ = CrossAssetModel::Discretization::Euler;
+    }
 
 private:
     QuantLib::ext::shared_ptr<PricingEngine>
