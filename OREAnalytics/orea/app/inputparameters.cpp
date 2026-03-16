@@ -73,10 +73,10 @@ void SetupVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputPara
     }
     // If basecurrency is still empty, default to USD
     if (baseCurrency_.empty()) {
+        baseCurrency_ = "USD";
         StructuredMessage(StructuredMessage::Category::Warning, StructuredMessage::Group::Input,
                           "Defaulting BaseCurrency to " + baseCurrency_,
                           std::pair<std::string, std::string>({"exceptionType", "No BaseCurrency provided"}));
-        baseCurrency_ = "USD";
     }
 
     // Reference Data Manager loading - must come before curve config loading
