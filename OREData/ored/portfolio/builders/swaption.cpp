@@ -87,7 +87,7 @@ buildMcCgEngine(const Handle<CrossAssetModel>& model, const std::vector<std::str
         discountCurves, fxSpots, irIndices,
         std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>{},
         std::vector<std::string>{}, std::vector<std::string>{}, std::set<Date>{});
-    return QuantLib::ext::make_shared<AmcCgMultiLegOptionEngine>(currencies, camCg, std::vector<Date>{}, false);
+    return QuantLib::ext::make_shared<AmcCgMultiLegOptionEngine>(camCg, std::vector<Date>{}, false);
 }
 
 } // namespace
@@ -618,11 +618,8 @@ QuantLib::ext::shared_ptr<PricingEngine> AmcCgSwaptionEngineBuilder::engineImpl(
     DLOG("Building AMC-CG Swaption engine for trade " << id << " from external CAM");
     QL_REQUIRE(keys.size() == 1, "AmcCgSwapptionEngineBuilder::engingImpl(): multiple ccys are not supported. TODO.");
     QL_REQUIRE(modelCg_ != nullptr, "AmcCgSwapEngineBuilder::engineImpl: modelcg is null");
-    QuantLib::ext::shared_ptr<IborIndex> index;
-    std::string ccy = tryParseIborIndex(keys.front(), index) ? index->currency().code() : keys.front();
     return QuantLib::ext::make_shared<AmcCgMultiLegOptionEngine>(
-        std::vector<std::string>{ccy}, modelCg_, simulationDates_,
-        parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")));
+        modelCg_, simulationDates_, parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")));
 }
 
 } // namespace data
