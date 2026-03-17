@@ -116,9 +116,6 @@ private:
         std::size_t flowNode;
     };
 
-    // convert a date to a time w.r.t. the valuation date
-    Real time(const Date& d) const;
-
     // create the info for a given flow
     CashflowInfo createCashflowInfo(QuantLib::ext::shared_ptr<QuantLib::CashFlow> flow, const std::string& payCcy,
                                     bool payer, Size legNo, Size cfNo) const;

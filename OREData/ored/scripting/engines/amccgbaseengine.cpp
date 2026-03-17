@@ -87,10 +87,6 @@ AmcCgBaseEngine::AmcCgBaseEngine(const QuantLib::ext::shared_ptr<ModelCG>& model
     : modelCg_(modelCg), amcEnabled_(true), simulationDates_(simulationDates),
       reevaluateExerciseInStickyCloseOutDateRun_(reevaluateExerciseInStickyCloseOutDateRun) {}
 
-Real AmcCgBaseEngine::time(const Date& d) const {
-    return QuantLib::ActualActual(QuantLib::ActualActual::ISDA).yearFraction(modelCg_->referenceDate(), d);
-}
-
 AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext::shared_ptr<QuantLib::CashFlow> flow,
                                                                   const std::string& payCcy, bool payer, Size legNo,
                                                                   Size cfNo) const {
