@@ -180,7 +180,7 @@ protected:
         auto config = configuration(MarketContext::pricing);
 
         Handle<IborIndex> hIndex = market_->iborIndex(index, config);
-        auto smile = parseBool(engineParameter("WithSmile", {}, false, "false"));
+        auto isFlatVol = parseBool(engineParameter("withFlatVol", {}, false, "false"));
         QL_REQUIRE(!hIndex.empty(), "RateDigitalOptionEngineBuilder: could not find index " << index);
         ext::shared_ptr<IborIndex> iborIndex = hIndex.currentLink();
 
@@ -192,7 +192,7 @@ protected:
         DiscountFactor dfPayment = discountCurve->discount(paymentDate);
 
         Handle<OptionletVolatilityStructure> ovs = market_->capFloorVol(index, config);
-        if (!smile) {
+        if (isFlatVol) {
             // Replace market vol with a flat zero surface → digital valued at intrinsic
             ovs = Handle<OptionletVolatilityStructure>(
                 ext::make_shared<ConstantOptionletVolatility>(

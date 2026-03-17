@@ -95,8 +95,8 @@ Real RangeAccrualLegEngineBuilder::correlation(const std::string& index) {
     return parseReal(engineParameter("Correlation", {}, false, "1.0"));
 }
 
-bool RangeAccrualLegEngineBuilder::withSmile(const std::string& index) {
-    return parseBool(engineParameter("WithSmile", {}, false, "false"));
+bool RangeAccrualLegEngineBuilder::withFlatVol(const std::string& index) {
+    return parseBool(engineParameter("withFlatVol", {}, false, "false"));
 }
 
 bool RangeAccrualLegEngineBuilder::byCallSpread(const std::string& index) {
@@ -110,13 +110,13 @@ Real RangeAccrualLegEngineBuilder::flatVol(const std::string& index) {
 QuantLib::ext::shared_ptr<FloatingRateCouponPricer> RangeAccrualLegEngineBuilder::buildPricer(
     const std::string& index, const Date& accrualStartDate, const Date& accrualEndDate) {
     Real corr = correlation(index);
-    bool smile = withSmile(index);
+    bool isFlatVol = withFlatVol(index);
     bool callSpread = byCallSpread(index);
     Handle<SwaptionVolatilityStructure> ovs = swaptionVolatilityStructure(index);
     Date expiryDate = std::max(accrualStartDate, ovs->referenceDate() + 1);
     ext::shared_ptr<SmileSection>smileOnExpiry;
     ext::shared_ptr<SmileSection>smileOnPayment;
-    if(smile){
+    if(!isFlatVol){
         // Use at least 1 day after reference date to avoid t=0 smile section
         // (stddev = vol * sqrt(0) = 0, then vol = stddev / sqrt(0) = NaN)
         smileOnExpiry = ovs->smileSection(expiryDate, true);
@@ -135,7 +135,7 @@ QuantLib::ext::shared_ptr<FloatingRateCouponPricer> RangeAccrualLegEngineBuilder
 
     // The BGM pricer interprets SmileSection vols as lognormal. If the swaption
     // surface is in Normal vol, we must convert via Bachelier→Black inversion.
-    if (smile && ovs->volatilityType() == QuantLib::Normal) {
+    if (!isFlatVol && ovs->volatilityType() == QuantLib::Normal) {
         auto configuration = this->configuration(MarketContext::pricing);
         auto iborIndex = market_->iborIndex(index, configuration);
         // Use per-section forwards: the conversion should reflect the forward
@@ -149,7 +149,7 @@ QuantLib::ext::shared_ptr<FloatingRateCouponPricer> RangeAccrualLegEngineBuilder
     }
 
     return QuantLib::ext::make_shared<RangeAccrualPricerByBgm>(
-        corr, smileOnExpiry, smileOnPayment, smile, callSpread);
+        corr, smileOnExpiry, smileOnPayment, !isFlatVol, callSpread);
 }
 
 } // namespace data
