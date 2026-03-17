@@ -81,6 +81,7 @@ buildMcCgEngine(const Handle<CrossAssetModel>& model, const std::vector<std::str
                 const std::vector<Handle<YieldTermStructure>>& discountCurves,
                 const std::vector<Handle<Quote>>& fxSpots,
                 const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
+                const std::vector<std::string> indices, const std::vector<std::string> indexCurrencies,
                 const std::set<Date> simulationDates, const EngineBuilder* builder) {
     Model::Params mcParams;
     mcParams.seed = parseReal(builder->engineParameter("Training.Seed", {}, true));
@@ -100,10 +101,9 @@ buildMcCgEngine(const Handle<CrossAssetModel>& model, const std::vector<std::str
     auto camCg = QuantLib::ext::make_shared<GaussianCamCG>(
         model, parseInteger(builder->engineParameter("Training.Samples", {}, true, std::string())), currencies,
         discountCurves, fxSpots, irIndices,
-        std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>{},
-        std::vector<std::string>{}, std::vector<std::string>{}, simulationDates,
-        builder->engineFactory()->iborFallbackConfig(), std::vector<std::string>{}, std::vector<Date>{},
-        parseInteger(builder->engineParameter("TimeStepsPerYear", {}, true)));
+        std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>{}, indices, indexCurrencies,
+        simulationDates, builder->engineFactory()->iborFallbackConfig(), std::vector<std::string>{},
+        std::vector<Date>{}, parseInteger(builder->engineParameter("TimeStepsPerYear", {}, true)));
 
     auto rt = builder->globalParameters().find("RunType");
     std::string runType = rt != builder->globalParameters().end() ? rt->second : "<<no run type set>>";
@@ -604,6 +604,7 @@ QuantLib::ext::shared_ptr<PricingEngine> CamMCCgSwaptionEngineBuilder::engineImp
     std::vector<Handle<YieldTermStructure>> discountCurves;
     std::vector<Handle<Quote>> fxSpots;
     std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>> irIndices;
+    std::vector<std::string> indices, indexCurrencies;
 
     for (Size i = 0; i < keys.size(); ++i) {
 
@@ -626,8 +627,11 @@ QuantLib::ext::shared_ptr<PricingEngine> CamMCCgSwaptionEngineBuilder::engineImp
                 yts, market_->securitySpread(securitySpread, configuration(MarketContext::pricing))));
         discountCurves.push_back(yts);
 
-        if (i > 0)
+        if (i > 0) {
             fxSpots.push_back(market_->fxRate(ccy + currencies.front(), configuration(MarketContext::pricing)));
+            indices.push_back("FX-GENERIC-" + currencies[i] + "-" + currencies[0]);
+            indexCurrencies.push_back(currencies[i]);
+        }
     }
 
     std::set<Date> simulationDates;
@@ -638,7 +642,8 @@ QuantLib::ext::shared_ptr<PricingEngine> CamMCCgSwaptionEngineBuilder::engineImp
         simulationDates.insert(d);
     } while (d < maxDate);
 
-    return buildMcCgEngine(cam, currencies, discountCurves, fxSpots, irIndices, simulationDates, this);
+    return buildMcCgEngine(cam, currencies, discountCurves, fxSpots, irIndices, indices, indexCurrencies,
+                           simulationDates, this);
 }
 
 QuantLib::ext::shared_ptr<PricingEngine> AmcCgSwaptionEngineBuilder::engineImpl(
