@@ -16,11 +16,12 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 #include "onindexcouponutils.hpp"
-#include <oret/util/fileutilities.hpp>
 #include <boost/test/unit_test.hpp>
-#include <fstream>
+#include <oret/util/fileutilities.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <qle/termstructures/interpolateddiscountcurve2.hpp>
+#include <format>
+#include <fstream>
 
 namespace QuantExt {
 
