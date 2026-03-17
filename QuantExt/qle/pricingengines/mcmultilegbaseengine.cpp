@@ -239,6 +239,7 @@ void McMultiLegBaseEngine::calculateModels(
                                              simulationTimes);
 
             if (pathValueRebate.initialised()) {
+                // FIXME do we need this? the pathValueRebate is known at time t
                 regModelRebate[counter] = McRegressionModel(
                     *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
                     regressorModel_, regressionVarianceCutoff_, regressionMaxSimTimesIr_, regressionMaxSimTimesFx_,
