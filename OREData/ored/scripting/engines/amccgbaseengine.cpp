@@ -1016,11 +1016,15 @@ void AmcCgBaseEngine::calculate() const {
 
         if (useCachedSensis_) {
 
+            baseNpv_ = npvValue_;
+
             // extract sensis and store them
 
             std::vector<RandomVariable> derivatives(g->size(), RandomVariable(modelCg_->size(), 0.0));
             derivatives[npv_] = RandomVariable(modelCg_->size(), 1.0);
-            backwardDerivatives(*g, values, derivatives, grads_, RandomVariable::deleter, keepNodes);
+            backwardDerivatives(*g, values, derivatives, grads_, RandomVariable::deleter, keepNodes, ops_,
+                                opNodeRequirements_, keepNodes, RandomVariableOpCode::ConditionalExpectation,
+                                ops_[RandomVariableOpCode::ConditionalExpectation]);
 
             sensis_.resize(baseModelParams_.size());
             for (Size i = 0; i < baseModelParams_.size(); ++i) {
@@ -1042,8 +1046,8 @@ void AmcCgBaseEngine::calculate() const {
             modelParams.push_back(std::make_pair(p.node(), p.eval()));
         }
 
-        double npv = npvValue_;
-        DLOG("computing npv using baseNpv " << npvValue_ << " and sensis.");
+        double npv = baseNpv_;
+        DLOG("computing npv using baseNpv " << baseNpv_ << " and sensis.");
 
         for (Size i = 0; i < baseModelParams_.size(); ++i) {
             QL_REQUIRE(modelParams[i].first == baseModelParams_[i].first,
