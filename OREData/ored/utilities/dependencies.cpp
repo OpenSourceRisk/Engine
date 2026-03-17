@@ -64,7 +64,8 @@ CurveSpec::CurveType marketObjectToCurveType(MarketObject mo) {
 }
 
 string marketObjectToCurveSpec(const MarketObject& mo, const string& name, const string& baseCcy,
-                               const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs) {
+                               const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
+                               bool configFallback) {
     auto ct = marketObjectToCurveType(mo);
     CurveSpec* cs = nullptr;
 
@@ -92,7 +93,7 @@ string marketObjectToCurveSpec(const MarketObject& mo, const string& name, const
         string key = name;
         // if the key is an index and we don't have a cc for that, fall back to the ccy
         QuantLib::ext::shared_ptr<IborIndex> ind;
-        if (tryParseIborIndex(name, ind) && !curveConfigs->hasSwaptionVolCurveConfig(name)) {
+        if (tryParseIborIndex(name, ind) && !curveConfigs->hasSwaptionVolCurveConfig(name) && configFallback) {
             key = ind->currency().code();
         }
         cs = new SwaptionVolatilityCurveSpec(key, key);
@@ -125,7 +126,7 @@ string marketObjectToCurveSpec(const MarketObject& mo, const string& name, const
         string key = name;
         // if the key is an index and we don't have a cc for that, fall back to the ccy
         QuantLib::ext::shared_ptr<IborIndex> ind;
-        if (tryParseIborIndex(name, ind) && !curveConfigs->hasCapFloorVolCurveConfig(name)) {
+        if (tryParseIborIndex(name, ind) && !curveConfigs->hasCapFloorVolCurveConfig(name) && configFallback) {
             key = ind->currency().code();
         }
         cs = new CapFloorVolatilityCurveSpec(key, key);

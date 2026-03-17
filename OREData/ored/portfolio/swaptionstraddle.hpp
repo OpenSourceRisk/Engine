@@ -45,8 +45,8 @@ public:
     // Inspectors
     const OptionData& optionData() const { return optionData_; }
     const std::vector<LegData>& legData() const { return legData_; }
-    const QuantLib::ext::shared_ptr<Swaption>& payerSwaption() const { return payerSwaption_; }
-    const QuantLib::ext::shared_ptr<Swaption>& receiverSwaption() const { return receiverSwaption_; }
+    const QuantLib::ext::shared_ptr<Swaption>& swaption1() const { return swaption1_; }
+    const QuantLib::ext::shared_ptr<Swaption>& swaption2() const { return swaption2_; }
 
     // Serialization
     void fromXML(XMLNode* node) override;
@@ -61,8 +61,8 @@ private:
     OptionData optionData_;
     std::vector<LegData> legData_;
 
-    QuantLib::ext::shared_ptr<Swaption> payerSwaption_;
-    QuantLib::ext::shared_ptr<Swaption> receiverSwaption_;
+    QuantLib::ext::shared_ptr<Swaption> swaption1_;
+    QuantLib::ext::shared_ptr<Swaption> swaption2_;
     string longShort_;
 };
 

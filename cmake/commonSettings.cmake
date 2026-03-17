@@ -52,6 +52,7 @@ option(ORE_MULTITHREADING_CPU_AFFINITY "Set cpu affinitity in multithreaded calc
 option(ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER "Enable the parallel unit test runner" OFF)
 option(ORE_ENABLE_OPENCL "Enable OpenCL" OFF)
 option(ORE_ENABLE_CUDA "Enable CUDA" OFF)
+option(ORE_PREVENT_BOOST_AUTO_LINKING "Prevent Boost auto-linking" ON)
 
 # Implies that we have built QuantLib (our fork thereof) separately and that we are importing it.
 option(ORE_BUILD_QL_SEPARATELY "Enable when building ORE separately." OFF)
@@ -175,13 +176,14 @@ else()
         -Werror=return-type
         -Werror=unused-function
         -Wno-unknown-pragmas
-        --system-header-prefix=boost/
+        $<$<CXX_COMPILER_ID:${clangs_to_check}>:--system-header-prefix=boost/>
         -Werror=unused-variable
         -Werror=uninitialized
         "$<$<AND:$<BOOL:${QL_USE_PCH}>,$<CXX_COMPILER_ID:${clangs_to_check}>>:SHELL:-Xclang -fno-pch-timestamp>"
         $<$<AND:$<BOOL:${QL_USE_PCH}>,$<CXX_COMPILER_ID:GNU>>:-fpch-preprocess>
         $<$<CXX_COMPILER_ID:${clangs_to_check}>:-Wsometimes-uninitialized>
         $<$<CXX_COMPILER_ID:GNU>:-Wmaybe-uninitialized>
+        $<$<CXX_COMPILER_ID:GNU>:-Wno-error=maybe-uninitialized>
         $<$<CXX_COMPILER_ID:${clangs_to_check}>:-Wunused-lambda-capture>
         $<$<CXX_COMPILER_ID:${clangs_to_check}>:-Winconsistent-missing-override>
     )
@@ -213,8 +215,10 @@ endif()
 
 if(ORE_BOOST_AUTO_LINK_SYSTEM)
     add_compile_definitions(BOOST_AUTO_LINK_SYSTEM)
-else()
-    # Avoid using Boost auto-linking unless it was explicitly asked for.
+endif()
+
+# Avoid using Boost auto-linking unless it was explicitly asked for.
+if(ORE_PREVENT_BOOST_AUTO_LINKING)
     add_compile_definitions(BOOST_ALL_NO_LIB)
 endif()
 

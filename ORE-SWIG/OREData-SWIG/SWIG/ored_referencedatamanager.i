@@ -43,7 +43,8 @@ public:
     const std::string& type();
     const std::string& id();
     const QuantLib::Date& validFrom();
-
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
 
 %shared_ptr(ReferenceDataManager)

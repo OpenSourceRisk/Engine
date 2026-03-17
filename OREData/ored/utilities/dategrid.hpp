@@ -18,7 +18,7 @@
 
 /*! \file ored/utilities/dategrid.hpp
     \brief The date grid class
-    \ingroup simulation
+    \ingroup utilities
 */
 
 #pragma once
@@ -33,7 +33,7 @@ namespace data {
 //! Simulation Date Grid
 /*!
   Utility for building a simulation date grid.
-  \ingroup simulation
+  \ingroup utilities
  */
 class DateGrid {
 public:

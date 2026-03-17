@@ -41,7 +41,6 @@
 #include <qle/instruments/cdsoption.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/models/crossassetmodel.hpp>
-#include <qle/models/cdsoptionhelper.hpp>
 #include <qle/models/crcirpp.hpp>
 #include <qle/models/cirppconstantfellerparametrization.hpp>
 #include <qle/models/crossassetmodel.hpp>

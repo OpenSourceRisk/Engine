@@ -43,6 +43,7 @@ public:
     const QuantLib::Date& referenceDate() const override { return baseVol_->referenceDate(); }
     QuantLib::VolatilityType volatilityType() const override { return baseVol_->volatilityType(); }
     QuantLib::Real displacement() const override { return baseVol_->displacement(); }
+    bool useEffectiveVolatility() const override { return baseVol_->useEffectiveVolatility(); }
     QuantLib::Calendar calendar() const override { return baseVol_->calendar(); }
 
     const QuantLib::Handle<QuantLib::OptionletVolatilityStructure>& baseVol() const { return baseVol_; }

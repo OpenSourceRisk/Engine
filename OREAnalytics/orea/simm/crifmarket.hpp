@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orepsimm/orea/crifmarket.hpp
+/*! \file orea/simm/crifmarket.hpp
     \brief Market used when generating CRIF file
 */
 

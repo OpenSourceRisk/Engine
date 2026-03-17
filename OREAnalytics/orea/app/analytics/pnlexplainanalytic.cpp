@@ -36,13 +36,8 @@ using namespace ore::data;
 namespace ore {
 namespace analytics {
 
-void PnlExplainVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) {
-        
-    string scenarioFile;
-    inputs->loadParameter<string>(scenarioFile, "pnlExplain", "historicalScenarioFile", false);
-    if (!scenarioFile.empty())
-        scenarioReader_ = loadScenarioReader(scenarioFile, inputs->setupVariables().inputPath_);
-    
+void PnlExplainVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) {    
+    inputs->loadScenarioReader("pnlExplain", "historicalScenarioFile"),
     inputs->loadParameterXML<SensitivityScenarioData>(sensiScenarioData_, "pnlExplain", "sensitivityConfigFile");
     if (!sensiScenarioData_)
         sensiScenarioData_ = inputs->sensiScenarioData();
@@ -50,6 +45,8 @@ void PnlExplainVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<Inpu
     if (parSensitivity_)
         inputs->setParSensi(parSensitivity_);
     inputs->loadParameter<bool>(riskFactorLevel_, "pnlExplain", "riskFactorLevelReporting", false, parseBool);
+    inputs->loadParameter<string>(portfolioFilter_, "pnlExplain", "portfolioFilter", false);
+    inputs->loadParameterXML<ReturnConfiguration>(returnConfiguration_, "pnlExplain", "returnConfigFile");
 }
 
 void PnlExplainAnalyticImpl::setUpConfigurations() {
@@ -137,7 +134,7 @@ void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     auto t1Scenario = pnlImpl->t1Scenario();
 
     QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> scenarios;
-    if (!inputs_->scenarioReader()) {
+    if (!pnlExVars->scenarioReader_) {
         vector<QuantLib::ext::shared_ptr<ore::analytics::Scenario>> histScens = {t0Scenario, t1Scenario};
 
         QuantLib::ext::shared_ptr<HistoricalScenarioLoader> scenarioLoader =
@@ -145,7 +142,8 @@ void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
 
         auto zeroScenarios = QuantLib::ext::make_shared<HistoricalScenarioGenerator>(
             scenarioLoader, QuantLib::ext::make_shared<SimpleScenarioFactory>(),
-            QuantLib::ext::make_shared<ReturnConfiguration>(), adjFactors, "hs_");
+            pnlExVars->returnConfiguration_ ? pnlExVars->returnConfiguration_ : QuantLib::ext::make_shared<ReturnConfiguration>(),
+            adjFactors, "hs_");
 
         zeroScenarios->baseScenario() = t0Scenario;
 
@@ -179,10 +177,12 @@ void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
         } else
             scenarios = zeroScenarios;
     } else {
-        auto defaultReturnConfig = QuantLib::ext::make_shared<ReturnConfiguration>();
+        auto returnConfig = pnlExVars->returnConfiguration_
+                                ? pnlExVars->returnConfiguration_
+                                : QuantLib::ext::make_shared<ReturnConfiguration>();
         auto scenarios = buildHistoricalScenarioGenerator(
             pnlExVars->scenarioReader_, adjFactors, pnlDates, analytic()->configurations().simMarketParams,
-            analytic()->configurations().todaysMarketParams, defaultReturnConfig);
+            analytic()->configurations().todaysMarketParams, returnConfig);
         scenarios->baseScenario() = t0Scenario;
     }
 
@@ -192,8 +192,8 @@ void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     std::unique_ptr<MarketRiskReport::SensiRunArgs> sensiArgs =
         std::make_unique<MarketRiskReport::SensiRunArgs>(ss, shiftCalculator);
 
-    auto pnlExplainReport =
-        ext::make_shared<PnlExplainReport>(inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(), period, pnlReport, scenarios,
+    auto pnlExplainReport = ext::make_shared<PnlExplainReport>(
+        inputs_->baseCurrency(), analytic()->portfolio(), pnlExVars->portfolioFilter_, period, pnlReport, scenarios,
         std::move(sensiArgs), nullptr, nullptr, true, pnlExVars->riskFactorLevel_);
 
     LOG("Call PNL Explain calculation");

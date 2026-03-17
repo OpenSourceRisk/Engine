@@ -63,12 +63,13 @@ protected:
                                                         const string& term) override {
 
         string curveId = term.empty() ? creditCurveId : creditCurveId + "-" + term;
-        Handle<YieldTermStructure> yts = market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
+        Handle<YieldTermStructure> discountSwapCurrency = market_->discountCurve(ccy.code(), configuration(MarketContext::irCalibration));
+        Handle<YieldTermStructure> discountTradeCollateral = market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
         Handle<QuantExt::CreditVolCurve> vol = market_->cdsVol(curveId, configuration(MarketContext::pricing));
         Handle<DefaultProbabilityTermStructure> dpts =
             market_->defaultCurve(creditCurveId, configuration(MarketContext::pricing))->curve();
         Handle<Quote> recovery = market_->recoveryRate(creditCurveId, configuration(MarketContext::pricing));
-        return QuantLib::ext::make_shared<QuantExt::BlackCdsOptionEngine>(dpts, recovery->value(), yts, vol);
+        return QuantLib::ext::make_shared<QuantExt::BlackCdsOptionEngine>(dpts, recovery->value(), discountSwapCurrency, discountTradeCollateral, vol);
     }
 };
 

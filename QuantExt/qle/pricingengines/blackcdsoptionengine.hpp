@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2021 Quaternion Risk Management Ltd
+ Copyright (C) 2026 AcadiaSoft, Inc.
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -32,28 +33,32 @@ namespace QuantExt {
 
 /*! Black single name CDS option engine
 
-    Prices single name CDS option instruments quoted in terms of strike spread. It is assumed that the volatility 
-    structure's strike dimension, if there is one, is in terms of spread also. This is the standard situation for 
+    Prices single name CDS option instruments quoted in terms of strike spread. It is assumed that the volatility
+    structure's strike dimension, if there is one, is in terms of spread also. This is the standard situation for
     single name CDS options.
 
-    The valuation follows the approach outlined in <em>Modeling Single-name and Multi-name Credit Derivatives, 
-    Dominic O'Kane, 2008, Section 9.3.7</em>. This is also the approach in <em>A CDS Option Miscellany, Richard 
-    J. Martin, 2019, Section 2.1 and 2.2</em>. If we need the approach in Section 2.4 of that paper, we would need 
-    to make adjustments to the forward spread and RPV01 in our calculation which may in turn need access to the ISDA 
-    supplied interest rate curve. We leave that as a possible future enhancement.
+    The valuation follows the approach outlined in <em>Modeling Single-name and Multi-name Credit Derivatives,
+    Dominic O'Kane, 2008, Section 9.3.7</em>. Read this along with section 11.3.1 and 11.7 to reflect the changed
+    conventions after the CDS Big-Bang since when CDS having a standardised coupon and trade with an upfront. This is also
+    the approach in <em>A CDS Option Miscellany, Richard J. Martin, 2019, Section 2.1 and 2.2</em>. If we need the
+    approach in Section 2.4 of that paper, we would need to make adjustments to the forward spread and RPV01 in our
+    calculation which may in turn need access to the ISDA supplied interest rate curve. We leave that as a possible
+    future enhancement.
 */
 class BlackCdsOptionEngine : public QuantExt::CdsOption::engine {
 public:
     BlackCdsOptionEngine(const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& probability,
         QuantLib::Real recovery,
-        const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
+        const QuantLib::Handle<QuantLib::YieldTermStructure>& discountSwapCurrency,
+        const QuantLib::Handle<QuantLib::YieldTermStructure>& discountTradeCollateral,
         const QuantLib::Handle<QuantExt::CreditVolCurve>& volatility);
 
     //! \name Inspectors
     //@{
     const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& probability() const;
     QuantLib::Real recovery() const;
-    const QuantLib::Handle<QuantLib::YieldTermStructure> discount() const;
+    const QuantLib::Handle<QuantLib::YieldTermStructure> discountSwapCurrency() const;
+    const QuantLib::Handle<QuantLib::YieldTermStructure> discountTradeCollateral() const;
     const QuantLib::Handle<QuantExt::CreditVolCurve> volatility() const;
     //@}
 
@@ -65,7 +70,8 @@ public:
 private:
     QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure> probability_;
     QuantLib::Real recovery_;
-    QuantLib::Handle<QuantLib::YieldTermStructure> discount_;
+    QuantLib::Handle<QuantLib::YieldTermStructure> discountSwapCurrency_;
+    QuantLib::Handle<QuantLib::YieldTermStructure> discountTradeCollateral_;
     QuantLib::Handle<QuantExt::CreditVolCurve> volatility_;
 };
 

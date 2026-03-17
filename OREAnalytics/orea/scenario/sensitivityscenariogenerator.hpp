@@ -69,21 +69,21 @@ using namespace data;
   - Default curve integrated hazard rates.
 
   To apply shifts to the integrated hazard rates let:
-  - S(t) be the survival probability at time t
-  - &lambda(t) be the "instantaneous" hazard rate at time t
-  - &Lambda(t) be the averaged hazard rate at time t
+  - \f$S(t)\f$ be the survival probability at time t
+  - \f$\lambda(t)\f$ be the "instantaneous" hazard rate at time t
+  - \f$\Lambda(t)\f$ be the averaged hazard rate at time t
 
   The relationship between these three can be expressed as:
   \f[
-    S(t) = e^{-&Lambda(t) t}
+    S(t) = e^{-\Lambda(t) t}
   \f]
   \f[
-    &Lambda(t) = \frac{ \int_{0}^t  &lambda(t) du}{t}
+    \Lambda(t) = \frac{ \int_{0}^t  \lambda(t) du}{t}
   \f]
 
   The survival probability quotes from the scenarioSimMarket default curves are then converted as follows:
   \f[
-    &Lambda(t) = - \frac{ ln( S(t) )}{t}
+    \Lambda(t) = - \frac{ ln( S(t) )}{t}
   \f]
 
 

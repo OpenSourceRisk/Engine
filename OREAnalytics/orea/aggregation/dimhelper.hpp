@@ -16,10 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/dim/dimhelper.hpp
+/*! \file orea/aggregation/dimhelper.hpp
     \brief Dynamic initial margin helper
-
-    \ingroup dim
+    \ingroup analytics
 */
 
 #pragma once

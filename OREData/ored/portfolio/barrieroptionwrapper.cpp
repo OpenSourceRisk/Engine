@@ -128,8 +128,12 @@ bool SingleBarrierOptionWrapper::exercise() const {
                     ? QuantLib::ext::dynamic_pointer_cast<QuantExt::EqFxIndexBase>(indexLows_)
                     : QuantLib::ext::dynamic_pointer_cast<QuantExt::EqFxIndexBase>(indexHighs_);
             if (eqfxIndex) {
+                // Cap at the contract exercise date (expiry) - barrier monitoring ends at expiry,
+                // and requiredFixings only provides fixings up to that date.
+                auto maxDate = *std::max_element(contractExerciseDates_.begin(), contractExerciseDates_.end());
+                Date endDate = std::min(today, maxDate);
                 Date d = calendar_.adjust(startDate_);
-                while (d < today && !trigger) {
+                while (d < endDate && !trigger) {
                     
                     Real fixing = Null<Real>();
                     if (eqfxIndexLowHigh == nullptr) {
@@ -202,8 +206,13 @@ bool DoubleBarrierOptionWrapper::exercise() const {
             auto indexL = indexLows_ != nullptr ? ext::dynamic_pointer_cast<QuantExt::EqFxIndexBase>(indexLows_) : nullptr;
             auto indexH = indexHighs_ != nullptr ? ext::dynamic_pointer_cast<QuantExt::EqFxIndexBase>(indexHighs_) : nullptr;;
             if (eqfxIndex) {
+                // Cap at the contract exercise date (expiry) - barrier monitoring ends at expiry,
+                // and requiredFixings only provides fixings up to that date.
+                // Get the Max Exercise Date
+                auto maxDate = *std::max_element(contractExerciseDates_.begin(), contractExerciseDates_.end());
+                Date endDate = std::min(today, maxDate);
                 Date d = calendar_.adjust(startDate_);
-                while (d < today && !trigger) {
+                while (d < endDate && !trigger) {
                     double dailyLow, dailyHigh = Null<Real>();
 
                     if (indexL == nullptr){
