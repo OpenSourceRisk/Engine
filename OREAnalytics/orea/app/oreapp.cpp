@@ -1054,6 +1054,10 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->getString("simm", "version", false);
         if (tmp != "")
             setSimmVersion(tmp);
+        else if (simmVersion() == "") {
+            LOG("set SIMM version to 2.6 (default)");
+            setSimmVersion("2.6");
+        }
 
         tmp = params_->getString("simm", "mporDays", false);
         if (tmp != "")
@@ -1093,20 +1097,26 @@ void OREAppInputParameters::loadParameters() {
             }
 
             auto nameMapper = QuantLib::ext::make_shared<SimmBasicNameMapper>();
-            tmp = params_->getString("crif", "nameMappingInputFile", false);
+            tmp = params_->getString("setup", "simmnamemappingFile", false);
+            if (tmp.empty())
+                tmp = params_->getString("crif", "nameMappingInputFile", false);
             if (tmp != "") {
                 string fileName = (setupVariables_.inputPath_ / tmp).generic_string();
                 LOG("simmNameMapper file name: " << fileName);
-                nameMapper->fromFile(fileName);
+                if (std::filesystem::exists(fileName))
+                    nameMapper->fromFile(fileName);
             }
             simmNameMapper_ = nameMapper;
 
             auto bucketMapper = QuantLib::ext::make_shared<SimmBucketMapperBase>();
-            tmp = params_->getString("crif", "bucketMappingInputFile", false);
+            tmp = params_->getString("setup", "simmbucketmappingFile", false);
+            if (tmp.empty())
+                tmp = params_->getString("crif", "bucketMappingInputFile", false);
             if (tmp != "") {
                 string fileName = (setupVariables_.inputPath_ / tmp).generic_string();
                 LOG("simmBucketMapper file name: " << fileName);
-                bucketMapper->fromFile(fileName);
+                if (std::filesystem::exists(fileName))
+                    bucketMapper->fromFile(fileName);
             }
             simmBucketMapper_ = bucketMapper;
         }
@@ -1117,6 +1127,8 @@ void OREAppInputParameters::loadParameters() {
             setSimmCalculationCurrencyPost(tmp);
         } else {
             QL_REQUIRE(baseCurrency() != "", "either base currency or calculation currency is required");
+            setSimmCalculationCurrencyCall(baseCurrency());
+            setSimmCalculationCurrencyPost(baseCurrency());
         }
 
         tmp = params_->getString("simm", "calculationCurrencyCall", false);
@@ -1517,6 +1529,93 @@ void OREAppInputParameters::loadParameters() {
      tmp = params_->getString("smrc", "active", false);
      if (!tmp.empty() && parseBool(tmp))
          insertAnalytic("SMRC");
+
+     /*************
+      * FRTB
+      *************/
+
+     tmp = params_->getString("frtb", "active", false);
+     if (!tmp.empty() && parseBool(tmp)) {
+         insertAnalytic("FRTB");
+
+         tmp = params_->getString("frtb", "crif", false);
+         if (tmp != "") {
+             string file = (setupVariables_.inputPath_ / tmp).generic_string();
+             setCrifFromFile(file, csvEolChar(), csvSeparator(), '\"', csvEscapeChar());
+         }
+     }
+
+     /*************************
+      * NPV Lagged
+      *************************/
+
+     tmp = params_->getString("npvLagged", "active", false);
+     if (!tmp.empty() && parseBool(tmp))
+         insertAnalytic("NPV_LAGGED");
+
+     /*************************
+      * TOTAL IM
+      *************************/
+
+     tmp = params_->getString("totalIM", "active", false);
+     if (!tmp.empty() && parseBool(tmp))
+         insertAnalytic("TOTAL_IM");
+
+     /*************************
+      * IM Impact
+      *************************/
+
+     tmp = params_->getString("imImpact", "active", false);
+     if (!tmp.empty() && parseBool(tmp))
+         insertAnalytic("IM_IMPACT");
+
+     /*************************
+      * SIMM Backtest
+      *************************/
+
+     tmp = params_->getString("simmBacktest", "active", false);
+     if (!tmp.empty() && parseBool(tmp))
+         insertAnalytic("SIMM_BACKTEST");
+
+     /*************************
+      * CRIF to Trade
+      *************************/
+
+     tmp = params_->getString("crifToTrade", "active", false);
+     if (!tmp.empty() && parseBool(tmp))
+         insertAnalytic("CRIF_TO_TRADE");
+
+     /*************************
+      * FRTB CRIF
+      *************************/
+
+     tmp = params_->getString("frtbCrif", "active", false);
+     if (!tmp.empty() && parseBool(tmp))
+         insertAnalytic("FRTBCRIF");
+
+     /*************************
+      * Fixing Estimate
+      *************************/
+
+     tmp = params_->getString("fixingEstimate", "active", false);
+     if (!tmp.empty() && parseBool(tmp))
+         insertAnalytic("FIXING_ESTIMATE");
+
+     /*************************
+      * SIMM Optimization
+      *************************/
+
+     tmp = params_->getString("simmOptimization", "active", false);
+     if (!tmp.empty() && parseBool(tmp))
+         insertAnalytic("SIMM_OPTIMIZATION");
+
+     /*************************
+      * STRESS
+      *************************/
+
+     tmp = params_->getString("stress", "active", false);
+     if (!tmp.empty() && parseBool(tmp))
+         insertAnalytic("STRESS");
 
      /*************
       * cashflow npv and dynamic backtesting
