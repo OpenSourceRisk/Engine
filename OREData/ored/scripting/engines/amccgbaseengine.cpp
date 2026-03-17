@@ -24,6 +24,7 @@
 #include <ored/scripting/engines/amccgbaseengine.hpp>
 
 #include <ored/utilities/indexnametranslator.hpp>
+#include <ored/utilities/log.hpp>
 
 #include <qle/ad/backwardderivatives.hpp>
 #include <qle/ad/computationgraph.hpp>
