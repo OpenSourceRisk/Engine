@@ -64,6 +64,97 @@ void CrifAnalyticImpl::buildDependencies() {
     addDependentAnalytic("SENSITIVITY", sensiAnalytic.second);
 }
 
+void CrifAnalyticImpl::handlePreSimmExemptionsReports(
+    CrifAnalyticBase& crifAnalytic, const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+    const std::string& marketConfig, const QuantLib::ext::shared_ptr<InMemoryReport>& npvWithoutReport) {}
+
+bool CrifAnalyticImpl::continueWithEmptyPortfolio(const CrifAnalyticBase& crifAnalytic) const {
+    return false;
+}
+
+void CrifAnalyticImpl::handlePostSimmExemptionsReports(
+    CrifAnalyticBase& crifAnalytic, const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+    const std::string& marketConfig, const QuantLib::ext::shared_ptr<InMemoryReport>& npvWithReport,
+    const QuantLib::ext::shared_ptr<InMemoryReport>& cfWithReport) {
+    LOG("Write portfolio, with SIMM exemptions, to XML");
+    path portfolioXmlPath = inputs->resultsPath() / "portfolio_with_simm_exemptions.xml";
+    crifAnalytic.portfolioSimmExemptions()->toFile(portfolioXmlPath.string());
+}
+
+QuantLib::ext::shared_ptr<Portfolio> CrifAnalyticImpl::buildSimmExemptionOverridePortfolio(
+    CrifAnalyticBase& crifAnalytic, const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+    std::set<std::string>& removedTrades, std::set<std::string>& modifiedTrades) {
+    return nullptr;
+}
+
+QuantLib::ext::shared_ptr<SensitivityStream> CrifAnalyticImpl::extractParSensitivityStream(
+    const QuantLib::ext::shared_ptr<Analytic>& sensiAnalytic,
+    const QuantLib::ext::shared_ptr<Portfolio>& portfolio) const {
+    auto pricingImpl = static_cast<PricingAnalyticImpl*>(sensiAnalytic->impl().get());
+    auto sa = pricingImpl->sensiAnalysis();
+    auto pa = pricingImpl->parAnalysis();
+    auto baseCurrency = sa->simMarketData()->baseCcy();
+    const auto& typesDisabled = analytic()->configurations().sensiScenarioData->parConversionExcludes();
+    auto parConverter = QuantLib::ext::make_shared<ParSensitivityConverter>(pa->parSensitivities(), pa->shiftSizes());
+    auto parCube = QuantLib::ext::make_shared<ZeroToParCube>(sa->sensiCubes(), parConverter, typesDisabled, true);
+    auto stream = QuantLib::ext::make_shared<ParSensitivityCubeStream>(parCube, baseCurrency, portfolio);
+    return QuantLib::ext::make_shared<ore::analytics::BufferedSensitivityStream>(stream);
+}
+
+QuantLib::ext::shared_ptr<SensitivityStream> CrifAnalyticImpl::computeExtraSensitivityStream(
+    CrifAnalyticBase& crifAnalytic, const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+    const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
+    const QuantLib::ext::shared_ptr<Analytic>& sensiAnalytic,
+    const QuantLib::ext::shared_ptr<Portfolio>& simmOverridesPortfolio) {
+    return nullptr;
+}
+
+void CrifAnalyticImpl::handleMainSensitivityReports(CrifAnalyticBase& crifAnalytic,
+                                                    const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                                                    const QuantLib::ext::shared_ptr<Analytic>& sensiAnalytic) {
+    static const std::vector<std::pair<std::string, std::string>> reportMapping = {
+        {"sensitivity_scenario", "crif_scenario"},
+        {"sensitivity", "crif_sensitivity"},
+        {"sensitivity_config", "crif_sensitivity_config"},
+        {"par_sensitivity", "crif_par_sensitivity"},
+        {"jacobi", "crif_par_conversion_matrix"},
+        {"jacobi_inverse", "crif_par_conversion_matrix_inverse"},
+        {"scenario_par_rates", "crif_scenario_par_rates"}};
+    auto sensiReports = sensiAnalytic->reports();
+    if (sensiReports.find("SENSITIVITY") != sensiReports.end()) {
+        for (const auto& [srcName, dstName] : reportMapping) {
+            auto it = sensiReports.at("SENSITIVITY").find(srcName);
+            if (it != sensiReports.at("SENSITIVITY").end())
+                analytic()->addReport(LABEL, dstName, it->second);
+        }
+    }
+}
+
+QuantLib::ext::shared_ptr<PortfolioFieldGetter> CrifAnalyticImpl::buildPortfolioFieldGetter(
+    CrifAnalyticBase& crifAnalytic, const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+    const QuantLib::ext::shared_ptr<Portfolio>& simmOverridesPortfolio) {
+    return nullptr;
+}
+
+void CrifAnalyticImpl::extendCrif(CrifAnalyticBase& crifAnalytic,
+                                  const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                                  const QuantLib::ext::shared_ptr<Crif>& crif,
+                                  const QuantLib::ext::shared_ptr<Portfolio>& simmOverridesPortfolio,
+                                  const QuantLib::ext::shared_ptr<SensitivityStream>& ssSimmOverrides,
+                                  const std::set<std::string>& removedTrades,
+                                  const std::set<std::string>& modifiedTrades,
+                                  const QuantLib::ext::shared_ptr<CrifMarket>& crifMarket,
+                                  const QuantLib::ext::shared_ptr<PortfolioFieldGetter>& fieldGetter,
+                                  double usdSpot) {}
+
+void CrifAnalyticImpl::writeCrifReport(CrifAnalyticBase& crifAnalytic,
+                                       const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                                       const QuantLib::ext::shared_ptr<InMemoryReport>& crifReport,
+                                       const QuantLib::ext::shared_ptr<Crif>& crif,
+                                       const QuantLib::ext::shared_ptr<PortfolioFieldGetter>& fieldGetter) {
+    ReportWriter(inputs->reportNaString()).writeCrifReport(crifReport, crif);
+}
+
 void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                                    const std::set<std::string>& runTypes) {
     QL_REQUIRE(analytic()->portfolio(), "CrifAnalytic::run: No portfolio loaded.");
@@ -78,7 +169,7 @@ void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
 
     ObservationMode::instance().setMode(ObservationMode::Mode::None);
 
-    auto crifAnalytic = static_cast<CrifAnalytic*>(analytic());
+    auto crifAnalytic = dynamic_cast<CrifAnalyticBase*>(analytic());
     QL_REQUIRE(crifAnalytic, "Analytic must be of type CRIF");
 
     // Save portfolio state before applying SIMM exemptions
@@ -95,6 +186,7 @@ void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
         .writeNpv(*npvWithoutReport, crifAnalytic->baseCurrency(), analytic()->market(), marketConfig,
                   analytic()->portfolio());
     analytic()->addReport(LABEL, "npv_no_simm_exemptions", npvWithoutReport);
+    handlePreSimmExemptionsReports(*crifAnalytic, inputs_, marketConfig, npvWithoutReport);
 
     std::set<std::string> removedTrades, modifiedTrades;
     if (applySimmExemptions_) {
@@ -112,7 +204,7 @@ void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
     }
 
     // If we have an empty portfolio, then quit the CRIF analytic
-    if (analytic()->portfolio()->size() == 0) {
+    if (analytic()->portfolio()->size() == 0 && !continueWithEmptyPortfolio(*crifAnalytic)) {
         ALOG("portfolio is empty once SIMM exemptions applied");
         analytic()->addReport(LABEL, "crif", QuantLib::ext::make_shared<InMemoryReport>());
         return;
@@ -137,13 +229,27 @@ void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
         .writeCashflow(*cfWithReport, crifAnalytic->baseCurrency(), analytic()->portfolio(), analytic()->market(),
                        marketConfig);
     analytic()->addReport(LABEL, "cashflow_with_simm_exemptions", cfWithReport);
+    handlePostSimmExemptionsReports(*crifAnalytic, inputs_, marketConfig, npvWithReport, cfWithReport);
 
-    // Portfolio after applying SIMM exemptions
-    LOG("Write portfolio, with SIMM exemptions, to XML");
-    path portfolioXmlPath = inputs_->resultsPath() / "portfolio_with_simm_exemptions.xml";
-    crifAnalytic->portfolioSimmExemptions()->toFile(portfolioXmlPath.string());
+    auto simmOverridesPortfolio =
+        buildSimmExemptionOverridePortfolio(*crifAnalytic, inputs_, removedTrades, modifiedTrades);
+    if (analytic()->portfolio()->size() == 0 &&
+        (!simmOverridesPortfolio || simmOverridesPortfolio->size() == 0)) {
+        ALOG("portfolio is empty once SIMM exemptions applied");
+        analytic()->addReport(LABEL, "crif", QuantLib::ext::make_shared<InMemoryReport>());
+        return;
+    }
 
     // Run the dependent SENSITIVITY analytic
+    auto sensiAnalytic = dependentAnalytic(sensitivityLookUpKey);
+
+    // Override the dependent analytic's configurations with the CRIF-specific ones
+    sensiAnalytic->configurations().todaysMarketParams = analytic()->configurations().todaysMarketParams;
+    sensiAnalytic->configurations().simMarketParams = analytic()->configurations().simMarketParams;
+    sensiAnalytic->configurations().sensiScenarioData = analytic()->configurations().sensiScenarioData;
+
+    QuantLib::ext::shared_ptr<SensitivityStream> ssSimmOverrides =
+        computeExtraSensitivityStream(*crifAnalytic, inputs_, loader, sensiAnalytic, simmOverridesPortfolio);
     QuantLib::ext::shared_ptr<SensitivityStream> ss;
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityAnalysis> sensiAnalysis;
     if (portfolioSimmExemptions->size() > 0) {
@@ -151,7 +257,6 @@ void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
         CONSOLEW("CRIF: Run Sensitivity");
 
         // Get the dependent SENSITIVITY analytic and set the SIMM-exempted portfolio
-        auto sensiAnalytic = dependentAnalytic(sensitivityLookUpKey);
         sensiAnalytic->setPortfolio(portfolioSimmExemptions);
 
         // Ensure par sensitivity conversion and pillar alignment are enabled (required for CRIF)
@@ -168,39 +273,10 @@ void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
         // Extract sensi analysis and par analysis from the PricingAnalyticImpl
         auto pricingImpl = static_cast<PricingAnalyticImpl*>(sensiAnalytic->impl().get());
         sensiAnalysis = pricingImpl->sensiAnalysis();
-        auto parAnalysis = pricingImpl->parAnalysis();
-
-        // Reconstruct par sensitivity stream (the one in PricingAnalytic was consumed by its report writer)
-        auto baseCurrency = sensiAnalysis->simMarketData()->baseCcy();
-        const auto& typesDisabled = analytic()->configurations().sensiScenarioData->parConversionExcludes();
-        auto parConverter = QuantLib::ext::make_shared<ParSensitivityConverter>(
-            parAnalysis->parSensitivities(), parAnalysis->shiftSizes());
-        auto parCube = QuantLib::ext::make_shared<ZeroToParCube>(
-            sensiAnalysis->sensiCubes(), parConverter, typesDisabled, true);
-        ss = QuantLib::ext::make_shared<ParSensitivityCubeStream>(
-            parCube, baseCurrency, portfolioSimmExemptions);
-        ss = QuantLib::ext::make_shared<ore::analytics::BufferedSensitivityStream>(ss);
+        ss = extractParSensitivityStream(sensiAnalytic, portfolioSimmExemptions);
 
         LOG("Finished sensitivity and par sensitivity analysis");
-
-        // Copy sensitivity reports from the dependent analytic with "crif_" prefix
-        static const std::vector<std::pair<std::string, std::string>> reportMapping = {
-            {"sensitivity_scenario", "crif_scenario"},
-            {"sensitivity", "crif_sensitivity"},
-            {"sensitivity_config", "crif_sensitivity_config"},
-            {"par_sensitivity", "crif_par_sensitivity"},
-            {"jacobi", "crif_par_conversion_matrix"},
-            {"jacobi_inverse", "crif_par_conversion_matrix_inverse"},
-            {"scenario_par_rates", "crif_scenario_par_rates"}
-        };
-        auto sensiReports = sensiAnalytic->reports();
-        if (sensiReports.find("SENSITIVITY") != sensiReports.end()) {
-            for (const auto& [srcName, dstName] : reportMapping) {
-                auto it = sensiReports.at("SENSITIVITY").find(srcName);
-                if (it != sensiReports.at("SENSITIVITY").end())
-                    analytic()->addReport(LABEL, dstName, it->second);
-            }
-        }
+        handleMainSensitivityReports(*crifAnalytic, inputs_, sensiAnalytic);
 
         CONSOLE("OK");
     }
@@ -220,9 +296,13 @@ void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
     string baseCcy = crifAnalytic->baseCurrency();
     Real usdSpot = baseCcy == "USD" ? 1.0 : analytic()->market()->fxRate(baseCcy + "USD")->value();
     QuantLib::ext::shared_ptr<InMemoryReport> crifReport = QuantLib::ext::make_shared<InMemoryReport>();
-    auto crif = crifAnalytic->computeCrif(portfolioSimmExemptions, ss, inputs_, crifMarket, usdSpot);
+    auto fieldGetter = buildPortfolioFieldGetter(*crifAnalytic, inputs_, simmOverridesPortfolio);
+    auto crif = crifAnalytic->computeCrif(portfolioSimmExemptions, ss, inputs_, false, removedTrades, modifiedTrades,
+                                          crifMarket, fieldGetter, usdSpot);
+    extendCrif(*crifAnalytic, inputs_, crif, simmOverridesPortfolio, ssSimmOverrides, removedTrades, modifiedTrades,
+               crifMarket, fieldGetter, usdSpot);
     crifAnalytic->crif() = crif;
-    ReportWriter(inputs_->reportNaString()).writeCrifReport(crifReport, crifAnalytic->crif());
+    writeCrifReport(*crifAnalytic, inputs_, crifReport, crifAnalytic->crif(), fieldGetter);
     analytic()->addReport(LABEL, "crif", crifReport);
     CONSOLE("OK");
     LOG("CRIF report generated successfully");
@@ -241,14 +321,18 @@ QuantLib::ext::shared_ptr<Crif>
 CrifAnalytic::computeCrif(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
                           const QuantLib::ext::shared_ptr<SensitivityStream>& sensiStream,
                           const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-                          const QuantLib::ext::shared_ptr<CrifMarket>& crifMarket, double usdSpot) {
+                          bool isSimmOverrideExceptionPortfolio,
+                          const std::set<std::string>& removedTrades,
+                          const std::set<std::string>& modifiedTrades,
+                          const QuantLib::ext::shared_ptr<CrifMarket>& crifMarket,
+                          const QuantLib::ext::shared_ptr<PortfolioFieldGetter>& fieldGetter, double usdSpot) {
     startTimer("computeCrif()");
     if (portfolio != nullptr && portfolio->size() > 0) {
         auto tradeData = QuantLib::ext::make_shared<SimmTradeData>(portfolio, market(), inputs->refDataManager(),
 								   inputs->simmBucketMapper());
 	tradeData->init();
         CrifGenerator crifGenerator(inputs->getSimmConfiguration(), inputs->simmNameMapper(), tradeData, crifMarket,
-                                    inputs->xbsParConversion(), baseCurrency(), usdSpot, nullptr,
+                                    inputs->xbsParConversion(), baseCurrency(), usdSpot, fieldGetter,
                                     inputs->refDataManager(), inputs->curveConfigs().get());
         stopTimer("computeCrif()");
         try {
