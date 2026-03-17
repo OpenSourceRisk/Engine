@@ -197,7 +197,6 @@ void XvaEngineCG::buildCam() {
 
     for (Size i = 1; i < currencies.size(); ++i) {
         fxSpots.push_back(simMarket_->fxSpot(currencies[i] + currencies[0]));
-        // we provide them, although we probably do not really need to
         indices.push_back("FX-GENERIC-" + currencies[i] + "-" + currencies[0]);
         indexCurrencies.push_back(currencies[i]);
     }
