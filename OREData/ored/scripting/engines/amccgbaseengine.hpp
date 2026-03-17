@@ -99,7 +99,6 @@ protected:
 
     // remaining state
     mutable std::size_t cgVersion_ = 0;
-    mutable bool cgForStickyCloseOutDateRunIsBuilt_ = false;
     mutable bool haveBaseValues_ = false;
     mutable double baseNpv_;
     mutable std::vector<std::pair<std::size_t, double>> baseModelParams_;
