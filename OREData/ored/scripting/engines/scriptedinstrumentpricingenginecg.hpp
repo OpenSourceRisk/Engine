@@ -126,9 +126,6 @@ private:
     bool useCachedSensis_;
     bool useExternalComputeFramework_;
     bool useDoublePrecisionForExternalCalculation_;
-
-    // state
-    mutable bool cgForStickyCloseOutDateRunIsBuilt_ = false;
 };
 
 } // namespace data

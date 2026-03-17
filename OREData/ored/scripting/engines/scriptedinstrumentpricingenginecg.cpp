@@ -113,10 +113,10 @@ void ScriptedInstrumentPricingEngineCG::buildComputationGraph(const bool stickyC
 
     // TODO add sticky close-out states
 
-    if (cgVersion_ == model_->cgVersion() && (!stickyCloseOutDateRun || cgForStickyCloseOutDateRunIsBuilt_))
+    if (!amcEnabled_ && cgVersion_ == model_->cgVersion())
         return;
 
-    cgForStickyCloseOutDateRunIsBuilt_ = stickyCloseOutDateRun;
+    cgVersion_ = model_->cgVersion();
 
     auto g = model_->computationGraph();
 
@@ -163,7 +163,6 @@ void ScriptedInstrumentPricingEngineCG::buildComputationGraph(const bool stickyC
     ComputationGraphBuilder cgBuilder(*g, getRandomVariableOpLabels(), ast_, workingContext_, model_,
                                       minimalModelCcys_);
     cgBuilder.run(generateAdditionalResults_, includePastCashflows_, script_, interactive_);
-    cgVersion_ = model_->cgVersion();
     DLOG("Built computation graph version " << cgVersion_ << " size is " << g->size());
     TLOGGERSTREAM(ssaForm(*g, getRandomVariableOpLabels()));
     keepNodes_ = cgBuilder.keepNodes();
