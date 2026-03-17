@@ -670,13 +670,15 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun, st
             if (rebatedExercise) {
                 Size exerciseTimes_idx = std::distance(exerciseDates.begin(), exerciseDates.find(*d));
                 for (Size k = 0; k < rebatedExercise->rebateCurrencies().size(); ++k) {
-                    if (rebatedExercise->rebate(exerciseTimes_idx), k != 0.0) {
+                    if (rebatedExercise->rebate(exerciseTimes_idx, k) != 0.0) {
                         // if no rebate currency is given, we assume that it is paid in the first leg's currency!
-                        pathValueRebate[counter] = modelCg_->pay(
-                            cg_const(g, rebatedExercise->rebate(exerciseTimes_idx)), *d,
-                            rebatedExercise->rebatePaymentDate(exerciseTimes_idx),
-                            rebatedExercise->rebateCurrency(k).empty() ? currency_.front()
-                                                                       : rebatedExercise->rebateCurrency(k).code());
+                        pathValueRebate[counter] =
+                            cg_add(g, pathValueRebate[counter],
+                                   modelCg_->pay(cg_const(g, rebatedExercise->rebate(exerciseTimes_idx, k)), *d,
+                                                 rebatedExercise->rebatePaymentDate(exerciseTimes_idx),
+                                                 rebatedExercise->rebateCurrency(k).empty()
+                                                     ? currency_.front()
+                                                     : rebatedExercise->rebateCurrency(k).code()));
                     }
                 }
             }
