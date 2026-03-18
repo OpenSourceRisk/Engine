@@ -270,8 +270,9 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
     inputs->loadParameter<bool>(firstMporCollateralAdjustment_, "xva", "firstMporCollateralAdjustment", false, parseBool);
     inputs->loadParameter<string>(creditMigrationOutputFiles_, "xva", "creditMigrationOutputFiles", false);
     inputs->loadParameterXML<CreditSimulationParameters>(creditSimulationParameters_, "xva", "creditMigrationConfig");
-    inputs->loadParameterXML<NettingSetManager>(nettingSetManager_, pfeAnalytics, "csaFile");
-    inputs->loadParameterXML<CollateralBalances>(collateralBalances_, pfeAnalytics, "collateralBalancesFile");
+    vector<string> pfeOrSetupAnalytics = {"xva", "pfe", "setup"};
+    inputs->loadParameterXML<NettingSetManager>(nettingSetManager_, pfeOrSetupAnalytics, "csaFile");
+    inputs->loadParameterXML<CollateralBalances>(collateralBalances_, pfeOrSetupAnalytics, "collateralBalancesFile");
     
     string correlationInputFile;
     inputs->loadParameter<string>(correlationInputFile, "xva", "correlationInputFile", false);
