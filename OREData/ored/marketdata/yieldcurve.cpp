@@ -631,8 +631,7 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
                                                             curveConfig_.back()->reportConfig());
                     std::vector<Date> pillarDates = *rc.pillarDates();
                     if (!pillarDates.empty()) {
-                        std::copy(pillarDates.begin(), pillarDates.end(),
-                                  std::back_inserter(calibrationInfo_[index]->pillarDates));
+                        calibrationInfo_[index]->pillarDates = pillarDates;
                     }
                 } catch (...) {
                     DLOG("Report configuration for yield curves not set - using predefined/default pillar dates.");
@@ -1211,6 +1210,7 @@ void YieldCurve::buildZeroCurve(const std::size_t index) {
 
     // Create the (date, zero) pairs.
     map<Date, Rate> data;
+    map<Date, string> quoteLabel;
     QuantLib::ext::shared_ptr<Convention> convention = conventions->get(curveSegments_[index][0]->conventionsID());
     QL_REQUIRE(convention, "No conventions found with ID: " << curveSegments_[index][0]->conventionsID());
     QL_REQUIRE(convention->type() == Convention::Type::Zero, "Conventions ID does not give zero rate conventions.");
@@ -1221,19 +1221,21 @@ void YieldCurve::buildZeroCurve(const std::size_t index) {
         QL_REQUIRE(quoteDayCounter == zeroQuotes[i]->dayCounter(),
                    "The day counter should be the same between the conventions"
                    "and the quote.");
+        Date resolvedDate;
         if (!zeroQuotes[i]->tenorBased()) {
-            data[zeroQuotes[i]->date()] = zeroQuotes[i]->quote()->value();
+            resolvedDate = zeroQuotes[i]->date();
         } else {
             QL_REQUIRE(zeroConvention->tenorBased(), "Using tenor based "
                                                      "zero rates without tenor based zero rate conventions.");
-            Date zeroDate = asofDate_;
+            resolvedDate = asofDate_;
             if (zeroConvention->spotLag() > 0) {
-                zeroDate = zeroConvention->spotCalendar().advance(zeroDate, zeroConvention->spotLag() * Days);
+                resolvedDate = zeroConvention->spotCalendar().advance(resolvedDate, zeroConvention->spotLag() * Days);
             }
-            zeroDate = zeroConvention->tenorCalendar().advance(zeroDate, zeroQuotes[i]->tenor(),
-                                                               zeroConvention->rollConvention(), zeroConvention->eom());
-            data[zeroDate] = zeroQuotes[i]->quote()->value();
+            resolvedDate = zeroConvention->tenorCalendar().advance(resolvedDate, zeroQuotes[i]->tenor(),
+                                                                   zeroConvention->rollConvention(), zeroConvention->eom());
         }
+        data[resolvedDate] = zeroQuotes[i]->quote()->value();
+        quoteLabel[resolvedDate] = zeroQuotes[i]->name();
     }
 
     QL_REQUIRE(data.size() > 0, "No market data found for curve spec "
@@ -1302,6 +1304,17 @@ void YieldCurve::buildZeroCurve(const std::size_t index) {
                                   extrapolationMethod_[index]);
     } else {
         QL_FAIL("Unknown yield curve interpolation variable.");
+    }
+
+    if (buildCalibrationInfo_) {
+        for (auto const& [d, label] : quoteLabel) {
+            RateHelperData rhd;
+            rhd.mainPillarDate = d;
+            rhd.mdQuoteLabel = label;
+            rhd.mdQuoteValue = data.at(d);
+            rhd.rateHelperType = "Direct Zero";
+            rateHelperData_[index].push_back(rhd);
+        }
     }
 }
 
@@ -1475,6 +1488,7 @@ void YieldCurve::buildDiscountCurve(const std::size_t index) {
         }
     }
 
+    map<Date, string> quoteLabel;  // resolved date -> quote name, used to populate calibration info
     int multipleQuotes = 0;
     for (const auto& marketQuote : marketData) {
         QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::DISCOUNT,
@@ -1491,6 +1505,7 @@ void YieldCurve::buildDiscountCurve(const std::size_t index) {
         if (discountQuote->date() != Date()) {
 
             data[discountQuote->date()] = discountQuote->quote()->value();
+            quoteLabel[discountQuote->date()] = discountQuote->name();
 
         } else if (discountQuote->tenor() != Period()) {
 
@@ -1510,6 +1525,7 @@ void YieldCurve::buildDiscountCurve(const std::size_t index) {
                 multipleQuotes++;
 
             data[date] = discountQuote->quote()->value();
+            quoteLabel[date] = discountQuote->name();
 
         } else {
             QL_FAIL("YieldCurve::buildDiscountCurve - neither date nor tenor recognised");
@@ -1562,6 +1578,17 @@ void YieldCurve::buildDiscountCurve(const std::size_t index) {
             zerocurve(dates, zeroes, zeroDayCounter_[index], interpolationMethod_[index], extrapolationMethod_[index]);
     } else {
         QL_FAIL("Unknown yield curve interpolation variable.");
+    }
+
+    if (buildCalibrationInfo_) {
+        for (auto const& [d, label] : quoteLabel) {
+            RateHelperData rhd;
+            rhd.mainPillarDate = d;
+            rhd.mdQuoteLabel = label;
+            rhd.mdQuoteValue = data.at(d);
+            rhd.rateHelperType = "Direct Discount";
+            rateHelperData_[index].push_back(rhd);
+        }
     }
 }
 
