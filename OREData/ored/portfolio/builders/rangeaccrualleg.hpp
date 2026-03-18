@@ -32,7 +32,7 @@
 namespace ore {
 namespace data {
 
-//! Engine Builder for RangeAccrualLeg
+//! Engine Builder for RangeAccrualLeg using BGM model with swaption vols
 /*! Provides the OptionletVolatilityStructure and pricer parameters.
     Per-coupon pricers are created in makeRangeAccrualLeg using the vol surface
     to build smile sections at each coupon's expiry and payment dates.
@@ -52,6 +52,20 @@ private:
     bool withFlatVol(const std::string& index);
     bool byCallSpread(const std::string& index);
     Real flatVol(const std::string& index);
+};
+
+//! Engine Builder for RangeAccrualLeg using call-spread replication on optionlet vols
+/*! Uses the capFloor (optionlet) volatility surface directly.
+    Supports both Black (shifted-lognormal) and Bachelier (normal) vol types.
+    This is the same replication approach used by the RateDigitalOption trade type.
+    \ingroup builders
+*/
+class RangeAccrualLegCallSpreadEngineBuilder : public EngineBuilder {
+public:
+    RangeAccrualLegCallSpreadEngineBuilder()
+        : EngineBuilder("Black", "CallSpreadCouponPricer", {"IborRangeAccrualLeg"}) {}
+
+    QuantLib::ext::shared_ptr<FloatingRateCouponPricer> buildPricer(const std::string& index);
 };
 
 } // namespace data

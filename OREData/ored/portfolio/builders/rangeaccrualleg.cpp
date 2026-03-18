@@ -20,11 +20,14 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/indexparser.hpp>
 
+#include <qle/cashflows/rangeaccrualcouponpricer.hpp>
+
 #include <ql/cashflows/rangeaccrual.hpp>
 #include <ql/indexes/iborindex.hpp>
 #include <ql/pricingengines/blackformula.hpp>
 #include <ql/termstructures/volatility/smilesection.hpp>
 #include <ql/termstructures/volatility/flatsmilesection.hpp>
+#include <ql/termstructures/volatility/optionlet/constantoptionletvol.hpp>
 
 namespace ore {
 namespace data {
@@ -150,6 +153,28 @@ QuantLib::ext::shared_ptr<FloatingRateCouponPricer> RangeAccrualLegEngineBuilder
 
     return QuantLib::ext::make_shared<RangeAccrualPricerByBgm>(
         corr, smileOnExpiry, smileOnPayment, !isFlatVol, callSpread);
+}
+
+QuantLib::ext::shared_ptr<FloatingRateCouponPricer> RangeAccrualLegCallSpreadEngineBuilder::buildPricer(
+    const std::string& index) {
+    auto config = configuration(MarketContext::pricing);
+
+    Handle<OptionletVolatilityStructure> ovs = market_->capFloorVol(index, config);
+
+    auto isFlatVol = parseBool(engineParameter("withFlatVol", {}, false, "false"));
+    if (isFlatVol) {
+        ovs = Handle<OptionletVolatilityStructure>(
+            QuantLib::ext::make_shared<ConstantOptionletVolatility>(
+                ovs->referenceDate(), ovs->calendar(), ovs->businessDayConvention(),
+                0.0, ovs->dayCounter(), ovs->volatilityType(), ovs->displacement()));
+    }
+    QL_REQUIRE(!ovs.empty(), "RangeAccrualLegCallSpreadEngineBuilder: no capFloor vol for " << index);
+
+    Real eps = 1.0e-4;
+    if (engineParameter("CallSpreadEps", {}, false, "") != "")
+        eps = parseReal(engineParameter("CallSpreadEps"));
+
+    return QuantLib::ext::make_shared<QuantExt::RangeAccrualPricerByCallSpread>(ovs, eps);
 }
 
 } // namespace data

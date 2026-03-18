@@ -2408,23 +2408,38 @@ Leg makeRangeAccrualLeg(const LegData& data, const QuantLib::ext::shared_ptr<Ibo
     if (attachPricer) {
         auto builder = engineFactory->builder("IborRangeAccrualLeg");
         QL_REQUIRE(builder, "No builder found for IborRangeAccrualLeg");
-        auto raBuilder =
-            QuantLib::ext::dynamic_pointer_cast<RangeAccrualLegEngineBuilder>(builder);
-        QL_REQUIRE(raBuilder, "Expected RangeAccrualLegEngineBuilder");
         std::string indexName = IndexNameTranslator::instance().oreName(iborIndex->name());
         Date today = Settings::instance().evaluationDate();
+
+        // Dispatch to the appropriate builder type
+        auto raBuilder = QuantLib::ext::dynamic_pointer_cast<RangeAccrualLegEngineBuilder>(builder);
+        auto csBuilder = QuantLib::ext::dynamic_pointer_cast<RangeAccrualLegCallSpreadEngineBuilder>(builder);
+        QL_REQUIRE(raBuilder || csBuilder,
+                   "Expected RangeAccrualLegEngineBuilder or RangeAccrualLegCallSpreadEngineBuilder");
+
+        // For the call-spread builder, the pricer is independent of the coupon dates
+        // so we build it once and reuse it for all coupons.
+        QuantLib::ext::shared_ptr<FloatingRateCouponPricer> csPricer;
+        if (csBuilder)
+            csPricer = csBuilder->buildPricer(indexName);
+
         Size couponIdx = 0;
         for (auto& cf : leg) {
             auto raCoupon = QuantLib::ext::dynamic_pointer_cast<RangeAccrualFloatersCoupon>(cf);
             if (raCoupon) {
                 if (raCoupon->date() > today) {
-                    auto pricer = raBuilder->buildPricer(
-                        indexName, raCoupon->accrualStartDate(), raCoupon->accrualEndDate());
+                    QuantLib::ext::shared_ptr<FloatingRateCouponPricer> pricer;
+                    if (raBuilder)
+                        pricer = raBuilder->buildPricer(
+                            indexName, raCoupon->accrualStartDate(), raCoupon->accrualEndDate());
+                    else
+                        pricer = csPricer;
+
                     if (fixedRateMode) {
                         // Set the per-coupon fixed rate on the pricer so it computes
                         // fixedRate * (n/N) instead of gearing * Libor * (n/N) + spread
                         auto raPricer =
-                            QuantLib::ext::dynamic_pointer_cast<RangeAccrualPricerByBgm>(pricer);
+                            QuantLib::ext::dynamic_pointer_cast<RangeAccrualPricer>(pricer);
                         if (raPricer)
                             raPricer->setFixedRate(coupon[std::min(couponIdx, coupon.size() - 1)]);
                     }
