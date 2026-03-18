@@ -49,7 +49,6 @@ public:
                   const std::set<Date>& simulationDates,
                   const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
                       QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
-                  const std::vector<Size>& projectedStateProcessIndices = {},
                   const std::vector<std::string>& conditionalExpectationModelStates = {},
                   const std::vector<Date>& stickyCloseOutDates = {}, const Size timeStepsPerYear = 1);
 
@@ -100,7 +99,6 @@ protected:
     std::vector<Handle<YieldTermStructure>> curves_;
     std::vector<Handle<Quote>> fxSpots_;
     Size timeStepsPerYear_;
-    std::vector<Size> projectedStateProcessIndices_;
     std::vector<Date> stickyCloseOutDates_;
 
     // updated in performCalculations()

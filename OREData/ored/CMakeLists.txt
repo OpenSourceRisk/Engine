@@ -75,6 +75,7 @@ model/calibrationinstruments/cpicapfloor.cpp
 model/calibrationinstruments/yoycapfloor.cpp
 model/calibrationinstruments/yoyswap.cpp
 model/calibrationpointcache.cpp
+model/camcorrelationsfromindexcorrelations.cpp
 model/commodityschwartzmodelbuilder.cpp
 model/commodityschwartzmodeldata.cpp
 model/crcirbuilder.cpp
@@ -494,6 +495,7 @@ model/calibrationinstruments/cpicapfloor.hpp
 model/calibrationinstruments/yoycapfloor.hpp
 model/calibrationinstruments/yoyswap.hpp
 model/calibrationpointcache.hpp
+model/camcorrelationsfromindexcorrelations.hpp
 model/commodityschwartzmodelbuilder.hpp
 model/commodityschwartzmodeldata.hpp
 model/crcirbuilder.hpp

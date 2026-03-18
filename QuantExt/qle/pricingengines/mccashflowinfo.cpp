@@ -16,15 +16,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ql/cashflows/averagebmacoupon.hpp>
-#include <ql/cashflows/capflooredcoupon.hpp>
-#include <ql/cashflows/cmscoupon.hpp>
-#include <ql/cashflows/fixedratecoupon.hpp>
-#include <ql/cashflows/floatingratecoupon.hpp>
-#include <ql/cashflows/iborcoupon.hpp>
-#include <ql/cashflows/simplecashflow.hpp>
-#include <ql/experimental/coupons/strippedcapflooredcoupon.hpp>
-#include <ql/indexes/swapindex.hpp>
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/cappedflooredaveragebmacoupon.hpp>
 #include <qle/cashflows/equitycashflow.hpp>
@@ -36,10 +27,21 @@
 #include <qle/cashflows/indexedcoupon.hpp>
 #include <qle/cashflows/interpolatediborcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
+#include <qle/cashflows/scaledcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/indexes/equityindex.hpp>
 #include <qle/indexes/fxindex.hpp>
 #include <qle/pricingengines/mccashflowinfo.hpp>
+
+#include <ql/cashflows/averagebmacoupon.hpp>
+#include <ql/cashflows/capflooredcoupon.hpp>
+#include <ql/cashflows/cmscoupon.hpp>
+#include <ql/cashflows/fixedratecoupon.hpp>
+#include <ql/cashflows/floatingratecoupon.hpp>
+#include <ql/cashflows/iborcoupon.hpp>
+#include <ql/cashflows/simplecashflow.hpp>
+#include <ql/experimental/coupons/strippedcapflooredcoupon.hpp>
+#include <ql/indexes/swapindex.hpp>
 
 namespace QuantExt {
 
@@ -66,10 +68,21 @@ McCashflowInfo::McCashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const C
         this->exIntoCriterionTime = this->payTime + (exerciseIntoIncludeSameDayFlows ? tinyTime : 0.0);
     }
 
+    // Handle scaling
+    Real multiplier = 1.0;
+    if (auto scf = QuantLib::ext::dynamic_pointer_cast<ScaledCashFlow>(flow)) {
+        multiplier = scf->multiplier();
+        flow = scf->underlyingCashFlow();
+    } else if (auto scp = QuantLib::ext::dynamic_pointer_cast<ScaledCoupon>(flow)) {
+        multiplier = scp->multiplier();
+        flow = scp->underlyingCoupon();
+    }
+
     // Handle SimpleCashflow
     if (QuantLib::ext::dynamic_pointer_cast<SimpleCashFlow>(flow) != nullptr) {
-        this->amountCalculator = [flow](const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
-            return RandomVariable(n, flow->amount());
+        this->amountCalculator = [flow, multiplier](const Size n,
+                                                    const std::vector<std::vector<const RandomVariable*>>& states) {
+            return RandomVariable(n, multiplier * flow->amount());
         };
         return;
     }
@@ -92,17 +105,18 @@ McCashflowInfo::McCashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const C
                     model->pIdx(CrossAssetModel::AssetType::FX, fxLinkedTargetCcyIdx - 1));
             }
         }
-        this->amountCalculator = [today, fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx, fxLinkedFixingDate,
-                                  fxl](const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
+        this->amountCalculator = [today, fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx, fxLinkedFixingDate, fxl,
+                                  multiplier](const Size n,
+                                              const std::vector<std::vector<const RandomVariable*>>& states) {
             if (fxLinkedFixingDate <= today)
-                return RandomVariable(n, fxl->amount());
+                return RandomVariable(n, multiplier * fxl->amount());
             RandomVariable fxSource(n, 1.0), fxTarget(n, 1.0);
             Size fxIdx = 0;
             if (fxLinkedSourceCcyIdx > 0)
                 fxSource = exp(*states.at(0).at(fxIdx++));
             if (fxLinkedTargetCcyIdx > 0)
                 fxTarget = exp(*states.at(0).at(fxIdx));
-            return RandomVariable(n, fxl->foreignAmount()) * fxSource / fxTarget;
+            return RandomVariable(n, multiplier * fxl->foreignAmount()) * fxSource / fxTarget;
         };
         return;
     }
@@ -231,35 +245,35 @@ McCashflowInfo::McCashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const C
             statesEqIdx = simTimeCounter++;
         }
 
-        this->amountCalculator = [flow, isFxLinked, isFxIndexed, fxLinkedFixedFxRate, fxLinkedSourceCcyIdx,
-                                  fxLinkedTargetCcyIdx, isEqIndexed, eqLinkedFixedPrice, eqLinkedQuantity, statesFxIdx,
-                                  statesEqIdx](const Size n,
-                                               const std::vector<std::vector<const RandomVariable*>>& states) {
-            RandomVariable fxFixing(n, 1.0);
-            if (isFxLinked || isFxIndexed) {
-                if (fxLinkedFixedFxRate != Null<Real>()) {
-                    fxFixing = RandomVariable(n, fxLinkedFixedFxRate);
-                } else {
-                    RandomVariable fxSource(n, 1.0), fxTarget(n, 1.0);
-                    Size fxIdx = 0;
-                    if (fxLinkedSourceCcyIdx > 0)
-                        fxSource = exp(*states.at(statesFxIdx).at(fxIdx++));
-                    if (fxLinkedTargetCcyIdx > 0)
-                        fxTarget = exp(*states.at(statesFxIdx).at(fxIdx));
-                    fxFixing = fxSource / fxTarget;
+        this->amountCalculator =
+            [flow, isFxLinked, isFxIndexed, fxLinkedFixedFxRate, fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx,
+             isEqIndexed, eqLinkedFixedPrice, eqLinkedQuantity, statesFxIdx, statesEqIdx,
+             multiplier](const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
+                RandomVariable fxFixing(n, 1.0);
+                if (isFxLinked || isFxIndexed) {
+                    if (fxLinkedFixedFxRate != Null<Real>()) {
+                        fxFixing = RandomVariable(n, fxLinkedFixedFxRate);
+                    } else {
+                        RandomVariable fxSource(n, 1.0), fxTarget(n, 1.0);
+                        Size fxIdx = 0;
+                        if (fxLinkedSourceCcyIdx > 0)
+                            fxSource = exp(*states.at(statesFxIdx).at(fxIdx++));
+                        if (fxLinkedTargetCcyIdx > 0)
+                            fxTarget = exp(*states.at(statesFxIdx).at(fxIdx));
+                        fxFixing = fxSource / fxTarget;
+                    }
                 }
-            }
-            RandomVariable eqFixing(n, 1.0);
-            if (isEqIndexed) {
-                if (eqLinkedFixedPrice != Null<Real>()) {
-                    eqFixing = RandomVariable(n, eqLinkedFixedPrice);
-                } else {
-                    eqFixing = exp(*states.at(statesEqIdx).at(0));
+                RandomVariable eqFixing(n, 1.0);
+                if (isEqIndexed) {
+                    if (eqLinkedFixedPrice != Null<Real>()) {
+                        eqFixing = RandomVariable(n, eqLinkedFixedPrice);
+                    } else {
+                        eqFixing = exp(*states.at(statesEqIdx).at(0));
+                    }
+                    eqFixing *= RandomVariable(n, eqLinkedQuantity);
                 }
-                eqFixing *= RandomVariable(n, eqLinkedQuantity);
-            }
-            return eqFixing * fxFixing * RandomVariable(n, flow->amount());
-        };
+                return eqFixing * fxFixing * RandomVariable(n, multiplier * flow->amount());
+            };
         return;
     }
 
@@ -286,11 +300,12 @@ McCashflowInfo::McCashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const C
             statesEqIdx = simTimeCounter++;
         }
 
-        this->amountCalculator = [&lgmVectorised, indexCcyIdx, ibor, simTime, fixedRate, isFxLinked, fxLinkedForeignNominal,
-                                  fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx, fxLinkedFixedFxRate, isCapFloored,
-                                  isNakedOption, effFloor, effCap, isFxIndexed, isEqIndexed, eqLinkedFixedPrice,
-                                  eqLinkedQuantity, statesFxIdx, statesEqIdx](
-                                     const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
+        this->amountCalculator = [&lgmVectorised, indexCcyIdx, ibor, simTime, fixedRate, isFxLinked,
+                                  fxLinkedForeignNominal, fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx,
+                                  fxLinkedFixedFxRate, isCapFloored, isNakedOption, effFloor, effCap, isFxIndexed,
+                                  isEqIndexed, eqLinkedFixedPrice, eqLinkedQuantity, statesFxIdx, statesEqIdx,
+                                  multiplier](const Size n,
+                                              const std::vector<std::vector<const RandomVariable*>>& states) {
             RandomVariable fixing = fixedRate != Null<Real>()
                                         ? RandomVariable(n, fixedRate)
                                         : lgmVectorised[indexCcyIdx].fixing(ibor->index(), ibor->fixingDate(), simTime,
@@ -337,7 +352,8 @@ McCashflowInfo::McCashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const C
             } else {
                 effectiveRate = RandomVariable(n, ibor->gearing()) * fixing + RandomVariable(n, ibor->spread());
             }
-            return RandomVariable(n, (isFxLinked ? fxLinkedForeignNominal : ibor->nominal()) * ibor->accrualPeriod()) *
+            return RandomVariable(n, multiplier * (isFxLinked ? fxLinkedForeignNominal : ibor->nominal()) *
+                                         ibor->accrualPeriod()) *
                    effectiveRate * fxFixing * eqFixing;
         };
 
@@ -367,11 +383,12 @@ McCashflowInfo::McCashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const C
             statesEqIdx = simTimeCounter++;
         }
 
-        this->amountCalculator = [&lgmVectorised, indexCcyIdx, ibor, simTime, fixedRate, isFxLinked, fxLinkedForeignNominal,
-                                  fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx, fxLinkedFixedFxRate, isCapFloored,
-                                  isNakedOption, effFloor, effCap, isFxIndexed, isEqIndexed, eqLinkedFixedPrice,
-                                  eqLinkedQuantity, statesFxIdx, statesEqIdx](
-                                     const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
+        this->amountCalculator = [&lgmVectorised, indexCcyIdx, ibor, simTime, fixedRate, isFxLinked,
+                                  fxLinkedForeignNominal, fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx,
+                                  fxLinkedFixedFxRate, isCapFloored, isNakedOption, effFloor, effCap, isFxIndexed,
+                                  isEqIndexed, eqLinkedFixedPrice, eqLinkedQuantity, statesFxIdx, statesEqIdx,
+                                  multiplier](const Size n,
+                                              const std::vector<std::vector<const RandomVariable*>>& states) {
             RandomVariable fixing;
             if (fixedRate != Null<Real>()) {
                 fixing = RandomVariable(n, fixedRate);
@@ -428,7 +445,8 @@ McCashflowInfo::McCashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const C
             } else {
                 effectiveRate = RandomVariable(n, ibor->gearing()) * fixing + RandomVariable(n, ibor->spread());
             }
-            return RandomVariable(n, (isFxLinked ? fxLinkedForeignNominal : ibor->nominal()) * ibor->accrualPeriod()) *
+            return RandomVariable(n, multiplier * (isFxLinked ? fxLinkedForeignNominal : ibor->nominal()) *
+                                         ibor->accrualPeriod()) *
                    effectiveRate * fxFixing * eqFixing;
         };
 
@@ -458,11 +476,12 @@ McCashflowInfo::McCashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const C
             statesEqIdx = simTimeCounter++;
         }
 
-        this->amountCalculator = [&lgmVectorised, indexCcyIdx, cms, simTime, fixedRate, isFxLinked, fxLinkedForeignNominal,
-                                  fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx, fxLinkedFixedFxRate, isCapFloored,
-                                  isNakedOption, effFloor, effCap, isFxIndexed, isEqIndexed, eqLinkedFixedPrice,
-                                  eqLinkedQuantity, statesFxIdx, statesEqIdx](
-                                     const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
+        this->amountCalculator = [&lgmVectorised, indexCcyIdx, cms, simTime, fixedRate, isFxLinked,
+                                  fxLinkedForeignNominal, fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx,
+                                  fxLinkedFixedFxRate, isCapFloored, isNakedOption, effFloor, effCap, isFxIndexed,
+                                  isEqIndexed, eqLinkedFixedPrice, eqLinkedQuantity, statesFxIdx, statesEqIdx,
+                                  multiplier](const Size n,
+                                              const std::vector<std::vector<const RandomVariable*>>& states) {
             RandomVariable fixing =
                 fixedRate != Null<Real>()
                     ? RandomVariable(n, fixedRate)
@@ -510,7 +529,8 @@ McCashflowInfo::McCashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const C
                 effectiveRate = RandomVariable(n, cms->gearing()) * fixing + RandomVariable(n, cms->spread());
             }
 
-            return RandomVariable(n, (isFxLinked ? fxLinkedForeignNominal : cms->nominal()) * cms->accrualPeriod()) *
+            return RandomVariable(n, multiplier * (isFxLinked ? fxLinkedForeignNominal : cms->nominal()) *
+                                         cms->accrualPeriod()) *
                    effectiveRate * fxFixing * eqFixing;
         };
 
@@ -569,8 +589,9 @@ McCashflowInfo::McCashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const C
 
         this->amountCalculator = [&lgmVectorised, indexCcyIdx, on, simTime, isFxLinked, fxLinkedForeignNominal,
                                   fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx, fxLinkedFixedFxRate, isFxIndexed,
-                                  isEqIndexed, eqLinkedFixedPrice, eqLinkedQuantity, statesFxIdx, statesEqIdx,
-                                  simIdx](const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
+                                  isEqIndexed, eqLinkedFixedPrice, eqLinkedQuantity, statesFxIdx, statesEqIdx, simIdx,
+                                  multiplier](const Size n,
+                                              const std::vector<std::vector<const RandomVariable*>>& states) {
             auto statesFcn = [&states = as_const(states)](Size i) -> const RandomVariable* {
                 return states.at(i).at(0);
             };
@@ -601,7 +622,8 @@ McCashflowInfo::McCashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const C
                 }
                 eqFixing *= RandomVariable(n, eqLinkedQuantity);
             }
-            return RandomVariable(n, (isFxLinked ? fxLinkedForeignNominal : on->nominal()) * on->accrualPeriod()) *
+            return RandomVariable(n, multiplier * (isFxLinked ? fxLinkedForeignNominal : on->nominal()) *
+                                         on->accrualPeriod()) *
                    effectiveRate * fxFixing * eqFixing;
         };
 
@@ -660,8 +682,9 @@ McCashflowInfo::McCashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const C
 
         this->amountCalculator = [&lgmVectorised, indexCcyIdx, cfon, simTime, isFxLinked, fxLinkedForeignNominal,
                                   fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx, fxLinkedFixedFxRate, isFxIndexed,
-                                  isEqIndexed, eqLinkedFixedPrice, eqLinkedQuantity, statesFxIdx, statesEqIdx,
-                                  simIdx](const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
+                                  isEqIndexed, eqLinkedFixedPrice, eqLinkedQuantity, statesFxIdx, statesEqIdx, simIdx,
+                                  multiplier](const Size n,
+                                              const std::vector<std::vector<const RandomVariable*>>& states) {
             auto statesFcn = [&states = as_const(states)](Size i) -> const RandomVariable* {
                 return states.at(i).at(0);
             };
@@ -694,7 +717,8 @@ McCashflowInfo::McCashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const C
                 }
                 eqFixing *= RandomVariable(n, eqLinkedQuantity);
             }
-            return RandomVariable(n, (isFxLinked ? fxLinkedForeignNominal : cfon->nominal()) * cfon->accrualPeriod()) *
+            return RandomVariable(n, multiplier * (isFxLinked ? fxLinkedForeignNominal : cfon->nominal()) *
+                                         cfon->accrualPeriod()) *
                    effectiveRate * fxFixing * eqFixing;
         };
 
@@ -753,8 +777,9 @@ McCashflowInfo::McCashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const C
 
         this->amountCalculator = [&lgmVectorised, indexCcyIdx, av, simTime, isFxLinked, fxLinkedForeignNominal,
                                   fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx, fxLinkedFixedFxRate, isFxIndexed,
-                                  isEqIndexed, eqLinkedFixedPrice, eqLinkedQuantity, statesFxIdx, statesEqIdx,
-                                  simIdx](const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
+                                  isEqIndexed, eqLinkedFixedPrice, eqLinkedQuantity, statesFxIdx, statesEqIdx, simIdx,
+                                  multiplier](const Size n,
+                                              const std::vector<std::vector<const RandomVariable*>>& states) {
             auto statesFcn = [&states = as_const(states)](Size i) -> const RandomVariable* {
                 return states.at(i).at(0);
             };
@@ -785,7 +810,8 @@ McCashflowInfo::McCashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const C
                 }
                 eqFixing *= RandomVariable(n, eqLinkedQuantity);
             }
-            return RandomVariable(n, (isFxLinked ? fxLinkedForeignNominal : av->nominal()) * av->accrualPeriod()) *
+            return RandomVariable(n, multiplier * (isFxLinked ? fxLinkedForeignNominal : av->nominal()) *
+                                         av->accrualPeriod()) *
                    effectiveRate * fxFixing * eqFixing;
         };
 
@@ -844,8 +870,9 @@ McCashflowInfo::McCashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const C
 
         this->amountCalculator = [&lgmVectorised, indexCcyIdx, cfav, simTime, isFxLinked, fxLinkedForeignNominal,
                                   fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx, fxLinkedFixedFxRate, isFxIndexed,
-                                  isEqIndexed, eqLinkedFixedPrice, eqLinkedQuantity, statesFxIdx, statesEqIdx,
-                                  simIdx](const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
+                                  isEqIndexed, eqLinkedFixedPrice, eqLinkedQuantity, statesFxIdx, statesEqIdx, simIdx,
+                                  multiplier](const Size n,
+                                              const std::vector<std::vector<const RandomVariable*>>& states) {
             auto statesFcn = [&states = as_const(states)](Size i) -> const RandomVariable* {
                 return states.at(i).at(0);
             };
@@ -878,7 +905,8 @@ McCashflowInfo::McCashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const C
                 }
                 eqFixing *= RandomVariable(n, eqLinkedQuantity);
             }
-            return RandomVariable(n, (isFxLinked ? fxLinkedForeignNominal : cfav->nominal()) * cfav->accrualPeriod()) *
+            return RandomVariable(n, multiplier * (isFxLinked ? fxLinkedForeignNominal : cfav->nominal()) *
+                                         cfav->accrualPeriod()) *
                    effectiveRate * fxFixing * eqFixing;
         };
 
@@ -907,8 +935,9 @@ McCashflowInfo::McCashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const C
 
         this->amountCalculator = [&lgmVectorised, indexCcyIdx, bma, simTime, isFxLinked, fxLinkedForeignNominal,
                                   fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx, fxLinkedFixedFxRate, isFxIndexed,
-                                  isEqIndexed, eqLinkedFixedPrice, eqLinkedQuantity, statesFxIdx, statesEqIdx](
-                                     const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
+                                  isEqIndexed, eqLinkedFixedPrice, eqLinkedQuantity, statesFxIdx, statesEqIdx,
+                                  multiplier](const Size n,
+                                              const std::vector<std::vector<const RandomVariable*>>& states) {
             RandomVariable effectiveRate = lgmVectorised[indexCcyIdx].averagedBmaRate(
                 QuantLib::ext::dynamic_pointer_cast<BMAIndex>(bma->index()), bma->fixingDates(),
                 bma->accrualStartDate(), bma->accrualEndDate(), false, bma->spread(), bma->gearing(), Null<Real>(),
@@ -936,7 +965,8 @@ McCashflowInfo::McCashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const C
                 }
                 eqFixing *= RandomVariable(n, eqLinkedQuantity);
             }
-            return RandomVariable(n, (isFxLinked ? fxLinkedForeignNominal : bma->nominal()) * bma->accrualPeriod()) *
+            return RandomVariable(n, multiplier * (isFxLinked ? fxLinkedForeignNominal : bma->nominal()) *
+                                         bma->accrualPeriod()) *
                    effectiveRate * fxFixing * eqFixing;
         };
 
@@ -966,7 +996,8 @@ McCashflowInfo::McCashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const C
         this->amountCalculator =
             [&lgmVectorised, indexCcyIdx, cfbma, simTime, isFxLinked, fxLinkedForeignNominal, fxLinkedSourceCcyIdx,
              fxLinkedTargetCcyIdx, fxLinkedFixedFxRate, isFxIndexed, isEqIndexed, eqLinkedFixedPrice, eqLinkedQuantity,
-             statesFxIdx, statesEqIdx](const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
+             statesFxIdx, statesEqIdx,
+             multiplier](const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
                 RandomVariable effectiveRate = lgmVectorised[indexCcyIdx].averagedBmaRate(
                     QuantLib::ext::dynamic_pointer_cast<BMAIndex>(cfbma->underlying()->index()),
                     cfbma->underlying()->fixingDates(), cfbma->underlying()->accrualStartDate(),
@@ -996,7 +1027,8 @@ McCashflowInfo::McCashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const C
                     }
                     eqFixing *= RandomVariable(n, eqLinkedQuantity);
                 }
-                return RandomVariable(n, (isFxLinked ? fxLinkedForeignNominal : cfbma->underlying()->nominal()) *
+                return RandomVariable(n, multiplier *
+                                             (isFxLinked ? fxLinkedForeignNominal : cfbma->underlying()->nominal()) *
                                              cfbma->underlying()->accrualPeriod()) *
                        effectiveRate * fxFixing * eqFixing;
             };
@@ -1026,8 +1058,9 @@ McCashflowInfo::McCashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const C
 
         this->amountCalculator = [&lgmVectorised, indexCcyIdx, sub, simTime, isFxLinked, fxLinkedForeignNominal,
                                   fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx, fxLinkedFixedFxRate, isFxIndexed,
-                                  isEqIndexed, eqLinkedFixedPrice, eqLinkedQuantity, statesFxIdx, statesEqIdx](
-                                     const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
+                                  isEqIndexed, eqLinkedFixedPrice, eqLinkedQuantity, statesFxIdx, statesEqIdx,
+                                  multiplier](const Size n,
+                                              const std::vector<std::vector<const RandomVariable*>>& states) {
             RandomVariable fixing = lgmVectorised[indexCcyIdx].subPeriodsRate(
                 sub->index(), sub->fixingDates(), simTime, *states.at(0).at(0), sub->accrualFractions(), sub->type(),
                 sub->includeSpread(), sub->spread(), sub->gearing(), sub->accrualPeriod());
@@ -1054,7 +1087,8 @@ McCashflowInfo::McCashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const C
                 }
                 eqFixing *= RandomVariable(n, eqLinkedQuantity);
             }
-            return RandomVariable(n, (isFxLinked ? fxLinkedForeignNominal : sub->nominal()) * sub->accrualPeriod()) *
+            return RandomVariable(n, multiplier * (isFxLinked ? fxLinkedForeignNominal : sub->nominal()) *
+                                         sub->accrualPeriod()) *
                    fixing * fxFixing * eqFixing;
         };
 
@@ -1124,9 +1158,10 @@ McCashflowInfo::McCashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const C
             }
         }
 
-        this->amountCalculator = [&model, today, &lgmVectorised, eq, irStartFixingIdx, eqStartFixingIdx, eqEndFixingIdx, fxStartFixingIdx,
-                                  fxEndFixingIdx, fxSourceCcyIdx, fxTargetCcyIdx, eqCcyIndex](
-                                     const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
+        this->amountCalculator = [&model, today, &lgmVectorised, eq, irStartFixingIdx, eqStartFixingIdx, eqEndFixingIdx,
+                                  fxStartFixingIdx, fxEndFixingIdx, fxSourceCcyIdx, fxTargetCcyIdx, eqCcyIndex,
+                                  multiplier](const Size n,
+                                              const std::vector<std::vector<const RandomVariable*>>& states) {
             RandomVariable initialPrice;
             if (eq->inputInitialPrice() != Null<Real>() || eq->fixingStartDate() <= today) {
                 initialPrice = RandomVariable(n, eq->initialPrice());
@@ -1235,7 +1270,7 @@ McCashflowInfo::McCashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const C
             } else {
                 nominal = RandomVariable(n, eq->inputNominal());
             }
-            return swapletRate * nominal;
+            return multiplier * swapletRate * nominal;
         };
         return;
     } // end of equity coupon handling
@@ -1255,10 +1290,11 @@ McCashflowInfo::McCashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const C
             this->modelIndices.push_back(
                 {model->pIdx(CrossAssetModel::AssetType::EQ, model->eqIndex(eq->equityCurve()->name()))});
         }
-        this->amountCalculator = [today, eq](const Size n,
-                                            const std::vector<std::vector<const RandomVariable*>>& states) {
-            return eq->fixingDate() <= today ? RandomVariable(n, eq->amount())
-                                              : RandomVariable(n, eq->quantity()) * exp(*states.at(0).at(0));
+        this->amountCalculator = [today, eq, multiplier](
+                                     const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
+            return multiplier * (eq->fixingDate() <= today
+                                     ? RandomVariable(n, eq->amount())
+                                     : RandomVariable(n, eq->quantity()) * exp(*states.at(0).at(0)));
         };
     }
 

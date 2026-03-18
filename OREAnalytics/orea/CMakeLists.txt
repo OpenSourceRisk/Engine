@@ -287,6 +287,7 @@ app/structuredanalyticswarning.hpp
 app/zerosensitivityloader.hpp
 auto_link.hpp
 cube/cube_io.hpp
+cube/cube_io_utils.hpp
 cube/cubecsvreader.hpp
 cube/cubeinterpretation.hpp
 cube/cubewriter.hpp

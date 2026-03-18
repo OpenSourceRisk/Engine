@@ -16,13 +16,152 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <ored/model/lgmbuilder.hpp>
 #include <ored/portfolio/builders/balanceguaranteedswap.hpp>
+#include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
+
 #include <qle/pricingengines/numericlgmbgsflexiswapengine.hpp>
 
 #include <ql/quotes/compositequote.hpp>
+#include <ql/pricingengines/swap/discountingswapengine.hpp>
 
 namespace ore {
 namespace data {
+
+QuantLib::ext::shared_ptr<QuantExt::IrModel>
+FlexiSwapBGSLGMGridEngineBuilderBase::model(const string& id, const string& key, const std::vector<Date>& expiries,
+                                            const Date& maturity, const std::vector<Real>& strikes) {
+
+    // TODO this is the same as in LGMBermudanSwaptionEngineBuilder::model(), factor the model building out
+
+    DLOG("Get model data");
+    auto calibration = parseCalibrationType(modelParameter("Calibration"));
+    auto calibrationStrategy = parseCalibrationStrategy(modelParameter("CalibrationStrategy"));
+    std::string referenceCalibrationGrid = modelParameter("ReferenceCalibrationGrid", {}, false, "");
+    Real lambda = parseReal(modelParameter("Reversion"));
+    vector<Real> sigma = parseListOfValues<Real>(modelParameter("Volatility"), &parseReal);
+    vector<Real> sigmaTimes = parseListOfValues<Real>(modelParameter("VolatilityTimes", {}, false), &parseReal);
+    QL_REQUIRE(sigma.size() == sigmaTimes.size() + 1, "there must be n+1 volatilities (" << sigma.size()
+                                                                                         << ") for n volatility times ("
+                                                                                         << sigmaTimes.size() << ")");
+    Real tolerance = parseReal(modelParameter("Tolerance"));
+    auto reversionType = parseReversionType(modelParameter("ReversionType"));
+    auto volatilityType = parseVolatilityType(modelParameter("VolatilityType"));
+    bool continueOnCalibrationError = globalParameters_.count("ContinueOnCalibrationError") > 0 &&
+                                      parseBool(globalParameters_.at("ContinueOnCalibrationError"));
+    bool allowModelFallbacks =
+        globalParameters_.count("AllowModelFallbakcs") > 0 && parseBool(globalParameters_.at("AllowModelFallbacks"));
+
+    auto data = QuantLib::ext::make_shared<IrLgmData>();
+
+    // check for allowed calibration / bermudan strategy settings
+    std::vector<std::pair<CalibrationType, CalibrationStrategy>> validCalPairs = {
+        {CalibrationType::None, CalibrationStrategy::None},
+        {CalibrationType::Bootstrap, CalibrationStrategy::CoterminalATM},
+        {CalibrationType::Bootstrap, CalibrationStrategy::CoterminalDealStrike},
+        {CalibrationType::BestFit, CalibrationStrategy::CoterminalATM},
+        {CalibrationType::BestFit, CalibrationStrategy::CoterminalDealStrike}};
+
+    QL_REQUIRE(std::find(validCalPairs.begin(), validCalPairs.end(),
+                         std::make_pair(calibration, calibrationStrategy)) != validCalPairs.end(),
+               "Calibration (" << calibration << ") and CalibrationStrategy (" << calibrationStrategy
+                               << ") are not allowed in this combination");
+
+    // compute horizon shift
+    Real shiftHorizon = parseReal(modelParameter("ShiftHorizon", {}, false, "0.5"));
+    Date today = Settings::instance().evaluationDate();
+    shiftHorizon = ActualActual(ActualActual::ISDA).yearFraction(today, maturity) * shiftHorizon;
+
+    // Default: no calibration, constant lambda and sigma from engine configuration
+    data->reset();
+    data->qualifier() = key;
+    data->calibrateH() = false;
+    data->hParamType() = ParamType::Constant;
+    data->hValues() = {lambda};
+    data->reversionType() = reversionType;
+    data->calibrateA() = false;
+    data->aParamType() = ParamType::Piecewise;
+    data->aValues() = sigma;
+    data->aTimes() = sigmaTimes;
+    data->volatilityType() = volatilityType;
+    data->calibrationType() = calibration;
+    data->shiftHorizon() = shiftHorizon;
+
+    if (calibrationStrategy == CalibrationStrategy::CoterminalATM ||
+        calibrationStrategy == CalibrationStrategy::CoterminalDealStrike) {
+        DLOG("Build LgmData for co-terminal specification");
+        vector<string> expiryDates, termDates;
+        for (Size i = 0; i < expiries.size(); ++i) {
+            expiryDates.push_back(to_string(expiries[i]));
+            termDates.push_back(to_string(maturity));
+        }
+        data->optionExpiries() = expiryDates;
+        data->optionTerms() = termDates;
+        data->optionStrikes().resize(expiryDates.size(), "ATM");
+        if (calibrationStrategy == CalibrationStrategy::CoterminalDealStrike) {
+            for (Size i = 0; i < expiryDates.size(); ++i) {
+                if (strikes[i] != Null<Real>())
+                    data->optionStrikes()[i] = std::to_string(strikes[i]);
+            }
+        }
+        if (calibration == CalibrationType::Bootstrap) {
+            DLOG("Calibrate piecewise alpha");
+            data->calibrationType() = CalibrationType::Bootstrap;
+            data->calibrateH() = false;
+            data->hParamType() = ParamType::Constant;
+            data->hValues() = {lambda};
+            data->calibrateA() = true;
+            data->aParamType() = ParamType::Piecewise;
+            data->aValues() = {sigma};
+        } else if (calibration == CalibrationType::BestFit) {
+            DLOG("Calibrate constant sigma");
+            data->calibrationType() = CalibrationType::BestFit;
+            data->calibrateH() = false;
+            data->hParamType() = ParamType::Constant;
+            data->hValues() = {lambda};
+            data->calibrateA() = true;
+            data->aParamType() = ParamType::Constant;
+            data->aValues() = {sigma};
+        } else
+            QL_FAIL("choice of calibration type invalid");
+    }
+
+    bool generateAdditionalResults = false;
+    auto p = globalParameters_.find("GenerateAdditionalResults");
+    if (p != globalParameters_.end()) {
+        generateAdditionalResults = parseBool(p->second);
+    }
+
+    // Build model
+    DLOG("Build LGM model");
+
+    auto rt = globalParameters_.find("RunType");
+    bool allowChangingFallbacks =
+        rt != globalParameters_.end() && rt->second != "SensitivityDelta" && rt->second != "SensitivityDeltaGamma";
+
+    QuantLib::ext::shared_ptr<LgmBuilder> calib = QuantLib::ext::make_shared<LgmBuilder>(
+        market_, data, configuration(MarketContext::irCalibration), tolerance, continueOnCalibrationError,
+        referenceCalibrationGrid, generateAdditionalResults, id, BlackCalibrationHelper::RelativePriceError,
+        allowChangingFallbacks, allowModelFallbacks,
+        globalParameters_.count("Calibrate") != 0 && !parseBool(globalParameters_.at("Calibrate")));
+
+    engineFactory()->modelBuilders().insert(std::make_pair(id, calib));
+
+    return calib->model();
+}
+
+QuantLib::ext::shared_ptr<PricingEngine>
+FlexiSwapBGSDiscountingEngineBuilderBase::engineImpl(const string& id, const string& id2, const string& key,
+                                                     const std::vector<Date>& expiries, const Date& maturity,
+                                                     const std::vector<Real>& strikes) {
+    DLOG("Building Discounting Flexi Swap engine for trade " << id);
+    DLOG("Build engine (configuration " << configuration(MarketContext::pricing) << ")");
+    QuantLib::ext::shared_ptr<IborIndex> index;
+    string ccy = tryParseIborIndex(key, index) ? index->currency().code() : key;
+    Handle<YieldTermStructure> dscCurve = market_->discountCurve(ccy, configuration(MarketContext::pricing));
+    return QuantLib::ext::make_shared<QuantLib::DiscountingSwapEngine>(dscCurve);
+}
 
 QuantLib::ext::shared_ptr<PricingEngine>
 BalanceGuaranteedSwapFlexiSwapLGMGridEngineBuilder::engineImpl(const string& id, const string& id2, const string& ccy,
@@ -61,8 +200,8 @@ BalanceGuaranteedSwapFlexiSwapLGMGridEngineBuilder::engineImpl(const string& id,
     // Build engine
     DLOG("Build engine (configuration " << configuration(MarketContext::pricing) << ")");
     Handle<YieldTermStructure> dscCurve = market_->discountCurve(ccy, configuration(MarketContext::pricing));
-    return QuantLib::ext::make_shared<QuantExt::NumericLgmBgsFlexiSwapEngine>(lgm, sy, ny, sx, nx, minCpr, maxCpr, dscCurve,
-                                                                      method, singleSwaptionThreshold);
+    return QuantLib::ext::make_shared<QuantExt::NumericLgmBgsFlexiSwapEngine>(
+        lgm, sy, ny, sx, nx, minCpr, maxCpr, dscCurve, method, singleSwaptionThreshold);
 }
 
 } // namespace data
