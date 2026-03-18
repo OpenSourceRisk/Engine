@@ -43,6 +43,9 @@ public:
     Date date() const override { return underlying_->date(); }
     Real amount() const override { return underlying_->amount() * multiplier_; }
 
+    Real multiplier() const { return multiplier_; }
+    const QuantLib::ext::shared_ptr<CashFlow>& underlyingCashFlow() const { return underlying_; }
+
 private:
     Real multiplier_;
     QuantLib::ext::shared_ptr<CashFlow> underlying_;
@@ -71,8 +74,8 @@ public:
     Rate rate() const override { return underlyingCoupon_->rate(); }
     DayCounter dayCounter() const override { return underlyingCoupon_->dayCounter(); }
 
-    const Real multiplier() const { return multiplier_; }
-    const QuantLib::ext::shared_ptr<Coupon> underlyingCoupon() const { return underlyingCoupon_; }
+    Real multiplier() const { return multiplier_; }
+    const QuantLib::ext::shared_ptr<Coupon>& underlyingCoupon() const { return underlyingCoupon_; }
 
 private:
     Real multiplier_;

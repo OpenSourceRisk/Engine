@@ -17,6 +17,8 @@
 */
 
 #include <qle/instruments/multilegoption.hpp>
+#include <qle/cashflows/scaledcoupon.hpp>
+#include <qle/cashflows/indexedcoupon.hpp>
 
 #include <ql/cashflows/floatingratecoupon.hpp>
 
@@ -50,8 +52,21 @@ MultiLegOption::MultiLegOption(const std::vector<Leg>& legs, const std::vector<b
     // register with underlying cashflows
 
     for (auto const& l : legs_) {
-        for (auto const& c : l) {
+        for (auto c : l) {
             registerWith(c);
+            // always forward notifications after removing wrapper coupons
+            bool foundWrapper;
+            do {
+                foundWrapper = false;
+                if (auto s = QuantLib::ext::dynamic_pointer_cast<ScaledCoupon>(c)) {
+                    c = s->underlyingCoupon();
+                    foundWrapper = true;
+                }
+                if (auto i = QuantLib::ext::dynamic_pointer_cast<IndexedCoupon>(c)) {
+                    c = i->underlying();
+                    foundWrapper = true;
+                }
+            } while (foundWrapper);
             if (auto lazy = QuantLib::ext::dynamic_pointer_cast<LazyObject>(c))
                 lazy->alwaysForwardNotifications();
         }

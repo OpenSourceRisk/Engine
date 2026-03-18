@@ -204,15 +204,24 @@ void McMultiLegBaseEngine::calculateModels(
         // update path value rebate
 
         if (isExerciseTime && rebatedExercise != nullptr) {
-            if (rebatedExercise->rebate(rebateIndex) != 0.0) {
-                Size simulationTimes_idx = std::distance(simulationTimes.begin(), simulationTimes.find(*t));
-                Real payTime = time(rebatedExercise->rebatePaymentDate(rebateIndex));
-                if (payTime >= 0.0) {
-                    pathValueRebate = lgmVectorised_[0].reducedDiscountBond(
-                                          *t, payTime, pathValues[simulationTimes_idx][0], discountCurves_[0]) *
-                                      RandomVariable(calibrationSamples_, rebatedExercise->rebate(rebateIndex));
-                } else {
-                    pathValueRebate = RandomVariable(calibrationSamples_, 0.0);
+            pathValueRebate = RandomVariable(calibrationSamples_, 0.0);
+            for (Size k = 0; k < rebatedExercise->rebateCurrencies().size(); ++k) {
+                if (rebatedExercise->rebate(rebateIndex, k) != 0.0) {
+                    Size ccyIndex = rebatedExercise->rebateCurrency(k).empty()
+                                        ? 0
+                                        : model_->ccyIndex(rebatedExercise->rebateCurrency(k));
+                    Size simulationTimes_idx = std::distance(simulationTimes.begin(), simulationTimes.find(*t));
+                    Real payTime = time(rebatedExercise->rebatePaymentDate(rebateIndex));
+                    if (payTime >= 0.0) {
+                        auto tmpRebate = lgmVectorised_[0].reducedDiscountBond(
+                                             *t, payTime, pathValues[simulationTimes_idx][0], discountCurves_[0]) *
+                                         rebatedExercise->rebate(rebateIndex,k);
+                        if (ccyIndex > 0) {
+                            tmpRebate *= exp(pathValues[simulationTimes_idx]
+                                                       [model_->pIdx(CrossAssetModel::AssetType::FX, ccyIndex - 1)]);
+                        }
+                        pathValueRebate += tmpRebate;
+                    }
                 }
             }
             --rebateIndex;
@@ -230,6 +239,7 @@ void McMultiLegBaseEngine::calculateModels(
                                              simulationTimes);
 
             if (pathValueRebate.initialised()) {
+                // FIXME do we need this? the pathValueRebate is known at time t
                 regModelRebate[counter] = McRegressionModel(
                     *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
                     regressorModel_, regressionVarianceCutoff_, regressionMaxSimTimesIr_, regressionMaxSimTimesFx_,

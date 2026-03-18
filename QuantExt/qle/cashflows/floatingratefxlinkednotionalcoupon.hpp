@@ -25,8 +25,10 @@
 #ifndef quantext_floating_rate_fx_linked_notional_coupon_hpp
 #define quantext_floating_rate_fx_linked_notional_coupon_hpp
 
-#include <ql/cashflows/floatingratecoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
+
+#include <ql/cashflows/floatingratecoupon.hpp>
+#include <ql/indexes/interestrateindex.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;

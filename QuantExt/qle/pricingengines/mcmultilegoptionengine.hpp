@@ -54,6 +54,7 @@ public:
         const Period& cfOnCpnAddSimTimesCutoff = Period(), const Size regressionMaxSimTimesIr = 0,
         const Size regressionMaxSimTimesFx = 0, const Size regressionMaxSimTimesEq = 0,
         const McRegressionModel::VarGroupMode regressionVarGroupMode = McRegressionModel::VarGroupMode::Global);
+
     McMultiLegOptionEngine(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model,
                            const SequenceType calibrationPathGenerator, const SequenceType pricingPathGenerator,
                            const Size calibrationSamples, const Size pricingSamples, const Size calibrationSeed,

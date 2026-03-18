@@ -16,14 +16,18 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/algorithm/string.hpp>
 #include <ored/configuration/correlationcurveconfig.hpp>
+#include <ored/model/utilities.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+
 #include <ql/errors.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
+
+#include <boost/algorithm/string.hpp>
+
 namespace ore {
 namespace data {
 
@@ -225,64 +229,64 @@ XMLNode* CorrelationCurveConfig::toXML(XMLDocument& doc) const {
     return node;
 }
 
+namespace {
+Size getIndexPriority(const IndexInfo& i) {
+    if (i.isComm())
+        return 0;
+    else if (i.isEq())
+        return 1;
+    else if (i.isFx())
+        return 2;
+    else if (i.isIrIbor())
+        return 3;
+    else if (i.isIrSwap())
+        return 4;
+    else if (i.isInf())
+        return 5;
+    else if (i.isGeneric())
+        return 6;
+    return 7;
+}
+} // namespace
+
 bool indexNameLessThan(const std::string& index1, const std::string& index2) {
-    vector<string> tokens1;
-    boost::split(tokens1, index1, boost::is_any_of("-"));
-    vector<string> tokens2;
-    boost::split(tokens2, index2, boost::is_any_of("-"));
 
-    QL_REQUIRE(tokens1.size() >= 2, "at least two tokens expected in " << index1);
-    QL_REQUIRE(tokens2.size() >= 2, "at least two tokens expected in " << index2);
+    try {
 
-    Size s1, s2;
+        IndexInfo i1(index1);
+        IndexInfo i2(index2);
 
-    if (tokens1[1] == "CMS")
-        s1 = 4;
-    else if (tokens1[0] == "FX")
-        s1 = 2;
-    else if (tokens1[0] == "EQ")
-        s1 = 1;
-    else if (tokens1[0] == "COMM")
-        s1 = 0;
-    else
-        s1 = 3; // assume Ibor
+        Size s1 = getIndexPriority(i1);
+        Size s2 = getIndexPriority(i2);
 
-    if (tokens2[1] == "CMS")
-        s2 = 4;
-    else if (tokens2[0] == "FX")
-        s2 = 2;
-    else if (tokens2[0] == "EQ")
-        s2 = 1;
-    else if (tokens2[0] == "COMM")
-        s2 = 0;
-    else
-        s2 = 3; // assume Ibor
+        if (s1 != s2)
+            return s1 < s2;
 
-    if (s1 < s2)
-        return true;
-    else if (s2 < s1)
-        return false;
+        // both EQ or both COM
+        if (s1 == 0 || s1 == 1)
+            return i1.name() < i2.name();
 
-    // both EQ or both COM
-    if (s1 == 0 || s1 == 1)
-        return tokens1[1] < tokens2[1];
+        // both FX, compare CCY1 then CCY2 then fixing source alphabetical
+        if (s1 == 2) {
+            return std::make_tuple(i1.fx()->sourceCurrency().code(), i1.fx()->targetCurrency().code(), i1.fx()->familyName()) <
+                   std::make_tuple(i2.fx()->sourceCurrency().code(), i2.fx()->targetCurrency().code(), i2.fx()->familyName());
+        }
 
-    QL_REQUIRE(tokens1.size() >= 3, "at least three tokens expected in " << index1);
-    QL_REQUIRE(tokens2.size() >= 3, "at least three tokens expected in " << index2);
+        // both Ibor or Overnight, both CMS, compare tenor, then name
+        if (s1 == 3 || s1 == 4) {
+            return std::make_tuple(i1.ir()->tenor(), i1.ir()->name()) <
+                   std::make_tuple(i2.ir()->tenor(), i2.ir()->name());
+        }
 
-    // both CMS or both Ibor, tenor is the last token (3rd or even 4th for customised CMS indices)
-    if (s1 == 3 || s1 == 4)
-        return parsePeriod(tokens1.back()) < parsePeriod(tokens2.back());
+        // both Inf, Generic or other, compare name
+        return i1.name() < i2.name();
 
-    QL_REQUIRE(tokens1.size() >= 4, "at least four tokens expected in " << index1);
-    QL_REQUIRE(tokens2.size() >= 4, "at least four tokens expected in " << index2);
+    } catch (const std::exception&) {
 
-    // both FX, compare CCY1 then CCY2 alphabetical
-    if (s1 == 2) {
-        return (tokens1[2] + "-" + tokens1[3]) < (tokens2[2] + "-" + tokens2[3]);
+        // could not parse one of the indices, fall back to plain string comparison
+
+        return index1 < index2;
     }
-
-    QL_FAIL("indexNameLessThan(): internal error");
 }
 
 } // namespace data
