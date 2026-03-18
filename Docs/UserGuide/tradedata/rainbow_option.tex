@@ -2026,3 +2026,294 @@ The meanings and allowable values for the \lstinline!WorstPerformanceRainbowOpti
       as amount of CCY1 in CCY2.Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
         Allowable values: See Table \ref{tab:currency} for allowable currency codes.
 \end{itemize}
+
+
+\subsubsection*{Worst Performance Rainbow Option 08}
+
+A worst performance rainbow option 08 is represented as a {\em scripted trade},
+refer to the scripted trade documentation in ore/Docs/ScriptedTrade
+for an introduction.
+
+Trade input and the payoff script are described below.
+
+\begin{minted}[fontsize=\scriptsize]{xml}
+<Trade id="FX_WorstPerformanceRainbowOption08">
+  <TradeType>ScriptedTrade</TradeType>
+  <Envelope>
+    <CounterParty>CPTY_A</CounterParty>
+    <NettingSetId>CPTY_A</NettingSetId>
+    <AdditionalFields/>
+  </Envelope>
+  <WorstPerformanceRainbowOption08Data>
+    <LongShort type="number">1</LongShort>
+    <CallPut type="number">1</CallPut>
+    <Quantity type="number">1000000</Quantity>
+    <Premium type="number">1000</Premium>
+    <PremiumDate type="event">2025-12-01</PremiumDate>
+    <Underlyings type="index">
+      <Value>FX-TR20H-EUR-USD</Value>
+      <Value>FX-TR20H-USD-JPY</Value>
+      <Value>FX-TR20H-USD-CAD</Value>
+    </Underlyings>
+    <StrikePrices type="number">
+      <Value>1.1050</Value>
+      <Value>155.50</Value>
+      <Value>1.3025</Value>
+    </StrikePrices>
+    <ObservationDate type="event">2026-01-10</ObservationDate>
+    <SettlementDate type="event">2026-01-15</SettlementDate>
+    <PayCcy type="currency">USD</PayCcy>
+  </WorstPerformanceRainbowOption08Data>
+</Trade>
+\end{minted}
+
+The WorstPerformanceRainbowOption08 script referenced in the trade above is shown in listing
+\ref{lst:worst_performance_rainbow_option_08}.
+
+\begin{listing}[hbt]
+\begin{minted}[fontsize=\scriptsize]{Basic}
+REQUIRE LongShort == 1 OR LongShort == -1;
+REQUIRE CallPut == 1 OR CallPut == -1;
+
+NUMBER indexFinal, performance, d, spot, indexStrike;
+NUMBER worstPerformance, premium, u, worstUnderlying, worstUnderlyingFinalPrice;
+NUMBER ExerciseProbability, isOption;
+NUMBER payoff;
+worstUnderlying = 1;
+worstPerformance = 999999;
+
+FOR u IN (1, SIZE(Underlyings), 1) DO
+  indexStrike = StrikePrices[u];
+  indexFinal = Underlyings[u](ObservationDate);
+
+  performance = Quantity * max((indexStrike - indexFinal) / indexFinal, 0);
+
+  IF performance < worstPerformance THEN
+    worstPerformance = performance;
+    worstUnderlying = u;
+    worstUnderlyingFinalPrice = indexFinal;
+  END;
+END;
+
+payoff = LOGPAY(worstPerformance, ObservationDate, SettlementDate, PayCcy, 1, Payoff);
+premium = LOGPAY(Premium, PremiumDate, PremiumDate, PayCcy, 0, Premium);
+
+Option = LongShort * (payoff - premium);
+
+IF worstPerformance > 0 THEN
+  ExerciseProbability = 1;
+END;
+
+isOption = 1;
+\end{minted}
+\caption{Payoff script for a WorstPerformanceRainbowOption08.}
+\label{lst:worst_performance_rainbow_option_08}
+\end{listing}
+
+The payout formula, determined on the \lstinline!ObservationDate!, is as follows.
+Define
+
+\begin{equation*}
+  worstPerformance = \min_i \left( \text{\lstinline!Quantity!} * \max\left(\frac{K_i - S_i(T)}{S_i(T)}, 0\right) \right),
+\end{equation*}
+
+where $K_i$ is the strike level of underlying $i$ and $S_i(T)$ is its final level at time $T$.
+The premium-adjusted payoff from the long perspective is
+
+\begin{equation*}
+  Payout = worstPerformance - \text{\lstinline!Premium!}.
+\end{equation*}
+
+The meanings and allowable values for the \lstinline!WorstPerformanceRainbowOption08Data! node below.
+
+\begin{itemize}
+  \item{}[number] \lstinline!LongShort!: Own party position in the option, represented numerically. \\
+  Allowable values: \emph{1} (Long), \emph{-1} (Short).
+  \item{}[number] \lstinline!CallPut!: Option direction flag used by this script family. \\
+  Allowable values: \emph{1} or \emph{-1}.
+  \item{}[number] \lstinline!Quantity!: A quantity multiplier applied to the payoff. \\
+  Allowable values: Any number.
+  \item{}[number] \lstinline!Premium!: Total option premium amount in terms of the \emph{PayCcy}. \\
+  Allowable values: Any number.
+  \item{}[event] \lstinline!PremiumDate!: The premium payment date. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[index] \lstinline!Underlyings!: The basket of underlyings. \\
+  Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
+  \item{}[number] \lstinline!StrikePrices!: The strike levels for each underlying, in the same order as \lstinline!Underlyings!. \\
+  Allowable values: Any number.
+  \item{}[event] \lstinline!ObservationDate!: The date on which the final levels of the assets are determined. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[event] \lstinline!SettlementDate!: The settlement date for the payoff. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
+      in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
+      be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
+        Allowable values: See Table \ref{tab:currency} for allowable currency codes.
+\end{itemize}
+
+\subsubsection*{Worst Performance Rainbow Option 09}
+
+A worst performance rainbow option 09 is represented as a {\em scripted trade},
+refer to the scripted trade documentation in ore/Docs/ScriptedTrade
+for an introduction.
+
+Trade input and the payoff script are described below.
+
+\begin{minted}[fontsize=\scriptsize]{xml}
+<Trade id="FX_WorstPerformanceRainbowOption09">
+  <TradeType>ScriptedTrade</TradeType>
+  <Envelope>
+    <CounterParty>CPTY_A</CounterParty>
+    <NettingSetId>CPTY_A</NettingSetId>
+    <AdditionalFields/>
+  </Envelope>
+  <WorstPerformanceRainbowOption09Data>
+    <LongShort type="number">1</LongShort>
+    <CallPut type="number">1</CallPut>
+    <Quantity type="number">1000000</Quantity>
+    <Premium type="number">1000</Premium>
+    <PremiumDate type="event">2025-12-01</PremiumDate>
+    <Underlyings type="index">
+      <Value>FX-TR20H-EUR-USD</Value>
+      <Value>FX-TR20H-USD-JPY</Value>
+      <Value>FX-TR20H-USD-CAD</Value>
+    </Underlyings>
+    <StrikePrices type="number">
+      <Value>1.1050</Value>
+      <Value>155.50</Value>
+      <Value>1.3025</Value>
+    </StrikePrices>
+    <ObservationDate type="event">2026-01-10</ObservationDate>
+    <SettlementDate type="event">2026-01-15</SettlementDate>
+    <BarrierDates type="event">
+      <ScheduleData>
+        <Rules>
+          <StartDate>2025-12-01</StartDate>
+          <EndDate>2026-01-10</EndDate>
+          <Tenor>1D</Tenor>
+          <Convention>Following</Convention>
+          <TermConvention>Following</TermConvention>
+          <Calendar>USA</Calendar>
+          <Rule>Forward</Rule>
+        </Rules>
+      </ScheduleData>
+    </BarrierDates>
+    <KOLevels type="number">
+      <Value>1.0850</Value>
+      <Value>150.50</Value>
+      <Value>1.2875</Value>
+    </KOLevels>
+    <PayCcy type="currency">USD</PayCcy>
+  </WorstPerformanceRainbowOption09Data>
+</Trade>
+\end{minted}
+
+The WorstPerformanceRainbowOption09 script referenced in the trade above is shown in listing
+\ref{lst:worst_performance_rainbow_option_09}.
+
+\begin{listing}[hbt]
+\begin{minted}[fontsize=\scriptsize]{Basic}
+REQUIRE LongShort == 1 OR LongShort == -1;
+
+NUMBER indexFinal, performance, d, spot, indexStrike;
+NUMBER worstPerformance, knockedOut, u, worstUnderlying, worstUnderlyingFinalPrice;
+NUMBER ExerciseProbability, isOption;
+NUMBER payoff;
+worstUnderlying = 1;
+worstPerformance = 999999;
+
+FOR u IN (1, SIZE(Underlyings), 1) DO
+  indexStrike = StrikePrices[u];
+  indexFinal = Underlyings[u](ObservationDate);
+  performance = Quantity * max((indexStrike - indexFinal) / indexFinal, 0);
+
+  IF performance < worstPerformance THEN
+    worstPerformance = performance;
+    worstUnderlying = u;
+    worstUnderlyingFinalPrice = indexFinal;
+  END;
+END;
+
+FOR d IN (1, SIZE(BarrierDates), 1) DO
+  FOR u IN (1, SIZE(Underlyings), 1) DO
+    IF Underlyings[u](BarrierDates[d]) <= KOLevels[u] THEN
+      knockedOut = 1;
+    END;
+  END;
+END;
+
+IF knockedOut == 0 THEN
+  payoff = LOGPAY(worstPerformance, ObservationDate, SettlementDate, PayCcy, 1, Payoff);
+END;
+
+NUMBER premiumTemp, premiumTotal;
+
+premiumTotal = Premium;
+premiumTemp = LOGPAY(Premium, PremiumDate, PremiumDate, PayCcy, 0, Premium);
+
+Option = LongShort * (payoff - premiumTemp);
+
+IF worstPerformance > 0 THEN
+  ExerciseProbability = 1;
+END;
+
+isOption = 1;
+\end{minted}
+\caption{Payoff script for a WorstPerformanceRainbowOption09.}
+\label{lst:worst_performance_rainbow_option_09}
+\end{listing}
+
+The payout formula, determined on the \lstinline!ObservationDate!, is as follows.
+Define
+
+\begin{equation*}
+  worstPerformance = \min_i \left( \text{\lstinline!Quantity!} * \max\left(\frac{K_i - S_i(T)}{S_i(T)}, 0\right) \right),
+\end{equation*}
+
+where $K_i$ is the strike level of underlying $i$ and $S_i(T)$ is its final level at time $T$.
+
+If a knock-out event is observed on any barrier date $t_d$, i.e.
+
+\begin{equation*}
+  \exists i, d : S_i(t_d) \leq \text{\lstinline!KOLevels!}[i],
+\end{equation*}
+
+then the option payoff leg is zero. Otherwise, the option payoff leg is equal to
+\lstinline!worstPerformance! above. The premium-adjusted payoff from the long perspective is
+
+\begin{equation*}
+  Payout = \mathbb{1}_{\{\text{no KO}\}} * worstPerformance - \text{\lstinline!Premium!}.
+\end{equation*}
+
+The meanings and allowable values for the \lstinline!WorstPerformanceRainbowOption09Data! node below.
+
+\begin{itemize}
+  \item{}[number] \lstinline!LongShort!: Own party position in the option, represented numerically. \\
+  Allowable values: \emph{1} (Long), \emph{-1} (Short).
+  \item{}[number] \lstinline!CallPut!: Option direction flag used by this script family. \\
+  Allowable values: \emph{1} or \emph{-1}.
+  \item{}[number] \lstinline!Quantity!: A quantity multiplier applied to the payoff. \\
+  Allowable values: Any number.
+  \item{}[number] \lstinline!Premium!: Total option premium amount in terms of the \emph{PayCcy}. \\
+  Allowable values: Any number.
+  \item{}[event] \lstinline!PremiumDate!: The premium payment date. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[index] \lstinline!Underlyings!: The basket of underlyings. \\
+  Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
+  \item{}[number] \lstinline!StrikePrices!: The strike levels for each underlying, in the same order as \lstinline!Underlyings!. \\
+  Allowable values: Any number.
+  \item{}[event] \lstinline!ObservationDate!: The date on which the final levels of the assets are determined. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[event] \lstinline!SettlementDate!: The settlement date for the payoff. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[event] \lstinline!BarrierDates!: The knock-out observation dates. \\
+  Allowable values: See Section \ref{ss:schedule_data}.
+  \item{}[number] \lstinline!KOLevels!: Knock-out levels for each underlying, in the same order as \lstinline!Underlyings!. \\
+  Allowable values: Any number.
+  \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
+      in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
+      be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
+        Allowable values: See Table \ref{tab:currency} for allowable currency codes.
+\end{itemize}
