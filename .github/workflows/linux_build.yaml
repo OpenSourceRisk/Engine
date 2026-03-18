@@ -1,0 +1,46 @@
+name: C/C++ CI Ubuntu
+
+on:
+  push:
+    tags:
+       - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: building
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    - name: set up dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y \
+            libboost-all-dev \
+            libboost-test-dev \
+            ninja-build \
+            zlib1g-dev
+    - name: cmake configure
+      run : |
+        mkdir build
+        cd build
+        cmake \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_SHARED_LIBS=false \
+            -DBoost_USE_STATIC_RUNTIME=OFF \
+            -DQL_BUILD_EXAMPLES=false \
+            -DORE_PYTHON_INTEGRATION=ON \
+            -DQL_BUILD_TEST_SUITE=false \
+            -DQL_BUILD_BENCHMARK=false \
+            -DQL_ENABLE_SESSIONS=true \
+            -DORE_BUILD_DOC=false \
+            -DORE_BUILD_SWIG=false \
+            -G "Ninja" \
+            ..
+    - name: cmake build
+      run: |
+        cd build
+        pwd
+        cmake --build . -j $(nproc)
