@@ -14,7 +14,7 @@ jobs:
       github.actor != 'github-actions[bot]'
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           token: ${{ secrets.ORG_ACTIONS_ACCESS_1 }}
           fetch-depth: 0
