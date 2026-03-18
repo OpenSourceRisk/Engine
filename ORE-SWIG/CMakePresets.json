@@ -15,7 +15,7 @@
                 "MSVC_WHOLE_PROGRAM_OPTIMIZATION": true,
                 "QL_ENABLE_SESSIONS": true,
                 "ORE_BUILD_DOC": true,
-                "OREPLUS_LICENSE": false
+                "ORE_USE_ZLIB":  false
             },
             "architecture": {
                 "value": "x64",
