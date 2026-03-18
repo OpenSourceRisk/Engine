@@ -75,15 +75,16 @@ ScriptedInstrumentPricingEngineCG::ScriptedInstrumentPricingEngineCG(
     const std::vector<std::string>& amcCgComponents, const std::string& amcCgTargetValue,
     const std::string& amcCgTargetDerivative, const ASTNodePtr ast, const QuantLib::ext::shared_ptr<Context>& context,
     const Model::Params& params, const double indicatorSmoothingForValues,
-    const double indicatorSmoothingForDerivatives, const std::string& script, const bool interactive,
-    const bool amcEnabled, const bool generateAdditionalResults, const bool includePastCashflows,
-    const bool useCachedSensis, const bool useExternalComputeFramework,
+    const double indicatorSmoothingForDerivatives, const double sqrtSmoothingForDerivatives, const std::string& script,
+    const bool interactive, const bool amcEnabled, const bool generateAdditionalResults,
+    const bool includePastCashflows, const bool useCachedSensis, const bool useExternalComputeFramework,
     const bool useDoublePrecisionForExternalCalculation)
     : npv_(npv), additionalResults_(additionalResults), model_(model), minimalModelCcys_(minimalModelCcys),
       amcCgComponents_(amcCgComponents), amcCgTargetValue_(amcCgTargetValue),
       amcCgTargetDerivative_(amcCgTargetDerivative), ast_(ast), context_(context), params_(params),
       indicatorSmoothingForValues_(indicatorSmoothingForValues),
-      indicatorSmoothingForDerivatives_(indicatorSmoothingForDerivatives), script_(script), interactive_(interactive),
+      indicatorSmoothingForDerivatives_(indicatorSmoothingForDerivatives),
+      sqrtSmoothingForDerivatives_(sqrtSmoothingForDerivatives), script_(script), interactive_(interactive),
       amcEnabled_(amcEnabled), generateAdditionalResults_(generateAdditionalResults),
       includePastCashflows_(includePastCashflows), useCachedSensis_(useCachedSensis),
       useExternalComputeFramework_(useExternalComputeFramework),
@@ -103,7 +104,8 @@ ScriptedInstrumentPricingEngineCG::ScriptedInstrumentPricingEngineCG(
         ops_ = getRandomVariableOps(model_->size(), params_.regressionOrder, params_.polynomType,
                                     indicatorSmoothingForValues_, params_.regressionVarianceCutoff);
         grads_ = getRandomVariableGradients(model_->size(), params_.regressionOrder, params_.polynomType,
-                                            indicatorSmoothingForDerivatives_, params_.regressionVarianceCutoff);
+                                            indicatorSmoothingForDerivatives_, sqrtSmoothingForDerivatives_,
+                                            params_.regressionVarianceCutoff);
     }
 }
 

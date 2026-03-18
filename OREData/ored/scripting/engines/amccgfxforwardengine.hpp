@@ -36,10 +36,11 @@ public:
     AmcCgFxForwardEngine(const std::string& domCcy, const std::string& forCcy,
                          const QuantLib::ext::shared_ptr<ModelCG>& modelCg, const Model::Params& mcParams,
                          const double indicatorSmoothingForValues, const double indicatorSmoothingForDerivatives,
-                         const bool useCachedSensis, const bool useExternalComputeFramework,
-                         const bool useDoublePrecisionForExternalCalculation)
+                         const double sqrtSmoothingForDerivatives, const bool useCachedSensis,
+                         const bool useExternalComputeFramework, const bool useDoublePrecisionForExternalCalculation)
         : AmcCgBaseEngine(modelCg, mcParams, indicatorSmoothingForValues, indicatorSmoothingForDerivatives,
-                          useCachedSensis, useExternalComputeFramework, useDoublePrecisionForExternalCalculation),
+                          sqrtSmoothingForDerivatives, useCachedSensis, useExternalComputeFramework,
+                          useDoublePrecisionForExternalCalculation),
           domCcy_(domCcy), forCcy_(forCcy) {
         registerWith(modelCg_);
     }

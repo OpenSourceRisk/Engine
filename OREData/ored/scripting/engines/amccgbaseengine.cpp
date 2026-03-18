@@ -65,12 +65,14 @@ using namespace QuantExt;
 
 AmcCgBaseEngine::AmcCgBaseEngine(const QuantLib::ext::shared_ptr<ModelCG>& modelCg, const Model::Params& mcParams,
                                  const double indicatorSmoothingForValues,
-                                 const double indicatorSmoothingForDerivatives, const bool useCachedSensis,
+                                 const double indicatorSmoothingForDerivatives,
+                                 const double sqrtSmoothingForDerivatives, const bool useCachedSensis,
                                  const bool useExternalComputeFramework,
                                  const bool useDoublePrecisionForExternalCalculation)
     : modelCg_(modelCg), amcEnabled_(false), mcParams_(mcParams),
       indicatorSmoothingForValues_(indicatorSmoothingForValues),
-      indicatorSmoothingForDerivatives_(indicatorSmoothingForDerivatives), useCachedSensis_(useCachedSensis),
+      indicatorSmoothingForDerivatives_(indicatorSmoothingForDerivatives),
+      sqrtSmoothingForDerivatives_(sqrtSmoothingForDerivatives), useCachedSensis_(useCachedSensis),
       useExternalComputeFramework_(useExternalComputeFramework),
       useDoublePrecisionForExternalCalculation_(useDoublePrecisionForExternalCalculation) {
 
@@ -78,7 +80,8 @@ AmcCgBaseEngine::AmcCgBaseEngine(const QuantLib::ext::shared_ptr<ModelCG>& model
     ops_ = getRandomVariableOps(modelCg_->size(), mcParams_.regressionOrder, mcParams_.polynomType,
                                 indicatorSmoothingForValues_, mcParams_.regressionVarianceCutoff);
     grads_ = getRandomVariableGradients(modelCg_->size(), mcParams_.regressionOrder, mcParams_.polynomType,
-                                        indicatorSmoothingForDerivatives_, mcParams_.regressionVarianceCutoff);
+                                        indicatorSmoothingForDerivatives_, sqrtSmoothingForDerivatives_,
+                                        mcParams_.regressionVarianceCutoff);
 }
 
 AmcCgBaseEngine::AmcCgBaseEngine(const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
@@ -1025,6 +1028,7 @@ void AmcCgBaseEngine::calculate() const {
             sensis_.resize(baseModelParams_.size());
             for (Size i = 0; i < baseModelParams_.size(); ++i) {
                 sensis_[i] = modelCg_->extractT0Result(derivatives[baseModelParams_[i].first]);
+                TLOG("sensi at node " << baseModelParams_[i].first << ": " << sensis_[i]);
             }
             DLOG("got backward sensitivities");
 
@@ -1052,8 +1056,6 @@ void AmcCgBaseEngine::calculate() const {
                                                       << baseModelParams_[i].first);
             Real tmp = sensis_[i] * (modelParams[i].second - baseModelParams_[i].second);
             npv += tmp;
-            TLOG("node " << modelParams[i].first << ": " << modelParams[i].second << " (current) - "
-                         << baseModelParams_[i].second << " (base) ] * " << sensis_[i] << " (delta) => " << tmp);
         }
 
         npvValue_ = npv;

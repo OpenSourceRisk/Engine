@@ -77,7 +77,7 @@ buildMcEngine(const Handle<CrossAssetModel>& model, const std::vector<Handle<Yie
 }
 
 QuantLib::ext::shared_ptr<PricingEngine>
-buildMcCgEngine(const Handle<CrossAssetModel>& model, const std::vector<std::string>& currencies,
+buildMcCgEngine(const std::string& id,const Handle<CrossAssetModel>& model, const std::vector<std::string>& currencies,
                 const std::vector<Handle<YieldTermStructure>>& discountCurves,
                 const std::vector<Handle<Quote>>& fxSpots,
                 const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
@@ -111,8 +111,9 @@ buildMcCgEngine(const Handle<CrossAssetModel>& model, const std::vector<std::str
 
     return QuantLib::ext::make_shared<AmcCgMultiLegOptionEngine>(
         camCg, mcParams, parseReal(builder->engineParameter("IndicatorSmoothingForValues", {}, false, "0.0")),
-        parseReal(builder->engineParameter("IndicatorSmoothingForDerivatives", {}, false, "0.0")), useCachedSensis,
-        false, true);
+        parseReal(builder->engineParameter("IndicatorSmoothingForDerivatives", {}, false, "0.0")),
+        parseReal(builder->engineParameter("SqrtSmoothingForDerivatives", {}, false, "0.0")), useCachedSensis, false,
+        true, id);
 }
 
 } // namespace
@@ -642,7 +643,7 @@ QuantLib::ext::shared_ptr<PricingEngine> CamMCCgSwaptionEngineBuilder::engineImp
         simulationDates.insert(d);
     } while (d < maxDate);
 
-    return buildMcCgEngine(cam, currencies, discountCurves, fxSpots, irIndices, indices, indexCurrencies,
+    return buildMcCgEngine(id, cam, currencies, discountCurves, fxSpots, irIndices, indices, indexCurrencies,
                            simulationDates, this);
 }
 

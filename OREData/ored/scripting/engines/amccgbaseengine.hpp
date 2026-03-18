@@ -44,8 +44,8 @@ public:
     // non-amc use
     AmcCgBaseEngine(const QuantLib::ext::shared_ptr<ModelCG>& modelCg, const Model::Params& mcParams,
                     const double indicatorSmoothingForValues, const double indicatorSmoothingForDerivatives,
-                    const bool useCachedSensis, const bool useExternalComputeFramework,
-                    const bool useDoublePrecisionForExternalCalculation);
+                    const double sqrtSmoothingForDerivatives, const bool useCachedSensis,
+                    const bool useExternalComputeFramework, const bool useDoublePrecisionForExternalCalculation);
     // amc use
     AmcCgBaseEngine(const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
                     const std::vector<QuantLib::Date>& simulationDates = {},
@@ -64,6 +64,7 @@ protected:
     Model::Params mcParams_;
     double indicatorSmoothingForValues_;
     double indicatorSmoothingForDerivatives_;
+    double sqrtSmoothingForDerivatives_;
     bool useCachedSensis_ = false;
     bool useExternalComputeFramework_ = false;
     bool useDoublePrecisionForExternalCalculation_ = false;

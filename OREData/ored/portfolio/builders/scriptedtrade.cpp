@@ -354,6 +354,7 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
     }
     DLOG("indicatorSmoothingForValues      = " << indicatorSmoothingForValues_);
     DLOG("indicatorSmoothingForDerivatives = " << indicatorSmoothingForDerivatives_);
+    DLOG("sqrtSmoothingForDerivatives = " << sqrtSmoothingForDerivatives_);
 
     // 22 build the pricing engine and return it
 
@@ -387,9 +388,9 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
         engine = QuantLib::ext::make_shared<ScriptedInstrumentPricingEngineCG>(
             script.npv(), script.results(), modelCG_, std::set<std::string>(modelCcys_.begin(), modelCcys_.end()),
             script.amcCgComponents(), script.amcCgTargetValue(), script.amcCgTargetDerivative(), ast_, context, params_,
-            indicatorSmoothingForValues_, indicatorSmoothingForDerivatives_, script.code(), interactive_,
-            buildingAmcCg_, generateAdditionalResults, includePastCashflows_, useCachedSensis, useExternalDev,
-            useDoublePrecisionForExternalCalculation_);
+            indicatorSmoothingForValues_, indicatorSmoothingForDerivatives_, sqrtSmoothingForDerivatives_,
+            script.code(), interactive_, buildingAmcCg_, generateAdditionalResults, includePastCashflows_,
+            useCachedSensis, useExternalDev, useDoublePrecisionForExternalCalculation_);
         if (useExternalDev) {
             ComputeEnvironment::instance().selectContext(externalComputeDevice_);
         }
@@ -566,6 +567,8 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
         parseReal(engineParameter("IndicatorSmoothingForValues", getModelEngineQualifiers(), false, "0.0"));
     indicatorSmoothingForDerivatives_ =
         parseReal(engineParameter("IndicatorSmoothingForDerivatives", getModelEngineQualifiers(), false, "0.2"));
+    sqrtSmoothingForDerivatives_ =
+        parseReal(engineParameter("SqrtSmoothingForDerivatives", getModelEngineQualifiers(), false, "1E-8"));
     referenceCalibrationGrid_ = modelParameter("ReferenceCalibrationGrid", getModelEngineQualifiers(), false, "");
 
     // usage of ad or an external device implies usage of cg

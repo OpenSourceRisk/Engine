@@ -37,10 +37,12 @@ public:
     // non-amc use
     AmcCgMultiLegOptionEngine(const QuantLib::ext::shared_ptr<ModelCG>& modelCg, const Model::Params& mcParams,
                               const double indicatorSmoothingForValues, const double indicatorSmoothingForDerivatives,
-                              const bool useCachedSensis, const bool useExternalComputeFramework,
-                              const bool useDoublePrecisionForExternalCalculation)
+                              const double sqrtSmoothingForDerivatives, const bool useCachedSensis,
+                              const bool useExternalComputeFramework,
+                              const bool useDoublePrecisionForExternalCalculation, const std::string& id)
         : AmcCgBaseEngine(modelCg, mcParams, indicatorSmoothingForValues, indicatorSmoothingForDerivatives,
-                          useCachedSensis, useExternalComputeFramework, useDoublePrecisionForExternalCalculation) {
+                          sqrtSmoothingForDerivatives, useCachedSensis, useExternalComputeFramework,
+                          useDoublePrecisionForExternalCalculation) {
         registerWith(modelCg_);
     }
     // amc use
