@@ -469,6 +469,8 @@ void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
                         for (auto const& [instr, innerMult] : c->components()) {
                             qlInstruments2.push_back(std::make_pair(instr, outerMult * innerMult));
                         }
+                    } else {
+                        qlInstruments2.push_back(std::make_pair(qlInstrument, outerMult));
                     }
                 }
 
