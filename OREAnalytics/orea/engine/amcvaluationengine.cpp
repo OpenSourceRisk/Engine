@@ -389,7 +389,7 @@ void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
              - ore::data::CompositeInstrumentWrapper
              - QuantLib::CompositeInstrumment, QuantExt::MultiCcyCompositeInstrument
 
-             but only 1 level for each, i.e. nested comp wrappers resp. comp instruments */
+             but only 1 level for each, i.e. nested comp wrappers resp. comp instruments are not supported */
 
     LOG("Extract AMC Calculators...");
 
