@@ -1542,10 +1542,6 @@ void OREAppInputParameters::loadParameters() {
         if (tmp != ""){
             setSimmVersion(tmp);
         }
-        else{
-            LOG("set SIMM version to 2.6 (default)");
-            setSimmVersion("2.1");
-        }
 
          tmp = params_->getString("frtb", "crif", false);
          if (tmp != "") {
