@@ -25,6 +25,7 @@
 #include <ored/scripting/staticanalyser.hpp>
 #include <ored/scripting/utilities.hpp>
 #include <ored/scripting/scriptedinstrument.hpp>
+#include <ored/model/utilities.hpp>
 
 #include <ored/portfolio/enginefactory.hpp>
 
@@ -187,7 +188,7 @@ protected:
     std::string externalComputeDevice_;
     bool includePastCashflows_;
     bool staticNpvMem_;
-    Real indicatorSmoothingForValues_, indicatorSmoothingForDerivatives_;
+    Real indicatorSmoothingForValues_, indicatorSmoothingForDerivatives_, sqrtSmoothingForDerivatives_;
     // Heston related
     std::vector<Period> hestonCalibrationExpiries_;
     std::vector<Period> hestonCalibrationVarianceTerms_;

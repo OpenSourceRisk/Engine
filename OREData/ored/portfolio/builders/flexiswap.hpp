@@ -27,75 +27,17 @@
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/utilities/log.hpp>
 
-#include <qle/models/lgm.hpp>
-
-#include <boost/make_shared.hpp>
-
 namespace ore {
 namespace data {
-using ore::data::CachingPricingEngineBuilder;
 
-//! Flexi Swap / BGS Engine Builder Base Class (id2 is used for BGS only)
-class FlexiSwapBGSEngineBuilderBase
-    : public CachingPricingEngineBuilder<std::string, const std::string&, const std::string&, const std::string&,
-                                         const std::vector<QuantLib::Date>&, const QuantLib::Date&,
-                                         const std::vector<QuantLib::Real>&> {
+//! Flexi Swap Recpliation Engine Builder
+class FlexiSwapEngineBuilder : public CachingPricingEngineBuilder<string> {
 public:
-    FlexiSwapBGSEngineBuilderBase(const std::string& tradeType, const std::string& model, const std::string& engine)
-        : CachingEngineBuilder(model, engine, {tradeType}) {}
+    FlexiSwapEngineBuilder() : CachingEngineBuilder("Replication", "Replication", {"FlexiSwap"}) {}
 
-protected:
-    virtual std::string keyImpl(const std::string& id, const std::string& id2, const std::string& key,
-                                const std::vector<QuantLib::Date>& dates, const QuantLib::Date& maturity,
-                                const std::vector<QuantLib::Real>& strikes) override {
-        return id;
-    }
-};
-
-//! Flexi Swap / BGS Discounting Engine Builder
-class FlexiSwapBGSDiscountingEngineBuilderBase : public FlexiSwapBGSEngineBuilderBase {
-public:
-    FlexiSwapBGSDiscountingEngineBuilderBase(const std::string& tradeType)
-        : FlexiSwapBGSEngineBuilderBase(tradeType, "DiscountedCashflows", "DiscountingSwapEngine") {}
-
-protected:
-    virtual QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::string& id, const std::string& id2,
-                                                                  const std::string& key,
-                                                                  const std::vector<QuantLib::Date>& dates,
-                                                                  const QuantLib::Date& maturity,
-                                                                  const std::vector<QuantLib::Real>& strikes) override;
-};
-
-//! Flexi Swap / BGS Numeric LGM Grid Engine Builder Base Class
-class FlexiSwapBGSLGMGridEngineBuilderBase : public FlexiSwapBGSEngineBuilderBase {
-public:
-    FlexiSwapBGSLGMGridEngineBuilderBase(const std::string& tradeType, const std::string& model)
-        : FlexiSwapBGSEngineBuilderBase(tradeType, model, "Grid") {}
-
-protected:
-    QuantLib::ext::shared_ptr<QuantExt::IrModel> model(const std::string& id, const std::string& key,
-                                                       const std::vector<QuantLib::Date>& dates,
-                                                       const QuantLib::Date& maturity,
-                                                       const std::vector<QuantLib::Real>& strikes);
-};
-
-//! Flexi Swap Discounting Engine Builder
-class FlexiSwapDiscountingEngineBuilder : public FlexiSwapBGSDiscountingEngineBuilderBase {
-public:
-    FlexiSwapDiscountingEngineBuilder() : FlexiSwapBGSDiscountingEngineBuilderBase("FlexiSwap") {}
-};
-
-//! Flexi Swap LGM Grid Engine Builder
-class FlexiSwapLGMGridEngineBuilder : public FlexiSwapBGSLGMGridEngineBuilderBase {
-public:
-    FlexiSwapLGMGridEngineBuilder() : FlexiSwapBGSLGMGridEngineBuilderBase("FlexiSwap", "LGM") {}
-
-protected:
-    virtual QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::string& id, const std::string& id2,
-                                                                  const std::string& key,
-                                                                  const std::vector<QuantLib::Date>& dates,
-                                                                  const QuantLib::Date& maturity,
-                                                                  const std::vector<QuantLib::Real>& strikes) override;
+private:
+    QuantLib::ext::shared_ptr<PricingEngine> engineImpl() override { return nullptr; }
+    string keyImpl() override { return std::string(); }
 };
 
 } // namespace data
