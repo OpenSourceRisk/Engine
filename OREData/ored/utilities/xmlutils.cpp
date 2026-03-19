@@ -571,7 +571,8 @@ void XMLUtils::addChildrenWithAttributes(XMLDocument& doc, XMLNode* parent, cons
             QL_REQUIRE(values.size() == attr.size(), "Values / Attribute vector size mismatch");
         }
         QL_REQUIRE(parent, "XML Node is null (Adding " << names << ")");
-        XMLNode* node = addChild(doc, parent, names);
+        // if names is not given add directly to parent
+        XMLNode* node = names.empty() ? parent : addChild(doc, parent, names);
         for (Size i = 0; i < values.size(); i++) {
             XMLNode* c = doc.allocNode(name, convertToString(values[i]));
             QL_REQUIRE(c, "XML AllocNode failure (" << name << ")");

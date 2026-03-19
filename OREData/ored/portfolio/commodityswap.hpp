@@ -81,6 +81,7 @@ private:
                                            const std::string& configuration);
 
     std::vector<ore::data::LegData> legData_;
+    bool isXCCY_ = false;
     bool roundNettedFloatingLegs_ = false;
     QuantLib::Natural nettingPrecision_ = QuantLib::Null<QuantLib::Natural>();
 
@@ -88,7 +89,7 @@ private:
     std::vector<QuantLib::Leg> originalLegsBeforeNetting_;
     std::vector<bool> originalLegPayersBeforeNetting_;
     std::vector<std::string> originalLegCurrenciesBeforeNetting_;
-    QuantLib::Size nettedLegId_ = QuantLib::Null<QuantLib::Size>();
+    std::set<QuantLib::Size> nettedLegIds_;
     std::set<QuantLib::Size> fixedLegIds_, floatingLegIds_;
 };
 

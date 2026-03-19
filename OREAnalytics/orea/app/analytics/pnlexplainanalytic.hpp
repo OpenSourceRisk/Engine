@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/app/pnlexplainanalytic.hpp
-    \brief ORE Analytics Manager
+/*! \file orea/app/analytics/pnlexplainanalytic.hpp
+    \brief ORE P&L Explain Analytic
 */
 
 #pragma once
@@ -27,6 +27,7 @@
 #include <orea/app/analytics/pnlanalytic.hpp>
 #include <orea/app/analytics/pricinganalytic.hpp>
 #include <orea/app/inputvariables.hpp>
+#include <orea/scenario/historicalscenarioreturn.hpp>
 
 namespace ore {
 namespace analytics {
@@ -41,6 +42,7 @@ struct PnlExplainVariables : public InputVariables {
     bool parSensitivity_ = false;
     bool riskFactorLevel_ = false;
     std::string portfolioFilter_;
+    QuantLib::ext::shared_ptr<ReturnConfiguration> returnConfiguration_;
 };
 
 class PnlExplainAnalyticImpl : public Analytic::Impl {

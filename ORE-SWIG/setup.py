@@ -4,7 +4,7 @@
  All rights reserved.
 """
 
-import os, sys, math, codecs
+import os, sys, math, codecs, shutil, platform
 if sys.version_info < (3,10):
     from distutils.cmd import Command
     from distutils.command.build_ext import build_ext
@@ -111,6 +111,51 @@ class my_build_ext(build_ext):
             return p
         else:
             raise Exception("Invalid path: {}".format(p))
+
+    def build_extension(self, ext):
+        """Override to use pre-built object files when available.
+
+        The precompile.sh script (run during CIBW_BEFORE_ALL) compiles
+        oreanalytics_wrap.cpp for each Python version in parallel and stores
+        the .o files under .prebuilt/<platform>-<pytag>/.  When this directory
+        is found we copy the .o into the build temp directory so that
+        setuptools only needs to perform the (fast) link step.
+        """
+        prebuilt_dir = os.environ.get('ORE_PREBUILT_DIR', '')
+        if prebuilt_dir and os.path.isdir(prebuilt_dir):
+            py_tag = f"cpython-{sys.version_info.major}{sys.version_info.minor}"
+            machine = platform.machine()   # e.g. x86_64, aarch64
+            tag = f"linux-{machine}-{py_tag}"
+            prebuilt_obj = os.path.join(prebuilt_dir, tag, "oreanalytics_wrap.o")
+            if os.path.isfile(prebuilt_obj):
+                # Determine where setuptools expects the object file
+                build_temp = self.build_temp  # e.g. build/temp.linux-x86_64-cpython-312
+                os.makedirs(build_temp, exist_ok=True)
+                dest = os.path.join(build_temp, "oreanalytics_wrap.o")
+                print(f"Using pre-built object: {prebuilt_obj} -> {dest}")
+                shutil.copy2(prebuilt_obj, dest)
+
+                # Now run only the link step.
+                # We need to gather the objects list and call link_shared_object
+                # via the standard path but with sources already "compiled".
+                # The simplest way is to replace the compiler's compile method
+                # with a no-op that returns the existing objects, then call
+                # the parent build_extension which will invoke compile (no-op)
+                # and then link.
+                original_compile = self.compiler.compile
+                def _skip_compile(sources, output_dir=None, **kwargs):
+                    # Return the list of object files that already exist
+                    return [dest]
+                self.compiler.compile = _skip_compile
+                try:
+                    build_ext.build_extension(self, ext)
+                finally:
+                    self.compiler.compile = original_compile
+                return
+
+        # No pre-built objects; fall through to normal compilation
+        build_ext.build_extension(self, ext)
+
     def finalize_options(self):
         build_ext.finalize_options(self)
         self.set_undefined_options('build', ('static','static'))

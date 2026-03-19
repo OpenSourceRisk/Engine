@@ -16,7 +16,8 @@
   FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
  */
 
-/*! \file ored/portfolio/builder/fxeuropeanbarrieroption.hpp
+/*!
+   \file ored/portfolio/builders/fxeuropeanbarrieroption.hpp
    \brief FX European Barrier Option pricing engine builder
    \ingroup portfolio/builders
 */

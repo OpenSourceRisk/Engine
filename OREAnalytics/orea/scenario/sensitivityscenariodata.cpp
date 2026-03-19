@@ -927,6 +927,7 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) const {
     }
 
     XMLUtils::addChild(doc, root, "ComputeGamma", computeGamma_);
+
     XMLUtils::addChild(doc, root, "UseSpreadedTermStructures", useSpreadedTermStructures_);
 
     // If not par, no more to do

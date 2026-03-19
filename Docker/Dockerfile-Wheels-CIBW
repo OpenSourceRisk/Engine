@@ -1,4 +1,5 @@
-
+ARG DOCKER_REPO
+ARG ORE_BUILD_VERSION
 FROM ${DOCKER_REPO}ore-build-dependencies:${ORE_BUILD_VERSION}
 
 ARG WHEEL_ARCH
@@ -10,7 +11,9 @@ ENV PATH="/venv/bin:$PATH"
 ENV CIBW_BUILD="cp310-manylinux_${WHEEL_ARCH} cp312-manylinux_${WHEEL_ARCH}"
 ENV CIBW_MANYLINUX_X86_64_IMAGE=${WHEEL_IMAGE}
 ENV CIBW_MANYLINUX_AARCH64_IMAGE=${WHEEL_IMAGE}
-ENV CIBW_BEFORE_BUILD="chmod +x ORE-SWIG/Wheels-gitlab/before_all_linux.sh && ORE-SWIG/Wheels-gitlab/before_all_linux.sh"
+ENV CIBW_BEFORE_ALL="/opt/python/cp310-cp310/bin/pip3 install setuptools docker && chmod +x ORE-SWIG/Wheels-gitlab/before_all_linux.sh && PATH=/opt/python/cp310-cp310/bin:\$PATH ORE-SWIG/Wheels-gitlab/before_all_linux.sh && chmod +x ORE-SWIG/Wheels-gitlab/precompile.sh && ORE-SWIG/Wheels-gitlab/precompile.sh cp310-cp310 cp312-cp312"
+ENV CIBW_BEFORE_BUILD="pip install setuptools"
+ENV CIBW_ENVIRONMENT="ORE_PREBUILT_DIR=/project/ORE-SWIG/.prebuilt"
 
 WORKDIR /builds/qs/oreplus/ore
 RUN \
@@ -18,4 +21,5 @@ python ../ore/Docker/update_version_number.py -f setup.py -v ${WHEELS_VERSION} &
 cibuildwheel --output-dir wheelhouse ORE-SWIG
 
 COPY wheelhouse /wheelhouse
+
 

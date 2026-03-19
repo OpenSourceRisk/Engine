@@ -202,7 +202,8 @@ getRandomVariableOps(const Size size, const Size regressionOrder, QuantLib::LsmB
 
 std::vector<RandomVariableGrad> getRandomVariableGradients(const Size size, const Size regressionOrder,
                                                            const QuantLib::LsmBasisSystem::PolynomialType polynomType,
-                                                           const double eps, const Real regressionVarianceCutoff) {
+                                                           const double eps, const double sqrtEps,
+                                                           const Real regressionVarianceCutoff) {
 
     std::vector<RandomVariableGrad> grads;
 
@@ -285,9 +286,10 @@ std::vector<RandomVariableGrad> getRandomVariableGradients(const Size size, cons
                        const Size node) -> std::vector<RandomVariable> { return {*v}; });
 
     // Sqrt = 14
-    grads.push_back(
-        [size](const std::vector<const RandomVariable*>& args, const RandomVariable* v,
-               const Size node) -> std::vector<RandomVariable> { return {RandomVariable(size, 0.5) / *v}; });
+    grads.push_back([size, sqrtEps](const std::vector<const RandomVariable*>& args, const RandomVariable* v,
+                                    const Size node) -> std::vector<RandomVariable> {
+        return {RandomVariable(size, 0.5) / max(*v, RandomVariable(size, sqrtEps))};
+    });
 
     // Log = 15
     grads.push_back(

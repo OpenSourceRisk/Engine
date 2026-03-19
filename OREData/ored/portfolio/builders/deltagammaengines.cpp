@@ -23,10 +23,14 @@
 namespace ore {
 namespace data {
 
-QuantLib::ext::shared_ptr<PricingEngine>
-EuropeanSwaptionEngineBuilderDeltaGamma::engineImpl(const string& id, const string& key, const std::vector<Date>& dates,
-                                          const std::vector<Date>& maturities, const std::vector<Real>& strikes, const bool isAmerican,
-                                          const std::string& discountCurve, const std::string& securitySpread) {
+QuantLib::ext::shared_ptr<PricingEngine> EuropeanSwaptionEngineBuilderDeltaGamma::engineImpl(
+    const string& id, const std::vector<string>& keys, const std::vector<Date>& dates,
+    const std::vector<Date>& maturities, const std::vector<std::vector<Real>>& strikes,
+    const std::vector<std::vector<Real>>& fxStrikes, const bool isAmerican, const std::string& discountCurve,
+    const std::string& securitySpread, const SwaptionModel&) {
+
+    QL_REQUIRE(keys.size() == 1,
+               "EuropeanSwaptionEngineBuilderDeltaGamma::engingImpl(): multiple ccys are not supported.");
 
     std::vector<Time> bucketTimesDeltaGamma = parseListOfValues<Time>(engineParameter("BucketTimesDeltaGamma"), &parseReal);
     std::vector<Time> bucketTimesVegaOpt = parseListOfValues<Time>(engineParameter("BucketTimesVegaOpt"), &parseReal);
@@ -35,8 +39,7 @@ EuropeanSwaptionEngineBuilderDeltaGamma::engineImpl(const string& id, const stri
     bool computeGamma = parseBool(engineParameter("ComputeGamma"));
 
     QuantLib::ext::shared_ptr<IborIndex> index;
-    string ccyCode = tryParseIborIndex(key, index) ? index->currency().code() : key;
-    //const string& ccyCode = ccy.code();
+    string ccyCode = tryParseIborIndex(keys.front(), index) ? index->currency().code() : keys.front();
     Handle<YieldTermStructure> yts = market_->discountCurve(ccyCode, configuration(MarketContext::pricing));
     QL_REQUIRE(!yts.empty(), "engineFactory error: yield term structure not found for currency " << ccyCode);
     Handle<SwaptionVolatilityStructure> svts = market_->swaptionVol(ccyCode, configuration(MarketContext::pricing));
@@ -58,6 +61,6 @@ EuropeanSwaptionEngineBuilderDeltaGamma::engineImpl(const string& id, const stri
         break;
     }
 }
-  
+
 } // namespace data
 } // namespace ore

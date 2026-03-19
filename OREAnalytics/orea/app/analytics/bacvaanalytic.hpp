@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file oreap/app/analytics/bacvaanalytic.hpp
+/*! \file orea/app/analytics/bacvaanalytic.hpp
     \brief ORE BACVA Analytic
 */
 #pragma once

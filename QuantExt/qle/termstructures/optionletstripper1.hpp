@@ -49,6 +49,8 @@ public:
                        Real accuracy = 1.0e-6, Natural maxIter = 100,
                        const Handle<YieldTermStructure>& discount = Handle<YieldTermStructure>(),
                        const VolatilityType type = ShiftedLognormal, const Real displacement = 0.0,
+                       const Period& rateComputationPeriod = 0 * Days, const Size onCapSettlementDays = 0,
+                       const bool useEffectiveVolatility = false,
                        const optional<VolatilityType> targetVolatilityType = QuantLib::ext::nullopt,
                        const optional<Real> targetDisplacement = QuantLib::ext::nullopt);
 

@@ -1630,7 +1630,7 @@
 
   <xs:complexType name="flexiSwapData">
     <xs:sequence>
-      <xs:element name="LowerNotionalBounds" maxOccurs="1" minOccurs="0">
+      <xs:element name="LowerNotionalBounds" maxOccurs="unbounded" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
             <xs:element name="Notional" maxOccurs="unbounded" minOccurs="1">
@@ -1643,32 +1643,7 @@
               </xs:complexType>
             </xs:element>
           </xs:sequence>
-        </xs:complexType>
-      </xs:element>
-      <xs:element name="Prepayment" maxOccurs="1" minOccurs="0">
-        <xs:complexType>
-          <xs:sequence>
-            <xs:element type="xs:string" name="NoticePeriod" minOccurs="0"/>
-            <xs:element type="xs:string" name="NoticeCalendar" minOccurs="0"/>
-            <xs:element type="xs:string" name="NoticeConvention" minOccurs="0"/>
-            <xs:sequence>
-              <xs:element name="PrepaymentOptions" maxOccurs="unbounded" minOccurs="0">
-                <xs:complexType>
-                  <xs:sequence>
-                    <xs:element name="PrepaymentOption" maxOccurs="unbounded" minOccurs="0">
-                      <xs:complexType>
-                        <xs:all>
-                          <xs:element type="date" name="ExerciseDate"/>
-                          <xs:element type="xs:string" name="Type"/>
-                          <xs:element type="xs:float" name="Value"/>
-                        </xs:all>
-                      </xs:complexType>
-                    </xs:element>
-                  </xs:sequence>
-                </xs:complexType>
-              </xs:element>
-            </xs:sequence>
-          </xs:sequence>
+          <xs:attribute name="currency" type="xs:string" />
         </xs:complexType>
       </xs:element>
       <xs:element type="longShort" name="OptionLongShort"/>

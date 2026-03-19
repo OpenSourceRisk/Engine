@@ -70,7 +70,8 @@ double simulationLagTime(const QuantLib::ext::shared_ptr<QuantLib::ZeroInflation
 /*! Compute a seasonality-adjusted zero rate for a given observation date.
     It takes the time tau between the term structure base date and the observation date as
     given and dont adjust it internally based on the frequency of the inflation curve.
-    \param observationDate  date at which the seasonality factor is evaluated
+    \param baseDate inflation base date
+    \param observationDate date at which the seasonality factor is evaluated
     \param unadjustedZeroRate the zero inflation rate before seasonality
     \param tau the year fraction between the term structure base date and the observation date
     \param ts the zero inflation term structure that may contain seasonality
