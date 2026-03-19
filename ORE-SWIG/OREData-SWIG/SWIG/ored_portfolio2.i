@@ -1680,7 +1680,7 @@ public:
     FlexiSwap(const Envelope& env, const std::vector<ext::shared_ptr<LegData>>& underlyingData,
               const std::map<std::string, std::pair<std::vector<double>, std::vector<std::string>>>& lowerNotionalBounds,
               const std::string& optionLongShort) {
-        return new FlexiSwap(env, VECTOR_SWIG_TO_ORE(underlyingData), lowerNotionalBounds, lowerNotionalBoundsDates, optionLongShort);
+        return new FlexiSwap(env, VECTOR_SWIG_TO_ORE(underlyingData), lowerNotionalBounds, optionLongShort);
     }
 }
 
