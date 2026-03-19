@@ -5,8 +5,6 @@ import logging
 import unittest
 from pathlib import Path
 import pytest
-import collections
-#collections.Callable = collections.abc.Callable
 
 examples_exempt_from_scenariogenerator_samples_overwrite = [
     'Performance',
@@ -36,7 +34,7 @@ def get_files(dirname):
     res = []
     for cur_path, subdirs, files in os.walk(dirname):
         for file in files:
-            res.append(os.path.relpath(os.path.join(cur_path, file), dirname))
+            res.append(os.path.relpath(os.path.join(str(cur_path), file), dirname))
     return res
 
 
@@ -110,7 +108,6 @@ def add_utest(name):
 # Need to have this as a function and call it before unitest.main()
 # https://stackoverflow.com/questions/2798956/python-unittest-generate-multiple-tests-programmatically
 def regress_all_utests():
-    i = 1
     examples=get_list_of_examples()
     legacyexamples=get_list_of_legacy_examples()
     academy=get_list_ore_academy()
