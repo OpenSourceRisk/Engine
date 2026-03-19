@@ -1075,7 +1075,7 @@ public:
      **************************************************/
 
     const QuantLib::Date& cashflowHorizon() const { return cashflowHorizon_; };
-    const QuantLib::Date& portfolioFilterDate() const { return portfolioFilterDate_; }    
+    const QuantLib::Date& portfolioFilterDate() const { return portfolioFilterDate_; }
 
     /******************
      * Getters for SIMM
@@ -1174,6 +1174,12 @@ public:
         return zeroToParShiftSensitivityScenarioData_;
     }
         
+    /************************************
+     * Getters for portfolio details
+     ************************************/
+    const std::string& detailsConfigType() const { return detailsConfigType_; }
+    void setDetailsConfigType(const std::string& type) { detailsConfigType_ = type; }
+
     /*************************************
      * List of analytics that shall be run
      *************************************/
@@ -1220,6 +1226,9 @@ protected:
      *************/
     bool outputTodaysMarketCalibration_ = true;
     std::size_t todaysMarketCalibrationPrecision_ = 8;
+
+    // Portfolio Details
+    std::string detailsConfigType_ = "BASIC";
 
     /***********************************
      * CASHFLOW and CASHFLOWNPV analytic

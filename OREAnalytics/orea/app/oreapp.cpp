@@ -1720,6 +1720,10 @@ void OREAppInputParameters::loadParameters() {
     tmp = params_->getString("portfolioDetails", "active", false);
     if (!tmp.empty() && parseBool(tmp))
         insertAnalytic("PORTFOLIO_DETAILS");
+    
+    tmp = params_->getString("portfolioDetails", "portfolio_details_configuration", false);
+    if (!tmp.empty())
+        setDetailsConfigType(tmp);
 
     /*****************
      * CRIF Generation
