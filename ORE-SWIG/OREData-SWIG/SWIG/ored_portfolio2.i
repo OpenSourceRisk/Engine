@@ -1677,17 +1677,10 @@ public:
 };
 // Call VECTOR_SWIG_TO_ORE to convert vectors from SWIG format to ORE format
 %extend FlexiSwap {
-    FlexiSwap(const Envelope& env, const std::vector<ext::shared_ptr<LegData>>& swap,
-              const std::vector<double>& lowerNotionalBounds, const std::vector<std::string>& lowerNotionalBoundsDates,
+    FlexiSwap(const Envelope& env, const std::vector<ext::shared_ptr<LegData>>& underlyingData,
+              const std::map<std::string, std::pair<std::vector<double>, std::vector<std::string>>>& lowerNotionalBounds,
               const std::string& optionLongShort) {
-        return new FlexiSwap(env, VECTOR_SWIG_TO_ORE(swap), lowerNotionalBounds, lowerNotionalBoundsDates, optionLongShort);
-    }
-    FlexiSwap(const Envelope& env, const std::vector<ext::shared_ptr<LegData>>& swap,
-              const std::string& noticePeriod, const std::string& noticeCalendar, const std::string& noticeConvention,
-              const std::vector<std::string>& exerciseDates, const std::vector<std::string>& exerciseTypes,
-              const std::vector<double>& exerciseValues, const std::string& optionLongShort) {
-        return new FlexiSwap(env, VECTOR_SWIG_TO_ORE(swap), noticePeriod, noticeCalendar, noticeConvention,
-            exerciseDates, exerciseTypes, exerciseValues, optionLongShort);
+        return new FlexiSwap(env, VECTOR_SWIG_TO_ORE(underlyingData), lowerNotionalBounds, lowerNotionalBoundsDates, optionLongShort);
     }
 }
 
