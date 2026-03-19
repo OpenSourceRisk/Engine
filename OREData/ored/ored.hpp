@@ -87,6 +87,7 @@
 #include <ored/model/calibrationinstruments/yoycapfloor.hpp>
 #include <ored/model/calibrationinstruments/yoyswap.hpp>
 #include <ored/model/calibrationpointcache.hpp>
+#include <ored/model/camcorrelationsfromindexcorrelations.hpp>
 #include <ored/model/commodityschwartzmodelbuilder.hpp>
 #include <ored/model/commodityschwartzmodeldata.hpp>
 #include <ored/model/crcirbuilder.hpp>

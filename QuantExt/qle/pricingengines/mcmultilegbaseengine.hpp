@@ -218,7 +218,6 @@ public:
     // convert a date to a time w.r.t. the valuation date
     Real time(const Date& d) const;
 
-
     // get the index of a time in the given simulation times set
     Size timeIndex(const Time t, const std::set<Real>& simulationTimes) const;
 

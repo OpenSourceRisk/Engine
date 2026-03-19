@@ -28,6 +28,50 @@
 namespace ore {
 namespace data {
 
+//! Flexi Swap / BGS Engine Builder Base Class (id2 is used for BGS only)
+class FlexiSwapBGSEngineBuilderBase
+    : public CachingPricingEngineBuilder<std::string, const std::string&, const std::string&, const std::string&,
+                                         const std::vector<QuantLib::Date>&, const QuantLib::Date&,
+                                         const std::vector<QuantLib::Real>&> {
+public:
+    FlexiSwapBGSEngineBuilderBase(const std::string& tradeType, const std::string& model, const std::string& engine)
+        : CachingEngineBuilder(model, engine, {tradeType}) {}
+
+protected:
+    virtual std::string keyImpl(const std::string& id, const std::string& id2, const std::string& key,
+                                const std::vector<QuantLib::Date>& dates, const QuantLib::Date& maturity,
+                                const std::vector<QuantLib::Real>& strikes) override {
+        return id;
+    }
+};
+
+//! Flexi Swap / BGS Discounting Engine Builder
+class FlexiSwapBGSDiscountingEngineBuilderBase : public FlexiSwapBGSEngineBuilderBase {
+public:
+    FlexiSwapBGSDiscountingEngineBuilderBase(const std::string& tradeType)
+        : FlexiSwapBGSEngineBuilderBase(tradeType, "DiscountedCashflows", "DiscountingSwapEngine") {}
+
+protected:
+    virtual QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::string& id, const std::string& id2,
+                                                                  const std::string& key,
+                                                                  const std::vector<QuantLib::Date>& dates,
+                                                                  const QuantLib::Date& maturity,
+                                                                  const std::vector<QuantLib::Real>& strikes) override;
+};
+
+//! Flexi Swap / BGS Numeric LGM Grid Engine Builder Base Class
+class FlexiSwapBGSLGMGridEngineBuilderBase : public FlexiSwapBGSEngineBuilderBase {
+public:
+    FlexiSwapBGSLGMGridEngineBuilderBase(const std::string& tradeType, const std::string& model)
+        : FlexiSwapBGSEngineBuilderBase(tradeType, model, "Grid") {}
+
+protected:
+    QuantLib::ext::shared_ptr<QuantExt::IrModel> model(const std::string& id, const std::string& key,
+                                                       const std::vector<QuantLib::Date>& dates,
+                                                       const QuantLib::Date& maturity,
+                                                       const std::vector<QuantLib::Real>& strikes);
+};
+
 //! Balance Guaranteed Swap Discounting Engine Builder
 class BalanceGuaranteedSwapDiscountingEngineBuilder : public FlexiSwapBGSDiscountingEngineBuilderBase {
 public:

@@ -79,8 +79,6 @@ public:
     const std::map<std::string,QuantLib::ext::any>& additionalData() const override;
 
 protected:
-    virtual QuantLib::ext::shared_ptr<LegData> createLegData() const;
-
     vector<LegData> legData_;
     string settlement_;
     bool isXCCY_ = false;
@@ -96,6 +94,14 @@ private:
 };
 
 std::string isdaSubProductSwap(const std::string& tradeId, const vector<LegData>& legData);
+
+std::tuple<Size, Real, std::string, std::string> getSwapNpvAndNotionalInfo(const std::vector<LegData>& legData);
+
+std::map<AssetClass, std::set<std::string>>
+getSwapUnderlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager,
+                         const std::vector<LegData>& legData, const std::string& security);
+
+std::tuple<Date, Date, std::string> getSwapStartMaturity(const std::vector<Leg>& legs);
 
 } // namespace data
 } // namespace ore

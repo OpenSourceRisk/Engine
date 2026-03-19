@@ -134,6 +134,7 @@ instruments/deposit.cpp
 instruments/equityforward.cpp
 instruments/fixedbmaswap.cpp
 instruments/flexiswap.cpp
+instruments/flexiswapreplication.cpp
 instruments/forwardbond.cpp
 instruments/fxforward.cpp
 instruments/genericswaption.cpp
@@ -665,6 +666,7 @@ instruments/deposit.hpp
 instruments/equityforward.hpp
 instruments/fixedbmaswap.hpp
 instruments/flexiswap.hpp
+instruments/flexiswapreplication.hpp
 instruments/forwardbond.hpp
 instruments/fxforward.hpp
 instruments/genericswaption.hpp

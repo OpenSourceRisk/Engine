@@ -57,6 +57,8 @@ void AmcCgFxOptionEngine::calculate() const {
 
     AmcCgFxOptionEngineBase::setupLegs();
     AmcCgFxOptionEngineBase::calculateFxOptionBase();
+    if(!amcEnabled_)
+        results_.value = npvValue_;
 }
 
 void AmcCgFxEuropeanForwardOptionEngine::calculate() const {
@@ -67,6 +69,8 @@ void AmcCgFxEuropeanForwardOptionEngine::calculate() const {
 
     AmcCgFxOptionEngineBase::setupLegs();
     AmcCgFxOptionEngineBase::calculateFxOptionBase();
+    if(!amcEnabled_)
+        results_.value = npvValue_;
 }
 
 void AmcCgFxEuropeanCSOptionEngine::calculate() const {
@@ -110,6 +114,9 @@ void AmcCgFxEuropeanCSOptionEngine::calculate() const {
         AmcCgFxOptionEngineBase::setupLegs();
         AmcCgFxOptionEngineBase::calculateFxOptionBase();
     }
+
+    if(!amcEnabled_)
+        results_.value = npvValue_;
 }
 
 } // namespace data
