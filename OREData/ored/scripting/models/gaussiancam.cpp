@@ -654,18 +654,18 @@ RandomVariable GaussianCam::npv(const RandomVariable& amount, const Date& obsdat
 
     Array coeff;
     Matrix coordinateTransform;
-
+    Size minSize = std::min(size(), trainingSamples());
     // if a memSlot is given and coefficients / coordinate transform are stored, we use them
 
     bool haveStoredModel = false;
 
     if (memSlot) {
         if (auto it = storedRegressionModel_.find(*memSlot); it != storedRegressionModel_.end()) {
-            coeff = std::get<0>(it->second);
-            coordinateTransform = std::get<2>(it->second);
-            QL_REQUIRE(std::get<1>(it->second) == state.size(),
+            Size nStoredModelStates;
+            std::tie(coeff, nStoredModelStates, coordinateTransform, minSize) = it->second;
+            QL_REQUIRE(nStoredModelStates == state.size(),
                        "GaussianCam::npv(): stored regression coefficients at mem slot "
-                           << *memSlot << " are for state size " << std::get<1>(it->second) << ", actual state size is "
+                           << *memSlot << " are for state size " << nStoredModelStates << ", actual state size is "
                            << state.size() << " (before possible coordinate transform).");
             haveStoredModel = true;
         }
@@ -689,7 +689,7 @@ RandomVariable GaussianCam::npv(const RandomVariable& amount, const Date& obsdat
 
         coeff = regressionCoefficients(amount, state,
                                        multiPathBasisSystem(state.size(), params_.regressionOrder, params_.polynomType,
-                                                            {}, std::min(size(), trainingSamples())),
+                                                            {}, minSize),
                                        filter, RandomVariableRegressionMethod::QR);
         DLOG("GaussianCam::npv(" << ore::data::to_string(obsdate) << "): regression coefficients are " << coeff
                                  << " (got model state size " << nModelStates << " and " << nAddReg
@@ -699,7 +699,7 @@ RandomVariable GaussianCam::npv(const RandomVariable& amount, const Date& obsdat
         // store model if requried
 
         if (memSlot) {
-            storedRegressionModel_[*memSlot] = std::make_tuple(coeff, nModelStates + nAddReg, coordinateTransform);
+            storedRegressionModel_[*memSlot] = std::make_tuple(coeff, nModelStates + nAddReg, coordinateTransform, minSize);
         }
 
     } else {
@@ -713,11 +713,9 @@ RandomVariable GaussianCam::npv(const RandomVariable& amount, const Date& obsdat
     }
 
     // compute conditional expectation and return the result
+    auto baseFn = multiPathBasisSystem(state.size(), params_.regressionOrder, params_.polynomType, {}, minSize);
 
-    return conditionalExpectation(state,
-                                  multiPathBasisSystem(state.size(), params_.regressionOrder, params_.polynomType, {},
-                                                       std::min(size(), trainingSamples())),
-                                  coeff);
+    return conditionalExpectation(state, baseFn, coeff);
 }
 
 void GaussianCam::toggleTrainingPaths() const {
