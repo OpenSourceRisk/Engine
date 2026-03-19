@@ -390,7 +390,9 @@ namespace data {
       "          IF {d == 0 OR _AMC_SimDates[simDateIdx] == BarrierMonitoringDates[d]} AND {MonitorAndSimDates[s] <= SettlementDate} THEN\n"
       "            KnockedInAtObsTime[simDateIdx] = KnockedIn;\n"
       "            KnockedOutAtObsTime[simDateIdx] = KnockedOut;\n"
-      "            simDateIdx = simDateIdx + 1;\n"
+      "            IF simDateIdx < SIZE(_AMC_SimDates) THEN\n"
+      "              simDateIdx = simDateIdx + 1;\n"
+      "            END;\n"
       "          END;\n"
       "\n"
       "        END;\n"
@@ -752,13 +754,14 @@ void GenericBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>&
          {"TriggerProbability", "Triggered"},
          {"ExerciseProbability", "Exercised"},
          {"TransatlanticActive", "TransatlanticActive"},
-         {"TransatlanticTriggered", "TransatlanticTriggered"}},
+         {"TransatlanticTriggered", "TransatlanticTriggered"},
+         {"BarrierMonitoringDates", "BarrierMonitoringDates"}},
         {}, {}, {ScriptedTradeScriptData::CalibrationData("Underlyings", {"Strike", "BarrierLevels"})});
     script_["FD"] = ScriptedTradeScriptData(
         fdscript, "value", {{"currentNotional", "currentNotional"}, {"notionalCurrency", "PayCurrency"}}, {}, {},
         {ScriptedTradeScriptData::CalibrationData("Underlyings", {"Strike", "BarrierLevels"})});
     script_["AMC"] = ScriptedTradeScriptData(
-        amcscript, "value", {{"currentNotional", "currentNotional"}, {"notionalCurrency", "PayCurrency"}}, {},
+        amcscript, "value", {{"currentNotional", "currentNotional"}, {"notionalCurrency", "PayCurrency"}, {"BarrierMonitoringDates", "BarrierMonitoringDates"}, {"_AMC_SimDates", "_AMC_SimDates"}}, {},
         {ScriptedTradeScriptData::NewScheduleData("MonitorAndSimDates", "Join",
                                                   {"_AMC_SimDates", "BarrierMonitoringDates"})},
         {ScriptedTradeScriptData::CalibrationData("Underlyings", {"Strike", "BarrierLevels"})});
