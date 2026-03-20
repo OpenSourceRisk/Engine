@@ -358,8 +358,11 @@ Rate AverageONIndexedCouponPricer::effectiveRate(const Date& date) const {
     }
 
     // Give the final result
-    Time cpnDcf = coupon_->separateRateCompPeriod() ?
-        indexDc.yearFraction(intDates.front(), date) : coupon_->accruedPeriod(date);
+    // It should not happen but there are cases where coupon_->accruedPeriod(date) was giving 0 because the payment
+    // date was _before_ the accrual end date. For example payment cal != accrual cal, payment date end of month and
+    // not a good BD, payment convention set to MF => date rolled back before accrual end date.
+    Time cpnDcf = coupon_->separateRateCompPeriod() ? indexDc.yearFraction(intDates.front(), date)
+        : coupon_->accruedPeriod(std::min(date, std::min(cpnAccEnd, coupon_->date())));
     return coupon_->gearing() * avgRate / cpnDcf + coupon_->spread();
 }
 

@@ -369,8 +369,11 @@ tuple<Rate, Spread, Rate> OvernightIndexedCouponPricer::compute(const Date& date
     }
 
     // Give the final result
-    Time cpnDcf = coupon_->separateRateCompPeriod() ?
-        indexDc.yearFraction(cpnAccStart, date) : coupon_->accruedPeriod(date);
+    // It should not happen but there are cases where coupon_->accruedPeriod(date) was giving 0 because the payment 
+    // date was _before_ the accrual end date. For example payment cal != accrual cal, payment date end of month and 
+    // not a good BD, payment convention set to MF => date rolled back before accrual end date.
+    Time cpnDcf = coupon_->separateRateCompPeriod() ? indexDc.yearFraction(cpnAccStart, date)
+        : coupon_->accruedPeriod(std::min(date, std::min(cpnAccEnd, coupon_->date())));
     Rate rate = (compFac - 1.0) / cpnDcf;
     Rate swapletRate = !incSpread ? coupon_->gearing() * rate + spread : coupon_->gearing() * rate;
     Spread effectiveSpread = !incSpread ? spread : rate - (compFacNoSpd - 1.0) / cpnDcf;
