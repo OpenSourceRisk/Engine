@@ -389,7 +389,7 @@ void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
              - ore::data::CompositeInstrumentWrapper
              - QuantLib::CompositeInstrumment, QuantExt::MultiCcyCompositeInstrument
 
-             but only 1 level for each, i.e. nested comp wrappers resp. comp instruments are not supported */
+    */
 
     LOG("Extract AMC Calculators...");
 
@@ -419,14 +419,24 @@ void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
                 continue;
             }
 
-            // 3 unpack CompositeInstrumentWrapper if we have one
+            // 3 unpack CompositeInstrumentWrapper
 
-            std::vector<QuantLib::ext::shared_ptr<InstrumentWrapper>> wrappers;
-            if (auto comp = QuantLib::ext::dynamic_pointer_cast<CompositeInstrumentWrapper>(trade->instrument())) {
-                wrappers = comp->wrappers();
-            } else {
-                wrappers = {trade->instrument()};
-            }
+            std::set<QuantLib::ext::shared_ptr<InstrumentWrapper>> wrappers{trade->instrument()};
+            std::set<QuantLib::ext::shared_ptr<InstrumentWrapper>> wrappersTmp;
+            bool compositeFound;
+            do {
+                compositeFound = false;
+                for (auto const& w : wrappers) {
+                    if (auto comp = QuantLib::ext::dynamic_pointer_cast<CompositeInstrumentWrapper>(w)) {
+                        wrappersTmp.insert(comp->wrappers().begin(), comp->wrappers().end());
+                        compositeFound = true;
+                    } else {
+                        wrappersTmp.insert(trade->instrument());
+                    }
+                }
+                wrappers.swap(wrappersTmp);
+                wrappersTmp.clear();
+            } while (compositeFound);
 
             // 4 process the wrappers
 
@@ -434,10 +444,8 @@ void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
 
                 // 4.1 store main ql instrument and its multipliers in provisional qlInstruments container
 
-                std::vector<std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Real>> qlInstruments;
-
-                qlInstruments.push_back(
-                    std::make_pair(wrapper->qlInstrument(), wrapper->multiplier() * wrapper->multiplier2()));
+                std::set<std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Real>> qlInstruments{
+                    std::make_pair(wrapper->qlInstrument(), wrapper->multiplier() * wrapper->multiplier2())};
 
                 // 4.2 extract fees resp. store non-fees as ql instruments to be processed in qlInstruments container
 
@@ -449,35 +457,41 @@ void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
                         tradeInfo.fees.back().amount = p->cashFlow()->amount() * wrapper->additionalMultipliers()[i];
                         tradeInfo.fees.back().payDate = p->cashFlow()->date();
                     } else {
-                        qlInstruments.push_back(
+                        qlInstruments.insert(
                             std::make_pair(wrapper->additionalInstruments()[i], wrapper->additionalMultipliers()[i]));
                     }
                 }
 
-                // 4.3 unpack composite ql / qle instruments to final container qlInstruments2
+                // 4.3 unpack composite ql / qle instruments
 
-                std::vector<std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Real>> qlInstruments2;
+                std::set<std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Real>> qlInstrumentsTmp;
+                bool compositeFound;
+                do {
+                    compositeFound = false;
+                    for (auto const& [qlInstrument, outerMult] : qlInstruments) {
 
-                for (auto const& [qlInstrument, outerMult] : qlInstruments) {
-
-                    if (auto c = QuantLib::ext::dynamic_pointer_cast<MultiCcyCompositeInstrument>(qlInstrument)) {
-                        for (auto const& [instr, innerMult, _] : c->components()) {
-                            qlInstruments2.push_back(std::make_pair(instr, outerMult * innerMult));
+                        if (auto c = QuantLib::ext::dynamic_pointer_cast<MultiCcyCompositeInstrument>(qlInstrument)) {
+                            for (auto const& [instr, innerMult, _] : c->components()) {
+                                qlInstrumentsTmp.insert(std::make_pair(instr, outerMult * innerMult));
+                            }
+                            compositeFound = true;
+                        } else if (auto c = QuantLib::ext::dynamic_pointer_cast<CompositeInstrument>(qlInstrument)) {
+                            for (auto const& [instr, innerMult] : c->components()) {
+                                qlInstrumentsTmp.insert(std::make_pair(instr, outerMult * innerMult));
+                            }
+                            compositeFound = true;
+                        } else {
+                            qlInstrumentsTmp.insert(std::make_pair(qlInstrument, outerMult));
                         }
-                    } else if (auto c =
-                                   QuantLib::ext::dynamic_pointer_cast<CompositeInstrument>(qlInstrument)) {
-                        for (auto const& [instr, innerMult] : c->components()) {
-                            qlInstruments2.push_back(std::make_pair(instr, outerMult * innerMult));
-                        }
-                    } else {
-                        qlInstruments2.push_back(std::make_pair(qlInstrument, outerMult));
                     }
-                }
+                    qlInstruments.swap(qlInstrumentsTmp);
+                    qlInstrumentsTmp.clear();
+                } while (compositeFound);
 
-                // 4.4 process the final container qlInstruments2
+                // 4.4 process qlInstruments
 
                 Size cmpIdx = 0;
-                for (auto const& [qlInstrument, multiplier] : qlInstruments2) {
+                for (auto const& [qlInstrument, multiplier] : qlInstruments) {
 
                     QuantLib::ext::shared_ptr<AmcCalculator> amcCalc;
 
