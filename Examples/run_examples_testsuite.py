@@ -61,9 +61,14 @@ class TestExamples(unittest.TestCase):
                         'Error comparing {} to {}'.format(file1, file2))
 
     def compAllFiles(self, comp_config):
-        if os.path.isdir(os.path.join(os.getcwd(), 'ExpectedOutput')):
+        curr_dir = os.getcwd()
+        dir_leaf = os.path.basename(os.path.normpath(curr_dir))
+        if os.path.isdir(os.path.join(curr_dir, 'ExpectedOutput')):
             for f in get_files('ExpectedOutput'):
-                self.compFiles(os.path.join('ExpectedOutput', f), os.path.join('Output', f), comp_config)
+                with self.subTest(test_name=dir_leaf, filename=f):
+                    exp_file = os.path.join('ExpectedOutput', f)
+                    out_file = os.path.join('Output', f)
+                    self.compFiles(exp_file, out_file, comp_config)
         else:
             self.logger.warning('No ExpectedOutput folder detected, skipped.')
 
