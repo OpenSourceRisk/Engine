@@ -643,7 +643,7 @@ def buildCommoditySwap(trade_id, ccy, isPayer, quantity, start, term, price,
         isPayer, ccy, fixedSchedule, fixedDC)
     floatingLeg = ql.LegData(
         ql.CommodityFloatingLegData(index, priceType, quantities, quantityDates),
-        not isPayer, ccy, floatSchedule, floatDC) 
+        not isPayer, ccy, floatSchedule, floatDC)
     legs = ql.LegDataVector()
     legs.push_back(fixedLeg)
     legs.push_back(floatingLeg)
@@ -679,10 +679,10 @@ def buildCommodityBasisSwap(trade_id, ccy, isPayer, quantity, start, term,
     floatSchedule = ql.ScheduleData(ql.ScheduleRules(startDate, endDate, floatFreq, cal, conv, conv, rule))
     floatingLeg_1 = ql.LegData(
         ql.CommodityFloatingLegData(index_1, priceType, quantities, quantityDates),
-        isPayer, ccy, floatSchedule, floatDC) 
+        isPayer, ccy, floatSchedule, floatDC)
     floatingLeg_2 = ql.LegData(
         ql.CommodityFloatingLegData(index_2, priceType, quantities, quantityDates),
-        not isPayer, ccy, floatSchedule, floatDC) 
+        not isPayer, ccy, floatSchedule, floatDC)
     legs = ql.LegDataVector()
     legs.push_back(floatingLeg_1)
     legs.push_back(floatingLeg_2)
@@ -769,4 +769,3 @@ def buildFxTouchOption(trade_id, longShort, expiry, boughtCcy, soldCcy,
 
 buildFxTouchOption("9_FXTouchOption", "Long", 10, "EUR", "USD", 1000, "NS",
                    "UpAndIn", 1.3)
-

@@ -121,11 +121,15 @@ public:
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
+%template(UnderlyingVector) std::vector<ext::shared_ptr<Underlying>>;
+SWIG_SHARED_PTR_VECTOR_TYPEMAP(Underlying, UnderlyingVector)
 
 %shared_ptr(EquityUnderlying)
 class EquityUnderlying : public Underlying {
 public:
     explicit EquityUnderlying(const std::string& equityName);
+    EquityUnderlying(const std::string& name, const std::string& identifierType, const std::string& currency,
+                     const std::string& exchange, QuantLib::Real weight);
 };
 
 %shared_ptr(TradeBarrier)
@@ -141,6 +145,8 @@ public:
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
+%template(BarrierDataVector) std::vector<ext::shared_ptr<BarrierData>>;
+SWIG_SHARED_PTR_VECTOR_TYPEMAP(BarrierData, BarrierDataVector)
 %extend BarrierData {
     BarrierData(const std::string& barrierType, const std::vector<double>& levels, const double rebate,
                 const std::vector<ext::shared_ptr<TradeBarrier>>& tradeBarriers, const std::string& style = std::string(),
@@ -152,25 +158,31 @@ public:
 }
 
 %shared_ptr(EquitySwap)
-class EquitySwap : public Trade {
+class EquitySwap : public ORESwap {
 public:
     EquitySwap();
+    EquitySwap(const Envelope& env, const LegData& leg0, const LegData& leg1);
     void build(const ext::shared_ptr<EngineFactory>&) override;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
 };
 %extend EquitySwap {
-    EquitySwap(const Envelope& env, const std::vector<ext::shared_ptr<LegData>>& legData) {
+    EquitySwap(const Envelope& env, const vector<ext::shared_ptr<LegData>>& legData) {
         return new EquitySwap(env, VECTOR_SWIG_TO_ORE(legData));
     }
 }
 
 %shared_ptr(InflationSwap)
-class InflationSwap : public Trade {
+class InflationSwap : public ORESwap {
 public:
     InflationSwap();
+    InflationSwap(const Envelope& env, const LegData& leg0, const LegData& leg1);
     void build(const ext::shared_ptr<EngineFactory>&) override;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
 };
 %extend InflationSwap {
-    InflationSwap(const Envelope& env, const std::vector<ext::shared_ptr<LegData>>& legData) {
+    InflationSwap(const Envelope& env, const vector<ext::shared_ptr<LegData>>& legData) {
         return new InflationSwap(env, VECTOR_SWIG_TO_ORE(legData));
     }
 }

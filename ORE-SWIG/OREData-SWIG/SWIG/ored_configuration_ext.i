@@ -85,7 +85,7 @@ public:
         const QuantLib::DayCounter& dayCounter, QuantLib::Natural settleDays, const QuantLib::Calendar& calendar,
         const QuantLib::BusinessDayConvention& businessDayConvention, const std::string& index, const std::string& indexCurve,
         const std::string& yieldTermStructure, const QuantLib::Period& observationLag, const std::string& quoteIndex = "",
-        const std::string& conventions = "", const bool useLastAvailableFixingDate = false);
+        const std::string& conventions = "");
 
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;

@@ -477,4 +477,268 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 
+// ore/OREData/ored/portfolio/underlying.hpp
+
+%{
+using ore::data::BasicUnderlying;
+using ore::data::FXUnderlying;
+using ore::data::InterestRateUnderlying;
+using ore::data::InflationUnderlying;
+using ore::data::CreditUnderlying;
+using ore::data::UnderlyingBuilder;
+using ore::data::PortfolioFieldGetter;
+using ore::data::OptionWrapper;
+using ore::data::EuropeanOptionWrapper;
+using ore::data::AmericanOptionWrapper;
+using ore::data::BermudanOptionWrapper;
+using ore::data::VanillaInstrument;
+using ore::data::ExerciseBuilder;
+using ore::data::CompositeInstrumentWrapper;
+using ore::data::BondPositionInstrumentWrapper;
+using ore::data::CommodityPositionInstrumentWrapper;
+using QuantExt::EquityIndex2;
+using ore::data::EquityPositionInstrumentWrapper;
+using ore::data::EquityOptionPositionInstrumentWrapper;
+using ore::data::SimmCreditQualifierMapping;
+using ore::data::StructuredConfigurationErrorMessage;
+using ore::data::StructuredConfigurationWarningMessage;
+using ore::data::StructuredTradeErrorMessage;
+using ore::data::StructuredTradeWarningMessage;
+%}
+
+%shared_ptr(BasicUnderlying)
+class BasicUnderlying : public Underlying {
+public:
+    BasicUnderlying();
+    explicit BasicUnderlying(const std::string& name);
+};
+
+%shared_ptr(FXUnderlying)
+class FXUnderlying : public Underlying {
+public:
+    explicit FXUnderlying();
+    FXUnderlying(const std::string& type, const std::string& name, const QuantLib::Real weight);
+};
+
+%shared_ptr(InterestRateUnderlying)
+class InterestRateUnderlying : public Underlying {
+public:
+    explicit InterestRateUnderlying();
+    InterestRateUnderlying(const std::string& type, const std::string& name, const QuantLib::Real weight);
+};
+
+%shared_ptr(InflationUnderlying)
+class InflationUnderlying : public Underlying {
+public:
+    explicit InflationUnderlying();
+    InflationUnderlying(const std::string& type, const std::string& name, const QuantLib::Real weight,
+                        const QuantLib::CPI::InterpolationType& interpolation = QuantLib::CPI::InterpolationType::Flat);
+};
+
+%shared_ptr(CreditUnderlying)
+class CreditUnderlying : public Underlying {
+public:
+    explicit CreditUnderlying();
+    CreditUnderlying(const std::string& type, const std::string& name, const QuantLib::Real weight);
+};
+
+%shared_ptr(UnderlyingBuilder)
+class UnderlyingBuilder : public XMLSerializable {
+public:
+    explicit UnderlyingBuilder(const std::string& nodeName = "Underlying",
+                               const std::string& basicUnderlyingNodeName = "Name");
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
+};
+
+// ore/OREData/ored/portfolio/additionalfieldgetter.hpp
+
+%shared_ptr(PortfolioFieldGetter)
+class PortfolioFieldGetter {
+public:
+    PortfolioFieldGetter(const ext::shared_ptr<Portfolio>& portfolio,
+                         const std::set<std::string>& baseFieldNames = {}, bool addExtraFields = true);
+};
+
+// ore/OREData/ored/portfolio/optionwrapper.hpp
+
+// Abstract base class
+%shared_ptr(OptionWrapper)
+class OptionWrapper : public InstrumentWrapper {};
+
+%shared_ptr(EuropeanOptionWrapper)
+class EuropeanOptionWrapper : public OptionWrapper {
+public:
+    EuropeanOptionWrapper(const ext::shared_ptr<Instrument>& inst, const bool isLongOption,
+                          const Date& exerciseDate,
+                          const Date& settlementDate,
+                          const bool isPhysicalDelivery,
+                          const ext::shared_ptr<Instrument>& undInst,
+                          const Real multiplier = 1.0,
+                          const Real undMultiplier = 1.0,
+                          const vector<ext::shared_ptr<Instrument>>& additionalInstruments =
+                              vector<ext::shared_ptr<Instrument>>(),
+                          const vector<Real>& additionalMultipliers = vector<Real>());
+    bool exercise() const override;
+};
+
+%shared_ptr(AmericanOptionWrapper)
+class AmericanOptionWrapper /*: public OptionWrapper*/ {
+public:
+    AmericanOptionWrapper(const ext::shared_ptr<Instrument>& inst, const bool isLongOption,
+                          const Date& exerciseDate, const Date& settlementDate, const bool isPhysicalDelivery,
+                          const ext::shared_ptr<Instrument>& undInst,
+                          const Real multiplier = 1.0,
+                          const Real undMultiplier = 1.0,
+                          const vector<ext::shared_ptr<Instrument>>& additionalInstruments =
+                              vector<ext::shared_ptr<Instrument>>(),
+                          const vector<Real>& additionalMultipliers = vector<Real>());
+    bool exercise() const override;
+};
+
+%shared_ptr(BermudanOptionWrapper)
+class BermudanOptionWrapper : public OptionWrapper {
+public:
+    BermudanOptionWrapper(const ext::shared_ptr<Instrument>& inst, const bool isLongOption,
+                          const std::vector<Date>& exerciseDates,
+                          const std::vector<Date>& settlementDates,
+                          const bool isPhysicalDelivery,
+                          const std::vector<ext::shared_ptr<Instrument>>& undInsts,
+                          const Real multiplier = 1.0,
+                          const Real undMultiplier = 1.0,
+                          const std::vector<ext::shared_ptr<Instrument>>& additionalInstruments =
+                              std::vector<ext::shared_ptr<Instrument>>(),
+                          const std::vector<Real>& additionalMultipliers = std::vector<Real>());
+    bool exercise() const override;
+};
+
+// ore/OREData/ored/portfolio/instrumentwrapper.hpp
+
+%shared_ptr(VanillaInstrument)
+class VanillaInstrument : public InstrumentWrapper {
+public:
+    VanillaInstrument(const ext::shared_ptr<Instrument>& inst, const Real multiplier = 1.0,
+                      const std::vector<ext::shared_ptr<Instrument>>& additionalInstruments =
+                          std::vector<ext::shared_ptr<Instrument>>(),
+                      const std::vector<Real>& additionalMultipliers = std::vector<Real>());
+};
+
+// ore/OREData/ored/portfolio/optiondata.hpp
+
+%shared_ptr(ExerciseBuilder)
+class ExerciseBuilder {
+public:
+    ExerciseBuilder(const OptionData& optionData, const std::vector<Leg> legs,
+                    bool removeNoticeDatesAfterLastAccrualStart = true);
+};
+
+// ore/OREData/ored/portfolio/compositeinstrumentwrapper.hpp
+
+%shared_ptr(CompositeInstrumentWrapper)
+class CompositeInstrumentWrapper : public ore::data::InstrumentWrapper {
+public:
+    CompositeInstrumentWrapper(const std::vector<ext::shared_ptr<InstrumentWrapper>>& wrappers,
+                               const std::vector<Handle<Quote>>& fxRates = {}, const Date& valuationDate = Date());
+};
+
+// ore/OREData/ored/portfolio/bondposition.hpp
+
+%template(BondVector) std::vector<ext::shared_ptr<Bond>>;
+
+%shared_ptr(BondPositionInstrumentWrapper)
+class BondPositionInstrumentWrapper : public InstrumentWrapper {
+public:
+    BondPositionInstrumentWrapper(const Real quantity, const std::vector<ext::shared_ptr<Bond>>& bonds,
+                                  const std::vector<Real>& weights, const std::vector<Real>& bidAskAdjstments,
+                                  const std::vector<Handle<Quote>>& fxConversion = {});
+};
+
+// ore/OREData/ored/portfolio/commodityposition.hpp
+
+%template(CommodityIndexVector) std::vector<ext::shared_ptr<CommodityIndex>>;
+
+%shared_ptr(CommodityPositionInstrumentWrapper)
+class CommodityPositionInstrumentWrapper : public Instrument {
+public:
+    CommodityPositionInstrumentWrapper(const Real quantity,
+                                       const std::vector<ext::shared_ptr<CommodityIndex>>& commodities,
+                                       const std::vector<Real>& weights,
+                                       const std::vector<Handle<Quote>>& fxConversion = {});
+};
+
+// ore/OREData/ored/portfolio/equityposition.hpp
+
+%template(EquityIndex2Vector) std::vector<ext::shared_ptr<EquityIndex2>>;
+
+%shared_ptr(EquityPositionInstrumentWrapper)
+class EquityPositionInstrumentWrapper : public Instrument {
+public:
+    EquityPositionInstrumentWrapper(const Real quantity,
+                                    const std::vector<ext::shared_ptr<EquityIndex2>>& equities,
+                                    const std::vector<Real>& weights,
+                                    const std::vector<Handle<Quote>>& fxConversion = {});
+};
+
+%template(VanillaOptionVector) std::vector<ext::shared_ptr<VanillaOption>>;
+
+%shared_ptr(EquityOptionPositionInstrumentWrapper)
+class EquityOptionPositionInstrumentWrapper : public Instrument {
+public:
+    EquityOptionPositionInstrumentWrapper(const Real quantity,
+                                          const std::vector<ext::shared_ptr<VanillaOption>>& options,
+                                          const std::vector<Real>& positions,
+                                          const std::vector<Real>& weights,
+                                          const std::vector<Handle<Quote>>& fxConversion = {});
+};
+
+// ore/OREData/ored/portfolio/simmcreditqualifiermapping.hpp
+
+%shared_ptr(SimmCreditQualifierMapping)
+struct SimmCreditQualifierMapping {
+    SimmCreditQualifierMapping();
+    SimmCreditQualifierMapping(const std::string& targetQualifier, const std::string& creditGroup, bool hasCreditRisk);
+};
+
+// ore/OREData/ored/portfolio/structuredconfigurationerror.hpp
+
+%shared_ptr(StructuredConfigurationErrorMessage)
+class StructuredConfigurationErrorMessage {
+public:
+    StructuredConfigurationErrorMessage(const std::string& configurationType, const std::string& configurationId,
+                                        const std::string& exceptionType, const std::string& exceptionWhat,
+                                        const std::map<std::string, std::string>& subFields = {});
+};
+
+// ore/OREData/ored/portfolio/structuredconfigurationwarning.hpp
+
+%shared_ptr(StructuredConfigurationWarningMessage)
+class StructuredConfigurationWarningMessage {
+public:
+    StructuredConfigurationWarningMessage(const std::string& configurationType, const std::string& configurationId,
+                                          const std::string& warningType, const std::string& warningWhat,
+                                          const std::map<std::string, std::string>& subFields = {});
+};
+
+// ore/OREData/ored/portfolio/structuredtradeerror.hpp
+
+%shared_ptr(StructuredTradeErrorMessage)
+class StructuredTradeErrorMessage {
+public:
+    StructuredTradeErrorMessage(const ext::shared_ptr<Trade>& trade, const std::string& exceptionType,
+                                const std::string& exceptionWhat);
+    StructuredTradeErrorMessage(const std::string& tradeId, const std::string& tradeType,
+                                const std::string& exceptionType, const std::string& exceptionWhat);
+};
+
+// ore/OREData/ored/portfolio/structuredtradewarning.hpp
+
+%shared_ptr(StructuredTradeWarningMessage)
+class StructuredTradeWarningMessage {
+public:
+    StructuredTradeWarningMessage(const ext::shared_ptr<Trade>& trade, const std::string& warningType,
+                                  const std::string& warningWhat);
+    StructuredTradeWarningMessage(const std::string& tradeId, const std::string& tradeType,
+                                  const std::string& warningType, const std::string& warningWhat);
+};
+
 #endif

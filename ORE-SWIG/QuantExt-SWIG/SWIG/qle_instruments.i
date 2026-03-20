@@ -43,14 +43,13 @@ using QuantExt::Deposit;
 using QuantExt::DepositEngine;
 using QuantExt::VarianceSwap2;
 using QuantExt::GeneralisedReplicatingVarianceSwapEngine;
-using QuantExt::MultiLegOption;
-using QuantExt::BondTRS;
 using QuantExt::GenericSwaption;
-using QuantExt::RiskParticipationAgreement;
 using QuantExt::ConvertibleBond2;
 using QLECallableBond = QuantExt::CallableBond;
-using QuantExt::BalanceGuaranteedSwap;
-using QuantExt::Ascot;
+using QuantExt::MultiLegOption;
+using QuantExt::BondTRS;
+using QuantExt::RiskParticipationAgreement;
+using QLEBalanceGuaranteedSwap = QuantExt::BalanceGuaranteedSwap;
 %}
 
 
@@ -151,8 +150,8 @@ class PaymentDiscountingEngine : public PricingEngine {
                              const QuantLib::Handle<QuantLib::Quote>& spotFX = QuantLib::Handle<QuantLib::Quote>(),
                              QuantLib::ext::optional<bool> includeSettlementDateFlows = QuantLib::ext::nullopt,
                              const QuantLib::Date& settlementDate = QuantLib::Date(),
-                             const QuantLib::Date& npvDate = QuantLib::Date());    
-    const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve();    
+                             const QuantLib::Date& npvDate = QuantLib::Date());
+    const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve();
     const QuantLib::Handle<QuantLib::Quote>& spotFX();
 };
 
@@ -337,12 +336,8 @@ class ConvertibleBond2 : public Bond {
 class QLECallableBond : public Bond {
 };
 
-%shared_ptr(BalanceGuaranteedSwap)
-class BalanceGuaranteedSwap : public Swap {
-};
-
-%shared_ptr(Ascot)
-class Ascot : public Instrument {
+%shared_ptr(QLEBalanceGuaranteedSwap)
+class QLEBalanceGuaranteedSwap : public Swap {
 };
 
 #endif

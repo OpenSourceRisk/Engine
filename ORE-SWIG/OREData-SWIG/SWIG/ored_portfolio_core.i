@@ -40,6 +40,11 @@ using QuantLib::CashFlow;
 %}
 
 %include std_string.i
+// Apply std::string typemaps to the QuantLib 'string' typedef so SWIG uses
+// SWIG_AsPtr_std_string (str↔string) rather than SWIG_ConvertPtr (pointer route).
+%apply std::string { string };
+%apply std::string & { string & };
+%apply const std::string & { const string & };
 
 %template(TradeVector) std::vector<ext::shared_ptr<Trade>>;
 %template(StringStringMap) std::map<std::string, std::string>;
@@ -54,6 +59,59 @@ std::vector<T> VECTOR_SWIG_TO_ORE(const std::vector<ext::shared_ptr<T>>& v) {
     return ret;
 }
 %}
+
+// Macro: add a typemap so Python lists/sequences are accepted wherever SWIG
+// expects vector<ext::shared_ptr<CppType>>.  The macro must be invoked after
+// %shared_ptr(CppType) and the %template(...) declaration for that type.
+// We also provide a freearg typemap that suppresses SWIG's default cleanup
+// (`if (SWIG_IsNewObj(resN)) delete argN;`) which references variables our
+// custom `in` typemap does not declare.
+%define SWIG_SHARED_PTR_VECTOR_TYPEMAP(CppType, SwigTypeName)
+%typemap(in) std::vector<ext::shared_ptr<CppType> >
+    (std::vector<ext::shared_ptr<CppType> > tmp) {
+    if (!PySequence_Check($input)) {
+        PyErr_SetString(PyExc_TypeError, "Expected a Python sequence for " #CppType " vector");
+        SWIG_fail;
+    }
+    Py_ssize_t sz = PySequence_Size($input);
+    for (Py_ssize_t i = 0; i < sz; ++i) {
+        PyObject* item = PySequence_GetItem($input, i);
+        void* eptr = 0;
+        int eres = SWIG_ConvertPtr(item, &eptr, $descriptor(ext::shared_ptr<CppType> *), 0);
+        Py_DECREF(item);
+        if (!SWIG_IsOK(eres) || !eptr) {
+            PyErr_Format(PyExc_TypeError, "Element %zd of sequence is not a " #CppType " instance", i);
+            SWIG_fail;
+        }
+        tmp.push_back(*reinterpret_cast<ext::shared_ptr<CppType>*>(eptr));
+    }
+    $1 = tmp;
+}
+%typemap(freearg) std::vector<ext::shared_ptr<CppType> > ""
+%typemap(in) const std::vector<ext::shared_ptr<CppType> >&
+    (std::vector<ext::shared_ptr<CppType> > tmp) {
+    if (!PySequence_Check($input)) {
+        PyErr_SetString(PyExc_TypeError, "Expected a Python sequence for " #CppType " vector");
+        SWIG_fail;
+    }
+    Py_ssize_t sz = PySequence_Size($input);
+    for (Py_ssize_t i = 0; i < sz; ++i) {
+        PyObject* item = PySequence_GetItem($input, i);
+        void* eptr = 0;
+        int eres = SWIG_ConvertPtr(item, &eptr, $descriptor(ext::shared_ptr<CppType> *), 0);
+        Py_DECREF(item);
+        if (!SWIG_IsOK(eres) || !eptr) {
+            PyErr_Format(PyExc_TypeError, "Element %zd of sequence is not a " #CppType " instance", i);
+            SWIG_fail;
+        }
+        tmp.push_back(*reinterpret_cast<ext::shared_ptr<CppType>*>(eptr));
+    }
+    $1 = &tmp;
+}
+%typemap(freearg) const std::vector<ext::shared_ptr<CppType> >& ""
+%typemap(in) vector<ext::shared_ptr<CppType> > = std::vector<ext::shared_ptr<CppType> >;
+%typemap(in) const vector<ext::shared_ptr<CppType> >& = const std::vector<ext::shared_ptr<CppType> >&;
+%enddef
 
 enum class MarketContext { irCalibration, fxCalibration, eqCalibration, pricing };
 
@@ -146,6 +204,8 @@ class InstrumentWrapper {
     Real NPV() const;
     ext::shared_ptr<QuantLib::Instrument> qlInstrument() const;
 };
+%template(InstrumentWrapperVector) std::vector<ext::shared_ptr<InstrumentWrapper>>;
+SWIG_SHARED_PTR_VECTOR_TYPEMAP(InstrumentWrapper, InstrumentWrapperVector)
 
 %shared_ptr(Trade)
 class Trade : public XMLSerializable {
