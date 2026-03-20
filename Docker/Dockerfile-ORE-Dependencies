@@ -51,6 +51,23 @@ RUN mkdir -p /usr/lib/ccache \
        ln -sf /usr/local/bin/ccache /usr/lib/ccache/$cc; \
      done
 
+ARG SCCACHE_VERSION=v0.14.0
+RUN set -eux \
+  && case "$(dpkg --print-architecture)" in \
+       amd64) ARCH=x86_64 ;; \
+       arm64) ARCH=aarch64 ;; \
+       *) echo "Unsupported architecture: $(dpkg --print-architecture)"; exit 1 ;; \
+     esac \
+  && SCCACHE_TARBALL="sccache-${SCCACHE_VERSION}-${ARCH}-unknown-linux-musl.tar.gz" \
+  && SCCACHE_URL="https://github.com/mozilla/sccache/releases/download/${SCCACHE_VERSION}/${SCCACHE_TARBALL}" \
+  && curl -fsSL "${SCCACHE_URL}" -o "/tmp/${SCCACHE_TARBALL}" \
+  && curl -fsSL "${SCCACHE_URL}.sha256" -o "/tmp/${SCCACHE_TARBALL}.sha256" \
+  && cd /tmp && echo "$(cat ${SCCACHE_TARBALL}.sha256)  ${SCCACHE_TARBALL}" | sha256sum -c - \
+  && tar -xzf "/tmp/${SCCACHE_TARBALL}" -C /tmp \
+  && mv "/tmp/sccache-${SCCACHE_VERSION}-${ARCH}-unknown-linux-musl/sccache" /usr/local/bin/sccache \
+  && chmod +x /usr/local/bin/sccache \
+  && rm -rf /tmp/sccache-*
+
 RUN \
 curl -sSL https://get.docker.com -o install-docker.sh && \
 sh install-docker.sh --version 28
