@@ -1,5 +1,8 @@
 # syntax = docker/dockerfile:1.2
+ARG DOCKER_REPO
 ARG ORE_BUILD_VERSION
+ARG DEBIAN_TAG
+ARG CMAKE_BUILD_TYPE
 FROM ${DOCKER_REPO}ore-build-dependencies:${ORE_BUILD_VERSION} as orebuild
 
 LABEL Quaternion Risk Management
@@ -8,22 +11,9 @@ LABEL Description="Build ORE"
 ARG NUM_CORES
 ARG CMAKE_BUILD_TYPE
 
-# Exclusions are performed by .dockerignore
-COPY CMakeLists.txt /ore/CMakeLists.txt
-COPY QuantLib /ore/QuantLib
-COPY QuantExt /ore/QuantExt
-COPY OREData /ore/OREData
-COPY OREAnalytics /ore/OREAnalytics
-COPY App /ore/App
-COPY ThirdPartyLibs /ore/ThirdPartyLibs
-COPY ORETest /ore/ORETest
-COPY cmake /ore/cmake
-COPY ORE-SWIG/CMakeLists.txt /ore/ORE-SWIG/CMakeLists.txt
-COPY ORE-SWIG/test /ore/ORE-SWIG/test
-COPY ORE-SWIG/OREAnalytics-SWIG /ore/ORE-SWIG/OREAnalytics-SWIG
-COPY ORE-SWIG/OREData-SWIG /ore/ORE-SWIG/OREData-SWIG
-COPY ORE-SWIG/QuantExt-SWIG /ore/ORE-SWIG/QuantExt-SWIG
-COPY ORE-SWIG/QuantLib-SWIG /ore/ORE-SWIG/QuantLib-SWIG
+# Source archive is created in CI before_script (see ci/build_ore.yml)
+# This replaces 15 individual COPY statements with a single ADD for faster buildah builds
+ADD ore-source.tar.gz /ore/
 
 # - add  -fpch-preprocess to CMAKE_CXX_FLAGS when QL_USE_PCH is set to ON
 RUN cd /ore \
@@ -76,7 +66,6 @@ RUN mkdir -p /boostlibs && \
 RUN mkdir -p /opencllibs && \
     find /usr/lib -type f -name 'libOpenCL*' -exec cp {} /opencllibs/ \;
 
-ARG DEBIAN_TAG
 FROM ${DOCKER_REPO}debian:${DEBIAN_TAG}
 
 COPY --from=orebuild /usr/local/include /usr/local/include
