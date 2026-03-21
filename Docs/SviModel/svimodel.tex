@@ -180,7 +180,8 @@ ORE supports the following SVI model variants:
 \item HendriksMartini2017EssviFirstPowerLaw: Extended Surface SVI with first power-law parameterization (see \ref{sec:essvi}), arbitrage-free
 \item HendriksMartini2017EssviSecondPowerLaw: Extended Surface SVI with second power-law parameterization (see \ref{sec:essvi}), arbitrage-free
 \item CorbettaEtAl2019Essvi: Extended Surface SVI (see \ref{sec:essvi}) using robust calibration \cite{Corbetta_2019}, arbitrage-free,
-\item Mingone2022Essvi: Extended Surface SVI (see \ref{sec:essvi}) with global calibration \cite{Mingone_2022}, arbitrage-free,
+\item Mingone2022EssviGJ: Extended Surface SVI (see \ref{sec:essvi}) with global calibration and Gatheral Jim condition \cite{Mingone_2022}, arbitrage-free,
+\item Mingone2022EssviMM: Extended Surface SVI (see \ref{sec:essvi}) with global calibration and Martini Mingone condition \cite{Mingone_2022}, arbitrage-free,
 \end{itemize}
 
 \subsection{Calibration}
@@ -282,7 +283,7 @@ Work in progress
 
 \subsection{Global calibration for Extended Surface SVI}
 
-Applicable to model variant Mingone2022Essvi.
+Applicable to model variant Mingone2022EssviGJ and Mingone2022EssviMM.
 
 ORE implements the global calibration method for the Extended Surface SVI model proposed by Mingone \cite{Mingone_2022}.
 The method guarantees absence of both calendar and butterfly arbitrage across the whole surface by re-parametrization of the model,
@@ -298,12 +299,18 @@ via
 a_i &=& \theta_i - \theta_{i-1} p_i \\
 c_i &=& \frac{\psi_i - A_{\psi_i}}{C_{\psi_i} - A_{\psi_i}} \\
 p_i &=& \max \left( \frac{1 + \rho_{i-1}}{1 + \rho_i}, \frac{1 - \rho_{i-1}}{1 - \rho_i} \right) \quad \text{for } i > 1 \\
-f_i &=& \min \left( \frac{4}{1+|\rho_i|}, \sqrt{f_{GJ}(\theta_i, |\rho_i|)}\right) \quad \text{for } i \ge 1 \\
 A_{\psi_1} &=& 0 \\
 A_{\psi_i} &=& \psi_{i-1} p_i \quad \text{for } i \ge 1 \\
 C_{\psi_1} &=& \min \left( f_1, \frac{f_2}{p_2}, ..., \frac{f_N}{\Pi^N_{j=2}p_j} \right) \\
 C_{\psi_i} &=& \min \left( \frac{\psi_{i-1}}{\theta_{i-1}},f_i, \frac{f_{i+1}}{p_{i+1}}, ..., \frac{f_N}{\Pi^N_{j=i+1}p_j} \right) \quad \text{for } i \ge 1
 \end{eqnarray}
+
+\begin{eqnarray}
+f_i &=& \min \left( \frac{4}{1+|\rho_i|}, \sqrt{f_{GJ}(\theta_i, |\rho_i|)}\right) \quad \text{for } i \ge 1 \text{ or }\\
+f_i &=& \min \left( \frac{4}{1+|\rho_i|}, \sqrt{f_{MM}(\theta_i, |\rho_i|)}\right) \quad \text{for } i \ge 1 \\
+\end{eqnarray}
+
+where $f_{GJ}$ and $f_{MM}$ are the Gatheral Jim and Martini Mingone functions defined in \cite{Mingone_2022}.
 
 The natural SVI parameters can be recovered via
 \begin{eqnarray}

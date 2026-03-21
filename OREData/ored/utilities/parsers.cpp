@@ -1720,7 +1720,8 @@ SviParametricVolatility::ModelVariant parseSviParametricVolatilityModelVariant(c
         {"HendriksMartini2017EssviFirstPowerLaw", SviParametricVolatility::ModelVariant::HendriksMartini2017EssviFirstPowerLaw},
         {"HendriksMartini2017EssviSecondPowerLaw", SviParametricVolatility::ModelVariant::HendriksMartini2017EssviSecondPowerLaw},
         {"CorbettaEtAl2019Essvi", SviParametricVolatility::ModelVariant::CorbettaEtAl2019Essvi},
-        {"Mingone2022Essvi", SviParametricVolatility::ModelVariant::Mingone2022Essvi}};
+        {"Mingone2022EssviGJ", SviParametricVolatility::ModelVariant::Mingone2022EssviGJ},
+        {"Mingone2022EssviMM", SviParametricVolatility::ModelVariant::Mingone2022EssviMM}};
     auto it = m.find(s);
     if (it != m.end()) {
         return it->second;
@@ -1730,7 +1731,7 @@ SviParametricVolatility::ModelVariant parseSviParametricVolatilityModelVariant(c
             << s
             << "' not recognized, expected one of 'Gatheral2004SviRaw', 'Gatheral2004SviNatural', 'Gatheral2004SviJw', "
                "'Gatheral2012SsviHeston', 'Gatheral2012SsviPowerLaw', 'HendriksMartini2017EssviFirstPowerLaw', "
-               "'HendriksMartini2017EssviSecondPowerLaw', 'CorbettaEtAl2019Essvi', 'Mingone2022Essvi'.");
+               "'HendriksMartini2017EssviSecondPowerLaw', 'CorbettaEtAl2019Essvi', 'Mingone2022EssviGJ', 'Mingone2022EssviMM'.");
     }
 }
 
@@ -1751,8 +1752,10 @@ std::ostream& operator<<(std::ostream& out, SviParametricVolatility::ModelVarian
         out << "HendriksMartini2017EssviSecondPowerLaw";
     } else if (m == SviParametricVolatility::ModelVariant::CorbettaEtAl2019Essvi) {
         out << "CorbettaEtAl2019Essvi";
-    } else if (m == SviParametricVolatility::ModelVariant::Mingone2022Essvi) {
-        out << "Mingone2022Essvi";
+    } else if (m == SviParametricVolatility::ModelVariant::Mingone2022EssviGJ) {
+        out << "Mingone2022EssviGJ";
+    } else if (m == SviParametricVolatility::ModelVariant::Mingone2022EssviMM) {
+        out << "Mingone2022EssviMM";
     } else {
         QL_FAIL("SviParametricVolatility::ModelVariant (" << static_cast<int>(m)
                                                           << ") not recognized. This is an internal error.");

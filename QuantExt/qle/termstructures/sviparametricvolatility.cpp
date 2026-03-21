@@ -27,6 +27,7 @@
 #include <ql/math/optimization/costfunction.hpp>
 #include <ql/math/optimization/levenbergmarquardt.hpp>
 #include <ql/math/randomnumbers/haltonrsg.hpp>
+#include <ql/math/solvers1d/brent.hpp>
 
 #include <boost/algorithm/string/join.hpp>
 
@@ -61,7 +62,9 @@ ParametricVolatility::MarketQuoteType SviParametricVolatility::preferredOutputQu
         return MarketQuoteType::Price;
     case ModelVariant::Gatheral2012SsviPowerLaw:
         return MarketQuoteType::Price;
-    case ModelVariant::Mingone2022Essvi:
+    case ModelVariant::Mingone2022EssviGJ:
+        return MarketQuoteType::ShiftedLognormalVolatility;
+    case ModelVariant::Mingone2022EssviMM:
         return MarketQuoteType::ShiftedLognormalVolatility;
     default:
         QL_FAIL("SviParametricVolatility::preferredOutputQuoteType(): model variant ("
@@ -111,7 +114,8 @@ std::vector<Real> SviParametricVolatility::getGuess(const std::vector<std::pair<
         }
         break;
     }
-    case ModelVariant::Mingone2022Essvi: {
+    case ModelVariant::Mingone2022EssviGJ:
+    case ModelVariant::Mingone2022EssviMM: {
         for (Size i = 0, j = 0; i < params.size(); ++i) {
             if (params[i].second != ParametricVolatility::ParameterCalibration::Calibrated) {
                 result[i] = params[i].first;
@@ -174,7 +178,8 @@ SviParametricVolatility::defaultModelParameters() const {
                 {0.0, ParameterCalibration::Calibrated},
                 {0.5, ParameterCalibration::Calibrated},
                 {0.5, ParameterCalibration::Calibrated}};
-    case ModelVariant::Mingone2022Essvi:
+    case ModelVariant::Mingone2022EssviGJ:
+    case ModelVariant::Mingone2022EssviMM:
         return {{0.0, ParameterCalibration::Calibrated},
                 {0.0, ParameterCalibration::Calibrated}, // will be set to ATM total implied variances
                 {0.0, ParameterCalibration::Calibrated}, // will be set to ATM total implied variances
@@ -200,7 +205,8 @@ QuantLib::Size SviParametricVolatility::expectedModelParametersSize() const {
         return 7; // theta, eta, lambda, p_0, p_m, theta_max, a
     case ModelVariant::CorbettaEtAl2019Essvi:
         return 4; // theta_star, k_star, rho, phi
-    case ModelVariant::Mingone2022Essvi:
+    case ModelVariant::Mingone2022EssviGJ:
+    case ModelVariant::Mingone2022EssviMM:
         return 3; // rho, a, c
     default:
         QL_FAIL("SviParametricVolatility::expectedModelParametersSize(): model variant ("
@@ -469,7 +475,8 @@ Constraint SviParametricVolatility::getCalibrationConstraint(
     // case ModelVariant::HendriksMartini2017EssviFirstPowerLaw:
     // case ModelVariant::HendriksMartini2017EssviSecondPowerLaw:
     // case ModelVariant::CorbettaEtAl2019Essvi:
-    case ModelVariant::Mingone2022Essvi: {
+    case ModelVariant::Mingone2022EssviGJ:
+    case ModelVariant::Mingone2022EssviMM: {
         Array lowerBound(noFreeParams), upperBound(noFreeParams);
         for (Size j = 0, i = 0; i < params.size(); ++i) {
             if (isFreeParams[i]) {
@@ -497,7 +504,8 @@ Constraint SviParametricVolatility::getCalibrationConstraint(
 
 void SviParametricVolatility::sanitiseSviParams(std::vector<Matrix>& m) {
     switch(modelVariant_) {
-        case ModelVariant::Mingone2022Essvi: {
+        case ModelVariant::Mingone2022EssviGJ:
+        case ModelVariant::Mingone2022EssviMM: {
             for (Size k = 0; k < m.size(); ++k) {
                 Matrix& mat = m[k];
                 for (Size i = 0; i < mat.rows(); ++i) {
@@ -1191,7 +1199,8 @@ SviParametricVolatility::convertFromRawSvi(const Real timeToExpiry, const std::v
         case ModelVariant::HendriksMartini2017EssviFirstPowerLaw:
         case ModelVariant::HendriksMartini2017EssviSecondPowerLaw:
         case ModelVariant::CorbettaEtAl2019Essvi:
-        case ModelVariant::Mingone2022Essvi:
+        case ModelVariant::Mingone2022EssviGJ:
+        case ModelVariant::Mingone2022EssviMM:
             QL_FAIL("SviParametricVolatility::convertToRawSvi(): model variant ("
                     << static_cast<int>(modelVariant) << ") not implemented.");
             break;
@@ -1625,8 +1634,8 @@ SsviParametricVolatilityGlobal::SsviParametricVolatilityGlobal(
     : SviParametricVolatility(modelVariant, marketSmiles, marketModelType, inputMarketQuoteType, discountCurve,
                              modelParameters, modelShifts, maxCalibrationAttempts, exitEarlyErrorThreshold,
                              maxAcceptableError, true) {  // deferCalculate = true
-        QL_REQUIRE(modelVariant == ModelVariant::Mingone2022Essvi,
-                   "SsviParametricVolatilityGlobal only supports Mingone2022Essvi model variant.");
+        QL_REQUIRE(modelVariant == ModelVariant::Mingone2022EssviGJ || modelVariant == ModelVariant::Mingone2022EssviMM,
+                   "SsviParametricVolatilityGlobal::SsviParametricVolatilityGlobal(): only global SSVI model variants are allowed.");
         // Now call calculate() so virtual dispatch works correctly
         calculate();
 }
@@ -1958,8 +1967,8 @@ void SsviParametricVolatilityGlobal::calibrate() {
 std::tuple<std::vector<Real>, std::vector<Real>, std::vector<Real>>
 SsviParametricVolatilityGlobal::convertToNaturalSvi(const std::vector<Real>& params, ModelVariant modelVariant) {
 
-    QL_REQUIRE(modelVariant == ModelVariant::Mingone2022Essvi,
-               "SsviParametricVolatilityGlobal::convertToNaturalSvi only supports Mingone2022Essvi model variant.");
+    QL_REQUIRE(modelVariant == ModelVariant::Mingone2022EssviGJ || modelVariant == ModelVariant::Mingone2022EssviMM,
+               "SsviParametricVolatilityGlobal::convertToNaturalSvi only supports Mingone2022EssviGJ and Mingone2022EssviMM model variants.");
     QL_REQUIRE(params.size() % 3 == 0, "SsviParametricVolatilityGlobal::convertToNaturalSvi: wrong number of parameters.");
 
     Size n = params.size() / 3;
@@ -1986,7 +1995,91 @@ SsviParametricVolatilityGlobal::convertToNaturalSvi(const std::vector<Real>& par
 
     std::vector<Real> f(n);
     for(Size i = 0; i < n; ++i) {
-        f[i] = std::min(4.0 / (1.0 + std::abs(rho[i])), std::sqrt(4 * theta[i] / (1.0 + std::abs(rho[i]))));
+        const Real absRho = std::abs(rho[i]);
+
+        switch (modelVariant) {
+            case ModelVariant::Mingone2022EssviGJ: {
+                Real fGJ = 4.0 * theta[i] / (1.0 + absRho);
+                f[i] = std::min(4.0 / (1.0 + absRho), std::sqrt(std::max(0.0, fGJ)));
+                break;
+            }
+            case ModelVariant::Mingone2022EssviMM: {
+                const Real sqrtOneMinusRho2 = std::sqrt(std::max(0.0, 1.0 - absRho * absRho));
+                const Real sqrtOneMinusRho2Safe = std::max(sqrtOneMinusRho2, 1e-12);
+                // Lower bound l2(|rho|) from MM; we nudge it to stay inside the valid domain.
+                const Real l2 = 1.0 / std::tan(std::acos(-absRho) / 3.0);
+                const Real lMin = l2 + 1e-6;
+                // Cap the search range; the MM infimum is typically attained well before this.
+                const Real lMax = std::max(10.0, lMin * 100.0);
+                // Coarse grid keeps runtime predictable; Brent only refines when we see a sign change.
+                const Size gridSize = 80;
+                Real fMm = QL_MAX_REAL;
+
+                auto candidateAt = [&](const Real l) {
+                    // Compose the MM bound from N, N', N'' as in the paper.
+                    const Real N = sqrtOneMinusRho2 + absRho * l + std::sqrt(l * l + 1.0);
+                    const Real Np = absRho + l / std::sqrt(l * l + 1.0);
+                    const Real Npp = 1.0 / std::pow(l * l + 1.0, 1.5);
+                    const Real g = 0.25 * Np;
+                    const Real h = 1.0 - (l - absRho / sqrtOneMinusRho2Safe) * Np / (2.0 * N);
+                    const Real g2 = Npp - (Np * Np) / (2.0 * N);
+                    const Real denom = theta[i] * sqrtOneMinusRho2Safe * g * g - g2;
+                    if (denom <= 0.0)
+                        return QL_MAX_REAL;
+                    // MM bound candidate for a given l.
+                    return 4.0 * theta[i] * sqrtOneMinusRho2Safe * h * h / denom;
+                };
+
+                auto derivAt = [&](const Real l) {
+                    const Real h = 1e-6 * std::max(1.0, l);
+                    const Real fPlus = candidateAt(l + h);
+                    const Real fMinus = candidateAt(std::max(lMin, l - h));
+                    if (!std::isfinite(fPlus) || !std::isfinite(fMinus))
+                        return QL_MAX_REAL;
+                    // Central difference derivative for root finding.
+                    return (fPlus - fMinus) / (2.0 * h);
+                };
+
+                // Start from the left edge and then sweep log-space to find a bracket for Brent.
+                Real bestF = candidateAt(lMin);
+                Real prevL = lMin;
+                Real prevD = derivAt(prevL);
+                for (Size k = 1; k <= gridSize; ++k) {
+                    const Real t = static_cast<Real>(k) / static_cast<Real>(gridSize);
+                    // Log-spaced grid over l in (l2, lMax) to probe the infimum.
+                    const Real l = lMin * std::exp(std::log(lMax / lMin) * t);
+                    const Real fVal = candidateAt(l);
+                    if (fVal < bestF) {
+                        bestF = fVal;
+                    }
+                    const Real dVal = derivAt(l);
+                    if (std::isfinite(prevD) && std::isfinite(dVal) && prevD * dVal < 0.0) {
+                        try {
+                            // Bracketed root solve for a stationary point.
+                            Brent solver;
+                            solver.setMaxEvaluations(100);
+                            const Real guess = 0.5 * (prevL + l);
+                            const Real lStar = solver.solve(derivAt, 1e-8, guess, prevL, l);
+                            const Real fStar = candidateAt(lStar);
+                            if (fStar < bestF) {
+                                bestF = fStar;
+                            }
+                        } catch (...) {
+                        }
+                    }
+                    prevL = l;
+                    prevD = dVal;
+                }
+
+                fMm = std::min(fMm, bestF);
+                f[i] = std::min(4.0 / (1.0 + absRho), std::sqrt(std::max(0.0, fMm)));
+                break;
+            }
+            default:
+                QL_FAIL("SsviParametricVolatilityGlobal::convertToNaturalSvi: unsupported model variant.");
+        }
+        
+
     }
 
     std::vector<Real> C(n);
@@ -2045,7 +2138,8 @@ Real SsviParametricVolatilityGlobal::evaluate(const Real timeToExpiry, const Rea
 
     std::vector<Real> params;
     switch (modelVariant_) {
-    case ModelVariant::Mingone2022Essvi: {
+    case ModelVariant::Mingone2022EssviGJ:
+    case ModelVariant::Mingone2022EssviMM: {
         Real rho, theta, psi;
         auto firstParam = calibratedSviParams_.find(std::make_pair(timeToExpiries_.front(), uLength));
         auto lastParam = calibratedSviParams_.find(std::make_pair(timeToExpiries_.back(), uLength));

@@ -32,15 +32,16 @@ namespace QuantExt {
 class SviParametricVolatility : public ParametricVolatility {
 public:
     enum class ModelVariant {
-        Gatheral2004SviRaw = 0, // SVI with Raw parameterization, not arbitrage-free
-        Gatheral2004SviNatural = 1, // SVI with Natural parameterization, not arbitrage-free
-        Gatheral2004SviJw = 2, // SVI with Jump-Wings parameterization, not arbitrage-free
+        Gatheral2004SviRaw = 0, // SVI with Raw parameterization
+        Gatheral2004SviNatural = 1, // SVI with Natural parameterization
+        Gatheral2004SviJw = 2, // SVI with Jump-Wings parameterization
         Gatheral2012SsviHeston = 3, // Surface SVI with Heston-like parameterization, arbitrage-free
         Gatheral2012SsviPowerLaw = 4, // Surface SVI with power-law parameterization, arbitrage-free
         HendriksMartini2017EssviFirstPowerLaw = 5, // Extended Surface SVI with first power-law parameterization, arbitrage-free
         HendriksMartini2017EssviSecondPowerLaw = 6, // Extended Surface SVI with second power-law parameterization, arbitrage-free
         CorbettaEtAl2019Essvi = 7, // Extended Surface SVI using robust calibration, arbitrage-free,
-        Mingone2022Essvi = 8, // Extended Surface SVI with global calibration, arbitrage-free
+        Mingone2022EssviGJ = 8, // Extended Surface SVI with global calibration and Gatheral Jim condition, arbitrage-free
+        Mingone2022EssviMM = 9, // Extended Surface SVI with global calibration and Martini Mingone condition, arbitrage-free
     };
 
     /*! - modelParameters are given by (tte, underlyingLen) as a vector of parameter values and whether the values are
