@@ -42,12 +42,25 @@ namespace data {
 
 //! Build a BlackVolatilitySurfaceSvi, force calibration, and log RMSE diagnostics.
 /*!
-  \param curveLabel          Prefix for log/error messages, e.g. "EquityVolCurve", "FXVolCurve".
-  \param spotDays            Spot settlement lag. Pass 0 for equity/commodity surfaces.
-  \param spotCalendar        Spot settlement calendar. Pass the surface calendar for equity/commodity.
-  \param curve1              For FX: domestic discount curve. For EQ/COMM: forecast/risk-free curve.
-  \param curve2              For FX: foreign discount curve. For EQ/COMM: dividend/convenience yield.
-  \param logPerStrikeFit     If true, logs market vs fitted vol for every (expiry, strike) slice.
+  \param curveLabel                   Prefix for log/error messages, e.g. "EquityVolCurve", "FXVolCurve".
+  \param asof                         Valuation/anchor date.
+  \param dates                        Expiry dates of the vol surface.
+  \param strikes                      Per-expiry strike vectors.
+  \param quotes                       Per-expiry market vol (or price) vectors aligned with \p strikes.
+  \param optionTypes                  Per-expiry option type vectors (Call/Put) aligned with \p strikes.
+  \param dayCounter                   Day counter used to convert dates to year fractions.
+  \param calendar                     Holiday calendar for the surface.
+  \param spot                         Spot price quote handle.
+  \param spotDays                     Spot settlement lag. Pass 0 for equity/commodity surfaces.
+  \param spotCalendar                 Spot settlement calendar. Pass the surface calendar for equity/commodity.
+  \param curve1                       For FX: domestic discount curve. For EQ/COMM: forecast/risk-free curve.
+  \param curve2                       For FX: foreign discount curve. For EQ/COMM: dividend/convenience yield.
+  \param sviModelVariant              Which SVI/SSVI/ESSVI parametric model to calibrate.
+  \param parametricSmileConfiguration Optional initial parameter values and calibration settings; if absent,
+                                      model defaults are used.
+  \param interpolationModel           String name of the model variant; used for log/error messages.
+  \param inputMarketQuoteType         Quote type of the input vols (shifted-lognormal or normal).
+  \param logPerStrikeFit              If true, logs market vs fitted vol for every (expiry, strike) slice.
 */
 QuantLib::ext::shared_ptr<QuantLib::BlackVolTermStructure> buildSviSurface(
     const std::string& curveLabel,
