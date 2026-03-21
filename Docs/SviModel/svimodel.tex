@@ -276,10 +276,54 @@ Work in progress
 
 Applicable to model variant CorbettaEtAl2019Essvi.
 
+\cite{Corbetta_2019} proposes a robust calibration method for a re-parametrized Extended Surface SVI model, with new model parameters
+$k^*, \theta^*, \rho, \psi \in \mathbb{R} \times \mathbb{R}^+ \times (-1, 1) \times (0, \infty)$
+$\theta = \theta^* - \rho \psi k^*$
+where the data point $(k^*, \theta^*)$ represents the log-forward moneyness and total implied variance closest to the ATM (forward).
+
+Butterfly arbitrage is avoided by imposing the following constraints on the model parameters:
+$0 < \psi \le \frac{-2\rho k^*}{1 + |\rho|} + \sqrt{\frac{4 \rho^2 (k^*)^2}{(1 + |\rho|)^2} + \frac{4 \theta^*}{1 + |\rho|}}$
+
+Calednar arbitrage is avoided by imposing the following constraints on the model parameters:
+$\theta &>& \underline{\theta} \quad \text{and} \quad \psi &>& \underline{\psi}$
+
+where $\underline{\theta}$ and $\underline{\psi}$ are the calibrated $\theta$ and $\psi$ parameters associated to the previous slice
+
 \subsubsection{Interpolation}
-Work in progress
+
+For two slices with parameters $\theta_1, \psi_1, \rho_1$ and $\theta_2, \psi_2, \rho_2$ the interpolated parameters for a slice with time to maturity $t$ between the two slices are given by
+
+\begin{eqnarray}
+\theta_t &=& (1 - \lambda) \theta_1 + \lambda \theta_2 \\
+\psi_t &=& (1 - \lambda) \psi_1 + \lambda \psi_2 \\
+\psi_t \rho_t &=& (1 - \lambda) \psi_1 \rho_1 + \lambda \psi_2 \rho_2
+\end{eqnarray}
+
+where $\lambda = \frac{t - T_1}{T_2 - T_1}$ is the interpolation weight.
+
 \subsubsection{Extrapolation}
-Work in progress
+
+For $t < T_1$,
+\begin{eqnarray}
+\theta_t &=& \lambda \theta_1 \\
+\psi_t &=& \lambda \psi_1 \\
+\rho_t &=& \rho_1
+\end{eqnarray}
+
+where $\lambda = \frac{t}{T_1}$ is the extrapolation weight.
+
+For $t > T_N$,
+
+\begin{eqnarray}
+\theta_t &=& \theta_N + u(t) \\
+\psi_t &=& \psi_N \\
+\rho_t &=& \rho_N
+\end{eqnarray}
+
+where $u(t)$ is any continuous increasing function on $[T_N, \infty)$ with $u(T_N) = 0$.
+
+In our implementation we use $u(t) = \frac{\theta_N - \theta_{N-1}}{T_N - T_{N-1}} (t - T_N)$
+
 
 \subsection{Global calibration for Extended Surface SVI}
 
@@ -344,6 +388,8 @@ For $t < T_1$,
 \psi_t &=& \lambda \psi_1 \\
 \rho_t &=& \rho_1
 \end{eqnarray}
+
+where $\lambda = \frac{t}{T_1}$ is the extrapolation weight.
 
 For $t > T_N$,
 

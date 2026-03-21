@@ -57,7 +57,7 @@ public:
             modelParameters = {},
         const std::map<QuantLib::Real, QuantLib::Real>& modelShift = {},
         const QuantLib::Size maxCalibrationAttempts = 10, const QuantLib::Real exitEarlyErrorThreshold = 0.005,
-        const QuantLib::Real maxAcceptableError = 0.05, bool deferCalculate = false);
+        const QuantLib::Real maxAcceptableError = 0.05, bool deferCalculate = false, bool enforceNoArbitrage = false);
 
     virtual QuantLib::Real evaluate(
         const QuantLib::Real timeToExpiry, const QuantLib::Real underlyingLength, const QuantLib::Real strike,
@@ -105,11 +105,12 @@ public:
 protected:
     ModelVariant modelVariant_;
 
-    QuantLib::Constraint getCalibrationConstraint(std::vector<std::pair<Real, ParameterCalibration>> params,
-                                                  bool arbitrageFree) const;
+    virtual QuantLib::Constraint getCalibrationConstraint(std::vector<std::pair<Real, ParameterCalibration>> params,
+                                                          bool arbitrageFree) const;
     std::vector<Real> getGuess(const std::vector<std::pair<Real, ParametricVolatility::ParameterCalibration>>& params,
                                const std::vector<Real>& randomSeq, const Real forward, const Real lognormalShift) const;
 
+    static QuantLib::Size expectedModelParametersSize(ModelVariant modelVariant);
     QuantLib::Size expectedModelParametersSize() const;
     ParametricVolatility::MarketQuoteType preferredOutputQuoteType() const;
     virtual std::tuple<std::vector<Real>, Real, Real, QuantLib::Size>
@@ -122,6 +123,10 @@ protected:
     mutable std::map<std::pair<Real, Real>, Real> lognormalShifts_;
     mutable std::map<std::pair<Real, Real>, Real> calibrationErrors_;
     mutable std::map<std::pair<Real, Real>, QuantLib::Size> noOfAttempts_;
+
+    // Key of previous slice for calendar spread constraint (Corbetta);
+    // overridden in SsviParametricVolatilityGlobal to return prevSliceKey_
+    virtual QuantLib::ext::optional<std::pair<Real, Real>> prevSliceKey() const { return QuantLib::ext::nullopt; }
 
     mutable std::vector<Real> underlyingLengths_, timeToExpiries_;
     mutable std::vector<Real> underlyingLengthsForInterpolation_, timeToExpiriesForInterpolation_;
@@ -138,6 +143,7 @@ protected:
     QuantLib::Size maxCalibrationAttempts_;
     QuantLib::Real exitEarlyErrorThreshold_;
     QuantLib::Real maxAcceptableError_;
+    bool enforceNoArbitrage_;
 
     void calculate();
     virtual void setDefaultParameters();
@@ -168,7 +174,7 @@ public:
             modelParameters = {},
         const std::map<QuantLib::Real, QuantLib::Real>& modelShift = {},
         const QuantLib::Size maxCalibrationAttempts = 10, const QuantLib::Real exitEarlyErrorThreshold = 0.005,
-        const QuantLib::Real maxAcceptableError = 0.05);
+        const QuantLib::Real maxAcceptableError = 0.05, bool enforceNoArbitrage = true);
 
     std::vector<Real> evaluateSvi(const std::vector<Real>& params, const Real forward,
                                   const Real timeToExpiry, const Real lognormalShift,
@@ -193,6 +199,38 @@ private:
         const Real timeToExpiry, const Real underlyingLength) const;
 };
 
+class SsviParametricVolatilityRobust : public SviParametricVolatility {
+public:
+    SsviParametricVolatilityRobust(
+        const ModelVariant modelVariant, const std::vector<MarketSmile> marketSmiles,
+        const MarketModelType marketModelType, const MarketQuoteType inputMarketQuoteType,
+        const QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve,
+        const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, ParameterCalibration>>>
+            modelParameters = {},
+        const std::map<QuantLib::Real, QuantLib::Real>& modelShift = {},
+        const QuantLib::Size maxCalibrationAttempts = 10, const QuantLib::Real exitEarlyErrorThreshold = 0.005,
+        const QuantLib::Real maxAcceptableError = 0.05, bool enforceNoArbitrage = true
+    );
+
+    virtual QuantLib::Real evaluate(
+        const QuantLib::Real timeToExpiry, const QuantLib::Real underlyingLength, const QuantLib::Real strike,
+        const QuantLib::Real forward, const MarketQuoteType outputMarketQuoteType,
+        const QuantLib::Real outputLognormalShift = QuantLib::Null<QuantLib::Real>(),
+        const QuantLib::ext::optional<QuantLib::Option::Type> outputOptionType = QuantLib::ext::nullopt) const override;
+
+protected:
+    mutable std::map<std::pair<Real, Real>, std::vector<Real>> calibratedModelParams_;
+    QuantLib::Constraint getCalibrationConstraint(std::vector<std::pair<Real, ParameterCalibration>> params,
+                                                  bool arbitrageFree) const override;
+
+    // Key of previous slice for calendar spread constraint (Corbetta)
+    mutable QuantLib::ext::optional<std::pair<Real, Real>> prevSliceKey_;
+    QuantLib::ext::optional<std::pair<Real, Real>> prevSliceKey() const override { return prevSliceKey_; }
+
+    void calibrate() override;
+
+};
+
 class SsviParametricVolatilityGlobal : public SviParametricVolatility {
 public:
     SsviParametricVolatilityGlobal(
@@ -203,7 +241,7 @@ public:
             modelParameters = {},
         const std::map<QuantLib::Real, QuantLib::Real>& modelShift = {},
         const QuantLib::Size maxCalibrationAttempts = 10, const QuantLib::Real exitEarlyErrorThreshold = 0.005,
-        const QuantLib::Real maxAcceptableError = 0.05
+        const QuantLib::Real maxAcceptableError = 0.05, bool enforceNoArbitrage = true
     );
 
     static std::tuple<std::vector<Real>, std::vector<Real>, std::vector<Real>> convertToNaturalSvi(
@@ -222,6 +260,11 @@ protected:
                                    const std::vector<std::pair<Real, ParameterCalibration>>& params) const;
 
     mutable std::map<std::pair<Real, Real>, std::vector<Real>> calibratedModelParams_;
+
+    // Key of previous slice for calendar spread constraint (Corbetta)
+    mutable QuantLib::ext::optional<std::pair<Real, Real>> prevSliceKey_;
+    QuantLib::ext::optional<std::pair<Real, Real>> prevSliceKey() const override { return prevSliceKey_; }
+
     void calibrate() override;
     void setDefaultParameters() override;
 
