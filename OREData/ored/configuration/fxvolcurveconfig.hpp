@@ -78,6 +78,16 @@ public:
                             const SmileInterpolation& interp = SmileInterpolation::VannaVolga2,
                             const string& conventionsID = "", const std::vector<Size>& smileDelta = {25},
                             const string& smileExtrapolation = "Flat");
+    //! Overload accepting string interpolation (supports SVI variants)
+    FXVolatilityCurveConfig(const string& curveID, const string& curveDescription, const Dimension& dimension,
+                            const vector<string>& expiries, const vector<string>& deltas = vector<string>(),
+                            const string& fxSpotID = "", const string& fxForeignCurveID = "",
+                            const string& fxDomesticCurveID = "",
+                            const DayCounter& dayCounter = QuantLib::Actual365Fixed(),
+                            const Calendar& calendar = QuantLib::TARGET(),
+                            const string& interp = "VannaVolga2",
+                            const string& conventionsID = "", const std::vector<Size>& smileDelta = {25},
+                            const string& smileExtrapolation = "Flat");
 
     FXVolatilityCurveConfig(const string& curveID, const string& curveDescription, const Dimension& dimension,
                             const string& baseVolatility1, const string& baseVolatility2,
@@ -102,6 +112,7 @@ public:
     const string& fxSpotID() const { return fxSpotID_; }
     const string& fxForeignYieldCurveID() const { return fxForeignYieldCurveID_; }
     const string& fxDomesticYieldCurveID() const { return fxDomesticYieldCurveID_; }
+    const string& smileInterpolationStr() const { return smileInterpolationStr_; }
     const SmileInterpolation& smileInterpolation() const { return smileInterpolation_; }
     const std::string& smileExtrapolation() const { return smileExtrapolation_; }
     const TimeInterpolation& timeInterpolation() const { return timeInterpolation_; }
@@ -114,7 +125,6 @@ public:
     const string& fxIndexTag() const { return fxIndexTag_; }
     const ReportConfig& reportConfig() const { return reportConfig_; }
     double butterflyErrorTolerance() const { return butterflyErrorTolerance_; }
-    const std::string& interpolationModel() const { return interpolationModel_; }
     const QuantLib::ext::optional<ParametricSmileConfiguration>& parametricSmileConfiguration() const {
         return parametricSmileConfiguration_;
     }
@@ -123,7 +133,6 @@ public:
     //! \name Setters
     //@{
     Dimension& dimension() { return dimension_; }
-    SmileInterpolation& smileInterpolation() { return smileInterpolation_; }
     string& smileExtrapolation() { return smileExtrapolation_; }
     TimeInterpolation& timeInterpolation() { return timeInterpolation_; }
     string& timeWeighting() { return timeWeighting_; }
@@ -156,6 +165,7 @@ private:
     string conventionsID_;
     std::vector<Size> smileDelta_;
     std::set<string> requiredYieldCurveIDs_;
+    string smileInterpolationStr_;
     SmileInterpolation smileInterpolation_;
     string smileExtrapolation_;
     TimeInterpolation timeInterpolation_;
@@ -165,12 +175,12 @@ private:
     string fxIndexTag_;
     ReportConfig reportConfig_;
     double butterflyErrorTolerance_ = 0.01;
-    std::string interpolationModel_;
     QuantLib::ext::optional<ParametricSmileConfiguration> parametricSmileConfiguration_;
 };
 
 FXVolatilityCurveConfig::TimeInterpolation parseFxVolatilityTimeInterpolation(const std::string& s);
 std::ostream& operator<<(std::ostream& out, FXVolatilityCurveConfig::TimeInterpolation t);
+std::ostream& operator<<(std::ostream& out, FXVolatilityCurveConfig::SmileInterpolation s);
 
 } // namespace data
 } // namespace ore

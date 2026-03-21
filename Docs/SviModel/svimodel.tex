@@ -201,8 +201,8 @@ credits.
 The calibration of the SVI parameters is performed on the market smile points, which are given by
 
 \begin{itemize}
-\item option expiry and swap underlying length in the case of interest rate swaptions and credit default swaptions
-\item option expiry in the case of interest rate cap/floors, equity options, FX options and commodity options 
+\item option expiry and swap underlying length in the case of credit default swaptions
+\item option expiry in the case of equity options, FX options and commodity options 
 \end{itemize}
 
 If no free parameters are given, we use the given initial SVI parameters unchanged for the given market point.
@@ -454,23 +454,12 @@ parametrization and methodology explained in \ref{sec:model}.
 The SVI interpolation is specified as
 
 \begin{minted}[fontsize=\footnotesize]{xml}
-      <StrikeInterpolation>Gatheral2012SsviPowerLaw</StrikeInterpolation>
+      <TimeInterpolation>Mingone2022EssviGJ</TimeInterpolation>
+      <StrikeInterpolation>Mingone2022EssviGJ</StrikeInterpolation>
 \end{minted}
 
-for cap/floor volatility surfaces,
-
-\begin{minted}[fontsize=\footnotesize]{xml}
-      <Interpolation>Gatheral2012SsviPowerLaw</Interpolation>
-\end{minted}
-
-for swaption volatility surfaces, and
-
-\begin{minted}[fontsize=\footnotesize]{xml}
-      <InterpolationModel>Mingone2022EssviGJ</InterpolationModel>
-\end{minted}
-
-for equity, FX, and commodity volatility surfaces (within a \texttt{StrikeSurface}, \texttt{MoneynessSurface}, or
-\texttt{DeltaSurface} element). In all cases the {\em Input} volatility type is given by
+within a \texttt{StrikeSurface}, \texttt{MoneynessSurface}, or
+\texttt{DeltaSurface} element, for equity and commodity volatility surfaces. Both fields must be set to the same SVI variant name. The {\em Input} volatility type is given by
 
 \begin{minted}[fontsize=\footnotesize]{xml}
       <VolatilityType>Lognormal</VolatilityType>
@@ -483,24 +472,16 @@ overridden with
       <ModelShift>0.0</ModelShift>
 \end{minted}
 
-for cap/floors, equity options, fx options and commodity options (single displacement $d$ for the whole surface) resp.
-
-\begin{minted}[fontsize=\footnotesize]{xml}
-      <ModelShift>0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0</ModelShift>
-\end{minted}
-
-for swaptions (each underlying swap length has its own associated displacement $d$).
+for equity options, FX options and commodity options (single displacement $d$ for the whole surface).
 
 \subsection{ParametricSmileConfiguration}
 
 The \texttt{ParametricSmileConfiguration} element specifies the initial values and calibration settings for the SVI
-parameters. For cap/floor and swaption volatility surfaces, this element is a child of the top-level curve
-configuration. For equity, FX, and commodity volatility surfaces, the \texttt{ParametricSmileConfiguration} is specified
-within the surface element (e.g. \texttt{StrikeSurface}, \texttt{MoneynessSurface}, or \texttt{DeltaSurface}) alongside
-the \texttt{InterpolationModel}.
+parameters. It is specified within the surface element (e.g. \texttt{StrikeSurface}, \texttt{MoneynessSurface}, or
+\texttt{DeltaSurface}) alongside the \texttt{TimeInterpolation} and \texttt{StrikeInterpolation} elements (which must both be set to the same SVI variant name).
 
 The initial values for the optimization for each parameter are specified, either as a single value that is used for all
-options or individually for the array of option expiries (caps), matrix of swaption expiries / underlying swap lengths.
+options or individually for the array of option expiries.
 
 For the Gatheral2004SviRaw model variant, the parameters are $a$, $b$, $\rho$, $m$ and $\sigma$:
 
@@ -733,12 +714,11 @@ A complete example for an equity volatility surface using the Mingone2022EssviGJ
         <VolatilityType>Lognormal</VolatilityType>
         <Strikes>*</Strikes>
         <Expiries>*</Expiries>
-        <TimeInterpolation>Linear</TimeInterpolation>
-        <StrikeInterpolation>Linear</StrikeInterpolation>
+        <TimeInterpolation>Mingone2022EssviGJ</TimeInterpolation>
+        <StrikeInterpolation>Mingone2022EssviGJ</StrikeInterpolation>
         <Extrapolation>true</Extrapolation>
         <TimeExtrapolation>Flat</TimeExtrapolation>
         <StrikeExtrapolation>Flat</StrikeExtrapolation>
-        <InterpolationModel>Mingone2022EssviGJ</InterpolationModel>
         <ParametricSmileConfiguration>
           <Parameters>
             <Parameter>
@@ -768,16 +748,125 @@ A complete example for an equity volatility surface using the Mingone2022EssviGJ
   </EquityVolatility>
 \end{minted}
 
-\subsection{Swaption / Cap Floor Output Override}
 
-For swaptions and cap/floors, the {\em output} volatility type and displacement $d$ can be overridden. By default,
-input volatility type and displacement is used. In the case of swaptions an override would look like this
+
+\subsection{FX Volatility Surface Example (Mingone)}
+
+A complete example for an FX volatility surface using the Mingone2022EssviGJ model variant:
 
 \begin{minted}[fontsize=\footnotesize]{xml}
-      <OutputVolatilityType>Normal</OutputVolatilityType>
-      <OutputShift>0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0</OutputShift>
+  <FXVolatility>
+    <CurveId>USDJPY</CurveId>
+    <CurveDescription>Lognormal option implied vols for USD/JPY
+      using ESSVI Mingone GJ</CurveDescription>
+    <Dimension>Smile</Dimension>
+    <SmileType>BFRR</SmileType>
+    <SmileInterpolation>Mingone2022EssviGJ</SmileInterpolation>
+    <TimeInterpolation>V2T</TimeInterpolation>
+    <SmileDelta>25</SmileDelta>
+    <Conventions>USD-JPY-FXOPTION</Conventions>
+    <Expiries>*</Expiries>
+    <FXSpotID>FX/USD/JPY</FXSpotID>
+    <FXForeignCurveID>Yield/USD/USD-FedFunds</FXForeignCurveID>
+    <FXDomesticCurveID>Yield/JPY/JPY-IN-USD</FXDomesticCurveID>
+    <Calendar>JoinHolidays(US settlement, Japan)</Calendar>
+    <DayCounter>Actual/365 (Fixed)</DayCounter>
+    <ParametricSmileConfiguration>
+      <Parameters>
+        <Parameter>
+          <Name>rho</Name>
+          <InitialValue>0.0</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>a</Name>
+          <InitialValue>0.0</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>c</Name>
+          <InitialValue>0.5</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+      </Parameters>
+      <Calibration>
+        <MaxCalibrationAttempts>50</MaxCalibrationAttempts>
+        <ExitEarlyErrorThreshold>0.005</ExitEarlyErrorThreshold>
+        <MaxAcceptableError>0.5</MaxAcceptableError>
+      </Calibration>
+    </ParametricSmileConfiguration>
+  </FXVolatility>
 \end{minted}
 
+\subsection{Commodity Volatility Surface Example (Corbetta Robust)}
+
+SVI is supported for commodity volatility surfaces using all three 2D surface config types:
+\texttt{StrikeSurface} (strike-quoted), \texttt{DeltaSurface} (delta-quoted), and
+\texttt{MoneynessSurface} (moneyness-quoted). The configuration is identical to equity,
+except the curve lives under \texttt{CommodityVolatility} and requires a
+\texttt{PriceCurveId} and \texttt{YieldCurveId}. Commodity forwards are derived from
+the \texttt{CommodityPriceCurve} rather than from spot and carry curves: internally, a
+\texttt{PriceTermStructureAdapter} converts the price term structure into yield-curve
+handles so the existing \texttt{BlackVolatilitySurfaceSvi} machinery is reused directly.
+
+A complete example for a commodity volatility surface using the CorbettaEtAl2019Essvi model variant
+on an absolute-strike surface with wildcard expiries and strikes:
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <CommodityVolatility>
+    <CurveId>ICE:B</CurveId>
+    <CurveDescription>ICE Brent option surface using ESSVI Robust SVI</CurveDescription>
+    <Currency>USD</Currency>
+    <VolatilityConfig>
+      <StrikeSurface priority="0">
+        <QuoteType>ImpliedVolatility</QuoteType>
+        <VolatilityType>Lognormal</VolatilityType>
+        <Strikes>*</Strikes>
+        <Expiries>*</Expiries>
+        <TimeInterpolation>CorbettaEtAl2019Essvi</TimeInterpolation>
+        <StrikeInterpolation>CorbettaEtAl2019Essvi</StrikeInterpolation>
+        <Extrapolation>true</Extrapolation>
+        <TimeExtrapolation>Flat</TimeExtrapolation>
+        <StrikeExtrapolation>Flat</StrikeExtrapolation>
+        <ParametricSmileConfiguration>
+          <Parameters>
+            <Parameter>
+              <Name>k_star</Name>
+              <InitialValue>0.0</InitialValue>
+              <Calibration>Implied</Calibration>
+            </Parameter>
+            <Parameter>
+              <Name>theta_star</Name>
+              <InitialValue>0.0</InitialValue>
+              <Calibration>Implied</Calibration>
+            </Parameter>
+            <Parameter>
+              <Name>rho</Name>
+              <InitialValue>-0.5</InitialValue>
+              <Calibration>Calibrated</Calibration>
+            </Parameter>
+            <Parameter>
+              <Name>psi</Name>
+              <InitialValue>1.0</InitialValue>
+              <Calibration>Calibrated</Calibration>
+            </Parameter>
+          </Parameters>
+          <Calibration>
+            <MaxCalibrationAttempts>100</MaxCalibrationAttempts>
+            <ExitEarlyErrorThreshold>0.005</ExitEarlyErrorThreshold>
+            <MaxAcceptableError>0.3</MaxAcceptableError>
+          </Calibration>
+        </ParametricSmileConfiguration>
+      </StrikeSurface>
+    </VolatilityConfig>
+    <DayCounter>A365</DayCounter>
+    <Calendar>ICE_FuturesEU</Calendar>
+    <FutureConventions>ICE:B</FutureConventions>
+    <OptionExpiryRollDays>1</OptionExpiryRollDays>
+    <PriceCurveId>Commodity/USD/ICE:B</PriceCurveId>
+    <YieldCurveId>Yield/USD/USD-FedFunds</YieldCurveId>
+  </CommodityVolatility>
+\end{minted}
 
 \begin{thebibliography}{10}
 

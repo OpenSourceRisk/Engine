@@ -223,9 +223,8 @@ public:
         const std::string& strikeExtrapolation,
         MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
         QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European,
-        std::string calendarStr = std::string(), QuantLib::Natural priority = 0, 
-        bool timeExtrapolationInVariance = true,
-        const std::string& interpolationModel = std::string());
+        std::string calendarStr = std::string(), QuantLib::Natural priority = 0,
+        bool timeExtrapolationInVariance = true);
 
     //! \name Inspectors
     //@{
@@ -235,7 +234,6 @@ public:
     const std::string& timeExtrapolation() const;
     bool timeExtrapolationVariance() const;
     const std::string& strikeExtrapolation() const;
-    const std::string& interpolationModel() const;
     const QuantLib::ext::optional<ParametricSmileConfiguration>& parametricSmileConfiguration() const {
         return parametricSmileConfiguration_;
     }
@@ -263,7 +261,6 @@ private:
     std::string timeExtrapolation_;
     std::string strikeExtrapolation_;
     bool timeExtrapolationInVariance_;
-    std::string interpolationModel_;
     QuantLib::ext::optional<ParametricSmileConfiguration> parametricSmileConfiguration_;
 };
 
@@ -285,8 +282,7 @@ public:
                                   MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
                                   QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European,
                                   std::string calendarStr = std::string(), QuantLib::Natural priority = 0,
-                                  bool timeExtrapolationInVariance = true,
-                                  const std::string& interpolationModel = std::string());
+                                  bool timeExtrapolationInVariance = true);
 
     //! \name Inspectors
     //@{
@@ -330,8 +326,7 @@ public:
         MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
         QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European,
         std::string calendarStr = std::string(), QuantLib::Natural priority = 0,
-        bool timeExtrapolationInVariance = true,
-        const std::string& interpolationModel = std::string());
+        bool timeExtrapolationInVariance = true);
 
     //! \name Inspectors
     //@{
@@ -384,8 +379,7 @@ public:
         MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
         QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European,
         std::string calendarStr = std::string(), QuantLib::Natural priority = 0,
-        bool timeExtrapolationInVariance = true,
-        const std::string& interpolationModel = std::string());
+        bool timeExtrapolationInVariance = true);
 
     //! \name Inspectors
     //@{
@@ -433,7 +427,7 @@ public:
         MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
         QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European,
         std::string calendarStr = std::string(), QuantLib::Natural priority = 0,
-        bool timeExtrapolationInVariance = true, const std::string& interpolationModel = std::string());
+        bool timeExtrapolationInVariance = true);
 
     //! \name Inspectors
     //@{

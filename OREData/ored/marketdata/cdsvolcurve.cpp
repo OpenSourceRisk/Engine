@@ -380,8 +380,12 @@ void CDSVolCurve::buildVolatility(const Date& asof, CDSVolatilityCurveConfig& vc
         effTerms.push_back(vc.terms()[i]);
     }
 
-    auto sviModelVariant = parseSviModelVariant(vssc.interpolationModel());
+    string strikeInterpolation = vssc.strikeInterpolation();
+    auto sviModelVariant = parseSviModelVariant(strikeInterpolation);
     if (sviModelVariant) {
+        QL_REQUIRE(vssc.timeInterpolation() == strikeInterpolation,
+                   "CDSVolCurve: SVI requires TimeInterpolation and StrikeInterpolation to be set to the same "
+                   "variant, got '" << vssc.timeInterpolation() << "' vs '" << strikeInterpolation << "'");
         buildSviVolatility(asof, vc, vssc, quotes, effTerms, termCurves, *sviModelVariant);
     } else {
         vol_ = QuantLib::ext::make_shared<QuantExt::InterpolatingCreditVolCurve>(
@@ -426,7 +430,7 @@ void CDSVolCurve::buildSviVolatility(
     const vector<Handle<CreditCurve>>& termCurves,
     SviParametricVolatility::ModelVariant modelVariant) {
 
-    LOG("CDSVolCurve: building SVI surface with model variant " << vssc.interpolationModel());
+    LOG("CDSVolCurve: building SVI surface with model variant " << vssc.strikeInterpolation());
 
     // Organise quotes into per-slice vectors sorted by {exerciseDate, underlyingTerm}.
     // The quotes map is already sorted by key, so we just iterate in order.
@@ -460,7 +464,7 @@ void CDSVolCurve::buildSviVolatility(
         Size expectedSize = QuantExt::SviModelTraits::expectedParametersSize(modelVariant);
         QL_REQUIRE(params.size() == expectedSize,
                    "CDSVolCurve: ParametricSmileConfiguration has " << params.size()
-                       << " parameters, but model variant " << vssc.interpolationModel() << " expects "
+                       << " parameters, but model variant " << vssc.strikeInterpolation() << " expects "
                        << expectedSize);
         for (auto const& p : params) {
             QL_REQUIRE(p.initialValue.size() == 1 || p.initialValue.size() == exerciseDates.size(),
@@ -513,20 +517,20 @@ void CDSVolCurve::buildSviVolatility(
                     for (Size i = 0; i < rmseVol.rows(); ++i) {
                         Real r = rmseVol(i, j);
                         if (r != Null<Real>())
-                            LOG("CDSVolCurve SVI (" << vssc.interpolationModel() << ") slice [" << j
-                                << "] vol RMSE = " << r);
+                            DLOG("CDSVolCurve SVI (" << vssc.strikeInterpolation() << ") slice [" << j
+                                 << "] vol RMSE = " << r);
                     }
                 }
                 Real gv = sviPV->globalVolRmseShiftedLognormal();
                 if (gv != Null<Real>())
-                    LOG("CDSVolCurve SVI (" << vssc.interpolationModel() << ") global vol RMSE = " << gv);
+                    DLOG("CDSVolCurve SVI (" << vssc.strikeInterpolation() << ") global vol RMSE = " << gv);
             } catch (...) {}
         }
     }
 
     vol_ = sviVol;
     vol_->enableExtrapolation();
-    LOG("CDSVolCurve: finished building SVI surface with model variant " << vssc.interpolationModel());
+    LOG("CDSVolCurve: finished building SVI surface with model variant " << vssc.strikeInterpolation());
 }
 
 void CDSVolCurve::buildVolatilityExplicit(
@@ -599,8 +603,12 @@ void CDSVolCurve::buildVolatilityExplicit(
         effTerms.push_back(vc.terms()[i]);
     }
 
-    auto sviModelVariant = parseSviModelVariant(vssc.interpolationModel());
+    string strikeInterpolation = vssc.strikeInterpolation();
+    auto sviModelVariant = parseSviModelVariant(strikeInterpolation);
     if (sviModelVariant) {
+        QL_REQUIRE(vssc.timeInterpolation() == strikeInterpolation,
+                   "CDSVolCurve: SVI requires TimeInterpolation and StrikeInterpolation to be set to the same "
+                   "variant, got '" << vssc.timeInterpolation() << "' vs '" << strikeInterpolation << "'");
         buildSviVolatility(asof, vc, vssc, quotes, effTerms, termCurves, *sviModelVariant);
     } else {
         vol_ = QuantLib::ext::make_shared<QuantExt::InterpolatingCreditVolCurve>(

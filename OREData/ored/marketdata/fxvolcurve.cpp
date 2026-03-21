@@ -169,9 +169,9 @@ buildFxSviSurface(const Date& asof, const std::vector<Date>& dates,
                 Size nTotalStrikes = 0;
                 for (auto const& s : strikes)
                     nTotalStrikes += s.size();
-                LOG("FXVolCurve SVI (" << interpolationModel << ") global RMSE"
-                    << " vol=" << gv << " price=" << gp << " totalVar=" << gt
-                    << " (" << dates.size() << " expiries, " << nTotalStrikes << " strikes)");
+                DLOG("FXVolCurve SVI (" << interpolationModel << ") global RMSE"
+                     << " vol=" << gv << " price=" << gp << " totalVar=" << gt
+                     << " (" << dates.size() << " expiries, " << nTotalStrikes << " strikes)");
             }
             // Log per-strike market vs fitted for diagnostics / plotting
             for (Size j = 0; j < dates.size() && j < strikes.size(); ++j) {
@@ -180,8 +180,8 @@ buildFxSviSurface(const Date& asof, const std::vector<Date>& dates,
                     Real mktVol = vols[j][k];
                     Real fitVol = Null<Real>();
                     try { fitVol = result->blackVol(t, strikes[j][k]); } catch (...) {}
-                    LOG("FXVolCurve SVI fit expiry[" << j << "] strike=" << strikes[j][k]
-                        << " mktVol=" << mktVol << " fitVol=" << fitVol);
+                    DLOG("FXVolCurve SVI fit expiry[" << j << "] strike=" << strikes[j][k]
+                         << " mktVol=" << mktVol << " fitVol=" << fitVol);
                 }
             }
         }
@@ -389,7 +389,8 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
     else if (config->smileInterpolation() == FXVolatilityCurveConfig::SmileInterpolation::Cubic)
         interp = QuantExt::InterpolatedSmileSection::InterpolationMethod::CubicSpline;
     else {
-        QL_FAIL("Delta FX vol surface: invalid interpolation, expected Linear, Cubic");
+        // SVI variant selected: intermediate delta surface uses Linear
+        interp = QuantExt::InterpolatedSmileSection::InterpolationMethod::Linear;
     }
 
     bool flatExtrapolation = true;
@@ -415,9 +416,9 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
                    [](const std::pair<Real, string>& x) { return x.first; });
     // Check if SVI interpolation model is requested
     std::optional<SviParametricVolatility::ModelVariant> sviModelVariant;
-    bool useSvi = !config->interpolationModel().empty() &&
+    bool useSvi = !config->smileInterpolationStr().empty() &&
                   tryParse<std::optional<SviParametricVolatility::ModelVariant>>(
-                      config->interpolationModel(), sviModelVariant,
+                      config->smileInterpolationStr(), sviModelVariant,
                       std::function<SviParametricVolatility::ModelVariant(const std::string&)>(
                           parseSviParametricVolatilityModelVariant));
 
@@ -429,8 +430,8 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
     deltaSurface->enableExtrapolation();
 
     if (useSvi) {
-        DLOG("FXVolCurve::buildSmileDeltaCurve: InterpolationModel set to SVI ("
-             << config->interpolationModel() << "); SmileInterpolation controls the intermediate surface only.");
+        DLOG("FXVolCurve::buildSmileDeltaCurve: SmileInterpolation set to SVI ("
+             << config->smileInterpolationStr() << "); intermediate delta surface uses Linear.");
 
         // Determine delta samples (signed correctly for getStrikeFromDelta)
         std::vector<std::pair<Option::Type, Real>> deltaSamples;
@@ -445,7 +446,7 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
 
         vol_ = buildFxSviSurface(asof, dates, strikesSvi, volsSvi, optionTypesSvi, dc, config->calendar(),
                                   fxSpot_, spotDays_, spotCalendar_, domYts_, forYts_, *sviModelVariant,
-                                  config->parametricSmileConfiguration(), config->interpolationModel());
+                                  config->parametricSmileConfiguration(), config->smileInterpolationStr());
     } else {
         vol_ = deltaSurface;
     }
@@ -578,7 +579,8 @@ void FXVolCurve::buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, cons
     else if (config->smileInterpolation() == FXVolatilityCurveConfig::SmileInterpolation::Cubic)
         interp = QuantExt::BlackVolatilitySurfaceBFRR::SmileInterpolation::Cubic;
     else {
-        QL_FAIL("BFRR FX vol surface: invalid smile interpolation, expected Linear, Cubic");
+        // SVI variant selected: intermediate BFRR surface uses Linear
+        interp = QuantExt::BlackVolatilitySurfaceBFRR::SmileInterpolation::Linear;
     }
 
     QuantExt::BlackVolatilitySurfaceBFRR::TimeInterpolation interp2;
@@ -600,9 +602,9 @@ void FXVolCurve::buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, cons
 
     // Check if SVI interpolation model is requested
     std::optional<SviParametricVolatility::ModelVariant> sviModelVariant;
-    bool useSvi = !config->interpolationModel().empty() &&
+    bool useSvi = !config->smileInterpolationStr().empty() &&
                   tryParse<std::optional<SviParametricVolatility::ModelVariant>>(
-                      config->interpolationModel(), sviModelVariant,
+                      config->smileInterpolationStr(), sviModelVariant,
                       std::function<SviParametricVolatility::ModelVariant(const std::string&)>(
                           parseSviParametricVolatilityModelVariant));
 
@@ -616,8 +618,8 @@ void FXVolCurve::buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, cons
     bfrrSurface->enableExtrapolation();
 
     if (useSvi) {
-        DLOG("FXVolCurve::buildSmileBfRrCurve: InterpolationModel set to SVI ("
-             << config->interpolationModel() << "); SmileInterpolation controls the intermediate surface only.");
+        DLOG("FXVolCurve::buildSmileBfRrCurve: SmileInterpolation set to SVI ("
+             << config->smileInterpolationStr() << "); intermediate BFRR surface uses Linear.");
 
         // Determine delta samples: put and call for each smile delta
         std::vector<std::pair<Option::Type, Real>> deltaSamples;
@@ -632,7 +634,7 @@ void FXVolCurve::buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, cons
 
         vol_ = buildFxSviSurface(asof, dates, strikesSvi, volsSvi, optionTypesSvi, dc, config->calendar(),
                                   fxSpot_, spotDays_, spotCalendar_, domYts_, forYts_, *sviModelVariant,
-                                  config->parametricSmileConfiguration(), config->interpolationModel());
+                                  config->parametricSmileConfiguration(), config->smileInterpolationStr());
     } else {
         vol_ = bfrrSurface;
     }
@@ -896,15 +898,15 @@ void FXVolCurve::buildSmileAbsoluteCurve(Date asof, FXVolatilityCurveSpec spec, 
 
     // Check if an SVI interpolation model is requested
     std::optional<SviParametricVolatility::ModelVariant> sviModelVariant;
-    bool useSvi = !config->interpolationModel().empty() &&
+    bool useSvi = !config->smileInterpolationStr().empty() &&
                   tryParse<std::optional<SviParametricVolatility::ModelVariant>>(
-                      config->interpolationModel(), sviModelVariant,
+                      config->smileInterpolationStr(), sviModelVariant,
                       std::function<SviParametricVolatility::ModelVariant(const std::string&)>(
                           parseSviParametricVolatilityModelVariant));
 
     if (useSvi) {
-        DLOG("FXVolCurve: Building SVI surface with model variant " << config->interpolationModel());
-        DLOG("FXVolCurve::buildSmileAbsoluteCurve: InterpolationModel set to SVI; SmileInterpolation is ignored.");
+        DLOG("FXVolCurve: Building SVI surface with model variant " << config->smileInterpolationStr());
+        DLOG("FXVolCurve::buildSmileAbsoluteCurve: SmileInterpolation set to SVI variant; non-SVI interpolation ignored.");
 
         // Build option types: all Call for plain vol quotes (no call/put distinction in FX absolute)
         std::vector<std::vector<Option::Type>> optionTypes;
@@ -915,7 +917,7 @@ void FXVolCurve::buildSmileAbsoluteCurve(Date asof, FXVolatilityCurveSpec spec, 
         vol_ = buildFxSviSurface(asof, dates, strikes, strikeQuotes, optionTypes, config->dayCounter(),
                                   config->calendar(), fxSpot_, spotDays_, spotCalendar_, domYts_, forYts_,
                                   *sviModelVariant, config->parametricSmileConfiguration(),
-                                  config->interpolationModel());
+                                  config->smileInterpolationStr());
     } else {
         QuantExt::BlackVolatilitySurfaceAbsolute::SmileInterpolation interp;
         if (config->smileInterpolation() == FXVolatilityCurveConfig::SmileInterpolation::Linear)

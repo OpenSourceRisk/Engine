@@ -204,8 +204,8 @@ QuantLib::ext::shared_ptr<BlackVolTermStructure> buildSviSurface(
                     Real r = rmseVol(i, j);
                     if (r != QuantLib::Null<QuantLib::Real>()) {
                         Size nStrikes = j < sviStrikes.size() ? sviStrikes[j].size() : 0;
-                        LOG("EquityVolCurve SVI (" << interpolationModel << ") expiry[" << j
-                            << "] vol RMSE = " << r << " (normalised by max vol, " << nStrikes << " strikes)");
+                        DLOG("EquityVolCurve SVI (" << interpolationModel << ") expiry[" << j
+                             << "] vol RMSE = " << r << " (normalised by max vol, " << nStrikes << " strikes)");
                     }
                 }
             }
@@ -217,9 +217,9 @@ QuantLib::ext::shared_ptr<BlackVolTermStructure> buildSviSurface(
                 Size nTotalStrikes = 0;
                 for (auto const& s : sviStrikes)
                     nTotalStrikes += s.size();
-                LOG("EquityVolCurve SVI (" << interpolationModel << ") global RMSE"
-                    << " vol=" << gv << " price=" << gp << " totalVar=" << gt
-                    << " (" << sviDates.size() << " expiries, " << nTotalStrikes << " strikes)");
+                DLOG("EquityVolCurve SVI (" << interpolationModel << ") global RMSE"
+                     << " vol=" << gv << " price=" << gp << " totalVar=" << gt
+                     << " (" << sviDates.size() << " expiries, " << nTotalStrikes << " strikes)");
             }
         }
     } catch (...) {}
@@ -669,11 +669,16 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
     if (vssc.quoteType() == MarketDatum::QuoteType::PRICE) {
 
         // Check if an SVI interpolation model is requested
-        string interpolationModel = vssc.interpolationModel();
-        auto sviModelVariant = parseSviModelVariant(interpolationModel);
+        string strikeInterpolation = vssc.strikeInterpolation();
+        auto sviModelVariant = parseSviModelVariant(strikeInterpolation);
+        if (sviModelVariant) {
+            QL_REQUIRE(vssc.timeInterpolation() == strikeInterpolation,
+                       "EquityVolCurve: SVI requires TimeInterpolation and StrikeInterpolation to be set to the same "
+                       "variant, got '" << vssc.timeInterpolation() << "' vs '" << strikeInterpolation << "'");
+        }
 
         if (sviModelVariant) {
-            DLOG("EquityVolCurve: Building SVI surface from option prices with model variant " << interpolationModel);
+            DLOG("EquityVolCurve: Building SVI surface from option prices with model variant " << strikeInterpolation);
 
             std::vector<Date> sviDates;
             std::vector<std::vector<Real>> sviStrikes, sviPrices;
@@ -686,7 +691,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
             vol_ = buildSviSurface(asof, sviDates, sviStrikes, sviPrices, dayCounter_, calendar_,
                                    eqIndex->equitySpot(), eqIndex->equityForecastCurve(),
                                    eqIndex->equityDividendCurve(), *sviModelVariant, sviOptionTypes,
-                                   vssc.parametricSmileConfiguration(), interpolationModel,
+                                   vssc.parametricSmileConfiguration(), strikeInterpolation,
                                    ParametricVolatility::MarketQuoteType::Price);
 
         } else {
@@ -711,11 +716,16 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
     } else if (vssc.quoteType() == MarketDatum::QuoteType::RATE_LNVOL) {
 
         // Check if an SVI interpolation model is requested
-        string interpolationModel = vssc.interpolationModel();
-        auto sviModelVariant = parseSviModelVariant(interpolationModel);
+        string strikeInterpolation = vssc.strikeInterpolation();
+        auto sviModelVariant = parseSviModelVariant(strikeInterpolation);
+        if (sviModelVariant) {
+            QL_REQUIRE(vssc.timeInterpolation() == strikeInterpolation,
+                       "EquityVolCurve: SVI requires TimeInterpolation and StrikeInterpolation to be set to the same "
+                       "variant, got '" << vssc.timeInterpolation() << "' vs '" << strikeInterpolation << "'");
+        }
 
         if (sviModelVariant) {
-            DLOG("EquityVolCurve: Building SVI surface with model variant " << interpolationModel);
+            DLOG("EquityVolCurve: Building SVI surface with model variant " << strikeInterpolation);
 
             std::vector<Date> sviDates;
             std::vector<std::vector<Real>> sviStrikes, sviVols;
@@ -728,7 +738,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
             vol_ = buildSviSurface(asof, sviDates, sviStrikes, sviVols, dayCounter_, calendar_,
                                    eqIndex->equitySpot(), eqIndex->equityForecastCurve(),
                                    eqIndex->equityDividendCurve(), *sviModelVariant, sviOptionTypes,
-                                   vssc.parametricSmileConfiguration(), interpolationModel);
+                                   vssc.parametricSmileConfiguration(), strikeInterpolation);
 
         } else if (callExpiries.size() == 1 && callStrikes.size() == 1) {
             DLOG("EquityVolCurve: Building BlackConstantVol");
@@ -925,11 +935,16 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
         maxExpiry_ = expiryDates.back();
 
     // Check if an SVI interpolation model is requested
-    string interpolationModel = vmsc.interpolationModel();
-    auto sviModelVariant = parseSviModelVariant(interpolationModel);
+    string strikeInterpolation = vmsc.strikeInterpolation();
+    auto sviModelVariant = parseSviModelVariant(strikeInterpolation);
+    if (sviModelVariant) {
+        QL_REQUIRE(vmsc.timeInterpolation() == strikeInterpolation,
+                   "EquityVolCurve: SVI requires TimeInterpolation and StrikeInterpolation to be set to the same "
+                   "variant, got '" << vmsc.timeInterpolation() << "' vs '" << strikeInterpolation << "'");
+    }
 
     if (sviModelVariant) {
-        DLOG("EquityVolCurve: Building SVI surface from moneyness quotes with model variant " << interpolationModel);
+        DLOG("EquityVolCurve: Building SVI surface from moneyness quotes with model variant " << strikeInterpolation);
 
         bool preferOutOfTheMoney = vc.preferOutOfTheMoney() ? *vc.preferOutOfTheMoney() : true;
         Real spot = eqIndex->equitySpot()->value();
@@ -966,7 +981,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
         vol_ = buildSviSurface(asof, sviDates, sviStrikes, sviVols, dayCounter_, calendar_,
                                eqIndex->equitySpot(), eqIndex->equityForecastCurve(),
                                eqIndex->equityDividendCurve(), *sviModelVariant, sviOptionTypes,
-                               vmsc.parametricSmileConfiguration(), interpolationModel);
+                               vmsc.parametricSmileConfiguration(), strikeInterpolation);
 
         DLOG("EquityVolCurve: Setting BlackVolatilitySurfaceSvi extrapolation to "
              << to_string(vmsc.extrapolation()));
@@ -1319,11 +1334,16 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilit
         maxExpiry_ = expiryDates.back();
 
     // Check if an SVI interpolation model is requested
-    string interpolationModel = vdsc.interpolationModel();
-    auto sviModelVariant = parseSviModelVariant(interpolationModel);
+    string strikeInterpolation = vdsc.strikeInterpolation();
+    auto sviModelVariant = parseSviModelVariant(strikeInterpolation);
+    if (sviModelVariant) {
+        QL_REQUIRE(vdsc.timeInterpolation() == strikeInterpolation,
+                   "EquityVolCurve: SVI requires TimeInterpolation and StrikeInterpolation to be set to the same "
+                   "variant, got '" << vdsc.timeInterpolation() << "' vs '" << strikeInterpolation << "'");
+    }
 
     if (sviModelVariant) {
-        DLOG("EquityVolCurve: Building SVI surface from delta quotes with model variant " << interpolationModel);
+        DLOG("EquityVolCurve: Building SVI surface from delta quotes with model variant " << strikeInterpolation);
 
         bool preferOutOfTheMoney = vc.preferOutOfTheMoney() ? *vc.preferOutOfTheMoney() : true;
 
@@ -1385,7 +1405,7 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilit
         vol_ = buildSviSurface(asof, sviDates, sviStrikes, sviVols, dayCounter_, calendar_,
                                eqIndex->equitySpot(), eqIndex->equityForecastCurve(),
                                eqIndex->equityDividendCurve(), *sviModelVariant, sviOptionTypes,
-                               vdsc.parametricSmileConfiguration(), interpolationModel);
+                               vdsc.parametricSmileConfiguration(), strikeInterpolation);
 
         DLOG("EquityVolCurve: Setting BlackVolatilitySurfaceSvi extrapolation to "
              << to_string(vdsc.extrapolation()));

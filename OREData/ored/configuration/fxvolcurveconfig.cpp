@@ -36,10 +36,27 @@ FXVolatilityCurveConfig::FXVolatilityCurveConfig(const string& curveID, const st
                                                  const DayCounter& dayCounter, const Calendar& calendar,
                                                  const SmileInterpolation& interp, const string& conventionsID,
                                                  const std::vector<Size>& smileDelta, const string& smileExtrapolation)
+    : FXVolatilityCurveConfig(curveID, curveDescription, dimension, expiries, strikes, fxSpotID,
+                              fxForeignCurveID, fxDomesticCurveID, dayCounter, calendar,
+                              to_string(interp), conventionsID, smileDelta, smileExtrapolation) {}
+
+FXVolatilityCurveConfig::FXVolatilityCurveConfig(const string& curveID, const string& curveDescription,
+                                                 const Dimension& dimension, const vector<string>& expiries,
+                                                 const vector<string>& strikes, const string& fxSpotID,
+                                                 const string& fxForeignCurveID, const string& fxDomesticCurveID,
+                                                 const DayCounter& dayCounter, const Calendar& calendar,
+                                                 const string& interp, const string& conventionsID,
+                                                 const std::vector<Size>& smileDelta, const string& smileExtrapolation)
     : CurveConfig(curveID, curveDescription), dimension_(dimension), expiries_(expiries), dayCounter_(dayCounter),
       calendar_(calendar), fxSpotID_(fxSpotID), fxForeignYieldCurveID_(fxForeignCurveID),
       fxDomesticYieldCurveID_(fxDomesticCurveID), conventionsID_(conventionsID), smileDelta_(smileDelta),
-      smileInterpolation_(interp), smileExtrapolation_(smileExtrapolation) {}
+      smileInterpolationStr_(interp), smileInterpolation_(SmileInterpolation::Linear), smileExtrapolation_(smileExtrapolation) {
+    // Sync enum field from string
+    if (smileInterpolationStr_ == "VannaVolga1") smileInterpolation_ = SmileInterpolation::VannaVolga1;
+    else if (smileInterpolationStr_ == "VannaVolga2") smileInterpolation_ = SmileInterpolation::VannaVolga2;
+    else if (smileInterpolationStr_ == "Cubic") smileInterpolation_ = SmileInterpolation::Cubic;
+    else smileInterpolation_ = SmileInterpolation::Linear;
+}
 
 FXVolatilityCurveConfig::FXVolatilityCurveConfig(const string& curveID, const string& curveDescription,
                                                  const Dimension& dimension, const string& baseVolatility1,
@@ -116,13 +133,11 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
 
                 // only read smile interpolation method if dimension is smile.
                 if (smileInterp == "") {
-                    smileInterpolation_ = SmileInterpolation::VannaVolga2; // default to VannaVolga 2nd approximation
-                } else if (smileInterp == "VannaVolga1") {
-                    smileInterpolation_ = SmileInterpolation::VannaVolga1;
-                } else if (smileInterp == "VannaVolga2") {
-                    smileInterpolation_ = SmileInterpolation::VannaVolga2;
+                    smileInterpolationStr_ = "VannaVolga2"; // default
+                } else if (smileInterp == "VannaVolga1" || smileInterp == "VannaVolga2") {
+                    smileInterpolationStr_ = smileInterp;
                 } else {
-                    QL_FAIL("SmileInterpolation " << smileInterp << " not supported");
+                    QL_FAIL("SmileInterpolation " << smileInterp << " not supported for VannaVolga");
                 }
 
                 string sDelta = XMLUtils::getChildValue(node, "SmileDelta");
@@ -134,11 +149,12 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
                 dimension_ = Dimension::SmileDelta;
                 // only read smile interpolation and extrapolation method if dimension is smile.
                 if (smileInterp == "" || smileInterp == "Linear") {
-                    smileInterpolation_ = SmileInterpolation::Linear;
+                    smileInterpolationStr_ = "Linear";
                 } else if (smileInterp == "Cubic") {
-                    smileInterpolation_ = SmileInterpolation::Cubic;
+                    smileInterpolationStr_ = "Cubic";
                 } else {
-                    QL_FAIL("SmileInterpolation " << smileInterp << " not supported");
+                    // Could be an SVI variant — store it verbatim, validated at build time
+                    smileInterpolationStr_ = smileInterp;
                 }
 
                 smileExtrapolation_ = XMLUtils::getChildValue(node, "SmileExtrapolation", false, "Flat");
@@ -156,11 +172,12 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
             } else if (smileType == "BFRR") {
                 dimension_ = Dimension::SmileBFRR;
                 if (smileInterp == "" || smileInterp == "Cubic") {
-                    smileInterpolation_ = SmileInterpolation::Cubic;
+                    smileInterpolationStr_ = "Cubic";
                 } else if (smileInterp == "Linear") {
-                    smileInterpolation_ = SmileInterpolation::Linear;
+                    smileInterpolationStr_ = "Linear";
                 } else {
-                    QL_FAIL("SmileInterpolation " << smileInterp << " not supported");
+                    // Could be an SVI variant — store it verbatim, validated at build time
+                    smileInterpolationStr_ = smileInterp;
                 }
                 string sDelta = XMLUtils::getChildValue(node, "SmileDelta");
                 if (sDelta == "")
@@ -170,11 +187,12 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
             } else if (smileType == "Absolute") {
                 dimension_ = Dimension::SmileAbsolute;
                 if (smileInterp == "" || smileInterp == "Cubic") {
-                    smileInterpolation_ = SmileInterpolation::Cubic;
+                    smileInterpolationStr_ = "Cubic";
                 } else if (smileInterp == "Linear") {
-                    smileInterpolation_ = SmileInterpolation::Linear;
+                    smileInterpolationStr_ = "Linear";
                 } else {
-                    QL_FAIL("SmileInterpolation " << smileInterp << " not supported");
+                    // Could be an SVI variant — store it verbatim, validated at build time
+                    smileInterpolationStr_ = smileInterp;
                 }
             } else {
                 QL_FAIL("SmileType '" << smileType << "' not supported, expected VannaVolga, Delta, BFRR, Absolute");
@@ -201,7 +219,12 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
         reportConfig_.fromXML(tmp);
     }
 
-    interpolationModel_ = XMLUtils::getChildValue(node, "InterpolationModel", false);
+    // Sync enum field from string (SVI variants fall back to Linear)
+    if (smileInterpolationStr_ == "VannaVolga1") smileInterpolation_ = SmileInterpolation::VannaVolga1;
+    else if (smileInterpolationStr_ == "VannaVolga2") smileInterpolation_ = SmileInterpolation::VannaVolga2;
+    else if (smileInterpolationStr_ == "Cubic") smileInterpolation_ = SmileInterpolation::Cubic;
+    else smileInterpolation_ = SmileInterpolation::Linear;
+
     parametricSmileConfiguration_ = QuantLib::ext::nullopt;
     if (XMLNode* n = XMLUtils::getChildNode(node, "ParametricSmileConfiguration")) {
         parametricSmileConfiguration_ = ParametricSmileConfiguration();
@@ -227,27 +250,15 @@ XMLNode* FXVolatilityCurveConfig::toXML(XMLDocument& doc) const {
     } else if (dimension_ == Dimension::SmileVannaVolga) {
         XMLUtils::addChild(doc, node, "Dimension", "Smile");
         XMLUtils::addChild(doc, node, "SmileType", "VannaVolga");
-        // only write smile interpolation if dimension is smile
-        if (smileInterpolation_ == SmileInterpolation::VannaVolga1) {
-            XMLUtils::addChild(doc, node, "SmileInterpolation", "VannaVolga1");
-        } else if (smileInterpolation_ == SmileInterpolation::VannaVolga2) {
-            XMLUtils::addChild(doc, node, "SmileInterpolation", "VannaVolga2");
-        } else {
-            QL_FAIL("Unknown SmileInterpolation in FXVolatilityCurveConfig::toXML()");
-        }
+        if (!smileInterpolationStr_.empty())
+            XMLUtils::addChild(doc, node, "SmileInterpolation", smileInterpolationStr_);
         XMLUtils::addGenericChildAsList(doc, node, "SmileDelta", deltas_);
         XMLUtils::addChild(doc, node, "Conventions", to_string(conventionsID_));
     } else if (dimension_ == Dimension::SmileDelta) {
         XMLUtils::addChild(doc, node, "Dimension", "Smile");
         XMLUtils::addChild(doc, node, "SmileType", "Delta");
-        // only write smile interpolation if dimension is smile
-        if (smileInterpolation_ == SmileInterpolation::Linear) {
-            XMLUtils::addChild(doc, node, "SmileInterpolation", "Linear");
-        } else if (smileInterpolation_ == SmileInterpolation::Cubic) {
-            XMLUtils::addChild(doc, node, "SmileInterpolation", "Cubic");
-        } else {
-            QL_FAIL("Unknown SmileInterpolation in FXVolatilityCurveConfig::toXML()");
-        }
+        if (!smileInterpolationStr_.empty())
+            XMLUtils::addChild(doc, node, "SmileInterpolation", smileInterpolationStr_);
         if (!smileExtrapolation_.empty())
             XMLUtils::addChild(doc, node, "SmileExtrapolation", smileExtrapolation_);
         XMLUtils::addChild(doc, node, "Conventions", to_string(conventionsID_));
@@ -255,27 +266,15 @@ XMLNode* FXVolatilityCurveConfig::toXML(XMLDocument& doc) const {
     } else if (dimension_ == Dimension::SmileBFRR) {
         XMLUtils::addChild(doc, node, "Dimension", "Smile");
         XMLUtils::addChild(doc, node, "SmileType", "BFRR");
-        if (smileInterpolation_ == SmileInterpolation::Linear) {
-            XMLUtils::addChild(doc, node, "SmileInterpolation", "Linear");
-        } else if (smileInterpolation_ == SmileInterpolation::Cubic) {
-            XMLUtils::addChild(doc, node, "SmileInterpolation", "Cubic");
-        } else {
-            QL_FAIL("Unknown SmileInterpolation in FXVolatilityCurveConfig::toXML()");
-        }
+        if (!smileInterpolationStr_.empty())
+            XMLUtils::addChild(doc, node, "SmileInterpolation", smileInterpolationStr_);
         XMLUtils::addGenericChildAsList(doc, node, "SmileDelta", smileDelta_);
         XMLUtils::addChild(doc, node, "Conventions", to_string(conventionsID_));
     } else if (dimension_ == Dimension::SmileAbsolute) {
         XMLUtils::addChild(doc, node, "Dimension", "Smile");
         XMLUtils::addChild(doc, node, "SmileType", "Absolute");
-        if (smileInterpolation_ == SmileInterpolation::Linear) {
-            XMLUtils::addChild(doc, node, "SmileInterpolation", "Linear");
-        } else if (smileInterpolation_ == SmileInterpolation::Cubic) {
-            XMLUtils::addChild(doc, node, "SmileInterpolation", "Cubic");
-        } else {
-            QL_FAIL("Unknown SmileInterpolation in FXVolatilityCurveConfig::toXML()");
-        }
-        if (!interpolationModel_.empty())
-            XMLUtils::addChild(doc, node, "InterpolationModel", interpolationModel_);
+        if (!smileInterpolationStr_.empty())
+            XMLUtils::addChild(doc, node, "SmileInterpolation", smileInterpolationStr_);
         XMLUtils::addChild(doc, node, "Conventions", to_string(conventionsID_));
     } else {
         QL_FAIL("Unknown Dimension in FXVolatilityCurveConfig::toXML()");
@@ -391,6 +390,18 @@ std::ostream& operator<<(std::ostream& out, FXVolatilityCurveConfig::TimeInterpo
     else {
         QL_FAIL("operator<<(FXVolatilityCurveConfig::TimeInterpolation): enum "
                 << static_cast<int>(t) << " not recognized. Internal error, contact dev.");
+    }
+}
+
+std::ostream& operator<<(std::ostream& out, FXVolatilityCurveConfig::SmileInterpolation s) {
+    switch (s) {
+    case FXVolatilityCurveConfig::SmileInterpolation::VannaVolga1: return out << "VannaVolga1";
+    case FXVolatilityCurveConfig::SmileInterpolation::VannaVolga2: return out << "VannaVolga2";
+    case FXVolatilityCurveConfig::SmileInterpolation::Linear: return out << "Linear";
+    case FXVolatilityCurveConfig::SmileInterpolation::Cubic: return out << "Cubic";
+    default:
+        QL_FAIL("operator<<(FXVolatilityCurveConfig::SmileInterpolation): enum "
+                << static_cast<int>(s) << " not recognized. Internal error, contact dev.");
     }
 }
 
