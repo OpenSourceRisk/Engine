@@ -49,6 +49,7 @@
 #include <qle/termstructures/optionpricesurface.hpp>
 #include <qle/termstructures/correlationtermstructure.hpp>
 #include <qle/termstructures/blackinvertedvoltermstructure.hpp>
+#include <qle/termstructures/svimodeltraits.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -162,7 +163,7 @@ QuantLib::ext::shared_ptr<BlackVolTermStructure> buildSviSurface(
     if (parametricSmileConfiguration) {
         auto const& psc = *parametricSmileConfiguration;
         auto const& params = psc.parameters();
-        Size expectedSize = QuantExt::SviParametricVolatility::expectedModelParametersSize(sviModelVariant);
+        Size expectedSize = QuantExt::SviModelTraits::expectedParametersSize(sviModelVariant);
         QL_REQUIRE(params.size() == expectedSize,
                    "EquityVolCurve: ParametricSmileConfiguration has "
                        << params.size() << " parameters, but model variant " << interpolationModel << " expects "
