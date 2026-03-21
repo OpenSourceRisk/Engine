@@ -153,6 +153,7 @@ public:
 
 private:
     void populateRequiredIds() const override;
+    void syncSmileInterpolation();
 
     Dimension dimension_;
     vector<string> expiries_;

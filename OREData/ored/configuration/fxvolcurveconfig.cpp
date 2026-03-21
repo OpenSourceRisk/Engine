@@ -51,7 +51,14 @@ FXVolatilityCurveConfig::FXVolatilityCurveConfig(const string& curveID, const st
       calendar_(calendar), fxSpotID_(fxSpotID), fxForeignYieldCurveID_(fxForeignCurveID),
       fxDomesticYieldCurveID_(fxDomesticCurveID), conventionsID_(conventionsID), smileDelta_(smileDelta),
       smileInterpolationStr_(interp), smileInterpolation_(SmileInterpolation::Linear), smileExtrapolation_(smileExtrapolation) {
-    // Sync enum field from string
+    syncSmileInterpolation();
+}
+
+void FXVolatilityCurveConfig::syncSmileInterpolation() {
+    // smileInterpolationStr_ is the canonical field: it holds the raw string from XML / constructor and
+    // supports SVI variant names (e.g. "CorbettaEtAl2019Essvi", "Mingone2022EssviGJ") that have no enum counterpart.
+    // smileInterpolation_ is derived from it and kept for backward compatibility with callers that
+    // switch on the enum. SVI variants and any unrecognised strings fall back to Linear.
     if (smileInterpolationStr_ == "VannaVolga1") smileInterpolation_ = SmileInterpolation::VannaVolga1;
     else if (smileInterpolationStr_ == "VannaVolga2") smileInterpolation_ = SmileInterpolation::VannaVolga2;
     else if (smileInterpolationStr_ == "Cubic") smileInterpolation_ = SmileInterpolation::Cubic;
@@ -219,11 +226,7 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
         reportConfig_.fromXML(tmp);
     }
 
-    // Sync enum field from string (SVI variants fall back to Linear)
-    if (smileInterpolationStr_ == "VannaVolga1") smileInterpolation_ = SmileInterpolation::VannaVolga1;
-    else if (smileInterpolationStr_ == "VannaVolga2") smileInterpolation_ = SmileInterpolation::VannaVolga2;
-    else if (smileInterpolationStr_ == "Cubic") smileInterpolation_ = SmileInterpolation::Cubic;
-    else smileInterpolation_ = SmileInterpolation::Linear;
+    syncSmileInterpolation();
 
     parametricSmileConfiguration_ = QuantLib::ext::nullopt;
     if (XMLNode* n = XMLUtils::getChildNode(node, "ParametricSmileConfiguration")) {
