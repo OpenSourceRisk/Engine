@@ -104,7 +104,8 @@ public:
 protected:
     ModelVariant modelVariant_;
 
-    QuantLib::Constraint getCalibrationConstraint(std::vector<std::pair<Real, ParameterCalibration>> params) const;
+    QuantLib::Constraint getCalibrationConstraint(std::vector<std::pair<Real, ParameterCalibration>> params,
+                                                  bool arbitrageFree) const;
     std::vector<Real> getGuess(const std::vector<std::pair<Real, ParametricVolatility::ParameterCalibration>>& params,
                                const std::vector<Real>& randomSeq, const Real forward, const Real lognormalShift) const;
 

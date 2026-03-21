@@ -21,15 +21,12 @@
 
 #include <ql/experimental/math/laplaceinterpolation.hpp>
 #include <ql/experimental/volatility/sviinterpolation.hpp>
-// #include <ql/math/comparison.hpp>
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
 #include <ql/math/interpolations/flatextrapolation2d.hpp>
 #include <ql/math/optimization/constraint.hpp>
 #include <ql/math/optimization/costfunction.hpp>
 #include <ql/math/optimization/levenbergmarquardt.hpp>
 #include <ql/math/randomnumbers/haltonrsg.hpp>
-// #include <ql/math/solvers1d/brent.hpp>
-// #include <ql/termstructures/volatility/sabr.hpp>
 
 #include <boost/algorithm/string/join.hpp>
 
@@ -121,15 +118,15 @@ std::vector<Real> SviParametricVolatility::getGuess(const std::vector<std::pair<
             } else {
                 switch (i % 3) {
                 case 0: {
-                    result[j] = randomSeq[j] * 2.0 - 1.0; // rho in [-1, 1]
+                    result[j] = eps1 + randomSeq[j] * 2.0 - 1.0; // rho in [-1, 1]
                     break;
                 }
                 case 1: {
-                    result[j] = randomSeq[j] * 0.1; // 0 < a < 0.1
+                    result[j] = eps1 + randomSeq[j] * 0.1; // 0 < a < 0.1
                     break;
                 }
                 case 2: {
-                    result[j] = randomSeq[j]; // c > 0
+                    result[j] = eps1 + randomSeq[j]; // c > 0
                     break;
                 }
                 default:
@@ -172,7 +169,7 @@ SviParametricVolatility::defaultModelParameters() const {
         return {{0.02, ParameterCalibration::Calibrated},
                 {0.0, ParameterCalibration::Calibrated},
                 {1.0, ParameterCalibration::Calibrated}};
-    case ModelVariant::Gatheral2012SsviPowerLaw:    
+    case ModelVariant::Gatheral2012SsviPowerLaw:
         return {{0.02, ParameterCalibration::Calibrated},
                 {0.0, ParameterCalibration::Calibrated},
                 {0.5, ParameterCalibration::Calibrated},
@@ -211,19 +208,24 @@ QuantLib::Size SviParametricVolatility::expectedModelParametersSize() const {
     }
 }
 
-Constraint SviParametricVolatility::getCalibrationConstraint(std::vector<std::pair<Real, ParameterCalibration>> params) const {
+Constraint SviParametricVolatility::getCalibrationConstraint(
+    std::vector<std::pair<Real, ParameterCalibration>> params, bool arbitrageFree) const {
     Size noFreeParams = 0;
+    Array fixedValues(params.size());
     std::vector<bool> isFreeParams(params.size(), false);
     for (Size i = 0; i < params.size(); ++i) {
         auto const& p = params[i];
         if (p.second == ParameterCalibration::Calibrated) {
             isFreeParams[i] = true;
             ++noFreeParams;
+        } else {
+            fixedValues[i] = params[i].first;
         }
     }
-    
+
     switch (modelVariant_) {
     case ModelVariant::Gatheral2004SviRaw: {
+        QL_REQUIRE(!arbitrageFree, "Arbitrage-free constraint for Gatheral2004SviRaw model is not implemented.");
         Array lowerBound(noFreeParams), upperBound(noFreeParams);
         for (Size j = 0, i = 0; i < params.size(); ++i) {
             if (isFreeParams[i]) {
@@ -252,6 +254,7 @@ Constraint SviParametricVolatility::getCalibrationConstraint(std::vector<std::pa
         return NonhomogeneousBoundaryConstraint(lowerBound, upperBound);
     }
     case ModelVariant::Gatheral2004SviNatural: {
+        QL_REQUIRE(!arbitrageFree, "Arbitrage-free constraint for Gatheral2004SviNatural model is not implemented.");
         Array lowerBound(noFreeParams), upperBound(noFreeParams);
         for (Size j = 0, i = 0; i < params.size(); ++i) {
             if (isFreeParams[i]) {
@@ -280,6 +283,7 @@ Constraint SviParametricVolatility::getCalibrationConstraint(std::vector<std::pa
         return NonhomogeneousBoundaryConstraint(lowerBound, upperBound);
     }
     case ModelVariant::Gatheral2004SviJw: {
+        QL_REQUIRE(!arbitrageFree, "Arbitrage-free constraint for Gatheral2004SviJw model is not implemented.");
         Array lowerBound(noFreeParams), upperBound(noFreeParams);
         for (Size j = 0, i = 0; i < params.size(); ++i) {
             if (isFreeParams[i]) {
@@ -301,7 +305,37 @@ Constraint SviParametricVolatility::getCalibrationConstraint(std::vector<std::pa
                 ++j;
             }
         }
-        return NonhomogeneousBoundaryConstraint(lowerBound, upperBound);
+        // Constraint for explicit transformation between SVI-JW and SVI-Raw parameters
+        class JwConstraint : public Constraint {
+            private:
+                class Impl final : public Constraint::Impl {
+                public:
+                    Impl(const Array& fixed, const std::vector<bool>& isFreeParams)
+                    : fixed_(fixed), isFreeParams_(isFreeParams) {}
+                    bool test(const Array& p) const override {
+                        Array q(5);
+                        Size j = 0;
+                        for (Size i = 0; i < 5; ++i) {
+                            if (isFreeParams_[i]) {
+                                q[i] = p[j];
+                                ++j;
+                            } else {
+                                q[i] = fixed_[i];
+                            }
+                        }
+                        return -q[2] <= 2.0 * q[1] && q[1] <= 0.5 * q[3];
+                    }
+                private:
+                    Array fixed_;
+                    std::vector<bool> isFreeParams_;
+                };
+            public:
+                JwConstraint(const Array& fixed, const std::vector<bool>& isFreeParams)
+                : Constraint(ext::shared_ptr<Constraint::Impl>(new Impl(fixed, isFreeParams))) {}
+        };
+        return CompositeConstraint(NonhomogeneousBoundaryConstraint(lowerBound, upperBound),
+                                   JwConstraint(fixedValues, isFreeParams));
+        // return NonhomogeneousBoundaryConstraint(lowerBound, upperBound);
     }
     case ModelVariant::Gatheral2012SsviHeston: {
         Array lowerBound(noFreeParams), upperBound(noFreeParams);
@@ -325,6 +359,38 @@ Constraint SviParametricVolatility::getCalibrationConstraint(std::vector<std::pa
                 }
                 ++j;
             }
+        }
+        if (arbitrageFree) {
+            // Constraint for no butterfly arbitrage
+            class HestonConstraint : public Constraint {
+                private:
+                    class Impl final : public Constraint::Impl {
+                    public:
+                        Impl(const Array& fixed, const std::vector<bool>& isFreeParams)
+                        : fixed_(fixed), isFreeParams_(isFreeParams) {}
+                        bool test(const Array& p) const override {
+                            Array q(3);
+                            Size j = 0;
+                            for (Size i = 0; i < 3; ++i) {
+                                if (isFreeParams_[i]) {
+                                    q[i] = p[j];
+                                    ++j;
+                                } else {
+                                    q[i] = fixed_[i];
+                                }
+                            }
+                            return q[2] >= (1.0 + std::abs(q[1])) / 4.0;
+                        }
+                    private:
+                        Array fixed_;
+                        std::vector<bool> isFreeParams_;
+                    };
+                public:
+                    HestonConstraint(const Array& fixed, const std::vector<bool>& isFreeParams)
+                    : Constraint(ext::shared_ptr<Constraint::Impl>(new Impl(fixed, isFreeParams))) {}
+            };
+            return CompositeConstraint(NonhomogeneousBoundaryConstraint(lowerBound, upperBound),
+                                    HestonConstraint(fixedValues, isFreeParams));
         }
         return NonhomogeneousBoundaryConstraint(lowerBound, upperBound);
     }
@@ -355,13 +421,54 @@ Constraint SviParametricVolatility::getCalibrationConstraint(std::vector<std::pa
                 ++j;
             }
         }
+        if (arbitrageFree) {
+            // Constraint for no butterfly arbitrage
+            class PowerLawConstraint : public Constraint {
+                private:
+                    class Impl final : public Constraint::Impl {
+                    public:
+                        Impl(const Array& fixed, const std::vector<bool>& isFreeParams)
+                        : fixed_(fixed), isFreeParams_(isFreeParams) {}
+                        bool test(const Array& p) const override {
+                            Array q(4);
+                            Size j = 0;
+                            for (Size i = 0; i < 4; ++i) {
+                                if (isFreeParams_[i]) {
+                                    q[i] = p[j];
+                                    ++j;
+                                } else {
+                                    q[i] = fixed_[i];
+                                }
+                            }
+
+                            const Real cond3Bound = std::pow(4 / (q[2] * (1 + std::abs(q[1]))), 1 / (1 - q[3]));
+                            if (q[0] > cond3Bound)
+                                return false;
+
+                            if (q[3] < 0.5) {
+                                return q[0] <= std::pow(4 / (q[2] * q[2] * (1 + std::abs(q[1]))), 1 / (1 - 2 * q[3]));
+                            } else if (q[3] > 0.5) {
+                                return q[0] >= std::pow(4 / (q[2] * q[2] * (1 + std::abs(q[1]))), 1 / (1 - 2 * q[3]));
+                            } else {
+                                return q[2] * q[2] * (1 + std::abs(q[1])) <= 4;
+                            }
+                        }
+                    private:
+                        Array fixed_;
+                        std::vector<bool> isFreeParams_;
+                    };
+                public:
+                    PowerLawConstraint(const Array& fixed, const std::vector<bool>& isFreeParams)
+                    : Constraint(ext::shared_ptr<Constraint::Impl>(new Impl(fixed, isFreeParams))) {}
+            };
+            return CompositeConstraint(NonhomogeneousBoundaryConstraint(lowerBound, upperBound),
+                                    PowerLawConstraint(fixedValues, isFreeParams));
+        }
         return NonhomogeneousBoundaryConstraint(lowerBound, upperBound);
     }
     // case ModelVariant::HendriksMartini2017EssviFirstPowerLaw:
     // case ModelVariant::HendriksMartini2017EssviSecondPowerLaw:
-    //     // return 7; // theta, eta, lambda, p_0, p_m, theta_max, a
     // case ModelVariant::CorbettaEtAl2019Essvi:
-    //     // return 4; // theta_star, k_star, rho, phi
     case ModelVariant::Mingone2022Essvi: {
         Array lowerBound(noFreeParams), upperBound(noFreeParams);
         for (Size j = 0, i = 0; i < params.size(); ++i) {
@@ -422,7 +529,7 @@ std::vector<Real> SviParametricVolatility::evaluateSvi(const std::vector<Real>& 
     std::vector<Real> result(strikes.size());
     Real a, b, rho, m, sigma;
     std::tie(a, b, rho, m, sigma) = convertToRawSvi(timeToExpiry, params, modelVariant_);
-    
+
     for (Size i = 0; i < strikes.size(); ++i) {
         try {
             Real k = std::log((std::max(strikes[i], 1E-6) + lognormalShift) / (forward + lognormalShift));
@@ -577,8 +684,8 @@ std::tuple<std::vector<Real>, Real, Real, Size> SviParametricVolatility::calibra
     // perform the calibration (this step might throw if all minimizations go wrong)
 
     // Define box constraints for each free parameter
-    Constraint constraint = getCalibrationConstraint(params);
-    
+    Constraint constraint = getCalibrationConstraint(params, false);
+
     LevenbergMarquardt lm;
     EndCriteria endCriteria(100, 10, 1E-8, 1E-8, 1E-8);
 
@@ -686,7 +793,7 @@ void SviParametricVolatility::setDefaultParameters() {
 }
 
 void SviParametricVolatility::calibrate() {
-    
+
     // for each market smile calibrate the SVI variant
 
     for (auto const& s : marketSmiles_) {
@@ -749,7 +856,7 @@ void SviParametricVolatility::calculate() {
                        "SviParametricVolatility::calculate(): negative strike (" << k << ") given for ("
                            << "timeToExpiry=" << s.timeToExpiry
                            << ", underlyingLength=" << s.underlyingLength
-                           << ").");   
+                           << ").");
         }
         for (auto const& q : s.marketQuotes) {
             QL_REQUIRE(q != Null<Real>(),
@@ -950,23 +1057,32 @@ SviParametricVolatility::convertToRawSvi(const Real timeToExpiry, const std::vec
             rho = 1.0 - p * std::sqrt(w) / b;
             Real beta = rho - (2.0 * phi * std::sqrt(w)) / b;
 
-            // TODO: check below formulae for sigma, m, a
-
             // Ensure beta is within valid range (-1, 1) for numerical stability
             beta = std::max(-1.0 + 1E-6, std::min(1.0 - 1E-6, beta));
+            Real alpha = std::sqrt(1.0 / (beta * beta) - 1.0) * beta >= 0 ? 1.0 : -1.0;
 
-            Real val = (1.0 - rho * beta) / std::sqrt(1.0 - beta * beta) - std::sqrt(1.0 - rho * rho);
+            Real tmp = std::sqrt(1 + alpha * alpha) * alpha >= 0 ? 1.0 : -1.0;
+            tmp -= alpha * std::sqrt(1.0 - rho * rho);
+            m = (v - v_tilda) * timeToExpiry / (b * (-rho + tmp));
 
-            if (std::abs(val) > 1E-10) {
-                sigma = (v - v_tilda) * timeToExpiry / (b * val);
-                m = sigma * beta / std::sqrt(1.0 - beta * beta);
+            if (!close_enough(m, 0.0)) {
+                sigma = alpha * m;
                 a = v_tilda * timeToExpiry - b * sigma * std::sqrt(1.0 - rho * rho);
             } else {
-                // Fallback for v ~ v_tilda (implies phi ~ 0, beta ~ rho)
-                // System is underdetermined for sigma. Assume a = 0 to close the system.
-                sigma = w / (b * std::sqrt(1.0 - rho * rho));
-                m = sigma * rho / std::sqrt(1.0 - rho * rho);
-                a = 0.0;
+                // Solve the circular dependency between a and sigma
+                // sigma = (v * timeToExpiry - a) / b;
+                // a = v_tilda * timeToExpiry - b * sigma * std::sqrt(1.0 - rho * rho);
+                // => a = v_tilda * timeToExpiry - (v * timeToExpiry - a) * std::sqrt(1.0 - rho * rho);
+                // => a = (v_tilda * timeToExpiry - v * timeToExpiry * std::sqrt(1.0 - rho * rho)) / (1.0 - std::sqrt(1.0 - rho * rho));
+                const Real sqrtOneMinusRho2 = std::sqrt(1.0 - rho * rho);
+                const Real denom = b * (1.0 - sqrtOneMinusRho2);
+                if (!close_enough(denom, 0.0)) {
+                    a = v_tilda * timeToExpiry;
+                    sigma = (v * timeToExpiry - a) / b;
+                } else {
+                    sigma = (v - v_tilda) * timeToExpiry / denom;
+                    a = v_tilda * timeToExpiry - b * sigma * sqrtOneMinusRho2;
+                }
             }
             break;
         }
@@ -1062,7 +1178,7 @@ SviParametricVolatility::convertFromRawSvi(const Real timeToExpiry, const std::v
                 }
                 lambda = x / theta;
             }
-            return {rho, theta, lambda}; 
+            return {rho, theta, lambda};
         }
         case ModelVariant::Gatheral2012SsviPowerLaw: {
             Real theta = m;
@@ -1070,7 +1186,7 @@ SviParametricVolatility::convertFromRawSvi(const Real timeToExpiry, const std::v
             // Reverse the relation: sigma = eta * theta^(-gamma)
             // Therefore: eta = sigma * theta^gamma
             Real eta = sigma * std::pow(theta, gamma);
-            return {rho, theta, eta, gamma}; 
+            return {rho, theta, eta, gamma};
         }
         case ModelVariant::HendriksMartini2017EssviFirstPowerLaw:
         case ModelVariant::HendriksMartini2017EssviSecondPowerLaw:
@@ -1303,7 +1419,7 @@ SsviParametricVolatility::calibrateModelParameters(
         modifiedParams[i].first = calibratedParams[i];
     }
     modifiedParams[1].second = ParameterCalibration::Fixed; // fix rho for current slice
-    
+
     // The reset will be similar to SviParametricVolatility::calibrateModelParameters, but with penalty for
     // calendar spread arbitrage
 
@@ -1370,50 +1486,6 @@ SsviParametricVolatility::calibrateModelParameters(
             for (Size i = 0; i < strikes_.size(); ++i) {
                 result[i] = abs(marketQuotes_[i] - svi[i]) / refQuote_;
             }
-            // add penalty for calendar spread arbitrage, check!!
-            // if (!paramsPreviousSlice_.empty()) {
-            //     std::vector<Real> k;
-            //     Real aPrev, bPrev, sigmaPrev, rhoPrev, mPrev;
-            //     std::tie(aPrev, bPrev, rhoPrev, mPrev, sigmaPrev) = convertToRawSvi(
-            //         timeToExpiry_, paramsPreviousSlice_, modelVariant_);
-            //     Real aCurr, bCurr, sigmaCurr, rhoCurr, mCurr;
-            //     auto paramsCurrentSlice = { params_[0].first, x[0], x[1] };
-            //     std::tie(aCurr, bCurr, rhoCurr, mCurr, sigmaCurr) = convertToRawSvi(
-            //         timeToExpiry_, paramsCurrentSlice, modelVariant_);
-            //     for (Size i = 0; i < strikes_.size(); ++i) {
-            //         Real w_previous = detail::sviTotalVariance(
-            //             aPrev, bPrev, sigmaPrev, rhoPrev, mPrev,
-            //             std::log((std::max(strikes_[i], 1E-6) + lognormalShift_) / (forward_ + lognormalShift_)));
-            //         Real w_current = detail::sviTotalVariance(
-            //             aCurr, bCurr, sigmaCurr, rhoCurr, mCurr,
-            //             std::log((std::max(strikes_[i], 1E-6) + lognormalShift_) / (forward_ + lognormalShift_)));
-            //         if (w_current < w_previous) {
-            //             k.push_back(i);
-            //         }
-            //     }
-            //     if (!k.empty()) {
-            //         sort(k.begin(), k.end());
-            //         std::vector<Real> c(k.size() + 1);
-            //         std::vector<Real> k_tilda(k.size() + 1);
-            //         for (Size i = 0; i < k.size(); ++i) {
-            //             k_tilda[i+1] = std::log((std::max(strikes_[k[i]], 1E-6) + lognormalShift_) / (forward_ + lognormalShift_));
-            //         }
-            //         k_tilda[0] = k_tilda[1] - 1.0;
-            //         for (Size i = 1; i < k.size(); ++i) {
-            //             k_tilda[i] = 0.5 * (k_tilda[i] + k_tilda[i+1]);
-            //         }
-            //         k_tilda[k.size()] = k_tilda[k.size()-1] + 1.0;
-            //         for (Size i = 1; i < c.size(); ++i) {
-            //             c[i] = detail::sviTotalVariance(aPrev, bPrev, sigmaPrev, rhoPrev, mPrev, k_tilda[i]) -
-            //                     detail::sviTotalVariance(aCurr, bCurr, sigmaCurr, rhoCurr, mCurr, k_tilda[i]);
-            //             c[i] = std::max(0.0, c[i]);
-            //         }
-            //         Real crossedness = *std::max_element(c.begin(), c.end());
-            //         for (Size i = 0; i < strikes_.size(); ++i) {
-            //             result[i] += crossedness * 100000.0;
-            //         }
-            //     }
-            // }
             return result;
         }
     };
@@ -1458,8 +1530,8 @@ SsviParametricVolatility::calibrateModelParameters(
     // perform the calibration (this step might throw if all minimizations go wrong)
 
     // Define box constraints for each free parameter
-    Constraint constraint = getCalibrationConstraint(modifiedParams);
-    
+    Constraint constraint = getCalibrationConstraint(modifiedParams, true);
+
     LevenbergMarquardt lm;
     EndCriteria endCriteria(100, 10, 1E-8, 1E-8, 1E-8);
 
@@ -1570,7 +1642,7 @@ SsviParametricVolatilityGlobal::calibrateModelParametersGlobal(
     for (auto const& p : params)
         if (p.second == ParameterCalibration::Calibrated)
             ++noFreeParams;
-    
+
     struct TargetFunction : public QuantLib::CostFunction {
         std::vector<Real> forward_;
         std::vector<Real> timeToExpiry_;
@@ -1709,8 +1781,8 @@ SsviParametricVolatilityGlobal::calibrateModelParametersGlobal(
     t.modelVariant_ = modelVariant_;
 
     // Define box constraints for each free parameter
-    Constraint constraint = getCalibrationConstraint(params);
-    
+    Constraint constraint = getCalibrationConstraint(params, true);
+
     LevenbergMarquardt lm(1e-8, 1e-8, 1e-6, false, 100000, false);
     EndCriteria endCriteria(100000, 1000, 1E-6, 1E-6, 1E-6);
     std::vector<Real> bestResult(params.size());
@@ -1823,7 +1895,7 @@ void SsviParametricVolatilityGlobal::setDefaultParameters() {
     for (auto const& s : marketSmiles_) {
 
         if (modelParameters_[std::make_pair(s.timeToExpiry, s.underlyingLength)][1].first == 0.0) {
-    
+
             // determine the shift for the model (if applicable)
 
             Real modelLognormalShift;
@@ -1861,7 +1933,7 @@ void SsviParametricVolatilityGlobal::calibrate() {
     }
 
     auto paramSize = expectedModelParametersSize();
-    
+
     try {
         auto [params, error, shift, noOfAttempts] = calibrateModelParametersGlobal(marketSmiles_, flatParams);
         Size i = 0;
@@ -1961,7 +2033,7 @@ Real SsviParametricVolatilityGlobal::evaluate(const Real timeToExpiry, const Rea
                                         << forward << ") not allowed.");
     QL_REQUIRE(!calibratedSviParams_.empty(),
                "SsviParametricVolatilityGlobal::evaluate(): no calibrated SVI parameters available for evaluation.");
-    
+
     // we don't interpolate the svi parameters in underlying length, but take the last available slice
     Real uLength;
     if (underlyingLength == Null<Real>()) {
@@ -1970,7 +2042,7 @@ Real SsviParametricVolatilityGlobal::evaluate(const Real timeToExpiry, const Rea
         auto it = std::upper_bound(underlyingLengths_.begin(), underlyingLengths_.end(), underlyingLength);
         uLength = it == underlyingLengths_.end() ? underlyingLengths_.back() : *it;
     }
-    
+
     std::vector<Real> params;
     switch (modelVariant_) {
     case ModelVariant::Mingone2022Essvi: {
@@ -1984,7 +2056,7 @@ Real SsviParametricVolatilityGlobal::evaluate(const Real timeToExpiry, const Rea
                 "SsviParametricVolatilityGlobal::evaluate(): no calibrated SVI parameters found for ("
                     << timeToExpiries_.back() << ", " << uLength << ").");
         auto lambda = timeToExpiry / timeToExpiries_.front();
-    
+
         if (lambda < 1.0) {
             rho = firstParam->second[0];
             theta = lambda * firstParam->second[1];
@@ -2012,7 +2084,7 @@ Real SsviParametricVolatilityGlobal::evaluate(const Real timeToExpiry, const Rea
             psi = sviParametersInterpolations_[2](timeToExpiry, uLength);
         }
         params = { 0.0, 0.0, rho, theta, psi / theta };
-        break;                                    
+        break;
     }
     default:
         QL_FAIL("SsviParametricVolatilityGlobal::evaluate(): model variant ("
