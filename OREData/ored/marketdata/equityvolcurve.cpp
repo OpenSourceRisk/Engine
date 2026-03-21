@@ -192,7 +192,6 @@ QuantLib::ext::shared_ptr<BlackVolTermStructure> buildSviSurface(
         asof, sviDates, sviStrikes, sviQuotes, dayCounter, calendar, spot, 0, calendar, forecastCurve, dividendCurve,
         sviModelVariant, inputMarketQuoteType, sviOptionTypes, modelParameters, maxCalibrationAttempts,
         exitEarlyErrorThreshold, maxAcceptableError);
-
     // Force calibration by triggering one evaluation, then log calibration RMSE
     try {
         result->blackVol(1.0, sviStrikes[0].front());

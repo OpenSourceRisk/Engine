@@ -94,18 +94,21 @@ BlackVolatilitySurfaceSvi::BlackVolatilitySurfaceSvi(
         svi_ = QuantLib::ext::make_shared<SsviParametricVolatility>(
             modelVariant, marketSmiles, ParametricVolatility::MarketModelType::Black76,
             inputMarketQuoteType, discountCurve, modelParameters,
-            std::map<Real, Real>(), maxCalibrationAttempts, exitEarlyErrorThreshold, maxAcceptableError);
+            std::map<Real, Real>(), maxCalibrationAttempts, exitEarlyErrorThreshold, maxAcceptableError,
+                true, false);
     } else if (modelVariant == SviParametricVolatility::ModelVariant::CorbettaEtAl2019Essvi) {
         svi_ = QuantLib::ext::make_shared<SsviParametricVolatilityRobust>(
             modelVariant, marketSmiles, ParametricVolatility::MarketModelType::Black76,
             inputMarketQuoteType, discountCurve, modelParameters,
-            std::map<Real, Real>(), maxCalibrationAttempts, exitEarlyErrorThreshold, maxAcceptableError);
+            std::map<Real, Real>(), maxCalibrationAttempts, exitEarlyErrorThreshold, maxAcceptableError,
+                true, false);
     } else if (modelVariant == SviParametricVolatility::ModelVariant::Mingone2022EssviGJ ||
                modelVariant == SviParametricVolatility::ModelVariant::Mingone2022EssviMM) {
         svi_ = QuantLib::ext::make_shared<SsviParametricVolatilityGlobal>(
             modelVariant, marketSmiles, ParametricVolatility::MarketModelType::Black76,
             inputMarketQuoteType, discountCurve, modelParameters,
-            std::map<Real, Real>(), maxCalibrationAttempts, exitEarlyErrorThreshold, maxAcceptableError);
+            std::map<Real, Real>(), maxCalibrationAttempts, exitEarlyErrorThreshold, maxAcceptableError,
+            true, true);
     } else {
         QL_FAIL("BlackVolatilitySurfaceSvi: model variant " << static_cast<int>(modelVariant) << " is not supported");
     }

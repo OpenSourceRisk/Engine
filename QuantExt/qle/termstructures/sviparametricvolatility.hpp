@@ -58,7 +58,8 @@ public:
             modelParameters = {},
         const std::map<QuantLib::Real, QuantLib::Real>& modelShift = {},
         const QuantLib::Size maxCalibrationAttempts = 10, const QuantLib::Real exitEarlyErrorThreshold = 0.005,
-        const QuantLib::Real maxAcceptableError = 0.05, bool enforceNoArbitrage = false);
+        const QuantLib::Real maxAcceptableError = 0.05, bool enforceNoArbitrage = false,
+        const MarketQuoteType calibrationQuoteType = MarketQuoteType::ShiftedLognormalVolatility);
 
     virtual QuantLib::Real evaluate(
         const QuantLib::Real timeToExpiry, const QuantLib::Real underlyingLength, const QuantLib::Real strike,
@@ -117,7 +118,8 @@ protected:
             modelParameters,
         const std::map<QuantLib::Real, QuantLib::Real>& modelShift,
         QuantLib::Size maxCalibrationAttempts, QuantLib::Real exitEarlyErrorThreshold,
-        QuantLib::Real maxAcceptableError, bool enforceNoArbitrage, bool);
+        QuantLib::Real maxAcceptableError, bool enforceNoArbitrage, bool,
+        MarketQuoteType calibrationQuoteType = MarketQuoteType::ShiftedLognormalVolatility);
 
     void init() { calculate(); }
 
@@ -177,6 +179,7 @@ protected:
     QuantLib::Real exitEarlyErrorThreshold_;
     QuantLib::Real maxAcceptableError_;
     bool enforceNoArbitrage_;
+    MarketQuoteType calibrationTargetType_;
 
     void calculate();
     void computeVolRmseMetrics();
@@ -203,7 +206,9 @@ public:
             modelParameters = {},
         const std::map<QuantLib::Real, QuantLib::Real>& modelShift = {},
         const QuantLib::Size maxCalibrationAttempts = 10, const QuantLib::Real exitEarlyErrorThreshold = 0.005,
-        const QuantLib::Real maxAcceptableError = 0.05, bool enforceNoArbitrage = true);
+        const QuantLib::Real maxAcceptableError = 0.05, bool enforceNoArbitrage = true,
+        bool useInverseVegaWeight = false,
+        const MarketQuoteType calibrationQuoteType = MarketQuoteType::ShiftedLognormalVolatility);
 
     QuantLib::Real evaluate(
         const QuantLib::Real timeToExpiry, const QuantLib::Real underlyingLength, const QuantLib::Real strike,
@@ -217,6 +222,8 @@ public:
                              const std::vector<std::pair<Real, ParameterCalibration>>& params) const override;
 
 protected:
+    bool useInverseVegaWeight_ = false;
+
     SsviParametricVolatility(
         const ModelVariant modelVariant, const std::vector<MarketSmile>& marketSmiles,
         const MarketModelType marketModelType, const MarketQuoteType inputMarketQuoteType,
@@ -225,7 +232,8 @@ protected:
             modelParameters,
         const std::map<QuantLib::Real, QuantLib::Real>& modelShift,
         const QuantLib::Size maxCalibrationAttempts, const QuantLib::Real exitEarlyErrorThreshold,
-        const QuantLib::Real maxAcceptableError, bool enforceNoArbitrage, bool);
+        const QuantLib::Real maxAcceptableError, bool enforceNoArbitrage, bool, bool useInverseVegaWeight,
+        MarketQuoteType calibrationQuoteType = MarketQuoteType::ShiftedLognormalVolatility);
 
     std::vector<Real> evaluateSvi(const std::vector<Real>& params, const Real forward,
                                   const Real timeToExpiry, const Real lognormalShift,
@@ -264,7 +272,9 @@ public:
             modelParameters = {},
         const std::map<QuantLib::Real, QuantLib::Real>& modelShift = {},
         const QuantLib::Size maxCalibrationAttempts = 10, const QuantLib::Real exitEarlyErrorThreshold = 0.005,
-        const QuantLib::Real maxAcceptableError = 0.05, bool enforceNoArbitrage = true
+        const QuantLib::Real maxAcceptableError = 0.05, bool enforceNoArbitrage = true,
+        bool useInverseVegaWeight = false,
+        const MarketQuoteType calibrationQuoteType = MarketQuoteType::ShiftedLognormalVolatility
     );
 
     QuantLib::Real evaluate(
@@ -278,9 +288,16 @@ protected:
     QuantLib::Constraint getCalibrationConstraint(const std::vector<std::pair<Real, ParameterCalibration>>& params,
                                                   bool arbitrageFree) const override;
 
-    // Key of previous slice for calendar spread constraint (Corbetta)
-    mutable QuantLib::ext::optional<std::pair<Real, Real>> prevSliceKey_;
-    QuantLib::ext::optional<std::pair<Real, Real>> prevSliceKey() const override { return prevSliceKey_; }
+    // Per-underlyingLength keys of the previous successful slice for the Corbetta
+    // calendar-spread constraint. Using a map (keyed by underlyingLength) ensures
+    // the constraint never propagates across different CDS tenor rows.
+    mutable std::map<QuantLib::Real, QuantLib::ext::optional<std::pair<Real, Real>>> prevSliceKeys_;
+    // Underlying length of the slice currently being calibrated, used by prevSliceKey().
+    mutable QuantLib::Real currentSmileUnderlyingLength_ = QuantLib::Null<QuantLib::Real>();
+    QuantLib::ext::optional<std::pair<Real, Real>> prevSliceKey() const override {
+        auto it = prevSliceKeys_.find(currentSmileUnderlyingLength_);
+        return it != prevSliceKeys_.end() ? it->second : QuantLib::ext::nullopt;
+    }
 
     void calibrate() override;
 
@@ -314,7 +331,9 @@ public:
             modelParameters = {},
         const std::map<QuantLib::Real, QuantLib::Real>& modelShift = {},
         const QuantLib::Size maxCalibrationAttempts = 10, const QuantLib::Real exitEarlyErrorThreshold = 0.005,
-        const QuantLib::Real maxAcceptableError = 0.05, bool enforceNoArbitrage = true
+        const QuantLib::Real maxAcceptableError = 0.05, bool enforceNoArbitrage = true,
+        bool useInverseVegaWeight = false,
+        const MarketQuoteType calibrationQuoteType = MarketQuoteType::ShiftedLognormalVolatility
     );
 
     QuantLib::Real evaluate(

@@ -41,6 +41,10 @@ using QuantExt::BlackVolatilityWithATM;
 using QuantExt::CreditCurve;
 using QuantExt::CreditVolCurve;
 using QuantExt::CreditVolCurveWrapper;
+using QuantExt::CreditVolCurveSvi;
+using QuantExt::ParametricVolatility;
+using QuantExt::SviParametricVolatility;
+using QuantExt::BlackVolatilitySurfaceSvi;
 using QuantLib::Observer;
 using QuantLib::VolatilityTermStructure;
 using QuantExt::convertSwaptionVolatility;
@@ -270,6 +274,75 @@ class CreditVolCurveWrapper : public CreditVolCurve {
 };
 %template(CreditVolCurveHandle) Handle<CreditVolCurve>;
 %template(RelinkableVolCreditCurveHandle) RelinkableHandle<CreditVolCurve>;
+
+%nodefaultctor ParametricVolatility;
+class ParametricVolatility {
+  public:
+    enum class MarketQuoteType { Price, NormalVolatility, ShiftedLognormalVolatility };
+};
+
+%nodefaultctor SviParametricVolatility;
+class SviParametricVolatility {
+  public:
+    enum class ModelVariant {
+        Gatheral2004SviRaw = 0,
+        Gatheral2004SviNatural = 1,
+        Gatheral2004SviJw = 2,
+        Gatheral2012SsviHeston = 3,
+        Gatheral2012SsviPowerLaw = 4,
+        HendriksMartini2017EssviFirstPowerLaw = 5,
+        HendriksMartini2017EssviSecondPowerLaw = 6,
+        CorbettaEtAl2019Essvi = 7,
+        Mingone2022EssviGJ = 8,
+        Mingone2022EssviMM = 9
+    };
+};
+
+%shared_ptr(CreditVolCurveSvi)
+class CreditVolCurveSvi : public CreditVolCurve {
+  public:
+    CreditVolCurveSvi(
+        const QuantLib::Date& referenceDate, const QuantLib::Calendar& cal,
+        QuantLib::BusinessDayConvention bdc, const QuantLib::DayCounter& dc,
+        const std::vector<QuantLib::Period>& terms,
+        const std::vector<QuantLib::Handle<CreditCurve>>& termCurves,
+        const CreditVolCurve::Type& type,
+        const std::vector<QuantLib::Date>& exerciseDates,
+        const std::vector<QuantLib::Period>& underlyingTerms,
+        const std::vector<std::vector<QuantLib::Real>>& strikes,
+        const std::vector<std::vector<QuantLib::Real>>& vols,
+        SviParametricVolatility::ModelVariant modelVariant,
+        ParametricVolatility::MarketQuoteType inputMarketQuoteType =
+            ParametricVolatility::MarketQuoteType::NormalVolatility,
+        const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve =
+            QuantLib::Handle<QuantLib::YieldTermStructure>());
+    QuantLib::Real volatility(const QuantLib::Date& exerciseDate, const QuantLib::Real underlyingLength,
+                              const QuantLib::Real strike,
+                              const CreditVolCurve::Type& targetType) const override;
+};
+
+%shared_ptr(BlackVolatilitySurfaceSvi)
+class BlackVolatilitySurfaceSvi : public BlackVolTermStructure {
+  public:
+    BlackVolatilitySurfaceSvi(
+        const QuantLib::Date& referenceDate,
+        const std::vector<QuantLib::Date>& dates,
+        const std::vector<std::vector<QuantLib::Real>>& strikes,
+        const std::vector<std::vector<QuantLib::Real>>& quotes,
+        const QuantLib::DayCounter& dayCounter,
+        const QuantLib::Calendar& calendar,
+        const QuantLib::Handle<QuantLib::Quote>& spot,
+        QuantLib::Size spotDays,
+        const QuantLib::Calendar& spotCalendar,
+        const QuantLib::Handle<QuantLib::YieldTermStructure>& domesticTS,
+        const QuantLib::Handle<QuantLib::YieldTermStructure>& foreignTS,
+        SviParametricVolatility::ModelVariant modelVariant,
+        ParametricVolatility::MarketQuoteType inputMarketQuoteType =
+            ParametricVolatility::MarketQuoteType::ShiftedLognormalVolatility);
+    QuantLib::Date maxDate() const;
+    QuantLib::Rate minStrike() const;
+    QuantLib::Rate maxStrike() const;
+};
 
 %shared_ptr(BlackVolatilityWithATM)
 class BlackVolatilityWithATM : public BlackVolTermStructure {
