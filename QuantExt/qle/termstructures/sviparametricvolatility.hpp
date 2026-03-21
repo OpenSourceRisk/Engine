@@ -119,6 +119,7 @@ protected:
     std::vector<std::pair<Real, ParameterCalibration>> defaultModelParameters() const;
     void sanitiseSviParams(std::vector<QuantLib::Matrix>& m);
 
+    mutable std::map<std::pair<Real, Real>, std::vector<Real>> calibratedModelParams_;
     mutable std::map<std::pair<Real, Real>, std::vector<Real>> calibratedSviParams_;
     mutable std::map<std::pair<Real, Real>, Real> lognormalShifts_;
     mutable std::map<std::pair<Real, Real>, Real> calibrationErrors_;
@@ -194,12 +195,18 @@ public:
     calibrateModelParameters(const MarketSmile& marketSmile,
                              const std::vector<std::pair<Real, ParameterCalibration>>& params) const override;
 
+protected:
+    virtual std::tuple<std::vector<Real>, Real, std::vector<Real>, QuantLib::Size>
+    calibrateModelParametersGlobal(const std::vector<MarketSmile>& marketSmiles,
+                                   const std::vector<std::pair<Real, ParameterCalibration>>& params) const;
+    void calibrate() override;
+
 private:
     std::tuple<Real, Real, Real> convertToNaturalSvi(
         const Real timeToExpiry, const Real underlyingLength) const;
 };
 
-class SsviParametricVolatilityRobust : public SviParametricVolatility {
+class SsviParametricVolatilityRobust : public SsviParametricVolatility {
 public:
     SsviParametricVolatilityRobust(
         const ModelVariant modelVariant, const std::vector<MarketSmile> marketSmiles,
@@ -231,7 +238,7 @@ protected:
 
 };
 
-class SsviParametricVolatilityGlobal : public SviParametricVolatility {
+class SsviParametricVolatilityGlobal : public SsviParametricVolatility {
 public:
     SsviParametricVolatilityGlobal(
         const ModelVariant modelVariant, const std::vector<MarketSmile> marketSmiles,
@@ -254,12 +261,9 @@ public:
         const QuantLib::ext::optional<QuantLib::Option::Type> outputOptionType = QuantLib::ext::nullopt) const override;
 
 protected:
-    // calibrate model parameters for a set of market smiles
     std::tuple<std::vector<Real>, Real, std::vector<Real>, QuantLib::Size>
-    calibrateModelParametersGlobal(const std::vector<MarketSmile>& marketSmile,
-                                   const std::vector<std::pair<Real, ParameterCalibration>>& params) const;
-
-    mutable std::map<std::pair<Real, Real>, std::vector<Real>> calibratedModelParams_;
+    calibrateModelParametersGlobal(const std::vector<MarketSmile>& marketSmiles,
+                                   const std::vector<std::pair<Real, ParameterCalibration>>& params) const override;
 
     // Key of previous slice for calendar spread constraint (Corbetta)
     mutable QuantLib::ext::optional<std::pair<Real, Real>> prevSliceKey_;

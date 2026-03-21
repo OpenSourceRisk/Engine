@@ -254,14 +254,35 @@ interpolated linearly (1D case) or bilinearly (2D case) with flat extrapolation.
 
 Applicable to model variants Gatheral2012SsviHeston, Gatheral2012SsviPowerLaw.
 
-\subsubsection{Initial Calibration}
-Work in progress
-\subsubsection{Recalibration}
-Work in progress
+Global calibration is applied to the parameters $\theta_i$'s, $\rho$, $\lambda$ (for Gatheral2012SsviHeston), $\eta$ and $\gamma$ (for Gatheral2012SsviPowerLaw),
+with constraints to guarantee absence of calendar and butterfly arbitrage.
+
 \subsubsection{Interpolation}
-Work in progress
+
+Price of options with expiry times that do not lie on the market quotation grid will be interpolated in total variance space,
+
+\begin{equation}
+\frac{C_t}{K_t} = \alpha_t \frac{C_i}{K_i} + (1 - \alpha_t) \frac{C_{i+1}}{K_{i+1}}
+\end{equation}
+
+where
+
+\begin{equation}
+\alpha_t = \frac{\sqrt{\theta_{t_{i+1}}} - \sqrt{\theta_t}}{\sqrt{\theta_{t_{i+1}}} - \sqrt{\theta_{t_i}}}
+\end{equation}
+
+with $\theta_t$ linearly interpolated between $\theta_{t_i}$ and $\theta_{t_{i+1}}$ in $t$.
+
 \subsubsection{Extrapolation}
-Work in progress
+For $t < t_1$, we re-use the equation for interpolation with
+
+$(C_i,K_i)$ being the intrinsic value and strike of the option and $\theta_i$ being zero.
+$(C_{i+1},K_{i+1})$ being the price and strike of the option with expiry $t_1$ and $\theta_{i+1}$ being the total variance at $t_1$
+
+For $t > t_N$, we extrapolate in total variance space with
+\begin{equation}
+w(k,\theta_t) = w(k,\theta_{t_N}) + \theta_t - \theta_{t_N}
+\end{equation}
 
 \subsection{Calibration for Extended Surface SVI}
 
@@ -284,8 +305,8 @@ where the data point $(k^*, \theta^*)$ represents the log-forward moneyness and 
 Butterfly arbitrage is avoided by imposing the following constraints on the model parameters:
 $0 < \psi \le \frac{-2\rho k^*}{1 + |\rho|} + \sqrt{\frac{4 \rho^2 (k^*)^2}{(1 + |\rho|)^2} + \frac{4 \theta^*}{1 + |\rho|}}$
 
-Calednar arbitrage is avoided by imposing the following constraints on the model parameters:
-$\theta &>& \underline{\theta} \quad \text{and} \quad \psi &>& \underline{\psi}$
+Calendar arbitrage is avoided by imposing the following constraints on the model parameters:
+$\theta > \underline{\theta} \quad \text{and} \quad \psi > \underline{\psi}$
 
 where $\underline{\theta}$ and $\underline{\psi}$ are the calibrated $\theta$ and $\psi$ parameters associated to the previous slice
 
