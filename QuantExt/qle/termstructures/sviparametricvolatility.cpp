@@ -37,6 +37,9 @@ namespace QuantExt {
 using namespace QuantLib;
 
 namespace {
+
+// -- Forward declarations (defined in the second anonymous namespace below) --
+
 Real resolveModelLognormalShift(const ParametricVolatility::MarketSmile& marketSmile,
                                 const std::map<Real, Real>& modelShifts, const char* context);
 std::vector<Real> collectModelLognormalShifts(const std::vector<ParametricVolatility::MarketSmile>& marketSmiles,
@@ -47,30 +50,93 @@ flattenModelParameters(const std::vector<ParametricVolatility::MarketSmile>& mar
                                       std::vector<std::pair<Real, ParametricVolatility::ParameterCalibration>>>&
                            modelParameters,
                        const char* context);
+
+// Multi-start root-finding loop for single-slice calibrators:
+// SviParametricVolatility::calibrateModelParameters() and
+// SsviParametricVolatilityRobust::calibrateModelParametersRobust().
+template <typename CostFn, typename GetGuessFn>
+void rootFindingSingleSlice(
+    CostFn& t,
+    const std::vector<std::pair<Real, ParametricVolatility::ParameterCalibration>>& params,
+    Constraint& constraint,
+    Size noFreeParams,
+    Size maxAttempts,
+    Real exitEarlyThreshold,
+    GetGuessFn getGuessFn,
+    std::vector<Real>& bestResult,
+    Real& bestError,
+    Size& attempt)
+{
+    LevenbergMarquardt lm;
+    EndCriteria endCriteria(100, 10, 1E-8, 1E-8, 1E-8);
+    HaltonRsg haltonRsg(noFreeParams, 42);
+    Array guess(noFreeParams);
+
+    for (attempt = 0; attempt < maxAttempts; ++attempt) {
+
+        if (attempt == 0) {
+            // first attempt uses given initial model parameters
+            for (Size i = 0, j = 0; i < t.params_.size(); ++i) {
+                if (params[i].second == ParametricVolatility::ParameterCalibration::Calibrated) {
+                    guess[j++] = t.params_[i].first;
+                }
+            }
+        } else {
+            // subsequent attempts use randomized guess
+            auto g = getGuessFn(params, haltonRsg.nextSequence().value, t.forward_, t.lognormalShift_);
+            for (Size i = 0, j = 0; i < g.size(); ++i) {
+                if (params[i].second == ParametricVolatility::ParameterCalibration::Calibrated) {
+                    guess[j++] = g[i];
+                }
+            }
+        }
+
+        Problem problem(t, constraint, guess);
+        try {
+            lm.minimize(problem, endCriteria);
+        } catch (const std::exception& e) {
+            continue;
+        }
+
+        Real thisError = problem.functionValue();
+        if (thisError < bestError) {
+            bestError = thisError;
+            for (Size i = 0, j = 0; i < bestResult.size(); ++i) {
+                if (params[i].second != ParametricVolatility::ParameterCalibration::Calibrated)
+                    bestResult[i] = t.params_[i].first;
+                else
+                    bestResult[i] = problem.currentValue()[j++];
+            }
+        }
+
+        if (bestError < exitEarlyThreshold)
+            break;
+    }
+}
 }
 
 SviParametricVolatility::SviParametricVolatility(
-    const ModelVariant modelVariant, const std::vector<MarketSmile> marketSmiles, const MarketModelType marketModelType,
+    const ModelVariant modelVariant, const std::vector<MarketSmile>& marketSmiles, const MarketModelType marketModelType,
     const MarketQuoteType inputMarketQuoteType, const Handle<YieldTermStructure> discountCurve,
-    const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, ParameterCalibration>>>
+    const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, ParameterCalibration>>>&
         modelParameters,
     const std::map<QuantLib::Real, QuantLib::Real>& modelShifts, const Size maxCalibrationAttempts,
     const Real exitEarlyErrorThreshold, const Real maxAcceptableError, bool enforceNoArbitrage)
     : SviParametricVolatility(modelVariant, marketSmiles, marketModelType, inputMarketQuoteType, discountCurve,
-                              std::move(modelParameters), modelShifts, maxCalibrationAttempts,
+                              modelParameters, modelShifts, maxCalibrationAttempts,
                               exitEarlyErrorThreshold, maxAcceptableError, enforceNoArbitrage, false) {
     init();
 }
 
 SviParametricVolatility::SviParametricVolatility(
-    const ModelVariant modelVariant, const std::vector<MarketSmile> marketSmiles, const MarketModelType marketModelType,
+    const ModelVariant modelVariant, const std::vector<MarketSmile>& marketSmiles, const MarketModelType marketModelType,
     const MarketQuoteType inputMarketQuoteType, const Handle<YieldTermStructure> discountCurve,
-    const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, ParameterCalibration>>>
+    const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, ParameterCalibration>>>&
         modelParameters,
     const std::map<QuantLib::Real, QuantLib::Real>& modelShifts, const Size maxCalibrationAttempts,
     const Real exitEarlyErrorThreshold, const Real maxAcceptableError, bool enforceNoArbitrage, bool)
     : ParametricVolatility(marketSmiles, marketModelType, inputMarketQuoteType, discountCurve),
-      modelVariant_(modelVariant), modelParameters_(std::move(modelParameters)), modelShifts_(modelShifts),
+      modelVariant_(modelVariant), modelParameters_(modelParameters), modelShifts_(modelShifts),
       maxCalibrationAttempts_(maxCalibrationAttempts), exitEarlyErrorThreshold_(exitEarlyErrorThreshold),
       maxAcceptableError_(maxAcceptableError), enforceNoArbitrage_(enforceNoArbitrage) {}
 
@@ -98,7 +164,7 @@ QuantLib::Size SviParametricVolatility::expectedModelParametersSize() const {
 }
 
 Constraint SviParametricVolatility::getCalibrationConstraint(
-    std::vector<std::pair<Real, ParameterCalibration>> params, bool arbitrageFree) const {
+    const std::vector<std::pair<Real, ParameterCalibration>>& params, bool arbitrageFree) const {
     return SviModelTraits::calibrationConstraint(modelVariant_, params, arbitrageFree);
 }
 
@@ -118,7 +184,7 @@ std::vector<Real> SviParametricVolatility::evaluateSvi(const std::vector<Real>& 
 
     for (Size i = 0; i < strikes.size(); ++i) {
         try {
-            Real k = std::log((std::max(strikes[i], 1E-6) + lognormalShift) / (forward + lognormalShift));
+            Real k = std::log((strikes[i] + lognormalShift) / (forward + lognormalShift));
             Real totalVariance = detail::sviTotalVariance(a, b, sigma, rho, m, k);
             result[i] = std::sqrt(std::max(0.0, totalVariance / timeToExpiry));
         } catch (...) {
@@ -263,57 +329,13 @@ std::tuple<std::vector<Real>, Real, Real, Size> SviParametricVolatility::calibra
     // Define box constraints for each free parameter
     Constraint constraint = getCalibrationConstraint(params, enforceNoArbitrage_);
 
-    LevenbergMarquardt lm;
-    EndCriteria endCriteria(100, 10, 1E-8, 1E-8, 1E-8);
-
     std::vector<Real> bestResult(params.size());
     Real bestError = QL_MAX_REAL;
-
-    HaltonRsg haltonRsg(noFreeParams, 42);
-
-    Array guess(noFreeParams);
-
     Size attempt;
-    for (attempt = 0; attempt < maxCalibrationAttempts_; ++attempt) {
-
-        if (attempt == 0) {
-            // first attempt uses given initial model parameters
-            for (Size i = 0, j = 0; i < t.params_.size(); ++i) {
-                if (params[i].second == ParametricVolatility::ParameterCalibration::Calibrated) {
-                    guess[j++] = t.params_[i].first;
-                }
-            }
-        } else {
-            // subsequent attempts use randomized guess
-            auto g = getGuess(params, haltonRsg.nextSequence().value, t.forward_, t.lognormalShift_);
-            for (Size i = 0, j = 0; i < g.size(); ++i) {
-                if (params[i].second == ParametricVolatility::ParameterCalibration::Calibrated) {
-                    guess[j++] = g[i];
-                }
-            }
-        }
-
-        Problem problem(t, constraint, guess);
-        try {
-            lm.minimize(problem, endCriteria);
-        } catch (const std::exception& e) {
-            continue;
-        }
-
-        Real thisError = problem.functionValue();
-        if (thisError < bestError) {
-            bestError = thisError;
-            for (Size i = 0, j = 0; i < bestResult.size(); ++i) {
-                if (params[i].second != ParametricVolatility::ParameterCalibration::Calibrated)
-                    bestResult[i] = t.params_[i].first;
-                else
-                    bestResult[i] = problem.currentValue()[j++];
-            }
-        }
-
-        if (bestError < exitEarlyErrorThreshold_)
-            break;
-    }
+    rootFindingSingleSlice(
+        t, params, constraint, noFreeParams, maxCalibrationAttempts_, exitEarlyErrorThreshold_,
+        [this](const auto& p, const auto& seq, Real fwd, Real shift) { return getGuess(p, seq, fwd, shift); },
+        bestResult, bestError, attempt);
 
     // store the calibration results
     CalibrationResult result;
@@ -337,6 +359,9 @@ std::tuple<std::vector<Real>, Real, Real, Size> SviParametricVolatility::calibra
 }
 
 namespace {
+
+// -- Laplace interpolation --
+
 void laplaceInterpolationWithErrorHandling(Matrix& m, const std::vector<Real>& x, const std::vector<Real>& y) {
     std::vector<std::pair<double, Size>> tolerances = {{1E-6, 100}, {1E-5, 100}, {1E-4, 100}, {1E-4, 1000}};
     std::vector<std::string> errorText;
@@ -355,6 +380,8 @@ void laplaceInterpolationWithErrorHandling(Matrix& m, const std::vector<Real>& x
                    << boost::join(errorText, ",")
                    << "), this might be related to the numerical parameters relTol, maxIterMult. Contact dev.");
 }
+
+// -- Type aliases and model-parameter utilities --
 
 using ParameterSpec = std::pair<Real, ParametricVolatility::ParameterCalibration>;
 using ModelKey = std::pair<Real, Real>;
@@ -401,6 +428,93 @@ std::vector<ParameterSpec> flattenModelParameters(const std::vector<ParametricVo
     }
     return result;
 }
+
+// -- Calibration helpers --
+
+void storeCalibrationOutcome(RealParameterMap& calibratedModelParams, RealParameterMap& calibratedSviParams,
+                             std::map<ModelKey, Real>& calibrationErrors,
+                             std::map<ModelKey, Real>& lognormalShifts,
+                             std::map<ModelKey, Size>& noOfAttempts, const ModelKey& key,
+                             const std::vector<Real>& modelParams, const std::vector<Real>& sviParams,
+                             const Real error, const Real shift, const Size attempts,
+                             const Real maxAcceptableError) {
+    if (error < maxAcceptableError) {
+        calibratedModelParams[key] = modelParams;
+        calibratedSviParams[key] = sviParams;
+    }
+    calibrationErrors[key] = error;
+    lognormalShifts[key] = shift;
+    noOfAttempts[key] = attempts;
+}
+
+std::vector<Real> extractSsviGlobalSliceParameters(const std::vector<Real>& params, const Size sliceIndex,
+                                                   const Size numberOfSlices) {
+    std::vector<Real> localParams = {params[sliceIndex]};
+    for (Size j = numberOfSlices; j < params.size(); ++j) {
+        localParams.push_back(params[j]);
+    }
+    return localParams;
+}
+
+// Cost function for global (multi-smile) SVI calibration, shared by
+// SsviParametricVolatility::calibrateModelParametersGlobal() and
+// SsviParametricVolatilityGlobal::calibrateModelParametersGlobal().
+struct GlobalTargetFunction : public QuantLib::CostFunction {
+    std::vector<Real> forward_;
+    std::vector<Real> timeToExpiry_;
+    std::vector<Real> lognormalShift_;
+    std::vector<std::vector<Real>> strikes_;
+    std::vector<std::vector<QuantLib::Option::Type>> optionTypes_;
+    std::vector<Real> marketQuotes_;
+    std::vector<Real> weight_;
+    SviParametricVolatility::ModelVariant modelVariant_;
+    std::vector<std::function<Real(Real)>> paramTransform_; // whether to apply logit transform to the parameter
+    std::vector<std::function<Real(Real)>> paramInverseTransform_; // whether to apply logit transform to the parameter
+    std::function<std::vector<Real>(const std::vector<Real>&,
+                                    const std::vector<Real>&,
+                                    const std::vector<Real>&,
+                                    const std::vector<Real>&,
+                                    const std::vector<std::vector<Real>>&,
+                                    const std::vector<std::vector<QuantLib::Option::Type>>&,
+                                    const std::vector<Real>&)>
+        evalSvi_;
+    std::vector<std::pair<Real, ParametricVolatility::ParameterCalibration>> params_;
+
+    std::vector<Real> evalSvi(const Array& x) const {
+        std::vector<Real> params(params_.size());
+        for (Size i = 0, j = 0; i < params_.size(); ++i) {
+            if (params_[i].second != ParametricVolatility::ParameterCalibration::Calibrated) {
+                params[i] = params_[i].first;
+            } else {
+                params[i] = paramInverseTransform_[i](x[j]);
+                ++j;
+            }
+        }
+        return evalSvi_(params, forward_, timeToExpiry_, lognormalShift_, strikes_,
+                        optionTypes_, lognormalShift_);
+    }
+
+    Array values(const Array& x) const override {
+        auto svi = evalSvi(x);
+        Array result(svi.size());
+        for (Size i = 0; i < svi.size(); ++i) {
+            result[i] = (svi[i] - marketQuotes_[i]) * weight_[i];
+        }
+
+        return result;
+    }
+
+    Real value(const Array& x) const override {
+        Array v = values(x);
+        std::transform(v.begin(), v.end(), v.begin(), [](Real x) -> Real { return x*x; });
+        return std::accumulate(v.begin(), v.end(), Real(0.0)) / Real(2.0);
+    }
+};
+
+// =====================================================================
+// The following code applies to Corbetta (CorbettaEtAl2019Essvi) only
+// =====================================================================
+
 Array rebuildParameterArray(const Array& p, const Array& fixed, const std::vector<bool>& isFreeParams, Size size) {
     // Expand the optimizer's free-parameter vector back to the full Corbetta parameter tuple.
     Array fullParams(size);
@@ -415,6 +529,8 @@ Array rebuildParameterArray(const Array& p, const Array& fixed, const std::vecto
     }
     return fullParams;
 }
+
+// -- Corbetta (ESSVI) natural parameters and bounds --
 
 struct CorbettaNaturalParams {
     Real theta;
@@ -501,6 +617,8 @@ void corbettaParameterBounds(const std::vector<bool>& isFreeParams, Array& lower
     }
 }
 
+// -- Corbetta constraint classes --
+
 class CorbettaButterflyConstraint : public Constraint {
 public:
     CorbettaButterflyConstraint(const Array& fixed, const std::vector<bool>& isFreeParams)
@@ -583,22 +701,6 @@ Constraint corbettaConstraint(const Array& lowerBound, const Array& upperBound, 
                                CorbettaCalendarSpreadConstraint(fixedValues, isFreeParams, *prevNatural));
 }
 
-void storeCalibrationOutcome(RealParameterMap& calibratedModelParams, RealParameterMap& calibratedSviParams,
-                             std::map<ModelKey, Real>& calibrationErrors,
-                             std::map<ModelKey, Real>& lognormalShifts,
-                             std::map<ModelKey, Size>& noOfAttempts, const ModelKey& key,
-                             const std::vector<Real>& modelParams, const std::vector<Real>& sviParams,
-                             const Real error, const Real shift, const Size attempts,
-                             const Real maxAcceptableError) {
-    if (error < maxAcceptableError) {
-        calibratedModelParams[key] = modelParams;
-        calibratedSviParams[key] = sviParams;
-    }
-    calibrationErrors[key] = error;
-    lognormalShifts[key] = shift;
-    noOfAttempts[key] = attempts;
-}
-
 void initialiseCorbettaAtmParameters(const ParametricVolatility& volatility, std::vector<ParameterSpec>& params,
                                      const ParametricVolatility::MarketSmile& marketSmile,
                                      const Real modelLognormalShift,
@@ -640,14 +742,10 @@ void initialiseCorbettaAtmParameters(const ParametricVolatility& volatility, std
     params[1].second = ParametricVolatility::ParameterCalibration::Fixed;
 }
 
-std::vector<Real> extractSsviGlobalSliceParameters(const std::vector<Real>& params, const Size sliceIndex,
-                                                   const Size numberOfSlices) {
-    std::vector<Real> localParams = {params[sliceIndex]};
-    for (Size j = numberOfSlices; j < params.size(); ++j) {
-        localParams.push_back(params[j]);
-    }
-    return localParams;
-}
+// =====================================================================
+// End Corbetta-specific code
+// =====================================================================
+
 } // namespace
 
 void SviParametricVolatility::setDefaultParameters() {
@@ -820,6 +918,7 @@ void SviParametricVolatility::calculate() {
     sanitiseSviParams(sviParametersMatrices_);
 
     // workaround because BilinearInterpolation below requires at least two points in each dimension
+    // -- pad the single-entry axis by duplicating its last row/column and extending the grid by 1.
 
     timeToExpiriesForInterpolation_ = timeToExpiries_;
     underlyingLengthsForInterpolation_ = underlyingLengths_;
@@ -1013,9 +1112,14 @@ Real SviParametricVolatility::evaluate(const Real timeToExpiry, const Real under
                                        const Real forward, const MarketQuoteType outputMarketQuoteType,
                                        const Real outputLognormalShift,
                                        const QuantLib::ext::optional<QuantLib::Option::Type> outputOptionType) const {
+    validateEvaluateInputs(timeToExpiry, underlyingLength, strike, forward);
     Real totalVariance;
     Real lognormalShift = lognormalShiftInterpolation_(timeToExpiry, underlyingLength);
-    Real k = std::log((std::max(strike, 1E-6) + lognormalShift) / (forward + lognormalShift));
+    QL_REQUIRE(strike + lognormalShift > 0.0, "SviParametricVolatility::evaluate(): non-positive shifted strike ("
+                                                   << strike << " + " << lognormalShift << " = " << strike + lognormalShift << ").");
+    QL_REQUIRE(forward + lognormalShift > 0.0, "SviParametricVolatility::evaluate(): non-positive shifted forward ("
+                                                   << forward << " + " << lognormalShift << " = " << forward + lognormalShift << ").");
+    Real k = std::log((strike + lognormalShift) / (forward + lognormalShift));
     switch (modelVariant_) {
     case ModelVariant::Gatheral2004SviRaw:
     case ModelVariant::Gatheral2004SviNatural:
@@ -1044,14 +1148,14 @@ Real SviParametricVolatility::evaluate(const Real timeToExpiry, const Real under
 }
 
 SsviParametricVolatility::SsviParametricVolatility(
-    const ModelVariant modelVariant, const std::vector<MarketSmile> marketSmiles, const MarketModelType marketModelType,
+    const ModelVariant modelVariant, const std::vector<MarketSmile>& marketSmiles, const MarketModelType marketModelType,
     const MarketQuoteType inputMarketQuoteType, const Handle<YieldTermStructure> discountCurve,
-    const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, ParameterCalibration>>>
+    const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, ParameterCalibration>>>&
         modelParameters,
     const std::map<QuantLib::Real, QuantLib::Real>& modelShifts, const Size maxCalibrationAttempts,
     const Real exitEarlyErrorThreshold, const Real maxAcceptableError, const bool enforceNoArbitrage)
     : SsviParametricVolatility(modelVariant, marketSmiles, marketModelType, inputMarketQuoteType, discountCurve,
-                               std::move(modelParameters), modelShifts, maxCalibrationAttempts,
+                               modelParameters, modelShifts, maxCalibrationAttempts,
                                exitEarlyErrorThreshold, maxAcceptableError, enforceNoArbitrage, false) {
     QL_REQUIRE(modelVariant == ModelVariant::Gatheral2012SsviHeston ||
                modelVariant == ModelVariant::Gatheral2012SsviPowerLaw,
@@ -1060,9 +1164,9 @@ SsviParametricVolatility::SsviParametricVolatility(
 }
 
 SsviParametricVolatility::SsviParametricVolatility(
-    const ModelVariant modelVariant, const std::vector<MarketSmile> marketSmiles, const MarketModelType marketModelType,
+    const ModelVariant modelVariant, const std::vector<MarketSmile>& marketSmiles, const MarketModelType marketModelType,
     const MarketQuoteType inputMarketQuoteType, const Handle<YieldTermStructure> discountCurve,
-    const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, ParameterCalibration>>>
+    const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, ParameterCalibration>>>&
         modelParameters,
     const std::map<QuantLib::Real, QuantLib::Real>& modelShifts, const Size maxCalibrationAttempts,
     const Real exitEarlyErrorThreshold, const Real maxAcceptableError, const bool enforceNoArbitrage, bool)
@@ -1076,16 +1180,14 @@ std::vector<Real> SsviParametricVolatility::evaluateSvi(const std::vector<Real>&
                                                         const MarketQuoteType outputMarketQuoteType,
                                                         const std::vector<QuantLib::Option::Type>& outputOptionTypes,
                                                         const Real outputLognormalShift) const {
-    std::vector<Real> result(strikes.size());
-    Real a, b, rho, m, sigma;
-    std::tie(a, b, rho, m, sigma) = SviParametricVolatility::convertToRawSvi(timeToExpiry, params, modelVariant_);
-
-    for (Size i = 0; i < strikes.size(); ++i) {
+    // Get raw shifted-lognormal vols from the base implementation
+    auto result = SviParametricVolatility::evaluateSvi(params, forward, timeToExpiry, lognormalShift,
+                                                       strikes, outputMarketQuoteType, outputOptionTypes,
+                                                       outputLognormalShift);
+    // Convert each result to the requested output market quote type
+    for (Size i = 0; i < result.size(); ++i) {
         try {
-            Real k = std::log((std::max(strikes[i], 1E-6) + lognormalShift) / (forward + lognormalShift));
-            Real totalVariance = detail::sviTotalVariance(a, b, sigma, rho, m, k);
-            Real sigma = std::sqrt(std::max(0.0, totalVariance / timeToExpiry));
-            result[i] = convert(sigma, MarketQuoteType::ShiftedLognormalVolatility, lognormalShift,
+            result[i] = convert(result[i], MarketQuoteType::ShiftedLognormalVolatility, lognormalShift,
                                 outputOptionTypes.empty() ? QuantLib::ext::nullopt
                                                     : QuantLib::ext::optional<Option::Type>(outputOptionTypes[i]),
                                 timeToExpiry, strikes[i], forward,
@@ -1108,9 +1210,14 @@ Real SsviParametricVolatility::evaluate(const Real timeToExpiry, const Real unde
                                         const Real forward, const MarketQuoteType outputMarketQuoteType,
                                         const Real outputLognormalShift,
                                         const QuantLib::ext::optional<QuantLib::Option::Type> outputOptionType) const {
+    validateEvaluateInputs(timeToExpiry, underlyingLength, strike, forward);
     Real totalVariance;
     Real lognormalShift = lognormalShiftInterpolation_(timeToExpiry, underlyingLength);
-    Real k = std::log((std::max(strike, 1E-6) + lognormalShift) / (forward + lognormalShift));
+    QL_REQUIRE(strike + lognormalShift > 0.0,
+               "SsviParametricVolatility::evaluate(): shifted strike (" << strike + lognormalShift << ") must be positive.");
+    QL_REQUIRE(forward + lognormalShift > 0.0,
+               "SsviParametricVolatility::evaluate(): shifted forward (" << forward + lognormalShift << ") must be positive.");
+    Real k = std::log((strike + lognormalShift) / (forward + lognormalShift));
     switch (modelVariant_) {
     case ModelVariant::Gatheral2012SsviHeston:
     case ModelVariant::Gatheral2012SsviPowerLaw: {
@@ -1168,64 +1275,7 @@ SsviParametricVolatility::calibrateModelParametersGlobal(
     }
 
 
-    struct TargetFunction : public QuantLib::CostFunction {
-        std::vector<Real> forward_;
-        std::vector<Real> timeToExpiry_;
-        std::vector<Real> lognormalShift_;
-        std::vector<std::vector<Real>> strikes_;
-        std::vector<std::vector<QuantLib::Option::Type>> optionTypes_;
-        std::vector<Real> marketQuotes_;
-        std::vector<Real> weight_;
-        ModelVariant modelVariant_;
-        std::vector<std::function<Real(Real)>> paramTransform_; // whether to apply logit transform to the parameter
-        std::vector<std::function<Real(Real)>> paramInverseTransform_; // whether to apply logit transform to the parameter
-        std::function<std::vector<Real>(const std::vector<Real>&,
-                                        const std::vector<Real>&,
-                                        const std::vector<Real>&,
-                                        const std::vector<Real>&,
-                                        const std::vector<std::vector<Real>>&,
-                                        const std::vector<std::vector<QuantLib::Option::Type>>&,
-                                        const std::vector<Real>&)>
-            evalSvi_;
-        std::vector<std::pair<Real, ParameterCalibration>> params_;
-
-        std::vector<Real> evalSvi(const Array& x) const {
-            std::vector<Real> params(params_.size());
-            for (Size i = 0, j = 0; i < params_.size(); ++i) {
-                if (params_[i].second != ParametricVolatility::ParameterCalibration::Calibrated) {
-                    params[i] = params_[i].first;
-                } else {
-                    // Apply inverse logit transformation for parameters that require it
-                    if (paramInverseTransform_[i]) {
-                        params[i] = paramInverseTransform_[i](x[j]);
-                    } else {
-                        params[i] = x[j];
-                    }
-                    ++j;
-                }
-            }
-            return evalSvi_(params, forward_, timeToExpiry_, lognormalShift_, strikes_,
-                            optionTypes_, lognormalShift_);
-        }
-
-        Array values(const Array& x) const override {
-            auto svi = evalSvi(x);
-            Array result(svi.size());
-            std::vector<Real> resultVec(svi.size());
-            for (Size i = 0; i < svi.size(); ++i) {
-                result[i] = (svi[i] - marketQuotes_[i]) * weight_[i];
-                resultVec[i] = result[i];
-            }
-
-            return result;
-        }
-
-        Real value(const Array& x) const override {
-            Array v = values(x);
-            std::transform(v.begin(), v.end(), v.begin(), [](Real x) -> Real { return x*x; });
-            return std::accumulate(v.begin(), v.end(), Real(0.0)) / Real(2.0);
-        }
-    };
+    using TargetFunction = GlobalTargetFunction;
 
     TargetFunction t;
 
@@ -1260,50 +1310,56 @@ SsviParametricVolatility::calibrateModelParametersGlobal(
         case ModelVariant::HendriksMartini2017EssviSecondPowerLaw:
         case ModelVariant::Mingone2022EssviGJ:
         case ModelVariant::Mingone2022EssviMM: {
+            // Weight by 1/vega so calibration errors are measured in price space,
+            // giving near-ATM options (high vega) less weight and preventing deep
+            // OTM quotes from being drowned out.
             for (Size i = 0; i < marketSmile.marketQuotes.size(); ++i) {
-                Real k = std::log((std::max(marketSmile.strikes[i], 1E-6) + modelLognormalShift) /
+                Real k = std::log((marketSmile.strikes[i] + modelLognormalShift) /
                                   (marketSmile.forward + modelLognormalShift));
                 Real vol = convert(marketSmile.marketQuotes[i], inputMarketQuoteType_, marketSmile.lognormalShift,
                                    marketSmile.optionTypes.empty() ? QuantLib::ext::nullopt
                                                                    : QuantLib::ext::optional<Option::Type>(marketSmile.optionTypes[i]),
                                    marketSmile.timeToExpiry, marketSmile.strikes[i], marketSmile.forward,
                                    MarketQuoteType::ShiftedLognormalVolatility, modelLognormalShift, QuantLib::ext::nullopt);
-                Real volSqrtT = vol * std::sqrt(marketSmile.timeToExpiry);
+                Real volSqrtT = std::max(vol * std::sqrt(marketSmile.timeToExpiry), 1E-10);
                 Real d1 = volSqrtT * 0.5 - k / volSqrtT;
                 Real vega = discountCurve_->discount(marketSmile.timeToExpiry) * marketSmile.forward *
                             (1.0 / std::sqrt(2.0 * M_PI)) * std::exp(-0.5 * d1 * d1) * std::sqrt(marketSmile.timeToExpiry);
                 t.weight_.push_back(1.0 / (vega + 1E-12)); // avoid division by zero
             }
-            t.paramTransform_.push_back(nullptr); // rho parameter
-            t.paramTransform_.push_back(nullptr); // a parameter
-            t.paramTransform_.push_back([](Real x) { return std::log(x / (1.0 - x)); });  // c parameter
-            t.paramInverseTransform_.push_back(nullptr); // rho parameter
-            t.paramInverseTransform_.push_back(nullptr); // a parameter
+            t.paramTransform_.push_back([](Real x) { return x; }); // rho parameter
+            t.paramTransform_.push_back([](Real x) { return x; }); // a parameter
+            t.paramTransform_.push_back([](Real x) {
+                Real cx = std::max(1E-10, std::min(x, 1.0 - 1E-10));
+                return std::log(cx / (1.0 - cx));
+            });  // c parameter
+            t.paramInverseTransform_.push_back([](Real x) { return x; }); // rho parameter
+            t.paramInverseTransform_.push_back([](Real x) { return x; }); // a parameter
             t.paramInverseTransform_.push_back([](Real x) { return 1.0 / (1.0 + std::exp(-x)); });  // c parameter
             break;
         }
         default:
-            QL_FAIL("SsviParametricVolatilityGlobal::calibrateModelParametersGlobal(): model variant ("
+            QL_FAIL("SsviParametricVolatility::calibrateModelParametersGlobal(): model variant ("
                     << static_cast<int>(modelVariant_) << ") not handled.");
         }
     }
 
     for (Size i = 0; i < t.forward_.size(); ++i) {
-        t.paramTransform_.push_back(nullptr);
-        t.paramInverseTransform_.push_back(nullptr);
+        t.paramTransform_.push_back([](Real x) { return x; });
+        t.paramInverseTransform_.push_back([](Real x) { return x; });
     }
     if (modelVariant_ == ModelVariant::Gatheral2012SsviHeston) {
-        t.paramTransform_.push_back(nullptr);
-        t.paramTransform_.push_back(nullptr);
-        t.paramInverseTransform_.push_back(nullptr);
-        t.paramInverseTransform_.push_back(nullptr);
+        t.paramTransform_.push_back([](Real x) { return x; });
+        t.paramTransform_.push_back([](Real x) { return x; });
+        t.paramInverseTransform_.push_back([](Real x) { return x; });
+        t.paramInverseTransform_.push_back([](Real x) { return x; });
     } else if (modelVariant_ == ModelVariant::Gatheral2012SsviPowerLaw) {
-        t.paramTransform_.push_back(nullptr);
-        t.paramTransform_.push_back(nullptr);
-        t.paramTransform_.push_back(nullptr);
-        t.paramInverseTransform_.push_back(nullptr);
-        t.paramInverseTransform_.push_back(nullptr);
-        t.paramInverseTransform_.push_back(nullptr);
+        t.paramTransform_.push_back([](Real x) { return x; });
+        t.paramTransform_.push_back([](Real x) { return x; });
+        t.paramTransform_.push_back([](Real x) { return x; });
+        t.paramInverseTransform_.push_back([](Real x) { return x; });
+        t.paramInverseTransform_.push_back([](Real x) { return x; });
+        t.paramInverseTransform_.push_back([](Real x) { return x; });
     }
 
     t.evalSvi_ = [this](const std::vector<Real>& params,
@@ -1324,7 +1380,7 @@ SsviParametricVolatility::calibrateModelParametersGlobal(
             }
             auto [rho, theta, phi] = SviParametricVolatility::convertToNaturalSvi(timeToExpiry[i], localParams, modelVariant_);
             for (Size j = 0; j < strikes[i].size(); ++j) {
-                Real k = std::log((std::max(strikes[i][j], 1E-6) + lognormalShift[i]) / (forward[i] + lognormalShift[i]));
+                Real k = std::log((strikes[i][j] + lognormalShift[i]) / (forward[i] + lognormalShift[i]));
                 Real totalVariance = phi * k + rho;
                 totalVariance *= totalVariance;
                 totalVariance += 1 - rho * rho;
@@ -1359,35 +1415,27 @@ SsviParametricVolatility::calibrateModelParametersGlobal(
     Array guess(noFreeParams);
 
     Size attempt;
-    // for (attempt = 0; attempt < maxCalibrationAttempts_; ++attempt) {
+    // TODO multi-start calibration disabled — getGuess is not compatible with
+    // the global SSVI parameter layout (causes segfault on attempt > 0).
     for (attempt = 0; attempt < 1; ++attempt) {
 
         if (attempt == 0) {
             // first attempt uses given initial model parameters
             for (Size i = 0, j = 0; i < t.params_.size(); ++i) {
                 if (t.params_[i].second == ParametricVolatility::ParameterCalibration::Calibrated) {
-                    // Apply logit transformation for c parameters to unbounded space
-                    if (t.paramTransform_[i]) {
-                        guess[j++] = t.paramTransform_[i](t.params_[i].first);
-                    } else {
-                        guess[j++] = t.params_[i].first;
-                    }
-                }
-            }
-        } else {
-            // subsequent attempts use randomized guess
-            auto g = getGuess(params, haltonRsg.nextSequence().value, t.forward_[0], t.lognormalShift_[0]);
-            for (Size i = 0, j = 0; i < g.size(); ++i) {
-                if (params[i].second == ParametricVolatility::ParameterCalibration::Calibrated) {
-                    // Apply logit transformation for c parameters to unbounded space
-                    if (t.paramTransform_[i]) {
-                        guess[j++] = t.paramTransform_[i](g[i]);
-                    } else {
-                        guess[j++] = g[i];
-                    }
+                    guess[j++] = t.paramTransform_[i](t.params_[i].first);
                 }
             }
         }
+        // } else {
+        //     // subsequent attempts use randomized guess
+        //     auto g = getGuess(params, haltonRsg.nextSequence().value, t.forward_[0], t.lognormalShift_[0]);
+        //     for (Size i = 0, j = 0; i < g.size(); ++i) {
+        //         if (params[i].second == ParametricVolatility::ParameterCalibration::Calibrated) {
+        //             guess[j++] = t.paramTransform_[i](g[i]);
+        //         }
+        //     }
+        // }
 
         Problem problem(t, constraint, guess);
         EndCriteria::Type ec;
@@ -1404,12 +1452,7 @@ SsviParametricVolatility::calibrateModelParametersGlobal(
                 if (ssviParams[i].second != ParametricVolatility::ParameterCalibration::Calibrated) {
                     bestResult[i] = t.params_[i].first;
                 } else {
-                    if (t.paramInverseTransform_[i]) {
-                        // Apply inverse logit transformation to get back to original space
-                        bestResult[i] = t.paramInverseTransform_[i](problem.currentValue()[j]);
-                    } else {
-                        bestResult[i] = problem.currentValue()[j];
-                    }
+                    bestResult[i] = t.paramInverseTransform_[i](problem.currentValue()[j]);
                     ++j;
                 }
             }
@@ -1577,60 +1620,15 @@ SsviParametricVolatility::calibrateModelParameters(
 
     // perform the calibration (this step might throw if all minimizations go wrong)
 
-    // Define box constraints for each free parameter
     Constraint constraint = getCalibrationConstraint(params, enforceNoArbitrage_);
-
-    LevenbergMarquardt lm;
-    EndCriteria endCriteria(100, 10, 1E-8, 1E-8, 1E-8);
 
     std::vector<Real> bestResult(params.size());
     Real bestError = QL_MAX_REAL;
-
-    HaltonRsg haltonRsg(noFreeParams, 42);
-
-    Array guess(noFreeParams);
-
     Size attempt;
-    for (attempt = 0; attempt < maxCalibrationAttempts_; ++attempt) {
-
-        if (attempt == 0) {
-            // first attempt uses given initial model parameters
-            for (Size i = 0, j = 0; i < t.params_.size(); ++i) {
-                if (params[i].second == ParametricVolatility::ParameterCalibration::Calibrated) {
-                    guess[j++] = t.params_[i].first;
-                }
-            }
-        } else {
-            // subsequent attempts use randomized guess
-            auto g = getGuess(params, haltonRsg.nextSequence().value, t.forward_, t.lognormalShift_);
-            for (Size i = 0, j = 0; i < g.size(); ++i) {
-                if (params[i].second == ParametricVolatility::ParameterCalibration::Calibrated) {
-                    guess[j++] = g[i];
-                }
-            }
-        }
-
-        Problem problem(t, constraint, guess);
-        try {
-            lm.minimize(problem, endCriteria);
-        } catch (const std::exception& e) {
-            continue;
-        }
-
-        Real thisError = problem.functionValue();
-        if (thisError < bestError) {
-            bestError = thisError;
-            for (Size i = 0, j = 0; i < bestResult.size(); ++i) {
-                if (params[i].second != ParametricVolatility::ParameterCalibration::Calibrated)
-                    bestResult[i] = t.params_[i].first;
-                else
-                    bestResult[i] = problem.currentValue()[j++];
-            }
-        }
-
-        if (bestError < exitEarlyErrorThreshold_)
-            break;
-    }
+    rootFindingSingleSlice(
+        t, params, constraint, noFreeParams, maxCalibrationAttempts_, exitEarlyErrorThreshold_,
+        [this](const auto& p, const auto& seq, Real fwd, Real shift) { return getGuess(p, seq, fwd, shift); },
+        bestResult, bestError, attempt);
 
     // store the calibration results
     CalibrationResult result;
@@ -1653,14 +1651,43 @@ SsviParametricVolatility::calibrateModelParameters(
     return std::make_tuple(bestResult, bestError, t.lognormalShift_, ++attempt);
 }
 
-std::tuple<Real, Real, Real>
-SsviParametricVolatility::convertToNaturalSvi(const Real timeToExpiry, const Real underlyingLength) const {
-    std::vector<Real> params;
-    params.resize(expectedModelParametersSize());
-    for (Size i = 0; i < params.size(); ++i) {
-        params[i] = sviParametersInterpolations_[i](timeToExpiry, underlyingLength);
+void SviParametricVolatility::validateEvaluateInputs(Real timeToExpiry, Real underlyingLength,
+                                                      Real strike, Real forward) const {
+    QL_REQUIRE(timeToExpiry > 0.0, "SviParametricVolatility::evaluate(): non-positive time to expiry ("
+                                        << timeToExpiry << ") not allowed.");
+    QL_REQUIRE(underlyingLength >= 0.0, "SviParametricVolatility::evaluate(): negative underlying length ("
+                                        << underlyingLength << ") not allowed.");
+    QL_REQUIRE(!calibratedSviParams_.empty(),
+               "SviParametricVolatility::evaluate(): no calibrated SVI parameters available for evaluation.");
+}
+
+Real SsviParametricVolatility::resolveUnderlyingLength(Real underlyingLength) const {
+    if (underlyingLength == Null<Real>()) {
+        return underlyingLength;
     }
-    return SviParametricVolatility::convertToNaturalSvi(timeToExpiry, params, modelVariant_);
+    auto it = std::upper_bound(underlyingLengths_.begin(), underlyingLengths_.end(), underlyingLength);
+    return it == underlyingLengths_.end() ? underlyingLengths_.back() : *it;
+}
+
+Real SsviParametricVolatility::evaluateSsviSlice(
+    Real timeToExpiry, Real underlyingLength, Real strike, Real forward,
+    Real rho, Real theta, Real phi, MarketQuoteType outputMarketQuoteType,
+    Real outputLognormalShift,
+    const QuantLib::ext::optional<QuantLib::Option::Type>& outputOptionType) const {
+    std::vector<Real> params = {0.0, 0.0, rho, theta, phi};
+    Real lognormalShift = lognormalShiftInterpolation_(timeToExpiry, underlyingLength);
+    QL_REQUIRE(strike + lognormalShift > 0.0,
+               "SsviParametricVolatility::evaluateSsviSlice(): shifted strike (" << strike + lognormalShift << ") must be positive.");
+    QL_REQUIRE(forward + lognormalShift > 0.0,
+               "SsviParametricVolatility::evaluateSsviSlice(): shifted forward (" << forward + lognormalShift << ") must be positive.");
+    Real k = std::log((strike + lognormalShift) / (forward + lognormalShift));
+    Real a, b, rhoRaw, m, sigma;
+    std::tie(a, b, rhoRaw, m, sigma) = convertToRawSvi(timeToExpiry, params, ModelVariant::Gatheral2004SviNatural);
+    Real totalVariance = detail::sviTotalVariance(a, b, sigma, rhoRaw, m, k);
+    Real result = std::sqrt(std::max(0.0, totalVariance / timeToExpiry));
+    return convert(result, MarketQuoteType::ShiftedLognormalVolatility, lognormalShift, QuantLib::ext::nullopt,
+                   timeToExpiry, strike, forward, outputMarketQuoteType,
+                   outputLognormalShift == Null<Real>() ? lognormalShift : outputLognormalShift, outputOptionType);
 }
 
 void SsviParametricVolatility::calibrate() {
@@ -1695,7 +1722,7 @@ void SsviParametricVolatility::calibrate() {
             break;
         }
         default:
-             QL_FAIL("SsviParametricVolatilityGlobal::calibrate(): model variant ("
+             QL_FAIL("SsviParametricVolatility::calibrate(): model variant ("
                     << static_cast<int>(modelVariant_) << ") not handled.");
     }
     
@@ -1723,14 +1750,14 @@ void SsviParametricVolatility::storeSsviCalibrationResult(const ModelKey& key, c
 }
 
 SsviParametricVolatilityRobust::SsviParametricVolatilityRobust(
-    const ModelVariant modelVariant, const std::vector<MarketSmile> marketSmiles, const MarketModelType marketModelType,
+    const ModelVariant modelVariant, const std::vector<MarketSmile>& marketSmiles, const MarketModelType marketModelType,
     const MarketQuoteType inputMarketQuoteType, const Handle<YieldTermStructure> discountCurve,
-    const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, ParameterCalibration>>>
+    const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, ParameterCalibration>>>&
         modelParameters,
     const std::map<QuantLib::Real, QuantLib::Real>& modelShifts, const Size maxCalibrationAttempts,
     const Real exitEarlyErrorThreshold, const Real maxAcceptableError, bool enforceNoArbitrage)
     : SsviParametricVolatility(modelVariant, marketSmiles, marketModelType, inputMarketQuoteType, discountCurve,
-                               std::move(modelParameters), modelShifts, maxCalibrationAttempts,
+                               modelParameters, modelShifts, maxCalibrationAttempts,
                                exitEarlyErrorThreshold, maxAcceptableError, enforceNoArbitrage, false) {
     QL_REQUIRE(modelVariant == ModelVariant::CorbettaEtAl2019Essvi,
                "SsviParametricVolatilityRobust::SsviParametricVolatilityRobust(): only robust SSVI model variants are allowed.");
@@ -1738,7 +1765,7 @@ SsviParametricVolatilityRobust::SsviParametricVolatilityRobust(
 }
 
 Constraint SsviParametricVolatilityRobust::getCalibrationConstraint(
-    std::vector<std::pair<Real, ParameterCalibration>> params, bool arbitrageFree) const {
+    const std::vector<std::pair<Real, ParameterCalibration>>& params, bool arbitrageFree) const {
     Size noFreeParams = 0;
     Array fixedValues(params.size());
     std::vector<bool> isFreeParams(params.size(), false);
@@ -1758,7 +1785,7 @@ Constraint SsviParametricVolatilityRobust::getCalibrationConstraint(
         corbettaParameterBounds(isFreeParams, lowerBound, upperBound);
         if (arbitrageFree) {
             return corbettaConstraint(lowerBound, upperBound, fixedValues, isFreeParams,
-                                      findPreviousCorbettaNaturalParams(prevSliceKey(), calibratedModelParams_));
+                                      findPreviousCorbettaNaturalParams(prevSliceKey(), corbettaCalibratedModelParams_));
         }
         return NonhomogeneousBoundaryConstraint(lowerBound, upperBound);
     }
@@ -1777,7 +1804,9 @@ void SsviParametricVolatilityRobust::calibrate() {
 
     switch (modelVariant_) {
         case ModelVariant::CorbettaEtAl2019Essvi: {
-            // Clear previous slice key before forward calibration
+            // Slices are calibrated forward in time. prevSliceKey_ tracks the last
+            // successfully calibrated slice so that applyCorbettaPsiLowerBound() can
+            // enforce the calendar-spread no-arbitrage constraint on psi.
             prevSliceKey_ = QuantLib::ext::nullopt;
 
             initialiseCorbettaAtmGuesses(modelParams, modelLognormalShifts);
@@ -1785,7 +1814,7 @@ void SsviParametricVolatilityRobust::calibrate() {
             break;   
         }
         default:
-             QL_FAIL("SsviParametricVolatilityGlobal::calibrate(): model variant ("
+             QL_FAIL("SsviParametricVolatilityRobust::calibrate(): model variant ("
                     << static_cast<int>(modelVariant_) << ") not handled.");
     }
     
@@ -1796,14 +1825,14 @@ void SsviParametricVolatilityRobust::storeCorbettaCalibrationResult(const ModelK
                                                                     const Real error, const Real shift,
                                                                     const Size noOfAttempts) {
     auto [rho, theta, phi] = SviParametricVolatility::convertToNaturalSvi(key.first, params, modelVariant_);
-    storeCalibrationOutcome(calibratedModelParams_, calibratedSviParams_, calibrationErrors_, lognormalShifts_,
+    storeCalibrationOutcome(corbettaCalibratedModelParams_, calibratedSviParams_, calibrationErrors_, lognormalShifts_,
                             noOfAttempts_, key, params, {rho, theta, phi}, error, shift, noOfAttempts,
                             maxAcceptableError_);
 }
 
 void SsviParametricVolatilityRobust::calibrateCorbettaFixedRhoSlice(
     const MarketSmile& marketSmile, std::vector<ParameterSpec>& params, const ModelKey& key) {
-    applyCorbettaPsiLowerBound(params, prevSliceKey_, calibratedModelParams_, params[2].first,
+    applyCorbettaPsiLowerBound(params, prevSliceKey_, corbettaCalibratedModelParams_, params[2].first,
                                "SsviParametricVolatilityRobust::calibrate()");
     auto [resultParams, error, shift, noOfAttempts] = calibrateModelParameters(marketSmile, params);
     storeCorbettaCalibrationResult(key, resultParams, error, shift, noOfAttempts);
@@ -1819,6 +1848,8 @@ void SsviParametricVolatilityRobust::calibrateCorbettaRhoSlice(
     Real bestSliceError = QL_MAX_REAL;
 
     // Sweep rho on a shrinking grid and keep the best calibration seen across all passes.
+    // Each pass tests candidateCount equally spaced rho values, then narrows the window
+    // around the best rho found in that pass and repeats until rhoStep < 0.0001.
     while (rhoStep > 0.0001) {
         for (Size j = 0; j < candidateCount; ++j) {
             rhoCandidates[j] = rhoLower + (j + 1) * rhoStep;
@@ -1829,7 +1860,7 @@ void SsviParametricVolatilityRobust::calibrateCorbettaRhoSlice(
         for (auto rho : rhoCandidates) {
             params[2].first = rho;
             params[2].second = ParameterCalibration::Fixed;
-            applyCorbettaPsiLowerBound(params, prevSliceKey_, calibratedModelParams_, rho,
+            applyCorbettaPsiLowerBound(params, prevSliceKey_, corbettaCalibratedModelParams_, rho,
                                        "SsviParametricVolatilityRobust::calibrate()");
 
             auto [resultParams, error, shift, noOfAttempts] = calibrateModelParameters(marketSmile, params);
@@ -1895,54 +1926,40 @@ Real SsviParametricVolatilityRobust::evaluate(const Real timeToExpiry, const Rea
                                               const Real forward, const MarketQuoteType outputMarketQuoteType,
                                               const Real outputLognormalShift,
                                               const QuantLib::ext::optional<QuantLib::Option::Type> outputOptionType) const {
-    QL_REQUIRE(timeToExpiry >= 0.0, "SsviParametricVolatilityRobust::evaluate(): negative time to expiry ("
-                                        << timeToExpiry << ") not allowed.");
-    QL_REQUIRE(underlyingLength >= 0.0, "SsviParametricVolatilityRobust::evaluate(): negative underlying length ("
-                                        << underlyingLength << ") not allowed.");
-    QL_REQUIRE(strike >= 0.0, "SsviParametricVolatilityRobust::evaluate(): negative strike ("
-                                        << strike << ") not allowed.");
-    QL_REQUIRE(forward > 0.0, "SsviParametricVolatilityRobust::evaluate(): non positive forward ("
-                                        << forward << ") not allowed.");
-    QL_REQUIRE(!calibratedSviParams_.empty(),
-               "SsviParametricVolatilityRobust::evaluate(): no calibrated SVI parameters available for evaluation.");
+    validateEvaluateInputs(timeToExpiry, underlyingLength, strike, forward);
+    Real uLength = resolveUnderlyingLength(underlyingLength);
 
-    // we don't interpolate the svi parameters in underlying length, but take the last available slice
-    Real uLength;
-    if (underlyingLength == Null<Real>()) {
-        uLength = underlyingLength;
-    } else {
-        auto it = std::upper_bound(underlyingLengths_.begin(), underlyingLengths_.end(), underlyingLength);
-        uLength = it == underlyingLengths_.end() ? underlyingLengths_.back() : *it;
-    }
-
-    std::vector<Real> params;
+    Real rho, theta, phi;
     switch (modelVariant_) {
     case ModelVariant::CorbettaEtAl2019Essvi: {
-        Real rho, theta, phi;
-        auto firstParam = calibratedModelParams_.find(std::make_pair(timeToExpiries_.front(), uLength));
-        auto lastParam = calibratedModelParams_.find(std::make_pair(timeToExpiries_.back(), uLength));
-        QL_REQUIRE(firstParam != calibratedModelParams_.end(),
+        auto firstParam = corbettaCalibratedModelParams_.find(std::make_pair(timeToExpiries_.front(), uLength));
+        auto lastParam = corbettaCalibratedModelParams_.find(std::make_pair(timeToExpiries_.back(), uLength));
+        QL_REQUIRE(firstParam != corbettaCalibratedModelParams_.end(),
             "SsviParametricVolatilityRobust::evaluate(): no calibrated model parameters found for ("
                     << timeToExpiries_.front() << ", " << uLength << ").");
-        QL_REQUIRE(lastParam != calibratedModelParams_.end(),
+        QL_REQUIRE(lastParam != corbettaCalibratedModelParams_.end(),
             "SsviParametricVolatilityRobust::evaluate(): no calibrated model parameters found for ("
                     << timeToExpiries_.back() << ", " << uLength << ").");
         auto lambda = timeToExpiry / timeToExpiries_.front();
 
+        // Corbetta et al. (2019) time extrapolation: before the first slice, scale
+        // psi and theta linearly in t; beyond the last slice, extrapolate theta with
+        // the slope between the two final slices, keeping rho and phi from the last.
         if (lambda < 1.0) {
             Real kStar = firstParam->second[0];
             Real thetaStar = firstParam->second[1];
             rho = firstParam->second[2];
             Real psi = lambda * firstParam->second[3];
             theta = lambda * (thetaStar - rho * psi * kStar);
+            theta = std::max(theta, 1E-10);
             phi = psi / theta;
         } else if (timeToExpiry > timeToExpiries_.back()) {
             QL_REQUIRE(timeToExpiries_.size() >= 2,
                        "SsviParametricVolatilityRobust::evaluate(): cannot extrapolate beyond last time to expiry "
                        "with only one calibrated slice.");
             auto it1 = timeToExpiries_.end() - 2;
-            auto secondLastParam = calibratedModelParams_.find(std::make_pair(*it1, uLength));
-            QL_REQUIRE(secondLastParam != calibratedModelParams_.end(),
+            auto secondLastParam = corbettaCalibratedModelParams_.find(std::make_pair(*it1, uLength));
+            QL_REQUIRE(secondLastParam != corbettaCalibratedModelParams_.end(),
                        "SsviParametricVolatilityRobust::evaluate(): no calibrated model parameters found for ("
                        << *it1 << ", " << uLength << ").");
             auto kStarN = lastParam->second[0];
@@ -1958,6 +1975,7 @@ Real SsviParametricVolatilityRobust::evaluate(const Real timeToExpiry, const Rea
             auto thetaN = thetaStarN - rhoN * psiN * kStarN;
             auto thetaNm1 = thetaStarNm1 - rhoNm1 * psiNm1 * kStarNm1;
             rho = rhoN;
+            thetaN = std::max(thetaN, 1E-10);
             phi = psiN / thetaN;
             Real lambda  = (thetaN - thetaNm1) / (tN - tNm1);
             theta = thetaN + lambda * (timeToExpiry - tN);
@@ -1966,37 +1984,26 @@ Real SsviParametricVolatilityRobust::evaluate(const Real timeToExpiry, const Rea
             theta = sviParametersInterpolations_[1](timeToExpiry, uLength);
             phi = sviParametersInterpolations_[2](timeToExpiry, uLength);
         }
-        params = { 0.0, 0.0, rho, theta, phi };
         break;
     }
     default:
-        QL_FAIL("SsviParametricVolatilityGlobal::evaluate(): model variant ("
+        QL_FAIL("SsviParametricVolatilityRobust::evaluate(): model variant ("
                 << static_cast<int>(modelVariant_) << ") not handled.");
     }
 
-    Real totalVariance;
-    Real lognormalShift = lognormalShiftInterpolation_(timeToExpiry, underlyingLength);
-    Real k = std::log((std::max(strike, 1E-6) + lognormalShift) / (forward + lognormalShift));
-    Real a, b, rho, m, sigma;
-    std::tie(a, b, rho, m, sigma) = convertToRawSvi(timeToExpiry, params, ModelVariant::Gatheral2004SviNatural);
-    totalVariance = detail::sviTotalVariance(a, b, sigma, rho, m, k);
-
-    Real result = std::sqrt(std::max(0.0, totalVariance / timeToExpiry));
-    return convert(result, MarketQuoteType::ShiftedLognormalVolatility, lognormalShift, QuantLib::ext::nullopt, timeToExpiry, strike, forward,
-                   outputMarketQuoteType, outputLognormalShift == Null<Real>() ? lognormalShift : outputLognormalShift,
-                   outputOptionType);
-
+    return evaluateSsviSlice(timeToExpiry, underlyingLength, strike, forward, rho, theta, phi,
+                             outputMarketQuoteType, outputLognormalShift, outputOptionType);
 }
 
 SsviParametricVolatilityGlobal::SsviParametricVolatilityGlobal(
-    const ModelVariant modelVariant, const std::vector<MarketSmile> marketSmiles, const MarketModelType marketModelType,
+    const ModelVariant modelVariant, const std::vector<MarketSmile>& marketSmiles, const MarketModelType marketModelType,
     const MarketQuoteType inputMarketQuoteType, const Handle<YieldTermStructure> discountCurve,
-    const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, ParameterCalibration>>>
+    const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, ParameterCalibration>>>&
         modelParameters,
     const std::map<QuantLib::Real, QuantLib::Real>& modelShifts, const Size maxCalibrationAttempts,
     const Real exitEarlyErrorThreshold, const Real maxAcceptableError, bool enforceNoArbitrage)
     : SsviParametricVolatility(modelVariant, marketSmiles, marketModelType, inputMarketQuoteType, discountCurve,
-                               std::move(modelParameters), modelShifts, maxCalibrationAttempts,
+                               modelParameters, modelShifts, maxCalibrationAttempts,
                                exitEarlyErrorThreshold, maxAcceptableError, enforceNoArbitrage, false) {
     QL_REQUIRE(modelVariant == ModelVariant::HendriksMartini2017EssviFirstPowerLaw ||
                modelVariant == ModelVariant::HendriksMartini2017EssviSecondPowerLaw ||
@@ -2017,64 +2024,7 @@ SsviParametricVolatilityGlobal::calibrateModelParametersGlobal(
         if (p.second == ParameterCalibration::Calibrated)
             ++noFreeParams;
 
-    struct TargetFunction : public QuantLib::CostFunction {
-        std::vector<Real> forward_;
-        std::vector<Real> timeToExpiry_;
-        std::vector<Real> lognormalShift_;
-        std::vector<std::vector<Real>> strikes_;
-        std::vector<std::vector<QuantLib::Option::Type>> optionTypes_;
-        std::vector<Real> marketQuotes_;
-        std::vector<Real> weight_;
-        ModelVariant modelVariant_;
-        std::vector<std::function<Real(Real)>> paramTransform_; // whether to apply logit transform to the parameter
-        std::vector<std::function<Real(Real)>> paramInverseTransform_; // whether to apply logit transform to the parameter
-        std::function<std::vector<Real>(const std::vector<Real>&,
-                                        const std::vector<Real>&,
-                                        const std::vector<Real>&,
-                                        const std::vector<Real>&,
-                                        const std::vector<std::vector<Real>>&,
-                                        const std::vector<std::vector<QuantLib::Option::Type>>&,
-                                        const std::vector<Real>&)>
-            evalSvi_;
-        std::vector<std::pair<Real, ParameterCalibration>> params_;
-
-        std::vector<Real> evalSvi(const Array& x) const {
-            std::vector<Real> params(params_.size());
-            for (Size i = 0, j = 0; i < params_.size(); ++i) {
-                if (params_[i].second != ParametricVolatility::ParameterCalibration::Calibrated) {
-                    params[i] = params_[i].first;
-                } else {
-                    // Apply inverse logit transformation for parameters that require it
-                    if (paramInverseTransform_[i]) {
-                        params[i] = paramInverseTransform_[i](x[j]);
-                    } else {
-                        params[i] = x[j];
-                    }
-                    ++j;
-                }
-            }
-            return evalSvi_(params, forward_, timeToExpiry_, lognormalShift_, strikes_,
-                            optionTypes_, lognormalShift_);
-        }
-
-        Array values(const Array& x) const override {
-            auto svi = evalSvi(x);
-            Array result(svi.size());
-            std::vector<Real> resultVec(svi.size());
-            for (Size i = 0; i < svi.size(); ++i) {
-                result[i] = (svi[i] - marketQuotes_[i]) * weight_[i];
-                resultVec[i] = result[i];
-            }
-
-            return result;
-        }
-
-        Real value(const Array& x) const override {
-            Array v = values(x);
-            std::transform(v.begin(), v.end(), v.begin(), [](Real x) -> Real { return x*x; });
-            return std::accumulate(v.begin(), v.end(), Real(0.0)) / Real(2.0);
-        }
-    };
+    using TargetFunction = GlobalTargetFunction;
 
     TargetFunction t;
 
@@ -2111,25 +2061,29 @@ SsviParametricVolatilityGlobal::calibrateModelParametersGlobal(
         case ModelVariant::HendriksMartini2017EssviSecondPowerLaw:
         case ModelVariant::Mingone2022EssviGJ:
         case ModelVariant::Mingone2022EssviMM: {
+            // Weight by 1/vega (same rationale as slice calibration above).
             for (Size i = 0; i < marketSmile.marketQuotes.size(); ++i) {
-                Real k = std::log((std::max(marketSmile.strikes[i], 1E-6) + modelLognormalShift) /
+                Real k = std::log((marketSmile.strikes[i] + modelLognormalShift) /
                                   (marketSmile.forward + modelLognormalShift));
                 Real vol = convert(marketSmile.marketQuotes[i], inputMarketQuoteType_, marketSmile.lognormalShift,
                                    marketSmile.optionTypes.empty() ? QuantLib::ext::nullopt
                                                                    : QuantLib::ext::optional<Option::Type>(marketSmile.optionTypes[i]),
                                    marketSmile.timeToExpiry, marketSmile.strikes[i], marketSmile.forward,
                                    MarketQuoteType::ShiftedLognormalVolatility, modelLognormalShift, QuantLib::ext::nullopt);
-                Real volSqrtT = vol * std::sqrt(marketSmile.timeToExpiry);
+                Real volSqrtT = std::max(vol * std::sqrt(marketSmile.timeToExpiry), 1E-10);
                 Real d1 = volSqrtT * 0.5 - k / volSqrtT;
                 Real vega = discountCurve_->discount(marketSmile.timeToExpiry) * marketSmile.forward *
                             (1.0 / std::sqrt(2.0 * M_PI)) * std::exp(-0.5 * d1 * d1) * std::sqrt(marketSmile.timeToExpiry);
                 t.weight_.push_back(1.0 / (vega + 1E-12)); // avoid division by zero
             }
-            t.paramTransform_.push_back(nullptr); // rho parameter
-            t.paramTransform_.push_back(nullptr); // a parameter
-            t.paramTransform_.push_back([](Real x) { return std::log(x / (1.0 - x)); });  // c parameter
-            t.paramInverseTransform_.push_back(nullptr); // rho parameter
-            t.paramInverseTransform_.push_back(nullptr); // a parameter
+            t.paramTransform_.push_back([](Real x) { return x; }); // rho parameter
+            t.paramTransform_.push_back([](Real x) { return x; }); // a parameter
+            t.paramTransform_.push_back([](Real x) {
+                Real cx = std::max(1E-10, std::min(x, 1.0 - 1E-10));
+                return std::log(cx / (1.0 - cx));
+            });  // c parameter
+            t.paramInverseTransform_.push_back([](Real x) { return x; }); // rho parameter
+            t.paramInverseTransform_.push_back([](Real x) { return x; }); // a parameter
             t.paramInverseTransform_.push_back([](Real x) { return 1.0 / (1.0 + std::exp(-x)); });  // c parameter
             break;
         }
@@ -2147,14 +2101,14 @@ SsviParametricVolatilityGlobal::calibrateModelParametersGlobal(
                         const std::vector<std::vector<QuantLib::Option::Type>>& outputOptionTypes,
                         const std::vector<Real>& outputLognormalShift) {
 
-        auto [rho, theta, phi] = convertToNaturalSvi(params, modelVariant_);
+        auto [rho, theta, phi] = convertToNaturalSviGlobal(params, modelVariant_);
         Size n = forward.size();
 
         std::vector<Real> svi;
         for (Size i = 0; i < n; ++i) {
             Real psi  = phi[i] * theta[i];
             for (Size j = 0; j < strikes[i].size(); ++j) {
-                Real k = std::log((std::max(strikes[i][j], 1E-6) + lognormalShift[i]) / (forward[i] + lognormalShift[i]));
+                Real k = std::log((strikes[i][j] + lognormalShift[i]) / (forward[i] + lognormalShift[i]));
                 Real totalVariance = psi * k + theta[i] * rho[i];
                 totalVariance *= totalVariance;
                 totalVariance = std::sqrt(totalVariance + theta[i] * theta[i] * (1 - rho[i] * rho[i]));
@@ -2194,12 +2148,7 @@ SsviParametricVolatilityGlobal::calibrateModelParametersGlobal(
             // first attempt uses given initial model parameters
             for (Size i = 0, j = 0; i < t.params_.size(); ++i) {
                 if (params[i].second == ParametricVolatility::ParameterCalibration::Calibrated) {
-                    // Apply logit transformation for c parameters to unbounded space
-                    if (t.paramTransform_[i]) {
-                        guess[j++] = t.paramTransform_[i](t.params_[i].first);
-                    } else {
-                        guess[j++] = t.params_[i].first;
-                    }
+                    guess[j++] = t.paramTransform_[i](t.params_[i].first);
                 }
             }
         } else {
@@ -2207,12 +2156,7 @@ SsviParametricVolatilityGlobal::calibrateModelParametersGlobal(
             auto g = getGuess(params, haltonRsg.nextSequence().value, t.forward_[0], t.lognormalShift_[0]);
             for (Size i = 0, j = 0; i < g.size(); ++i) {
                 if (params[i].second == ParametricVolatility::ParameterCalibration::Calibrated) {
-                    // Apply logit transformation for c parameters to unbounded space
-                    if (t.paramTransform_[i]) {
-                        guess[j++] = t.paramTransform_[i](g[i]);
-                    } else {
-                        guess[j++] = g[i];
-                    }
+                    guess[j++] = t.paramTransform_[i](g[i]);
                 }
             }
         }
@@ -2232,12 +2176,7 @@ SsviParametricVolatilityGlobal::calibrateModelParametersGlobal(
                 if (params[i].second != ParametricVolatility::ParameterCalibration::Calibrated) {
                     bestResult[i] = t.params_[i].first;
                 } else {
-                    if (t.paramInverseTransform_[i]) {
-                        // Apply inverse logit transformation to get back to original space
-                        bestResult[i] = t.paramInverseTransform_[i](problem.currentValue()[j]);
-                    } else {
-                        bestResult[i] = problem.currentValue()[j];
-                    }
+                    bestResult[i] = t.paramInverseTransform_[i](problem.currentValue()[j]);
                     ++j;
                 }
             }
@@ -2364,7 +2303,7 @@ void SsviParametricVolatilityGlobal::storeGlobalCalibrationResults(const std::ve
                                                                    const Size noOfAttempts) {
     const auto paramSize = expectedModelParametersSize();
     Size i = 0;
-    auto [rho, theta, phi] = convertToNaturalSvi(params, modelVariant_);
+    auto [rho, theta, phi] = convertToNaturalSviGlobal(params, modelVariant_);
     for (const auto& marketSmile : marketSmiles_) {
         const auto key = modelKey(marketSmile);
         std::vector<Real> localParams(params.begin() + i * paramSize, params.begin() + (i + 1) * paramSize);
@@ -2376,7 +2315,7 @@ void SsviParametricVolatilityGlobal::storeGlobalCalibrationResults(const std::ve
 }
 
 std::tuple<std::vector<Real>, std::vector<Real>, std::vector<Real>>
-SsviParametricVolatilityGlobal::convertToNaturalSvi(const std::vector<Real>& params, ModelVariant modelVariant) {
+SsviParametricVolatilityGlobal::convertToNaturalSviGlobal(const std::vector<Real>& params, ModelVariant modelVariant) {
     return SviModelTraits::toNaturalSviGlobal(params, modelVariant);
 }
 
@@ -2384,31 +2323,13 @@ Real SsviParametricVolatilityGlobal::evaluate(const Real timeToExpiry, const Rea
                                               const Real forward, const MarketQuoteType outputMarketQuoteType,
                                               const Real outputLognormalShift,
                                               const QuantLib::ext::optional<QuantLib::Option::Type> outputOptionType) const {
-    QL_REQUIRE(timeToExpiry >= 0.0, "SsviParametricVolatilityGlobal::evaluate(): negative time to expiry ("
-                                        << timeToExpiry << ") not allowed.");
-    QL_REQUIRE(underlyingLength >= 0.0, "SsviParametricVolatilityGlobal::evaluate(): negative underlying length ("
-                                        << underlyingLength << ") not allowed.");
-    QL_REQUIRE(strike >= 0.0, "SsviParametricVolatilityGlobal::evaluate(): negative strike ("
-                                        << strike << ") not allowed.");
-    QL_REQUIRE(forward > 0.0, "SsviParametricVolatilityGlobal::evaluate(): non positive forward ("
-                                        << forward << ") not allowed.");
-    QL_REQUIRE(!calibratedSviParams_.empty(),
-               "SsviParametricVolatilityGlobal::evaluate(): no calibrated SVI parameters available for evaluation.");
+    validateEvaluateInputs(timeToExpiry, underlyingLength, strike, forward);
+    Real uLength = resolveUnderlyingLength(underlyingLength);
 
-    // we don't interpolate the svi parameters in underlying length, but take the last available slice
-    Real uLength;
-    if (underlyingLength == Null<Real>()) {
-        uLength = underlyingLength;
-    } else {
-        auto it = std::upper_bound(underlyingLengths_.begin(), underlyingLengths_.end(), underlyingLength);
-        uLength = it == underlyingLengths_.end() ? underlyingLengths_.back() : *it;
-    }
-
-    std::vector<Real> params;
+    Real rho, theta, phi;
     switch (modelVariant_) {
     case ModelVariant::Mingone2022EssviGJ:
     case ModelVariant::Mingone2022EssviMM: {
-        Real rho, theta, phi;
         auto firstParam = calibratedSviParams_.find(std::make_pair(timeToExpiries_.front(), uLength));
         auto lastParam = calibratedSviParams_.find(std::make_pair(timeToExpiries_.back(), uLength));
         QL_REQUIRE(firstParam != calibratedSviParams_.end(),
@@ -2445,7 +2366,6 @@ Real SsviParametricVolatilityGlobal::evaluate(const Real timeToExpiry, const Rea
             theta = sviParametersInterpolations_[1](timeToExpiry, uLength);
             phi = sviParametersInterpolations_[2](timeToExpiry, uLength);
         }
-        params = { 0.0, 0.0, rho, theta, phi };
         break;
     }
     default:
@@ -2453,18 +2373,8 @@ Real SsviParametricVolatilityGlobal::evaluate(const Real timeToExpiry, const Rea
                 << static_cast<int>(modelVariant_) << ") not handled.");
     }
 
-    Real totalVariance;
-    Real lognormalShift = lognormalShiftInterpolation_(timeToExpiry, underlyingLength);
-    Real k = std::log((std::max(strike, 1E-6) + lognormalShift) / (forward + lognormalShift));
-    Real a, b, rho, m, sigma;
-    std::tie(a, b, rho, m, sigma) = convertToRawSvi(timeToExpiry, params, ModelVariant::Gatheral2004SviNatural);
-    totalVariance = detail::sviTotalVariance(a, b, sigma, rho, m, k);
-
-    Real result = std::sqrt(std::max(0.0, totalVariance / timeToExpiry));
-    return convert(result, MarketQuoteType::ShiftedLognormalVolatility, lognormalShift, QuantLib::ext::nullopt, timeToExpiry, strike, forward,
-                   outputMarketQuoteType, outputLognormalShift == Null<Real>() ? lognormalShift : outputLognormalShift,
-                   outputOptionType);
-
+    return evaluateSsviSlice(timeToExpiry, underlyingLength, strike, forward, rho, theta, phi,
+                             outputMarketQuoteType, outputLognormalShift, outputOptionType);
 }
 
 } // namespace QuantExt

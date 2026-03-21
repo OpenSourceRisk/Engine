@@ -45,10 +45,10 @@ public:
           is set to the input market smiles shift
     */
     SabrParametricVolatility(
-        const ModelVariant modelVariant, const std::vector<MarketSmile> marketSmiles,
+        const ModelVariant modelVariant, const std::vector<MarketSmile>& marketSmiles,
         const MarketModelType marketModelType, const MarketQuoteType inputMarketQuoteType,
         const QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve,
-        const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, ParameterCalibration>>>
+        const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, ParameterCalibration>>>&
             modelParameters = {},
         const std::map<QuantLib::Real, QuantLib::Real>& modelShift = {},
         const QuantLib::Size maxCalibrationAttempts = 10, const QuantLib::Real exitEarlyErrorThreshold = 0.005,

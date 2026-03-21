@@ -31,7 +31,8 @@ namespace SviModelTraits {
 using namespace QuantLib;
 
 namespace {
-// Calibration guess constants (match SviParametricVolatility private statics)
+// Small epsilon to keep calibration guesses away from boundary singularities,
+// eps2 caps correlation |rho| < 1, max_nu bounds the vol-of-vol guess range.
 constexpr double eps1    = .0000001;
 constexpr double eps2    = .9999;
 constexpr double max_nu  = 2.0;
@@ -413,6 +414,9 @@ calibrationConstraint(ModelVariant mv,
             }
         }
         if (arbitrageFree) {
+            // Gatheral & Jacquier (2014) conditions 3 & 4 for the power-law SSVI:
+            // each theta[i] must stay below bounds derived from eta, gamma, rho to
+            // ensure no butterfly arbitrage across the surface.
             class PowerLawConstraint : public Constraint {
                 class Impl final : public Constraint::Impl {
                 public:
@@ -540,6 +544,9 @@ toRawSvi(Real timeToExpiry, const std::vector<Real>& params, ModelVariant mv) {
         break;
     }
     case ModelVariant::Gatheral2004SviJw: {
+        // Convert Jump-Wings (JW) params {v, phiJw, p, c, vTilda} to raw SVI {a, b, rho, m, sigma}.
+        // See Gatheral & Jacquier (2014), "Arbitrage-free SVI volatility surfaces", Section 3.3.
+        // Three branches handle the m ~ 0 and denom ~ 0 edge cases for numerical stability.
         Real v       = params[0];
         Real phiJw   = params[1];
         Real p       = params[2];
@@ -805,6 +812,10 @@ toNaturalSviGlobal(const std::vector<Real>& params, ModelVariant mv) {
                 break;
             }
             case ModelVariant::Mingone2022EssviMM: {
+                // Compute per-slice upper bound f[i] on phi*theta using the Martini-Mingone (MM)
+                // no-butterfly-arbitrage condition. Finds the minimum of a rational function of l
+                // over [lMin, lMax] via 80-point log-spaced grid search + Brent refinement at sign changes.
+                // N, Np, Npp are the function and its first two derivatives w.r.t. l.
                 const Real sqrtOneMinusRho2     = std::sqrt(std::max(0.0, 1.0 - absRho * absRho));
                 const Real sqrtOneMinusRho2Safe = std::max(sqrtOneMinusRho2, 1e-12);
                 const Real l2   = 1.0 / std::tan(std::acos(-absRho) / 3.0);

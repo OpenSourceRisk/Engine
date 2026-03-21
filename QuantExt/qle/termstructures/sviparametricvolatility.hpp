@@ -44,16 +44,17 @@ public:
         Mingone2022EssviMM = 9, // Extended Surface SVI with global calibration and Martini Mingone condition, arbitrage-free
     };
 
-    /*! - modelParameters are given by (tte, underlyingLen) as a vector of parameter values and whether the values are
-         fixed
+    /*! - modelParameters are keyed by (timeToExpiry, underlyingLength) where underlyingLength
+          is an optional second dimension (e.g. swap tenor for swaptions, Null<Real>() for equities)
+        - each value is a vector of parameter values and whether each is fixed or calibrated
         - modelShift is optional and defines the lognormal shift used within the model (if applicable), if not given, it
           is set to the input market smiles shift
     */
     SviParametricVolatility(
-        const ModelVariant modelVariant, const std::vector<MarketSmile> marketSmiles,
+        const ModelVariant modelVariant, const std::vector<MarketSmile>& marketSmiles,
         const MarketModelType marketModelType, const MarketQuoteType inputMarketQuoteType,
         const QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve,
-        const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, ParameterCalibration>>>
+        const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, ParameterCalibration>>>&
             modelParameters = {},
         const std::map<QuantLib::Real, QuantLib::Real>& modelShift = {},
         const QuantLib::Size maxCalibrationAttempts = 10, const QuantLib::Real exitEarlyErrorThreshold = 0.005,
@@ -94,25 +95,25 @@ public:
     QuantLib::Real globalVolRmseTotalVariance() const { return globalVolRmseTotalVariance_; }
 
     struct CalibrationResult {
-        QuantLib::Real timeToExpiry;
-        QuantLib::Real underlyingLength;
-        QuantLib::Real forward;
-        std::vector<Real> strikes;           // strikes
-        std::vector<Real> marketInput;       // the market input data
-        std::vector<Real> calibrationTarget; // the converted data against which the model is calibrated
-        std::vector<Real> calibrationResult; // the best model fit
-        QuantLib::Real error;                // the calibration error
-        bool accepted;                       // true if isInterpolated = false
+        QuantLib::Real timeToExpiry     = QuantLib::Null<QuantLib::Real>();
+        QuantLib::Real underlyingLength = QuantLib::Null<QuantLib::Real>();
+        QuantLib::Real forward          = QuantLib::Null<QuantLib::Real>();
+        std::vector<Real> strikes;            // strikes
+        std::vector<Real> marketInput;        // the market input data
+        std::vector<Real> calibrationTarget;  // the converted data against which the model is calibrated
+        std::vector<Real> calibrationResult;  // the best model fit
+        QuantLib::Real error = QuantLib::Null<QuantLib::Real>();  // the calibration error
+        bool accepted        = false;         // true if isInterpolated = false
     };
 
     const std::vector<CalibrationResult>& calibrationResults() const { return calibrationResults_; }
 
 protected:
     SviParametricVolatility(
-        const ModelVariant modelVariant, const std::vector<MarketSmile> marketSmiles,
+        const ModelVariant modelVariant, const std::vector<MarketSmile>& marketSmiles,
         const MarketModelType marketModelType, const MarketQuoteType inputMarketQuoteType,
         const QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve,
-        const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, ParameterCalibration>>>
+        const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, ParameterCalibration>>>&
             modelParameters,
         const std::map<QuantLib::Real, QuantLib::Real>& modelShift,
         QuantLib::Size maxCalibrationAttempts, QuantLib::Real exitEarlyErrorThreshold,
@@ -122,7 +123,7 @@ protected:
 
     ModelVariant modelVariant_;
 
-    virtual QuantLib::Constraint getCalibrationConstraint(std::vector<std::pair<Real, ParameterCalibration>> params,
+    virtual QuantLib::Constraint getCalibrationConstraint(const std::vector<std::pair<Real, ParameterCalibration>>& params,
                                                           bool arbitrageFree) const;
     std::vector<Real> getGuess(const std::vector<std::pair<Real, ParametricVolatility::ParameterCalibration>>& params,
                                const std::vector<Real>& randomSeq, const Real forward, const Real lognormalShift) const;
@@ -179,14 +180,10 @@ protected:
 
     void calculate();
     void computeVolRmseMetrics();
+    void validateEvaluateInputs(Real timeToExpiry, Real underlyingLength, Real strike, Real forward) const;
+
     virtual void setDefaultParameters();
     virtual void calibrate();
-
-private:
-    static constexpr double eps1 = .0000001;
-    static constexpr double eps2 = .9999;
-    static constexpr double max_nvol_equiv = 0.02;
-    static constexpr double max_nu = 2.0;
 
     virtual std::vector<Real> evaluateSvi(const std::vector<Real>& params, const Real forward,
                                           const Real timeToExpiry, const Real lognormalShift,
@@ -194,33 +191,41 @@ private:
                                           const MarketQuoteType outputMarketQuoteType,
                                           const std::vector<QuantLib::Option::Type>& outputOptionTypes,
                                           const Real outputLognormalShift) const;
-
 };
 
 class SsviParametricVolatility : public SviParametricVolatility {
 public:
     SsviParametricVolatility(
-        const ModelVariant modelVariant, const std::vector<MarketSmile> marketSmiles,
+        const ModelVariant modelVariant, const std::vector<MarketSmile>& marketSmiles,
         const MarketModelType marketModelType, const MarketQuoteType inputMarketQuoteType,
         const QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve,
-        const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, ParameterCalibration>>>
+        const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, ParameterCalibration>>>&
             modelParameters = {},
         const std::map<QuantLib::Real, QuantLib::Real>& modelShift = {},
         const QuantLib::Size maxCalibrationAttempts = 10, const QuantLib::Real exitEarlyErrorThreshold = 0.005,
         const QuantLib::Real maxAcceptableError = 0.05, bool enforceNoArbitrage = true);
 
+    QuantLib::Real evaluate(
+        const QuantLib::Real timeToExpiry, const QuantLib::Real underlyingLength, const QuantLib::Real strike,
+        const QuantLib::Real forward, const MarketQuoteType outputMarketQuoteType,
+        const QuantLib::Real outputLognormalShift = QuantLib::Null<QuantLib::Real>(),
+        const QuantLib::ext::optional<QuantLib::Option::Type> outputOptionType = QuantLib::ext::nullopt) const override;
+
+    // calibrate model parameters for a single market smile
+    std::tuple<std::vector<Real>, Real, Real, QuantLib::Size>
+    calibrateModelParameters(const MarketSmile& marketSmile,
+                             const std::vector<std::pair<Real, ParameterCalibration>>& params) const override;
+
 protected:
     SsviParametricVolatility(
-        const ModelVariant modelVariant, const std::vector<MarketSmile> marketSmiles,
+        const ModelVariant modelVariant, const std::vector<MarketSmile>& marketSmiles,
         const MarketModelType marketModelType, const MarketQuoteType inputMarketQuoteType,
         const QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve,
-        const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, ParameterCalibration>>>
+        const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, ParameterCalibration>>>&
             modelParameters,
         const std::map<QuantLib::Real, QuantLib::Real>& modelShift,
         const QuantLib::Size maxCalibrationAttempts, const QuantLib::Real exitEarlyErrorThreshold,
         const QuantLib::Real maxAcceptableError, bool enforceNoArbitrage, bool);
-
-public:
 
     std::vector<Real> evaluateSvi(const std::vector<Real>& params, const Real forward,
                                   const Real timeToExpiry, const Real lognormalShift,
@@ -229,18 +234,6 @@ public:
                                   const std::vector<QuantLib::Option::Type>& outputOptionTypes,
                                   const Real outputLognormalShift) const override;
 
-    virtual QuantLib::Real evaluate(
-        const QuantLib::Real timeToExpiry, const QuantLib::Real underlyingLength, const QuantLib::Real strike,
-        const QuantLib::Real forward, const MarketQuoteType outputMarketQuoteType,
-        const QuantLib::Real outputLognormalShift = QuantLib::Null<QuantLib::Real>(),
-        const QuantLib::ext::optional<QuantLib::Option::Type> outputOptionType = QuantLib::ext::nullopt) const override;
-    
-    // calibrate model parameters for a single market smile
-    std::tuple<std::vector<Real>, Real, Real, QuantLib::Size>
-    calibrateModelParameters(const MarketSmile& marketSmile,
-                             const std::vector<std::pair<Real, ParameterCalibration>>& params) const override;
-
-protected:
     virtual std::tuple<std::vector<Real>, Real, std::vector<Real>, QuantLib::Size>
     calibrateModelParametersGlobal(const std::vector<MarketSmile>& marketSmiles,
                                    const std::vector<std::pair<Real, ParameterCalibration>>& params) const;
@@ -254,33 +247,35 @@ protected:
                                     QuantLib::Real error, QuantLib::Real shift,
                                     QuantLib::Size noOfAttempts);
 
-private:
-    std::tuple<Real, Real, Real> convertToNaturalSvi(
-        const Real timeToExpiry, const Real underlyingLength) const;
+    Real resolveUnderlyingLength(Real underlyingLength) const;
+    Real evaluateSsviSlice(Real timeToExpiry, Real underlyingLength, Real strike, Real forward,
+                           Real rho, Real theta, Real phi, MarketQuoteType outputMarketQuoteType,
+                           Real outputLognormalShift,
+                           const QuantLib::ext::optional<QuantLib::Option::Type>& outputOptionType) const;
 };
 
 class SsviParametricVolatilityRobust : public SsviParametricVolatility {
 public:
     SsviParametricVolatilityRobust(
-        const ModelVariant modelVariant, const std::vector<MarketSmile> marketSmiles,
+        const ModelVariant modelVariant, const std::vector<MarketSmile>& marketSmiles,
         const MarketModelType marketModelType, const MarketQuoteType inputMarketQuoteType,
         const QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve,
-        const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, ParameterCalibration>>>
+        const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, ParameterCalibration>>>&
             modelParameters = {},
         const std::map<QuantLib::Real, QuantLib::Real>& modelShift = {},
         const QuantLib::Size maxCalibrationAttempts = 10, const QuantLib::Real exitEarlyErrorThreshold = 0.005,
         const QuantLib::Real maxAcceptableError = 0.05, bool enforceNoArbitrage = true
     );
 
-    virtual QuantLib::Real evaluate(
+    QuantLib::Real evaluate(
         const QuantLib::Real timeToExpiry, const QuantLib::Real underlyingLength, const QuantLib::Real strike,
         const QuantLib::Real forward, const MarketQuoteType outputMarketQuoteType,
         const QuantLib::Real outputLognormalShift = QuantLib::Null<QuantLib::Real>(),
         const QuantLib::ext::optional<QuantLib::Option::Type> outputOptionType = QuantLib::ext::nullopt) const override;
 
 protected:
-    mutable std::map<std::pair<Real, Real>, std::vector<Real>> calibratedModelParams_;
-    QuantLib::Constraint getCalibrationConstraint(std::vector<std::pair<Real, ParameterCalibration>> params,
+    mutable std::map<std::pair<Real, Real>, std::vector<Real>> corbettaCalibratedModelParams_;
+    QuantLib::Constraint getCalibrationConstraint(const std::vector<std::pair<Real, ParameterCalibration>>& params,
                                                   bool arbitrageFree) const override;
 
     // Key of previous slice for calendar spread constraint (Corbetta)
@@ -312,17 +307,17 @@ private:
 class SsviParametricVolatilityGlobal : public SsviParametricVolatility {
 public:
     SsviParametricVolatilityGlobal(
-        const ModelVariant modelVariant, const std::vector<MarketSmile> marketSmiles,
+        const ModelVariant modelVariant, const std::vector<MarketSmile>& marketSmiles,
         const MarketModelType marketModelType, const MarketQuoteType inputMarketQuoteType,
         const QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve,
-        const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, ParameterCalibration>>>
+        const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, ParameterCalibration>>>&
             modelParameters = {},
         const std::map<QuantLib::Real, QuantLib::Real>& modelShift = {},
         const QuantLib::Size maxCalibrationAttempts = 10, const QuantLib::Real exitEarlyErrorThreshold = 0.005,
         const QuantLib::Real maxAcceptableError = 0.05, bool enforceNoArbitrage = true
     );
 
-    virtual QuantLib::Real evaluate(
+    QuantLib::Real evaluate(
         const QuantLib::Real timeToExpiry, const QuantLib::Real underlyingLength, const QuantLib::Real strike,
         const QuantLib::Real forward, const MarketQuoteType outputMarketQuoteType,
         const QuantLib::Real outputLognormalShift = QuantLib::Null<QuantLib::Real>(),
@@ -332,7 +327,7 @@ protected:
     std::tuple<std::vector<Real>, Real, std::vector<Real>, QuantLib::Size>
     calibrateModelParametersGlobal(const std::vector<MarketSmile>& marketSmiles,
                                    const std::vector<std::pair<Real, ParameterCalibration>>& params) const override;
-    static std::tuple<std::vector<Real>, std::vector<Real>, std::vector<Real>> convertToNaturalSvi(
+    static std::tuple<std::vector<Real>, std::vector<Real>, std::vector<Real>> convertToNaturalSviGlobal(
         const std::vector<Real>& params, ModelVariant modelVariant);
 
     // Key of previous slice for calendar spread constraint (Corbetta)
