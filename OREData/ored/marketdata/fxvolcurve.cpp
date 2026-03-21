@@ -22,6 +22,7 @@
 #include <ored/marketdata/structuredcurveerror.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 
 #include <qle/indexes/fxindex.hpp>
@@ -32,7 +33,9 @@
 #include <qle/termstructures/blackvolsurfaceabsolute.hpp>
 #include <qle/termstructures/blackvolsurfacebfrr.hpp>
 #include <qle/termstructures/blackvolsurfacedelta.hpp>
+#include <qle/termstructures/blackvolsurfacesvi.hpp>
 #include <qle/termstructures/fxblackvolsurface.hpp>
+#include <qle/termstructures/svimodeltraits.hpp>
 
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
@@ -90,6 +93,156 @@ QuantExt::FxVolatilityTimeWeighting FXVolCurve::buildTimeWeighting(const Date& a
 
     return QuantExt::FxVolatilityTimeWeighting(asof, dc, weekdayWeights, tradingCenters, events);
 }
+
+namespace {
+
+QuantLib::ext::shared_ptr<QuantLib::BlackVolTermStructure>
+buildFxSviSurface(const Date& asof, const std::vector<Date>& dates,
+                  const std::vector<std::vector<Real>>& strikes, const std::vector<std::vector<Real>>& vols,
+                  const std::vector<std::vector<Option::Type>>& optionTypes, const DayCounter& dc,
+                  const Calendar& cal, const Handle<Quote>& spot, Size spotDays, const Calendar& spotCalendar,
+                  const Handle<YieldTermStructure>& domYts, const Handle<YieldTermStructure>& forYts,
+                  QuantExt::SviParametricVolatility::ModelVariant sviModelVariant,
+                  const QuantLib::ext::optional<ParametricSmileConfiguration>& psc,
+                  const std::string& interpolationModel) {
+
+    std::map<std::pair<Real, Real>,
+             std::vector<std::pair<Real, QuantExt::ParametricVolatility::ParameterCalibration>>>
+        modelParameters;
+    Size maxCalibrationAttempts = 10;
+    Real exitEarlyErrorThreshold = 0.005;
+    Real maxAcceptableError = 0.05;
+
+    if (psc) {
+        auto const& params = psc->parameters();
+        Size expectedSize = QuantExt::SviModelTraits::expectedParametersSize(sviModelVariant);
+        QL_REQUIRE(params.size() == expectedSize,
+                   "FXVolCurve: ParametricSmileConfiguration has "
+                       << params.size() << " parameters, but model variant " << interpolationModel << " expects "
+                       << expectedSize);
+        for (auto const& p : params) {
+            QL_REQUIRE(p.initialValue.size() == 1 || p.initialValue.size() == dates.size(),
+                       "FXVolCurve: ParametricSmileConfiguration parameter '"
+                           << p.name << "' has " << p.initialValue.size() << " initial values, expected 1 or "
+                           << dates.size());
+        }
+        for (Size j = 0; j < dates.size(); ++j) {
+            std::vector<std::pair<Real, QuantExt::ParametricVolatility::ParameterCalibration>> paramVec;
+            for (auto const& p : params) {
+                Real val = p.initialValue.size() == 1 ? p.initialValue.front() : p.initialValue[j];
+                paramVec.push_back(std::make_pair(val, p.calibration));
+            }
+            Real t = dc.yearFraction(asof, dates[j]);
+            modelParameters[std::make_pair(t, Null<Real>())] = paramVec;
+        }
+        maxCalibrationAttempts = psc->calibration().maxCalibrationAttempts;
+        exitEarlyErrorThreshold = psc->calibration().exitEarlyErrorThreshold;
+        maxAcceptableError = psc->calibration().maxAcceptableError;
+    }
+
+    auto result = QuantLib::ext::make_shared<QuantExt::BlackVolatilitySurfaceSvi>(
+        asof, dates, strikes, vols, dc, cal, spot, spotDays, spotCalendar, domYts, forYts, sviModelVariant,
+        QuantExt::ParametricVolatility::MarketQuoteType::ShiftedLognormalVolatility, optionTypes, modelParameters,
+        maxCalibrationAttempts, exitEarlyErrorThreshold, maxAcceptableError);
+
+    // Force evaluation to trigger calibration, then log per-expiry and global RMSE
+    try {
+        if (!dates.empty() && !strikes.empty() && !strikes.front().empty())
+            result->blackVol(1.0, strikes.front().front());
+        auto sviPV = QuantLib::ext::dynamic_pointer_cast<QuantExt::SviParametricVolatility>(result->parametricVolatility());
+        if (sviPV) {
+            auto const& rmseVol = sviPV->volRmseShiftedLognormal();
+            for (Size j = 0; j < rmseVol.columns(); ++j) {
+                for (Size i = 0; i < rmseVol.rows(); ++i) {
+                    Real r = rmseVol(i, j);
+                    if (r != QuantLib::Null<QuantLib::Real>()) {
+                        Size nStrikes = j < strikes.size() ? strikes[j].size() : 0;
+                        LOG("FXVolCurve SVI (" << interpolationModel << ") expiry[" << j
+                            << "] vol RMSE = " << r << " (normalised by max vol, " << nStrikes << " strikes)");
+                    }
+                }
+            }
+            Real gv = sviPV->globalVolRmseShiftedLognormal();
+            Real gp = sviPV->globalVolRmsePrice();
+            Real gt = sviPV->globalVolRmseTotalVariance();
+            if (gv != QuantLib::Null<QuantLib::Real>()) {
+                Size nTotalStrikes = 0;
+                for (auto const& s : strikes)
+                    nTotalStrikes += s.size();
+                LOG("FXVolCurve SVI (" << interpolationModel << ") global RMSE"
+                    << " vol=" << gv << " price=" << gp << " totalVar=" << gt
+                    << " (" << dates.size() << " expiries, " << nTotalStrikes << " strikes)");
+            }
+            // Log per-strike market vs fitted for diagnostics / plotting
+            for (Size j = 0; j < dates.size() && j < strikes.size(); ++j) {
+                Real t = dc.yearFraction(asof, dates[j]);
+                for (Size k = 0; k < strikes[j].size() && k < vols[j].size(); ++k) {
+                    Real mktVol = vols[j][k];
+                    Real fitVol = Null<Real>();
+                    try { fitVol = result->blackVol(t, strikes[j][k]); } catch (...) {}
+                    LOG("FXVolCurve SVI fit expiry[" << j << "] strike=" << strikes[j][k]
+                        << " mktVol=" << mktVol << " fitVol=" << fitVol);
+                }
+            }
+        }
+    } catch (...) {}
+
+    return result;
+}
+
+// Samples (strike, vol, Option::Call) from a vol surface at given delta/ATM points for each expiry,
+// sorted by ascending strike. deltaSamples contains (optionType, delta) pairs where delta is already
+// sign-correct for getStrikeFromDelta (negative for puts, positive for calls).
+std::tuple<std::vector<std::vector<Real>>, std::vector<std::vector<Real>>,
+           std::vector<std::vector<Option::Type>>>
+sampleStrikesFromSurface(const std::vector<Date>& dates,
+                         const QuantLib::ext::shared_ptr<BlackVolTermStructure>& surface,
+                         const DayCounter& dc, const Date& asof, Real spot,
+                         const Handle<YieldTermStructure>& domYts,
+                         const Handle<YieldTermStructure>& forYts,
+                         DeltaVolQuote::DeltaType deltaType, DeltaVolQuote::AtmType atmType,
+                         DeltaVolQuote::DeltaType longTermDeltaType, DeltaVolQuote::AtmType longTermAtmType,
+                         const Period& switchTenor, const Calendar& cal, bool hasAtm,
+                         const std::vector<std::pair<Option::Type, Real>>& deltaSamples) {
+    Date switchDate = (switchTenor == 0 * Days) ? Date::maxDate() : cal.advance(asof, switchTenor);
+
+    std::vector<std::vector<Real>> strikes, vols;
+    std::vector<std::vector<Option::Type>> optionTypes;
+
+    for (Size i = 0; i < dates.size(); ++i) {
+        Real t = dc.yearFraction(asof, dates[i]);
+        Real domDisc = domYts->discount(dates[i]);
+        Real forDisc = forYts->discount(dates[i]);
+        DeltaVolQuote::DeltaType effDt = dates[i] <= switchDate ? deltaType : longTermDeltaType;
+        DeltaVolQuote::AtmType effAt = dates[i] <= switchDate ? atmType : longTermAtmType;
+
+        std::vector<std::tuple<Real, Real, Option::Type>> samples;
+        if (hasAtm) {
+            Real K = QuantExt::getAtmStrike(effDt, effAt, spot, domDisc, forDisc, surface, t);
+            samples.emplace_back(K, surface->blackVol(t, K), Option::Call);
+        }
+        for (auto const& [optType, delta] : deltaSamples) {
+            Real K = QuantExt::getStrikeFromDelta(optType, delta, effDt, spot, domDisc, forDisc, surface, t);
+            samples.emplace_back(K, surface->blackVol(t, K), Option::Call);
+        }
+        std::sort(samples.begin(), samples.end(),
+                  [](const auto& a, const auto& b) { return std::get<0>(a) < std::get<0>(b); });
+
+        std::vector<Real> ks, vs;
+        std::vector<Option::Type> os;
+        for (auto const& s : samples) {
+            ks.push_back(std::get<0>(s));
+            vs.push_back(std::get<1>(s));
+            os.push_back(std::get<2>(s));
+        }
+        strikes.push_back(ks);
+        vols.push_back(vs);
+        optionTypes.push_back(os);
+    }
+    return {strikes, vols, optionTypes};
+}
+
+} // anonymous namespace
 
 void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
                                       QuantLib::ext::shared_ptr<FXVolatilityCurveConfig> config, const FXTriangulation& fxSpots,
@@ -260,10 +413,42 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
                    [](const std::pair<Real, string>& x) { return x.first; });
     std::transform(callDeltas.begin(), callDeltas.end(), std::back_inserter(callDeltasNum),
                    [](const std::pair<Real, string>& x) { return x.first; });
-    vol_ = QuantLib::ext::make_shared<QuantExt::BlackVolatilitySurfaceDelta>(
+    // Check if SVI interpolation model is requested
+    std::optional<SviParametricVolatility::ModelVariant> sviModelVariant;
+    bool useSvi = !config->interpolationModel().empty() &&
+                  tryParse<std::optional<SviParametricVolatility::ModelVariant>>(
+                      config->interpolationModel(), sviModelVariant,
+                      std::function<SviParametricVolatility::ModelVariant(const std::string&)>(
+                          parseSviParametricVolatilityModelVariant));
+
+    // Build the delta surface — used directly (non-SVI) or as intermediate for strike conversion (SVI)
+    auto deltaSurface = QuantLib::ext::make_shared<QuantExt::BlackVolatilitySurfaceDelta>(
         asof, dates, putDeltasNum, callDeltasNum, hasATM, blackVolMatrix, dc, cal, fxSpot_, domYts_, forYts_,
-        deltaType_, atmType_, QuantLib::ext::nullopt, switchTenor_, longTermDeltaType_, longTermAtmType_, QuantLib::ext::nullopt, interp,
-        flatExtrapolation);
+        deltaType_, atmType_, QuantLib::ext::nullopt, switchTenor_, longTermDeltaType_, longTermAtmType_,
+        QuantLib::ext::nullopt, interp, flatExtrapolation);
+    deltaSurface->enableExtrapolation();
+
+    if (useSvi) {
+        DLOG("FXVolCurve::buildSmileDeltaCurve: InterpolationModel set to SVI ("
+             << config->interpolationModel() << "); SmileInterpolation controls the intermediate surface only.");
+
+        // Determine delta samples (signed correctly for getStrikeFromDelta)
+        std::vector<std::pair<Option::Type, Real>> deltaSamples;
+        for (Real pd : putDeltasNum)
+            deltaSamples.emplace_back(Option::Put, pd);
+        for (Real cd : callDeltasNum)
+            deltaSamples.emplace_back(Option::Call, cd);
+        auto [strikesSvi, volsSvi, optionTypesSvi] =
+            sampleStrikesFromSurface(dates, deltaSurface, dc, asof, fxSpot_->value(), domYts_, forYts_,
+                                     deltaType_, atmType_, longTermDeltaType_, longTermAtmType_,
+                                     switchTenor_, config->calendar(), hasATM, deltaSamples);
+
+        vol_ = buildFxSviSurface(asof, dates, strikesSvi, volsSvi, optionTypesSvi, dc, config->calendar(),
+                                  fxSpot_, spotDays_, spotCalendar_, domYts_, forYts_, *sviModelVariant,
+                                  config->parametricSmileConfiguration(), config->interpolationModel());
+    } else {
+        vol_ = deltaSurface;
+    }
 
     vol_->enableExtrapolation();
 }
@@ -413,11 +598,44 @@ void FXVolCurve::buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, cons
     std::transform(smileDeltas.begin(), smileDeltas.end(), std::back_inserter(smileDeltasScaled),
                    [](Size d) { return static_cast<Real>(d) / 100.0; });
 
-    vol_ = QuantLib::ext::make_shared<QuantExt::BlackVolatilitySurfaceBFRR>(
-        asof, dates, smileDeltasScaled, bfQuotes, rrQuotes, atmQuotes, config->dayCounter(), config->calendar(),
-        fxSpot_, spotDays_, spotCalendar_, domYts_, forYts_, deltaType_, atmType_, switchTenor_, longTermDeltaType_,
-        longTermAtmType_, riskReversalInFavorOf_, butterflyIsBrokerStyle_, interp, interp2,
-        buildTimeWeighting(asof, config->dayCounter()), config->butterflyErrorTolerance());
+    // Check if SVI interpolation model is requested
+    std::optional<SviParametricVolatility::ModelVariant> sviModelVariant;
+    bool useSvi = !config->interpolationModel().empty() &&
+                  tryParse<std::optional<SviParametricVolatility::ModelVariant>>(
+                      config->interpolationModel(), sviModelVariant,
+                      std::function<SviParametricVolatility::ModelVariant(const std::string&)>(
+                          parseSviParametricVolatilityModelVariant));
+
+    // Build the BFRR surface — used directly (non-SVI) or as intermediate for strike conversion (SVI)
+    DayCounter dc = config->dayCounter();
+    auto bfrrSurface = QuantLib::ext::make_shared<QuantExt::BlackVolatilitySurfaceBFRR>(
+        asof, dates, smileDeltasScaled, bfQuotes, rrQuotes, atmQuotes, dc, config->calendar(),
+        fxSpot_, spotDays_, spotCalendar_, domYts_, forYts_, deltaType_, atmType_, switchTenor_,
+        longTermDeltaType_, longTermAtmType_, riskReversalInFavorOf_, butterflyIsBrokerStyle_, interp, interp2,
+        buildTimeWeighting(asof, dc), config->butterflyErrorTolerance());
+    bfrrSurface->enableExtrapolation();
+
+    if (useSvi) {
+        DLOG("FXVolCurve::buildSmileBfRrCurve: InterpolationModel set to SVI ("
+             << config->interpolationModel() << "); SmileInterpolation controls the intermediate surface only.");
+
+        // Determine delta samples: put and call for each smile delta
+        std::vector<std::pair<Option::Type, Real>> deltaSamples;
+        for (Real d : smileDeltasScaled) {
+            deltaSamples.emplace_back(Option::Put, -d);
+            deltaSamples.emplace_back(Option::Call, d);
+        }
+        auto [strikesSvi, volsSvi, optionTypesSvi] =
+            sampleStrikesFromSurface(dates, bfrrSurface, dc, asof, fxSpot_->value(), domYts_, forYts_,
+                                     deltaType_, atmType_, longTermDeltaType_, longTermAtmType_,
+                                     switchTenor_, config->calendar(), true, deltaSamples);
+
+        vol_ = buildFxSviSurface(asof, dates, strikesSvi, volsSvi, optionTypesSvi, dc, config->calendar(),
+                                  fxSpot_, spotDays_, spotCalendar_, domYts_, forYts_, *sviModelVariant,
+                                  config->parametricSmileConfiguration(), config->interpolationModel());
+    } else {
+        vol_ = bfrrSurface;
+    }
 
     vol_->enableExtrapolation();
 }
@@ -672,23 +890,47 @@ void FXVolCurve::buildSmileAbsoluteCurve(Date asof, FXVolatilityCurveSpec spec, 
 
     DLOG("build Absolute fx vol surface with " << expiries_.size() << " expiries");
 
-    QuantExt::BlackVolatilitySurfaceAbsolute::SmileInterpolation interp;
-    if (config->smileInterpolation() == FXVolatilityCurveConfig::SmileInterpolation::Linear)
-        interp = QuantExt::BlackVolatilitySurfaceAbsolute::SmileInterpolation::Linear;
-    else if (config->smileInterpolation() == FXVolatilityCurveConfig::SmileInterpolation::Cubic)
-        interp = QuantExt::BlackVolatilitySurfaceAbsolute::SmileInterpolation::Cubic;
-    else {
-        QL_FAIL("Absolute FX vol surface: invalid interpolation, expected Linear, Cubic");
-    }
-
     std::vector<Date> dates;
     std::transform(expiries_.begin(), expiries_.end(), std::back_inserter(dates),
                    [&asof, &config](const Period& p) { return config->calendar().advance(asof, p); });
 
-    vol_ = QuantLib::ext::make_shared<QuantExt::BlackVolatilitySurfaceAbsolute>(
-        asof, dates, strikes, strikeQuotes, config->dayCounter(), config->calendar(),
-        fxSpot_, spotDays_, spotCalendar_, domYts_, forYts_, deltaType_, atmType_, switchTenor_, longTermDeltaType_,
-        longTermAtmType_, interp);
+    // Check if an SVI interpolation model is requested
+    std::optional<SviParametricVolatility::ModelVariant> sviModelVariant;
+    bool useSvi = !config->interpolationModel().empty() &&
+                  tryParse<std::optional<SviParametricVolatility::ModelVariant>>(
+                      config->interpolationModel(), sviModelVariant,
+                      std::function<SviParametricVolatility::ModelVariant(const std::string&)>(
+                          parseSviParametricVolatilityModelVariant));
+
+    if (useSvi) {
+        DLOG("FXVolCurve: Building SVI surface with model variant " << config->interpolationModel());
+        DLOG("FXVolCurve::buildSmileAbsoluteCurve: InterpolationModel set to SVI; SmileInterpolation is ignored.");
+
+        // Build option types: all Call for plain vol quotes (no call/put distinction in FX absolute)
+        std::vector<std::vector<Option::Type>> optionTypes;
+        for (Size i = 0; i < strikes.size(); ++i) {
+            optionTypes.push_back(std::vector<Option::Type>(strikes[i].size(), Option::Call));
+        }
+
+        vol_ = buildFxSviSurface(asof, dates, strikes, strikeQuotes, optionTypes, config->dayCounter(),
+                                  config->calendar(), fxSpot_, spotDays_, spotCalendar_, domYts_, forYts_,
+                                  *sviModelVariant, config->parametricSmileConfiguration(),
+                                  config->interpolationModel());
+    } else {
+        QuantExt::BlackVolatilitySurfaceAbsolute::SmileInterpolation interp;
+        if (config->smileInterpolation() == FXVolatilityCurveConfig::SmileInterpolation::Linear)
+            interp = QuantExt::BlackVolatilitySurfaceAbsolute::SmileInterpolation::Linear;
+        else if (config->smileInterpolation() == FXVolatilityCurveConfig::SmileInterpolation::Cubic)
+            interp = QuantExt::BlackVolatilitySurfaceAbsolute::SmileInterpolation::Cubic;
+        else {
+            QL_FAIL("Absolute FX vol surface: invalid interpolation, expected Linear, Cubic");
+        }
+
+        vol_ = QuantLib::ext::make_shared<QuantExt::BlackVolatilitySurfaceAbsolute>(
+            asof, dates, strikes, strikeQuotes, config->dayCounter(), config->calendar(), fxSpot_, spotDays_,
+            spotCalendar_, domYts_, forYts_, deltaType_, atmType_, switchTenor_, longTermDeltaType_,
+            longTermAtmType_, interp);
+    }
 
     vol_->enableExtrapolation();
 }

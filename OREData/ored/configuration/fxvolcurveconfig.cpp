@@ -177,7 +177,7 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
                     QL_FAIL("SmileInterpolation " << smileInterp << " not supported");
                 }
             } else {
-                QL_FAIL("SmileType '" << smileType << "' not supported, expected VannaVolga, Delta, BFRR");
+                QL_FAIL("SmileType '" << smileType << "' not supported, expected VannaVolga, Delta, BFRR, Absolute");
             }
         } else {
             QL_FAIL("Dimension " << dim << " not supported yet");
@@ -199,6 +199,13 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
 
     if (auto tmp = XMLUtils::getChildNode(node, "Report")) {
         reportConfig_.fromXML(tmp);
+    }
+
+    interpolationModel_ = XMLUtils::getChildValue(node, "InterpolationModel", false);
+    parametricSmileConfiguration_ = QuantLib::ext::nullopt;
+    if (XMLNode* n = XMLUtils::getChildNode(node, "ParametricSmileConfiguration")) {
+        parametricSmileConfiguration_ = ParametricSmileConfiguration();
+        parametricSmileConfiguration_->fromXML(n);
     }
 }
 
@@ -267,6 +274,8 @@ XMLNode* FXVolatilityCurveConfig::toXML(XMLDocument& doc) const {
         } else {
             QL_FAIL("Unknown SmileInterpolation in FXVolatilityCurveConfig::toXML()");
         }
+        if (!interpolationModel_.empty())
+            XMLUtils::addChild(doc, node, "InterpolationModel", interpolationModel_);
         XMLUtils::addChild(doc, node, "Conventions", to_string(conventionsID_));
     } else {
         QL_FAIL("Unknown Dimension in FXVolatilityCurveConfig::toXML()");
@@ -283,6 +292,9 @@ XMLNode* FXVolatilityCurveConfig::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "TimeWeighting", timeWeighting_);
     XMLUtils::addChild(doc, node, "ButterflyErrorTolerance", butterflyErrorTolerance_);
     XMLUtils::appendNode(node, reportConfig_.toXML(doc));
+
+    if (parametricSmileConfiguration_)
+        XMLUtils::appendNode(node, parametricSmileConfiguration_->toXML(doc));
     
     return node;
 }

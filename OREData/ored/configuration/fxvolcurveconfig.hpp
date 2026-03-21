@@ -25,6 +25,7 @@
 #pragma once
 
 #include <ored/configuration/curveconfig.hpp>
+#include <ored/configuration/parametricsmileconfiguration.hpp>
 #include <ored/configuration/reportconfig.hpp>
 
 #include <ql/time/calendars/target.hpp>
@@ -113,6 +114,10 @@ public:
     const string& fxIndexTag() const { return fxIndexTag_; }
     const ReportConfig& reportConfig() const { return reportConfig_; }
     double butterflyErrorTolerance() const { return butterflyErrorTolerance_; }
+    const std::string& interpolationModel() const { return interpolationModel_; }
+    const QuantLib::ext::optional<ParametricSmileConfiguration>& parametricSmileConfiguration() const {
+        return parametricSmileConfiguration_;
+    }
     //@}
 
     //! \name Setters
@@ -160,6 +165,8 @@ private:
     string fxIndexTag_;
     ReportConfig reportConfig_;
     double butterflyErrorTolerance_ = 0.01;
+    std::string interpolationModel_;
+    QuantLib::ext::optional<ParametricSmileConfiguration> parametricSmileConfiguration_;
 };
 
 FXVolatilityCurveConfig::TimeInterpolation parseFxVolatilityTimeInterpolation(const std::string& s);
