@@ -183,7 +183,7 @@ protected:
 
     void calculate();
     void computeVolRmseMetrics();
-    void validateEvaluateInputs(Real timeToExpiry, Real underlyingLength, Real strike, Real forward) const;
+    void validateEvaluateDimensions(Real timeToExpiry, Real underlyingLength) const;
 
     virtual void setDefaultParameters();
     virtual void calibrate();

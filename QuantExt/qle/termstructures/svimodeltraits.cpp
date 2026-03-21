@@ -612,8 +612,8 @@ void sanitiseParams(ModelVariant mv, std::vector<Matrix>& m) {
             Matrix& mat = m[k];
             for (Size i = 0; i < mat.rows(); ++i) {
                 for (Size j = 0; j < mat.columns(); ++j) {
-                    if (k == 0)      // rho
-                        mat(i, j) = std::max(std::min(mat(i, j), 1.0 - 1e-6), -1.0 + 1e-6);
+                    if (k == 0)      // psi*rho -- no individual bound (rho constraint enforced at use time)
+                        ;
                     else if (k == 1) // theta
                         mat(i, j) = std::max(mat(i, j), 1e-6);
                     else if (k == 2) // psi
