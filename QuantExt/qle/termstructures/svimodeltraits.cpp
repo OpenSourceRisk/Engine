@@ -118,7 +118,7 @@ std::vector<std::pair<Real, ParameterCalibration>> defaultParameters(ModelVarian
     case ModelVariant::Mingone2022EssviMM:
         // a (index 1) will be overwritten with the ATM total implied variance
         return {{0.0, ParameterCalibration::Calibrated},
-                {0.0, ParameterCalibration::Implied},
+                {0.0, ParameterCalibration::Calibrated},
                 {0.5, ParameterCalibration::Calibrated}};
     default:
         QL_FAIL("SviModelTraits::defaultParameters(): model variant ("

@@ -108,7 +108,7 @@ BlackVolatilitySurfaceSvi::BlackVolatilitySurfaceSvi(
             modelVariant, marketSmiles, ParametricVolatility::MarketModelType::Black76,
             inputMarketQuoteType, discountCurve, modelParameters,
             std::map<Real, Real>(), maxCalibrationAttempts, exitEarlyErrorThreshold, maxAcceptableError,
-            true, true);
+            true, false);
     } else {
         QL_FAIL("BlackVolatilitySurfaceSvi: model variant " << static_cast<int>(modelVariant) << " is not supported");
     }

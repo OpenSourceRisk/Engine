@@ -93,7 +93,7 @@ std::vector<ParametricVolatility::MarketSmile> makeEquitySmiles() {
             Option::Type::Call, Option::Type::Call, Option::Type::Call, Option::Type::Call
         };
         marketSmile.strikes = {1122.94, 1144.51, 1158.58, 1173.53, 1182.43, 1192.31, 1193.93, 1203.18, 1206.75, 1214.23, 1222.30, 1224.68, 1231.90, 1241.53, 1247.26, 1252.82, 1264.55};
-        marketSmile.marketQuotes = {0.410316, 0.381766, 0.363500, 0.347710, 0.336493, 0.324581, 0.317560, 0.307984, 0.299896, 0.291993, 0.286609, 0.279219, 0.272729, 0.266710, 0.258742, 0.255447, 0.246115};
+        marketSmile.marketQuotes = {0.410316, 0.381766, 0.363500, 0.347710, 0.336493, 0.320933, 0.317560, 0.306574, 0.299896, 0.291993, 0.283417, 0.279219, 0.272729, 0.266710, 0.258742, 0.255447, 0.246115};
         marketSmiles.push_back(marketSmile);
 
         marketSmile.timeToExpiry = 14.0 / 365;
@@ -106,7 +106,7 @@ std::vector<ParametricVolatility::MarketSmile> makeEquitySmiles() {
             Option::Type::Call, Option::Type::Call, Option::Type::Call, Option::Type::Call
         };
         marketSmile.strikes = {1099.41, 1124.05, 1145.36, 1158.26, 1172.51, 1179.33, 1190.89, 1200.78, 1207.99, 1217.31, 1224.50, 1233.79, 1244.11, 1250.74, 1259.39, 1267.86, 1280.90};
-        marketSmile.marketQuotes = {0.400044, 0.376577, 0.356776, 0.345523, 0.332281, 0.319763, 0.309992, 0.300516, 0.288343, 0.279092, 0.274458, 0.267821, 0.258001, 0.252714, 0.244229, 0.236755, 0.230965};
+        marketSmile.marketQuotes = {0.400044, 0.376577, 0.356776, 0.345523, 0.330080, 0.319763, 0.309992, 0.299427, 0.288343, 0.279092, 0.274458, 0.267821, 0.258001, 0.252714, 0.244229, 0.236755, 0.230965};
         marketSmiles.push_back(marketSmile);
 
         marketSmile.timeToExpiry = 21.0 / 365;
@@ -119,7 +119,7 @@ std::vector<ParametricVolatility::MarketSmile> makeEquitySmiles() {
             Option::Type::Call, Option::Type::Call, Option::Type::Call, Option::Type::Call
         };
         marketSmile.strikes = {1075.59, 1107.11, 1126.91, 1148.60, 1162.99, 1180.48, 1189.66, 1199.70, 1210.14, 1222.31, 1229.70, 1241.62, 1253.28, 1260.18, 1268.81, 1285.60, 1296.09};
-        marketSmile.marketQuotes = {0.403621, 0.379285, 0.361075, 0.344408, 0.329564, 0.317462, 0.306874, 0.295942, 0.287708, 0.275504, 0.268199, 0.260995, 0.251052, 0.248767, 0.239204, 0.228724, 0.220916};
+        marketSmile.marketQuotes = {0.403621, 0.379285, 0.361075, 0.344408, 0.329564, 0.317312, 0.306874, 0.295942, 0.287708, 0.275504, 0.268199, 0.260995, 0.251052, 0.247579, 0.239204, 0.228724, 0.220916};
         marketSmiles.push_back(marketSmile);
 
         marketSmile.timeToExpiry = 30.0 / 365;
@@ -132,7 +132,7 @@ std::vector<ParametricVolatility::MarketSmile> makeEquitySmiles() {
             Option::Type::Call, Option::Type::Call, Option::Type::Call, Option::Type::Call
         };
         marketSmile.strikes = {1044.97, 1084.92, 1112.62, 1140.16, 1158.77, 1170.80, 1187.09, 1198.32, 1216.20, 1227.57, 1234.45, 1248.16, 1259.08, 1268.41, 1284.63, 1295.02, 1312.73};
-        marketSmile.marketQuotes = {0.409582, 0.382653, 0.366011, 0.341689, 0.327985, 0.316492, 0.306763, 0.293709, 0.285949, 0.274241, 0.263696, 0.255191, 0.248151, 0.244946, 0.235525, 0.223650, 0.213641};
+        marketSmile.marketQuotes = {0.409582, 0.382653, 0.366011, 0.341689, 0.327985, 0.316492, 0.305219, 0.293709, 0.283773, 0.272561, 0.263696, 0.255191, 0.248151, 0.244946, 0.235525, 0.223650, 0.213641};
         marketSmiles.push_back(marketSmile);
 
         marketSmile.timeToExpiry = 60.0 / 365;
@@ -145,7 +145,7 @@ std::vector<ParametricVolatility::MarketSmile> makeEquitySmiles() {
             Option::Type::Call, Option::Type::Call, Option::Type::Call, Option::Type::Call
         };
         marketSmile.strikes = {985.44, 1036.16, 1079.68, 1109.24, 1134.60, 1160.25, 1182.55, 1197.48, 1215.82, 1237.38, 1250.35, 1264.25, 1280.49, 1294.35, 1311.29, 1332.23, 1356.31};
-        marketSmile.marketQuotes = {0.421799, 0.393766, 0.370669, 0.350774, 0.333624, 0.319848, 0.303939, 0.293438, 0.284358, 0.274419, 0.262142, 0.253328, 0.246538, 0.240213, 0.229835, 0.223702, 0.213295};
+        marketSmile.marketQuotes = {0.421799, 0.393766, 0.370669, 0.350774, 0.333624, 0.319848, 0.303939, 0.293438, 0.284358, 0.272761, 0.262142, 0.253328, 0.246538, 0.240213, 0.229835, 0.223702, 0.213295};
         marketSmiles.push_back(marketSmile);
 
         marketSmile.timeToExpiry = 90.0 / 365;
@@ -158,7 +158,7 @@ std::vector<ParametricVolatility::MarketSmile> makeEquitySmiles() {
             Option::Type::Call, Option::Type::Call, Option::Type::Call, Option::Type::Call
         };
         marketSmile.strikes = {944.63, 1007.48, 1054.91, 1092.41, 1126.63, 1153.85, 1180.67, 1196.90, 1220.61, 1240.47, 1264.24, 1278.18, 1297.55, 1319.64, 1339.72, 1363.21, 1391.89};
-        marketSmile.marketQuotes = {0.418999, 0.389986, 0.365363, 0.346810, 0.326453, 0.314019, 0.301690, 0.289580, 0.286232, 0.276251, 0.266677, 0.255980, 0.248485, 0.240609, 0.230233, 0.223509, 0.215270};
+        marketSmile.marketQuotes = {0.418999, 0.389986, 0.365363, 0.346810, 0.326453, 0.314019, 0.300606, 0.289580, 0.284623, 0.276251, 0.265419, 0.255980, 0.248485, 0.240609, 0.230233, 0.223509, 0.215270};
         marketSmiles.push_back(marketSmile);
 
         marketSmile.timeToExpiry = 120.0 / 365;
@@ -171,7 +171,7 @@ std::vector<ParametricVolatility::MarketSmile> makeEquitySmiles() {
             Option::Type::Call, Option::Type::Call, Option::Type::Call, Option::Type::Call
         };
         marketSmile.strikes = {918.63, 985.75, 1037.37, 1082.99, 1119.36, 1147.48, 1176.49, 1198.01, 1223.08, 1251.19, 1270.59, 1292.26, 1316.76, 1333.43, 1361.10, 1388.29, 1424.22};
-        marketSmile.marketQuotes = {0.413837, 0.385065, 0.359964, 0.340852, 0.323843, 0.309977, 0.296963, 0.286033, 0.278605, 0.269365, 0.261194, 0.252634, 0.245578, 0.236339, 0.226830, 0.219789, 0.209707};
+        marketSmile.marketQuotes = {0.413837, 0.385065, 0.359964, 0.340852, 0.323843, 0.309977, 0.296963, 0.286033, 0.278605, 0.269365, 0.261194, 0.252634, 0.244983, 0.236339, 0.226830, 0.219789, 0.209707};
         marketSmiles.push_back(marketSmile);
 
         marketSmile.timeToExpiry = 150.0 / 365;
@@ -184,7 +184,7 @@ std::vector<ParametricVolatility::MarketSmile> makeEquitySmiles() {
             Option::Type::Call, Option::Type::Call, Option::Type::Call, Option::Type::Call
         };
         marketSmile.strikes = {890.86, 966.37, 1024.96, 1068.50, 1107.58, 1144.56, 1170.38, 1201.22, 1231.73, 1257.33, 1274.95, 1300.23, 1325.49, 1355.63, 1381.70, 1412.55, 1444.96};
-        marketSmile.marketQuotes = {0.411588, 0.382071, 0.357016, 0.337421, 0.321289, 0.306528, 0.293209, 0.284729, 0.274771, 0.267157, 0.258676, 0.248822, 0.241263, 0.232238, 0.224041, 0.215884, 0.207250};
+        marketSmile.marketQuotes = {0.411588, 0.382071, 0.357016, 0.337421, 0.321289, 0.306528, 0.293209, 0.284729, 0.274771, 0.266682, 0.258676, 0.248822, 0.241263, 0.232238, 0.224041, 0.215884, 0.207250};
         marketSmiles.push_back(marketSmile);
 
         marketSmile.timeToExpiry = 180.0 / 365;
@@ -210,7 +210,7 @@ std::vector<ParametricVolatility::MarketSmile> makeEquitySmiles() {
             Option::Type::Call, Option::Type::Call, Option::Type::Call, Option::Type::Call
         };
         marketSmile.strikes = {821.09, 912.84, 981.06, 1042.76, 1091.20, 1135.19, 1173.14, 1209.99, 1238.05, 1276.24, 1305.15, 1341.85, 1373.25, 1407.04, 1443.55, 1478.94, 1533.01};
-        marketSmile.marketQuotes = {0.404928, 0.375090, 0.348356, 0.327751, 0.312948, 0.298135, 0.285556, 0.277480, 0.267281, 0.257639, 0.249180, 0.241201, 0.234008, 0.225853, 0.217684, 0.209539, 0.200184};
+        marketSmile.marketQuotes = {0.404928, 0.375090, 0.348356, 0.327751, 0.312948, 0.298135, 0.285556, 0.276822, 0.267281, 0.257639, 0.249180, 0.241201, 0.234008, 0.225853, 0.217684, 0.209539, 0.200184};
         marketSmiles.push_back(marketSmile);
 
         marketSmile.timeToExpiry = 360.0 / 365;
@@ -236,7 +236,7 @@ std::vector<ParametricVolatility::MarketSmile> makeEquitySmiles() {
             Option::Type::Call, Option::Type::Call, Option::Type::Call, Option::Type::Call
         };
         marketSmile.strikes = {708.44, 822.79, 917.53, 993.93, 1063.72, 1123.39, 1177.85, 1235.13, 1283.90, 1336.73, 1387.93, 1439.38, 1491.69, 1544.06, 1601.83, 1663.54, 1751.02};
-        marketSmile.marketQuotes = {0.372184, 0.345171, 0.321792, 0.303847, 0.289309, 0.276185, 0.264926, 0.261127, 0.253158, 0.244007, 0.234930, 0.226771, 0.218799, 0.211367, 0.203609, 0.195096, 0.186241};
+        marketSmile.marketQuotes = {0.372184, 0.345171, 0.321792, 0.303847, 0.289309, 0.276185, 0.264926, 0.260340, 0.253158, 0.244007, 0.234930, 0.226771, 0.218799, 0.211367, 0.203609, 0.195096, 0.186241};
         marketSmiles.push_back(marketSmile);
 
         marketSmile.timeToExpiry = 1080.0 / 365;
@@ -249,7 +249,7 @@ std::vector<ParametricVolatility::MarketSmile> makeEquitySmiles() {
             Option::Type::Call, Option::Type::Call, Option::Type::Call, Option::Type::Call
         };
         marketSmile.strikes = {658.24, 780.43, 886.53, 974.74, 1052.66, 1127.76, 1191.30, 1265.65, 1329.86, 1386.75, 1451.16, 1511.35, 1583.19, 1647.03, 1715.69, 1794.03, 1909.31};
-        marketSmile.marketQuotes = {0.366081, 0.341689, 0.319777, 0.302824, 0.287198, 0.274434, 0.264799, 0.260869, 0.251818, 0.242530, 0.234414, 0.225842, 0.218427, 0.210355, 0.201884, 0.191400, 0.183379};
+        marketSmile.marketQuotes = {0.366081, 0.341689, 0.319777, 0.302824, 0.287198, 0.274434, 0.264799, 0.259771, 0.251818, 0.242530, 0.234414, 0.225842, 0.218427, 0.210355, 0.201884, 0.191400, 0.183379};
         marketSmiles.push_back(marketSmile);
 
     return marketSmiles;

@@ -279,8 +279,33 @@ class CreditVolCurveWrapper : public CreditVolCurve {
 class ParametricVolatility {
   public:
     enum class MarketQuoteType { Price, NormalVolatility, ShiftedLognormalVolatility };
+    enum class ParameterCalibration { Fixed, Calibrated, Implied };
 };
 
+#if defined(SWIGPYTHON)
+// Add nested-class-style access so Python code can write
+//   ParametricVolatility.MarketQuoteType.ShiftedLognormalVolatility
+// in addition to the SWIG default
+//   ParametricVolatility.MarketQuoteType_ShiftedLognormalVolatility
+%pythoncode %{
+class _MarketQuoteTypeAccessor:
+    Price                     = ParametricVolatility.MarketQuoteType_Price
+    NormalVolatility          = ParametricVolatility.MarketQuoteType_NormalVolatility
+    ShiftedLognormalVolatility = ParametricVolatility.MarketQuoteType_ShiftedLognormalVolatility
+ParametricVolatility.MarketQuoteType = _MarketQuoteTypeAccessor
+
+class _ParameterCalibrationAccessor:
+    Fixed      = ParametricVolatility.ParameterCalibration_Fixed
+    Calibrated = ParametricVolatility.ParameterCalibration_Calibrated
+    Implied    = ParametricVolatility.ParameterCalibration_Implied
+ParametricVolatility.ParameterCalibration = _ParameterCalibrationAccessor
+%}
+#endif
+
+%template(OptionTypeVector)       std::vector<QuantLib::Option::Type>;
+%template(OptionTypeVectorVector) std::vector<std::vector<QuantLib::Option::Type>>;
+
+%shared_ptr(SviParametricVolatility)
 %nodefaultctor SviParametricVolatility;
 class SviParametricVolatility {
   public:
@@ -296,6 +321,8 @@ class SviParametricVolatility {
         Mingone2022EssviGJ = 8,
         Mingone2022EssviMM = 9
     };
+    QuantLib::Real globalVolRmseShiftedLognormal() const;
+    QuantLib::Matrix volRmseShiftedLognormal() const;
 };
 
 %shared_ptr(CreditVolCurveSvi)
@@ -321,6 +348,57 @@ class CreditVolCurveSvi : public CreditVolCurve {
                               const CreditVolCurve::Type& targetType) const override;
 };
 
+#if defined(SWIGPYTHON)
+// Typemap: convert Python dict -> C++ std::map<pair<Real,Real>, vector<pair<Real,ParameterCalibration>>>
+// Enables passing {} (empty) or {(lo,hi): [(init, calib), ...]} directly from Python.
+%typemap(in) const std::map<std::pair<QuantLib::Real, QuantLib::Real>,
+    std::vector<std::pair<QuantLib::Real, ParametricVolatility::ParameterCalibration>>>&
+    (std::map<std::pair<QuantLib::Real, QuantLib::Real>,
+     std::vector<std::pair<QuantLib::Real, ParametricVolatility::ParameterCalibration>>> _mp_temp) {
+    if (!PyDict_Check($input)) {
+        PyErr_SetString(PyExc_TypeError, "modelParameters must be a dict");
+        SWIG_fail;
+    }
+    PyObject *_mp_key, *_mp_val;
+    Py_ssize_t _mp_pos = 0;
+    while (PyDict_Next($input, &_mp_pos, &_mp_key, &_mp_val)) {
+        if (!PyTuple_Check(_mp_key) || PyTuple_GET_SIZE(_mp_key) != 2) {
+            PyErr_SetString(PyExc_TypeError, "modelParameters key must be a (lo, hi) 2-tuple");
+            SWIG_fail;
+        }
+        double _lo = PyFloat_AsDouble(PyTuple_GET_ITEM(_mp_key, 0));
+        double _hi = PyFloat_AsDouble(PyTuple_GET_ITEM(_mp_key, 1));
+        if (PyErr_Occurred()) SWIG_fail;
+        if (!PySequence_Check(_mp_val)) {
+            PyErr_SetString(PyExc_TypeError, "modelParameters value must be a sequence");
+            SWIG_fail;
+        }
+        std::vector<std::pair<QuantLib::Real, ParametricVolatility::ParameterCalibration>> _params;
+        Py_ssize_t _n = PySequence_Size(_mp_val);
+        for (Py_ssize_t _i = 0; _i < _n; ++_i) {
+            PyObject* _item = PySequence_GetItem(_mp_val, _i);
+            if (!PyTuple_Check(_item) || PyTuple_GET_SIZE(_item) != 2) {
+                Py_DECREF(_item);
+                PyErr_SetString(PyExc_TypeError, "each entry must be a (initial, calibration) 2-tuple");
+                SWIG_fail;
+            }
+            double _init = PyFloat_AsDouble(PyTuple_GET_ITEM(_item, 0));
+            long   _cal  = PyLong_AsLong(PyTuple_GET_ITEM(_item, 1));
+            Py_DECREF(_item);
+            if (PyErr_Occurred()) SWIG_fail;
+            _params.emplace_back(_init,
+                static_cast<ParametricVolatility::ParameterCalibration>(_cal));
+        }
+        _mp_temp[{_lo, _hi}] = std::move(_params);
+    }
+    $1 = &_mp_temp;
+}
+%typemap(typecheck, precedence=4095) const std::map<std::pair<QuantLib::Real, QuantLib::Real>,
+    std::vector<std::pair<QuantLib::Real, ParametricVolatility::ParameterCalibration>>>& {
+    $1 = PyDict_Check($input) ? 1 : 0;
+}
+#endif
+
 %shared_ptr(BlackVolatilitySurfaceSvi)
 class BlackVolatilitySurfaceSvi : public BlackVolTermStructure {
   public:
@@ -338,10 +416,23 @@ class BlackVolatilitySurfaceSvi : public BlackVolTermStructure {
         const QuantLib::Handle<QuantLib::YieldTermStructure>& foreignTS,
         SviParametricVolatility::ModelVariant modelVariant,
         ParametricVolatility::MarketQuoteType inputMarketQuoteType =
-            ParametricVolatility::MarketQuoteType::ShiftedLognormalVolatility);
+            ParametricVolatility::MarketQuoteType::ShiftedLognormalVolatility,
+        const std::vector<std::vector<QuantLib::Option::Type>>& optionTypes = {},
+        const std::map<std::pair<QuantLib::Real, QuantLib::Real>,
+            std::vector<std::pair<QuantLib::Real, ParametricVolatility::ParameterCalibration>>>& modelParameters = {},
+        QuantLib::Size maxCalibrationAttempts = 10,
+        QuantLib::Real exitEarlyErrorThreshold = 0.005,
+        QuantLib::Real maxAcceptableError = 0.05);
     QuantLib::Date maxDate() const;
     QuantLib::Rate minStrike() const;
     QuantLib::Rate maxStrike() const;
+    %extend {
+        // Return the underlying SviParametricVolatility (triggers calibration on first call).
+        ext::shared_ptr<SviParametricVolatility> sviParametricVolatility() const {
+            return QuantLib::ext::dynamic_pointer_cast<SviParametricVolatility>(
+                self->parametricVolatility());
+        }
+    }
 };
 
 %shared_ptr(BlackVolatilityWithATM)
