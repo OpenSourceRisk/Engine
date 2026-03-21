@@ -31,10 +31,10 @@ EquityVolatilityCurveConfig::EquityVolatilityCurveConfig(
     const string& curveID, const string& curveDescription, const string& currency,
     const vector<QuantLib::ext::shared_ptr<VolatilityConfig>>& volatilityConfig, const string& equityId, 
     const string& dayCounter, const string& calendar, const OneDimSolverConfig& solverConfig, 
-    const QuantLib::ext::optional<bool>& preferOutOfTheMoney)
+    const QuantLib::ext::optional<bool>& preferOutOfTheMoney, const Interpolation interpolation)
     : CurveConfig(curveID, curveDescription), ccy_(currency), volatilityConfig_(volatilityConfig),
       equityId_(equityId), dayCounter_(dayCounter), calendar_(calendar), solverConfig_(solverConfig),
-      preferOutOfTheMoney_(preferOutOfTheMoney) {
+      preferOutOfTheMoney_(preferOutOfTheMoney), interpolation_(interpolation) {
     populateQuotes();
 }
 
@@ -42,10 +42,10 @@ EquityVolatilityCurveConfig::EquityVolatilityCurveConfig(
     const string& curveID, const string& curveDescription, const string& currency,
     const QuantLib::ext::shared_ptr<VolatilityConfig>& volatilityConfig, const string& equityId,
     const string& dayCounter, const string& calendar, const OneDimSolverConfig& solverConfig,
-    const QuantLib::ext::optional<bool>& preferOutOfTheMoney)
+    const QuantLib::ext::optional<bool>& preferOutOfTheMoney, const Interpolation interpolation)
     : EquityVolatilityCurveConfig(curveID, curveDescription, currency,
         std::vector<QuantLib::ext::shared_ptr<VolatilityConfig>>{volatilityConfig}, equityId, dayCounter, 
-        calendar, solverConfig, preferOutOfTheMoney) {}
+        calendar, solverConfig, preferOutOfTheMoney, interpolation) {}
 
 const string EquityVolatilityCurveConfig::quoteStem(const string& volType) const {
     return "EQUITY_OPTION/" + volType + "/" + equityId() + "/" + ccy_ + "/";
@@ -164,6 +164,18 @@ void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
         volatilityConfig_ = vcb.volatilityConfig();
     } else {
         QL_FAIL("Only ATM and Smile dimensions, or Volatility Config supported for EquityVolatility " << curveID_);
+    }
+
+    string interp = XMLUtils::getChildValue(node, "Interpolation", false, "Linear");
+    if (interp == "Linear") {
+        interpolation_ = Interpolation::Linear;
+    } else {
+        try {
+            interpolation_ = Interpolation(static_cast<int>(parseSviParametricVolatilityModelVariant(interp)));
+        } catch (const std::exception& e) {
+            QL_FAIL("Interpolation '" << interp << "' not recognized. Expected 'Linear' or a SVI variant ("
+                                      << e.what() << ")");
+        }
     }
 
     if (auto tmp = XMLUtils::getChildNode(node, "Report")) {

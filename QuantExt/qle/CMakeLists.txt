@@ -418,6 +418,7 @@ termstructures/pricetermstructureadapter.cpp
 termstructures/proxyoptionletvolatility.cpp
 termstructures/proxyswaptionvolatility.cpp
 termstructures/sabrparametricvolatility.cpp
+termstructures/sviparametricvolatility.cpp
 termstructures/scenario.cpp
 termstructures/simplemclocalvolstochasticratescorrection.cpp
 termstructures/spreadedblackvolatilitycurve.cpp
@@ -1050,6 +1051,7 @@ termstructures/probabilitytraits.hpp
 termstructures/proxyoptionletvolatility.hpp
 termstructures/proxyswaptionvolatility.hpp
 termstructures/sabrparametricvolatility.hpp
+termstructures/sviparametricvolatility.hpp
 termstructures/sabrstrippedoptionletadapter.hpp
 termstructures/scenario.hpp
 termstructures/simplemclocalvolstochasticratescorrection.hpp

@@ -96,6 +96,7 @@ strippedoptionletadapter.cpp
 strippedoptionletadapter2.cpp
 survivalprobabilitycurve.cpp
 swaptionvolconstantspread.cpp
+sviparametricvolatility.cpp
 testsuite.cpp
 transitionmatrix.cpp)
 

@@ -618,6 +618,7 @@
 #include <qle/termstructures/subperiodsswaphelper.hpp>
 #include <qle/termstructures/survivalprobabilitycurve.hpp>
 #include <qle/termstructures/survivalprobabilitycurvefromyield.hpp>
+#include <qle/termstructures/sviparametricvolatility.hpp>
 #include <qle/termstructures/swaptionsabrcube.hpp>
 #include <qle/termstructures/swaptionvolatilityconverter.hpp>
 #include <qle/termstructures/swaptionvolconstantspread.hpp>
