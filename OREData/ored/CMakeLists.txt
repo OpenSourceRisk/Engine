@@ -63,6 +63,7 @@ marketdata/swaptionvolcurve.cpp
 marketdata/todaysmarket.cpp
 marketdata/todaysmarketcalibrationinfo.cpp
 marketdata/todaysmarketparameters.cpp
+marketdata/volsurfacebuilder.cpp
 marketdata/wrappedmarket.cpp
 marketdata/yieldcurve.cpp
 marketdata/yieldvolcurve.cpp
@@ -483,6 +484,7 @@ marketdata/swaptionvolcurve.hpp
 marketdata/todaysmarket.hpp
 marketdata/todaysmarketcalibrationinfo.hpp
 marketdata/todaysmarketparameters.hpp
+marketdata/volsurfacebuilder.hpp
 marketdata/wrappedmarket.hpp
 marketdata/yieldcurve.hpp
 marketdata/yieldvolcurve.hpp

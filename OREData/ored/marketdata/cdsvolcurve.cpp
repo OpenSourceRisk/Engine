@@ -29,28 +29,12 @@
 #include <ql/time/calendars/weekendsonly.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <qle/termstructures/creditvolcurve.hpp>
-#include <qle/termstructures/creditvolcurve.hpp>
 #include <qle/termstructures/svimodeltraits.hpp>
 #include <qle/utilities/time.hpp>
 
 using namespace QuantExt;
 using namespace QuantLib;
 using namespace std;
-
-namespace {
-
-std::optional<QuantExt::SviParametricVolatility::ModelVariant>
-parseSviModelVariant(const std::string& interpolationModel) {
-    std::optional<QuantExt::SviParametricVolatility::ModelVariant> result;
-    if (!interpolationModel.empty())
-        ore::data::tryParse<std::optional<QuantExt::SviParametricVolatility::ModelVariant>>(
-            interpolationModel, result,
-            std::function<QuantExt::SviParametricVolatility::ModelVariant(const std::string&)>(
-                ore::data::parseSviParametricVolatilityModelVariant));
-    return result;
-}
-
-} // namespace
 
 namespace ore {
 namespace data {
@@ -381,12 +365,12 @@ void CDSVolCurve::buildVolatility(const Date& asof, CDSVolatilityCurveConfig& vc
     }
 
     string strikeInterpolation = vssc.strikeInterpolation();
-    auto sviModelVariant = parseSviModelVariant(strikeInterpolation);
-    if (sviModelVariant) {
+    SviParametricVolatility::ModelVariant sviModelVariant;
+    if (tryParse<SviParametricVolatility::ModelVariant>(strikeInterpolation, sviModelVariant, parseSviParametricVolatilityModelVariant)) {
         QL_REQUIRE(vssc.timeInterpolation() == strikeInterpolation,
                    "CDSVolCurve: SVI requires TimeInterpolation and StrikeInterpolation to be set to the same "
                    "variant, got '" << vssc.timeInterpolation() << "' vs '" << strikeInterpolation << "'");
-        buildSviVolatility(asof, vc, vssc, quotes, effTerms, termCurves, *sviModelVariant);
+        buildSviVolatility(asof, vc, vssc, quotes, effTerms, termCurves, sviModelVariant);
     } else {
         vol_ = QuantLib::ext::make_shared<QuantExt::InterpolatingCreditVolCurve>(
             asof, calendar_, Following, dayCounter_, effTerms, termCurves, quotes, strikeType_);
@@ -604,12 +588,12 @@ void CDSVolCurve::buildVolatilityExplicit(
     }
 
     string strikeInterpolation = vssc.strikeInterpolation();
-    auto sviModelVariant = parseSviModelVariant(strikeInterpolation);
-    if (sviModelVariant) {
+    SviParametricVolatility::ModelVariant sviModelVariant;
+    if (tryParse<SviParametricVolatility::ModelVariant>(strikeInterpolation, sviModelVariant, parseSviParametricVolatilityModelVariant)) {
         QL_REQUIRE(vssc.timeInterpolation() == strikeInterpolation,
                    "CDSVolCurve: SVI requires TimeInterpolation and StrikeInterpolation to be set to the same "
                    "variant, got '" << vssc.timeInterpolation() << "' vs '" << strikeInterpolation << "'");
-        buildSviVolatility(asof, vc, vssc, quotes, effTerms, termCurves, *sviModelVariant);
+        buildSviVolatility(asof, vc, vssc, quotes, effTerms, termCurves, sviModelVariant);
     } else {
         vol_ = QuantLib::ext::make_shared<QuantExt::InterpolatingCreditVolCurve>(
             asof, calendar_, Following, dayCounter_, effTerms, termCurves, quotes, strikeType_);
