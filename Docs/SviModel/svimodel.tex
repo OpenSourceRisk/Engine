@@ -868,6 +868,80 @@ on an absolute-strike surface with wildcard expiries and strikes:
   </CommodityVolatility>
 \end{minted}
 
+\subsection{CDS Volatility Surface Example (Mingone, global)}
+
+A complete example for an CDS volatility surface using the Mingone2022EssviGJ model variant:
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <CDSVolatility>
+    <CurveId>RED:2I666VDB8</CurveId>
+    <CurveDescription>ITRAXX Europe 5Y index option lognormal vols
+      using ESSVI Mingone GJ (global)</CurveDescription>
+    <Terms>
+      <Term>
+        <Label>1Y</Label>
+        <Curve>Default/EUR/RED:2I666VDB8_1Y</Curve>
+      </Term>
+      <Term>
+        <Label>3Y</Label>
+        <Curve>Default/EUR/RED:2I666VDB8_3Y</Curve>
+      </Term>
+      <Term>
+        <Label>5Y</Label>
+        <Curve>Default/EUR/RED:2I666VDB8_5Y</Curve>
+      </Term>
+      <Term>
+        <Label>7Y</Label>
+        <Curve>Default/EUR/RED:2I666VDB8_7Y</Curve>
+      </Term>
+      <Term>
+        <Label>10Y</Label>
+        <Curve>Default/EUR/RED:2I666VDB8_10Y</Curve>
+      </Term>
+    </Terms>
+    <StrikeSurface priority="0">
+      <QuoteType>ImpliedVolatility</QuoteType>
+      <VolatilityType>Lognormal</VolatilityType>
+      <Strikes>*</Strikes>
+      <Expiries>*</Expiries>
+      <TimeInterpolation>Mingone2022EssviGJ</TimeInterpolation>
+      <StrikeInterpolation>Mingone2022EssviGJ</StrikeInterpolation>
+      <Extrapolation>true</Extrapolation>
+      <TimeExtrapolation>Flat</TimeExtrapolation>
+      <StrikeExtrapolation>Flat</StrikeExtrapolation>
+      <ParametricSmileConfiguration>
+        <Parameters>
+          <Parameter>
+            <Name>rho</Name>
+            <InitialValue>0.0</InitialValue>
+            <Calibration>Calibrated</Calibration>
+          </Parameter>
+          <Parameter>
+            <Name>a</Name>
+            <InitialValue>0.0</InitialValue>
+            <Calibration>Calibrated</Calibration>
+          </Parameter>
+          <Parameter>
+            <Name>c</Name>
+            <InitialValue>0.5</InitialValue>
+            <Calibration>Calibrated</Calibration>
+          </Parameter>
+        </Parameters>
+        <Calibration>
+          <MaxCalibrationAttempts>50</MaxCalibrationAttempts>
+          <ExitEarlyErrorThreshold>0.005</ExitEarlyErrorThreshold>
+          <MaxAcceptableError>100.0</MaxAcceptableError>
+        </Calibration>
+      </ParametricSmileConfiguration>
+    </StrikeSurface>
+    <DayCounter>A365</DayCounter>
+    <Calendar>NullCalendar</Calendar>
+    <StrikeType>Spread</StrikeType>
+    <QuoteName>2I666VDB8</QuoteName>
+    <StrikeFactor>10000</StrikeFactor>
+  </CDSVolatility>
+\end{minted}
+
 \begin{thebibliography}{10}
 
 \bibitem{Gatheral_2004} Gatheral, J., A parsimonious arbitrage-free implied volatility parameterization with application to the valuation of volatility derivatives, Presentation at Global Derivatives \& Risk Management, 2004
