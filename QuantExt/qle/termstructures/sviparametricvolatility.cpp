@@ -286,7 +286,7 @@ std::tuple<std::vector<Real>, Real, Real, Size> SviParametricVolatility::calibra
             Array result(strikes_.size());
             auto svi = evalSvi(x);
             for (Size i = 0; i < strikes_.size(); ++i) {
-                result[i] = abs(marketQuotes_[i] - svi[i]) / refQuote_;
+                result[i] = std::abs(marketQuotes_[i] - svi[i]) / refQuote_;
             }
             return result;
         }
@@ -1577,7 +1577,7 @@ SsviParametricVolatility::calibrateModelParameters(
             Array result(strikes_.size());
             auto svi = evalSvi(x);
             for (Size i = 0; i < strikes_.size(); ++i) {
-                result[i] = abs(marketQuotes_[i] - svi[i]) / refQuote_;
+                result[i] = std::abs(marketQuotes_[i] - svi[i]) / refQuote_;
             }
             return result;
         }
