@@ -133,29 +133,138 @@ getGuess(ModelVariant mv,
     std::vector<Real> result(params.size(), 0.0);
 
     switch (mv) {
-    case ModelVariant::Gatheral2004SviRaw:
-    case ModelVariant::Gatheral2004SviNatural:
-    case ModelVariant::Gatheral2004SviJw:
-    case ModelVariant::Gatheral2012SsviHeston:
-    case ModelVariant::Gatheral2012SsviPowerLaw: {
+    case ModelVariant::Gatheral2004SviRaw: {
+        // Raw SVI params: a (unconstrained), b (>=0), rho in (-1,1), m (unconstrained), sigma (>0)
         for (Size i = 0, j = 0; i < params.size(); ++i) {
             if (params[i].second != ParametricVolatility::ParameterCalibration::Calibrated) {
                 result[i] = params[i].first;
             } else {
                 switch (i) {
-                case 0: {
-                    Real fbeta = std::pow(forward + lognormalShift, params[1].first);
-                    result[0] = (eps1 + randomSeq[j] * 0.01) / fbeta;
+                case 0: // a
+                    result[0] = (2.0 * randomSeq[j] - 1.0) * 0.1;
+                    break;
+                case 1: // b >= 0
+                    result[1] = eps1 + randomSeq[j] * 2.0;
+                    break;
+                case 2: // rho in (-1, 1)
+                    result[2] = (2.0 * randomSeq[j] - 1.0) * eps2;
+                    break;
+                case 3: // m
+                    result[3] = (2.0 * randomSeq[j] - 1.0) * 0.1;
+                    break;
+                case 4: // sigma > 0
+                    result[4] = eps1 + randomSeq[j] * 0.5;
+                    break;
+                default:
                     break;
                 }
-                case 1:
-                    result[1] = eps1 + randomSeq[j] * eps2;
+                ++j;
+            }
+        }
+        break;
+    }
+    case ModelVariant::Gatheral2004SviNatural: {
+        // Natural SVI params: delta (unconstrained), miu (unconstrained), rho in (-1,1), omega (>=0), zeta (>0)
+        for (Size i = 0, j = 0; i < params.size(); ++i) {
+            if (params[i].second != ParametricVolatility::ParameterCalibration::Calibrated) {
+                result[i] = params[i].first;
+            } else {
+                switch (i) {
+                case 0: // delta
+                    result[0] = (2.0 * randomSeq[j] - 1.0) * 0.5;
                     break;
-                case 2:
+                case 1: // miu
+                    result[1] = (2.0 * randomSeq[j] - 1.0) * 0.5;
+                    break;
+                case 2: // rho in (-1, 1)
+                    result[2] = (2.0 * randomSeq[j] - 1.0) * eps2;
+                    break;
+                case 3: // omega >= 0
+                    result[3] = eps1 + randomSeq[j];
+                    break;
+                case 4: // zeta > 0
+                    result[4] = eps1 + randomSeq[j] * 2.0;
+                    break;
+                default:
+                    break;
+                }
+                ++j;
+            }
+        }
+        break;
+    }
+    case ModelVariant::Gatheral2004SviJw: {
+        // JW SVI params: v (>0), phi (unconstrained), p (unconstrained), c (unconstrained), vTilda (>0)
+        for (Size i = 0, j = 0; i < params.size(); ++i) {
+            if (params[i].second != ParametricVolatility::ParameterCalibration::Calibrated) {
+                result[i] = params[i].first;
+            } else {
+                switch (i) {
+                case 0: // v > 0
+                    result[0] = eps1 + randomSeq[j] * 0.5;
+                    break;
+                case 1: // phi
+                    result[1] = (2.0 * randomSeq[j] - 1.0) * 0.5;
+                    break;
+                case 2: // p
+                    result[2] = (2.0 * randomSeq[j] - 1.0) * 2.0;
+                    break;
+                case 3: // c
+                    result[3] = eps1 + randomSeq[j] * 2.0;
+                    break;
+                case 4: // vTilda > 0
+                    result[4] = eps1 + randomSeq[j] * 0.5;
+                    break;
+                default:
+                    break;
+                }
+                ++j;
+            }
+        }
+        break;
+    }
+    case ModelVariant::Gatheral2012SsviHeston: {
+        // Heston SSVI params: theta (>0), rho in (-1,1), lambda (>0)
+        for (Size i = 0, j = 0; i < params.size(); ++i) {
+            if (params[i].second != ParametricVolatility::ParameterCalibration::Calibrated) {
+                result[i] = params[i].first;
+            } else {
+                switch (i) {
+                case 0: // theta > 0
+                    result[0] = eps1 + randomSeq[j] * 0.5;
+                    break;
+                case 1: // rho in (-1, 1)
+                    result[1] = (2.0 * randomSeq[j] - 1.0) * eps2;
+                    break;
+                case 2: // lambda > 0
                     result[2] = eps1 + randomSeq[j] * max_nu;
                     break;
-                case 3:
-                    result[3] = (randomSeq[j] * 2.0 - 1.0) * eps2;
+                default:
+                    break;
+                }
+                ++j;
+            }
+        }
+        break;
+    }
+    case ModelVariant::Gatheral2012SsviPowerLaw: {
+        // PowerLaw SSVI params: theta (>0), rho in (-1,1), eta (>0), gamma in (0,1)
+        for (Size i = 0, j = 0; i < params.size(); ++i) {
+            if (params[i].second != ParametricVolatility::ParameterCalibration::Calibrated) {
+                result[i] = params[i].first;
+            } else {
+                switch (i) {
+                case 0: // theta > 0
+                    result[0] = eps1 + randomSeq[j] * 0.5;
+                    break;
+                case 1: // rho in (-1, 1)
+                    result[1] = (2.0 * randomSeq[j] - 1.0) * eps2;
+                    break;
+                case 2: // eta > 0
+                    result[2] = eps1 + randomSeq[j] * max_nu;
+                    break;
+                case 3: // gamma in (0, 1)
+                    result[3] = eps1 + randomSeq[j] * (1.0 - 2e-6);
                     break;
                 default:
                     break;
