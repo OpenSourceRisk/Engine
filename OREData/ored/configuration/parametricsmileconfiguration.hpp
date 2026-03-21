@@ -43,7 +43,7 @@ public:
         ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
         std::string name;
-        std::vector<double> initialValue = {0.0};
+        std::vector<double> initialValue = {QuantLib::Null<double>()};
         QuantExt::ParametricVolatility::ParameterCalibration calibration =
             QuantExt::ParametricVolatility::ParameterCalibration::Calibrated;
     };

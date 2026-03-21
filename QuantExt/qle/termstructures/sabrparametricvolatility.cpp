@@ -562,6 +562,16 @@ void SabrParametricVolatility::calculate() {
         }
     }
 
+    // Replace any Null<Real>() initial value with the model's hard-coded default for that parameter index.
+    // Null<Real>() means "<InitialValue> was omitted" in XML.
+    auto const sabrDefaults = defaultModelParameters();
+    for (auto& [key, params] : modelParameters_) {
+        for (Size i = 0; i < params.size() && i < sabrDefaults.size(); ++i) {
+            if (params[i].first == Null<Real>())
+                params[i].first = sabrDefaults[i].first;
+        }
+    }
+
     // check validity of model parameters
 
     for (auto const& [k, v] : modelParameters_) {

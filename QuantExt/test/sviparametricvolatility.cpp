@@ -269,9 +269,9 @@ const std::map<SviParametricVolatility::ModelVariant, SsviTestConfig> ssviTestCo
     {SviParametricVolatility::ModelVariant::CorbettaEtAl2019Essvi,
      {{0.0, 0.0, 0.0, 0.01}, 0.014, 0.042}},                              // k_star, theta_star, rho, psi
     {SviParametricVolatility::ModelVariant::Mingone2022EssviGJ,
-     {{0.0, 0.0, 0.5}, 0.008, 0.024}},                                    // rho, a, c
+     {{0.0, Null<Real>(), 0.5}, 0.008, 0.024}},    // rho, a=Null (ATM-implied), c
     {SviParametricVolatility::ModelVariant::Mingone2022EssviMM,
-     {{0.0, 0.0, 0.5}, 0.008, 0.024}},                                    // rho, a, c
+     {{0.0, Null<Real>(), 0.5}, 0.008, 0.024}},    // rho, a=Null (ATM-implied), c
 };
 
 struct CommonDataSsvi {

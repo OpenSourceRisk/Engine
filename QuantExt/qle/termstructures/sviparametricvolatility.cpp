@@ -784,6 +784,18 @@ void SviParametricVolatility::setDefaultParameters() {
         }
     }
 
+    // Replace any Null<Real>() initial value with the model's hard-coded default for that parameter index.
+    // Null<Real>() means "<InitialValue> was omitted" in XML.  For Mingone the default for the 'a' parameter
+    // (index 1) is intentionally Null<Real>() too, so it passes through here unchanged and is resolved later
+    // by SsviParametricVolatilityGlobal::setDefaultParameters() using the ATM-implied total variance.
+    auto const defaults = defaultModelParameters();
+    for (auto& [key, params] : modelParameters_) {
+        for (Size i = 0; i < params.size() && i < defaults.size(); ++i) {
+            if (params[i].first == Null<Real>())
+                params[i].first = defaults[i].first;
+        }
+    }
+
 }
 
 void SviParametricVolatility::calibrate() {
@@ -2401,7 +2413,7 @@ void SsviParametricVolatilityGlobal::setDefaultParameters() {
             Real atmQuote = getAtmQuote(s, modelLognormalShift, MarketQuoteType::ShiftedLognormalVolatility);
             Real atmVar = atmQuote * atmQuote * s.timeToExpiry;
 
-            if (modelParameters_[std::make_pair(s.timeToExpiry, s.underlyingLength)][1].first == 0.0) {
+            if (modelParameters_[std::make_pair(s.timeToExpiry, s.underlyingLength)][1].first == Null<Real>()) {
                 if (sliceIndex == 0) {
                     // theta_0: set to the ATM total variance level for the first slice
                     modelParameters_[std::make_pair(s.timeToExpiry, s.underlyingLength)][1].first = atmVar;
