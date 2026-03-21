@@ -57,7 +57,23 @@ public:
             modelParameters = {},
         const std::map<QuantLib::Real, QuantLib::Real>& modelShift = {},
         const QuantLib::Size maxCalibrationAttempts = 10, const QuantLib::Real exitEarlyErrorThreshold = 0.005,
-        const QuantLib::Real maxAcceptableError = 0.05, bool deferCalculate = false, bool enforceNoArbitrage = false);
+        const QuantLib::Real maxAcceptableError = 0.05, bool enforceNoArbitrage = false);
+
+protected:
+    // Tag type for subclass constructor dispatch
+    struct DeferredInit {};
+    // Protected constructor: skips calculate(), for use by subclasses
+    SviParametricVolatility(
+        DeferredInit,
+        const ModelVariant modelVariant, const std::vector<MarketSmile> marketSmiles,
+        const MarketModelType marketModelType, const MarketQuoteType inputMarketQuoteType,
+        const QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve,
+        const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, ParameterCalibration>>>
+            modelParameters = {},
+        const std::map<QuantLib::Real, QuantLib::Real>& modelShift = {},
+        const QuantLib::Size maxCalibrationAttempts = 10, const QuantLib::Real exitEarlyErrorThreshold = 0.005,
+        const QuantLib::Real maxAcceptableError = 0.05, bool enforceNoArbitrage = false);
+public:
 
     virtual QuantLib::Real evaluate(
         const QuantLib::Real timeToExpiry, const QuantLib::Real underlyingLength, const QuantLib::Real strike,
@@ -76,6 +92,21 @@ public:
     const QuantLib::Matrix& calibrationError() const { return calibrationError_; }
     //indicator whether smile params were interpolated (1) or calibrated (0)
     const QuantLib::Matrix& isInterpolated() const { return isInterpolated_; }
+    // Vol RMSE metrics — identical definition for all model variants, comparable across Corbetta/PowerLaw/Mingone etc.
+    // All three are normalised by the per-slice maximum of the *market* value in that quote type.
+    // Shape: rows = underlyingLengths, cols = timeToExpiries. Null<Real>() for uncalibrated slices.
+
+    // |model_vol - market_vol| / max(market_vol_per_slice), where vol = shifted-lognormal vol
+    const QuantLib::Matrix& volRmseShiftedLognormal() const { return volRmseShiftedLognormal_; }
+    QuantLib::Real globalVolRmseShiftedLognormal() const { return globalVolRmseShiftedLognormal_; }
+
+    // |model_price - market_price| / max(market_price_per_slice)
+    const QuantLib::Matrix& volRmsePrice() const { return volRmsePrice_; }
+    QuantLib::Real globalVolRmsePrice() const { return globalVolRmsePrice_; }
+
+    // |model_totalVar - market_totalVar| / max(market_totalVar_per_slice),  totalVar = vol^2 * T
+    const QuantLib::Matrix& volRmseTotalVariance() const { return volRmseTotalVariance_; }
+    QuantLib::Real globalVolRmseTotalVariance() const { return globalVolRmseTotalVariance_; }
 
     struct CalibrationResult {
         QuantLib::Real timeToExpiry;
@@ -102,6 +133,8 @@ public:
     Real getAtmQuote(const MarketSmile& marketSmile, Real modelLognormalShift,
                      QuantLib::ext::optional<MarketQuoteType> outputMarketQuoteType = QuantLib::ext::nullopt) const;
 
+    static QuantLib::Size expectedModelParametersSize(ModelVariant modelVariant);
+
 protected:
     ModelVariant modelVariant_;
 
@@ -110,7 +143,6 @@ protected:
     std::vector<Real> getGuess(const std::vector<std::pair<Real, ParametricVolatility::ParameterCalibration>>& params,
                                const std::vector<Real>& randomSeq, const Real forward, const Real lognormalShift) const;
 
-    static QuantLib::Size expectedModelParametersSize(ModelVariant modelVariant);
     QuantLib::Size expectedModelParametersSize() const;
     ParametricVolatility::MarketQuoteType preferredOutputQuoteType() const;
     virtual std::tuple<std::vector<Real>, Real, Real, QuantLib::Size>
@@ -131,8 +163,11 @@ protected:
 
     mutable std::vector<Real> underlyingLengths_, timeToExpiries_;
     mutable std::vector<Real> underlyingLengthsForInterpolation_, timeToExpiriesForInterpolation_;
-    mutable QuantLib::Matrix lognormalShift_, calibrationError_, isInterpolated_,
-        numberOfCalibrationAttempts_;
+    mutable QuantLib::Matrix lognormalShift_, calibrationError_, isInterpolated_, numberOfCalibrationAttempts_;
+    mutable QuantLib::Matrix volRmseShiftedLognormal_, volRmsePrice_, volRmseTotalVariance_;
+    mutable QuantLib::Real globalVolRmseShiftedLognormal_ = QuantLib::Null<QuantLib::Real>();
+    mutable QuantLib::Real globalVolRmsePrice_            = QuantLib::Null<QuantLib::Real>();
+    mutable QuantLib::Real globalVolRmseTotalVariance_    = QuantLib::Null<QuantLib::Real>();
     mutable QuantLib::Interpolation2D lognormalShiftInterpolation_;
     mutable std::vector<QuantLib::Matrix> sviParametersMatrices_;
     mutable std::vector<QuantLib::Interpolation2D> sviParametersInterpolations_;
@@ -147,6 +182,7 @@ protected:
     bool enforceNoArbitrage_;
 
     void calculate();
+    void computeVolRmseMetrics();
     virtual void setDefaultParameters();
     virtual void calibrate();
 
@@ -176,6 +212,22 @@ public:
         const std::map<QuantLib::Real, QuantLib::Real>& modelShift = {},
         const QuantLib::Size maxCalibrationAttempts = 10, const QuantLib::Real exitEarlyErrorThreshold = 0.005,
         const QuantLib::Real maxAcceptableError = 0.05, bool enforceNoArbitrage = true);
+
+protected:
+    // Protected constructor: skips variant check and calculate(), for use by subclasses.
+    // Uses DeferredInit tag inherited from SviParametricVolatility.
+    SsviParametricVolatility(
+        DeferredInit,
+        const ModelVariant modelVariant, const std::vector<MarketSmile> marketSmiles,
+        const MarketModelType marketModelType, const MarketQuoteType inputMarketQuoteType,
+        const QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve,
+        const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, ParameterCalibration>>>
+            modelParameters = {},
+        const std::map<QuantLib::Real, QuantLib::Real>& modelShift = {},
+        const QuantLib::Size maxCalibrationAttempts = 10, const QuantLib::Real exitEarlyErrorThreshold = 0.005,
+        const QuantLib::Real maxAcceptableError = 0.05, bool enforceNoArbitrage = true);
+
+public:
 
     std::vector<Real> evaluateSvi(const std::vector<Real>& params, const Real forward,
                                   const Real timeToExpiry, const Real lognormalShift,

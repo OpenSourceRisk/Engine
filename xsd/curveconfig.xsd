@@ -67,6 +67,8 @@
       <xs:element type="bool" name="TimeExtrapolationVariance" minOccurs="0" maxOccurs="1"/>
       <xs:element type="extrapolationType" name="StrikeExtrapolation"/>
       <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="InterpolationModel" minOccurs="0"/>
+      <xs:element type="parametricSmileConfig" name="ParametricSmileConfiguration" minOccurs="0"/>
     </xs:all>
     <xs:attribute type="xs:nonNegativeInteger" name="priority"/>
   </xs:complexType>
@@ -90,6 +92,8 @@
       <xs:element type="extrapolationType" name="StrikeExtrapolation"/>
       <xs:element type="bool" name="FuturePriceCorrection" minOccurs="0"/>
       <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="InterpolationModel" minOccurs="0"/>
+      <xs:element type="parametricSmileConfig" name="ParametricSmileConfiguration" minOccurs="0"/>
     </xs:all>
     <xs:attribute type="xs:nonNegativeInteger" name="priority"/>
   </xs:complexType>
@@ -110,6 +114,8 @@
       <xs:element type="extrapolationType" name="StrikeExtrapolation"/>
       <xs:element type="bool" name="FuturePriceCorrection" minOccurs="0"/>
       <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="InterpolationModel" minOccurs="0"/>
+      <xs:element type="parametricSmileConfig" name="ParametricSmileConfiguration" minOccurs="0"/>
     </xs:all>
     <xs:attribute type="xs:nonNegativeInteger" name="priority"/>
   </xs:complexType>  

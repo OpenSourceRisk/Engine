@@ -31,6 +31,7 @@
 #include <ored/utilities/wildcard.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/math/matrix.hpp>
+#include <ql/pricingengines/blackdeltacalculator.hpp>
 #include <ql/pricingengines/blackformula.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
@@ -44,6 +45,7 @@
 #include <qle/termstructures/blackvolsurfacedelta.hpp>
 #include <qle/termstructures/eqcommoptionsurfacestripper.hpp>
 #include <qle/termstructures/blackvolsurfaceproxy.hpp>
+#include <qle/termstructures/blackvolsurfacesvi.hpp>
 #include <qle/termstructures/optionpricesurface.hpp>
 #include <qle/termstructures/correlationtermstructure.hpp>
 #include <qle/termstructures/blackinvertedvoltermstructure.hpp>
@@ -51,6 +53,181 @@
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace std;
+
+namespace {
+
+std::optional<SviParametricVolatility::ModelVariant> parseSviModelVariant(const std::string& interpolationModel) {
+    std::optional<SviParametricVolatility::ModelVariant> result;
+    if (!interpolationModel.empty())
+        ore::data::tryParse<std::optional<SviParametricVolatility::ModelVariant>>(
+            interpolationModel, result,
+            std::function<SviParametricVolatility::ModelVariant(const std::string&)>(
+                ore::data::parseSviParametricVolatilityModelVariant));
+    return result;
+}
+
+void organizeCallPutQuotesByExpiry(
+    const std::vector<Date>& callExpiries, const std::vector<Real>& callStrikes, const std::vector<Real>& callQuotes,
+    const std::vector<Date>& putExpiries, const std::vector<Real>& putStrikes, const std::vector<Real>& putQuotes,
+    const Handle<EquityIndex2>& eqIndex, bool preferOutOfTheMoney,
+    std::vector<Date>& sviDates, std::vector<std::vector<Real>>& sviStrikes,
+    std::vector<std::vector<Real>>& sviQuotes, std::vector<std::vector<Option::Type>>& sviOptionTypes) {
+
+    std::map<Date, std::map<Real, Real>> callsByExpiry, putsByExpiry;
+    for (Size i = 0; i < callExpiries.size(); ++i)
+        callsByExpiry[callExpiries[i]][callStrikes[i]] = callQuotes[i];
+    for (Size i = 0; i < putExpiries.size(); ++i)
+        putsByExpiry[putExpiries[i]][putStrikes[i]] = putQuotes[i];
+
+    std::set<Date> allDates;
+    for (auto const& kv : callsByExpiry)
+        allDates.insert(kv.first);
+    for (auto const& kv : putsByExpiry)
+        allDates.insert(kv.first);
+
+    static const std::map<Real, Real> emptyMap;
+    for (auto const& d : allDates) {
+        Real atmf = eqIndex->forecastFixing(d);
+        auto callIt = callsByExpiry.find(d);
+        auto putIt = putsByExpiry.find(d);
+        auto const& calls = callIt != callsByExpiry.end() ? callIt->second : emptyMap;
+        auto const& puts = putIt != putsByExpiry.end() ? putIt->second : emptyMap;
+
+        std::set<Real> strikeSet;
+        for (auto const& kv : calls)
+            strikeSet.insert(kv.first);
+        for (auto const& kv : puts)
+            strikeSet.insert(kv.first);
+
+        std::vector<Real> strikes, quotes;
+        std::vector<Option::Type> types;
+        for (Real k : strikeSet) {
+            if (preferOutOfTheMoney && k < atmf) {
+                auto it = puts.find(k);
+                if (it != puts.end()) {
+                    strikes.push_back(k);
+                    quotes.push_back(it->second);
+                    types.push_back(Option::Put);
+                } else {
+                    auto jt = calls.find(k);
+                    if (jt != calls.end()) {
+                        strikes.push_back(k);
+                        quotes.push_back(jt->second);
+                        types.push_back(Option::Call);
+                    }
+                }
+            } else {
+                auto it = calls.find(k);
+                if (it != calls.end()) {
+                    strikes.push_back(k);
+                    quotes.push_back(it->second);
+                    types.push_back(Option::Call);
+                } else {
+                    auto jt = puts.find(k);
+                    if (jt != puts.end()) {
+                        strikes.push_back(k);
+                        quotes.push_back(jt->second);
+                        types.push_back(Option::Put);
+                    }
+                }
+            }
+        }
+        if (!strikes.empty()) {
+            sviDates.push_back(d);
+            sviStrikes.push_back(strikes);
+            sviQuotes.push_back(quotes);
+            sviOptionTypes.push_back(types);
+        }
+    }
+}
+
+QuantLib::ext::shared_ptr<BlackVolTermStructure> buildSviSurface(
+    const Date& asof, const std::vector<Date>& sviDates, const std::vector<std::vector<Real>>& sviStrikes,
+    const std::vector<std::vector<Real>>& sviQuotes, const DayCounter& dayCounter, const Calendar& calendar,
+    const Handle<Quote>& spot, const Handle<YieldTermStructure>& forecastCurve,
+    const Handle<YieldTermStructure>& dividendCurve, SviParametricVolatility::ModelVariant sviModelVariant,
+    const std::vector<std::vector<Option::Type>>& sviOptionTypes,
+    const QuantLib::ext::optional<ore::data::ParametricSmileConfiguration>& parametricSmileConfiguration,
+    const std::string& interpolationModel,
+    ParametricVolatility::MarketQuoteType inputMarketQuoteType =
+        ParametricVolatility::MarketQuoteType::ShiftedLognormalVolatility) {
+
+    std::map<std::pair<Real, Real>,
+             std::vector<std::pair<Real, QuantExt::ParametricVolatility::ParameterCalibration>>>
+        modelParameters;
+    Size maxCalibrationAttempts = 10;
+    Real exitEarlyErrorThreshold = 0.005;
+    Real maxAcceptableError = 0.05;
+
+    if (parametricSmileConfiguration) {
+        auto const& psc = *parametricSmileConfiguration;
+        auto const& params = psc.parameters();
+        Size expectedSize = QuantExt::SviParametricVolatility::expectedModelParametersSize(sviModelVariant);
+        QL_REQUIRE(params.size() == expectedSize,
+                   "EquityVolCurve: ParametricSmileConfiguration has "
+                       << params.size() << " parameters, but model variant " << interpolationModel << " expects "
+                       << expectedSize);
+        for (auto const& p : params) {
+            QL_REQUIRE(p.initialValue.size() == 1 || p.initialValue.size() == sviDates.size(),
+                       "EquityVolCurve: ParametricSmileConfiguration parameter '"
+                           << p.name << "' has " << p.initialValue.size() << " initial values, expected 1 or "
+                           << sviDates.size());
+        }
+        for (Size j = 0; j < sviDates.size(); ++j) {
+            std::vector<std::pair<Real, QuantExt::ParametricVolatility::ParameterCalibration>> paramVec;
+            for (auto const& p : params) {
+                Real val = p.initialValue.size() == 1 ? p.initialValue.front() : p.initialValue[j];
+                paramVec.push_back(std::make_pair(val, p.calibration));
+            }
+            Real t = dayCounter.yearFraction(asof, sviDates[j]);
+            modelParameters[std::make_pair(t, Null<Real>())] = paramVec;
+        }
+        maxCalibrationAttempts = psc.calibration().maxCalibrationAttempts;
+        exitEarlyErrorThreshold = psc.calibration().exitEarlyErrorThreshold;
+        maxAcceptableError = psc.calibration().maxAcceptableError;
+    }
+
+    auto result = QuantLib::ext::make_shared<BlackVolatilitySurfaceSvi>(
+        asof, sviDates, sviStrikes, sviQuotes, dayCounter, calendar, spot, 0, calendar, forecastCurve, dividendCurve,
+        sviModelVariant, inputMarketQuoteType, sviOptionTypes, modelParameters, maxCalibrationAttempts,
+        exitEarlyErrorThreshold, maxAcceptableError);
+
+    // Force calibration by triggering one evaluation, then log calibration RMSE
+    try {
+        result->blackVol(1.0, sviStrikes[0].front());
+        auto sviPV = QuantLib::ext::dynamic_pointer_cast<QuantExt::SviParametricVolatility>(result->parametricVolatility());
+        if (sviPV) {
+            // per-expiry vol RMSE (shifted lognormal space)
+            auto const& rmseVol = sviPV->volRmseShiftedLognormal();
+            for (Size j = 0; j < rmseVol.columns(); ++j) {
+                for (Size i = 0; i < rmseVol.rows(); ++i) {
+                    Real r = rmseVol(i, j);
+                    if (r != QuantLib::Null<QuantLib::Real>()) {
+                        Size nStrikes = j < sviStrikes.size() ? sviStrikes[j].size() : 0;
+                        LOG("EquityVolCurve SVI (" << interpolationModel << ") expiry[" << j
+                            << "] vol RMSE = " << r << " (normalised by max vol, " << nStrikes << " strikes)");
+                    }
+                }
+            }
+            // global RMSE across all expiries — all three metrics
+            Real gv = sviPV->globalVolRmseShiftedLognormal();
+            Real gp = sviPV->globalVolRmsePrice();
+            Real gt = sviPV->globalVolRmseTotalVariance();
+            if (gv != QuantLib::Null<QuantLib::Real>()) {
+                Size nTotalStrikes = 0;
+                for (auto const& s : sviStrikes)
+                    nTotalStrikes += s.size();
+                LOG("EquityVolCurve SVI (" << interpolationModel << ") global RMSE"
+                    << " vol=" << gv << " price=" << gp << " totalVar=" << gt
+                    << " (" << sviDates.size() << " expiries, " << nTotalStrikes << " strikes)");
+            }
+        }
+    } catch (...) {}
+
+    return result;
+}
+
+} // namespace
 
 namespace ore {
 namespace data {
@@ -491,26 +668,69 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
 
     if (vssc.quoteType() == MarketDatum::QuoteType::PRICE) {
 
-        // Create the 1D solver options used in the price stripping.
-        Solver1DOptions solverOptions = vc.solverConfig();
+        // Check if an SVI interpolation model is requested
+        string interpolationModel = vssc.interpolationModel();
+        auto sviModelVariant = parseSviModelVariant(interpolationModel);
 
-        DLOG("EquityVolCurve: Building a option price surface for calls and puts");
-        QuantLib::ext::shared_ptr<OptionPriceSurface> callSurface =
-            QuantLib::ext::make_shared<OptionPriceSurface>(asof, callExpiries, callStrikes, callData, dayCounter_);
-        QuantLib::ext::shared_ptr<OptionPriceSurface> putSurface =
-            QuantLib::ext::make_shared<OptionPriceSurface>(asof, putExpiries, putStrikes, putData, dayCounter_);
+        if (sviModelVariant) {
+            DLOG("EquityVolCurve: Building SVI surface from option prices with model variant " << interpolationModel);
 
-        DLOG("EquityVolCurve: CallSurface contains " << callSurface->expiries().size() << " expiries.");
+            std::vector<Date> sviDates;
+            std::vector<std::vector<Real>> sviStrikes, sviPrices;
+            std::vector<std::vector<Option::Type>> sviOptionTypes;
+            organizeCallPutQuotesByExpiry(callExpiries, callStrikes, callData,
+                                          putExpiries, putStrikes, putData,
+                                          eqIndex, preferOutOfTheMoney,
+                                          sviDates, sviStrikes, sviPrices, sviOptionTypes);
 
-        DLOG("EquityVolCurve: Stripping equity volatility surface from the option premium surfaces");
-        QuantLib::ext::shared_ptr<EquityOptionSurfaceStripper> eoss = QuantLib::ext::make_shared<EquityOptionSurfaceStripper>(
-            eqIndex, callSurface, putSurface, calendar_, dayCounter_, vssc.exerciseType(), flatStrikeExtrap,
-            flatStrikeExtrap, timeExtrapolation, preferOutOfTheMoney, solverOptions);
-        vol_ = eoss->volSurface();
+            vol_ = buildSviSurface(asof, sviDates, sviStrikes, sviPrices, dayCounter_, calendar_,
+                                   eqIndex->equitySpot(), eqIndex->equityForecastCurve(),
+                                   eqIndex->equityDividendCurve(), *sviModelVariant, sviOptionTypes,
+                                   vssc.parametricSmileConfiguration(), interpolationModel,
+                                   ParametricVolatility::MarketQuoteType::Price);
+
+        } else {
+            // Create the 1D solver options used in the price stripping.
+            Solver1DOptions solverOptions = vc.solverConfig();
+
+            DLOG("EquityVolCurve: Building a option price surface for calls and puts");
+            QuantLib::ext::shared_ptr<OptionPriceSurface> callSurface =
+                QuantLib::ext::make_shared<OptionPriceSurface>(asof, callExpiries, callStrikes, callData, dayCounter_);
+            QuantLib::ext::shared_ptr<OptionPriceSurface> putSurface =
+                QuantLib::ext::make_shared<OptionPriceSurface>(asof, putExpiries, putStrikes, putData, dayCounter_);
+
+            DLOG("EquityVolCurve: CallSurface contains " << callSurface->expiries().size() << " expiries.");
+
+            DLOG("EquityVolCurve: Stripping equity volatility surface from the option premium surfaces");
+            QuantLib::ext::shared_ptr<EquityOptionSurfaceStripper> eoss = QuantLib::ext::make_shared<EquityOptionSurfaceStripper>(
+                eqIndex, callSurface, putSurface, calendar_, dayCounter_, vssc.exerciseType(), flatStrikeExtrap,
+                flatStrikeExtrap, timeExtrapolation, preferOutOfTheMoney, solverOptions);
+            vol_ = eoss->volSurface();
+        }
 
     } else if (vssc.quoteType() == MarketDatum::QuoteType::RATE_LNVOL) {
 
-        if (callExpiries.size() == 1 && callStrikes.size() == 1) {
+        // Check if an SVI interpolation model is requested
+        string interpolationModel = vssc.interpolationModel();
+        auto sviModelVariant = parseSviModelVariant(interpolationModel);
+
+        if (sviModelVariant) {
+            DLOG("EquityVolCurve: Building SVI surface with model variant " << interpolationModel);
+
+            std::vector<Date> sviDates;
+            std::vector<std::vector<Real>> sviStrikes, sviVols;
+            std::vector<std::vector<Option::Type>> sviOptionTypes;
+            organizeCallPutQuotesByExpiry(callExpiries, callStrikes, callData,
+                                          putExpiries, putStrikes, putData,
+                                          eqIndex, preferOutOfTheMoney,
+                                          sviDates, sviStrikes, sviVols, sviOptionTypes);
+
+            vol_ = buildSviSurface(asof, sviDates, sviStrikes, sviVols, dayCounter_, calendar_,
+                                   eqIndex->equitySpot(), eqIndex->equityForecastCurve(),
+                                   eqIndex->equityDividendCurve(), *sviModelVariant, sviOptionTypes,
+                                   vssc.parametricSmileConfiguration(), interpolationModel);
+
+        } else if (callExpiries.size() == 1 && callStrikes.size() == 1) {
             DLOG("EquityVolCurve: Building BlackConstantVol");
             vol_ = QuantLib::ext::shared_ptr<BlackVolTermStructure>(
                 new BlackConstantVol(asof, Calendar(), callData[0], dayCounter_));
@@ -703,6 +923,58 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
     // set max expiry date (used in buildCalibrationInfo())
     if (!expiryDates.empty())
         maxExpiry_ = expiryDates.back();
+
+    // Check if an SVI interpolation model is requested
+    string interpolationModel = vmsc.interpolationModel();
+    auto sviModelVariant = parseSviModelVariant(interpolationModel);
+
+    if (sviModelVariant) {
+        DLOG("EquityVolCurve: Building SVI surface from moneyness quotes with model variant " << interpolationModel);
+
+        bool preferOutOfTheMoney = vc.preferOutOfTheMoney() ? *vc.preferOutOfTheMoney() : true;
+        Real spot = eqIndex->equitySpot()->value();
+
+        std::vector<Date> sviDates;
+        std::vector<std::vector<Real>> sviStrikes, sviVols;
+        std::vector<std::vector<Option::Type>> sviOptionTypes;
+
+        for (const auto& kv : surfaceData) {
+            Date d = kv.first;
+            Real atmf = eqIndex->forecastFixing(d);
+
+            std::vector<Real> strikesForExpiry, volsForExpiry;
+            std::vector<Option::Type> types;
+
+            for (Size i = 0; i < moneynessLevels.size(); ++i) {
+                Real strike;
+                if (moneynessType == MoneynessStrike::Type::Forward) {
+                    strike = moneynessLevels[i] * atmf;
+                } else {
+                    strike = moneynessLevels[i] * spot;
+                }
+                strikesForExpiry.push_back(strike);
+                volsForExpiry.push_back(kv.second[i]);
+                types.push_back(preferOutOfTheMoney && strike < atmf ? Option::Put : Option::Call);
+            }
+
+            sviDates.push_back(d);
+            sviStrikes.push_back(strikesForExpiry);
+            sviVols.push_back(volsForExpiry);
+            sviOptionTypes.push_back(types);
+        }
+
+        vol_ = buildSviSurface(asof, sviDates, sviStrikes, sviVols, dayCounter_, calendar_,
+                               eqIndex->equitySpot(), eqIndex->equityForecastCurve(),
+                               eqIndex->equityDividendCurve(), *sviModelVariant, sviOptionTypes,
+                               vmsc.parametricSmileConfiguration(), interpolationModel);
+
+        DLOG("EquityVolCurve: Setting BlackVolatilitySurfaceSvi extrapolation to "
+             << to_string(vmsc.extrapolation()));
+        vol_->enableExtrapolation(vmsc.extrapolation());
+
+        DLOG("EquityVolCurve: finished building SVI moneyness strike surface");
+        return;
+    }
 
     // Set the strike extrapolation which only matters if extrapolation is turned on for the whole surface.
     // BlackVarianceSurfaceMoneyness time extrapolation is hard-coded to constant in volatility.
@@ -1045,6 +1317,83 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilit
     // set max expiry date (used in buildCalibrationInfo())
     if (!expiryDates.empty())
         maxExpiry_ = expiryDates.back();
+
+    // Check if an SVI interpolation model is requested
+    string interpolationModel = vdsc.interpolationModel();
+    auto sviModelVariant = parseSviModelVariant(interpolationModel);
+
+    if (sviModelVariant) {
+        DLOG("EquityVolCurve: Building SVI surface from delta quotes with model variant " << interpolationModel);
+
+        bool preferOutOfTheMoney = vc.preferOutOfTheMoney() ? *vc.preferOutOfTheMoney() : true;
+
+        // Use BlackDeltaCalculator directly with each quote's own vol for delta-to-strike conversion
+        Real spot = eqIndex->equitySpot()->value();
+        DeltaVolQuote::DeltaType atmDt = atmDeltaType ? *atmDeltaType : deltaType;
+
+        std::vector<Date> sviDates;
+        std::vector<std::vector<Real>> sviStrikes, sviVols;
+        std::vector<std::vector<Option::Type>> sviOptionTypes;
+
+        for (Size i = 0; i < expiryDates.size(); ++i) {
+            Date d = expiryDates[i];
+            Real t = dayCounter_.yearFraction(asof, d);
+            Real rfDisc = eqIndex->equityForecastCurve()->discount(d);
+            Real divDisc = eqIndex->equityDividendCurve()->discount(d);
+            Real atmf = eqIndex->forecastFixing(d);
+
+            std::vector<Real> strikesForExpiry, volsForExpiry;
+            std::vector<Option::Type> types;
+
+            // Put delta strikes
+            for (Size j = 0; j < putDeltas.size(); ++j) {
+                Real vol_j = vols[i][j];
+                Real stdDev = vol_j * std::sqrt(t);
+                BlackDeltaCalculator bdc(Option::Put, deltaType, spot, rfDisc, divDisc, stdDev);
+                Real strike = bdc.strikeFromDelta(putDeltas[j]);
+                strikesForExpiry.push_back(strike);
+                volsForExpiry.push_back(vol_j);
+                types.push_back(Option::Put);
+            }
+
+            // ATM strike
+            Real atmVol = vols[i][putDeltas.size()];
+            Real atmStdDev = atmVol * std::sqrt(t);
+            BlackDeltaCalculator atmBdc(Option::Call, atmDt, spot, rfDisc, divDisc, atmStdDev);
+            Real atmStrike = atmBdc.atmStrike(atmType);
+            strikesForExpiry.push_back(atmStrike);
+            volsForExpiry.push_back(atmVol);
+            types.push_back(preferOutOfTheMoney && atmStrike < atmf ? Option::Put : Option::Call);
+
+            // Call delta strikes
+            for (Size j = 0; j < callDeltas.size(); ++j) {
+                Real vol_j = vols[i][putDeltas.size() + 1 + j];
+                Real stdDev = vol_j * std::sqrt(t);
+                BlackDeltaCalculator bdc(Option::Call, deltaType, spot, rfDisc, divDisc, stdDev);
+                Real strike = bdc.strikeFromDelta(callDeltas[j]);
+                strikesForExpiry.push_back(strike);
+                volsForExpiry.push_back(vol_j);
+                types.push_back(Option::Call);
+            }
+
+            sviDates.push_back(d);
+            sviStrikes.push_back(strikesForExpiry);
+            sviVols.push_back(volsForExpiry);
+            sviOptionTypes.push_back(types);
+        }
+
+        vol_ = buildSviSurface(asof, sviDates, sviStrikes, sviVols, dayCounter_, calendar_,
+                               eqIndex->equitySpot(), eqIndex->equityForecastCurve(),
+                               eqIndex->equityDividendCurve(), *sviModelVariant, sviOptionTypes,
+                               vdsc.parametricSmileConfiguration(), interpolationModel);
+
+        DLOG("EquityVolCurve: Setting BlackVolatilitySurfaceSvi extrapolation to "
+             << to_string(vdsc.extrapolation()));
+        vol_->enableExtrapolation(vdsc.extrapolation());
+
+        DLOG("EquityVolCurve: finished building SVI delta strike surface");
+        return;
+    }
 
     DLOG("EquityVolCurve: Creating BlackVolatilitySurfaceDelta object");
     bool hasAtm = true;

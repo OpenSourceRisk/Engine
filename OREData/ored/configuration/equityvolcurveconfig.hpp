@@ -46,20 +46,6 @@ using std::vector;
 */
 class EquityVolatilityCurveConfig : public CurveConfig {
 public:
-    //! Supported interpolations (codes are consistent with QuantExt::SviParametricVolatility::ModelVariant)
-    enum class Interpolation {
-        Gatheral2004SviRaw = 0, // SVI with Raw parameterization
-        Gatheral2004SviNatural = 1, // SVI with Natural parameterization
-        Gatheral2004SviJw = 2, // SVI with Jump-Wings parameterization
-        Gatheral2012SsviHeston = 3, // Surface SVI with Heston-like parameterization, arbitrage-free
-        Gatheral2012SsviPowerLaw = 4, // Surface SVI with power-law parameterization, arbitrage-free
-        HendriksMartini2017EssviFirstPowerLaw = 5, // Extended Surface SVI with first power-law parameterization, arbitrage-free
-        HendriksMartini2017EssviSecondPowerLaw = 6, // Extended Surface SVI with second power-law parameterization, arbitrage-free
-        CorbettaEtAl2019Essvi = 7, // Extended Surface SVI using robust calibration, arbitrage-free,
-        Mingone2022EssviGJ = 8, // Extended Surface SVI with global calibration and Gatheral Jim condition, arbitrage-free
-        Mingone2022EssviMM = 9, // Extended Surface SVI with global calibration and Martini Mingone condition, arbitrage-free
-        Linear
-    };
     //! \name Constructors/Destructors
     //@{
     //! Default constructor
@@ -70,15 +56,13 @@ public:
                                 const string& equityId = string(),
                                 const string& dayCounter = "A365", const string& calendar = "NullCalendar",
                                 const OneDimSolverConfig& solverConfig = OneDimSolverConfig(),
-                                const QuantLib::ext::optional<bool>& preferOutOfTheMoney = QuantLib::ext::nullopt,
-                                const Interpolation interpolation = Interpolation::Linear);
+                                const QuantLib::ext::optional<bool>& preferOutOfTheMoney = QuantLib::ext::nullopt);
     EquityVolatilityCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
                                 const QuantLib::ext::shared_ptr<VolatilityConfig>& volatilityConfig,
                                 const string& equityId = string(),
                                 const string& dayCounter = "A365", const string& calendar = "NullCalendar",
                                 const OneDimSolverConfig& solverConfig = OneDimSolverConfig(),
-                                const QuantLib::ext::optional<bool>& preferOutOfTheMoney = QuantLib::ext::nullopt,
-                                const Interpolation interpolation = Interpolation::Linear);
+                                const QuantLib::ext::optional<bool>& preferOutOfTheMoney = QuantLib::ext::nullopt);
     //@}
 
     //! \name Serialisation
@@ -101,7 +85,6 @@ public:
     const QuantLib::ext::optional<bool>& preferOutOfTheMoney() const {
         return preferOutOfTheMoney_;
     }
-    Interpolation interpolation() const { return interpolation_; }
     const ReportConfig& reportConfig() const { return reportConfig_; }
     //@}
 
@@ -121,7 +104,6 @@ private:
     string calendar_;
     OneDimSolverConfig solverConfig_;
     QuantLib::ext::optional<bool> preferOutOfTheMoney_;
-    Interpolation interpolation_ = Interpolation::Linear;
     ReportConfig reportConfig_;
 
     // Return a default solver configuration. Used by solverConfig() if solverConfig_ is empty.

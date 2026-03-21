@@ -431,13 +431,20 @@ The SVI interpolation is specified as
       <StrikeInterpolation>Gatheral2012SsviPowerLaw</StrikeInterpolation>
 \end{minted}
 
-for cap/floor volatility surfaces and
+for cap/floor volatility surfaces,
 
 \begin{minted}[fontsize=\footnotesize]{xml}
       <Interpolation>Gatheral2012SsviPowerLaw</Interpolation>
 \end{minted}
 
-for swaption volatility surfaces. In both cases the {\em Input} volatility type is given by
+for swaption volatility surfaces, and
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <InterpolationModel>Mingone2022EssviGJ</InterpolationModel>
+\end{minted}
+
+for equity, FX, and commodity volatility surfaces (within a \texttt{StrikeSurface}, \texttt{MoneynessSurface}, or
+\texttt{DeltaSurface} element). In all cases the {\em Input} volatility type is given by
 
 \begin{minted}[fontsize=\footnotesize]{xml}
       <VolatilityType>Lognormal</VolatilityType>
@@ -456,14 +463,20 @@ for cap/floors, equity options, fx options and commodity options (single displac
       <ModelShift>0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0</ModelShift>
 \end{minted}
 
-for swaptions (each underlying swap length has its own associated displacement $d$). In the following
+for swaptions (each underlying swap length has its own associated displacement $d$).
 
-\begin{minted}[fontsize=\footnotesize]{xml}
-      <ParametricSmileConfiguration>
-\end{minted}
+\subsection{ParametricSmileConfiguration}
 
-the initial values for the optimization for each parameter are specified, either as a single value that is used for all
-options or individually for the array of option expiries (caps), matrix of swaption expiries / underlying swap lengths, e.g.
+The \texttt{ParametricSmileConfiguration} element specifies the initial values and calibration settings for the SVI
+parameters. For cap/floor and swaption volatility surfaces, this element is a child of the top-level curve
+configuration. For equity, FX, and commodity volatility surfaces, the \texttt{ParametricSmileConfiguration} is specified
+within the surface element (e.g. \texttt{StrikeSurface}, \texttt{MoneynessSurface}, or \texttt{DeltaSurface}) alongside
+the \texttt{InterpolationModel}.
+
+The initial values for the optimization for each parameter are specified, either as a single value that is used for all
+options or individually for the array of option expiries (caps), matrix of swaption expiries / underlying swap lengths.
+
+For the Gatheral2004SviRaw model variant, the parameters are $a$, $b$, $\rho$, $m$ and $\sigma$:
 
 \begin{minted}[fontsize=\footnotesize]{xml}
       <Parameters>
@@ -495,11 +508,174 @@ options or individually for the array of option expiries (caps), matrix of swapt
       </Parameters>
 \end{minted}
 
+For the Gatheral2004SviNatural model variant, the parameters are $\Delta$, $\mu$, $\rho$, $\omega$ and $\zeta$:
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <Parameters>
+        <Parameter>
+          <Name>delta</Name>
+          <InitialValue>0.05</InitialValue>
+          <Calibration>Implied</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>mu</Name>
+          <InitialValue>0.0</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>rho</Name>
+          <InitialValue>0.0</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>omega</Name>
+          <InitialValue>0.1</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>zeta</Name>
+          <InitialValue>0.1</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+      </Parameters>
+\end{minted}
+
+For the Gatheral2004SviJw model variant, the parameters are $v_t$, $\psi_t$, $p_t$, $c_t$ and $\tilde{v}_t$:
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <Parameters>
+        <Parameter>
+          <Name>v</Name>
+          <InitialValue>0.04</InitialValue>
+          <Calibration>Implied</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>psi</Name>
+          <InitialValue>0.0</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>p</Name>
+          <InitialValue>0.1</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>c</Name>
+          <InitialValue>0.1</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>vtilde</Name>
+          <InitialValue>0.04</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+      </Parameters>
+\end{minted}
+
+For the Gatheral2012SsviHeston model variant, the parameters are $\theta$, $\rho$ and $\lambda$:
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <Parameters>
+        <Parameter>
+          <Name>theta</Name>
+          <InitialValue>0.02</InitialValue>
+          <Calibration>Implied</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>rho</Name>
+          <InitialValue>0.0</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>lambda</Name>
+          <InitialValue>1.0</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+      </Parameters>
+\end{minted}
+
+For the Gatheral2012SsviPowerLaw model variant, the parameters are $\theta$, $\rho$, $\eta$ and $\gamma$:
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <Parameters>
+        <Parameter>
+          <Name>theta</Name>
+          <InitialValue>0.02</InitialValue>
+          <Calibration>Implied</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>rho</Name>
+          <InitialValue>0.0</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>eta</Name>
+          <InitialValue>0.5</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>gamma</Name>
+          <InitialValue>0.5</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+      </Parameters>
+\end{minted}
+
+For the CorbettaEtAl2019Essvi model variant, the parameters are $k^*$, $\theta^*$, $\rho$ and $\psi$:
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <Parameters>
+        <Parameter>
+          <Name>k_star</Name>
+          <InitialValue>0.0</InitialValue>
+          <Calibration>Implied</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>theta_star</Name>
+          <InitialValue>0.0</InitialValue>
+          <Calibration>Implied</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>rho</Name>
+          <InitialValue>0.0</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>psi</Name>
+          <InitialValue>0.01</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+      </Parameters>
+\end{minted}
+
+For the Mingone2022EssviGJ and Mingone2022EssviMM model variants, the parameters are $\rho$, $a$ and $c$ (see
+\ref{sec:model}):
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <Parameters>
+        <Parameter>
+          <Name>rho</Name>
+          <InitialValue>0.0</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>a</Name>
+          <InitialValue>0.0</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>c</Name>
+          <InitialValue>0.5</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+      </Parameters>
+\end{minted}
+
 The ``Calibration'' field is used to distinguish
 
 \begin{itemize}
 \item ``Fixed'': fixed values that are not calibrated, but prescribed by the user
-\item ``Implied'': if $\theta$ is implied from ATM market volatility
+\item ``Implied'': if the values are implied from market data
 \item ``Calibrated'': takes part in the optimization
 \end{itemize}
 
@@ -514,8 +690,62 @@ $t_A$ and the maximum acceptable error threshold $t_B$:
       </Calibration>
 \end{minted}
 
-Finally, the {\em output} volatility type and displacement $d$ can be overridden. By default, input volatility type and
-displacement is used. In the case of swaptions an override would look like this
+\subsection{Equity Volatility Surface Example (Mingone)}
+
+A complete example for an equity volatility surface using the Mingone2022EssviGJ model variant:
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <EquityVolatility>
+    <CurveId>RIC:.SPX</CurveId>
+    <CurveDescription>Lognormal option implied vols for SPX
+      using ESSVI Mingone GJ</CurveDescription>
+    <Currency>USD</Currency>
+    <DayCounter>A365</DayCounter>
+    <VolatilityConfig>
+      <StrikeSurface priority="0">
+        <QuoteType>ImpliedVolatility</QuoteType>
+        <VolatilityType>Lognormal</VolatilityType>
+        <Strikes>*</Strikes>
+        <Expiries>*</Expiries>
+        <TimeInterpolation>Linear</TimeInterpolation>
+        <StrikeInterpolation>Linear</StrikeInterpolation>
+        <Extrapolation>true</Extrapolation>
+        <TimeExtrapolation>Flat</TimeExtrapolation>
+        <StrikeExtrapolation>Flat</StrikeExtrapolation>
+        <InterpolationModel>Mingone2022EssviGJ</InterpolationModel>
+        <ParametricSmileConfiguration>
+          <Parameters>
+            <Parameter>
+              <Name>rho</Name>
+              <InitialValue>0.0</InitialValue>
+              <Calibration>Calibrated</Calibration>
+            </Parameter>
+            <Parameter>
+              <Name>a</Name>
+              <InitialValue>0.0</InitialValue>
+              <Calibration>Calibrated</Calibration>
+            </Parameter>
+            <Parameter>
+              <Name>c</Name>
+              <InitialValue>0.5</InitialValue>
+              <Calibration>Calibrated</Calibration>
+            </Parameter>
+          </Parameters>
+          <Calibration>
+            <MaxCalibrationAttempts>50</MaxCalibrationAttempts>
+            <ExitEarlyErrorThreshold>0.005</ExitEarlyErrorThreshold>
+            <MaxAcceptableError>0.5</MaxAcceptableError>
+          </Calibration>
+        </ParametricSmileConfiguration>
+      </StrikeSurface>
+    </VolatilityConfig>
+  </EquityVolatility>
+\end{minted}
+
+\subsection{Swaption / Cap Floor Output Override}
+
+For swaptions and cap/floors, the {\em output} volatility type and displacement $d$ can be overridden. By default,
+input volatility type and displacement is used. In the case of swaptions an override would look like this
 
 \begin{minted}[fontsize=\footnotesize]{xml}
       <OutputVolatilityType>Normal</OutputVolatilityType>

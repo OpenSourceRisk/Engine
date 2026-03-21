@@ -70,6 +70,7 @@ public:
     //! \name Inspectors
     //@{
     const Parameter& parameter(const std::string& name) const;
+    const std::vector<Parameter>& parameters() const { return parameters_; }
     const Calibration& calibration() const;
     //@}
 
