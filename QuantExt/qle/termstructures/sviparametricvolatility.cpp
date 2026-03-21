@@ -1252,9 +1252,90 @@ Real SsviParametricVolatility::evaluate(const Real timeToExpiry, const Real unde
     switch (modelVariant_) {
     case ModelVariant::Gatheral2012SsviHeston:
     case ModelVariant::Gatheral2012SsviPowerLaw: {
-        Real a, b, rho, m, sigma;
-        std::tie(a, b, rho, m, sigma) = convertToRawSvi(timeToExpiry, underlyingLength);
-        totalVariance = detail::sviTotalVariance(a, b, sigma, rho, m, k);
+        // Price-space calendar-spread interpolation (Gatheral 2012, Lemma 5.1):
+        //   C_t = alpha_t * C_i + (1 - alpha_t) * C_{i+1},
+        //   alpha_t = (sqrt(theta_{i+1}) - sqrt(theta_t)) / (sqrt(theta_{i+1}) - sqrt(theta_i)),
+        // where theta_t is linearly interpolated in t and C_j are undiscounted (forward-premium)
+        // option prices computed with the risk-free discount factor (discount = 1).
+        //
+        // Note: this is applied uniformly regardless of the input quote type.  For CDS surfaces
+        // the pricing engine typically discounts with a risky annuity rather than a risk-free
+        // factor, so the forward prices fp1/fp2 computed here via blackFormula(..., 1.0) will not
+        // exactly match the engine's prices.  The interpolated variance is still arbitrage-free in
+        // the risk-neutral (risk-free) measure; any risky-annuity correction is a second-order
+        // effect handled by the engine itself.
+        if (timeToExpiries_.size() < 2) {
+            Real a, b, rho, m, sigma;
+            std::tie(a, b, rho, m, sigma) = convertToRawSvi(timeToExpiry, underlyingLength);
+            totalVariance = detail::sviTotalVariance(a, b, sigma, rho, m, k);
+            break;
+        }
+
+        const Real Fs = forward + lognormalShift;
+        const Real Ks = strike + lognormalShift;
+        const Option::Type otmType = (strike <= forward) ? Option::Put : Option::Call;
+
+        auto it = std::lower_bound(timeToExpiries_.begin(), timeToExpiries_.end(), timeToExpiry);
+
+        if (it != timeToExpiries_.end() && *it == timeToExpiry) {
+            // Exactly on a calibrated expiry: direct SSVI evaluation.
+            Real a, b, rho, m, sigma;
+            std::tie(a, b, rho, m, sigma) = convertToRawSvi(timeToExpiry, underlyingLength);
+            totalVariance = detail::sviTotalVariance(a, b, sigma, rho, m, k);
+        } else if (it == timeToExpiries_.end()) {
+            // Late extrapolation (t > T_N): shift the total variance by the increase in theta.
+            const Size n = timeToExpiries_.size();
+            const Real TN = timeToExpiries_[n - 1];
+            const Real TN1 = timeToExpiries_[n - 2];
+            Real aN, bN, rhoN, mN, sigmaN;
+            std::tie(aN, bN, rhoN, mN, sigmaN) = convertToRawSvi(TN, underlyingLength);
+            const Real wN = detail::sviTotalVariance(aN, bN, sigmaN, rhoN, mN, k);
+            const Real thetaN = sviParametersInterpolations_[0](TN, underlyingLength);
+            const Real thetaN1 = sviParametersInterpolations_[0](TN1, underlyingLength);
+            const Real dThetaDt = std::max(0.0, (thetaN - thetaN1) / (TN - TN1));
+            totalVariance = std::max(0.0, wN + dThetaDt * (timeToExpiry - TN));
+        } else if (it == timeToExpiries_.begin()) {
+            // Early extrapolation (t < T_1): price-space interpolation toward the t=0 intrinsic.
+            const Real T1 = timeToExpiries_.front();
+            const Real theta1 = sviParametersInterpolations_[0](T1, underlyingLength);
+            const Real lambda = timeToExpiry / T1;
+            const Real sqrtTheta1 = std::sqrt(std::max(0.0, theta1));
+            const Real sqrtThetat = std::sqrt(std::max(0.0, lambda * theta1));
+            const Real alpha = (sqrtTheta1 > 0.0) ? (sqrtTheta1 - sqrtThetat) / sqrtTheta1 : 1.0;
+            const Real fp0 = std::max((otmType == Option::Put ? Ks - Fs : Fs - Ks), 0.0);
+            Real a1, b1, rho1, m1, sigma1;
+            std::tie(a1, b1, rho1, m1, sigma1) = convertToRawSvi(T1, underlyingLength);
+            const Real w1 = detail::sviTotalVariance(a1, b1, sigma1, rho1, m1, k);
+            const Real fp1 = blackFormula(otmType, Ks, Fs, std::sqrt(std::max(0.0, w1)), 1.0);
+            const Real fpt = std::max(alpha * fp0 + (1.0 - alpha) * fp1, fp0);
+            const Real guess = std::sqrt(std::max(0.0, w1 * lambda));
+            const Real stddev = blackFormulaImpliedStdDev(otmType, Ks, Fs, fpt, 1.0, 0.0, guess, 1e-6, 1000);
+            totalVariance = stddev * stddev;
+        } else {
+            // Interior off-grid: alpha_t-weighted price-space interpolation.
+            const Real T2 = *it;
+            const Real T1 = *(it - 1);
+            const Real theta1 = sviParametersInterpolations_[0](T1, underlyingLength);
+            const Real theta2 = sviParametersInterpolations_[0](T2, underlyingLength);
+            const Real thetat = theta1 + (timeToExpiry - T1) / (T2 - T1) * (theta2 - theta1);
+            const Real sqrtTheta1 = std::sqrt(std::max(0.0, theta1));
+            const Real sqrtTheta2 = std::sqrt(std::max(0.0, theta2));
+            const Real sqrtThetat = std::sqrt(std::max(0.0, thetat));
+            const Real denom = sqrtTheta2 - sqrtTheta1;
+            const Real alpha = (std::abs(denom) > 1e-12) ? (sqrtTheta2 - sqrtThetat) / denom : 0.5;
+            Real a1, b1, rho1, m1, sigma1, a2, b2, rho2, m2, sigma2;
+            std::tie(a1, b1, rho1, m1, sigma1) = convertToRawSvi(T1, underlyingLength);
+            std::tie(a2, b2, rho2, m2, sigma2) = convertToRawSvi(T2, underlyingLength);
+            const Real w1 = detail::sviTotalVariance(a1, b1, sigma1, rho1, m1, k);
+            const Real w2 = detail::sviTotalVariance(a2, b2, sigma2, rho2, m2, k);
+            const Real fp1 = blackFormula(otmType, Ks, Fs, std::sqrt(std::max(0.0, w1)), 1.0);
+            const Real fp2 = blackFormula(otmType, Ks, Fs, std::sqrt(std::max(0.0, w2)), 1.0);
+            const Real fpt = alpha * fp1 + (1.0 - alpha) * fp2;
+            const Real wt = alpha * w1 + (1.0 - alpha) * w2; // initial guess for solver
+            const Real stddev = blackFormulaImpliedStdDev(otmType, Ks, Fs, fpt, 1.0,
+                                                          0.0, std::sqrt(std::max(0.0, wt)), 1e-6, 1000);
+            totalVariance = stddev * stddev;
+        }
         break;
     }
     default:

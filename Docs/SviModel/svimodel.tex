@@ -184,6 +184,18 @@ ORE supports the following SVI model variants:
 \item Mingone2022EssviMM: Extended Surface SVI (see \ref{sec:essvi}) with global calibration and Martini Mingone condition \cite{Mingone_2022}, arbitrage-free,
 \end{itemize}
 
+\begin{remark}
+The arbitrage-free claims above apply to equity, FX, and commodity options, where the pricing numeraire is the
+risk-free discount factor $B(0,T)$.  For CDS options the correct numeraire is the risky annuity $\text{rpv01}(T)$,
+which is default-contingent and strictly smaller than the risk-free annuity.  Both the calendar-spread and butterfly
+arbitrage conditions are derived in the Black-76 / risk-free-discount setting and do not carry over exactly to CDS
+surfaces: even if total variance is non-decreasing in $t$, the declining $\text{rpv01}(T)$ can render a calendar spread
+negative; similarly, butterfly-arbitrage-free densities under the $T$-forward measure need not be non-negative under the
+annuity measure.  Both conditions are approximately satisfied for investment-grade names where
+$\text{rpv01}(T) \approx B(0,T) \cdot \text{annuity}$, but become weaker guarantees for high-yield or distressed
+credits.
+\end{remark}
+
 \subsection{Calibration}
 
 The calibration of the SVI parameters is performed on the market smile points, which are given by
@@ -273,6 +285,13 @@ where
 
 with $\theta_t$ linearly interpolated between $\theta_{t_i}$ and $\theta_{t_{i+1}}$ in $t$.
 
+\begin{remark}
+The prices $C_i$ and $C_{i+1}$ are computed as forward-premium (discount $= 1$) Black
+formulas.  For CDS options the engine discounts with the risky annuity $\text{rpv01}(T)$
+rather than a risk-free factor, so the no-arbitrage guarantee is approximate; for
+investment-grade names the difference is small.
+\end{remark}
+
 \subsubsection{Extrapolation}
 For $t < t_1$, we re-use the equation for interpolation with
 
@@ -283,6 +302,13 @@ For $t > t_N$, we extrapolate in total variance space with
 \begin{equation}
 w(k,\theta_t) = w(k,\theta_{t_N}) + \theta_t - \theta_{t_N}
 \end{equation}
+
+\begin{remark}
+The early-extrapolation price $C_1$ is a forward-premium (discount $= 1$) Black formula;
+the same CDS caveat as in the interpolation section above applies.
+Late extrapolation ($t > t_N$) works entirely in total variance space and does not involve
+a Black formula, so it is unaffected by the choice of discount numeraire.
+\end{remark}
 
 \subsection{Calibration for Extended Surface SVI}
 
