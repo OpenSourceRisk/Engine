@@ -332,7 +332,8 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) const {
         (!backStubShortIndex_.empty() && !backStubLongIndex_.empty())) {
         XMLUtils::addChild(doc, node, "StubUseOriginalCurve", stubUseOriginalCurve_);
     }
-    XMLUtils::addChild(doc, node, "ObservationShift", observationShift_);
+    if (observationShift_)
+        XMLUtils::addChild(doc, node, "ObservationShift", *observationShift_);
     return node;
 }
 
@@ -1728,7 +1729,7 @@ Leg makeOISLeg(const LegData& data, const QuantLib::ext::shared_ptr<OvernightInd
                 .withCapFlooredAverageONIndexedCouponPricer(cfCouponPricer)
                 .withTelescopicValueDates(floatData->telescopicValueDates())
                 .withPaymentDates(paymentDates)
-                .withObservationShift(floatData->observationShift());
+                .withObservationShift(floatData->observationShift() ? *floatData->observationShift() : true);
         return leg;
 
     } else {
@@ -1777,7 +1778,7 @@ Leg makeOISLeg(const LegData& data, const QuantLib::ext::shared_ptr<OvernightInd
                       .withCapFlooredOvernightIndexedCouponPricer(cfCouponPricer)
                       .withTelescopicValueDates(floatData->telescopicValueDates())
                       .withPaymentDates(paymentDates)
-                      .withObservationShift(floatData->observationShift());
+                      .withObservationShift(floatData->observationShift() ? *floatData->observationShift() : true);
 
         // If the overnight index is BRL CDI, we need a special coupon pricer
         QuantLib::ext::shared_ptr<BRLCdi> brlCdiIndex = QuantLib::ext::dynamic_pointer_cast<BRLCdi>(index);
