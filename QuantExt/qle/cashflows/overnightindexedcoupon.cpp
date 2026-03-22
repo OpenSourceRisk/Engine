@@ -81,7 +81,7 @@ Real OvernightIndexedCoupon::effectiveIndexFixing() const {
     return oicPricer()->effectiveIndexFixing();
 }
 
-Rate OvernightIndexedCoupon::effectiveRate(const Date& d) const {
+pair<Rate, Date> OvernightIndexedCoupon::effectiveRate(const Date& d) const {
     return oicPricer()->effectiveRate(d);
 }
 
@@ -124,7 +124,7 @@ void OvernightIndexedCouponPricer::initialize(const FloatingRateCoupon& coupon) 
     QL_ENSURE(coupon_, "OvernightIndexedCouponPricer::initialize: expected an OvernightIndexedCoupon.");
 }
 
-tuple<Rate, Spread, Rate> OvernightIndexedCouponPricer::compute(const Date& date) const
+tuple<Rate, Spread, Rate, Date> OvernightIndexedCouponPricer::compute(const Date& date) const
 {
     // Variables needed in the calcs below.
     auto onFixCal = coupon_->index()->fixingCalendar();
@@ -140,7 +140,7 @@ tuple<Rate, Spread, Rate> OvernightIndexedCouponPricer::compute(const Date& date
 
     // If we are before the start of the first interest period, then return zeros.
     if (numPeriods == 0)
-        return {0.0, 0.0, 0.0};
+        return {0.0, 0.0, 0.0, refDate};
 
     // --- 1. Variable set-up ---
     const Date today = Settings::instance().evaluationDate();
@@ -368,18 +368,46 @@ tuple<Rate, Spread, Rate> OvernightIndexedCouponPricer::compute(const Date& date
         }
     }
 
-    // Give the final result
-    // It should not happen but there are cases where coupon_->accruedPeriod(date) was giving 0 because the payment 
-    // date was _before_ the accrual end date. For example payment cal != accrual cal, payment date end of month and 
-    // not a good BD, payment convention set to MF => date rolled back before accrual end date.
-    Time cpnDcf = coupon_->separateRateCompPeriod() ? indexDc.yearFraction(cpnAccStart, date)
-        : coupon_->accruedPeriod(std::min(date, std::min(cpnAccEnd, coupon_->date())));
-    Rate rate = (compFac - 1.0) / cpnDcf;
-    Rate swapletRate = !incSpread ? coupon_->gearing() * rate + spread : coupon_->gearing() * rate;
-    Spread effectiveSpread = !incSpread ? spread : rate - (compFacNoSpd - 1.0) / cpnDcf;
-    Rate effectiveIndexFixing = !incSpread ? rate : rate - effectiveSpread;
+    // Day count fraction for the compounding period using index day counter.
+    Date upToDate = std::min(refDate, intDates.back());
+    Time compDcf = indexDc.yearFraction(intDates.front(), upToDate);
 
-    return {swapletRate, effectiveSpread, effectiveIndexFixing};
+    // If spread is not zero and not included in compouding and we have observation shift, users most likely expect the 
+    // spread to be applied on the unshifted period. This is the assumption here which is why we need to scale.
+    Spread adjSpread = spread;
+    if (obsShift && !coupon_->separateRateCompPeriod() && !incSpread) {
+        // So that we are left with unShiftedDcf x spread when we calculate the amount.
+        Time unShiftedDcf = coupon_->dayCounter().yearFraction(coupon_->accrualStartDate(), date);
+        adjSpread *= unShiftedDcf / compDcf;
+    }
+
+    // The final equivalent rate over the compounding period. There are a few scenarios:
+    // 1. No obs shift and no separate rate computation period. This is the most standard case. First interest date 
+    //    will be cpn accrual start date and upToDate will be the input `date`. In particular, if cpn dcf == index dcf 
+    //    and no spread / gearing, the dcf will cancel and cpn amount = (cmpFac - 1.0) x Ntl
+    // 2. Obs shift but no separate rate computation period. First interest date is first date in shifted period and 
+    //    upToDate is the end of the shifted ON period containing `date`. In particular, if cpn dcf == index dcf 
+    //    and no spread / gearing, the dcf will cancel and cpn amount = (cmpFac - 1.0) x Ntl where cmpFac is over the 
+    //    shifted period as expected. As noted above, a non-included spread will be on the unshifted period.
+    // 3. Separate rate computation period. First interest date is rate computation start date and could be anywhere. 
+    //    In this case, the rate is just calculated over the computation period and the usual coupon dcf is applied 
+    //    against it to get the amount.
+    Rate rate = (compFac - 1.0) / compDcf;
+
+    // This rate cannot be scaled as it is used in FallbackIborIndex.
+    Rate swapletRate = !incSpread ? coupon_->gearing() * rate + adjSpread : coupon_->gearing() * rate;
+
+    // Effective values that together give the OvernightIndexedCoupon amount.
+    Spread effectiveSpread = !incSpread ? adjSpread : rate - (compFacNoSpd - 1.0) / compDcf;
+    Rate effectiveIndexFixing = !incSpread ? rate : rate - effectiveSpread;
+    if (obsShift && !coupon_->separateRateCompPeriod()) {
+        Time unShiftedDcf = coupon_->dayCounter().yearFraction(coupon_->accrualStartDate(), date);
+        effectiveIndexFixing *= compDcf / unShiftedDcf;
+        if (incSpread)
+            effectiveSpread *= compDcf / unShiftedDcf;
+    }
+
+    return {swapletRate, effectiveSpread, effectiveIndexFixing, upToDate};
 }
 
 Rate OvernightIndexedCouponPricer::swapletRate() const {
@@ -394,13 +422,16 @@ Rate OvernightIndexedCouponPricer::effectiveIndexFixing() const {
     return std::get<2>(rateSpreadFixing());
 }
 
-Rate OvernightIndexedCouponPricer::effectiveRate(const Date& date) const {
-    return std::get<0>(compute(date));
+std::pair<Rate, Date> OvernightIndexedCouponPricer::effectiveRate(const Date& date) const {
+    auto res = compute(date);
+    return {std::get<0>(res), std::get<3>(res)};
 }
 
 tuple<Rate, Spread, Rate> OvernightIndexedCouponPricer::rateSpreadFixing() const {
-    Date d = coupon_->separateRateCompPeriod() ? coupon_->interestDates().back() : coupon_->accrualEndDate();
-    return compute(d);
+    Date d = coupon_->rateComputationEndDate() != Date() ?
+        coupon_->rateComputationEndDate() : coupon_->accrualEndDate();
+    auto res = compute(d);
+    return {std::get<0>(res), std::get<1>(res), std::get<2>(res)};
 }
 
 // CappedFlooredOvernightIndexedCoupon implementation

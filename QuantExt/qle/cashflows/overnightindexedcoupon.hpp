@@ -97,7 +97,7 @@ private:
     bool includeSpread_;
 
     // Calculate the effective rate up to a given date.
-    QuantLib::Rate effectiveRate(const QuantLib::Date& date) const override;
+    std::pair<QuantLib::Rate, QuantLib::Date> effectiveRate(const QuantLib::Date& date) const override;
 
     // Check for overnight index coupon pricer, throw if not and return shared pointer to it if valid.
     QuantLib::ext::shared_ptr<OvernightIndexedCouponPricer> oicPricer() const;
@@ -110,7 +110,7 @@ public:
     Rate swapletRate() const override;
     Rate effectiveSpread() const;
     Rate effectiveIndexFixing() const;
-    Rate effectiveRate(const Date& date) const;
+    std::pair<Rate, Date> effectiveRate(const Date& date) const;
 
     // Since there is no caching, this method returns swaplet rate, effective spread and effective index fixing tuple.
     std::tuple<Rate, Spread, Rate> rateSpreadFixing() const;
@@ -122,7 +122,7 @@ public:
     Rate floorletRate(Rate) const override { QL_FAIL("floorletRate not available"); }
 
 protected:
-    std::tuple<Rate, Spread, Rate> compute(const QuantLib::Date& date) const;
+    std::tuple<Rate, Spread, Rate, Date> compute(const QuantLib::Date& date) const;
     const OvernightIndexedCoupon* coupon_;
 };
 

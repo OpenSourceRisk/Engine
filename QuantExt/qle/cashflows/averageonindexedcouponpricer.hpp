@@ -42,7 +42,7 @@ public:
 
     void initialize(const FloatingRateCoupon& coupon) override;
     Rate swapletRate() const override;
-    Rate effectiveRate(const Date& date) const;
+    std::pair<Rate, Date> effectiveRate(const Date& date) const;
 
     Real swapletPrice() const override { QL_FAIL("swapletPrice not available"); }
     Real capletPrice(Rate) const override { QL_FAIL("capletPrice not available"); }

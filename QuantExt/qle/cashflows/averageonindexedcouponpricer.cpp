@@ -41,11 +41,12 @@ void AverageONIndexedCouponPricer::initialize(const FloatingRateCoupon& coupon) 
 }
 
 Rate AverageONIndexedCouponPricer::swapletRate() const {
-    Date d = coupon_->separateRateCompPeriod() ? coupon_->interestDates().back() : coupon_->accrualEndDate();
-    return effectiveRate(d);
+    Date d = coupon_->rateComputationEndDate() != Date() ?
+        coupon_->rateComputationEndDate() : coupon_->accrualEndDate();
+    return effectiveRate(d).first;
 }
 
-Rate AverageONIndexedCouponPricer::effectiveRate(const Date& date) const {
+std::pair<Rate, Date> AverageONIndexedCouponPricer::effectiveRate(const Date& date) const {
 
     // Variables needed in the calcs below.
     auto onFixCal = coupon_->index()->fixingCalendar();
@@ -61,7 +62,7 @@ Rate AverageONIndexedCouponPricer::effectiveRate(const Date& date) const {
 
     // If we are before the start of the first interest period, then return zero.
     if (numPeriods == 0)
-        return 0.0;
+        return {0.0, refDate};
 
     // --- 1. Variable set-up ---
     const Date today = Settings::instance().evaluationDate();
@@ -357,13 +358,22 @@ Rate AverageONIndexedCouponPricer::effectiveRate(const Date& date) const {
         }
     }
 
+    // Day count fraction for the averaging period using index day counter.
+    Date upToDate = std::min(refDate, intDates.back());
+    Time avgPeriodDcf = indexDc.yearFraction(intDates.front(), upToDate);
+
+    // If spread is not zero and we have observation shift, users most likely expect the spread to be applied on the 
+    // unshifted period. This is the assumption here which is why we need to scale.
+    Spread adjSpread = coupon_->spread();
+    if (obsShift && !coupon_->separateRateCompPeriod()) {
+        // So that we are left with unShiftedDcf x spread when we calculate the amount.
+        Time unShiftedDcf = coupon_->dayCounter().yearFraction(coupon_->accrualStartDate(), date);
+        adjSpread *= unShiftedDcf / avgPeriodDcf;
+    }
+
     // Give the final result
-    // It should not happen but there are cases where coupon_->accruedPeriod(date) was giving 0 because the payment
-    // date was _before_ the accrual end date. For example payment cal != accrual cal, payment date end of month and
-    // not a good BD, payment convention set to MF => date rolled back before accrual end date.
-    Time cpnDcf = coupon_->separateRateCompPeriod() ? indexDc.yearFraction(intDates.front(), date)
-        : coupon_->accruedPeriod(std::min(date, std::min(cpnAccEnd, coupon_->date())));
-    return coupon_->gearing() * avgRate / cpnDcf + coupon_->spread();
+    Rate rate = coupon_->gearing() * avgRate / avgPeriodDcf + adjSpread;
+    return {rate, upToDate};
 }
 
 }

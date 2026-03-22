@@ -194,14 +194,33 @@ OvernightIndexedCouponBase::OvernightIndexedCouponBase(Type type, const Date& pa
             fixingDates_.reserve(reserveSize);
             interestDates_.reserve(reserveSize);
 
-            // Add fixing, interest and value dates up to and including the fixing date corresponding to 
-            // cachedEvalDate_.
-            addScheduleDates(cachedEvalDate_, fixStart, adjIntStart, lbStart);
-            QL_REQUIRE(!fixingDates_.empty(), "OvernightIndexedCoupon: no fixing dates generated!");
-            tsStartIdx_ = fixingDates_.size() - 1;
+            // Note again that cachedEvalDate_ (CEVD) is the valuation date (VD) adjusted to the preceding good index 
+            // business day if necessary i.e. CEVD is the latest fixing date <= VD. We need to add an extra fixing date 
+            // so that the fixing date that starts the telescopic period is > VD. We do it in addScheduleDates if we 
+            // can (i.e. if CEVD + 1 BD doesn't put us in the back stub). If not, it is covered by addTelescopeBackStub.
+            bool addFixEnd = false;
+            Date cachedEvalPlusOne = onFixCal.advance(cachedEvalDate_, 1, Days, Following);
+            if (cachedEvalPlusOne < rateCutOffStart) {
+                // If rco = 0, CEVD + 1 BD < fixEnd. If rco != 0, CEVD + 1 BD < rateCutOffStart.
+                // We can add the extra fixing date here in addScheduleDates.
+                addScheduleDates(cachedEvalPlusOne, fixStart, adjIntStart, lbStart);
+                tsStartIdx_ = fixingDates_.size() - 1;
+            } else if (cachedEvalPlusOne == rateCutOffStart) {
+                // If rco = 0, CEVD + 1 BD == fixEnd:
+                //   We set addFixEnd to true so that addTelescopeBackStub adds the extra fixing date.
+                // If rco != 0, CEVD + 1 BD == rateCutOffStart.
+                //   If rco != 0, addTelescopeBackStub adds from and incl. rateCutOffStart in any case.
+                addScheduleDates(cachedEvalDate_, fixStart, adjIntStart, lbStart);
+                addFixEnd = true;
+                // intentionally leave tsStartIdx_ unset as in this case we will have all dates.
+            } else {
+                QL_FAIL("OvernightIndexedCoupon: failed to build dates schedules.");
+            }
+
+            QL_REQUIRE(!fixingDates_.empty(), "OvernightIndexedCoupon: no fixing dates generated.");
 
             // Add final dates.
-            addTelescopeBackStub(fixEnd, rateCutOffStart, rcoIntStart, rcoLbStart, intEnd, adjIntEnd, lbEnd);
+            addTelescopeBackStub(fixEnd, rateCutOffStart, rcoIntStart, rcoLbStart, intEnd, adjIntEnd, lbEnd, addFixEnd);
 
             // Update interest start date if necessary.
             if (!observationShift_ && intStart != adjIntStart)
@@ -242,7 +261,10 @@ const vector<Date>& OvernightIndexedCouponBase::interestDates() const {
 void OvernightIndexedCouponBase::performCalculations() const {
     if (haveStaleDates())
         updateSchedules();
-    FloatingRateCoupon::performCalculations();
+
+    additionalResults_.clear();
+    Date upToDate = separateRateCompPeriod() ? interestDates_.back() : accrualEndDate_;
+    std::tie(rate_, upToDateAdj_) = effectiveRate(upToDate);
 }
 
 const vector<Rate>& OvernightIndexedCouponBase::indexFixings() const {
@@ -263,6 +285,17 @@ const vector<Rate>& OvernightIndexedCouponBase::indexFixings() const {
     return fixings_;
 }
 
+Real OvernightIndexedCouponBase::amount() const {
+    calculate();
+
+    // If observation shift, we need to use the day count fraction from the shifted period.
+    if (observationShift_ && !separateRateCompPeriod()) {
+        return nominal() * rate_ * dayCounter().yearFraction(interestDates_.front(), upToDateAdj_);
+    } else {
+        return nominal() * rate_ * accrualPeriod();
+    }
+}
+
 Real OvernightIndexedCouponBase::accruedAmount(const Date& d) const {
     // Note: no facility in OvernightIndexedCoupon ctor to pass in an ex-coupon date so we don't check
     // tradingExCoupon(d). Don't believe it applies for overnight indexed coupons in any case.
@@ -270,7 +303,12 @@ Real OvernightIndexedCouponBase::accruedAmount(const Date& d) const {
         return 0.0;
 
     Date upToDate = separateRateCompPeriod() ? std::min(d, interestDates_.back()) : std::min(d, accrualEndDate_);
-    return nominal() * effectiveRate(upToDate) * accruedPeriod(d);
+    auto [rate, upToDateAdj] = effectiveRate(upToDate);
+    if (observationShift_ && !separateRateCompPeriod()) {
+        return nominal() * rate * dayCounter().yearFraction(interestDates_.front(), upToDateAdj);
+    } else {
+        return nominal() * rate * dayCounter().yearFraction(accrualStartDate_, upToDateAdj);
+    }
 }
 
 void OvernightIndexedCouponBase::setTelescopicDates(Type type) {
@@ -487,11 +525,11 @@ void OvernightIndexedCouponBase::addRateCutoffDates(Date fixEnd,
 }
 
 void OvernightIndexedCouponBase::addTelescopeBackStub(Date fixEnd, Date rcoStart, Date rcoIntStart, Date rcoLbStart,
-    const Date& intEnd, const Date& adjIntEnd, const Date& lbEnd) {
+    const Date& intEnd, const Date& adjIntEnd, const Date& lbEnd, bool addFixEnd) {
     auto onFixCal = overnightIndex_->fixingCalendar();
     if (rateCutoff_ == 0) {
         // Add final dates.
-        if (fixingDates_.back() < fixEnd && !onFixCal.isBusinessDay(intEnd)) {
+        if (fixingDates_.back() < fixEnd && (!onFixCal.isBusinessDay(intEnd) || addFixEnd)) {
             // We need an overnight period stub here because everything does not collapse.
             fixingDates_.push_back(fixEnd);
             valueDates_.push_back(overnightIndex_->valueDate(fixEnd));

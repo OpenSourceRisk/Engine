@@ -53,7 +53,7 @@ void AverageONIndexedCoupon::accept(AcyclicVisitor& v) {
         FloatingRateCoupon::accept(v);
 }
 
-Rate AverageONIndexedCoupon::effectiveRate(const Date& d) const {
+std::pair<Rate, Date> AverageONIndexedCoupon::effectiveRate(const Date& d) const {
     return oicPricer()->effectiveRate(d);
 }
 

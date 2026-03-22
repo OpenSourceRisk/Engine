@@ -1499,6 +1499,10 @@ BOOST_DATA_TEST_CASE(testCpn_NoLb_NoOs_NoFd_Ts,
     }
     checkDates(cpn, expFixDates, expTsIntDates, expValDates);
 
+    // Create a new coupon when evaluation date has been updated. It should have the same dates.
+    auto new_cpn = createCoupon(0, false, true, 0, rcoDays, adjustStart, adjustEnd);
+    checkDates(new_cpn, expFixDates, expTsIntDates, expValDates);
+
     // Step over evaluation dates up to 3 Dec 2025 (all coupon dates in the past).
     size_t pos = 1;
     auto onFixCal = cpn.overnightIndex()->fixingCalendar();
@@ -1516,6 +1520,10 @@ BOOST_DATA_TEST_CASE(testCpn_NoLb_NoOs_NoFd_Ts,
             }
         }
         checkDates(cpn, expFixDates, expTsIntDates, expValDates);
+
+        // New coupon from scratch and check dates.
+        new_cpn = createCoupon(0, false, true, 0, rcoDays, adjustStart, adjustEnd);
+        checkDates(new_cpn, expFixDates, expTsIntDates, expValDates);
     }
 
     // Step back down through evaluation dates to 30 Oct 2025 again.
@@ -1523,8 +1531,12 @@ BOOST_DATA_TEST_CASE(testCpn_NoLb_NoOs_NoFd_Ts,
     while (evalDate >= Date(31, Oct, 2025)) {
         Settings::instance().evaluationDate() = --evalDate;
 
+        // New coupon from scratch and check dates.
+        new_cpn = createCoupon(0, false, true, 0, rcoDays, adjustStart, adjustEnd);
+
         if (!adjustStart && evalDate == Date(30, Oct, 2025)) {
             checkDates(cpn, expFixDates, expTsIntDates, expValDates);
+            checkDates(new_cpn, expFixDates, expTsIntDates, expValDates);
             continue;
         }
 
@@ -1550,6 +1562,7 @@ BOOST_DATA_TEST_CASE(testCpn_NoLb_NoOs_NoFd_Ts,
             expTsIntDates.erase(expTsIntDates.begin() + viIdxFrom, expTsIntDates.begin() + viIdxTo);
         }
         checkDates(cpn, expFixDates, expTsIntDates, expValDates);
+        checkDates(new_cpn, expFixDates, expTsIntDates, expValDates);
     }
 
     // Helper function that sets up expected dates when rate cut-off days is 0 based on expected value dates.
@@ -1584,6 +1597,10 @@ BOOST_DATA_TEST_CASE(testCpn_NoLb_NoOs_NoFd_Ts,
     }
     checkDates(cpn, expFixDates, expTsIntDates, expValDates, adjustStart, adjustEnd);
 
+    // New coupon from scratch and check dates.
+    new_cpn = createCoupon(0, false, true, 0, rcoDays, adjustStart, adjustEnd);
+    checkDates(new_cpn, expFixDates, expTsIntDates, expValDates, adjustStart, adjustEnd);
+
     Settings::instance().evaluationDate() = Date(16, Nov, 2025);
     if (rcoDays == 0) {
         expValDates   = {Date(31, Oct, 2025), Date( 3, Nov, 2025), Date( 4, Nov, 2025), Date( 5, Nov, 2025), Date( 6, Nov, 2025), Date( 7, Nov, 2025), Date(10, Nov, 2025), Date(12, Nov, 2025), Date(13, Nov, 2025), Date(14, Nov, 2025), Date(17, Nov, 2025)};
@@ -1593,6 +1610,10 @@ BOOST_DATA_TEST_CASE(testCpn_NoLb_NoOs_NoFd_Ts,
         setupDatesRco();
     }
     checkDates(cpn, expFixDates, expTsIntDates, expValDates, adjustStart, adjustEnd);
+
+    // New coupon from scratch and check dates.
+    new_cpn = createCoupon(0, false, true, 0, rcoDays, adjustStart, adjustEnd);
+    checkDates(new_cpn, expFixDates, expTsIntDates, expValDates, adjustStart, adjustEnd);
 
     Settings::instance().evaluationDate() = Date(25, Nov, 2025);
     if (rcoDays == 0) {
@@ -1604,6 +1625,10 @@ BOOST_DATA_TEST_CASE(testCpn_NoLb_NoOs_NoFd_Ts,
     }
     checkDates(cpn, expFixDates, expTsIntDates, expValDates, adjustStart, adjustEnd);
 
+    // New coupon from scratch and check dates.
+    new_cpn = createCoupon(0, false, true, 0, rcoDays, adjustStart, adjustEnd);
+    checkDates(new_cpn, expFixDates, expTsIntDates, expValDates, adjustStart, adjustEnd);
+
     Settings::instance().evaluationDate() = Date(11, Nov, 2025);
     if (rcoDays == 0) {
         expValDates   = {Date(31, Oct, 2025), Date( 3, Nov, 2025), Date( 4, Nov, 2025), Date( 5, Nov, 2025), Date( 6, Nov, 2025), Date( 7, Nov, 2025), Date(10, Nov, 2025), Date(12, Nov, 2025)};
@@ -1613,6 +1638,10 @@ BOOST_DATA_TEST_CASE(testCpn_NoLb_NoOs_NoFd_Ts,
         setupDatesRco();
     }
     checkDates(cpn, expFixDates, expTsIntDates, expValDates, adjustStart, adjustEnd);
+
+    // New coupon from scratch and check dates.
+    new_cpn = createCoupon(0, false, true, 0, rcoDays, adjustStart, adjustEnd);
+    checkDates(new_cpn, expFixDates, expTsIntDates, expValDates, adjustStart, adjustEnd);
 
     Settings::instance().evaluationDate() = Date(2, Dec, 2025);
     if (rcoDays == 0) {
@@ -1624,6 +1653,10 @@ BOOST_DATA_TEST_CASE(testCpn_NoLb_NoOs_NoFd_Ts,
     }
     checkDates(cpn, expFixDates, expTsIntDates, expValDates, adjustStart, adjustEnd);
 
+    // New coupon from scratch and check dates.
+    new_cpn = createCoupon(0, false, true, 0, rcoDays, adjustStart, adjustEnd);
+    checkDates(new_cpn, expFixDates, expTsIntDates, expValDates, adjustStart, adjustEnd);
+
     Settings::instance().evaluationDate() = Date(4, Nov, 2025);
     if (rcoDays == 0) {
         expValDates   = {Date(31, Oct, 2025), Date( 3, Nov, 2025), Date( 4, Nov, 2025), Date( 5, Nov, 2025)};
@@ -1633,6 +1666,10 @@ BOOST_DATA_TEST_CASE(testCpn_NoLb_NoOs_NoFd_Ts,
         setupDatesRco();
     }
     checkDates(cpn, expFixDates, expTsIntDates, expValDates, adjustStart, adjustEnd);
+
+    // New coupon from scratch and check dates.
+    new_cpn = createCoupon(0, false, true, 0, rcoDays, adjustStart, adjustEnd);
+    checkDates(new_cpn, expFixDates, expTsIntDates, expValDates, adjustStart, adjustEnd);
 }
 
 #ifdef __INTELLISENSE__
@@ -1681,6 +1718,10 @@ BOOST_DATA_TEST_CASE(testCpn_Lb_Os_NoFd_Ts,
     }
     checkDates(cpn, expFixDates, expTsIntDates, expValDates);
 
+    // Create a new coupon when evaluation date has been updated. It should have the same dates.
+    auto new_cpn = createCoupon(2, true, true, 0, rcoDays, adjustStart, adjustEnd);
+    checkDates(new_cpn, expFixDates, expTsIntDates, expValDates);
+
     // Step over evaluation dates up to 3 Dec 2025 (all coupon dates in the past).
     size_t pos = 1;
     auto onFixCal = cpn.overnightIndex()->fixingCalendar();
@@ -1698,6 +1739,10 @@ BOOST_DATA_TEST_CASE(testCpn_Lb_Os_NoFd_Ts,
             }
         }
         checkDates(cpn, expFixDates, expTsIntDates, expValDates);
+
+        // New coupon from scratch and check dates.
+        new_cpn = createCoupon(2, true, true, 0, rcoDays, adjustStart, adjustEnd);
+        checkDates(new_cpn, expFixDates, expTsIntDates, expValDates);
     }
 
     // Step back down through evaluation dates to 28 Oct 2025 again.
@@ -1725,6 +1770,10 @@ BOOST_DATA_TEST_CASE(testCpn_Lb_Os_NoFd_Ts,
                 expTsIntDates.erase(expTsIntDates.begin() + viIdxFrom, expTsIntDates.begin() + viIdxTo);
             }
             checkDates(cpn, expFixDates, expTsIntDates, expValDates);
+
+            // New coupon from scratch and check dates.
+            new_cpn = createCoupon(2, true, true, 0, rcoDays, adjustStart, adjustEnd);
+            checkDates(new_cpn, expFixDates, expTsIntDates, expValDates);
         }
     }
 
@@ -1766,6 +1815,10 @@ BOOST_DATA_TEST_CASE(testCpn_Lb_Os_NoFd_Ts,
         Settings::instance().evaluationDate() = evalDate;
         setupExpDates(idx);
         checkDates(cpn, expFixDates, expTsIntDates, expValDates);
+
+        // New coupon from scratch and check dates.
+        new_cpn = createCoupon(2, true, true, 0, rcoDays, adjustStart, adjustEnd);
+        checkDates(new_cpn, expFixDates, expTsIntDates, expValDates);
     }
 }
 

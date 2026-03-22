@@ -53,7 +53,7 @@ public:
 
 private:
     // Calculate the effective rate up to a given date.
-    QuantLib::Rate effectiveRate(const QuantLib::Date& date) const override;
+    std::pair<QuantLib::Rate, QuantLib::Date> effectiveRate(const QuantLib::Date& date) const override;
 
     // Check for average overnight index coupon pricer, throw if not and return shared pointer to it if valid.
     QuantLib::ext::shared_ptr<AverageONIndexedCouponPricer> oicPricer() const;

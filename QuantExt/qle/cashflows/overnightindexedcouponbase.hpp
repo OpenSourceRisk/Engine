@@ -182,17 +182,29 @@ public:
     //@{
     void performCalculations() const override;
     //@}
+    //! \name CashFlow interface
+    //@{
+    QuantLib::Real amount() const override;
+    //@}
     //! \name FloatingRateCoupon interface
     //@{
     //! The date when the coupon is fully determined i.e. the last fixing date.
     QuantLib::Date fixingDate() const override { return fixingDates_.back(); }
+    //@}
+    //! \name Coupon interface
+    //@{
     //! The accrued amount up to `date`.
     QuantLib::Real accruedAmount(const QuantLib::Date& date) const override;
     //@}
 
+protected:
+    // Stored along with rate_ to avoid recalculation of amount().
+    mutable QuantLib::Date upToDateAdj_;
 private:
     // Calculate the effective rate up to a given date. Must be implemented in derived classes.
-    virtual QuantLib::Rate effectiveRate(const QuantLib::Date& date) const = 0;
+    // The second element is the date up to which the effective rate is calculated. With observation shift, it will be 
+    // different from the input `date` and we do not want to calculate it again elsewhere.
+    virtual std::pair<QuantLib::Rate, QuantLib::Date> effectiveRate(const QuantLib::Date& date) const = 0;
 
     // True if telescopic dates requested and can be applied.
     bool telescopicDates_;
@@ -243,7 +255,7 @@ private:
     // Add final dates in telescopic period.
     void addTelescopeBackStub(QuantLib::Date fixEnd, QuantLib::Date rcoStart, QuantLib::Date rcoIntStart,
         QuantLib::Date rcoLbStart, const QuantLib::Date& intEnd, const QuantLib::Date& adjIntEnd,
-        const QuantLib::Date& lbEnd);
+        const QuantLib::Date& lbEnd, bool addFixEnd = false);
 
     // After adding dates in telescopic period, check if we have all dates and update tsStartIdx_ accordingly.
     void checkForAllDates() const;

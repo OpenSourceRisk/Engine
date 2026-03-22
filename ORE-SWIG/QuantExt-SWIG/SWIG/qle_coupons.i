@@ -183,7 +183,7 @@ class OvernightIndexedCouponPricer : public FloatingRateCouponPricer {
   public:
     Rate effectiveSpread() const;
     Rate effectiveIndexFixing() const;
-    Rate effectiveRate(const Date& date) const;
+    std::pair<Rate, Date> effectiveRate(const Date& date) const;
     std::tuple<Rate, Spread, Rate> rateSpreadFixing() const;
 };
 
