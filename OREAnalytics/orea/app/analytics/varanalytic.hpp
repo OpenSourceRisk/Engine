@@ -46,6 +46,7 @@ struct VarVariables : public InputVariables {
     QuantLib::ext::shared_ptr<SensitivityScenarioData> sensiScenarioData_;
     QuantLib::ext::shared_ptr<ScenarioReader> scenarioReader_;
     bool outputHistoricalScenarios_ = false;
+    QuantLib::ext::shared_ptr<ReturnConfiguration> returnConfiguration_;
 };
   
 class VarAnalyticImpl : public Analytic::Impl {

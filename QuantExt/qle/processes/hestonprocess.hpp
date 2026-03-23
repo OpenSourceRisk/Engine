@@ -39,9 +39,11 @@ using namespace QuantLib;
     The PDF/CDF is computed by Fourier inversion (Gil-Pelaez formula) of Schouten's stable Heston
     characteristic function phi(u):
 
-    pdf(x) = 1/pi * \int_0^\infty Re[ exp(-i*u*x) * phi(u)] du,
-    cdf(x) = 1/2 - 1/pi * \int_0^\infty 1/u * Im[ exp(-i*u*x) * phi(u)] du
-    
+    \f[
+        pdf(x) = 1/pi * \int_0^\infty Re[ exp(-i*u*x) * phi(u)] du,
+        cdf(x) = 1/2 - 1/pi * \int_0^\infty 1/u * Im[ exp(-i*u*x) * phi(u)] du
+    \f]
+
     The numerical integration is done using Gauss-Laguerre, following
     one of QuantLib's option pricing approaches in AnalyticHestonEngine, in particular the
     default approach where the engine constructor takes the HestonModel as its only argument.

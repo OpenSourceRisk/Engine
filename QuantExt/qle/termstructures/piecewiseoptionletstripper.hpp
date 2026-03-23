@@ -40,17 +40,18 @@ public:
     typedef typename PiecewiseOptionletCurve<Interpolator, Bootstrap>::this_curve optionlet_curve;
     typedef Bootstrap<optionlet_curve> bootstrap_type;
 
-    PiecewiseOptionletStripper(const QuantLib::ext::shared_ptr<QuantExt::CapFloorTermVolSurface>& capFloorSurface,
-                               const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index,
-                               const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
-                               bool flatFirstPeriod = true,
-                               const QuantLib::VolatilityType capFloorVolType = QuantLib::ShiftedLognormal,
-                               const QuantLib::Real capFloorVolDisplacement = 0.0,
-                               const QuantLib::ext::optional<VolatilityType> optionletVolType = QuantLib::ext::nullopt,
-                               const QuantLib::ext::optional<QuantLib::Real> optionletVolDisplacement = QuantLib::ext::nullopt,
-                               bool interpOnOptionlets = true, const Interpolator& i = Interpolator(),
-                               const Bootstrap<optionlet_curve>& bootstrap = Bootstrap<optionlet_curve>(),
-                               const Period& rateComputationPeriod = 0 * Days, const Size onCapSettlementDays = 0);
+    PiecewiseOptionletStripper(
+        const QuantLib::ext::shared_ptr<QuantExt::CapFloorTermVolSurface>& capFloorSurface,
+        const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index,
+        const QuantLib::Handle<QuantLib::YieldTermStructure>& discount, bool flatFirstPeriod = true,
+        const QuantLib::VolatilityType capFloorVolType = QuantLib::ShiftedLognormal,
+        const QuantLib::Real capFloorVolDisplacement = 0.0,
+        const QuantLib::ext::optional<VolatilityType> optionletVolType = QuantLib::ext::nullopt,
+        const QuantLib::ext::optional<QuantLib::Real> optionletVolDisplacement = QuantLib::ext::nullopt,
+        bool interpOnOptionlets = true, const Interpolator& i = Interpolator(),
+        const Bootstrap<optionlet_curve>& bootstrap = Bootstrap<optionlet_curve>(),
+        const Period& rateComputationPeriod = 0 * Days, const Size onCapSettlementDays = 0,
+        const bool useEffectiveVolatility = false);
 
     //! \name Inspectors
     //@{
@@ -98,14 +99,16 @@ private:
 template <class Interpolator, template <class> class Bootstrap>
 PiecewiseOptionletStripper<Interpolator, Bootstrap>::PiecewiseOptionletStripper(
     const QuantLib::ext::shared_ptr<QuantExt::CapFloorTermVolSurface>& capFloorSurface,
-    const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index, const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
-    bool flatFirstPeriod, const QuantLib::VolatilityType capFloorVolType, const QuantLib::Real capFloorVolDisplacement,
+    const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index,
+    const QuantLib::Handle<QuantLib::YieldTermStructure>& discount, bool flatFirstPeriod,
+    const QuantLib::VolatilityType capFloorVolType, const QuantLib::Real capFloorVolDisplacement,
     const QuantLib::ext::optional<VolatilityType> optionletVolType,
-    const QuantLib::ext::optional<QuantLib::Real> optionletVolDisplacement, bool interpOnOptionlets, const Interpolator& i,
-    const Bootstrap<optionlet_curve>& bootstrap, const Period& rateComputationPeriod, const Size onCapSettlementDays)
+    const QuantLib::ext::optional<QuantLib::Real> optionletVolDisplacement, bool interpOnOptionlets,
+    const Interpolator& i, const Bootstrap<optionlet_curve>& bootstrap, const Period& rateComputationPeriod,
+    const Size onCapSettlementDays, const bool useEffectiveVolatility)
     : OptionletStripper(capFloorSurface, index, discount, optionletVolType ? *optionletVolType : capFloorVolType,
                         optionletVolDisplacement ? *optionletVolDisplacement : 0.0, rateComputationPeriod,
-                        onCapSettlementDays),
+                        onCapSettlementDays, useEffectiveVolatility),
       flatFirstPeriod_(flatFirstPeriod), capFloorVolType_(capFloorVolType),
       capFloorVolDisplacement_(capFloorVolDisplacement), interpOnOptionlets_(interpOnOptionlets), interpolator_(i),
       bootstrap_(bootstrap), strikeCurves_(nStrikes_), helpers_(nStrikes_) {
@@ -137,12 +140,14 @@ PiecewiseOptionletStripper<Interpolator, Bootstrap>::PiecewiseOptionletStripper(
                     index_->fixingCalendar().adjust(capFloorSurface->referenceDate()), onCapSettlementDays_ * Days);
                 helpers_[j].push_back(QuantLib::ext::make_shared<OISCapFloorHelper>(
                     CapFloorHelper::Automatic, tenors[i], rateComputationPeriod_, strikes[j],
-                    Handle<Quote>(quotes_[i].back()), QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(index_), discount_,
-                    false, effDate, CapFloorHelper::Volatility, capFloorVolType_, capFloorVolDisplacement_));
+                    Handle<Quote>(quotes_[i].back()), QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(index_),
+                    discount_, false, effDate, CapFloorHelper::Volatility, capFloorVolType_, capFloorVolDisplacement_,
+                    useEffectiveVolatility_));
             } else {
                 helpers_[j].push_back(QuantLib::ext::make_shared<CapFloorHelper>(
                     CapFloorHelper::Automatic, tenors[i], strikes[j], Handle<Quote>(quotes_[i].back()), index_,
-                    discount_, true, Date(), CapFloorHelper::Volatility, capFloorVolType_, capFloorVolDisplacement_));
+                    discount_, true, Date(), CapFloorHelper::Volatility, capFloorVolType_, capFloorVolDisplacement_,
+                    useEffectiveVolatility_));
             }
         }
     }
@@ -176,7 +181,7 @@ inline void PiecewiseOptionletStripper<Interpolator, Bootstrap>::performCalculat
         strikeCurves_[j] = QuantLib::ext::make_shared<optionlet_curve>(
             termVolSurface_->referenceDate(), helpers_[j], termVolSurface_->calendar(),
             termVolSurface_->businessDayConvention(), termVolSurface_->dayCounter(), volatilityType_, displacement_,
-            flatFirstPeriod_, interpolator_, bootstrap_);
+            flatFirstPeriod_, useEffectiveVolatility_, interpolator_, bootstrap_);
     }
 
     // Populate the optionlet volatilities and standard deviations

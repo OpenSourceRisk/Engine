@@ -49,13 +49,13 @@ using namespace QuantLib;
   \end{align*}
   \f]
 
-  The (constant) correlations \rho_{SX} and \rho_{VX} are passed to the constructor,
-  the FX process volatility \sqrt{V_X} (possibly constant, determinstic, local or
+  The (constant) correlations \f$\rho_{SX}\f$ and \f$\rho_{VX}\f$ are passed to the constructor,
+  the FX process volatility \f$\sqrt{V_X}\f$ (possibly constant, determinstic, local or
   stochastic) that is "external" to this Heston system, needs to be updated before
   evolve is called.
 
   It is the developer's responsibility to ensure that
-  - the passed correlations \rho_{SX} and \rho_{VX} are consistent with the correlation
+  - the passed correlations \f$\rho_{SX}\f$ and \f$\rho_{VX}\f$ are consistent with the correlation
   matrix that drives the overall system of processes that includes the FX process and
   this Heston system
   - the Wiener increments passed to this Heston system are nevertheless independent,

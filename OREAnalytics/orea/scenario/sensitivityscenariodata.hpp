@@ -141,9 +141,10 @@ public:
     };
 
     //! Default constructor
-    SensitivityScenarioData(bool parConversion = true, std::string parConversionExcludeFixings = ".*", 
+    SensitivityScenarioData(bool parConversion = true, std::string parConversionExcludeFixings = ".*",
                             ore::data::ParConversionMatrixRegularisation parConversionMatrixRegularisation = ore::data::ParConversionMatrixRegularisation::Silent)
-        : computeGamma_(true), useSpreadedTermStructures_(false), parConversion_(parConversion), 
+        : computeGamma_(true),
+          useSpreadedTermStructures_(false), parConversion_(parConversion), 
           parConversionExcludeFixings_(parConversionExcludeFixings), parConversionMatrixRegularisation_(parConversionMatrixRegularisation){};
 
     //! \name Inspectors

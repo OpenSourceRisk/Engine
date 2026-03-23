@@ -57,6 +57,7 @@ public:
         \param flatFirstPeriod If the volatility between the first date and second date in \p dates is assumed constant
                                and equal to the second element of \p volatilities. This means that the first element of
                                \p volatilities is ignored.
+        \param useEffectiveVolatility Whether or not to use effective volatility
         \param interpolator    The interpolation object used to interpolate between the provided \p dates
     */
     InterpolatedOptionletCurve(const std::vector<QuantLib::Date>& dates,
@@ -65,7 +66,7 @@ public:
                                const QuantLib::Calendar& calendar = QuantLib::Calendar(),
                                QuantLib::VolatilityType volatilityType = QuantLib::Normal,
                                QuantLib::Real displacement = 0.0, bool flatFirstPeriod = true,
-                               const Interpolator& interpolator = Interpolator());
+                               bool useEffectiveVolatility = false, const Interpolator& interpolator = Interpolator());
 
     //! \name TermStructure interface
     //@{
@@ -82,6 +83,7 @@ public:
     //@{
     QuantLib::VolatilityType volatilityType() const override;
     QuantLib::Real displacement() const override;
+    bool useEffectiveVolatility() const override;
     //@}
 
     //! \name Other inspectors
@@ -97,19 +99,19 @@ protected:
     InterpolatedOptionletCurve(QuantLib::BusinessDayConvention bdc, const QuantLib::DayCounter& dayCounter,
                                QuantLib::VolatilityType volatilityType = QuantLib::Normal,
                                QuantLib::Real displacement = 0.0, bool flatFirstPeriod = true,
-                               const Interpolator& interpolator = Interpolator());
+                               bool useEffectiveVolatility = false, const Interpolator& interpolator = Interpolator());
 
     InterpolatedOptionletCurve(const QuantLib::Date& referenceDate, const QuantLib::Calendar& calendar,
                                QuantLib::BusinessDayConvention bdc, const QuantLib::DayCounter& dayCounter,
                                QuantLib::VolatilityType volatilityType = QuantLib::Normal,
                                QuantLib::Real displacement = 0.0, bool flatFirstPeriod = true,
-                               const Interpolator& interpolator = Interpolator());
+                               bool useEffectiveVolatility = false, const Interpolator& interpolator = Interpolator());
 
     InterpolatedOptionletCurve(QuantLib::Natural settlementDays, const QuantLib::Calendar& calendar,
                                QuantLib::BusinessDayConvention bdc, const QuantLib::DayCounter& dayCounter,
                                QuantLib::VolatilityType volatilityType = QuantLib::Normal,
                                QuantLib::Real displacement = 0.0, bool flatFirstPeriod = true,
-                               const Interpolator& interpolator = Interpolator());
+                               bool useEffectiveVolatility = false, const Interpolator& interpolator = Interpolator());
 
     //! \name OptionletVolatilityStructure interface
     //@{
@@ -136,6 +138,8 @@ private:
     //! True if the volatility from the initial date to the first date is assumed flat
     bool flatFirstPeriod_;
 
+    bool useEffectiveVolatility_;
+
     //! Initialise the dates and the interpolation object.
     void initialise();
 };
@@ -150,10 +154,11 @@ InterpolatedOptionletCurve<Interpolator>::InterpolatedOptionletCurve(
     const std::vector<QuantLib::Date>& dates, const std::vector<QuantLib::Real>& volatilities,
     QuantLib::BusinessDayConvention bdc, const QuantLib::DayCounter& dayCounter, const QuantLib::Calendar& calendar,
     QuantLib::VolatilityType volatilityType, QuantLib::Real displacement, bool flatFirstPeriod,
-    const Interpolator& interpolator)
+    bool useEffectiveVolatility, const Interpolator& interpolator)
     : QuantLib::OptionletVolatilityStructure(dates.at(0), calendar, bdc, dayCounter),
       QuantLib::InterpolatedCurve<Interpolator>(std::vector<QuantLib::Time>(), volatilities, interpolator),
-      dates_(dates), volatilityType_(volatilityType), displacement_(displacement), flatFirstPeriod_(flatFirstPeriod) {
+      dates_(dates), volatilityType_(volatilityType), displacement_(displacement), flatFirstPeriod_(flatFirstPeriod),
+      useEffectiveVolatility_(useEffectiveVolatility) {
     initialise();
 }
 
@@ -162,27 +167,29 @@ InterpolatedOptionletCurve<Interpolator>::InterpolatedOptionletCurve(QuantLib::B
                                                                      const QuantLib::DayCounter& dayCounter,
                                                                      QuantLib::VolatilityType volatilityType,
                                                                      QuantLib::Real displacement, bool flatFirstPeriod,
+                                                                     bool useEffectiveVolatility,
                                                                      const Interpolator& interpolator)
     : QuantLib::OptionletVolatilityStructure(bdc, dayCounter), QuantLib::InterpolatedCurve<Interpolator>(interpolator),
-      volatilityType_(volatilityType), displacement_(displacement), flatFirstPeriod_(flatFirstPeriod) {}
+      volatilityType_(volatilityType), displacement_(displacement), flatFirstPeriod_(flatFirstPeriod),
+      useEffectiveVolatility_(useEffectiveVolatility) {}
 
 template <class Interpolator>
 InterpolatedOptionletCurve<Interpolator>::InterpolatedOptionletCurve(
     const QuantLib::Date& referenceDate, const QuantLib::Calendar& calendar, QuantLib::BusinessDayConvention bdc,
     const QuantLib::DayCounter& dayCounter, QuantLib::VolatilityType volatilityType, QuantLib::Real displacement,
-    bool flatFirstPeriod, const Interpolator& interpolator)
+    bool flatFirstPeriod, bool useEffectiveVolatility, const Interpolator& interpolator)
     : QuantLib::OptionletVolatilityStructure(referenceDate, calendar, bdc, dayCounter),
       QuantLib::InterpolatedCurve<Interpolator>(interpolator), volatilityType_(volatilityType),
-      displacement_(displacement), flatFirstPeriod_(flatFirstPeriod) {}
+      displacement_(displacement), flatFirstPeriod_(flatFirstPeriod), useEffectiveVolatility_(useEffectiveVolatility) {}
 
 template <class Interpolator>
 InterpolatedOptionletCurve<Interpolator>::InterpolatedOptionletCurve(
     QuantLib::Natural settlementDays, const QuantLib::Calendar& calendar, QuantLib::BusinessDayConvention bdc,
     const QuantLib::DayCounter& dayCounter, QuantLib::VolatilityType volatilityType, QuantLib::Real displacement,
-    bool flatFirstPeriod, const Interpolator& interpolator)
+    bool flatFirstPeriod, bool useEffectiveVolatility, const Interpolator& interpolator)
     : QuantLib::OptionletVolatilityStructure(settlementDays, calendar, bdc, dayCounter),
       QuantLib::InterpolatedCurve<Interpolator>(interpolator), volatilityType_(volatilityType),
-      displacement_(displacement), flatFirstPeriod_(flatFirstPeriod) {}
+      displacement_(displacement), flatFirstPeriod_(flatFirstPeriod), useEffectiveVolatility_(useEffectiveVolatility) {}
 
 template <class T> inline QuantLib::Date InterpolatedOptionletCurve<T>::maxDate() const {
     if (this->maxDate_ != Date())
@@ -205,6 +212,8 @@ template <class T> inline QuantLib::VolatilityType InterpolatedOptionletCurve<T>
 }
 
 template <class T> inline QuantLib::Real InterpolatedOptionletCurve<T>::displacement() const { return displacement_; }
+
+template <class T> inline bool InterpolatedOptionletCurve<T>::useEffectiveVolatility() const { return useEffectiveVolatility_; }
 
 template <class T> inline const std::vector<QuantLib::Time>& InterpolatedOptionletCurve<T>::times() const {
     return this->times_;

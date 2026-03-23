@@ -54,7 +54,7 @@ void SensitivityReportStream::reset() {
 SensitivityRecord SensitivityReportStream::processRecord(const vector<Report::ReportType>& entries) const {
 
     QL_REQUIRE(entries.size() == 10 || entries.size() == 14,
-               "On row number " << row_ << ": A sensitivity record needs 10 entries or 14 entries");
+               "On row number " << row_ << ": A sensitivity record needs 10 or 14 entries");
 
     SensitivityRecord sr;
     sr.tradeId = boost::get<std::string>(entries[0]);
@@ -73,8 +73,9 @@ SensitivityRecord SensitivityReportStream::processRecord(const vector<Report::Re
     sr.currency = boost::get<std::string>(entries[6]);
     sr.baseNpv = boost::get<Real>(entries[7]);
     Real delta = boost::get<Real>(entries[8]);
-    sr.delta = delta != Null<Real>() ? delta : 0;
     Real gamma = boost::get<Real>(entries[9]);
+
+    sr.delta = delta != Null<Real>() ? delta : 0;
     sr.gamma = gamma != Null<Real>() ? gamma : 0;
 
     return sr;

@@ -80,6 +80,9 @@ private:
 
     //! Can only compute gamma if the up and down risk factors align
     bool canComputeGamma_;
+
+    //! Flag to emit a theta record before the delta/gamma records for a new trade
+    bool emitThetaNext_;
 };
 
 } // namespace analytics

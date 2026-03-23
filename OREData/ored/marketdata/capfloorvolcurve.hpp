@@ -117,7 +117,7 @@ private:
               const std::vector<QuantLib::Volatility>& volatilities, QuantLib::Natural settleDays,
               const QuantLib::Calendar& cal, QuantLib::BusinessDayConvention bdc,
               QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndex, const QuantLib::DayCounter& dc,
-              QuantLib::VolatilityType type, QuantLib::Real displacement) const;
+              QuantLib::VolatilityType type, QuantLib::Real displacement, bool useEffectiveVolatility) const;
 
     //! Generate fixing days from end date for optionlet vol
     vector<Date> populateFixingDates(const QuantLib::Date& asof, CapFloorVolatilityCurveConfig& config,

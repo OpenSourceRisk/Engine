@@ -128,6 +128,13 @@ volatilities of the first par market cap are interpolated between the value at $
 node. Since the node at $t=0$ adds a degree of freedom, the parameter SmoothnessLambda should be set to a positive value
 in the bootstrap config. See \label{sec:bootstrap_config}.
 
+\item \lstinline!UseEffectiveVolatility! [Optional]:
+Only applies to overnight caplets. If false (default), volatilities in the surface will be ``stripped volatilities'',
+i.e. they will be placed on the first fixing date of the caplet and a decay adjustment will be applied when pricing the
+caplet. If true, volatilities in the surface will be ``effective volatliities'', i.e. they will be placed on the last
+fixing date of the caplet and the market black formula will be used to price such a caplet, using the last fixing date
+to calculate the usual black variance, without decay adjustment.
+
 \end{itemize}
 
 \begin{longlisting}
@@ -156,6 +163,7 @@ in the bootstrap config. See \label{sec:bootstrap_config}.
   <InputType>TermVolatilities</InputType>
   <RateComputationPeriod>...</RateComputationPeriod>
   <FlatFirstPeriod>...</FlatFirstPeriod>
+  <UseEffectiveVolatility>...</UseEffectiveVolatility>
 </CapFloorVolatility>
 \end{minted}
 \caption{ATM cap floor configuration with interpolation on term volatilities.}
@@ -241,6 +249,13 @@ volatilities of the first par market cap are interpolated between the value at $
 node. Since the node at $t=0$ adds a degree of freedom, the parameter SmoothnessLambda should be set to a positive value
 in the bootstrap config. See \label{sec:bootstrap_config}.
 
+\item \lstinline!UseEffectiveVolatility! [Optional]:
+Only applies to overnight caplets. If false (default), volatilities in the surface will be ``stripped volatilities'',
+i.e. they will be placed on the first fixing date of the caplet and a decay adjustment will be applied when pricing the
+caplet. If true, volatilities in the surface will be ``effective volatliities'', i.e. they will be placed on the last
+fixing date of the caplet and the market black formula will be used to price such a caplet, using the last fixing date
+to calculate the usual black variance, without decay adjustment.
+
 \end{itemize}
 
 \begin{longlisting}
@@ -269,6 +284,7 @@ in the bootstrap config. See \label{sec:bootstrap_config}.
   <InputType>TermVolatilities</InputType>
   <RateComputationPeriod>...</RateComputationPeriod>
   <FlatFirstPeriod>...</FlatFirstPeriod>
+  <UseEffectiveVolatility>...</UseEffectiveVolatility>
 </CapFloorVolatility>
 \end{minted}
 \caption{ATM cap floor configuration with interpolation on optionlet volatilities.}
@@ -354,6 +370,13 @@ volatilities of the first par market cap are interpolated between the value at $
 node. Since the node at $t=0$ adds a degree of freedom, the parameter SmoothnessLambda should be set to a positive value
 in the bootstrap config. See \label{sec:bootstrap_config}.
 
+\item \lstinline!UseEffectiveVolatility! [Optional]:
+Only applies to overnight caplets. If false (default), volatilities in the surface will be ``stripped volatilities'',
+i.e. they will be placed on the first fixing date of the caplet and a decay adjustment will be applied when pricing the
+caplet. If true, volatilities in the surface will be ``effective volatliities'', i.e. they will be placed on the last
+fixing date of the caplet and the market black formula will be used to price such a caplet, using the last fixing date
+to calculate the usual black variance, without decay adjustment.
+
 \end{itemize}
 
 \begin{longlisting}
@@ -382,6 +405,7 @@ in the bootstrap config. See \label{sec:bootstrap_config}.
   <InputType>TermVolatilities</InputType>
   <RateComputationPeriod>...</RateComputationPeriod>
   <FlatFirstPeriod>...</FlatFirstPeriod>
+  <UseEffectiveVolatility>...</UseEffectiveVolatility>
 </CapFloorVolatility>
 \end{minted}
 \caption{Cap floor surface with interpolation on term volatilities.}
@@ -484,6 +508,13 @@ volatilities of the first par market cap are interpolated between the value at $
 node. Since the node at $t=0$ adds a degree of freedom, the parameter SmoothnessLambda should be set to a positive value
 in the bootstrap config. See \label{sec:bootstrap_config}.
 
+\item \lstinline!UseEffectiveVolatility! [Optional]:
+Only applies to overnight caplets. If false (default), volatilities in the surface will be ``stripped volatilities'',
+i.e. they will be placed on the first fixing date of the caplet and a decay adjustment will be applied when pricing the
+caplet. If true, volatilities in the surface will be ``effective volatliities'', i.e. they will be placed on the last
+fixing date of the caplet and the market black formula will be used to price such a caplet, using the last fixing date
+to calculate the usual black variance, without decay adjustment.
+
 \end{itemize}
 
 \begin{longlisting}
@@ -515,6 +546,7 @@ in the bootstrap config. See \label{sec:bootstrap_config}.
   <InputType>TermVolatilities</InputType>
   <RateComputationPeriod>...</RateComputationPeriod>
   <FlatFirstPeriod>...</FlatFirstPeriod>
+  <UseEffectiveVolatility>...</UseEffectiveVolatility>
 </CapFloorVolatility>
 \end{minted}
 \caption{Cap floor surface with interpolation on optionlet volatilities.}
@@ -584,12 +616,6 @@ Indicates the interpolation and extrapolation, if allowed by the \lstinline!Extr
 \item \lstinline!InputType!:
 The type of the marketdata input. Allowable values are \lstinline!TermVolatilities! or \lstinline!OptionletVolatilities!. As we are describing ATM curve on optionlet volatilities, this should be set to \lstinline!OptionletVolatilities! as shown in Listing \ref{lst:capfloorvol_optionlet_atm_configuration}.
 
-\item \lstinline!OptionletTenorInArrears!:
-If true, the tenor in the market data is the maturiy of the optionlet, if false, it is the start date of the optionlet instead. Default is true.
-
-\item \lstinline!OptionletVolIsEffective!:
-Applies to overnight indices only. If true, the input volatility is interpreted as effective volatility and converted to stripped volatility before inserting it into the optionlet surface.
-
 \end{itemize}
 
 \begin{longlisting}
@@ -615,8 +641,6 @@ Applies to overnight indices only. If true, the input volatility is interpreted 
   <TimeInterpolation>...</TimeInterpolation>
   <BootstrapConfig>...</BootstrapConfig>
   <InputType>OptionletVolatilities</InputType>
-  <OptionletTenorInArrears>...</OptionletTenorInArrears>
-  <OptionletVolIsEffective>...</OptionletVolIsEffective>
 </CapFloorVolatility>
 \end{minted}
 \caption{ATM cap floor configuration with optionlet volatilities input.}
@@ -693,12 +717,6 @@ If true, the quote labels that are looked up in the market data to build the sur
 \item \lstinline!InputType!:
 The type of the marketdata input. Allowable values are \lstinline!TermVolatilities! or \lstinline!OptionletVolatilities!. As we are describing ATM curve on optionlet volatilities, this should be set to \lstinline!OptionletVolatilities! as shown in Listing \ref{lst:capfloorvol_optionlet_surface_configuration}.
 
-\item \lstinline!OptionletTenorInArrears!:
-If true, the tenor in the market data is the maturiy of the optionlet, if false, it is the start date of the optionlet instead. Default is true.
-
-\item \lstinline!OptionletVolIsEffective!:
-Applies to overnight indices only. If true, the input volatility is interpreted as effective volatility and converted to stripped volatility before inserting it into the optionlet surface.
-
 \end{itemize}
 
 \begin{longlisting}
@@ -725,8 +743,6 @@ Applies to overnight indices only. If true, the input volatility is interpreted 
   <StrikeInterpolation>...</StrikeInterpolation>
   <QuoteIncludesIndexName>...</QuoteIncludesIndexName>
   <InputType>OptionletVolatilities</InputType>
-  <OptionletTenorInArrears>...</OptionletTenorInArrears>
-  <OptionletVolIsEffective>...</OptionletVolIsEffective>
 </CapFloorVolatility>
 \end{minted}
 \caption{Cap floor surface with optionlet volatilities input.}
