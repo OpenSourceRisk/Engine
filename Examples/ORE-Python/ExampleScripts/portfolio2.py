@@ -472,9 +472,8 @@ ql.FailedTrade(env0)
 
 # ore/OREData/ored/portfolio/flexiswap.hpp
 
-ql.FlexiSwap()
-ql.FlexiSwap(env0, [leg_data0], [0.], [""], "Long")
-ql.FlexiSwap(env0, [leg_data0], "", "TARGET", "", [qlEvalDateStr], [""], [0.], "Long")
+#ql.FlexiSwap()
+#ql.FlexiSwap(env0, [leg_data0], [""], "Long")
 
 # ore/OREData/ored/portfolio/formulabasedlegbuilder.hpp
 

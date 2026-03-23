@@ -205,6 +205,7 @@
 #include <qle/instruments/equityforward.hpp>
 #include <qle/instruments/fixedbmaswap.hpp>
 #include <qle/instruments/flexiswap.hpp>
+#include <qle/instruments/flexiswapreplication.hpp>
 #include <qle/instruments/forwardbond.hpp>
 #include <qle/instruments/fxforward.hpp>
 #include <qle/instruments/genericswaption.hpp>

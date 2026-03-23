@@ -22,7 +22,10 @@ jobs:
             libboost-all-dev \
             libboost-test-dev \
             ninja-build \
-            zlib1g-dev
+            zlib1g-dev \
+            libeigen3-dev \
+            libbz2-dev \
+            liblzma-dev
     - name: cmake configure
       run : |
         mkdir build
@@ -38,6 +41,7 @@ jobs:
             -DQL_ENABLE_SESSIONS=true \
             -DORE_BUILD_DOC=false \
             -DORE_BUILD_SWIG=false \
+            -DCMAKE_POLICY_DEFAULT_CMP0167=NEW \
             -G "Ninja" \
             ..
     - name: cmake build

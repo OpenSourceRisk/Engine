@@ -18,7 +18,7 @@ jobs:
             platform: x64
             boost-lib: 64
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         submodules: recursive
     - name: uninstall SWIG 4.1.1
