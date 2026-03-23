@@ -60,6 +60,7 @@ void VarVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
                                        hsPeriod.startDates().front(), hsPeriod.endDates().front());
     }    
     inputs->loadParameter<bool>(outputHistoricalScenarios_, varAnalytics, "outputHistoricalScenarios", false, parseBool);
+    inputs->loadParameterXML<ReturnConfiguration>(returnConfiguration_, varAnalytics, "returnConfigFile");
 }
 
 void ParametricVarVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) {
@@ -174,14 +175,16 @@ void ParametricVarAnalyticImpl::setVarReport(const QuantLib::ext::shared_ptr<ore
         if (auto adjLoader = QuantLib::ext::dynamic_pointer_cast<AdjustedInMemoryLoader>(loader))
             adjFactors = QuantLib::ext::make_shared<ore::data::AdjustmentFactors>(adjLoader->adjustmentFactors());
 
-        auto defaultReturnConfig = QuantLib::ext::make_shared<ReturnConfiguration>();
+        auto returnConfig = varVars->returnConfiguration_
+                                ? varVars->returnConfiguration_
+                                : QuantLib::ext::make_shared<ReturnConfiguration>();
 
         QL_REQUIRE(varVars->scenarioReader_, "ScenarioReader Required.");
 
         auto scenarios = buildHistoricalScenarioGenerator(
             varVars->scenarioReader_, adjFactors, benchmarkVarPeriod, varVars->horizonCalendar_, varVars->horizonDays_,
             analytic()->configurations().simMarketParams, analytic()->configurations().todaysMarketParams,
-            defaultReturnConfig, varVars->horizonOverlappingPeriods_);
+            returnConfig, varVars->horizonOverlappingPeriods_);
 
         if (varVars->outputHistoricalScenarios_)
             ReportWriter().writeHistoricalScenarios(
@@ -235,14 +238,16 @@ void HistoricalSimulationVarAnalyticImpl::setVarReport(
     if (auto adjLoader = QuantLib::ext::dynamic_pointer_cast<AdjustedInMemoryLoader>(loader))
         adjFactors = QuantLib::ext::make_shared<ore::data::AdjustmentFactors>(adjLoader->adjustmentFactors());
 
-    auto defaultReturnConfig = QuantLib::ext::make_shared<ReturnConfiguration>();
+    auto returnConfig = varVars->returnConfiguration_
+                            ? varVars->returnConfiguration_
+                            : QuantLib::ext::make_shared<ReturnConfiguration>();
 
     QL_REQUIRE(varVars->scenarioReader_, "ScenarioReader Required.");
 
     auto scenarios = buildHistoricalScenarioGenerator(
         varVars->scenarioReader_, adjFactors, benchmarkVarPeriod, varVars->horizonCalendar_, varVars->horizonDays_,
         analytic()->configurations().simMarketParams, analytic()->configurations().todaysMarketParams,
-        defaultReturnConfig, varVars->horizonOverlappingPeriods_, riskFactorBreakdown_);
+        returnConfig, varVars->horizonOverlappingPeriods_, riskFactorBreakdown_);
 
     if (varVars->outputHistoricalScenarios_)
         ore::analytics::ReportWriter().writeHistoricalScenarios(

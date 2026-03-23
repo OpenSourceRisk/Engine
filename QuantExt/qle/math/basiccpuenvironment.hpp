@@ -28,12 +28,12 @@
 
 namespace QuantExt {
 
-class BasicCpuFramework : public ComputeFramework {
+class BasicCpuFramework final : public ComputeFramework {
 public:
     BasicCpuFramework();
-    ~BasicCpuFramework() override final;
-    std::set<std::string> getAvailableDevices() const override final;
-    ComputeContext* getContext(const std::string& deviceName) override final;
+    ~BasicCpuFramework() override;
+    std::set<std::string> getAvailableDevices() const override;
+    ComputeContext* getContext(const std::string& deviceName) override;
 
 private:
     std::map<std::string, ComputeContext*> contexts_;

@@ -46,3 +46,36 @@ The root element is \lstinline|ReturnConfiguration|, which contains one or more
     \item If no override is specified for a particular name, the default return configuration for the risk factor type is used.
     \item The displacement should be set to a small positive value if the risk factor can approach zero, to avoid numerical issues.
 \end{itemize}
+
+\subsubsection*{Usage in Analytics}
+
+The \lstinline|ReturnConfiguration| can be supplied to the following analytics via their configuration file using
+the \lstinline|returnConfigFile| parameter:
+
+\begin{itemize}
+    \item \textbf{Historical Simulation VaR} (\lstinline|historicalSimulationVar| section)
+    \item \textbf{Parametric VaR} (\lstinline|parametricVar| / \lstinline|var| sections, when using historical scenarios)
+    \item \textbf{PNL Explain} (\lstinline|pnlExplain| section)
+\end{itemize}
+
+Example entry in the analytics configuration file:
+
+\begin{listing}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Analytic type="historicalSimulationVar">
+  <Parameter name="active">true</Parameter>
+  <Parameter name="historicalScenarioFile">histscen.csv</Parameter>
+  <Parameter name="simulationConfigFile">simulation.xml</Parameter>
+  <Parameter name="historicalPeriod">20160101-20210101</Parameter>
+  <Parameter name="mporDays">10</Parameter>
+  <Parameter name="quantiles">0.01,0.05,0.95,0.99</Parameter>
+  <Parameter name="returnConfigFile">returnConfig.xml</Parameter>
+</Analytic>
+\end{minted}
+\caption{Using a custom return configuration in Historical Simulation VaR}
+\label{lst:histsimvar_returnconfig}
+\end{listing}
+
+If \lstinline|returnConfigFile| is omitted, the engine falls back to the built-in defaults
+(log returns for curves, relative returns for spots and volatilities, absolute returns for recovery rates, etc.),
+preserving full backward compatibility.

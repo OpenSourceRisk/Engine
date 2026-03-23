@@ -28,12 +28,12 @@
 
 namespace QuantExt {
 
-class CudaFramework : public ComputeFramework {
+class CudaFramework final : public ComputeFramework {
 public:
     CudaFramework();
     ~CudaFramework() override final;
-    std::set<std::string> getAvailableDevices() const override final;
-    ComputeContext* getContext(const std::string& deviceName) override final;
+    std::set<std::string> getAvailableDevices() const override;
+    ComputeContext* getContext(const std::string& deviceName) override;
 
 private:
     std::map<std::string, ComputeContext*> contexts_;

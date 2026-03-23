@@ -27,7 +27,7 @@ jobs:
             python-version: "3.13"
     steps:
     - name: Checkout ORE
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         submodules: recursive
     - name: Set up Python ${{ matrix.python-version }}

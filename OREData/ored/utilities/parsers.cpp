@@ -1186,17 +1186,6 @@ std::ostream& operator<<(std::ostream& os, SobolRsg::DirectionIntegers t) {
     }
 }
 
-std::ostream& operator<<(std::ostream& out, QuantExt::CrossAssetModel::Discretization dis) {
-    switch (dis) {
-    case QuantExt::CrossAssetModel::Discretization::Exact:
-        return out << "Exact";
-    case QuantExt::CrossAssetModel::Discretization::Euler:
-        return out << "Euler";
-    default:
-        return out << "?";
-    }
-}
-
 using ADCP = CommodityFutureConvention::AveragingData::CalculationPeriod;
 ADCP parseAveragingDataPeriod(const string& s) {
     if (s == "PreviousMonth") {

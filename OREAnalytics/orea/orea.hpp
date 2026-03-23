@@ -75,6 +75,7 @@
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <orea/app/zerosensitivityloader.hpp>
 #include <orea/cube/cube_io.hpp>
+#include <orea/cube/cube_io_utils.hpp>
 #include <orea/cube/cubecsvreader.hpp>
 #include <orea/cube/cubeinterpretation.hpp>
 #include <orea/cube/cubewriter.hpp>
