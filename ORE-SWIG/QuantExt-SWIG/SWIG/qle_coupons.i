@@ -55,6 +55,7 @@ class OvernightIndexedCouponBase : public FloatingRateCoupon {
     bool observationShift() const;
     bool hasLookback() const;
     const QuantLib::ext::shared_ptr<QuantLib::OvernightIndex>& overnightIndex() const;
+    bool canApplyTelescopic() const;
     bool telescopicDates() const;
     bool separateRateCompPeriod() const;
 };

@@ -327,7 +327,7 @@ tuple<Rate, Spread, Rate, Date> OvernightIndexedCouponPricer::compute(const Date
     }
 
     // Fixing dates in the future.
-    if (!rcoRate && !coupon_->telescopicDates()) {
+    if (!rcoRate && !coupon_->canApplyTelescopic()) {
         // If can't apply telescopic formula, loop over remaining periods and forecast the fixings.
         while (currPeriodIdx < numPeriods) {
             auto [onRate, inRcoPeriod] = onRateRcoInd();
@@ -340,7 +340,32 @@ tuple<Rate, Spread, Rate, Date> OvernightIndexedCouponPricer::compute(const Date
     } else if (!rcoRate) {
         while (currPeriodIdx < numPeriods) {
             Date currValDateOneBd = onFixCal.advance(valDates[currPeriodIdx], 1, Days, Following);
-            if (currPeriodIdx == numPeriods - 1 && currValDateOneBd < valDates[currPeriodIdx + 1]) {
+            if (!coupon_->telescopicDates()) {
+                // Coupon does not have telescopic dates but we can apply telescopic formula to avoid forecasting each 
+                // forward ON fixing.
+                // - if first date is a holiday, we need to forecast the ON rate as telescopic formula including it 
+                //   will give a sligthly inaccurate result.
+                // - if in final period that we are accruing up to, forecast ON rate in case `date` is not a good 
+                //   business day. This also covers the case of the last ON period where the coupon end date is a 
+                //   holiday - we need to forecast there also as telescopic including it is slightly inaccurate.
+                // - if in rate cut-off period, get the RCO ON rate and break to go to the RCO block at end.
+                if (currPeriodIdx == 0 && onFixCal.isHoliday(intDates.front()) ||
+                    currPeriodIdx == numPeriods - 1 || inRateCutoffPeriod()) {
+                    auto [onRate, inRcoPeriod] = onRateRcoInd();
+                    updateCompFactors(onRate);
+                    if (inRcoPeriod) {
+                        rcoRate = onRate;
+                        break;
+                    }
+                } else {
+                    // Telescopic formula to either start of RCO period or start of last underlying ON period.
+                    Size tsEndIdx = numPeriods - 1;
+                    if (rco > 0)
+                        tsEndIdx = std::min(tsEndIdx, fixDates.size() - rco - 1);
+                    applyTsFormula(valDates[currPeriodIdx], valDates[tsEndIdx]);
+                    currPeriodIdx = tsEndIdx;
+                }
+            } else if (currPeriodIdx == numPeriods - 1 && currValDateOneBd < valDates[currPeriodIdx + 1]) {
                 // Telescopic formula and date d is in the period associated with the telescopic period.
                 applyTsFormulaWithStub();
                 currPeriodIdx++;

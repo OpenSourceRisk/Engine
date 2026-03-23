@@ -173,7 +173,9 @@ public:
     bool hasLookback() const { return lookback_.length() != 0; }
     //! The underlying overnight index.
     const QuantLib::ext::shared_ptr<QuantLib::OvernightIndex>& overnightIndex() const { return overnightIndex_; }
-    //! True is telescopic dates were requested and can be applied, false otherwise.
+    //! True if telescopic formula can be applied, false otherwise.
+    bool canApplyTelescopic() const;
+    //! True if telescopic dates were requested and can be applied, false otherwise.
     bool telescopicDates() const { return telescopicDates_; }
     //! True if there is a rate computation period separate from the main coupon accrual period.
     bool separateRateCompPeriod() const { return separateRateCompPeriod_; }

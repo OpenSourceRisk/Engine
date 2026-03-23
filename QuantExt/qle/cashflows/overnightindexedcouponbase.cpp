@@ -258,6 +258,10 @@ const vector<Date>& OvernightIndexedCouponBase::interestDates() const {
     return interestDates_;
 }
 
+bool OvernightIndexedCouponBase::canApplyTelescopic() const {
+    return (!hasLookback() || observationShift()) && fixingDays_ == index_->fixingDays();
+}
+
 void OvernightIndexedCouponBase::performCalculations() const {
     if (haveStaleDates())
         updateSchedules();
@@ -313,8 +317,7 @@ Real OvernightIndexedCouponBase::accruedAmount(const Date& d) const {
 
 void OvernightIndexedCouponBase::setTelescopicDates(Type type) {
     if (type == Type::Compounding)
-        telescopicDates_ = telescopicDates_ &&
-            ((!hasLookback() || observationShift()) && fixingDays_ == index_->fixingDays());
+        telescopicDates_ = telescopicDates_ && canApplyTelescopic();
 }
 
 bool OvernightIndexedCouponBase::haveStaleDates() const {
