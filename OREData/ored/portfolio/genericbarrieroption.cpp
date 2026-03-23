@@ -754,14 +754,13 @@ void GenericBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>&
          {"TriggerProbability", "Triggered"},
          {"ExerciseProbability", "Exercised"},
          {"TransatlanticActive", "TransatlanticActive"},
-         {"TransatlanticTriggered", "TransatlanticTriggered"},
-         {"BarrierMonitoringDates", "BarrierMonitoringDates"}},
+         {"TransatlanticTriggered", "TransatlanticTriggered"}},
         {}, {}, {ScriptedTradeScriptData::CalibrationData("Underlyings", {"Strike", "BarrierLevels"})});
     script_["FD"] = ScriptedTradeScriptData(
         fdscript, "value", {{"currentNotional", "currentNotional"}, {"notionalCurrency", "PayCurrency"}}, {}, {},
         {ScriptedTradeScriptData::CalibrationData("Underlyings", {"Strike", "BarrierLevels"})});
     script_["AMC"] = ScriptedTradeScriptData(
-        amcscript, "value", {{"currentNotional", "currentNotional"}, {"notionalCurrency", "PayCurrency"}, {"BarrierMonitoringDates", "BarrierMonitoringDates"}, {"_AMC_SimDates", "_AMC_SimDates"}}, {},
+        amcscript, "value", {{"currentNotional", "currentNotional"}, {"notionalCurrency", "PayCurrency"}}, {},
         {ScriptedTradeScriptData::NewScheduleData("MonitorAndSimDates", "Join",
                                                   {"_AMC_SimDates", "BarrierMonitoringDates"})},
         {ScriptedTradeScriptData::CalibrationData("Underlyings", {"Strike", "BarrierLevels"})});
