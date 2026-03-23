@@ -43,7 +43,7 @@ class DKCPI : public ZeroInflationIndex {
 public:
     DKCPI(const Handle<ZeroInflationTermStructure>& ts = Handle<ZeroInflationTermStructure>())
         : ZeroInflationIndex("CPI", DenmarkRegion(), false, Monthly, Period(1, Months), // availability
-                             DKKCurrency(), ts) {}
+                             DKKCurrency(), ts, {{Date(1, Jan, 2026), 1 / 1.21066666666667}}) {}
 };
 
 } // namespace QuantExt

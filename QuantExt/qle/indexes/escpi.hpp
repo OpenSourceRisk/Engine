@@ -34,7 +34,7 @@ class ESCPI : public ZeroInflationIndex {
 public:
     ESCPI(const Handle<ZeroInflationTermStructure>& ts = Handle<ZeroInflationTermStructure>())
         : ZeroInflationIndex("CPI", SpainRegion(), false, Monthly, Period(1, Months), // availability
-                             EURCurrency(), ts) {}
+                             EURCurrency(), ts, {{Date(1, Jan, 2026), 0.844483166863984}}) {}
 };
 
 } // namespace QuantExt
