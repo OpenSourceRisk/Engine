@@ -8,8 +8,20 @@
 # There are 300+ classes, the number of supported constructors is higher
 # because of overloads.
 # This script constructs trades but does not price them and there is no output.
+import os
+import sys
 
-import ORE as ql
+
+import ctypes
+
+try:
+    ctypes.WinDLL(r"C:/Users/fkhasman/source/repos/oreplus3/build/ore/ORE-SWIG/Release/_OREP.pyd")
+    print("Loaded successfully.")
+except OSError as e:
+    print("DLL load failed:", e)
+
+
+
 
 # some values
 
@@ -472,8 +484,8 @@ ql.FailedTrade(env0)
 
 # ore/OREData/ored/portfolio/flexiswap.hpp
 
-#ql.FlexiSwap()
-#ql.FlexiSwap(env0, [leg_data0], [""], "Long")
+ql.FlexiSwap()
+ql.FlexiSwap(env0, [leg_data0], ql.MapStringToPairVectorDoubleVectorString({"": [0, ""]}), "Long")
 
 # ore/OREData/ored/portfolio/formulabasedlegbuilder.hpp
 
