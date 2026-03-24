@@ -23,6 +23,7 @@
 #pragma once
 
 #include <orea/app/analytic.hpp>
+#include <orea/app/inputvariables.hpp>
 #include <orea/app/portfolioanalyser.hpp>
 
 namespace ore {
@@ -30,11 +31,15 @@ namespace analytics {
 
 class InputParameters;
 
+struct PortfolioDetailsVariables : public InputVariables {
+    void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
+};
+
 class PortfolioDetailsAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "PORTFOLIO_DETAILS";
 
-    PortfolioDetailsAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) {
+    PortfolioDetailsAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs, QuantLib::ext::make_shared<PortfolioDetailsVariables>()) {
         setLabel(LABEL);
     }
 

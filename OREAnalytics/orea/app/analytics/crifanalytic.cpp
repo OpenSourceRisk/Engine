@@ -42,6 +42,8 @@ using namespace std::filesystem;
 namespace ore {
 namespace analytics {
 
+void CrifVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) { }
+
 std::pair<QuantLib::ext::shared_ptr<SensitivityStream>,
           std::map<std::string, QuantLib::ext::shared_ptr<InMemoryReport>>>
 computeSensitivities(QuantLib::ext::shared_ptr<ore::analytics::SensitivityAnalysis>& sensiAnalysis,

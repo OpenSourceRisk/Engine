@@ -22,6 +22,7 @@
 #pragma once
 
 #include <orea/app/analytic.hpp>
+#include <orea/app/inputvariables.hpp>
 #include <orea/simm/crifmarket.hpp>
 #include <orea/simm/crifrecord.hpp>
 #include <ored/portfolio/portfolio.hpp>
@@ -39,11 +40,15 @@ computeSensitivities(QuantLib::ext::shared_ptr<ore::analytics::SensitivityAnalys
                      const QuantLib::ext::shared_ptr<InputParameters>& plusInputs, ore::analytics::Analytic* analytic,
                      const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio, const bool writeReports);
 
+struct CrifVariables : public InputVariables {
+    void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
+};
+
 class CrifAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "CRIF";
 
-    CrifAnalyticImpl(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs) : Analytic::Impl(inputs) {
+    CrifAnalyticImpl(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs) : Analytic::Impl(inputs, QuantLib::ext::make_shared<CrifVariables>()) {
         setLabel(LABEL);
     }
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,

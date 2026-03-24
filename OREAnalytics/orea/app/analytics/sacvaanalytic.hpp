@@ -43,7 +43,7 @@ public:
     static constexpr const char* LABEL = "SA_CVA";
     static constexpr const char* sensiLookupKey = "SENSI";
 
-    SaCvaAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) {
+    SaCvaAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs, QuantLib::ext::make_shared<SaCvaVariables>()) {
         setLabel(LABEL);}
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                      const std::set<std::string>& runTypes = {}) override;

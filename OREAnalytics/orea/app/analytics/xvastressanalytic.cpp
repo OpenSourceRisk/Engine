@@ -34,6 +34,8 @@
 namespace ore {
 namespace analytics {
 
+void XvaStressVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) { }
+
 void XvaStressAnalyticImpl::writeCubes(const std::string& label,
                                        const QuantLib::ext::shared_ptr<Analytic>& xvaAnalytic) {
     if (!inputs_->xvaStressWriteCubes() || xvaAnalytic == nullptr) {
@@ -68,7 +70,7 @@ void XvaStressAnalyticImpl::writeCubes(const std::string& label,
 
 XvaStressAnalyticImpl::XvaStressAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
                                              const QuantLib::ext::optional<QuantLib::ext::shared_ptr<StressTestScenarioData>>& scenarios)
-    : Analytic::Impl(inputs), stressScenarios_(scenarios.value_or(inputs->xvaStressScenarioData())) {
+    : Analytic::Impl(inputs, QuantLib::ext::make_shared<XvaStressVariables>()), stressScenarios_(scenarios.value_or(inputs->xvaStressScenarioData())) {
     setLabel(LABEL);
 }
 

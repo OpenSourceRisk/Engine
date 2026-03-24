@@ -35,6 +35,8 @@
 namespace ore {
 namespace analytics {
 
+void XvaSensitivityVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) { }
+
 XvaResults::XvaResults(const QuantLib::ext::shared_ptr<InMemoryReport>& xvaReport) {
     QL_REQUIRE(xvaReport != nullptr, "Empty xvaReport, can not extract any values");
     QL_REQUIRE(xvaReport->hasHeader("TradeId"), "Expect column 'tradeId' in XVA report.");
@@ -98,7 +100,7 @@ void XvaSensitivityAnalyticImpl::buildDependencies() {
 }
 
 XvaSensitivityAnalyticImpl::XvaSensitivityAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-    : Analytic::Impl(inputs) {
+    : Analytic::Impl(inputs, QuantLib::ext::make_shared<XvaSensitivityVariables>()) {
     setLabel(LABEL);
 }
    

@@ -655,7 +655,7 @@ void OREAppInputParameters::loadParameters() {
     // switch default for backward compatibility
     setEntireMarket(true);
     setAllFixings(true);
-    setEomInflationFixings(false);
+    setEomInflationFixings(true);
     setBuildFailedTrades(false);
 
     QL_REQUIRE(params_->hasGroup("setup"), "parameter group 'setup' missing");
@@ -1579,8 +1579,18 @@ void OREAppInputParameters::loadParameters() {
       *************************/
 
      tmp = params_->getString("simmBacktest", "active", false);
-     if (!tmp.empty() && parseBool(tmp))
-         insertAnalytic("SIMM_BACKTEST");
+     bool doSimmBacktest = !tmp.empty() ? parseBool(tmp) : false;
+
+    if (doSimmBacktest) {
+        insertAnalytic("SIMM_BACKTEST");
+
+        tmp = params_->getString("simmBacktest", "crif", false);
+        if (tmp != "") {
+            string file = (setupVariables_.inputPath_ / tmp).generic_string();
+            setCrifFromFile(file, csvEolChar(), csvSeparator(), '\"', csvEscapeChar());
+        }
+
+    }
 
      /*************************
       * CRIF to Trade
