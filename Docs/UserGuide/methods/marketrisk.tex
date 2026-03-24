@@ -583,6 +583,15 @@ The historical simulation VaR is defined to be a $p$-quantile of the empirical d
 revaluation PL vector $\pi_F = \{ \pi_F(j) \}_{j}$. Here, with ``generated'' we mean that we weigh each $\pi_F(j)$ with
 the same probability $1/J$, where $J$ denotes the number of elements in the vector.
 
+The \textbf{Expected Shortfall} (ES), also known as Conditional Value-at-Risk (CVaR), at confidence level $p$ is
+defined as the expected loss given that the loss exceeds the VaR level. For the empirical distribution described above, this is
+$$
+\text{ES}(p) = \frac{1}{|\mathcal{L}(p)|}\sum_{j \in \mathcal{L}(p)} \pi_F(j) ,
+$$
+where $\mathcal{L}(p) = \bigl\{ j : \pi_F(j) \leq \text{VaR}(p) \bigr\}$ is the set of scenarios in the lower
+tail at or below the VaR level. In other words, ES is the average of the P\&L realisations that fall at or below
+the VaR at confidence level $p$.
+
 \subsection{Historical Simulation Taylor VaR}\label{histtaylorvar}
 
 Similarly, the historical simulation Taylor VaR is defined to be the $p$-quantile of the empirical distribution
