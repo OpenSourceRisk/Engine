@@ -518,9 +518,6 @@ std::ostream& operator<<(std::ostream& os, SobolBrownianGenerator::Ordering t);
 //! Write QuantLib::SobolRsg::DirectionIntegers to stream
 std::ostream& operator<<(std::ostream& os, SobolRsg::DirectionIntegers t);
     
-//! Enum to string used in ScenarioGeneratorData's toXML
-std::ostream& operator<<(std::ostream& os, QuantExt::CrossAssetModel::Discretization type);
-
 //! Convert text to CommodityFutureConvention::AveragingData::CalculationPeriod
 CommodityFutureConvention::AveragingData::CalculationPeriod parseAveragingDataPeriod(const std::string& s);
 

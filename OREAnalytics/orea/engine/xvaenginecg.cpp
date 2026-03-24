@@ -197,7 +197,6 @@ void XvaEngineCG::buildCam() {
 
     for (Size i = 1; i < currencies.size(); ++i) {
         fxSpots.push_back(simMarket_->fxSpot(currencies[i] + currencies[0]));
-        // we provide them, although we probably do not really need to
         indices.push_back("FX-GENERIC-" + currencies[i] + "-" + currencies[0]);
         indexCurrencies.push_back(currencies[i]);
     }
@@ -240,8 +239,8 @@ void XvaEngineCG::buildCam() {
     // note: projectedStateProcessIndices can be removed from GaussianCamCG constructor most probably?
     model_ = QuantLib::ext::make_shared<GaussianCamCG>(
         camBuilder_->model(), scenarioGeneratorData_->samples(), currencies, curves, fxSpots, irIndices, infIndices,
-        indices, indexCurrencies, simulationDates_, iborFallbackConfig_, std::vector<Size>(),
-        std::vector<std::string>(), stickyCloseOutDates_, timeStepsPerYear);
+        indices, indexCurrencies, simulationDates_, iborFallbackConfig_, std::vector<std::string>(),
+        stickyCloseOutDates_, timeStepsPerYear);
     // this is actually necessary, FIXME why? There is a calculate() missing in the model impl. then?
     model_->calculate();
 
@@ -707,7 +706,8 @@ void XvaEngineCG::doForwardEvaluation() {
         ops_ = getRandomVariableOps(model_->size(), regressionOrder_, QuantLib::LsmBasisSystem::Monomial,
                                     (sensitivityData_ && bumpCvaSensis_) ? eps : 0.0, regressionVarianceCutoff_,
                                     pfRegressorPosGroups_, usePythonIntegration_);
-        grads_ = getRandomVariableGradients(model_->size(), regressionOrder_, QuantLib::LsmBasisSystem::Monomial, eps);
+        grads_ =
+            getRandomVariableGradients(model_->size(), regressionOrder_, QuantLib::LsmBasisSystem::Monomial, eps, 1E-8);
     }
 
     bool keepValuesForDerivatives = (!bumpCvaSensis_ && sensitivityData_) || enableDynamicIM_;

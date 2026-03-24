@@ -1,5 +1,6 @@
 /*
- Copyright (C) 2026 AcadiaSoft, Inc.
+ Copyright (C) 2016 Quaternion Risk Management Ltd
+ All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
  for transparent pricing and risk analysis - http://opensourcerisk.org
@@ -15,6 +16,21 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/portfolio/builders/flexiswap.hpp>
+#pragma once
 
-namespace ore::data {}
+#include <ored/utilities/correlationmatrix.hpp>
+#include <ored/utilities/log.hpp>
+
+#include <qle/termstructures/correlationtermstructure.hpp>
+
+#include <ql/quote.hpp>
+#include <ql/handle.hpp>
+
+namespace ore::data {
+
+std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>> getCamCorrelationsFromIndexCorrelations(
+    const std::map<std::pair<std::string, std::string>, QuantLib::Handle<QuantExt::CorrelationTermStructure>>&
+        indexCorrelations,
+    const std::string& infModeltype = "JY");
+
+} // namespace ore::data

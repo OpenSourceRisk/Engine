@@ -123,6 +123,9 @@ public:
         }
     }
 
+    //! Return market
+    QuantLib::ext::shared_ptr<Market> market() const { return market_; }
+
     //! reset the builder (e.g. clear cache)
     virtual void reset() {}
 
@@ -150,7 +153,7 @@ public:
                                        const bool mandatory = true, const std::string& defaultValue = "") const;
 
     /*! return global parameters */
-    const std::map<std::string, std::string> globalParameters() const { return globalParameters_; }
+    const std::map<std::string, std::string>& globalParameters() const { return globalParameters_; }
 
     //! return model builders
     EngineFactory* engineFactory() const;

@@ -58,12 +58,13 @@ public:
             calculator_; // always a valid function
     };
 
-    static CashflowInfo
-    buildCashflowInfo(const QuantLib::ext::shared_ptr<QuantLib::CashFlow>& c, const QuantLib::Real payrec,
-                      const std::function<QuantLib::Real(const QuantLib::Date&)>& timeFromReference,
-                      const QuantLib::Exercise::Type exerciseType, const bool midCouponExercise,
-                      const QuantLib::Period& noticePeriod, const QuantLib::Calendar& noticeCalendar,
-                      const QuantLib::BusinessDayConvention noticeConvention, const std::string& cashflowDescription);
+    static CashflowInfo buildCashflowInfo(QuantLib::ext::shared_ptr<QuantLib::CashFlow> c, const QuantLib::Real payrec,
+                                          const std::function<QuantLib::Real(const QuantLib::Date&)>& timeFromReference,
+                                          const QuantLib::Exercise::Type exerciseType, const bool midCouponExercise,
+                                          const QuantLib::Period& noticePeriod,
+                                          const QuantLib::Calendar& noticeCalendar,
+                                          const QuantLib::BusinessDayConvention noticeConvention,
+                                          const std::string& cashflowDescription);
 
 protected:
     static bool instrumentIsHandled(const std::vector<Leg>& legs, const std::vector<bool>& payer,
