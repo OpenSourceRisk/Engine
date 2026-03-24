@@ -58,6 +58,8 @@ class OvernightIndexedCouponBase : public FloatingRateCoupon {
     bool canApplyTelescopic() const;
     bool telescopicDates() const;
     bool separateRateCompPeriod() const;
+    bool includeSpread() const;
+    Type rateType() const;
 };
 
 %shared_ptr(AverageONIndexedCoupon)

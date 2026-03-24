@@ -127,7 +127,7 @@ public:
 protected:
     // Note: class is abstract (effectiveRate method) but make the ctor protected in any case.
     OvernightIndexedCouponBase(
-        Type type,
+        Type rateType,
         const QuantLib::Date& paymentDate,
         QuantLib::Real nominal,
         const QuantLib::Date& startDate,
@@ -179,6 +179,10 @@ public:
     bool telescopicDates() const { return telescopicDates_; }
     //! True if there is a rate computation period separate from the main coupon accrual period.
     bool separateRateCompPeriod() const { return separateRateCompPeriod_; }
+    //! Default implemenation which is overridden for example in \ref OvernightIndexedCoupon.
+    virtual bool includeSpread() const { return false; }
+    //! Whether the overnight coupon is compouding or averaging.
+    Type rateType() const { return rateType_; };
     //@}
     //! \name LazyObject interface
     //@{
@@ -208,6 +212,7 @@ private:
     // different from the input `date` and we do not want to calculate it again elsewhere.
     virtual std::pair<QuantLib::Rate, QuantLib::Date> effectiveRate(const QuantLib::Date& date) const = 0;
 
+    Type rateType_;
     // True if telescopic dates requested and can be applied.
     bool telescopicDates_;
     QuantLib::ext::shared_ptr<QuantLib::OvernightIndex> overnightIndex_;
@@ -238,7 +243,7 @@ private:
     mutable QuantLib::Date cachedEvalDate_;
 
     // Set value of telescopicDates_ according to whether telescoping can be used or not.
-    void setTelescopicDates(Type type);
+    void setTelescopicDates();
 
     // Check if (telescopic) date schedules are stale.
     bool haveStaleDates() const;

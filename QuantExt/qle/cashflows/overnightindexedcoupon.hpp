@@ -75,7 +75,7 @@ public:
     /** If `true`, the spread is included in the daily compounding. If `false` the compounding is performed without the 
      *   spread and the spread is added to the final rate.
      */
-    bool includeSpread() const { return includeSpread_; }
+    bool includeSpread() const override { return includeSpread_; }
     /** The `effectiveSpread` \f$s^*\f$ and `effectiveIndexFixing` \f$f^*\f$ are set such that the coupon amount is 
      *  \f$\Pi\f$ is given by:
      *  \f[

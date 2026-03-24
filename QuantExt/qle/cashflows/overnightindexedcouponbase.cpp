@@ -50,14 +50,14 @@ using std::vector;
 
 namespace QuantExt {
 
-OvernightIndexedCouponBase::OvernightIndexedCouponBase(Type type, const Date& paymentDate, Real nominal,
+OvernightIndexedCouponBase::OvernightIndexedCouponBase(Type rateType, const Date& paymentDate, Real nominal,
     const Date& startDate, const Date& endDate, const ext::shared_ptr<OvernightIndex>& overnightIndex, Real gearing,
     Spread spread, const Date& refPeriodStart, const Date& refPeriodEnd, const DayCounter& dayCounter,
     bool telescopicValueDates, const Period& lookback, const Natural rateCutoff, const Natural fixingDays,
     const Date& rateComputationStartDate, const Date& rateComputationEndDate, bool observationShift)
     : FloatingRateCoupon(paymentDate, nominal, startDate, endDate, fixingDays, overnightIndex, gearing, spread,
         refPeriodStart, refPeriodEnd, dayCounter, false),
-      telescopicDates_(telescopicValueDates), overnightIndex_(overnightIndex), lookback_(lookback),
+      rateType_(rateType), telescopicDates_(telescopicValueDates), overnightIndex_(overnightIndex), lookback_(lookback),
       rateCutoff_(rateCutoff), rateComputationStartDate_(rateComputationStartDate),
       rateComputationEndDate_(rateComputationEndDate), observationShift_(observationShift) {
 
@@ -80,7 +80,7 @@ OvernightIndexedCouponBase::OvernightIndexedCouponBase(Type type, const Date& pa
     QL_REQUIRE(intStart < intEnd, "OvernightIndexedCoupon: start date ("
         << intStart << ") must be earlier than end date (" << intEnd << ")");
 
-    setTelescopicDates(type);
+    setTelescopicDates();
     auto onFixCal = overnightIndex->fixingCalendar();
     cachedEvalDate_ = onFixCal.adjust(Settings::instance().evaluationDate(), Preceding);
 
@@ -315,8 +315,8 @@ Real OvernightIndexedCouponBase::accruedAmount(const Date& d) const {
     }
 }
 
-void OvernightIndexedCouponBase::setTelescopicDates(Type type) {
-    if (type == Type::Compounding)
+void OvernightIndexedCouponBase::setTelescopicDates() {
+    if (rateType_ == Type::Compounding)
         telescopicDates_ = telescopicDates_ && canApplyTelescopic();
 }
 
