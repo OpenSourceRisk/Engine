@@ -473,7 +473,7 @@ ql.FailedTrade(env0)
 # ore/OREData/ored/portfolio/flexiswap.hpp
 
 ql.FlexiSwap()
-ql.FlexiSwap(env0, [leg_data0], ql.MapStringToPairVectorDoubleVectorString({"": [0, ""]}), "Long")
+ql.FlexiSwap(env0, [leg_data0], ql.MapStringToPairVectorDoubleVectorString({"": ql.PairVectorDoubleVectorString(ql.DoubleVector([0]), ql.StrVector([""]))}), "Long")
 
 # ore/OREData/ored/portfolio/formulabasedlegbuilder.hpp
 
