@@ -33,8 +33,7 @@ public:
     FRCPI(const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts =
               QuantLib::Handle<QuantLib::ZeroInflationTermStructure>())
         : QuantLib::ZeroInflationIndex("CPI", QuantLib::FranceRegion(), false, QuantLib::Monthly,
-                                       QuantLib::Period(1, QuantLib::Months), QuantLib::EURCurrency(), ts,
-                                       {{Date(1, Jan, 2026), 0.834585838343353}}) {}
+                                       QuantLib::Period(1, QuantLib::Months), QuantLib::EURCurrency(), ts) {}
 };
 
 } // namespace QuantExt

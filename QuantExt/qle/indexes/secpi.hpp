@@ -34,7 +34,7 @@ class SECPI : public ZeroInflationIndex {
 public:
     SECPI(const Handle<ZeroInflationTermStructure>& ts = Handle<ZeroInflationTermStructure>())
         : ZeroInflationIndex("CPI", SwedenRegion(), false, Monthly, Period(1, Months), // availability
-                             SEKCurrency(), ts, {{Date(1, Jan, 2026), 1 / 3.3592}}) {}
+                             SEKCurrency(), ts) {}
 };
 
 } // namespace QuantExt
