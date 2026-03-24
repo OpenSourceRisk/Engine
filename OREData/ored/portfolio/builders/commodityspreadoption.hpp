@@ -23,6 +23,7 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <ored/utilities/marketdata.hpp>
 #include <qle/indexes/commodityindex.hpp>
 #include <qle/pricingengines/commodityspreadoptionengine.hpp>
+#include <qle/pricingengines/commoditybachelierspreadoptionengine.hpp>
 #include <qle/termstructures/flatcorrelation.hpp>
 
 namespace ore::data {
@@ -120,4 +121,27 @@ protected:
                                                                                            beta, volType, displacement);
     }
 };
+
+class CommoditySpreadOptionBachelierEngineBuilder : public CommoditySpreadOptionBaseEngineBuilder {
+public:
+    CommoditySpreadOptionBachelierEngineBuilder()
+        : CommoditySpreadOptionBaseEngineBuilder("BlackScholes", "CommodityBachelierSpreadOptionEngine",
+                                                 {"CommoditySpreadOption"}) {}
+
+protected:
+    QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
+    engineImpl(const Currency& ccy, const std::string& discountCurveName,
+               QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> const& longIndex,
+               QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> const& shortIndex, string const& id) override {
+        Handle<YieldTermStructure> yts =
+            discountCurveName.empty()
+                ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
+                : indexOrYieldCurve(market_, discountCurveName, configuration(MarketContext::pricing));
+        Handle<QuantLib::BlackVolTermStructure> volLong =
+            market_->commodityVolatility(longIndex->name() + "_" + shortIndex->name(), configuration(MarketContext::pricing));
+            return QuantLib::ext::make_shared<QuantExt::CommodityBachelierSpreadOptionAnalyticalEngine>(yts, volLong);
+        }
+};
+
+
 } // namespace ore::data

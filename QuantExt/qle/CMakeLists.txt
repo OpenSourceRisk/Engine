@@ -281,6 +281,7 @@ pricingengines/blackswaptionenginedeltagamma.cpp
 pricingengines/cboengine.cpp
 pricingengines/cbomcengine.cpp
 pricingengines/commodityapoengine.cpp
+pricingengines/commoditybachelierspreadoptionengine.cpp
 pricingengines/commodityschwartzfutureoptionengine.cpp
 pricingengines/commodityspreadoptionengine.cpp
 pricingengines/commodityswaptionengine.cpp
@@ -867,6 +868,7 @@ pricingengines/cashpositionengine.hpp
 pricingengines/cboengine.hpp
 pricingengines/cbomcengine.hpp
 pricingengines/commodityapoengine.hpp
+pricingengines/commoditybachelierspreadoptionengine.hpp
 pricingengines/commodityschwartzfutureoptionengine.hpp
 pricingengines/commodityspreadoptionengine.hpp
 pricingengines/commodityswaptionengine.hpp

@@ -409,6 +409,7 @@
 #include <qle/pricingengines/cboengine.hpp>
 #include <qle/pricingengines/cbomcengine.hpp>
 #include <qle/pricingengines/commodityapoengine.hpp>
+#include <qle/pricingengines/commoditybachelierspreadoptionengine.hpp>
 #include <qle/pricingengines/commodityschwartzfutureoptionengine.hpp>
 #include <qle/pricingengines/commodityspreadoptionengine.hpp>
 #include <qle/pricingengines/commodityswaptionengine.hpp>
