@@ -22,8 +22,8 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/utilities/marketdata.hpp>
 #include <qle/indexes/commodityindex.hpp>
-#include <qle/pricingengines/commodityspreadoptionengine.hpp>
 #include <qle/pricingengines/commoditybachelierspreadoptionengine.hpp>
+#include <qle/pricingengines/commodityspreadoptionengine.hpp>
 #include <qle/termstructures/flatcorrelation.hpp>
 
 namespace ore::data {
@@ -36,7 +36,7 @@ namespace ore::data {
 class CommoditySpreadOptionBaseEngineBuilder
     : public CachingPricingEngineBuilder<
           std::string, const Currency&, const std::string&, QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> const&,
-          QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> const&, std::string const&> {
+          QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> const&, std::string const&, int> {
 public:
     CommoditySpreadOptionBaseEngineBuilder(const std::string& model, const std::string& engine,
                                            const std::set<std::string>& tradeTypes)
@@ -45,9 +45,10 @@ public:
 protected:
     std::string keyImpl(const Currency& ccy, const std::string& discountCurveName,
                         QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> const& comm1,
-                        QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> const& comm2,
-                        std::string const& id) override {
-        return id + "/" + ccy.code() + "/" + discountCurveName + "/" + comm1->name() + "/" + comm2->name();
+                        QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> const& comm2, std::string const& id,
+                        int offset = 0) override {
+        return id + "/" + ccy.code() + "/" + discountCurveName + "/" + comm1->name() + "/" + comm2->name() + "/" +
+               std::to_string(offset);
     }
 };
 
@@ -67,7 +68,11 @@ protected:
     QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
     engineImpl(const Currency& ccy, const std::string& discountCurveName,
                QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> const& longIndex,
-               QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> const& shortIndex, string const& id) override {
+               QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> const& shortIndex, string const& id,
+               int offset = 0) override {
+
+        DLOG("Building CommoditySpreadOptionEngineBuilder Engine for " << longIndex->name() << " and "
+                                                                       << shortIndex->name() << std::endl);
         Handle<YieldTermStructure> yts =
             discountCurveName.empty()
                 ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
@@ -125,23 +130,50 @@ protected:
 class CommoditySpreadOptionBachelierEngineBuilder : public CommoditySpreadOptionBaseEngineBuilder {
 public:
     CommoditySpreadOptionBachelierEngineBuilder()
-        : CommoditySpreadOptionBaseEngineBuilder("BlackScholes", "CommodityBachelierSpreadOptionEngine",
+        : CommoditySpreadOptionBaseEngineBuilder("BlackScholes", "CommoditySpreadOptionBachelierEngine",
                                                  {"CommoditySpreadOption"}) {}
 
 protected:
     QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
     engineImpl(const Currency& ccy, const std::string& discountCurveName,
                QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> const& longIndex,
-               QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> const& shortIndex, string const& id) override {
+               QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> const& shortIndex, string const& id,
+               int offset = 0) override {
+        DLOG("Building CommoditySpreadOptionBachelierEngineBuilder Engine for " << longIndex->name() << " and "
+                                                                                << shortIndex->name() << std::endl);
         Handle<YieldTermStructure> yts =
             discountCurveName.empty()
                 ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
                 : indexOrYieldCurve(market_, discountCurveName, configuration(MarketContext::pricing));
-        Handle<QuantLib::BlackVolTermStructure> volLong =
-            market_->commodityVolatility(longIndex->name() + "_" + shortIndex->name(), configuration(MarketContext::pricing));
-            return QuantLib::ext::make_shared<QuantExt::CommodityBachelierSpreadOptionAnalyticalEngine>(yts, volLong);
-        }
-};
 
+        bool calendarSpread = longIndex->underlyingName() == shortIndex->underlyingName();
+        std::vector<string> volatilityQualifiers;
+
+        if (calendarSpread) {
+            volatilityQualifiers.push_back(longIndex->underlyingName() + "_" + std::to_string(offset));
+            volatilityQualifiers.push_back(longIndex->underlyingName());
+            std::cout << "Identified calendar spread option with offset " << offset << " between the two legs"
+                      << std::endl;
+            std::cout << "Using vol qualifiers " << volatilityQualifiers[0] << " and " << volatilityQualifiers[1]
+                      << std::endl;
+        } else {
+            std::string pair = longIndex->underlyingName() + "_" + shortIndex->underlyingName();
+            std::string pairReverse = shortIndex->underlyingName() + "_" + longIndex->underlyingName();
+            volatilityQualifiers.push_back(pair + "_" + std::to_string(offset));
+            volatilityQualifiers.push_back(pair);
+            volatilityQualifiers.push_back(pairReverse + "_" + std::to_string(offset));
+            volatilityQualifiers.push_back(pairReverse);
+        }
+
+        auto spreadVol = this->engineParameter("SpreadVol", volatilityQualifiers, false,
+                                              longIndex->name() + "_" + shortIndex->name());
+
+        std::cout << "Building Bachelier Engine for " << longIndex->name() << " and " << shortIndex->name()
+                  << " using vol " << spreadVol << std::endl;
+        Handle<QuantLib::BlackVolTermStructure> volLong =
+            market_->commodityVolatility(spreadVol, configuration(MarketContext::pricing));
+        return QuantLib::ext::make_shared<QuantExt::CommodityBachelierSpreadOptionAnalyticalEngine>(yts, volLong);
+    }
+};
 
 } // namespace ore::data

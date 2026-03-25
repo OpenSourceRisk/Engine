@@ -29,7 +29,6 @@ CommodityBachelierSpreadOptionAnalyticalEngine::CommodityBachelierSpreadOptionAn
     const Handle<YieldTermStructure>& discountCurve, const QuantLib::Handle<QuantLib::BlackVolTermStructure>& normalSpreadVolTS)
     : discountCurve_(discountCurve), normalSpreadVolTS_(normalSpreadVolTS) {
     QL_REQUIRE(!normalSpreadVolTS_.empty(), "normalSpreadVolTS not set");
-    QL_REQUIRE(normalSpreadVolTS_->volType() == VolatilityType::Normal, "normalSpreadVolTS must be normal vol surface");
     registerWith(discountCurve_);
     registerWith(normalSpreadVolTS_);
 
@@ -46,16 +45,20 @@ void CommodityBachelierSpreadOptionAnalyticalEngine::calculate() const {
     if (paymentDate == Date())
         paymentDate = std::max(arguments_.longAssetFlow->date(), arguments_.shortAssetFlow->date());
     QL_REQUIRE(paymentDate >= exerciseDate, "Payment date needs to be on or after exercise date");
-    if (exerciseDate < Settings::instance().evaluationDate()){
+    if (exerciseDate < today){
         results_.value = std::max(arguments_.type * (arguments_.longAssetFlow->fixing() - arguments_.shortAssetFlow->fixing() - arguments_.strikePrice), 0.0) *
                           discountCurve_->discount(paymentDate);
         return;
     }     
     double df = discountCurve_->discount(paymentDate);
+    Time ttp = discountCurve_->timeFromReference(paymentDate);
+    Time tte = discountCurve_->timeFromReference(exerciseDate);
     double forwardLong = arguments_.longAssetFlow->fixing();
     double forwardShort = arguments_.shortAssetFlow->fixing();
     double spread = forwardLong - forwardShort;
     double stdDev = std::sqrt(normalSpreadVolTS_->blackVariance(exerciseDate, arguments_.effectiveStrike));
+    mp["tte"] = tte;
+    mp["ttp"] = ttp;
     mp["f1"] = forwardLong;
     mp["f2"] = forwardShort;
     mp["spread"] = spread;
@@ -63,7 +66,8 @@ void CommodityBachelierSpreadOptionAnalyticalEngine::calculate() const {
     mp["df"] = df;
     mp["effectiveStrike"] = arguments_.effectiveStrike;
     mp["absStrike"] = arguments_.strikePrice;
-    results_.value = blackFormula(arguments_.type, arguments_.strikePrice, spread, stdDev, df);
+    mp["vol"] = normalSpreadVolTS_->blackVol(exerciseDate, arguments_.effectiveStrike);
+    results_.value = arguments_.quantity *  bachelierBlackFormula(arguments_.type, arguments_.strikePrice, spread, stdDev, df);
 }
 
 } // namespace QuantExt
