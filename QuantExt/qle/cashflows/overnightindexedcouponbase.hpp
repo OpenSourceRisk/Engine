@@ -141,7 +141,7 @@ protected:
         bool telescopicValueDates = false,
         const QuantLib::Period& lookback = 0 * QuantLib::Days,
         const QuantLib::Natural rateCutoff = 0,
-        const QuantLib::Natural fixingDays = QuantLib::Null<QuantLib::Size>(),
+        const QuantLib::Natural fixingDays = QuantLib::Null<QuantLib::Natural>(),
         const QuantLib::Date& rateComputationStartDate = QuantLib::Date(),
         const QuantLib::Date& rateComputationEndDate = QuantLib::Date(),
         bool observationShift = true);
@@ -272,6 +272,55 @@ private:
 
     // Populate accrual values dt_.
     void populateAccruals() const;
+};
+
+//! Convenience builder class for overnight coupons.
+class OvernightCouponBuilder {
+public:
+    OvernightCouponBuilder(
+        OvernightIndexedCouponBase::Type rateType,
+        const QuantLib::Date& paymentDate,
+        QuantLib::Real nominal,
+        const QuantLib::Date& startDate,
+        const QuantLib::Date& endDate,
+        const QuantLib::ext::shared_ptr<QuantLib::OvernightIndex>& index);
+
+    OvernightCouponBuilder& withGearing(QuantLib::Real gearing);
+    OvernightCouponBuilder& withSpread(QuantLib::Real spread);
+    OvernightCouponBuilder& withRefPeriodStart(const QuantLib::Date& refPeriodStart);
+    OvernightCouponBuilder& withRefPeriodEnd(const QuantLib::Date& refPeriodEnd);
+    OvernightCouponBuilder& withDayCounter(const QuantLib::DayCounter& dayCounter);
+    OvernightCouponBuilder& withTelescopicValueDates(bool telescopicValueDates);
+    OvernightCouponBuilder& withIncludeSpread(bool includeSpread);
+    OvernightCouponBuilder& withLookback(const QuantLib::Period& lookback);
+    OvernightCouponBuilder& withRateCutoff(QuantLib::Natural rateCutoff);
+    OvernightCouponBuilder& withFixingDays(QuantLib::Natural fixingDays);
+    OvernightCouponBuilder& withRateComputationStart(const QuantLib::Date& rateComputationStart);
+    OvernightCouponBuilder& withRateComputationEnd(const QuantLib::Date& rateComputationEnd);
+    OvernightCouponBuilder& withObservationShift(bool observationShift);
+
+    QuantLib::ext::shared_ptr<OvernightIndexedCouponBase> build() const;
+
+private:
+    OvernightIndexedCouponBase::Type rateType_;
+    QuantLib::Date paymentDate_;
+    QuantLib::Real nominal_;
+    QuantLib::Date startDate_;
+    QuantLib::Date endDate_;
+    QuantLib::ext::shared_ptr<QuantLib::OvernightIndex> index_;
+    QuantLib::Real gearing_ = 1.0;
+    QuantLib::Spread spread_ = 0.0;
+    QuantLib::Date refPeriodStart_;
+    QuantLib::Date refPeriodEnd_;
+    QuantLib::DayCounter dayCounter_;
+    bool telescopicValueDates_ = false;
+    bool includeSpread_ = false;
+    QuantLib::Period lookback_ = 0 * QuantLib::Days;
+    QuantLib::Natural rateCutoff_ = 0;
+    QuantLib::Natural fixingDays_ = QuantLib::Null<QuantLib::Natural>();
+    QuantLib::Date rateComputationStart_;
+    QuantLib::Date rateComputationEnd_;
+    bool observationShift_ = true;
 };
 
 }

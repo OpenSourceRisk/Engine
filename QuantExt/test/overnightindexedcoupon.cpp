@@ -2026,6 +2026,13 @@ BOOST_AUTO_TEST_CASE(testCpnAccrualsAll)
     auto [outFilePath, expFilePath] = filePaths(cpnName);
     OnIndexCouponTest::runCpnAccrualTest(cpn, outFilePath, expFilePath);
 }
+
+BOOST_AUTO_TEST_CASE(testSilly)
+{
+    Date date_1;
+    Date date_2 = Null<Date>();
+    BOOST_CHECK(date_1 == date_2);
+}
 // clang-format on
 
 BOOST_AUTO_TEST_SUITE_END()

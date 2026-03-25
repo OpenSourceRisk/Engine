@@ -39,6 +39,8 @@
 */
 
 #include <qle/cashflows/overnightindexedcouponbase.hpp>
+#include <qle/cashflows/averageonindexedcoupon.hpp>
+#include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <algorithm>
 #include <iterator>
 
@@ -600,6 +602,97 @@ void OvernightIndexedCouponBase::populateAccruals() const {
     const DayCounter& dc = overnightIndex_->dayCounter();
     for (Size i = 0; i < n_; ++i)
         dt_[i] = dc.yearFraction(interestDates_[i], interestDates_[i + 1]);
+}
+
+OvernightCouponBuilder::OvernightCouponBuilder(
+    OvernightIndexedCouponBase::Type rateType,
+    const Date& paymentDate,
+    Real nominal,
+    const Date& startDate,
+    const Date& endDate,
+    const ext::shared_ptr<OvernightIndex>& overnightIndex)
+    : rateType_(rateType),
+      paymentDate_(paymentDate),
+      nominal_(nominal),
+      startDate_(startDate),
+      endDate_(endDate),
+      index_(overnightIndex) {}
+
+OvernightCouponBuilder& OvernightCouponBuilder::withGearing(Real gearing) {
+    gearing_ = gearing;
+    return *this;
+}
+
+OvernightCouponBuilder& OvernightCouponBuilder::withSpread(Real spread) {
+    spread_ = spread;
+    return *this;
+}
+
+OvernightCouponBuilder& OvernightCouponBuilder::withRefPeriodStart(const Date& refPeriodStart) {
+    refPeriodStart_ = refPeriodStart;
+    return *this;
+}
+
+OvernightCouponBuilder& OvernightCouponBuilder::withRefPeriodEnd(const Date& refPeriodEnd) {
+    refPeriodEnd_ = refPeriodEnd;
+    return *this;
+}
+
+OvernightCouponBuilder& OvernightCouponBuilder::withDayCounter(const DayCounter& dayCounter) {
+    dayCounter_ = dayCounter;
+    return *this;
+}
+
+OvernightCouponBuilder& OvernightCouponBuilder::withTelescopicValueDates(bool telescopicValueDates) {
+    telescopicValueDates_ = telescopicValueDates;
+    return *this;
+}
+
+OvernightCouponBuilder& OvernightCouponBuilder::withIncludeSpread(bool includeSpread) {
+    includeSpread_ = includeSpread;
+    return *this;
+}
+
+OvernightCouponBuilder& OvernightCouponBuilder::withLookback(const Period& lookback) {
+    lookback_ = lookback;
+    return *this;
+}
+
+OvernightCouponBuilder& OvernightCouponBuilder::withRateCutoff(Natural rateCutoff) {
+    rateCutoff_ = rateCutoff;
+    return *this;
+}
+
+OvernightCouponBuilder& OvernightCouponBuilder::withFixingDays(Natural fixingDays) {
+    fixingDays_ = fixingDays;
+    return *this;
+}
+
+OvernightCouponBuilder& OvernightCouponBuilder::withRateComputationStart(const Date& rateComputationStart) {
+    rateComputationStart_ = rateComputationStart;
+    return *this;
+}
+
+OvernightCouponBuilder& OvernightCouponBuilder::withRateComputationEnd(const Date& rateComputationEnd) {
+    rateComputationEnd_ = rateComputationEnd;
+    return *this;
+}
+
+OvernightCouponBuilder& OvernightCouponBuilder::withObservationShift(bool observationShift) {
+    observationShift_ = observationShift;
+    return *this;
+}
+
+ext::shared_ptr<OvernightIndexedCouponBase> OvernightCouponBuilder::build() const {
+    if (rateType_ == OvernightIndexedCouponBase::Type::Averaging) {
+        return ext::make_shared<AverageONIndexedCoupon>(paymentDate_, nominal_, startDate_, endDate_, index_,
+            gearing_, spread_, rateCutoff_, dayCounter_, lookback_, fixingDays_, rateComputationStart_,
+            rateComputationEnd_, telescopicValueDates_, observationShift_);
+    } else {
+        return ext::make_shared<OvernightIndexedCoupon>(paymentDate_, nominal_, startDate_, endDate_, index_,
+            gearing_, spread_, refPeriodStart_, refPeriodEnd_, dayCounter_, telescopicValueDates_, includeSpread_,
+            lookback_, rateCutoff_, fixingDays_, rateComputationStart_, rateComputationEnd_, observationShift_);
+    }
 }
 
 }

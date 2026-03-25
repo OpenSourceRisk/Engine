@@ -222,7 +222,6 @@ class CappedFlooredOvernightIndexedCoupon : public FloatingRateCoupon {
 
 // QuantExt::AverageONLeg
 %{
-// No CapFlooredAverageONIndexedCouponPricer because it is currently an abstract class.
 Leg _AverageONLeg(
     const Schedule& schedule,
     const ext::shared_ptr<OvernightIndex>& index,
@@ -304,7 +303,6 @@ Leg _AverageONLeg(
 
 // QuantExt::OvernightLeg
 %{
-// No CappedFlooredOvernightIndexedCouponPricer because it is currently an abstract class.
 Leg _QLEOvernightLeg(
     const Schedule& schedule,
     const ext::shared_ptr<OvernightIndex>& index,
