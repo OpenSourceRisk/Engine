@@ -195,7 +195,7 @@ public:
     //! \name FloatingRateCoupon interface
     //@{
     //! The date when the coupon is fully determined i.e. the last fixing date.
-    QuantLib::Date fixingDate() const override { return fixingDates_.back(); }
+    QuantLib::Date fixingDate() const override { return lastFixingDate_; }
     //@}
     //! \name Coupon interface
     //@{
