@@ -12,6 +12,7 @@
       <xs:element type="callableSwapData" name="CallableSwapData"/>
       <xs:element type="arcOptionData" name="ArcOptionData"/>
       <xs:element type="swaptionData" name="SwaptionData"/>
+      <xs:element type="swaptionStraddleData" name="SwaptionStraddleData"/>
       <xs:element type="varianceSwapData" name="VarianceSwapData"/>
       <xs:element type="varianceSwapData" name="EquityVarianceSwapData"/>
       <xs:element type="varianceSwapData" name="FxVarianceSwapData"/>
@@ -273,6 +274,21 @@
       <xs:sequence>
         <xs:element type="legData" name="LegData" maxOccurs="unbounded" minOccurs="1"/>
         <xs:element type="optionData" name="OptionData"/>
+      </xs:sequence>
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="swaptionStraddleData">
+    <xs:choice>
+      <xs:sequence>
+        <xs:element type="xs:string" name="LongShort" maxOccurs="unbounded" minOccurs="0"/>
+        <xs:element type="optionData" name="OptionData"/>
+        <xs:element type="legData" name="LegData" maxOccurs="unbounded" minOccurs="1"/>
+      </xs:sequence>
+      <xs:sequence>
+        <xs:element type="legData" name="LegData" maxOccurs="unbounded" minOccurs="1"/>
+        <xs:element type="optionData" name="OptionData"/>
+        <xs:element type="xs:string" name="LongShort" maxOccurs="unbounded" minOccurs="0"/>
       </xs:sequence>
     </xs:choice>
   </xs:complexType>
@@ -1262,6 +1278,7 @@
       <xs:enumeration value="InflationSwap"/>
       <xs:enumeration value="Swap"/>
       <xs:enumeration value="Swaption"/>
+      <xs:enumeration value="SwaptionStraddle"/>
       <xs:enumeration value="ForwardRateAgreement"/>
       <xs:enumeration value="FxAverageForward"/>
       <xs:enumeration value="FxForward"/>
@@ -1615,7 +1632,7 @@
 
   <xs:complexType name="flexiSwapData">
     <xs:sequence>
-      <xs:element name="LowerNotionalBounds" maxOccurs="1" minOccurs="0">
+      <xs:element name="LowerNotionalBounds" maxOccurs="unbounded" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
             <xs:element name="Notional" maxOccurs="unbounded" minOccurs="1">
@@ -1628,32 +1645,7 @@
               </xs:complexType>
             </xs:element>
           </xs:sequence>
-        </xs:complexType>
-      </xs:element>
-      <xs:element name="Prepayment" maxOccurs="1" minOccurs="0">
-        <xs:complexType>
-          <xs:sequence>
-            <xs:element type="xs:string" name="NoticePeriod" minOccurs="0"/>
-            <xs:element type="xs:string" name="NoticeCalendar" minOccurs="0"/>
-            <xs:element type="xs:string" name="NoticeConvention" minOccurs="0"/>
-            <xs:sequence>
-              <xs:element name="PrepaymentOptions" maxOccurs="unbounded" minOccurs="0">
-                <xs:complexType>
-                  <xs:sequence>
-                    <xs:element name="PrepaymentOption" maxOccurs="unbounded" minOccurs="0">
-                      <xs:complexType>
-                        <xs:all>
-                          <xs:element type="date" name="ExerciseDate"/>
-                          <xs:element type="xs:string" name="Type"/>
-                          <xs:element type="xs:float" name="Value"/>
-                        </xs:all>
-                      </xs:complexType>
-                    </xs:element>
-                  </xs:sequence>
-                </xs:complexType>
-              </xs:element>
-            </xs:sequence>
-          </xs:sequence>
+          <xs:attribute name="currency" type="xs:string" />
         </xs:complexType>
       </xs:element>
       <xs:element type="longShort" name="OptionLongShort"/>
@@ -3128,6 +3120,7 @@
       <xs:element type="stFreeStyleEvent" name="SettlementDate"/>
       <xs:element type="stFreeStyleNumber" name="SettlementAmount"/>
       <xs:element type="stFreeStyleEvent" name="Expiry"/>
+      <xs:element type="stFreeStyleBool" name="isTerminalOnly"/>
       <xs:element type="stFreeStyleNumber" name="Premium"/>
       <xs:element type="stFreeStyleEvent" name="PremiumDate"/>
       <xs:element type="stFreeStyleCurrency" name="PayCcy"/>
