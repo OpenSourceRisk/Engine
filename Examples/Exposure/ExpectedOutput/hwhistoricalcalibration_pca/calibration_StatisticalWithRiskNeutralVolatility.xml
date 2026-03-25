@@ -40,11 +40,11 @@
 				<ParamType>Constant</ParamType>
 				<TimeGrid/>
 				<InitialValue>
-					<Kappa>0.00971341, 5, 0.0644724, 0.111779</Kappa>
+					<Kappa>0.00971349, 5, 0.0644724, 0.111779</Kappa>
 				</InitialValue>
 			</Reversion>
 			<PCALoadings>
-				<Loadings>0.411974, -0.698491</Loadings>
+				<Loadings>0.411974, -0.698493</Loadings>
 				<Loadings>-3.88859, 4.52878</Loadings>
 			</PCALoadings>
 			<PCASigma0>
