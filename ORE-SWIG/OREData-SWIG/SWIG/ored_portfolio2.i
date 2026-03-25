@@ -1667,6 +1667,8 @@ public:
 
 // ore/OREData/ored/portfolio/flexiswap.hpp
 
+%template(PairVectorDoubleVectorString) std::pair<std::vector<double>, std::vector<std::string>>;
+%template(MapStringToPairVectorDoubleVectorString) std::map<std::string, std::pair<std::vector<double>, std::vector<std::string>>>;
 %shared_ptr(FlexiSwap)
 class FlexiSwap : public ore::data::Trade {
 public:
