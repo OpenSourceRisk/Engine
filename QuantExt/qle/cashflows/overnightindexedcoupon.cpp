@@ -361,8 +361,8 @@ tuple<Rate, Spread, Rate, Date> OvernightIndexedCouponPricer::compute(const Date
                     // Telescopic formula to either start of RCO period or start of last underlying ON period.
                     Size tsEndIdx = numPeriods - 1;
                     if (rco == 0) {
-                        // If last interest date, i.e. coupon end date, is a good business day, avoid an ON forecast.
-                        if (numPeriods == fixDates.size() && onFixCal.isBusinessDay(intDates.back()))
+                        // If `date` that we are accruing up to is a good business day, avoid an ON forecast.
+                        if (numPeriods == fixDates.size() && onFixCal.isBusinessDay(date))
                             tsEndIdx++;
                     } else {
                         tsEndIdx = std::min(tsEndIdx, fixDates.size() - rco - 1);
