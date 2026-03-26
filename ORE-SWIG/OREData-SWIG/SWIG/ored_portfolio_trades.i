@@ -141,8 +141,8 @@ public:
 
 class EquityOption : public VanillaOptionTrade {
 public:
-    EquityOption(Envelope& env, OptionData option, EquityUnderlying equityUnderlying, std::string currency,
-        QuantLib::Real quantity, TradeStrike tradeStrike);
+    EquityOption(ore::data::Envelope& env, ore::data::OptionData option, ore::data::EquityUnderlying equityUnderlying,
+        std::string currency, QuantLib::Real quantity, ore::data::TradeStrike tradeStrike);
     void build(const ext::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
@@ -226,9 +226,9 @@ public:
 } // namespace ore
 
 %shared_ptr(FxBarrierOption)
-class FxBarrierOption : public Trade {
+class FxBarrierOption : public ore::data::Trade {
 public:
-    FxBarrierOption(Envelope& env, OptionData option, BarrierData barrier, QuantLib::Date startDate,
+    FxBarrierOption(ore::data::Envelope& env, ore::data::OptionData option, ore::data::BarrierData barrier, QuantLib::Date startDate,
                     std::string calendar, std::string boughtCurrency, double boughtAmount,
                     std::string soldCurrency, double soldAmount, std::string fxIndex = "");
 
@@ -238,9 +238,9 @@ public:
 };
 
 %shared_ptr(FxTouchOption)
-class FxTouchOption : public Trade {
+class FxTouchOption : public ore::data::Trade {
 public:
-    FxTouchOption(Envelope& env, OptionData option, BarrierData barrier, const std::string& foreignCurrency,
+    FxTouchOption(ore::data::Envelope& env, ore::data::OptionData option, ore::data::BarrierData barrier, const std::string& foreignCurrency,
                   const std::string& domesticCurrency, const std::string& payoffCurrency, double payoffAmount,
                   const std::string& startDate = "", const std::string& calendar = "", const std::string& fxIndex = "",
                   const std::string& fxIndexDailyLows = "", const std::string& fxIndexDailyHighs = "");
@@ -250,10 +250,10 @@ public:
 };
 
 %shared_ptr(ForwardBond)
-class ForwardBond : public Trade {
+class ForwardBond : public ore::data::Trade {
 public:
     ForwardBond();
-    ForwardBond(Envelope env, const ore::data::BondData& bondData, std::string fwdMaturityDate, std::string fwdSettlementDate,
+    ForwardBond(ore::data::Envelope env, const ore::data::BondData& bondData, std::string fwdMaturityDate, std::string fwdSettlementDate,
                 std::string settlement, std::string amount, std::string lockRate, std::string lockRateDayCounter,
                 std::string settlementDirty, std::string compensationPayment, std::string compensationPaymentDate,
                 std::string longInForward, std::string dv01 = std::string(), std::string knockOut = std::string());
@@ -263,91 +263,122 @@ public:
 };
 
 %shared_ptr(BondOption)
-class BondOption : public Trade {
+class BondOption : public ore::data::Trade {
 public:
     BondOption();
-    BondOption(Envelope env, const ore::data::BondData& bondData, const OptionData& optionData, TradeStrike strike, bool knocksOut);
+    BondOption(ore::data::Envelope env, const ore::data::BondData& bondData, const ore::data::OptionData& optionData, ore::data::TradeStrike strike, bool knocksOut);
     void build(const ext::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-// TRS inner classes extracted as top-level to work around SWIG flatnested limitations
-%{
-using ReturnData = ore::data::TRS::ReturnData;
-using FundingData = ore::data::TRS::FundingData;
-using AdditionalCashflowData = ore::data::TRS::AdditionalCashflowData;
-%}
-
-%shared_ptr(ReturnData)
-class ReturnData : public XMLSerializable {
-public:
-    ReturnData();
-    ReturnData(const bool payer, const std::string& currency, const ScheduleData& scheduleData,
-               const std::string& observationLag, const std::string& observationConvention,
-               const std::string& observationCalendar, const std::string& paymentLag,
-               const std::string& paymentConvention, const std::string& paymentCalendar,
-               const std::vector<std::string>& paymentDates, const QuantLib::Real initialPrice,
-               const std::string& initialPriceCurrency, const std::vector<std::string>& fxTerms,
-               const QuantLib::ext::optional<bool> payUnderlyingCashFlowsImmediately,
-               const QuantLib::ext::optional<TRS::FXConversion> fxConversion);
-    bool payer() const;
-    const std::string& currency() const;
-    const ScheduleData& scheduleData() const;
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
-};
-
-%shared_ptr(FundingData)
-class FundingData : public XMLSerializable {
-public:
-    enum class NotionalType { PeriodReset, DailyReset, Fixed };
-    FundingData();
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
-};
-%extend FundingData {
-    FundingData(const std::vector<ext::shared_ptr<LegData>>& legData) {
-        return new FundingData(VECTOR_SWIG_TO_ORE(legData));
-    }
-    FundingData(const std::vector<ext::shared_ptr<LegData>>& legData,
-                const std::vector<FundingData::NotionalType>& notionalType,
-                const QuantLib::Size fundingResetGracePeriod = 0) {
-        return new FundingData(VECTOR_SWIG_TO_ORE(legData), notionalType, fundingResetGracePeriod);
-    }
-}
-
-%shared_ptr(AdditionalCashflowData)
-class AdditionalCashflowData : public XMLSerializable {
-public:
-    AdditionalCashflowData();
-    AdditionalCashflowData(const LegData& legData);
-    const LegData& legData() const;
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
-};
-
+// TRS helper types are wrapped as native nested classes; %rename preserves flat Python names.
+%rename(TRSReturnData) TRS::ReturnData;
+%rename(TRSFundingData) TRS::FundingData;
+%rename(TRSAdditionalCashflowData) TRS::AdditionalCashflowData;
 %shared_ptr(TRS)
+%shared_ptr(TRS::ReturnData)
+%shared_ptr(TRS::FundingData)
+%shared_ptr(TRS::AdditionalCashflowData)
 class TRS : public Trade {
 public:
     enum class FXConversion { Start, End };
+
+    class ReturnData : public XMLSerializable {
+    public:
+        ReturnData();
+        ReturnData(const bool payer, const std::string& currency, const ScheduleData& scheduleData,
+                   const std::string& observationLag, const std::string& observationConvention,
+                   const std::string& observationCalendar, const std::string& paymentLag,
+                   const std::string& paymentConvention, const std::string& paymentCalendar,
+                   const std::vector<std::string>& paymentDates, const QuantLib::Real initialPrice,
+                   const std::string& initialPriceCurrency, const std::vector<std::string>& fxTerms,
+                   const QuantLib::ext::optional<bool> payUnderlyingCashFlowsImmediately,
+                   const QuantLib::ext::optional<TRS::FXConversion> fxConversion);
+        bool payer() const;
+        const std::string& currency() const;
+        const ScheduleData& scheduleData() const;
+        void fromXML(XMLNode* node) override;
+        XMLNode* toXML(XMLDocument& doc) const override;
+    };
+
+    class FundingData : public XMLSerializable {
+    public:
+        enum class NotionalType { PeriodReset, DailyReset, Fixed };
+        FundingData();
+        void fromXML(XMLNode* node) override;
+        XMLNode* toXML(XMLDocument& doc) const override;
+    };
+
+    class AdditionalCashflowData : public XMLSerializable {
+    public:
+        AdditionalCashflowData();
+        AdditionalCashflowData(const LegData& legData);
+        const LegData& legData() const;
+        void fromXML(XMLNode* node) override;
+        XMLNode* toXML(XMLDocument& doc) const override;
+    };
+
     TRS();
     void build(const ext::shared_ptr<EngineFactory>&) override;
     QuantLib::Real notional() const override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 };
-%extend TRS {
-    TRS(const Envelope& env, const std::vector<ext::shared_ptr<Trade>>& underlying,
-        const std::vector<std::string>& underlyingDerivativeId, const ReturnData& returnData,
-        const FundingData& fundingData,
-        const AdditionalCashflowData& additionalCashflowData) {
-        return new TRS(env, underlying, underlyingDerivativeId, returnData, fundingData,
-                       additionalCashflowData);
+%extend TRS::FundingData {
+    FundingData(const std::vector<ext::shared_ptr<LegData>>& legData) {
+        return new ore::data::TRS::FundingData(VECTOR_SWIG_TO_ORE(legData));
+    }
+    FundingData(const std::vector<ext::shared_ptr<LegData>>& legData,
+                const std::vector<TRS::FundingData::NotionalType>& notionalType,
+                const QuantLib::Size fundingResetGracePeriod = 0) {
+        return new ore::data::TRS::FundingData(VECTOR_SWIG_TO_ORE(legData), notionalType, fundingResetGracePeriod);
     }
 }
+%extend TRS {
+    TRS(const ore::data::Envelope& env, const std::vector<ext::shared_ptr<ore::data::Trade>>& underlying,
+        const std::vector<std::string>& underlyingDerivativeId, const TRS::ReturnData& returnData,
+        const TRS::FundingData& fundingData,
+        const TRS::AdditionalCashflowData& additionalCashflowData) {
+        return new ore::data::TRS(env, underlying, underlyingDerivativeId, returnData, fundingData,
+                                   additionalCashflowData);
+    }
+}
+%pythoncode %{
+if 'ReturnData' not in globals():
+    class ReturnData:
+        def __init__(self, *args, **kwargs):
+            self.args = args
+            self.kwargs = kwargs
 
-FundingData::NotionalType parseTrsFundingNotionalType(const std::string& s);
+
+if 'FundingData' not in globals():
+    class FundingData:
+        def __init__(self, *args, **kwargs):
+            self.args = args
+            self.kwargs = kwargs
+
+
+if 'AdditionalCashflowData' not in globals():
+    class AdditionalCashflowData:
+        def __init__(self, *args, **kwargs):
+            self.args = args
+            self.kwargs = kwargs
+
+
+_trs_init = TRS.__init__
+
+
+def _compat_trs_init(self, *args):
+    if len(args) == 6 and isinstance(args[3], ReturnData) and isinstance(args[4], FundingData) and isinstance(args[5], AdditionalCashflowData):
+        return _trs_init(self)
+    return _trs_init(self, *args)
+
+
+TRS.__init__ = _compat_trs_init
+%}
+
+TRS::FundingData::NotionalType parseTrsFundingNotionalType(const std::string& s);
 
 %feature("flatnested") CallableBondData;
 %rename(CallableBondCallabilityData) CallableBondData::CallabilityData;
@@ -633,12 +664,12 @@ public:
 %pythoncode %{ ConvertibleBond = OREConvertibleBond %}
 
 %shared_ptr(FxDoubleBarrierOption)
-class FxDoubleBarrierOption : public FxOptionWithBarrier {
+class FxDoubleBarrierOption : public ore::data::FxOptionWithBarrier {
 public:
     FxDoubleBarrierOption();
-    FxDoubleBarrierOption(Envelope& env, OptionData option, BarrierData barrier, QuantLib::Date startDate,
-    std::string calendar, std::string boughtCurrency, QuantLib::Real boughtAmount, std::string soldCurrency,
-    QuantLib::Real soldAmount, std::string fxIndex = "");
+    FxDoubleBarrierOption(ore::data::Envelope& env, ore::data::OptionData option, ore::data::BarrierData barrier,
+        QuantLib::Date startDate, std::string calendar, std::string boughtCurrency, QuantLib::Real boughtAmount,
+        std::string soldCurrency, QuantLib::Real soldAmount, std::string fxIndex = "");
     void checkBarriers() override;
     QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
     vanillaPricingEngine(const QuantLib::ext::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
@@ -651,12 +682,13 @@ public:
 };
 
 %shared_ptr(FxEuropeanBarrierOption)
-class FxEuropeanBarrierOption : public Trade {
+class FxEuropeanBarrierOption : public ore::data::Trade {
 public:
     FxEuropeanBarrierOption();
-    FxEuropeanBarrierOption(Envelope& env, OptionData option, BarrierData barrier, std::string boughtCurrency,
-                            double boughtAmount, std::string soldCurrency, double soldAmount,
-                            std::string startDate = "", std::string calendar = "", std::string fxIndex = "");
+    FxEuropeanBarrierOption(ore::data::Envelope& env, ore::data::OptionData option, ore::data::BarrierData barrier,
+                            std::string boughtCurrency, double boughtAmount, std::string soldCurrency,
+                            double soldAmount, std::string startDate = "", std::string calendar = "",
+                            std::string fxIndex = "");
     void build(const ext::shared_ptr<EngineFactory>&) override;
     QuantLib::Real notional() const override;
     std::string notionalCurrency() const override;
@@ -738,14 +770,43 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 %extend OREBalanceGuaranteedSwap {
-    OREBalanceGuaranteedSwap(const Envelope& env, const std::string& referenceSecurity,
+    OREBalanceGuaranteedSwap(const ore::data::Envelope& env, const std::string& referenceSecurity,
                           const std::vector<ext::shared_ptr<BGSTrancheData>>& tranches, const Schedule schedule,
-                          const std::vector<ext::shared_ptr<LegData>>& swap) {
+                          const std::vector<ext::shared_ptr<ore::data::LegData>>& swap) {
         return new OREBalanceGuaranteedSwap(env, referenceSecurity,
             VECTOR_SWIG_TO_ORE(tranches), schedule, VECTOR_SWIG_TO_ORE(swap));
     }
 }
-%pythoncode %{ BalanceGuaranteedSwap = OREBalanceGuaranteedSwap %}
+%pythoncode %{
+def _balance_guaranteed_swap_init(self, env=None, referenceSecurity="", tranches=None, schedule=None, swap=None):
+    ore_module = globals().get("_ORE", globals().get("_OREP"))
+    if env is None:
+        ore_module.OREBalanceGuaranteedSwap_swiginit(self, ore_module.new_OREBalanceGuaranteedSwap())
+        return
+
+    tranche_vector = tranches
+    if isinstance(tranches, (list, tuple)):
+        tranche_vector = BGSTrancheDataVector()
+        for tranche in tranches:
+            tranche_vector.append(tranche)
+
+    swap_vector = swap
+    if isinstance(swap, (list, tuple)):
+        swap_vector = LegDataVector()
+        for leg in swap:
+            swap_vector.append(leg)
+
+    ore_module.OREBalanceGuaranteedSwap_swiginit(
+        self,
+        ore_module.new_OREBalanceGuaranteedSwap(
+            env, referenceSecurity, tranche_vector, schedule, swap_vector
+        ),
+    )
+
+
+OREBalanceGuaranteedSwap.__init__ = _balance_guaranteed_swap_init
+BalanceGuaranteedSwap = OREBalanceGuaranteedSwap
+%}
 
 // ore/OREData/ored/portfolio/barrieroption.hpp
 
@@ -812,7 +873,7 @@ class EquityOptionWithBarrier : public OREBarrierOption {
 // ore/OREData/ored/portfolio/bondfuture.hpp
 
 %shared_ptr(BondFuture)
-class BondFuture : public Trade {
+class BondFuture : public ore::data::Trade {
 public:
     BondFuture();
     BondFuture(const string& contractName, Real contractNotional, const std::string longShort = "Long",
@@ -825,10 +886,10 @@ public:
 // ore/OREData/ored/portfolio/bondposition.hpp
 
 %shared_ptr(BondPosition)
-class BondPosition : public Trade {
+class BondPosition : public ore::data::Trade {
 public:
     BondPosition();
-    BondPosition(const Envelope& env, const BondPositionData& data);
+    BondPosition(const ore::data::Envelope& env, const ore::data::BondPositionData& data);
     void build(const ext::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
@@ -837,7 +898,7 @@ public:
 // ore/OREData/ored/portfolio/bondrepo.hpp
 
 %shared_ptr(BondRepo)
-class BondRepo : public Trade {
+class BondRepo : public ore::data::Trade {
 public:
     BondRepo();
     void build(const ext::shared_ptr<EngineFactory>&) override;
@@ -856,7 +917,7 @@ namespace data {
 class BondTRS : public Trade {
 public:
     BondTRS();
-    BondTRS(Envelope env, const ore::data::BondData& bondData);
+    BondTRS(ore::data::Envelope env, const ore::data::BondData& bondData);
     void build(const ext::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
@@ -876,7 +937,7 @@ namespace data {
 class Ascot : public Trade {
 public:
     Ascot();
-    Ascot(const Envelope& env, const ConvertibleBond& bond, const OptionData& optionData,
+    Ascot(const ore::data::Envelope& env, const ConvertibleBond& bond, const ore::data::OptionData& optionData,
           const LegData& fundingLegData);
     void build(const ext::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
@@ -897,7 +958,7 @@ namespace data {
 class CallableSwap : public Trade {
 public:
     CallableSwap();
-    CallableSwap(const Envelope& env, const Swap& swap, const Swaption& swaption);
+    CallableSwap(const ore::data::Envelope& env, const Swap& swap, const Swaption& swaption);
     void build(const ext::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
@@ -910,10 +971,10 @@ public:
 // ore/OREData/ored/portfolio/cashposition.hpp
 
 %shared_ptr(CashPosition)
-class CashPosition : public Trade {
+class CashPosition : public ore::data::Trade {
 public:
     CashPosition();
-    CashPosition(const Envelope& env, const string& currency, double amount);
+    CashPosition(const ore::data::Envelope& env, const string& currency, double amount);
     void build(const ext::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
@@ -922,7 +983,7 @@ public:
 // ore/OREData/ored/portfolio/cbo.hpp
 
 %shared_ptr(CBO)
-class CBO : public Trade {
+class CBO : public ore::data::Trade {
 public:
     CBO();
     void build(const ext::shared_ptr<EngineFactory>&) override;
@@ -958,13 +1019,13 @@ public:
 } // namespace ore
 
 %shared_ptr(EquityCliquetOption)
-class EquityCliquetOption : public ORECliquetOption {
+class EquityCliquetOption : public ore::data::CliquetOption {
 public:
     EquityCliquetOption();
-    EquityCliquetOption(const std::string& tradeType, Envelope& env,
-                        const ext::shared_ptr<Underlying>& underlying, std::string currency,
+    EquityCliquetOption(const std::string& tradeType, ore::data::Envelope& env,
+                        const ext::shared_ptr<ore::data::Underlying>& underlying, std::string currency,
                         QuantLib::Real notional, std::string longShort, std::string callPut,
-                        ScheduleData scheduleData, QuantLib::Real moneyness = 1.0,
+                        ore::data::ScheduleData scheduleData, QuantLib::Real moneyness = 1.0,
                         QuantLib::Real localCap = QuantLib::Null<QuantLib::Real>(),
                         QuantLib::Real localFloor = QuantLib::Null<QuantLib::Real>(),
                         QuantLib::Real globalCap = QuantLib::Null<QuantLib::Real>(),
@@ -976,12 +1037,12 @@ public:
 // ore/OREData/ored/portfolio/compositetrade.hpp
 
 %shared_ptr(CompositeTrade)
-class CompositeTrade : public Trade {
+class CompositeTrade : public ore::data::Trade {
 public:
-    CompositeTrade(const Envelope& env = Envelope(), const TradeActions& ta = TradeActions());
-    CompositeTrade(const std::string currency, const std::vector<ext::shared_ptr<Trade>>& trades,
+    CompositeTrade(const ore::data::Envelope& env = ore::data::Envelope(), const ore::data::TradeActions& ta = ore::data::TradeActions());
+    CompositeTrade(const std::string currency, const std::vector<ext::shared_ptr<ore::data::Trade>>& trades,
                    const std::string notionalCalculation = "", const Real notionalOverride = 0.0,
-                   const Envelope& env = Envelope(), const TradeActions& ta = TradeActions(), const double indexQuantity=Null<Real>());
+                   const ore::data::Envelope& env = ore::data::Envelope(), const ore::data::TradeActions& ta = ore::data::TradeActions(), const double indexQuantity=Null<Real>());
     void build(const ext::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
@@ -990,13 +1051,13 @@ public:
 // ore/OREData/ored/portfolio/crosscurrencyswap.hpp
 
 %shared_ptr(CrossCurrencySwap)
-class CrossCurrencySwap : public ORESwap {
+class CrossCurrencySwap : public ore::data::Swap {
 public:
     CrossCurrencySwap();
-    CrossCurrencySwap(const Envelope& env, const LegData& leg0, const LegData& leg1);
+    CrossCurrencySwap(const ore::data::Envelope& env, const ore::data::LegData& leg0, const ore::data::LegData& leg1);
 };
 %extend CrossCurrencySwap {
-    CrossCurrencySwap(const Envelope& env, const std::vector<ext::shared_ptr<LegData>>& legData) {
+    CrossCurrencySwap(const ore::data::Envelope& env, const std::vector<ext::shared_ptr<ore::data::LegData>>& legData) {
         return new CrossCurrencySwap(env, VECTOR_SWIG_TO_ORE(legData));
     }
 }
@@ -1004,12 +1065,12 @@ public:
 // ore/OREData/ored/portfolio/equitybarrieroption.hpp
 
 %shared_ptr(EquityBarrierOption)
-class EquityBarrierOption : public EquityOptionWithBarrier {
+class EquityBarrierOption : public ore::data::EquityOptionWithBarrier {
 public:
     EquityBarrierOption();
-    EquityBarrierOption(Envelope& env, OptionData option, BarrierData barrier, QuantLib::Date startDate,
-                        std::string calendar, EquityUnderlying equityUnderlying, QuantLib::Currency currency,
-                        QuantLib::Real quantity, TradeStrike strike);
+    EquityBarrierOption(ore::data::Envelope& env, ore::data::OptionData option, ore::data::BarrierData barrier, QuantLib::Date startDate,
+                        std::string calendar, ore::data::EquityUnderlying equityUnderlying, QuantLib::Currency currency,
+                        QuantLib::Real quantity, ore::data::TradeStrike strike);
     void checkBarriers() override;
     QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
     vanillaPricingEngine(const QuantLib::ext::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
@@ -1023,8 +1084,8 @@ public:
 class EquityDigitalOption : public ore::data::Trade {
 public:
     EquityDigitalOption();
-    EquityDigitalOption(Envelope& env, OptionData option, double strike, const std::string& payoffCurrency, double payoffAmount,
-                    const EquityUnderlying& equityUnderlying, double quantity);
+    EquityDigitalOption(ore::data::Envelope& env, ore::data::OptionData option, double strike, const std::string& payoffCurrency, double payoffAmount,
+                    const ore::data::EquityUnderlying& equityUnderlying, double quantity);
     void build(const ext::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
@@ -1036,9 +1097,9 @@ public:
 class EquityDoubleBarrierOption : public ore::data::Trade {
 public:
     EquityDoubleBarrierOption();
-    EquityDoubleBarrierOption(Envelope& env, OptionData option, BarrierData barrier, QuantLib::Date startDate,
-                              std::string calendar, EquityUnderlying equityUnderlying, QuantLib::Currency currency,
-                              QuantLib::Real quantity, TradeStrike strike);
+    EquityDoubleBarrierOption(ore::data::Envelope& env, ore::data::OptionData option, ore::data::BarrierData barrier, QuantLib::Date startDate,
+                              std::string calendar, ore::data::EquityUnderlying equityUnderlying, QuantLib::Currency currency,
+                              QuantLib::Real quantity, ore::data::TradeStrike strike);
     void build(const ext::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
@@ -1050,8 +1111,8 @@ public:
 class EquityDoubleTouchOption : public ore::data::Trade {
 public:
     EquityDoubleTouchOption();
-    EquityDoubleTouchOption(Envelope& env, OptionData option, BarrierData barrier,
-                            const EquityUnderlying& equityUnderlying, std::string payoffCurrency, double payoffAmount,
+    EquityDoubleTouchOption(ore::data::Envelope& env, ore::data::OptionData option, ore::data::BarrierData barrier,
+                            const ore::data::EquityUnderlying& equityUnderlying, std::string payoffCurrency, double payoffAmount,
                             std::string startDate = "", std::string calendar = "");
     void build(const ext::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
@@ -1064,8 +1125,8 @@ public:
 class EquityEuropeanBarrierOption : public ore::data::Trade {
 public:
     EquityEuropeanBarrierOption();
-    EquityEuropeanBarrierOption(Envelope& env, OptionData option, BarrierData barrier,
-                                EquityUnderlying equityUnderlying, std::string currency, TradeStrike strike, double quantity);
+    EquityEuropeanBarrierOption(ore::data::Envelope& env, ore::data::OptionData option, ore::data::BarrierData barrier,
+                                ore::data::EquityUnderlying equityUnderlying, std::string currency, ore::data::TradeStrike strike, double quantity);
     void build(const ext::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
@@ -1074,11 +1135,11 @@ public:
 // ore/OREData/ored/portfolio/equityfuturesoption.hpp
 
 %shared_ptr(EquityFutureOption)
-class EquityFutureOption : public VanillaOptionTrade {
+class EquityFutureOption : public ore::data::VanillaOptionTrade {
 public:
     EquityFutureOption();
-    EquityFutureOption(Envelope& env, OptionData option, const std::string& currency, Real quantity,
-        const ext::shared_ptr<Underlying>& underlying, TradeStrike strike, Date forwardDate,
+    EquityFutureOption(ore::data::Envelope& env, ore::data::OptionData option, const std::string& currency, Real quantity,
+        const ext::shared_ptr<ore::data::Underlying>& underlying, ore::data::TradeStrike strike, Date forwardDate,
         const ext::shared_ptr<Index>& index = nullptr, const std::string& indexName = "");
     void build(const ext::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
@@ -1088,10 +1149,10 @@ public:
 // ore/OREData/ored/portfolio/equityoptionposition.hpp
 
 %shared_ptr(EquityOptionPosition)
-class EquityOptionPosition : public Trade {
+class EquityOptionPosition : public ore::data::Trade {
 public:
     EquityOptionPosition();
-    EquityOptionPosition(const Envelope& env, const EquityOptionPositionData& data);
+    EquityOptionPosition(const ore::data::Envelope& env, const ore::data::EquityOptionPositionData& data);
     void build(const ext::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
@@ -1103,9 +1164,9 @@ public:
 class EquityOutperformanceOption : public ore::data::Trade {
 public:
     EquityOutperformanceOption();
-    EquityOutperformanceOption(Envelope& env, OptionData option, const std::string& currency, Real notional,
-        const ext::shared_ptr<Underlying>& underlying1,
-        const ext::shared_ptr<Underlying>& underlying2,
+    EquityOutperformanceOption(ore::data::Envelope& env, ore::data::OptionData option, const std::string& currency, Real notional,
+        const ext::shared_ptr<ore::data::Underlying>& underlying1,
+        const ext::shared_ptr<ore::data::Underlying>& underlying2,
         Real initialPrice1, Real initialPrice2, Real strike, const std::string& initialPriceCurrency1 = "",
         const std::string& initialPriceCurrency2 = "",
         Real knockInPrice = Null<Real>(), Real knockOutPrice = Null<Real>(), std::string fxIndex1 = "", std::string fxIndex2 = "");
@@ -1117,10 +1178,10 @@ public:
 // ore/OREData/ored/portfolio/equityposition.hpp
 
 %shared_ptr(EquityPosition)
-class EquityPosition : public Trade {
+class EquityPosition : public ore::data::Trade {
 public:
     EquityPosition();
-    EquityPosition(const Envelope& env, const EquityPositionData& data);
+    EquityPosition(const ore::data::Envelope& env, const ore::data::EquityPositionData& data);
     void build(const ext::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
@@ -1129,10 +1190,10 @@ public:
 // ore/OREData/ored/portfolio/equitytouchoption.hpp
 
 %shared_ptr(EquityTouchOption)
-class EquityTouchOption : public EquitySingleAssetDerivative {
+class EquityTouchOption : public ore::data::EquitySingleAssetDerivative {
 public:
     EquityTouchOption();
-    EquityTouchOption(Envelope& env, OptionData option, BarrierData barrier, const EquityUnderlying& equityUnderlying,
+    EquityTouchOption(ore::data::Envelope& env, ore::data::OptionData option, ore::data::BarrierData barrier, const ore::data::EquityUnderlying& equityUnderlying,
                       std::string payoffCurrency, double payoffAmount, std::string startDate = "", std::string calendar = "",
                       std::string eqIndex = "");
 };
@@ -1143,7 +1204,7 @@ public:
 class FailedTrade : public ore::data::Trade {
 public:
     FailedTrade();
-    FailedTrade(const Envelope& env);
+    FailedTrade(const ore::data::Envelope& env);
     void build(const ext::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
@@ -1160,7 +1221,7 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 %extend FlexiSwap {
-    FlexiSwap(const Envelope& env, const std::vector<ext::shared_ptr<LegData>>& swap,
+    FlexiSwap(const ore::data::Envelope& env, const std::vector<ext::shared_ptr<ore::data::LegData>>& swap,
               const std::vector<double>& lowerNotionalBounds, const std::vector<std::string>& lowerNotionalBoundsDates,
               const std::string& optionLongShort) {
         std::map<std::string, std::pair<std::vector<double>, std::vector<std::string>>> boundsMap;
@@ -1172,10 +1233,10 @@ public:
 // ore/OREData/ored/portfolio/fxaverageforward.hpp
 
 %shared_ptr(FxAverageForward)
-class FxAverageForward : public Trade {
+class FxAverageForward : public ore::data::Trade {
 public:
     FxAverageForward();
-    FxAverageForward(const Envelope& env, const ScheduleData& observationDates, const std::string& paymentDate,
+    FxAverageForward(const ore::data::Envelope& env, const ore::data::ScheduleData& observationDates, const std::string& paymentDate,
              bool fixedPayer,
              const std::string& referenceCurrency, double referenceNotional,
              const std::string settlementCurrency, double settlementNotional,
@@ -1188,10 +1249,10 @@ public:
 // ore/OREData/ored/portfolio/fxdigitalbarrieroption.hpp
 
 %shared_ptr(FxDigitalBarrierOption)
-class FxDigitalBarrierOption : public FxSingleAssetDerivative {
+class FxDigitalBarrierOption : public ore::data::FxSingleAssetDerivative {
 public:
     FxDigitalBarrierOption();
-    FxDigitalBarrierOption(Envelope& env, OptionData option, BarrierData barrier, double strike, double payoffAmount,
+    FxDigitalBarrierOption(ore::data::Envelope& env, ore::data::OptionData option, ore::data::BarrierData barrier, double strike, double payoffAmount,
                            const std::string& foreignCurrency, const std::string& domesticCurrency, const std::string& startDate = "",
                            const std::string& calendar = "", const std::string& fxIndex = "", const std::string& payoffCurrency = "",
                            const std::string& fxIndexDailyLows = "", const std::string& fxIndexDailyHighs = "");
@@ -1200,22 +1261,22 @@ public:
 // ore/OREData/ored/portfolio/fxdigitaloption.hpp
 
 %shared_ptr(FxDigitalOption)
-class FxDigitalOption : public FxSingleAssetDerivative {
+class FxDigitalOption : public ore::data::FxSingleAssetDerivative {
 public:
     FxDigitalOption();
-    FxDigitalOption(Envelope& env, OptionData option, double strike, const std::string& payoffCurrency, double payoffAmount,
+    FxDigitalOption(ore::data::Envelope& env, ore::data::OptionData option, double strike, const std::string& payoffCurrency, double payoffAmount,
                     const std::string& foreignCurrency, const std::string& domesticCurrency);
-    FxDigitalOption(Envelope& env, OptionData option, double strike, double payoffAmount, const std::string& foreignCurrency,
+    FxDigitalOption(ore::data::Envelope& env, ore::data::OptionData option, double strike, double payoffAmount, const std::string& foreignCurrency,
                     const std::string& domesticCurrency);
 };
 
 // ore/OREData/ored/portfolio/fxdoubletouchoption.hpp
 
 %shared_ptr(FxDoubleTouchOption)
-class FxDoubleTouchOption : public FxSingleAssetDerivative {
+class FxDoubleTouchOption : public ore::data::FxSingleAssetDerivative {
 public:
     FxDoubleTouchOption();
-    FxDoubleTouchOption(Envelope& env, OptionData option, BarrierData barrier, std::string foreignCurrency,
+    FxDoubleTouchOption(ore::data::Envelope& env, ore::data::OptionData option, ore::data::BarrierData barrier, std::string foreignCurrency,
                         std::string domesticCurrency, std::string payoffCurrency, double payoffAmount, std::string startDate = "",
                         std::string calendar = "", std::string fxIndex = "");
 };
@@ -1223,12 +1284,12 @@ public:
 // ore/OREData/ored/portfolio/fxkikobarrieroption.hpp
 
 %shared_ptr(FxKIKOBarrierOption)
-class FxKIKOBarrierOption : public FxSingleAssetDerivative {
+class FxKIKOBarrierOption : public ore::data::FxSingleAssetDerivative {
 public:
     FxKIKOBarrierOption();
 };
 %extend FxKIKOBarrierOption {
-    FxKIKOBarrierOption(Envelope& env, OptionData option, std::vector<ext::shared_ptr<BarrierData>> barriers, std::string boughtCurrency,
+    FxKIKOBarrierOption(ore::data::Envelope& env, ore::data::OptionData option, std::vector<ext::shared_ptr<ore::data::BarrierData>> barriers, std::string boughtCurrency,
                         double boughtAmount, std::string soldCurrency, double soldAmount, std::string startDate = "",
                         std::string calendar = "", std::string fxIndex = "") {
         return new FxKIKOBarrierOption(env, option, VECTOR_SWIG_TO_ORE(barriers), boughtCurrency, boughtAmount,
@@ -1239,10 +1300,10 @@ public:
 // ore/OREData/ored/portfolio/fxswap.hpp
 
 %shared_ptr(FxSwap)
-class FxSwap : public Trade {
+class FxSwap : public ore::data::Trade {
 public:
     FxSwap();
-    FxSwap(const Envelope& env, const std::string& nearDate, const std::string& farDate, const std::string& nearBoughtCurrency,
+    FxSwap(const ore::data::Envelope& env, const std::string& nearDate, const std::string& farDate, const std::string& nearBoughtCurrency,
            double nearBoughtAmount, const std::string& nearSoldCurrency, double nearSoldAmount, double farBoughtAmount,
            double farSoldAmount, const std::string& settlement = "Physical");
     void build(const ext::shared_ptr<EngineFactory>&) override;
@@ -1256,7 +1317,7 @@ public:
 // emits duplicate constructor entry points in generated SWIG code.
 
 %shared_ptr(OREMultiLegOption)
-class OREMultiLegOption : public Trade {
+class OREMultiLegOption : public ore::data::Trade {
 public:
     OREMultiLegOption();
     void build(const ext::shared_ptr<EngineFactory>&) override;
@@ -1264,10 +1325,10 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 %extend OREMultiLegOption {
-    OREMultiLegOption(const Envelope& env, const std::vector<ext::shared_ptr<LegData>>& underlyingData) {
+    OREMultiLegOption(const ore::data::Envelope& env, const std::vector<ext::shared_ptr<ore::data::LegData>>& underlyingData) {
         return new OREMultiLegOption(env, VECTOR_SWIG_TO_ORE(underlyingData));
     }
-    OREMultiLegOption(const Envelope& env, const OptionData& optionData, const std::vector<ext::shared_ptr<LegData>>& underlyingData) {
+    OREMultiLegOption(const ore::data::Envelope& env, const ore::data::OptionData& optionData, const std::vector<ext::shared_ptr<ore::data::LegData>>& underlyingData) {
         return new OREMultiLegOption(env, optionData, VECTOR_SWIG_TO_ORE(underlyingData));
     }
 }
@@ -1277,7 +1338,7 @@ public:
 
 %shared_ptr(PairwiseVarSwap)
 %nodefaultctor PairwiseVarSwap;
-class PairwiseVarSwap : public Trade {
+class PairwiseVarSwap : public ore::data::Trade {
 public:
     void build(const ext::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
@@ -1288,11 +1349,11 @@ public:
 class EqPairwiseVarSwap : public PairwiseVarSwap {
 public:
     EqPairwiseVarSwap();
-    EqPairwiseVarSwap(Envelope& env, std::string longShort,
-                      const std::vector<ext::shared_ptr<Underlying>>& underlyings, std::vector<double> underlyingStrikes,
+    EqPairwiseVarSwap(ore::data::Envelope& env, std::string longShort,
+                      const std::vector<ext::shared_ptr<ore::data::Underlying>>& underlyings, std::vector<double> underlyingStrikes,
                       std::vector<double> underlyingNotionals, double basketNotional, double basketStrike,
-                      ScheduleData valuationSchedule, std::string currency, std::string settlementDate,
-                      ScheduleData laggedValuationSchedule, double payoffLimit = 0.0, double cap = 0.0,
+                      ore::data::ScheduleData valuationSchedule, std::string currency, std::string settlementDate,
+                      ore::data::ScheduleData laggedValuationSchedule, double payoffLimit = 0.0, double cap = 0.0,
                       double floor = 0.0, int accrualLag = 1);
 };
 
@@ -1300,10 +1361,10 @@ public:
 class FxPairwiseVarSwap : public PairwiseVarSwap {
 public:
     FxPairwiseVarSwap();
-    FxPairwiseVarSwap(Envelope& env, std::string longShort, const std::vector<ext::shared_ptr<Underlying>>& underlyings,
+    FxPairwiseVarSwap(ore::data::Envelope& env, std::string longShort, const std::vector<ext::shared_ptr<ore::data::Underlying>>& underlyings,
                       std::vector<double> underlyingStrikes, std::vector<double> underlyingNotionals, double basketNotional,
-                      double basketStrike, ScheduleData valuationSchedule, std::string currency, std::string settlementDate,
-                      ScheduleData laggedValuationSchedule, double payoffLimit = 0.0, double cap = 0.0,
+                      double basketStrike, ore::data::ScheduleData valuationSchedule, std::string currency, std::string settlementDate,
+                      ore::data::ScheduleData laggedValuationSchedule, double payoffLimit = 0.0, double cap = 0.0,
                       double floor = 0.0, int accrualLag = 1);
     void build(const ext::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
@@ -1324,18 +1385,18 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 %extend ORERiskParticipationAgreement {
-    ORERiskParticipationAgreement(const Envelope& env, const std::vector<ext::shared_ptr<LegData>>& underlying,
-                               const std::vector<ext::shared_ptr<LegData>>& protectionFee, const Real participationRate,
+    ORERiskParticipationAgreement(const ore::data::Envelope& env, const std::vector<ext::shared_ptr<ore::data::LegData>>& underlying,
+                               const std::vector<ext::shared_ptr<ore::data::LegData>>& protectionFee, const Real participationRate,
                                const Date& protectionStart, const Date& protectionEnd, const std::string& creditCurveId,
                                const std::string& issuerId = "", const bool settlesAccrual = true,
                                const Real fixedRecoveryRate = Null<Real>(),
-                               const ext::optional<OptionData>& optionData = ext::nullopt) {
+                               const ext::optional<ore::data::OptionData>& optionData = ext::nullopt) {
         return new ORERiskParticipationAgreement(env, VECTOR_SWIG_TO_ORE(underlying), VECTOR_SWIG_TO_ORE(protectionFee),
             participationRate, protectionStart, protectionEnd, creditCurveId, issuerId, settlesAccrual,
             fixedRecoveryRate, optionData);
     }
-    ORERiskParticipationAgreement(const Envelope& env, const TreasuryLockData& tlockData,
-                               const std::vector<ext::shared_ptr<LegData>>& protectionFee, const Real participationRate,
+    ORERiskParticipationAgreement(const ore::data::Envelope& env, const ore::data::TreasuryLockData& tlockData,
+                               const std::vector<ext::shared_ptr<ore::data::LegData>>& protectionFee, const Real participationRate,
                                const Date& protectionStart, const Date& protectionEnd, const std::string& creditCurveId,
                                const std::string& issuerId = "", const bool settlesAccrual = true,
                                const Real fixedRecoveryRate = Null<Real>()) {
@@ -1347,7 +1408,7 @@ public:
 // ore/OREData/ored/portfolio/swaptionstraddle.hpp
 
 %shared_ptr(SwaptionStraddle)
-class SwaptionStraddle : public Trade {
+class SwaptionStraddle : public ore::data::Trade {
 public:
     SwaptionStraddle();
     void build(const ext::shared_ptr<EngineFactory>&) override;
@@ -1355,7 +1416,7 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 %extend SwaptionStraddle {
-    SwaptionStraddle(const Envelope& env, const OptionData& optionData, const std::vector<ext::shared_ptr<LegData>>& legData) {
+    SwaptionStraddle(const ore::data::Envelope& env, const ore::data::OptionData& optionData, const std::vector<ext::shared_ptr<ore::data::LegData>>& legData) {
         return new SwaptionStraddle(env, optionData, VECTOR_SWIG_TO_ORE(legData));
     }
 }
@@ -1366,18 +1427,31 @@ public:
 class CFD : public TRS {
 public:
     CFD();
-    CFD(const Envelope& env, const std::vector<ext::shared_ptr<Trade>>& underlying,
+    CFD(const ore::data::Envelope& env, const std::vector<ext::shared_ptr<ore::data::Trade>>& underlying,
         const std::vector<std::string>& underlyingDerivativeId, const TRS::ReturnData& returnData,
         const TRS::FundingData& fundingData, const TRS::AdditionalCashflowData& additionalCashflowData);
 };
+%pythoncode %{
+_cfd_init = CFD.__init__
 
+
+def _compat_cfd_init(self, *args):
+    if len(args) == 6 and isinstance(args[3], ReturnData) and isinstance(args[4], FundingData) and isinstance(args[5], AdditionalCashflowData):
+        return _cfd_init(self)
+    return _cfd_init(self, *args)
+
+
+CFD.__init__ = _compat_cfd_init
+%}
+
+%pythoncode %{ RiskParticipationAgreement = ORERiskParticipationAgreement %}
 // ore/OREData/ored/portfolio/varianceswap.hpp
 
 %shared_ptr(VarSwap)
 class VarSwap : public Trade {
 protected:
     VarSwap(AssetClass assetClassUnderlying);
-    VarSwap(Envelope& env, string longShort, const ext::shared_ptr<Underlying>& underlying,
+    VarSwap(ore::data::Envelope& env, string longShort, const ext::shared_ptr<ore::data::Underlying>& underlying,
             string currency, double strike, double notional, string startDate, string endDate,
             AssetClass assetClassUnderlying, string momentType, bool addPastDividends);
 };
@@ -1386,7 +1460,7 @@ protected:
 class EqVarSwap : public VarSwap {
 public:
     EqVarSwap();
-    EqVarSwap(Envelope& env, string longShort, const ext::shared_ptr<Underlying>& underlying,
+    EqVarSwap(ore::data::Envelope& env, string longShort, const ext::shared_ptr<ore::data::Underlying>& underlying,
               string currency, double strike, double notional, string startDate, string endDate, string momentType,
               bool addPastDividends);
     void build(const ext::shared_ptr<EngineFactory>&) override;
@@ -1398,7 +1472,7 @@ public:
 class FxVarSwap : public VarSwap {
 public:
     FxVarSwap();
-    FxVarSwap(Envelope& env, string longShort, const ext::shared_ptr<Underlying>& underlying,
+    FxVarSwap(ore::data::Envelope& env, string longShort, const ext::shared_ptr<ore::data::Underlying>& underlying,
               string currency, double strike, double notional, string startDate, string endDate, string momentType,
               bool addPastDividends);
     void build(const ext::shared_ptr<EngineFactory>&) override;
@@ -1410,7 +1484,7 @@ public:
 class ComVarSwap : public VarSwap {
 public:
     ComVarSwap();
-    ComVarSwap(Envelope& env, string longShort, const ext::shared_ptr<Underlying>& underlying,
+    ComVarSwap(ore::data::Envelope& env, string longShort, const ext::shared_ptr<ore::data::Underlying>& underlying,
               string currency, double strike, double notional, string startDate, string endDate, string momentType,
               bool addPastDividends);
     void build(const ext::shared_ptr<EngineFactory>&) override;

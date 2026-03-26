@@ -99,13 +99,14 @@ QuantExt::CrossCcyFixFloatSwap* qleMakeCrossCcyFixFloatSwap(
 
 %pythoncode %{
 def _cross_ccy_fix_float_swap_init(self, *args):
+  _ore_module = globals().get("_ORE", globals().get("_OREP"))
   if len(args) == 17:
     try:
-      _ORE.CrossCcyFixFloatSwap_swiginit(self, _ORE.qleMakeCrossCcyFixFloatSwap(*args))
+      _ore_module.CrossCcyFixFloatSwap_swiginit(self, _ore_module.qleMakeCrossCcyFixFloatSwap(*args))
       return
     except TypeError:
       pass
-  _ORE.CrossCcyFixFloatSwap_swiginit(self, _ORE.new_CrossCcyFixFloatSwap(*args))
+  _ore_module.CrossCcyFixFloatSwap_swiginit(self, _ore_module.new_CrossCcyFixFloatSwap(*args))
 
 CrossCcyFixFloatSwap.__init__ = _cross_ccy_fix_float_swap_init
 %}

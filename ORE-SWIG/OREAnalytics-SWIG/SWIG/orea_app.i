@@ -81,7 +81,7 @@ class Parameters {
 
 class InputParameters {
 public:
-    
+
     void setParameter(std::string analytic, std::string parameter, std::string val);
 
     // Getters, to be continued
@@ -100,14 +100,14 @@ public:
     const ext::shared_ptr<ore::data::CalendarAdjustmentConfig>& calendarAdjustmentConfigs();
     const ext::shared_ptr<ore::data::CurveConfigurations>& curveConfig(const std::string& s = std::string()) const;
     QuantLib::Date mporDate();
-        
+
     const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& stressSimMarketParams() const;
     const QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData>& stressScenarioData() const;
     const QuantLib::ext::shared_ptr<ore::data::EngineData>& stressPricingEngine() const;
     const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& stressSensitivityScenarioData() const;
 
     // and Setters
-    void setAsOfDate(const std::string& s); 
+    void setAsOfDate(const std::string& s);
     void setResultsPath(const std::string& s);
     void setBaseCurrency(const std::string& s);
     void setContinueOnError(bool b);
@@ -118,17 +118,17 @@ public:
     void setFixingCutOffDate(Date d);
     void setUseAtParCouponsCurves(bool b);
     void setUseAtParCouponsTrades(bool b);
-    void setMarketConfig(const std::string& config, const std::string& context); 
+    void setMarketConfig(const std::string& config, const std::string& context);
     void setResultsPath(std::filesystem::path resultsPath);
     void setRefDataManager(const ext::shared_ptr<ore::data::BasicReferenceDataManager>& refDataManager);
     void setBaselTrafficLight(const ext::shared_ptr<ore::data::BaselTrafficLightData>& baselTrafficLight);
-    void setTodaysMarketParams(const ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams);    
+    void setTodaysMarketParams(const ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams);
     void setTodaysMarketParamsFromFile(const std::string& fileName);
     void setSensitivityScenarioData(
         const ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensiScenarioData);
     void setRefDataManager(const std::string& xml);
     void setConventions(const std::string& xml);
-    void setConventions(const ext::shared_ptr<ore::data::Conventions>& convs);    
+    void setConventions(const ext::shared_ptr<ore::data::Conventions>& convs);
     void setConventionsFromFile(const std::string& fileName);
     void setMporConventions(const std::string& xml);
     void setIborFallbackConfig(const std::string& xml);
@@ -140,7 +140,7 @@ public:
     void setCurveConfigsFromFile(const std::string& fileName, std::string id = std::string());
     void setCalendarAdjustment(const std::string& xml);
     void setCalendarAdjustmentFromFile(const std::string& fileName);
-    void setCurrencyConfig(const std::string& xml);    
+    void setCurrencyConfig(const std::string& xml);
     void setCurrencyConfigFromFile(const std::string& fileName);
     void setPricingEngine(const std::string& xml);
     void setPricingEngine(const ext::shared_ptr<ore::data::EngineData>& ed);
@@ -164,7 +164,7 @@ public:
     void setDryRun(bool b);
     void setMporDate(const QuantLib::Date& d);
     void setMporDays(Size s);
-    void setMporCalendar(const std::string& s); 
+    void setMporCalendar(const std::string& s);
     void setMporForward(bool b);
     void setMporOverlappingPeriods(bool b);
     void setMarketDataLoaderOutput(const std::string& s);
@@ -194,10 +194,10 @@ public:
     void setScenarioOutputFile(const std::string& filename);
     // Setters for stress testing
     void setStressThreshold(Real r);
-    void setStressSimMarketParams(const std::string& xml); 
+    void setStressSimMarketParams(const std::string& xml);
     void setStressScenarioData(const std::string& xml);
     void setStressScenarioData(const ext::shared_ptr<ore::analytics::StressTestScenarioData>& stressScenarioData);
-    void setStressPricingEngine(const std::string& xml); 
+    void setStressPricingEngine(const std::string& xml);
     void setStressPricingEngine(const ext::shared_ptr<ore::data::EngineData>& engineData);
     // Setters for VaR
     void setVarQuantiles(const std::string& s); // parse to vector<Real>
@@ -207,7 +207,7 @@ public:
     void setMcVarSamples(Size s);
     void setMcVarSeed(long l);
     void setCovarianceData(ore::data::CSVReader& reader);
-    void setCovarianceDataFromBuffer(const std::string& xml); 
+    void setCovarianceDataFromBuffer(const std::string& xml);
     void setLookbackPeriod(const std::string& s);
     void setBenchmarkVarPeriod(const std::string& period);
     void setScenarioReader(const std::string& fileName);
@@ -239,7 +239,7 @@ public:
     void setScenarioGeneratorData(const ext::shared_ptr<ore::analytics::ScenarioGeneratorData>& xml);
     void setCrossAssetModelData(const std::string& xml);
     void setCrossAssetModelData(const ext::shared_ptr<ore::data::CrossAssetModelData>& xml);
-    void setSimulationPricingEngine(const std::string& xml); 
+    void setSimulationPricingEngine(const std::string& xml);
     void setSimulationPricingEngine(const ext::shared_ptr<ore::data::EngineData>& engineData);
     void setAmcPricingEngine(const std::string& xml);
     void setAmcPricingEngine(const ext::shared_ptr<ore::data::EngineData>& engineData);
@@ -291,8 +291,8 @@ public:
     void setDimQuantile(Real r);
     void setDimHorizonCalendarDays(Size s);
     void setDimRegressionOrder(Size s);
-    void setDimRegressors(const std::string& s); 
-    void setDimOutputGridPoints(const std::string& s); 
+    void setDimRegressors(const std::string& s);
+    void setDimOutputGridPoints(const std::string& s);
     void setDimLocalRegressionEvaluations(Size s);
     void setDimLocalRegressionBandwidth(Real r);
     // capital value adjustment details
@@ -310,16 +310,16 @@ public:
     void setCreditSimulationParametersFromBuffer(const std::string& xml);
     void setCreditMigrationOutputFiles(const std::string& s);
     // Setters for cashflow npv and dynamic backtesting
-    void setCashflowHorizon(const std::string& s); 
+    void setCashflowHorizon(const std::string& s);
     void setPortfolioFilterDate(const std::string& s);
     // Set list of analytics that shall be run
     void setAnalytics(const std::string& s);
-    void insertAnalytic(const std::string& s); 
+    void insertAnalytic(const std::string& s);
     void removeAnalytic(const std::string& s);
     void setCube(const ext::shared_ptr<ore::analytics::NPVCube>& file);
     void setMarketCube(const ext::shared_ptr<ore::analytics::AggregationScenarioData>& file);
 
-    const std::map<std::string, std::string>&  marketConfigs() const; 
+    const std::map<std::string, std::string>&  marketConfigs() const;
 };
 
 class OREApp {
@@ -329,15 +329,15 @@ class OREApp {
 
     OREApp(const ext::shared_ptr<ore::analytics::InputParameters>& inputs, const std::string& logFile = "", Size logLevel = 31,
            bool console = false, bool clearLog = true);
-    
+
     void run();
 
     void run(const std::vector<std::string>& marketData,
              const std::vector<std::string>& fixingData);
-                          
+
     void run(const ext::shared_ptr<ore::analytics::MarketDataLoader> loader);
 
-    void setupLog(QuantLib::Size mask = 15, const std::string& path = "", const std::string& file = "", 
+    void setupLog(QuantLib::Size mask = 15, const std::string& path = "", const std::string& file = "",
                   const std::filesystem::path& logRootPath = std::filesystem::path(),
                   const std::string& progressLogFile = "", QuantLib::Size progressLogRotationSize = 100 * 1024 * 1024,
                   bool progressLogToConsole = false, const std::string& structuredLogFile = "",
@@ -347,7 +347,7 @@ class OREApp {
 
     std::set<std::string> getAnalyticTypes();
     std::set<std::string> getSupportedAnalyticTypes();
-    const ext::shared_ptr<ore::analytics::Analytic>& getAnalytic(std::string type); 
+    const ext::shared_ptr<ore::analytics::Analytic>& getAnalytic(std::string type);
 
     std::set<std::string> getReportNames();
     ext::shared_ptr<ore::data::PlainInMemoryReport> getReport(std::string reportName);
@@ -399,7 +399,7 @@ public:
 };
 
 class MarketDataInMemoryLoader : public MarketDataLoader {
-public: 
+public:
     MarketDataInMemoryLoader(const ext::shared_ptr<ore::analytics::InputParameters>& inputs,
                              const std::vector<std::string>& marketData,
                              const std::vector<std::string>& fixingData);

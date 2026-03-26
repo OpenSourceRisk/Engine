@@ -290,6 +290,27 @@ public:
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
+%extend DigitalCMSLegData {
+    DigitalCMSLegData(
+        const CMSLegData& underlying,
+        Position::Type callPosition = Position::Long,
+        bool isCallATMIncluded = false,
+        const std::vector<double> callStrikes = std::vector<double>(),
+        const std::vector<std::string> callStrikeDates = std::vector<std::string>(),
+        const std::vector<double> callPayoffs = std::vector<double>(),
+        const std::vector<std::string> callPayoffDates = std::vector<std::string>(),
+        Position::Type putPosition = Position::Long,
+        bool isPutATMIncluded = false,
+        const std::vector<double> putStrikes = std::vector<double>(),
+        const std::vector<std::string> putStrikeDates = std::vector<std::string>(),
+        const std::vector<double> putPayoffs = std::vector<double>(),
+        const std::vector<std::string> putPayoffDates = std::vector<std::string>()) {
+        return new DigitalCMSLegData(
+            QuantLib::ext::make_shared<CMSLegData>(underlying),
+            callPosition, isCallATMIncluded, callStrikes, callStrikeDates, callPayoffs, callPayoffDates,
+            putPosition, isPutATMIncluded, putStrikes, putStrikeDates, putPayoffs, putPayoffDates);
+    }
+}
 
 class CPILegData : public LegAdditionalData {
   public:
@@ -351,6 +372,21 @@ public:
   virtual void fromXML(XMLNode* node) override;
   virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
+%extend DigitalCMSSpreadLegData {
+    DigitalCMSSpreadLegData(
+        const CMSSpreadLegData& underlying, Position::Type callPosition = Position::Long,
+        bool isCallATMIncluded = false, const std::vector<double> callStrikes = std::vector<double>(),
+        const std::vector<std::string> callStrikeDates = std::vector<std::string>(), const std::vector<double> callPayoffs = std::vector<double>(),
+        const std::vector<std::string> callPayoffDates = std::vector<std::string>(), Position::Type putPosition = Position::Long,
+        bool isPutATMIncluded = false, const std::vector<double> putStrikes = std::vector<double>(),
+        const std::vector<std::string> putStrikeDates = std::vector<std::string>(), const std::vector<double> putPayoffs = std::vector<double>(),
+        const std::vector<std::string> putPayoffDates = std::vector<std::string>()) {
+            return new DigitalCMSSpreadLegData(
+                QuantLib::ext::make_shared<CMSSpreadLegData>(underlying),
+                callPosition, isCallATMIncluded, callStrikes, callStrikeDates, callPayoffs, callPayoffDates,
+                putPosition, isPutATMIncluded, putStrikes, putStrikeDates, putPayoffs, putPayoffDates);
+    }
+}
 
 class EquityLegData : public LegAdditionalData {
 public:

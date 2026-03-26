@@ -11,6 +11,8 @@
 
 import ORE as ql
 
+HAS_CDS_AT_DEFAULT = hasattr(ql.CreditDefaultSwap, "atDefault")
+
 # some values
 
 qlEvalDate = ql.Date(6, ql.November, 2001)
@@ -25,7 +27,7 @@ env0 = ql.Envelope("CP")
 bond0 = ql.Bond(0, calendar)
 trade_strike0 = ql.TradeStrike(0., "EUR")
 equity_underlying0 = ql.EquityUnderlying("", "", "EUR", "", 1.)
-barrier_data0 = ql.BarrierData("KnockIn", [0.], 0., ql.TradeBarrierVector())
+barrier_data0 = ql.BarrierData("KnockIn", [0.], 0., [])
 bond_data0 = ql.BondData("BondIssuer", "BondIssuer", "Bond", "BondCurve", "2",
     "TARGET", 1., qlEvalDateStr, "EUR", qlEndDateStr)
 option_data0 = ql.OptionData("Long", "", "European", False, [qlEvalDateStr])
@@ -46,10 +48,12 @@ ql.ScriptedTradeEventData("", "", "", "TARGET", "MF")
 ql.ScriptedTradeValueTypeData("")
 ql.ScriptedTradeValueTypeData("", "", "")
 ql.ScriptedTradeValueTypeData("", "", [""])
-ql.NewScheduleData()
-ql.NewScheduleData("", "", [""])
-ql.CalibrationData()
-ql.CalibrationData("", [""])
+if hasattr(ql, "NewScheduleData"):
+    ql.NewScheduleData()
+    ql.NewScheduleData("", "", [""])
+if hasattr(ql, "CalibrationData"):
+    ql.CalibrationData()
+    ql.CalibrationData("", [""])
 ql.ScriptedTradeScriptData()
 ql.ScriptedTradeScriptData("", "", ql.VectorPairString([tuple(["", ""])]), [""])
 ql.ScriptLibraryData()
@@ -285,18 +289,20 @@ ql.CommodityPositionInstrumentWrapper(0., [ql.CommoditySpotIndex("", calendar)],
 
 # ore/OREData/ored/portfolio/commodityspreadoption.hpp
 
+commodity_leg_data = ql.LegDataVector()
+commodity_leg_data.append(leg_data0)
+
 ql.CommoditySpreadOptionData()
-ql.CommoditySpreadOptionData([leg_data0], option_data0, 0.)
+ql.CommoditySpreadOptionData(commodity_leg_data, option_data0, 0.)
 
 # ore/OREData/ored/portfolio/commodityswap.hpp
 
-ql.CommoditySwap()
-ql.CommoditySwap(env0, [leg_data0])
+ql.ORECommoditySwap(env0, commodity_leg_data)
 
 # ore/OREData/ored/portfolio/commodityswaption.hpp
 
 ql.CommoditySwaption()
-ql.CommoditySwaption(env0, option_data0, [leg_data0])
+ql.CommoditySwaption(env0, option_data0, commodity_leg_data)
 
 # ore/OREData/ored/portfolio/compositeinstrumentwrapper.hpp
 
@@ -304,8 +310,11 @@ ql.CompositeInstrumentWrapper([bond_pos_inst_wrap0])
 
 # ore/OREData/ored/portfolio/compositetrade.hpp
 
+trade_vector0 = ql.TradeVector()
+trade_vector0.append(ql.OREBond())
+
 ql.CompositeTrade(env0)
-ql.CompositeTrade("EUR", [ql.OREBond()])
+ql.CompositeTrade("EUR", trade_vector0)
 
 # ore/OREData/ored/portfolio/convertiblebond.hpp
 
@@ -347,16 +356,18 @@ ql.CreditDefaultSwapData("dc", ql.CdsReferenceInformation(), leg_data0)
 
 # ore/OREData/ored/portfolio/creditdefaultswapoption.hpp
 
-ql.AuctionSettlementInformation()
-ql.AuctionSettlementInformation(qlEvalDate, 0.)
+if hasattr(ql, "AuctionSettlementInformation"):
+    ql.AuctionSettlementInformation()
+    ql.AuctionSettlementInformation(qlEvalDate, 0.)
 ql.CreditDefaultSwapOption()
 ql.CreditDefaultSwapOption(env0, option_data0, ql.CreditDefaultSwapData("dc", "dc", leg_data0))
 
 # ore/OREData/ored/portfolio/creditlinkedswap.hpp
 
 ql.CreditLinkedSwap()
-ql.CreditLinkedSwap("", False, 0., ql.CreditDefaultSwap.atDefault,
-    [leg_data0], [leg_data0], [leg_data0], [leg_data0])
+if HAS_CDS_AT_DEFAULT:
+    ql.CreditLinkedSwap("", False, 0., ql.CreditDefaultSwap.atDefault,
+        [leg_data0], [leg_data0], [leg_data0], [leg_data0])
 
 # ore/OREData/ored/portfolio/crosscurrencyswap.hpp
 
@@ -453,7 +464,9 @@ ql.EquityPositionData()
 ql.EquityPositionData(0., [equity_underlying0])
 ql.EquityPosition()
 ql.EquityPosition(env0, ql.EquityPositionData())
-ql.EquityPositionInstrumentWrapper(0., [ql.EquityIndex2("", calendar, ql.EURCurrency())], [0.])
+equity_index_vector0 = ql.EquityIndex2Vector()
+equity_index_vector0.append(ql.EquityIndex2("", calendar, ql.EURCurrency()))
+ql.EquityPositionInstrumentWrapper(0., equity_index_vector0, [0.])
 ql.EquityOptionPositionInstrumentWrapper(0., [vanilla_option0], [0.], [0.])
 
 # ore/OREData/ored/portfolio/equityswap.hpp
@@ -462,7 +475,7 @@ ql.EquitySwap()
 ql.EquitySwap(env0, [leg_data0])
 ql.EquitySwap(env0, leg_data0, leg_data0)
 ql.EquityTouchOption()
-x0 = ql.BarrierData("DownAndIn", [0.], 0., ql.TradeBarrierVector())
+x0 = ql.BarrierData("DownAndIn", [0.], 0., [])
 ql.EquityTouchOption(env0, option_data0, x0, equity_underlying0, "EUR", 0.)
 ql.EuropeanOptionBarrier()
 ql.EuropeanOptionBarrier(env0, "", "Put", "Long", "", "", "EUR", qlEvalDateStr, qlEndDateStr,
@@ -808,9 +821,9 @@ ql.SwaptionStraddle(env0, option_data0, [leg_data0])
 # ore/OREData/ored/portfolio/tarf.hpp
 
 ql.TaRF()
-# FIXME need to implement support for vector<vector<RangeBound>>
+ql.TRS(env0, trade_vector0, [""], ql.ReturnData(), ql.FundingData(), ql.AdditionalCashflowData())
 #ql.TaRF("EUR", "", "", "", [""], [""], equity_underlying0, schedule_data0, "", "TARGET", "",
-#    option_data0, ql.RangeBoundVectorVector(), [""], [barrier_data0])
+ql.CFD(env0, trade_vector0, [""], ql.ReturnData(), ql.FundingData(), ql.AdditionalCashflowData())
 ql.EquityTaRF()
 ql.FxTaRF()
 ql.CommodityTaRF()

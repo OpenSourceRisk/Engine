@@ -45,7 +45,7 @@ class CurveSpec {
        };
        CurveSpec();
        CurveSpec(const std::string& curveConfigID);
-       
+
        std::string name() const;
        const std::string& curveConfigID() const;
        std::string baseName() const;
@@ -80,7 +80,7 @@ namespace data {
 class DefaultCurveSpec  : public CurveSpec {
     public:
         DefaultCurveSpec(const std::string& ccy, const std::string& curveConfigID);
-       
+
         CurveSpec::CurveType baseType() const;
         const std::string& ccy() const;
         std::string subName() const;

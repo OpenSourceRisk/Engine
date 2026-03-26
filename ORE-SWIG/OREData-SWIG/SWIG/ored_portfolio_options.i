@@ -168,17 +168,28 @@ public:
 } // namespace data
 } // namespace ore
 
-%template(UnderlyingVector) std::vector<QuantLib::ext::shared_ptr<ore::data::Underlying>>;
+%template(UnderlyingVector) std::vector<ext::shared_ptr<ore::data::Underlying>>;
 SWIG_SHARED_PTR_VECTOR_TYPEMAP(ore::data::Underlying, UnderlyingVector)
 
-%template(TradeBarrierVector) std::vector<QuantLib::ext::shared_ptr<ore::data::TradeBarrier>>;
+%template(TradeBarrierDataVector) std::vector<ore::data::TradeBarrier>;
+%template(TradeBarrierVector) std::vector<ext::shared_ptr<ore::data::TradeBarrier>>;
+SWIG_SHARED_PTR_VECTOR_TYPEMAP(ore::data::TradeBarrier, TradeBarrierVector)
 
-%template(BarrierDataVector) std::vector<QuantLib::ext::shared_ptr<ore::data::BarrierData>>;
+%template(BarrierDataVector) std::vector<ext::shared_ptr<ore::data::BarrierData>>;
 SWIG_SHARED_PTR_VECTOR_TYPEMAP(ore::data::BarrierData, BarrierDataVector)
 
 %extend ore::data::BarrierData {
     BarrierData(const std::string& barrierType, const std::vector<double>& levels, const double rebate,
-                const std::vector<QuantLib::ext::shared_ptr<ore::data::TradeBarrier>>& tradeBarriers,
+                const std::vector<ore::data::TradeBarrier>& tradeBarriers,
+                const std::string& style = std::string(),
+                const std::optional<std::string>& strictComparison = std::nullopt,
+                const std::optional<bool>& overrideTriggered = std::nullopt) {
+        return new ore::data::BarrierData(barrierType, levels, rebate, tradeBarriers,
+            style, strictComparison, overrideTriggered);
+    }
+
+    BarrierData(const std::string& barrierType, const std::vector<double>& levels, const double rebate,
+                const std::vector<ext::shared_ptr<ore::data::TradeBarrier>>& tradeBarriers,
                 const std::string& style = std::string(),
                 const std::optional<std::string>& strictComparison = std::nullopt,
                 const std::optional<bool>& overrideTriggered = std::nullopt) {
@@ -187,14 +198,29 @@ SWIG_SHARED_PTR_VECTOR_TYPEMAP(ore::data::BarrierData, BarrierDataVector)
     }
 }
 
+%pythoncode %{
+def _barrier_data_init(self, barrierType, levels, rebate, tradeBarriers, *args):
+    ore_module = globals().get("_ORE", globals().get("_OREP"))
+    if isinstance(tradeBarriers, (list, tuple)):
+        vector = TradeBarrierDataVector()
+        for tradeBarrier in tradeBarriers:
+            vector.append(tradeBarrier)
+        ore_module.BarrierData_swiginit(self, ore_module.new_BarrierData(barrierType, levels, rebate, vector, *args))
+        return
+    ore_module.BarrierData_swiginit(self, ore_module.new_BarrierData(barrierType, levels, rebate, tradeBarriers, *args))
+
+
+BarrierData.__init__ = _barrier_data_init
+%}
+
 %extend ore::data::EquitySwap {
-    EquitySwap(const Envelope& env, const std::vector<QuantLib::ext::shared_ptr<LegData>>& legData) {
+    EquitySwap(const Envelope& env, const std::vector<ext::shared_ptr<ore::data::LegData>>& legData) {
         return new ore::data::EquitySwap(env, VECTOR_SWIG_TO_ORE(legData));
     }
 }
 
 %extend ore::data::InflationSwap {
-    InflationSwap(const Envelope& env, const std::vector<QuantLib::ext::shared_ptr<LegData>>& legData) {
+    InflationSwap(const Envelope& env, const std::vector<ext::shared_ptr<ore::data::LegData>>& legData) {
         return new ore::data::InflationSwap(env, VECTOR_SWIG_TO_ORE(legData));
     }
 }

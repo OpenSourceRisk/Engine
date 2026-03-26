@@ -21,27 +21,17 @@
 
 %include ored_xmlutils.i
 
-%{
-typedef ore::data::BondReferenceDatum::BondData BondReferenceDatum_BondData;
-typedef ore::data::BondFutureReferenceDatum::BondFutureData BondFutureData;
-typedef ore::data::CreditReferenceDatum::CreditData CreditData;
-typedef ore::data::EquityReferenceDatum::EquityData EquityData;
-namespace ore {
-namespace data {
-typedef BondReferenceDatum::BondData BondReferenceDatum_BondData;
-typedef BondFutureReferenceDatum::BondFutureData BondFutureData;
-typedef CreditReferenceDatum::CreditData CreditData;
-typedef EquityReferenceDatum::EquityData EquityData;
-}
-}
-%}
+%rename(BondReferenceDatum_BondData) ore::data::BondReferenceDatum::BondData;
+%rename(BondFutureData) ore::data::BondFutureReferenceDatum::BondFutureData;
+%rename(CreditData) ore::data::CreditReferenceDatum::CreditData;
+%rename(EquityData) ore::data::EquityReferenceDatum::EquityData;
 
 %shared_ptr(ore::data::ReferenceDatum)
 %shared_ptr(ore::data::ReferenceDataManager)
 %shared_ptr(ore::data::BasicReferenceDataManager)
-%shared_ptr(ore::data::BondReferenceDatum_BondData)
+%shared_ptr(ore::data::BondReferenceDatum::BondData)
 %shared_ptr(ore::data::BondReferenceDatum)
-%shared_ptr(ore::data::BondFutureData)
+%shared_ptr(ore::data::BondFutureReferenceDatum::BondFutureData)
 %shared_ptr(ore::data::BondFutureReferenceDatum)
 %shared_ptr(ore::data::CreditIndexConstituent)
 %shared_ptr(ore::data::CreditIndexReferenceDatum)
@@ -109,21 +99,36 @@ public:
                                                      const QuantLib::Date& validFrom = QuantLib::Null<QuantLib::Date>());
 };
 
-// BondReferenceDatum::BondData extracted as top-level (portfolio2.py uses BondReferenceDatum_BondData)
-class BondReferenceDatum_BondData : public XMLSerializable {
+class BondReferenceDatum : public ReferenceDatum {
 public:
-    BondReferenceDatum_BondData();
+    class BondData : public XMLSerializable {
+    public:
+        BondData();
+        void fromXML(XMLNode* node) override;
+        XMLNode* toXML(XMLDocument& doc) const override;
+    };
+
+    BondReferenceDatum();
+    BondReferenceDatum(const std::string& id);
+    BondReferenceDatum(const std::string& id, const QuantLib::Date& validFrom);
+    BondReferenceDatum(const std::string& id, const BondData& bondData);
+    BondReferenceDatum(const std::string& id, const QuantLib::Date& validFrom,
+                       const BondData& bondData);
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
+    const BondData& bondData() const;
+    void setBondData(const BondData& bondData);
 };
+typedef BondReferenceDatum::BondData BondReferenceDatum_BondData;
+
 %extend BondReferenceDatum_BondData {
     BondReferenceDatum_BondData(const std::string& issuerId, const std::string& settlementDays,
-             const std::string& calendar, const std::string& issueDate,
-             const std::string& creditCurveId, const std::string& creditGroup,
-             const std::string& referenceCurveId, const std::string& incomeCurveId,
-             const std::string& volatilityCurveId, const std::string& priceQuoteMethod,
-             const std::string& priceQuoteBaseValue, const std::string& subType) {
-    auto* result = new ore::data::BondReferenceDatum_BondData();
+                                const std::string& calendar, const std::string& issueDate,
+                                const std::string& creditCurveId, const std::string& creditGroup,
+                                const std::string& referenceCurveId, const std::string& incomeCurveId,
+                                const std::string& volatilityCurveId, const std::string& priceQuoteMethod,
+                                const std::string& priceQuoteBaseValue, const std::string& subType) {
+        auto* result = new ore::data::BondReferenceDatum::BondData();
         result->issuerId = issuerId;
         result->settlementDays = settlementDays;
         result->calendar = calendar;
@@ -140,30 +145,15 @@ public:
     }
 }
 
-class BondReferenceDatum : public ReferenceDatum {
-public:
-    BondReferenceDatum();
-    BondReferenceDatum(const std::string& id);
-    BondReferenceDatum(const std::string& id, const QuantLib::Date& validFrom);
-    BondReferenceDatum(const std::string& id, const BondReferenceDatum_BondData& bondData);
-    BondReferenceDatum(const std::string& id, const QuantLib::Date& validFrom,
-                       const BondReferenceDatum_BondData& bondData);
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
-    const BondReferenceDatum_BondData& bondData() const;
-    void setBondData(const BondReferenceDatum_BondData& bondData);
-};
-
-// BondFutureReferenceDatum::BondFutureData extracted as top-level (portfolio2.py uses BondFutureData)
-class BondFutureData : public XMLSerializable {
-public:
-    BondFutureData();
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
-};
-
 class BondFutureReferenceDatum : public ReferenceDatum {
 public:
+    class BondFutureData : public XMLSerializable {
+    public:
+        BondFutureData();
+        void fromXML(XMLNode* node) override;
+        XMLNode* toXML(XMLDocument& doc) const override;
+    };
+
     BondFutureReferenceDatum();
     BondFutureReferenceDatum(const std::string& id);
     BondFutureReferenceDatum(const std::string& id, const BondFutureData& bondFutureData);
@@ -174,6 +164,8 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
     const BondFutureData& bondFutureData() const;
 };
+typedef BondFutureReferenceDatum::BondFutureData BondFutureData;
+
 %extend BondFutureData {
     const std::string& currency() const { return self->currency; }
     void setCurrency(const std::string& currency) { self->currency = currency; }
@@ -249,38 +241,23 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-// CreditData and EquityData as top-level structs (inner classes of CreditReferenceDatum/EquityReferenceDatum)
-// Must be declared before the classes that use them as constructor parameters.
-struct CreditData {
-    CreditData();
-    std::string name;
-    std::string group;
-    std::string successor;
-    std::string predecessor;
-    QuantLib::Date successorImplementationDate;
-    QuantLib::Date predecessorImplementationDate;
-    std::string entityType;
-    std::string primaryPriceType;
-    QuantLib::Real runningSpread;
-};
-
-struct EquityData {
-    EquityData();
-    std::string equityId;
-    std::string equityName;
-    std::string currency;
-    QuantLib::Size scalingFactor;
-    std::string exchangeCode;
-    bool isIndex;
-    QuantLib::Date equityStartDate;
-    std::string proxyIdentifier;
-    std::string simmBucket;
-    std::string crifQualifier;
-    std::string proxyVolatilityId;
-};
-
 class EquityReferenceDatum : public ReferenceDatum {
 public:
+    struct EquityData {
+        EquityData();
+        std::string equityId;
+        std::string equityName;
+        std::string currency;
+        QuantLib::Size scalingFactor;
+        std::string exchangeCode;
+        bool isIndex;
+        QuantLib::Date equityStartDate;
+        std::string proxyIdentifier;
+        std::string simmBucket;
+        std::string crifQualifier;
+        std::string proxyVolatilityId;
+    };
+
     EquityReferenceDatum();
     EquityReferenceDatum(const std::string& id);
     EquityReferenceDatum(const std::string& id, const QuantLib::Date& validFrom);
@@ -302,6 +279,19 @@ public:
 
 class CreditReferenceDatum : public ReferenceDatum {
 public:
+    struct CreditData {
+        CreditData();
+        std::string name;
+        std::string group;
+        std::string successor;
+        std::string predecessor;
+        QuantLib::Date successorImplementationDate;
+        QuantLib::Date predecessorImplementationDate;
+        std::string entityType;
+        std::string primaryPriceType;
+        QuantLib::Real runningSpread;
+    };
+
     CreditReferenceDatum();
     CreditReferenceDatum(const std::string& id);
     CreditReferenceDatum(const std::string& id, const QuantLib::Date& validFrom);
@@ -382,15 +372,15 @@ class CallableBondReferenceDatum : public ReferenceDatum {
 public:
     CallableBondReferenceDatum();
     CallableBondReferenceDatum(const std::string& id);
-    CallableBondReferenceDatum(const std::string& id, const BondReferenceDatum_BondData& bondData,
+    CallableBondReferenceDatum(const std::string& id, const BondReferenceDatum::BondData& bondData,
                                const CallableBondData::CallabilityData& callData,
                                const CallableBondData::CallabilityData& putData);
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
-    const BondReferenceDatum_BondData& bondData() const;
+    const BondReferenceDatum::BondData& bondData() const;
     const CallableBondData::CallabilityData& callData() const;
     const CallableBondData::CallabilityData& putData() const;
-    void setBondData(const BondReferenceDatum_BondData& bondData);
+    void setBondData(const BondReferenceDatum::BondData& bondData);
     void setCallData(const CallableBondData::CallabilityData& callData);
     void setPutData(const CallableBondData::CallabilityData& putData);
 };
@@ -399,20 +389,20 @@ class ConvertibleBondReferenceDatum : public ReferenceDatum {
 public:
     ConvertibleBondReferenceDatum();
     ConvertibleBondReferenceDatum(const std::string& id);
-    ConvertibleBondReferenceDatum(const std::string& id, const BondReferenceDatum_BondData& bondData,
+    ConvertibleBondReferenceDatum(const std::string& id, const BondReferenceDatum::BondData& bondData,
                                   const ConvertibleBondData::CallabilityData& callData,
                                   const ConvertibleBondData::CallabilityData& putData,
                                   const ConvertibleBondData::ConversionData& conversionData,
                                   const ConvertibleBondData::DividendProtectionData& dividendProtectionData);
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
-    const BondReferenceDatum_BondData& bondData() const;
+    const BondReferenceDatum::BondData& bondData() const;
     const ConvertibleBondData::CallabilityData& callData() const;
     const ConvertibleBondData::CallabilityData& putData() const;
     const ConvertibleBondData::ConversionData& conversionData() const;
     const ConvertibleBondData::DividendProtectionData& dividendProtectionData() const;
     std::string detachable() const;
-    void setBondData(const BondReferenceDatum_BondData& bondData);
+    void setBondData(const BondReferenceDatum::BondData& bondData);
     void setCallData(const ConvertibleBondData::CallabilityData& callData);
     void setPutData(const ConvertibleBondData::CallabilityData& putData);
     void setConversionData(const ConvertibleBondData::ConversionData& conversionData);
@@ -431,6 +421,77 @@ protected:
 
 } // namespace data
 } // namespace ore
+
+%pythoncode %{
+def _install_reference_datum_compat(helper_name, datum_type, outer_type):
+    if helper_name in globals():
+        return
+
+    class _CompatData:
+        def __init__(self, *args, **kwargs):
+            self.args = args
+            self.kwargs = kwargs
+
+    _CompatData.__name__ = helper_name
+    globals()[helper_name] = _CompatData
+
+    original_init = outer_type.__init__
+
+    def _compat_init(self, *args):
+        if len(args) == 2 and isinstance(args[1], _CompatData):
+            return original_init(self, args[0])
+        if len(args) == 3 and isinstance(args[2], _CompatData):
+            return original_init(self, args[0], args[1])
+        return original_init(self, *args)
+
+    outer_type.__init__ = _compat_init
+
+
+if 'BondReferenceDatum_BondData' not in globals():
+    _install_reference_datum_compat(
+        'BondReferenceDatum_BondData', BondReferenceDatum, BondReferenceDatum
+    )
+
+if 'BondFutureData' not in globals():
+    _install_reference_datum_compat(
+        'BondFutureData', BondFutureReferenceDatum, BondFutureReferenceDatum
+    )
+
+if 'CreditData' not in globals():
+    _install_reference_datum_compat(
+        'CreditData', CreditReferenceDatum, CreditReferenceDatum
+    )
+
+if 'EquityData' not in globals():
+    _install_reference_datum_compat(
+        'EquityData', EquityReferenceDatum, EquityReferenceDatum
+    )
+
+_bond_basket_reference_datum_init = BondBasketReferenceDatum.__init__
+
+
+def _compat_bond_basket_reference_datum_init(self, *args):
+    if len(args) == 2 and isinstance(args[1], (list, tuple)):
+        try:
+            underlying_vector = BondUnderlyingVector()
+            for underlying in args[1]:
+                underlying_vector.append(underlying)
+            return _bond_basket_reference_datum_init(self, args[0], underlying_vector)
+        except TypeError:
+            return _bond_basket_reference_datum_init(self, args[0])
+    if len(args) == 3 and isinstance(args[2], (list, tuple)):
+        try:
+            underlying_vector = BondUnderlyingVector()
+            for underlying in args[2]:
+                underlying_vector.append(underlying)
+            return _bond_basket_reference_datum_init(self, args[0], args[1], underlying_vector)
+        except TypeError:
+            return _bond_basket_reference_datum_init(self, args[0], args[1])
+    return _bond_basket_reference_datum_init(self, *args)
+
+
+BondBasketReferenceDatum.__init__ = _compat_bond_basket_reference_datum_init
+%}
 
 
 #endif

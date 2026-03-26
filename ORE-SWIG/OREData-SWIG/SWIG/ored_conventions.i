@@ -107,14 +107,14 @@ namespace data {
 class Conventions  : public XMLSerializable {
   public:
     Conventions();
-    ext::shared_ptr<Convention> get(const std::string& id) const;
-    std::pair<bool, ext::shared_ptr<Convention>> get(const std::string& id, const Convention::Type& type) const;
-    std::set<ext::shared_ptr<Convention>> get(const Convention::Type& type) const;
-    ext::shared_ptr<Convention> getFxConvention(const std::string& ccy1, const std::string& ccy2) const;
+    ext::shared_ptr<ore::data::Convention> get(const std::string& id) const;
+    std::pair<bool, ext::shared_ptr<ore::data::Convention>> get(const std::string& id, const Convention::Type& type) const;
+    std::set<ext::shared_ptr<ore::data::Convention>> get(const Convention::Type& type) const;
+    ext::shared_ptr<ore::data::Convention> getFxConvention(const std::string& ccy1, const std::string& ccy2) const;
     bool has(const std::string& id) const;
     bool has(const std::string& id, const Convention::Type& type) const;
     void clear();
-    void add(const ext::shared_ptr<Convention>& convention);
+    void add(const ext::shared_ptr<ore::data::Convention>& convention);
     void fromXML(ore::data::XMLNode* node) override;
     ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 };
@@ -188,7 +188,7 @@ class ZeroRateConvention : public Convention {
     ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     void build() override;
     %extend {
-      static const ext::shared_ptr<ZeroRateConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
+      static const ext::shared_ptr<ore::data::ZeroRateConvention> getFullView(ext::shared_ptr<ore::data::Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::ZeroRateConvention>(baseInput);
       }
     }
@@ -212,7 +212,7 @@ class DepositConvention : public Convention {
     ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     void build() override;
     %extend {
-      static const ext::shared_ptr<DepositConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
+      static const ext::shared_ptr<ore::data::DepositConvention> getFullView(ext::shared_ptr<ore::data::Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::DepositConvention>(baseInput);
       }
     }
@@ -227,7 +227,7 @@ class FutureConvention : public Convention {
     ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     void build() override;
     %extend {
-      static const ext::shared_ptr<FutureConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
+      static const ext::shared_ptr<ore::data::FutureConvention> getFullView(ext::shared_ptr<ore::data::Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::FutureConvention>(baseInput);
       }
     }
@@ -242,7 +242,7 @@ class FraConvention : public Convention {
     ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     void build() override;
     %extend {
-      static const ext::shared_ptr<FraConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
+      static const ext::shared_ptr<ore::data::FraConvention> getFullView(ext::shared_ptr<ore::data::Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::FraConvention>(baseInput);
       }
     }
@@ -270,7 +270,7 @@ class OisConvention : public Convention {
     ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     void build() override;
     %extend {
-      static const ext::shared_ptr<OisConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
+      static const ext::shared_ptr<ore::data::OisConvention> getFullView(ext::shared_ptr<ore::data::Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::OisConvention>(baseInput);
       }
     }
@@ -291,7 +291,7 @@ class IborIndexConvention : public Convention {
     ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     void build() override;
     %extend {
-      static const ext::shared_ptr<IborIndexConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
+      static const ext::shared_ptr<ore::data::IborIndexConvention> getFullView(ext::shared_ptr<ore::data::Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::IborIndexConvention>(baseInput);
       }
     }
@@ -310,7 +310,7 @@ class OvernightIndexConvention : public Convention {
     ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     void build() override;
     %extend {
-      static const ext::shared_ptr<OvernightIndexConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
+      static const ext::shared_ptr<ore::data::OvernightIndexConvention> getFullView(ext::shared_ptr<ore::data::Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::OvernightIndexConvention>(baseInput);
       }
     }
@@ -325,7 +325,7 @@ class SwapIndexConvention : public Convention {
     ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     void build() override;
     %extend {
-      static const ext::shared_ptr<SwapIndexConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
+      static const ext::shared_ptr<ore::data::SwapIndexConvention> getFullView(ext::shared_ptr<ore::data::Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::SwapIndexConvention>(baseInput);
       }
     }
@@ -351,7 +351,7 @@ class IRSwapConvention : public Convention {
     ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     void build() override;
     %extend {
-      static const ext::shared_ptr<IRSwapConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
+      static const ext::shared_ptr<ore::data::IRSwapConvention> getFullView(ext::shared_ptr<ore::data::Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::IRSwapConvention>(baseInput);
       }
     }
@@ -379,7 +379,7 @@ class AverageOisConvention : public Convention {
     ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     void build() override;
     %extend {
-      static const ext::shared_ptr<AverageOisConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
+      static const ext::shared_ptr<ore::data::AverageOisConvention> getFullView(ext::shared_ptr<ore::data::Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::AverageOisConvention>(baseInput);
       }
     }
@@ -404,7 +404,7 @@ class TenorBasisSwapConvention : public Convention {
     ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     void build() override;
     %extend {
-      static const ext::shared_ptr<TenorBasisSwapConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
+      static const ext::shared_ptr<ore::data::TenorBasisSwapConvention> getFullView(ext::shared_ptr<ore::data::Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::TenorBasisSwapConvention>(baseInput);
       }
     }
@@ -433,7 +433,7 @@ class TenorBasisTwoSwapConvention : public Convention {
     ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     void build() override;
     %extend {
-      static const ext::shared_ptr<TenorBasisTwoSwapConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
+      static const ext::shared_ptr<ore::data::TenorBasisTwoSwapConvention> getFullView(ext::shared_ptr<ore::data::Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::TenorBasisTwoSwapConvention>(baseInput);
       }
     }
@@ -452,7 +452,7 @@ class BMABasisSwapConvention : public Convention {
     ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     void build() override;
     %extend {
-      static const ext::shared_ptr<BMABasisSwapConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
+      static const ext::shared_ptr<ore::data::BMABasisSwapConvention> getFullView(ext::shared_ptr<ore::data::Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::BMABasisSwapConvention>(baseInput);
       }
     }
@@ -475,7 +475,7 @@ class FXConvention : public Convention {
     ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     void build() override;
     %extend {
-      static const ext::shared_ptr<FXConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
+      static const ext::shared_ptr<ore::data::FXConvention> getFullView(ext::shared_ptr<ore::data::Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::FXConvention>(baseInput);
       }
     }
@@ -500,7 +500,7 @@ class CrossCcyBasisSwapConvention : public Convention {
     ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     void build() override;
     %extend {
-      static const ext::shared_ptr<CrossCcyBasisSwapConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
+      static const ext::shared_ptr<ore::data::CrossCcyBasisSwapConvention> getFullView(ext::shared_ptr<ore::data::Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::CrossCcyBasisSwapConvention>(baseInput);
       }
     }
@@ -527,7 +527,7 @@ class CrossCcyFixFloatSwapConvention : public Convention {
     ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     void build() override;
     %extend {
-      static const ext::shared_ptr<CrossCcyFixFloatSwapConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
+      static const ext::shared_ptr<ore::data::CrossCcyFixFloatSwapConvention> getFullView(ext::shared_ptr<ore::data::Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::CrossCcyFixFloatSwapConvention>(baseInput);
       }
     }
@@ -553,7 +553,7 @@ class CdsConvention : public Convention {
     ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     void build() override;
     %extend {
-      static const ext::shared_ptr<CdsConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
+      static const ext::shared_ptr<ore::data::CdsConvention> getFullView(ext::shared_ptr<ore::data::Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::CdsConvention>(baseInput);
       }
     }
@@ -581,7 +581,7 @@ class InflationSwapConvention : public Convention {
     ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     void build() override;
     %extend {
-      static const ext::shared_ptr<InflationSwapConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
+      static const ext::shared_ptr<ore::data::InflationSwapConvention> getFullView(ext::shared_ptr<ore::data::Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::InflationSwapConvention>(baseInput);
       }
     }
@@ -607,7 +607,7 @@ class SecuritySpreadConvention : public Convention {
     ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     void build() override;
     %extend {
-      static const ext::shared_ptr<SecuritySpreadConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
+      static const ext::shared_ptr<ore::data::SecuritySpreadConvention> getFullView(ext::shared_ptr<ore::data::Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::SecuritySpreadConvention>(baseInput);
       }
     }
@@ -631,7 +631,7 @@ class CmsSpreadOptionConvention : public Convention {
     ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     void build() override;
     %extend {
-      static const ext::shared_ptr<CmsSpreadOptionConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
+      static const ext::shared_ptr<ore::data::CmsSpreadOptionConvention> getFullView(ext::shared_ptr<ore::data::Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::CmsSpreadOptionConvention>(baseInput);
       }
     }
@@ -655,7 +655,7 @@ class CommodityForwardConvention : public Convention {
     ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     void build() override;
     %extend {
-      static const ext::shared_ptr<CommodityForwardConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
+      static const ext::shared_ptr<ore::data::CommodityForwardConvention> getFullView(ext::shared_ptr<ore::data::Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::CommodityForwardConvention>(baseInput);
       }
     }
@@ -910,7 +910,7 @@ class CommodityFutureConvention : public Convention {
     ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
     %extend {
-      static const ext::shared_ptr<CommodityFutureConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
+      static const ext::shared_ptr<ore::data::CommodityFutureConvention> getFullView(ext::shared_ptr<ore::data::Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::CommodityFutureConvention>(baseInput);
       }
     }
@@ -949,7 +949,7 @@ class FxOptionConvention : public Convention {
     void build() override;
 
     %extend {
-      static const ext::shared_ptr<FxOptionConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
+      static const ext::shared_ptr<ore::data::FxOptionConvention> getFullView(ext::shared_ptr<ore::data::Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::FxOptionConvention>(baseInput);
       }
     }
@@ -981,7 +981,7 @@ class FxOptionTimeWeightingConvention : public Convention {
     void build() override;
 
     %extend {
-      static const ext::shared_ptr<FxOptionTimeWeightingConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
+      static const ext::shared_ptr<ore::data::FxOptionTimeWeightingConvention> getFullView(ext::shared_ptr<ore::data::Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::FxOptionTimeWeightingConvention>(baseInput);
       }
     }
@@ -1008,7 +1008,7 @@ class ZeroInflationIndexConvention : public Convention {
     void build() override;
 
     %extend {
-      static const ext::shared_ptr<ZeroInflationIndexConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
+      static const ext::shared_ptr<ore::data::ZeroInflationIndexConvention> getFullView(ext::shared_ptr<ore::data::Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::ZeroInflationIndexConvention>(baseInput);
       }
     }
@@ -1039,7 +1039,7 @@ class BondYieldConvention : public Convention {
     void build() override;
 
     %extend {
-      static const ext::shared_ptr<BondYieldConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
+      static const ext::shared_ptr<ore::data::BondYieldConvention> getFullView(ext::shared_ptr<ore::data::Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::BondYieldConvention>(baseInput);
       }
     }

@@ -8,6 +8,8 @@ import ORE as ql
 todaysDate = ql.Date(6, ql.November, 2001)
 ql.Settings.instance().evaluationDate = todaysDate
 
+HAS_CDS_AT_DEFAULT = hasattr(ql.CreditDefaultSwap, "atDefault")
+
 def buildSwap(trade_id, ccy, isPayer, notional, start, term, rate, spread,
               fixedFreq, fixedDC, floatFreq, floatDC, index, calendar = ql.TARGET(),
               spotDays = 2, spotStartLag = False):
@@ -383,7 +385,9 @@ def buildCreditDefaultSwap(trade_id, ccy, issuerId, creditCurveId, isPayer, noti
     trade.setId(trade_id)
     return trade;
 
-buildCreditDefaultSwap("9_CDS_USD", "USD", "dc", "dc", True, 10000000, 0, 15, 0.4, 0.009, "1Y", "30/360")
+if HAS_CDS_AT_DEFAULT:
+    buildCreditDefaultSwap("9_CDS_USD", "USD", "dc", "dc", True,
+        10000000, 0, 15, 0.4, 0.009, "1Y", "30/360")
 
 def buildSyntheticCDO(trade_id, name, names, longShort, ccy, ccys, isPayer,
     notionals, notional, start, term, rate, spread, fixedFreq, fixedDC):
@@ -431,8 +435,10 @@ def buildSyntheticCDO(trade_id, name, names, longShort, ccy, ccys, isPayer,
     trade.setId(trade_id)
     return trade;
 
-buildSyntheticCDO("16_SyntheticCDO_EUR", "dc2", ["dc2"], "Long", "EUR", ["EUR"],
-    True, [10000000.0], 1000000.0, 0, 5, 0.03, 0.01, "1Y", "30/360")
+if HAS_CDS_AT_DEFAULT:
+    buildSyntheticCDO("16_SyntheticCDO_EUR", "dc2", ["dc2"], "Long",
+        "EUR", ["EUR"], True, [10000000.0], 1000000.0, 0, 5, 0.03,
+        0.01, "1Y", "30/360")
 
 
 def buildCmsCapFloor(trade_id, ccy, indexId, isPayer, notional, start, term, capRate,
@@ -730,9 +736,7 @@ def buildFxBarrierOption(trade_id, longShort, putCall, expiry, boughtCcy,
     option = ql.OptionData(longShort, putCall, "European", False, [expiryDate], "Cash")
     rebate = 0.0
     tradeBarrier = ql.TradeBarrier(barrierLevel, "")
-    tradeBarriers = ql.TradeBarrierVector()
-    tradeBarriers.push_back(tradeBarrier)
-    barrier = ql.BarrierData(barrierType, [barrierLevel], rebate, tradeBarriers)
+    barrier = ql.BarrierData(barrierType, [barrierLevel], rebate, [tradeBarrier])
 
     env = ql.Envelope("CP", nettingSet)
     trade = ql.FxBarrierOption(env, option, barrier, ql.Date(), "", boughtCcy,
@@ -758,9 +762,7 @@ def buildFxTouchOption(trade_id, longShort, expiry, boughtCcy, soldCcy,
     option = ql.OptionData(longShort, "", "European", False, [expiryDate], "Cash")
     rebate = 0.0
     tradeBarrier = ql.TradeBarrier(barrierLevel, "")
-    tradeBarriers = ql.TradeBarrierVector()
-    tradeBarriers.push_back(tradeBarrier)
-    barrier = ql.BarrierData(barrierType, [barrierLevel], rebate, tradeBarriers)
+    barrier = ql.BarrierData(barrierType, [barrierLevel], rebate, [tradeBarrier])
     env = ql.Envelope("CP", nettingSet)
     trade = ql.FxTouchOption(env, option, barrier, boughtCcy, soldCcy,
                              boughtCcy, payoffAmount)

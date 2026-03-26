@@ -78,7 +78,7 @@ public:
     DirectYieldCurveSegment(const std::string& typeID, const std::string& conventionsID, const std::vector<std::string>& quotes);
     ~DirectYieldCurveSegment();
     void fromXML(ore::data::XMLNode* node) override;
-    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;   
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 };
 
 } // namespace data
@@ -327,7 +327,7 @@ public:
 
     const std::vector<std::string>& quotes();
 
-}; 
+};
 
 } // namespace data
 } // namespace ore

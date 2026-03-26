@@ -25,8 +25,6 @@ using ore::data::ScriptedTradeValueTypeData;
 using ore::data::ScriptedTradeScriptData;
 using ore::data::ScriptLibraryData;
 using ore::data::ScriptedTrade;
-using NewScheduleData = ore::data::ScriptedTradeScriptData::NewScheduleData;
-using CalibrationData = ore::data::ScriptedTradeScriptData::CalibrationData;
 using ore::data::Accumulator;
 using ore::data::EquityAccumulator;
 using ore::data::FxAccumulator;
@@ -77,34 +75,17 @@ using ore::data::FxWorstOfBasketSwap;
 using ore::data::CommodityWorstOfBasketSwap;
 %}
 
-// Expose ScriptedTradeScriptData inner classes as top-level to work around SWIG flatnested limitations
+%rename(NewScheduleData) ore::data::ScriptedTradeScriptData::NewScheduleData;
+%rename(CalibrationData) ore::data::ScriptedTradeScriptData::CalibrationData;
+
 %template(VectorPairString) std::vector<std::pair<std::string, std::string>>;
-%template(ScriptedTradeNewScheduleDataVector) std::vector<ext::shared_ptr<NewScheduleData>>;
-%template(ScriptedTradeCalibrationDataVector) std::vector<ext::shared_ptr<CalibrationData>>;
+%template(ScriptedTradeEventDataVector) std::vector<ext::shared_ptr<ore::data::ScriptedTradeEventData>>;
+%template(ScriptedTradeValueTypeDataVector) std::vector<ext::shared_ptr<ore::data::ScriptedTradeValueTypeData>>;
+%template(ScriptedTradeNewScheduleDataVector) std::vector<ext::shared_ptr<ore::data::ScriptedTradeScriptData::NewScheduleData>>;
+%template(ScriptedTradeCalibrationDataVector) std::vector<ext::shared_ptr<ore::data::ScriptedTradeScriptData::CalibrationData>>;
 
-%shared_ptr(NewScheduleData)
-class NewScheduleData : public XMLSerializable {
-public:
-    NewScheduleData();
-    NewScheduleData(const std::string& name, const std::string& operation,
-                    const std::vector<std::string>& sourceSchedules);
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
-    const std::string& name() const;
-    const std::string& operation() const;
-    const std::vector<std::string>& sourceSchedules() const;
-};
-
-%shared_ptr(CalibrationData)
-class CalibrationData : public XMLSerializable {
-public:
-    CalibrationData();
-    CalibrationData(const std::string& index, const std::vector<std::string>& strikes);
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
-    const std::string& index() const;
-    const std::vector<std::string>& strikes() const;
-};
+%shared_ptr(ore::data::ScriptedTradeScriptData::NewScheduleData)
+%shared_ptr(ore::data::ScriptedTradeScriptData::CalibrationData)
 
 %shared_ptr(ore::data::ScriptedTradeEventData)
 %shared_ptr(ore::data::ScriptedTradeValueTypeData)
@@ -140,6 +121,9 @@ public:
 %shared_ptr(ore::data::EquityRainbowOption)
 %shared_ptr(ore::data::FxRainbowOption)
 %shared_ptr(ore::data::CommodityRainbowOption)
+
+SWIG_SHARED_PTR_VECTOR_TYPEMAP(ore::data::ScriptedTradeEventData, ScriptedTradeEventDataVector)
+SWIG_SHARED_PTR_VECTOR_TYPEMAP(ore::data::ScriptedTradeValueTypeData, ScriptedTradeValueTypeDataVector)
 %shared_ptr(ore::data::StrikeResettableOption)
 %shared_ptr(ore::data::EquityStrikeResettableOption)
 %shared_ptr(ore::data::FxStrikeResettableOption)
@@ -183,6 +167,28 @@ public:
 
 class ScriptedTradeScriptData : public XMLSerializable {
 public:
+    class NewScheduleData : public XMLSerializable {
+    public:
+        NewScheduleData();
+        NewScheduleData(const std::string& name, const std::string& operation,
+                        const std::vector<std::string>& sourceSchedules);
+        void fromXML(XMLNode* node) override;
+        XMLNode* toXML(XMLDocument& doc) const override;
+        const std::string& name() const;
+        const std::string& operation() const;
+        const std::vector<std::string>& sourceSchedules() const;
+    };
+
+    class CalibrationData : public XMLSerializable {
+    public:
+        CalibrationData();
+        CalibrationData(const std::string& index, const std::vector<std::string>& strikes);
+        void fromXML(XMLNode* node) override;
+        XMLNode* toXML(XMLDocument& doc) const override;
+        const std::string& index() const;
+        const std::vector<std::string>& strikes() const;
+    };
+
     ScriptedTradeScriptData();
     ScriptedTradeScriptData(const std::string& code, const std::string& npv,
                             const std::vector<std::pair<std::string, std::string>>& results,

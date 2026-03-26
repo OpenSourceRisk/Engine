@@ -184,13 +184,14 @@ QuantExt::SwaptionVolCubeWithATM* qleMakeSwaptionVolCubeWithATM(const QuantExt::
 
 %pythoncode %{
 def _swaption_vol_cube_with_atm_init(self, *args):
+  _ore_module = globals().get("_ORE", globals().get("_OREP"))
   if len(args) == 1:
     try:
-      _ORE.SwaptionVolCubeWithATM_swiginit(self, _ORE.qleMakeSwaptionVolCubeWithATM(args[0]))
+      _ore_module.SwaptionVolCubeWithATM_swiginit(self, _ore_module.qleMakeSwaptionVolCubeWithATM(args[0]))
       return
     except TypeError:
       pass
-  _ORE.SwaptionVolCubeWithATM_swiginit(self, _ORE.new_SwaptionVolCubeWithATM(*args))
+  _ore_module.SwaptionVolCubeWithATM_swiginit(self, _ore_module.new_SwaptionVolCubeWithATM(*args))
 
 SwaptionVolCubeWithATM.__init__ = _swaption_vol_cube_with_atm_init
 %}

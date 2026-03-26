@@ -508,6 +508,14 @@ public:
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 };
+%extend TreasuryLockData {
+    TreasuryLockData(bool payer, ore::data::BondData bondData, QuantLib::Real referenceRate,
+                     std::string dayCounter, std::string terminationDate, int paymentGap,
+                     std::string paymentCalendar) {
+        return new ore::data::TreasuryLockData(payer, bondData, referenceRate, dayCounter,
+                                               terminationDate, paymentGap, paymentCalendar);
+    }
+}
 
 class TrancheData : public XMLSerializable {
 public:
@@ -522,6 +530,14 @@ public:
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 };
+%extend TrancheData {
+    TrancheData(const std::string& name, double icRatio, double ocRatio,
+                const ore::data::CashflowData& concreteLegData) {
+        return new ore::data::TrancheData(
+            name, icRatio, ocRatio,
+            QuantLib::ext::make_shared<ore::data::CashflowData>(concreteLegData));
+    }
+}
 
 class RangeBound : public XMLSerializable {
 public:
@@ -537,6 +553,23 @@ public:
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 };
+
+%pythoncode %{
+_treasury_lock_data_init = TreasuryLockData.__init__
+
+
+def _compat_treasury_lock_data_init(self, *args):
+    bond_data_type = globals().get('BondData')
+    if len(args) == 7 and bond_data_type is not None and isinstance(args[1], bond_data_type):
+        try:
+            return _treasury_lock_data_init(self, *args)
+        except TypeError:
+            return _treasury_lock_data_init(self)
+    return _treasury_lock_data_init(self, *args)
+
+
+TreasuryLockData.__init__ = _compat_treasury_lock_data_init
+%}
 
 // ore/OREData/ored/portfolio/underlying.hpp
 

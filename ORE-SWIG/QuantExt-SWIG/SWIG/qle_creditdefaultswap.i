@@ -86,16 +86,18 @@ QuantExt::CdsOption* qleMakeCdsOptionFromObjects(const QuantLib::CreditDefaultSw
 
 %pythoncode %{
 def _qle_cds_option_init(self, *args):
+  _ore_module = globals().get("_ORE", globals().get("_OREP"))
   if len(args) == 2:
     try:
-      _ORE.QLECdsOption_swiginit(self, _ORE.qleMakeCdsOptionFromObjects(args[0], args[1]))
+      _ore_module.QLECdsOption_swiginit(self, _ore_module.qleMakeCdsOptionFromObjects(args[0], args[1]))
       return
     except TypeError:
       pass
-  _ORE.QLECdsOption_swiginit(self, _ORE.new_QLECdsOption(*args))
+  _ore_module.QLECdsOption_swiginit(self, _ore_module.new_QLECdsOption(*args))
 
 def _qle_cds_option_underlying_swap(self):
-  return _ORE.qleCdsOptionUnderlyingSwap(self)
+  _ore_module = globals().get("_ORE", globals().get("_OREP"))
+  return _ore_module.qleCdsOptionUnderlyingSwap(self)
 
 QLECdsOption.__init__ = _qle_cds_option_init
 QLECdsOption.underlyingSwap = _qle_cds_option_underlying_swap

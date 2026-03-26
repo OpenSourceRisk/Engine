@@ -31,20 +31,20 @@ namespace ore {
 namespace data {
 
 bool isGenericIborIndex(const std::string& indexName);
-QuantLib::ext::shared_ptr<QuantLib::IborIndex> parseIborIndex(
+ext::shared_ptr<IborIndex> parseIborIndex(
     const std::string& s,
-    const QuantLib::Handle<QuantLib::YieldTermStructure>& h = QuantLib::Handle<QuantLib::YieldTermStructure>());
+    const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>());
 
-QuantLib::ext::shared_ptr<QuantLib::SwapIndex> parseSwapIndex(
+ext::shared_ptr<SwapIndex> parseSwapIndex(
     const std::string& s,
-    const QuantLib::Handle<QuantLib::YieldTermStructure>& forwarding = QuantLib::Handle<QuantLib::YieldTermStructure>(),
-    const QuantLib::Handle<QuantLib::YieldTermStructure>& discounting = QuantLib::Handle<QuantLib::YieldTermStructure>());
+    const Handle<YieldTermStructure>& forwarding = Handle<YieldTermStructure>(),
+    const Handle<YieldTermStructure>& discounting = Handle<YieldTermStructure>());
 
-QuantLib::ext::shared_ptr<QuantLib::Index> parseIndex(const std::string& s);
+ext::shared_ptr<Index> parseIndex(const std::string& s);
 
-QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex> parseZeroInflationIndex(
+ext::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(
     const std::string& s,
-    const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& h = QuantLib::Handle<QuantLib::ZeroInflationTermStructure>());
+    const Handle<ZeroInflationTermStructure>& h = Handle<ZeroInflationTermStructure>());
 
 QuantLib::ext::shared_ptr<QuantExt::FxIndex> parseFxIndex(const std::string& s);
 

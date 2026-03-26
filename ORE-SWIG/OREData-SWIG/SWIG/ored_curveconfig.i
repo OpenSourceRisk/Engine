@@ -33,7 +33,7 @@ public:
     const std::string& curveID() const;
     const std::string& curveDescription() const;
     std::string& curveID();
-    std::string& curveDescription();    
+    std::string& curveDescription();
     std::set<std::string> requiredCurveIds(const CurveSpec::CurveType& curveType);
     std::map<CurveSpec::CurveType, std::set<std::string>> requiredCurveIds();
     void setRequiredCurveIds(const CurveSpec::CurveType& curveType, const std::set<std::string>& ids);

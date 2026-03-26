@@ -53,7 +53,7 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
 %extend CommoditySpreadOptionData {
-    CommoditySpreadOptionData(const std::vector<QuantLib::ext::shared_ptr<ore::data::LegData>>& legData, const ore::data::OptionData& optionData,
+    CommoditySpreadOptionData(const std::vector<ext::shared_ptr<ore::data::LegData>>& legData, const ore::data::OptionData& optionData,
                               QuantLib::Real strike) {
         return new ore::data::CommoditySpreadOptionData(VECTOR_SWIG_TO_ORE(legData), optionData, strike);
     }
@@ -172,7 +172,7 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 %extend CommoditySwap {
-    CommoditySwap(const ore::data::Envelope& env, const std::vector<QuantLib::ext::shared_ptr<ore::data::LegData>>& legs) {
+    CommoditySwap(const ore::data::Envelope& env, const std::vector<ext::shared_ptr<ore::data::LegData>>& legs) {
         return new ore::data::CommoditySwap(env, VECTOR_SWIG_TO_ORE(legs));
     }
 }
@@ -188,7 +188,7 @@ public:
 };
 %extend CommoditySwaption {
     CommoditySwaption(const ore::data::Envelope& env, const ore::data::OptionData& optionData,
-                      const std::vector<QuantLib::ext::shared_ptr<ore::data::LegData>>& legs) {
+                      const std::vector<ext::shared_ptr<ore::data::LegData>>& legs) {
         return new ore::data::CommoditySwaption(env, optionData, VECTOR_SWIG_TO_ORE(legs));
     }
 }

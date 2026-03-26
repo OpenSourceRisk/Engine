@@ -67,14 +67,14 @@ class MarketImpl {
                                           const std::string& configuration = ore::data::Market::defaultConfiguration) const;
     QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve(const std::string& ccy,
                               const std::string& configuration = ore::data::Market::defaultConfiguration) const;
-    
+
     %extend {
-      QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndex(const std::string& indexName,
-                                             const std::string& configuration = ore::data::Market::defaultConfiguration) const {
+      ext::shared_ptr<IborIndex> iborIndex(const std::string& indexName,
+                                           const std::string& configuration = ore::data::Market::defaultConfiguration) const {
           return self->iborIndex(indexName, configuration).currentLink();
       }
-      QuantLib::ext::shared_ptr<QuantLib::SwapIndex> swapIndex(const std::string& indexName,
-                                             const std::string& configuration = ore::data::Market::defaultConfiguration) const {
+      ext::shared_ptr<SwapIndex> swapIndex(const std::string& indexName,
+                                           const std::string& configuration = ore::data::Market::defaultConfiguration) const {
           return self->swapIndex(indexName, configuration).currentLink();
       }
     }
@@ -126,14 +126,14 @@ class MarketImpl {
 
     // Inflation Indexes (Pointer rather than Handle)
     %extend {
-      QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex> zeroInflationIndex(const std::string& indexName,
-                                                               const std::string& configuration =
-                                                                 ore::data::Market::defaultConfiguration) const {
-          return self->zeroInflationIndex(indexName, configuration).currentLink();
-      }
-      QuantLib::ext::shared_ptr<QuantLib::YoYInflationIndex> yoyInflationIndex(const std::string& indexName,
+      ext::shared_ptr<ZeroInflationIndex> zeroInflationIndex(const std::string& indexName,
                                                              const std::string& configuration =
                                                                ore::data::Market::defaultConfiguration) const {
+          return self->zeroInflationIndex(indexName, configuration).currentLink();
+      }
+      ext::shared_ptr<YoYInflationIndex> yoyInflationIndex(const std::string& indexName,
+                                                           const std::string& configuration =
+                                                             ore::data::Market::defaultConfiguration) const {
           return self->yoyInflationIndex(indexName, configuration).currentLink();
       }
     }
