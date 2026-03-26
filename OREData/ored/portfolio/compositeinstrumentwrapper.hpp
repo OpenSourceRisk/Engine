@@ -60,6 +60,7 @@ public:
     const std::map<std::string, QuantLib::ext::any>& additionalResults() const override;
     void updateQlInstruments() override;
     bool isOption() override;
+    const std::vector<QuantLib::ext::shared_ptr<InstrumentWrapper>>& wrappers() const { return wrappers_; }
 
 protected:
     bool isOption_;
