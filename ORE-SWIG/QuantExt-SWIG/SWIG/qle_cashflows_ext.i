@@ -23,14 +23,11 @@
 %include cashflows.i
 %include qle_indexes.i
 
-%{
-using QuantExt::EquityReturnType;
-using QuantExt::EquityCoupon;
-using QuantExt::EquityCouponPricer;
-using QuantExt::CommodityCashFlow;
-using QuantExt::CommodityIndexedCashFlow;
-using QuantExt::TRSCashFlow;
-%}
+namespace QuantExt {
+    class FutureExpiryCalculator;
+} // namespace QuantExt
+
+namespace QuantExt {
 
 enum class EquityReturnType {
     Price,
@@ -39,17 +36,24 @@ enum class EquityReturnType {
     Dividend
 };
 
-%shared_ptr(EquityCoupon)
+} // namespace QuantExt
+
+%shared_ptr(QuantExt::EquityCoupon)
+namespace QuantExt {
 class EquityCoupon : public Coupon {
 };
+} // namespace QuantExt
 
-%shared_ptr(EquityCouponPricer)
+%shared_ptr(QuantExt::EquityCouponPricer)
+namespace QuantExt {
 class EquityCouponPricer {
   public:
     Rate swapletRate();
 };
+} // namespace QuantExt
 
-%shared_ptr(CommodityCashFlow)
+%shared_ptr(QuantExt::CommodityCashFlow)
+namespace QuantExt {
 class CommodityCashFlow : public CashFlow {
   public:
     QuantLib::Real quantity() const;
@@ -57,8 +61,10 @@ class CommodityCashFlow : public CashFlow {
     QuantLib::Real gearing() const;
     bool useFuturePrice() const;
 };
+} // namespace QuantExt
 
-%shared_ptr(CommodityIndexedCashFlow)
+%shared_ptr(QuantExt::CommodityIndexedCashFlow)
+namespace QuantExt {
 class CommodityIndexedCashFlow : public CommodityCashFlow {
   public:
     enum class PaymentTiming { InAdvance, InArrears, RelativeToExpiry };
@@ -79,8 +85,10 @@ class CommodityIndexedCashFlow : public CommodityCashFlow {
     QuantLib::Date date() const override;
     QuantLib::Real amount() const override;
 };
+} // namespace QuantExt
 
-%shared_ptr(TRSCashFlow)
+%shared_ptr(QuantExt::TRSCashFlow)
+namespace QuantExt {
 class TRSCashFlow : public CashFlow {
   public:
     TRSCashFlow(const Date& paymentDate,
@@ -97,5 +105,6 @@ class TRSCashFlow : public CashFlow {
     const Date& fixingStartDate() const;
     const Date& fixingEndDate() const;
 };
+} // namespace QuantExt
 
 #endif

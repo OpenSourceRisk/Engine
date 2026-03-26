@@ -22,27 +22,23 @@
 %include vectors.i
 %include ored_crossassetmodeldata.i
 
-%{
-using ore::data::IrLgmData;
-using ore::data::IrModelBuilder;
-using ore::data::LgmBuilder;
-using ore::data::HwBuilder;
-using ore::data::FxBsBuilder;
-using ore::data::CrossAssetModelBuilder;
-using QuantExt::IrModel;
-using QuantExt::HwModel;
-%}
-
-%shared_ptr(IrLgmData)
+%shared_ptr(ore::data::IrLgmData)
+namespace ore {
+namespace data {
 class IrLgmData : public LgmData {
 public:
     IrLgmData();
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 };
 
-%shared_ptr(IrModelBuilder)
-%nodefaultctor IrModelBuilder;
+} // namespace data
+} // namespace ore
+
+%shared_ptr(ore::data::IrModelBuilder)
+%nodefaultctor ore::data::IrModelBuilder;
+namespace ore {
+namespace data {
 class IrModelBuilder : public ModelBuilder {
 public:
     enum class FallbackType { NoFallback, FallbackRule1 };
@@ -59,7 +55,12 @@ public:
     void newCalcWithoutRecalibration() const override;
 };
 
-%shared_ptr(LgmBuilder)
+} // namespace data
+} // namespace ore
+
+%shared_ptr(ore::data::LgmBuilder)
+namespace ore {
+namespace data {
 class LgmBuilder : public IrModelBuilder {
 public:
     LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& market,
@@ -77,13 +78,18 @@ public:
                const bool dontCalibrate = false);
 };
 
-%shared_ptr(HwBuilder)
+} // namespace data
+} // namespace ore
+
+%shared_ptr(ore::data::HwBuilder)
+namespace ore {
+namespace data {
 class HwBuilder : public IrModelBuilder {
 public:
     HwBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& market,
               const QuantLib::ext::shared_ptr<HwModelData>& data,
-              const IrModel::Measure measure = IrModel::Measure::BA,
-              const HwModel::Discretization discretization = HwModel::Discretization::Euler,
+              const QuantExt::IrModel::Measure measure = QuantExt::IrModel::Measure::BA,
+              const QuantExt::HwModel::Discretization discretization = QuantExt::HwModel::Discretization::Euler,
               const bool evaluateBankAccount = true,
               const std::string& configuration = Market::defaultConfiguration,
               Real bootstrapTolerance = 0.001,
@@ -98,7 +104,12 @@ public:
               const bool dontCalibrate = false);
 };
 
-%shared_ptr(FxBsBuilder)
+} // namespace data
+} // namespace ore
+
+%shared_ptr(ore::data::FxBsBuilder)
+namespace ore {
+namespace data {
 class FxBsBuilder : public ModelBuilder {
 public:
     FxBsBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& market,
@@ -115,11 +126,17 @@ public:
     void setCalibrationDone() const;
 };
 
-%shared_ptr(CrossAssetModelBuilder)
+} // namespace data
+} // namespace ore
+
+%shared_ptr(ore::data::CrossAssetModelBuilder)
+%nodefaultctor ore::data::CrossAssetModelBuilder;
+namespace ore {
+namespace data {
 class CrossAssetModelBuilder : public ModelBuilder {
 public:
     Handle<QuantExt::CrossAssetModel> model() const;
-    const QuantLib::ext::shared_ptr<CrossAssetModelData>& modelData() const;
+    const QuantLib::ext::shared_ptr<ore::data::CrossAssetModelData>& modelData() const;
     const std::vector<Real>& swaptionCalibrationErrors();
     const std::vector<Real>& fxOptionCalibrationErrors();
     const std::vector<Real>& eqOptionCalibrationErrors();
@@ -130,5 +147,8 @@ public:
     void recalibrate() const override;
     void newCalcWithoutRecalibration() const override;
 };
+
+} // namespace data
+} // namespace ore
 
 #endif

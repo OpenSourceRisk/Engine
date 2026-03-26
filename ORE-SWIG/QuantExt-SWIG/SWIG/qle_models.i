@@ -25,35 +25,14 @@
 %include stochasticprocess.i
 %include vectors.i
 
-%{
-using QuantExt::LinkableCalibratedModel;
-using QuantExt::ModelBuilder;
-using QuantExt::Parametrization;
-using QuantExt::IrModel;
-using QuantExt::FxBsParametrization;
-using QuantExt::EqBsParametrization;
-using QuantExt::IrLgm1fParametrization;
-using QuantExt::IrHwParametrization;
-using QuantExt::InfDkParametrization;
-using QuantExt::LinearGaussMarkovModel;
-using QuantExt::HwModel;
-using QuantExt::CrossAssetModel;
-using QuantExt::HullWhiteBucketing;
-using QuantExt::Bucketing;
-using QuantExt::sanitiseTransitionMatrix;
-using QuantExt::checkTransitionMatrix;
-using QuantExt::checkGeneratorMatrix;
-using QuantExt::generator;
-using QuantExt::CrossAssetStateProcess;
-using QuantLib::Matrix;
-using QuantLib::Array;
-%}
-
-%shared_ptr(CrossAssetStateProcess)
+%shared_ptr(QuantExt::CrossAssetStateProcess)
+namespace QuantExt {
 class CrossAssetStateProcess;
+}
 
-%shared_ptr(ModelBuilder)
-%nodefaultctor ModelBuilder;
+%shared_ptr(QuantExt::ModelBuilder)
+%nodefaultctor QuantExt::ModelBuilder;
+namespace QuantExt {
 class ModelBuilder : public LazyObject {
 public:
     virtual void recalibrate() const;
@@ -61,8 +40,10 @@ public:
     virtual bool requiresRecalibration() const = 0;
     virtual void newCalcWithoutRecalibration() const;
 };
+}
 
-%shared_ptr(LinkableCalibratedModel)
+%shared_ptr(QuantExt::LinkableCalibratedModel)
+namespace QuantExt {
 class LinkableCalibratedModel {
 public:
     EndCriteria::Type endCriteria() const;
@@ -71,9 +52,11 @@ public:
     virtual void setParams(const Array& params);
     virtual void setParam(Size idx, const Real value);
 };
+}
 
-%shared_ptr(Parametrization)
-%nodefaultctor Parametrization;
+%shared_ptr(QuantExt::Parametrization)
+%nodefaultctor QuantExt::Parametrization;
+namespace QuantExt {
 class Parametrization {
 public:
     virtual const Currency& currency() const;
@@ -85,14 +68,16 @@ public:
     virtual Real direct(const Size, const Real x) const;
     virtual Real inverse(const Size, const Real y) const;
 };
+}
 
-%shared_ptr(IrModel)
-%nodefaultctor IrModel;
-class IrModel : public LinkableCalibratedModel {
+%shared_ptr(QuantExt::IrModel)
+%nodefaultctor QuantExt::IrModel;
+namespace QuantExt {
+class IrModel : public QuantExt::LinkableCalibratedModel {
 public:
     enum class Measure { LGM, BA };
-    virtual Measure measure() const = 0;
-    virtual const QuantLib::ext::shared_ptr<Parametrization> parametrizationBase() const = 0;
+    virtual QuantExt::IrModel::Measure measure() const = 0;
+    virtual const QuantLib::ext::shared_ptr<QuantExt::Parametrization> parametrizationBase() const = 0;
     virtual Handle<YieldTermStructure> termStructure() const = 0;
     virtual Size n() const = 0;
     virtual Size m() const = 0;
@@ -100,20 +85,24 @@ public:
     virtual Size m_aux() const = 0;
     virtual QuantLib::ext::shared_ptr<StochasticProcess> stateProcess() const = 0;
 };
+}
 
-%shared_ptr(FxBsParametrization)
-%nodefaultctor FxBsParametrization;
-class FxBsParametrization : public Parametrization {
+%shared_ptr(QuantExt::FxBsParametrization)
+%nodefaultctor QuantExt::FxBsParametrization;
+namespace QuantExt {
+class FxBsParametrization : public QuantExt::Parametrization {
 public:
     virtual Real variance(const Time t) const = 0;
     virtual Real sigma(const Time t) const;
     virtual Real stdDeviation(const Time t) const;
     const Handle<Quote> fxSpotToday() const;
 };
+}
 
-%shared_ptr(EqBsParametrization)
-%nodefaultctor EqBsParametrization;
-class EqBsParametrization : public Parametrization {
+%shared_ptr(QuantExt::EqBsParametrization)
+%nodefaultctor QuantExt::EqBsParametrization;
+namespace QuantExt {
+class EqBsParametrization : public QuantExt::Parametrization {
 public:
     virtual Real variance(const Time t) const = 0;
     virtual Real sigma(const Time t) const;
@@ -123,10 +112,12 @@ public:
     const Handle<YieldTermStructure> equityIrCurveToday() const;
     const Handle<YieldTermStructure> equityDivYieldCurveToday() const;
 };
+}
 
-%shared_ptr(IrLgm1fParametrization)
-%nodefaultctor IrLgm1fParametrization;
-class IrLgm1fParametrization : public Parametrization {
+%shared_ptr(QuantExt::IrLgm1fParametrization)
+%nodefaultctor QuantExt::IrLgm1fParametrization;
+namespace QuantExt {
+class IrLgm1fParametrization : public QuantExt::Parametrization {
 public:
     virtual Real zeta(const Time t) const = 0;
     virtual Real H(const Time t) const = 0;
@@ -139,10 +130,12 @@ public:
     Real& shift();
     Real& scaling();
 };
+}
 
-%shared_ptr(IrHwParametrization)
-%nodefaultctor IrHwParametrization;
-class IrHwParametrization : public Parametrization {
+%shared_ptr(QuantExt::IrHwParametrization)
+%nodefaultctor QuantExt::IrHwParametrization;
+namespace QuantExt {
+class IrHwParametrization : public QuantExt::Parametrization {
 public:
     virtual Matrix sigma_x(const Time t) const = 0;
     virtual Array kappa(const Time t) const = 0;
@@ -152,10 +145,12 @@ public:
     Size n() const;
     Size m() const;
 };
+}
 
-%shared_ptr(InfDkParametrization)
-%nodefaultctor InfDkParametrization;
-class InfDkParametrization : public Parametrization {
+%shared_ptr(QuantExt::InfDkParametrization)
+%nodefaultctor QuantExt::InfDkParametrization;
+namespace QuantExt {
+class InfDkParametrization : public QuantExt::Parametrization {
 public:
     virtual Real zeta(const Time t) const = 0;
     virtual Real H(const Time t) const = 0;
@@ -165,13 +160,15 @@ public:
     virtual Real Hprime2(const Time t) const;
     virtual Real hullWhiteSigma(const Time t) const;
 };
+}
 
-%shared_ptr(LinearGaussMarkovModel)
-class LinearGaussMarkovModel : public IrModel {
+%shared_ptr(QuantExt::LinearGaussMarkovModel)
+namespace QuantExt {
+class LinearGaussMarkovModel : public QuantExt::IrModel {
 public:
     enum class Discretization { Euler, Exact };
     QuantLib::ext::shared_ptr<StochasticProcess> stateProcess() const override;
-    const QuantLib::ext::shared_ptr<IrLgm1fParametrization> parametrization() const;
+    const QuantLib::ext::shared_ptr<QuantExt::IrLgm1fParametrization> parametrization() const;
     Real numeraire(const Time t, const Real x,
                    const Handle<YieldTermStructure> discountCurve = Handle<YieldTermStructure>()) const;
     Real bankAccountNumeraire(const Time t, const Real x, const Real y,
@@ -179,37 +176,43 @@ public:
     Real discountBond(const Time t, const Time T, const Real x,
                       Handle<YieldTermStructure> discountCurve = Handle<YieldTermStructure>()) const;
 };
+}
 
-%shared_ptr(HwModel)
-class HwModel : public IrModel {
+%shared_ptr(QuantExt::HwModel)
+namespace QuantExt {
+class HwModel : public QuantExt::IrModel {
 public:
     enum class Discretization { Euler, Exact };
     QuantLib::ext::shared_ptr<StochasticProcess> stateProcess() const override;
-    const QuantLib::ext::shared_ptr<IrHwParametrization> parametrization() const;
+    const QuantLib::ext::shared_ptr<QuantExt::IrHwParametrization> parametrization() const;
 };
+}
 
-%shared_ptr(CrossAssetModel)
-%nodefaultctor CrossAssetModel;
-class CrossAssetModel : public LinkableCalibratedModel {
+%shared_ptr(QuantExt::CrossAssetModel)
+%nodefaultctor QuantExt::CrossAssetModel;
+namespace QuantExt {
+class CrossAssetModel : public QuantExt::LinkableCalibratedModel {
 public:
     enum class AssetType : Size { IR = 0, FX = 1, INF = 2, CR = 3, EQ = 4, COM = 5, CrState = 6 };
     enum class ModelType { LGM1F, HW, BS, LV, DK, CIRPP, JY, GENERIC };
     enum class Discretization { Euler, Exact, BestMarginalDiscretization };
 
-    QuantLib::ext::shared_ptr<CrossAssetStateProcess> stateProcess() const;
+    QuantLib::ext::shared_ptr<QuantExt::CrossAssetStateProcess> stateProcess() const;
     Size dimension() const;
     Size brownians() const;
     Size auxBrownians() const;
     Size totalNumberOfParameters() const;
-    Size components(const AssetType t) const;
-    ModelType modelType(const AssetType t, const Size i) const;
-    IrModel::Measure measure() const;
-    const std::vector<QuantLib::ext::shared_ptr<Parametrization>>& parametrizations() const;
+    Size components(const QuantExt::CrossAssetModel::AssetType t) const;
+    QuantExt::CrossAssetModel::ModelType modelType(const QuantExt::CrossAssetModel::AssetType t, const Size i) const;
+    QuantExt::IrModel::Measure measure() const;
+    const std::vector<QuantLib::ext::shared_ptr<QuantExt::Parametrization>>& parametrizations() const;
     const Matrix& correlation() const;
-    Discretization discretization() const;
+    QuantExt::CrossAssetModel::Discretization discretization() const;
 };
+}
 
-%shared_ptr(Bucketing)
+%shared_ptr(QuantExt::Bucketing)
+namespace QuantExt {
 class Bucketing {
 public:
     Bucketing(const Real lowerBound, const Real upperBound, const Size n);
@@ -217,9 +220,11 @@ public:
     Size index(const Real x) const;
     Size buckets() const;
 };
+}
 
-%shared_ptr(HullWhiteBucketing)
-class HullWhiteBucketing : public Bucketing {
+%shared_ptr(QuantExt::HullWhiteBucketing)
+namespace QuantExt {
+class HullWhiteBucketing : public QuantExt::Bucketing {
 public:
     HullWhiteBucketing(const Real lowerBound, const Real upperBound, const Size n);
     const Array& probability() const;
@@ -230,5 +235,6 @@ void sanitiseTransitionMatrix(Matrix& m);
 void checkTransitionMatrix(const Matrix& t);
 void checkGeneratorMatrix(const Matrix& g);
 Matrix generator(const Matrix& t, const Real horizon = 1.0);
+}
 
 #endif

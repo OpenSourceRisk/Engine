@@ -26,38 +26,25 @@
 
 %include ored_portfolio.i
 
-%{
-using ore::analytics::CrifRecord;
-using ore::analytics::Crif;
-using ore::analytics::CrifLoader;
-using ore::analytics::CsvFileCrifLoader;
-using ore::analytics::CsvBufferCrifLoader;
-using ore::analytics::SimmConfiguration;
-using ore::analytics::SimmConfigurationBase;
-using ore::analytics::SimmConfiguration_ISDA_V2_6;
-using ore::analytics::SimmResults;
-using ore::analytics::SimmBucketMapper;
-using ore::analytics::SimmBucketMapperBase;
-using ore::analytics::SimmCalculator;
-%}
+%shared_ptr(ore::analytics::Crif)
+%shared_ptr(ore::analytics::CrifLoader)
+%shared_ptr(ore::analytics::CsvFileCrifLoader)
+%shared_ptr(ore::analytics::CsvBufferCrifLoader)
+%shared_ptr(ore::analytics::SimmConfiguration)
+%shared_ptr(ore::analytics::SimmConfigurationBase)
+%shared_ptr(ore::analytics::SimmConfiguration_ISDA_V2_6)
+%shared_ptr(ore::analytics::SimmBucketMapper)
+%shared_ptr(ore::analytics::SimmBucketMapperBase)
+%shared_ptr(ore::analytics::SimmCalculator)
 
-%shared_ptr(Crif)
-%shared_ptr(CrifLoader)
-%shared_ptr(CsvFileCrifLoader)
-%shared_ptr(CsvBufferCrifLoader)
-%shared_ptr(SimmConfiguration)
-%shared_ptr(SimmConfigurationBase)
-%shared_ptr(SimmConfiguration_ISDA_V2_6)
-%shared_ptr(SimmBucketMapper)
-%shared_ptr(SimmBucketMapperBase)
-%shared_ptr(SimmCalculator)
+%nodefaultctor ore::analytics::SimmConfiguration;
+%nodefaultctor ore::analytics::SimmBucketMapper;
+%nodefaultctor ore::analytics::SimmConfigurationBase;
 
-%nodefaultctor SimmConfiguration;
-%nodefaultctor SimmBucketMapper;
-%nodefaultctor SimmConfigurationBase;
+%template(RegulationSet) std::set<ore::analytics::CrifRecord::Regulation>;
 
-%template(RegulationSet) std::set<CrifRecord::Regulation>;
-
+namespace ore {
+namespace analytics {
 class CrifRecord {
   public:
     enum class RecordType { SIMM, FRTB, SACCR, Generic };
@@ -233,15 +220,15 @@ class SimmConfiguration_ISDA_V2_6 : public SimmConfigurationBase {
                                 const std::string version = "2.6");
   %extend {
     SimmConfiguration_ISDA_V2_6() {
-      auto mapper = QuantLib::ext::make_shared<SimmBucketMapperBase>();
-      return new SimmConfiguration_ISDA_V2_6(mapper);
+      auto mapper = QuantLib::ext::make_shared<ore::analytics::SimmBucketMapperBase>();
+      return new ore::analytics::SimmConfiguration_ISDA_V2_6(mapper);
     }
-    SimmConfiguration_ISDA_V2_6(const QuantLib::ext::shared_ptr<SimmBucketMapperBase>& simmBucketMapper,
+    SimmConfiguration_ISDA_V2_6(const QuantLib::ext::shared_ptr<ore::analytics::SimmBucketMapperBase>& simmBucketMapper,
                   const QuantLib::Size& mporDays = 10,
                   const std::string& name = "SIMM ISDA 2.6 (16 August 2023)",
                   const std::string version = "2.6") {
-      return new SimmConfiguration_ISDA_V2_6(
-        QuantLib::ext::static_pointer_cast<SimmBucketMapper>(simmBucketMapper), mporDays, name, version);
+      return new ore::analytics::SimmConfiguration_ISDA_V2_6(
+        QuantLib::ext::static_pointer_cast<ore::analytics::SimmBucketMapper>(simmBucketMapper), mporDays, name, version);
     }
   }
 };
@@ -297,23 +284,27 @@ class SimmCalculator {
   public:
     %extend {
         SimmCalculator() {
-            auto mapper = QuantLib::ext::make_shared<SimmBucketMapperBase>();
-            auto config = QuantLib::ext::make_shared<SimmConfiguration_ISDA_V2_6>(mapper);
+      auto mapper = QuantLib::ext::make_shared<ore::analytics::SimmBucketMapperBase>();
+      auto config = QuantLib::ext::make_shared<ore::analytics::SimmConfiguration_ISDA_V2_6>(mapper);
             auto crif = QuantLib::ext::make_shared<ore::analytics::Crif>();
-            return new SimmCalculator(crif, config);
+      return new ore::analytics::SimmCalculator(crif, config);
         }
         SimmCalculator(const QuantLib::ext::shared_ptr<ore::analytics::Crif>& crif,
-                       const QuantLib::ext::shared_ptr<SimmConfiguration>& simmConfiguration) {
-            return new SimmCalculator(crif, simmConfiguration);
+             const QuantLib::ext::shared_ptr<ore::analytics::SimmConfiguration>& simmConfiguration) {
+      return new ore::analytics::SimmCalculator(crif, simmConfiguration);
         }
         SimmCalculator(const QuantLib::ext::shared_ptr<ore::analytics::Crif>& crif,
-                       const QuantLib::ext::shared_ptr<SimmConfiguration_ISDA_V2_6>& simmConfiguration) {
-            return new SimmCalculator(crif, QuantLib::ext::static_pointer_cast<SimmConfiguration>(simmConfiguration));
+             const QuantLib::ext::shared_ptr<ore::analytics::SimmConfiguration_ISDA_V2_6>& simmConfiguration) {
+      return new ore::analytics::SimmCalculator(
+        crif, QuantLib::ext::static_pointer_cast<ore::analytics::SimmConfiguration>(simmConfiguration));
         }
     }
 
     const std::string& calculationCurrency(const SimmConfiguration::SimmSide& side) const;
     const std::string& resultCurrency() const;
 };
+
+  } // namespace analytics
+  } // namespace ore
 
 #endif

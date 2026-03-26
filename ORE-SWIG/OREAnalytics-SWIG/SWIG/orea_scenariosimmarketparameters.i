@@ -23,14 +23,9 @@
 %include types.i
 %include ored_xmlutils.i
 
-%{
-using ore::analytics::ScenarioSimMarketParameters;
-using ore::analytics::RiskFactorKey;
-
-using ore::data::XMLSerializable;
-%}
-
-%shared_ptr(ScenarioSimMarketParameters)
+%shared_ptr(ore::analytics::ScenarioSimMarketParameters)
+namespace ore {
+namespace analytics {
 class ScenarioSimMarketParameters {
 public:
     ScenarioSimMarketParameters();
@@ -41,11 +36,11 @@ public:
 
     const std::string& baseCcy() const;
     const std::vector<std::string>& ccys() const;
-    std::vector<std::string> paramsLookup(RiskFactorKey::KeyType k) const;
-    bool hasParamsName(RiskFactorKey::KeyType kt, std::string name) const;
-    void addParamsName(RiskFactorKey::KeyType kt, std::vector<std::string> names);
-    bool paramsSimulate(RiskFactorKey::KeyType kt) const;
-    void setParamsSimulate(RiskFactorKey::KeyType kt, bool simulate);
+    std::vector<std::string> paramsLookup(ore::analytics::RiskFactorKey::KeyType k) const;
+    bool hasParamsName(ore::analytics::RiskFactorKey::KeyType kt, std::string name) const;
+    void addParamsName(ore::analytics::RiskFactorKey::KeyType kt, std::vector<std::string> names);
+    bool paramsSimulate(ore::analytics::RiskFactorKey::KeyType kt) const;
+    void setParamsSimulate(ore::analytics::RiskFactorKey::KeyType kt, bool simulate);
 
     std::vector<std::string> discountCurveNames() const;
 
@@ -191,7 +186,7 @@ public:
 
     QuantLib::Size numberOfCreditStates() const;
 
-    const std::map<RiskFactorKey::KeyType, std::pair<bool, std::set<std::string>>>& parameters() const;
+    const std::map<ore::analytics::RiskFactorKey::KeyType, std::pair<bool, std::set<std::string>>>& parameters() const;
 
     std::vector<std::string>& ccys();
     void setDiscountCurveNames(std::vector<std::string> names);
@@ -350,5 +345,8 @@ public:
       }
     }
 };
+
+} // namespace analytics
+} // namespace ore
 
 #endif

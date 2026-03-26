@@ -20,22 +20,35 @@
 #define ored_portfolio_options_i
 
 %{
+using ore::data::TradeMonetary;
 using ore::data::PremiumData;
-using ore::data::OptionData;
 using ore::data::OptionExerciseData;
 using ore::data::OptionPaymentData;
+using ore::data::OptionData;
 using ore::data::TradeStrike;
 using ore::data::Underlying;
 using ore::data::EquityUnderlying;
-using ore::data::TradeMonetary;
-using ore::data::EquitySwap;
-using ore::data::InflationSwap;
 using ore::data::TradeBarrier;
 using ore::data::BarrierData;
-using ore::data::XMLSerializable;
+using ore::data::EquitySwap;
+using ore::data::InflationSwap;
 %}
 
-%shared_ptr(TradeMonetary)
+%shared_ptr(ore::data::TradeMonetary)
+%shared_ptr(ore::data::PremiumData)
+%shared_ptr(ore::data::OptionExerciseData)
+%shared_ptr(ore::data::OptionPaymentData)
+%shared_ptr(ore::data::OptionData)
+%shared_ptr(ore::data::TradeStrike)
+%shared_ptr(ore::data::Underlying)
+%shared_ptr(ore::data::EquityUnderlying)
+%shared_ptr(ore::data::TradeBarrier)
+%shared_ptr(ore::data::BarrierData)
+%shared_ptr(ore::data::EquitySwap)
+%shared_ptr(ore::data::InflationSwap)
+
+namespace ore {
+namespace data {
 class TradeMonetary {
 public:
     TradeMonetary();
@@ -43,7 +56,6 @@ public:
     TradeMonetary(const std::string& valueString);
 };
 
-%shared_ptr(PremiumData)
 class PremiumData : public XMLSerializable {
 public:
     PremiumData();
@@ -52,7 +64,6 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(OptionExerciseData)
 class OptionExerciseData : public XMLSerializable {
 public:
     OptionExerciseData();
@@ -63,7 +74,6 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(OptionPaymentData)
 class OptionPaymentData : public XMLSerializable {
 public:
     enum class RelativeTo { Expiry, Exercise };
@@ -83,7 +93,6 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(OptionData)
 class OptionData : public XMLSerializable {
 public:
     OptionData(std::string longShort, std::string callPut, std::string style, bool payoffAtExpiry, std::vector<std::string> exerciseDates,
@@ -104,7 +113,6 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(TradeStrike)
 class TradeStrike {
 public:
     enum class Type {
@@ -115,16 +123,12 @@ public:
     TradeStrike(const QuantLib::Real& value, const std::string& currency);
 };
 
-%shared_ptr(Underlying)
 class Underlying : public XMLSerializable {
 public:
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
-%template(UnderlyingVector) std::vector<ext::shared_ptr<Underlying>>;
-SWIG_SHARED_PTR_VECTOR_TYPEMAP(Underlying, UnderlyingVector)
 
-%shared_ptr(EquityUnderlying)
 class EquityUnderlying : public Underlying {
 public:
     explicit EquityUnderlying(const std::string& equityName);
@@ -132,32 +136,17 @@ public:
                      const std::string& exchange, QuantLib::Real weight);
 };
 
-%shared_ptr(TradeBarrier)
 class TradeBarrier : public TradeMonetary {
 public:
     TradeBarrier(QuantLib::Real value, std::string currency);
 };
-%template(TradeBarrierVector) std::vector<ext::shared_ptr<TradeBarrier>>;
 
-%shared_ptr(BarrierData)
 class BarrierData : public XMLSerializable {
 public:
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
-%template(BarrierDataVector) std::vector<ext::shared_ptr<BarrierData>>;
-SWIG_SHARED_PTR_VECTOR_TYPEMAP(BarrierData, BarrierDataVector)
-%extend BarrierData {
-    BarrierData(const std::string& barrierType, const std::vector<double>& levels, const double rebate,
-                const std::vector<ext::shared_ptr<TradeBarrier>>& tradeBarriers, const std::string& style = std::string(),
-                const std::optional<std::string>& strictComparison = std::nullopt,
-                const std::optional<bool>& overrideTriggered = std::nullopt) {
-        return new BarrierData(barrierType, levels, rebate, VECTOR_SWIG_TO_ORE(tradeBarriers),
-            style, strictComparison, overrideTriggered);
-    }
-}
 
-%shared_ptr(EquitySwap)
 class EquitySwap : public ORESwap {
 public:
     EquitySwap();
@@ -166,13 +155,7 @@ public:
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 };
-%extend EquitySwap {
-    EquitySwap(const Envelope& env, const vector<ext::shared_ptr<LegData>>& legData) {
-        return new EquitySwap(env, VECTOR_SWIG_TO_ORE(legData));
-    }
-}
 
-%shared_ptr(InflationSwap)
 class InflationSwap : public ORESwap {
 public:
     InflationSwap();
@@ -181,10 +164,38 @@ public:
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 };
-%extend InflationSwap {
-    InflationSwap(const Envelope& env, const vector<ext::shared_ptr<LegData>>& legData) {
-        return new InflationSwap(env, VECTOR_SWIG_TO_ORE(legData));
+
+} // namespace data
+} // namespace ore
+
+%template(UnderlyingVector) std::vector<QuantLib::ext::shared_ptr<ore::data::Underlying>>;
+SWIG_SHARED_PTR_VECTOR_TYPEMAP(ore::data::Underlying, UnderlyingVector)
+
+%template(TradeBarrierVector) std::vector<QuantLib::ext::shared_ptr<ore::data::TradeBarrier>>;
+
+%template(BarrierDataVector) std::vector<QuantLib::ext::shared_ptr<ore::data::BarrierData>>;
+SWIG_SHARED_PTR_VECTOR_TYPEMAP(ore::data::BarrierData, BarrierDataVector)
+
+%extend ore::data::BarrierData {
+    BarrierData(const std::string& barrierType, const std::vector<double>& levels, const double rebate,
+                const std::vector<QuantLib::ext::shared_ptr<ore::data::TradeBarrier>>& tradeBarriers,
+                const std::string& style = std::string(),
+                const std::optional<std::string>& strictComparison = std::nullopt,
+                const std::optional<bool>& overrideTriggered = std::nullopt) {
+        return new ore::data::BarrierData(barrierType, levels, rebate, VECTOR_SWIG_TO_ORE(tradeBarriers),
+            style, strictComparison, overrideTriggered);
     }
 }
 
+%extend ore::data::EquitySwap {
+    EquitySwap(const Envelope& env, const std::vector<QuantLib::ext::shared_ptr<LegData>>& legData) {
+        return new ore::data::EquitySwap(env, VECTOR_SWIG_TO_ORE(legData));
+    }
+}
+
+%extend ore::data::InflationSwap {
+    InflationSwap(const Envelope& env, const std::vector<QuantLib::ext::shared_ptr<LegData>>& legData) {
+        return new ore::data::InflationSwap(env, VECTOR_SWIG_TO_ORE(legData));
+    }
+}
 #endif

@@ -49,7 +49,53 @@ using ore::data::CommodityFloatingLegData;
 using ore::data::XMLSerializable;
 %}
 
-%shared_ptr(ScheduleRules)
+%shared_ptr(ore::data::ScheduleRules)
+%shared_ptr(ore::data::ScheduleDates)
+%shared_ptr(ore::data::ScheduleDerived)
+%shared_ptr(ore::data::ScheduleData)
+%shared_ptr(ore::data::LegAdditionalData)
+%shared_ptr(ore::data::CashflowData)
+%shared_ptr(ore::data::FixedLegData)
+%shared_ptr(ore::data::ZeroCouponFixedLegData)
+%shared_ptr(ore::data::FloatingLegData)
+%shared_ptr(ore::data::AmortizationData)
+%shared_ptr(ore::data::Indexing)
+%shared_ptr(ore::data::LegData)
+%shared_ptr(ore::data::CMSLegData)
+%shared_ptr(ore::data::DigitalCMSLegData)
+%shared_ptr(ore::data::CPILegData)
+%shared_ptr(ore::data::YoYLegData)
+%shared_ptr(ore::data::CMSSpreadLegData)
+%shared_ptr(ore::data::DigitalCMSSpreadLegData)
+%shared_ptr(ore::data::EquityLegData)
+%shared_ptr(ore::data::LegDataFactory)
+%shared_ptr(ore::data::CommodityFixedLegData)
+%shared_ptr(ore::data::CommodityFloatingLegData)
+%shared_ptr(ore::data::CMBLegData)
+%shared_ptr(ore::data::FixedLegBuilder)
+%shared_ptr(ore::data::ZeroCouponFixedLegBuilder)
+%shared_ptr(ore::data::FloatingLegBuilder)
+%shared_ptr(ore::data::CashflowLegBuilder)
+%shared_ptr(ore::data::CPILegBuilder)
+%shared_ptr(ore::data::YYLegBuilder)
+%shared_ptr(ore::data::CMSLegBuilder)
+%shared_ptr(ore::data::CMBLegBuilder)
+%shared_ptr(ore::data::DigitalCMSLegBuilder)
+%shared_ptr(ore::data::CMSSpreadLegBuilder)
+%shared_ptr(ore::data::DigitalCMSSpreadLegBuilder)
+%shared_ptr(ore::data::EquityLegBuilder)
+%shared_ptr(ore::data::CommodityFixedLegBuilder)
+%shared_ptr(ore::data::CommodityFloatingLegBuilder)
+%shared_ptr(ore::data::DurationAdjustedCmsLegBuilder)
+%shared_ptr(ore::data::DurationAdjustedCmsLegData)
+%shared_ptr(ore::data::FormulaBasedLegBuilder)
+%shared_ptr(ore::data::FormulaBasedLegData)
+%shared_ptr(ore::data::EquityMarginLegBuilder)
+%shared_ptr(ore::data::EquityMarginLegData)
+
+namespace ore {
+namespace data {
+
 class ScheduleRules : public XMLSerializable {
 public:
   ScheduleRules();
@@ -62,7 +108,6 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(ScheduleDates)
 class ScheduleDates : public XMLSerializable {
 public:
   ScheduleDates();
@@ -73,7 +118,6 @@ public:
   virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(ScheduleDerived)
 class ScheduleDerived : public XMLSerializable {
 public:
   ScheduleDerived();
@@ -84,7 +128,6 @@ public:
   virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(ScheduleData)
 class ScheduleData : public XMLSerializable {
 public:
   ScheduleData();
@@ -95,13 +138,11 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(LegAdditionalData)
 class LegAdditionalData : public XMLSerializable {
 };
 
 // ore/OREData/ored/portfolio/legdata.hpp - CashflowData
 
-%shared_ptr(CashflowData)
 class CashflowData : public LegAdditionalData {
 public:
     CashflowData();
@@ -112,7 +153,6 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(FixedLegData)
 class FixedLegData : public LegAdditionalData {
   public:
     FixedLegData();
@@ -121,7 +161,6 @@ class FixedLegData : public LegAdditionalData {
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(ZeroCouponFixedLegData)
 class ZeroCouponFixedLegData : public LegAdditionalData {
 public:
     ZeroCouponFixedLegData();
@@ -137,7 +176,6 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(FloatingLegData)
 class FloatingLegData : public LegAdditionalData {
 public:
   FloatingLegData();
@@ -161,7 +199,6 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(AmortizationData)
 class AmortizationData : public XMLSerializable {
 public:
   AmortizationData();
@@ -169,9 +206,7 @@ public:
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
-%template(AmortizationDataVector) std::vector<ext::shared_ptr<AmortizationData>>;
 
-%shared_ptr(Indexing)
 class Indexing : public XMLSerializable {
 public:
     Indexing();
@@ -191,9 +226,7 @@ public:
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 };
-%template(IndexingVector) std::vector<Indexing>;
 
-%shared_ptr(LegData)
 class LegData : public XMLSerializable {
   public:
     virtual void fromXML(XMLNode* node) override;
@@ -223,10 +256,7 @@ class LegData : public XMLSerializable {
                     indexing, indexingFromAssetLeg, lastPeriodDayCounter);
     }
 }
-  %template(LegDataVector) std::vector<ext::shared_ptr<LegData>>;
-SWIG_SHARED_PTR_VECTOR_TYPEMAP(LegData, LegDataVector)
 
-%shared_ptr(CMSLegData)
 class CMSLegData : public LegAdditionalData {
   public:
     CMSLegData();
@@ -239,7 +269,6 @@ class CMSLegData : public LegAdditionalData {
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(DigitalCMSLegData)
 class DigitalCMSLegData : public LegAdditionalData {
 public:
     DigitalCMSLegData();
@@ -262,7 +291,6 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(CPILegData)
 class CPILegData : public LegAdditionalData {
   public:
     CPILegData();
@@ -277,7 +305,6 @@ class CPILegData : public LegAdditionalData {
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(YoYLegData)
 class YoYLegData : public LegAdditionalData {
   public:
     YoYLegData();
@@ -296,7 +323,6 @@ class YoYLegData : public LegAdditionalData {
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(CMSSpreadLegData)
 class CMSSpreadLegData : public LegAdditionalData {
 public:
   CMSSpreadLegData();
@@ -311,7 +337,6 @@ public:
   virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(DigitalCMSSpreadLegData)
 class DigitalCMSSpreadLegData : public LegAdditionalData {
 public:
   DigitalCMSSpreadLegData();
@@ -327,7 +352,6 @@ public:
   virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(EquityLegData)
 class EquityLegData : public LegAdditionalData {
 public:
   EquityLegData();
@@ -339,7 +363,6 @@ public:
   virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(LegDataFactory)
 class LegDataFactory {
 public:
   static LegDataFactory& instance();
@@ -355,7 +378,6 @@ enum class CommodityPayRelativeTo {
 
 enum class CommodityPriceType { Spot, FutureSettlement };
 
-%shared_ptr(CommodityFixedLegData)
 class CommodityFixedLegData : public LegAdditionalData {
   public:
     CommodityFixedLegData(const std::vector<QuantLib::Real>& quantities, const std::vector<std::string>& quantityDates,
@@ -365,7 +387,6 @@ class CommodityFixedLegData : public LegAdditionalData {
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(CommodityFloatingLegData)
 class CommodityFloatingLegData : public LegAdditionalData {
   public:
     CommodityFloatingLegData(
@@ -388,6 +409,14 @@ class CommodityFloatingLegData : public LegAdditionalData {
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
+
+    }
+    }
+
+%template(AmortizationDataVector) std::vector<ext::shared_ptr<ore::data::AmortizationData>>;
+%template(IndexingVector) std::vector<ore::data::Indexing>;
+%template(LegDataVector) std::vector<ext::shared_ptr<ore::data::LegData>>;
+SWIG_SHARED_PTR_VECTOR_TYPEMAP(ore::data::LegData, LegDataVector)
 
 // ore/OREData/ored/portfolio/legbuilders.hpp
 
@@ -416,7 +445,9 @@ using ore::data::EquityMarginLegData;
 
 %template(PositionTypeVector) std::vector<QuantLib::Position::Type>;
 
-%shared_ptr(CMBLegData)
+namespace ore {
+namespace data {
+
 class CMBLegData : public LegAdditionalData {
 public:
     CMBLegData();
@@ -434,102 +465,86 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(FixedLegBuilder)
 class FixedLegBuilder : public LegBuilder {
 public:
     FixedLegBuilder();
 };
 
-%shared_ptr(ZeroCouponFixedLegBuilder)
 class ZeroCouponFixedLegBuilder : public LegBuilder {
 public:
     ZeroCouponFixedLegBuilder();
 };
 
-%shared_ptr(FloatingLegBuilder)
 class FloatingLegBuilder : public LegBuilder {
 public:
     FloatingLegBuilder();
 };
 
-%shared_ptr(CashflowLegBuilder)
 class CashflowLegBuilder : public LegBuilder {
 public:
     CashflowLegBuilder();
 };
 
-%shared_ptr(CPILegBuilder)
 class CPILegBuilder : public LegBuilder {
 public:
     CPILegBuilder();
 };
 
-%shared_ptr(YYLegBuilder)
 class YYLegBuilder : public LegBuilder {
 public:
     YYLegBuilder();
 };
 
-%shared_ptr(CMSLegBuilder)
 class CMSLegBuilder : public LegBuilder {
 public:
     CMSLegBuilder();
 };
 
-%shared_ptr(CMBLegBuilder)
 class CMBLegBuilder : public LegBuilder {
 public:
     CMBLegBuilder();
 };
 
-%shared_ptr(DigitalCMSLegBuilder)
 class DigitalCMSLegBuilder : public LegBuilder {
 public:
     DigitalCMSLegBuilder();
 };
 
-%shared_ptr(CMSSpreadLegBuilder)
 class CMSSpreadLegBuilder : public LegBuilder {
 public:
     CMSSpreadLegBuilder();
 };
 
-%shared_ptr(DigitalCMSSpreadLegBuilder)
 class DigitalCMSSpreadLegBuilder : public LegBuilder {
 public:
     DigitalCMSSpreadLegBuilder();
 };
 
-%shared_ptr(EquityLegBuilder)
 class EquityLegBuilder : public LegBuilder {
 public:
     EquityLegBuilder();
 };
 
-%shared_ptr(CommodityFixedLegBuilder)
-class CommodityFixedLegBuilder : public ore::data::LegBuilder {
+        class CommodityFixedLegBuilder : public LegBuilder {
 public:
     CommodityFixedLegBuilder();
 };
 
-%shared_ptr(CommodityFloatingLegBuilder)
-class CommodityFloatingLegBuilder : public ore::data::LegBuilder {
+        class CommodityFloatingLegBuilder : public LegBuilder {
 public:
     CommodityFloatingLegBuilder();
 };
 
 // ore/OREData/ored/portfolio/durationadjustedcmslegbuilder.hpp
 
-%shared_ptr(DurationAdjustedCmsLegBuilder)
-class DurationAdjustedCmsLegBuilder : public ore::data::LegBuilder {
+        class DurationAdjustedCmsLegBuilder : public LegBuilder {
 public:
     DurationAdjustedCmsLegBuilder();
 };
 
 // ore/OREData/ored/portfolio/durationadjustedcmslegdata.hpp
 
-%shared_ptr(DurationAdjustedCmsLegData)
-class DurationAdjustedCmsLegData : public ore::data::LegAdditionalData {
+        class DurationAdjustedCmsLegData : public LegAdditionalData {
 public:
     DurationAdjustedCmsLegData();
     DurationAdjustedCmsLegData(const std::string& swapIndex, Size duration, Size fixingDays, bool isInArrears,
@@ -548,15 +563,13 @@ public:
 
 // ore/OREData/ored/portfolio/formulabasedlegbuilder.hpp
 
-%shared_ptr(FormulaBasedLegBuilder)
-class FormulaBasedLegBuilder : public ore::data::LegBuilder {
+class FormulaBasedLegBuilder : public LegBuilder {
 public:
     explicit FormulaBasedLegBuilder();
 };
 
 // ore/OREData/ored/portfolio/formulabasedlegdata.hpp
 
-%shared_ptr(FormulaBasedLegData)
 class FormulaBasedLegData : public LegAdditionalData {
 public:
     FormulaBasedLegData();
@@ -567,16 +580,14 @@ public:
 
 // ore/OREData/ored/portfolio/equityfxlegbuilder.hpp
 
-%shared_ptr(EquityMarginLegBuilder)
-class EquityMarginLegBuilder : public ore::data::LegBuilder {
+class EquityMarginLegBuilder : public LegBuilder {
 public:
     EquityMarginLegBuilder();
 };
 
 // ore/OREData/ored/portfolio/equityfxlegdata.hpp
 
-%shared_ptr(EquityMarginLegData)
-class EquityMarginLegData : public ore::data::LegAdditionalData {
+class EquityMarginLegData : public LegAdditionalData {
 public:
     EquityMarginLegData();
     EquityMarginLegData(QuantLib::ext::shared_ptr<ore::data::EquityLegData>& equityLegData, const vector<double>& rates,
@@ -585,5 +596,8 @@ public:
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
+
+}
+}
 
 #endif

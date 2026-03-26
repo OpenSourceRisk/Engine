@@ -22,42 +22,41 @@
 %include ored_marketdatum.i
 %include std_set.i
 
-%{
-using ore::data::Loader;
-using ore::data::Fixing;
-using ore::data::Wildcard;
-%}
+%shared_ptr(ore::data::Loader)
+%shared_ptr(ore::data::CSVLoader)
+%shared_ptr(ore::data::InMemoryLoader)
 
-%shared_ptr(Loader)
+namespace ore {
+namespace data {
 class Loader {
   private:
     Loader();
   public:
-    std::vector<ext::shared_ptr<MarketDatum>> loadQuotes(const QuantLib::Date&) const;
-    ext::shared_ptr<MarketDatum> get(const std::string& name, const QuantLib::Date&) const;
-    ext::shared_ptr<MarketDatum> get(const std::pair<std::string, bool>& name, const QuantLib::Date& d) const;
-    std::set<ext::shared_ptr<MarketDatum>> get(const std::set<std::string>& names, const QuantLib::Date& asof) const;
-    std::set<ext::shared_ptr<MarketDatum>> get(const Wildcard& wildcard, const QuantLib::Date& asof) const;
+    std::vector<ext::shared_ptr<ore::data::MarketDatum>> loadQuotes(const QuantLib::Date&) const;
+    ext::shared_ptr<ore::data::MarketDatum> get(const std::string& name, const QuantLib::Date&) const;
+    ext::shared_ptr<ore::data::MarketDatum> get(const std::pair<std::string, bool>& name, const QuantLib::Date& d) const;
+    std::set<ext::shared_ptr<ore::data::MarketDatum>> get(const std::set<std::string>& names, const QuantLib::Date& asof) const;
+    std::set<ext::shared_ptr<ore::data::MarketDatum>> get(const ore::data::Wildcard& wildcard, const QuantLib::Date& asof) const;
     bool has(const std::string& name, const QuantLib::Date& d) const;
     bool hasQuotes(const QuantLib::Date& d) const;
-    std::set<Fixing> loadFixings() const;
+    std::set<ore::data::Fixing> loadFixings() const;
 };
+} // namespace data
+} // namespace ore
+
 %template(StringBoolPair) std::pair<std::string, bool>;
-%template(MarketDatumVector) std::vector<ext::shared_ptr<MarketDatum>>;
+%template(MarketDatumVector) std::vector<ext::shared_ptr<ore::data::MarketDatum>>;
 
 // Fixing class has no default ctor, excluding some features of std::vector
-%ignore std::vector<Fixing>::pop;
-%ignore std::vector<Fixing>::resize;
-%ignore std::vector<Fixing>::vector(size_type);
-%template(FixingVector) std::vector<Fixing>;
-%template(FixingSet) std::set<Fixing>;
+%ignore std::vector<ore::data::Fixing>::pop;
+%ignore std::vector<ore::data::Fixing>::resize;
+%ignore std::vector<ore::data::Fixing>::vector(size_type);
+%template(FixingVector) std::vector<ore::data::Fixing>;
+%template(FixingSet) std::set<ore::data::Fixing>;
 
-%{
-using ore::data::CSVLoader;
-%}
-
-%shared_ptr(CSVLoader)
-class CSVLoader : public Loader {
+namespace ore {
+namespace data {
+class CSVLoader : public ore::data::Loader {
   public:
     CSVLoader(const std::string& marketFilename, const std::string& fixingFilename,
               bool implyTodaysFixings = false);
@@ -65,12 +64,7 @@ class CSVLoader : public Loader {
               bool implyTodaysFixings = false);
 };
 
-%{
-using ore::data::InMemoryLoader;
-%}
-
-%shared_ptr(InMemoryLoader)
-class InMemoryLoader : public Loader {
+class InMemoryLoader : public ore::data::Loader {
   public:
     InMemoryLoader();
     void add(QuantLib::Date date, const std::string& name, QuantLib::Real value);
@@ -83,5 +77,8 @@ struct Fixing {
     QuantLib::Real fixing;
     Fixing(const QuantLib::Date& d, const std::string& s, const QuantLib::Real f);
 };
+
+} // namespace data
+} // namespace ore
 
 #endif

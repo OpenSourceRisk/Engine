@@ -60,7 +60,21 @@ using ore::data::ParametricSmileConfiguration;
 
 %}
 
-%shared_ptr(ReportConfig)
+%shared_ptr(ore::data::ReportConfig)
+%feature("flatnested") PriceSegment;
+%rename(PriceSegmentOffPeakDaily) ore::data::PriceSegment::OffPeakDaily;
+%shared_ptr(ore::data::PriceSegment)
+%shared_ptr(ore::data::PriceSegment::OffPeakDaily)
+%feature("flatnested") ParametricSmileConfiguration;
+%rename(ParametricSmileParameter) ore::data::ParametricSmileConfiguration::Parameter;
+%rename(ParametricSmileCalibration) ore::data::ParametricSmileConfiguration::Calibration;
+%shared_ptr(ore::data::ParametricSmileConfiguration)
+%shared_ptr(ore::data::ParametricSmileConfiguration::Parameter)
+%shared_ptr(ore::data::ParametricSmileConfiguration::Calibration)
+
+namespace ore {
+namespace data {
+
 class ReportConfig : public XMLSerializable {
 public:
     ReportConfig();
@@ -77,14 +91,10 @@ public:
     const QuantLib::ext::optional<std::vector<Date>>& pillarDates() const;
     const QuantLib::ext::optional<std::vector<Period>>& underlyingTenors() const;
 
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 };
 
-%feature("flatnested") PriceSegment;
-%rename(PriceSegmentOffPeakDaily) PriceSegment::OffPeakDaily;
-%shared_ptr(PriceSegment)
-%shared_ptr(PriceSegment::OffPeakDaily)
 class PriceSegment : public XMLSerializable {
 public:
     enum class Type { Future, AveragingFuture, AveragingSpot, AveragingOffPeakPower, OffPeakPowerDaily };
@@ -97,8 +107,8 @@ public:
         const std::vector<std::string>& offPeakQuotes() const;
         const std::vector<std::string>& peakQuotes() const;
 
-        void fromXML(XMLNode* node) override;
-        XMLNode* toXML(XMLDocument& doc) const override;
+        void fromXML(ore::data::XMLNode* node) override;
+        ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     };
 
     PriceSegment();
@@ -116,8 +126,8 @@ public:
     const std::string& peakPriceCalendar() const;
     bool empty() const;
 
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
     %extend {
         static PriceSegment withOffPeakDaily(const std::string& conventionsId,
@@ -134,12 +144,6 @@ public:
     }
 };
 
-%feature("flatnested") ParametricSmileConfiguration;
-%rename(ParametricSmileParameter) ParametricSmileConfiguration::Parameter;
-%rename(ParametricSmileCalibration) ParametricSmileConfiguration::Calibration;
-%shared_ptr(ParametricSmileConfiguration)
-%shared_ptr(ParametricSmileConfiguration::Parameter)
-%shared_ptr(ParametricSmileConfiguration::Calibration)
 class ParametricSmileConfiguration : public XMLSerializable {
 public:
     class Parameter : public XMLSerializable {
@@ -256,14 +260,30 @@ public:
     }
 };
 
-%template(CurveTypeStringSet) std::map<CurveSpec::CurveType, std::set<std::string>>;
-%template(PriceSegmentVector) std::vector<PriceSegment>;
-%template(PriceSegmentMap) std::map<unsigned short, PriceSegment>;
-%template(ParametricSmileParameterVector) std::vector<ParametricSmileConfiguration::Parameter>;
+} // namespace data
+} // namespace ore
+
+%template(CurveTypeStringSet) std::map<ore::data::CurveSpec::CurveType, std::set<std::string>>;
+%template(PriceSegmentVector) std::vector<ore::data::PriceSegment>;
+%template(PriceSegmentMap) std::map<unsigned short, ore::data::PriceSegment>;
+%template(ParametricSmileParameterVector) std::vector<ore::data::ParametricSmileConfiguration::Parameter>;
 %template(DoubleVectorVector) std::vector<std::vector<double>>;
 %template(StringBoolPairVector) std::vector<std::pair<std::string, bool>>;
 
-%shared_ptr(CurveConfigurations)
+%shared_ptr(ore::data::CurveConfigurations)
+%shared_ptr(ore::data::CurveConfigurationsManager)
+%shared_ptr(ore::data::VolatilityConfig)
+%shared_ptr(ore::data::OneDimSolverConfig)
+%shared_ptr(ore::data::EquityCurveConfig)
+%shared_ptr(ore::data::CommodityCurveConfig)
+%shared_ptr(ore::data::DefaultCurveConfig)
+%shared_ptr(ore::data::DefaultCurveConfig::Config)
+%feature("flatnested") DefaultCurveConfig;
+%rename(DefaultCurveConfigConfig) ore::data::DefaultCurveConfig::Config;
+
+namespace ore {
+namespace data {
+
 class CurveConfigurations  : public XMLSerializable  {
   public:
     CurveConfigurations();
@@ -348,15 +368,11 @@ class CurveConfigurations  : public XMLSerializable  {
 
     void addAdditionalCurveConfigs(const CurveConfigurations& c);
 
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
 };
 
-%template(StringCurveConfigMap) std::map<std::string, ext::shared_ptr<CurveConfigurations>>;
-%template(VolatilityConfigVector) std::vector<ext::shared_ptr<VolatilityConfig>>;
-
-%shared_ptr(CurveConfigurationsManager)
 class CurveConfigurationsManager {
   public:
     CurveConfigurationsManager();
@@ -369,18 +385,16 @@ class CurveConfigurationsManager {
 
 };
 
-%shared_ptr(VolatilityConfig)
 class VolatilityConfig : public XMLSerializable {
 public:
     VolatilityConfig(std::string calendarStr = std::string(), QuantLib::Natural priority = 0);
 
     void fromXMLNode(ore::data::XMLNode* node);
-    void toXMLNode(XMLDocument& doc, XMLNode* node) const;
+    void toXMLNode(ore::data::XMLDocument& doc, ore::data::XMLNode* node) const;
     QuantLib::Natural priority() const;
     QuantLib::Calendar calendar() const;
 };
 
-%shared_ptr(OneDimSolverConfig)
 class OneDimSolverConfig : public XMLSerializable {
 public:
     OneDimSolverConfig();
@@ -412,7 +426,6 @@ public:
 
 };
 
-%shared_ptr(EquityCurveConfig)
 class EquityCurveConfig : public CurveConfig {
 public:
     enum class Type { DividendYield, ForwardPrice, OptionPremium, NoDividends, ForwardDividendPrice};
@@ -423,8 +436,8 @@ public:
                       const bool dividendExtrapolation = false, const bool extrapolation = false,
                       const QuantLib::Exercise::Type& exerciseStyle = QuantLib::Exercise::Type::European);
     EquityCurveConfig() ;
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
     const std::string& forecastingCurve() const;
     const std::string& currency() const;
@@ -440,7 +453,6 @@ public:
     const std::vector<std::string>& fwdQuotes();
 };
 
-%shared_ptr(CommodityCurveConfig)
 class CommodityCurveConfig : public CurveConfig {
 public:
     enum class Type { Direct, CrossCurrency, Basis, Piecewise };
@@ -468,8 +480,8 @@ public:
                          const std::string& interpolationMethod = "Linear", bool extrapolation = true,
                          const QuantLib::ext::optional<BootstrapConfig>& bootstrapConfig = QuantLib::ext::nullopt);
 
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
     const Type& type() const;
     const std::string& currency() const;
@@ -509,10 +521,6 @@ public:
     void setBootstrapConfig(const BootstrapConfig& bootstrapConfig);
 };
 
-%shared_ptr(DefaultCurveConfig)
-%shared_ptr(DefaultCurveConfig::Config)
-%feature("flatnested") DefaultCurveConfig;
-%rename(DefaultCurveConfigConfig) DefaultCurveConfig::Config;
 class DefaultCurveConfig : public CurveConfig {
 public:
     class Config : public XMLSerializable {
@@ -533,8 +541,8 @@ public:
                const bool allowNegativeRates = false, const int priority = 0);
         Config();
 
-        void fromXML(XMLNode* node) override;
-        XMLNode* toXML(XMLDocument& doc) const override;
+        void fromXML(ore::data::XMLNode* node) override;
+        ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
         const int priority() const;
         const Type& type() const;
@@ -587,8 +595,8 @@ public:
                        const Config& config);
     DefaultCurveConfig();
 
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
     const std::string& currency() const;
     const std::map<int, Config>& configs() const;
@@ -641,7 +649,12 @@ public:
     }
 };
 
-%template(IntDefaultCurveConfigMap) std::map<int, DefaultCurveConfig::Config>;
+} // namespace data
+} // namespace ore
+
+%template(StringCurveConfigMap) std::map<std::string, ext::shared_ptr<ore::data::CurveConfigurations>>;
+%template(VolatilityConfigVector) std::vector<ext::shared_ptr<ore::data::VolatilityConfig>>;
+%template(IntDefaultCurveConfigMap) std::map<int, ore::data::DefaultCurveConfig::Config>;
 
 #if defined(SWIGPYTHON)
 %pythoncode %{
@@ -656,7 +669,15 @@ if 'DefaultCurveConfigConfig' in globals():
 %}
 #endif
 
-%shared_ptr(GenericYieldVolatilityCurveConfig)
+%shared_ptr(ore::data::GenericYieldVolatilityCurveConfig)
+%shared_ptr(ore::data::SwaptionVolatilityCurveConfig)
+%shared_ptr(ore::data::FXVolatilityCurveConfig)
+%shared_ptr(ore::data::CapFloorVolatilityCurveConfig)
+%shared_ptr(ore::data::EquityVolatilityCurveConfig)
+
+namespace ore {
+namespace data {
+
 class GenericYieldVolatilityCurveConfig : public CurveConfig {
 public:
     enum class Dimension { ATM, Smile };
@@ -700,8 +721,8 @@ public:
                                       const std::string& proxyTargetShortSwapIndexBase,
                                       const std::string& proxyTargetSwapIndexBase);
 
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
     const std::string& qualifier() const;
     Dimension dimension() const;
@@ -735,7 +756,6 @@ public:
 
 };
 
-%shared_ptr(SwaptionVolatilityCurveConfig)
 class SwaptionVolatilityCurveConfig : public GenericYieldVolatilityCurveConfig {
 public:
     SwaptionVolatilityCurveConfig();
@@ -756,7 +776,6 @@ public:
                                   const std::string& proxyTargetSwapIndexBase);
 };
 
-%shared_ptr(FXVolatilityCurveConfig)
 class FXVolatilityCurveConfig : public CurveConfig {
 public:
     enum class Dimension { ATM, SmileVannaVolga, SmileDelta, SmileBFRR, SmileAbsolute, ATMTriangulated };
@@ -778,8 +797,8 @@ public:
                             const std::string& fxIndexTag = "GENERIC");
 
 
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
     const Dimension& dimension() const;
     const std::vector<std::string>& expiries() const;
@@ -803,7 +822,6 @@ public:
 
 };
 
-%shared_ptr(CapFloorVolatilityCurveConfig)
 class CapFloorVolatilityCurveConfig : public CurveConfig {
 public:
     enum class VolatilityType { Lognormal, Normal, ShiftedLognormal };
@@ -827,14 +845,14 @@ public:
                                   const QuantLib::Period& proxySourceRateComputationPeriod = 0 * Days,
                                   const QuantLib::Period& proxyTargetRateComputationPeriod = 0 * Days);
 
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
     const VolatilityType& volatilityType() const;
     const VolatilityType& outputVolatilityType() const;
     QuantLib::Real modelShift() const;
     QuantLib::Real outputShift() const;
-    MarketDatum::QuoteType quoteType() const;
+    ore::data::MarketDatum::QuoteType quoteType() const;
     bool extrapolate() const;
     bool flatExtrapolation() const;
     bool includeAtm() const;
@@ -873,7 +891,6 @@ public:
 
 };
 
-%shared_ptr(EquityVolatilityCurveConfig)
 class EquityVolatilityCurveConfig : public CurveConfig {
 public:
     EquityVolatilityCurveConfig();
@@ -889,8 +906,8 @@ public:
                                 const string& dayCounter = "A365", const string& calendar = "NullCalendar",
                                 const OneDimSolverConfig& solverConfig = OneDimSolverConfig(),
                                 const QuantLib::ext::optional<bool>& preferOutOfTheMoney = QuantLib::ext::nullopt);
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     const string& equityId() const;
     const string& ccy() const;
     const string& dayCounter() const;
@@ -905,5 +922,8 @@ public:
     string& ccy();
     string& dayCounter();
 };
+
+} // namespace data
+} // namespace ore
 
 #endif

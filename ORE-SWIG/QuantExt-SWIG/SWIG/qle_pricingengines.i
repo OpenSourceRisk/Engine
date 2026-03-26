@@ -25,18 +25,8 @@
 %include swaption.i
 %include qle_termstructures.i
 
-%{
-using QuantExt::AnalyticLgmSwaptionEngine;
-using QuantExt::McMultiLegOptionEngine;
-using QuantExt::NumericLgmMultiLegOptionEngine;
-using QuantExt::CommodityAveragePriceOptionAnalyticalEngine;
-using QuantExt::CommoditySwaptionEngine;
-using QuantExt::DiscountingBondTRSEngine;
-using QuantExt::BlackIndexCdsOptionEngine;
-using QuantExt::DiscountingSwapEngineDeltaGamma;
-%}
-
-%shared_ptr(AnalyticLgmSwaptionEngine)
+%shared_ptr(QuantExt::AnalyticLgmSwaptionEngine)
+namespace QuantExt {
 class AnalyticLgmSwaptionEngine : public PricingEngine {
   public:
     void enableCache(const bool lgm_H_constant = true, const bool lgm_alpha_constant = false);
@@ -44,16 +34,22 @@ class AnalyticLgmSwaptionEngine : public PricingEngine {
     void setZetaShift(const Time t1, const Real shift);
     void resetZetaShift();
 };
+}
 
-%shared_ptr(McMultiLegOptionEngine)
+%shared_ptr(QuantExt::McMultiLegOptionEngine)
+namespace QuantExt {
 class McMultiLegOptionEngine : public PricingEngine {
 };
+}
 
-%shared_ptr(NumericLgmMultiLegOptionEngine)
+%shared_ptr(QuantExt::NumericLgmMultiLegOptionEngine)
+namespace QuantExt {
 class NumericLgmMultiLegOptionEngine : public PricingEngine {
 };
+}
 
-%shared_ptr(CommodityAveragePriceOptionAnalyticalEngine)
+%shared_ptr(QuantExt::CommodityAveragePriceOptionAnalyticalEngine)
+namespace QuantExt {
 class CommodityAveragePriceOptionAnalyticalEngine : public PricingEngine {
   public:
     CommodityAveragePriceOptionAnalyticalEngine(
@@ -63,28 +59,36 @@ class CommodityAveragePriceOptionAnalyticalEngine : public PricingEngine {
         QuantLib::DiffusionModelType modelType = QuantLib::DiffusionModelType::AsInputVolatilityType,
         QuantLib::Real displacement = 0.0);
 };
+}
 
-%shared_ptr(CommoditySwaptionEngine)
+%shared_ptr(QuantExt::CommoditySwaptionEngine)
+namespace QuantExt {
 class CommoditySwaptionEngine : public PricingEngine {
   public:
     CommoditySwaptionEngine(const Handle<YieldTermStructure>& discountCurve,
                             const Handle<QuantLib::BlackVolTermStructure>& vol,
                             Real beta = 0.0);
 };
+}
 
-%shared_ptr(DiscountingBondTRSEngine)
+%shared_ptr(QuantExt::DiscountingBondTRSEngine)
+namespace QuantExt {
 class DiscountingBondTRSEngine : public PricingEngine {
   public:
     DiscountingBondTRSEngine(const Handle<YieldTermStructure>& discountCurve,
                              const bool treatSecuritySpreadAsCreditSpread,
                              const bool survivalWeightedFundingReturnCashflows);
 };
+}
 
-%shared_ptr(BlackIndexCdsOptionEngine)
+%shared_ptr(QuantExt::BlackIndexCdsOptionEngine)
+namespace QuantExt {
 class BlackIndexCdsOptionEngine : public PricingEngine {
 };
+}
 
-%shared_ptr(DiscountingSwapEngineDeltaGamma)
+%shared_ptr(QuantExt::DiscountingSwapEngineDeltaGamma)
+namespace QuantExt {
 class DiscountingSwapEngineDeltaGamma : public PricingEngine {
   public:
     DiscountingSwapEngineDeltaGamma(const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
@@ -94,5 +98,6 @@ class DiscountingSwapEngineDeltaGamma : public PricingEngine {
                                     const bool computeBPS = false,
                                     const bool linearInZero = true);
 };
+}
 
 #endif

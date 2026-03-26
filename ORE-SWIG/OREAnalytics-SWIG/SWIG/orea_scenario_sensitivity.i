@@ -19,76 +19,73 @@
 #ifndef orea_scenario_sensitivity_i
 #define orea_scenario_sensitivity_i
 
-%{
-using ore::analytics::SensitivityScenarioData;
-using ore::data::XMLSerializable;
-%}
+%shared_ptr(ore::analytics::SensitivityScenarioData);
+%shared_ptr(ore::analytics::SensitivityScenarioData::ShiftData);
+%shared_ptr(ore::analytics::SensitivityScenarioData::CurveShiftData);
+%shared_ptr(ore::analytics::SensitivityScenarioData::VolShiftData);
+%shared_ptr(ore::analytics::SensitivityScenarioData::CdsVolShiftData);
+%shared_ptr(ore::analytics::SensitivityScenarioData::BaseCorrelationShiftData);
+%shared_ptr(ore::analytics::SensitivityScenarioData::SpotShiftData);
+%shared_ptr(ore::analytics::SensitivityScenarioData::GenericYieldVolShiftData);
+%shared_ptr(ore::analytics::SensitivityScenarioData::CapFloorVolShiftData);
+%shared_ptr(ore::analytics::SensitivityScenarioData::CurveShiftParData);
+%shared_ptr(ore::analytics::SensitivityScenarioData::CapFloorVolShiftParData);
 
-%shared_ptr(SensitivityScenarioData);
-%shared_ptr(SensitivityScenarioData::ShiftData);
-%shared_ptr(SensitivityScenarioData::CurveShiftData);
-%shared_ptr(SensitivityScenarioData::VolShiftData);
-%shared_ptr(SensitivityScenarioData::CdsVolShiftData);
-%shared_ptr(SensitivityScenarioData::BaseCorrelationShiftData);
-%shared_ptr(SensitivityScenarioData::SpotShiftData);
-%shared_ptr(SensitivityScenarioData::GenericYieldVolShiftData);
-%shared_ptr(SensitivityScenarioData::CapFloorVolShiftData);
-%shared_ptr(SensitivityScenarioData::CurveShiftParData);
-%shared_ptr(SensitivityScenarioData::CapFloorVolShiftParData);
-
-%template(StringShiftTypeMap) std::map<std::string, ShiftType>;
-%template(StringShiftSchemeMap) std::map<std::string, ShiftScheme>;
+%template(StringShiftTypeMap) std::map<std::string, QuantExt::ShiftType>;
+%template(StringShiftSchemeMap) std::map<std::string, QuantExt::ShiftScheme>;
 %template(StringRealMap) std::map<std::string, Real>;
-%template(StringCurveShiftDataMap) std::map<std::string, ext::shared_ptr<SensitivityScenarioData::CurveShiftData>>;
-%template(StringSpotShiftDataMap) std::map<std::string, ext::shared_ptr<SensitivityScenarioData::SpotShiftData>>;
-%template(StringCapFloorVolShiftDataMap) std::map<std::string, ext::shared_ptr<SensitivityScenarioData::CapFloorVolShiftData>>;
-%template(StringGenericYieldVolShiftDataMap) std::map<std::string, ext::shared_ptr<SensitivityScenarioData::GenericYieldVolShiftData>>;
-%template(StringVolShiftDataMap) std::map<std::string, ext::shared_ptr<SensitivityScenarioData::VolShiftData>>;
-%template(StringCdsVolShiftDataMap) std::map<std::string, ext::shared_ptr<SensitivityScenarioData::CdsVolShiftData>>;
-%template(StringBaseCorrelationShiftDataMap) std::map<std::string, ext::shared_ptr<SensitivityScenarioData::BaseCorrelationShiftData>>;
+%template(StringCurveShiftDataMap) std::map<std::string, ext::shared_ptr<ore::analytics::SensitivityScenarioData::CurveShiftData>>;
+%template(StringSpotShiftDataMap) std::map<std::string, ext::shared_ptr<ore::analytics::SensitivityScenarioData::SpotShiftData>>;
+%template(StringCapFloorVolShiftDataMap) std::map<std::string, ext::shared_ptr<ore::analytics::SensitivityScenarioData::CapFloorVolShiftData>>;
+%template(StringGenericYieldVolShiftDataMap) std::map<std::string, ext::shared_ptr<ore::analytics::SensitivityScenarioData::GenericYieldVolShiftData>>;
+%template(StringVolShiftDataMap) std::map<std::string, ext::shared_ptr<ore::analytics::SensitivityScenarioData::VolShiftData>>;
+%template(StringCdsVolShiftDataMap) std::map<std::string, ext::shared_ptr<ore::analytics::SensitivityScenarioData::CdsVolShiftData>>;
+%template(StringBaseCorrelationShiftDataMap) std::map<std::string, ext::shared_ptr<ore::analytics::SensitivityScenarioData::BaseCorrelationShiftData>>;
 %template(VectorOfStringStringPair) std::vector<std::pair<std::string, std::string>>;
 
-%rename (SensitivityScenarioDataShiftData) SensitivityScenarioData::ShiftData;
+%rename (SensitivityScenarioDataShiftData) ore::analytics::SensitivityScenarioData::ShiftData;
 %feature ("flatnested") ShiftData;
 
-%rename (SensitivityScenarioDataCurveShiftData) SensitivityScenarioData::CurveShiftData;
+%rename (SensitivityScenarioDataCurveShiftData) ore::analytics::SensitivityScenarioData::CurveShiftData;
 %feature ("flatnested") CurveShiftData;
 
-%rename (SensitivityScenarioDataSpotShiftData) SensitivityScenarioData::SpotShiftData;
+%rename (SensitivityScenarioDataSpotShiftData) ore::analytics::SensitivityScenarioData::SpotShiftData;
 %feature ("flatnested") SpotShiftData;
 
-%rename (SensitivityScenarioDataCdsVolShiftData) SensitivityScenarioData::CdsVolShiftData;
+%rename (SensitivityScenarioDataCdsVolShiftData) ore::analytics::SensitivityScenarioData::CdsVolShiftData;
 %feature ("flatnested") CdsVolShiftData;
 
-%rename (SensitivityScenarioDataBaseCorrelationShiftData) SensitivityScenarioData::BaseCorrelationShiftData;
+%rename (SensitivityScenarioDataBaseCorrelationShiftData) ore::analytics::SensitivityScenarioData::BaseCorrelationShiftData;
 %feature ("flatnested") BaseCorrelationShiftData;
 
-%rename (SensitivityScenarioDataVolShiftData) SensitivityScenarioData::VolShiftData;
+%rename (SensitivityScenarioDataVolShiftData) ore::analytics::SensitivityScenarioData::VolShiftData;
 %feature ("flatnested") VolShiftData;
 
-%rename (SensitivityScenarioDataCapFloorVolShiftData) SensitivityScenarioData::CapFloorVolShiftData;
+%rename (SensitivityScenarioDataCapFloorVolShiftData) ore::analytics::SensitivityScenarioData::CapFloorVolShiftData;
 %feature ("flatnested") CapFloorVolShiftData;
 
-%rename (SensitivityScenarioDataGenericYieldVolShiftData) SensitivityScenarioData::GenericYieldVolShiftData;
+%rename (SensitivityScenarioDataGenericYieldVolShiftData) ore::analytics::SensitivityScenarioData::GenericYieldVolShiftData;
 %feature ("flatnested") GenericYieldVolShiftData;
 
-%rename (SensitivityScenarioDataCurveShiftParData) SensitivityScenarioData::CurveShiftParData;
+%rename (SensitivityScenarioDataCurveShiftParData) ore::analytics::SensitivityScenarioData::CurveShiftParData;
 %feature ("flatnested") CurveShiftParData;
 
-%rename (SensitivityScenarioDataCapFloorVolShiftParData) SensitivityScenarioData::CapFloorVolShiftParData;
+%rename (SensitivityScenarioDataCapFloorVolShiftParData) ore::analytics::SensitivityScenarioData::CapFloorVolShiftParData;
 %feature ("flatnested") CapFloorVolShiftParData;
 
-class SensitivityScenarioData : public XMLSerializable {
+namespace ore {
+namespace analytics {
+class SensitivityScenarioData : public ore::data::XMLSerializable {
   public:
 
     struct ShiftData {
-        ShiftType shiftType = ShiftType::Absolute;
+                QuantExt::ShiftType shiftType = QuantExt::ShiftType::Absolute;
         Real shiftSize = 0.0;
-        ShiftScheme shiftScheme = ShiftScheme::Forward;
+                QuantExt::ShiftScheme shiftScheme = QuantExt::ShiftScheme::Forward;
 
-        std::map<std::string, ShiftType> keyedShiftType;
+                std::map<std::string, QuantExt::ShiftType> keyedShiftType;
         std::map<std::string, Real> keyedShiftSize;
-        std::map<std::string, ShiftScheme> keyedShiftScheme;
+                std::map<std::string, QuantExt::ShiftScheme> keyedShiftScheme;
     };
 
     struct CurveShiftData : ShiftData {
@@ -246,5 +243,8 @@ class SensitivityScenarioData : public XMLSerializable {
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 };
+
+} // namespace analytics
+} // namespace ore
 
 #endif

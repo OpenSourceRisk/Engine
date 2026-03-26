@@ -26,15 +26,9 @@
 %include ored_market.i
 %include ored_portfolio.i
 
-%{
-using ore::analytics::CollateralAccount;
-using ore::analytics::ExposureCalculator;
-using ore::analytics::DynamicInitialMarginCalculator;
-using ore::analytics::ValueAdjustmentCalculator;
-using ore::analytics::PostProcess;
-%}
-
-%shared_ptr(CollateralAccount)
+%shared_ptr(ore::analytics::CollateralAccount)
+namespace ore {
+namespace analytics {
 class CollateralAccount {
 public:
     CollateralAccount();
@@ -49,39 +43,57 @@ public:
         Date marginRequestDate() const;
     };
 };
+}
+}
 
-%shared_ptr(DynamicInitialMarginCalculator)
-%nodefaultctor DynamicInitialMarginCalculator;
+%shared_ptr(ore::analytics::DynamicInitialMarginCalculator)
+%nodefaultctor ore::analytics::DynamicInitialMarginCalculator;
+namespace ore {
+namespace analytics {
 class DynamicInitialMarginCalculator {
 public:
     virtual ~DynamicInitialMarginCalculator() {}
     virtual void build() = 0;
-    const QuantLib::ext::shared_ptr<NPVCube>& dimCube() const;
+    const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& dimCube() const;
 };
+}
+}
 
-%shared_ptr(ExposureCalculator)
-%nodefaultctor ExposureCalculator;
+%shared_ptr(ore::analytics::ExposureCalculator)
+%nodefaultctor ore::analytics::ExposureCalculator;
+namespace ore {
+namespace analytics {
 class ExposureCalculator {
 public:
     virtual ~ExposureCalculator() {}
     virtual void build();
 };
+}
+}
 
-%shared_ptr(ValueAdjustmentCalculator)
-%nodefaultctor ValueAdjustmentCalculator;
-%rename(XvaCalculator) ValueAdjustmentCalculator;
+%shared_ptr(ore::analytics::ValueAdjustmentCalculator)
+%nodefaultctor ore::analytics::ValueAdjustmentCalculator;
+%rename(XvaCalculator) ore::analytics::ValueAdjustmentCalculator;
+namespace ore {
+namespace analytics {
 class ValueAdjustmentCalculator {
 public:
     virtual ~ValueAdjustmentCalculator() {}
     virtual void build();
 };
+}
+}
 
-%shared_ptr(PostProcess)
-%nodefaultctor PostProcess;
+%shared_ptr(ore::analytics::PostProcess)
+%nodefaultctor ore::analytics::PostProcess;
+namespace ore {
+namespace analytics {
 class PostProcess {
 public:
-    const QuantLib::ext::shared_ptr<NPVCube>& cube();
-    const QuantLib::ext::shared_ptr<NPVCube>& netCube();
+    const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& cube();
+    const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& netCube();
 };
+}
+}
 
 #endif

@@ -24,20 +24,12 @@
 %include termstructures.i
 %include volatilities.i
 
-%{
-using QuantExt::DynamicSwaptionVolatilityMatrix;
-using QuantExt::BlackVolatilitySurfaceBFRR;
-using QuantExt::CorrelationTermStructure;
-using QuantExt::NegativeCorrelationTermStructure;
-using QuantExt::CorrelationValue;
-using QuantLib::DeltaVolQuote;
-using QLESpreadedSwaptionVolatility = QuantExt::SpreadedSwaptionVolatility;
-%}
-
-%shared_ptr(QLESpreadedSwaptionVolatility)
-class QLESpreadedSwaptionVolatility : public SwaptionVolatilityDiscrete {
+%rename(QLESpreadedSwaptionVolatility) QuantExt::SpreadedSwaptionVolatility;
+%shared_ptr(QuantExt::SpreadedSwaptionVolatility)
+namespace QuantExt {
+class SpreadedSwaptionVolatility : public SwaptionVolatilityDiscrete {
 public:
-    QLESpreadedSwaptionVolatility(const Handle<SwaptionVolatilityStructure>& base,
+    SpreadedSwaptionVolatility(const Handle<SwaptionVolatilityStructure>& base,
                                const std::vector<Period>& optionTenors,
                                const std::vector<Period>& swapTenors,
                                const std::vector<Real>& strikeSpreads,
@@ -49,14 +41,18 @@ public:
                                const bool stickyAbsMoney = false);
     const Handle<SwaptionVolatilityStructure>& baseVol();
 };
+}
 
-%shared_ptr(DynamicSwaptionVolatilityMatrix)
-%nodefaultctor DynamicSwaptionVolatilityMatrix;
+%shared_ptr(QuantExt::DynamicSwaptionVolatilityMatrix)
+%nodefaultctor QuantExt::DynamicSwaptionVolatilityMatrix;
+namespace QuantExt {
 class DynamicSwaptionVolatilityMatrix : public SwaptionVolatilityStructure {
 };
+}
 
-%shared_ptr(BlackVolatilitySurfaceBFRR)
-%nodefaultctor BlackVolatilitySurfaceBFRR;
+%shared_ptr(QuantExt::BlackVolatilitySurfaceBFRR)
+%nodefaultctor QuantExt::BlackVolatilitySurfaceBFRR;
+namespace QuantExt {
 class BlackVolatilitySurfaceBFRR : public BlackVolTermStructure {
 public:
     enum class SmileInterpolation { Linear = 1, Cubic = 2 };
@@ -69,34 +65,41 @@ public:
     const std::vector<std::vector<Real>>& rrQuotes() const;
     const std::vector<Real>& atmQuotes() const;
 };
+}
 
-%shared_ptr(CorrelationTermStructure)
-%nodefaultctor CorrelationTermStructure;
+%shared_ptr(QuantExt::CorrelationTermStructure)
+%nodefaultctor QuantExt::CorrelationTermStructure;
+namespace QuantExt {
 class CorrelationTermStructure : public TermStructure {
 public:
     Real correlation(Time t, Real strike = Null<Real>(), bool extrapolate = false) const;
     Real correlation(const Date& d, Real strike = Null<Real>(), bool extrapolate = false) const;
     virtual Time minTime() const;
 };
+}
 
-%template(CorrelationTermStructureHandle) Handle<CorrelationTermStructure>;
-%template(RelinkableCorrelationTermStructureHandle) RelinkableHandle<CorrelationTermStructure>;
+%template(CorrelationTermStructureHandle) Handle<QuantExt::CorrelationTermStructure>;
+%template(RelinkableCorrelationTermStructureHandle) RelinkableHandle<QuantExt::CorrelationTermStructure>;
 
-%shared_ptr(NegativeCorrelationTermStructure)
-class NegativeCorrelationTermStructure : public CorrelationTermStructure {
+%shared_ptr(QuantExt::NegativeCorrelationTermStructure)
+namespace QuantExt {
+class NegativeCorrelationTermStructure : public QuantExt::CorrelationTermStructure {
 public:
-    NegativeCorrelationTermStructure(const Handle<CorrelationTermStructure>& c);
+    NegativeCorrelationTermStructure(const Handle<QuantExt::CorrelationTermStructure>& c);
 };
+}
 
-%shared_ptr(CorrelationValue)
+%shared_ptr(QuantExt::CorrelationValue)
+namespace QuantExt {
 class CorrelationValue : public Quote {
 public:
-    CorrelationValue(const Handle<CorrelationTermStructure>& correlation,
+    CorrelationValue(const Handle<QuantExt::CorrelationTermStructure>& correlation,
                      const Time t,
                      const Real strike = Null<Real>());
     Real value() const;
     bool isValid() const;
     void update() override;
 };
+}
 
 #endif

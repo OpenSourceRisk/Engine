@@ -22,32 +22,43 @@
 %include ored_xmlutils.i
 
 %{
-using ore::data::XMLSerializable;
-using ore::data::ReferenceDatum;
-using ore::data::BondReferenceDatum;
-using ore::data::BondFutureReferenceDatum;
-using ore::data::CreditIndexConstituent;
-using ore::data::CreditIndexReferenceDatum;
-using ore::data::PortfolioBasketReferenceDatum;
-using ore::data::CreditReferenceDatum;
-using ore::data::EquityReferenceDatum;
-using ore::data::BondBasketReferenceDatum;
-using ore::data::CallableBondReferenceDatum;
-using ore::data::ConvertibleBondReferenceDatum;
-using ore::data::CurrencyHedgedEquityIndexReferenceDatum;
-using ore::data::EquityIndexReferenceDatum;
-using ore::data::CommodityIndexReferenceDatum;
-using ore::data::ReferenceDataManager;
-using ore::data::BasicReferenceDataManager;
-using BondReferenceDatum_BondData = ore::data::BondReferenceDatum::BondData;
-using BondFutureData = ore::data::BondFutureReferenceDatum::BondFutureData;
-using CreditData = ore::data::CreditReferenceDatum::CreditData;
-using EquityData = ore::data::EquityReferenceDatum::EquityData;
+typedef ore::data::BondReferenceDatum::BondData BondReferenceDatum_BondData;
+typedef ore::data::BondFutureReferenceDatum::BondFutureData BondFutureData;
+typedef ore::data::CreditReferenceDatum::CreditData CreditData;
+typedef ore::data::EquityReferenceDatum::EquityData EquityData;
+namespace ore {
+namespace data {
+typedef BondReferenceDatum::BondData BondReferenceDatum_BondData;
+typedef BondFutureReferenceDatum::BondFutureData BondFutureData;
+typedef CreditReferenceDatum::CreditData CreditData;
+typedef EquityReferenceDatum::EquityData EquityData;
+}
+}
 %}
 
+%shared_ptr(ore::data::ReferenceDatum)
+%shared_ptr(ore::data::ReferenceDataManager)
+%shared_ptr(ore::data::BasicReferenceDataManager)
+%shared_ptr(ore::data::BondReferenceDatum_BondData)
+%shared_ptr(ore::data::BondReferenceDatum)
+%shared_ptr(ore::data::BondFutureData)
+%shared_ptr(ore::data::BondFutureReferenceDatum)
+%shared_ptr(ore::data::CreditIndexConstituent)
+%shared_ptr(ore::data::CreditIndexReferenceDatum)
+%shared_ptr(ore::data::EquityIndexReferenceDatum)
+%shared_ptr(ore::data::CommodityIndexReferenceDatum)
+%shared_ptr(ore::data::CurrencyHedgedEquityIndexReferenceDatum)
+%shared_ptr(ore::data::EquityReferenceDatum)
+%shared_ptr(ore::data::PortfolioBasketReferenceDatum)
+%shared_ptr(ore::data::CreditReferenceDatum)
+%shared_ptr(ore::data::BondBasketReferenceDatum)
+%shared_ptr(ore::data::CallableBondReferenceDatum)
+%shared_ptr(ore::data::ConvertibleBondReferenceDatum)
+%shared_ptr(ore::data::IndexReferenceDatum)
 
+namespace ore {
+namespace data {
 
-%shared_ptr(ReferenceDatum)
 class ReferenceDatum : public XMLSerializable {
 public:
     ReferenceDatum();
@@ -63,17 +74,15 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(ReferenceDataManager)
 class ReferenceDataManager {
 public:
     virtual ~ReferenceDataManager();
     virtual bool hasData(const std::string& type, const std::string& id,
                          const QuantLib::Date& asof = QuantLib::Null<QuantLib::Date>()) = 0;
-    virtual ext::shared_ptr<ReferenceDatum> getData(const std::string& type, const std::string& id, const QuantLib::Date& asof = QuantLib::Null<QuantLib::Date>()) = 0;
-    virtual void add(const ext::shared_ptr<ReferenceDatum>& referenceDatum) = 0;
+    virtual QuantLib::ext::shared_ptr<ReferenceDatum> getData(const std::string& type, const std::string& id, const QuantLib::Date& asof = QuantLib::Null<QuantLib::Date>()) = 0;
+    virtual void add(const QuantLib::ext::shared_ptr<ReferenceDatum>& referenceDatum) = 0;
 };
 
-%shared_ptr(BasicReferenceDataManager)
 class BasicReferenceDataManager : public ReferenceDataManager, public XMLSerializable {
 public:
     BasicReferenceDataManager();
@@ -82,7 +91,7 @@ public:
     // Load extra data and append to this manger
     void appendData(const std::string& filename);
 
-    ext::shared_ptr<ReferenceDatum> buildReferenceDatum(const std::string& refDataType);
+    QuantLib::ext::shared_ptr<ReferenceDatum> buildReferenceDatum(const std::string& refDataType);
 
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(ore::data::XMLDocument& doc) const override;
@@ -92,16 +101,15 @@ public:
 
     bool hasData(const std::string& type, const std::string& id,
                  const QuantLib::Date& asof = QuantLib::Null<QuantLib::Date>()) override;
-    ext::shared_ptr<ReferenceDatum> getData(const std::string& type, const std::string& id,
+    QuantLib::ext::shared_ptr<ReferenceDatum> getData(const std::string& type, const std::string& id,
                                               const QuantLib::Date& asof = QuantLib::Null<QuantLib::Date>()) override;
-    void add(const ext::shared_ptr<ReferenceDatum>& referenceDatum) override;
+    void add(const QuantLib::ext::shared_ptr<ReferenceDatum>& referenceDatum) override;
     // adds a datum from an xml node and returns it (or nullptr if nothing was added due to an error)
-    ext::shared_ptr<ReferenceDatum> addFromXMLNode(XMLNode* node, const std::string& id = std::string(),
+    QuantLib::ext::shared_ptr<ReferenceDatum> addFromXMLNode(XMLNode* node, const std::string& id = std::string(),
                                                      const QuantLib::Date& validFrom = QuantLib::Null<QuantLib::Date>());
 };
 
 // BondReferenceDatum::BondData extracted as top-level (portfolio2.py uses BondReferenceDatum_BondData)
-%shared_ptr(BondReferenceDatum_BondData)
 class BondReferenceDatum_BondData : public XMLSerializable {
 public:
     BondReferenceDatum_BondData();
@@ -115,7 +123,7 @@ public:
              const std::string& referenceCurveId, const std::string& incomeCurveId,
              const std::string& volatilityCurveId, const std::string& priceQuoteMethod,
              const std::string& priceQuoteBaseValue, const std::string& subType) {
-        auto* result = new BondReferenceDatum_BondData();
+    auto* result = new ore::data::BondReferenceDatum_BondData();
         result->issuerId = issuerId;
         result->settlementDays = settlementDays;
         result->calendar = calendar;
@@ -132,7 +140,6 @@ public:
     }
 }
 
-%shared_ptr(BondReferenceDatum)
 class BondReferenceDatum : public ReferenceDatum {
 public:
     BondReferenceDatum();
@@ -148,7 +155,6 @@ public:
 };
 
 // BondFutureReferenceDatum::BondFutureData extracted as top-level (portfolio2.py uses BondFutureData)
-%shared_ptr(BondFutureData)
 class BondFutureData : public XMLSerializable {
 public:
     BondFutureData();
@@ -156,7 +162,6 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(BondFutureReferenceDatum)
 class BondFutureReferenceDatum : public ReferenceDatum {
 public:
     BondFutureReferenceDatum();
@@ -198,7 +203,6 @@ public:
     void setSettlementLag(const std::string& settlementLag) { self->settlementLag = settlementLag; }
 }
 
-%shared_ptr(CreditIndexConstituent)
 class CreditIndexConstituent : public XMLSerializable {
 public:
     CreditIndexConstituent();
@@ -213,7 +217,6 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(CreditIndexReferenceDatum)
 class CreditIndexReferenceDatum : public ReferenceDatum {
 public:
     CreditIndexReferenceDatum();
@@ -223,7 +226,6 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(EquityIndexReferenceDatum)
 class EquityIndexReferenceDatum : public ReferenceDatum {
 public:
     EquityIndexReferenceDatum();
@@ -231,7 +233,6 @@ public:
     EquityIndexReferenceDatum(const std::string& name, const QuantLib::Date& validFrom);
 };
 
-%shared_ptr(CommodityIndexReferenceDatum)
 class CommodityIndexReferenceDatum : public ReferenceDatum {
 public:
     CommodityIndexReferenceDatum();
@@ -239,7 +240,6 @@ public:
     CommodityIndexReferenceDatum(const std::string& name, const QuantLib::Date& validFrom);
 };
 
-%shared_ptr(CurrencyHedgedEquityIndexReferenceDatum)
 class CurrencyHedgedEquityIndexReferenceDatum : public ReferenceDatum {
 public:
     CurrencyHedgedEquityIndexReferenceDatum();
@@ -279,7 +279,6 @@ struct EquityData {
     std::string proxyVolatilityId;
 };
 
-%shared_ptr(EquityReferenceDatum)
 class EquityReferenceDatum : public ReferenceDatum {
 public:
     EquityReferenceDatum();
@@ -291,7 +290,6 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(PortfolioBasketReferenceDatum)
 class PortfolioBasketReferenceDatum : public ReferenceDatum {
 public:
     PortfolioBasketReferenceDatum();
@@ -302,7 +300,6 @@ public:
     std::vector<QuantLib::ext::shared_ptr<Trade>> getTrades() const;
 };
 
-%shared_ptr(CreditReferenceDatum)
 class CreditReferenceDatum : public ReferenceDatum {
 public:
     CreditReferenceDatum();
@@ -330,7 +327,7 @@ public:
         data.entityType = entityType;
         data.primaryPriceType = primaryPriceType;
         data.runningSpread = runningSpread;
-        return new CreditReferenceDatum(id, data);
+        return new ore::data::CreditReferenceDatum(id, data);
     }
 }
 
@@ -353,11 +350,10 @@ public:
         data.simmBucket = simmBucket;
         data.crifQualifier = crifQualifier;
         data.proxyVolatilityId = proxyVolatilityId;
-        return new EquityReferenceDatum(id, data);
+        return new ore::data::EquityReferenceDatum(id, data);
     }
 }
 
-%shared_ptr(BondBasketReferenceDatum)
 class BondBasketReferenceDatum : public ReferenceDatum {
 public:
     BondBasketReferenceDatum();
@@ -372,17 +368,16 @@ public:
 };
 %extend BondBasketReferenceDatum {
     BondBasketReferenceDatum(const std::string& id,
-                             const std::vector<ext::shared_ptr<BondUnderlying>>& underlyingData) {
-        return new BondBasketReferenceDatum(id, VECTOR_SWIG_TO_ORE(underlyingData));
+                             const std::vector<QuantLib::ext::shared_ptr<BondUnderlying>>& underlyingData) {
+        return new ore::data::BondBasketReferenceDatum(id, VECTOR_SWIG_TO_ORE(underlyingData));
     }
 
     BondBasketReferenceDatum(const std::string& id, const QuantLib::Date& validFrom,
-                             const std::vector<ext::shared_ptr<BondUnderlying>>& underlyingData) {
-        return new BondBasketReferenceDatum(id, validFrom, VECTOR_SWIG_TO_ORE(underlyingData));
+                             const std::vector<QuantLib::ext::shared_ptr<BondUnderlying>>& underlyingData) {
+        return new ore::data::BondBasketReferenceDatum(id, validFrom, VECTOR_SWIG_TO_ORE(underlyingData));
     }
 }
 
-%shared_ptr(CallableBondReferenceDatum)
 class CallableBondReferenceDatum : public ReferenceDatum {
 public:
     CallableBondReferenceDatum();
@@ -400,7 +395,6 @@ public:
     void setPutData(const CallableBondData::CallabilityData& putData);
 };
 
-%shared_ptr(ConvertibleBondReferenceDatum)
 class ConvertibleBondReferenceDatum : public ReferenceDatum {
 public:
     ConvertibleBondReferenceDatum();
@@ -428,16 +422,15 @@ public:
 
 // ore/OREData/ored/portfolio/referencedatamanager.hpp
 
-%{
-using ore::data::IndexReferenceDatum;
-%}
-
-%shared_ptr(IndexReferenceDatum)
 class IndexReferenceDatum : public ReferenceDatum {
 protected:
     IndexReferenceDatum(const std::string& type);
     IndexReferenceDatum(const std::string& type, const std::string& id);
 };
+
+
+} // namespace data
+} // namespace ore
 
 
 #endif

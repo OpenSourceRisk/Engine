@@ -45,16 +45,93 @@ using ore::data::EquityOptionPositionData;
 using ore::data::TreasuryLockData;
 using ore::data::TrancheData;
 using ore::data::RangeBound;
+using ore::data::BasicUnderlying;
+using ore::data::FXUnderlying;
+using ore::data::InterestRateUnderlying;
+using ore::data::InflationUnderlying;
+using ore::data::CreditUnderlying;
+using ore::data::UnderlyingBuilder;
+using ore::data::PortfolioFieldGetter;
+using ore::data::OptionWrapper;
+using ore::data::EuropeanOptionWrapper;
+using ore::data::AmericanOptionWrapper;
+using ore::data::BermudanOptionWrapper;
+using ore::data::VanillaInstrument;
+using ore::data::ExerciseBuilder;
+using ore::data::CompositeInstrumentWrapper;
+using ore::data::BondPositionInstrumentWrapper;
+using ore::data::CommodityPositionInstrumentWrapper;
+using QuantExt::EquityIndex2;
+using ore::data::EquityPositionInstrumentWrapper;
+using ore::data::EquityOptionPositionInstrumentWrapper;
+using ore::data::SimmCreditQualifierMapping;
+using ore::data::StructuredConfigurationErrorMessage;
+using ore::data::StructuredConfigurationWarningMessage;
+using ore::data::StructuredTradeErrorMessage;
+using ore::data::StructuredTradeWarningMessage;
 %}
 
-%template(NettingSetDetailsVector) std::vector<NettingSetDetails>;
-%template(TradeActionVector) std::vector<ext::shared_ptr<TradeAction>>;
-%template(BondUnderlyingVector) std::vector<ext::shared_ptr<BondUnderlying>>;
-%template(CommodityUnderlyingVector) std::vector<ext::shared_ptr<CommodityUnderlying>>;
-%template(EquityUnderlyingVector) std::vector<ext::shared_ptr<EquityUnderlying>>;
-%template(EquityOptionUnderlyingDataVector) std::vector<ext::shared_ptr<EquityOptionUnderlyingData>>;
+%template(NettingSetDetailsVector) std::vector<ore::data::NettingSetDetails>;
+%template(TradeActionVector) std::vector<ext::shared_ptr<ore::data::TradeAction>>;
+%template(BondUnderlyingVector) std::vector<ext::shared_ptr<ore::data::BondUnderlying>>;
+%template(CommodityUnderlyingVector) std::vector<ext::shared_ptr<ore::data::CommodityUnderlying>>;
+%template(EquityUnderlyingVector) std::vector<ext::shared_ptr<ore::data::EquityUnderlying>>;
+%template(EquityOptionUnderlyingDataVector) std::vector<ext::shared_ptr<ore::data::EquityOptionUnderlyingData>>;
+%template(BondVector) std::vector<ext::shared_ptr<Bond>>;
+%template(CommodityIndexVector) std::vector<ext::shared_ptr<CommodityIndex>>;
+%template(EquityIndex2Vector) std::vector<ext::shared_ptr<QuantExt::EquityIndex2>>;
+%template(VanillaOptionVector) std::vector<ext::shared_ptr<VanillaOption>>;
 
-%shared_ptr(NettingSetDetails)
+%shared_ptr(ore::data::NettingSetDetails)
+%shared_ptr(ore::data::CSA)
+%shared_ptr(ore::data::NettingSetDefinition)
+%shared_ptr(ore::data::NettingSetManager)
+%shared_ptr(ore::data::TradeAction)
+%shared_ptr(ore::data::TradeActions)
+%shared_ptr(ore::data::CollateralBalance)
+%shared_ptr(ore::data::CollateralBalances)
+%shared_ptr(ore::data::CounterpartyInformation)
+%shared_ptr(ore::data::CounterpartyCorrelationMatrix)
+%shared_ptr(ore::data::CounterpartyManager)
+%shared_ptr(ore::data::BondUnderlying)
+%shared_ptr(ore::data::CommodityUnderlying)
+%shared_ptr(ore::data::BondBasket)
+%shared_ptr(ore::data::BondPositionData)
+%shared_ptr(ore::data::CommodityPositionData)
+%shared_ptr(ore::data::EquityPositionData)
+%shared_ptr(ore::data::EquityOptionUnderlyingData)
+%shared_ptr(ore::data::EquityOptionPositionData)
+%shared_ptr(ore::data::TreasuryLockData)
+%shared_ptr(ore::data::TrancheData)
+%shared_ptr(ore::data::RangeBound)
+%shared_ptr(ore::data::BasicUnderlying)
+%shared_ptr(ore::data::FXUnderlying)
+%shared_ptr(ore::data::InterestRateUnderlying)
+%shared_ptr(ore::data::InflationUnderlying)
+%shared_ptr(ore::data::CreditUnderlying)
+%shared_ptr(ore::data::UnderlyingBuilder)
+%shared_ptr(ore::data::PortfolioFieldGetter)
+%shared_ptr(ore::data::OptionWrapper)
+%nodefaultctor ore::data::OptionWrapper;
+%shared_ptr(ore::data::EuropeanOptionWrapper)
+%shared_ptr(ore::data::AmericanOptionWrapper)
+%shared_ptr(ore::data::BermudanOptionWrapper)
+%shared_ptr(ore::data::VanillaInstrument)
+%shared_ptr(ore::data::ExerciseBuilder)
+%shared_ptr(ore::data::CompositeInstrumentWrapper)
+%shared_ptr(ore::data::BondPositionInstrumentWrapper)
+%shared_ptr(ore::data::CommodityPositionInstrumentWrapper)
+%shared_ptr(ore::data::EquityPositionInstrumentWrapper)
+%shared_ptr(ore::data::EquityOptionPositionInstrumentWrapper)
+%shared_ptr(ore::data::SimmCreditQualifierMapping)
+%shared_ptr(ore::data::StructuredConfigurationErrorMessage)
+%shared_ptr(ore::data::StructuredConfigurationWarningMessage)
+%shared_ptr(ore::data::StructuredTradeErrorMessage)
+%shared_ptr(ore::data::StructuredTradeWarningMessage)
+
+namespace ore {
+namespace data {
+
 class NettingSetDetails : public XMLSerializable {
 public:
     NettingSetDetails();
@@ -77,7 +154,6 @@ public:
     const std::map<std::string, std::string> mapRepresentation() const;
 };
 
-%shared_ptr(CSA)
 class CSA {
 public:
     enum Type { Bilateral, CallOnly, PostOnly };
@@ -118,7 +194,6 @@ public:
 
 CSA::Type parseCsaType(const std::string& s);
 
-%shared_ptr(NettingSetDefinition)
 class NettingSetDefinition : public XMLSerializable {
 public:
     NettingSetDefinition();
@@ -164,7 +239,6 @@ public:
     const QuantLib::ext::shared_ptr<CSA>& csaDetails();
 };
 
-%shared_ptr(NettingSetManager)
 class NettingSetManager : public XMLSerializable {
 public:
     NettingSetManager();
@@ -183,7 +257,6 @@ public:
     void loadAll();
 };
 
-%shared_ptr(TradeAction)
 class TradeAction : public XMLSerializable {
 public:
     TradeAction();
@@ -195,7 +268,6 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(TradeActions)
 class TradeActions : public XMLSerializable {
 public:
     TradeActions(const std::vector<TradeAction>& actions = std::vector<TradeAction>());
@@ -205,14 +277,14 @@ public:
     void clear();
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
-};
-%extend TradeActions {
-    TradeActions(const std::vector<ext::shared_ptr<TradeAction>>& actions) {
-        return new TradeActions(VECTOR_SWIG_TO_ORE(actions));
-    }
-}
 
-%shared_ptr(CollateralBalance)
+    %extend {
+        TradeActions(const std::vector<ext::shared_ptr<ore::data::TradeAction>>& actions) {
+            return new ore::data::TradeActions(VECTOR_SWIG_TO_ORE(actions));
+        }
+    }
+};
+
 class CollateralBalance : public XMLSerializable {
 public:
     CollateralBalance();
@@ -232,7 +304,6 @@ public:
     const QuantLib::Real& variationMargin() const;
 };
 
-%shared_ptr(CollateralBalances)
 class CollateralBalances : public XMLSerializable {
 public:
     CollateralBalances();
@@ -252,7 +323,6 @@ enum class CounterpartyCreditQuality { IG, HY, NR };
 
 CounterpartyCreditQuality parseCounterpartyCreditQuality(const std::string& cq);
 
-%shared_ptr(CounterpartyInformation)
 class CounterpartyInformation : public XMLSerializable {
 public:
     CounterpartyInformation(const std::string& counterpartyId, bool isClearingCP = false,
@@ -270,7 +340,6 @@ public:
     const std::string& saCvaRiskBucket() const;
 };
 
-%shared_ptr(CounterpartyCorrelationMatrix)
 class CounterpartyCorrelationMatrix : public XMLSerializable {
 public:
     CounterpartyCorrelationMatrix();
@@ -281,7 +350,6 @@ public:
     QuantLib::Real lookup(const std::string& f1, const std::string& f2);
 };
 
-%shared_ptr(CounterpartyManager)
 class CounterpartyManager : public XMLSerializable {
 public:
     CounterpartyManager();
@@ -298,7 +366,6 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(BondUnderlying)
 class BondUnderlying : public Underlying {
 public:
     BondUnderlying();
@@ -313,7 +380,6 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(CommodityUnderlying)
 class CommodityUnderlying : public Underlying {
 public:
     CommodityUnderlying();
@@ -332,7 +398,6 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(BondBasket)
 class BondBasket : public XMLSerializable {
 public:
     BondBasket();
@@ -347,7 +412,6 @@ public:
           const QuantLib::Currency& ccy, const std::string& reinvestmentEndDate);
 };
 
-%shared_ptr(BondPositionData)
 class BondPositionData : public XMLSerializable {
 public:
     BondPositionData();
@@ -357,15 +421,15 @@ public:
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
     void populateFromBondBasketReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& ref);
-};
-%extend BondPositionData {
-    BondPositionData(const QuantLib::Real quantity,
-                     const std::vector<ext::shared_ptr<BondUnderlying>>& underlyings) {
-        return new BondPositionData(quantity, VECTOR_SWIG_TO_ORE(underlyings));
-    }
-}
 
-%shared_ptr(CommodityPositionData)
+    %extend {
+        BondPositionData(const QuantLib::Real quantity,
+                         const std::vector<ext::shared_ptr<ore::data::BondUnderlying>>& underlyings) {
+            return new ore::data::BondPositionData(quantity, VECTOR_SWIG_TO_ORE(underlyings));
+        }
+    }
+};
+
 class CommodityPositionData : public XMLSerializable {
 public:
     CommodityPositionData();
@@ -373,15 +437,15 @@ public:
     const std::vector<CommodityUnderlying>& underlyings() const;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
-};
-%extend CommodityPositionData {
-    CommodityPositionData(const QuantLib::Real quantity,
-                          const std::vector<ext::shared_ptr<CommodityUnderlying>>& underlyings) {
-        return new CommodityPositionData(quantity, VECTOR_SWIG_TO_ORE(underlyings));
-    }
-}
 
-%shared_ptr(EquityPositionData)
+    %extend {
+        CommodityPositionData(const QuantLib::Real quantity,
+                              const std::vector<ext::shared_ptr<ore::data::CommodityUnderlying>>& underlyings) {
+            return new ore::data::CommodityPositionData(quantity, VECTOR_SWIG_TO_ORE(underlyings));
+        }
+    }
+};
+
 class EquityPositionData : public XMLSerializable {
 public:
     EquityPositionData();
@@ -389,15 +453,15 @@ public:
     const std::vector<EquityUnderlying>& underlyings() const;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
-};
-%extend EquityPositionData {
-    EquityPositionData(const QuantLib::Real quantity,
-                       const std::vector<ext::shared_ptr<EquityUnderlying>>& underlyings) {
-        return new EquityPositionData(quantity, VECTOR_SWIG_TO_ORE(underlyings));
-    }
-}
 
-%shared_ptr(EquityOptionUnderlyingData)
+    %extend {
+        EquityPositionData(const QuantLib::Real quantity,
+                           const std::vector<ext::shared_ptr<ore::data::EquityUnderlying>>& underlyings) {
+            return new ore::data::EquityPositionData(quantity, VECTOR_SWIG_TO_ORE(underlyings));
+        }
+    }
+};
+
 class EquityOptionUnderlyingData : public XMLSerializable {
 public:
     EquityOptionUnderlyingData();
@@ -410,7 +474,6 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(EquityOptionPositionData)
 class EquityOptionPositionData : public XMLSerializable {
 public:
     EquityOptionPositionData();
@@ -418,25 +481,25 @@ public:
     const std::vector<EquityOptionUnderlyingData>& underlyings() const;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
-};
-%extend EquityOptionPositionData {
-    EquityOptionPositionData(const QuantLib::Real quantity,
-                             const std::vector<ext::shared_ptr<EquityOptionUnderlyingData>>& underlyings) {
-        return new EquityOptionPositionData(quantity, VECTOR_SWIG_TO_ORE(underlyings));
-    }
-}
 
-%shared_ptr(TreasuryLockData)
+    %extend {
+        EquityOptionPositionData(const QuantLib::Real quantity,
+                                 const std::vector<ext::shared_ptr<ore::data::EquityOptionUnderlyingData>>& underlyings) {
+            return new ore::data::EquityOptionPositionData(quantity, VECTOR_SWIG_TO_ORE(underlyings));
+        }
+    }
+};
+
 class TreasuryLockData : public XMLSerializable {
 public:
     TreasuryLockData();
-    TreasuryLockData(bool payer, const BondData& bondData, QuantLib::Real referenceRate,
+    TreasuryLockData(bool payer, const ore::data::BondData& bondData, QuantLib::Real referenceRate,
                      std::string dayCounter, std::string terminationDate, int paymentGap,
                      std::string paymentCalendar);
     bool empty() const;
     bool payer() const;
-    const BondData& bondData() const;
-    const BondData& originalBondData() const;
+    const ore::data::BondData& bondData() const;
+    const ore::data::BondData& originalBondData() const;
     QuantLib::Real referenceRate() const;
     const std::string& dayCounter() const;
     const std::string& terminationDate() const;
@@ -446,7 +509,6 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(TrancheData)
 class TrancheData : public XMLSerializable {
 public:
     TrancheData();
@@ -461,7 +523,6 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(RangeBound)
 class RangeBound : public XMLSerializable {
 public:
     RangeBound();
@@ -479,55 +540,24 @@ public:
 
 // ore/OREData/ored/portfolio/underlying.hpp
 
-%{
-using ore::data::BasicUnderlying;
-using ore::data::FXUnderlying;
-using ore::data::InterestRateUnderlying;
-using ore::data::InflationUnderlying;
-using ore::data::CreditUnderlying;
-using ore::data::UnderlyingBuilder;
-using ore::data::PortfolioFieldGetter;
-using ore::data::OptionWrapper;
-using ore::data::EuropeanOptionWrapper;
-using ore::data::AmericanOptionWrapper;
-using ore::data::BermudanOptionWrapper;
-using ore::data::VanillaInstrument;
-using ore::data::ExerciseBuilder;
-using ore::data::CompositeInstrumentWrapper;
-using ore::data::BondPositionInstrumentWrapper;
-using ore::data::CommodityPositionInstrumentWrapper;
-using QuantExt::EquityIndex2;
-using ore::data::EquityPositionInstrumentWrapper;
-using ore::data::EquityOptionPositionInstrumentWrapper;
-using ore::data::SimmCreditQualifierMapping;
-using ore::data::StructuredConfigurationErrorMessage;
-using ore::data::StructuredConfigurationWarningMessage;
-using ore::data::StructuredTradeErrorMessage;
-using ore::data::StructuredTradeWarningMessage;
-%}
-
-%shared_ptr(BasicUnderlying)
 class BasicUnderlying : public Underlying {
 public:
     BasicUnderlying();
     explicit BasicUnderlying(const std::string& name);
 };
 
-%shared_ptr(FXUnderlying)
 class FXUnderlying : public Underlying {
 public:
     explicit FXUnderlying();
     FXUnderlying(const std::string& type, const std::string& name, const QuantLib::Real weight);
 };
 
-%shared_ptr(InterestRateUnderlying)
 class InterestRateUnderlying : public Underlying {
 public:
     explicit InterestRateUnderlying();
     InterestRateUnderlying(const std::string& type, const std::string& name, const QuantLib::Real weight);
 };
 
-%shared_ptr(InflationUnderlying)
 class InflationUnderlying : public Underlying {
 public:
     explicit InflationUnderlying();
@@ -535,14 +565,12 @@ public:
                         const QuantLib::CPI::InterpolationType& interpolation = QuantLib::CPI::InterpolationType::Flat);
 };
 
-%shared_ptr(CreditUnderlying)
 class CreditUnderlying : public Underlying {
 public:
     explicit CreditUnderlying();
     CreditUnderlying(const std::string& type, const std::string& name, const QuantLib::Real weight);
 };
 
-%shared_ptr(UnderlyingBuilder)
 class UnderlyingBuilder : public XMLSerializable {
 public:
     explicit UnderlyingBuilder(const std::string& nodeName = "Underlying",
@@ -553,7 +581,6 @@ public:
 
 // ore/OREData/ored/portfolio/additionalfieldgetter.hpp
 
-%shared_ptr(PortfolioFieldGetter)
 class PortfolioFieldGetter {
 public:
     PortfolioFieldGetter(const ext::shared_ptr<Portfolio>& portfolio,
@@ -562,11 +589,8 @@ public:
 
 // ore/OREData/ored/portfolio/optionwrapper.hpp
 
-// Abstract base class
-%shared_ptr(OptionWrapper)
 class OptionWrapper : public InstrumentWrapper {};
 
-%shared_ptr(EuropeanOptionWrapper)
 class EuropeanOptionWrapper : public OptionWrapper {
 public:
     EuropeanOptionWrapper(const ext::shared_ptr<Instrument>& inst, const bool isLongOption,
@@ -582,7 +606,6 @@ public:
     bool exercise() const override;
 };
 
-%shared_ptr(AmericanOptionWrapper)
 class AmericanOptionWrapper /*: public OptionWrapper*/ {
 public:
     AmericanOptionWrapper(const ext::shared_ptr<Instrument>& inst, const bool isLongOption,
@@ -596,7 +619,6 @@ public:
     bool exercise() const override;
 };
 
-%shared_ptr(BermudanOptionWrapper)
 class BermudanOptionWrapper : public OptionWrapper {
 public:
     BermudanOptionWrapper(const ext::shared_ptr<Instrument>& inst, const bool isLongOption,
@@ -614,7 +636,6 @@ public:
 
 // ore/OREData/ored/portfolio/instrumentwrapper.hpp
 
-%shared_ptr(VanillaInstrument)
 class VanillaInstrument : public InstrumentWrapper {
 public:
     VanillaInstrument(const ext::shared_ptr<Instrument>& inst, const Real multiplier = 1.0,
@@ -625,7 +646,6 @@ public:
 
 // ore/OREData/ored/portfolio/optiondata.hpp
 
-%shared_ptr(ExerciseBuilder)
 class ExerciseBuilder {
 public:
     ExerciseBuilder(const OptionData& optionData, const std::vector<Leg> legs,
@@ -634,8 +654,7 @@ public:
 
 // ore/OREData/ored/portfolio/compositeinstrumentwrapper.hpp
 
-%shared_ptr(CompositeInstrumentWrapper)
-class CompositeInstrumentWrapper : public ore::data::InstrumentWrapper {
+class CompositeInstrumentWrapper : public InstrumentWrapper {
 public:
     CompositeInstrumentWrapper(const std::vector<ext::shared_ptr<InstrumentWrapper>>& wrappers,
                                const std::vector<Handle<Quote>>& fxRates = {}, const Date& valuationDate = Date());
@@ -643,9 +662,6 @@ public:
 
 // ore/OREData/ored/portfolio/bondposition.hpp
 
-%template(BondVector) std::vector<ext::shared_ptr<Bond>>;
-
-%shared_ptr(BondPositionInstrumentWrapper)
 class BondPositionInstrumentWrapper : public InstrumentWrapper {
 public:
     BondPositionInstrumentWrapper(const Real quantity, const std::vector<ext::shared_ptr<Bond>>& bonds,
@@ -655,9 +671,6 @@ public:
 
 // ore/OREData/ored/portfolio/commodityposition.hpp
 
-%template(CommodityIndexVector) std::vector<ext::shared_ptr<CommodityIndex>>;
-
-%shared_ptr(CommodityPositionInstrumentWrapper)
 class CommodityPositionInstrumentWrapper : public Instrument {
 public:
     CommodityPositionInstrumentWrapper(const Real quantity,
@@ -668,20 +681,14 @@ public:
 
 // ore/OREData/ored/portfolio/equityposition.hpp
 
-%template(EquityIndex2Vector) std::vector<ext::shared_ptr<EquityIndex2>>;
-
-%shared_ptr(EquityPositionInstrumentWrapper)
 class EquityPositionInstrumentWrapper : public Instrument {
 public:
     EquityPositionInstrumentWrapper(const Real quantity,
-                                    const std::vector<ext::shared_ptr<EquityIndex2>>& equities,
+                                    const std::vector<ext::shared_ptr<QuantExt::EquityIndex2>>& equities,
                                     const std::vector<Real>& weights,
                                     const std::vector<Handle<Quote>>& fxConversion = {});
 };
 
-%template(VanillaOptionVector) std::vector<ext::shared_ptr<VanillaOption>>;
-
-%shared_ptr(EquityOptionPositionInstrumentWrapper)
 class EquityOptionPositionInstrumentWrapper : public Instrument {
 public:
     EquityOptionPositionInstrumentWrapper(const Real quantity,
@@ -693,7 +700,6 @@ public:
 
 // ore/OREData/ored/portfolio/simmcreditqualifiermapping.hpp
 
-%shared_ptr(SimmCreditQualifierMapping)
 struct SimmCreditQualifierMapping {
     SimmCreditQualifierMapping();
     SimmCreditQualifierMapping(const std::string& targetQualifier, const std::string& creditGroup, bool hasCreditRisk);
@@ -701,7 +707,6 @@ struct SimmCreditQualifierMapping {
 
 // ore/OREData/ored/portfolio/structuredconfigurationerror.hpp
 
-%shared_ptr(StructuredConfigurationErrorMessage)
 class StructuredConfigurationErrorMessage {
 public:
     StructuredConfigurationErrorMessage(const std::string& configurationType, const std::string& configurationId,
@@ -711,7 +716,6 @@ public:
 
 // ore/OREData/ored/portfolio/structuredconfigurationwarning.hpp
 
-%shared_ptr(StructuredConfigurationWarningMessage)
 class StructuredConfigurationWarningMessage {
 public:
     StructuredConfigurationWarningMessage(const std::string& configurationType, const std::string& configurationId,
@@ -721,7 +725,6 @@ public:
 
 // ore/OREData/ored/portfolio/structuredtradeerror.hpp
 
-%shared_ptr(StructuredTradeErrorMessage)
 class StructuredTradeErrorMessage {
 public:
     StructuredTradeErrorMessage(const ext::shared_ptr<Trade>& trade, const std::string& exceptionType,
@@ -732,7 +735,6 @@ public:
 
 // ore/OREData/ored/portfolio/structuredtradewarning.hpp
 
-%shared_ptr(StructuredTradeWarningMessage)
 class StructuredTradeWarningMessage {
 public:
     StructuredTradeWarningMessage(const ext::shared_ptr<Trade>& trade, const std::string& warningType,
@@ -740,5 +742,8 @@ public:
     StructuredTradeWarningMessage(const std::string& tradeId, const std::string& tradeType,
                                   const std::string& warningType, const std::string& warningWhat);
 };
+
+} // namespace data
+} // namespace ore
 
 #endif

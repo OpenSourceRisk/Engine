@@ -32,39 +32,7 @@
 %include tuple.i
 
 %{
-using ore::analytics::Parameters;
-using ore::analytics::OREApp;
-using ore::analytics::Analytic;
-using ore::analytics::AnalyticsManager;
-using ore::analytics::InputParameters;
-using ore::analytics::NPVCube;
-using ore::analytics::AggregationScenarioData;
-using ore::analytics::MarketDataLoaderImpl;
-using ore::analytics::MarketDataLoader;
-using ore::analytics::MarketDataInMemoryLoader;
-using ore::analytics::MarketCalibrationReport;
-using ore::analytics::DummyMarketDataLoader;
-using ore::analytics::PortfolioAnalyser;
-using ore::analytics::ScenarioSimMarketParameters;
-using ore::analytics::SensitivityScenarioData;
-using ore::analytics::StressTestScenarioData;;
-using ore::analytics::ScenarioGeneratorData;
-using ore::data::Portfolio;
-using ore::data::MarketImpl;
-using ore::data::PlainInMemoryReport;
-using ore::data::TodaysMarketParameters;
-using ore::data::ReferenceDatum;
-using ore::data::ReferenceDataManager;
-using ore::data::BasicReferenceDataManager;
-using ore::data::CurveConfigurations;
-using ore::data::EngineData;
-using ore::data::IborFallbackConfig;
-using ore::data::Report;
-using ore::data::AssetClass;
-using ore::data::MarketObject;
-using ore::data::NettingSetManager;
-using ore::data::CollateralBalances;
-
+typedef ore::data::AssetClass AssetClass;
 %}
 
 namespace std {
@@ -74,13 +42,29 @@ namespace std {
     %template() pair<Date, string>;
     %template(DateStringPairVector) vector<pair<Date, string>>;
     %template(SizeVector) vector<QuantLib::Size>;
-    %template(MarketObjectMap) map<enum MarketObject, set<string>>;
-    %template(AllMarketObjectMap) map<string, map<enum MarketObject, set<string>>>;
+        %template(MarketObjectMap) map<ore::data::MarketObject, set<string>>;
+        %template(AllMarketObjectMap) map<string, map<ore::data::MarketObject, set<string>>>;
 }
+
+%template(StringStringPair) std::pair<std::string, std::string>;
+%template(PairOfStringsPairBool) std::pair<std::pair<std::string, std::string>, bool>;
+%template(MarketFixingsVector) std::vector<std::pair<std::pair<std::string, std::string>, bool>>;
 
 // ORE Analytics
 
-%shared_ptr(Parameters)
+%shared_ptr(ore::analytics::Parameters)
+%shared_ptr(ore::data::IborFallbackConfig)
+%shared_ptr(ore::analytics::InputParameters)
+%shared_ptr(ore::analytics::OREApp)
+%shared_ptr(ore::analytics::Analytic)
+%shared_ptr(ore::analytics::MarketDataLoader)
+%shared_ptr(ore::analytics::AnalyticsManager)
+%shared_ptr(ore::analytics::MarketDataInMemoryLoader)
+%shared_ptr(ore::analytics::DummyMarketDataLoader)
+%shared_ptr(ore::analytics::PortfolioAnalyser)
+namespace ore {
+namespace analytics {
+
 class Parameters {
   public:
     Parameters();
@@ -95,8 +79,6 @@ class Parameters {
     //void add(const std::string& groupName, const std::string& paramName, const std::string& paramValue);
 };
 
-%shared_ptr(IborFallbackConfig)
-%shared_ptr(InputParameters)
 class InputParameters {
 public:
     
@@ -104,25 +86,25 @@ public:
 
     // Getters, to be continued
     const QuantLib::Date& asof();
-    const ext::shared_ptr<Portfolio>& portfolio();
+    const ext::shared_ptr<ore::data::Portfolio>& portfolio();
     Size nThreads();
-    CurveConfigurationsManager& curveConfigs();
-    const ext::shared_ptr<TodaysMarketParameters>& todaysMarketParams() const;
+    ore::data::CurveConfigurationsManager& curveConfigs();
+    const ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams() const;
     const std::string& marketDataLoaderOutput();
-    const ext::shared_ptr<BasicReferenceDataManager>& refDataManager() const;
-    const ext::shared_ptr<EngineData>& pricingEngine() const;
-    const ext::shared_ptr<Conventions>& conventions() const;
-    const ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig() const;
+    const ext::shared_ptr<ore::data::BasicReferenceDataManager>& refDataManager() const;
+    const ext::shared_ptr<ore::data::EngineData>& pricingEngine() const;
+    const ext::shared_ptr<ore::data::Conventions>& conventions() const;
+    const ext::shared_ptr<ore::data::IborFallbackConfig>& iborFallbackConfig() const;
     const ext::shared_ptr<ore::data::BaselTrafficLightData>& baselTrafficLightConfig() const;
     const ext::shared_ptr<ore::data::CurrencyConfig>& currencyConfigs();
     const ext::shared_ptr<ore::data::CalendarAdjustmentConfig>& calendarAdjustmentConfigs();
-    const ext::shared_ptr<CurveConfigurations>& curveConfig(const std::string& s = std::string()) const;
+    const ext::shared_ptr<ore::data::CurveConfigurations>& curveConfig(const std::string& s = std::string()) const;
     QuantLib::Date mporDate();
         
-    const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& stressSimMarketParams() const;
-    const QuantLib::ext::shared_ptr<StressTestScenarioData>& stressScenarioData() const;
-    const QuantLib::ext::shared_ptr<EngineData>& stressPricingEngine() const;
-    const QuantLib::ext::shared_ptr<SensitivityScenarioData>& stressSensitivityScenarioData() const;
+    const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& stressSimMarketParams() const;
+    const QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData>& stressScenarioData() const;
+    const QuantLib::ext::shared_ptr<ore::data::EngineData>& stressPricingEngine() const;
+    const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& stressSensitivityScenarioData() const;
 
     // and Setters
     void setAsOfDate(const std::string& s); 
@@ -146,14 +128,14 @@ public:
         const ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensiScenarioData);
     void setRefDataManager(const std::string& xml);
     void setConventions(const std::string& xml);
-    void setConventions(const ext::shared_ptr<Conventions>& convs);    
+    void setConventions(const ext::shared_ptr<ore::data::Conventions>& convs);    
     void setConventionsFromFile(const std::string& fileName);
     void setMporConventions(const std::string& xml);
     void setIborFallbackConfig(const std::string& xml);
     void setIborFallbackConfig(const std::string& xml);
     void setIborFallbackConfigFromFile(const std::string& fileName);
     void setCurveConfigs(const std::string& xml, std::string id = std::string());
-    void setCurveConfigs(const ext::shared_ptr<CurveConfigurations>& cc, std::string id = std::string());
+    void setCurveConfigs(const ext::shared_ptr<ore::data::CurveConfigurations>& cc, std::string id = std::string());
     void setCurveConfigsFromFile(const std::string& fileName, std::string id = std::string());
     void setCurveConfigsFromFile(const std::string& fileName, std::string id = std::string());
     void setCalendarAdjustment(const std::string& xml);
@@ -161,12 +143,12 @@ public:
     void setCurrencyConfig(const std::string& xml);    
     void setCurrencyConfigFromFile(const std::string& fileName);
     void setPricingEngine(const std::string& xml);
-    void setPricingEngine(const ext::shared_ptr<EngineData>& ed);
+    void setPricingEngine(const ext::shared_ptr<ore::data::EngineData>& ed);
     void setPricingEngineFromFile(const std::string& fileName);
     void setScriptLibrary(const std::string& xml);
     void setTodaysMarketParams(const std::string& xml);
     void setPortfolio(const std::string& xml);
-    void setPortfolio(const ext::shared_ptr<Portfolio>& portfolio);
+    void setPortfolio(const ext::shared_ptr<ore::data::Portfolio>& portfolio);
     void setPortfolioFromFile(const std::string& fileNameString, const std::filesystem::path& inputPath);
     void setMarketConfigs(const std::map<std::string, std::string>& m);
     void setThreads(int i);
@@ -205,7 +187,7 @@ public:
     void setSensiSimMarketParams(const std::string& xml);
     void setSensiScenarioData(const std::string& xml);
     void setSensiPricingEngine(const std::string& xml);
-    void setSensiPricingEngine(const ext::shared_ptr<EngineData>& engineData);
+    void setSensiPricingEngine(const ext::shared_ptr<ore::data::EngineData>& engineData);
     // Setters for scenario
     void setScenarioSimMarketParams(const std::string& xml);
     void setScenarioSimMarketParamsFromFile(const std::string& fileName);
@@ -214,9 +196,9 @@ public:
     void setStressThreshold(Real r);
     void setStressSimMarketParams(const std::string& xml); 
     void setStressScenarioData(const std::string& xml);
-    void setStressScenarioData(const ext::shared_ptr<StressTestScenarioData>& stressScenarioData);
+    void setStressScenarioData(const ext::shared_ptr<ore::analytics::StressTestScenarioData>& stressScenarioData);
     void setStressPricingEngine(const std::string& xml); 
-    void setStressPricingEngine(const ext::shared_ptr<EngineData>& engineData);
+    void setStressPricingEngine(const ext::shared_ptr<ore::data::EngineData>& engineData);
     // Setters for VaR
     void setVarQuantiles(const std::string& s); // parse to vector<Real>
     void setVarBreakDown(bool b);
@@ -252,23 +234,23 @@ public:
     void setWriteCube(bool b);
     void setWriteScenarios(bool b);
     void setExposureSimMarketParams(const std::string& xml);
-    void setExposureSimMarketParams(const ext::shared_ptr<ScenarioSimMarketParameters>& xml);
+    void setExposureSimMarketParams(const ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& xml);
     void setScenarioGeneratorData(const std::string& xml);
-    void setScenarioGeneratorData(const ext::shared_ptr<ScenarioGeneratorData>& xml);
+    void setScenarioGeneratorData(const ext::shared_ptr<ore::analytics::ScenarioGeneratorData>& xml);
     void setCrossAssetModelData(const std::string& xml);
-    void setCrossAssetModelData(const ext::shared_ptr<CrossAssetModelData>& xml);
+    void setCrossAssetModelData(const ext::shared_ptr<ore::data::CrossAssetModelData>& xml);
     void setSimulationPricingEngine(const std::string& xml); 
-    void setSimulationPricingEngine(const ext::shared_ptr<EngineData>& engineData);
+    void setSimulationPricingEngine(const ext::shared_ptr<ore::data::EngineData>& engineData);
     void setAmcPricingEngine(const std::string& xml);
-    void setAmcPricingEngine(const ext::shared_ptr<EngineData>& engineData);
+    void setAmcPricingEngine(const ext::shared_ptr<ore::data::EngineData>& engineData);
     void setAmcCgPricingEngine(const std::string& xml);
-    void setAmcCgPricingEngine(const ext::shared_ptr<EngineData>& engineData);
+    void setAmcCgPricingEngine(const ext::shared_ptr<ore::data::EngineData>& engineData);
     void setNettingSetManager(const std::string& xml);
-    void setNettingSetManager(const ext::shared_ptr<NettingSetManager>& xml);
+    void setNettingSetManager(const ext::shared_ptr<ore::data::NettingSetManager>& xml);
     // TODO: load from XML
     // void setCounterpartyManager(const std::string& xml);
     void setCollateralBalances(const std::string& xml);
-    void setCollateralBalances(const ext::shared_ptr<CollateralBalances>& xml);
+    void setCollateralBalances(const ext::shared_ptr<ore::data::CollateralBalances>& xml);
     // Setters for xva
     void setXvaBaseCurrency(const std::string& s);
     // TODO: API for setting NPV and market cubes
@@ -334,19 +316,18 @@ public:
     void setAnalytics(const std::string& s);
     void insertAnalytic(const std::string& s); 
     void removeAnalytic(const std::string& s);
-    void setCube(const ext::shared_ptr<NPVCube>& file);
-    void setMarketCube(const ext::shared_ptr<AggregationScenarioData>& file);
+    void setCube(const ext::shared_ptr<ore::analytics::NPVCube>& file);
+    void setMarketCube(const ext::shared_ptr<ore::analytics::AggregationScenarioData>& file);
 
     const std::map<std::string, std::string>&  marketConfigs() const; 
 };
 
-%shared_ptr(OREApp)
 class OREApp {
   public:
 
-    OREApp(const ext::shared_ptr<Parameters>& params, bool console = false);
+    OREApp(const ext::shared_ptr<ore::analytics::Parameters>& params, bool console = false);
 
-    OREApp(const ext::shared_ptr<InputParameters>& inputs, const std::string& logFile = "", Size logLevel = 31,
+    OREApp(const ext::shared_ptr<ore::analytics::InputParameters>& inputs, const std::string& logFile = "", Size logLevel = 31,
            bool console = false, bool clearLog = true);
     
     void run();
@@ -354,7 +335,7 @@ class OREApp {
     void run(const std::vector<std::string>& marketData,
              const std::vector<std::string>& fixingData);
                           
-    void run(const ext::shared_ptr<MarketDataLoader> loader);
+    void run(const ext::shared_ptr<ore::analytics::MarketDataLoader> loader);
 
     void setupLog(QuantLib::Size mask = 15, const std::string& path = "", const std::string& file = "", 
                   const std::filesystem::path& logRootPath = std::filesystem::path(),
@@ -362,26 +343,26 @@ class OREApp {
                   bool progressLogToConsole = false, const std::string& structuredLogFile = "",
                   QuantLib::Size structuredLogRotationSize = 100 * 1024 * 1024);
 
-    ext::shared_ptr<InputParameters> getInputs();
+    ext::shared_ptr<ore::analytics::InputParameters> getInputs();
 
     std::set<std::string> getAnalyticTypes();
     std::set<std::string> getSupportedAnalyticTypes();
-    const ext::shared_ptr<Analytic>& getAnalytic(std::string type); 
+    const ext::shared_ptr<ore::analytics::Analytic>& getAnalytic(std::string type); 
 
     std::set<std::string> getReportNames();
-    ext::shared_ptr<PlainInMemoryReport> getReport(std::string reportName);
+    ext::shared_ptr<ore::data::PlainInMemoryReport> getReport(std::string reportName);
 
     std::set<std::string> getCubeNames();
-    ext::shared_ptr<NPVCube> getCube(std::string cubeName);
+    ext::shared_ptr<ore::analytics::NPVCube> getCube(std::string cubeName);
 
     std::set<std::string> getMarketCubeNames();
-    ext::shared_ptr<AggregationScenarioData> getMarketCube(std::string cubeName);
+    ext::shared_ptr<ore::analytics::AggregationScenarioData> getMarketCube(std::string cubeName);
 
     std::vector<std::string> getErrors();
 
     Real getRunTime();
 
-    ext::shared_ptr<BufferLogger> getLogger(const std::string& name);
+    ext::shared_ptr<ore::data::BufferLogger> getLogger(const std::string& name);
     std::vector<std::string>& getProgressLog();
 
     std::string version();
@@ -390,84 +371,78 @@ class OREApp {
     void closeLog();
 };
 
-%shared_ptr(Analytic)
 class Analytic {
  public:
-    ext::shared_ptr<MarketImpl> getMarket() const;
-    const ext::shared_ptr<Portfolio>& portfolio() const;
+    ext::shared_ptr<ore::data::MarketImpl> getMarket() const;
+    const ext::shared_ptr<ore::data::Portfolio>& portfolio() const;
 };
 
-%shared_ptr(MarketDataLoader)
 class MarketDataLoader {
 public:
-    MarketDataLoader(const ext::shared_ptr<InputParameters>& inputs, ext::shared_ptr<MarketDataLoaderImpl> impl)
+    MarketDataLoader(const ext::shared_ptr<ore::analytics::InputParameters>& inputs,
+                     ext::shared_ptr<ore::analytics::MarketDataLoaderImpl> impl)
         : inputs_(inputs), impl_(impl);
 
-     virtual void populateLoader(const std::vector<ext::shared_ptr<TodaysMarketParameters>>& todaysMarketParameters,
+     virtual void populateLoader(const std::vector<ext::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters,
         const std::set<Date>& loaderDates);
 
-     virtual void populateLoader(const ext::shared_ptr<TodaysMarketParameters>& todaysMarketParameters,
+     virtual void populateLoader(const ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParameters,
                    const std::set<Date>& loaderDates);
 };
 
-%shared_ptr(AnalyticsManager)
 class AnalyticsManager {
 public:
-    AnalyticsManager(const ext::shared_ptr<InputParameters>& inputs,
-                     const ext::shared_ptr<MarketDataLoader>& marketDataLoader);
+    AnalyticsManager(const ext::shared_ptr<ore::analytics::InputParameters>& inputs,
+                     const ext::shared_ptr<ore::analytics::MarketDataLoader>& marketDataLoader);
     void initialise();
-    void runAnalytics(const ext::shared_ptr<MarketCalibrationReport>& marketCalibrationReport = nullptr);
+    void runAnalytics(const ext::shared_ptr<ore::analytics::MarketCalibrationReport>& marketCalibrationReport = nullptr);
 };
 
-%shared_ptr(MarketDataInMemoryLoader)
 class MarketDataInMemoryLoader : public MarketDataLoader {
 public: 
-    MarketDataInMemoryLoader(const ext::shared_ptr<InputParameters>& inputs,
+    MarketDataInMemoryLoader(const ext::shared_ptr<ore::analytics::InputParameters>& inputs,
                              const std::vector<std::string>& marketData,
                              const std::vector<std::string>& fixingData);
 };
 
-%template(StringStringPair) std::pair<std::string, std::string>;
-%template(PairOfStringsPairBool) std::pair<std::pair<std::string, std::string>, bool>;
-%template(MarketFixingsVector) std::vector<std::pair<std::pair<std::string, std::string>, bool>>;
-
-%shared_ptr(DummyMarketDataLoader)
 class DummyMarketDataLoader : public MarketDataLoader {
 public:
-    DummyMarketDataLoader(const ext::shared_ptr<InputParameters>& inputs);
+    DummyMarketDataLoader(const ext::shared_ptr<ore::analytics::InputParameters>& inputs);
 
     std::vector<std::pair<std::string, std::string>> marketDataQuotes();
     std::vector<std::pair<std::pair<std::string, std::string>, bool>> marketFixings();
 };
 
 
-%shared_ptr(PortfolioAnalyser)
 class PortfolioAnalyser {
 public:
-    PortfolioAnalyser(const ext::shared_ptr<Portfolio>& p,
-                      const ext::shared_ptr<EngineData>& ed, const std::string& baseCcy,
-                      const ext::shared_ptr<CurveConfigurations>& curveConfigs = nullptr,
-                      const ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
-                      const ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
-                          ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
+    PortfolioAnalyser(const ext::shared_ptr<ore::data::Portfolio>& p,
+                      const ext::shared_ptr<ore::data::EngineData>& ed, const std::string& baseCcy,
+                      const ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs = nullptr,
+                      const ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr,
+                      const ext::shared_ptr<ore::data::IborFallbackConfig>& iborFallbackConfig =
+                          ext::make_shared<ore::data::IborFallbackConfig>(ore::data::IborFallbackConfig::defaultConfig()),
                       bool recordSecuritySpecificCreditCurves = false, const std::string& baseCcyDiscountCurve = std::string());
 
-    bool hasRiskFactorType(const RiskFactorKey::KeyType& riskFactorType) const;
-    bool hasMarketObjectType(const MarketObject& marketObject) const;
+    bool hasRiskFactorType(const ore::analytics::RiskFactorKey::KeyType& riskFactorType) const;
+    bool hasMarketObjectType(const ore::data::MarketObject& marketObject) const;
     std::map<ore::analytics::RiskFactorKey::KeyType, std::set<std::string>> riskFactors() const;
-    std::set<std::string> riskFactorNames(const RiskFactorKey::KeyType& riskFactorType) const;
-    std::set<RiskFactorKey::KeyType> riskFactorTypes() const;
-    std::map<MarketObject, std::set<std::string>>
+    std::set<std::string> riskFactorNames(const ore::analytics::RiskFactorKey::KeyType& riskFactorType) const;
+    std::set<ore::analytics::RiskFactorKey::KeyType> riskFactorTypes() const;
+    std::map<ore::data::MarketObject, std::set<std::string>>
     marketObjects(const QuantLib::ext::optional<std::string> config = QuantLib::ext::nullopt) const;
-    std::map<std::string, std::map<MarketObject, std::set<std::string>>> allMarketObjects() const;
+    std::map<std::string, std::map<ore::data::MarketObject, std::set<std::string>>> allMarketObjects() const;
     std::set<std::string> swapindices() const;
-    void riskFactorReport(Report& reportOut) const;
-    void marketObjectReport(Report& reportOut) const;
+    void riskFactorReport(ore::data::Report& reportOut) const;
+    void marketObjectReport(ore::data::Report& reportOut) const;
     std::set<std::string> counterparties();
     Date maturity();
-    const ext::shared_ptr<Portfolio>& portfolio() const;
-    std::map<AssetClass, std::set<std::string>> underlyingIndices() const;
+    const ext::shared_ptr<ore::data::Portfolio>& portfolio() const;
+    std::map<ore::data::AssetClass, std::set<std::string>> underlyingIndices() const;
     void addDependencies();
 };
+
+} // namespace analytics
+} // namespace ore
 
 #endif

@@ -22,85 +22,105 @@
 %include orea_app.i
 %include orea_scenario_ext.i
 
-%{
-using ore::analytics::AnalyticFactory;
-using ore::analytics::PricingAnalytic;
-using ore::analytics::XvaAnalytic;
-using ore::analytics::SimmAnalytic;
-using ore::analytics::SaCcrAnalytic;
-%}
+%shared_ptr(ore::analytics::AnalyticFactory)
+%shared_ptr(ore::analytics::PricingAnalytic)
+%shared_ptr(ore::analytics::XvaAnalytic)
+%shared_ptr(ore::analytics::SimmAnalytic)
+%shared_ptr(ore::analytics::SaCcrAnalytic)
 
-%shared_ptr(AnalyticFactory)
-%shared_ptr(PricingAnalytic)
-%shared_ptr(XvaAnalytic)
-%shared_ptr(SimmAnalytic)
-%shared_ptr(SaCcrAnalytic)
+%rename(SaccrAnalytic) ore::analytics::SaCcrAnalytic;
 
-%rename(SaccrAnalytic) SaCcrAnalytic;
-
-class PricingAnalytic : public Analytic {
+namespace ore {
+namespace analytics {
+class PricingAnalytic : public ore::analytics::Analytic {
   public:
     %extend {
         PricingAnalytic() {
-            auto inputs = QuantLib::ext::make_shared<InputParameters>();
-            return new PricingAnalytic(inputs, QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>());
+                        auto inputs = QuantLib::ext::make_shared<ore::analytics::InputParameters>();
+            return new ore::analytics::PricingAnalytic(
+                inputs, QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>());
         }
-        PricingAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs) {
-            return new PricingAnalytic(inputs, QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>());
+        PricingAnalytic(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs) {
+            return new ore::analytics::PricingAnalytic(
+                inputs, QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>());
         }
     }
 };
+}
+}
 
-class XvaAnalytic : public Analytic {
+namespace ore {
+namespace analytics {
+class XvaAnalytic : public ore::analytics::Analytic {
   public:
     %extend {
         XvaAnalytic() {
-            auto inputs = QuantLib::ext::make_shared<InputParameters>();
-            return new XvaAnalytic(inputs, QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>());
+                        auto inputs = QuantLib::ext::make_shared<ore::analytics::InputParameters>();
+            return new ore::analytics::XvaAnalytic(
+                inputs, QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>());
         }
-        XvaAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs) {
-            return new XvaAnalytic(inputs, QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>());
+        XvaAnalytic(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs) {
+            return new ore::analytics::XvaAnalytic(
+                inputs, QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>());
         }
     }
 };
+}
+}
 
-class SimmAnalytic : public Analytic {
+namespace ore {
+namespace analytics {
+class SimmAnalytic : public ore::analytics::Analytic {
   public:
     %extend {
         SimmAnalytic() {
-            auto inputs = QuantLib::ext::make_shared<InputParameters>();
-            return new SimmAnalytic(inputs, QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>());
+                        auto inputs = QuantLib::ext::make_shared<ore::analytics::InputParameters>();
+            return new ore::analytics::SimmAnalytic(
+                inputs, QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>());
         }
-        SimmAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs) {
-            return new SimmAnalytic(inputs, QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>());
+        SimmAnalytic(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs) {
+            return new ore::analytics::SimmAnalytic(
+                inputs, QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>());
         }
     }
 
     bool hasNettingSetDetails();
     bool determineWinningRegulations();
 };
+}
+}
 
-class SaCcrAnalytic : public Analytic {
+namespace ore {
+namespace analytics {
+class SaCcrAnalytic : public ore::analytics::Analytic {
   public:
     %extend {
         SaCcrAnalytic() {
-            auto inputs = QuantLib::ext::make_shared<InputParameters>();
-            return new SaCcrAnalytic(inputs, QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>());
+                        auto inputs = QuantLib::ext::make_shared<ore::analytics::InputParameters>();
+            return new ore::analytics::SaCcrAnalytic(
+                inputs, QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>());
         }
-        SaCcrAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs) {
-            return new SaCcrAnalytic(inputs, QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>());
+        SaCcrAnalytic(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs) {
+            return new ore::analytics::SaCcrAnalytic(
+                inputs, QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>());
         }
     }
 };
+}
+}
 
-%nodefaultctor AnalyticFactory;
+%nodefaultctor ore::analytics::AnalyticFactory;
+namespace ore {
+namespace analytics {
 class AnalyticFactory {
   public:
     %extend {
-        static AnalyticFactory* instance() {
-            return &AnalyticFactory::instance();
+        static ore::analytics::AnalyticFactory* instance() {
+            return &ore::analytics::AnalyticFactory::instance();
         }
     }
 };
+}
+}
 
 #endif

@@ -30,23 +30,13 @@
 %include cashflows.i
 %include qle_indexes.i
 
-%{
-using QuantExt::ExtendedHestonProcess;
-using QuantExt::CrossAssetStateProcess;
-using QuantExt::IrLgm1fStateProcess;
-using QuantExt::IrLgm1fParametrization;
-using QuantExt::CrossAssetModel;
-using QuantLib::Real;
-using QuantLib::Handle;
-using QuantLib::YieldTermStructure;
-using QuantLib::Quote;
-using QuantLib::Size;
-%}
-
-%shared_ptr(CrossAssetModel)
+%shared_ptr(QuantExt::CrossAssetModel)
+namespace QuantExt {
 class CrossAssetModel;
+}
 
-%shared_ptr(ExtendedHestonProcess)
+%shared_ptr(QuantExt::ExtendedHestonProcess)
+namespace QuantExt {
 class ExtendedHestonProcess : public HestonProcess {
 public:
     ExtendedHestonProcess(Handle<YieldTermStructure> riskFreeRate,
@@ -73,9 +63,11 @@ public:
     Real pdfIntegrand(Real u, Real x, Real time) const;
     Real cdfIntegrand(Real u, Real x, Real time) const;
 };
+}
 
-%shared_ptr(CrossAssetStateProcess)
-%nodefaultctor CrossAssetStateProcess;
+%shared_ptr(QuantExt::CrossAssetStateProcess)
+%nodefaultctor QuantExt::CrossAssetStateProcess;
+namespace QuantExt {
 class CrossAssetStateProcess : public StochasticProcess {
 public:
     Size size() const override;
@@ -86,11 +78,13 @@ public:
     Array evolve(Time t0, const Array& x0, Time dt, const Array& dw) const override;
     void resetCache(const Size timeSteps) const;
 };
+}
 
-%shared_ptr(IrLgm1fStateProcess)
+%shared_ptr(QuantExt::IrLgm1fStateProcess)
+namespace QuantExt {
 class IrLgm1fStateProcess : public StochasticProcess1D {
 public:
-    IrLgm1fStateProcess(const QuantLib::ext::shared_ptr<IrLgm1fParametrization>& parametrization);
+    IrLgm1fStateProcess(const QuantLib::ext::shared_ptr<QuantExt::IrLgm1fParametrization>& parametrization);
     Real x0() const override;
     Real drift(Time t, Real x) const override;
     Real diffusion(Time t, Real x) const override;
@@ -99,5 +93,6 @@ public:
     Real variance(Time t0, Real x0, Time dt) const override;
     void resetCache(const Size timeSteps) const;
 };
+}
 
 #endif

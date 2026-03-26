@@ -23,20 +23,20 @@
 %include ored_xmlutils.i
 
 %{
-using ore::data::Portfolio;
-using ore::data::Envelope;
-using ore::data::MarketContext;
-using ore::data::EngineData;
-using ore::data::ReferenceDataManager;
-using ore::data::LegBuilder;
-using ore::data::EngineBuilder;
-using ore::data::EngineFactory;
-using ore::data::IborFallbackConfig;
-using ore::data::Trade;
-using ore::data::TradeFactory;
-using ore::data::InstrumentWrapper;
-using ore::data::XMLSerializable;
-using QuantLib::CashFlow;
+typedef ore::data::Portfolio Portfolio;
+typedef ore::data::Envelope Envelope;
+typedef ore::data::MarketContext MarketContext;
+typedef ore::data::EngineData EngineData;
+typedef ore::data::ReferenceDataManager ReferenceDataManager;
+typedef ore::data::LegBuilder LegBuilder;
+typedef ore::data::EngineBuilder EngineBuilder;
+typedef ore::data::EngineFactory EngineFactory;
+typedef ore::data::Market Market;
+typedef ore::data::IborFallbackConfig IborFallbackConfig;
+typedef ore::data::Trade Trade;
+typedef ore::data::TradeFactory TradeFactory;
+typedef ore::data::InstrumentWrapper InstrumentWrapper;
+typedef ore::data::NettingSetDetails NettingSetDetails;
 %}
 
 %include std_string.i
@@ -46,9 +46,18 @@ using QuantLib::CashFlow;
 %apply std::string & { string & };
 %apply const std::string & { const string & };
 
-%template(TradeVector) std::vector<ext::shared_ptr<Trade>>;
+%template(TradeVector) std::vector<ext::shared_ptr<ore::data::Trade>>;
 %template(StringStringMap) std::map<std::string, std::string>;
-%template(StringTradeMap) std::map<std::string, ext::shared_ptr<Trade>>;
+%template(StringTradeMap) std::map<std::string, ext::shared_ptr<ore::data::Trade>>;
+%shared_ptr(ore::data::EngineData)
+%shared_ptr(ore::data::LegBuilder)
+%shared_ptr(ore::data::EngineBuilder)
+%shared_ptr(ore::data::EngineFactory)
+%shared_ptr(ore::data::TradeFactory)
+%shared_ptr(ore::data::Envelope)
+%shared_ptr(ore::data::InstrumentWrapper)
+%shared_ptr(ore::data::Trade)
+%shared_ptr(ore::data::Portfolio)
 
 %{
 template<typename T>
@@ -113,9 +122,14 @@ std::vector<T> VECTOR_SWIG_TO_ORE(const std::vector<ext::shared_ptr<T>>& v) {
 %typemap(in) const vector<ext::shared_ptr<CppType> >& = const std::vector<ext::shared_ptr<CppType> >&;
 %enddef
 
+%template(InstrumentWrapperVector) std::vector<QuantLib::ext::shared_ptr<ore::data::InstrumentWrapper>>;
+SWIG_SHARED_PTR_VECTOR_TYPEMAP(ore::data::InstrumentWrapper, InstrumentWrapperVector)
+
+namespace ore {
+namespace data {
+
 enum class MarketContext { irCalibration, fxCalibration, eqCalibration, pricing };
 
-%shared_ptr(EngineData)
 class EngineData : public XMLSerializable {
 public:
     EngineData();
@@ -136,54 +150,49 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(LegBuilder)
 class LegBuilder {
   private:
     LegBuilder(const std::string& legType);
 };
 
-%shared_ptr(EngineBuilder)
 class EngineBuilder {
   public:
     EngineBuilder(const std::string& model, const std::string& engine,
                   const std::set<std::string>& tradeTypes);
 };
 
-%shared_ptr(EngineFactory)
 class EngineFactory {
   public:
-    EngineFactory(const ext::shared_ptr<EngineData>& data,
-                  const ext::shared_ptr<Market>& market,
-                  const std::map<MarketContext, std::string>& configurations = std::map<MarketContext, std::string>(),
-                  const ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
-                  const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
-                     QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
-                  const std::vector<ext::shared_ptr<EngineBuilder>> extraEngineBuilders = {});
+   EngineFactory(const QuantLib::ext::shared_ptr<ore::data::EngineData>& data,
+          const QuantLib::ext::shared_ptr<Market>& market,
+            const std::map<ore::data::MarketContext, std::string>& configurations = std::map<ore::data::MarketContext, std::string>(),
+            const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr,
+            const QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig>& iborFallbackConfig =
+              QuantLib::ext::make_shared<ore::data::IborFallbackConfig>(ore::data::IborFallbackConfig::defaultConfig()),
+            const std::vector<QuantLib::ext::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders = {});
 };
 
-%shared_ptr(TradeFactory)
 class TradeFactory {
 public:
 };
 
-%shared_ptr(Envelope)
 class Envelope : public XMLSerializable {
 public:
     Envelope();
     Envelope(const std::string& counterparty, const std::string& nettingSetId, const std::set<std::string>& portfolioIds = std::set<std::string>());
-    Envelope(const std::string& counterparty, const NettingSetDetails& nettingSetDetails = NettingSetDetails(),
+  Envelope(const std::string& counterparty, const ore::data::NettingSetDetails& nettingSetDetails = ore::data::NettingSetDetails(),
              const std::set<std::string>& portfolioIds = std::set<std::string>());
     Envelope(const std::string& counterparty, const std::map<std::string, std::string>& additionalFields);
     Envelope(const std::string& counterparty, const std::string& nettingSetId, const std::map<std::string, std::string>& additionalFields,
              const std::set<std::string>& portfolioIds = std::set<std::string>());
-    Envelope(const std::string& counterparty, const NettingSetDetails& nettingSetDetails,
+  Envelope(const std::string& counterparty, const ore::data::NettingSetDetails& nettingSetDetails,
              const std::map<std::string, std::string>& additionalFields, const std::set<std::string>& portfolioIds = std::set<std::string>());
 
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
     const std::string& counterparty() const;
     const std::string& nettingSetId() const;
-    const NettingSetDetails nettingSetDetails() const;
+    const ore::data::NettingSetDetails nettingSetDetails() const;
     const std::set<std::string>& portfolioIds() const;
     const std::map<std::string, std::string> additionalFields() const;
     const std::map<std::string, QuantLib::ext::any>& fullAdditionalFields() const;
@@ -196,18 +205,14 @@ public:
     bool hasNettingSetDetails() const;
 };
 
-%shared_ptr(InstrumentWrapper)
 class InstrumentWrapper {
   private:
     InstrumentWrapper();
   public:
-    Real NPV() const;
-    ext::shared_ptr<QuantLib::Instrument> qlInstrument() const;
+    QuantLib::Real NPV() const;
+    QuantLib::ext::shared_ptr<QuantLib::Instrument> qlInstrument() const;
 };
-%template(InstrumentWrapperVector) std::vector<ext::shared_ptr<InstrumentWrapper>>;
-SWIG_SHARED_PTR_VECTOR_TYPEMAP(InstrumentWrapper, InstrumentWrapperVector)
 
-%shared_ptr(Trade)
 class Trade : public XMLSerializable {
   private:
     Trade();
@@ -215,32 +220,34 @@ class Trade : public XMLSerializable {
     const std::string& id();
     void setId(const std::string& id);
     const std::string& tradeType();
-    const ext::shared_ptr<InstrumentWrapper>& instrument();
-    std::vector<std::vector<ext::shared_ptr<QuantLib::CashFlow>>> legs();
-    const Envelope& envelope() const;
+    const QuantLib::ext::shared_ptr<ore::data::InstrumentWrapper>& instrument();
+    std::vector<std::vector<QuantLib::ext::shared_ptr<QuantLib::CashFlow>>> legs();
+    const ore::data::Envelope& envelope() const;
     const QuantLib::Date& maturity();
-    Real notional();
+    QuantLib::Real notional();
 };
 
-%shared_ptr(Portfolio)
 class Portfolio : public XMLSerializable {
   public:
     Portfolio(bool buildFailedTrades = true);
     std::size_t size() const;
     std::set<std::string> ids() const;
-    void add(const ext::shared_ptr<Trade>& trade);
+    void add(const QuantLib::ext::shared_ptr<ore::data::Trade>& trade);
     bool has(const std::string& id);
-    ext::shared_ptr<Trade> get(const std::string& id) const;
-    const std::map<std::string, ext::shared_ptr<Trade>>& trades() const;
+    QuantLib::ext::shared_ptr<ore::data::Trade> get(const std::string& id) const;
+    const std::map<std::string, QuantLib::ext::shared_ptr<ore::data::Trade>>& trades() const;
     bool remove(const std::string& tradeID);
     void fromFile(const std::string& fileName);
     void fromXMLString(const std::string& xmlString);
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
     std::string toXMLString();
-    void build(const ext::shared_ptr<EngineFactory>& factory,
+    void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& factory,
                const std::string& context = "unspecified",
                const bool emitStructuredError = true);
  };
+
+  } // namespace data
+  } // namespace ore
 
 #endif

@@ -23,19 +23,20 @@
 %include ored_market.i
 %include ored_portfolio.i
 
-%{
-using ore::analytics::FixingManager;
-%}
-
-%shared_ptr(FixingManager)
+%shared_ptr(ore::analytics::FixingManager)
+namespace ore {
+namespace analytics {
 class FixingManager {
 public:
     explicit FixingManager(Date today);
-    void initialise(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
-                    const QuantLib::ext::shared_ptr<Market>& market,
-                    const std::string& configuration = Market::defaultConfiguration);
+    void initialise(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
+                    const QuantLib::ext::shared_ptr<ore::data::Market>& market,
+                    const std::string& configuration = ore::data::Market::defaultConfiguration);
     void update(Date d);
     void reset();
 };
+
+} // namespace analytics
+} // namespace ore
 
 #endif

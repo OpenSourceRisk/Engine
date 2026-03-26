@@ -27,125 +27,6 @@ using ore::data::ScriptLibraryData;
 using ore::data::ScriptedTrade;
 using NewScheduleData = ore::data::ScriptedTradeScriptData::NewScheduleData;
 using CalibrationData = ore::data::ScriptedTradeScriptData::CalibrationData;
-%}
-
-// Expose ScriptedTradeScriptData inner classes as top-level to work around SWIG flatnested limitations
-%template(VectorPairString) std::vector<std::pair<std::string, std::string>>;
-
-%shared_ptr(NewScheduleData)
-class NewScheduleData : public XMLSerializable {
-public:
-    NewScheduleData();
-    NewScheduleData(const std::string& name, const std::string& operation,
-                    const std::vector<std::string>& sourceSchedules);
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
-    const std::string& name() const;
-    const std::string& operation() const;
-    const std::vector<std::string>& sourceSchedules() const;
-};
-
-%shared_ptr(CalibrationData)
-class CalibrationData : public XMLSerializable {
-public:
-    CalibrationData();
-    CalibrationData(const std::string& index, const std::vector<std::string>& strikes);
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
-    const std::string& index() const;
-    const std::vector<std::string>& strikes() const;
-};
-
-%template(ScriptedTradeNewScheduleDataVector) std::vector<ext::shared_ptr<NewScheduleData>>;
-%template(ScriptedTradeCalibrationDataVector) std::vector<ext::shared_ptr<CalibrationData>>;
-
-%shared_ptr(ScriptedTradeEventData)
-class ScriptedTradeEventData : public XMLSerializable {
-public:
-    ScriptedTradeEventData();
-    ScriptedTradeEventData(const std::string& name, const std::string& date);
-    ScriptedTradeEventData(const std::string& name, const ScheduleData& schedule);
-    ScriptedTradeEventData(const std::string& name, const std::string& baseSchedule, const std::string& shift,
-                           const std::string& calendar, const std::string& convention);
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
-};
-
-%shared_ptr(ScriptedTradeValueTypeData)
-class ScriptedTradeValueTypeData : public XMLSerializable {
-public:
-    explicit ScriptedTradeValueTypeData(const std::string& nodeName);
-    ScriptedTradeValueTypeData(const std::string& nodeName, const std::string& name, const std::string& value);
-    ScriptedTradeValueTypeData(const std::string& nodeName, const std::string& name,
-                               const std::vector<std::string>& values);
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
-};
-
-%shared_ptr(ScriptedTradeScriptData)
-class ScriptedTradeScriptData : public XMLSerializable {
-public:
-    ScriptedTradeScriptData();
-    ScriptedTradeScriptData(const std::string& code, const std::string& npv,
-                            const std::vector<std::pair<std::string, std::string>>& results,
-                            const std::vector<std::string>& stickyCloseOutStates);
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
-};
-
-%shared_ptr(ScriptLibraryData)
-class ScriptLibraryData : public XMLSerializable {
-public:
-    ScriptLibraryData();
-    ScriptLibraryData(const ScriptLibraryData& d);
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
-    bool has(const std::string& scriptName, const std::string& purpose,
-             const bool fallBackOnEmptyPurpose = true) const;
-};
-%extend ScriptLibraryData {
-    std::string productTag(const std::string& scriptName, const std::string& purpose,
-                           const bool fallBackOnEmptyPurpose = true) const {
-        return self->get(scriptName, purpose, fallBackOnEmptyPurpose).first;
-    }
-
-    ScriptedTradeScriptData scriptData(const std::string& scriptName, const std::string& purpose,
-                                       const bool fallBackOnEmptyPurpose = true) const {
-        return self->get(scriptName, purpose, fallBackOnEmptyPurpose).second;
-    }
-}
-
-%shared_ptr(ScriptedTrade)
-class ScriptedTrade : public Trade {
-public:
-    ScriptedTrade(const std::string& tradeType = "ScriptedTrade", const Envelope& env = Envelope());
-    void build(const ext::shared_ptr<EngineFactory>&) override;
-    QuantLib::Real notional() const override;
-    std::string notionalCurrency() const override;
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
-};
-%extend ScriptedTrade {
-    ScriptedTrade(const Envelope& env,
-                  const std::vector<ext::shared_ptr<ScriptedTradeEventData>>& events,
-                  const std::vector<ext::shared_ptr<ScriptedTradeValueTypeData>>& numbers,
-                  const std::vector<ext::shared_ptr<ScriptedTradeValueTypeData>>& indices,
-                  const std::vector<ext::shared_ptr<ScriptedTradeValueTypeData>>& currencies,
-                  const std::vector<ext::shared_ptr<ScriptedTradeValueTypeData>>& daycounters,
-                  const std::string& scriptName, const std::string& tradeType = "ScriptedTrade") {
-        return new ScriptedTrade(env,
-            VECTOR_SWIG_TO_ORE(events),
-            VECTOR_SWIG_TO_ORE(numbers),
-            VECTOR_SWIG_TO_ORE(indices),
-            VECTOR_SWIG_TO_ORE(currencies),
-            VECTOR_SWIG_TO_ORE(daycounters),
-            scriptName, tradeType);
-    }
-}
-
-// Scripted trade subclasses from ored_portfolio2.i
-
-%{
 using ore::data::Accumulator;
 using ore::data::EquityAccumulator;
 using ore::data::FxAccumulator;
@@ -158,7 +39,6 @@ using ore::data::CommodityBasketVarianceSwap;
 using ore::data::CommodityBestEntryOption;
 using ore::data::CommodityGenericBarrierOption;
 using ore::data::Autocallable_01;
-using OREBasketOption = ore::data::BasketOption;
 using ore::data::EquityBasketOption;
 using ore::data::FxBasketOption;
 using ore::data::CommodityBasketOption;
@@ -197,9 +77,170 @@ using ore::data::FxWorstOfBasketSwap;
 using ore::data::CommodityWorstOfBasketSwap;
 %}
 
-// ore/OREData/ored/portfolio/accumulator.hpp
+// Expose ScriptedTradeScriptData inner classes as top-level to work around SWIG flatnested limitations
+%template(VectorPairString) std::vector<std::pair<std::string, std::string>>;
+%template(ScriptedTradeNewScheduleDataVector) std::vector<ext::shared_ptr<NewScheduleData>>;
+%template(ScriptedTradeCalibrationDataVector) std::vector<ext::shared_ptr<CalibrationData>>;
 
-%shared_ptr(Accumulator)
+%shared_ptr(NewScheduleData)
+class NewScheduleData : public XMLSerializable {
+public:
+    NewScheduleData();
+    NewScheduleData(const std::string& name, const std::string& operation,
+                    const std::vector<std::string>& sourceSchedules);
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+    const std::string& name() const;
+    const std::string& operation() const;
+    const std::vector<std::string>& sourceSchedules() const;
+};
+
+%shared_ptr(CalibrationData)
+class CalibrationData : public XMLSerializable {
+public:
+    CalibrationData();
+    CalibrationData(const std::string& index, const std::vector<std::string>& strikes);
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+    const std::string& index() const;
+    const std::vector<std::string>& strikes() const;
+};
+
+%shared_ptr(ore::data::ScriptedTradeEventData)
+%shared_ptr(ore::data::ScriptedTradeValueTypeData)
+%shared_ptr(ore::data::ScriptedTradeScriptData)
+%shared_ptr(ore::data::ScriptLibraryData)
+%shared_ptr(ore::data::ScriptedTrade)
+%shared_ptr(ore::data::Accumulator)
+%shared_ptr(ore::data::EquityAccumulator)
+%shared_ptr(ore::data::FxAccumulator)
+%shared_ptr(ore::data::CommodityAccumulator)
+%shared_ptr(ore::data::AsianOption)
+%shared_ptr(ore::data::EquityAsianOption)
+%shared_ptr(ore::data::FxAsianOption)
+%shared_ptr(ore::data::CommodityAsianOption)
+%shared_ptr(ore::data::Autocallable_01)
+%shared_ptr(ore::data::BasketVarianceSwap)
+%shared_ptr(ore::data::EquityBasketVarianceSwap)
+%shared_ptr(ore::data::FxBasketVarianceSwap)
+%shared_ptr(ore::data::CommodityBasketVarianceSwap)
+%shared_ptr(ore::data::BestEntryOption)
+%shared_ptr(ore::data::EquityBestEntryOption)
+%shared_ptr(ore::data::FxBestEntryOption)
+%shared_ptr(ore::data::CommodityBestEntryOption)
+%shared_ptr(ore::data::DoubleDigitalOption)
+%shared_ptr(ore::data::EuropeanOptionBarrier)
+%shared_ptr(ore::data::GenericBarrierOption)
+%shared_ptr(ore::data::EquityGenericBarrierOption)
+%shared_ptr(ore::data::FxGenericBarrierOption)
+%shared_ptr(ore::data::CommodityGenericBarrierOption)
+%shared_ptr(ore::data::KnockOutSwap)
+%shared_ptr(ore::data::PerformanceOption_01)
+%shared_ptr(ore::data::RainbowOption)
+%shared_ptr(ore::data::EquityRainbowOption)
+%shared_ptr(ore::data::FxRainbowOption)
+%shared_ptr(ore::data::CommodityRainbowOption)
+%shared_ptr(ore::data::StrikeResettableOption)
+%shared_ptr(ore::data::EquityStrikeResettableOption)
+%shared_ptr(ore::data::FxStrikeResettableOption)
+%shared_ptr(ore::data::CommodityStrikeResettableOption)
+%shared_ptr(ore::data::TaRF)
+%shared_ptr(ore::data::EquityTaRF)
+%shared_ptr(ore::data::FxTaRF)
+%shared_ptr(ore::data::CommodityTaRF)
+%shared_ptr(ore::data::WindowBarrierOption)
+%shared_ptr(ore::data::EquityWindowBarrierOption)
+%shared_ptr(ore::data::FxWindowBarrierOption)
+%shared_ptr(ore::data::CommodityWindowBarrierOption)
+%shared_ptr(ore::data::WorstOfBasketSwap)
+%shared_ptr(ore::data::EquityWorstOfBasketSwap)
+%shared_ptr(ore::data::FxWorstOfBasketSwap)
+%shared_ptr(ore::data::CommodityWorstOfBasketSwap)
+
+namespace ore {
+namespace data {
+
+class ScriptedTradeEventData : public XMLSerializable {
+public:
+    ScriptedTradeEventData();
+    ScriptedTradeEventData(const std::string& name, const std::string& date);
+    ScriptedTradeEventData(const std::string& name, const ScheduleData& schedule);
+    ScriptedTradeEventData(const std::string& name, const std::string& baseSchedule, const std::string& shift,
+                           const std::string& calendar, const std::string& convention);
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+};
+
+class ScriptedTradeValueTypeData : public XMLSerializable {
+public:
+    explicit ScriptedTradeValueTypeData(const std::string& nodeName);
+    ScriptedTradeValueTypeData(const std::string& nodeName, const std::string& name, const std::string& value);
+    ScriptedTradeValueTypeData(const std::string& nodeName, const std::string& name,
+                               const std::vector<std::string>& values);
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+};
+
+class ScriptedTradeScriptData : public XMLSerializable {
+public:
+    ScriptedTradeScriptData();
+    ScriptedTradeScriptData(const std::string& code, const std::string& npv,
+                            const std::vector<std::pair<std::string, std::string>>& results,
+                            const std::vector<std::string>& stickyCloseOutStates);
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+};
+
+class ScriptLibraryData : public XMLSerializable {
+public:
+    ScriptLibraryData();
+    ScriptLibraryData(const ScriptLibraryData& d);
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+    bool has(const std::string& scriptName, const std::string& purpose,
+             const bool fallBackOnEmptyPurpose = true) const;
+
+    %extend {
+        std::string productTag(const std::string& scriptName, const std::string& purpose,
+                               const bool fallBackOnEmptyPurpose = true) const {
+            return self->get(scriptName, purpose, fallBackOnEmptyPurpose).first;
+        }
+
+        ScriptedTradeScriptData scriptData(const std::string& scriptName, const std::string& purpose,
+                                           const bool fallBackOnEmptyPurpose = true) const {
+            return self->get(scriptName, purpose, fallBackOnEmptyPurpose).second;
+        }
+    }
+};
+
+class ScriptedTrade : public Trade {
+public:
+    ScriptedTrade(const std::string& tradeType = "ScriptedTrade", const Envelope& env = Envelope());
+    void build(const ext::shared_ptr<EngineFactory>&) override;
+    QuantLib::Real notional() const override;
+    std::string notionalCurrency() const override;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+
+    %extend {
+        ScriptedTrade(const Envelope& env,
+                      const std::vector<ext::shared_ptr<ore::data::ScriptedTradeEventData>>& events,
+                      const std::vector<ext::shared_ptr<ore::data::ScriptedTradeValueTypeData>>& numbers,
+                      const std::vector<ext::shared_ptr<ore::data::ScriptedTradeValueTypeData>>& indices,
+                      const std::vector<ext::shared_ptr<ore::data::ScriptedTradeValueTypeData>>& currencies,
+                      const std::vector<ext::shared_ptr<ore::data::ScriptedTradeValueTypeData>>& daycounters,
+                      const std::string& scriptName, const std::string& tradeType = "ScriptedTrade") {
+            return new ore::data::ScriptedTrade(env,
+                VECTOR_SWIG_TO_ORE(events),
+                VECTOR_SWIG_TO_ORE(numbers),
+                VECTOR_SWIG_TO_ORE(indices),
+                VECTOR_SWIG_TO_ORE(currencies),
+                VECTOR_SWIG_TO_ORE(daycounters),
+                scriptName, tradeType);
+        }
+    }
+};
+
 class Accumulator : public ScriptedTrade {
 public:
     explicit Accumulator(const std::string& tradeType = "Accumulator");
@@ -217,28 +258,21 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(EquityAccumulator)
 class EquityAccumulator : public Accumulator {
 public:
     EquityAccumulator();
 };
 
-%shared_ptr(FxAccumulator)
 class FxAccumulator : public Accumulator {
 public:
     FxAccumulator();
 };
 
-%shared_ptr(CommodityAccumulator)
 class CommodityAccumulator : public Accumulator {
 public:
     CommodityAccumulator();
 };
 
-// ore/OREData/ored/portfolio/asianoption.hpp
-
-// AsianOption does NOT inherit ScriptedTrade - it is a Trade directly
-%shared_ptr(AsianOption)
 class AsianOption : public Trade {
 public:
     explicit AsianOption(const std::string& tradeType);
@@ -253,27 +287,21 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(EquityAsianOption)
 class EquityAsianOption : public AsianOption {
 public:
     EquityAsianOption();
 };
 
-%shared_ptr(FxAsianOption)
 class FxAsianOption : public AsianOption {
 public:
     FxAsianOption();
 };
 
-%shared_ptr(CommodityAsianOption)
 class CommodityAsianOption : public AsianOption {
 public:
     CommodityAsianOption();
 };
 
-// ore/OREData/ored/portfolio/autocallable_01.hpp
-
-%shared_ptr(Autocallable_01)
 class Autocallable_01 : public ScriptedTrade {
 public:
     Autocallable_01();
@@ -288,14 +316,61 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 
+} // namespace data
+} // namespace ore
+
 // ore/OREData/ored/portfolio/basketoption.hpp
 // Renamed OREBasketOption to avoid potential clashes
 
-%shared_ptr(OREBasketOption)
-class OREBasketOption : public ScriptedTrade {
+%rename(OREBasketOption) ore::data::BasketOption;
+%shared_ptr(ore::data::BasketOption)
+%shared_ptr(ore::data::EquityBasketOption)
+%shared_ptr(ore::data::FxBasketOption)
+%shared_ptr(ore::data::CommodityBasketOption)
+%shared_ptr(ore::data::BasketVarianceSwap)
+%shared_ptr(ore::data::EquityBasketVarianceSwap)
+%shared_ptr(ore::data::FxBasketVarianceSwap)
+%shared_ptr(ore::data::CommodityBasketVarianceSwap)
+%shared_ptr(ore::data::BestEntryOption)
+%shared_ptr(ore::data::EquityBestEntryOption)
+%shared_ptr(ore::data::FxBestEntryOption)
+%shared_ptr(ore::data::CommodityBestEntryOption)
+%shared_ptr(ore::data::DoubleDigitalOption)
+%shared_ptr(ore::data::EuropeanOptionBarrier)
+%shared_ptr(ore::data::GenericBarrierOption)
+%shared_ptr(ore::data::EquityGenericBarrierOption)
+%shared_ptr(ore::data::FxGenericBarrierOption)
+%shared_ptr(ore::data::CommodityGenericBarrierOption)
+%shared_ptr(ore::data::KnockOutSwap)
+%shared_ptr(ore::data::PerformanceOption_01)
+%shared_ptr(ore::data::RainbowOption)
+%shared_ptr(ore::data::EquityRainbowOption)
+%shared_ptr(ore::data::FxRainbowOption)
+%shared_ptr(ore::data::CommodityRainbowOption)
+%shared_ptr(ore::data::StrikeResettableOption)
+%shared_ptr(ore::data::EquityStrikeResettableOption)
+%shared_ptr(ore::data::FxStrikeResettableOption)
+%shared_ptr(ore::data::CommodityStrikeResettableOption)
+%shared_ptr(ore::data::TaRF)
+%shared_ptr(ore::data::EquityTaRF)
+%shared_ptr(ore::data::FxTaRF)
+%shared_ptr(ore::data::CommodityTaRF)
+%shared_ptr(ore::data::WindowBarrierOption)
+%shared_ptr(ore::data::EquityWindowBarrierOption)
+%shared_ptr(ore::data::FxWindowBarrierOption)
+%shared_ptr(ore::data::CommodityWindowBarrierOption)
+%shared_ptr(ore::data::WorstOfBasketSwap)
+%shared_ptr(ore::data::EquityWorstOfBasketSwap)
+%shared_ptr(ore::data::FxWorstOfBasketSwap)
+%shared_ptr(ore::data::CommodityWorstOfBasketSwap)
+
+namespace ore {
+namespace data {
+
+class BasketOption : public ScriptedTrade {
 public:
-    OREBasketOption(const std::string& tradeType = "BasketOption");
-    OREBasketOption(const std::string& currency, const std::string& notional, const TradeStrike& strike,
+    BasketOption(const std::string& tradeType = "BasketOption");
+    BasketOption(const std::string& currency, const std::string& notional, const TradeStrike& strike,
                  const std::vector<ext::shared_ptr<Underlying>>& underlyings, const OptionData& optionData,
                  const std::string& settlement, const ScheduleData& observationDates);
     void build(const ext::shared_ptr<EngineFactory>&) override;
@@ -303,27 +378,21 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(EquityBasketOption)
-class EquityBasketOption : public OREBasketOption {
+class EquityBasketOption : public BasketOption {
 public:
     EquityBasketOption();
 };
 
-%shared_ptr(FxBasketOption)
-class FxBasketOption : public OREBasketOption {
+class FxBasketOption : public BasketOption {
 public:
     FxBasketOption();
 };
 
-%shared_ptr(CommodityBasketOption)
-class CommodityBasketOption : public OREBasketOption {
+class CommodityBasketOption : public BasketOption {
 public:
     CommodityBasketOption();
 };
 
-// ore/OREData/ored/portfolio/basketvarianceswap.hpp
-
-%shared_ptr(BasketVarianceSwap)
 class BasketVarianceSwap : public ScriptedTrade {
 public:
     BasketVarianceSwap(const std::string& tradeType = "BasketVarianceSwap");
@@ -337,27 +406,21 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(EquityBasketVarianceSwap)
 class EquityBasketVarianceSwap : public BasketVarianceSwap {
 public:
     EquityBasketVarianceSwap();
 };
 
-%shared_ptr(FxBasketVarianceSwap)
 class FxBasketVarianceSwap : public BasketVarianceSwap {
 public:
     FxBasketVarianceSwap();
 };
 
-%shared_ptr(CommodityBasketVarianceSwap)
 class CommodityBasketVarianceSwap : public BasketVarianceSwap {
 public:
     CommodityBasketVarianceSwap();
 };
 
-// ore/OREData/ored/portfolio/bestentryoption.hpp
-
-%shared_ptr(BestEntryOption)
 class BestEntryOption : public ScriptedTrade {
 public:
     BestEntryOption(const std::string& tradeType = "BestEntryOption");
@@ -371,27 +434,21 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(EquityBestEntryOption)
 class EquityBestEntryOption : public BestEntryOption {
 public:
     EquityBestEntryOption();
 };
 
-%shared_ptr(FxBestEntryOption)
 class FxBestEntryOption : public BestEntryOption {
 public:
     FxBestEntryOption();
 };
 
-%shared_ptr(CommodityBestEntryOption)
 class CommodityBestEntryOption : public BestEntryOption {
 public:
     CommodityBestEntryOption();
 };
 
-// ore/OREData/ored/portfolio/doubledigitaloption.hpp
-
-%shared_ptr(DoubleDigitalOption)
 class DoubleDigitalOption : public ScriptedTrade {
 public:
     DoubleDigitalOption();
@@ -407,9 +464,6 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-// ore/OREData/ored/portfolio/europeanoptionbarrier.hpp
-
-%shared_ptr(EuropeanOptionBarrier)
 class EuropeanOptionBarrier : public ScriptedTrade {
 public:
     explicit EuropeanOptionBarrier(const ext::shared_ptr<Conventions>& conventions = nullptr);
@@ -428,78 +482,68 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-// ore/OREData/ored/portfolio/genericbarrieroption.hpp
-
-%shared_ptr(GenericBarrierOption)
 class GenericBarrierOption : public ScriptedTrade {
 public:
     GenericBarrierOption(const std::string& tradeType = "GenericBarrierOption");
     void build(const ext::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
-};
-%extend GenericBarrierOption {
-    GenericBarrierOption(ext::shared_ptr<Underlying>& underlying, const OptionData& optionData,
-                         const std::vector<ext::shared_ptr<BarrierData>>& barriers,
-                         const ScheduleData& barrierMonitoringDates,
-                         const BarrierData& transatlanticBarrier, const std::string& payCurrency,
-                         const std::string& settlementDate, const std::string& quantity,
-                         const std::string& strike, const std::string& amount, const std::string& kikoType) {
-        return new GenericBarrierOption(underlying, optionData, VECTOR_SWIG_TO_ORE(barriers),
-            barrierMonitoringDates, transatlanticBarrier, payCurrency, settlementDate, quantity,
-            strike, amount, kikoType);
-    }
-    GenericBarrierOption(const std::vector<ext::shared_ptr<Underlying>>& underlyings, const OptionData& optionData,
-                         const std::vector<ext::shared_ptr<BarrierData>>& barriers,
-                         const ScheduleData& barrierMonitoringDates,
-                         const std::vector<ext::shared_ptr<BarrierData>>& transatlanticBarrier,
-                         const std::string& payCurrency, const std::string& settlementDate,
-                         const std::string& quantity, const std::string& strike,
-                         const std::string& amount, const std::string& kikoType) {
-        return new GenericBarrierOption(underlyings, optionData, VECTOR_SWIG_TO_ORE(barriers),
-            barrierMonitoringDates, VECTOR_SWIG_TO_ORE(transatlanticBarrier), payCurrency,
-            settlementDate, quantity, strike, amount, kikoType);
-    }
-}
 
-%shared_ptr(EquityGenericBarrierOption)
+    %extend {
+        GenericBarrierOption(ext::shared_ptr<Underlying>& underlying, const OptionData& optionData,
+                             const std::vector<ext::shared_ptr<BarrierData>>& barriers,
+                             const ScheduleData& barrierMonitoringDates,
+                             const BarrierData& transatlanticBarrier, const std::string& payCurrency,
+                             const std::string& settlementDate, const std::string& quantity,
+                             const std::string& strike, const std::string& amount, const std::string& kikoType) {
+            return new ore::data::GenericBarrierOption(underlying, optionData, VECTOR_SWIG_TO_ORE(barriers),
+                barrierMonitoringDates, transatlanticBarrier, payCurrency, settlementDate, quantity,
+                strike, amount, kikoType);
+        }
+        GenericBarrierOption(const std::vector<ext::shared_ptr<Underlying>>& underlyings, const OptionData& optionData,
+                             const std::vector<ext::shared_ptr<BarrierData>>& barriers,
+                             const ScheduleData& barrierMonitoringDates,
+                             const std::vector<ext::shared_ptr<BarrierData>>& transatlanticBarrier,
+                             const std::string& payCurrency, const std::string& settlementDate,
+                             const std::string& quantity, const std::string& strike,
+                             const std::string& amount, const std::string& kikoType) {
+            return new ore::data::GenericBarrierOption(underlyings, optionData, VECTOR_SWIG_TO_ORE(barriers),
+                barrierMonitoringDates, VECTOR_SWIG_TO_ORE(transatlanticBarrier), payCurrency,
+                settlementDate, quantity, strike, amount, kikoType);
+        }
+    }
+};
+
 class EquityGenericBarrierOption : public GenericBarrierOption {
 public:
     EquityGenericBarrierOption();
 };
 
-%shared_ptr(FxGenericBarrierOption)
 class FxGenericBarrierOption : public GenericBarrierOption {
 public:
     FxGenericBarrierOption();
 };
 
-%shared_ptr(CommodityGenericBarrierOption)
 class CommodityGenericBarrierOption : public GenericBarrierOption {
 public:
     CommodityGenericBarrierOption();
 };
 
-// ore/OREData/ored/portfolio/knockoutswap.hpp
-
-%shared_ptr(KnockOutSwap)
 class KnockOutSwap : public ScriptedTrade {
 public:
     KnockOutSwap();
     void build(const ext::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
-};
-%extend KnockOutSwap {
-    KnockOutSwap(const std::vector<ext::shared_ptr<LegData>>& legData, const BarrierData& barrierData,
-                 const std::string& barrierStartDate) {
-        return new KnockOutSwap(VECTOR_SWIG_TO_ORE(legData), barrierData, barrierStartDate);
+
+    %extend {
+        KnockOutSwap(const std::vector<ext::shared_ptr<LegData>>& legData, const BarrierData& barrierData,
+                     const std::string& barrierStartDate) {
+            return new ore::data::KnockOutSwap(VECTOR_SWIG_TO_ORE(legData), barrierData, barrierStartDate);
+        }
     }
-}
+};
 
-// ore/OREData/ored/portfolio/performanceoption_01.hpp
-
-%shared_ptr(PerformanceOption_01)
 class PerformanceOption_01 : public ScriptedTrade {
 public:
     explicit PerformanceOption_01(const ext::shared_ptr<Conventions>& conventions = nullptr);
@@ -516,9 +560,6 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-// ore/OREData/ored/portfolio/rainbowoption.hpp
-
-%shared_ptr(RainbowOption)
 class RainbowOption : public ScriptedTrade {
 public:
     RainbowOption();
@@ -531,30 +572,24 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(EquityRainbowOption)
 class EquityRainbowOption : public RainbowOption {
 public:
     EquityRainbowOption();
     EquityRainbowOption(const ext::shared_ptr<Conventions>& conventions);
 };
 
-%shared_ptr(FxRainbowOption)
 class FxRainbowOption : public RainbowOption {
 public:
     FxRainbowOption();
     FxRainbowOption(const ext::shared_ptr<Conventions>& conventions);
 };
 
-%shared_ptr(CommodityRainbowOption)
 class CommodityRainbowOption : public RainbowOption {
 public:
     CommodityRainbowOption();
     CommodityRainbowOption(const ext::shared_ptr<Conventions>& conventions);
 };
 
-// ore/OREData/ored/portfolio/strikeresettableoption.hpp
-
-%shared_ptr(StrikeResettableOption)
 class StrikeResettableOption : public ScriptedTrade {
 public:
     StrikeResettableOption(const std::string& tradeType = "StrikeResettableOption");
@@ -571,27 +606,21 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(EquityStrikeResettableOption)
 class EquityStrikeResettableOption : public StrikeResettableOption {
 public:
     EquityStrikeResettableOption();
 };
 
-%shared_ptr(FxStrikeResettableOption)
 class FxStrikeResettableOption : public StrikeResettableOption {
 public:
     FxStrikeResettableOption();
 };
 
-%shared_ptr(CommodityStrikeResettableOption)
 class CommodityStrikeResettableOption : public StrikeResettableOption {
 public:
     CommodityStrikeResettableOption();
 };
 
-// ore/OREData/ored/portfolio/tarf.hpp
-
-%shared_ptr(TaRF)
 class TaRF : public ScriptedTrade {
 public:
     TaRF(const std::string& tradeType = "TaRF");
@@ -600,27 +629,21 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(EquityTaRF)
 class EquityTaRF : public TaRF {
 public:
     EquityTaRF();
 };
 
-%shared_ptr(FxTaRF)
 class FxTaRF : public TaRF {
 public:
     FxTaRF();
 };
 
-%shared_ptr(CommodityTaRF)
 class CommodityTaRF : public TaRF {
 public:
     CommodityTaRF();
 };
 
-// ore/OREData/ored/portfolio/windowbarrieroption.hpp
-
-%shared_ptr(WindowBarrierOption)
 class WindowBarrierOption : public ScriptedTrade {
 public:
     WindowBarrierOption(const std::string& tradeType = "WindowBarrierOption");
@@ -633,86 +656,81 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-%shared_ptr(EquityWindowBarrierOption)
 class EquityWindowBarrierOption : public WindowBarrierOption {
 public:
     EquityWindowBarrierOption();
 };
 
-%shared_ptr(FxWindowBarrierOption)
 class FxWindowBarrierOption : public WindowBarrierOption {
 public:
     FxWindowBarrierOption();
 };
 
-%shared_ptr(CommodityWindowBarrierOption)
 class CommodityWindowBarrierOption : public WindowBarrierOption {
 public:
     CommodityWindowBarrierOption();
 };
 
-// ore/OREData/ored/portfolio/worstofbasketswap.hpp
-
-%shared_ptr(WorstOfBasketSwap)
 class WorstOfBasketSwap : public ScriptedTrade {
 public:
     WorstOfBasketSwap(const std::string& tradeType = "WorstOfBasketSwap");
     void build(const ext::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
-};
-%extend WorstOfBasketSwap {
-    WorstOfBasketSwap(const Envelope& env, const std::string& longShort,
-                      const std::string& quantity, const std::string& strike,
-                      const std::string& initialFixedRate, const std::vector<std::string>& initialPrices,
-                      const std::string& fixedRate,
-                      const ScriptedTradeEventData& floatingPeriodSchedule,
-                      const ScriptedTradeEventData& floatingFixingSchedule,
-                      const ScriptedTradeEventData& fixedDeterminationSchedule,
-                      const ScriptedTradeEventData& floatingPayDates,
-                      const ScriptedTradeEventData& fixedPayDates,
-                      const ScriptedTradeEventData& knockOutDeterminationSchedule,
-                      const ScriptedTradeEventData& knockInDeterminationSchedule,
-                      const std::string& knockInPayDate, const std::string& initialFixedPayDate,
-                      const bool bermudanKnockIn, const bool accumulatingFixedCoupons,
-                      const bool accruingFixedCoupons, const bool isAveraged,
-                      const std::string& floatingIndex, const std::string& floatingSpread,
-                      const std::string& floatingRateCutoff,
-                      const QuantLib::DayCounter& floatingDayCountFraction,
-                      const QuantLib::Period& floatingLookback, const bool includeSpread,
-                      const std::string& currency,
-                      const std::vector<ext::shared_ptr<Underlying>>& underlyings,
-                      const std::string& knockInLevel,
-                      const std::vector<std::string>& fixedTriggerLevels,
-                      const std::vector<std::string>& knockOutLevels,
-                      const ScriptedTradeEventData& fixedAccrualSchedule) {
-        return new WorstOfBasketSwap(env, longShort, quantity, strike, initialFixedRate, initialPrices,
-            fixedRate, floatingPeriodSchedule, floatingFixingSchedule, fixedDeterminationSchedule,
-            floatingPayDates, fixedPayDates, knockOutDeterminationSchedule, knockInDeterminationSchedule,
-            knockInPayDate, initialFixedPayDate, bermudanKnockIn, accumulatingFixedCoupons,
-            accruingFixedCoupons, isAveraged, floatingIndex, floatingSpread, floatingRateCutoff,
-            floatingDayCountFraction, floatingLookback, includeSpread, currency,
-            underlyings, knockInLevel, fixedTriggerLevels, knockOutLevels,
-            fixedAccrualSchedule);
-    }
-}
 
-%shared_ptr(EquityWorstOfBasketSwap)
+    %extend {
+        WorstOfBasketSwap(const Envelope& env, const std::string& longShort,
+                          const std::string& quantity, const std::string& strike,
+                          const std::string& initialFixedRate, const std::vector<std::string>& initialPrices,
+                          const std::string& fixedRate,
+                          const ScriptedTradeEventData& floatingPeriodSchedule,
+                          const ScriptedTradeEventData& floatingFixingSchedule,
+                          const ScriptedTradeEventData& fixedDeterminationSchedule,
+                          const ScriptedTradeEventData& floatingPayDates,
+                          const ScriptedTradeEventData& fixedPayDates,
+                          const ScriptedTradeEventData& knockOutDeterminationSchedule,
+                          const ScriptedTradeEventData& knockInDeterminationSchedule,
+                          const std::string& knockInPayDate, const std::string& initialFixedPayDate,
+                          const bool bermudanKnockIn, const bool accumulatingFixedCoupons,
+                          const bool accruingFixedCoupons, const bool isAveraged,
+                          const std::string& floatingIndex, const std::string& floatingSpread,
+                          const std::string& floatingRateCutoff,
+                          const QuantLib::DayCounter& floatingDayCountFraction,
+                          const QuantLib::Period& floatingLookback, const bool includeSpread,
+                          const std::string& currency,
+                          const std::vector<ext::shared_ptr<Underlying>>& underlyings,
+                          const std::string& knockInLevel,
+                          const std::vector<std::string>& fixedTriggerLevels,
+                          const std::vector<std::string>& knockOutLevels,
+                          const ScriptedTradeEventData& fixedAccrualSchedule) {
+            return new ore::data::WorstOfBasketSwap(env, longShort, quantity, strike, initialFixedRate, initialPrices,
+                fixedRate, floatingPeriodSchedule, floatingFixingSchedule, fixedDeterminationSchedule,
+                floatingPayDates, fixedPayDates, knockOutDeterminationSchedule, knockInDeterminationSchedule,
+                knockInPayDate, initialFixedPayDate, bermudanKnockIn, accumulatingFixedCoupons,
+                accruingFixedCoupons, isAveraged, floatingIndex, floatingSpread, floatingRateCutoff,
+                floatingDayCountFraction, floatingLookback, includeSpread, currency,
+                underlyings, knockInLevel, fixedTriggerLevels, knockOutLevels,
+                fixedAccrualSchedule);
+        }
+    }
+};
+
 class EquityWorstOfBasketSwap : public WorstOfBasketSwap {
 public:
     EquityWorstOfBasketSwap();
 };
 
-%shared_ptr(FxWorstOfBasketSwap)
 class FxWorstOfBasketSwap : public WorstOfBasketSwap {
 public:
     FxWorstOfBasketSwap();
 };
 
-%shared_ptr(CommodityWorstOfBasketSwap)
 class CommodityWorstOfBasketSwap : public WorstOfBasketSwap {
 public:
     CommodityWorstOfBasketSwap();
 };
+
+} // namespace data
+} // namespace ore
 
 #endif

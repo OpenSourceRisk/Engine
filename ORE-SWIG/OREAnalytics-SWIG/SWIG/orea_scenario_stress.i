@@ -19,73 +19,68 @@
 #ifndef orea_scenario_stress_i
 #define orea_scenario_stress_i
 
-%{
-using ore::analytics::StressTestScenarioData;
-using QuantLib::Period;
-using QuantLib::Real;
-using ore::data::XMLSerializable;
-%}
-
 %template(PeriodVectorRealMap) std::map<Period, std::vector<Real>>;
 %template(PeriodPairsRealMap) std::map<pair<Period, Period>, Real>;
 
-%shared_ptr(StressTestScenarioData);
-%shared_ptr(StressTestScenarioData::CurveShiftData);
-%shared_ptr(StressTestScenarioData::SpotShiftData);
-%shared_ptr(StressTestScenarioData::VolShiftData);
-%shared_ptr(StressTestScenarioData::FXVolShiftData);
-%shared_ptr(StressTestScenarioData::CapFloorVolShiftData);
-%shared_ptr(StressTestScenarioData::SwaptionVolShiftData);
-%template()std::pair<std::string, ext::shared_ptr<StressTestScenarioData::CurveShiftData>>;
-%template(StressTestScenarioDataCurveShiftDataVector) std::vector<std::pair<std::string, ext::shared_ptr<StressTestScenarioData::CurveShiftData>>>;
-%template()std::pair<std::string, ext::shared_ptr<StressTestScenarioData::SpotShiftData>>;
-%template(StressTestScenarioDataSpotShiftDataVector) std::vector<std::pair<std::string, ext::shared_ptr<StressTestScenarioData::SpotShiftData>>>;
-%template()std::pair<std::string, ext::shared_ptr<StressTestScenarioData::FXVolShiftData>>;
-%template(StressTestScenarioDataFXVolShiftDataVector) std::vector<std::pair<std::string, ext::shared_ptr<StressTestScenarioData::FXVolShiftData>>>;
-%template()std::pair<std::string, ext::shared_ptr<StressTestScenarioData::VolShiftData>>;
-%template(StressTestScenarioDataVolShiftDataVector) std::vector<std::pair<std::string, ext::shared_ptr<StressTestScenarioData::VolShiftData>>>;
-%template()std::pair<std::string, ext::shared_ptr<StressTestScenarioData::CapFloorVolShiftData>>;
-%template(StressTestScenarioDataCapFloorVolShiftDataVector) std::vector<std::pair<std::string, ext::shared_ptr<StressTestScenarioData::CapFloorVolShiftData>>>;
-%template()std::pair<std::string, ext::shared_ptr<StressTestScenarioData::SwaptionVolShiftData>>;
-%template(StressTestScenarioDataSwaptionShiftDataVector) std::vector<std::pair<std::string, ext::shared_ptr<StressTestScenarioData::SwaptionVolShiftData>>>;
-%template(StressTestDataVector) std::vector<StressTestScenarioData::StressTestData>;
+%shared_ptr(ore::analytics::StressTestScenarioData);
+%shared_ptr(ore::analytics::StressTestScenarioData::CurveShiftData);
+%shared_ptr(ore::analytics::StressTestScenarioData::SpotShiftData);
+%shared_ptr(ore::analytics::StressTestScenarioData::VolShiftData);
+%shared_ptr(ore::analytics::StressTestScenarioData::FXVolShiftData);
+%shared_ptr(ore::analytics::StressTestScenarioData::CapFloorVolShiftData);
+%shared_ptr(ore::analytics::StressTestScenarioData::SwaptionVolShiftData);
+%template()std::pair<std::string, ext::shared_ptr<ore::analytics::StressTestScenarioData::CurveShiftData>>;
+%template(StressTestScenarioDataCurveShiftDataVector) std::vector<std::pair<std::string, ext::shared_ptr<ore::analytics::StressTestScenarioData::CurveShiftData>>>;
+%template()std::pair<std::string, ext::shared_ptr<ore::analytics::StressTestScenarioData::SpotShiftData>>;
+%template(StressTestScenarioDataSpotShiftDataVector) std::vector<std::pair<std::string, ext::shared_ptr<ore::analytics::StressTestScenarioData::SpotShiftData>>>;
+%template()std::pair<std::string, ext::shared_ptr<ore::analytics::StressTestScenarioData::FXVolShiftData>>;
+%template(StressTestScenarioDataFXVolShiftDataVector) std::vector<std::pair<std::string, ext::shared_ptr<ore::analytics::StressTestScenarioData::FXVolShiftData>>>;
+%template()std::pair<std::string, ext::shared_ptr<ore::analytics::StressTestScenarioData::VolShiftData>>;
+%template(StressTestScenarioDataVolShiftDataVector) std::vector<std::pair<std::string, ext::shared_ptr<ore::analytics::StressTestScenarioData::VolShiftData>>>;
+%template()std::pair<std::string, ext::shared_ptr<ore::analytics::StressTestScenarioData::CapFloorVolShiftData>>;
+%template(StressTestScenarioDataCapFloorVolShiftDataVector) std::vector<std::pair<std::string, ext::shared_ptr<ore::analytics::StressTestScenarioData::CapFloorVolShiftData>>>;
+%template()std::pair<std::string, ext::shared_ptr<ore::analytics::StressTestScenarioData::SwaptionVolShiftData>>;
+%template(StressTestScenarioDataSwaptionShiftDataVector) std::vector<std::pair<std::string, ext::shared_ptr<ore::analytics::StressTestScenarioData::SwaptionVolShiftData>>>;
+%template(StressTestDataVector) std::vector<ore::analytics::StressTestScenarioData::StressTestData>;
 
-%rename (StressTestScenarioDataStressTestData) StressTestScenarioData::StressTestData;
+%rename (StressTestScenarioDataStressTestData) ore::analytics::StressTestScenarioData::StressTestData;
 %feature ("flatnested") StressTestData;
 
-%rename (StressTestScenarioDataCurveShiftData) StressTestScenarioData::CurveShiftData;
+%rename (StressTestScenarioDataCurveShiftData) ore::analytics::StressTestScenarioData::CurveShiftData;
 %feature ("flatnested") CurveShiftData;
 
-%rename (StressTestScenarioDataSpotShiftData) StressTestScenarioData::SpotShiftData;
+%rename (StressTestScenarioDataSpotShiftData) ore::analytics::StressTestScenarioData::SpotShiftData;
 %feature ("flatnested") SpotShiftData;
 
-%rename (StressTestScenarioDataFXVolShiftData) StressTestScenarioData::FXVolShiftData;
+%rename (StressTestScenarioDataFXVolShiftData) ore::analytics::StressTestScenarioData::FXVolShiftData;
 %feature ("flatnested") FXVolShiftData;
 
-%rename (StressTestScenarioDataBaseSwaptionVolShiftData) StressTestScenarioData::SwaptionVolShiftData;
+%rename (StressTestScenarioDataBaseSwaptionVolShiftData) ore::analytics::StressTestScenarioData::SwaptionVolShiftData;
 %feature ("flatnested") SwaptionVolShiftData;
 
-%rename (StressTestScenarioDataVolShiftData) StressTestScenarioData::VolShiftData;
+%rename (StressTestScenarioDataVolShiftData) ore::analytics::StressTestScenarioData::VolShiftData;
 %feature ("flatnested") VolShiftData;
 
-%rename (StressTestScenarioDataCapFloorVolShiftData) StressTestScenarioData::CapFloorVolShiftData;
+%rename (StressTestScenarioDataCapFloorVolShiftData) ore::analytics::StressTestScenarioData::CapFloorVolShiftData;
 %feature ("flatnested") CapFloorVolShiftData;
 
-class StressTestScenarioData : public XMLSerializable {
+namespace ore {
+namespace analytics {
+class StressTestScenarioData : public ore::data::XMLSerializable {
   public:
     struct CurveShiftData {
-        ShiftType shiftType;
+        QuantExt::ShiftType shiftType;
         std::vector<Real> shifts;
         std::vector<Period> shiftTenors;
     };
 
     struct SpotShiftData {
-        ShiftType shiftType;
+        QuantExt::ShiftType shiftType;
         Real shiftSize;
     };
 
     struct VolShiftData {
-        ShiftType shiftType;
+        QuantExt::ShiftType shiftType;
         std::vector<Period> shiftExpiries;
         std::vector<Real> shifts;
     };
@@ -96,7 +91,7 @@ class StressTestScenarioData : public XMLSerializable {
             Unadjusted,
             Weighted
         };
-        ShiftType shiftType;
+        QuantExt::ShiftType shiftType;
         std::vector<Period> shiftExpiries;
         std::vector<Real> shifts;
         std::vector<Period> weightTenors;
@@ -105,14 +100,14 @@ class StressTestScenarioData : public XMLSerializable {
     };
 
     struct CapFloorVolShiftData {
-        ShiftType shiftType;
+        QuantExt::ShiftType shiftType;
         std::vector<Period> shiftExpiries;
         std::vector<double> shiftStrikes;
         std::map<Period, std::vector<Real>> shifts;
     };
 
     struct SwaptionVolShiftData {
-        ShiftType shiftType;
+        QuantExt::ShiftType shiftType;
         Real parallelShiftSize;
         std::vector<Period> shiftExpiries;
         std::vector<Period> shiftTerms;
@@ -120,7 +115,7 @@ class StressTestScenarioData : public XMLSerializable {
     };
 
     struct CommodityVolShiftData {
-        ShiftType shiftType;
+        QuantExt::ShiftType shiftType;
         std::vector<Period> shiftExpiries;
         std::vector<Real> shiftMoneyness;
         std::vector<Real> shifts;
@@ -182,5 +177,8 @@ class StressTestScenarioData : public XMLSerializable {
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 };
+
+} // namespace analytics
+} // namespace ore
 
 #endif
