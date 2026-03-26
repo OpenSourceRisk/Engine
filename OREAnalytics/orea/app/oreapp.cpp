@@ -393,13 +393,17 @@ void OREApp::initFromParams() {
 
     // Read all inputs from params and files referenced in params
     CONSOLEW("Loading inputs");
-    inputs_ = QuantLib::ext::make_shared<OREAppInputParameters>(params_);
+    inputs_ = createInputParameters(params_);
     inputs_->loadParameters();
     outputs_ = QuantLib::ext::make_shared<OutputParameters>(params_);
     CONSOLE("OK");
 
     Settings::instance().evaluationDate() = inputs_->asof();
     LOG("initFromParameters done, requested analytics:" << to_string(inputs_->analytics()));
+}
+
+QuantLib::ext::shared_ptr<InputParameters> OREApp::createInputParameters(const QuantLib::ext::shared_ptr<Parameters>& params) {
+    return QuantLib::ext::make_shared<OREAppInputParameters>(params);
 }
 
 void OREApp::initFromInputs() {
