@@ -71,9 +71,9 @@
       <Parameter name="marginalAllocationLimit">1.0</Parameter>
       <Parameter name="exerciseNextBreak">N</Parameter>
       <Parameter name="cva">N</Parameter>
-      <Parameter name="dva">N</Parameter>
+      <Parameter name="dva">Y</Parameter>
       <Parameter name="dvaName">BANK</Parameter>
-      <Parameter name="fva">N</Parameter>
+      <Parameter name="fva">Y</Parameter>
       <Parameter name="fvaBorrowingCurve">USD-SOFR</Parameter>
       <Parameter name="fvaLendingCurve">USD-SOFR</Parameter>
       <Parameter name="colva">N</Parameter>
