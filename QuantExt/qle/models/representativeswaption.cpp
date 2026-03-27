@@ -127,11 +127,6 @@ RepresentativeSwaptionMatcher::RepresentativeSwaptionMatcher(
                     .withObservationShift(o->observationShift())
                     .build();
 
-                if (o->rateType() == OvernightIndexedCouponBase::Type::Compounding)
-                    tmp->setPricer(ext::make_shared<QuantExt::OvernightIndexedCouponPricer>());
-                else
-                    tmp->setPricer(ext::make_shared<QuantExt::AverageONIndexedCouponPricer>());
-
                 modelLinkedUnderlying_.push_back(tmp);
                 if (modelIborIndexToUse == nullptr) {
                     modelIborIndexToUse = onIndexLinkedToModelCurve;
@@ -260,7 +255,7 @@ QuantLib::ext::shared_ptr<Swaption> RepresentativeSwaptionMatcher::representativ
 
             // For an OIS coupon, we keep the original coupon, if the first fixing date >= exercise date
             if (o->fixingDates().front() >= exerciseDate) {
-                if (o->rateType() == OvernightIndexedCouponBase::Type::Compounding)
+                if (o->rateType() != OvernightIndexedCouponBase::Type::Averaging)
                     o->setPricer(ext::make_shared<QuantExt::OvernightIndexedCouponPricer>());
                 else
                     o->setPricer(ext::make_shared<QuantExt::AverageONIndexedCouponPricer>());
@@ -300,11 +295,6 @@ QuantLib::ext::shared_ptr<Swaption> RepresentativeSwaptionMatcher::representativ
                             .withFixingDays(o->fixingDays())
                             .build();
 
-                        if (o->rateType() == OvernightIndexedCouponBase::Type::Compounding)
-                            tmp->setPricer(ext::make_shared<QuantExt::OvernightIndexedCouponPricer>());
-                        else
-                            tmp->setPricer(ext::make_shared<QuantExt::AverageONIndexedCouponPricer>());
-
                         additionalDeterministicNpv += discountCurve_->discount(tmp->date()) * tmp->amount();
                     }
                 }
@@ -343,11 +333,6 @@ QuantLib::ext::shared_ptr<Swaption> RepresentativeSwaptionMatcher::representativ
                         .withRateCutoff(o->rateCutoff())
                         .withFixingDays(o->fixingDays())
                         .build();
-
-                    if (o->rateType() == OvernightIndexedCouponBase::Type::Compounding)
-                        tmp->setPricer(ext::make_shared<QuantExt::OvernightIndexedCouponPricer>());
-                    else
-                        tmp->setPricer(ext::make_shared<QuantExt::AverageONIndexedCouponPricer>());
 
                     effectiveLeg.push_back(tmp);
                     effectiveIsPayer.push_back(modelLinkedUnderlyingIsPayer_[c]);

@@ -122,7 +122,7 @@ namespace QuantExt {
  */
 class OvernightIndexedCouponBase : public QuantLib::FloatingRateCoupon {
 public:
-    enum class Type { Compounding, Averaging };
+    enum class Type { Compounding, Averaging, BrlCdi };
 
 protected:
     // Note: class is abstract (effectiveRate method) but make the ctor protected in any case.

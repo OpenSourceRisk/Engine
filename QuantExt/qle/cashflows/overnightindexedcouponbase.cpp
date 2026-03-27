@@ -41,6 +41,7 @@
 #include <qle/cashflows/overnightindexedcouponbase.hpp>
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
+#include <qle/indexes/ibor/brlcdi.hpp>
 #include <algorithm>
 #include <iterator>
 
@@ -268,9 +269,15 @@ void OvernightIndexedCouponBase::performCalculations() const {
     if (haveStaleDates())
         updateSchedules();
 
-    additionalResults_.clear();
-    Date upToDate = separateRateCompPeriod() ? interestDates_.back() : accrualEndDate_;
-    std::tie(rate_, upToDateAdj_) = effectiveRate(upToDate);
+    if (rateType_ == Type::BrlCdi) {
+        // If we have a BRL CDI coupon, do exactly what we were doing before the restructure of the QuantLib and
+        // QuantExt overnight coupons and pricers until we decide on a course of action.
+        FloatingRateCoupon::performCalculations();
+    } else {
+        additionalResults_.clear();
+        Date upToDate = separateRateCompPeriod() ? interestDates_.back() : accrualEndDate_;
+        std::tie(rate_, upToDateAdj_) = effectiveRate(upToDate);
+    }
 }
 
 const vector<Rate>& OvernightIndexedCouponBase::indexFixings() const {
@@ -307,6 +314,11 @@ Real OvernightIndexedCouponBase::accruedAmount(const Date& d) const {
     // tradingExCoupon(d). Don't believe it applies for overnight indexed coupons in any case.
     if (d <= accrualStartDate_ || d > paymentDate_)
         return 0.0;
+
+    // If we have a BRL CDI coupon, do exactly what we were doing before the restructure of the QuantLib and QuantExt
+    // overnight coupons and pricers until we decide on a course of action.
+    if (rateType_ == Type::BrlCdi)
+        return FloatingRateCoupon::accruedAmount(d);
 
     Date upToDate = separateRateCompPeriod() ? std::min(d, interestDates_.back()) : std::min(d, accrualEndDate_);
     auto [rate, upToDateAdj] = effectiveRate(upToDate);
@@ -616,7 +628,18 @@ OvernightCouponBuilder::OvernightCouponBuilder(
       nominal_(nominal),
       startDate_(startDate),
       endDate_(endDate),
-      index_(overnightIndex) {}
+      index_(overnightIndex) {
+
+    using RateType = QuantExt::OvernightIndexedCouponBase::Type;
+    auto brlCdiIndex = ext::dynamic_pointer_cast<BRLCdi>(overnightIndex);
+    if (rateType_ == RateType::BrlCdi) {
+        QL_REQUIRE(brlCdiIndex, "OvernightCouponBuilder: if rate type is BrlCdi, the index must be BRLCdi.");
+    } else if (brlCdiIndex) {
+        // Keep consistent with the constructors i.e. OvernightIndexedCoupon built with a BRL CDI index has its rate 
+        // type set to BrlCdi. An averaging coupon with BRL CDI just proceeds as a normal AverageONIndexedCoupon.
+        rateType_ = RateType::BrlCdi;
+    }
+}
 
 OvernightCouponBuilder& OvernightCouponBuilder::withGearing(Real gearing) {
     gearing_ = gearing;

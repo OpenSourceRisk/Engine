@@ -38,6 +38,8 @@
 */
 
 #include <qle/cashflows/overnightindexedcoupon.hpp>
+#include <qle/indexes/ibor/brlcdi.hpp>
+#include <qle/cashflows/brlcdicouponpricer.hpp>
 #include <ql/cashflows/cashflowvectors.hpp>
 #include <ql/cashflows/couponpricer.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
@@ -49,6 +51,19 @@
 using std::pair;
 using std::tuple;
 using std::vector;
+using RateType = QuantExt::OvernightIndexedCouponBase::Type;
+
+namespace {
+
+// A small helper to set the rate type correctly for the special case of a BRL CDI coupon.
+RateType rateTypeFromIndex(const QuantLib::ext::shared_ptr<QuantLib::OvernightIndex>& overnightIndex) {
+    if (QuantLib::ext::dynamic_pointer_cast<QuantExt::BRLCdi>(overnightIndex))
+        return RateType::BrlCdi;
+    else
+        return RateType::Compounding;
+}
+
+}
 
 namespace QuantExt {
 
@@ -60,10 +75,14 @@ OvernightIndexedCoupon::OvernightIndexedCoupon(const Date& paymentDate, Real nom
                                                bool includeSpread, const Period& lookback, const Natural rateCutoff,
                                                const Natural fixingDays, const Date& rateComputationStartDate,
                                                const Date& rateComputationEndDate, bool observationShift)
-    : OvernightIndexedCouponBase(Type::Compounding, paymentDate, nominal, startDate, endDate, overnightIndex, gearing,
-        spread, refPeriodStart, refPeriodEnd, dayCounter, telescopicValueDates, lookback, rateCutoff, fixingDays,
-        rateComputationStartDate, rateComputationEndDate, observationShift), includeSpread_(includeSpread) {
-    setPricer(ext::make_shared<OvernightIndexedCouponPricer>());
+    : OvernightIndexedCouponBase(rateTypeFromIndex(overnightIndex), paymentDate, nominal, startDate, endDate,
+        overnightIndex, gearing, spread, refPeriodStart, refPeriodEnd, dayCounter, telescopicValueDates, lookback,
+        rateCutoff, fixingDays, rateComputationStartDate, rateComputationEndDate, observationShift),
+        includeSpread_(includeSpread) {
+    if (rateType() == RateType::BrlCdi)
+        setPricer(ext::make_shared<BRLCdiCouponPricer>());
+    else
+        setPricer(ext::make_shared<OvernightIndexedCouponPricer>());
 }
 
 void OvernightIndexedCoupon::accept(AcyclicVisitor& v) {
@@ -86,6 +105,8 @@ pair<Rate, Date> OvernightIndexedCoupon::effectiveRate(const Date& d) const {
 }
 
 ext::shared_ptr<OvernightIndexedCouponPricer> OvernightIndexedCoupon::oicPricer() const {
+    // Any of the methods that depend on this should not be called by a BRL CDI coupon.
+    QL_REQUIRE(rateType() != RateType::BrlCdi, "BRL CDI coupon does not use an OvernightIndexedCouponPricer.");
     auto fcp = pricer();
     QL_REQUIRE(fcp, "OvernightIndexedCoupon: FloatingRateCoupon pricer is null.");
     auto p = ext::dynamic_pointer_cast<OvernightIndexedCouponPricer>(pricer());

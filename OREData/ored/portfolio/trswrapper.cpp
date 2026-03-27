@@ -719,7 +719,7 @@ void TRSWrapperAccrualEngine::calculate() const {
                             results_.additionalResults["fundingLegDCF" + resultSuffix + resultSuffix2 + "_" +
                                                        ore::data::to_string(intStartDate)] = dt;
                             localNotional *= localFxFactor;
-                            if (overnightCpn->rateType() == OvernightIndexedCouponBase::Type::Compounding) {
+                            if (overnightCpn->rateType() != OvernightIndexedCouponBase::Type::Averaging) {
                                 accruedInterest = localNotional * irFixing * dt + accruedInterest * (1 + irFixing * dt);
                                 if (!overnightCpn->includeSpread()) {
                                     accruedSpreadInterest += localNotional * spread * dt;
@@ -734,7 +734,7 @@ void TRSWrapperAccrualEngine::calculate() const {
                         }
                     }
 
-                    if (overnightCpn->rateType() == OvernightIndexedCouponBase::Type::Compounding)
+                    if (overnightCpn->rateType() != OvernightIndexedCouponBase::Type::Averaging)
                         fundingLegNotionalFactor = (gearing * accruedInterest + accruedSpreadInterest);
                     else
                         fundingLegNotionalFactor = accruedInterest;
