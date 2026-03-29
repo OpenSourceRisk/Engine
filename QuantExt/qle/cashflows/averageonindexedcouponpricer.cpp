@@ -79,6 +79,8 @@ std::pair<Rate, Date> AverageONIndexedCouponPricer::effectiveRate(const Date& da
     const DayCounter& indexDc = index->dayCounter();
     const Natural indexFixDays = index->fixingDays();
     const Natural cpnFixDays = coupon_->fixingDays();
+    const bool intValDatesAlign = (lookback.length() == 0 || obsShift) && cpnFixDays == indexFixDays;
+    const ext::optional<Size> tsStartIdx = coupon_->telescopicStartIdx();
 
     // Average rate will be calculated below.
     Real avgRate = 0.0;
@@ -138,19 +140,15 @@ std::pair<Rate, Date> AverageONIndexedCouponPricer::effectiveRate(const Date& da
         return {onRate(inRcoPeriod), inRcoPeriod};
     };
 
-    auto intDatesValDatesAlign = [&]() {
-        return ((lookback.length() == 0 || obsShift) && cpnFixDays == indexFixDays);
-    };
-
-    auto applyTakadaFormula = [&](Size startIdx, Size endIdx) {
+    auto applyTakadaFormula = [&](Size startIdx, Size endIdx, bool checkGap = true) {
         if (startIdx >= endIdx)
             return;
 
         const Date& start = valDates[startIdx];
         const Date& end = valDates[endIdx];
 
-        if (onFixCal.advance(start, 1, Days, Following) == end) {
-            if (intDatesValDatesAlign()) {
+        if (checkGap && onFixCal.advance(start, 1, Days, Following) == end) {
+            if (intValDatesAlign) {
                 avgRate += curve->discount(start) / curve->discount(end) - 1.0;
             } else {
                 Time valDcf = indexDc.yearFraction(valDates[startIdx], valDates[endIdx]);
@@ -158,7 +156,7 @@ std::pair<Rate, Date> AverageONIndexedCouponPricer::effectiveRate(const Date& da
                 avgRate += onRate * indexDc.yearFraction(intDates[startIdx], intDates[endIdx]);
             }
         } else {
-            if (intDatesValDatesAlign()) {
+            if (intValDatesAlign) {
                 avgRate += log(curve->discount(start) / curve->discount(end));
             } else {
                 Time valDcf = indexDc.yearFraction(start, end);
@@ -181,7 +179,7 @@ std::pair<Rate, Date> AverageONIndexedCouponPricer::effectiveRate(const Date& da
         // Piece from value date at start of telescopic period to valDateUndStart.
         if (valDates[currPeriodIdx] < valDateUndStart) {
             if (onFixCal.advance(valDates[currPeriodIdx], 1, Days, Following) == valDateUndStart) {
-                if (intDatesValDatesAlign()) {
+                if (intValDatesAlign) {
                     avgRate += curve->discount(valDates[currPeriodIdx]) / curve->discount(valDateUndStart) - 1.0;
                 } else {
                     Time valDcf = indexDc.yearFraction(valDates[currPeriodIdx], valDateUndStart);
@@ -190,7 +188,7 @@ std::pair<Rate, Date> AverageONIndexedCouponPricer::effectiveRate(const Date& da
                     avgRate += onRate * indexDc.yearFraction(intDates[currPeriodIdx], intDateUndStart);
                 }
             } else {
-                if (intDatesValDatesAlign()) {
+                if (intValDatesAlign) {
                     avgRate += log(curve->discount(valDates[currPeriodIdx]) / curve->discount(valDateUndStart));
                 } else {
                     Time valDcf = indexDc.yearFraction(valDates[currPeriodIdx], valDateUndStart);
@@ -278,28 +276,18 @@ std::pair<Rate, Date> AverageONIndexedCouponPricer::effectiveRate(const Date& da
         "AverageONIndexedCouponPricer::effectiveRate: approximation type should be None or Takada.");
 
     // Fixing dates in the future.
-    if (!rcoRate && !coupon_->telescopicDates() && approximationType_ == None) {
-        // If we don't have telescopic dates and not using approximation, loop over remaining periods and forecast.
-        while (currPeriodIdx < numPeriods) {
-            auto [onRate, inRcoPeriod] = onRateRcoInd();
-            updateAvgRate(onRate);
-            if (inRcoPeriod) {
-                rcoRate = onRate;
-                break;
-            }
-        }
-    } else if (!rcoRate && coupon_->telescopicDates()) {
+    if (!rcoRate && coupon_->telescopicDates()) {
         // Telescopic dates so apply the Takada approximation (even if approximationType_ == None)
         while (currPeriodIdx < numPeriods) {
-            Date currValDateOneBd = onFixCal.advance(valDates[currPeriodIdx], 1, Days, Following);
-            if (currPeriodIdx == numPeriods - 1 && currValDateOneBd < valDates[currPeriodIdx + 1]) {
+            const bool inTsPeriod = tsStartIdx && currPeriodIdx == tsStartIdx;
+            if (currPeriodIdx == numPeriods - 1 && inTsPeriod) {
                 // Telescopic formula and date d is in the period associated with the telescopic period.
                 applyTakadaFormulaWithStub();
                 currPeriodIdx++;
-            } else if (currPeriodIdx < numPeriods - 1 && currValDateOneBd < valDates[currPeriodIdx + 1]) {
+            } else if (currPeriodIdx < numPeriods - 1 && inTsPeriod) {
                 // Telescopic formula but date d is not in the period associated with the telescopic period.
                 // So can just apply Takada formula on the full period.
-                applyTakadaFormula(currPeriodIdx, currPeriodIdx + 1);
+                applyTakadaFormula(currPeriodIdx, currPeriodIdx + 1, false);
                 currPeriodIdx++;
             } else {
                 // May have rate cut-off periods, final / initial stub period or telescopic period may have been 1D.
@@ -309,6 +297,16 @@ std::pair<Rate, Date> AverageONIndexedCouponPricer::effectiveRate(const Date& da
                     rcoRate = onRate;
                     break;
                 }
+            }
+        }
+    } else if (!rcoRate && approximationType_ == None) {
+        // If we don't have telescopic dates and not using approximation, loop over remaining periods and forecast.
+        while (currPeriodIdx < numPeriods) {
+            auto [onRate, inRcoPeriod] = onRateRcoInd();
+            updateAvgRate(onRate);
+            if (inRcoPeriod) {
+                rcoRate = onRate;
+                break;
             }
         }
     } else if (!rcoRate) {

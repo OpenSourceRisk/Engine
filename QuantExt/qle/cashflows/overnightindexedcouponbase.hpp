@@ -116,9 +116,14 @@ namespace QuantExt {
  *    fixing lag. As outlined above, in this case the value date periods align with the interest date periods and the 
  *    telescopic formula gives the same result as the full calculation.
  *  - for coupon type `Averaging`, telescopic dates are always allowed if requested. See 
-      \ref AverageONIndexedCouponPricer, if telescopic dates are requested, it implies use of the `Takada` 
-      approximation and in this case, because the valuation is an approximation in any case, telescopic dates are 
-      allowed even when value period dates do not align with interest period dates.
+ *    \ref AverageONIndexedCouponPricer, if telescopic dates are requested, it implies use of the `Takada` 
+ *    approximation and in this case, because the valuation is an approximation in any case, telescopic dates are 
+ *    allowed even when value period dates do not align with interest period dates.
+ *
+ *  When telescopic dates are used, there are certain cases where we want to bypass the check that determines if we 
+ *  need to add or remove dates from the schedule when the evaluation date changes. For example, in the OISRateHelper 
+ *  or AverageOISRateHelper where the date schedule is rebuilt when the evaluation date changes, there is no need to 
+ *  perform this check. A parameter `staleDatesCheck` is provided in the constructor for this purpose.
  */
 class OvernightIndexedCouponBase : public QuantLib::FloatingRateCoupon {
 public:
@@ -144,7 +149,8 @@ protected:
         const QuantLib::Natural fixingDays = QuantLib::Null<QuantLib::Natural>(),
         const QuantLib::Date& rateComputationStartDate = QuantLib::Date(),
         const QuantLib::Date& rateComputationEndDate = QuantLib::Date(),
-        bool observationShift = true);
+        bool observationShift = true,
+        bool staleDatesCheck = true);
 
 public:
     //! \name Inspectors
@@ -182,7 +188,9 @@ public:
     //! Default implemenation which is overridden for example in \ref OvernightIndexedCoupon.
     virtual bool includeSpread() const { return false; }
     //! Whether the overnight coupon is compouding or averaging.
-    Type rateType() const { return rateType_; };
+    Type rateType() const { return rateType_; }
+    //! The index of the period where telescopic formula starts to apply.
+    QuantLib::ext::optional<QuantLib::Size> telescopicStartIdx() const { return tsStartIdx_; }
     //@}
     //! \name LazyObject interface
     //@{
@@ -230,6 +238,8 @@ private:
     QuantLib::Date rateComputationStartDate_;
     QuantLib::Date rateComputationEndDate_;
     bool observationShift_;
+    // Made mutable so that we can update it in certain places where it is efficient to do so.
+    mutable bool staleDatesCheck_;
     bool separateRateCompPeriod_;
 
     // Record last possible fixing date.

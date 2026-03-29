@@ -69,7 +69,8 @@ public:
                            const DayCounter& dayCounter = DayCounter(), bool telescopicValueDates = false,
                            bool includeSpread = false, const Period& lookback = 0 * Days, const Natural rateCutoff = 0,
                            const Natural fixingDays = Null<Size>(), const Date& rateComputationStartDate = Date(),
-                           const Date& rateComputationEndDate = Date(), bool observationShift = true);
+                           const Date& rateComputationEndDate = Date(), bool observationShift = true,
+                           bool staleDatesCheck = true);
     //! \name Inspectors
     //@{
     /** If `true`, the spread is included in the daily compounding. If `false` the compounding is performed without the 
@@ -244,6 +245,7 @@ public:
     OvernightLeg& withCapFlooredOvernightIndexedCouponPricer(
         const QuantLib::ext::shared_ptr<CappedFlooredOvernightIndexedCouponPricer>& couponPricer);
     OvernightLeg& withObservationShift(bool observationShift);
+    OvernightLeg& withStaleDatesCheck(bool staleDatesCheck);
     operator Leg() const;
 
 private:
@@ -271,6 +273,7 @@ private:
     QuantLib::ext::shared_ptr<OvernightIndexedCouponPricer> couponPricer_;
     QuantLib::ext::shared_ptr<CappedFlooredOvernightIndexedCouponPricer> capFlooredCouponPricer_;
     bool observationShift_;
+    bool staleDatesCheck_;
 };
 
 } // namespace QuantExt

@@ -74,10 +74,11 @@ OvernightIndexedCoupon::OvernightIndexedCoupon(const Date& paymentDate, Real nom
                                                const DayCounter& dayCounter, bool telescopicValueDates,
                                                bool includeSpread, const Period& lookback, const Natural rateCutoff,
                                                const Natural fixingDays, const Date& rateComputationStartDate,
-                                               const Date& rateComputationEndDate, bool observationShift)
+                                               const Date& rateComputationEndDate, bool observationShift,
+                                               bool staleDatesCheck)
     : OvernightIndexedCouponBase(rateTypeFromIndex(overnightIndex), paymentDate, nominal, startDate, endDate,
         overnightIndex, gearing, spread, refPeriodStart, refPeriodEnd, dayCounter, telescopicValueDates, lookback,
-        rateCutoff, fixingDays, rateComputationStartDate, rateComputationEndDate, observationShift),
+        rateCutoff, fixingDays, rateComputationStartDate, rateComputationEndDate, observationShift, staleDatesCheck),
         includeSpread_(includeSpread) {
     if (rateType() == RateType::BrlCdi)
         setPricer(ext::make_shared<BRLCdiCouponPricer>());
@@ -178,6 +179,7 @@ tuple<Rate, Spread, Rate, Date> OvernightIndexedCouponPricer::compute(const Date
     const Date& cpnAccStart = coupon_->separateRateCompPeriod() ? intDates.front() : coupon_->accrualStartDate();
     const Date& cpnAccEnd = coupon_->separateRateCompPeriod() ? intDates.back() : coupon_->accrualEndDate();
     const DayCounter& indexDc = index->dayCounter();
+    const ext::optional<Size> tsStartIdx = coupon_->telescopicStartIdx();
 
     // Compound factor with and without spread which will be calculated below.
     Real compFac = 1.0;
@@ -360,7 +362,7 @@ tuple<Rate, Spread, Rate, Date> OvernightIndexedCouponPricer::compute(const Date
         }
     } else if (!rcoRate) {
         while (currPeriodIdx < numPeriods) {
-            Date currValDateOneBd = onFixCal.advance(valDates[currPeriodIdx], 1, Days, Following);
+            const bool inTsPeriod = tsStartIdx && currPeriodIdx == tsStartIdx;
             if (!coupon_->telescopicDates()) {
                 // Coupon does not have telescopic dates but we can apply telescopic formula to avoid forecasting each 
                 // forward ON fixing.
@@ -391,11 +393,11 @@ tuple<Rate, Spread, Rate, Date> OvernightIndexedCouponPricer::compute(const Date
                     applyTsFormula(valDates[currPeriodIdx], valDates[tsEndIdx]);
                     currPeriodIdx = tsEndIdx;
                 }
-            } else if (currPeriodIdx == numPeriods - 1 && currValDateOneBd < valDates[currPeriodIdx + 1]) {
+            } else if (currPeriodIdx == numPeriods - 1 && inTsPeriod) {
                 // Telescopic formula and date d is in the period associated with the telescopic period.
                 applyTsFormulaWithStub();
                 currPeriodIdx++;
-            } else if (currPeriodIdx < numPeriods - 1 && currValDateOneBd < valDates[currPeriodIdx + 1]) {
+            } else if (currPeriodIdx < numPeriods - 1 && inTsPeriod) {
                 // Telescopic formula but date d is not in the period associated with the telescopic period.
                 // So can just apply the full factor.
                 applyTsFormula(valDates[currPeriodIdx], valDates[currPeriodIdx + 1]);
@@ -813,6 +815,11 @@ OvernightLeg& OvernightLeg::withObservationShift(bool observationShift) {
     return *this;
 }
 
+OvernightLeg& OvernightLeg::withStaleDatesCheck(bool staleDatesCheck) {
+    staleDatesCheck_ = staleDatesCheck;
+    return *this;
+}
+
 OvernightLeg::operator Leg() const {
 
     QL_REQUIRE(!notionals_.empty(), "no notional given for compounding overnight leg");
@@ -904,7 +911,7 @@ OvernightLeg::operator Leg() const {
                 paymentDate, detail::get(notionals_, i, 1.0), start, end, overnightIndex_,
                 detail::get(gearings_, i, 1.0), detail::get(spreads_, i, 0.0), refStart, refEnd, paymentDayCounter_,
                 telescopicValueDates_, includeSpread_, lookback_, rateCutoff_, fixingDays_, rateComputationStartDate,
-                rateComputationEndDate, observationShift_);
+                rateComputationEndDate, observationShift_, staleDatesCheck_);
             if (couponPricer_) {
                 cpn->setPricer(couponPricer_);
             }

@@ -57,12 +57,14 @@ OvernightIndexedCouponBase::OvernightIndexedCouponBase(Type rateType, const Date
     const Date& startDate, const Date& endDate, const ext::shared_ptr<OvernightIndex>& overnightIndex, Real gearing,
     Spread spread, const Date& refPeriodStart, const Date& refPeriodEnd, const DayCounter& dayCounter,
     bool telescopicValueDates, const Period& lookback, const Natural rateCutoff, const Natural fixingDays,
-    const Date& rateComputationStartDate, const Date& rateComputationEndDate, bool observationShift)
+    const Date& rateComputationStartDate, const Date& rateComputationEndDate, bool observationShift,
+    bool staleDatesCheck)
     : FloatingRateCoupon(paymentDate, nominal, startDate, endDate, fixingDays, overnightIndex, gearing, spread,
         refPeriodStart, refPeriodEnd, dayCounter, false),
       rateType_(rateType), telescopicDates_(telescopicValueDates), overnightIndex_(overnightIndex), lookback_(lookback),
       rateCutoff_(rateCutoff), rateComputationStartDate_(rateComputationStartDate),
-      rateComputationEndDate_(rateComputationEndDate), observationShift_(observationShift) {
+      rateComputationEndDate_(rateComputationEndDate), observationShift_(observationShift),
+      staleDatesCheck_(staleDatesCheck) {
 
     // Lookback was never intended to be positive i.e. it was designed to allow time to calculate the coupon before
     // a coupon payment date. QuantLib has it as Natural => non-negative but we won't change the interface now but just 
@@ -238,25 +240,25 @@ OvernightIndexedCouponBase::OvernightIndexedCouponBase(Type rateType, const Date
 }
 
 const vector<Date>& OvernightIndexedCouponBase::fixingDates() const {
-    if (haveStaleDates())
+    if (staleDatesCheck_ && haveStaleDates())
         updateSchedules();
     return fixingDates_;
 }
 
 const vector<Time>& OvernightIndexedCouponBase::dt() const {
-    if (haveStaleDates())
+    if (staleDatesCheck_ && haveStaleDates())
         updateSchedules();
     return dt_;
 }
 
 const vector<Date>& OvernightIndexedCouponBase::valueDates() const {
-    if (haveStaleDates())
+    if (staleDatesCheck_ && haveStaleDates())
         updateSchedules();
     return valueDates_;
 }
 
 const vector<Date>& OvernightIndexedCouponBase::interestDates() const {
-    if (haveStaleDates())
+    if (staleDatesCheck_ && haveStaleDates())
         updateSchedules();
     return interestDates_;
 }
@@ -266,8 +268,13 @@ bool OvernightIndexedCouponBase::canApplyTelescopic() const {
 }
 
 void OvernightIndexedCouponBase::performCalculations() const {
-    if (haveStaleDates())
-        updateSchedules();
+    // Turn off further stale date checks while we are performing the calculation.
+    bool cachedStaleDatesCheck = staleDatesCheck_;
+    if (staleDatesCheck_) {
+        if (haveStaleDates())
+            updateSchedules();
+        staleDatesCheck_ = false;
+    }
 
     if (rateType_ == Type::BrlCdi) {
         // If we have a BRL CDI coupon, do exactly what we were doing before the restructure of the QuantLib and
@@ -278,10 +285,13 @@ void OvernightIndexedCouponBase::performCalculations() const {
         Date upToDate = separateRateCompPeriod() ? interestDates_.back() : accrualEndDate_;
         std::tie(rate_, upToDateAdj_) = effectiveRate(upToDate);
     }
+
+    // Restore value of staleDatesCheck_.
+    staleDatesCheck_ = cachedStaleDatesCheck;
 }
 
 const vector<Rate>& OvernightIndexedCouponBase::indexFixings() const {
-    if (haveStaleDates())
+    if (staleDatesCheck_ && haveStaleDates())
         updateSchedules();
 
     fixings_.resize(n_);

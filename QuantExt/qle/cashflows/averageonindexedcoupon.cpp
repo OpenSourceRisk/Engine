@@ -39,10 +39,10 @@ AverageONIndexedCoupon::AverageONIndexedCoupon(const Date& paymentDate, Real nom
                                                const DayCounter& dayCounter, const Period& lookback,
                                                const Size fixingDays, const Date& rateComputationStartDate,
                                                const Date& rateComputationEndDate, const bool telescopicValueDates,
-                                               bool observationShift)
+                                               bool observationShift, bool staleDatesCheck)
     : OvernightIndexedCouponBase(Type::Averaging, paymentDate, nominal, startDate, endDate, overnightIndex, gearing,
         spread, Date(), Date(), dayCounter, telescopicValueDates, lookback, rateCutoff, fixingDays,
-        rateComputationStartDate, rateComputationEndDate, observationShift) {
+        rateComputationStartDate, rateComputationEndDate, observationShift, staleDatesCheck) {
     setPricer(ext::make_shared<AverageONIndexedCouponPricer>());
 }
 
@@ -372,6 +372,11 @@ AverageONLeg& AverageONLeg::withObservationShift(bool observationShift) {
     return *this;
 }
 
+AverageONLeg& AverageONLeg::withStaleDatesCheck(bool staleDatesCheck) {
+    staleDatesCheck_ = staleDatesCheck;
+    return *this;
+}
+
 AverageONLeg::operator Leg() const {
 
     QL_REQUIRE(!notionals_.empty(), "No notional given for average overnight leg.");
@@ -463,7 +468,7 @@ AverageONLeg::operator Leg() const {
                 paymentDate, detail::get(notionals_, i, notionals_.back()), start, end, overnightIndex_,
                 detail::get(gearings_, i, 1.0), detail::get(spreads_, i, 0.0), rateCutoff_, paymentDayCounter_,
                 lookback_, fixingDays_, rateComputationStartDate, rateComputationEndDate, telescopicValueDates_,
-                observationShift_);
+                observationShift_, staleDatesCheck_);
             if (couponPricer_) {
                 cpn->setPricer(couponPricer_);
             }
