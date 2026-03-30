@@ -112,6 +112,7 @@ OvernightIndexedCouponBase::OvernightIndexedCouponBase(Type rateType, const Date
     QL_REQUIRE(fixStart <= rateCutOffStart, "OvernightIndexedCoupon: rate cut-off fixing date (" <<
         rateCutOffStart << ") cannot be earlier than the first fixing date (" << fixStart << ").");
     lastFixingDate_ = rateCutOffStart;
+    lastFixingDateNoCutoff_ = fixEnd;
 
     if (!telescopicDates_ || cachedEvalDate_ >= rateCutOffStart) {
 

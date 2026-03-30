@@ -64,10 +64,10 @@ Real BlackOvernightIndexedCouponPricer::optionletRateGlobal(Option::Type optionT
         bool shiftedLn = capletVolatility()->volatilityType() == ShiftedLognormal;
         Real shift = capletVolatility()->displacement();
         Real stdDev, strippedVol;
-        Real effectiveTime = capletVolatility()->timeFromReference(lastRelevantFixingDate);
+        Real effectiveTime = capletVolatility()->timeFromReference(coupon_->underlying()->fixingDateNoCutoff());
         if (capletVolatility()->useEffectiveVolatility()) {
             // vol input is effective, i.e. we use a plain black model
-            strippedVol = capletVolatility()->volatility(lastRelevantFixingDate, effStrike);
+            strippedVol = capletVolatility()->volatility(coupon_->underlying()->fixingDateNoCutoff(), effStrike);
             stdDev = strippedVol * std::sqrt(effectiveTime);
         } else {
             // vol input is not effective:
@@ -75,7 +75,7 @@ Real BlackOvernightIndexedCouponPricer::optionletRateGlobal(Option::Type optionT
             // section 6.3. the idea is to dampen the average volatility sigma between the fixing start and fixing end
             // date by a linear function going from (fixing start, 1) to (fixing end, 0)
             Real fixingStartTime = capletVolatility()->timeFromReference(fixingDates.front());
-            Real fixingEndTime = capletVolatility()->timeFromReference(lastRelevantFixingDate);
+            Real fixingEndTime = capletVolatility()->timeFromReference(coupon_->underlying()->fixingDateNoCutoff());
             Real T = std::max(fixingStartTime, 0.0);
             if (!close_enough(fixingEndTime, T))
                 T += std::pow(fixingEndTime - T, 3.0) / std::pow(fixingEndTime - fixingStartTime, 2.0) / 3.0;
@@ -230,7 +230,7 @@ Real BlackOvernightIndexedCouponPricer::optionletRateLocal(Option::Type optionTy
         bool shiftedLn = capletVolatility()->volatilityType() == ShiftedLognormal;
         Rate cfValue = shiftedLn ? blackFormula(optionType, effStrike, averageRate, stdDev, 1.0, shift)
                                  : bachelierBlackFormula(optionType, effStrike, averageRate, stdDev, 1.0);
-        Real effectiveTime = capletVolatility()->timeFromReference(coupon_->underlying()->fixingDate());
+        Real effectiveTime = capletVolatility()->timeFromReference(coupon_->underlying()->fixingDateNoCutoff());
         if (optionType == Option::Type::Call)
             effectiveCapletVolatility_ = stdDev / std::sqrt(effectiveTime);
         else
@@ -334,10 +334,10 @@ Real BlackAverageONIndexedCouponPricer::optionletRateGlobal(Option::Type optionT
         bool shiftedLn = capletVolatility()->volatilityType() == ShiftedLognormal;
         Real shift = capletVolatility()->displacement();
         Real stdDev, strippedVol;
-        Real effectiveTime = capletVolatility()->timeFromReference(lastRelevantFixingDate);
+        Real effectiveTime = capletVolatility()->timeFromReference(coupon_->underlying()->fixingDateNoCutoff());
         if (capletVolatility()->useEffectiveVolatility()) {
             // vol input is effective, i.e. we use a plain black model
-            strippedVol = capletVolatility()->volatility(lastRelevantFixingDate, effStrike);
+            strippedVol = capletVolatility()->volatility(coupon_->underlying()->fixingDateNoCutoff(), effStrike);
             stdDev = strippedVol * std::sqrt(effectiveTime);
         } else {
             // vol input is not effective:
@@ -345,7 +345,7 @@ Real BlackAverageONIndexedCouponPricer::optionletRateGlobal(Option::Type optionT
             // section 6.3. the idea is to dampen the average volatility sigma between the fixing start and fixing end
             // date by a linear function going from (fixing start, 1) to (fixing end, 0)
             Real fixingStartTime = capletVolatility()->timeFromReference(fixingDates.front());
-            Real fixingEndTime = capletVolatility()->timeFromReference(lastRelevantFixingDate);
+            Real fixingEndTime = capletVolatility()->timeFromReference(coupon_->underlying()->fixingDateNoCutoff());
             strippedVol = capletVolatility()->volatility(
                 std::max(fixingDates.front(), capletVolatility()->referenceDate() + 1), effStrike);
             Real T = std::max(fixingStartTime, 0.0);
@@ -483,7 +483,7 @@ Real BlackAverageONIndexedCouponPricer::optionletRateLocal(Option::Type optionTy
         Rate cfValue = shiftedLn ? blackFormula(optionType, effStrike, averageRate, stdDev, 1.0, shift)
                                  : bachelierBlackFormula(optionType, effStrike, averageRate, stdDev, 1.0);
 
-        Real effectiveTime = capletVolatility()->timeFromReference(coupon_->underlying()->fixingDate());
+        Real effectiveTime = capletVolatility()->timeFromReference(coupon_->underlying()->fixingDateNoCutoff());
         if (optionType == Option::Type::Call)
             effectiveCapletVolatility_ = stdDev / std::sqrt(effectiveTime);
         else

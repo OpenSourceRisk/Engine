@@ -191,6 +191,8 @@ public:
     Type rateType() const { return rateType_; }
     //! The index of the period where telescopic formula starts to apply.
     QuantLib::ext::optional<QuantLib::Size> telescopicStartIdx() const { return tsStartIdx_; }
+    //! The last fixing date ignoring any rate cut-off.
+    QuantLib::Date fixingDateNoCutoff() const { return lastFixingDateNoCutoff_; }
     //@}
     //! \name LazyObject interface
     //@{
@@ -244,6 +246,10 @@ private:
 
     // Record last possible fixing date.
     QuantLib::Date lastFixingDate_;
+
+    // In some places, e.g. BlackOvernightIndexedCouponPricer, the logic needs the last fixing date ignoring any rate 
+    // cut-off. We record this date as well.
+    QuantLib::Date lastFixingDateNoCutoff_;
 
     // Index into fixing dates for current start of telescopic period. If not set, all dates are present.
     mutable QuantLib::ext::optional<QuantLib::Size> tsStartIdx_;
