@@ -41,6 +41,8 @@ ValueAdjustmentCalculator::ValueAdjustmentCalculator(
     const string& dvaName,
     const string& fvaBorrowingCurve,
     const string& fvaLendingCurve,
+    const bool dvaAnalytic,
+    const bool fvaAnalytic,
     const bool applyDynamicInitialMargin,
     const QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator> dimCalculator,
     const QuantLib::ext::shared_ptr<NPVCube> tradeExposureCube,
@@ -51,6 +53,7 @@ ValueAdjustmentCalculator::ValueAdjustmentCalculator(
     : portfolio_(portfolio), market_(market), configuration_(configuration),
       baseCurrency_(baseCurrency), dvaName_(dvaName),
       fvaBorrowingCurve_(fvaBorrowingCurve), fvaLendingCurve_(fvaLendingCurve),
+      dvaAnalytic_(dvaAnalytic), fvaAnalytic_(fvaAnalytic),
       applyDynamicInitialMargin_(applyDynamicInitialMargin),
       dimCalculator_(dimCalculator),
       tradeExposureCube_(tradeExposureCube),
@@ -318,14 +321,16 @@ void ValueAdjustmentCalculator::build() {
             if (flipViewXVA_) {
                 cid = origDvaName;
                 dvaName_ = trade->envelope().counterparty();
-                fvaBorrowingCurve_ = dvaName_ + flipViewBorrowingCurvePostfix_;
-                fvaLendingCurve_ = dvaName_ + flipViewLendingCurvePostfix_;
+                if (fvaAnalytic_) {
+                    fvaBorrowingCurve_ = dvaName_ + flipViewBorrowingCurvePostfix_;
+                    fvaLendingCurve_ = dvaName_ + flipViewLendingCurvePostfix_;
+                }
             } else {
                 cid = trade->envelope().counterparty();
             }
-            if (fvaBorrowingCurve_ != "")
+            if (fvaAnalytic_ && fvaBorrowingCurve_ != "")
                 borrowingCurve = market_->yieldCurve(fvaBorrowingCurve_, configuration_);
-            if (fvaLendingCurve_ != "")
+            if (fvaAnalytic_ && fvaLendingCurve_ != "")
                 lendingCurve = market_->yieldCurve(fvaLendingCurve_, configuration_);
 
             if (!borrowingCurve.empty() || !lendingCurve.empty()) {
@@ -352,7 +357,7 @@ void ValueAdjustmentCalculator::build() {
                 Date d0 = j == 0 ? today : dates()[j - 1];
                 Date d1 = dates()[j];
                 Real cvaIncrement = calculateCvaIncrement(tid, cid, d0, d1, cvaRR);
-                Real dvaIncrement = dvaName_ != "" ? calculateDvaIncrement(tid, d0, d1, dvaRR) : 0;
+                Real dvaIncrement = (dvaAnalytic_ && dvaName_ != "") ? calculateDvaIncrement(tid, d0, d1, dvaRR) : 0;
                 tradeCva_[tid] += cvaIncrement;
                 tradeDva_[tid] += dvaIncrement;
 
@@ -406,8 +411,10 @@ void ValueAdjustmentCalculator::build() {
             if (flipViewXVA_) {
                 cid = origDvaName;
                 dvaName_ = pair.second;
-                fvaBorrowingCurve_ = dvaName_ + flipViewBorrowingCurvePostfix_;
-                fvaLendingCurve_ = dvaName_ + flipViewLendingCurvePostfix_;
+                if (fvaAnalytic_) {
+                    fvaBorrowingCurve_ = dvaName_ + flipViewBorrowingCurvePostfix_;
+                    fvaLendingCurve_ = dvaName_ + flipViewLendingCurvePostfix_;
+                }
             } else {
                 cid = pair.second;
             }
@@ -416,9 +423,9 @@ void ValueAdjustmentCalculator::build() {
             if (dvaName_ != "") {
                 dvaRR = market_->recoveryRate(dvaName_, configuration_)->value();
             }
-            if (fvaBorrowingCurve_ != "")
+            if (fvaAnalytic_ && fvaBorrowingCurve_ != "")
                 borrowingCurve = market_->yieldCurve(fvaBorrowingCurve_, configuration_);
-            if (fvaLendingCurve_ != "")
+            if (fvaAnalytic_ && fvaLendingCurve_ != "")
                 lendingCurve = market_->yieldCurve(fvaLendingCurve_, configuration_);
 
             if (!borrowingCurve.empty() || !lendingCurve.empty()) {
@@ -439,7 +446,7 @@ void ValueAdjustmentCalculator::build() {
                 Date d0 = j == 0 ? today : dates()[j - 1];
                 Date d1 = dates()[j];
                 Real cvaIncrement = calculateNettingSetCvaIncrement(nid, cid, d0, d1, cvaRR);
-                Real dvaIncrement = dvaName_ != "" ? calculateNettingSetDvaIncrement(nid, d0, d1, dvaRR) : 0;
+                Real dvaIncrement = (dvaAnalytic_ && dvaName_ != "") ? calculateNettingSetDvaIncrement(nid, d0, d1, dvaRR) : 0;
                 nettingSetCva_[nid] += cvaIncrement;
                 nettingSetDva_[nid] += dvaIncrement;
 
