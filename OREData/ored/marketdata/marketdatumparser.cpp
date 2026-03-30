@@ -897,12 +897,14 @@ QuantLib::ext::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const 
         // COMMODITY_CALENDAR_SPREAD_OPTION/<QT>/<COMDTY_NAME>/<OFFSET>/<CCY>/<EXPIRY>/<STRIKE>
         using QT = MarketDatum::QuoteType;
         QL_REQUIRE(tokens.size() == 7 || tokens.size() >= 8, "7 or at least 8 tokens are expected in " << datumName);
-        QL_REQUIRE(quoteType == QT::RATE_NVOL, "Quote type for " << datumName << " should be'RATE_NVOL');
+        QL_REQUIRE(quoteType == QT::RATE_NVOL, "Quote type for " << datumName << " should be'RATE_NVOL'");
 
         QuantLib::ext::shared_ptr<Expiry> expiry = parseExpiry(tokens[6]);
-        strike = parseBaseStrike(tokens[7]);        
-        return QuantLib::ext::make_shared<CommodityOptionQuote>(value, asof, datumName, quoteType, tokens[2],
-            tokens[3],tokens[4] expiry, strike, optionType);
+        auto strike = parseBaseStrike(tokens[7]);        
+        auto offset = parseInteger(tokens[3]);
+
+        return QuantLib::ext::make_shared<CommoditySpreadOptionQuote>(value, asof, datumName, quoteType, tokens[2],
+            offset, tokens[4], expiry, strike);
     }
     
     case MarketDatum::InstrumentType::CORRELATION: {

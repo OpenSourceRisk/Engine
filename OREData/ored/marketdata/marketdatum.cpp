@@ -286,12 +286,13 @@ QuantLib::Size SeasonalityQuote::applyMonth() const {
     return applyMonth;
 }
 
-CommodityOptionQuote::CommodityOptionQuote(Real value, const Date& asof, const string& name, QuoteType quoteType,
-                                           const string& commodityName, const string& quoteCurrency,
-                                           const QuantLib::ext::shared_ptr<Expiry>& expiry,
-                                           const QuantLib::ext::shared_ptr<BaseStrike>& strike,
-                                           Option::Type optionType)
-    : MarketDatum(value, asof, name, quoteType, InstrumentType::COMMODITY_OPTION), commodityName_(commodityName),
+CommodityOptionBaseQuote::CommodityOptionBaseQuote(MarketDatum::InstrumentType instrumentType, Real value,
+                                                   const Date& asof, const string& name, QuoteType quoteType,
+                                                   const string& commodityName, const string& quoteCurrency,
+                                                   const QuantLib::ext::shared_ptr<Expiry>& expiry,
+                                                   const QuantLib::ext::shared_ptr<BaseStrike>& strike,
+                                                   Option::Type optionType)
+    : MarketDatum(value, asof, name, quoteType, instrumentType), commodityName_(commodityName),
       quoteCurrency_(quoteCurrency), expiry_(expiry), strike_(strike), optionType_(optionType) {
 
     if (auto date = QuantLib::ext::dynamic_pointer_cast<ExpiryDate>(expiry))
@@ -299,18 +300,22 @@ CommodityOptionQuote::CommodityOptionQuote(Real value, const Date& asof, const s
                                                    << date->expiryDate() << " must be after asof date " << asof);
 }
 
-CommoditySpreadOptionQuote::CommoditySpreadOptionQuote(Real value, const Date& asof, const string& name, QuoteType quoteType,
-                                           const string& commodityName, const int offset, const string& quoteCurrency,
+CommodityOptionQuote::CommodityOptionQuote(Real value, const Date& asof, const string& name, QuoteType quoteType,
+                                           const string& commodityName, const string& quoteCurrency,
                                            const QuantLib::ext::shared_ptr<Expiry>& expiry,
-                                           const QuantLib::ext::shared_ptr<BaseStrike>& strike)
-    : MarketDatum(value, asof, name, quoteType, InstrumentType::COMMODITY_OPTION), commodityName_(commodityName),
-      offset_(offset), quoteCurrency_(quoteCurrency), expiry_(expiry), strike_(strike) {
+                                           const QuantLib::ext::shared_ptr<BaseStrike>& strike, Option::Type optionType)
+    : CommodityOptionBaseQuote(InstrumentType::COMMODITY_OPTION, value, asof, name, quoteType, commodityName,
+                               quoteCurrency, expiry, strike, optionType) {}
 
-    if (auto date = QuantLib::ext::dynamic_pointer_cast<ExpiryDate>(expiry))
-        QL_REQUIRE(asof <= date->expiryDate(), "CommodityOptionQuote: Invalid CommodityOptionQuote, expiry date "
-                                                   << date->expiryDate() << " must be after asof date " << asof);
-}
-
+CommoditySpreadOptionQuote::CommoditySpreadOptionQuote(Real value, const Date& asof, const string& name,
+                                                       QuoteType quoteType, const string& commodityName,
+                                                       const int offset, const string& quoteCurrency,
+                                                       const QuantLib::ext::shared_ptr<Expiry>& expiry,
+                                                       const QuantLib::ext::shared_ptr<BaseStrike>& strike,
+                                                       const Option::Type optionType)
+    : CommodityOptionBaseQuote(InstrumentType::COMMODITY_CALENDAR_SPREAD_OPTION, value, asof, name, quoteType,
+                               commodityName, quoteCurrency, expiry, strike, optionType),
+      offset_(offset) {}
 
 CorrelationQuote::CorrelationQuote(Real value, const Date& asof, const string& name, QuoteType quoteType,
                                    const string& index1, const string& index2, const string& expiry,
@@ -662,6 +667,15 @@ template <class Archive> void CommodityOptionQuote::serialize(Archive& ar, const
     ar& strike_;
 }
 
+template <class Archive> void CommoditySpreadOptionQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& commodityName_;
+    ar& quoteCurrency_;
+    ar& expiry_;
+    ar& strike_;
+    ar& offset_;
+}
+
 template <class Archive> void CommodityOptionShiftQuote::serialize(Archive& ar, const unsigned int version) {
     ar& boost::serialization::base_object<MarketDatum>(*this);
     ar& commodityName_;
@@ -787,6 +801,8 @@ template void CommodityForwardQuote::serialize(boost::archive::binary_oarchive& 
 template void CommodityForwardQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
 template void CommodityOptionQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
 template void CommodityOptionQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void CommoditySpreadOptionQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void CommoditySpreadOptionQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
 template void CommodityOptionShiftQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
 template void CommodityOptionShiftQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
 template void CorrelationQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
@@ -846,6 +862,7 @@ BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::IndexCDSOptionQuote);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::CommoditySpotQuote);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::CommodityForwardQuote);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::CommodityOptionQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::CommoditySpreadOptionQuote);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::CommodityOptionShiftQuote);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::CorrelationQuote);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::CPRQuote);
