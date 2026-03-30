@@ -559,16 +559,18 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
                 }
                 ScheduleData scheduleData = legData.schedule();
                 QuantLib::Schedule schedule = makeSchedule(scheduleData);
-                Integer settlementDays = refDatum->bondData().settlementDays.empty() ? 0 : parseInteger(refDatum->bondData().settlementDays);
+                auto dc = parseDayCounter(legData.dayCounter());
                 helper = QuantLib::ext::make_shared<UpfrontCdsHelper>(
-                    quote.value, runningSpread, recoveryRate_, discountCurve, CreditDefaultSwap::PricingModel::Midpoint,
-                    schedule, settlementDays, parseDayCounter(legData.dayCounter()), true, ppt);
-            }else {
+                    quote.value, runningSpread, schedule, dc, recoveryRate_, discountCurve,
+                    CreditDefaultSwap::PricingModel::Midpoint, cdsConv->upfrontSettlementDays(),
+                    cdsConv->settlesAccrual(), ppt, dc, true);
+            } else {
                 helper = QuantLib::ext::make_shared<UpfrontCdsHelper>(
-                        quote.value, runningSpread, quote.term, cdsConv->settlementDays(), cdsConv->calendar(),
-                        cdsConv->frequency(), cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(),
-                        recoveryRate_, discountCurve, CreditDefaultSwap::PricingModel::Midpoint, cdsConv->upfrontSettlementDays(), cdsConv->settlesAccrual(), ppt,
-                        config.startDate(), cdsConv->lastPeriodDayCounter());        
+                    quote.value, runningSpread, quote.term, cdsConv->settlementDays(), cdsConv->calendar(),
+                    cdsConv->frequency(), cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(),
+                    recoveryRate_, discountCurve, CreditDefaultSwap::PricingModel::Midpoint,
+                    cdsConv->upfrontSettlementDays(), cdsConv->settlesAccrual(), ppt, config.startDate(),
+                    cdsConv->lastPeriodDayCounter());
             }
             if (helper->latestDate() > asof) {
                 helpers.push_back(helper);
