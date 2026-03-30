@@ -691,7 +691,7 @@ ParSensitivityConverter::ParSensitivityConverter(const ParSensitivityAnalysis::P
 
     // Populate the set of par keys (rows of Jacobi) and raw zero keys (columns of Jacobi)
     for (auto parEntry : parSensitivities) {
-        parKeys_.insert(parEntry.first.first);
+    parKeys_.insert(parEntry.first.first);
         rawKeys_.insert(parEntry.first.second);
     }
 

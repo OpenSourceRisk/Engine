@@ -629,8 +629,9 @@ QuantLib::ext::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const stri
         pair<bool, QuantLib::ext::shared_ptr<Convention>> p = conventions->get(s, Convention::Type::ZeroInflationIndex);
         if (p.first) {
             auto c = QuantLib::ext::dynamic_pointer_cast<ZeroInflationIndexConvention>(p.second);
-            auto index = QuantLib::ext::make_shared<ZeroInflationIndex>(s, c->region(), c->revised(),
-                                                                c->frequency(), c->availabilityLag(), c->currency(), h);
+            auto index = QuantLib::ext::make_shared<ZeroInflationIndex>(s, c->region(), c->revised(), c->frequency(),
+                                                                        c->availabilityLag(), c->currency(), h,
+                                                                        c->rebasingEvents());
             IndexNameTranslator::instance().add(index->name(), s);
             return index;
         }

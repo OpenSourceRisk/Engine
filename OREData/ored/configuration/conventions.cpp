@@ -2666,7 +2666,8 @@ ZeroInflationIndexConvention::ZeroInflationIndexConvention(
     bool revised,
     const string& frequency,
     const string& availabilityLag,
-    const string& currency)
+    const string& currency,
+    const std::map<QuantLib::Date, QuantLib::Real>& rebasingEvents)
     : Convention(id, Type::ZeroInflationIndex),
       regionName_(regionName),
       regionCode_(regionCode),
@@ -2674,7 +2675,8 @@ ZeroInflationIndexConvention::ZeroInflationIndexConvention(
       strFrequency_(frequency),
       strAvailabilityLag_(availabilityLag),
       strCurrency_(currency),
-      frequency_(Monthly) {
+      frequency_(Monthly),
+      rebasingEvents_(rebasingEvents) {
     build();
 }
 
@@ -2700,7 +2702,16 @@ void ZeroInflationIndexConvention::fromXML(XMLNode* node) {
     strFrequency_ = XMLUtils::getChildValue(node, "Frequency", true);
     strAvailabilityLag_ = XMLUtils::getChildValue(node, "AvailabilityLag", true);
     strCurrency_ = XMLUtils::getChildValue(node, "Currency", true);
-
+    rebasingEvents_.clear();
+    if (XMLNode* rebasingNode = XMLUtils::getChildNode(node, "RebasingEvents")) {
+        for (XMLNode* eventNode = XMLUtils::getChildNode(rebasingNode, "Event"); eventNode;
+             eventNode = XMLUtils::getNextSibling(eventNode, "Event")) {
+            Date rebaseDate = parseDate(XMLUtils::getAttribute(eventNode, "date"));
+            Real factor = parseReal(XMLUtils::getNodeValue(eventNode));
+            rebasingEvents_[rebaseDate] = factor;
+        }
+    }
+    
     build();
 }
 
@@ -2714,6 +2725,16 @@ XMLNode* ZeroInflationIndexConvention::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "Frequency", strFrequency_);
     XMLUtils::addChild(doc, node, "AvailabilityLag", strAvailabilityLag_);
     XMLUtils::addChild(doc, node, "Currency", strCurrency_);
+
+    if (!rebasingEvents_.empty()) {
+        XMLNode* rebasingNode = doc.allocNode("RebasingEvents");
+        for (const auto& [rebaseDate, factor] : rebasingEvents_) {
+            XMLNode* eventNode = doc.allocNode("Event", to_string(factor));
+            XMLUtils::addAttribute(doc, eventNode, "date", to_string(rebaseDate));
+            XMLUtils::appendNode(rebasingNode, eventNode);
+        }
+        XMLUtils::appendNode(node, rebasingNode);
+    }
 
     return node;
 }

@@ -343,6 +343,14 @@ private:
 
 class CPILegData : public LegAdditionalData {
 public:
+    //! Indicates if the BaseCPI is rebased or not
+    enum class BaseCPIBase {
+        //! BaseCPI is based on the latest rebasing of the index, default
+        Current,
+        //! BaseCPI is not rebased and corresponds to latest rebasing before the start date.
+        StartDate,
+    };
+
     //! Default constructor
     CPILegData() : LegAdditionalData(LegType::CPI, false) {}
     //! Constructor
@@ -352,12 +360,14 @@ public:
                const vector<string>& capDates = vector<string>(), const vector<double>& floors = vector<double>(),
                const vector<string>& floorDates = vector<string>(), double finalFlowCap = Null<Real>(),
                double finalFlowFloor = Null<Real>(), bool nakedOption = false,
-               bool subtractInflationNominalCoupons = false)
+               bool subtractInflationNominalCoupons = false,
+               BaseCPIBase BaseCPIBase = BaseCPIBase::Current)
         : LegAdditionalData(LegType::CPI, false), index_(index), startDate_(startDate), baseCPI_(baseCPI),
           observationLag_(observationLag), interpolation_(interpolation), rates_(rates), rateDates_(rateDates),
           subtractInflationNominal_(subtractInflationNominal), caps_(caps), capDates_(capDates), floors_(floors),
           floorDates_(floorDates), finalFlowCap_(finalFlowCap), finalFlowFloor_(finalFlowFloor),
-          nakedOption_(nakedOption), subtractInflationNominalCoupons_(subtractInflationNominalCoupons) {
+          nakedOption_(nakedOption), subtractInflationNominalCoupons_(subtractInflationNominalCoupons),
+          baseCPIBase_(BaseCPIBase) {
         indices_.insert(index_);
     }
 
@@ -379,6 +389,7 @@ public:
     double finalFlowFloor() const { return finalFlowFloor_; }
     bool nakedOption() const { return nakedOption_; }
     bool subtractInflationNominalCoupons() const { return subtractInflationNominalCoupons_; }
+    BaseCPIBase baseCPIBase() const { return baseCPIBase_; }
     //@}
 
     //! \name Serialisation
@@ -403,6 +414,7 @@ private:
     double finalFlowFloor_;
     bool nakedOption_;
     bool subtractInflationNominalCoupons_;
+    BaseCPIBase baseCPIBase_ = BaseCPIBase::Current;
 };
 
 //! Serializable YoY Leg Data

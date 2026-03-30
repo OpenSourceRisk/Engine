@@ -1909,16 +1909,19 @@ public:
         bool revised,
         const std::string& frequency,
         const std::string& availabilityLag,
-        const std::string& currency);
+        const std::string& currency,
+        const std::map<QuantLib::Date, Real>& rebasingEvents = {});
 
     QuantLib::Region region() const;
     bool revised() const { return revised_; }
     QuantLib::Frequency frequency() const { return frequency_; }
     const QuantLib::Period& availabilityLag() const { return availabilityLag_; }
     const QuantLib::Currency& currency() const { return currency_; }
-
+    const std::map<QuantLib::Date, Real>& rebasingEvents() const { return rebasingEvents_; }
+    
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
+    
     void build() override;
 
 private:
@@ -1932,6 +1935,7 @@ private:
     QuantLib::Frequency frequency_;
     QuantLib::Period availabilityLag_;
     QuantLib::Currency currency_;
+    std::map<QuantLib::Date, Real> rebasingEvents_;
 };
 
 /*! Container for storing bond yield calculation conventions
