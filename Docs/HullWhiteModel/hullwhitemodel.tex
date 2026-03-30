@@ -615,8 +615,7 @@ Here, $A$ is the annualizing factor that normalize the variance of daily log-ret
 
 \section{Swaption Pricer}
 
-An analytical pricing formula for European swaptions under the Hull-White n-factor model can be derived using the
-Jamshidian approach. We outline the method following \cite{Andersen_Piterbarg_2010}, Lemma 12.1.19.
+An analytical pricing formula for European swaptions under the Hull-White n-factor model. We outline the method following \cite{Andersen_Piterbarg_2010}, Lemma 12.1.19.
 
 \subsection{Decomposition of the Swaption Payoff}
 
@@ -662,6 +661,11 @@ where $q(t)$ is a state-independent deterministic function given as a slight gen
 \begin{equation}
 q_j(t,T) = -\frac{P(t,T_1,x_0) g_j(t,T_1) - P(t,T_m,x_0) g_j(t,T_m)}{A(t)} + \frac{S(t)}{A(t)} \sum_{i=1}^m \delta_i P(t,T_i,x_0) g_j(t,T_i)
 \end{equation}
+
+\begin{remark}
+There is a typo in \cite{Andersen_Piterbarg_2010}, formula (12.1.6.2): in the expression for $q_j(t,x)$, the second
+term should be added, not subtracted. The formula above already reflects the correct sign.
+\end{remark}
 
 Here, $T_1$ is the first accrual start date of the fixed leg, $T_m$ is the final accrual end date, $S(t)$ is the swap
 rate, $A(t)$ is the annuity, and $P(t,T,x_0)$ denotes the discount bond price evaluated at a deterministic
