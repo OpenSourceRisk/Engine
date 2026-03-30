@@ -29,7 +29,6 @@
 %shared_ptr(ore::data::CommodityPosition)
 %shared_ptr(ore::data::CommoditySwap)
 %shared_ptr(ore::data::CommoditySwaption)
-%template(PositionTypeVector) std::vector<ore::data::Position::Type>;
 
 namespace ore {
 namespace data {
@@ -161,21 +160,6 @@ public:
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 };
-
-// ore/OREData/ored/portfolio/commodityswap.hpp
-
-class CommoditySwap : public Trade {
-public:
-    CommoditySwap();
-    void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>&) override;
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
-};
-%extend CommoditySwap {
-    CommoditySwap(const ore::data::Envelope& env, const std::vector<ext::shared_ptr<ore::data::LegData>>& legs) {
-        return new ore::data::CommoditySwap(env, VECTOR_SWIG_TO_ORE(legs));
-    }
-}
 
 // ore/OREData/ored/portfolio/commodityswaption.hpp
 

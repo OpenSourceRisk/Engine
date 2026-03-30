@@ -277,10 +277,6 @@ public:
           self->commodities() = coms;
       }
 
-      void setCurrencies(std::vector<std::string> ccys) {
-          self->currencies() = ccys;
-      }
-
       void setBootstrapTolerance(QuantLib::Real tol) {
           self->bootstrapTolerance() = tol;
       }

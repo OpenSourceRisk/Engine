@@ -41,7 +41,6 @@
 %template(StringVolShiftDataMap) std::map<std::string, ext::shared_ptr<ore::analytics::SensitivityScenarioData::VolShiftData>>;
 %template(StringCdsVolShiftDataMap) std::map<std::string, ext::shared_ptr<ore::analytics::SensitivityScenarioData::CdsVolShiftData>>;
 %template(StringBaseCorrelationShiftDataMap) std::map<std::string, ext::shared_ptr<ore::analytics::SensitivityScenarioData::BaseCorrelationShiftData>>;
-%template(VectorOfStringStringPair) std::vector<std::pair<std::string, std::string>>;
 
 %rename (SensitivityScenarioDataShiftData) ore::analytics::SensitivityScenarioData::ShiftData;
 %feature ("flatnested") ShiftData;

@@ -267,7 +267,6 @@ public:
 %template(PriceSegmentVector) std::vector<ore::data::PriceSegment>;
 %template(PriceSegmentMap) std::map<unsigned short, ore::data::PriceSegment>;
 %template(ParametricSmileParameterVector) std::vector<ore::data::ParametricSmileConfiguration::Parameter>;
-%template(DoubleVectorVector) std::vector<std::vector<double>>;
 %template(StringBoolPairVector) std::vector<std::pair<std::string, bool>>;
 
 %shared_ptr(ore::data::CurveConfigurations)

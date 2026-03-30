@@ -42,8 +42,8 @@ namespace std {
     %template() pair<Date, string>;
     %template(DateStringPairVector) vector<pair<Date, string>>;
     %template(SizeVector) vector<QuantLib::Size>;
-        %template(MarketObjectMap) map<ore::data::MarketObject, set<string>>;
-        %template(AllMarketObjectMap) map<string, map<ore::data::MarketObject, set<string>>>;
+    %template(MarketObjectMap) map<ore::data::MarketObject, set<string>>;
+    %template(AllMarketObjectMap) map<string, map<ore::data::MarketObject, set<string>>>;
 }
 
 %template(StringStringPair) std::pair<std::string, std::string>;
@@ -132,11 +132,9 @@ public:
     void setConventionsFromFile(const std::string& fileName);
     void setMporConventions(const std::string& xml);
     void setIborFallbackConfig(const std::string& xml);
-    void setIborFallbackConfig(const std::string& xml);
     void setIborFallbackConfigFromFile(const std::string& fileName);
     void setCurveConfigs(const std::string& xml, std::string id = std::string());
     void setCurveConfigs(const ext::shared_ptr<ore::data::CurveConfigurations>& cc, std::string id = std::string());
-    void setCurveConfigsFromFile(const std::string& fileName, std::string id = std::string());
     void setCurveConfigsFromFile(const std::string& fileName, std::string id = std::string());
     void setCalendarAdjustment(const std::string& xml);
     void setCalendarAdjustmentFromFile(const std::string& fileName);
@@ -444,5 +442,32 @@ public:
 
 } // namespace analytics
 } // namespace ore
+
+%pythoncode %{
+try:
+    import swig_runtime_data5
+
+    # SWIG exposes enum-class map keys as SwigPyObject instances; make them hashable
+    # so std::map conversions can materialize Python dict-like results.
+    swig_runtime_data5.SwigPyObject.__hash__ = object.__hash__
+except Exception:
+    pass
+
+
+def _swig_map_items(map_object):
+    return [(key, map_object[key]) for key in map_object.keys()]
+
+
+def _market_object_map_items(self):
+    return _swig_map_items(self)
+
+
+def _all_market_object_map_items(self):
+    return _swig_map_items(self)
+
+
+MarketObjectMap.items = _market_object_map_items
+AllMarketObjectMap.items = _all_market_object_map_items
+%}
 
 #endif
