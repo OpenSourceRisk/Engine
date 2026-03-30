@@ -68,6 +68,8 @@ public:
     OneDimSolverConfig solverConfig() const;
     const QuantLib::ext::optional<bool>& preferOutOfTheMoney() const;
     const ReportConfig& reportConfig() const { return reportConfig_; }
+    const MarketDatum::InstrumentType instrumentType() const { return instrumentType_; }
+    int calendarSpreadOffset() const { return calendarSpreadOffset_; }
     //@}
 
     //! \name Serialisation
@@ -87,11 +89,11 @@ private:
     QuantLib::Natural optionExpiryRollDays_;
     std::string priceCurveId_;
     std::string yieldCurveId_;
-    MarketDatum::InstrumentType instrumentType_ = MarketDatum::InstrumentType::COMMODITY_OPTION;
-    int calendarSpreadOffset_ = 0;
     std::string quoteSuffix_;
     OneDimSolverConfig solverConfig_;
     QuantLib::ext::optional<bool> preferOutOfTheMoney_;
+    MarketDatum::InstrumentType instrumentType_ = MarketDatum::InstrumentType::COMMODITY_OPTION;
+    int calendarSpreadOffset_ = 0;
     ReportConfig reportConfig_;
 
     //! Populate CurveConfig::quotes_ with the required quotes.
