@@ -2045,8 +2045,8 @@ Trade input and the payoff script are described below.
     <AdditionalFields/>
   </Envelope>
   <WorstPerformanceRainbowOption08Data>
-    <LongShort type="number">1</LongShort>
-    <CallPut type="number">1</CallPut>
+    <LongShort type="longShort">Long</LongShort>
+    <CallPut type="optionType">Call</CallPut>
     <Quantity type="number">1000000</Quantity>
     <Premium type="number">1000</Premium>
     <PremiumDate type="event">2025-12-01</PremiumDate>
@@ -2127,10 +2127,10 @@ The premium-adjusted payoff from the long perspective is
 The meanings and allowable values for the \lstinline!WorstPerformanceRainbowOption08Data! node below.
 
 \begin{itemize}
-  \item{}[number] \lstinline!LongShort!: Own party position in the option, represented numerically. \\
-  Allowable values: \emph{1} (Long), \emph{-1} (Short).
-  \item{}[number] \lstinline!CallPut!: Option direction flag used by this script family. \\
-  Allowable values: \emph{1} or \emph{-1}.
+  \item{}[longShort] \lstinline!LongShort!: Own party position in the option. \\
+  Allowable values: \emph{Long}, \emph{Short}.
+  \item{}[optionType] \lstinline!CallPut!: Option direction flag used by this script family. \\
+  Allowable values: \emph{Call}, \emph{Put}.
   \item{}[number] \lstinline!Quantity!: A quantity multiplier applied to the payoff. \\
   Allowable values: Any number.
   \item{}[number] \lstinline!Premium!: Total option premium amount in terms of the \emph{PayCcy}. \\
@@ -2169,8 +2169,8 @@ Trade input and the payoff script are described below.
     <AdditionalFields/>
   </Envelope>
   <WorstPerformanceRainbowOption09Data>
-    <LongShort type="number">1</LongShort>
-    <CallPut type="number">1</CallPut>
+    <LongShort type="longShort">Long</LongShort>
+    <CallPut type="optionType">Call</CallPut>
     <Quantity type="number">1000000</Quantity>
     <Premium type="number">1000</Premium>
     <PremiumDate type="event">2025-12-01</PremiumDate>
@@ -2289,10 +2289,10 @@ then the option payoff leg is zero. Otherwise, the option payoff leg is equal to
 The meanings and allowable values for the \lstinline!WorstPerformanceRainbowOption09Data! node below.
 
 \begin{itemize}
-  \item{}[number] \lstinline!LongShort!: Own party position in the option, represented numerically. \\
-  Allowable values: \emph{1} (Long), \emph{-1} (Short).
-  \item{}[number] \lstinline!CallPut!: Option direction flag used by this script family. \\
-  Allowable values: \emph{1} or \emph{-1}.
+  \item{}[longShort] \lstinline!LongShort!: Own party position in the option. \\
+  Allowable values: \emph{Long}, \emph{Short}.
+  \item{}[optionType] \lstinline!CallPut!: Option direction flag used by this script family. \\
+  Allowable values: \emph{Call}, \emph{Put}.
   \item{}[number] \lstinline!Quantity!: A quantity multiplier applied to the payoff. \\
   Allowable values: Any number.
   \item{}[number] \lstinline!Premium!: Total option premium amount in terms of the \emph{PayCcy}. \\
