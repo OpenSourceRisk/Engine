@@ -1091,6 +1091,7 @@ public:
     const std::string& simmReportingCurrency() const { return simmReportingCurrency_; }
     bool enforceIMRegulations() const { return enforceIMRegulations_; }
     bool removeInvalidCrifRecords() const { return removeInvalidCrifRecords_; }
+    bool useSimmParameters() const { return useSimmParameters_; }
     QuantLib::ext::shared_ptr<SimmConfiguration> getSimmConfiguration();
     bool writeSimmIntermediateReports() const { return writeSimmIntermediateReports_; }
 
