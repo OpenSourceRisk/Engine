@@ -202,8 +202,7 @@ applySimmExemptions(Portfolio& portfolio, const QuantLib::ext::shared_ptr<Engine
                 const LegData& ld = legData[i];
                 const string& ccy = ld.currency();
 
-                if (ld.legType() != LegType::Cashflow && ld.legType() != LegType::Fixed &&
-                    ld.legType() != LegType::Floating) {
+                if (!ld.isSimmPlainVanillaIrLeg()) {
                     hasNonVanillaLeg = true;
                     break;
                 }

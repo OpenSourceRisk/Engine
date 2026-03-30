@@ -99,7 +99,7 @@ public:
     const string& legNodeName() const { return legNodeName_; }
     const std::set<std::string>& indices() const { return indices_; }
     //! check if a x-ccy swap with the leg qualifies for the isda simm exemption treatment
-    const bool isSimmPlainVanillaIrLeg() const { return isSimmPlainVanillaIrLeg_; };
+    virtual const bool isSimmPlainVanillaIrLeg() const { return isSimmPlainVanillaIrLeg_; };
 
 protected:
     /*! Store the set of ORE index names that appear on this leg.
@@ -281,6 +281,7 @@ public:
     const string& backStubRoundingType() const { return backStubRoundingType_; }
     const string& backStubRoundingPrecision() const { return backStubRoundingPrecision_; }
     bool stubUseOriginalCurve() const { return stubUseOriginalCurve_; }
+    const bool isSimmPlainVanillaIrLeg() const override { return caps_.empty() && floors_.empty(); }
     //@}
 
     //! \name Modifiers
