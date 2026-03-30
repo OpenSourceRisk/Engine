@@ -299,6 +299,19 @@ CommodityOptionQuote::CommodityOptionQuote(Real value, const Date& asof, const s
                                                    << date->expiryDate() << " must be after asof date " << asof);
 }
 
+CommoditySpreadOptionQuote::CommoditySpreadOptionQuote(Real value, const Date& asof, const string& name, QuoteType quoteType,
+                                           const string& commodityName, const int offset, const string& quoteCurrency,
+                                           const QuantLib::ext::shared_ptr<Expiry>& expiry,
+                                           const QuantLib::ext::shared_ptr<BaseStrike>& strike)
+    : MarketDatum(value, asof, name, quoteType, InstrumentType::COMMODITY_OPTION), commodityName_(commodityName),
+      offset_(offset), quoteCurrency_(quoteCurrency), expiry_(expiry), strike_(strike) {
+
+    if (auto date = QuantLib::ext::dynamic_pointer_cast<ExpiryDate>(expiry))
+        QL_REQUIRE(asof <= date->expiryDate(), "CommodityOptionQuote: Invalid CommodityOptionQuote, expiry date "
+                                                   << date->expiryDate() << " must be after asof date " << asof);
+}
+
+
 CorrelationQuote::CorrelationQuote(Real value, const Date& asof, const string& name, QuoteType quoteType,
                                    const string& index1, const string& index2, const string& expiry,
                                    const string& strike)
