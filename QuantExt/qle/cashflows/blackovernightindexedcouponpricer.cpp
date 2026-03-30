@@ -217,8 +217,7 @@ Real BlackOvernightIndexedCouponPricer::optionletRateLocal(Option::Type optionTy
         }
 
         // estimate the average daily rate over the future period (approximate the continuously compounded rate)
-        const DayCounter& indexDc = index->dayCounter();
-        Real tau = indexDc.yearFraction(intDates[i], intDates.back());
+        Real tau = coupon_->dayCounter().yearFraction(dates[i], dates.back());
         Real averageRate = std::log(factor) / tau;
 
         // compute the value of a cap or floor with fixing in the middle of the future period
@@ -249,7 +248,7 @@ Real BlackOvernightIndexedCouponPricer::optionletRateLocal(Option::Type optionTy
         // now assume the averageRate is the effective rate over the future period and update the compoundFactor
         // this is an approximation, see "Ester / Daily Spread Curve Setup in ORE": set tau to avg value
         Natural numCalDays = intDates.back() - intDates[i];
-        Real dailyTau = indexDc.yearFraction(intDates[i], intDates.back()) / numCalDays;
+        Real dailyTau = coupon_->underlying()->dayCounter().yearFraction(intDates[i], intDates.back()) / numCalDays;
         // now use formula (4) from the paper
         compoundFactor *= std::pow(1.0 + dailyTau * averageRate, static_cast<int>(numCalDays));
         compoundFactorRaw *= std::pow(1.0 + dailyTau * averageRateRaw, static_cast<int>(numCalDays));
@@ -470,8 +469,7 @@ Real BlackAverageONIndexedCouponPricer::optionletRateLocal(Option::Type optionTy
         }
 
         // estimate the average daily rate over the future period (approximate the continuously compounded rate)
-        const DayCounter& indexDc = index->dayCounter();
-        Real tau = indexDc.yearFraction(intDates[i], intDates.back());
+        Real tau = coupon_->dayCounter().yearFraction(dates[i], dates.back());
         Real averageRate = std::log(factor) / tau;
 
         // compute the value of a cap or floor with fixing in the middle of the future period
@@ -503,7 +501,7 @@ Real BlackAverageONIndexedCouponPricer::optionletRateLocal(Option::Type optionTy
         // now assume the averageRate is the effective rate over the future period and update the average rate
         // this is an approximation, see "Ester / Daily Spread Curve Setup in ORE": set tau to avg value
         Natural numCalDays = intDates.back() - intDates[i];
-        Real dailyTau = indexDc.yearFraction(intDates[i], intDates.back()) / numCalDays;
+        Real dailyTau = coupon_->underlying()->dayCounter().yearFraction(intDates[i], intDates.back()) / numCalDays;
         accumulatedRate += dailyTau * averageRate * static_cast<Real>(numCalDays);
         accumulatedRateRaw += dailyTau * averageRateRaw * static_cast<Real>(numCalDays);
     }
