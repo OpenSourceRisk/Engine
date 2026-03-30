@@ -3,11 +3,12 @@
  All rights reserved.
 */
 
+#include <boost/test/unit_test.hpp>
 #include "testmarket.hpp"
 #include <orea/scenario/historicalscenariogenerator.hpp>
 #include <orea/scenario/simplescenario.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
-#include <oret/toplevelfixture.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 
 using namespace std;
 using namespace ore;
@@ -17,7 +18,7 @@ using namespace boost::unit_test_framework;
 using namespace QuantLib;
 using namespace QuantExt;
 
-BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::data::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(HistoricalReturnConfiguration)
 

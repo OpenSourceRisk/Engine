@@ -35,8 +35,8 @@
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <qle/indexes/dividendmanager.hpp>
-#include <oret/datapaths.hpp>
-#include <oret/toplevelfixture.hpp>
+#include <oret/util/datapaths.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
 #include <tuple>
 
@@ -46,7 +46,7 @@ using namespace boost::unit_test_framework;
 using namespace std;
 using namespace ore::data;
 
-using ore::test::TopLevelFixture;
+using ore::data::TopLevelFixture;
 
 namespace bdata = boost::unit_test::data;
 
@@ -183,7 +183,7 @@ vector<bool> enforcesTodaysHistoricFixings = {true, false};
 
 } // namespace
 
-BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::data::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(FixingsTests)
 

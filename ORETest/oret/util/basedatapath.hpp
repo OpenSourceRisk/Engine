@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file oret/basedatapath.hpp
+/*! \file oret/util/basedatapath.hpp
     \brief Parse base data path from the Boost test command line arguments
 */
 
