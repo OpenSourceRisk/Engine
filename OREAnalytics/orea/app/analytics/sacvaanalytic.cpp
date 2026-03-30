@@ -31,7 +31,8 @@ namespace ore {
 namespace analytics {
 
 void SaCvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) {
-    inputs->loadParameterXML<NettingSetManager>(nettingSetManager_, "bacva", "csaFile");
+    vector<string> analyticStrs = {"sacva", "bacva", "setup"};
+    inputs->loadParameterXML<NettingSetManager>(nettingSetManager_, analyticStrs, "csaFile");
 }
 
 void SaCvaAnalyticImpl::setUpConfigurations() {

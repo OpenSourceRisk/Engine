@@ -24,6 +24,7 @@
 #pragma warning(disable : 4503)
 #endif
 
+#include <orea/app/analytics/utilities.hpp>
 #include <orea/app/cleanupsingletons.hpp>
 #include <orea/app/marketdatabinaryloader.hpp>
 #include <orea/app/marketdatacsvloader.hpp>
@@ -41,6 +42,7 @@
 
 #include <ored/configuration/currencyconfig.hpp>
 #include <ored/portfolio/collateralbalance.hpp>
+#include <ored/portfolio/counterpartymanager.hpp>
 #include <ored/report/inmemoryreport.hpp>
 #include <ored/utilities/calendaradjustmentconfig.hpp>
 
@@ -1059,8 +1061,8 @@ void OREAppInputParameters::loadParameters() {
         if (tmp != "")
             setSimmVersion(tmp);
         else if (simmVersion() == "") {
-            LOG("set SIMM version to 2.6 (default)");
-            setSimmVersion("2.6");
+            LOG("set SIMM version to 2.1 (default)");
+            setSimmVersion("2.1");
         }
 
         tmp = params_->getString("simm", "mporDays", false);
@@ -1101,9 +1103,7 @@ void OREAppInputParameters::loadParameters() {
             }
 
             auto nameMapper = QuantLib::ext::make_shared<SimmBasicNameMapper>();
-            tmp = params_->getString("setup", "simmnamemappingFile", false);
-            if (tmp.empty())
-                tmp = params_->getString("crif", "nameMappingInputFile", false);
+            tmp = params_->getString("setup", "nameMappingInputFile", false);
             if (tmp != "") {
                 string fileName = (setupVariables_.inputPath_ / tmp).generic_string();
                 LOG("simmNameMapper file name: " << fileName);
@@ -1113,9 +1113,7 @@ void OREAppInputParameters::loadParameters() {
             simmNameMapper_ = nameMapper;
 
             auto bucketMapper = QuantLib::ext::make_shared<SimmBucketMapperBase>();
-            tmp = params_->getString("setup", "simmbucketmappingFile", false);
-            if (tmp.empty())
-                tmp = params_->getString("crif", "bucketMappingInputFile", false);
+            tmp = params_->getString("setup", "bucketMappingInputFile", false);
             if (tmp != "") {
                 string fileName = (setupVariables_.inputPath_ / tmp).generic_string();
                 LOG("simmBucketMapper file name: " << fileName);
@@ -1460,6 +1458,49 @@ void OREAppInputParameters::loadParameters() {
      if (!tmp.empty() && parseBool(tmp)) {
          insertAnalytic("SA_CVA");
 
+         // Load scenarioGeneratorData from sacva section and forward to the simulation section
+         // so the XVA sub-analytic can pick it up (otherwise ConfigurationBuilder defaults to 1000 samples)
+         tmp = params_->getString("sacva", "scenarioGeneratorData", false);
+         if (!tmp.empty()) {
+             LOG("Loading scenarioGeneratorData from sacva section: " << tmp);
+             setScenarioGeneratorData(tmp);
+         }
+
+         // Load crossAssetModelData from sacva section and forward to the simulation section
+         tmp = params_->getString("sacva", "crossAssetModelData", false);
+         if (!tmp.empty()) {
+             LOG("Loading crossAssetModelData from sacva section: " << tmp);
+             setCrossAssetModelData(tmp);
+         }
+
+         // Load dimModel from sacva section and forward to the xva section
+         // so the XVA sub-analytic applies Dynamic Initial Margin (e.g. DeltaVaR)
+         tmp = params_->getString("sacva", "dimModel", false);
+         if (!tmp.empty()) {
+             LOG("Loading dimModel from sacva section: " << tmp);
+             setDimModel(tmp);
+         }
+
+         // Forward storeSensis, curveSensiGrid, vegaSensiGrid from sacva to simulation section
+         // so the XVA sub-analytic creates nettingSetCube and sensitivityStorageManager for DIM
+         tmp = params_->getString("sacva", "storeSensis", false);
+         if (!tmp.empty() && parseBool(tmp)) {
+             LOG("Loading storeSensis from sacva section");
+             setStoreSensis(true);
+         }
+         tmp = params_->getString("sacva", "curveSensiGrid", false);
+         if (!tmp.empty()) {
+             LOG("Loading curveSensiGrid from sacva section: " << tmp);
+             vector<double> grid = parseListOfRealValues(tmp);
+             parameters_.set("simulation", "curveSensiGrid", grid);
+         }
+         tmp = params_->getString("sacva", "vegaSensiGrid", false);
+         if (!tmp.empty()) {
+             LOG("Loading vegaSensiGrid from sacva section: " << tmp);
+             vector<double> grid = parseListOfRealValues(tmp);
+             parameters_.set("simulation", "vegaSensiGrid", grid);
+         }
+
          tmp = params_->getString("sacva", "saCvaNetSensitivitiesFile", false);
          if (!tmp.empty()) {
              string file = (setupVariables_.inputPath_ / tmp).generic_string();
@@ -1493,24 +1534,33 @@ void OREAppInputParameters::loadParameters() {
      if (!tmp.empty() && parseBool(tmp)) {
          insertAnalytic("SA_CCR");
 
+         // Forward counterpartyFile from saccr section (overrides setup section if present)
+         tmp = params_->getString("saccr", "counterpartyFile", false);
+         if (tmp != "") {
+             string file = (setupVariables_.inputPath_ / tmp).generic_string();
+             LOG("Loading counterparty manager from saccr section: " << file);
+             setupVariables_.counterpartyManager_ = QuantLib::ext::make_shared<ore::data::CounterpartyManager>();
+             setupVariables_.counterpartyManager_->fromFile(file);
+         }
+
          // Commodity asset class uses SIMM name and bucket mapping for hedging set definitions
 	     // Note that Equities use reference data for that purpose
          tmp = params_->getString("saccr", "simmVersion", false);
          if (tmp != "")
              setSimmVersion(tmp);
          else if (simmVersion_ == "") {
-             setSimmVersion("2.6");
-             WLOG("Setting SIMM version to 2.6 for SACCR");
+             setSimmVersion("2.1");
+             WLOG("Setting SIMM version to 2.1 for SACCR");
          }
 
-         tmp = params_->getString("saccr", "simmNameMapping", false);
+         tmp = params_->getString("saccr", "nameMappingInputFile", false);
          if (tmp != "") {
              string nameMappingFile = (setupVariables_.inputPath_ / tmp).generic_string();
              setSimmNameMapperFromFile(nameMappingFile);
-             LOG("Loading SIMM bucket mapping from file " << nameMappingFile);
+             LOG("Loading SIMM name mapping from file " << nameMappingFile);
          }
 
-         tmp = params_->getString("saccr", "simmBucketMapping", false);
+         tmp = params_->getString("saccr", "bucketMappingInputFile", false);
          if (tmp != "") {
              string bucketMappingFile = (setupVariables_.inputPath_ / tmp).generic_string();
              setSimmBucketMapperFromFile(bucketMappingFile);
@@ -1545,6 +1595,9 @@ void OREAppInputParameters::loadParameters() {
          tmp = params_->getString("frtb", "version", false);
         if (tmp != ""){
             setSimmVersion(tmp);
+        } else if (simmVersion() == "") {
+            LOG("set SIMM version to 2.1 (default)");
+            setSimmVersion("2.1");
         }
 
          tmp = params_->getString("frtb", "crif", false);
@@ -1779,7 +1832,9 @@ void OREAppInputParameters::loadParameters() {
         }
 
 	    auto nameMapper = QuantLib::ext::make_shared<SimmBasicNameMapper>();
-	    tmp = params_->getString("crif", "nameMappingInputFile", false);
+	    tmp = params_->getString("setup", "nameMappingInputFile", false);
+	    if (tmp.empty())
+	        tmp = params_->getString("crif", "nameMappingInputFile", false);
 	    if (tmp != "") {
 	       string fileName = (setupVariables_.inputPath_ / tmp).generic_string();
 	       LOG("simmNameMapper file name: " << fileName);
@@ -1788,7 +1843,9 @@ void OREAppInputParameters::loadParameters() {
 	    simmNameMapper_ = nameMapper;
 
 	    auto bucketMapper = QuantLib::ext::make_shared<SimmBucketMapperBase>();
-	    tmp = params_->getString("crif", "bucketMappingInputFile", false);
+	    tmp = params_->getString("setup", "bucketMappingInputFile", false);
+	    if (tmp.empty())
+	        tmp = params_->getString("crif", "bucketMappingInputFile", false);
 	    if (tmp != "") {
 	       string fileName = (setupVariables_.inputPath_ / tmp).generic_string();
 	       LOG("simmBucketMapper file name: " << fileName);
