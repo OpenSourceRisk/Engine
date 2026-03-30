@@ -17,15 +17,33 @@ class ImportSmokeTest(unittest.TestCase):
             "Settings",
             "CrossCcyBasisSwap",
             "InMemoryLoader",
+            "Wildcard",
             "Portfolio",
             "InputParameters",
             "OREApp",
             "NPVCube",
+            "YieldCurveType_Discount",
         ]
         for symbol in required_symbols:
             self.assertTrue(
                 hasattr(ORE, symbol),
                 msg=f"Missing symbol in ORE module: {symbol}",
+            )
+
+    def test_market_surface_symbols_are_available(self) -> None:
+        """Verify the targeted market wrapper surface is exported."""
+        required_methods = [
+            "fxRate",
+            "capFloorVolIndexBase",
+            "conversionFactor",
+            "securityPrice",
+            "commodityIndex",
+        ]
+
+        for method in required_methods:
+            self.assertTrue(
+                hasattr(ORE.MarketImpl, method),
+                msg=f"Missing MarketImpl method in ORE module: {method}",
             )
 
     def test_minimal_object_construction(self) -> None:

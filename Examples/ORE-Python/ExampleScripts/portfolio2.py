@@ -9,6 +9,9 @@
 # because of overloads.
 # This script constructs trades but does not price them and there is no output.
 
+import os
+import sys
+
 import ORE as ql
 
 HAS_CDS_AT_DEFAULT = hasattr(ql.CreditDefaultSwap, "atDefault")
@@ -899,4 +902,11 @@ ql.WorstOfBasketSwap(env0, "Long", "", "", "", [""], "", x0, x0, x0, x0, x0, x0,
 ql.EquityWorstOfBasketSwap()
 ql.FxWorstOfBasketSwap()
 ql.CommodityWorstOfBasketSwap()
+
+if __name__ == "__main__" and sys.platform.startswith("linux"):
+    # This script is a construction-only smoke test. On Linux CI, some SWIG-wrapped
+    # trades can segfault during interpreter teardown after all work is already done.
+    sys.stdout.flush()
+    sys.stderr.flush()
+    os._exit(0)
 

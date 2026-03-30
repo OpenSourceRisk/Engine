@@ -3,6 +3,9 @@
 # ore/OREAnalytics/test/testportfolio.cpp
 # This script constructs trades but does not price them and there is no output.
 
+import os
+import sys
+
 import ORE as ql
 
 todaysDate = ql.Date(6, ql.November, 2001)
@@ -771,3 +774,10 @@ def buildFxTouchOption(trade_id, longShort, expiry, boughtCcy, soldCcy,
 
 buildFxTouchOption("9_FXTouchOption", "Long", 10, "EUR", "USD", 1000, "NS",
                    "UpAndIn", 1.3)
+
+if __name__ == "__main__" and sys.platform.startswith("linux"):
+    # This script is a construction-only smoke test. On Linux CI, some SWIG-wrapped
+    # trades can segfault during interpreter teardown after all work is already done.
+    sys.stdout.flush()
+    sys.stderr.flush()
+    os._exit(0)

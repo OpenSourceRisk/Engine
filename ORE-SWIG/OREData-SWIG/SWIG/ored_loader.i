@@ -28,6 +28,25 @@
 
 namespace ore {
 namespace data {
+
+class Wildcard {
+  public:
+    Wildcard(const std::string& pattern, const bool usePrefixes = true,
+             const bool aggressivePrefixes = false);
+
+    bool hasWildcard() const;
+    std::size_t wildcardPos() const;
+    bool isPrefix() const;
+    bool matches(const std::string& s) const;
+
+    const std::string& pattern() const;
+    const std::string& regex() const;
+    const std::string& prefix() const;
+
+    bool usePrefixes() const;
+    bool aggressivePrefixes() const;
+};
+
 class Loader {
   private:
     Loader();
@@ -40,12 +59,26 @@ class Loader {
     bool has(const std::string& name, const QuantLib::Date& d) const;
     bool hasQuotes(const QuantLib::Date& d) const;
     std::set<ore::data::Fixing> loadFixings() const;
+
+    %extend {
+      std::vector<ext::shared_ptr<ore::data::MarketDatum>> getByPattern(
+        const std::string& pattern, const QuantLib::Date& asof,
+        const bool usePrefixes = true,
+        const bool aggressivePrefixes = false) const {
+        const ore::data::Wildcard wildcard(pattern, usePrefixes,
+                         aggressivePrefixes);
+        const auto quotes = self->get(wildcard, asof);
+        return std::vector<ext::shared_ptr<ore::data::MarketDatum>>(
+          quotes.begin(), quotes.end());
+      }
+    }
 };
 } // namespace data
 } // namespace ore
 
 %template(StringBoolPair) std::pair<std::string, bool>;
 %template(MarketDatumVector) std::vector<ext::shared_ptr<ore::data::MarketDatum>>;
+%template(MarketDatumSet) std::set<ext::shared_ptr<ore::data::MarketDatum>>;
 
 // Fixing class has no default ctor, excluding some features of std::vector
 %ignore std::vector<ore::data::Fixing>::pop;

@@ -318,6 +318,51 @@ public:
       void setSalvagingAlgorithm(QuantLib::SalvagingAlgorithm::Type alg) {
           self->getSalvagingAlgorithm() = alg;
       }
+
+      void setCorrelations(ore::data::CorrelationMatrixBuilder& builder) {
+          self->setCorrelations(builder.correlations());
+      }
+
+      void setCorrelationData(const ore::data::InstantaneousCorrelations& corrs) {
+          self->setCorrelations(corrs.correlations());
+      }
+
+      ext::shared_ptr<ore::data::InstantaneousCorrelations> correlationData() const {
+          return ext::make_shared<ore::data::InstantaneousCorrelations>(self->correlations());
+      }
+
+      void setCorrelation(const ore::data::CorrelationFactor& factor1,
+                          const ore::data::CorrelationFactor& factor2,
+                          QuantLib::Real correlation) {
+          ore::data::CorrelationMatrixBuilder builder = oreplusCorrelationBuilderFromMap(self->correlations());
+          builder.addCorrelation(factor1, factor2, correlation);
+          self->setCorrelations(builder.correlations());
+      }
+
+      void setCorrelationValue(const std::string& type1, const std::string& name1,
+                               QuantLib::Size index1, const std::string& type2,
+                               const std::string& name2, QuantLib::Size index2,
+                               QuantLib::Real correlation) {
+          ore::data::CorrelationMatrixBuilder builder = oreplusCorrelationBuilderFromMap(self->correlations());
+          builder.addCorrelation(oreplusMakeCorrelationFactor(type1, name1, index1),
+                                 oreplusMakeCorrelationFactor(type2, name2, index2), correlation);
+          self->setCorrelations(builder.correlations());
+      }
+
+      QuantLib::Real correlationValue(const ore::data::CorrelationFactor& factor1,
+                                      const ore::data::CorrelationFactor& factor2) const {
+          ore::data::CorrelationMatrixBuilder builder = oreplusCorrelationBuilderFromMap(self->correlations());
+          return builder.getCorrelation(factor1, factor2)->value();
+      }
+
+      QuantLib::Real correlationValue(const std::string& type1, const std::string& name1,
+                                      QuantLib::Size index1, const std::string& type2,
+                                      const std::string& name2, QuantLib::Size index2) const {
+                    ore::data::CorrelationMatrixBuilder builder = oreplusCorrelationBuilderFromMap(self->correlations());
+                    return builder.getCorrelation(oreplusMakeCorrelationFactor(type1, name1, index1),
+                                                                                oreplusMakeCorrelationFactor(type2, name2, index2))
+                            ->value();
+      }
     }
 
 };

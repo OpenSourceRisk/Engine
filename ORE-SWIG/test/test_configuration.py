@@ -113,6 +113,42 @@ class ConfigurationBindingsTest(unittest.TestCase):
         )
         self.assertTrue(len(basel_copy.toXMLString()) > 0)
 
+    def test_ibor_fallback_config_helpers_and_roundtrip(self):
+        """Validate fallback data wrapping and convenience insertion."""
+        usd_switch = ore.Date(15, ore.June, 2026)
+        gbp_switch = ore.Date(16, ore.June, 2026)
+
+        usd_fallback = ore.IborFallbackConfig.FallbackData(
+            "SOFR", 0.002615, usd_switch
+        )
+        self.assertEqual(usd_fallback.rfrIndex, "SOFR")
+        self.assertAlmostEqual(usd_fallback.spread, 0.002615)
+        self.assertEqual(usd_fallback.switchDate, usd_switch)
+
+        fallbacks = ore.StringFallbackDataMap()
+        fallbacks["USD-LIBOR-3M"] = usd_fallback
+
+        config = ore.IborFallbackConfig(True, True, False, fallbacks)
+        config.addIndexFallbackRule(
+            "GBP-LIBOR-6M", "SONIA", 0.001193, gbp_switch
+        )
+
+        copied_usd = config.fallbackData("USD-LIBOR-3M")
+        copied_gbp = config.fallbackData("GBP-LIBOR-6M")
+        self.assertEqual(copied_usd.rfrIndex, "SOFR")
+        self.assertAlmostEqual(copied_gbp.spread, 0.001193)
+        self.assertEqual(copied_gbp.switchDate, gbp_switch)
+
+        config_copy = self._assert_roundtrip(
+            config,
+            ore.IborFallbackConfig,
+            ["USD-LIBOR-3M", "SOFR", "GBP-LIBOR-6M", "SONIA"],
+        )
+        roundtripped_gbp = config_copy.fallbackData("GBP-LIBOR-6M")
+        self.assertEqual(roundtripped_gbp.rfrIndex, "SONIA")
+        self.assertAlmostEqual(roundtripped_gbp.spread, 0.001193)
+        self.assertEqual(roundtripped_gbp.switchDate, gbp_switch)
+
 
 if __name__ == '__main__':
     print('testing ORE configuration bindings')
