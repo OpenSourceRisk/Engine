@@ -509,6 +509,7 @@
 #include <qle/termstructures/blackvolsurfacewithatm.hpp>
 #include <qle/termstructures/bondyieldshiftedcurvetermstructure.hpp>
 #include <qle/termstructures/brlcdiratehelper.hpp>
+#include <qle/termstructures/calendarspreadfuturepricetermstructure.hpp>
 #include <qle/termstructures/capfloorhelper.hpp>
 #include <qle/termstructures/capfloortermvolcurve.hpp>
 #include <qle/termstructures/capfloortermvolsurface.hpp>
