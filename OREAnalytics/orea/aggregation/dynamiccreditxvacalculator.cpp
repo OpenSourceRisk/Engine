@@ -36,6 +36,7 @@ DynamicCreditXvaCalculator::DynamicCreditXvaCalculator(
     const QuantLib::ext::shared_ptr<Portfolio> portfolio, const QuantLib::ext::shared_ptr<Market> market,
     const string& configuration, const string& baseCurrency, const string& dvaName,
     const string& fvaBorrowingCurve, const string& fvaLendingCurve,
+    const bool dvaAnalytic, const bool fvaAnalytic,
     const bool applyDynamicInitialMargin,
     const QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator> dimCalculator,
     const QuantLib::ext::shared_ptr<NPVCube> tradeExposureCube,
@@ -45,7 +46,8 @@ DynamicCreditXvaCalculator::DynamicCreditXvaCalculator(
     const Size nettingSetEpeIndex, const Size nettingSetEneIndex, const Size cptySpIndex,
     const bool flipViewXVA, const string& flipViewBorrowingCurvePostfix, const string& flipViewLendingCurvePostfix)
     : ValueAdjustmentCalculator(portfolio, market, configuration, baseCurrency, dvaName,
-                                fvaBorrowingCurve, fvaLendingCurve, applyDynamicInitialMargin,
+                                fvaBorrowingCurve, fvaLendingCurve, dvaAnalytic, fvaAnalytic,
+                                applyDynamicInitialMargin,
                                 dimCalculator, tradeExposureCube, nettingSetExposureCube, tradeEpeIndex, tradeEneIndex, 
                                 nettingSetEpeIndex, nettingSetEneIndex, 
                                 flipViewXVA, flipViewBorrowingCurvePostfix, flipViewLendingCurvePostfix),

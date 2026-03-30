@@ -60,7 +60,7 @@
       <Parameter name="allocationMethod">None</Parameter>
       <Parameter name="marginalAllocationLimit">1.0</Parameter>
       <Parameter name="cva">Y</Parameter>
-      <Parameter name="dva">N</Parameter>
+      <Parameter name="dva">Y</Parameter>
       <Parameter name="dvaName">BANK</Parameter>
       <Parameter name="fva">N</Parameter>
       <Parameter name="fvaFundingCurve">BANK_EUR_FUNDING</Parameter>
