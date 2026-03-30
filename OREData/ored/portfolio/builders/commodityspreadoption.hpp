@@ -139,6 +139,11 @@ protected:
                QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> const& longIndex,
                QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> const& shortIndex, string const& id,
                int offset = 0) override {
+
+        QL_REQUIRE(longIndex->underlyingName() == shortIndex->underlyingName(),
+                   "Bachelier spread option engine only supports calendar spreads, but got "
+                       << longIndex->underlyingName() << " and " << shortIndex->underlyingName());
+
         DLOG("Building CommoditySpreadOptionBachelierEngineBuilder Engine for " << longIndex->name() << " and "
                                                                                 << shortIndex->name() << std::endl);
         Handle<YieldTermStructure> yts =
@@ -146,28 +151,11 @@ protected:
                 ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
                 : indexOrYieldCurve(market_, discountCurveName, configuration(MarketContext::pricing));
 
-        bool calendarSpread = longIndex->underlyingName() == shortIndex->underlyingName();
-        std::vector<string> volatilityQualifiers;
-        
-        // Instead of looking for a volatility specific to the contract expiries, check if a mapping is configured
-        if (calendarSpread) {
-            volatilityQualifiers.push_back(longIndex->underlyingName() + "_" + std::to_string(offset));
-            volatilityQualifiers.push_back(longIndex->underlyingName());
-        } else {
-            std::string pair = longIndex->underlyingName() + "_" + shortIndex->underlyingName();
-            std::string pairReverse = shortIndex->underlyingName() + "_" + longIndex->underlyingName();
-            volatilityQualifiers.push_back(pair + "_" + std::to_string(offset));
-            volatilityQualifiers.push_back(pair);
-            volatilityQualifiers.push_back(pairReverse + "_" + std::to_string(offset));
-            volatilityQualifiers.push_back(pairReverse);
-        }
+        auto volName = longIndex->underlyingName() + "_CalendarSpread_" + std::to_string(offset);
 
-        auto spreadVol = this->engineParameter("SpreadVol", volatilityQualifiers, false,
-                                              longIndex->name() + "_" + shortIndex->name());
-
-        Handle<QuantLib::BlackVolTermStructure> volLong =
-            market_->commodityVolatility(spreadVol, configuration(MarketContext::pricing));
-        return QuantLib::ext::make_shared<QuantExt::CommodityBachelierSpreadOptionAnalyticalEngine>(yts, volLong);
+        Handle<QuantLib::BlackVolTermStructure> volTS =
+            market_->commodityVolatility(volName, configuration(MarketContext::pricing));
+        return QuantLib::ext::make_shared<QuantExt::CommodityBachelierSpreadOptionAnalyticalEngine>(yts, volTS);
     }
 };
 
