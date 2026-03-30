@@ -18,6 +18,7 @@
 
 #include <ored/configuration/commodityvolcurveconfig.hpp>
 #include <ored/marketdata/curvespecparser.hpp>
+#include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
@@ -36,11 +37,18 @@ CommodityVolatilityConfig::CommodityVolatilityConfig(
     const vector<QuantLib::ext::shared_ptr<VolatilityConfig>>& volatilityConfig, const string& dayCounter,
     const string& calendar, const std::string& futureConventionsId, QuantLib::Natural optionExpiryRollDays,
     const std::string& priceCurveId, const std::string& yieldCurveId, const std::string& quoteSuffix,
-    const OneDimSolverConfig& solverConfig, const QuantLib::ext::optional<bool>& preferOutOfTheMoney)
+    const OneDimSolverConfig& solverConfig, const QuantLib::ext::optional<bool>& preferOutOfTheMoney,
+    const MarketDatum::InstrumentType instrumentType, const int calendarSpreadOffset)
     : CurveConfig(curveId, curveDescription), currency_(currency), volatilityConfig_(volatilityConfig),
       dayCounter_(dayCounter), calendar_(calendar), futureConventionsId_(futureConventionsId),
       optionExpiryRollDays_(optionExpiryRollDays), priceCurveId_(priceCurveId), yieldCurveId_(yieldCurveId),
-      quoteSuffix_(quoteSuffix), solverConfig_(solverConfig), preferOutOfTheMoney_(preferOutOfTheMoney) {
+      quoteSuffix_(quoteSuffix), solverConfig_(solverConfig), preferOutOfTheMoney_(preferOutOfTheMoney),
+      instrumentType_(instrumentType), calendarSpreadOffset_(calendarSpreadOffset) {
+    QL_REQUIRE(instrumentType_ == MarketDatum::InstrumentType::COMMODITY_OPTION ||
+                   instrumentType_ == MarketDatum::InstrumentType::COMMODITY_CALENDAR_SPREAD_OPTION,
+               "invalid instrument type " << to_string(instrumentType_));
+    QL_REQUIRE(instrumentType_ == MarketDatum::InstrumentType::COMMODITY_OPTION || calendarSpreadOffset_ != 0,
+               "calendar spread offset should be not zero for spread commodity options");
     populateQuotes();
 }
 
@@ -138,6 +146,18 @@ void CommodityVolatilityConfig::fromXML(XMLNode* node) {
         solverConfig_.fromXML(n);
     }
 
+    instrumentType_ = parseInstrumentType(XMLUtils::getChildValue(node, "InstrumentType", false, "COMMODITY_OPTION"));
+    calendarSpreadOffset_ = parseInteger(XMLUtils::getChildValue(node, "CalendarSpreadOffset", false, "0"));
+
+    if (instrumentType_ == MarketDatum::InstrumentType::COMMODITY_CALENDAR_SPREAD_OPTION) {
+        QL_REQUIRE(calendarSpreadOffset_ != 0,
+                   "calendar spread offset should be not zero for spread commodity options");
+        string suffix = "_CalendarSpread_" + std::to_string(calendarSpreadOffset_);
+        QL_REQUIRE(curveID_.size() > suffix.size() &&
+                       curveID_.compare(curveID_.size() - suffix.size(), suffix.size(), suffix) == 0,
+                   "curveId should end with '" << suffix << "'");
+    }
+
     preferOutOfTheMoney_ = QuantLib::ext::nullopt;
     if (XMLNode* n = XMLUtils::getChildNode(node, "PreferOutOfTheMoney")) {
         preferOutOfTheMoney_ = parseBool(XMLUtils::getNodeValue(n));
@@ -179,6 +199,10 @@ XMLNode* CommodityVolatilityConfig::toXML(XMLDocument& doc) const {
         XMLUtils::appendNode(node, solverConfig_.toXML(doc));
     if (preferOutOfTheMoney_)
         XMLUtils::addChild(doc, node, "PreferOutOfTheMoney", *preferOutOfTheMoney_);
+    if (instrumentType_ != MarketDatum::InstrumentType::COMMODITY_OPTION) {
+        XMLUtils::addChild(doc, node, "InstrumentType", to_string(instrumentType_));
+        XMLUtils::addChild(doc, node, "CalendarSpreadOffset", calendarSpreadOffset_);
+    }
     XMLUtils::appendNode(node, reportConfig_.toXML(doc));
     return node;
 }

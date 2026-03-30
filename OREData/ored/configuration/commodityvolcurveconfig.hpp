@@ -28,6 +28,7 @@
 #include <ored/configuration/onedimsolverconfig.hpp>
 #include <ored/configuration/volatilityconfig.hpp>
 #include <ored/configuration/reportconfig.hpp>
+#include <ored/marketdata/marketdatum.hpp>
 
 namespace ore {
 namespace data {
@@ -49,7 +50,9 @@ public:
                               const std::string& priceCurveId = "", const std::string& yieldCurveId = "",
                               const std::string& quoteSuffix = "",
                               const OneDimSolverConfig& solverConfig = OneDimSolverConfig(),
-                              const QuantLib::ext::optional<bool>& preferOutOfTheMoney = QuantLib::ext::nullopt);
+                              const QuantLib::ext::optional<bool>& preferOutOfTheMoney = QuantLib::ext::nullopt,
+                              const MarketDatum::InstrumentType instrumentType = MarketDatum::InstrumentType::COMMODITY_OPTION,
+                              const int calendarSpreadOffset = 0);
 
     //! \name Inspectors
     //@{
@@ -84,6 +87,8 @@ private:
     QuantLib::Natural optionExpiryRollDays_;
     std::string priceCurveId_;
     std::string yieldCurveId_;
+    MarketDatum::InstrumentType instrumentType_ = MarketDatum::InstrumentType::COMMODITY_OPTION;
+    int calendarSpreadOffset_ = 0;
     std::string quoteSuffix_;
     OneDimSolverConfig solverConfig_;
     QuantLib::ext::optional<bool> preferOutOfTheMoney_;
