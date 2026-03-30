@@ -74,7 +74,9 @@ class OreExample(object):
             self._locate_ore_exe()
 
     def _locate_ore_exe(self):
-        if os.name == 'nt':
+        if 'ORE_EXE' in os.environ.keys():
+            self.ore_exe = os.environ['ORE_EXE']
+        elif os.name == 'nt':
             if platform.machine()[-2:] == "64":
                 if os.path.isfile("..\\..\\App\\bin\\x64\\Release\\ore.exe"):
                     self.ore_exe = "..\\..\\App\\bin\\x64\\Release\\ore.exe"

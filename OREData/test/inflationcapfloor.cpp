@@ -25,7 +25,7 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
-#include <oret/toplevelfixture.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 #include <ql/indexes/inflation/euhicp.hpp>
 #include <ql/instruments/inflationcapfloor.hpp>
 #include <ql/pricingengines/inflation/inflationcapfloorengines.hpp>
@@ -100,7 +100,7 @@ public:
     Calendar cal;
 };
 
-BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::data::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(InflationCapFloorTests)
 

@@ -26,7 +26,7 @@
 #include <ored/scripting/astprinter.hpp>
 #include <ored/scripting/asttoscriptconverter.hpp>
 #include <ored/scripting/randomastgenerator.hpp>
-#include <oret/toplevelfixture.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 
 #include <iostream>
 #include <iomanip>
@@ -531,7 +531,7 @@ TestDatum scriptData[] = {
      "            -\n"}};
 } // namespace
 
-BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::data::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(ScriptParserTest)
 

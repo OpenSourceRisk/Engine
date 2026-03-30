@@ -103,7 +103,7 @@ add_executable(quantext-test-suite ${QuantExt-Test_SRC})
 target_link_libraries(quantext-test-suite
     PRIVATE
         ${QLE_LIB_NAME}
-        ${ORE_TEST_SUPPORT_NAME}
+        ${ORE_TEST_UTIL_NAME}
         Boost::log
 )
 

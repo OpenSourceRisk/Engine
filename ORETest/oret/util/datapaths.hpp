@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file oret/datapaths.hpp
+/*! \file oret/util/datapaths.hpp
     \brief Utility to retrieve the path for a unit test's input files
 */
 

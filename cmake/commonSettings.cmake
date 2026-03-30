@@ -65,7 +65,10 @@ set(QLE_LIB_NAME "QuantExt")
 set(ORED_LIB_NAME "OREData")
 set(OREA_LIB_NAME "OREAnalytics")
 set(RAPIDXML_NAME "RapidXml")
-set(ORE_TEST_SUPPORT_NAME "TestSupport")
+# TestLog depends on ore::data::logger and so can only be used in test suites of projects OREData and above.
+set(ORE_TEST_LOG_NAME "TestLog")
+# TestUtil should remain independent and be usable in QuantExt and above.
+set(ORE_TEST_UTIL_NAME "TestUtil")
 
 # define build type clang address sanitizer + undefined behaviour + LIBCPP assertions, but keep O2
 set(CMAKE_CXX_FLAGS_CLANG_ASAN_O2 "-fsanitize=address,undefined -fno-omit-frame-pointer -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG -g -O2")

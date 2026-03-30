@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file oret/log.hpp
+/*! \file oret/logging/log.hpp
     \brief boost test logger
 */
 

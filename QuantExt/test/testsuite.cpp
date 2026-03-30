@@ -46,6 +46,10 @@ using boost::timer::cpu_timer;
 using boost::unit_test::test_suite;
 using boost::unit_test::framework::master_test_suite;
 
+#include <oret/util/basedatapath.hpp>
+#include <oret/util/datapaths.hpp>
+using ore::test::getBaseDataPath;
+
 #include "toplevelfixture.hpp"
 
 #if !defined(BOOST_ALL_NO_LIB) && defined(BOOST_MSVC)
@@ -59,12 +63,18 @@ using boost::unit_test::framework::master_test_suite;
 #include <boost/config/auto_link.hpp>
 #endif
 
+// Global base path variable
+string basePath = "";
+
 class QleGlobalFixture {
 public:
     QleGlobalFixture() {
         int argc = master_test_suite().argc;
         char** argv = master_test_suite().argv;
-        
+
+        // Set the base data path for the unit tests
+        basePath = getBaseDataPath(argc, argv);
+
         std::string logFile;
         for (int i = 1; i < argc; ++i) {
             if (boost::starts_with(argv[i], "--ore_log_file")) {

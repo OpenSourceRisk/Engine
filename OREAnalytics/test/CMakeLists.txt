@@ -32,7 +32,8 @@ add_executable(orea-test-suite ${OREAnalytics-Test_SRC})
 target_link_libraries(orea-test-suite
     PRIVATE
         ${OREA_LIB_NAME}
-        ${ORE_TEST_SUPPORT_NAME}
+        ${ORE_TEST_UTIL_NAME}
+        ${ORE_TEST_LOG_NAME}
 )
 
 if (ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER)

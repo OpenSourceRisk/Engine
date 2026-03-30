@@ -22,7 +22,7 @@
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/strike.hpp>
-#include <oret/toplevelfixture.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 #include <ql/currencies/america.hpp>
 #include <ql/math/comparison.hpp>
 #include <ql/time/calendars/austria.hpp>
@@ -145,7 +145,7 @@ void checkCalendars(const std::set<Date>& expectedHolidays, const std::vector<Da
 
 } // namespace
 
-BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::data::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(ParserTests)
 

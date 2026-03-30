@@ -16,20 +16,20 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/test/unit_test.hpp>
 #include "sacva.hpp"
-
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/osutils.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <orea/engine/sacvasensitivityrecord.hpp>
 #include <orea/engine/standardapproachcvacalculator.hpp>
 #include <orea/engine/sacvasensitivityloader.hpp>
-#include <oret/datapaths.hpp>
-#include <oret/fileutilities.hpp>
+#include <oret/util/datapaths.hpp>
+#include <oret/util/fileutilities.hpp>
 #include <test/oreatoplevelfixture.hpp>
 
 
-using ore::test::TopLevelFixture;
+using ore::data::TopLevelFixture;
 using namespace std;
 using namespace QuantLib;
 using namespace QuantExt;

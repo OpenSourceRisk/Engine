@@ -23,7 +23,7 @@
 
 #include <ored/scripting/value.hpp>
 
-#include <oret/toplevelfixture.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 
 #include <ql/time/date.hpp>
 #include <tuple>
@@ -34,7 +34,7 @@
 using namespace ore::data;
 using namespace QuantLib;
 
-BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::data::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(ValueTypeTest)
 

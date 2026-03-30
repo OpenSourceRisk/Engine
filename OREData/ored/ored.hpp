@@ -440,6 +440,7 @@
 #include <ored/utilities/timeperiod.hpp>
 #include <ored/utilities/timer.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 #include <ored/utilities/vectorutils.hpp>
 #include <ored/utilities/wildcard.hpp>
 #include <ored/utilities/xmlutils.hpp>

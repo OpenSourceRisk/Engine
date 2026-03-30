@@ -17,9 +17,9 @@
 */
 
 #include <boost/test/unit_test.hpp>
-#include <oret/datapaths.hpp>
-#include <oret/fileutilities.hpp>
-#include <oret/toplevelfixture.hpp>
+#include <oret/util/datapaths.hpp>
+#include <oret/util/fileutilities.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 
 #include <ored/model/irlgmdata.hpp>
 
@@ -35,7 +35,7 @@ using namespace std;
 using namespace ore;
 using namespace ore::data;
 
-using ore::test::TopLevelFixture;
+using ore::data::TopLevelFixture;
 
 namespace {
 
