@@ -63,6 +63,10 @@ public:
         const string& fvaBorrowingCurve,
         //! FVA lending curve
         const string& fvaLendingCurve,
+        //! Whether DVA computation is enabled
+        const bool dvaAnalytic,
+        //! Whether FVA (FCA/FBA) computation is enabled
+        const bool fvaAnalytic,
 	    //! Deactivate initial margin calculation even if active at netting set level
         const bool applyDynamicInitialMargin,
 	    //! Dynamic Initial Margin calculator
@@ -200,6 +204,8 @@ protected:
     string dvaName_;
     string fvaBorrowingCurve_;
     string fvaLendingCurve_;
+    bool dvaAnalytic_;
+    bool fvaAnalytic_;
     bool applyDynamicInitialMargin_;
     QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator> dimCalculator_;
     const QuantLib::ext::shared_ptr<NPVCube> tradeExposureCube_;
