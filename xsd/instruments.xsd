@@ -4182,7 +4182,7 @@
   <xs:complexType name="worstPerformanceRainbowOption08Data">
     <xs:all>
       <xs:element type="stFreeStyleLongShort" name="LongShort"/>
-      <xs:element type="stFreeStyleNumber" name="CallPut"/>
+      <xs:element type="stFreeStyleOptionType" name="CallPut"/>
       <xs:element type="stFreeStyleNumber" name="Quantity"/>
       <xs:element type="stFreeStyleNumber" name="Premium"/>
       <xs:element type="stFreeStyleEvent" name="PremiumDate"/>
@@ -4197,7 +4197,7 @@
   <xs:complexType name="worstPerformanceRainbowOption09Data">
     <xs:all>
       <xs:element type="stFreeStyleLongShort" name="LongShort"/>
-      <xs:element type="stFreeStyleNumber" name="CallPut"/>
+      <xs:element type="stFreeStyleOptionType" name="CallPut"/>
       <xs:element type="stFreeStyleNumber" name="Quantity"/>
       <xs:element type="stFreeStyleNumber" name="Premium"/>
       <xs:element type="stFreeStyleEvent" name="PremiumDate"/>
