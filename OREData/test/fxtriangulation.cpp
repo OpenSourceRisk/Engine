@@ -19,14 +19,14 @@
 #include <boost/make_shared.hpp>
 #include <boost/test/unit_test.hpp>
 #include <ored/marketdata/fxtriangulation.hpp>
-#include <oret/toplevelfixture.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 #include <ql/quotes/simplequote.hpp>
 
 using namespace ore::data;
 using namespace QuantLib;
 using namespace std;
 
-using ore::test::TopLevelFixture;
+using ore::data::TopLevelFixture;
 
 namespace {
 

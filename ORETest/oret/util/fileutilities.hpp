@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file oret/fileutilities.hpp
+/*! \file oret/util/fileutilities.hpp
     \brief File utilities for use in unit tests
 */
 
