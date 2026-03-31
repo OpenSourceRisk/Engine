@@ -36,6 +36,7 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/simmcurrencies.hpp>
 
 #include <ql/cashflows/coupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
@@ -202,12 +203,21 @@ applySimmExemptions(Portfolio& portfolio, const QuantLib::ext::shared_ptr<Engine
                 continue;
             }
 
+            std::set<string> fixedFloatStdCurrencies;
             for (Size i = 0; i < legData.size(); i++) {
                 const LegData& ld = legData[i];
                 const string& ccy = ld.currency();
-                if (ld.legType() == LegType::Fixed || ld.legType() == LegType::Floating)
+                if (ld.legType() == LegType::Fixed || ld.legType() == LegType::Floating) {
                     legCcys[ccy].push_back(i);
-            }            
+                    fixedFloatStdCurrencies.insert(isUnidadeCurrency(ccy) ? simmStandardCurrency(ccy) : ccy);
+                }
+            }
+
+            // SIMM exemption only applies to cross currency swaps with 2 standard SIMM currencies on fixed/floating
+            // legs
+            if (legCcys.size() != 2 || fixedFloatStdCurrencies.size() != 2) {
+                continue;
+            }
 
             // Get list of legs with notional exchanges
             map<string, vector<Size>> legNotionalIdx;

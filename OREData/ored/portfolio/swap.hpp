@@ -86,7 +86,6 @@ protected:
 private:
     bool isResetting_;
     Size notionalTakenFromLeg_;
-    bool allLegsAreSimmPlainVanillaIrLegs_ = false;
     
     // For fair rate calculation
     mutable std::vector<QuantLib::Handle<QuantLib::YieldTermStructure>> discountCurves_;
