@@ -148,7 +148,7 @@ private:
     Size overwriteModelSize_ = Null<Size>();
 
     // stored regression coefficients, state size (before possible transform) and (optional) coordinate transform
-    mutable std::map<long, std::tuple<Array, Size, Matrix, Size>> storedRegressionModel_;
+    mutable std::map<long, std::tuple<Array, Size, Matrix>> storedRegressionModel_;
 };
 
 } // namespace data
