@@ -613,6 +613,83 @@ The $\sigma_{i+1}$ for currency pair $c_{i+1} - c_1$ is computed by
 
 Here, $A$ is the annualizing factor that normalize the variance of daily log-return into annualized variance. Normally, $A=252$. $\lambda$ is the factor for exponential weight, and $\Lambda=\sum_{m=1}^{T} \lambda^{m-1}$. When $\lambda=1$, it will become equal-weighted.
 
+\section{Swaption Pricer}
+
+An analytical pricing formula for European swaptions under the Hull-White n-factor model. We outline the method following \cite{Andersen_Piterbarg_2010}, Lemma 12.1.19.
+
+\subsection{Decomposition of the Swaption Payoff}
+
+A european swaption with expiry $T_e$ on an underlying swap gives the holder the right to enter into a swap at
+expiry. The swaption payoff at expiry can be written as the value of the underlying fixed-rate leg minus the floating
+leg. Under the n-factor Hull-White model, for analytical pricing we construct an effective fixed rate and an effective
+fair swap rate.
+
+The effective fixed rate $K$ is computed as
+
+\begin{equation}
+K = \frac{\text{NPV}_{\text{fixed}} - (\text{NPV}_{\text{float}} - \text{NPV}_{\text{float,flat}})}{\text{Annuity}}
+\end{equation}
+
+where the annuity is defined as
+
+\begin{equation}
+A = \delta \sum_{j=1}^{m} P(0, T_j)
+\end{equation}
+
+with $\delta$ denoting the accrual fractions of the fixed leg periods and $P(0, T_j)$ the zero-coupon bond prices at
+time $0$ for each fixed leg payment date $T_j$.
+
+The effective fair swap rate is given by
+
+\begin{equation}
+F = \frac{\text{NPV}_{\text{float,flat}}}{\text{Annuity}}
+\end{equation}
+
+where the flat floating leg NPV is computed using a flat spread assumption (i.e., single-curve valuation).
+
+\subsection{Variance of the Swap Rate}
+
+The variance of the swap rate at the swaption expiry, which is required for option pricing, is approximated using the
+general result in \cite{Andersen_Piterbarg_2010}, Lemma 12.1.19. The approximate variance is computed as
+
+\begin{equation}
+\nu = \int_0^{T_e} (q(t)^T \sigma_x(t))^2 dt
+\end{equation}
+
+where $q(t)$ is a state-independent deterministic function given as a slight generalization of Piterbarg (12.1.6.2):
+
+\begin{equation}
+q_j(t,T) = -\frac{P(t,T_1,x_0) g_j(t,T_1) - P(t,T_m,x_0) g_j(t,T_m)}{A(t)} + \frac{S(t)}{A(t)} \sum_{i=1}^m \delta_i P(t,T_i,x_0) g_j(t,T_i)
+\end{equation}
+
+\begin{remark}
+There is a typo in \cite{Andersen_Piterbarg_2010}, formula (12.1.6.2): in the expression for $q_j(t,x)$, the second
+term should be added, not subtracted. The formula above already reflects the correct sign.
+\end{remark}
+
+Here, $T_1$ is the first accrual start date of the fixed leg, $T_m$ is the final accrual end date, $S(t)$ is the swap
+rate, $A(t)$ is the annuity, and $P(t,T,x_0)$ denotes the discount bond price evaluated at a deterministic
+approximation of the state variable $x(t)$ (typically $x_0 = 0$).
+
+The integral is computed numerically using piecewise Simpson integration over the parameter time points of the model
+volatility structure.
+
+\subsection{Option Pricing Formula}
+
+Once the effective fixed rate $K$, effective fair swap rate $F$, and variance $\nu$ are computed, the swaption value is
+given by the Bachelier Black formula applied to the underlying swap rate:
+
+\begin{equation}\label{swaption_price}
+V = A \times \text{bachelierBlackFormula}(\text{type}, K, F, \sqrt{\nu})
+\end{equation}
+
+where ``type'' is either Call (for a payer swaption) or Put (for a receiver swaption). The Bachelier Black formula is
+more appropriate than the Black-Scholes formula in this context since we are working with a Gaussian interest rate model
+where swap rates exhibit (approximately) normal dynamics rather than lognormal dynamics.
+
+This analytical pricing approach is efficient for European swaptions under the multi-factor Hull-White model and avoids
+the need for Monte Carlo simulation.
+
 \section{Commodity Model}\label{sec:commodity_model}
 
 \subsection{Simple Model: Black-Scholes and Black76}

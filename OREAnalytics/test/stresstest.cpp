@@ -50,7 +50,7 @@
 #include <ored/utilities/osutils.hpp>
 #include <ored/report/inmemoryreport.hpp>
 
-#include <oret/toplevelfixture.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 
 #include <ql/math/randomnumbers/mt19937uniformrng.hpp>
 #include <ql/time/calendars/target.hpp>
