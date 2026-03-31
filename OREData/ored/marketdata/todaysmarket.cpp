@@ -52,6 +52,7 @@
 #include <qle/indexes/inflationindexwrapper.hpp>
 #include <qle/termstructures/blackvolsurfacewithatm.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
+#include <qle/termstructures/calendarspreadfuturepricetermstructure.hpp>
 
 #include <tuple>
 
@@ -812,8 +813,14 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
 
             // Logic copied from Equity vol section of TodaysMarket for now
             QuantLib::ext::shared_ptr<BlackVolTermStructure> bvts(itr->second->volatility());
+            
             Handle<YieldTermStructure> discount = discountCurve(commodityVolSpec->currency(), configuration);
             Handle<PriceTermStructure> priceCurve = commodityPriceCurve(commodityName, configuration);
+            if (itr->second->isCalendarSpreadOption() && !priceCurve.empty()) {
+                priceCurve =
+                    Handle<PriceTermStructure>(QuantLib::ext::make_shared<CalendarSpreadFuturePriceTermStructure>(
+                        priceCurve, itr->second->expiryCalculator(), itr->second->calendarSpreadOffset()));
+            }
             Handle<YieldTermStructure> yield = Handle<YieldTermStructure>(
                 QuantLib::ext::make_shared<PriceTermStructureAdapter>(*priceCurve, *discount));
             Handle<Quote> spot(QuantLib::ext::make_shared<SimpleQuote>(priceCurve->price(0, true)));

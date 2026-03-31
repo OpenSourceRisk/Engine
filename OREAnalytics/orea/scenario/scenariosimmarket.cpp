@@ -31,6 +31,7 @@
 #include <ored/configuration/inflationcurveconfig.hpp>
 #include <ored/marketdata/curvespecparser.hpp>
 #include <ored/marketdata/structuredcurveerror.hpp>
+#include <ored/utilities/conventionsbasedfutureexpiry.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
@@ -46,6 +47,7 @@
 #include <qle/termstructures/blackvariancecurve3.hpp>
 #include <qle/termstructures/blackvariancesurfacestddevs.hpp>
 #include <qle/termstructures/blackvolconstantspread.hpp>
+#include <qle/termstructures/calendarspreadfuturepricetermstructure.hpp>
 #include <qle/termstructures/commoditybasispricecurvewrapper.hpp>
 #include <qle/termstructures/credit/basecorrelationstructure.hpp>
 #include <qle/termstructures/credit/spreadedbasecorrelationcurve.hpp>
@@ -2920,6 +2922,10 @@ ScenarioSimMarket::ScenarioSimMarket(
                     bool simDataWritten = false;
                     try {
                         DLOG("building commodity volatility for " << name);
+                        
+                        QuantLib::ext::shared_ptr<CommodityVolatilityConfig> volConfig;
+                        if (curveConfigs.hasCommodityVolatilityConfig(name))
+                            volConfig = curveConfigs.commodityVolatilityConfig(name);
 
                         // Get initial base volatility structure
                         Handle<BlackVolTermStructure> baseVol = initMarket->commodityVolatility(name, configuration);
@@ -2948,8 +2954,43 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                             // Get this scenario simulation market's commodity price curve. An exception is expected
                             // if there is no commodity curve but there is a commodity volatility.
-                            const auto& priceCurve = *commodityPriceCurve(name, configuration);
-
+                            // Check if we have a calendar spread vol surface (naming convention:
+                            // <name>_CalendarSpread_<Offset>)
+                            QuantLib::ext::shared_ptr<PriceTermStructure> priceCurve;
+                            if (volConfig && volConfig->instrumentType() ==
+                                                 MarketDatum::InstrumentType::COMMODITY_CALENDAR_SPREAD_OPTION) {
+                                auto offset = volConfig->calendarSpreadOffset();
+                                auto ptsId = volConfig->priceCurveId();
+                                QL_REQUIRE(
+                                    !volConfig->futureConventionsId().empty(),
+                                    "Future conventions id is required to build calendar spread volatility surface "
+                                        << name);
+                                QuantLib::ext::shared_ptr<Conventions> conventions =
+                                    InstrumentConventions::instance().conventions();
+                                const auto& cId = volConfig->futureConventionsId();
+                                QL_REQUIRE(conventions->has(cId), "Conventions, " << cId << " for config "
+                                                                                  << volConfig->curveID()
+                                                                                  << " not found.");
+                                auto convention = QuantLib::ext::dynamic_pointer_cast<CommodityFutureConvention>(
+                                    conventions->get(cId));
+                                QL_REQUIRE(convention, "Convention with ID '"
+                                                           << cId << "' should be of type CommodityFutureConvention");
+                                auto expCalc = QuantLib::ext::make_shared<ConventionsBasedFutureExpiry>(*convention);
+                                if (ptsId.empty()) {
+                                    QL_FAIL(
+                                        "Price term structure is required to build calendar spread volatility surface "
+                                        << name);
+                                }
+                                auto underlyingPriceCurve = commodityPriceCurve(ptsId, configuration);
+                                priceCurve = QuantLib::ext::make_shared<CalendarSpreadFuturePriceTermStructure>(
+                                    underlyingPriceCurve, expCalc, offset);
+                            } else {
+                                priceCurve = *commodityPriceCurve(name, configuration);
+                                if (priceCurve == nullptr) {
+                                    QL_FAIL("Commodity price curve for "
+                                            << name << " is required to build commodity volatility surface " << name);
+                                }
+                            }
                             // More than one moneyness implies a surface. If we have a surface, we will build a
                             // forward surface below which requires two yield term structures, one for the commodity
                             // price currency and another that recovers the commodity forward prices. We don't want

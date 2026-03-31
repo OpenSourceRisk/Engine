@@ -191,6 +191,8 @@ CommodityVolCurve::CommodityVolCurve(
             config.instrumentType() == MarketDatum::InstrumentType::COMMODITY_OPTION || expCalc_ != nullptr,
             "A future expiry calculator is required to build a commodity volatility curve calendar for spread options");
 
+        isCalendarSpreadOption_ = config.instrumentType() == MarketDatum::InstrumentType::COMMODITY_CALENDAR_SPREAD_OPTION;
+        calendarSpreadOffset_ = config.calendarSpreadOffset();
         calendar_ = parseCalendar(config.calendar());
         dayCounter_ = parseDayCounter(config.dayCounter());
 
