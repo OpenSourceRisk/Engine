@@ -440,34 +440,97 @@ public:
     void addDependencies();
 };
 
+// Python-friendly helpers for PortfolioAnalyser: expose market object data using
+// integer enum values so that Python dicts can be built without requiring
+// SwigPyObject (which is not hashable) as dict keys.
+%extend PortfolioAnalyser {
+    std::vector<std::string> _marketObjectConfigurations() const {
+        std::vector<std::string> result;
+        for (const auto& kv : $self->allMarketObjects())
+            result.push_back(kv.first);
+        return result;
+    }
+
+    std::vector<int> _marketObjectTypes() const {
+        std::vector<int> result;
+        for (const auto& kv : $self->marketObjects())
+            result.push_back(static_cast<int>(kv.first));
+        return result;
+    }
+
+    std::vector<std::string> _marketObjectNamesByType(int marketObjectType) const {
+        auto mo = static_cast<ore::data::MarketObject>(marketObjectType);
+        auto objects = $self->marketObjects();
+        auto it = objects.find(mo);
+        if (it != objects.end())
+            return std::vector<std::string>(it->second.begin(), it->second.end());
+        return {};
+    }
+
+    std::vector<int> _marketObjectTypesForConfig(const std::string& config) const {
+        std::vector<int> result;
+        const auto all = $self->allMarketObjects();
+        auto it = all.find(config);
+        if (it != all.end()) {
+            for (const auto& kv : it->second)
+                result.push_back(static_cast<int>(kv.first));
+        }
+        return result;
+    }
+
+    std::vector<std::string> _marketObjectNamesByConfigAndType(const std::string& config, int marketObjectType) const {
+        auto mo = static_cast<ore::data::MarketObject>(marketObjectType);
+        const auto all = $self->allMarketObjects();
+        auto it = all.find(config);
+        if (it != all.end()) {
+            auto it2 = it->second.find(mo);
+            if (it2 != it->second.end())
+                return std::vector<std::string>(it2->second.begin(), it2->second.end());
+        }
+        return {};
+    }
+}
+
 } // namespace analytics
 } // namespace ore
 
 %pythoncode %{
-try:
-    import swig_runtime_data5
-
-    # SWIG exposes enum-class map keys as SwigPyObject instances; make them hashable
-    # so std::map conversions can materialize Python dict-like results.
-    swig_runtime_data5.SwigPyObject.__hash__ = object.__hash__
-except Exception:
-    pass
+# Keep a reference to the C++ derefMarketObject for pointer dereference, then
+# wrap it so that plain Python integers (returned by the helper methods below)
+# pass through unchanged.
+_cpp_deref_market_object = derefMarketObject
 
 
-def _swig_map_items(map_object):
-    return [(key, map_object[key]) for key in map_object.keys()]
+def _deref_market_object(value):
+    if isinstance(value, int):
+        return value
+    return _cpp_deref_market_object(value)
 
 
-def _market_object_map_items(self):
-    return _swig_map_items(self)
+def _portfolio_analyser_market_objects(self, config=None):
+    """Return market objects as a Python dict {market_object_int: tuple_of_names}.
+
+    Using integer keys avoids the hashability problem of SWIG-wrapped enum-class
+    values (SwigPyObject) that would arise when iterating the raw C++ std::map.
+    """
+    if config is None:
+        return {mo: tuple(self._marketObjectNamesByType(mo))
+                for mo in self._marketObjectTypes()}
+    return {mo: tuple(self._marketObjectNamesByConfigAndType(config, mo))
+            for mo in self._marketObjectTypesForConfig(config)}
 
 
-def _all_market_object_map_items(self):
-    return _swig_map_items(self)
+def _portfolio_analyser_all_market_objects(self):
+    """Return all market objects as a Python dict {config: {market_object_int: tuple_of_names}}."""
+    return {config: _portfolio_analyser_market_objects(self, config)
+            for config in self._marketObjectConfigurations()}
 
 
-MarketObjectMap.items = _market_object_map_items
-AllMarketObjectMap.items = _all_market_object_map_items
+derefMarketObject = _deref_market_object
+PortfolioAnalyser._cppMarketObjects = PortfolioAnalyser.marketObjects
+PortfolioAnalyser._cppAllMarketObjects = PortfolioAnalyser.allMarketObjects
+PortfolioAnalyser.marketObjects = _portfolio_analyser_market_objects
+PortfolioAnalyser.allMarketObjects = _portfolio_analyser_all_market_objects
 %}
 
 #endif

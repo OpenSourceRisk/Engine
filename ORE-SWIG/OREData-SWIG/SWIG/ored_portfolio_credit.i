@@ -356,9 +356,6 @@ public:
 };
 
 %pythoncode %{
-CreditDefaultSwap.atDefault = "atDefault"
-CreditDefaultSwap.atPeriodEnd = "atPeriodEnd"
-CreditDefaultSwap.atMaturity = "atMaturity"
 BasketData.__init__ = _basket_data_init
 %}
 
