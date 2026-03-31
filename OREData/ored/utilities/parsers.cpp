@@ -346,7 +346,9 @@ DateGeneration::Rule parseDateGenerationRule(const string& s) {
                                                   {"OldCDS", DateGeneration::OldCDS},
                                                   {"CDS2015", DateGeneration::CDS2015},
                                                   {"CDS", DateGeneration::CDS},
-                                                  {"LastWednesday", DateGeneration::LastWednesday}};
+                                                  {"LastWednesday", DateGeneration::LastWednesday},
+                                                  {"NthBusinessDay", DateGeneration::NthBusinessDay},
+                                                  {"EighthBusinessDay", DateGeneration::EighthBusinessDay}};
 
     auto it = m.find(s);
     if (it != m.end()) {

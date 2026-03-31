@@ -1099,15 +1099,19 @@ public:
     //! Default constructor
     CdsConvention();
 
+    //Reference Data based constructor
+    CdsConvention(const string& id, const bool usesReferenceData);
+
     //! Detailed constructor
     CdsConvention(const string& id, const string& strSettlementDays, const string& strCalendar,
                   const string& strFrequency, const string& strPaymentConvention, const string& strRule,
                   const string& dayCounter, const string& settlesAccrual, const string& paysAtDefaultTime,
-                  const string& strUpfrontSettlementDays = "", const string& lastPeriodDayCounter = "");
+                  const string& strUpfrontSettlementDays = "", const string& lastPeriodDayCounter = "", bool usesReferenceData = false);
     //@}
 
     //! \name Inspectors
     //@{
+    bool usesReferenceData() const { return usesReferenceData_; }
     Natural settlementDays() const { return settlementDays_; }
     const Calendar& calendar() const { return calendar_; }
     Frequency frequency() const { return frequency_; }
@@ -1149,6 +1153,8 @@ private:
     string strPaysAtDefaultTime_;
     string strUpfrontSettlementDays_;
     string strLastPeriodDayCounter_;
+
+    bool usesReferenceData_;
 };
 
 class InflationSwapConvention : public Convention {
