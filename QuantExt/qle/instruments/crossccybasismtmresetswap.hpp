@@ -59,8 +59,9 @@ public:
         QuantLib::ext::optional<bool> domesticIncludeSpread = QuantLib::ext::nullopt,
         QuantLib::ext::optional<Period> domesticLookback = QuantLib::ext::nullopt, QuantLib::ext::optional<Size> domesticFixingDays = QuantLib::ext::nullopt,
         QuantLib::ext::optional<Size> domesticRateCutoff = QuantLib::ext::nullopt, QuantLib::ext::optional<bool> domesticIsAveraged = QuantLib::ext::nullopt,
-        const bool telescopicValueDates = false,
-	bool fairSpreadLegIsForeign = true);
+        const bool telescopicValueDates = false, bool fairSpreadLegIsForeign = true,
+        QuantLib::ext::optional<bool> foreignObservationShift = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<bool> domesticObservationShift = QuantLib::ext::nullopt);
     //@}
     //! \name Instrument interface
     //@{
@@ -132,11 +133,13 @@ private:
     QuantLib::ext::optional<QuantLib::Size> foreignFixingDays_;
     QuantLib::ext::optional<Size> foreignRateCutoff_;
     QuantLib::ext::optional<bool> foreignIsAveraged_;
+    QuantLib::ext::optional<bool> foreignObservationShift_;
     QuantLib::ext::optional<bool> domesticIncludeSpread_;
     QuantLib::ext::optional<QuantLib::Period> domesticLookback_;
     QuantLib::ext::optional<QuantLib::Size> domesticFixingDays_;
     QuantLib::ext::optional<Size> domesticRateCutoff_;
     QuantLib::ext::optional<bool> domesticIsAveraged_;
+    QuantLib::ext::optional<bool> domesticObservationShift_;
     bool telescopicValueDates_;
     bool fairSpreadLegIsForeign_;
 

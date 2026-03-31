@@ -190,29 +190,73 @@ in Listing \ref{lst:float_zero_coupon_leg_dates}. \begin{listing}[H]
 
   Allowable values: See Table \ref{tab:calendar} Calendar.
 
-\item FixingDays [Optional]: The fixing gap. For Ibor coupons this is the number of business days before the accrual
-  period's {\em reference} date to observe the index fixing. Here, the accrual period reference date is the accrual
-  start date for an in advanced fixed coupon and the accrual end date for in arrears fixed coupon. \\
-  For overnight coupons this is the number of business days by which the value dates are shifted into the past to get
-  the fixing observation dates. In the context of RFRs the FixingDays parameter is sometimes also called
-  ``obervation lag''.
+\item \lstinline!FixingDays! [Optional]: The fixing gap. For Ibor coupons this is the number of business days 
+  before the accrual period's {\em reference} date to observe the index fixing.
+  Here, the accrual period reference date is the accrual start date for an in advanced fixed coupon and the 
+  accrual end date for in arrears fixed coupon. \\
+  
+  For overnight coupons this is the number of business days prior to the underlying overnight coupon period start 
+  date on which the overnight index value should be observed.
+  Note that, as outlined below in the section on \lstinline!Lookback!, the \lstinline!FixingDays! value is applied 
+  after the \lstinline!Lookback!.
+  Note also that a value of \lstinline!m! for \lstinline!FixingDays! is equivalent to a \lstinline!Lookback! of 
+  \lstinline!mD! in combination with \lstinline!ObservationShift! set to \lstinline!false!.
+  An example is given in the \lstinline!Lookback! section below where \lstinline!ObservationShift! is set to 
+  \lstinline!true! and \lstinline!Lookback! and \lstinline!FixingDays! are non-zero. That shows the need for all 
+  three parameters even though they are generally rarely all used together in practice.
+  In the context of RFRs the \lstinline!FixingDays! parameter is sometimes referred to as the ``obervation lag''.
 
-  The calendar used for the fixing gap, is the calendar associated with the floating index, as defined in the conventions for the index.
+  The calendar used for the fixing gap, is the calendar associated with the floating index, as defined in the 
+  conventions for the index.
 
-  Allowable values: A non-negative whole number.  Defaults to the index's fixing days if blank or omitted. See defaults per index in Table \ref{tab:fixingdaysdefaults}.
+  Allowable values: A non-negative whole number. 
+  Defaults to the index's fixing days if blank or omitted. See defaults per index in Table \ref{tab:fixingdaysdefaults}.
 
-\item Lookback [Optional]: Only applicable to OIS legs. A period by which the value dates schedule of (averaged,
-  compounded) OIS legs is shifted into the past. On top of this the gap defined by the FixingDays is applied to get the
-  final fixing date for an original date in the OIS value dates schedule. In the context of RFRs the Lookback
-  parameter is sometimes also called ``shift''. With this terminology, first the shift and then the observation lag is
-  applied to get the fixing date for an original value date of an overnight coupon.
+\item \lstinline!Lookback! [Optional]: Only applicable to OIS legs. Each overnight indexed coupon in an overnight 
+  leg has a sequence of underlying overnight periods over which the overnight index is accumulated, i.e. either 
+  compounded or averaged, over the coupon period.
+  With a \lstinline!Lookback! of \lstinline!0D!, the default, and no explicit coupon \lstinline!FixingDays! specified, 
+  the underlying overnight periods align with the start and end value date of the associated overnight index fixing.
+  For example, for a 1M compounded SOFR coupon from 1 Nov 2025 to 30 Nov 2025, the underlying overnight period from 
+  Tue 4 Nov 2025 to Wed 5 Nov 2025 in the compounding will use the SOFR fixing for 4 Nov 2025 to 5 Nov 2025 published 
+  at 08:00 ET on 5 Nov 2025.
+  With a positive \lstinline!Lookback! of $m > 0$ days, and no explicit coupon \lstinline!FixingDays! specified, the 
+  overnight index value used for a given underlying period is the overnight index value observed $m$ periods prior 
+  to that underlying period.
+  Taking again the example of a 1M compounded SOFR coupon from 1 Nov 2025 to 30 Nov 2025. If the \lstinline!Lookback! 
+  is \lstinline!2D! and no explicit coupon \lstinline!FixingDays! is specified, the underlying overnight period from 
+  Tue 4 Nov 2025 to Wed 5 Nov 2025 in the compounding will use the SOFR fixing for Fri 31 Oct 2025 to Mon 3 Nov 2025 
+  published at 08:00 ET on Mon 3 Nov 2025.
+  When \lstinline!Lookback! is a positive number of days, the \lstinline!ObservationShift! flag, described below, 
+  determines what weight is applied to the fixing in the accumulation of the rate. The \lstinline!ObservationShift! 
+  section below builds on the example given here.
+  Note that the coupon may specify a number of \lstinline!FixingDays! also. These \lstinline!FixingDays! are applied 
+  after the \lstinline!Lookback! here.
+  Taking again the example of a 1M compounded SOFR coupon from 1 Nov 2025 to 30 Nov 2025. If the \lstinline!Lookback! 
+  is \lstinline!2D! and \lstinline!FixingDays! is set to \lstinline!1!, the underlying overnight period from 
+  Tue 4 Nov 2025 to Wed 5 Nov 2025 in the compounding will use the SOFR fixing for Thu 30 Oct 2025 to Fri 31 Oct 2025 
+  published at 08:00 ET on Fri 31 Oct 2025. Note that if \lstinline!ObservationShift! is \lstinline!false! in this 
+  case, the fixing $r$ observed on Thu 30 Oct 2025 will use the dates of the original underlying overnight period from 
+  Tue 4 Nov 2025 to Wed 5 Nov 2025 and will have a contribution of $r \times 1 / 360$ in the accumulation against 
+  that period.
+  If \lstinline!ObservationShift! is \lstinline!true!, the fixing $r$ observed on Thu 30 Oct 2025 will use the dates 
+  from the \lstinline!Lookback! shifted period from Fri 31 Oct 2025 to Mon 3 Nov 2025 and will have a contribution of 
+  $r \times 3 / 360$ in the accumulation against the original underlying period from Tue 4 Nov 2025 to Wed 5 Nov 2025.
 
-  Allowable values: any valid period, e.g. 2D, 3M, 1Y
+  Allowable values: any non-negative integer number of days, e.g. \lstinline!0D!, \lstinline!1D!, ...
 
-\item RateCutoff [Optional]: Only applicable to OIS legs. The number of fixing dates at the end of the fixing period for
-  which the fixing value is held constant and set to the previous value. Defaults to $0$.
+\item \lstinline!RateCutoff! [Optional]: Only applicable to OIS legs. The number of fixing dates at the end of the 
+  fixing period for which the fixing value is held constant and set to the previous value.
+  It is also referred to in the literature as a Lockout.
+  Defaults to \lstinline!0! i.e. no rate cut-off.
+  Take for example a 1M compounded SOFR coupon from 1 Nov 2025 to 30 Nov 2025 with a \lstinline!RateCutoff! of 
+  \lstinline!3!, no \lstinline!Lookback! and no externally specified \lstinline!FixingDays!. The final four 
+  underlying overnight periods are Mon 24th to Tue 25th, Tue 25th to Wed 26th, Wed 26th to Fri 28th and Fri 28th to 
+  Sun 30th. Note that Thu 27th was Thanksgiving Day, a SOFR holiday. With \lstinline!RateCutoff! of \lstinline!3!, 
+  the SOFR rate for period Mon 24th to Tue 25th published on Tue 25 Nov 2025 is used for the period Mon 24th to 
+  Tue 25th and for the final three underlying overnight periods.
 
-Allowable values: any non-negative whole number
+  Allowable values: any non-negative whole number strictly less than the number of underlying overnight periods in the coupon.
 
 \item Spreads [Optional]: This node contains child elements of type
   \lstinline!Spread!. If the spread is constant over the life of the
@@ -329,5 +373,20 @@ Note that rounding does not apply to interpolated fixing forecasts.
 
 \item \lstinline!StubUseOriginalCurve! [Optional]: Boolean flag to indicate whether the original index curve should be used for stub interpolation fixing forecasts.
   Allowable values: \emph{true}, \emph{false} . Defaults to \emph{false} if left blank or omitted.
+
+\item \lstinline!ObservationShift! [Optional]: Only applicable to OIS legs. If a non-zero \lstinline!Lookback! value 
+is used, \lstinline!ObservationShift! can be set to \lstinline!true! to indicate that the overnight fixing associated 
+with the underlying overnight period that has been shifted back is applied using the starting and end dates of that 
+shifted period. As an example, assume that the underlying index is SOFR and that the underlying overnight period is 
+from Tue 4 Nov 2025 to Wed 5 Nov 2025. Without a lookback, the fixing for this period is the SOFR fixing for 4 Nov 2025, 
+published at 08:00 ET on 5 Nov 2025. With a lookback of 2 days, the fixing for the period is the SOFR fixing for Fri 
+31 Oct 2025, published at 08:00 ET on 3 Nov 2025. With \lstinline!ObservationShift! set to \lstinline!false!, the rate 
+for Fri 31 Oct 2025 is applied to the period from Tue 4 Nov 2025 to Wed 5 Nov 2025 i.e. the contribution for period 
+from Tue 4 Nov 2025 to Wed 5 Nov 2025 in the averaging or compounding will be $r \times 1 / 360$. With 
+\lstinline!ObservationShift! set to \lstinline!true!, the rate for Fri 31 Oct 2025 is applied to the period from 
+Fri 31 Oct 2025 to Mon 3 Nov 2025 i.e. the contribution for period from Tue 4 Nov 2025 to Wed 5 Nov 2025 in the 
+averaging or compounding will be $r \times 3 / 360$.
+
+  Allowable values: \lstinline!true!, \lstinline!false!. Defaults to \lstinline!true! if left blank or omitted.
 
 \end{itemize}

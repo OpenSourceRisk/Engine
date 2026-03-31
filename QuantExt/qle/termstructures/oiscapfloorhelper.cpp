@@ -93,7 +93,7 @@ void OISCapFloorHelper::initializeDates() {
         auto cfon = QuantLib::ext::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(capFloor_.front());
         QL_REQUIRE(cfon, "OISCapFloorHelper: Expected the first cashflow on the ois cap floor instrument to be a "
                          "CappedFlooredOvernightIndexedCoupon");
-        earliestDate_ = std::max(today, useEffectiveVolatility_ ? cfon->underlying()->fixingDates().back()
+        earliestDate_ = std::max(today, useEffectiveVolatility_ ? cfon->underlying()->fixingDateNoCutoff()
                                                                 : cfon->underlying()->fixingDates().front());
 
         // Remaining dates are each equal to the fixing date on the final optionlet
@@ -101,7 +101,7 @@ void OISCapFloorHelper::initializeDates() {
         QL_REQUIRE(cfon2, "OISCapFloorHelper: Expected the final cashflow on the cap floor instrument to be a "
                           "CappedFlooredOvernightIndexedCoupon");
         pillarDate_ = latestDate_ = latestRelevantDate_ = useEffectiveVolatility_
-                                                              ? cfon2->underlying()->fixingDates().back()
+                                                              ? cfon2->underlying()->fixingDateNoCutoff()
                                                               : cfon2->underlying()->fixingDates().front();
     }
 }

@@ -226,7 +226,7 @@ public:
                     const string& frontStubRoundingType = std::string(), const string& frontStubRoundingPrecision = std::string(),
                     const string& backStubShortIndex = std::string(), const string& backStubLongIndex = std::string(),
                     const string& backStubRoundingType = std::string(), const string& backStubRoundingPrecision = std::string(),
-                    bool stubUseOriginalCurve = false);
+                    bool stubUseOriginalCurve = false, bool observationShift = true);
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };

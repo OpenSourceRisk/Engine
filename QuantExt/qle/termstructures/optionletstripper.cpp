@@ -168,7 +168,7 @@ void OptionletStripper::populateDates() const {
             auto lastCoupon = QuantLib::ext::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(dummyCap.back());
             QL_REQUIRE(lastCoupon, "OptionletStripper::populateDates(): expected CappedFlooredOvernightIndexedCoupon");
             optionletDates_[i] =
-                std::max(referenceDate + 1, useEffectiveVolatility_ ? lastCoupon->underlying()->fixingDates().back()
+                std::max(referenceDate + 1, useEffectiveVolatility_ ? lastCoupon->underlying()->fixingDateNoCutoff()
                                                                     : lastCoupon->underlying()->fixingDates().front());
             optionletPaymentDates_[i] = lastCoupon->underlying()->date();
             optionletAccrualPeriods_[i] = lastCoupon->underlying()->accrualPeriod();

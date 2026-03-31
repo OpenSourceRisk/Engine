@@ -40,7 +40,7 @@ MakeAverageOIS::MakeAverageOIS(const Period& swapTenor, const QuantLib::ext::sha
       onEndOfMonth_(false), onFirstDate_(Date()), onNextToLastDate_(Date()), rateCutoff_(0), onSpread_(0.0),
       onGearing_(1.0), onDayCounter_(overnightIndex->dayCounter()),
       onPaymentAdjustment_(overnightIndex->businessDayConvention()),
-      onPaymentCalendar_(overnightIndex->fixingCalendar()), telescopicValueDates_(false),
+      onPaymentCalendar_(overnightIndex->fixingCalendar()), telescopicValueDates_(false), staleDatesCheck_(true),
       onCouponPricer_(QuantLib::ext::make_shared<AverageONIndexedCouponPricer>()) {}
 
 MakeAverageOIS::operator AverageOIS() const {
@@ -81,7 +81,8 @@ MakeAverageOIS::operator QuantLib::ext::shared_ptr<AverageOIS>() const {
     QuantLib::ext::shared_ptr<AverageOIS> swap(
         new AverageOIS(type_, nominal_, fixedSchedule, fixedRate_, fixedDayCounter_, fixedPaymentAdjustment_,
                        fixedPaymentCalendar_, onSchedule, overnightIndex_, onPaymentAdjustment_, onPaymentCalendar_,
-                       rateCutoff_, onSpread_, onGearing_, onDayCounter_, onCouponPricer_, telescopicValueDates_));
+                       rateCutoff_, onSpread_, onGearing_, onDayCounter_, onCouponPricer_, telescopicValueDates_,
+                       staleDatesCheck_));
 
     swap->setPricingEngine(engine_);
     return swap;
@@ -237,6 +238,11 @@ MakeAverageOIS& MakeAverageOIS::withONPaymentCalendar(const Calendar& onPaymentC
 
 MakeAverageOIS& MakeAverageOIS::withTelescopicValueDates(bool telescopicValueDates) {
     telescopicValueDates_ = telescopicValueDates;
+    return *this;
+}
+
+MakeAverageOIS& MakeAverageOIS::withStaleDatesCheck(bool staleDatesCheck) {
+    staleDatesCheck_ = staleDatesCheck;
     return *this;
 }
 

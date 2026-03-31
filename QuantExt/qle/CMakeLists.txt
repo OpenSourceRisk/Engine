@@ -65,6 +65,7 @@ cashflows/nonstandardcapflooredyoyinflationcoupon.cpp
 cashflows/nonstandardinflationcouponpricer.cpp
 cashflows/nonstandardyoyinflationcoupon.cpp
 cashflows/overnightindexedcoupon.cpp
+cashflows/overnightindexedcouponbase.cpp
 cashflows/quantocouponpricer.cpp
 cashflows/strippedcapflooredcpicoupon.cpp
 cashflows/strippedcapflooredyoyinflationcoupon.cpp
@@ -532,6 +533,7 @@ cashflows/nonstandardcapflooredyoyinflationcoupon.hpp
 cashflows/nonstandardinflationcouponpricer.hpp
 cashflows/nonstandardyoyinflationcoupon.hpp
 cashflows/overnightindexedcoupon.hpp
+cashflows/overnightindexedcouponbase.hpp
 cashflows/quantocouponpricer.hpp
 cashflows/scaledcoupon.hpp
 cashflows/strippedcapflooredcpicoupon.hpp

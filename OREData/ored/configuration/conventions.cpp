@@ -984,16 +984,17 @@ CrossCcyBasisSwapConvention::CrossCcyBasisSwapConvention(
     const string& strIncludeSpread, const string& strLookback, const string& strFixingDays, const string& strRateCutoff,
     const string& strIsAveraged, const string& strFlatIncludeSpread, const string& strFlatLookback,
     const string& strFlatFixingDays, const string& strFlatRateCutoff, const string& strFlatIsAveraged,
-    const Conventions* conventions)
+    const Conventions* conventions, const string& strObservationShift, const string& strFlatObservationShift)
     : Convention(id, Type::CrossCcyBasis), strSettlementDays_(strSettlementDays),
       strSettlementCalendar_(strSettlementCalendar), strRollConvention_(strRollConvention), strFlatIndex_(flatIndex),
       strSpreadIndex_(spreadIndex), strEom_(strEom), strIsResettable_(strIsResettable),
       strFlatIndexIsResettable_(strFlatIndexIsResettable), strFlatTenor_(strFlatTenor), strSpreadTenor_(strSpreadTenor),
       strPaymentLag_(strPaymentLag), strFlatPaymentLag_(strFlatPaymentLag), strIncludeSpread_(strIncludeSpread),
       strLookback_(strLookback), strFixingDays_(strFixingDays), strRateCutoff_(strRateCutoff),
-      strIsAveraged_(strIsAveraged), strFlatIncludeSpread_(strFlatIncludeSpread), strFlatLookback_(strFlatLookback),
+      strIsAveraged_(strIsAveraged), strObservationShift_(strObservationShift),
+      strFlatIncludeSpread_(strFlatIncludeSpread), strFlatLookback_(strFlatLookback),
       strFlatFixingDays_(strFlatFixingDays), strFlatRateCutoff_(strFlatRateCutoff),
-      strFlatIsAveraged_(strFlatIsAveraged) {
+      strFlatIsAveraged_(strFlatIsAveraged), strFlatObservationShift_(strFlatObservationShift) {
     build();
 }
 
@@ -1046,6 +1047,8 @@ void CrossCcyBasisSwapConvention::build() {
         rateCutoff_ = parseInteger(strRateCutoff_);
     if (!strIsAveraged_.empty())
         isAveraged_ = parseBool(strIsAveraged_);
+    if (!strObservationShift_.empty())
+        observationShift_ = parseBool(strObservationShift_);
     if (!strFlatIncludeSpread_.empty())
         flatIncludeSpread_ = parseBool(strFlatIncludeSpread_);
     if (!strFlatLookback_.empty())
@@ -1056,6 +1059,8 @@ void CrossCcyBasisSwapConvention::build() {
         flatRateCutoff_ = parseInteger(strFlatRateCutoff_);
     if (!strFlatIsAveraged_.empty())
         flatIsAveraged_ = parseBool(strFlatIsAveraged_);
+    if (!strFlatObservationShift_.empty())
+        flatObservationShift_ = parseBool(strFlatObservationShift_);
 }
 
 void CrossCcyBasisSwapConvention::fromXML(XMLNode* node) {
@@ -1080,18 +1085,19 @@ void CrossCcyBasisSwapConvention::fromXML(XMLNode* node) {
     strFlatPaymentLag_ = XMLUtils::getChildValue(node, "FlatPaymentLag", false);
 
     // OIS specific conventions
-
     strIncludeSpread_ = XMLUtils::getChildValue(node, "SpreadIncludeSpread", false);
     strLookback_ = XMLUtils::getChildValue(node, "SpreadLookback", false);
     strFixingDays_ = XMLUtils::getChildValue(node, "SpreadFixingDays", false);
     strRateCutoff_ = XMLUtils::getChildValue(node, "SpreadRateCutoff", false);
     strIsAveraged_ = XMLUtils::getChildValue(node, "SpreadIsAveraged", false);
+    strObservationShift_ = XMLUtils::getChildValue(node, "SpreadObservationShift", false);
 
     strFlatIncludeSpread_ = XMLUtils::getChildValue(node, "FlatIncludeSpread", false);
     strFlatLookback_ = XMLUtils::getChildValue(node, "FlatLookback", false);
     strFlatFixingDays_ = XMLUtils::getChildValue(node, "FlatFixingDays", false);
     strFlatRateCutoff_ = XMLUtils::getChildValue(node, "FlatRateCutoff", false);
     strFlatIsAveraged_ = XMLUtils::getChildValue(node, "FlatIsAveraged", false);
+    strFlatObservationShift_ = XMLUtils::getChildValue(node, "FlatObservationShift", false);
 
     build();
 }
@@ -1131,6 +1137,8 @@ XMLNode* CrossCcyBasisSwapConvention::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, node, "SpreadRateCutoff", strRateCutoff_);
     if (!strIsAveraged_.empty())
         XMLUtils::addChild(doc, node, "SpreadIsAveraged", strIsAveraged_);
+    if (!strObservationShift_.empty())
+        XMLUtils::addChild(doc, node, "SpreadObservationShift", strObservationShift_);
 
     if (!strFlatIncludeSpread_.empty())
         XMLUtils::addChild(doc, node, "FlatIncludeSpread", strFlatIncludeSpread_);
@@ -1142,6 +1150,8 @@ XMLNode* CrossCcyBasisSwapConvention::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, node, "FlatRateCutoff", strFlatRateCutoff_);
     if (!strFlatIsAveraged_.empty())
         XMLUtils::addChild(doc, node, "FlatIsAveraged", strFlatIsAveraged_);
+    if (!strFlatObservationShift_.empty())
+        XMLUtils::addChild(doc, node, "FlatObservationShift", strFlatObservationShift_);
 
     return node;
 }
@@ -1157,14 +1167,14 @@ CrossCcyFixFloatSwapConvention::CrossCcyFixFloatSwapConvention(
     const string& fixedConvention, const string& fixedDayCounter, const string& index, const string& eom,
     const std::string& strIsResettable, const std::string& strFloatIndexIsResettable, const string& strIncludeSpread,
     const string& strLookback, const string& strFixingDays, const string& strRateCutoff,
-    const string& strIsAveraged)
+    const string& strIsAveraged, const string& strObservationShift)
     : Convention(id, Type::CrossCcyFixFloat), strSettlementDays_(settlementDays),
       strSettlementCalendar_(settlementCalendar), strSettlementConvention_(settlementConvention),
       strFixedCurrency_(fixedCurrency), strFixedFrequency_(fixedFrequency), strFixedConvention_(fixedConvention),
       strFixedDayCounter_(fixedDayCounter), strIndex_(index), strEom_(eom), strIsResettable_(strIsResettable),
       strFloatIndexIsResettable_(strFloatIndexIsResettable), strIncludeSpread_(strIncludeSpread),
       strLookback_(strLookback), strFixingDays_(strFixingDays), strRateCutoff_(strRateCutoff),
-      strIsAveraged_(strIsAveraged) {
+      strIsAveraged_(strIsAveraged), strObservationShift_(strObservationShift) {
 
     build();
 }
@@ -1191,6 +1201,8 @@ void CrossCcyFixFloatSwapConvention::build() {
         rateCutoff_ = parseInteger(strRateCutoff_);
     if (!strIsAveraged_.empty())
         isAveraged_ = parseBool(strIsAveraged_);
+    if (!strObservationShift_.empty())
+        observationShift_ = parseBool(strObservationShift_);
 }
 
 void CrossCcyFixFloatSwapConvention::fromXML(XMLNode* node) {
@@ -1213,14 +1225,13 @@ void CrossCcyFixFloatSwapConvention::fromXML(XMLNode* node) {
     strIsResettable_ = XMLUtils::getChildValue(node, "IsResettable", false);
     strFloatIndexIsResettable_ = XMLUtils::getChildValue(node, "FloatIndexIsResettable", false);
 
-    
     // OIS specific conventions
-
     strIncludeSpread_ = XMLUtils::getChildValue(node, "IncludeSpread", false);
     strLookback_ = XMLUtils::getChildValue(node, "Lookback", false);
     strFixingDays_ = XMLUtils::getChildValue(node, "FixingDays", false);
     strRateCutoff_ = XMLUtils::getChildValue(node, "RateCutoff", false);
     strIsAveraged_ = XMLUtils::getChildValue(node, "IsAveraged", false);
+    strObservationShift_ = XMLUtils::getChildValue(node, "ObservationShift", false);
 
     build();
 }
@@ -1245,15 +1256,18 @@ XMLNode* CrossCcyFixFloatSwapConvention::toXML(XMLDocument& doc) const {
     if (!strFloatIndexIsResettable_.empty())
         XMLUtils::addChild(doc, node, "FloatIndexIsResettable", strFloatIndexIsResettable_);
     if (!strIncludeSpread_.empty())
-        XMLUtils::addChild(doc, node, "SpreadIncludeSpread", strIncludeSpread_);
+        XMLUtils::addChild(doc, node, "IncludeSpread", strIncludeSpread_);
     if (!strLookback_.empty())
-        XMLUtils::addChild(doc, node, "SpreadLookback", strLookback_);
+        XMLUtils::addChild(doc, node, "Lookback", strLookback_);
     if (!strFixingDays_.empty())
-        XMLUtils::addChild(doc, node, "SpreadFixingDays", strFixingDays_);
+        XMLUtils::addChild(doc, node, "FixingDays", strFixingDays_);
     if (!strRateCutoff_.empty())
-        XMLUtils::addChild(doc, node, "SpreadRateCutoff", strRateCutoff_);
+        XMLUtils::addChild(doc, node, "RateCutoff", strRateCutoff_);
     if (!strIsAveraged_.empty())
-        XMLUtils::addChild(doc, node, "SpreadIsAveraged", strIsAveraged_);
+        XMLUtils::addChild(doc, node, "IsAveraged", strIsAveraged_);
+    if (!strObservationShift_.empty())
+        XMLUtils::addChild(doc, node, "ObservationShift", strObservationShift_);
+
     return node;
 }
 

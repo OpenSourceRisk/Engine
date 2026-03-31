@@ -21,6 +21,8 @@
 #include <ql/pricingengines/blackformula.hpp>
 #include <ql/termstructures/volatility/optionlet/optionletvolatilitystructure.hpp>
 
+using std::vector;
+
 namespace QuantExt {
 
 void BlackOvernightIndexedCouponPricer::initialize(const FloatingRateCoupon& coupon) {
@@ -57,15 +59,15 @@ Real BlackOvernightIndexedCouponPricer::optionletRateGlobal(Option::Type optionT
     } else {
         // not yet determined, use Black model
         QL_REQUIRE(!capletVolatility().empty(), "BlackOvernightIndexedCouponPricer: missing optionlet volatility");
-        std::vector<Date> fixingDates = coupon_->underlying()->fixingDates();
+        const std::vector<Date>& fixingDates = coupon_->underlying()->fixingDates();
         QL_REQUIRE(!fixingDates.empty(), "BlackOvernightIndexedCouponPricer: empty fixing dates");
         bool shiftedLn = capletVolatility()->volatilityType() == ShiftedLognormal;
         Real shift = capletVolatility()->displacement();
         Real stdDev, strippedVol;
-        Real effectiveTime = capletVolatility()->timeFromReference(fixingDates.back());
+        Real effectiveTime = capletVolatility()->timeFromReference(coupon_->underlying()->fixingDateNoCutoff());
         if (capletVolatility()->useEffectiveVolatility()) {
             // vol input is effective, i.e. we use a plain black model
-            strippedVol = capletVolatility()->volatility(fixingDates.back(), effStrike);
+            strippedVol = capletVolatility()->volatility(coupon_->underlying()->fixingDateNoCutoff(), effStrike);
             stdDev = strippedVol * std::sqrt(effectiveTime);
         } else {
             // vol input is not effective:
@@ -73,7 +75,7 @@ Real BlackOvernightIndexedCouponPricer::optionletRateGlobal(Option::Type optionT
             // section 6.3. the idea is to dampen the average volatility sigma between the fixing start and fixing end
             // date by a linear function going from (fixing start, 1) to (fixing end, 0)
             Real fixingStartTime = capletVolatility()->timeFromReference(fixingDates.front());
-            Real fixingEndTime = capletVolatility()->timeFromReference(fixingDates.back());
+            Real fixingEndTime = capletVolatility()->timeFromReference(coupon_->underlying()->fixingDateNoCutoff());
             Real T = std::max(fixingStartTime, 0.0);
             if (!close_enough(fixingEndTime, T))
                 T += std::pow(fixingEndTime - T, 3.0) / std::pow(fixingEndTime - fixingStartTime, 2.0) / 3.0;
@@ -128,7 +130,7 @@ Real BlackOvernightIndexedCouponPricer::optionletRateLocal(Option::Type optionTy
     // this, but as a first step it seems safer to add the full modified code explicitly here and leave the original
     // code alone.
 
-    ext::shared_ptr<OvernightIndex> index = ext::dynamic_pointer_cast<OvernightIndex>(coupon_->index());
+    ext::shared_ptr<OvernightIndex> index = coupon_->underlying()->overnightIndex();
 
     const std::vector<Date>& fixingDates = coupon_->underlying()->fixingDates();
     const std::vector<Time>& dt = coupon_->underlying()->dt();
@@ -138,17 +140,26 @@ Real BlackOvernightIndexedCouponPricer::optionletRateLocal(Option::Type optionTy
     QL_REQUIRE(coupon_->underlying()->rateCutoff() < n,
                "rate cutoff (" << coupon_->underlying()->rateCutoff()
                                << ") must be less than number of fixings in period (" << n << ")");
-    Size nCutoff = n - coupon_->underlying()->rateCutoff();
+    Natural rco = coupon_->underlying()->rateCutoff();
+    Size nCutoff = n - rco;
 
     Real compoundFactor = 1.0, compoundFactorRaw = 1.0;
 
+    // Recall below, when we have a rate cut-off (aka lockout) of m > 0, the last m + 1 dates in fixingDates are the 
+    // same, the last date in valueDates is the end of the underlying ON period corresponding to the lockout fixing 
+    // date and the m + 1 dates in valueDates prior to the last date are the same and equal to the start of the 
+    // underlying ON period corresponding to the lockout fixing date. So, with a rate cut-off of 2 for example, we have:
+    // fixingDates = [...,       fd_{n-3},       fd_{n-3},       fd_{n-3}]
+    // valueDates  = [..., VD_s(fd_{n-3}), VD_s(fd_{n-3}), VD_s(fd_{n-3}), VD_e(fd_{n-3})]
+    // where VD_s(fd) and VD_e(fd) give the start and end dates of the underlying ON period given a fixing date fd.
+
     // already fixed part
     Date today = Settings::instance().evaluationDate();
-    while (i < n && fixingDates[std::min(i, nCutoff)] < today) {
+    while (i < n && fixingDates[i] < today) {
         // rate must have been fixed
-        Rate pastFixing = index->pastFixing(fixingDates[std::min(i, nCutoff)]);
+        Rate pastFixing = index->pastFixing(fixingDates[i]);
         QL_REQUIRE(pastFixing != Null<Real>(),
-                   "Missing " << index->name() << " fixing for " << fixingDates[std::min(i, nCutoff)]);
+                   "Missing " << index->name() << " fixing for " << fixingDates[i]);
         if (coupon_->underlying()->includeSpread()) {
             pastFixing += coupon_->spread();
         }
@@ -158,7 +169,7 @@ Real BlackOvernightIndexedCouponPricer::optionletRateLocal(Option::Type optionTy
     }
 
     // today is a border case
-    if (i < n && fixingDates[std::min(i, nCutoff)] == today) {
+    while (i < n && fixingDates[i] == today) {
         // might have been fixed
         try {
             Rate pastFixing = index->pastFixing(today);
@@ -170,33 +181,44 @@ Real BlackOvernightIndexedCouponPricer::optionletRateLocal(Option::Type optionTy
                 compoundFactorRaw *= 1.0 + pastFixing * dt[i];
                 ++i;
             } else {
-                ; // fall through and forecast
+                break; // fall through and forecast
             }
         } catch (Error&) {
-            ; // fall through and forecast
+            break; // fall through and forecast
         }
     }
 
     // forward part, approximation by pricing a cap / floor in the middle of the future period
     const std::vector<Date>& dates = coupon_->underlying()->valueDates();
+    const vector<Date>& intDates = coupon_->underlying()->interestDates();
     if (i < n) {
         Handle<YieldTermStructure> curve = index->forwardingTermStructure();
         QL_REQUIRE(!curve.empty(), "null term structure set to this instance of " << index->name());
 
-        DiscountFactor startDiscount = curve->discount(dates[i]);
-        DiscountFactor endDiscount = curve->discount(dates[std::max(nCutoff, i)]);
+        Real factor = 1.0;
+        if (rco > 0) {
+            // Can be on lockout date here if lockout date == today and there was no fixing for today. This is the
+            // condition (rco > 0 && i == nCutoff - 1). Otherwise
+            if (i < nCutoff - 1)
+                factor = curve->discount(dates[i]) / curve->discount(dates[nCutoff - 1]);
+        } else {
+            // Don't make accomodations here for final interest date being a holiday, lookback w/o obs shift etc. like 
+            // in the main ON pricers. It probably matters less here as we are making approximations in the pricing 
+            // below but we may want to revisit if necessary.
+            factor = curve->discount(dates[i]) / curve->discount(dates[n]);
+        }
 
         // handle the rate cutoff period (if there is any, i.e. if nCutoff < n)
-        if (nCutoff < n) {
-            // forward discount factor for one calendar day on the cutoff date
-            DiscountFactor discountCutoffDate = curve->discount(dates[nCutoff] + 1) / curve->discount(dates[nCutoff]);
-            // keep the above forward discount factor constant during the cutoff period
-            endDiscount *= std::pow(discountCutoffDate, dates[n] - dates[nCutoff]);
+        if (rco > 0) {
+            Rate onRate = (curve->discount(dates[nCutoff - 1]) / curve->discount(dates.back()) - 1.0) /
+                index->dayCounter().yearFraction(dates[nCutoff-1], dates.back());
+            for (Size j = nCutoff - 1; j < n; j++)
+                factor *= 1.0 + onRate * dt[j];
         }
 
         // estimate the average daily rate over the future period (approximate the continuously compounded rate)
         Real tau = coupon_->dayCounter().yearFraction(dates[i], dates.back());
-        Real averageRate = -std::log(endDiscount / startDiscount) / tau;
+        Real averageRate = std::log(factor) / tau;
 
         // compute the value of a cap or floor with fixing in the middle of the future period
         // (but accounting for the rate cutoff here)
@@ -208,7 +230,7 @@ Real BlackOvernightIndexedCouponPricer::optionletRateLocal(Option::Type optionTy
         bool shiftedLn = capletVolatility()->volatilityType() == ShiftedLognormal;
         Rate cfValue = shiftedLn ? blackFormula(optionType, effStrike, averageRate, stdDev, 1.0, shift)
                                  : bachelierBlackFormula(optionType, effStrike, averageRate, stdDev, 1.0);
-        Real effectiveTime = capletVolatility()->timeFromReference(fixingDates.back());
+        Real effectiveTime = capletVolatility()->timeFromReference(coupon_->underlying()->fixingDateNoCutoff());
         if (optionType == Option::Type::Call)
             effectiveCapletVolatility_ = stdDev / std::sqrt(effectiveTime);
         else
@@ -225,16 +247,15 @@ Real BlackOvernightIndexedCouponPricer::optionletRateLocal(Option::Type optionTy
 
         // now assume the averageRate is the effective rate over the future period and update the compoundFactor
         // this is an approximation, see "Ester / Daily Spread Curve Setup in ORE": set tau to avg value
-        Real dailyTau =
-            coupon_->underlying()->dayCounter().yearFraction(dates[i], dates.back()) / (dates.back() - dates[i]);
+        Natural numCalDays = intDates.back() - intDates[i];
+        Real dailyTau = coupon_->underlying()->dayCounter().yearFraction(intDates[i], intDates.back()) / numCalDays;
         // now use formula (4) from the paper
-        compoundFactor *= std::pow(1.0 + dailyTau * averageRate, static_cast<int>(dates.back() - dates[i]));
-        compoundFactorRaw *= std::pow(1.0 + dailyTau * averageRateRaw, static_cast<int>(dates.back() - dates[i]));
+        compoundFactor *= std::pow(1.0 + dailyTau * averageRate, static_cast<int>(numCalDays));
+        compoundFactorRaw *= std::pow(1.0 + dailyTau * averageRateRaw, static_cast<int>(numCalDays));
     }
 
-    Rate tau = coupon_->underlying()->lookback() == 0 * Days
-                   ? coupon_->accrualPeriod()
-                   : coupon_->dayCounter().yearFraction(dates.front(), dates.back());
+    Rate tau = !coupon_->underlying()->hasLookback() ? coupon_->accrualPeriod() :
+        coupon_->dayCounter().yearFraction(intDates.front(), intDates.back());
     Rate rate = (compoundFactor - 1.0) / tau;
     Rate rawRate = (compoundFactorRaw - 1.0) / tau;
 
@@ -308,15 +329,15 @@ Real BlackAverageONIndexedCouponPricer::optionletRateGlobal(Option::Type optionT
     } else {
         // not yet determined, use Black model
         QL_REQUIRE(!capletVolatility().empty(), "BlackAverageONIndexedCouponPricer: missing optionlet volatility");
-        std::vector<Date> fixingDates = coupon_->underlying()->fixingDates();
+        const std::vector<Date>& fixingDates = coupon_->underlying()->fixingDates();
         QL_REQUIRE(!fixingDates.empty(), "BlackAverageONIndexedCouponPricer: empty fixing dates");
         bool shiftedLn = capletVolatility()->volatilityType() == ShiftedLognormal;
         Real shift = capletVolatility()->displacement();
         Real stdDev, strippedVol;
-        Real effectiveTime = capletVolatility()->timeFromReference(fixingDates.back());
+        Real effectiveTime = capletVolatility()->timeFromReference(coupon_->underlying()->fixingDateNoCutoff());
         if (capletVolatility()->useEffectiveVolatility()) {
             // vol input is effective, i.e. we use a plain black model
-            strippedVol = capletVolatility()->volatility(fixingDates.back(), effStrike);
+            strippedVol = capletVolatility()->volatility(coupon_->underlying()->fixingDateNoCutoff(), effStrike);
             stdDev = strippedVol * std::sqrt(effectiveTime);
         } else {
             // vol input is not effective:
@@ -324,7 +345,7 @@ Real BlackAverageONIndexedCouponPricer::optionletRateGlobal(Option::Type optionT
             // section 6.3. the idea is to dampen the average volatility sigma between the fixing start and fixing end
             // date by a linear function going from (fixing start, 1) to (fixing end, 0)
             Real fixingStartTime = capletVolatility()->timeFromReference(fixingDates.front());
-            Real fixingEndTime = capletVolatility()->timeFromReference(fixingDates.back());
+            Real fixingEndTime = capletVolatility()->timeFromReference(coupon_->underlying()->fixingDateNoCutoff());
             strippedVol = capletVolatility()->volatility(
                 std::max(fixingDates.front(), capletVolatility()->referenceDate() + 1), effStrike);
             Real T = std::max(fixingStartTime, 0.0);
@@ -369,7 +390,7 @@ Real BlackAverageONIndexedCouponPricer::optionletRateLocal(Option::Type optionTy
     // this, but as a first step it seems safer to add the full modified code explicitly here and leave the original
     // code alone.
 
-    ext::shared_ptr<OvernightIndex> index = ext::dynamic_pointer_cast<OvernightIndex>(coupon_->index());
+    ext::shared_ptr<OvernightIndex> index = coupon_->underlying()->overnightIndex();
 
     const std::vector<Date>& fixingDates = coupon_->underlying()->fixingDates();
     const std::vector<Time>& dt = coupon_->underlying()->dt();
@@ -379,17 +400,18 @@ Real BlackAverageONIndexedCouponPricer::optionletRateLocal(Option::Type optionTy
     QL_REQUIRE(coupon_->underlying()->rateCutoff() < n,
                "rate cutoff (" << coupon_->underlying()->rateCutoff()
                                << ") must be less than number of fixings in period (" << n << ")");
-    Size nCutoff = n - coupon_->underlying()->rateCutoff();
+    Natural rco = coupon_->underlying()->rateCutoff();
+    Size nCutoff = n - rco;
 
     Real accumulatedRate = 0.0, accumulatedRateRaw = 0.0;
 
     // already fixed part
     Date today = Settings::instance().evaluationDate();
-    while (i < n && fixingDates[std::min(i, nCutoff)] < today) {
+    while (i < n && fixingDates[i] < today) {
         // rate must have been fixed
-        Rate pastFixing = index->pastFixing(fixingDates[std::min(i, nCutoff)]);
+        Rate pastFixing = index->pastFixing(fixingDates[i]);
         QL_REQUIRE(pastFixing != Null<Real>(),
-                   "Missing " << index->name() << " fixing for " << fixingDates[std::min(i, nCutoff)]);
+                   "Missing " << index->name() << " fixing for " << fixingDates[i]);
         if (coupon_->includeSpread()) {
             pastFixing += coupon_->spread();
         }
@@ -399,7 +421,7 @@ Real BlackAverageONIndexedCouponPricer::optionletRateLocal(Option::Type optionTy
     }
 
     // today is a border case
-    if (i < n && fixingDates[std::min(i, nCutoff)] == today) {
+    while (i < n && fixingDates[i] == today) {
         // might have been fixed
         try {
             Rate pastFixing = index->pastFixing(today);
@@ -411,33 +433,44 @@ Real BlackAverageONIndexedCouponPricer::optionletRateLocal(Option::Type optionTy
                 accumulatedRateRaw += pastFixing * dt[i];
                 ++i;
             } else {
-                ; // fall through and forecast
+                break; // fall through and forecast
             }
         } catch (Error&) {
-            ; // fall through and forecast
+            break; // fall through and forecast
         }
     }
 
     // forward part, approximation by pricing a cap / floor in the middle of the future period
     const std::vector<Date>& dates = coupon_->underlying()->valueDates();
+    const vector<Date>& intDates = coupon_->underlying()->interestDates();
     if (i < n) {
         Handle<YieldTermStructure> curve = index->forwardingTermStructure();
         QL_REQUIRE(!curve.empty(), "null term structure set to this instance of " << index->name());
 
-        DiscountFactor startDiscount = curve->discount(dates[i]);
-        DiscountFactor endDiscount = curve->discount(dates[std::max(nCutoff, i)]);
+        Real factor = 1.0;
+        if (rco > 0) {
+            // Can be on lockout date here if lockout date == today and there was no fixing for today. This is the
+            // condition (rco > 0 && i == nCutoff - 1). Otherwise
+            if (i < nCutoff - 1)
+                factor = curve->discount(dates[i]) / curve->discount(dates[nCutoff - 1]);
+        } else {
+            // Don't make accomodations here for final interest date being a holiday, lookback w/o obs shift etc. like
+            // in the main ON pricers. It probably matters less here as we are making approximations in the pricing
+            // below but we may want to revisit if necessary.
+            factor = curve->discount(dates[i]) / curve->discount(dates[n]);
+        }
 
         // handle the rate cutoff period (if there is any, i.e. if nCutoff < n)
-        if (nCutoff < n) {
-            // forward discount factor for one calendar day on the cutoff date
-            DiscountFactor discountCutoffDate = curve->discount(dates[nCutoff] + 1) / curve->discount(dates[nCutoff]);
-            // keep the above forward discount factor constant during the cutoff period
-            endDiscount *= std::pow(discountCutoffDate, dates[n] - dates[nCutoff]);
+        if (rco > 0) {
+            Rate onRate = (curve->discount(dates[nCutoff - 1]) / curve->discount(dates.back()) - 1.0) /
+                          index->dayCounter().yearFraction(dates[nCutoff-1], dates.back());
+            for (Size j = nCutoff - 1; j < n; j++)
+                factor *= 1.0 + onRate * dt[j];
         }
 
         // estimate the average daily rate over the future period (approximate the continuously compounded rate)
         Real tau = coupon_->dayCounter().yearFraction(dates[i], dates.back());
-        Real averageRate = -std::log(endDiscount / startDiscount) / tau;
+        Real averageRate = std::log(factor) / tau;
 
         // compute the value of a cap or floor with fixing in the middle of the future period
         // (but accounting for the rate cutoff here)
@@ -450,7 +483,7 @@ Real BlackAverageONIndexedCouponPricer::optionletRateLocal(Option::Type optionTy
         Rate cfValue = shiftedLn ? blackFormula(optionType, effStrike, averageRate, stdDev, 1.0, shift)
                                  : bachelierBlackFormula(optionType, effStrike, averageRate, stdDev, 1.0);
 
-        Real effectiveTime = capletVolatility()->timeFromReference(fixingDates.back());
+        Real effectiveTime = capletVolatility()->timeFromReference(coupon_->underlying()->fixingDateNoCutoff());
         if (optionType == Option::Type::Call)
             effectiveCapletVolatility_ = stdDev / std::sqrt(effectiveTime);
         else
@@ -467,15 +500,14 @@ Real BlackAverageONIndexedCouponPricer::optionletRateLocal(Option::Type optionTy
 
         // now assume the averageRate is the effective rate over the future period and update the average rate
         // this is an approximation, see "Ester / Daily Spread Curve Setup in ORE": set tau to avg value
-        Real dailyTau =
-            coupon_->underlying()->dayCounter().yearFraction(dates[i], dates.back()) / (dates.back() - dates[i]);
-        accumulatedRate += dailyTau * averageRate * static_cast<Real>(dates.back() - dates[i]);
-        accumulatedRateRaw += dailyTau * averageRateRaw * static_cast<Real>(dates.back() - dates[i]);
+        Natural numCalDays = intDates.back() - intDates[i];
+        Real dailyTau = coupon_->underlying()->dayCounter().yearFraction(intDates[i], intDates.back()) / numCalDays;
+        accumulatedRate += dailyTau * averageRate * static_cast<Real>(numCalDays);
+        accumulatedRateRaw += dailyTau * averageRateRaw * static_cast<Real>(numCalDays);
     }
 
-    Rate tau = coupon_->underlying()->lookback() == 0 * Days
-                   ? coupon_->accrualPeriod()
-                   : coupon_->dayCounter().yearFraction(dates.front(), dates.back());
+    Rate tau = !coupon_->underlying()->hasLookback() ? coupon_->accrualPeriod()
+        : coupon_->dayCounter().yearFraction(intDates.front(), intDates.back());
     Rate rate = accumulatedRate / tau;
     Rate rawRate = accumulatedRateRaw / tau;
 

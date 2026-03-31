@@ -50,10 +50,13 @@ public:
         const QuantLib::Currency& floatCurrency, const QuantLib::Schedule& floatSchedule,
         const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& floatIndex, QuantLib::Spread floatSpread,
         QuantLib::BusinessDayConvention floatPaymentBdc, QuantLib::Natural floatPaymentLag,
-                         const QuantLib::Calendar& floatPaymentCalendar, const bool telescopicValueDates = false,
-                         QuantLib::ext::optional<bool> floatIncludeSpread = QuantLib::ext::nullopt,
-        QuantLib::ext::optional<Period> floatLookback = QuantLib::ext::nullopt, QuantLib::ext::optional<Size> floatFixingDays = QuantLib::ext::nullopt,
-        QuantLib::ext::optional<Size> floatRateCutoff = QuantLib::ext::nullopt, QuantLib::ext::optional<bool> floatIsAveraged = QuantLib::ext::nullopt);
+        const QuantLib::Calendar& floatPaymentCalendar, const bool telescopicValueDates = false,
+        QuantLib::ext::optional<bool> floatIncludeSpread = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<Period> floatLookback = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<Size> floatFixingDays = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<Size> floatRateCutoff = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<bool> floatIsAveraged = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<bool> floatObservationShift = QuantLib::ext::nullopt);
     //@}
 
     //! \name Instrument interface
@@ -88,6 +91,7 @@ public:
     QuantLib::ext::optional<Size> floatFixingDays() const { return floatFixingDays_; }
     QuantLib::ext::optional<Size> floatRateCutoff() const { return floatRateCutoff_; }
     QuantLib::ext::optional<bool> floatIsAveraged() const { return floatIsAveraged_; }
+    QuantLib::ext::optional<bool> floatObservationShift() const { return floatObservationShift_; }
     //@}
 
     //! \name Additional interface
@@ -137,6 +141,7 @@ private:
     QuantLib::ext::optional<Size> floatFixingDays_;
     QuantLib::ext::optional<Size> floatRateCutoff_;
     QuantLib::ext::optional<bool> floatIsAveraged_;
+    QuantLib::ext::optional<bool> floatObservationShift_;
 
     mutable QuantLib::Rate fairFixedRate_;
     mutable QuantLib::Spread fairSpread_;

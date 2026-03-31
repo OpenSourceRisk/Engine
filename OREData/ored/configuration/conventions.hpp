@@ -903,7 +903,8 @@ public:
                                 const string& strRateCutoff = "", const string& strIsAveraged = "",
                                 const string& strFlatIncludeSpread = "", const string& strFlatLookback = "",
                                 const string& strFlatFixingDays = "", const string& strFlatRateCutoff = "",
-                                const string& strFlatIsAveraged = "", const Conventions* conventions = nullptr);
+                                const string& strFlatIsAveraged = "", const Conventions* conventions = nullptr,
+                                const string& strObservationShift = "", const string& strFlatObservationShift = "");
     //@}
 
     //! \name Inspectors
@@ -931,11 +932,13 @@ public:
     QuantLib::ext::optional<QuantLib::Size> fixingDays() const { return fixingDays_; }
     QuantLib::ext::optional<Size> rateCutoff() const { return rateCutoff_; }
     QuantLib::ext::optional<bool> isAveraged() const { return isAveraged_; }
+    QuantLib::ext::optional<bool> observationShift() const { return observationShift_; }
     QuantLib::ext::optional<bool> flatIncludeSpread() const { return flatIncludeSpread_; }
     QuantLib::ext::optional<QuantLib::Period> flatLookback() const { return flatLookback_; }
     QuantLib::ext::optional<QuantLib::Size> flatFixingDays() const { return flatFixingDays_; }
     QuantLib::ext::optional<Size> flatRateCutoff() const { return flatRateCutoff_; }
     QuantLib::ext::optional<bool> flatIsAveraged() const { return flatIsAveraged_; }
+    QuantLib::ext::optional<bool> flatObservationShift() const { return flatObservationShift_; }
     //@}
 
     //! \name Serialisation
@@ -961,11 +964,13 @@ private:
     QuantLib::ext::optional<QuantLib::Size> fixingDays_;
     QuantLib::ext::optional<Size> rateCutoff_;
     QuantLib::ext::optional<bool> isAveraged_;
+    QuantLib::ext::optional<bool> observationShift_;
     QuantLib::ext::optional<bool> flatIncludeSpread_;
     QuantLib::ext::optional<QuantLib::Period> flatLookback_;
     QuantLib::ext::optional<QuantLib::Size> flatFixingDays_;
     QuantLib::ext::optional<Size> flatRateCutoff_;
     QuantLib::ext::optional<bool> flatIsAveraged_;
+    QuantLib::ext::optional<bool> flatObservationShift_;
 
     // Strings to store the inputs
     string strSettlementDays_;
@@ -986,11 +991,13 @@ private:
     string strFixingDays_;
     string strRateCutoff_;
     string strIsAveraged_;
+    string strObservationShift_;
     string strFlatIncludeSpread_;
     string strFlatLookback_;
     string strFlatFixingDays_;
     string strFlatRateCutoff_;
     string strFlatIsAveraged_;
+    string strFlatObservationShift_;
 };
 
 /*! Container for storing Cross Currency Fix vs Float Swap quote conventions
@@ -1012,7 +1019,7 @@ public:
                                    const std::string& strFloatIndexIsResettable = "",
                                    const string& strIncludeSpread = "", const string& strLookback = "",
                                    const string& strFixingDays = "", const string& strRateCutoff = "",
-                                   const string& strIsAveraged = "");
+                                   const string& strIsAveraged = "", const string& strObservationShift = "");
     //@}
 
     //! \name Inspectors
@@ -1035,6 +1042,7 @@ public:
     QuantLib::ext::optional<QuantLib::Size> fixingDays() const { return fixingDays_; }
     QuantLib::ext::optional<Size> rateCutoff() const { return rateCutoff_; }
     QuantLib::ext::optional<bool> isAveraged() const { return isAveraged_; }
+    QuantLib::ext::optional<bool> observationShift() const { return observationShift_; }
     //@}
 
     //! \name Serialisation interface
@@ -1070,15 +1078,16 @@ private:
     std::string strFixedDayCounter_;
     std::string strIndex_;
     std::string strEom_;
-
     std::string strIsResettable_;
     std::string strFloatIndexIsResettable_;
 
+    // OIS Only
     std::string strIncludeSpread_;
     std::string strLookback_;
     std::string strFixingDays_;
     std::string strRateCutoff_;
     std::string strIsAveraged_;
+    std::string strObservationShift_;
 
     // OIS Only
     QuantLib::ext::optional<bool> includeSpread_;
@@ -1086,6 +1095,7 @@ private:
     QuantLib::ext::optional<QuantLib::Size> fixingDays_;
     QuantLib::ext::optional<Size> rateCutoff_;
     QuantLib::ext::optional<bool> isAveraged_;
+    QuantLib::ext::optional<bool> observationShift_;
 };
 
 //! Container for storing Credit Default Swap quote conventions

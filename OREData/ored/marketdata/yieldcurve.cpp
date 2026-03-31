@@ -3457,7 +3457,8 @@ void YieldCurve::addCrossCcyBasisSwaps(const std::size_t index,
                     basisSwapConvention->isAveraged(), basisSwapConvention->flatIncludeSpread(),
                     basisSwapConvention->flatLookback(), basisSwapConvention->flatFixingDays(),
                     basisSwapConvention->flatRateCutoff(), basisSwapConvention->flatIsAveraged(), true,
-                    pillarChoice(segment->pillarChoice()));
+                    pillarChoice(segment->pillarChoice()), Date(), basisSwapConvention->observationShift(),
+                    basisSwapConvention->flatObservationShift());
 
                 instruments.push_back(
                     {helper, mainPillarDate(segment->pillarChoice(), helper->pillarDate()),
@@ -3531,7 +3532,8 @@ void YieldCurve::addCrossCcyBasisSwaps(const std::size_t index,
                     basisSwapConvention->isAveraged(), basisSwapConvention->flatIncludeSpread(),
                     basisSwapConvention->flatLookback(), basisSwapConvention->flatFixingDays(),
                     basisSwapConvention->flatRateCutoff(), basisSwapConvention->flatIsAveraged(), true,
-                    pillarChoice(segment->pillarChoice()));
+                    pillarChoice(segment->pillarChoice()), Date(), basisSwapConvention->observationShift(),
+                    basisSwapConvention->flatObservationShift());
 
                 instruments.push_back(
                     {helper, mainPillarDate(segment->pillarChoice(), helper->pillarDate()),
@@ -3667,7 +3669,8 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const std::size_t index,
                     swapConvention->fixedDayCounter(), floatIndex, floatLegDisc, Handle<Quote>(), swapConvention->eom(),
                     true, pillarChoice(segment->pillarChoice()), QuantLib::Date(), std::vector<Natural>{fxSettlDays},
                     std::vector<Calendar>{fxCal}, swapConvention->includeSpread(), swapConvention->lookback(),
-                    swapConvention->fixingDays(), swapConvention->rateCutoff(), swapConvention->isAveraged());
+                    swapConvention->fixingDays(), swapConvention->rateCutoff(), swapConvention->isAveraged(),
+                    swapConvention->observationShift());
                 instruments.push_back(
                     {helper, mainPillarDate(segment->pillarChoice(), helper->pillarDate()),
                      additionalPillarDates(segment->pillarChoice(), helper->earliestDate()), "XCCY Fix-Float Swap",
@@ -3699,7 +3702,7 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const std::size_t index,
                     resetsOnFloatLeg, true, pillarChoice(segment->pillarChoice()), QuantLib::Date(),
                     std::vector<Natural>{fxSettlDays}, std::vector<Calendar>{fxCal}, swapConvention->includeSpread(),
                     swapConvention->lookback(), swapConvention->fixingDays(), swapConvention->rateCutoff(),
-                    swapConvention->isAveraged());
+                    swapConvention->isAveraged(), swapConvention->observationShift());
                 instruments.push_back(
                     {helper, mainPillarDate(segment->pillarChoice(), helper->pillarDate()),
                      additionalPillarDates(segment->pillarChoice(), helper->earliestDate()),

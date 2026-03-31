@@ -228,7 +228,8 @@ public:
                     const string& frontStubRoundingType = std::string(), const string& frontStubRoundingPrecision = std::string(),
                     const string& backStubShortIndex = std::string(), const string& backStubLongIndex = std::string(),
                     const string& backStubRoundingType = std::string(), const string& backStubRoundingPrecision = std::string(),
-                    bool stubUseOriginalCurve = false)
+                    bool stubUseOriginalCurve = false,
+                    QuantLib::ext::optional<bool> observationShift = QuantLib::ext::nullopt)
 
         : LegAdditionalData(LegType::Floating, true), index_(ore::data::internalIndexName(index)),
           fixingDays_(fixingDays), lookback_(lookback), rateCutoff_(rateCutoff), isInArrears_(isInArrears),
@@ -241,7 +242,7 @@ public:
           frontStubRoundingType_(frontStubRoundingType), frontStubRoundingPrecision_(frontStubRoundingPrecision),
           backStubShortIndex_(backStubShortIndex), backStubLongIndex_(backStubLongIndex),
           backStubRoundingType_(backStubRoundingType), backStubRoundingPrecision_(backStubRoundingPrecision),
-          stubUseOriginalCurve_(stubUseOriginalCurve) {
+          stubUseOriginalCurve_(stubUseOriginalCurve), observationShift_(observationShift) {
         indices_.insert(index_);
     }
 
@@ -281,6 +282,7 @@ public:
     const string& backStubRoundingType() const { return backStubRoundingType_; }
     const string& backStubRoundingPrecision() const { return backStubRoundingPrecision_; }
     bool stubUseOriginalCurve() const { return stubUseOriginalCurve_; }
+    QuantLib::ext::optional<bool> observationShift() const { return observationShift_; }
     //@}
 
     //! \name Modifiers
@@ -292,6 +294,7 @@ public:
     bool& nakedOption() { return nakedOption_; }
     bool& localCapFloor() { return localCapFloor_; }
     bool& telescopicValueDates() { return telescopicValueDates_; }
+    QuantLib::ext::optional<bool>& observationShift() { return observationShift_; }
     //@}
 
     //! \name Serialisation
@@ -334,6 +337,7 @@ private:
     string backStubRoundingType_;
     string backStubRoundingPrecision_;
     bool stubUseOriginalCurve_;
+    QuantLib::ext::optional<bool> observationShift_;
 };
 
 //! Serializable CPI Leg Data

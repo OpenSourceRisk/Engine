@@ -1,10 +1,15 @@
 # cpp files, this list is maintained manually
 
+set(QuantExt-Test_HDR
+    onindexcouponutils.hpp
+)
+
 set(QuantExt-Test_SRC ad.cpp
 analyticcashsettledeuropeanengine.cpp
 analyticeuropeanenginedeltagamma.cpp
 analytichwswaptionengine.cpp
 analyticlgmswaptionengine.cpp
+averageonindexedcoupon.cpp
 basecorrelationcurve.cpp
 bfrrvolsurface.cpp
 blackmultilegoptionengine.cpp
@@ -75,6 +80,7 @@ logquote.cpp
 mclgmswaptionengine.cpp
 multilegoption.cpp
 normalfreeboundarysabr.cpp
+onindexcouponutils.cpp
 optionletstripper.cpp
 overnightindexedcoupon.cpp
 payment.cpp
@@ -99,7 +105,7 @@ swaptionvolconstantspread.cpp
 testsuite.cpp
 transitionmatrix.cpp)
 
-add_executable(quantext-test-suite ${QuantExt-Test_SRC})
+add_executable(quantext-test-suite ${QuantExt-Test_SRC} ${QuantExt-Test_HDR})
 target_link_libraries(quantext-test-suite
     PRIVATE
         ${QLE_LIB_NAME}
