@@ -385,6 +385,18 @@ void CPILegData::fromXML(XMLNode* node) {
         nakedOption_ = XMLUtils::getChildValueAsBool(node, "NakedOption", false);
     else
         nakedOption_ = false;
+
+    string BaseCPIBaseStr = XMLUtils::getChildValue(node, "BaseCPIBase", false, "Current");
+    if (BaseCPIBaseStr == "StartDate") {
+        baseCPIBase_ = BaseCPIBase::StartDate;
+        QL_REQUIRE(!startDate_.empty(),
+                   "CPILegData: StartDate is mandatory when BaseCPIBase is 'StartDate'");
+    } else if (BaseCPIBaseStr == "Current") {
+        baseCPIBase_ = BaseCPIBase::Current;
+    } else {
+        QL_FAIL("CPILegData: unknown BaseCPIBase '" << BaseCPIBaseStr
+                << "'. Valid values are 'Current' and 'StartDate'.");
+    }
 }
 
 XMLNode* CPILegData::toXML(XMLDocument& doc) const {
@@ -410,6 +422,8 @@ XMLNode* CPILegData::toXML(XMLDocument& doc) const {
     if (finalFlowFloor_ != Null<Real>())
         XMLUtils::addChild(doc, node, "FinalFlowFloor", finalFlowFloor_);
     XMLUtils::addChild(doc, node, "NakedOption", nakedOption_);
+    if (baseCPIBase_ == BaseCPIBase::StartDate)
+        XMLUtils::addChild(doc, node, "BaseCPIBase", "StartDate");
     return node;
 }
 
@@ -2018,11 +2032,25 @@ Leg makeCPILeg(const LegData& data, const QuantLib::ext::shared_ptr<ZeroInflatio
     applyAmortization(notionals, data, schedule, false);
     PaymentLag paymentLag = parsePaymentLag(data.paymentLag());
 
+    Real effectiveBaseCPI = cpiLegData->baseCPI();
+    if (cpiLegData->baseCPIBase() == CPILegData::BaseCPIBase::StartDate) {
+        QL_REQUIRE(!cpiLegData->startDate().empty(),
+                   "makeCPILeg: StartDate is required when BaseCPIBase is 'StartDate'");
+        const Date startDate = parseDate(cpiLegData->startDate());
+        const Date today = Settings::instance().evaluationDate();
+        const Real factor = index->rebasingMultiplier(startDate, today);
+        DLOG("CPILeg: converting pre-rebase BaseCPI " << effectiveBaseCPI
+             << " using rebase multiplier " << factor
+             << " (startDate=" << io::iso_date(startDate)
+             << ", evalDate=" << io::iso_date(today) << ")");
+        effectiveBaseCPI *= factor;
+    }
+
     QuantExt::CPILeg cpiLeg =
         QuantExt::CPILeg(schedule, index,
                          engineFactory->market()->discountCurve(data.currency(),
                                                                 engineFactory->configuration(MarketContext::pricing)),
-                         cpiLegData->baseCPI(), observationLag)
+                         effectiveBaseCPI, observationLag)
             .withNotionals(notionals)
             .withPaymentDayCounter(dc)
             .withPaymentAdjustment(bdc)

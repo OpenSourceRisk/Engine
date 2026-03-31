@@ -19,7 +19,7 @@
 #include <boost/test/unit_test.hpp>
 #include <orea/engine/sensitivityaggregator.hpp>
 #include <orea/engine/sensitivityinmemorystream.hpp>
-#include <oret/toplevelfixture.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 #include <ql/math/comparison.hpp>
 #include <test/oreatoplevelfixture.hpp>
 

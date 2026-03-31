@@ -1099,15 +1099,19 @@ public:
     //! Default constructor
     CdsConvention();
 
+    //Reference Data based constructor
+    CdsConvention(const string& id, const bool usesReferenceData);
+
     //! Detailed constructor
     CdsConvention(const string& id, const string& strSettlementDays, const string& strCalendar,
                   const string& strFrequency, const string& strPaymentConvention, const string& strRule,
                   const string& dayCounter, const string& settlesAccrual, const string& paysAtDefaultTime,
-                  const string& strUpfrontSettlementDays = "", const string& lastPeriodDayCounter = "");
+                  const string& strUpfrontSettlementDays = "", const string& lastPeriodDayCounter = "", bool usesReferenceData = false);
     //@}
 
     //! \name Inspectors
     //@{
+    bool usesReferenceData() const { return usesReferenceData_; }
     Natural settlementDays() const { return settlementDays_; }
     const Calendar& calendar() const { return calendar_; }
     Frequency frequency() const { return frequency_; }
@@ -1149,6 +1153,8 @@ private:
     string strPaysAtDefaultTime_;
     string strUpfrontSettlementDays_;
     string strLastPeriodDayCounter_;
+
+    bool usesReferenceData_;
 };
 
 class InflationSwapConvention : public Convention {
@@ -1909,16 +1915,19 @@ public:
         bool revised,
         const std::string& frequency,
         const std::string& availabilityLag,
-        const std::string& currency);
+        const std::string& currency,
+        const std::map<QuantLib::Date, Real>& rebasingEvents = {});
 
     QuantLib::Region region() const;
     bool revised() const { return revised_; }
     QuantLib::Frequency frequency() const { return frequency_; }
     const QuantLib::Period& availabilityLag() const { return availabilityLag_; }
     const QuantLib::Currency& currency() const { return currency_; }
-
+    const std::map<QuantLib::Date, Real>& rebasingEvents() const { return rebasingEvents_; }
+    
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
+    
     void build() override;
 
 private:
@@ -1932,6 +1941,7 @@ private:
     QuantLib::Frequency frequency_;
     QuantLib::Period availabilityLag_;
     QuantLib::Currency currency_;
+    std::map<QuantLib::Date, Real> rebasingEvents_;
 };
 
 /*! Container for storing bond yield calculation conventions

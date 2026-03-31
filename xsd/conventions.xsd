@@ -50,12 +50,12 @@
   <xs:complexType name="cdsConventionsType">
     <xs:all>
       <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="xs:integer" name="SettlementDays" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="xs:string" name="Calendar" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="frequencyType" name="Frequency" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="businessDayConvention" name="PaymentConvention" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="dateRule" name="Rule" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="dayCounter" name="DayCounter" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:integer" name="SettlementDays" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Calendar" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="frequencyType" name="Frequency" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="businessDayConvention" name="PaymentConvention" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="dateRule" name="Rule" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:nonNegativeInteger" name="UpfrontSettlementDays" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="SettlesAccrual" minOccurs="1" maxOccurs="1"/>
       <xs:element type="bool" name="PaysAtDefaultTime" minOccurs="1" maxOccurs="1"/>

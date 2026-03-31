@@ -362,7 +362,7 @@ TestCase testCaseData[] = {
       {18.5041, 0.00216216}, {19.0027, 0.000691815}, {19.5041, 0.00058673},
       {20, 1.52066e-05},     {20.5039, 0},           {21.0012, 0}}}};
 
-BOOST_FIXTURE_TEST_SUITE(OreAmcTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OreAmcTestSuite, ore::data::TopLevelFixture)
 
 BOOST_FIXTURE_TEST_SUITE(AmcBermudanSwaptionTest, TestData)
 

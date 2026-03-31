@@ -18,7 +18,7 @@
 
 #include <qle/models/representativefxoption.hpp>
 
-#include <oret/toplevelfixture.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/indexes/fxindex.hpp>
@@ -42,7 +42,7 @@ using namespace QuantLib;
 using namespace QuantExt;
 using namespace boost::unit_test_framework;
 
-struct RepresentativeFxOptionFixture : public ore::test::TopLevelFixture {
+struct RepresentativeFxOptionFixture : public ore::data::TopLevelFixture {
 public:
     RepresentativeFxOptionFixture() { Settings::instance().evaluationDate() = today; }
     Date today = Date(20, Apr, 2021);
