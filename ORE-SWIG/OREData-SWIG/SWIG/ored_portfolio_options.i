@@ -147,7 +147,7 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-class EquitySwap : public ORESwap {
+class EquitySwap : public Swap {
 public:
     EquitySwap();
     EquitySwap(const Envelope& env, const LegData& leg0, const LegData& leg1);
@@ -156,7 +156,7 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-class InflationSwap : public ORESwap {
+class InflationSwap : public Swap {
 public:
     InflationSwap();
     InflationSwap(const Envelope& env, const LegData& leg0, const LegData& leg1);

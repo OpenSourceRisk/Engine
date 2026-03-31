@@ -280,7 +280,7 @@ public:
 %shared_ptr(TRS::ReturnData)
 %shared_ptr(TRS::FundingData)
 %shared_ptr(TRS::AdditionalCashflowData)
-class TRS : public Trade {
+class TRS : public ore::data::Trade {
 public:
     enum class FXConversion { Start, End };
 
@@ -844,7 +844,7 @@ public:
 } // namespace data
 } // namespace ore
 
-class FxOptionWithBarrier : public OREBarrierOption {
+class FxOptionWithBarrier : public ore::data::BarrierOption {
     void additionalFromXml(ore::data::XMLNode* node) override;
     void additionalToXml(ore::data::XMLDocument& doc, ore::data::XMLNode* node) const override;
     QuantLib::ext::shared_ptr<QuantLib::Index> getIndex() const override;
@@ -857,7 +857,7 @@ class FxOptionWithBarrier : public OREBarrierOption {
     ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 };
 
-class EquityOptionWithBarrier : public OREBarrierOption {
+class EquityOptionWithBarrier : public ore::data::BarrierOption {
     void additionalFromXml(ore::data::XMLNode* node) override;
     void additionalToXml(ore::data::XMLDocument& doc, ore::data::XMLNode* node) const override;
     QuantLib::ext::shared_ptr<QuantLib::Index> getIndex() const override;
@@ -1448,7 +1448,7 @@ CFD.__init__ = _compat_cfd_init
 // ore/OREData/ored/portfolio/varianceswap.hpp
 
 %shared_ptr(VarSwap)
-class VarSwap : public Trade {
+class VarSwap : public ore::data::Trade {
 protected:
     VarSwap(AssetClass assetClassUnderlying);
     VarSwap(ore::data::Envelope& env, string longShort, const ext::shared_ptr<ore::data::Underlying>& underlying,
