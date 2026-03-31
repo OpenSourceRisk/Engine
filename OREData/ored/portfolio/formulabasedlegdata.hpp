@@ -32,10 +32,10 @@ namespace data {
 class FormulaBasedLegData : public LegAdditionalData {
 public:
     //! Default constructor
-    FormulaBasedLegData() : LegAdditionalData(LegType::FormulaBased, false), fixingDays_(0), isInArrears_(false) {}
+    FormulaBasedLegData() : LegAdditionalData(LegType::FormulaBased), fixingDays_(0), isInArrears_(false) {}
     //! Constructor
     FormulaBasedLegData(const string& formulaBasedIndex, int fixingDays, bool isInArrears)
-        : LegAdditionalData(LegType::FormulaBased, false), formulaBasedIndex_(formulaBasedIndex), fixingDays_(fixingDays),
+        : LegAdditionalData(LegType::FormulaBased), formulaBasedIndex_(formulaBasedIndex), fixingDays_(fixingDays),
           isInArrears_(isInArrears) {
         initIndices();
     }

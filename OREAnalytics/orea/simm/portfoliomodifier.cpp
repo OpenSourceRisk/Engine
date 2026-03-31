@@ -196,31 +196,21 @@ applySimmExemptions(Portfolio& portfolio, const QuantLib::ext::shared_ptr<Engine
             }
 
             // Check if the swap has multiple currencies
-            bool hasNonVanillaLeg = false;
             map<string, vector<Size>> legCcys;
+
+            if (!isSimmEligibleXccySwap(legData, swap->settlement())) {
+                continue;
+            }
+
             for (Size i = 0; i < legData.size(); i++) {
                 const LegData& ld = legData[i];
                 const string& ccy = ld.currency();
-
-                if (!ld.isSimmPlainVanillaIrLeg()) {
-                    hasNonVanillaLeg = true;
-                    break;
-                }
-
                 if (ld.legType() == LegType::Fixed || ld.legType() == LegType::Floating)
                     legCcys[ccy].push_back(i);
             }
 
-            // Inflation, CMS, etc. - non-vanilla IR coupon types do not qualify for SIMM exemptions
-            if (hasNonVanillaLeg)
-                continue;
-
             // If not cross currency or there are fewer than 2 legs
             if (legCcys.size() != 2)
-                continue;
-
-            // If non-deliverable (i.e. cash settlement), we can continue to the next trade
-            if (swap->settlement() != "Physical")
                 continue;
 
             // Check that all legs in a given ccy are in the same direction (payer, receiver)

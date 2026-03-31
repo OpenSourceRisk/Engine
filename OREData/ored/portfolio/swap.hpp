@@ -93,6 +93,9 @@ private:
     mutable std::vector<QuantLib::Real> fxSpots_;
 };
 
+bool legIsSimmEligableXccySwap(const LegData& ld);
+bool isSimmEligibleXccySwap(const std::vector<LegData>& legData, const std::string& settlement);
+
 std::string isdaSubProductSwap(const std::string& tradeId, const vector<LegData>& legData);
 
 std::tuple<Size, Real, std::string, std::string> getSwapNpvAndNotionalInfo(const std::vector<LegData>& legData);

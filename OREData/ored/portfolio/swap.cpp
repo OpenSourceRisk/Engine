@@ -80,9 +80,8 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
         if (currencies[i] != currency)
             isXCCY_ = true;
         isResetting_ = isResetting_ || (!legData_[i].isNotResetXCCY());
-
-        if(!legData_[i].isSimmPlainVanillaIrLeg()){
-
+        
+        if (!legIsSimmEligableXccySwap(legData_[i])) {
             allLegsAreSimmPlainVanillaIrLegs_ = false;
         }
     }
@@ -124,12 +123,7 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
     /* determine whether we have a xccy and whether to use the special xbs curves */
     isXCCY_ = isXCCY_ || currenciesWithIndexing.size() > 1;
 
-    static std::set<LegType> eligibleForXbs = {LegType::Fixed, LegType::Floating};
-
-    bool useXbsCurves = true;
-    for(Size i=0;i<numLegs;++i) {
-        useXbsCurves = useXbsCurves && (eligibleForXbs.find(legData_[i].legType()) != eligibleForXbs.end());
-    }
+    bool useXbsCurves = isSimmEligibleXccySwap(legData_, settlement_);
 
     std::tie(notionalTakenFromLeg_, notional_, npvCurrency_, notionalCurrency_) = getSwapNpvAndNotionalInfo(legData_);
 
@@ -158,16 +152,14 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
             currencies.push_back(currencies[i]);
         }
     } // for legs
-
     if (isXCCY_) {
         QuantLib::ext::shared_ptr<QuantExt::CurrencySwap> swap(
             new QuantExt::CurrencySwap(legs_, legPayers_, currencies, settlement_ == "Physical", isResetting_));
         QuantLib::ext::shared_ptr<CrossCurrencySwapEngineBuilderBase> swapBuilder =
             QuantLib::ext::dynamic_pointer_cast<CrossCurrencySwapEngineBuilderBase>(builder);
         QL_REQUIRE(swapBuilder, "No Builder found for CrossCurrencySwap " << id());
-        bool useXccyYieldCurvesForDiscounting = allLegsAreSimmPlainVanillaIrLegs_;
         swap->setPricingEngine(
-            swapBuilder->engine(currenciesWithIndexing, npvCcy, useXccyYieldCurvesForDiscounting, eqNames));
+            swapBuilder->engine(currenciesWithIndexing, npvCcy, useXbsCurves, eqNames));
         setSensitivityTemplate(*swapBuilder);
         addProductModelEngine(*swapBuilder);
         // take the first legs currency as the npv currency (arbitrary choice)
@@ -202,10 +194,9 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
 
     if (isXCCY_) {
         // Cross-currency swap: per-leg curves and FX spots
-        bool useXccyYieldCurves = allLegsAreSimmPlainVanillaIrLegs_;
         for (Size i = 0; i < numLegs; ++i) {
             string ccyCode = currencies[i].code();
-            if (useXccyYieldCurves) {
+            if (useXbsCurves) {
                 discountCurves_[i] = (xccyYieldCurve)(market, ccyCode, configuration);
             } else {
                 discountCurves_[i] = market->discountCurve(ccyCode, configuration);
@@ -518,6 +509,26 @@ std::tuple<Date, Date, std::string> getSwapStartMaturity(const std::vector<Leg>&
         }
     }
     return std::make_tuple(startDate, maturity, maturityType);
+}
+
+bool legIsSimmEligableXccySwap(const LegData& ld) {
+    if (ld.legType() != LegType::Fixed && ld.legType() != LegType::Floating && ld.legType() != LegType::Cashflow)
+        return false;
+    if (ld.legType() == LegType::Floating) {
+        auto floatingLegData = QuantLib::ext::dynamic_pointer_cast<FloatingLegData>(ld.concreteLegData());
+        QL_REQUIRE(floatingLegData, "internal error: expected floating leg data for floating leg, contact dev.");
+        if (!floatingLegData->caps().empty() || !floatingLegData->floors().empty())
+            return false;
+    }
+    return true;
+}
+
+bool isSimmEligibleXccySwap(const std::vector<LegData>& legData, const std::string& settlement) {
+    for (const auto& ld : legData) {
+        if (!legIsSimmEligableXccySwap(ld))
+            return false;
+    }
+    return settlement == "Physical";
 }
 
 } // namespace data
