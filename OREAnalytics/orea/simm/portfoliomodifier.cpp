@@ -23,7 +23,7 @@
 #include <orea/simm/simmconfiguration.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <orea/simm/simmtradedata.hpp>
-#include <orea/simm/utilities.hpp>
+
 
 #include <ored/portfolio/callableswap.hpp>
 #include <ored/portfolio/fxforward.hpp>
@@ -207,31 +207,7 @@ applySimmExemptions(Portfolio& portfolio, const QuantLib::ext::shared_ptr<Engine
                 const string& ccy = ld.currency();
                 if (ld.legType() == LegType::Fixed || ld.legType() == LegType::Floating)
                     legCcys[ccy].push_back(i);
-            }
-
-            // If not cross currency or there are fewer than 2 legs
-            if (legCcys.size() != 2)
-                continue;
-
-            // Check that all legs in a given ccy are in the same direction (payer, receiver)
-            bool legsSameDirection = true;
-            for (const auto& [ccy, legIdxs] : legCcys) {
-                std::size_t idx = legIdxs[0];
-                if (!std::all_of(legIdxs.begin(), legIdxs.end(),
-                                 [&legData, idx](Size i) { return legData[i].isPayer() == legData[idx].isPayer(); })) {
-                    legsSameDirection = false;
-                }
-            }
-            if (!legsSameDirection)
-                continue;
-
-            // If cross currency, but after converting "unidade" to standard ccys reduce to one ccy, do not apply
-            // exemptions, see ISDA FAQ E2 (e.g. CLF / CLP xccy swaps do not qualify for exemptions)
-            std::set<std::string> stdCcys;
-            for (auto const& d : legData)
-                stdCcys.insert(isUnidadeCurrency(d.currency()) ? simmStandardCurrency(d.currency()) : d.currency());
-            if (stdCcys.size() <= 1)
-                continue;
+            }            
 
             // Get list of legs with notional exchanges
             map<string, vector<Size>> legNotionalIdx;

@@ -33,6 +33,7 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/simmcurrencies.hpp>
 
 #include <qle/utilities/inflation.hpp>
 

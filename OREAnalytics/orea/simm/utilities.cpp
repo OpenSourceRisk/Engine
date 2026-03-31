@@ -49,6 +49,7 @@
 #include <ored/portfolio/trs.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/simmcurrencies.hpp>
 
 #include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/bondoption.hpp>
@@ -443,16 +444,7 @@ static const map<string, CrifRecord::ProductClass> tradeProductClassMap = {
     {"SyntheticCDO", CrifRecord::ProductClass::Credit},
     {"TotalReturnSwap", CrifRecord::ProductClass::Rates}};
 
-std::map<std::string, std::string> nonStdCcys = {{"CLF", "CLP"}, {"CNH", "CNY"}, {"COU", "CUP"}, {"CUC", "CUP"},
-                                                 {"MXV", "MXN"}, {"UYI", "UYU"}, {"UYW", "UYU"}};
-
-std::set<std::string> unidadeCcys = {"CLF", "COU", "MXV", "UYW"};
-
 } // namespace
-
-bool isSimmNonStandardCurrency(const std::string& ccy) { return nonStdCcys.find(ccy) != nonStdCcys.end(); }
-
-bool isUnidadeCurrency(const std::string& ccy) { return unidadeCcys.find(ccy) != unidadeCcys.end(); }
 
 bool isIsin(const string& s) {
     // FIXME, this is a bit too broad: Use enumeration for the first two letters? Validate checksum?
@@ -470,13 +462,6 @@ bool isIsin(const string& s) {
     return true;
 }
   
-std::string simmStandardCurrency(const std::string& ccy) {
-    if (auto c = nonStdCcys.find(ccy); c != nonStdCcys.end()) {
-        return c->second;
-    } else {
-        return ccy;
-    }
-}
 
 void convertToSimmStandardCurrency(double& npv, std::string& ccy, const QuantLib::ext::shared_ptr<ore::data::Market> market) {
     if (!isSimmNonStandardCurrency(ccy))

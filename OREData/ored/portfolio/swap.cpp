@@ -25,6 +25,7 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/simmcurrencies.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 
 #include <ql/time/calendars/target.hpp>
@@ -511,24 +512,48 @@ std::tuple<Date, Date, std::string> getSwapStartMaturity(const std::vector<Leg>&
     return std::make_tuple(startDate, maturity, maturityType);
 }
 
+//! Return true if the floating leg has at least one cap or floor
+bool floatingLegHasCapFloors(const QuantLib::ext::shared_ptr<FloatingLegData>& floatingLegData) {
+    QL_REQUIRE(floatingLegData, "internal error: expected floating leg data for floating leg, contact dev.");
+    return !floatingLegData->caps().empty() || !floatingLegData->floors().empty();
+}
+
 bool legIsSimmEligableXccySwap(const LegData& ld) {
     if (ld.legType() != LegType::Fixed && ld.legType() != LegType::Floating && ld.legType() != LegType::Cashflow)
         return false;
-    if (ld.legType() == LegType::Floating) {
-        auto floatingLegData = QuantLib::ext::dynamic_pointer_cast<FloatingLegData>(ld.concreteLegData());
-        QL_REQUIRE(floatingLegData, "internal error: expected floating leg data for floating leg, contact dev.");
-        if (!floatingLegData->caps().empty() || !floatingLegData->floors().empty())
-            return false;
+    if (!ld.indexing().empty()) {
+        return false;
+    }
+    if (ld.legType() == LegType::Floating &&
+        floatingLegHasCapFloors(QuantLib::ext::dynamic_pointer_cast<FloatingLegData>(ld.concreteLegData()))) {
+        return false;
     }
     return true;
 }
 
 bool isSimmEligibleXccySwap(const std::vector<LegData>& legData, const std::string& settlement) {
-    for (const auto& ld : legData) {
+    if (settlement != "Physical") {
+        return false;
+    }
+
+    std::map<string, bool> legPayerReceiver;
+    std::set<string> standardSimCurrencies;
+    for (Size i = 0; i < legData.size(); i++) {
+        const LegData& ld = legData[i];
         if (!legIsSimmEligableXccySwap(ld))
             return false;
+        // check that all legs with the same currency are in the same direction
+        const string& ccy = ld.currency();
+        auto payerReceiverIt = legPayerReceiver.find(ccy);
+        if (payerReceiverIt == legPayerReceiver.end()) {
+            legPayerReceiver[ccy] = ld.isPayer();
+        } else if (payerReceiverIt->second != ld.isPayer()) {
+            return false;
+        }
+        standardSimCurrencies.insert(isUnidadeCurrency(ccy) ? simmStandardCurrency(ccy) : ccy);
     }
-    return settlement == "Physical";
+
+    return standardSimCurrencies.size() == 2;
 }
 
 } // namespace data
