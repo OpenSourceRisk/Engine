@@ -697,6 +697,17 @@ void OREAppInputParameters::loadParameters() {
     tmp = params_->getString("curves", "todaysMarketCalibrationPrecision", false);
     if (tmp != "")
         setTodaysMarketCalibrationPrecision(parseInteger(tmp));
+    
+    /*************
+     * CASHFLOWNPV
+     *************/
+    tmp = params_->getString("cashflownpv", "active", false);
+    if (!tmp.empty() && parseBool(tmp))
+        insertAnalytic("CASHFLOWNPV");
+    
+    tmp = params_->getString("cashflownpv", "cashFlowHorizon", false);
+    if (tmp != "")
+        setCashflowHorizon(tmp);
 
     /*************
      * SENSITIVITY

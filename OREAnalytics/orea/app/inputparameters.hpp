@@ -797,6 +797,7 @@ public:
         simmCalibrationData_ = s;
     }
     void setSimmCalibrationDataFromFile(const std::string& fileName);
+    void setSimmCalculationCurrency(const std::string& s) { simmCalculationCurrencyCall_ = s; simmCalculationCurrencyPost_ = s; }
     void setSimmCalculationCurrencyCall(const std::string& s) { simmCalculationCurrencyCall_ = s; }
     void setSimmCalculationCurrencyPost(const std::string& s) { simmCalculationCurrencyPost_ = s; }
     void setSimmResultCurrency(const std::string& s) { simmResultCurrency_ = s; }
