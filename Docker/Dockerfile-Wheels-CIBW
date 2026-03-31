@@ -8,10 +8,16 @@ ARG WHEELS_VERSION
 
 ENV PATH="/venv/bin:$PATH"
 
-ENV CIBW_BUILD="cp310-manylinux_${WHEEL_ARCH} cp312-manylinux_${WHEEL_ARCH}"
+ENV CIBW_BUILD="cp310-manylinux_${WHEEL_ARCH} cp311-manylinux_${WHEEL_ARCH} cp312-manylinux_${WHEEL_ARCH} cp313-manylinux_${WHEEL_ARCH} cp314-manylinux_${WHEEL_ARCH}"
 ENV CIBW_MANYLINUX_X86_64_IMAGE=${WHEEL_IMAGE}
 ENV CIBW_MANYLINUX_AARCH64_IMAGE=${WHEEL_IMAGE}
-ENV CIBW_BEFORE_ALL="/opt/python/cp310-cp310/bin/pip3 install setuptools docker && chmod +x ORE-SWIG/Wheels-gitlab/before_all_linux.sh && PATH=/opt/python/cp310-cp310/bin:\$PATH ORE-SWIG/Wheels-gitlab/before_all_linux.sh && chmod +x ORE-SWIG/Wheels-gitlab/precompile.sh && ORE-SWIG/Wheels-gitlab/precompile.sh cp310-cp310 cp312-cp312"
+# Force cibuildwheel to pull the image fresh every time, rather than reusing a
+# stale locally-cached version that may lack /ore-swig-prebuilt/.
+ENV CIBW_CONTAINER_ENGINE="docker; create_args: --pull=always"
+# The SWIG wrapper .cpp and pre-built .o files are baked into the wheel image
+# by Dockerfile-Wheels-ORE at /ore-swig-prebuilt/. CIBW_BEFORE_ALL copies them
+# into the project directory so setup.py can find them.
+ENV CIBW_BEFORE_ALL="echo '=== WHEEL_IMAGE diagnostics ===' && cat /etc/os-release 2>/dev/null | head -3 && echo '=== Checking /ore-swig-prebuilt ===' && (ls -la /ore-swig-prebuilt/ || (echo 'ERROR: /ore-swig-prebuilt/ does not exist. The wheels_ore2 image may be stale.' && exit 1)) && /opt/python/cp310-cp310/bin/pip3 install setuptools && cp /ore-swig-prebuilt/oreanalytics_wrap.cpp /project/ORE-SWIG/oreanalytics_wrap.cpp && mkdir -p /project/ORE-SWIG/.prebuilt && cp -r /ore-swig-prebuilt/linux-* /project/ORE-SWIG/.prebuilt/ && chmod +x /project/ORE-SWIG/Wheels-gitlab/oreanalytics-config && cp /project/ORE-SWIG/Wheels-gitlab/oreanalytics-config /project/ORE-SWIG/oreanalytics-config"
 ENV CIBW_BEFORE_BUILD="pip install setuptools"
 ENV CIBW_ENVIRONMENT="ORE_PREBUILT_DIR=/project/ORE-SWIG/.prebuilt"
 

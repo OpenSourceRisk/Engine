@@ -1,3 +1,8 @@
+# syntax = docker/dockerfile:1.2
+#
+# Build ORE libraries, generate SWIG wrapper, and pre-compile wrapper objects
+# for each target Python version — all on the manylinux image.
+
 ARG WHEEL_IMG
 FROM ${WHEEL_IMG}
 
@@ -16,9 +21,8 @@ COPY cmake /ore/cmake
 COPY Docker/update_version_number.py /ore
 
 RUN \
-dnf -y install clang && \
-dnf -y install ccache && \
-dnf -y install ninja-build
+dnf -y install clang ccache ninja-build swig && \
+dnf clean all
 
 ENV PATH="/usr/lib64/ccache:/usr/lib/ccache:$PATH"
 ENV CCACHE_DIR="/ccache"
@@ -35,4 +39,36 @@ WORKDIR /ore/build
 RUN --mount=type=cache,id=ccache-wheels,target=/ccache/ ccache -z && \
 cmake --build . -- -j ${NUM_CORES} install && \
 ccache -s
+
+# Generate SWIG wrapper source (needs SWIG + Python + ORE headers).
+COPY ORE-SWIG/CMakeLists.txt /ore/ORE-SWIG/CMakeLists.txt
+COPY ORE-SWIG/OREAnalytics-SWIG /ore/ORE-SWIG/OREAnalytics-SWIG
+COPY ORE-SWIG/OREData-SWIG /ore/ORE-SWIG/OREData-SWIG
+COPY ORE-SWIG/QuantExt-SWIG /ore/ORE-SWIG/QuantExt-SWIG
+COPY ORE-SWIG/QuantLib-SWIG /ore/ORE-SWIG/QuantLib-SWIG
+COPY ORE-SWIG/setup.py /ore/ORE-SWIG/setup.py
+COPY ORE-SWIG/LICENSE.txt /ore/ORE-SWIG/LICENSE.txt
+COPY ORE-SWIG/Wheels-gitlab /ore/ORE-SWIG/Wheels-gitlab
+
+WORKDIR /ore/ORE-SWIG
+RUN \
+PATH="/opt/python/cp310-cp310/bin:$PATH" && \
+pip3 install setuptools && \
+cp Wheels-gitlab/oreanalytics-config . && \
+chmod +x oreanalytics-config && \
+python3 setup.py wrap
+
+# Pre-compile the SWIG wrapper for each target Python version.
+# ccache is mounted to speed up rebuilds when the wrapper source hasn't changed.
+RUN --mount=type=cache,id=ccache-wheels-swig,target=/ccache/ \
+    chmod +x Wheels-gitlab/precompile.sh && \
+    Wheels-gitlab/precompile.sh cp310-cp310 cp311-cp311 cp312-cp312 cp313-cp313 cp314-cp314
+
+# Stage all artifacts into /ore-swig-prebuilt/ for use by cibuildwheel.
+# This is a separate RUN (no --mount) to ensure Kaniko commits the layer.
+RUN mkdir -p /ore-swig-prebuilt && \
+    cp oreanalytics_wrap.cpp /ore-swig-prebuilt/ && \
+    cp -r .prebuilt/linux-* /ore-swig-prebuilt/ && \
+    echo "=== /ore-swig-prebuilt contents ===" && \
+    find /ore-swig-prebuilt -type f -ls
 
