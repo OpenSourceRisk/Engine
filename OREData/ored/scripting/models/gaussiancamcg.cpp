@@ -532,8 +532,14 @@ Date GaussianCamCG::adjustForStickyCloseOut(const Date& d) const {
 std::size_t GaussianCamCG::getInterpolatedUnderlyingPath(const Date& d, const Size indexNo) const {
     if (effectiveSimulationDates_.find(d) != effectiveSimulationDates_.end())
         return underlyingPaths_.at(d).at(indexNo);
-    if (d > *effectiveSimulationDates_.rbegin())
-        return underlyingPaths_.at(*effectiveSimulationDates_.rbegin()).at(indexNo);
+    if (d > *effectiveSimulationDates_.rbegin()) {
+        // alternative a) extrapolation not allowed (ENABLED)
+        QL_FAIL("GaussianCamCG::getInterpolatedUnderlyingPath(" << d << "," << indexNo << "): extrapolation at " << d
+                                                                << " > " << *effectiveSimulationDates_.rbegin()
+                                                                << " not allowed. Extend simulation grid.");
+        // alternative b) flat extrapolation (DISABLED)
+        // return underlyingPaths_.at(*effectiveSimulationDates_.rbegin()).at(indexNo);
+    }
     ModelCG::ModelParameter id(ModelCG::ModelParameter::Type::interpolated_undpath, {}, {}, d, {}, {}, indexNo);
     if (auto m = cachedParameters_.find(id); m != cachedParameters_.end())
         return m->node();
@@ -548,8 +554,14 @@ std::size_t GaussianCamCG::getInterpolatedUnderlyingPath(const Date& d, const Si
 std::size_t GaussianCamCG::getInterpolatedIrState(const Date& d, const Size ccyIndex) const {
     if (effectiveSimulationDates_.find(d) != effectiveSimulationDates_.end())
         return irStates_.at(d).at(ccyIndex);
-    if (d > *effectiveSimulationDates_.rbegin())
-        return irStates_.at(*effectiveSimulationDates_.rbegin()).at(ccyIndex);
+    if (d > *effectiveSimulationDates_.rbegin()) {
+        // alternative a) extrapolation not allowed (ENABLED)
+        QL_FAIL("GaussianCamCG::getInterpolatedIrState(" << d << "," << ccyIndex << "): extrapolation at " << d << " > "
+                                                         << *effectiveSimulationDates_.rbegin()
+                                                         << " not allowed. Extend simulation grid.");
+        // alternative b) flat extrapolation (DISABLED)
+        // return irStates_.at(*effectiveSimulationDates_.rbegin()).at(ccyIndex);
+    }
     ModelCG::ModelParameter id(ModelCG::ModelParameter::Type::interpolated_irstate, {}, {}, d, {}, {}, ccyIndex);
     if (auto m = cachedParameters_.find(id); m != cachedParameters_.end())
         return m->node();
