@@ -603,6 +603,8 @@ def CreateTrade(tradeType, tradeQuote, curve, ois):
                 legCreated = CreateFloatingLeg(leg, tradeType, tradeQuote, curve, details, basis=False)
                 if not legCreated:
                     return
+                # On OIS trades, the fixing days should not be specified unless you want something non-standard.
+                leg.find('FloatingLegData').remove(leg.find('FloatingLegData/FixingDays'))
         try:
 
             addTradeToPortfolio(newRoot, ois)

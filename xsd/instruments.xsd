@@ -571,6 +571,7 @@
         <xs:element type="stubInterpolation" name="FrontStubInterpolation" minOccurs="0" maxOccurs="1"/>
         <xs:element type="stubInterpolation" name="BackStubInterpolation" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:boolean" name="StubUseOriginalCurve" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:boolean" name="ObservationShift" minOccurs="0" maxOccurs="1"/>
       </xs:all>
     </xs:complexType>
   </xs:element>
