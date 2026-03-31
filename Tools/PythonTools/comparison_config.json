@@ -1355,7 +1355,7 @@
           }
         ]
       },
-      "flownpv\\.csv": {
+      ".*flownpv\\.csv": {
         "keys": [
           "TradeId"
         ],
