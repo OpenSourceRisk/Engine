@@ -384,6 +384,7 @@ scripting/value.cpp
 utilities/bondindexbuilder.cpp
 utilities/calendaradjustmentconfig.cpp
 utilities/calendarparser.cpp
+utilities/commodity.cpp
 utilities/conventionsbasedfutureexpiry.cpp
 utilities/correlationmatrix.cpp
 utilities/csvfilereader.cpp
@@ -823,6 +824,7 @@ scripting/value.hpp
 utilities/bondindexbuilder.hpp
 utilities/calendaradjustmentconfig.hpp
 utilities/calendarparser.hpp
+utilities/commodity.hpp
 utilities/conventionsbasedfutureexpiry.hpp
 utilities/correlationmatrix.hpp
 utilities/credit.hpp

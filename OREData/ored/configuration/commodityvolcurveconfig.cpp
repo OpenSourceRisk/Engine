@@ -19,6 +19,7 @@
 #include <ored/configuration/commodityvolcurveconfig.hpp>
 #include <ored/marketdata/curvespecparser.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
+#include <ored/utilities/commodity.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
@@ -150,12 +151,13 @@ void CommodityVolatilityConfig::fromXML(XMLNode* node) {
     calendarSpreadOffset_ = parseInteger(XMLUtils::getChildValue(node, "CalendarSpreadOffset", false, "0"));
 
     if (instrumentType_ == MarketDatum::InstrumentType::COMMODITY_CALENDAR_SPREAD_OPTION) {
-        QL_REQUIRE(calendarSpreadOffset_ != 0,
-                   "calendar spread offset should be not zero for spread commodity options");
-        string suffix = "_CalendarSpread_" + std::to_string(calendarSpreadOffset_);
-        QL_REQUIRE(curveID_.size() > suffix.size() &&
-                       curveID_.compare(curveID_.size() - suffix.size(), suffix.size(), suffix) == 0,
-                   "curveId should end with '" << suffix << "'");
+        string underlyingName;
+        int parsedOffset = 0;
+        QL_REQUIRE(parseCommodityCalendarSpreadVolSurfaceName(curveID_, underlyingName, parsedOffset),
+                   "curveId '" << curveID_ << "' should be of the form <underlying>_CALENDAR_SPREAD_<offset>");
+        QL_REQUIRE(calendarSpreadOffset_ == parsedOffset,
+                   "CalendarSpreadOffset " << calendarSpreadOffset_ << " does not match curveId '" << curveID_
+                                            << "' offset " << parsedOffset);
     }
 
     preferOutOfTheMoney_ = QuantLib::ext::nullopt;
@@ -199,7 +201,7 @@ XMLNode* CommodityVolatilityConfig::toXML(XMLDocument& doc) const {
         XMLUtils::appendNode(node, solverConfig_.toXML(doc));
     if (preferOutOfTheMoney_)
         XMLUtils::addChild(doc, node, "PreferOutOfTheMoney", *preferOutOfTheMoney_);
-    if (instrumentType_ != MarketDatum::InstrumentType::COMMODITY_OPTION) {
+    if (instrumentType_ == MarketDatum::InstrumentType::COMMODITY_CALENDAR_SPREAD_OPTION) {
         XMLUtils::addChild(doc, node, "InstrumentType", to_string(instrumentType_));
         XMLUtils::addChild(doc, node, "CalendarSpreadOffset", calendarSpreadOffset_);
     }
@@ -218,7 +220,10 @@ void CommodityVolatilityConfig::populateQuotes() {
             quotes_.insert(quotes_.end(), qs.begin(), qs.end());
         } else if (auto vc = QuantLib::ext::dynamic_pointer_cast<VolatilitySurfaceConfig>(config)) {
             string quoteType = to_string(vc->quoteType());
-            string stem = "COMMODITY_OPTION/" + quoteType + "/" + curveID_ + "/" + currency_ + "/";
+            string stem = to_string(instrumentType()) + "/" + quoteType + "/" + curveID_ + "/";
+            if (instrumentType_ == MarketDatum::InstrumentType::COMMODITY_CALENDAR_SPREAD_OPTION)
+                stem += std::to_string(calendarSpreadOffset_) + "/";
+            stem += currency_ + "/";
             for (const pair<string, string>& p : vc->quotes()) {
                 string q = stem + p.first + "/" + p.second;
                 if (!quoteSuffix_.empty())

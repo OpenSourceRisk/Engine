@@ -31,6 +31,7 @@
 #include <ored/configuration/inflationcurveconfig.hpp>
 #include <ored/marketdata/curvespecparser.hpp>
 #include <ored/marketdata/structuredcurveerror.hpp>
+#include <ored/utilities/commodity.hpp>
 #include <ored/utilities/conventionsbasedfutureexpiry.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/indexparser.hpp>
@@ -2955,12 +2956,22 @@ ScenarioSimMarket::ScenarioSimMarket(
                             // Get this scenario simulation market's commodity price curve. An exception is expected
                             // if there is no commodity curve but there is a commodity volatility.
                             // Check if we have a calendar spread vol surface (naming convention:
-                            // <name>_CalendarSpread_<Offset>)
+                            // <name>_CALENDAR_SPREAD_<Offset>)
                             QuantLib::ext::shared_ptr<PriceTermStructure> priceCurve;
+                            string ptsId;
+                            int offset = 0;
+                            bool isCalendarSpreadVolSurface =
+                                parseCommodityCalendarSpreadVolSurfaceName(name, ptsId, offset);
                             if (volConfig && volConfig->instrumentType() ==
                                                  MarketDatum::InstrumentType::COMMODITY_CALENDAR_SPREAD_OPTION) {
-                                auto offset = volConfig->calendarSpreadOffset();
-                                auto ptsId = volConfig->priceCurveId();
+                                QL_REQUIRE(isCalendarSpreadVolSurface,
+                                           "Calendar spread commodity volatility surface " << name
+                                                                                             << " should have format <underlying>_CALENDAR_SPREAD_<offset>");
+                                QL_REQUIRE(offset == volConfig->calendarSpreadOffset(),
+                                           "Calendar spread offset from name " << offset
+                                                                                << " does not match config offset "
+                                                                                << volConfig->calendarSpreadOffset());
+                                
                                 QL_REQUIRE(
                                     !volConfig->futureConventionsId().empty(),
                                     "Future conventions id is required to build calendar spread volatility surface "
@@ -2976,12 +2987,11 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 QL_REQUIRE(convention, "Convention with ID '"
                                                            << cId << "' should be of type CommodityFutureConvention");
                                 auto expCalc = QuantLib::ext::make_shared<ConventionsBasedFutureExpiry>(*convention);
-                                if (ptsId.empty()) {
-                                    QL_FAIL(
-                                        "Price term structure is required to build calendar spread volatility surface "
-                                        << name);
-                                }
                                 auto underlyingPriceCurve = commodityPriceCurve(ptsId, configuration);
+                                QL_REQUIRE(!underlyingPriceCurve.empty(),
+                                           "Underlying commodity price curve "
+                                               << ptsId << " is required to build calendar spread volatility surface "
+                                               << name);
                                 priceCurve = QuantLib::ext::make_shared<CalendarSpreadFuturePriceTermStructure>(
                                     underlyingPriceCurve, expCalc, offset);
                             } else {

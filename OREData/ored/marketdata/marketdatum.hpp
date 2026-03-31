@@ -1951,9 +1951,9 @@ public:
 /*! This class holds single market points of type COMMODITY_OPTION
     \ingroup marketdata
 */
-class CommoditySpreadOptionQuote : public CommodityOptionBaseQuote {
+class CommodityCalendarSpreadOptionQuote : public CommodityOptionBaseQuote {
 public:
-    CommoditySpreadOptionQuote()
+    CommodityCalendarSpreadOptionQuote()
         : CommodityOptionBaseQuote(MarketDatum::InstrumentType::COMMODITY_CALENDAR_SPREAD_OPTION) {}
 
     //! Constructor
@@ -1968,7 +1968,7 @@ public:
         \param optionType    The option type.
         
     */
-    CommoditySpreadOptionQuote(QuantLib::Real value, const QuantLib::Date& asof, const std::string& name,
+    CommodityCalendarSpreadOptionQuote(QuantLib::Real value, const QuantLib::Date& asof, const std::string& name,
                                QuoteType quoteType, const std::string& commodityName, const int offSet,
                                const std::string& quoteCurrency, const QuantLib::ext::shared_ptr<Expiry>& expiry,
                                const QuantLib::ext::shared_ptr<BaseStrike>& strike,
@@ -1976,7 +1976,7 @@ public:
 
     //! Make a copy of the market datum
     QuantLib::ext::shared_ptr<MarketDatum> clone() override {
-        return QuantLib::ext::make_shared<CommoditySpreadOptionQuote>(quote_->value(), asofDate_, name_, quoteType_,
+        return QuantLib::ext::make_shared<CommodityCalendarSpreadOptionQuote>(quote_->value(), asofDate_, name_, quoteType_,
                                                                       commodityName_, offset_, quoteCurrency_, expiry_,
                                                                       strike_, optionType_);
     }

@@ -40,6 +40,7 @@
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
 #include <ored/marketdata/yieldvolcurve.hpp>
+#include <ored/utilities/commodity.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/log.hpp>
@@ -813,13 +814,32 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
 
             // Logic copied from Equity vol section of TodaysMarket for now
             QuantLib::ext::shared_ptr<BlackVolTermStructure> bvts(itr->second->volatility());
-            
             Handle<YieldTermStructure> discount = discountCurve(commodityVolSpec->currency(), configuration);
-            Handle<PriceTermStructure> priceCurve = commodityPriceCurve(commodityName, configuration);
-            if (itr->second->isCalendarSpreadOption() && !priceCurve.empty()) {
+            Handle<PriceTermStructure> priceCurve;
+            
+            int parsedCalendarSpreadOffset = 0;
+
+            if (itr->second->isCalendarSpreadOption()) {
+                string priceCurveName = commodityName;
+                bool isCalendarSpreadVolSurface = parseCommodityCalendarSpreadVolSurfaceName(
+                    commodityName, priceCurveName, parsedCalendarSpreadOffset);
+                QL_REQUIRE(isCalendarSpreadVolSurface,
+                           "Commodity calendar spread vol surface name '"
+                               << commodityName << "' should be of the form <underlying>_CALENDAR_SPREAD_<offset>");
+                QL_REQUIRE(parsedCalendarSpreadOffset == itr->second->calendarSpreadOffset(),
+                           "Calendar spread offset from name " << parsedCalendarSpreadOffset
+                                                               << " does not match config offset "
+                                                               << itr->second->calendarSpreadOffset());
+                auto underlyingPriceCurve = commodityPriceCurve(priceCurveName, configuration);
+                QL_REQUIRE(!underlyingPriceCurve.empty(), "Failed to get price curve "
+                                                              << priceCurveName
+                                                              << " for commodity calendar spread vol surface with name "
+                                                              << commodityName);
                 priceCurve =
                     Handle<PriceTermStructure>(QuantLib::ext::make_shared<CalendarSpreadFuturePriceTermStructure>(
-                        priceCurve, itr->second->expiryCalculator(), itr->second->calendarSpreadOffset()));
+                        underlyingPriceCurve, itr->second->expiryCalculator(), parsedCalendarSpreadOffset));
+            } else {
+                priceCurve = commodityPriceCurve(commodityName, configuration);
             }
             Handle<YieldTermStructure> yield = Handle<YieldTermStructure>(
                 QuantLib::ext::make_shared<PriceTermStructureAdapter>(*priceCurve, *discount));

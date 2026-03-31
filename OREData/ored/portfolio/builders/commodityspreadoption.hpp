@@ -151,7 +151,7 @@ protected:
                 ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
                 : indexOrYieldCurve(market_, discountCurveName, configuration(MarketContext::pricing));
 
-        auto volName = longIndex->underlyingName() + "_CalendarSpread_" + std::to_string(offset);
+        auto volName = longIndex->underlyingName() + "_CALENDAR_SPREAD_" + std::to_string(offset);
 
         Handle<QuantLib::BlackVolTermStructure> volTS =
             market_->commodityVolatility(volName, configuration(MarketContext::pricing));

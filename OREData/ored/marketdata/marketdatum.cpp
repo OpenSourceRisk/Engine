@@ -155,6 +155,8 @@ std::ostream& operator<<(std::ostream& out, const MarketDatum::InstrumentType& t
         return out << "CORRELATION";
     case MarketDatum::InstrumentType::COMMODITY_OPTION:
         return out << "COMMODITY_OPTION";
+    case MarketDatum::InstrumentType::COMMODITY_CALENDAR_SPREAD_OPTION:
+        return out << "COMMODITY_CALENDAR_SPREAD_OPTION";
     case MarketDatum::InstrumentType::CPR:
         return out << "CPR";
     case MarketDatum::InstrumentType::RATING:
@@ -307,7 +309,7 @@ CommodityOptionQuote::CommodityOptionQuote(Real value, const Date& asof, const s
     : CommodityOptionBaseQuote(InstrumentType::COMMODITY_OPTION, value, asof, name, quoteType, commodityName,
                                quoteCurrency, expiry, strike, optionType) {}
 
-CommoditySpreadOptionQuote::CommoditySpreadOptionQuote(Real value, const Date& asof, const string& name,
+CommodityCalendarSpreadOptionQuote::CommodityCalendarSpreadOptionQuote(Real value, const Date& asof, const string& name,
                                                        QuoteType quoteType, const string& commodityName,
                                                        const int offset, const string& quoteCurrency,
                                                        const QuantLib::ext::shared_ptr<Expiry>& expiry,
@@ -667,7 +669,7 @@ template <class Archive> void CommodityOptionQuote::serialize(Archive& ar, const
     ar& strike_;
 }
 
-template <class Archive> void CommoditySpreadOptionQuote::serialize(Archive& ar, const unsigned int version) {
+template <class Archive> void CommodityCalendarSpreadOptionQuote::serialize(Archive& ar, const unsigned int version) {
     ar& boost::serialization::base_object<MarketDatum>(*this);
     ar& commodityName_;
     ar& quoteCurrency_;
@@ -801,8 +803,8 @@ template void CommodityForwardQuote::serialize(boost::archive::binary_oarchive& 
 template void CommodityForwardQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
 template void CommodityOptionQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
 template void CommodityOptionQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
-template void CommoditySpreadOptionQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
-template void CommoditySpreadOptionQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void CommodityCalendarSpreadOptionQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void CommodityCalendarSpreadOptionQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
 template void CommodityOptionShiftQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
 template void CommodityOptionShiftQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
 template void CorrelationQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
@@ -862,7 +864,7 @@ BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::IndexCDSOptionQuote);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::CommoditySpotQuote);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::CommodityForwardQuote);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::CommodityOptionQuote);
-BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::CommoditySpreadOptionQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::CommodityCalendarSpreadOptionQuote);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::CommodityOptionShiftQuote);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::CorrelationQuote);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::CPRQuote);

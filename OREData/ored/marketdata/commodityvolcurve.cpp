@@ -610,18 +610,18 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
 
         QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
 
-        auto q = QuantLib::ext::dynamic_pointer_cast<CommodityOptionQuote>(md);
-        QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to CommodityOptionQuote");
+        auto q = QuantLib::ext::dynamic_pointer_cast<CommodityOptionBaseQuote>(md);
+        QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to CommodityOptionBaseQuote");
 
         QL_REQUIRE(vc.curveID() == q->commodityName(),
             "CommodityVolatilityConfig curve ID '" << vc.curveID() <<
-            "' <> CommodityOptionQuote commodity name '" << q->commodityName() << "'");
+            "' <> CommodityOptionBaseQuote commodity name '" << q->commodityName() << "'");
         QL_REQUIRE(vc.currency() == q->quoteCurrency(),
             "CommodityVolatilityConfig currency '" << vc.currency() <<
-            "' <> CommodityOptionQuote currency '" << q->quoteCurrency() << "'");
+            "' <> CommodityOptionBaseQuote currency '" << q->quoteCurrency() << "'");
         QL_REQUIRE(vssc.quoteType() == q->quoteType(),
             "VolatilityStrikeSurfaceConfig quote type '" << vssc.quoteType() <<
-            "' <> CommodityOptionQuote quote type '" << q->quoteType() << "'");
+            "' <> CommodityOptionBaseQuote quote type '" << q->quoteType() << "'");
 
         // This surface is for absolute strikes only.
         auto strike = QuantLib::ext::dynamic_pointer_cast<AbsoluteStrike>(q->strike());
