@@ -62,7 +62,7 @@ class CommoditySpreadOptionEngineBuilder : public CommoditySpreadOptionBaseEngin
 public:
     CommoditySpreadOptionEngineBuilder()
         : CommoditySpreadOptionBaseEngineBuilder("BlackScholes", "CommoditySpreadOptionEngine",
-                                                 {"CommoditySpreadOption"}) {}
+                                                 {"CommoditySpreadOption", "CommodityCalendarSpreadOption"}) {}
 
 protected:
     QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
@@ -127,11 +127,11 @@ protected:
     }
 };
 
-class CommoditySpreadOptionBachelierEngineBuilder : public CommoditySpreadOptionBaseEngineBuilder {
+class CommodityCalendarSpreadOptionBachelierEngineBuilder : public CommoditySpreadOptionBaseEngineBuilder {
 public:
-    CommoditySpreadOptionBachelierEngineBuilder()
-        : CommoditySpreadOptionBaseEngineBuilder("BlackScholes", "CommoditySpreadOptionBachelierEngine",
-                                                 {"CommoditySpreadOption"}) {}
+    CommodityCalendarSpreadOptionBachelierEngineBuilder()
+        : CommoditySpreadOptionBaseEngineBuilder("BlackScholes", "CommodityCalendarSpreadOptionBachelierEngine",
+                                                 {"CommodityCalendarSpreadOption"}) {}
 
 protected:
     QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
@@ -144,8 +144,9 @@ protected:
                    "Bachelier spread option engine only supports calendar spreads, but got "
                        << longIndex->underlyingName() << " and " << shortIndex->underlyingName());
 
-        DLOG("Building CommoditySpreadOptionBachelierEngineBuilder Engine for " << longIndex->name() << " and "
-                                                                                << shortIndex->name() << std::endl);
+        DLOG("Building CommodityCalendarSpreadOptionBachelierEngineBuilder Engine for " << longIndex->name()
+                                                   << " and " << shortIndex->name()
+                                                   << std::endl);
         Handle<YieldTermStructure> yts =
             discountCurveName.empty()
                 ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))

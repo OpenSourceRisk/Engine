@@ -296,18 +296,22 @@ void CommodityVolCurve::buildVolatility(const Date& asof, const CommodityVolatil
                                         const ConstantVolatilityConfig& cvc, const Loader& loader) {
 
     LOG("CommodityVolCurve: start building constant volatility structure");
-    QL_REQUIRE(vc.instrumentType() == MarketDatum::InstrumentType::COMMODITY_OPTION,
-        "CommodityVolCurve: commodity calendar spread option volatilities are not compatible with constant volatility configs");
     const QuantLib::ext::shared_ptr<MarketDatum>& md = loader.get(cvc.quote(), asof);
     QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
-    QL_REQUIRE(md->instrumentType() == MarketDatum::InstrumentType::COMMODITY_OPTION,
-        "MarketDatum instrument type '" << md->instrumentType() << "' <> 'MarketDatum::InstrumentType::COMMODITY_OPTION'");
-    QuantLib::ext::shared_ptr<CommodityOptionQuote> q = QuantLib::ext::dynamic_pointer_cast<CommodityOptionQuote>(md);
-    QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to CommodityOptionQuote");
+    QL_REQUIRE(md->instrumentType() == vc.instrumentType(),
+               "MarketDatum instrument type '" << md->instrumentType() << "' <> configured instrument type '"
+                                               << vc.instrumentType() << "'");
+    QuantLib::ext::shared_ptr<CommodityOptionBaseQuote> q =
+        QuantLib::ext::dynamic_pointer_cast<CommodityOptionBaseQuote>(md);
+    QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to CommodityOptionBaseQuote");
     QL_REQUIRE(q->quoteType() == MarketDatum::QuoteType::RATE_LNVOL ||
                    q->quoteType() == MarketDatum::QuoteType::RATE_SLNVOL ||
                    q->quoteType() == MarketDatum::QuoteType::RATE_NVOL,
                "CommodityOptionQuote type '" << q->quoteType() << "' <> RATE_LNVOL or RATE_SLNVOL or RATE_NVOL");
+    QL_REQUIRE(q->quoteType() == MarketDatum::QuoteType::RATE_NVOL ||
+                   vc.instrumentType() == MarketDatum::InstrumentType::COMMODITY_OPTION,
+               "CommodityVolCurve: Only normal volatilities for calendar spread option volatilities are currently "
+               "supported.");
     QL_REQUIRE(q->name() == cvc.quote(),
         "CommodityOptionQuote name '" << q->name() << "' <> ConstantVolatilityConfig quote '" << cvc.quote() << "'");
     TLOG("Found the constant volatility quote " << q->name());
@@ -599,12 +603,16 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     map<Date, Real> fwdCurve;
 
     // Loop over quotes and process any commodity option quote that matches a wildcard
+    string commodityName = vc.instrumentType() == MarketDatum::InstrumentType::COMMODITY_CALENDAR_SPREAD_OPTION
+                                ? vc.calendarSpreadUnderlyingName()
+                                : vc.curveID();
     std::ostringstream ss;
-    ss << vc.instrumentType() << "/" << vssc.quoteType() << "/" << vc.curveID() << "/"
+    ss << vc.instrumentType() << "/" << vssc.quoteType() << "/" << commodityName << "/"
        << (vc.instrumentType() == MarketDatum::InstrumentType::COMMODITY_CALENDAR_SPREAD_OPTION
                ? to_string(vc.calendarSpreadOffset()) + "/"
                : "")
        << vc.currency() << "/*";
+    DLOG("Looking for quotes with pattern " << ss.str());
     Wildcard w(ss.str());
     for (const auto& md : loader.get(w, asof)) {
 
@@ -613,7 +621,7 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
         auto q = QuantLib::ext::dynamic_pointer_cast<CommodityOptionBaseQuote>(md);
         QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to CommodityOptionBaseQuote");
 
-        QL_REQUIRE(vc.curveID() == q->commodityName(),
+        QL_REQUIRE(commodityName == q->commodityName(),
             "CommodityVolatilityConfig curve ID '" << vc.curveID() <<
             "' <> CommodityOptionBaseQuote commodity name '" << q->commodityName() << "'");
         QL_REQUIRE(vc.currency() == q->quoteCurrency(),
@@ -876,8 +884,11 @@ void CommodityVolCurve::buildVolatilityExplicit(const Date& asof, CommodityVolat
     Size quotesAdded = 0;
     Size skippedExpiredQuotes = 0;
     // Loop over quotes and process commodity option quotes that have been requested
+    string commodityName = vc.instrumentType() == MarketDatum::InstrumentType::COMMODITY_CALENDAR_SPREAD_OPTION
+                                ? vc.calendarSpreadUnderlyingName()
+                                : vc.curveID();
     std::ostringstream ss;
-    ss << vc.instrumentType() << "/" << vssc.quoteType() << "/" << vc.curveID() << "/"
+    ss << vc.instrumentType() << "/" << vssc.quoteType() << "/" << commodityName << "/"
        << (vc.instrumentType() == MarketDatum::InstrumentType::COMMODITY_CALENDAR_SPREAD_OPTION
                ? to_string(vc.calendarSpreadOffset()) + "/"
                : "")

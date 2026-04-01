@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2026 Quaternion Risk Management Ltd
+ Copyright (C) 2026 AcadiaSoft Inc.
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -24,9 +24,10 @@ namespace ore {
 namespace data {
 
 //! Parse a commodity calendar spread volatility surface name.
-/*! Expected format is [underlying]_CALENDAR_SPREAD_[offset].
-    On success, returns true and populates \p underlyingName and \p offset.
-*/
+//! Expect the name to be of the form underlyingName_CALENDAR_SPREAD_offset, where offset is the number of contract
+//! expiries between the two contracts in the calendar spread. If the name can be parsed successfully, the function
+//! returns true and underlyingName and offset are set accordingly. Otherwise, it returns false and underlyingName is
+//! set to an empty string and offset to 0.
 bool parseCommodityCalendarSpreadVolSurfaceName(const std::string& name, std::string& underlyingName, int& offset);
 
 } // namespace data

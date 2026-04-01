@@ -820,24 +820,33 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
             int parsedCalendarSpreadOffset = 0;
 
             if (itr->second->isCalendarSpreadOption()) {
-                string priceCurveName = commodityName;
-                bool isCalendarSpreadVolSurface = parseCommodityCalendarSpreadVolSurfaceName(
-                    commodityName, priceCurveName, parsedCalendarSpreadOffset);
-                QL_REQUIRE(isCalendarSpreadVolSurface,
-                           "Commodity calendar spread vol surface name '"
-                               << commodityName << "' should be of the form <underlying>_CALENDAR_SPREAD_<offset>");
-                QL_REQUIRE(parsedCalendarSpreadOffset == itr->second->calendarSpreadOffset(),
-                           "Calendar spread offset from name " << parsedCalendarSpreadOffset
-                                                               << " does not match config offset "
-                                                               << itr->second->calendarSpreadOffset());
-                auto underlyingPriceCurve = commodityPriceCurve(priceCurveName, configuration);
-                QL_REQUIRE(!underlyingPriceCurve.empty(), "Failed to get price curve "
-                                                              << priceCurveName
-                                                              << " for commodity calendar spread vol surface with name "
-                                                              << commodityName);
-                priceCurve =
-                    Handle<PriceTermStructure>(QuantLib::ext::make_shared<CalendarSpreadFuturePriceTermStructure>(
-                        underlyingPriceCurve, itr->second->expiryCalculator(), parsedCalendarSpreadOffset));
+                try {
+                    priceCurve = commodityPriceCurve(commodityName, configuration);
+                } catch (const std::exception&) {
+                    priceCurve = Handle<PriceTermStructure>();
+                }
+
+                if (priceCurve.empty()) {
+                    string priceCurveName = commodityName;
+                    bool isCalendarSpreadVolSurface = parseCommodityCalendarSpreadVolSurfaceName(
+                        commodityName, priceCurveName, parsedCalendarSpreadOffset);
+                    QL_REQUIRE(isCalendarSpreadVolSurface,
+                               "Commodity calendar spread vol surface name '"
+                                   << commodityName
+                                   << "' should be of the form <underlying>_CALENDAR_SPREAD_<offset>");
+                    QL_REQUIRE(parsedCalendarSpreadOffset == itr->second->calendarSpreadOffset(),
+                               "Calendar spread offset from name " << parsedCalendarSpreadOffset
+                                                                   << " does not match config offset "
+                                                                   << itr->second->calendarSpreadOffset());
+                    auto underlyingPriceCurve = commodityPriceCurve(priceCurveName, configuration);
+                    QL_REQUIRE(!underlyingPriceCurve.empty(), "Failed to get price curve "
+                                                                  << priceCurveName
+                                                                  << " for commodity calendar spread vol surface with name "
+                                                                  << commodityName);
+                    priceCurve = Handle<PriceTermStructure>(
+                        QuantLib::ext::make_shared<CalendarSpreadFuturePriceTermStructure>(
+                            underlyingPriceCurve, itr->second->expiryCalculator(), parsedCalendarSpreadOffset));
+                }
             } else {
                 priceCurve = commodityPriceCurve(commodityName, configuration);
             }

@@ -160,7 +160,6 @@ void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::Eng
 
     // init engine factory builder
     QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
-    auto engineBuilder = QuantLib::ext::dynamic_pointer_cast<CommoditySpreadOptionBaseEngineBuilder>(builder);
     // get config
     auto config = builder->configuration(MarketContext::pricing);
 
@@ -228,6 +227,19 @@ void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::Eng
 
     QL_REQUIRE(legs_[0].size() > 0, "CommoditySpreadOption: need at least one option, please check the trade xml");
 
+    auto firstLongFlow = QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityCashFlow>(legs_[longLegId][0]);
+    auto firstShortFlow = QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityCashFlow>(legs_[shortLegId][0]);
+    QL_REQUIRE(firstLongFlow && firstShortFlow,
+               "CommoditySpreadOption: expected CommodityCashFlow instances in both legs");
+    bool isCalendarSpread =
+        firstLongFlow->index()->underlyingName() == firstShortFlow->index()->underlyingName();
+    string builderProductType = isCalendarSpread ? "CommodityCalendarSpreadOption" : "CommoditySpreadOption";
+
+    builder = engineFactory->builder(builderProductType);
+    auto engineBuilder = QuantLib::ext::dynamic_pointer_cast<CommoditySpreadOptionBaseEngineBuilder>(builder);
+    QL_REQUIRE(engineBuilder,
+               "CommoditySpreadOption: could not cast engine builder for product type '" << builderProductType
+                                                                                           << "'");
     Position::Type positionType = parsePositionType(optionData_.longShort());
     Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
 

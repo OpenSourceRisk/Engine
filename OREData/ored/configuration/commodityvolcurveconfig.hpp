@@ -53,7 +53,8 @@ public:
                               const OneDimSolverConfig& solverConfig = OneDimSolverConfig(),
                               const QuantLib::ext::optional<bool>& preferOutOfTheMoney = QuantLib::ext::nullopt,
                               const MarketDatum::InstrumentType instrumentType = MarketDatum::InstrumentType::COMMODITY_OPTION,
-                              const int calendarSpreadOffset = 0);
+                              const int calendarSpreadOffset = 0,
+                              const std::string& calendarSpreadUnderlyingName = "");
 
     //! \name Inspectors
     //@{
@@ -71,6 +72,8 @@ public:
     const ReportConfig& reportConfig() const { return reportConfig_; }
     const MarketDatum::InstrumentType instrumentType() const { return instrumentType_; }
     int calendarSpreadOffset() const { return calendarSpreadOffset_; }
+    const std::string& calendarSpreadUnderlyingName() const { return calendarSpreadUnderlyingName_; }
+
     //@}
 
     //! \name Serialisation
@@ -81,6 +84,7 @@ public:
 
 private:
     void populateRequiredIds() const override;
+    void validate() const;
 
     std::string currency_;
     std::vector<QuantLib::ext::shared_ptr<VolatilityConfig>> volatilityConfig_;
@@ -95,6 +99,7 @@ private:
     QuantLib::ext::optional<bool> preferOutOfTheMoney_;
     MarketDatum::InstrumentType instrumentType_ = MarketDatum::InstrumentType::COMMODITY_OPTION;
     int calendarSpreadOffset_ = 0;
+    std::string calendarSpreadUnderlyingName_;
     ReportConfig reportConfig_;
 
     //! Populate CurveConfig::quotes_ with the required quotes.
