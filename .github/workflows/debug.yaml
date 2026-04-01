@@ -1,8 +1,9 @@
 name: Debug Push Metadata
 on:
-  push:
-    branches:
-      - master
+  workflow_dispatch: # Remove this line and comment in those below when want to debug again.
+  # push:
+    # branches:
+      # - master
 
 jobs:
   dump_contexts:
