@@ -271,6 +271,8 @@ void FloatingLegData::fromXML(XMLNode* node) {
         backStubRoundingPrecision_ = XMLUtils::getChildValue(backStubNode, "RoundingPrecision");
     }
     stubUseOriginalCurve_ = XMLUtils::getChildValueAsBool(node, "StubUseOriginalCurve", false, false);
+    if (XMLNode* obsShiftNode = XMLUtils::getChildNode(node, "ObservationShift"))
+        observationShift_ = parseBool(XMLUtils::getNodeValue(obsShiftNode));
 }
 
 XMLNode* FloatingLegData::toXML(XMLDocument& doc) const {
@@ -333,6 +335,8 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) const {
         (!backStubShortIndex_.empty() && !backStubLongIndex_.empty())) {
         XMLUtils::addChild(doc, node, "StubUseOriginalCurve", stubUseOriginalCurve_);
     }
+    if (observationShift_)
+        XMLUtils::addChild(doc, node, "ObservationShift", *observationShift_);
     return node;
 }
 
@@ -1766,7 +1770,8 @@ Leg makeOISLeg(const LegData& data, const QuantLib::ext::shared_ptr<OvernightInd
                 .withAverageONIndexedCouponPricer(couponPricer)
                 .withCapFlooredAverageONIndexedCouponPricer(cfCouponPricer)
                 .withTelescopicValueDates(floatData->telescopicValueDates())
-                .withPaymentDates(paymentDates);
+                .withPaymentDates(paymentDates)
+                .withObservationShift(floatData->observationShift() ? *floatData->observationShift() : true);
         return leg;
 
     } else {
@@ -1814,7 +1819,8 @@ Leg makeOISLeg(const LegData& data, const QuantLib::ext::shared_ptr<OvernightInd
                       .withOvernightIndexedCouponPricer(couponPricer)
                       .withCapFlooredOvernightIndexedCouponPricer(cfCouponPricer)
                       .withTelescopicValueDates(floatData->telescopicValueDates())
-                      .withPaymentDates(paymentDates);
+                      .withPaymentDates(paymentDates)
+                      .withObservationShift(floatData->observationShift() ? *floatData->observationShift() : true);
 
         // If the overnight index is BRL CDI, we need a special coupon pricer
         QuantLib::ext::shared_ptr<BRLCdi> brlCdiIndex = QuantLib::ext::dynamic_pointer_cast<BRLCdi>(index);

@@ -20,8 +20,8 @@ EUR6MSwap,eur6m_zero,5924803.71,7615306.91,1690503.20
 EUR6MSwap,eur6m_no_caplet,5924803.71,8055907.11,2131103.40
 EUR6MSwap,eur_ester_zero,5924803.71,5867078.77,-57724.94
 EUR6MSwap,eur_ester_par_and_FX,5924803.71,5847515.87,-77287.84
-XccySwap,xccy_basis_per,268878.25,373837.37,104959.12
-XccySwap,eur_ester_par,268878.25,1184691.80,915813.55
-XccySwap,xccy_basis_zero,268878.25,1954579.45,1685701.20
-XccySwap,eur_ester_zero,268878.25,29447.50,-239430.75
-XccySwap,eur_ester_par_and_FX,268878.25,230964.20,-37914.05
+XccySwap,xccy_basis_per,298223.89,403240.02,105016.13
+XccySwap,eur_ester_par,298223.89,1214055.10,915831.21
+XccySwap,xccy_basis_zero,298223.89,1983867.04,1685643.15
+XccySwap,eur_ester_zero,298223.89,58791.10,-239432.79
+XccySwap,eur_ester_par_and_FX,298223.89,260327.51,-37896.38

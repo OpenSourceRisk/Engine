@@ -57,7 +57,9 @@ public:
         QuantLib::ext::optional<bool> payIsAveraged = QuantLib::ext::nullopt, QuantLib::ext::optional<bool> recIncludeSpread = QuantLib::ext::nullopt,
         QuantLib::ext::optional<Period> recLookback = QuantLib::ext::nullopt, QuantLib::ext::optional<Size> recFixingDays = QuantLib::ext::nullopt,
         QuantLib::ext::optional<Size> recRateCutoff = QuantLib::ext::nullopt, QuantLib::ext::optional<bool> recIsAveraged = QuantLib::ext::nullopt,
-        const bool telescopicValueDates = false);
+        const bool telescopicValueDates = false,
+        QuantLib::ext::optional<bool> payObservationShift = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<bool> recObservationShift = QuantLib::ext::nullopt);
     //@}
     //! \name Instrument interface
     //@{
@@ -126,11 +128,13 @@ private:
     QuantLib::ext::optional<QuantLib::Size> payFixingDays_;
     QuantLib::ext::optional<Size> payRateCutoff_;
     QuantLib::ext::optional<bool> payIsAveraged_;
+    QuantLib::ext::optional<bool> payObservationShift_;
     QuantLib::ext::optional<bool> recIncludeSpread_;
     QuantLib::ext::optional<QuantLib::Period> recLookback_;
     QuantLib::ext::optional<QuantLib::Size> recFixingDays_;
     QuantLib::ext::optional<Size> recRateCutoff_;
     QuantLib::ext::optional<bool> recIsAveraged_;
+    QuantLib::ext::optional<bool> recObservationShift_;
     bool telescopicValueDates_;
 
     mutable Spread fairPaySpread_;
