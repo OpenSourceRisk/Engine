@@ -1847,7 +1847,8 @@ public:
           optionType_(QuantLib::Option::Call) {}
 
     //! Constructor
-    /*! \param value         The volatility value
+    /*! \param instrumentType The type of the commodity option quote, either COMMODITY_OPTION or COMMODITY_CALENDAR_SPREAD_OPTION
+        \param value         The volatility value
         \param asof          The quote date
         \param name          The quote name
         \param quoteType     The quote type, should be RATE_LNVOL
@@ -1962,6 +1963,7 @@ public:
         \param name          The quote name
         \param quoteType     The quote type, should be RATE_LNVOL
         \param commodityName The name of the underlying commodity
+        \param offSet        The number of contract expiries between the two contracts in the calendar spread
         \param quoteCurrency The quote currency
         \param expiry        Expiry object defining the quote's expiry
         \param strike        Strike object defining the quote's strike
