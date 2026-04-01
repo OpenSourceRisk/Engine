@@ -29,6 +29,7 @@
 %include ored_portfolio.i
 %include std_map.i
 %include std_set.i
+%include std_filesystem.i
 %include tuple.i
 
 %{
