@@ -38,15 +38,18 @@ CrossCcyBasisSwap::CrossCcyBasisSwap(Real payNominal, const Currency& payCurrenc
                                      QuantLib::ext::optional<Size> payRateCutoff, QuantLib::ext::optional<bool> payIsAveraged,
                                      QuantLib::ext::optional<bool> recIncludeSpread, QuantLib::ext::optional<Period> recLookback,
                                      QuantLib::ext::optional<Size> recFixingDays, QuantLib::ext::optional<Size> recRateCutoff,
-                                     QuantLib::ext::optional<bool> recIsAveraged, const bool telescopicValueDates)
+                                     QuantLib::ext::optional<bool> recIsAveraged, const bool telescopicValueDates,
+                                     QuantLib::ext::optional<bool> payObservationShift,
+                                     QuantLib::ext::optional<bool> recObservationShift)
     : CrossCcySwap(2), payNominal_(payNominal), payCurrency_(payCurrency), paySchedule_(paySchedule),
       payIndex_(payIndex), paySpread_(paySpread), payGearing_(payGearing), recNominal_(recNominal),
       recCurrency_(recCurrency), recSchedule_(recSchedule), recIndex_(recIndex), recSpread_(recSpread),
       recGearing_(recGearing), payPaymentLag_(payPaymentLag), recPaymentLag_(recPaymentLag),
       payIncludeSpread_(payIncludeSpread), payLookback_(payLookback), payFixingDays_(payFixingDays),
-      payRateCutoff_(payRateCutoff), payIsAveraged_(payIsAveraged), recIncludeSpread_(recIncludeSpread),
-      recLookback_(recLookback), recFixingDays_(recFixingDays), recRateCutoff_(recRateCutoff),
-      recIsAveraged_(recIsAveraged), telescopicValueDates_(telescopicValueDates) {
+      payRateCutoff_(payRateCutoff), payIsAveraged_(payIsAveraged), payObservationShift_(payObservationShift),
+      recIncludeSpread_(recIncludeSpread), recLookback_(recLookback), recFixingDays_(recFixingDays),
+      recRateCutoff_(recRateCutoff), recIsAveraged_(recIsAveraged), recObservationShift_(recObservationShift),
+      telescopicValueDates_(telescopicValueDates) {
     registerWith(payIndex_);
     registerWith(recIndex_);
     initialize();
@@ -64,9 +67,10 @@ void CrossCcyBasisSwap::initialize() {
                            .withGearing(payGearing_)
                            .withPaymentLag(payPaymentLag_)
                            .withLookback(payLookback_ ? *payLookback_ : 0 * Days)
-                           .withFixingDays(payFixingDays_ ? *payFixingDays_ : 0)
+                           .withFixingDays(payFixingDays_ ? *payFixingDays_ : Null<Size>())
                            .withRateCutoff(payRateCutoff_ ? *payRateCutoff_ : 0)
-                           .withTelescopicValueDates(telescopicValueDates_);
+                           .withTelescopicValueDates(telescopicValueDates_)
+                           .withObservationShift(payObservationShift_ ? *payObservationShift_ : true);
         } else {
             legs_[0] = QuantExt::OvernightLeg(paySchedule_, on)
                            .withNotionals(payNominal_)
@@ -75,9 +79,10 @@ void CrossCcyBasisSwap::initialize() {
                            .withPaymentLag(payPaymentLag_)
                            .includeSpread(payIncludeSpread_ ? *payIncludeSpread_ : false)
                            .withLookback(payLookback_ ? *payLookback_ : 0 * Days)
-                           .withFixingDays(payFixingDays_ ? *payFixingDays_ : 0)
+                           .withFixingDays(payFixingDays_ ? *payFixingDays_ : Null<Size>())
                            .withRateCutoff(payRateCutoff_ ? *payRateCutoff_ : 0)
-                           .withTelescopicValueDates(telescopicValueDates_);
+                           .withTelescopicValueDates(telescopicValueDates_)
+                           .withObservationShift(payObservationShift_ ? *payObservationShift_ : true);
         }
     } else {
         // Ibor leg
@@ -108,9 +113,10 @@ void CrossCcyBasisSwap::initialize() {
                            .withGearing(recGearing_)
                            .withPaymentLag(recPaymentLag_)
                            .withLookback(recLookback_ ? *recLookback_ : 0 * Days)
-                           .withFixingDays(recFixingDays_ ? *recFixingDays_ : 0)
+                           .withFixingDays(recFixingDays_ ? *recFixingDays_ : Null<Size>())
                            .withRateCutoff(recRateCutoff_ ? *recRateCutoff_ : 0)
-                           .withTelescopicValueDates(telescopicValueDates_);
+                           .withTelescopicValueDates(telescopicValueDates_)
+                           .withObservationShift(recObservationShift_ ? *recObservationShift_ : true);
         } else {
             legs_[1] = QuantExt::OvernightLeg(recSchedule_, on)
                            .withNotionals(recNominal_)
@@ -119,9 +125,10 @@ void CrossCcyBasisSwap::initialize() {
                            .withPaymentLag(recPaymentLag_)
                            .includeSpread(recIncludeSpread_ ? *recIncludeSpread_ : false)
                            .withLookback(recLookback_ ? *recLookback_ : 0 * Days)
-                           .withFixingDays(recFixingDays_ ? *recFixingDays_ : 0)
+                           .withFixingDays(recFixingDays_ ? *recFixingDays_ : Null<Size>())
                            .withRateCutoff(recRateCutoff_ ? *recRateCutoff_ : 0)
-                           .withTelescopicValueDates(telescopicValueDates_);
+                           .withTelescopicValueDates(telescopicValueDates_)
+                           .withObservationShift(recObservationShift_ ? *recObservationShift_ : true);
         }
     } else {
         // Ibor leg

@@ -279,7 +279,7 @@ void AnalyticsManager::toFile(const ore::analytics::Analytic::analytic_reports& 
             }
             else {
                 ALOG("Report " << reportName << " occurs " << it->second << " times, fix report naming");
-                fileName = analytic + "_" + reportName + "_" + to_string(hits[fileName]);
+                fileName = analytic + "_" + reportName + "_" + to_string(hits[reportName]);
             }
 
             // attach a suffix only if it does not have one already

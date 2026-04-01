@@ -132,15 +132,19 @@ void HistoricalSimulationVarReport::writeAdditionalReports(
                 for (const auto& r : riskFactorPnls_[s]) {
                     const auto& key = r.first;
                     const std::vector<Real>& vals = r.second;
-                    Size idx = 0;
                     for (const auto& t : tradeIdIdxPairs_) {
-                        report2->next();
-                        report2->add(ore::data::to_string(key));
-                        report2->add(t.first);
-                        report2->add(hisScenGen_->startDates()[s]);
-                        report2->add(hisScenGen_->endDates()[s]);
-                        report2->add(idx < vals.size() ? vals[idx] : 0.0);
-                        ++idx;
+                        if (t.second < vals.size()) {
+                            Real pnl = vals[t.second];
+                            // Only report if not NaN, i.e. the trade is sensitive to this risk factor.
+                            if (!std::isnan(pnl)) {
+                                report2->next();
+                                report2->add(ore::data::to_string(key));
+                                report2->add(t.first);
+                                report2->add(hisScenGen_->startDates()[s]);
+                                report2->add(hisScenGen_->endDates()[s]);
+                                report2->add(pnl);
+                            }
+                        }
                     }
                 }
             }
