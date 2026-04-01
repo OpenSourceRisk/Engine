@@ -11,7 +11,7 @@ jobs:
     # AND ignore our own bot to prevent loops.
     if: |
       github.repository == 'OpenSourceRisk/ORE-Gitlab' &&
-      github.event.head_commit.committer.name == 'Gitlab CI' &&
+      github.event.repository.description == 'mirror acadia repo ORE' &&
       github.actor != 'github-actions[bot]'
     steps:
       - name: Checkout Code
