@@ -89,33 +89,13 @@ private:
 
 }
 
-Handle<SwaptionVolatilityStructure> RangeAccrualLegEngineBuilder::swaptionVolatilityStructure(const std::string& index) {
-    auto configuration = this->configuration(MarketContext::pricing);
-    return market_->swaptionVol(index, configuration);
-}
-
-Real RangeAccrualLegEngineBuilder::correlation(const std::string& index) {
-    return parseReal(engineParameter("Correlation", {}, false, "1.0"));
-}
-
-bool RangeAccrualLegEngineBuilder::withFlatVol(const std::string& index) {
-    return parseBool(engineParameter("withFlatVol", {}, false, "false"));
-}
-
-bool RangeAccrualLegEngineBuilder::byCallSpread(const std::string& index) {
-    return parseBool(engineParameter("ByCallSpread", {}, false, "true"));
-}
-
-Real RangeAccrualLegEngineBuilder::flatVol(const std::string& index) {
-    return parseReal(engineParameter("FlatVol", {}, false, "1E-6"));
-}
-
-QuantLib::ext::shared_ptr<FloatingRateCouponPricer> RangeAccrualLegEngineBuilder::buildPricer(
+QuantLib::ext::shared_ptr<FloatingRateCouponPricer> RangeAccrualLegEngineBuilder::engineImpl(
     const std::string& index, const Date& accrualStartDate, const Date& accrualEndDate) {
-    Real corr = correlation(index);
-    bool isFlatVol = withFlatVol(index);
-    bool callSpread = byCallSpread(index);
-    Handle<SwaptionVolatilityStructure> ovs = swaptionVolatilityStructure(index);
+    auto config = configuration(MarketContext::pricing);
+    Real corr = parseReal(engineParameter("Correlation", {}, false, "1.0"));
+    bool isFlatVol = parseBool(engineParameter("withFlatVol", {}, false, "false"));
+    bool callSpread = parseBool(engineParameter("ByCallSpread", {}, false, "true"));
+    Handle<SwaptionVolatilityStructure> ovs = market_->swaptionVol(index, config);
     Date expiryDate = std::max(accrualStartDate, ovs->referenceDate() + 1);
     ext::shared_ptr<SmileSection>smileOnExpiry;
     ext::shared_ptr<SmileSection>smileOnPayment;
@@ -126,10 +106,9 @@ QuantLib::ext::shared_ptr<FloatingRateCouponPricer> RangeAccrualLegEngineBuilder
         smileOnPayment = ovs->smileSection(accrualEndDate, true);
     }else{
         // Use the day counter from the index in LegData
-        auto configuration = this->configuration(MarketContext::pricing);
-        auto iborIndex = market_->iborIndex(index, configuration);
+        auto iborIndex = market_->iborIndex(index, config);
         auto dayCounter = iborIndex->dayCounter();
-        Real fVol = flatVol(index);// or parameterize if needed
+        Real fVol = parseReal(engineParameter("FlatVol", {}, false, "1E-6"));
         smileOnExpiry = QuantLib::ext::shared_ptr<SmileSection>(new FlatSmileSection(expiryDate, fVol, dayCounter));
         smileOnPayment = QuantLib::ext::shared_ptr<SmileSection>(new FlatSmileSection(accrualEndDate, fVol, dayCounter));
     }
@@ -139,8 +118,7 @@ QuantLib::ext::shared_ptr<FloatingRateCouponPricer> RangeAccrualLegEngineBuilder
     // The BGM pricer interprets SmileSection vols as lognormal. If the swaption
     // surface is in Normal vol, we must convert via Bachelier→Black inversion.
     if (!isFlatVol && ovs->volatilityType() == QuantLib::Normal) {
-        auto configuration = this->configuration(MarketContext::pricing);
-        auto iborIndex = market_->iborIndex(index, configuration);
+        auto iborIndex = market_->iborIndex(index, config);
         // Use per-section forwards: the conversion should reflect the forward
         // at each smile section's expiry. Using the index's fixing calendar
         // ensures the dates are valid fixing dates.
@@ -155,7 +133,7 @@ QuantLib::ext::shared_ptr<FloatingRateCouponPricer> RangeAccrualLegEngineBuilder
         corr, smileOnExpiry, smileOnPayment, !isFlatVol, callSpread);
 }
 
-QuantLib::ext::shared_ptr<FloatingRateCouponPricer> RangeAccrualLegCallSpreadEngineBuilder::buildPricer(
+QuantLib::ext::shared_ptr<FloatingRateCouponPricer> RangeAccrualLegCallSpreadEngineBuilder::engineImpl(
     const std::string& index) {
     auto config = configuration(MarketContext::pricing);
 

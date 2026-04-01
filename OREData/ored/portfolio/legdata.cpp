@@ -2449,7 +2449,7 @@ Leg makeRangeAccrualLeg(const LegData& data, const QuantLib::ext::shared_ptr<Ibo
         // so we build it once and reuse it for all coupons.
         QuantLib::ext::shared_ptr<FloatingRateCouponPricer> csPricer;
         if (csBuilder)
-            csPricer = csBuilder->buildPricer(indexName);
+            csPricer = csBuilder->engine(indexName);
 
         Size couponIdx = 0;
         for (auto& cf : leg) {
@@ -2458,7 +2458,7 @@ Leg makeRangeAccrualLeg(const LegData& data, const QuantLib::ext::shared_ptr<Ibo
                 if (raCoupon->date() > today) {
                     QuantLib::ext::shared_ptr<FloatingRateCouponPricer> pricer;
                     if (raBuilder)
-                        pricer = raBuilder->buildPricer(
+                        pricer = raBuilder->engine(
                             indexName, raCoupon->accrualStartDate(), raCoupon->accrualEndDate());
                     else
                         pricer = csPricer;

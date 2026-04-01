@@ -25,6 +25,7 @@
 
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
+#include <ored/utilities/to_string.hpp>
 
 #include <ql/cashflows/couponpricer.hpp>
 #include <ql/termstructures/volatility/optionlet/optionletvolatilitystructure.hpp>
@@ -38,20 +39,21 @@ namespace data {
     to build smile sections at each coupon's expiry and payment dates.
     \ingroup builders
 */
-class RangeAccrualLegEngineBuilder : public EngineBuilder {
+class RangeAccrualLegEngineBuilder
+    : public CachingCouponPricerBuilder<std::string, const std::string&, const QuantLib::Date&,
+                                        const QuantLib::Date&> {
 public:
     RangeAccrualLegEngineBuilder()
-        : EngineBuilder("BGM", "FloatingRateCouponPricer", {"IborRangeAccrualLeg"}) {}
+        : CachingEngineBuilder("BGM", "FloatingRateCouponPricer", {"IborRangeAccrualLeg"}) {}
 
-    QuantLib::ext::shared_ptr<FloatingRateCouponPricer> buildPricer(
-        const std::string& index, const Date& accrualStartDate, const Date& accrualEndDate);
+protected:
+    std::string keyImpl(const std::string& index, const QuantLib::Date& accrualStartDate,
+                        const QuantLib::Date& accrualEndDate) override {
+        return index + "/" + ore::data::to_string(accrualStartDate) + "/" + ore::data::to_string(accrualEndDate);
+    }
 
-private:
-    Handle<SwaptionVolatilityStructure> swaptionVolatilityStructure(const std::string& index);
-    Real correlation(const std::string& index);
-    bool withFlatVol(const std::string& index);
-    bool byCallSpread(const std::string& index);
-    Real flatVol(const std::string& index);
+    QuantLib::ext::shared_ptr<QuantLib::FloatingRateCouponPricer> engineImpl(const std::string& index, const QuantLib::Date& accrualStartDate,
+               const QuantLib::Date& accrualEndDate) override;
 };
 
 //! Engine Builder for RangeAccrualLeg using call-spread replication on optionlet vols
@@ -60,12 +62,16 @@ private:
     This is the same replication approach used by the RateDigitalOption trade type.
     \ingroup builders
 */
-class RangeAccrualLegCallSpreadEngineBuilder : public EngineBuilder {
+class RangeAccrualLegCallSpreadEngineBuilder
+    : public CachingCouponPricerBuilder<std::string, const std::string&> {
 public:
     RangeAccrualLegCallSpreadEngineBuilder()
-        : EngineBuilder("Black", "CallSpreadCouponPricer", {"IborRangeAccrualLeg"}) {}
+        : CachingEngineBuilder("Black", "CallSpreadCouponPricer", {"IborRangeAccrualLeg"}) {}
 
-    QuantLib::ext::shared_ptr<FloatingRateCouponPricer> buildPricer(const std::string& index);
+protected:
+    std::string keyImpl(const std::string& index) override { return index; }
+
+    QuantLib::ext::shared_ptr<QuantLib::FloatingRateCouponPricer> engineImpl(const std::string& index) override;
 };
 
 } // namespace data
