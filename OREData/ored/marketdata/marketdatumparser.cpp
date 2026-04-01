@@ -429,15 +429,28 @@ QuantLib::ext::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const 
         // CDS/PRICE/Name/Seniority/ccy/term/runningSpread
         // CDS/PRICE/Name/Seniority/ccy/doc/term
         // CDS/PRICE/Name/Seniority/ccy/doc/term/runningSpread
-        QL_REQUIRE(tokens.size() == 6 || tokens.size() == 7 || tokens.size() == 8,
-            "6, 7 or 8 tokens expected in " << datumName);
+        // CDS/PRICE/Name/ccy          -- for new MDX quote, using reference datum to build schedule in Cds Helper
+        QL_REQUIRE(tokens.size() == 4 || tokens.size() == 6 || tokens.size() == 7 || tokens.size() == 8,
+            "4, 6, 7 or 8 tokens expected in " << datumName);
         const string& underlyingName = tokens[2];
+        string docClause;
+        Period term;
+        Date expiryDate;
+        Real runningSpread = Null<Real>();
+        
+        if (tokens.size() == 4)
+        {
+            const string& ccy = tokens[3];
+            // build from reference data, no seniority, no term
+            // e.g. for MDX swap
+            return QuantLib::ext::make_shared<CdsQuote>(value, asof, datumName, quoteType, underlyingName, "",
+                                                        ccy, term, docClause, runningSpread);
+        }
         const string& seniority = tokens[3];
         const string& ccy = tokens[4];
 
-        string docClause;
-        Period term;
-        Real runningSpread = Null<Real>();
+        
+        
         if (tokens.size() == 6) {
             term = parsePeriod(tokens[5]);
         } else if (tokens.size() == 8) {
