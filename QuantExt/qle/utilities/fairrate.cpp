@@ -108,8 +108,6 @@ std::pair<Real, Real> fairRate(const std::vector<Leg>& legs,
     Date valuationDate = discountCurve(0)->referenceDate();
 
     auto [referenceLegIdx, excludeIndices] = selectReferenceLeg(legs, isPayer);
-    std::cout << "fairRate: selected leg " << referenceLegIdx << " as reference leg, excluding legs ";    for (const auto i : excludeIndices)
-        std::cout << i << " ";    std::cout << std::endl;
 
     std::vector<bool> exclude(n, false);
     for (const auto i : excludeIndices)
