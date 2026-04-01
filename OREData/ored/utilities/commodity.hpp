@@ -24,7 +24,7 @@ namespace ore {
 namespace data {
 
 //! Parse a commodity calendar spread volatility surface name.
-/*! Expected format is <underlying>_CALENDAR_SPREAD_<offset>.
+/*! Expected format is [underlying]_CALENDAR_SPREAD_[offset].
     On success, returns true and populates \p underlyingName and \p offset.
 */
 bool parseCommodityCalendarSpreadVolSurfaceName(const std::string& name, std::string& underlyingName, int& offset);
