@@ -67,7 +67,7 @@ public:
     void buildCommoditySwap(std::string commodityId, std::string maturity, QuantLib::Real quantity, QuantLib::Real fixedPrice, std::string indexId,
                             std::string floatType, bool firstLegPays, std::string tradeId = "");
     void buildCommodityOption(std::string commodityId, QuantLib::Real quantity, std::string maturity, QuantLib::Real strike, std::string priceType,
-                              bool isLong, bool isCall);
+                              bool isLong, bool isCall, std::string tradeId);
     void buildCommodityForward(std::string commodityId, QuantLib::Real quantity, std::string maturity, QuantLib::Real strike,
                                bool isLong, std::string tradeId = "");
     void fromXML(XMLNode* node) override;
