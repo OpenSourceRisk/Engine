@@ -84,7 +84,8 @@ using std::string;
 using ore::data::parseReal;
 using ore::data::parseInteger;
 using ore::data::isPseudoCurrency;
-
+using ore::data::isSimmNonStandardCurrency;
+using ore::data::simmStandardCurrency;
 namespace ore {
 namespace analytics {
 
@@ -464,19 +465,19 @@ bool isIsin(const string& s) {
   
 
 void convertToSimmStandardCurrency(double& npv, std::string& ccy, const QuantLib::ext::shared_ptr<ore::data::Market> market) {
-    if (!isSimmNonStandardCurrency(ccy))
+    if (!ore::data::isSimmNonStandardCurrency(ccy))
         return;
-    std::string target = simmStandardCurrency(ccy);
+    std::string target = ore::data::simmStandardCurrency(ccy);
     npv *= market->fxRate(ccy + target)->value();
     ccy = target;
 }
 
-void convertToSimmStandardCurrency(std::string& ccy) { ccy = simmStandardCurrency(ccy); }
+void convertToSimmStandardCurrency(std::string& ccy) { ccy = ore::data::simmStandardCurrency(ccy); }
 
 bool convertToSimmStandardCurrencyPair(std::string& ccy) {
     QL_REQUIRE(ccy.size() == 6, "convertToSimmStandardCurrencyPair: expected string of size 6, got '" << ccy << "'");
-    std::string ccy1 = simmStandardCurrency(ccy.substr(0, 3));
-    std::string ccy2 = simmStandardCurrency(ccy.substr(3));
+    std::string ccy1 = ore::data::simmStandardCurrency(ccy.substr(0, 3));
+    std::string ccy2 = ore::data::simmStandardCurrency(ccy.substr(3));
     ccy = ccy1 + ccy2;
     return ccy1 != ccy2;
 }

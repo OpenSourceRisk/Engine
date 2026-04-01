@@ -53,6 +53,8 @@ using ore::data::Portfolio;
 using ore::data::to_string;
 using ore::data::parseBool;
 using ore::data::Trade;
+using ore::data::isUnidadeCurrency;
+using ore::data::simmStandardCurrency;
 using ore::analytics::CrifRecord;
 using QuantExt::FXLinkedCashFlow;
 using namespace QuantLib;

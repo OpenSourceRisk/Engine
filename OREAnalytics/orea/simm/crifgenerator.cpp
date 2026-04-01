@@ -48,6 +48,9 @@
 
 using namespace ore::analytics;
 
+using ore::data::isSimmNonStandardCurrency;
+using ore::data::isUnidadeCurrency;
+using ore::data::simmStandardCurrency;
 using ore::data::checkCurrency;
 using ore::data::parseIborIndex;
 using ore::data::parseZeroInflationIndex;

@@ -543,7 +543,7 @@ bool isSimmEligibleXccySwap(const std::vector<LegData>& legData, const std::stri
         } else if (payerReceiverIt->second != ld.isPayer()) {
             return false;
         }
-        standardSimCurrencies.insert(isUnidadeCurrency(ccy) ? simmStandardCurrency(ccy) : ccy);
+        standardSimCurrencies.insert(ore::data::isUnidadeCurrency(ccy) ? ore::data::simmStandardCurrency(ccy) : ccy);
     }
     // Dont allow three raw currencies even if two of them are the same standard SIMM currency
     return legPayerReceiver.size() == 2 && standardSimCurrencies.size() == 2;
