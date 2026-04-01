@@ -36,6 +36,7 @@ struct SaCcrVariables : public InputVariables {
 
     QuantLib::ext::shared_ptr<ore::data::NettingSetManager> nettingSetManager_;
     QuantLib::ext::shared_ptr<ore::data::CollateralBalances> collateralBalances_;
+    QuantLib::ext::shared_ptr<ore::data::CounterpartyManager> counterpartyManager_;
 };
 
 class SaCcrAnalyticImpl : public Analytic::Impl {

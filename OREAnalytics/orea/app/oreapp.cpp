@@ -1469,36 +1469,8 @@ void OREAppInputParameters::loadParameters() {
      if (!tmp.empty() && parseBool(tmp)) {
          insertAnalytic("SA_CVA");
 
-         // Load scenarioGeneratorData from sacva section and forward to the simulation section
-         // so the XVA sub-analytic can pick it up (otherwise ConfigurationBuilder defaults to 1000 samples)
-         tmp = params_->getString("sacva", "scenarioGeneratorData", false);
-         if (!tmp.empty()) {
-             LOG("Loading scenarioGeneratorData from sacva section: " << tmp);
-             setScenarioGeneratorData(tmp);
-         }
-
-         // Load crossAssetModelData from sacva section and forward to the simulation section
-         tmp = params_->getString("sacva", "crossAssetModelData", false);
-         if (!tmp.empty()) {
-             LOG("Loading crossAssetModelData from sacva section: " << tmp);
-             setCrossAssetModelData(tmp);
-         }
-
-         // Load dimModel from sacva section and forward to the xva section
-         // so the XVA sub-analytic applies Dynamic Initial Margin (e.g. DeltaVaR)
-         tmp = params_->getString("sacva", "dimModel", false);
-         if (!tmp.empty()) {
-             LOG("Loading dimModel from sacva section: " << tmp);
-             setDimModel(tmp);
-         }
-
-         // Forward storeSensis, curveSensiGrid, vegaSensiGrid from sacva to simulation section
-         // so the XVA sub-analytic creates nettingSetCube and sensitivityStorageManager for DIM
-         tmp = params_->getString("sacva", "storeSensis", false);
-         if (!tmp.empty() && parseBool(tmp)) {
-             LOG("Loading storeSensis from sacva section");
-             setStoreSensis(true);
-         }
+         // Forward curveSensiGrid, vegaSensiGrid from sacva to simulation section
+         // (requires access to parameters_ so cannot be moved to loadVariablesImpl)
          tmp = params_->getString("sacva", "curveSensiGrid", false);
          if (!tmp.empty()) {
              LOG("Loading curveSensiGrid from sacva section: " << tmp);
@@ -1512,22 +1484,10 @@ void OREAppInputParameters::loadParameters() {
              parameters_.set("simulation", "vegaSensiGrid", grid);
          }
 
-         tmp = params_->getString("sacva", "saCvaNetSensitivitiesFile", false);
-         if (!tmp.empty()) {
-             string file = (setupVariables_.inputPath_ / tmp).generic_string();
-             LOG("Loading aggregated SA-CVA sensitivity input from file" << file);
-             setSaCvaNetSensitivitiesFromFile(file);
-         } else {
-             tmp = params_->getString("sacva", "cvaSensitivitiesFile", false);
-             if (!tmp.empty()) {
-                 string file = (setupVariables_.inputPath_ / tmp).generic_string();
-                 LOG("Loading granular cva sensitivity input from file" << file);
-                 setCvaSensitivitiesFromFile(file);
-             }
-	 }
-
-	 // if both above failed: run the sub-analytic
-	 if (saCvaNetSensitivities().size() == 0) {
+	 // if no sensitivity files provided: run the sub-analytic
+	 tmp = params_->getString("sacva", "saCvaNetSensitivitiesFile", false);
+	 std::string tmp2 = params_->getString("sacva", "cvaSensitivitiesFile", false);
+	 if (tmp.empty() && tmp2.empty()) {
 	     // Ensure that we have the XVA Sensitivity analytic configured, see above
 	     QL_REQUIRE(analytics().find("XVA_SENSITIVITY") != analytics().end(),
 			"SA-CVA needs the XVA Sensitivity analytic configured unless sensitivities are provided as "
@@ -1542,42 +1502,8 @@ void OREAppInputParameters::loadParameters() {
       *********************/
 
      tmp = params_->getString("saccr", "active", false);
-     if (!tmp.empty() && parseBool(tmp)) {
+     if (!tmp.empty() && parseBool(tmp))
          insertAnalytic("SA_CCR");
-
-         // Forward counterpartyFile from saccr section (overrides setup section if present)
-         tmp = params_->getString("saccr", "counterpartyFile", false);
-         if (tmp != "") {
-             string file = (setupVariables_.inputPath_ / tmp).generic_string();
-             LOG("Loading counterparty manager from saccr section: " << file);
-             setupVariables_.counterpartyManager_ = QuantLib::ext::make_shared<ore::data::CounterpartyManager>();
-             setupVariables_.counterpartyManager_->fromFile(file);
-         }
-
-         // Commodity asset class uses SIMM name and bucket mapping for hedging set definitions
-	     // Note that Equities use reference data for that purpose
-         tmp = params_->getString("saccr", "simmVersion", false);
-         if (tmp != "")
-             setSimmVersion(tmp);
-         else if (simmVersion_ == "") {
-             setSimmVersion("2.1");
-             WLOG("Setting SIMM version to 2.1 for SACCR");
-         }
-
-         tmp = params_->getString("saccr", "nameMappingInputFile", false);
-         if (tmp != "") {
-             string nameMappingFile = (setupVariables_.inputPath_ / tmp).generic_string();
-             setSimmNameMapperFromFile(nameMappingFile);
-             LOG("Loading SIMM name mapping from file " << nameMappingFile);
-         }
-
-         tmp = params_->getString("saccr", "bucketMappingInputFile", false);
-         if (tmp != "") {
-             string bucketMappingFile = (setupVariables_.inputPath_ / tmp).generic_string();
-             setSimmBucketMapperFromFile(bucketMappingFile);
-             LOG("Loading SIMM bucket mapping from file " << bucketMappingFile);
-         }
-     }
 
      /*********************
       * CVA Capital: BA-CVA
@@ -1600,23 +1526,8 @@ void OREAppInputParameters::loadParameters() {
       *************/
 
      tmp = params_->getString("frtb", "active", false);
-     if (!tmp.empty() && parseBool(tmp)) {
+     if (!tmp.empty() && parseBool(tmp))
          insertAnalytic("FRTB");
-
-         tmp = params_->getString("frtb", "version", false);
-        if (tmp != ""){
-            setSimmVersion(tmp);
-        } else if (simmVersion() == "") {
-            LOG("set SIMM version to 2.1 (default)");
-            setSimmVersion("2.1");
-        }
-
-         tmp = params_->getString("frtb", "crif", false);
-         if (tmp != "") {
-             string file = (setupVariables_.inputPath_ / tmp).generic_string();
-             setCrifFromFile(file, csvEolChar(), csvSeparator(), '\"', csvEscapeChar());
-         }
-     }
 
      /*************************
       * NPV Lagged

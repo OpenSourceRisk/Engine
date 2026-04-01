@@ -24,6 +24,7 @@
 #include <orea/engine/parsensitivitycubestream.hpp>
 #include <orea/engine/sacvasensitivityloader.hpp>
 #include <ored/report/inmemoryreport.hpp>
+#include <ored/utilities/parsers.hpp>
 
 using RFType = ore::analytics::RiskFactorKey::KeyType;
 
@@ -33,6 +34,58 @@ namespace analytics {
 void SaCvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) {
     vector<string> analyticStrs = {"sacva", "bacva", "setup"};
     inputs->loadParameterXML<NettingSetManager>(nettingSetManager_, analyticStrs, "csaFile");
+
+    std::string tmp;
+
+    // Load scenarioGeneratorData from sacva section and forward to the simulation section
+    // so the XVA sub-analytic can pick it up (otherwise ConfigurationBuilder defaults to 1000 samples)
+    inputs->loadParameter<std::string>(tmp, "sacva", "scenarioGeneratorData");
+    if (!tmp.empty()) {
+        LOG("Loading scenarioGeneratorData from sacva section: " << tmp);
+        inputs->setScenarioGeneratorData(tmp);
+    }
+
+    // Load crossAssetModelData from sacva section and forward to the simulation section
+    tmp = {};
+    inputs->loadParameter<std::string>(tmp, "sacva", "crossAssetModelData");
+    if (!tmp.empty()) {
+        LOG("Loading crossAssetModelData from sacva section: " << tmp);
+        inputs->setCrossAssetModelData(tmp);
+    }
+
+    // Load dimModel from sacva section and forward to the xva section
+    // so the XVA sub-analytic applies Dynamic Initial Margin (e.g. DeltaVaR)
+    tmp = {};
+    inputs->loadParameter<std::string>(tmp, "sacva", "dimModel");
+    if (!tmp.empty()) {
+        LOG("Loading dimModel from sacva section: " << tmp);
+        inputs->setDimModel(tmp);
+    }
+
+    // Forward storeSensis from sacva to simulation section
+    // so the XVA sub-analytic creates nettingSetCube and sensitivityStorageManager for DIM
+    tmp = {};
+    inputs->loadParameter<std::string>(tmp, "sacva", "storeSensis");
+    if (!tmp.empty() && ore::data::parseBool(tmp)) {
+        LOG("Loading storeSensis from sacva section");
+        inputs->setStoreSensis(true);
+    }
+
+    // Load sensitivity input files
+    tmp = {};
+    inputs->loadParameter<std::string>(tmp, "sacva", "saCvaNetSensitivitiesFile");
+    if (!tmp.empty()) {
+        std::string file = (inputs->setupVariables().inputPath_ / tmp).generic_string();
+        LOG("Loading aggregated SA-CVA sensitivity input from file" << file);
+        inputs->setSaCvaNetSensitivitiesFromFile(file);
+    } else {
+        inputs->loadParameter<std::string>(tmp, "sacva", "cvaSensitivitiesFile");
+        if (!tmp.empty()) {
+            std::string file = (inputs->setupVariables().inputPath_ / tmp).generic_string();
+            LOG("Loading granular cva sensitivity input from file" << file);
+            inputs->setCvaSensitivitiesFromFile(file);
+        }
+    }
 }
 
 void SaCvaAnalyticImpl::setUpConfigurations() {
