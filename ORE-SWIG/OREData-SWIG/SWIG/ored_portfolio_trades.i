@@ -255,29 +255,8 @@ public:
 } // namespace data
 } // namespace ore
 
-%shared_ptr(FxBarrierOption)
-class FxBarrierOption : public ore::data::Trade {
-public:
-    FxBarrierOption(ore::data::Envelope& env, ore::data::OptionData option, ore::data::BarrierData barrier, QuantLib::Date startDate,
-                    std::string calendar, std::string boughtCurrency, double boughtAmount,
-                    std::string soldCurrency, double soldAmount, std::string fxIndex = "");
-
-    void build(const ext::shared_ptr<EngineFactory>&) override;
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
-};
-
-%shared_ptr(FxTouchOption)
-class FxTouchOption : public ore::data::Trade {
-public:
-    FxTouchOption(ore::data::Envelope& env, ore::data::OptionData option, ore::data::BarrierData barrier, const std::string& foreignCurrency,
-                  const std::string& domesticCurrency, const std::string& payoffCurrency, double payoffAmount,
-                  const std::string& startDate = "", const std::string& calendar = "", const std::string& fxIndex = "",
-                  const std::string& fxIndexDailyLows = "", const std::string& fxIndexDailyHighs = "");
-    void build(const ext::shared_ptr<EngineFactory>&) override;
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
-};
+// FxBarrierOption and FxTouchOption are declared later, after
+// FxOptionWithBarrier / FxSingleAssetDerivative base classes are visible.
 
 %shared_ptr(ForwardBond)
 class ForwardBond : public ore::data::Trade {
@@ -800,8 +779,44 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 
+// FxBarrierOption inherits from FxOptionWithBarrier (not Trade directly)
+%feature("notabstract") FxBarrierOption;
+%shared_ptr(FxBarrierOption)
+class FxBarrierOption : public ore::data::FxOptionWithBarrier {
+public:
+    FxBarrierOption(ore::data::Envelope& env, ore::data::OptionData option, ore::data::BarrierData barrier, QuantLib::Date startDate,
+                    std::string calendar, std::string boughtCurrency, double boughtAmount,
+                    std::string soldCurrency, double soldAmount, std::string fxIndex = "");
+    void checkBarriers() override;
+    QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
+    vanillaPricingEngine(const QuantLib::ext::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
+                           const QuantLib::Date& paymentDate = QuantLib::Date()) override;
+    QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
+    barrierPricingEngine(const QuantLib::ext::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
+                           const QuantLib::Date& paymentDate = QuantLib::Date()) override;
+    void build(const ext::shared_ptr<EngineFactory>&) override;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+};
+
+// FxTouchOption inherits from FxSingleAssetDerivative (not Trade directly)
+%feature("notabstract") FxTouchOption;
+%shared_ptr(FxTouchOption)
+class FxTouchOption : public ore::data::FxSingleAssetDerivative {
+public:
+    FxTouchOption(ore::data::Envelope& env, ore::data::OptionData option, ore::data::BarrierData barrier, const std::string& foreignCurrency,
+                  const std::string& domesticCurrency, const std::string& payoffCurrency, double payoffAmount,
+                  const std::string& startDate = "", const std::string& calendar = "", const std::string& fxIndex = "",
+                  const std::string& fxIndexDailyLows = "", const std::string& fxIndexDailyHighs = "");
+    void build(const ext::shared_ptr<EngineFactory>&) override;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+};
+
+// FxEuropeanBarrierOption inherits from FxSingleAssetDerivative (not Trade directly)
+%feature("notabstract") FxEuropeanBarrierOption;
 %shared_ptr(FxEuropeanBarrierOption)
-class FxEuropeanBarrierOption : public ore::data::Trade {
+class FxEuropeanBarrierOption : public ore::data::FxSingleAssetDerivative {
 public:
     FxEuropeanBarrierOption();
     FxEuropeanBarrierOption(ore::data::Envelope& env, ore::data::OptionData option, ore::data::BarrierData barrier,
@@ -1137,8 +1152,10 @@ public:
                            const QuantLib::Date& paymentDate = QuantLib::Date()) override;
 };
 
+// EquityDigitalOption inherits from EquitySingleAssetDerivative (not Trade directly)
+%feature("notabstract") EquityDigitalOption;
 %shared_ptr(EquityDigitalOption)
-class EquityDigitalOption : public ore::data::Trade {
+class EquityDigitalOption : public ore::data::EquitySingleAssetDerivative {
 public:
     EquityDigitalOption();
     EquityDigitalOption(ore::data::Envelope& env, ore::data::OptionData option, double strike, const std::string& payoffCurrency, double payoffAmount,
@@ -1150,13 +1167,22 @@ public:
 
 // ore/OREData/ored/portfolio/equitydoublebarrieroption.hpp
 
+// EquityDoubleBarrierOption inherits from EquityOptionWithBarrier (not Trade directly)
+%feature("notabstract") EquityDoubleBarrierOption;
 %shared_ptr(EquityDoubleBarrierOption)
-class EquityDoubleBarrierOption : public ore::data::Trade {
+class EquityDoubleBarrierOption : public ore::data::EquityOptionWithBarrier {
 public:
     EquityDoubleBarrierOption();
     EquityDoubleBarrierOption(ore::data::Envelope& env, ore::data::OptionData option, ore::data::BarrierData barrier, QuantLib::Date startDate,
                               std::string calendar, ore::data::EquityUnderlying equityUnderlying, QuantLib::Currency currency,
                               QuantLib::Real quantity, ore::data::TradeStrike strike);
+    void checkBarriers() override;
+    QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
+    vanillaPricingEngine(const QuantLib::ext::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
+                           const QuantLib::Date& paymentDate = QuantLib::Date()) override;
+    QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
+    barrierPricingEngine(const QuantLib::ext::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
+                           const QuantLib::Date& paymentDate = QuantLib::Date()) override;
     void build(const ext::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
@@ -1164,8 +1190,10 @@ public:
 
 // ore/OREData/ored/portfolio/equitydoubletouchoption.hpp
 
+// EquityDoubleTouchOption inherits from EquitySingleAssetDerivative (not Trade directly)
+%feature("notabstract") EquityDoubleTouchOption;
 %shared_ptr(EquityDoubleTouchOption)
-class EquityDoubleTouchOption : public ore::data::Trade {
+class EquityDoubleTouchOption : public ore::data::EquitySingleAssetDerivative {
 public:
     EquityDoubleTouchOption();
     EquityDoubleTouchOption(ore::data::Envelope& env, ore::data::OptionData option, ore::data::BarrierData barrier,
@@ -1178,8 +1206,10 @@ public:
 
 // ore/OREData/ored/portfolio/equityeuropeanbarrieroption.hpp
 
+// EquityEuropeanBarrierOption inherits from EquityOption (not Trade directly)
+%feature("notabstract") EquityEuropeanBarrierOption;
 %shared_ptr(EquityEuropeanBarrierOption)
-class EquityEuropeanBarrierOption : public ore::data::Trade {
+class EquityEuropeanBarrierOption : public ore::data::EquityOption {
 public:
     EquityEuropeanBarrierOption();
     EquityEuropeanBarrierOption(ore::data::Envelope& env, ore::data::OptionData option, ore::data::BarrierData barrier,
