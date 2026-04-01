@@ -30,8 +30,6 @@ using ore::data::Underlying;
 using ore::data::EquityUnderlying;
 using ore::data::TradeBarrier;
 using ore::data::BarrierData;
-using ore::data::EquitySwap;
-using ore::data::InflationSwap;
 %}
 
 %shared_ptr(ore::data::TradeMonetary)
@@ -44,8 +42,6 @@ using ore::data::InflationSwap;
 %shared_ptr(ore::data::EquityUnderlying)
 %shared_ptr(ore::data::TradeBarrier)
 %shared_ptr(ore::data::BarrierData)
-%shared_ptr(ore::data::EquitySwap)
-%shared_ptr(ore::data::InflationSwap)
 
 namespace ore {
 namespace data {
@@ -147,24 +143,6 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
 
-class EquitySwap : public Swap {
-public:
-    EquitySwap();
-    EquitySwap(const Envelope& env, const LegData& leg0, const LegData& leg1);
-    void build(const ext::shared_ptr<EngineFactory>&) override;
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
-};
-
-class InflationSwap : public Swap {
-public:
-    InflationSwap();
-    InflationSwap(const Envelope& env, const LegData& leg0, const LegData& leg1);
-    void build(const ext::shared_ptr<EngineFactory>&) override;
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
-};
-
 } // namespace data
 } // namespace ore
 
@@ -212,16 +190,4 @@ def _barrier_data_init(self, barrierType, levels, rebate, tradeBarriers, *args):
 
 BarrierData.__init__ = _barrier_data_init
 %}
-
-%extend ore::data::EquitySwap {
-    EquitySwap(const Envelope& env, const std::vector<ext::shared_ptr<ore::data::LegData>>& legData) {
-        return new ore::data::EquitySwap(env, VECTOR_SWIG_TO_ORE(legData));
-    }
-}
-
-%extend ore::data::InflationSwap {
-    InflationSwap(const Envelope& env, const std::vector<ext::shared_ptr<ore::data::LegData>>& legData) {
-        return new ore::data::InflationSwap(env, VECTOR_SWIG_TO_ORE(legData));
-    }
-}
 #endif

@@ -54,6 +54,8 @@ using ore::data::FxTouchOption;
 %shared_ptr(ore::data::FxForward)
 %shared_ptr(ore::data::EquityOption)
 %shared_ptr(ore::data::EquityForward)
+%shared_ptr(ore::data::EquitySwap)
+%shared_ptr(ore::data::InflationSwap)
 %shared_ptr(ore::data::CapFloor)
 %shared_ptr(ore::data::BondData)
 %shared_ptr(ore::data::Bond)
@@ -88,6 +90,34 @@ public:
     const std::vector<LegData>& legData() const { return legData_; }
     const std::map<std::string,QuantLib::ext::any>& additionalData() const override;
 };
+
+class EquitySwap : public Swap {
+public:
+    EquitySwap();
+    EquitySwap(const Envelope& env, const LegData& leg0, const LegData& leg1);
+    void build(const ext::shared_ptr<EngineFactory>&) override;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+};
+%extend EquitySwap {
+    EquitySwap(const Envelope& env, const std::vector<ext::shared_ptr<LegData>>& legData) {
+        return new ore::data::EquitySwap(env, VECTOR_SWIG_TO_ORE(legData));
+    }
+}
+
+class InflationSwap : public Swap {
+public:
+    InflationSwap();
+    InflationSwap(const Envelope& env, const LegData& leg0, const LegData& leg1);
+    void build(const ext::shared_ptr<EngineFactory>&) override;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+};
+%extend InflationSwap {
+    InflationSwap(const Envelope& env, const std::vector<ext::shared_ptr<LegData>>& legData) {
+        return new ore::data::InflationSwap(env, VECTOR_SWIG_TO_ORE(legData));
+    }
+}
 
 class ForwardRateAgreement : public Swap {
 public:
@@ -663,6 +693,95 @@ public:
 } // namespace ore
 %pythoncode %{ ConvertibleBond = OREConvertibleBond %}
 
+// ore/OREData/ored/portfolio/barrieroption.hpp
+
+%rename(OREBarrierOption) ore::data::BarrierOption;
+
+%shared_ptr(ore::data::FxDerivative)
+%shared_ptr(ore::data::FxSingleAssetDerivative)
+%shared_ptr(ore::data::EquityDerivative)
+%shared_ptr(ore::data::EquitySingleAssetDerivative)
+%shared_ptr(ore::data::BarrierOption)
+%shared_ptr(ore::data::FxOptionWithBarrier)
+%shared_ptr(ore::data::EquityOptionWithBarrier)
+%nodefaultctor ore::data::FxDerivative;
+%nodefaultctor ore::data::FxSingleAssetDerivative;
+%nodefaultctor ore::data::EquityDerivative;
+%nodefaultctor ore::data::EquitySingleAssetDerivative;
+%nodefaultctor ore::data::FxOptionWithBarrier;
+%nodefaultctor ore::data::EquityOptionWithBarrier;
+
+namespace ore {
+namespace data {
+
+class FxDerivative : virtual public Trade { };
+
+class FxSingleAssetDerivative : public FxDerivative {
+public:
+    void build(const ext::shared_ptr<EngineFactory>&) override;
+};
+
+class EquityDerivative : virtual public Trade { };
+
+class EquitySingleAssetDerivative : public EquityDerivative {
+public:
+    void build(const ext::shared_ptr<EngineFactory>&) override;
+};
+
+class BarrierOption : virtual public Trade {
+public:
+    void build(const ext::shared_ptr<EngineFactory>&) override;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+    virtual void checkBarriers() = 0;
+    virtual QuantLib::ext::shared_ptr<QuantLib::Index> getIndex() const = 0;
+    virtual const QuantLib::Real strike() const = 0;
+    virtual QuantLib::Real tradeMultiplier() = 0;
+    virtual Currency tradeCurrency() = 0;
+    virtual QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
+    vanillaPricingEngine(const QuantLib::ext::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
+                           const QuantLib::Date& paymentDate) = 0;
+    virtual QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
+    barrierPricingEngine(const QuantLib::ext::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
+                           const QuantLib::Date& paymentDate) = 0;
+    virtual const QuantLib::Handle<QuantLib::Quote>& spotQuote() = 0;
+    virtual void additionalFromXml(ore::data::XMLNode* node) = 0;
+    virtual void additionalToXml(ore::data::XMLDocument& doc, ore::data::XMLNode* node) const = 0;
+    virtual std::string indexFixingName() = 0;
+};
+
+class FxOptionWithBarrier : public FxSingleAssetDerivative, public BarrierOption {
+public:
+    void additionalFromXml(ore::data::XMLNode* node) override;
+    void additionalToXml(ore::data::XMLDocument& doc, ore::data::XMLNode* node) const override;
+    QuantLib::ext::shared_ptr<QuantLib::Index> getIndex() const override;
+    const QuantLib::Real strike() const override;
+    QuantLib::Real tradeMultiplier() override;
+    Currency tradeCurrency() override;
+    const QuantLib::Handle<QuantLib::Quote>& spotQuote() override;
+    std::string indexFixingName() override;
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
+};
+
+class EquityOptionWithBarrier : public EquitySingleAssetDerivative, public BarrierOption {
+public:
+    void additionalFromXml(ore::data::XMLNode* node) override;
+    void additionalToXml(ore::data::XMLDocument& doc, ore::data::XMLNode* node) const override;
+    QuantLib::ext::shared_ptr<QuantLib::Index> getIndex() const override;
+    const QuantLib::Real strike() const override;
+    QuantLib::Real tradeMultiplier() override;
+    Currency tradeCurrency() override;
+    const QuantLib::Handle<QuantLib::Quote>& spotQuote() override;
+    std::string indexFixingName() override;
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
+};
+
+} // namespace data
+} // namespace ore
+
+%feature("notabstract") FxDoubleBarrierOption;
 %shared_ptr(FxDoubleBarrierOption)
 class FxDoubleBarrierOption : public ore::data::FxOptionWithBarrier {
 public:
@@ -745,7 +864,6 @@ using ORERiskParticipationAgreement = ore::data::RiskParticipationAgreement;
 %}
 
 %rename(OREBondTRS) ore::data::BondTRS;
-%rename(OREBarrierOption) ore::data::BarrierOption;
 %rename(ORECallableSwap) ore::data::CallableSwap;
 %rename(ORECliquetOption) ore::data::CliquetOption;
 %rename(OREAscot) ore::data::Ascot;
@@ -807,68 +925,6 @@ def _balance_guaranteed_swap_init(self, env=None, referenceSecurity="", tranches
 OREBalanceGuaranteedSwap.__init__ = _balance_guaranteed_swap_init
 BalanceGuaranteedSwap = OREBalanceGuaranteedSwap
 %}
-
-// ore/OREData/ored/portfolio/barrieroption.hpp
-
-%shared_ptr(ore::data::BarrierOption)
-%shared_ptr(FxOptionWithBarrier)
-%shared_ptr(EquityOptionWithBarrier)
-%nodefaultctor FxOptionWithBarrier;
-%nodefaultctor EquityOptionWithBarrier;
-
-namespace ore {
-namespace data {
-
-class BarrierOption : virtual public Trade {
-public:
-    void build(const ext::shared_ptr<EngineFactory>&) override;
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
-    virtual void checkBarriers() = 0;
-    virtual QuantLib::ext::shared_ptr<QuantLib::Index> getIndex() const = 0;
-    virtual const QuantLib::Real strike() const = 0;
-    virtual QuantLib::Real tradeMultiplier() = 0;
-    virtual Currency tradeCurrency() = 0;
-    virtual QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
-    vanillaPricingEngine(const QuantLib::ext::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
-                           const QuantLib::Date& paymentDate) = 0;
-    virtual QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
-    barrierPricingEngine(const QuantLib::ext::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
-                           const QuantLib::Date& paymentDate) = 0;
-    virtual const QuantLib::Handle<QuantLib::Quote>& spotQuote() = 0;
-    virtual void additionalFromXml(ore::data::XMLNode* node) = 0;
-    virtual void additionalToXml(ore::data::XMLDocument& doc, ore::data::XMLNode* node) const = 0;
-    virtual std::string indexFixingName() = 0;
-};
-
-} // namespace data
-} // namespace ore
-
-class FxOptionWithBarrier : public ore::data::BarrierOption {
-    void additionalFromXml(ore::data::XMLNode* node) override;
-    void additionalToXml(ore::data::XMLDocument& doc, ore::data::XMLNode* node) const override;
-    QuantLib::ext::shared_ptr<QuantLib::Index> getIndex() const override;
-    const QuantLib::Real strike() const override;
-    QuantLib::Real tradeMultiplier() override;
-    Currency tradeCurrency() override;
-    const QuantLib::Handle<QuantLib::Quote>& spotQuote() override;
-    std::string indexFixingName() override;
-    void fromXML(ore::data::XMLNode* node) override;
-    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
-};
-
-class EquityOptionWithBarrier : public ore::data::BarrierOption {
-    void additionalFromXml(ore::data::XMLNode* node) override;
-    void additionalToXml(ore::data::XMLDocument& doc, ore::data::XMLNode* node) const override;
-    QuantLib::ext::shared_ptr<QuantLib::Index> getIndex() const override;
-    const QuantLib::Real strike() const override;
-    QuantLib::Real tradeMultiplier() override;
-    Currency tradeCurrency() override;
-    const QuantLib::Handle<QuantLib::Quote>& spotQuote() override;
-    std::string indexFixingName() override;
-    void fromXML(ore::data::XMLNode* node) override;
-    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
-};
 
 // ore/OREData/ored/portfolio/bondfuture.hpp
 
@@ -1064,6 +1120,7 @@ public:
 
 // ore/OREData/ored/portfolio/equitybarrieroption.hpp
 
+%feature("notabstract") EquityBarrierOption;
 %shared_ptr(EquityBarrierOption)
 class EquityBarrierOption : public ore::data::EquityOptionWithBarrier {
 public:
@@ -1189,6 +1246,7 @@ public:
 
 // ore/OREData/ored/portfolio/equitytouchoption.hpp
 
+%feature("notabstract") EquityTouchOption;
 %shared_ptr(EquityTouchOption)
 class EquityTouchOption : public ore::data::EquitySingleAssetDerivative {
 public:
@@ -1248,6 +1306,7 @@ public:
 
 // ore/OREData/ored/portfolio/fxdigitalbarrieroption.hpp
 
+%feature("notabstract") FxDigitalBarrierOption;
 %shared_ptr(FxDigitalBarrierOption)
 class FxDigitalBarrierOption : public ore::data::FxSingleAssetDerivative {
 public:
@@ -1260,6 +1319,7 @@ public:
 
 // ore/OREData/ored/portfolio/fxdigitaloption.hpp
 
+%feature("notabstract") FxDigitalOption;
 %shared_ptr(FxDigitalOption)
 class FxDigitalOption : public ore::data::FxSingleAssetDerivative {
 public:
@@ -1272,6 +1332,7 @@ public:
 
 // ore/OREData/ored/portfolio/fxdoubletouchoption.hpp
 
+%feature("notabstract") FxDoubleTouchOption;
 %shared_ptr(FxDoubleTouchOption)
 class FxDoubleTouchOption : public ore::data::FxSingleAssetDerivative {
 public:
@@ -1283,6 +1344,7 @@ public:
 
 // ore/OREData/ored/portfolio/fxkikobarrieroption.hpp
 
+%feature("notabstract") FxKIKOBarrierOption;
 %shared_ptr(FxKIKOBarrierOption)
 class FxKIKOBarrierOption : public ore::data::FxSingleAssetDerivative {
 public:
