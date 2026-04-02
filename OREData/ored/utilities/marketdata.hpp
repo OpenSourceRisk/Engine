@@ -138,12 +138,12 @@ std::string fxIndexNameForDailyHighs(const QuantLib::ext::shared_ptr<QuantExt::F
 //! set to an empty string and offset to 0.
 bool parseCommodityCalendarSpreadVolSurfaceName(const std::string& name, std::string& underlyingName, int& offset);
 
-QuantLib::ext::shared_ptr<PriceTermStructure> getCalendarSpreadPriceCurve(const ore::data::Market* market,
+QuantLib::ext::shared_ptr<QuantExt::PriceTermStructure> getCalendarSpreadPriceCurve(const ore::data::Market* market,
                                                                           const std::string& name,
                                                                           const std::string& configuration, int offset,
                                                                           const std::string& conventionId);
 
-QuantLib::ext::shared_ptr<PriceTermStructure>
+QuantLib::ext::shared_ptr<QuantExt::PriceTermStructure>
 getCalendarSpreadPriceCurve(const ore::data::Market* market, const std::string& name, const std::string& configuration,
                             int offset, const QuantLib::ext::shared_ptr<QuantExt::FutureExpiryCalculator>& expCal);
 } // namespace data
