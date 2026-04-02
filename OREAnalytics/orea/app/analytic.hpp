@@ -53,7 +53,6 @@ namespace ore {
 namespace analytics {
 
 class InputParameters;
-struct InputVariables;
 class AnalyticsManager;
 class StressTestScenarioData;
 
