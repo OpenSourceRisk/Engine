@@ -611,7 +611,7 @@ void GenericBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>&
 
     QL_REQUIRE(optionData_.exerciseDates().size() == 1,
                "OptionData must contain exactly one ExerciseDate, got " << optionData_.exerciseDates().size());
-    events_.emplace_back("ExpiryDate", optionData_.exerciseDates().front());
+    std::string expiryDateStr = optionData_.exerciseDates().front();
 
     if (!settlementDate_.empty()) {
         QL_REQUIRE(
@@ -641,6 +641,23 @@ void GenericBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>&
                              ScheduleData(ScheduleRules(barrierMonitoringStartDate_, barrierMonitoringEndDate_, "1D",
                                                         getUnderlyingCalendar(factory).name(), "F", "F", "Forward")));
     }
+
+    // For European options, if the barrier monitoring schedule end date matches the exercise date
+    // and falls on a holiday, the schedule adjusts it via the term convention. We must adjust
+    // the ExpiryDate in the same way so that ExpiryDate >= last monitoring date holds.
+    if (!barrierMonitoringDates_.rules().empty()) {
+        const auto& rules = barrierMonitoringDates_.rules().front();
+        if (rules.endDate() == expiryDateStr) {
+            Calendar cal = parseCalendar(rules.calendar());
+            std::string termConvStr = rules.termConvention().empty() ? rules.convention() : rules.termConvention();
+            BusinessDayConvention termConv = parseBusinessDayConvention(termConvStr);
+            Date adjustedExpiry = cal.adjust(parseDate(expiryDateStr), termConv);
+            if (adjustedExpiry != parseDate(expiryDateStr)) {
+                expiryDateStr = ore::data::to_string(adjustedExpiry);
+            }
+        }
+    }
+    events_.emplace_back("ExpiryDate", expiryDateStr);
 
     std::vector<std::string> barrierTypes, barrierLevels, barrierRebates, barrierRebateCurrencies,
         barrierRebatePayTimes, barrierStrictComparison;
