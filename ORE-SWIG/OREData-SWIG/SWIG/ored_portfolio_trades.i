@@ -729,7 +729,12 @@ public:
     virtual std::string indexFixingName() = 0;
 };
 
-class FxOptionWithBarrier : public FxSingleAssetDerivative, public BarrierOption {
+// NOTE: The actual C++ class inherits from both FxSingleAssetDerivative and
+// BarrierOption, forming a virtual diamond to Trade.  SWIG cannot handle
+// virtual diamond inheritance correctly (pointer offset / vtable issues that
+// cause segfaults on Linux during destruction).  We break the diamond here by
+// inheriting only from BarrierOption, matching the approach used on master.
+class FxOptionWithBarrier : public BarrierOption {
 public:
     void additionalFromXml(ore::data::XMLNode* node) override;
     void additionalToXml(ore::data::XMLDocument& doc, ore::data::XMLNode* node) const override;
@@ -743,7 +748,8 @@ public:
     ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 };
 
-class EquityOptionWithBarrier : public EquitySingleAssetDerivative, public BarrierOption {
+// NOTE: Same virtual diamond avoidance as FxOptionWithBarrier above.
+class EquityOptionWithBarrier : public BarrierOption {
 public:
     void additionalFromXml(ore::data::XMLNode* node) override;
     void additionalToXml(ore::data::XMLDocument& doc, ore::data::XMLNode* node) const override;
