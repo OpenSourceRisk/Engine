@@ -17,7 +17,7 @@ ENV CIBW_ENVIRONMENT="ORE_PREBUILT_DIR=/project/ORE-SWIG/.prebuilt"
 
 WORKDIR /builds/qs/oreplus/ore
 RUN \
-python ../ore/Docker/update_version_number.py -f setup.py -v ${WHEELS_VERSION} && \
+python Docker/update_version_number.py -f setup.py -v ${WHEELS_VERSION} && \
 cibuildwheel --output-dir wheelhouse ORE-SWIG
 
 COPY wheelhouse /wheelhouse
