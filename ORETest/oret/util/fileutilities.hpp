@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file oret/fileutilities.hpp
+/*! \file oret/util/fileutilities.hpp
     \brief File utilities for use in unit tests
 */
 
@@ -24,7 +24,7 @@
 
 #include <algorithm>
 #include <filesystem>
-#include <boost/test/unit_test.hpp>
+#include <boost/test/unit_test_log.hpp>
 #include <fstream>
 #include <iterator>
 #include <string>

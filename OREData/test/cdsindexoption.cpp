@@ -16,9 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <oret/toplevelfixture.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 #include <boost/test/unit_test.hpp>
-#include <oret/datapaths.hpp>
+#include <oret/util/datapaths.hpp>
 
 #include <ored/portfolio/builders/indexcreditdefaultswap.hpp>
 #include <ored/portfolio/builders/indexcreditdefaultswapoption.hpp>
@@ -109,7 +109,7 @@ void checkNpvs(const QuantLib::ext::shared_ptr<Portfolio>& portfolio, Real tol, 
 
 }
 
-BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::data::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(CdsIndexOptionTest)
 

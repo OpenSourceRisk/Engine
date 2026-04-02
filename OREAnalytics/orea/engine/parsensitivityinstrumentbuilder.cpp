@@ -1495,7 +1495,7 @@ std::pair<QuantLib::ext::shared_ptr<Instrument>, Date> ParSensitivityInstrumentB
                 conv->paymentLag(), conv->flatPaymentLag(), conv->includeSpread(), conv->lookback(), conv->fixingDays(),
                 conv->rateCutoff(), conv->isAveraged(), conv->flatIncludeSpread(), conv->flatLookback(),
                 conv->flatFixingDays(), conv->flatRateCutoff(), conv->flatIsAveraged(), telescopicValueDates,
-                true);                                                       // fair spread leg is foreign
+                true, conv->observationShift(), conv->flatObservationShift()); // fair spread leg is foreign
         } else if (conv->isResettable() && !conv->flatIndexIsResettable()) { // i.e. spread index leg is resettable
             DLOG("create resettable xccy par instrument (2), convention " << conv->id());
             helper = QuantLib::ext::make_shared<CrossCcyBasisMtMResetSwap>(
@@ -1505,7 +1505,7 @@ std::pair<QuantLib::ext::shared_ptr<Instrument>, Date> ParSensitivityInstrumentB
                 conv->flatPaymentLag(), conv->paymentLag(), conv->flatIncludeSpread(), conv->flatLookback(),
                 conv->flatFixingDays(), conv->flatRateCutoff(), conv->flatIsAveraged(), conv->includeSpread(),
                 conv->lookback(), conv->fixingDays(), conv->rateCutoff(), conv->isAveraged(), telescopicValueDates,
-                false); // fair spread leg is domestic
+                false, conv->flatObservationShift(), conv->observationShift()); // fair spread leg is domestic
         } else {        // not resettable
             DLOG("create non-resettable xccy par instrument (3), convention " << conv->id());
             helper = QuantLib::ext::make_shared<CrossCcyBasisSwap>(
@@ -1513,7 +1513,8 @@ std::pair<QuantLib::ext::shared_ptr<Instrument>, Date> ParSensitivityInstrumentB
                 notional, currency, schedule, *index, 0.0, 1.0,                 // flat index leg
                 conv->paymentLag(), conv->flatPaymentLag(), conv->includeSpread(), conv->lookback(), conv->fixingDays(),
                 conv->rateCutoff(), conv->isAveraged(), conv->flatIncludeSpread(), conv->flatLookback(),
-                conv->flatFixingDays(), conv->flatRateCutoff(), conv->flatIsAveraged(), telescopicValueDates);
+                conv->flatFixingDays(), conv->flatRateCutoff(), conv->flatIsAveraged(), telescopicValueDates,
+                conv->observationShift(), conv->flatObservationShift());
         }
     } else { // base ccy index is flat index
         if (conv->isResettable() && conv->flatIndexIsResettable()) {
@@ -1525,7 +1526,7 @@ std::pair<QuantLib::ext::shared_ptr<Instrument>, Date> ParSensitivityInstrumentB
                 conv->paymentLag(), conv->flatPaymentLag(), conv->includeSpread(), conv->lookback(), conv->fixingDays(),
                 conv->rateCutoff(), conv->isAveraged(), conv->flatIncludeSpread(), conv->flatLookback(),
                 conv->flatFixingDays(), conv->flatRateCutoff(), conv->flatIsAveraged(), telescopicValueDates,
-                true); // fair spread leg is foreign
+                true, conv->observationShift(), conv->flatObservationShift()); // fair spread leg is foreign
         } else if (conv->isResettable() && !conv->flatIndexIsResettable()) {
             DLOG("create resettable xccy par instrument (5), convention " << conv->id());
             // second leg is resettable, so the second leg is the non-base non-flat spread leg
@@ -1536,7 +1537,7 @@ std::pair<QuantLib::ext::shared_ptr<Instrument>, Date> ParSensitivityInstrumentB
                 conv->flatPaymentLag(), conv->paymentLag(), conv->flatIncludeSpread(), conv->flatLookback(),
                 conv->flatFixingDays(), conv->flatRateCutoff(), conv->flatIsAveraged(), conv->includeSpread(),
                 conv->lookback(), conv->fixingDays(), conv->rateCutoff(), conv->isAveraged(), telescopicValueDates,
-                false); // fair spread leg is domestic
+                false, conv->flatObservationShift(), conv->observationShift()); // fair spread leg is domestic
         } else {        // not resettable
             DLOG("create non-resettable xccy par instrument (6), convention " << conv->id());
             helper = QuantLib::ext::make_shared<CrossCcyBasisSwap>(
@@ -1544,7 +1545,8 @@ std::pair<QuantLib::ext::shared_ptr<Instrument>, Date> ParSensitivityInstrumentB
                 baseNotional, baseCurrency, baseSchedule, *baseIndex, 0.0, 1.0, // flat index leg
                 conv->paymentLag(), conv->flatPaymentLag(), conv->includeSpread(), conv->lookback(), conv->fixingDays(),
                 conv->rateCutoff(), conv->isAveraged(), conv->flatIncludeSpread(), conv->flatLookback(),
-                conv->flatFixingDays(), conv->flatRateCutoff(), conv->flatIsAveraged(), telescopicValueDates);
+                conv->flatFixingDays(), conv->flatRateCutoff(), conv->flatIsAveraged(), telescopicValueDates,
+                conv->observationShift(), conv->flatObservationShift());
         }
     }
 

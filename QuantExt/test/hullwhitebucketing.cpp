@@ -18,7 +18,6 @@
 
 #include "toplevelfixture.hpp"
 #include <boost/test/unit_test.hpp>
-#include <oret/datapaths.hpp>
 
 #include <qle/models/hullwhitebucketing.hpp>
 

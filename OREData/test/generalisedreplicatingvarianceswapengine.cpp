@@ -21,7 +21,7 @@
 */
 
 #include <qle/pricingengines/varianceswapgeneralreplicationengine.hpp>
-#include <oret/toplevelfixture.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 
 #include <boost/test/unit_test.hpp>
 
@@ -118,7 +118,7 @@ struct Datum {
 
 } // namespace
 
-BOOST_FIXTURE_TEST_SUITE(OREPlusEquityFXTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREPlusEquityFXTestSuite, ore::data::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(GeneralisedReplicatingVarianceSwapEngineTest)
 

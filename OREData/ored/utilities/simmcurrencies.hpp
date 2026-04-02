@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2017 Quaternion Risk Management Ltd
+ Copyright (C) 2026 Quaternion Risk Management Ltd.
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,13 +16,26 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file oret/oret.hpp
-    \brief ORE Test utilities
+/*! \file ored/utilities/simmcurrencies.hpp
+    \brief supporting utilities
 */
 
 #pragma once
 
-// This is a set of header only test utilities that are common to both OREData and OREAnalytics
-// We have them as a separate package to avoid polluting the core libs with boost unit test artifacts.
+#include <string>
+#include <vector>
 
-#include <oret/log.hpp>
+namespace ore {
+namespace data {
+
+//! true if ccy is not a simm standard ccy
+bool isSimmNonStandardCurrency(const std::string& ccy);
+
+//! true if ccy is a simm non-standard "unidade" ccy
+bool isUnidadeCurrency(const std::string& ccy);
+
+//! return simm standard ccy corresponding to ccy (or ccy itself if this is a standard ccy)
+std::string simmStandardCurrency(const std::string& ccy);
+
+} // namespace data
+} // namespace ore

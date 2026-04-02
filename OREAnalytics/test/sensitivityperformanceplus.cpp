@@ -15,7 +15,7 @@
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
-
+#include <boost/test/unit_test.hpp>
 #include "sensitivityperformanceplus.hpp"
 #include <test/oreatoplevelfixture.hpp>
 #include "testmarket.hpp"

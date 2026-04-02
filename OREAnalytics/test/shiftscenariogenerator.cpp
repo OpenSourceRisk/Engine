@@ -19,7 +19,7 @@
 #include <boost/test/unit_test.hpp>
 #include <orea/scenario/shiftscenariogenerator.hpp>
 #include <ored/utilities/to_string.hpp>
-#include <oret/toplevelfixture.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 #include <test/oreatoplevelfixture.hpp>
 
 using namespace boost::unit_test_framework;

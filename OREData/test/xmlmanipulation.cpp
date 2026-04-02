@@ -19,7 +19,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/test/unit_test.hpp>
 #include <ored/utilities/xmlutils.hpp>
-#include <oret/toplevelfixture.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 #include <ql/errors.hpp>
 #include <ql/types.hpp>
 
@@ -28,7 +28,7 @@ using namespace boost::unit_test_framework;
 using namespace std;
 using namespace QuantLib;
 
-using ore::test::TopLevelFixture;
+using ore::data::TopLevelFixture;
 
 namespace {
 

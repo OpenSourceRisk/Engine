@@ -28,7 +28,7 @@
 #include <ored/portfolio/swap.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
-#include <oret/toplevelfixture.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 #include <ql/time/calendars/all.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 #include <ql/utilities/dataformatters.hpp>
@@ -44,7 +44,7 @@ using namespace std;
 using namespace ore;
 using namespace ore::data;
 
-using ore::test::TopLevelFixture;
+using ore::data::TopLevelFixture;
 
 namespace {
 

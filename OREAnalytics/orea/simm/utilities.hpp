@@ -58,16 +58,7 @@ buildSimmConfiguration(const std::string& simmVersion, const QuantLib::ext::shar
 //!  commaSeparatedListToJsonArrayString("item", '') -> "item" 
 std::string escapeCommaSeparatedList(const std::string& str, const char& csvQuoteChar);
 
-  //! true if ccy is not a simm standard ccy
-bool isSimmNonStandardCurrency(const std::string& ccy);
-
-//! true if ccy is a simm non-standard "unidade" ccy
-bool isUnidadeCurrency(const std::string& ccy);
-
 bool isIsin(const string& s);
-
-//! return simm standard ccy corresponding to ccy (or ccy itself if this is a standard ccy)
-std::string simmStandardCurrency(const std::string& ccy);
 
 //! update given npv and ccy to standard ccy using market's fx rate
 void convertToSimmStandardCurrency(double& npv, std::string& ccy, const QuantLib::ext::shared_ptr<ore::data::Market> market);
