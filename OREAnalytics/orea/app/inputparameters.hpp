@@ -496,8 +496,16 @@ public:
     // Setters for sensi analytics
     void setXbsParConversion(bool b) { xbsParConversion_ = b; }
     void setParSensi(bool b) { parSensi_ = b; }
-    void setComputeTheta(bool b) { parameters_.set("sensitivity", "computeTheta", b); }
-    void setThetaPeriod(Period b) { parameters_.set("sensitivity", "thetaPeriod", b); }
+    void setComputeTheta(bool b) {
+        parameters_.set("sensitivity", "computeTheta", b);
+        parameters_.set("simm", "computeTheta", b);
+        parameters_.set("crif", "computeTheta", b);
+    }
+    void setThetaPeriod(Period b) { 
+        parameters_.set("sensitivity", "thetaPeriod", b);
+        parameters_.set("simm", "thetaPeriod", b);
+        parameters_.set("crif", "thetaPeriod", b); 
+    }
     void setOptimiseRiskFactors(bool b) { optimiseRiskFactors_ = b; }
     void setAlignPillars(bool b) { alignPillars_ = b; }
     void setOutputJacobi(bool b) { outputJacobi_ = b; }
