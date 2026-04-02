@@ -70,7 +70,8 @@ void AverageOISRateHelper::initializeDates() {
                       .withFixedPaymentAdjustment(fixedPaymentAdjustment_)
                       .withRateCutoff(rateCutoff_)
                       .withDiscountingTermStructure(discountRelinkableHandle_)
-                      .withTelescopicValueDates(telescopicValueDates_);
+                      .withTelescopicValueDates(telescopicValueDates_)
+                      .withStaleDatesCheck(false);
 
     spreadLeg_ = FixedRateLeg(averageOIS_->onSchedule())
                      .withNotionals(1.0)

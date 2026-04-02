@@ -23,6 +23,8 @@
 #include <ql/cashflows/cashflows.hpp>
 #include <ql/cashflows/coupon.hpp>
 #include <ql/cashflows/floatingratecoupon.hpp>
+#include <ql/cashflows/fixedratecoupon.hpp>
+#include <ql/cashflows/simplecashflow.hpp>
 
 using namespace QuantLib;
 
@@ -38,7 +40,8 @@ LegKind classifyLeg(const Leg& leg) {
         if (auto frc = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(cf)) {
             return LegKind::Floating;
         }
-        if (QuantLib::ext::dynamic_pointer_cast<Coupon>(cf)) {
+        if (QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(cf) ||
+            QuantLib::ext::dynamic_pointer_cast<SimpleCashFlow>(cf)) {
             return LegKind::FixedLike;
         }
     }
@@ -105,6 +108,7 @@ std::pair<Real, Real> fairRate(const std::vector<Leg>& legs,
     Date valuationDate = discountCurve(0)->referenceDate();
 
     auto [referenceLegIdx, excludeIndices] = selectReferenceLeg(legs, isPayer);
+
     std::vector<bool> exclude(n, false);
     for (const auto i : excludeIndices)
         exclude[i] = true;

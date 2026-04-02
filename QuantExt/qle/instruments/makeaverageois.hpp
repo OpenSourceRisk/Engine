@@ -79,7 +79,8 @@ public:
     MakeAverageOIS& withONDayCounter(const DayCounter& onDayCounter);
     MakeAverageOIS& withONPaymentAdjustment(BusinessDayConvention onPaymentAdjustment);
     MakeAverageOIS& withONPaymentCalendar(const Calendar& onPaymentCalendar);
-    MakeAverageOIS &withTelescopicValueDates(bool telescopicValueDates);
+    MakeAverageOIS& withTelescopicValueDates(bool telescopicValueDates);
+    MakeAverageOIS& withStaleDatesCheck(bool staleDatesCheck);
 
     // Pricing.
     MakeAverageOIS& withONCouponPricer(const QuantLib::ext::shared_ptr<AverageONIndexedCouponPricer>& onCouponPricer);
@@ -126,6 +127,7 @@ private:
     BusinessDayConvention onPaymentAdjustment_;
     Calendar onPaymentCalendar_;
     bool telescopicValueDates_;
+    bool staleDatesCheck_;
 
     QuantLib::ext::shared_ptr<PricingEngine> engine_;
     QuantLib::ext::shared_ptr<AverageONIndexedCouponPricer> onCouponPricer_;
