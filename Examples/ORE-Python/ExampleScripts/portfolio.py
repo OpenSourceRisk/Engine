@@ -4,12 +4,20 @@
 # This script constructs trades but does not price them and there is no output.
 
 
-import ORE as ql
+import ORE as _ql
+
+from diagnostic_trace import ScriptTracer
+
+
+TRACE = ScriptTracer(_ql, __file__, trace_calls_by_default=True)
+ql = TRACE.module()
 
 
 def main():
+    TRACE.checkpoint("main start")
     todaysDate = ql.Date(6, ql.November, 2001)
     ql.Settings.instance().evaluationDate = todaysDate
+    TRACE.checkpoint("evaluation date set")
 
     def buildSwap(trade_id, ccy, isPayer, notional, start, term, rate, spread,
                   fixedFreq, fixedDC, floatFreq, floatDC, index, calendar = ql.TARGET(),
@@ -772,7 +780,11 @@ def main():
 
     buildFxTouchOption("9_FXTouchOption", "Long", 10, "EUR", "USD", 1000, "NS",
                        "UpAndIn", 1.3)
+    TRACE.checkpoint("main completed")
 
 
 if __name__ == "__main__":
+    TRACE.checkpoint("calling main")
     main()
+    TRACE.checkpoint("main returned")
+    TRACE.collect_garbage("post-main")
