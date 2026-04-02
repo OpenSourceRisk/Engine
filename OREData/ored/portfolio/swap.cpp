@@ -25,6 +25,7 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/simmcurrencies.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 
 #include <ql/time/calendars/target.hpp>
@@ -67,7 +68,6 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
 
     isXCCY_ = false;
     isResetting_ = false;
-    allLegsAreSimmPlainVanillaIrLegs_ = true;
 
     for (Size i = 0; i < numLegs; ++i) {
         // allow minor currencies for Equity legs as some exchanges trade in these, e.g LSE in pence - GBX or GBp
@@ -80,11 +80,6 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
         if (currencies[i] != currency)
             isXCCY_ = true;
         isResetting_ = isResetting_ || (!legData_[i].isNotResetXCCY());
-
-        if(!legData_[i].isSimmPlainVanillaIrLeg()){
-
-            allLegsAreSimmPlainVanillaIrLegs_ = false;
-        }
     }
 
     /* collect currencies from fx indexing and eq names from eq indexing
@@ -124,12 +119,7 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
     /* determine whether we have a xccy and whether to use the special xbs curves */
     isXCCY_ = isXCCY_ || currenciesWithIndexing.size() > 1;
 
-    static std::set<LegType> eligibleForXbs = {LegType::Fixed, LegType::Floating};
-
-    bool useXbsCurves = true;
-    for(Size i=0;i<numLegs;++i) {
-        useXbsCurves = useXbsCurves && (eligibleForXbs.find(legData_[i].legType()) != eligibleForXbs.end());
-    }
+    bool useXbsCurves = isSimmEligibleXccySwap(legData_, settlement_);
 
     std::tie(notionalTakenFromLeg_, notional_, npvCurrency_, notionalCurrency_) = getSwapNpvAndNotionalInfo(legData_);
 
@@ -158,16 +148,14 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
             currencies.push_back(currencies[i]);
         }
     } // for legs
-
     if (isXCCY_) {
         QuantLib::ext::shared_ptr<QuantExt::CurrencySwap> swap(
             new QuantExt::CurrencySwap(legs_, legPayers_, currencies, settlement_ == "Physical", isResetting_));
         QuantLib::ext::shared_ptr<CrossCurrencySwapEngineBuilderBase> swapBuilder =
             QuantLib::ext::dynamic_pointer_cast<CrossCurrencySwapEngineBuilderBase>(builder);
         QL_REQUIRE(swapBuilder, "No Builder found for CrossCurrencySwap " << id());
-        bool useXccyYieldCurvesForDiscounting = allLegsAreSimmPlainVanillaIrLegs_;
         swap->setPricingEngine(
-            swapBuilder->engine(currenciesWithIndexing, npvCcy, useXccyYieldCurvesForDiscounting, eqNames));
+            swapBuilder->engine(currenciesWithIndexing, npvCcy, useXbsCurves, eqNames));
         setSensitivityTemplate(*swapBuilder);
         addProductModelEngine(*swapBuilder);
         // take the first legs currency as the npv currency (arbitrary choice)
@@ -202,10 +190,9 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
 
     if (isXCCY_) {
         // Cross-currency swap: per-leg curves and FX spots
-        bool useXccyYieldCurves = allLegsAreSimmPlainVanillaIrLegs_;
         for (Size i = 0; i < numLegs; ++i) {
             string ccyCode = currencies[i].code();
-            if (useXccyYieldCurves) {
+            if (useXbsCurves) {
                 discountCurves_[i] = (xccyYieldCurve)(market, ccyCode, configuration);
             } else {
                 discountCurves_[i] = market->discountCurve(ccyCode, configuration);
@@ -268,7 +255,7 @@ const std::map<std::string,QuantLib::ext::any>& Swap::additionalData() const {
         if (!isXCCY_) {
             if (swap) {
                 additionalData_["legNPV[" + legID + "]"] = swap->legNPV(i);
-                if (allLegsAreSimmPlainVanillaIrLegs_ && legData_[i].legType() == LegType::Fixed) {
+                if (legData_[i].legType() == LegType::Fixed) {
                     additionalData_["PV01[" + legID + "]"] = std::abs(swap->legBPS(i));
                 }
             } else
@@ -295,9 +282,7 @@ const std::map<std::string,QuantLib::ext::any>& Swap::additionalData() const {
     }
 
     // Compute fair rate using the new utility function
-    // Restrict to SIMM plain-vanilla IR legs, but allow multi-leg and cross-currency within that scope
-    if (allLegsAreSimmPlainVanillaIrLegs_ && !legs_.empty() && !discountCurves_.empty() &&
-        discountCurves_.size() == numLegs) {
+    if (!legs_.empty() && !discountCurves_.empty() && discountCurves_.size() == numLegs) {
         try {
             auto [atmForward, spreadCorrection] = QuantExt::fairRate(
                 std::vector<Leg>(legs_.begin(), legs_.begin() + numLegs),
@@ -518,6 +503,50 @@ std::tuple<Date, Date, std::string> getSwapStartMaturity(const std::vector<Leg>&
         }
     }
     return std::make_tuple(startDate, maturity, maturityType);
+}
+
+//! Return true if the floating leg has at least one cap or floor
+bool floatingLegHasCapFloors(const QuantLib::ext::shared_ptr<FloatingLegData>& floatingLegData) {
+    QL_REQUIRE(floatingLegData, "internal error: expected floating leg data for floating leg, contact dev.");
+    return !floatingLegData->caps().empty() || !floatingLegData->floors().empty();
+}
+
+bool legIsSimmEligableXccySwap(const LegData& ld) {
+    if (ld.legType() != LegType::Fixed && ld.legType() != LegType::Floating && ld.legType() != LegType::Cashflow)
+        return false;
+    if (!ld.indexing().empty()) {
+        return false;
+    }
+    if (ld.legType() == LegType::Floating &&
+        floatingLegHasCapFloors(QuantLib::ext::dynamic_pointer_cast<FloatingLegData>(ld.concreteLegData()))) {
+        return false;
+    }
+    return true;
+}
+
+bool isSimmEligibleXccySwap(const std::vector<LegData>& legData, const std::string& settlement) {
+    if (settlement != "Physical") {
+        return false;
+    }
+
+    std::map<string, bool> legPayerReceiver;
+    std::set<string> standardSimCurrencies;
+    for (Size i = 0; i < legData.size(); i++) {
+        const LegData& ld = legData[i];
+        if (!legIsSimmEligableXccySwap(ld))
+            return false;
+        // check that all legs with the same currency are in the same direction
+        const string& ccy = ld.currency();
+        auto payerReceiverIt = legPayerReceiver.find(ccy);
+        if (payerReceiverIt == legPayerReceiver.end()) {
+            legPayerReceiver[ccy] = ld.isPayer();
+        } else if (payerReceiverIt->second != ld.isPayer()) {
+            return false;
+        }
+        standardSimCurrencies.insert(ore::data::isUnidadeCurrency(ccy) ? ore::data::simmStandardCurrency(ccy) : ccy);
+    }
+    // Dont allow three raw currencies even if two of them are the same standard SIMM currency
+    return legPayerReceiver.size() == 2 && standardSimCurrencies.size() == 2;
 }
 
 } // namespace data

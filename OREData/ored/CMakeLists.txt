@@ -403,6 +403,7 @@ utilities/marketdata.cpp
 utilities/osutils.cpp
 utilities/parsers.cpp
 utilities/progressbar.cpp
+utilities/simmcurrencies.cpp
 utilities/strike.cpp
 utilities/timeperiod.cpp
 utilities/timer.cpp
@@ -844,6 +845,7 @@ utilities/osutils.hpp
 utilities/parsers.hpp
 utilities/progressbar.hpp
 utilities/serializationdaycounter.hpp
+utilities/simmcurrencies.hpp
 utilities/strike.hpp
 utilities/timeperiod.hpp
 utilities/timer.hpp
