@@ -29,6 +29,7 @@
 %include ored_portfolio.i
 %include std_map.i
 %include std_set.i
+%include std_filesystem.i
 %include tuple.i
 
 %{
@@ -145,6 +146,7 @@ public:
     void setSensitivityScenarioData(
         const ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensiScenarioData);
     void setRefDataManager(const std::string& xml);
+    void setRefDataManagerFromFile(const std::string& fileName);
     void setConventions(const std::string& xml);
     void setConventions(const ext::shared_ptr<Conventions>& convs);    
     void setConventionsFromFile(const std::string& fileName);

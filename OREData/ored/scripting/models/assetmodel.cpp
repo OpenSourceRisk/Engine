@@ -440,7 +440,7 @@ RandomVariable AssetModel::npv(const RandomVariable& amount, const Date& obsdate
 
         Array coeff;
         Matrix coordinateTransform;
-
+        Size minSize = std::min(size(), trainingSamples());
         // if a memSlot is given and coefficients / coordinate transform are stored, we use them
 
         bool haveStoredModel = false;
@@ -448,6 +448,7 @@ RandomVariable AssetModel::npv(const RandomVariable& amount, const Date& obsdate
         if (memSlot) {
             if (auto it = storedRegressionModel_.find(*memSlot); it != storedRegressionModel_.end()) {
                 coeff = std::get<0>(it->second);
+                minSize = coeff.size();
                 coordinateTransform = std::get<2>(it->second);
                 QL_REQUIRE(std::get<1>(it->second) == state.size(),
                            "AssetModel::npv(): stored regression coefficients at mem slot "
@@ -477,7 +478,7 @@ RandomVariable AssetModel::npv(const RandomVariable& amount, const Date& obsdate
             coeff =
                 regressionCoefficients(amount, state,
                                        multiPathBasisSystem(state.size(), params_.regressionOrder, params_.polynomType,
-                                                            {}, std::min(size(), trainingSamples())),
+                                                            {}, minSize),
                                        filter, RandomVariableRegressionMethod::QR);
             DLOG("AssetModel::npv(" << ore::data::to_string(obsdate) << "): regression coefficients are " << coeff
                                     << " (got model state size " << nModelStates << " and " << nAddReg
@@ -502,10 +503,9 @@ RandomVariable AssetModel::npv(const RandomVariable& amount, const Date& obsdate
 
         // compute conditional expectation and return the result
 
-        return conditionalExpectation(state,
-                                      multiPathBasisSystem(state.size(), params_.regressionOrder, params_.polynomType,
-                                                           {}, std::min(size(), trainingSamples())),
-                                      coeff);
+        return conditionalExpectation(
+            state, multiPathBasisSystem(state.size(), params_.regressionOrder, params_.polynomType, {}, minSize),
+            coeff);
     } else {
         QL_FAIL("AssetModel::npv(): unhandled type, internal error.");
     }
