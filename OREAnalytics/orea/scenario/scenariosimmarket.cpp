@@ -31,9 +31,9 @@
 #include <ored/configuration/inflationcurveconfig.hpp>
 #include <ored/marketdata/curvespecparser.hpp>
 #include <ored/marketdata/structuredcurveerror.hpp>
-#include <ored/utilities/commodity.hpp>
-#include <ored/utilities/conventionsbasedfutureexpiry.hpp>
+
 #include <ored/utilities/indexnametranslator.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -48,7 +48,6 @@
 #include <qle/termstructures/blackvariancecurve3.hpp>
 #include <qle/termstructures/blackvariancesurfacestddevs.hpp>
 #include <qle/termstructures/blackvolconstantspread.hpp>
-#include <qle/termstructures/calendarspreadfuturepricetermstructure.hpp>
 #include <qle/termstructures/commoditybasispricecurvewrapper.hpp>
 #include <qle/termstructures/credit/basecorrelationstructure.hpp>
 #include <qle/termstructures/credit/spreadedbasecorrelationcurve.hpp>
@@ -280,55 +279,6 @@ makeYieldCurve(const std::string& curveId, const bool spreaded, const Handle<Yie
             return idc;
         }
     }
-}
-
-QuantLib::ext::shared_ptr<PriceTermStructure> getCalendarSpreadPriceCurve(
-    const QuantLib::ext::shared_ptr<CommodityVolatilityConfig>& volConfig,
-    ore::data::Market& market, const std::string& name, const std::string& configuration) {
-
-    Handle<PriceTermStructure> configuredSpreadCurve;
-    try {
-        configuredSpreadCurve = market.commodityPriceCurve(name, configuration);
-    } catch (const std::exception&) {
-        configuredSpreadCurve = Handle<PriceTermStructure>();
-    }
-
-    if (!configuredSpreadCurve.empty()) {
-        DLOG("Using existing commodity price curve for calendar spread vol surface " << name);
-        return *configuredSpreadCurve;
-    }
-
-    DLOG("Commodity price curve for " << name
-         << " is not available, will build calendar spread price curve from underlying");
-
-    string commodityName;
-    int offset = 0;
-    bool isCalendarSpreadVolSurface = parseCommodityCalendarSpreadVolSurfaceName(name, commodityName, offset);
-    QL_REQUIRE(isCalendarSpreadVolSurface,
-               "Calendar spread commodity volatility surface " << name
-                                                               << " should have format [underlying]_CALENDAR_SPREAD_[offset]");
-    QL_REQUIRE(offset == volConfig->calendarSpreadOffset(),
-               "Calendar spread offset from name " << offset << " does not match config offset "
-                                                    << volConfig->calendarSpreadOffset());
-    QL_REQUIRE(!volConfig->futureConventionsId().empty(),
-               "Future conventions id is required to build calendar spread volatility surface " << name);
-
-    QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
-    const auto& cId = volConfig->futureConventionsId();
-    QL_REQUIRE(conventions->has(cId),
-               "Conventions, " << cId << " for config " << volConfig->curveID() << " not found.");
-    auto convention =
-        QuantLib::ext::dynamic_pointer_cast<CommodityFutureConvention>(conventions->get(cId));
-    QL_REQUIRE(convention, "Convention with ID '" << cId << "' should be of type CommodityFutureConvention");
-    auto expCalc = QuantLib::ext::make_shared<ConventionsBasedFutureExpiry>(*convention);
-
-    auto underlyingPriceCurve = market.commodityPriceCurve(commodityName, configuration);
-    QL_REQUIRE(!underlyingPriceCurve.empty(),
-               "Underlying commodity price curve " << commodityName
-                                                    << " is required to build calendar spread volatility surface "
-                                                    << name);
-    DLOG("Building calendar spread price curve for " << name << " from underlying " << commodityName);
-    return QuantLib::ext::make_shared<CalendarSpreadFuturePriceTermStructure>(underlyingPriceCurve, expCalc, offset);
 }
 
 } // namespace
@@ -3013,14 +2963,10 @@ ScenarioSimMarket::ScenarioSimMarket(
                                                          MarketDatum::InstrumentType::COMMODITY_CALENDAR_SPREAD_OPTION;
                             if (isCalendarSpreadVolSurface) {
                                 DLOG("Commodity volatility surface " << name << " is configured as calendar spread vol surface");
-                                priceCurve = getCalendarSpreadPriceCurve(volConfig, *this, name, configuration);
+                                priceCurve = getCalendarSpreadPriceCurve(this, name, configuration,
+                                    volConfig->calendarSpreadOffset(), volConfig->futureConventionsId());
                             } else {
                                 priceCurve = *commodityPriceCurve(name, configuration);
-                                DLOG("got commodity price curve for vol surface " << name);
-                                if (priceCurve == nullptr) {
-                                    QL_FAIL("Commodity price curve for "
-                                            << name << " is required to build commodity volatility surface " << name);
-                                }
                             }
                             // More than one moneyness implies a surface. If we have a surface, we will build a
                             // forward surface below which requires two yield term structures, one for the commodity
@@ -3121,7 +3067,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     QuantLib::ext::shared_ptr<PriceTermStructure> initMarketPriceCurve;
                                     if (isCalendarSpreadVolSurface) {
                                         initMarketPriceCurve =
-                                            getCalendarSpreadPriceCurve(volConfig, *initMarket, name, configuration);
+                                            getCalendarSpreadPriceCurve(initMarket.get(), name, configuration,
+                                                volConfig->calendarSpreadOffset(), volConfig->futureConventionsId());
                                     } else {
                                         initMarketPriceCurve = *initMarket->commodityPriceCurve(name, configuration);
                                     }

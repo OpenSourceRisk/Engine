@@ -415,7 +415,6 @@
 #include <ored/utilities/bondindexbuilder.hpp>
 #include <ored/utilities/calendaradjustmentconfig.hpp>
 #include <ored/utilities/calendarparser.hpp>
-#include <ored/utilities/commodity.hpp>
 #include <ored/utilities/conventionsbasedfutureexpiry.hpp>
 #include <ored/utilities/correlationmatrix.hpp>
 #include <ored/utilities/credit.hpp>

@@ -29,7 +29,6 @@
 #include <ored/configuration/volatilityconfig.hpp>
 #include <ored/configuration/reportconfig.hpp>
 #include <ored/marketdata/marketdatum.hpp>
-#include <ored/utilities/commodity.hpp>
 
 namespace ore {
 namespace data {

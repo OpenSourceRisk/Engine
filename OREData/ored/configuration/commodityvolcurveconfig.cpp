@@ -19,7 +19,7 @@
 #include <ored/configuration/commodityvolcurveconfig.hpp>
 #include <ored/marketdata/curvespecparser.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
-#include <ored/utilities/commodity.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
@@ -81,15 +81,11 @@ void CommodityVolatilityConfig::validate() const {
                        "calendar spread options only support RATE_NVOL quotes for ConstantVolatilityConfig");
             QL_REQUIRE(cvc->volType() == VolatilityConfig::VolatilityType::Normal,
                        "calendar spread options only support Normal vol type for ConstantVolatilityConfig");
-            QL_REQUIRE(cvc->shiftQuote().empty(),
-                       "calendar spread options do not support shifted lognormal quotes for ConstantVolatilityConfig");
         } else if (auto vcc = QuantLib::ext::dynamic_pointer_cast<VolatilityCurveConfig>(vc)) {
             QL_REQUIRE(vcc->quoteType() == MarketDatum::QuoteType::RATE_NVOL,
                        "calendar spread options only support RATE_NVOL quotes for VolatilityCurveConfig");
             QL_REQUIRE(vcc->volType() == VolatilityConfig::VolatilityType::Normal,
                        "calendar spread options only support Normal vol type for VolatilityCurveConfig");
-            QL_REQUIRE(vcc->shiftQuote().empty(),
-                       "calendar spread options do not support shifted lognormal quotes for VolatilityCurveConfig");
         } else if (auto vssc = QuantLib::ext::dynamic_pointer_cast<VolatilityStrikeSurfaceConfig>(vc)) {
             QL_REQUIRE(vssc->quoteType() == MarketDatum::QuoteType::RATE_NVOL,
                        "calendar spread options only support RATE_NVOL quotes for VolatilityStrikeSurfaceConfig");
@@ -204,10 +200,6 @@ void CommodityVolatilityConfig::fromXML(XMLNode* node) {
     preferOutOfTheMoney_ = QuantLib::ext::nullopt;
     if (XMLNode* n = XMLUtils::getChildNode(node, "PreferOutOfTheMoney")) {
         preferOutOfTheMoney_ = parseBool(XMLUtils::getNodeValue(n));
-    }
-
-    if (XMLNode* n = XMLUtils::getChildNode(node, "CalendarSpreadUnderlyingName")) {
-        calendarSpreadUnderlyingName_ = XMLUtils::getNodeValue(n);
     }
 
     if(auto tmp = XMLUtils::getChildNode(node, "Report")){
