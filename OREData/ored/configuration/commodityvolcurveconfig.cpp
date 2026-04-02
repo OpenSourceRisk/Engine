@@ -216,6 +216,12 @@ XMLNode* CommodityVolatilityConfig::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
     XMLUtils::addChild(doc, node, "Currency", currency_);
 
+    if (instrumentType_ == MarketDatum::InstrumentType::COMMODITY_CALENDAR_SPREAD_OPTION) {
+        XMLUtils::addChild(doc, node, "InstrumentType", to_string(instrumentType_));
+        XMLUtils::addChild(doc, node, "CalendarSpreadOffset", calendarSpreadOffset_);
+        XMLUtils::addChild(doc, node, "CalendarSpreadUnderlyingName", calendarSpreadUnderlyingName_);
+    }
+
     XMLNode* vnode = doc.allocNode("VolatilityConfig");
     for (auto vc : volatilityConfig_) {
         XMLNode* n = vc->toXML(doc);
@@ -238,11 +244,6 @@ XMLNode* CommodityVolatilityConfig::toXML(XMLDocument& doc) const {
         XMLUtils::appendNode(node, solverConfig_.toXML(doc));
     if (preferOutOfTheMoney_)
         XMLUtils::addChild(doc, node, "PreferOutOfTheMoney", *preferOutOfTheMoney_);
-    if (instrumentType_ == MarketDatum::InstrumentType::COMMODITY_CALENDAR_SPREAD_OPTION) {
-        XMLUtils::addChild(doc, node, "InstrumentType", to_string(instrumentType_));
-        XMLUtils::addChild(doc, node, "CalendarSpreadOffset", calendarSpreadOffset_);
-        XMLUtils::addChild(doc, node, "CalendarSpreadUnderlyingName", calendarSpreadUnderlyingName_);
-    }
     XMLUtils::appendNode(node, reportConfig_.toXML(doc));
     return node;
 }

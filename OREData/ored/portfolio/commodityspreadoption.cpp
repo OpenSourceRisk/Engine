@@ -235,6 +235,11 @@ void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::Eng
         firstLongFlow->index()->underlyingName() == firstShortFlow->index()->underlyingName();
     string builderProductType = isCalendarSpread ? "CommodityCalendarSpreadOption" : "CommoditySpreadOption";
 
+    if (isCalendarSpread && !engineFactory->engineData()->hasProduct(builderProductType)) {
+        DLOG("No engine configuration for '" << builderProductType << "', falling back to 'CommoditySpreadOption'");
+        builderProductType = "CommoditySpreadOption";
+    }
+
     builder = engineFactory->builder(builderProductType);
     auto engineBuilder = QuantLib::ext::dynamic_pointer_cast<CommoditySpreadOptionBaseEngineBuilder>(builder);
     QL_REQUIRE(engineBuilder,

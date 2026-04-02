@@ -2908,7 +2908,6 @@ Available Model/Engine pairs:
 
 \begin{itemize}
 \item BlackScholes/CommoditySpreadOptionEngine
-\item BlackScholes/CommoditySpreadOptionBachelierEngine
 \end{itemize}
 
 \subsubsection{BlackScholes/CommoditySpreadOptionEngine}
@@ -2991,104 +2990,92 @@ Example configuration:
 \label{lst:peconfig_CommoditySpreadOption_BlackScholes_CommoditySpreadOptionEngine}
 \end{longlisting}
 
-\subsubsection{BlackScholes/CommoditySpreadOptionBachelierEngine}
+%--------------------------------------------------------
+\subsection{Product Type: CommodityCalendarSpreadOption}
+%--------------------------------------------------------
 
-This engine prices commodity spread options using directly quoted normal (Bachelier) spread volatilities and the
-Bachelier formula. Unlike the CommoditySpreadOptionEngine which derives the spread volatility from individual
-underlying vols and a correlation, this engine takes a single pre-computed normal spread volatility surface as input.
+Used by trade type: CommodityCalendarSpreadOption
 
-\textbf{When to use this engine:}
+Available Model/Engine pairs:
 
-Use this engine when normal spread volatilities are directly available from the market (e.g.\ quoted calendar spread
-vols). The engine computes the
-spread forward as $F_{\text{spread}} = F_{\text{long}} - F_{\text{short}}$ from the two underlying commodity forward
-curves and prices the option using the Bachelier formula with the quoted spread vol.
+\begin{itemize}
+\item BlackScholes/CommoditySpreadOptionEngine
+\item BlackScholes/CommodityCalendarSpreadOptionBachelierEngine
+\end{itemize}
+
+\subsubsection{BlackScholes/CommoditySpreadOptionEngine}
+
+This is the same engine as described for CommoditySpreadOption above. It derives the spread volatility from the
+individual volatility surfaces of the two underlying commodity contracts and uses a correlation assumption to compute a
+calendar spread option price via either the Bachelier model or the Kirk approximation. All model parameters, engine
+parameters, and the qualifier-based parameter lookup described in the CommoditySpreadOption section apply here as well.
+
+See section \ref{lst:peconfig_CommoditySpreadOption_BlackScholes_CommoditySpreadOptionEngine} for configuration details.
+
+\subsubsection{BlackScholes/CommodityCalendarSpreadOptionBachelierEngine}
+
+This engine prices calendar spread options using a directly quoted normal (Bachelier) spread volatility surface. It is
+designed specifically for calendar spreads where both legs reference the same underlying commodity but different contract
+months.
+
+\textbf{How it works:}
+
+The engine constructs the spread vol curve name from the underlying commodity name and the calendar spread offset as
+
+\texttt{<underlying>\_CALENDAR\_SPREAD\_<offset>}
+
+where \texttt{offset} is the number of contract months between the long and short legs (e.g.\ for a spread between the
+1st and 2nd nearby contracts, offset = 1). It then looks up the corresponding commodity volatility surface from the
+market and prices the option using the Bachelier formula with the discount curve and the spread volatility.
 
 \textbf{Volatility Curve Setup:}
 
-The spread volatility surface referenced by the \texttt{SpreadVol} engine parameter must be configured as a regular
-\texttt{CommodityVolatility} curve in the curve configuration. The volatility type should be set to \texttt{Normal}. No
-new market object type is required --- the spread vol surface is a regular commodity volatility curve that happens to
-represent spread volatilities.
+The spread volatility surface must be configured as a \texttt{CommodityVolatility} curve in the curve configuration
+using the naming convention \texttt{<underlying>\_CALENDAR\_SPREAD\_<offset>}. The volatility type should be Normal.
+For example, for WTI 1-month calendar spreads, the curve would be named \texttt{NYMEX:CL\_CALENDAR\_SPREAD\_1}.
 
-In addition, a \texttt{Commodity} forward curve for the spread must be configured in the curve configuration and
-referenced in the today's market parameters. This spread forward curve represents the forward prices of the spread
-(i.e.\ the difference between the two underlying commodity forward prices) and is needed by the
-\texttt{BlackVolatilityWithATM} wrapper applied in \texttt{TodaysMarket} to resolve ATM volatility queries on the
-spread vol surface. The spread forward curve should be set up as a standard commodity curve whose prices correspond to
-the expected spread levels at each contract expiry.
+There are two ways to set up the curve configuration:
+
+\begin{enumerate}
+\item \textbf{Using \texttt{InstrumentType = COMMODITY\_CALENDAR\_SPREAD\_OPTION}}: Set the instrument type to
+  \texttt{COMMODITY\_CALENDAR\_SPREAD\_OPTION} and provide the additional fields \texttt{CalendarSpreadOffset} (the
+  offset between the two contract months) and \texttt{CalendarSpreadUnderlyingName} (the underlying commodity name,
+  e.g.\ \texttt{NYMEX:CL}). These must be consistent with the \texttt{CurveId}. With this setup, a calendar spread
+  forward curve will be built automatically from the underlying commodity forward curve and the commodity future
+  conventions if it is not explicitly provided. The quote names follow the pattern
+  \texttt{COMMODITY\_CALENDAR\_SPREAD\_OPTION/RATE\_NVOL/<underlying>/<offset>/<ccy>/...}.
+
+\item \textbf{Using \texttt{InstrumentType = COMMODITY\_OPTION} (default)}: Use the regular instrument type with normal
+  volatility quotes. The \texttt{CurveId} must still follow the
+  \texttt{<underlying>\_CALENDAR\_SPREAD\_<offset>} naming convention. In this case, the calendar spread forward curve
+  must be explicitly provided as a commodity price curve in the today's market parameters --- it will not be built
+  automatically. The quote names follow the standard pattern
+  \texttt{COMMODITY\_OPTION/RATE\_NVOL/<curveId>/<ccy>/...}.
+\end{enumerate}
 
 \textbf{Engine Parameters:}
 
 \begin{itemize}
-\item SpreadVol [optional]: The name of the commodity volatility curve to use as the normal spread volatility surface.
-  If not specified, the engine defaults to looking up a volatility curve named
-  \texttt{<longIndexName>\_<shortIndexName>}, where the index names follow the standard commodity index naming
-  convention \texttt{COMM-<Underlying>-yyyy-mm} (e.g.\
-  \texttt{COMM-NYMEX:CL-2025-01\_COMM-NYMEX:CL-2025-02} for a January/February WTI calendar spread). This means that
-  by default, one curve per contract pair is expected. To reduce the number of required curves, use the
-  \texttt{SpreadVol} parameter with the offset-based mapping described below.
-  This parameter supports qualifier-based lookup to allow different spread vol curves for different underlying
-  pairs and calendar spread offsets.
 \item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
-\textbf{Offset-Based Volatility Mapping:}
-
-For calendar spread options on futures, the engine automatically computes the \emph{offset} between the two contract
-months (e.g.\ for a spread between the 1st and 2nd nearby contracts, offset = 1). The \texttt{SpreadVol} parameter
-supports offset-qualified names, which allows mapping a small number of spread vol curves to cover all contract pairs.
-
-The qualifier lookup order for calendar spreads (same underlying) is:
-\begin{enumerate}
-  \item \texttt{SpreadVol\_<underlying>\_<offset>} --- e.g.\ \texttt{SpreadVol\_NYMEX:CL\_1}
-  \item \texttt{SpreadVol\_<underlying>} --- fallback, e.g.\ \texttt{SpreadVol\_NYMEX:CL}
-\end{enumerate}
-
-For cross-commodity spreads (different underlyings):
-\begin{enumerate}
-  \item \texttt{SpreadVol\_<long>\_<short>\_<offset>} --- e.g.\ \texttt{SpreadVol\_ICE:B\_NYMEX:CL\_1}
-  \item \texttt{SpreadVol\_<long>\_<short>} --- e.g.\ \texttt{SpreadVol\_ICE:B\_NYMEX:CL}
-  \item \texttt{SpreadVol\_<short>\_<long>\_<offset>} --- reverse order with offset
-  \item \texttt{SpreadVol\_<short>\_<long>} --- reverse order fallback
-\end{enumerate}
-
-This offset convention significantly reduces the number of spread vol curves required. Instead of defining a separate
-vol surface for each contract pair, only a handful of offset curves are needed.
-At each contract expiry, the offset-1 curve gives the vol for the spread between that contract and the next,
- the offset-2 curve gives the vol for the spread to the contract two months out, and so on.
-
 A sample configuration is shown in listing
-\ref{lst:peconfig_CommoditySpreadOption_BlackScholes_CommoditySpreadOptionBachelierEngine}.
+\ref{lst:peconfig_CommodityCalendarSpreadOption_BlackScholes_BachelierEngine}.
 
 \begin{longlisting}
 \begin{minted}[fontsize=\footnotesize]{xml}
-<Product type="CommoditySpreadOption">
+<Product type="CommodityCalendarSpreadOption">
     <Model>BlackScholes</Model>
     <ModelParameters/>
-    <Engine>CommoditySpreadOptionBachelierEngine</Engine>
+    <Engine>CommodityCalendarSpreadOptionBachelierEngine</Engine>
     <EngineParameters>
-        <!-- Offset-specific: use CL_CS1 vol curve for 1-month calendar spreads -->
-        <Parameter name="SpreadVol_NYMEX:CL_1">SPREAD_VOL:CL_CS1</Parameter>
-        <!-- Offset-specific: use CL_CS2 vol curve for 2-month calendar spreads -->
-        <Parameter name="SpreadVol_NYMEX:CL_2">SPREAD_VOL:CL_CS2</Parameter>
-        <!-- Fallback for any other CL offset -->
-        <Parameter name="SpreadVol_NYMEX:CL">SPREAD_VOL:CL_CS1</Parameter>
-        <!-- Cross-commodity spread vol -->
-        <Parameter name="SpreadVol_ICE:B_NYMEX:CL">SPREAD_VOL:BRENT_WTI</Parameter>
         <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
     </EngineParameters>
 </Product>
 \end{minted}
-\caption{Configuration for Product CommoditySpreadOption, Model BlackScholes, Engine CommoditySpreadOptionBachelierEngine}
-\label{lst:peconfig_CommoditySpreadOption_BlackScholes_CommoditySpreadOptionBachelierEngine}
+\caption{Configuration for Product CommodityCalendarSpreadOption, Model BlackScholes, Engine CommodityCalendarSpreadOptionBachelierEngine}
+\label{lst:peconfig_CommodityCalendarSpreadOption_BlackScholes_BachelierEngine}
 \end{longlisting}
-
-In this example, the curves \texttt{SPREAD\_VOL:CL\_CS1}, \texttt{SPREAD\_VOL:CL\_CS2}, and
-\texttt{SPREAD\_VOL:BW\_CS} are standard commodity volatility curves defined in the curve configuration with volatility
-type set to Normal. For instance, \texttt{SPREAD\_VOL:CL\_CS1} contains the normal volatility term structure for
-1-month WTI calendar spreads: at the expiry of the first nearby contract, it gives the vol for the $C_1 - C_2$
-spread; at the expiry of the second nearby, it gives the vol for $C_2 - C_3$; and so on.
 
 %--------------------------------------------------------
 \subsection{Product Type: CommodityOption}
