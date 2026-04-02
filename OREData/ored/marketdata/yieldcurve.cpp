@@ -1335,16 +1335,39 @@ void YieldCurve::buildZeroSpreadedCurve(const std::size_t index) {
     Date today = Settings::instance().evaluationDate();
     vector<Date> dates;
     vector<Handle<Quote>> quoteHandles;
-    for (Size i = 0; i < quoteIDs.size(); ++i) {
-        if (QuantLib::ext::shared_ptr<MarketDatum> md = loader_.get(quoteIDs[i], asofDate_)) {
-            QL_REQUIRE(md->instrumentType() == MarketDatum::InstrumentType::ZERO, "Market quote not of type zero.");
-            QL_REQUIRE(md->quoteType() == MarketDatum::QuoteType::YIELD_SPREAD,
-                       "Market quote not of type yield spread.");
-            QuantLib::ext::shared_ptr<ZeroQuote> zeroQuote = QuantLib::ext::dynamic_pointer_cast<ZeroQuote>(md);
-            quotes.push_back(zeroQuote);
-            dates.push_back(zeroQuote->tenorBased() ? today + zeroQuote->tenor() : zeroQuote->date());
-            quoteHandles.push_back(zeroQuote->quote());
+
+    vector<string> quotesVector;
+    quotesVector.reserve(quoteIDs.size());
+    std::transform(quoteIDs.begin(), quoteIDs.end(), std::back_inserter(quotesVector),
+                   [](const std::pair<string, bool>& pair) { return pair.first; });
+    auto wildcard = getUniqueWildcard(quotesVector);
+    std::set<QuantLib::ext::shared_ptr<MarketDatum>> marketData;
+    if (wildcard) {
+        marketData = loader_.get(*wildcard, asofDate_);
+    } else {
+        for (Size i = 0; i < quoteIDs.size(); ++i) {
+            if (QuantLib::ext::shared_ptr<MarketDatum> md = loader_.get(quoteIDs[i], asofDate_))
+                marketData.insert(md);
         }
+    }
+
+    // process market data
+    for (const auto& marketQuote : marketData) {
+        QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::ZERO,
+                   "Market quote not of type zero.");
+        QL_REQUIRE(marketQuote->quoteType() == MarketDatum::QuoteType::YIELD_SPREAD,
+                   "Market quote not of type yield spread.");
+        QuantLib::ext::shared_ptr<ZeroQuote> zeroQuote = QuantLib::ext::dynamic_pointer_cast<ZeroQuote>(marketQuote);
+        // If not using wildcard, verify quote is in config list
+        if (!wildcard) {
+            auto it = std::find_if(quoteIDs.begin(), quoteIDs.end(),
+                                   [&](const std::pair<string, bool>& p) { return p.first == marketQuote->name(); });
+            if (it == quoteIDs.end())
+                continue;
+        }
+        quotes.push_back(zeroQuote);
+        dates.push_back(zeroQuote->tenorBased() ? today + zeroQuote->tenor() : zeroQuote->date());
+        quoteHandles.push_back(zeroQuote->quote());
     }
 
     QL_REQUIRE(!quotes.empty(),
