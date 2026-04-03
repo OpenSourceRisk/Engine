@@ -10,19 +10,99 @@
 # This script constructs trades but does not price them and there is no output.
 
 
+import itertools
+import os
+
 import ORE as _ql
 
-from diagnostic_trace import ScriptTracer
+
+_TRACE_SCRIPT = os.environ.get("ORE_TRACE_SCRIPT", "").lower() in {
+    "1", "true", "yes", "on"
+}
+_SCRIPT_NAME = os.path.basename(__file__)
+_CALL_IDS = itertools.count(1)
 
 
-TRACE = ScriptTracer(_ql, __file__, trace_calls_by_default=True)
-ql = TRACE.module()
+def _short_repr(value):
+    if isinstance(value, (str, bytes)):
+        text = repr(value)
+    elif isinstance(value, (int, float, bool)) or value is None:
+        text = repr(value)
+    elif isinstance(value, (list, tuple, set, dict)):
+        text = f"{type(value).__name__}(len={len(value)})"
+    else:
+        text = type(value).__name__
+    return text if len(text) <= 80 else text[:77] + "..."
+
+
+def _log_call(message):
+    if not _TRACE_SCRIPT:
+        return
+    text = f"[{_SCRIPT_NAME}] {message}"
+    print(text, flush=True)
+    try:
+        _ql.WLOG(text)
+    except Exception:
+        pass
+
+
+class _LoggedCallable:
+    def __init__(self, name, target):
+        self._name = name
+        self._target = target
+
+    def __call__(self, *args, **kwargs):
+        call_id = next(_CALL_IDS)
+        args_text = ", ".join(_short_repr(arg) for arg in args)
+        kwargs_text = ", ".join(
+            f"{key}={_short_repr(value)}" for key, value in kwargs.items()
+        )
+        signature = ", ".join(
+            part for part in (args_text, kwargs_text) if part
+        )
+        _log_call(f"CALL #{call_id} {self._name}({signature})")
+        try:
+            return self._target(*args, **kwargs)
+        except Exception as exc:
+            _log_call(
+                f"RAISE #{call_id} {self._name}: {type(exc).__name__}: {exc}"
+            )
+            raise
+
+    def __getattr__(self, name):
+        return getattr(self._target, name)
+
+
+class _LoggedModule:
+    def __init__(self, module):
+        self._module = module
+        self._cache = {}
+
+    def __getattr__(self, name):
+        if name in self._cache:
+            return self._cache[name]
+        value = getattr(self._module, name)
+        if callable(value) and not name.startswith("__"):
+            wrapped = _LoggedCallable(name, value)
+            self._cache[name] = wrapped
+            return wrapped
+        return value
+
+
+if _TRACE_SCRIPT:
+    try:
+        _ql.Log.instance().setMask(255)
+        _ql.Log.instance().switchOn()
+    except Exception:
+        pass
+
+ql = _LoggedModule(_ql) if _TRACE_SCRIPT else _ql
 
 
 def main():
     # some values
 
-    TRACE.checkpoint("main start")
+    _log_call("main start")
 
     qlEvalDate = ql.Date(6, ql.November, 2001)
     ql.Settings.instance().evaluationDate = qlEvalDate
@@ -47,7 +127,7 @@ def main():
         "1Y", "TARGET", "MF", "MF", "Forward"))
     schedule0 = ql.Schedule(qlEvalDate, qlEndDate, period_1Y, calendar,
         ql.Unadjusted, ql.Unadjusted, ql.DateGeneration.Forward, False)
-    TRACE.checkpoint("bootstrap objects created")
+    _log_call("bootstrap objects created")
 
     # ore/OREData/ored/portfolio/scriptedtrade.hpp
 
@@ -908,11 +988,10 @@ def main():
     ql.EquityWorstOfBasketSwap()
     ql.FxWorstOfBasketSwap()
     ql.CommodityWorstOfBasketSwap()
-    TRACE.checkpoint("main completed")
+    _log_call("main completed")
 
 
 if __name__ == "__main__":
-    TRACE.checkpoint("calling main")
+    _log_call("calling main")
     main()
-    TRACE.checkpoint("main returned")
-    TRACE.collect_garbage("post-main")
+    _log_call("main returned")
