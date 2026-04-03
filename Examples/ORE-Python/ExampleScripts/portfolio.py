@@ -168,7 +168,9 @@ def main():
 
         env = ql.Envelope("CP")
         trade = ql.ORESwaption(env, option, legData)
+        _log_call("constructed ORESwaption in buildEuropeanSwaption")
         trade.setId(trade_id)
+        _log_call("setId completed on ORESwaption in buildEuropeanSwaption")
         return trade;
 
     swap1 = buildEuropeanSwaption("5_Swaption_EUR", "Long", "EUR", True, 1000000.0, 10, 10,

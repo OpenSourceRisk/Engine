@@ -78,6 +78,13 @@ std::vector<T> VECTOR_SWIG_TO_ORE(const std::vector<ext::shared_ptr<T>>& v) {
 %define SWIG_SHARED_PTR_VECTOR_TYPEMAP(CppType, SwigTypeName)
 %typemap(in) std::vector<ext::shared_ptr<CppType> >
     (std::vector<ext::shared_ptr<CppType> > tmp) {
+  void* vptr = 0;
+  int vres = SWIG_ConvertPtr(
+    $input, &vptr, $descriptor(std::vector<ext::shared_ptr<CppType> > *), 0
+  );
+  if (SWIG_IsOK(vres) && vptr) {
+    $1 = *reinterpret_cast<std::vector<ext::shared_ptr<CppType> >*>(vptr);
+  } else {
     if (!PySequence_Check($input)) {
         PyErr_SetString(PyExc_TypeError, "Expected a Python sequence for " #CppType " vector");
         SWIG_fail;
@@ -95,10 +102,18 @@ std::vector<T> VECTOR_SWIG_TO_ORE(const std::vector<ext::shared_ptr<T>>& v) {
         tmp.push_back(*reinterpret_cast<ext::shared_ptr<CppType>*>(eptr));
     }
     $1 = tmp;
+      }
 }
 %typemap(freearg) std::vector<ext::shared_ptr<CppType> > ""
 %typemap(in) const std::vector<ext::shared_ptr<CppType> >&
     (std::vector<ext::shared_ptr<CppType> > tmp) {
+      void* vptr = 0;
+      int vres = SWIG_ConvertPtr(
+        $input, &vptr, $descriptor(std::vector<ext::shared_ptr<CppType> > *), 0
+      );
+      if (SWIG_IsOK(vres) && vptr) {
+        $1 = reinterpret_cast<std::vector<ext::shared_ptr<CppType> >*>(vptr);
+      } else {
     if (!PySequence_Check($input)) {
         PyErr_SetString(PyExc_TypeError, "Expected a Python sequence for " #CppType " vector");
         SWIG_fail;
@@ -116,6 +131,7 @@ std::vector<T> VECTOR_SWIG_TO_ORE(const std::vector<ext::shared_ptr<T>>& v) {
         tmp.push_back(*reinterpret_cast<ext::shared_ptr<CppType>*>(eptr));
     }
     $1 = &tmp;
+      }
 }
 %typemap(freearg) const std::vector<ext::shared_ptr<CppType> >& ""
 %typemap(in) vector<ext::shared_ptr<CppType> > = std::vector<ext::shared_ptr<CppType> >;

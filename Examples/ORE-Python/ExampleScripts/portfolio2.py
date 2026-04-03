@@ -216,7 +216,10 @@ def main():
     ql.BGSTrancheData()
     ql.BGSTrancheData("", "", 0, [0.], [""])
     ql.BalanceGuaranteedSwap()
-    ql.BalanceGuaranteedSwap(env0, "", [ql.BGSTrancheData()], schedule0, [leg_data0])
+    bgs_trade0 = ql.BalanceGuaranteedSwap(env0, "", [ql.BGSTrancheData()], schedule0, [leg_data0])
+    _log_call("constructed BalanceGuaranteedSwap overload")
+    del bgs_trade0
+    _log_call("deleted BalanceGuaranteedSwap overload temporary")
 
     # ore/OREData/ored/portfolio/optionwrapper.hpp
 
