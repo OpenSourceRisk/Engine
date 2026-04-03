@@ -458,7 +458,7 @@ def main():
     # ore/OREData/ored/portfolio/creditlinkedswap.hpp
 
     ql.CreditLinkedSwap()
-    ql.CreditLinkedSwap("", False, 0., ql.CreditDefaultSwap.atDefault,
+    ql.CreditLinkedSwap("", False, 0., "atDefault",
         [leg_data0], [leg_data0], [leg_data0], [leg_data0])
 
     # ore/OREData/ored/portfolio/crosscurrencyswap.hpp

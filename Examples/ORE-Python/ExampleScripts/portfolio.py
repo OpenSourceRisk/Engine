@@ -471,7 +471,7 @@ def main():
 
         env = ql.Envelope("CP")
         swap = ql.CreditDefaultSwapData(issuerId, creditCurveId, fixedLeg, True,
-            ql.CreditDefaultSwap.atDefault, today + ql.Period(1, ql.Days))
+            "atDefault", today + ql.Period(1, ql.Days))
         trade = ql.ORECreditDefaultSwap(env, swap)
         trade.setId(trade_id)
         return trade;
@@ -493,7 +493,7 @@ def main():
         attachmentPoint = 0.0;
         detachmentPoint = 0.1;
         settlesAccrual = True;
-        protectionPaymentTime = ql.CreditDefaultSwap.atDefault
+        protectionPaymentTime = "atDefault"
 
         upfrontFee = 0.0;
 
