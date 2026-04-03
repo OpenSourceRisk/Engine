@@ -10,35 +10,15 @@ output_file="output.txt"
 
 for file in *.py; do
     if [ -f "$file" ]; then
-        trace_output=0
-        case "$file" in
-            portfolio.py|portfolio2.py)
-                trace_output=1
-                ;;
-        esac
-
         > "$output_file"
         echo RUN $file  | tee -a "$output_file"
-        if [ $trace_output -eq 1 ]; then
-            ORE_TRACE_SCRIPT=1 python3 "$file"  &>> "$output_file" || status=1
-        else
-            python3 "$file"  &>> "$output_file" || status=1
-        fi
+        python3 "$file"  &>> "$output_file" || status=1
         return_code=$?
         if [ $return_code -gt $status ]; then
                 status+=$return_code
         fi
 
-        if [ $trace_output -eq 1 ]; then
-            cat "$output_file"
-        fi
-
         if [[ "$file" == "log.py" ]]; then
-            continue
-        fi
-
-        if [ $trace_output -eq 1 ]; then
-            echo "Skipping output comparison for traced script $file."
             continue
         fi
 

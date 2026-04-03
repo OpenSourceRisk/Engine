@@ -4,100 +4,12 @@
 # This script constructs trades but does not price them and there is no output.
 
 
-import itertools
-import os
-
-import ORE as _ql
-
-
-_TRACE_SCRIPT = os.environ.get("ORE_TRACE_SCRIPT", "").lower() in {
-    "1", "true", "yes", "on"
-}
-_SCRIPT_NAME = os.path.basename(__file__)
-_CALL_IDS = itertools.count(1)
-
-
-def _short_repr(value):
-    if isinstance(value, (str, bytes)):
-        text = repr(value)
-    elif isinstance(value, (int, float, bool)) or value is None:
-        text = repr(value)
-    elif isinstance(value, (list, tuple, set, dict)):
-        text = f"{type(value).__name__}(len={len(value)})"
-    else:
-        text = type(value).__name__
-    return text if len(text) <= 80 else text[:77] + "..."
-
-
-def _log_call(message):
-    if not _TRACE_SCRIPT:
-        return
-    text = f"[{_SCRIPT_NAME}] {message}"
-    print(text, flush=True)
-    try:
-        _ql.WLOG(text)
-    except Exception:
-        pass
-
-
-class _LoggedCallable:
-    def __init__(self, name, target):
-        self._name = name
-        self._target = target
-
-    def __call__(self, *args, **kwargs):
-        call_id = next(_CALL_IDS)
-        args_text = ", ".join(_short_repr(arg) for arg in args)
-        kwargs_text = ", ".join(
-            f"{key}={_short_repr(value)}" for key, value in kwargs.items()
-        )
-        signature = ", ".join(
-            part for part in (args_text, kwargs_text) if part
-        )
-        _log_call(f"CALL #{call_id} {self._name}({signature})")
-        try:
-            return self._target(*args, **kwargs)
-        except Exception as exc:
-            _log_call(
-                f"RAISE #{call_id} {self._name}: {type(exc).__name__}: {exc}"
-            )
-            raise
-
-    def __getattr__(self, name):
-        return getattr(self._target, name)
-
-
-class _LoggedModule:
-    def __init__(self, module):
-        self._module = module
-        self._cache = {}
-
-    def __getattr__(self, name):
-        if name in self._cache:
-            return self._cache[name]
-        value = getattr(self._module, name)
-        if callable(value) and not name.startswith("__"):
-            wrapped = _LoggedCallable(name, value)
-            self._cache[name] = wrapped
-            return wrapped
-        return value
-
-
-if _TRACE_SCRIPT:
-    try:
-        _ql.Log.instance().setMask(255)
-        _ql.Log.instance().switchOn()
-    except Exception:
-        pass
-
-ql = _LoggedModule(_ql) if _TRACE_SCRIPT else _ql
+import ORE as ql
 
 
 def main():
-    _log_call("main start")
     todaysDate = ql.Date(6, ql.November, 2001)
     ql.Settings.instance().evaluationDate = todaysDate
-    _log_call("evaluation date set")
 
     def buildSwap(trade_id, ccy, isPayer, notional, start, term, rate, spread,
                   fixedFreq, fixedDC, floatFreq, floatDC, index, calendar = ql.TARGET(),
@@ -168,9 +80,7 @@ def main():
 
         env = ql.Envelope("CP")
         trade = ql.ORESwaption(env, option, legData)
-        _log_call("constructed ORESwaption in buildEuropeanSwaption")
         trade.setId(trade_id)
-        _log_call("setId completed on ORESwaption in buildEuropeanSwaption")
         return trade;
 
     swap1 = buildEuropeanSwaption("5_Swaption_EUR", "Long", "EUR", True, 1000000.0, 10, 10,
@@ -862,10 +772,7 @@ def main():
 
     buildFxTouchOption("9_FXTouchOption", "Long", 10, "EUR", "USD", 1000, "NS",
                        "UpAndIn", 1.3)
-    _log_call("main completed")
 
 
 if __name__ == "__main__":
-    _log_call("calling main")
     main()
-    _log_call("main returned")
