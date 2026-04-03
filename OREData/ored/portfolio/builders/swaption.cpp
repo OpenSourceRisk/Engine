@@ -47,12 +47,25 @@ using namespace ore::data;
 
 namespace {
 
+Handle<CrossAssetModel> convertToCam(const SwaptionModel& model) {
+    if (std::holds_alternative<ext::shared_ptr<QuantExt::LGM>>(model)) {
+        return Handle<CrossAssetModel>(QuantLib::ext::make_shared<CrossAssetModel>(
+            std::vector<QuantLib::ext::shared_ptr<IrModel>>(1, std::get<ext::shared_ptr<QuantExt::LGM>>(model)),
+            std::vector<QuantLib::ext::shared_ptr<FxBsParametrization>>()));
+    } else if (std::holds_alternative<Handle<CrossAssetModel>>(model)) {
+        return std::get<Handle<CrossAssetModel>>(model);
+    } else {
+        QL_FAIL("convertToCam: can not convert variant to cam (internal error)");
+    }
+}
+
 QuantLib::ext::shared_ptr<PricingEngine>
-buildMcEngine(const Handle<CrossAssetModel>& model, const std::vector<Handle<YieldTermStructure>>& discountCurves,
+buildMcEngine(const SwaptionModel& model, const std::vector<Handle<YieldTermStructure>>& discountCurves,
               const std::vector<Size>& externalModelIndices, const std::vector<QuantLib::Date>& simulationDates,
               const std::vector<QuantLib::Date>& stickyCloseOutDates, const EngineBuilder* builder) {
     return QuantLib::ext::make_shared<QuantExt::McMultiLegOptionEngine>(
-        model, parseSequenceType(builder->engineParameter("Training.Sequence", {}, false, "SobolBrownianBridge")),
+        convertToCam(model),
+        parseSequenceType(builder->engineParameter("Training.Sequence", {}, false, "SobolBrownianBridge")),
         parseSequenceType(builder->engineParameter("Pricing.Sequence", {}, false, "SobolBrownianBridge")),
         parseInteger(builder->engineParameter("Training.Samples", {}, true, std::string())),
         parseInteger(builder->engineParameter("Pricing.Samples", {}, false, "0")),
@@ -77,12 +90,13 @@ buildMcEngine(const Handle<CrossAssetModel>& model, const std::vector<Handle<Yie
 }
 
 QuantLib::ext::shared_ptr<PricingEngine>
-buildMcCgEngine(const std::string& id,const Handle<CrossAssetModel>& model, const std::vector<std::string>& currencies,
+buildMcCgEngine(const std::string& id, const SwaptionModel& model, const std::vector<std::string>& currencies,
                 const std::vector<Handle<YieldTermStructure>>& discountCurves,
                 const std::vector<Handle<Quote>>& fxSpots,
                 const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
                 const std::vector<std::string> indices, const std::vector<std::string> indexCurrencies,
                 const std::set<Date> simulationDates, const EngineBuilder* builder) {
+
     Model::Params mcParams;
     mcParams.seed = parseReal(builder->engineParameter("Training.Seed", {}, true));
     mcParams.sequenceType =
@@ -99,8 +113,8 @@ buildMcCgEngine(const std::string& id,const Handle<CrossAssetModel>& model, cons
         parseRealOrNull(builder->engineParameter("RegressionVarianceCutoff", {}, false, std::string()));
 
     auto camCg = QuantLib::ext::make_shared<GaussianCamCG>(
-        model, parseInteger(builder->engineParameter("Training.Samples", {}, true, std::string())), currencies,
-        discountCurves, fxSpots, irIndices,
+        convertToCam(model), parseInteger(builder->engineParameter("Training.Samples", {}, true, std::string())),
+        currencies, discountCurves, fxSpots, irIndices,
         std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>{}, indices, indexCurrencies,
         simulationDates, builder->engineFactory()->iborFallbackConfig(), std::vector<std::string>{},
         std::vector<Date>{}, parseInteger(builder->engineParameter("TimeStepsPerYear", {}, true)));
@@ -533,11 +547,6 @@ QuantLib::ext::shared_ptr<PricingEngine> CamMCSwaptionEngineBuilder::engineImpl(
     const std::string& securitySpread, const SwaptionModel& modelOverwrite) {
     DLOG("Building CAM MC Swaption engine for trade " << id);
 
-    auto cam =
-        std::holds_alternative<std::monostate>(modelOverwrite)
-            ? std::get<Handle<CrossAssetModel>>(model(id, keys, dates, maturities, strikes, fxStrikes, isAmerican))
-            : std::get<Handle<CrossAssetModel>>(modelOverwrite);
-
     std::vector<Handle<YieldTermStructure>> discountCurves;
     for (Size i = 0; i < keys.size(); ++i) {
         QuantLib::ext::shared_ptr<IborIndex> index;
@@ -552,7 +561,10 @@ QuantLib::ext::shared_ptr<PricingEngine> CamMCSwaptionEngineBuilder::engineImpl(
         discountCurves.push_back(yts);
     }
 
-    return buildMcEngine(cam, discountCurves, std::vector<Size>(), {}, {}, this);
+    return buildMcEngine(std::holds_alternative<std::monostate>(modelOverwrite)
+                             ? model(id, keys, dates, maturities, strikes, fxStrikes, isAmerican)
+                             : modelOverwrite,
+                         discountCurves, std::vector<Size>(), {}, {}, this);
 }
 
 QuantLib::ext::shared_ptr<PricingEngine>
@@ -596,11 +608,6 @@ QuantLib::ext::shared_ptr<PricingEngine> CamMCCgSwaptionEngineBuilder::engineImp
     const std::string& securitySpread, const SwaptionModel& modelOverwrite) {
     DLOG("Building CAM MCCG Swaption engine for trade " << id);
 
-    auto cam =
-        std::holds_alternative<std::monostate>(modelOverwrite)
-            ? std::get<Handle<CrossAssetModel>>(model(id, keys, dates, maturities, strikes, fxStrikes, isAmerican))
-            : std::get<Handle<CrossAssetModel>>(modelOverwrite);
-
     std::vector<std::string> currencies;
     std::vector<Handle<YieldTermStructure>> discountCurves;
     std::vector<Handle<Quote>> fxSpots;
@@ -643,8 +650,12 @@ QuantLib::ext::shared_ptr<PricingEngine> CamMCCgSwaptionEngineBuilder::engineImp
         simulationDates.insert(d);
     } while (d < maxDate);
 
-    return buildMcCgEngine(id, cam, currencies, discountCurves, fxSpots, irIndices, indices, indexCurrencies,
-                           simulationDates, this);
+    return buildMcCgEngine(id,
+                           std::holds_alternative<std::monostate>(modelOverwrite)
+                               ? model(id, keys, dates, maturities, strikes, fxStrikes, isAmerican)
+                               : modelOverwrite,
+                           currencies, discountCurves, fxSpots, irIndices, indices, indexCurrencies, simulationDates,
+                           this);
 }
 
 QuantLib::ext::shared_ptr<PricingEngine> AmcCgSwaptionEngineBuilder::engineImpl(
