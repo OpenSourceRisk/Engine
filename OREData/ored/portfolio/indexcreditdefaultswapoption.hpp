@@ -36,7 +36,8 @@ public:
     IndexCreditDefaultSwapOption(const ore::data::Envelope& env, const IndexCreditDefaultSwapData& swap,
                                  const ore::data::OptionData& option, QuantLib::Real strike,
                                  const std::string& indexTerm = "", const std::string& strikeType = "Spread",
-                                 const std::string& tradeDateStr = "", const std::string& fepStartDateStr = "");
+                                 const QuantLib::Date& tradeDate = QuantLib::Date(),
+                                 const QuantLib::Date& fepStartDate = QuantLib::Date());
 
     //! \name Trade
     //@{
@@ -59,11 +60,11 @@ public:
     QuantLib::Real strike() const;
     QuantLib::Option::Type callPut() const;
     const std::string& strikeType() const;
+    const QuantLib::Date& tradeDate() const;
+    const QuantLib::Date& fepStartDate() const;
     const std::string& tradeDateStr() const;
     const std::string& fepStartDateStr() const;
     // only available after build()
-    const QuantLib::Date& tradeDate() const;
-    const QuantLib::Date& fepStartDate() const;
     const CreditPortfolioSensitivityDecomposition sensitivityDecomposition() const;
     QuantLib::Real effectiveStrike() const;
     const std::string& effectiveStrikeType() const;
@@ -79,11 +80,11 @@ private:
     QuantLib::Real strike_;
     std::string indexTerm_;
     std::string strikeType_;
-    std::string tradeDateStr_;
-    std::string fepStartDateStr_;
 
     QuantLib::Date tradeDate_;
     QuantLib::Date fepStartDate_;
+    std::string tradeDateStr_;
+    std::string fepStartDateStr_;
     CreditPortfolioSensitivityDecomposition sensitivityDecomposition_;
     QuantLib::Real effectiveStrike_;
     std::string effectiveStrikeType_;

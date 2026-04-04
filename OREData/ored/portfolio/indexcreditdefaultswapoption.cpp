@@ -51,9 +51,11 @@ IndexCreditDefaultSwapOption::IndexCreditDefaultSwapOption()
 IndexCreditDefaultSwapOption::IndexCreditDefaultSwapOption(const Envelope& env, const IndexCreditDefaultSwapData& swap,
                                                            const OptionData& option, Real strike,
                                                            const string& indexTerm, const string& strikeType,
-                                                           const string& tradeDateStr, const string& fepStartDateStr)
+                                                           const Date& tradeDate, const Date& fepStartDate)
     : Trade("IndexCreditDefaultSwapOption", env), swap_(swap), option_(option), strike_(strike),
-      indexTerm_(indexTerm), strikeType_(strikeType), tradeDateStr_(tradeDateStr), fepStartDateStr_(fepStartDateStr),
+      indexTerm_(indexTerm), strikeType_(strikeType), tradeDate_(tradeDate), fepStartDate_(fepStartDate),
+      tradeDateStr_(tradeDate != Date() ? to_string(tradeDate) : ""),
+      fepStartDateStr_(fepStartDate != Date() ? to_string(fepStartDate) : ""),
       sensitivityDecomposition_(CPSD::Underlying), effectiveStrike_(Null<Real>()), defaultHasOccured_(false) {}
 
 void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
