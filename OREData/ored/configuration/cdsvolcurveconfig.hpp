@@ -37,7 +37,7 @@ namespace data {
 class CDSVolatilityCurveConfig : public CurveConfig {
 public:
     //! Default constructor
-    CDSVolatilityCurveConfig() {}
+    CDSVolatilityCurveConfig();
 
     //! Detailed constructor
     CDSVolatilityCurveConfig(const std::string& curveId, const std::string& curveDescription,

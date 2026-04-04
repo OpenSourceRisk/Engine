@@ -30,6 +30,9 @@ using std::string;
 namespace ore {
 namespace data {
 
+CDSVolatilityCurveConfig::CDSVolatilityCurveConfig()
+    : dayCounter_("A365"), calendar_("NullCalendar"), strikeFactor_(1.0) {}
+
 CDSVolatilityCurveConfig::CDSVolatilityCurveConfig(const string& curveId, const string& curveDescription,
                                                    const QuantLib::ext::shared_ptr<VolatilityConfig>& volatilityConfig,
                                                    const string& dayCounter, const string& calendar,
@@ -74,15 +77,12 @@ void CDSVolatilityCurveConfig::fromXML(XMLNode* node) {
     terms_.clear();
     termCurves_.clear();
     if (auto n = XMLUtils::getChildNode(node, "Terms")) {
-        terms_.clear();
-        termCurves_.clear();
         for (auto c : XMLUtils::getChildrenNodes(n, "Term")) {
             terms_.push_back(XMLUtils::getChildValueAsPeriod(c, "Label", true));
             termCurves_.push_back(XMLUtils::getChildValue(c, "Curve", true));
         }
     }
 
-    quoteName_ = "";
     if (auto n = XMLUtils::getChildNode(node, "QuoteName"))
         quoteName_ = XMLUtils::getNodeValue(n);
 
@@ -97,7 +97,7 @@ void CDSVolatilityCurveConfig::fromXML(XMLNode* node) {
         QL_REQUIRE(expiries.size() > 0, "Need at least one expiry in the Expiries node.");
 
         // Build the quotes by appending the expiries and terms to the quote stem.
-	std::vector<std::string> quotes;
+        std::vector<std::string> quotes;
         string stem = quoteStem();
         for (const string& exp : expiries) {
             for (auto const& p : terms_) {
@@ -105,9 +105,9 @@ void CDSVolatilityCurveConfig::fromXML(XMLNode* node) {
             }
         }
 
-	// If we have at most 1 term specified, we add quotes without term as well
+        // If we have at most 1 term specified, we add quotes without term as well
         for (const string& exp : expiries) {
-	    quotes.push_back(stem + exp);
+            quotes.push_back(stem + exp);
         }
 
         // Create the relevant volatilityConfig_ object.
@@ -138,19 +138,15 @@ void CDSVolatilityCurveConfig::fromXML(XMLNode* node) {
         volatilityConfig_->fromXML(n);
     }
 
-    dayCounter_ = "A365";
     if (auto n = XMLUtils::getChildNode(node, "DayCounter"))
         dayCounter_ = XMLUtils::getNodeValue(n);
 
-    calendar_ = "NullCalendar";
     if (auto n = XMLUtils::getChildNode(node, "Calendar"))
         calendar_ = XMLUtils::getNodeValue(n);
 
-    strikeType_ = "";
     if (auto n = XMLUtils::getChildNode(node, "StrikeType"))
         strikeType_ = XMLUtils::getNodeValue(n);
 
-    strikeFactor_ = 1.0;
     if (auto n = XMLUtils::getChildNode(node, "StrikeFactor"))
         strikeFactor_ = parseReal(XMLUtils::getNodeValue(n));
 
