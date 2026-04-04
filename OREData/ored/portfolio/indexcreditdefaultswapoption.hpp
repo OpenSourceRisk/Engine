@@ -36,12 +36,13 @@ public:
     IndexCreditDefaultSwapOption(const ore::data::Envelope& env, const IndexCreditDefaultSwapData& swap,
                                  const ore::data::OptionData& option, QuantLib::Real strike,
                                  const std::string& indexTerm = "", const std::string& strikeType = "Spread",
-                                 const QuantLib::Date& tradeDate = Date(), const QuantLib::Date& fepStartDate = Date());
+                                 const std::string& tradeDateStr = "", const std::string& fepStartDateStr = "");
 
     //! \name Trade
     //@{
     void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
     QuantLib::Real notional() const override;
+    void reset() override;
     //@}
 
     //! \name Serialisation
@@ -58,10 +59,12 @@ public:
     QuantLib::Real strike() const;
     QuantLib::Option::Type callPut() const;
     const std::string& strikeType() const;
+    const std::string& tradeDateStr() const;
+    const std::string& fepStartDateStr() const;
+    // only available after build()
     const QuantLib::Date& tradeDate() const;
     const QuantLib::Date& fepStartDate() const;
     const CreditPortfolioSensitivityDecomposition sensitivityDecomposition() const;
-    // only available after build()
     QuantLib::Real effectiveStrike() const;
     const std::string& effectiveStrikeType() const;
     const QuantLib::Period& effectiveIndexTerm() const;
@@ -76,10 +79,12 @@ private:
     QuantLib::Real strike_;
     std::string indexTerm_;
     std::string strikeType_;
+    std::string tradeDateStr_;
+    std::string fepStartDateStr_;
+
     QuantLib::Date tradeDate_;
     QuantLib::Date fepStartDate_;
     CreditPortfolioSensitivityDecomposition sensitivityDecomposition_;
-
     QuantLib::Real effectiveStrike_;
     std::string effectiveStrikeType_;
     QuantLib::Period effectiveIndexTerm_;
@@ -99,7 +104,7 @@ private:
 
     //! Populated during trade building
     Notionals notionals_;
-    bool defaultHasOccured_ = false;
+    bool defaultHasOccured_;
 
     //! map of all the constituents to notionals
     map<string, Real> constituents_;
