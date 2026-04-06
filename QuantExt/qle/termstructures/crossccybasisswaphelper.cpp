@@ -43,7 +43,8 @@ CrossCcyBasisSwapHelper::CrossCcyBasisSwapHelper(
     QuantLib::ext::optional<Period> flatLookback, QuantLib::ext::optional<Size> flatFixingDays,
     QuantLib::ext::optional<Size> flatRateCutoff, QuantLib::ext::optional<bool> flatIsAveraged,
     const bool telescopicValueDates, const QuantLib::Pillar::Choice pillarChoice,
-    const QuantLib::Date& customPillarDate)
+    const QuantLib::Date& customPillarDate, QuantLib::ext::optional<bool> observationShift,
+    QuantLib::ext::optional<bool> flatObservationShift)
     : RelativeDateRateHelper(spreadQuote), spotFX_(spotFX), settlementDays_(settlementDays),
       settlementCalendar_(settlementCalendar), swapTenor_(swapTenor), rollConvention_(rollConvention),
       flatIndex_(flatIndex), spreadIndex_(spreadIndex), flatDiscountCurve_(flatDiscountCurve),
@@ -55,8 +56,9 @@ CrossCcyBasisSwapHelper::CrossCcyBasisSwapHelper(
       spreadCalendar_(spreadCalendar), spotFXSettleDaysVec_(spotFXSettleDaysVec),
       spotFXSettleCalendarVec_(spotFXSettleCalendarVec), paymentLag_(paymentLag), flatPaymentLag_(flatPaymentLag),
       includeSpread_(includeSpread), lookback_(lookback), fixingDays_(fixingDays), rateCutoff_(rateCutoff),
-      isAveraged_(isAveraged), flatIncludeSpread_(flatIncludeSpread), flatLookback_(flatLookback),
-      flatFixingDays_(flatFixingDays), flatRateCutoff_(flatRateCutoff), flatIsAveraged_(flatIsAveraged),
+      isAveraged_(isAveraged), observationShift_(observationShift), flatIncludeSpread_(flatIncludeSpread),
+      flatLookback_(flatLookback), flatFixingDays_(flatFixingDays), flatRateCutoff_(flatRateCutoff),
+      flatIsAveraged_(flatIsAveraged), flatObservationShift_(flatObservationShift),
       telescopicValueDates_(telescopicValueDates), pillarChoice_(pillarChoice) {
 
     flatLegCurrency_ = flatIndex_->currency();
@@ -156,7 +158,8 @@ void CrossCcyBasisSwapHelper::initializeDates() {
         quote().empty() || !quote()->isValid() ? 0.0 : quote()->value(), spreadGearing_, flatLegNominal,
         flatLegCurrency_, flatLegSchedule, flatIndex_, spreadOnFlatLeg_, flatGearing_, paymentLag_, flatPaymentLag_,
         includeSpread_, lookback_, fixingDays_, rateCutoff_, isAveraged_, flatIncludeSpread_, flatLookback_,
-        flatFixingDays_, flatRateCutoff_, flatIsAveraged_, telescopicValueDates_);
+        flatFixingDays_, flatRateCutoff_, flatIsAveraged_, telescopicValueDates_, observationShift_,
+        flatObservationShift_);
 
     QuantLib::ext::shared_ptr<PricingEngine> engine;
     if (flatIsDomestic_) {

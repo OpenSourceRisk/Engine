@@ -627,19 +627,24 @@ structure of this node is shown in Listing \ref{lst:xccy_basis_conventions}.
   <EOM> </EOM>
   <IsResettable> </IsResettable>
   <FlatIndexIsResettable> </FlatIndexIsResettable>>
-  <PaymentLag> </PaymentLag>
+  <SpreadTenor> </SpreadTenor>
+  <FlatTenor> </FlatTenor>
+  <FlatPaymentLag> </FlatPaymentLag>
+  <SpreadPaymentLag> </SpreadPaymentLag>
   <FlatPaymentLag> </FlatPaymentLag>
   <!-- for OIS only -->
-  <IncludeSpread> </IncludeSpread>
-  <Lookback> </Lookback>
-  <FixingDays> </FixingDays>
-  <RateCutoff> </RateCutoff>
-  <IsAveraged> </IsAveraged>
+  <SpreadIncludeSpread> </SpreadIncludeSpread>
+  <SpreadLookback> </SpreadLookback>
+  <SpreadFixingDays> </SpreadFixingDays>
+  <SpreadRateCutoff> </SpreadRateCutoff>
+  <SpreadIsAveraged> </SpreadIsAveraged>
+  <SpreadObservationShift> </SpreadObservationShift>
   <FlatIncludeSpread> </FlatIncludeSpread>
   <FlatLookback> </FlatLookback>
   <FlatFixingDays> </FlatFixingDays>
   <FlatRateCutoff> </FlatRateCutoff>
   <FlatIsAveraged> </FlatIsAveraged>
+  <FlatObservationShift> </FlatObservationShift>
 </CrossCurrencyBasis>
 \end{minted}
 \caption{Cross currency basis swap conventions}
@@ -667,11 +672,94 @@ SettlementDays above.
 \item SpreadFixingDays [Optional]: Only relevant if spread leg is OIS, allowable values are 0, 1, 2, ..., defaults to 0 if not given
 \item SpreadRateCutoff [Optional]: Only relevant if spread leg is OIS, allowable values are 0, 1, 2, ..., defaults to 0 if not given
 \item SpreadIsAveraged [Optional]: Only relevant if spread leg is OIS, allowable values are true, false, defaults to false if not given
-\item FlatIncludeSpread [Optional]: Only relevant if spread leg is OIS, allowable values are true, false, defaults to false if not given
-\item FlatLookback [Optional]: Only relevant if spread leg is OIS, allowable values are 0D, 1D, ..., defaults to 0D if not given
-\item FlatFixingDays [Optional]: Only relevant if spread leg is OIS, allowable values are 0, 1, 2, ..., defaults to 0 if not given
-\item FlatRateCutoff [Optional]: Only relevant if spread leg is OIS, allowable values are 0, 1, 2, ..., defaults to 0 if not given
-\item FlatIsAveraged [Optional]: Only relevant if spread leg is OIS, allowable values are true, false, defaults to false if not given
+\item SpreadObservationShift [Optional]: Only relevant if spread leg is OIS, allowable values are true, false, defaults to true if not given
+\item FlatIncludeSpread [Optional]: Only relevant if flat leg is OIS, allowable values are true, false, defaults to false if not given
+\item FlatLookback [Optional]: Only relevant if flat leg is OIS, allowable values are 0D, 1D, ..., defaults to 0D if not given
+\item FlatFixingDays [Optional]: Only relevant if flat leg is OIS, allowable values are 0, 1, 2, ..., defaults to 0 if not given
+\item FlatRateCutoff [Optional]: Only relevant if flat leg is OIS, allowable values are 0, 1, 2, ..., defaults to 0 if not given
+\item FlatIsAveraged [Optional]: Only relevant if flat leg is OIS, allowable values are true, false, defaults to false if not given
+\item FlatObservationShift [Optional]: Only relevant if flat leg is OIS, allowable values are true, false, defaults to true if not given
+\end{itemize}
+
+\subsubsection{Cross Currency Fix Float Swap Conventions}
+A node with name \lstinline!CrossCurrencyFixFloat! is used to store conventions for cross currency fixed versus float swap quotes.
+The structure of this node is shown in Listing \ref{lst:xccy_fix_float_conventions}.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CrossCurrencyFixFloat>
+  <Id> </Id>
+  <SettlementDays> </SettlementDays>
+  <SettlementCalendar> </SettlementCalendar>
+  <SettlementConvention> </SettlementConvention>
+  <FixedCurrency> </FixedCurrency>
+  <FixedFrequency> </FixedFrequency>
+  <FixedConvention> </FixedConvention>
+  <FixedDayCounter> </FixedDayCounter>
+  <Index> </Index>>
+  <EOM> </EOM>
+  <IsResettable> </IsResettable>
+  <FloatIndexIsResettable> </FloatIndexIsResettable>
+  <!-- for OIS only -->
+  <IncludeSpread> </IncludeSpread>
+  <Lookback> </Lookback>
+  <FixingDays> </FixingDays>
+  <RateCutoff> </RateCutoff>
+  <IsAveraged> </IsAveraged>
+  <ObservationShift> </ObservationShift>
+</CrossCurrencyFixFloat>
+\end{minted}
+\caption{Cross currency fix float swap conventions}
+\label{lst:xccy_fix_float_conventions}
+\end{listing}
+
+The meanings of the various elements in this node are as follows:
+\begin{itemize}
+\item \lstinline!SettlementDays!: The number of business days to the start of the cross currency basis swap.
+\item \lstinline!SettlementCalendar!: The business day calendar(s) for both legs
+    It is also used to arrive at the settlement date using the SettlementDays above.
+\item \lstinline!SettlementConvention!: The roll convention for both legs.
+\item \lstinline!FixedCurrency!: The currency of the fixed leg.
+\item \lstinline!FixedFrequency!: The frequency of the fixed leg payments.
+\item \lstinline!FixedConvention!: The business day roll convention for the fixed leg.
+\item \lstinline!FixedDayCounter!: The day count convention for the fixed leg.
+\item \lstinline!Index!: The name of the index on the floating leg.
+\item \lstinline!EOM! [Optional]:
+    \lstinline!true! if the end of month convention is to be used when generating the schedule on both legs, 
+    and \lstinline!false! if not. If not provided, it defaults to \lstinline!false!.
+\item \lstinline!IsResettable! [Optional]: \lstinline!true! if the swap is mark-to-market resetting, 
+    and \lstinline!false! otherwise. If not provided, it defaults to \lstinline!false!.
+\item \lstinline!FloatIndexIsResettable! [Optional]: If the swap is mark-to-market resetting, 
+    then this field indicates which leg's notional resets.
+    It is \lstinline!true! if it is the notional on the floating leg that resets, 
+    and \lstinline!false! if it is the notional on the fixed leg that resets.
+    If not provided, it defaults to \lstinline!true!.
+\end{itemize}
+
+The following fields are only relevant if the floating leg is an overnight indexed leg:
+\begin{itemize}
+\item \lstinline!IncludeSpread! [Optional]: If the leg is compounding,
+    this field indicates whether or not to include the spread in the compounding.
+    The allowable values are \lstinline!true! or \lstinline!false!.
+    The default to \lstinline!false! if not given.
+\item \lstinline!Lookback! [Optional]: The lookback period for the overnight indexed leg.
+    If provided, it must be a period that is a non-negative number of days.
+    The allowable values are \lstinline!0D!, \lstinline!1D! etc.
+    It defaults to \lstinline!0D! if not given.
+\item \lstinline!FixingDays! [Optional]: The fixing lag to be used for the overnight index.
+    If provided, it must be a non-negative integer.
+    If not provided, the natural fixing lag of the overnight index is used.
+\item \lstinline!RateCutoff! [Optional]: The number of rate cut-off days on the overnight leg.
+    If provided, it must be a non-negative integer.
+    If not provided, it defaults to \lstinline!0! i.e. no rate cut-off.
+\item \lstinline!IsAveraged! [Optional]: This flag indicates whether the overnight leg is averaged or compounded.
+    The allowable values are \lstinline!true! or \lstinline!false!.
+    It defaults to \lstinline!false! if not given, i.e. assumes a compounded overnight leg.
+\item \lstinline!ObservationShift! [Optional]: If a non-zero lookback is given,
+    this flag indicates if the there is an observation shift or not.
+    The allowable values are \lstinline!true! or \lstinline!false!.
+    It defaults to \lstinline!true! if not given.
 \end{itemize}
 
 \subsubsection{Inflation Swap Conventions}

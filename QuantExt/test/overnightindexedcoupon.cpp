@@ -15,22 +15,25 @@
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
-
 #include "toplevelfixture.hpp"
-
-#include <boost/assign/std/vector.hpp>
-#include <qle/cashflows/overnightindexedcoupon.hpp>
-#include <ql/indexes/ibor/sofr.hpp>
-#include <ql/time/calendars/unitedstates.hpp>
-#include <ql/time/calendars/nullcalendar.hpp>
-
-#include <boost/make_shared.hpp>
+#include "onindexcouponutils.hpp"
+// clang-format off
 #include <boost/test/unit_test.hpp>
-#include <boost/timer/timer.hpp>
+#include <boost/test/data/test_case.hpp>
+// clang-format on
+#include <ql/time/calendars/unitedstates.hpp>
+#include <qle/cashflows/overnightindexedcoupon.hpp>
+#include <map>
+#include <format>
+#include <oret/util/datapaths.hpp>
+#include <string>
 
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace boost::unit_test_framework;
+using namespace std;
+namespace bdata = boost::unit_test::data;
+using OnIndexCouponTest::TestCouponData;
 
 namespace {
 struct TestData {
@@ -1176,6 +1179,861 @@ BOOST_AUTO_TEST_CASE(testSofrAverageReconciliation) {
     runTest(schedule, d.sofr, 180, d.sofrAvg180, "SOFR AVG 180", 1e-4);
 
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(OvernightIndexCouponTests)
+
+// Valuation dates to test non-telescopic period coupons.
+vector<Date> valDatesToTestNoTs {
+    Date(23, Oct, 2025), // Coupon in future even with 2BD lookback and 2BD fixing lag.
+    Date(26, Oct, 2025), // Sunday, coupon in future even with 2BD lookback and 2BD fixing lag.
+    Date(12, Nov, 2025), // Mid coupon period.
+    Date( 2, Dec, 2025)  // After coupon period.
+};
+
+using OIC = QuantExt::OvernightIndexedCoupon;
+
+void checkDates(const OIC& cpn, const vector<Date>& expFixDates, const vector<Date>& expIntDates,
+    const vector<Date>& expValDates, bool adjustedStart = false, bool adjustedEnd = false)
+{
+    auto onFixCal = cpn.index()->fixingCalendar();
+
+    // If have not already adjusted the interest dates before passing them in for comparison.
+    vector<Date> tmpExpIntDates(expIntDates);
+    if (adjustedStart)
+        tmpExpIntDates.front() = onFixCal.adjust(tmpExpIntDates.front(), Preceding);
+    if (adjustedEnd)
+        tmpExpIntDates.back() = onFixCal.adjust(tmpExpIntDates.back(), Following);
+
+    // Can use BOOST_TEST(a == b) for containers a and b now but error messages in failure are not informative.
+    const auto& fixDates = cpn.fixingDates();
+    BOOST_CHECK_EQUAL_COLLECTIONS(fixDates.begin(), fixDates.end(), expFixDates.begin(), expFixDates.end());
+    const auto& intDates = cpn.interestDates();
+    BOOST_CHECK_EQUAL_COLLECTIONS(intDates.begin(), intDates.end(), tmpExpIntDates.begin(), tmpExpIntDates.end());
+    const auto& valDates = cpn.valueDates();
+    BOOST_CHECK_EQUAL_COLLECTIONS(valDates.begin(), valDates.end(), expValDates.begin(), expValDates.end());
+}
+
+void checkDatesOverEvalDates(const OIC& cpn, const vector<Date>& expFixDates, const vector<Date>& expIntDates,
+    const vector<Date>& expValDates, bool adjustedStart = false, bool adjustedEnd = false)
+{
+    // Check dates for original evaluation date and the other evaluation dates.
+    checkDates(cpn, expFixDates, expIntDates, expValDates, adjustedStart, adjustedEnd);
+    for (const auto& valuationDate : valDatesToTestNoTs) {
+        Settings::instance().evaluationDate() = valuationDate;
+        checkDates(cpn, expFixDates, expIntDates, expValDates, adjustedStart, adjustedEnd);
+    }
+}
+
+OIC createCoupon(Natural lbDays = 0, bool obsShift = false, bool telescopic = false, Natural fixingDays = 0,
+    Natural rcoDays = 0, bool adjustStart = false, bool adjustEnd = false)
+{
+    TestCouponData tcd;
+    auto onFixCal = tcd.sofr->fixingCalendar();
+    Date start = adjustStart ? onFixCal.adjust(tcd.start, Preceding) : tcd.start;
+    Date end = adjustEnd ? onFixCal.adjust(tcd.end, Following) : tcd.end;
+
+    return OIC(tcd.pmt, tcd.notional, start, end, tcd.sofr, 1.0, 0.0, Date(), Date(), DayCounter(),
+        telescopic, false, lbDays * Days, rcoDays, fixingDays, Date(), Date(), obsShift);
+}
+
+// Used for expected results in tests below.
+vector<Date> expIntDates = {Date( 1, Nov, 2025), Date( 3, Nov, 2025), Date( 4, Nov, 2025), Date( 5, Nov, 2025), Date( 6, Nov, 2025), Date( 7, Nov, 2025), Date(10, Nov, 2025), Date(12, Nov, 2025), Date(13, Nov, 2025), Date(14, Nov, 2025), Date(17, Nov, 2025), Date(18, Nov, 2025), Date(19, Nov, 2025), Date(20, Nov, 2025), Date(21, Nov, 2025), Date(24, Nov, 2025), Date(25, Nov, 2025), Date(26, Nov, 2025), Date(28, Nov, 2025), Date(30, Nov, 2025)};
+vector<Date> sofrDates   = {Date(28, Oct, 2025), Date(29, Oct, 2025), Date(30, Oct, 2025), Date(31, Oct, 2025), Date( 3, Nov, 2025), Date( 4, Nov, 2025), Date( 5, Nov, 2025), Date( 6, Nov, 2025), Date( 7, Nov, 2025), Date(10, Nov, 2025), Date(12, Nov, 2025), Date(13, Nov, 2025), Date(14, Nov, 2025), Date(17, Nov, 2025), Date(18, Nov, 2025), Date(19, Nov, 2025), Date(20, Nov, 2025), Date(21, Nov, 2025), Date(24, Nov, 2025), Date(25, Nov, 2025), Date(26, Nov, 2025), Date(28, Nov, 2025), Date( 1, Dec, 2025)};
+
+void applyRcoExpDates(vector<Date>& expFixDates, vector<Date>& expValDates, Natural rcoDays) {
+    // Given fixing dates with no rate cut-off: {..., tf_{M-3}, tf_{M-2}, tf_{M-1}, tf_{M}} -> 
+    // Expect fixing dates with rate cut-off = 3 for example: {..., tf_{M-3}, tf_{M-3}, tf_{M-3}, tf_{M-3}}
+    auto itFix = prev(expFixDates.end(), rcoDays + 1);
+    fill(itFix + 1, expFixDates.end(), *itFix);
+
+    // Given associated value dates with no rate cut-off:
+    //   {..., VD(tf_{M-3}), VD(tf_{M-2}), VD(tf_{M-1}), VD(tf_{M}), VD(tf_{M}) + 1BD}
+    // Expect value dates with rate cut-off = 3 for example:
+    //   {..., VD(tf_{M-3}), VD(tf_{M-3}), VD(tf_{M-3}), VD(tf_{M-3}), VD(tf_{M-3}) + 1BD}
+    // where VD(tf_{.}) is the value date corresponding to the fixing date tf_{.}.
+    auto itVal = prev(expValDates.end(), rcoDays + 2);
+    expValDates.back() = *(itVal + 1);
+    fill(itVal + 1, prev(expValDates.end()), *itVal);
+}
+
+// Test coupon dates for coupon with or without lookback period (Lb / NoLb), with or without observation shift 
+// (Os / NoOs), with or without externally specified (i.e. != natural fixing lag of the index) fixing lag (Fd / NoFd) 
+// and possibly with no telescoping dates allowed (NoTs). All tests are performed with no rate cut-off (0) or with 
+// a rate cut-off of 3 days and with or without start / end coupon date being a holiday.
+// 
+// Note that for '_NoTs', moving the valuation date should have no impact. Where '_NoTs' is not in the test name, the
+// test is ran for both telescoping allowed and not allowed as in these cases it is switched off in the 
+// OvernightIndexedCoupon constructor because it is not possible. Telescoping dates are tested separately below.
+#ifdef __INTELLISENSE__
+void testCpn_NoLb_NoOs_NoFd_NoTs(Natural rcoDays, bool adjustStart, bool adjustEnd)
+#else
+BOOST_DATA_TEST_CASE(testCpn_NoLb_NoOs_NoFd_NoTs,
+    bdata::make({0, 3}) * bdata::make({true, false}) * bdata::make({true, false}),
+    rcoDays, adjustStart, adjustEnd
+)
+#endif
+{
+    // Create the coupon.
+    Settings::instance().evaluationDate() = valDatesToTestNoTs.front();
+    auto cpn = createCoupon(0, false, false, 0, rcoDays, adjustStart, adjustEnd);
+
+    // Check expected results.
+    vector<Date> expFixDates(sofrDates.begin() + 3, prev(sofrDates.end()));
+    vector<Date> expValDates(sofrDates.begin() + 3, sofrDates.end());
+    if (rcoDays > 0)
+        applyRcoExpDates(expFixDates, expValDates, rcoDays);
+
+    checkDatesOverEvalDates(cpn, expFixDates, expIntDates, expValDates, adjustStart, adjustEnd);
+}
+
+#ifdef __INTELLISENSE__
+void testCpn_Lb_NoOs_NoFd(Natural rcoDays, bool allowTelescope, bool adjustStart, bool adjustEnd)
+#else
+BOOST_DATA_TEST_CASE(testCpn_Lb_NoOs_NoFd,
+    bdata::make({0, 3}) * bdata::make({true, false}) * bdata::make({true, false}) * bdata::make({true, false}),
+    rcoDays, allowTelescope, adjustStart, adjustEnd
+)
+#endif
+{
+    // Create the coupon with lookback of 2 days.
+    Settings::instance().evaluationDate() = valDatesToTestNoTs.front();
+    auto cpn = createCoupon(2, false, allowTelescope, 0, rcoDays, adjustStart, adjustEnd);
+
+    // Check expected results.
+    vector<Date> expFixDates(sofrDates.begin() + 1, prev(sofrDates.end(), 3));
+    vector<Date> expValDates(sofrDates.begin() + 1, prev(sofrDates.end(), 2));
+    if (rcoDays > 0)
+        applyRcoExpDates(expFixDates, expValDates, rcoDays);
+
+    checkDatesOverEvalDates(cpn, expFixDates, expIntDates, expValDates, adjustStart, adjustEnd);
+}
+
+#ifdef __INTELLISENSE__
+void testCpn_Lb_Os_NoFd_NoTs(Natural rcoDays, bool adjustStart, bool adjustEnd)
+#else
+BOOST_DATA_TEST_CASE(testCpn_Lb_Os_NoFd_NoTs,
+    bdata::make({0, 3}) * bdata::make({true, false}) * bdata::make({true, false}),
+    rcoDays, adjustStart, adjustEnd
+)
+#endif
+{
+    // Create the coupon with lookback of 2 days and observation shift.
+    Settings::instance().evaluationDate() = valDatesToTestNoTs.front();
+    auto cpn = createCoupon(2, true, false, 0, rcoDays, adjustStart, adjustEnd);
+
+    // Check expected results. Note: with obs shift, interest dates = value dates.
+    vector<Date> expFixDates(sofrDates.begin() + 1, prev(sofrDates.end(), 3));
+    vector<Date> tmpExpIntDates(sofrDates.begin() + 1, prev(sofrDates.end(), 2));
+    vector<Date> expValDates(sofrDates.begin() + 1, prev(sofrDates.end(), 2));
+    if (rcoDays > 0)
+        applyRcoExpDates(expFixDates, expValDates, rcoDays);
+
+    checkDatesOverEvalDates(cpn, expFixDates, tmpExpIntDates, expValDates, adjustStart, adjustEnd);
+}
+
+#ifdef __INTELLISENSE__
+void testCpn_NoLb_NoOs_Fd(Natural rcoDays, bool allowTelescope, bool adjustStart, bool adjustEnd)
+#else
+BOOST_DATA_TEST_CASE(testCpn_NoLb_NoOs_Fd,
+    bdata::make({0, 3}) * bdata::make({true, false}) * bdata::make({true, false}) * bdata::make({true, false}),
+    rcoDays, allowTelescope, adjustStart, adjustEnd
+)
+#endif
+{
+    // Create the coupon with fixing lag of 1 day.
+    Settings::instance().evaluationDate() = valDatesToTestNoTs.front();
+    auto cpn = createCoupon(0, false, allowTelescope, 1, rcoDays, adjustStart, adjustEnd);
+
+    // Check expected results.
+    vector<Date> expFixDates(sofrDates.begin() + 2, prev(sofrDates.end(), 2));
+    vector<Date> expValDates(sofrDates.begin() + 2, prev(sofrDates.end()));
+    if (rcoDays > 0)
+        applyRcoExpDates(expFixDates, expValDates, rcoDays);
+
+    checkDatesOverEvalDates(cpn, expFixDates, expIntDates, expValDates, adjustStart, adjustEnd);
+}
+
+#ifdef __INTELLISENSE__
+void testCpn_Lb_Os_Fd(Natural rcoDays, bool allowTelescope, bool adjustStart, bool adjustEnd)
+#else
+BOOST_DATA_TEST_CASE(testCpn_Lb_Os_Fd,
+    bdata::make({0, 3}) * bdata::make({true, false}) * bdata::make({true, false}) * bdata::make({true, false}),
+    rcoDays, allowTelescope, adjustStart, adjustEnd
+)
+#endif
+{
+    // Create the coupon with lookback of 2 days, observation shift and fixing lag of 1 day.
+    Settings::instance().evaluationDate() = valDatesToTestNoTs.front();
+    auto cpn = createCoupon(2, true, allowTelescope, 1, rcoDays, adjustStart, adjustEnd);
+
+    // Check expected results. Note: with obs shift, interest dates = value dates.
+    vector<Date> expFixDates(sofrDates.begin(), prev(sofrDates.end(), 4));
+    vector<Date> tmpExpIntDates(sofrDates.begin() + 1, prev(sofrDates.end(), 2));
+    vector<Date> expValDates(sofrDates.begin(), prev(sofrDates.end(), 3));
+    if (rcoDays > 0)
+        applyRcoExpDates(expFixDates, expValDates, rcoDays);
+
+    checkDatesOverEvalDates(cpn, expFixDates, tmpExpIntDates, expValDates, adjustStart, adjustEnd);
+}
+
+BOOST_AUTO_TEST_CASE(testShortCouponsNoTs)
+{
+    // For SOFR index.
+    TestCouponData tcd;
+
+    // 1 period coupon, start and end business days.
+    Date start(5, Nov, 2025);
+    Date end(6, Nov, 2025);
+    Date pmt(7, Nov, 2025);
+    OIC cpn(pmt, 1, start, end, tcd.sofr);
+    checkDates(cpn, {Date(5, Nov, 2025)}, {Date(5, Nov, 2025), Date(6, Nov, 2025)},
+        {Date(5, Nov, 2025), Date(6, Nov, 2025)});
+
+    // 1 period coupon, start holiday (Veteran's Day in US) and end business day.
+    start = Date(11, Nov, 2025);
+    end = Date(12, Nov, 2025);
+    pmt = Date(13, Nov, 2025);
+    cpn = OIC(pmt, 1, start, end, tcd.sofr);
+    checkDates(cpn, {Date(10, Nov, 2025)}, {Date(11, Nov, 2025), Date(12, Nov, 2025)},
+        {Date(10, Nov, 2025), Date(12, Nov, 2025)});
+
+    // 1 period coupon, start business day and end holiday (Thanksgiving Day in US).
+    start = Date(26, Nov, 2025);
+    end = Date(27, Nov, 2025);
+    pmt = Date(28, Nov, 2025);
+    cpn = OIC(pmt, 1, start, end, tcd.sofr);
+    checkDates(cpn, {Date(26, Nov, 2025)}, {Date(26, Nov, 2025), Date(27, Nov, 2025)},
+        {Date(26, Nov, 2025), Date(28, Nov, 2025)});
+
+    // 1 period coupon, start holiday (Saturday) and end holiday (Sunday). Should not arise in practice but should work.
+    start = Date(29, Nov, 2025);
+    end = Date(30, Nov, 2025);
+    pmt = Date(1, Dec, 2025);
+    cpn = OIC(pmt, 1, start, end, tcd.sofr);
+    checkDates(cpn, {Date(28, Nov, 2025)}, {Date(29, Nov, 2025), Date(30, Nov, 2025)},
+        {Date(28, Nov, 2025), Date(1, Dec, 2025)});
+
+    // 2 period coupon, with rate cut-off equal to 1 => both underlying periods use the same fixing.
+    start = Date(5, Nov, 2025);
+    end = Date(7, Nov, 2025);
+    pmt = Date(8, Nov, 2025);
+    cpn = OIC(pmt, 1, start, end, tcd.sofr, 1.0, 0.0, Date(), Date(), DayCounter(), false, false, 0 * Days, 1);
+    checkDates(cpn, {Date(5, Nov, 2025), Date(5, Nov, 2025)},
+        {Date(5, Nov, 2025), Date(6, Nov, 2025), Date(7, Nov, 2025)},
+        {Date(5, Nov, 2025), Date(5, Nov, 2025), Date(6, Nov, 2025)});
+}
+
+BOOST_AUTO_TEST_CASE(testBadCouponInputs)
+{
+    TestCouponData tcd;
+
+    // Coupon end date (3 Nov 2025) before start date (4 Nov 2025).
+    BOOST_CHECK_THROW(OIC(Date(5, Nov, 2025), 1, Date(4, Nov, 2025), Date(3, Nov, 2025), tcd.sofr), Error);
+    // Negative lookback period.
+    BOOST_CHECK_THROW(OIC(Date(1, Dec, 2025), 1, Date(1, Nov, 2025), Date(30, Nov, 2025), tcd.sofr, 1.0, 0.0,
+        Date(), Date(), DayCounter(), false, false, -1 * Days), Error);
+    // Lookback period that is not a Days unit.
+    BOOST_CHECK_THROW(OIC(Date(1, Dec, 2025), 1, Date(1, Nov, 2025), Date(30, Nov, 2025), tcd.sofr, 1.0, 0.0,
+        Date(), Date(), DayCounter(), false, false, 1 * Weeks), Error);
+    // Rate cut-off that is greater than or equal to the number of underlying periods.
+    BOOST_CHECK_THROW(OIC(Date(8, Dec, 2025), 1, Date(5, Nov, 2025), Date(7, Nov, 2025), tcd.sofr, 1.0, 0.0,
+        Date(), Date(), DayCounter(), false, false, 0 * Days, 2), Error);
+}
+
+// Tests for telescoping dates.
+#ifdef __INTELLISENSE__
+void testCpn_NoLb_NoOs_NoFd_Ts(Natural rcoDays, bool adjustStart, bool adjustEnd)
+#else
+BOOST_DATA_TEST_CASE(testCpn_NoLb_NoOs_NoFd_Ts,
+    bdata::make({0, 3}) * bdata::make({true, false}) * bdata::make({true, false}),
+    rcoDays, adjustStart, adjustEnd
+)
+#endif
+{
+    // Set evaluation date to one business day before first fixing date.
+    Settings::instance().evaluationDate() = Date(30, Oct, 2025);
+
+    // Create the coupon with telescoping dates set to true.
+    auto cpn = createCoupon(0, false, true, 0, rcoDays, adjustStart, adjustEnd);
+
+    // Expected dates at this point. Note dates at back end of the period remain constant.
+    vector<Date> expFixDates{Date(31, Oct, 2025)};
+    vector<Date> expValDates{Date(31, Oct, 2025)};
+    vector<Date> expTsIntDates{adjustStart ? Date(31, Oct, 2025) : Date(1, Nov, 2025)};
+    if (!adjustStart) {
+        expFixDates.push_back(Date(3, Nov, 2025));
+        expValDates.push_back(Date(3, Nov, 2025));
+        expTsIntDates.push_back(Date(3, Nov, 2025));
+    }
+
+    // Expected back stub.
+    if (rcoDays == 0) {
+        if (!adjustEnd) {
+            expFixDates.push_back(Date(28, Nov, 2025));
+            expValDates.push_back(Date(28, Nov, 2025));
+            expTsIntDates.push_back(Date(28, Nov, 2025));
+            expTsIntDates.push_back(Date(30, Nov, 2025));
+        } else {
+            expTsIntDates.push_back(Date(1, Dec, 2025));
+        }
+        expValDates.push_back(Date(1, Dec, 2025));
+    } else {
+        expFixDates.insert(expFixDates.end(), rcoDays + 1, Date(24, Nov, 2025));
+        expValDates.insert(expValDates.end(), rcoDays + 1, Date(24, Nov, 2025));
+        expValDates.push_back(Date(25, Nov, 2025));
+        expTsIntDates.insert(expTsIntDates.end(), prev(expIntDates.end(), 5), prev(expIntDates.end()));
+        expTsIntDates.push_back(adjustEnd ? Date(1, Dec, 2025) : Date(30, Nov, 2025));
+    }
+
+    // Note: not passing adjustStart & adjustEnd here because I have already adjusted the dates above.
+    checkDates(cpn, expFixDates, expTsIntDates, expValDates);
+
+    // Update evaluation date to first fixing date.
+    Settings::instance().evaluationDate() = Date(31, Oct, 2025);
+    if (adjustStart) {
+        expFixDates.insert(expFixDates.begin() + 1, Date(3, Nov, 2025));
+        expValDates.insert(expValDates.begin() + 1, Date(3, Nov, 2025));
+        expTsIntDates.insert(expTsIntDates.begin() + 1, Date(3, Nov, 2025));
+    }
+    checkDates(cpn, expFixDates, expTsIntDates, expValDates);
+
+    // Create a new coupon when evaluation date has been updated. It should have the same dates.
+    auto new_cpn = createCoupon(0, false, true, 0, rcoDays, adjustStart, adjustEnd);
+    checkDates(new_cpn, expFixDates, expTsIntDates, expValDates);
+
+    // Step over evaluation dates up to 3 Dec 2025 (all coupon dates in the past).
+    size_t pos = 1;
+    auto onFixCal = cpn.overnightIndex()->fixingCalendar();
+    Date evalDate = Settings::instance().evaluationDate();
+    while (evalDate < Date(2, Dec, 2025)) {
+        Settings::instance().evaluationDate() = ++evalDate;
+        if (onFixCal.isBusinessDay(evalDate)) {
+            auto nextBd = onFixCal.advance(evalDate, 1, Days, Following);
+            if ((rcoDays > 0 && evalDate < Date(21, Nov, 2025))
+                || (rcoDays == 0 && ((!adjustEnd && evalDate < Date(26, Nov, 2025))
+                    || (adjustEnd && evalDate < Date(28, Nov, 2025))))) {
+                expFixDates.insert(expFixDates.begin() + ++pos, nextBd);
+                expValDates.insert(expValDates.begin() + pos, nextBd);
+                expTsIntDates.insert(expTsIntDates.begin() + pos, nextBd);
+            }
+        }
+        checkDates(cpn, expFixDates, expTsIntDates, expValDates);
+
+        // New coupon from scratch and check dates.
+        new_cpn = createCoupon(0, false, true, 0, rcoDays, adjustStart, adjustEnd);
+        checkDates(new_cpn, expFixDates, expTsIntDates, expValDates);
+    }
+
+    // Step back down through evaluation dates to 30 Oct 2025 again.
+    vector<Date>::iterator it;
+    while (evalDate >= Date(31, Oct, 2025)) {
+        Settings::instance().evaluationDate() = --evalDate;
+
+        // New coupon from scratch and check dates.
+        new_cpn = createCoupon(0, false, true, 0, rcoDays, adjustStart, adjustEnd);
+
+        if (!adjustStart && evalDate == Date(30, Oct, 2025)) {
+            checkDates(cpn, expFixDates, expTsIntDates, expValDates);
+            checkDates(new_cpn, expFixDates, expTsIntDates, expValDates);
+            continue;
+        }
+
+        Date cmpDate;
+        if (rcoDays > 0) {
+            it = prev(expFixDates.end(), rcoDays + 1);
+            cmpDate = *it;
+        } else if (!adjustEnd) {
+            it = prev(expFixDates.end());
+            cmpDate = *prev(it);
+        } else {
+            it = expFixDates.end();
+            cmpDate = *prev(it);
+        }
+
+        auto nextBd = onFixCal.advance(onFixCal.adjust(evalDate, Preceding), 1, Days, Following);
+        auto itFrom = upper_bound(expFixDates.begin(), it, nextBd);
+        if (itFrom < it) {
+            auto viIdxFrom = distance(expFixDates.begin(), itFrom);
+            auto viIdxTo = distance(expFixDates.begin(), it);
+            expFixDates.erase(itFrom, it);
+            expValDates.erase(expValDates.begin() + viIdxFrom, expValDates.begin() + viIdxTo);
+            expTsIntDates.erase(expTsIntDates.begin() + viIdxFrom, expTsIntDates.begin() + viIdxTo);
+        }
+        checkDates(cpn, expFixDates, expTsIntDates, expValDates);
+        checkDates(new_cpn, expFixDates, expTsIntDates, expValDates);
+    }
+
+    // Helper function that sets up expected dates when rate cut-off days is 0 based on expected value dates.
+    auto setupDatesNoRco = [adjustEnd, &expValDates, &expTsIntDates, &expFixDates]() {
+        if (!adjustEnd && expValDates.back() < Date(28, Nov, 2025)) {
+            expValDates.push_back(Date(28, Nov, 2025));
+        }
+        expTsIntDates = expValDates;
+        expTsIntDates.front() = Date(1, Nov, 2025);
+        expValDates.push_back(Date(1, Dec, 2025));
+        expTsIntDates.push_back(Date(30, Nov, 2025));
+        expFixDates.assign(expValDates.begin(), prev(expValDates.end()));
+    };
+
+    // Helper function that sets up expected dates when rate cut-off days is 3 based on expected interest dates.
+    auto setupDatesRco = [&expValDates, &expTsIntDates, &expFixDates]() {
+        expValDates = expTsIntDates;
+        fill(prev(expValDates.end(), 5), expValDates.end(), Date(24, Nov, 2025));
+        expValDates.front() = Date(31, Oct, 2025);
+        expValDates.back() = Date(25, Nov, 2025);
+        expFixDates.assign(expValDates.begin(), prev(expValDates.end()));
+    };
+
+    // Jump to some random evaluation dates and check (adjust interest start and end dates in the checks).
+    Settings::instance().evaluationDate() = Date(7, Nov, 2025);
+    if (rcoDays == 0) {
+        expValDates   = {Date(31, Oct, 2025), Date( 3, Nov, 2025), Date( 4, Nov, 2025), Date( 5, Nov, 2025), Date( 6, Nov, 2025), Date( 7, Nov, 2025), Date(10, Nov, 2025)};
+        setupDatesNoRco();
+    } else {
+        expTsIntDates = {Date( 1, Nov, 2025), Date( 3, Nov, 2025), Date( 4, Nov, 2025), Date( 5, Nov, 2025), Date( 6, Nov, 2025), Date( 7, Nov, 2025), Date(10, Nov, 2025), Date(24, Nov, 2025), Date(25, Nov, 2025), Date(26, Nov, 2025), Date(28, Nov, 2025), Date(30, Nov, 2025)};
+        setupDatesRco();
+    }
+    checkDates(cpn, expFixDates, expTsIntDates, expValDates, adjustStart, adjustEnd);
+
+    // New coupon from scratch and check dates.
+    new_cpn = createCoupon(0, false, true, 0, rcoDays, adjustStart, adjustEnd);
+    checkDates(new_cpn, expFixDates, expTsIntDates, expValDates, adjustStart, adjustEnd);
+
+    Settings::instance().evaluationDate() = Date(16, Nov, 2025);
+    if (rcoDays == 0) {
+        expValDates   = {Date(31, Oct, 2025), Date( 3, Nov, 2025), Date( 4, Nov, 2025), Date( 5, Nov, 2025), Date( 6, Nov, 2025), Date( 7, Nov, 2025), Date(10, Nov, 2025), Date(12, Nov, 2025), Date(13, Nov, 2025), Date(14, Nov, 2025), Date(17, Nov, 2025)};
+        setupDatesNoRco();
+    } else {
+        expTsIntDates = {Date( 1, Nov, 2025), Date( 3, Nov, 2025), Date( 4, Nov, 2025), Date( 5, Nov, 2025), Date( 6, Nov, 2025), Date( 7, Nov, 2025), Date(10, Nov, 2025), Date(12, Nov, 2025), Date(13, Nov, 2025), Date(14, Nov, 2025), Date(17, Nov, 2025), Date(24, Nov, 2025), Date(25, Nov, 2025), Date(26, Nov, 2025), Date(28, Nov, 2025), Date(30, Nov, 2025)};
+        setupDatesRco();
+    }
+    checkDates(cpn, expFixDates, expTsIntDates, expValDates, adjustStart, adjustEnd);
+
+    // New coupon from scratch and check dates.
+    new_cpn = createCoupon(0, false, true, 0, rcoDays, adjustStart, adjustEnd);
+    checkDates(new_cpn, expFixDates, expTsIntDates, expValDates, adjustStart, adjustEnd);
+
+    Settings::instance().evaluationDate() = Date(25, Nov, 2025);
+    if (rcoDays == 0) {
+        expValDates   = {Date(31, Oct, 2025), Date( 3, Nov, 2025), Date( 4, Nov, 2025), Date( 5, Nov, 2025), Date( 6, Nov, 2025), Date( 7, Nov, 2025), Date(10, Nov, 2025), Date(12, Nov, 2025), Date(13, Nov, 2025), Date(14, Nov, 2025), Date(17, Nov, 2025), Date(18, Nov, 2025), Date(19, Nov, 2025), Date(20, Nov, 2025), Date(21, Nov, 2025), Date(24, Nov, 2025), Date(25, Nov, 2025), Date(26, Nov, 2025)};
+        setupDatesNoRco();
+    } else {
+        expTsIntDates = {Date( 1, Nov, 2025), Date( 3, Nov, 2025), Date( 4, Nov, 2025), Date( 5, Nov, 2025), Date( 6, Nov, 2025), Date( 7, Nov, 2025), Date(10, Nov, 2025), Date(12, Nov, 2025), Date(13, Nov, 2025), Date(14, Nov, 2025), Date(17, Nov, 2025), Date(18, Nov, 2025), Date(19, Nov, 2025), Date(20, Nov, 2025), Date(21, Nov, 2025), Date(24, Nov, 2025), Date(25, Nov, 2025), Date(26, Nov, 2025), Date(28, Nov, 2025), Date(30, Nov, 2025)};
+        setupDatesRco();
+    }
+    checkDates(cpn, expFixDates, expTsIntDates, expValDates, adjustStart, adjustEnd);
+
+    // New coupon from scratch and check dates.
+    new_cpn = createCoupon(0, false, true, 0, rcoDays, adjustStart, adjustEnd);
+    checkDates(new_cpn, expFixDates, expTsIntDates, expValDates, adjustStart, adjustEnd);
+
+    Settings::instance().evaluationDate() = Date(11, Nov, 2025);
+    if (rcoDays == 0) {
+        expValDates   = {Date(31, Oct, 2025), Date( 3, Nov, 2025), Date( 4, Nov, 2025), Date( 5, Nov, 2025), Date( 6, Nov, 2025), Date( 7, Nov, 2025), Date(10, Nov, 2025), Date(12, Nov, 2025)};
+        setupDatesNoRco();
+    } else {
+        expTsIntDates = {Date( 1, Nov, 2025), Date( 3, Nov, 2025), Date( 4, Nov, 2025), Date( 5, Nov, 2025), Date( 6, Nov, 2025), Date( 7, Nov, 2025), Date(10, Nov, 2025), Date(12, Nov, 2025), Date(24, Nov, 2025), Date(25, Nov, 2025), Date(26, Nov, 2025), Date(28, Nov, 2025), Date(30, Nov, 2025)};
+        setupDatesRco();
+    }
+    checkDates(cpn, expFixDates, expTsIntDates, expValDates, adjustStart, adjustEnd);
+
+    // New coupon from scratch and check dates.
+    new_cpn = createCoupon(0, false, true, 0, rcoDays, adjustStart, adjustEnd);
+    checkDates(new_cpn, expFixDates, expTsIntDates, expValDates, adjustStart, adjustEnd);
+
+    Settings::instance().evaluationDate() = Date(2, Dec, 2025);
+    if (rcoDays == 0) {
+        expValDates   = {Date(31, Oct, 2025), Date( 3, Nov, 2025), Date( 4, Nov, 2025), Date( 5, Nov, 2025), Date( 6, Nov, 2025), Date( 7, Nov, 2025), Date(10, Nov, 2025), Date(12, Nov, 2025), Date(13, Nov, 2025), Date(14, Nov, 2025), Date(17, Nov, 2025), Date(18, Nov, 2025), Date(19, Nov, 2025), Date(20, Nov, 2025), Date(21, Nov, 2025), Date(24, Nov, 2025), Date(25, Nov, 2025), Date(26, Nov, 2025), Date(28, Nov, 2025)};
+        setupDatesNoRco();
+    } else {
+        expTsIntDates = {Date( 1, Nov, 2025), Date( 3, Nov, 2025), Date( 4, Nov, 2025), Date( 5, Nov, 2025), Date( 6, Nov, 2025), Date( 7, Nov, 2025), Date(10, Nov, 2025), Date(12, Nov, 2025), Date(13, Nov, 2025), Date(14, Nov, 2025), Date(17, Nov, 2025), Date(18, Nov, 2025), Date(19, Nov, 2025), Date(20, Nov, 2025), Date(21, Nov, 2025), Date(24, Nov, 2025), Date(25, Nov, 2025), Date(26, Nov, 2025), Date(28, Nov, 2025), Date(30, Nov, 2025)};
+        setupDatesRco();
+    }
+    checkDates(cpn, expFixDates, expTsIntDates, expValDates, adjustStart, adjustEnd);
+
+    // New coupon from scratch and check dates.
+    new_cpn = createCoupon(0, false, true, 0, rcoDays, adjustStart, adjustEnd);
+    checkDates(new_cpn, expFixDates, expTsIntDates, expValDates, adjustStart, adjustEnd);
+
+    Settings::instance().evaluationDate() = Date(4, Nov, 2025);
+    if (rcoDays == 0) {
+        expValDates   = {Date(31, Oct, 2025), Date( 3, Nov, 2025), Date( 4, Nov, 2025), Date( 5, Nov, 2025)};
+        setupDatesNoRco();
+    } else {
+        expTsIntDates = {Date( 1, Nov, 2025), Date( 3, Nov, 2025), Date( 4, Nov, 2025), Date( 5, Nov, 2025), Date(24, Nov, 2025), Date(25, Nov, 2025), Date(26, Nov, 2025), Date(28, Nov, 2025), Date(30, Nov, 2025)};
+        setupDatesRco();
+    }
+    checkDates(cpn, expFixDates, expTsIntDates, expValDates, adjustStart, adjustEnd);
+
+    // New coupon from scratch and check dates.
+    new_cpn = createCoupon(0, false, true, 0, rcoDays, adjustStart, adjustEnd);
+    checkDates(new_cpn, expFixDates, expTsIntDates, expValDates, adjustStart, adjustEnd);
+}
+
+#ifdef __INTELLISENSE__
+void testCpn_Lb_Os_NoFd_Ts(Natural rcoDays, bool adjustStart, bool adjustEnd)
+#else
+BOOST_DATA_TEST_CASE(testCpn_Lb_Os_NoFd_Ts,
+    bdata::make({0, 3}) * bdata::make({true, false}) * bdata::make({true, false}),
+    rcoDays, adjustStart, adjustEnd
+)
+#endif
+{
+    // Set evaluation date to one business day before first fixing date taking into account lookback = 2.
+    Settings::instance().evaluationDate() = Date(28, Oct, 2025);
+
+    // Create the coupon with telescoping dates set to true.
+    auto cpn = createCoupon(2, true, true, 0, rcoDays, adjustStart, adjustEnd);
+
+    // Expected dates at this point. Note dates at back end of the period remain constant.
+    vector<Date> expValDates{Date(29, Oct, 2025)};
+    if (!adjustStart) {
+        expValDates.push_back(Date(30, Oct, 2025));
+    }
+    vector<Date> expTsIntDates = expValDates;
+
+    if (rcoDays == 0) {
+        if (!adjustEnd) {
+            expValDates.push_back(Date(25, Nov, 2025));
+            expTsIntDates.push_back(Date(25, Nov, 2025));
+        }
+        expValDates.push_back(Date(26, Nov, 2025));
+        expTsIntDates.push_back(Date(26, Nov, 2025));
+    } else {
+        expValDates.insert(expValDates.end(), rcoDays + 1, Date(20, Nov, 2025));
+        expValDates.push_back(Date(21, Nov, 2025));
+        expTsIntDates.insert(expTsIntDates.end(), prev(expIntDates.end(), 7), prev(expIntDates.end(), 2));
+    }
+    vector<Date> expFixDates(expValDates.begin(), prev(expValDates.end()));
+    checkDates(cpn, expFixDates, expTsIntDates, expValDates);
+
+    // Update evaluation date to first fixing date.
+    Settings::instance().evaluationDate() = Date(29, Oct, 2025);
+    if (adjustStart) {
+        expFixDates.insert(expFixDates.begin() + 1, Date(30, Oct, 2025));
+        expValDates.insert(expValDates.begin() + 1, Date(30, Oct, 2025));
+        expTsIntDates.insert(expTsIntDates.begin() + 1, Date(30, Oct, 2025));
+    }
+    checkDates(cpn, expFixDates, expTsIntDates, expValDates);
+
+    // Create a new coupon when evaluation date has been updated. It should have the same dates.
+    auto new_cpn = createCoupon(2, true, true, 0, rcoDays, adjustStart, adjustEnd);
+    checkDates(new_cpn, expFixDates, expTsIntDates, expValDates);
+
+    // Step over evaluation dates up to 3 Dec 2025 (all coupon dates in the past).
+    size_t pos = 1;
+    auto onFixCal = cpn.overnightIndex()->fixingCalendar();
+    Date evalDate = Settings::instance().evaluationDate();
+    while (evalDate < Date(2, Dec, 2025)) {
+        Settings::instance().evaluationDate() = ++evalDate;
+        if (onFixCal.isBusinessDay(evalDate)) {
+            auto nextBd = onFixCal.advance(evalDate, 1, Days, Following);
+            if ((rcoDays > 0 && evalDate < Date(19, Nov, 2025))
+                || (rcoDays == 0 && ((adjustEnd && evalDate < Date(25, Nov, 2025))
+                    || (!adjustEnd && evalDate < Date(24, Nov, 2025))))) {
+                expFixDates.insert(expFixDates.begin() + ++pos, nextBd);
+                expValDates.insert(expValDates.begin() + pos, nextBd);
+                expTsIntDates.insert(expTsIntDates.begin() + pos, nextBd);
+            }
+        }
+        checkDates(cpn, expFixDates, expTsIntDates, expValDates);
+
+        // New coupon from scratch and check dates.
+        new_cpn = createCoupon(2, true, true, 0, rcoDays, adjustStart, adjustEnd);
+        checkDates(new_cpn, expFixDates, expTsIntDates, expValDates);
+    }
+
+    // Step back down through evaluation dates to 28 Oct 2025 again.
+    vector<Date>::iterator it;
+    while (evalDate > Date(28, Oct, 2025)) {
+        Settings::instance().evaluationDate() = --evalDate;
+
+        Date cmpDate;
+        if (rcoDays > 0) {
+            it = prev(expFixDates.end(), rcoDays + 1);
+            cmpDate = *it;
+        } else {
+            it = adjustEnd ? expFixDates.end() : prev(expFixDates.end());
+            cmpDate = *prev(it);
+        }
+
+        if (evalDate > Date(28, Oct, 2025)) {
+            auto nextBd = onFixCal.advance(onFixCal.adjust(evalDate, Preceding), 1, Days, Following);
+            auto itFrom = upper_bound(expFixDates.begin(), it, nextBd);
+            if (itFrom < it) {
+                auto viIdxFrom = distance(expFixDates.begin(), itFrom);
+                auto viIdxTo = distance(expFixDates.begin(), it);
+                expFixDates.erase(itFrom, it);
+                expValDates.erase(expValDates.begin() + viIdxFrom, expValDates.begin() + viIdxTo);
+                expTsIntDates.erase(expTsIntDates.begin() + viIdxFrom, expTsIntDates.begin() + viIdxTo);
+            }
+            checkDates(cpn, expFixDates, expTsIntDates, expValDates);
+
+            // New coupon from scratch and check dates.
+            new_cpn = createCoupon(2, true, true, 0, rcoDays, adjustStart, adjustEnd);
+            checkDates(new_cpn, expFixDates, expTsIntDates, expValDates);
+        }
+    }
+
+    // We just index into this full date set for the expected results.
+    vector<Date> fullDateSet = {Date(29, Oct, 2025), Date(30, Oct, 2025), Date(31, Oct, 2025), Date( 3, Nov, 2025), Date( 4, Nov, 2025), Date( 5, Nov, 2025), Date( 6, Nov, 2025), Date( 7, Nov, 2025), Date(10, Nov, 2025), Date(12, Nov, 2025), Date(13, Nov, 2025), Date(14, Nov, 2025), Date(17, Nov, 2025), Date(18, Nov, 2025), Date(19, Nov, 2025), Date(20, Nov, 2025), Date(21, Nov, 2025), Date(24, Nov, 2025), Date(25, Nov, 2025), Date(26, Nov, 2025)};
+
+    auto setupExpDates = [rcoDays, adjustEnd, &fullDateSet, &expValDates, &expTsIntDates, &expFixDates](size_t idx) {
+        idx = rcoDays == 0 ? min(idx, fullDateSet.size() - 1) : min(idx, static_cast<size_t>(15));
+        expValDates.assign(fullDateSet.begin(), fullDateSet.begin() + idx);
+        expTsIntDates.assign(fullDateSet.begin(), fullDateSet.begin() + idx);
+
+        if (rcoDays == 0) {
+            if (!adjustEnd && expValDates.back() != Date(25, Nov, 2025)) {
+                expValDates.push_back(Date(25, Nov, 2025));
+                expTsIntDates.push_back(Date(25, Nov, 2025));
+            }
+            expValDates.push_back(Date(26, Nov, 2025));
+            expTsIntDates.push_back(Date(26, Nov, 2025));
+        } else {
+            expTsIntDates.insert(expTsIntDates.end(), prev(fullDateSet.end(), rcoDays + 2), fullDateSet.end());
+            expValDates.insert(expValDates.end(), rcoDays + 1, Date(20, Nov, 2025));
+            expValDates.push_back(Date(21, Nov, 2025));
+        }
+        expFixDates.assign(expValDates.begin(), prev(expValDates.end()));
+    };
+
+    // Jump to some random evaluation dates and check.
+    vector<pair<Date, size_t>> evalDateIdx = {
+        {Date(7, Nov, 2025), 9},
+        {Date(16, Nov, 2025), 13},
+        {Date(25, Nov, 2025), 19},
+        {Date(11, Nov, 2025), 10},
+        {Date(2, Dec, 2025), 20},
+        {Date(4, Nov, 2025), 6},
+        {Date(3, Oct, 2025), adjustStart ? 1 : 2}
+    };
+
+    for (const auto& [evalDate, idx] : evalDateIdx) {
+        Settings::instance().evaluationDate() = evalDate;
+        setupExpDates(idx);
+        checkDates(cpn, expFixDates, expTsIntDates, expValDates);
+
+        // New coupon from scratch and check dates.
+        new_cpn = createCoupon(2, true, true, 0, rcoDays, adjustStart, adjustEnd);
+        checkDates(new_cpn, expFixDates, expTsIntDates, expValDates);
+    }
+}
+
+// Test short coupons with telescoping set to true.
+BOOST_AUTO_TEST_CASE(testShortCouponsTs)
+{
+    // For SOFR index.
+    TestCouponData tcd;
+
+    auto createCpn = [&tcd](const Date& pmt, const Date& start, const Date& end, Natural lbDays = 0,
+        Natural rcoDays = 0)
+    {
+        bool obsShift = lbDays != 0;
+        return OIC(tcd.pmt, tcd.notional, start, end, tcd.sofr, 1.0, 0.0, Date(), Date(), DayCounter(), true, false,
+                lbDays * Days, rcoDays, Null<Natural>(), Date(), Date(), obsShift);
+    };
+
+    // 1 period coupon, start and end business days.
+    Date evalDate(4, Nov, 2025);
+    Settings::instance().evaluationDate() = evalDate;
+    Date start(5, Nov, 2025);
+    Date end(6, Nov, 2025);
+    Date pmt(7, Nov, 2025);
+    auto cpn = createCpn(pmt, start, end);
+    while (evalDate < Date(9, Nov, 2025)) {
+        checkDates(cpn, {Date(5, Nov, 2025)}, {Date(5, Nov, 2025), Date(6, Nov, 2025)},
+            {Date(5, Nov, 2025), Date(6, Nov, 2025)});
+        Settings::instance().evaluationDate() = ++evalDate;
+    }
+
+    // 1 period coupon, start holiday (Veteran's Day in US) and end business day.
+    evalDate = Date(9, Nov, 2025);
+    Settings::instance().evaluationDate() = evalDate;
+    start = Date(11, Nov, 2025);
+    end = Date(12, Nov, 2025);
+    pmt = Date(13, Nov, 2025);
+    cpn = createCpn(pmt, start, end);
+    while (evalDate < Date(15, Nov, 2025)) {
+        checkDates(cpn, {Date(10, Nov, 2025)}, {Date(11, Nov, 2025), Date(12, Nov, 2025)},
+            {Date(10, Nov, 2025), Date(12, Nov, 2025)});
+        Settings::instance().evaluationDate() = ++evalDate;
+    }
+
+    // 1 period coupon, start business day and end holiday (Thanksgiving Day in US).
+    evalDate = Date(25, Nov, 2025);
+    Settings::instance().evaluationDate() = evalDate;
+    start = Date(26, Nov, 2025);
+    end = Date(27, Nov, 2025);
+    pmt = Date(28, Nov, 2025);
+    cpn = createCpn(pmt, start, end);
+    while (evalDate < Date(30, Nov, 2025)) {
+        checkDates(cpn, {Date(26, Nov, 2025)}, {Date(26, Nov, 2025), Date(27, Nov, 2025)},
+            {Date(26, Nov, 2025), Date(28, Nov, 2025)});
+        Settings::instance().evaluationDate() = ++evalDate;
+    }
+
+    // 1 period coupon, start holiday (Saturday) and end holiday (Sunday). Should not arise in practice but should work.
+    evalDate = Date(25, Nov, 2025);
+    Settings::instance().evaluationDate() = evalDate;
+    start = Date(29, Nov, 2025);
+    end = Date(30, Nov, 2025);
+    pmt = Date(1, Dec, 2025);
+    cpn = createCpn(pmt, start, end);
+    while (evalDate < Date(2, Dec, 2025)) {
+        checkDates(cpn, {Date(28, Nov, 2025)}, {Date(29, Nov, 2025), Date(30, Nov, 2025)},
+            {Date(28, Nov, 2025), Date(1, Dec, 2025)});
+        Settings::instance().evaluationDate() = ++evalDate;
+    }
+
+    // 2 period coupon, with rate cut-off equal to 1 => both underlying periods use the same fixing.
+    evalDate = Date(3, Nov, 2025);
+    Settings::instance().evaluationDate() = evalDate;
+    start = Date(5, Nov, 2025);
+    end = Date(7, Nov, 2025);
+    pmt = Date(8, Nov, 2025);
+    cpn = createCpn(pmt, start, end, 0, 1);
+    while (evalDate < Date(9, Nov, 2025)) {
+        checkDates(cpn, {Date(5, Nov, 2025), Date(5, Nov, 2025)},
+            {Date(5, Nov, 2025), Date(6, Nov, 2025), Date(7, Nov, 2025)},
+            {Date(5, Nov, 2025), Date(5, Nov, 2025), Date(6, Nov, 2025)});
+        Settings::instance().evaluationDate() = ++evalDate;
+    }
+}
+
+// When telescopic dates is requested, it can be turned off if it is not possible to use it. Test this here.
+BOOST_AUTO_TEST_CASE(testTelescopicSetting)
+{
+    TestCouponData tcd;
+
+    OIC cpn(tcd.pmt, 1.0, tcd.start, tcd.end, tcd.sofr, 1.0, 0.0, Date(), Date(), DayCounter(), true, false,
+            0 * Days, 0, Null<Natural>(), Date(), Date(), false);
+    BOOST_CHECK_MESSAGE(cpn.telescopicDates(), "Expected telescopic dates to be true when no lookback, no "
+        "observation shift, and no external fixing lag.");
+
+    cpn = OIC(tcd.pmt, 1.0, tcd.start, tcd.end, tcd.sofr, 1.0, 0.0, Date(), Date(), DayCounter(), true, false,
+        2 * Days, 0, Null<Natural>(), Date(), Date(), true);
+    BOOST_CHECK_MESSAGE(cpn.telescopicDates(), "Expected telescopic dates to be true when non-zero lookback with "
+        "observation shift, and no external fixing lag.");
+
+    cpn = OIC(tcd.pmt, 1.0, tcd.start, tcd.end, tcd.sofr, 1.0, 0.0, Date(), Date(), DayCounter(), true, false,
+        2 * Days, 0, Null<Natural>(), Date(), Date(), false);
+    BOOST_CHECK_MESSAGE(!cpn.telescopicDates(), "Expected telescopic dates to be false when non-zero lookback "
+        "without observation shift, and no external fixing lag.");
+
+    cpn = OIC(tcd.pmt, 1.0, tcd.start, tcd.end, tcd.sofr, 1.0, 0.0, Date(), Date(), DayCounter(), true, false,
+        0 * Days, 0, 1, Date(), Date(), false);
+    BOOST_CHECK_MESSAGE(!cpn.telescopicDates(), "Expected telescopic dates to be false when there is an external "
+        "fixing lag different from the index fixing lag.");
+}
+
+// Get the input and ouput file paths for the given coupon ID in the tests below.
+pair<path, path> filePaths(const string& cpnId) {
+    auto outPath = TEST_OUTPUT_PATH / path(cpnId + ".csv");
+    auto expPath = TEST_INPUT_PATH / path(cpnId + ".csv");
+    return {outPath, expPath};
+}
+
+// Parameter sets for coupon testCouponAccruals below.
+auto lookbacks   = bdata::make({    0,     0,     2,    2,     2});
+auto obsShifts   = bdata::make({false, false,  true, true, false});
+auto telescopic  = bdata::make({false,  true, false, true, false});
+auto rateCutoffs = bdata::make({0, 3});
+
+// Selection of the above parameters.
+auto cpnVariants = (lookbacks ^ obsShifts ^ telescopic) * rateCutoffs;
+
+// Use this so that I can have an index available in the test body below.
+// Could use auto idx = boost::unit_test::framework::current_test_case().p_id; in test body but may be brittle across 
+// different versions of Boost.
+auto idxCpnVariants = cpnVariants ^ bdata::xrange(cpnVariants.size().value());
+
+#ifdef __INTELLISENSE__
+void testCpnAccruals(Natural lb, bool os, bool ts, Natural rco, size_t idx)
+#else
+BOOST_DATA_TEST_CASE(testCpnAccruals, idxCpnVariants, lb, os, ts, rco, idx)
+#endif
+{
+    // Create the coupon ID for output file.
+    string strOs = os ? "os" : "nos";
+    string strTs = ts ? "ts" : "nts";
+    string cpnName = format("{:02d}_lb-{}_{}_rco-{}_{}", idx, lb, strOs, rco, strTs);
+
+    // Create the coupon.
+    TestCouponData tcd;
+    Real notional = 100000000;
+
+    OIC cpn(tcd.pmt, notional, tcd.start, tcd.end, tcd.sofr, 1.0, 0.0, Date(), Date(), DayCounter(), ts, false,
+            lb * Days, rco, Null<Natural>(), Date(), Date(), os);
+
+    auto [outFilePath, expFilePath] = filePaths(cpnName);
+    OnIndexCouponTest::runCpnAccrualTest(cpn, outFilePath, expFilePath);
+}
+
+// Test gearings and spreads with different settings for whether start / end date of coupon is a business day.
+auto gearings  = bdata::make({  2.0,  1.0});
+auto spreads   = bdata::make({ 10.0, 10.0});
+auto incSpread = bdata::make({false, true});
+auto startBd   = bdata::make({false, true});
+auto endBd     = bdata::make({ true, false});
+auto gsCpnVariants = (gearings ^ spreads ^ incSpread ^ startBd ^ endBd) * bdata::make({ true, false});
+auto idxGsCpnVariants = gsCpnVariants ^ bdata::xrange(gsCpnVariants.size().value());
+
+#ifdef __INTELLISENSE__
+void testCpnAccrualsGearingSpread(Real gearing, Spread spread, bool incSpr, bool sibd, bool eibd, bool ts, size_t idx)
+#else
+BOOST_DATA_TEST_CASE(testCpnAccrualsGearingSpread, idxGsCpnVariants, gearing, spread, incSpr, sibd, eibd, ts, idx)
+#endif
+{
+    // Create the coupon ID for output file, maintaining format of previous tests with additional fields.
+    string strTs = ts ? "ts" : "nts";
+    string strIncSpr = incSpr ? "inc-spr" : "exc-spr";
+    string strSibd = sibd ? "sibd" : "sih";
+    string strEibd = eibd ? "eibd" : "eih";
+    string cpnName = format("{:02d}_lb-0_nos_rco-0_{}_g-{:g}_s-{:g}_{}_{}_{}",
+        idx, strTs, gearing, spread, strIncSpr, strSibd, strEibd);
+
+    // Create the coupon.
+    TestCouponData tcd;
+    Real notional = 100000000;
+    Date start = sibd ? Date(3, Nov, 2025) : tcd.start;
+    Date end = eibd ? Date(28, Nov, 2025) : tcd.end;
+    OIC cpn(tcd.pmt, notional, start, end, tcd.sofr, gearing, spread / 10000, Date(), Date(), DayCounter(), ts, incSpr,
+            0 * Days, 0, Null<Natural>(), Date(), Date(), false);
+
+    auto [outFilePath, expFilePath] = filePaths(cpnName);
+    OnIndexCouponTest::runCpnAccrualTest(cpn, outFilePath, expFilePath);
+}
+
+// Test coupon with all non-standard arguments set. Include spread must be false because gearing != 1 and telescoping 
+// must be false because an external fixing lag of 1 BD is specified != index fixing days.
+BOOST_AUTO_TEST_CASE(testCpnAccrualsAll)
+{
+    // Create the coupon ID for output file, maintaining format of previous tests with additional fields.
+    // fl-1 indicates fixing lag of 1 BD.
+    string cpnName("lb-2_os_rco-3_nts_g-1p5_s-10_exc-spr_sibd_eibd_fl-1");
+
+    // Create the coupon.
+    TestCouponData tcd;
+    Real notional = 100000000;
+    Date start = Date(3, Nov, 2025);
+    Date end = Date(28, Nov, 2025);
+    OIC cpn(tcd.pmt, notional, start, end, tcd.sofr, 1.5, 0.0010, Date(), Date(), DayCounter(), false, false, 2 * Days,
+            3, 1, Date(), Date(), true);
+
+    auto [outFilePath, expFilePath] = filePaths(cpnName);
+    OnIndexCouponTest::runCpnAccrualTest(cpn, outFilePath, expFilePath);
+}
+
+BOOST_AUTO_TEST_CASE(testSilly)
+{
+    Date date_1;
+    Date date_2 = Null<Date>();
+    BOOST_CHECK(date_1 == date_2);
+}
+// clang-format on
 
 BOOST_AUTO_TEST_SUITE_END()
 

@@ -452,11 +452,11 @@ void McMultiLegBaseEngine::calculate() const {
         maxTime = std::max(maxTime, *m);
 
     std::set<Real> xvaTimes;
-
-    for (auto const& d : simulationDates_) {
-        if (auto t = time(d); t < maxTime + tinyTime) {
-            xvaTimes.insert(time(d));
-        }
+    bool overshoot = false;
+    for (auto d = simulationDates_.begin(); d != simulationDates_.end() && !overshoot; ++d) {
+        double t = time(*d);
+        xvaTimes.insert(t);
+        overshoot = t > maxTime + tinyTime;
     }
 
     /* build combined time sets */

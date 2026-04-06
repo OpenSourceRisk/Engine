@@ -19,6 +19,10 @@
 #include <qle/math/randomvariable.hpp>
 #include <qle/math/randomvariablelsmbasissystem.hpp>
 
+#ifdef ORE_ENABLE_CUDA
+#include <qle/math/gpuqrsolve_multistream.hpp>
+#endif
+
 #include <ql/experimental/math/moorepenroseinverse.hpp>
 #include <ql/math/comparison.hpp>
 #include <ql/math/generallinearleastsquares.hpp>
@@ -1305,7 +1309,11 @@ Array regressionCoefficients(
             }
         }
     } else if (regressionMethod == RandomVariableRegressionMethod::QR) {
+#ifdef ORE_ENABLE_CUDA
+        res = gpuQrSolveMultiStream(A, b);
+#else
         res = qrSolve(A, b);
+#endif
     } else {
         QL_FAIL("regressionCoefficients(): unknown regression method, expected SVD or QR");
     }
