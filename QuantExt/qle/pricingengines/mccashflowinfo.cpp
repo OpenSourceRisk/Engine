@@ -1296,6 +1296,7 @@ McCashflowInfo::McCashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const C
                                      ? RandomVariable(n, eq->amount())
                                      : RandomVariable(n, eq->quantity()) * exp(*states.at(0).at(0)));
         };
+        return;
     }
 
     QL_FAIL("CashflowInfo: unhandled coupon leg " << legNo << " cashflow " << cfNo);
