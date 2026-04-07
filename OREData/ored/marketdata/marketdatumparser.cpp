@@ -36,7 +36,7 @@ using QuantLib::WeekendsOnly;
 namespace ore {
 namespace data {
 
-static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
+MarketDatum::InstrumentType parseInstrumentType(const string& s) {
 
     static map<string, MarketDatum::InstrumentType> b = {
         {"ZERO", MarketDatum::InstrumentType::ZERO},
@@ -82,6 +82,7 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
         {"COMMODITY_FWD", MarketDatum::InstrumentType::COMMODITY_FWD},
         {"CORRELATION", MarketDatum::InstrumentType::CORRELATION},
         {"COMMODITY_OPTION", MarketDatum::InstrumentType::COMMODITY_OPTION},
+        {"COMMODITY_CALENDAR_SPREAD_OPTION", MarketDatum::InstrumentType::COMMODITY_CALENDAR_SPREAD_OPTION},
         {"CPR", MarketDatum::InstrumentType::CPR},
         {"RATING", MarketDatum::InstrumentType::RATING}};
 
@@ -904,6 +905,21 @@ QuantLib::ext::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const 
             tokens[3], expiry, strike, optionType);
     }
 
+    case MarketDatum::InstrumentType::COMMODITY_CALENDAR_SPREAD_OPTION: {
+        // Expects one of the following forms:
+        // COMMODITY_CALENDAR_SPREAD_OPTION/<QT>/<COMDTY_NAME>/<OFFSET>/<CCY>/<EXPIRY>/<STRIKE>
+        using QT = MarketDatum::QuoteType;
+        QL_REQUIRE(tokens.size() == 7, "7 tokens are expected in " << datumName);
+        QL_REQUIRE(quoteType == QT::RATE_NVOL, "Quote type for " << datumName << " should be'RATE_NVOL'");
+
+        QuantLib::ext::shared_ptr<Expiry> expiry = parseExpiry(tokens[5]);
+        auto strike = parseBaseStrike(tokens[6]);        
+        auto offset = parseInteger(tokens[3]);
+
+        return QuantLib::ext::make_shared<CommodityCalendarSpreadOptionQuote>(value, asof, datumName, quoteType, tokens[2],
+            offset, tokens[4], expiry, strike);
+    }
+    
     case MarketDatum::InstrumentType::CORRELATION: {
         // Expects the following form:
         // CORRELATION/RATE/<INDEX1>/<INDEX2>/<TENOR>/<STRIKE>

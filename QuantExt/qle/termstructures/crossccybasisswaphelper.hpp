@@ -75,7 +75,9 @@ public:
         QuantLib::ext::optional<Size> flatRateCutoff = QuantLib::ext::nullopt,
         QuantLib::ext::optional<bool> flatIsAveraged = QuantLib::ext::nullopt, const bool telescopicValueDates = false,
         const QuantLib::Pillar::Choice pillarChoice = QuantLib::Pillar::LastRelevantDate,
-        const QuantLib::Date& customPillarDate = Date());
+        const QuantLib::Date& customPillarDate = Date(),
+        QuantLib::ext::optional<bool> observationShift = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<bool> flatObservationShift = QuantLib::ext::nullopt);
     //! \name RateHelper interface
     //@{
     Real impliedQuote() const override;
@@ -126,11 +128,13 @@ protected:
     QuantLib::ext::optional<QuantLib::Size> fixingDays_;
     QuantLib::ext::optional<Size> rateCutoff_;
     QuantLib::ext::optional<bool> isAveraged_;
+    QuantLib::ext::optional<bool> observationShift_;
     QuantLib::ext::optional<bool> flatIncludeSpread_;
     QuantLib::ext::optional<QuantLib::Period> flatLookback_;
     QuantLib::ext::optional<QuantLib::Size> flatFixingDays_;
     QuantLib::ext::optional<Size> flatRateCutoff_;
     QuantLib::ext::optional<bool> flatIsAveraged_;
+    QuantLib::ext::optional<bool> flatObservationShift_;
 
     Currency flatLegCurrency_;
     Currency spreadLegCurrency_;
