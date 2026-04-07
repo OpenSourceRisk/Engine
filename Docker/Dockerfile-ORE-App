@@ -5,15 +5,23 @@ ARG ORE_HELPER_VERSION
 ARG ORE_VERSION
 
 FROM ${DOCKER_REPO}env_ore:${ORE_VERSION} as env_ore
+
+# Bundle all artifacts needed by the final stage into a single tar for faster buildah cross-stage copy
+# Move bin to a staging path so it can be extracted to /ore/App without conflicting with the base image
+RUN mkdir -p /stage/ore-app && cp -r /usr/local/bin/* /stage/ore-app/ \
+  && tar cf /stage-output.tar \
+  /stage/ore-app \
+  /usr/local/lib \
+  /usr/include/boost \
+  /oreswig
+
 FROM ${DOCKER_REPO}ore-helper:${ORE_HELPER_VERSION}
 
 RUN mkdir -p /ore/App
 
-COPY --from=env_ore /usr/local/bin /ore/App
-RUN true
-COPY --from=env_ore /usr/local/lib /usr/local/lib
-COPY --from=env_ore /usr/include/boost/ /usr/include/boost
-COPY --from=env_ore /oreswig /oreswig
+COPY --from=env_ore /stage-output.tar /stage-output.tar
+RUN tar xf /stage-output.tar -C / && rm /stage-output.tar \
+  && mv /stage/ore-app/* /ore/App/ && rm -rf /stage
 
 WORKDIR /ore
 

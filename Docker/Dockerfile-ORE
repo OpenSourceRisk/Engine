@@ -48,6 +48,8 @@ RUN set -e; \
   if [ $BUILD_EXIT -ne 0 ]; then exit $BUILD_EXIT; fi
 
 WORKDIR /
+# Stage all artifacts and bundle into a single tar for faster cross-stage copy
+# (single RUN avoids extra buildah layer checkpoints)
 RUN mkdir -p html \
   && mkdir /html/ored && cp -r /ore/OREData/doc/html/* /html/ored \
   && mkdir /html/orea && cp -r /ore/OREAnalytics/doc/html/* /html/orea \
@@ -59,25 +61,29 @@ RUN mkdir -p html \
   && mkdir -p oreswig/pythonlib \
   && mv /ore/build.ore/ORE-SWIG/ORE.py /oreswig/pythonlib \
   && mv /ore/build.ore/ORE-SWIG/_OREP.so /oreswig/pythonlib \
-  && rm -rf ore
-
-RUN mkdir -p /boostlibs && \
-    find /usr/lib -type f -name 'libboost*.so*' -exec cp {} /boostlibs/ \;
-RUN mkdir -p /opencllibs && \
-    find /usr/lib -type f -name 'libOpenCL*' -exec cp {} /opencllibs/ \;
+  && rm -rf ore \
+  && mkdir -p /boostlibs \
+  && find /usr/lib -maxdepth 2 -type f -name 'libboost*.so*' -exec cp {} /boostlibs/ \; \
+  && mkdir -p /opencllibs \
+  && find /usr/lib -maxdepth 2 -type f -name 'libOpenCL*' -exec cp {} /opencllibs/ \; \
+  && tar cf /stage-output.tar \
+      /usr/local/include \
+      /usr/local/lib \
+      /usr/local/bin \
+      /boostlibs \
+      /opencllibs \
+      /usr/lib/llvm-19 \
+      /usr/include/boost \
+      /usr/include/CL \
+      /oreswig \
+      /doxy_tagfiles
 
 FROM ${DOCKER_REPO}debian:${DEBIAN_TAG}
 
-COPY --from=orebuild /usr/local/include /usr/local/include
-COPY --from=orebuild /usr/local/lib/ /usr/local/lib
-COPY --from=orebuild /usr/local/bin/ /usr/local/bin
-COPY --from=orebuild /boostlibs/ /usr/local/lib/
-COPY --from=orebuild /opencllibs/ /usr/local/lib/
-COPY --from=orebuild /usr/lib/llvm-19/ /usr/lib/llvm-19
-COPY --from=orebuild /usr/include/boost/ /usr/include/boost
-COPY --from=orebuild /usr/include/CL /usr/include/CL
-COPY --from=orebuild /oreswig /oreswig
-COPY --from=orebuild /doxy_tagfiles /doxy_tagfiles
+COPY --from=orebuild /stage-output.tar /stage-output.tar
+RUN tar xf /stage-output.tar -C / && rm /stage-output.tar \
+  && cp /boostlibs/* /usr/local/lib/ && rm -rf /boostlibs \
+  && cp /opencllibs/* /usr/local/lib/ && rm -rf /opencllibs
 
 RUN ldconfig
 CMD bash
