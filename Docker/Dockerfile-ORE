@@ -66,18 +66,25 @@ RUN mkdir -p /boostlibs && \
 RUN mkdir -p /opencllibs && \
     find /usr/lib -type f -name 'libOpenCL*' -exec cp {} /opencllibs/ \;
 
+# Bundle all artifacts needed by the final stage into a single tar for faster cross-stage copy
+RUN tar cf /stage-output.tar \
+  /usr/local/include \
+  /usr/local/lib \
+  /usr/local/bin \
+  /boostlibs \
+  /opencllibs \
+  /usr/lib/llvm-19 \
+  /usr/include/boost \
+  /usr/include/CL \
+  /oreswig \
+  /doxy_tagfiles
+
 FROM ${DOCKER_REPO}debian:${DEBIAN_TAG}
 
-COPY --from=orebuild /usr/local/include /usr/local/include
-COPY --from=orebuild /usr/local/lib/ /usr/local/lib
-COPY --from=orebuild /usr/local/bin/ /usr/local/bin
-COPY --from=orebuild /boostlibs/ /usr/local/lib/
-COPY --from=orebuild /opencllibs/ /usr/local/lib/
-COPY --from=orebuild /usr/lib/llvm-19/ /usr/lib/llvm-19
-COPY --from=orebuild /usr/include/boost/ /usr/include/boost
-COPY --from=orebuild /usr/include/CL /usr/include/CL
-COPY --from=orebuild /oreswig /oreswig
-COPY --from=orebuild /doxy_tagfiles /doxy_tagfiles
+COPY --from=orebuild /stage-output.tar /stage-output.tar
+RUN tar xf /stage-output.tar -C / && rm /stage-output.tar \
+  && cp /boostlibs/* /usr/local/lib/ && rm -rf /boostlibs \
+  && cp /opencllibs/* /usr/local/lib/ && rm -rf /opencllibs
 
 RUN ldconfig
 CMD bash
