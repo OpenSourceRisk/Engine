@@ -31,6 +31,7 @@
       <xs:element type="fxTouchOptionData" name="FxDoubleTouchOptionData"/>
       <xs:element type="fxSwapData" name="FxSwapData"/>
       <xs:element type="capFloorData" name="CapFloorData"/>
+      <xs:element type="rateDigitalOptionData" name="RateDigitalOptionData"/>
       <xs:element type="equityFutureOptionData" name="EquityFutureOptionData"/>
       <xs:element type="equityOptionData" name="EquityOptionData"/>
       <xs:element type="eqBarrierOptionData" name="EquityBarrierOptionData"/>
@@ -100,7 +101,7 @@
       <xs:element type="kikoCorridorVarianceSwapData" name="KIKOCorridorVarianceSwapData"/>
       <xs:element type="corridorVarianceDispersionSwapData" name="CorridorVarianceDispersionSwapData"/>
       <xs:element type="koCorridorVarianceDispersionSwapData" name="KOCorridorVarianceDispersionSwapData"/>
-	  <xs:element type="pairwiseGeometricVarianceDispersionSwapData" name="PairwiseGeometricVarianceDispersionSwapData"/>
+      <xs:element type="pairwiseGeometricVarianceDispersionSwapData" name="PairwiseGeometricVarianceDispersionSwapData"/>
       <xs:element type="conditionalVarianceSwap01Data" name="ConditionalVarianceSwap01Data"/>
       <xs:element type="conditionalVarianceSwap02Data" name="ConditionalVarianceSwap02Data"/>
       <xs:element type="gammaSwapData" name="GammaSwapData"/>
@@ -114,6 +115,7 @@
       <xs:element type="accumulatorData" name="FxAccumulatorData"/>
       <xs:element type="accumulatorData" name="EquityAccumulatorData"/>
       <xs:element type="accumulatorData" name="CommodityAccumulatorData"/>
+      <xs:element type="callableRangeAccrualData" name="CallableRangeAccrualData"/>
       <xs:element type="windowBarrierOptionData2" name="FxWindowBarrierOptionData"/>
       <xs:element type="windowBarrierOptionData2" name="EquityWindowBarrierOptionData"/>
       <xs:element type="windowBarrierOptionData2" name="CommodityWindowBarierOptionData"/>
@@ -182,8 +184,8 @@
       <xs:element type="knockOutSwapData" name="KnockOutSwapData"/>
       <xs:element type="LPISwapData" name="LPISwapData"/>
       <xs:element type="cashPositionData" name="CashPositionData"/>
-	  <xs:element type="strikeResettableOptionData" name="StrikeResettableOptionData"/>
-	  <xs:element type="strikeResettableOptionData2" name="EquityStrikeResettableOptionData"/>
+      <xs:element type="strikeResettableOptionData" name="StrikeResettableOptionData"/>
+      <xs:element type="strikeResettableOptionData2" name="EquityStrikeResettableOptionData"/>
       <xs:element type="strikeResettableOptionData2" name="FxStrikeResettableOptionData"/>
       <xs:element type="strikeResettableOptionData2" name="CommodityStrikeResettableOptionData"/>
     </xs:choice>
@@ -573,6 +575,58 @@
         <xs:element type="xs:boolean" name="StubUseOriginalCurve" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:boolean" name="ObservationShift" minOccurs="0" maxOccurs="1"/>
       </xs:all>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="RangeAccrualLegData" substitutionGroup="legDataType">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="FloatingLegData" minOccurs="0" maxOccurs="1"/>
+        <xs:element name="Coupons" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="Coupon" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:simpleContent>
+                    <xs:extension base="xs:float">
+                      <xs:attribute name="startDate" type="xs:string" />
+                    </xs:extension>
+                  </xs:simpleContent>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="UpperBounds" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="UpperBound" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:simpleContent>
+                    <xs:extension base="xs:float">
+                      <xs:attribute name="startDate" type="xs:string" />
+                    </xs:extension>
+                  </xs:simpleContent>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="LowerBounds" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="LowerBound" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:simpleContent>
+                    <xs:extension base="xs:float">
+                      <xs:attribute name="startDate" type="xs:string" />
+                    </xs:extension>
+                  </xs:simpleContent>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
     </xs:complexType>
   </xs:element>
   <xs:element name="CPILegData" substitutionGroup="legDataType">
@@ -1371,9 +1425,10 @@
       <xs:enumeration value="CommodityRainbowOption"/>
       <xs:enumeration value="KnockOutSwap"/>
       <xs:enumeration value="CashPosition"/>
-	  <xs:enumeration value="CommodityStrikeResettableOption"/>
-	  <xs:enumeration value="FxStrikeResettableOption"/>
-	  <xs:enumeration value="EquityStrikeResettableOption"/>
+      <xs:enumeration value="RateDigitalOption"/>
+      <xs:enumeration value="CommodityStrikeResettableOption"/>
+      <xs:enumeration value="FxStrikeResettableOption"/>
+      <xs:enumeration value="EquityStrikeResettableOption"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -1396,6 +1451,7 @@
       <xs:enumeration value="CommodityFloating"/>
       <xs:enumeration value="EquityMargin"/>
       <xs:enumeration value="DurationAdjustedCMS"/>
+      <xs:enumeration value="RangeAccrual"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -1460,6 +1516,18 @@
       <xs:element type="xs:float" name="SoldAmount" minOccurs="0"/>
       <xs:element type="xs:float" name="Delta" minOccurs="0"/>
       <xs:element type="xs:string" name="FXIndex" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="rateDigitalOptionData">
+    <xs:all>
+      <xs:element type="optionData" name="OptionData" minOccurs="1"/>
+      <xs:element type="indexNameType" name="Index"/>
+      <xs:element type="xs:float" name="Strike"/>
+      <xs:element type="xs:float" name="PayoffAmount"/>
+      <xs:element type="currencyCode" name="PayoffCurrency"/>
+      <xs:element type="date" name="FixingDate"/>
+      <xs:element type="date" name="PaymentDate"/>
     </xs:all>
   </xs:complexType>
 
@@ -4366,6 +4434,32 @@
       <xs:element type="stFreeStyleNumber" name="KnockOutProfitEvents"/>
       <xs:element type="stFreeStyleNumber" name="TargetAmount"/>
       <xs:element type="stFreeStyleNumber" name="TargetType"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="callableRangeAccrualData">
+    <xs:all>
+      <xs:element type="stFreeStyleBool" name="IsCallable"/>
+      <xs:element type="stFreeStyleCurrency" name="PayCcy"/>
+      <xs:element type="stFreeStyleNumber" name="PremiumAmount"/>
+      <xs:element type="stFreeStyleCurrency" name="PremiumCcy"/>
+      <xs:element type="stFreeStyleEvent" name="PremiumPayDate"/>
+      <xs:element type="stFreeStyleLongShort" name="LongShort"/>
+      <xs:element type="stFreeStyleEventSchedule" name="ExerciseDates"/>
+      <xs:element type="stFreeStyleBool" name="FloatingPayer"/>
+      <xs:element type="stFreeStyleNumber" name="FloatingNotional"/>
+      <xs:element type="stFreeStyleNumber" name="FloatingSpread"/>
+      <xs:element type="stFreeStyleIndex" name="FloatingIndex"/>
+      <xs:element type="stFreeStyleDayCounter" name="FloatingDayCounter"/>
+      <xs:element type="stFreeStyleEventSchedule" name="FloatingSchedule"/>
+      <xs:element type="stFreeStyleIndex" name="RangeAccrualIndex"/>
+      <xs:element type="stFreeStyleBool" name="RangeAccrualPayer"/>
+      <xs:element type="stFreeStyleNumber" name="RangeAccrualCoupon"/>
+      <xs:element type="stFreeStyleNumber" name="RangeAccrualNotional"/>
+      <xs:element type="stFreeStyleDayCounter" name="RangeAccrualDayCounter"/>
+      <xs:element type="stFreeStyleEventSchedule" name="RangeAccrualSchedule"/>
+      <xs:element type="stFreeStyleNumberVector" name="RangeUpperBounds"/>
+      <xs:element type="stFreeStyleNumberVector" name="RangeLowerBounds"/>
     </xs:all>
   </xs:complexType>
 

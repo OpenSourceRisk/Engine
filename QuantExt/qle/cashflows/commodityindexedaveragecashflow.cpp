@@ -46,14 +46,14 @@ CommodityIndexedAverageCashFlow::CommodityIndexedAverageCashFlow(
     bool useBusinessDays, CommodityQuantityFrequency quantityFrequency, Natural hoursPerDay, Natural dailyExpiryOffset,
     bool unrealisedQuantity, const QuantLib::ext::optional<pair<Calendar, Real>>& offPeakPowerData,
     const ext::shared_ptr<FxIndex>& fxIndex, QuantLib::Natural avgPricePrecision)
-    : CommodityCashFlow(quantity, spread, gearing, useFuturePrice, index, fxIndex), startDate_(startDate),
+    : CommodityCashFlow(quantity, spread, gearing, useFuturePrice, index, fxIndex, calc), startDate_(startDate),
       endDate_(endDate),
       paymentDate_(paymentDate), pricingCalendar_(pricingCalendar), deliveryDateRoll_(deliveryDateRoll),
       futureMonthOffset_(futureMonthOffset), includeEndDate_(includeEndDate), excludeStartDate_(excludeStartDate),
       useBusinessDays_(useBusinessDays), quantityFrequency_(quantityFrequency), hoursPerDay_(hoursPerDay),
       dailyExpiryOffset_(dailyExpiryOffset), unrealisedQuantity_(unrealisedQuantity),
       offPeakPowerData_(offPeakPowerData), avgPricePrecision_(avgPricePrecision) {
-    init(calc);
+    init(calc_);
 }
 
 CommodityIndexedAverageCashFlow::CommodityIndexedAverageCashFlow(
@@ -66,7 +66,7 @@ CommodityIndexedAverageCashFlow::CommodityIndexedAverageCashFlow(
     Natural hoursPerDay, Natural dailyExpiryOffset, bool unrealisedQuantity,
     const QuantLib::ext::optional<pair<Calendar, Real>>& offPeakPowerData, const ext::shared_ptr<FxIndex>& fxIndex,
     QuantLib::Natural avgPricePrecision)
-    : CommodityCashFlow(quantity, spread, gearing, useFuturePrice, index, fxIndex), startDate_(startDate), endDate_(endDate),
+    : CommodityCashFlow(quantity, spread, gearing, useFuturePrice, index, fxIndex, calc), startDate_(startDate), endDate_(endDate),
       paymentDate_(paymentDateOverride), pricingCalendar_(pricingCalendar),
       deliveryDateRoll_(deliveryDateRoll), futureMonthOffset_(futureMonthOffset), includeEndDate_(includeEndDate),
       excludeStartDate_(excludeStartDate), useBusinessDays_(useBusinessDays), quantityFrequency_(quantityFrequency),
@@ -79,7 +79,7 @@ CommodityIndexedAverageCashFlow::CommodityIndexedAverageCashFlow(
         paymentDate_ = paymentCalendar.advance(endDate, paymentLag, Days, paymentConvention);
     }
 
-    init(calc);
+    init(calc_);
 }
 
 void CommodityIndexedAverageCashFlow::performCalculations() const {

@@ -67,6 +67,7 @@ cashflows/nonstandardyoyinflationcoupon.cpp
 cashflows/overnightindexedcoupon.cpp
 cashflows/overnightindexedcouponbase.cpp
 cashflows/quantocouponpricer.cpp
+cashflows/rangeaccrualcouponpricer.cpp
 cashflows/strippedcapflooredcpicoupon.cpp
 cashflows/strippedcapflooredyoyinflationcoupon.cpp
 cashflows/subperiodscoupon.cpp
@@ -282,6 +283,7 @@ pricingengines/blackswaptionenginedeltagamma.cpp
 pricingengines/cboengine.cpp
 pricingengines/cbomcengine.cpp
 pricingengines/commodityapoengine.cpp
+pricingengines/commoditybachelierspreadoptionengine.cpp
 pricingengines/commodityschwartzfutureoptionengine.cpp
 pricingengines/commodityspreadoptionengine.cpp
 pricingengines/commodityswaptionengine.cpp
@@ -340,6 +342,7 @@ pricingengines/numericlgmflexiswapengine.cpp
 pricingengines/numericlgmmultilegoptionengine.cpp
 pricingengines/pairwisevarianceswapengine.cpp
 pricingengines/paymentdiscountingengine.cpp
+pricingengines/ratedigitalcallspreadengine.cpp
 pricingengines/varianceswapgeneralreplicationengine.cpp
 pricingengines/volatilityfromvarianceswapengine.cpp
 processes/commodityschwartzstateprocess.cpp
@@ -382,6 +385,7 @@ termstructures/crossccybasismtmresetswaphelper.cpp
 termstructures/crossccybasisswaphelper.cpp
 termstructures/crossccyfixfloatmtmresetswaphelper.cpp
 termstructures/crossccyfixfloatswaphelper.cpp
+termstructures/calendarspreadfuturepricetermstructure.cpp
 termstructures/crosscurrencypricetermstructure.cpp
 termstructures/datedstrippedoptionlet.cpp
 termstructures/datedstrippedoptionletadapter.cpp
@@ -535,6 +539,7 @@ cashflows/nonstandardyoyinflationcoupon.hpp
 cashflows/overnightindexedcoupon.hpp
 cashflows/overnightindexedcouponbase.hpp
 cashflows/quantocouponpricer.hpp
+cashflows/rangeaccrualcouponpricer.hpp
 cashflows/scaledcoupon.hpp
 cashflows/strippedcapflooredcpicoupon.hpp
 cashflows/strippedcapflooredyoyinflationcoupon.hpp
@@ -868,6 +873,7 @@ pricingengines/cashpositionengine.hpp
 pricingengines/cboengine.hpp
 pricingengines/cbomcengine.hpp
 pricingengines/commodityapoengine.hpp
+pricingengines/commoditybachelierspreadoptionengine.hpp
 pricingengines/commodityschwartzfutureoptionengine.hpp
 pricingengines/commodityspreadoptionengine.hpp
 pricingengines/commodityswaptionengine.hpp
@@ -926,6 +932,7 @@ pricingengines/numericlgmflexiswapengine.hpp
 pricingengines/numericlgmmultilegoptionengine.hpp
 pricingengines/pairwisevarianceswapengine.hpp
 pricingengines/paymentdiscountingengine.hpp
+pricingengines/ratedigitalcallspreadengine.hpp
 pricingengines/tflattice.hpp
 pricingengines/varianceswapgeneralreplicationengine.hpp
 pricingengines/volatilityfromvarianceswapengine.hpp
@@ -975,6 +982,7 @@ termstructures/commodityaveragebasispricecurve.hpp
 termstructures/commoditybasispricecurve.hpp
 termstructures/commoditybasispricecurvewrapper.hpp
 termstructures/commoditybasispricetermstructure.hpp
+termstructures/calendarspreadfuturepricetermstructure.hpp
 termstructures/correlationtermstructure.hpp
 termstructures/credit/basecorrelationstructure.hpp
 termstructures/credit/spreadedbasecorrelationcurve.hpp
