@@ -5,15 +5,9 @@ ARG CMAKE_BUILD_TYPE=Release
 ARG NUM_CORES=16
 ARG WHEELS_VERSION
 
-COPY CMakeLists.txt /ore/CMakeLists.txt
-COPY QuantLib /ore/QuantLib
-COPY QuantExt /ore/QuantExt
-COPY OREData /ore/OREData
-COPY OREAnalytics /ore/OREAnalytics
-COPY ORETest /ore/ORETest
-COPY ThirdPartyLibs /ore/ThirdPartyLibs
-COPY cmake /ore/cmake
-COPY Docker/update_version_number.py /ore
+# Source archive is created in CI before_script (see ci/build_wheels.yml)
+# This replaces 9 individual COPY statements with a single ADD for faster buildah builds
+ADD wheels-ore-source.tar.gz /ore/
 
 RUN \
 dnf -y install clang && \
