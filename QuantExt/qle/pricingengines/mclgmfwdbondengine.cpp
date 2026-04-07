@@ -89,8 +89,8 @@ void McLgmFwdBondEngine::calculate() const {
 
     // vanilla forward bond calculation
     double forwardContractForwardValue = (arguments_.isLong ? 1.0 : -1.0) *
-                                         (forwardBondValue - accruedAmount_ - arguments_.strikeAmount) *
-                                         arguments_.bondNotional;
+                                            ((forwardBondValue - accruedAmount_) * arguments_.bondNotional - 
+                                            arguments_.strikeAmount);
 
     // builder ensures we calculate with a clean price or we divide by one
     forwardContractForwardValue /= conversionFactor();
@@ -142,9 +142,9 @@ McLgmFwdBondEngine::overwritePathValueUndDirty(double t, const RandomVariable& p
         RandomVariable strikePayment = RandomVariable(samples, arguments_.strikeAmount / arguments_.bondNotional);
 
         RandomVariable forwardContractForwardValueRV =
-            RandomVariable(samples, arguments_.isLong ? 1.0 : -1.0) *
+            RandomVariable(samples, arguments_.isLong ? 1.0 : -1.0) * (
                 (forwardBondValue - RandomVariable(samples, accruedAmount_)) -
-            strikePayment;
+                strikePayment);
 
         return forwardContractForwardValueRV / numeraire_contract;
 
