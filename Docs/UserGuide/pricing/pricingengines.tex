@@ -2904,18 +2904,36 @@ The parameters have the following meaning:
 
 Used by trade type: CommoditySpreadOption
 
-Available Model/Engine pairs: BlackScholes/CommoditySpreadOptionEngine
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item BlackScholes/CommoditySpreadOptionEngine
+\end{itemize}
+
+\subsubsection{BlackScholes/CommoditySpreadOptionEngine}
+
+This engine derives the spread volatility from the individual volatility surfaces of both underlying commodities and
+a correlation assumption. It reads individual commodity vol surfaces from the market and computes the spread option
+price using either the Bachelier model or the Kirk approximation.
 
 Model Parameters:
 \begin{itemize}
     \item Volatility [optional]: Selects the pricing model. If omitted, defaults to AsInputVolatilityType.
     \begin{itemize}
-        \item \textbf{AsInputVolatilityType}: Use Model according to volatility type of the vol curve (normal volatilities use Bachelier model, lognormal volatilities use Kirk Approximation)
-        \item \textbf{Normal}: Use Bachelier model, if needed log-normal input vols are converted into normal vols
-        \item \textbf{Lognormal}: Use Kirk approximation, if needed and possible normal input vols are converted into log-normal vols
-        \item \textbf{ShiftedLognormal}: Use Kirk approximation where both underlyings following a shifted lognormal process, if needed and possible input vols are converted into a shifted lognormal vols with a given displacement.
+        \item \textbf{AsInputVolatilityType}: Use model according to the volatility type of the vol curve (normal
+          volatilities use Bachelier model, lognormal volatilities use Kirk Approximation).
+        \item \textbf{Normal}: Use Bachelier model. Both underlyings are assumed to follow a normal (arithmetic
+          Brownian motion) process. The spread $S = F_1 - F_2$ is then also normally distributed and the spread
+          volatility is computed from the individual volatilities and the correlation as
+          $\sigma_{\text{spread}} = \sqrt{\sigma_1^2 + \sigma_2^2 - 2\rho\,\sigma_1\,\sigma_2}$.
+          If the input vol curves are lognormal, they are converted to normal vols.
+        \item \textbf{Lognormal}: Use Kirk approximation, if needed and possible normal input vols are converted into
+          log-normal vols.
+        \item \textbf{ShiftedLognormal}: Use Kirk approximation where both underlyings follow a shifted lognormal
+          process, if needed and possible input vols are converted into shifted lognormal vols with a given displacement.
     \end{itemize}
-    \item Displacement [optional]: Only relevant for volatility = \textbf{ShiftedLognormal}. The displacement parameter in the shifted lognormal model. Defaults to 0 if omitted.
+    \item Displacement [optional]: Only relevant for volatility = \textbf{ShiftedLognormal}. The displacement parameter
+      in the shifted lognormal model. Defaults to 0 if omitted.
 \end{itemize}
 
 Engine description:
@@ -2970,6 +2988,93 @@ Example configuration:
 \end{minted}
 \caption{Configuration for Product CommoditySpreadOption, Model BlackScholes, Engine CommoditySpreadOptionEngine}
 \label{lst:peconfig_CommoditySpreadOption_BlackScholes_CommoditySpreadOptionEngine}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsection{Product Type: CommodityCalendarSpreadOption}
+%--------------------------------------------------------
+
+Used by trade type: CommodityCalendarSpreadOption
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item BlackScholes/CommoditySpreadOptionEngine
+\item BlackScholes/CommodityCalendarSpreadOptionBachelierEngine
+\end{itemize}
+
+\subsubsection{BlackScholes/CommoditySpreadOptionEngine}
+
+This is the same engine as described for CommoditySpreadOption above. It derives the spread volatility from the
+individual volatility surfaces of the two underlying commodity contracts and uses a correlation assumption to compute a
+calendar spread option price via either the Bachelier model or the Kirk approximation. All model parameters, engine
+parameters, and the qualifier-based parameter lookup described in the CommoditySpreadOption section apply here as well.
+
+See section \ref{lst:peconfig_CommoditySpreadOption_BlackScholes_CommoditySpreadOptionEngine} for configuration details.
+
+\subsubsection{BlackScholes/CommodityCalendarSpreadOptionBachelierEngine}
+
+This engine prices calendar spread options using a directly quoted normal (Bachelier) spread volatility surface. It is
+designed specifically for calendar spreads where both legs reference the same underlying commodity but different contract
+months.
+
+\textbf{How it works:}
+
+The engine constructs the spread vol curve name from the underlying commodity name and the calendar spread offset as
+
+\texttt{<underlying>\_CALENDAR\_SPREAD\_<offset>}
+
+where \texttt{offset} is the number of contract months between the long and short legs (e.g.\ for a spread between the
+1st and 2nd nearby contracts, offset = 1). It then looks up the corresponding commodity volatility surface from the
+market and prices the option using the Bachelier formula with the discount curve and the spread volatility.
+
+\textbf{Volatility Curve Setup:}
+
+The spread volatility surface must be configured as a \texttt{CommodityVolatility} curve in the curve configuration
+using the naming convention \texttt{<underlying>\_CALENDAR\_SPREAD\_<offset>}. The volatility type should be Normal.
+For example, for WTI 1-month calendar spreads, the curve would be named \texttt{NYMEX:CL\_CALENDAR\_SPREAD\_1}.
+
+There are two ways to set up the curve configuration:
+
+\begin{enumerate}
+\item \textbf{Using \texttt{InstrumentType = COMMODITY\_CALENDAR\_SPREAD\_OPTION}}: Set the instrument type to
+  \texttt{COMMODITY\_CALENDAR\_SPREAD\_OPTION} and provide the additional fields \texttt{CalendarSpreadOffset} (the
+  offset between the two contract months) and \texttt{CalendarSpreadUnderlyingName} (the underlying commodity name,
+  e.g.\ \texttt{NYMEX:CL}). These must be consistent with the \texttt{CurveId}. With this setup, a calendar spread
+  forward curve will be built automatically from the underlying commodity forward curve and the commodity future
+  conventions if it is not explicitly provided. The quote names follow the pattern
+  \texttt{COMMODITY\_CALENDAR\_SPREAD\_OPTION/RATE\_NVOL/<underlying>/<offset>/<ccy>/...}.
+
+\item \textbf{Using \texttt{InstrumentType = COMMODITY\_OPTION} (default)}: Use the regular instrument type with normal
+  volatility quotes. The \texttt{CurveId} must still follow the
+  \texttt{<underlying>\_CALENDAR\_SPREAD\_<offset>} naming convention. In this case, the calendar spread forward curve
+  must be explicitly provided as a commodity price curve in the today's market parameters --- it will not be built
+  automatically. The quote names follow the standard pattern
+  \texttt{COMMODITY\_OPTION/RATE\_NVOL/<curveId>/<ccy>/...}.
+\end{enumerate}
+
+\textbf{Engine Parameters:}
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use
+\end{itemize}
+
+A sample configuration is shown in listing
+\ref{lst:peconfig_CommodityCalendarSpreadOption_BlackScholes_BachelierEngine}.
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CommodityCalendarSpreadOption">
+    <Model>BlackScholes</Model>
+    <ModelParameters/>
+    <Engine>CommodityCalendarSpreadOptionBachelierEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CommodityCalendarSpreadOption, Model BlackScholes, Engine CommodityCalendarSpreadOptionBachelierEngine}
+\label{lst:peconfig_CommodityCalendarSpreadOption_BlackScholes_BachelierEngine}
 \end{longlisting}
 
 %--------------------------------------------------------
