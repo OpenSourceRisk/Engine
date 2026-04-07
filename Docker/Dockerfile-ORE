@@ -61,23 +61,23 @@ RUN mkdir -p html \
   && mv /ore/build.ore/ORE-SWIG/_OREP.so /oreswig/pythonlib \
   && rm -rf ore
 
+# Copy boost/opencl shared libs to staging dirs and bundle everything into a single tar
+# for faster cross-stage copy (single RUN avoids extra buildah layer checkpoints)
 RUN mkdir -p /boostlibs && \
-    find /usr/lib -type f -name 'libboost*.so*' -exec cp {} /boostlibs/ \;
-RUN mkdir -p /opencllibs && \
-    find /usr/lib -type f -name 'libOpenCL*' -exec cp {} /opencllibs/ \;
-
-# Bundle all artifacts needed by the final stage into a single tar for faster cross-stage copy
-RUN tar cf /stage-output.tar \
-  /usr/local/include \
-  /usr/local/lib \
-  /usr/local/bin \
-  /boostlibs \
-  /opencllibs \
-  /usr/lib/llvm-19 \
-  /usr/include/boost \
-  /usr/include/CL \
-  /oreswig \
-  /doxy_tagfiles
+    find /usr/lib -type f -name 'libboost*.so*' -exec cp {} /boostlibs/ \; && \
+    mkdir -p /opencllibs && \
+    find /usr/lib -type f -name 'libOpenCL*' -exec cp {} /opencllibs/ \; && \
+    tar cf /stage-output.tar \
+      /usr/local/include \
+      /usr/local/lib \
+      /usr/local/bin \
+      /boostlibs \
+      /opencllibs \
+      /usr/lib/llvm-19 \
+      /usr/include/boost \
+      /usr/include/CL \
+      /oreswig \
+      /doxy_tagfiles
 
 FROM ${DOCKER_REPO}debian:${DEBIAN_TAG}
 
