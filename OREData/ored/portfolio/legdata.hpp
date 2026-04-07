@@ -72,7 +72,8 @@ enum class LegType {
     CommodityFloating,
     CommodityFixed,
     EquityMargin,
-    YY
+    YY,
+    RangeAccrual
 };
 
 LegType parseLegType(const std::string& legType);
@@ -335,6 +336,48 @@ private:
     string backStubRoundingPrecision_;
     bool stubUseOriginalCurve_;
     QuantLib::ext::optional<bool> observationShift_;
+};
+
+//! Serializable Range Accrual Leg Data
+/*!
+  \ingroup tradedata
+*/
+class RangeAccrualLegData : public LegAdditionalData {
+public:
+    //! Default constructor
+    RangeAccrualLegData() : LegAdditionalData(LegType::RangeAccrual, true) {}
+    //! Constructor
+    RangeAccrualLegData(const QuantLib::ext::shared_ptr<FloatingLegData>& underlying,
+                        std::vector<Real> coupon,
+                        std::vector<Real> lowerBound,
+                        std::vector<Real> upperBound)
+        : LegAdditionalData(LegType::RangeAccrual, true), underlying_(underlying),
+          coupon_(coupon), lowerBound_(lowerBound), upperBound_(upperBound) { }
+
+    //! \name Inspectors
+    //@{
+    const QuantLib::ext::shared_ptr<FloatingLegData>& underlying() const { return underlying_; }
+    const std::vector<Real>& coupon() const { return coupon_; }
+    const std::vector<Real>& lowerBound() const { return lowerBound_; }
+    const std::vector<Real>& upperBound() const { return upperBound_; }
+    const std::vector<string>& couponDates() const { return couponDates_; }
+    const std::vector<string>& lowerBoundDates() const { return lowerBoundDates_; }
+    const std::vector<string>& upperBoundDates() const { return upperBoundDates_; }
+    //@}
+
+    //! \name Serialisation
+    //@{
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
+    //@}
+private:
+    QuantLib::ext::shared_ptr<FloatingLegData> underlying_;
+    std::vector<string> couponDates_;
+    std::vector<string> lowerBoundDates_;
+    std::vector<string> upperBoundDates_;
+    std::vector<Real> coupon_;
+    std::vector<Real> lowerBound_;
+    std::vector<Real> upperBound_;
 };
 
 //! Serializable CPI Leg Data
@@ -1091,6 +1134,10 @@ Leg makeDigitalCMSSpreadLeg(const LegData& data,
                             const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                             const QuantLib::Date& openEndDateReplacement = Null<Date>(), const bool attachPricer = true,
                             std::set<std::tuple<std::set<std::string>, std::string, std::string>>* = nullptr);
+Leg makeRangeAccrualLeg(const LegData& data, const QuantLib::ext::shared_ptr<IborIndex>& index,
+                       const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                       const QuantLib::Date& openEndDateReplacement = Null<Date>(),
+                       const bool attachPricer = true);
 Leg makeEquityLeg(const LegData& data, const QuantLib::ext::shared_ptr<QuantExt::EquityIndex2>& equityCurve,
                   const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                   const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr, const bool attachPricer = true,
