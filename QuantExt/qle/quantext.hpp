@@ -410,6 +410,7 @@
 #include <qle/pricingengines/cboengine.hpp>
 #include <qle/pricingengines/cbomcengine.hpp>
 #include <qle/pricingengines/commodityapoengine.hpp>
+#include <qle/pricingengines/commoditybachelierspreadoptionengine.hpp>
 #include <qle/pricingengines/commodityschwartzfutureoptionengine.hpp>
 #include <qle/pricingengines/commodityspreadoptionengine.hpp>
 #include <qle/pricingengines/commodityswaptionengine.hpp>
@@ -509,6 +510,7 @@
 #include <qle/termstructures/blackvolsurfacewithatm.hpp>
 #include <qle/termstructures/bondyieldshiftedcurvetermstructure.hpp>
 #include <qle/termstructures/brlcdiratehelper.hpp>
+#include <qle/termstructures/calendarspreadfuturepricetermstructure.hpp>
 #include <qle/termstructures/capfloorhelper.hpp>
 #include <qle/termstructures/capfloortermvolcurve.hpp>
 #include <qle/termstructures/capfloortermvolsurface.hpp>

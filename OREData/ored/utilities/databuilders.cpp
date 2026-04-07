@@ -440,6 +440,7 @@ void dataBuilders() {
     // (Bond, FwdBond, EquityForward missing compared to "AMC" variants)
 
     ORE_REGISTER_ENGINE_BUILDER(CommoditySpreadOptionEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(CommodityCalendarSpreadOptionBachelierEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CpiCapFloorEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(EquityFutureEuropeanOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(DiscountingBondTRSEngineBuilder, false)

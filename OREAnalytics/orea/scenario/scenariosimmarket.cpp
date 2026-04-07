@@ -31,7 +31,9 @@
 #include <ored/configuration/inflationcurveconfig.hpp>
 #include <ored/marketdata/curvespecparser.hpp>
 #include <ored/marketdata/structuredcurveerror.hpp>
+
 #include <ored/utilities/indexnametranslator.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -2920,6 +2922,10 @@ ScenarioSimMarket::ScenarioSimMarket(
                     bool simDataWritten = false;
                     try {
                         DLOG("building commodity volatility for " << name);
+                        
+                        QuantLib::ext::shared_ptr<CommodityVolatilityConfig> volConfig;
+                        if (curveConfigs.hasCommodityVolatilityConfig(name))
+                            volConfig = curveConfigs.commodityVolatilityConfig(name);
 
                         // Get initial base volatility structure
                         Handle<BlackVolTermStructure> baseVol = initMarket->commodityVolatility(name, configuration);
@@ -2927,7 +2933,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                         Handle<BlackVolTermStructure> newVol;
                         bool stickyStrike = parameters_->commodityVolSmileDynamics(name) == "StickyStrike";
                         if (param.second.first) {
-
+                            DLOG("Simulating commodity volatilities for index name " << name
+                                                                                 << " with smile dynamics "
+                                                                                 << parameters_->commodityVolSmileDynamics(name));
                             // Check and reorg moneyness and/or expiries to simplify subsequent code.
                             vector<Real> moneyness = parameters->commodityVolMoneyness(name);
                             QL_REQUIRE(!moneyness.empty(), "Commodity volatility moneyness for "
@@ -2948,8 +2956,18 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                             // Get this scenario simulation market's commodity price curve. An exception is expected
                             // if there is no commodity curve but there is a commodity volatility.
-                            const auto& priceCurve = *commodityPriceCurve(name, configuration);
-
+                            // Check if we have a calendar spread vol surface (naming convention:
+                            // <name>_CALENDAR_SPREAD_<Offset>)
+                            QuantLib::ext::shared_ptr<PriceTermStructure> priceCurve;
+                            bool isCalendarSpreadVolSurface = volConfig && volConfig->instrumentType() ==
+                                                         MarketDatum::InstrumentType::COMMODITY_CALENDAR_SPREAD_OPTION;
+                            if (isCalendarSpreadVolSurface) {
+                                DLOG("Commodity volatility surface " << name << " is configured as calendar spread vol surface");
+                                priceCurve = getCalendarSpreadPriceCurve(this, name, configuration,
+                                    volConfig->calendarSpreadOffset(), volConfig->futureConventionsId());
+                            } else {
+                                priceCurve = *commodityPriceCurve(name, configuration);
+                            }
                             // More than one moneyness implies a surface. If we have a surface, we will build a
                             // forward surface below which requires two yield term structures, one for the commodity
                             // price currency and another that recovers the commodity forward prices. We don't want
@@ -3046,10 +3064,16 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     // get init market curves to populate sticky ts in vol surface ctor
                                     Handle<YieldTermStructure> initMarketYts =
                                         initMarket->discountCurve(priceCurve->currency().code(), configuration);
-                                    Handle<QuantExt::PriceTermStructure> priceCurve =
-                                        initMarket->commodityPriceCurve(name, configuration);
+                                    QuantLib::ext::shared_ptr<PriceTermStructure> initMarketPriceCurve;
+                                    if (isCalendarSpreadVolSurface) {
+                                        initMarketPriceCurve =
+                                            getCalendarSpreadPriceCurve(initMarket.get(), name, configuration,
+                                                volConfig->calendarSpreadOffset(), volConfig->futureConventionsId());
+                                    } else {
+                                        initMarketPriceCurve = *initMarket->commodityPriceCurve(name, configuration);
+                                    }
                                     Handle<YieldTermStructure> initMarketPriceYts(
-                                        QuantLib::ext::make_shared<PriceTermStructureAdapter>(*priceCurve, *initMarketYts));
+                                        QuantLib::ext::make_shared<PriceTermStructureAdapter>(initMarketPriceCurve, *initMarketYts));
                                     // create vol surface
                                     newVol = Handle<BlackVolTermStructure>(
                                         QuantLib::ext::make_shared<SpreadedBlackVolatilitySurfaceMoneynessForward>(
