@@ -49,6 +49,7 @@
 #include <ored/portfolio/builders/capflooredaverageonindexedcouponleg.hpp>
 #include <ored/portfolio/builders/capflooredcpileg.hpp>
 #include <ored/portfolio/builders/capfloorediborleg.hpp>
+#include <ored/portfolio/builders/rangeaccrualleg.hpp>
 #include <ored/portfolio/builders/capfloorednonstandardyoyleg.hpp>
 #include <ored/portfolio/builders/capflooredovernightindexedcouponleg.hpp>
 #include <ored/portfolio/builders/capflooredyoyleg.hpp>
@@ -79,6 +80,7 @@
 #include <ored/portfolio/builders/equitycompositeoption.hpp>
 #include <ored/portfolio/builders/equitydigitaloption.hpp>
 #include <ored/portfolio/builders/equitydoublebarrieroption.hpp>
+#include <ored/portfolio/builders/ratedigitaloption.hpp>
 #include <ored/portfolio/builders/equitydoubletouchoption.hpp>
 #include <ored/portfolio/builders/equityforward.hpp>
 #include <ored/portfolio/builders/equityfuturesoption.hpp>
@@ -142,6 +144,7 @@
 #include <ored/portfolio/equityderivative.hpp>
 #include <ored/portfolio/equitydigitaloption.hpp>
 #include <ored/portfolio/equitydoublebarrieroption.hpp>
+#include <ored/portfolio/ratedigitaloption.hpp>
 #include <ored/portfolio/equitydoubletouchoption.hpp>
 #include <ored/portfolio/equityeuropeanbarrieroption.hpp>
 #include <ored/portfolio/equityforward.hpp>
@@ -255,6 +258,7 @@ void dataBuilders() {
     ORE_REGISTER_LEG_DATA("DurationAdjustedCMS", DurationAdjustedCmsLegData, false)
     ORE_REGISTER_LEG_DATA("EquityMargin", EquityMarginLegData, false)
     ORE_REGISTER_LEG_DATA("FormulaBased", FormulaBasedLegData, false)
+    ORE_REGISTER_LEG_DATA("RangeAccrual", RangeAccrualLegData, false)
 
     ORE_REGISTER_CALIBRATION_INSTRUMENT("CpiCapFloor", CpiCapFloor, false)
     ORE_REGISTER_CALIBRATION_INSTRUMENT("YoYCapFloor", YoYCapFloor, false)
@@ -311,6 +315,7 @@ void dataBuilders() {
     ORE_REGISTER_TRADE_BUILDER("FxSwap", FxSwap, false)
     ORE_REGISTER_TRADE_BUILDER("EquityTouchOption", EquityTouchOption, false)
     ORE_REGISTER_TRADE_BUILDER("EquityDigitalOption", EquityDigitalOption, false)
+    ORE_REGISTER_TRADE_BUILDER("RateDigitalOption", RateDigitalOption, false)
     ORE_REGISTER_TRADE_BUILDER("CompositeTrade", CompositeTrade, false)
     ORE_REGISTER_TRADE_BUILDER("MultiLegOption", MultiLegOption, false)
     ORE_REGISTER_TRADE_BUILDER("Swap", Swap, false)
@@ -413,6 +418,7 @@ void dataBuilders() {
     ORE_REGISTER_LEGBUILDER("EquityLegBuilder", EquityLegBuilder, false)
     ORE_REGISTER_LEGBUILDER("EquityMarginLegBuilder", EquityMarginLegBuilder, false)
     ORE_REGISTER_LEGBUILDER("FormulaBasedLegBuilder", FormulaBasedLegBuilder, false)
+    ORE_REGISTER_LEGBUILDER("RangeAccrualLegBuilder", RangeAccrualLegBuilder, false)
 
     ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcCurrencySwapEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(AmcSwaptionEngineBuilder, false)
@@ -486,6 +492,7 @@ void dataBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(EquityTouchOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CapFlooredYoYLegEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(EquityDigitalOptionEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(RateDigitalOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(FxEuropeanAsianOptionMCDAAPEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(FxEuropeanAsianOptionMCDAASEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(FxEuropeanAsianOptionMCDGAPEngineBuilder, false)
@@ -524,6 +531,8 @@ void dataBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(EquityDoubleTouchOptionAnalyticEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CapFlooredIborLegEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CapFlooredInterpolatedIborLegEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(RangeAccrualLegEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(RangeAccrualLegCallSpreadEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(LinearTsrDurationAdjustedCmsCouponPricerBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(GaussCopulaBucketingCdoEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(GaussCopulaMonteCarloCdoEngineBuilder, false)

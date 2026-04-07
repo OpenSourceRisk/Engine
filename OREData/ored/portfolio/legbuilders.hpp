@@ -64,6 +64,17 @@ public:
                      nullptr) const override;
 };
 
+class RangeAccrualLegBuilder : public LegBuilder {
+public:
+    RangeAccrualLegBuilder() : LegBuilder(LegType::RangeAccrual) {}
+    Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                 RequiredFixings& requiredFixings, const string& configuration,
+                 const QuantLib::Date& openEndDateReplacement = Null<Date>(), const bool useXbsCurves = false,
+                 const bool attachPricer = true,
+                 std::set<std::tuple<std::set<std::string>, std::string, std::string>>* productModelEngines =
+                     nullptr) const override;
+};
+
 class CashflowLegBuilder : public LegBuilder {
 public:
     CashflowLegBuilder() : LegBuilder(LegType::Cashflow) {}

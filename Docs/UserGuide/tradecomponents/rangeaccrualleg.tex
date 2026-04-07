@@ -1,0 +1,149 @@
+\subsubsection{Range Accrual Leg Data}
+\label{ss:rangeaccruallegdata}
+
+A Range Accrual leg pays a coupon that accrues proportionally to the number of days an underlying Ibor index fixes
+within a specified range $[L, U]$. For each accrual period the coupon amount is:
+
+$$\text{Amount} = N \cdot r \cdot \frac{n}{N_{\text{obs}}} \cdot \tau$$
+
+where $N$ is the notional, $r$ is either a fixed coupon rate or a floating rate (gearing $\times$ Ibor $+$ spread),
+$n$ is the number of observation days where $L \leq \text{fixing} \leq U$, $N_{\text{obs}}$ is the total number of
+observation days in the period, and $\tau$ is the day count fraction.
+
+The \lstinline!RangeAccrualLegData! trade component node is used within the \lstinline!LegData! trade component when the
+\lstinline!LegType! element is set to \emph{RangeAccrual}. It contains a nested \lstinline!FloatingLegData! node that
+defines the underlying Ibor index, fixing days, gearings and spreads, plus additional elements for the range boundaries
+and an optional fixed coupon rate.
+
+Two modes are supported:
+\begin{itemize}
+\item \textbf{Fixed-rate mode}: When \lstinline!Coupons! are provided (non-zero), the payout per period is
+  $N \cdot c \cdot (n / N_{\text{obs}}) \cdot \tau$ where $c$ is the fixed coupon rate. In this mode, gearings and
+  spreads from the nested \lstinline!FloatingLegData! are ignored.
+\item \textbf{Floating mode}: When \lstinline!Coupons! are omitted or set to zero, the payout per period is
+  $N \cdot (g \cdot f + s) \cdot (n / N_{\text{obs}}) \cdot \tau$ where $g$ is the gearing, $f$ the index fixing and
+  $s$ the spread from the nested \lstinline!FloatingLegData!.
+\end{itemize}
+
+Listing \ref{lst:rangeaccruallegdata} shows an example for a leg of type Range Accrual in fixed-rate mode.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <LegData>
+        <LegType>RangeAccrual</LegType>
+        <Payer>false</Payer>
+        <Currency>EUR</Currency>
+        <Notionals>
+          <Notional>10000000</Notional>
+        </Notionals>
+        <DayCounter>ACT/360</DayCounter>
+        <PaymentConvention>ModifiedFollowing</PaymentConvention>
+        <ScheduleData>
+          <Rules>
+            <StartDate>2024-01-15</StartDate>
+            <EndDate>2029-01-15</EndDate>
+            <Tenor>6M</Tenor>
+            <Calendar>TARGET</Calendar>
+            <Convention>ModifiedFollowing</Convention>
+            <TermConvention>ModifiedFollowing</TermConvention>
+            <Rule>Forward</Rule>
+          </Rules>
+        </ScheduleData>
+        <RangeAccrualLegData>
+          <FloatingLegData>
+            <Index>EUR-EURIBOR-6M</Index>
+            <FixingDays>2</FixingDays>
+          </FloatingLegData>
+          <Coupons>
+            <Coupon>0.05</Coupon>
+          </Coupons>
+          <LowerBounds>
+            <LowerBound>0.02</LowerBound>
+          </LowerBounds>
+          <UpperBounds>
+            <UpperBound>0.06</UpperBound>
+          </UpperBounds>
+        </RangeAccrualLegData>
+      </LegData>
+\end{minted}
+\caption{Range Accrual leg data (fixed-rate mode)}
+\label{lst:rangeaccruallegdata}
+\end{listing}
+
+Listing \ref{lst:rangeaccruallegdata_floating} shows an example in floating mode with gearing and spread.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+        <RangeAccrualLegData>
+          <FloatingLegData>
+            <Index>EUR-EURIBOR-6M</Index>
+            <FixingDays>2</FixingDays>
+            <Spreads>
+              <Spread>0.005</Spread>
+            </Spreads>
+            <Gearings>
+              <Gearing>1.5</Gearing>
+            </Gearings>
+          </FloatingLegData>
+          <LowerBounds>
+            <LowerBound>0.01</LowerBound>
+          </LowerBounds>
+          <UpperBounds>
+            <UpperBound>0.05</UpperBound>
+          </UpperBounds>
+        </RangeAccrualLegData>
+\end{minted}
+\caption{Range Accrual leg data (floating mode)}
+\label{lst:rangeaccruallegdata_floating}
+\end{listing}
+
+The \lstinline!RangeAccrualLegData! block contains the following elements:
+
+\begin{itemize}
+
+\item FloatingLegData: A nested \lstinline!FloatingLegData! node (see \ref{ss:floatingleg_data}) that defines the
+  underlying Ibor index used for range observations and, in floating mode, for coupon rate determination. Only Ibor
+  indices are supported. The relevant sub-elements are:
+
+  \begin{itemize}
+  \item Index: The Ibor index whose daily fixings are observed against the range bounds, e.g.\ \emph{EUR-EURIBOR-6M}.
+    See Table \ref{tab:indices} for allowable values.
+  \item FixingDays [Optional]: The number of business days before the observation date to take the index fixing.
+    Defaults to the index's fixing days if omitted.
+  \item Spreads [Optional]: Spread(s) added to the index fixing in floating mode. Ignored in fixed-rate mode. Expressed
+    in decimal form, e.g.\ \emph{0.005} is 50 bp.
+  \item Gearings [Optional]: Gearing factor(s) applied to the index fixing in floating mode. Ignored in fixed-rate
+    mode. Defaults to \emph{1} if omitted.
+  \end{itemize}
+
+\item Coupons [Optional]: This node contains child elements of type \lstinline!Coupon! specifying the fixed coupon
+  rate(s) for fixed-rate mode. If this is a single value, it applies to all periods. A vector of values or a dated
+  vector of values (using \lstinline!startDate! attributes) can be used for varying rates.
+
+  When \lstinline!Coupons! are provided with non-zero values, the leg operates in fixed-rate mode and the gearings and
+  spreads from \lstinline!FloatingLegData! are ignored.
+
+  If the entire \lstinline!Coupons! section is omitted or all values are zero, the leg operates in floating mode.
+
+  Allowable values: Each child element can take any real number. The rate is expressed in decimal form, e.g.\
+  \emph{0.05} is a rate of 5\%.
+
+\item LowerBounds: This node contains child elements of type \lstinline!LowerBound! specifying the lower bound(s) of
+  the accrual range. The observation index fixing must be greater than or equal to the lower bound for a day to count
+  towards the accrual. This can be a single value, a vector of values, or a dated vector of values (using
+  \lstinline!startDate! attributes).
+
+  Allowable values: Each child element can take any real number. The bound is expressed in decimal form, e.g.\
+  \emph{0.02} is a bound of 2\%.
+
+\item UpperBounds: This node contains child elements of type \lstinline!UpperBound! specifying the upper bound(s) of
+  the accrual range. The observation index fixing must be less than or equal to the upper bound for a day to count
+  towards the accrual. This can be a single value, a vector of values, or a dated vector of values (using
+  \lstinline!startDate! attributes).
+
+  Allowable values: Each child element can take any real number. The bound is expressed in decimal form, e.g.\
+  \emph{0.06} is a bound of 6\%.
+
+\end{itemize}

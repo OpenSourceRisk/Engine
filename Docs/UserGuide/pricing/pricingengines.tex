@@ -1461,6 +1461,115 @@ The parameters have the following meaning:
 \end{longlisting}
 
 %--------------------------------------------------------
+\subsection{Product Type: IborRangeAccrualLeg}
+%--------------------------------------------------------
+
+Used by trade type: any trade with a Range Accrual leg (leg type RangeAccrual)
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item BGM/FloatingRateCouponPricer
+\item Black/CallSpreadCouponPricer
+\end{itemize}
+
+Engine description:
+
+BGM/FloatingRateCouponPricer builds a \lstinline!RangeAccrualPricerByBgm! for each coupon of the range accrual leg. The
+pricer is based on the BGM (Brace--Gatarek--Musiela) model and uses smile sections from a swaption volatility surface to
+price the range accrual condition. Normal (Bachelier) volatility surfaces are automatically converted to lognormal
+(Black) volatilities internally. A sample configuration is shown in listing
+\ref{lst:peconfig_IborRangeAccrualLeg_BGM_FloatingRateCouponPricer}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item Correlation [optional]: The correlation parameter used by the BGM range accrual pricer. Defaults to \emph{1.0} if
+  omitted.
+
+  Allowable values: Any real number.
+
+\item withFlatVol [optional]: If \emph{true}, a flat volatility smile section is used instead of the market swaption
+  volatility surface. Defaults to \emph{false} if omitted.
+
+  Allowable values: \emph{true}, \emph{false}.
+
+\item FlatVol [optional]: The flat volatility value used when \lstinline!withFlatVol! is set to \emph{true}. Defaults to
+  \emph{1E-6} if omitted.
+
+  Allowable values: Any non-negative real number.
+
+\item ByCallSpread [optional]: If \emph{true}, the range accrual condition is priced using a call-spread approximation,
+  which naturally incorporates the volatility smile (each spread leg is priced at its own strike vol).
+  If \emph{false}, a Black--Scholes digital pricing is used: the digital value is computed analytically using the
+  volatility at the strike, without accounting for the slope of the smile. Defaults to \emph{true} if omitted.
+
+  Allowable values: \emph{true}, \emph{false}.
+
+\item SensitivityTemplate [optional]: the sensitivity template to use.
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="IborRangeAccrualLeg">
+    <Model>BGM</Model>
+    <ModelParameters/>
+    <Engine>FloatingRateCouponPricer</Engine>
+    <EngineParameters>
+        <Parameter name="Correlation">1.0</Parameter>
+        <Parameter name="withFlatVol">false</Parameter>
+        <Parameter name="ByCallSpread">true</Parameter>
+        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product IborRangeAccrualLeg, Model BGM, Engine FloatingRateCouponPricer}
+\label{lst:peconfig_IborRangeAccrualLeg_BGM_FloatingRateCouponPricer}
+\end{longlisting}
+
+Black/CallSpreadCouponPricer builds a \lstinline!RangeAccrualPricerByCallSpread! for the range accrual leg. The pricer
+uses the optionlet (capFloor) volatility surface directly and prices each daily range observation as a call-spread on
+vanilla caplet/floorlet prices:
+$$\text{Digital}(K) \approx \frac{C(K - \varepsilon/2,\, \sigma_{K-\varepsilon/2}) - C(K + \varepsilon/2,\, \sigma_{K+\varepsilon/2})}{\varepsilon}$$
+This is the same model-free replication approach used by the \emph{RateDigitalOption} trade type. It supports both
+Black (shifted-lognormal) and Bachelier (normal) optionlet volatility surfaces natively, without conversion.
+A sample configuration is shown in listing
+\ref{lst:peconfig_IborRangeAccrualLeg_Black_CallSpreadCouponPricer}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item CallSpreadEps [optional]: The width of the call-spread in rate terms. Smaller values approach the analytical
+  digital; larger values smooth the replication. Defaults to \emph{1E-4} (1 basis point) if omitted.
+
+  Allowable values: Any positive real number.
+
+\item withFlatVol [optional]: If \emph{true}, a flat zero-volatility surface is used instead of the market capFloor
+  surface, resulting in intrinsic (zero time value) digital pricing. Defaults to \emph{false} if omitted.
+
+  Allowable values: \emph{true}, \emph{false}.
+
+\item SensitivityTemplate [optional]: the sensitivity template to use.
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="IborRangeAccrualLeg">
+    <Model>Black</Model>
+    <ModelParameters/>
+    <Engine>CallSpreadCouponPricer</Engine>
+    <EngineParameters>
+        <Parameter name="CallSpreadEps">1E-4</Parameter>
+        <Parameter name="withFlatVol">false</Parameter>
+        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product IborRangeAccrualLeg, Model Black, Engine CallSpreadCouponPricer}
+\label{lst:peconfig_IborRangeAccrualLeg_Black_CallSpreadCouponPricer}
+\end{longlisting}
+
+%--------------------------------------------------------
 \subsection{Product Type: CapFlooredInterpolatedIborLeg}
 %--------------------------------------------------------
 
@@ -5254,6 +5363,65 @@ The parameters have the following meaning:
 \end{minted}
 \caption{Configuration for Product FormulaBasedCoupon, Model BrigoMercurio, Engine MC}
 \label{lst:peconfig_FormulaBasedCoupon_BrigoMercurio_MC}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsection{Product Type: RateDigitalOption}
+%--------------------------------------------------------
+
+Used by trade type: RateDigitalOption
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item Black/CallSpreadEngine
+\end{itemize}
+
+Engine description:
+
+Black/CallSpreadEngine builds a \lstinline!RateDigitalCallSpreadEngine! that prices a European cash-or-nothing digital
+option on an interest rate fixing via call-spread replication. For a digital call paying $P$ if the fixing $L > K$:
+
+$$\text{PV} = P \times \frac{C(K - \varepsilon/2,\, \sigma_{-}) - C(K + \varepsilon/2,\, \sigma_{+})}{\varepsilon}$$
+
+where $C(K, \sigma)$ is the vanilla caplet/floorlet price at strike $K$ using the market optionlet volatility $\sigma(K)$
+from the cap/floor volatility surface. The formula for a digital put is analogous using put prices. Both Black
+(shifted-lognormal) and Bachelier (normal) volatility types are supported automatically depending on the optionlet
+surface type.
+
+A sample configuration is shown in listing
+\ref{lst:peconfig_RateDigitalOption_Black_CallSpreadEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item CallSpreadEps [optional]: The width of the call-spread in rate terms. Smaller values approximate the analytical
+  digital more closely; larger values smooth the replication. Defaults to \emph{1E-4} (1 bp) if omitted.
+
+  Allowable values: Any positive real number.
+
+\item withFlatVol [optional]: If \emph{true}, replaces the market optionlet volatility surface with a flat zero surface,
+  effectively pricing the digital at its intrinsic value. Defaults to \emph{false} if omitted.
+
+  Allowable values: \emph{true}, \emph{false}.
+
+\item SensitivityTemplate [optional]: the sensitivity template to use.
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="RateDigitalOption">
+    <Model>Black</Model>
+    <ModelParameters/>
+    <Engine>CallSpreadEngine</Engine>
+    <EngineParameters>
+        <Parameter name="CallSpreadEps">1E-4</Parameter>
+        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product RateDigitalOption, Model Black, Engine CallSpreadEngine}
+\label{lst:peconfig_RateDigitalOption_Black_CallSpreadEngine}
 \end{longlisting}
 
 %--------------------------------------------------------

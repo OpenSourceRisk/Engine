@@ -25,6 +25,7 @@
 #include <ored/portfolio/builders/capflooredovernightindexedcouponleg.hpp>
 #include <ored/portfolio/builders/capflooredyoyleg.hpp>
 #include <ored/portfolio/builders/cms.hpp>
+#include <ored/portfolio/builders/rangeaccrualleg.hpp>
 #include <ored/portfolio/builders/cmsspread.hpp>
 #include <ored/portfolio/builders/equity.hpp>
 #include <ored/portfolio/forwardbond.hpp>
@@ -77,6 +78,7 @@
 #include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
+#include <ql/cashflows/rangeaccrual.hpp>
 #include <ql/errors.hpp>
 #include <ql/experimental/coupons/digitalcmsspreadcoupon.hpp>
 #include <ql/experimental/coupons/strippedcapflooredcoupon.hpp>
@@ -115,7 +117,8 @@ const boost::bimap<string, LegType> legTypeMap =
     ("CommodityFloating", LegType::CommodityFloating)
     ("CommodityFixed", LegType::CommodityFixed)
     ("EquityMargin", LegType::EquityMargin)
-    ("YY", LegType::YY);
+    ("YY", LegType::YY)
+    ("RangeAccrual", LegType::RangeAccrual);
 // clang-format on
 
 LegType parseLegType(const std::string& legType)  {
@@ -334,6 +337,31 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) const {
     }
     if (observationShift_)
         XMLUtils::addChild(doc, node, "ObservationShift", *observationShift_);
+    return node;
+}
+
+void RangeAccrualLegData::fromXML(XMLNode* node) {
+    XMLUtils::checkNode(node, legNodeName());
+
+    XMLNode* underlyingNode = XMLUtils::getChildNode(node, "FloatingLegData");
+    underlying_ = QuantLib::ext::make_shared<FloatingLegData>();
+    underlying_->fromXML(underlyingNode);
+    indices_ = underlying_->indices();
+
+    coupon_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Coupons", "Coupon", "startDate", couponDates_, &parseReal,
+                                                             false);
+    upperBound_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "UpperBounds", "UpperBound", "startDate", upperBoundDates_, &parseReal,
+                                                             true);
+    lowerBound_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "LowerBounds", "LowerBound", "startDate", lowerBoundDates_, &parseReal,
+                                                             true);
+}
+
+XMLNode* RangeAccrualLegData::toXML(XMLDocument& doc) const {
+    XMLNode* node = doc.allocNode(legNodeName());
+    XMLUtils::appendNode(node, underlying_->toXML(doc));
+    XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Coupons", "Coupon", coupon_, "startDate", couponDates_);
+    XMLUtils::addChildrenWithOptionalAttributes(doc, node, "UpperBounds", "UpperBound", upperBound_, "startDate", upperBoundDates_);
+    XMLUtils::addChildrenWithOptionalAttributes(doc, node, "LowerBounds", "LowerBound", lowerBound_, "startDate", lowerBoundDates_);
     return node;
 }
 
@@ -2344,6 +2372,118 @@ Leg makeYoYLeg(const LegData& data, const QuantLib::ext::shared_ptr<InflationInd
             }
         }
     }
+    return leg;
+}
+
+Leg makeRangeAccrualLeg(const LegData& data, const QuantLib::ext::shared_ptr<IborIndex>& index,
+                       const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                       const QuantLib::Date& openEndDateReplacement, const bool attachPricer) {
+    auto rangeAccrualData = QuantLib::ext::dynamic_pointer_cast<RangeAccrualLegData>(data.concreteLegData());
+    QL_REQUIRE(rangeAccrualData, "Wrong LegType, expected RangeAccrual, got " << data.legType());
+    auto floatData = rangeAccrualData->underlying();
+    QL_REQUIRE(floatData, "makeRangeAccrualLeg: no underlying FloatingLegData");
+
+    // We allow only an IborIndex - could be extended in the future
+    auto iborIndex = QuantLib::ext::dynamic_pointer_cast<IborIndex>(index);
+    QL_REQUIRE(iborIndex, "makeRangeAccrualLeg: expected IborIndex for " << floatData->index());
+
+    Schedule schedule = makeSchedule(data.schedule(), openEndDateReplacement);
+
+    vector<double> notionals =
+        buildScheduledVectorNormalised(data.notionals(), data.notionalDates(), schedule, 0.0);
+
+    applyAmortization(notionals, data, schedule, true);
+
+    DayCounter dc = parseDayCounter(data.dayCounter());
+    BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
+
+    Size fixingDays = floatData->fixingDays() == Null<Size>() ? iborIndex->fixingDays() : floatData->fixingDays();
+
+    vector<double> gearings =
+        buildScheduledVectorNormalised(floatData->gearings(), floatData->gearingDates(), schedule, 1.0);
+    vector<double> spreads =
+        buildScheduledVectorNormalised(floatData->spreads(), floatData->spreadDates(), schedule, 0.0);
+    vector<double> coupon =
+        buildScheduledVectorNormalised(rangeAccrualData->coupon(), rangeAccrualData->couponDates(), schedule, 0.0);
+    vector<double> lowerBound =
+        buildScheduledVectorNormalised(rangeAccrualData->lowerBound(), rangeAccrualData->lowerBoundDates(), schedule, 0.0);
+    vector<double> upperBound =
+        buildScheduledVectorNormalised(rangeAccrualData->upperBound(), rangeAccrualData->upperBoundDates(), schedule, 0.0);
+
+    // Determine fixed-rate vs floating mode.
+    // Fixed-rate mode: the Coupons node provides a fixed rate x% and the payout is
+    //     Amount = Notional * x% * (n/N) * DayCountFraction
+    // Floating mode (no Coupons or Coupon=0): the payout is
+    //     Amount = Notional * (gearing * Libor + spread) * (n/N) * DayCountFraction
+    //     (note: in the QuantLib pricer the spread addend is actually unconditional)
+    bool fixedRateMode = false;
+    for (const auto& c : coupon) {
+        if (c != 0.0) { fixedRateMode = true; break; }
+    }
+
+    // In both modes gearing must be non-zero so the QuantLib leg builder creates
+    // RangeAccrualFloatersCoupon objects (gearing == 0 would create FixedRateCoupons
+    // with no range-accrual logic).
+    Leg leg = QuantLib::RangeAccrualLeg(schedule, iborIndex)
+                      .withNotionals(notionals)
+                      .withPaymentDayCounter(dc)
+                      .withPaymentAdjustment(bdc)
+                      .withFixingDays(static_cast<Natural>(fixingDays))
+                      .withSpreads(fixedRateMode ? std::vector<Spread>(1, 0.0) : spreads)
+                      .withGearings(fixedRateMode ? std::vector<Real>(1, 1.0) : gearings)
+                      .withLowerTriggers(lowerBound)
+                      .withUpperTriggers(upperBound)
+                      .withObservationTenor(1 * Days)
+                      .withObservationConvention(bdc);
+
+    // Attach per-coupon range accrual pricers with correct expiry/payment smile sections.
+    // Only attach pricers to live coupons (payment date > today). Past coupons are fully
+    // determined by historical fixings and don't need analytical pricing.
+    if (attachPricer) {
+        auto builder = engineFactory->builder("IborRangeAccrualLeg");
+        QL_REQUIRE(builder, "No builder found for IborRangeAccrualLeg");
+        std::string indexName = IndexNameTranslator::instance().oreName(iborIndex->name());
+        Date today = Settings::instance().evaluationDate();
+
+        // Dispatch to the appropriate builder type
+        auto raBuilder = QuantLib::ext::dynamic_pointer_cast<RangeAccrualLegEngineBuilder>(builder);
+        auto csBuilder = QuantLib::ext::dynamic_pointer_cast<RangeAccrualLegCallSpreadEngineBuilder>(builder);
+        QL_REQUIRE(raBuilder || csBuilder,
+                   "Expected RangeAccrualLegEngineBuilder or RangeAccrualLegCallSpreadEngineBuilder");
+
+        // For the call-spread builder, the pricer is independent of the coupon dates
+        // so we build it once and reuse it for all coupons.
+        QuantLib::ext::shared_ptr<FloatingRateCouponPricer> csPricer;
+        if (csBuilder)
+            csPricer = csBuilder->engine(indexName);
+
+        Size couponIdx = 0;
+        for (auto& cf : leg) {
+            auto raCoupon = QuantLib::ext::dynamic_pointer_cast<RangeAccrualFloatersCoupon>(cf);
+            if (raCoupon) {
+                if (raCoupon->date() > today) {
+                    QuantLib::ext::shared_ptr<FloatingRateCouponPricer> pricer;
+                    if (raBuilder)
+                        pricer = raBuilder->engine(
+                            indexName, raCoupon->accrualStartDate(), raCoupon->accrualEndDate());
+                    else
+                        pricer = csPricer;
+
+                    if (fixedRateMode) {
+                        // Set the per-coupon fixed rate on the pricer so it computes
+                        // fixedRate * (n/N) instead of gearing * Libor * (n/N) + spread
+                        auto raPricer =
+                            QuantLib::ext::dynamic_pointer_cast<RangeAccrualPricer>(pricer);
+                        if (raPricer)
+                            raPricer->setFixedRate(coupon[std::min(couponIdx, coupon.size() - 1)]);
+                    }
+                    raCoupon->setPricer(pricer);
+                }
+                ++couponIdx;
+            }
+        }
+    }
+
     return leg;
 }
 

@@ -77,6 +77,7 @@
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/overnightindexedcouponbase.hpp>
 #include <qle/cashflows/quantocouponpricer.hpp>
+#include <qle/cashflows/rangeaccrualcouponpricer.hpp>
 #include <qle/cashflows/scaledcoupon.hpp>
 #include <qle/cashflows/strippedcapflooredcpicoupon.hpp>
 #include <qle/cashflows/strippedcapflooredyoyinflationcoupon.hpp>
@@ -469,6 +470,7 @@
 #include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
 #include <qle/pricingengines/pairwisevarianceswapengine.hpp>
 #include <qle/pricingengines/paymentdiscountingengine.hpp>
+#include <qle/pricingengines/ratedigitalcallspreadengine.hpp>
 #include <qle/pricingengines/tflattice.hpp>
 #include <qle/pricingengines/varianceswapgeneralreplicationengine.hpp>
 #include <qle/pricingengines/volatilityfromvarianceswapengine.hpp>
