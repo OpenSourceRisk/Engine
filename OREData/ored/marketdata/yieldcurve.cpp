@@ -333,8 +333,6 @@ YieldCurve::InterpolationMethod parseYieldCurveInterpolationMethod(const string&
         return YieldCurve::InterpolationMethod::FinancialCubic;
     else if (s == "ConvexMonotone")
         return YieldCurve::InterpolationMethod::ConvexMonotone;
-    else if (s == "ExponentialSplines")
-        return YieldCurve::InterpolationMethod::ExponentialSplines;
     else if (s == "Quadratic")
         return YieldCurve::InterpolationMethod::Quadratic;
     else if (s == "LogQuadratic")
@@ -365,6 +363,8 @@ YieldCurve::InterpolationMethod parseYieldCurveInterpolationMethod(const string&
         return YieldCurve::InterpolationMethod::NelsonSiegel;
     else if (s == "Svensson")
         return YieldCurve::InterpolationMethod::Svensson;
+    else if (s == "ExponentialSplines")
+        return YieldCurve::InterpolationMethod::ExponentialSplines;
     else
         QL_FAIL("Yield curve interpolation method " << s << " not recognized");
 };
