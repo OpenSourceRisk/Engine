@@ -32,7 +32,7 @@
 #include <ored/portfolio/swap.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
-#include <oret/toplevelfixture.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 #include <test/oreatoplevelfixture.hpp>
 
 #include <qle/instruments/fxforward.hpp>
@@ -136,7 +136,7 @@ struct TestData {
         vector<string> optionStrikes(optionExpiries.size(), "ATMF");
         vector<Time> sigmaTimes = {};
 
-        std::vector<QuantLib::ext::shared_ptr<FxBsData>> fxConfigs;
+        std::vector<QuantLib::ext::shared_ptr<FxData>> fxConfigs;
 
         vector<Real> sigmaValues = {0.15};
         fxConfigs.push_back(QuantLib::ext::make_shared<FxBsData>("USD", "EUR", calibrationType, true, ParamType::Piecewise,

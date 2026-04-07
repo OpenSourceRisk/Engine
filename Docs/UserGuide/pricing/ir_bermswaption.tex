@@ -1,9 +1,8 @@
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsubsection{Bermudan/American Swaption and non-standard European Swaption}
+\subsubsection{Bermudan/American Swaption}
 \label{pricing:ir_bermswaption}
 
-Bermudan/American Swaptions and non-standard European Swaptions (see \ref{pricing:ir_euroswaption} for the criteria to
-distinguish standard from non-standard swaptions) are priced using a one-factor Linear Gauss Markov (LGM) model, which
+Bermudan/American Swaptions are priced using a one-factor Linear Gauss Markov (LGM) model, which
 is closely related to the Hull-White one-factor model, see section \ref{models:LGM} for details.
 
 \underline{General Model Parametrization}
@@ -184,7 +183,7 @@ The underlying maturity of the calibration swaptions is chosen to be identical t
 
 The strikes of the calibration swaptions are chosen dependent on the parameter ``CalibrationStrategy'' (see listing
 \ref{lst:ir_bermswaption_pricing_config}). This parameter can be set to ``None'' (if ``Calibration'' is set to ``None'',
-too) or to ``CoterminalATM'' or to ``CoterminalDealStrike''.
+too), ``CoterminalATM'', ``CoterminalDealStrike'', ``DeltaGammaAdjusted''.
 
 In case of ``CoterminalATM'' the calibration swaption strikes are set to their fair forward swap level.
 
@@ -201,7 +200,8 @@ first floating rate coupon spread with accrual start date greater or equal to $d
 The calibration swaptions are always constructed following the conventions of the relevant swaption surface / cube. In
 particular, the index tenor of these swaptions is set to the market swaptions tenor.
 
-
+In case of ``DeltaGammaAdjusted'' the calibration swaption strikes and maturity are adjusted to the exercise-into
+underlying following \cite{Andersen_Piterbarg_2010}, section 19.4.3.
 
 \underline{Numerical implementation of calibration}
 

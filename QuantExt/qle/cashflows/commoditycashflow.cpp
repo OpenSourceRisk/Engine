@@ -36,9 +36,9 @@ void CommodityCashFlow::accept(QuantLib::AcyclicVisitor& v) {
 
 CommodityCashFlow::CommodityCashFlow(QuantLib::Real quantity, QuantLib::Real spread, QuantLib::Real gearing,
                                      bool useFuturePrice, const ext::shared_ptr<CommodityIndex>& index,
-                                     const ext::shared_ptr<FxIndex>& fxIndex)
+                                     const ext::shared_ptr<FxIndex>& fxIndex, const ext::shared_ptr<FutureExpiryCalculator>& calc)
     : quantity_(quantity), spread_(spread), gearing_(gearing), useFuturePrice_(useFuturePrice), index_(index),
-      fxIndex_(fxIndex) {
+      fxIndex_(fxIndex), calc_(calc) {
     registerWith(index_);
     if (fxIndex) {
         registerWith(fxIndex);

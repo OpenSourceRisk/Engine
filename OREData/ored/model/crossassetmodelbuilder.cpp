@@ -22,23 +22,27 @@
 #include <ored/model/crossassetmodelbuilder.hpp>
 #include <ored/model/eqbsbuilder.hpp>
 #include <ored/model/fxbsbuilder.hpp>
+#include <ored/model/fxlvdata.hpp>
 #include <ored/model/hwbuilder.hpp>
 #include <ored/model/inflation/infdkbuilder.hpp>
 #include <ored/model/inflation/infjybuilder.hpp>
 #include <ored/model/inflation/infjydata.hpp>
 #include <ored/model/irhwmodeldata.hpp>
 #include <ored/model/lgmbuilder.hpp>
+#include <ored/model/localvolmodelbuilder.hpp>
 #include <ored/model/structuredmodelerror.hpp>
 #include <ored/model/structuredmodelwarning.hpp>
 #include <ored/model/utilities.hpp>
 #include <ored/utilities/correlationmatrix.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/dategrid.hpp>
 
 #include <qle/cashflows/jyyoyinflationcouponpricer.hpp>
 #include <qle/models/cpicapfloorhelper.hpp>
 #include <qle/models/fxbsconstantparametrization.hpp>
 #include <qle/models/fxbspiecewiseconstantparametrization.hpp>
+#include <qle/models/fxlvparametrization.hpp>
 #include <qle/models/fxeqoptionhelper.hpp>
 #include <qle/models/irlgm1fconstantparametrization.hpp>
 #include <qle/models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp>
@@ -54,12 +58,15 @@
 #include <qle/pricingengines/analyticxassetlgmeqoptionengine.hpp>
 #include <qle/pricingengines/commodityschwartzfutureoptionengine.hpp>
 
+#include <qle/termstructures/simplemclocalvolstochasticratescorrection.hpp>
+
 #include <ql/math/optimization/levenbergmarquardt.hpp>
 #include <ql/models/shortrate/calibrationhelpers/swaptionhelper.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/utilities/dataformatters.hpp>
+#include <ql/termstructures/volatility/equityfx/localvoltermstructure.hpp>
 
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/lexical_cast.hpp>
@@ -241,7 +248,7 @@ void CrossAssetModelBuilder::relinkIrDiscountCurves(const std::vector<QuantLib::
 
 void CrossAssetModelBuilder::buildModel() const {
 
-    LOG("Start building CrossAssetModel");
+    DLOG("Start building CrossAssetModel");
     
     QL_REQUIRE(market_.value() != NULL, "CrossAssetModelBuilder: no market given");
 
@@ -270,7 +277,7 @@ void CrossAssetModelBuilder::buildModel() const {
         swaptionCalibrationErrors_.resize(config_->irConfigs().size());
         fxOptionBaskets_.resize(config_->fxConfigs().size());
         fxOptionExpiries_.resize(config_->fxConfigs().size());
-        fxOptionCalibrationErrors_.resize(config_->fxConfigs().size());
+        fxOptionCalibrationErrors_.resize(config_->fxConfigs().size(), Null<Real>());
         eqOptionBaskets_.resize(config_->eqConfigs().size());
         eqOptionExpiries_.resize(config_->eqConfigs().size());
         eqOptionCalibrationErrors_.resize(config_->eqConfigs().size());
@@ -306,7 +313,8 @@ void CrossAssetModelBuilder::buildModel() const {
     std::vector<std::string> currencies, regions, crNames, eqNames, infIndices, comNames;
     std::vector<QuantLib::ext::shared_ptr<LgmBuilder>> lgmBuilder;
     std::vector<QuantLib::ext::shared_ptr<HwBuilder>> hwBuilder;
-    std::vector<QuantLib::ext::shared_ptr<FxBsBuilder>> fxBuilder;
+    std::vector<QuantLib::ext::shared_ptr<ModelBuilder>> fxBuilder;
+    std::vector<QuantLib::RelinkableHandle<QuantLib::LocalVolTermStructure>> fxLocalVolHandle;
     std::vector<QuantLib::ext::shared_ptr<EqBsBuilder>> eqBuilder;
     std::vector<QuantLib::ext::shared_ptr<CommoditySchwartzModelBuilder>> csBuilder;
 
@@ -371,12 +379,13 @@ void CrossAssetModelBuilder::buildModel() const {
     /*******************************************************
      * Build the FX parametrizations and calibration baskets
      */
-    std::vector<QuantLib::ext::shared_ptr<QuantExt::FxBsParametrization>> fxParametrizations;
+    std::vector<QuantLib::ext::shared_ptr<QuantExt::Parametrization>> fxParametrizations;
     for (Size i = 0; i < config_->fxConfigs().size(); i++) {
         DLOG("FX Parametrization " << i);
-        QuantLib::ext::shared_ptr<FxBsData> fx = config_->fxConfigs()[i];
-        QuantLib::Currency ccy = ore::data::parseCurrency(fx->foreignCcy());
-        QuantLib::Currency domCcy = ore::data::parseCurrency(fx->domesticCcy());
+
+        QuantLib::Currency ccy = ore::data::parseCurrency(config_->fxConfigs()[i]->foreignCcy());
+        QuantLib::Currency domCcy = ore::data::parseCurrency(config_->fxConfigs()[i]->domesticCcy());
+        std::string pair = ccy.code() + domCcy.code();
 
         QL_REQUIRE(ccy.code() == irParametrizations[i + 1]->currency().code(),
                    "FX parametrization currency[" << i << "]=" << ccy << " does not match IR currency[" << i + 1
@@ -385,19 +394,44 @@ void CrossAssetModelBuilder::buildModel() const {
         QL_REQUIRE(domCcy == domesticCcy, "FX parametrization [" << i << "]=" << ccy << "/" << domCcy
                                                                  << " does not match domestic ccy " << domesticCcy);
 
-        if (!buildersAreInitialized) {
-            subBuilders_[CrossAssetModel::AssetType::FX][i] = QuantLib::ext::make_shared<FxBsBuilder>(
-                market_.value(), fx, configurationFxCalibration_, referenceCalibrationGrid_, id_);
+        if (auto fx = QuantLib::ext::dynamic_pointer_cast<FxBsData>(config_->fxConfigs()[i])) {
+            if (!buildersAreInitialized) {
+                subBuilders_[CrossAssetModel::AssetType::FX][i] = QuantLib::ext::make_shared<FxBsBuilder>(
+                    market_.value(), fx, configurationFxCalibration_, referenceCalibrationGrid_, id_);
+            }
+            auto builder =
+                QuantLib::ext::dynamic_pointer_cast<FxBsBuilder>(subBuilders_[CrossAssetModel::AssetType::FX][i]);
+            fxBuilder.push_back(builder);
+            fxLocalVolHandle.push_back({});
+            fxOptionBaskets_[i] = builder->optionBasket();
+            fxParametrizations.push_back(builder->parametrization());
+            processInfo[CrossAssetModel::AssetType::FX].emplace_back(pair, 1);
+        } else if(auto fx = QuantLib::ext::dynamic_pointer_cast<FxLvData>(config_->fxConfigs()[i])) {
+            if (!buildersAreInitialized) {
+                auto fxVol = market_.value()->fxVol(pair, configurationFxCalibration_);
+                DateGrid calibrationGrid(fx->calibrationGrid(),
+                                         fxVol->calendar().empty() ? NullCalendar() : fxVol->calendar());
+                auto tmp = calibrationGrid.dates();
+                std::set<QuantLib::Date> calibrationDates(tmp.begin(), tmp.end());
+                subBuilders_[CrossAssetModel::AssetType::FX][i] = QuantLib::ext::make_shared<LocalVolModelBuilder>(
+                    market_.value()->discountCurve(domCcy.code(), configurationFxCalibration_),
+                    QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
+                        market_.value()->fxSpot(pair, configurationFxCalibration_),
+                        market_.value()->discountCurve(ccy.code(), configurationFxCalibration_),
+                        market_.value()->discountCurve(domCcy.code(), configurationFxCalibration_), fxVol),
+                    calibrationDates, std::set<QuantLib::Date>{}, 0, parseLocalVolType(fx->model()),
+                    parseListOfValues<Real>(fx->calibrationMoneyness(), parseReal), std::string(), dontCalibrate_,
+                    Handle<YieldTermStructure>(), true);
+            }
+            auto builder =
+                QuantLib::ext::dynamic_pointer_cast<LocalVolModelBuilder>(subBuilders_[CrossAssetModel::AssetType::FX][i]);
+            fxBuilder.push_back(builder);
+            fxLocalVolHandle.push_back(RelinkableHandle<QuantLib::LocalVolTermStructure>());
+            fxOptionBaskets_[i].clear();
+            fxParametrizations.push_back(QuantLib::ext::make_shared<FxLvParametrization>(
+                ccy, market_.value()->fxSpot(pair, configurationFxCalibration_), fxLocalVolHandle.back()));
+            processInfo[CrossAssetModel::AssetType::FX].emplace_back(pair, 1);
         }
-        auto builder =
-            QuantLib::ext::dynamic_pointer_cast<FxBsBuilder>(subBuilders_[CrossAssetModel::AssetType::FX][i]);
-        fxBuilder.push_back(builder);
-
-        QuantLib::ext::shared_ptr<QuantExt::FxBsParametrization> parametrization = builder->parametrization();
-
-        fxOptionBaskets_[i] = builder->optionBasket();
-        fxParametrizations.push_back(parametrization);
-        processInfo[CrossAssetModel::AssetType::FX].emplace_back(ccy.code() + domCcy.code(), 1);
     }
 
     /*******************************************************
@@ -560,13 +594,13 @@ void CrossAssetModelBuilder::buildModel() const {
         parametrizations.push_back(irParametrizations[i]);
     for (Size i = 0; i < fxParametrizations.size(); i++)
         parametrizations.push_back(fxParametrizations[i]);
-    for (Size i = 0; i < eqParametrizations.size(); i++)
-        parametrizations.push_back(eqParametrizations[i]);
     parametrizations.insert(parametrizations.end(), infParameterizations.begin(), infParameterizations.end());
     for (Size i = 0; i < crLgmParametrizations.size(); i++)
         parametrizations.push_back(crLgmParametrizations[i]);
     for (Size i = 0; i < crCirParametrizations.size(); i++)
         parametrizations.push_back(crCirParametrizations[i]);
+    for (Size i = 0; i < eqParametrizations.size(); i++)
+        parametrizations.push_back(eqParametrizations[i]);
     for (Size i = 0; i < comParametrizations.size(); i++)
         parametrizations.push_back(comParametrizations[i]);
     for (Size i = 0; i < crStateParametrizations.size(); i++)
@@ -629,68 +663,97 @@ void CrossAssetModelBuilder::buildModel() const {
      */
 
     for (Size i = 0; i < fxParametrizations.size(); i++) {
-        QuantLib::ext::shared_ptr<FxBsData> fx = config_->fxConfigs()[i];
 
-        if (fx->calibrationType() == CalibrationType::None || !fx->calibrateSigma()) {
-            DLOG("FX Calibration " << i << " skipped");
-            continue;
-        }
+        DLOG("FX Calibration " << i);
+
+        auto bsBuilder = QuantLib::ext::dynamic_pointer_cast<ore::data::FxBsBuilder>(fxBuilder[i]);
+        auto lvBuilder = QuantLib::ext::dynamic_pointer_cast<ore::data::LocalVolModelBuilder>(fxBuilder[i]);
 
         if (!fxBuilder[i]->requiresRecalibration() &&
-            recalibratedCurrencies.find(fx->foreignCcy()) == recalibratedCurrencies.end() &&
-            recalibratedCurrencies.find(fx->domesticCcy()) == recalibratedCurrencies.end()) {
+            recalibratedCurrencies.find(fxParametrizations[i]->currency().code()) == recalibratedCurrencies.end() &&
+            recalibratedCurrencies.find(domesticCcy.code()) == recalibratedCurrencies.end() &&
+            (!lvBuilder || !fxLocalVolHandle[i].empty())) {
             DLOG("FX Calibration "
                  << i << " skipped, since neither fx builder nor ir models in dom / for ccy were recalibrated.");
             continue;
         }
 
-        DLOG("FX Calibration " << i);
+        if (bsBuilder) {
 
-        // attach pricing engines to helpers
-        QuantLib::ext::shared_ptr<QuantExt::AnalyticCcLgmFxOptionEngine> engine =
-            QuantLib::ext::make_shared<QuantExt::AnalyticCcLgmFxOptionEngine>(*model_, i);
-        // enable caching for calibration
-        // TODO: review this
-        engine->cache(true);
-        for (Size j = 0; j < fxOptionBaskets_[i].size(); j++)
-            fxOptionBaskets_[i][j]->setPricingEngine(engine);
+            auto fx = QuantLib::ext::dynamic_pointer_cast<FxBsData>(config_->fxConfigs()[i]);
 
-        if (!dontCalibrate_) {
+            if (fx->calibrationType() == CalibrationType::None || !fx->calibrateSigma()) {
+                DLOG("FX Calibration " << i << " skipped");
+                continue;
+            }
+            QuantLib::ext::shared_ptr<QuantExt::AnalyticCcLgmFxOptionEngine> engine =
+                QuantLib::ext::make_shared<QuantExt::AnalyticCcLgmFxOptionEngine>(*model_, i);
+            engine->cache(true);
+            for (Size j = 0; j < fxOptionBaskets_[i].size(); j++)
+                fxOptionBaskets_[i][j]->setPricingEngine(engine);
+            if (!dontCalibrate_) {
+                // reset to initial params to ensure identical calibration outcomes for identical baskets
+                resetModelParams(CrossAssetModel::AssetType::FX, 0, i, Null<Size>());
 
-            // reset to initial params to ensure identical calibration outcomes for identical baskets
-            resetModelParams(CrossAssetModel::AssetType::FX, 0, i, Null<Size>());
-
-            if (fx->calibrationType() == CalibrationType::Bootstrap && fx->sigmaParamType() == ParamType::Piecewise)
-                model_->calibrateBsVolatilitiesIterative(CrossAssetModel::AssetType::FX, i, fxOptionBaskets_[i],
-                                                         *optimizationMethod_, endCriteria_);
-            else
-                model_->calibrateBsVolatilitiesGlobal(CrossAssetModel::AssetType::FX, i, fxOptionBaskets_[i],
-                                                      *optimizationMethod_, endCriteria_);
-
-            DLOG("FX " << fx->foreignCcy() << " calibration errors:");
-            fxOptionCalibrationErrors_[i] = getCalibrationError(fxOptionBaskets_[i]);
-            if (fx->calibrationType() == CalibrationType::Bootstrap) {
-                if (fabs(fxOptionCalibrationErrors_[i]) < config_->bootstrapTolerance()) {
-                    DLOGGERSTREAM("Calibration details:");
-                    DLOGGERSTREAM(
-                        getCalibrationDetails(fxOptionBaskets_[i], fxParametrizations[i], irParametrizations[0]));
-                    DLOGGERSTREAM("rmse = " << fxOptionCalibrationErrors_[i]);
-                } else {
-                    std::string exceptionMessage = "FX BS " + fx->foreignCcy() + " index " + std::to_string(i) + " calibration error " +
-                                                   std::to_string(fxOptionCalibrationErrors_[i]) +
-                                                   " exceeds tolerance " +
-                                                   std::to_string(config_->bootstrapTolerance());
-                    StructuredModelWarningMessage("Failed to calibrate FX BS Model", exceptionMessage, id_).log();
-                    WLOGGERSTREAM("Calibration details:");
-                    WLOGGERSTREAM(
-                        getCalibrationDetails(fxOptionBaskets_[i], fxParametrizations[i], irParametrizations[0]));
-                    WLOGGERSTREAM("rmse = " << fxOptionCalibrationErrors_[i]);
-                    if (!continueOnError_)
-                        QL_FAIL(exceptionMessage);
+                if (fx->calibrationType() == CalibrationType::Bootstrap && fx->sigmaParamType() == ParamType::Piecewise)
+                    model_->calibrateBsVolatilitiesIterative(CrossAssetModel::AssetType::FX, i, fxOptionBaskets_[i],
+                                                             *optimizationMethod_, endCriteria_);
+                else
+                    model_->calibrateBsVolatilitiesGlobal(CrossAssetModel::AssetType::FX, i, fxOptionBaskets_[i],
+                                                          *optimizationMethod_, endCriteria_);
+                DLOG("FX " << fx->foreignCcy() << " calibration errors:");
+                fxOptionCalibrationErrors_[i] = getCalibrationError(fxOptionBaskets_[i]);
+                auto fxParam = QuantLib::ext::dynamic_pointer_cast<FxBsParametrization>(fxParametrizations[i]);
+                if (fx->calibrationType() == CalibrationType::Bootstrap) {
+                    if (fabs(fxOptionCalibrationErrors_[i]) < config_->bootstrapTolerance()) {
+                        DLOGGERSTREAM("Calibration details:");
+                        DLOGGERSTREAM(getCalibrationDetails(fxOptionBaskets_[i], fxParam, irParametrizations[0]));
+                        DLOGGERSTREAM("rmse = " << fxOptionCalibrationErrors_[i]);
+                    } else {
+                        std::string exceptionMessage =
+                            "FX BS " + fx->foreignCcy() + " index " + std::to_string(i) + " calibration error " +
+                            std::to_string(fxOptionCalibrationErrors_[i]) + " exceeds tolerance " +
+                            std::to_string(config_->bootstrapTolerance());
+                        StructuredModelWarningMessage("Failed to calibrate FX BS Model", exceptionMessage, id_).log();
+                        WLOGGERSTREAM("Calibration details:");
+                        WLOGGERSTREAM(getCalibrationDetails(fxOptionBaskets_[i], fxParam, irParametrizations[0]));
+                        WLOGGERSTREAM("rmse = " << fxOptionCalibrationErrors_[i]);
+                        if (!continueOnError_)
+                            QL_FAIL(exceptionMessage);
+                    }
                 }
             }
+            bsBuilder->setCalibrationDone();
+
+        } else if (lvBuilder) {
+
+            auto config = QuantLib::ext::dynamic_pointer_cast<FxLvData>(config_->fxConfigs()[i]);
+
+            if (config->stochasticRatesCorrection() == "None") {
+
+                fxLocalVolHandle[i].linkTo(
+                    *lvBuilder->model()->generalizedBlackScholesProcesses().front()->localVolatility());
+
+            } else if (config->stochasticRatesCorrection() == "SimpleMc") {
+
+                Real maxTime = irDiscountCurves[0]->timeFromReference(*lvBuilder->simulationDates().rbegin());
+
+                fxLocalVolHandle[i].linkTo(QuantLib::ext::make_shared<SimpleMcLocalVolStochasticRatesCorrection>(
+                    lvBuilder->model()->generalizedBlackScholesProcesses().front()->blackVolatility(),
+                    lvBuilder->model()->generalizedBlackScholesProcesses().front()->localVolatility(),
+                    model_->irModel(0), model_->irModel(i + 1), model_->fxModel(i), irDiscountCurves[0],
+                    irDiscountCurves[i + 1], model_->correlation(), maxTime,
+                    config->simpleMcParameters().calibrationMoneynessMin(),
+                    config->simpleMcParameters().calibrationMoneynessMax(),
+                    config->simpleMcParameters().timeStepsPerYear(), config->simpleMcParameters().nStrikes(),
+                    config->simpleMcParameters().samples(), config->simpleMcParameters().d2CdK2Threshold(),
+                    config->simpleMcParameters().nPasses()));
+
+            } else {
+                QL_FAIL("FxLv model: StochasticRatesCorrection '" << config->stochasticRatesCorrection()
+                                                                  << "' not known, expected 'None', 'SimpleMc'");
+            }
         }
-        fxBuilder[i]->setCalibrationDone();
     }
 
     /*************************

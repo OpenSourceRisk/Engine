@@ -36,8 +36,6 @@ using namespace std;
 class DirectDynamicInitialMarginCalculator : public DynamicInitialMarginCalculator {
 public:
     DirectDynamicInitialMarginCalculator(
-        //! Global input parameters
-        const QuantLib::ext::shared_ptr<InputParameters>& inputs,
         //! Driving portfolio consistent with the cube below
         const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
         //! NPV cube resulting from the Monte Carlo simulation loop

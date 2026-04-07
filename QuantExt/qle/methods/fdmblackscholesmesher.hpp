@@ -29,7 +29,7 @@
 #include <ql/handle.hpp>
 #include <ql/quote.hpp>
 
-#include <ql/tuple.hpp>
+#include <tuple>
 
 namespace QuantLib {
 class FdmQuantoHelper;

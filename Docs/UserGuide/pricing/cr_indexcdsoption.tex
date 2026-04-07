@@ -192,7 +192,7 @@ stochastic quantity on the other hand, see \ref{pricing:cr_indexcdsoption_Sp2}. 
 is calculated as
 
 
-\begin{equation}
+\begin{equation}\label{pricing:cr_adjusted_strike_spread}
 K_s' = c + \frac{N_{td}}{N_{vd}}\frac{RA(K_s)}{S(t_e) \cdot RA} \left( K_s - c \right)
 \end{equation}
 
@@ -209,7 +209,7 @@ calculated using the risky strike annuity on the notional at trade date rather t
 
 Finally, the option price is calculated using the Black formula
 
-\begin{equation}
+\begin{equation}\label{pricing:cr_black_spread-volatility}
   \text{NPV}_{opt} = P_{OIS,t}(0,t_e) \cdot S(t_e) \cdot  RA \cdot N_{vd} \cdot \text{Black} \left( K_s', S_p, \sigma\sqrt{t_e}, \omega \right)
 \end{equation}
 

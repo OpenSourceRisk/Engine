@@ -65,6 +65,7 @@
 		<YieldCurve name="SEK-IN-USD">Yield/SEK/SEK-IN-USD</YieldCurve>
 		<YieldCurve name="USD-IN-EUR">Yield/USD/USD-IN-EUR</YieldCurve>
 		<YieldCurve name="USDBENCHMARK-USD-3M">Yield/USD/USDBENCHMARK-USD-3M</YieldCurve>
+		<YieldCurve name="FundingCurve">Yield/EUR/FundingCurve</YieldCurve>
 	</YieldCurves>
 	<DiscountingCurves id="default">
 		<DiscountingCurve currency="AUD">Yield/AUD/AUD-IN-EUR</DiscountingCurve>
@@ -367,6 +368,7 @@
                 <DefaultCurve name="RED:9J26DD|SNRFOR|USD|XR14">Default/USD/RED:9J26DD|SNRFOR|USD|XR14</DefaultCurve>
                 <DefaultCurve name="RED:GL6652|SNRFOR|USD|XR14">Default/USD/RED:GL6652|SNRFOR|USD|XR14</DefaultCurve>
                 <DefaultCurve name="RED:UZDD52|SNRFOR|USD|XR14">Default/USD/RED:UZDD52|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="FundingCurveAsCreditCurve">Default/EUR/FundingCurveAsCreditCurve</DefaultCurve>
 	</DefaultCurves>
 	<YYInflationCapFloorVolatilities id="default">
 		<YYInflationCapFloorVolatility name="AUCPI">InflationCapFloorVolatility/AUCPI/AUCPI_YY_CF_VOL</YYInflationCapFloorVolatility>
@@ -452,4 +454,3 @@
 		<Correlation name="USD-CMS-30Y&amp;USD-CMS-2Y">Correlation/USD-CMS-30Y&amp;USD-CMS-2Y</Correlation>
 	</Correlations>
 </TodaysMarket>
-

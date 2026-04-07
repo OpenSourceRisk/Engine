@@ -83,7 +83,7 @@ public:
     void fromXML(ore::data::XMLNode* node) override;
     ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
-    void populateFromBondReferenceData(const boost::shared_ptr<ore::data::ReferenceDataManager>& referenceData);
+    void populateFromBondReferenceData(const ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData);
 
 private:
     ore::data::BondData bondData_;
@@ -101,13 +101,13 @@ public:
     CallableBond(const Envelope& env, const CallableBondData& data)
         : Trade("CallableBond", env), originalData_(data), data_(data) {}
 
-    void build(const boost::shared_ptr<ore::data::EngineFactory>&) override;
+    void build(const ext::shared_ptr<ore::data::EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 
     //! Add underlying Bond names
     std::map<AssetClass, std::set<std::string>>
-    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+    underlyingIndices(const ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
     const CallableBondData& data() const { return data_; }
     const BondData& bondData() const { return data_.bondData(); }
@@ -136,8 +136,8 @@ struct CallableBondTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
 };
 
 struct CallableBondBuilder : public BondBuilder {
-    Result build(const boost::shared_ptr<EngineFactory>& engineFactory,
-                 const boost::shared_ptr<ReferenceDataManager>& referenceData,
+    Result build(const ext::shared_ptr<EngineFactory>& engineFactory,
+                 const ext::shared_ptr<ReferenceDataManager>& referenceData,
                  const std::string& securityId) const override;
 };
 

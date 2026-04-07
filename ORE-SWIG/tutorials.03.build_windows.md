@@ -48,11 +48,11 @@ its prerequisites, e.g:
     SET ZLIB_ROOT=C:\repos\vcpkg\packages\zlib_x64-windows (optional)
     SET ORE_DIR=C:\repos\ore
 
-# Build ORE and ORE-SWIG
+# Build ORE and ORESWIG
 
-There are two ways to build ORESWIG: using **cmake**, or using **setup.py**.
-With cmake, you can generate the wrapper.  With setup.py you can generate both
-the wrapper and the wheel. Regardless, ORE libraries must be built first.
+You can use **cmake** to build ORE and the ORESWIG wrapper.  You can use
+**setup.py** to build the ORESWIG wrapper and wheel.  If you use setup.py to
+build ORE-SWIG, you must first build ORE.
 
 ## Build ORE/ORESWIG via CMake
 
@@ -70,7 +70,7 @@ Make sure to add the location of the ORE-SWIG package to your PYTHONPATH, e.g:
 
     SET PYTHONPATH=%ORE_DIR%\build\ORE-SWIG;%ORE_DIR%\build\ORE-SWIG\Release
 
-## Build ORE/ORESWIG via setup.py
+## Build ORESWIG via setup.py
 
 If using the setup.py method, you would have to build ORE with cmake as
 demonstrated above, but, when configuring cmake, disable the SWIG build with:
@@ -84,6 +84,8 @@ we create a virtual environment into which we install the packages required by
 setup.py.
 
     cd %ORE_DIR%\ORE-SWIG
+    SET BOOST=C:\repos\boost\boost_1_72_0
+    SET BOOST_LIB64=C:\repos\boost\boost_1_72_0\lib64-msvc-14.2
     SET ORE_STATIC_RUNTIME=1
     SET ORE_USE_ZLIB=1
     SET PATH=%PATH%;C:\path\to\swig
@@ -116,9 +118,9 @@ not then `cube.dat` is generated as a flat (plain text) file.
 ## Build the wheel with setup.py
 
 Whether you used cmake or setup.py above to build the wrapper, you can use
-setup.py to build the wheel.  If you used setup.py then you already have the
-python virtual environment, and you can reuse it, otherwise you can create a
-new one as shown below.
+setup.py to build the wheel.  If you used setup.py before then you already have
+the python virtual environment, and you can reuse it, otherwise you can create
+a new one as shown below.
 
     cd %ORE_DIR%\ORE-SWIG
     SET BOOST=C:\repos\boost\boost_1_72_0

@@ -50,15 +50,18 @@ QuantLib::Date determineLatestRelevantDate(const std::vector<QuantLib::Leg>& leg
     return result;
 }
 
-QuantLib::Date determinePillarDate(const QuantLib::Pillar::Choice pillarChoice, const QuantLib::Date& maturityDate,
+QuantLib::Date determinePillarDate(const QuantLib::Date& presetPillarDate, const QuantLib::Pillar::Choice pillarChoice,
+                                   const QuantLib::Date& startDate, const QuantLib::Date& maturityDate,
                                    const QuantLib::Date& latestRelevantDate) {
     switch (pillarChoice) {
+    case QuantLib::Pillar::StartDate:
+        return startDate;
     case QuantLib::Pillar::MaturityDate:
         return maturityDate;
     case QuantLib::Pillar::LastRelevantDate:
         return latestRelevantDate;
     case QuantLib::Pillar::CustomDate:
-        QL_FAIL("determinePillarDate(): CustomDate is not supported currently.");
+        return presetPillarDate;
     default:
         QL_FAIL("determinePillarDate(): unknown pillar choice (code " << static_cast<int>(pillarChoice) << ")");
     }

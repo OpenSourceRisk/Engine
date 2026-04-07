@@ -56,7 +56,8 @@ public:
     //! Detailed constructor
     DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
                  map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves,
-                 map<string, QuantLib::ext::shared_ptr<DefaultCurve>>& defaultCurves,
+                 map<string, QuantLib::ext::shared_ptr<DefaultCurve>>& defaultCurves, 
+				 QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData,
                  const bool buildCalibrationInfo = false);
     //@}
     //! \name Inspectors
@@ -71,12 +72,13 @@ private:
     QuantLib::ext::shared_ptr<QuantExt::CreditCurve> curve_;
     QuantLib::ext::shared_ptr<DefaultCurveCalibrationInfo> calibrationInfo_;
     Real recoveryRate_;
-
+    
     //! Build a default curve from CDS spread quotes
     void buildCdsCurve(const std::string& curveID, const DefaultCurveConfig::Config& config, const QuantLib::Date& asof,
                        const DefaultCurveSpec& spec, const Loader& loader,
                        std::map<std::string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves,
-                       bool implyDefaultFromMarket);
+                       bool implyDefaultFromMarket,
+                       QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData);
 
     //! Build a default curve from hazard rate quotes
     void buildHazardRateCurve(const std::string& curveID, const DefaultCurveConfig::Config& config,
@@ -99,6 +101,11 @@ private:
     //! Build a null curve (null rate, null recovery)
     void buildNullCurve(const std::string& curveID, const DefaultCurveConfig::Config& config, const Date& asof,
                         const DefaultCurveSpec& spec);
+
+    //! Build a yield curve wrapped as a default curve
+    void buildYieldCurveAsDefaultCurve(const std::string& curveID, const DefaultCurveConfig::Config& config,
+                                       const Date& asof, const DefaultCurveSpec& spec,
+                                       std::map<std::string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves);
 };
 
 } // namespace data

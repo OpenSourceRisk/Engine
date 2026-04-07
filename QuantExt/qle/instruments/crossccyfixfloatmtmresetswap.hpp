@@ -56,7 +56,8 @@ public:
         const QuantLib::ext::shared_ptr<FxIndex>& fxIdx, bool resetsOnFloatLeg = true, bool receiveFixed = true,
         QuantLib::ext::optional<bool> floatIncludeSpread = QuantLib::ext::nullopt, QuantLib::ext::optional<Period> floatLookback = QuantLib::ext::nullopt,
         QuantLib::ext::optional<Size> floatFixingDays = QuantLib::ext::nullopt, QuantLib::ext::optional<Size> floatRateCutoff = QuantLib::ext::nullopt,
-        QuantLib::ext::optional<bool> floatIsAveraged = QuantLib::ext::nullopt);
+        QuantLib::ext::optional<bool> floatIsAveraged = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<bool> floatObservationShift = QuantLib::ext::nullopt);
 
     //@}
     //! \name Instrument interface
@@ -84,6 +85,7 @@ public:
     QuantLib::ext::optional<Size> floatFixingDays() const { return floatFixingDays_; }
     QuantLib::ext::optional<Size> floatRateCutoff() const { return floatRateCutoff_; }
     QuantLib::ext::optional<bool> floatIsAveraged() const { return floatIsAveraged_; }
+    QuantLib::ext::optional<bool> floatObservationShift() const { return floatObservationShift_; }
     //@}
 
     //! \name Additional interface
@@ -136,6 +138,7 @@ private:
     QuantLib::ext::optional<Size> floatFixingDays_;
     QuantLib::ext::optional<Size> floatRateCutoff_;
     QuantLib::ext::optional<bool> floatIsAveraged_;
+    QuantLib::ext::optional<bool> floatObservationShift_;
 
     mutable QuantLib::Spread fairSpread_;
     mutable QuantLib::Rate fairFixedRate_;

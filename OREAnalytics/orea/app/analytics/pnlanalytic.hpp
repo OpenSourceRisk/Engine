@@ -25,9 +25,28 @@
 #include <orea/app/analytics/pricinganalytic.hpp>
 #include <orea/app/analytics/scenarioanalytic.hpp>
 #include <orea/app/analytic.hpp>
+#include <orea/app/inputvariables.hpp>
 
 namespace ore {
 namespace analytics {
+
+class InputParameters;
+
+struct PnlVariables : public InputVariables {
+    void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
+    
+    QuantLib::Date pnlDate_;
+    QuantLib::Size horizonDays_ = 10;
+    bool horizonOverlappingPeriods_ = true;
+    QuantLib::Calendar horizonCalendar_;
+    
+    QuantLib::ext::shared_ptr<ore::data::Conventions> pnlConventions_;
+    QuantLib::ext::shared_ptr<CurveConfigurations> pnlCurveConfig_;
+    QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketParams_;
+    QuantLib::ext::shared_ptr<ore::data::Portfolio> pnlPortfolio_;
+
+    vector<RiskFactorKey::KeyType> pnlDateAdjustedRiskFactors_;
+};
 
 class PnlAnalyticImpl : public Analytic::Impl {
 public:
@@ -36,11 +55,8 @@ public:
     static constexpr const char* sensiLookupKey = "SENSI";
 
     PnlAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-        : Analytic::Impl(inputs), useSpreadedTermStructures_(true) {
+        : Analytic::Impl(inputs, QuantLib::ext::make_shared<PnlVariables>()), useSpreadedTermStructures_(true) {
         setLabel(LABEL);
-        mporDate_ = inputs_->mporDate();
-        LOG("ASOF date " << io::iso_date(inputs_->asof()));
-        LOG("MPOR date " << io::iso_date(mporDate_));
     }
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                      const std::set<std::string>& runTypes = {}) override;
@@ -48,8 +64,14 @@ public:
     void setUpConfigurations() override;
 
     bool useSpreadedTermStructures() const { return useSpreadedTermStructures_; }
-    const QuantLib::Date& mporDate() const { return mporDate_; }
-    std::vector<QuantLib::Date> additionalMarketDates() const override { return {mporDate_}; }
+    const QuantLib::Date& mporDate() const {
+        auto pnlVars = ext::dynamic_pointer_cast<PnlVariables>(inputVariables_);
+        return pnlVars->pnlDate_;
+    }
+
+    std::vector<QuantLib::Date> additionalMarketDates() const override {       
+        return {mporDate()};
+    }
     
     const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& t0Scenario() const { return t0Scenario_; }
     const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& t1Scenario() const { return t1Scenario_; }
@@ -59,7 +81,6 @@ public:
 
 private:
     bool useSpreadedTermStructures_ = true;
-    QuantLib::Date mporDate_;
     QuantLib::ext::shared_ptr<ore::analytics::Scenario> t0Scenario_, t1Scenario_;
     QuantLib::ext::shared_ptr<ScenarioSimMarket> t0SimMarket_;
 };

@@ -25,7 +25,9 @@
 #include <ored/portfolio/builders/capflooredovernightindexedcouponleg.hpp>
 #include <ored/portfolio/builders/capflooredyoyleg.hpp>
 #include <ored/portfolio/builders/cms.hpp>
+#include <ored/portfolio/builders/rangeaccrualleg.hpp>
 #include <ored/portfolio/builders/cmsspread.hpp>
+#include <ored/portfolio/builders/equity.hpp>
 #include <ored/portfolio/forwardbond.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/makenonstandardlegs.hpp>
@@ -76,6 +78,7 @@
 #include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
+#include <ql/cashflows/rangeaccrual.hpp>
 #include <ql/errors.hpp>
 #include <ql/experimental/coupons/digitalcmsspreadcoupon.hpp>
 #include <ql/experimental/coupons/strippedcapflooredcoupon.hpp>
@@ -114,7 +117,8 @@ const boost::bimap<string, LegType> legTypeMap =
     ("CommodityFloating", LegType::CommodityFloating)
     ("CommodityFixed", LegType::CommodityFixed)
     ("EquityMargin", LegType::EquityMargin)
-    ("YY", LegType::YY);
+    ("YY", LegType::YY)
+    ("RangeAccrual", LegType::RangeAccrual);
 // clang-format on
 
 LegType parseLegType(const std::string& legType)  {
@@ -134,7 +138,7 @@ std::ostream& operator<<(std::ostream& out, const LegType& legType) {
 void CashflowData::fromXML(XMLNode* node) {
     // allow for empty Cashflow legs without any payments
     if(node == nullptr)
-	return;
+        return;
     XMLUtils::checkNode(node, legNodeName());
     amounts_ =
         XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Cashflow", "Amount", "date", dates_, &parseReal, false);
@@ -267,6 +271,8 @@ void FloatingLegData::fromXML(XMLNode* node) {
         backStubRoundingPrecision_ = XMLUtils::getChildValue(backStubNode, "RoundingPrecision");
     }
     stubUseOriginalCurve_ = XMLUtils::getChildValueAsBool(node, "StubUseOriginalCurve", false, false);
+    if (XMLNode* obsShiftNode = XMLUtils::getChildNode(node, "ObservationShift"))
+        observationShift_ = parseBool(XMLUtils::getNodeValue(obsShiftNode));
 }
 
 XMLNode* FloatingLegData::toXML(XMLDocument& doc) const {
@@ -329,6 +335,33 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) const {
         (!backStubShortIndex_.empty() && !backStubLongIndex_.empty())) {
         XMLUtils::addChild(doc, node, "StubUseOriginalCurve", stubUseOriginalCurve_);
     }
+    if (observationShift_)
+        XMLUtils::addChild(doc, node, "ObservationShift", *observationShift_);
+    return node;
+}
+
+void RangeAccrualLegData::fromXML(XMLNode* node) {
+    XMLUtils::checkNode(node, legNodeName());
+
+    XMLNode* underlyingNode = XMLUtils::getChildNode(node, "FloatingLegData");
+    underlying_ = QuantLib::ext::make_shared<FloatingLegData>();
+    underlying_->fromXML(underlyingNode);
+    indices_ = underlying_->indices();
+
+    coupon_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Coupons", "Coupon", "startDate", couponDates_, &parseReal,
+                                                             false);
+    upperBound_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "UpperBounds", "UpperBound", "startDate", upperBoundDates_, &parseReal,
+                                                             true);
+    lowerBound_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "LowerBounds", "LowerBound", "startDate", lowerBoundDates_, &parseReal,
+                                                             true);
+}
+
+XMLNode* RangeAccrualLegData::toXML(XMLDocument& doc) const {
+    XMLNode* node = doc.allocNode(legNodeName());
+    XMLUtils::appendNode(node, underlying_->toXML(doc));
+    XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Coupons", "Coupon", coupon_, "startDate", couponDates_);
+    XMLUtils::addChildrenWithOptionalAttributes(doc, node, "UpperBounds", "UpperBound", upperBound_, "startDate", upperBoundDates_);
+    XMLUtils::addChildrenWithOptionalAttributes(doc, node, "LowerBounds", "LowerBound", lowerBound_, "startDate", lowerBoundDates_);
     return node;
 }
 
@@ -384,6 +417,18 @@ void CPILegData::fromXML(XMLNode* node) {
         nakedOption_ = XMLUtils::getChildValueAsBool(node, "NakedOption", false);
     else
         nakedOption_ = false;
+
+    string BaseCPIBaseStr = XMLUtils::getChildValue(node, "BaseCPIBase", false, "Current");
+    if (BaseCPIBaseStr == "StartDate") {
+        baseCPIBase_ = BaseCPIBase::StartDate;
+        QL_REQUIRE(!startDate_.empty(),
+                   "CPILegData: StartDate is mandatory when BaseCPIBase is 'StartDate'");
+    } else if (BaseCPIBaseStr == "Current") {
+        baseCPIBase_ = BaseCPIBase::Current;
+    } else {
+        QL_FAIL("CPILegData: unknown BaseCPIBase '" << BaseCPIBaseStr
+                << "'. Valid values are 'Current' and 'StartDate'.");
+    }
 }
 
 XMLNode* CPILegData::toXML(XMLDocument& doc) const {
@@ -409,6 +454,8 @@ XMLNode* CPILegData::toXML(XMLDocument& doc) const {
     if (finalFlowFloor_ != Null<Real>())
         XMLUtils::addChild(doc, node, "FinalFlowFloor", finalFlowFloor_);
     XMLUtils::addChild(doc, node, "NakedOption", nakedOption_);
+    if (baseCPIBase_ == BaseCPIBase::StartDate)
+        XMLUtils::addChild(doc, node, "BaseCPIBase", "StartDate");
     return node;
 }
 
@@ -1723,7 +1770,8 @@ Leg makeOISLeg(const LegData& data, const QuantLib::ext::shared_ptr<OvernightInd
                 .withAverageONIndexedCouponPricer(couponPricer)
                 .withCapFlooredAverageONIndexedCouponPricer(cfCouponPricer)
                 .withTelescopicValueDates(floatData->telescopicValueDates())
-                .withPaymentDates(paymentDates);
+                .withPaymentDates(paymentDates)
+                .withObservationShift(floatData->observationShift() ? *floatData->observationShift() : true);
         return leg;
 
     } else {
@@ -1771,7 +1819,8 @@ Leg makeOISLeg(const LegData& data, const QuantLib::ext::shared_ptr<OvernightInd
                       .withOvernightIndexedCouponPricer(couponPricer)
                       .withCapFlooredOvernightIndexedCouponPricer(cfCouponPricer)
                       .withTelescopicValueDates(floatData->telescopicValueDates())
-                      .withPaymentDates(paymentDates);
+                      .withPaymentDates(paymentDates)
+                      .withObservationShift(floatData->observationShift() ? *floatData->observationShift() : true);
 
         // If the overnight index is BRL CDI, we need a special coupon pricer
         QuantLib::ext::shared_ptr<BRLCdi> brlCdiIndex = QuantLib::ext::dynamic_pointer_cast<BRLCdi>(index);
@@ -2017,11 +2066,25 @@ Leg makeCPILeg(const LegData& data, const QuantLib::ext::shared_ptr<ZeroInflatio
     applyAmortization(notionals, data, schedule, false);
     PaymentLag paymentLag = parsePaymentLag(data.paymentLag());
 
+    Real effectiveBaseCPI = cpiLegData->baseCPI();
+    if (cpiLegData->baseCPIBase() == CPILegData::BaseCPIBase::StartDate) {
+        QL_REQUIRE(!cpiLegData->startDate().empty(),
+                   "makeCPILeg: StartDate is required when BaseCPIBase is 'StartDate'");
+        const Date startDate = parseDate(cpiLegData->startDate());
+        const Date today = Settings::instance().evaluationDate();
+        const Real factor = index->rebasingMultiplier(startDate, today);
+        DLOG("CPILeg: converting pre-rebase BaseCPI " << effectiveBaseCPI
+             << " using rebase multiplier " << factor
+             << " (startDate=" << io::iso_date(startDate)
+             << ", evalDate=" << io::iso_date(today) << ")");
+        effectiveBaseCPI *= factor;
+    }
+
     QuantExt::CPILeg cpiLeg =
         QuantExt::CPILeg(schedule, index,
                          engineFactory->market()->discountCurve(data.currency(),
                                                                 engineFactory->configuration(MarketContext::pricing)),
-                         cpiLegData->baseCPI(), observationLag)
+                         effectiveBaseCPI, observationLag)
             .withNotionals(notionals)
             .withPaymentDayCounter(dc)
             .withPaymentAdjustment(bdc)
@@ -2312,6 +2375,118 @@ Leg makeYoYLeg(const LegData& data, const QuantLib::ext::shared_ptr<InflationInd
     return leg;
 }
 
+Leg makeRangeAccrualLeg(const LegData& data, const QuantLib::ext::shared_ptr<IborIndex>& index,
+                       const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                       const QuantLib::Date& openEndDateReplacement, const bool attachPricer) {
+    auto rangeAccrualData = QuantLib::ext::dynamic_pointer_cast<RangeAccrualLegData>(data.concreteLegData());
+    QL_REQUIRE(rangeAccrualData, "Wrong LegType, expected RangeAccrual, got " << data.legType());
+    auto floatData = rangeAccrualData->underlying();
+    QL_REQUIRE(floatData, "makeRangeAccrualLeg: no underlying FloatingLegData");
+
+    // We allow only an IborIndex - could be extended in the future
+    auto iborIndex = QuantLib::ext::dynamic_pointer_cast<IborIndex>(index);
+    QL_REQUIRE(iborIndex, "makeRangeAccrualLeg: expected IborIndex for " << floatData->index());
+
+    Schedule schedule = makeSchedule(data.schedule(), openEndDateReplacement);
+
+    vector<double> notionals =
+        buildScheduledVectorNormalised(data.notionals(), data.notionalDates(), schedule, 0.0);
+
+    applyAmortization(notionals, data, schedule, true);
+
+    DayCounter dc = parseDayCounter(data.dayCounter());
+    BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
+
+    Size fixingDays = floatData->fixingDays() == Null<Size>() ? iborIndex->fixingDays() : floatData->fixingDays();
+
+    vector<double> gearings =
+        buildScheduledVectorNormalised(floatData->gearings(), floatData->gearingDates(), schedule, 1.0);
+    vector<double> spreads =
+        buildScheduledVectorNormalised(floatData->spreads(), floatData->spreadDates(), schedule, 0.0);
+    vector<double> coupon =
+        buildScheduledVectorNormalised(rangeAccrualData->coupon(), rangeAccrualData->couponDates(), schedule, 0.0);
+    vector<double> lowerBound =
+        buildScheduledVectorNormalised(rangeAccrualData->lowerBound(), rangeAccrualData->lowerBoundDates(), schedule, 0.0);
+    vector<double> upperBound =
+        buildScheduledVectorNormalised(rangeAccrualData->upperBound(), rangeAccrualData->upperBoundDates(), schedule, 0.0);
+
+    // Determine fixed-rate vs floating mode.
+    // Fixed-rate mode: the Coupons node provides a fixed rate x% and the payout is
+    //     Amount = Notional * x% * (n/N) * DayCountFraction
+    // Floating mode (no Coupons or Coupon=0): the payout is
+    //     Amount = Notional * (gearing * Libor + spread) * (n/N) * DayCountFraction
+    //     (note: in the QuantLib pricer the spread addend is actually unconditional)
+    bool fixedRateMode = false;
+    for (const auto& c : coupon) {
+        if (c != 0.0) { fixedRateMode = true; break; }
+    }
+
+    // In both modes gearing must be non-zero so the QuantLib leg builder creates
+    // RangeAccrualFloatersCoupon objects (gearing == 0 would create FixedRateCoupons
+    // with no range-accrual logic).
+    Leg leg = QuantLib::RangeAccrualLeg(schedule, iborIndex)
+                      .withNotionals(notionals)
+                      .withPaymentDayCounter(dc)
+                      .withPaymentAdjustment(bdc)
+                      .withFixingDays(static_cast<Natural>(fixingDays))
+                      .withSpreads(fixedRateMode ? std::vector<Spread>(1, 0.0) : spreads)
+                      .withGearings(fixedRateMode ? std::vector<Real>(1, 1.0) : gearings)
+                      .withLowerTriggers(lowerBound)
+                      .withUpperTriggers(upperBound)
+                      .withObservationTenor(1 * Days)
+                      .withObservationConvention(bdc);
+
+    // Attach per-coupon range accrual pricers with correct expiry/payment smile sections.
+    // Only attach pricers to live coupons (payment date > today). Past coupons are fully
+    // determined by historical fixings and don't need analytical pricing.
+    if (attachPricer) {
+        auto builder = engineFactory->builder("IborRangeAccrualLeg");
+        QL_REQUIRE(builder, "No builder found for IborRangeAccrualLeg");
+        std::string indexName = IndexNameTranslator::instance().oreName(iborIndex->name());
+        Date today = Settings::instance().evaluationDate();
+
+        // Dispatch to the appropriate builder type
+        auto raBuilder = QuantLib::ext::dynamic_pointer_cast<RangeAccrualLegEngineBuilder>(builder);
+        auto csBuilder = QuantLib::ext::dynamic_pointer_cast<RangeAccrualLegCallSpreadEngineBuilder>(builder);
+        QL_REQUIRE(raBuilder || csBuilder,
+                   "Expected RangeAccrualLegEngineBuilder or RangeAccrualLegCallSpreadEngineBuilder");
+
+        // For the call-spread builder, the pricer is independent of the coupon dates
+        // so we build it once and reuse it for all coupons.
+        QuantLib::ext::shared_ptr<FloatingRateCouponPricer> csPricer;
+        if (csBuilder)
+            csPricer = csBuilder->engine(indexName);
+
+        Size couponIdx = 0;
+        for (auto& cf : leg) {
+            auto raCoupon = QuantLib::ext::dynamic_pointer_cast<RangeAccrualFloatersCoupon>(cf);
+            if (raCoupon) {
+                if (raCoupon->date() > today) {
+                    QuantLib::ext::shared_ptr<FloatingRateCouponPricer> pricer;
+                    if (raBuilder)
+                        pricer = raBuilder->engine(
+                            indexName, raCoupon->accrualStartDate(), raCoupon->accrualEndDate());
+                    else
+                        pricer = csPricer;
+
+                    if (fixedRateMode) {
+                        // Set the per-coupon fixed rate on the pricer so it computes
+                        // fixedRate * (n/N) instead of gearing * Libor * (n/N) + spread
+                        auto raPricer =
+                            QuantLib::ext::dynamic_pointer_cast<RangeAccrualPricer>(pricer);
+                        if (raPricer)
+                            raPricer->setFixedRate(coupon[std::min(couponIdx, coupon.size() - 1)]);
+                    }
+                    raCoupon->setPricer(pricer);
+                }
+                ++couponIdx;
+            }
+        }
+    }
+
+    return leg;
+}
+
 Leg makeCMSLeg(const LegData& data, const QuantLib::ext::shared_ptr<QuantLib::SwapIndex>& swapIndex,
                const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer,
                const QuantLib::Date& openEndDateReplacement,
@@ -2454,11 +2629,11 @@ Leg makeCMBLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactor
     bondData.populateFromBondReferenceData(engineFactory->referenceData());
     DLOG("Bond data for security id " << securityFamily << " loaded");
     QL_REQUIRE(bondData.coupons().size() == 1,
-	       "multiple reference bond legs not covered by the CMB leg");
+           "multiple reference bond legs not covered by the CMB leg");
     QL_REQUIRE(bondData.coupons().front().schedule().rules().size() == 1,
-	       "multiple bond schedule rules not covered by the CMB leg");
+           "multiple bond schedule rules not covered by the CMB leg");
     QL_REQUIRE(bondData.coupons().front().schedule().dates().size() == 0,
-	       "dates based bond schedules not covered by the CMB leg");
+           "dates based bond schedules not covered by the CMB leg");
 
     // Get bond yield conventions
     auto ret = InstrumentConventions::instance().conventions()->get(securityFamily, Convention::Type::BondYield);
@@ -2466,13 +2641,13 @@ Leg makeCMBLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactor
     if (ret.first)
         conv = QuantLib::ext::dynamic_pointer_cast<BondYieldConvention>(ret.second);
     else {
-	conv = QuantLib::ext::make_shared<BondYieldConvention>();
-        ALOG("BondYield conventions not found for security " << securityFamily << ", falling back on defaults:"
-	     << " compounding=" << conv->compoundingName()
-	     << ", priceType=" << conv->priceTypeName()
-	     << ", accuracy=" << conv->accuracy() 
-	     << ", maxEvaluations=" << conv->maxEvaluations() 
-	     << ", guess=" << conv->guess());
+        conv = QuantLib::ext::make_shared<BondYieldConvention>();
+            ALOG("BondYield conventions not found for security " << securityFamily << ", falling back on defaults:"
+             << " compounding=" << conv->compoundingName()
+             << ", priceType=" << conv->priceTypeName()
+             << ", accuracy=" << conv->accuracy() 
+             << ", maxEvaluations=" << conv->maxEvaluations() 
+             << ", guess=" << conv->guess());
     } 
 
     Schedule bondSchedule = makeSchedule(bondData.coupons().front().schedule());
@@ -2493,22 +2668,22 @@ Leg makeCMBLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactor
         // Construct bond with start date = accrual start date and maturity = accrual start date + term
         // or start = accrual end if in arrears. Adjusted for fixing lag, ignoring bond settlement lags for now.
         Date refDate = cmbData->isInArrears() ? schedule[i+1] : schedule[i];
-	Date start = calendar.advance(refDate, -fixingDays, Days, Preceding); 
-	std::string startDate = to_string(start);
-	std::string endDate = to_string(start + underlyingPeriod);
-	bondData.populateFromBondReferenceData(engineFactory->referenceData(), startDate, endDate);
-	Bond bondTrade(Envelope(), bondData);
-	bondTrade.build(engineFactory);
-	auto bond = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(bondTrade.instrument()->qlInstrument());
-	QuantLib::ext::shared_ptr<QuantExt::ConstantMaturityBondIndex> bondIndex
-	    = QuantLib::ext::make_shared<QuantExt::ConstantMaturityBondIndex>(securityFamily, underlyingPeriod,
-	        // from bond reference data
-		bondSettlementDays, bondCurrency, bondCalendar, bondDayCounter, bondConvention, bondEndOfMonth,
-		// underlying forward starting bond
-		bond,
-		// yield calculation parameters from conventions, except frequency which is from bond reference data
-		conv->compounding(), bondFrequency, conv->accuracy(), conv->maxEvaluations(), conv->guess(), conv->priceType());
-	bondIndices.push_back(bondIndex);
+        Date start = calendar.advance(refDate, -fixingDays, Days, Preceding); 
+        std::string startDate = to_string(start);
+        std::string endDate = to_string(start + underlyingPeriod);
+        bondData.populateFromBondReferenceData(engineFactory->referenceData(), startDate, endDate);
+        Bond bondTrade(Envelope(), bondData);
+        bondTrade.build(engineFactory);
+        auto bond = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(bondTrade.instrument()->qlInstrument());
+        QuantLib::ext::shared_ptr<QuantExt::ConstantMaturityBondIndex> bondIndex
+            = QuantLib::ext::make_shared<QuantExt::ConstantMaturityBondIndex>(securityFamily, underlyingPeriod,
+                // from bond reference data
+            bondSettlementDays, bondCurrency, bondCalendar, bondDayCounter, bondConvention, bondEndOfMonth,
+            // underlying forward starting bond
+            bond,
+            // yield calculation parameters from conventions, except frequency which is from bond reference data
+            conv->compounding(), bondFrequency, conv->accuracy(), conv->maxEvaluations(), conv->guess(), conv->priceType());
+        bondIndices.push_back(bondIndex);
     }
     
     // Create a sequence of floating rate coupons linked to those indexes and concatenate them to a leg
@@ -2519,8 +2694,8 @@ Leg makeCMBLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactor
 
     // FIXME: Move the following into CmbLeg in cmbcoupon.xpp
     QL_REQUIRE(bondIndices.size() == schedule.size() - 1,
-	       "vector size mismatch between schedule (" << schedule.size() << ") "
-	       << "and bond indices (" << bondIndices.size() << ")");
+           "vector size mismatch between schedule (" << schedule.size() << ") "
+           << "and bond indices (" << bondIndices.size() << ")");
     Leg leg;
     for (Size i = 0; i < schedule.size() - 1; i++) {
         Date paymentDate;
@@ -2530,26 +2705,26 @@ Leg makeCMBLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactor
             paymentDate = calendar.adjust(schedule[i + 1], convention);
         }
         
-	DLOG("Coupon " << i << ": "
-	     << io::iso_date(paymentDate) << " "
-	     << notionals[i] << " "
-	     << io::iso_date(schedule[i]) << " "
-	     << io::iso_date(schedule[i+1]) << " "
-	     << cmbData->fixingDays() << " "
-	     << gearings[i] << " "
-	     << spreads[i] << " "
-	     << dayCounter.name());
-	QuantLib::ext::shared_ptr<CmbCoupon> coupon
-	    = QuantLib::ext::make_shared<CmbCoupon>(paymentDate, notionals[i], schedule[i], schedule[i + 1],
-					    cmbData->fixingDays(), bondIndices[i], gearings[i], spreads[i], Date(), Date(),
-					    dayCounter, cmbData->isInArrears());	
+        DLOG("Coupon " << i << ": "
+             << io::iso_date(paymentDate) << " "
+             << notionals[i] << " "
+             << io::iso_date(schedule[i]) << " "
+             << io::iso_date(schedule[i+1]) << " "
+             << cmbData->fixingDays() << " "
+             << gearings[i] << " "
+             << spreads[i] << " "
+             << dayCounter.name());
+        QuantLib::ext::shared_ptr<CmbCoupon> coupon
+            = QuantLib::ext::make_shared<CmbCoupon>(paymentDate, notionals[i], schedule[i], schedule[i + 1],
+                            cmbData->fixingDays(), bondIndices[i], gearings[i], spreads[i], Date(), Date(),
+                            dayCounter, cmbData->isInArrears());    
     
-    if (!attachPricer)
-        return leg;
+        if (!attachPricer)
+            return leg;
 
-	auto pricer = QuantLib::ext::make_shared<CmbCouponPricer>();
-	coupon->setPricer(pricer);
-	leg.push_back(coupon);
+        auto pricer = QuantLib::ext::make_shared<CmbCouponPricer>();
+        coupon->setPricer(pricer);
+        leg.push_back(coupon);
     }
     
     return leg;
@@ -2851,8 +3026,12 @@ Leg makeDigitalCMSSpreadLeg(
 }
 
 Leg makeEquityLeg(const LegData& data, const QuantLib::ext::shared_ptr<EquityIndex2>& equityCurve,
-                  const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex, const QuantLib::Date& openEndDateReplacement) {
-    QuantLib::ext::shared_ptr<EquityLegData> eqLegData = QuantLib::ext::dynamic_pointer_cast<EquityLegData>(data.concreteLegData());
+                  const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                  const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex, const bool attachPricer,
+                  const QuantLib::Date& openEndDateReplacement,
+                  std::set<std::tuple<std::set<std::string>, std::string, std::string>>* productModelEngines) {
+    QuantLib::ext::shared_ptr<EquityLegData> eqLegData =
+        QuantLib::ext::dynamic_pointer_cast<EquityLegData>(data.concreteLegData());
     QL_REQUIRE(eqLegData, "Wrong LegType, expected Equity, got " << data.legType());
 
     DayCounter dc;
@@ -2866,10 +3045,10 @@ Leg makeEquityLeg(const LegData& data, const QuantLib::ext::shared_ptr<EquityInd
     Real initialPrice = eqLegData->initialPrice();
     bool initialPriceIsInTargetCcy = false;
 
+    Currency dataCurrency = parseCurrencyWithMinors(data.currency());
     if (!eqLegData->initialPriceCurrency().empty()) {
         // parse currencies to handle minor currencies
         Currency initialPriceCurrency = parseCurrencyWithMinors(eqLegData->initialPriceCurrency());
-        Currency dataCurrency = parseCurrencyWithMinors(data.currency());
         Currency eqCurrency;
         // set equity currency
         if (!eqLegData->eqCurrency().empty())
@@ -2943,6 +3122,31 @@ Leg makeEquityLeg(const LegData& data, const QuantLib::ext::shared_ptr<EquityInd
                   .withPaymentDates(paymentDates);
 
     QL_REQUIRE(leg.size() > 0, "Empty Equity Leg");
+
+    if (attachPricer) {
+        // Get a coupon pricer for the leg
+        QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("EquityLeg");
+        QL_REQUIRE(builder, "No Equity builder found for EquityLeg");
+        LOG("Before cast");
+        QuantLib::ext::shared_ptr<EquityCouponPricerBuilderBase> equityBuilder =
+            QuantLib::ext::dynamic_pointer_cast<EquityCouponPricerBuilderBase>(builder);
+        LOG("After cast");
+        auto equityPricer = QuantLib::ext::dynamic_pointer_cast<EquityCouponPricer>(
+            equityBuilder->engine(dataCurrency, equityCurve->name(), eqLegData->fxIndex()));
+        LOG("After cast2");
+        QL_REQUIRE(equityPricer, "Expected Equity Pricer");
+
+        if (productModelEngines)
+            productModelEngines->insert(std::make_tuple(builder->tradeTypes(), builder->model(), builder->engine()));
+
+        // Loop over the coupons in the leg and set pricer
+        for (auto& cf : leg) {
+            auto eqCoupon = QuantLib::ext::dynamic_pointer_cast<QuantExt::EquityCoupon>(cf);
+            if (eqCoupon) {
+                eqCoupon->setPricer(equityPricer);
+            }
+        }
+    }
 
     return leg;
 }

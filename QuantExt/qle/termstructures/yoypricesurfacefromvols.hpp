@@ -27,6 +27,7 @@ public:
     QuantLib::ext::shared_ptr<YoYCapFloorTermPriceSurface>
     operator()(const QuantLib::ext::shared_ptr<QuantLib::CapFloorTermVolSurface>& volSurface,
                const QuantLib::ext::shared_ptr<YoYInflationIndex>& index,
+               QuantLib::CPI::InterpolationType interpolation,
                const QuantLib::Handle<QuantLib::YieldTermStructure>& nominalTs, QuantLib::VolatilityType type,
                QuantLib::Real displacement);
 };

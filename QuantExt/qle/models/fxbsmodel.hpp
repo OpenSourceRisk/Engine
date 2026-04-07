@@ -39,9 +39,13 @@ public:
     Handle<Quote> fxSpotToday() const override { return parametrization_->fxSpotToday(); }
     Size n() const override { return 1; }
     Size m() const override { return 1; }
+    Size n_aux() const override { return 0; }
+    Size m_aux() const override { return 0; }
 
-    Array eulerStep(const Time t0, const Array& x0, const Time dt, const Array& dw, const Real r_dom,
-                    const Real r_for) const override;
+    double volatility(const Time t, const Array& s) const override;
+
+    Array marginalStep(const Time t0, const Array& x0, const Time dt, const Array& dw, const Real r_dom,
+                       const Real r_for, const std::optional<Discretization> disc = std::nullopt) const override;
 
 private:
     QuantLib::ext::shared_ptr<FxBsParametrization> parametrization_;
@@ -52,8 +56,10 @@ inline FxBsModel::FxBsModel(const QuantLib::ext::shared_ptr<FxBsParametrization>
     QL_REQUIRE(parametrization != nullptr, "FxBsModel: parametrization is null");
 }
 
-inline Array FxBsModel::eulerStep(const Time t0, const Array& x0, const Time dt, const Array& dw, const Real r_dom,
-                                  const Real r_for) const {
+inline double FxBsModel::volatility(const Time t, const Array&) const { return parametrization_->sigma(t); }
+
+inline Array FxBsModel::marginalStep(const Time t0, const Array& x0, const Time dt, const Array& dw, const Real r_dom,
+                                     const Real r_for, const std::optional<Discretization> disc) const {
     Real sigma = parametrization_->sigma(t0);
     return x0 + (r_dom - r_for - 0.5 * sigma * sigma) * dt + sigma * std::sqrt(dt) * dw[0];
 }

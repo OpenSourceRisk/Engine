@@ -161,7 +161,7 @@ StructuredSecurityId::StructuredSecurityId(const std::string& securityId, const 
 }
 
 std::pair<QuantLib::Date, QuantLib::Date>
-BondFutureUtils::deduceDates(const boost::shared_ptr<BondFutureReferenceDatum>& refData) {
+BondFutureUtils::deduceDates(const ext::shared_ptr<BondFutureReferenceDatum>& refData) {
     Date expiry, settlement;
     if (!refData->bondFutureData().lastTrading.empty())
         expiry = parseDate(refData->bondFutureData().lastTrading);

@@ -37,9 +37,9 @@
 #include <ored/configuration/yieldcurveconfig.hpp>
 #include <ored/utilities/csvfilereader.hpp>
 #include <ored/utilities/parsers.hpp>
-#include <oret/datapaths.hpp>
-#include <oret/fileutilities.hpp>
-#include <oret/toplevelfixture.hpp>
+#include <oret/util/datapaths.hpp>
+#include <oret/util/fileutilities.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 
 #include <ql/time/calendar.hpp>
 #include <ql/time/daycounter.hpp>
@@ -51,7 +51,7 @@ using namespace std;
 using namespace ore;
 using namespace ore::data;
 
-using ore::test::TopLevelFixture;
+using ore::data::TopLevelFixture;
 using std::ostream;
 
 namespace bdata = boost::unit_test::data;
@@ -224,7 +224,6 @@ BOOST_AUTO_TEST_CASE(testDiscountRatioSegmentFromXml) {
 
     // Perform the checks
     BOOST_CHECK(seg.type() == YieldCurveSegment::Type::DiscountRatio);
-    BOOST_CHECK_EQUAL(seg.typeID(), "Discount Ratio");
     BOOST_CHECK_EQUAL(seg.conventionsID(), "");
     BOOST_CHECK(seg.quotes().empty());
 
@@ -249,7 +248,6 @@ BOOST_AUTO_TEST_CASE(testDiscountRatioSegmentToXml) {
     DiscountRatioYieldCurveSegment newSeg;
     BOOST_CHECK_NO_THROW(newSeg.fromXML(doc.getFirstNode("")));
     BOOST_CHECK(newSeg.type() == YieldCurveSegment::Type::DiscountRatio);
-    BOOST_CHECK_EQUAL(newSeg.typeID(), "Discount Ratio");
     BOOST_CHECK_EQUAL(newSeg.conventionsID(), "");
     BOOST_CHECK(newSeg.quotes().empty());
 

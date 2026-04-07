@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/app/analytics/analyticsfactory.hpp
+/*! \file orea/app/analytics/analyticfactory.hpp
     \brief Analytics Factory
     \ingroup analytics
 */
@@ -24,19 +24,19 @@
 #pragma once
 
 #include <map>
+#include <set>
 #include <ql/patterns/singleton.hpp>
 
 #include <boost/make_shared.hpp>
 #include <boost/thread/lock_types.hpp>
 #include <boost/thread/shared_mutex.hpp>
 
-#include <orea/app/inputparameters.hpp>
-
 namespace ore {
 namespace analytics {
 
 class Analytic;
 class AnalyticsManager;
+class InputParameters;
 
 //! AnalyticBuilder base class
 /*! All derived classes have to be stateless. It should not be necessary to derive classes
@@ -48,8 +48,8 @@ class AbstractAnalyticBuilder {
 public:
     virtual ~AbstractAnalyticBuilder() {}
     virtual QuantLib::ext::shared_ptr<Analytic>
-    build(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs,
-          const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager) const = 0;
+    build(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+          const QuantLib::ext::weak_ptr<AnalyticsManager>& analyticsManager) const = 0;
 };
 
 //! Template AnalyticBuilder class
@@ -59,8 +59,8 @@ public:
 template <class T> class AnalyticBuilder : public AbstractAnalyticBuilder {
 public:
     virtual QuantLib::ext::shared_ptr<Analytic> build(
-        const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs,
-        const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager) const override {
+        const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+        const QuantLib::ext::weak_ptr<AnalyticsManager>& analyticsManager) const override {
         auto a = QuantLib::ext::make_shared<T>(inputs, analyticsManager);
         a->initialise();
         return a;
@@ -87,8 +87,8 @@ public:
 
     //! Build, throws for unknown className
     std::pair<std::string, QuantLib::ext::shared_ptr<Analytic>>
-    build(const std::string& subAnalytic, const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs, 
-        const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager,
+    build(const std::string& subAnalytic, const QuantLib::ext::shared_ptr<InputParameters>& inputs, 
+        const QuantLib::ext::weak_ptr<AnalyticsManager>& analyticsManager,
         const bool useCache = false) const;
 
  private:

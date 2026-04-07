@@ -39,8 +39,6 @@ using namespace std;
 class FlatDynamicInitialMarginCalculator : public DynamicInitialMarginCalculator {
 public:
     FlatDynamicInitialMarginCalculator(
-        //! Global input parameters
-        const QuantLib::ext::shared_ptr<InputParameters>& inputs,
         //! Driving portfolio consistent with the cube below
         const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
         //! NPV cube resulting from the Monte Carlo simulation loop
@@ -48,12 +46,17 @@ public:
         //! Interpretation of the cube, regular NPV, MPoR grid etc
         const QuantLib::ext::shared_ptr<CubeInterpretation>& cubeInterpretation,
          //! Additional output of the MC simulation loop with numeraires, index fixings, FX spots etc
-        const QuantLib::ext::shared_ptr<AggregationScenarioData>& scenarioData);
+        const QuantLib::ext::shared_ptr<AggregationScenarioData>& scenarioData,
+        //! structure with collateral balances
+        const QuantLib::ext::shared_ptr<ore::data::CollateralBalances>& collateralBalances = nullptr);
 
     const map<string, Real>& unscaledCurrentDIM() const override { return currentIM_; }
     void build() override;
     void exportDimEvolution(ore::data::Report& dimEvolutionReport) const override;
     const vector<Real>& dimResults(const std::string& nettingSet) const;
+
+private:
+    QuantLib::ext::shared_ptr<ore::data::CollateralBalances> collateralBalances_;
 };
 
 } // namespace analytics

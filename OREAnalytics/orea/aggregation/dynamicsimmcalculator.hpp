@@ -36,8 +36,6 @@ namespace analytics {
 class DynamicSimmCalculator : public ore::analytics::DynamicInitialMarginCalculator {
 public:
     DynamicSimmCalculator(
-        //! Global input parameters,
-        const QuantLib::ext::shared_ptr<InputParameters>& inputs,
         //! Driving portfolio consistent with the cube below
         const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
         //! NPV cube resulting from the Monte Carlo simulation loop
@@ -52,8 +50,10 @@ public:
         QuantLib::Real quantile = 0.99,
         //! VaR holding period in calendar days
         QuantLib::Size horizonCalendarDays = 14,
-	const std::map<std::string, Real>& currentIM = std::map<std::string, Real>(),
-	const Size& simmCubeDepth = 4);
+        //! Actual t0 IM by netting set used to scale the DIM evolution, no scaling if the argument is omitted
+        const std::map<std::string, Real>& currentIM = std::map<std::string, Real>(),
+        //! SIMM cube depth, default 4
+        const Size& simmCubeDepth = 4);
 
     const std::map<std::string, QuantLib::Real>& unscaledCurrentDIM() const override;
     void build() override;

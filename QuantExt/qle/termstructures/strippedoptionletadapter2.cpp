@@ -136,5 +136,7 @@ Date StrippedOptionletAdapter2::maxDate() const { return optionletStripper_->opt
 
 VolatilityType StrippedOptionletAdapter2::volatilityType() const { return optionletStripper_->volatilityType(); }
 
+bool StrippedOptionletAdapter2::useEffectiveVolatility() const { return optionletStripper_->useEffectiveVolatility(); }
+
 Real StrippedOptionletAdapter2::displacement() const { return optionletStripper_->displacement(); }
 } // namespace QuantExt

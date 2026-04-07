@@ -116,7 +116,6 @@
     <ModelParameters/>
     <Engine>CpiCapEngine</Engine>
     <EngineParameters>
-      <Parameter name="useLastFixingDate">true</Parameter>
       <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
     </EngineParameters>
   </Product>
@@ -153,7 +152,6 @@
     <ModelParameters/>
     <Engine>BlackAnalytic</Engine>
     <EngineParameters>
-      <Parameter name="useLastFixingDate">true</Parameter>
       <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
     </EngineParameters>
   </Product>
@@ -162,7 +160,6 @@
     <ModelParameters/>
     <Engine>BlackAnalytic</Engine>
     <EngineParameters>
-      <Parameter name="useLastFixingDate">true</Parameter>
       <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
     </EngineParameters>
   </Product>
@@ -181,6 +178,12 @@
     <EngineParameters>
       <Parameter name="SensitivityTemplate">EQ_Analytical</Parameter>
     </EngineParameters>
+  </Product>
+  <Product type="EquityLeg">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>EquityCouponPricer</Engine>
+    <EngineParameters/>
   </Product>
   <Product type="EquityOption">
     <Model>BlackScholesMerton</Model>

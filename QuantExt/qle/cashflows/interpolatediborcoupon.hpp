@@ -24,9 +24,9 @@
 #pragma once
 
 #include <qle/indexes/interpolatediborindex.hpp>
-
 #include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/indexes/iborindex.hpp>
+#include <ql/shared_ptr.hpp>
 
 namespace QuantExt {
 
@@ -50,8 +50,8 @@ public:
 
 private:
     friend class InterpolatedIborCouponPricer;
-    const boost::shared_ptr<InterpolatedIborIndex> interpolatedIborIndex_;
-    const boost::shared_ptr<QuantLib::IborIndex> iborIndex_;
+    const QuantLib::ext::shared_ptr<InterpolatedIborIndex> interpolatedIborIndex_;
+    const QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndex_;
     // computed by coupon pricer (depending on par coupon flag) and stored here
     void initializeCachedData() const;
     mutable bool cachedDataIsInitialized_ = false;

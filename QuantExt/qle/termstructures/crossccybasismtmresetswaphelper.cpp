@@ -45,7 +45,8 @@ CrossCcyBasisMtMResetSwapHelper::CrossCcyBasisMtMResetSwapHelper(
     QuantLib::ext::optional<bool> domesticIncludeSpread, QuantLib::ext::optional<Period> domesticLookback,
     QuantLib::ext::optional<Size> domesticFixingDays, QuantLib::ext::optional<Size> domesticRateCutoff,
     QuantLib::ext::optional<bool> domesticIsAveraged, const bool telescopicValueDates,
-    const QuantLib::Pillar::Choice pillarChoice)
+    const QuantLib::Pillar::Choice pillarChoice, const QuantLib::Date& customPillarDate,
+    QuantLib::ext::optional<bool> foreignObservationShift, QuantLib::ext::optional<bool> domesticObservationShift)
     : RelativeDateRateHelper(spreadQuote), spotFX_(spotFX), settlementDays_(settlementDays),
       settlementCalendar_(settlementCalendar), swapTenor_(swapTenor), rollConvention_(rollConvention),
       foreignCcyIndex_(foreignCcyIndex), domesticCcyIndex_(domesticCcyIndex),
@@ -60,9 +61,10 @@ CrossCcyBasisMtMResetSwapHelper::CrossCcyBasisMtMResetSwapHelper(
       spotFXSettleDaysVec_(spotFXSettleDaysVec), spotFXSettleCalendarVec_(spotFXSettleCalendarVec),
       foreignIncludeSpread_(foreignIncludeSpread), foreignLookback_(foreignLookback),
       foreignFixingDays_(foreignFixingDays), foreignRateCutoff_(foreignRateCutoff),
-      foreignIsAveraged_(foreignIsAveraged), domesticIncludeSpread_(domesticIncludeSpread),
-      domesticLookback_(domesticLookback), domesticFixingDays_(domesticFixingDays),
-      domesticRateCutoff_(domesticRateCutoff), domesticIsAveraged_(domesticIsAveraged),
+      foreignIsAveraged_(foreignIsAveraged), foreignObservationShift_(foreignObservationShift),
+      domesticIncludeSpread_(domesticIncludeSpread), domesticLookback_(domesticLookback),
+      domesticFixingDays_(domesticFixingDays), domesticRateCutoff_(domesticRateCutoff),
+      domesticIsAveraged_(domesticIsAveraged), domesticObservationShift_(domesticObservationShift),
       telescopicValueDates_(telescopicValueDates), pillarChoice_(pillarChoice) {
 
     foreignCurrency_ = foreignCcyIndex_->currency();
@@ -108,6 +110,8 @@ CrossCcyBasisMtMResetSwapHelper::CrossCcyBasisMtMResetSwapHelper(
     registerWith(domesticCcyDiscountCurve_);
     registerWith(foreignCcyFxFwdRateCurve_);
     registerWith(domesticCcyFxFwdRateCurve_);
+
+    pillarDate_ = customPillarDate;
 
     initializeDates();
 }
@@ -155,11 +159,13 @@ void CrossCcyBasisMtMResetSwapHelper::initializeDates() {
 
     swap_ = QuantLib::ext::make_shared<CrossCcyBasisMtMResetSwap>(
         foreignNominal, foreignCurrency_, foreignLegSchedule, foreignCcyIndex_,
-        !spreadOnForeignCcy_ || quote().empty() ? 0.0 : quote()->value(), domesticCurrency_, domesticLegSchedule,
-        domesticCcyIndex_, spreadOnForeignCcy_ || quote().empty() ? 0.0 : quote()->value(), fxIdx, true,
+        !spreadOnForeignCcy_ || quote().empty() || !quote()->isValid() ? 0.0 : quote()->value(), domesticCurrency_,
+        domesticLegSchedule, domesticCcyIndex_,
+        spreadOnForeignCcy_ || quote().empty() || !quote()->isValid() ? 0.0 : quote()->value(), fxIdx, true,
         foreignPaymentLag_, domesticPaymentLag_, foreignIncludeSpread_, foreignLookback_, foreignFixingDays_,
         foreignRateCutoff_, foreignIsAveraged_, domesticIncludeSpread_, domesticLookback_, domesticFixingDays_,
-        domesticRateCutoff_, domesticIsAveraged_, telescopicValueDates_);
+        domesticRateCutoff_, domesticIsAveraged_, telescopicValueDates_, true, foreignObservationShift_,
+        domesticObservationShift_);
 
     QuantLib::ext::shared_ptr<PricingEngine> engine = QuantLib::ext::make_shared<CrossCcySwapEngine>(
         domesticCurrency_, domesticDiscountRLH_, foreignCurrency_, foreignDiscountRLH_, spotFX_, QuantLib::ext::nullopt,
@@ -169,7 +175,8 @@ void CrossCcyBasisMtMResetSwapHelper::initializeDates() {
     earliestDate_ = swap_->startDate();
     maturityDate_ = swap_->maturityDate();
     latestRelevantDate_ = determineLatestRelevantDate(swap_->legs(), {!foreignIndexGiven_, !domesticIndexGiven_});
-    latestDate_ = pillarDate_ = determinePillarDate(pillarChoice_, maturityDate_, latestRelevantDate_);
+    latestDate_ = pillarDate_ =
+        determinePillarDate(pillarDate_, pillarChoice_, earliestDate_, maturityDate_, latestRelevantDate_);
 }
 
 void CrossCcyBasisMtMResetSwapHelper::setTermStructure(YieldTermStructure* t) {

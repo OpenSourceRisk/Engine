@@ -17,6 +17,7 @@
 */
 
 #include <orea/app/analytics/parconversionanalytic.hpp>
+#include <orea/app/inputparameters.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/engine/parsensitivityanalysis.hpp>
@@ -24,10 +25,11 @@
 #include <orea/scenario/deltascenariofactory.hpp>
 #include <orea/scenario/scenario.hpp>
 #include <orea/scenario/shiftscenariogenerator.hpp>
+#include <ored/report/inmemoryreport.hpp>
 #include <ored/utilities/to_string.hpp>
 
 using namespace ore::data;
-using namespace boost::filesystem;
+using namespace std::filesystem;
 
 namespace ore {
 namespace analytics {
@@ -200,6 +202,11 @@ void ParConversionAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore:
     }
     LOG("Sensi Analysis - Completed");
     CONSOLE("OK");
+}
+
+std::map<std::string, std::vector<ZeroSensitivityLoader::ZeroSensitivity>> ParConversionAnalytic::loadZeroSensitivities() const {
+    ZeroSensitivityLoader loader(inputs_->parConversionInputFile());
+    return loader.sensitivities();
 }
 
 } // namespace analytics

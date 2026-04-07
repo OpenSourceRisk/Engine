@@ -92,8 +92,8 @@ buildZeroInflationCurve(CommonData& cd, bool useLastKnownFixing, const QuantLib:
         Rate quote = cd.zeroCouponQuotes[i];
         QuantLib::ext::shared_ptr<QuantLib::ZeroInflationTraits::helper> instrument =
             QuantLib::ext::make_shared<ZeroCouponInflationSwapHelper>(
-                Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(quote)), cd.obsLag, maturity, fixingCalendar, bdc,
-                dc, index, isInterpolated ? CPI::Linear : CPI::Flat, Handle<YieldTermStructure>(discountTS), today);
+                Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(quote)), cd.obsLag, today, maturity, fixingCalendar, bdc,
+                dc, index, isInterpolated ? CPI::Linear : CPI::Flat);
         helpers.push_back(instrument);
     }
     Date baseDate =
@@ -360,8 +360,8 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolatedCPICurve) {
     Frequency frequency = Monthly;
 
     auto makeHelper = [&](const ext::shared_ptr<Quote>& quote, const Date& maturity) {
-        return ext::make_shared<ZeroCouponInflationSwapHelper>(Handle<Quote>(quote), observationLag, maturity, calendar,
-                                                               bdc, dc, ii, CPI::AsIndex, nominalTS);
+        return ext::make_shared<ZeroCouponInflationSwapHelper>(Handle<Quote>(quote), observationLag, evaluationDate,
+                                                               maturity, calendar, bdc, dc, ii, CPI::AsIndex);
     };
 
     std::vector<ext::shared_ptr<QuantExt::CPITraits::helper>> helpers;

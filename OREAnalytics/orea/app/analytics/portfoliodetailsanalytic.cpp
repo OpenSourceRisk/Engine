@@ -17,6 +17,8 @@
 */
 
 #include <orea/app/analytics/portfoliodetailsanalytic.hpp>
+#include <orea/app/inputparameters.hpp>
+#include <ored/report/inmemoryreport.hpp>
 
 namespace ore {
 namespace analytics {

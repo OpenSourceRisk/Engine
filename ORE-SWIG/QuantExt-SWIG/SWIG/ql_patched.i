@@ -84,7 +84,7 @@
     #error using an old version of QuantLib, please update
 #endif
 
-#ifdef BOOST_MSVC
+#if !defined(BOOST_ALL_NO_LIB) && defined(BOOST_MSVC)
 #ifdef QL_ENABLE_THREAD_SAFE_OBSERVER_PATTERN
 #define BOOST_LIB_NAME boost_thread
 #include <boost/config/auto_link.hpp>

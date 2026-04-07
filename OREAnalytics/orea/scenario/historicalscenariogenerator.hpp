@@ -86,9 +86,11 @@ public:
         //! string prepended to label of all scenarios generated
         const std::string& labelPrefix = "",
         //! indicates if the generated sceanrios will be absolute or difference
-        const bool generateDifferenceScenarios = false);
+        const bool generateDifferenceScenarios = false,
+        //! whether or not to break down the scenario return into risk factor contributions
+        const bool riskFactorBreakdown = false);
 
-    //! Constructor with no mporDays/Calendar, construct historical shift scenario between each scneario
+    //! Constructor with no mporDays/Calendar, construct historical shift scenario between each scenario
     HistoricalScenarioGenerator(
         //! Historical Scenario Loader containing all scenarios
         const QuantLib::ext::shared_ptr<HistoricalScenarioLoader>& historicalScenarioLoader,
@@ -101,7 +103,9 @@ public:
         //! string prepended to label of all scenarios generated
         const std::string& labelPrefix = "",
         //! indicates if the generated sceanrios will be absolute or difference
-        const bool generateDifferenceScenarios = false);
+        const bool generateDifferenceScenarios = false,
+        //! whether or not to break down the scenario return into risk factor contributions
+        const bool riskFactorBreakdown = false);
 
     //! Set base scenario, this also defines the asof date
     QuantLib::ext::shared_ptr<Scenario>& baseScenario() { return baseScenario_; }
@@ -130,6 +134,8 @@ public:
         If Mpor > 1 than the scenarios will overlap.
     */
     QuantLib::ext::shared_ptr<Scenario> next(const QuantLib::Date& d) override;
+
+    QuantLib::ext::shared_ptr<Scenario> nextKey(const Date& d, const RiskFactorKey& key, QuantLib::ext::shared_ptr<Scenario>& scen);
 
     //! Return the calculation details of the last generated scenario */
     const std::vector<HistoricalScenarioCalculationDetails>& lastHistoricalScenarioCalculationDetails() const;
@@ -170,9 +176,23 @@ public:
     void setGenerateDifferenceScenarios(const bool b) { generateDifferenceScenarios_ = b; }
     const bool generateDifferenceScenarios() const { return generateDifferenceScenarios_; }
 
+    void setRiskFactorBreakdown(const bool b) { riskFactorBreakdown_ = b; }
+    bool isRiskFactorBreakdown() const {return riskFactorBreakdown_; }
+    virtual void setCurrentKey(const RiskFactorKey& k);
+    RiskFactorKey getCurrentKey() const { return currentKey_;}
+    virtual void setIterator(const Size& k);
+
+    //! When true, next() populates all base-scenario keys even in single-key
+    //! breakdown mode (required for multi-threaded runs where each thread
+    //! builds a fresh sim market). When false (default), only the shifted
+    //! key is added to the scenario (single-threaded optimisation).
+    void setPopulateAllKeysOnBreakdown(bool b) { populateAllKeysOnBreakdown_ = b; }
+    bool populateAllKeysOnBreakdown() const { return populateAllKeysOnBreakdown_; }
+
 protected:
     // to be managed in derived classes, if next is overwritten
     Size i_;
+    Size calcDetailsCounter_ = 0;
 
     QuantLib::ext::shared_ptr<HistoricalScenarioLoader> historicalScenarioLoader_;
     std::vector<QuantLib::Date> startDates_, endDates_;
@@ -201,6 +221,9 @@ private:
     QuantLib::ext::shared_ptr<ReturnConfiguration> returnConfiguration_;
     std::string labelPrefix_;
     bool generateDifferenceScenarios_ = false;
+    bool riskFactorBreakdown_ = false;
+    bool populateAllKeysOnBreakdown_ = false;
+    RiskFactorKey currentKey_;
 };
 
 //! Historical scenario generator generating random scenarios, for testing purposes
@@ -280,7 +303,7 @@ QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> buildHistoricalScenarioGe
     const QuantLib::ext::shared_ptr<ore::data::AdjustmentFactors>& adjFactors, const TimePeriod& period,
     Calendar calendar, Size mporDays, const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simParams,
     const QuantLib::ext::shared_ptr<TodaysMarketParameters>& marketParam,
-    const QuantLib::ext::shared_ptr<ReturnConfiguration>& returnConfiguration, const bool overlapping = true);
+    const QuantLib::ext::shared_ptr<ReturnConfiguration>& returnConfiguration, const bool overlapping = true, const bool riskFactorKey = false);
 
 QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>
 buildHistoricalScenarioGenerator(const QuantLib::ext::shared_ptr<ScenarioReader>& hsr,

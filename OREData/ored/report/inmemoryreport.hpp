@@ -26,7 +26,7 @@
 #include <ored/report/csvreport.hpp>
 #include <ored/report/report.hpp>
 #include <ql/errors.hpp>
-#include <ql/tuple.hpp>
+#include <tuple>
 #include <vector>
 #include <map>
 
@@ -60,6 +60,8 @@ public:
     //! Returns the data
     const ReportType& data(Size i, Size j) const;
     void toFile(const string& filename, const char sep = ',', const bool commentCharacter = true, char quoteChar = '\0',
+                const string& nullString = "#N/A", bool lowerHeader = false);
+    void toZip(const string& filename, const char sep = ',', const bool commentCharacter = true, char quoteChar = '\0',
                 const string& nullString = "#N/A", bool lowerHeader = false);
     void jumpToColumn(Size i) { i_ = i; }
     

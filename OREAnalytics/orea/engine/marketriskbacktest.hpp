@@ -24,6 +24,7 @@
 #pragma once
 
 #include <qle/math/covariancesalvage.hpp>
+#include <ored/marketdata/todaysmarketparameters.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/utilities/progressbar.hpp>
 #include <orea/engine/historicalpnlgenerator.hpp>
@@ -137,7 +138,8 @@ public:
                        std::unique_ptr<MultiThreadArgs> mtArgs = nullptr,
                        const QuantLib::ext::shared_ptr<ore::analytics::HistoricalScenarioGenerator>& hisScenGen = nullptr,
                        const bool breakdown = false,
-                       const bool requireTradePnl = false);
+                       const bool requireTradePnl = false,
+                       const QuantLib::ext::shared_ptr<TodaysMarketParameters>& marketConfig = nullptr);
 
     virtual ~MarketRiskBacktest() {}
 
@@ -156,6 +158,8 @@ public:
 
 protected:
     std::unique_ptr<BacktestArgs> btArgs_;
+    // Todays market parameters used to map DiscountCurve nodes
+    QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters> todaysmarket_;
 
     void initialise() override;
     

@@ -1,7 +1,3 @@
-cmake_minimum_required(VERSION 3.8)
-
-project(OREAnalyticsJava CXX)
-
 # write the library here
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
@@ -17,8 +13,6 @@ execute_process(
   WORKING_DIRECTORY ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}
   COMMAND ${CMAKE_COMMAND} -E touch OREAnalyticsJava.jar
 )
-
-include(${ORE}/cmake/commonSettings.cmake)
 
 # Append /bigobj to compiler flags on Windows for this target
 if (MSVC)
@@ -45,13 +39,13 @@ include_directories(${ORE}/QuantLib)
 include_directories(${ORE}/QuantExt)
 include_directories(${ORE}/OREData)
 include_directories(${ORE}/OREAnalytics)
-include_directories(${PROJECT_SOURCE_DIR}/../SWIG)
-include_directories(${PROJECT_SOURCE_DIR}/../../QuantLib-SWIG/SWIG)
-include_directories(${PROJECT_SOURCE_DIR}/../../QuantExt-SWIG/SWIG)
-include_directories(${PROJECT_SOURCE_DIR}/../../OREData-SWIG/SWIG)
-include_directories(${PROJECT_SOURCE_DIR}/../../OREAnalytics-SWIG/SWIG)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../SWIG)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../QuantLib-SWIG/SWIG)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../QuantExt-SWIG/SWIG)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../OREData-SWIG/SWIG)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../OREAnalytics-SWIG/SWIG)
 
-find_package (Boost REQUIRED COMPONENTS serialization date_time filesystem OPTIONAL_COMPONENTS system)
+find_package (Boost REQUIRED COMPONENTS serialization date_time OPTIONAL_COMPONENTS system)
 include_directories(${Boost_INCLUDE_DIRS})
 
 # specify library search path (update this when we build ORE with cmake)
@@ -73,12 +67,12 @@ include_directories(${JNI_INCLUDE_DIRS})
 include(${SWIG_USE_FILE})
 set(CMAKE_SWIG_FLAGS "")
 
-set_source_files_properties(${PROJECT_SOURCE_DIR}/../SWIG/oreanalytics.i PROPERTIES CPLUSPLUS ON)
-set_source_files_properties(${PROJECT_SOURCE_DIR}/../SWIG/oreanalytics.i PROPERTIES SWIG_FLAGS "-includeall")
+set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/../SWIG/oreanalytics.i PROPERTIES CPLUSPLUS ON)
+set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/../SWIG/oreanalytics.i PROPERTIES SWIG_FLAGS "-includeall")
 set(CMAKE_SWIG_FLAGS -package oreanalytics)
 set(CMAKE_SWIG_OUTDIR "oreanalytics")
 
-swig_add_library(${ORE_JAVA_LIB_NAME} TYPE SHARED LANGUAGE java SOURCES ${PROJECT_SOURCE_DIR}/../SWIG/oreanalytics.i)
+swig_add_library(${ORE_JAVA_LIB_NAME} TYPE SHARED LANGUAGE java SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/../SWIG/oreanalytics.i)
 
 swig_link_libraries(${ORE_JAVA_LIB_NAME} ${QL_LIB_NAME})
 swig_link_libraries(${ORE_JAVA_LIB_NAME} ${QLE_LIB_NAME})

@@ -42,12 +42,12 @@
 
 namespace QuantExt {
 
-class OpenClFramework : public ComputeFramework {
+class OpenClFramework final : public ComputeFramework {
 public:
     OpenClFramework();
-    ~OpenClFramework() override final;
-    std::set<std::string> getAvailableDevices() const override final;
-    ComputeContext* getContext(const std::string& deviceName) override final;
+    ~OpenClFramework() override;
+    std::set<std::string> getAvailableDevices() const override;
+    ComputeContext* getContext(const std::string& deviceName) override;
 
 private:
     static void init();

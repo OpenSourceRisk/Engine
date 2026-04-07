@@ -117,11 +117,17 @@ private:
               const std::vector<QuantLib::Volatility>& volatilities, QuantLib::Natural settleDays,
               const QuantLib::Calendar& cal, QuantLib::BusinessDayConvention bdc,
               QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndex, const QuantLib::DayCounter& dc,
-              QuantLib::VolatilityType type, QuantLib::Real displacement) const;
+              QuantLib::VolatilityType type, QuantLib::Real displacement, bool useEffectiveVolatility) const;
 
     //! Generate fixing days from end date for optionlet vol
     vector<Date> populateFixingDates(const QuantLib::Date& asof, CapFloorVolatilityCurveConfig& config,
-                                     QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndex, const vector<Period>& configTenors);
+                                     QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndex,
+                                     const vector<Period>& configTenors);
+
+    //! calculate stripped from effective optionlet vol
+    double strippedVolFromEffectiveVol(const QuantLib::Date& asof, CapFloorVolatilityCurveConfig& config,
+                                       QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndex, const Period& tenor,
+                                       const Real effectiveVol, const Real shift);
 
     //! Build calibration info
     void buildCalibrationInfo(const Date& asof, const CurveConfigurations& curveConfigs,

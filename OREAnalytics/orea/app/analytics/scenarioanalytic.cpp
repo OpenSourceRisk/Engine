@@ -16,8 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <orea/app/inputparameters.hpp>
 #include <orea/app/analytics/scenarioanalytic.hpp>
 #include <orea/scenario/scenariowriter.hpp>
+#include <ored/report/inmemoryreport.hpp>
 
 using namespace ore::analytics;
 

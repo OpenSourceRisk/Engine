@@ -18,7 +18,6 @@
 
 #include <iomanip>
 #include <iostream>
-#include <oret/config.hpp>
 
 // Boost
 #include <boost/make_shared.hpp>
@@ -37,13 +36,13 @@ using boost::timer::cpu_timer;
 using boost::unit_test::test_suite;
 using boost::unit_test::framework::master_test_suite;
 
-#include <oret/basedatapath.hpp>
-#include <oret/datapaths.hpp>
-#include <oret/oret.hpp>
+#include <oret/util/basedatapath.hpp>
+#include <oret/util/datapaths.hpp>
+#include <oret/logging/log.hpp>
 using ore::test::getBaseDataPath;
 using ore::test::setupTestLogging;
 
-#ifdef BOOST_MSVC
+#if !defined(BOOST_ALL_NO_LIB) && defined(BOOST_MSVC)
 #include <orea/auto_link.hpp>
 #include <ored/auto_link.hpp>
 #include <ql/auto_link.hpp>

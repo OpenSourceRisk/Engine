@@ -482,6 +482,20 @@
 	</CDSVolatilities>
 	<DefaultCurves>
 		<DefaultCurve>
+			<CurveId>FundingCurveAsCreditCurve</CurveId>
+			<Currency>EUR</Currency>
+			<CurveDescription>Issuer funding spread curve as credit curve</CurveDescription>
+			<Configurations>
+				<Configuration priority="0">
+					<Type>YieldCurve</Type>
+					<DayCounter>Actual/360</DayCounter>
+					<RecoveryRate>RECOVERY_RATE/RATE/CPTY_C/SR/EUR</RecoveryRate>
+					<ReinterpretedYieldCurve>Yield/EUR/FundingCurve</ReinterpretedYieldCurve>
+					<Extrapolation>true</Extrapolation>
+				</Configuration>
+			</Configurations>
+		</DefaultCurve>
+		<DefaultCurve>
 			<CurveId>ISIN:DE000A3H2WP2</CurveId>
 			<CurveDescription>Delivery Hero Se</CurveDescription>
 			<Currency>EUR</Currency>
@@ -4858,6 +4872,22 @@
 		</DefaultCurve>
 	</DefaultCurves>
 	<YieldCurves>
+		<YieldCurve>
+			<CurveId>FundingCurve</CurveId>
+			<CurveDescription>Funding curve of the issuer</CurveDescription>
+			<Currency>EUR</Currency>
+			<DiscountCurve></DiscountCurve>
+			<Segments>
+				<Direct>
+					<Type>Zero</Type>
+					<Quotes>
+						<Quote>ZERO/RATE/EUR/FUNDING/A365/2025-02-10</Quote>
+						<Quote>ZERO/RATE/EUR/FUNDING/A365/2050-12-31</Quote>
+					</Quotes>
+					<Conventions>EUR-ZERO</Conventions>
+				</Direct>
+			</Segments>
+		</YieldCurve>
 		<YieldCurve>
 			<CurveId>AUD-AONIA</CurveId>
 			<CurveDescription>AUD discount curve bootstrapped from OIS swap rates</CurveDescription>
@@ -19713,4 +19743,3 @@
 		</IRSwaptionVolatilities>
 	</ReportConfiguration>
 </CurveConfiguration>
-

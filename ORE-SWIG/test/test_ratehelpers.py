@@ -179,29 +179,6 @@ class BasisTwoSwapHelperTest(unittest.TestCase):
         """ Test basis to swap Helper simple inspector. """
         self.assertEqual(self.basistwoswaphelper.quote().value(),self.spread.value())
 
-
-class OICCBSHelperTest(unittest.TestCase):
-    def setUp(self):
-        """ Test OICCBS Helper"""
-        self.todays_date=Date(1,October,2018)
-        Settings.instance().evaluationDate = self.todays_date
-        self.settlementDays=2
-        self.term=Period(6,Months)
-        self.payFloat=Sonia()
-        self.payTenor=Period(6,Months)
-        self.recFloat=Sonia()
-        self.recTenor=Period(6,Months)
-        self.spreadQuote=QuoteHandle(SimpleQuote(0.02))
-        self.flat_forward=FlatForward(self.todays_date, 0.03, Actual360())
-        self.fixedDiscountCurve=RelinkableYieldTermStructureHandle(self.flat_forward)
-        self.spreadQuoteOnPayLeg=True
-        self.fixedDiscountOnPayLeg=False
-        self.oiccbshelper=OICCBSHelper(self.settlementDays,self.term,self.payFloat,self.payTenor,self.recFloat,self.recTenor,self.spreadQuote,self.fixedDiscountCurve,self.spreadQuoteOnPayLeg,self.fixedDiscountOnPayLeg)        
-    def testSimpleInspectors(self):
-        """ Test OICCBS simple inspector. """
-        self.assertEqual(self.oiccbshelper.quote().value(),self.spreadQuote.value())
-
-
 class ImmFraRateHelperTest(unittest.TestCase):
     def setUp(self):
         """ Set-up ImmFraRateHelper """
@@ -252,7 +229,6 @@ if __name__ == '__main__':
     suite.addTest(unittest.makeSuite(TenorBasisSwapHelperTest,'test'))
     suite.addTest(unittest.makeSuite(SubPeriodsSwapHelperTest,'test'))
     suite.addTest(unittest.makeSuite(BasisTwoSwapHelperTest,'test'))
-    suite.addTest(unittest.makeSuite(OICCBSHelperTest,'test'))
     suite.addTest(unittest.makeSuite(ImmFraRateHelperTest,'test'))
     suite.addTest(unittest.makeSuite(CrossCcyFixFloatSwapHelperTest,'test'))
     unittest.TextTestRunner(verbosity=2).run(suite)

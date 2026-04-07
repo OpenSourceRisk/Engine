@@ -41,9 +41,9 @@ AssetModel::AssetModel(const Model::Type type, const Size paths, const std::stri
                        const std::string& indexCurrency, const Handle<AssetModelWrapper>& model,
                        const std::set<Date>& simulationDates,
                        const ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig, const std::string& calibration,
-                       const std::vector<Real>& calibrationStrikes, const Params& params)
+                       const std::vector<Real>& calibrationStrikes, const Params& params, bool debug)
     : AssetModel(type, paths, {currency}, {curve}, {}, {}, {}, {index}, {indexCurrency}, {currency}, model, {},
-                 simulationDates, iborFallbackConfig, calibration, {{index, calibrationStrikes}}, params) {}
+                 simulationDates, iborFallbackConfig, calibration, {{index, calibrationStrikes}}, params, debug) {}
 
 AssetModel::AssetModel(
     const Model::Type type, const Size paths, const std::vector<std::string>& currencies,
@@ -55,12 +55,12 @@ AssetModel::AssetModel(
     const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
     const std::set<Date>& simulationDates, const ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
     const std::string& calibration, const std::map<std::string, std::vector<Real>>& calibrationStrikes,
-    const Params& params)
+    const Params& params, bool debug)
     : ModelImpl(type, params, curves.at(0)->dayCounter(), paths, currencies, irIndices, infIndices, indices,
                 indexCurrencies, simulationDates, iborFallbackConfig),
       curves_(curves), fxSpots_(fxSpots), payCcys_(payCcys), model_(model), correlations_(correlations),
-      calibration_(calibration), calibrationStrikes_(calibrationStrikes) {
-
+      calibration_(calibration), calibrationStrikes_(calibrationStrikes), debug_(debug) {
+  
     // check inputs
 
     QL_REQUIRE(!model_.empty(), "model is empty");
@@ -160,6 +160,9 @@ void AssetModel::performCalculations() const {
     underlyingPaths_.clear();
     underlyingPathsTraining_.clear();
 
+    auxPaths_.clear();
+    auxPathsTraining_.clear();
+
     // nothing to do if we do not have any indices
 
     if (indices_.empty())
@@ -173,15 +176,19 @@ void AssetModel::performCalculations() const {
 void AssetModel::initUnderlyingPathsMc() const {
     for (auto const& d : effectiveSimulationDates_) {
         underlyingPaths_[d] = std::vector<RandomVariable>(model_->processes().size(), RandomVariable(size(), 0.0));
-        if (trainingSamples() != Null<Size>())
+        auxPaths_[d] = std::vector<RandomVariable>(model_->processes().size(), RandomVariable(size(), 0.0));
+        if (trainingSamples() != Null<Size>()) {
             underlyingPathsTraining_[d] =
                 std::vector<RandomVariable>(model_->processes().size(), RandomVariable(trainingSamples(), 0.0));
+            auxPathsTraining_[d] =
+                std::vector<RandomVariable>(model_->processes().size(), RandomVariable(trainingSamples(), 0.0));
+	}
     }
 }
 
 void AssetModel::setReferenceDateValuesMc() const {
     for (Size l = 0; l < indices_.size(); ++l) {
-        underlyingPaths_[*effectiveSimulationDates_.begin()][l].setAll(initialValue(l));
+	underlyingPaths_[*effectiveSimulationDates_.begin()][l].setAll(initialValue(l));
         if (trainingSamples() != Null<Size>()) {
             underlyingPathsTraining_[*effectiveSimulationDates_.begin()][l].setAll(initialValue(l));
         }
@@ -203,7 +210,6 @@ Matrix AssetModel::getCorrelation() const {
             correlation[i1][i2] = correlation[i2][i1] = c.second->correlation(0.0); // we assume a constant correlation!
         }
     }
-    DLOG("AssetModel correlation matrix:");
     DLOGGERSTREAM(correlation);
     return correlation;
 }
@@ -358,7 +364,7 @@ RandomVariable AssetModel::npv(const RandomVariable& amount, const Date& obsdate
         // handle stochastic amount
 
         QL_REQUIRE(t1 != Null<Real>(),
-                   "AssetModel::npv(): can not roll back amount wiithout time attached (to t0=" << t0 << ")");
+                   "AssetModel::npv(): can not roll back amount without time attached (to t0=" << t0 << ")");
 
         // might throw if t0, t1 are not found in timeGrid_
 
@@ -377,8 +383,7 @@ RandomVariable AssetModel::npv(const RandomVariable& amount, const Date& obsdate
 
         // if t0 < t1, we roll back on the time grid
 
-        Array workingArray(amount.size());
-        amount.copyToArray(workingArray);
+        Array workingArray = static_cast<Array>(amount);
 
         for (int j = static_cast<int>(ind1) - 1; j >= static_cast<int>(ind0); --j) {
             solver_->rollback(workingArray, timeGrid_[j + 1], timeGrid_[j], 1, 0);
@@ -410,7 +415,12 @@ RandomVariable AssetModel::npv(const RandomVariable& amount, const Date& obsdate
             for (auto const& r : underlyingPaths_.at(obsdate))
                 state.push_back(&r);
         }
-
+	
+        if (!auxPaths_.empty()) {
+            for (auto const& r : auxPaths_.at(obsdate))
+                state.push_back(&r);
+        }
+	
         Size nModelStates = state.size();
 
         if (addRegressor1.initialised() && (memSlot || !addRegressor1.deterministic()))
@@ -430,7 +440,7 @@ RandomVariable AssetModel::npv(const RandomVariable& amount, const Date& obsdate
 
         Array coeff;
         Matrix coordinateTransform;
-
+        Size minSize = std::min(size(), trainingSamples());
         // if a memSlot is given and coefficients / coordinate transform are stored, we use them
 
         bool haveStoredModel = false;
@@ -438,6 +448,7 @@ RandomVariable AssetModel::npv(const RandomVariable& amount, const Date& obsdate
         if (memSlot) {
             if (auto it = storedRegressionModel_.find(*memSlot); it != storedRegressionModel_.end()) {
                 coeff = std::get<0>(it->second);
+                minSize = coeff.size();
                 coordinateTransform = std::get<2>(it->second);
                 QL_REQUIRE(std::get<1>(it->second) == state.size(),
                            "AssetModel::npv(): stored regression coefficients at mem slot "
@@ -467,7 +478,7 @@ RandomVariable AssetModel::npv(const RandomVariable& amount, const Date& obsdate
             coeff =
                 regressionCoefficients(amount, state,
                                        multiPathBasisSystem(state.size(), params_.regressionOrder, params_.polynomType,
-                                                            {}, std::min(size(), trainingSamples())),
+                                                            {}, minSize),
                                        filter, RandomVariableRegressionMethod::QR);
             DLOG("AssetModel::npv(" << ore::data::to_string(obsdate) << "): regression coefficients are " << coeff
                                     << " (got model state size " << nModelStates << " and " << nAddReg
@@ -492,10 +503,9 @@ RandomVariable AssetModel::npv(const RandomVariable& amount, const Date& obsdate
 
         // compute conditional expectation and return the result
 
-        return conditionalExpectation(state,
-                                      multiPathBasisSystem(state.size(), params_.regressionOrder, params_.polynomType,
-                                                           {}, std::min(size(), trainingSamples())),
-                                      coeff);
+        return conditionalExpectation(
+            state, multiPathBasisSystem(state.size(), params_.regressionOrder, params_.polynomType, {}, minSize),
+            coeff);
     } else {
         QL_FAIL("AssetModel::npv(): unhandled type, internal error.");
     }
@@ -538,7 +548,6 @@ Real AssetModel::extractT0Result(const RandomVariable& value) const {
     calculate();
 
     // roll back to today (if necessary)
-
     RandomVariable r =
         npv(value, referenceDate(), Filter(), QuantLib::ext::nullopt, RandomVariable(), RandomVariable());
 
@@ -549,10 +558,8 @@ Real AssetModel::extractT0Result(const RandomVariable& value) const {
 
     // otherwise interpolate the result at the spot of the underlying process
 
-    Array x(underlyingValues_.size());
-    Array y(underlyingValues_.size());
-    underlyingValues_.copyToArray(x);
-    r.copyToArray(y);
+    Array x = static_cast<Array>(underlyingValues_);
+    Array y = static_cast<Array>(r);
     MonotonicCubicNaturalSpline interpolation(x.begin(), x.end(), y.begin());
     interpolation.enableExtrapolation();
     return interpolation(initialValue(0));

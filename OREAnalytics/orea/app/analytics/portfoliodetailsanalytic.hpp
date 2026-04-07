@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/app/portfoliodetailsanalytic.hpp
-    \brief Pricing Analytic
+/*! \file orea/app/analytics/portfoliodetailsanalytic.hpp
+    \brief Portfolio details analytic
 */
 
 #pragma once
@@ -27,6 +27,8 @@
 
 namespace ore {
 namespace analytics {
+
+class InputParameters;
 
 class PortfolioDetailsAnalyticImpl : public Analytic::Impl {
 public:

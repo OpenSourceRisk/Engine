@@ -39,7 +39,9 @@ public:
                      const QuantLib::ext::shared_ptr<BRLCdi>& brlCdiIndex, const bool brlCdiindexGiven,
                      const QuantLib::Handle<QuantLib::YieldTermStructure>& discountingCurve =
                          QuantLib::Handle<QuantLib::YieldTermStructure>(),
-                     bool discountCurveGiven = false, bool telescopicValueDates = false);
+                     bool discountCurveGiven = false, bool telescopicValueDates = false,
+                     QuantLib::Pillar::Choice pillar = QuantLib::Pillar::LastRelevantDate,
+                     const QuantLib::Date& customPillarDate = QuantLib::Date());
 
     //! \name inspectors
     //@{
@@ -65,6 +67,7 @@ protected:
     bool brlCdiIndexGiven_;
     QuantLib::ext::shared_ptr<BRLCdiSwap> swap_;
     bool telescopicValueDates_;
+    QuantLib::Pillar::Choice pillarChoice_;
 
     QuantLib::RelinkableHandle<QuantLib::YieldTermStructure> termStructureHandle_;
     QuantLib::Handle<QuantLib::YieldTermStructure> discountHandle_;

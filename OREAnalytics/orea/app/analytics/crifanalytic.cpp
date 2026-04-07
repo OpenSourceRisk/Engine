@@ -17,6 +17,7 @@
 */
 
 #include <orea/app/analytics/crifanalytic.hpp>
+#include <orea/app/inputparameters.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/simm/crifgenerator.hpp>
@@ -32,10 +33,11 @@
 
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
+#include <ored/report/inmemoryreport.hpp>
 #include <ored/utilities/parsers.hpp>
 
 using namespace ore::data;
-using namespace boost::filesystem;
+using namespace std::filesystem;
 
 namespace ore {
 namespace analytics {
@@ -57,7 +59,8 @@ computeSensitivities(QuantLib::ext::shared_ptr<ore::analytics::SensitivityAnalys
             analytic->configurations().simMarketParams, analytic->configurations().sensiScenarioData,
             inputs->sensiRecalibrateModels(), inputs->sensiLaxFxConversion(), analytic->configurations().curveConfig,
             analytic->configurations().todaysMarketParams, false, inputs->refDataManager(),
-            inputs->iborFallbackConfig(), true, inputs->dryRun(), inputs->useAtParCouponsTrades());
+            inputs->iborFallbackConfig(), true, inputs->dryRun(), inputs->useAtParCouponsTrades(), 
+            inputs->computeTheta(), inputs->thetaPeriod());
     } else {
         sensiAnalysis = QuantLib::ext::make_shared<SensitivityAnalysis>(
             inputs->nThreads(), inputs->asof(), analytic->loader(), portfolio, Market::defaultConfiguration,
@@ -66,7 +69,8 @@ computeSensitivities(QuantLib::ext::shared_ptr<ore::analytics::SensitivityAnalys
             inputs->sensiLaxFxConversion(), analytic->configurations().curveConfig,
             analytic->configurations().todaysMarketParams, false, inputs->refDataManager(),
             inputs->iborFallbackConfig(), true, inputs->dryRun(), "analytic/" + analytic->label(),
-            inputs->useAtParCouponsCurves(), inputs->useAtParCouponsTrades());
+            inputs->useAtParCouponsCurves(), inputs->useAtParCouponsTrades(),
+            inputs->computeTheta(), inputs->thetaPeriod());
     }
 
     LOG("Sensitivity analysis initialised");
@@ -171,7 +175,10 @@ void CrifAnalyticImpl::setUpConfigurations() {
     QL_REQUIRE(analytic()->configurations().simMarketParams, "CrifAnalytic: simMarketParams not set");
     QL_REQUIRE(analytic()->configurations().sensiScenarioData, "CrifAnalytic: sensiScenarioData not set");
     QL_REQUIRE(analytic()->configurations().todaysMarketParams, "CrifAnalytic: todaysMarketParams not set");
-    
+
+    inputs_->loadParameter<bool>(applySimmExemptions_, "crif", "applySimmExemptions", false,
+                                 std::function<bool(const string&)>(parseBool));
+
     setGenerateAdditionalResults(true);
 }
 
@@ -208,15 +215,19 @@ void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
     analytic()->addReport(LABEL, "npv_no_simm_exemptions", npvWithoutReport);
 
     std::set<std::string> removedTrades, modifiedTrades;
-    analytic()->startTimer("applySimmExemptions()");
-    try {
-        std::tie(removedTrades, modifiedTrades) =
-            applySimmExemptions(*analytic()->portfolio(), engineFactory(), crifAnalytic->simmExemptionOverrides(),
-                                inputs_->useAtParCouponsTrades());
-    } catch (std::exception& e) {
-        QL_FAIL(e.what());
+    if (applySimmExemptions_) {
+        analytic()->startTimer("applySimmExemptions()");
+        try {
+            std::tie(removedTrades, modifiedTrades) =
+                applySimmExemptions(*analytic()->portfolio(), engineFactory(), crifAnalytic->simmExemptionOverrides(),
+                                    inputs_->useAtParCouponsTrades());
+        } catch (std::exception& e) {
+            QL_FAIL(e.what());
+        }
+        analytic()->stopTimer("applySimmExemptions()");
+    } else {
+        WLOG("Skipping application of SIMM exemptions as applySimmExemptions is set to false");
     }
-    analytic()->stopTimer("applySimmExemptions()");
 
     // If we have an empty portfolio, then quit the CRIF analytic
     if (analytic()->portfolio()->size() == 0) {
@@ -305,8 +316,8 @@ void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
     LOG("CRIF report generated successfully");
 }
 
-CrifAnalytic::CrifAnalytic(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs,
-                           const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager,
+CrifAnalytic::CrifAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                           const QuantLib::ext::weak_ptr<AnalyticsManager>& analyticsManager,
                            const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
                            const std::string& baseCurrency)
     : Analytic(std::make_unique<CrifAnalyticImpl>(inputs), {"CRIF"}, inputs, analyticsManager) {
@@ -314,7 +325,7 @@ CrifAnalytic::CrifAnalytic(const QuantLib::ext::shared_ptr<ore::analytics::Input
     baseCurrency_ = baseCurrency.empty() ? inputs->baseCurrency() : baseCurrency;
 }
 
-QuantLib::ext::shared_ptr<ore::analytics::Crif>
+QuantLib::ext::shared_ptr<Crif>
 CrifAnalytic::computeCrif(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
                           const QuantLib::ext::shared_ptr<SensitivityStream>& sensiStream,
                           const QuantLib::ext::shared_ptr<InputParameters>& inputs,

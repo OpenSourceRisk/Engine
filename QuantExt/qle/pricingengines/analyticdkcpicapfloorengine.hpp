@@ -39,7 +39,6 @@ public:
 private:
     const QuantLib::ext::shared_ptr<CrossAssetModel> model_;
     const Size index_;
-    const Real baseCPI_;
 };
 
 } // namespace QuantExt

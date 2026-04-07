@@ -12,4 +12,8 @@ print("+-----------------------------------------------------+")
 
 # Legacy example 53
 
-oreex.run("Input/ore_centralbank.xml")
+oreex.run("Input/ore_centralbank_0.xml")
+oreex.run("Input/ore_centralbank_1.xml")
+oreex.run("Input/ore_centralbank_2.xml")
+oreex.run("Input/ore_centralbank_3.xml")
+oreex.run("Input/ore_centralbank_4.xml")

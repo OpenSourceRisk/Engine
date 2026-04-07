@@ -254,7 +254,7 @@ protected:
         return data;
     }
 
-    virtual double CdsAtmVol(const std::string& tradeId, const std::string& optionExpiry) const;
+    virtual std::optional<double> CdsAtmVol(const std::string& tradeId, const std::string& optionExpiry) const;
 };
 
 class SimmRecordGenerator : public CrifRecordGenerator {

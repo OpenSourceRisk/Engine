@@ -34,128 +34,39 @@ namespace QuantExt {
 
 AverageONIndexedCoupon::AverageONIndexedCoupon(const Date& paymentDate, Real nominal, const Date& startDate,
                                                const Date& endDate,
-                                               const QuantLib::ext::shared_ptr<OvernightIndex>& overnightIndex, Real gearing,
-                                               Spread spread, Natural rateCutoff, const DayCounter& dayCounter,
-                                               const Period& lookback, const Size fixingDays,
-                                               const Date& rateComputationStartDate, const Date& rateComputationEndDate,
-                                               const bool telescopicValueDates)
-    : FloatingRateCoupon(paymentDate, nominal, startDate, endDate, fixingDays, overnightIndex, gearing, spread, Date(),
-                         Date(), dayCounter, false),
-      overnightIndex_(overnightIndex), rateCutoff_(rateCutoff), lookback_(lookback),
-      rateComputationStartDate_(rateComputationStartDate), rateComputationEndDate_(rateComputationEndDate) {
-
-    Date valueStart = rateComputationStartDate_ == Null<Date>() ? startDate : rateComputationStartDate_;
-    Date valueEnd = rateComputationEndDate_ == Null<Date>() ? endDate : rateComputationEndDate_;
-    if (lookback != 0 * Days) {
-        BusinessDayConvention bdc = lookback.length() > 0 ? Preceding : Following;
-        valueStart = overnightIndex->fixingCalendar().advance(valueStart, -lookback, bdc);
-        valueEnd = overnightIndex->fixingCalendar().advance(valueEnd, -lookback, bdc);
-    }
-
-    // Populate the value dates.
-    Date tmpEndDate = valueEnd;
-    if(telescopicValueDates) {
-	// same optimization as in OvernightIndexedCoupon
-        Date evalDate = Settings::instance().evaluationDate();
-        tmpEndDate = overnightIndex->fixingCalendar().advance(std::max(valueStart, evalDate), 7, Days, Following);
-        tmpEndDate = std::min(tmpEndDate, valueEnd);
-    }
-
-    QL_REQUIRE(valueStart < tmpEndDate, "OvernightIndexedCoupon: valueStart ("
-                                            << valueStart << ") must be earlier than valueEnd (" << tmpEndDate << ")");
-
-    try {
-        Schedule sch = MakeSchedule()
-                           .from(valueStart)
-                           // .to(valueEnd)
-                           .to(tmpEndDate)
-                           .withTenor(1 * Days)
-                           .withCalendar(overnightIndex->fixingCalendar())
-                           .withConvention(overnightIndex->businessDayConvention())
-                           .backwards();
-        valueDates_ = sch.dates();
-    } catch (...) {
-        // handle degenerate schedules
-        valueDates_ = {valueStart, tmpEndDate};
-    }
-
-    if (telescopicValueDates) {
-        // build optimised value dates schedule: back stub
-        // contains at least two dates and enough periods to cover rate cutoff
-        Date tmp2 = overnightIndex->fixingCalendar().adjust(valueEnd, overnightIndex->businessDayConvention());
-        Date tmp1 = overnightIndex->fixingCalendar().advance(tmp2, -std::max<Size>(rateCutoff_, 1), Days, Preceding);
-        while (tmp1 <= tmp2) {
-            if (tmp1 > valueDates_.back())
-                valueDates_.push_back(tmp1);
-            tmp1 = overnightIndex->fixingCalendar().advance(tmp1, 1, Days, Following);
-        }
-    }
-
-    QL_ENSURE(valueDates_.size() >= 2 + rateCutoff_, "degenerate schedule");
-
-    // the first and last value date should be the unadjusted input value dates
-    if (valueDates_.front() != valueStart)
-        valueDates_.front() = valueStart;
-    if (valueDates_.back() != valueEnd)
-        valueDates_.back() = valueEnd;
-
-    numPeriods_ = valueDates_.size() - 1;
-
-    QL_REQUIRE(valueDates_[0] != valueDates_[1],
-               "internal error: first two value dates of on coupon are equal: " << valueDates_[0]);
-    QL_REQUIRE(valueDates_[numPeriods_] != valueDates_[numPeriods_ - 1],
-               "internal error: last two value dates of on coupon are equal: " << valueDates_[numPeriods_]);
-
-    // Populate the fixing dates.
-    fixingDates_.resize(numPeriods_);
-    for (Size i = 0; i < numPeriods_; ++i)
-        fixingDates_[i] = overnightIndex->fixingCalendar().advance(
-            valueDates_[i], -static_cast<Integer>(FloatingRateCoupon::fixingDays()), Days, Preceding);
-
-    setPricer(ext::shared_ptr<FloatingRateCouponPricer>(new AverageONIndexedCouponPricer));
-    // Populate the accrual periods.
-    dt_.resize(numPeriods_);
-    const DayCounter& dc = overnightIndex->dayCounter();
-    for (Size i = 0; i < numPeriods_; ++i)
-        dt_[i] = dc.yearFraction(valueDates_[i], valueDates_[i + 1]);
-
-    // check that rate cutoff is < number of fixing dates
-    QL_REQUIRE(rateCutoff_ < numPeriods_, "rate cutoff (" << rateCutoff_
-                                                          << ") must be less than number of fixings in period ("
-                                                          << numPeriods_ << ")");
+                                               const QuantLib::ext::shared_ptr<OvernightIndex>& overnightIndex,
+                                               Real gearing, Spread spread, Natural rateCutoff,
+                                               const DayCounter& dayCounter, const Period& lookback,
+                                               const Size fixingDays, const Date& rateComputationStartDate,
+                                               const Date& rateComputationEndDate, const bool telescopicValueDates,
+                                               bool observationShift, bool staleDatesCheck)
+    : OvernightIndexedCouponBase(Type::Averaging, paymentDate, nominal, startDate, endDate, overnightIndex, gearing,
+        spread, Date(), Date(), dayCounter, telescopicValueDates, lookback, rateCutoff, fixingDays,
+        rateComputationStartDate, rateComputationEndDate, observationShift, staleDatesCheck) {
+    setPricer(ext::make_shared<AverageONIndexedCouponPricer>());
 }
-
-const std::vector<Rate>& AverageONIndexedCoupon::indexFixings() const {
-
-    fixings_.resize(numPeriods_);
-    Size i;
-
-    for (i = 0; i < numPeriods_ - rateCutoff_; ++i) {
-        fixings_[i] = index_->fixing(fixingDates_[i]);
-    }
-
-    Rate cutoffFixing = fixings_[i - 1];
-    while (i < numPeriods_) {
-        fixings_[i] = cutoffFixing;
-        i++;
-    }
-
-    return fixings_;
-}
-
-Date AverageONIndexedCoupon::fixingDate() const { return fixingDates_[fixingDates_.size() - 1 - rateCutoff_]; }
 
 void AverageONIndexedCoupon::accept(AcyclicVisitor& v) {
-    Visitor<AverageONIndexedCoupon>* v1 = dynamic_cast<Visitor<AverageONIndexedCoupon>*>(&v);
-    if (v1 != 0) {
+    if (auto v1 = dynamic_cast<Visitor<AverageONIndexedCoupon>*>(&v))
         v1->visit(*this);
-    } else {
+    else
         FloatingRateCoupon::accept(v);
-    }
+}
+
+std::pair<Rate, Date> AverageONIndexedCoupon::effectiveRate(const Date& d) const {
+    return oicPricer()->effectiveRate(d);
+}
+
+ext::shared_ptr<AverageONIndexedCouponPricer> AverageONIndexedCoupon::oicPricer() const {
+    auto fcp = pricer();
+    QL_REQUIRE(fcp, "AverageONIndexedCoupon: FloatingRateCoupon pricer is null.");
+    auto p = ext::dynamic_pointer_cast<AverageONIndexedCouponPricer>(pricer());
+    QL_REQUIRE(p, "AverageONIndexedCoupon: expected an AverageONIndexedCouponPricer.");
+    p->initialize(*this);
+    return p;
 }
 
 // capped floored average on coupon implementation
-
 void CappedFlooredAverageONIndexedCoupon::alwaysForwardNotifications() {
     LazyObject::alwaysForwardNotifications();
     underlying_->alwaysForwardNotifications();
@@ -183,6 +94,8 @@ void CappedFlooredAverageONIndexedCoupon::performCalculations() const {
                   "CapFlooredAverageONIndexedCouponPricer");
     effectiveCapletVolatility_ = p->effectiveCapletVolatility();
     effectiveFloorletVolatility_ = p->effectiveFloorletVolatility();
+    strippedCapletVolatility_ = p->strippedCapletVolatility();
+    strippedFloorletVolatility_ = p->strippedFloorletVolatility();
 }
 
 Rate CappedFlooredAverageONIndexedCoupon::cap() const { return gearing_ > 0.0 ? cap_ : floor_; }
@@ -251,6 +164,16 @@ Real CappedFlooredAverageONIndexedCoupon::effectiveFloorletVolatility() const {
     return effectiveFloorletVolatility_;
 }
 
+Real CappedFlooredAverageONIndexedCoupon::strippedCapletVolatility() const {
+    calculate();
+    return strippedCapletVolatility_;
+}
+
+Real CappedFlooredAverageONIndexedCoupon::strippedFloorletVolatility() const {
+    calculate();
+    return strippedFloorletVolatility_;
+}
+
 void CappedFlooredAverageONIndexedCoupon::accept(AcyclicVisitor& v) {
     Visitor<CappedFlooredAverageONIndexedCoupon>* v1 = dynamic_cast<Visitor<CappedFlooredAverageONIndexedCoupon>*>(&v);
     if (v1 != 0)
@@ -279,17 +202,21 @@ CappedFlooredAverageONIndexedCoupon::CappedFlooredAverageONIndexedCoupon(
 // capped floored average on coupon pricer base class implementation
 
 CapFlooredAverageONIndexedCouponPricer::CapFlooredAverageONIndexedCouponPricer(
-    const Handle<OptionletVolatilityStructure>& v, const bool effectiveVolatilityInput)
-    : capletVol_(v), effectiveVolatilityInput_(effectiveVolatilityInput) {
+    const Handle<OptionletVolatilityStructure>& v)
+    : capletVol_(v) {
     registerWith(capletVol_);
 }
-
-bool CapFlooredAverageONIndexedCouponPricer::effectiveVolatilityInput() const { return effectiveVolatilityInput_; }
 
 Real CapFlooredAverageONIndexedCouponPricer::effectiveCapletVolatility() const { return effectiveCapletVolatility_; }
 
 Real CapFlooredAverageONIndexedCouponPricer::effectiveFloorletVolatility() const {
     return effectiveFloorletVolatility_;
+}
+
+Real CapFlooredAverageONIndexedCouponPricer::strippedCapletVolatility() const { return strippedCapletVolatility_; }
+
+Real CapFlooredAverageONIndexedCouponPricer::strippedFloorletVolatility() const {
+    return strippedFloorletVolatility_;
 }
 
 Handle<OptionletVolatilityStructure> CapFlooredAverageONIndexedCouponPricer::capletVolatility() const {
@@ -440,6 +367,16 @@ AverageONLeg& AverageONLeg::withCapFlooredAverageONIndexedCouponPricer(
     return *this;
 }
 
+AverageONLeg& AverageONLeg::withObservationShift(bool observationShift) {
+    observationShift_ = observationShift;
+    return *this;
+}
+
+AverageONLeg& AverageONLeg::withStaleDatesCheck(bool staleDatesCheck) {
+    staleDatesCheck_ = staleDatesCheck;
+    return *this;
+}
+
 AverageONLeg::operator Leg() const {
 
     QL_REQUIRE(!notionals_.empty(), "No notional given for average overnight leg.");
@@ -530,7 +467,8 @@ AverageONLeg::operator Leg() const {
             auto cpn = QuantLib::ext::make_shared<AverageONIndexedCoupon>(
                 paymentDate, detail::get(notionals_, i, notionals_.back()), start, end, overnightIndex_,
                 detail::get(gearings_, i, 1.0), detail::get(spreads_, i, 0.0), rateCutoff_, paymentDayCounter_,
-                lookback_, fixingDays_, rateComputationStartDate, rateComputationEndDate, telescopicValueDates_);
+                lookback_, fixingDays_, rateComputationStartDate, rateComputationEndDate, telescopicValueDates_,
+                observationShift_, staleDatesCheck_);
             if (couponPricer_) {
                 cpn->setPricer(couponPricer_);
             }

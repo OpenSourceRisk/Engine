@@ -25,10 +25,10 @@ namespace ore {
 namespace data {
 
 BootstrapConfig::BootstrapConfig(Real accuracy, Real globalAccuracy, bool dontThrow, Size maxAttempts, Real maxFactor,
-                                 Real minFactor, Size dontThrowSteps, bool global)
+                                 Real minFactor, Size dontThrowSteps, bool global, Real smoothnessLambda)
     : accuracy_(accuracy), globalAccuracy_(globalAccuracy == Null<Real>() ? accuracy_ : globalAccuracy),
       dontThrow_(dontThrow), maxAttempts_(maxAttempts), maxFactor_(maxFactor), minFactor_(minFactor),
-      dontThrowSteps_(dontThrowSteps), global_(global) {}
+      dontThrowSteps_(dontThrowSteps), global_(global), smoothnessLambda_(smoothnessLambda) {}
 
 void BootstrapConfig::fromXML(XMLNode* node) {
 
@@ -79,6 +79,11 @@ void BootstrapConfig::fromXML(XMLNode* node) {
     if (XMLNode* n = XMLUtils::getChildNode(node, "Global")) {
         global_ = parseBool(XMLUtils::getNodeValue(n));
     }
+
+    smoothnessLambda_ = 0.0;
+    if (XMLNode* n = XMLUtils::getChildNode(node, "SmoothnessLambda")) {
+        smoothnessLambda_ = parseReal(XMLUtils::getNodeValue(n));
+    }
 }
 
 XMLNode* BootstrapConfig::toXML(XMLDocument& doc) const {
@@ -92,6 +97,7 @@ XMLNode* BootstrapConfig::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "MinFactor", minFactor_);
     XMLUtils::addChild(doc, node, "DontThrowSteps", static_cast<int>(dontThrowSteps_));
     XMLUtils::addChild(doc, node, "Global", global_);
+    XMLUtils::addChild(doc, node, "SmoothnessLambda", smoothnessLambda_);
 
     return node;
 }

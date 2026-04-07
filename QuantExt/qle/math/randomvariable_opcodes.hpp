@@ -43,6 +43,8 @@ struct RandomVariableOpCode {
     static constexpr std::size_t Pow = 16;
     static constexpr std::size_t NormalCdf = 17;
     static constexpr std::size_t NormalPdf = 18;
+    static constexpr std::size_t Frac = 19;
+    static constexpr std::size_t Round = 20;
 };
 
 // random variable operation labels
@@ -51,7 +53,7 @@ inline std::vector<std::string> getRandomVariableOpLabels() {
     static std::vector<std::string> tmp = {
         "None",        "Add",         "Subtract",     "Negative",  "Mult",     "Div", "ConditionalExpectation",
         "IndicatorEq", "IndicatorGt", "IndicatorGeq", "Min",       "Max",      "Abs", "Exp",
-        "Sqrt",        "Log",         "Pow",          "NormalCdf", "NormalPdf"};
+        "Sqrt",        "Log",         "Pow",          "NormalCdf", "NormalPdf", "Frac", "Round"};
 
     return tmp;
 }

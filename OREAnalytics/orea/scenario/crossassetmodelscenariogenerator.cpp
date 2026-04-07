@@ -24,6 +24,7 @@
 #include <ql/termstructures/yield/discountcurve.hpp>
 #include <ql/time/daycounters/thirty360.hpp>
 #include <qle/indexes/inflationindexobserver.hpp>
+#include <qle/utilities/inflation.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -41,7 +42,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     const std::string& configuration, const std::string& amcPathDataOutput, Size samples)
     : ScenarioPathGenerator(today, grid->dates(), grid->timeGrid()), model_(model), pathGenerator_(pathGenerator),
       scenarioFactory_(scenarioFactory), simMarketConfig_(simMarketConfig), initMarket_(initMarket),
-      configuration_(configuration), amcPathDataOutput_(amcPathDataOutput), totalSamples_(samples) {
+      configuration_(configuration), amcPathDataOutput_(amcPathDataOutput), totalSamples_(samples), dateGrid_(grid) {
 
     LOG("CrossAssetModelScenarioGenerator ctor called");
 
@@ -292,9 +293,9 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         QuantLib::ext::shared_ptr<ZeroInflationModelTermStructure> ts;
 
         if (mt == CrossAssetModel::ModelType::DK) {
-            ts = QuantLib::ext::make_shared<DkImpliedZeroInflationTermStructure>(model_, idx);
+            ts = QuantLib::ext::make_shared<DkImpliedZeroInflationTermStructure>(model_, idx, dateGrid_->dayCounter());
         } else {
-            ts = QuantLib::ext::make_shared<JyImpliedZeroInflationTermStructure>(model_, idx);
+            ts = QuantLib::ext::make_shared<JyImpliedZeroInflationTermStructure>(model_, idx, dateGrid_->dayCounter());
             QL_REQUIRE(model_->modelType(CrossAssetModel::AssetType::IR, 0) == CrossAssetModel::ModelType::LGM1F,
                        "Simulation of INF JY model is only supported for LGM1F ir model type.");
         }
@@ -412,10 +413,8 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
 
     std::vector<Array> ir_state(n_ccy_);
     for (Size j = 0; j < n_ccy_; ++j) {
-        ir_state[j] = Array(model_->irModel(j)->n());
+        ir_state[j] = Array(model_->irModel(j)->n() + model_->irModel(j)->n_aux());
     }
-
-    Array ir_state_aux(model_->irModel(0)->n_aux());
 
     std::vector<Size> indexCcyIdx(n_indices_);
     for (Size j = 0; j < n_indices_; ++j)
@@ -431,16 +430,12 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
         scenarios[i] = scenarioFactory_->buildScenario(dates_[i], true);
 
         // populate IR states
-        copyPathToArray(sample.value, gridIndexInPath_[i + 1], model_->pIdx(CrossAssetModel::AssetType::IR, 0),
-                        ir_state[0]);
-        copyPathToArray(sample.value, gridIndexInPath_[i + 1],
-                        model_->pIdx(CrossAssetModel::AssetType::IR, 0) + ir_state[0].size(), ir_state_aux);
-        for (Size j = 1; j < n_ccy_; ++j)
+        for (Size j = 0; j < n_ccy_; ++j)
             copyPathToArray(sample.value, gridIndexInPath_[i + 1], model_->pIdx(CrossAssetModel::AssetType::IR, j),
                             ir_state[j]);
 
         // Set numeraire from domestic ir process
-        scenarios[i]->setNumeraire(model_->numeraire(0, t, ir_state[0], Handle<YieldTermStructure>(), ir_state_aux));
+        scenarios[i]->setNumeraire(model_->numeraire(0, t, ir_state[0], Handle<YieldTermStructure>()));
 
         // Discount curves
         for (Size j = 0; j < n_ccy_; j++) {
@@ -551,55 +546,43 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
 
         // Inflation index values
         for (Size j = 0; j < n_inf_; j++) {
-
             // Depending on type of model, i.e. DK or JY, z and y mean different things.
             Real z = sample.value[model_->pIdx(CrossAssetModel::AssetType::INF, j, 0)][gridIndexInPath_[i + 1]];
             Real y = sample.value[model_->pIdx(CrossAssetModel::AssetType::INF, j, 1)][gridIndexInPath_[i + 1]];
-
-            // Could possibly cache the model type outside the loop to improve performance.
-            Real cpi = 0.0;
-            if (model_->modelType(CrossAssetModel::AssetType::INF, j) == CrossAssetModel::ModelType::JY) {
-                cpi = std::exp(
-                    sample.value[model_->pIdx(CrossAssetModel::AssetType::INF, j, 1)][gridIndexInPath_[i + 1]]);
-            } else if (model_->modelType(CrossAssetModel::AssetType::INF, j) == CrossAssetModel::ModelType::DK) {
-                auto index = *initMarket_->zeroInflationIndex(model_->inf(j)->name());
-                Date baseDate = index->zeroInflationTermStructure()->baseDate();
-                auto zts = index->zeroInflationTermStructure();
-                Time relativeTime = inflationYearFraction(zts->frequency(), false, zts->dayCounter(), baseDate,
-                                                          dates_[i] - zts->observationLag());
-                std::tie(cpi, std::ignore) = model_->infdkI(j, relativeTime, relativeTime, z, y);
-                cpi *= index->fixing(baseDate);
-            } else {
-                QL_FAIL("CrossAssetModelScenarioGenerator: expected inflation model to be JY or DK.");
-            }
-
+            auto index = *initMarket_->zeroInflationIndex(model_->inf(j)->name());
+            auto zts = index->zeroInflationTermStructure();
+            Real cpi = scenarioBaseCpi(y, z, dates_[i], model_, j, dateGrid_->dayCounter(), index);
+            Date fixingDate = inflationPeriod(dates_[i] - simulationLag(zts), zts->frequency()).first;
+            cpi = seasonalizeCPI(fixingDate, cpi, zts);
             scenarios[i]->add(cpiKeys_[j], cpi);
         }
 
         // Zero inflation curves
         for (Size j = 0; j < zeroInfCurves_.size(); ++j) {
 
-            auto tup = zeroInfCurves_[j];
+            auto [idx, ccyIdx, modelType, ts] = zeroInfCurves_[j];
 
             // State variables needed depends on model, 3 for JY and 2 for DK.
-            auto idx = std::get<0>(tup);
+            
             Array state(3);
             state[0] = sample.value[model_->pIdx(CrossAssetModel::AssetType::INF, idx, 0)][gridIndexInPath_[i + 1]];
             state[1] = sample.value[model_->pIdx(CrossAssetModel::AssetType::INF, idx, 1)][gridIndexInPath_[i + 1]];
-            if (std::get<2>(tup) == CrossAssetModel::ModelType::DK) {
+            if (modelType == CrossAssetModel::ModelType::DK) {
                 state.resize(2);
             } else {
-                state[2] = ir_state[std::get<1>(tup)][0];
+                state[2] = ir_state[ccyIdx][0];
             }
 
             // Update the term structure's date and state.
-            auto ts = std::get<3>(tup);
             ts->move(dates_[i], state);
 
             // Populate the zero inflation scenario values based on the current date and state.
             for (Size k = 0; k < ten_zinf_[j].size(); k++) {
-                Time T = dc.yearFraction(dates_[i], dates_[i] + ten_zinf_[j][k]);
-                scenarios[i]->add(zeroInflationKeys_[j * ten_zinf_[j].size() + k], ts->zeroRate(T));
+                auto index = *initMarket_->zeroInflationIndex(model_->inf(idx)->name());
+                auto obsLag = ts->observationLag();
+                auto zeroRate =
+                    scenarioInflationZeroRateFromModelTs(dates_[i], ten_zinf_[j][k], obsLag, index, ts, modelType, dc);
+                scenarios[i]->add(zeroInflationKeys_[j * ten_zinf_[j].size() + k], zeroRate);
             }
         }
 

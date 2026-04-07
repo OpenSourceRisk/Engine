@@ -97,13 +97,13 @@ XMLNode* EquityCurveConfig::toXML(XMLDocument& doc) const {
     if (outputType_ == EquityCurveConfig::Type::OptionPremium)
         XMLUtils::addChild(doc, node, "ExerciseStyle", to_string(exerciseStyle_));
     XMLUtils::addChild(doc, node, "SpotQuote", equitySpotQuoteID_);
-    XMLUtils::addChildren(doc, node, "Quotes", "Quote", fwdQuotes_);
     XMLUtils::addChild(doc, node, "DayCounter", dayCountID_);
 
     if (outputType_ != Type::NoDividends) {
         XMLNode* divInterpNode = XMLUtils::addChild(doc, node, "DividendInterpolation");
         XMLUtils::addChild(doc, divInterpNode, "InterpolationVariable", divInterpVariable_);
         XMLUtils::addChild(doc, divInterpNode, "InterpolationMethod", divInterpMethod_);
+        XMLUtils::addChildren(doc, node, "Quotes", "Quote", fwdQuotes_);
     }
     XMLUtils::addChild(doc, node, "DividendExtrapolation", dividendExtrapolation_);
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolation_);

@@ -24,16 +24,21 @@
 #ifndef quantext_inflation_index_observer_hpp
 #define quantext_inflation_index_observer_hpp
 
+#include <ql/indexes/inflationindex.hpp>
+#include <qle/utilities/inflation.hpp>
+
 namespace QuantExt {
 
 //! Inflation Index observer
 /*! \ingroup indexes */
 class InflationIndexObserver : public TermStructure {
 public:
-    InflationIndexObserver(const QuantLib::ext::shared_ptr<InflationIndex>& index, const Handle<Quote>& quote,
-                           const Period& observationLag, const DayCounter& dayCounter = DayCounter())
-        : TermStructure(dayCounter), index_(index), quote_(quote), observationLag_(observationLag) {
+    InflationIndexObserver(const QuantLib::Handle<ZeroInflationIndex>& index, const Handle<Quote>& quote,
+                           const int simulationLag, const DayCounter& dayCounter = DayCounter())
+        : TermStructure(dayCounter), index_(index), quote_(quote), simulationLag_(simulationLag) {
         registerWith(quote_);
+        QL_REQUIRE(!index_.empty(), "index is null");
+        QL_REQUIRE(!index_->zeroInflationTermStructure().empty(), "index does not have an associated zero inflation term structure");
     }
 
     void update() override { // called when the quote changes
@@ -49,14 +54,15 @@ private:
     void setFixing() {
         // something like this
         Date today = Settings::instance().evaluationDate();
-        Date fixingDate = today - observationLag_;
+        Date fixingDate = inflationPeriod(today - simulationLag_, index_->frequency()).first;
         // overwrite the current fixing in the QuantLib::FixingManager
-        index_->addFixing(fixingDate, quote_->value(), true);
+        Real cpi = quote_->value();
+        index_->addFixing(fixingDate, cpi, true);
     }
 
-    QuantLib::ext::shared_ptr<InflationIndex> index_;
+    QuantLib::Handle<ZeroInflationIndex> index_;
     Handle<Quote> quote_;
-    Period observationLag_;
+    int simulationLag_;
 };
 } // namespace QuantExt
 

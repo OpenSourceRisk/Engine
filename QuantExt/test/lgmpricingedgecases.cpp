@@ -25,8 +25,8 @@
 #include <ql/indexes/inflation/ukrpi.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/target.hpp>
+#include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <qle/pricingengines/analyticlgmswaptionengine.hpp>
-#include <qle/pricingengines/oiccbasisswapengine.hpp>
 
 using namespace QuantExt;
 

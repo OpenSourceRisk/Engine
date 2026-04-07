@@ -64,6 +64,8 @@ public:
     const string& calendar() const { return calendar_; }
     const string& fxIndex() const { return fxIndex_; }
     QuantLib::Real strike() const { return soldAmount_ / boughtAmount_; }
+    QuantLib::Real notional() const override;
+    string notionalCurrency() const override;
     //@}
 
     //! \name Serialisation
@@ -79,6 +81,7 @@ private:
     string fxIndex_;
     QuantLib::Real boughtAmount_;
     QuantLib::Real soldAmount_;
+    QuantLib::ext::shared_ptr<Trade> delegatingBuilderTrade_;
 };
 } // namespace data
 } // namespace oreplus

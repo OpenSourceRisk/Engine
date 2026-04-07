@@ -32,11 +32,11 @@ McCamFxOptionEngineBase::McCamFxOptionEngineBase(
     const SobolBrownianGenerator::Ordering ordering, const SobolRsg::DirectionIntegers directionIntegers,
     const std::vector<Handle<YieldTermStructure>>& discountCurves, const std::vector<Date>& simulationDates,
     const std::vector<Date>& stickyCloseOutDates, const std::vector<Size>& externalModelIndices,
-    const bool minimalObsDate, const RegressorModel regressorModel, const Real regressionVarianceCutoff,
+    const bool minimalObsDate, const McRegressionModel::RegressorModel regressorModel, const Real regressionVarianceCutoff,
     const bool recalibrateOnStickyCloseOutDates, const bool reevaluateExerciseInStickyRun,
     const Size cfOnCpnMaxSimTimes, const Period& cfOnCpnAddSimTimesCutoff,
     const Size regressionMaxSimTimesIr, const Size regressionMaxSimTimesFx, const Size regressionMaxSimTimesEq,
-    const VarGroupMode regressionVarGroupMode)
+    const McRegressionModel::VarGroupMode regressionVarGroupMode)
     : McMultiLegBaseEngine(model, calibrationPathGenerator, pricingPathGenerator, calibrationSamples, pricingSamples,
                            calibrationSeed, pricingSeed, polynomOrder, polynomType, ordering, directionIntegers,
                            discountCurves, simulationDates, stickyCloseOutDates, externalModelIndices, minimalObsDate,
@@ -73,7 +73,7 @@ void McCamFxOptionEngineBase::calculateFxOptionBase() const {
     Real fxSpot = 1.0;
     Size npvCcyIndex = model_->ccyIndex(npvCcy_);
     if (npvCcyIndex > 0)
-        fxSpot = model_->fxbs(npvCcyIndex - 1)->fxSpotToday()->value();
+        fxSpot = model_->fxModel(npvCcyIndex - 1)->fxSpotToday()->value();
 
     fxOptionResultValue_ = resultValue_ / fxSpot;
     fxOptionUnderlyingNpv_ = resultUnderlyingNpv_ / fxSpot;

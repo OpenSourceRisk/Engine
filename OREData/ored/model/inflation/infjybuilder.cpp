@@ -285,8 +285,9 @@ Helpers InfJyBuilder::buildCpiCapFloorBasket(const CalibrationBasket& cb,
     // Some of these should possibly come from conventions.
     // Also some variables used in the loop below.
     auto calendar = zeroInflationIndex_->fixingCalendar();
-    auto baseDate = zts->baseDate();
-    auto baseCpi = dontCalibrate_ ? 100.0 : zeroInflationIndex_->fixing(baseDate);
+    auto startDate = Settings::instance().evaluationDate();
+    auto baseCpi = dontCalibrate_ ? 100.0 : ZeroInflation::cpiFixing(zeroInflationIndex_, startDate, cpiVolatility_->observationLag(),
+                                              cpiVolatility_->indexIsInterpolated());
     auto bdc = cpiVolatility_->businessDayConvention();
     auto obsLag = cpiVolatility_->observationLag();
     
@@ -304,18 +305,31 @@ Helpers InfJyBuilder::buildCpiCapFloorBasket(const CalibrationBasket& cb,
 
     // Add calibration instruments to the helpers vector.
     const auto& ci = cb.instruments();
-
-    auto observationInterpolation = cpiVolatility_->indexIsInterpolated() ? CPI::Linear : CPI::Flat;
-
+ 
+    auto observationInterpolation =cpiVolatility_->indexIsInterpolated() ? CPI::Linear : CPI::Flat;
+    DLOG("InfJyBuilder: ci size = " << ci.size() << ", base CPI = " << baseCpi << ", obs lag = " << obsLag <<
+         ", observation interpolation = " << (observationInterpolation == CPI::Linear ? "Linear" : "Flat"));
     for (Size i = 0; i < ci.size(); ++i) {
-
         auto cpiCapFloor = QuantLib::ext::dynamic_pointer_cast<CpiCapFloor>(ci[i]);
         QL_REQUIRE(cpiCapFloor, "InfJyBuilder: expected CpiCapFloor calibration instrument.");
         auto maturity = optionMaturity(cpiCapFloor->maturity(), calendar);
-
-        // Deal with reference calibration date grid stuff.
+        auto fixingDate = ZeroInflation::fixingDate(maturity, obsLag, zeroInflationIndex_->frequency(), cpiVolatility_->indexIsInterpolated());
+        DLOG("InfJyBuilder: processing CPI cap floor calibration instrument with maturity " << io::iso_date(maturity) <<
+             " and strike " << cpiCapFloor->strike() << " fixing Date " << io::iso_date(fixingDate));
+        if(fixingDate <= zeroInflationIndex_->zeroInflationTermStructure()->baseDate()){
+            DLOG("InfJyBuilder: skipping CPI cap floor calibration instrument with maturity " << io::iso_date(maturity) <<
+                 " as its fixing date " << io::iso_date(fixingDate) << " is on or before the base date of the zero inflation curve, " <<
+                 io::iso_date(zeroInflationIndex_->zeroInflationTermStructure()->baseDate()));
+            active[i] = false;
+            continue;
+        }
+        
+             // Deal with reference calibration date grid stuff.
         auto rcDate = lower_bound(rcDates.begin(), rcDates.end(), maturity);
         if (!(rcDate == rcDates.end() || *rcDate > prevRcDate)) {
+            DLOG("InfJyBuilder: skipping CPI cap floor calibration instrument with maturity " << io::iso_date(maturity) <<
+                 " as it does not satisfy the reference calibration date grid requirement. rcDate = " <<  io::iso_date(*rcDate) <<
+                 ", prevRcDate = " << io::iso_date(prevRcDate));
             active[i] = false;
             continue;
         }
@@ -328,14 +342,13 @@ Helpers InfJyBuilder::buildCpiCapFloorBasket(const CalibrationBasket& cb,
         /* FIXME - the maturity date is not adjusted on eval date changes even if given as a tenor
                  - if the strike is atm, the value will not be updated on eval date changes */
         Real strikeValue =
-            cpiCapFloorStrikeValue(cpiCapFloor->strike(), *zeroInflationIndex_->zeroInflationTermStructure(), maturity);
+            cpiCapFloorStrikeValue(cpiCapFloor->strike(), zeroInflationIndex_, cpiVolatility_, maturity, dontCalibrate_);
         Option::Type capfloor = cpiCapFloor->type() == CapFloor::Cap ? Option::Call : Option::Put;
         auto inst = QuantLib::ext::make_shared<CPICapFloor>(capfloor, nominal, today, baseCpi, maturity, calendar, bdc, calendar, bdc,
                                             strikeValue, zeroInflationIndex_, obsLag, observationInterpolation);
         inst->setPricingEngine(engine);
 
-        auto fixingDate = inst->fixingDate();
-        auto t = inflationTime(fixingDate, *zts, false);
+        auto t = rateCurve_->timeFromReference(fixingDate + simulationLag(zts));
 
         // Build the helper using the NPV as the premium.
         Real premium;
@@ -723,9 +736,16 @@ QuantLib::ext::shared_ptr<FxBsParametrization> InfJyBuilder::createIndexParam() 
     // Create the index portion of the parameterization
     QuantLib::ext::shared_ptr<QuantExt::FxBsParametrization> indexParam;
 
-    Handle<Quote> baseCpiQuote(QuantLib::ext::make_shared<SimpleQuote>(
+    Date baseDate = zeroInflationIndex_->zeroInflationTermStructure()->baseDate();
+    QuantLib::Real baseCpi = 
         dontCalibrate_ ? 100
-                       : zeroInflationIndex_->fixing(zeroInflationIndex_->zeroInflationTermStructure()->baseDate())));
+                       : zeroInflationIndex_->fixing(baseDate);
+
+    // Seasonality is determinsitc and not in the dynamic and applied later
+    if (zeroInflationIndex_->zeroInflationTermStructure()->seasonality() != nullptr) {
+        baseCpi = deseasonalizeCPI(baseDate, baseCpi, zeroInflationIndex_->zeroInflationTermStructure().currentLink());
+    }
+    QuantLib::Handle<QuantLib::Quote> baseCpiQuote(QuantLib::ext::make_shared<QuantLib::SimpleQuote>(baseCpi));
 
     // Index volatility parameter constraints
     const auto& cc = data_->calibrationConfiguration();

@@ -18,15 +18,21 @@
 
 #include <orea/app/analytics/analyticfactory.hpp>
 #include <orea/app/analytics/sacvaanalytic.hpp>
+#include <orea/app/inputparameters.hpp>
 #include <orea/engine/standardapproachcvacalculator.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/engine/parsensitivitycubestream.hpp>
 #include <orea/engine/sacvasensitivityloader.hpp>
+#include <ored/report/inmemoryreport.hpp>
 
 using RFType = ore::analytics::RiskFactorKey::KeyType;
 
 namespace ore {
 namespace analytics {
+
+void SaCvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) {
+    inputs->loadParameterXML<NettingSetManager>(nettingSetManager_, "bacva", "csaFile");
+}
 
 void SaCvaAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
@@ -46,6 +52,8 @@ void SaCvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::I
 
     LOG("SaCvaAnalyticImpl::runAnalytic called");
     SaCvaNetSensitivities cvaSensis = inputs_->saCvaNetSensitivities();
+
+    auto sacvaVars = ext::dynamic_pointer_cast<SaCvaVariables>(inputVariables_);
 
     // Generate sensitivities here if not provided
     if (cvaSensis.size() == 0) {

@@ -54,10 +54,10 @@
       <!-- enable dynamic IM -->
       <Parameter name="xvaCgDynamicIM">true</Parameter>
       <!-- calculate dynamic IM on each nth time step -->
-      <Parameter name="xvaCgDynamicIMStepSize">1</Parameter>
+      <Parameter name="xvaCgDynamicIMStepSize">4</Parameter>
       <!-- regression order in xva cg engine -->
-      <Parameter name="xvaCgRegressionOrder">4</Parameter>
-      <Parameter name="xvaCgRegressionOrderDynamicIm">4</Parameter>
+      <Parameter name="xvaCgRegressionOrder">2</Parameter>
+      <Parameter name="xvaCgRegressionOrderDynamicIm">2</Parameter>
       <!-- regression variance cutoff in xva cg engine, the cutoff is disabled when the parameter is not given -->
       <!-- <Parameter name="xvaCgRegressionVarianceCutoff">0.01</Parameter> -->
       <!-- <Parameter name="xvaCgRegressionVarianceCutoffDynamicIm">0.01</Parameter> -->
@@ -87,9 +87,9 @@
       <Parameter name="marginalAllocationLimit">1.0</Parameter>
       <Parameter name="exerciseNextBreak">N</Parameter>
       <Parameter name="cva">Y</Parameter>
-      <Parameter name="dva">N</Parameter>
+      <Parameter name="dva">Y</Parameter>
       <!--<Parameter name="dvaName">BANK</Parameter>-->
-      <Parameter name="fva">N</Parameter>
+      <Parameter name="fva">Y</Parameter>
       <!--
       <Parameter name="fvaBorrowingCurve">BANK_EUR_BORROW</Parameter>
       <Parameter name="fvaLendingCurve">BANK_EUR_LEND</Parameter>

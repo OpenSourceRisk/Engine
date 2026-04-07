@@ -26,8 +26,11 @@
 #include <orea/app/analytics/xvaanalytic.hpp>
 #include <orea/scenario/stressscenariogenerator.hpp>
 #include <ored/report/inmemoryreport.hpp>
+
 namespace ore {
 namespace analytics {
+
+class InputParameters;
 
 class XvaExplainResults {
 

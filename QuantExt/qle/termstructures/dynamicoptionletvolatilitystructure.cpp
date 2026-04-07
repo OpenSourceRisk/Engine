@@ -48,7 +48,9 @@ Date DynamicOptionletVolatilityStructure::maxDate() const {
     QL_FAIL("unexpected decay mode (" << decayMode_ << ")");
 }
 
-void DynamicOptionletVolatilityStructure::update() { TermStructure::update(); }
+void DynamicOptionletVolatilityStructure::update() {
+    TermStructure::update(); 
+}
 
 QuantLib::ext::shared_ptr<SmileSection> DynamicOptionletVolatilityStructure::smileSectionImpl(Time optionTime) const {
     return source_->smileSection(optionTime);

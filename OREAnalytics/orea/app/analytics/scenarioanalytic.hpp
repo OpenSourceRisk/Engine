@@ -25,7 +25,9 @@
 
 namespace ore {
 namespace analytics {
-    
+
+class InputParameters;
+
 class ScenarioAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "SCENARIO";

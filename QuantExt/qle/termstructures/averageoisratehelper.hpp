@@ -50,7 +50,8 @@ public:
                          // Exogenous discount curve
                          const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
                          const bool discountCurveGiven = false, const bool telescopicValueDates = false,
-                         const QuantLib::Pillar::Choice pillarChoice = QuantLib::Pillar::LastRelevantDate);
+                         const QuantLib::Pillar::Choice pillarChoice = QuantLib::Pillar::LastRelevantDate,
+                         const Date& customPillarDate = Date());
 
     //! \name RateHelper interface
     //@{

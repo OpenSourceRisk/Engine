@@ -30,10 +30,10 @@ namespace data {
 
 namespace {
 template <class T>
-boost::shared_ptr<FloatingRateCouponPricer>
-getEngine(const std::string& index, const boost::shared_ptr<Market>& market, const std::string& configuration,
+ext::shared_ptr<FloatingRateCouponPricer>
+getEngine(const std::string& index, const ext::shared_ptr<Market>& market, const std::string& configuration,
           const bool zeroVolatility, const std::string& timingAdjustmentStr, const Real correlationValue,
-          std::map<string, boost::shared_ptr<FloatingRateCouponPricer>>& engines) {
+          std::map<string, ext::shared_ptr<FloatingRateCouponPricer>>& engines) {
 
     std::string ccyCode = parseIborIndex(index)->currency().code();
     Handle<YieldTermStructure> yts = market->discountCurve(ccyCode, configuration);
@@ -59,7 +59,7 @@ getEngine(const std::string& index, const boost::shared_ptr<Market>& market, con
 }
 } // namespace
 
-boost::shared_ptr<FloatingRateCouponPricer> CapFlooredIborLegEngineBuilder::engineImpl(const std::string& index) {
+ext::shared_ptr<FloatingRateCouponPricer> CapFlooredIborLegEngineBuilder::engineImpl(const std::string& index) {
     return getEngine<BlackIborCouponPricer>(index, market_, configuration(MarketContext::pricing),
                                             parseBool(engineParameter("ZeroVolatility", {}, false, "false")),
                                             engineParameter("TimingAdjustment", {}, false, "Black76"),
@@ -67,7 +67,7 @@ boost::shared_ptr<FloatingRateCouponPricer> CapFlooredIborLegEngineBuilder::engi
                                             engines_);
 }
 
-boost::shared_ptr<FloatingRateCouponPricer>
+ext::shared_ptr<FloatingRateCouponPricer>
 CapFlooredInterpolatedIborLegEngineBuilder::engineImpl(const std::string& index) {
     return getEngine<QuantExt::BlackInterpolatedIborCouponPricer>(
         index, market_, configuration(MarketContext::pricing),

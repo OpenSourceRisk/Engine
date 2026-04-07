@@ -17,81 +17,46 @@
 */
 
 /*! \file averageonindexedcoupon.hpp
-    \brief coupon paying the weighted average of the daily overnight rate
-
-        \ingroup cashflows
+    \brief coupon paying the interest due to the weighted average of daily overnight fixings.
 */
-
 #pragma once
-
+#include <qle/cashflows/overnightindexedcouponbase.hpp>
 #include <ql/cashflows/couponpricer.hpp>
-#include <ql/cashflows/floatingratecoupon.hpp>
-#include <ql/indexes/iborindex.hpp>
-#include <ql/time/schedule.hpp>
 
 namespace QuantExt {
-using namespace QuantLib;
 
-//! average overnight coupon pricer
-/*! \ingroup cashflows
- */
+using namespace QuantLib;
 class AverageONIndexedCouponPricer;
 
-//! average overnight coupon
-/*! %Coupon paying the interest due to the weighted average of daily
-     overnight fixings. The rateCutoff counts the number of fixing
-     dates starting at the end date whose fixings are not taken into
-     account, but rather replaced by the last known fixing before.
-
-             \ingroup cashflows
-*/
-class AverageONIndexedCoupon : public FloatingRateCoupon {
+/** Overnight (averaging) coupon.
+ *  %Coupon paying the interest due to the weighted, by overnight day count fraction, average of a series of overnight 
+ *  fixings over the coupon period.
+ *
+ *  For more details about the coupon structure, see OvernightIndexedCouponBase.
+ *
+ *  \see OvernightIndexedCouponBase
+ *  \ingroup cashflows
+ */
+class AverageONIndexedCoupon : public OvernightIndexedCouponBase {
 public:
     AverageONIndexedCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate,
                            const QuantLib::ext::shared_ptr<OvernightIndex>& overnightIndex, Real gearing = 1.0,
                            Spread spread = 0.0, Natural rateCutoff = 0, const DayCounter& dayCounter = DayCounter(),
                            const Period& lookback = 0 * Days, const Size fixingDays = Null<Size>(),
-                           const Date& rateComputationStartDate = Null<Date>(),
-                           const Date& rateComputationEndDate = Null<Date>(), const bool telescopicValueDates = false);
-    //! \name Inspectors
-    //@{
-    //! fixing dates for the rates to be averaged
-    const std::vector<Date>& fixingDates() const { return fixingDates_; }
-    //! accrual periods for the averaging
-    const std::vector<Time>& dt() const { return dt_; }
-    //! fixings to be averaged
-    const std::vector<Rate>& indexFixings() const;
-    //! value dates for the rates to be averaged
-    const std::vector<Date>& valueDates() const { return valueDates_; }
-    //! rate cutoff associated with the coupon
-    Natural rateCutoff() const { return rateCutoff_; }
-    //! lookback period
-    const Period& lookback() const { return lookback_; }
-    //! rate computation start date
-    const Date& rateComputationStartDate() const { return rateComputationStartDate_; }
-    //! rate computation end date
-    const Date& rateComputationEndDate() const { return rateComputationEndDate_; }
-    //! the underlying index
-    const ext::shared_ptr<OvernightIndex>& overnightIndex() const { return overnightIndex_; }
-    //@}
-    //! \name FloatingRateCoupon interface
-    //@{
-    //! the date when the coupon is fully determined
-    Date fixingDate() const override;
-    //@}
+                           const Date& rateComputationStartDate = Date(),
+                           const Date& rateComputationEndDate = Date(), const bool telescopicValueDates = false,
+                           bool observationShift = true, bool staleDatesCheck = true);
     //! \name Visitability
     //@{
     void accept(AcyclicVisitor&) override;
     //@}
+
 private:
-    QuantLib::ext::shared_ptr<OvernightIndex> overnightIndex_;
-    std::vector<Date> valueDates_, fixingDates_;
-    mutable std::vector<Rate> fixings_;
-    Size numPeriods_;
-    std::vector<Time> dt_;
-    Natural rateCutoff_;
-    Period lookback_;
-    Date rateComputationStartDate_, rateComputationEndDate_;
+    // Calculate the effective rate up to a given date.
+    std::pair<QuantLib::Rate, QuantLib::Date> effectiveRate(const QuantLib::Date& date) const override;
+
+    // Check for average overnight index coupon pricer, throw if not and return shared pointer to it if valid.
+    QuantLib::ext::shared_ptr<AverageONIndexedCouponPricer> oicPricer() const;
 };
 
 //! capped floored overnight indexed coupon
@@ -132,10 +97,14 @@ public:
     Real effectiveCapletVolatility() const;
     //! effective floorlet volatility
     Real effectiveFloorletVolatility() const;
-    //@}
+    //! stripped caplet volatility
+    Real strippedCapletVolatility() const;
+    //! stripped floorlet volatility
+    Real strippedFloorletVolatility() const;
     //! \name Visitability
     //@{
     virtual void accept(AcyclicVisitor&) override;
+    //@}
 
     bool isCapped() const { return cap_ != Null<Real>(); }
     bool isFloored() const { return floor_ != Null<Real>(); }
@@ -153,23 +122,26 @@ protected:
     bool includeSpread_;
     mutable Real effectiveCapletVolatility_;
     mutable Real effectiveFloorletVolatility_;
+    mutable Real strippedCapletVolatility_;
+    mutable Real strippedFloorletVolatility_;
 };
 
 //! capped floored averaged indexed coupon pricer base class
 class CapFlooredAverageONIndexedCouponPricer : public FloatingRateCouponPricer {
 public:
-    CapFlooredAverageONIndexedCouponPricer(const Handle<OptionletVolatilityStructure>& v,
-                                           const bool effectiveVolatilityInput = false);
+    CapFlooredAverageONIndexedCouponPricer(const Handle<OptionletVolatilityStructure>& v);
     Handle<OptionletVolatilityStructure> capletVolatility() const;
-    bool effectiveVolatilityInput() const;
     Real effectiveCapletVolatility() const;   // only available after capletRate() was called
     Real effectiveFloorletVolatility() const; // only available after floorletRate() was called
+    Real strippedCapletVolatility() const;    // only available after capletRate() was called
+    Real strippedFloorletVolatility() const;  // only available after floorletRate() was called
 
 protected:
     Handle<OptionletVolatilityStructure> capletVol_;
-    bool effectiveVolatilityInput_;
     mutable Real effectiveCapletVolatility_ = Null<Real>();
     mutable Real effectiveFloorletVolatility_ = Null<Real>();
+    mutable Real strippedCapletVolatility_ = Null<Real>();
+    mutable Real strippedFloorletVolatility_ = Null<Real>();
 };
 
 //! helper class building a sequence of overnight coupons
@@ -206,6 +178,8 @@ public:
     AverageONLeg& withAverageONIndexedCouponPricer(const QuantLib::ext::shared_ptr<AverageONIndexedCouponPricer>& couponPricer);
     AverageONLeg& withCapFlooredAverageONIndexedCouponPricer(
         const QuantLib::ext::shared_ptr<CapFlooredAverageONIndexedCouponPricer>& couponPricer);
+    AverageONLeg& withObservationShift(bool observationShift);
+    AverageONLeg& withStaleDatesCheck(bool staleDatesCheck);
     operator Leg() const;
 
 private:
@@ -232,6 +206,8 @@ private:
     std::vector<QuantLib::Date> paymentDates_;
     QuantLib::ext::shared_ptr<AverageONIndexedCouponPricer> couponPricer_;
     QuantLib::ext::shared_ptr<CapFlooredAverageONIndexedCouponPricer> capFlooredCouponPricer_;
+    bool observationShift_;
+    bool staleDatesCheck_;
 };
 
 } // namespace QuantExt

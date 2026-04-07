@@ -24,8 +24,9 @@ namespace QuantExt {
 
 BlackVolatilityConstantSpread::BlackVolatilityConstantSpread(const Handle<BlackVolTermStructure>& atm,
                                                              const Handle<BlackVolTermStructure>& surface)
-    : BlackVolTermStructure(0, atm->calendar(), atm->businessDayConvention(), atm->dayCounter()), atm_(atm),
-      surface_(surface) {
+    : BlackVolTermStructure(0, atm->calendar(), atm->businessDayConvention(), atm->dayCounter(), atm->volType(),
+                            atm->shift()),
+      atm_(atm), surface_(surface) {
     enableExtrapolation(atm->allowsExtrapolation());
     registerWith(atm);
     registerWith(surface);

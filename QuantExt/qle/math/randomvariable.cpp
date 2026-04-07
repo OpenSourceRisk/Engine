@@ -19,11 +19,16 @@
 #include <qle/math/randomvariable.hpp>
 #include <qle/math/randomvariablelsmbasissystem.hpp>
 
+#ifdef ORE_ENABLE_CUDA
+#include <qle/math/gpuqrsolve_multistream.hpp>
+#endif
+
 #include <ql/experimental/math/moorepenroseinverse.hpp>
 #include <ql/math/comparison.hpp>
 #include <ql/math/generallinearleastsquares.hpp>
 #include <ql/math/matrixutilities/qrdecomposition.hpp>
 #include <ql/math/matrixutilities/symmetricschurdecomposition.hpp>
+#include <ql/math/rounding.hpp>
 
 #include <boost/math/distributions/normal.hpp>
 
@@ -441,7 +446,8 @@ void RandomVariable::copyToMatrixCol(QuantLib::Matrix& m, const Size j) const {
     }
 }
 
-void RandomVariable::copyToArray(QuantLib::Array& array) const {
+RandomVariable::operator Array() const {
+    Array array(n_);
     if (deterministic_)
         std::fill(array.begin(), array.end(), constantData_);
     else if (n_ != 0) {
@@ -450,6 +456,7 @@ void RandomVariable::copyToArray(QuantLib::Array& array) const {
         std::copy(data_, data_ + n_, array.begin());
         stopDataStats(n_);
     }
+    return array;
 }
 
 void RandomVariable::clear() {
@@ -567,6 +574,8 @@ RandomVariable& RandomVariable::operator+=(const RandomVariable& y) {
     return *this;
 }
 
+RandomVariable& RandomVariable::operator+=(const Real y) { return operator+=(RandomVariable(size(), y)); }
+
 RandomVariable& RandomVariable::operator-=(const RandomVariable& y) {
     if (!y.initialised())
         clear();
@@ -591,6 +600,8 @@ RandomVariable& RandomVariable::operator-=(const RandomVariable& y) {
     return *this;
 }
 
+RandomVariable& RandomVariable::operator-=(const Real y) { return operator-=(RandomVariable(size(), y)); }
+
 RandomVariable& RandomVariable::operator*=(const RandomVariable& y) {
     if (!y.initialised())
         clear();
@@ -608,12 +619,17 @@ RandomVariable& RandomVariable::operator*=(const RandomVariable& y) {
     else {
         resumeCalcStats();
         for (Size i = 0; i < n_; ++i) {
-            data_[i] *= y[i];
+            if (y[i] == 0.0 || data_[i] == 0.0)
+                data_[i] = 0.0;
+            else
+                data_[i] *= y[i];
         }
         stopCalcStats(n_);
     }
     return *this;
 }
+
+RandomVariable& RandomVariable::operator*=(const Real y) { return operator*=(RandomVariable(size(), y)); }
 
 RandomVariable& RandomVariable::operator/=(const RandomVariable& y) {
     if (!y.initialised())
@@ -639,12 +655,17 @@ RandomVariable& RandomVariable::operator/=(const RandomVariable& y) {
     return *this;
 }
 
+RandomVariable& RandomVariable::operator/=(const Real y) { return operator/=(RandomVariable(size(), y)); }
+
 RandomVariable operator+(RandomVariable x, const RandomVariable& y) {
     if (!x.initialised() || !y.initialised())
         return RandomVariable();
     x += y;
     return x;
 }
+
+RandomVariable operator+(Real y, RandomVariable x) { return std::move(x) + RandomVariable(x.size(), y); }
+RandomVariable operator+(RandomVariable x, Real y) { return std::move(x) + RandomVariable(x.size(), y); }
 
 RandomVariable operator-(RandomVariable x, const RandomVariable& y) {
     if (!x.initialised() || !y.initialised())
@@ -653,6 +674,9 @@ RandomVariable operator-(RandomVariable x, const RandomVariable& y) {
     return x;
 }
 
+RandomVariable operator-(Real y, RandomVariable x) { return RandomVariable(x.size(), y) - std::move(x); }
+RandomVariable operator-(RandomVariable x, Real y) { return std::move(x) - RandomVariable(x.size(), y); }
+
 RandomVariable operator*(RandomVariable x, const RandomVariable& y) {
     if (!x.initialised() || !y.initialised())
         return RandomVariable();
@@ -660,12 +684,18 @@ RandomVariable operator*(RandomVariable x, const RandomVariable& y) {
     return x;
 }
 
+RandomVariable operator*(Real y, RandomVariable x) { return std::move(x) * RandomVariable(x.size(), y); }
+RandomVariable operator*(RandomVariable x, Real y) { return std::move(x) * RandomVariable(x.size(), y); }
+
 RandomVariable operator/(RandomVariable x, const RandomVariable& y) {
     if (!x.initialised() || !y.initialised())
         return RandomVariable();
     x /= y;
     return x;
 }
+
+RandomVariable operator/(Real y, RandomVariable x) { return RandomVariable(x.size(), y) / std::move(x); }
+RandomVariable operator/(RandomVariable x, Real y) { return std::move(x) / RandomVariable(x.size(), y); }
 
 RandomVariable max(RandomVariable x, const RandomVariable& y) {
     if (!x.initialised() || !y.initialised())
@@ -687,6 +717,9 @@ RandomVariable max(RandomVariable x, const RandomVariable& y) {
     return x;
 }
 
+RandomVariable max(const Real y, RandomVariable x) { return max(RandomVariable(x.size(), y), std::move(x)); }
+RandomVariable max(RandomVariable x, const Real y) { return max(RandomVariable(x.size(), y), std::move(x)); }
+
 RandomVariable min(RandomVariable x, const RandomVariable& y) {
     if (!x.initialised() || !y.initialised())
         return RandomVariable();
@@ -706,6 +739,9 @@ RandomVariable min(RandomVariable x, const RandomVariable& y) {
     }
     return x;
 }
+
+RandomVariable min(const Real y, RandomVariable x) { return min(RandomVariable(x.size(), y), std::move(x)); }
+RandomVariable min(RandomVariable x, const Real y) { return min(RandomVariable(x.size(), y), std::move(x)); }
 
 RandomVariable pow(RandomVariable x, const RandomVariable& y) {
     if (!x.initialised() || !y.initialised())
@@ -728,6 +764,33 @@ RandomVariable pow(RandomVariable x, const RandomVariable& y) {
     }
     return x;
 }
+
+RandomVariable pow(RandomVariable x, const Real y) { return pow(std::move(x), RandomVariable(x.size(), y)); }
+
+RandomVariable round(RandomVariable x, const RandomVariable& y) {
+    if (!x.initialised() || !y.initialised())
+        return RandomVariable();
+    QL_REQUIRE(x.size() == y.size(),
+               "RandomVariable: round(x,y): x size (" << x.size() << ") must be equal to y size (" << y.size() << ")");
+    x.checkTimeConsistencyAndUpdate(y.time());
+    if (!y.deterministic_)
+        x.expand();
+    if (x.deterministic()){
+        QuantLib::Rounding rnd(y.constantData_, QuantLib::Rounding::Closest, 5);
+        x.constantData_ = rnd(x.constantData_);
+    }
+    else {
+        resumeCalcStats();
+        for (Size i = 0; i < x.size(); ++i) {
+            QuantLib::Rounding rnd(y.constantData_, QuantLib::Rounding::Closest, 5);
+            x.data_[i] = rnd(x.constantData_);
+        }
+        stopCalcStats(x.size());
+    }
+    return x;
+}
+
+RandomVariable round(RandomVariable x, const Real y) { return round(std::move(x), RandomVariable(x.size(), y)); }
 
 RandomVariable operator-(RandomVariable x) {
     if (x.deterministic_)
@@ -788,6 +851,20 @@ RandomVariable sqrt(RandomVariable x) {
         resumeCalcStats();
         for (Size i = 0; i < x.n_; ++i) {
             x.data_[i] = std::sqrt(x.data_[i]);
+        }
+        stopCalcStats(x.n_);
+    }
+    return x;
+}
+
+RandomVariable frac(RandomVariable x) {
+    double iptr;
+    if (x.deterministic_)
+        x.constantData_ = std::modf(x.constantData_, &iptr);
+    else {
+        resumeCalcStats();
+        for (Size i = 0; i < x.n_; ++i) {
+            x.data_[i] = std::modf(x.data_[i], &iptr);
         }
         stopCalcStats(x.n_);
     }
@@ -1213,11 +1290,7 @@ Array regressionCoefficients(
         r = applyFilter(r, filter);
     }
 
-    Array b(r.size());
-    if (r.deterministic())
-        std::fill(b.begin(), b.end(), r[0]);
-    else
-        r.copyToArray(b);
+    Array b = static_cast<Array>(r);
 
     Array res;
     if (regressionMethod == RandomVariableRegressionMethod::SVD) {
@@ -1236,7 +1309,11 @@ Array regressionCoefficients(
             }
         }
     } else if (regressionMethod == RandomVariableRegressionMethod::QR) {
+#ifdef ORE_ENABLE_CUDA
+        res = gpuQrSolveMultiStream(A, b);
+#else
         res = qrSolve(A, b);
+#endif
     } else {
         QL_FAIL("regressionCoefficients(): unknown regression method, expected SVD or QR");
     }

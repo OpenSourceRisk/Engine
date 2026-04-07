@@ -297,5 +297,12 @@ std::set<RiskFactorKey> SensitivityCube::relevantRiskFactors() const {
     return result;
 }
 
+Real SensitivityCube::theta(const string& tradeId) const {
+    auto it = thetaMap_.find(tradeId);
+    if (it != thetaMap_.end())
+        return it->second;
+    return Null<Real>();
+}
+
 } // namespace analytics
 } // namespace ore

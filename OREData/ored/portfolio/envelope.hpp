@@ -27,7 +27,7 @@
 #include <ored/utilities/xmlutils.hpp>
 
 #include <ql/any.hpp>
-#include <ql/tuple.hpp>
+#include <tuple>
 #include <boost/tuple/tuple_comparison.hpp>
 
 #include <map>

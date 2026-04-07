@@ -32,7 +32,7 @@ namespace ore {
 namespace analytics {
 
 /*! Modify the \p portfolio by applying the various SIMM exemptions outlined in the
-    document <em>SIMM Cross-Currency Swap Treatment, February 27, 2017<\em>
+    document <em>SIMM Cross-Currency Swap Treatment, February 27, 2017</em>
     Returns a pair of sets (s1,s2), where s1 contains the trade ids that were removed
     and s2 conatins the trade ids that were modified.
 */

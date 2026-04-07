@@ -82,8 +82,8 @@ class StressTestScenarioData : public XMLSerializable {
   public:
     struct CurveShiftData {
         ShiftType shiftType;
-        vector<Real> shifts;
-        vector<Period> shiftTenors;
+        std::vector<Real> shifts;
+        std::vector<Period> shiftTenors;
     };
 
     struct SpotShiftData {
@@ -93,8 +93,8 @@ class StressTestScenarioData : public XMLSerializable {
 
     struct VolShiftData {
         ShiftType shiftType;
-        vector<Period> shiftExpiries;
-        vector<Real> shifts; 
+        std::vector<Period> shiftExpiries;
+        std::vector<Real> shifts; 
     };
 
     struct FXVolShiftData {
@@ -104,35 +104,35 @@ class StressTestScenarioData : public XMLSerializable {
             Weighted
         };
         ShiftType shiftType;
-        vector<Period> shiftExpiries;
-        vector<Real> shifts;
-        vector<Period> weightTenors;
-        vector<Real> weights;
+        std::vector<Period> shiftExpiries;
+        std::vector<Real> shifts;
+        std::vector<Period> weightTenors;
+        std::vector<Real> weights;
         AtmShiftMode mode = AtmShiftMode::Explicit;
     };
     
     struct CapFloorVolShiftData {
         ShiftType shiftType;
-        vector<Period> shiftExpiries;
-        vector<double> shiftStrikes;
-        std::map<Period, vector<Real>> shifts;
+        std::vector<Period> shiftExpiries;
+        std::vector<double> shiftStrikes;
+        std::map<Period, std::vector<Real>> shifts;
     };
     struct SwaptionVolShiftData {
         ShiftType shiftType;
         Real parallelShiftSize;
-        vector<Period> shiftExpiries;
-        vector<Period> shiftTerms;
-        map<pair<Period, Period>, Real> shifts;
+        std::vector<Period> shiftExpiries;
+        std::vector<Period> shiftTerms;
+        std::map<std::pair<Period, Period>, Real> shifts;
     };
     struct CommodityVolShiftData {
         ShiftType shiftType;
-        vector<Period> shiftExpiries;
-        vector<Real> shiftMoneyness;
-        vector<Real> shifts; 
+        std::vector<Period> shiftExpiries;
+        std::vector<Real> shiftMoneyness;
+        std::vector<Real> shifts; 
     };
     struct StressTestData {
         ~StressTestData() {}
-        string label;
+        std::string label;
         bool irCurveParShifts;
         bool irCapFloorParShifts;
         bool creditCurveParShifts;

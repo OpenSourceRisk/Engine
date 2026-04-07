@@ -48,6 +48,7 @@ std::pair<std::string,
         }
     }
     WLOG("AnalyticFactory::getBuilder(" << analyticName << "): no builder found");
+    QL_FAIL("Invalid analytic name: " << analyticName << ".");
     return std::make_pair(analyticName, nullptr);
 }
 

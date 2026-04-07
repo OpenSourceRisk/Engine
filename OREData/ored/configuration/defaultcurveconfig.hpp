@@ -52,7 +52,7 @@ public:
     class Config : public XMLSerializable {
     public:
         //! Supported default curve types
-        enum class Type { SpreadCDS, ConvSpreadCDS, HazardRate, Benchmark, Price, MultiSection, TransitionMatrix, Null };
+        enum class Type { SpreadCDS, ConvSpreadCDS, HazardRate, Benchmark, Price, MultiSection, TransitionMatrix, Null, YieldCurve };
         Config(const Type& type, const string& discountCurveID, const string& recoveryRateQuote,
                const DayCounter& dayCounter, const string& conventionID,
                const std::vector<std::pair<std::string, bool>>& cdsQuotes = {}, bool extrapolation = true,
@@ -96,6 +96,7 @@ public:
         const bool allowNegativeRates() const { return allowNegativeRates_; }
         const string& initialState() const { return initialState_; }
         const vector<string>& states() const { return states_; }
+        const string& reinterpretedYieldCurveID() const { return reinterpretedYieldCurveID_; }
        //@}
 
         //! \name Setters
@@ -118,6 +119,7 @@ public:
         QuantLib::Period& indexTerm() { return indexTerm_; }
         QuantLib::ext::optional<bool>& implyDefaultFromMarket() { return implyDefaultFromMarket_; }
         bool& allowNegativeRates() { return allowNegativeRates_; }
+        std::string& reinterpretedYieldCurveID() { return reinterpretedYieldCurveID_; }
         //@}
 
     private:
@@ -142,7 +144,7 @@ public:
         vector<string> multiSectionSwitchDates_;
         string initialState_;
         vector<string> states_;
-
+        string reinterpretedYieldCurveID_;
         /*! Indicates if the reference entity's default status should be implied from the market data. If \c true, this
             behaviour is active and if \c false it is not. If not explicitly set, it is assumed to be \c false.
 
@@ -192,7 +194,8 @@ private:
     void populateRequiredIds() const override;
     void populateRequiredIds(const std::string& discountCurveID, const std::string& benchmarkCurveID,
                              const std::string& sourceCurveID,
-                             const std::vector<std::string>& multiSectionSourceCurveIds) const;
+                             const std::vector<std::string>& multiSectionSourceCurveIds,
+                             const std::string& reinterpretedYieldCurveID) const;
     std::string currency_;
     std::map<int, Config> configs_;
     ReportConfig reportConfig_;

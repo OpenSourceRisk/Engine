@@ -24,7 +24,6 @@
 // clang-format on
 #include <qle/indexes/equityindex.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
-#include <qle/models/cdsoptionhelper.hpp>
 #include <qle/models/cirppconstantfellerparametrization.hpp>
 #include <qle/models/commodityschwartzmodel.hpp>
 #include <qle/models/commodityschwartzparametrization.hpp>
@@ -73,7 +72,6 @@
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
 #include <qle/pricingengines/discountingriskybondengine.hpp>
 #include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
-#include <qle/pricingengines/oiccbasisswapengine.hpp>
 #include <qle/pricingengines/paymentdiscountingengine.hpp>
 #include <qle/processes/commodityschwartzstateprocess.hpp>
 #include <qle/processes/crossassetstateprocess.hpp>

@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file paramtricvolatilitysmilesection.hpp
+/*! \file parametricvolatilitysmilesection.hpp
     \brief smile section based on parametric volatility
     \ingroup termstructures
 */

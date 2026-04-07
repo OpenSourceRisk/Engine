@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/app/pnlexplainanalytic.hpp
-    \brief ORE Analytics Manager
+/*! \file orea/app/analytics/pnlexplainanalytic.hpp
+    \brief ORE P&L Explain Analytic
 */
 
 #pragma once
@@ -26,9 +26,24 @@
 #include <orea/app/analytics/analyticfactory.hpp>
 #include <orea/app/analytics/pnlanalytic.hpp>
 #include <orea/app/analytics/pricinganalytic.hpp>
+#include <orea/app/inputvariables.hpp>
+#include <orea/scenario/historicalscenarioreturn.hpp>
 
 namespace ore {
 namespace analytics {
+
+class InputParameters;
+
+struct PnlExplainVariables : public InputVariables {
+    void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
+    
+    QuantLib::ext::shared_ptr<ScenarioReader> scenarioReader_;
+    QuantLib::ext::shared_ptr<SensitivityScenarioData> sensiScenarioData_;
+    bool parSensitivity_ = false;
+    bool riskFactorLevel_ = false;
+    std::string portfolioFilter_;
+    QuantLib::ext::shared_ptr<ReturnConfiguration> returnConfiguration_;
+};
 
 class PnlExplainAnalyticImpl : public Analytic::Impl {
 public:
@@ -36,7 +51,7 @@ public:
     static constexpr const char* sensiLookupKey = "SENSI";
     static constexpr const char* pnlLookupKey = "PNL";
     PnlExplainAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-        : Analytic::Impl(inputs) {
+        : Analytic::Impl(inputs, QuantLib::ext::make_shared<PnlExplainVariables>()) {
         setLabel(LABEL);
     }
 
@@ -44,6 +59,9 @@ public:
                              const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
     void buildDependencies() override;
+
+private:
+    QuantLib::ext::shared_ptr<PnlVariables> pnlVariables_;
 };
 
 class PnlExplainAnalytic : public Analytic {

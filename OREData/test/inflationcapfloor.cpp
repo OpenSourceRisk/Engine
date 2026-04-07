@@ -25,7 +25,7 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
-#include <oret/toplevelfixture.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 #include <ql/indexes/inflation/euhicp.hpp>
 #include <ql/instruments/inflationcapfloor.hpp>
 #include <ql/pricingengines/inflation/inflationcapfloorengines.hpp>
@@ -70,8 +70,8 @@ public:
         for (Size i = 0; i < datesZCII.size(); i++) {
             Handle<Quote> quote(QuantLib::ext::shared_ptr<Quote>(new SimpleQuote(ratesZCII[i] / 100)));
             QuantLib::ext::shared_ptr<YoYInflationTraits::helper> anInstrument =
-                QuantLib::ext::make_shared<YearOnYearInflationSwapHelper>(quote, Period(3, Months), datesZCII[i], cal, bdc, dc,
-                                                                  index, nominalTs);
+                QuantLib::ext::make_shared<YearOnYearInflationSwapHelper>(quote, Period(3, Months), asof, datesZCII[i], cal, bdc, dc,
+                                                                  index, CPI::Flat, nominalTs);
             instruments.push_back(anInstrument);
         };
         QuantLib::Date baseDate =
@@ -100,7 +100,7 @@ public:
     Calendar cal;
 };
 
-BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::data::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(InflationCapFloorTests)
 
@@ -170,14 +170,12 @@ BOOST_AUTO_TEST_CASE(testYoYCapFloor) {
     // check YoY cap NPV against pure QL pricing
     Schedule schedule(startDate, endDate, 1 * Years, TARGET(), Following, Following, DateGeneration::Forward, false);
     Handle<YieldTermStructure> nominalTs = market->discountCurve("EUR");
-    QL_DEPRECATED_DISABLE_WARNING
     Leg yyLeg =
-        yoyInflationLeg(schedule, TARGET(), market->yoyInflationIndex("EUHICPXT").currentLink(), Period(3, Months))
+        yoyInflationLeg(schedule, TARGET(), market->yoyInflationIndex("EUHICPXT").currentLink(), Period(3, Months), CPI::AsIndex)
             .withNotionals(10000000)
             .withPaymentDayCounter(ActualActual(ActualActual::ISDA))
             .withPaymentAdjustment(Following)
             .withRateCurve(nominalTs);
-    QL_DEPRECATED_ENABLE_WARNING
     QuantLib::ext::shared_ptr<YoYInflationCapFloor> qlCap(new YoYInflationCap(yyLeg, caps));
 
     Handle<QuantLib::YoYOptionletVolatilitySurface> hovs = market->yoyCapFloorVol("EUHICPXT");

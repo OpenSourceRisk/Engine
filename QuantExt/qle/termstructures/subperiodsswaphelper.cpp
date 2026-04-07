@@ -25,14 +25,12 @@
 
 namespace QuantExt {
 
-SubPeriodsSwapHelper::SubPeriodsSwapHelper(Handle<Quote> spread, const Period& swapTenor, const Period& fixedTenor,
-                                           const Calendar& fixedCalendar, const DayCounter& fixedDayCount,
-                                           BusinessDayConvention fixedConvention, const Period& floatPayTenor,
-                                           const QuantLib::ext::shared_ptr<IborIndex>& iborIndex,
-                                           const DayCounter& floatDayCount,
-                                           const Handle<YieldTermStructure>& discountingCurve,
-                                           QuantExt::SubPeriodsCoupon1::Type type,
-                                           QuantLib::Pillar::Choice pillarChoice)
+SubPeriodsSwapHelper::SubPeriodsSwapHelper(
+    Handle<Quote> spread, const Period& swapTenor, const Period& fixedTenor, const Calendar& fixedCalendar,
+    const DayCounter& fixedDayCount, BusinessDayConvention fixedConvention, const Period& floatPayTenor,
+    const QuantLib::ext::shared_ptr<IborIndex>& iborIndex, const DayCounter& floatDayCount,
+    const Handle<YieldTermStructure>& discountingCurve, QuantExt::SubPeriodsCoupon1::Type type,
+    QuantLib::Pillar::Choice pillarChoice, const QuantLib::Date& customPillarDate)
     : RelativeDateRateHelper(spread), iborIndex_(iborIndex), swapTenor_(swapTenor), fixedTenor_(fixedTenor),
       fixedCalendar_(fixedCalendar), fixedDayCount_(fixedDayCount), fixedConvention_(fixedConvention),
       floatPayTenor_(floatPayTenor), floatDayCount_(floatDayCount), type_(type), pillarChoice_(pillarChoice),
@@ -44,6 +42,8 @@ SubPeriodsSwapHelper::SubPeriodsSwapHelper(Handle<Quote> spread, const Period& s
     registerWith(iborIndex_);
     registerWith(spread);
     registerWith(discountHandle_);
+
+    pillarDate_ = customPillarDate;
 
     initializeDates();
 }
@@ -59,8 +59,9 @@ void SubPeriodsSwapHelper::initializeDates() {
     Date effectiveDate = spotCalendar.advance(valuationDate, spotDays * Days);
 
     swap_ = QuantLib::ext::shared_ptr<SubPeriodsSwap>(new SubPeriodsSwap(
-        effectiveDate, 1.0, swapTenor_, true, fixedTenor_, quote().empty() ? 0.0 : quote()->value(), fixedCalendar_,
-        fixedDayCount_, fixedConvention_, floatPayTenor_, iborIndex_, floatDayCount_, DateGeneration::Backward, type_));
+        effectiveDate, 1.0, swapTenor_, true, fixedTenor_,
+        quote().empty() || !quote()->isValid() ? 0.0 : quote()->value(), fixedCalendar_, fixedDayCount_,
+        fixedConvention_, floatPayTenor_, iborIndex_, floatDayCount_, DateGeneration::Backward, type_));
 
     QuantLib::ext::shared_ptr<PricingEngine> engine(new DiscountingSwapEngine(discountRelinkableHandle_));
     swap_->setPricingEngine(engine);
@@ -69,7 +70,8 @@ void SubPeriodsSwapHelper::initializeDates() {
     earliestDate_ = swap_->startDate();
     maturityDate_ = swap_->maturityDate();
     latestRelevantDate_ = determineLatestRelevantDate(swap_->legs());
-    latestDate_ = pillarDate_ = determinePillarDate(pillarChoice_, maturityDate_, latestRelevantDate_);
+    latestDate_ = pillarDate_ =
+        determinePillarDate(pillarDate_, pillarChoice_, earliestDate_, maturityDate_, latestRelevantDate_);
 }
 
 void SubPeriodsSwapHelper::setTermStructure(YieldTermStructure* t) {

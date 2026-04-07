@@ -18,6 +18,7 @@
 
 #include <ored/configuration/conventions.hpp>
 
+#include <ored/utilities/conventionsbasedfutureexpiry.hpp>
 #include <ored/utilities/currencyparser.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
@@ -29,8 +30,13 @@
 #include <ored/portfolio/bondutils.hpp>
 
 #include <qle/indexes/fxindex.hpp>
+#include <qle/termstructures/calendarspreadfuturepricetermstructure.hpp>
 
 #include <ql/time/imm.hpp>
+#include <ql/termstructures/yield/flatforward.hpp>
+#include <ql/time/calendars/canada.hpp>
+#include <ql/time/calendars/unitedkingdom.hpp>
+#include <ql/time/calendars/jointcalendar.hpp>
 
 #include <boost/algorithm/string.hpp>
 
@@ -72,6 +78,10 @@ Handle<YieldTermStructure> xccyYieldCurve(const QuantLib::ext::shared_ptr<Market
 
 Handle<YieldTermStructure> indexOrYieldCurve(const QuantLib::ext::shared_ptr<Market>& market, const std::string& name,
                                              const std::string& configuration) {
+    if (name == "NULLCURVE") {
+        return Handle<YieldTermStructure>(
+            QuantLib::ext::make_shared<QuantLib::FlatForward>(0, NullCalendar(), 0.0, Actual365Fixed()));
+    }
     try {
         return market->iborIndex(name, configuration)->forwardingTermStructure();
     } catch (...) {
@@ -83,7 +93,6 @@ Handle<YieldTermStructure> indexOrYieldCurve(const QuantLib::ext::shared_ptr<Mar
     QL_FAIL("Could not find index or yield curve with name '" << name << "' under configuration '" << configuration
                                                               << "' or default configuration.");
 }
-
 
 std::string indexTrancheSpecificCreditCurveName(const std::string& creditCurveId, const double assumedRecoveryRate){
     std::ostringstream oss;
@@ -323,15 +332,31 @@ std::pair<Date, Date> getOiFutureStartEndDate(QuantLib::Month expiryMonth, Quant
         endDate = IMM::nextDate(refEnd, false);
     } else if (rule  == FutureConvention::DateGenerationRule::FirstDayOfMonth) {
         endDate = calendar.adjust(Date(1, expiryMonth, expiryYear) + 1 * Months, Following);
-        startDate = calendar.adjust(endDate - tenor, Following);
+        startDate = calendar.adjust(Date(1, expiryMonth, expiryYear) + 1 * Months - tenor, Following);
     }
     return std::make_pair(startDate, endDate);
 }
 
-Date getMmFutureExpiryDate(QuantLib::Month expiryMonth, QuantLib::Natural expiryYear) { 
+Date getMmFutureExpiryDate(QuantLib::Month expiryMonth, QuantLib::Natural expiryYear,
+                           FutureConvention::DateGenerationRule rule) {
     Date refDate(1, expiryMonth, expiryYear);
-    Date immDate = IMM::nextDate(refDate, false);
-    return immDate;
+
+    if (rule == FutureConvention::DateGenerationRule::IMM) {
+        return IMM::nextDate(refDate, false);  // Third Wednesday
+    } else if (rule == FutureConvention::DateGenerationRule::IMMAUD) {
+        // Second Thursday of the expiry month (e.g. AUD-BBSW-3M futures).
+        return Date::nthWeekday(2, Thursday, expiryMonth, expiryYear);
+    } else if (rule == FutureConvention::DateGenerationRule::IMMNZD) {
+        // First Wednesday on or after the 9th: the 2nd Wednesday if it falls on day >= 9, otherwise the 3rd.
+        Date w2 = Date::nthWeekday(2, Wednesday, expiryMonth, expiryYear);
+        return w2 >= Date(9, expiryMonth, expiryYear) ? w2 : Date::nthWeekday(3, Wednesday, expiryMonth, expiryYear);
+    } else if (rule == FutureConvention::DateGenerationRule::IMMCAD) {
+        // Two GB+CA business days before the third Wednesday of the expiry month.
+        return JointCalendar(std::vector<Calendar>{UnitedKingdom(), Canada()})
+            .advance(Date::nthWeekday(3, Wednesday, expiryMonth, expiryYear), -2, Days, Preceding);
+    } else {
+        QL_FAIL("getMmFutureExpiryDate: DateGenerationRule '" << rule << "' not supported for MM Futures");
+    }
 }
 
 std::string fxIndexNameForDailyLowsOrHighs(const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex, bool lows) {
@@ -363,6 +388,99 @@ std::string fxIndexNameForDailyLows(const QuantLib::ext::shared_ptr<QuantExt::Fx
 
 std::string fxIndexNameForDailyHighs(const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex) {
     return fxIndexNameForDailyLowsOrHighs(fxIndex, false);
+}
+
+bool parseCommodityCalendarSpreadVolSurfaceName(const std::string& name, std::string& underlyingName, int& offset) {
+    static const std::string tag = "_CALENDAR_SPREAD_";
+
+    underlyingName.clear();
+    offset = 0;
+
+    const auto pos = name.rfind(tag);
+    if (pos == string::npos || pos == 0)
+        return false;
+
+    if (name.find(tag) != pos)
+        return false;
+
+    const string offsetString = name.substr(pos + tag.size());
+    if (offsetString.empty())
+        return false;
+
+    int parsedOffset;
+    try {
+        parsedOffset = parseInteger(offsetString);
+    } catch (...) {
+        return false;
+    }
+
+    if (parsedOffset == 0)
+        return false;
+
+    underlyingName = name.substr(0, pos);
+    offset = parsedOffset;
+    return true;
+}
+
+QuantLib::ext::shared_ptr<QuantExt::PriceTermStructure>
+getCalendarSpreadPriceCurve(const ore::data::Market* market, const std::string& name, const std::string& configuration,
+                            int offset, const QuantLib::ext::shared_ptr<FutureExpiryCalculator>& expCalc) {
+    QL_REQUIRE(market != nullptr, "market is required to build calendar spread price curve for " << name);
+    Handle<QuantExt::PriceTermStructure> configuredSpreadCurve;
+    try {
+        configuredSpreadCurve = market->commodityPriceCurve(name, configuration);
+    } catch (const std::exception&) {
+        configuredSpreadCurve = Handle<QuantExt::PriceTermStructure>();
+    }
+
+    if (!configuredSpreadCurve.empty()) {
+        DLOG("Using existing commodity price curve for calendar spread vol surface " << name);
+        return *configuredSpreadCurve;
+    }
+
+    DLOG("Commodity price curve for " << name
+                                      << " is not available, will build calendar spread price curve from underlying");
+
+    string commodityName;
+    int offsetFromName;
+    bool parsed = parseCommodityCalendarSpreadVolSurfaceName(name, commodityName, offsetFromName);
+    QL_REQUIRE(parsed, "Calendar spread commodity volatility surface "
+                           << name << " should have format [underlying]_CALENDAR_SPREAD_[offset]");
+    QL_REQUIRE(offsetFromName == offset, "Calendar spread offset from name "
+                                             << offsetFromName << " does not match config offset " << offset << " for "
+                                             << name);
+    auto underlyingPriceCurve = market->commodityPriceCurve(commodityName, configuration);
+    QL_REQUIRE(!underlyingPriceCurve.empty(),
+               "Underlying commodity price curve "
+                   << commodityName << " is required to build calendar spread volatility surface " << name);
+    DLOG("Building calendar spread price curve for " << name << " from underlying " << commodityName);
+    return QuantLib::ext::make_shared<CalendarSpreadFuturePriceTermStructure>(underlyingPriceCurve, expCalc, offset);
+}
+
+QuantLib::ext::shared_ptr<QuantExt::PriceTermStructure> getCalendarSpreadPriceCurve(const ore::data::Market* market,
+                                                                          const std::string& name,
+                                                                          const std::string& configuration, int offset,
+                                                                          const std::string& conventionId) {
+    QL_REQUIRE(market != nullptr, "market is required to build calendar spread price curve for " << name);
+    // If the market already has the curve, return it without requiring valid conventions
+    try {
+        auto h = market->commodityPriceCurve(name, configuration);
+        if (!h.empty()) {
+            DLOG("Using existing commodity price curve for calendar spread vol surface " << name);
+            return *h;
+        }
+    } catch (const std::exception&) {
+    }
+
+    QL_REQUIRE(!conventionId.empty(),
+               "Future conventions id is required to build calendar spread volatility surface " << name);
+    QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+    QL_REQUIRE(conventions->has(conventionId), "Convention " << conventionId << " not found.");
+    auto convention = QuantLib::ext::dynamic_pointer_cast<CommodityFutureConvention>(conventions->get(conventionId));
+    QL_REQUIRE(convention != nullptr,
+               "Convention with ID '" << conventionId << "' should be of type CommodityFutureConvention");
+    auto expCalc = QuantLib::ext::make_shared<ConventionsBasedFutureExpiry>(*convention);
+    return getCalendarSpreadPriceCurve(market, name, configuration, offset, expCalc);
 }
 
 } // namespace data

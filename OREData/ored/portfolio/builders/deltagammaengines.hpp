@@ -170,7 +170,8 @@ public:
         : FxForwardEngineBuilderBase("DiscountedCashflows", "DiscountingFxForwardEngineDeltaGamma") {}
 
 protected:
-    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy) override {
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy,
+                                                                const std::string& discountCurve) override {
 
         std::vector<Time> bucketTimes = parseListOfValues<Time>(engineParameter("BucketTimes"), &parseReal);
         bool computeDelta = parseBool(engineParameter("ComputeDelta"));
@@ -178,7 +179,7 @@ protected:
         bool linearInZero = parseBool(engineParameter("LinearInZero", {}, false, "True")); // FIXME: Add to pricing engine parameters?
         bool applySimmExemptions = parseBool(engineParameter("ApplySimmExemptions", {}, false, "false"));
 
-        string pair = keyImpl(forCcy, domCcy);
+        string pair = forCcy.code() + domCcy.code();
         Handle<YieldTermStructure> domCcyCurve =
             market_->discountCurve(domCcy.code(), configuration(MarketContext::pricing));
         Handle<YieldTermStructure> forCcyCurve =
@@ -201,10 +202,11 @@ public:
         : SwaptionEngineBuilder("BlackBachelier", "BlackBachelierSwaptionEngineDeltaGamma", {"EuropeanSwaption"}) {}
 
 protected:
-    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& id, const string& key, const std::vector<Date>& dates,
-                                                const std::vector<Date>& maturities, const std::vector<Real>& strikes,
-                                                const bool isAmerican, const std::string& discountCurve,
-                                                const std::string& securitySpread) override;
+    QuantLib::ext::shared_ptr<PricingEngine>
+    engineImpl(const string& id, const std::vector<string>& keys, const std::vector<Date>& dates,
+               const std::vector<Date>& maturities, const std::vector<std::vector<Real>>& strikes,
+               const std::vector<std::vector<Real>>& fxStrikes, const bool isAmerican, const std::string& discountCurve,
+               const std::string& securitySpread, const SwaptionModel&) override;
 };
   
 } // namespace data

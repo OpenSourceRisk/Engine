@@ -125,18 +125,19 @@ std::size_t LgmCG::fixing(const QuantLib::ext::shared_ptr<InterestRateIndex>& in
     ModelCG::ModelParameter id(ModelCG::ModelParameter::Type::fix, index->name(), {}, fixingDate, t);
 
     Date today = Settings::instance().evaluationDate();
+
+    // handle historical fixing (this is handled as a model parameter)
+
     if (fixingDate <= today) {
-
-        // handle historical fixing (this is handled as a model parameter)
-
         return addModelParameter(g_, modelParameters_, id, [index, fixingDate]() { return index->fixing(fixingDate); });
+    }
 
-    } else if (auto ibor = QuantLib::ext::dynamic_pointer_cast<IborIndex>(index)) {
+    // handle stochastic fixing (this is a derived model parameter)
 
-        // handle future fixing (this is a derived model parameter)
+    if (auto m = cachedParameters_.find(id); m != cachedParameters_.end())
+        return m->node();
 
-        if (auto m = cachedParameters_.find(id); m != cachedParameters_.end())
-            return m->node();
+    if (auto ibor = QuantLib::ext::dynamic_pointer_cast<IborIndex>(index)) {
 
         // Ibor Index
 
@@ -153,9 +154,99 @@ std::size_t LgmCG::fixing(const QuantLib::ext::shared_ptr<InterestRateIndex>& in
         id.setNode(cg_div(g_, cg_subtract(g_, cg_div(g_, disc1, disc2), cg_const(g_, 1.0)), cg_const(g_, dt)));
         cachedParameters_.insert(id);
         return id.node();
+    }
+    if (auto swap = QuantLib::ext::dynamic_pointer_cast<SwapIndex>(index)) {
 
+        // Swap Index
+
+        auto swapDiscountCurve =
+            swap->exogenousDiscount() ? swap->discountingTermStructure() : swap->forwardingTermStructure();
+
+        Leg floatingLeg, fixedLeg;
+
+        if (auto ois = QuantLib::ext::dynamic_pointer_cast<OvernightIndexedSwapIndex>(index)) {
+            auto underlying = ois->underlyingSwap(fixingDate);
+            floatingLeg = underlying->overnightLeg();
+            fixedLeg = underlying->fixedLeg();
+        } else {
+            auto underlying = swap->underlyingSwap(fixingDate);
+            floatingLeg = underlying->floatingLeg();
+            fixedLeg = underlying->fixedLeg();
+        }
+
+        std::size_t numerator = cg_const(g_, 0.0), denominator = cg_const(g_, 0.0);
+
+        for (auto const& c : floatingLeg) {
+            if (auto cpn = QuantLib::ext::dynamic_pointer_cast<IborCoupon>(c)) {
+                Date fixingValueDate = swap->iborIndex()->fixingCalendar().advance(
+                    cpn->fixingDate(), swap->iborIndex()->fixingDays(), Days);
+                Date fixingEndDate = cpn->fixingEndDate();
+                Date T1 = std::max(t, fixingValueDate);
+                Date T2 = std::max(T1, fixingEndDate); // accounts for QL_INDEXED_COUPON
+                Date T3 = std::max(T2, cpn->date());
+                std::size_t disc1 = reducedDiscountBond(t, T1, x, swap->forwardingTermStructure(),
+                                                        "swpfwd_" + swap->name(), fixingDate);
+                std::size_t disc2 =
+                    reducedDiscountBond(t, T2, x, swap->forwardingTermStructure(), "swpfwd" + swap->name(), fixingDate);
+                Real adjFactor =
+                    cpn->dayCounter().yearFraction(cpn->accrualStartDate(), cpn->accrualEndDate(),
+                                                   cpn->referencePeriodStart(), cpn->referencePeriodEnd()) /
+                    swap->iborIndex()->dayCounter().yearFraction(fixingValueDate, fixingEndDate);
+                std::size_t tmp = cg_subtract(g_, cg_div(g_, disc1, disc2), cg_const(g_, 1.0));
+                if (!QuantLib::close_enough(adjFactor, 1.0)) {
+                    tmp = cg_mult(g_, tmp, cg_const(g_, adjFactor));
+                }
+                numerator = cg_add(
+                    g_, numerator,
+                    cg_mult(g_, tmp,
+                            reducedDiscountBond(t, T3, x, swapDiscountCurve, "swpdsc_" + swap->name(), fixingDate)));
+            } else if (auto cpn = QuantLib::ext::dynamic_pointer_cast<QuantLib::OvernightIndexedCoupon>(c)) {
+                Date start = cpn->valueDates().front();
+                Date end = cpn->valueDates().back();
+                Date T1 = std::max(t, start);
+                Date T2 = std::max(T1, end);
+                Date T3 = std::max(T2, cpn->date());
+                std::size_t disc1 = reducedDiscountBond(t, T1, x, swap->forwardingTermStructure(),
+                                                        "swpfwd_" + swap->name(), fixingDate);
+                std::size_t disc2 = reducedDiscountBond(t, T2, x, swap->forwardingTermStructure(),
+                                                        "swpfwd_" + swap->name(), fixingDate);
+                Real adjFactor =
+                    cpn->dayCounter().yearFraction(cpn->accrualStartDate(), cpn->accrualEndDate(),
+                                                   cpn->referencePeriodStart(), cpn->referencePeriodEnd()) /
+                    swap->iborIndex()->dayCounter().yearFraction(start, end);
+                std::size_t tmp;
+                if (cpn->averagingMethod() == RateAveraging::Compound) {
+                    tmp = cg_subtract(g_, cg_div(g_, disc1, disc2), cg_const(g_, 1.0));
+                } else if (cpn->averagingMethod() == RateAveraging::Simple) {
+                    tmp = cg_log(g_, cg_div(g_, disc1, disc2));
+                } else {
+                    QL_FAIL("LgmCG::fixing(): RateAveraging '" << static_cast<int>(cpn->averagingMethod())
+                                                               << "' not handled - internal error, contact dev.");
+                }
+                if (!QuantLib::close_enough(adjFactor, 1.0)) {
+                    tmp = cg_mult(g_, tmp, cg_const(g_, adjFactor));
+                }
+                numerator = cg_add(
+                    g_, numerator,
+                    cg_mult(g_, tmp,
+                            reducedDiscountBond(t, T3, x, swapDiscountCurve, "swpdsc_" + swap->name(), fixingDate)));
+            } else {
+                QL_FAIL("LgmCG::fixing(): expected ibor or on coupon");
+            }
+        }
+        for (auto const& c : fixedLeg) {
+            auto cpn = QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(c);
+            QL_REQUIRE(cpn, "LgmCG::fixing(): expected fixed coupon");
+            Date d = cpn->date();
+            Date T = std::max(t, d);
+            denominator = cg_add(
+                g_, denominator,
+                cg_mult(g_, reducedDiscountBond(t, T, x, swapDiscountCurve, "swpdsc_" + swap->name(), fixingDate),
+                        cg_const(g_, cpn->accrualPeriod())));
+        }
+        return cg_div(g_, numerator, denominator);
     } else {
-        QL_FAIL("LgmCG::fixing(): only ibor indices handled so far, index = " << index->name());
+        QL_FAIL("LgmCG::fixing(): only ibor, swap indices handled so far, index = " << index->name());
     }
 }
 

@@ -27,9 +27,13 @@
 #include <orea/scenario/scenarioutilities.hpp>
 #include <orea/scenario/simplescenario.hpp>
 
+#include <ored/configuration/conventions.hpp>
+#include <ored/configuration/inflationcurveconfig.hpp>
 #include <ored/marketdata/curvespecparser.hpp>
 #include <ored/marketdata/structuredcurveerror.hpp>
+
 #include <ored/utilities/indexnametranslator.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -1294,8 +1298,10 @@ ScenarioSimMarket::ScenarioSimMarket(
                                                                    "when building optionlet vol for '"
                                                                        << name << "' (index=" << iborIndex->name()
                                                                        << ")");
-                                            optionDates[i] =
-                                                std::max(asof_ + 1, lastCoupon->underlying()->fixingDates().front());
+                                            optionDates[i] = std::max(
+                                                asof_ + 1, wrapper->useEffectiveVolatility()
+                                                               ? lastCoupon->underlying()->fixingDates().back()
+                                                               : lastCoupon->underlying()->fixingDates().front());
                                         }
                                     } else {
                                         QuantLib::ext::shared_ptr<CapFloor> capFloor =
@@ -1531,12 +1537,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                             string decayModeString = parameters->capFloorVolDecayMode();
                             ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
 
-                            QL_REQUIRE(!QuantLib::ext::dynamic_pointer_cast<ProxyOptionletVolatility>(*wrapper), 
-                                "DynamicOptionletVolatilityStructure does not support ProxyOptionletVolatility surface.");
+                            QuantLib::ext::shared_ptr<OptionletVolatilityStructure> capletVol = 
+                                    QuantLib::ext::make_shared<DynamicOptionletVolatilityStructure>(*wrapper, 0, NullCalendar(), decayMode);
 
-                            QuantLib::ext::shared_ptr<OptionletVolatilityStructure> capletVol =
-                                QuantLib::ext::make_shared<DynamicOptionletVolatilityStructure>(*wrapper, 0, NullCalendar(),
-                                                                                                decayMode);
                             hCapletVol = Handle<OptionletVolatilityStructure>(capletVol);
                         }
                         hCapletVol->setAdjustReferenceDate(false);
@@ -2382,29 +2385,28 @@ ScenarioSimMarket::ScenarioSimMarket(
                     bool simDataWritten = false;
                     try {
                         DLOG("adding " << name << " base CPI price");
+
                         Handle<ZeroInflationIndex> zeroInflationIndex =
                             initMarket->zeroInflationIndex(name, configuration);
-                        Period obsLag = zeroInflationIndex->zeroInflationTermStructure()->observationLag();
-                        Date fixingDate = zeroInflationIndex->zeroInflationTermStructure()->baseDate();
+                        auto zits = zeroInflationIndex->zeroInflationTermStructure();
+                        int simLag = simulationLag(zits);
+                        Date fixingDate = zits->baseDate();
                         Real baseCPI = zeroInflationIndex->fixing(fixingDate);
-
-                        QuantLib::ext::shared_ptr<InflationIndex> inflationIndex =
-                            QuantLib::ext::dynamic_pointer_cast<InflationIndex>(*zeroInflationIndex);
 
                         auto q = QuantLib::ext::make_shared<SimpleQuote>(baseCPI);
                         if(useSpreadedTermStructures_) {
                             auto m = [baseCPI](Real x) { return x * baseCPI; };
                             Handle<InflationIndexObserver> inflObserver(
                                 QuantLib::ext::make_shared<InflationIndexObserver>(
-                                    inflationIndex,
+                                    zeroInflationIndex,
                                     Handle<Quote>(
                                         QuantLib::ext::make_shared<DerivedQuote<decltype(m)>>(Handle<Quote>(q), m)),
-                                    obsLag));
+                                    simLag));
                             baseCpis_.insert(make_pair(make_pair(Market::defaultConfiguration, name), inflObserver));
                         } else {
                             Handle<InflationIndexObserver> inflObserver(
-                                QuantLib::ext::make_shared<InflationIndexObserver>(inflationIndex, Handle<Quote>(q),
-                                                                                   obsLag));
+                                QuantLib::ext::make_shared<InflationIndexObserver>(zeroInflationIndex, Handle<Quote>(q),
+                                                                                   simLag));
                             baseCpis_.insert(make_pair(make_pair(Market::defaultConfiguration, name), inflObserver));
                         }
                         simDataTmp.emplace(std::piecewise_construct, std::forward_as_tuple(param.first, name),
@@ -2429,6 +2431,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                     try {
                         DLOG("building " << name << " zero inflation curve");
 
+
                         Handle<ZeroInflationIndex> inflationIndex = initMarket->zeroInflationIndex(name, configuration);
                         Handle<ZeroInflationTermStructure> inflationTs = inflationIndex->zeroInflationTermStructure();
                         vector<string> keys(parameters->zeroInflationTenors(name).size());
@@ -2451,10 +2454,10 @@ ScenarioSimMarket::ScenarioSimMarket(
                         }
 
                         for (Size i = 1; i < zeroCurveTimes.size(); i++) {
-                            Real rate = inflationTs->zeroRate(quoteDates[i - 1], inflationTs->observationLag());
+                            Date obsDate = inflationPeriod(quoteDates[i - 1] - inflationTs->observationLag(), inflationTs->frequency()).first;
+                            Real rate = inflationTs->zeroRate(obsDate);
                             if (inflationTs->hasSeasonality()) {
-                                Date fixingDate = quoteDates[i - 1] - inflationTs->observationLag();
-                                rate = inflationTs->seasonality()->deseasonalisedZeroRate(fixingDate,                                 
+                                rate = inflationTs->seasonality()->deseasonalisedZeroRate(obsDate,                                 
                                     rate, *inflationTs.currentLink());
                             }
                             auto q = QuantLib::ext::make_shared<SimpleQuote>(useSpreadedTermStructures_ ? 0.0 : rate);
@@ -2485,9 +2488,13 @@ ScenarioSimMarket::ScenarioSimMarket(
                             zeroCurve =
                                 QuantLib::ext::make_shared<SpreadedZeroInflationCurve>(inflationTs, zeroCurveTimes, quotes);
                         } else {
+                            int simLag = simulationLag(inflationTs);
+                            // Quotes are build with first time to be (baseDate), need to 0 Days tenors here
+                            vector<Period> tenors(1, 0 * Days); 
+                            tenors.insert(tenors.end(), parameters->zeroInflationTenors(name).begin(), parameters->zeroInflationTenors(name).end());
                             zeroCurve = QuantLib::ext::make_shared<ZeroInflationCurveObserverMoving<Linear>>(
-                                0, inflationIndex->fixingCalendar(), dc, inflationTs->observationLag(),
-                                inflationTs->frequency(), false, zeroCurveTimes, quotes,
+                                0, inflationIndex->fixingCalendar(), dc, simLag, inflationTs->observationLag(),
+                                inflationTs->frequency(), false, tenors, quotes,
                                 inflationTs->seasonality());
                         }
 
@@ -2639,7 +2646,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         }
 
                         for (Size i = 1; i < yoyCurveTimes.size(); i++) {
-                            Real rate = yoyInflationTs->yoyRate(quoteDates[i - 1], yoyInflationTs->observationLag());
+                            Real rate = yoyInflationTs->yoyRate(quoteDates[i - 1] - yoyInflationTs->observationLag());
                             auto q = QuantLib::ext::make_shared<SimpleQuote>(useSpreadedTermStructures_ ? 0.0 : rate);
                             if (i == 1) {
                                 // add the zero rate at first tenor to the T0 time, to ensure flat interpolation of T1
@@ -2915,6 +2922,10 @@ ScenarioSimMarket::ScenarioSimMarket(
                     bool simDataWritten = false;
                     try {
                         DLOG("building commodity volatility for " << name);
+                        
+                        QuantLib::ext::shared_ptr<CommodityVolatilityConfig> volConfig;
+                        if (curveConfigs.hasCommodityVolatilityConfig(name))
+                            volConfig = curveConfigs.commodityVolatilityConfig(name);
 
                         // Get initial base volatility structure
                         Handle<BlackVolTermStructure> baseVol = initMarket->commodityVolatility(name, configuration);
@@ -2922,7 +2933,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                         Handle<BlackVolTermStructure> newVol;
                         bool stickyStrike = parameters_->commodityVolSmileDynamics(name) == "StickyStrike";
                         if (param.second.first) {
-
+                            DLOG("Simulating commodity volatilities for index name " << name
+                                                                                 << " with smile dynamics "
+                                                                                 << parameters_->commodityVolSmileDynamics(name));
                             // Check and reorg moneyness and/or expiries to simplify subsequent code.
                             vector<Real> moneyness = parameters->commodityVolMoneyness(name);
                             QL_REQUIRE(!moneyness.empty(), "Commodity volatility moneyness for "
@@ -2943,8 +2956,18 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                             // Get this scenario simulation market's commodity price curve. An exception is expected
                             // if there is no commodity curve but there is a commodity volatility.
-                            const auto& priceCurve = *commodityPriceCurve(name, configuration);
-
+                            // Check if we have a calendar spread vol surface (naming convention:
+                            // <name>_CALENDAR_SPREAD_<Offset>)
+                            QuantLib::ext::shared_ptr<PriceTermStructure> priceCurve;
+                            bool isCalendarSpreadVolSurface = volConfig && volConfig->instrumentType() ==
+                                                         MarketDatum::InstrumentType::COMMODITY_CALENDAR_SPREAD_OPTION;
+                            if (isCalendarSpreadVolSurface) {
+                                DLOG("Commodity volatility surface " << name << " is configured as calendar spread vol surface");
+                                priceCurve = getCalendarSpreadPriceCurve(this, name, configuration,
+                                    volConfig->calendarSpreadOffset(), volConfig->futureConventionsId());
+                            } else {
+                                priceCurve = *commodityPriceCurve(name, configuration);
+                            }
                             // More than one moneyness implies a surface. If we have a surface, we will build a
                             // forward surface below which requires two yield term structures, one for the commodity
                             // price currency and another that recovers the commodity forward prices. We don't want
@@ -3030,7 +3053,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 } else {
                                     newVol = Handle<BlackVolTermStructure>(QuantLib::ext::make_shared<BlackVarianceCurve3>(
                                         0, NullCalendar(), baseVol->businessDayConvention(), dayCounter, expiryTimes,
-                                        quotes[0], false));
+                                        quotes[0], false, baseVol->volType(), baseVol->shift()));
                                 }
                             } else {
                                 DLOG("Ssm comm vol for " << name << " uses BlackVarianceSurfaceMoneynessSpot.");
@@ -3041,10 +3064,16 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     // get init market curves to populate sticky ts in vol surface ctor
                                     Handle<YieldTermStructure> initMarketYts =
                                         initMarket->discountCurve(priceCurve->currency().code(), configuration);
-                                    Handle<QuantExt::PriceTermStructure> priceCurve =
-                                        initMarket->commodityPriceCurve(name, configuration);
+                                    QuantLib::ext::shared_ptr<PriceTermStructure> initMarketPriceCurve;
+                                    if (isCalendarSpreadVolSurface) {
+                                        initMarketPriceCurve =
+                                            getCalendarSpreadPriceCurve(initMarket.get(), name, configuration,
+                                                volConfig->calendarSpreadOffset(), volConfig->futureConventionsId());
+                                    } else {
+                                        initMarketPriceCurve = *initMarket->commodityPriceCurve(name, configuration);
+                                    }
                                     Handle<YieldTermStructure> initMarketPriceYts(
-                                        QuantLib::ext::make_shared<PriceTermStructureAdapter>(*priceCurve, *initMarketYts));
+                                        QuantLib::ext::make_shared<PriceTermStructureAdapter>(initMarketPriceCurve, *initMarketYts));
                                     // create vol surface
                                     newVol = Handle<BlackVolTermStructure>(
                                         QuantLib::ext::make_shared<SpreadedBlackVolatilitySurfaceMoneynessForward>(
@@ -3055,7 +3084,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     newVol = Handle<BlackVolTermStructure>(
                                         QuantLib::ext::make_shared<BlackVarianceSurfaceMoneynessForward>(
                                             baseVol->calendar(), spot, expiryTimes, moneyness, quotes, dayCounter,
-                                            priceYts, yts, stickyStrike, flatExtrapMoneyness));
+                                            priceYts, yts, stickyStrike, flatExtrapMoneyness, BlackVolTimeExtrapolation::FlatVolatility,
+                                            baseVol->volType(),
+                                            baseVol->shift()));
                                 }
                             }
 

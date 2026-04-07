@@ -29,6 +29,8 @@
 namespace ore {
 namespace analytics {
 
+class InputParameters;
+
 class SensitivityStressAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "SENSITIVITY_STRESS";

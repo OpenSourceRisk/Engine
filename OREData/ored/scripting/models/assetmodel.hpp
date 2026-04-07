@@ -73,7 +73,8 @@ public:
         const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
             QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
         const std::string& calibration = "ATM", const std::map<std::string, std::vector<Real>>& calibrationStrikes = {},
-        const Params& params = {});
+        const Params& params = {},
+	bool debug = false);
 
     // ctor for single underlying
     AssetModel(const Type Type, const Size size, const std::string& currency, const Handle<YieldTermStructure>& curve,
@@ -82,7 +83,8 @@ public:
                const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
                    QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
                const std::string& calibration = "ATM", const std::vector<Real>& calibrationStrikes = {},
-               const Params& params = {});
+               const Params& params = {},
+	       bool debug = false);
 
     // Model interface implementation
     const Date& referenceDate() const override;
@@ -107,6 +109,11 @@ public:
     const std::string& baseCcy() const override;
     RandomVariable pay(const RandomVariable& amount, const Date& obsdate, const Date& paydate,
                        const std::string& currency) const override;
+
+    const std::map<Date, std::vector<RandomVariable>>& underlyingPaths() { return underlyingPaths_; }
+    const std::map<Date, std::vector<RandomVariable>>& auxPaths() { return auxPaths_; }
+    const std::set<Date>& effectiveSimulationDates() { return effectiveSimulationDates_; }
+    const QuantLib::ext::shared_ptr<FdmMesher>& mesher() { return mesher_; }
 
 protected:
     // to be implemented by derived classes
@@ -155,6 +162,9 @@ protected:
     Size quantoSourceCcyIndex_, quantoTargetCcyIndex_;
     Real quantoCorrelationMultiplier_;
 
+    // generate extra output with model additional results
+    bool debug_;
+  
     // these all except underlyingPaths_ are initialised when the interface functions above are called
     mutable Date referenceDate_;                      // the model reference date
     mutable std::set<Date> effectiveSimulationDates_; // the dates effectively simulated (including today)
@@ -164,7 +174,9 @@ protected:
 
     // used for MC only:
     mutable std::map<Date, std::vector<RandomVariable>> underlyingPaths_;         // per simulation date index states
+    mutable std::map<Date, std::vector<RandomVariable>> auxPaths_;                // per simulation date index states
     mutable std::map<Date, std::vector<RandomVariable>> underlyingPathsTraining_; // ditto (training phase)
+    mutable std::map<Date, std::vector<RandomVariable>> auxPathsTraining_;          
     mutable bool inTrainingPhase_ = false;   // are we currently using training paths?
     mutable std::map<long, std::tuple<Array, Size, Matrix>> storedRegressionModel_; // stored regression coefficients
 

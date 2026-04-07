@@ -43,6 +43,7 @@ public:
     const QuantLib::Date& referenceDate() const override { return baseVol_->referenceDate(); }
     QuantLib::VolatilityType volatilityType() const override { return baseVol_->volatilityType(); }
     QuantLib::Real displacement() const override { return baseVol_->displacement(); }
+    bool useEffectiveVolatility() const override { return baseVol_->useEffectiveVolatility(); }
     QuantLib::Calendar calendar() const override { return baseVol_->calendar(); }
 
     const QuantLib::Handle<QuantLib::OptionletVolatilityStructure>& baseVol() const { return baseVol_; }
@@ -55,6 +56,9 @@ public:
     static QuantLib::Real getAtmLevel(const QuantLib::Date& fixingDate,
                                       const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index,
                                       const QuantLib::Period& rateComputationPeriod);
+
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex> getBaseIndex() const { return baseIndex_; }
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex> getTargetIndex() const { return targetIndex_; }
 
 private:
     QuantLib::ext::shared_ptr<QuantLib::SmileSection> smileSectionImpl(const QuantLib::Date& optionDate) const override;

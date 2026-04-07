@@ -44,7 +44,8 @@ public:
                          const bool includeSpread = false, const Period& payFrequency = Period(),
                          const Period& recFrequency = Period(), const bool telescopicValueDates = false,
                          const QuantExt::SubPeriodsCoupon1::Type type = QuantExt::SubPeriodsCoupon1::Compounding,
-                         QuantLib::Pillar::Choice pillarChoice = QuantLib::Pillar::Choice::LastRelevantDate);
+                         QuantLib::Pillar::Choice pillarChoice = QuantLib::Pillar::Choice::LastRelevantDate,
+                         const QuantLib::Date& customPillarDate = QuantLib::Date());
 
     //! \name RateHelper interface
     //@{

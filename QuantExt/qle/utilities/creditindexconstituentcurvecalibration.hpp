@@ -19,6 +19,7 @@
 #pragma once
 #include <ql/instrument.hpp>
 #include <ql/quotes/simplequote.hpp>
+#include <ql/shared_ptr.hpp>
 #include <ql/termstructures/defaulttermstructure.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <qle/termstructures/creditcurve.hpp>
@@ -76,7 +77,7 @@ public:
         lastPeriodDayCounter_ = lastPeriodDayCounter_ == DayCounter() ? Actual360(true) : lastPeriodDayCounter_;
     }
 
-    CreditIndexConstituentCurveCalibration(const boost::shared_ptr<CreditCurve>& indexRefData)
+    CreditIndexConstituentCurveCalibration(const QuantLib::ext::shared_ptr<CreditCurve>& indexRefData)
         : CreditIndexConstituentCurveCalibration(
               indexRefData->refData().startDate, indexRefData->refData().indexTerm,
               indexRefData->refData().runningSpread, indexRefData->recovery(), indexRefData->curve(),

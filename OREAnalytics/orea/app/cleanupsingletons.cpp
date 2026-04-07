@@ -26,6 +26,7 @@
 #include <ored/utilities/calendaradjustmentconfig.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/log.hpp>
+#include <qle/utilities/mcstats.hpp>
 
 #include <qle/math/computeenvironment.hpp>
 #include <qle/math/randomvariable.hpp>

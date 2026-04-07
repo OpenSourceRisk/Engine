@@ -18,6 +18,7 @@
 
 #include <ored/model/assetmodelbuilderbase.hpp>
 #include <ored/model/utilities.hpp>
+#include <ored/utilities/to_string.hpp>
 
 namespace ore {
 namespace data {
@@ -25,18 +26,19 @@ namespace data {
 AssetModelBuilderBase::AssetModelBuilderBase(const Handle<YieldTermStructure>& curve,
                                              const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
                                              const std::set<Date>& simulationDates, const std::set<Date>& addDates,
-                                             const Size timeStepsPerYear, const Handle<YieldTermStructure>& baseCurve)
+                                             const Size timeStepsPerYear, const Handle<YieldTermStructure>& baseCurve,
+                                             const bool observeContinuum)
     : AssetModelBuilderBase(std::vector<Handle<YieldTermStructure>>{curve},
                             std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>>{process},
-                            simulationDates, addDates, timeStepsPerYear, baseCurve) {}
+                            simulationDates, addDates, timeStepsPerYear, baseCurve, observeContinuum) {}
 
 AssetModelBuilderBase::AssetModelBuilderBase(
     const std::vector<Handle<YieldTermStructure>>& curves,
     const std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
     const std::set<Date>& simulationDates, const std::set<Date>& addDates, const Size timeStepsPerYear,
-    const Handle<YieldTermStructure>& baseCurve)
+    const Handle<YieldTermStructure>& baseCurve, const bool observeContinuum)
     : curves_(curves), baseCurve_(baseCurve), processes_(processes), simulationDates_(simulationDates),
-      addDates_(addDates), timeStepsPerYear_(timeStepsPerYear) {
+      addDates_(addDates), timeStepsPerYear_(timeStepsPerYear), observeContinuum_(observeContinuum) {
 
     QL_REQUIRE(!curves_.empty(), "AssetModelBuilderBase: no curves given");
 
@@ -121,8 +123,9 @@ void AssetModelBuilderBase::performCalculations() const {
 
         // setup model
 
-        model_.linkTo(QuantLib::ext::make_shared<AssetModelWrapper>(
-            processType(), getCalibratedProcesses(), effectiveSimulationDates_, discretisationTimeGrid_));
+        model_.linkTo(QuantLib::ext::make_shared<AssetModelWrapper>(processType(), getCalibratedProcesses(),
+                                                                    effectiveSimulationDates_, discretisationTimeGrid_,
+                                                                    calibrationResults_));
 
         // notify model observers
         model_->notifyObservers();
@@ -130,6 +133,9 @@ void AssetModelBuilderBase::performCalculations() const {
 }
 
 bool AssetModelBuilderBase::calibrationPointsChanged(const bool updateCache) const {
+
+    if(observeContinuum_)
+        return true;
 
     // get times for curves and times / strikes for vols
 

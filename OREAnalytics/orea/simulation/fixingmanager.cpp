@@ -30,6 +30,7 @@
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/indexes/fallbackiborindex.hpp>
 #include <qle/indexes/genericindex.hpp>
+#include <qle/utilities/inflation.hpp>
 
 #include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/capflooredcoupon.hpp>
@@ -92,7 +93,7 @@ void FixingManager::initialise(const QuantLib::ext::shared_ptr<Portfolio>& portf
                                             market->commodityPriceCurve(index->underlyingName(), configuration))]
                         .insert(dates.begin(), dates.end());
                 } else if (auto index = QuantLib::ext::dynamic_pointer_cast<FxIndex>(rawIndex)) {
-                    fixingMap_[*market->fxIndex(index->oreName(), configuration)].insert(dates.begin(), dates.end());
+                    fixingMap_[*market->fxIndex(name, configuration)].insert(dates.begin(), dates.end());
                 } else if (auto index = QuantLib::ext::dynamic_pointer_cast<GenericIndex>(rawIndex)) {
                     QL_FAIL("GenericIndex not handled");
                 } else if (auto index = QuantLib::ext::dynamic_pointer_cast<ConstantMaturityBondIndex>(rawIndex)) {
@@ -151,9 +152,9 @@ void FixingManager::applyFixings(Date start, Date end) {
         Date currentFixingDate;
         if (auto zii = QuantLib::ext::dynamic_pointer_cast<ZeroInflationIndex>(m.first)) {
             fixStart =
-                inflationPeriod(fixStart - zii->zeroInflationTermStructure()->observationLag(), zii->frequency()).first;
+                inflationPeriod(fixStart - simulationLag(zii->zeroInflationTermStructure()), zii->frequency()).first;
             fixEnd =
-                inflationPeriod(fixEnd - zii->zeroInflationTermStructure()->observationLag(), zii->frequency()).first +
+                inflationPeriod(fixEnd - simulationLag(zii->zeroInflationTermStructure()), zii->frequency()).first +
                 1;
             currentFixingDate = fixEnd;
         } else if (auto yii = QuantLib::ext::dynamic_pointer_cast<YoYInflationIndex>(m.first)) {

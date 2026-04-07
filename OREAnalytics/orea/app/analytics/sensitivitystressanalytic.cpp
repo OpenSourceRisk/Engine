@@ -20,6 +20,7 @@
 
 #include <orea/app/analytics/pricinganalytic.hpp>
 #include <orea/app/analytics/analyticfactory.hpp>
+#include <orea/app/inputparameters.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <orea/cube/cube_io.hpp>
@@ -27,7 +28,9 @@
 #include <orea/scenario/clonescenariofactory.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/stressscenariogenerator.hpp>
+#include <ored/report/inmemoryreport.hpp>
 #include <ored/report/utilities.hpp>
+
 namespace ore {
 namespace analytics {
 

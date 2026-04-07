@@ -31,6 +31,7 @@
 #include <qle/models/assetmodelwrapper.hpp>
 
 #include <ql/processes/blackscholesprocess.hpp>
+#include <ql/any.hpp>
 
 namespace ore {
 namespace data {
@@ -43,13 +44,16 @@ public:
     AssetModelBuilderBase(const std::vector<Handle<YieldTermStructure>>& curves,
                           const std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
                           const std::set<Date>& simulationDates, const std::set<Date>& addDates,
-                          const Size timeStepsPerYear, const Handle<YieldTermStructure>& baseCurve = {});
+                          const Size timeStepsPerYear, const Handle<YieldTermStructure>& baseCurve = {},
+                          const bool observeContinuum = false);
     AssetModelBuilderBase(const Handle<YieldTermStructure>& curve,
                           const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
                           const std::set<Date>& simulationDates, const std::set<Date>& addDates,
-                          const Size timeStepsPerYear, const Handle<YieldTermStructure>& baseCurve = {});
+                          const Size timeStepsPerYear, const Handle<YieldTermStructure>& baseCurve = {},
+                          const bool observeContinuum = false);
 
     Handle<AssetModelWrapper> model() const;
+    const std::set<Date>& simulationDates() const { return simulationDates_; }
 
     //! \name ModelBuilder interface
     //@{
@@ -73,11 +77,12 @@ protected:
     void performCalculations() const override;
     bool calibrationPointsChanged(const bool updateCache) const;
 
-    const std::vector<Handle<YieldTermStructure>> curves_;
-    const Handle<YieldTermStructure> baseCurve_;
-    const std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>> processes_;
-    const std::set<Date> simulationDates_, addDates_;
-    const Size timeStepsPerYear_;
+    std::vector<Handle<YieldTermStructure>> curves_;
+    Handle<YieldTermStructure> baseCurve_;
+    std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>> processes_;
+    std::set<Date> simulationDates_, addDates_;
+    Size timeStepsPerYear_;
+    bool observeContinuum_;
 
     mutable std::set<Date> effectiveSimulationDates_; // the dates effectively simulated (including today)
     mutable TimeGrid discretisationTimeGrid_;         // the (possibly refined) time grid for the simulation
@@ -90,6 +95,9 @@ protected:
     std::vector<Handle<BlackVolTermStructure>> vols_;
     std::vector<Handle<YieldTermStructure>> allCurves_;
     mutable CalibrationPointCache cache_;
+    //mutable std::map<std::string, CalibrationResults> calibrationResults_;
+    mutable std::vector<AssetModelCalibrationResults> calibrationResults_;
+
 };
 
 } // namespace data

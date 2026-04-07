@@ -308,7 +308,7 @@ QuantLib::Matrix CorrelationMatrixBuilder::pearsonCorrelation(const QuantLib::Ma
     Matrix mCorrelation(n, n);
     Array stdDevs(n);
     for (Size i = 0; i < n; i++) {
-        stdDevs[i] = sqrt(mCovariance[i][i]);
+        stdDevs[i] = std::sqrt(mCovariance[i][i]);
     }
     for (Size i = 0; i < n; i++) {
         for (Size j = 0; j < n; j++) {

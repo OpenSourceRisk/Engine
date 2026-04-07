@@ -22,6 +22,7 @@
 
 #include <ql/errors.hpp>
 #include <ql/math/comparison.hpp>
+#include <ql/math/rounding.hpp>
 
 #include <boost/math/distributions/normal.hpp>
 
@@ -63,6 +64,8 @@ std::size_t ComputationGraph::insert(const std::vector<std::size_t>& predecessor
     predecessors_.push_back(predecessors);
     opId_.push_back(opId);
     for (auto const& p : predecessors) {
+        QL_REQUIRE(p < node,
+                   "ComputationGraph::insert(): illegal predecessor node id (" << p << ") while adding node " << node);
         maxNodeRequiringArg_[p] = node;
     }
     maxNodeRequiringArg_.push_back(0);
@@ -317,6 +320,22 @@ std::size_t cg_sqrt(ComputationGraph& g, const std::size_t a, const std::string&
     if (g.isConstant(a))
         return cg_const(g, std::sqrt(g.constantValue(a)));
     return g.insert({a}, RandomVariableOpCode::Sqrt, label);
+}
+
+std::size_t cg_frac(ComputationGraph& g, const std::size_t a, const std::string& label) {
+    if (g.isConstant(a)){
+        double intPart;
+        return cg_const(g, std::modf(g.constantValue(a), &intPart));
+    } 
+    return g.insert({a}, RandomVariableOpCode::Frac, label);
+}
+
+std::size_t cg_round(ComputationGraph& g, const std::size_t a, const std::size_t b, const std::string& label) {
+    if (g.isConstant(a) && g.isConstant(b)){
+        QuantLib::Rounding rnd(g.constantValue(b), QuantLib::Rounding::Closest, 5);
+        return cg_const(g, rnd(g.constantValue(a)));
+    }
+    return g.insert({a, b}, RandomVariableOpCode::Round, label);
 }
 
 std::size_t cg_log(ComputationGraph& g, const std::size_t a, const std::string& label) {

@@ -25,6 +25,8 @@
 
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/trade.hpp>
+#include <ql/handle.hpp>
+#include <ql/termstructures/yieldtermstructure.hpp>
 
 namespace ore {
 namespace data {
@@ -77,8 +79,6 @@ public:
     const std::map<std::string,QuantLib::ext::any>& additionalData() const override;
 
 protected:
-    virtual QuantLib::ext::shared_ptr<LegData> createLegData() const;
-
     vector<LegData> legData_;
     string settlement_;
     bool isXCCY_ = false;
@@ -86,10 +86,24 @@ protected:
 private:
     bool isResetting_;
     Size notionalTakenFromLeg_;
-    bool allLegsAreSimmPlainVanillaIrLegs_ = false;
+    
+    // For fair rate calculation
+    mutable std::vector<QuantLib::Handle<QuantLib::YieldTermStructure>> discountCurves_;
+    mutable std::vector<QuantLib::Real> fxSpots_;
 };
 
+bool legIsSimmEligableXccySwap(const LegData& ld);
+bool isSimmEligibleXccySwap(const std::vector<LegData>& legData, const std::string& settlement);
+
 std::string isdaSubProductSwap(const std::string& tradeId, const vector<LegData>& legData);
+
+std::tuple<Size, Real, std::string, std::string> getSwapNpvAndNotionalInfo(const std::vector<LegData>& legData);
+
+std::map<AssetClass, std::set<std::string>>
+getSwapUnderlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager,
+                         const std::vector<LegData>& legData, const std::string& security);
+
+std::tuple<Date, Date, std::string> getSwapStartMaturity(const std::vector<Leg>& legs);
 
 } // namespace data
 } // namespace ore

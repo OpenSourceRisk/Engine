@@ -26,6 +26,9 @@
 #include <orea/scenario/stressscenariodata.hpp>
 namespace ore {
 namespace analytics {
+
+class InputParameters;
+
 class ZeroToParShiftAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "ZEROTOPARSHIFT";

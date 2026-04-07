@@ -25,6 +25,9 @@
 
 #include <ored/configuration/conventions.hpp>
 #include <ored/marketdata/market.hpp>
+#include <qle/time/futureexpirycalculator.hpp>
+#include <qle/termstructures/pricetermstructure.hpp>
+
 #include <string>
 
 namespace ore {
@@ -56,7 +59,8 @@ QuantLib::Handle<QuantLib::YieldTermStructure>
 xccyYieldCurve(const QuantLib::ext::shared_ptr<Market>& market, const std::string& ccyCode, bool& outXccyExists,
                const std::string& configuration = Market::defaultConfiguration);
 
-/*! Get a yield curve by name, where name can refer to an index or a yield curve name */
+/*! Get a yield curve by name, where name can refer to an index or a yield curve name
+    If the name is set to the special string "NULLCURVE" a curve with constant rate 0 is returned. */
 QuantLib::Handle<QuantLib::YieldTermStructure>
 indexOrYieldCurve(const QuantLib::ext::shared_ptr<Market>& market, const std::string& name,
                   const std::string& configuration = Market::defaultConfiguration);
@@ -109,7 +113,8 @@ std::pair<Date, Date> getOiFutureStartEndDate(QuantLib::Month expiryMonth, Quant
                                               QuantLib::Period tenor, FutureConvention::DateGenerationRule rule,
                                               const QuantLib::Calendar& calendar);
 
-Date getMmFutureExpiryDate(QuantLib::Month expiryMonth, QuantLib::Natural expiryYear);
+Date getMmFutureExpiryDate(QuantLib::Month expiryMonth, QuantLib::Natural expiryYear,
+                           FutureConvention::DateGenerationRule rule = FutureConvention::DateGenerationRule::IMM);
 
 /*! convert the creditCurveId into the internal name for the index tranche credit curve*/
 std::string indexTrancheSpecificCreditCurveName(const std::string& creditCurveId, const double assumedRecoveryRate);
@@ -126,5 +131,20 @@ std::string fxIndexNameForDailyLows(const QuantLib::ext::shared_ptr<QuantExt::Fx
 
 std::string fxIndexNameForDailyHighs(const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex);
 
+//! Parse a commodity calendar spread volatility surface name.
+//! Expect the name to be of the form underlyingName_CALENDAR_SPREAD_offset, where offset is the number of contract
+//! expiries between the two contracts in the calendar spread. If the name can be parsed successfully, the function
+//! returns true and underlyingName and offset are set accordingly. Otherwise, it returns false and underlyingName is
+//! set to an empty string and offset to 0.
+bool parseCommodityCalendarSpreadVolSurfaceName(const std::string& name, std::string& underlyingName, int& offset);
+
+QuantLib::ext::shared_ptr<QuantExt::PriceTermStructure> getCalendarSpreadPriceCurve(const ore::data::Market* market,
+                                                                          const std::string& name,
+                                                                          const std::string& configuration, int offset,
+                                                                          const std::string& conventionId);
+
+QuantLib::ext::shared_ptr<QuantExt::PriceTermStructure>
+getCalendarSpreadPriceCurve(const ore::data::Market* market, const std::string& name, const std::string& configuration,
+                            int offset, const QuantLib::ext::shared_ptr<QuantExt::FutureExpiryCalculator>& expCal);
 } // namespace data
 } // namespace ore

@@ -34,6 +34,16 @@
 #include <boost/serialization/optional.hpp>
 #include <ql/shared_ptr.hpp>
 
+namespace QuantLib {
+
+//! Write \p deltaType to stream. Not provided in QuantLib so add it here.
+std::ostream& operator<<(std::ostream& os, QuantLib::DeltaVolQuote::DeltaType type);
+
+//! Write \p atmType to stream. Not provided in QuantLib so add it here.
+std::ostream& operator<<(std::ostream& os, QuantLib::DeltaVolQuote::AtmType type);
+
+}
+
 namespace ore {
 namespace data {
 
@@ -256,12 +266,6 @@ private:
 
 //! Write \p strike to stream.
 std::ostream& operator<<(std::ostream& os, const BaseStrike& strike);
-
-//! Write \p deltaType to stream. Not provided in QuantLib so add it here.
-std::ostream& operator<<(std::ostream& os, QuantLib::DeltaVolQuote::DeltaType type);
-
-//! Write \p atmType to stream. Not provided in QuantLib so add it here.
-std::ostream& operator<<(std::ostream& os, QuantLib::DeltaVolQuote::AtmType type);
 
 //! Write MoneynessStrike::Type, \p type, to stream.
 std::ostream& operator<<(std::ostream& os, MoneynessStrike::Type type);

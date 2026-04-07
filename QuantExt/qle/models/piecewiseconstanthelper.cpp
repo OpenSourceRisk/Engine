@@ -119,18 +119,4 @@ PiecewiseConstantHelper3::PiecewiseConstantHelper3(const std::vector<Date>& date
     checkTimes(t2_);
 }
 
-PiecewiseConstantHelper4::PiecewiseConstantHelper4(const Array& t,
-    const QuantLib::ext::shared_ptr<Constraint>& constraint)
-    : t_(t), y_(QuantLib::ext::make_shared<PseudoParameter>(t.size(), *constraint)) {
-    checkTimes(t_);
-}
-
-PiecewiseConstantHelper4::PiecewiseConstantHelper4(const std::vector<Date>& dates,
-    const Handle<YieldTermStructure>& yts,
-    const QuantLib::ext::shared_ptr<Constraint>& constraint)
-    : t_(datesToTimes(dates, yts)),
-      y_(QuantLib::ext::make_shared<PseudoParameter>(dates.size(), *constraint)) {
-    checkTimes(t_);
-}
-
 } // namespace QuantExt

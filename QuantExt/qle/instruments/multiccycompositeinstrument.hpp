@@ -44,17 +44,20 @@ using namespace QuantLib;
     \ingroup instruments
 */
 class MultiCcyCompositeInstrument : public Instrument {
+public:
     typedef std::tuple<ext::shared_ptr<Instrument>, Real, Handle<Quote>> component;
     typedef std::list<component>::iterator iterator;
     typedef std::list<component>::const_iterator const_iterator;
 
-public:
     //! adds an instrument to the composite
     void add(const ext::shared_ptr<Instrument>& instrument, Real multiplier = 1.0,
              const Handle<Quote>& fx = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0)));
     //! shorts an instrument from the composite
     void subtract(const ext::shared_ptr<Instrument>& instrument, Real multiplier = 1.0,
                   const Handle<Quote>& fx = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0)));
+    //! returns components
+    std::list<component> components() const { return components_; }
+
     //! \name Observer interface
     //@{
     void deepUpdate() override;

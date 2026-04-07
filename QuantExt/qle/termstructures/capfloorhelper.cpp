@@ -17,7 +17,7 @@
 */
 
 #include <boost/bind/bind.hpp>
-#include <ql/functional.hpp>
+#include <functional>
 #include <ql/instruments/makecapfloor.hpp>
 #include <ql/pricingengines/capfloor/bacheliercapfloorengine.hpp>
 #include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>

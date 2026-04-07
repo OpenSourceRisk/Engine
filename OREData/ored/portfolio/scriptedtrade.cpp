@@ -26,6 +26,7 @@
 #include <ored/portfolio/schedule.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/model/assetmodelbuilderbase.hpp>
 
 #include <boost/algorithm/string/replace.hpp>
 
@@ -104,6 +105,8 @@ void ScriptedTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     // set sensitivity template
     setSensitivityTemplate(builder->sensitivityTemplate());
     addProductModelEngine(*builder);
+
+    DLOG("ScriptedTrade::build() done for trade " << id());
 }
 
 void ScriptedTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {

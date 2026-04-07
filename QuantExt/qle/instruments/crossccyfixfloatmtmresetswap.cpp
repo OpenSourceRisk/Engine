@@ -40,7 +40,8 @@ CrossCcyFixFloatMtMResetSwap::CrossCcyFixFloatMtMResetSwap(
     const BusinessDayConvention& floatPaymentBdc, Natural floatPaymentLag, const Calendar& floatPaymentCalendar,
     const QuantLib::ext::shared_ptr<FxIndex>& fxIdx, bool resetsOnFloatLeg, bool receiveFixed,
     QuantLib::ext::optional<bool> floatIncludeSpread, QuantLib::ext::optional<Period> floatLookback,
-    QuantLib::ext::optional<Size> floatFixingDays, QuantLib::ext::optional<Size> floatRateCutoff, QuantLib::ext::optional<bool> floatIsAveraged)
+    QuantLib::ext::optional<Size> floatFixingDays, QuantLib::ext::optional<Size> floatRateCutoff,
+    QuantLib::ext::optional<bool> floatIsAveraged, QuantLib::ext::optional<bool> floatObservationShift)
     : CrossCcySwap(3), nominal_(nominal), fixedCurrency_(fixedCurrency),
     fixedSchedule_(fixedSchedule), fixedRate_(fixedRate), fixedDayCount_(fixedDayCount), 
     fixedPaymentBdc_(fixedPaymentBdc), fixedPaymentLag_(fixedPaymentLag), fixedPaymentCalendar_(fixedPaymentCalendar),
@@ -49,7 +50,8 @@ CrossCcyFixFloatMtMResetSwap::CrossCcyFixFloatMtMResetSwap(
     floatPaymentLag_(floatPaymentLag), floatPaymentCalendar_(floatPaymentCalendar),
       fxIndex_(fxIdx), resetsOnFloatLeg_(resetsOnFloatLeg), receiveFixed_(receiveFixed),
       floatIncludeSpread_(floatIncludeSpread), floatLookback_(floatLookback), floatFixingDays_(floatFixingDays),
-      floatRateCutoff_(floatRateCutoff), floatIsAveraged_(floatIsAveraged) {
+      floatRateCutoff_(floatRateCutoff), floatIsAveraged_(floatIsAveraged),
+      floatObservationShift_(floatObservationShift) {
 
     registerWith(floatIndex_);
     registerWith(fxIndex_);
@@ -78,9 +80,10 @@ void CrossCcyFixFloatMtMResetSwap::initialize() {
                            .withSpread(floatSpread_)
                            .withPaymentLag(floatPaymentLag_)
                            .withLookback(floatLookback_ ? *floatLookback_ : 0 * Days)
-                           .withFixingDays(floatFixingDays_ ? *floatFixingDays_ : 0)
+                           .withFixingDays(floatFixingDays_ ? *floatFixingDays_ : Null<Size>())
                            .withRateCutoff(floatRateCutoff_ ? *floatRateCutoff_ : 0)
-                           .withTelescopicValueDates(telescopicValueDates_);
+                           .withTelescopicValueDates(telescopicValueDates_)
+                           .withObservationShift(floatObservationShift_ ? *floatObservationShift_ : true);
         } else {
             floatLeg = QuantExt::OvernightLeg(floatSchedule_, on)
                            .withNotionals(floatNotional)
@@ -88,9 +91,10 @@ void CrossCcyFixFloatMtMResetSwap::initialize() {
                            .withPaymentLag(floatPaymentLag_)
                            .includeSpread(floatIncludeSpread_ ? *floatIncludeSpread_ : false)
                            .withLookback(floatLookback_ ? *floatLookback_ : 0 * Days)
-                           .withFixingDays(floatFixingDays_ ? *floatFixingDays_ : 0)
+                           .withFixingDays(floatFixingDays_ ? *floatFixingDays_ : Null<Size>())
                            .withRateCutoff(floatRateCutoff_ ? *floatRateCutoff_ : 0)
-                           .withTelescopicValueDates(telescopicValueDates_);
+                           .withTelescopicValueDates(telescopicValueDates_)
+                           .withObservationShift(floatObservationShift_ ? *floatObservationShift_ : true);
         }
     } else {
         floatLeg = IborLeg(floatSchedule_, floatIndex_)

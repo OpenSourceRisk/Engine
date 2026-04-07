@@ -21,12 +21,12 @@ while test $# -gt 0; do
 
   case $1 in
     --cflags)
-      #echo -I${ORE}/OREAnalytics -I${ORE}/OREData -I${ORE}/QuantExt -I${ORE}/QuantLib -I${BOOST_INC} -std=c++1z
+      #echo -I${ORE}/OREAnalytics -I${ORE}/OREData -I${ORE}/QuantExt -I${ORE}/QuantLib -I${BOOST_INC} -std=c++20
       #echo -I${ORE}/OREAnalytics -I${ORE}/OREData -I${ORE}/QuantExt -I${ORE}/QuantLib
       echo -I${ORE}/build/QuantLib -I${ORE}/OREAnalytics -I${ORE}/OREData -I${ORE}/QuantExt -I${ORE}/QuantLib
       ;;
     --libs)
-      #echo -L${ORE}/build/OREAnalytics/orea -lOREAnalytics -L${ORE}/build/OREData/ored -lOREData -L${ORE}/build/QuantExt/qle -lQuantExt -L${ORE}/build/QuantLib/ql -lQuantLib -L${BOOST_LIB} -l${BOOST_THREAD} -lboost_system -lboost_serialization -lboost_date_time -lboost_regex -lboost_filesystem -std=c++1z
+      #echo -L${ORE}/build/OREAnalytics/orea -lOREAnalytics -L${ORE}/build/OREData/ored -lOREData -L${ORE}/build/QuantExt/qle -lQuantExt -L${ORE}/build/QuantLib/ql -lQuantLib -L${BOOST_LIB} -l${BOOST_THREAD} -lboost_system -lboost_serialization -lboost_date_time -lboost_regex -lboost_filesystem -std=c++20
       echo -L${ORE}/build/OREAnalytics/orea -lOREAnalytics -L${ORE}/build/OREData/ored -lOREData -L${ORE}/build/QuantExt/qle -lQuantExt -L${ORE}/build/QuantLib/ql -lQuantLib -lboost_thread -lboost_system -lboost_serialization -lboost_date_time -lboost_regex -lboost_filesystem
       ;;
     *)

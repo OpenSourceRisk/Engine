@@ -150,9 +150,10 @@ $\sigma_\text{eff}(t_1)$ which can be defined by
 
 and which allows to price an RFR caplet as if it was a standard Ibor caplet with caplet volatility
 $\sigma_\text{eff}(t_1)$ and fixing time $t_1$. We do not use $\sigma_\text{eff}$ to represent caplet volatilities in
-bootstrapped or proxied caplet volatility surfaces for RFR underlyings. We also do not report $\sigma_\text{eff}$ as the
-pricing vol in the cashflow report. Instead we use $\sigma(t_0)$ in all cases (where we set $\sigma(t_0) := \sigma(0)$
-for $t_0 < 0$).
+bootstrapped or proxied caplet volatility surfaces for RFR underlyings. Instead we use $\sigma(t_0)$, where we set
+$\sigma(t_0) := \sigma(0)$ for $t_0 < 0$. However we report $\sigma_\text{eff}$ as ``EffectiveCapVolatility'',
+``EffectiveFloorVolatility'' in the cashflow report, in addition to ``CapVolatility'', ``FloorVolatility'' referring to
+$\sigma(t_0)$.
 
 \subsubsection{Pricing of a SIFMA caplet}
 

@@ -25,7 +25,6 @@
 #include <orea/app/analytic.hpp>
 #include <orea/app/marketcalibrationreport.hpp>
 #include <orea/app/marketdataloader.hpp>
-#include <orea/app/inputparameters.hpp>
 #include <boost/enable_shared_from_this.hpp>
 
 #include <iostream>

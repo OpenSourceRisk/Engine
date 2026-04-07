@@ -22,7 +22,7 @@
 */
 
 #pragma once
-
+#include <ql/shared_ptr.hpp>
 #include <qle/instruments/forwardbond.hpp>
 #include <qle/pricingengines/mcmultilegbaseengine.hpp>
 
@@ -45,7 +45,7 @@ public:
                        const std::vector<Date> simulationDates = std::vector<Date>(),
                        const std::vector<Date>& stickyCloseOutDates = std::vector<Date>(),
                        const std::vector<Size> externalModelIndices = std::vector<Size>(),
-                       const bool minimalObsDate = true, const RegressorModel regressorModel = RegressorModel::Simple,
+                       const bool minimalObsDate = true, const McRegressionModel::RegressorModel regressorModel = McRegressionModel::RegressorModel::Simple,
                        const Real regressionVarianceCutoff = Null<Real>(),
                        const bool recalibrateOnStickyCloseOutDates = false,
                        const bool reevaluateExerciseInStickyRun = false,
@@ -54,7 +54,7 @@ public:
                        const Size regressionMaxSimTimesIr = 0,
                        const Size regressionMaxSimTimesFx = 0,
                        const Size regressionMaxSimTimesEq = 0,
-                       const VarGroupMode regressionVarGroupMode = VarGroupMode::Global)
+                       const McRegressionModel::VarGroupMode regressionVarGroupMode = McRegressionModel::VarGroupMode::Global)
         : GenericEngine<QuantExt::ForwardBond::arguments, QuantExt::ForwardBond::results>(),
           McMultiLegBaseEngine(Handle<CrossAssetModel>(QuantLib::ext::make_shared<CrossAssetModel>(
                                    std::vector<QuantLib::ext::shared_ptr<IrModel>>(1, model),
@@ -104,11 +104,11 @@ public:
         Currency npvCurrency() override { return baseCurrency_; }
 
         void addEngine(const QuantExt::McLgmFwdBondEngine& engine) {
-            engine_ = boost::make_shared<QuantExt::McLgmFwdBondEngine>(engine);
+            engine_ = QuantLib::ext::make_shared<QuantExt::McLgmFwdBondEngine>(engine);
         };
 
     private:
-        boost::shared_ptr<QuantExt::McLgmFwdBondEngine> engine_;
+        QuantLib::ext::shared_ptr<QuantExt::McLgmFwdBondEngine> engine_;
     };
 
 private:

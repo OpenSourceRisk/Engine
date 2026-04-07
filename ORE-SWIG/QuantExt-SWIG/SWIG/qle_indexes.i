@@ -97,7 +97,6 @@ class BondFuturesIndex : public Index {
         const QuantLib::Date& futureExpiryDate() const;
 
         const std::string& futureContract() const;
-        const QuantLib::Date& futureExpiryDate() const;
         const QuantLib::ext::shared_ptr<QuantLib::Bond>& ctd();
         const bool dirty() const;
 };

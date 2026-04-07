@@ -26,6 +26,7 @@ using QuantLib::Linear;
 QuantLib::ext::shared_ptr<YoYCapFloorTermPriceSurface> YoYPriceSurfaceFromVolatilities::operator()(
     const QuantLib::ext::shared_ptr<QuantLib::CapFloorTermVolSurface>& volSurface,
     const QuantLib::ext::shared_ptr<YoYInflationIndex>& index,
+    QuantLib::CPI::InterpolationType interpolation,
     const QuantLib::Handle<QuantLib::YieldTermStructure>& nominalTs, QuantLib::VolatilityType type,
     QuantLib::Real displacement) {
     QL_REQUIRE(volSurface != nullptr, "YoYPriceSurfaceFromVolatilties: missing vol surfaces");
@@ -73,21 +74,19 @@ QuantLib::ext::shared_ptr<YoYCapFloorTermPriceSurface> YoYPriceSurfaceFromVolati
             } else {
                 QL_FAIL("unknown volatility type: " << type);
             }
-            QL_DEPRECATED_DISABLE_WARNING
             // calculate the cap price
             YoYInflationCapFloor cap = YoYInflationCapFloor(
-                MakeYoYInflationCapFloor(YoYInflationCapFloor::Cap, index, optionletTerms[i].length(), cal, obsLag)
+                MakeYoYInflationCapFloor(YoYInflationCapFloor::Cap, index, optionletTerms[i].length(), cal, obsLag, interpolation)
                     .withStrike(strikes[j])
                     .withPricingEngine(pe)
                     .withNominal(10000));
             cPrice[j][i] = cap.NPV();
             // floor price
             YoYInflationCapFloor floor = YoYInflationCapFloor(
-                MakeYoYInflationCapFloor(YoYInflationCapFloor::Floor, index, optionletTerms[i].length(), cal, obsLag)
+                MakeYoYInflationCapFloor(YoYInflationCapFloor::Floor, index, optionletTerms[i].length(), cal, obsLag, interpolation)
                     .withStrike(strikes[j])
                     .withPricingEngine(pe)
                     .withNominal(10000));
-            QL_DEPRECATED_ENABLE_WARNING
             fPrice[j][i] = floor.NPV();
         }
     }
@@ -115,13 +114,10 @@ QuantLib::ext::shared_ptr<YoYCapFloorTermPriceSurface> YoYPriceSurfaceFromVolati
         }
         fStrikes.push_back(strikes[j]);
     }
-
-    Rate baseRate = index->yoyInflationTermStructure()->baseRate();
-    QL_DEPRECATED_DISABLE_WARNING
+    
     auto yoySurface = QuantLib::ext::make_shared<QuantExt::InterpolatedYoYCapFloorTermPriceSurface<Bilinear, Linear>>(
-        settDays, obsLag, index, baseRate, nominalTs, dc, cal, bdc, cStrikes, fStrikes, optionletTerms, cPriceFinal,
+        settDays, obsLag, index, interpolation, nominalTs, dc, cal, bdc, cStrikes, fStrikes, optionletTerms, cPriceFinal,
         fPriceFinal);
-    QL_DEPRECATED_ENABLE_WARNING
     yoySurface->enableExtrapolation();
     return yoySurface;
 }

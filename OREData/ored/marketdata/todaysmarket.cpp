@@ -43,6 +43,7 @@
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <qle/indexes/dividendmanager.hpp>
 #include <qle/indexes/equityindex.hpp>
@@ -53,7 +54,7 @@
 #include <qle/termstructures/blackvolsurfacewithatm.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
 
-#include <ql/tuple.hpp>
+#include <tuple>
 
 #include <boost/graph/topological_sort.hpp>
 #include <boost/range/adaptor/map.hpp>
@@ -533,7 +534,7 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
                 // build the curve
                 DLOG("Building DefaultCurve for asof " << asof_);
                 QuantLib::ext::shared_ptr<DefaultCurve> defaultCurve = QuantLib::ext::make_shared<DefaultCurve>(
-                    asof_, *defaultspec, *loader_, *curveConfigs_, requiredYieldCurves_, requiredDefaultCurves_,
+                    asof_, *defaultspec, *loader_, *curveConfigs_, requiredYieldCurves_, requiredDefaultCurves_, referenceData_,
                     buildCalibrationInfo_);
                 itr = requiredDefaultCurves_.insert(make_pair(defaultspec->name(), defaultCurve)).first;
                 calibrationInfo_->defaultCurveCalibrationInfo[defaultspec->name()] = defaultCurve->calibrationInfo();
@@ -815,7 +816,15 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
             // Logic copied from Equity vol section of TodaysMarket for now
             QuantLib::ext::shared_ptr<BlackVolTermStructure> bvts(itr->second->volatility());
             Handle<YieldTermStructure> discount = discountCurve(commodityVolSpec->currency(), configuration);
-            Handle<PriceTermStructure> priceCurve = commodityPriceCurve(commodityName, configuration);
+            Handle<PriceTermStructure> priceCurve;
+
+            if (itr->second->isCalendarSpreadOption()) {
+                auto pts = getCalendarSpreadPriceCurve(this, commodityName, configuration,
+                    itr->second->calendarSpreadOffset(), itr->second->expiryCalculator());
+                priceCurve = Handle<PriceTermStructure>(pts);
+            } else {
+                priceCurve = commodityPriceCurve(commodityName, configuration);
+            }
             Handle<YieldTermStructure> yield = Handle<YieldTermStructure>(
                 QuantLib::ext::make_shared<PriceTermStructureAdapter>(*priceCurve, *discount));
             Handle<Quote> spot(QuantLib::ext::make_shared<SimpleQuote>(priceCurve->price(0, true)));
