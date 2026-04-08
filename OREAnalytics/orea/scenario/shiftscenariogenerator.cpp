@@ -169,7 +169,11 @@ void ShiftScenarioGenerator::applyShift(Size j, Real shiftSize, bool up, ShiftTy
     if (tenors.size() == 1) { // single shift tenor means parallel shift
         Real w = up ? 1.0 : -1.0;
         for (Size k = 0; k < times.size(); k++) {
-            if (shiftType == ShiftType::Absolute)
+            if (shiftType == ShiftType::EqualTo) {
+                Real shiftDiff = shiftSize - shiftedValues[k];
+                shiftedValues[k] += w * shiftDiff;
+            }
+            else if (shiftType == ShiftType::Absolute)
                 shiftedValues[k] += w * shiftSize;
             else
                 shiftedValues[k] += values[k] * (w * shiftSize);
@@ -184,7 +188,11 @@ void ShiftScenarioGenerator::applyShift(Size j, Real shiftSize, bool up, ShiftTy
                 w = (t2 - times[k]) / (t2 - t1);
             if (!up)
                 w *= -1.0;
-            if (shiftType == ShiftType::Absolute)
+            if (shiftType == ShiftType::EqualTo) {
+                Real shiftDiff = shiftSize - shiftedValues[k];
+                shiftedValues[k] += w * shiftDiff;
+            }
+            else if (shiftType == ShiftType::Absolute)
                 shiftedValues[k] += w * shiftSize;
             else
                 shiftedValues[k] += values[k] * (w * shiftSize);
@@ -199,7 +207,11 @@ void ShiftScenarioGenerator::applyShift(Size j, Real shiftSize, bool up, ShiftTy
                 w = 1.0;
             if (!up)
                 w *= -1.0;
-            if (shiftType == ShiftType::Absolute)
+            if (shiftType == ShiftType::EqualTo) {
+                Real shiftDiff = shiftSize - shiftedValues[k];
+                shiftedValues[k] += w * shiftDiff;
+            }
+            else if (shiftType == ShiftType::Absolute)
                 shiftedValues[k] += w * shiftSize;
             else
                 shiftedValues[k] += values[k] * (w * shiftSize);
@@ -215,7 +227,11 @@ void ShiftScenarioGenerator::applyShift(Size j, Real shiftSize, bool up, ShiftTy
                 w = (t2 - times[k]) / (t2 - t1);
             if (!up)
                 w *= -1.0;
-            if (shiftType == ShiftType::Absolute)
+            if (shiftType == ShiftType::EqualTo) {
+                Real shiftDiff = shiftSize - shiftedValues[k];
+                shiftedValues[k] += w * shiftDiff;
+            }
+            else if (shiftType == ShiftType::Absolute)
                 shiftedValues[k] += w * shiftSize;
             else
                 shiftedValues[k] += values[k] * (w * shiftSize);
