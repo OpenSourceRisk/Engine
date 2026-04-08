@@ -32,7 +32,9 @@ namespace analytics {
 SimpleScenario::SimpleScenario(QuantLib::Date asof, const std::string& label, QuantLib::Real numeraire,
                                const QuantLib::ext::shared_ptr<SharedData>& sharedData)
     : sharedData_(sharedData == nullptr ? QuantLib::ext::make_shared<SharedData>() : sharedData), asof_(asof),
-      label_(label), numeraire_(numeraire) {}
+      label_(label), numeraire_(numeraire) {
+    data_.resize(sharedData_->keys.size(), QuantLib::Null<QuantLib::Real>());
+}
 
 bool SimpleScenario::has(const RiskFactorKey& key) const {
     return sharedData_->keyIndex.find(key) != sharedData_->keyIndex.end();
@@ -70,7 +72,9 @@ Real SimpleScenario::get(const Size index) const {
     return isAbsolute() ? sanitizeScenarioValue(sharedData_->keys[index].keytype, isPar(), data_[index]) : data_[index];
 }
 
-void SimpleScenario::add(const Size index, QuantLib::Real value) { data_[index] = value; }
+void SimpleScenario::add(const Size index, QuantLib::Real value) {
+    data_[index] = value;
+}
 
 QuantLib::ext::shared_ptr<Scenario> SimpleScenario::clone() const {
     return QuantLib::ext::make_shared<SimpleScenario>(*this);

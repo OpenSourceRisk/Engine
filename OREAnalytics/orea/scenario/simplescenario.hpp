@@ -69,9 +69,9 @@ public:
     void add(const RiskFactorKey& key, QuantLib::Real value) override;
     QuantLib::Real get(const RiskFactorKey& key) const override;
 
-    Size getIndex(const RiskFactorKey& key) const override;
-    Real get(const Size index) const override;
-    void add(const Size index, QuantLib::Real value) override;
+    QuantLib::Size getIndex(const RiskFactorKey& key) const override;
+    QuantLib::Real get(const QuantLib::Size index) const override;
+    void add(const QuantLib::Size index, QuantLib::Real value) override;
 
     //! This does _not_ clone the shared data
     QuantLib::ext::shared_ptr<Scenario> clone() const override;
