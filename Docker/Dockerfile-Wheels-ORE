@@ -14,12 +14,11 @@ ARG WHEELS_VERSION
 # This replaces 9 individual COPY statements with a single ADD for faster buildah builds
 ADD wheels-ore-source.tar.gz /ore/
 
-RUN \
-dnf -y install clang ninja-build swig && \
-dnf clean all
-
 WORKDIR /ore
 RUN \
+dnf -y install clang ninja-build swig && \
+dnf clean all && \
+rm -rf /var/cache/dnf && \
 python3 Docker/update_version_number.py -f version.hpp -v ${WHEELS_VERSION} && \
 mkdir build && \
 cd build && \
