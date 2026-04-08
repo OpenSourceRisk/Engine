@@ -281,7 +281,7 @@ QuantLib::ext::shared_ptr<YieldTermStructure> zerocurve(const vector<Date>& date
                                                         const DayCounter& dayCounter,
                                                         YieldCurve::InterpolationMethod interpolationMethod,
                                                         YieldCurve::ExtrapolationMethod extrapolationMethod,
-                                                        bool excludeT0, Size n, const Date& referenceDate) {
+                                                        bool excludeT0, Size n) {
     return buildYieldCurve<InterpolatedZeroCurve>(interpolationMethod, extrapolationMethod, excludeT0, n, dates, yields,
                                                   dayCounter);
 }
@@ -289,7 +289,7 @@ QuantLib::ext::shared_ptr<YieldTermStructure> zerocurve(const vector<Date>& date
 QuantLib::ext::shared_ptr<YieldTermStructure>
 discountcurve(const vector<Date>& dates, const vector<DiscountFactor>& dfs, const DayCounter& dayCounter,
               YieldCurve::InterpolationMethod interpolationMethod, YieldCurve::ExtrapolationMethod extrapolationMethod,
-              bool excludeT0, Size n, const Date& referenceDate) {
+              bool excludeT0, Size n) {
     return buildYieldCurve<InterpolatedDiscountCurve>(interpolationMethod, extrapolationMethod, excludeT0, n, dates,
                                                       dfs, dayCounter);
 }
@@ -298,7 +298,7 @@ QuantLib::ext::shared_ptr<YieldTermStructure> forwardcurve(const vector<Date>& d
                                                            const DayCounter& dayCounter,
                                                            YieldCurve::InterpolationMethod interpolationMethod,
                                                            YieldCurve::ExtrapolationMethod extrapolationMethod,
-                                                           bool excludeT0, Size n, const Date& referenceDate) {
+                                                           bool excludeT0, Size n) {
     return buildYieldCurve<InterpolatedForwardCurve>(interpolationMethod, extrapolationMethod, excludeT0, n, dates,
                                                      forwards, dayCounter);
 }
@@ -1119,17 +1119,14 @@ YieldCurve::flattenPiecewiseCurve(const std::size_t index, const QuantLib::ext::
     // Build the appropriate curve
     QuantLib::ext::shared_ptr<YieldTermStructure> curve;
     if (interpolationVariable_[index] == InterpolationVariable::Zero) {
-        curve =
-            zerocurve(dates, rates, zeroDayCounter_[index], interpolationMethod_[index], extrapolationMethod_[index],
-                      mixedInterpolationSize, excludeT0FromInterpolation_[index], asofDate_);
+        curve = zerocurve(dates, rates, zeroDayCounter_[index], interpolationMethod_[index],
+                          extrapolationMethod_[index], excludeT0FromInterpolation_[index], mixedInterpolationSize);
     } else if (interpolationVariable_[index] == InterpolationVariable::Discount) {
         curve = discountcurve(dates, rates, zeroDayCounter_[index], interpolationMethod_[index],
-                              extrapolationMethod_[index], mixedInterpolationSize, excludeT0FromInterpolation_[index],
-                              asofDate_);
+                              extrapolationMethod_[index], excludeT0FromInterpolation_[index], mixedInterpolationSize);
     } else if (interpolationVariable_[index] == InterpolationVariable::Forward) {
-        curve =
-            forwardcurve(dates, rates, zeroDayCounter_[index], interpolationMethod_[index], extrapolationMethod_[index],
-                         mixedInterpolationSize, excludeT0FromInterpolation_[index], asofDate_);
+        curve = forwardcurve(dates, rates, zeroDayCounter_[index], interpolationMethod_[index],
+                             extrapolationMethod_[index], excludeT0FromInterpolation_[index], mixedInterpolationSize);
     } else {
         QL_FAIL("Interpolation variable not recognised.");
     }
@@ -1265,24 +1262,26 @@ void YieldCurve::buildZeroCurve(const std::size_t index) {
     // Now build curve with requested conventions
     if (interpolationVariable_[index] == YieldCurve::InterpolationVariable::Zero) {
         QuantLib::ext::shared_ptr<YieldTermStructure> tempCurve =
-            zerocurve(dates, zeroes, quoteDayCounter, interpolationMethod_[index], extrapolationMethod_[index]);
+            zerocurve(dates, zeroes, quoteDayCounter, interpolationMethod_[index], extrapolationMethod_[index],
+                      excludeT0FromInterpolation_[index]);
         zeroes.clear();
         for (Size i = 0; i < dates.size(); ++i) {
             Rate zero = tempCurve->zeroRate(dates[i], zeroDayCounter_[index], Continuous);
             zeroes.push_back(zero);
         }
-        p_[index] =
-            zerocurve(dates, zeroes, zeroDayCounter_[index], interpolationMethod_[index], extrapolationMethod_[index]);
+        p_[index] = zerocurve(dates, zeroes, zeroDayCounter_[index], interpolationMethod_[index],
+                              extrapolationMethod_[index], excludeT0FromInterpolation_[index]);
     } else if (interpolationVariable_[index] == YieldCurve::InterpolationVariable::Discount) {
-        QuantLib::ext::shared_ptr<YieldTermStructure> tempCurve = discountcurve(
-            dates, discounts, quoteDayCounter, interpolationMethod_[index], extrapolationMethod_[index]);
+        QuantLib::ext::shared_ptr<YieldTermStructure> tempCurve =
+            discountcurve(dates, discounts, quoteDayCounter, interpolationMethod_[index], extrapolationMethod_[index],
+                          excludeT0FromInterpolation_[index]);
         discounts.clear();
         for (Size i = 0; i < dates.size(); ++i) {
             DiscountFactor discount = tempCurve->discount(dates[i]);
             discounts.push_back(discount);
         }
         p_[index] = discountcurve(dates, discounts, zeroDayCounter_[index], interpolationMethod_[index],
-                                  extrapolationMethod_[index]);
+                                  extrapolationMethod_[index], excludeT0FromInterpolation_[index]);
     } else {
         QL_FAIL("Unknown yield curve interpolation variable.");
     }
@@ -1566,8 +1565,9 @@ void YieldCurve::buildDiscountCurve(const std::size_t index) {
 
     QL_REQUIRE(dates.size() == discounts.size(), "Date and discount vectors differ in size.");
 
-    QuantLib::ext::shared_ptr<YieldTermStructure> tempDiscCurve = discountcurve(
-        dates, discounts, zeroDayCounter_[index], interpolationMethod_[index], extrapolationMethod_[index]);
+    QuantLib::ext::shared_ptr<YieldTermStructure> tempDiscCurve =
+        discountcurve(dates, discounts, zeroDayCounter_[index], interpolationMethod_[index],
+                      extrapolationMethod_[index], excludeT0FromInterpolation_[index]);
 
     // Now build curve with requested conventions
     if (interpolationVariable_[index] == YieldCurve::InterpolationVariable::Discount) {
@@ -1578,8 +1578,8 @@ void YieldCurve::buildDiscountCurve(const std::size_t index) {
             Rate zero = tempDiscCurve->zeroRate(dates[i], zeroDayCounter_[index], Continuous);
             zeroes.push_back(zero);
         }
-        p_[index] =
-            zerocurve(dates, zeroes, zeroDayCounter_[index], interpolationMethod_[index], extrapolationMethod_[index]);
+        p_[index] = zerocurve(dates, zeroes, zeroDayCounter_[index], interpolationMethod_[index],
+                              extrapolationMethod_[index], excludeT0FromInterpolation_[index]);
     } else {
         QL_FAIL("Unknown yield curve interpolation variable.");
     }
