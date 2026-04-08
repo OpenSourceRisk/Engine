@@ -624,6 +624,22 @@
           }
         ]
       },
+      "ba_cva\\.csv": {
+        "keys": [
+          "Counterparty",
+          "NettingSet",
+          "Analytic"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "Value"
+            ],
+            "abs_tol": 1e-06,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
       "stresstest\\.csv": {
         "keys": [
           "TradeId",
