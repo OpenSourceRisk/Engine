@@ -4,8 +4,10 @@
 # This script runs during the Dockerfile-Wheels-ORE build, right after the
 # ORE C++ library build completes.
 #
-# Compilations run sequentially to avoid OOM on memory-constrained CI runners
-# (a single compilation of this ~300k-line file needs most of available RAM).
+# Compilations run sequentially because sccache does not support concurrent
+# invocations from parallel background processes (its env-sanitized spawn
+# mechanism fails with "No such file or directory" when multiple clients race).
+# Each compilation at -O0 takes ~4 minutes, which is acceptable.
 #
 # We use -O0 because this is SWIG glue code — thin wrappers that forward
 # calls to pre-compiled ORE libraries. Optimization provides no measurable
@@ -45,6 +47,7 @@ else
 fi
 
 # Use sccache if available (wraps the compiler for caching via S3).
+# Ensure the server is running before any compilation.
 if command -v sccache &> /dev/null; then
     CXX="sccache $CXX"
     echo "Using compiler: $CXX (sccache enabled)"
@@ -79,7 +82,7 @@ for PYVER in "$@"; do
     echo "  Include: $PY_INCLUDE"
     START_TIME=$(date +%s)
 
-    # Compile sequentially (one at a time to avoid OOM).
+    # Compile sequentially (one at a time to avoid OOM and sccache conflicts).
     #
     # We intentionally do NOT use Python's sysconfig CFLAGS here. Those flags
     # (e.g. -O3, -g, -fstack-protector-strong, -specs=...) are tuned for

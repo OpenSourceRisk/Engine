@@ -11,7 +11,8 @@ ARG NUM_CORES=16
 ARG WHEELS_VERSION
 
 # Source archive is created in CI before_script (see ci/build_wheels.yml)
-# This replaces 9 individual COPY statements with a single ADD for faster buildah builds
+# Contains ORE source, ORE-SWIG bindings, and build scripts in a single archive
+# to avoid multiple COPY/ADD layers.
 ADD wheels-ore-source.tar.gz /ore/
 
 WORKDIR /ore
@@ -37,45 +38,43 @@ RUN set -e; \
   [ -n "${SCCACHE_S3_USE_SSL}" ] && export SCCACHE_S3_USE_SSL; \
   [ -n "${SCCACHE_S3_KEY_PREFIX}" ] && export SCCACHE_S3_KEY_PREFIX; \
   [ -n "${SCCACHE_IDLE_TIMEOUT}" ] && export SCCACHE_IDLE_TIMEOUT; \
+  sccache --stop-server 2>/dev/null || true; \
+  rm -f /tmp/sccache_server 2>/dev/null || true; \
   sccache --start-server \
   || echo "WARNING: sccache server failed to start — caching may be unavailable"; \
   cmake --build . -- -j ${NUM_CORES} install; \
   BUILD_EXIT=$?; \
   sccache --show-stats || true; \
-  if [ $BUILD_EXIT -ne 0 ]; then exit $BUILD_EXIT; fi
+  sccache --stop-server 2>/dev/null || true; \
+  rm -f /tmp/sccache_server 2>/dev/null || true; \
+  if [ $BUILD_EXIT -ne 0 ]; then exit $BUILD_EXIT; fi; \
+  rm -rf /ore/build /ore/QuantLib /ore/QuantExt /ore/OREData /ore/OREAnalytics \
+         /ore/ORETest /ore/ThirdPartyLibs /ore/cmake /ore/CMakeLists.txt
 
-# Generate SWIG wrapper source (needs SWIG + Python + ORE headers).
-COPY ORE-SWIG/CMakeLists.txt /ore/ORE-SWIG/CMakeLists.txt
-COPY ORE-SWIG/OREAnalytics-SWIG /ore/ORE-SWIG/OREAnalytics-SWIG
-COPY ORE-SWIG/OREData-SWIG /ore/ORE-SWIG/OREData-SWIG
-COPY ORE-SWIG/QuantExt-SWIG /ore/ORE-SWIG/QuantExt-SWIG
-COPY ORE-SWIG/QuantLib-SWIG /ore/ORE-SWIG/QuantLib-SWIG
-COPY ORE-SWIG/setup.py /ore/ORE-SWIG/setup.py
-COPY ORE-SWIG/LICENSE.txt /ore/ORE-SWIG/LICENSE.txt
-COPY ORE-SWIG/Wheels-gitlab /ore/ORE-SWIG/Wheels-gitlab
-
+# Generate SWIG wrapper source and pre-compile for each target Python version.
+# ORE-SWIG files are included in the source archive (no separate COPY needed).
 WORKDIR /ore/ORE-SWIG
-RUN \
-PATH="/opt/python/cp310-cp310/bin:$PATH" && \
-pip3 install setuptools && \
-cp Wheels-gitlab/oreanalytics-config . && \
-chmod +x oreanalytics-config && \
-python3 setup.py wrap
-
-# Pre-compile the SWIG wrapper for each target Python version.
-# sccache is used to speed up rebuilds when the wrapper source hasn't changed.
 RUN set -e; \
+    PATH="/opt/python/cp310-cp310/bin:$PATH" && \
+    pip3 install setuptools && \
+    cp Wheels-gitlab/oreanalytics-config . && \
+    chmod +x oreanalytics-config && \
+    python3 setup.py wrap && \
     [ -n "${SCCACHE_BUCKET}" ] && export SCCACHE_BUCKET; \
     [ -n "${SCCACHE_REGION}" ] && export SCCACHE_REGION; \
     [ -n "${SCCACHE_S3_USE_SSL}" ] && export SCCACHE_S3_USE_SSL; \
     [ -n "${SCCACHE_S3_KEY_PREFIX}" ] && export SCCACHE_S3_KEY_PREFIX; \
     [ -n "${SCCACHE_IDLE_TIMEOUT}" ] && export SCCACHE_IDLE_TIMEOUT; \
+    sccache --stop-server 2>/dev/null || true; \
+    rm -f /tmp/sccache_server 2>/dev/null || true; \
     sccache --start-server \
     || echo "WARNING: sccache server failed to start — caching may be unavailable"; \
     chmod +x Wheels-gitlab/precompile.sh && \
     Wheels-gitlab/precompile.sh cp310-cp310 cp311-cp311 cp312-cp312 cp313-cp313 cp314-cp314; \
     BUILD_EXIT=$?; \
     sccache --show-stats || true; \
+    sccache --stop-server 2>/dev/null || true; \
+    rm -f /tmp/sccache_server 2>/dev/null || true; \
     if [ $BUILD_EXIT -ne 0 ]; then exit $BUILD_EXIT; fi
 
 # Stage all artifacts into /ore-swig-prebuilt/ for use by cibuildwheel.
