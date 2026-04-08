@@ -383,6 +383,8 @@ void copyPathToArray(const MultiPath& p, Size t, Size a, Array& target) {
 
 std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextPath() {
 
+    boost::timer::cpu_timer timer;
+
     std::vector<QuantLib::ext::shared_ptr<Scenario>> scenarios(dates_.size());
     QL_REQUIRE(pathGenerator_ != nullptr, "CrossAssetModelScenarioGenerator::nextPath(): pathGenerator is null");
     Sample<MultiPath> sample = pathGenerator_->next();
@@ -676,6 +678,8 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
         oa << pathData_;
         os.close();
     }
+
+    timing_ += timer.elapsed().wall;
 
     return scenarios;
 }

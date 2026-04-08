@@ -79,6 +79,7 @@ public:
     ~CrossAssetModelScenarioGenerator() {};
     std::vector<QuantLib::ext::shared_ptr<Scenario>> nextPath() override;
     void reset() override;
+    boost::timer::nanosecond_type timing() const override { return timing_; }
 
 private:
     QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model_;
@@ -117,6 +118,7 @@ private:
     Size totalSamples_;
     std::vector<Size> gridIndexInPath_;
     QuantLib::ext::shared_ptr<DateGrid> dateGrid_;
+    boost::timer::nanosecond_type timing_ = 0;
 };
 
 } // namespace analytics

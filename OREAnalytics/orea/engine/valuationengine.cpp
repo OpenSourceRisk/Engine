@@ -117,6 +117,7 @@ void ValuationEngine::buildCube(const QuantLib::ext::shared_ptr<data::Portfolio>
 
     ObservationMode::Mode om = ObservationMode::instance().mode();
     Real updateTime = 0.0;
+    Real asdTime = 0.0;
     Real pricingTime = 0.0;
     Real fixingTime = 0.0;
     Real calibrationTime = 0.0;
@@ -202,24 +203,27 @@ void ValuationEngine::buildCube(const QuantLib::ext::shared_ptr<data::Portfolio>
             for (size_t i = 0; i < dg_->valuationDates().size(); ++i) {
                 double priceTime = 0;
                 double upTime = 0;
+                double asTime = 0;
                 double calTime = 0;
                 ++cubeDateIndex;
                 Date valueDate = dg_->valuationDates()[i];
                 Date closeOutDate = dg_->closeOutDateFromValuationDate(valueDate);
-                std::tie(priceTime, upTime, calTime) =
+                std::tie(priceTime, upTime, asTime, calTime) =
                     populateCube(valueDate, cubeDateIndex, sample, true, false, scenarioUpdated, trades, errorPolicy,
                                  tradeHasT0Error, tradeHasSampleError, calculators, outputCube, outputCubeNettingSet,
                                  counterparties, cptyCalculators, outputCptyCube, errors);
                 pricingTime += priceTime;
                 updateTime += upTime;
+                asdTime += asTime;
                 calibrationTime += calTime;
                 if (closeOutDate != Date()) {
-                    std::tie(priceTime, upTime, calTime) =
+                    std::tie(priceTime, upTime, asTime, calTime) =
                         populateCube(closeOutDate, cubeDateIndex, sample, false, mporStickyDate, scenarioUpdated,
                                      trades, errorPolicy, tradeHasT0Error, tradeHasSampleError, calculators, outputCube,
                                      outputCubeNettingSet, counterparties, cptyCalculators, outputCptyCube, errors);
                     pricingTime += priceTime;
                     updateTime += upTime;
+                    asdTime += asTime;
                     calibrationTime += calTime;
                 }
             }
@@ -235,16 +239,18 @@ void ValuationEngine::buildCube(const QuantLib::ext::shared_ptr<data::Portfolio>
                 if (dg_->isCloseOutDate()[i]) {
                     double priceTime = 0;
                     double upTime = 0;
+                    double asTime = 0;
                     double calTime = 0;
                     QL_REQUIRE(closeOutDateToValueDateIndex.count(d) == 1 && !closeOutDateToValueDateIndex[d].empty(),
                                "Need to calculate valuation date before close out date");
                     for (size_t& valueDateIndex : closeOutDateToValueDateIndex[d]) {
-                        std::tie(priceTime, upTime, calTime) =
+                        std::tie(priceTime, upTime, asTime, calTime) =
                             populateCube(d, valueDateIndex, sample, false, mporStickyDate, scenarioUpdated, trades,
                                          errorPolicy, tradeHasT0Error, tradeHasSampleError, calculators, outputCube,
                                          outputCubeNettingSet, counterparties, cptyCalculators, outputCptyCube, errors);
                         pricingTime += priceTime;
                         updateTime += upTime;
+                        asdTime += asTime;
                         calibrationTime += calTime;
                         scenarioUpdated = true;
                     }
@@ -252,17 +258,19 @@ void ValuationEngine::buildCube(const QuantLib::ext::shared_ptr<data::Portfolio>
                 if (dg_->isValuationDate()[i]) {
                     double priceTime = 0;
                     double upTime = 0;
+                    double asTime = 0;
                     double calTime = 0;
                     ++cubeDateIndex;
                     Date closeOutDate = dg_->closeOutDateFromValuationDate(d);
                     if (closeOutDate != Date())
                         closeOutDateToValueDateIndex[closeOutDate].push_back(cubeDateIndex);
-                    std::tie(priceTime, upTime, calTime) =
+                    std::tie(priceTime, upTime, asTime, calTime) =
                         populateCube(d, cubeDateIndex, sample, true, false, scenarioUpdated, trades, errorPolicy,
                                      tradeHasT0Error, tradeHasSampleError, calculators, outputCube,
                                      outputCubeNettingSet, counterparties, cptyCalculators, outputCptyCube, errors);
                     pricingTime += priceTime;
                     updateTime += upTime;
+                    asdTime += asTime;
                     calibrationTime += calTime;
                     scenarioUpdated = true;
                 }
@@ -300,9 +308,15 @@ void ValuationEngine::buildCube(const QuantLib::ext::shared_ptr<data::Portfolio>
            << (outputCube->samples() == 1 ? "" : "s");
     updateProgress(outputCube->samples() * nTrades, outputCube->samples() * nTrades, detail.str());
     loopTimer.stop();
-    LOG("ValuationEngine completed: loop " << setprecision(2) << loopTimer.format(2, "%w") << " sec, "
+    double pathGenTime = 0.0;
+    if(auto ssm = ext::dynamic_pointer_cast<ScenarioSimMarket>(simMarket_)) {
+        pathGenTime = (static_cast<double>(ssm->scenarioGenerator()->timing()) * 1e-9);
+    }
+    LOG("ValuationEngine completed: loop " << setprecision(6) << loopTimer.format(2, "%w") << " sec, "
                                            << "pricing " << pricingTime << " sec, "
                                            << "update " << updateTime << " sec, "
+                                           << "asd " << asdTime << " sec, "
+                                           << "pathGen " << pathGenTime << "sec, "
                                            << "calibration " << calibrationTime << " sec, "
                                            << "fixing " << fixingTime);
 
@@ -386,7 +400,7 @@ void ValuationEngine::tradeExercisable(bool enable,
     }
 }
 
-std::tuple<double, double, double> ValuationEngine::populateCube(
+std::tuple<double, double, double, double> ValuationEngine::populateCube(
     const QuantLib::Date& d, size_t cubeDateIndex, size_t sample, bool isValueDate, bool isStickyDate,
     bool scenarioUpdated, const std::map<std::string, QuantLib::ext::shared_ptr<Trade>>& trades,
     const ErrorPolicy errorPolicy, std::vector<bool>& tradeHasT0Error, std::vector<bool>& tradeHasSampleError,
@@ -397,6 +411,7 @@ std::tuple<double, double, double> ValuationEngine::populateCube(
     QuantLib::ext::shared_ptr<analytics::NPVCube>& outputCptyCube, Errors* errors) {
     double pricingTime = 0;
     double updateTime = 0;
+    double asdTime = 0;
     double calibrationTime = 0;
     QL_REQUIRE(cubeDateIndex >= 0, "first date should be a valuation date");
     cpu_timer timer;
@@ -411,12 +426,15 @@ std::tuple<double, double, double> ValuationEngine::populateCube(
     }
     // Always with fixing update here, in contrast to the close-out date section
     simMarket_->postUpdate(d, !isStickyDate || isValueDate);
+    timer.stop();
+    updateTime += timer.elapsed().wall * 1e-9;
+    timer.start();
     // Aggregation scenario data update on valuation dates only
     if (isValueDate) {
         simMarket_->updateAsd(d);
     }
     timer.stop();
-    updateTime += timer.elapsed().wall * 1e-9;
+    asdTime += timer.elapsed().wall * 1e-9;
 
     timer.start();
     recalibrateModels();
@@ -437,7 +455,7 @@ std::tuple<double, double, double> ValuationEngine::populateCube(
     }
     timer.stop();
     pricingTime += timer.elapsed().wall * 1e-9;
-    return std::make_tuple(pricingTime, updateTime, calibrationTime);
+    return std::make_tuple(pricingTime, updateTime, asdTime, calibrationTime);
 }
 
 } // namespace analytics
