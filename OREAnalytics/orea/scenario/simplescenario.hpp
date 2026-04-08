@@ -69,7 +69,11 @@ public:
     void add(const RiskFactorKey& key, QuantLib::Real value) override;
     QuantLib::Real get(const RiskFactorKey& key) const override;
 
-    //! This does _not_ close the shared data
+    Size getIndex(const RiskFactorKey& key) const override;
+    Real get(const Size index) const override;
+    void add(const Size index, QuantLib::Real value) override;
+
+    //! This does _not_ clone the shared data
     QuantLib::ext::shared_ptr<Scenario> clone() const override;
 
     void setAbsolute(const bool isAbsolute) override;

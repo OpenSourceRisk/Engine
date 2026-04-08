@@ -60,6 +60,18 @@ QuantLib::Real SimpleScenario::get(const RiskFactorKey& key) const {
     return isAbsolute() ? sanitizeScenarioValue(key.keytype, isPar(), data_[i->second]) : data_[i->second];
 }
 
+Size SimpleScenario::getIndex(const RiskFactorKey& key) const {
+    auto i = sharedData_->keyIndex.find(key);
+    QL_REQUIRE(i != sharedData_->keyIndex.end(), "SimpleScenario does not provide data for key " << key);
+    return i->second;
+}
+
+Real SimpleScenario::get(const Size index) const {
+    return isAbsolute() ? sanitizeScenarioValue(sharedData_->keys[index].keytype, isPar(), data_[index]) : data_[index];
+}
+
+void SimpleScenario::add(const Size index, QuantLib::Real value) { data_[index] = value; }
+
 QuantLib::ext::shared_ptr<Scenario> SimpleScenario::clone() const {
     return QuantLib::ext::make_shared<SimpleScenario>(*this);
 }
