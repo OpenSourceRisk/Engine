@@ -345,14 +345,12 @@ private:
 class RangeAccrualLegData : public LegAdditionalData {
 public:
     //! Default constructor
-    RangeAccrualLegData() : LegAdditionalData(LegType::RangeAccrual, "RangeAccrualLegData") {}
+    RangeAccrualLegData() : LegAdditionalData(LegType::RangeAccrual) {}
     //! Constructor
-    RangeAccrualLegData(const QuantLib::ext::shared_ptr<FloatingLegData>& underlying,
-                        std::vector<Real> coupon,
-                        std::vector<Real> lowerBound,
-                        std::vector<Real> upperBound)
-        : LegAdditionalData(LegType::RangeAccrual, "RangeAccrualLegData"), underlying_(underlying),
-          coupon_(coupon), lowerBound_(lowerBound), upperBound_(upperBound) { }
+    RangeAccrualLegData(const QuantLib::ext::shared_ptr<FloatingLegData>& underlying, std::vector<Real> coupon,
+                        std::vector<Real> lowerBound, std::vector<Real> upperBound)
+        : LegAdditionalData(LegType::RangeAccrual), underlying_(underlying), coupon_(coupon), lowerBound_(lowerBound),
+          upperBound_(upperBound) {}
 
     //! \name Inspectors
     //@{
