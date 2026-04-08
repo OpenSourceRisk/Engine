@@ -44,10 +44,10 @@ else
     CXX=g++
 fi
 
-# Use ccache if available (wraps the compiler for caching across runs).
-if command -v ccache &> /dev/null; then
-    CXX="ccache $CXX"
-    echo "Using compiler: $CXX (ccache enabled)"
+# Use sccache if available (wraps the compiler for caching via S3).
+if command -v sccache &> /dev/null; then
+    CXX="sccache $CXX"
+    echo "Using compiler: $CXX (sccache enabled)"
 else
     echo "Using compiler: $CXX"
 fi
