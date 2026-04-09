@@ -508,6 +508,7 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                             : QuantLib::ShiftedLognormal,
                         initialModelParameters, config->outputShift(), config->modelShift(), maxCalibrationAttempts,
                         exitEarlyErrorThreshold, maxAcceptableError);
+                    cube->enableExtrapolation();
                 }
 
                 // Wrap it in a SwaptionVolCubeWithATM, disable short-cut for atm vol retrieval
