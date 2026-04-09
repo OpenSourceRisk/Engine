@@ -3728,7 +3728,9 @@ void ScenarioSimMarket::updateAsd(const Date& d) {
 
                 setAsd(asdCache_.indexRawData.size() - 1);
             }
-        } else {
+        }
+
+        if (!cachingAsd_) {
 
             // cachingAsd_ is false
 
