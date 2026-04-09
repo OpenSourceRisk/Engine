@@ -19,7 +19,8 @@ RUN cp /ore-swig-prebuilt/oreanalytics_wrap.cpp . && \
 
 # Update version and build a wheel for each Python version, then repair for manylinux.
 RUN set -e; \
-    python3 /ore/Docker/update_version_number.py -f setup.py -v ${WHEELS_VERSION}; \
+    cd /ore && python3 Docker/update_version_number.py -f setup.py -v ${WHEELS_VERSION}; \
+    cd /ore/ORE-SWIG; \
     mkdir -p /wheelhouse /tmp/wheels; \
     for PYVER in cp310-cp310 cp311-cp311 cp312-cp312 cp313-cp313 cp314-cp314; do \
       PYBIN="/opt/python/${PYVER}/bin"; \
