@@ -631,9 +631,18 @@ def validate_json_diff(json_1, json_2, json_diff: dict, config: dict, path: str)
 
                         # Convert these lists (we are implicitly assuming they are lists) to DataFrame for datacompy comparison, similar to the CSV reports
                         json_1_df = pd.DataFrame(json_1_ptr)
-                        # json_1_df = json_1_df[[header for header in json_1_df.columns if header in names_to_check + keys[path]]]
                         json_2_df = pd.DataFrame(json_2_ptr)
-                        # json_2_df = json_2_df[[header for header in json_2_df.columns if header in names_to_check + keys[path]]]
+
+                        # Convert numeric-looking string columns to float so that
+                        # abs_tol / rel_tol are applied by datacompy (it only
+                        # applies tolerances to numeric columns).
+                        for df in [json_1_df, json_2_df]:
+                            for col in df.columns:
+                                if df[col].dtype == object:
+                                    try:
+                                        df[col] = pd.to_numeric(df[col])
+                                    except (ValueError, TypeError):
+                                        pass
 
                         # Run comparison
                         comp = Compare(json_1_df, json_2_df, join_columns=keys[path], abs_tol=abs_tol, rel_tol=rel_tol,
