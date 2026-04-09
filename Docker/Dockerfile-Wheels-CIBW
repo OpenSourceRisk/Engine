@@ -1,38 +1,43 @@
-ARG DOCKER_REPO
-ARG ORE_BUILD_VERSION
-FROM ${DOCKER_REPO}ore-build-dependencies:${ORE_BUILD_VERSION}
+ARG WHEEL_IMAGE
+FROM ${WHEEL_IMAGE}
 
 ARG WHEEL_ARCH
-ARG WHEEL_IMAGE
 ARG WHEELS_VERSION
 
-ENV PATH="/venv/bin:$PATH"
+# /ore/ORE-SWIG/ and /ore/Docker/ already exist in the wheels_ore2 base image
+# (included via wheels-ore-source.tar.gz in Dockerfile-Wheels-ORE).
+# /ore-swig-prebuilt/ contains the pre-compiled .o files and wrapper .cpp.
 
-ENV CIBW_BUILD="cp310-manylinux_${WHEEL_ARCH} cp311-manylinux_${WHEEL_ARCH} cp312-manylinux_${WHEEL_ARCH} cp313-manylinux_${WHEEL_ARCH} cp314-manylinux_${WHEEL_ARCH}"
-ENV CIBW_MANYLINUX_X86_64_IMAGE=${WHEEL_IMAGE}
-ENV CIBW_MANYLINUX_AARCH64_IMAGE=${WHEEL_IMAGE}
-# Use podman (daemonless) so cibuildwheel works inside buildah without a Docker socket.
-ENV CIBW_CONTAINER_ENGINE="podman"
-ENV CIBW_BEFORE_ALL="\
-    echo '=== Checking /ore-swig-prebuilt ===' && \
-    (ls -la /ore-swig-prebuilt/ || (echo 'ERROR: /ore-swig-prebuilt/ not found' && exit 1)) && \
-    /opt/python/cp310-cp310/bin/pip3 install setuptools && \
-    cp /ore-swig-prebuilt/oreanalytics_wrap.cpp /project/ORE-SWIG/oreanalytics_wrap.cpp && \
-    mkdir -p /project/ORE-SWIG/.prebuilt && \
-    cp -r /ore-swig-prebuilt/linux-* /project/ORE-SWIG/.prebuilt/ && \
-    chmod +x /project/ORE-SWIG/Wheels-gitlab/oreanalytics-config && \
-    cp /project/ORE-SWIG/Wheels-gitlab/oreanalytics-config /project/ORE-SWIG/oreanalytics-config"
-ENV CIBW_BEFORE_BUILD="pip install setuptools"
-ENV CIBW_ENVIRONMENT="ORE_PREBUILT_DIR=/project/ORE-SWIG/.prebuilt"
+WORKDIR /ore/ORE-SWIG
 
-WORKDIR /builds/qs/oreplus/ore
-COPY ORE-SWIG ORE-SWIG
-COPY Docker/update_version_number.py Docker/update_version_number.py
+# Stage pre-built SWIG artifacts into the project directory
+RUN cp /ore-swig-prebuilt/oreanalytics_wrap.cpp . && \
+    mkdir -p .prebuilt && \
+    cp -r /ore-swig-prebuilt/linux-* .prebuilt/ && \
+    chmod +x Wheels-gitlab/oreanalytics-config && \
+    cp Wheels-gitlab/oreanalytics-config .
 
-RUN \
-python Docker/update_version_number.py -f setup.py -v ${WHEELS_VERSION} && \
-cibuildwheel --output-dir wheelhouse ORE-SWIG
-
-COPY wheelhouse /wheelhouse
+# Update version and build a wheel for each Python version, then repair for manylinux.
+RUN set -e; \
+    python3 /ore/Docker/update_version_number.py -f setup.py -v ${WHEELS_VERSION}; \
+    mkdir -p /wheelhouse /tmp/wheels; \
+    for PYVER in cp310-cp310 cp311-cp311 cp312-cp312 cp313-cp313 cp314-cp314; do \
+      PYBIN="/opt/python/${PYVER}/bin"; \
+      if [ ! -d "$PYBIN" ]; then \
+        echo "WARNING: $PYBIN not found, skipping $PYVER"; \
+        continue; \
+      fi; \
+      echo "=== Building wheel for $PYVER ==="; \
+      "${PYBIN}/pip" install --quiet setuptools wheel; \
+      ORE_PREBUILT_DIR=/ore/ORE-SWIG/.prebuilt \
+        "${PYBIN}/python" setup.py bdist_wheel -d /tmp/wheels; \
+      rm -rf build/lib.* build/temp.* *.egg-info; \
+    done; \
+    echo "=== Repairing wheels with auditwheel ==="; \
+    for whl in /tmp/wheels/*.whl; do \
+      auditwheel repair "$whl" --plat manylinux_2_28_${WHEEL_ARCH} -w /wheelhouse/; \
+    done; \
+    echo "=== Built wheels ==="; \
+    ls -lh /wheelhouse/
 
 
