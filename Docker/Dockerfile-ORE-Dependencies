@@ -28,6 +28,7 @@ RUN apt-get update \
     python3-venv \
     curl \
     libzstd-dev \
+    podman \
     -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* \
