@@ -22,6 +22,7 @@
 #include <orea/engine/valuationcalculator.hpp>
 #include <orea/engine/valuationengine.hpp>
 #include <orea/simulation/simmarket.hpp>
+#include <orea/scenario/scenariosimmarket.hpp>
 
 #include <ored/portfolio/optionwrapper.hpp>
 #include <ored/portfolio/portfolio.hpp>
