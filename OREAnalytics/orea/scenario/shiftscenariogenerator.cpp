@@ -261,7 +261,11 @@ void ShiftScenarioGenerator::applyShift(Size i, Size j, Real shiftSize, bool up,
         Real w = up ? 1.0 : -1.0;
         for (Size k = 0; k < dataX.size(); ++k) {
             for (Size l = 0; l < dataY.size(); ++l) {
-                if (shiftType == ShiftType::Absolute)
+                if (shiftType == ShiftType::EqualTo) {
+                    Real shiftDiff = shiftSize - shiftedData[k][l];
+                    shiftedData[k][l] += w * shiftDiff;
+                }
+                else if (shiftType == ShiftType::Absolute)
                     shiftedData[k][l] += w * shiftSize;
                 else
                     shiftedData[k][l] += data[k][l] * (w * shiftSize);
@@ -318,7 +322,11 @@ void ShiftScenarioGenerator::applyShift(Size i, Size j, Real shiftSize, bool up,
             QL_REQUIRE(wy >= 0.0 && wy <= 1.0, "wy out of range");
 
             Real w = up ? 1.0 : -1.0;
-            if (shiftType == ShiftType::Absolute)
+            if (shiftType == ShiftType::EqualTo) {
+                Real shiftDiff = shiftSize - shiftedData[ix][iy];
+                shiftedData[ix][iy] += w * wx * wy * shiftDiff;
+            }
+            else if (shiftType == ShiftType::Absolute)
                 shiftedData[ix][iy] += w * wx * wy * shiftSize;
             else
                 shiftedData[ix][iy] += data[ix][iy] * (w * wx * wy * shiftSize);

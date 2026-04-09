@@ -729,7 +729,6 @@ void StressScenarioGenerator::addEquityVolShifts(StressTestScenarioData::StressT
         }
 
         ShiftType shiftType = data.shiftType;
-        bool eqShift = shiftType == ShiftType::EqualTo;
         
         std::vector<Period> shiftTenors = data.shiftExpiries;
         std::vector<Time> shiftTimes(shiftTenors.size());
@@ -740,22 +739,19 @@ void StressScenarioGenerator::addEquityVolShifts(StressTestScenarioData::StressT
         for (Size j = 0; j < shiftTenors.size(); ++j)
             shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
 
-        if (!eqShift) {
-            // FIXME: Apply same shifts to non-ATM vectors if present
-            for (Size j = 0; j < shiftTenors.size(); ++j) {
-                // apply shift at tenor point j
-                applyShift(j, shifts[j], true, shiftType, shiftTimes, values, times, shiftedValues,
-                           j == 0 ? true : false);
-            }
+        // FIXME: Apply same shifts to non-ATM vectors if present
+        for (Size j = 0; j < shiftTenors.size(); ++j) {
+            // apply shift at tenor point j
+            applyShift(j, shifts[j], true, shiftType, shiftTimes, values, times, shiftedValues,
+                        j == 0 ? true : false);
         }
 
         for (Size k = 0; k < n_eqvol_exp; ++k) {
             RiskFactorKey key(RiskFactorKey::KeyType::EquityVolatility, equity, k);
-            Real newValue = eqShift ? shifts[k] : shiftedValues[k];
             if (useSpreadedTermStructures_) {
-                scenario->add(key, newValue - values[k]);
+                scenario->add(key, shiftedValues[k] - values[k]);
             } else {
-                scenario->add(key, newValue);
+                scenario->add(key, shiftedValues[k]);
             }
         }
     }
@@ -863,14 +859,10 @@ void StressScenarioGenerator::addSwaptionVolShifts(StressTestScenarioData::Stres
 
         StressTestScenarioData::SwaptionVolShiftData data = *d.second;
         ShiftType shiftType = data.shiftType;
-        bool eqShift = shiftType == ShiftType::EqualTo;
         map<pair<Period, Period>, Real> shifts = data.shifts;
 
         vector<Real> shiftExpiryTimes(data.shiftExpiries.size(), 0.0);
         vector<Real> shiftTermTimes(data.shiftTerms.size(), 0.0);
-
-        TLOG("shfitExpiries.size(): " << data.shiftExpiries.size());
-        TLOG("shiftterms.size(): " << data.shiftTerms.size());
 
         DayCounter dc;
         if(auto s = simMarket_.lock()) {
@@ -910,18 +902,16 @@ void StressScenarioGenerator::addSwaptionVolShifts(StressTestScenarioData::Stres
                 // Size strikeBucket = 0; // FIXME
                 Real shift = 0.0;
                 pair<Period, Period> key(data.shiftExpiries[j], data.shiftTerms[k]);
-                if (!eqShift) {
-                    if (shifts.size() == 0)
-                        shift = data.parallelShiftSize;
-                    else {
-                        QL_REQUIRE(shifts.find(key) != shifts.end(), "swaption vol shift not found for expiry "
-                                                                         << data.shiftExpiries[j] << " and term "
-                                                                         << data.shiftTerms[k]);
-                        shift = shifts[key];
-                    }
-                    applyShift(j, k, shift, true, shiftType, shiftExpiryTimes, shiftTermTimes, volExpiryTimes,
-                               volTermTimes, volData, shiftedVolData, j == 0 && k == 0);
+                if (shifts.size() == 0)
+                    shift = data.parallelShiftSize;
+                else {
+                    QL_REQUIRE(shifts.find(key) != shifts.end(), "swaption vol shift not found for expiry "
+                                                                        << data.shiftExpiries[j] << " and term "
+                                                                        << data.shiftTerms[k]);
+                    shift = shifts[key];
                 }
+                applyShift(j, k, shift, true, shiftType, shiftExpiryTimes, shiftTermTimes, volExpiryTimes,
+                            volTermTimes, volData, shiftedVolData, j == 0 && k == 0);
             }
         }
 
@@ -930,9 +920,7 @@ void StressScenarioGenerator::addSwaptionVolShifts(StressTestScenarioData::Stres
             for (Size jj = 0; jj < n_swvol_exp; ++jj) {
                 for (Size kk = 0; kk < n_swvol_term; ++kk) {
                     Size idx = jj * n_swvol_term * n_swvol_strike + kk * n_swvol_strike + ii;
-                    pair<Period, Period> keyPair(data.shiftExpiries[jj], data.shiftTerms[kk]);
                     RiskFactorKey rfkey(RiskFactorKey::KeyType::SwaptionVolatility, key, idx);
-                    //Real shiftedValue = eqShift ? shifts[keyPair] : shiftedVolData[jj][kk];
                     if (useSpreadedTermStructures_) {
                         scenario->add(rfkey, shiftedVolData[jj][kk] - volData[jj][kk]);
                     } else {
