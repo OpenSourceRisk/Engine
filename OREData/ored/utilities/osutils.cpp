@@ -59,6 +59,8 @@
 #include <signal.h>
 #endif
 
+#include <ctime>
+
 using namespace std;
 
 namespace {
@@ -421,7 +423,17 @@ void setAssertHandler() {
     }
 }
 #endif
-    
+
+long nanosecondsClock() {
+#if defined(__unix__) or defined(__unix) or defined(__linux__) or defined(__APPLE__)
+    static timespec t;
+    clock_gettime(CLOCK_REALTIME, &t);
+    return t.tv_nsec;
+#else
+    return 0;
+#endif
+}
+
 } // end namespace os
 } // end namespace data
 } // end namespace ore

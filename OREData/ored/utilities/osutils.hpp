@@ -77,6 +77,9 @@ void dumpStacktrace();
 //! Set an assert handler that logs the stacktrace
 void setAssertHandler();
 
+//! Get real time in nanoseconds
+long nanosecondsClock();
+
 //! @}
 }; // namespace os
 } // namespace data

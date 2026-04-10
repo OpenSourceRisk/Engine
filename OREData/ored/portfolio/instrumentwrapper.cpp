@@ -17,6 +17,7 @@
 */
 
 #include <ored/portfolio/instrumentwrapper.hpp>
+#include <ored/utilities/osutils.hpp>
 
 namespace ore {
 namespace data {
@@ -80,9 +81,10 @@ Real InstrumentWrapper::getTimedNPV(const QuantLib::ext::shared_ptr<QuantLib::In
         return 0.0;
     if (instr->isCalculated() || instr->isExpired())
         return instr->NPV();
-    boost::timer::cpu_timer timer_;
+    long t0 = os::nanosecondsClock();
     Real tmp = instr->NPV();
-    cumulativePricingTime_ += timer_.elapsed().wall;
+    long t1 = os::nanosecondsClock();
+    cumulativePricingTime_ += std::max<long>(0l, t1 - t0);
     ++numberOfPricings_;
     return tmp;
 }
