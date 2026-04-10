@@ -93,7 +93,7 @@ protected:
         if (monoVars_.find(strike) == monoVars_.end())
             setMonotoneVar(strike);
         BackwardFlatInterpolation interpolation(timePoints_.begin(), timePoints_.end(), monoVars_[strike].begin());
-        return interpolation(t);
+        return interpolation(t, true);
     }
 
 private:

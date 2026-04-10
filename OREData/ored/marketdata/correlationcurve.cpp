@@ -259,6 +259,7 @@ CorrelationCurve::CorrelationCurve(Date asof, CorrelationCurveSpec spec, const L
                 vector<Period> optionTenors = parseVectorOfValues<Period>(config->optionTenors(), &parsePeriod);
                 quotePairs.resize(optionTenors.size());
                 bool failed = false;
+                std::vector<std::string> missingQuotes;
 
                 // search market data loader for quotes, logging missing ones
                 for (auto& q : config->quotes()) {
@@ -283,11 +284,12 @@ CorrelationCurve::CorrelationCurve(Date asof, CorrelationCurveSpec spec, const L
                     } else {
                         DLOGGERSTREAM("could not find correlation quote " << q);
                         failed = true;
+                        missingQuotes.push_back(q);
                     }
                 }
                 // fail if any quotes missing
                 if (failed) {
-                    QL_FAIL("could not build correlation curve");
+                    QL_FAIL("could not build correlation curve, missing quotes: " << boost::join(missingQuotes, ","));
                 }
             }
             vector<Handle<Quote>> corrs;
