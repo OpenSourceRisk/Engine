@@ -215,6 +215,8 @@
 #include <ored/portfolio/builders/pairwisevarianceswap.hpp>
 #include <ored/portfolio/builders/quantoequityoption.hpp>
 #include <ored/portfolio/builders/quantovanillaoption.hpp>
+#include <ored/portfolio/builders/rangeaccrualleg.hpp>
+#include <ored/portfolio/builders/ratedigitaloption.hpp>
 #include <ored/portfolio/builders/riskparticipationagreement.hpp>
 #include <ored/portfolio/builders/scriptedtrade.hpp>
 #include <ored/portfolio/builders/swap.hpp>
@@ -327,6 +329,7 @@
 #include <ored/portfolio/premiumdata.hpp>
 #include <ored/portfolio/rainbowoption.hpp>
 #include <ored/portfolio/rangebound.hpp>
+#include <ored/portfolio/ratedigitaloption.hpp>
 #include <ored/portfolio/referencedata.hpp>
 #include <ored/portfolio/referencedatafactory.hpp>
 #include <ored/portfolio/riskparticipationagreement.hpp>
@@ -436,6 +439,7 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/progressbar.hpp>
 #include <ored/utilities/serializationdaycounter.hpp>
+#include <ored/utilities/simmcurrencies.hpp>
 #include <ored/utilities/strike.hpp>
 #include <ored/utilities/timeperiod.hpp>
 #include <ored/utilities/timer.hpp>

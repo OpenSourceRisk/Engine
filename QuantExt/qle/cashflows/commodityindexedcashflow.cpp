@@ -29,12 +29,12 @@ CommodityIndexedCashFlow::CommodityIndexedCashFlow(Real quantity, const Date& pr
                                                    Real gearing, bool useFuturePrice, const Date& contractDate,
                                                    const ext::shared_ptr<FutureExpiryCalculator>& calc,
                                                    QuantLib::Natural dailyExpiryOffset, const ext::shared_ptr<FxIndex>& fxIndex)
-    : CommodityCashFlow(quantity, spread, gearing, useFuturePrice, index, fxIndex), pricingDate_(pricingDate),
+    : CommodityCashFlow(quantity, spread, gearing, useFuturePrice, index, fxIndex, calc), pricingDate_(pricingDate),
       paymentDate_(paymentDate), futureMonthOffset_(0), periodQuantity_(quantity), dailyExpiryOffset_(dailyExpiryOffset), 
       isAveraging_(false) {
 
     QL_REQUIRE(paymentDate != Date(), "CommodityIndexedCashFlow: payment date is null");
-    init(calc, contractDate);
+    init(calc_, contractDate);
 }
 
 CommodityIndexedCashFlow::CommodityIndexedCashFlow(
@@ -46,7 +46,7 @@ CommodityIndexedCashFlow::CommodityIndexedCashFlow(
     const QuantLib::Date& pricingDateOverride, QuantLib::Natural dailyExpiryOffset,
     const ext::shared_ptr<FxIndex>& fxIndex, const bool isAveragingWithBalanceMonth,
     const QuantLib::Calendar& pricingCalendar, bool includeEndDate, bool excludeStartDate)
-    : CommodityCashFlow(quantity, spread, gearing, useFuturePrice, index, fxIndex), pricingDate_(pricingDateOverride),
+    : CommodityCashFlow(quantity, spread, gearing, useFuturePrice, index, fxIndex, calc), pricingDate_(pricingDateOverride),
       paymentDate_(paymentDateOverride), useFutureExpiryDate_(useFutureExpiryDate),
       futureMonthOffset_(futureMonthOffset), periodQuantity_(quantity), dailyExpiryOffset_(dailyExpiryOffset),
       isAveraging_(isAveragingWithBalanceMonth) {
@@ -59,9 +59,9 @@ CommodityIndexedCashFlow::CommodityIndexedCashFlow(
             pricingDate_ = pricingLagCalendar.advance(pricingDate_, -static_cast<Integer>(pricingLag), Days, Preceding);
         } else {
             // We need to use the expiry date of the future contract
-            QL_REQUIRE(calc, "CommodityIndexedCashFlow needs a valid future "
+            QL_REQUIRE(calc_, "CommodityIndexedCashFlow needs a valid future "
                                  << "expiry calculator when using first future");
-            Date expiry = calc->expiryDate(pricingDate_, futureMonthOffset_);
+            Date expiry = calc_->expiryDate(pricingDate_, futureMonthOffset_);
             QL_REQUIRE(expiry != Null<Date>(), "CommodityIndexedCashflow needs a valid contract month, found no "
                                                "valid contract for pricing / contract date "
                                                    << io::iso_date(pricingDate_));
@@ -76,7 +76,7 @@ CommodityIndexedCashFlow::CommodityIndexedCashFlow(
     // and pass them here in any case to init
     Date ref = isInArrears ? endDate : startDate;
 
-    init(calc, ref, paymentTiming, startDate, endDate, paymentLag, paymentConvention, paymentCalendar, pricingCalendar,
+    init(calc_, ref, paymentTiming, startDate, endDate, paymentLag, paymentConvention, paymentCalendar, pricingCalendar,
          includeEndDate, excludeStartDate);
 }
 

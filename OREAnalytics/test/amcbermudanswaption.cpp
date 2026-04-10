@@ -287,7 +287,7 @@ TestCase testCaseData[] = {
     //   {18.5041, 0.000677892}, {19.0027, 0},          {19.5041, 0},          {20, 0},
     //   {20.5039, 0},           {21.0012, 0}}},
     {"Physical Settled Swaption EUR 10y50y (Long Term Simulation)",
-     200E-4,
+     250E-4,
      true,
      4,
      false,

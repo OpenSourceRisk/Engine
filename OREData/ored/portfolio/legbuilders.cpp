@@ -162,6 +162,90 @@ Leg FloatingLegBuilder::buildLeg(
     return result;
 }
 
+Leg RangeAccrualLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+    RequiredFixings& requiredFixings, const string& configuration, const QuantLib::Date& openEndDateReplacement,
+    const bool useXbsCurves, const bool attachPricer,
+    std::set<std::tuple<std::set<std::string>, std::string, std::string>>* productModelEngines) const {
+
+    auto rangeAccrualData = QuantLib::ext::dynamic_pointer_cast<RangeAccrualLegData>(data.concreteLegData());
+    QL_REQUIRE(rangeAccrualData, "Wrong LegType, expected RangeAccrual");
+    auto floatData = rangeAccrualData->underlying();
+    QL_REQUIRE(floatData, "RangeAccrualLegBuilder: no underlying FloatingLegData");
+
+    string indexName = floatData->index();
+    auto index = *engineFactory->market()->iborIndex(indexName, configuration);
+
+    // Build a dummy LegData of type Floating so that makeOISLeg / makeIborLeg / makeBMALeg
+    // see the correct concrete leg data (FloatingLegData) instead of RangeAccrualLegData.
+    LegData floatingLegData(floatData, data.isPayer(), data.currency(), data.schedule(), data.dayCounter(),
+                            data.notionals(), data.notionalDates(), data.paymentConvention(),
+                            data.notionalInitialExchange(), data.notionalFinalExchange(),
+                            data.notionalAmortizingExchange(), data.isNotResetXCCY(), data.foreignCurrency(),
+                            data.foreignAmount(), data.resetStartDate(), data.fxIndex(), data.amortizationData(),
+                            data.paymentLag(), data.notionalPaymentLag(), data.paymentCalendar(),
+                            data.paymentDates(), data.indexing(), data.indexingFromAssetLeg(),
+                            data.lastPeriodDayCounter());
+
+    // We want to build the FloatingLegData as well
+    auto idx = QuantLib::ext::dynamic_pointer_cast<IborIndex>(index);
+    Leg result;
+    QL_REQUIRE(idx, "RangeAccrual Index must be an Ibor Index");
+    if (!floatData->historicalFixings().empty())
+        idx = QuantLib::ext::make_shared<IborIndexWithFixingOverride>(index, floatData->historicalFixings());
+    result = makeIborLeg(floatingLegData, idx, engineFactory, attachPricer, openEndDateReplacement);
+    applyIndexing(result, floatingLegData, engineFactory, requiredFixings, openEndDateReplacement, useXbsCurves);
+    addToRequiredFixings(result, QuantLib::ext::make_shared<FixingDateGetter>(requiredFixings));
+
+    // handle fx resetting Ibor leg
+    if (data.legType() == LegType::RangeAccrual && !data.isNotResetXCCY()) {
+        QL_REQUIRE(!data.fxIndex().empty(), "FloatingRateLegBuilder: need fx index for fx resetting leg");
+        auto fxIndex = buildFxIndex(data.fxIndex(), data.currency(), data.foreignCurrency(), engineFactory->market(),
+                                    configuration, true);
+
+        // If the domestic notional value is not specified, i.e. there are no notionals specified in the leg
+        // data, then all coupons including the first will be FX linked. If the first coupon's FX fixing date
+        // is in the past, a FX fixing will be used to determine the first domestic notional. If the first
+        // coupon's FX fixing date is in the future, the first coupon's domestic notional will be determined
+        // by the FX forward rate on that future fixing date.
+
+        Size j = 0;
+        if (data.notionals().size() == 0) {
+            DLOG("Building FX Resettable with unspecified domestic notional");
+        } else {
+            // First coupon a plain floating rate coupon i.e. it is not FX linked because the initial notional is
+            // known. But, we need to add it to additionalLegs_ so that we don't miss the first coupon's ibor fixing
+            LOG("Building FX Resettable with first domestic notional specified explicitly");
+            j = 1;
+        }
+
+        // Make the necessary FX linked floating rate coupons
+        for (; j < result.size(); ++j) {
+            QuantLib::ext::shared_ptr<FloatingRateCoupon> coupon =
+                QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(result[j]);
+            Date fixingDate = fxIndex->fixingCalendar().advance(coupon->accrualStartDate(),
+                                                                -static_cast<Integer>(fxIndex->fixingDays()), Days);
+
+            auto domesticNotional = !data.notionals().empty()?data.notionals()[0]:Null<Real>();
+            QuantLib::ext::shared_ptr<FloatingRateFXLinkedNotionalCoupon> fxLinkedCoupon =
+                QuantLib::ext::make_shared<FloatingRateFXLinkedNotionalCoupon>(fixingDate, data.foreignAmount(),
+                                                                               fxIndex, coupon, parseDate(data.resetStartDate()),
+                                                                               domesticNotional);
+            
+            // set the same pricer
+            fxLinkedCoupon->setPricer(coupon->pricer());
+            result[j] = fxLinkedCoupon;
+
+            // Add the FX fixing to the required fixings
+            requiredFixings.addFixingDate(fixingDate, data.fxIndex(), fxLinkedCoupon->date());
+        }
+    }
+
+    Leg rangeAccrualResult = makeRangeAccrualLeg(data, index, engineFactory, openEndDateReplacement, attachPricer);
+    applyIndexing(rangeAccrualResult, data, engineFactory, requiredFixings, openEndDateReplacement, useXbsCurves);
+
+    return rangeAccrualResult;
+}
+
 Leg CashflowLegBuilder::buildLeg(
     const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
     RequiredFixings& requiredFixings, const string& configuration, const QuantLib::Date& openEndDateReplacement,

@@ -23,7 +23,7 @@
 #include <orea/simm/simmconfiguration.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <orea/simm/simmtradedata.hpp>
-#include <orea/simm/utilities.hpp>
+
 
 #include <ored/portfolio/callableswap.hpp>
 #include <ored/portfolio/fxforward.hpp>
@@ -36,6 +36,7 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/simmcurrencies.hpp>
 
 #include <ql/cashflows/coupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
@@ -52,6 +53,8 @@ using ore::data::Portfolio;
 using ore::data::to_string;
 using ore::data::parseBool;
 using ore::data::Trade;
+using ore::data::isUnidadeCurrency;
+using ore::data::simmStandardCurrency;
 using ore::analytics::CrifRecord;
 using QuantExt::FXLinkedCashFlow;
 using namespace QuantLib;
@@ -196,53 +199,27 @@ applySimmExemptions(Portfolio& portfolio, const QuantLib::ext::shared_ptr<Engine
             }
 
             // Check if the swap has multiple currencies
-            bool hasNonVanillaLeg = false;
             map<string, vector<Size>> legCcys;
+
+            if (!isSimmEligibleXccySwap(legData, swap->settlement())) {
+                continue;
+            }
+
+            std::set<string> fixedFloatStdCurrencies;
             for (Size i = 0; i < legData.size(); i++) {
                 const LegData& ld = legData[i];
                 const string& ccy = ld.currency();
-
-                if (ld.legType() != LegType::Cashflow && ld.legType() != LegType::Fixed &&
-                    ld.legType() != LegType::Floating) {
-                    hasNonVanillaLeg = true;
-                    break;
-                }
-
-                if (ld.legType() == LegType::Fixed || ld.legType() == LegType::Floating)
+                if (ld.legType() == LegType::Fixed || ld.legType() == LegType::Floating) {
                     legCcys[ccy].push_back(i);
-            }
-
-            // Inflation, CMS, etc. - non-vanilla IR coupon types do not qualify for SIMM exemptions
-            if (hasNonVanillaLeg)
-                continue;
-
-            // If not cross currency or there are fewer than 2 legs
-            if (legCcys.size() != 2)
-                continue;
-
-            // If non-deliverable (i.e. cash settlement), we can continue to the next trade
-            if (swap->settlement() != "Physical")
-                continue;
-
-            // Check that all legs in a given ccy are in the same direction (payer, receiver)
-            bool legsSameDirection = true;
-            for (const auto& [ccy, legIdxs] : legCcys) {
-                std::size_t idx = legIdxs[0];
-                if (!std::all_of(legIdxs.begin(), legIdxs.end(),
-                                 [&legData, idx](Size i) { return legData[i].isPayer() == legData[idx].isPayer(); })) {
-                    legsSameDirection = false;
+                    fixedFloatStdCurrencies.insert(isUnidadeCurrency(ccy) ? simmStandardCurrency(ccy) : ccy);
                 }
             }
-            if (!legsSameDirection)
-                continue;
 
-            // If cross currency, but after converting "unidade" to standard ccys reduce to one ccy, do not apply
-            // exemptions, see ISDA FAQ E2 (e.g. CLF / CLP xccy swaps do not qualify for exemptions)
-            std::set<std::string> stdCcys;
-            for (auto const& d : legData)
-                stdCcys.insert(isUnidadeCurrency(d.currency()) ? simmStandardCurrency(d.currency()) : d.currency());
-            if (stdCcys.size() <= 1)
+            // SIMM exemption only applies to cross currency swaps with 2 standard SIMM currencies on fixed/floating
+            // legs
+            if (legCcys.size() != 2 || fixedFloatStdCurrencies.size() != 2) {
                 continue;
+            }
 
             // Get list of legs with notional exchanges
             map<string, vector<Size>> legNotionalIdx;
