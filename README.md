@@ -1,7 +1,7 @@
 # ORE
 
 The [Open Source Risk](http://opensourcerisk.org) project aims at
-establishing a transparent peer-reviewed framework for pricing and risk
+establishing a transparent peer-previewed framework for pricing and risk
 analysis that can serve as
 * a benchmarking, validation, training, teaching reference 
 * an extensible foundation for tailored risk solutions
@@ -68,5 +68,15 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# Contribution by Cornelius Motlhala
+# Implementation of Potential Future Exposure (PFE) for 50-Year Horizons
+import numpy as np
 
+def calculate_bis_pfe(mtm, vol, time, conf=0.95):
+    # z-score for 95th percentile (BIS Reporting Standard)
+    z = 1.645 
+    addon = mtm * vol * np.sqrt(time) * z
+    return max(0, mtm + addon)
+
+print(f"PFE Result: {calculate_bis_pfe(10000000, 
 
