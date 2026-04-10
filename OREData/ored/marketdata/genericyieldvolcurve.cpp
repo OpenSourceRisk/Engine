@@ -403,15 +403,11 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                 for (Size i = 0; i < smileOptionTenors.size(); ++i) {
                     for (Size j = 0; j < smileUnderlyingTenors.size(); ++j) {
 
-                        // URI: cache
-                        Real lastNonZeroValue = 0.0;
                         int noneZeroValues = 0;
-
+                        Real lastNonZeroValue = 0.0;
                         vector<Real> x, y;
                         vector<Real> missingSpreadsIndexes;
                         
-                        
-                        // URI: scans strike spreads from right to left
                         for (Size k = 0; k < spreads.size(); ++k) {
                             int spreadIndex = spreads.size() - 1 - k;
                             // read vol spread quotes
