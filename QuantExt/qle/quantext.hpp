@@ -210,6 +210,7 @@
 #include <qle/instruments/flexiswapreplication.hpp>
 #include <qle/instruments/forwardbond.hpp>
 #include <qle/instruments/fxforward.hpp>
+#include <qle/instruments/fxforwardoptimized.hpp>
 #include <qle/instruments/genericswaption.hpp>
 #include <qle/instruments/impliedbondspread.hpp>
 #include <qle/instruments/indexcdsoption.hpp>
