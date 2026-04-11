@@ -29,6 +29,13 @@
 namespace ore {
 namespace analytics {
 
+void SimpleScenario::SharedData::refreshKeysHash() {
+    keysHash = std::accumulate(keys.begin(), keys.end(), 0, [](std::size_t h, const RiskFactorKey& key) {
+        boost::hash_combine(h, key);
+        return h;
+    });
+}
+
 SimpleScenario::SimpleScenario(QuantLib::Date asof, const std::string& label, QuantLib::Real numeraire,
                                const QuantLib::ext::shared_ptr<SharedData>& sharedData)
     : sharedData_(sharedData == nullptr ? QuantLib::ext::make_shared<SharedData>() : sharedData), asof_(asof),

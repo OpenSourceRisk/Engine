@@ -39,6 +39,7 @@ public:
         std::map<RiskFactorKey, std::size_t> keyIndex;
         std::map<std::pair<RiskFactorKey::KeyType, std::string>, std::vector<std::vector<QuantLib::Real>>> coordinates;
         std::size_t keysHash = 0;
+        void refreshKeysHash();
     };
 
     SimpleScenario() {}
