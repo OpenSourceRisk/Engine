@@ -34,6 +34,7 @@ namespace ore::data {
 class DateGrid;
 class Portfolio;
 class Trade;
+class OptionWrapper;
 } // namespace ore::data
 
 namespace QuantExt {
@@ -117,6 +118,7 @@ private:
     std::tuple<double, double, double, double>
     populateCube(const QuantLib::Date& d, size_t cubeDateIndex, size_t sample, bool isValueDate, bool isStickyDate,
                  bool scenarioUpdated, const std::map<std::string, QuantLib::ext::shared_ptr<ore::data::Trade>>& trades,
+                 const std::vector<QuantLib::ext::shared_ptr<OptionWrapper>>& optionWrappers,
                  const ErrorPolicy errorPolicy, std::vector<bool>& tradeHasT0Error,
                  std::vector<bool>& tradeHasSampleError,
                  const std::vector<QuantLib::ext::shared_ptr<ValuationCalculator>>& calculators,
@@ -138,7 +140,6 @@ private:
                         const std::vector<QuantLib::ext::shared_ptr<CounterpartyCalculator>>& calculators,
                         QuantLib::ext::shared_ptr<analytics::NPVCube>& cptyCube, const QuantLib::Date& d,
                         const QuantLib::Size cubeDateIndex, const QuantLib::Size sample);
-    void tradeExercisable(bool enable, const std::map<std::string, QuantLib::ext::shared_ptr<ore::data::Trade>>& trades);
     QuantLib::Date today_;
     QuantLib::ext::shared_ptr<ore::data::DateGrid> dg_;
     QuantLib::ext::shared_ptr<ore::analytics::SimMarket> simMarket_;

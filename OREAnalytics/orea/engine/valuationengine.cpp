@@ -135,6 +135,13 @@ void ValuationEngine::buildCube(const QuantLib::ext::shared_ptr<data::Portfolio>
     auto& counterparties = outputCptyCube ? outputCptyCube->idsAndIndexes() : std::map<string, Size>();
     std::vector<bool> tradeHasT0Error(portfolio->size(), false);
     std::vector<bool> tradeHasSampleError(portfolio->size(), false);
+
+    std::vector<QuantLib::ext::shared_ptr<OptionWrapper>> optionWrappers;
+    for (auto const& [id, t] : trades) {
+        if (auto o = QuantLib::ext::dynamic_pointer_cast<OptionWrapper>(t->instrument()))
+            optionWrappers.push_back(o);
+    }
+
     LOG("Initialise state objects...");
     // initialise state objects for each trade (required for path-dependent derivatives in particular)
     size_t i = 0;
@@ -210,18 +217,18 @@ void ValuationEngine::buildCube(const QuantLib::ext::shared_ptr<data::Portfolio>
                 Date valueDate = dg_->valuationDates()[i];
                 Date closeOutDate = dg_->closeOutDateFromValuationDate(valueDate);
                 std::tie(priceTime, upTime, asTime, calTime) =
-                    populateCube(valueDate, cubeDateIndex, sample, true, false, scenarioUpdated, trades, errorPolicy,
-                                 tradeHasT0Error, tradeHasSampleError, calculators, outputCube, outputCubeNettingSet,
-                                 counterparties, cptyCalculators, outputCptyCube, errors);
+                    populateCube(valueDate, cubeDateIndex, sample, true, false, scenarioUpdated, trades, optionWrappers,
+                                 errorPolicy, tradeHasT0Error, tradeHasSampleError, calculators, outputCube,
+                                 outputCubeNettingSet, counterparties, cptyCalculators, outputCptyCube, errors);
                 pricingTime += priceTime;
                 updateTime += upTime;
                 asdTime += asTime;
                 calibrationTime += calTime;
                 if (closeOutDate != Date()) {
-                    std::tie(priceTime, upTime, asTime, calTime) =
-                        populateCube(closeOutDate, cubeDateIndex, sample, false, mporStickyDate, scenarioUpdated,
-                                     trades, errorPolicy, tradeHasT0Error, tradeHasSampleError, calculators, outputCube,
-                                     outputCubeNettingSet, counterparties, cptyCalculators, outputCptyCube, errors);
+                    std::tie(priceTime, upTime, asTime, calTime) = populateCube(
+                        closeOutDate, cubeDateIndex, sample, false, mporStickyDate, scenarioUpdated, trades,
+                        optionWrappers, errorPolicy, tradeHasT0Error, tradeHasSampleError, calculators, outputCube,
+                        outputCubeNettingSet, counterparties, cptyCalculators, outputCptyCube, errors);
                     pricingTime += priceTime;
                     updateTime += upTime;
                     asdTime += asTime;
@@ -245,10 +252,10 @@ void ValuationEngine::buildCube(const QuantLib::ext::shared_ptr<data::Portfolio>
                     QL_REQUIRE(closeOutDateToValueDateIndex.count(d) == 1 && !closeOutDateToValueDateIndex[d].empty(),
                                "Need to calculate valuation date before close out date");
                     for (size_t& valueDateIndex : closeOutDateToValueDateIndex[d]) {
-                        std::tie(priceTime, upTime, asTime, calTime) =
-                            populateCube(d, valueDateIndex, sample, false, mporStickyDate, scenarioUpdated, trades,
-                                         errorPolicy, tradeHasT0Error, tradeHasSampleError, calculators, outputCube,
-                                         outputCubeNettingSet, counterparties, cptyCalculators, outputCptyCube, errors);
+                        std::tie(priceTime, upTime, asTime, calTime) = populateCube(
+                            d, valueDateIndex, sample, false, mporStickyDate, scenarioUpdated, trades, optionWrappers,
+                            errorPolicy, tradeHasT0Error, tradeHasSampleError, calculators, outputCube,
+                            outputCubeNettingSet, counterparties, cptyCalculators, outputCptyCube, errors);
                         pricingTime += priceTime;
                         updateTime += upTime;
                         asdTime += asTime;
@@ -266,8 +273,8 @@ void ValuationEngine::buildCube(const QuantLib::ext::shared_ptr<data::Portfolio>
                     if (closeOutDate != Date())
                         closeOutDateToValueDateIndex[closeOutDate].push_back(cubeDateIndex);
                     std::tie(priceTime, upTime, asTime, calTime) =
-                        populateCube(d, cubeDateIndex, sample, true, false, scenarioUpdated, trades, errorPolicy,
-                                     tradeHasT0Error, tradeHasSampleError, calculators, outputCube,
+                        populateCube(d, cubeDateIndex, sample, true, false, scenarioUpdated, trades, optionWrappers,
+                                     errorPolicy, tradeHasT0Error, tradeHasSampleError, calculators, outputCube,
                                      outputCubeNettingSet, counterparties, cptyCalculators, outputCptyCube, errors);
                     pricingTime += priceTime;
                     updateTime += upTime;
@@ -309,15 +316,15 @@ void ValuationEngine::buildCube(const QuantLib::ext::shared_ptr<data::Portfolio>
            << (outputCube->samples() == 1 ? "" : "s");
     updateProgress(outputCube->samples() * nTrades, outputCube->samples() * nTrades, detail.str());
     loopTimer.stop();
-    double pathGenTime = 0.0;
+    double scenGenTime = 0.0;
     if(auto ssm = ext::dynamic_pointer_cast<ScenarioSimMarket>(simMarket_)) {
-        pathGenTime = (static_cast<double>(ssm->scenarioGenerator()->timing()) * 1e-9);
+        scenGenTime = (static_cast<double>(ssm->scenarioGenerator()->timing()) * 1e-9);
     }
     LOG("ValuationEngine completed: loop " << setprecision(6) << loopTimer.format(2, "%w") << " sec, "
                                            << "pricing " << pricingTime << " sec, "
                                            << "update " << updateTime << " sec, "
                                            << "asd " << asdTime << " sec, "
-                                           << "pathGen " << pathGenTime << "sec, "
+                                           << "scenGen " << scenGenTime << "sec, "
                                            << "calibration " << calibrationTime << " sec, "
                                            << "fixing " << fixingTime);
 
@@ -388,22 +395,23 @@ void ValuationEngine::runCalculators(bool isCloseOutDate, const std::map<std::st
     }
 }
 
-void ValuationEngine::tradeExercisable(bool enable,
-                                       const std::map<std::string, QuantLib::ext::shared_ptr<Trade>>& trades) {
-    for (const auto& [tradeId, trade] : trades) {
-        auto t = QuantLib::ext::dynamic_pointer_cast<OptionWrapper>(trade->instrument());
+namespace {
+void tradeExercisable(bool enable, const std::vector<QuantLib::ext::shared_ptr<OptionWrapper>>& optionWrappers) {
+    std::for_each(optionWrappers.begin(), optionWrappers.end(), [enable](const auto& t) {
         if (t != nullptr) {
             if (enable)
                 t->enableExercise();
             else
                 t->disableExercise();
         }
-    }
+    });
 }
+} // namespace
 
 std::tuple<double, double, double, double> ValuationEngine::populateCube(
     const QuantLib::Date& d, size_t cubeDateIndex, size_t sample, bool isValueDate, bool isStickyDate,
     bool scenarioUpdated, const std::map<std::string, QuantLib::ext::shared_ptr<Trade>>& trades,
+    const std::vector<QuantLib::ext::shared_ptr<OptionWrapper>>& optionWrappers,
     const ErrorPolicy errorPolicy, std::vector<bool>& tradeHasT0Error, std::vector<bool>& tradeHasSampleError,
     const std::vector<QuantLib::ext::shared_ptr<ValuationCalculator>>& calculators,
     QuantLib::ext::shared_ptr<analytics::NPVCube>& outputCube,
@@ -444,12 +452,12 @@ std::tuple<double, double, double, double> ValuationEngine::populateCube(
 
     timer.start();
     if (isStickyDate && !isValueDate) // switch on again, if sticky
-        tradeExercisable(false, trades);
+        tradeExercisable(false, optionWrappers);
     // loop over trades
     runCalculators(!isValueDate, trades, errorPolicy, tradeHasT0Error, tradeHasSampleError, calculators, outputCube,
                    outputCubeNettingSet, d, cubeDateIndex, sample, simMarket_->label(), errors);
     if (isStickyDate && !isValueDate) // switch on again, if sticky
-        tradeExercisable(true, trades);
+        tradeExercisable(true, optionWrappers);
     // loop over counterparty names
     if (isValueDate) {
         runCalculators(false, counterparties, cptyCalculators, outputCptyCube, d, cubeDateIndex, sample);
