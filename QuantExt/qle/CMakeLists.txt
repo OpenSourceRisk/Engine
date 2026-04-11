@@ -138,6 +138,7 @@ instruments/flexiswap.cpp
 instruments/flexiswapreplication.cpp
 instruments/forwardbond.cpp
 instruments/fxforward.cpp
+instruments/fxforwardoptimized.cpp
 instruments/genericswaption.cpp
 instruments/impliedbondspread.cpp
 instruments/indexcdsoption.cpp
@@ -672,6 +673,7 @@ instruments/flexiswap.hpp
 instruments/flexiswapreplication.hpp
 instruments/forwardbond.hpp
 instruments/fxforward.hpp
+instruments/fxforwardoptimized.hpp
 instruments/genericswaption.hpp
 instruments/impliedbondspread.hpp
 instruments/indexcdsoption.hpp
