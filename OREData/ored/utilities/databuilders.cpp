@@ -473,6 +473,7 @@ void dataBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(CrossCurrencyCommoditySwapEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(EquityEuropeanCompositeEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(FxForwardEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(FxForwardOptimizedEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(DiscountingBondRepoEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(AccrualBondRepoEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CapFlooredOvernightIndexedCouponLegEngineBuilder, false)
