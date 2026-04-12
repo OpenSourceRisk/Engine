@@ -324,7 +324,7 @@ void ValuationEngine::buildCube(const QuantLib::ext::shared_ptr<data::Portfolio>
                                            << "pricing " << pricingTime << " sec, "
                                            << "update " << updateTime << " sec, "
                                            << "asd " << asdTime << " sec, "
-                                           << "scenGen " << scenGenTime << "sec, "
+                                           << "scenGen " << scenGenTime << " sec, "
                                            << "calibration " << calibrationTime << " sec, "
                                            << "fixing " << fixingTime);
 
