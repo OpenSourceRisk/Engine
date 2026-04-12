@@ -228,6 +228,7 @@
 #include <qle/instruments/riskparticipationagreement.hpp>
 #include <qle/instruments/riskparticipationagreement_tlock.hpp>
 #include <qle/instruments/subperiodsswap.hpp>
+#include <qle/instruments/swapoptimized.hpp>
 #include <qle/instruments/syntheticcdo.hpp>
 #include <qle/instruments/tenorbasisswap.hpp>
 #include <qle/instruments/vanillaforwardoption.hpp>

@@ -502,6 +502,7 @@ void dataBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(FxEuropeanAsianOptionACGAPEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(FxEuropeanAsianOptionTWEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(SwapEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(SwapOptimizedEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CrossCurrencySwapEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(MidPointIndexCdsEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(MidPointCdsMultiStateEngineBuilder, false)

@@ -154,6 +154,7 @@ instruments/payment.cpp
 instruments/rebatedexercise.cpp
 instruments/riskparticipationagreement.cpp
 instruments/riskparticipationagreement_tlock.cpp
+instruments/swapoptimized.cpp
 instruments/subperiodsswap.cpp
 instruments/syntheticcdo.cpp
 instruments/tenorbasisswap.cpp
@@ -690,6 +691,7 @@ instruments/payment.hpp
 instruments/rebatedexercise.hpp
 instruments/riskparticipationagreement.hpp
 instruments/riskparticipationagreement_tlock.hpp
+instruments/swapoptimized.hpp
 instruments/subperiodsswap.hpp
 instruments/syntheticcdo.hpp
 instruments/tenorbasisswap.hpp
