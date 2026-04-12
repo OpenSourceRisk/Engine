@@ -114,13 +114,14 @@ private:
 //! FX forward engine builder, optimized for exposure simulation
 class FxForwardOptimizedEngineBuilder final : public FxForwardEngineBuilderBase {
 public:
-    FxForwardOptimizedEngineBuilder() : FxForwardEngineBuilderBase("Optimized","Optimized") {}
+    FxForwardOptimizedEngineBuilder() : FxForwardEngineBuilderBase("Optimized", "Optimized") {}
     bool optimizedInstrument() const override { return true; }
 
 protected:
     QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy,
-                                                        const std::string& discountCurve) override { return nullptr; }
-
+                                                        const std::string& discountCurve) override {
+        return nullptr;
+    }
 };
 
 } // namespace data
