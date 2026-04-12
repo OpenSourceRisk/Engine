@@ -51,7 +51,8 @@ private:
         Real accrualPeriod_;
         Real indexPeriod_;
         YieldTermStructure* forwardCurve_;
-        Index* index_;
+        const TimeSeries<Real>* indexTimeSeries_;
+        std::string indexName_;
         Type type_;
     };
 

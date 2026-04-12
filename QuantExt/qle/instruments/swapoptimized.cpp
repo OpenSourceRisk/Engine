@@ -51,7 +51,8 @@ SwapOptimized::SwapOptimized(const std::vector<Leg>& legs, const std::vector<boo
 
                 d.type_ = Type::Ibor;
                 d.multiplier_ *= cpn->nominal();
-                d.index_ = cpn->iborIndex().get();
+                d.indexName_ = cpn->iborIndex()->name();
+                d.indexTimeSeries_ = &cpn->iborIndex()->timeSeries();
                 d.fixingDate_ = cpn->fixingDate();
                 d.forwardCurve_ = cpn->iborIndex()->forwardingTermStructure().currentLink().get();
                 d.index_d1_ = cpn->fixingValueDate();
@@ -102,9 +103,11 @@ void SwapOptimized::performCalculations() const {
         } else {
 
             double rate;
-            if (c->fixingDate_ < today)
-                rate = c->index_->fixing(c->fixingDate_);
-            else
+            if (c->fixingDate_ < today) {
+                rate = c->indexTimeSeries_->operator[](c->fixingDate_);
+                QL_REQUIRE(rate != Null<Real>(), "SwapOptimized::performCalculations(): missing fixing for "
+                                                     << c->indexName_ << " on " << c->fixingDate_);
+            } else
                 rate = (c->forwardCurve_->discount(c->index_d1_) / c->forwardCurve_->discount(c->index_d2_) - 1.0) /
                        c->indexPeriod_;
             tmp += (c->multiplier_ * c->gearing_ * rate + c->spread_) * c->accrualPeriod_ * dsc;
