@@ -78,11 +78,14 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     auto sharedData = ext::make_shared<SimpleScenario::SharedData>();
 
     // Cache discount curve keys
-    for (Size j = 0; j < model_->components(CrossAssetModel::AssetType::IR); j++) {
+    for (Size j = 0; j < n_ccy_; j++) {
         std::string ccy = model_->parametrizations()[j]->currency().code();
-        time_dsc_.push_back(std::vector<double>(simMarketConfig_->yieldCurveTenors(ccy).size()));
-        for (Size k = 0; k < time_dsc_.back().size(); k++) {
-            time_dsc_.back()[k] = dc.yearFraction(dates_[k], dates_[k] + simMarketConfig_->yieldCurveTenors(ccy)[k]);
+        auto const& ten = simMarketConfig_->yieldCurveTenors(ccy);
+        time_dsc_.push_back(std::vector<std::vector<double>>(dates_.size(), std::vector<double>(ten.size())));
+        for (Size k = 0; k < ten.size(); k++) {
+            for (Size i = 0; i < dates_.size(); ++i) {
+                time_dsc_.back()[i][k] = dc.yearFraction(dates_[i], dates_[i] + ten[k]);
+            }
             sharedData->keys.emplace_back(RiskFactorKey::KeyType::DiscountCurve, ccy, k);
             sharedData->keyIndex[sharedData->keys.back()] = sharedData->keys.size() - 1;
         }
@@ -90,11 +93,12 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
 
     // Cache index curve keys
     for (Size j = 0; j < n_indices_; ++j) {
-        time_idx_.push_back(
-            std::vector<double>(simMarketConfig_->yieldCurveTenors(simMarketConfig_->indices()[j]).size()));
-        for (Size k = 0; k < time_idx_.back().size(); ++k) {
-            time_idx_.back()[k] = dc.yearFraction(
-                dates_[k], dates_[k] + simMarketConfig_->yieldCurveTenors(simMarketConfig_->indices()[j])[k]);
+        auto const& ten = simMarketConfig_->yieldCurveTenors(simMarketConfig_->indices()[j]);
+        time_idx_.push_back(std::vector<std::vector<double>>(dates_.size(), std::vector<double>(ten.size())));
+        for (Size k = 0; k < ten.size(); ++k) {
+            for (Size i = 0; i < dates_.size(); ++i) {
+                time_idx_.back()[i][k] = dc.yearFraction(dates_[i], dates_[i] + ten[k]);
+            }
             sharedData->keys.emplace_back(RiskFactorKey::KeyType::IndexCurve, simMarketConfig_->indices()[j], k);
             sharedData->keyIndex[sharedData->keys.back()] = sharedData->keys.size() - 1;
         }
@@ -103,12 +107,14 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     // Cache yield curve keys
     Size n_curves = simMarketConfig_->yieldCurveNames().size();
     for (Size j = 0; j < n_curves; ++j) {
-        time_yc_.push_back(
-            vector<double>(simMarketConfig_->yieldCurveTenors(simMarketConfig_->yieldCurveNames()[j]).size()));
-        for (Size k = 0; k < time_yc_.back().size(); ++k) {
-            time_yc_.back()[k] = dc.yearFraction(
-                dates_[k], dates_[k] + simMarketConfig_->yieldCurveTenors(simMarketConfig_->yieldCurveNames()[j])[k]);
-            sharedData->keys.emplace_back(RiskFactorKey::KeyType::YieldCurve, simMarketConfig_->yieldCurveNames()[j], k);
+        auto const& ten = simMarketConfig_->yieldCurveTenors(simMarketConfig_->yieldCurveNames()[j]);
+        time_yc_.push_back(std::vector<std::vector<double>>(dates_.size(), std::vector<double>(ten.size())));
+        for (Size k = 0; k < ten.size(); ++k) {
+            for (Size i = 0; i < dates_.size(); ++i) {
+                time_yc_.back()[i][k] = dc.yearFraction(dates_[i], dates_[i] + ten[k]);
+            }
+            sharedData->keys.emplace_back(RiskFactorKey::KeyType::YieldCurve, simMarketConfig_->yieldCurveNames()[j],
+                                          k);
             sharedData->keyIndex[sharedData->keys.back()] = sharedData->keys.size() - 1;
         }
     }
@@ -315,7 +321,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     // we need a copy of the ir models to enable the cache for the purpose of this path generator
     std::vector<ext::shared_ptr<IrModel>> irModel(n_ccy_);
     for (Size j = 0; j < n_ccy_; ++j) {
-        irModel[j] = model_->irModel(j);//->clone();
+        irModel[j] = model_->irModel(j)->clone();
     }
 
     std::vector<Size> curvesCacheLoopSize(n_ccy_, 0);
@@ -323,7 +329,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     for (Size j = 0; j < n_ccy_; ++j) {
         curves_.push_back(
             QuantLib::ext::make_shared<QuantExt::ModelImpliedYieldTermStructure>(irModel[j], dc, true));
-        curvesCacheLoopSize[j] += dates_.size() * time_dsc_[j].size();
+        curvesCacheLoopSize[j] += dates_.size() * time_dsc_[j][0].size();
     }
 
     indexCcyIdx_.resize(n_indices_);
@@ -336,7 +342,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
             QuantLib::ext::make_shared<ModelImpliedYtsFwdFwdCorrected>(irModel[indexCcyIdx_[j]], fts, dc, true);
         fwdCurves_.push_back(impliedFwdCurve);
         indices_.push_back(index->clone(Handle<YieldTermStructure>(impliedFwdCurve)));
-        curvesCacheLoopSize[indexCcyIdx_[j]] += dates_.size() * time_idx_[j].size();
+        curvesCacheLoopSize[indexCcyIdx_[j]] += dates_.size() * time_idx_[j][0].size();
     }
 
     yieldCurveCcyIndex_.resize(n_curves_);
@@ -348,7 +354,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         auto impliedYieldCurve =
             QuantLib::ext::make_shared<ModelImpliedYtsFwdFwdCorrected>(irModel[yieldCurveCcyIndex_[j]], yts, dc, true);
         yieldCurves_.push_back(impliedYieldCurve);
-        curvesCacheLoopSize[yieldCurveCcyIndex_[j]] += dates_.size() * time_yc_[j].size();
+        curvesCacheLoopSize[yieldCurveCcyIndex_[j]] += dates_.size() * time_yc_[j][0].size();
     }
 
     for (Size j = 0; j < n_com_; ++j) {
@@ -441,8 +447,6 @@ void copyPathToArray(const MultiPath& p, Size t, Size a, Array& target) {
 
 std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextPath() {
 
-    boost::timer::cpu_timer timer;
-
     std::vector<QuantLib::ext::shared_ptr<Scenario>> scenarios(dates_.size());
     QL_REQUIRE(pathGenerator_ != nullptr, "CrossAssetModelScenarioGenerator::nextPath(): pathGenerator is null");
     Sample<MultiPath> sample = pathGenerator_->next();
@@ -471,13 +475,17 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
         }
     }
 
+    boost::timer::cpu_timer timer;
+
     std::vector<Array> ir_state(n_ccy_);
     for (Size j = 0; j < n_ccy_; ++j) {
         ir_state[j] = Array(model_->irModel(j)->n() + model_->irModel(j)->n_aux());
     }
 
     for (Size i = 0; i < dates_.size(); i++) {
-        Real t = timeGrid_[i + 1]; // recall: time grid has inserted t=0
+        // FIXME we need to check the consistency of model and scen-gen day counters, as we already do in amc val engine QPR-13995
+        Real t = timeGrid_[i + 1];
+        Real t_dc = dc.yearFraction(model_->irModel(0)->termStructure()->referenceDate(), dates_[i]);
 
         scenarios[i] = scenarioFactory_->buildScenario(dates_[i], true);
         Size rfKeyCounter = 0;
@@ -493,24 +501,24 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
         // Discount curves
         for (Size j = 0; j < n_ccy_; j++) {
             curves_[j]->move(t, ir_state[j]);
-            for (Size k = 0; k < time_dsc_[j].size(); k++) {
-                scenarios[i]->add(rfKeyCounter++, std::max(curves_[j]->discount(time_dsc_[j][k]), 0.00001));
+            for (Size k = 0; k < time_dsc_[j][i].size(); k++) {
+                scenarios[i]->add(rfKeyCounter++, std::max(curves_[j]->discount(time_dsc_[j][i][k]), 0.00001));
             }
         }
 
         // Index curves and Index fixings
         for (Size j = 0; j < n_indices_; ++j) {
-            fwdCurves_[j]->move(t, ir_state[indexCcyIdx_[j]]);
-            for (Size k = 0; k < time_idx_[j].size(); ++k) {
-                scenarios[i]->add(rfKeyCounter++, std::max(fwdCurves_[j]->discount(time_idx_[j][k]), 0.00001));
+            fwdCurves_[j]->move(t_dc, ir_state[indexCcyIdx_[j]]);
+            for (Size k = 0; k < time_idx_[j][i].size(); ++k) {
+                scenarios[i]->add(rfKeyCounter++, std::max(fwdCurves_[j]->discount(time_idx_[j][i][k]), 0.00001));
             }
         }
 
         // Yield curves
         for (Size j = 0; j < n_curves_; ++j) {
-            yieldCurves_[j]->move(t, ir_state[yieldCurveCcyIndex_[j]]);
-            for (Size k = 0; k < time_yc_[j].size(); ++k) {
-                scenarios[i]->add(rfKeyCounter++, std::max(yieldCurves_[j]->discount(time_yc_[j][k]), 0.00001));
+            yieldCurves_[j]->move(t_dc, ir_state[yieldCurveCcyIndex_[j]]);
+            for (Size k = 0; k < time_yc_[j][i].size(); ++k) {
+                scenarios[i]->add(rfKeyCounter++, std::max(yieldCurves_[j]->discount(time_yc_[j][i][k]), 0.00001));
             }
         }
 

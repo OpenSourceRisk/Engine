@@ -90,7 +90,7 @@ private:
     std::vector<QuantLib::ext::shared_ptr<QuantExt::CrossAssetModelImpliedFxVolTermStructure>> fxVols_;
     std::vector<QuantLib::ext::shared_ptr<QuantExt::CrossAssetModelImpliedEqVolTermStructure>> eqVols_;
     std::vector<QuantLib::ext::shared_ptr<QuantExt::CrossAssetModelImpliedSwaptionVolTermStructure>> swaptionVols_;
-    std::vector<std::vector<double>> time_dsc_, time_idx_, time_yc_;
+    std::vector<std::vector<std::vector<double>>> time_dsc_, time_idx_, time_yc_;
     std::vector<std::vector<Period>> ten_efc_, ten_zinf_, ten_yinf_, ten_dfc_, ten_com_;
     std::vector<bool> modelCcyRelevant_;
     Size n_ccy_, n_fx_, n_eq_, n_inf_, n_cr_, n_indices_, n_curves_, n_com_, n_crstates_, n_survivalweights_, n_states_;
