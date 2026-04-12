@@ -47,7 +47,6 @@ public:
     void performCalculations() const override;
 
 private:
-    void setupExpired() const override;
     Real nominal1_;
     Currency currency1_;
     Real nominal2_;

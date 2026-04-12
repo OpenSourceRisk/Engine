@@ -59,11 +59,6 @@ bool FxForwardOptimized::isExpired() const {
     return detail::simple_event(payDate_).hasOccurred(refDate, includeToday);
 }
 
-void FxForwardOptimized::setupExpired() const {
-    Instrument::setupExpired();
-    NPV_ = 0.0;
-}
-
 void FxForwardOptimized::performCalculations() const {
     NPV_ = -nominal1_ * currency1DiscountCurve_->discount(payDate_) +
            nominal2_ * currency2DiscountCurve_->discount(payDate_) * spotFX_->value();
