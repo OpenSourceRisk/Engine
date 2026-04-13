@@ -115,13 +115,7 @@ void ValuationEngine::buildCube(const QuantLib::ext::shared_ptr<data::Portfolio>
 
     ObservationMode::Mode om = ObservationMode::instance().mode();
 
-    long loopTime = 0;
-    long updateTime = 0;
-    long scenGenTime = 0;
-    long asdTime = 0.0;
-    long pricingTime = 0.0;
-    long fixingTime = 0.0;
-    long calibrationTime = 0.0;
+    Timings timings;
 
     LOG("Initialise " << calculators.size() << " valuation calculators");
     for (auto const& c : calculators) {
@@ -213,23 +207,14 @@ void ValuationEngine::buildCube(const QuantLib::ext::shared_ptr<data::Portfolio>
                 ++cubeDateIndex;
                 Date valueDate = dg_->valuationDates()[i];
                 Date closeOutDate = dg_->closeOutDateFromValuationDate(valueDate);
-                auto [priceTime, upTime, asTime, calTime] =
-                    populateCube(valueDate, cubeDateIndex, sample, true, false, scenarioUpdated, trades, optionWrappers,
-                                 errorPolicy, tradeHasT0Error, tradeHasSampleError, calculators, outputCube,
-                                 outputCubeNettingSet, counterparties, cptyCalculators, outputCptyCube, errors);
-                pricingTime += priceTime;
-                updateTime += upTime;
-                asdTime += asTime;
-                calibrationTime += calTime;
+                populateCube(valueDate, cubeDateIndex, sample, true, false, scenarioUpdated, trades, optionWrappers,
+                             errorPolicy, tradeHasT0Error, tradeHasSampleError, calculators, outputCube,
+                             outputCubeNettingSet, counterparties, cptyCalculators, outputCptyCube, errors, timings);
                 if (closeOutDate != Date()) {
-                    auto [priceTime, upTime, asTime, calTime] = populateCube(
-                        closeOutDate, cubeDateIndex, sample, false, mporStickyDate, scenarioUpdated, trades,
-                        optionWrappers, errorPolicy, tradeHasT0Error, tradeHasSampleError, calculators, outputCube,
-                        outputCubeNettingSet, counterparties, cptyCalculators, outputCptyCube, errors);
-                    pricingTime += priceTime;
-                    updateTime += upTime;
-                    asdTime += asTime;
-                    calibrationTime += calTime;
+                    populateCube(closeOutDate, cubeDateIndex, sample, false, mporStickyDate, scenarioUpdated, trades,
+                                 optionWrappers, errorPolicy, tradeHasT0Error, tradeHasSampleError, calculators,
+                                 outputCube, outputCubeNettingSet, counterparties, cptyCalculators, outputCptyCube,
+                                 errors, timings);
                 }
             }
         } else {
@@ -245,14 +230,10 @@ void ValuationEngine::buildCube(const QuantLib::ext::shared_ptr<data::Portfolio>
                     QL_REQUIRE(closeOutDateToValueDateIndex.count(d) == 1 && !closeOutDateToValueDateIndex[d].empty(),
                                "Need to calculate valuation date before close out date");
                     for (size_t& valueDateIndex : closeOutDateToValueDateIndex[d]) {
-                        auto [priceTime, upTime, asTime, calTime] = populateCube(
-                            d, valueDateIndex, sample, false, mporStickyDate, scenarioUpdated, trades, optionWrappers,
-                            errorPolicy, tradeHasT0Error, tradeHasSampleError, calculators, outputCube,
-                            outputCubeNettingSet, counterparties, cptyCalculators, outputCptyCube, errors);
-                        pricingTime += priceTime;
-                        updateTime += upTime;
-                        asdTime += asTime;
-                        calibrationTime += calTime;
+                        populateCube(d, valueDateIndex, sample, false, mporStickyDate, scenarioUpdated, trades,
+                                     optionWrappers, errorPolicy, tradeHasT0Error, tradeHasSampleError, calculators,
+                                     outputCube, outputCubeNettingSet, counterparties, cptyCalculators, outputCptyCube,
+                                     errors, timings);
                         scenarioUpdated = true;
                     }
                 }
@@ -261,14 +242,10 @@ void ValuationEngine::buildCube(const QuantLib::ext::shared_ptr<data::Portfolio>
                     Date closeOutDate = dg_->closeOutDateFromValuationDate(d);
                     if (closeOutDate != Date())
                         closeOutDateToValueDateIndex[closeOutDate].push_back(cubeDateIndex);
-                    auto [priceTime, upTime, asTime, calTime] =
-                        populateCube(d, cubeDateIndex, sample, true, false, scenarioUpdated, trades, optionWrappers,
-                                     errorPolicy, tradeHasT0Error, tradeHasSampleError, calculators, outputCube,
-                                     outputCubeNettingSet, counterparties, cptyCalculators, outputCptyCube, errors);
-                    pricingTime += priceTime;
-                    updateTime += upTime;
-                    asdTime += asTime;
-                    calibrationTime += calTime;
+                    populateCube(d, cubeDateIndex, sample, true, false, scenarioUpdated, trades, optionWrappers,
+                                 errorPolicy, tradeHasT0Error, tradeHasSampleError, calculators, outputCube,
+                                 outputCubeNettingSet, counterparties, cptyCalculators, outputCptyCube, errors,
+                                 timings);
                     scenarioUpdated = true;
                 }
             }
@@ -281,7 +258,7 @@ void ValuationEngine::buildCube(const QuantLib::ext::shared_ptr<data::Portfolio>
 
         auto fixingTimeStart = data::os::nanosecondsClock();
         simMarket_->fixingManager()->reset();
-        fixingTime += data::os::nanosecondsClock() - fixingTimeStart;
+        timings.fixingTime += data::os::nanosecondsClock() - fixingTimeStart;
     }
 
     if (dryRun) {
@@ -300,26 +277,30 @@ void ValuationEngine::buildCube(const QuantLib::ext::shared_ptr<data::Portfolio>
         }
     }
 
-    loopTime = data::os::nanosecondsClock() - loopTimeStart;
+    timings.loopTime += data::os::nanosecondsClock() - loopTimeStart;
 
     std::ostringstream detail;
     detail << nTrades << " trade" << (nTrades == 1 ? "" : "s") << ", " << outputCube->samples() << " sample"
            << (outputCube->samples() == 1 ? "" : "s");
     updateProgress(outputCube->samples() * nTrades, outputCube->samples() * nTrades, detail.str());
     if(auto ssm = ext::dynamic_pointer_cast<ScenarioSimMarket>(simMarket_)) {
-        scenGenTime = static_cast<double>(ssm->scenarioGenerator()->timing());
+        timings.scenGenTime += ssm->scenarioGenerator()->timing();
     }
     LOG("ValuationEngine completed:");
-    LOG("Loop              : " << static_cast<double>(loopTime) * 1E-3 << " mus");
-    LOG("  Update          : " << static_cast<double>(updateTime) * 1E-3 << " mus");
-    LOG("    ScenGen       : " << static_cast<double>(scenGenTime) * 1E-3 << " mus");
-    LOG("    Residual      : " << static_cast<double>(updateTime - scenGenTime) * 1E-3 << " mus");
-    LOG("  Asd             : " << static_cast<double>(asdTime) * 1E-3 << " mus");
-    LOG("  Pricing         : " << static_cast<double>(pricingTime) * 1E-3 << " mus");
-    LOG("  Fixing          : " << static_cast<double>(fixingTime) * 1E-3 << " mus");
-    LOG("  Calibration     : " << static_cast<double>(calibrationTime) * 1E-3 << " mus");
-    LOG("  Residual        : " << static_cast<double>(loopTime - updateTime - asdTime - pricingTime - fixingTime -
-                                                      calibrationTime) *
+    LOG("Loop              : " << static_cast<double>(timings.loopTime) * 1E-3 << " mus");
+    LOG("  UpdateDate      : " << static_cast<double>(timings.updateDateTime) * 1E-3 << " mus");
+    LOG("  UpdateScenario  : " << static_cast<double>(timings.updateScenarioTime) * 1E-3 << " mus");
+    LOG("    ScenGen       : " << static_cast<double>(timings.scenGenTime) * 1E-3 << " mus");
+    LOG("    ApplyScen     : " << static_cast<double>(timings.updateScenarioTime - timings.scenGenTime) * 1E-3 << " mus");
+    LOG("  Refresh         : " << static_cast<double>(timings.refreshTime) * 1E-3 << " mus");
+    LOG("  Asd             : " << static_cast<double>(timings.asdTime) * 1E-3 << " mus");
+    LOG("  Pricing         : " << static_cast<double>(timings.pricingTime) * 1E-3 << " mus");
+    LOG("  Fixing          : " << static_cast<double>(timings.fixingTime) * 1E-3 << " mus");
+    LOG("  Calibration     : " << static_cast<double>(timings.calibrationTime) * 1E-3 << " mus");
+    LOG("  Residual        : " << static_cast<double>(timings.loopTime - timings.updateDateTime -
+                                                      timings.updateScenarioTime - timings.refreshTime -
+                                                      timings.asdTime - timings.pricingTime - timings.fixingTime -
+                                                      timings.calibrationTime) *
                                       1E-3
                                << " mus");
 
@@ -403,7 +384,7 @@ void tradeExercisable(bool enable, const std::vector<QuantLib::ext::shared_ptr<O
 }
 } // namespace
 
-std::tuple<long, long, long, long> ValuationEngine::populateCube(
+void ValuationEngine::populateCube(
     const QuantLib::Date& d, size_t cubeDateIndex, size_t sample, bool isValueDate, bool isStickyDate,
     bool scenarioUpdated, const std::map<std::string, QuantLib::ext::shared_ptr<Trade>>& trades,
     const std::vector<QuantLib::ext::shared_ptr<OptionWrapper>>& optionWrappers, const ErrorPolicy errorPolicy,
@@ -412,34 +393,44 @@ std::tuple<long, long, long, long> ValuationEngine::populateCube(
     QuantLib::ext::shared_ptr<analytics::NPVCube>& outputCube,
     QuantLib::ext::shared_ptr<analytics::NPVCube>& outputCubeNettingSet, const std::map<string, Size>& counterparties,
     const vector<QuantLib::ext::shared_ptr<CounterpartyCalculator>>& cptyCalculators,
-    QuantLib::ext::shared_ptr<analytics::NPVCube>& outputCptyCube, Errors* errors) {
-    long pricingTime = 0;
-    long updateTime = 0;
-    long asdTime = 0;
-    long calibrationTime = 0;
+    QuantLib::ext::shared_ptr<analytics::NPVCube>& outputCptyCube, Errors* errors, Timings& timings) {
+
     QL_REQUIRE(cubeDateIndex >= 0, "first date should be a valuation date");
-    auto updateTimeStart = data::os::nanosecondsClock();
+
+    auto t0 = data::os::nanosecondsClock();
     simMarket_->preUpdate();
     if (isValueDate || !isStickyDate) {
         simMarket_->updateDate(d);
     }
     // We can skip this step, if we have done that above in the close-out date section
+    auto t1 = data::os::nanosecondsClock();
+    timings.updateDateTime += t1 - t0;
     if (!scenarioUpdated) {
         simMarket_->updateScenario(d);
     }
-    // Always with fixing update here, in contrast to the close-out date section
-    simMarket_->postUpdate(d, !isStickyDate || isValueDate);
-    auto asdTimeStart = data::os::nanosecondsClock();
-    updateTime = asdTimeStart - updateTimeStart;
+
+    auto t2 = data::os::nanosecondsClock();
+    timings.updateScenarioTime += t2 - t1;
+
+    simMarket_->postUpdate(d);
+    auto t3 = data::os::nanosecondsClock();
+    timings.refreshTime += t3 - t2;
+
+    if (!isStickyDate || isValueDate)
+        simMarket_->fixingManager()->update(d);
+    auto t4 = data::os::nanosecondsClock();
+    timings.fixingTime += t4 - t3;
+
     // Aggregation scenario data update on valuation dates only
     if (isValueDate) {
         simMarket_->updateAsd(d);
     }
-    auto calibrationTimeStart = data::os::nanosecondsClock();
-    asdTime = calibrationTimeStart - asdTimeStart;
+    auto t5 = data::os::nanosecondsClock();
+    timings.asdTime += t5 - t4;
+
     recalibrateModels();
-    auto pricingTimeStart = data::os::nanosecondsClock();
-    calibrationTime = pricingTimeStart - calibrationTimeStart;
+    auto t6 = data::os::nanosecondsClock();
+    timings.calibrationTime += t6 - t5;
 
     if (isStickyDate && !isValueDate) // switch on again, if sticky
         tradeExercisable(false, optionWrappers);
@@ -452,8 +443,8 @@ std::tuple<long, long, long, long> ValuationEngine::populateCube(
     if (isValueDate) {
         runCalculators(false, counterparties, cptyCalculators, outputCptyCube, d, cubeDateIndex, sample);
     }
-    pricingTime = data::os::nanosecondsClock() - pricingTimeStart;
-    return std::make_tuple(pricingTime, updateTime, asdTime, calibrationTime);
+
+    timings.pricingTime += data::os::nanosecondsClock() - t6;
 }
 
 } // namespace analytics

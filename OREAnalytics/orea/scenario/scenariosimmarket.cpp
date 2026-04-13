@@ -3586,9 +3586,8 @@ void ScenarioSimMarket::updateScenario(const Date& d) {
     applyScenario(scenario);
 }
 
-void ScenarioSimMarket::postUpdate(const Date& d, bool withFixings) {
+void ScenarioSimMarket::postUpdate(const Date& d) {
     ObservationMode::Mode om = ObservationMode::instance().mode();
-
     // Observation Mode - key to update these before fixings are set
     if (om == ObservationMode::Mode::Disable) {
         refresh();
@@ -3596,10 +3595,6 @@ void ScenarioSimMarket::postUpdate(const Date& d, bool withFixings) {
     } else if (om == ObservationMode::Mode::Defer) {
         ObservableSettings::instance().enableUpdates();
     }
-
-    // Apply fixings as historical fixings. Must do this before we populate ASD
-    if (withFixings)
-        fixingManager_->update(d);
 }
 
 void ScenarioSimMarket::setAsd(Size cacheCounter) {

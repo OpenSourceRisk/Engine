@@ -120,7 +120,7 @@ public:
     virtual void preUpdate() override;
     virtual void updateScenario(const Date&) override;
     virtual void updateDate(const Date&) override;
-    virtual void postUpdate(const Date& d, bool withFixings) override;
+    virtual void postUpdate(const Date& d) override;
     virtual void updateAsd(const Date&) override;
 
     //! Reset sim market to initial state
