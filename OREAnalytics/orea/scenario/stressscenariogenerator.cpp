@@ -608,67 +608,64 @@ void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestD
         }
 
         ShiftType shiftType = data.shiftType;
-        bool eqShift = shiftType == ShiftType::EqualTo;
         vector<Real> shifts;
         std::vector<Time> shiftTimes;
 
-        if (!eqShift) {
-            if (data.mode == StressTestScenarioData::FXVolShiftData::AtmShiftMode::Explicit) {
-                std::vector<Period> shiftTenors = data.shiftExpiries;
-                shifts = data.shifts;
-                QL_REQUIRE(shiftTenors.size() > 0, "FX vol shift tenors not specified");
-                QL_REQUIRE(shiftTenors.size() == shifts.size(), "shift tenor and shift size vectors do not match");
+        if (data.mode == StressTestScenarioData::FXVolShiftData::AtmShiftMode::Explicit) {
+            std::vector<Period> shiftTenors = data.shiftExpiries;
+            shifts = data.shifts;
+            QL_REQUIRE(shiftTenors.size() > 0, "FX vol shift tenors not specified");
+            QL_REQUIRE(shiftTenors.size() == shifts.size(), "shift tenor and shift size vectors do not match");
 
-                for (Size j = 0; j < shiftTenors.size(); ++j){
-                    shiftTimes.push_back(dc.yearFraction(asof, asof + shiftTenors[j]));
-                }
-            } else if (data.mode == StressTestScenarioData::FXVolShiftData::AtmShiftMode::Weighted) {
-                DLOG("FX Vol Stress Scenario with weighted schema")
-                QL_REQUIRE(data.weightTenors.size() == data.weights.size(), "Mismatch between weights and weightTenors");
-                QL_REQUIRE(data.shiftExpiries.size() == 1, "Weighting schema 'Weighted' requires exactly one tenor");
-                QL_REQUIRE(data.shifts.size() == 1, "Weighting schema 'Weighted' requires exactly one shift");
-                Period referenceTenor = data.shiftExpiries.front();
-                Real referenceShift = data.shifts.front();
-                std::vector<Period> shiftTenors = data.weightTenors;
-                auto it = std::find(shiftTenors.begin(), shiftTenors.end(), referenceTenor);
-                QL_REQUIRE(it != shiftTenors.end(), "Couldnt find reference weight for shift expiry");
-                size_t weightPos = std::distance(shiftTenors.begin(), it);
-                double referenceWeight = data.weights[weightPos];
-                QL_REQUIRE(referenceWeight > 0.0 && !QuantLib::close_enough(referenceWeight, 0.0),
-                           "Only strict positive reference weight is allowed");
-                const double weightedRefShift = referenceShift / referenceWeight;
-                DLOG("Compute shifts from weights")
-                DLOG("j,pillar,time,shift")
-                for (Size j = 0; j < shiftTenors.size(); ++j) {
-                    QL_REQUIRE(data.weights[j] >= 0, "only positive weights for weighted stresstest allowed");
-                    shiftTimes.push_back(dc.yearFraction(asof, asof + shiftTenors[j]));
-                    shifts.push_back(weightedRefShift * data.weights[j]);
-                    DLOG(j << "," << shiftTenors[j] << "," << shiftTimes.back() << "," << shifts.back());
-                }
-            } else if (data.mode == StressTestScenarioData::FXVolShiftData::AtmShiftMode::Unadjusted) {
-                QL_REQUIRE(data.shiftExpiries.size() == 1, "Weighting schema 'Unadjusted' requires exactly one tenor");
-                QL_REQUIRE(data.shifts.size() == 1, "Weighting schema 'Unadjusted' requires exactly one shift");
-                Time expiryTime = dc.yearFraction(asof, asof + data.shiftExpiries.front());
-                if (expiryTime >= 1e-6) {
-                    shiftTimes.push_back(expiryTime - 1e-6);
-                    shiftTimes.push_back(expiryTime);
-                    shiftTimes.push_back(expiryTime + 1e-6);
-                    shifts.push_back(0.0);
-                    shifts.push_back(data.shifts.front());
-                    shifts.push_back(0.0);
-                } else {
-                    shiftTimes.push_back(expiryTime);
-                    shiftTimes.push_back(expiryTime + 1e-6);
-                    shifts.push_back(data.shifts.front());
-                    shifts.push_back(0.0);
-                }
+            for (Size j = 0; j < shiftTenors.size(); ++j){
+                shiftTimes.push_back(dc.yearFraction(asof, asof + shiftTenors[j]));
             }
-            DLOG("Apply shift with shiftType " << shiftType);
-            // FIXME: Apply same shifts to non-ATM vectors if present
-            for (Size j = 0; j < shiftTimes.size(); ++j) {
-                // apply shift at tenor point j
-                applyShift(j, shifts[j], true, shiftType, shiftTimes, values, times, shiftedValues, j == 0 ? true : false);
+        } else if (data.mode == StressTestScenarioData::FXVolShiftData::AtmShiftMode::Weighted) {
+            DLOG("FX Vol Stress Scenario with weighted schema")
+            QL_REQUIRE(data.weightTenors.size() == data.weights.size(), "Mismatch between weights and weightTenors");
+            QL_REQUIRE(data.shiftExpiries.size() == 1, "Weighting schema 'Weighted' requires exactly one tenor");
+            QL_REQUIRE(data.shifts.size() == 1, "Weighting schema 'Weighted' requires exactly one shift");
+            Period referenceTenor = data.shiftExpiries.front();
+            Real referenceShift = data.shifts.front();
+            std::vector<Period> shiftTenors = data.weightTenors;
+            auto it = std::find(shiftTenors.begin(), shiftTenors.end(), referenceTenor);
+            QL_REQUIRE(it != shiftTenors.end(), "Couldnt find reference weight for shift expiry");
+            size_t weightPos = std::distance(shiftTenors.begin(), it);
+            double referenceWeight = data.weights[weightPos];
+            QL_REQUIRE(referenceWeight > 0.0 && !QuantLib::close_enough(referenceWeight, 0.0),
+                        "Only strict positive reference weight is allowed");
+            const double weightedRefShift = referenceShift / referenceWeight;
+            DLOG("Compute shifts from weights")
+            DLOG("j,pillar,time,shift")
+            for (Size j = 0; j < shiftTenors.size(); ++j) {
+                QL_REQUIRE(data.weights[j] >= 0, "only positive weights for weighted stresstest allowed");
+                shiftTimes.push_back(dc.yearFraction(asof, asof + shiftTenors[j]));
+                shifts.push_back(weightedRefShift * data.weights[j]);
+                DLOG(j << "," << shiftTenors[j] << "," << shiftTimes.back() << "," << shifts.back());
             }
+        } else if (data.mode == StressTestScenarioData::FXVolShiftData::AtmShiftMode::Unadjusted) {
+            QL_REQUIRE(data.shiftExpiries.size() == 1, "Weighting schema 'Unadjusted' requires exactly one tenor");
+            QL_REQUIRE(data.shifts.size() == 1, "Weighting schema 'Unadjusted' requires exactly one shift");
+            Time expiryTime = dc.yearFraction(asof, asof + data.shiftExpiries.front());
+            if (expiryTime >= 1e-6) {
+                shiftTimes.push_back(expiryTime - 1e-6);
+                shiftTimes.push_back(expiryTime);
+                shiftTimes.push_back(expiryTime + 1e-6);
+                shifts.push_back(0.0);
+                shifts.push_back(data.shifts.front());
+                shifts.push_back(0.0);
+            } else {
+                shiftTimes.push_back(expiryTime);
+                shiftTimes.push_back(expiryTime + 1e-6);
+                shifts.push_back(data.shifts.front());
+                shifts.push_back(0.0);
+            }
+        }
+        DLOG("Apply shift with shiftType " << shiftType);
+        // FIXME: Apply same shifts to non-ATM vectors if present
+        for (Size j = 0; j < shiftTimes.size(); ++j) {
+            // apply shift at tenor point j
+            applyShift(j, shifts[j], true, shiftType, shiftTimes, values, times, shiftedValues, j == 0 ? true : false);
         }
 
         DLOG("Output generated fx vol stress test scenario " << std.label << " " << ccypair);
@@ -677,13 +674,12 @@ void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestD
 
         for (Size k = 0; k < n_fxvol_exp; ++k) {
             RiskFactorKey key(RiskFactorKey::KeyType::FXVolatility, ccypair, k);
-            Real newValue = eqShift ? shifts[k] : shiftedValues[k];
             DLOG(k << "," << key << "," << simMarketData_->fxVolExpiries(ccypair)[k] << "," << times[k] << ","
-                   << values[k] << "," << newValue << "," << newValue - values[k]);
+                   << values[k] << "," << shiftedValues[k] << "," << shiftedValues[k] - values[k]);
             if (useSpreadedTermStructures_) {
-                scenario->add(key, newValue - values[k]);
+                scenario->add(key, shiftedValues[k] - values[k]);
             } else {
-                scenario->add(key, newValue);
+                scenario->add(key, shiftedValues[k]);
             }
         }
     }
