@@ -21,7 +21,7 @@
 */
 
 #pragma once
-
+#include <utility>
 #include <ql/types.hpp>
 #include <ql/utilities/null.hpp>
 
