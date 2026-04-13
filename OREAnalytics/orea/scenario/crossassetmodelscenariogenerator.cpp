@@ -21,12 +21,14 @@
 
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/osutils.hpp>
+
+#include <qle/indexes/inflationindexobserver.hpp>
+#include <qle/utilities/inflation.hpp>
 
 #include <ql/indexes/ibor/euribor.hpp>
 #include <ql/termstructures/yield/discountcurve.hpp>
 #include <ql/time/daycounters/thirty360.hpp>
-#include <qle/indexes/inflationindexobserver.hpp>
-#include <qle/utilities/inflation.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -475,7 +477,7 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
         }
     }
 
-    boost::timer::cpu_timer timer;
+    auto timingStart = data::os::nanosecondsClock();
 
     std::vector<Array> ir_state(n_ccy_);
     for (Size j = 0; j < n_ccy_; ++j) {
@@ -528,7 +530,6 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
             scenarios[i]->add(rfKeyCounter++, fx);
         }
 
-
         // FX vols
         if (simMarketConfig_->simulateFXVols()) {
             for (Size k = 0; k < simMarketConfig_->fxVolCcyPairs().size(); k++) {
@@ -547,6 +548,7 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
                 }
             }
         }
+
 
         // Equity spots
         for (Size k = 0; k < n_eq_; k++) {
@@ -671,7 +673,7 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
             if (model_->modelType(CrossAssetModel::AssetType::CR, j) == CrossAssetModel::ModelType::LGM1F) {
                 Real z = sample.value[model_->pIdx(CrossAssetModel::AssetType::CR, j, 0)][gridIndexInPath_[i + 1]];
                 Real y = sample.value[model_->pIdx(CrossAssetModel::AssetType::CR, j, 1)][gridIndexInPath_[i + 1]];
-                lgmDefaultCurves_[j]->move(t, z, y);
+                lgmDefaultCurves_[j]->move(dates_[i], z, y);
                 for (Size k = 0; k < ten_dfc_[j].size(); k++) {
                     Date d = dates_[i] + ten_dfc_[j][k];
                     Time T = dc.yearFraction(dates_[i], d);
@@ -680,7 +682,7 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
                 }
             } else if (model_->modelType(CrossAssetModel::AssetType::CR, j) == CrossAssetModel::ModelType::CIRPP) {
                 Real y = sample.value[model_->pIdx(CrossAssetModel::AssetType::CR, j, 0)][gridIndexInPath_[i + 1]];
-                cirppDefaultCurves_[j]->move(t, y);
+                cirppDefaultCurves_[j]->move(dates_[i], y);
                 for (Size k = 0; k < ten_dfc_[j].size(); k++) {
                     Date d = dates_[i] + ten_dfc_[j][k];
                     Time T = dc.yearFraction(dates_[i], d);
@@ -721,8 +723,7 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
         }
     }
 
-    timer.stop();
-    timing_ += timer.elapsed().wall;
+    timing_ += data::os::nanosecondsClock() - timingStart;
 
     if (totalSamples_ == currentSample_ && !amcPathDataOutput_.empty()) {
         LOG("Serialize paths, fx and irState buffers to'" << amcPathDataOutput_ << "'");
@@ -731,7 +732,6 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
         oa << pathData_;
         os.close();
     }
-
 
     return scenarios;
 }

@@ -81,10 +81,9 @@ Real InstrumentWrapper::getTimedNPV(const QuantLib::ext::shared_ptr<QuantLib::In
         return 0.0;
     if (instr->isCalculated() || instr->isExpired())
         return instr->NPV();
-    long t0 = os::nanosecondsClock();
+    auto t0 = os::nanosecondsClock();
     Real tmp = instr->NPV();
-    long t1 = os::nanosecondsClock();
-    cumulativePricingTime_ += std::max<long>(0l, t1 - t0);
+    cumulativePricingTime_ += os::nanosecondsClock() - t0;
     ++numberOfPricings_;
     return tmp;
 }

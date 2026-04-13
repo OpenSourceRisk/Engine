@@ -424,11 +424,11 @@ void setAssertHandler() {
 }
 #endif
 
-long nanosecondsClock() {
+unsigned long long nanosecondsClock() {
 #if defined(__unix__) or defined(__unix) or defined(__linux__) or defined(__APPLE__)
     static timespec t;
     clock_gettime(CLOCK_REALTIME, &t);
-    return t.tv_nsec;
+    return t.tv_nsec + 1000000000UL * t.tv_sec;
 #else
     return 0;
 #endif

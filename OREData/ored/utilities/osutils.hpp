@@ -78,7 +78,7 @@ void dumpStacktrace();
 void setAssertHandler();
 
 //! Get real time in nanoseconds
-long nanosecondsClock();
+unsigned long long nanosecondsClock();
 
 //! @}
 }; // namespace os
