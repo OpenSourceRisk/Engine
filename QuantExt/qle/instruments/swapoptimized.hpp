@@ -24,6 +24,7 @@
 #include <ql/cashflow.hpp>
 #include <ql/instrument.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
+#include <ql/timeseries.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
