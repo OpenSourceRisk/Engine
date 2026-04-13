@@ -1,3 +1,8 @@
+# syntax = docker/dockerfile:1.2
+#
+# Build ORE libraries, generate SWIG wrapper, and pre-compile wrapper objects
+# for each target Python version — all on the manylinux image.
+
 ARG WHEEL_IMG
 FROM ${WHEEL_IMG}
 
@@ -6,27 +11,77 @@ ARG NUM_CORES=16
 ARG WHEELS_VERSION
 
 # Source archive is created in CI before_script (see ci/build_wheels.yml)
-# This replaces 9 individual COPY statements with a single ADD for faster buildah builds
+# Contains ORE source, ORE-SWIG bindings, and build scripts in a single archive
+# to avoid multiple COPY/ADD layers.
 ADD wheels-ore-source.tar.gz /ore/
-
-RUN \
-dnf -y install clang && \
-dnf -y install ccache && \
-dnf -y install ninja-build
-
-ENV PATH="/usr/lib64/ccache:/usr/lib/ccache:$PATH"
-ENV CCACHE_DIR="/ccache"
-ENV CCACHE_MAXSIZE="10G"
 
 WORKDIR /ore
 RUN \
-python3 update_version_number.py -f version.hpp -v ${WHEELS_VERSION} && \
+dnf -y install clang ninja-build swig && \
+dnf clean all && \
+rm -rf /var/cache/dnf && \
+python3 Docker/update_version_number.py -f version.hpp -v ${WHEELS_VERSION} && \
 mkdir build && \
 cd build && \
-cmake .. -GNinja -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_CXX_FLAGS="-D BOOST_ENABLE_ASSERT_HANDLER $([ "$(uname -m)" = "x86_64" ] && echo "-mavx2")" -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DQL_BUILD_EXAMPLES=OFF -DQL_BUILD_TEST_SUITE=OFF -DQL_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON -DQL_ENABLE_SESSIONS=ON -DORE_BUILD_APP=OFF -DORE_BUILD_DOC=OFF -DORE_BUILD_EXAMPLES=OFF -DORE_BUILD_SWIG=OFF -DORE_BUILD_TESTS=OFF -DORE_ENABLE_OPENCL=OFF -DORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON -DORE_PYTHON_INTEGRATION=OFF
+cmake .. -GNinja -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_CXX_COMPILER_LAUNCHER=sccache -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_CXX_FLAGS="-D BOOST_ENABLE_ASSERT_HANDLER $([ "$(uname -m)" = "x86_64" ] && echo "-mavx2")" -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DQL_BUILD_EXAMPLES=OFF -DQL_BUILD_TEST_SUITE=OFF -DQL_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON -DQL_ENABLE_SESSIONS=ON -DORE_BUILD_APP=OFF -DORE_BUILD_DOC=OFF -DORE_BUILD_EXAMPLES=OFF -DORE_BUILD_SWIG=OFF -DORE_BUILD_TESTS=OFF -DORE_ENABLE_OPENCL=OFF -DORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON -DORE_PYTHON_INTEGRATION=OFF
+
+ARG SCCACHE_BUCKET
+ARG SCCACHE_REGION
+ARG SCCACHE_S3_USE_SSL
+ARG SCCACHE_S3_KEY_PREFIX
+ARG SCCACHE_IDLE_TIMEOUT
 
 WORKDIR /ore/build
-RUN --mount=type=cache,id=ccache-wheels,target=/ccache/ ccache -z && \
-cmake --build . -- -j ${NUM_CORES} install && \
-ccache -s
+RUN set -e; \
+  [ -n "${SCCACHE_BUCKET}" ] && export SCCACHE_BUCKET; \
+  [ -n "${SCCACHE_REGION}" ] && export SCCACHE_REGION; \
+  [ -n "${SCCACHE_S3_USE_SSL}" ] && export SCCACHE_S3_USE_SSL; \
+  [ -n "${SCCACHE_S3_KEY_PREFIX}" ] && export SCCACHE_S3_KEY_PREFIX; \
+  [ -n "${SCCACHE_IDLE_TIMEOUT}" ] && export SCCACHE_IDLE_TIMEOUT; \
+  sccache --stop-server 2>/dev/null || true; \
+  rm -f /tmp/sccache_server 2>/dev/null || true; \
+  sccache --start-server \
+  || echo "WARNING: sccache server failed to start — caching may be unavailable"; \
+  cmake --build . -- -j ${NUM_CORES} install; \
+  BUILD_EXIT=$?; \
+  sccache --show-stats || true; \
+  sccache --stop-server 2>/dev/null || true; \
+  rm -f /tmp/sccache_server 2>/dev/null || true; \
+  if [ $BUILD_EXIT -ne 0 ]; then exit $BUILD_EXIT; fi; \
+  rm -rf /ore/build /ore/QuantLib /ore/QuantExt /ore/OREData /ore/OREAnalytics \
+         /ore/ORETest /ore/ThirdPartyLibs /ore/cmake /ore/CMakeLists.txt
+
+# Generate SWIG wrapper source and pre-compile for each target Python version.
+# ORE-SWIG files are included in the source archive (no separate COPY needed).
+WORKDIR /ore/ORE-SWIG
+RUN set -e; \
+    PATH="/opt/python/cp310-cp310/bin:$PATH" && \
+    pip3 install setuptools && \
+    cp Wheels-gitlab/oreanalytics-config . && \
+    chmod +x oreanalytics-config && \
+    python3 setup.py wrap && \
+    [ -n "${SCCACHE_BUCKET}" ] && export SCCACHE_BUCKET; \
+    [ -n "${SCCACHE_REGION}" ] && export SCCACHE_REGION; \
+    [ -n "${SCCACHE_S3_USE_SSL}" ] && export SCCACHE_S3_USE_SSL; \
+    [ -n "${SCCACHE_S3_KEY_PREFIX}" ] && export SCCACHE_S3_KEY_PREFIX; \
+    [ -n "${SCCACHE_IDLE_TIMEOUT}" ] && export SCCACHE_IDLE_TIMEOUT; \
+    sccache --stop-server 2>/dev/null || true; \
+    rm -f /tmp/sccache_server 2>/dev/null || true; \
+    sccache --start-server \
+    || echo "WARNING: sccache server failed to start — caching may be unavailable"; \
+    chmod +x Wheels-gitlab/precompile.sh && \
+    Wheels-gitlab/precompile.sh cp310-cp310 cp311-cp311 cp312-cp312 cp313-cp313 cp314-cp314; \
+    BUILD_EXIT=$?; \
+    sccache --show-stats || true; \
+    sccache --stop-server 2>/dev/null || true; \
+    rm -f /tmp/sccache_server 2>/dev/null || true; \
+    if [ $BUILD_EXIT -ne 0 ]; then exit $BUILD_EXIT; fi
+
+# Stage all artifacts into /ore-swig-prebuilt/ for use by cibuildwheel.
+# This is a separate RUN (no --mount) to ensure Kaniko commits the layer.
+RUN mkdir -p /ore-swig-prebuilt && \
+    cp oreanalytics_wrap.cpp /ore-swig-prebuilt/ && \
+    cp -r .prebuilt/linux-* /ore-swig-prebuilt/ && \
+    echo "=== /ore-swig-prebuilt contents ===" && \
+    find /ore-swig-prebuilt -type f -ls
 
