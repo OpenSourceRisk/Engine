@@ -79,8 +79,6 @@ void ValuationEngine::buildCube(const QuantLib::ext::shared_ptr<data::Portfolio>
                                 vector<QuantLib::ext::shared_ptr<CounterpartyCalculator>> cptyCalculators, bool dryRun,
                                 Errors* errors) {
 
-    boost::timer::auto_cpu_timer timer;
-
     struct SimMarketResetter {
         SimMarketResetter(QuantLib::ext::shared_ptr<SimMarket> simMarket) : simMarket_(simMarket) {}
         ~SimMarketResetter() { simMarket_->reset(); }
