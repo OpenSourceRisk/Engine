@@ -315,10 +315,10 @@ ParStressScenarioConverter::ParStressScenarioConverter(
     const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParams,
     const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensiScenarioData,
     const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket,
-    const ore::analytics::ParSensitivityInstrumentBuilder::Instruments& parInstruments, bool useSpreadedTermStructure)
+    const ore::analytics::ParSensitivityInstrumentBuilder::Instruments& parInstruments)
     : asof_(asof), sortedParInstrumentRiskFactorKeys_(sortedParInstrumentRiskFactorKeys),
       simMarketParams_(simMarketParams), sensiScenarioData_(sensiScenarioData), simMarket_(simMarket),
-      parInstruments_(parInstruments), useSpreadedTermStructure_(useSpreadedTermStructure) {}
+      parInstruments_(parInstruments) {}
 
 ParStressScenarioConverter::ConversionResults 
 ParStressScenarioConverter::convertScenario(const StressTestScenarioData::StressTestData& parStressScenario) const {
@@ -479,7 +479,7 @@ double ParStressScenarioConverter::shiftsSizeForScenario(const RiskFactorKey rfK
     case RiskFactorKey::KeyType::SurvivalProbability: {
         double ttm = maturityTime(rfKey);
         DLOG("TTM " << ttm);
-        if (!useSpreadedTermStructure_) {
+        if (!sensiScenarioData_->useSpreadedTermStructures()) {
             shift = -std::log(targetValue / baseValue) / ttm;
         } else {
             shift = -std::log(targetValue) / ttm;
@@ -488,7 +488,7 @@ double ParStressScenarioConverter::shiftsSizeForScenario(const RiskFactorKey rfK
         break;
     }
     case RiskFactorKey::KeyType::OptionletVolatility:
-        if (!useSpreadedTermStructure_) {
+        if (!sensiScenarioData_->useSpreadedTermStructures()) {
             shift = targetValue - baseValue;
         } else {
             shift = targetValue;
@@ -581,11 +581,11 @@ void ParStressScenarioConverter::updateTargetStressTestScenarioData(
 }
 
 double ParStressScenarioConverter::lowerBound(const RiskFactorKey key) const {
-    if (useSpreadedTermStructure_ && key.keytype == RiskFactorKey::KeyType::OptionletVolatility) {
+    if (sensiScenarioData_->useSpreadedTermStructures() && key.keytype == RiskFactorKey::KeyType::OptionletVolatility) {
         return minVol_ - simMarket_->baseScenarioAbsolute()->get(key);
     } else if (key.keytype == RiskFactorKey::KeyType::OptionletVolatility) {
         return minVol_;
-    } else if (useSpreadedTermStructure_ && (key.keytype == RiskFactorKey::KeyType::DiscountCurve ||
+    } else if (sensiScenarioData_->useSpreadedTermStructures() && (key.keytype == RiskFactorKey::KeyType::DiscountCurve ||
                                              key.keytype == RiskFactorKey::KeyType::YieldCurve ||
                                              key.keytype == RiskFactorKey::KeyType::IndexCurve ||
                                              key.keytype == RiskFactorKey::KeyType::SurvivalProbability)) {
@@ -596,11 +596,11 @@ double ParStressScenarioConverter::lowerBound(const RiskFactorKey key) const {
 }
 
 double ParStressScenarioConverter::upperBound(const RiskFactorKey key) const {
-    if (useSpreadedTermStructure_ && key.keytype == RiskFactorKey::KeyType::OptionletVolatility) {
+    if (sensiScenarioData_->useSpreadedTermStructures() && key.keytype == RiskFactorKey::KeyType::OptionletVolatility) {
         return maxVol_ * simMarket_->baseScenarioAbsolute()->get(key);
     } else if (key.keytype == RiskFactorKey::KeyType::OptionletVolatility) {
         return maxVol_ * simMarket_->baseScenarioAbsolute()->get(key);
-    } else if (useSpreadedTermStructure_ && (key.keytype == RiskFactorKey::KeyType::DiscountCurve ||
+    } else if (sensiScenarioData_->useSpreadedTermStructures() && (key.keytype == RiskFactorKey::KeyType::DiscountCurve ||
                                              key.keytype == RiskFactorKey::KeyType::YieldCurve ||
                                              key.keytype == RiskFactorKey::KeyType::IndexCurve ||
                                              key.keytype == RiskFactorKey::KeyType::SurvivalProbability)) {

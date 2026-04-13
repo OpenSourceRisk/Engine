@@ -31,7 +31,7 @@ namespace{
     //! Build a bi-graph from the parSensitivites and sort the graph by their dependency
 std::vector<RiskFactorKey>
 sortParRiskFactorByDependency(const ParSensitivityAnalysis::ParContainer& parWithRespectToZero) {
-
+    DLOG("Build dependency graph for par stress conversion");
     std::map<RiskFactorKey, std::set<RiskFactorKey>> parToZeroEdges;
     std::map<RiskFactorKey, std::set<RiskFactorKey>> zeroToParEdges;
     std::vector<RiskFactorKey> orderedKeys;
@@ -39,6 +39,8 @@ sortParRiskFactorByDependency(const ParSensitivityAnalysis::ParContainer& parWit
     std::map<RiskFactorKey, std::set<RiskFactorKey>> dependencies;
     for (const auto& [key, value] : parWithRespectToZero) {
         const auto& [parKey, zeroKey] = key;
+        DLOG("ParStressConverter: par " << parKey << " has sensitivity to zero key " << zeroKey << " with value shift of " << value);
+        
         if (order.count(parKey) == 0) {
             order[parKey] = 0;
         }
@@ -115,7 +117,7 @@ QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData> ParStressTestC
     LOG("ParStressConverter: Build dependency graph of par instruments")
     auto dependencyGraph = sortParRiskFactorByDependency(parAnalysis->parSensitivities());
     ParStressScenarioConverter converter(asof_, dependencyGraph, simMarketParams_, sensiScenarioData_, simMarket,
-                                         parAnalysis->parInstruments(), stressTestData->useSpreadedTermStructures());
+                                         parAnalysis->parInstruments());
 
     std::map<std::string, std::vector<ParStressScenarioConverter::ParRateScenarioData>> reportData;
     for (const auto& scenario : stressTestData->data()) {
