@@ -399,11 +399,10 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                 // post processing: extrapolate leftmost non-zero value flat to the left and overwrite
                 // zero values
 
-                // URI: loops through one expiry-tenor pair
                 for (Size i = 0; i < smileOptionTenors.size(); ++i) {
                     for (Size j = 0; j < smileUnderlyingTenors.size(); ++j) {
 
-                        int noneZeroValues = 0;
+                        int nonZeroValues = 0;
                         Real lastNonZeroValue = 0.0;
                         vector<Real> x, y;
                         vector<Real> missingSpreadsIndexes;
@@ -418,12 +417,12 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                             if (!zero[i * smileUnderlyingTenors.size() + j][spreadIndex]) {
                                 x.push_back(spreads[spreadIndex]);
                                 y.push_back(q->value());
-                                noneZeroValues++;
+                                nonZeroValues++;
                             }
                         }
 
                         // edge case 1: all values are missing (or zero)
-                        if (noneZeroValues == 0) {
+                        if (nonZeroValues == 0) {
                             StructuredCurveWarningMessage(
                                 name, "Volatility curve building partially fails due to missing data.",
                                 "No data for entire smile " + ore::data::to_string(smileOptionTenors[i]) + "/" +
@@ -434,34 +433,35 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                         }
 
                         // edge case 2: only one non-zero value, we perform a flat extrapolation
-                        if (noneZeroValues == 1) {
+                        if (nonZeroValues == 1) {
                             // add a ghost point to simulate flat extrapolation using linear interpolation object
                             y.push_back(y.front());
                             x.push_back(x.front() + 1);
                         }
 
-                        auto I = ext::make_shared<LinearInterpolation>(x.begin(), x.end(), y.begin());
-                        auto f = ext::make_shared<FlatExtrapolation>(I);
+                        if (nonZeroValues > 0) {
 
+                            auto li = ext::make_shared<LinearInterpolation>(x.begin(), x.end(), y.begin());
+                            auto f = ext::make_shared<FlatExtrapolation>(li);
 
-                        for (Size k = 0; k < spreads.size(); ++k) {
-                            int spreadIndex = spreads.size() - 1 - k;
-                            // read vol spread quotes
-                            QuantLib::ext::shared_ptr<SimpleQuote> q = QuantLib::ext::dynamic_pointer_cast<SimpleQuote>(
-                                *volSpreadHandles[i * smileUnderlyingTenors.size() + j][spreadIndex]);
-                            QL_REQUIRE(q, "internal error: expected simple quote");
+                            for (Size k = 0; k < spreads.size(); ++k) {
+                                int spreadIndex = spreads.size() - 1 - k;
+                                // read vol spread quotes
+                                QuantLib::ext::shared_ptr<SimpleQuote> q =
+                                    QuantLib::ext::dynamic_pointer_cast<SimpleQuote>(
+                                        *volSpreadHandles[i * smileUnderlyingTenors.size() + j][spreadIndex]);
+                                QL_REQUIRE(q, "internal error: expected simple quote");
 
-                          
-                            
-                            // do not overwrite vol spread for zero strike spread (ATM point)
-                            if (zero[i * smileUnderlyingTenors.size() + j][spreadIndex] && !close_enough(spreads[spreadIndex], 0.0)) {
-                                q->setValue((*f)(spreads[spreadIndex]));
-                                DLOG("Overwrite vol spread for " << config->curveID() << "/" << smileOptionTenors[i]
-                                                                 << "/" << smileUnderlyingTenors[j] << "/"
-                                                                 << spreads[spreads.size() - 1 - k] << " with "
-                                                                 << lastNonZeroValue << " since market quote is zero");
+                                // do not overwrite vol spread for zero strike spread (ATM point)
+                                if (zero[i * smileUnderlyingTenors.size() + j][spreadIndex] &&
+                                    !close_enough(spreads[spreadIndex], 0.0)) {
+                                    q->setValue((*f)(spreads[spreadIndex]));
+                                    DLOG("Overwrite vol spread for "
+                                         << config->curveID() << "/" << smileOptionTenors[i] << "/"
+                                         << smileUnderlyingTenors[j] << "/" << spreads[spreads.size() - 1 - k]
+                                         << " with " << lastNonZeroValue << " since market quote is zero");
+                                }
                             }
-                         
                         }
                     }
                 }
