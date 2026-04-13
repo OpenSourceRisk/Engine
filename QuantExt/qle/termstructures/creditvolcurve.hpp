@@ -86,19 +86,20 @@ protected:
 
 class InterpolatingCreditVolCurve : public CreditVolCurve {
 public:
+    using QuoteKey = std::tuple<QuantLib::Date, QuantLib::Period, QuantLib::Real>;
+    using QuoteMap = std::map<QuoteKey, QuantLib::Handle<QuantLib::Quote>>;
+
     InterpolatingCreditVolCurve(const QuantLib::Natural settlementDays, const QuantLib::Calendar& cal,
                                 QuantLib::BusinessDayConvention bdc, const QuantLib::DayCounter& dc,
                                 const std::vector<QuantLib::Period>& terms,
                                 const std::vector<QuantLib::Handle<CreditCurve>>& termCurves,
-                                const std::map<std::tuple<QuantLib::Date, QuantLib::Period, QuantLib::Real>,
-                                               QuantLib::Handle<QuantLib::Quote>>& quotes,
+                                const QuoteMap& quotes,
                                 const Type& type);
     InterpolatingCreditVolCurve(const QuantLib::Date& referenceDate, const QuantLib::Calendar& cal,
                                 QuantLib::BusinessDayConvention bdc, const QuantLib::DayCounter& dc,
                                 const std::vector<QuantLib::Period>& terms,
                                 const std::vector<QuantLib::Handle<CreditCurve>>& termCurves,
-                                const std::map<std::tuple<QuantLib::Date, QuantLib::Period, QuantLib::Real>,
-                                               QuantLib::Handle<QuantLib::Quote>>& quotes,
+                                const QuoteMap& quotes,
                                 const Type& type);
 
     QuantLib::Real volatility(const QuantLib::Date& exerciseDate, const QuantLib::Real underlyingLength,

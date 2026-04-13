@@ -34,13 +34,73 @@ using namespace QuantExt;
 using namespace QuantLib;
 using namespace std;
 
+namespace {
+
+    // Logic to check that quote matches configured expiries and strikes if provided.
+    using ore::data::Expiry;
+    using ore::data::IndexCDSOptionQuote;
+    bool quoteMatchesStrikeExpiry(const ext::shared_ptr<IndexCDSOptionQuote>& q, Real quoteStrike,
+        const vector<ext::shared_ptr<Expiry>>& configuredExpiries,
+        const vector<Real>& configuredStrikes)
+    {
+        // Check that the quote matches one of the expiries if given.
+        bool result = true;
+        if (!configuredExpiries.empty()) {
+            auto expiryIt = find_if(configuredExpiries.begin(), configuredExpiries.end(),
+                [&q](QuantLib::ext::shared_ptr<Expiry> e) { return *e == *q->expiry(); });
+            if (expiryIt == configuredExpiries.end())
+                result = false;
+        }
+
+        // If we have been given a list of explicit strikes, check that the quote matches one of them.
+        // Move to the next quote if it does not.
+        if (!configuredStrikes.empty()) {
+            auto strikeIt = find_if(configuredStrikes.begin(), configuredStrikes.end(),
+                [quoteStrike](Real s) { return close(s, quoteStrike); });
+            if (strikeIt == configuredStrikes.end())
+                result = false;
+        }
+
+        return result;
+    }
+
+    // Logic to populate the index CDS term given a quote and a volatility curve configuration.
+    // If the return is not populated, the quote will be ignored in the loading.
+    /* - Load quotes with empty term only if there is zero or one term specified in the volatility curve config.
+         If zero terms are specified in the curve config, the term of the quote is set to 5Y.
+       - Load quotes with a term, if:
+           1. no term is specified in the volatility curve config; or
+           2. they match a term specified in the volatility curve config.
+    */
+    using ore::data::CDSVolatilityCurveConfig;
+    using ore::data::parsePeriod;
+    ext::optional<Period> getQuoteTerm(const ext::shared_ptr<IndexCDSOptionQuote>& q,
+        const CDSVolatilityCurveConfig& vc)
+    {
+        ext::optional<Period> term;
+        if (q->indexTerm().empty()) {
+            if (vc.terms().empty())
+                term = 5 * Years;
+            else if (vc.terms().size() == 1)
+                term = vc.terms().front();
+            // term left uninitialised if vc.terms() has more than one element.
+        } else {
+            Period tmp = parsePeriod(q->indexTerm());
+            if (vc.terms().empty() || std::find(vc.terms().begin(), vc.terms().end(), tmp) != vc.terms().end())
+                term = tmp;
+        }
+
+        return term;
+    }
+}
+
 namespace ore {
 namespace data {
 
 CDSVolCurve::CDSVolCurve(Date asof, CDSVolatilityCurveSpec spec, const Loader& loader,
                          const CurveConfigurations& curveConfigs,
-                         const std::map<std::string, QuantLib::ext::shared_ptr<CDSVolCurve>>& requiredCdsVolCurves,
-                         const std::map<std::string, QuantLib::ext::shared_ptr<DefaultCurve>>& requiredCdsCurves) {
+                         const CDSVolCurveCache& requiredCdsVolCurves,
+                         const DefaultCurveCache& requiredCdsCurves) {
 
     try {
 
@@ -103,7 +163,7 @@ void CDSVolCurve::buildVolatility(const Date& asof, const CDSVolatilityCurveConf
 
     DLOG("Creating CreditVolCurve structure");
 
-    std::map<std::tuple<QuantLib::Date, QuantLib::Period, QuantLib::Real>, QuantLib::Handle<QuantLib::Quote>> quotes;
+    CreditVolQuoteMap quotes;
     quotes[std::make_tuple(asof + 1 * Years, 5 * Years, strikeType_ == CreditVolCurve::Type::Price ? 1.0 : 0.0)] =
         quote;
     vol_ = QuantLib::ext::make_shared<QuantExt::InterpolatingCreditVolCurve>(
@@ -126,7 +186,7 @@ void CDSVolCurve::buildVolatility(const QuantLib::Date& asof, const CDSVolatilit
     auto wildcard = getUniqueWildcard(vcc.quotes());
 
     // curveData will be populated with the expiry dates and volatility values.
-    std::map<std::tuple<QuantLib::Date, QuantLib::Period, QuantLib::Real>, QuantLib::Handle<QuantLib::Quote>> quotes;
+    CreditVolQuoteMap quotes;
 
     // Different approaches depending on whether we are using a regex or searching for a list of explicit quotes.
     if (wildcard) {
@@ -143,27 +203,14 @@ void CDSVolCurve::buildVolatility(const QuantLib::Date& asof, const CDSVolatilit
 
             TLOG("The quote " << q->name() << " matched the pattern");
 
-            /* - We load quotes with empty term only if there is at most one term specified in the curve config.
-               - We load quotes with a term, if they match a term specified in the curve config or if no term is
-                 specified in the curve config.
-               - Quotes with an empty term get the unique term of the curve config assigned, if the curve config
-                 has no terms specified, 5 * Years. */
-            QuantLib::Period quoteTerm;
-            if (q->indexTerm().empty()) {
-                if (vc.terms().size() > 1)
-                    continue;
-                quoteTerm = vc.terms().empty() ? 5 * Years : vc.terms().front();
-            } else {
-                quoteTerm = parsePeriod(q->indexTerm());
-                if (std::find(vc.terms().begin(), vc.terms().end(), quoteTerm) == vc.terms().end() &&
-                    !vc.terms().empty())
-                    continue;
-            }
+            auto quoteTerm = getQuoteTerm(q, vc);
+            if (!quoteTerm)
+                continue;
 
             Date expiryDate = getExpiry(asof, q->expiry());
             if (expiryDate > asof) {
-                quotes[std::make_tuple(expiryDate, quoteTerm,
-                                       strikeType_ == CreditVolCurve::Type::Price ? 1.0 : 0.0)] = q->quote();
+                Real strike = strikeType_ == CreditVolCurve::Type::Price ? 1.0 : 0.0;
+                quotes[{expiryDate, *quoteTerm, strike}] = q->quote();
                 TLOG("Added quote " << q->name() << ": (" << io::iso_date(expiryDate) << "," << fixed
                                     << setprecision(9) << q->quote()->value() << ")");
             }
@@ -176,10 +223,8 @@ void CDSVolCurve::buildVolatility(const QuantLib::Date& asof, const CDSVolatilit
 
         DLOG("Have " << vcc.quotes().size() << " explicit quotes");
 
-        // Loop over quotes and process CDS option quotes that are explicitly specified in the config
-        std::ostringstream ss;
-        ss << MarketDatum::InstrumentType::INDEX_CDS_OPTION << "/*";
-        Wildcard w(ss.str());
+        // Loop over quotes and process CDS option quotes that are explicitly specified in the config.
+        Wildcard w("INDEX_CDS_OPTION/*");
         for (const auto& md : loader.get(w, asof)) {
 
             QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
@@ -223,9 +268,31 @@ void CDSVolCurve::buildVolatility(const QuantLib::Date& asof, const CDSVolatilit
     LOG("CDSVolCurve: finished building 1-D volatility curve");
 }
 
+void CDSVolCurve::buildVolatility(const Date& asof, const CDSVolatilityCurveSpec& spec,
+                                  const CDSVolatilityCurveConfig& vc, const CDSProxyVolatilityConfig& pvc,
+                                  const CDSVolCurveCache& requiredCdsVolCurves,
+                                  const DefaultCurveCache& requiredCdsCurves)
+{
+    LOG("CDSVolCurve: start building proxy volatility surface");
+    auto proxyVolCurve = requiredCdsVolCurves.find(CDSVolatilityCurveSpec(pvc.cdsVolatilityCurve()).name());
+    QL_REQUIRE(proxyVolCurve != requiredCdsVolCurves.end(), "CDSVolCurve: Failed to find cds vol curve '"
+        << pvc.cdsVolatilityCurve() << "' when building '" << spec.name() << "'");
+
+    vector<Period> terms;
+    vector<Handle<CreditCurve>> termCurves;
+    populateTermCurves(vc, requiredCdsCurves, terms, termCurves);
+    LOG("CDSVolCurve: will use " << termCurves.size() << " term curves in target surface, " << spec.name() <<
+        ", to determine atm levels and moneyness-adjustments");
+
+    auto hProxy = Handle<CreditVolCurve>(proxyVolCurve->second->volTermStructure());
+    vol_ = ext::make_shared<ProxyCreditVolCurve>(hProxy, terms, termCurves);
+
+    LOG("CDSVolCurve: finished building proxy volatility surface.");
+}
+
 void CDSVolCurve::buildVolatility(const Date& asof, CDSVolatilityCurveConfig& vc,
                                   const VolatilityStrikeSurfaceConfig& vssc, const Loader& loader,
-                                  const std::map<std::string, QuantLib::ext::shared_ptr<DefaultCurve>>& requiredCdsCurves) {
+                                  const DefaultCurveCache& requiredCdsCurves) {
 
     LOG("CDSVolCurve: start building 2-D volatility absolute strike surface");
 
@@ -263,7 +330,7 @@ void CDSVolCurve::buildVolatility(const Date& asof, CDSVolatilityCurveConfig& vc
     }
 
     // If we do not have an expiry wild card, parse the configured expiries.
-    vector<QuantLib::ext::shared_ptr<Expiry>> configuredExpiries;
+    vector<ext::shared_ptr<Expiry>> configuredExpiries;
     if (!expWc) {
         // Parse the list of expiry strings.
         for (const string& strExpiry : vssc.expiries()) {
@@ -272,29 +339,127 @@ void CDSVolCurve::buildVolatility(const Date& asof, CDSVolatilityCurveConfig& vc
         DLOG("Parsed " << configuredExpiries.size() << " unique configured expiries");
     }
 
-    // If there are no wildcard strikes or wildcard expiries, delegate to buildVolatilityExplicit.
-    if (!expWc && !strkWc) {
-        buildVolatilityExplicit(asof, vc, vssc, loader, configuredStrikes, requiredCdsCurves);
-        return;
-    }
+    // Delegate to the appropriate method.
+    BuildVolatilityArgs args{asof, vc, vssc, loader, configuredExpiries, configuredStrikes, requiredCdsCurves};
+    const bool wildcard = expWc || strkWc;
+    const bool viaPremia = vssc.quoteType() == MarketDatum::QuoteType::PRICE;
 
-    DLOG("Expiries and or strikes have been configured via wildcards so building a "
-         << "wildcard based absolute strike surface");
+    if (viaPremia) {
+        if (wildcard)
+            buildVolatilityViaPremiaWildcard(args);
+        else
+            buildVolatilityViaPremiaExplicit(args);
+    } else {
+        if (wildcard)
+            buildVolatilityWildcard(args);
+        else
+            buildVolatilityExplicit(args);
+    }
+}
+
+void CDSVolCurve::buildVolatilityExplicit(const BuildVolatilityArgs& args)
+{
+    LOG("CDSVolCurve: start building 2-D volatility absolute strike surface with explicit strikes and expiries.");
 
     // Store quotes by expiry, term, strike in a map
-    std::map<std::tuple<QuantLib::Date, QuantLib::Period, QuantLib::Real>, QuantLib::Handle<QuantLib::Quote>> quotes;
-    Size quotesAdded = 0;
+    CreditVolQuoteMap quotes;
 
-    // Loop over quotes and process any CDS option quote that matches a wildcard
-    std::ostringstream ss;
-    ss << MarketDatum::InstrumentType::INDEX_CDS_OPTION << "/RATE_LNVOL/*";
-    Wildcard w(ss.str());
-    for (const auto& md : loader.get(w, asof)) {
-
+    // Loop over quotes and process CDS option quotes that have been requested
+    const Date& asof = args.asof;
+    Wildcard w("INDEX_CDS_OPTION/RATE_LNVOL/*");
+    for (const auto& md : args.loader.get(w, args.asof))
+    {
         QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
 
         // Go to next quote if not a CDS option quote.
-        auto q = QuantLib::ext::dynamic_pointer_cast<IndexCDSOptionQuote>(md);
+        auto q = ext::dynamic_pointer_cast<IndexCDSOptionQuote>(md);
+        QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to IndexCDSOptionQuote");
+
+        // This surface is for absolute strikes only.
+        auto strike = ext::dynamic_pointer_cast<AbsoluteStrike>(q->strike());
+        if (!strike)
+            continue;
+
+        // If expiries or strikes are given, check that the quote matches one of them.
+        if (!quoteMatchesStrikeExpiry(q, strike->strike(), args.configuredExpiries, args.configuredStrikes))
+            continue;
+
+        auto quoteTerm = getQuoteTerm(q, args.vc);
+        if (!quoteTerm)
+            continue;
+
+        // Add quote to surface
+        Date expiryDate = getExpiry(asof, q->expiry());
+        quotes[{expiryDate, *quoteTerm, strike->strike() / args.vc.strikeFactor()}] = q->quote();
+
+        TLOG("Added quote " << q->name() << ": (" << q->expiry() << "," << fixed << setprecision(9) << strike->strike()
+            << "," << q->quote()->value() << ")");
+    }
+
+    setVolatilityCurve(asof, args.vc, quotes, args.requiredCdsCurves, true);
+}
+
+void CDSVolCurve::buildVolatilityViaPremiaExplicit(const BuildVolatilityArgs& args)
+{
+    LOG("CDSVolCurve: start building 2-D volatility absolute strike surface with explicit strikes and "
+        "expiries from premium quotes.");
+
+    // Store quotes by expiry, term, strike in a map
+    CreditVolQuoteMap quotes;
+
+    // Loop over quotes and process CDS option quotes that have been requested
+    const Date& asof = args.asof;
+    Wildcard w("INDEX_CDS_OPTION/PRICE/*");
+    for (const auto& md : args.loader.get(w, asof))
+    {
+        QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
+
+        // Go to next quote if not a CDS option quote.
+        auto q = ext::dynamic_pointer_cast<IndexCDSOptionQuote>(md);
+        QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to IndexCDSOptionQuote");
+
+        // This surface is for absolute strikes only.
+        auto strike = ext::dynamic_pointer_cast<AbsoluteStrike>(q->strike());
+        if (!strike)
+            continue;
+
+        // If expiries or strikes are given, check that the quote matches one of them.
+        if (!quoteMatchesStrikeExpiry(q, strike->strike(), args.configuredExpiries, args.configuredStrikes))
+            continue;
+
+        auto quoteTerm = getQuoteTerm(q, args.vc);
+        if (!quoteTerm)
+            continue;
+
+        // Add quote to surface
+        Date expiryDate = getExpiry(asof, q->expiry());
+        quotes[{expiryDate, *quoteTerm, strike->strike() / args.vc.strikeFactor()}] = q->quote();
+
+        TLOG("Added quote " << q->name() << ": (" << q->expiry() << "," << fixed << setprecision(9) << strike->strike()
+            << "," << q->quote()->value() << ")");
+    }
+
+    setVolatilityCurve(asof, args.vc, quotes, args.requiredCdsCurves, true);
+}
+
+void CDSVolCurve::buildVolatilityWildcard(const BuildVolatilityArgs& args)
+{
+    DLOG("CDSVolCurve: Expiries and or strikes have been configured via wildcards so building a "
+        "wildcard based absolute strike surface");
+
+    // Store quotes by expiry, term, strike in a map
+    CreditVolQuoteMap quotes;
+
+    // Process relevant CDS option volatility quotes.
+    const Date& asof = args.asof;
+    CDSVolatilityCurveConfig& vc = args.vc;
+    Wildcard w("INDEX_CDS_OPTION/RATE_LNVOL/*");
+    for (const auto& md : args.loader.get(w, asof))
+    {
+        QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
+
+        // Go to next quote if not a CDS option quote.
+        auto q = ext::dynamic_pointer_cast<IndexCDSOptionQuote>(md);
         QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to IndexCDSOptionQuote");
 
         // Go to next quote if index name in the quote does not match the cds vol configuration name.
@@ -302,177 +467,112 @@ void CDSVolCurve::buildVolatility(const Date& asof, CDSVolatilityCurveConfig& vc
             continue;
 
         // This surface is for absolute strikes only.
-        auto strike = QuantLib::ext::dynamic_pointer_cast<AbsoluteStrike>(q->strike());
+        auto strike = ext::dynamic_pointer_cast<AbsoluteStrike>(q->strike());
         if (!strike)
             continue;
 
-        QuantLib::Period quoteTerm;
-        if (q->indexTerm().empty()) {
-            if (vc.terms().size() > 1)
-                continue;
-            quoteTerm = vc.terms().empty() ? 5 * Years : vc.terms().front();
-        } else {
-            quoteTerm = parsePeriod(q->indexTerm());
-            if (std::find(vc.terms().begin(), vc.terms().end(), quoteTerm) == vc.terms().end() && !vc.terms().empty())
-                continue;
-        }
+        // If expiries or strikes are given, check that the quote matches one of them.
+        if (!quoteMatchesStrikeExpiry(q, strike->strike(), args.configuredExpiries, args.configuredStrikes))
+            continue;
 
-        // If we have been given a list of explicit expiries, check that the quote matches one of them.
-        // Move to the next quote if it does not.
-        if (!expWc) {
-            auto expiryIt = find_if(configuredExpiries.begin(), configuredExpiries.end(),
-                                    [&q](QuantLib::ext::shared_ptr<Expiry> e) { return *e == *q->expiry(); });
-            if (expiryIt == configuredExpiries.end())
-                continue;
-        }
-
-        // If we have been given a list of explicit strikes, check that the quote matches one of them.
-        // Move to the next quote if it does not.
-        if (!strkWc) {
-            auto strikeIt = find_if(configuredStrikes.begin(), configuredStrikes.end(),
-                                    [&strike](Real s) { return close(s, strike->strike()); });
-            if (strikeIt == configuredStrikes.end())
-                continue;
-        }
+        auto quoteTerm = getQuoteTerm(q, vc);
+        if (!quoteTerm)
+            continue;
 
         // If we make it here, add the data to the map
-        quotes[std::make_tuple(getExpiry(asof, q->expiry()), quoteTerm, strike->strike() / vc.strikeFactor())] =
-            q->quote();
-        quotesAdded++;
+        Date expiryDate = getExpiry(asof, q->expiry());
+        quotes[{expiryDate, *quoteTerm, strike->strike() / vc.strikeFactor()}] = q->quote();
 
         TLOG("Added quote " << q->name() << ": (" << q->expiry() << "," << fixed << setprecision(9) << strike->strike()
-                            << "," << q->quote()->value() << ")");
+            << "," << q->quote()->value() << ")");
     }
 
-    LOG("CDSVolCurve: added " << quotesAdded << " quotes in building wildcard based absolute strike surface.");
-    QL_REQUIRE(quotesAdded > 0, "No quotes loaded for " << vc.curveID());
-
-    DLOG("Creating the CreditVolCurve object");
-
-    std::vector<QuantLib::Period> effTerms;
-    std::vector<QuantLib::Handle<CreditCurve>> termCurves;
-    for (Size i = 0; i < vc.termCurves().size(); ++i) {
-        if (vc.termCurves()[i].empty())
-            continue;
-        auto t = requiredCdsCurves.find(vc.termCurves()[i]);
-        QL_REQUIRE(t != requiredCdsCurves.end(), "CDSVolCurve: required cds curve '"
-                                                     << vc.termCurves()[i]
-                                                     << "' was not found during vol curve building.");
-        termCurves.push_back(Handle<QuantExt::CreditCurve>(t->second->creditCurve()));
-        effTerms.push_back(vc.terms()[i]);
-    }
-
-    vol_ = QuantLib::ext::make_shared<QuantExt::InterpolatingCreditVolCurve>(asof, calendar_, Following, dayCounter_, effTerms,
-                                                                     termCurves, quotes, strikeType_);
-    vol_->enableExtrapolation();
-
-    LOG("CDSVolCurve: finished building 2-D volatility absolute strike surface");
+    setVolatilityCurve(asof, vc, quotes, args.requiredCdsCurves, false);
 }
 
-void CDSVolCurve::buildVolatility(const Date& asof, const CDSVolatilityCurveSpec& spec,
-                                  const CDSVolatilityCurveConfig& vc, const CDSProxyVolatilityConfig& pvc,
-                                  const std::map<std::string, QuantLib::ext::shared_ptr<CDSVolCurve>>& requiredCdsVolCurves,
-                                  const std::map<std::string, QuantLib::ext::shared_ptr<DefaultCurve>>& requiredCdsCurves) {
-    LOG("CDSVolCurve: start building proxy volatility surface");
-    auto proxyVolCurve = requiredCdsVolCurves.find(CDSVolatilityCurveSpec(pvc.cdsVolatilityCurve()).name());
-    QL_REQUIRE(proxyVolCurve != requiredCdsVolCurves.end(), "CDSVolCurve: Failed to find cds vol curve '"
-                                                                << pvc.cdsVolatilityCurve() << "' when building '"
-                                                                << spec.name() << "'");
-    std::vector<QuantLib::Period> effTerms;
-    std::vector<QuantLib::Handle<CreditCurve>> termCurves;
-    for (Size i = 0; i < vc.termCurves().size(); ++i) {
-        if (vc.termCurves()[i].empty())
-            continue;
-        auto t = requiredCdsCurves.find(vc.termCurves()[i]);
-        QL_REQUIRE(t != requiredCdsCurves.end(), "CDSVolCurve: required cds curve '"
-                                                     << vc.termCurves()[i]
-                                                     << "' was not found during vol curve building.");
-        termCurves.push_back(Handle<QuantExt::CreditCurve>(t->second->creditCurve()));
-        effTerms.push_back(vc.terms()[i]);
-    }
-    LOG("Will use " << termCurves.size()
-                    << " term curves in target surface to determine atm levels and moneyness-adjustments");
-    vol_ = QuantLib::ext::make_shared<QuantExt::ProxyCreditVolCurve>(
-        Handle<CreditVolCurve>(proxyVolCurve->second->volTermStructure()), effTerms, termCurves);
-    LOG("CDSVolCurve: finished building proxy volatility surface");
-}
-
-void CDSVolCurve::buildVolatilityExplicit(
-    const Date& asof, CDSVolatilityCurveConfig& vc, const VolatilityStrikeSurfaceConfig& vssc, const Loader& loader,
-    const vector<Real>& configuredStrikes,
-    const std::map<std::string, QuantLib::ext::shared_ptr<DefaultCurve>>& requiredCdsCurves) {
-
-    LOG("CDSVolCurve: start building 2-D volatility absolute strike surface with explicit strikes and expiries");
+void CDSVolCurve::buildVolatilityViaPremiaWildcard(const BuildVolatilityArgs& args)
+{
+    DLOG("CDSVolCurve: Expiries and or strikes have been configured via wildcards so building a "
+        "wildcard based absolute strike surface from premium quotes.");
 
     // Store quotes by expiry, term, strike in a map
-    std::map<std::tuple<QuantLib::Date, QuantLib::Period, QuantLib::Real>, QuantLib::Handle<QuantLib::Quote>> quotes;
+    CreditVolQuoteMap quotes;
 
-    // Count the number of quotes added. We check at the end that we have added all configured quotes.
-    Size quotesAdded = 0;
-
-    // Loop over quotes and process CDS option quotes that have been requested
-    std::ostringstream ss;
-    ss << MarketDatum::InstrumentType::INDEX_CDS_OPTION << "/*";
-    Wildcard w(ss.str());
-    for (const auto& md : loader.get(w, asof)) {
-
+    // Process relevant CDS option premium quotes.
+    const Date& asof = args.asof;
+    CDSVolatilityCurveConfig& vc = args.vc;
+    Wildcard w("INDEX_CDS_OPTION/PRICE/*");
+    for (const auto& md : args.loader.get(w, asof))
+    {
         QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
 
         // Go to next quote if not a CDS option quote.
-        auto q = QuantLib::ext::dynamic_pointer_cast<IndexCDSOptionQuote>(md);
+        auto q = ext::dynamic_pointer_cast<IndexCDSOptionQuote>(md);
         QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to IndexCDSOptionQuote");
 
+        // Go to next quote if index name in the quote does not match the cds vol configuration name.
+        if (vc.curveID() != q->indexName() && vc.quoteName() != q->indexName())
+            continue;
+
         // This surface is for absolute strikes only.
-        auto strike = QuantLib::ext::dynamic_pointer_cast<AbsoluteStrike>(q->strike());
+        auto strike = ext::dynamic_pointer_cast<AbsoluteStrike>(q->strike());
         if (!strike)
             continue;
 
-        QuantLib::Period quoteTerm;
-        if (q->indexTerm().empty()) {
-            if (vc.terms().size() > 1)
-                continue;
-            quoteTerm = vc.terms().empty() ? 5 * Years : vc.terms().front();
-        } else {
-            quoteTerm = parsePeriod(q->indexTerm());
-            if (std::find(vc.terms().begin(), vc.terms().end(), quoteTerm) == vc.terms().end() && !vc.terms().empty())
-                continue;
-        }
+        // If expiries or strikes are given, check that the quote matches one of them.
+        if (!quoteMatchesStrikeExpiry(q, strike->strike(), args.configuredExpiries, args.configuredStrikes))
+            continue;
 
-        // Add quote to surface
-        quotes[std::make_tuple(getExpiry(asof, q->expiry()), quoteTerm, strike->strike() / vc.strikeFactor())] =
-            q->quote();
-        quotesAdded++;
+        auto quoteTerm = getQuoteTerm(q, vc);
+        if (!quoteTerm)
+            continue;
+
+        // If we make it here, add the data to the map
+        Date expiryDate = getExpiry(asof, q->expiry());
+        quotes[{expiryDate, *quoteTerm, strike->strike() / vc.strikeFactor()}] = q->quote();
 
         TLOG("Added quote " << q->name() << ": (" << q->expiry() << "," << fixed << setprecision(9) << strike->strike()
-                            << "," << q->quote()->value() << ")")
+            << "," << q->quote()->value() << ")");
     }
 
-    LOG("CDSVolCurve: added " << quotesAdded << " quotes in building explicit absolute strike surface.");
+    setVolatilityCurve(asof, vc, quotes, args.requiredCdsCurves, false);
+}
 
-    QL_REQUIRE(vc.quotes().size() == quotesAdded,
-               "Found " << quotesAdded << " quotes, but " << vc.quotes().size() << " quotes required by config.");
-
-    DLOG("Creating the CreditVolCurve object");
-
-    std::vector<QuantLib::Period> effTerms;
-    std::vector<QuantLib::Handle<CreditCurve>> termCurves;
-    for (Size i = 0; i < vc.termCurves().size(); ++i) {
+void CDSVolCurve::populateTermCurves(const CDSVolatilityCurveConfig& vc, const DefaultCurveCache& requiredCdsCurves,
+    vector<Period>& terms, vector<Handle<CreditCurve>>& termCurves)
+{
+    for (Size i = 0; i < vc.termCurves().size(); ++i)
+    {
         if (vc.termCurves()[i].empty())
             continue;
         auto t = requiredCdsCurves.find(vc.termCurves()[i]);
         QL_REQUIRE(t != requiredCdsCurves.end(), "CDSVolCurve: required cds curve '"
-                                                     << vc.termCurves()[i]
-                                                     << "' was not found during vol curve building.");
-        termCurves.push_back(Handle<QuantExt::CreditCurve>(t->second->creditCurve()));
-        effTerms.push_back(vc.terms()[i]);
+            << vc.termCurves()[i] << "' was not found during vol curve building.");
+        termCurves.push_back(Handle<CreditCurve>(t->second->creditCurve()));
+        terms.push_back(vc.terms()[i]);
+    }
+}
+
+void CDSVolCurve::setVolatilityCurve(const Date& asof, CDSVolatilityCurveConfig& vc,
+    const CreditVolQuoteMap& quotes, const DefaultCurveCache& requiredCdsCurves, bool checkNumQuotes)
+{
+    LOG("CDSVolCurve: added " << quotes.size() << " quotes in building absolute strike surface.");
+
+    QL_REQUIRE(!quotes.empty(), "No quotes loaded for " << vc.curveID());
+    if (checkNumQuotes) {
+        QL_REQUIRE(vc.quotes().size() == quotes.size(),
+            "Found " << quotes.size() << " quotes, but " << vc.quotes().size() << " quotes required by config.");
     }
 
-    vol_ = QuantLib::ext::make_shared<QuantExt::InterpolatingCreditVolCurve>(asof, calendar_, Following, dayCounter_, effTerms,
-                                                                     termCurves, quotes, strikeType_);
+    vector<Period> terms;
+    vector<Handle<CreditCurve>> termCurves;
+    populateTermCurves(vc, requiredCdsCurves, terms, termCurves);
+
+    vol_ = ext::make_shared<InterpolatingCreditVolCurve>(
+        asof, calendar_, Following, dayCounter_, terms, termCurves, quotes, strikeType_);
     vol_->enableExtrapolation();
 
-    LOG("CDSVolCurve: finished building 2-D volatility absolute strike "
-        << "surface with explicit strikes and expiries");
+    LOG("CDSVolCurve: finished building 2-D volatility absolute strike surface");
 }
 
 Date CDSVolCurve::getExpiry(const Date& asof, const QuantLib::ext::shared_ptr<Expiry>& expiry) const {
