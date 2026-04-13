@@ -657,5 +657,6 @@
 #include <qle/utilities/scenarioinformation.hpp>
 #include <qle/utilities/serializationdate.hpp>
 #include <qle/utilities/serializationperiod.hpp>
+#include <qle/utilities/solvers.hpp>
 #include <qle/utilities/time.hpp>
 #include <qle/version.hpp>

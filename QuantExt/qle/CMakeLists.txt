@@ -1119,6 +1119,7 @@ utilities/savedobservablesettings.hpp
 utilities/scenarioinformation.hpp
 utilities/serializationdate.hpp
 utilities/serializationperiod.hpp
+utilities/solvers.hpp
 utilities/time.hpp
 version.hpp)
 
