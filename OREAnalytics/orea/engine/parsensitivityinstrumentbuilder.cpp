@@ -83,36 +83,45 @@ namespace analytics {
 
 std::pair<QuantLib::ext::shared_ptr<Instrument>, Date> ParSensitivityInstrumentBuilder::makeInstrument(
     const std::string& instType, const QuantLib::Date& asof, const QuantLib::ext::shared_ptr<Market>& market,
-    string ccy, string otherCcy, string curveName, string yieldCurveName, string equityForecastCurveName, Period term,
-    const QuantLib::ext::shared_ptr<Convention>& convention, bool singleCurve,
+    string ccy, string otherCcy, string curveName, string yieldCurveName, string equityForecastCurveName,
+    ore::data::CurvePillar& curvePillar, const QuantLib::ext::shared_ptr<Convention>& convention, bool singleCurve,
     std::set<ore::analytics::RiskFactorKey>& parHelperDependencies, std::set<std::string>& removeTodaysFixingIndices,
     const string& expDiscountCurve, const string& marketConfiguration) const {
     string instType3 = instType.substr(0, 3);
+    Period* term = std::get_if<Period>(&curvePillar);
+    QL_REQUIRE(term != nullptr || instType3 == "FUT",
+               "ParSensitivityInstrumentBuilder::makeInstrument(): expected Period type for curve pillar, but got '"
+                   << curvePillar << "' for ccy " << ccy << " and curve " << curveName << " and instrument type "
+                   << instType3);
     if (instType3 == "IRS")
-        return makeSwap(market, ccy, curveName, yieldCurveName, equityForecastCurveName, term, convention, singleCurve,
+        return makeSwap(market, ccy, curveName, yieldCurveName, equityForecastCurveName, *term, convention, singleCurve,
                         parHelperDependencies, removeTodaysFixingIndices, expDiscountCurve, marketConfiguration);
     else if (instType3 == "DEP")
-        return makeDeposit(asof, market, ccy, curveName, yieldCurveName, equityForecastCurveName, term, convention,
+
+        return makeDeposit(asof, market, ccy, curveName, yieldCurveName, equityForecastCurveName, *term, convention,
                            marketConfiguration);
     else if (instType3 == "FRA")
-        return makeFRA(asof, market, ccy, curveName, yieldCurveName, equityForecastCurveName, term, convention,
+        return makeFRA(asof, market, ccy, curveName, yieldCurveName, equityForecastCurveName, *term, convention,
                        marketConfiguration);
     else if (instType3 == "OIS")
-        return makeOIS(market, ccy, curveName, yieldCurveName, equityForecastCurveName, term, convention, singleCurve,
+        return makeOIS(market, ccy, curveName, yieldCurveName, equityForecastCurveName, *term, convention, singleCurve,
                        parHelperDependencies, removeTodaysFixingIndices, expDiscountCurve, marketConfiguration);
     else if (instType3 == "XBS")
-        return makeCrossCcyBasisSwap(market, otherCcy, ccy, term, convention, parHelperDependencies,
+        return makeCrossCcyBasisSwap(market, otherCcy, ccy, *term, convention, parHelperDependencies,
                                      removeTodaysFixingIndices, marketConfiguration);
     else if (instType3 == "FXF")
-        return makeFxForward(market, otherCcy, ccy, term, convention, parHelperDependencies, marketConfiguration);
+        return makeFxForward(market, otherCcy, ccy, *term, convention, parHelperDependencies, marketConfiguration);
     else if (instType3 == "TBS")
-        return makeTenorBasisSwap(asof, market, ccy, std::string(), std::string(), std::string(), std::string(), term,
+        return makeTenorBasisSwap(asof, market, ccy, std::string(), std::string(), std::string(), std::string(), *term,
                                   convention, singleCurve, parHelperDependencies, removeTodaysFixingIndices,
                                   expDiscountCurve, marketConfiguration);
     else if (instType3 == "BMA")
-        return makeBMABasisSwap(asof, market, ccy, std::string(), std::string(), std::string(), std::string(), term,
+        return makeBMABasisSwap(asof, market, ccy, std::string(), std::string(), std::string(), std::string(), *term,
                                 convention, singleCurve, parHelperDependencies, removeTodaysFixingIndices,
                                 expDiscountCurve, marketConfiguration);
+    else if (instType3 == "FUT")
+        DLOG("TODO: implement future par instrument builder for " << instType);
+        return std::make_pair(nullptr, Date());
     else
         return std::make_pair(nullptr, Date());
 }
@@ -186,7 +195,7 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
                 if (!dryRun && !relevantRiskFactors.empty() &&
                     relevantRiskFactors.find(key) == relevantRiskFactors.end())
                     continue;
-                Period term = data.shiftTenors[j];
+                ore::data::CurvePillar term = data.shiftTenors[j];
                 string instType = data.parInstruments[j];
                 bool singleCurve = data.parInstrumentSingleCurve;
                 string indexName = "";               // if empty, it will be picked from conventions
@@ -267,7 +276,7 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
                 if (!dryRun && !relevantRiskFactors.empty() &&
                     relevantRiskFactors.find(key) == relevantRiskFactors.end())
                     continue;
-                Period term = data.shiftTenors[j];
+                ore::data::CurvePillar term = data.shiftTenors[j];
                 string instType = data.parInstruments[j];
                 bool singleCurve = data.parInstrumentSingleCurve;
                 std::pair<QuantLib::ext::shared_ptr<Instrument>, Date> ret;
@@ -337,7 +346,7 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
                 if (!dryRun && !relevantRiskFactors.empty() &&
                     relevantRiskFactors.find(key) == relevantRiskFactors.end())
                     continue;
-                Period term = data.shiftTenors[j];
+                ore::data::CurvePillar term = data.shiftTenors[j];
                 string instType = data.parInstruments[j];
                 bool singleCurve = data.parInstrumentSingleCurve;
                 string yieldCurveName = "";
@@ -473,7 +482,11 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
                 if (!dryRun && !relevantRiskFactors.empty() &&
                     relevantRiskFactors.find(key) == relevantRiskFactors.end())
                     continue;
-                Period term = data.shiftTenors[k];
+                Period* term = std::get_if<Period>(&data.shiftTenors[k]);
+                QL_REQUIRE(term != nullptr,"ParSensitivityInstrumentBuilder::createParInstruments(): expected Period type for "
+                            "credit curve "
+                            "shift tenor, but got '<< data.shiftTenors[k]<<' for name "
+                            << name << " and tenor index " << k);
                 std::pair<QuantLib::ext::shared_ptr<Instrument>, Date> ret;
                 bool skipped = false;
                 try {
@@ -484,7 +497,7 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
                             << name << " and instrument type " << instType);
                     QuantLib::ext::shared_ptr<Convention> convention = conventions->get(conventionsMap[instType]);
 
-                    ret = makeCDS(simMarket, name, ccy, term, convention, parHelperDependencies[key],
+                    ret = makeCDS(simMarket, name, ccy, *term, convention, parHelperDependencies[key],
                                   data.discountCurve, marketConfiguration);
                 } catch (const std::exception& e) {
                     skipped = true;
@@ -521,7 +534,11 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
                 if (!dryRun && !relevantRiskFactors.empty() &&
                     relevantRiskFactors.find(key) == relevantRiskFactors.end())
                     continue;
-                Period term = data.shiftTenors[j];
+                Period* term = std::get_if<Period>(&data.shiftTenors[j]);
+                QL_REQUIRE(term != nullptr,"ParSensitivityInstrumentBuilder::createParInstruments(): expected Period type for zero "
+                            "inflation curve "
+                            "shift tenor, but got '<< data.shiftTenors[j]<<' for name "
+                            << indexName << " and tenor index " << j);
                 string instType = data.parInstruments[j];
                 bool singleCurve = data.parInstrumentSingleCurve;
                 try {
@@ -533,7 +550,7 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
                     QuantLib::ext::shared_ptr<Convention> convention = conventions->get(conventionsMap[instType]);
 
                     auto tmp =
-                        makeZeroInflationSwap(simMarket, indexName, term, convention, singleCurve,
+                        makeZeroInflationSwap(simMarket, indexName, *term, convention, singleCurve,
                                               parHelperDependencies[key], data.discountCurve, marketConfiguration);
                     auto helper = QuantLib::ext::dynamic_pointer_cast<ZeroCouponInflationSwap>(tmp);
                     QuantLib::ext::shared_ptr<IndexedCashFlow> lastCoupon =
@@ -571,7 +588,11 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
                 if (!dryRun && !relevantRiskFactors.empty() &&
                     relevantRiskFactors.find(key) == relevantRiskFactors.end())
                     continue;
-                Period term = data.shiftTenors[j];
+                Period* term = std::get_if<Period>(&data.shiftTenors[j]);
+                QL_REQUIRE(term != nullptr,"ParSensitivityInstrumentBuilder::createParInstruments(): expected Period type for yoy "
+                            "inflation curve "
+                            "shift tenor, but got '<< data.shiftTenors[j]<<' for name "
+                            << indexName << " and tenor index " << j);
                 string instType = data.parInstruments[j];
                 bool singleCurve = data.parInstrumentSingleCurve;
                 bool recognised = true;
@@ -585,7 +606,7 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
                     string instType3 = instType.substr(0, 3);
                     if (instType3 == "ZIS") {
                         auto tmp =
-                            makeYoyInflationSwap(simMarket, indexName, term, convention, singleCurve, true,
+                            makeYoyInflationSwap(simMarket, indexName, *term, convention, singleCurve, true,
                                                  parHelperDependencies[key], data.discountCurve, marketConfiguration);
                         auto helper = dynamic_pointer_cast<YearOnYearInflationSwap>(tmp);
                         // set pillar date
@@ -596,7 +617,7 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
                         parHelpers[key] = tmp;
                     } else if (instType3 == "YYS") {
                         auto tmp =
-                            makeYoyInflationSwap(simMarket, indexName, term, convention, singleCurve, false,
+                            makeYoyInflationSwap(simMarket, indexName, *term, convention, singleCurve, false,
                                                  parHelperDependencies[key], data.discountCurve, marketConfiguration);
                         auto helper = dynamic_pointer_cast<YearOnYearInflationSwap>(tmp);
                         // set pillar date

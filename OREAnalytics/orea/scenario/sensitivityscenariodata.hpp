@@ -26,6 +26,7 @@
 #include <orea/scenario/scenario.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/xmlutils.hpp>
+#include <ored/utilities/curvepillar.hpp>
 #include <qle/termstructures/dynamicstype.hpp>
 
 #include <set>
@@ -67,7 +68,7 @@ public:
         CurveShiftData() : ShiftData() {}
         CurveShiftData(const ShiftData& d) : ShiftData(d) {}
         virtual ~CurveShiftData() {}
-        vector<Period> shiftTenors;
+        vector<ore::data::CurvePillar> shiftTenors;
     };
 
     using SpotShiftData = ShiftData;

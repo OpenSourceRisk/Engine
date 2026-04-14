@@ -584,7 +584,7 @@ void ParSensitivityAnalysis::alignPillars() {
             simMarketParams_->setYieldCurveTenors(p.first, p.second);
             DLOG("yield curve tenors for " << p.first << " set (" << p.second.size() << ")");
             for (auto const& t : p.second)
-                TLOG("set tenor " << t.length() << " " << t.units())
+                TLOG("set tenor " << t);
         }
     }
     if (typesDisabled_.count(RiskFactorKey::KeyType::OptionletVolatility) == 0) {
@@ -608,7 +608,7 @@ void ParSensitivityAnalysis::alignPillars() {
             simMarketParams_->setDefaultTenors(p.first, p.second);
             DLOG("default expiries for " << p.first << " set (" << p.second.size() << ")");
             for (auto const& t : p.second)
-                TLOG("set tenor " << t.length() << " " << t.units())
+                TLOG("set tenor " << t);
         }
     }
     if (typesDisabled_.count(RiskFactorKey::KeyType::ZeroInflationCurve) == 0) {
@@ -616,7 +616,7 @@ void ParSensitivityAnalysis::alignPillars() {
             simMarketParams_->setZeroInflationTenors(p.first, p.second);
             DLOG("zero inflation expiries for " << p.first << " set (" << p.second.size() << ")");
             for (auto const& t : p.second)
-                TLOG("set tenor " << t.length() << " " << t.units())
+                TLOG("set tenor " << t);
         }
     }
     if (typesDisabled_.count(RiskFactorKey::KeyType::YoYInflationCurve) == 0) {
@@ -624,7 +624,7 @@ void ParSensitivityAnalysis::alignPillars() {
             simMarketParams_->setYoyInflationTenors(p.first, p.second);
             DLOG("yoy inflation expiries for " << p.first << " set (" << p.second.size() << ")");
             for (auto const& t : p.second)
-                TLOG("set tenor " << t.length() << " " << t.units())
+                TLOG("set tenor " << t);
         }
     }
     LOG("Alignment of pillars done.");

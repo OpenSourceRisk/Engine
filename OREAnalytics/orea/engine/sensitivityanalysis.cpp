@@ -454,10 +454,16 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         string ccy = keylabel;
         auto itr = sensiParams.discountCurveShiftData().find(ccy);
         QL_REQUIRE(itr != sensiParams.discountCurveShiftData().end(), "shiftData not found for " << ccy);
-        shiftSize = itr->second->shiftSize;
+        auto& [name, shiftData] = *itr;
+        
+        shiftSize = shiftData->shiftSize;
         if (itr->second->shiftType == ShiftType::Relative) {
             Size keyIdx = key.index;
-            Period p = itr->second->shiftTenors[keyIdx];
+            if (auto p = std::get_if<ore::data::FutureContinuationExpiry(shiftData->shiftTenors[keyIdx])) {
+                // load convention 
+                QL_REQUIRE 
+            }
+            
             Handle<YieldTermStructure> yts = simMarket->discountCurve(ccy, marketConfiguration);
             Time t = yts->dayCounter().yearFraction(asof, asof + p);
             Real zeroRate = yts->zeroRate(t, Continuous);

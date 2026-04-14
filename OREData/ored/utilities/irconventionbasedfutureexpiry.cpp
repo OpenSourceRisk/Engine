@@ -87,16 +87,23 @@ expiryToIrCurveDate(const CurvePillar& expiry,
     if (auto periodExpiry = std::get_if<QuantLib::Period>(&expiry)) {
         Date asof = refDate == Date() ? Settings::instance().evaluationDate() : refDate;
         return asof + *periodExpiry;
-    }
-    if (auto dateExpiry = std::get_if<QuantLib::Date>(&expiry)) {
-        return *dateExpiry;
-    }
-    if (auto futureExpiry = std::get_if<ore::data::FutureContinuationExpiry>(&expiry)) {
+    } else if (auto expiryMonthYear = std::get_if<ExpiryMonthYear>(&expiry)) {
         QL_REQUIRE(irFutureExpiry.has_value(),
-                   "expiryToIrCurveDate: irFutureExpiry is required to convert FutureContinuationExpiry");
-        auto offset = futureExpiry->expiryIndex() > 1 ? futureExpiry->expiryIndex() - 1 : 0;
-        return irFutureExpiry->nextExpiry(true, refDate, offset);
-    }
+                   "expiryToIrCurveDate: irFutureExpiry is required when using ExpiryMonthYear");
+        Date asof = refDate == Date() ? Settings::instance().evaluationDate() : refDate;
+        Month m = expiryMonthYear->month();
+        Year y = expiryMonthYear->year();
+        auto index = irFutureExpiry->convention()->index();
+        QL_REQUIRE(index, "expiryToIrCurveDate: convention index not set");
+        auto oisIndex = QuantLib::ext::dynamic_pointer_cast<QuantLib::OvernightIndex>(index);
+        bool isMMFuture = oisIndex == nullptr;
+        Date d = isMMFuture ? getMmFutureExpiryDate(m, y, irFutureExpiry->convention()->dateGenerationRule())
+                            : getOiFutureStartEndDate(m, y, irFutureExpiry->convention()->tenor(),
+                                                      irFutureExpiry->convention()->dateGenerationRule(),
+                                                      irFutureExpiry->convention()->calendar())
+                                  .second;
+        return d;
+    } 
     QL_FAIL("expiryToIrCurveDate: unsupported Expiry type");
 }
 

@@ -22,23 +22,17 @@
 namespace ore {
 namespace data {
 
+std::ostream& operator<<(std::ostream& os, const ExpiryMonthYear& v) { return os << v.toString(); }
+
 CurvePillar parseCurvePillar(const std::string& str) {
     QL_REQUIRE(str.size() > 1, "parseCurvePillar: string must have at least 2 characters");
-
-    if (str.at(0) == 'c') {
-        FutureContinuationExpiry expiry;
-        expiry.fromString(str);
-        return expiry;
+    QuantLib::Period p;
+    if (tryParse<Period>(str, p, [](const std::string& s) { return parsePeriod(s); })) {
+        return p;
+    } else if (str.size() == 7 && str[4] == '-') {
+        return ExpiryMonthYear(str);
     } else {
-        QuantLib::Date date;
-        QuantLib::Period period;
-        bool isDate;
-        parseDateOrPeriod(str, date, period, isDate);
-        if (isDate) {
-            return date;
-        } else {
-            return period;
-        }
+        QL_FAIL("parseCurvePillar: string '" << str << "' is neither a valid period nor of the form YYYY-MM");
     }
 }
 

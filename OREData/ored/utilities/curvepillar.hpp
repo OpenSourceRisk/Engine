@@ -29,7 +29,28 @@
 namespace ore {
 namespace data {
 
-using CurvePillar = std::variant<QuantLib::Date, QuantLib::Period, FutureContinuationExpiry>;
+class ExpiryMonthYear {
+public:
+    explicit ExpiryMonthYear(const std::string& str) : str_(str) {
+        QL_REQUIRE(str_.size() == 7 && str_[4] == '-', "ExpiryMonthYear should be of the form YYYY-MM");
+        year_ = boost::lexical_cast<int>(str_.substr(0, 4));
+        month_ = QuantLib::Month(boost::lexical_cast<int>(str_.substr(5, 2)));
+    }
+
+    QuantLib::Month month() const { return month_; }
+    QuantLib::Year year() const { return year_; }
+
+    std::string toString() const { return str_; }
+
+private:
+    std::string str_;
+    QuantLib::Month month_;
+    QuantLib::Year year_;
+};
+
+std::ostream& operator<<(std::ostream& os, const ExpiryMonthYear& v);
+
+using CurvePillar = std::variant<QuantLib::Period, ExpiryMonthYear>;
 
 CurvePillar parseCurvePillar(const std::string& str);
 
