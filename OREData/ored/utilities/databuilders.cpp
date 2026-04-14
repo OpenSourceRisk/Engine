@@ -151,6 +151,7 @@
 #include <ored/portfolio/equityfuturesoption.hpp>
 #include <ored/portfolio/equityfxlegbuilder.hpp>
 #include <ored/portfolio/equityfxlegdata.hpp>
+#include <ored/portfolio/equitydeltahedgedoption.hpp>
 #include <ored/portfolio/equityoption.hpp>
 #include <ored/portfolio/equityoptionposition.hpp>
 #include <ored/portfolio/equityoutperformanceoption.hpp>
@@ -343,6 +344,7 @@ void dataBuilders() {
     ORE_REGISTER_TRADE_BUILDER("FxKIKOBarrierOption", FxKIKOBarrierOption, false)
     ORE_REGISTER_TRADE_BUILDER("FxBarrierOption", FxBarrierOption, false)
     ORE_REGISTER_TRADE_BUILDER("EquityOption", EquityOption, false)
+    ORE_REGISTER_TRADE_BUILDER("EquityAutoDeltaHedgedOption", EquityAutoDeltaHedgedOption, false)
     ORE_REGISTER_TRADE_BUILDER("FxOption", FxOption, false)
     ORE_REGISTER_TRADE_BUILDER("CBO", CBO, false)
 
