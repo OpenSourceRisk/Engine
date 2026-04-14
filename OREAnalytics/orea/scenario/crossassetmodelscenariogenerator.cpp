@@ -45,11 +45,12 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     const std::string& configuration, const std::string& amcPathDataOutput, Size samples)
     : ScenarioPathGenerator(today, grid->dates(), grid->timeGrid()), model_(model), pathGenerator_(pathGenerator),
       simMarketConfig_(simMarketConfig), initMarket_(initMarket), configuration_(configuration),
-      amcPathDataOutput_(amcPathDataOutput), totalSamples_(samples), dateGrid_(grid) {
+      amcPathDataOutput_(amcPathDataOutput), totalSamples_(samples), dateGrid_(grid) {}
 
+void CrossAssetModelScenarioGenerator::init() {
     LOG("CrossAssetModelScenarioGenerator ctor called");
 
-    QL_REQUIRE(initMarket != NULL, "CrossAssetScenarioGenerator: initMarket is null");
+    QL_REQUIRE(initMarket_ != NULL, "CrossAssetScenarioGenerator: initMarket is null");
     QL_REQUIRE(timeGrid_.size() == dates_.size() + 1, "date/time grid size mismatch");
 
     // build mapping from grid index to path index
@@ -66,7 +67,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
 
     DayCounter dc = model_->irModel(0)->termStructure()->dayCounter();
     n_ccy_ = model_->components(CrossAssetModel::AssetType::IR);
-    n_fx_ = model->components(CrossAssetModel::AssetType::FX);
+    n_fx_ = model_->components(CrossAssetModel::AssetType::FX);
     n_eq_ = model_->components(CrossAssetModel::AssetType::EQ);
     n_inf_ = model_->components(CrossAssetModel::AssetType::INF);
     n_cr_ = model_->components(CrossAssetModel::AssetType::CR);
@@ -75,7 +76,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     n_survivalweights_ = simMarketConfig_->additionalScenarioDataSurvivalWeights().size();
     n_indices_ = simMarketConfig_->indices().size();
     n_curves_ = simMarketConfig_->yieldCurveNames().size();
-    n_states_ = model->stateProcess()->size();
+    n_states_ = model_->stateProcess()->size();
 
     auto sharedData = ext::make_shared<SimpleScenario::SharedData>();
 
@@ -150,7 +151,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
             QL_REQUIRE(ccy1 == baseCcy || ccy2 == baseCcy, "currency pair " << pair << " does not contain base");
             string foreign = ccy1 != baseCcy ? ccy1 : ccy2;
 
-            Size index = model->ccyIndex(parseCurrency(foreign)); // will throw if foreign not there
+            Size index = model_->ccyIndex(parseCurrency(foreign)); // will throw if foreign not there
             QL_REQUIRE(index > 0, "Invalid index for ccy " << foreign << " should be > 0");
             // fxVols_ are indexed by ccyPairs
             DLOG("Pair " << pair << " index " << index);
@@ -184,7 +185,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
             // Calculating the index is messy
             const string equityName = simMarketConfig_->equityVolNames()[k];
             DLOG("Set up CrossAssetModelImpliedEqVolTermStructures for " << equityName);
-            Size eqIndex = model->eqIndex(equityName);
+            Size eqIndex = model_->eqIndex(equityName);
             // eqVols_ are indexed by ccyPairs
             DLOG("EQ Vol Name = " << equityName << ", index = " << eqIndex);
             // index - 1 to convert "IR" index into an "FX" index
@@ -240,7 +241,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     Size n_inf = model_->components(CrossAssetModel::AssetType::INF);
     if (n_inf > 0) {
         for (Size j = 0; j < n_inf; ++j) {
-            sharedData->keys.emplace_back(RiskFactorKey::KeyType::CPIIndex, model->inf(j)->name());
+            sharedData->keys.emplace_back(RiskFactorKey::KeyType::CPIIndex, model_->inf(j)->name());
             sharedData->keyIndex[sharedData->keys.back()] = sharedData->keys.size() - 1;
         }
 
@@ -427,18 +428,19 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     }
 
     // if we have an amcPathDataOutput create the PathData
-    if (!amcPathDataOutput.empty()) {
-        pathData_.fxBuffer.resize(n_fx_,
-                                  std::vector<std::vector<Real>>(grid->dates().size() + 1, std::vector<Real>(samples)));
+    if (!amcPathDataOutput_.empty()) {
+        pathData_.fxBuffer.resize(
+            n_fx_, std::vector<std::vector<Real>>(dateGrid_->size() + 1, std::vector<Real>(totalSamples_)));
         pathData_.irStateBuffer.resize(
-            n_ccy_, std::vector<std::vector<Real>>(grid->dates().size() + 1, std::vector<Real>(samples)));
-        pathData_.pathTimes = std::vector<Real>(std::next(grid->timeGrid().begin(), 1), grid->timeGrid().end());
+            n_ccy_, std::vector<std::vector<Real>>(dateGrid_->dates().size() + 1, std::vector<Real>(totalSamples_)));
+        pathData_.pathTimes =
+            std::vector<Real>(std::next(dateGrid_->timeGrid().begin(), 1), dateGrid_->timeGrid().end());
         pathData_.paths.resize(pathData_.pathTimes.size(),
-                               std::vector<RandomVariable>(n_states_, RandomVariable(samples)));
+                               std::vector<RandomVariable>(n_states_, RandomVariable(totalSamples_)));
     }
 
     LOG("CrossAssetModelScenarioGenerator ctor done");
-}
+} // init
 
 namespace {
 void copyPathToArray(const MultiPath& p, Size t, Size a, Array& target) {
@@ -448,6 +450,11 @@ void copyPathToArray(const MultiPath& p, Size t, Size a, Array& target) {
 } // namespace
 
 std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextPath() {
+
+    if(!initialized_) {
+        init();
+        initialized_ = true;
+    }
 
     std::vector<QuantLib::ext::shared_ptr<Scenario>> scenarios(dates_.size());
     QL_REQUIRE(pathGenerator_ != nullptr, "CrossAssetModelScenarioGenerator::nextPath(): pathGenerator is null");

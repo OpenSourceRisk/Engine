@@ -80,13 +80,17 @@ public:
     long timing() const override { return timing_; }
 
 private:
+    void init();
     QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model_;
     QuantLib::ext::shared_ptr<QuantExt::MultiPathGeneratorBase> pathGenerator_;
     QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory_;
     QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketConfig_;
     QuantLib::ext::shared_ptr<ore::data::Market> initMarket_;
     const std::string configuration_;
+    std::string amcPathDataOutput_;
+    Size samples_;
     // generated data
+    bool initialized_ = false;
     std::vector<QuantLib::ext::shared_ptr<QuantExt::CrossAssetModelImpliedFxVolTermStructure>> fxVols_;
     std::vector<QuantLib::ext::shared_ptr<QuantExt::CrossAssetModelImpliedEqVolTermStructure>> eqVols_;
     std::vector<QuantLib::ext::shared_ptr<QuantExt::CrossAssetModelImpliedSwaptionVolTermStructure>> swaptionVols_;
@@ -107,7 +111,6 @@ private:
     vector<QuantLib::ext::shared_ptr<QuantExt::LgmImpliedDefaultTermStructure>> lgmDefaultCurves_;
     vector<QuantLib::ext::shared_ptr<QuantExt::CirppImpliedDefaultTermStructure>> cirppDefaultCurves_;
     vector<QuantLib::ext::shared_ptr<QuantExt::CreditCurve>> survivalWeightsDefaultCurves_;
-    std::string amcPathDataOutput_;
     PathData pathData_;
     Size currentSample_ = 0;
     Size totalSamples_;
