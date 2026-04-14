@@ -260,6 +260,7 @@ void FutureConvention::fromXML(XMLNode* node) {
     dateGenerationRule_ =
         dateGenerationStr.empty() ? DateGenerationRule::IMM : parseFutureDateGenerationRule(dateGenerationStr);
     strCalendar_ = XMLUtils::getChildValue(node, "Calendar", false);
+    strOvernightIndexTenor_ = XMLUtils::getChildValue(node, "OvernightIndexTenor", false);
     build();
 }
 
@@ -272,6 +273,8 @@ XMLNode* FutureConvention::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "DateGenerationRule", ore::data::to_string(dateGenerationRule_));
     if (!strCalendar_.empty())
         XMLUtils::addChild(doc, node, "Calendar", strCalendar_);
+    if (!strOvernightIndexTenor_.empty())
+        XMLUtils::addChild(doc, node, "OvernightIndexTenor", strOvernightIndexTenor_);
     return node;
 }
 

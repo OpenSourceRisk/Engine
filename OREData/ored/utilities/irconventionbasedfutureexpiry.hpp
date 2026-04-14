@@ -16,10 +16,11 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/configuration/conventions.hpp>
-#include <qle/time/futureexpirycalculator.hpp>
-
 #pragma once
+
+#include <ored/configuration/conventions.hpp>
+#include <ored/marketdata/expiry.hpp>
+#include <optional>
 
 namespace ore {
 namespace data {
@@ -37,5 +38,11 @@ private:
 
     QuantLib::Date nextExpiry(const QuantLib::Date& date) const;
 };
+
+// Helper function to convert an expiry to a date
+QuantLib::Date expiryToIrCurveDate(const QuantLib::ext::shared_ptr<Expiry>& expiry,
+                                   const QuantLib::Date& refDate = Date(),
+                                   const std::optional<IrConventionBasedFutureExpiry>& irFutureExpiry = std::nullopt);
+
 } // namespace data
 } // namespace ore
