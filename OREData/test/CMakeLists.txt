@@ -52,6 +52,7 @@ generalisedreplicatingvarianceswapengine.cpp
 indices.cpp
 inflationcapfloor.cpp
 inflationcurve.cpp
+irconventionbasedfutureexpiry.cpp
 legdata.cpp
 localvol.cpp
 mxnircurves.cpp

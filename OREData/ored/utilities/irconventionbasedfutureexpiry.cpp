@@ -58,34 +58,31 @@ QuantLib::Date IrConventionBasedFutureExpiry::nextExpiry(const QuantLib::Date& d
     auto oisIndex = QuantLib::ext::dynamic_pointer_cast<QuantLib::OvernightIndex>(convention_->index());
     bool isMMFuture = oisIndex == nullptr;
 
-    // Start from the given date's month/year and find the next expiry >= date
-    Date candidate;
     Month m = date.month();
     Year y = date.year();
-    // Try current month first, then advance month-by-month
-    for (Size i = 0; i < 13; ++i) {
+    auto nextFutureDate = [&isMMFuture, this](Month m, Year y) {
         if (isMMFuture) {
-            candidate = getMmFutureExpiryDate(m, y, convention_->dateGenerationRule());
+            return getMmFutureExpiryDate(m, y, convention_->dateGenerationRule());
         } else {
-            candidate = getOiFutureStartEndDate(m, y, convention_->tenor(),
-                                                convention_->dateGenerationRule(), convention_->calendar())
-                            .second;
-        }
-        if (candidate >= date)
-            return candidate;
-        // Advance to next month
-        if (m == Dec) {
-            m = Jan;
-            y++;
-        } else {
-            m = static_cast<Month>(static_cast<int>(m) + 1);
-        }
-    }
-    QL_FAIL("IrConventionBasedFutureExpiry::nextExpiry: could not find next expiry after " << date);
+            return getOiFutureStartEndDate(m, y, convention_->tenor(), convention_->dateGenerationRule(),
+                                           convention_->calendar())
+                .second;
+        };
+    };
+    auto nextDate = nextFutureDate(m, y);
+    // the expiry date could be before the current date, in which case we need to move to the next month
+    if (nextDate >= date)
+        return nextDate;
+    y = m == Dec ? y + 1 : y;
+    m = m == Dec ? Jan : Month(m + 1);
+    nextDate =  nextFutureDate(m, y);
+    QL_REQUIRE(nextDate >= date, "IR convention based future expiry: next expiry date "
+                                     << nextDate << " is before reference date " << date);
+    return nextDate;
 }
 
-QuantLib::Date expiryToIrCurveDate(const QuantLib::ext::shared_ptr<Expiry>& expiry,
-                                   const QuantLib::Date& refDate,
+
+QuantLib::Date expiryToIrCurveDate(const QuantLib::ext::shared_ptr<Expiry>& expiry, const QuantLib::Date& refDate,
                                    const std::optional<IrConventionBasedFutureExpiry>& irFutureExpiry) {
     QL_REQUIRE(expiry, "expiryToIrCurveDate: expiry not provided");
     if (auto periodExpiry = QuantLib::ext::dynamic_pointer_cast<ExpiryPeriod>(expiry)) {
@@ -101,7 +98,7 @@ QuantLib::Date expiryToIrCurveDate(const QuantLib::ext::shared_ptr<Expiry>& expi
         auto offset = futureExpiry->expiryIndex() > 1 ? futureExpiry->expiryIndex() - 1 : 0;
         return irFutureExpiry->nextExpiry(true, refDate, offset);
     }
-    QL_FAIL("expiryToIrCurveDate: unsupported Expiry type " << *expiry);
+    QL_FAIL("expiryToIrCurveDate: unsupported Expiry type");
 }
 
 } // namespace data
