@@ -175,12 +175,12 @@ private:
     LgmCalibrationInfo calibrationInfo_;
 
     bool enableCache_ = false;
-    Size discountBondCacheSize_;
-    Size numeraireCacheSize_;
-    mutable bool discountBondCacheReady_;
-    mutable bool numeraireCacheReady_;
-    mutable Size discountBondCacheCounter_;
-    mutable Size numeraireCacheCounter_;
+    Size discountBondCacheSize_ = 0;
+    Size numeraireCacheSize_ = 0;
+    mutable bool discountBondCacheReady_ = false;
+    mutable bool numeraireCacheReady_ = false;
+    mutable Size discountBondCacheCounter_ = 0;
+    mutable Size numeraireCacheCounter_ = 0;
     mutable std::vector<std::pair<double, double>> discountBondCache_;
     mutable std::vector<std::pair<double, double>> numeraireCache_;
 };
