@@ -82,7 +82,7 @@ std::vector<Size> stopLightBoundsTabulated(const std::vector<Real>& stopLightP, 
                                            const std::vector<int>& amberLimit, const std::vector<int>& redLimit) {
 
     if (stopLightP.size() == 2 && QuantLib::close_enough(stopLightP[0], 0.95) &&
-        QuantLib::close_enough(stopLightP[1], 0.9999) && numberOfDays == 10 && observations >= 1 &&
+        QuantLib::close_enough(stopLightP[1], 0.9999) && (numberOfDays == 10 || numberOfDays == 1) && observations >= 1 &&
         observations <= (obsNb.back() + 9) && QuantLib::close_enough(p, 0.99)) {
         Size idx = std::upper_bound(obsNb.begin(), obsNb.end(), observations) - obsNb.begin();
         QL_REQUIRE(idx > 0 && idx <= amberLimit.size() && idx <= redLimit.size(),

@@ -33,6 +33,7 @@
 #include <boost/range/adaptor/indexed.hpp>
 
 #include <future>
+#include <limits>
 #include <thread>
 
 using ore::data::EngineBuilder;
@@ -446,35 +447,29 @@ RiskFactorPnLSeries HistoricalPnlGenerator::riskFactorLevelPnlSeries(const ore::
         if (!(period.contains(start) && period.contains(end))) {
             continue; // leave this scenario's map empty
         }
-        // Aggregate PnL per trade and collapse duplicates by risk factor name
-        // Map: rf name -> (representative key, per-trade pnl vector)
-        std::unordered_map<std::string, std::pair<RiskFactorKey, std::vector<Real>>> byName;
+        // Map each RiskFactorKey to its per-trade PnL vector
+        std::map<RiskFactorKey, std::vector<Real>> byKey;
         for (const auto& kv : mapCube_) {
             const RiskFactorKey& rfKey = kv.first;
             const ext::shared_ptr<NPVCube>& rfCube = kv.second;
             Size tradeCount = rfCube->numIds();
-            std::vector<Real> pnlVec(tradeCount, 0.0);
+            // Initialize with NaN to indicate no sensitivity
+            std::vector<Real> pnlVec(tradeCount, std::numeric_limits<Real>::quiet_NaN());
             bool anyNonZero = false;
             for (Size i = 0; i < tradeCount; ++i) {
                 Real v = rfCube->get(i, dateIdx, s) - rfCube->getT0(i);
-                pnlVec[i] = v;
-                anyNonZero = anyNonZero || (v != 0.0);
+                // Only store actual PnL values, leave NaN for no sensitivity
+                if (v != 0.0) {
+                    pnlVec[i] = v;
+                    anyNonZero = true;
+                }
             }
             if (!anyNonZero)
                 continue;
-            auto it = byName.find(rfKey.name);
-            if (it == byName.end()) {
-                byName.emplace(rfKey.name, std::make_pair(rfKey, std::move(pnlVec)));
-            } else {
-                auto& aggVec = it->second.second;
-                if (aggVec.size() < pnlVec.size())
-                    aggVec.resize(pnlVec.size(), 0.0);
-                for (Size i = 0; i < pnlVec.size(); ++i)
-                    aggVec[i] += pnlVec[i];
-            }
+            byKey.emplace(rfKey, std::move(pnlVec));
         }
-        for (auto& e : byName) {
-            series[s].emplace(e.second.first, std::move(e.second.second));
+        for (auto& e : byKey) {
+            series[s].emplace(e.first, std::move(e.second));
         }
     }
 

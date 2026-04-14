@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file oret/log.hpp
+/*! \file oret/logging/log.hpp
     \brief boost test logger
 */
 
@@ -27,7 +27,7 @@
 #include <boost/log/expressions.hpp>
 #include <boost/log/utility/setup/console.hpp>
 #include <boost/log/utility/setup/file.hpp>
-#include <boost/test/unit_test.hpp>
+#include <boost/test/unit_test_log.hpp>
 #include <ored/utilities/log.hpp>
 
 using ore::data::Logger;

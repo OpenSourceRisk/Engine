@@ -38,105 +38,84 @@
 */
 
 /*! \file overnightindexedcoupon.hpp
-    \brief coupon paying the compounded daily overnight rate,
-           copy of QL class, added includeSpread flag
+    \brief paying the compounded interest due to daily overnight fixings.
 */
-
 #pragma once
-
+#include <qle/cashflows/overnightindexedcouponbase.hpp>
 #include <ql/cashflows/couponpricer.hpp>
-#include <ql/cashflows/floatingratecoupon.hpp>
-#include <ql/indexes/iborindex.hpp>
-#include <ql/time/schedule.hpp>
 
 namespace QuantLib {
 class OptionletVolatilityStructure;
 }
 
 namespace QuantExt {
+
 using namespace QuantLib;
+class OvernightIndexedCouponPricer;
 
-//! overnight coupon
-/*! %Coupon paying the compounded interest due to daily overnight fixings.
-
-    \warning telescopicValueDates optimizes the schedule for calculation speed,
-    but might fail to produce correct results if the coupon ages by more than
-    a grace period of 7 days. It is therefore recommended not to set this flag
-    to true unless you know exactly what you are doing. The intended use is
-    rather by the OISRateHelper which is safe, since it reinitialises the
-    instrument each time the evaluation date changes.
-
-    if includeSpread = true, the spread is included in the daily compounding,
-    otherwise it is added to the effective coupon rate after the compounding
-*/
-class OvernightIndexedCoupon : public FloatingRateCoupon {
+/** Overnight (compounding) coupon.
+ *  %Coupon paying the compounded interest due to a series of overnight fixings over the coupon period.
+ *
+ *  For more details about the coupon structure, see OvernightIndexedCouponBase.
+ *
+ *  \see OvernightIndexedCouponBase
+ *  \ingroup cashflows
+ */
+class OvernightIndexedCoupon : public OvernightIndexedCouponBase {
 public:
     OvernightIndexedCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate,
                            const ext::shared_ptr<OvernightIndex>& overnightIndex, Real gearing = 1.0,
                            Spread spread = 0.0, const Date& refPeriodStart = Date(), const Date& refPeriodEnd = Date(),
                            const DayCounter& dayCounter = DayCounter(), bool telescopicValueDates = false,
                            bool includeSpread = false, const Period& lookback = 0 * Days, const Natural rateCutoff = 0,
-                           const Natural fixingDays = Null<Size>(), const Date& rateComputationStartDate = Null<Date>(),
-                           const Date& rateComputationEndDate = Null<Date>());
+                           const Natural fixingDays = Null<Size>(), const Date& rateComputationStartDate = Date(),
+                           const Date& rateComputationEndDate = Date(), bool observationShift = true,
+                           bool staleDatesCheck = true);
     //! \name Inspectors
     //@{
-    //! fixing dates for the rates to be compounded
-    const std::vector<Date>& fixingDates() const { return fixingDates_; }
-    //! accrual (compounding) periods
-    const std::vector<Time>& dt() const { return dt_; }
-    //! fixings to be compounded
-    const std::vector<Rate>& indexFixings() const;
-    //! value dates for the rates to be compounded
-    const std::vector<Date>& valueDates() const { return valueDates_; }
-    //! include spread in compounding?
-    bool includeSpread() const { return includeSpread_; }
-    /*! effectiveSpread and effectiveIndexFixing are set such that
-        coupon amount = notional * accrualPeriod * ( gearing * effectiveIndexFixing + effectiveSpread )
-        notice that
-        - gearing = 1 is required if includeSpread = true
-        - effectiveSpread = spread() if includeSpread = false */
+    /** If `true`, the spread is included in the daily compounding. If `false` the compounding is performed without the 
+     *   spread and the spread is added to the final rate.
+     */
+    bool includeSpread() const override { return includeSpread_; }
+    /** The `effectiveSpread` \f$s^*\f$ and `effectiveIndexFixing` \f$f^*\f$ are set such that the coupon amount is 
+     *  \f$\Pi\f$ is given by:
+     *  \f[
+     *      N \tau(t_s, t_e) ( g f^* + s^* )
+     *  \f]
+     * 
+     *   \note
+     *   - a `gearing` value of 1 is required if `includeSpread` is set to `true`.
+     *   - the `effectiveSpread` is equal to the input `spread` if `includeSpread` is set to `false`.
+     */
     Real effectiveSpread() const;
     Real effectiveIndexFixing() const;
-    //! lookback period
-    const Period& lookback() const { return lookback_; }
-    //! rate cutoff
-    Natural rateCutoff() const { return rateCutoff_; }
-    //! rate computation start date
-    const Date& rateComputationStartDate() const { return rateComputationStartDate_; }
-    //! rate computation end date
-    const Date& rateComputationEndDate() const { return rateComputationEndDate_; }
-    //! the underlying index
-    const ext::shared_ptr<OvernightIndex>& overnightIndex() const { return overnightIndex_; }
-    //@}
-    //! \name FloatingRateCoupon interface
-    //@{
-    //! the date when the coupon is fully determined
-    Date fixingDate() const override { return fixingDates_[fixingDates_.size() - 1 - rateCutoff_]; }
     //@}
     //! \name Visitability
     //@{
     void accept(AcyclicVisitor&) override;
     //@}
 private:
-    QuantLib::ext::shared_ptr<OvernightIndex> overnightIndex_;
-    std::vector<Date> valueDates_, fixingDates_;
-    mutable std::vector<Rate> fixings_;
-    Size n_;
-    std::vector<Time> dt_;
     bool includeSpread_;
-    Period lookback_;
-    Natural rateCutoff_;
-    Date rateComputationStartDate_, rateComputationEndDate_;
+
+    // Calculate the effective rate up to a given date.
+    std::pair<QuantLib::Rate, QuantLib::Date> effectiveRate(const QuantLib::Date& date) const override;
+
+    // Check for overnight index coupon pricer, throw if not and return shared pointer to it if valid.
+    QuantLib::ext::shared_ptr<OvernightIndexedCouponPricer> oicPricer() const;
 };
 
 //! OvernightIndexedCoupon pricer
 class OvernightIndexedCouponPricer : public FloatingRateCouponPricer {
 public:
     void initialize(const FloatingRateCoupon& coupon) override;
-    void compute() const;
     Rate swapletRate() const override;
     Rate effectiveSpread() const;
     Rate effectiveIndexFixing() const;
+    std::pair<Rate, Date> effectiveRate(const Date& date) const;
+
+    // Since there is no caching, this method returns swaplet rate, effective spread and effective index fixing tuple.
+    std::tuple<Rate, Spread, Rate> rateSpreadFixing() const;
+
     Real swapletPrice() const override { QL_FAIL("swapletPrice not available"); }
     Real capletPrice(Rate) const override { QL_FAIL("capletPrice not available"); }
     Rate capletRate(Rate) const override { QL_FAIL("capletRate not available"); }
@@ -144,8 +123,8 @@ public:
     Rate floorletRate(Rate) const override { QL_FAIL("floorletRate not available"); }
 
 protected:
+    std::tuple<Rate, Spread, Rate, Date> compute(const QuantLib::Date& date) const;
     const OvernightIndexedCoupon* coupon_;
-    mutable Real swapletRate_, effectiveSpread_, effectiveIndexFixing_;
 };
 
 //! capped floored overnight indexed coupon
@@ -191,10 +170,10 @@ public:
     Real strippedCapletVolatility() const;
     //! stripped floorlet volatility
     Real strippedFloorletVolatility() const;
-    //@}
     //! \name Visitability
     //@{
     virtual void accept(AcyclicVisitor&) override;
+    //@}
 
     bool isCapped() const { return cap_ != Null<Real>(); }
     bool isFloored() const { return floor_ != Null<Real>(); }
@@ -260,10 +239,13 @@ public:
     OvernightLeg& withInArrears(const bool inArrears);
     OvernightLeg& withLastRecentPeriod(const QuantLib::ext::optional<Period>& lastRecentPeriod);
     OvernightLeg& withLastRecentPeriodCalendar(const Calendar& lastRecentPeriodCalendar);
-    OvernightLeg& withOvernightIndexedCouponPricer(const QuantLib::ext::shared_ptr<OvernightIndexedCouponPricer>& couponPricer);
+    OvernightLeg& withOvernightIndexedCouponPricer(
+        const QuantLib::ext::shared_ptr<OvernightIndexedCouponPricer>& couponPricer);
     OvernightLeg& withPaymentDates(const std::vector<Date>& paymentDates);
     OvernightLeg& withCapFlooredOvernightIndexedCouponPricer(
         const QuantLib::ext::shared_ptr<CappedFlooredOvernightIndexedCouponPricer>& couponPricer);
+    OvernightLeg& withObservationShift(bool observationShift);
+    OvernightLeg& withStaleDatesCheck(bool staleDatesCheck);
     operator Leg() const;
 
 private:
@@ -290,6 +272,8 @@ private:
     std::vector<QuantLib::Date> paymentDates_;
     QuantLib::ext::shared_ptr<OvernightIndexedCouponPricer> couponPricer_;
     QuantLib::ext::shared_ptr<CappedFlooredOvernightIndexedCouponPricer> capFlooredCouponPricer_;
+    bool observationShift_;
+    bool staleDatesCheck_;
 };
 
 } // namespace QuantExt
