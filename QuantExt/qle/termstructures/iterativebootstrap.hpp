@@ -236,7 +236,6 @@ template <class Curve> void IterativeBootstrap<Curve>::calculate() const {
         helper->setTermStructure(const_cast<Curve*>(ts_));
     }
 
-    const std::vector<QuantLib::Time>& times = ts_->times_;
     const std::vector<QuantLib::Real>& data = ts_->data_;
     QuantLib::Real accuracy = accuracy_ != QuantLib::Null<QuantLib::Real>() ? accuracy_ : ts_->accuracy_;
     QuantLib::Real globalAccuracy = globalAccuracy_ == QuantLib::Null<QuantLib::Real>() ? accuracy : globalAccuracy_;
@@ -280,16 +279,14 @@ template <class Curve> void IterativeBootstrap<Curve>::calculate() const {
             if (!validData) {
                 try { // extend interpolation a point at a time
                       // including the pillar to be bootstrapped
-                    ts_->interpolation_ =
-                        ts_->interpolator_.interpolate(times.begin(), times.begin() + i + 1, data.begin());
+                    ts_->setupInterpolation(i);
                 } catch (...) {
                     if (!Interpolator::global)
                         throw; // no chance to fix it in a later iteration
 
                     // otherwise use Linear while the target
                     // interpolation is not usable yet
-                    ts_->interpolation_ =
-                        QuantLib::Linear().interpolate(times.begin(), times.begin() + i + 1, data.begin());
+                    ts_->setupInterpolation(i, true);
                 }
                 ts_->interpolation_.update();
             }
