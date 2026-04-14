@@ -47,6 +47,7 @@ struct TradeCashflowReportData {
     QuantLib::Date payDate;
     std::string flowType;
     double amount;
+    double baseAmount;
     std::string currency;
     double coupon;
     double accrual;
@@ -57,6 +58,7 @@ struct TradeCashflowReportData {
     double fixingValue;
     double notional;
     double discountFactor;
+    double discountFactorBase;
     double presentValue;
     double fxRateLocalBase;
     double presentValueBase;

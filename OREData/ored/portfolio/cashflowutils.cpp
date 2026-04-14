@@ -78,7 +78,9 @@ void populateReportDataFromAdditionalResults(std::vector<TradeCashflowReportData
         for (auto const& cf : cfResults) {
 
             Real effectiveAmount = Null<Real>();
+            Real baseAmount = Null<Real>();
             Real discountFactor = Null<Real>();
+            Real discountFactorBase = Null<Real>();
             Real presentValue = Null<Real>();
             Real presentValueBase = Null<Real>();
             Real fxRateLocalBase = Null<Real>();
@@ -105,6 +107,10 @@ void populateReportDataFromAdditionalResults(std::vector<TradeCashflowReportData
                     specificDiscountCurve.empty() ? market->discountCurve(ccy, configuration) : specificDiscountCurve;
                 discountFactor = cf.payDate < asof ? 0.0 : discountCurve->discount(cf.payDate);
             }
+            if (ccy != baseCurrency) {                
+                auto baseDiscountCurve = specificDiscountCurve.empty() ? market->discountCurve(baseCurrency, configuration) : specificDiscountCurve;
+                discountFactorBase = cf.payDate < asof ? 0.0 : baseDiscountCurve->discount(cf.payDate);
+            } 
             if (cf.presentValue != Null<Real>()) {
                 presentValue = cf.presentValue * multiplier;
             } else if (effectiveAmount != Null<Real>() && discountFactor != Null<Real>()) {
@@ -118,6 +124,8 @@ void populateReportDataFromAdditionalResults(std::vector<TradeCashflowReportData
                 } catch (...) {
                 }
             }
+            if (cf.amount != Null<Real>() && ccy != baseCurrency && fxRateLocalBase != Null<Real>())
+                baseAmount = cf.amount * fxRateLocalBase;
             if (cf.presentValueBase != Null<Real>()) {
                 presentValueBase = cf.presentValueBase;
             } else if (presentValue != Null<Real>() && fxRateLocalBase != Null<Real>()) {
@@ -147,6 +155,7 @@ void populateReportDataFromAdditionalResults(std::vector<TradeCashflowReportData
             result.back().payDate = cf.payDate;
             result.back().flowType = cf.type;
             result.back().amount = effectiveAmount;
+            result.back().baseAmount = baseAmount;
             result.back().currency = ccy;
             result.back().coupon = cf.rate;
             result.back().accrual = cf.accrualPeriod;
@@ -157,6 +166,7 @@ void populateReportDataFromAdditionalResults(std::vector<TradeCashflowReportData
             result.back().fixingValue = cf.fixingValue;
             result.back().notional = cf.notional * (cf.notional == Null<Real>() ? 1.0 : multiplier);
             result.back().discountFactor = discountFactor;
+            result.back().discountFactorBase = discountFactorBase;
             result.back().presentValue = presentValue;
             result.back().fxRateLocalBase = fxRateLocalBase;
             result.back().presentValueBase = presentValueBase;
@@ -330,6 +340,7 @@ TradeCashflowReportData getCashflowReportData(
     }
 
     Real effectiveAmount = Null<Real>();
+    Real baseAmount = Null<Real>();
     Real discountFactor = Null<Real>();
     Real presentValue = Null<Real>();
     Real presentValueBase = Null<Real>();
@@ -340,8 +351,10 @@ TradeCashflowReportData getCashflowReportData(
     Real effectiveFloorVolatility = Null<Real>();
     Real effectiveCapVolatility = Null<Real>();
 
-    if (amount != Null<Real>())
+    if (amount != Null<Real>()) {
         effectiveAmount = amount * multiplier;
+        baseAmount = effectiveAmount * fxCcyBase;
+    }
 
     discountFactor = payDate < asof ? 0.0 : discountCurveCcy->discount(payDate);
     if (effectiveAmount != Null<Real>())
@@ -456,6 +469,7 @@ TradeCashflowReportData getCashflowReportData(
     result.payDate = payDate;
     result.flowType = overwriteFlowType.empty() ? flowType : overwriteFlowType;
     result.amount = effectiveAmount;
+    result.baseAmount = baseAmount;
     result.currency = ccy;
     result.coupon = coupon;
     result.accrual = accrual;
