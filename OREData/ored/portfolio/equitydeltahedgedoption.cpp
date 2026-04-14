@@ -18,7 +18,6 @@
 
 #include <ored/portfolio/equitydeltahedgedoption.hpp>
 #include <ored/portfolio/enginefactory.hpp>
-#include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
@@ -43,8 +42,8 @@ void EquityAutoDeltaHedgedOption::build(const QuantLib::ext::shared_ptr<EngineFa
 
     // ISDA taxonomy
     additionalData_["isdaAssetClass"] = string("Equity");
-    additionalData_["isdaBaseProduct"] = string("Vanilla Option");
-    additionalData_["isdaSubProduct"] = string("");
+    additionalData_["isdaBaseProduct"] = string("Option");
+    additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
     additionalData_["isdaTransaction"] = string("");
     additionalData_["hedgingVolatility"] = hedgingVol_;
     additionalData_["forwardRate"] = forwardRate_;
@@ -106,20 +105,19 @@ void EquityAutoDeltaHedgedOption::build(const QuantLib::ext::shared_ptr<EngineFa
                    << " must be before expiry date " << expiryDate << " for underlying " << i
                    << " in trade " << id());
 
-        Real Ni = u.quantity;
+        Real optionQuantity = u.quantity;
         Real K = u.strike.value();
-        notional_ += K * Ni;
+        notional_ += K * optionQuantity;
 
         if (i == 0)
             npvCurrency_ = notionalCurrency_ = ccy.code();
 
-        // Create the option payoff and exercise
+        // option payoff and exercise
         Option::Type type = parseOptionType(u.optionData.callPut());
         Real phi = (type == Option::Call) ? 1.0 : -1.0;
         auto payoff = QuantLib::ext::make_shared<PlainVanillaPayoff>(type, K);
         auto exercise = QuantLib::ext::make_shared<EuropeanExercise>(expiryDate);
 
-        // Common market data
         Handle<Quote> spot = market->equitySpot(assetName, config);
         Handle<YieldTermStructure> divCurve = market->equityDividendCurve(assetName, config);
         Handle<YieldTermStructure> fcstCurve = market->equityForecastCurve(assetName, config);
@@ -129,7 +127,7 @@ void EquityAutoDeltaHedgedOption::build(const QuantLib::ext::shared_ptr<EngineFa
         Handle<QuantExt::EquityIndex2> eqIndex = market->equityCurve(assetName, config);
         Calendar fixingCal = eqIndex->fixingCalendar();
 
-        // --- (a) Realized past hedge P&L ---
+        // --- Realized past hedge P&L ---
         // Accumulate DeltaHedge from observationStartDate_ to today using historical fixings.
         // Fwd_{t,Final} = S_t * Exp(forwardRate_ * Act(t,Final)/365).
         // delta_t = N(phi * d1) where d1 = [ln(Fwd/K) + 0.5*sigma_h^2*(T-t)] / (sigma_h*sqrt(T-t))
@@ -137,10 +135,7 @@ void EquityAutoDeltaHedgedOption::build(const QuantLib::ext::shared_ptr<EngineFa
 
         if (hedgingStarted) {
             DayCounter dc = Actual365Fixed();
-            Date obsDate = observationStartDate_;
-            // Advance to first valid fixing date on or after observation start
-            if (!fixingCal.isBusinessDay(obsDate))
-                obsDate = fixingCal.adjust(obsDate, Following);
+            Date obsDate = fixingCal.adjust(observationStartDate_, Following);
 
             // Previous forward: F_{t-1, Final} = S_{t-1} * Exp(forwardRate_ * tau)
             Real prevFwd = Null<Real>();
@@ -150,10 +145,6 @@ void EquityAutoDeltaHedgedOption::build(const QuantLib::ext::shared_ptr<EngineFa
             Real prevDelta = 0.0;
 
             for (Date d = obsDate; d <= today; d = fixingCal.advance(d, 1, Days)) {
-                if (!fixingCal.isBusinessDay(d))
-                    continue;
-
-                // Get the spot/index level for date d
                 Real spotD = eqIndex->fixing(d);
 
                 // Contractual forward: Fwd_{t,Final} = S_t * Exp(forwardRate_ * tau)
@@ -187,9 +178,9 @@ void EquityAutoDeltaHedgedOption::build(const QuantLib::ext::shared_ptr<EngineFa
             QuantLib::ext::make_shared<QuantLib::AnalyticEuropeanEngine>(marketProcess, discountCurve));
 
         // Subtract market option value: -N * C_market
-        composite->subtract(marketOption, Ni);
+        composite->subtract(marketOption, optionQuantity);
 
-        // --- (b) Future hedge P&L: BS option at hedging vol from today to expiry ---
+        // --- Future hedge P&L: BS option at hedging vol from today to expiry ---
         // The contractual delta uses Fwd = S_t * Exp(Some_Rates * tau), so the hedge GBM process
         // must use flat yield curves at the forward rate for both rate and dividend
         // so that BS forward = S * Exp((r - q) * tau) = S * Exp(forwardRate_ * tau).
@@ -210,7 +201,7 @@ void EquityAutoDeltaHedgedOption::build(const QuantLib::ext::shared_ptr<EngineFa
                 QuantLib::ext::make_shared<QuantLib::AnalyticEuropeanEngine>(hedgeProcess, discountCurve));
 
             // Add future hedge option value: +N * C_hedge(today)
-            composite->add(hedgeOption, Ni);
+            composite->add(hedgeOption, optionQuantity);
         }
 
         // --- Realized past hedge P&L as a payment at expiry ---
@@ -220,17 +211,17 @@ void EquityAutoDeltaHedgedOption::build(const QuantLib::ext::shared_ptr<EngineFa
             hedgePnLPayment->setPricingEngine(
                 QuantLib::ext::make_shared<QuantExt::PaymentDiscountingEngine>(discountCurve));
             additionalInstruments.push_back(hedgePnLPayment);
-            additionalMultipliers.push_back(Ni);
+            additionalMultipliers.push_back(optionQuantity);
         }
 
         // --- Premium: settled at the expiry date as part of the equity amount ---
         auto premData = u.optionData.premiumData().premiumData();
         QL_REQUIRE(premData.size() == 1, "EquityAutoDeltaHedgedOption: expected exactly one premium per underlying, got "
                                              << premData.size() << " for underlying " << i << " in trade " << id());
-        auto pd = premData.front();
-        QL_REQUIRE(pd.amount != Null<Real>(), "Invalid premium data for underlying " << i);
-        Real premAmount = convertMinorToMajorCurrency(pd.ccy, pd.amount);
-        Currency premCcy = parseCurrencyWithMinors(pd.ccy);
+        auto premiumData = premData.front();
+        QL_REQUIRE(premiumData.amount != Null<Real>(), "Invalid premium data for underlying " << i);
+        Real premAmount = convertMinorToMajorCurrency(premiumData.ccy, premiumData.amount);
+        Currency premCcy = parseCurrencyWithMinors(premiumData.ccy);
         auto payment = QuantLib::ext::make_shared<QuantExt::Payment>(premAmount, premCcy, expiryDate);
         Handle<Quote> fxRate;
         if (premCcy != ccy)
@@ -238,13 +229,13 @@ void EquityAutoDeltaHedgedOption::build(const QuantLib::ext::shared_ptr<EngineFa
         payment->setPricingEngine(
             QuantLib::ext::make_shared<QuantExt::PaymentDiscountingEngine>(discountCurve, fxRate));
         additionalInstruments.push_back(payment);
-        additionalMultipliers.push_back(Ni);
+        additionalMultipliers.push_back(optionQuantity);
     }
-
-    maturityType_ = "Expiry Date";
 
     instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(
         new VanillaInstrument(composite, 1.0, additionalInstruments, additionalMultipliers));
+    
+    setSensitivityTemplate(std::string());
 }
 
 void EquityAutoDeltaHedgedOption::fromXML(XMLNode* node) {
