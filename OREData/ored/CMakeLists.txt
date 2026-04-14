@@ -401,6 +401,7 @@ utilities/formulaparser.cpp
 utilities/indexnametranslator.cpp
 utilities/indexparser.cpp
 utilities/inflationstartdate.cpp
+utilities/irconventionbasedfutureexpiry.cpp
 utilities/log.cpp
 utilities/marketdata.cpp
 utilities/osutils.cpp
@@ -845,6 +846,7 @@ utilities/formulaparser.hpp
 utilities/indexnametranslator.hpp
 utilities/indexparser.hpp
 utilities/inflationstartdate.hpp
+utilities/irconventionbasedfutureexpiry.hpp
 utilities/log.hpp
 utilities/marketdata.hpp
 utilities/osutils.hpp
