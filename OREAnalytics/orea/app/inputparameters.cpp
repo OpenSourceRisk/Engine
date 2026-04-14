@@ -37,8 +37,6 @@
 #include <orea/simm/simmcalibration.hpp>
 #include <ql/indexes/iborindex.hpp>
 
-#include <iostream>
-
 using namespace QuantLib;
 
 namespace ore {
