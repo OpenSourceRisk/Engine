@@ -36,7 +36,7 @@ using QuantLib::WeekendsOnly;
 namespace ore {
 namespace data {
 
-static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
+MarketDatum::InstrumentType parseInstrumentType(const string& s) {
 
     static map<string, MarketDatum::InstrumentType> b = {
         {"ZERO", MarketDatum::InstrumentType::ZERO},
@@ -82,6 +82,7 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
         {"COMMODITY_FWD", MarketDatum::InstrumentType::COMMODITY_FWD},
         {"CORRELATION", MarketDatum::InstrumentType::CORRELATION},
         {"COMMODITY_OPTION", MarketDatum::InstrumentType::COMMODITY_OPTION},
+        {"COMMODITY_CALENDAR_SPREAD_OPTION", MarketDatum::InstrumentType::COMMODITY_CALENDAR_SPREAD_OPTION},
         {"CPR", MarketDatum::InstrumentType::CPR},
         {"RATING", MarketDatum::InstrumentType::RATING}};
 
@@ -429,15 +430,28 @@ QuantLib::ext::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const 
         // CDS/PRICE/Name/Seniority/ccy/term/runningSpread
         // CDS/PRICE/Name/Seniority/ccy/doc/term
         // CDS/PRICE/Name/Seniority/ccy/doc/term/runningSpread
-        QL_REQUIRE(tokens.size() == 6 || tokens.size() == 7 || tokens.size() == 8,
-            "6, 7 or 8 tokens expected in " << datumName);
+        // CDS/PRICE/Name/ccy          -- for new MDX quote, using reference datum to build schedule in Cds Helper
+        QL_REQUIRE(tokens.size() == 4 || tokens.size() == 6 || tokens.size() == 7 || tokens.size() == 8,
+            "4, 6, 7 or 8 tokens expected in " << datumName);
         const string& underlyingName = tokens[2];
+        string docClause;
+        Period term;
+        Date expiryDate;
+        Real runningSpread = Null<Real>();
+        
+        if (tokens.size() == 4)
+        {
+            const string& ccy = tokens[3];
+            // build from reference data, no seniority, no term
+            // e.g. for MDX swap
+            return QuantLib::ext::make_shared<CdsQuote>(value, asof, datumName, quoteType, underlyingName, "",
+                                                        ccy, term, docClause, runningSpread);
+        }
         const string& seniority = tokens[3];
         const string& ccy = tokens[4];
 
-        string docClause;
-        Period term;
-        Real runningSpread = Null<Real>();
+        
+        
         if (tokens.size() == 6) {
             term = parsePeriod(tokens[5]);
         } else if (tokens.size() == 8) {
@@ -891,6 +905,21 @@ QuantLib::ext::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const 
             tokens[3], expiry, strike, optionType);
     }
 
+    case MarketDatum::InstrumentType::COMMODITY_CALENDAR_SPREAD_OPTION: {
+        // Expects one of the following forms:
+        // COMMODITY_CALENDAR_SPREAD_OPTION/<QT>/<COMDTY_NAME>/<OFFSET>/<CCY>/<EXPIRY>/<STRIKE>
+        using QT = MarketDatum::QuoteType;
+        QL_REQUIRE(tokens.size() == 7, "7 tokens are expected in " << datumName);
+        QL_REQUIRE(quoteType == QT::RATE_NVOL, "Quote type for " << datumName << " should be'RATE_NVOL'");
+
+        QuantLib::ext::shared_ptr<Expiry> expiry = parseExpiry(tokens[5]);
+        auto strike = parseBaseStrike(tokens[6]);        
+        auto offset = parseInteger(tokens[3]);
+
+        return QuantLib::ext::make_shared<CommodityCalendarSpreadOptionQuote>(value, asof, datumName, quoteType, tokens[2],
+            offset, tokens[4], expiry, strike);
+    }
+    
     case MarketDatum::InstrumentType::CORRELATION: {
         // Expects the following form:
         // CORRELATION/RATE/<INDEX1>/<INDEX2>/<TENOR>/<STRIKE>

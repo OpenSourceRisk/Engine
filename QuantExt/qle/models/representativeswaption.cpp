@@ -94,7 +94,7 @@ RepresentativeSwaptionMatcher::RepresentativeSwaptionMatcher(
                     modelIborIndexToUse = iborIndexLinkedToModelCurve;
                     iborIndexToUse = i->iborIndex();
                 }
-            } else if (auto o = QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(c)) {
+            } else if (auto o = ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCouponBase>(c)) {
                 auto onIndex = o->overnightIndex();
                 QL_REQUIRE(onIndex, "internal error: could not cast o->index() to overnightIndex");
                 QuantLib::ext::shared_ptr<LgmImpliedYtsFwdFwdCorrected> y;
@@ -110,45 +110,30 @@ RepresentativeSwaptionMatcher::RepresentativeSwaptionMatcher(
                     QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(onIndex->clone(Handle<YieldTermStructure>(y)));
                 QL_REQUIRE(onIndexLinkedToModelCurve,
                            "internal error: could not cast onIndex->clone() to OvernightIndex");
-                auto tmp = QuantLib::ext::make_shared<QuantExt::OvernightIndexedCoupon>(
-                    o->date(), o->nominal(), o->accrualStartDate(), o->accrualEndDate(), onIndexLinkedToModelCurve,
-                    o->gearing(), o->spread(), o->referencePeriodStart(), o->referencePeriodEnd(), o->dayCounter(),
-                    false, o->includeSpread(), o->lookback(), o->rateCutoff(), o->fixingDays(),
-                    o->rateComputationStartDate(), o->rateComputationEndDate());
-                tmp->setPricer(QuantLib::ext::make_shared<OvernightIndexedCouponPricer>());
+
+                auto tmp = OvernightCouponBuilder(o->rateType(), o->date(), o->nominal(), o->accrualStartDate(),
+                    o->accrualEndDate(), onIndexLinkedToModelCurve)
+                    .withGearing(o->gearing())
+                    .withSpread(o->spread())
+                    .withRefPeriodStart(o->referencePeriodStart())
+                    .withRefPeriodEnd(o->referencePeriodEnd())
+                    .withDayCounter(o->dayCounter())
+                    .withIncludeSpread(o->includeSpread())
+                    .withLookback(o->lookback())
+                    .withRateCutoff(o->rateCutoff())
+                    .withFixingDays(o->fixingDays())
+                    .withRateComputationStart(o->rateComputationStartDate())
+                    .withRateComputationEnd(o->rateComputationEndDate())
+                    .withObservationShift(o->observationShift())
+                    .build();
+
                 modelLinkedUnderlying_.push_back(tmp);
                 if (modelIborIndexToUse == nullptr) {
                     modelIborIndexToUse = onIndexLinkedToModelCurve;
                     iborIndexToUse = o->overnightIndex();
                 }
-            } else if (auto o = QuantLib::ext::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(c)) {
-                auto onIndex = o->overnightIndex();
-                QL_REQUIRE(onIndex, "internal error: could not cast o->index() to overnightIndex");
-                QuantLib::ext::shared_ptr<LgmImpliedYtsFwdFwdCorrected> y;
-                auto fc = modelForwardCurves_.find(onIndex->name());
-                if (fc != modelForwardCurves_.end())
-                    y = fc->second;
-                else {
-                    y = QuantLib::ext::make_shared<LgmImpliedYtsFwdFwdCorrected>(
-                        model_, flatCurve.empty() ? onIndex->forwardingTermStructure() : flatCurve);
-                    modelForwardCurves_[onIndex->name()] = y;
-                }
-                auto onIndexLinkedToModelCurve =
-                    QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(onIndex->clone(Handle<YieldTermStructure>(y)));
-                QL_REQUIRE(onIndexLinkedToModelCurve,
-                           "internal error: could not cast onIndex->clone() to OvernightIndex");
-                auto tmp = QuantLib::ext::make_shared<QuantExt::AverageONIndexedCoupon>(
-                    o->date(), o->nominal(), o->accrualStartDate(), o->accrualEndDate(), onIndexLinkedToModelCurve,
-                    o->gearing(), o->spread(), o->rateCutoff(), o->dayCounter(), o->lookback(), o->fixingDays(),
-                    o->rateComputationStartDate(), o->rateComputationEndDate());
-                tmp->setPricer(QuantLib::ext::make_shared<AverageONIndexedCouponPricer>());
-                modelLinkedUnderlying_.push_back(tmp);
-                if (modelIborIndexToUse == nullptr) {
-                    modelIborIndexToUse = onIndexLinkedToModelCurve;
-                    iborIndexToUse = o->overnightIndex();
-                }
-            } else if (QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(c) ||
-                       QuantLib::ext::dynamic_pointer_cast<SimpleCashFlow>(c)) {
+
+            } else if (ext::dynamic_pointer_cast<FixedRateCoupon>(c) || ext::dynamic_pointer_cast<SimpleCashFlow>(c)) {
                 // fixed coupon or simple cashflow
                 modelLinkedUnderlying_.push_back(c);
             } else {
@@ -225,6 +210,9 @@ QuantLib::ext::shared_ptr<Swaption> RepresentativeSwaptionMatcher::representativ
 
     constexpr static Real h = 1.0E-4;
 
+    // Might need this when dealing with the ON coupons below.
+    Date adjExDate = swapIndexBase_->fixingCalendar().adjust(exerciseDate);
+
     // build leg containing all coupons with pay date > exerciseDate
 
     Date today = discountCurve_->referenceDate();
@@ -260,15 +248,17 @@ QuantLib::ext::shared_ptr<Swaption> RepresentativeSwaptionMatcher::representativ
                 effectiveLeg.push_back(cf);
                 effectiveIsPayer.push_back(modelLinkedUnderlyingIsPayer_[c]);
             }
-        } else if (auto o = QuantLib::ext::dynamic_pointer_cast<OvernightIndexedCoupon>(cf)) {
+        } else if (auto o = ext::dynamic_pointer_cast<OvernightIndexedCouponBase>(cf)) {
 
             if (o->fixingDates().empty())
                 continue;
 
             // For an OIS coupon, we keep the original coupon, if the first fixing date >= exercise date
-
             if (o->fixingDates().front() >= exerciseDate) {
-                o->setPricer(QuantLib::ext::make_shared<QuantExt::OvernightIndexedCouponPricer>());
+                if (o->rateType() != OvernightIndexedCouponBase::Type::Averaging)
+                    o->setPricer(ext::make_shared<QuantExt::OvernightIndexedCouponPricer>());
+                else
+                    o->setPricer(ext::make_shared<QuantExt::AverageONIndexedCouponPricer>());
                 effectiveLeg.push_back(o);
                 effectiveIsPayer.push_back(modelLinkedUnderlyingIsPayer_[c]);
             } else {
@@ -279,7 +269,6 @@ QuantLib::ext::shared_ptr<Swaption> RepresentativeSwaptionMatcher::representativ
                 // For b) keep fixing dates >= exerciseDate only, but at least one fixing date and scale the result
                 // to the full rate period associated to b). Furthermore, the accrual period will be the same as
                 // the rate computation (value dates) period
-
                 Real accrualToRatePeriodRatio = 1.0;
                 if (o->rateComputationStartDate() != Null<Date>() && o->rateComputationEndDate() != Null<Date>()) {
                     accrualToRatePeriodRatio =
@@ -293,86 +282,63 @@ QuantLib::ext::shared_ptr<Swaption> RepresentativeSwaptionMatcher::representativ
                         *std::next(std::lower_bound(o->fixingDates().begin(), o->fixingDates().end(), today), -1);
                     Date lastValueDateBeforeToday = valueDate(lastFixingDateBeforeToday, o);
                     if (lastValueDateBeforeToday > firstValueDate) {
-                        auto tmp = QuantLib::ext::make_shared<OvernightIndexedCoupon>(
-                            o->date(), o->nominal() * accrualToRatePeriodRatio, firstValueDate,
-                            lastValueDateBeforeToday, o->overnightIndex(), o->gearing(), o->spread(),
-                            o->referencePeriodStart(), o->referencePeriodEnd(), o->dayCounter(), false,
-                            o->includeSpread(), 0 * Days, o->rateCutoff(), o->fixingDays());
-                        tmp->setPricer(QuantLib::ext::make_shared<QuantExt::OvernightIndexedCouponPricer>());
+                        Real effNtl = o->nominal() * accrualToRatePeriodRatio;
+                        auto tmp = OvernightCouponBuilder(o->rateType(), o->date(), effNtl, firstValueDate,
+                            lastValueDateBeforeToday, o->overnightIndex())
+                            .withGearing(o->gearing())
+                            .withSpread(o->spread())
+                            .withRefPeriodStart(o->referencePeriodStart())
+                            .withRefPeriodEnd(o->referencePeriodEnd())
+                            .withDayCounter(o->dayCounter())
+                            .withIncludeSpread(o->includeSpread())
+                            .withRateCutoff(o->rateCutoff())
+                            .withFixingDays(o->fixingDays())
+                            .build();
+
                         additionalDeterministicNpv += discountCurve_->discount(tmp->date()) * tmp->amount();
                     }
                 }
-                if (o->fixingDates().back() >= today) {
-                    Date firstFixingDateGeqToday =
-                        *std::lower_bound(o->fixingDates().begin(), o->fixingDates().end(), today);
-                    Date firstValueDateGeqToday = valueDate(firstFixingDateGeqToday, o);
-                    Date lastValueDate =  valueDate(o->fixingDates().back(), o);
-                    Date startDate = o->index()->fixingCalendar().adjust(exerciseDate);
-                    Date endDate = std::max(lastValueDate, startDate + 1);
-                    Real factor = o->dayCounter().yearFraction(firstValueDateGeqToday, lastValueDate) /
-                                  o->dayCounter().yearFraction(startDate, endDate);
-                    auto tmp = QuantLib::ext::make_shared<OvernightIndexedCoupon>(
-                        o->date(), o->nominal() * accrualToRatePeriodRatio * factor, startDate, endDate,
-                        o->overnightIndex(), o->gearing(), o->spread(), o->referencePeriodStart(),
-                        o->referencePeriodEnd(), o->dayCounter(), false, o->includeSpread(), 0 * Days, o->rateCutoff(),
-                        o->fixingDays());
-                    tmp->setPricer(QuantLib::ext::make_shared<OvernightIndexedCouponPricer>());
+
+                // Only way that we can add something here and not fail in the overnight coupon pricers is that we 
+                // have no underlying overnight period value dates \in [today, adjExDate) because the reference date of 
+                // the yield curves is set to adjExDate below for some reason and we will ask the yield curve for a 
+                // discount factor at the value date for projection. This in turn gives a negative time error from the
+                // yield curve.
+                if (o->valueDates().back() > adjExDate) {
+                    const auto& fixDates = o->fixingDates();
+                    const auto& valDates = o->valueDates();
+                    const auto& intDates = o->interestDates();
+                    auto dc = o->dayCounter();
+                    // The interest date associated with the first fixing date >= today.
+                    auto ffgtIdx = distance(fixDates.begin(), lower_bound(fixDates.begin(), fixDates.end(), today));
+                    Date ffgtIntDate = intDates[ffgtIdx];
+                    // Interest date associated with the first value date >= adjExDate, where adjExDate is the 
+                    // reference date of yield curve below that will be used in the pricer. This will be the start date 
+                    // of the coupon.
+                    auto fvgeIdx = distance(valDates.begin(), lower_bound(valDates.begin(), valDates.end(), adjExDate));
+                    Date startDate = intDates[fvgeIdx];
+                    // Construct coupon and scaling factor.
+                    Date lastIntDate = intDates.back();
+                    Date endDate = std::max(lastIntDate, startDate + 1);
+                    Real factor = dc.yearFraction(ffgtIntDate, lastIntDate) / dc.yearFraction(startDate, endDate);
+                    Real effNtl = o->nominal() * accrualToRatePeriodRatio * factor;
+                    auto tmp = OvernightCouponBuilder(o->rateType(), o->date(), effNtl, startDate, endDate,
+                        o->overnightIndex())
+                        .withGearing(o->gearing())
+                        .withSpread(o->spread())
+                        .withRefPeriodStart(o->referencePeriodStart())
+                        .withRefPeriodEnd(o->referencePeriodEnd())
+                        .withDayCounter(o->dayCounter())
+                        .withIncludeSpread(o->includeSpread())
+                        .withRateCutoff(o->rateCutoff())
+                        .withFixingDays(o->fixingDays())
+                        .build();
+
                     effectiveLeg.push_back(tmp);
                     effectiveIsPayer.push_back(modelLinkedUnderlyingIsPayer_[c]);
                 }
             }
-        } else if (auto o = QuantLib::ext::dynamic_pointer_cast<AverageONIndexedCoupon>(cf)) {
-
-            if (o->fixingDates().empty())
-                continue;
-
-            if (o->fixingDates().front() >= exerciseDate) {
-                o->setPricer(QuantLib::ext::make_shared<QuantExt::AverageONIndexedCouponPricer>());
-                effectiveLeg.push_back(o);
-                effectiveIsPayer.push_back(modelLinkedUnderlyingIsPayer_[c]);
-            } else {
-
-                Real accrualToRatePeriodRatio = 1.0;
-                if (o->rateComputationStartDate() != Null<Date>() && o->rateComputationEndDate() != Null<Date>()) {
-                    accrualToRatePeriodRatio =
-                        o->dayCounter().yearFraction(o->accrualStartDate(), o->accrualEndDate()) /
-                        o->dayCounter().yearFraction(o->rateComputationStartDate(), o->rateComputationEndDate());
-                }
-                Date firstFixingDate = o->fixingDates().front();
-                if (firstFixingDate < today) {
-                    Date firstValueDate = valueDate(firstFixingDate, o);
-                    Date lastFixingDateBeforeToday =
-                        *std::next(std::lower_bound(o->fixingDates().begin(), o->fixingDates().end(), today), -1);
-                    Date lastValueDateBeforeToday = valueDate(lastFixingDateBeforeToday, o);
-                    if (lastValueDateBeforeToday > firstValueDate) {
-                        auto tmp = QuantLib::ext::make_shared<AverageONIndexedCoupon>(
-                            o->date(), o->nominal() * accrualToRatePeriodRatio, firstValueDate,
-                            lastValueDateBeforeToday, o->overnightIndex(), o->gearing(), o->spread(), o->rateCutoff(),
-                            o->dayCounter(), 0 * Days, o->fixingDays());
-                        tmp->setPricer(QuantLib::ext::make_shared<QuantExt::AverageONIndexedCouponPricer>());
-                        additionalDeterministicNpv += discountCurve_->discount(tmp->date()) * tmp->amount();
-                    }
-                }
-                if (o->fixingDates().back() >= today) {
-                    Date firstFixingDateGeqToday =
-                        *std::lower_bound(o->fixingDates().begin(), o->fixingDates().end(), today);
-                    Date firstValueDateGeqToday = valueDate(firstFixingDateGeqToday, o);
-                    Date lastValueDate = valueDate(o->fixingDates().back(), o);
-                    Date startDate = o->index()->fixingCalendar().adjust(exerciseDate);
-                    Date endDate = std::max(lastValueDate, startDate + 1);
-                    Real factor = o->dayCounter().yearFraction(firstValueDateGeqToday, lastValueDate) /
-                                  o->dayCounter().yearFraction(startDate, endDate);
-                    auto tmp = QuantLib::ext::make_shared<AverageONIndexedCoupon>(
-                        o->date(), o->nominal() * accrualToRatePeriodRatio * factor, startDate, endDate,
-                        o->overnightIndex(), o->gearing(), o->spread(), o->rateCutoff(), o->dayCounter(), 0 * Days,
-                        o->fixingDays());
-                    tmp->setPricer(QuantLib::ext::make_shared<AverageONIndexedCouponPricer>());
-                    effectiveLeg.push_back(tmp);
-                    effectiveIsPayer.push_back(modelLinkedUnderlyingIsPayer_[c]);
-                }
-            }
-        } else if (QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(cf) != nullptr ||
-                   QuantLib::ext::dynamic_pointer_cast<SimpleCashFlow>(cf) != nullptr) {
+        } else if (ext::dynamic_pointer_cast<FixedRateCoupon>(cf) || ext::dynamic_pointer_cast<SimpleCashFlow>(cf)) {
             effectiveLeg.push_back(cf);
             effectiveIsPayer.push_back(modelLinkedUnderlyingIsPayer_[c]);
         } else {
@@ -384,7 +350,7 @@ QuantLib::ext::shared_ptr<Swaption> RepresentativeSwaptionMatcher::representativ
         return QuantLib::ext::shared_ptr<Swaption>();
 
     // adjust exercise date to a valid fixing date, otherwise MakeVanillaSwap below may fail
-    exerciseDate = swapIndexBase_->fixingCalendar().adjust(exerciseDate);
+    exerciseDate = adjExDate;
 
     // compute exercise time (the dc of the discount curve defines the date => time mapping by convention)
     Real t_ex = discountCurve_->timeFromReference(exerciseDate);

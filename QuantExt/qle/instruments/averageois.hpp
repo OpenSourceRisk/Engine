@@ -57,7 +57,7 @@ public:
                const DayCounter& onDayCounter = DayCounter(),
                const QuantLib::ext::shared_ptr<AverageONIndexedCouponPricer>& onCouponPricer =
                    QuantLib::ext::shared_ptr<AverageONIndexedCouponPricer>(),
-               const bool telescopicValueDates = false);
+               const bool telescopicValueDates = false, const bool staleDatesCheck = true);
 
     /*! Arithmetic average ON leg vs. fixed leg constructor, allowing for
         varying nominals, fixed rates, ON leg spreads and ON leg gearings.
@@ -71,7 +71,7 @@ public:
                std::vector<Real> onGearings = std::vector<Real>(1, 1.0), const DayCounter& onDayCounter = DayCounter(),
                const QuantLib::ext::shared_ptr<AverageONIndexedCouponPricer>& onCouponPricer =
                    QuantLib::ext::shared_ptr<AverageONIndexedCouponPricer>(),
-               const bool telescopicValueDates = false);
+               const bool telescopicValueDates = false, const bool staleDatesCheck = true);
 
     //! \name Inspectors
     //@{
@@ -132,6 +132,7 @@ private:
     DayCounter onDayCounter_;
     QuantLib::ext::shared_ptr<AverageONIndexedCouponPricer> onCouponPricer_;
     bool telescopicValueDates_;
+    bool staleDatesCheck_;
 };
 } // namespace QuantExt
 

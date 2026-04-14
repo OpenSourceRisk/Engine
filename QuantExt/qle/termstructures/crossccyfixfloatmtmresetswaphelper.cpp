@@ -38,13 +38,14 @@ CrossCcyFixFloatMtMResetSwapHelper::CrossCcyFixFloatMtMResetSwapHelper(
     const std::vector<Natural>& spotFXSettleDaysVec, const std::vector<Calendar>& spotFXSettleCalendarVec,
     QuantLib::ext::optional<bool> includeSpread, QuantLib::ext::optional<Period> lookback,
     QuantLib::ext::optional<Size> fixingDays, QuantLib::ext::optional<Size> rateCutoff,
-    QuantLib::ext::optional<bool> isAveraged)
+    QuantLib::ext::optional<bool> isAveraged, QuantLib::ext::optional<bool> observationShift)
     : RelativeDateRateHelper(rate), spotFx_(spotFx), settlementDays_(settlementDays), paymentCalendar_(paymentCalendar),
       paymentConvention_(paymentConvention), tenor_(tenor), fixedCurrency_(fixedCurrency),
       fixedFrequency_(fixedFrequency), fixedConvention_(fixedConvention), fixedDayCount_(fixedDayCount), index_(index),
       floatDiscount_(floatDiscount), spread_(spread), endOfMonth_(endOfMonth), resetsOnFloatLeg_(resetsOnFloatLeg),
       telescopicValueDates_(telescopicValueDates), pillarChoice_(pillarChoice), includeSpread_(includeSpread),
-      lookback_(lookback), fixingDays_(fixingDays), rateCutoff_(rateCutoff), isAveraged_(isAveraged) {
+      lookback_(lookback), fixingDays_(fixingDays), rateCutoff_(rateCutoff), isAveraged_(isAveraged),
+      observationShift_(observationShift) {
 
     QL_REQUIRE(!spotFx_.empty(), "Spot FX quote cannot be empty.");
     QL_REQUIRE(fixedCurrency_ != index_->currency(), "Fixed currency should not equal float leg currency.");
@@ -103,7 +104,7 @@ void CrossCcyFixFloatMtMResetSwapHelper::initializeDates() {
         nominal, fixedCurrency_, fixedSchedule, quote().empty() || !quote()->isValid() ? 0.0 : quote()->value(),
         fixedDayCount_, paymentConvention_, paymentLag, paymentCalendar_, index_->currency(), floatSchedule, index_,
         floatSpread, paymentConvention_, paymentLag, paymentCalendar_, fxIdx, resetsOnFloatLeg_, true, includeSpread_,
-        lookback_, fixingDays_, rateCutoff_, isAveraged_);
+        lookback_, fixingDays_, rateCutoff_, isAveraged_, observationShift_);
 
     // Attach engine
     QuantLib::ext::shared_ptr<PricingEngine> engine = QuantLib::ext::make_shared<CrossCcySwapEngine>(

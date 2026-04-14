@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2017 Quaternion Risk Management Ltd
+ Copyright (C) 2026 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,18 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/pricingengines/nullamccalculator.hpp>
+#include <ored/portfolio/builders/ratedigitaloption.hpp>
 
-#include <ql/currencies/america.hpp>
-
-namespace QuantExt {
-
-QuantLib::Currency NullAmcCalculator::npvCurrency() { return USDCurrency(); }
-
-std::vector<QuantExt::RandomVariable> NullAmcCalculator::simulatePath(
-    const std::vector<QuantLib::Real>& pathTimes, const std::vector<std::vector<QuantExt::RandomVariable>>& paths,
-    const std::vector<size_t>& relevantPathIndex, const std::vector<size_t>& relevantTimeIndex) {
-    return std::vector<RandomVariable>(relevantPathIndex.size() + 1, RandomVariable(paths.front().front().size(), 0.0));
-}
-
-} // namespace QuantExt
+namespace ore {
+namespace data {
+} // namespace data
+} // namespace ore
