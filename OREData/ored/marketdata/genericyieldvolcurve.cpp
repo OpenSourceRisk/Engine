@@ -443,6 +443,7 @@ GenericYieldVolCurve::GenericYieldVolCurve(
 
                             auto li = ext::make_shared<LinearInterpolation>(x.begin(), x.end(), y.begin());
                             auto f = ext::make_shared<FlatExtrapolation>(li);
+                            f->enableExtrapolation();
 
                             for (Size k = 0; k < spreads.size(); ++k) {
                                 int spreadIndex = spreads.size() - 1 - k;
