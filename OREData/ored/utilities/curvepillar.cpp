@@ -17,10 +17,11 @@
 */
 #include <ored/utilities/curvepillar.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
 
 namespace ore {
 namespace data {
-    
+
 CurvePillar parseCurvePillar(const std::string& str) {
     QL_REQUIRE(str.size() > 1, "parseCurvePillar: string must have at least 2 characters");
 
@@ -40,5 +41,11 @@ CurvePillar parseCurvePillar(const std::string& str) {
         }
     }
 }
+
+std::ostream& operator<<(std::ostream& os, const CurvePillar& v) {
+    std::visit([&](const auto& x) { os << to_string(x); }, v);
+    return os;
+}
+
 } // namespace data
 } // namespace ore

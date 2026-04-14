@@ -392,6 +392,7 @@ utilities/correlationmatrix.cpp
 utilities/csvfilereader.cpp
 utilities/currencyhedgedequityindexdecomposition.cpp
 utilities/currencyparser.cpp
+utilities/curvepillar.cpp
 utilities/databuilders.cpp
 utilities/dategrid.cpp
 utilities/dependencies.cpp
@@ -837,6 +838,7 @@ utilities/credit.hpp
 utilities/csvfilereader.hpp
 utilities/currencyhedgedequityindexdecomposition.hpp
 utilities/currencyparser.hpp
+utilities/curvepillar.hpp
 utilities/databuilders.hpp
 utilities/dategrid.hpp
 utilities/dependencies.hpp

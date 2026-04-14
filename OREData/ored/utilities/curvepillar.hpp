@@ -23,12 +23,16 @@
 
 #pragma once
 
+#include <iostream>
 #include <ored/marketdata/expiry.hpp>
-
+#include <variant>
 namespace ore {
 namespace data {
-typedef std::variant<QuantLib::Date, QuantLib::Period, FutureContinuationExpiry> CurvePillar;
+
+using CurvePillar = std::variant<QuantLib::Date, QuantLib::Period, FutureContinuationExpiry>;
 
 CurvePillar parseCurvePillar(const std::string& str);
+
+std::ostream& operator<<(std::ostream& os, const CurvePillar& v);
 } // namespace data
 } // namespace ore
