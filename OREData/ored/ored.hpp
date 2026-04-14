@@ -424,6 +424,7 @@
 #include <ored/utilities/csvfilereader.hpp>
 #include <ored/utilities/currencyhedgedequityindexdecomposition.hpp>
 #include <ored/utilities/currencyparser.hpp>
+#include <ored/utilities/curvepillar.hpp>
 #include <ored/utilities/databuilders.hpp>
 #include <ored/utilities/dategrid.hpp>
 #include <ored/utilities/dependencies.hpp>

@@ -81,18 +81,17 @@ QuantLib::Date IrConventionBasedFutureExpiry::nextExpiry(const QuantLib::Date& d
     return nextDate;
 }
 
-
-QuantLib::Date expiryToIrCurveDate(const QuantLib::ext::shared_ptr<Expiry>& expiry, const QuantLib::Date& refDate,
-                                   const std::optional<IrConventionBasedFutureExpiry>& irFutureExpiry) {
-    QL_REQUIRE(expiry, "expiryToIrCurveDate: expiry not provided");
-    if (auto periodExpiry = QuantLib::ext::dynamic_pointer_cast<ExpiryPeriod>(expiry)) {
+QuantLib::Date
+expiryToIrCurveDate(const CurvePillar& expiry,
+                    const QuantLib::Date& refDate, const std::optional<IrConventionBasedFutureExpiry>& irFutureExpiry) {
+    if (auto periodExpiry = std::get_if<QuantLib::Period>(&expiry)) {
         Date asof = refDate == Date() ? Settings::instance().evaluationDate() : refDate;
-        return asof + periodExpiry->expiryPeriod();
+        return asof + *periodExpiry;
     }
-    if (auto dateExpiry = QuantLib::ext::dynamic_pointer_cast<ExpiryDate>(expiry)) {
-        return dateExpiry->expiryDate();
+    if (auto dateExpiry = std::get_if<QuantLib::Date>(&expiry)) {
+        return *dateExpiry;
     }
-    if (auto futureExpiry = QuantLib::ext::dynamic_pointer_cast<FutureContinuationExpiry>(expiry)) {
+    if (auto futureExpiry = std::get_if<ore::data::FutureContinuationExpiry>(&expiry)) {
         QL_REQUIRE(irFutureExpiry.has_value(),
                    "expiryToIrCurveDate: irFutureExpiry is required to convert FutureContinuationExpiry");
         auto offset = futureExpiry->expiryIndex() > 1 ? futureExpiry->expiryIndex() - 1 : 0;
@@ -100,6 +99,8 @@ QuantLib::Date expiryToIrCurveDate(const QuantLib::ext::shared_ptr<Expiry>& expi
     }
     QL_FAIL("expiryToIrCurveDate: unsupported Expiry type");
 }
+
+
 
 } // namespace data
 } // namespace ore

@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(testMmNextExpiryDecemberRollover) {
 BOOST_AUTO_TEST_CASE(testExpiryToIrCurveDatePeriod) {
     BOOST_TEST_MESSAGE("Testing expiryToIrCurveDate with ExpiryPeriod");
     Date ref(14, Apr, 2026);
-    auto expiry = QuantLib::ext::make_shared<ExpiryPeriod>(3 * Months);
+    auto expiry = 3 * Months;
     Date result = expiryToIrCurveDate(expiry, ref);
     BOOST_CHECK_EQUAL(result, ref + 3 * Months);
 }
@@ -164,8 +164,7 @@ BOOST_AUTO_TEST_CASE(testExpiryToIrCurveDateAbsoluteDate) {
     BOOST_TEST_MESSAGE("Testing expiryToIrCurveDate with ExpiryDate");
     Date ref(14, Apr, 2026);
     Date target(17, Jun, 2026);
-    auto expiry = QuantLib::ext::make_shared<ExpiryDate>(target);
-    Date result = expiryToIrCurveDate(expiry, ref);
+    Date result = expiryToIrCurveDate(target, ref);
     BOOST_CHECK_EQUAL(result, target);
 }
 
@@ -180,15 +179,15 @@ BOOST_AUTO_TEST_CASE(testExpiryToIrCurveDateFutureContinuation) {
     Date junImm(17, Jun, 2026);
 
     // c1 -> next future = April IMM
-    auto c1 = QuantLib::ext::make_shared<FutureContinuationExpiry>(1);
+    auto c1 = FutureContinuationExpiry(1);
     BOOST_CHECK_EQUAL(expiryToIrCurveDate(c1, ref, calc), aprImm);
 
     // c2 -> 2nd next future = May IMM
-    auto c2 = QuantLib::ext::make_shared<FutureContinuationExpiry>(2);
+    auto c2 = FutureContinuationExpiry(2);
     BOOST_CHECK_EQUAL(expiryToIrCurveDate(c2, ref, calc), mayImm);
 
     // c3 -> 3rd next future = June IMM
-    auto c3 = QuantLib::ext::make_shared<FutureContinuationExpiry>(3);
+    auto c3 = FutureContinuationExpiry(3);
     BOOST_CHECK_EQUAL(expiryToIrCurveDate(c3, ref, calc), junImm);
 }
 
@@ -317,13 +316,13 @@ BOOST_AUTO_TEST_CASE(testExpiryToIrCurveDateOisFutureContinuation) {
     Date mayEnd(20, May, 2026);
     Date junEnd(17, Jun, 2026);
 
-    auto c1 = QuantLib::ext::make_shared<FutureContinuationExpiry>(1);
+    auto c1 = FutureContinuationExpiry(1);
     BOOST_CHECK_EQUAL(expiryToIrCurveDate(c1, ref, calc), aprEnd);
 
-    auto c2 = QuantLib::ext::make_shared<FutureContinuationExpiry>(2);
+    auto c2 = FutureContinuationExpiry(2);
     BOOST_CHECK_EQUAL(expiryToIrCurveDate(c2, ref, calc), mayEnd);
 
-    auto c3 = QuantLib::ext::make_shared<FutureContinuationExpiry>(3);
+    auto c3 = FutureContinuationExpiry(3);
     BOOST_CHECK_EQUAL(expiryToIrCurveDate(c3, ref, calc), junEnd);
 }
 

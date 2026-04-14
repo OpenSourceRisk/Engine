@@ -19,8 +19,9 @@
 #pragma once
 
 #include <ored/configuration/conventions.hpp>
-#include <ored/marketdata/expiry.hpp>
+#include <ored/utilities/curvepillar.hpp>
 #include <optional>
+#include <variant>
 
 namespace ore {
 namespace data {
@@ -40,8 +41,8 @@ private:
 };
 
 // Helper function to convert an expiry to a date
-QuantLib::Date expiryToIrCurveDate(const QuantLib::ext::shared_ptr<Expiry>& expiry,
-                                   const QuantLib::Date& refDate = Date(),
+QuantLib::Date expiryToIrCurveDate(const CurvePillar& expiry,
+                                   const QuantLib::Date& refDate = QuantLib::Date(),
                                    const std::optional<IrConventionBasedFutureExpiry>& irFutureExpiry = std::nullopt);
 
 } // namespace data
