@@ -238,7 +238,7 @@ void ReportWriter::writeCashflowNpv(ore::data::Report& report, const ore::data::
     Size tradeTypeColumn = 1;
     Size payDateColumn = 4;
     Size ccyColumn = 7;
-    Size pvColumn = 17;
+    Size pvColumn = 19;
     QL_REQUIRE(cashflowReport.header(tradeIdColumn) == "TradeId", "incorrect trade id column " << tradeIdColumn);
     QL_REQUIRE(cashflowReport.header(tradeTypeColumn) == "Type", "incorrect trade type column " << tradeTypeColumn);
     QL_REQUIRE(cashflowReport.header(payDateColumn) == "PayDate", "incorrect payment date column " << payDateColumn);
