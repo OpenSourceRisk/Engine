@@ -151,7 +151,6 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
         .addColumn("FlowType", string())
         .addColumn("Amount", double(), 4)
         .addColumn("Currency", string())
-        .addColumn("Amount(Base)", double(), 4)
         .addColumn("Coupon", double(), 10)
         .addColumn("Accrual", double(), 10)
         .addColumn("AccrualStartDate", Date(), 4)
@@ -161,7 +160,6 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
         .addColumn("fixingValue", double(), 10)
         .addColumn("Notional", double(), 4)
         .addColumn("DiscountFactor", double(), 10)
-        .addColumn("DiscountFactorBase", double(), 10)
         .addColumn("PresentValue", double(), 10)
         .addColumn("FXRate(Local-Base)", double(), 10)
         .addColumn("PresentValue(Base)", double(), 10)
@@ -171,7 +169,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
         .addColumn("FloorVolatility", double(), 10)
         .addColumn("CapVolatility", double(), 10)
         .addColumn("EffectiveFloorVolatility", double(), 10)
-        .addColumn("EffectiveCapVolatility", double(), 10);
+        .addColumn("EffectiveCapVolatility", double(), 10)
+        .addColumn("Amount(Base)", double(), 4)
+        .addColumn("DiscountFactorBase", double(), 10);
 
     for (auto [tradeId, trade]: portfolio->trades()) {
 
@@ -189,7 +189,6 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                         .add(d.flowType)
                         .add(d.amount)
                         .add(d.currency)
-                        .add(d.baseAmount)
                         .add(d.coupon)
                         .add(d.accrual)
                         .add(d.accrualStartDate)
@@ -199,7 +198,6 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                         .add(d.fixingValue)
                         .add(d.notional)
                         .add(d.discountFactor)
-                        .add(d.discountFactorBase)
                         .add(d.presentValue)
                         .add(d.fxRateLocalBase)
                         .add(d.presentValueBase)
@@ -209,7 +207,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                         .add(d.floorVolatility)
                         .add(d.capVolatility)
                         .add(d.effectiveFloorVolatility)
-                        .add(d.effectiveCapVolatility);
+                        .add(d.effectiveCapVolatility)
+                        .add(d.baseAmount)
+                        .add(d.discountFactorBase);
             }
 
         } catch (std::exception& e) {
@@ -238,7 +238,7 @@ void ReportWriter::writeCashflowNpv(ore::data::Report& report, const ore::data::
     Size tradeTypeColumn = 1;
     Size payDateColumn = 4;
     Size ccyColumn = 7;
-    Size pvColumn = 19;
+    Size pvColumn = 17;
     QL_REQUIRE(cashflowReport.header(tradeIdColumn) == "TradeId", "incorrect trade id column " << tradeIdColumn);
     QL_REQUIRE(cashflowReport.header(tradeTypeColumn) == "Type", "incorrect trade type column " << tradeTypeColumn);
     QL_REQUIRE(cashflowReport.header(payDateColumn) == "PayDate", "incorrect payment date column " << payDateColumn);
