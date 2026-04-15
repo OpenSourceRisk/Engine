@@ -267,15 +267,10 @@ void EquityAutoDeltaHedgedOption::fromXML(XMLNode* node) {
         // Parse the equity underlying name
         string nameStr = XMLUtils::getChildValue(uNode, "Name", true);
         u.equityUnderlying = EquityUnderlying(nameStr);
-
         u.currency = XMLUtils::getChildValue(uNode, "Currency", true);
-
         u.strike.fromXML(uNode, true, false);
-
         u.strikeCurrency = XMLUtils::getChildValue(uNode, "StrikeCurrency", false);
-
         u.quantity = XMLUtils::getChildValueAsDouble(uNode, "Quantity", true);
-
         underlyings_.push_back(u);
     }
 }
