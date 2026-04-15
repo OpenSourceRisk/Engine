@@ -65,12 +65,16 @@ std::vector<QuantLib::Period> ScenarioCurvePillarConverter::convertToPeriodVecto
             QL_REQUIRE(allowFutureExpiries, "ExpiryMonthYear shift tenors are not allowed for " << name);
             QL_REQUIRE(parConversionEnabled, "To use ExpiryMonthYear shift tenors enable par conversion in "
                                              "configuration and provide future conventions");
-            result.push_back(convertFutureExpiryToPeriod(asof, p, name, sensitivityData, i));
+            auto tenor = convertFutureExpiryToPeriod(asof, p, name, sensitivityData, i);
+            QL_REQUIRE(tenor.length() > 0, "Invalid Converted future expiry. Tenor '"<< *p << "' is in the past for " << name);
+            result.push_back(tenor);
         } else {
             QL_FAIL("unsupported tenor type in shift tenors for " << name);
         }
     }
     return result;
 }
+
+
 } // namespace analytics
 } // namespace ore

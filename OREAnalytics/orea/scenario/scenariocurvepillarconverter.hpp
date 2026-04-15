@@ -47,5 +47,8 @@ public:
 private:
     mutable std::map<std::string, QuantLib::ext::shared_ptr<ore::data::FutureConvention>> futureConventions;
 };
+
+
+
 } // namespace analytics
 } // namespace ore
