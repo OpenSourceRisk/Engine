@@ -26,6 +26,7 @@
 #include <orea/cube/npvcube.hpp>
 #include <orea/engine/sensitivityanalysis.hpp>
 #include <orea/engine/parsensitivityinstrumentbuilder.hpp>
+#include <orea/scenario/scenariocurvepillarconverter.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
@@ -110,7 +111,8 @@ private:
 
     //! Populate `shiftSizes_` for \p key given the implied fair par rate \p parRate
     void populateShiftSizes(const ore::analytics::RiskFactorKey& key, QuantLib::Real parRate,
-                            const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket);
+                            const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket,
+                            const ScenarioCurvePillarConverter& curvePillarConverter);
 
     //! As of date for the calculation of the par sensitivities
     QuantLib::Date asof_;

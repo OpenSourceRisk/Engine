@@ -84,7 +84,7 @@ namespace analytics {
 std::pair<QuantLib::ext::shared_ptr<Instrument>, Date> ParSensitivityInstrumentBuilder::makeInstrument(
     const std::string& instType, const QuantLib::Date& asof, const QuantLib::ext::shared_ptr<Market>& market,
     string ccy, string otherCcy, string curveName, string yieldCurveName, string equityForecastCurveName,
-    ore::data::CurvePillar& curvePillar, const QuantLib::ext::shared_ptr<Convention>& convention, bool singleCurve,
+    ScenarioCurvePillar& curvePillar, const QuantLib::ext::shared_ptr<Convention>& convention, bool singleCurve,
     std::set<ore::analytics::RiskFactorKey>& parHelperDependencies, std::set<std::string>& removeTodaysFixingIndices,
     const string& expDiscountCurve, const string& marketConfiguration) const {
     string instType3 = instType.substr(0, 3);
@@ -119,9 +119,10 @@ std::pair<QuantLib::ext::shared_ptr<Instrument>, Date> ParSensitivityInstrumentB
         return makeBMABasisSwap(asof, market, ccy, std::string(), std::string(), std::string(), std::string(), *term,
                                 convention, singleCurve, parHelperDependencies, removeTodaysFixingIndices,
                                 expDiscountCurve, marketConfiguration);
-    else if (instType3 == "FUT")
+    else if (instType3 == "FUT"){
         DLOG("TODO: implement future par instrument builder for " << instType);
         return std::make_pair(nullptr, Date());
+    }
     else
         return std::make_pair(nullptr, Date());
 }
@@ -195,7 +196,7 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
                 if (!dryRun && !relevantRiskFactors.empty() &&
                     relevantRiskFactors.find(key) == relevantRiskFactors.end())
                     continue;
-                ore::data::CurvePillar term = data.shiftTenors[j];
+                auto term = data.shiftTenors[j];
                 string instType = data.parInstruments[j];
                 bool singleCurve = data.parInstrumentSingleCurve;
                 string indexName = "";               // if empty, it will be picked from conventions
@@ -276,7 +277,7 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
                 if (!dryRun && !relevantRiskFactors.empty() &&
                     relevantRiskFactors.find(key) == relevantRiskFactors.end())
                     continue;
-                ore::data::CurvePillar term = data.shiftTenors[j];
+                auto term = data.shiftTenors[j];
                 string instType = data.parInstruments[j];
                 bool singleCurve = data.parInstrumentSingleCurve;
                 std::pair<QuantLib::ext::shared_ptr<Instrument>, Date> ret;
@@ -346,7 +347,7 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
                 if (!dryRun && !relevantRiskFactors.empty() &&
                     relevantRiskFactors.find(key) == relevantRiskFactors.end())
                     continue;
-                ore::data::CurvePillar term = data.shiftTenors[j];
+                auto term = data.shiftTenors[j];
                 string instType = data.parInstruments[j];
                 bool singleCurve = data.parInstrumentSingleCurve;
                 string yieldCurveName = "";

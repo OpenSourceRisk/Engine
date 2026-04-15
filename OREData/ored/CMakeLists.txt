@@ -392,7 +392,6 @@ utilities/correlationmatrix.cpp
 utilities/csvfilereader.cpp
 utilities/currencyhedgedequityindexdecomposition.cpp
 utilities/currencyparser.cpp
-utilities/curvepillar.cpp
 utilities/databuilders.cpp
 utilities/dategrid.cpp
 utilities/dependencies.cpp
@@ -402,7 +401,6 @@ utilities/formulaparser.cpp
 utilities/indexnametranslator.cpp
 utilities/indexparser.cpp
 utilities/inflationstartdate.cpp
-utilities/irconventionbasedfutureexpiry.cpp
 utilities/log.cpp
 utilities/marketdata.cpp
 utilities/osutils.cpp
@@ -838,7 +836,6 @@ utilities/credit.hpp
 utilities/csvfilereader.hpp
 utilities/currencyhedgedequityindexdecomposition.hpp
 utilities/currencyparser.hpp
-utilities/curvepillar.hpp
 utilities/databuilders.hpp
 utilities/dategrid.hpp
 utilities/dependencies.hpp
@@ -848,7 +845,6 @@ utilities/formulaparser.hpp
 utilities/indexnametranslator.hpp
 utilities/indexparser.hpp
 utilities/inflationstartdate.hpp
-utilities/irconventionbasedfutureexpiry.hpp
 utilities/log.hpp
 utilities/marketdata.hpp
 utilities/osutils.hpp

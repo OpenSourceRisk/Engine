@@ -270,14 +270,14 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
                                                            continueOnError_, marketConfiguration_, simMarket);
 
     map<RiskFactorKey, Real> parRatesBase, parCapVols; // for both ir and yoy caps
-
+    ScenarioCurvePillarConverter curvePillarConverter{};
     for (auto& p : instruments_.parHelpers_) {
         try {
             Real parRate = impliedQuote(p.second);
             parRatesBase[p.first] = parRate;
 
             // Populate zero and par shift size for the current risk factor
-            populateShiftSizes(p.first, parRate, simMarket);
+            populateShiftSizes(p.first, parRate, simMarket, curvePillarConverter);
             auto shiftSize = shiftSizes_.at(p.first).second;
             parRatesBaseAndScenarioValue_[p.first] = std::make_pair(parRate, parRate + shiftSize);
 
@@ -298,7 +298,7 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
                                                     << parVol << ".");
 
         // Populate zero and par shift size for the current risk factor
-        populateShiftSizes(c.first, parVol, simMarket);
+        populateShiftSizes(c.first, parVol, simMarket, curvePillarConverter);
         auto shiftSize = shiftSizes_.at(c.first).second;
         parRatesBaseAndScenarioValue_[c.first] = std::make_pair(parVol, parVol + shiftSize);
     }
@@ -316,7 +316,7 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
                                                     << parVol << ".");
 
         // Populate zero and par shift size for the current risk factor
-        populateShiftSizes(c.first, parVol, simMarket);
+        populateShiftSizes(c.first, parVol, simMarket, curvePillarConverter);
         auto shiftSize = shiftSizes_.at(c.first).second;
         parRatesBaseAndScenarioValue_[c.first] = std::make_pair(parVol, parVol + shiftSize);
     }
@@ -338,7 +338,7 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
                                                         << parVol << ".");
 
         // Populate zero and par shift size for the current risk factor
-        populateShiftSizes(c.first, parVol, simMarket);
+        populateShiftSizes(c.first, parVol, simMarket, curvePillarConverter);
         auto shiftSize = shiftSizes_.at(c.first).second;
         parRatesBaseAndScenarioValue_[c.first] = std::make_pair(parVol, parVol + shiftSize);
     }
@@ -375,7 +375,7 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
     for (auto const& p : instruments_.parYoYCaps_) {
         parKeysCheck.insert(p.first);
     }
-
+    
     for (Size i = 1; i < scenarioGenerator->samples(); ++i) {
 
         simMarket->update(asof_);
@@ -403,7 +403,7 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
 
         // Get the absolute shift size and skip if close to zero
 
-        Real shiftSize = getShiftSize(desc[i].key1(), sensitivityData_, simMarket);
+        Real shiftSize = getShiftSize(desc[i].key1(), sensitivityData_, simMarket, curvePillarConverter);
 
         if (close_enough(shiftSize, 0.0)) {
             ALOG("Shift size for " << desc[i].key1() << " is zero, skipping");
@@ -642,10 +642,11 @@ void ParSensitivityAnalysis::disable(const set<RiskFactorKey::KeyType>& types) {
 }
 
 void ParSensitivityAnalysis::populateShiftSizes(const RiskFactorKey& key, Real parRate,
-                                                const QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket) {
+                                                const QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket,
+                                                const ScenarioCurvePillarConverter& curvePillarConverter) {
 
     // Get zero and par shift size for the key
-    Real zeroShiftSize = getShiftSize(key, sensitivityData_, simMarket);
+    Real zeroShiftSize = getShiftSize(key, sensitivityData_, simMarket, curvePillarConverter);
     auto shiftData = sensitivityData_.shiftData(key.keytype, key.name);
     Real parShiftSize = shiftData.shiftSize;
     if (shiftData.shiftType == ShiftType::Relative)

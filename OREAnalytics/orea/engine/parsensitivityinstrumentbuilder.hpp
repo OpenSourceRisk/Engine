@@ -79,7 +79,7 @@ private:
     std::pair<QuantLib::ext::shared_ptr<Instrument>, Date>
     makeInstrument(const std::string& instType, const QuantLib::Date& asof,
                    const QuantLib::ext::shared_ptr<Market>& market, string ccy, string otherCcy, string curveName,
-                   string yieldCurveName, string equityForecastCurveName, ore::data::CurvePillar& term,
+                   string yieldCurveName, string equityForecastCurveName, ScenarioCurvePillar& term,
                    const QuantLib::ext::shared_ptr<Convention>& convention, bool singleCurve,
                    std::set<ore::analytics::RiskFactorKey>& parHelperDependencies,
                    std::set<std::string>& removeTodaysFixingIndices, const string& expDiscountCurve,

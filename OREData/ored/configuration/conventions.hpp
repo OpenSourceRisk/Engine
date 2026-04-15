@@ -333,6 +333,7 @@ public:
     QuantLib::Period tenor() const { return tenor_ ; }
     DateGenerationRule dateGenerationRule() const { return dateGenerationRule_; }
     QuantLib::Calendar calendar() const { return calendar_; }
+    bool isOvernightIndexFuture() const { return isOisIndex_; }
     //@}
 
     //! Serialisation
@@ -350,6 +351,7 @@ private:
     DateGenerationRule dateGenerationRule_;
     QuantLib::Calendar calendar_;
     QuantLib::Period tenor_;
+    bool isOisIndex_;
 };
 
 //! Container for storing Forward rate Agreement conventions

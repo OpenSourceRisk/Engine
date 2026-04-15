@@ -83,7 +83,8 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
                 CurveShiftData data;
                 data.shiftType = QuantExt::parseShiftType(XMLUtils::getChildValue(child, "ShiftType", true));
                 data.shifts = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Shifts", true);
-                data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
+                data.shiftTenors = ore::data::parseListOfValues<ScenarioCurvePillar>(
+                    XMLUtils::getChildValue(child, "ShiftTenors", true), &parseScenarioCurvePillar);
                 QL_REQUIRE(data.shifts.size() == data.shiftTenors.size(),
                            "number of tenors and shifts does not match in survival probability stress data");
                 QL_REQUIRE(data.shifts.size() > 0, "no shifts provided in survival probability stress data");
@@ -102,7 +103,8 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
                 CurveShiftData data;
                 data.shiftType = QuantExt::parseShiftType(XMLUtils::getChildValue(child, "ShiftType", true));
                 data.shifts = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Shifts", true);
-                data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
+                data.shiftTenors = ore::data::parseListOfValues<ScenarioCurvePillar>(
+                    XMLUtils::getChildValue(child, "ShiftTenors", true), &parseScenarioCurvePillar);
                 QL_REQUIRE(data.shifts.size() == data.shiftTenors.size(),
                            "number of tenors (" << data.shiftTenors.size() << ")and shifts (" << data.shifts.size()
                                                 << ") does not match in discount curve stress data for ccy = " << ccy);
@@ -124,7 +126,8 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
                 CurveShiftData data;
                 data.shiftType = QuantExt::parseShiftType(XMLUtils::getChildValue(child, "ShiftType", true));
                 data.shifts = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Shifts", true);
-                data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
+                data.shiftTenors = ore::data::parseListOfValues<ScenarioCurvePillar>(
+                    XMLUtils::getChildValue(child, "ShiftTenors", true), &parseScenarioCurvePillar);
                 QL_REQUIRE(data.shifts.size() == data.shiftTenors.size(),
                            "number of tenors (" << data.shiftTenors.size() << ")and shifts (" << data.shifts.size()
                                                 << ") does not match in index curve stress data curve = " << index);
@@ -145,7 +148,8 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
                 CurveShiftData data;
                 data.shiftType = QuantExt::parseShiftType(XMLUtils::getChildValue(child, "ShiftType", true));
                 data.shifts = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Shifts", true);
-                data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
+                data.shiftTenors = ore::data::parseListOfValues<ScenarioCurvePillar>(
+                    XMLUtils::getChildValue(child, "ShiftTenors", true), &parseScenarioCurvePillar);
                 QL_REQUIRE(data.shifts.size() == data.shiftTenors.size(),
                            "number of tenors (" << data.shiftTenors.size() << ")and shifts (" << data.shifts.size()
                                                 << ") does not match in yield curve stress data curve = " << name);
@@ -276,7 +280,8 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
                 CurveShiftData data;
                 data.shiftType = QuantExt::parseShiftType(XMLUtils::getChildValue(child, "ShiftType", true));
                 data.shifts = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Shifts", true);
-                data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
+                data.shiftTenors = ore::data::parseListOfValues<ScenarioCurvePillar>(
+                    XMLUtils::getChildValue(child, "ShiftTenors", true), &parseScenarioCurvePillar);
                 QL_REQUIRE(data.shifts.size() == data.shiftTenors.size(),
                            "number of tenors ("
                                << data.shiftTenors.size() << ") and shifts (" << data.shifts.size()

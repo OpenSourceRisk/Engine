@@ -15,31 +15,34 @@
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
-#include <ored/utilities/curvepillar.hpp>
+#include <orea/scenario/scenariocurvepillar.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 
 namespace ore {
-namespace data {
+namespace analytics {
 
-std::ostream& operator<<(std::ostream& os, const ExpiryMonthYear& v) { return os << v.toString(); }
+using ore::data::parsePeriod;
+using ore::data::to_string;
 
-CurvePillar parseCurvePillar(const std::string& str) {
-    QL_REQUIRE(str.size() > 1, "parseCurvePillar: string must have at least 2 characters");
+std::ostream& operator<<(std::ostream& os, const IrFutureExpiryYearMonth& v) { return os << v.toString(); }
+
+ScenarioCurvePillar parseScenarioCurvePillar(const std::string& str) {
+    QL_REQUIRE(str.size() > 1, "parseScenarioCurvePillar: string must have at least 2 characters");
     QuantLib::Period p;
-    if (tryParse<Period>(str, p, [](const std::string& s) { return parsePeriod(s); })) {
+    if (tryParse<QuantLib::Period>(str, p, [](const std::string& s) { return parsePeriod(s); })) {
         return p;
     } else if (str.size() == 7 && str[4] == '-') {
-        return ExpiryMonthYear(str);
+        return IrFutureExpiryYearMonth(str);
     } else {
-        QL_FAIL("parseCurvePillar: string '" << str << "' is neither a valid period nor of the form YYYY-MM");
+        QL_FAIL("parseScenarioCurvePillar: string '" << str << "' is neither a valid period nor of the form YYYY-MM");
     }
 }
 
-std::ostream& operator<<(std::ostream& os, const CurvePillar& v) {
+std::ostream& operator<<(std::ostream& os, const ScenarioCurvePillar& v) {
     std::visit([&](const auto& x) { os << to_string(x); }, v);
     return os;
 }
 
-} // namespace data
+} // namespace analytics
 } // namespace ore

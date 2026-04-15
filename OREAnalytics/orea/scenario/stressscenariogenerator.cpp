@@ -65,6 +65,7 @@ void StressScenarioGenerator::generateScenarios() {
     Date asof = baseScenario_->asof();
     for (Size i = 0; i < stressData_->data().size(); ++i) {
         StressTestScenarioData::StressTestData data = stressData_->data().at(i);
+
         DLOG("Generate stress scenario #" << i << " '" << data.label << "'");
         QuantLib::ext::shared_ptr<Scenario> scenario =
             stressScenarioFactory_->buildScenario(asof, !useSpreadedTermStructures_, false, data.label);
@@ -234,7 +235,15 @@ void StressScenarioGenerator::addCommodityCurveShifts(StressTestScenarioData::St
             basePrices[j] = baseScenarioAbsolute_->get(key);
         }
 
-        std::vector<Period> shiftTenors = data.shiftTenors;
+        std::vector<Period> shiftTenors;
+        for (const auto& t : data.shiftTenors) {
+            if (auto p = std::get_if<Period>(&t)) {
+                shiftTenors.push_back(*p);
+            } else {
+                QL_FAIL("Unsupported shift tenor type for commodity curve shifts");
+            }
+        }
+
         QL_REQUIRE(shiftTenors.size() > 0, "Commodity shift tenors not specified");
         std::vector<Real> shifts = data.shifts;
         QL_REQUIRE(shiftTenors.size() == shifts.size(), "shift tenor and shift size vectors do not match");
@@ -297,7 +306,14 @@ void StressScenarioGenerator::addDiscountCurveShifts(StressTestScenarioData::Str
             zeros[j] = -std::log(quote) / times[j];
         }
 
-        std::vector<Period> shiftTenors = data.shiftTenors;
+        std::vector<Period> shiftTenors;
+        for (const auto& t : data.shiftTenors) {
+            if (auto p = std::get_if<Period>(&t)) {
+                shiftTenors.push_back(*p);
+            } else {
+                QL_FAIL("Unsupported shift tenor type for commodity curve shifts");
+            }
+        }
         QL_REQUIRE(shiftTenors.size() > 0, "Discount shift tenors not specified");
         std::vector<Real> shifts = data.shifts;
         QL_REQUIRE(shiftTenors.size() == shifts.size(), "shift tenor and shift size vectors do not match");
@@ -362,7 +378,14 @@ void StressScenarioGenerator::addSurvivalProbabilityShifts(StressTestScenarioDat
             zeros[j] = -std::log(quote) / times[j];
         }
 
-        std::vector<Period> shiftTenors = data.shiftTenors;
+                std::vector<Period> shiftTenors;
+        for (const auto& t : data.shiftTenors) {
+            if (auto p = std::get_if<Period>(&t)) {
+                shiftTenors.push_back(*p);
+            } else {
+                QL_FAIL("Unsupported shift tenor type for commodity curve shifts");
+            }
+        }
         QL_REQUIRE(shiftTenors.size() > 0, "Survival Probability shift tenors not specified");
         std::vector<Real> shifts = data.shifts;
         QL_REQUIRE(shiftTenors.size() == shifts.size(), "shift tenor and shift size vectors do not match");
@@ -429,7 +452,14 @@ void StressScenarioGenerator::addIndexCurveShifts(StressTestScenarioData::Stress
             zeros[j] = -std::log(quote) / times[j];
         }
 
-        std::vector<Period> shiftTenors = data.shiftTenors;
+                std::vector<Period> shiftTenors;
+        for (const auto& t : data.shiftTenors) {
+            if (auto p = std::get_if<Period>(&t)) {
+                shiftTenors.push_back(*p);
+            } else {
+                QL_FAIL("Unsupported shift tenor type for commodity curve shifts");
+            }
+        }
         QL_REQUIRE(shiftTenors.size() > 0, "Index curve shift tenors not specified");
         std::vector<Real> shifts = data.shifts;
         QL_REQUIRE(shiftTenors.size() == shifts.size(), "shift tenor and shift size vectors do not match");
@@ -495,7 +525,14 @@ void StressScenarioGenerator::addYieldCurveShifts(StressTestScenarioData::Stress
             zeros[j] = -std::log(quote) / times[j];
         }
 
-        std::vector<Period> shiftTenors = data.shiftTenors;
+        std::vector<Period> shiftTenors;
+        for (const auto& t : data.shiftTenors) {
+            if (auto p = std::get_if<Period>(&t)) {
+                shiftTenors.push_back(*p);
+            } else {
+                QL_FAIL("Unsupported shift tenor type for commodity curve shifts");
+            }
+        }
         QL_REQUIRE(shiftTenors.size() > 0, "Yield curve shift tenors not specified");
         std::vector<Real> shifts = data.shifts;
         QL_REQUIRE(shiftTenors.size() == shifts.size(), "shift tenor and shift size vectors do not match");

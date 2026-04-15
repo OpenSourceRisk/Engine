@@ -24,9 +24,9 @@
 #pragma once
 
 #include <orea/scenario/scenario.hpp>
+#include <orea/scenario/scenariocurvepillar.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/xmlutils.hpp>
-#include <ored/utilities/curvepillar.hpp>
 #include <qle/termstructures/dynamicstype.hpp>
 
 #include <set>
@@ -68,7 +68,7 @@ public:
         CurveShiftData() : ShiftData() {}
         CurveShiftData(const ShiftData& d) : ShiftData(d) {}
         virtual ~CurveShiftData() {}
-        vector<ore::data::CurvePillar> shiftTenors;
+        vector<ScenarioCurvePillar> shiftTenors;
     };
 
     using SpotShiftData = ShiftData;
@@ -205,6 +205,7 @@ public:
     const set<ore::analytics::RiskFactorKey::KeyType>& parConversionExcludes() const { return parConversionExcludes_; }
     const std::string& parConversionExcludeFixings() const { return parConversionExcludeFixings_; }
     ore::data::ParConversionMatrixRegularisation parConversionMatrixRegularisation() const { return parConversionMatrixRegularisation_; }
+    bool parConversion() const { return parConversion_; }
     //@}
 
     //! \name Setters

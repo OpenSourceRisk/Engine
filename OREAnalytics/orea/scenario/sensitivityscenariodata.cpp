@@ -106,8 +106,8 @@ void SensitivityScenarioData::shiftDataFromXML(XMLNode* child, ShiftData& data) 
 
 void SensitivityScenarioData::curveShiftDataFromXML(XMLNode* child, CurveShiftData& data) {
     shiftDataFromXML(child, data);
-    data.shiftTenors = ore::data::parseListOfValues<ore::data::CurvePillar>(
-        XMLUtils::getChildValue(child, "ShiftTenors", true), &ore::data::parseCurvePillar);
+    data.shiftTenors = ore::data::parseListOfValues<ScenarioCurvePillar>(
+        XMLUtils::getChildValue(child, "ShiftTenors", true), &parseScenarioCurvePillar);
 }
 
 void SensitivityScenarioData::volShiftDataFromXML(XMLNode* child, VolShiftData& data, const bool requireShiftStrikes) {

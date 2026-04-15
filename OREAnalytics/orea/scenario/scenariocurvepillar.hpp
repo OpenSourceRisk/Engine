@@ -25,14 +25,15 @@
 
 #include <iostream>
 #include <ored/marketdata/expiry.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <variant>
 namespace ore {
-namespace data {
+namespace analytics {
 
-class ExpiryMonthYear {
+class IrFutureExpiryYearMonth {
 public:
-    explicit ExpiryMonthYear(const std::string& str) : str_(str) {
-        QL_REQUIRE(str_.size() == 7 && str_[4] == '-', "ExpiryMonthYear should be of the form YYYY-MM");
+    explicit IrFutureExpiryYearMonth(const std::string& str) : str_(str) {
+        QL_REQUIRE(str_.size() == 7 && str_[4] == '-', "IrFutureExpiryYearMonth should be of the form YYYY-MM");
         year_ = boost::lexical_cast<int>(str_.substr(0, 4));
         month_ = QuantLib::Month(boost::lexical_cast<int>(str_.substr(5, 2)));
     }
@@ -42,18 +43,30 @@ public:
 
     std::string toString() const { return str_; }
 
+    QuantLib::Period toPeriod(const QuantLib::Date& referenceDate,
+                              const QuantLib::ext::shared_ptr<ore::data::FutureConvention>& convention) const {
+        bool isMMFuture = !convention->isOvernightIndexFuture();
+        QuantLib::Date d = isMMFuture
+                               ? getMmFutureExpiryDate(month_, year_, convention->dateGenerationRule())
+                               : getOiFutureStartEndDate(month_, year_, convention->tenor(),
+                                                         convention->dateGenerationRule(), convention->calendar())
+                                     .second;
+        return QuantLib::Period((d - referenceDate) * Days);
+    }
+
 private:
     std::string str_;
     QuantLib::Month month_;
     QuantLib::Year year_;
 };
 
-std::ostream& operator<<(std::ostream& os, const ExpiryMonthYear& v);
+std::ostream& operator<<(std::ostream& os, const IrFutureExpiryYearMonth& v);
 
-using CurvePillar = std::variant<QuantLib::Period, ExpiryMonthYear>;
+using ScenarioCurvePillar = std::variant<QuantLib::Period, IrFutureExpiryYearMonth>;
 
-CurvePillar parseCurvePillar(const std::string& str);
+ScenarioCurvePillar parseScenarioCurvePillar(const std::string& str);
 
-std::ostream& operator<<(std::ostream& os, const CurvePillar& v);
-} // namespace data
+std::ostream& operator<<(std::ostream& os, const ScenarioCurvePillar& v);
+
+} // namespace analytics
 } // namespace ore

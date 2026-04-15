@@ -24,7 +24,7 @@
 #pragma once
 
 #include <orea/scenario/scenario.hpp>
-
+#include <orea/scenario/scenariocurvepillar.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
@@ -49,7 +49,7 @@ public:
     struct CurveShiftData {
         ShiftType shiftType;
         vector<Real> shifts;
-        vector<Period> shiftTenors;
+        vector<ScenarioCurvePillar> shiftTenors;
     };
 
     struct SpotShiftData {

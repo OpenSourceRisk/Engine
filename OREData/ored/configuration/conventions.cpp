@@ -243,8 +243,9 @@ FutureConvention::FutureConvention(const string& id, const string& index,
 void FutureConvention::build() {
     auto tmpIndex = parseIborIndex(strIndex_);
     auto oisIndex = QuantLib::ext::dynamic_pointer_cast<QuantLib::OvernightIndex>(tmpIndex);
-    tenor_ = oisIndex != nullptr && !strOvernightIndexTenor_.empty() ? parsePeriod(strOvernightIndexTenor_)
-                                                                     : tmpIndex->tenor();
+    isOisIndex_ = oisIndex != nullptr;
+    tenor_ = isOisIndex_ && !strOvernightIndexTenor_.empty() ? parsePeriod(strOvernightIndexTenor_)
+                                                             : tmpIndex->tenor();
     calendar_ = strCalendar_.empty() ? tmpIndex->fixingCalendar() : parseCalendar(strCalendar_);
 }
 
