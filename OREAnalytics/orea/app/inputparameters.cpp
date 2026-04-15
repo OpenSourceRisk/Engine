@@ -392,11 +392,13 @@ void InputParameters::setBaselTrafficLightFromFile(const std::string& fileName) 
 void InputParameters::setScriptLibrary(const std::string& xml) {
     setupVariables_.scriptLibraryData_ = ext::make_shared<ScriptLibraryData>();
     setupVariables_.scriptLibraryData_->fromXMLString(xml);
+    ScriptLibraryStorage::instance().set(*setupVariables_.scriptLibraryData_);
 }
 
 void InputParameters::setScriptLibraryFromFile(const std::string& fileName) {
     setupVariables_.scriptLibraryData_ = ext::make_shared<ScriptLibraryData>();
     setupVariables_.scriptLibraryData_->fromFile(fileName);
+    ScriptLibraryStorage::instance().set(*setupVariables_.scriptLibraryData_);
 }
 
 void InputParameters::setConventions(const std::string& xml) {
