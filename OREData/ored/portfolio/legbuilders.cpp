@@ -242,6 +242,7 @@ Leg RangeAccrualLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::s
 
     Leg rangeAccrualResult = makeRangeAccrualLeg(data, index, engineFactory, openEndDateReplacement, attachPricer);
     applyIndexing(rangeAccrualResult, data, engineFactory, requiredFixings, openEndDateReplacement, useXbsCurves);
+    addToRequiredFixings(rangeAccrualResult, QuantLib::ext::make_shared<FixingDateGetter>(requiredFixings));
 
     return rangeAccrualResult;
 }

@@ -33,6 +33,7 @@
 #include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/cashflows/overnightindexedcoupon.hpp>
+#include <ql/cashflows/rangeaccrual.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/payoff.hpp>
 
@@ -289,6 +290,20 @@ NumericLgmMultiLegOptionEngineBase::CashflowInfo NumericLgmMultiLegOptionEngineB
                        lgm.reducedDiscountBond(t, T, x, discountCurve);
             };
             done = true;
+        } else if (auto ra = QuantLib::ext::dynamic_pointer_cast<QuantLib::RangeAccrualFloatersCoupon>(cpn)) {
+            // Range accrual coupon: the analytical pricer (BGM or CallSpread) computes the
+            // expected coupon amount using the current yield curve and vol surface.
+            // In the LGM tree we treat this as a deterministic cashflow (amount frozen at the
+            // pricer-computed value). This captures the range observation probability
+            // analytically while the LGM model handles the discounting and exercise decision.
+            info.maxEstimationTime_ = timeFromReference(ra->fixingDate());
+            info.calculator_ = [ra, T, payrec, multiplier](const LgmVectorised& lgm, const Real t,
+                                                           const RandomVariable& x,
+                                                           const Handle<YieldTermStructure>& discountCurve) {
+                return multiplier * RandomVariable(x.size(), ra->amount() * payrec) *
+                       lgm.reducedDiscountBond(t, T, x, discountCurve);
+            };
+            done = true;
         }
     } else {
         // can not cast to coupon
@@ -308,7 +323,8 @@ NumericLgmMultiLegOptionEngineBase::CashflowInfo NumericLgmMultiLegOptionEngineB
     QL_REQUIRE(
         done,
         "NumericLgmMultiLegOptionEngineBase::buildCashflowInfo(): coupon type not handled, supported coupon types: "
-        "SimpleCashFlow, Fix, (capfloored) Ibor, (capfloored) ON comp, (capfloored) ON avg, BMA/SIFMA, subperiod. " +
+        "SimpleCashFlow, Fix, (capfloored) Ibor, (capfloored) ON comp, (capfloored) ON avg, BMA/SIFMA, subperiod, "
+        "RangeAccrual. " +
             cashflowDescription);
 
     // some postprocessing and checks
@@ -412,13 +428,14 @@ bool NumericLgmMultiLegOptionEngineBase::instrumentIsHandled(
                       QuantLib::ext::dynamic_pointer_cast<QuantExt::CappedFlooredAverageONIndexedCoupon>(c) ||
                       QuantLib::ext::dynamic_pointer_cast<QuantExt::CappedFlooredAverageBMACoupon>(c) ||
                       QuantLib::ext::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(c) ||
+                      QuantLib::ext::dynamic_pointer_cast<QuantLib::RangeAccrualFloatersCoupon>(c) ||
                       (QuantLib::ext::dynamic_pointer_cast<QuantLib::CappedFlooredCoupon>(c) &&
                        QuantLib::ext::dynamic_pointer_cast<QuantLib::IborCoupon>(
                            QuantLib::ext::dynamic_pointer_cast<QuantLib::CappedFlooredCoupon>(c)->underlying())))) {
                     messages.push_back(
                         "NumericLgmMultilegOptionEngine: coupon type not handled, supported coupon types: Fix, "
                         "(capfloored) (interpolated) Ibor, (capfloored) ON comp, (capfloored) ON avg, BMA/SIFMA, "
-                        "Subperiod, Scaled. leg = " +
+                        "Subperiod, Scaled, RangeAccrual. leg = " +
                         std::to_string(i) + " cf = " + std::to_string(j));
                     isHandled = false;
                 }
