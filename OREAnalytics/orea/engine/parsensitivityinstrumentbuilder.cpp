@@ -1139,7 +1139,7 @@ std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Date> ParSensitivityI
                     << term << " has already expired (expiry date: " << endDate << ", asof: " << asof << ")");
         }
 
-        auto future = ext::make_shared<OvernightIndexFuture>(index, startDate, endDate, Handle<Quote>(),
+        auto future = ext::make_shared<OvernightIndexFuture>(overnightIndex, startDate, endDate, Handle<Quote>(),
                                                              futureConvention->overnightIndexFutureNettingType());
         return {future, future->maturityDate()};
     } else {
