@@ -144,6 +144,8 @@ scenario/historicalscenariogenerator.cpp
 scenario/historicalscenarioreturn.cpp
 scenario/lgmscenariogenerator.cpp
 scenario/scenario.cpp
+scenario/scenariocurvepillar.cpp
+scenario/scenariocurvepillarconverter.cpp
 scenario/scenariofilereader.cpp
 scenario/scenariogenerator.cpp
 scenario/scenariogeneratorbuilder.cpp
@@ -373,6 +375,8 @@ scenario/historicalscenariogenerator.hpp
 scenario/historicalscenarioreturn.hpp
 scenario/lgmscenariogenerator.hpp
 scenario/scenario.hpp
+scenario/scenariocurvepillar.hpp
+scenario/scenariocurvepillarconverter.hpp
 scenario/scenariofactory.hpp
 scenario/scenariofilereader.hpp
 scenario/scenariofilter.hpp
