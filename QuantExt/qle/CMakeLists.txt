@@ -145,6 +145,7 @@ instruments/indexcreditdefaultswap.cpp
 instruments/makeaverageois.cpp
 instruments/makecds.cpp
 instruments/makeoiscapfloor.cpp
+instruments/moneymarketfuture.cpp
 instruments/multiccycompositeinstrument.cpp
 instruments/multilegoption.cpp
 instruments/outperformanceoption.cpp
@@ -679,6 +680,7 @@ instruments/indexcreditdefaultswap.hpp
 instruments/makeaverageois.hpp
 instruments/makecds.hpp
 instruments/makeoiscapfloor.hpp
+instruments/moneymarketfuture.hpp
 instruments/multiccycompositeinstrument.hpp
 instruments/multilegoption.hpp
 instruments/nullinstrument.hpp
