@@ -51,6 +51,8 @@
 #include <ql/quotes/derivedquote.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/termstructures/yield/oisratehelper.hpp>
+#include <ql/termstructures/yield/ratehelpers.hpp>
+#include <ql/termstructures/yield/overnightindexfutureratehelper.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
 #include <qle/instruments/brlcdiswap.hpp>
 #include <qle/instruments/crossccybasismtmresetswap.hpp>
@@ -60,6 +62,7 @@
 #include <qle/instruments/fxforward.hpp>
 #include <qle/instruments/makecds.hpp>
 #include <qle/instruments/subperiodsswap.hpp>
+#include <qle/instruments/moneymarketfuture.hpp>
 #include <qle/instruments/tenorbasisswap.hpp>
 #include <qle/math/blockmatrixinverse.hpp>
 #include <qle/pricingengines/crossccyswapengine.hpp>
@@ -119,10 +122,9 @@ std::pair<QuantLib::ext::shared_ptr<Instrument>, Date> ParSensitivityInstrumentB
         return makeBMABasisSwap(asof, market, ccy, std::string(), std::string(), std::string(), std::string(), *term,
                                 convention, singleCurve, parHelperDependencies, removeTodaysFixingIndices,
                                 expDiscountCurve, marketConfiguration);
-    else if (instType3 == "FUT"){
-        DLOG("TODO: implement future par instrument builder for " << instType);
-        return std::make_pair(nullptr, Date());
-    }
+    else if (instType3 == "FUT")
+        return makeIrFuture(asof, market, ccy, curveName, yieldCurveName, equityForecastCurveName, std::get<IrFutureExpiryYearMonth>(curvePillar),
+                            convention, singleCurve, parHelperDependencies, removeTodaysFixingIndices, marketConfiguration);
     else
         return std::make_pair(nullptr, Date());
 }
@@ -1080,6 +1082,87 @@ ParSensitivityInstrumentBuilder::makeOIS(const QuantLib::ext::shared_ptr<Market>
     // set pillar date
     Date latestRelevantDate = helper->maturityDate();
     return std::pair<QuantLib::ext::shared_ptr<Instrument>, Date>(helper, latestRelevantDate);
+}
+
+//! Create IR Future
+std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Date> ParSensitivityInstrumentBuilder::makeIrFuture(
+    const QuantLib::Date& asof, const QuantLib::ext::shared_ptr<ore::data::Market>& market, std::string ccy,
+    std::string indexName, std::string yieldCurveName, std::string equityForecastCurveName,
+    IrFutureExpiryYearMonth term, const QuantLib::ext::shared_ptr<ore::data::Convention>& convention, bool singleCurve,
+    std::set<ore::analytics::RiskFactorKey>& parHelperDependencies, std::set<std::string>& removeTodaysFixingIndices,
+    const std::string& marketConfiguration) const {
+    QuantLib::ext::shared_ptr<FutureConvention> futureConvention =
+        QuantLib::ext::dynamic_pointer_cast<FutureConvention>(convention);
+    Handle<YieldTermStructure> indexTs =
+        Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.00, Actual365Fixed()));
+    if (market == nullptr) {
+        if (!singleCurve)
+            parHelperDependencies.emplace(RiskFactorKey::KeyType::IndexCurve,
+                                          indexName != "" ? indexName : futureConvention->indexName(), 0);
+    }
+    if (market != nullptr) {
+        if (singleCurve) {
+            if (indexName != "") {
+                indexTs = market->iborIndex(indexName, marketConfiguration).currentLink()->forwardingTermStructure();
+            } else if (yieldCurveName != "") {
+                indexTs = market->yieldCurve(yieldCurveName, marketConfiguration);
+            } else if (equityForecastCurveName != "") {
+                indexTs = market->equityForecastCurve(equityForecastCurveName, marketConfiguration);
+            } else if (ccy != "") {
+                indexTs = market->discountCurve(ccy, marketConfiguration);
+            } else {
+                QL_FAIL("ParSensitivityInstrumentBuilder::makeOIS(): Index curve not identified in "
+                        "ParSensitivityAnalysis::makeOIS");
+            }
+        } else {
+            indexTs =
+                market->iborIndex(indexName != "" ? indexName : futureConvention->indexName(), marketConfiguration)
+                    .currentLink()
+                    ->forwardingTermStructure();
+        }
+    }
+
+    if (futureConvention->isOvernightIndexFuture()) {
+        QuantLib::ext::shared_ptr<IborIndex> index = futureConvention->index();
+
+        QuantLib::ext::shared_ptr<OvernightIndex> overnightIndex =
+            QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(index->clone(indexTs));
+        
+        removeTodaysFixingIndices.insert(overnightIndex->name());
+
+        auto [startDate, endDate] =
+            getOiFutureStartEndDate(term.month(), term.year(), futureConvention->tenor(),
+                                    futureConvention->dateGenerationRule(), futureConvention->calendar());
+        if (endDate < asof) {
+            // TODO :SKIP
+            QL_FAIL("ParSensitivityInstrumentBuilder::makeIrFuture(): OIS Future with expiry "
+                    << term << " has already expired (expiry date: " << endDate << ", asof: " << asof << ")");
+        }
+
+        auto future = ext::make_shared<OvernightIndexFuture>(index, startDate, endDate, Handle<Quote>(),
+                                                             futureConvention->overnightIndexFutureNettingType());
+        return {future, future->maturityDate()};
+    } else {
+        
+        auto index = futureConvention->index()->clone(indexTs);
+        Date immDate = getMmFutureExpiryDate(term.month(), term.year(), futureConvention->dateGenerationRule());
+
+        if (immDate < asof) {
+            // TODO :SKIP
+            QL_FAIL("ParSensitivityInstrumentBuilder::makeIrFuture(): OIS Future with expiry "
+                    << term << " has already expired (expiry date: " << immDate << ", asof: " << asof << ")");
+        }
+
+        // Determine the futures type for validation
+        Futures::Type futuresType =
+            (futureConvention->dateGenerationRule() == FutureConvention::DateGenerationRule::IMM) ? Futures::IMM
+                                                                                                  : Futures::Custom;
+
+        auto helper =
+            QuantLib::ext::make_shared<MoneyMarketFuture>(index, immDate, Handle<Quote>());
+
+        return {helper, helper->maturityDate()};
+    }
 }
 
 std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Date> ParSensitivityInstrumentBuilder::makeTenorBasisSwap(
