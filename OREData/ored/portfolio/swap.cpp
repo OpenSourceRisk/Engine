@@ -126,27 +126,6 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
     Currency npvCcy = parseCurrency(npvCurrency_);
     DLOG("npv currency is " << npvCurrency_);
 
-    // Check for DelegatingEngineBuilder on range accrual legs: if found, delegate the
-    // entire swap to the scripted trade engine and return early.
-    for (Size i = 0; i < numLegs; ++i) {
-        if (legData_[i].legType() == LegType::RangeAccrual) {
-            auto legEngineBuilder = engineFactory->builder("IborRangeAccrualLeg");
-            if (auto db = QuantLib::ext::dynamic_pointer_cast<DelegatingEngineBuilder>(legEngineBuilder)) {
-                delegatingBuilderTrade_ = db->build(this, engineFactory);
-                instrument_ = delegatingBuilderTrade_->instrument();
-                maturity_ = delegatingBuilderTrade_->maturity();
-                npvCurrency_ = delegatingBuilderTrade_->npvCurrency();
-                notionalCurrency_ = delegatingBuilderTrade_->notionalCurrency();
-                additionalData_ = delegatingBuilderTrade_->additionalData();
-                requiredFixings_ = delegatingBuilderTrade_->requiredFixings();
-                setSensitivityTemplate(delegatingBuilderTrade_->sensitivityTemplate());
-                addProductModelEngine(delegatingBuilderTrade_->productModelEngine());
-                return;
-            }
-            break;
-        }
-    }
-
     QuantLib::ext::shared_ptr<EngineBuilder> builder =
         isXCCY_ ? engineFactory->builder("CrossCurrencySwap") : engineFactory->builder("Swap");
     auto configuration = builder->configuration(MarketContext::pricing);

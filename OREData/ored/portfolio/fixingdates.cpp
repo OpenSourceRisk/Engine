@@ -890,23 +890,24 @@ void FixingDateGetter::visit(InterpolatedIborCoupon& c) {
 }
 
 void FixingDateGetter::visit(RangeAccrualFloatersCoupon& c) {
-    auto indexName = IndexNameTranslator::instance().oreName(c.index()->name());
-    // Register the standard ibor fixing date for the coupon rate
-    requiredFixings_.addFixingDate(c.fixingDate(), indexName, c.date());
+    requiredFixings_.addFixingDate(c.fixingDate(), 
+                                   IndexNameTranslator::instance().oreName(c.index()->name()), 
+                                   c.date());
     // Register all observation fixing dates needed by the pricer.
     // The RangeAccrualPricer iterates over observationSchedule().dates() (which includes the
     // accrual start and end dates, unlike observationDates()) and shifts each date back by
     // fixingDays using the index fixing calendar. We must replicate that logic here so the
     // required fixings set includes every date the pricer will actually request.
     Calendar calendar = c.index()->fixingCalendar();
-    Natural fixDays = c.fixingDays();
     const std::vector<Date>& scheduleDates = c.observationSchedule().dates();
     std::vector<Date> adjustedDates;
     adjustedDates.reserve(scheduleDates.size());
     for (const auto& d : scheduleDates) {
-        adjustedDates.push_back(calendar.advance(d, -static_cast<Integer>(fixDays), Days));
+        adjustedDates.push_back(calendar.advance(d, -static_cast<Integer>(c.fixingDays()), Days));
     }
-    requiredFixings_.addFixingDates(adjustedDates, indexName, c.date());
+    requiredFixings_.addFixingDates(adjustedDates, 
+                                   IndexNameTranslator::instance().oreName(c.index()->name()), 
+                                   c.date());
 }
 
 void addToRequiredFixings(const QuantLib::Leg& leg, const QuantLib::ext::shared_ptr<FixingDateGetter>& fixingDateGetter) {

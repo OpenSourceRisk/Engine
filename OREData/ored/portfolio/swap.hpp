@@ -86,7 +86,6 @@ protected:
 private:
     bool isResetting_;
     Size notionalTakenFromLeg_;
-    QuantLib::ext::shared_ptr<Trade> delegatingBuilderTrade_;
     
     // For fair rate calculation
     mutable std::vector<QuantLib::Handle<QuantLib::YieldTermStructure>> discountCurves_;
