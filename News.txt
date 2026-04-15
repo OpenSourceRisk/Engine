@@ -1,9 +1,40 @@
+Changes for the 16th ORE release:
+=================================
+
+ORE v16 includes the following notable changes (January 2025 to April 2026)
+
+- Update of QuantLib: ORE is built on top of QuantLib and version 16 will use the recent QuantLib version v1.42
+- Convexity adjustments for EquityTRS and BondTRS
+- LocalVol support for FX in exposure simulations
+- Heston model for scripted trade pricing
+- Support for Swaption Straddles
+- Dual European Binary Option with Volatility
+- Support multithreading in HistSimVar analytic
+- Optional trade and risk factor breakdown in HistSimVar analytic
+- speed up of cube reading / writing
+- Review of inflation simulation framework, bug fixing
+- Update single name CDS options to current conventions
+- Theta in sensitivity calculation
+- Cross-Currency support for CommoditySwap
+- optionally use effective volatilities in market cap surfaces
+- include conditional fee paid on exercise for swaption pricing
+- support cross-currency Flexi-Swap
+- fix overnight coupon accrual calculation and various other details
+- support rebasing of inflation indices
+- allow wildcards for zero curve spreads
+- SVI for equity, fx, commodity, credit vol surfaces
+- add range accrual instrument and pricer
+- add rate digital option instrument and pricer
+- support quoted commodity calendar spread options
+- speed up of MC exposure simulation, scenario generation and fast fx forward, vanilla swap engines
+- various bug fixes
+
 Changes for the 15th ORE release:
 =================================
 
 ORE v15 includes the following notable changes (November 2025 to January 2026)
 
-- Update of QuantLib: ORE is built on top of QuantLib and version 14 will use the recent QuantLib version v1.41
+- Update of QuantLib: ORE is built on top of QuantLib and version 15 will use the recent QuantLib version v1.41
 - Support for conventional spreads in credit curve builder
 - ForwardFlat interpolation for commodity curves
 - Exposure cube npv overlay: apply an optional correction to exposure npv cubes to match t0 npvs from pricing analytic
