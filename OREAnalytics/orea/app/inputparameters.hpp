@@ -933,7 +933,6 @@ public:
     const QuantLib::ext::shared_ptr<ore::data::ScriptLibraryData>& scriptLibraryData() {
         return setupVariables_.scriptLibraryData_;
     }
-
   
     QuantLib::Size maxRetries() const { return maxRetries_; }
     QuantLib::Size nThreads() const { return setupVariables_.nThreads_; }
