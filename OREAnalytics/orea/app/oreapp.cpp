@@ -56,7 +56,6 @@
 #include <boost/timer/timer.hpp>
 
 #include <mutex>
-#include <iostream>
 
 using namespace std;
 using namespace ore::data;
