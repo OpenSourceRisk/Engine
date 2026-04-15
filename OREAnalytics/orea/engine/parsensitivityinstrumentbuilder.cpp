@@ -1152,12 +1152,6 @@ std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Date> ParSensitivityI
             QL_FAIL("ParSensitivityInstrumentBuilder::makeIrFuture(): OIS Future with expiry "
                     << term << " has already expired (expiry date: " << immDate << ", asof: " << asof << ")");
         }
-
-        // Determine the futures type for validation
-        Futures::Type futuresType =
-            (futureConvention->dateGenerationRule() == FutureConvention::DateGenerationRule::IMM) ? Futures::IMM
-                                                                                                  : Futures::Custom;
-
         auto helper =
             QuantLib::ext::make_shared<MoneyMarketFuture>(index, immDate, Handle<Quote>());
 
