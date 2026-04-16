@@ -2284,7 +2284,9 @@ void SensitivityScenarioGenerator::generateCommodityCurveScenarios(bool up) {
         vector<Time> shiftTimes(data.shiftTenors.size());
         for (Size j = 0; j < data.shiftTenors.size(); ++j) {
             auto p = std::get_if<Period>(&data.shiftTenors[j]);
-            QL_REQUIRE(p != nullptr, "Only period shift tenors are allowed for commodity curves");
+            QL_REQUIRE(p != nullptr,
+                       "Unsupported sensitivity shift tenor type '" << data.shiftTenors[j]
+                                                                    << "' for commodity curve '" << name << "'");
             shiftTimes[j] = dc.yearFraction(asof, asof + *p);
         }
 

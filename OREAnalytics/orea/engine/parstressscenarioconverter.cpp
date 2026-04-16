@@ -159,13 +159,13 @@ bool checkCurveShiftData(const std::string& name, const ext::shared_ptr<StressTe
     if (it == sensiData.end()) {
         StructuredConfigurationWarningMessage(
             "StressScenario", name, "Par Shift to zero conversion",
-            "no par sensitivity scenario found. Please add par sensi config").log();
+            "no sensitivity config found for '" + name + "'. Please add par sensi config").log();
         return false;
     }
     auto parShiftData = ext::dynamic_pointer_cast<SensitivityScenarioData::CurveShiftParData>(it->second);
     if (parShiftData == nullptr) {
         StructuredConfigurationWarningMessage("StressScenario", name, "Par Shift to zero conversion",
-                                              "no par sensitivity scenario found. Please add par sensi config")
+                                              "no par sensitivity config found for '" + name + "'. Please add par sensi config")
             .log();
         return false;
     }
@@ -634,53 +634,33 @@ double ParStressScenarioConverter::upperBound(const RiskFactorKey key) const {
     }
 }
 
-std::vector<ScenarioCurvePillar> ParStressScenarioConverter::getShiftTenors(const RiskFactorKey& key) const{
-    switch(key.keytype){
-        case RiskFactorKey::KeyType::DiscountCurve: {
-            if (sensiScenarioData_->discountCurveShiftData().count(key.name) > 0) {
-                return sensiScenarioData_->discountCurveShiftData().at(key.name)->shiftTenors;
-            } else {
-                std::vector<ScenarioCurvePillar> tenors;
-                for (const auto& t : simMarketParams_->yieldCurveTenors(key.name)) {
-                    tenors.push_back(t);
-                }
-                return tenors;
-            }
+std::vector<ScenarioCurvePillar> ParStressScenarioConverter::getShiftTenors(const RiskFactorKey& key) const {
+    std::vector<ScenarioCurvePillar> tenors;
+    switch (key.keytype) {
+    case RiskFactorKey::KeyType::DiscountCurve: {
+        for (const auto& t : simMarketParams_->yieldCurveTenors(key.name)) {
+            tenors.push_back(t);
         }
-        case RiskFactorKey::KeyType::YieldCurve:
-            if (sensiScenarioData_->yieldCurveShiftData().count(key.name) > 0) {
-                return sensiScenarioData_->yieldCurveShiftData().at(key.name)->shiftTenors;
-            } else {
-                std::vector<ScenarioCurvePillar> tenors;
-                for (const auto& t : simMarketParams_->yieldCurveTenors(key.name)) {
-                    tenors.push_back(t);
-                }
-                return tenors;
-            }
-        case RiskFactorKey::KeyType::IndexCurve:
-            if (sensiScenarioData_->indexCurveShiftData().count(key.name) > 0) {
-                return sensiScenarioData_->indexCurveShiftData().at(key.name)->shiftTenors;
-            } else {
-                std::vector<ScenarioCurvePillar> tenors;
-                for (const auto& t : simMarketParams_->yieldCurveTenors(key.name)) {
-                    tenors.push_back(t);
-                }
-                return tenors;
-            }
-        case RiskFactorKey::KeyType::SurvivalProbability:
-            if (sensiScenarioData_->creditCurveShiftData().count(key.name) > 0) {
-                return sensiScenarioData_->creditCurveShiftData().at(key.name)->shiftTenors;
-            } else {
-                std::vector<ScenarioCurvePillar> tenors;
-                for (const auto& t : simMarketParams_->defaultTenors(key.name)) {
-                    tenors.push_back(t);
-                }
-                return tenors;
-            }
-        default:
-           QL_FAIL("Unsupported par instrument type for shift tenors " << key.keytype);
-    }  
-    
+        return tenors;
+    }
+    case RiskFactorKey::KeyType::YieldCurve:
+        for (const auto& t : simMarketParams_->yieldCurveTenors(key.name)) {
+            tenors.push_back(t);
+        }
+        return tenors;
+    case RiskFactorKey::KeyType::IndexCurve:
+        for (const auto& t : simMarketParams_->yieldCurveTenors(key.name)) {
+            tenors.push_back(t);
+        }
+        return tenors;
+    case RiskFactorKey::KeyType::SurvivalProbability:
+        for (const auto& t : simMarketParams_->defaultTenors(key.name)) {
+            tenors.push_back(t);
+        }
+        return tenors;
+    default:
+        QL_FAIL("Unsupported par instrument type for shift tenors " << key.keytype);
+    }
 }
 } // namespace analytics
 } // namespace ore

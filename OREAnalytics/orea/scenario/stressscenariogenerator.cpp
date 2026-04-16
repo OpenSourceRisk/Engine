@@ -240,7 +240,9 @@ void StressScenarioGenerator::addCommodityCurveShifts(StressTestScenarioData::St
             if (auto p = std::get_if<Period>(&t)) {
                 shiftTenors.push_back(*p);
             } else {
-                QL_FAIL("Unsupported shift tenor type for commodity curve shifts");
+                QL_FAIL("Unsupported stresstest shift tenor type '" << t
+                                                                     << "' for commodity curve '" << commodity
+                                                                     << "'");
             }
         }
 
@@ -291,7 +293,7 @@ void StressScenarioGenerator::addDiscountCurveShifts(StressTestScenarioData::Str
         StressTestScenarioData::CurveShiftData data = *d.second;
         ShiftType shiftType = data.shiftType;
         //DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(ccy));
-	DayCounter dc;
+	    DayCounter dc;
         if(auto s = simMarket_.lock()) {
             dc = s->discountCurve(ccy)->dayCounter();
         } else {
@@ -311,7 +313,7 @@ void StressScenarioGenerator::addDiscountCurveShifts(StressTestScenarioData::Str
             if (auto p = std::get_if<Period>(&t)) {
                 shiftTenors.push_back(*p);
             } else {
-                QL_FAIL("Unsupported shift tenor type for commodity curve shifts");
+                QL_FAIL("Unsupported stresstest shift tenor type '" << t <<  "' for discount curve '" << ccy << "'");
             }
         }
         QL_REQUIRE(shiftTenors.size() > 0, "Discount shift tenors not specified");
@@ -383,7 +385,9 @@ void StressScenarioGenerator::addSurvivalProbabilityShifts(StressTestScenarioDat
             if (auto p = std::get_if<Period>(&t)) {
                 shiftTenors.push_back(*p);
             } else {
-                QL_FAIL("Unsupported shift tenor type for commodity curve shifts");
+                QL_FAIL("Unsupported stresstest shift tenor type '" << t
+                                                                     << "' for survival probability curve '"
+                                                                     << name << "'");
             }
         }
         QL_REQUIRE(shiftTenors.size() > 0, "Survival Probability shift tenors not specified");
@@ -457,7 +461,8 @@ void StressScenarioGenerator::addIndexCurveShifts(StressTestScenarioData::Stress
             if (auto p = std::get_if<Period>(&t)) {
                 shiftTenors.push_back(*p);
             } else {
-                QL_FAIL("Unsupported shift tenor type for commodity curve shifts");
+                QL_FAIL("Unsupported stresstest shift tenor type '" << t
+                                                                     << "' for index curve '" << indexName << "'");
             }
         }
         QL_REQUIRE(shiftTenors.size() > 0, "Index curve shift tenors not specified");
@@ -530,7 +535,8 @@ void StressScenarioGenerator::addYieldCurveShifts(StressTestScenarioData::Stress
             if (auto p = std::get_if<Period>(&t)) {
                 shiftTenors.push_back(*p);
             } else {
-                QL_FAIL("Unsupported shift tenor type for commodity curve shifts");
+                QL_FAIL("Unsupported stresstest shift tenor type '" << t
+                                                                     << "' for yield curve '" << name << "'");
             }
         }
         QL_REQUIRE(shiftTenors.size() > 0, "Yield curve shift tenors not specified");
