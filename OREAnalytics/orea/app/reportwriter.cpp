@@ -2307,7 +2307,7 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
     Size baseCcyColumn = 7;
     
     // t0 NPV = NPV(t0;m0;p0)
-    QL_REQUIRE(t0NpvReport->rows() == t0m0p0NpvReport->rows(), "different number of rows in npv reports");
+    QL_REQUIRE(t0NpvReport->rows() == t0m1p0NpvReport->rows(), "different number of rows in npv reports");
     QL_REQUIRE(t0NpvReport->rows() == t1m0p0NpvReport->rows(), "different number of rows in npv reports");
 
     QL_REQUIRE(t0NpvReport->header(tradeIdColumn) == "TradeId", "incorrect trade id column " << tradeIdColumn);
@@ -2360,7 +2360,7 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
         try {
             string tradeId = boost::get<string>(t0NpvReport->data(tradeIdColumn, i));
             t0Ids.insert(tradeId);
-            string tradeId2 = boost::get<string>(t0m0p0NpvReport->data(tradeIdColumn, i));
+            string tradeId2 = boost::get<string>(t0m1p0NpvReport->data(tradeIdColumn, i));
             string tradeId3 = boost::get<string>(t1m0p0NpvReport->data(tradeIdColumn, i));
             QL_REQUIRE(tradeId == tradeId2 && tradeId == tradeId3, "inconsistent ordering of NPV reports");
             string tradeType = boost::get<string>(t0NpvReport->data(tradeTypeColumn, i));
