@@ -1129,7 +1129,9 @@ std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Date> ParSensitivityI
             QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(index->clone(indexTs));
         
         removeTodaysFixingIndices.insert(overnightIndex->name());
-
+        LOG("Creating OIS future with index " << overnightIndex->name() << " and term " << term << " using tenor "
+                                              << futureConvention->tenor() << " and date generation rule "
+                                              << futureConvention->dateGenerationRule());
         auto [startDate, endDate] =
             getOiFutureStartEndDate(term.month(), term.year(), futureConvention->tenor(),
                                     futureConvention->dateGenerationRule(), futureConvention->calendar());
@@ -1138,7 +1140,7 @@ std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Date> ParSensitivityI
             QL_FAIL("ParSensitivityInstrumentBuilder::makeIrFuture(): OIS Future with expiry "
                     << term << " has already expired (expiry date: " << endDate << ", asof: " << asof << ")");
         }
-
+        LOG("Creating OIS future with start date " << startDate << " and end date " << endDate);
         auto future = ext::make_shared<OvernightIndexFuture>(overnightIndex, startDate, endDate, Handle<Quote>(),
                                                              futureConvention->overnightIndexFutureNettingType());
         return {future, future->maturityDate()};
