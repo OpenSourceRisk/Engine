@@ -261,7 +261,7 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
         ReportWriter(inputs_->reportNaString())
             .writeAdditionalResultsReport(*t0m1p0AddReport, analytic()->portfolio(), analytic()->market(),
                                           marketConfig, effectiveResultCurrency);
-        analytic()->addReport(LABEL, "pnl_additional_results_t0_m1_p0", t0m0p0AddReport);
+        analytic()->addReport(LABEL, "pnl_additional_results_t0_m1_p0", t0m1p0AddReport);
         CONSOLE("OK");
     }
 
