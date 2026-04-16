@@ -2397,7 +2397,7 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
                 .add(startDate)
                 .add(endDate)
                 .add(t0Npv)
-                .add(t0m0p0Npv)
+                .add(t0m1p0Npv)
                 .add(t1m0p0Npv)
                 .add(t1m1p0Npv)
                 .add(t1m0p1Npv)
