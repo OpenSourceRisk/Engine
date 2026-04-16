@@ -135,7 +135,6 @@ void SetupVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputPara
     inputs->loadParameterXML<ScriptLibraryData>(scriptLibraryData, "setup", "scriptLibrary");
     if (scriptLibraryData)
         ScriptLibraryStorage::instance().set(*scriptLibraryData);
-
     // load all other 'setup' parameters here
     inputs->loadParameter<bool>(dryRun_, "setup", "dryRun", false, parseBool);
     inputs->loadParameter<string>(reportNaString_, "setup", "reportNaString", false);
@@ -391,15 +390,15 @@ void InputParameters::setBaselTrafficLightFromFile(const std::string& fileName) 
 }
 
 void InputParameters::setScriptLibrary(const std::string& xml) {
-    ScriptLibraryData data;
-    data.fromXMLString(xml);
-    ScriptLibraryStorage::instance().set(std::move(data));
+    setupVariables_.scriptLibraryData_ = ext::make_shared<ScriptLibraryData>();
+    setupVariables_.scriptLibraryData_->fromXMLString(xml);
+    ScriptLibraryStorage::instance().set(*setupVariables_.scriptLibraryData_);
 }
 
 void InputParameters::setScriptLibraryFromFile(const std::string& fileName) {
-    ScriptLibraryData data;
-    data.fromFile(fileName);
-    ScriptLibraryStorage::instance().set(std::move(data));
+    setupVariables_.scriptLibraryData_ = ext::make_shared<ScriptLibraryData>();
+    setupVariables_.scriptLibraryData_->fromFile(fileName);
+    ScriptLibraryStorage::instance().set(*setupVariables_.scriptLibraryData_);
 }
 
 void InputParameters::setConventions(const std::string& xml) {
@@ -1155,6 +1154,6 @@ ext::shared_ptr<SimmConfiguration> InputParameters::getSimmConfiguration() {
                "Internal error, load simm bucket mapper before retrieving simmconfiguration");
     return buildSimmConfiguration(simmVersion(), simmBucketMapper(), simmCalibrationData(), mporDays());
 }
-
+  
 } // namespace analytics
 } // namespace ore

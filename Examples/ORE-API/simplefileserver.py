@@ -32,6 +32,10 @@ def is_directory_traversal(file_name):
     else:
         return True
 
+@api.route('/health')
+def health():
+    return flask.jsonify(status="ok", service="simplefileserver")
+
 @api.route('/file/<path:filename>', methods=['GET', 'POST'])
 def get_file(filename):
     # responses are truncated if the request is large (even if it is not used as here), this appears to be a bug
@@ -39,7 +43,7 @@ def get_file(filename):
     flask.request.get_data()
     file_type = filename.rsplit(".", 1)[1]
     fdir, file = os.path.split(unquote(filename))
-    filepath = os.path.join(main_args.input_dir, fdir)
+    filepath = os.path.join(input_dir, fdir)
     if not is_directory_traversal(filepath):
         response = flask.make_response(flask.send_from_directory(filepath, file, mimetype=getMimeType(filename)))
         response.headers['Content-Type'] = file_type_header_map[file_type]
@@ -51,9 +55,9 @@ def get_file(filename):
 def get_file2(filename, notused):
     flask.request.get_data()
     fdir, file = os.path.split(unquote(filename))
-    filepath = os.path.join(main_args.input_dir, fdir)
+    filepath = os.path.join(input_dir, fdir)
     if not is_directory_traversal(filepath):
-        return flask.send_from_directory(os.path.join(main_args.input_dir, fdir), file, mimetype=getMimeType(filename))
+        return flask.send_from_directory(os.path.join(input_dir, fdir), file, mimetype=getMimeType(filename))
     else:
         flask.abort(400, description="backwards directory traversal detected!")
         
@@ -61,8 +65,8 @@ def get_file2(filename, notused):
 def post_report(filename):
     fdir, file = os.path.split(unquote(filename))
     filename = ''
-    if main_args.output_dir:
-        filename = os.path.join(main_args.output_dir, os.path.join(fdir, file.replace('-', '_')))
+    if output_dir:
+        filename = os.path.join(output_dir, os.path.join(fdir, file.replace('-', '_')))
     else:
         filename = os.path.join(os.path.join(fdir, file.replace('-', '_')))
     file_dir = os.path.dirname(os.path.realpath(filename))
@@ -92,4 +96,12 @@ if __name__ == '__main__':
     argparser.add_argument('--output_dir', type=str, help='Path to write output', default='Output')
     main_args = argparser.parse_args()
 
+    input_dir = main_args.input_dir
+    output_dir = main_args.output_dir
+    
     api.run(host=main_args.host, port=main_args.port)
+
+else:
+    # if simplefileserver.py is loaded instead of being run, we use default paths
+    input_dir = "Input"
+    output_dir = "Output"

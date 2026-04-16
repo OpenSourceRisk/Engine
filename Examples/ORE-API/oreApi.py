@@ -155,7 +155,8 @@ class oreApi():
 
     def setupCurves(self, data_dict, params):
         print("Loading Curves variables")
-        params.setOutputCurves(True)
+        if data_dict["analytics"]["curves"]["active"] == "Y":
+            params.setOutputCurves(True)
         self.setSimpleParameter(data_dict["analytics"], "grid", "curves", params.setCurvesGrid)
         self.setSimpleParameter(data_dict["analytics"], "configuration", "curves", params.setCurvesMarketConfig)
         self.setSimpleParameter(data_dict["analytics"], "outputTodaysMarketCalibration", "curves",
@@ -164,13 +165,14 @@ class oreApi():
     def setupSensitivity(self, data_dict, params):
         print("Loading Sensitivity variables")
         params.insertAnalytic("SENSITIVITY")
-        self.setSimpleParameter(data_dict["analytics"], "paraSensitivity", "sensitivity", params.setParSensi, bool)
+        self.setSimpleParameter(data_dict["analytics"], "parSensitivity", "sensitivity", params.setParSensi, bool)
         self.setSimpleParameter(data_dict["analytics"], "outputJacobi", "sensitivity", params.setOutputJacobi, bool)
         self.setSimpleParameter(data_dict["analytics"], "alignPillars", "sensitivity", params.setAlignPillars, bool)
         self.setUriParameter(data_dict["analytics"], "marketConfigUri", "sensitivity", params.setSensiSimMarketParams)
         self.setUriParameter(data_dict["analytics"], "sensitivityConfigUri", "sensitivity", params.setSensiScenarioData)
         self.setUriParameter(data_dict["analytics"], "pricingEnginesUri", "sensitivity", params.setSensiPricingEngine)
         self.setSimpleParameter(data_dict["analytics"], "outputSensitivityThreshold", "sensitivity", params.setSensiThreshold, float)
+        self.setSimpleParameter(data_dict["analytics"], "recalibrateModels", "sensitivity", params.setRecalibrateModels, bool)
         
     def setupStress(self, data_dict, params):
         # Stress variables
@@ -202,8 +204,9 @@ class oreApi():
         params.insertAnalytic("XVA")
         self.setSimpleParameter(data_dict["analytics"], "baseCurrency", "xva", params.setXvaBaseCurrency)
         self.setUriParameter(data_dict["analytics"], "csaUri", "xva", params.setNettingSetManager)
-        if params.setLoadCube(True) and "nettingSetCubeUri" in data_dict["analytics"]["xva"]:
-            self.setUriParameter(data_dict["analytics"], "nettingSetCubeUri", "xva", params.setNettingSetManager)
+        # has been removed from the input parameters interface
+        #if params.setLoadCube(True) and "nettingSetCubeUri" in data_dict["analytics"]["xva"]:
+        #    self.setUriParameter(data_dict["analytics"], "nettingSetCubeUri", "xva", params.setNettingSetManager)
         self.setSimpleParameter(data_dict["analytics"], "flipViewXVA", "xva", params.setFlipViewXVA, bool)
         self.setSimpleParameter(data_dict["analytics"], "fullInitialCollateralisation", "xva", params.setFullInitialCollateralisation,
                            bool)
@@ -226,11 +229,12 @@ class oreApi():
         self.setSimpleParameter(data_dict["analytics"], "kva", "xva", params.setKvaAnalytic, bool)
         self.setSimpleParameter(data_dict["analytics"], "dynamicCredit", "xva", params.setDynamicCredit, bool)
         self.setSimpleParameter(data_dict["analytics"], "cvaSensi", "xva", params.setCvaSensi, bool)
-        self.setSimpleParameter(data_dict["analytics"], "cvaSensiGrid", "xva", params.setCvaSensiGrid, str)
+        # has been removed from the interface because cvs sensi has a separate analytic now
+        #self.setSimpleParameter(data_dict["analytics"], "cvaSensiGrid", "xva", params.setCvaSensiGrid, str)
         self.setSimpleParameter(data_dict["analytics"], "cvaSensiShiftSize", "xva", params.setCvaSensiShiftSize, float)
         self.setSimpleParameter(data_dict["analytics"], "dvaName", "xva", params.setDvaName, str)
-        self.setUriParameter(data_dict["analytics"], "rawCubeOutputUri", "xva", params.setRawCubeOutput)
-        self.setUriParameter(data_dict["analytics"], "netCubeOutputUri", "xva", params.setNetCubeOutput)
+        self.setSimpleParameter(data_dict["analytics"], "rawCubeOutput", "xva", params.setRawCubeOutput, bool)
+        self.setSimpleParameter(data_dict["analytics"], "netCubeOutput", "xva", params.setNetCubeOutput, bool)
 
         # FVA variables
         self.setSimpleParameter(data_dict["analytics"], "fvaBorrowingCurve", "xva", params.setFvaBorrowingCurve)
@@ -241,14 +245,15 @@ class oreApi():
 
 
         # DIM variables
-        #  Fill Time series param
-        self.setUriParameter(data_dict["analytics"], "deterministicInitialMarginUri", "xva", params.setDeterministicInitialMargin)
+        # has been removed from the input parameters interface, because we have more realistic alternatives (regression, dynamic simm)
+        #self.setUriParameter(data_dict["analytics"], "deterministicInitialMarginUri", "xva", params.setDeterministicInitialMargin)
         self.setSimpleParameter(data_dict["analytics"], "dimQuantile", "xva", params.setDimQuantile, float)
         self.setSimpleParameter(data_dict["analytics"], "dimHorizonCalendarDays", "xva", params.setDimHorizonCalendarDays, int)
         self.setSimpleParameter(data_dict["analytics"], "dimRegressionOrder", "xva", params.setDimRegressionOrder, int)
         self.setSimpleParameter(data_dict["analytics"], "dimRegressors", "xva", params.setDimRegressors, str)
         self.setSimpleParameter(data_dict["analytics"], "dimOutputGridPoints", "xva", params.setDimOutputGridPoints, str)
-        self.setSimpleParameter(data_dict["analytics"], "dimOutputNettingSet", "xva", params.setDimOutputNettingSet, str)
+        # removed from the input parameters interface
+        #self.setSimpleParameter(data_dict["analytics"], "dimOutputNettingSet", "xva", params.setDimOutputNettingSet, str)
         self.setSimpleParameter(data_dict["analytics"], "dimLocalRegressionEvaluations", "xva", params.setDimLocalRegressionEvaluations,
                            int)
         self.setSimpleParameter(data_dict["analytics"], "dimLocalRegressionBandwidth", "xva", params.setDimLocalRegressionBandwidth,
@@ -321,7 +326,28 @@ class oreApi():
             params.setWriteCube(True)
         if "scenariodump" in data_dict["analytics"]["simulation"]:
             params.setWriteScenarios(True)
-        
+
+        self.setSimpleParameter(data_dict["analytics"], "amcCg", "simulation", params.setAmcCg, str)
+        self.setSimpleParameter(data_dict["analytics"], "xvaCgBumpSensis", "simulation", params.setXvaCgBumpSensis, bool)
+        self.setSimpleParameter(data_dict["analytics"], "xvaCgDynamicIM", "simulation", params.setXvaCgDynamicIM, bool)
+        self.setSimpleParameter(data_dict["analytics"], "xvaCgDynamicIMStepSize", "simulation", params.setXvaCgDynamicIMStepSize, int)
+        self.setSimpleParameter(data_dict["analytics"], "xvaCgRegressionOrder", "simulation", params.setXvaCgRegressionOrder, int)
+        self.setSimpleParameter(data_dict["analytics"], "xvaCgRegressionVarianceCutoff", "simulation", params.setXvaCgRegressionVarianceCutoff, float)
+        self.setSimpleParameter(data_dict["analytics"], "xvaCgRegressionOrderDynamicIm", "simulation", params.setXvaCgRegressionOrderDynamicIm, int)
+        self.setSimpleParameter(data_dict["analytics"], "xvaCgRegressionVarianceCutoffDynamicIm", "simulation", params.setXvaCgRegressionVarianceCutoffDynamicIm, float)
+        self.setSimpleParameter(data_dict["analytics"], "xvaCgTradeLevelBreakDown", "simulation", params.setXvaCgTradeLevelBreakdown, bool)
+        # FIXME
+        # self.setSimpleParameter(data_dict["analytics"], "xvaCgRegressionReportTimeStepsDynamicIM", "simulation", params.setXvaCgRegressionReportTimeStepsDynamicIM, vector<int>)
+        self.setSimpleParameter(data_dict["analytics"], "xvaCgUseRedBlocks", "simulation", params.setXvaCgUseRedBlocks, bool)
+        self.setSimpleParameter(data_dict["analytics"], "xvaCgUseExternalComputeDevice", "simulation", params.setXvaCgUseExternalComputeDevice, bool)
+        self.setSimpleParameter(data_dict["analytics"], "xvaCgExternalDeviceCompatibilityMode", "simulation", params.setXvaCgExternalDeviceCompatibilityMode, bool)
+        self.setSimpleParameter(data_dict["analytics"], "xvaCgUseDoublePrecisionForExternalCalculation", "simulation", params.setXvaCgUseDoublePrecisionForExternalCalculation, bool)
+        self.setSimpleParameter(data_dict["analytics"], "xvaCgExternalComputeDevice", "simulation", params.setXvaCgExternalComputeDevice, str)
+        self.setSimpleParameter(data_dict["analytics"], "xvaCgUsePythonIntegration", "simulation", params.setXvaCgUsePythonIntegration, bool)
+        self.setSimpleParameter(data_dict["analytics"], "xvaCgUsePythonIntegrationDynamicIm", "simulation", params.setXvaCgUsePythonIntegrationDynamicIm, bool)
+        # FIXME
+        self.setUriParameter(data_dict["analytics"], "xvaCgSensitivityConfigUri", "simulation", params.setXvaCgSensiScenarioData)
+
 
     def buildInputParameters(self, data_dict):
 
@@ -329,6 +355,7 @@ class oreApi():
         params = ore.InputParameters()
 
         # Load in variables
+        print()
         print("Loading parameters...")
 
         # switch default for backward compatibility
@@ -395,29 +422,30 @@ class oreApi():
         self.setSimpleParameter(data_dict, "implyTodaysFixings", "setup", params.setImplyTodaysFixings, bool)
 
         # Set referenceData
-        try:
-            self.setUriParameter(data_dict, "referenceDataUri", "setup", params.setRefDataManager)
-        except Exception as e:
-            error_type = type(e).__name__
-            error_message = str(e)
-            response = make_response({'error_type': error_type, 'error_message': error_message})
-            response.status_code = 500
-            return response
+        # we cannot return a response here, need to return params
+        #try:
+        self.setUriParameter(data_dict, "referenceDataUri", "setup", params.setRefDataManager)
+        #except Exception as e:
+        #    error_type = type(e).__name__
+        #    error_message = str(e)
+        #    response = make_response({'error_type': error_type, 'error_message': error_message})
+        #    response.status_code = 500
+        #    return response
 
         # Set iborFallbackConfig
         self.setUriParameter(data_dict, "iborFallbackConfigUri", "setup", params.setIborFallbackConfig)
 
         # Set CurveConfigs
-        try:
-            self.setUriParameter(data_dict, "curveConfigUri", "setup", params.setCurveConfigs)
-
-        except Exception as e:
-            error_message = "Curve Config not found"
-            print("Exception occurred:", str(e))
-            print("Error message:", error_message)
-            response = make_response(f"error: {str(e)}")
-            response.status_code = 404
-            return response
+        # we cannot return a response here, need to return params
+        #try:
+        self.setUriParameter(data_dict, "curveConfigUri", "setup", params.setCurveConfigs)
+        # except Exception as e:
+        #    error_message = "Curve Config not found"
+        #    print("Exception occurred:", str(e))
+        #    print("Error message:", error_message)
+        #    response = make_response(f"error: {str(e)}")
+        #    response.status_code = 404
+        #    return response
 
         # Set conventions
         self.setUriParameter(data_dict, "conventionsUri", "setup", params.setConventions)
@@ -431,10 +459,14 @@ class oreApi():
         # Set portfolio
         self.setUriParameter(data_dict, "portfolioUri", "setup", params.setPortfolio)
 
+        # Set script library
+        self.setUriParameter(data_dict, "scriptLibraryUri", "setup", params.setScriptLibrary)
+
         # Set observationModel
         self.setSimpleParameter(data_dict, "observationModel", "setup", params.setObservationModel)
 
         print("Loaded Setup Variables")
+
         # Markets variables
         if "markets" in data_dict:
             print("Loading Market variables")
@@ -453,7 +485,6 @@ class oreApi():
             else:
                 print("Requested analytic ", requestedAnalytic, " not active")
 
-        print("Done with analytics")
         # TODO: CPTY and Market cube not needed for any of the runs (966)
 
         # cashflow npv and dynamic backtesting
@@ -468,7 +499,7 @@ class oreApi():
             if params.lazyMarketBuilding(True):
                 params.setLazyMarketBuilding(False)
         '''
-        print("buildInputParameters done")
+        print("Loading parameters done")
 
         return params
 
@@ -478,8 +509,12 @@ class oreApi():
         # Retrieve the data_dict from the request
         data_dict = self.get_data()
         
-        # Set logFile name
+        # Set logFile name and log level
         logFile = self.setInputName(data_dict, "logFile", "setup")
+        if "logMask" in data_dict["setup"]:
+            logLevel = self.setInputName(data_dict, "logMask", "setup")
+        else:
+            logLevel = 31
 
         # set up input parameters
         inputParams = self.buildInputParameters(data_dict)
@@ -501,11 +536,11 @@ class oreApi():
         print("Retrieved fixings data")
 
         print("Creating OREApp...")
-        ore_app = ore.OREApp(inputParams, logFile, 63, True)
+        ore_app = ore.OREApp(inputParams, logFile, logLevel, True)
 
         print("Running ORE process...")
         try:
-            ore_app.run(ore.StrVector(market_data), ore.StrVector(fixings_data))  # try catch error needed (500 error)
+            ore_app.run(ore.StrVector(market_data), ore.StrVector(fixings_data))
         except Exception as e:
             error_message = "Internal server error from ore app failing"
             error = str(e.args[0])
