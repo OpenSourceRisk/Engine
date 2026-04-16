@@ -151,7 +151,7 @@
 #include <ored/portfolio/equityfuturesoption.hpp>
 #include <ored/portfolio/equityfxlegbuilder.hpp>
 #include <ored/portfolio/equityfxlegdata.hpp>
-#include <ored/portfolio/equitydeltahedgedoption.hpp>
+#include <ored/portfolio/equityautodeltahedgeoption.hpp>
 #include <ored/portfolio/equityoption.hpp>
 #include <ored/portfolio/equityoptionposition.hpp>
 #include <ored/portfolio/equityoutperformanceoption.hpp>

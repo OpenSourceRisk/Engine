@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file portfolio/equitydeltahedgedoption.hpp
+/*! \file portfolio/equityautodeltahedgeoption.hpp
     \brief Equity Auto Delta Hedged Option data model and serialization
     \ingroup tradedata
 */

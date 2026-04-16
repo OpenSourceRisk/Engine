@@ -250,7 +250,7 @@ portfolio/envelope.cpp
 portfolio/equitybarrieroption.cpp
 portfolio/equitydigitaloption.cpp
 portfolio/ratedigitaloption.cpp
-portfolio/equitydeltahedgedoption.cpp
+portfolio/equityautodeltahedgeoption.cpp
 portfolio/equitydoublebarrieroption.cpp
 portfolio/equitydoubletouchoption.cpp
 portfolio/equityeuropeanbarrieroption.cpp
@@ -682,7 +682,7 @@ portfolio/equitybarrieroption.hpp
 portfolio/equityderivative.hpp
 portfolio/equitydigitaloption.hpp
 portfolio/ratedigitaloption.hpp
-portfolio/equitydeltahedgedoption.hpp
+portfolio/equityautodeltahedgeoption.hpp
 portfolio/equitydoublebarrieroption.hpp
 portfolio/equitydoubletouchoption.hpp
 portfolio/equityeuropeanbarrieroption.hpp

@@ -265,8 +265,8 @@
 #include <ored/portfolio/enginedata.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/envelope.hpp>
+#include <ored/portfolio/equityautodeltahedgeoption.hpp>
 #include <ored/portfolio/equitybarrieroption.hpp>
-#include <ored/portfolio/equitydeltahedgedoption.hpp>
 #include <ored/portfolio/equityderivative.hpp>
 #include <ored/portfolio/equitydigitaloption.hpp>
 #include <ored/portfolio/equitydoublebarrieroption.hpp>
