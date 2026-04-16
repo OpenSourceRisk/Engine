@@ -405,7 +405,6 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                         int nonZeroValues = 0;
                         Real lastNonZeroValue = 0.0;
                         vector<Real> x, y;
-                        vector<Real> missingSpreadsIndexes;
                         
                         for (Size k = 0; k < spreads.size(); ++k) {
                             int spreadIndex = spreads.size() - 1 - k;
