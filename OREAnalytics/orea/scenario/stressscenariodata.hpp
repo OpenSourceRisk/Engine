@@ -48,6 +48,7 @@ class StressTestScenarioData : public XMLSerializable {
 public:
     struct CurveShiftData {
         ShiftType shiftType;
+        bool shiftingZeros = true;
         vector<Real> shifts;
         vector<Period> shiftTenors;
     };

@@ -146,6 +146,8 @@ std::ostream& operator<<(std::ostream& out, const ShiftType& shiftType) {
         return out << "Absolute";
     else if (shiftType == ShiftType::Relative)
         return out << "Relative";
+    else if (shiftType == ShiftType::EqualTo)
+        return out << "EqualTo";
     else
         QL_FAIL("Invalid ShiftType " << shiftType);
 }
@@ -174,7 +176,8 @@ QuantExt::ShiftScheme parseShiftScheme(const std::string& s) {
 QuantExt::ShiftType parseShiftType(const std::string& s) {
     static std::map<string, ShiftType> m = {
         {"Absolute", ShiftType::Absolute},
-        {"Relative", ShiftType::Relative}};
+        {"Relative", ShiftType::Relative}, 
+        {"EqualTo", ShiftType::EqualTo}};
     auto it = m.find(s);
     if (it != m.end()) {
         return it->second;

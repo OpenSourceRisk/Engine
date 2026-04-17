@@ -53,9 +53,9 @@
   <xs:complexType name="stresstest">
     <xs:all>
       <xs:element type="stresstestparshifts" name="ParShifts" minOccurs="0"/>
-      <xs:element type="discountcurves" name="DiscountCurves" minOccurs="0"/>
-      <xs:element type="indexcurves" name="IndexCurves" minOccurs="0"/>
-      <xs:element type="yieldcurves" name="YieldCurves" minOccurs="0"/>
+      <xs:element type="stressdiscountcurves" name="DiscountCurves" minOccurs="0"/>
+      <xs:element type="stressindexcurves" name="IndexCurves" minOccurs="0"/>
+      <xs:element type="stressyieldcurves" name="YieldCurves" minOccurs="0"/>
       <xs:element type="fxspots" name="FxSpots" minOccurs="0"/>
       <xs:element type="stressfxvolatilities" name="FxVolatilities" minOccurs="0"/>
       <xs:element type="swaptionvolatilities" name="SwaptionVolatilities" minOccurs="0"/>
@@ -104,7 +104,93 @@
     <xs:attribute type="currencyPair" name="ccypair" use="required"/>
   </xs:complexType>
 
-  <xs:complexType name="stresscommoditycurves">
+  <xs:complexType name="stressdiscountcurves">
+    <xs:sequence>
+      <xs:element type="stressdiscountcurve" name="DiscountCurve" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+	
+  <xs:complexType name="stressdiscountcurve">
+	  <xs:sequence>
+		  <xs:element type="shiftTypeEntry" name="ShiftType" maxOccurs="unbounded"/>
+		  <xs:element type="xs:boolean" name="ShiftingZeros" minOccurs="0"/>
+		  <xs:choice>
+			  <xs:element type="shiftSizeEntry" name="ShiftSize" maxOccurs="unbounded"/>
+			  <xs:element type="xs:string" name="Shifts"/>
+		  </xs:choice>
+		  <xs:element type="shiftSchemeEntry" name="ShiftScheme" minOccurs="0" maxOccurs="unbounded"/>
+		  <xs:element type="xs:string" name="ShiftTenors"/>
+		  <xs:element type="parconversion" name="ParConversion" minOccurs="0"/>
+	  </xs:sequence>
+	  <xs:attribute type="currencyCode" name="ccy" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="stressindexcurves">
+    <xs:sequence>
+      <xs:element type="stressindexcurve" name="IndexCurve" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+	
+  <xs:complexType name="stressindexcurve">
+	  <xs:sequence>
+		  <xs:element type="shiftTypeEntry" name="ShiftType" maxOccurs="unbounded"/>
+		  <xs:element type="xs:boolean" name="ShiftingZeros" minOccurs="0"/>
+		  <xs:choice>
+			  <xs:element type="shiftSizeEntry" name="ShiftSize" maxOccurs="unbounded"/>
+			  <xs:element type="xs:string" name="Shifts"/>
+		  </xs:choice>
+		  <xs:element type="shiftSchemeEntry" name="ShiftScheme" minOccurs="0" maxOccurs="unbounded"/>
+		  <xs:element type="xs:string" name="ShiftTenors"/>
+		  <xs:element type="parconversion" name="ParConversion" minOccurs="0"/>
+	  </xs:sequence>
+	  <xs:attribute type="indexNameType" name="index" use="required"/>
+  </xs:complexType>
+
+
+	<xs:complexType name="stressyieldcurves">
+		<xs:sequence>
+			<xs:element type="stressyieldcurve" name="YieldCurve" maxOccurs="unbounded" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="stressyieldcurve">
+		<xs:sequence>
+			<xs:element type="xs:string" name="CurveType" minOccurs="0"/>
+			<xs:element type="shiftTypeEntry" name="ShiftType" maxOccurs="unbounded"/>
+			<xs:element type="xs:boolean" name="ShiftingZeros" minOccurs="0"/>
+			<xs:choice>
+				<xs:element type="shiftSizeEntry" name="ShiftSize" maxOccurs="unbounded"/>
+				<xs:element type="xs:string" name="Shifts"/>
+			</xs:choice>
+			<xs:element type="shiftSchemeEntry" name="ShiftScheme" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element type="xs:string" name="ShiftTenors"/>
+			<xs:element type="parconversion" name="ParConversion" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attribute type="xs:string" name="name" use="required"/>
+	</xs:complexType>
+
+	<xs:complexType name="stresssurvivalprobabilities">
+		<xs:sequence>
+			<xs:element type="stresssurvivalprobability" name="SurvivalProbability" maxOccurs="unbounded" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="stresssurvivalprobability">
+		<xs:sequence>
+			<xs:element type="shiftTypeEntry" name="ShiftType" maxOccurs="unbounded"/>
+			<xs:element type="xs:boolean" name="ShiftingZeros" minOccurs="0"/>
+			<xs:choice>
+				<xs:element type="shiftSizeEntry" name="ShiftSize" maxOccurs="unbounded"/>
+				<xs:element type="xs:string" name="Shifts"/>
+			</xs:choice>
+			<xs:element type="shiftSchemeEntry" name="ShiftScheme" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element type="xs:string" name="ShiftTenors"/>
+			<xs:element type="parconversion" name="ParConversion" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attribute type="xs:string" name="name" use="required"/>
+	</xs:complexType>
+
+	<xs:complexType name="stresscommoditycurves">
     <xs:sequence>
       <xs:element type="stresscommoditycurve" name="CommodityCurve" maxOccurs="unbounded" minOccurs="0"/>
     </xs:sequence>

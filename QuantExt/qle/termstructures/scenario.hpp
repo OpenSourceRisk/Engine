@@ -184,7 +184,7 @@ private:
 };
 
 enum class ShiftScheme { Forward, Backward, Central };
-enum class ShiftType { Absolute, Relative };
+enum class ShiftType { Absolute, Relative, EqualTo };
 
 ShiftScheme parseShiftScheme(const std::string& s);
 ShiftType parseShiftType(const std::string& s);
