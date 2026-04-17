@@ -51,7 +51,7 @@ public:
                                : getOiFutureStartEndDate(month_, year_, convention->tenor(),
                                                          convention->dateGenerationRule(), convention->calendar())
                                      .second;
-        return QuantLib::Period((d - referenceDate) * Days);
+        return QuantLib::Period((d - referenceDate) * QuantLib::Days);
     }
 
 private:

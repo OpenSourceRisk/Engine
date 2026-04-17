@@ -30,7 +30,7 @@ std::ostream& operator<<(std::ostream& os, const IrFutureExpiryYearMonth& v) { r
 ScenarioCurvePillar parseScenarioCurvePillar(const std::string& str) {
     QL_REQUIRE(str.size() > 1, "parseScenarioCurvePillar: string must have at least 2 characters");
     QuantLib::Period p;
-    if (tryParse<QuantLib::Period>(str, p, [](const std::string& s) { return parsePeriod(s); })) {
+    if (ore::data::tryParse<QuantLib::Period>(str, p, [](const std::string& s) { return parsePeriod(s); })) {
         return p;
     } else if (str.size() == 7 && str[4] == '-') {
         return IrFutureExpiryYearMonth(str);
@@ -40,7 +40,7 @@ ScenarioCurvePillar parseScenarioCurvePillar(const std::string& str) {
 }
 
 std::ostream& operator<<(std::ostream& os, const ScenarioCurvePillar& v) {
-    std::visit([&](const auto& x) { os << to_string(x); }, v);
+    std::visit([&](const auto& x) { os << x; }, v);
     return os;
 }
 
