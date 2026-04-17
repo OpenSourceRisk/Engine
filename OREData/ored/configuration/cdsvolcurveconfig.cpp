@@ -73,14 +73,15 @@ void CDSVolatilityCurveConfig::PriceInfo::fromXML(XMLNode* node)
     cdsConventionsId_ = XMLUtils::getChildValue(node, "CdsConventions", true);
     runningCoupon_ = XMLUtils::getChildValueAsDouble(node, "RunningCoupon", true);
     if (auto n = XMLUtils::getChildNode(node, "IndexFactors")) {
-        indexFactors_.emplace();
+        // Note: MSVC is more permissive here and allows indexFactors_.emplace() but clang rejects it.
+        indexFactors_ = IndexFactors{};
         indexFactors_->indexFactor = XMLUtils::getChildValueAsDouble(n, "IndexFactor", true);
         indexFactors_->indexFactorStrike = XMLUtils::getChildValueAsDouble(n, "IndexFactorStrike", true);
         indexFactors_->realisedFep = XMLUtils::getChildValueAsDouble(n, "RealisedFep", true);
     }
     engineOverride_ = XMLUtils::getChildValue(node, "EngineOverride", false);
     if (auto n = XMLUtils::getChildNode(node, "OneDimSolverConfig")) {
-        solverConfig_.emplace();
+        solverConfig_ = OneDimSolverConfig{};
         solverConfig_->fromXML(n);
     }
     if (auto n = XMLUtils::getChildNode(node, "QuoteDimension")) {
@@ -246,7 +247,7 @@ void CDSVolatilityCurveConfig::fromXML(XMLNode* node) {
         strikeFactor_ = parseReal(XMLUtils::getNodeValue(n));
 
     if (auto n = XMLUtils::getChildNode(node, "PriceInfo")) {
-        priceInfo_.emplace();
+        priceInfo_ = PriceInfo{};
         priceInfo_->fromXML(n);
     }
 
