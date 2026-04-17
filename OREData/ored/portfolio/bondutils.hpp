@@ -61,6 +61,7 @@ Date getOpenEndDateReplacement(const std::string& replacementPeriodStr, const Ca
 
    - BondReferenceDatum::TYPE             ("Bond")
    - ConvertibleBondReferenceDatum:TYPE   ("ConvertibleBond")
+   - CallableBondReferenceDatum:TYPE      ("CallableBond")
 
    or an empty string if no reference data was found. */
 
