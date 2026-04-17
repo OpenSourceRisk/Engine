@@ -336,7 +336,7 @@ Real OvernightIndexedCouponBase::accruedAmount(const Date& d) const {
     if (observationShift_ && !separateRateCompPeriod()) {
         return nominal() * rate * dayCounter().yearFraction(interestDates_.front(), upToDateAdj);
     } else {
-        return nominal() * rate * dayCounter().yearFraction(accrualStartDate_, upToDateAdj);
+        return nominal() * rate * dayCounter().yearFraction(accrualStartDate_, std::min(d, accrualEndDate_));
     }
 }
 
