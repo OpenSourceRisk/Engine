@@ -28,6 +28,7 @@
 #include <ored/marketdata/defaultcurve.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <qle/termstructures/creditvolcurve.hpp>
+#include <qle/termstructures/indexcdsvolstripper.hpp>
 
 namespace ore {
 namespace data {
@@ -95,33 +96,22 @@ private:
         const DefaultCurveCache& requiredCdsCurves;
     };
 
-    /*! Build a volatility surface from a collection of expiry and absolute strike pairs where the strikes and
-        expiries are both explicitly configured i.e. where wild cards are not used for either the strikes or
-        the expiries.
-    */
-    void buildVolatilityExplicit(const BuildVolatilityArgs& args);
+    //! Add the volatility quotes to the `quotes` container.
+    using CreditVolQuoteMap = QuantExt::InterpolatingCreditVolCurve::QuoteMap;
+    void populateVolatilityQuotes(const BuildVolatilityArgs& args, CreditVolQuoteMap& quotes);
 
-    /** Build a volatility surface from a collection of expiry and absolute strike pairs where the strikes and
-     *  expiries are both explicitly configured and the quotes are option premia.
-     */
-    void buildVolatilityViaPremiaExplicit(const BuildVolatilityArgs& args);
+    //! Add the volatility premium quotes to the `quotes` container.
+    using PremiumQuoteCube = QuantExt::IndexCdsVolStripper::QuoteCube;
+    void populateVolatilityPremiaQuotes(const BuildVolatilityArgs& args, PremiumQuoteCube& quotes);
 
-    /** Build a volatility surface from a collection of expiry and absolute strike pairs where the strikes or
-     *  expiries are not explicitly configured i.e. where wild cards are used for the strikes and or the expiries.
-     */
-    void buildVolatilityWildcard(const BuildVolatilityArgs& args);
-
-    /** Build a volatility surface from a collection of expiry and absolute strike pairs where the strikes or
-     *  expiries are not explicitly configured and the quotes are option premia.
-     */
-    void buildVolatilityViaPremiaWildcard(const BuildVolatilityArgs& args);
+    //! Build the volatility surface from the premium quotes.
+    void buildVolatilityViaPremia(const BuildVolatilityArgs& args, const PremiumQuoteCube& quotes);
 
     // Shared logic for populating terms and term curves.
     void populateTermCurves(const CDSVolatilityCurveConfig& vc, const DefaultCurveCache& requiredCdsCurves,
         std::vector<QuantLib::Period>& terms, std::vector<QuantLib::Handle<QuantExt::CreditCurve>>& termCurves);
 
     //! Create and set the `CreditVolCurve` member using the quotes.
-    using CreditVolQuoteMap = QuantExt::InterpolatingCreditVolCurve::QuoteMap;
     void setVolatilityCurve(
         const QuantLib::Date& asof,
         CDSVolatilityCurveConfig& vc,

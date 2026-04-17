@@ -255,44 +255,20 @@ Real OptionSurfaceStripper::implyVol(Date expiry, Real strike, Option::Type type
 }
 
 void OptionSurfaceStripper::setUpSolver() {
+    bool useMinMax;
+    std::tie(brent_, useMinMax) = createSolver1D<Brent>(solverOptions_);
 
-    // Check that enough solver options have been provided.
-    const Real& guess = solverOptions_.initialGuess;
-    QL_REQUIRE(guess != Null<Real>(), "OptionSurfaceStripper: need a valid initial " <<
-        "guess for a price based surface.");
-
-    const Real& accuracy = solverOptions_.accuracy;
-    QL_REQUIRE(accuracy != Null<Real>(), "OptionSurfaceStripper: need a valid accuracy " <<
-        "for a price based surface.");
-
-    // Set maximum evaluations if provided.
-    if (solverOptions_.maxEvaluations != Null<Size>())
-        brent_.setMaxEvaluations(solverOptions_.maxEvaluations);
-
-    // Check and set the lower bound and upper bound
-    if (solverOptions_.lowerBound != Null<Real>() && solverOptions_.upperBound != Null<Real>()) {
-        QL_REQUIRE(solverOptions_.lowerBound < solverOptions_.upperBound, "OptionSurfaceStripper: lowerBound (" <<
-            solverOptions_.lowerBound << ") should be less than upperBound (" << solverOptions_.upperBound << ")");
-    }
-
-    if (solverOptions_.lowerBound != Null<Real>())
-        brent_.setLowerBound(solverOptions_.lowerBound);
-    if (solverOptions_.upperBound != Null<Real>())
-        brent_.setUpperBound(solverOptions_.upperBound);
-
-    // Choose a min/max or step solver based on parameters provided, favouring the min/max based version.
-    const Real& min = solverOptions_.minMax.first;
-    const Real& max = solverOptions_.minMax.second;
-    const Real& step = solverOptions_.step;
+    Real accuracy = solverOptions_.accuracy;
+    Real guess = solverOptions_.initialGuess;
     using std::placeholders::_1;
-    if (min != Null<Real>() && max != Null<Real>()) {
+    if (useMinMax) {
+        auto [min, max] = solverOptions_.minMax;
         typedef Real (Brent::* MinMaxSolver)(const PriceError&, Real, Real, Real, Real) const;
         solver_ = std::bind(static_cast<MinMaxSolver>(&Brent::solve), &brent_, _1, accuracy, guess, min, max);
-    } else if (step != Null<Real>()) {
+    } else {
+        Real step = solverOptions_.step;
         typedef Real(Brent::* StepSolver)(const PriceError&, Real, Real, Real) const;
         solver_ = std::bind(static_cast<StepSolver>(&Brent::solve), &brent_, _1, accuracy, guess, step);
-    } else {
-        QL_FAIL("OptionSurfaceStripper: need a valid step size or (min, max) pair for a price based surface.");
     }
 
 }

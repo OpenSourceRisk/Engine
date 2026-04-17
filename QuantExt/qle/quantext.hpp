@@ -558,6 +558,7 @@
 #include <qle/termstructures/immfraratehelper.hpp>
 #include <qle/termstructures/implieddefaulttermstructure.hpp>
 #include <qle/termstructures/impliedtermstructure.hpp>
+#include <qle/termstructures/indexcdsvolstripper.hpp>
 #include <qle/termstructures/inflation/constantcpivolatility.hpp>
 #include <qle/termstructures/inflation/cpicurve.hpp>
 #include <qle/termstructures/inflation/cpipricevolatilitysurface.hpp>

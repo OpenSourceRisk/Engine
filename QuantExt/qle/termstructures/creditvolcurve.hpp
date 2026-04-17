@@ -114,7 +114,7 @@ private:
     void createSmile(const QuantLib::Date& expiry, const QuantLib::Period& term, const QuantLib::Date& expiry_m,
                      const QuantLib::Date& expiry_p) const;
 
-    std::map<std::tuple<QuantLib::Date, QuantLib::Period, QuantLib::Real>, QuantLib::Handle<QuantLib::Quote>> quotes_;
+    QuoteMap quotes_;
 
     mutable std::vector<QuantLib::Period> smileTerms_;
     mutable std::vector<QuantLib::Date> smileExpiries_;

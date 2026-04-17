@@ -29,16 +29,18 @@
 #include <ql/time/calendars/weekendsonly.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <qle/termstructures/creditvolcurve.hpp>
+#include <qle/termstructures/indexcdsvolstripper.hpp>
 
 using namespace QuantExt;
 using namespace QuantLib;
 using namespace std;
 
+namespace ore {
+namespace data {
+
 namespace {
 
     // Logic to check that quote matches configured expiries and strikes if provided.
-    using ore::data::Expiry;
-    using ore::data::IndexCDSOptionQuote;
     bool quoteMatchesStrikeExpiry(const ext::shared_ptr<IndexCDSOptionQuote>& q, Real quoteStrike,
         const vector<ext::shared_ptr<Expiry>>& configuredExpiries,
         const vector<Real>& configuredStrikes)
@@ -72,8 +74,6 @@ namespace {
            1. no term is specified in the volatility curve config; or
            2. they match a term specified in the volatility curve config.
     */
-    using ore::data::CDSVolatilityCurveConfig;
-    using ore::data::parsePeriod;
     ext::optional<Period> getQuoteTerm(const ext::shared_ptr<IndexCDSOptionQuote>& q,
         const CDSVolatilityCurveConfig& vc)
     {
@@ -92,10 +92,41 @@ namespace {
 
         return term;
     }
-}
 
-namespace ore {
-namespace data {
+    using OptEng = IndexCdsVolStripper::OptionEngine;
+    OptEng getOptionEngine(const string& engineOverride)
+    {
+        if (engineOverride.empty()) {
+            return OptEng::None;
+        } else if (engineOverride == "BlackIndexCdsOptionEngine") {
+            return OptEng::Black;
+        } else if (engineOverride == "NumericalIntegrationEngine") {
+            return OptEng::Numerical;
+        } else {
+            WLOG("Invalid option engine override (" << engineOverride << ") specified in CDS volatility curve"
+                " configuration. The default will be used in option stripping.");
+            return OptEng::None;
+        }
+    }
+
+    Solver1DOptions getSolverOptions(const ext::optional<OneDimSolverConfig>& solverConfig,
+        QuantExt::CdsOption::StrikeType strikeType)
+    {
+        // If given an explicit configuration, use the solver options created from it.
+        if (solverConfig)
+            return *solverConfig;
+
+        // Use a conservative best guess (based on data as of 1 Apr 2026)
+        using ST = QuantExt::CdsOption::StrikeType;
+        Size maxEvals = 200;
+        // Accuracy in the price to 1 / 10 of 1 bp.
+        Real accuracy = 0.1;
+        if (strikeType == ST::Price)
+            return Solver1DOptions{ maxEvals, 0.15, accuracy, std::make_pair(0.0001, 1.5), 0.015, 0.0001, 1.5 };
+        else
+            return Solver1DOptions{ maxEvals, 1.10, accuracy, std::make_pair( 0.001, 5.0), 0.050,  0.001, 5.0 };
+    }
+}
 
 CDSVolCurve::CDSVolCurve(Date asof, CDSVolatilityCurveSpec spec, const Loader& loader,
                          const CurveConfigurations& curveConfigs,
@@ -345,110 +376,20 @@ void CDSVolCurve::buildVolatility(const Date& asof, CDSVolatilityCurveConfig& vc
     const bool viaPremia = vssc.quoteType() == MarketDatum::QuoteType::PRICE;
 
     if (viaPremia) {
-        if (wildcard)
-            buildVolatilityViaPremiaWildcard(args);
-        else
-            buildVolatilityViaPremiaExplicit(args);
+        // Get the quotes.
+        PremiumQuoteCube quotes;
+        populateVolatilityPremiaQuotes(args, quotes);
+        buildVolatilityViaPremia(args, quotes);
     } else {
-        if (wildcard)
-            buildVolatilityWildcard(args);
-        else
-            buildVolatilityExplicit(args);
+        CreditVolQuoteMap quotes;
+        populateVolatilityQuotes(args, quotes);
+        setVolatilityCurve(asof, vc, quotes, args.requiredCdsCurves, !wildcard);
     }
 }
 
-void CDSVolCurve::buildVolatilityExplicit(const BuildVolatilityArgs& args)
+void CDSVolCurve::populateVolatilityQuotes(const BuildVolatilityArgs& args, CreditVolQuoteMap& quotes)
 {
-    LOG("CDSVolCurve: start building 2-D volatility absolute strike surface with explicit strikes and expiries.");
-
-    // Store quotes by expiry, term, strike in a map
-    CreditVolQuoteMap quotes;
-
-    // Loop over quotes and process CDS option quotes that have been requested
-    const Date& asof = args.asof;
-    Wildcard w("INDEX_CDS_OPTION/RATE_LNVOL/*");
-    for (const auto& md : args.loader.get(w, args.asof))
-    {
-        QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
-
-        // Go to next quote if not a CDS option quote.
-        auto q = ext::dynamic_pointer_cast<IndexCDSOptionQuote>(md);
-        QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to IndexCDSOptionQuote");
-
-        // This surface is for absolute strikes only.
-        auto strike = ext::dynamic_pointer_cast<AbsoluteStrike>(q->strike());
-        if (!strike)
-            continue;
-
-        // If expiries or strikes are given, check that the quote matches one of them.
-        if (!quoteMatchesStrikeExpiry(q, strike->strike(), args.configuredExpiries, args.configuredStrikes))
-            continue;
-
-        auto quoteTerm = getQuoteTerm(q, args.vc);
-        if (!quoteTerm)
-            continue;
-
-        // Add quote to surface
-        Date expiryDate = getExpiry(asof, q->expiry());
-        quotes[{expiryDate, *quoteTerm, strike->strike() / args.vc.strikeFactor()}] = q->quote();
-
-        TLOG("Added quote " << q->name() << ": (" << q->expiry() << "," << fixed << setprecision(9) << strike->strike()
-            << "," << q->quote()->value() << ")");
-    }
-
-    setVolatilityCurve(asof, args.vc, quotes, args.requiredCdsCurves, true);
-}
-
-void CDSVolCurve::buildVolatilityViaPremiaExplicit(const BuildVolatilityArgs& args)
-{
-    LOG("CDSVolCurve: start building 2-D volatility absolute strike surface with explicit strikes and "
-        "expiries from premium quotes.");
-
-    // Store quotes by expiry, term, strike in a map
-    CreditVolQuoteMap quotes;
-
-    // Loop over quotes and process CDS option quotes that have been requested
-    const Date& asof = args.asof;
-    Wildcard w("INDEX_CDS_OPTION/PRICE/*");
-    for (const auto& md : args.loader.get(w, asof))
-    {
-        QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
-
-        // Go to next quote if not a CDS option quote.
-        auto q = ext::dynamic_pointer_cast<IndexCDSOptionQuote>(md);
-        QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to IndexCDSOptionQuote");
-
-        // This surface is for absolute strikes only.
-        auto strike = ext::dynamic_pointer_cast<AbsoluteStrike>(q->strike());
-        if (!strike)
-            continue;
-
-        // If expiries or strikes are given, check that the quote matches one of them.
-        if (!quoteMatchesStrikeExpiry(q, strike->strike(), args.configuredExpiries, args.configuredStrikes))
-            continue;
-
-        auto quoteTerm = getQuoteTerm(q, args.vc);
-        if (!quoteTerm)
-            continue;
-
-        // Add quote to surface
-        Date expiryDate = getExpiry(asof, q->expiry());
-        quotes[{expiryDate, *quoteTerm, strike->strike() / args.vc.strikeFactor()}] = q->quote();
-
-        TLOG("Added quote " << q->name() << ": (" << q->expiry() << "," << fixed << setprecision(9) << strike->strike()
-            << "," << q->quote()->value() << ")");
-    }
-
-    setVolatilityCurve(asof, args.vc, quotes, args.requiredCdsCurves, true);
-}
-
-void CDSVolCurve::buildVolatilityWildcard(const BuildVolatilityArgs& args)
-{
-    DLOG("CDSVolCurve: Expiries and or strikes have been configured via wildcards so building a "
-        "wildcard based absolute strike surface");
-
-    // Store quotes by expiry, term, strike in a map
-    CreditVolQuoteMap quotes;
+    DLOG("CDSVolCurve: start populating volatility quotes.");
 
     // Process relevant CDS option volatility quotes.
     const Date& asof = args.asof;
@@ -487,16 +428,15 @@ void CDSVolCurve::buildVolatilityWildcard(const BuildVolatilityArgs& args)
             << "," << q->quote()->value() << ")");
     }
 
-    setVolatilityCurve(asof, vc, quotes, args.requiredCdsCurves, false);
+    DLOG("CDSVolCurve: finished populating volatility quotes.");
 }
 
-void CDSVolCurve::buildVolatilityViaPremiaWildcard(const BuildVolatilityArgs& args)
+void CDSVolCurve::populateVolatilityPremiaQuotes(const BuildVolatilityArgs& args, PremiumQuoteCube& quotes)
 {
-    DLOG("CDSVolCurve: Expiries and or strikes have been configured via wildcards so building a "
-        "wildcard based absolute strike surface from premium quotes.");
+    DLOG("CDSVolCurve: start populating volatility premia quotes.");
 
-    // Store quotes by expiry, term, strike in a map
-    CreditVolQuoteMap quotes;
+    // Store quotes by term, expiry in OptionPrice structs.
+    using OptionPrice = IndexCdsVolStripper::OptionPrice;
 
     // Process relevant CDS option premium quotes.
     const Date& asof = args.asof;
@@ -523,19 +463,118 @@ void CDSVolCurve::buildVolatilityViaPremiaWildcard(const BuildVolatilityArgs& ar
         if (!quoteMatchesStrikeExpiry(q, strike->strike(), args.configuredExpiries, args.configuredStrikes))
             continue;
 
-        auto quoteTerm = getQuoteTerm(q, vc);
-        if (!quoteTerm)
+        // Quote term must be populated in the configuration and in the quote for price quotes.
+        Period quoteTerm = parsePeriod(q->indexTerm());
+        if (std::find(vc.terms().begin(), vc.terms().end(), quoteTerm) == vc.terms().end())
             continue;
 
-        // If we make it here, add the data to the map
+        // Get the expiry date.
         Date expiryDate = getExpiry(asof, q->expiry());
-        quotes[{expiryDate, *quoteTerm, strike->strike() / vc.strikeFactor()}] = q->quote();
+
+        // Add or update existing OptionPrice in the cube for this expiry and term.
+        Real strikeValue = strike->strike() / vc.strikeFactor();
+        vector<OptionPrice>& prices = quotes[quoteTerm][expiryDate];
+        auto priceIt = find_if(prices.begin(), prices.end(), [&strikeValue](const OptionPrice& p) {
+            return close(p.strike, strikeValue);
+        });
+
+        OptionPrice& op = priceIt == prices.end() ? prices.emplace_back() : *priceIt;
+        if (priceIt != prices.end()) {
+            if ((q->side() == Protection::Buyer && !priceIt->payerPrice.empty()) ||
+                (q->side() == Protection::Seller && !priceIt->receiverPrice.empty())) {
+                WLOG("Duplicate quote found for expiry " << expiryDate << ", term " << quoteTerm << " and strike "
+                    << strike->strike() << ". Ignoring this quote: " << q->name() << ".");
+                continue;
+            }
+        } else {
+            op.strike = strikeValue;
+        }
+
+        // Add the quote.
+        if (q->side() == Protection::Buyer)
+            op.payerPrice = q->quote();
+        else
+            op.receiverPrice = q->quote();
 
         TLOG("Added quote " << q->name() << ": (" << q->expiry() << "," << fixed << setprecision(9) << strike->strike()
             << "," << q->quote()->value() << ")");
     }
 
-    setVolatilityCurve(asof, vc, quotes, args.requiredCdsCurves, false);
+    DLOG("CDSVolCurve: finished populating volatility premia quotes.");
+}
+
+void CDSVolCurve::buildVolatilityViaPremia(const BuildVolatilityArgs& args, const PremiumQuoteCube& quotes)
+{
+    DLOG("CDSVolCurve: start building 2-D volatility absolute strike surface via premium stripping.");
+
+    const auto& vc = args.vc;
+
+    // Make sure that we have a valid price information node in the configuration or we can't proceed.
+    QL_REQUIRE(vc.priceInfo(), "CDSVolCurve: to build a volatility structure from price quotes, we need a valid "
+        "price information node in the configuration.");
+    const auto& priceInfo = *vc.priceInfo();
+
+    // Validation on term curves, terms and term maturities.
+    // These are checked in the configuration creation but better to double check here.
+    const auto& terms = vc.terms();
+    const auto& termCrvNames = vc.termCurves();
+    const auto& maturities = vc.termMaturities();
+    QL_REQUIRE(terms.size() == termCrvNames.size(), "CDSVolCurve: terms (" << terms.size() <<
+        ") and term curves (" << termCrvNames.size() << ") size mismatch.");
+    QL_REQUIRE(terms.size() == maturities.size(), "CDSVolCurve: terms (" << terms.size() <<
+        ") and term maturities (" << maturities.size() << ") size mismatch.");
+
+    // Get the term curves and term maturities required by IndexCdsVolStripper.
+    map<Period, Handle<CreditCurve>> termCurves;
+    map<Period, Date> termMaturities;
+    for (Size i = 0; i < termCrvNames.size(); ++i)
+    {
+        const string& termCrvName = termCrvNames[i];
+        QL_REQUIRE(!termCrvName.empty(), "CDSVolCurve: term curves should not be empty for CDS "
+            "volatility premium configurations.");
+        auto t = args.requiredCdsCurves.find(termCrvName);
+        QL_REQUIRE(t != args.requiredCdsCurves.end(), "CDSVolCurve: required cds curve '"
+            << termCrvName << "' was not found during vol curve building.");
+        termCurves.try_emplace(terms[i], Handle<CreditCurve>(t->second->creditCurve()));
+        termMaturities.try_emplace(terms[i], maturities[i]);
+    }
+
+    // Get the CDS curve conventions to build CreditCurve::RefData for IndexCdsVolStripper::TradeData.
+    ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+    const string& convId = priceInfo.cdsConventionsId();
+    auto p = conventions->get(convId, Convention::Type::CDS);
+    QL_REQUIRE(p.first, "CDSVolCurve: no CDS conventions found with id " << convId << ".");
+    ext::shared_ptr<CdsConvention> cdsConv = ext::dynamic_pointer_cast<CdsConvention>(p.second);
+    QL_REQUIRE(cdsConv, "CDSVolCurve: convention '" << convId << "' could not be case to CdsConvention.");
+    // Index term and start date will not be used in stripping volatilities so just use defaults here.
+    CreditCurve::RefData refData = createRefData(0 * Days, Date(), cdsConv);
+
+    // Create the IndexCdsVolStripper::TradeData.
+    // Add realised FEP and index factor from reference data here later if not overridden in configuration.
+    auto strikeType = parseCdsOptionStrikeType(vc.strikeType());
+    auto optionEngine = getOptionEngine(priceInfo.engineOverride());
+    IndexCdsVolStripper::TradeData tradeData{ refData, strikeType, 1.0, 1.0, 0.0, optionEngine };
+    if (const auto& indexFactors = priceInfo.indexFactors()) {
+        tradeData.indexFactor = indexFactors->indexFactor;
+        tradeData.indexFactorStrike = indexFactors->indexFactorStrike;
+        tradeData.realisedFepFactor = indexFactors->realisedFep;
+    }
+
+    // Create the IndexCdsVolStripper.
+    IndexCdsVolStripper volStripper(args.asof, calendar_, Following, dayCounter_, termCurves, termMaturities,
+        quotes, tradeData, getSolverOptions(priceInfo.solverConfig(), strikeType));
+
+    // Set the volatility curve using the stripper.
+    vol_ = volStripper.creditVolCurve();
+    vol_->enableExtrapolation();
+
+    if (!volStripper.errorMessages().empty()) {
+        WLOG("CDSVolCurve: errors were encountered during stripping of volatilities for " << vc.curveID() << ":");
+        for (const auto& msg : volStripper.errorMessages())
+            WLOG("  - " << msg);
+    }
+
+    DLOG("CDSVolCurve: finished building 2-D volatility absolute strike surface via premium stripping.");
 }
 
 void CDSVolCurve::populateTermCurves(const CDSVolatilityCurveConfig& vc, const DefaultCurveCache& requiredCdsCurves,
