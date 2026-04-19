@@ -88,7 +88,6 @@ void IndexCdsOption::setupExpired() const {
 
 void IndexCdsOption::setupArguments(PricingEngine::arguments* args) const {
     Option::setupArguments(args);
-    swap_->setupArguments(args);
 
     IndexCdsOption::arguments* arguments = dynamic_cast<IndexCdsOption::arguments*>(args);
     QL_REQUIRE(arguments, "Internal error IndexCdsOption: cannot cast arguments to IndexCdsOption::arguments.");
