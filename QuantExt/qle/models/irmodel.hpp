@@ -79,6 +79,12 @@ public:
 
     /*! perform an Euler step */
     virtual Array marginalStep(const Time t0, const Array& x0, const Time dt, const Array& dw) const = 0;
+
+    /*! allow caching for better performance, at the cost of an increased memory footprint */
+    virtual void enableCache(const bool enable, const std::vector<Size>& loopSizes) {}
+
+    /*! clone the irmodel */
+    virtual ext::shared_ptr<IrModel> clone() const = 0;
 };
 
 } // namespace QuantExt

@@ -157,6 +157,13 @@ public:
     //! Get an element from the scenario
     virtual Real get(const RiskFactorKey& key) const = 0;
 
+    //! Get simple integer index if supported, for faster access
+    virtual Size getIndex(const RiskFactorKey& key) const { QL_FAIL("Scenario::getIndex(): not implemented"); }
+    //! Get an element from integer key, for faster access
+    virtual Real get(const Size index) const { QL_FAIL("Scenario::get(int): not implemented"); }
+    //! Add an element via integer key, for faster access
+    virtual void add(const Size index, Real value) { QL_FAIL("Scenario::add(int, double): not implemented"); }
+
     //! Is this an absolute or difference scenario?
     virtual const bool isAbsolute() const = 0;
     //! Set if this is an absolute scenario

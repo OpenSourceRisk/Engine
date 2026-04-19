@@ -17,14 +17,18 @@
 */
 
 #include <orea/scenario/crossassetmodelscenariogenerator.hpp>
+#include <orea/scenario/simplescenariofactory.hpp>
+
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/osutils.hpp>
+
+#include <qle/indexes/inflationindexobserver.hpp>
+#include <qle/utilities/inflation.hpp>
 
 #include <ql/indexes/ibor/euribor.hpp>
 #include <ql/termstructures/yield/discountcurve.hpp>
 #include <ql/time/daycounters/thirty360.hpp>
-#include <qle/indexes/inflationindexobserver.hpp>
-#include <qle/utilities/inflation.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -36,17 +40,17 @@ namespace analytics {
 CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model,
     QuantLib::ext::shared_ptr<QuantExt::MultiPathGeneratorBase> pathGenerator,
-    QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory,
     QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketConfig, Date today,
     QuantLib::ext::shared_ptr<DateGrid> grid, QuantLib::ext::shared_ptr<ore::data::Market> initMarket,
     const std::string& configuration, const std::string& amcPathDataOutput, Size samples)
     : ScenarioPathGenerator(today, grid->dates(), grid->timeGrid()), model_(model), pathGenerator_(pathGenerator),
-      scenarioFactory_(scenarioFactory), simMarketConfig_(simMarketConfig), initMarket_(initMarket),
-      configuration_(configuration), amcPathDataOutput_(amcPathDataOutput), totalSamples_(samples), dateGrid_(grid) {
+      simMarketConfig_(simMarketConfig), initMarket_(initMarket), configuration_(configuration),
+      amcPathDataOutput_(amcPathDataOutput), totalSamples_(samples), dateGrid_(grid) {}
 
+void CrossAssetModelScenarioGenerator::init() {
     LOG("CrossAssetModelScenarioGenerator ctor called");
 
-    QL_REQUIRE(initMarket != NULL, "CrossAssetScenarioGenerator: initMarket is null");
+    QL_REQUIRE(initMarket_ != NULL, "CrossAssetScenarioGenerator: initMarket is null");
     QL_REQUIRE(timeGrid_.size() == dates_.size() + 1, "date/time grid size mismatch");
 
     // build mapping from grid index to path index
@@ -63,7 +67,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
 
     DayCounter dc = model_->irModel(0)->termStructure()->dayCounter();
     n_ccy_ = model_->components(CrossAssetModel::AssetType::IR);
-    n_fx_ = model->components(CrossAssetModel::AssetType::FX);
+    n_fx_ = model_->components(CrossAssetModel::AssetType::FX);
     n_eq_ = model_->components(CrossAssetModel::AssetType::EQ);
     n_inf_ = model_->components(CrossAssetModel::AssetType::INF);
     n_cr_ = model_->components(CrossAssetModel::AssetType::CR);
@@ -72,57 +76,58 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     n_survivalweights_ = simMarketConfig_->additionalScenarioDataSurvivalWeights().size();
     n_indices_ = simMarketConfig_->indices().size();
     n_curves_ = simMarketConfig_->yieldCurveNames().size();
-    n_states_ = model->stateProcess()->size();
+    n_states_ = model_->stateProcess()->size();
 
-    // Cache yield curve keys
-    discountCurveKeys_.reserve(n_ccy_ * simMarketConfig_->yieldCurveTenors("").size());
-    for (Size j = 0; j < model_->components(CrossAssetModel::AssetType::IR); j++) {
+    auto sharedData = ext::make_shared<SimpleScenario::SharedData>();
+
+    // Cache discount curve keys
+    for (Size j = 0; j < n_ccy_; j++) {
         std::string ccy = model_->parametrizations()[j]->currency().code();
-        ten_dsc_.push_back(simMarketConfig_->yieldCurveTenors(ccy));
-        Size n_ten = ten_dsc_.back().size();
-        for (Size k = 0; k < n_ten; k++)
-            discountCurveKeys_.emplace_back(RiskFactorKey::KeyType::DiscountCurve, ccy, k); // j * n_ten + k
+        auto const& ten = simMarketConfig_->yieldCurveTenors(ccy);
+        time_dsc_.push_back(std::vector<std::vector<double>>(dates_.size(), std::vector<double>(ten.size())));
+        for (Size k = 0; k < ten.size(); k++) {
+            for (Size i = 0; i < dates_.size(); ++i) {
+                time_dsc_.back()[i][k] = dc.yearFraction(dates_[i], dates_[i] + ten[k]);
+            }
+            sharedData->keys.emplace_back(RiskFactorKey::KeyType::DiscountCurve, ccy, k);
+            sharedData->keyIndex[sharedData->keys.back()] = sharedData->keys.size() - 1;
+        }
     }
 
     // Cache index curve keys
-    indexCurveKeys_.reserve(n_indices_ * simMarketConfig_->yieldCurveTenors("").size());
     for (Size j = 0; j < n_indices_; ++j) {
-        ten_idx_.push_back(simMarketConfig_->yieldCurveTenors(simMarketConfig_->indices()[j]));
-        Size n_ten = ten_idx_.back().size();
-        for (Size k = 0; k < n_ten; ++k) {
-            indexCurveKeys_.emplace_back(RiskFactorKey::KeyType::IndexCurve, simMarketConfig_->indices()[j], k);
+        auto const& ten = simMarketConfig_->yieldCurveTenors(simMarketConfig_->indices()[j]);
+        time_idx_.push_back(std::vector<std::vector<double>>(dates_.size(), std::vector<double>(ten.size())));
+        for (Size k = 0; k < ten.size(); ++k) {
+            for (Size i = 0; i < dates_.size(); ++i) {
+                time_idx_.back()[i][k] = dc.yearFraction(dates_[i], dates_[i] + ten[k]);
+            }
+            sharedData->keys.emplace_back(RiskFactorKey::KeyType::IndexCurve, simMarketConfig_->indices()[j], k);
+            sharedData->keyIndex[sharedData->keys.back()] = sharedData->keys.size() - 1;
         }
     }
 
     // Cache yield curve keys
     Size n_curves = simMarketConfig_->yieldCurveNames().size();
-    yieldCurveKeys_.reserve(n_curves * simMarketConfig_->yieldCurveTenors("").size());
     for (Size j = 0; j < n_curves; ++j) {
-        ten_yc_.push_back(simMarketConfig_->yieldCurveTenors(simMarketConfig_->yieldCurveNames()[j]));
-        Size n_ten = ten_yc_.back().size();
-        for (Size k = 0; k < n_ten; ++k) {
-            yieldCurveKeys_.emplace_back(RiskFactorKey::KeyType::YieldCurve, simMarketConfig_->yieldCurveNames()[j], k);
-        }
-    }
-
-    // Cache commodity curve keys
-    if (n_com_ > 0) {
-        commodityCurveKeys_.reserve(n_com_ * simMarketConfig_->commodityCurveTenors("").size());
-        for (Size j = 0; j < n_com_; j++) {
-            std::string name = model_->com(j)->name();
-            ten_com_.push_back(simMarketConfig_->commodityCurveTenors(name));
-            Size n_ten = ten_com_.back().size();
-            for (Size k = 0; k < n_ten; k++)
-                commodityCurveKeys_.emplace_back(RiskFactorKey::KeyType::CommodityCurve, name, k); // j * n_ten + k
+        auto const& ten = simMarketConfig_->yieldCurveTenors(simMarketConfig_->yieldCurveNames()[j]);
+        time_yc_.push_back(std::vector<std::vector<double>>(dates_.size(), std::vector<double>(ten.size())));
+        for (Size k = 0; k < ten.size(); ++k) {
+            for (Size i = 0; i < dates_.size(); ++i) {
+                time_yc_.back()[i][k] = dc.yearFraction(dates_[i], dates_[i] + ten[k]);
+            }
+            sharedData->keys.emplace_back(RiskFactorKey::KeyType::YieldCurve, simMarketConfig_->yieldCurveNames()[j],
+                                          k);
+            sharedData->keyIndex[sharedData->keys.back()] = sharedData->keys.size() - 1;
         }
     }
 
     // Cache FX rate keys
-    fxKeys_.reserve(n_ccy_ - 1);
     for (Size k = 0; k < n_ccy_ - 1; k++) {
         const string& foreign = model_->parametrizations()[k + 1]->currency().code();
         const string& domestic = model_->parametrizations()[0]->currency().code();
-        fxKeys_.emplace_back(RiskFactorKey::KeyType::FXSpot, foreign + domestic); // k
+        sharedData->keys.emplace_back(RiskFactorKey::KeyType::FXSpot, foreign + domestic);
+        sharedData->keyIndex[sharedData->keys.back()] = sharedData->keys.size() - 1;
     }
 
     // set up CrossAssetModelImpliedFxVolTermStructures
@@ -146,22 +151,29 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
             QL_REQUIRE(ccy1 == baseCcy || ccy2 == baseCcy, "currency pair " << pair << " does not contain base");
             string foreign = ccy1 != baseCcy ? ccy1 : ccy2;
 
-            Size index = model->ccyIndex(parseCurrency(foreign)); // will throw if foreign not there
+            Size index = model_->ccyIndex(parseCurrency(foreign)); // will throw if foreign not there
             QL_REQUIRE(index > 0, "Invalid index for ccy " << foreign << " should be > 0");
             // fxVols_ are indexed by ccyPairs
             DLOG("Pair " << pair << " index " << index);
             // index - 1 to convert "IR" index into an "FX" index
             fxVols_.push_back(QuantLib::ext::make_shared<CrossAssetModelImpliedFxVolTermStructure>(model_, index - 1));
             DLOG("Set up CrossAssetModelImpliedFxVolTermStructures for " << pair << " done");
+
+            const vector<Period>& expires = simMarketConfig_->fxVolExpiries(pair);
+            for (Size j = 0; j < expires.size(); j++) {
+                sharedData->keys.emplace_back(RiskFactorKey::KeyType::FXVolatility, pair, j);
+                sharedData->keyIndex[sharedData->keys.back()] = sharedData->keys.size() - 1;
+            }
+
         }
     }
 
     // Cache EQ rate keys
     Size n_eq = model_->components(CrossAssetModel::AssetType::EQ);
-    eqKeys_.reserve(n_eq);
     for (Size k = 0; k < n_eq; k++) {
         const string& eqName = model_->eqbs(k)->name();
-        eqKeys_.emplace_back(RiskFactorKey::KeyType::EquitySpot, eqName);
+        sharedData->keys.emplace_back(RiskFactorKey::KeyType::EquitySpot, eqName);
+        sharedData->keyIndex[sharedData->keys.back()] = sharedData->keys.size() - 1;
     }
 
     // equity vols
@@ -173,109 +185,190 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
             // Calculating the index is messy
             const string equityName = simMarketConfig_->equityVolNames()[k];
             DLOG("Set up CrossAssetModelImpliedEqVolTermStructures for " << equityName);
-            Size eqIndex = model->eqIndex(equityName);
+            Size eqIndex = model_->eqIndex(equityName);
             // eqVols_ are indexed by ccyPairs
             DLOG("EQ Vol Name = " << equityName << ", index = " << eqIndex);
             // index - 1 to convert "IR" index into an "FX" index
             eqVols_.push_back(QuantLib::ext::make_shared<CrossAssetModelImpliedEqVolTermStructure>(model_, eqIndex));
             DLOG("Set up CrossAssetModelImpliedEqVolTermStructures for " << equityName << " done");
+
+            const vector<Period>& expiries = simMarketConfig_->equityVolExpiries(equityName);
+            for (Size j = 0; j < expiries.size(); j++) {
+                sharedData->keys.emplace_back(RiskFactorKey::KeyType::EquityVolatility, equityName, j);
+                sharedData->keyIndex[sharedData->keys.back()] = sharedData->keys.size() - 1;
+            }
+        }
+    }
+
+    // set up CrossAssetModelImpliedSwaptionVolTermStructures
+    if (simMarketConfig_->simulateSwapVols()) {
+
+        DLOG("CrossAssetModel is simulating Swaption vols");
+
+        QL_REQUIRE(model_->modelType(CrossAssetModel::AssetType::IR, 0) == CrossAssetModel::ModelType::LGM1F,
+                   "Simulation of Swaption vols is only supported for LGM1F ir model type.");
+
+        for (Size k = 0; k < simMarketConfig_->swapVolKeys().size(); k++) {
+            const string key = simMarketConfig_->swapVolKeys()[k];
+            DLOG("Set up CrossAssetModelImpliedSwaptionVolTermStructures for key " << key);
+
+            string swapIndexBaseName = initMarket_->swapIndexBase(key);
+            string shortSwapIndexBaseName = initMarket_->shortSwapIndexBase(key);
+            DLOG("SwapIndexBases for key " << key << " : " << shortSwapIndexBaseName << " " << swapIndexBaseName);
+            auto swapIndex = parseSwapIndex(swapIndexBaseName);
+            auto shortSwapIndex = parseSwapIndex(shortSwapIndexBaseName);
+
+            Size ccyIndex = model_->ccyIndex(swapIndex->currency());
+            swaptionVols_.push_back(QuantLib::ext::make_shared<CrossAssetModelImpliedSwaptionVolTermStructure>(
+                model_, curves_[ccyIndex], indices_, swapIndex, shortSwapIndex));
+
+            DLOG("Set up CrossAssetModelImpliedSwaptionVolTermStructures for key " << key << " done");
+
+            const vector<Period>& expires = simMarketConfig_->swapVolExpiries(key);
+            const vector<Period>& terms = simMarketConfig_->swapVolTerms(key);
+
+            for (Size j = 0; j < expires.size(); j++) {
+                for (Size jj = 0; jj < terms.size(); jj++) {
+                    Size idx = j * terms.size() + jj;
+                    sharedData->keys.emplace_back(RiskFactorKey::KeyType::SwaptionVolatility, key, idx);
+                    sharedData->keyIndex[sharedData->keys.back()] = sharedData->keys.size() - 1;
+                }
+            }
         }
     }
 
     // Cache INF rate keys
     Size n_inf = model_->components(CrossAssetModel::AssetType::INF);
     if (n_inf > 0) {
-        cpiKeys_.reserve(n_inf);
         for (Size j = 0; j < n_inf; ++j) {
-            cpiKeys_.emplace_back(RiskFactorKey::KeyType::CPIIndex, model->inf(j)->name());
+            sharedData->keys.emplace_back(RiskFactorKey::KeyType::CPIIndex, model_->inf(j)->name());
+            sharedData->keyIndex[sharedData->keys.back()] = sharedData->keys.size() - 1;
         }
 
         Size n_zeroinf = simMarketConfig_->zeroInflationIndices().size();
         if (n_zeroinf > 0) {
-            zeroInflationKeys_.reserve(n_zeroinf * simMarketConfig_->zeroInflationTenors("").size());
             for (Size j = 0; j < n_zeroinf; ++j) {
                 ten_zinf_.push_back(simMarketConfig_->zeroInflationTenors(simMarketConfig_->zeroInflationIndices()[j]));
                 Size n_ten = ten_zinf_.back().size();
                 for (Size k = 0; k < n_ten; ++k) {
-                    zeroInflationKeys_.emplace_back(RiskFactorKey::KeyType::ZeroInflationCurve,
-                                                    simMarketConfig_->zeroInflationIndices()[j], k);
+                    sharedData->keys.emplace_back(RiskFactorKey::KeyType::ZeroInflationCurve,
+                                                  simMarketConfig_->zeroInflationIndices()[j], k);
+                    sharedData->keyIndex[sharedData->keys.back()] = sharedData->keys.size() - 1;
                 }
             }
         }
 
         Size n_yoyinf = simMarketConfig_->yoyInflationIndices().size();
         if (n_yoyinf > 0) {
-            yoyInflationKeys_.reserve(n_yoyinf * simMarketConfig_->yoyInflationTenors("").size());
             for (Size j = 0; j < n_yoyinf; ++j) {
                 ten_yinf_.push_back(simMarketConfig_->yoyInflationTenors(simMarketConfig_->yoyInflationIndices()[j]));
                 Size n_ten = ten_yinf_.back().size();
                 for (Size k = 0; k < n_ten; ++k) {
-                    yoyInflationKeys_.emplace_back(RiskFactorKey::KeyType::YoYInflationCurve,
-                                                   simMarketConfig_->yoyInflationIndices()[j], k);
+                    sharedData->keys.emplace_back(RiskFactorKey::KeyType::YoYInflationCurve,
+                                                  simMarketConfig_->yoyInflationIndices()[j], k);
+                    sharedData->keyIndex[sharedData->keys.back()] = sharedData->keys.size() - 1;
                 }
             }
         }
     }
 
     // Cache default curve keys
-    Size n_cr = model_->components(CrossAssetModel::AssetType::CR);
-    defaultCurveKeys_.reserve(n_cr * simMarketConfig_->defaultTenors("").size());
     for (Size j = 0; j < model_->components(CrossAssetModel::AssetType::CR); j++) {
         std::string cr_name = model_->cr(j)->name();
         ten_dfc_.push_back(simMarketConfig_->defaultTenors(cr_name));
         Size n_ten = ten_dfc_.back().size();
         for (Size k = 0; k < n_ten; k++) {
-            defaultCurveKeys_.emplace_back(RiskFactorKey::KeyType::SurvivalProbability, cr_name, k); // j * n_ten + k
+            sharedData->keys.emplace_back(RiskFactorKey::KeyType::SurvivalProbability, cr_name, k);
+            sharedData->keyIndex[sharedData->keys.back()] = sharedData->keys.size() - 1;
+        }
+    }
+
+    // Cache commodity curve keys
+    if (n_com_ > 0) {
+        for (Size j = 0; j < n_com_; j++) {
+            std::string name = model_->com(j)->name();
+            ten_com_.push_back(simMarketConfig_->commodityCurveTenors(name));
+            Size n_ten = ten_com_.back().size();
+            for (Size k = 0; k < n_ten; k++) {
+            sharedData->keys.emplace_back(RiskFactorKey::KeyType::CommodityCurve, name, k);
+            sharedData->keyIndex[sharedData->keys.back()] = sharedData->keys.size() - 1;
+            }
         }
     }
 
     // Cache CrState keys
-    crStateKeys_.reserve(n_crstates_);
     for (Size j = 0; j < n_crstates_; ++j) {
         ostringstream numStr;
         numStr << j;
-        crStateKeys_.emplace_back(RiskFactorKey::KeyType::CreditState, numStr.str());
+        sharedData->keys.emplace_back(RiskFactorKey::KeyType::CreditState, numStr.str());
+        sharedData->keyIndex[sharedData->keys.back()] = sharedData->keys.size() - 1;
     }
 
-    survivalWeightKeys_.reserve(n_survivalweights_);
     for (Size j = 0; j < n_survivalweights_; ++j) {
         string name = simMarketConfig_->additionalScenarioDataSurvivalWeights()[j];
-        survivalWeightKeys_.emplace_back(RiskFactorKey::KeyType::SurvivalWeight, name);
-        recoveryRateKeys_.emplace_back(RiskFactorKey::KeyType::RecoveryRate, name);
+        sharedData->keys.emplace_back(RiskFactorKey::KeyType::SurvivalWeight, name);
+        sharedData->keyIndex[sharedData->keys.back()] = sharedData->keys.size() - 1;
+        sharedData->keys.emplace_back(RiskFactorKey::KeyType::RecoveryRate, name);
+        sharedData->keyIndex[sharedData->keys.back()] = sharedData->keys.size() - 1;
         survivalWeightsDefaultCurves_.push_back(*initMarket_->defaultCurve(name, configuration_));
     }
 
+    sharedData->refreshKeysHash();
+
+    // build scenario factory using the shared data built above
+
+    scenarioFactory_ = ext::make_shared<SimpleScenarioFactory>(sharedData);
+
     // cache curves
+
+    // we need a copy of the ir models to enable the cache for the purpose of this path generator
+    std::vector<ext::shared_ptr<IrModel>> irModel(n_ccy_);
+    for (Size j = 0; j < n_ccy_; ++j) {
+        irModel[j] = model_->irModel(j)->clone();
+    }
+
+    std::vector<Size> curvesCacheLoopSize(n_ccy_, 0);
 
     for (Size j = 0; j < n_ccy_; ++j) {
         curves_.push_back(
-            QuantLib::ext::make_shared<QuantExt::ModelImpliedYieldTermStructure>(model_->irModel(j), dc, true));
+            QuantLib::ext::make_shared<QuantExt::ModelImpliedYieldTermStructure>(irModel[j], dc, true));
+        curvesCacheLoopSize[j] += dates_.size() * time_dsc_[j][0].size();
     }
 
+    indexCcyIdx_.resize(n_indices_);
     for (Size j = 0; j < n_indices_; ++j) {
         std::string indexName = simMarketConfig_->indices()[j];
         QuantLib::ext::shared_ptr<IborIndex> index = *initMarket_->iborIndex(indexName, configuration_);
+        indexCcyIdx_[j] = model_->ccyIndex(index->currency());
         Handle<YieldTermStructure> fts = index->forwardingTermStructure();
-        auto impliedFwdCurve = QuantLib::ext::make_shared<ModelImpliedYtsFwdFwdCorrected>(
-            model_->irModel(model_->ccyIndex(index->currency())), fts, dc, false);
+        auto impliedFwdCurve =
+            QuantLib::ext::make_shared<ModelImpliedYtsFwdFwdCorrected>(irModel[indexCcyIdx_[j]], fts, dc, true);
         fwdCurves_.push_back(impliedFwdCurve);
         indices_.push_back(index->clone(Handle<YieldTermStructure>(impliedFwdCurve)));
+        curvesCacheLoopSize[indexCcyIdx_[j]] += dates_.size() * time_idx_[j][0].size();
     }
 
+    yieldCurveCcyIndex_.resize(n_curves_);
     for (Size j = 0; j < n_curves_; ++j) {
         std::string curveName = simMarketConfig_->yieldCurveNames()[j];
         Currency ccy = ore::data::parseCurrency(simMarketConfig_->yieldCurveCurrencies().at(curveName));
+        yieldCurveCcyIndex_[j] = model_->ccyIndex(ccy);
         Handle<YieldTermStructure> yts = initMarket_->yieldCurve(curveName, configuration_);
-        auto impliedYieldCurve = QuantLib::ext::make_shared<ModelImpliedYtsFwdFwdCorrected>(
-            model_->irModel(model_->ccyIndex(ccy)), yts, dc, false);
+        auto impliedYieldCurve =
+            QuantLib::ext::make_shared<ModelImpliedYtsFwdFwdCorrected>(irModel[yieldCurveCcyIndex_[j]], yts, dc, true);
         yieldCurves_.push_back(impliedYieldCurve);
-        yieldCurveCurrency_.push_back(ccy);
+        curvesCacheLoopSize[yieldCurveCcyIndex_[j]] += dates_.size() * time_yc_[j][0].size();
     }
 
     for (Size j = 0; j < n_com_; ++j) {
         QuantLib::ext::shared_ptr<CommodityModel> cm = model_->comModel(j);
         auto pts = QuantLib::ext::make_shared<QuantExt::ModelImpliedPriceTermStructure>(model_->comModel(j), dc, true);
         comCurves_.push_back(pts);
+    }
+
+    for (Size j = 0; j < n_ccy_; ++j) {
+        // numeraire cache loop size is dates_.size(), only relevant for j == 0
+        irModel[j]->enableCache(true, {curvesCacheLoopSize[j], dates_.size()});
     }
 
     // Cache data regarding the zero inflation curves to avoid repeating in date loop below.
@@ -335,44 +428,19 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     }
 
     // if we have an amcPathDataOutput create the PathData
-    if (!amcPathDataOutput.empty()) {
-        pathData_.fxBuffer.resize(n_fx_,
-                                  std::vector<std::vector<Real>>(grid->dates().size() + 1, std::vector<Real>(samples)));
+    if (!amcPathDataOutput_.empty()) {
+        pathData_.fxBuffer.resize(
+            n_fx_, std::vector<std::vector<Real>>(dateGrid_->size() + 1, std::vector<Real>(totalSamples_)));
         pathData_.irStateBuffer.resize(
-            n_ccy_, std::vector<std::vector<Real>>(grid->dates().size() + 1, std::vector<Real>(samples)));
-        pathData_.pathTimes = std::vector<Real>(std::next(grid->timeGrid().begin(), 1), grid->timeGrid().end());
+            n_ccy_, std::vector<std::vector<Real>>(dateGrid_->dates().size() + 1, std::vector<Real>(totalSamples_)));
+        pathData_.pathTimes =
+            std::vector<Real>(std::next(dateGrid_->timeGrid().begin(), 1), dateGrid_->timeGrid().end());
         pathData_.paths.resize(pathData_.pathTimes.size(),
-                               std::vector<RandomVariable>(n_states_, RandomVariable(samples)));
-    }
-
-    // set up CrossAssetModelImpliedSwaptionVolTermStructures
-    if (simMarketConfig_->simulateSwapVols()) {
-
-        DLOG("CrossAssetModel is simulating Swaption vols");
-
-        QL_REQUIRE(model_->modelType(CrossAssetModel::AssetType::IR, 0) == CrossAssetModel::ModelType::LGM1F,
-                   "Simulation of Swaption vols is only supported for LGM1F ir model type.");
-
-        for (Size k = 0; k < simMarketConfig_->swapVolKeys().size(); k++) {
-            const string key = simMarketConfig_->swapVolKeys()[k];
-            DLOG("Set up CrossAssetModelImpliedSwaptionVolTermStructures for key " << key);
-
-            string swapIndexBaseName = initMarket_->swapIndexBase(key);
-            string shortSwapIndexBaseName = initMarket_->shortSwapIndexBase(key);
-            DLOG("SwapIndexBases for key " << key << " : " << shortSwapIndexBaseName << " " << swapIndexBaseName);
-            auto swapIndex = parseSwapIndex(swapIndexBaseName);
-            auto shortSwapIndex = parseSwapIndex(shortSwapIndexBaseName);
-
-            Size ccyIndex = model_->ccyIndex(swapIndex->currency());
-            swaptionVols_.push_back(QuantLib::ext::make_shared<CrossAssetModelImpliedSwaptionVolTermStructure>(
-                model_, curves_[ccyIndex], indices_, swapIndex, shortSwapIndex));
-
-            DLOG("Set up CrossAssetModelImpliedSwaptionVolTermStructures for key " << key << " done");
-        }
+                               std::vector<RandomVariable>(n_states_, RandomVariable(totalSamples_)));
     }
 
     LOG("CrossAssetModelScenarioGenerator ctor done");
-}
+} // init
 
 namespace {
 void copyPathToArray(const MultiPath& p, Size t, Size a, Array& target) {
@@ -382,6 +450,11 @@ void copyPathToArray(const MultiPath& p, Size t, Size a, Array& target) {
 } // namespace
 
 std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextPath() {
+
+    if(!initialized_) {
+        init();
+        initialized_ = true;
+    }
 
     std::vector<QuantLib::ext::shared_ptr<Scenario>> scenarios(dates_.size());
     QL_REQUIRE(pathGenerator_ != nullptr, "CrossAssetModelScenarioGenerator::nextPath(): pathGenerator is null");
@@ -411,23 +484,20 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
         }
     }
 
+    auto timingStart = data::os::nanosecondsClock();
+
     std::vector<Array> ir_state(n_ccy_);
     for (Size j = 0; j < n_ccy_; ++j) {
         ir_state[j] = Array(model_->irModel(j)->n() + model_->irModel(j)->n_aux());
     }
 
-    std::vector<Size> indexCcyIdx(n_indices_);
-    for (Size j = 0; j < n_indices_; ++j)
-        indexCcyIdx[j] = model_->ccyIndex(indices_[j]->currency());
-
-    std::vector<Size> yieldCurveCcyIdx(n_curves_);
-    for (Size j = 0; j < n_curves_; ++j)
-        yieldCurveCcyIdx[j] = model_->ccyIndex(yieldCurveCurrency_[j]);
-
     for (Size i = 0; i < dates_.size(); i++) {
-        Real t = timeGrid_[i + 1]; // recall: time grid has inserted t=0
+        // FIXME we need to check the consistency of model and scen-gen day counters, as we already do in amc val engine QPR-13995
+        Real t = timeGrid_[i + 1];
+        Real t_dc = dc.yearFraction(model_->irModel(0)->termStructure()->referenceDate(), dates_[i]);
 
         scenarios[i] = scenarioFactory_->buildScenario(dates_[i], true);
+        Size rfKeyCounter = 0;
 
         // populate IR states
         for (Size j = 0; j < n_ccy_; ++j)
@@ -440,40 +510,31 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
         // Discount curves
         for (Size j = 0; j < n_ccy_; j++) {
             curves_[j]->move(t, ir_state[j]);
-            for (Size k = 0; k < ten_dsc_[j].size(); k++) {
-                Date d = dates_[i] + ten_dsc_[j][k];
-                Time T = dc.yearFraction(dates_[i], d);
-                Real discount = std::max(curves_[j]->discount(T), 0.00001);
-                scenarios[i]->add(discountCurveKeys_[j * ten_dsc_[j].size() + k], discount);
+            for (Size k = 0; k < time_dsc_[j][i].size(); k++) {
+                scenarios[i]->add(rfKeyCounter++, std::max(curves_[j]->discount(time_dsc_[j][i][k]), 0.00001));
             }
         }
 
         // Index curves and Index fixings
         for (Size j = 0; j < n_indices_; ++j) {
-            fwdCurves_[j]->move(dates_[i], ir_state[indexCcyIdx[j]]);
-            for (Size k = 0; k < ten_idx_[j].size(); ++k) {
-                Date d = dates_[i] + ten_idx_[j][k];
-                Time T = dc.yearFraction(dates_[i], d);
-                Real discount = std::max(fwdCurves_[j]->discount(T), 0.00001);
-                scenarios[i]->add(indexCurveKeys_[j * ten_idx_[j].size() + k], discount);
+            fwdCurves_[j]->move(t_dc, ir_state[indexCcyIdx_[j]]);
+            for (Size k = 0; k < time_idx_[j][i].size(); ++k) {
+                scenarios[i]->add(rfKeyCounter++, std::max(fwdCurves_[j]->discount(time_idx_[j][i][k]), 0.00001));
             }
         }
 
         // Yield curves
         for (Size j = 0; j < n_curves_; ++j) {
-            yieldCurves_[j]->move(dates_[i], ir_state[yieldCurveCcyIdx[j]]);
-            for (Size k = 0; k < ten_yc_[j].size(); ++k) {
-                Date d = dates_[i] + ten_yc_[j][k];
-                Time T = dc.yearFraction(dates_[i], d);
-                Real discount = std::max(yieldCurves_[j]->discount(T), 0.00001);
-                scenarios[i]->add(yieldCurveKeys_[j * ten_yc_[j].size() + k], discount);
+            yieldCurves_[j]->move(t_dc, ir_state[yieldCurveCcyIndex_[j]]);
+            for (Size k = 0; k < time_yc_[j][i].size(); ++k) {
+                scenarios[i]->add(rfKeyCounter++, std::max(yieldCurves_[j]->discount(time_yc_[j][i][k]), 0.00001));
             }
         }
 
         // FX rates
         for (Size k = 0; k < n_ccy_ - 1; k++) {
             Real fx = std::exp(sample.value[model_->pIdx(CrossAssetModel::AssetType::FX, k)][gridIndexInPath_[i + 1]]);
-            scenarios[i]->add(fxKeys_[k], fx);
+            scenarios[i]->add(rfKeyCounter++, fx);
         }
 
         // FX vols
@@ -486,20 +547,21 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
                 Real zFor = sample.value[fxIndex + 1][gridIndexInPath_[i + 1]];
                 Real logFx =
                     sample.value[n_ccy_ + fxIndex][gridIndexInPath_[i + 1]]; // multiplies USD amount to get EUR
-                fxVols_[k]->move(dates_[i], ir_state[0][0], zFor, logFx);
+                fxVols_[k]->move(t, ir_state[0][0], zFor, logFx);
 
                 for (Size j = 0; j < expires.size(); j++) {
                     Real vol = fxVols_[k]->blackVol(dates_[i] + expires[j], Null<Real>(), true);
-                    scenarios[i]->add(RiskFactorKey(RiskFactorKey::KeyType::FXVolatility, ccyPair, j), vol);
+                    scenarios[i]->add(rfKeyCounter++, vol);
                 }
             }
         }
+
 
         // Equity spots
         for (Size k = 0; k < n_eq_; k++) {
             Real eqSpot =
                 std::exp(sample.value[model_->pIdx(CrossAssetModel::AssetType::EQ, k)][gridIndexInPath_[i + 1]]);
-            scenarios[i]->add(eqKeys_[k], eqSpot);
+            scenarios[i]->add(rfKeyCounter++, eqSpot);
         }
 
         // Equity vols
@@ -513,11 +575,11 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
                 Size eqCcyIdx = eqVols_[k]->eqCcyIndex();
                 Real z_eqIr = sample.value[eqCcyIdx][gridIndexInPath_[i + 1]];
                 Real logEq = sample.value[eqIndex][gridIndexInPath_[i + 1]];
-                eqVols_[k]->move(dates_[i], z_eqIr, logEq);
+                eqVols_[k]->move(t, z_eqIr, logEq);
 
                 for (Size j = 0; j < expiries.size(); j++) {
                     Real vol = eqVols_[k]->blackVol(dates_[i] + expiries[j], Null<Real>(), true);
-                    scenarios[i]->add(RiskFactorKey(RiskFactorKey::KeyType::EquityVolatility, equityName, j), vol);
+                    scenarios[i]->add(rfKeyCounter++, vol);
                 }
             }
         }
@@ -532,13 +594,12 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
                 // ext::shared_ptr<YieldTermStructure> dts = curves_[swaptionVols_[k]->ccyIndex()];
                 // ext::shared_ptr<YieldTermStructure> fts = fwdCurves_[swaptionVols_[k]->indexIndex()];
                 // Update the implied swaption vols
-                swaptionVols_[k]->move(dates_[i], ir_state[0][0]);
+                swaptionVols_[k]->move(t, ir_state[0][0]);
 
                 for (Size j = 0; j < expires.size(); j++) {
                     for (Size jj = 0; jj < terms.size(); jj++) {
                         Real vol = swaptionVols_[k]->volatility(dates_[i] + expires[j], terms[jj], Null<Real>(), true);
-                        Size idx = j * terms.size() + jj;
-                        scenarios[i]->add(RiskFactorKey(RiskFactorKey::KeyType::SwaptionVolatility, key, idx), vol);
+                        scenarios[i]->add(rfKeyCounter++, vol);
                     }
                 }
             }
@@ -554,7 +615,7 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
             Real cpi = scenarioBaseCpi(y, z, dates_[i], model_, j, dateGrid_->dayCounter(), index);
             Date fixingDate = inflationPeriod(dates_[i] - simulationLag(zts), zts->frequency()).first;
             cpi = seasonalizeCPI(fixingDate, cpi, zts);
-            scenarios[i]->add(cpiKeys_[j], cpi);
+            scenarios[i]->add(rfKeyCounter++, cpi);
         }
 
         // Zero inflation curves
@@ -582,7 +643,7 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
                 auto obsLag = ts->observationLag();
                 auto zeroRate =
                     scenarioInflationZeroRateFromModelTs(dates_[i], ten_zinf_[j][k], obsLag, index, ts, modelType, dc);
-                scenarios[i]->add(zeroInflationKeys_[j * ten_zinf_[j].size() + k], zeroRate);
+                scenarios[i]->add(rfKeyCounter++, zeroRate);
             }
         }
 
@@ -610,7 +671,7 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
             // Use the YoY term structure's YoY rates to populate the scenarios.
             auto yoyRates = ts->yoyRates(pillarDates);
             for (Size k = 0; k < pillarDates.size(); ++k) {
-                scenarios[i]->add(yoyInflationKeys_[j * ten_yinf_[j].size() + k], yoyRates.at(pillarDates[k]));
+                scenarios[i]->add(rfKeyCounter++, yoyRates.at(pillarDates[k]));
             }
         }
 
@@ -624,7 +685,7 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
                     Date d = dates_[i] + ten_dfc_[j][k];
                     Time T = dc.yearFraction(dates_[i], d);
                     Real survProb = std::max(lgmDefaultCurves_[j]->survivalProbability(T), 0.00001);
-                    scenarios[i]->add(defaultCurveKeys_[j * ten_dfc_[j].size() + k], survProb);
+                    scenarios[i]->add(rfKeyCounter++, survProb);
                 }
             } else if (model_->modelType(CrossAssetModel::AssetType::CR, j) == CrossAssetModel::ModelType::CIRPP) {
                 Real y = sample.value[model_->pIdx(CrossAssetModel::AssetType::CR, j, 0)][gridIndexInPath_[i + 1]];
@@ -633,7 +694,7 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
                     Date d = dates_[i] + ten_dfc_[j][k];
                     Time T = dc.yearFraction(dates_[i], d);
                     Real survProb = std::max(cirppDefaultCurves_[j]->survivalProbability(T), 0.00001);
-                    scenarios[i]->add(defaultCurveKeys_[j * ten_dfc_[j].size() + k], survProb);
+                    scenarios[i]->add(rfKeyCounter++, survProb);
                 }
             }
         }
@@ -647,14 +708,14 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
                 Date d = dates_[i] + ten_com_[j][k];
                 Time T = dc.yearFraction(dates_[i], d);
                 Real price = std::max(comCurves_[j]->price(T), 0.00001);
-                scenarios[i]->add(commodityCurveKeys_[j * ten_com_[j].size() + k], price);
+                scenarios[i]->add(rfKeyCounter++, price);
             }
         }
 
         // Credit States
         for (Size k = 0; k < n_crstates_; ++k) {
             Real z = sample.value[model_->pIdx(CrossAssetModel::AssetType::CrState, k)][gridIndexInPath_[i + 1]];
-            scenarios[i]->add(crStateKeys_[k], z);
+            scenarios[i]->add(rfKeyCounter++, z);
         }
 
         // Survival Weights, stochastic cumulative survival probability, Recovery Rates
@@ -663,11 +724,13 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
             Real rr = survivalWeightsDefaultCurves_[k]->recovery().empty()
                           ? 0.0
                           : survivalWeightsDefaultCurves_[k]->recovery()->value();
-            scenarios[i]->add(survivalWeightKeys_[k],
+            scenarios[i]->add(rfKeyCounter++,
                               survivalWeightsDefaultCurves_[k]->curve()->survivalProbability(dates_[i]));
-            scenarios[i]->add(recoveryRateKeys_[k], rr);
+            scenarios[i]->add(rfKeyCounter++, rr);
         }
     }
+
+    timing_ += data::os::nanosecondsClock() - timingStart;
 
     if (totalSamples_ == currentSample_ && !amcPathDataOutput_.empty()) {
         LOG("Serialize paths, fx and irState buffers to'" << amcPathDataOutput_ << "'");

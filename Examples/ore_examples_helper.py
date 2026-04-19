@@ -150,12 +150,16 @@ class OreExample(object):
 
     def get_times(self, output):
         print_on_console("Get times from the log file:")
-        logfile = open(output)
-        for line in logfile.readlines():
-            if "ValuationEngine completed" in line:
-                times = line.split(":")[-1].strip().split(",")
-                for time in times:
-                    print_on_console("\t" + time.split()[0] + ": " + time.split()[1])
+        printTimings = False
+        with open(output) as logfile:
+            for line in logfile:
+                if "XVA::buildCube done" in line:
+                    printTimings = False
+                if printTimings:
+                    times = line.split(")")[1].rstrip()[2:]
+                    print_on_console(times)
+                if "ValuationEngine completed" in line:
+                    printTimings = True
 
     def get_output_data_from_column(self, csv_name, colidx, offset=1, filter='', filterCol=0):
         f = open(os.path.join(os.path.join(os.getcwd(), "Output"), csv_name))

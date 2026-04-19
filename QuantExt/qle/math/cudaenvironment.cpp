@@ -144,29 +144,29 @@ namespace QuantExt {
 
 #ifdef ORE_ENABLE_CUDA
 
-class CudaContext : public ComputeContext {
+class CudaContext final : public ComputeContext {
 public:
     CudaContext(size_t device, const std::vector<std::pair<std::string, std::string>>& deviceInfo,
                 const std::string gpuArchitecture, const bool supportsDoublePrecision);
-    ~CudaContext() override final;
-    void init() override final;
+    ~CudaContext() override;
+    void init() override;
 
     std::pair<std::size_t, bool> initiateCalculation(const std::size_t n, const std::size_t id = 0,
                                                      const std::size_t version = 0,
-                                                     const Settings settings = {}) override final;
-    void disposeCalculation(const std::size_t n) override final;
-    std::size_t createInputVariable(double v) override final;
-    std::size_t createInputVariable(double* v) override final;
-    std::vector<std::vector<std::size_t>> createInputVariates(const std::size_t dim, const std::size_t steps) override final;
+                                                     const Settings settings = {}) override;
+    void disposeCalculation(const std::size_t n) override;
+    std::size_t createInputVariable(double v) override;
+    std::size_t createInputVariable(double* v) override;
+    std::vector<std::vector<std::size_t>> createInputVariates(const std::size_t dim, const std::size_t steps) override;
     std::size_t applyOperation(const std::size_t randomVariableOpCode,
-                               const std::vector<std::size_t>& args) override final;
-    void freeVariable(const std::size_t id) override final;
-    void declareOutputVariable(const std::size_t id) override final;
-    void finalizeCalculation(std::vector<double*>& output) override final;
+                               const std::vector<std::size_t>& args) override;
+    void freeVariable(const std::size_t id) override;
+    void declareOutputVariable(const std::size_t id) override;
+    voidizeCalculation(std::vector<double*>& output) override;
 
     std::vector<std::pair<std::string, std::string>> deviceInfo() const override;
     bool supportsDoublePrecision() const override;
-    const DebugInfo& debugInfo() const override final;
+    const DebugInfo& debugInfo() const override;
 
 private:
 

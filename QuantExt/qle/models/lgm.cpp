@@ -78,4 +78,11 @@ Array LinearGaussMarkovModel::marginalStep(const Time t0, const Array& x0, const
     }
 }
 
+ext::shared_ptr<IrModel> LinearGaussMarkovModel::clone() const {
+    // not flattening parametrization_, integrator_, stateProcess_
+    auto tmp = ext::make_shared<LinearGaussMarkovModel>(*this);
+    tmp->enableCache(false);
+    return tmp;
+}
+
 } // namespace QuantExt
