@@ -248,20 +248,20 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     analytic()->modifyPortfolio();
     
     // t0m0p0NpvReport renamed from t0NpvLaggedReport
-    QuantLib::ext::shared_ptr<InMemoryReport> t0m0p0NpvReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+    QuantLib::ext::shared_ptr<InMemoryReport> t0m1p0NpvReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     ReportWriter(inputs_->reportNaString())
-        .writeNpv(*t0m0p0NpvReport, effectiveResultCurrency, analytic()->market(), marketConfig,
+        .writeNpv(*t0m1p0NpvReport, effectiveResultCurrency, analytic()->market(), marketConfig,
                   analytic()->portfolio());
 
-    analytic()->addReport(LABEL, "pnl_npv_t0_m0_p0", t0m0p0NpvReport);
+    analytic()->addReport(LABEL, "pnl_npv_t0_m1_p0", t0m1p0NpvReport);
 
     if (inputs_->outputAdditionalResults()) {
-        CONSOLEW("Pricing: Additional Results t0,m0,p0");
-        QuantLib::ext::shared_ptr<InMemoryReport> t0m0p0AddReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+        CONSOLEW("Pricing: Additional Results t0,m1,p0");
+        QuantLib::ext::shared_ptr<InMemoryReport> t0m1p0AddReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
         ReportWriter(inputs_->reportNaString())
-            .writeAdditionalResultsReport(*t0m0p0AddReport, analytic()->portfolio(), analytic()->market(),
+            .writeAdditionalResultsReport(*t0m1p0AddReport, analytic()->portfolio(), analytic()->market(),
                                           marketConfig, effectiveResultCurrency);
-        analytic()->addReport(LABEL, "pnl_additional_results_t0_m0_p0", t0m0p0AddReport);
+        analytic()->addReport(LABEL, "pnl_additional_results_t0_m1_p0", t0m1p0AddReport);
         CONSOLE("OK");
     }
 
@@ -448,7 +448,7 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     // FIXME: check which market and which portfolio to pass to the report writer
     QuantLib::ext::shared_ptr<InMemoryReport> pnlReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     ReportWriter(inputs_->reportNaString())
-        .writePnlReport(*pnlReport, t0NpvReport, t0m0p0NpvReport, t1m0p0NpvReport, t1m1p0NpvReport, t1m0p1NpvReport, t1m1p1NpvReport,
+        .writePnlReport(*pnlReport, t0NpvReport, t0m1p0NpvReport, t1m0p0NpvReport, t1m1p0NpvReport, t1m0p1NpvReport, t1m1p1NpvReport,
 			t0CashFlowReport, inputs_->asof(), mporDate(), effectiveResultCurrency, analytic()->market(), 
             marketConfig, analytic()->portfolio());
     analytic()->addReport(LABEL, "pnl", pnlReport);
