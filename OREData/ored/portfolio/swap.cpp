@@ -28,13 +28,14 @@
 #include <ored/utilities/simmcurrencies.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 
-#include <ql/time/calendars/target.hpp>
 #include <ql/indexes/inflation/euhicp.hpp>
 #include <ql/termstructures/yield/zerospreadedtermstructure.hpp>
-#include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
+#include <ql/time/calendars/target.hpp>
 #include <qle/cashflows/equitycouponpricer.hpp>
+#include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/indexes/fxindex.hpp>
 #include <qle/instruments/currencyswap.hpp>
+#include <qle/instruments/swapoptimized.hpp>
 #include <qle/utilities/fairrate.hpp>
 
 #include <ql/instruments/swap.hpp>
@@ -148,12 +149,14 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
             currencies.push_back(currencies[i]);
         }
     } // for legs
+
     if (isXCCY_) {
         QuantLib::ext::shared_ptr<QuantExt::CurrencySwap> swap(
             new QuantExt::CurrencySwap(legs_, legPayers_, currencies, settlement_ == "Physical", isResetting_));
         QuantLib::ext::shared_ptr<CrossCurrencySwapEngineBuilderBase> swapBuilder =
             QuantLib::ext::dynamic_pointer_cast<CrossCurrencySwapEngineBuilderBase>(builder);
-        QL_REQUIRE(swapBuilder, "No Builder found for CrossCurrencySwap " << id());
+        QL_REQUIRE(swapBuilder,
+                   "internal error: engine builder for product type CrossCurrencySwap can not be cast, trade " << id());
         swap->setPricingEngine(
             swapBuilder->engine(currenciesWithIndexing, npvCcy, useXbsCurves, eqNames));
         setSensitivityTemplate(*swapBuilder);
@@ -161,18 +164,24 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
         // take the first legs currency as the npv currency (arbitrary choice)
         instrument_.reset(new VanillaInstrument(swap));
     } else {
-        QuantLib::ext::shared_ptr<QuantLib::Swap> swap(new QuantLib::Swap(legs_, legPayers_));
         QuantLib::ext::shared_ptr<SwapEngineBuilderBase> swapBuilder =
             QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
-        QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
-        swap->setPricingEngine(swapBuilder->engine(npvCcy, envelope().additionalField("discount_curve", false),
-                                                   envelope().additionalField("security_spread", false), eqNames));
+        QL_REQUIRE(swapBuilder, "internal error: engine builder for product type Swap can not be cast, trade " << id());
+        QuantLib::ext::shared_ptr<QuantLib::Instrument> swap;
+        if(swapBuilder->optimizedInstrument()) {
+            auto market = builder->market();
+            auto config = builder->configuration(MarketContext::pricing);
+            swap = QuantLib::ext::make_shared<SwapOptimized>(legs_, legPayers_,
+                                                             market->discountCurve(npvCcy.code(), config));
+        } else {
+            swap = QuantLib::ext::make_shared<QuantLib::Swap>(legs_, legPayers_);
+            swap->setPricingEngine(swapBuilder->engine(npvCcy, envelope().additionalField("discount_curve", false),
+                                                       envelope().additionalField("security_spread", false), eqNames));
+        }
         setSensitivityTemplate(*swapBuilder);
         addProductModelEngine(*swapBuilder);
         instrument_.reset(new VanillaInstrument(swap));
     }
-
-    DLOG("Set instrument wrapper");
 
     // set Leg Currencies
     legCurrencies_ = vector<string>(currencies.size());

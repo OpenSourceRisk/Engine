@@ -29,13 +29,12 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/osutils.hpp>
 
 #include <qle/math/randomvariable_ops.hpp>
 
 #include <ql/errors.hpp>
 #include <ql/indexes/indexmanager.hpp>
-
-#include <boost/timer/timer.hpp>
 
 #define TRACE(message, n)                                                                                              \
     {                                                                                                                  \
@@ -1525,11 +1524,13 @@ void ComputationGraphBuilder::run(const bool generatePayLog, const bool includeP
         std::cerr << pattern << "\nInitial Context: \n" << (*context_) << std::endl;
     }
 
-    boost::timer::cpu_timer timer;
+    long timing;
+
     try {
+        auto timingStart = data::os::nanosecondsClock();
         reset(root_);
         root_->accept(runner);
-        timer.stop();
+        timing = data::os::nanosecondsClock() - timingStart;
         QL_REQUIRE(runner.value.size() == 1, "ComputationGraphBuilder::run(): value stack has wrong size ("
                                                  << runner.value.size() << "), should be 1");
         QL_REQUIRE(runner.filter.size() == 1, "ComputationGraphBuilder::run(): filter stack has wrong size ("
@@ -1575,7 +1576,7 @@ void ComputationGraphBuilder::run(const bool generatePayLog, const bool includeP
     }
 
     DLOGGERSTREAM(pattern << *context_);
-    DLOG("computation graph builder running time: " << timer.elapsed().wall / 1E3 << " mus");
+    DLOG("computation graph builder running time: " << static_cast<double>(timing) * 1E-3 << " mus");
 
     if (interactive) {
         std::cerr << pattern << "<<<<\n" << *context_ << ">>>>\n" << std::endl;

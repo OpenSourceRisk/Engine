@@ -61,7 +61,7 @@ public:
 
     //! Build function
     QuantLib::ext::shared_ptr<ScenarioGenerator>
-    build(QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model, QuantLib::ext::shared_ptr<ScenarioFactory> sf,
+    build(QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model,
           QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> marketConfig, Date asof,
           QuantLib::ext::shared_ptr<ore::data::Market> initMarket,
           const std::string& configuration = ore::data::Market::defaultConfiguration,
