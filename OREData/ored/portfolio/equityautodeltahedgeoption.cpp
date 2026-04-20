@@ -17,12 +17,12 @@
 */
 
 #include <ored/portfolio/equityautodeltahedgeoption.hpp>
+#include <ored/portfolio/builders/equityautodeltahedgeoption.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
 #include <qle/instruments/equityautodeltahedgedoption.hpp>
-#include <qle/pricingengines/analyticeuropeanengineautodeltahedge.hpp>
 
 using namespace QuantLib;
 
@@ -37,7 +37,7 @@ void EquityAutoDeltaHedgedOption::build(const QuantLib::ext::shared_ptr<EngineFa
     additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
     additionalData_["isdaTransaction"] = string("");
     additionalData_["hedgingVolatility"] = hedgingVol_;
-    additionalData_["forwardRate"] = forwardRate_;
+    additionalData_["driftRate"] = driftRate_;
     additionalData_["observationStartDate"] = ore::data::to_string(observationStartDate_);
 
     QL_REQUIRE(!underlyings_.empty(),
@@ -47,9 +47,6 @@ void EquityAutoDeltaHedgedOption::build(const QuantLib::ext::shared_ptr<EngineFa
     string assetName = underlyings_.front().equityUnderlying.name();
     Currency ccy = parseCurrency(underlyings_.front().currency);
     npvCurrency_ = notionalCurrency_ = ccy.code();
-
-    const QuantLib::ext::shared_ptr<Market>& market = engineFactory->market();
-    string config = engineFactory->configuration(MarketContext::pricing);
 
     // Build the instrument batches
     std::vector<QuantExt::UnderlyingOptionBatch> batches;
@@ -96,22 +93,17 @@ void EquityAutoDeltaHedgedOption::build(const QuantLib::ext::shared_ptr<EngineFa
 
     // Create the QuantExt instrument
     auto instrument = QuantLib::ext::make_shared<QuantExt::EquityAutoDeltaHedgedOption>(
-        batches, hedgingVol_, forwardRate_, observationStartDate_, assetName, ccy);
+        batches, hedgingVol_, driftRate_, observationStartDate_, assetName, ccy);
 
-    // Attach the pricing engine with market data handles
-    Handle<Quote> spot = market->equitySpot(assetName, config);
-    Handle<YieldTermStructure> discountCurve = market->discountCurve(ccy.code(), config);
-    Handle<YieldTermStructure> divCurve = market->equityDividendCurve(assetName, config);
-    Handle<YieldTermStructure> fcstCurve = market->equityForecastCurve(assetName, config);
-    Handle<BlackVolTermStructure> marketVol = market->equityVol(assetName, config);
-    Handle<QuantExt::EquityIndex2> eqIndex = market->equityCurve(assetName, config);
-
-    instrument->setPricingEngine(QuantLib::ext::make_shared<QuantExt::AnalyticEuropeanEngineAutoDeltaHedge>(
-        spot, discountCurve, divCurve, fcstCurve, marketVol, eqIndex));
+    // Attach the pricing engine via the engine builder
+    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
+    auto eqBuilder = QuantLib::ext::dynamic_pointer_cast<EquityAutoDeltaHedgedOptionEngineBuilder>(builder);
+    QL_REQUIRE(eqBuilder, "EquityAutoDeltaHedgedOption: no engine builder found for trade " << id());
+    instrument->setPricingEngine(eqBuilder->engine(assetName, ccy));
 
     instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(new VanillaInstrument(instrument));
 
-    setSensitivityTemplate(std::string());
+    setSensitivityTemplate(*eqBuilder);
 }
 
 void EquityAutoDeltaHedgedOption::fromXML(XMLNode* node) {
@@ -121,7 +113,7 @@ void EquityAutoDeltaHedgedOption::fromXML(XMLNode* node) {
     QL_REQUIRE(eqNode, "No EquityAutoDeltaHedgedOptionData node for trade " << id());
 
     hedgingVol_ = XMLUtils::getChildValueAsDouble(eqNode, "Volatility", true);
-    forwardRate_ = XMLUtils::getChildValueAsDouble(eqNode, "ForwardRate", true);
+    driftRate_ = XMLUtils::getChildValueAsDouble(eqNode, "DriftRate", true);
 
     string obsStartStr = XMLUtils::getChildValue(eqNode, "ObservationStartDate", true);
     observationStartDate_ = parseDate(obsStartStr);
@@ -157,7 +149,7 @@ XMLNode* EquityAutoDeltaHedgedOption::toXML(XMLDocument& doc) const {
     XMLUtils::appendNode(node, eqNode);
 
     XMLUtils::addChild(doc, eqNode, "Volatility", hedgingVol_);
-    XMLUtils::addChild(doc, eqNode, "ForwardRate", forwardRate_);
+    XMLUtils::addChild(doc, eqNode, "driftRate", driftRate_);
 
     XMLNode* underlyingsNode = doc.allocNode("Underlyings");
     XMLUtils::appendNode(eqNode, underlyingsNode);

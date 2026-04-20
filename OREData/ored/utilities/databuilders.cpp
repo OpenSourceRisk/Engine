@@ -82,6 +82,7 @@
 #include <ored/portfolio/builders/equitydoublebarrieroption.hpp>
 #include <ored/portfolio/builders/ratedigitaloption.hpp>
 #include <ored/portfolio/builders/equitydoubletouchoption.hpp>
+#include <ored/portfolio/builders/equityautodeltahedgeoption.hpp>
 #include <ored/portfolio/builders/equityforward.hpp>
 #include <ored/portfolio/builders/equityfuturesoption.hpp>
 #include <ored/portfolio/builders/equityoption.hpp>
@@ -520,6 +521,7 @@ void dataBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(AnalyticHaganCmsCouponPricerBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(NumericalHaganCmsCouponPricerBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(LinearTSRCmsCouponPricerBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(EquityAutoDeltaHedgedOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(EquityForwardEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(BlackIndexCdsOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(NumericalIntegrationIndexCdsOptionEngineBuilder, false)

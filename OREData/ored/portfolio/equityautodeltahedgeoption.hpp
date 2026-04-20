@@ -75,7 +75,7 @@ public:
     const std::vector<UnderlyingOptionData>& underlyings() const { return underlyings_; }
     double hedgingVolatility() const { return hedgingVol_; }
     const QuantLib::Date& observationStartDate() const { return observationStartDate_; }
-    double forwardRate() const { return forwardRate_; }
+    double driftRate() const { return driftRate_; }
     //@}
 
     //! \name Serialisation
@@ -87,7 +87,7 @@ public:
 private:
     std::vector<UnderlyingOptionData> underlyings_;
     double hedgingVol_ = 0.0;
-    double forwardRate_ = 0.0;
+    double driftRate_ = 0.0;
     QuantLib::Date observationStartDate_;
 };
 

@@ -1798,7 +1798,7 @@
   <xs:complexType name="equityAutoDeltaHedgedOptionData">
     <xs:all>
       <xs:element name="Volatility" type="xs:float"/>
-      <xs:element name="ForwardRate" type="xs:float"/>
+      <xs:element name="DriftRate" type="xs:float"/>
       <xs:element name="Underlyings">
         <xs:complexType>
           <xs:sequence>

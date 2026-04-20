@@ -177,6 +177,7 @@ portfolio/builders/equitydigitaloption.cpp
 portfolio/builders/ratedigitaloption.cpp
 portfolio/builders/equitydoublebarrieroption.cpp
 portfolio/builders/equitydoubletouchoption.cpp
+portfolio/builders/equityautodeltahedgeoption.cpp
 portfolio/builders/equityforward.cpp
 portfolio/builders/equityfuturesoption.cpp
 portfolio/builders/equityoption.cpp
@@ -606,6 +607,7 @@ portfolio/builders/equitydigitaloption.hpp
 portfolio/builders/ratedigitaloption.hpp
 portfolio/builders/equitydoublebarrieroption.hpp
 portfolio/builders/equitydoubletouchoption.hpp
+portfolio/builders/equityautodeltahedgeoption.hpp
 portfolio/builders/equityforward.hpp
 portfolio/builders/equityfuturesoption.hpp
 portfolio/builders/equityoption.hpp

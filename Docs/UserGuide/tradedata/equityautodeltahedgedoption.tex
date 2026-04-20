@@ -12,7 +12,7 @@ Listing \ref{lst:eqautodeltahedged_data}.
 \begin{minted}[fontsize=\footnotesize]{xml}
 <EquityAutoDeltaHedgedOptionData>
   <Volatility>0.05</Volatility>
-  <ForwardRate>0.00</ForwardRate>
+  <DriftRate>0.00</DriftRate>
   <Underlyings>
     <Underlying>
       <OptionData>
@@ -55,7 +55,7 @@ The meanings and allowable values of the elements in the
 
   Allowable values: any non-negative real number.
 
-\item \lstinline!ForwardRate! [Mandatory]:  The continuously compounded rate $r$ used in the
+\item \lstinline!DriftRate! [Mandatory]:  The continuously compounded rate $r$ used in the
   contractual forward formula $F_{t,T} = S_t \cdot e^{r\,\tau}$, where $\tau$ is the
   Actual/365~(Fixed) year fraction from observation date to expiry.
 

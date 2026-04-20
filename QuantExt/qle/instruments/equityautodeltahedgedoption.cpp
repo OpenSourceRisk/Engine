@@ -24,9 +24,9 @@ using namespace QuantLib;
 namespace QuantExt {
 
 EquityAutoDeltaHedgedOption::EquityAutoDeltaHedgedOption(const std::vector<UnderlyingOptionBatch>& batches, Real hedgingVolatility,
-                                                         Real forwardRate, const Date& observationStartDate,
+                                                         Real driftRate, const Date& observationStartDate,
                                                          const std::string& equityName, const Currency& currency)
-    : batches_(batches), hedgingVol_(hedgingVolatility), forwardRate_(forwardRate),
+    : batches_(batches), hedgingVol_(hedgingVolatility), driftRate_(driftRate),
       observationStartDate_(observationStartDate), equityName_(equityName), currency_(currency) {
     QL_REQUIRE(!batches_.empty(), "EquityAutoDeltaHedgedOption: no option batches specified");
     QL_REQUIRE(hedgingVol_ >= 0.0, "EquityAutoDeltaHedgedOption: hedging volatility must be non-negative");
@@ -44,7 +44,7 @@ void EquityAutoDeltaHedgedOption::setupArguments(PricingEngine::arguments* args)
     QL_REQUIRE(arguments != nullptr, "wrong argument type in EquityAutoDeltaHedgedOption");
     arguments->batches = batches_;
     arguments->hedgingVolatility = hedgingVol_;
-    arguments->forwardRate = forwardRate_;
+    arguments->driftRate = driftRate_;
     arguments->observationStartDate = observationStartDate_;
     arguments->equityName = equityName_;
     arguments->currency = currency_;

@@ -51,7 +51,7 @@ void AnalyticEuropeanEngineAutoDeltaHedge::calculate() const {
 
     Date today = Settings::instance().evaluationDate();
     Real hedgingVol = arguments_.hedgingVolatility;
-    Real fwdRate = arguments_.forwardRate;
+    Real driftRate = arguments_.driftRate;
     Date obsStartDate = arguments_.observationStartDate;
     bool hedgingStarted = (today >= obsStartDate);
 
@@ -86,7 +86,7 @@ void AnalyticEuropeanEngineAutoDeltaHedge::calculate() const {
                 Real spotD = equityIndex_->fixing(d);
 
                 Time tToExpiry = dc.yearFraction(d, expiryDate);
-                Real fwdD = spotD * std::exp(fwdRate * tToExpiry);
+                Real fwdD = spotD * std::exp(driftRate * tToExpiry);
 
                 if (prevFwd != Null<Real>()) {
                     realizedHedgePnL += prevDelta * (fwdD - prevFwd);
@@ -120,7 +120,7 @@ void AnalyticEuropeanEngineAutoDeltaHedge::calculate() const {
                 today, NullCalendar(), hedgingVol, Actual365Fixed()));
             hedgeVol->enableExtrapolation();
             Handle<YieldTermStructure> fwdRateCurve(QuantLib::ext::make_shared<FlatForward>(
-                today, fwdRate, Actual365Fixed()));
+                today, driftRate, Actual365Fixed()));
             Handle<YieldTermStructure> zeroRateCurve(QuantLib::ext::make_shared<FlatForward>(
                 today, 0.0, Actual365Fixed()));
             auto hedgeProcess = QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(

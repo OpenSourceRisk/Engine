@@ -59,7 +59,7 @@ public:
     //@{
     EquityAutoDeltaHedgedOption(const std::vector<UnderlyingOptionBatch>& batches,
                                 Real hedgingVolatility,
-                                Real forwardRate,
+                                Real driftRate,
                                 const Date& observationStartDate,
                                 const std::string& equityName,
                                 const Currency& currency);
@@ -74,7 +74,7 @@ public:
     //@{
     const std::vector<UnderlyingOptionBatch>& batches() const { return batches_; }
     Real hedgingVolatility() const { return hedgingVol_; }
-    Real forwardRate() const { return forwardRate_; }
+    Real driftRate() const { return driftRate_; }
     const Date& observationStartDate() const { return observationStartDate_; }
     const std::string& equityName() const { return equityName_; }
     const Currency& currency() const { return currency_; }
@@ -84,7 +84,7 @@ private:
     // data members
     std::vector<UnderlyingOptionBatch> batches_;
     Real hedgingVol_;
-    Real forwardRate_;
+    Real driftRate_;
     Date observationStartDate_;
     std::string equityName_;
     Currency currency_;
@@ -95,7 +95,7 @@ class EquityAutoDeltaHedgedOption::arguments : public virtual PricingEngine::arg
 public:
     std::vector<UnderlyingOptionBatch> batches;
     Real hedgingVolatility;
-    Real forwardRate;
+    Real driftRate;
     Date observationStartDate;
     std::string equityName;
     Currency currency;
