@@ -39,10 +39,11 @@ public:
                               const double indicatorSmoothingForValues, const double indicatorSmoothingForDerivatives,
                               const double sqrtSmoothingForDerivatives, const bool useCachedSensis,
                               const bool useExternalComputeFramework,
-                              const bool useDoublePrecisionForExternalCalculation, const std::string& id)
+                              const bool useDoublePrecisionForExternalCalculation, const std::string& id,
+                              const bool generateAdditionalResults)
         : AmcCgBaseEngine(modelCg, mcParams, indicatorSmoothingForValues, indicatorSmoothingForDerivatives,
                           sqrtSmoothingForDerivatives, useCachedSensis, useExternalComputeFramework,
-                          useDoublePrecisionForExternalCalculation) {
+                          useDoublePrecisionForExternalCalculation, generateAdditionalResults) {
         registerWith(modelCg_);
     }
     // amc use
