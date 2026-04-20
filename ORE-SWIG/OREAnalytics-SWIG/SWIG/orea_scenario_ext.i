@@ -191,7 +191,7 @@ public:
     virtual void preUpdate() = 0;
     virtual void updateDate(const Date&) = 0;
     virtual void updateScenario(const Date&) = 0;
-    virtual void postUpdate(const Date& d, bool withFixings) = 0;
+    virtual void postUpdate(const Date& d) = 0;
     virtual void updateAsd(const Date&) = 0;
     virtual void reset() = 0;
     virtual const QuantLib::ext::shared_ptr<ore::analytics::FixingManager>& fixingManager() const = 0;
@@ -211,7 +211,7 @@ public:
     virtual void preUpdate() override;
     virtual void updateScenario(const Date&) override;
     virtual void updateDate(const Date&) override;
-    virtual void postUpdate(const Date& d, bool withFixings) override;
+    virtual void postUpdate(const Date& d) override;
     virtual void updateAsd(const Date&) override;
     virtual void reset() override;
 

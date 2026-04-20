@@ -609,7 +609,7 @@ public:
 class FormulaBasedLegData : public LegAdditionalData {
 public:
     FormulaBasedLegData();
-    FormulaBasedLegData(const string& formulaBasedIndex, int fixingDays, bool isInArrears);
+    FormulaBasedLegData(const std::string& formulaBasedIndex, int fixingDays, bool isInArrears);
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };

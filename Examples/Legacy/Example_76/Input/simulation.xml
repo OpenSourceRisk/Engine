@@ -4,7 +4,7 @@
   <Parameters>  
     <Discretization>Exact</Discretization>
     <!--<Grid>5,1W</Grid>-->
-    <Grid>24,1D</Grid>
+    <Grid>1D,2D,3D,4D,5D,6D,7D,8D,9D,10D,11D,12D,13D,14D,15D,16D,17D,18D,19D,20D,21D,22D,23D,24D,25D,26D,27D,28D,29D,30D,31D,32D,33D,34D,35D,1Y,2Y</Grid>
     <Calendar>EUR,USD,GBP,CHF</Calendar>
     <Sequence>SobolBrownianBridge</Sequence>
     <Scenario>Simple</Scenario>

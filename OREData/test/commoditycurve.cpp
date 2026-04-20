@@ -21,8 +21,8 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
 // clang-format on
-#include <oret/datapaths.hpp>
-#include <oret/toplevelfixture.hpp>
+#include <oret/util/datapaths.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 
 #include <ql/math/comparison.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
@@ -132,7 +132,7 @@ void checkCurve(const QuantLib::ext::shared_ptr<PriceTermStructure>& priceCurve,
 
 } // namespace
 
-BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::data::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(CommodityCurveTests)
 

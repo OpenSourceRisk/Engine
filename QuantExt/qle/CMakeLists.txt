@@ -65,7 +65,9 @@ cashflows/nonstandardcapflooredyoyinflationcoupon.cpp
 cashflows/nonstandardinflationcouponpricer.cpp
 cashflows/nonstandardyoyinflationcoupon.cpp
 cashflows/overnightindexedcoupon.cpp
+cashflows/overnightindexedcouponbase.cpp
 cashflows/quantocouponpricer.cpp
+cashflows/rangeaccrualcouponpricer.cpp
 cashflows/strippedcapflooredcpicoupon.cpp
 cashflows/strippedcapflooredyoyinflationcoupon.cpp
 cashflows/subperiodscoupon.cpp
@@ -136,6 +138,7 @@ instruments/flexiswap.cpp
 instruments/flexiswapreplication.cpp
 instruments/forwardbond.cpp
 instruments/fxforward.cpp
+instruments/fxforwardoptimized.cpp
 instruments/genericswaption.cpp
 instruments/impliedbondspread.cpp
 instruments/indexcdsoption.cpp
@@ -151,6 +154,7 @@ instruments/payment.cpp
 instruments/rebatedexercise.cpp
 instruments/riskparticipationagreement.cpp
 instruments/riskparticipationagreement_tlock.cpp
+instruments/swapoptimized.cpp
 instruments/subperiodsswap.cpp
 instruments/syntheticcdo.cpp
 instruments/tenorbasisswap.cpp
@@ -281,6 +285,7 @@ pricingengines/blackswaptionenginedeltagamma.cpp
 pricingengines/cboengine.cpp
 pricingengines/cbomcengine.cpp
 pricingengines/commodityapoengine.cpp
+pricingengines/commoditybachelierspreadoptionengine.cpp
 pricingengines/commodityschwartzfutureoptionengine.cpp
 pricingengines/commodityspreadoptionengine.cpp
 pricingengines/commodityswaptionengine.cpp
@@ -332,7 +337,6 @@ pricingengines/mcregressionmodel.cpp
 pricingengines/midpointcdoengine.cpp
 pricingengines/midpointcdsenginemultistate.cpp
 pricingengines/midpointindexcdsengine.cpp
-pricingengines/nullamccalculator.cpp
 pricingengines/numericalintegrationindexcdsoptionengine.cpp
 pricingengines/numericlgmbgsflexiswapengine.cpp
 pricingengines/numericlgmcallablebondengine.cpp
@@ -340,6 +344,7 @@ pricingengines/numericlgmflexiswapengine.cpp
 pricingengines/numericlgmmultilegoptionengine.cpp
 pricingengines/pairwisevarianceswapengine.cpp
 pricingengines/paymentdiscountingengine.cpp
+pricingengines/ratedigitalcallspreadengine.cpp
 pricingengines/varianceswapgeneralreplicationengine.cpp
 pricingengines/volatilityfromvarianceswapengine.cpp
 processes/commodityschwartzstateprocess.cpp
@@ -382,6 +387,7 @@ termstructures/crossccybasismtmresetswaphelper.cpp
 termstructures/crossccybasisswaphelper.cpp
 termstructures/crossccyfixfloatmtmresetswaphelper.cpp
 termstructures/crossccyfixfloatswaphelper.cpp
+termstructures/calendarspreadfuturepricetermstructure.cpp
 termstructures/crosscurrencypricetermstructure.cpp
 termstructures/datedstrippedoptionlet.cpp
 termstructures/datedstrippedoptionletadapter.cpp
@@ -533,7 +539,9 @@ cashflows/nonstandardcapflooredyoyinflationcoupon.hpp
 cashflows/nonstandardinflationcouponpricer.hpp
 cashflows/nonstandardyoyinflationcoupon.hpp
 cashflows/overnightindexedcoupon.hpp
+cashflows/overnightindexedcouponbase.hpp
 cashflows/quantocouponpricer.hpp
+cashflows/rangeaccrualcouponpricer.hpp
 cashflows/scaledcoupon.hpp
 cashflows/strippedcapflooredcpicoupon.hpp
 cashflows/strippedcapflooredyoyinflationcoupon.hpp
@@ -666,6 +674,7 @@ instruments/flexiswap.hpp
 instruments/flexiswapreplication.hpp
 instruments/forwardbond.hpp
 instruments/fxforward.hpp
+instruments/fxforwardoptimized.hpp
 instruments/genericswaption.hpp
 instruments/impliedbondspread.hpp
 instruments/indexcdsoption.hpp
@@ -682,6 +691,7 @@ instruments/payment.hpp
 instruments/rebatedexercise.hpp
 instruments/riskparticipationagreement.hpp
 instruments/riskparticipationagreement_tlock.hpp
+instruments/swapoptimized.hpp
 instruments/subperiodsswap.hpp
 instruments/syntheticcdo.hpp
 instruments/tenorbasisswap.hpp
@@ -867,6 +877,7 @@ pricingengines/cashpositionengine.hpp
 pricingengines/cboengine.hpp
 pricingengines/cbomcengine.hpp
 pricingengines/commodityapoengine.hpp
+pricingengines/commoditybachelierspreadoptionengine.hpp
 pricingengines/commodityschwartzfutureoptionengine.hpp
 pricingengines/commodityspreadoptionengine.hpp
 pricingengines/commodityswaptionengine.hpp
@@ -918,7 +929,6 @@ pricingengines/mcregressionmodel.hpp
 pricingengines/midpointcdoengine.hpp
 pricingengines/midpointcdsenginemultistate.hpp
 pricingengines/midpointindexcdsengine.hpp
-pricingengines/nullamccalculator.hpp
 pricingengines/numericalintegrationindexcdsoptionengine.hpp
 pricingengines/numericlgmbgsflexiswapengine.hpp
 pricingengines/numericlgmcallablebondengine.hpp
@@ -926,6 +936,7 @@ pricingengines/numericlgmflexiswapengine.hpp
 pricingengines/numericlgmmultilegoptionengine.hpp
 pricingengines/pairwisevarianceswapengine.hpp
 pricingengines/paymentdiscountingengine.hpp
+pricingengines/ratedigitalcallspreadengine.hpp
 pricingengines/tflattice.hpp
 pricingengines/varianceswapgeneralreplicationengine.hpp
 pricingengines/volatilityfromvarianceswapengine.hpp
@@ -975,6 +986,7 @@ termstructures/commodityaveragebasispricecurve.hpp
 termstructures/commoditybasispricecurve.hpp
 termstructures/commoditybasispricecurvewrapper.hpp
 termstructures/commoditybasispricetermstructure.hpp
+termstructures/calendarspreadfuturepricetermstructure.hpp
 termstructures/correlationtermstructure.hpp
 termstructures/credit/basecorrelationstructure.hpp
 termstructures/credit/spreadedbasecorrelationcurve.hpp
@@ -1042,7 +1054,6 @@ termstructures/piecewiseatmoptionletcurve.hpp
 termstructures/piecewiseoptionletcurve.hpp
 termstructures/piecewiseoptionletstripper.hpp
 termstructures/piecewisepricecurve.hpp
-termstructures/pillaronlyyieldcurve.hpp
 termstructures/pricecurve.hpp
 termstructures/pricetermstructure.hpp
 termstructures/pricetermstructureadapter.hpp

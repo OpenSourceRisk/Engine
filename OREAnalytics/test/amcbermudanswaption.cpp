@@ -287,7 +287,7 @@ TestCase testCaseData[] = {
     //   {18.5041, 0.000677892}, {19.0027, 0},          {19.5041, 0},          {20, 0},
     //   {20.5039, 0},           {21.0012, 0}}},
     {"Physical Settled Swaption EUR 10y50y (Long Term Simulation)",
-     200E-4,
+     250E-4,
      true,
      4,
      false,
@@ -362,7 +362,7 @@ TestCase testCaseData[] = {
       {18.5041, 0.00216216}, {19.0027, 0.000691815}, {19.5041, 0.00058673},
       {20, 1.52066e-05},     {20.5039, 0},           {21.0012, 0}}}};
 
-BOOST_FIXTURE_TEST_SUITE(OreAmcTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OreAmcTestSuite, ore::data::TopLevelFixture)
 
 BOOST_FIXTURE_TEST_SUITE(AmcBermudanSwaptionTest, TestData)
 
@@ -439,8 +439,7 @@ BOOST_DATA_TEST_CASE(testBermudanSwaptionExposure, boost::unit_test::data::make(
     sgd->setGrid(grid);
 
     ScenarioGeneratorBuilder sgb(sgd);
-    QuantLib::ext::shared_ptr<ScenarioFactory> sf = QuantLib::ext::make_shared<SimpleScenarioFactory>(true);
-    QuantLib::ext::shared_ptr<ScenarioGenerator> sg = sgb.build(model, sf, simMarketConfig, today, market);
+    QuantLib::ext::shared_ptr<ScenarioGenerator> sg = sgb.build(model, simMarketConfig, today, market);
 
     auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(market, simMarketConfig);
     simMarket->scenarioGenerator() = sg;

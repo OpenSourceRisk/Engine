@@ -125,10 +125,9 @@ void ScenarioGenerationAnalyticImpl::buildScenarioGenerator(const bool continueO
         if (!model_)
             buildCrossAssetModel(continueOnCalibrationError, allowModelFallbacks);
         ScenarioGeneratorBuilder sgb(analytic()->configurations().scenarioGeneratorData);
-        QuantLib::ext::shared_ptr<ScenarioFactory> sf = QuantLib::ext::make_shared<SimpleScenarioFactory>(true);
         string config = inputs_->marketConfig("simulation");
         scenarioGenerator_ =
-            sgb.build(model_, sf, analytic()->configurations().simMarketParams, inputs_->asof(), analytic()->market(),
+            sgb.build(model_, analytic()->configurations().simMarketParams, inputs_->asof(), analytic()->market(),
                       config, QuantLib::ext::make_shared<MultiPathGeneratorFactory>(), sgVars->amcPathDataOutput_);
         QL_REQUIRE(scenarioGenerator_, "failed to build the scenario generator");
         samples_ = analytic()->configurations().scenarioGeneratorData->samples();

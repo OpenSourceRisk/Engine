@@ -26,8 +26,8 @@
 #include <ored/utilities/csvfilereader.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
-#include <oret/datapaths.hpp>
-#include <oret/toplevelfixture.hpp>
+#include <oret/util/datapaths.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 #include <ql/time/date.hpp>
 #include <string>
 
@@ -36,7 +36,7 @@ using namespace boost::unit_test_framework;
 using namespace std;
 using namespace ore::data;
 
-using ore::test::TopLevelFixture;
+using ore::data::TopLevelFixture;
 
 namespace bdata = boost::unit_test::data;
 

@@ -46,7 +46,7 @@
 #include <ored/portfolio/swap.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/osutils.hpp>
-#include <oret/toplevelfixture.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 #include <ql/math/randomnumbers/mt19937uniformrng.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/date.hpp>
@@ -396,9 +396,8 @@ void test_performance(Size portfolioSize, ObservationMode::Mode om, double nonZe
         QuantLib::ext::make_shared<MultiPathGeneratorMersenneTwister>(model->stateProcess(), dg->timeGrid(), seed, antithetic);
 
     // build scenario generator
-    QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory = QuantLib::ext::make_shared<SimpleScenarioFactory>(true);
     QuantLib::ext::shared_ptr<ScenarioGenerator> scenarioGenerator = QuantLib::ext::make_shared<CrossAssetModelScenarioGenerator>(
-        model, pathGen, scenarioFactory, parameters, today, dg, initMarket);
+        model, pathGen, parameters, today, dg, initMarket);
 
     // build scenario sim market
     convs();

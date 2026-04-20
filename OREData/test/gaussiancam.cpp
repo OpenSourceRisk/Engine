@@ -31,7 +31,7 @@
 #include <ored/scripting/astprinter.hpp>
 #include <ored/scripting/models/dummymodel.hpp>
 
-#include <oret/toplevelfixture.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 
 #include <ored/model/crossassetmodelbuilder.hpp>
 #include <ored/model/irlgmdata.hpp>
@@ -45,7 +45,7 @@ using namespace ore::data;
 using namespace QuantLib;
 using namespace QuantExt;
 
-BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::data::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(GaussianCamTest)
 

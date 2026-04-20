@@ -75,7 +75,9 @@
 #include <qle/cashflows/nonstandardinflationcouponpricer.hpp>
 #include <qle/cashflows/nonstandardyoyinflationcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
+#include <qle/cashflows/overnightindexedcouponbase.hpp>
 #include <qle/cashflows/quantocouponpricer.hpp>
+#include <qle/cashflows/rangeaccrualcouponpricer.hpp>
 #include <qle/cashflows/scaledcoupon.hpp>
 #include <qle/cashflows/strippedcapflooredcpicoupon.hpp>
 #include <qle/cashflows/strippedcapflooredyoyinflationcoupon.hpp>
@@ -208,6 +210,7 @@
 #include <qle/instruments/flexiswapreplication.hpp>
 #include <qle/instruments/forwardbond.hpp>
 #include <qle/instruments/fxforward.hpp>
+#include <qle/instruments/fxforwardoptimized.hpp>
 #include <qle/instruments/genericswaption.hpp>
 #include <qle/instruments/impliedbondspread.hpp>
 #include <qle/instruments/indexcdsoption.hpp>
@@ -225,6 +228,7 @@
 #include <qle/instruments/riskparticipationagreement.hpp>
 #include <qle/instruments/riskparticipationagreement_tlock.hpp>
 #include <qle/instruments/subperiodsswap.hpp>
+#include <qle/instruments/swapoptimized.hpp>
 #include <qle/instruments/syntheticcdo.hpp>
 #include <qle/instruments/tenorbasisswap.hpp>
 #include <qle/instruments/vanillaforwardoption.hpp>
@@ -409,6 +413,7 @@
 #include <qle/pricingengines/cboengine.hpp>
 #include <qle/pricingengines/cbomcengine.hpp>
 #include <qle/pricingengines/commodityapoengine.hpp>
+#include <qle/pricingengines/commoditybachelierspreadoptionengine.hpp>
 #include <qle/pricingengines/commodityschwartzfutureoptionengine.hpp>
 #include <qle/pricingengines/commodityspreadoptionengine.hpp>
 #include <qle/pricingengines/commodityswaptionengine.hpp>
@@ -460,7 +465,6 @@
 #include <qle/pricingengines/midpointcdoengine.hpp>
 #include <qle/pricingengines/midpointcdsenginemultistate.hpp>
 #include <qle/pricingengines/midpointindexcdsengine.hpp>
-#include <qle/pricingengines/nullamccalculator.hpp>
 #include <qle/pricingengines/numericalintegrationindexcdsoptionengine.hpp>
 #include <qle/pricingengines/numericlgmbgsflexiswapengine.hpp>
 #include <qle/pricingengines/numericlgmcallablebondengine.hpp>
@@ -468,6 +472,7 @@
 #include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
 #include <qle/pricingengines/pairwisevarianceswapengine.hpp>
 #include <qle/pricingengines/paymentdiscountingengine.hpp>
+#include <qle/pricingengines/ratedigitalcallspreadengine.hpp>
 #include <qle/pricingengines/tflattice.hpp>
 #include <qle/pricingengines/varianceswapgeneralreplicationengine.hpp>
 #include <qle/pricingengines/volatilityfromvarianceswapengine.hpp>
@@ -509,6 +514,7 @@
 #include <qle/termstructures/blackvolsurfacewithatm.hpp>
 #include <qle/termstructures/bondyieldshiftedcurvetermstructure.hpp>
 #include <qle/termstructures/brlcdiratehelper.hpp>
+#include <qle/termstructures/calendarspreadfuturepricetermstructure.hpp>
 #include <qle/termstructures/capfloorhelper.hpp>
 #include <qle/termstructures/capfloortermvolcurve.hpp>
 #include <qle/termstructures/capfloortermvolsurface.hpp>
@@ -584,7 +590,6 @@
 #include <qle/termstructures/piecewiseoptionletcurve.hpp>
 #include <qle/termstructures/piecewiseoptionletstripper.hpp>
 #include <qle/termstructures/piecewisepricecurve.hpp>
-#include <qle/termstructures/pillaronlyyieldcurve.hpp>
 #include <qle/termstructures/pricecurve.hpp>
 #include <qle/termstructures/pricetermstructure.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>

@@ -270,21 +270,21 @@ QuantLib::ext::shared_ptr<YieldTermStructure>
 zerocurve(const vector<Date>& dates, const vector<Rate>& yields, const DayCounter& dayCounter,
           YieldCurve::InterpolationMethod interpolationMethod,
           YieldCurve::ExtrapolationMethod extrapolationMethod = YieldCurve::ExtrapolationMethod::ContinuousForward,
-          Size n = 0, bool excludeT0 = false, const Date& referenceDate = Date());
+          bool excludeT0 = false, Size n = 0);
 
 //! Create a Interpolated Discount Curve and apply interpolators
 QuantLib::ext::shared_ptr<YieldTermStructure>
 discountcurve(const vector<Date>& dates, const vector<DiscountFactor>& dfs, const DayCounter& dayCounter,
               YieldCurve::InterpolationMethod interpolationMethod,
               YieldCurve::ExtrapolationMethod extrapolationMethod = YieldCurve::ExtrapolationMethod::ContinuousForward,
-              Size n = 0, bool excludeT0 = false, const Date& referenceDate = Date());
+              bool excludeT0 = false, Size n = 0);
 
 //! Create a Interpolated Forward Curve and apply interpolators
 QuantLib::ext::shared_ptr<YieldTermStructure>
 forwardcurve(const vector<Date>& dates, const vector<Rate>& forwards, const DayCounter& dayCounter,
              YieldCurve::InterpolationMethod interpolationMethod,
              YieldCurve::ExtrapolationMethod extrapolationMethod = YieldCurve::ExtrapolationMethod::ContinuousForward,
-             Size n = 0, bool excludeT0 = false, const Date& referenceDate = Date());
+             bool excludeT0 = false, Size n = 0);
 
 //! Convert text to YieldCurve::ExtrapolationMethod
 /*!

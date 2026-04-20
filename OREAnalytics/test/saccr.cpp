@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/test/unit_test.hpp>
 #include "saccr.hpp"
 
 #include "testmarket.hpp"
@@ -67,7 +68,7 @@
 #include <qle/utilities/inflation.hpp>
 
 
-using ore::test::TopLevelFixture;
+using ore::data::TopLevelFixture;
 using namespace std;
 using namespace QuantLib;
 using namespace QuantExt;

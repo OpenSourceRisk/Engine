@@ -29,6 +29,7 @@ The top level XML elements for each \lstinline!YieldCurve! node are shown in Lis
 
 The meaning of each of the top level elements in Listing \ref{lst:top_level_yc} is given below. If an element is labelled
 as `Optional', then it may be excluded or included and left blank.
+
 \begin{itemize}
 \item CurveId: Unique identifier for the yield curve.
 \item CurveDescription: A description of the yield curve. This field may be left blank.
@@ -92,10 +93,12 @@ interpolation input.
 \item \lstinline!BootstrapConfig! [Optional]: this node holds configuration details for the iterative bootstrap
 that are described in section \ref{sec:bootstrap_config}. If omitted, this node's default values described
 in section \ref{sec:bootstrap_config} are used.
-
 \end{itemize}
 
-\begin{table}[h]
+While interpolation method and variable can be combined in an arbitrary way, only a subset of these combinations are
+usually recommended to use as summarized in table \ref{tab:recommende_interp_var_methods}.
+
+\begin{table}[H]
 \centering
   \begin{tabular}{|l|l|}
     \hline
@@ -109,9 +112,9 @@ in section \ref{sec:bootstrap_config} are used.
   \label{tab:allow_interp_variables}
 \end{table}
 
-\begin{table}[h]
+\begin{table}[H]
 \centering
-\begin{tabular}{|l|p{11cm}|}
+\begin{tabular}{|l|p{9cm}|}
     \hline
     {\bfseries Method} & {\bfseries Description} \\
     \hline
@@ -142,6 +145,43 @@ in section \ref{sec:bootstrap_config} are used.
   \caption{Allowable interpolation methods.}
   \label{tab:allow_interp_methods}
 \end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|}
+    \hline
+    {\bfseries Variable} & {\bfseries Method} \\
+    \hline
+    Zero        & Linear \\
+                & NaturalCubic \\
+                & FinancialCubic \\
+                & ConvexMonotone \\
+                & Quadratic \\
+                & Hermite \\
+                & CubicSpline \\ \hline
+    Forward     & Linear \\
+                & NaturalCubic \\
+                & FinancialCubic \\
+                & ConvexMonotone \\
+                & Quadratic \\
+                & Hermite \\
+                & CubicSpline \\
+                & BackwardFlat \\ \hline
+    Discount    & LogLinear \\
+                & LogQuadratic \\
+                & LogNaturalCubic \\
+                & LogFinancialCubic \\
+                & LogCubicSpline \\
+                & MonotnicLogCubicSpline \\
+                & DefaultLogMixedLinearCubic \\
+                & MonotonicLogMixedLinearCubic \\
+                & KrugerLogMixedLinearCubic \\
+                & LogMixedLinearCubicNaturalSpline \\ \hline
+  \end{tabular}
+  \caption{Recommended combinations of interpolation variable and method.}
+  \label{tab:recommende_interp_var_methods}
+\end{table}
+
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsubsection*{Segments Node} \label{ss:segments_node}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

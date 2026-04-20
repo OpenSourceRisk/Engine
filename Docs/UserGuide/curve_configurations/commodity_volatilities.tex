@@ -6,6 +6,7 @@ The following types of commodity volatility structures are supported in ORE:
 \item A one-dimensional expiry dependent volatility structure i.e.\ the volatility returned is dependent on the time to option expiry but does not change with option strike.
 \item A two-dimensional volatility structure with a dependence on both expiry and strike. There is support for absolute strikes, delta strikes and moneyness strikes.
 \item An average price option (APO) volatility surface. In particular, this structure returns the volatility of an average price that can then be used directly in the Black 76 formula to give the value of the APO.
+\item A calendar spread option volatility structure. This supports constant, one-dimensional (expiry dependent) and two-dimensional (expiry and absolute strike) normal volatility structures for commodity calendar spread options.
 \end{itemize}
 
 Listing \ref{lst:comm_vol_const_config} outlines the configuration for a constant volatility structure.
@@ -484,3 +485,68 @@ The ID of an existing commodity price curve giving the average price for the APO
 This ID of a yield curve in the currency of the commodity used for discounting.
 
 \end{itemize}
+
+Listing \ref{lst:comm_vol_calspread_config} outlines the configuration for a commodity calendar spread option volatility structure. Calendar spread options are options on the price difference between two consecutive futures contracts for the same commodity. The volatility structures used here are \emph{normal} (Bachelier) volatilities since the calendar spread can take negative values. The supported inner volatility configurations are \lstinline!Constant!, \lstinline!Curve! and \lstinline!StrikeSurface! --- moneyness, delta and APO configurations are not supported for calendar spread option volatilities.
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CommodityVolatility>
+  <CurveId>ICE:B_CALENDAR_SPREAD_1</CurveId>
+  <CurveDescription>...</CurveDescription>
+  <Currency>USD</Currency>
+  <InstrumentType>COMMODITY_CALENDAR_SPREAD_OPTION</InstrumentType>
+  <CalendarSpreadOffset>1</CalendarSpreadOffset>
+  <CalendarSpreadUnderlyingName>ICE:B</CalendarSpreadUnderlyingName>
+  <StrikeSurface>
+    <QuoteType>ImpliedVolatility</QuoteType>
+    <VolatilityType>Normal</VolatilityType>
+    <ExerciseType>European</ExerciseType>
+    <Strikes>*</Strikes>
+    <Expiries>*</Expiries>
+    <TimeInterpolation>Linear</TimeInterpolation>
+    <StrikeInterpolation>Cubic</StrikeInterpolation>
+    <Extrapolation>true</Extrapolation>
+    <TimeExtrapolation>Linear</TimeExtrapolation>
+    <StrikeExtrapolation>Flat</StrikeExtrapolation>
+  </StrikeSurface>
+  <DayCounter>A365</DayCounter>
+  <Calendar>...</Calendar>
+  <FutureConventions>ICE:B</FutureConventions>
+  <PriceCurveId>Commodity/USD/ICE:B</PriceCurveId>
+  <YieldCurveId>Yield/USD/USD-FedFunds</YieldCurveId>
+</CommodityVolatility>
+\end{minted}
+\caption{Calendar spread option volatility configuration}
+\label{lst:comm_vol_calspread_config}
+\end{longlisting}
+
+The meaning of the calendar spread specific elements is given below. All other common elements (\lstinline!DayCounter!, \lstinline!Calendar!, \lstinline!FutureConventions!, etc.) have the same meaning as described for the previous configurations.
+\begin{itemize}
+
+\item \lstinline!CurveId!:
+The curve identifier must follow the naming convention \lstinline!{underlying}_CALENDAR_SPREAD_{offset}! where \lstinline!{underlying}! is the name of the underlying commodity (matching \lstinline!CalendarSpreadUnderlyingName!) and \lstinline!{offset}! is a positive integer (matching \lstinline!CalendarSpreadOffset!). For example, \lstinline!ICE:B_CALENDAR_SPREAD_1! represents the first-nearby calendar spread for ICE Brent.
+
+\item \lstinline!InstrumentType!:
+Must be set to \lstinline!COMMODITY_CALENDAR_SPREAD_OPTION! to indicate that this volatility configuration is for calendar spread options. The default value is \lstinline!COMMODITY_OPTION! (i.e.\ standard commodity options), so this node must be explicitly provided for calendar spread configurations.
+
+\item \lstinline!CalendarSpreadOffset!:
+A positive integer indicating the futures contract offset for the calendar spread. A value of \lstinline!1! means the spread is between the $N$-th and $(N+1)$-th futures contracts. This value must match the offset embedded in the \lstinline!CurveId!.
+
+\item \lstinline!CalendarSpreadUnderlyingName!:
+The name of the underlying commodity for which the calendar spread is defined. This must match the underlying portion of the \lstinline!CurveId!. For example, if \lstinline!CurveId! is \lstinline!ICE:B_CALENDAR_SPREAD_1!, then \lstinline!CalendarSpreadUnderlyingName! must be \lstinline!ICE:B!.
+
+\item \lstinline!QuoteType! / \lstinline!VolatilityType!:
+Only \lstinline!Normal! volatility (\lstinline!RATE_NVOL! quote type) is supported for calendar spread option volatilities. This is enforced during validation.
+
+\end{itemize}
+
+The market data quote strings for calendar spread options follow the pattern:
+\begin{center}
+\lstinline!COMMODITY_CALENDAR_SPREAD_OPTION/RATE_NVOL/{N}/{O}/{C}/e_n/s_m!
+\end{center}
+where \lstinline!{N}! is the value in \lstinline!CalendarSpreadUnderlyingName!, \lstinline!{O}! is the \lstinline!CalendarSpreadOffset!, \lstinline!{C}! is the \lstinline!Currency!, and \lstinline!e_n! and \lstinline!s_m! are the expiry and strike respectively. For example, a quote for ICE Brent first-nearby calendar spread with USD currency might look like:
+\begin{center}
+\lstinline!COMMODITY_CALENDAR_SPREAD_OPTION/RATE_NVOL/ICE:B/1/USD/2026-03-31/-4.84!
+\end{center}
+
+Note that the \lstinline!FutureConventions! node is used to build a calendar spread forward price curve automatically from the underlying commodity price curve. This curve is used to compute ATM levels.

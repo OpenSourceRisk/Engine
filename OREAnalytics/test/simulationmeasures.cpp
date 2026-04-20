@@ -32,7 +32,7 @@
 #include <ored/portfolio/swap.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
-#include <oret/toplevelfixture.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 #include <test/oreatoplevelfixture.hpp>
 
 #include <qle/instruments/fxforward.hpp>
@@ -242,8 +242,7 @@ void test_measure(std::string measureName, Real shiftHorizon, std::string discNa
     sgd->setGrid(grid);
 
     ScenarioGeneratorBuilder sgb(sgd);
-    QuantLib::ext::shared_ptr<ScenarioFactory> sf = QuantLib::ext::make_shared<SimpleScenarioFactory>(true);
-    QuantLib::ext::shared_ptr<ScenarioGenerator> sg = sgb.build(model, sf, simMarketConfig, today, d.market);
+    QuantLib::ext::shared_ptr<ScenarioGenerator> sg = sgb.build(model, simMarketConfig, today, d.market);
 
     convs();
     auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(d.market, simMarketConfig);
