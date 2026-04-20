@@ -471,8 +471,8 @@ def main():
 
     # ore/OREData/ored/portfolio/equityswap.hpp
 
-        ql.FlexiSwap()
-        ql.FlexiSwap(env0, [leg_data0], ql.MapStringToPairVectorDoubleVectorString({"": ql.PairVectorDoubleVectorString(ql.DoubleVector([0]), ql.StrVector([""]))}), "Long")
+    ql.FlexiSwap()
+    ql.FlexiSwap(env0, [leg_data0], ql.DoubleVector([0]), ql.StrVector([""]), "Long")
 
     ql.EquitySwap()
     ql.EquitySwap(env0, [leg_data0])
