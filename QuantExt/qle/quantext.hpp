@@ -210,6 +210,7 @@
 #include <qle/instruments/flexiswapreplication.hpp>
 #include <qle/instruments/forwardbond.hpp>
 #include <qle/instruments/fxforward.hpp>
+#include <qle/instruments/fxforwardoptimized.hpp>
 #include <qle/instruments/genericswaption.hpp>
 #include <qle/instruments/impliedbondspread.hpp>
 #include <qle/instruments/indexcdsoption.hpp>
@@ -227,6 +228,7 @@
 #include <qle/instruments/riskparticipationagreement.hpp>
 #include <qle/instruments/riskparticipationagreement_tlock.hpp>
 #include <qle/instruments/subperiodsswap.hpp>
+#include <qle/instruments/swapoptimized.hpp>
 #include <qle/instruments/syntheticcdo.hpp>
 #include <qle/instruments/tenorbasisswap.hpp>
 #include <qle/instruments/vanillaforwardoption.hpp>

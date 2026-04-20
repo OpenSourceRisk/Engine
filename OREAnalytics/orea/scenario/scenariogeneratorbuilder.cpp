@@ -40,7 +40,6 @@ namespace analytics {
 
 QuantLib::ext::shared_ptr<ScenarioGenerator>
 ScenarioGeneratorBuilder::build(QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model,
-                                QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory,
                                 QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> marketConfig, Date asof,
                                 QuantLib::ext::shared_ptr<ore::data::Market> initMarket, const std::string& configuration,
                                 const QuantLib::ext::shared_ptr<PathGeneratorFactory>& pf, const std::string& amcPathDataInput) {
@@ -63,9 +62,9 @@ ScenarioGeneratorBuilder::build(QuantLib::ext::shared_ptr<QuantExt::CrossAssetMo
     auto pathGen = pf->build(data_->sequenceType(), process, processTimeGrid, data_->seed(), data_->ordering(),
                              data_->directionIntegers());
 
-    return QuantLib::ext::make_shared<CrossAssetModelScenarioGenerator>(
-        model, pathGen, scenarioFactory, marketConfig, asof, data_->getGrid(), initMarket, configuration,
-        amcPathDataInput, data_->samples());
+    return QuantLib::ext::make_shared<CrossAssetModelScenarioGenerator>(model, pathGen, marketConfig, asof,
+                                                                        data_->getGrid(), initMarket, configuration,
+                                                                        amcPathDataInput, data_->samples());
 }
 } // namespace analytics
 } // namespace ore
