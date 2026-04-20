@@ -76,7 +76,6 @@ private:
     Real d2CdK2Threshold_;
     Size nPasses_;
 
-    mutable bool applyCorrection_ = true;
     mutable TimeGrid timeGrid_;
     mutable std::vector<Real> logStrikes_;
     mutable std::vector<Real> logStrikesMid_;
