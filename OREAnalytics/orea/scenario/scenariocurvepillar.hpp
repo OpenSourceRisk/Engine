@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2026 Quaternion Risk Management Ltd
+ Copyright (C) 2026 AcadiaSoft Inc.
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/utilities/curvepillar.hpp
+/*! \file scenario/scenariocurvepillar.hpp
     \brief Variant of Periods, explicit dates and future continuations to be used for pillar selection in simmmarket and
    sceneriodata
 */
