@@ -149,7 +149,7 @@ XMLNode* EquityAutoDeltaHedgedOption::toXML(XMLDocument& doc) const {
     XMLUtils::appendNode(node, eqNode);
 
     XMLUtils::addChild(doc, eqNode, "Volatility", hedgingVol_);
-    XMLUtils::addChild(doc, eqNode, "driftRate", driftRate_);
+    XMLUtils::addChild(doc, eqNode, "DriftRate", driftRate_);
 
     XMLNode* underlyingsNode = doc.allocNode("Underlyings");
     XMLUtils::appendNode(eqNode, underlyingsNode);
