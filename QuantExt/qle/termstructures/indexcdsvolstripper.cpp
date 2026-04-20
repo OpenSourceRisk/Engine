@@ -192,9 +192,9 @@ ext::shared_ptr<QuantExt::IndexCdsOption> IndexCdsVolStripper::createIndexCdsOpt
     const CreditCurve::RefData& indexCdsData = tradeData_.indexCdsData;
     auto indexCds = ext::make_shared<QuantExt::IndexCreditDefaultSwap>(Protection::Buyer, refDateNtl,
         vector<Real>{refDateNtl}, indexCdsData.runningSpread, schedule, indexCdsData.payConvention,
-        indexCdsData.dayCounter, indexCdsData.settlesAccrual, indexCdsData.protPmtTime, Date(),
+        indexCdsData.dayCounter, indexCdsData.settlesAccrual, indexCdsData.protPmtTime, expiryDate,
         ext::shared_ptr<FaceValueClaim>(), indexCdsData.lastPeriodDayCounter, indexCdsData.rebatesAccrual,
-        referenceDate_, indexCdsData.cashSettlementDays);
+        expiryDate, indexCdsData.cashSettlementDays);
 
     indexCds->setPricingEngine(ext::make_shared<QuantExt::MidPointIndexCdsEngine>(
         cch->curve(), cch->recovery()->value(), cch->rateCurve()));

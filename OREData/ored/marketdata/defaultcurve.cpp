@@ -335,7 +335,7 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
                                  bool implyDefaultFromMarket,
                                  QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData) {
 
-    LOG("Start building default curve of type SpreadCDS for curve " << curveID << "and  implyDefaultFromMarket = "
+    LOG("Start building default curve of type SpreadCDS for curve " << curveID << " and  implyDefaultFromMarket = "
         << to_string(implyDefaultFromMarket));
 
     QL_REQUIRE(config.type() == DefaultCurveConfig::Config::Type::SpreadCDS ||
@@ -929,16 +929,18 @@ void DefaultCurve::buildYieldCurveAsDefaultCurve(const std::string& curveID, con
 }
 
 CreditCurve::RefData createRefData(const Period& indexTerm, const Date& startDate,
-    const ext::shared_ptr<CdsConvention>& cdsConvention)
+    const ext::shared_ptr<CdsConvention>& cdsConvention, Real runningSpread, bool eom)
 {
     CreditCurve::RefData refData;
-    refData.indexTerm = indexTerm;
     refData.startDate = startDate;
+    refData.indexTerm = indexTerm;
     refData.tenor = Period(cdsConvention->frequency());
     refData.calendar = cdsConvention->calendar();
     refData.convention = cdsConvention->paymentConvention();
     refData.termConvention = Unadjusted;
     refData.rule = cdsConvention->rule();
+    refData.endOfMonth = eom;
+    refData.runningSpread = runningSpread;
     refData.payConvention = cdsConvention->paymentConvention();
     refData.dayCounter = cdsConvention->dayCounter();
     if (cdsConvention->lastPeriodDayCounter() != DayCounter())

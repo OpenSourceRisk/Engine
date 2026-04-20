@@ -478,19 +478,19 @@ void CDSVolCurve::populateVolatilityPremiaQuotes(const BuildVolatilityArgs& args
             return close(p.strike, strikeValue);
         });
 
-        OptionPrice& op = priceIt == prices.end() ? prices.emplace_back() : *priceIt;
         if (priceIt != prices.end()) {
             if ((q->side() == Protection::Buyer && !priceIt->payerPrice.empty()) ||
                 (q->side() == Protection::Seller && !priceIt->receiverPrice.empty())) {
-                WLOG("Duplicate quote found for expiry " << expiryDate << ", term " << quoteTerm << " and strike "
-                    << strike->strike() << ". Ignoring this quote: " << q->name() << ".");
+                WLOG("Duplicate quote found for expiry " << expiryDate << ", term " << quoteTerm << ", strike "
+                    << strike->strike() << " and side " << q->side()  << ". Ignoring this quote: " << q->name() << ".");
                 continue;
             }
-        } else {
-            op.strike = strikeValue;
         }
 
+        OptionPrice& op = priceIt == prices.end() ? prices.emplace_back() : *priceIt;
+
         // Add the quote.
+        op.strike = strikeValue;
         if (q->side() == Protection::Buyer)
             op.payerPrice = q->quote();
         else
@@ -547,7 +547,7 @@ void CDSVolCurve::buildVolatilityViaPremia(const BuildVolatilityArgs& args, cons
     ext::shared_ptr<CdsConvention> cdsConv = ext::dynamic_pointer_cast<CdsConvention>(p.second);
     QL_REQUIRE(cdsConv, "CDSVolCurve: convention '" << convId << "' could not be case to CdsConvention.");
     // Index term and start date will not be used in stripping volatilities so just use defaults here.
-    CreditCurve::RefData refData = createRefData(0 * Days, Date(), cdsConv);
+    CreditCurve::RefData refData = createRefData(0 * Days, Date(), cdsConv, priceInfo.runningCoupon());
 
     // Create the IndexCdsVolStripper::TradeData.
     // Add realised FEP and index factor from reference data here later if not overridden in configuration.

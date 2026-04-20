@@ -833,7 +833,7 @@ QuantLib::ext::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const 
         }
 
         return QuantLib::ext::make_shared<IndexCDSOptionQuote>(value, asof, datumName, tokens[2], expiry,
-            indexTerm, strike, side);
+            indexTerm, strike, quoteType, side);
     }
 
     case MarketDatum::InstrumentType::COMMODITY_SPOT: {

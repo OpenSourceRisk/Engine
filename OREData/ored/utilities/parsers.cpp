@@ -450,6 +450,18 @@ Protection::Side parseProtectionSide(const std::string& s) {
     }
 }
 
+ostream& operator<<(ostream& os, const Protection::Side side)
+{
+    switch (side) {
+        case Protection::Buyer:
+            return os << "Buyer";
+        case Protection::Seller:
+            return os << "Seller";
+        default:
+            QL_FAIL("Unknown Protection::Side");
+    }
+}
+
 Settlement::Type parseSettlementType(const std::string& s) {
     static map<string, Settlement::Type> m = {
         {"Cash", Settlement::Cash},
