@@ -28,6 +28,7 @@
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvoltimeextrapolation.hpp>
 #include <qle/indexes/commodityindex.hpp>
 #include <qle/pricingengines/commodityapoengine.hpp>
 #include <qle/termstructures/blackvariancesurfacemoneyness.hpp>
@@ -49,7 +50,8 @@ public:
                      const QuantLib::ext::shared_ptr<FutureExpiryCalculator>& baseExpCalc, QuantLib::Real beta = 0.0,
                      bool flatStrikeExtrapolation = true,
                      const QuantLib::ext::optional<QuantLib::Period>& maxTenor = QuantLib::ext::nullopt,
-                     QuantLib::BlackVolTimeExtrapolation timeExtrapolation = QuantLib::BlackVolTimeExtrapolation::FlatVolatility);
+                     QuantLib::BlackVolTimeExtrapolation::Type timeExtrapolationType =
+                         QuantLib::BlackVolTimeExtrapolation::Type::FlatVolatility);
 
     //! \name TermStructure interface
     //@{

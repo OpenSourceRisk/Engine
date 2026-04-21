@@ -369,12 +369,10 @@ InflationCurve::CurveBuildResults
     QuantLib::ext::shared_ptr<ZeroInflationIndex> zcIndex;
     QuantLib::ext::shared_ptr<YoYInflationIndex> index;
     QuantLib::Period obsLagFromSegment = 0 * Days;
-    bool interpolatedIndex = false;
     for (const auto& segment : config->segments()) {
         auto convention =
             QuantLib::ext::dynamic_pointer_cast<InflationSwapConvention>(conventions->get(segment.convention()));
         QL_REQUIRE(convention, "InflationSwap Conventions for " << segment.convention() << " not found.");
-        interpolatedIndex |= convention->interpolated();
         auto p = getStartAndLag(asof, *convention);
         Date swapStart = p.first;
         if (p.second != 0 * Days) {
@@ -441,11 +439,9 @@ InflationCurve::CurveBuildResults
     Real baseRate = config->baseRate() != Null<Real>() ? config->baseRate() : helpers.front()->quote()->value();
     Date baseDate = QuantExt::ZeroInflation::curveBaseDate(false, asof, curveObsLag, config->frequency(), index);
 
-    QL_DEPRECATED_DISABLE_WARNING
     results.curve = QuantLib::ext::shared_ptr<PiecewiseYoYInflationCurve<Linear>>(new PiecewiseYoYInflationCurve<Linear>(
-        asof, baseDate, baseRate, curveObsLag, config->frequency(), interpolatedIndex, config->dayCounter(),
+        asof, baseDate, baseRate, curveObsLag, config->frequency(), config->dayCounter(),
         helpers, {}, config->tolerance()));
-    QL_DEPRECATED_ENABLE_WARNING
     results.index = zcIndex;
     
     return results;
