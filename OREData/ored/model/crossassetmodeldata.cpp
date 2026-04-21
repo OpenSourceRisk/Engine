@@ -75,7 +75,11 @@ void InstantaneousCorrelations::fromXML(XMLNode* node) {
     // Configure correlation structure
     LOG("CrossAssetModelData: adding correlations.");
     CorrelationMatrixBuilder cmb;
-    if (auto correlationNode = XMLUtils::getChildNode(node, "InstantaneousCorrelations")) {
+    XMLNode* correlationNode = node;
+    if (XMLUtils::getNodeName(node) != "InstantaneousCorrelations") {
+        correlationNode = XMLUtils::getChildNode(node, "InstantaneousCorrelations");
+    }
+    if (correlationNode != nullptr) {
         vector<XMLNode*> nodes = XMLUtils::getChildrenNodes(correlationNode, "Correlation");
         for (Size i = 0; i < nodes.size(); ++i) {
             CorrelationFactor factor_1 = fromNode(nodes[i], true);

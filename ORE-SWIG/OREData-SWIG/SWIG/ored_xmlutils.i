@@ -20,18 +20,19 @@
 #define ored_xmlutils_i
 
 %{
-// put c++ declarations here
-using ore::data::XMLNode;
-using ore::data::XMLDocument;
-using ore::data::XMLSerializable;
+typedef ore::data::XMLNode XMLNode;
+typedef ore::data::XMLDocument XMLDocument;
+typedef ore::data::XMLSerializable XMLSerializable;
 %}
 
-%shared_ptr(XMLSerializable)
+%shared_ptr(ore::data::XMLSerializable)
+namespace ore {
+namespace data {
 class XMLSerializable {
 public:
     virtual ~XMLSerializable();
-    virtual void fromXML(XMLNode* node) = 0;
-    virtual XMLNode* toXML(XMLDocument& doc) const = 0;
+    virtual void fromXML(ore::data::XMLNode* node) = 0;
+    virtual ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const = 0;
 
     void fromFile(const std::string& filename);
     void toFile(const std::string& filename) const;
@@ -39,5 +40,12 @@ public:
     void fromXMLString(const std::string& xml);
     std::string toXMLString() const;
 };
+
+} // namespace data
+} // namespace ore
+
+typedef ore::data::XMLNode XMLNode;
+typedef ore::data::XMLDocument XMLDocument;
+typedef ore::data::XMLSerializable XMLSerializable;
 
 #endif

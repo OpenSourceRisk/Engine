@@ -28,22 +28,23 @@
 #define ORE_DEBUG 32   // 00100000  63 = 2^6-1
 #define ORE_DATA 64    // 01000000  127
 
-%{
-using ore::data::Log;
-using ore::data::Logger;
-%}
+%shared_ptr(ore::data::Log)
+%shared_ptr(ore::data::Logger)
+%shared_ptr(ore::data::FileLogger)
+%shared_ptr(ore::data::BufferLogger)
 
-%shared_ptr(Log)
+namespace ore {
+namespace data {
 class Log {
   private:
     Log();
   public:
     static Log& instance();
     %extend {
-        void registerLogger(const ext::shared_ptr<Logger>& logger) {
+                void registerLogger(const ext::shared_ptr<ore::data::Logger>& logger) {
             self->registerLogger(logger);
         }
-        ext::shared_ptr<Logger>& logger(const std::string& name) {
+                ext::shared_ptr<ore::data::Logger>& logger(const std::string& name) {
             return self->logger(name);
         }
         void removeLogger(const std::string& name) {
@@ -84,33 +85,32 @@ class Log {
     }
 };
 
-%shared_ptr(Logger)
 class Logger {
   private:
     Logger();
 };
 
-%{
-using ore::data::FileLogger;
-%}
-
-%shared_ptr(FileLogger)
-class FileLogger : public Logger {
+class FileLogger : public ore::data::Logger {
   public:
     FileLogger(const std::string& filename);
 };
 
-%{
-using ore::data::BufferLogger;
-%}
-
-%shared_ptr(BufferLogger)
-class BufferLogger : public Logger {
+class BufferLogger : public ore::data::Logger {
   public:
     BufferLogger(unsigned minLevel = ORE_DATA);
     bool hasNext();
     std::string next();
 };
+
+} // namespace data
+} // namespace ore
+
+%{
+typedef ore::data::Log Log;
+typedef ore::data::Logger Logger;
+typedef ore::data::FileLogger FileLogger;
+typedef ore::data::BufferLogger BufferLogger;
+%}
 
 %rename(MLOG) MLOGSWIG;
 %inline %{
