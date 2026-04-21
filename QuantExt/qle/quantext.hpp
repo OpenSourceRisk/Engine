@@ -204,6 +204,7 @@
 #include <qle/instruments/crossccyswap.hpp>
 #include <qle/instruments/currencyswap.hpp>
 #include <qle/instruments/deposit.hpp>
+#include <qle/instruments/equityautodeltahedgedoption.hpp>
 #include <qle/instruments/equityforward.hpp>
 #include <qle/instruments/fixedbmaswap.hpp>
 #include <qle/instruments/flexiswap.hpp>
@@ -393,6 +394,7 @@
 #include <qle/pricingengines/analyticdoublebarrierbinaryengine.hpp>
 #include <qle/pricingengines/analyticdoublebarrierengine.hpp>
 #include <qle/pricingengines/analyticeuropeanengine.hpp>
+#include <qle/pricingengines/analyticeuropeanengineautodeltahedge.hpp>
 #include <qle/pricingengines/analyticeuropeanenginedeltagamma.hpp>
 #include <qle/pricingengines/analyticeuropeanforwardengine.hpp>
 #include <qle/pricingengines/analytichwswaptionengine.hpp>

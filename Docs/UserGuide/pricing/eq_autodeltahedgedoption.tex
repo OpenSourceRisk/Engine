@@ -1,0 +1,89 @@
+\subsubsection{Equity Auto Delta Hedged Option}
+\label{pricing:eq_autodeltahedgedoption}
+
+An Equity Auto Delta Hedged Option is a structured product consisting of $N$
+batches of European vanilla equity options, each with an embedded discrete
+delta-hedging strategy.  The equity amount at expiry for each batch $i$ is
+
+$$
+\text{EqAmount} = \sum_{i=1}^{N}
+  \bigl[\text{DeltaHedge}_{\text{Final}}^{i}
+       + \text{Premium}^{i}
+       - \text{Option}_{\text{Final}}^{i}\bigr]
+  \times N^{i}
+$$
+
+\paragraph{Delta-hedge accumulation.}
+The delta-hedge P\&L for batch $i$ is built up discretely on each business day
+from the observation start date to expiry:
+
+\begin{align*}
+\text{DeltaHedge}_{t} &= \text{DeltaHedge}_{t-1}
+  + \delta_{t-1}\,\bigl(F_{t,T} - F_{t-1,T}\bigr), \\
+\text{DeltaHedge}_{\text{Start}} &= 0,
+\end{align*}
+
+where $F_{t,T}$ is the contractual forward defined as
+$$
+F_{t,T} = S_t \cdot e^{r\,\tau(t,T)}
+$$
+with $r$ the forward rate specified in the trade XML and
+$\tau(t,T) = \text{Act}(t,T)/365$ measured on an Actual/365 (Fixed) basis.
+
+The delta on each observation date is the Black--Scholes delta at the
+hedging volatility $\sigma_h$:
+$$
+\delta_t = \Phi\!\bigl(\omega\, d_1\bigr),
+\qquad
+d_1 = \frac{\ln(F_{t,T}/K) + \tfrac{1}{2}\sigma_h^2\,\tau(t,T)}
+           {\sigma_h\sqrt{\tau(t,T)}}
+$$
+where $\omega = +1$ for a call and $\omega = -1$ for a put, and $\Phi$ is
+the standard normal cumulative distribution function.
+
+\paragraph{Pricing decomposition.}
+The present value is split into four components for each batch:
+
+\begin{enumerate}
+\item \textbf{Realized past hedge P\&L} (observation start to valuation date):
+  Computed from historical equity fixings and the discrete delta-hedge
+  accumulation formula above.  This is a known cash amount, discounted from
+  expiry.
+
+\item \textbf{Future hedge P\&L} (valuation date to expiry):  Modelled as a
+  Black--Scholes option value at the hedging volatility $\sigma_h$, using the
+  contractual forward dynamics (flat rate curve at $r$, zero dividend curve):
+  $$
+  C_{\text{hedge}}^{i} = \text{BS}\bigl(S_0,\, K^i,\, \sigma_h,\, r,\, T\bigr)
+  $$
+  This represents the expected terminal value of the delta-hedging strategy
+  from today to expiry.
+
+\item \textbf{Option payoff}:  The expected option payoff valued at market
+  volatility and market equity forward curves:
+  $$
+  C_{\text{market}}^{i} = \text{BS}\bigl(S(0,T),\, K^i,\, \sigma_{\text{mkt}},\, T\bigr)
+  $$
+  using the standard Black--Scholes model with the market dividend and
+  forecasting curves, discounted via the market discount curve.
+
+\item \textbf{Premium}:  The per-unit option premium, discounted from expiry
+  to today.
+\end{enumerate}
+
+The total present value is then:
+$$
+\text{PV} = \sum_{i} N^{i} \Bigl[
+  \text{realizedPnL}^{i} \cdot P(T)
+  + C_{\text{hedge}}^{i}
+  + \text{Premium}^{i} \cdot P(T)
+  - C_{\text{market}}^{i}
+\Bigr]
+$$
+
+where $P(T)$ is the discount factor for expiry~$T$.
+
+\medskip
+The market-vol option and the hedge-vol option are both priced analytically
+using the Black--Scholes formula (Analytic European Engine).  The realized
+hedge P\&L and premiums are modelled as deterministic cash flows at expiry.
