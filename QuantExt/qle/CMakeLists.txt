@@ -132,6 +132,7 @@ instruments/crossccyfixfloatswap.cpp
 instruments/crossccyswap.cpp
 instruments/currencyswap.cpp
 instruments/deposit.cpp
+instruments/equityautodeltahedgedoption.cpp
 instruments/equityforward.cpp
 instruments/fixedbmaswap.cpp
 instruments/flexiswap.cpp
@@ -267,6 +268,7 @@ pricingengines/analyticdoublebarrierbinaryengine.cpp
 pricingengines/analyticdoublebarrierengine.cpp
 pricingengines/analyticeuropeanengine.cpp
 pricingengines/analyticeuropeanenginedeltagamma.cpp
+pricingengines/analyticeuropeanengineautodeltahedge.cpp
 pricingengines/analyticeuropeanforwardengine.cpp
 pricingengines/analytichwswaptionengine.cpp
 pricingengines/analyticjycpicapfloorengine.cpp
@@ -668,6 +670,7 @@ instruments/crossccyfixfloatswap.hpp
 instruments/crossccyswap.hpp
 instruments/currencyswap.hpp
 instruments/deposit.hpp
+instruments/equityautodeltahedgedoption.hpp
 instruments/equityforward.hpp
 instruments/fixedbmaswap.hpp
 instruments/flexiswap.hpp
@@ -858,6 +861,7 @@ pricingengines/analyticdoublebarrierbinaryengine.hpp
 pricingengines/analyticdoublebarrierengine.hpp
 pricingengines/analyticeuropeanengine.hpp
 pricingengines/analyticeuropeanenginedeltagamma.hpp
+pricingengines/analyticeuropeanengineautodeltahedge.hpp
 pricingengines/analyticeuropeanforwardengine.hpp
 pricingengines/analytichwswaptionengine.hpp
 pricingengines/analyticjycpicapfloorengine.hpp
