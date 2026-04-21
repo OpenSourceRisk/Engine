@@ -63,10 +63,6 @@ const char* __version__;
 %}
 #endif
 
-//#if defined(SWIGPYTHON)
-//%feature("autodoc");
-//#endif
-
 // include all quantlib .i's
 %include ql.i
 

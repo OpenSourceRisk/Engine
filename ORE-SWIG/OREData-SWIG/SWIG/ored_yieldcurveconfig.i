@@ -25,27 +25,10 @@
 %include ored_curvespec.i
 %include ored_xmlutils.i
 
-%{
-using ore::data::YieldCurveConfig;
-using ore::data::YieldCurveSegment;
-using ore::data::DirectYieldCurveSegment;
-using ore::data::SimpleYieldCurveSegment;
-using ore::data::AverageOISYieldCurveSegment;
-using ore::data::TenorBasisYieldCurveSegment;
-using ore::data::CrossCcyYieldCurveSegment;
-using ore::data::ZeroSpreadedYieldCurveSegment;
-using ore::data::WeightedAverageYieldCurveSegment;
-using ore::data::YieldPlusDefaultYieldCurveSegment;
-using ore::data::DiscountRatioYieldCurveSegment;
-using ore::data::FittedBondYieldCurveSegment;
-using ore::data::IborFallbackCurveSegment;
-using ore::data::BondYieldShiftedYieldCurveSegment;
-using ore::data::XMLSerializable;
-
-%}
-
-%shared_ptr(YieldCurveSegment)
-class YieldCurveSegment : public XMLSerializable {
+%shared_ptr(ore::data::YieldCurveSegment)
+namespace ore {
+namespace data {
+class YieldCurveSegment : public ore::data::XMLSerializable {
 public:
     enum class Type {
         Zero,
@@ -70,67 +53,92 @@ public:
         IborFallback,
         BondYieldShifted
     };
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     Type type() const;
     const std::string& conventionsID() const;
     const QuantLib::Pillar::Choice pillarChoice() const;
     Size priority() const;
     Size minDistance() const;
-    const std::vector<pair<std::string, bool>>& quotes() const;
+    const std::vector<std::pair<std::string, bool>>& quotes() const;
 protected:
     YieldCurveSegment();
 };
 
+} // namespace data
+} // namespace ore
 
-%shared_ptr(DirectYieldCurveSegment)
+
+%shared_ptr(ore::data::DirectYieldCurveSegment)
+namespace ore {
+namespace data {
 class DirectYieldCurveSegment : public YieldCurveSegment {
 public:
     DirectYieldCurveSegment();
     DirectYieldCurveSegment(const std::string& typeID, const std::string& conventionsID, const std::vector<std::string>& quotes);
     ~DirectYieldCurveSegment();
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;   
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 };
 
-%shared_ptr(SimpleYieldCurveSegment)
+} // namespace data
+} // namespace ore
+
+%shared_ptr(ore::data::SimpleYieldCurveSegment)
+namespace ore {
+namespace data {
 class SimpleYieldCurveSegment : public YieldCurveSegment {
 public:
     SimpleYieldCurveSegment();
     SimpleYieldCurveSegment(const std::string& typeID, const std::string& conventionsID, const std::vector<std::string>& quotes,
                             const std::string& projectionCurveID = std::string());
     ~SimpleYieldCurveSegment() {}
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     const std::string& projectionCurveID() const;
 };
 
-%shared_ptr(AverageOISYieldCurveSegment)
+} // namespace data
+} // namespace ore
+
+%shared_ptr(ore::data::AverageOISYieldCurveSegment)
+namespace ore {
+namespace data {
 class AverageOISYieldCurveSegment : public YieldCurveSegment {
 public:
     AverageOISYieldCurveSegment();
     AverageOISYieldCurveSegment(const std::string& typeID, const std::string& conventionsID, const std::vector<std::string>& quotes,
                                 const std::string& projectionCurveID);
     ~AverageOISYieldCurveSegment();
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     const std::string& projectionCurveID() const;
 };
 
-%shared_ptr(TenorBasisYieldCurveSegment)
+} // namespace data
+} // namespace ore
+
+%shared_ptr(ore::data::TenorBasisYieldCurveSegment)
+namespace ore {
+namespace data {
 class TenorBasisYieldCurveSegment : public YieldCurveSegment {
 public:
     TenorBasisYieldCurveSegment();
     TenorBasisYieldCurveSegment(const std::string& typeID, const std::string& conventionsID, const std::vector<std::string>& quotes,
                                 const std::string& receiveProjectionCurveID, const std::string& payProjectionCurveID);
     ~TenorBasisYieldCurveSegment();
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     const std::string& receiveProjectionCurveID() const;
     const std::string& payProjectionCurveID() const;
 };
 
-%shared_ptr(CrossCcyYieldCurveSegment)
+} // namespace data
+} // namespace ore
+
+%shared_ptr(ore::data::CrossCcyYieldCurveSegment)
+namespace ore {
+namespace data {
 class CrossCcyYieldCurveSegment : public YieldCurveSegment {
 public:
     CrossCcyYieldCurveSegment();
@@ -139,42 +147,57 @@ public:
                               const std::string& domesticProjectionCurveID = std::string(),
                               const std::string& foreignProjectionCurveID = std::string());
     ~CrossCcyYieldCurveSegment();
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     const std::string& spotRateID() const;
     const std::string& foreignDiscountCurveID() const;
     const std::string& domesticProjectionCurveID() const;
     const std::string& foreignProjectionCurveID() const;
 };
 
-%shared_ptr(ZeroSpreadedYieldCurveSegment)
+} // namespace data
+} // namespace ore
+
+%shared_ptr(ore::data::ZeroSpreadedYieldCurveSegment)
+namespace ore {
+namespace data {
 class ZeroSpreadedYieldCurveSegment : public YieldCurveSegment {
 public:
     ZeroSpreadedYieldCurveSegment();
     ZeroSpreadedYieldCurveSegment(const std::string& typeID, const std::string& conventionsID, const std::vector<std::string>& quotes,
                                   const std::string& referenceCurveID);
     ~ZeroSpreadedYieldCurveSegment();
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     const std::string& referenceCurveID() const;
 };
 
-%shared_ptr(WeightedAverageYieldCurveSegment)
+} // namespace data
+} // namespace ore
+
+%shared_ptr(ore::data::WeightedAverageYieldCurveSegment)
+namespace ore {
+namespace data {
 class WeightedAverageYieldCurveSegment : public YieldCurveSegment {
 public:
     WeightedAverageYieldCurveSegment();
     WeightedAverageYieldCurveSegment(const std::string& typeID, const std::string& referenceCurveID1,
                                      const std::string& referenceCurveID2, const Real weight1, const Real weight2);
     ~WeightedAverageYieldCurveSegment();
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     const std::string& referenceCurveID1() const;
     const std::string& referenceCurveID2() const;
     Real weight1() const;
     Real weight2() const;
 };
 
-%shared_ptr(YieldPlusDefaultYieldCurveSegment)
+} // namespace data
+} // namespace ore
+
+%shared_ptr(ore::data::YieldPlusDefaultYieldCurveSegment)
+namespace ore {
+namespace data {
 class YieldPlusDefaultYieldCurveSegment : public YieldCurveSegment {
 public:
     YieldPlusDefaultYieldCurveSegment();
@@ -182,14 +205,19 @@ public:
                                       const std::vector<std::string>& defaultCurveIDs,
                                       const std::vector<Real>& weights);
     ~YieldPlusDefaultYieldCurveSegment();
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     const std::string& referenceCurveID() const { return referenceCurveID_; }
     const std::vector<std::string>& defaultCurveIDs() { return defaultCurveIDs_; }
     const std::vector<Real>& weights() { return weights_; }
 };
 
-%shared_ptr(DiscountRatioYieldCurveSegment)
+} // namespace data
+} // namespace ore
+
+%shared_ptr(ore::data::DiscountRatioYieldCurveSegment)
+namespace ore {
+namespace data {
 class DiscountRatioYieldCurveSegment : public YieldCurveSegment {
 public:
     DiscountRatioYieldCurveSegment();
@@ -197,8 +225,8 @@ public:
                                    const std::string& baseCurveCurrency, const std::string& numeratorCurveId,
                                    const std::string& numeratorCurveCurrency, const std::string& denominatorCurveId,
                                    const std::string& denominatorCurveCurrency);
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     const std::string& baseCurveId() const;
     const std::string& baseCurveCurrency() const;
     const std::string& numeratorCurveId() const;
@@ -207,51 +235,71 @@ public:
     const std::string& denominatorCurveCurrency() const;
 };
 
-%shared_ptr(FittedBondYieldCurveSegment)
+} // namespace data
+} // namespace ore
+
+%shared_ptr(ore::data::FittedBondYieldCurveSegment)
+namespace ore {
+namespace data {
 class FittedBondYieldCurveSegment : public YieldCurveSegment {
 public:
     FittedBondYieldCurveSegment();
     FittedBondYieldCurveSegment(const std::string& typeID, const std::vector<std::string>& quotes,
                                 const std::map<std::string, std::string>& iborIndexCurves, const bool extrapolateFlat);
 
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     const std::map<std::string, std::string>& iborIndexCurves() const;
     const bool extrapolateFlat() const;
 };
 
-%shared_ptr(IborFallbackCurveSegment)
+} // namespace data
+} // namespace ore
+
+%shared_ptr(ore::data::IborFallbackCurveSegment)
+namespace ore {
+namespace data {
 class IborFallbackCurveSegment : public YieldCurveSegment {
 public:
     IborFallbackCurveSegment();
     IborFallbackCurveSegment(const std::string& typeID, const std::string& iborIndex, const std::string& rfrCurve,
                              const QuantLib::ext::optional<std::string>& rfrIndex, const QuantLib::ext::optional<Real>& spread);
 
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     const std::string& iborIndex() const;
     const std::string& rfrCurve() const;
     const QuantLib::ext::optional<std::string>& rfrIndex() const;
     const QuantLib::ext::optional<Real>& spread() const;
 };
 
-%shared_ptr(BondYieldShiftedYieldCurveSegment)
+} // namespace data
+} // namespace ore
+
+%shared_ptr(ore::data::BondYieldShiftedYieldCurveSegment)
+namespace ore {
+namespace data {
 class BondYieldShiftedYieldCurveSegment : public YieldCurveSegment {
 public:
     BondYieldShiftedYieldCurveSegment();
     BondYieldShiftedYieldCurveSegment(const std::string& typeID, const std::string& referenceCurveID, const std::vector<std::string>& quotes,
                                       const std::map<std::string, std::string>& iborIndexCurves, const bool extrapolateFlat);
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     const std::string& referenceCurveID() const;
     const std::map<std::string, std::string>& iborIndexCurves() const;
     const bool extrapolateFlat() const;
 };
 
+} // namespace data
+} // namespace ore
 
-%template(YieldCurveSegmentVector) std::vector<ext::shared_ptr<YieldCurveSegment>>;
 
-%shared_ptr(YieldCurveConfig)
+%template(YieldCurveSegmentVector) std::vector<ext::shared_ptr<ore::data::YieldCurveSegment>>;
+
+%shared_ptr(ore::data::YieldCurveConfig)
+namespace ore {
+namespace data {
 class YieldCurveConfig : public CurveConfig {
 public:
     YieldCurveConfig();
@@ -263,8 +311,8 @@ public:
                      const BootstrapConfig& bootstrapConfig = BootstrapConfig(),
                      const QuantLib::Size mixedInterpolationCutoff = 1);
 
-    virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) const override;
+    virtual void fromXML(ore::data::XMLNode* node) override;
+    virtual ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
     const std::string& currency() const;
     const std::string& discountCurveID() const;
@@ -279,6 +327,9 @@ public:
 
     const std::vector<std::string>& quotes();
 
-}; 
+};
+
+} // namespace data
+} // namespace ore
 
 #endif

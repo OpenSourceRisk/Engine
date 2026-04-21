@@ -30,16 +30,13 @@
 %include cashflows.i
 %include qle_indexes.i
 
-%{
-using QuantExt::ExtendedHestonProcess;
-using QuantLib::Real;
-using QuantLib::Handle;
-using QuantLib::YieldTermStructure;
-using QuantLib::Quote;
-using QuantLib::Size;
-%}
+%shared_ptr(QuantExt::CrossAssetModel)
+namespace QuantExt {
+class CrossAssetModel;
+}
 
-%shared_ptr(ExtendedHestonProcess)
+%shared_ptr(QuantExt::ExtendedHestonProcess)
+namespace QuantExt {
 class ExtendedHestonProcess : public HestonProcess {
 public:
     ExtendedHestonProcess(Handle<YieldTermStructure> riskFreeRate,
@@ -56,15 +53,46 @@ public:
     // See equation (2) in https://perswww.kuleuven.be/~u0009713/HestonTrap.pdf
     std::complex<Real> phi(Real u, Real time) const;
 
-    // Gil-Pelaez formula with numerical integration using Gauss-Laguerre 
+    // Gil-Pelaez formula with numerical integration using Gauss-Laguerre
     // QuantLib's AnalyticHestonEngine uses Gauss-Laguerre integration
     // with order = 128 by default and requires order <= 192
     Real pdf(Real x, Time time, Size order) const;
     Real cdf(Real x, Time time, Size order) const;
 
-    // Integrand for the integration above 
+    // Integrand for the integration above
     Real pdfIntegrand(Real u, Real x, Real time) const;
     Real cdfIntegrand(Real u, Real x, Real time) const;
 };
+}
+
+%shared_ptr(QuantExt::CrossAssetStateProcess)
+%nodefaultctor QuantExt::CrossAssetStateProcess;
+namespace QuantExt {
+class CrossAssetStateProcess : public StochasticProcess {
+public:
+    Size size() const override;
+    Size factors() const override;
+    Array initialValues() const override;
+    Array drift(Time t, const Array& x) const override;
+    Matrix diffusion(Time t, const Array& x) const override;
+    Array evolve(Time t0, const Array& x0, Time dt, const Array& dw) const override;
+    void resetCache(const Size timeSteps) const;
+};
+}
+
+%shared_ptr(QuantExt::IrLgm1fStateProcess)
+namespace QuantExt {
+class IrLgm1fStateProcess : public StochasticProcess1D {
+public:
+    IrLgm1fStateProcess(const QuantLib::ext::shared_ptr<QuantExt::IrLgm1fParametrization>& parametrization);
+    Real x0() const override;
+    Real drift(Time t, Real x) const override;
+    Real diffusion(Time t, Real x) const override;
+    Real expectation(Time t0, Real x0, Time dt) const override;
+    Real stdDeviation(Time t0, Real x0, Time dt) const override;
+    Real variance(Time t0, Real x0, Time dt) const override;
+    void resetCache(const Size timeSteps) const;
+};
+}
 
 #endif

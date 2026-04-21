@@ -53,9 +53,30 @@
 
 %include <windows.i>
 
+%include orea_common.i
 %include orea_app.i
 %include orea_cube.i
 %include orea_scenariosimmarketparameters.i
 %include orea_scenario.i
+%include orea_simulation.i
+%include orea_scenario_ext.i
+%include orea_engine.i
+%include orea_aggregation.i
+%include orea_simm.i
+%include orea_analytics.i
+
+#if defined(SWIGPYTHON)
+%pythoncode %{
+_OREA_MODULE_OVERVIEW = """OREAnalytics layer bindings.
+
+Contains application wiring, scenario/simulation configuration,
+cube interfaces, sensitivity engines, aggregation utilities, and SIMM APIs.
+"""
+if __doc__:
+    __doc__ = __doc__ + "\n\n" + _OREA_MODULE_OVERVIEW
+else:
+    __doc__ = _OREA_MODULE_OVERVIEW
+%}
+#endif
 
 #endif

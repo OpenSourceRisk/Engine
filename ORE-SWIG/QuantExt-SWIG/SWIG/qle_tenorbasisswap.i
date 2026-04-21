@@ -27,14 +27,8 @@
 
 %include qle_termstructures.i
 
-%{
-using QuantExt::TenorBasisSwap;
-using QuantExt::SubPeriodsCoupon1;
-using QuantExt::SubPeriodsCouponPricer1;
-using QuantExt::SubPeriodsSwap;
-%}
-
-%shared_ptr(SubPeriodsCoupon1)
+%shared_ptr(QuantExt::SubPeriodsCoupon1)
+namespace QuantExt {
 class SubPeriodsCoupon1 : public FloatingRateCoupon {
   public:
     enum Type { Averaging, Compounding };
@@ -56,16 +50,20 @@ class SubPeriodsCoupon1 : public FloatingRateCoupon {
     bool includeSpread() const;
     QuantLib::Spread spread();
 };
+} // namespace QuantExt
 
-%shared_ptr(SubPeriodsCouponPricer1)
-    class SubPeriodsCouponPricer1 : public FloatingRateCouponPricer {
+%shared_ptr(QuantExt::SubPeriodsCouponPricer1)
+namespace QuantExt {
+class SubPeriodsCouponPricer1 : public FloatingRateCouponPricer {
   private:
     SubPeriodsCouponPricer1();
   public:
     QuantLib::Rate swapletRate() const;
 };
+} // namespace QuantExt
 
-%shared_ptr(TenorBasisSwap)
+%shared_ptr(QuantExt::TenorBasisSwap)
+namespace QuantExt {
 class TenorBasisSwap : public Swap {
   public:
       TenorBasisSwap(const QuantLib::Date & effectiveDate,
@@ -126,8 +124,10 @@ class TenorBasisSwap : public Swap {
       QuantLib::Real recLegNPV() const;
       QuantLib::Rate fairRecLegSpread() const;
 };
+} // namespace QuantExt
 
-%shared_ptr(SubPeriodsSwap)
+%shared_ptr(QuantExt::SubPeriodsSwap)
+namespace QuantExt {
 class SubPeriodsSwap : public Swap {
   public:
     SubPeriodsSwap(const QuantLib::Date& effectiveDate,
@@ -159,5 +159,6 @@ class SubPeriodsSwap : public Swap {
     QuantLib::Real floatLegBPS() const;
     QuantLib::Real floatLegNPV() const;
 };
+} // namespace QuantExt
 
 #endif

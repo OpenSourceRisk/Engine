@@ -26,15 +26,20 @@
 #include <qle/quantext.hpp>
 %}
 %include common.i
+%include qle_common_typemaps.i
 %include qle_common.i
 %include qle_calendars.i
 %include qle_cashflows.i
+%include qle_cashflows_ext.i
 %include qle_coupons.i
 %include qle_indexes.i
 %include qle_currencies.i
 %include qle_termstructures.i
+%include qle_termstructures_ext.i
 %include qle_crossccyfixfloatswap.i
 %include qle_instruments.i
+%include qle_pricingengines.i
+%include qle_models.i
 %include qle_ratehelpers.i
 %include qle_ccyswap.i
 %include qle_equityforward.i
@@ -45,6 +50,20 @@
 %include qle_averageoisratehelper.i
 %include qle_processes.i
 
-//%include qle_crossccyfixfloatswaphelper.i
+// CrossCcyFixFloatSwapHelper is intentionally not exposed yet.
+
+#if defined(SWIGPYTHON)
+%pythoncode %{
+_QLE_MODULE_OVERVIEW = """QuantExt layer bindings.
+
+Contains extended instruments, cashflows, pricing engines, term structures,
+models, and processes used by OREData and OREAnalytics workflows.
+"""
+if __doc__:
+	__doc__ = __doc__ + "\n\n" + _QLE_MODULE_OVERVIEW
+else:
+	__doc__ = _QLE_MODULE_OVERVIEW
+%}
+#endif
 
 #endif

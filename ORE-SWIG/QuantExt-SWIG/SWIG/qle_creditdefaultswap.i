@@ -27,19 +27,37 @@
 %include creditdefaultswap.i
 
 %{
-using QLECdsOption = QuantExt::CdsOption;
-using QLEBlackCdsOptionEngine = QuantExt::BlackCdsOptionEngine;
+static QuantLib::ext::shared_ptr<QuantLib::Exercise> qleCloneExercise(const QuantLib::Exercise& exercise) {
+  switch (exercise.type()) {
+  case QuantLib::Exercise::American: {
+    const auto& dates = exercise.dates();
+    if (dates.size() == 1) {
+      return QuantLib::ext::make_shared<QuantLib::AmericanExercise>(dates.back());
+    }
+    return QuantLib::ext::make_shared<QuantLib::AmericanExercise>(dates.front(), dates.back());
+  }
+  case QuantLib::Exercise::Bermudan:
+    return QuantLib::ext::make_shared<QuantLib::BermudanExercise>(exercise.dates());
+  case QuantLib::Exercise::European:
+    return QuantLib::ext::make_shared<QuantLib::EuropeanExercise>(exercise.lastDate());
+  default:
+    throw std::runtime_error("Unsupported exercise type in qleCloneExercise");
+  }
+}
 %}
 
-%shared_ptr(QLECdsOption)
-class QLECdsOption : public Instrument {
+%rename(QLECdsOption) QuantExt::CdsOption;
+%ignore QuantExt::CdsOption::underlyingSwap;
+%shared_ptr(QuantExt::CdsOption)
+namespace QuantExt {
+class CdsOption : public Instrument {
   public:
     enum StrikeType { Price, Spread };
-    QLECdsOption(const ext::shared_ptr<CreditDefaultSwap> swap,
-		 const ext::shared_ptr<QuantLib::Exercise>& exercise,
-		 bool knocksOut = true, const QuantLib::Real strike = Null<Real>(),
-         const StrikeType strikeType = StrikeType::Spread);
-    const ext::shared_ptr<CreditDefaultSwap> underlyingSwap() const;
+    CdsOption(const QuantLib::ext::shared_ptr<QuantLib::CreditDefaultSwap> swap,
+	      const QuantLib::ext::shared_ptr<QuantLib::Exercise>& exercise,
+	      bool knocksOut = true, const QuantLib::Real strike = Null<Real>(),
+              const QuantExt::CdsOption::StrikeType strikeType = QuantExt::CdsOption::StrikeType::Spread);
+    const QuantLib::ext::shared_ptr<QuantLib::CreditDefaultSwap> underlyingSwap() const;
     QuantLib::Rate atmRate() const;
     QuantLib::Real riskyAnnuity() const;
     QuantLib::Volatility impliedVolatility(QuantLib::Real price,
@@ -52,15 +70,50 @@ class QLECdsOption : public Instrument {
                                            QuantLib::Volatility minVol = 1.0e-7,
                                            QuantLib::Volatility maxVol = 4.0) const;
 };
+}
 
-%shared_ptr(QLEBlackCdsOptionEngine)
-class QLEBlackCdsOptionEngine : public PricingEngine {
+%inline %{
+const QuantLib::CreditDefaultSwap& qleCdsOptionUnderlyingSwap(const QuantExt::CdsOption& option) {
+  return *option.underlyingSwap();
+}
+
+QuantExt::CdsOption* qleMakeCdsOptionFromObjects(const QuantLib::CreditDefaultSwap& swap,
+                         const QuantLib::Exercise& exercise) {
+  return new QuantExt::CdsOption(QuantLib::ext::make_shared<QuantLib::CreditDefaultSwap>(swap),
+                   qleCloneExercise(exercise));
+}
+%}
+
+%pythoncode %{
+def _qle_cds_option_init(self, *args):
+  _ore_module = globals().get("_ORE", globals().get("_OREP"))
+  if len(args) == 2:
+    try:
+      _ore_module.QLECdsOption_swiginit(self, _ore_module.qleMakeCdsOptionFromObjects(args[0], args[1]))
+      return
+    except TypeError:
+      pass
+  _ore_module.QLECdsOption_swiginit(self, _ore_module.new_QLECdsOption(*args))
+
+def _qle_cds_option_underlying_swap(self):
+  _ore_module = globals().get("_ORE", globals().get("_OREP"))
+  return _ore_module.qleCdsOptionUnderlyingSwap(self)
+
+QLECdsOption.__init__ = _qle_cds_option_init
+QLECdsOption.underlyingSwap = _qle_cds_option_underlying_swap
+%}
+
+%rename(QLEBlackCdsOptionEngine) QuantExt::BlackCdsOptionEngine;
+%shared_ptr(QuantExt::BlackCdsOptionEngine)
+namespace QuantExt {
+class BlackCdsOptionEngine : public PricingEngine {
   public:
-    QLEBlackCdsOptionEngine(const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& probability,
-                            QuantLib::Real recovery,
-                            const QuantLib::Handle<QuantLib::YieldTermStructure>& discountSwapCurrency,
-                            const QuantLib::Handle<QuantLib::YieldTermStructure>& discountTradeCollateral,
-                            const QuantLib::Handle<QuantExt::CreditVolCurve>& volatility);
+    BlackCdsOptionEngine(const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& probability,
+                         QuantLib::Real recovery,
+                         const QuantLib::Handle<QuantLib::YieldTermStructure>& discountSwapCurrency,
+                         const QuantLib::Handle<QuantLib::YieldTermStructure>& discountTradeCollateral,
+                         const QuantLib::Handle<QuantExt::CreditVolCurve>& volatility);
 };
+}
 
 #endif
