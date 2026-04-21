@@ -6,8 +6,9 @@
     
     <DiscountCurves>
       <DiscountCurve ccy="EUR">
-        <ShiftType>Absolute</ShiftType>
-        <Shifts>0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01</Shifts>
+        <ShiftType>EqualTo</ShiftType>
+		<ShiftingZeros>false</ShiftingZeros> 
+        <Shifts>0.996316428895,0.993166150767,0.987069496482,0.979613825387,0.959691116291,0.92906264163,0.869380109967,0.767160986344,0.679589600745</Shifts>
         <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
       </DiscountCurve>
       <DiscountCurve ccy="USD">

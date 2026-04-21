@@ -1188,11 +1188,12 @@ void ScriptEngine::run(const std::string& script, bool interactive, QuantLib::ex
         std::cerr << pattern << "\nInitial Context: \n" << (*context_) << std::endl;
     }
 
-    boost::timer::cpu_timer timer;
+    auto timingStart = data::os::nanosecondsClock();
+    unsigned long long timing;
     try {
         reset(root_);
         root_->accept(runner);
-        timer.stop();
+        timing = data::os::nanosecondsClock() - timingStart;
         QL_REQUIRE(runner.value.size() == 1,
                    "ScriptEngine::run(): value stack has wrong size (" << runner.value.size() << "), should be 1");
         QL_REQUIRE(runner.filter.size() == 1,
@@ -1230,7 +1231,7 @@ void ScriptEngine::run(const std::string& script, bool interactive, QuantLib::ex
     }
 
     DLOGGERSTREAM(pattern << *context_);
-    DLOG("Script engine running time: " << boost::timer::format(timer.elapsed()));
+    DLOG("Script engine running time: " << static_cast<double>(timing) * 1E-3 << " mus");
 
     if (interactive) {
         std::cerr << pattern << *context_ << std::endl;

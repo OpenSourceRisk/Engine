@@ -47,6 +47,7 @@ class CurrencyConfig;
 class CrossAssetModelData;
 class CollateralBalances;
 class NettingSetManager;
+class ScriptLibraryData;
 }
 }
 
@@ -113,6 +114,7 @@ struct SetupVariables : public InputVariables {
     QuantLib::ext::shared_ptr<ore::data::EngineData> pricingEngine_;
     QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters> todaysMarketParams_;
     QuantLib::ext::shared_ptr<ore::data::CounterpartyManager> counterpartyManager_;
+    QuantLib::ext::shared_ptr<ore::data::ScriptLibraryData> scriptLibraryData_;
     bool iborFallbackOverride_ = false;
     char csvCommentCharacter_ = '#';
     char csvSeparator_ = ',';
@@ -375,9 +377,9 @@ public:
 
     // setters for backward compatibility, use setParameter directly when possible
 
-    void setOutputCurves(bool b) { setParameter("npv", "outputCurve", to_string(b)); }
-    void setCurvesMarketConfig(const std::string& s) { setParameter("curves", "grid", s); };
-    void setCurvesGrid(const std::string& s) { setParameter("curves", "configuration", s); };
+    void setOutputCurves(bool b) { setParameter("npv", "outputCurves", to_string(b)); }
+    void setCurvesMarketConfig(const std::string& s) { setParameter("curves", "configuration", s); };
+    void setCurvesGrid(const std::string& s) { setParameter("curves", "grid", s); };
         
      /*********
      * Setters
@@ -587,6 +589,9 @@ public:
     void setExposureIncludeReferenceDateEvents(bool b) { parameters_.set("simulation", "includeReferenceDateEvents", b); }
     void setAmc(bool b) { parameters_.set("simulation", "amc", b); }
     void setAmcCg(XvaEngineCG::Mode b) { parameters_.set("simulation", "amcCg", b); }
+    void setAmcCg(const std::string& mode) {
+        parameters_.set("simulation", "amcCg", parseXvaEngineCgMode(mode));
+    }
     void setXvaCgBumpSensis(bool b) { parameters_.set("simulation", "xvaCgBumpSensis", b); }
     void setXvaCgDynamicIM(bool b) { parameters_.set("simulation", "xvaCgDynamicIM", b); }
     void setXvaCgDynamicIMStepSize(Size s) { parameters_.set("simulation", "xvaCgDynamicIMStepSize", s); }
@@ -696,6 +701,7 @@ public:
     void setDvaName(const std::string& s) { parameters_.set("xva", "dvaName", s); }
     // FIXME: remove this from the base class?
     void setRawCubeOutputFile(const std::string& s) { parameters_.set("xva", "rawCubeOutputFile", s); }
+    void setRawCubeOutput(bool b) { parameters_.set("xva", "rawCubeOutput", b); };
     void setNetCubeOutput(bool b) { parameters_.set("xva", "netCubeOutput", b); };
     void setNetCubeOutputFile(const std::string& s) { parameters_.set("xva", "netCubeOutputFile", s); }
     void setTimeAveragedNettedExposureOutputFile(const std::string& s) { parameters_.set("xva", "timeAveragedNettedExposureOutputFile", s); }
@@ -924,7 +930,10 @@ public:
     const QuantLib::ext::shared_ptr<ore::data::CalendarAdjustmentConfig>& calendarAdjustmentConfigs() {
         return setupVariables_.calendarAdjustment_;
     }
-
+    const QuantLib::ext::shared_ptr<ore::data::ScriptLibraryData>& scriptLibraryData() {
+        return setupVariables_.scriptLibraryData_;
+    }
+  
     QuantLib::Size maxRetries() const { return maxRetries_; }
     QuantLib::Size nThreads() const { return setupVariables_.nThreads_; }
     bool entireMarket() const { return setupVariables_.entireMarket_; }

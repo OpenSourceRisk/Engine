@@ -3248,6 +3248,10 @@ ScenarioSimMarket::ScenarioSimMarket(
                 // nothing to do, these are written to asd
                 break;
 
+            case RiskFactorKey::KeyType::Theta:
+                // nothing to do, used only for sensi analysis
+                break;
+
             case RiskFactorKey::KeyType::None:
                 WLOG("RiskFactorKey None not yet implemented");
                 break;
@@ -3411,6 +3415,11 @@ void ScenarioSimMarket::reset() {
     fixingManager_->reset();
     // restore the filter
     filter_ = filterBackup;
+    // reset asd cache
+    cachingAsd_ = true;
+    firstAsdDate_ = {};
+    asdCacheCounter_ = 0;
+    asdCache_ = {};
 }
 
 void ScenarioSimMarket::applyScenario(const QuantLib::ext::shared_ptr<QuantExt::Scenario>& s) {
@@ -3577,9 +3586,8 @@ void ScenarioSimMarket::updateScenario(const Date& d) {
     applyScenario(scenario);
 }
 
-void ScenarioSimMarket::postUpdate(const Date& d, bool withFixings) {
+void ScenarioSimMarket::postUpdate(const Date& d) {
     ObservationMode::Mode om = ObservationMode::instance().mode();
-
     // Observation Mode - key to update these before fixings are set
     if (om == ObservationMode::Mode::Disable) {
         refresh();
@@ -3587,54 +3595,148 @@ void ScenarioSimMarket::postUpdate(const Date& d, bool withFixings) {
     } else if (om == ObservationMode::Mode::Defer) {
         ObservableSettings::instance().enableUpdates();
     }
+}
 
-    // Apply fixings as historical fixings. Must do this before we populate ASD
-    if (withFixings)
-        fixingManager_->update(d);
+void ScenarioSimMarket::setAsd(Size cacheCounter) {
+    for (Size i = 0; i < asdCache_.indices.size(); ++i) {
+        asd_->set(asdCache_.indexRawData[cacheCounter][i],
+                  asdCache_.indices[i]->fixing(asdCache_.indexFixingDates[cacheCounter][i]));
+    }
+
+    for (Size i = 0; i < asdCache_.fxSpots.size(); ++i) {
+        asd_->set(asdCache_.fxSpotRawData[cacheCounter][i], asdCache_.fxSpots[i]->value());
+    }
+
+    for (Size i = 0; i < asdCache_.creditStateKeys.size(); ++i) {
+        asd_->set(asdCache_.creditStateRawData[cacheCounter][i], currentScenario_->get(asdCache_.creditStateKeys[i]));
+    }
+
+    for (Size i = 0; i < asdCache_.survWeightKeys.size(); ++i) {
+        asd_->set(asdCache_.survWeightRawData[cacheCounter][i], currentScenario_->get(asdCache_.survWeightKeys[i]));
+        asd_->set(asdCache_.rrRawData[cacheCounter][i], currentScenario_->get(asdCache_.rrKeys[i]));
+    }
+
+    asd_->set(numeraire_, AggregationScenarioDataType::Numeraire);
 }
 
 void ScenarioSimMarket::updateAsd(const Date& d) {
+
     if (asd_) {
-        // add additional scenario data to the given container, if required
-        for (auto i : parameters_->additionalScenarioDataIndices()) {
-            QuantLib::ext::shared_ptr<QuantLib::Index> index;
-            try {
-                index = *iborIndex(i);
-            } catch (...) {
+
+        if (cachingAsd_) {
+
+            if (d == firstAsdDate_) {
+
+                cachingAsd_ = false;
+
+            } else {
+
+                // caching on first path
+
+                if (firstAsdDate_ == Date())
+                    firstAsdDate_ = d;
+
+                // indices
+
+                if (asdCache_.indices.empty()) {
+                    for (auto i : parameters_->additionalScenarioDataIndices()) {
+                        QuantLib::ext::shared_ptr<QuantLib::Index> index;
+                        try {
+                            index = *iborIndex(i);
+                        } catch (...) {
+                        }
+                        try {
+                            index = *swapIndex(i);
+                        } catch (...) {
+                        }
+                        QL_REQUIRE(index != nullptr,
+                                   "ScenarioSimMarket::update() index " << i << " not found in sim market");
+                        if (auto fb = QuantLib::ext::dynamic_pointer_cast<FallbackIborIndex>(index)) {
+                            // proxy fallback ibor index by its rfr index's fixing
+                            index = fb->rfrIndex();
+                        }
+                        asdCache_.indices.push_back(index);
+                    }
+                }
+
+                asdCache_.indexRawData.push_back({});
+                asdCache_.indexFixingDates.push_back({});
+                for (Size i = 0; i<  parameters_->additionalScenarioDataIndices().size();++i) {
+                    asdCache_.indexRawData.back().push_back(asd_->rawData(
+                        AggregationScenarioDataType::IndexFixing, parameters_->additionalScenarioDataIndices()[i]));
+                    asdCache_.indexFixingDates.back().push_back(asdCache_.indices[i]->fixingCalendar().adjust(d));
+                }
+
+                // fx spots
+
+                if (asdCache_.fxSpots.empty()) {
+                    for (auto c : parameters_->additionalScenarioDataCcys()) {
+                        if (c != parameters_->baseCcy()) {
+                            asdCache_.fxSpots.push_back(fxSpot(c + parameters_->baseCcy()));
+                        }
+                    }
+                }
+
+                asdCache_.fxSpotRawData.push_back({});
+                for (auto c : parameters_->additionalScenarioDataCcys()) {
+                    if (c != parameters_->baseCcy()) {
+                        asdCache_.fxSpotRawData.back().push_back(asd_->rawData(AggregationScenarioDataType::FXSpot, c));
+                    }
+                }
+
+                // credit states
+
+                if (asdCache_.creditStateKeys.empty()) {
+                    for (Size i = 0; i < parameters_->additionalScenarioDataNumberOfCreditStates(); ++i) {
+                        RiskFactorKey key(RiskFactorKey::KeyType::CreditState, std::to_string(i));
+                        QL_REQUIRE(currentScenario_->has(key), "scenario does not have key " << key);
+                        asdCache_.creditStateKeys.push_back(key);
+                    }
+                }
+
+                asdCache_.creditStateRawData.push_back({});
+                for (Size i = 0; i < parameters_->additionalScenarioDataNumberOfCreditStates(); ++i) {
+                    asdCache_.creditStateRawData.back().push_back(
+                        asd_->rawData(AggregationScenarioDataType::CreditState, std::to_string(i)));
+                }
+
+                // surv weights and rrs
+
+                if (asdCache_.survWeightKeys.empty()) {
+                    for (const auto& n : parameters_->additionalScenarioDataSurvivalWeights()) {
+                        RiskFactorKey key(RiskFactorKey::KeyType::SurvivalWeight, n);
+                        RiskFactorKey rrKey(RiskFactorKey::KeyType::RecoveryRate, n);
+                        QL_REQUIRE(currentScenario_->has(key), "scenario does not have key " << key);
+                        QL_REQUIRE(currentScenario_->has(rrKey), "scenario does not have key " << key);
+                        asdCache_.survWeightKeys.push_back(key);
+                        asdCache_.rrKeys.push_back(rrKey);
+                    }
+                }
+
+                asdCache_.survWeightRawData.push_back({});
+                asdCache_.rrRawData.push_back({});
+                for (const auto& n : parameters_->additionalScenarioDataSurvivalWeights()) {
+                    asdCache_.survWeightRawData.back().push_back(
+                        asd_->rawData(AggregationScenarioDataType::SurvivalWeight, n));
+                    asdCache_.rrRawData.back().push_back(asd_->rawData(AggregationScenarioDataType::RecoveryRate, n));
+                }
+
+                setAsd(asdCache_.indexRawData.size() - 1);
             }
-            try {
-                index = *swapIndex(i);
-            } catch (...) {
+        }
+
+        if (!cachingAsd_) {
+
+            // cachingAsd_ is false
+
+            if (d == firstAsdDate_) {
+                asdCacheCounter_ = 0;
+            } else {
+                ++asdCacheCounter_;
             }
-            QL_REQUIRE(index != nullptr, "ScenarioSimMarket::update() index " << i << " not found in sim market");
-            if (auto fb = QuantLib::ext::dynamic_pointer_cast<FallbackIborIndex>(index)) {
-                // proxy fallback ibor index by its rfr index's fixing
-                index = fb->rfrIndex();
-            }
-            asd_->set(index->fixing(index->fixingCalendar().adjust(d)), AggregationScenarioDataType::IndexFixing, i);
-        }
 
-        for (auto c : parameters_->additionalScenarioDataCcys()) {
-            if (c != parameters_->baseCcy())
-                asd_->set(fxSpot(c + parameters_->baseCcy())->value(), AggregationScenarioDataType::FXSpot, c);
+            setAsd(asdCacheCounter_);
         }
-
-        for (Size i = 0; i < parameters_->additionalScenarioDataNumberOfCreditStates(); ++i) {
-            RiskFactorKey key(RiskFactorKey::KeyType::CreditState, std::to_string(i));
-            QL_REQUIRE(currentScenario_->has(key), "scenario does not have key " << key);
-            asd_->set(currentScenario_->get(key), AggregationScenarioDataType::CreditState, std::to_string(i));
-        }
-
-        for (const auto& n : parameters_->additionalScenarioDataSurvivalWeights()) {
-            RiskFactorKey key(RiskFactorKey::KeyType::SurvivalWeight, n);
-            QL_REQUIRE(currentScenario_->has(key), "scenario does not have key " << key);
-            asd_->set(currentScenario_->get(key), AggregationScenarioDataType::SurvivalWeight, n);
-            RiskFactorKey rrKey(RiskFactorKey::KeyType::RecoveryRate, n);
-            QL_REQUIRE(currentScenario_->has(rrKey), "scenario does not have key " << key);
-            asd_->set(currentScenario_->get(rrKey), AggregationScenarioDataType::RecoveryRate, n);
-        }
-
-        asd_->set(numeraire_, AggregationScenarioDataType::Numeraire);
 
         asd_->next();
     }

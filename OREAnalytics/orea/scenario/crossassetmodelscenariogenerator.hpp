@@ -57,7 +57,6 @@ using namespace QuantExt;
   - a calibrated model,
   - an associated multi path generator (i.e. providing paths for all factors
     of the model ordered as described in the model),
-  - a scenario factory that provides building scenario class instances,
   - the configuration of market curves to be simulated
   - a simulation date grid that starts in the future, i.e. does not include today's date
   - the associated time grid including t=0
@@ -69,7 +68,6 @@ public:
     //! Constructor
     CrossAssetModelScenarioGenerator(QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model,
                                      QuantLib::ext::shared_ptr<QuantExt::MultiPathGeneratorBase> multiPathGenerator,
-                                     QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory,
                                      QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketConfig,
                                      QuantLib::Date today, QuantLib::ext::shared_ptr<DateGrid> grid,
                                      QuantLib::ext::shared_ptr<ore::data::Market> initMarket,
@@ -79,30 +77,32 @@ public:
     ~CrossAssetModelScenarioGenerator() {};
     std::vector<QuantLib::ext::shared_ptr<Scenario>> nextPath() override;
     void reset() override;
+    long timing() const override { return timing_; }
 
 private:
+    void init();
     QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model_;
     QuantLib::ext::shared_ptr<QuantExt::MultiPathGeneratorBase> pathGenerator_;
     QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory_;
     QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketConfig_;
     QuantLib::ext::shared_ptr<ore::data::Market> initMarket_;
     const std::string configuration_;
+    std::string amcPathDataOutput_;
+    Size samples_;
     // generated data
-    std::vector<RiskFactorKey> discountCurveKeys_, indexCurveKeys_, yieldCurveKeys_, zeroInflationKeys_,
-        yoyInflationKeys_, defaultCurveKeys_, commodityCurveKeys_;
-    std::vector<RiskFactorKey> fxKeys_, eqKeys_, cpiKeys_;
-    std::vector<RiskFactorKey> crStateKeys_, survivalWeightKeys_, recoveryRateKeys_;
+    bool initialized_ = false;
     std::vector<QuantLib::ext::shared_ptr<QuantExt::CrossAssetModelImpliedFxVolTermStructure>> fxVols_;
     std::vector<QuantLib::ext::shared_ptr<QuantExt::CrossAssetModelImpliedEqVolTermStructure>> eqVols_;
     std::vector<QuantLib::ext::shared_ptr<QuantExt::CrossAssetModelImpliedSwaptionVolTermStructure>> swaptionVols_;
-    std::vector<std::vector<Period>> ten_dsc_, ten_idx_, ten_yc_, ten_efc_, ten_zinf_, ten_yinf_, ten_dfc_, ten_com_;
+    std::vector<std::vector<std::vector<double>>> time_dsc_, time_idx_, time_yc_;
+    std::vector<std::vector<Period>> ten_efc_, ten_zinf_, ten_yinf_, ten_dfc_, ten_com_;
     std::vector<bool> modelCcyRelevant_;
     Size n_ccy_, n_fx_, n_eq_, n_inf_, n_cr_, n_indices_, n_curves_, n_com_, n_crstates_, n_survivalweights_, n_states_;
 
     vector<QuantLib::ext::shared_ptr<QuantExt::ModelImpliedYieldTermStructure>> curves_, fwdCurves_, yieldCurves_;
     vector<QuantLib::ext::shared_ptr<QuantExt::ModelImpliedPriceTermStructure>> comCurves_;
     vector<QuantLib::ext::shared_ptr<IborIndex>> indices_;
-    vector<Currency> yieldCurveCurrency_;
+    std::vector<Size> indexCcyIdx_, yieldCurveCcyIndex_;
     vector<string> zeroInflationIndex_, yoyInflationIndex_;
     vector<tuple<Size, Size, CrossAssetModel::ModelType, QuantLib::ext::shared_ptr<ZeroInflationModelTermStructure>>>
         zeroInfCurves_;
@@ -111,12 +111,12 @@ private:
     vector<QuantLib::ext::shared_ptr<QuantExt::LgmImpliedDefaultTermStructure>> lgmDefaultCurves_;
     vector<QuantLib::ext::shared_ptr<QuantExt::CirppImpliedDefaultTermStructure>> cirppDefaultCurves_;
     vector<QuantLib::ext::shared_ptr<QuantExt::CreditCurve>> survivalWeightsDefaultCurves_;
-    std::string amcPathDataOutput_;
     PathData pathData_;
     Size currentSample_ = 0;
     Size totalSamples_;
     std::vector<Size> gridIndexInPath_;
     QuantLib::ext::shared_ptr<DateGrid> dateGrid_;
+    long timing_ = 0;
 };
 
 } // namespace analytics
