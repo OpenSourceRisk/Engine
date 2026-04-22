@@ -1964,6 +1964,20 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     Handle<FxIndex> fxInd = fxIndex(name);
 
                                     if (parameters->fxUseMoneyness(name)) { // moneyness
+                                        if (useSpreadedTermStructures_) {
+                                            fxVolCurve = QuantLib::ext::make_shared<
+                                                SpreadedBlackVolatilitySurfaceMoneynessForward>(
+                                                Handle<BlackVolTermStructure>(wrapper), spot, times,
+                                                parameters->fxVolMoneyness(name), quotes,
+                                                Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(spot->value())),
+                                                initForTS, initDomTS, forTS, domTS, stickyStrike);
+                                        } else {
+                                            fxVolCurve =
+                                                QuantLib::ext::make_shared<BlackVarianceSurfaceMoneynessForward>(
+                                                    cal, spot, times, parameters->fxVolStdDevs(name), quotes, dc,
+                                                    fxInd->sourceCurve(), fxInd->targetCurve(), stickyStrike,
+                                                    flatExtrapolation);
+                                        }
                                     } else {                                // standard deviations
                                         if (useSpreadedTermStructures_) {
                                             fxVolCurve = QuantLib::ext::make_shared<SpreadedBlackVolatilitySurfaceStdDevs>(
@@ -2142,10 +2156,10 @@ ScenarioSimMarket::ScenarioSimMarket(
                                             eqCurve->equityDividendCurve(), eqCurve->equityForecastCurve(),
                                             stickyStrike);
                                     } else {
-                                        // FIXME should that be Forward, since we read the vols at fwd moneyness above?
-                                        eqVolCurve = QuantLib::ext::make_shared<BlackVarianceSurfaceMoneynessSpot>(
+                                        eqVolCurve = QuantLib::ext::make_shared<BlackVarianceSurfaceMoneynessForward>(
                                             cal, spot, times, parameters->equityVolMoneyness(name), quotes, dc,
-                                            stickyStrike);
+                                            eqCurve->equityDividendCurve(), eqCurve->equityForecastCurve(),
+                                            stickyStrike, true);
                                     }
                                     eqVolCurve->enableExtrapolation();
 
