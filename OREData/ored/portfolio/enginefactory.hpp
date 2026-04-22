@@ -162,6 +162,7 @@ protected:
     std::string getParameter(const std::map<std::string, std::string>& m, const std::string& p,
                              const std::vector<std::string>& qs, const bool mandatory,
                              const std::string& defaultValue) const;
+    bool generateAdditionalResults() const;
     string model_;
     string engine_;
     set<string> tradeTypes_;

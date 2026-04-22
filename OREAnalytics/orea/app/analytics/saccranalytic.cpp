@@ -48,6 +48,7 @@ SaCcrAnalyticImpl::SaCcrAnalyticImpl(const QuantLib::ext::shared_ptr<ore::analyt
 void SaCcrAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().simulationConfigRequired = false;
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
+    setGenerateAdditionalResults(true);
 }
 
 void SaCcrAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<InMemoryLoader>& loader,

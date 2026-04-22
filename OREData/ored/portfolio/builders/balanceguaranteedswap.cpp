@@ -127,12 +127,6 @@ FlexiSwapBGSLGMGridEngineBuilderBase::model(const string& id, const string& key,
             QL_FAIL("choice of calibration type invalid");
     }
 
-    bool generateAdditionalResults = false;
-    auto p = globalParameters_.find("GenerateAdditionalResults");
-    if (p != globalParameters_.end()) {
-        generateAdditionalResults = parseBool(p->second);
-    }
-
     // Build model
     DLOG("Build LGM model");
 
@@ -142,7 +136,7 @@ FlexiSwapBGSLGMGridEngineBuilderBase::model(const string& id, const string& key,
 
     QuantLib::ext::shared_ptr<LgmBuilder> calib = QuantLib::ext::make_shared<LgmBuilder>(
         market_, data, configuration(MarketContext::irCalibration), tolerance, continueOnCalibrationError,
-        referenceCalibrationGrid, generateAdditionalResults, id, BlackCalibrationHelper::RelativePriceError,
+        referenceCalibrationGrid, generateAdditionalResults(), id, BlackCalibrationHelper::RelativePriceError,
         allowChangingFallbacks, allowModelFallbacks,
         globalParameters_.count("Calibrate") != 0 && !parseBool(globalParameters_.at("Calibrate")));
 

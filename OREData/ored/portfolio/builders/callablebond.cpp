@@ -371,15 +371,9 @@ CallableBondLgmEngineBuilder::makeEngine(const std::string& id, const std::strin
 
     // determine whether add results should be generated
 
-    bool generateAdditionalResults = false;
-    auto p = globalParameters_.find("GenerateAdditionalResults");
-    if (p != globalParameters_.end()) {
-        generateAdditionalResults = parseBool(p->second);
-    }
-
     // get LGM model
 
-    auto lgm = model(id, ccy, maturityDate, generateAdditionalResults);
+    auto lgm = model(id, ccy, maturityDate, generateAdditionalResults());
 
     // return engine
 
@@ -388,7 +382,7 @@ CallableBondLgmEngineBuilder::makeEngine(const std::string& id, const std::strin
     return QuantLib::ext::make_shared<QuantExt::NumericLgmCallableBondEngine>(
         Handle<QuantExt::LGM>(QuantLib::ext::dynamic_pointer_cast<QuantExt::LGM>(lgm)), args...,
         americanExerciseTimeStepsPerYear, referenceCurve, spread, defaultCurve, incomeCurve, recovery,
-        parseBool(engineParameter("SpreadOnIncomeCurve", {}, false, "true")), generateAdditionalResults);
+        parseBool(engineParameter("SpreadOnIncomeCurve", {}, false, "true")), generateAdditionalResults());
 }
 
 QuantLib::ext::shared_ptr<QuantLib::PricingEngine> CallableBondLgmFdEngineBuilder::engineImpl(
@@ -454,17 +448,9 @@ QuantLib::ext::shared_ptr<QuantExt::PricingEngine> CallableBondCamMcEngineBuilde
     } catch (...) {
     }
 
-    // determine whether add results should be generated
-
-    bool generateAdditionalResults = false;
-    auto p = globalParameters_.find("GenerateAdditionalResults");
-    if (p != globalParameters_.end()) {
-        generateAdditionalResults = parseBool(p->second);
-    }
-
     // get LGM model
 
-    auto cam = model(id, ccy, creditCurveId, maturityDate, generateAdditionalResults);
+    auto cam = model(id, ccy, creditCurveId, maturityDate, generateAdditionalResults());
     bool spreadOnIncome = parseBool(engineParameter("SpreadOnIncomeCurve", {}, false, "true"));
     
     // return engine
@@ -486,9 +472,8 @@ QuantLib::ext::shared_ptr<QuantExt::PricingEngine> CallableBondCamMcEngineBuilde
         parseSobolBrownianGeneratorOrdering(engineParameter("BrownianBridgeOrdering", {}, false, "Steps")),
         parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers", {}, false, "JoeKuoD7")),
         referenceCurve, discountingSpread, defaultCurve, incomeCurve, recovery, spreadOnIncome,
-        americanExerciseTimeStepsPerYear,
-        generateAdditionalResults, simulationDates, stickyCloseOutDates, externalModelIndices,
-        parseBool(engineParameter("MinObsDate", {}, false, "true")),
+        americanExerciseTimeStepsPerYear, generateAdditionalResults(), simulationDates, stickyCloseOutDates,
+        externalModelIndices, parseBool(engineParameter("MinObsDate", {}, false, "true")),
         parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")),
         parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())),
         parseBool(engineParameter("RecalibrateOnStickyCloseOutDates", {}, false, "false")),
@@ -534,13 +519,6 @@ QuantLib::ext::shared_ptr<QuantExt::PricingEngine> CallableBondCamAmcEngineBuild
     } catch (...) {
     }
 
-    // determine whether add results should be generated
-
-    bool generateAdditionalResults = false;
-    auto p = globalParameters_.find("GenerateAdditionalResults");
-    if (p != globalParameters_.end()) {
-        generateAdditionalResults = parseBool(p->second);
-    }
     bool spreadOnIncome = parseBool(engineParameter("SpreadOnIncomeCurve", {}, false, "true"));
     Size americanExerciseTimeStepsPerYear = parseInteger(modelParameter("ExerciseTimeStepsPerYear", {}, false, "0"));
     // get LGM model
@@ -569,9 +547,8 @@ QuantLib::ext::shared_ptr<QuantExt::PricingEngine> CallableBondCamAmcEngineBuild
         parseSobolBrownianGeneratorOrdering(engineParameter("BrownianBridgeOrdering", {}, false, "Steps")),
         parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers", {}, false, "JoeKuoD7")),
         referenceCurve, discountingSpread, defaultCurve, incomeCurve, recovery, spreadOnIncome,
-        americanExerciseTimeStepsPerYear,
-        generateAdditionalResults, simulationDates_, stickyCloseOutDates_, externalModelIndices,
-        parseBool(engineParameter("MinObsDate", {}, false, "true")),
+        americanExerciseTimeStepsPerYear, generateAdditionalResults(), simulationDates_, stickyCloseOutDates_,
+        externalModelIndices, parseBool(engineParameter("MinObsDate", {}, false, "true")),
         parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")),
         parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())),
         parseBool(engineParameter("RecalibrateOnStickyCloseOutDates", {}, false, "false")),

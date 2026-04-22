@@ -38,10 +38,11 @@ public:
                             const QuantLib::ext::shared_ptr<ModelCG>& modelCg, const Model::Params& mcParams,
                             const double indicatorSmoothingForValues, const double indicatorSmoothingForDerivatives,
                             const double sqrtSmoothingForDerivatives, const bool useCachedSensis,
-                            const bool useExternalComputeFramework, const bool useDoublePrecisionForExternalCalculation)
+                            const bool useExternalComputeFramework, const bool useDoublePrecisionForExternalCalculation,
+                            const bool generateAdditionalResults)
         : AmcCgBaseEngine(modelCg, mcParams, indicatorSmoothingForValues, indicatorSmoothingForDerivatives,
                           sqrtSmoothingForDerivatives, useCachedSensis, useExternalComputeFramework,
-                          useDoublePrecisionForExternalCalculation),
+                          useDoublePrecisionForExternalCalculation, generateAdditionalResults),
           domCcy_(domCcy), forCcy_(forCcy) {}
     AmcCgFxOptionEngineBase(const std::string& domCcy, const std::string& forCcy,
                             const QuantLib::ext::shared_ptr<ModelCG>& modelCg, const std::vector<Date>& simulationDates,
@@ -64,10 +65,12 @@ public:
                         const QuantLib::ext::shared_ptr<ModelCG>& modelCg, const Model::Params& mcParams,
                         const double indicatorSmoothingForValues, const double indicatorSmoothingForDerivatives,
                         const double sqrtSmoothingForDerivatives, const bool useCachedSensis,
-                        const bool useExternalComputeFramework, const bool useDoublePrecisionForExternalCalculation)
+                        const bool useExternalComputeFramework, const bool useDoublePrecisionForExternalCalculation,
+                        const bool generateAdditionalResults)
         : AmcCgFxOptionEngineBase(domCcy, forCcy, modelCg, mcParams, indicatorSmoothingForValues,
                                   indicatorSmoothingForDerivatives, sqrtSmoothingForDerivatives, useCachedSensis,
-                                  useExternalComputeFramework, useDoublePrecisionForExternalCalculation) {
+                                  useExternalComputeFramework, useDoublePrecisionForExternalCalculation,
+                                  generateAdditionalResults) {
         registerWith(modelCg_);
     }
     AmcCgFxOptionEngine(const std::string& domCcy, const std::string& forCcy,
@@ -88,10 +91,12 @@ public:
                                        const double indicatorSmoothingForDerivatives,
                                        const double sqrtSmoothingForDerivatives, const bool useCachedSensis,
                                        const bool useExternalComputeFramework,
-                                       const bool useDoublePrecisionForExternalCalculation)
+                                       const bool useDoublePrecisionForExternalCalculation,
+                                       const bool generateAdditionalResults)
         : AmcCgFxOptionEngineBase(domCcy, forCcy, modelCg, mcParams, indicatorSmoothingForValues,
                                   indicatorSmoothingForDerivatives, sqrtSmoothingForDerivatives, useCachedSensis,
-                                  useExternalComputeFramework, useDoublePrecisionForExternalCalculation) {
+                                  useExternalComputeFramework, useDoublePrecisionForExternalCalculation,
+                                  generateAdditionalResults) {
         registerWith(modelCg_);
     }
     AmcCgFxEuropeanForwardOptionEngine(const std::string& domCcy, const std::string& forCcy,
@@ -114,10 +119,12 @@ public:
                                   const double indicatorSmoothingForDerivatives,
                                   const double sqrtSmoothingForDerivatives, const bool useCachedSensis,
                                   const bool useExternalComputeFramework,
-                                  const bool useDoublePrecisionForExternalCalculation)
+                                  const bool useDoublePrecisionForExternalCalculation,
+                                  const bool generateAdditionalResults)
         : AmcCgFxOptionEngineBase(domCcy, forCcy, modelCg, mcParams, indicatorSmoothingForValues,
                                   indicatorSmoothingForDerivatives, sqrtSmoothingForDerivatives, useCachedSensis,
-                                  useExternalComputeFramework, useDoublePrecisionForExternalCalculation) {
+                                  useExternalComputeFramework, useDoublePrecisionForExternalCalculation,
+                                  generateAdditionalResults) {
         registerWith(modelCg_);
     }
     // amc use

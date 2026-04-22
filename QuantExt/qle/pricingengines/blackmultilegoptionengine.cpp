@@ -34,8 +34,9 @@
 namespace QuantExt {
 
 BlackMultiLegOptionEngineBase::BlackMultiLegOptionEngineBase(const Handle<YieldTermStructure>& discountCurve,
-                                                             const Handle<SwaptionVolatilityStructure>& volatility)
-    : discountCurve_(discountCurve), volatility_(volatility) {}
+                                                             const Handle<SwaptionVolatilityStructure>& volatility,
+                                                             const bool generateAdditionalResults)
+    : discountCurve_(discountCurve), volatility_(volatility), generateAdditionalResults_(generateAdditionalResults) {}
 
 bool BlackMultiLegOptionEngineBase::instrumentIsHandled(const MultiLegOption& m, std::vector<std::string>& messages) {
     return instrumentIsHandled(m.legs(), m.payer(), m.currency(), m.exercise(), m.settlementType(),
@@ -353,30 +354,33 @@ void BlackMultiLegOptionEngineBase::calculate() const {
 
     underlyingNpv_ = fixedNpv + floatingNpv + simpleCfNpv;
 
-    additionalResults_["simpleCashflowCorrection"] = simpleCfCorrection;
-    additionalResults_["strike"] = effectiveFixedRate;
-    additionalResults_["underlyingNPV"] = underlyingNpv_;
-    additionalResults_["annuity"] = annuity;
-    additionalResults_["timeToExpiry"] = exerciseTime;
-    additionalResults_["impliedVolatility"] = Real(stdDev / std::sqrt(exerciseTime));
-    additionalResults_["swapLength"] = swapLength;
-    additionalResults_["stdDev"] = stdDev;
-    additionalResults_["delta"] = delta;
-    additionalResults_["vega"] = vega;
-    additionalResults_["fixedNpv"] = fixedNpv;
-    additionalResults_["fixedBps"] = fixedBps;
-    additionalResults_["atmForward"] = effectiveAtmForward - spreadCorrection;
-    additionalResults_["spreadCorrection"] = spreadCorrection;
-    additionalResults_["effectiveAtmForward"] = effectiveAtmForward;
-    additionalResults_["weightedFixedRate"] = weightedFixedRate;
-    additionalResults_["floatingNpv"] = floatingNpv;
-    additionalResults_["floatingSpreadNpv"] = floatingSpreadNpv;
-    additionalResults_["simpleCfNpv"] = simpleCfNpv;
+    if (generateAdditionalResults_) {
+        additionalResults_["simpleCashflowCorrection"] = simpleCfCorrection;
+        additionalResults_["strike"] = effectiveFixedRate;
+        additionalResults_["underlyingNPV"] = underlyingNpv_;
+        additionalResults_["annuity"] = annuity;
+        additionalResults_["timeToExpiry"] = exerciseTime;
+        additionalResults_["impliedVolatility"] = Real(stdDev / std::sqrt(exerciseTime));
+        additionalResults_["swapLength"] = swapLength;
+        additionalResults_["stdDev"] = stdDev;
+        additionalResults_["delta"] = delta;
+        additionalResults_["vega"] = vega;
+        additionalResults_["fixedNpv"] = fixedNpv;
+        additionalResults_["fixedBps"] = fixedBps;
+        additionalResults_["atmForward"] = effectiveAtmForward - spreadCorrection;
+        additionalResults_["spreadCorrection"] = spreadCorrection;
+        additionalResults_["effectiveAtmForward"] = effectiveAtmForward;
+        additionalResults_["weightedFixedRate"] = weightedFixedRate;
+        additionalResults_["floatingNpv"] = floatingNpv;
+        additionalResults_["floatingSpreadNpv"] = floatingSpreadNpv;
+        additionalResults_["simpleCfNpv"] = simpleCfNpv;
+    }
 }
 
 BlackMultiLegOptionEngine::BlackMultiLegOptionEngine(const Handle<YieldTermStructure>& discountCurve,
-                                                     const Handle<SwaptionVolatilityStructure>& volatility)
-    : BlackMultiLegOptionEngineBase(discountCurve, volatility) {
+                                                     const Handle<SwaptionVolatilityStructure>& volatility,
+                                                     const bool generateAdditionalResults)
+    : BlackMultiLegOptionEngineBase(discountCurve, volatility, generateAdditionalResults) {
     registerWith(discountCurve_);
     registerWith(volatility_);
 }
@@ -397,13 +401,16 @@ void BlackMultiLegOptionEngine::calculate() const {
 
     results_.value = npv_;
     results_.underlyingNpv = underlyingNpv_;
-    results_.additionalResults = additionalResults_;
-    results_.additionalResults["underlyingNpv"] = underlyingNpv_;
+    if (generateAdditionalResults_) {
+        results_.additionalResults = additionalResults_;
+        results_.additionalResults["underlyingNpv"] = underlyingNpv_;
+    }
 }
 
 BlackSwaptionFromMultilegOptionEngine::BlackSwaptionFromMultilegOptionEngine(
-    const Handle<YieldTermStructure>& discountCurve, const Handle<SwaptionVolatilityStructure>& volatility)
-    : BlackMultiLegOptionEngineBase(discountCurve, volatility) {
+    const Handle<YieldTermStructure>& discountCurve, const Handle<SwaptionVolatilityStructure>& volatility,
+    const bool generateAdditionalResults)
+    : BlackMultiLegOptionEngineBase(discountCurve, volatility, generateAdditionalResults) {
     registerWith(discountCurve_);
     registerWith(volatility_);
 }
@@ -426,13 +433,16 @@ void BlackSwaptionFromMultilegOptionEngine::calculate() const {
     BlackMultiLegOptionEngineBase::calculate();
 
     results_.value = npv_;
-    results_.additionalResults = additionalResults_;
-    results_.additionalResults["underlyingNpv"] = underlyingNpv_;
+    if (generateAdditionalResults_) {
+        results_.additionalResults = additionalResults_;
+        results_.additionalResults["underlyingNpv"] = underlyingNpv_;
+    }
 }
 
 BlackNonstandardSwaptionFromMultilegOptionEngine::BlackNonstandardSwaptionFromMultilegOptionEngine(
-    const Handle<YieldTermStructure>& discountCurve, const Handle<SwaptionVolatilityStructure>& volatility)
-    : BlackMultiLegOptionEngineBase(discountCurve, volatility) {
+    const Handle<YieldTermStructure>& discountCurve, const Handle<SwaptionVolatilityStructure>& volatility,
+    const bool generateAdditionalResults)
+    : BlackMultiLegOptionEngineBase(discountCurve, volatility, generateAdditionalResults) {
     registerWith(discountCurve_);
     registerWith(volatility_);
 }
@@ -456,8 +466,10 @@ void BlackNonstandardSwaptionFromMultilegOptionEngine::calculate() const {
     BlackMultiLegOptionEngineBase::calculate();
 
     results_.value = npv_;
-    results_.additionalResults = additionalResults_;
-    results_.additionalResults["underlyingNpv"] = underlyingNpv_;
+    if (generateAdditionalResults_) {
+        results_.additionalResults = additionalResults_;
+        results_.additionalResults["underlyingNpv"] = underlyingNpv_;
+    }
 }
 
 } // namespace QuantExt

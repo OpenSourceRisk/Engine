@@ -76,7 +76,8 @@ public:
         const bool reevaluateExerciseInStickyRun = false, const Size cfOnCpnMaxSimTimes = 1,
         const Period& cfOnCpnAddSimTimesCutoff = Period(), const Size regressionMaxSimTimesIr = 0,
         const Size regressionMaxSimTimesFx = 0, const Size regressionMaxSimTimesEq = 0,
-        const McRegressionModel::VarGroupMode regressionVarGroupMode = McRegressionModel::VarGroupMode::Global);
+        const McRegressionModel::VarGroupMode regressionVarGroupMode = McRegressionModel::VarGroupMode::Global,
+        const bool generateAdditionalResults = false);
 
     //! Destructor
     virtual ~McMultiLegBaseEngine() {}
@@ -119,6 +120,7 @@ public:
     Size regressionMaxSimTimesFx_;
     Size regressionMaxSimTimesEq_;
     McRegressionModel::VarGroupMode regressionVarGroupMode_;
+    bool generateAdditionalResults_;
 
     // set from global settings
     mutable bool includeTodaysCashflows_;
