@@ -38,11 +38,12 @@ McMultiLegBaseEngine::McMultiLegBaseEngine(
     const LsmBasisSystem::PolynomialType polynomType, const SobolBrownianGenerator::Ordering ordering,
     SobolRsg::DirectionIntegers directionIntegers, const std::vector<Handle<YieldTermStructure>>& discountCurves,
     const std::vector<Date>& simulationDates, const std::vector<Date>& stickyCloseOutDates,
-    const std::vector<Size>& externalModelIndices, const bool minimalObsDate, const McRegressionModel::RegressorModel regressorModel,
-    const Real regressionVarianceCutoff, const bool recalibrateOnStickyCloseOutDates,
-    const bool reevaluateExerciseInStickyRun, const Size cfOnCpnMaxSimTimes,
-    const Period& cfOnCpnAddSimTimesCutoff, const Size regressionMaxSimTimesIr, const Size regressionMaxSimTimesFx,
-    const Size regressionMaxSimTimesEq, const McRegressionModel::VarGroupMode regressionVarGroupMode)
+    const std::vector<Size>& externalModelIndices, const bool minimalObsDate,
+    const McRegressionModel::RegressorModel regressorModel, const Real regressionVarianceCutoff,
+    const bool recalibrateOnStickyCloseOutDates, const bool reevaluateExerciseInStickyRun,
+    const Size cfOnCpnMaxSimTimes, const Period& cfOnCpnAddSimTimesCutoff, const Size regressionMaxSimTimesIr,
+    const Size regressionMaxSimTimesFx, const Size regressionMaxSimTimesEq,
+    const McRegressionModel::VarGroupMode regressionVarGroupMode, const bool generateAdditionalResults)
     : model_(model), calibrationPathGenerator_(calibrationPathGenerator), pricingPathGenerator_(pricingPathGenerator),
       calibrationSamples_(calibrationSamples), pricingSamples_(pricingSamples), calibrationSeed_(calibrationSeed),
       pricingSeed_(pricingSeed), polynomOrder_(polynomOrder), polynomType_(polynomType), ordering_(ordering),
@@ -51,13 +52,10 @@ McMultiLegBaseEngine::McMultiLegBaseEngine(
       minimalObsDate_(minimalObsDate), regressorModel_(regressorModel),
       regressionVarianceCutoff_(regressionVarianceCutoff),
       recalibrateOnStickyCloseOutDates_(recalibrateOnStickyCloseOutDates),
-      reevaluateExerciseInStickyRun_(reevaluateExerciseInStickyRun),
-      cfOnCpnMaxSimTimes_(cfOnCpnMaxSimTimes),
-      cfOnCpnAddSimTimesCutoff_(cfOnCpnAddSimTimesCutoff),
-      regressionMaxSimTimesIr_(regressionMaxSimTimesIr),
-      regressionMaxSimTimesFx_(regressionMaxSimTimesFx),
-      regressionMaxSimTimesEq_(regressionMaxSimTimesEq),
-      regressionVarGroupMode_(regressionVarGroupMode) {
+      reevaluateExerciseInStickyRun_(reevaluateExerciseInStickyRun), cfOnCpnMaxSimTimes_(cfOnCpnMaxSimTimes),
+      cfOnCpnAddSimTimesCutoff_(cfOnCpnAddSimTimesCutoff), regressionMaxSimTimesIr_(regressionMaxSimTimesIr),
+      regressionMaxSimTimesFx_(regressionMaxSimTimesFx), regressionMaxSimTimesEq_(regressionMaxSimTimesEq),
+      regressionVarGroupMode_(regressionVarGroupMode), generateAdditionalResults_(generateAdditionalResults) {
 
     if (discountCurves_.empty())
         discountCurves_.resize(model_->components(CrossAssetModel::AssetType::IR));
