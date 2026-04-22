@@ -7,7 +7,7 @@ from ORE import *
 import unittest
 
 
-class QleTask522IndexesSmokeTest(unittest.TestCase):
+class QleIndexesSmokeTest(unittest.TestCase):
     def setUp(self):
         self.today = Date(2, March, 2026)
         Settings.instance().evaluationDate = self.today
