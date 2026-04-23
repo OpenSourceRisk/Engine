@@ -315,29 +315,17 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
             maturityType_ = "Payment Date";
 
         } else {
-            if (forwardDate_ == QuantLib::Date()) {
-                if (sameCcy) {
-                    LOG("Build VanillaOption for trade " << id());
-                    vanilla = QuantLib::ext::make_shared<QuantLib::VanillaOption>(payoff, exercise);
-                    tradeTypeBuilder = tradeType_ + "American";
-                } else {
-                    LOG("Build QuantoVanillaOption for trade " << id());
-                    vanilla = QuantLib::ext::make_shared<QuantLib::QuantoVanillaOption>(payoff, exercise);
-                    if (assetClassUnderlying_ == AssetClass::EQ)
-                        tradeTypeBuilder = "QuantoEquityOption";
-                    else if (assetClassUnderlying_ == AssetClass::COM)
-                        tradeTypeBuilder = "QuantoCommodityOption";
-                    else
-                        QL_FAIL("Option Quanto payoff not supported for " << assetClassUnderlying_ << " class.");
-                }
+            if (sameCcy) {
+                LOG("Build VanillaOption for trade " << id());
+                vanilla = QuantLib::ext::make_shared<QuantLib::VanillaOption>(payoff, exercise);
+                tradeTypeBuilder = tradeType_ + "American";
             } else {
-                LOG("Build VanillaForwardOption for trade " << id());
-                QL_REQUIRE(sameCcy, "Quanto payoff is not currently supported for Forward Options: Trade " << id());
-                vanilla = QuantLib::ext::make_shared<QuantExt::VanillaForwardOption>(payoff, exercise, forwardDate_);
-                if (assetClassUnderlying_ == AssetClass::COM || assetClassUnderlying_ == AssetClass::FX)
-                    tradeTypeBuilder = tradeType_ + "Forward";
+                LOG("Build QuantoVanillaOption for trade " << id());
+                vanilla = QuantLib::ext::make_shared<QuantLib::VanillaOption>(payoff, exercise);
+                if (assetClassUnderlying_ == AssetClass::EQ)
+                    tradeTypeBuilder = "QuantoEquityOptionAmerican";
                 else
-                    tradeTypeBuilder = tradeType_ + "American";
+                    QL_FAIL("Option Quanto payoff not supported for " << assetClassUnderlying_ << " class.");
             }
         }
     } else {
