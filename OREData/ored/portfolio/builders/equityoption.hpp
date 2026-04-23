@@ -81,7 +81,7 @@ public:
 };
 
 /*! Engine builder for American cash-settled equity options using Barone-Adesi and Whaley approximation.
-    \ingroup builders
+    \ingroup builders 
  */
 class EquityAmericanCSOptionBAWEngineBuilder : public AmericanCSOptionBAWEngineBuilder {
 public:
