@@ -159,10 +159,10 @@ void IndexCdsVolStripper::populateEngineAndVols(const Period& term, const Handle
     ext::shared_ptr<IndexCdsOptionBaseEngine> engine;
     if (optionEngine_ == OptionEngine::Black) {
         engine = ext::make_shared<QuantExt::BlackIndexCdsOptionEngine>(cch->curve(),
-            cch->recovery()->value(), cch->rateCurve(), cch->rateCurve(), volCurve);
+            cch->recovery()->value(), cch->rateCurve(), cch->rateCurve(), volCurve, false);
     } else {
         engine = ext::make_shared<QuantExt::NumericalIntegrationIndexCdsOptionEngine>(cch->curve(),
-            cch->recovery()->value(), cch->rateCurve(), cch->rateCurve(), volCurve);
+            cch->recovery()->value(), cch->rateCurve(), cch->rateCurve(), volCurve, false);
     }
 
     // Store engine and vol pair per term.
@@ -190,7 +190,7 @@ ext::shared_ptr<QuantExt::IndexCdsOption> IndexCdsVolStripper::createIndexCdsOpt
 
     // Create the index CDS underlying the option and set pricing engine.
     const CreditCurve::RefData& indexCdsData = tradeData_.indexCdsData;
-    auto indexCds = ext::make_shared<QuantExt::IndexCreditDefaultSwap>(Protection::Buyer, refDateNtl,
+    auto indexCds = ext::make_shared<QuantExt::IndexCreditDefaultSwap>(side, refDateNtl,
         vector<Real>{refDateNtl}, indexCdsData.runningSpread, schedule, indexCdsData.payConvention,
         indexCdsData.dayCounter, indexCdsData.settlesAccrual, indexCdsData.protPmtTime, expiryDate,
         ext::shared_ptr<FaceValueClaim>(), indexCdsData.lastPeriodDayCounter, indexCdsData.rebatesAccrual,
@@ -297,7 +297,7 @@ ext::optional<Volatility> IndexCdsVolStripper::stripVols(const vector<OptionPric
     };
 
     // Flag that determines if we move in direction of increasing (`asc` true) or decreasing (`asc` false) strike.
-    Size step = asc ? 1 : -1;
+    ptrdiff_t step = asc ? 1 : -1;
 
     // Engine and associated volatility handle used in the implied volatility calculation below.
     const EnginePtr& engine = engineVol.engine;
@@ -306,19 +306,27 @@ ext::optional<Volatility> IndexCdsVolStripper::stripVols(const vector<OptionPric
     // Store the first implied volatility - we can use it as initial guess when going in opposite strike direction.
     ext::optional<Volatility> firstVol;
 
-    for (Size i = startPos; asc ? (i < endPos) : (i >= endPos); i += step) {
+    ptrdiff_t ePos = static_cast<ptrdiff_t>(endPos);
+    for (ptrdiff_t i = static_cast<ptrdiff_t>(startPos); asc ? (i < ePos) : (i >= ePos); i += step) {
         const OptionPrice& op = prices[i];
         bool usePayer = usePayerOpt(op);
         Real targetPrice = usePayer ? op.payerPrice->value() : op.receiverPrice->value();
+
+        // If the target price is 0, we use the previous solved volatility, which is in initial guess.
+        if (close(targetPrice, 0.0)) {
+            Handle<Quote> hvq(ext::make_shared<SimpleQuote>(solverOptions.initialGuess));
+            volQuotes.try_emplace(QuoteKey{ expiryDate, term, op.strike }, hvq);
+            continue;
+        }
+
         Real targetPricePv = discPremium(targetPrice * notional_);
         const auto& helper = usePayer ? payRecHelper.payerHelper : payRecHelper.receiverHelper;
-        Real strike = op.strike;
-        helper->setStrike(strike);
+        helper->setStrike(op.strike);
         ImpVolRes res = helper->impliedVolatility(targetPricePv, engine, vol, solverOptions);
         if (!res.success) {
             std::ostringstream oss;
             oss << "Failed to imply vol for (expiry, term, strike) triplet (" << io::iso_date(expiryDate) << ", " <<
-                term << ", " << strike << ") with error message: " << res.errorMessage << ". Final volatility is " <<
+                term << ", " << op.strike << ") with error message: " << res.errorMessage << ". Final volatility is " <<
                 res.volatility << " for target premium of " << targetPricePv << " with premium error of " <<
                 res.error << ".";
             errorMessages_.push_back(oss.str());
@@ -326,7 +334,7 @@ ext::optional<Volatility> IndexCdsVolStripper::stripVols(const vector<OptionPric
 
         solverOptions.initialGuess = res.volatility;
         Handle<Quote> hvq(ext::make_shared<SimpleQuote>(res.volatility));
-        volQuotes.try_emplace(QuoteKey{ expiryDate, term, strike }, hvq);
+        volQuotes.try_emplace(QuoteKey{ expiryDate, term, op.strike }, hvq);
 
         if (!firstVol && res.success)
             firstVol = res.volatility;

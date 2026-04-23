@@ -119,12 +119,12 @@ namespace {
         // Use a conservative best guess (based on data as of 1 Apr 2026)
         using ST = QuantExt::CdsOption::StrikeType;
         Size maxEvals = 200;
-        // Accuracy in the price to 1 / 10 of 1 bp.
-        Real accuracy = 0.1;
+        // Accuracy in the price to approx. 1 / 10,000 of 1 bp => 0.01 on 1M notional.
+        Real accuracy = 0.0001;
         if (strikeType == ST::Price)
-            return Solver1DOptions{ maxEvals, 0.15, accuracy, std::make_pair(0.0001, 1.5), 0.015, 0.0001, 1.5 };
+            return Solver1DOptions{ maxEvals, accuracy, 0.15, std::make_pair(0.0001, 1.5), 0.015, 0.0001, 1.5 };
         else
-            return Solver1DOptions{ maxEvals, 1.10, accuracy, std::make_pair( 0.001, 5.0), 0.050,  0.001, 5.0 };
+            return Solver1DOptions{ maxEvals, accuracy, 1.10, std::make_pair( 0.001, 5.0), 0.050,  0.001, 5.0 };
     }
 }
 

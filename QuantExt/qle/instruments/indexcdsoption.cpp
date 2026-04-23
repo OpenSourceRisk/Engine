@@ -176,8 +176,7 @@ IndexCdsOption::ImpliedVolatilityResult IndexCdsOption::impliedVolatility(Real p
         if (useMinMax) {
             auto [minVol, maxVol] = solverOptions.minMax;
             result.volatility = solver.solve(f, solverOptions.accuracy, solverOptions.initialGuess, minVol, maxVol);
-        }
-        else {
+        } else {
             result.volatility = solver.solve(f, solverOptions.accuracy, solverOptions.initialGuess, solverOptions.step);
         }
         result.success = true;
