@@ -541,6 +541,8 @@ void dataBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(EquityEuropeanCSOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(EquityAmericanOptionFDEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(EquityAmericanOptionBAWEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(EquityAmericanCSOptionFDEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(EquityAmericanCSOptionBAWEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CapFlooredNonStandardYoYLegEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(QuantoEquityEuropeanOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(QuantoEquityAmericanOptionEngineBuilder, false)

@@ -319,6 +319,7 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
                 if (sameCcy) {
                     LOG("Build VanillaOption for trade " << id());
                     vanilla = QuantLib::ext::make_shared<QuantLib::VanillaOption>(payoff, exercise);
+                    tradeTypeBuilder = tradeType_ + "American";
                 } else {
                     LOG("Build QuantoVanillaOption for trade " << id());
                     vanilla = QuantLib::ext::make_shared<QuantLib::QuantoVanillaOption>(payoff, exercise);
@@ -335,6 +336,8 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
                 vanilla = QuantLib::ext::make_shared<QuantExt::VanillaForwardOption>(payoff, exercise, forwardDate_);
                 if (assetClassUnderlying_ == AssetClass::COM || assetClassUnderlying_ == AssetClass::FX)
                     tradeTypeBuilder = tradeType_ + "Forward";
+                else
+                    tradeTypeBuilder = tradeType_ + "American";
             }
         }
     } else {
