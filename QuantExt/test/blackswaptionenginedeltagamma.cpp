@@ -350,11 +350,11 @@ BOOST_AUTO_TEST_CASE(testNpvDeltasGammaVegas) {
     TestData d;
 
     QuantLib::ext::shared_ptr<PricingEngine> engineLn0 =
-        QuantLib::ext::make_shared<BlackMultiLegOptionEngine>(d.discountCurve, d.lnVol);
+        QuantLib::ext::make_shared<BlackMultiLegOptionEngine>(d.discountCurve, d.lnVol, true);
     QuantLib::ext::shared_ptr<PricingEngine> engineSln0 =
-        QuantLib::ext::make_shared<BlackMultiLegOptionEngine>(d.discountCurve, d.slnVol);
+        QuantLib::ext::make_shared<BlackMultiLegOptionEngine>(d.discountCurve, d.slnVol, true);
     QuantLib::ext::shared_ptr<PricingEngine> engineN0 =
-        QuantLib::ext::make_shared<BlackMultiLegOptionEngine>(d.discountCurve, d.nVol);
+        QuantLib::ext::make_shared<BlackMultiLegOptionEngine>(d.discountCurve, d.nVol, true);
 
     QuantLib::ext::shared_ptr<PricingEngine> engineLn = QuantLib::ext::make_shared<BlackSwaptionEngineDeltaGamma>(
         d.discountCurve, d.lnVol, d.pillarTimes, d.pillarTimes, d.pillarTimes, true, true);

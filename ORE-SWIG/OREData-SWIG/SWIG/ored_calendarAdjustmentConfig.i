@@ -19,42 +19,51 @@
 #ifndef ored_CalendarAdjustmentConfig_i
 #define ored_CalendarAdjustmentConfig_i
 
-%{
+%include ored_xmlutils.i
 
-using ore::data::CalendarAdjustmentConfig;
-using std::map;
-using std::set;
-using std::string;
-using std::vector;
-using QuantLib::DateGeneration;
-using QuantLib::Calendar;
-%}
+%shared_ptr(ore::data::CalendarAdjustmentConfig)
+%shared_ptr(ore::data::CurrencyConfig)
 
-%shared_ptr(CalendarAdjustmentConfig)
+namespace ore {
+namespace data {
 class CalendarAdjustmentConfig {
   public:
 
     CalendarAdjustmentConfig();
 
-    void addHolidays(const string& calname, const Date& d);
+    void addHolidays(const std::string& calname, const Date& d);
 
-    void addBusinessDays(const string& calname, const Date& d);
+    void addBusinessDays(const std::string& calname, const Date& d);
 
-    void addBaseCalendar(const string& calname, const string& d);
+    void addBaseCalendar(const std::string& calname, const std::string& d);
 
-    const set<Date>& getHolidays(const string& calname);
+    const std::set<Date>& getHolidays(const std::string& calname);
 
-    const set<Date>& getBusinessDays(const string& calname);
+    const std::set<Date>& getBusinessDays(const std::string& calname);
 
-    set<string> getCalendars() const;
+    std::set<std::string> getCalendars() const;
 
-    const string& getBaseCalendar(const string& calname);
+    const std::string& getBaseCalendar(const std::string& calname);
 
-    void append(const CalendarAdjustmentConfig& c);
+    void append(const ore::data::CalendarAdjustmentConfig& c);
 
     void fromFile(const std::string& name);
 
 };
+
+class CurrencyConfig : public ore::data::XMLSerializable {
+  public:
+
+    CurrencyConfig();
+
+    void addCurrencies();
+
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
+};
+
+} // namespace data
+} // namespace ore
 
 
 #endif

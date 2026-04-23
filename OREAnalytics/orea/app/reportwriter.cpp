@@ -1122,7 +1122,9 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, QuantLib::ext::s
                 // Add the multiplier if there are additional results.
                 // Check on 'instMultiplier' already existing is probably unnecessary.
                 if (!thisAddResults.empty() && thisAddResults.count("instMultiplier") == 0) {
-                    thisAddResults["instMultiplier"] = i == 0 ? trade->instrument()->multiplier() : multipliers[i - 1];
+                    thisAddResults["instMultiplier"] =
+                        i == 0 ? trade->instrument()->multiplier() * trade->instrument()->multiplier2()
+                               : multipliers[i - 1];
                 }
 
                 // Write current instrument's additional results.

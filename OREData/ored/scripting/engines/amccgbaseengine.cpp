@@ -68,13 +68,15 @@ AmcCgBaseEngine::AmcCgBaseEngine(const QuantLib::ext::shared_ptr<ModelCG>& model
                                  const double indicatorSmoothingForDerivatives,
                                  const double sqrtSmoothingForDerivatives, const bool useCachedSensis,
                                  const bool useExternalComputeFramework,
-                                 const bool useDoublePrecisionForExternalCalculation)
+                                 const bool useDoublePrecisionForExternalCalculation,
+                                 const bool generateAdditionalResults)
     : modelCg_(modelCg), amcEnabled_(false), mcParams_(mcParams),
       indicatorSmoothingForValues_(indicatorSmoothingForValues),
       indicatorSmoothingForDerivatives_(indicatorSmoothingForDerivatives),
       sqrtSmoothingForDerivatives_(sqrtSmoothingForDerivatives), useCachedSensis_(useCachedSensis),
       useExternalComputeFramework_(useExternalComputeFramework),
-      useDoublePrecisionForExternalCalculation_(useDoublePrecisionForExternalCalculation) {
+      useDoublePrecisionForExternalCalculation_(useDoublePrecisionForExternalCalculation),
+      generateAdditionalResults_(generateAdditionalResults) {
 
     opNodeRequirements_ = getRandomVariableOpNodeRequirements();
     ops_ = getRandomVariableOps(modelCg_->size(), mcParams_.regressionOrder, mcParams_.polynomType,

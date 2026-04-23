@@ -29,6 +29,7 @@ void SmrcVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParam
 
 void SmrcAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
+    setGenerateAdditionalResults(true);
 }
 
 void SmrcAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
