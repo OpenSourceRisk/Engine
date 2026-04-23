@@ -323,13 +323,13 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
 
         // 5.3 include the exercise fee payment
 
-        if (exerciseBuilder_->feeSettlement()) {
+        for (auto const& s : exerciseBuilder_->feeSettlement()) {
             legs_.push_back(Leg());
-            legs_.back().push_back(exerciseBuilder_->feeSettlement());
-            legCurrencies_.push_back(npvCurrency_);
+            legs_.back().push_back(s.first);
+            legCurrencies_.push_back(s.second.empty() ? npvCurrency_ : s.second.code());
             legPayers_.push_back(true);
-            maturity_ = std::max(maturity_, exerciseBuilder_->feeSettlement()->date());
-            if (maturity_ == exerciseBuilder_->feeSettlement()->date())
+            maturity_ = std::max(maturity_, s.first->date());
+            if (maturity_ == s.first->date())
                 maturityType_ = "Fee Settlement Date";
         }
 
