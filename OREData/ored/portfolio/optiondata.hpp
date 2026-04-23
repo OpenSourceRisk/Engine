@@ -29,6 +29,7 @@
 #include <ored/portfolio/schedule.hpp>
 
 #include <ql/cashflow.hpp>
+#include <ql/currency.hpp>
 #include <ql/exercise.hpp>
 #include <ql/time/businessdayconvention.hpp>
 #include <ql/time/calendar.hpp>
