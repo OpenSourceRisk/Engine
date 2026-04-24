@@ -44,6 +44,24 @@ using namespace ore::data;
 namespace ore {
 namespace analytics {
 
+namespace {
+    QuantLib::Period convertSensitivityCurvePillarToPeriod(
+        const QuantLib::Date& asof, const ScenarioCurvePillar& pillar, const RiskFactorKey& rfkey,
+        bool allowFutureExpiriesForRiskType, bool parConversionEnabled) {
+        if (auto p = std::get_if<QuantLib::Period>(&pillar))
+            return *p;
+        else if (auto b = std::get_if<IrFutureExpiryYearMonth>(&pillar)) {
+            QL_REQUIRE(allowFutureExpiriesForRiskType,
+                       "IR Future expiry curve pillars are not allowed for risk factor type " << rfkey.keytype);
+            QL_REQUIRE(parConversionEnabled,
+                       "par conversion needs to be enabled for IR future expiry tenors in curve shifts for key "
+                           << rfkey.keytype << " and curve " << rfkey.name);
+            return b->toPeriod(asof);
+        } else
+            QL_FAIL("unsupported pillar type for key " << rfkey.keytype << ": " << pillar);
+    }
+}
+
 SensitivityAnalysis::SensitivityAnalysis(
     const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
     const QuantLib::ext::shared_ptr<ore::data::Market>& market, const string& marketConfiguration,
@@ -426,9 +444,7 @@ void SensitivityAnalysis::generateSensitivities() {
 }
 
 Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensiParams,
-                  const QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket,
-                  const ScenarioCurvePillarConverter& curvePillarConverter,
-                  const string& marketConfiguration) {
+                  const QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket, const string& marketConfiguration) {
 
     Date asof = simMarket->asofDate();
     RiskFactorKey::KeyType keytype = key.keytype;
@@ -457,19 +473,11 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         auto itr = sensiParams.discountCurveShiftData().find(ccy);
         QL_REQUIRE(itr != sensiParams.discountCurveShiftData().end(), "shiftData not found for " << ccy);
         auto& [name, shiftData] = *itr;
-        
         shiftSize = shiftData->shiftSize;
         if (itr->second->shiftType == ShiftType::Relative) {
             Size keyIdx = key.index;
-            QuantLib::Period p;
-            
-            if (auto a = std::get_if<QuantLib::Period>(&shiftData->shiftTenors[keyIdx])) {
-                p = *a;
-            } else if (auto b = std::get_if<IrFutureExpiryYearMonth>(&shiftData->shiftTenors[keyIdx])) {
-                QL_REQUIRE(sensiParams.parConversion(),
-                           "par conversion needs to be enabled for future expiry tenors in index curve shifts");
-                p = curvePillarConverter.convertFutureExpiryToPeriod(asof, b, key.name, shiftData, keyIdx);
-            }
+            QuantLib::Period p = convertSensitivityCurvePillarToPeriod(asof, shiftData->shiftTenors[keyIdx], key, true,
+                                                                       sensiParams.parConversion());
             Handle<YieldTermStructure> yts = simMarket->discountCurve(ccy, marketConfiguration);
             Time t = yts->dayCounter().yearFraction(asof, asof + p);
             Real zeroRate = yts->zeroRate(t, Continuous);
@@ -483,14 +491,8 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         shiftSize = itr->second->shiftSize;
         if (itr->second->shiftType == ShiftType::Relative) {
             Size keyIdx = key.index;
-            QuantLib::Period p;
-            if (auto a = std::get_if<QuantLib::Period>(&itr->second->shiftTenors[keyIdx])) {
-                p = *a;
-            } else if (auto b = std::get_if<IrFutureExpiryYearMonth>(&itr->second->shiftTenors[keyIdx])) {
-                QL_REQUIRE(sensiParams.parConversion(),
-                           "par conversion needs to be enabled for future expiry tenors in index curve shifts");
-                p = curvePillarConverter.convertFutureExpiryToPeriod(asof, b, key.name, itr->second, keyIdx);
-            }
+            QuantLib::Period p = convertSensitivityCurvePillarToPeriod(asof, itr->second->shiftTenors[keyIdx], key, true,
+                                                                       sensiParams.parConversion());
             Handle<YieldTermStructure> yts = simMarket->iborIndex(idx, marketConfiguration)->forwardingTermStructure();
             Time t = yts->dayCounter().yearFraction(asof, asof + p);
             Real zeroRate = yts->zeroRate(t, Continuous);
@@ -504,14 +506,8 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         shiftSize = itr->second->shiftSize;
         if (itr->second->shiftType == ShiftType::Relative) {
             Size keyIdx = key.index;
-            QuantLib::Period p;
-            if (auto a = std::get_if<QuantLib::Period>(&itr->second->shiftTenors[keyIdx])) {
-                p = *a;
-            } else if (auto b = std::get_if<IrFutureExpiryYearMonth>(&itr->second->shiftTenors[keyIdx])) {
-                QL_REQUIRE(sensiParams.parConversion(),
-                           "par conversion needs to be enabled for future expiry tenors in yield curve shifts");
-                p = curvePillarConverter.convertFutureExpiryToPeriod(asof, b, key.name, itr->second, keyIdx);
-            }
+            auto p = convertSensitivityCurvePillarToPeriod(asof, itr->second->shiftTenors[keyIdx], key, true,
+                                                            sensiParams.parConversion());
             Handle<YieldTermStructure> yts = simMarket->yieldCurve(yc, marketConfiguration);
             Time t = yts->dayCounter().yearFraction(asof, asof + p);
             Real zeroRate = yts->zeroRate(t, Continuous);
@@ -526,12 +522,8 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
 
         if (itr->second->shiftType == ShiftType::Relative) {
             Size keyIdx = key.index;
-            QuantLib::Period p;
-            if (auto a = std::get_if<QuantLib::Period>(&itr->second->shiftTenors[keyIdx])) {
-                p = *a;
-            } else {
-                QL_FAIL("IR Future expiries are only allowed for discount, index and yield curves: " << key.name);
-            }
+            auto p = convertSensitivityCurvePillarToPeriod(asof, itr->second->shiftTenors[keyIdx], key, false,
+                                                            sensiParams.parConversion());
             Handle<YieldTermStructure> ts = simMarket->equityDividendCurve(eq, marketConfiguration);
             Time t = ts->dayCounter().yearFraction(asof, asof + p);
             Real zeroRate = ts->zeroRate(t, Continuous);
@@ -652,12 +644,8 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         shiftSize = itr->second->shiftSize;
         if (itr->second->shiftType == ShiftType::Relative) {
             Size keyIdx = key.index;
-            QuantLib::Period p;
-            if (auto a = std::get_if<QuantLib::Period>(&itr->second->shiftTenors[keyIdx])) {
-                p = *a;
-            } else {
-               QL_FAIL("IR Future expiries are only allowed for discount, index and yield curves: " << key.name);
-            }
+            auto p = convertSensitivityCurvePillarToPeriod(asof, itr->second->shiftTenors[keyIdx], key, false,
+                                                           sensiParams.parConversion());
             Handle<DefaultProbabilityTermStructure> ts = simMarket->defaultCurve(name, marketConfiguration)->curve();
             Time t = ts->dayCounter().yearFraction(asof, asof + p);
             Real prob = ts->survivalProbability(t);
@@ -689,12 +677,8 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         shiftSize = itr->second->shiftSize;
         if (itr->second->shiftType == ShiftType::Relative) {
             Size keyIdx = key.index;
-            QuantLib::Period p;
-            if (auto a = std::get_if<QuantLib::Period>(&itr->second->shiftTenors[keyIdx])) {
-                p = *a;
-            } else {
-                QL_FAIL("unsupported pillar type for dividend yield shift: " << key.name);
-            }
+            auto p = convertSensitivityCurvePillarToPeriod(asof, itr->second->shiftTenors[keyIdx], key, false,
+                                                           sensiParams.parConversion());
             Handle<ZeroInflationTermStructure> yts =
                 simMarket->zeroInflationIndex(idx, marketConfiguration)->zeroInflationTermStructure();
             Time t = yts->dayCounter().yearFraction(asof, asof + p);
@@ -709,12 +693,8 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         shiftSize = itr->second->shiftSize;
         if (itr->second->shiftType == ShiftType::Relative) {
             Size keyIdx = key.index;
-            QuantLib::Period p;
-            if (auto a = std::get_if<QuantLib::Period>(&itr->second->shiftTenors[keyIdx])) {
-                p = *a;
-            } else {
-                QL_FAIL("unsupported pillar type for dividend yield shift: " << key.name);
-            }
+            auto p = convertSensitivityCurvePillarToPeriod(asof, itr->second->shiftTenors[keyIdx], key, false,
+                                                           sensiParams.parConversion());
             Handle<YoYInflationTermStructure> yts =
                 simMarket->yoyInflationIndex(idx, marketConfiguration)->yoyInflationTermStructure();
             Time t = yts->dayCounter().yearFraction(asof, asof + p);
@@ -766,12 +746,8 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         QL_REQUIRE(it != sensiParams.commodityCurveShiftData().end(), "shiftData not found for " << keylabel);
         shiftSize = it->second->shiftSize;
         if (it->second->shiftType == ShiftType::Relative) {
-            QuantLib::Period p;
-            if (auto a = std::get_if<QuantLib::Period>(&it->second->shiftTenors[key.index])) {
-                p = *a;
-            } else {
-                QL_FAIL("IR Future expiries are only allowed for discount, index and yield curves: " << key.name);
-            }
+            auto p = convertSensitivityCurvePillarToPeriod(asof, it->second->shiftTenors[key.index], key, false,
+                                                            sensiParams.parConversion());
             Handle<PriceTermStructure> priceCurve = simMarket->commodityPriceCurve(keylabel, marketConfiguration);
             Time t = priceCurve->dayCounter().yearFraction(asof, asof + p);
             shiftMult = priceCurve->price(t);

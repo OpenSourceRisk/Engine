@@ -29,7 +29,6 @@
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
 #include <orea/scenario/sensitivityscenariogenerator.hpp>
-#include <orea/scenario/scenariocurvepillarconverter.hpp>
 
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/market.hpp>
@@ -203,9 +202,7 @@ protected:
     given sensitivity parameters \p sensiParams and a simulation market \p simMarket
 */
 Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensiParams,
-                  const QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket,
-                  const ScenarioCurvePillarConverter& curvePillarConverter,
-                  const std::string& marketConfiguration = "");
+                  const QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket, const std::string& marketConfiguration = "");
 
 } // namespace analytics
 } // namespace ore

@@ -903,10 +903,9 @@ void test1dShifts(bool granular) {
     // collect shifted data at tenors of the underlying curve
     // aggregate "observed" shifts
     // compare to expected total shifts
-    ScenarioCurvePillarConverter pillarConverter;
+
     vector<Period> shiftTenors =
-        pillarConverter.convertToPeriodVector(today, sensiData->discountCurveShiftData()["EUR"]->shiftTenors, "EUR",
-                                              sensiData->discountCurveShiftData()["EUR"], false, false);
+        scenarioPillarsToPeriodVector(today, sensiData->discountCurveShiftData()["EUR"]->shiftTenors, false);
     vector<Time> shiftTimes(shiftTenors.size());
     for (Size i = 0; i < shiftTenors.size(); ++i)
         shiftTimes[i] = dc.yearFraction(today, today + shiftTenors[i]);

@@ -22,6 +22,7 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ored/utilities/xmlutils.hpp>
+#include <ored/configuration/conventions.hpp>
 
 using ore::data::parseBool;
 using ore::data::to_string;
@@ -556,6 +557,21 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             string ccy = XMLUtils::getAttribute(child, "ccy");
             CurveShiftParData data(*discountCurveShiftData_.find(ccy)->second);
             parDataFromXML(child, data);
+            
+            for(size_t i = 0; i < data.shiftTenors.size(); ++i){
+                if (auto p = std::get_if<IrFutureExpiryYearMonth>(&data.shiftTenors[i])) {
+                    QL_REQUIRE(data.shiftTenors.size() == data.parInstruments.size(),
+                       "number of shift tenors and par instruments must be the same for discount curve " << ccy);
+                    auto it = data.parInstrumentConventions.find(data.parInstruments[i]);
+                    QL_REQUIRE(it != data.parInstrumentConventions.end(),
+                               "par instrument " << data.parInstruments[i] << " not found in par instrument conventions for discount curve " << ccy);
+                    string conventionName = it->second;
+                    auto [found, convention] = ore::data::InstrumentConventions::instance().conventions()->get(conventionName, ore::data::Convention::Type::Future);
+                    QL_REQUIRE(found, "convention " << conventionName << " not found for par instrument " << data.parInstruments[i] << " for discount curve " << ccy);
+                    auto irFutureConvention = QuantLib::ext::dynamic_pointer_cast<ore::data::FutureConvention>(convention);
+                    p->setConvention(conventionName, irFutureConvention);
+                }
+            }
             discountCurveShiftData_[ccy] = QuantLib::ext::make_shared<CurveShiftParData>(data);
         }
     }
@@ -568,6 +584,21 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             string index = XMLUtils::getAttribute(child, "index");
             CurveShiftParData data(*indexCurveShiftData_.find(index)->second);
             parDataFromXML(child, data);
+
+            for(size_t i = 0; i < data.shiftTenors.size(); ++i){
+                if (auto p = std::get_if<IrFutureExpiryYearMonth>(&data.shiftTenors[i])) {
+                    QL_REQUIRE(data.shiftTenors.size() == data.parInstruments.size(),
+                       "number of shift tenors and par instruments must be the same for index curve " << index);
+                    auto it = data.parInstrumentConventions.find(data.parInstruments[i]);
+                    QL_REQUIRE(it != data.parInstrumentConventions.end(),
+                               "par instrument " << data.parInstruments[i] << " not found in par instrument conventions for index curve " << index);
+                    string conventionName = it->second;
+                    auto [found, convention] = ore::data::InstrumentConventions::instance().conventions()->get(conventionName, ore::data::Convention::Type::Future);
+                    QL_REQUIRE(found, "convention " << conventionName << " not found for par instrument " << data.parInstruments[i] << " for index curve " << index);
+                    auto irFutureConvention = QuantLib::ext::dynamic_pointer_cast<ore::data::FutureConvention>(convention);
+                    p->setConvention(conventionName, irFutureConvention);
+                }
+            }
             indexCurveShiftData_[index] = QuantLib::ext::make_shared<CurveShiftParData>(data);
         }
     }
@@ -581,6 +612,20 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             string curveType = XMLUtils::getChildValue(child, "CurveType", false);
             CurveShiftParData data(*yieldCurveShiftData_.find(curveName)->second);
             parDataFromXML(child, data);
+            for(size_t i = 0; i < data.shiftTenors.size(); ++i){
+                if (auto p = std::get_if<IrFutureExpiryYearMonth>(&data.shiftTenors[i])) {
+                    QL_REQUIRE(data.shiftTenors.size() == data.parInstruments.size(),
+                       "number of shift tenors and par instruments must be the same for yield curve " << curveName);
+                    auto it = data.parInstrumentConventions.find(data.parInstruments[i]);
+                    QL_REQUIRE(it != data.parInstrumentConventions.end(),
+                               "par instrument " << data.parInstruments[i] << " not found in par instrument conventions for yield curve " << curveName);
+                    string conventionName = it->second;
+                    auto [found, convention] = ore::data::InstrumentConventions::instance().conventions()->get(conventionName, ore::data::Convention::Type::Future);
+                    QL_REQUIRE(found, "convention " << conventionName << " not found for par instrument " << data.parInstruments[i] << " for yield curve " << curveName);
+                    auto irFutureConvention = QuantLib::ext::dynamic_pointer_cast<ore::data::FutureConvention>(convention);
+                    p->setConvention(conventionName, irFutureConvention);
+                }
+            }
             yieldCurveShiftData_[curveName] = QuantLib::ext::make_shared<CurveShiftParData>(data);
         }
     }
