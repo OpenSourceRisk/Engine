@@ -617,11 +617,10 @@ void XvaAnalyticImpl::buildScenarioGenerator(const bool continueOnCalibrationErr
         if (!model_)
             buildCrossAssetModel(continueOnCalibrationError, allowModelFallbacks);
         ScenarioGeneratorBuilder sgb(analytic()->configurations().scenarioGeneratorData);
-        QuantLib::ext::shared_ptr<ScenarioFactory> sf = QuantLib::ext::make_shared<SimpleScenarioFactory>(true);
         string config = inputs_->marketConfig("simulation");
         auto market = offsetScenario_ == nullptr ? analytic()->market() : simMarketCalibration_;
         scenarioGenerator_ =
-            sgb.build(model_, sf, analytic()->configurations().simMarketParams, inputs_->asof(), market, config,
+            sgb.build(model_, analytic()->configurations().simMarketParams, inputs_->asof(), market, config,
                       QuantLib::ext::make_shared<MultiPathGeneratorFactory>(), xvaVars->amcPathDataOutput_);
         QL_REQUIRE(scenarioGenerator_, "failed to build the scenario generator");
     }

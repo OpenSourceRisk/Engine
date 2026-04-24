@@ -75,9 +75,39 @@ const char* __version__;
 %}
 #endif
 
-//#if defined(SWIGPYTHON)
-//%feature("autodoc");
-//#endif
+#if defined(SWIGPYTHON)
+%feature("autodoc", "1");
+%feature("docstring") "ORE API symbol exposed through SWIG bindings.";
+%pythoncode %{
+_ORE_MODULE_OVERVIEW = """ORE Python bindings (single-module architecture).
+
+This module exposes QuantLib, QuantExt, OREData, and OREAnalytics classes
+through one SWIG-generated extension.
+"""
+if __doc__:
+    __doc__ = __doc__ + "\n\n" + _ORE_MODULE_OVERVIEW
+else:
+    __doc__ = _ORE_MODULE_OVERVIEW
+
+import atexit as _atexit
+import gc as _gc
+
+def _ore_module_cleanup():
+    """Force garbage collection before module finalization.
+
+    On Linux with QL_ENABLE_SESSIONS, QuantLib singletons are thread_local.
+    Their destructors run during exit() and may be destroyed before Python
+    finishes cleaning up SWIG wrapper objects.  Forcing gc.collect() here
+    (registered via atexit, which runs during Py_FinalizeEx before exit())
+    ensures all C++ shared_ptr-wrapped objects are released while the
+    singletons are still alive.
+    """
+    _gc.collect()
+    _gc.collect()
+
+_atexit.register(_ore_module_cleanup)
+%}
+#endif
 
 // include all quantlib .i's
 %include ql.i

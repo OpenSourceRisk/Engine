@@ -21,21 +21,13 @@
 
 %include qle_futureexpirycalculator.i
 
-%{
-using std::string;
-using std::map;
-
-using ore::data::ConventionsBasedFutureExpiry;
-
-using QuantExt::FutureExpiryCalculator;
-using ore::data::CommodityFutureConvention;
-%}
-
-%shared_ptr(ConventionsBasedFutureExpiry)
+%shared_ptr(ore::data::ConventionsBasedFutureExpiry)
+namespace ore {
+namespace data {
 class ConventionsBasedFutureExpiry : public QuantExt::FutureExpiryCalculator {
   public:
     ConventionsBasedFutureExpiry(const std::string& commName, QuantLib::Size maxIterations = 100);
-    ConventionsBasedFutureExpiry(const CommodityFutureConvention& convention, QuantLib::Size maxIterations = 100);
+    ConventionsBasedFutureExpiry(const ore::data::CommodityFutureConvention& convention, QuantLib::Size maxIterations = 100);
 
     QuantLib::Date nextExpiry(bool includeExpiry = true, const QuantLib::Date& referenceDate = QuantLib::Date(),
                               QuantLib::Natural offset = 0, bool forOption = false) override;
@@ -50,10 +42,13 @@ class ConventionsBasedFutureExpiry : public QuantExt::FutureExpiryCalculator {
 
     QuantLib::Date applyFutureMonthOffset(const QuantLib::Date& contractDate, QuantLib::Natural futureMonthOffset) override;
 
-    const CommodityFutureConvention& commodityFutureConvention() const;
+    const ore::data::CommodityFutureConvention& commodityFutureConvention() const;
 
     QuantLib::Size maxIterations() const;
 
 };
+
+  } // namespace data
+  } // namespace ore
 
 #endif

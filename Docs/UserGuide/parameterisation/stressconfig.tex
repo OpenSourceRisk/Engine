@@ -10,8 +10,13 @@ This file {\tt stressconfig.xml} specifies how stress tests can be configured. T
 
 In this example, two zero stress scenarios ``parallel\_rates'' and ``twist'' and one par rate ``par\_parallel'' are defined. 
 Each scenario definition contains
-the market components to be shifted in this scenario in a similar syntax that is also used for the sensitivitya
-configuration, see \ref{sec:sensitivity}. Components that should not be shifted, can just be omitted in the definition
+the market components to be shifted in this scenario in a similar syntax that is also used for the sensitivity
+configuration, see \ref{sec:sensitivity}. In addition to the ``Absolute`` and ``Relative`` shift types defined in sensitivity 
+configuration, stress tests allow an ``EqualTo`` shift type. In this case, the user provides the values that the curve should
+be shifted to. In the case of Discount, Yield, Index curves, and Survival Probabilities, an additional field ``ShiftingZeros``
+is required to indicate if the given shifted values are zero rates (true) or discount rates (false).
+
+Components that should not be shifted, can just be omitted in the definition
 of the scenario. Shifts for rate curves, credit curves and interest rate cap/floors can be given as par or zero rate shifts.
 By default shifts are zero rate shifts. If shifts are marked as par rate shifts all components (rate/credit/caps) shifts are 
 par shifts in that category, for example it is not possible to have par rate first for one yield curve and zero rate for 

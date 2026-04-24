@@ -141,35 +141,24 @@ BlackIndexCdsOptionEngineBuilder::engineImpl(const QuantLib::Currency& ccy, cons
                                              const std::vector<std::string>& creditCurveIds,
                                              const std::vector<double>& constituentNotionals) {
 
-    bool generateAdditionalResults = false;
-    if (auto genAddParam = globalParameters_.find("GenerateAdditionalResults");
-        genAddParam != globalParameters_.end()) {
-        generateAdditionalResults = parseBool(genAddParam->second);
-    }
     std::string curve = engineParameter("FepCurve", {}, false, "Underlying");
 
     return genericEngineImpl<QuantExt::BlackIndexCdsOptionEngine>(
         curve, market_, configuration(ore::data::MarketContext::irCalibration),
         configuration(ore::data::MarketContext::pricing), ccy, creditCurveId, volCurveId, creditCurveIds,
-        generateAdditionalResults, calibrateUnderlyingCurves(), constituentNotionals);
+        generateAdditionalResults(), calibrateUnderlyingCurves(), constituentNotionals);
 }
 
 QuantLib::ext::shared_ptr<QuantLib::PricingEngine> NumericalIntegrationIndexCdsOptionEngineBuilder::engineImpl(
     const QuantLib::Currency& ccy, const std::string& creditCurveId, const std::string& volCurveId,
     const std::vector<std::string>& creditCurveIds, const std::vector<double>& constituentNotionals) {
 
-    bool generateAdditionalResults = false;
-    if (auto genAddParam = globalParameters_.find("GenerateAdditionalResults");
-        genAddParam != globalParameters_.end()) {
-        generateAdditionalResults = parseBool(genAddParam->second);
-    }
-
     std::string curve = engineParameter("FepCurve", {}, false, "Underlying");
 
     return genericEngineImpl<QuantExt::NumericalIntegrationIndexCdsOptionEngine>(
         curve, market_, configuration(ore::data::MarketContext::irCalibration),
         configuration(ore::data::MarketContext::pricing), ccy, creditCurveId, volCurveId, creditCurveIds,
-        generateAdditionalResults, calibrateUnderlyingCurves(), constituentNotionals);
+        generateAdditionalResults(), calibrateUnderlyingCurves(), constituentNotionals);
 }
 
 } // namespace data

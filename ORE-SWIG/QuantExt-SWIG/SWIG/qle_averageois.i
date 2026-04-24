@@ -26,12 +26,20 @@
 %include indexes.i
 %include swap.i
 
-%{
-using QuantExt::AverageOIS;
-using QuantExt::AverageONIndexedCouponPricer;
-%}
+%shared_ptr(QuantExt::AverageONIndexedCouponPricer)
+namespace QuantExt {
+class AverageONIndexedCouponPricer : public FloatingRateCouponPricer {
+  public:
+    enum Approximation { Takada, None };
+    AverageONIndexedCouponPricer(AverageONIndexedCouponPricer::Approximation approxType
+        = AverageONIndexedCouponPricer::Takada);
+    void initialize(const QuantLib::FloatingRateCoupon& coupon);
+    QuantLib::Rate swapletRate() const;
+};
+} // namespace QuantExt
 
-%shared_ptr(AverageOIS)
+%shared_ptr(QuantExt::AverageOIS)
+namespace QuantExt {
 class AverageOIS : public Swap {
   public:
     enum Type { Receiver = -1, Payer = 1 };
@@ -50,8 +58,8 @@ class AverageOIS : public Swap {
                QuantLib::Spread onSpread = 0.0,
                QuantLib::Real onGearing = 1.0,
                const QuantLib::DayCounter& onDayCounter = QuantLib::DayCounter(),
-               const ext::shared_ptr<AverageONIndexedCouponPricer>& onCouponPricer
-               = ext::shared_ptr<AverageONIndexedCouponPricer>());
+               const ext::shared_ptr<QuantExt::AverageONIndexedCouponPricer>& onCouponPricer
+               = ext::shared_ptr<QuantExt::AverageONIndexedCouponPricer>());
     AverageOIS::Type type();
     QuantLib::Real nominal();
     const std::vector<QuantLib::Real>& nominals();
@@ -74,15 +82,6 @@ class AverageOIS : public Swap {
     QuantLib::Real overnightLegNPV();
     QuantLib::Spread fairSpread();
 };
-
-%shared_ptr(AverageONIndexedCouponPricer)
-class AverageONIndexedCouponPricer : public FloatingRateCouponPricer {
-  public:
-    enum Approximation { Takada, None };
-    AverageONIndexedCouponPricer(AverageONIndexedCouponPricer::Approximation approxType
-        = AverageONIndexedCouponPricer::Takada);
-    void initialize(const QuantLib::FloatingRateCoupon& coupon);
-    QuantLib::Rate swapletRate() const;
-};
+} // namespace QuantExt
 
 #endif
