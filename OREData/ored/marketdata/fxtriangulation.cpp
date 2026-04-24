@@ -348,7 +348,7 @@ Handle<Quote> FXTriangulation::getQuote(const std::string& forCcy, const std::st
     }
     if (auto it = quotes_.find(domCcy + forCcy); it != quotes_.end()) {
         auto f = [](Real x) { return 1.0 / x; };
-        return Handle<Quote>(QuantLib::ext::make_shared<DerivedQuote<decltype(f)>>(it->second, f));
+        return Handle<Quote>(QuantLib::ext::make_shared<DerivedQuote<decltype(f)>>(it->second, f, false));
     }
     QL_FAIL(
         "FXTriangulation::getQuote(" << forCcy << domCcy
