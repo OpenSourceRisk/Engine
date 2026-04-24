@@ -378,7 +378,7 @@ ExerciseBuilder::ExerciseBuilder(const OptionData& optionData, const std::vector
                             continue;
                         for (auto const& c : l) {
                             if (auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(c)) {
-                                if (cpn->accrualStartDate() >= sortedExerciseDates[i])
+                                if (cpn->accrualStartDate() >= sortedExerciseDates[j])
                                     notionals.insert(std::make_pair(cpn->accrualStartDate(), cpn->nominal()));
                             }
                         }
@@ -392,8 +392,8 @@ ExerciseBuilder::ExerciseBuilder(const OptionData& optionData, const std::vector
                         DLOG("Convert percentage rebate "
                              << rebateAmounts[j][i] << " to absolute rebate " << rebateAmounts[j][i] * feeNotional
                              << " using nominal " << feeNotional << " for exercise date "
-                             << QuantLib::io::iso_date(sortedExerciseDates[i]) << " and currency "
-                             << (rebateCurrencies.empty() ? "na" : rebateCurrencies[i].code()));
+                             << QuantLib::io::iso_date(sortedExerciseDates[j]) << " and currency "
+                             << (rebateCurrencies[i].empty() ? "na" : rebateCurrencies[i].code()));
                         rebateAmounts[j][i] *= feeNotional; // multiply percentage fee by relevant notional
                     }
 
@@ -448,8 +448,8 @@ ExerciseBuilder::ExerciseBuilder(const OptionData& optionData, const std::vector
             if (optionData.style() == "American") {
                 // Note: we compute the settl date relative to notification, not exercise here
                 exercise_ = QuantLib::ext::make_shared<QuantExt::RebatedExercise>(
-                    *exercise_, exercise_->dates(), std::vector<std::vector<Real>>{rebates.front()}, rebateCurrencies,
-                    feeSettlPeriod, feeSettlCal, feeSettlBdc);
+                    *exercise_, exercise_->dates(), std::vector<std::vector<Real>>{rebates.front()}, rebateCurrencies, feeSettlPeriod, feeSettlCal,
+                    feeSettlBdc);
             } else {
                 exercise_ = QuantLib::ext::make_shared<QuantExt::RebatedExercise>(
                     *exercise_, exerciseDates_, rebateAmounts, rebateCurrencies, feeSettlPeriod, feeSettlCal,
