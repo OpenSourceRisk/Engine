@@ -230,8 +230,6 @@ void PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::update() {
 
 template <class Interpolator, template <class> class Bootstrap>
 void PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::performCalculations() const {
-    std::cout << "Performing calculations for PiecewiseAtmOptionletCurve with reference date "
-              << QuantLib::io::iso_date(referenceDate()) << std::endl;
     // Update the quotes from the cap floor term volatility surface
     for (QuantLib::Size i = 0; i < tenors_.size(); i++) {
         quotes_[i]->setValue(cftvc_->volatility(tenors_[i], 0.01));
