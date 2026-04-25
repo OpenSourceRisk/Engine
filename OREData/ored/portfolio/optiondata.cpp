@@ -351,7 +351,7 @@ ExerciseBuilder::ExerciseBuilder(const OptionData& optionData, const std::vector
         // flip the sign of the fee to get a rebate
 
         for (auto& r : rebateAmounts)
-            for(auto& a: r)
+            for (auto& a : r)
                 a = -a;
 
         // convert relative to absolute fees if required
@@ -438,9 +438,9 @@ ExerciseBuilder::ExerciseBuilder(const OptionData& optionData, const std::vector
         if (exercise_ != nullptr) {
             vector<vector<double>> rebates;
             for (Size i = 0; i < sortedExerciseDates.size(); ++i) {
-                rebates.push_back({});
-                for (Size j = 0; j < rebateCurrencies.size(); ++j) {
-                    if (isExerciseDateAlive[i]) {
+                if (isExerciseDateAlive[i]) {
+                    rebates.push_back({});
+                    for (Size j = 0; j < rebateCurrencies.size(); ++j) {
                         rebates.back().push_back(rebateAmounts[i][j]);
                     }
                 }
@@ -448,11 +448,11 @@ ExerciseBuilder::ExerciseBuilder(const OptionData& optionData, const std::vector
             if (optionData.style() == "American") {
                 // Note: we compute the settl date relative to notification, not exercise here
                 exercise_ = QuantLib::ext::make_shared<QuantExt::RebatedExercise>(
-                    *exercise_, exercise_->dates(), std::vector<std::vector<Real>>{rebates.front()}, rebateCurrencies, feeSettlPeriod, feeSettlCal,
-                    feeSettlBdc);
+                    *exercise_, exercise_->dates(), std::vector<std::vector<Real>>{rebates.front()}, rebateCurrencies,
+                    feeSettlPeriod, feeSettlCal, feeSettlBdc);
             } else {
                 exercise_ = QuantLib::ext::make_shared<QuantExt::RebatedExercise>(
-                    *exercise_, exerciseDates_, rebateAmounts, rebateCurrencies, feeSettlPeriod, feeSettlCal,
+                    *exercise_, exerciseDates_, rebates, rebateCurrencies, feeSettlPeriod, feeSettlCal,
                     feeSettlBdc);
             }
         }
