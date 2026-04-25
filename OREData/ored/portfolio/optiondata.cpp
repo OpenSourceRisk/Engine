@@ -424,7 +424,7 @@ ExerciseBuilder::ExerciseBuilder(const OptionData& optionData, const std::vector
             for (Size i = 0; i < rebateCurrencies.size(); ++i) {
                 feeSettlement_.push_back(
                     std::make_pair(QuantLib::ext::make_shared<QuantLib::SimpleCashFlow>(
-                                       rebateAmounts[exerciseDateIndex_][i],
+                                       -rebateAmounts[exerciseDateIndex_][i],
                                        feeSettlCal.advance(exerciseDate_, feeSettlPeriod, feeSettlBdc)),
                                    rebateCurrencies[i]));
                 DLOG("Settlement fee for exercised option is "
