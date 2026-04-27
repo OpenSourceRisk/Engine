@@ -44,9 +44,7 @@ public:
 
     std::string toString() const { return str_; }
 
-    void setConvention(const std::string& conventionName,
-                       const QuantLib::ext::shared_ptr<ore::data::FutureConvention>& convention) {
-        conventionName_ = conventionName;
+    void setConvention(const QuantLib::ext::shared_ptr<ore::data::FutureConvention>& convention) {
         convention_ = convention;
     }
 
@@ -65,7 +63,6 @@ private:
     std::string str_;
     QuantLib::Month month_;
     QuantLib::Year year_;
-    std::string conventionName_;
     QuantLib::ext::shared_ptr<ore::data::FutureConvention> convention_;
 };
 

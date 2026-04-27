@@ -51,7 +51,7 @@ void updateFutureExpiries(ore::analytics::SensitivityScenarioData::CurveShiftPar
             QL_REQUIRE(found, "convention " << conventionName << " not found for par instrument "
                                             << data.parInstruments[i] << " for curve " << curveName);
             auto irFutureConvention = QuantLib::ext::dynamic_pointer_cast<ore::data::FutureConvention>(convention);
-            p->setConvention(conventionName, irFutureConvention);
+            p->setConvention(irFutureConvention);
         }
     }
     return;
