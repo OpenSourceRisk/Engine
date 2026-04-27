@@ -181,7 +181,7 @@ public:
        some point and handle such notice dates in the callling code as appropriate. If the exercise style is American
        the flag is set to false always internally. */
     ExerciseBuilder(const OptionData& optionData, const std::vector<QuantLib::Leg>& legs,
-                    const std::vector<QuantLib::Currency>& legCurrencies = {},
+                    const std::vector<std::string>& legCurrencies = {},
                     bool removeNoticeDatesAfterLastAccrualStart = true);
 
     // null if exercsied or no alive exercise dates
@@ -198,8 +198,9 @@ public:
     const QuantLib::Date& exerciseDate() const { return exerciseDate_; }
     // only for exercised options: cash settlement amount or null
     const QuantLib::ext::shared_ptr<QuantLib::CashFlow>& cashSettlement() const { return cashSettlement_; }
+    const std::string& cashSettlementCurrency() const { return cashSettlementCurrency_; }
     // only for exercised options: exercise fee amount or null
-    std::vector<std::pair<QuantLib::ext::shared_ptr<QuantLib::CashFlow>, QuantLib::Currency>> feeSettlement() const {
+    std::vector<std::pair<QuantLib::ext::shared_ptr<QuantLib::CashFlow>, std::string>> feeSettlement() const {
         return feeSettlement_;
     }
 
@@ -220,7 +221,8 @@ private:
     bool isExercised_ = false;
     QuantLib::Date exerciseDate_;
     QuantLib::ext::shared_ptr<QuantLib::CashFlow> cashSettlement_;
-    std::vector<std::pair<QuantLib::ext::shared_ptr<QuantLib::CashFlow>, QuantLib::Currency>> feeSettlement_;
+    std::string cashSettlementCurrency_;
+    std::vector<std::pair<QuantLib::ext::shared_ptr<QuantLib::CashFlow>, std::string>> feeSettlement_;
 
     // index in all exercise date vector if exercised
     Size exerciseDateIndex_ = QuantLib::Null<QuantLib::Size>();

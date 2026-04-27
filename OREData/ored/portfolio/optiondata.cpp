@@ -163,8 +163,12 @@ XMLNode* OptionData::toXML(XMLDocument& doc) const {
 }
 
 ExerciseBuilder::ExerciseBuilder(const OptionData& optionData, const std::vector<Leg>& legs,
-                                 const std::vector<Currency>& legCurrencies,
+                                 const std::vector<std::string>& legCurrencies,
                                  bool removeNoticeDatesAfterLastAccrualStart) {
+
+    QL_REQUIRE(legCurrencies.empty() || legCurrencies.size() == legs.size(),
+               "ExerciseBuilder: legCurrencies size (" << legCurrencies.size() << ") must match legs size ("
+                                                       << legs.size() << ")");
 
     // never remove notice dates if mid coupon exercise is active
 
@@ -302,6 +306,7 @@ ExerciseBuilder::ExerciseBuilder(const OptionData& optionData, const std::vector
                 }
                 if (p != Null<Real>())
                     cashSettlement_ = QuantLib::ext::make_shared<QuantLib::SimpleCashFlow>(p, cashSettlementDate);
+                cashSettlementCurrency_ = optionData.cashSettlementCurrency();
                 DLOG("Option is cash settled, amount " << p << " paid on " << cashSettlementDate);
             }
         }
@@ -323,7 +328,7 @@ ExerciseBuilder::ExerciseBuilder(const OptionData& optionData, const std::vector
 
         std::map<std::string, std::tuple<vector<double>, vector<string>, vector<string>>> rebateData;
 
-        std::vector<Currency> rebateCurrencies;
+        std::vector<std::string> rebateCurrencies;
         std::vector<std::vector<double>> rebateAmounts(exDatesPlusInf.size() - 1);
         std::vector<std::vector<std::string>> rebateTypes(exDatesPlusInf.size() - 1);
 
@@ -335,7 +340,7 @@ ExerciseBuilder::ExerciseBuilder(const OptionData& optionData, const std::vector
 
         for (auto const& [ccy, data] : rebateData) {
             auto const& [amounts, dates, types] = data;
-            rebateCurrencies.push_back(ccy.empty() ? Currency() : parseCurrency(ccy));
+            rebateCurrencies.push_back(ccy);
             {
                 auto tmp = buildScheduledVectorNormalised(amounts, dates, exDatesPlusInf, 0.0);
                 for (Size i = 0; i < exDatesPlusInf.size() - 1; ++i)
@@ -393,7 +398,7 @@ ExerciseBuilder::ExerciseBuilder(const OptionData& optionData, const std::vector
                              << rebateAmounts[j][i] << " to absolute rebate " << rebateAmounts[j][i] * feeNotional
                              << " using nominal " << feeNotional << " for exercise date "
                              << QuantLib::io::iso_date(sortedExerciseDates[j]) << " and currency "
-                             << (rebateCurrencies[i].empty() ? "na" : rebateCurrencies[i].code()));
+                             << rebateCurrencies[i]);
                         rebateAmounts[j][i] *= feeNotional; // multiply percentage fee by relevant notional
                     }
 
@@ -427,9 +432,9 @@ ExerciseBuilder::ExerciseBuilder(const OptionData& optionData, const std::vector
                                        -rebateAmounts[exerciseDateIndex_][i],
                                        feeSettlCal.advance(exerciseDate_, feeSettlPeriod, feeSettlBdc)),
                                    rebateCurrencies[i]));
-                DLOG("Settlement fee for exercised option is "
-                     << feeSettlement_.back().first->amount() << " paid on " << feeSettlement_.back().first->date()
-                     << " in currency " << (rebateCurrencies[i].empty() ? "na" : rebateCurrencies[i].code()));
+                DLOG("Settlement fee for exercised option is " << feeSettlement_.back().first->amount() << " paid on "
+                                                               << feeSettlement_.back().first->date() << " in currency "
+                                                               << (rebateCurrencies[i]));
             }
         }
 
@@ -445,15 +450,20 @@ ExerciseBuilder::ExerciseBuilder(const OptionData& optionData, const std::vector
                     }
                 }
             }
+
+            std::vector<Currency> rebateCcys;
+            std::for_each(rebateCurrencies.begin(), rebateCurrencies.end(), [&rebateCcys](const std::string& s) {
+                rebateCcys.push_back(s.empty() ? Currency() : parseCurrency(s));
+            });
+
             if (optionData.style() == "American") {
                 // Note: we compute the settl date relative to notification, not exercise here
                 exercise_ = QuantLib::ext::make_shared<QuantExt::RebatedExercise>(
-                    *exercise_, exercise_->dates(), std::vector<std::vector<Real>>{rebates.front()}, rebateCurrencies,
+                    *exercise_, exercise_->dates(), std::vector<std::vector<Real>>{rebates.front()}, rebateCcys,
                     feeSettlPeriod, feeSettlCal, feeSettlBdc);
             } else {
                 exercise_ = QuantLib::ext::make_shared<QuantExt::RebatedExercise>(
-                    *exercise_, exerciseDates_, rebates, rebateCurrencies, feeSettlPeriod, feeSettlCal,
-                    feeSettlBdc);
+                    *exercise_, exerciseDates_, rebates, rebateCcys, feeSettlPeriod, feeSettlCal, feeSettlBdc);
             }
         }
     } // if exercise fees are given
