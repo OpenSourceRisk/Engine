@@ -77,7 +77,8 @@ public:
                                   std::unique_ptr<MultiThreadArgs> multiThreadArgs = nullptr,
                                   const bool breakdown = false, const bool includeExpectedShortfall = false,
                                   const bool tradePnl = false, const bool riskFactorBreakdown = false,
-                                  const bool useAtParCouponsCurves = true, const bool useAtParCouponsTrades = true);
+                                  const bool useAtParCouponsCurves = true, const bool useAtParCouponsTrades = true,
+                                  const bool riskClassBreakdown = true);
 
     void createAdditionalReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) override;
 
@@ -88,6 +89,7 @@ public:
 
 protected:
     void createVarCalculator() override;
+    void initialiseRiskGroups() override;
     void writeHeader(const QuantLib::ext::shared_ptr<Report>& report) const override;
     std::vector<Real> calcVarsForQuantiles() const override;
     void handleFullRevalResults(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
@@ -105,6 +107,7 @@ private:
     bool includeExpectedShortfall_ = false;
     bool tradePnl_ = false;
     bool riskFactorBreakdown_ = false;
+    bool riskClassBreakdown_ = true;
     int countRF_ = 0;
 };
 
