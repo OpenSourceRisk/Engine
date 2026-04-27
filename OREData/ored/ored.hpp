@@ -187,6 +187,7 @@
 #include <ored/portfolio/builders/durationadjustedcms.hpp>
 #include <ored/portfolio/builders/equity.hpp>
 #include <ored/portfolio/builders/equityasianoption.hpp>
+#include <ored/portfolio/builders/equityautodeltahedgeoption.hpp>
 #include <ored/portfolio/builders/equitybarrieroption.hpp>
 #include <ored/portfolio/builders/equitycompositeoption.hpp>
 #include <ored/portfolio/builders/equitydigitaloption.hpp>
@@ -216,6 +217,8 @@
 #include <ored/portfolio/builders/pairwisevarianceswap.hpp>
 #include <ored/portfolio/builders/quantoequityoption.hpp>
 #include <ored/portfolio/builders/quantovanillaoption.hpp>
+#include <ored/portfolio/builders/rangeaccrualleg.hpp>
+#include <ored/portfolio/builders/ratedigitaloption.hpp>
 #include <ored/portfolio/builders/riskparticipationagreement.hpp>
 #include <ored/portfolio/builders/scriptedtrade.hpp>
 #include <ored/portfolio/builders/swap.hpp>
@@ -264,6 +267,7 @@
 #include <ored/portfolio/enginedata.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/envelope.hpp>
+#include <ored/portfolio/equityautodeltahedgeoption.hpp>
 #include <ored/portfolio/equitybarrieroption.hpp>
 #include <ored/portfolio/equityderivative.hpp>
 #include <ored/portfolio/equitydigitaloption.hpp>
@@ -328,6 +332,7 @@
 #include <ored/portfolio/premiumdata.hpp>
 #include <ored/portfolio/rainbowoption.hpp>
 #include <ored/portfolio/rangebound.hpp>
+#include <ored/portfolio/ratedigitaloption.hpp>
 #include <ored/portfolio/referencedata.hpp>
 #include <ored/portfolio/referencedatafactory.hpp>
 #include <ored/portfolio/riskparticipationagreement.hpp>

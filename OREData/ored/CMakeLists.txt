@@ -158,6 +158,7 @@ portfolio/builders/commodityapomodelbuilder.cpp
 portfolio/builders/commodityasianoption.cpp
 portfolio/builders/commodityforward.cpp
 portfolio/builders/commodityoption.cpp
+portfolio/builders/rangeaccrualleg.cpp
 portfolio/builders/commodityspreadoption.cpp
 portfolio/builders/commodityswap.cpp
 portfolio/builders/commodityswaption.cpp
@@ -174,8 +175,10 @@ portfolio/builders/equityasianoption.cpp
 portfolio/builders/equitybarrieroption.cpp
 portfolio/builders/equitycompositeoption.cpp
 portfolio/builders/equitydigitaloption.cpp
+portfolio/builders/ratedigitaloption.cpp
 portfolio/builders/equitydoublebarrieroption.cpp
 portfolio/builders/equitydoubletouchoption.cpp
+portfolio/builders/equityautodeltahedgeoption.cpp
 portfolio/builders/equityforward.cpp
 portfolio/builders/equityfuturesoption.cpp
 portfolio/builders/equityoption.cpp
@@ -248,6 +251,8 @@ portfolio/enginefactory.cpp
 portfolio/envelope.cpp
 portfolio/equitybarrieroption.cpp
 portfolio/equitydigitaloption.cpp
+portfolio/ratedigitaloption.cpp
+portfolio/equityautodeltahedgeoption.cpp
 portfolio/equitydoublebarrieroption.cpp
 portfolio/equitydoubletouchoption.cpp
 portfolio/equityeuropeanbarrieroption.cpp
@@ -584,6 +589,7 @@ portfolio/builders/commodityapomodelbuilder.hpp
 portfolio/builders/commodityasianoption.hpp
 portfolio/builders/commodityforward.hpp
 portfolio/builders/commodityoption.hpp
+portfolio/builders/rangeaccrualleg.hpp
 portfolio/builders/commodityspreadoption.hpp
 portfolio/builders/commodityswap.hpp
 portfolio/builders/commodityswaption.hpp
@@ -600,8 +606,10 @@ portfolio/builders/equityasianoption.hpp
 portfolio/builders/equitybarrieroption.hpp
 portfolio/builders/equitycompositeoption.hpp
 portfolio/builders/equitydigitaloption.hpp
+portfolio/builders/ratedigitaloption.hpp
 portfolio/builders/equitydoublebarrieroption.hpp
 portfolio/builders/equitydoubletouchoption.hpp
+portfolio/builders/equityautodeltahedgeoption.hpp
 portfolio/builders/equityforward.hpp
 portfolio/builders/equityfuturesoption.hpp
 portfolio/builders/equityoption.hpp
@@ -677,6 +685,8 @@ portfolio/envelope.hpp
 portfolio/equitybarrieroption.hpp
 portfolio/equityderivative.hpp
 portfolio/equitydigitaloption.hpp
+portfolio/ratedigitaloption.hpp
+portfolio/equityautodeltahedgeoption.hpp
 portfolio/equitydoublebarrieroption.hpp
 portfolio/equitydoubletouchoption.hpp
 portfolio/equityeuropeanbarrieroption.hpp

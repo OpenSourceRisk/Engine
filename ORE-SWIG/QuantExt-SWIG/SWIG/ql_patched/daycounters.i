@@ -28,9 +28,7 @@
 %include stl.i
 %include null.i
 
-%{
-using QuantLib::DayCounter;
-%}
+namespace QuantLib {
 
 class DayCounter {
   protected:
@@ -91,6 +89,8 @@ namespace QuantLib {
         Business252(Calendar c = Brazil());
     };
 }
+
+} // namespace QuantLib
 
 // FIXME: This leads to errors (reference to 'Actual365NoLeap' is ambiguous) when building further wrappers
 // that include this directory, and deprecation warnings are NOT avoided then. So comment this out for now.

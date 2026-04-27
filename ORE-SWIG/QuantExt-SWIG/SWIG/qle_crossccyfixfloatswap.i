@@ -25,15 +25,12 @@
 %include swap.i
 %include qle_ccyswap.i
 
-%{
-using QuantExt::CrossCcyFixFloatSwap;
-%}
-
-%shared_ptr(CrossCcyFixFloatSwap)
-class CrossCcyFixFloatSwap : public CrossCcySwap {
+%shared_ptr(QuantExt::CrossCcyFixFloatSwap)
+namespace QuantExt {
+class CrossCcyFixFloatSwap : public QuantExt::CrossCcySwap {
   public:
     enum Type { Receiver = -1, Payer = 1 };
-    CrossCcyFixFloatSwap(CrossCcyFixFloatSwap::Type type,
+    CrossCcyFixFloatSwap(QuantExt::CrossCcyFixFloatSwap::Type type,
                          QuantLib::Real fixedNominal,
                          const QuantLib::Currency& fixedCurrency,
                          const QuantLib::Schedule& fixedSchedule,
@@ -45,12 +42,12 @@ class CrossCcyFixFloatSwap : public CrossCcySwap {
                          QuantLib::Real floatNominal,
                          const QuantLib::Currency& floatCurrency,
                          const QuantLib::Schedule& floatSchedule,
-                         const ext::shared_ptr<IborIndex>& floatIndex,
+                         const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& floatIndex,
                          QuantLib::Spread floatSpread,
                          QuantLib::BusinessDayConvention floatPaymentBdc,
                          QuantLib::Natural floatPaymentLag,
                          const QuantLib::Calendar& floatPaymentCalendar);
-    CrossCcyFixFloatSwap::Type type() const;
+    QuantExt::CrossCcyFixFloatSwap::Type type() const;
     QuantLib::Real fixedNominal() const;
     const QuantLib::Currency& fixedCurrency() const;
     const QuantLib::Schedule& fixedSchedule() const;
@@ -69,5 +66,49 @@ class CrossCcyFixFloatSwap : public CrossCcySwap {
     QuantLib::Rate fairFixedRate() const;
     QuantLib::Spread fairSpread() const;
 };
+  }
+
+%inline %{
+QuantExt::CrossCcyFixFloatSwap* qleMakeCrossCcyFixFloatSwap(
+  QuantExt::CrossCcyFixFloatSwap::Type type,
+  QuantLib::Real fixedNominal,
+  const QuantLib::Currency& fixedCurrency,
+  const QuantLib::Schedule& fixedSchedule,
+  QuantLib::Rate fixedRate,
+  const QuantLib::DayCounter& fixedDayCount,
+  QuantLib::BusinessDayConvention fixedPaymentBdc,
+  QuantLib::Natural fixedPaymentLag,
+  const QuantLib::Calendar& fixedPaymentCalendar,
+  QuantLib::Real floatNominal,
+  const QuantLib::Currency& floatCurrency,
+  const QuantLib::Schedule& floatSchedule,
+  const QuantLib::IborIndex& floatIndex,
+  QuantLib::Spread floatSpread,
+  QuantLib::BusinessDayConvention floatPaymentBdc,
+  QuantLib::Natural floatPaymentLag,
+  const QuantLib::Calendar& floatPaymentCalendar) {
+  return new QuantExt::CrossCcyFixFloatSwap(type, fixedNominal, fixedCurrency, fixedSchedule, fixedRate,
+                        fixedDayCount, fixedPaymentBdc, fixedPaymentLag,
+                        fixedPaymentCalendar, floatNominal, floatCurrency,
+                        floatSchedule,
+                        floatIndex.clone(floatIndex.forwardingTermStructure()),
+                        floatSpread, floatPaymentBdc, floatPaymentLag,
+                        floatPaymentCalendar);
+}
+%}
+
+%pythoncode %{
+def _cross_ccy_fix_float_swap_init(self, *args):
+  _ore_module = globals().get("_ORE", globals().get("_OREP"))
+  if len(args) == 17:
+    try:
+      _ore_module.CrossCcyFixFloatSwap_swiginit(self, _ore_module.qleMakeCrossCcyFixFloatSwap(*args))
+      return
+    except TypeError:
+      pass
+  _ore_module.CrossCcyFixFloatSwap_swiginit(self, _ore_module.new_CrossCcyFixFloatSwap(*args))
+
+CrossCcyFixFloatSwap.__init__ = _cross_ccy_fix_float_swap_init
+%}
 
 #endif

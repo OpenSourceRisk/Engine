@@ -21,15 +21,12 @@
 
 %include boost_shared_ptr.i
 
-%{
-using ore::data::InMemoryReport;
-using ore::data::PlainInMemoryReport;
-%}
-
-%shared_ptr(PlainInMemoryReport)
+%shared_ptr(ore::data::PlainInMemoryReport)
+namespace ore {
+namespace data {
 class PlainInMemoryReport {
 public:
-    PlainInMemoryReport(const ext::shared_ptr<InMemoryReport>& imReport);
+    PlainInMemoryReport(const ext::shared_ptr<ore::data::InMemoryReport>& imReport);
     Size columns() const;
     std::string header(Size i);
     Size columnType(Size i) const;
@@ -45,5 +42,8 @@ public:
     QuantLib::Date dataAsDate(Size j, Size i) const;
     QuantLib::Period dataAsPeriod(Size j, Size i) const;
 };
+
+} // namespace data
+} // namespace ore
 
 #endif

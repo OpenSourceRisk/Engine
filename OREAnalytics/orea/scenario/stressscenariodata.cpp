@@ -82,6 +82,8 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
                 DLOG("Loading stress parameters for survival probability for " << name);
                 CurveShiftData data;
                 data.shiftType = QuantExt::parseShiftType(XMLUtils::getChildValue(child, "ShiftType", true));
+                data.shiftingZeros = XMLUtils::getChildValueAsBool(
+                    child, "ShiftingZeros", data.shiftType == ShiftType::EqualTo ? true : false, true);
                 data.shifts = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Shifts", true);
                 data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
                 QL_REQUIRE(data.shifts.size() == data.shiftTenors.size(),
@@ -101,6 +103,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
                 DLOG("Loading stress parameters for discount curve for ccy " << ccy);
                 CurveShiftData data;
                 data.shiftType = QuantExt::parseShiftType(XMLUtils::getChildValue(child, "ShiftType", true));
+                data.shiftingZeros = XMLUtils::getChildValueAsBool(child, "ShiftingZeros", data.shiftType == ShiftType::EqualTo ? true : false, true);
                 data.shifts = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Shifts", true);
                 data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
                 QL_REQUIRE(data.shifts.size() == data.shiftTenors.size(),
@@ -123,6 +126,8 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
                 // same as discount curve sensitivity loading from here ...
                 CurveShiftData data;
                 data.shiftType = QuantExt::parseShiftType(XMLUtils::getChildValue(child, "ShiftType", true));
+                data.shiftingZeros = XMLUtils::getChildValueAsBool(
+                    child, "ShiftingZeros", data.shiftType == ShiftType::EqualTo ? true : false, true);
                 data.shifts = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Shifts", true);
                 data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
                 QL_REQUIRE(data.shifts.size() == data.shiftTenors.size(),
@@ -144,6 +149,8 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
                 // same as discount curve sensitivity loading from here ...
                 CurveShiftData data;
                 data.shiftType = QuantExt::parseShiftType(XMLUtils::getChildValue(child, "ShiftType", true));
+                data.shiftingZeros = XMLUtils::getChildValueAsBool(
+                    child, "ShiftingZeros", data.shiftType == ShiftType::EqualTo ? true : false, true);
                 data.shifts = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Shifts", true);
                 data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
                 QL_REQUIRE(data.shifts.size() == data.shiftTenors.size(),

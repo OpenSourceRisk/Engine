@@ -991,6 +991,7 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="Relative"/>
       <xs:enumeration value="Absolute"/>
+	  <xs:enumeration value="EqualTo"/>
     </xs:restriction>
   </xs:simpleType>
 

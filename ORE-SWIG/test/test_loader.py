@@ -51,6 +51,26 @@ class LoaderTest:
                 })
         self.marketdata = marketdata
         self.fixingdata = fixingdata
+
+    def _build_wildcard_pattern(self):
+        """Return a prefix wildcard pattern and its expected matches."""
+        pattern_groups = {}
+
+        for data in self.marketdata:
+            name = data['Name']
+            slash_pos = name.rfind('/')
+            if slash_pos > 0:
+                pattern = name[:slash_pos + 1] + '*'
+            else:
+                prefix_len = max(1, len(name) // 2)
+                pattern = name[:prefix_len] + '*'
+
+            pattern_groups.setdefault(pattern, set()).add(name)
+
+        pattern, expected_names = max(
+            pattern_groups.items(), key=lambda item: (len(item[1]), item[0])
+        )
+        return pattern, expected_names
                 
     def testSimpleInspectors(self):
         """ Test Loader simple inspectors. """
@@ -92,6 +112,28 @@ class LoaderTest:
 #            self.assertEqual(self.fixingdata_loader[i].date, self.fixingdata[i]['Date'])
 #            self.assertEqual(self.fixingdata_loader[i].name, self.fixingdata[i]['Name'])
 #            self.assertAlmostEqual(self.fixingdata_loader[i].fixing, self.fixingdata[i]['Value'])
+
+    def testWildcardLookup(self):
+        """Test wildcard construction and loader pattern helpers."""
+        pattern, expected_names = self._build_wildcard_pattern()
+
+        wildcard = Wildcard(pattern)
+        self.assertEqual(wildcard.pattern(), pattern)
+        self.assertTrue(wildcard.hasWildcard())
+        self.assertTrue(wildcard.isPrefix())
+        self.assertTrue(wildcard.usePrefixes())
+        self.assertFalse(wildcard.aggressivePrefixes())
+
+        for name in expected_names:
+            self.assertTrue(wildcard.matches(name))
+
+        direct_quotes = self.loader.get(wildcard, self.asofDate)
+        direct_names = {quote.name() for quote in direct_quotes}
+        self.assertEqual(direct_names, expected_names)
+
+        helper_quotes = self.loader.getByPattern(pattern, self.asofDate)
+        helper_names = {quote.name() for quote in helper_quotes}
+        self.assertEqual(helper_names, expected_names)
 
 
 class CSVLoaderTest(LoaderTest, unittest.TestCase):

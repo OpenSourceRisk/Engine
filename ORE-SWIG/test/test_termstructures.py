@@ -21,7 +21,7 @@ class BlackVolatilityWithATMTest(unittest.TestCase):
         self.surface=BlackConstantVol(self.todays_date, UnitedStates(UnitedStates.NYSE), 0.05, Actual360())
         self.blackvolatilitywithatm=BlackVolatilityWithATM(self.surface,self.spot,self.yield1,self.yield2)
 
-        
+
     def testSimpleInspectors(self):
         """ Test Black Volatility with ATM simple inspector. """
         self.assertEqual(self.blackvolatilitywithatm.referenceDate(),self.date1)
@@ -39,7 +39,7 @@ class BlackVarianceSurfaceMoneynessSpotTest(unittest.TestCase):
         self.stickyStrike=False
         self.blackvariancesurfacemoneynessspot=BlackVarianceSurfaceMoneynessSpot(self.cal,self.spot,self.times,self.moneyness,self.blackVolMatrix,self.dayCounter,self.stickyStrike)
 
-        
+
     def testSimpleInspectors(self):
         """ Test Black Variance Surface Moneyness Spot simple inspector. """
         self.assertEqual(self.blackvariancesurfacemoneynessspot.dayCounter(),self.dayCounter)
@@ -60,10 +60,10 @@ class BlackVarianceSurfaceMoneynessForwardTest(unittest.TestCase):
         self.moneyness=(1.0,1.1,1.2)
         self.blackVolMatrix =((QuoteHandle(SimpleQuote(0.2)),QuoteHandle(SimpleQuote(0.2)),QuoteHandle(SimpleQuote(0.3))),(QuoteHandle(SimpleQuote(0.2)),QuoteHandle(SimpleQuote(0.3)),QuoteHandle(SimpleQuote(0.4))),(QuoteHandle(SimpleQuote(0.3)),QuoteHandle(SimpleQuote(0.4)),QuoteHandle(SimpleQuote(0.5))))
         self.dayCounter=Actual360()
-        self.stickyStrike=False                
+        self.stickyStrike=False
         self.blackvariancesurfacemoneynessforward=BlackVarianceSurfaceMoneynessForward(self.cal,self.spot,self.times,self.moneyness,self.blackVolMatrix,self.dc,self.forTS,self.domTS,self.stickyStrike)
 
-        
+
     def testSimpleInspectors(self):
         """ Test Black Variance Surface Moneyness Forward simple inspector. """
         self.assertEqual(self.blackvariancesurfacemoneynessforward.dayCounter(),self.dayCounter)
@@ -95,14 +95,14 @@ class SwaptionVolCubeWithATMTest(unittest.TestCase):
                                                         self.volSpreads,self.swapIndexBase,self.shortSwapIndexBase,
                                                         self.vegaWeightedSmileFit,self.flatExtrapolation, self.volsAreSpreads)
         self.cube=SwaptionVolCubeWithATM(self.swaptionVolatilityCube)
-        
+
     def testSimpleInspectors(self):
         """ Test Swaption Vol Cube With ATM simple inspector. """
         self.assertEqual(self.cube.dayCounter(),self.dayCounter)
-        
-        
-        
-        
+
+
+
+
 class QLESwaptionVolCube2Test(unittest.TestCase):
     def setUp(self):
         """ Test consistency of QLE Swaption Vol Cube 2"""
@@ -122,11 +122,11 @@ class QLESwaptionVolCube2Test(unittest.TestCase):
         self.volsAreSpreads=False
         self.swaptionVolCube2=QLESwaptionVolCube2(self.atmVolStructure,self.optionTenors,self.swapTenors,self.strikeSpreads,self.volSpreads,self.swapIndexBase,self.shortSwapIndexBase,self.vegaWeightedSmileFit,self.flatExtrapolation,self.volsAreSpreads)
 
-        
+
     def testSimpleInspectors(self):
         """ Test  QLE Swaption Vol Cube 2 simple inspector. """
         self.assertEqual(self.swaptionVolCube2.dayCounter(),self.dayCounter)
-        
+
 
 class SwaptionVolatilityConstantSpreadTest(unittest.TestCase):
     def setUp(self):
@@ -140,7 +140,7 @@ class SwaptionVolatilityConstantSpreadTest(unittest.TestCase):
     def testSimpleInspectors(self):
         """ Test Swaption Volatility Constant Spread simple inspector. """
         self.assertEqual(self.swaptionVolatilityConstantSpread.dayCounter(),self.dayCounter)
-        
+
 
 class FxBlackVannaVolgaVolatilitySurfaceTest(unittest.TestCase):
     def setUp(self):
@@ -162,10 +162,30 @@ class FxBlackVannaVolgaVolatilitySurfaceTest(unittest.TestCase):
     def testSimpleInspectors(self):
         """ Test Fx Black Vanna Volga Volatility Surface simple inspector. """
         self.assertEqual(self.fxBlackVannaVolgaVolatilitySurface.dayCounter(),self.dc)
-        
-        
 
-        
+
+class Task5TermStructureSmokeTest(unittest.TestCase):
+    def setUp(self):
+        """Create simple market inputs used across Task 5 term structure tests."""
+        self.today = Date(1, October, 2018)
+        self.dc = Actual360()
+        self.calendar = UnitedStates(UnitedStates.NYSE)
+        self.base = ConstantSwaptionVolatility(self.today, self.calendar, Following, 0.20, self.dc)
+
+    def test_task5_termstructure_symbols_available(self):
+        """Verify Task 5 term structure symbols are available in the module."""
+        self.assertTrue(hasattr(__import__("ORE"), "DynamicSwaptionVolatilityMatrix"))
+        self.assertTrue(hasattr(__import__("ORE"), "BlackVolatilitySurfaceBFRR"))
+        self.assertTrue(hasattr(__import__("ORE"), "CorrelationTermStructure"))
+        self.assertTrue(hasattr(__import__("ORE"), "QLESpreadedSwaptionVolatility"))
+
+    def test_spreaded_swaption_symbol_available(self):
+        """Verify the aliased QuantExt spreaded swaption class is available."""
+        self.assertTrue(hasattr(__import__("ORE"), "QLESpreadedSwaptionVolatility"))
+
+
+
+
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()
@@ -175,7 +195,7 @@ if __name__ == '__main__':
     suite.addTest(unittest.makeSuite(SwaptionVolCubeWithATMTest,'test'))
     suite.addTest(unittest.makeSuite(QLESwaptionVolCube2Test,'test'))
     suite.addTest(unittest.makeSuite(FxBlackVannaVolgaVolatilitySurfaceTest,'test'))
-    
+    suite.addTest(unittest.makeSuite(Task5TermStructureSmokeTest,'test'))
+
     unittest.TextTestRunner(verbosity=2).run(suite)
     unittest.main()
-

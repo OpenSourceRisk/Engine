@@ -49,6 +49,7 @@
 #include <ored/portfolio/builders/capflooredaverageonindexedcouponleg.hpp>
 #include <ored/portfolio/builders/capflooredcpileg.hpp>
 #include <ored/portfolio/builders/capfloorediborleg.hpp>
+#include <ored/portfolio/builders/rangeaccrualleg.hpp>
 #include <ored/portfolio/builders/capfloorednonstandardyoyleg.hpp>
 #include <ored/portfolio/builders/capflooredovernightindexedcouponleg.hpp>
 #include <ored/portfolio/builders/capflooredyoyleg.hpp>
@@ -79,7 +80,9 @@
 #include <ored/portfolio/builders/equitycompositeoption.hpp>
 #include <ored/portfolio/builders/equitydigitaloption.hpp>
 #include <ored/portfolio/builders/equitydoublebarrieroption.hpp>
+#include <ored/portfolio/builders/ratedigitaloption.hpp>
 #include <ored/portfolio/builders/equitydoubletouchoption.hpp>
+#include <ored/portfolio/builders/equityautodeltahedgeoption.hpp>
 #include <ored/portfolio/builders/equityforward.hpp>
 #include <ored/portfolio/builders/equityfuturesoption.hpp>
 #include <ored/portfolio/builders/equityoption.hpp>
@@ -142,12 +145,14 @@
 #include <ored/portfolio/equityderivative.hpp>
 #include <ored/portfolio/equitydigitaloption.hpp>
 #include <ored/portfolio/equitydoublebarrieroption.hpp>
+#include <ored/portfolio/ratedigitaloption.hpp>
 #include <ored/portfolio/equitydoubletouchoption.hpp>
 #include <ored/portfolio/equityeuropeanbarrieroption.hpp>
 #include <ored/portfolio/equityforward.hpp>
 #include <ored/portfolio/equityfuturesoption.hpp>
 #include <ored/portfolio/equityfxlegbuilder.hpp>
 #include <ored/portfolio/equityfxlegdata.hpp>
+#include <ored/portfolio/equityautodeltahedgeoption.hpp>
 #include <ored/portfolio/equityoption.hpp>
 #include <ored/portfolio/equityoptionposition.hpp>
 #include <ored/portfolio/equityoutperformanceoption.hpp>
@@ -255,6 +260,7 @@ void dataBuilders() {
     ORE_REGISTER_LEG_DATA("DurationAdjustedCMS", DurationAdjustedCmsLegData, false)
     ORE_REGISTER_LEG_DATA("EquityMargin", EquityMarginLegData, false)
     ORE_REGISTER_LEG_DATA("FormulaBased", FormulaBasedLegData, false)
+    ORE_REGISTER_LEG_DATA("RangeAccrual", RangeAccrualLegData, false)
 
     ORE_REGISTER_CALIBRATION_INSTRUMENT("CpiCapFloor", CpiCapFloor, false)
     ORE_REGISTER_CALIBRATION_INSTRUMENT("YoYCapFloor", YoYCapFloor, false)
@@ -311,6 +317,7 @@ void dataBuilders() {
     ORE_REGISTER_TRADE_BUILDER("FxSwap", FxSwap, false)
     ORE_REGISTER_TRADE_BUILDER("EquityTouchOption", EquityTouchOption, false)
     ORE_REGISTER_TRADE_BUILDER("EquityDigitalOption", EquityDigitalOption, false)
+    ORE_REGISTER_TRADE_BUILDER("RateDigitalOption", RateDigitalOption, false)
     ORE_REGISTER_TRADE_BUILDER("CompositeTrade", CompositeTrade, false)
     ORE_REGISTER_TRADE_BUILDER("MultiLegOption", MultiLegOption, false)
     ORE_REGISTER_TRADE_BUILDER("Swap", Swap, false)
@@ -338,6 +345,7 @@ void dataBuilders() {
     ORE_REGISTER_TRADE_BUILDER("FxKIKOBarrierOption", FxKIKOBarrierOption, false)
     ORE_REGISTER_TRADE_BUILDER("FxBarrierOption", FxBarrierOption, false)
     ORE_REGISTER_TRADE_BUILDER("EquityOption", EquityOption, false)
+    ORE_REGISTER_TRADE_BUILDER("EquityAutoDeltaHedgedOption", EquityAutoDeltaHedgedOption, false)
     ORE_REGISTER_TRADE_BUILDER("FxOption", FxOption, false)
     ORE_REGISTER_TRADE_BUILDER("CBO", CBO, false)
 
@@ -413,6 +421,7 @@ void dataBuilders() {
     ORE_REGISTER_LEGBUILDER("EquityLegBuilder", EquityLegBuilder, false)
     ORE_REGISTER_LEGBUILDER("EquityMarginLegBuilder", EquityMarginLegBuilder, false)
     ORE_REGISTER_LEGBUILDER("FormulaBasedLegBuilder", FormulaBasedLegBuilder, false)
+    ORE_REGISTER_LEGBUILDER("RangeAccrualLegBuilder", RangeAccrualLegBuilder, false)
 
     ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcCurrencySwapEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(AmcSwaptionEngineBuilder, false)
@@ -440,6 +449,7 @@ void dataBuilders() {
     // (Bond, FwdBond, EquityForward missing compared to "AMC" variants)
 
     ORE_REGISTER_ENGINE_BUILDER(CommoditySpreadOptionEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(CommodityCalendarSpreadOptionBachelierEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CpiCapFloorEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(EquityFutureEuropeanOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(DiscountingBondTRSEngineBuilder, false)
@@ -466,6 +476,7 @@ void dataBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(CrossCurrencyCommoditySwapEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(EquityEuropeanCompositeEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(FxForwardEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(FxForwardOptimizedEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(DiscountingBondRepoEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(AccrualBondRepoEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CapFlooredOvernightIndexedCouponLegEngineBuilder, false)
@@ -485,6 +496,7 @@ void dataBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(EquityTouchOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CapFlooredYoYLegEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(EquityDigitalOptionEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(RateDigitalOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(FxEuropeanAsianOptionMCDAAPEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(FxEuropeanAsianOptionMCDAASEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(FxEuropeanAsianOptionMCDGAPEngineBuilder, false)
@@ -493,6 +505,7 @@ void dataBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(FxEuropeanAsianOptionACGAPEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(FxEuropeanAsianOptionTWEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(SwapEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(SwapOptimizedEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CrossCurrencySwapEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(MidPointIndexCdsEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(MidPointCdsMultiStateEngineBuilder, false)
@@ -510,6 +523,7 @@ void dataBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(AnalyticHaganCmsCouponPricerBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(NumericalHaganCmsCouponPricerBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(LinearTSRCmsCouponPricerBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(EquityAutoDeltaHedgedOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(EquityForwardEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(BlackIndexCdsOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(NumericalIntegrationIndexCdsOptionEngineBuilder, false)
@@ -523,6 +537,8 @@ void dataBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(EquityDoubleTouchOptionAnalyticEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CapFlooredIborLegEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CapFlooredInterpolatedIborLegEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(RangeAccrualLegEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(RangeAccrualLegCallSpreadEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(LinearTsrDurationAdjustedCmsCouponPricerBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(GaussCopulaBucketingCdoEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(GaussCopulaMonteCarloCdoEngineBuilder, false)

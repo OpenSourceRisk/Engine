@@ -158,19 +158,20 @@
         <!-- AndreasenHuge, Dupire -->
         <Model>AndreasenHuge</Model>
         <!-- None, SimpleMc -->
+        <!-- <StochasticRatesCorrection>None</StochasticRatesCorrection> -->
         <StochasticRatesCorrection>SimpleMc</StochasticRatesCorrection>
         <SimpleMcParameters>
-          <TimeStepsPerYear>24</TimeStepsPerYear>
-          <CalibrationMoneynessMin>-3.0</CalibrationMoneynessMin>
-          <CalibrationMoneynessMax>3.0</CalibrationMoneynessMax>
-          <nStrikes>25</nStrikes>
-          <Samples>10000</Samples>
-          <d2CdK2Threshold>0.01</d2CdK2Threshold>
+          <TimeStepsPerYear>48</TimeStepsPerYear>
+          <CalibrationMoneynessMin>-4.0</CalibrationMoneynessMin>
+          <CalibrationMoneynessMax>4.0</CalibrationMoneynessMax>
+          <nStrikes>100</nStrikes>
+          <Samples>65536</Samples>
+          <d2CdK2Threshold>0.005</d2CdK2Threshold>
           <nPasses>1</nPasses>
         </SimpleMcParameters>
         <!-- AndreasenHuge: calibration set spec -->
-        <CalibrationMoneyness>-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0</CalibrationMoneyness>
-        <CalibrationGrid>70,1M</CalibrationGrid>
+        <CalibrationMoneyness>-4.0, -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0 ,4.0</CalibrationMoneyness>
+        <CalibrationGrid>140,2W</CalibrationGrid>
       </LocalVol>
 
     </ForeignExchangeModels>

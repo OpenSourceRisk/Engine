@@ -92,4 +92,11 @@ void HwModel::calibrateVolatilitiesIterativeStatisticalWithRiskNeutralVolatility
     update();
 }
 
+ext::shared_ptr<IrModel> HwModel::clone() const {
+    // do not flatten parametrization_
+    auto tmp = ext::make_shared<HwModel>(*this);
+    tmp->enableCache(false, {});
+    return tmp;
+}
+
 } // namespace QuantExt

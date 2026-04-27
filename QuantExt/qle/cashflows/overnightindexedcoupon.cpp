@@ -372,8 +372,8 @@ tuple<Rate, Spread, Rate, Date> OvernightIndexedCouponPricer::compute(const Date
                 //   business day. This also covers the case of the last ON period where the coupon end date is a 
                 //   holiday - we need to forecast there also as telescopic including it is slightly inaccurate.
                 // - if in rate cut-off period, get the RCO ON rate and break to go to the RCO block at end.
-                if (currPeriodIdx == 0 && onFixCal.isHoliday(intDates.front()) ||
-                    currPeriodIdx == numPeriods - 1 || inRateCutoffPeriod()) {
+                if ((currPeriodIdx == 0 && onFixCal.isHoliday(intDates.front())) || currPeriodIdx == numPeriods - 1 ||
+                    inRateCutoffPeriod()) {
                     auto [onRate, inRcoPeriod] = onRateRcoInd();
                     updateCompFactors(onRate);
                     if (inRcoPeriod) {
