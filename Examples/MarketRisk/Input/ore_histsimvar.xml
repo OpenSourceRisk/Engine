@@ -26,11 +26,6 @@
     <Parameter name="sensitivity">default</Parameter>
   </Markets>
   <Analytics>
-    <Analytic type="npv">
-        <Parameter name="active">Y</Parameter>
-        <Parameter name="baseCurrency">EUR</Parameter>
-        <Parameter name="outputFileName">npv.csv</Parameter>
-    </Analytic>
     <Analytic type="historicalSimulationVar">
       <Parameter name="active">Y</Parameter>
       <Parameter name="historicalScenarioFile">scenarios.csv</Parameter>
@@ -41,7 +36,7 @@
       <Parameter name="mporOverlappingPeriods">true</Parameter>
       <Parameter name="quantiles">0.01,0.05,0.95,0.99</Parameter>
       <Parameter name="includeExpectedShortfall">Y</Parameter>
-      <Parameter name="breakdown">N</Parameter>
+      <!-- <Parameter name="breakdown">Y</Parameter> -->
       <Parameter name="tradePnl">N</Parameter>
       <!--<Parameter name="riskFactorBreakdown">Y</Parameter>-->
       <!-- <Parameter name="riskClassBreakdown">N</Parameter> -->
