@@ -32,10 +32,17 @@ namespace analytics {
 
 class InputParameters;
 
+}
+namespace data {
+class CounterpartyManager;
+}
+namespace analytics {
+
 struct SaCvaVariables : public InputVariables {
     void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
 
     QuantLib::ext::shared_ptr<ore::data::NettingSetManager> nettingSetManager_;
+    QuantLib::ext::shared_ptr<ore::data::CounterpartyManager> counterpartyManager_;
 };
 
 class SaCvaAnalyticImpl : public Analytic::Impl {

@@ -645,6 +645,9 @@ public:
     void setCollateralBalances(const QuantLib::ext::shared_ptr<CollateralBalances>& xml) { parameters_.set("xva", "collateralBalancesFile", xml); };
     void setReportBufferSize(Size s) { setupVariables_.reportBufferSize_ = s; }
     void setCounterpartyManager(const std::string& xml);
+    void setCounterpartyManager(const QuantLib::ext::shared_ptr<ore::data::CounterpartyManager>& cm) {
+        setupVariables_.counterpartyManager_ = cm;
+    }
     void setCalibrationModel(const std::string& s) { parameters_.set("calibration", "model", s); }
     void setHwCalibrationMode(const std::string& s) { parameters_.set("calibration", "mode", s); }
     void setPcaCalibration(bool b) { parameters_.set("calibration", "pcaCalibration", b); }

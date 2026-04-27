@@ -1204,8 +1204,10 @@ void OREAppInputParameters::loadParameters() {
             QL_REQUIRE(!doSimm || tmp == tmpSimm, "calculation currency for for imschedule and simm should match");
             setSimmCalculationCurrencyCall(tmp);
             setSimmCalculationCurrencyPost(tmp);
-        } else {
+        } else if (simmCalculationCurrencyCall() == "") {
             QL_REQUIRE(baseCurrency() != "", "either base currency or calculation currency is required");
+            setSimmCalculationCurrencyCall(baseCurrency());
+            setSimmCalculationCurrencyPost(baseCurrency());
         }
 
         tmp = params_->getString("imschedule", "calculationCurrencyCall", false);

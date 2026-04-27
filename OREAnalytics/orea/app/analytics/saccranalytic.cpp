@@ -50,7 +50,7 @@ void SaCcrVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputPara
         inputs->setSimmVersion(tmp);
     else if (inputs->simmVersion().empty()) {
         inputs->setSimmVersion("2.1");
-        WLOG("Setting SIMM version to 2.1 for SACCR");
+        WLOG("Setting SIMM version to " << inputs->simmVersion() << " for SACCR");
     }
 
     tmp = {};
