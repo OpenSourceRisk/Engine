@@ -1,0 +1,42 @@
+<SensitivityAnalysis>
+	<ParConversionExcludes>
+		<Type>OptionletVolatility</Type>
+	</ParConversionExcludes>
+	<ParConversionMatrixRegularisation>Silent</ParConversionMatrixRegularisation>
+	<DiscountCurves>
+		<DiscountCurve ccy="USD">
+			<ShiftType>Absolute</ShiftType>
+			<ShiftSize>0.0001</ShiftSize>
+			<ShiftScheme>Forward</ShiftScheme>
+			<ShiftTenors>1D,2026-02,2026-03,2026-04,2026-05,2026-06,2026-07,2026-08,2026-09,2026-12,2027-03,2027-06,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,25Y,30Y,40Y,50Y</ShiftTenors>
+			<ParConversion>
+				<Instruments>DEP,FUT,FUT,FUT,FUT,FUT,FUT,FUT,FUT,FUT,FUT,FUT,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS</Instruments>
+				<SingleCurve>true</SingleCurve>
+				<Conventions>
+					<Convention id="DEP">USD-ON-SOFR-DEPOSIT</Convention>
+					<Convention id="FUT">USD-SOFR-3M-FUTURES</Convention>
+					<Convention id="OIS">USD-SOFR-OIS</Convention>
+				</Conventions>
+			</ParConversion>
+		</DiscountCurve>
+	</DiscountCurves>
+	<IndexCurves>
+		<IndexCurve index="USD-SOFR">
+			<ShiftType>Absolute</ShiftType>
+			<ShiftSize>0.0001</ShiftSize>
+			<ShiftScheme>Forward</ShiftScheme>
+			<ShiftTenors>1D,2026-02,2026-03,2026-04,2026-05,2026-06,2026-07,2026-08,2026-09,2026-12,2027-03,2027-06,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,25Y,30Y,40Y,50Y</ShiftTenors>
+			<ParConversion>
+				<Instruments>DEP,FUT,FUT,FUT,FUT,FUT,FUT,FUT,FUT,FUT,FUT,FUT,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS</Instruments>
+				<SingleCurve>true</SingleCurve>
+				<Conventions>
+					<Convention id="DEP">USD-ON-SOFR-DEPOSIT</Convention>
+					<Convention id="FUT">USD-SOFR-3M-FUTURES</Convention>
+					<Convention id="OIS">USD-SOFR-OIS</Convention>
+				</Conventions>
+			</ParConversion>
+		</IndexCurve>
+	</IndexCurves>
+	<ComputeGamma>false</ComputeGamma>
+	<UseSpreadedTermStructures>true</UseSpreadedTermStructures>
+</SensitivityAnalysis>

@@ -22,6 +22,7 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ored/utilities/xmlutils.hpp>
+#include <ored/configuration/conventions.hpp>
 
 using ore::data::parseBool;
 using ore::data::to_string;
@@ -32,6 +33,31 @@ using namespace QuantLib;
 
 namespace ore {
 namespace analytics {
+
+namespace {
+
+void updateFutureExpiries(ore::analytics::SensitivityScenarioData::CurveShiftParData& data, const std::string& curveName) {
+    for (size_t i = 0; i < data.shiftTenors.size(); ++i) {
+        if (auto p = std::get_if<IrFutureExpiryYearMonth>(&data.shiftTenors[i])) {
+            QL_REQUIRE(data.shiftTenors.size() == data.parInstruments.size(),
+                       "number of shift tenors and par instruments must be the same for curve " << curveName);
+            auto it = data.parInstrumentConventions.find(data.parInstruments[i]);
+            QL_REQUIRE(it != data.parInstrumentConventions.end(),
+                       "par instrument " << data.parInstruments[i]
+                                         << " not found in par instrument conventions for curve " << curveName);
+            string conventionName = it->second;
+            auto [found, convention] = ore::data::InstrumentConventions::instance().conventions()->get(
+                conventionName, ore::data::Convention::Type::Future);
+            QL_REQUIRE(found, "convention " << conventionName << " not found for par instrument "
+                                            << data.parInstruments[i] << " for curve " << curveName);
+            auto irFutureConvention = QuantLib::ext::dynamic_pointer_cast<ore::data::FutureConvention>(convention);
+            p->setConvention(irFutureConvention);
+        }
+    }
+    return;
+}
+
+} // namespace
 
 using RFType = RiskFactorKey::KeyType;
 using ShiftData = SensitivityScenarioData::ShiftData;
@@ -106,7 +132,8 @@ void SensitivityScenarioData::shiftDataFromXML(XMLNode* child, ShiftData& data) 
 
 void SensitivityScenarioData::curveShiftDataFromXML(XMLNode* child, CurveShiftData& data) {
     shiftDataFromXML(child, data);
-    data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
+    data.shiftTenors = ore::data::parseListOfValues<ScenarioCurvePillar>(
+        XMLUtils::getChildValue(child, "ShiftTenors", true), &parseScenarioCurvePillar);
 }
 
 void SensitivityScenarioData::volShiftDataFromXML(XMLNode* child, VolShiftData& data, const bool requireShiftStrikes) {
@@ -555,6 +582,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             string ccy = XMLUtils::getAttribute(child, "ccy");
             CurveShiftParData data(*discountCurveShiftData_.find(ccy)->second);
             parDataFromXML(child, data);
+            updateFutureExpiries(data, ccy);
             discountCurveShiftData_[ccy] = QuantLib::ext::make_shared<CurveShiftParData>(data);
         }
     }
@@ -567,6 +595,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             string index = XMLUtils::getAttribute(child, "index");
             CurveShiftParData data(*indexCurveShiftData_.find(index)->second);
             parDataFromXML(child, data);
+            updateFutureExpiries(data, index);
             indexCurveShiftData_[index] = QuantLib::ext::make_shared<CurveShiftParData>(data);
         }
     }
@@ -580,6 +609,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             string curveType = XMLUtils::getChildValue(child, "CurveType", false);
             CurveShiftParData data(*yieldCurveShiftData_.find(curveName)->second);
             parDataFromXML(child, data);
+            updateFutureExpiries(data, curveName);
             yieldCurveShiftData_[curveName] = QuantLib::ext::make_shared<CurveShiftParData>(data);
         }
     }

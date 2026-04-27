@@ -44,6 +44,24 @@ using namespace ore::data;
 namespace ore {
 namespace analytics {
 
+namespace {
+    QuantLib::Period convertSensitivityCurvePillarToPeriod(
+        const QuantLib::Date& asof, const ScenarioCurvePillar& pillar, const RiskFactorKey& rfkey,
+        bool allowFutureExpiriesForRiskType, bool parConversionEnabled) {
+        if (auto p = std::get_if<QuantLib::Period>(&pillar))
+            return *p;
+        else if (auto b = std::get_if<IrFutureExpiryYearMonth>(&pillar)) {
+            QL_REQUIRE(allowFutureExpiriesForRiskType,
+                       "IR Future expiry curve pillars are not allowed for risk factor type " << rfkey.keytype);
+            QL_REQUIRE(parConversionEnabled,
+                       "par conversion needs to be enabled for IR future expiry tenors in curve shifts for key "
+                           << rfkey.keytype << " and curve " << rfkey.name);
+            return b->toPeriod(asof);
+        } else
+            QL_FAIL("unsupported pillar type for key " << rfkey.keytype << ": " << pillar);
+    }
+}
+
 SensitivityAnalysis::SensitivityAnalysis(
     const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
     const QuantLib::ext::shared_ptr<ore::data::Market>& market, const string& marketConfiguration,
@@ -454,10 +472,12 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         string ccy = keylabel;
         auto itr = sensiParams.discountCurveShiftData().find(ccy);
         QL_REQUIRE(itr != sensiParams.discountCurveShiftData().end(), "shiftData not found for " << ccy);
-        shiftSize = itr->second->shiftSize;
+        auto& [name, shiftData] = *itr;
+        shiftSize = shiftData->shiftSize;
         if (itr->second->shiftType == ShiftType::Relative) {
             Size keyIdx = key.index;
-            Period p = itr->second->shiftTenors[keyIdx];
+            QuantLib::Period p = convertSensitivityCurvePillarToPeriod(asof, shiftData->shiftTenors[keyIdx], key, true,
+                                                                       sensiParams.parConversion());
             Handle<YieldTermStructure> yts = simMarket->discountCurve(ccy, marketConfiguration);
             Time t = yts->dayCounter().yearFraction(asof, asof + p);
             Real zeroRate = yts->zeroRate(t, Continuous);
@@ -471,7 +491,8 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         shiftSize = itr->second->shiftSize;
         if (itr->second->shiftType == ShiftType::Relative) {
             Size keyIdx = key.index;
-            Period p = itr->second->shiftTenors[keyIdx];
+            QuantLib::Period p = convertSensitivityCurvePillarToPeriod(asof, itr->second->shiftTenors[keyIdx], key, true,
+                                                                       sensiParams.parConversion());
             Handle<YieldTermStructure> yts = simMarket->iborIndex(idx, marketConfiguration)->forwardingTermStructure();
             Time t = yts->dayCounter().yearFraction(asof, asof + p);
             Real zeroRate = yts->zeroRate(t, Continuous);
@@ -485,7 +506,8 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         shiftSize = itr->second->shiftSize;
         if (itr->second->shiftType == ShiftType::Relative) {
             Size keyIdx = key.index;
-            Period p = itr->second->shiftTenors[keyIdx];
+            auto p = convertSensitivityCurvePillarToPeriod(asof, itr->second->shiftTenors[keyIdx], key, true,
+                                                            sensiParams.parConversion());
             Handle<YieldTermStructure> yts = simMarket->yieldCurve(yc, marketConfiguration);
             Time t = yts->dayCounter().yearFraction(asof, asof + p);
             Real zeroRate = yts->zeroRate(t, Continuous);
@@ -500,7 +522,8 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
 
         if (itr->second->shiftType == ShiftType::Relative) {
             Size keyIdx = key.index;
-            Period p = itr->second->shiftTenors[keyIdx];
+            auto p = convertSensitivityCurvePillarToPeriod(asof, itr->second->shiftTenors[keyIdx], key, false,
+                                                            sensiParams.parConversion());
             Handle<YieldTermStructure> ts = simMarket->equityDividendCurve(eq, marketConfiguration);
             Time t = ts->dayCounter().yearFraction(asof, asof + p);
             Real zeroRate = ts->zeroRate(t, Continuous);
@@ -621,7 +644,8 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         shiftSize = itr->second->shiftSize;
         if (itr->second->shiftType == ShiftType::Relative) {
             Size keyIdx = key.index;
-            Period p = itr->second->shiftTenors[keyIdx];
+            auto p = convertSensitivityCurvePillarToPeriod(asof, itr->second->shiftTenors[keyIdx], key, false,
+                                                           sensiParams.parConversion());
             Handle<DefaultProbabilityTermStructure> ts = simMarket->defaultCurve(name, marketConfiguration)->curve();
             Time t = ts->dayCounter().yearFraction(asof, asof + p);
             Real prob = ts->survivalProbability(t);
@@ -653,7 +677,8 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         shiftSize = itr->second->shiftSize;
         if (itr->second->shiftType == ShiftType::Relative) {
             Size keyIdx = key.index;
-            Period p = itr->second->shiftTenors[keyIdx];
+            auto p = convertSensitivityCurvePillarToPeriod(asof, itr->second->shiftTenors[keyIdx], key, false,
+                                                           sensiParams.parConversion());
             Handle<ZeroInflationTermStructure> yts =
                 simMarket->zeroInflationIndex(idx, marketConfiguration)->zeroInflationTermStructure();
             Time t = yts->dayCounter().yearFraction(asof, asof + p);
@@ -668,7 +693,8 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         shiftSize = itr->second->shiftSize;
         if (itr->second->shiftType == ShiftType::Relative) {
             Size keyIdx = key.index;
-            Period p = sensiParams.yoyInflationCurveShiftData().at(idx)->shiftTenors[keyIdx];
+            auto p = convertSensitivityCurvePillarToPeriod(asof, itr->second->shiftTenors[keyIdx], key, false,
+                                                           sensiParams.parConversion());
             Handle<YoYInflationTermStructure> yts =
                 simMarket->yoyInflationIndex(idx, marketConfiguration)->yoyInflationTermStructure();
             Time t = yts->dayCounter().yearFraction(asof, asof + p);
@@ -720,7 +746,8 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         QL_REQUIRE(it != sensiParams.commodityCurveShiftData().end(), "shiftData not found for " << keylabel);
         shiftSize = it->second->shiftSize;
         if (it->second->shiftType == ShiftType::Relative) {
-            Period p = it->second->shiftTenors[key.index];
+            auto p = convertSensitivityCurvePillarToPeriod(asof, it->second->shiftTenors[key.index], key, false,
+                                                            sensiParams.parConversion());
             Handle<PriceTermStructure> priceCurve = simMarket->commodityPriceCurve(keylabel, marketConfiguration);
             Time t = priceCurve->dayCounter().yearFraction(asof, asof + p);
             shiftMult = priceCurve->price(t);

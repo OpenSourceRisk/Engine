@@ -323,29 +323,36 @@ public:
     //! Index based constructor taking in addition a netting type for ON indices and a date generation rule
     FutureConvention(const string& id, const string& index,
                      const QuantLib::RateAveraging::Type overnightIndexFutureNettingType,
-                     const DateGenerationRule dateGeneration, const string& calendar);
+                     const DateGenerationRule dateGeneration, const string& calendar,
+                     const string& strOvernightIndexTenor_ = "");
     //@}
     //! \name Inspectors
     //@{
     QuantLib::ext::shared_ptr<IborIndex> index() const;
     QuantLib::RateAveraging::Type overnightIndexFutureNettingType() const { return overnightIndexFutureNettingType_; }
+    QuantLib::Period tenor() const { return tenor_; }
     DateGenerationRule dateGenerationRule() const { return dateGenerationRule_; }
     QuantLib::Calendar calendar() const { return calendar_; }
+    bool isOvernightIndexFuture() const { return isOisIndex_; }
+    std::string indexName() const { return strIndex_; }
     //@}
 
     //! Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
-    virtual void build() override {}
+    virtual void build() override;
     //@}
 
 private:
     string strIndex_;
     string strCalendar_;
+    string strOvernightIndexTenor_;
     QuantLib::RateAveraging::Type overnightIndexFutureNettingType_;
     DateGenerationRule dateGenerationRule_;
     QuantLib::Calendar calendar_;
+    QuantLib::Period tenor_;
+    bool isOisIndex_;
 };
 
 //! Container for storing Forward rate Agreement conventions

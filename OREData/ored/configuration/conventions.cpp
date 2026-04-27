@@ -227,14 +227,25 @@ XMLNode* DepositConvention::toXML(XMLDocument& doc) const {
 }
 
 FutureConvention::FutureConvention(const string& id, const string& index)
-    : FutureConvention(id, index, QuantLib::RateAveraging::Type::Compound, DateGenerationRule::IMM, std::string()) {}
+    : FutureConvention(id, index, QuantLib::RateAveraging::Type::Compound, DateGenerationRule::IMM, std::string(),
+                       std::string()) {}
 
 FutureConvention::FutureConvention(const string& id, const string& index,
                                    const QuantLib::RateAveraging::Type overnightIndexFutureNettingType,
-                                   const DateGenerationRule dateGenerationRule, const string& calendar)
-    : Convention(id, Type::Future), strIndex_(index),
-      overnightIndexFutureNettingType_(overnightIndexFutureNettingType) {
-    parseIborIndex(strIndex_);
+                                   const DateGenerationRule dateGenerationRule, const string& calendar,
+                                   const string& strOvernightIndexTenor)
+    : Convention(id, Type::Future), strIndex_(index), strCalendar_(calendar),
+      strOvernightIndexTenor_(strOvernightIndexTenor),
+      overnightIndexFutureNettingType_(overnightIndexFutureNettingType), dateGenerationRule_(dateGenerationRule) {
+    build();
+}
+
+void FutureConvention::build() {
+    auto tmpIndex = parseIborIndex(strIndex_);
+    auto oisIndex = QuantLib::ext::dynamic_pointer_cast<QuantLib::OvernightIndex>(tmpIndex);
+    isOisIndex_ = oisIndex != nullptr;
+    tenor_ = isOisIndex_ && !strOvernightIndexTenor_.empty() ? parsePeriod(strOvernightIndexTenor_) : tmpIndex->tenor();
+    calendar_ = strCalendar_.empty() ? tmpIndex->fixingCalendar() : parseCalendar(strCalendar_);
 }
 
 void FutureConvention::fromXML(XMLNode* node) {
@@ -242,7 +253,6 @@ void FutureConvention::fromXML(XMLNode* node) {
     type_ = Type::Future;
     id_ = XMLUtils::getChildValue(node, "Id", true);
     strIndex_ = XMLUtils::getChildValue(node, "Index", true);
-    auto tmpIndex = parseIborIndex(strIndex_);
     string nettingTypeStr = XMLUtils::getChildValue(node, "OvernightIndexFutureNettingType", false);
     overnightIndexFutureNettingType_ =
         nettingTypeStr.empty() ? RateAveraging::Type::Compound : parseOvernightIndexFutureNettingType(nettingTypeStr);
@@ -250,7 +260,8 @@ void FutureConvention::fromXML(XMLNode* node) {
     dateGenerationRule_ =
         dateGenerationStr.empty() ? DateGenerationRule::IMM : parseFutureDateGenerationRule(dateGenerationStr);
     strCalendar_ = XMLUtils::getChildValue(node, "Calendar", false);
-    calendar_ = strCalendar_.empty() ? tmpIndex->fixingCalendar() : parseCalendar(strCalendar_);
+    strOvernightIndexTenor_ = XMLUtils::getChildValue(node, "OvernightIndexTenor", false);
+    build();
 }
 
 XMLNode* FutureConvention::toXML(XMLDocument& doc) const {
@@ -262,6 +273,8 @@ XMLNode* FutureConvention::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "DateGenerationRule", ore::data::to_string(dateGenerationRule_));
     if (!strCalendar_.empty())
         XMLUtils::addChild(doc, node, "Calendar", strCalendar_);
+    if (!strOvernightIndexTenor_.empty())
+        XMLUtils::addChild(doc, node, "OvernightIndexTenor", strOvernightIndexTenor_);
     return node;
 }
 
