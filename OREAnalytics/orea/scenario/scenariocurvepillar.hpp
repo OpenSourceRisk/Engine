@@ -24,9 +24,9 @@
 #pragma once
 
 #include <iostream>
+#include <ored/configuration/conventions.hpp>
 #include <ored/marketdata/expiry.hpp>
 #include <ored/utilities/marketdata.hpp>
-#include <ored/configuration/conventions.hpp>
 #include <variant>
 namespace ore {
 namespace analytics {
@@ -69,8 +69,6 @@ private:
     QuantLib::ext::shared_ptr<ore::data::FutureConvention> convention_;
 };
 
-
-
 std::ostream& operator<<(std::ostream& os, const IrFutureExpiryYearMonth& v);
 
 using ScenarioCurvePillar = std::variant<QuantLib::Period, IrFutureExpiryYearMonth>;
@@ -80,8 +78,8 @@ ScenarioCurvePillar parseScenarioCurvePillar(const std::string& str);
 std::ostream& operator<<(std::ostream& os, const ScenarioCurvePillar& v);
 
 inline std::vector<QuantLib::Period> scenarioPillarsToPeriodVector(const QuantLib::Date& asof,
-                                                            const std::vector<ScenarioCurvePillar>& pillars,
-                                                            bool allowFutureExpiries) {
+                                                                   const std::vector<ScenarioCurvePillar>& pillars,
+                                                                   bool allowFutureExpiries) {
     std::vector<QuantLib::Period> result;
     for (const auto& pillar : pillars) {
         if (auto p = std::get_if<QuantLib::Period>(&pillar)) {

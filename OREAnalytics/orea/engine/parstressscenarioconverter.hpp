@@ -89,7 +89,7 @@ private:
     double upperBound(const RiskFactorKey key) const;
 
     std::vector<ScenarioCurvePillar> getShiftTenors(const RiskFactorKey& key) const;
-
+    
     QuantLib::Date asof_;
     const std::vector<RiskFactorKey> sortedParInstrumentRiskFactorKeys_;
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> simMarketParams_;

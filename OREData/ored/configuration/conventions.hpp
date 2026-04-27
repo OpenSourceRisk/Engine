@@ -330,13 +330,13 @@ public:
     //@{
     QuantLib::ext::shared_ptr<IborIndex> index() const;
     QuantLib::RateAveraging::Type overnightIndexFutureNettingType() const { return overnightIndexFutureNettingType_; }
-    QuantLib::Period tenor() const { return tenor_ ; }
+    QuantLib::Period tenor() const { return tenor_; }
     DateGenerationRule dateGenerationRule() const { return dateGenerationRule_; }
     QuantLib::Calendar calendar() const { return calendar_; }
     bool isOvernightIndexFuture() const { return isOisIndex_; }
     std::string indexName() const { return strIndex_; }
     //@}
-    
+
     //! Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;

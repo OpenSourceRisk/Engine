@@ -538,10 +538,11 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
                     relevantRiskFactors.find(key) == relevantRiskFactors.end())
                     continue;
                 Period* term = std::get_if<Period>(&data.shiftTenors[j]);
-                QL_REQUIRE(term != nullptr,"ParSensitivityInstrumentBuilder::createParInstruments(): expected Period type for zero "
-                            "inflation curve "
-                            "shift tenor, but got '<< data.shiftTenors[j]<<' for name "
-                            << indexName << " and tenor index " << j);
+                QL_REQUIRE(term != nullptr,
+                           "ParSensitivityInstrumentBuilder::createParInstruments(): expected Period type for zero "
+                           "inflation curve "
+                           "shift tenor, but got '<< data.shiftTenors[j]<<' for name "
+                               << indexName << " and tenor index " << j);
                 string instType = data.parInstruments[j];
                 bool singleCurve = data.parInstrumentSingleCurve;
                 try {
@@ -592,10 +593,11 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
                     relevantRiskFactors.find(key) == relevantRiskFactors.end())
                     continue;
                 Period* term = std::get_if<Period>(&data.shiftTenors[j]);
-                QL_REQUIRE(term != nullptr,"ParSensitivityInstrumentBuilder::createParInstruments(): expected Period type for yoy "
-                            "inflation curve "
-                            "shift tenor, but got '<< data.shiftTenors[j]<<' for name "
-                            << indexName << " and tenor index " << j);
+                QL_REQUIRE(term != nullptr,
+                           "ParSensitivityInstrumentBuilder::createParInstruments(): expected Period type for yoy "
+                           "inflation curve "
+                           "shift tenor, but got '<< data.shiftTenors[j]<<' for name "
+                               << indexName << " and tenor index " << j);
                 string instType = data.parInstruments[j];
                 bool singleCurve = data.parInstrumentSingleCurve;
                 bool recognised = true;
@@ -1127,7 +1129,7 @@ std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Date> ParSensitivityI
 
         QuantLib::ext::shared_ptr<OvernightIndex> overnightIndex =
             QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(index->clone(indexTs));
-        
+
         removeTodaysFixingIndices.insert(overnightIndex->name());
         LOG("Creating OIS future with index " << overnightIndex->name() << " and term " << term << " using tenor "
                                               << futureConvention->tenor() << " and date generation rule "
@@ -1145,7 +1147,7 @@ std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Date> ParSensitivityI
                                                              futureConvention->overnightIndexFutureNettingType());
         return {future, future->maturityDate()};
     } else {
-        
+
         auto index = futureConvention->index()->clone(indexTs);
         Date immDate = getMmFutureExpiryDate(term.month(), term.year(), futureConvention->dateGenerationRule());
 
@@ -1154,8 +1156,7 @@ std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Date> ParSensitivityI
             QL_FAIL("ParSensitivityInstrumentBuilder::makeIrFuture(): OIS Future with expiry "
                     << term << " has already expired (expiry date: " << immDate << ", asof: " << asof << ")");
         }
-        auto helper =
-            QuantLib::ext::make_shared<MoneyMarketFuture>(index, immDate, Handle<Quote>());
+        auto helper = QuantLib::ext::make_shared<MoneyMarketFuture>(index, immDate, Handle<Quote>());
 
         return {helper, helper->maturityDate()};
     }
