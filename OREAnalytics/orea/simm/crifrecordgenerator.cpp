@@ -281,6 +281,7 @@ QuantLib::ext::optional<ore::analytics::CrifRecord> CrifRecordGenerator::operato
     boost::split(rfTokens, sr.desc_1, boost::is_any_of("/"), boost::token_compress_off);
     QL_REQUIRE(!rfTokens.empty(), "Expected one token at least for factor '" << sr.key_1 << "'");
 
+    DLOG("Risk sensitivity...");
     QuantLib::ext::optional<CrifRecord> result;
     try {
         CrifRecordData data;
@@ -551,6 +552,9 @@ CrifRecordData CrifRecordGenerator::irVolatilityImpl(const ore::analytics::Sensi
 
         // Update the sensitivity to give the optionlet vega expected in the CRIF (before summing at the expiry
         // level).
+        DLOG("For (" << sr.key_1.keytype << ") sensitivity (" << sr.key_1.name << ", " << rfTokens[0] << "), "
+                     << std::fixed << std::setprecision(2) << "(sensi, atm_vol, shift_size) is (" << sr.delta
+                     << std::setprecision(9) << ", " << vol << ", " << shiftSize << ").");
         data.sensitivity = vol * sr.delta / shiftSize;
     }
     return data;
