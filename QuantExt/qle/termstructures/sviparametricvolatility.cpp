@@ -2307,8 +2307,8 @@ SsviParametricVolatilityGlobal::calibrateModelParametersGlobal(
     // Define box constraints for each free parameter
     Constraint constraint = getCalibrationConstraint(params, enforceNoArbitrage_);
 
-    LevenbergMarquardt lm;
-    EndCriteria endCriteria(2000, 200, 1E-8, 1E-8, 1E-8);
+    LevenbergMarquardt lm(1E-8, 1E-12, 1E-12);
+    EndCriteria endCriteria(10000, 1000, 1E-14, 1E-14, 1E-14);
     std::vector<Real> bestResult(params.size());
     Real bestError = QL_MAX_REAL;
 
