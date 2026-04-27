@@ -25,9 +25,14 @@
 %{
 using ore::analytics::StressTestScenarioData;
 using ore::analytics::SensitivityScenarioData;
+using ore::analytics::ScenarioCurvePillar;
+using ore::analytics::IrFutureExpiryYearMonth;
+using ore::analytics::parseScenarioCurvePillar;
 using QuantLib::Period;
 using QuantLib::Real;
 using ore::data::XMLSerializable;
+#include <orea/scenario/scenariocurvepillar.hpp>
+#include <sstream>
 %}
 
 
@@ -35,6 +40,13 @@ using ore::data::XMLSerializable;
 %template(VectorPeriod) std::vector<Period>;
 %template(PeriodVectorRealMap) std::map<Period, std::vector<Real>>;
 %template(PeriodPairsRealMap) std::map<pair<Period, Period>, Real>;
+%template(VectorString) std::vector<std::string>;
+
+class IrFutureExpiryYearMonth {
+public:
+    explicit IrFutureExpiryYearMonth(const std::string& str);
+    std::string toString() const;
+};
 
 %shared_ptr(StressTestScenarioData);
 %shared_ptr(StressTestScenarioData::CurveShiftData);
@@ -83,7 +95,6 @@ class StressTestScenarioData : public XMLSerializable {
     struct CurveShiftData {
         ShiftType shiftType;
         std::vector<Real> shifts;
-        std::vector<Period> shiftTenors;
     };
 
     struct SpotShiftData {
@@ -188,6 +199,41 @@ class StressTestScenarioData : public XMLSerializable {
 
 };
 
+%extend StressTestScenarioData::CurveShiftData {
+    void setShiftTenors(const std::vector<Period>& tenors) {
+        $self->shiftTenors.clear();
+        for (const auto& t : tenors)
+            $self->shiftTenors.push_back(ScenarioCurvePillar(t));
+    }
+    void setShiftTenorPillars(const std::vector<std::string>& tenors) {
+        $self->shiftTenors.clear();
+        for (const auto& t : tenors)
+            $self->shiftTenors.push_back(parseScenarioCurvePillar(t));
+    }
+    std::vector<std::string> getShiftTenorStrings() const {
+        std::vector<std::string> result;
+        for (const auto& p : $self->shiftTenors) {
+            std::ostringstream os;
+            os << p;
+            result.push_back(os.str());
+        }
+        return result;
+    }
+    %pythoncode %{
+        @property
+        def shiftTenors(self):
+            return self.getShiftTenorStrings()
+        @shiftTenors.setter
+        def shiftTenors(self, value):
+            if not value:
+                self.setShiftTenors([])
+            elif all(isinstance(v, str) for v in value):
+                self.setShiftTenorPillars(list(value))
+            else:
+                self.setShiftTenors(list(value))
+    %}
+}
+
 %shared_ptr(SensitivityScenarioData);
 %shared_ptr(SensitivityScenarioData::ShiftData);
 %shared_ptr(SensitivityScenarioData::CurveShiftData);
@@ -258,7 +304,6 @@ class SensitivityScenarioData : public XMLSerializable {
     struct CurveShiftData : ShiftData {
         CurveShiftData() : ShiftData() {}
         CurveShiftData(const ShiftData& d) : ShiftData(d) {}
-        std::vector<Period> shiftTenors;
     };
 
     using SpotShiftData = ShiftData;
@@ -411,5 +456,40 @@ class SensitivityScenarioData : public XMLSerializable {
     XMLNode* toXML(XMLDocument& doc) const override;
 
 };
+
+%extend SensitivityScenarioData::CurveShiftData {
+    void setShiftTenors(const std::vector<Period>& tenors) {
+        $self->shiftTenors.clear();
+        for (const auto& t : tenors)
+            $self->shiftTenors.push_back(ScenarioCurvePillar(t));
+    }
+    void setShiftTenorPillars(const std::vector<std::string>& tenors) {
+        $self->shiftTenors.clear();
+        for (const auto& t : tenors)
+            $self->shiftTenors.push_back(parseScenarioCurvePillar(t));
+    }
+    std::vector<std::string> getShiftTenorStrings() const {
+        std::vector<std::string> result;
+        for (const auto& p : $self->shiftTenors) {
+            std::ostringstream os;
+            os << p;
+            result.push_back(os.str());
+        }
+        return result;
+    }
+    %pythoncode %{
+        @property
+        def shiftTenors(self):
+            return self.getShiftTenorStrings()
+        @shiftTenors.setter
+        def shiftTenors(self, value):
+            if not value:
+                self.setShiftTenors([])
+            elif all(isinstance(v, str) for v in value):
+                self.setShiftTenorPillars(list(value))
+            else:
+                self.setShiftTenors(list(value))
+    %}
+}
 
 #endif
