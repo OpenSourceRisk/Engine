@@ -281,7 +281,6 @@ QuantLib::ext::optional<ore::analytics::CrifRecord> CrifRecordGenerator::operato
     boost::split(rfTokens, sr.desc_1, boost::is_any_of("/"), boost::token_compress_off);
     QL_REQUIRE(!rfTokens.empty(), "Expected one token at least for factor '" << sr.key_1 << "'");
 
-    DLOG("Risk sensitivity...");
     QuantLib::ext::optional<CrifRecord> result;
     try {
         CrifRecordData data;
