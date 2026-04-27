@@ -120,7 +120,7 @@ public:
     virtual void preUpdate() override;
     virtual void updateScenario(const Date&) override;
     virtual void updateDate(const Date&) override;
-    virtual void postUpdate(const Date& d, bool withFixings) override;
+    virtual void postUpdate(const Date& d) override;
     virtual void updateAsd(const Date&) override;
 
     //! Reset sim market to initial state
@@ -179,6 +179,9 @@ protected:
     /*! add a single swap index to the market */
     void addSwapIndexToSsm(const std::string& indexName);
 
+    /*! helper method used in updateAsd() */
+    void setAsd(Size cacheCounter);
+
     const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> parameters_;
     QuantLib::ext::shared_ptr<ScenarioGenerator> scenarioGenerator_;
     QuantLib::ext::shared_ptr<AggregationScenarioData> asd_;
@@ -213,6 +216,26 @@ protected:
     mutable QuantLib::ext::shared_ptr<Scenario> currentScenario_;
     QuantLib::ext::shared_ptr<Scenario> offsetScenario_;
     QuantLib::ext::shared_ptr<QuantExt::ScenarioInformationSetter> scenarioInformationSetter_;
+
+    // cache for asd writing
+    bool cachingAsd_ = true;
+    Date firstAsdDate_;
+    Size asdCacheCounter_ = 0;
+    struct AsdCacheData {
+        using RawData = std::vector<vector<vector<double>>*>;
+        std::vector<ext::shared_ptr<Index>> indices;
+        std::vector<std::vector<Date>> indexFixingDates;
+        std::vector<Handle<Quote>> fxSpots;
+        std::vector<RiskFactorKey> creditStateKeys;
+        std::vector<RiskFactorKey> survWeightKeys;
+        std::vector<RiskFactorKey> rrKeys;
+        std::vector<RawData> indexRawData;
+        std::vector<RawData> fxSpotRawData;
+        std::vector<RawData> creditStateRawData;
+        std::vector<RawData> survWeightRawData;
+        std::vector<RawData> rrRawData;
+    };
+    AsdCacheData asdCache_;
 };
 } // namespace analytics
 } // namespace ore

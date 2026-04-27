@@ -439,8 +439,7 @@ BOOST_DATA_TEST_CASE(testBermudanSwaptionExposure, boost::unit_test::data::make(
     sgd->setGrid(grid);
 
     ScenarioGeneratorBuilder sgb(sgd);
-    QuantLib::ext::shared_ptr<ScenarioFactory> sf = QuantLib::ext::make_shared<SimpleScenarioFactory>(true);
-    QuantLib::ext::shared_ptr<ScenarioGenerator> sg = sgb.build(model, sf, simMarketConfig, today, market);
+    QuantLib::ext::shared_ptr<ScenarioGenerator> sg = sgb.build(model, simMarketConfig, today, market);
 
     auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(market, simMarketConfig);
     simMarket->scenarioGenerator() = sg;

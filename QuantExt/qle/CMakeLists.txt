@@ -132,12 +132,14 @@ instruments/crossccyfixfloatswap.cpp
 instruments/crossccyswap.cpp
 instruments/currencyswap.cpp
 instruments/deposit.cpp
+instruments/equityautodeltahedgedoption.cpp
 instruments/equityforward.cpp
 instruments/fixedbmaswap.cpp
 instruments/flexiswap.cpp
 instruments/flexiswapreplication.cpp
 instruments/forwardbond.cpp
 instruments/fxforward.cpp
+instruments/fxforwardoptimized.cpp
 instruments/genericswaption.cpp
 instruments/impliedbondspread.cpp
 instruments/indexcdsoption.cpp
@@ -154,6 +156,7 @@ instruments/payment.cpp
 instruments/rebatedexercise.cpp
 instruments/riskparticipationagreement.cpp
 instruments/riskparticipationagreement_tlock.cpp
+instruments/swapoptimized.cpp
 instruments/subperiodsswap.cpp
 instruments/syntheticcdo.cpp
 instruments/tenorbasisswap.cpp
@@ -266,6 +269,7 @@ pricingengines/analyticdoublebarrierbinaryengine.cpp
 pricingengines/analyticdoublebarrierengine.cpp
 pricingengines/analyticeuropeanengine.cpp
 pricingengines/analyticeuropeanenginedeltagamma.cpp
+pricingengines/analyticeuropeanengineautodeltahedge.cpp
 pricingengines/analyticeuropeanforwardengine.cpp
 pricingengines/analytichwswaptionengine.cpp
 pricingengines/analyticjycpicapfloorengine.cpp
@@ -667,12 +671,14 @@ instruments/crossccyfixfloatswap.hpp
 instruments/crossccyswap.hpp
 instruments/currencyswap.hpp
 instruments/deposit.hpp
+instruments/equityautodeltahedgedoption.hpp
 instruments/equityforward.hpp
 instruments/fixedbmaswap.hpp
 instruments/flexiswap.hpp
 instruments/flexiswapreplication.hpp
 instruments/forwardbond.hpp
 instruments/fxforward.hpp
+instruments/fxforwardoptimized.hpp
 instruments/genericswaption.hpp
 instruments/impliedbondspread.hpp
 instruments/indexcdsoption.hpp
@@ -690,6 +696,7 @@ instruments/payment.hpp
 instruments/rebatedexercise.hpp
 instruments/riskparticipationagreement.hpp
 instruments/riskparticipationagreement_tlock.hpp
+instruments/swapoptimized.hpp
 instruments/subperiodsswap.hpp
 instruments/syntheticcdo.hpp
 instruments/tenorbasisswap.hpp
@@ -856,6 +863,7 @@ pricingengines/analyticdoublebarrierbinaryengine.hpp
 pricingengines/analyticdoublebarrierengine.hpp
 pricingengines/analyticeuropeanengine.hpp
 pricingengines/analyticeuropeanenginedeltagamma.hpp
+pricingengines/analyticeuropeanengineautodeltahedge.hpp
 pricingengines/analyticeuropeanforwardengine.hpp
 pricingengines/analytichwswaptionengine.hpp
 pricingengines/analyticjycpicapfloorengine.hpp

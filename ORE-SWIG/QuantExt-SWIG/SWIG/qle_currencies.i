@@ -21,10 +21,6 @@
 
 %include currencies.i
 
-%{
-using QuantLib::Currency;
-%}
-
 namespace QuantExt {
 	//Metals
 	class XAUCurrency : public Currency {};

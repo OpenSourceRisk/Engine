@@ -56,7 +56,7 @@ public:
     void initialise(const std::vector<QuantLib::Date>& dates) override;
     void reset() override;
     QuantLib::Real NPV() const override;
-    Real multiplier2() const override { return (isLong_ ? 1.0 : -1.0); }
+    Real multiplier2() const override { return multiplier2_; }
     const std::map<std::string, QuantLib::ext::any>& additionalResults() const override;
     void updateQlInstruments() override {
         for (QuantLib::Size i = 0; i < underlyingInstruments_.size(); ++i)
@@ -114,6 +114,7 @@ protected:
     std::vector<QuantLib::Date> settlementDates_;
     std::vector<QuantLib::ext::shared_ptr<QuantLib::Instrument>> underlyingInstruments_;
     mutable QuantLib::ext::shared_ptr<QuantLib::Instrument> activeUnderlyingInstrument_;
+    mutable Real multiplier2_;
     Real undMultiplier_;
     mutable bool exercised_;
     bool exercisable_;

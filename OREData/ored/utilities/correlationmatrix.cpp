@@ -66,8 +66,8 @@ CorrelationFactor parseCorrelationFactor(const string& name, const char separato
                "parseCorrelationFactor(" << name << "): expected 2 or 3 tokens separated by separator ('" << sep
                                          << "'), e.g. 'IR" << sep << "USD' or 'INF" << sep << "UKRPI" << sep << "0'");
 
-    return {parseCamAssetType(tokens[0]), tokens[1],
-            static_cast<Size>(tokens.size() == 3 ? parseInteger(tokens[3]) : 0)};
+        return {parseCamAssetType(tokens[0]), tokens[1],
+            static_cast<Size>(tokens.size() == 3 ? parseInteger(tokens[2]) : 0)};
 }
 
 void CorrelationMatrixBuilder::reset() {
