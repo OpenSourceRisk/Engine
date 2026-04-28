@@ -24,22 +24,14 @@
 %include qle_common.i
 %include std_set.i
 
-%{
-using ore::data::Portfolio;
-using ore::data::TradeGenerator;
-using ore::data::LegData;
-using ore::data::XMLUtils;
-using ore::data::XMLSerializable;
-%}
-
-
-
-%shared_ptr(TradeGenerator)
-class TradeGenerator : public Portfolio {
+%shared_ptr(ore::data::TradeGenerator)
+namespace ore {
+namespace data {
+class TradeGenerator : public ore::data::Portfolio {
 public:
 
     TradeGenerator(std::string counterpartyId = "", std::string nettingSetId = "", std::string startDate = "");
-    TradeGenerator(ext::shared_ptr<CurveConfigurations> curveConfig, ext::shared_ptr < BasicReferenceDataManager> refData,
+    TradeGenerator(ext::shared_ptr<ore::data::CurveConfigurations> curveConfig, ext::shared_ptr<ore::data::BasicReferenceDataManager> refData,
                    std::string counterpartyId = "", std::string nettingSetId = "", std::string startDate = "");
     void buildSwap(std::string indexId, QuantLib::Real notional, std::string maturity, QuantLib::Real rate, bool firstLegPays,
                    std::string start = std::string(), std::string tradeId = std::string());
@@ -70,16 +62,19 @@ public:
                               bool isLong, bool isCall, std::string tradeId);
     void buildCommodityForward(std::string commodityId, QuantLib::Real quantity, std::string maturity, QuantLib::Real strike,
                                bool isLong, std::string tradeId = "");
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
 private:
-    LegData buildOisLeg(QuantLib::ext::shared_ptr < Convention> conv, QuantLib::Real notional, std::string maturity, bool isPayer,
+    ore::data::LegData buildOisLeg(QuantLib::ext::shared_ptr<ore::data::Convention> conv, QuantLib::Real notional, std::string maturity, bool isPayer,
                      std::map<std::string, std::string> mapPairs = {});
-    LegData buildIborLeg(QuantLib::ext::shared_ptr < Convention> conv, QuantLib::Real notional, std::string maturity, bool isPayer,
+    ore::data::LegData buildIborLeg(QuantLib::ext::shared_ptr<ore::data::Convention> conv, QuantLib::Real notional, std::string maturity, bool isPayer,
                      std::map<std::string, std::string> mapPairs = {});
-    Date startDate;
-    };
+    QuantLib::Date startDate;
+};
+
+} // namespace data
+} // namespace ore
 
 
 

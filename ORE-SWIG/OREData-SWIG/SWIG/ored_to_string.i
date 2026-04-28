@@ -21,28 +21,26 @@
 
 %include ored_market.i
 
-%{
-using ore::data::to_string;
-using QuantLib::Date;
-using QuantLib::Period;
-using ore::data::MarketObject;
-%}
-
-%typemap(typecheck) MarketObject * {
-    $1 = (MarketObject *)0;  // Always allow typechecking to succeed
+%typemap(typecheck) ore::data::MarketObject * {
+    $1 = (ore::data::MarketObject *)0;  // Always allow typechecking to succeed
 }
 
+namespace ore {
+namespace data {
 std::string to_string(const QuantLib::Date& date);
 std::string to_string(bool aBool);
 std::string to_string(const QuantLib::Period& period);
 
 template <class T> std::string to_string(const T& t);
-%template(MarketObjectString) to_string<MarketObject>;
+} // namespace data
+} // namespace ore
+
+%template(MarketObjectString) ore::data::to_string<ore::data::MarketObject>;
 
 %inline %{
 	//template std::string to_string<MarketObject>(const MarketObject& mo);
 
-    MarketObject derefMarketObject(MarketObject* ptr) {
+    ore::data::MarketObject derefMarketObject(ore::data::MarketObject* ptr) {
         if (!ptr) {
             throw std::invalid_argument("Null pointer passed to deref_A_pointer");
         }

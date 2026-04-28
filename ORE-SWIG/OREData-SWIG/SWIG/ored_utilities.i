@@ -22,27 +22,14 @@
 %include types.i
 %include ored_iborfallbackconfig.i
 
-%{
-using std::string;
-using std::map;
+namespace ore {
+namespace data {
 
-using ore::data::addMarketObjectDependencies;
-using ore::data::marketObjectToCurveSpec;
-using ore::data::currencyToDiscountCurve;
-using ore::data::swapIndexDiscountCurve;
-using ore::data::buildCollateralCurveConfig;
-using ore::data::getCollateralisedDiscountCcy;
-using ore::data::isCollateralCurve;
-using ore::data::CurveConfigurations;
-using ore::data::IborFallbackConfig;
-using ore::data::MarketObject;
-
-%}
 void addMarketObjectDependencies(std::map<std::string, std::map<MarketObject, std::set<std::string>>>* objects,
                                  const ext::shared_ptr<CurveConfigurations>& curveConfigs, const std::string& baseCcy,
                                  const std::string& baseCcyDiscountCurve,
                                  ext::shared_ptr<IborFallbackConfig> iborFallbackConfig =
-                                    ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()));
+                                     ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()));
 
 std::string marketObjectToCurveSpec(const MarketObject& mo, const std::string& name, const std::string& baseCcy,
                                     const ext::shared_ptr<CurveConfigurations>& curveConfigs);
@@ -51,16 +38,19 @@ std::string currencyToDiscountCurve(const std::string& ccy, const std::string& b
                                     const std::string& baseCcyDiscountCurve,
                                     const ext::shared_ptr<CurveConfigurations>& curveConfigs);
 
-std::string swapIndexDiscountCurve(const std::string& ccy, const std::string& baseCcy = std::string(), 
-    const std::string& swapIndexConvId = std::string());
+std::string swapIndexDiscountCurve(const std::string& ccy, const std::string& baseCcy = std::string(),
+                                   const std::string& swapIndexConvId = std::string());
 
-void buildCollateralCurveConfig(const string& curveId, const std::string& baseCcy,
-                               const std::string& baseCcyDiscountCurve,
+void buildCollateralCurveConfig(const std::string& curveId, const std::string& baseCcy,
+                                const std::string& baseCcyDiscountCurve,
                                 const ext::shared_ptr<CurveConfigurations>& curveConfigs);
 
 std::set<std::string> getCollateralisedDiscountCcy(const std::string& ccy,
-    const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigs);
+                                                   const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigs);
 
 const bool isCollateralCurve(const std::string& id, std::vector<std::string>& tokens);
+
+} // namespace data
+} // namespace ore
 
 #endif

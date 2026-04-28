@@ -115,6 +115,7 @@ instruments/bondtotalreturnswap.cpp
 instruments/brlcdiswap.cpp
 instruments/callablebond.cpp
 instruments/cashflowresults.cpp
+instruments/cashsettledamericanoption.cpp
 instruments/cashsettledeuropeanoption.cpp
 instruments/cbo.cpp
 instruments/cdsoption.cpp
@@ -132,6 +133,7 @@ instruments/crossccyfixfloatswap.cpp
 instruments/crossccyswap.cpp
 instruments/currencyswap.cpp
 instruments/deposit.cpp
+instruments/equityautodeltahedgedoption.cpp
 instruments/equityforward.cpp
 instruments/fixedbmaswap.cpp
 instruments/flexiswap.cpp
@@ -146,6 +148,7 @@ instruments/indexcreditdefaultswap.cpp
 instruments/makeaverageois.cpp
 instruments/makecds.cpp
 instruments/makeoiscapfloor.cpp
+instruments/moneymarketfuture.cpp
 instruments/multiccycompositeinstrument.cpp
 instruments/multilegoption.cpp
 instruments/outperformanceoption.cpp
@@ -267,6 +270,7 @@ pricingengines/analyticdoublebarrierbinaryengine.cpp
 pricingengines/analyticdoublebarrierengine.cpp
 pricingengines/analyticeuropeanengine.cpp
 pricingengines/analyticeuropeanenginedeltagamma.cpp
+pricingengines/analyticeuropeanengineautodeltahedge.cpp
 pricingengines/analyticeuropeanforwardengine.cpp
 pricingengines/analytichwswaptionengine.cpp
 pricingengines/analyticjycpicapfloorengine.cpp
@@ -282,6 +286,7 @@ pricingengines/blackcdsoptionengine.cpp
 pricingengines/blackindexcdsoptionengine.cpp
 pricingengines/blackmultilegoptionengine.cpp
 pricingengines/blackswaptionenginedeltagamma.cpp
+pricingengines/cashsettledamericanengine.cpp
 pricingengines/cboengine.cpp
 pricingengines/cbomcengine.cpp
 pricingengines/commodityapoengine.cpp
@@ -652,6 +657,7 @@ instruments/brlcdiswap.hpp
 instruments/callablebond.hpp
 instruments/cashflowresults.hpp
 instruments/cashposition.hpp
+instruments/cashsettledamericanoption.hpp
 instruments/cashsettledeuropeanoption.hpp
 instruments/cbo.hpp
 instruments/cdsoption.hpp
@@ -669,6 +675,7 @@ instruments/crossccyfixfloatswap.hpp
 instruments/crossccyswap.hpp
 instruments/currencyswap.hpp
 instruments/deposit.hpp
+instruments/equityautodeltahedgedoption.hpp
 instruments/equityforward.hpp
 instruments/fixedbmaswap.hpp
 instruments/flexiswap.hpp
@@ -683,6 +690,7 @@ instruments/indexcreditdefaultswap.hpp
 instruments/makeaverageois.hpp
 instruments/makecds.hpp
 instruments/makeoiscapfloor.hpp
+instruments/moneymarketfuture.hpp
 instruments/multiccycompositeinstrument.hpp
 instruments/multilegoption.hpp
 instruments/nullinstrument.hpp
@@ -859,6 +867,7 @@ pricingengines/analyticdoublebarrierbinaryengine.hpp
 pricingengines/analyticdoublebarrierengine.hpp
 pricingengines/analyticeuropeanengine.hpp
 pricingengines/analyticeuropeanenginedeltagamma.hpp
+pricingengines/analyticeuropeanengineautodeltahedge.hpp
 pricingengines/analyticeuropeanforwardengine.hpp
 pricingengines/analytichwswaptionengine.hpp
 pricingengines/analyticjycpicapfloorengine.hpp
@@ -875,6 +884,7 @@ pricingengines/blackindexcdsoptionengine.hpp
 pricingengines/blackmultilegoptionengine.hpp
 pricingengines/blackswaptionenginedeltagamma.hpp
 pricingengines/cashpositionengine.hpp
+pricingengines/cashsettledamericanengine.hpp
 pricingengines/cboengine.hpp
 pricingengines/cbomcengine.hpp
 pricingengines/commodityapoengine.hpp

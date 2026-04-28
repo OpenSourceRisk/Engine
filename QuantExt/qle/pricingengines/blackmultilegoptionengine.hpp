@@ -34,7 +34,8 @@ namespace QuantExt {
 class BlackMultiLegOptionEngineBase {
 public:
     BlackMultiLegOptionEngineBase(const Handle<YieldTermStructure>& discountCurve,
-                                  const Handle<SwaptionVolatilityStructure>& volatility);
+                                  const Handle<SwaptionVolatilityStructure>& volatility,
+                                  const bool generateAdditionalResults);
 
     static bool instrumentIsHandled(const MultiLegOption& m, std::vector<std::string>& messages);
 
@@ -49,6 +50,7 @@ protected:
     // inputs set in ctor
     Handle<YieldTermStructure> discountCurve_;
     Handle<SwaptionVolatilityStructure> volatility_;
+    bool generateAdditionalResults_;
 
     // inputs set by derived classes
     mutable std::vector<Leg> legs_;
@@ -71,7 +73,8 @@ class BlackMultiLegOptionEngine : public QuantLib::GenericEngine<MultiLegOption:
                                   public BlackMultiLegOptionEngineBase {
 public:
     BlackMultiLegOptionEngine(const Handle<YieldTermStructure>& discountCurve,
-                              const Handle<SwaptionVolatilityStructure>& volatility);
+                              const Handle<SwaptionVolatilityStructure>& volatility,
+                              const bool generateAdditionalResults = false);
 
     void calculate() const override;
 };
@@ -80,7 +83,8 @@ class BlackSwaptionFromMultilegOptionEngine : public QuantLib::GenericEngine<Swa
                                               public BlackMultiLegOptionEngineBase {
 public:
     BlackSwaptionFromMultilegOptionEngine(const Handle<YieldTermStructure>& discountCurve,
-                                          const Handle<SwaptionVolatilityStructure>& volatility);
+                                          const Handle<SwaptionVolatilityStructure>& volatility,
+                                          const bool generateAdditionalResults = false);
 
     void calculate() const override;
 };
@@ -90,7 +94,8 @@ class BlackNonstandardSwaptionFromMultilegOptionEngine
       public BlackMultiLegOptionEngineBase {
 public:
     BlackNonstandardSwaptionFromMultilegOptionEngine(const Handle<YieldTermStructure>& discountCurve,
-                                                     const Handle<SwaptionVolatilityStructure>& volatility);
+                                                     const Handle<SwaptionVolatilityStructure>& volatility,
+                                                     const bool generateAdditionalResults = false);
 
     void calculate() const override;
 };

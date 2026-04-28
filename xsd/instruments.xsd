@@ -34,6 +34,7 @@
       <xs:element type="rateDigitalOptionData" name="RateDigitalOptionData"/>
       <xs:element type="equityFutureOptionData" name="EquityFutureOptionData"/>
       <xs:element type="equityOptionData" name="EquityOptionData"/>
+      <xs:element type="equityAutoDeltaHedgedOptionData" name="EquityAutoDeltaHedgedOptionData"/>
       <xs:element type="eqBarrierOptionData" name="EquityBarrierOptionData"/>
       <xs:element type="eqBarrierOptionData" name="EquityDoubleBarrierOptionData"/>
       <xs:element type="equityForwardData" name="EquityForwardData"/>
@@ -1780,6 +1781,32 @@
       <xs:element type="extendedCurrencyCode" name="StrikeCurrency" minOccurs="0"/>
       <xs:element type="xs:float" name="Quantity"/>
       <xs:element ref="strikeGroup"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="equityAutoDeltaHedgedUnderlyingData">
+    <xs:all>
+      <xs:element type="optionData" name="OptionData"/>
+      <xs:element type="xs:string" name="Name"/>
+      <xs:element type="extendedCurrencyCode" name="Currency"/>
+      <xs:element ref="strikeGroup"/>
+      <xs:element type="extendedCurrencyCode" name="StrikeCurrency" minOccurs="0"/>
+      <xs:element type="xs:float" name="Quantity"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="equityAutoDeltaHedgedOptionData">
+    <xs:all>
+      <xs:element name="Volatility" type="xs:float"/>
+      <xs:element name="DriftRate" type="xs:float"/>
+      <xs:element name="Underlyings">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="Underlying" type="equityAutoDeltaHedgedUnderlyingData" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="ObservationStartDate" type="date"/>
     </xs:all>
   </xs:complexType>
 

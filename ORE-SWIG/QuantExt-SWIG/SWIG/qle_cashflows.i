@@ -30,53 +30,36 @@
 %include cashflows.i
 %include qle_indexes.i
 
-%{
-//using QuantExt::FXLinked;
-using QuantExt::FXLinkedCashFlow;
-using QuantExt::FloatingRateFXLinkedNotionalCoupon;
-%}
-
-//%shared_ptr(FXLinked)
-//class FXLinked {
-// private:
-    // FXLinked();
-  //  public:
-    //    FXLinked(const QuantLib::Date& fixingDate, 
-      //           QuantLib::Real foreignAmount,
-        //         ext::shared_ptr<FxIndex> fxIndex);
-   //     QuantLib::Date fxFixingDate() const;
-   //     const ext::shared_ptr<FxIndex>& fxIndex() const;
-   //     QuantLib::Real foreignAmount() const;
-   //     QuantLib::Real fxRate() const;
-   //     ext::shared_ptr<FXLinked> clone(ext::shared_ptr<FxIndex> fxIndex) = 0;
-//};
-
-%shared_ptr(FXLinkedCashFlow)
+%shared_ptr(QuantExt::FXLinkedCashFlow)
+namespace QuantExt {
 class FXLinkedCashFlow : public CashFlow {
   public:
     FXLinkedCashFlow(const QuantLib::Date& cashFlowDate,
                      const QuantLib::Date& fixingDate,
                      QuantLib::Real foreignAmount,
-                     ext::shared_ptr<FxIndex> fxIndex);
+                     ext::shared_ptr<QuantExt::FxIndex> fxIndex);
     QuantLib::Date date() const;
     QuantLib::Date fxFixingDate() const;
-    const ext::shared_ptr<FxIndex> fxIndex() const;
+    const ext::shared_ptr<QuantExt::FxIndex> fxIndex() const;
     QuantLib::Real amount() const override;
     QuantLib::Real foreignAmount() const;
     QuantLib::Real fxRate() const;
 };
+} // namespace QuantExt
 
-%shared_ptr(FloatingRateFXLinkedNotionalCoupon)
+%shared_ptr(QuantExt::FloatingRateFXLinkedNotionalCoupon)
+namespace QuantExt {
 class FloatingRateFXLinkedNotionalCoupon : public FloatingRateCoupon {
   public:
     FloatingRateFXLinkedNotionalCoupon(const QuantLib::Date& fxFixingDate,
                                        QuantLib::Real foreignAmount,
-                                       ext::shared_ptr<FxIndex> fxIndex,
+                                       ext::shared_ptr<QuantExt::FxIndex> fxIndex,
                                        const ext::shared_ptr<FloatingRateCoupon> underlying);
     Real nominal() const;
     Rate rate() const;
     Rate indexFixing() const;
     void setPricer(const ext::shared_ptr<FloatingRateCouponPricer>& p);
 };
+} // namespace QuantExt
 
 #endif
