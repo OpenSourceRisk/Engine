@@ -263,7 +263,7 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     requiredFixings_.addData(underlying_->requiredFixings());
 
     bool isXccy =
-        std::set<std::string>(underlying_->legCurrencies().begin(), underlying_->legCurrencies().end()).size() <= 1;
+        std::set<std::string>(underlying_->legCurrencies().begin(), underlying_->legCurrencies().end()).size() > 1;
 
     // 3 build the exercise and parse some fields
 
