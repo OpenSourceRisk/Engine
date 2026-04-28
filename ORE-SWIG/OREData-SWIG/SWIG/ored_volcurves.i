@@ -21,47 +21,13 @@
 
 %include std_set.i
 
-%{
-using ore::data::GenericYieldVolCurve;
-using ore::data::SwaptionVolCurve;
-using ore::data::AssetModelBuilderBase;
-using ore::data::LocalVolModelBuilder;
-using namespace std;
-%}
-
 %template(DateSet) std::set<Date>;
 
-/*
-%shared_ptr(GenericYieldVolCurve)
-class GenericYieldVolCurve {
-	public:
-		GenericYieldVolCurve(const Date& asof, const Loader& loader,
-                            const CurveConfigurations& curveConfigs,
-                            const ext::shared_ptr<GenericYieldVolatilityCurveConfig>& config,
-                            const map<string, ext::shared_ptr<SwapIndex>>& requiredSwapIndices,
-                            const map<string, ext::shared_ptr<GenericYieldVolCurve>>& requiredVolCurves,
-                            const std::function<bool(const ext::shared_ptr<MarketDatum>& md, Period& expiry, Period& term)>&
-                                matchAtmQuote,
-                            const std::function<bool(const ext::shared_ptr<MarketDatum>& md, Period& expiry, Period& term, Real& strike)>&
-                                matchSmileQuote,
-                            const std::function<bool(const ext::shared_ptr<MarketDatum>& md, Period& term)>& matchShiftQuote,
-                            const bool buildCalibrationInfo);
-        const ext::shared_ptr<SwaptionVolatilityStructure>& volTermStructure();
-        ext::shared_ptr<IrVolCalibrationInfo> calibrationInfo() const;
-};
+// GenericYieldVolCurve and SwaptionVolCurve wrappers are intentionally deferred.
 
-%shared_ptr(SwaptionVolCurve)
-class SwaptionVolCurve : public GenericYieldVolCurve {
-    public:
-        SwaptionVolCurve(Date asof, SwaptionVolatilitySpec spec, const Loader& loader,
-        const SwaptionVolatilityCurveSpec& spec() const;  
-
-};
-*/
-
-%template(GeneralizedBlackScholesProcessVector) std::vector<ext::shared_ptr<GeneralizedBlackScholesProcess> >;
-
-%shared_ptr(LocalVolModelBuilder)
+%shared_ptr(ore::data::LocalVolModelBuilder)
+namespace ore {
+namespace data {
 class LocalVolModelBuilder : public BlackScholesModelBuilderBase {
     public:
          enum class Type { Dupire, DupireFloored, AndreasenHuge };
@@ -81,6 +47,9 @@ class LocalVolModelBuilder : public BlackScholesModelBuilderBase {
                               const Handle<YieldTermStructure>& baseCurve = {});
          std::vector<ext::shared_ptr<StochasticProcess>> getCalibratedProcesses() const override;
 };
+
+} // namespace data
+} // namespace ore
 
 
 #endif

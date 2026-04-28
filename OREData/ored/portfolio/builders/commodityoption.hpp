@@ -73,6 +73,23 @@ public:
     CommodityAmericanOptionBAWEngineBuilder()
         : AmericanOptionBAWEngineBuilder("BlackScholes", {"CommodityOptionAmerican"}, AssetClass::COM) {}
 };
+/*! Engine builder for American cash-settled commodity options using finite difference.
+    \ingroup builders
+ */
+class CommodityAmericanCSOptionFDEngineBuilder : public AmericanCSOptionFDEngineBuilder {
+public:
+    CommodityAmericanCSOptionFDEngineBuilder()
+        : AmericanCSOptionFDEngineBuilder("BlackScholes", {"CommodityOptionAmericanCS"}, AssetClass::COM, expiryDate_) {}
+};
+
+/*! Engine builder for American cash-settled commodity options using Barone-Adesi and Whaley approximation.
+    \ingroup builders
+ */
+class CommodityAmericanCSOptionBAWEngineBuilder : public AmericanCSOptionBAWEngineBuilder {
+public:
+    CommodityAmericanCSOptionBAWEngineBuilder()
+        : AmericanCSOptionBAWEngineBuilder("BlackScholes", {"CommodityOptionAmericanCS"}, AssetClass::COM) {}
+};
 
 class CommodityAmericanFDScriptedEngineBuilder : public DelegatingEngineBuilder {
 public:

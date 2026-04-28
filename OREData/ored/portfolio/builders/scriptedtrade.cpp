@@ -358,23 +358,17 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
 
     // 22 build the pricing engine and return it
 
-    bool generateAdditionalResults = false;
-    auto p = globalParameters_.find("GenerateAdditionalResults");
-    if (p != globalParameters_.end()) {
-        generateAdditionalResults = parseBool(p->second);
-    }
-
     QuantLib::ext::shared_ptr<ScriptedInstrument::engine> engine;
     if (model_) {
         engine = QuantLib::ext::make_shared<ScriptedInstrumentPricingEngine>(
             script.npv(), script.results(), model_, ast_, context, script.code(), interactive_, amcCam_ != nullptr,
             std::set<std::string>(script.stickyCloseOutStates().begin(), script.stickyCloseOutStates().end()),
-            generateAdditionalResults, includePastCashflows_, staticNpvMem_);
+            generateAdditionalResults(), includePastCashflows_, staticNpvMem_);
     } else if (modelCG_) {
         auto rt = globalParameters_.find("RunType");
         std::string runType = rt != globalParameters_.end() ? rt->second : "<<no run type set>>";
         bool useCachedSensis = useAd_ && (runType == "SensitivityDelta");
-        bool useExternalDev = useExternalComputeDevice_ && !generateAdditionalResults && !useCachedSensis;
+        bool useExternalDev = useExternalComputeDevice_ && !generateAdditionalResults() && !useCachedSensis;
         if (useAd_ && !useCachedSensis) {
             WLOG("Will not apply AD although useAD is configured, because runType ("
                  << runType << ") does not match SensitivitiyDelta");
@@ -383,13 +377,13 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
             WLOG("Will not use exxternal compute deivce although useExternalComputeDevice is configured, because we "
                  "are either applying AD ("
                  << std::boolalpha << useCachedSensis << ") or we are generating add results ("
-                 << generateAdditionalResults << "), both of which do not support external devices at the moment.");
+                 << generateAdditionalResults() << "), both of which do not support external devices at the moment.");
         }
         engine = QuantLib::ext::make_shared<ScriptedInstrumentPricingEngineCG>(
             script.npv(), script.results(), modelCG_, std::set<std::string>(modelCcys_.begin(), modelCcys_.end()),
             script.amcCgComponents(), script.amcCgTargetValue(), script.amcCgTargetDerivative(), ast_, context, params_,
             indicatorSmoothingForValues_, indicatorSmoothingForDerivatives_, sqrtSmoothingForDerivatives_,
-            script.code(), interactive_, buildingAmcCg_, generateAdditionalResults, includePastCashflows_,
+            script.code(), interactive_, buildingAmcCg_, generateAdditionalResults(), includePastCashflows_,
             useCachedSensis, useExternalDev, useDoublePrecisionForExternalCalculation_);
         if (useExternalDev) {
             ComputeEnvironment::instance().selectContext(externalComputeDevice_);
@@ -399,7 +393,7 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
     LOG("engine built for model " << modelParam_ << " / " << engineParam_ << ", modelSize = " << modelSize_
                                   << ", interactive = " << interactive_ << ", amcEnabled = " << buildingAmc_
                                   << ", amccgEnabled = " << buildingAmcCg_
-                                  << ", generateAdditionalResults = " << generateAdditionalResults);
+                                  << ", generateAdditionalResults = " << generateAdditionalResults());
     return engine;
 }
 

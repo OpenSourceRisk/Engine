@@ -204,12 +204,14 @@
 #include <qle/instruments/crossccyswap.hpp>
 #include <qle/instruments/currencyswap.hpp>
 #include <qle/instruments/deposit.hpp>
+#include <qle/instruments/equityautodeltahedgedoption.hpp>
 #include <qle/instruments/equityforward.hpp>
 #include <qle/instruments/fixedbmaswap.hpp>
 #include <qle/instruments/flexiswap.hpp>
 #include <qle/instruments/flexiswapreplication.hpp>
 #include <qle/instruments/forwardbond.hpp>
 #include <qle/instruments/fxforward.hpp>
+#include <qle/instruments/fxforwardoptimized.hpp>
 #include <qle/instruments/genericswaption.hpp>
 #include <qle/instruments/impliedbondspread.hpp>
 #include <qle/instruments/indexcdsoption.hpp>
@@ -217,6 +219,7 @@
 #include <qle/instruments/makeaverageois.hpp>
 #include <qle/instruments/makecds.hpp>
 #include <qle/instruments/makeoiscapfloor.hpp>
+#include <qle/instruments/moneymarketfuture.hpp>
 #include <qle/instruments/multiccycompositeinstrument.hpp>
 #include <qle/instruments/multilegoption.hpp>
 #include <qle/instruments/nullinstrument.hpp>
@@ -227,6 +230,7 @@
 #include <qle/instruments/riskparticipationagreement.hpp>
 #include <qle/instruments/riskparticipationagreement_tlock.hpp>
 #include <qle/instruments/subperiodsswap.hpp>
+#include <qle/instruments/swapoptimized.hpp>
 #include <qle/instruments/syntheticcdo.hpp>
 #include <qle/instruments/tenorbasisswap.hpp>
 #include <qle/instruments/vanillaforwardoption.hpp>
@@ -391,6 +395,7 @@
 #include <qle/pricingengines/analyticdoublebarrierbinaryengine.hpp>
 #include <qle/pricingengines/analyticdoublebarrierengine.hpp>
 #include <qle/pricingengines/analyticeuropeanengine.hpp>
+#include <qle/pricingengines/analyticeuropeanengineautodeltahedge.hpp>
 #include <qle/pricingengines/analyticeuropeanenginedeltagamma.hpp>
 #include <qle/pricingengines/analyticeuropeanforwardengine.hpp>
 #include <qle/pricingengines/analytichwswaptionengine.hpp>

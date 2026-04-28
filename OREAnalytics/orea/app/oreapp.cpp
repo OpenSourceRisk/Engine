@@ -408,7 +408,9 @@ void OREApp::initFromInputs() {
     InstrumentConventions::instance().setConventions(inputs_->conventions());
     if (inputs_->mporConventions() && inputs_->mporDate() != Date())
         InstrumentConventions::instance().setConventions(inputs_->mporConventions(), inputs_->mporDate());
-
+    if (inputs_->scriptLibraryData())
+        ScriptLibraryStorage::instance().set(*inputs_->scriptLibraryData());
+    
     if (inputs_->currencyConfigs() != nullptr)
         inputs_->currencyConfigs()->addCurrencies();
     if (inputs_->calendarAdjustmentConfigs() != nullptr)
