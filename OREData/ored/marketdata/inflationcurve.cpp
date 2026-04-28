@@ -305,7 +305,8 @@ InflationCurve::CurveBuildResults
                                             << " quote " << zcq->quote()->value());
                 auto instrument = QuantLib::ext::make_shared<ZeroCouponInflationSwapHelper>(
                     zcq->quote(), convention->observationLag(), swapStart, maturity, convention->fixCalendar(),
-                    convention->fixConvention(), convention->dayCounter(), index, observationInterpolation);
+                    convention->fixConvention(), convention->dayCounter(), index, observationInterpolation,
+                    Pillar::Choice::MaturityDate);
 
                 // Unregister with inflation index. See PR #326 on github for details.
                 instrument->unregisterWithAll();
