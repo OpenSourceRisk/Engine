@@ -456,6 +456,13 @@ ExerciseBuilder::ExerciseBuilder(const OptionData& optionData, const std::vector
                 rebateCcys.push_back(s.empty() ? Currency() : parseCurrency(s));
             });
 
+            // log rebates
+            for (Size i = 0; i < rebates.size(); ++i) {
+                for (Size j = 0; j < rebates[i].size(); ++j) {
+                    DLOG("got rebate " << rebates[i][j] << " " << rebateCcys[j] << " @" << exercise_->dates()[i]);
+                }
+            }
+
             if (optionData.style() == "American") {
                 // Note: we compute the settl date relative to notification, not exercise here
                 exercise_ = QuantLib::ext::make_shared<QuantExt::RebatedExercise>(
