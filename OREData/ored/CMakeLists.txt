@@ -198,7 +198,6 @@ portfolio/builders/fxoption.cpp
 portfolio/builders/fxtouchoption.cpp
 portfolio/builders/indexcreditdefaultswap.cpp
 portfolio/builders/indexcreditdefaultswapoption.cpp
-portfolio/builders/multilegoption.cpp
 portfolio/builders/pairwisevarianceswap.cpp
 portfolio/builders/quantoequityoption.cpp
 portfolio/builders/riskparticipationagreement.cpp
@@ -298,7 +297,6 @@ portfolio/legbuilders.cpp
 portfolio/legdata.cpp
 portfolio/legdatafactory.cpp
 portfolio/makenonstandardlegs.cpp
-portfolio/multilegoption.cpp
 portfolio/nettingsetdefinition.cpp
 portfolio/nettingsetdetails.cpp
 portfolio/nettingsetmanager.cpp
@@ -628,7 +626,6 @@ portfolio/builders/fxoption.hpp
 portfolio/builders/fxtouchoption.hpp
 portfolio/builders/indexcreditdefaultswap.hpp
 portfolio/builders/indexcreditdefaultswapoption.hpp
-portfolio/builders/multilegoption.hpp
 portfolio/builders/pairwisevarianceswap.hpp
 portfolio/builders/quantoequityoption.hpp
 portfolio/builders/quantovanillaoption.hpp
@@ -732,7 +729,6 @@ portfolio/legbuilders.hpp
 portfolio/legdata.hpp
 portfolio/legdatafactory.hpp
 portfolio/makenonstandardlegs.hpp
-portfolio/multilegoption.hpp
 portfolio/nettingsetdefinition.hpp
 portfolio/nettingsetdetails.hpp
 portfolio/nettingsetmanager.hpp
