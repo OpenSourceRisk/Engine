@@ -171,7 +171,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
         .addColumn("EffectiveFloorVolatility", double(), 10)
         .addColumn("EffectiveCapVolatility", double(), 10)
         .addColumn("Amount(Base)", double(), 4)
-        .addColumn("DiscountFactorBase", double(), 10);
+        .addColumn("DiscountFactor(Base)", double(), 10);
 
     for (auto [tradeId, trade]: portfolio->trades()) {
 
