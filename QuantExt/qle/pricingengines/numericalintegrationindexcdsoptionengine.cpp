@@ -159,15 +159,34 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
         if (arguments_.strikeType == CdsOption::StrikeType::Spread &&
             QuantLib::close_enough(arguments_.tradeDateNtl, arguments_.swap->notional())) {
             strikeSpread = arguments_.strike;
+        } else if (QuantLib::close_enough(strikeAdjustment, 0.0)) {
+            strikeSpread = arguments_.swap->runningSpread();
         } else {
+            // The most common scenario when volatility type is spread is that the strike K is in spread terms also. 
+            // When trade date notional != value date notional, it is common that the index factor is reasonably close 
+            // to 1 becauese index CDS option maturities are relatively short and therefore not enough time for a large 
+            // amount of defaults to accumulate. This is the rationale for 1bp move of original strike below as the 
+            // initial guess when strike type is spread. When it is price, just go 1 bp in the right direction of the 
+            // running spread. This initial guess could possibly be improved but price type strike when volatility type 
+            // is spread is not a common scenario.
             Brent brent;
-            brent.setLowerBound(1.0E-8);
             auto strikeTarget = [this, strikeAdjustment](Real strikeSpread) {
                 return forwardRiskyAnnuityStrike(strikeSpread) * (arguments_.swap->runningSpread() - strikeSpread) -
                        strikeAdjustment;
             };
             try {
-                strikeSpread = brent.solve(strikeTarget, 1.0E-7, arguments_.swap->fairSpreadClean(), 0.0001);
+                Real loBnd = 1.0E-8;
+                Real acc = 1.0E-7;
+                Real initGuess = arguments_.strikeType == CdsOption::StrikeType::Spread ?
+                    arguments_.strike : arguments_.swap->runningSpread();
+                if (strikeAdjustment > 0) {
+                    initGuess = initGuess > 0.0001 ? initGuess - 0.0001 : 0.9 * initGuess;
+                    strikeSpread = brent.solve(strikeTarget, acc, initGuess, loBnd, arguments_.swap->runningSpread());
+                } else {
+                    initGuess += 0.0001;
+                    brent.setLowerBound(loBnd);
+                    strikeSpread = brent.solve(strikeTarget, acc, initGuess, 0.0001);
+                }
                 // eval function at solution to make sure, add results are set correctly
                 forwardRiskyAnnuityStrike(strikeSpread);
             } catch (const std::exception& e) {
