@@ -496,14 +496,14 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         QL_FAIL("Swaption:build(): internal error, exercise type not handled.");
     }
 
-    if (!areStandardLegs(underlying_->legs())) {
+    if (!isXccy && !areStandardLegs(underlying_->legs())) {
         builderType += "_NonStandard";
         builderTypeFallback += "_NonStandard";
     }
 
     if (isXccy) {
-        builderType += "_Xccy";
-        builderTypeFallback += "_Xccy";
+        builderType += "_XCcy";
+        builderTypeFallback += "_XCcy";
     }
 
     string pricingProductType = envelope().additionalField("pricing_product_type", false);
