@@ -94,10 +94,6 @@ template <class T> inline const std::vector<Probability>& SurvivalProbabilityCur
     return this->data_;
 }
 
-template <class T> inline const std::vector<Handle<Quote>>& SurvivalProbabilityCurve<T>::quotes() const {
-    return quotes_;
-}
-
 template <class T> inline std::vector<std::pair<Date, Real>> SurvivalProbabilityCurve<T>::nodes() const {
     std::vector<std::pair<Date, Real>> results(dates_.size());
     for (Size i = 0; i < dates_.size(); ++i)
