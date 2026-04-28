@@ -39,7 +39,6 @@
 #include <ored/marketdata/bondspreadimply.hpp>
 #include <ored/portfolio/builders/currencyswap.hpp>
 #include <ored/portfolio/builders/fxoption.hpp>
-#include <ored/portfolio/builders/multilegoption.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/utilities/indexparser.hpp>

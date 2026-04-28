@@ -880,7 +880,6 @@ using ore::data::EqVarSwap;
 using ore::data::FxVarSwap;
 using ore::data::ComVarSwap;
 using OREBalanceGuaranteedSwap = ore::data::BalanceGuaranteedSwap;
-using OREMultiLegOption = ore::data::MultiLegOption;
 using ORERiskParticipationAgreement = ore::data::RiskParticipationAgreement;
 %}
 
@@ -1408,29 +1407,6 @@ public:
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 };
-
-// ore/OREData/ored/portfolio/multilegoption.hpp
-// Renamed OREMultiLegOption to avoid clash with QuantExt::MultiLegOption instrument
-// Kept as an alias wrapper because direct %rename with the vector-converting %extend helper
-// emits duplicate constructor entry points in generated SWIG code.
-
-%shared_ptr(OREMultiLegOption)
-class OREMultiLegOption : public ore::data::Trade {
-public:
-    OREMultiLegOption();
-    void build(const ext::shared_ptr<EngineFactory>&) override;
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
-};
-%extend OREMultiLegOption {
-    OREMultiLegOption(const ore::data::Envelope& env, const std::vector<ext::shared_ptr<ore::data::LegData>>& underlyingData) {
-        return new OREMultiLegOption(env, VECTOR_SWIG_TO_ORE(underlyingData));
-    }
-    OREMultiLegOption(const ore::data::Envelope& env, const ore::data::OptionData& optionData, const std::vector<ext::shared_ptr<ore::data::LegData>>& underlyingData) {
-        return new OREMultiLegOption(env, optionData, VECTOR_SWIG_TO_ORE(underlyingData));
-    }
-}
-%pythoncode %{ MultiLegOption = OREMultiLegOption %}
 
 // ore/OREData/ored/portfolio/pairwisevarianceswap.hpp
 
