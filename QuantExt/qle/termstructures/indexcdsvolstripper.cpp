@@ -288,8 +288,8 @@ ext::optional<Volatility> IndexCdsVolStripper::stripVols(const vector<OptionPric
         }
     };
 
-    // If the premia are BpsPerOutstandingNtl, we need to scale the premium value by the current index factor.
-    Real scale = tradeData_.quoteDimension == QuoteDimension::BpsPerOptionNtl ? 1.0 : tradeData_.indexFactor;
+    // If the premia are BpsPerOutstandingNtl, we need to scale the premium value.
+    Real scale = tradeData_.quoteDimension == QuoteDimension::BpsPerOptionNtl ? 1.0 : tradeData_.indexFactorStrike;
 
     // We want to discount the premium from cash settlement date back to reference date before using as target value.
     auto discPremium = [discToPremPmt, scale](Real premium) {

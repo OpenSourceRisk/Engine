@@ -76,32 +76,37 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
         // 1 price vol type model
 
         // convert spread to strike if necessary
-
+        Real swapNtl = arguments_.swap->notional();
         Real strikePrice;
+        Real strikeForVol;
+        Real rFep = realizedFep() / discTradeCollToExercise;
         if (arguments_.strikeType == CdsOption::StrikeType::Price) {
             // strike is expressed w.r.t. trade date notional
-            strikePrice = 1.0 - arguments_.tradeDateNtl / arguments_.swap->notional() * (1.0 - arguments_.strike);
+            strikeForVol = arguments_.strike;
+            strikePrice = 1.0 - (arguments_.tradeDateNtl * (1.0 - arguments_.strike) - rFep) / swapNtl;
         } else {
             if (generateAdditionalResults_)
                 results_.additionalResults["strikeSpread"] = arguments_.strike;
-            strikePrice = 1.0 + arguments_.tradeDateNtl / arguments_.swap->notional() *
-                                    forwardRiskyAnnuityStrike(arguments_.strike) *
-                                    (arguments_.swap->runningSpread() - arguments_.strike);
+            Real upfront = forwardRiskyAnnuityStrike(arguments_.strike) *
+                (arguments_.swap->runningSpread() - arguments_.strike);
+            strikeForVol = 1.0 + upfront;
+            strikePrice = 1.0 + (arguments_.tradeDateNtl * upfront - rFep) / swapNtl;
         }
 
         // get volatility
 
         Real volatility = volatility_->volatility(exerciseDate, QuantExt::periodToTime(arguments_.indexTerm),
-                                                  strikePrice, CreditVolCurve::Type::Price);
+            strikeForVol, CreditVolCurve::Type::Price);
         Real atmVolatility = volatility_->volatility(exerciseDate, QuantExt::periodToTime(arguments_.indexTerm),
                                                      Null<Real>(), CreditVolCurve::Type::Price);
         Real stdDev = volatility * std::sqrt(exerciseTime);
 
         // calculate the default-adjusted forward price
 
-        Real forwardPriceExclFep = 1.0 - underlyingNpv / arguments_.swap->notional() /
+        Real forwardPriceExclFep = 1.0 - underlyingNpv / swapNtl /
                                              (Settlement::Cash ? discSwapCurrToExercise : discTradeCollToExercise);
-        Real forwardPrice = forwardPriceExclFep - fep() / arguments_.swap->notional() / discTradeCollToExercise;
+        Real urFep = unrealizedFep() / discTradeCollToExercise;
+        Real forwardPrice = forwardPriceExclFep - urFep / swapNtl;
 
         // Check the inputs to the black formula before applying it
         QL_REQUIRE(forwardPrice > 0.0 || close_enough(forwardPrice, 0.0),
@@ -111,7 +116,7 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
                    "NumericalIntegrationIndexCdsOptionEngine: Effective Strike price ("
                        << strikePrice << ") is not positive, can not calculate a reasonable option price");
 
-        results_.value = arguments_.swap->notional() *
+        results_.value = swapNtl *
                          blackFormula(arguments_.swap->side() == Protection::Buyer ? Option::Put : Option::Call,
                                       strikePrice, forwardPrice, stdDev, discTradeCollToExercise);
 
@@ -149,7 +154,7 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
         }
 
         // back out spread strike from strike adjustment if necessary
-
+        Real strikeSpreadForVol = arguments_.strike;
         Real strikeSpread;
         if (arguments_.strikeType == CdsOption::StrikeType::Spread &&
             QuantLib::close_enough(arguments_.tradeDateNtl, arguments_.swap->notional())) {
@@ -171,6 +176,8 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
                         << arguments_.strike << ", trade strike type "
                         << (arguments_.strikeType == CdsOption::StrikeType::Spread ? "Spread" : "Price"));
             }
+            if (arguments_.strikeType != CdsOption::StrikeType::Spread)
+                strikeSpreadForVol = strikeSpread;
         }
 
         if (generateAdditionalResults_ && arguments_.strikeType == CdsOption::StrikeType::Price)
@@ -179,7 +186,7 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
         // get volatility
 
         Real volatility = volatility_->volatility(exerciseDate, QuantExt::periodToTime(arguments_.indexTerm),
-                                                  strikeSpread, CreditVolCurve::Type::Spread);
+            strikeSpreadForVol, CreditVolCurve::Type::Spread);
         Real atmVolatility = volatility_->volatility(exerciseDate, QuantExt::periodToTime(arguments_.indexTerm),
                                                      Null<Real>(), CreditVolCurve::Type::Spread);
         Real stdDev = volatility * std::sqrt(exerciseTime);
