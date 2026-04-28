@@ -135,9 +135,7 @@ public:
         : SwaptionEngineBuilder("LGM", engine,
                                 {"EuropeanSwaption", "EuropeanSwaption_NonStandard", "BermudanSwaption",
                                  "BermudanSwaption_NonStandard", "AmericanSwaption", "AmericanSwaption_NonStandard",
-                                 "EuropeanSwaption_XCcy", "EuropeanSwaption_NonStandard_XCcy", "BermudanSwaption_XCcy",
-                                 "BermudanSwaption_NonStandard_XCcy", "AmericanSwaption_XCcy",
-                                 "AmericanSwaption_NonStandard_XCcy"},
+                                 "EuropeanSwaption_XCcy", "BermudanSwaption_XCcy", "AmericanSwaption_XCcy"},
                                 idBasedKey) {}
 };
 
