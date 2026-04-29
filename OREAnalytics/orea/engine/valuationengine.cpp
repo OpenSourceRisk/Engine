@@ -24,6 +24,7 @@
 #include <orea/simulation/simmarket.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 
+#include <ored/portfolio/compositeinstrumentwrapper.hpp>
 #include <ored/portfolio/optionwrapper.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
@@ -132,8 +133,17 @@ void ValuationEngine::buildCube(const QuantLib::ext::shared_ptr<data::Portfolio>
 
     std::vector<QuantLib::ext::shared_ptr<OptionWrapper>> optionWrappers;
     for (auto const& [id, t] : trades) {
-        if (auto o = QuantLib::ext::dynamic_pointer_cast<OptionWrapper>(t->instrument()))
-            optionWrappers.push_back(o);
+        std::vector<QuantLib::ext::shared_ptr<InstrumentWrapper>> wrapperStack{t->instrument()};
+        while (!wrapperStack.empty()) {
+            auto w = wrapperStack.back();
+            wrapperStack.pop_back();
+            if (auto comp = QuantLib::ext::dynamic_pointer_cast<CompositeInstrumentWrapper>(w)) {
+                for (auto const& cw : comp->wrappers())
+                    wrapperStack.push_back(cw);
+            } else if (auto o = QuantLib::ext::dynamic_pointer_cast<OptionWrapper>(w)) {
+                optionWrappers.push_back(o);
+            }
+        }
     }
 
     LOG("Initialise state objects...");
