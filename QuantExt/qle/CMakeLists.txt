@@ -115,6 +115,7 @@ instruments/bondtotalreturnswap.cpp
 instruments/brlcdiswap.cpp
 instruments/callablebond.cpp
 instruments/cashflowresults.cpp
+instruments/cashsettledamericanoption.cpp
 instruments/cashsettledeuropeanoption.cpp
 instruments/cbo.cpp
 instruments/cdsoption.cpp
@@ -285,6 +286,7 @@ pricingengines/blackcdsoptionengine.cpp
 pricingengines/blackindexcdsoptionengine.cpp
 pricingengines/blackmultilegoptionengine.cpp
 pricingengines/blackswaptionenginedeltagamma.cpp
+pricingengines/cashsettledamericanengine.cpp
 pricingengines/cboengine.cpp
 pricingengines/cbomcengine.cpp
 pricingengines/commodityapoengine.cpp
@@ -654,6 +656,7 @@ instruments/brlcdiswap.hpp
 instruments/callablebond.hpp
 instruments/cashflowresults.hpp
 instruments/cashposition.hpp
+instruments/cashsettledamericanoption.hpp
 instruments/cashsettledeuropeanoption.hpp
 instruments/cbo.hpp
 instruments/cdsoption.hpp
@@ -880,6 +883,7 @@ pricingengines/blackindexcdsoptionengine.hpp
 pricingengines/blackmultilegoptionengine.hpp
 pricingengines/blackswaptionenginedeltagamma.hpp
 pricingengines/cashpositionengine.hpp
+pricingengines/cashsettledamericanengine.hpp
 pricingengines/cboengine.hpp
 pricingengines/cbomcengine.hpp
 pricingengines/commodityapoengine.hpp
