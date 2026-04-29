@@ -223,8 +223,8 @@ Real BondSpreadImply::implySpread(const std::string& securityId, const Real pric
     }
 
     DLOG("settlement date         = " << QuantLib::io::iso_date(b.bond->settlementDate()));
-    DLOG("market quote            = " << priceAdj);
-    DLOG("accrueds                = " << b.bond->accruedAmount());
+    DLOG("clean price market      = " << priceAdj);
+    DLOG("accrueds                = " << b.bond->accruedAmount() / 100.0);
     DLOG("inflation factor        = " << inflationFactor);
     DLOG("price quote method adj  = " << adj);
     DLOG("conversion factor       = " << conversionFactor);
@@ -232,12 +232,13 @@ Real BondSpreadImply::implySpread(const std::string& securityId, const Real pric
     DLOG("future/fwd epiry        = " << (expiry == Date() ? "na" : ore::data::to_string(expiry)));
 
     auto targetFunction = [&b, &spreadQuote, priceAdj, adj, inflationFactor, conversionFactor, &expiry](const Real s) {
-        spreadQuote->setValue(s);
+        spreadQuote->setValue(std::max(std::min(s, 5.0), -5.0));
         if (b.modelBuilder != nullptr)
             b.modelBuilder->recalibrate();
         Real c = getPrice(b, expiry);
-        TLOG("--> spread imply: trying s = " << s << " yields clean price " << c);
-        return c - priceAdj * inflationFactor * adj * conversionFactor;
+        auto tmp = c - priceAdj * inflationFactor * adj * conversionFactor;
+        TLOG("--> spread imply: trying s = " << s << " yields clean price " << c << " and target function " << tmp);
+        return tmp;
     };
 
     // edge case: bond has a zero settlement value -> skip spread imply
