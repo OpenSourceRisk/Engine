@@ -61,13 +61,17 @@ void CrifVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParam
         LOG("set SIMM version for CRIF generation to " << inputs->simmVersion());
     }
 
-    // Load name mapper (try crif, then saccr, then simm)
+    // Load name mapper (try crif, then saccr, then simm, then npv, then setup)
     tmp = {};
     inputs->loadParameter<std::string>(tmp, "crif", "nameMappingInputFile");
     if (tmp.empty())
         inputs->loadParameter<std::string>(tmp, "saccr", "nameMappingInputFile");
     if (tmp.empty())
         inputs->loadParameter<std::string>(tmp, "simm", "nameMappingInputFile");
+    if (tmp.empty())
+        inputs->loadParameter<std::string>(tmp, "npv", "nameMappingInputFile");
+    if (tmp.empty())
+        inputs->loadParameter<std::string>(tmp, "setup", "nameMappingInputFile");
     if (!tmp.empty()) {
         std::string fileName = (inputPath / tmp).generic_string();
         LOG("simmNameMapper file name: " << fileName);
@@ -77,13 +81,17 @@ void CrifVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParam
         inputs->setSimmNameMapper(nameMapper);
     }
 
-    // Load bucket mapper (try crif, then saccr, then simm)
+    // Load bucket mapper (try crif, then saccr, then simm, then npv, then setup)
     tmp = {};
     inputs->loadParameter<std::string>(tmp, "crif", "bucketMappingInputFile");
     if (tmp.empty())
         inputs->loadParameter<std::string>(tmp, "saccr", "bucketMappingInputFile");
     if (tmp.empty())
         inputs->loadParameter<std::string>(tmp, "simm", "bucketMappingInputFile");
+    if (tmp.empty())
+        inputs->loadParameter<std::string>(tmp, "npv", "bucketMappingInputFile");
+    if (tmp.empty())
+        inputs->loadParameter<std::string>(tmp, "setup", "bucketMappingInputFile");
     if (!tmp.empty()) {
         std::string fileName = (inputPath / tmp).generic_string();
         LOG("simmBucketMapper file name: " << fileName);
