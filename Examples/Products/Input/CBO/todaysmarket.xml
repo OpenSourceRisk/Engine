@@ -1,0 +1,70 @@
+<TodaysMarket>
+	<Configuration id="default">
+		<YieldCurvesId>default</YieldCurvesId>
+		<DiscountingCurvesId>default</DiscountingCurvesId>
+		<IndexForwardingCurvesId>default</IndexForwardingCurvesId>
+		<SwapIndexCurvesId>default</SwapIndexCurvesId>
+		<FxSpotsId>default</FxSpotsId>
+		<SwaptionVolatilitiesId>default</SwaptionVolatilitiesId>
+		<CapFloorVolatilitiesId>default</CapFloorVolatilitiesId>
+		<DefaultCurvesId>default</DefaultCurvesId>
+		<SecuritiesId>default</SecuritiesId>
+	</Configuration>
+	<YieldCurves id="default"/>
+	<DiscountingCurves id="default">
+		<DiscountingCurve currency="USD">Yield/USD/USD-LIBOR-3M</DiscountingCurve>
+	</DiscountingCurves>
+	<IndexForwardingCurves id="default">
+		<Index name="USD-FedFunds">Yield/USD/USD-FedFunds</Index>
+		<Index name="USD-LIBOR-3M">Yield/USD/USD-LIBOR-3M</Index>
+	</IndexForwardingCurves>
+	<SwapIndexCurves id="default">
+		<SwapIndex name="USD-CMS-1Y">
+			<Discounting>USD-LIBOR-3M</Discounting>
+		</SwapIndex>
+		<SwapIndex name="USD-CMS-30Y">
+			<Discounting>USD-LIBOR-3M</Discounting>
+		</SwapIndex>
+		<SwapIndex name="USD-CMS-5Y">
+			<Discounting>USD-LIBOR-3M</Discounting>
+		</SwapIndex>
+	</SwapIndexCurves>
+	<FxSpots id="default"/>
+	<SwaptionVolatilities id="default">
+		<SwaptionVolatility key="USD-LIBOR-3M">SwaptionVolatility/USD/USD</SwaptionVolatility>
+	</SwaptionVolatilities>
+	<DefaultCurves id="default">
+		<DefaultCurve name="ALL_SECTORS.NORTH_AMERICA.BBB|SNRFOR|USD">Default/USD/ALL_SECTORS.NORTH_AMERICA.BBB|SNRFOR|USD</DefaultCurve>
+		<DefaultCurve name="CONS_GOODS.NORTH_AMERICA.BBB|SNRFOR|USD">Default/USD/CONS_GOODS.NORTH_AMERICA.BBB|SNRFOR|USD</DefaultCurve>
+		<DefaultCurve name="CORP_FINANCIALS.NORTH_AMERICA.BBB|SNRFOR|USD">Default/USD/CORP_FINANCIALS.NORTH_AMERICA.BBB|SNRFOR|USD</DefaultCurve>
+		<DefaultCurve name="ENERGY.NORTH_AMERICA.BBB|SNRFOR|USD">Default/USD/ENERGY.NORTH_AMERICA.BBB|SNRFOR|USD</DefaultCurve>
+		<DefaultCurve name="FINANCIALS.EUROPE.BBB|SNRFOR|USD">Default/USD/FINANCIALS.EUROPE.BBB|SNRFOR|USD</DefaultCurve>
+		<DefaultCurve name="FINANCIALS.NORTH_AMERICA.BBB|SNRFOR|USD">Default/USD/FINANCIALS.NORTH_AMERICA.BBB|SNRFOR|USD</DefaultCurve>
+		<DefaultCurve name="GOV.NORTH_AMERICA.BBB|SNRFOR|USD">Default/USD/GOV.NORTH_AMERICA.BBB|SNRFOR|USD</DefaultCurve>
+		<DefaultCurve name="HEALTH.NORTH_AMERICA.BBB|SNRFOR|USD">Default/USD/HEALTH.NORTH_AMERICA.BBB|SNRFOR|USD</DefaultCurve>
+		<DefaultCurve name="UTILITIES.NORTH_AMERICA.BBB|SNRFOR|USD">Default/USD/UTILITIES.NORTH_AMERICA.BBB|SNRFOR|USD</DefaultCurve>
+	</DefaultCurves>
+	<Securities id="default">
+		<Security name="ISIN:US15135BAW19">Security/ISIN:US15135BAW19</Security>
+		<Security name="ISIN:US16411QAK76">Security/ISIN:US16411QAK76</Security>
+		<Security name="ISIN:US16411QAL59">Security/ISIN:US16411QAL59</Security>
+		<Security name="ISIN:US205768AT12">Security/ISIN:US205768AT12</Security>
+		<Security name="ISIN:US251526BN89">Security/ISIN:US251526BN89</Security>
+		<Security name="ISIN:US3134A4AA29">Security/ISIN:US3134A4AA29</Security>
+		<Security name="ISIN:US404119CA57">Security/ISIN:US404119CA57</Security>
+		<Security name="ISIN:US46285MAA80">Security/ISIN:US46285MAA80</Security>
+		<Security name="ISIN:US55354GAQ38">Security/ISIN:US55354GAQ38</Security>
+		<Security name="ISIN:US629377CS98">Security/ISIN:US629377CS98</Security>
+		<Security name="ISIN:US674599ED34">Security/ISIN:US674599ED34</Security>
+		<Security name="ISIN:US674599EF81">Security/ISIN:US674599EF81</Security>
+		<Security name="ISIN:US72147KAG31">Security/ISIN:US72147KAG31</Security>
+		<Security name="ISIN:US77313LAB99">Security/ISIN:US77313LAB99</Security>
+		<Security name="ISIN:US845467AS85">Security/ISIN:US845467AS85</Security>
+		<Security name="ISIN:US845467AT68">Security/ISIN:US845467AT68</Security>
+		<Security name="ISIN:US87612BBS07">Security/ISIN:US87612BBS07</Security>
+		<Security name="ISIN:US87612BBU52">Security/ISIN:US87612BBU52</Security>
+		<Security name="ISIN:US904678AF64">Security/ISIN:US904678AF64</Security>
+		<Security name="ISIN:US92343VGM00">Security/ISIN:US92343VGM00</Security>
+	</Securities>
+</TodaysMarket>
+

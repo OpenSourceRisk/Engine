@@ -1,16 +1,24 @@
 #!/usr/bin/env python
 
-import glob
 import os
-import sys
-sys.path.append('../')
-from ore_examples_helper import OreExample
+import subprocess
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
-oreex = OreExample(sys.argv[1] if len(sys.argv)>1 else False)
+cases = [ "run_all.py", 
+          "run_cbo.py"
+         ]
 
-print("+-----------------------------------------------------+")
-print("| Products                                            |")
-print("+-----------------------------------------------------+")
+# Get max parallel from environment variable, default to 1
+max_parallel = int(os.getenv("EXAMPLES_PARALLEL", "1"))
 
-oreex.print_headline("Run ORE to price thre sample portfolio")
-oreex.run("Input/ore.xml")
+def run_script(script_name):
+    cmd = ["python3", script_name]
+    print("Calling:", " ".join(cmd))
+    return subprocess.call(cmd)
+
+# Run scripts in parallel
+with ThreadPoolExecutor(max_workers=max_parallel) as executor:
+    futures = [executor.submit(run_script, case) for case in cases]
+    for future in as_completed(futures):
+        result = future.result()
+        print(f"Script finished with exit code: {result}")
