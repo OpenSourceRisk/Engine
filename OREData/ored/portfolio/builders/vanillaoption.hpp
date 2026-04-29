@@ -41,6 +41,7 @@
 #include <qle/termstructures/blackmonotonevarvoltermstructure.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
 #include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
+#include <qle/pricingengines/cashsettledamericanengine.hpp>
 namespace ore {
 namespace data {
 
@@ -371,6 +372,123 @@ protected:
                        QuantLib::close_enough(volTS->shift(), 0.0),
                    "AmericanOptionBAWEngineBuilder: currently only lognormal vols are supported");
         return QuantLib::ext::make_shared<QuantExt::BaroneAdesiWhaleyApproximationEngine>(gbsp);
+    }
+};
+
+//! Abstract Engine Builder for Cash Settled American Vanilla Options using Barone Adesi Whaley Approximation
+/*! Pricing engines are cached by asset/currency
+
+    \ingroup builders
+ */
+class AmericanCSOptionBAWEngineBuilder : public AmericanOptionEngineBuilder {
+public:
+    AmericanCSOptionBAWEngineBuilder(const string& model, const set<string>& tradeTypes, const AssetClass& assetClass)
+        : AmericanOptionEngineBuilder(model, "CashSettledAmericanBAWEngine", tradeTypes, assetClass, Date()) {}
+
+protected:
+    virtual QuantLib::ext::shared_ptr<PricingEngine>
+    engineImpl(const string& assetName, const Currency& ccy, const string& discountCurveName,
+               const AssetClass& assetClass, const Date& expiryDate, const bool useFxSpot,
+               const std::optional<Currency>& cashSettlementCurrency) override {
+        std::string delimiter = "#";
+        std::string assetNameLocal = assetName;
+        QuantLib::Date forwardDate = QuantLib::Date();
+        if (assetName.find(delimiter) != std::string::npos) {
+            std::string forwardDateString = splitByLastDelimiter(assetName, delimiter);
+            bool validDate = tryParse<Date>(forwardDateString, forwardDate, parseDate);
+            if (validDate)
+                assetNameLocal = removeAfterLastDelimiter(assetName, delimiter);
+        }
+        QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp =
+            getBlackScholesProcess(assetNameLocal, ccy, assetClass);
+        auto volTS = gbsp->blackVolatility();
+        QL_REQUIRE(volTS->volType() == QuantLib::VolatilityType::ShiftedLognormal &&
+                       QuantLib::close_enough(volTS->shift(), 0.0),
+                   "AmericanOptionBAWEngineBuilder: currently only lognormal vols are supported");
+        auto underlyingEngine = QuantLib::ext::make_shared<QuantExt::BaroneAdesiWhaleyApproximationEngine>(gbsp);
+
+        std::string discountingCurrency = cashSettlementCurrency ? cashSettlementCurrency->code() : ccy.code();
+        Handle<YieldTermStructure> discountCurve =
+            discountCurveName.empty()
+                ? market_->discountCurve(discountingCurrency, configuration(MarketContext::pricing))
+                : indexOrYieldCurve(market_, discountCurveName, configuration(MarketContext::pricing));
+
+        return QuantLib::ext::make_shared<QuantExt::CashSettledAmericanEngine>(underlyingEngine, discountCurve);
+    }
+};
+
+//! Abstract Engine Builder for Cash Settled American Vanilla Options using Finite Difference Method
+/*! Pricing engines are cached by asset/currency
+
+    \ingroup builders
+ */
+class AmericanCSOptionFDEngineBuilder : public AmericanOptionEngineBuilder {
+public:
+    AmericanCSOptionFDEngineBuilder(const string& model, const set<string>& tradeTypes, const AssetClass& assetClass,
+                                  const Date& expiryDate)
+        : AmericanOptionEngineBuilder(model, "CashSettledAmericanFDEngine", tradeTypes, assetClass, expiryDate) {}
+
+protected:
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
+                                                                const string& discountCurveName,
+                                                                const AssetClass& assetClass, const Date& expiryDate,
+                                                                const bool useFxSpot,
+                                                                const std::optional<Currency>&) override {
+        // We follow the way FdBlackScholesBarrierEngine determines maturity for time grid generation
+        Handle<YieldTermStructure> riskFreeRate =
+            market_->discountCurve(ccy.code(), configuration(ore::data::MarketContext::pricing));
+        Time expiry = riskFreeRate->dayCounter().yearFraction(riskFreeRate->referenceDate(),
+                                                              std::max(riskFreeRate->referenceDate(), expiryDate));
+
+        std::string delimiter = "#";
+        std::string assetNameLocal = assetName;
+        QuantLib::Date forwardDate = QuantLib::Date();
+        if (assetName.find(delimiter) != std::string::npos) {
+            std::string forwardDateString = splitByLastDelimiter(assetName, delimiter);
+            bool validDate = tryParse<Date>(forwardDateString, forwardDate, parseDate);
+            if (validDate)
+                assetNameLocal = removeAfterLastDelimiter(assetName, delimiter);
+        }
+
+        FdmSchemeDesc scheme = parseFdmSchemeDesc(engineParameter("Scheme"));
+        Size tGrid = (Size)(parseInteger(engineParameter("TimeGridPerYear")) * expiry);
+        Size xGrid = parseInteger(engineParameter("XGrid"));
+        Size dampingSteps = parseInteger(engineParameter("DampingSteps"));
+        bool monotoneVar = parseBool(engineParameter("EnforceMonotoneVariance", {}, false, "true"));
+        Size tGridMin = parseInteger(engineParameter("TimeGridMinimumSize", {}, false, "1"));
+        tGrid = std::max(tGridMin, tGrid);
+
+        QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp;
+
+        if (monotoneVar) {
+            // Replicate the construction of time grid in FiniteDifferenceModel::rollbackImpl
+            // This time grid is required to build a BlackMonotoneVarVolTermStructure which
+            // ensures monotonic variance along the time grid
+            const Size totalSteps = tGrid + dampingSteps;
+            std::vector<Time> timePoints(totalSteps + 1);
+            Array timePointsArray(totalSteps, expiry, -expiry / totalSteps);
+            timePoints[0] = 0.0;
+            for (Size i = 0; i < totalSteps; i++)
+                timePoints[timePoints.size() - i - 1] = timePointsArray[i];
+            timePoints.insert(std::upper_bound(timePoints.begin(), timePoints.end(), 0.99 / 365), 0.99 / 365);
+            gbsp = getBlackScholesProcess(assetNameLocal, ccy, assetClass, timePoints, true, forwardDate);
+        } else {
+            gbsp = getBlackScholesProcess(assetNameLocal, ccy, assetClass, {}, true, forwardDate);
+        }
+        auto volTS = gbsp->blackVolatility();
+        QL_REQUIRE(volTS->volType() == QuantLib::VolatilityType::ShiftedLognormal &&
+                       QuantLib::close_enough(volTS->shift(), 0.0),
+                   "AmericanOptionFDEngineBuilder: currently only lognormal vols are supported");
+
+        auto underlyingEngine = QuantLib::ext::make_shared<QuantExt::FdBlackScholesVanillaEngine2>(
+            gbsp, tGrid, xGrid, dampingSteps, scheme);
+
+        Handle<YieldTermStructure> discountCurve =
+            discountCurveName.empty()
+                ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
+                : indexOrYieldCurve(market_, discountCurveName, configuration(MarketContext::pricing));
+
+        return QuantLib::ext::make_shared<QuantExt::CashSettledAmericanEngine>(underlyingEngine, discountCurve);
     }
 };
 

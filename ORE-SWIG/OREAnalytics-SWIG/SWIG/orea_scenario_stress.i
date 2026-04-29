@@ -19,6 +19,13 @@
 #ifndef orea_scenario_stress_i
 #define orea_scenario_stress_i
 
+%{
+#include <orea/scenario/scenariocurvepillar.hpp>
+#include <sstream>
+using ore::analytics::ScenarioCurvePillar;
+using ore::analytics::parseScenarioCurvePillar;
+%}
+
 %template(PeriodVectorRealMap) std::map<Period, std::vector<Real>>;
 %template(PeriodPairsRealMap) std::map<pair<Period, Period>, Real>;
 
@@ -71,7 +78,6 @@ class StressTestScenarioData : public ore::data::XMLSerializable {
     struct CurveShiftData {
         QuantExt::ShiftType shiftType;
         std::vector<Real> shifts;
-        std::vector<Period> shiftTenors;
     };
 
     struct SpotShiftData {
@@ -180,5 +186,40 @@ class StressTestScenarioData : public ore::data::XMLSerializable {
 
 } // namespace analytics
 } // namespace ore
+
+%extend ore::analytics::StressTestScenarioData::CurveShiftData {
+    void setShiftTenors(const std::vector<Period>& tenors) {
+        $self->shiftTenors.clear();
+        for (const auto& t : tenors)
+            $self->shiftTenors.push_back(ScenarioCurvePillar(t));
+    }
+    void setShiftTenorPillars(const std::vector<std::string>& tenors) {
+        $self->shiftTenors.clear();
+        for (const auto& t : tenors)
+            $self->shiftTenors.push_back(parseScenarioCurvePillar(t));
+    }
+    std::vector<std::string> getShiftTenorStrings() const {
+        std::vector<std::string> result;
+        for (const auto& p : $self->shiftTenors) {
+            std::ostringstream os;
+            os << p;
+            result.push_back(os.str());
+        }
+        return result;
+    }
+    %pythoncode %{
+        @property
+        def shiftTenors(self):
+            return self.getShiftTenorStrings()
+        @shiftTenors.setter
+        def shiftTenors(self, value):
+            if not value:
+                self.setShiftTenors([])
+            elif all(isinstance(v, str) for v in value):
+                self.setShiftTenorPillars(list(value))
+            else:
+                self.setShiftTenors(list(value))
+    %}
+}
 
 #endif
