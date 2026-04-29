@@ -100,6 +100,7 @@ struct XvaVariables : public InputVariables {
     optional<bool> exposureIncludeTodaysCashFlows_;
     optional<bool> exposureIncludeReferenceDateEvents_ = false;
     QuantLib::ext::shared_ptr<ScenarioReader> scenarioReader_;
+    std::string filterTenor_;
 
     /**************
      * XVA analytic

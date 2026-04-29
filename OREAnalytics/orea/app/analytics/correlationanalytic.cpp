@@ -21,6 +21,8 @@
 #include <orea/app/inputparameters.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/engine/observationmode.hpp>
+#include <orea/scenario/filteredscenarioreader.hpp>
+#include <orea/scenario/simplescenariofactory.hpp>
 #include <ored/portfolio/trade.hpp>
 #include <ored/marketdata/adjustmentfactors.hpp>
 #include <ored/marketdata/adjustedinmemoryloader.hpp>
@@ -36,7 +38,8 @@ namespace analytics {
 void CorrelationVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) {
     vector<string> correlationAnalytics = {"correlation", "xva"};
 
-    inputs->loadParameterXML<ScenarioSimMarketParameters>(simMarketParams_, correlationAnalytics, "marketConfigFile");
+    inputs->loadParameterXML<ScenarioSimMarketParameters>(simMarketParams_, correlationAnalytics,
+                                                              vector<string>({"simulationConfigFile"}));
     inputs->loadParameterXML<SensitivityScenarioData>(sensiScenarioData_, correlationAnalytics, "sensitivityConfigFile");
 
     inputs->loadParameter<string>(lookbackPeriod_, correlationAnalytics,
@@ -50,6 +53,7 @@ void CorrelationVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<Inp
 
     inputs->loadParameter<bool>(horizonOverlappingPeriods_, correlationAnalytics, vector<string>({"horizonOverlappingPeriods", "mporOverlappingPeriods"}), false, parseBool);
     inputs->loadParameter<bool>(allowPartialScenarios_, correlationAnalytics, "allowPartialScenarios", false, parseBool);
+    inputs->loadParameter<string>(filterTenor_, correlationAnalytics, "filteredScenarioTenor", false);
     
     TimePeriod hsPeriod = totalTimePeriod(vector<string>({lookbackPeriod_}), horizonDays_, horizonCalendar_);
     QL_REQUIRE(hsPeriod.numberOfContiguousParts() == 1,
@@ -57,6 +61,14 @@ void CorrelationVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<Inp
     scenarioReader_ = inputs->loadScenarioReader(correlationAnalytics, vector<string>({"historicalScenarioFile", "scenarioFile"}),
                                                  hsPeriod.startDates().front(),
                                                  hsPeriod.endDates().front());
+
+    // Apply tenor filter if specified
+    if (!filterTenor_.empty() && scenarioReader_ && simMarketParams_) {
+        Period tenor = parsePeriod(filterTenor_);
+        auto factory = QuantLib::ext::make_shared<SimpleScenarioFactory>(true);
+        scenarioReader_ = QuantLib::ext::make_shared<FilteredScenarioReader>(scenarioReader_, simMarketParams_, tenor, factory);
+        LOG("Applied tenor filter " << filterTenor_ << " to correlation scenario reader");
+    }
 }
 
 void CorrelationAnalyticImpl::setUpConfigurations() {
