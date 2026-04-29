@@ -142,7 +142,7 @@
           <xs:sequence>
             <xs:choice>
               <xs:element type="lgm" name="LGM" maxOccurs="unbounded" minOccurs="0"/>
-              <xs:element type="hw" name="HWModel" maxOccurs="unbounded" minOccurs=""/>
+              <xs:element type="hw" name="HWModel" maxOccurs="unbounded" minOccurs="0"/>
             </xs:choice>
           </xs:sequence>
         </xs:complexType>
