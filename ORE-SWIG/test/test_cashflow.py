@@ -4,6 +4,7 @@
 """
 
 from ORE import *
+import ORE
 import unittest
 import logging
 
@@ -92,11 +93,84 @@ class FloatingRateFXLinkedNotionalCouponTest(unittest.TestCase):
         """ Test consistency of FX Linked Cash Flow fair price and NPV() """
 
         
+class CommodityIndexedAverageCashFlowTest(unittest.TestCase):
+    def setUp(self):
+        """Set up a CommodityIndexedAverageCashFlow with a CommoditySpotIndex."""
+        self.todayDate = Date(15, January, 2026)
+        Settings.instance().evaluationDate = self.todayDate
+
+        self.commName = "COMMODITY_WTI"
+        self.commCalendar = UnitedStates(UnitedStates.NYSE)
+
+        # Use two-arg constructor (no price curve); fixings will supply prices
+        self.commodityIndex = CommoditySpotIndex(
+            self.commName, self.commCalendar)
+
+        self.startDate = Date(2, February, 2026)
+        self.endDate = Date(2, March, 2026)
+        self.paymentDate = Date(3, March, 2026)
+        self.quantity = 1000.0
+
+    def testExplicitPaymentDateConstructor(self):
+        """Test CommodityIndexedAverageCashFlow with explicit payment date."""
+        cf = CommodityIndexedAverageCashFlow(
+            self.quantity, self.startDate, self.endDate,
+            self.paymentDate, self.commodityIndex)
+
+        self.assertEqual(cf.date(), self.paymentDate)
+        self.assertEqual(cf.startDate(), self.startDate)
+        self.assertEqual(cf.endDate(), self.endDate)
+        self.assertAlmostEqual(cf.periodQuantity(), self.quantity, delta=1e-10)
+
+    def testDeducedPaymentDateConstructor(self):
+        """Test CommodityIndexedAverageCashFlow with deduced payment date."""
+        cf = CommodityIndexedAverageCashFlow(
+            self.quantity, self.startDate, self.endDate,
+            0, self.commCalendar, Following,
+            self.commodityIndex)
+
+        self.assertEqual(cf.startDate(), self.startDate)
+        self.assertEqual(cf.endDate(), self.endDate)
+        self.assertAlmostEqual(cf.periodQuantity(), self.quantity, delta=1e-10)
+        # Payment date should be on or after end date
+        self.assertGreaterEqual(cf.date(), self.endDate)
+
+    def testAccessors(self):
+        """Test CommodityIndexedAverageCashFlow accessor methods."""
+        cf = CommodityIndexedAverageCashFlow(
+            self.quantity, self.startDate, self.endDate,
+            self.paymentDate, self.commodityIndex,
+            self.commCalendar, 0.5, 1.0, False, 0, 0)
+
+        self.assertEqual(cf.deliveryDateRoll(), 0)
+        self.assertEqual(cf.futureMonthOffset(), 0)
+        self.assertTrue(cf.useBusinessDays())
+        self.assertIsNotNone(cf.index())
+
+    def testCommodityIndexedAverageLeg(self):
+        """Test CommodityIndexedAverageLeg builder produces a non-empty Leg."""
+        schedule = Schedule(
+            self.startDate, Date(2, February, 2027),
+            Period(1, Months), self.commCalendar,
+            ModifiedFollowing, ModifiedFollowing,
+            DateGeneration.Forward, False)
+
+        leg = CommodityIndexedAverageLeg(
+            schedule=schedule,
+            index=self.commodityIndex,
+            quantities=[self.quantity],
+            paymentCalendar=self.commCalendar,
+            pricingCalendar=self.commCalendar)
+
+        self.assertGreater(len(leg), 0)
+
+
 if __name__ == '__main__':
     print('testing ORE ' + ORE.__version__)
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(FXLinkedCashFlowTest,'test'))
     suite.addTest(unittest.makeSuite(FloatingRateFXLinkedNotionalCouponTest,'test'))
+    suite.addTest(unittest.makeSuite(CommodityIndexedAverageCashFlowTest,'test'))
     unittest.TextTestRunner(verbosity=2).run(suite)
     unittest.main()
 
