@@ -45,8 +45,9 @@ Array datesToTimes(const std::vector<Date>& dates, const Handle<YieldTermStructu
 } // anonymous namespace
 
 PiecewiseConstantHelper1::PiecewiseConstantHelper1(const Array& t,
-    const QuantLib::ext::shared_ptr<Constraint>& constraint, const bool rcll)
-    : t_(t), rcll_(rcll) {
+    const QuantLib::ext::shared_ptr<Constraint>& constraint, const bool rcll, 
+    const bool withoutTransformation)
+    : t_(t), rcll_(rcll), withoutTransformation_(withoutTransformation) {
     Size ySize = t_.size() + 1;
     if (!rcll_)
         ySize = t_.size() ;
@@ -56,8 +57,9 @@ PiecewiseConstantHelper1::PiecewiseConstantHelper1(const Array& t,
 
 PiecewiseConstantHelper1::PiecewiseConstantHelper1(const std::vector<Date>& dates,
     const Handle<YieldTermStructure>& yts,
-    const QuantLib::ext::shared_ptr<Constraint>& constraint, const bool rcll)
-    : t_(datesToTimes(dates, yts)), rcll_(rcll) {
+    const QuantLib::ext::shared_ptr<Constraint>& constraint, const bool rcll,
+    const bool withoutTransformation)
+    : t_(datesToTimes(dates, yts)), rcll_(rcll), withoutTransformation_(withoutTransformation) {
     Size ySize = t_.size() + 1;
     if (!rcll_)
         ySize = t_.size() ;

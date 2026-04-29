@@ -41,10 +41,12 @@ class PiecewiseConstantHelper1 {
 public:
     PiecewiseConstantHelper1(const Array& t,
         const QuantLib::ext::shared_ptr<QuantLib::Constraint>& constraint = QuantLib::ext::make_shared<QuantLib::NoConstraint>(), 
-        const bool rcll = true);
+        const bool rcll = true,
+        const bool withoutTransformation = false);
     PiecewiseConstantHelper1(const std::vector<Date>& dates, const Handle<YieldTermStructure>& yts,
         const QuantLib::ext::shared_ptr<QuantLib::Constraint>& constraint = QuantLib::ext::make_shared<QuantLib::NoConstraint>(), 
-        const bool rcll = true);
+        const bool rcll = true,
+        const bool withoutTransformation = false);
 
     const Array& t() const;
     const QuantLib::ext::shared_ptr<Parameter> p() const;
@@ -61,10 +63,11 @@ protected:
     const Array t_;
     /*! y are the raw values in the sense of parameter transformation */
     QuantLib::ext::shared_ptr<PseudoParameter> y_;
+    bool rcll_ = true;
+    bool withoutTransformation_ = false;
 
 private:
     mutable std::vector<Real> b_;
-    bool rcll_ = true;
 };
 
 //! Piecewise Constant Helper 11
@@ -176,9 +179,18 @@ inline const Array& PiecewiseConstantHelper1::t() const { return t_; }
 
 inline const QuantLib::ext::shared_ptr<Parameter> PiecewiseConstantHelper1::p() const { return y_; }
 
-inline Real PiecewiseConstantHelper1::direct(const Real x) const { return x * x; }
+inline Real PiecewiseConstantHelper1::direct(const Real x) const { 
+    if (withoutTransformation_) 
+        return x ; 
+    return x * x; 
+}
 
-inline Real PiecewiseConstantHelper1::inverse(const Real y) const { return std::sqrt(y); }
+inline Real PiecewiseConstantHelper1::inverse(const Real y) const 
+{
+    if (withoutTransformation_) 
+        return y;
+    return std::sqrt(y); 
+}
 
 inline void PiecewiseConstantHelper1::update() const {
     Real sum = 0.0;
