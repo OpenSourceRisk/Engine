@@ -89,7 +89,6 @@ public:
 
 protected:
     void createVarCalculator() override;
-    void initialiseRiskGroups() override;
     void writeHeader(const QuantLib::ext::shared_ptr<Report>& report) const override;
     std::vector<Real> calcVarsForQuantiles() const override;
     void handleFullRevalResults(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
@@ -107,7 +106,6 @@ private:
     bool includeExpectedShortfall_ = false;
     bool tradePnl_ = false;
     bool riskFactorBreakdown_ = false;
-    bool riskClassBreakdown_ = true;
     int countRF_ = 0;
 };
 

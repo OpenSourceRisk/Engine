@@ -38,9 +38,9 @@
       <Parameter name="includeExpectedShortfall">Y</Parameter>
       <!-- <Parameter name="breakdown">Y</Parameter> -->
       <Parameter name="tradePnl">N</Parameter>
-      <!--<Parameter name="riskFactorBreakdown">Y</Parameter>-->
+      <!-- <Parameter name="riskFactorBreakdown">N</Parameter> -->
       <!-- <Parameter name="riskClassBreakdown">N</Parameter> -->
-      <!--<Parameter name="portfolioFilter">PF1</Parameter>-->
+      <!-- <Parameter name="portfolioFilter">PF1</Parameter> -->
       <Parameter name="outputFile">var.csv</Parameter>
     </Analytic>
   </Analytics>

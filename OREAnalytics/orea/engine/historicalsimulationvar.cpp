@@ -40,68 +40,16 @@ HistoricalSimulationVarReport::HistoricalSimulationVarReport(
     const bool breakdown, const bool includeExpectedShortfall, const bool tradePnl, const bool riskFactorBreakdown, const bool useAtParCouponsCurves,
     const bool useAtParCouponsTrades, const bool riskClassBreakdown)
     : VarReport(baseCurrency, portfolio, portfolioFilter, p, period, hisScenGen, nullptr, std::move(fullRevalArgs),
-                std::move(multiThreadArgs), false, useAtParCouponsCurves, useAtParCouponsTrades, tradePnl, riskFactorBreakdown),
+                std::move(multiThreadArgs), false, useAtParCouponsCurves, useAtParCouponsTrades, tradePnl, riskFactorBreakdown,
+                riskClassBreakdown),
                 includeExpectedShortfall_(includeExpectedShortfall) {
     fullReval_ = true;
     tradePnl_ = tradePnl;
     riskFactorBreakdown_ = riskFactorBreakdown;
-    riskClassBreakdown_ = riskClassBreakdown;
 }
 
 void HistoricalSimulationVarReport::createVarCalculator() {
     varCalculator_ = QuantLib::ext::make_shared<HistoricalSimulationVarCalculator>(pnls_);
-}
-
-void HistoricalSimulationVarReport::initialiseRiskGroups() {
-    if (riskClassBreakdown_) {
-        // Default behavior — full cross-product of risk classes × types
-        MarketRiskReport::initialiseRiskGroups();
-        return;
-    }
-
-    // riskClassBreakdown=false: only create [All, All] risk group
-    riskGroups_ = QuantLib::ext::make_shared<MarketRiskGroupContainer>();
-    tradeGroups_ = QuantLib::ext::make_shared<TradeGroupContainer>();
-
-    bool hasFilter = false;
-    std::regex filter;
-    if (portfolioFilter_ != "") {
-        hasFilter = true;
-        filter = std::regex(portfolioFilter_);
-    }
-
-    Size pos = 0;
-    tradeGroups_->add(QuantLib::ext::make_shared<TradeGroup>("All"));
-
-    QL_REQUIRE(portfolio_, "No portfolio given");
-    for (const auto& pId : portfolio_->portfolioIds()) {
-        if (breakdown_ && (!hasFilter || std::regex_match(pId, filter)))
-            tradeGroups_->add(QuantLib::ext::make_shared<TradeGroup>(pId));
-    }
-
-    for (auto const& [tradeId, trade] : portfolio_->trades()) {
-        if (!hasFilter && trade->portfolioIds().size() == 0)
-            tradeIdGroups_["All"].insert(std::make_pair(tradeId, pos));
-        else {
-            for (auto const& pId : trade->portfolioIds()) {
-                if (!hasFilter || std::regex_match(pId, filter)) {
-                    tradeIdGroups_["All"].insert(std::make_pair(tradeId, pos));
-                    if (breakdown_)
-                        tradeIdGroups_[pId].insert(std::make_pair(tradeId, pos));
-                }
-            }
-        }
-        pos++;
-    }
-
-    // Only add the [All, All] risk group
-    auto riskGroup = QuantLib::ext::make_shared<MarketRiskGroup>(
-        MarketRiskConfiguration::RiskClass::All,
-        MarketRiskConfiguration::RiskType::All);
-    riskGroups_->add(riskGroup);
-
-    riskGroups_->reset();
-    tradeGroups_->reset();
 }
 
 void HistoricalSimulationVarReport::createAdditionalReports(
