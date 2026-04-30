@@ -379,6 +379,7 @@ termstructures/blackvolsurfaceabsolute.cpp
 termstructures/blackvolsurfacebfrr.cpp
 termstructures/blackvolsurfacedelta.cpp
 termstructures/blackvolsurfaceproxy.cpp
+termstructures/blackvolsurfacesvi.cpp
 termstructures/blackvolsurfacewithatm.cpp
 termstructures/brlcdiratehelper.cpp
 termstructures/capfloorhelper.cpp
@@ -429,6 +430,8 @@ termstructures/pricetermstructureadapter.cpp
 termstructures/proxyoptionletvolatility.cpp
 termstructures/proxyswaptionvolatility.cpp
 termstructures/sabrparametricvolatility.cpp
+termstructures/svimodeltraits.cpp
+termstructures/sviparametricvolatility.cpp
 termstructures/scenario.cpp
 termstructures/simplemclocalvolstochasticratescorrection.cpp
 termstructures/spreadedblackvolatilitycurve.cpp
@@ -985,6 +988,7 @@ termstructures/blackvolsurfaceabsolute.hpp
 termstructures/blackvolsurfacebfrr.hpp
 termstructures/blackvolsurfacedelta.hpp
 termstructures/blackvolsurfaceproxy.hpp
+termstructures/blackvolsurfacesvi.hpp
 termstructures/blackvolsurfacewithatm.hpp
 termstructures/bondyieldshiftedcurvetermstructure.hpp
 termstructures/brlcdiratehelper.hpp
@@ -1071,6 +1075,8 @@ termstructures/probabilitytraits.hpp
 termstructures/proxyoptionletvolatility.hpp
 termstructures/proxyswaptionvolatility.hpp
 termstructures/sabrparametricvolatility.hpp
+termstructures/svimodeltraits.hpp
+termstructures/sviparametricvolatility.hpp
 termstructures/sabrstrippedoptionletadapter.hpp
 termstructures/scenario.hpp
 termstructures/simplemclocalvolstochasticratescorrection.hpp

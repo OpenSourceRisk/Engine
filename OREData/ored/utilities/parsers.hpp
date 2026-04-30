@@ -38,6 +38,7 @@
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/pricingengines/mcregressionmodel.hpp>
 #include <qle/termstructures/sabrparametricvolatility.hpp>
+#include <qle/termstructures/sviparametricvolatility.hpp>
 #include <qle/termstructures/scenario.hpp>
 
 #include <ql/cashflows/cpicoupon.hpp>
@@ -658,6 +659,18 @@ QuantExt::SabrParametricVolatility::ModelVariant parseSabrParametricVolatilityMo
 \ingroup utilities
 */
 std::ostream& operator<<(std::ostream& out, QuantExt::SabrParametricVolatility::ModelVariant m);
+
+//! Parse SviParametricVolatility::ModelVariant
+/*!
+\ingroup utilities
+*/
+QuantExt::SviParametricVolatility::ModelVariant parseSviParametricVolatilityModelVariant(const std::string& s);
+
+//! Write SviParametricVolatility::ModelVariant
+/*!
+\ingroup utilities
+*/
+std::ostream& operator<<(std::ostream& out, QuantExt::SviParametricVolatility::ModelVariant m);
 
 //! Write QuantLib::Exercise::Type
 /*!

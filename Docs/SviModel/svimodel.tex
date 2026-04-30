@@ -1,0 +1,960 @@
+\documentclass{amsart}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage[miktex]{gnuplottex}
+\usepackage{epstopdf}
+\usepackage{minted}
+\usepackage{color,soul}
+\usepackage{listings}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\newtheorem{theorem}{Theorem}
+\theoremstyle{plain}
+\newtheorem{acknowledgement}{Acknowledgement}
+\newtheorem{algorithm}{Algorithm}
+\newtheorem{axiom}{Axiom}
+\newtheorem{case}{Case}
+\newtheorem{claim}{Claim}
+\newtheorem{conclusion}{Conclusion}
+\newtheorem{condition}{Condition}
+\newtheorem{conjecture}{Conjecture}
+\newtheorem{corollary}{Corollary}
+\newtheorem{criterion}{Criterion}
+\newtheorem{definition}{Definition}
+\newtheorem{example}{Example}
+\newtheorem{exercise}{Exercise}
+\newtheorem{lemma}{Lemma}
+\newtheorem{notation}{Notation}
+\newtheorem{problem}{Problem}
+\newtheorem{proposition}{Proposition}
+\newtheorem{remark}{Remark}
+\newtheorem{solution}{Solution}
+\newtheorem{summary}{Summary}
+\numberwithin{equation}{section}
+%--------------------------------------------------------
+
+\begin{document}
+
+\title{SVI model in ORE}
+
+\date{3 February 2026}
+
+\begin{abstract}
+Description of SVI model implementation in ORE.
+\end{abstract}
+\maketitle
+
+% \tableofcontents
+
+\section{SVI Model}\label{sec:model}
+
+\subsection{Specification}
+
+The SVI model is given by (see e.g. \cite{Gatheral_2004})
+
+\begin{equation}
+w(k; a,b,\rho,m,\sigma) = a + b \left( \rho (k - m) + \sqrt{(k - m)^2 + \sigma^2} \right)
+\end{equation}
+
+with
+
+\begin{itemize}
+\item $w$ the total implied variance, i.e. $w = \sigma_{imp}^2 T$ with implied volatility $\sigma_{imp}$ and
+  option time to maturity $T$
+\item $k$ the log-moneyness, i.e. $k = \ln(K/F)$ with strike $K$ and forward $F$
+\item $a$ controls the overall level of the variance curve
+\item $b \ge 0$ controls the slope of the variance curve
+\item $\rho \in [-1,1]$ controls the skewness of the variance curve
+\item $m$ controls the horizontal shift of the variance curve
+\item $\sigma > 0$ controls the curvature of the variance curve
+\end{itemize}
+
+\subsubsection{Raw SVI}\label{sec:rawsvi}
+
+The above is the so-called ``raw'' SVI formulation. In the
+following we will refer to the $5$ parameters $(a,b,\rho,m,\sigma)$ as the ``raw SVI parameters''.
+There are two other SVI variants known from the literature.
+
+\subsubsection{Natural SVI}\label{sec:naturalsvi}
+
+The ``natural'' SVI formulation uses parameters $(\Delta, \mu, \rho, \omega, \zeta)$ related to the raw parameters via
+\begin{eqnarray}
+a &=& \Delta + \frac{\omega}{2} (1 - \rho^2) \\
+b &=& \frac{\zeta \omega}{2} \\
+m &=& \mu - \frac{\rho \omega}{\zeta} \\
+\sigma &=& \frac{\omega}{\zeta}
+\end{eqnarray}
+
+The total variance is therefore given by
+\begin{equation}
+w(k; \Delta, \mu, \rho, \omega, \zeta) = \Delta + \frac{\omega}{2} \left( 1 + \zeta \rho (k - \mu) + \sqrt{(\zeta (k - \mu) + \rho)^2 + 1 - \rho^2} \right)
+\end{equation}
+
+\subsubsection{SVI Jump-Wings}\label{sec:svijw}
+
+The ``SVI-JW'' formulation uses parameters $(v_t, \psi_t, p_t, c_t, \tilde{v}_t)$ related to the raw parameters via
+
+\begin{eqnarray}
+v_t &=& \frac{a + b (- \rho m + \sqrt{m^2 + \sigma^2})}{t} \\
+\psi_t &=& \frac{1}{\sqrt{w_t}} \frac{b}{2} (-\frac{m}{\sqrt{m^2 + \sigma^2}} + \rho)  \\
+p_t &=& \frac{1}{\sqrt{w_t}}  b (1 - \rho) \\
+c_t &=& \frac{1}{\sqrt{w_t}}  b (1 + \rho) \\
+\tilde{v}_t &=& \frac{1}{t}(a + b \sigma \sqrt{1 - \rho^2})
+\end{eqnarray}
+
+Closed-form translation from SVI-JW parameters to raw SVI parameters exists only under certain conditions, see
+\cite{Gatheral_2004} for details.
+
+\subsubsection{Surface SVI}\cite{Gatheral_2012}\label{sec:ssvi}
+
+The Surface SVI model is an extension of the natural parameterization, with time-dependent parameters
+$(\theta_t, \varphi(\theta_t))$ and non-time-dependent parameters $\rho$, via
+
+\begin{equation}
+w(k,t) = \frac{\theta_t}{2} \left( 1 + \varphi(\theta_t) \rho k + \sqrt{(\varphi(\theta_t) k + \rho)^2 + 1 - \rho^2} \right)
+\end{equation}
+
+with
+
+\begin{eqnarray}
+\theta_t &=& \sigma_{BS}^2(0,t) t \\
+\varphi: \mathbb{R}^+ &\rightarrow& \mathbb{R}^+ \text{ (smooth function)}
+\end{eqnarray}
+
+Sufficient conditions for absence of calendar and butterfly arbitrage are, $\forall t, \theta > 0$,
+
+\begin{enumerate}
+\item $\partial_t \theta_t \ge 0$
+\item $0 \le \partial_\theta (\theta \varphi(\theta)) \le \frac{1}{\rho^2} (1 + \sqrt{1 - \rho^2})$
+\item $\theta \varphi(\theta) (1 + |\rho|) < 4$
+\item $\theta \varphi(\theta)^2 (1 + |\rho|) < 4$
+\end{enumerate}
+
+\subsubsection{Surface SVI - Heston-like Parameterization}\label{sec:ssvi_heston}
+A popular choice for $\varphi$ is the Heston-like parameterization
+\begin{equation}
+\varphi(\theta) = \frac{1}{\lambda \theta}(1 - \frac{1 - \exp(-\lambda \theta)}{\lambda \theta})  \end{equation}
+with $\lambda > 0$ a constant parameter.
+
+The model guarantees absense of calendar arbitrage, and sufficient condition for absense of butterfly arbitrage is
+\begin{equation}
+\lambda \ge \frac{1+|\rho|}{4}
+\end{equation}
+
+\subsubsection{Surface SVI - Power-law Parameterization}\label{sec:ssvi_power_law}
+
+Another choice for $\varphi$ is the power-law parameterization
+\begin{equation}
+\varphi(\theta) = \eta \theta^{-\gamma}
+\end{equation}
+with $\eta > 0$ and $0 < \gamma < 1$ constant parameters
+
+The model guarantees absense of calendar arbitrage, and sufficient conditions for absense of butterfly arbitrage are
+\begin{eqnarray}
+\theta &\le& \left(\frac{4}{\eta (1 + |\rho|)}\right)^{1-\gamma}  \\
+\theta &\le& \left(\frac{4}{\eta^2 (1 + |\rho|)}\right)^{\frac{1}{1-2\gamma}} \quad \text{for } 0<\gamma<0.5 \\
+\theta &\ge& \left(\frac{4}{\eta^2 (1 + |\rho|)}\right)^{\frac{1}{1-2\gamma}} \quad \text{for } 0.5<\gamma<1 \\
+4 &\ge& \eta^2 (1 + |\rho|) \quad \text{for } \gamma=0.5
+\end{eqnarray}
+
+\subsubsection{Extended Surface SVI}\cite{Hendriks_2017}\label{sec:essvi}
+
+The extended Surface SVI model is an extension of the Surface SVI model, replacing the static parameter $\rho$ with a time-dependent parameter
+$\rho_t$, via
+\begin{equation}
+w(k,t) = \frac{\theta_t}{2} \left( 1 + \varphi(\theta_t) \rho_t k + \sqrt{(\varphi(\theta_t) k + \rho_t)^2 + 1 - \rho_t^2} \right)
+\end{equation}
+
+\subsection{Model Variants}
+
+ORE supports the following SVI model variants:
+
+\begin{itemize}
+\item Gatheral2004SviRaw: SVI with Raw parameterization (see \ref{sec:rawsvi})
+\item Gatheral2004SviNatural: SVI with Natural parameterization (see \ref{sec:naturalsvi})
+\item Gatheral2004SviJw: SVI with Jump-Wings parameterization (see \ref{sec:svijw})
+\item Gatheral2012SsviHeston: Surface SVI with Heston-like parameterization (see \ref{sec:ssvi_heston}), arbitrage-free
+\item Gatheral2012SsviPowerLaw: Surface SVI with power-law parameterization (see \ref{sec:ssvi_power_law}), arbitrage-free
+\item HendriksMartini2017EssviFirstPowerLaw: Extended Surface SVI with first power-law parameterization (see \ref{sec:essvi}), arbitrage-free
+\item HendriksMartini2017EssviSecondPowerLaw: Extended Surface SVI with second power-law parameterization (see \ref{sec:essvi}), arbitrage-free
+\item CorbettaEtAl2019Essvi: Extended Surface SVI (see \ref{sec:essvi}) using robust calibration \cite{Corbetta_2019}, arbitrage-free,
+\item Mingone2022EssviGJ: Extended Surface SVI (see \ref{sec:essvi}) with global calibration and Gatheral Jim condition \cite{Mingone_2022}, arbitrage-free,
+\item Mingone2022EssviMM: Extended Surface SVI (see \ref{sec:essvi}) with global calibration and Martini Mingone condition \cite{Mingone_2022}, arbitrage-free,
+\end{itemize}
+
+\begin{remark}
+The arbitrage-free claims above apply to equity, FX, and commodity options, where the pricing numeraire is the
+risk-free discount factor $B(0,T)$.  For CDS options the correct numeraire is the risky annuity $\text{rpv01}(T)$,
+which is default-contingent and strictly smaller than the risk-free annuity.  Both the calendar-spread and butterfly
+arbitrage conditions are derived in the Black-76 / risk-free-discount setting and do not carry over exactly to CDS
+surfaces: even if total variance is non-decreasing in $t$, the declining $\text{rpv01}(T)$ can render a calendar spread
+negative; similarly, butterfly-arbitrage-free densities under the $T$-forward measure need not be non-negative under the
+annuity measure.  Both conditions are approximately satisfied for investment-grade names where
+$\text{rpv01}(T) \approx B(0,T) \cdot \text{annuity}$, but become weaker guarantees for high-yield or distressed
+credits.
+\end{remark}
+
+\subsection{Calibration}
+
+The calibration of the SVI parameters is performed on the market smile points, which are given by
+
+\begin{itemize}
+\item option expiry and swap underlying length in the case of credit default swaptions
+\item option expiry in the case of equity options, FX options and commodity options 
+\end{itemize}
+
+If no free parameters are given, we use the given initial SVI parameters unchanged for the given market point.
+
+If at least one free parameter is given, we run an optimization using the LevenbergMarquardt optimizer on the following
+target function $f$.
+
+\begin{equation}
+T(x) = \sum_{i=1}^n m_i - s(x, K_i)
+\end{equation}
+
+with
+
+\begin{itemize}
+\item $x$ the input SVI parameters
+\item $m_i$ the $ith$ market quote, converted to the preferred output type of the resolution method
+\item $s(x,K)$ the output of the resolution method for parameters $x$ and strike $K$
+\end{itemize}
+
+The optimization is run from user-provided initial SVI parameters. If the target function $T$ on this first run is
+below a user-provided ``early exit'' error threshold $t_A$, i.e.
+
+$$
+T(x) < t_A
+$$
+
+the result of the optimization will be accepted. Otherwise more optimization runs will be performed using random initial
+guesses generated from a Halton sequence.
+
+If for any of the subsequent optimization runs, the error lies below $t_A$ the corresponding minimum will be
+accepted. If for a given maximum number of runs $N$ the error never lies below the given threshold, the best found
+solution with target value $T(x_b)$ is compared against the maximum acceptable threshold $t_B$ and if
+
+$$
+T(x_b) < t_B
+$$
+
+the solution $x_b$ is accepted. Otherwise the calibration is marked as ``unsuccessful''. After all market points have been
+calibrated, we have either a 1D arrays or a 2D matrices of calibrated SVI
+parameters with possibly missing entries from unsuccessful calibrations. As a last step, these missing values are
+interpolated linearly (1D case) or using Laplace Interpolation in 2D where the x and y axis are indexed by the option
+time to maturity and underlying swap length (i.e. the interpolation grid is not equidistant in general). The
+interpolated values are updated if not admissible for the SVI model.
+
+\subsection{Calibration for SVI}
+
+Applicable to model variants Gatheral2004SviRaw, Gatheral2004SviNatural, Gatheral2004SviJw.
+
+For each market smile point the free SVI parameters are calibrated to quotes of the given market smile. If the market
+smile quotes are not given in the preferred output type of the resolution method, we convert the market quote to the
+preferred output type first.
+
+\subsubsection{Interpolation}
+
+SVI parameters for option expiry times / underlying swap lengths that do not lie on the market quotation grid will be
+interpolated linearly (1D case) or bilinearly (2D case) with flat extrapolation.
+
+\subsubsection{Extrapolation} Flat extrapolation is used for option expiry times / underlying swap lengths that lie outside the market quotation grid.
+
+\subsection{Calibration for Surface SVI}
+
+Applicable to model variants Gatheral2012SsviHeston, Gatheral2012SsviPowerLaw.
+
+Global calibration is applied to the parameters $\theta_i$'s, $\rho$, $\lambda$ (for Gatheral2012SsviHeston), $\eta$ and $\gamma$ (for Gatheral2012SsviPowerLaw),
+with constraints to guarantee absence of calendar and butterfly arbitrage.
+
+\subsubsection{Interpolation}
+
+Price of options with expiry times that do not lie on the market quotation grid will be interpolated in total variance space,
+
+\begin{equation}
+\frac{C_t}{K_t} = \alpha_t \frac{C_i}{K_i} + (1 - \alpha_t) \frac{C_{i+1}}{K_{i+1}}
+\end{equation}
+
+where
+
+\begin{equation}
+\alpha_t = \frac{\sqrt{\theta_{t_{i+1}}} - \sqrt{\theta_t}}{\sqrt{\theta_{t_{i+1}}} - \sqrt{\theta_{t_i}}}
+\end{equation}
+
+with $\theta_t$ linearly interpolated between $\theta_{t_i}$ and $\theta_{t_{i+1}}$ in $t$.
+
+\begin{remark}
+The prices $C_i$ and $C_{i+1}$ are computed as forward-premium (discount $= 1$) Black
+formulas.  For CDS options the engine discounts with the risky annuity $\text{rpv01}(T)$
+rather than a risk-free factor, so the no-arbitrage guarantee is approximate; for
+investment-grade names the difference is small.
+\end{remark}
+
+\subsubsection{Extrapolation}
+For $t < t_1$, we re-use the equation for interpolation with
+
+$(C_i,K_i)$ being the intrinsic value and strike of the option and $\theta_i$ being zero.
+$(C_{i+1},K_{i+1})$ being the price and strike of the option with expiry $t_1$ and $\theta_{i+1}$ being the total variance at $t_1$
+
+For $t > t_N$, we extrapolate in total variance space with
+\begin{equation}
+w(k,\theta_t) = w(k,\theta_{t_N}) + \theta_t - \theta_{t_N}
+\end{equation}
+
+\begin{remark}
+The early-extrapolation price $C_1$ is a forward-premium (discount $= 1$) Black formula;
+the same CDS caveat as in the interpolation section above applies.
+Late extrapolation ($t > t_N$) works entirely in total variance space and does not involve
+a Black formula, so it is unaffected by the choice of discount numeraire.
+\end{remark}
+
+\subsection{Calibration for Extended Surface SVI}
+
+Applicable to model variants HendriksMartini2017EssviFirstPowerLaw, HendriksMartini2017EssviSecondPowerLaw.
+
+\subsubsection{Interpolation}
+Work in progress
+\subsubsection{Extrapolation}
+Work in progress
+
+\subsection{Robust calibration for Extended Surface SVI}
+
+Applicable to model variant CorbettaEtAl2019Essvi.
+
+\cite{Corbetta_2019} proposes a robust calibration method for a re-parametrized Extended Surface SVI model, with new model parameters
+$k^*, \theta^*, \rho, \psi \in \mathbb{R} \times \mathbb{R}^+ \times (-1, 1) \times (0, \infty)$
+$\theta = \theta^* - \rho \psi k^*$
+where the data point $(k^*, \theta^*)$ represents the log-forward moneyness and total implied variance closest to the ATM (forward).
+
+Butterfly arbitrage is avoided by imposing the following constraints on the model parameters:
+$0 < \psi \le \frac{-2\rho k^*}{1 + |\rho|} + \sqrt{\frac{4 \rho^2 (k^*)^2}{(1 + |\rho|)^2} + \frac{4 \theta^*}{1 + |\rho|}}$
+
+Calendar arbitrage is avoided by imposing the following constraints on the model parameters:
+$\theta > \underline{\theta} \quad \text{and} \quad \psi > \underline{\psi}$
+
+where $\underline{\theta}$ and $\underline{\psi}$ are the calibrated $\theta$ and $\psi$ parameters associated to the previous slice
+
+\subsubsection{Interpolation}
+
+For two slices with parameters $\theta_1, \psi_1, \rho_1$ and $\theta_2, \psi_2, \rho_2$ the interpolated parameters for a slice with time to maturity $t$ between the two slices are given by
+
+\begin{eqnarray}
+\theta_t &=& (1 - \lambda) \theta_1 + \lambda \theta_2 \\
+\psi_t &=& (1 - \lambda) \psi_1 + \lambda \psi_2 \\
+\psi_t \rho_t &=& (1 - \lambda) \psi_1 \rho_1 + \lambda \psi_2 \rho_2
+\end{eqnarray}
+
+where $\lambda = \frac{t - T_1}{T_2 - T_1}$ is the interpolation weight.
+
+\subsubsection{Extrapolation}
+
+For $t < T_1$,
+\begin{eqnarray}
+\theta_t &=& \lambda \theta_1 \\
+\psi_t &=& \lambda \psi_1 \\
+\rho_t &=& \rho_1
+\end{eqnarray}
+
+where $\lambda = \frac{t}{T_1}$ is the extrapolation weight.
+
+For $t > T_N$,
+
+\begin{eqnarray}
+\theta_t &=& \theta_N + u(t) \\
+\psi_t &=& \psi_N \\
+\rho_t &=& \rho_N
+\end{eqnarray}
+
+where $u(t)$ is any continuous increasing function on $[T_N, \infty)$ with $u(T_N) = 0$.
+
+In our implementation we use $u(t) = \frac{\theta_N - \theta_{N-1}}{T_N - T_{N-1}} (t - T_N)$
+
+
+\subsection{Global calibration for Extended Surface SVI}
+
+Applicable to model variant Mingone2022EssviGJ and Mingone2022EssviMM.
+
+ORE implements the global calibration method for the Extended Surface SVI model proposed by Mingone \cite{Mingone_2022}.
+The method guarantees absence of both calendar and butterfly arbitrage across the whole surface by re-parametrization of the model,
+with new model parameters
+
+\begin{equation}
+\rho_1, ..., \rho_N, \theta_1, a_2, ..., a_N, c_1, ..., c_N \in (-1, 1)^N \times (0, \infty)^N \times (0, 1)^N
+\end{equation}
+
+via
+
+\begin{eqnarray}
+a_i &=& \theta_i - \theta_{i-1} p_i \\
+c_i &=& \frac{\psi_i - A_{\psi_i}}{C_{\psi_i} - A_{\psi_i}} \\
+p_i &=& \max \left( \frac{1 + \rho_{i-1}}{1 + \rho_i}, \frac{1 - \rho_{i-1}}{1 - \rho_i} \right) \quad \text{for } i > 1 \\
+A_{\psi_1} &=& 0 \\
+A_{\psi_i} &=& \psi_{i-1} p_i \quad \text{for } i \ge 1 \\
+C_{\psi_1} &=& \min \left( f_1, \frac{f_2}{p_2}, ..., \frac{f_N}{\Pi^N_{j=2}p_j} \right) \\
+C_{\psi_i} &=& \min \left( \frac{\psi_{i-1}}{\theta_{i-1}},f_i, \frac{f_{i+1}}{p_{i+1}}, ..., \frac{f_N}{\Pi^N_{j=i+1}p_j} \right) \quad \text{for } i \ge 1
+\end{eqnarray}
+
+\begin{eqnarray}
+f_i &=& \min \left( \frac{4}{1+|\rho_i|}, \sqrt{f_{GJ}(\theta_i, |\rho_i|)}\right) \quad \text{for } i \ge 1 \text{ or }\\
+f_i &=& \min \left( \frac{4}{1+|\rho_i|}, \sqrt{f_{MM}(\theta_i, |\rho_i|)}\right) \quad \text{for } i \ge 1 \\
+\end{eqnarray}
+
+where $f_{GJ}$ and $f_{MM}$ are the Gatheral Jim and Martini Mingone functions defined in \cite{Mingone_2022}.
+
+The natural SVI parameters can be recovered via
+\begin{eqnarray}
+\theta_2 &=& \theta_1 p_2 + a_2, ..., \theta_N = \theta_{N-1} p_N + a_N \\
+\psi_1 &=& c_1 (C_{\psi_1} - A_{\psi_1}) + A_{\psi_1}, ..., \psi_N = c_N (C_{\psi_N} - A_{\psi_N}) + A_{\psi_N} \\
+\phi_i &=& \frac{\psi_i}{\theta_i}, \quad \rho_i \text{ given by the model parameters}
+\end{eqnarray}
+
+Note that logit transformation is applied to $c_i$ internally to map the optimization domain from $(0,1)$ to
+$(-\infty, \infty)$.
+
+To maintain the absence of arbitrage across the whole surface, interpolation and extrapolation of the model parameters is performed on natural SVI parameters $\theta_i, \psi_i, \psi_i \rho_i$ for $i = 1, ..., N$.
+
+\subsubsection{Interpolation}
+
+For two slices with parameters $\theta_1, \psi_1, \psi_1 \rho_1$ and $\theta_2, \psi_2, \psi_2 \rho_2$ the interpolated parameters for a slice with time to maturity $t$ between the two slices are given by
+
+\begin{eqnarray}
+\theta_t &=& (1 - \lambda) \theta_1 + \lambda \theta_2 \\
+\psi_t &=& (1 - \lambda) \psi_1 + \lambda \psi_2 \\
+\psi_t \rho_t &=& (1 - \lambda) \psi_1 \rho_1 + \lambda \psi_2 \rho_2
+\end{eqnarray}
+
+where $\lambda = \frac{t - T_1}{T_2 - T_1}$ is the interpolation weight.
+
+\subsubsection{Extrapolation}
+
+For $t < T_1$,
+\begin{eqnarray}
+\theta_t &=& \lambda \theta_1 \\
+\psi_t &=& \lambda \psi_1 \\
+\rho_t &=& \rho_1
+\end{eqnarray}
+
+where $\lambda = \frac{t}{T_1}$ is the extrapolation weight.
+
+For $t > T_N$,
+
+\begin{eqnarray}
+\theta_t &=& \theta_N  + \frac{\theta_N - \theta_{N-1}}{T_N - T_{N-1}} (t - T_N) \\
+\psi_t &=& \psi_N \\
+\rho_t &=& \rho_N
+\end{eqnarray}
+
+\section{Parametrization in ORE}
+
+For details on the parametrization see also the ORE User Guide. This documentation focuses on the link between the
+parametrization and methodology explained in \ref{sec:model}.
+
+The SVI interpolation is specified as
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <TimeInterpolation>Mingone2022EssviGJ</TimeInterpolation>
+      <StrikeInterpolation>Mingone2022EssviGJ</StrikeInterpolation>
+\end{minted}
+
+within a \texttt{StrikeSurface}, \texttt{MoneynessSurface}, or
+\texttt{DeltaSurface} element, for equity and commodity volatility surfaces. Both fields must be set to the same SVI variant name. The {\em Input} volatility type is given by
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <VolatilityType>Lognormal</VolatilityType>
+\end{minted}
+
+The displacement $d$ applied in the SVI {\em model} formulation is either read from the input market quotes, or can be
+overridden with
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <ModelShift>0.0</ModelShift>
+\end{minted}
+
+for equity options, FX options and commodity options (single displacement $d$ for the whole surface).
+
+\subsection{ParametricSmileConfiguration}
+
+The \texttt{ParametricSmileConfiguration} element specifies the initial values and calibration settings for the SVI
+parameters. It is specified within the surface element (e.g. \texttt{StrikeSurface}, \texttt{MoneynessSurface}, or
+\texttt{DeltaSurface}) alongside the \texttt{TimeInterpolation} and \texttt{StrikeInterpolation} elements (which must both be set to the same SVI variant name).
+
+The initial values for the optimization for each parameter are specified, either as a single value that is used for all
+options or individually for the array of option expiries.
+
+For the Gatheral2004SviRaw model variant, the parameters are $a$, $b$, $\rho$, $m$ and $\sigma$:
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <Parameters>
+        <Parameter>
+          <Name>a</Name>
+          <InitialValue>0.05</InitialValue>
+          <Calibration>Implied</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>b</Name>
+          <InitialValue>0.1</InitialValue>
+          <Calibration>Fixed</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>rho</Name>
+          <InitialValue>0.0</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>m</Name>
+          <InitialValue>0.5</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>sigma</Name>
+          <InitialValue>0.1</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+      </Parameters>
+\end{minted}
+
+For the Gatheral2004SviNatural model variant, the parameters are $\Delta$, $\mu$, $\rho$, $\omega$ and $\zeta$:
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <Parameters>
+        <Parameter>
+          <Name>delta</Name>
+          <InitialValue>0.05</InitialValue>
+          <Calibration>Implied</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>mu</Name>
+          <InitialValue>0.0</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>rho</Name>
+          <InitialValue>0.0</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>omega</Name>
+          <InitialValue>0.1</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>zeta</Name>
+          <InitialValue>0.1</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+      </Parameters>
+\end{minted}
+
+For the Gatheral2004SviJw model variant, the parameters are $v_t$, $\psi_t$, $p_t$, $c_t$ and $\tilde{v}_t$:
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <Parameters>
+        <Parameter>
+          <Name>v</Name>
+          <InitialValue>0.04</InitialValue>
+          <Calibration>Implied</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>psi</Name>
+          <InitialValue>0.0</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>p</Name>
+          <InitialValue>0.1</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>c</Name>
+          <InitialValue>0.1</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>vtilde</Name>
+          <InitialValue>0.04</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+      </Parameters>
+\end{minted}
+
+For the Gatheral2012SsviHeston model variant, the parameters are $\theta$, $\rho$ and $\lambda$:
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <Parameters>
+        <Parameter>
+          <Name>theta</Name>
+          <InitialValue>0.02</InitialValue>
+          <Calibration>Implied</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>rho</Name>
+          <InitialValue>0.0</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>lambda</Name>
+          <InitialValue>1.0</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+      </Parameters>
+\end{minted}
+
+For the Gatheral2012SsviPowerLaw model variant, the parameters are $\theta$, $\rho$, $\eta$ and $\gamma$:
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <Parameters>
+        <Parameter>
+          <Name>theta</Name>
+          <InitialValue>0.02</InitialValue>
+          <Calibration>Implied</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>rho</Name>
+          <InitialValue>0.0</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>eta</Name>
+          <InitialValue>0.5</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>gamma</Name>
+          <InitialValue>0.5</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+      </Parameters>
+\end{minted}
+
+For the CorbettaEtAl2019Essvi model variant, the parameters are $k^*$, $\theta^*$, $\rho$ and $\psi$:
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <Parameters>
+        <Parameter>
+          <Name>k_star</Name>
+          <InitialValue>0.0</InitialValue>
+          <Calibration>Implied</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>theta_star</Name>
+          <InitialValue>0.0</InitialValue>
+          <Calibration>Implied</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>rho</Name>
+          <InitialValue>0.0</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>psi</Name>
+          <InitialValue>0.01</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+      </Parameters>
+\end{minted}
+
+For the Mingone2022EssviGJ and Mingone2022EssviMM model variants, the parameters are $\rho$, $a$ and $c$ (see
+\ref{sec:model}):
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <Parameters>
+        <Parameter>
+          <Name>rho</Name>
+          <InitialValue>0.0</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>a</Name>
+          <InitialValue>0.0</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>c</Name>
+          <InitialValue>0.5</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+      </Parameters>
+\end{minted}
+
+The ``Calibration'' field is used to distinguish
+
+\begin{itemize}
+\item ``Fixed'': fixed values that are not calibrated, but prescribed by the user
+\item ``Implied'': if the values are implied from market data
+\item ``Calibrated'': takes part in the optimization
+\end{itemize}
+
+It follows a Calibration section with the maximum number of calibration attempts $N$, the early exit error threshold
+$t_A$ and the maximum acceptable error threshold $t_B$:
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <Calibration>
+        <MaxCalibrationAttempts>10</MaxCalibrationAttempts>
+        <ExitEarlyErrorThreshold>0.005</ExitEarlyErrorThreshold>
+        <MaxAcceptableError>0.05</MaxAcceptableError>
+      </Calibration>
+\end{minted}
+
+\subsection{Equity Volatility Surface Example (Mingone)}
+
+A complete example for an equity volatility surface using the Mingone2022EssviGJ model variant:
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <EquityVolatility>
+    <CurveId>RIC:.SPX</CurveId>
+    <CurveDescription>Lognormal option implied vols for SPX
+      using ESSVI Mingone GJ</CurveDescription>
+    <Currency>USD</Currency>
+    <DayCounter>A365</DayCounter>
+    <VolatilityConfig>
+      <StrikeSurface priority="0">
+        <QuoteType>ImpliedVolatility</QuoteType>
+        <VolatilityType>Lognormal</VolatilityType>
+        <Strikes>*</Strikes>
+        <Expiries>*</Expiries>
+        <TimeInterpolation>Mingone2022EssviGJ</TimeInterpolation>
+        <StrikeInterpolation>Mingone2022EssviGJ</StrikeInterpolation>
+        <Extrapolation>true</Extrapolation>
+        <TimeExtrapolation>Flat</TimeExtrapolation>
+        <StrikeExtrapolation>Flat</StrikeExtrapolation>
+        <ParametricSmileConfiguration>
+          <Parameters>
+            <Parameter>
+              <Name>rho</Name>
+              <InitialValue>0.0</InitialValue>
+              <Calibration>Calibrated</Calibration>
+            </Parameter>
+            <Parameter>
+              <Name>a</Name>
+              <InitialValue>0.0</InitialValue>
+              <Calibration>Calibrated</Calibration>
+            </Parameter>
+            <Parameter>
+              <Name>c</Name>
+              <InitialValue>0.5</InitialValue>
+              <Calibration>Calibrated</Calibration>
+            </Parameter>
+          </Parameters>
+          <Calibration>
+            <MaxCalibrationAttempts>50</MaxCalibrationAttempts>
+            <ExitEarlyErrorThreshold>0.005</ExitEarlyErrorThreshold>
+            <MaxAcceptableError>0.5</MaxAcceptableError>
+          </Calibration>
+        </ParametricSmileConfiguration>
+      </StrikeSurface>
+    </VolatilityConfig>
+  </EquityVolatility>
+\end{minted}
+
+
+
+\subsection{FX Volatility Surface Example (Mingone)}
+
+A complete example for an FX volatility surface using the Mingone2022EssviGJ model variant:
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <FXVolatility>
+    <CurveId>USDJPY</CurveId>
+    <CurveDescription>Lognormal option implied vols for USD/JPY
+      using ESSVI Mingone GJ</CurveDescription>
+    <Dimension>Smile</Dimension>
+    <SmileType>BFRR</SmileType>
+    <SmileInterpolation>Mingone2022EssviGJ</SmileInterpolation>
+    <TimeInterpolation>V2T</TimeInterpolation>
+    <SmileDelta>25</SmileDelta>
+    <Conventions>USD-JPY-FXOPTION</Conventions>
+    <Expiries>*</Expiries>
+    <FXSpotID>FX/USD/JPY</FXSpotID>
+    <FXForeignCurveID>Yield/USD/USD-FedFunds</FXForeignCurveID>
+    <FXDomesticCurveID>Yield/JPY/JPY-IN-USD</FXDomesticCurveID>
+    <Calendar>JoinHolidays(US settlement, Japan)</Calendar>
+    <DayCounter>Actual/365 (Fixed)</DayCounter>
+    <ParametricSmileConfiguration>
+      <Parameters>
+        <Parameter>
+          <Name>rho</Name>
+          <InitialValue>0.0</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>a</Name>
+          <InitialValue>0.0</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>c</Name>
+          <InitialValue>0.5</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+      </Parameters>
+      <Calibration>
+        <MaxCalibrationAttempts>50</MaxCalibrationAttempts>
+        <ExitEarlyErrorThreshold>0.005</ExitEarlyErrorThreshold>
+        <MaxAcceptableError>0.5</MaxAcceptableError>
+      </Calibration>
+    </ParametricSmileConfiguration>
+  </FXVolatility>
+\end{minted}
+
+\subsection{Commodity Volatility Surface Example (Corbetta Robust)}
+
+SVI is supported for commodity volatility surfaces using all three 2D surface config types:
+\texttt{StrikeSurface} (strike-quoted), \texttt{DeltaSurface} (delta-quoted), and
+\texttt{MoneynessSurface} (moneyness-quoted). The configuration is identical to equity,
+except the curve lives under \texttt{CommodityVolatility} and requires a
+\texttt{PriceCurveId} and \texttt{YieldCurveId}. Commodity forwards are derived from
+the \texttt{CommodityPriceCurve} rather than from spot and carry curves: internally, a
+\texttt{PriceTermStructureAdapter} converts the price term structure into yield-curve
+handles so the existing \texttt{BlackVolatilitySurfaceSvi} machinery is reused directly.
+
+A complete example for a commodity volatility surface using the CorbettaEtAl2019Essvi model variant
+on an absolute-strike surface with wildcard expiries and strikes:
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <CommodityVolatility>
+    <CurveId>ICE:B</CurveId>
+    <CurveDescription>ICE Brent option surface using ESSVI Robust SVI</CurveDescription>
+    <Currency>USD</Currency>
+    <VolatilityConfig>
+      <StrikeSurface priority="0">
+        <QuoteType>ImpliedVolatility</QuoteType>
+        <VolatilityType>Lognormal</VolatilityType>
+        <Strikes>*</Strikes>
+        <Expiries>*</Expiries>
+        <TimeInterpolation>CorbettaEtAl2019Essvi</TimeInterpolation>
+        <StrikeInterpolation>CorbettaEtAl2019Essvi</StrikeInterpolation>
+        <Extrapolation>true</Extrapolation>
+        <TimeExtrapolation>Flat</TimeExtrapolation>
+        <StrikeExtrapolation>Flat</StrikeExtrapolation>
+        <ParametricSmileConfiguration>
+          <Parameters>
+            <Parameter>
+              <Name>k_star</Name>
+              <InitialValue>0.0</InitialValue>
+              <Calibration>Implied</Calibration>
+            </Parameter>
+            <Parameter>
+              <Name>theta_star</Name>
+              <InitialValue>0.0</InitialValue>
+              <Calibration>Implied</Calibration>
+            </Parameter>
+            <Parameter>
+              <Name>rho</Name>
+              <InitialValue>-0.5</InitialValue>
+              <Calibration>Calibrated</Calibration>
+            </Parameter>
+            <Parameter>
+              <Name>psi</Name>
+              <InitialValue>1.0</InitialValue>
+              <Calibration>Calibrated</Calibration>
+            </Parameter>
+          </Parameters>
+          <Calibration>
+            <MaxCalibrationAttempts>100</MaxCalibrationAttempts>
+            <ExitEarlyErrorThreshold>0.005</ExitEarlyErrorThreshold>
+            <MaxAcceptableError>0.3</MaxAcceptableError>
+          </Calibration>
+        </ParametricSmileConfiguration>
+      </StrikeSurface>
+    </VolatilityConfig>
+    <DayCounter>A365</DayCounter>
+    <Calendar>ICE_FuturesEU</Calendar>
+    <FutureConventions>ICE:B</FutureConventions>
+    <OptionExpiryRollDays>1</OptionExpiryRollDays>
+    <PriceCurveId>Commodity/USD/ICE:B</PriceCurveId>
+    <YieldCurveId>Yield/USD/USD-FedFunds</YieldCurveId>
+  </CommodityVolatility>
+\end{minted}
+
+\subsection{CDS Volatility Surface Example (Mingone, global)}
+
+A complete example for an CDS volatility surface using the Mingone2022EssviGJ model variant:
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <CDSVolatility>
+    <CurveId>RED:2I666VDB8</CurveId>
+    <CurveDescription>ITRAXX Europe 5Y index option lognormal vols
+      using ESSVI Mingone GJ (global)</CurveDescription>
+    <Terms>
+      <Term>
+        <Label>1Y</Label>
+        <Curve>Default/EUR/RED:2I666VDB8_1Y</Curve>
+      </Term>
+      <Term>
+        <Label>3Y</Label>
+        <Curve>Default/EUR/RED:2I666VDB8_3Y</Curve>
+      </Term>
+      <Term>
+        <Label>5Y</Label>
+        <Curve>Default/EUR/RED:2I666VDB8_5Y</Curve>
+      </Term>
+      <Term>
+        <Label>7Y</Label>
+        <Curve>Default/EUR/RED:2I666VDB8_7Y</Curve>
+      </Term>
+      <Term>
+        <Label>10Y</Label>
+        <Curve>Default/EUR/RED:2I666VDB8_10Y</Curve>
+      </Term>
+    </Terms>
+    <StrikeSurface priority="0">
+      <QuoteType>ImpliedVolatility</QuoteType>
+      <VolatilityType>Lognormal</VolatilityType>
+      <Strikes>*</Strikes>
+      <Expiries>*</Expiries>
+      <TimeInterpolation>Mingone2022EssviGJ</TimeInterpolation>
+      <StrikeInterpolation>Mingone2022EssviGJ</StrikeInterpolation>
+      <Extrapolation>true</Extrapolation>
+      <TimeExtrapolation>Flat</TimeExtrapolation>
+      <StrikeExtrapolation>Flat</StrikeExtrapolation>
+      <ParametricSmileConfiguration>
+        <Parameters>
+          <Parameter>
+            <Name>rho</Name>
+            <InitialValue>0.0</InitialValue>
+            <Calibration>Calibrated</Calibration>
+          </Parameter>
+          <Parameter>
+            <Name>a</Name>
+            <InitialValue>0.0</InitialValue>
+            <Calibration>Calibrated</Calibration>
+          </Parameter>
+          <Parameter>
+            <Name>c</Name>
+            <InitialValue>0.5</InitialValue>
+            <Calibration>Calibrated</Calibration>
+          </Parameter>
+        </Parameters>
+        <Calibration>
+          <MaxCalibrationAttempts>50</MaxCalibrationAttempts>
+          <ExitEarlyErrorThreshold>0.005</ExitEarlyErrorThreshold>
+          <MaxAcceptableError>100.0</MaxAcceptableError>
+        </Calibration>
+      </ParametricSmileConfiguration>
+    </StrikeSurface>
+    <DayCounter>A365</DayCounter>
+    <Calendar>NullCalendar</Calendar>
+    <StrikeType>Spread</StrikeType>
+    <QuoteName>2I666VDB8</QuoteName>
+    <StrikeFactor>10000</StrikeFactor>
+  </CDSVolatility>
+\end{minted}
+
+\begin{thebibliography}{10}
+
+\bibitem{Gatheral_2004} Gatheral, J., A parsimonious arbitrage-free implied volatility parameterization with application to the valuation of volatility derivatives, Presentation at Global Derivatives \& Risk Management, 2004
+
+\bibitem{Gatheral_2012} Gatheral, J., Jacquier A., Arbitrage-free SVI volatility surfaces, Quantitative Finance, 2012
+
+\bibitem{Hendriks_2017} Hendriks S., Martini C., The extended SSVI volatility surface, 2017
+
+\bibitem{Corbetta_2019} Corbetta J., Cohort P., Laachir I., Martini C., Robust calibration and arbitrage-free interpolation of SSVI slices, 2019
+
+\bibitem{Mingone_2022} Mingone A., No arbitrage global parametrization for the eSSVI volatility surface, 2022
+
+\end{thebibliography}
+
+
+\end{document}

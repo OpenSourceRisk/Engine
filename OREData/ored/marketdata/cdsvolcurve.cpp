@@ -29,6 +29,8 @@
 #include <ql/time/calendars/weekendsonly.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <qle/termstructures/creditvolcurve.hpp>
+#include <qle/termstructures/svimodeltraits.hpp>
+#include <qle/utilities/time.hpp>
 
 using namespace QuantExt;
 using namespace QuantLib;
@@ -362,9 +364,18 @@ void CDSVolCurve::buildVolatility(const Date& asof, CDSVolatilityCurveConfig& vc
         effTerms.push_back(vc.terms()[i]);
     }
 
-    vol_ = QuantLib::ext::make_shared<QuantExt::InterpolatingCreditVolCurve>(asof, calendar_, Following, dayCounter_, effTerms,
-                                                                     termCurves, quotes, strikeType_);
-    vol_->enableExtrapolation();
+    string strikeInterpolation = vssc.strikeInterpolation();
+    SviParametricVolatility::ModelVariant sviModelVariant;
+    if (tryParse<SviParametricVolatility::ModelVariant>(strikeInterpolation, sviModelVariant, parseSviParametricVolatilityModelVariant)) {
+        QL_REQUIRE(vssc.timeInterpolation() == strikeInterpolation,
+                   "CDSVolCurve: SVI requires TimeInterpolation and StrikeInterpolation to be set to the same "
+                   "variant, got '" << vssc.timeInterpolation() << "' vs '" << strikeInterpolation << "'");
+        buildSviVolatility(asof, vc, vssc, quotes, effTerms, termCurves, sviModelVariant);
+    } else {
+        vol_ = QuantLib::ext::make_shared<QuantExt::InterpolatingCreditVolCurve>(
+            asof, calendar_, Following, dayCounter_, effTerms, termCurves, quotes, strikeType_);
+        vol_->enableExtrapolation();
+    }
 
     LOG("CDSVolCurve: finished building 2-D volatility absolute strike surface");
 }
@@ -395,6 +406,115 @@ void CDSVolCurve::buildVolatility(const Date& asof, const CDSVolatilityCurveSpec
     vol_ = QuantLib::ext::make_shared<QuantExt::ProxyCreditVolCurve>(
         Handle<CreditVolCurve>(proxyVolCurve->second->volTermStructure()), effTerms, termCurves);
     LOG("CDSVolCurve: finished building proxy volatility surface");
+}
+
+void CDSVolCurve::buildSviVolatility(
+    const Date& asof, const CDSVolatilityCurveConfig& vc, const VolatilityStrikeSurfaceConfig& vssc,
+    const map<tuple<Date, Period, Real>, Handle<Quote>>& quotes, const vector<Period>& effTerms,
+    const vector<Handle<CreditCurve>>& termCurves,
+    SviParametricVolatility::ModelVariant modelVariant) {
+
+    LOG("CDSVolCurve: building SVI surface with model variant " << vssc.strikeInterpolation());
+
+    // Organise quotes into per-slice vectors sorted by {exerciseDate, underlyingTerm}.
+    // The quotes map is already sorted by key, so we just iterate in order.
+    map<pair<Date, Period>, pair<vector<Real>, vector<Real>>> sliceData; // {date,term} -> {strikes, vols}
+    for (auto const& kv : quotes) {
+        auto key = make_pair(get<0>(kv.first), get<1>(kv.first));
+        sliceData[key].first.push_back(get<2>(kv.first));
+        sliceData[key].second.push_back(kv.second->value());
+    }
+
+    vector<Date> exerciseDates;
+    vector<Period> underlyingTerms;
+    vector<vector<Real>> sliceStrikes, sliceVols;
+
+    for (auto const& kv : sliceData) {
+        exerciseDates.push_back(kv.first.first);
+        underlyingTerms.push_back(kv.first.second);
+        sliceStrikes.push_back(kv.second.first);
+        sliceVols.push_back(kv.second.second);
+    }
+
+    // Build modelParameters overrides from ParametricSmileConfiguration if provided.
+    map<pair<Real, Real>, vector<pair<Real, QuantExt::ParametricVolatility::ParameterCalibration>>> modelParameters;
+    Size maxCalibrationAttempts = 10;
+    Real exitEarlyErrorThreshold = 0.005;
+    Real maxAcceptableError = 0.05;
+
+    if (vssc.parametricSmileConfiguration()) {
+        auto const& psc = *vssc.parametricSmileConfiguration();
+        auto const& params = psc.parameters();
+        Size expectedSize = QuantExt::SviModelTraits::expectedParametersSize(modelVariant);
+        QL_REQUIRE(params.size() == expectedSize,
+                   "CDSVolCurve: ParametricSmileConfiguration has " << params.size()
+                       << " parameters, but model variant " << vssc.strikeInterpolation() << " expects "
+                       << expectedSize);
+        for (auto const& p : params) {
+            QL_REQUIRE(p.initialValue.size() == 1 || p.initialValue.size() == exerciseDates.size(),
+                       "CDSVolCurve: ParametricSmileConfiguration parameter '"
+                           << p.name << "' has " << p.initialValue.size() << " initial values, expected 1 or "
+                           << exerciseDates.size());
+        }
+        for (Size j = 0; j < exerciseDates.size(); ++j) {
+            Real t = dayCounter_.yearFraction(asof, exerciseDates[j]);
+            Real uLen = periodToTime(underlyingTerms[j]);
+            vector<pair<Real, QuantExt::ParametricVolatility::ParameterCalibration>> paramVec;
+            for (auto const& p : params) {
+                Real val = p.initialValue.size() == 1 ? p.initialValue.front() : p.initialValue[j];
+                paramVec.push_back(make_pair(val, p.calibration));
+            }
+            modelParameters[make_pair(t, uLen)] = paramVec;
+        }
+        maxCalibrationAttempts = psc.calibration().maxCalibrationAttempts;
+        exitEarlyErrorThreshold = psc.calibration().exitEarlyErrorThreshold;
+        maxAcceptableError = psc.calibration().maxAcceptableError;
+    }
+
+    // Determine the input quote type from the configured VolatilityType, so that lognormal
+    // market data (RATE_LNVOL) is not misinterpreted as normal vol when building an SVI surface.
+    const auto inputQuoteType =
+        (vssc.volType() == VolatilityConfig::VolatilityType::Normal)
+            ? ParametricVolatility::MarketQuoteType::NormalVolatility
+            : ParametricVolatility::MarketQuoteType::ShiftedLognormalVolatility;
+
+    auto sviVol = QuantLib::ext::make_shared<QuantExt::CreditVolCurveSvi>(
+        asof, calendar_, Following, dayCounter_, effTerms, termCurves, strikeType_, exerciseDates, underlyingTerms,
+        sliceStrikes, sliceVols, modelVariant, inputQuoteType, Handle<YieldTermStructure>(), modelParameters,
+        map<Real, Real>(), maxCalibrationAttempts, exitEarlyErrorThreshold, maxAcceptableError);
+
+    // Force calibration and log RMSE diagnostics.
+    // Note: volatility() triggers lazy calibration but may throw if the calibration produced no valid
+    // parameters (e.g. global Mingone on a difficult surface). We catch that inner exception so we can
+    // still log RMSE metrics without the failure preventing vol_ assignment.
+    if (!exerciseDates.empty() && !sliceStrikes.empty() && !sliceStrikes[0].empty()) {
+        Real uLen0 = periodToTime(underlyingTerms[0]);
+        try {
+            sviVol->volatility(exerciseDates[0], uLen0, sliceStrikes[0].front(), strikeType_);
+        } catch (...) {}
+        auto sviPV = QuantLib::ext::dynamic_pointer_cast<QuantExt::SviParametricVolatility>(
+            sviVol->parametricVolatility());
+        if (sviPV) {
+            try {
+                auto const& rmseVol = sviPV->volRmseShiftedLognormal();
+                for (Size j = 0; j < rmseVol.columns(); ++j) {
+                    for (Size i = 0; i < rmseVol.rows(); ++i) {
+                        Real r = rmseVol(i, j);
+                        if (r != Null<Real>())
+                            DLOG("CDSVolCurve SVI (" << vssc.strikeInterpolation() << ") slice [" << j
+                                 << "] vol RMSE = " << r);
+                    }
+                }
+                Real gv = sviPV->globalVolRmseShiftedLognormal();
+                if (gv != Null<Real>())
+                    DLOG("CDSVolCurve SVI (" << vssc.strikeInterpolation() << ") global vol RMSE = " << gv);
+            } catch (...) {}
+        }
+    }
+
+    vol_ = sviVol;
+    vol_->enableExtrapolation();
+    LOG("CDSVolCurve: finished building SVI surface with model variant " << vssc.strikeInterpolation());
 }
 
 void CDSVolCurve::buildVolatilityExplicit(
@@ -467,9 +587,18 @@ void CDSVolCurve::buildVolatilityExplicit(
         effTerms.push_back(vc.terms()[i]);
     }
 
-    vol_ = QuantLib::ext::make_shared<QuantExt::InterpolatingCreditVolCurve>(asof, calendar_, Following, dayCounter_, effTerms,
-                                                                     termCurves, quotes, strikeType_);
-    vol_->enableExtrapolation();
+    string strikeInterpolation = vssc.strikeInterpolation();
+    SviParametricVolatility::ModelVariant sviModelVariant;
+    if (tryParse<SviParametricVolatility::ModelVariant>(strikeInterpolation, sviModelVariant, parseSviParametricVolatilityModelVariant)) {
+        QL_REQUIRE(vssc.timeInterpolation() == strikeInterpolation,
+                   "CDSVolCurve: SVI requires TimeInterpolation and StrikeInterpolation to be set to the same "
+                   "variant, got '" << vssc.timeInterpolation() << "' vs '" << strikeInterpolation << "'");
+        buildSviVolatility(asof, vc, vssc, quotes, effTerms, termCurves, sviModelVariant);
+    } else {
+        vol_ = QuantLib::ext::make_shared<QuantExt::InterpolatingCreditVolCurve>(
+            asof, calendar_, Following, dayCounter_, effTerms, termCurves, quotes, strikeType_);
+        vol_->enableExtrapolation();
+    }
 
     LOG("CDSVolCurve: finished building 2-D volatility absolute strike "
         << "surface with explicit strikes and expiries");
