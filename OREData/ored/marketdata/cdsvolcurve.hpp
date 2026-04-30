@@ -50,7 +50,8 @@ public:
     CDSVolCurve(QuantLib::Date asof, CDSVolatilityCurveSpec spec, const Loader& loader,
                 const CurveConfigurations& curveConfigs,
                 const CDSVolCurveCache& requiredCdsVolCurves = {},
-                const DefaultCurveCache& requiredCdsCurves = {});
+                const DefaultCurveCache& requiredCdsCurves = {},
+                const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr);
     //@}
 
     //! \name Inspectors
@@ -83,7 +84,8 @@ private:
     //! Build a volatility surface from a collection of expiry and absolute strike pairs.
     void buildVolatility(const QuantLib::Date& asof, CDSVolatilityCurveConfig& vc,
                          const VolatilityStrikeSurfaceConfig& vssc, const Loader& loader,
-                         const DefaultCurveCache& requiredCdsCurves);
+                         const DefaultCurveCache& requiredCdsCurves,
+                         const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData);
 
     // Arguments needed by the methods below to build a volatility surface.
     struct BuildVolatilityArgs {
@@ -105,7 +107,8 @@ private:
     void populateVolatilityPremiaQuotes(const BuildVolatilityArgs& args, PremiumQuoteCube& quotes);
 
     //! Build the volatility surface from the premium quotes.
-    void buildVolatilityViaPremia(const BuildVolatilityArgs& args, const PremiumQuoteCube& quotes);
+    void buildVolatilityViaPremia(const BuildVolatilityArgs& args, const PremiumQuoteCube& quotes,
+        const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData);
 
     // Shared logic for populating terms and term curves.
     void populateTermCurves(const CDSVolatilityCurveConfig& vc, const DefaultCurveCache& requiredCdsCurves,

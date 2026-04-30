@@ -311,7 +311,8 @@ void CDSVolatilityCurveConfig::populateQuotes() {
                 quotes_.push_back(stem + ore::data::to_string(t) + "/" + p.first + "/" + p.second);
             }
             // if only one or even no term is configured, also build quotes of the form .../EXPIRY/STRIKE
-            if (terms_.size() <= 1) {
+            // note: we require the term for price quotes.
+            if (terms_.size() <= 1 && vc->quoteType() != MarketDatum::QuoteType::PRICE) {
                 quotes_.push_back(stem + p.first + "/" + p.second);
             }
         }

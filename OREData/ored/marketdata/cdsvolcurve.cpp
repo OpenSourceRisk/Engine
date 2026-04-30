@@ -38,6 +38,8 @@ using namespace std;
 namespace ore {
 namespace data {
 
+using IndexFactors = CDSVolatilityCurveConfig::PriceInfo::IndexFactors;
+
 namespace {
 
     // Logic to check that quote matches configured expiries and strikes if provided.
@@ -125,12 +127,80 @@ namespace {
         else
             return Solver1DOptions{ maxEvals, accuracy, 1.10, std::make_pair( 0.001, 5.0), 0.050,  0.001, 5.0 };
     }
+
+    IndexFactors getIndexFactors(const string& indexId, const ext::shared_ptr<ReferenceDataManager>& referenceData)
+    {
+        IndexFactors indexFactors;
+        auto [hasData, refDatum] = referenceData->tryGetData(CreditIndexReferenceDatum::TYPE, indexId);
+
+        // A number checks before we can proceed.
+        if (!hasData) {
+            WLOG("CDSVolCurve: reference data manager does not have reference data for index " << indexId <<
+                ". Will proceed as if we have version 1 of the index i.e. default index factor of 1 and FEP of 0.");
+            return indexFactors;
+        }
+
+        auto ciRefDatum = ext::dynamic_pointer_cast<CreditIndexReferenceDatum>(refDatum);
+        if (!ciRefDatum->indexVersion() || *ciRefDatum->indexVersion() == 0) {
+            WLOG("CDSVolCurve: credit index reference datum for index " << indexId << " does not have a version. " <<
+                "Will proceed as if we have version 1 of the index i.e. default index factor of 1 and FEP of 0.");
+            return indexFactors;
+        }
+        Size indexVersion = *ciRefDatum->indexVersion();
+
+        // If index version is 1, we can proceed with the default IndexFactors instance.
+        if (indexVersion == 1)
+            return indexFactors;
+
+        // Derive the current index factor, the index factor relevant for the given index version and the FEP relevant 
+        // for the given index version from the constituents.
+        map<Date, pair<Real, Real>> defaultInfo;
+        Real indexFactor = 1.0;
+        for (const CreditIndexConstituent& c : ciRefDatum->constituents()) {
+            if (c.priorWeight() == Null<Real>())
+                continue;
+            indexFactor -= c.priorWeight();
+            defaultInfo.try_emplace(c.auctionDate(), c.priorWeight(), c.recovery());
+        }
+
+        if (indexFactor < 0) {
+            WLOG("CDSVolCurve: credit index reference datum for index " << indexId << " implies a negative index " <<
+            "factor (" << indexFactor << "). Will proceed as if we have version 1 of the index i.e. default " <<
+            "index factor of 1 and FEP of 0.");
+            return indexFactors;
+        }
+
+        if (defaultInfo.size() < indexVersion - 1) {
+            WLOG("CDSVolCurve: credit index reference datum for index " << indexId << " has information on only " <<
+                defaultInfo.size() << " defaults but we are looking for information on version " << indexVersion <<
+                " of the index. Will proceed as if we have version 1 of the index i.e. default index factor of " <<
+                "1 and FEP of 0.");
+            return indexFactors;
+        }
+
+        Size count = 0;
+        indexFactors.indexFactor = indexFactor;
+        for (auto it = defaultInfo.begin(); it != defaultInfo.end() && count < indexVersion - 1; ++it, ++count) {
+            indexFactors.indexFactorStrike -= it->second.first;
+            indexFactors.realisedFep += it->second.first * (1 - it->second.second);
+        }
+
+        // Log a warning if the calculated index factor does not match the index factor in the reference datum.
+        if (ciRefDatum->indexFactor() && !close_enough(indexFactor, *ciRefDatum->indexFactor())) {
+            WLOG("CDSVolCurve: calculated index factor for index " << indexId << " is " << indexFactor <<
+                " but the credit index reference datum has index factor " << *ciRefDatum->indexFactor() <<
+                ". We will use the calculated index factor but the index data should be checked.");
+        }
+
+        return indexFactors;
+    }
 }
 
 CDSVolCurve::CDSVolCurve(Date asof, CDSVolatilityCurveSpec spec, const Loader& loader,
                          const CurveConfigurations& curveConfigs,
                          const CDSVolCurveCache& requiredCdsVolCurves,
-                         const DefaultCurveCache& requiredCdsCurves) {
+                         const DefaultCurveCache& requiredCdsCurves,
+                         const ext::shared_ptr<ReferenceDataManager>& referenceData) {
 
     try {
 
@@ -153,7 +223,7 @@ CDSVolCurve::CDSVolCurve(Date asof, CDSVolatilityCurveSpec spec, const Loader& l
         } else if (auto vcc = QuantLib::ext::dynamic_pointer_cast<VolatilityCurveConfig>(vc)) {
             buildVolatility(asof, config, *vcc, loader);
         } else if (auto vssc = QuantLib::ext::dynamic_pointer_cast<VolatilityStrikeSurfaceConfig>(vc)) {
-            buildVolatility(asof, config, *vssc, loader, requiredCdsCurves);
+            buildVolatility(asof, config, *vssc, loader, requiredCdsCurves, referenceData);
         } else if (auto vdsc = QuantLib::ext::dynamic_pointer_cast<VolatilityDeltaSurfaceConfig>(vc)) {
             QL_FAIL("CDSVolCurve does not support a VolatilityDeltaSurfaceConfig yet.");
         } else if (auto vmsc = QuantLib::ext::dynamic_pointer_cast<VolatilityMoneynessSurfaceConfig>(vc)) {
@@ -322,7 +392,8 @@ void CDSVolCurve::buildVolatility(const Date& asof, const CDSVolatilityCurveSpec
 
 void CDSVolCurve::buildVolatility(const Date& asof, CDSVolatilityCurveConfig& vc,
                                   const VolatilityStrikeSurfaceConfig& vssc, const Loader& loader,
-                                  const DefaultCurveCache& requiredCdsCurves) {
+                                  const DefaultCurveCache& requiredCdsCurves,
+                                  const ext::shared_ptr<ReferenceDataManager>& referenceData) {
 
     LOG("CDSVolCurve: start building 2-D volatility absolute strike surface");
 
@@ -378,7 +449,7 @@ void CDSVolCurve::buildVolatility(const Date& asof, CDSVolatilityCurveConfig& vc
         // Get the quotes.
         PremiumQuoteCube quotes;
         populateVolatilityPremiaQuotes(args, quotes);
-        buildVolatilityViaPremia(args, quotes);
+        buildVolatilityViaPremia(args, quotes, referenceData);
     } else {
         CreditVolQuoteMap quotes;
         populateVolatilityQuotes(args, quotes);
@@ -502,7 +573,8 @@ void CDSVolCurve::populateVolatilityPremiaQuotes(const BuildVolatilityArgs& args
     DLOG("CDSVolCurve: finished populating volatility premia quotes.");
 }
 
-void CDSVolCurve::buildVolatilityViaPremia(const BuildVolatilityArgs& args, const PremiumQuoteCube& quotes)
+void CDSVolCurve::buildVolatilityViaPremia(const BuildVolatilityArgs& args, const PremiumQuoteCube& quotes,
+    const ext::shared_ptr<ReferenceDataManager>& referenceData)
 {
     DLOG("CDSVolCurve: start building 2-D volatility absolute strike surface via premium stripping.");
 
@@ -549,15 +621,28 @@ void CDSVolCurve::buildVolatilityViaPremia(const BuildVolatilityArgs& args, cons
     CreditCurve::RefData refData = createRefData(0 * Days, Date(), cdsConv, priceInfo.runningCoupon());
 
     // Create the IndexCdsVolStripper::TradeData.
-    // Add realised FEP and index factor from reference data here later if not overridden in configuration.
     auto strikeType = parseCdsOptionStrikeType(vc.strikeType());
     auto optionEngine = getOptionEngine(priceInfo.engineOverride());
     IndexCdsVolStripper::TradeData tradeData{ refData, strikeType, 1.0, 1.0, 0.0, optionEngine };
-    if (const auto& indexFactors = priceInfo.indexFactors()) {
-        tradeData.indexFactor = indexFactors->indexFactor;
-        tradeData.indexFactorStrike = indexFactors->indexFactorStrike;
-        tradeData.realisedFepFactor = indexFactors->realisedFep;
+
+    // If index factor information in config, use it else try to get it via the reference data.
+    IndexFactors indexFactors;
+    if (priceInfo.indexFactors()) {
+        indexFactors = *priceInfo.indexFactors();
+    } else if (referenceData) {
+        DLOG("CDSVolCurve: index factor information was not available directly in CDS volatility curve " <<
+            "configuration for " << vc.curveID() << ". Will try to get this information from reference data.");
+        indexFactors = getIndexFactors(vc.curveID(), referenceData);
+    } else {
+        WLOG("CDSVolCurve: index factor information was not available directly in CDS volatility curve " <<
+            "configuration or reference data for " << vc.curveID() << ". Will proceed as if we have version 1 of " <<
+            "the index i.e. default index factor of 1 and FEP of 0.");
     }
+
+    // Update the trade data with the index factor information.
+    tradeData.indexFactor = indexFactors.indexFactor;
+    tradeData.indexFactorStrike = indexFactors.indexFactorStrike;
+    tradeData.realisedFepFactor = indexFactors.realisedFep;
 
     // Create the IndexCdsVolStripper.
     IndexCdsVolStripper volStripper(args.asof, calendar_, Following, dayCounter_, termCurves, termMaturities,
