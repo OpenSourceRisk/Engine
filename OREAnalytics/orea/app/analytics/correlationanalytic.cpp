@@ -39,7 +39,7 @@ void CorrelationVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<Inp
     vector<string> correlationAnalytics = {"correlation", "xva"};
 
     inputs->loadParameterXML<ScenarioSimMarketParameters>(simMarketParams_, correlationAnalytics,
-                                                              vector<string>({"simulationConfigFile"}));
+                                                              vector<string>({"simulationConfigFile", "simulationUri"}));
     inputs->loadParameterXML<SensitivityScenarioData>(sensiScenarioData_, correlationAnalytics, "sensitivityConfigFile");
 
     inputs->loadParameter<string>(lookbackPeriod_, correlationAnalytics,
