@@ -89,7 +89,6 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
     inputs->loadParameter<bool>(amcIndividualTrainingOutput_, "simulation", "amcIndividualTrainingOutput", false, parseBool);
 
     scenarioReader_ = inputs->loadScenarioReader("simulation", "scenarioFile");
-    inputs->loadParameter<string>(filterTenor_, "simulation", "filteredScenarioTenor", false);
     inputs->loadParameterXML<EngineData>(simulationPricingEngine_, "simulation", "pricingEnginesFile");
     if (!simulationPricingEngine_)
         simulationPricingEngine_ = inputs->setupVariables().pricingEngine_;
@@ -611,17 +610,7 @@ void XvaAnalyticImpl::buildScenarioGenerator(const bool continueOnCalibrationErr
 
     auto xvaVars = ext::dynamic_pointer_cast<XvaVariables>(inputVariables_);
     if (xvaVars->scenarioReader_ && !xvaVars->generateCorrelations_) {
-        QuantLib::ext::shared_ptr<ScenarioReader> reader = xvaVars->scenarioReader_;
-        // Apply tenor filter if specified
-        if (!xvaVars->filterTenor_.empty()) {
-            Period tenor = parsePeriod(xvaVars->filterTenor_);
-            auto simParams = analytic()->configurations().simMarketParams;
-            QL_REQUIRE(simParams, "ScenarioSimMarketParameters required for tenor filtering");
-            auto factory = QuantLib::ext::make_shared<SimpleScenarioFactory>(true);
-            reader = QuantLib::ext::make_shared<FilteredScenarioReader>(reader, simParams, tenor, factory);
-            LOG("Applied tenor filter " << xvaVars->filterTenor_ << " to scenario reader");
-        }
-        auto loader = QuantLib::ext::make_shared<SimpleScenarioLoader>(reader);
+        auto loader = QuantLib::ext::make_shared<SimpleScenarioLoader>(xvaVars->scenarioReader_);
         auto slg = QuantLib::ext::make_shared<ScenarioLoaderPathGenerator>(loader, inputs_->asof(), grid_->dates(),
                                                                        grid_->timeGrid());
         scenarioGenerator_ = slg;

@@ -40,6 +40,11 @@ FilteredScenarioReader::FilteredScenarioReader(const QuantLib::ext::shared_ptr<S
         << ", allowed " << allowedKeys_.size() << " risk factor keys");
 }
 
+void FilteredScenarioReader::load(const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simParams,
+                                  const QuantLib::ext::shared_ptr<TodaysMarketParameters>& marketParams) {
+    reader_->load(simParams, marketParams);
+}
+
 bool FilteredScenarioReader::next() { return reader_->next(); }
 
 Date FilteredScenarioReader::date() const { return reader_->date(); }

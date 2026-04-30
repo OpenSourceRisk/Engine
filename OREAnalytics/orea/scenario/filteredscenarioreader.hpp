@@ -58,6 +58,8 @@ public:
                            const QuantLib::Period& filterTenor,
                            const QuantLib::ext::shared_ptr<ScenarioFactory>& factory);
 
+    void load(const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simParams,
+             const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& marketParams) override;
     bool next() override;
     QuantLib::Date date() const override;
     QuantLib::ext::shared_ptr<Scenario> scenario() const override;
