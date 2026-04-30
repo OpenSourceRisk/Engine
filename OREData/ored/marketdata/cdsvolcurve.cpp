@@ -148,12 +148,8 @@ namespace {
         }
         Size indexVersion = *ciRefDatum->indexVersion();
 
-        // If index version is 1, we can proceed with the default IndexFactors instance.
-        if (indexVersion == 1)
-            return indexFactors;
-
-        // Derive the current index factor, the index factor relevant for the given index version and the FEP relevant 
-        // for the given index version from the constituents.
+        // Derive the current index factor (`indexFactor` below), the index factor relevant for the given index version 
+        // (`indexFactorStrike` below) and the FEP relevant for the given index version from the constituents.
         map<Date, pair<Real, Real>> defaultInfo;
         Real indexFactor = 1.0;
         for (const CreditIndexConstituent& c : ciRefDatum->constituents()) {
@@ -163,33 +159,51 @@ namespace {
             defaultInfo.try_emplace(c.auctionDate(), c.priorWeight(), c.recovery());
         }
 
-        if (indexFactor < 0) {
-            WLOG("CDSVolCurve: credit index reference datum for index " << indexId << " implies a negative index " <<
-            "factor (" << indexFactor << "). Will proceed as if we have version 1 of the index i.e. default " <<
-            "index factor of 1 and FEP of 0.");
+        // If version is 1 and there are no defaults, can just proceed with default `IndexFactors`. Usual case.
+        if (defaultInfo.empty() && indexVersion == 1)
+            return indexFactors;
+
+        if (defaultInfo.empty() && indexVersion > 1) {
+            WLOG("CDSVolCurve: credit index reference datum for index " << indexId << " has no default data " <<
+                "but the version is " << indexVersion << " (> 1). Will proceed as if we have version 1 of the index " <<
+                "i.e. default index factor of 1 and FEP of 0 but the index data should be checked.");
             return indexFactors;
         }
 
+        if (indexFactor < 0) {
+            WLOG("CDSVolCurve: credit index reference datum for index " << indexId << " implies a negative index " <<
+            "factor (" << indexFactor << "). Will proceed as if we have version 1 of the index i.e. default " <<
+            "index factor of 1 and FEP of 0 but the index data should be checked.");
+            return indexFactors;
+        }
+
+        // If version is 2, should be at least one default, if version is 3, should be at least 2 defaults etc.
         if (defaultInfo.size() < indexVersion - 1) {
             WLOG("CDSVolCurve: credit index reference datum for index " << indexId << " has information on only " <<
                 defaultInfo.size() << " defaults but we are looking for information on version " << indexVersion <<
                 " of the index. Will proceed as if we have version 1 of the index i.e. default index factor of " <<
-                "1 and FEP of 0.");
+                "1 and FEP of 0 but the index data should be checked.");
             return indexFactors;
         }
 
+        // If version is 1: `indexFactorStrike` is 1 and `realisedFep` is \Sum_{i=1}^{N} (1 - R_i) w_i.
+        // If version is 2: `indexFactorStrike` is 1 - w_1 and `realisedFep` is \Sum_{i=2}^{N} (1 - R_i) w_i.
         Size count = 0;
         indexFactors.indexFactor = indexFactor;
-        for (auto it = defaultInfo.begin(); it != defaultInfo.end() && count < indexVersion - 1; ++it, ++count) {
-            indexFactors.indexFactorStrike -= it->second.first;
-            indexFactors.realisedFep += it->second.first * (1 - it->second.second);
+        for (auto it = defaultInfo.begin(); it != defaultInfo.end(); ++it, ++count) {
+            if (count < indexVersion - 1)
+                indexFactors.indexFactorStrike -= it->second.first;
+            else
+                indexFactors.realisedFep += it->second.first * (1 - it->second.second);
         }
 
-        // Log a warning if the calculated index factor does not match the index factor in the reference datum.
-        if (ciRefDatum->indexFactor() && !close_enough(indexFactor, *ciRefDatum->indexFactor())) {
-            WLOG("CDSVolCurve: calculated index factor for index " << indexId << " is " << indexFactor <<
-                " but the credit index reference datum has index factor " << *ciRefDatum->indexFactor() <<
-                ". We will use the calculated index factor but the index data should be checked.");
+        // Log a warning if the calculated `indexFactorStrike` does not match the index factor given for this version 
+        // of the index in the reference datum.
+        if (ciRefDatum->indexFactor() && !close_enough(indexFactors.indexFactorStrike, *ciRefDatum->indexFactor())) {
+            WLOG("CDSVolCurve: the calculated index factor for index " << indexId << " is " <<
+                indexFactors.indexFactorStrike << " but the credit index reference datum gives the index factor as " <<
+                *ciRefDatum->indexFactor() << ". We will use the calculated index factor but the index data " <<
+                "should be checked.");
         }
 
         return indexFactors;
