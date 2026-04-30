@@ -24,6 +24,7 @@
 #ifndef quantext_eq_comm_option_surface_stripper_hpp
 #define quantext_eq_comm_option_surface_stripper_hpp
 
+#include <qle/utilities/solvers.hpp>
 #include <qle/indexes/equityindex.hpp>
 #include <qle/interpolators/optioninterpolator2d.hpp>
 #include <qle/termstructures/optionpricesurface.hpp>
@@ -37,28 +38,6 @@
 #include <ql/termstructures/yieldtermstructure.hpp>
 
 namespace QuantExt {
-
-/*! A simple struct to group together options used by a Solver1D instance.
-
-    This declaration may be moved to a common header if useful for other classes.
-*/
-struct Solver1DOptions {
-    //! The maximum number of evaluations. Default used if not set.
-    QuantLib::Size maxEvaluations = QuantLib::Null<QuantLib::Size>();
-    //! The accuracy for the search.
-    QuantLib::Real accuracy = QuantLib::Null<QuantLib::Real>();
-    //! The initial guess for the search.
-    QuantLib::Real initialGuess = QuantLib::Null<QuantLib::Real>();
-    //! Set the minimum and maximum search.
-    std::pair<QuantLib::Real, QuantLib::Real> minMax =
-        std::make_pair(QuantLib::Null<QuantLib::Real>(), QuantLib::Null<QuantLib::Real>());
-    //! Set the step size for the search.
-    QuantLib::Real step = QuantLib::Null<QuantLib::Real>();
-    //! The lower bound of the search domain. A \c Null<Real>() indicates that the bound should not be set.
-    QuantLib::Real lowerBound = QuantLib::Null<QuantLib::Real>();
-    //! The upper bound of the search domain. A \c Null<Real>() indicates that the bound should not be set.
-    QuantLib::Real upperBound = QuantLib::Null<QuantLib::Real>();
-};
 
 //! Abstract base class for the option stripper
 class OptionSurfaceStripper : public QuantLib::LazyObject {

@@ -267,6 +267,10 @@ void CreditIndexReferenceDatum::fromXML(XMLNode* node) {
 
     indexFamily_ = XMLUtils::getChildValue(cird, "IndexFamily", false);
     indexSubFamily_ = XMLUtils::getChildValue(cird, "IndexSubFamily", false);
+    if (auto n = XMLUtils::getChildNode(cird, "IndexVersion"))
+        indexVersion_ = parseInteger(XMLUtils::getNodeValue(n));
+    if (auto n = XMLUtils::getChildNode(cird, "IndexFactor"))
+        indexFactor_ = parseReal(XMLUtils::getNodeValue(n));
 
     constituents_.clear();
 
@@ -285,6 +289,10 @@ XMLNode* CreditIndexReferenceDatum::toXML(ore::data::XMLDocument& doc) const {
 
     XMLUtils::addChild(doc, cird, "IndexFamily", indexFamily_);
     XMLUtils::addChild(doc, cird, "IndexSubFamily", indexSubFamily_);
+    if (indexVersion_)
+        XMLUtils::addChild(doc, cird, "IndexVersion", static_cast<int>(*indexVersion_));
+    if (indexFactor_)
+        XMLUtils::addChild(doc, cird, "IndexFactor", *indexFactor_);
 
     for (auto c : constituents_) {
         auto cNode = c.toXML(doc);
@@ -796,37 +804,31 @@ void BasicReferenceDataManager::check(const string& type, const string& id, cons
                                                                      << validFrom << "': " << error);
         }
     }
-        
 }
 
-bool BasicReferenceDataManager::hasData(const string& type, const string& id, const QuantLib::Date& asof) {
-    if (rdmOverride_ && rdmOverride_->hasData(type, id, asof)) 
-        return true;
-
-    Date asofDate = asof;
-    if (asofDate == QuantLib::Null<QuantLib::Date>()) {
-        asofDate = Settings::instance().evaluationDate();
-    }
-    auto [validFrom, refData] = latestValidFrom(type, id, asofDate);
-    check(type, id, validFrom);
-    return refData != nullptr;
+bool BasicReferenceDataManager::hasData(const string& type, const string& id, const Date& asof) {
+    return tryGetData(type, id, asof).first;
 }
 
-QuantLib::ext::shared_ptr<ReferenceDatum> BasicReferenceDataManager::getData(const string& type, const string& id,
-                                                                     const QuantLib::Date& asof) {
-
-    if (rdmOverride_ && rdmOverride_->hasData(type, id, asof)) 
-		return rdmOverride_->getData(type, id, asof);
-
-    Date asofDate = asof;
-    if (asofDate == QuantLib::Null<QuantLib::Date>()) {
-        asofDate = Settings::instance().evaluationDate();
-    }
-    auto [validFrom, refData] = latestValidFrom(type, id, asofDate);
-    check(type, id, validFrom);
-    QL_REQUIRE(refData != nullptr, "BasicReferenceDataManager::getData(): No Reference data for type='"
-                                       << type << "', id='" << id << "', asof='" << asof << "'");
+ext::shared_ptr<ReferenceDatum> BasicReferenceDataManager::getData(const string& type,
+    const string& id, const Date& asof)
+{
+    auto [hasData, refData] = tryGetData(type, id, asof);
+    QL_REQUIRE(hasData, "BasicReferenceDataManager::getData(): No Reference data for type='" <<
+        type << "', id='" << id << "', asof='" << asof << "'");
     return refData;
+}
+
+pair<bool, ext::shared_ptr<ReferenceDatum>> BasicReferenceDataManager::tryGetData(const string& type,
+    const string& id, const Date& asof)
+{
+    if (rdmOverride_ && rdmOverride_->hasData(type, id, asof))
+        return { true, rdmOverride_->getData(type, id, asof) };
+
+    Date asofDate = asof == Date() ? Settings::instance().evaluationDate() : asof;
+    auto [validFrom, refData] = latestValidFrom(type, id, asofDate);
+    check(type, id, validFrom);
+    return { refData != nullptr, refData };
 }
 
 } // namespace data

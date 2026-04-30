@@ -794,18 +794,28 @@ QuantLib::ext::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const 
     case MarketDatum::InstrumentType::INDEX_CDS_OPTION: {
 
         // Expects the following form. The strike is optional. The index term is optional for backwards compatibility.
-        // INDEX_CDS_OPTION/RATE_LNVOL/<INDEX_NAME>[/<INDEX_TERM>]/<EXPIRY>[/<STRIKE>]
-        QL_REQUIRE(tokens.size() >= 4 || tokens.size() <= 6, "4, 5 or 6 tokens expected in " << datumName);
-        QL_REQUIRE(quoteType == MarketDatum::QuoteType::RATE_LNVOL, "Invalid quote type for " << datumName);
+        // INDEX_CDS_OPTION/RATE_LNVOL/<INDEX_NAME>[/<INDEX_TERM>]/<EXPIRY>[/<STRIKE>/<SIDE>]
+        QL_REQUIRE(tokens.size() >= 4 || tokens.size() <= 7, "4, 5, 6 or 7 tokens expected in " << datumName);
+
+        QL_REQUIRE(quoteType == MarketDatum::QuoteType::RATE_LNVOL || quoteType == MarketDatum::QuoteType::PRICE,
+            "Invalid quote type for " << datumName << ". Must be RATE_LNVOL or PRICE.");
+
+        // As a new addition, no need to be backward compatible so avoid the guessing.
+        if (quoteType == MarketDatum::QuoteType::PRICE)
+            QL_REQUIRE(tokens.size() == 7, "For INDEX_CDS_OPTION quote of type PRICE, we require all 7 tokens.");
 
         QuantLib::ext::shared_ptr<Expiry> expiry;
         QuantLib::ext::shared_ptr<BaseStrike> strike;
+        Protection::Side side = Protection::Side::Buyer;
         string indexTerm;
-        if (tokens.size() == 6) {
-            // We have been given an index term, an expiry and a strike.
+        if (tokens.size() == 6 || tokens.size() == 7) {
+            // We have been given an index term, an expiry, a strike and possibly a protection side.
             indexTerm = tokens[3];
             expiry = parseExpiry(tokens[4]);
             strike = parseBaseStrike(tokens[5]);
+            if (tokens.size() == 7) {
+                side = parseProtectionSide(tokens[6]);
+            }
         } else if (tokens.size() == 5) {
             // We have been given either 1) an index term and an expiry or 2) an expiry and a strike.
             // If the last token is a number, we have 2) an expiry and a strike.
@@ -822,7 +832,8 @@ QuantLib::ext::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const 
             expiry = parseExpiry(tokens[3]);
         }
 
-        return QuantLib::ext::make_shared<IndexCDSOptionQuote>(value, asof, datumName, tokens[2], expiry, indexTerm, strike);
+        return QuantLib::ext::make_shared<IndexCDSOptionQuote>(value, asof, datumName, tokens[2], expiry,
+            indexTerm, strike, quoteType, side);
     }
 
     case MarketDatum::InstrumentType::COMMODITY_SPOT: {

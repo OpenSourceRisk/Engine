@@ -414,6 +414,7 @@ termstructures/generatordefaulttermstructure.cpp
 termstructures/hazardspreadeddefaulttermstructure.cpp
 termstructures/iborfallbackcurve.cpp
 termstructures/immfraratehelper.cpp
+termstructures/indexcdsvolstripper.cpp
 termstructures/inflation/constantcpivolatility.cpp
 termstructures/inflation/cpicurve.cpp
 termstructures/inflation/cpivolatilitystructure.cpp
@@ -1038,6 +1039,7 @@ termstructures/iborfallbackcurve.hpp
 termstructures/immfraratehelper.hpp
 termstructures/implieddefaulttermstructure.hpp
 termstructures/impliedtermstructure.hpp
+termstructures/indexcdsvolstripper.hpp
 termstructures/inflation/constantcpivolatility.hpp
 termstructures/inflation/cpicurve.hpp
 termstructures/inflation/cpipricevolatilitysurface.hpp
@@ -1139,6 +1141,7 @@ utilities/savedobservablesettings.hpp
 utilities/scenarioinformation.hpp
 utilities/serializationdate.hpp
 utilities/serializationperiod.hpp
+utilities/solvers.hpp
 utilities/time.hpp
 version.hpp)
 

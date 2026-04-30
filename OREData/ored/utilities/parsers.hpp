@@ -237,6 +237,9 @@ QuantLib::Position::Type parsePositionType(const string& s);
 */
 QuantLib::Protection::Side parseProtectionSide(const string& s);
 
+//! Output operator for QuantLib::Protection::Side
+std::ostream& operator<<(std::ostream& os, const QuantLib::Protection::Side side);
+
 //! Convert text to QuantLib::Settlement::Type
 /*!
 \ingroup utilities

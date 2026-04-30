@@ -566,6 +566,7 @@
 #include <qle/termstructures/immfraratehelper.hpp>
 #include <qle/termstructures/implieddefaulttermstructure.hpp>
 #include <qle/termstructures/impliedtermstructure.hpp>
+#include <qle/termstructures/indexcdsvolstripper.hpp>
 #include <qle/termstructures/inflation/constantcpivolatility.hpp>
 #include <qle/termstructures/inflation/cpicurve.hpp>
 #include <qle/termstructures/inflation/cpipricevolatilitysurface.hpp>
@@ -667,5 +668,6 @@
 #include <qle/utilities/scenarioinformation.hpp>
 #include <qle/utilities/serializationdate.hpp>
 #include <qle/utilities/serializationperiod.hpp>
+#include <qle/utilities/solvers.hpp>
 #include <qle/utilities/time.hpp>
 #include <qle/version.hpp>

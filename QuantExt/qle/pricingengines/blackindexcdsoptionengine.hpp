@@ -54,7 +54,7 @@ private:
     void doCalc() const override;
 
     void spreadStrikeCalculate(QuantLib::Real fep) const;
-    void priceStrikeCalculate(QuantLib::Real fep) const;
+    void priceStrikeCalculate() const;
 };
 
 } // namespace QuantExt
