@@ -1206,7 +1206,7 @@ endif()
 # ORE_EIGEN_WAS_FOUND is recorded here to be used in OreConfig.cmake.in.
 # Need CACHE because configure_file is called from the top level ORE CMakeLists.txt file.
 SET(ORE_EIGEN_WAS_FOUND FALSE CACHE INTERNAL "Record if Eigen was found.")
-find_package(Eigen3 3.3 NO_MODULE)
+find_package(Eigen3 NO_MODULE)
 if(TARGET Eigen3::Eigen)
     target_link_libraries(${QLE_LIB_NAME} PRIVATE Eigen3::Eigen)
     target_compile_definitions(${QLE_LIB_NAME} PRIVATE ORE_USE_EIGEN)

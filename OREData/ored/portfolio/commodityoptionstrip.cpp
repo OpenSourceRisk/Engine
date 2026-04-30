@@ -430,9 +430,8 @@ void CommodityOptionStrip::buildStandardOptions(const Leg& leg, const QuantLib::
             Real effectiveQuantity = cf->gearing() * cf->periodQuantity();
 
             OptionData optionData(to_string(tempDatum.position), tempDatum.type, style, false, strExerciseDate,
-                                  settlement, "", PremiumData(), {}, {}, "", "", "", {}, {}, "", "", "", "", "",
+                                  settlement, "", PremiumData(), {}, {}, "", "", "", {}, {}, {}, "", "", "", "", "",
                                   automaticExercise, QuantLib::ext::nullopt, paymentData);
-
 
             QuantLib::ext::shared_ptr<Trade> commOption;
             if(!isDigital()) {

@@ -439,6 +439,10 @@ SwaptionModel SwaptionEngineBuilder::model(const string& id, const std::vector<s
 
 } // model()
 
+bool SwaptionEngineBuilder::instrumentIsHandled(QuantExt::MultiLegOption& s, std::vector<std::string>& messages) const {
+    return true;
+}
+
 string SwaptionEngineBuilder::keyImpl(const string& id, const std::vector<string>& keys, const std::vector<Date>& dates,
                                       const std::vector<Date>& maturities,
                                       const std::vector<std::vector<Real>>& strikes,
@@ -469,6 +473,11 @@ QuantLib::ext::shared_ptr<PricingEngine> EuropeanSwaptionEngineBuilder::engineIm
     Handle<SwaptionVolatilityStructure> svts =
         market_->swaptionVol(keys.front(), configuration(MarketContext::pricing));
     return QuantLib::ext::make_shared<BlackMultiLegOptionEngine>(yts, svts, generateAdditionalResults());
+}
+
+bool EuropeanSwaptionEngineBuilder::instrumentIsHandled(QuantExt::MultiLegOption& s,
+                                                        std::vector<std::string>& messages) const {
+    return BlackMultiLegOptionEngine::instrumentIsHandled(s, messages);
 }
 
 QuantLib::ext::shared_ptr<PricingEngine> LGMGridSwaptionEngineBuilder::engineImpl(
@@ -503,6 +512,11 @@ QuantLib::ext::shared_ptr<PricingEngine> LGMGridSwaptionEngineBuilder::engineImp
         generateAdditionalResults());
 }
 
+bool LGMGridSwaptionEngineBuilder::instrumentIsHandled(QuantExt::MultiLegOption& s,
+                                                       std::vector<std::string>& messages) const {
+    return NumericLgmMultiLegOptionEngine::instrumentIsHandled(s, messages);
+}
+
 QuantLib::ext::shared_ptr<PricingEngine> LGMFDSwaptionEngineBuilder::engineImpl(
     const string& id, const std::vector<string>& keys, const std::vector<Date>& dates,
     const std::vector<Date>& maturities, const std::vector<std::vector<Real>>& strikes,
@@ -533,6 +547,11 @@ QuantLib::ext::shared_ptr<PricingEngine> LGMFDSwaptionEngineBuilder::engineImpl(
     return QuantLib::ext::make_shared<QuantExt::NumericLgmMultiLegOptionEngine>(
         lgm, maxTime, scheme, stateGridPoints, timeStepsPerYear, mesherEpsilon, yts,
         isAmerican ? parseInteger(modelParameter("ExerciseTimeStepsPerYear")) : 0, generateAdditionalResults());
+}
+
+bool LGMFDSwaptionEngineBuilder::instrumentIsHandled(QuantExt::MultiLegOption& s,
+                                                     std::vector<std::string>& messages) const {
+    return NumericLgmMultiLegOptionEngine::instrumentIsHandled(s, messages);
 }
 
 QuantLib::ext::shared_ptr<PricingEngine> CamMCSwaptionEngineBuilder::engineImpl(

@@ -150,9 +150,9 @@
          // Test the building of a FX Asian option doesn't throw
 	 PremiumData premiumData;
          OptionData optionData("Long", to_string(a.type), "European", true, {to_string(expiry)}, "Cash", "",
-			       premiumData,
-                               vector<Real>(), vector<Real>(), "", "", "", vector<string>(), vector<string>(), "", "",
-                               "", "Asian", "Arithmetic", QuantLib::ext::nullopt, QuantLib::ext::nullopt, QuantLib::ext::nullopt);
+                               premiumData, vector<Real>(), vector<Real>(), "", "", "", vector<string>(),
+                               vector<string>(), vector<string>(), "", "", "", "Asian", "Arithmetic",
+                               QuantLib::ext::nullopt, QuantLib::ext::nullopt, QuantLib::ext::nullopt);
 
          QuantLib::ext::shared_ptr<FxAsianOption> asianOption = QuantLib::ext::make_shared<FxAsianOption>(
              env, "FxAsianOption", 1.0, TradeStrike(a.strike, "USD"), optionData, scheduleData,

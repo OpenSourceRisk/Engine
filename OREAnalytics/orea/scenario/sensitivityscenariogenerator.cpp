@@ -2574,7 +2574,7 @@ void SensitivityScenarioGenerator::generateSecuritySpreadScenarios(bool up) {
         Real offset;
         if (!tryGetBaseScenarioValue(baseScenarioAbsolute_, key, base_spread, continueOnError_))
             continue;
-            if (!tryGetBaseScenarioValue(baseScenario_, key, offset, continueOnError_))
+        if (!tryGetBaseScenarioValue(baseScenario_, key, offset, continueOnError_))
             continue;
         Real newSpread = relShift ? base_spread * (1.0 + size) : (base_spread + size);
         // Real newRate = up ? rate * (1.0 + getShiftSize(data)) : rate * (1.0 - getShiftSize(data));

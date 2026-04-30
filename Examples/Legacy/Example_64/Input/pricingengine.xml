@@ -89,26 +89,6 @@
       <Parameter name="Probabilities">ExerciseBoundary</Parameter>
     </EngineParameters>
   </Product>
-  <Product type="MultiLegOption">
-    <Model>LGM</Model>
-    <ModelParameters>
-      <Parameter name="Calibration">Bootstrap</Parameter>
-      <Parameter name="CalibrationStrategy">CoterminalATM</Parameter>
-      <Parameter name="Reversion">0.03</Parameter>
-      <Parameter name="ReversionType">HullWhite</Parameter>
-      <Parameter name="Volatility">0.01</Parameter>
-      <Parameter name="VolatilityType">Hagan</Parameter>
-      <Parameter name="Tolerance">0.0001</Parameter>
-    </ModelParameters>
-    <Engine>Grid</Engine>
-    <EngineParameters>
-      <Parameter name="sy">3.0</Parameter>
-      <Parameter name="ny">10</Parameter>
-      <Parameter name="sx">3.0</Parameter>
-      <Parameter name="nx">10</Parameter>
-      <Parameter name="Probabilities">ExerciseBoundary</Parameter>
-    </EngineParameters>
-  </Product>
   <Product type="CapFloor">
     <Model>IborCapModel</Model>
     <ModelParameters/>

@@ -139,26 +139,22 @@
       <xs:element type="bool" name="PiecewiseIntegration" minOccurs="0"/>
       <xs:element name="InterestRateModels" maxOccurs="1" >
         <xs:complexType>
-          <xs:choice>
-            <xs:sequence>
-              <xs:element type="lgm" name="LGM" maxOccurs="unbounded" minOccurs="1"/>
-            </xs:sequence>
-            <xs:sequence>
-              <xs:element type="hw" name="HWModel" maxOccurs="unbounded" minOccurs="1"/>
-            </xs:sequence>
-          </xs:choice>
+          <xs:sequence>
+            <xs:choice>
+              <xs:element type="lgm" name="LGM" maxOccurs="unbounded" minOccurs="0"/>
+              <xs:element type="hw" name="HWModel" maxOccurs="unbounded" minOccurs="0"/>
+            </xs:choice>
+          </xs:sequence>
         </xs:complexType>
       </xs:element>
       <xs:element name="ForeignExchangeModels" maxOccurs="1" minOccurs="0">
         <xs:complexType>
-          <xs:choice>
-            <xs:sequence>
-            <xs:element type="crossCurrencyLGM" name="CrossCcyLGM" maxOccurs="unbounded" minOccurs="0"/>
-            </xs:sequence>
-            <xs:sequence>
-            <xs:element type="localVol" name="LocalVol" maxOccurs="unbounded" minOccurs="0"/>
-            </xs:sequence>
-          </xs:choice>
+          <xs:sequence>
+            <xs:choice>
+              <xs:element type="crossCurrencyLGM" name="CrossCcyLGM" maxOccurs="unbounded" minOccurs="0"/>
+              <xs:element type="localVol" name="LocalVol" maxOccurs="unbounded" minOccurs="0"/>
+            </xs:choice>
+          </xs:sequence>
         </xs:complexType>
       </xs:element>
       <xs:element name="EquityModels" maxOccurs="1" minOccurs="0">

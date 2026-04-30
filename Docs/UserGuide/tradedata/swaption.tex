@@ -3,12 +3,13 @@
 
 \ifdefined\IncludePayoff{{\bf Payoff}
 
-A swaption is an option which gives the buyer the right, but not the obligation, 
-to enter into an underlying interest rate swap. The underlying swap may have varying 
-notional, rates, and spreads during its lifetime.
+A swaption is an option which gives the buyer the right, but not the obligation, to enter into an underlying interest
+rate swap. The underlying swap may have varying notional, rates, and spreads during its lifetime, and can be
+single-currency or cross-currency.
 
 With a {\bf European Swaption}, the buyer is only allowed to exercise the option and enter 
 into the swap on the expiration date of the swaption.
+
 There are two types of swaptions, payer and receiver:
 \begin{itemize}	
 \item Payer swaptions: the underlying swap pays fixed rate and receives floating 
@@ -16,6 +17,7 @@ rate.
 \item Receiver swaptions: the underlying swap receives fixed and pays floating 
 rate.
 \end{itemize}
+
 European Swaption settlement can be either cash or physical delivery of the underlying swap.
 For cash settlement there are different methods to compute the settlement price (collateralized
 cash price, par yield curve).
@@ -32,13 +34,16 @@ The \lstinline!SwaptionData!  node is the trade data container for the \emph{Swa
 node has one and exactly one \lstinline!OptionData! trade component sub-node, and at least one \lstinline!LegData! trade
 component sub-node.  These trade components are outlined in section \ref{ss:option_data} and section
 \ref{ss:leg_data}.\\
+
 \vspace{5mm}
-Supported swaption exercise styles are \emph{European}, \emph{Bermudan}, \emph{American}. Swaptions of all exercise styles can have an arbitrary number of legs, with
-each leg represented by a \lstinline!LegData! sub-node.  Cross currency swaptions are not supported for either exercise style, i.e. the Currency element must
-have the same value for all \lstinline!LegData! sub-nodes of a swaption. Unless \lstinline!MidCouponExercise! isset to \emph{true}, there must be at least one full coupon period after the exercise date for European 
-Swaptions, and after the last exercise date for Bermudan and American Swaptions. See Table \ref{tab:swaption_requirements} for further details on requirements for
- swaptions.\\
+Supported swaption exercise styles are \emph{European}, \emph{Bermudan}, \emph{American}. Swaptions of all exercise
+styles can have an arbitrary number of legs, with each leg represented by a \lstinline!LegData! sub-node.  Cross
+currency swaptions are supported for all exercise styles. Unless \lstinline!MidCouponExercise! is set to \emph{true},
+there must be at least one full coupon period after the exercise date for European Swaptions, and after the last
+exercise date for Bermudan and American Swaptions. See Table \ref{tab:swaption_requirements} for further details on
+requirements for swaptions.\\
 \vspace{5mm}
+
 The structure of an example \lstinline!SwaptionData!  node of a European swaption is shown in Listing
 \ref{lst:swaption_data}.
 
@@ -159,6 +164,9 @@ Allowable values: \emph{true}, \emph{false}. If omitted, defaults to \emph{false
   \item using the \verb+startDate+ attribute to specify a change in a fee from a certain day on (w.r.t. the exercise
     date schedule)
   \end{itemize}
+
+  Fees can be paid in different currencies and specified via the \verb+currency+ attribute. If not given, the fee pay
+  currency defaults to the trade npv currency.
 
   Fees can either be given as an absolute amount or relative to the current notional of the period immediately following
   the exercise date using the \verb+type+ attribute together with specifiers \verb+Absolute+ resp. \verb+Percentage+. If

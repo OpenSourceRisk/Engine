@@ -46,8 +46,11 @@ void CommodityBachelierSpreadOptionAnalyticalEngine::calculate() const {
         paymentDate = std::max(arguments_.longAssetFlow->date(), arguments_.shortAssetFlow->date());
     QL_REQUIRE(paymentDate >= exerciseDate, "Payment date needs to be on or after exercise date");
     if (exerciseDate < today){
-        results_.value = std::max(arguments_.type * (arguments_.longAssetFlow->fixing() - arguments_.shortAssetFlow->fixing() - arguments_.strikePrice), 0.0) *
-                          discountCurve_->discount(paymentDate);
+        results_.value = std::max((arguments_.type == Option::Call ? 1.0 : -1.0) *
+                                      (arguments_.longAssetFlow->fixing() - arguments_.shortAssetFlow->fixing() -
+                                       arguments_.strikePrice),
+                                  0.0) *
+                         discountCurve_->discount(paymentDate);
         return;
     }     
     double df = discountCurve_->discount(paymentDate);
