@@ -164,12 +164,17 @@ public:
                 const QuantLib::ext::shared_ptr<PortfolioFieldGetter>& fieldGetter,
                 double usdSpot);
     
+    void setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario) {
+        offsetScenario_ = offsetScenario;
+    }
+    
 private:
     std::string baseCurrency_;
     QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolioNoSimmExemptions_;
     QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolioSimmExemptions_;
     set<CrifRecord::Regulation> simmExemptionOverrides_;
     QuantLib::ext::shared_ptr<ore::analytics::Crif> crif_;
+    QuantLib::ext::shared_ptr<Scenario> offsetScenario_;
 };
   
 } // namespace analytics

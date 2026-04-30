@@ -59,10 +59,15 @@ public:
     //! Load CRIF from external source, override to generate CRIF
     virtual void loadCrifRecords(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader);
 
+    void setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario) {
+        offsetScenario_ = offsetScenario;
+    }
+
 private:
     QuantLib::ext::shared_ptr<Crif> crif_;
     bool hasNettingSetDetails_;
     bool determineWinningRegulations_;
+    QuantLib::ext::shared_ptr<Scenario> offsetScenario_;
 };
 
 } // namespace analytics

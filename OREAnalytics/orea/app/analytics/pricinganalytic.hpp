@@ -86,6 +86,10 @@ public:
                     const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager)
         : Analytic(std::make_unique<PricingAnalyticImpl>(inputs), pricingAnalyticSubAnalytics, inputs,
                    analyticsManager) {}
+
+    void setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario) {
+        static_cast<PricingAnalyticImpl*>(impl_.get())->setOffsetScenario(offsetScenario);
+    }
 };
  
 } // namespace analytics

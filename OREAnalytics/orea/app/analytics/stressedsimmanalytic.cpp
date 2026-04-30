@@ -20,7 +20,7 @@
 #include <orea/app/inputparameters.hpp>
 
 #include <orea/app/analytics/analyticfactory.hpp>
-#include <orea/app/analytics/pricinganalytic.hpp>
+#include <orea/app/analytics/simmanalytic.hpp>
 
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
@@ -37,15 +37,16 @@ namespace analytics {
 
 void StressedSimmVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) {
     InputVariables::loadVariablesImpl(inputs);
-    inputs->loadParameterXML<StressTestScenarioData>(stressedSimmScenarioData_, "stressedSimm", "stressedSimmScenarioData");
+    inputs->loadParameterXML<StressTestScenarioData>(stressedSimmScenarioData_, "stressedSimm",
+                                                     "stressedSimmScenarioData");
 }
 
 StressedSimmAnalyticImpl::StressedSimmAnalyticImpl(
     const QuantLib::ext::shared_ptr<InputParameters>& inputs,
     const QuantLib::ext::optional<QuantLib::ext::shared_ptr<StressTestScenarioData>>& scenarios)
-    : Analytic::Impl(inputs, QuantLib::ext::make_shared<StressedSimmVariables>(inputs)),
+    : Analytic::Impl(inputs, QuantLib::ext::make_shared<StressedSimmVariables>()),
       stressScenarios_(scenarios.value_or(
-          QuantLib::ext::static_pointer_cast<StressedSimmVariables>(variables_)->stressedSimmScenarioData_)) {
+          QuantLib::ext::static_pointer_cast<StressedSimmVariables>(inputVariables_)->stressedSimmScenarioData_)) {
     setLabel(LABEL);
 }
 
@@ -54,15 +55,15 @@ void StressedSimmAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().simMarketParams = inputs_->sensiSimMarketParams();
     analytic()->configurations().sensiScenarioData = inputs_->sensiScenarioData();
 
-    QL_REQUIRE(analytic()->configurations().simMarketParams, "CrifAnalytic: simMarketParams not set");
-    QL_REQUIRE(analytic()->configurations().sensiScenarioData, "CrifAnalytic: sensiScenarioData not set");
-    QL_REQUIRE(analytic()->configurations().todaysMarketParams, "CrifAnalytic: todaysMarketParams not set");
+    QL_REQUIRE(analytic()->configurations().simMarketParams, "StressedSimmAnalytic: simMarketParams not set");
+    QL_REQUIRE(analytic()->configurations().sensiScenarioData, "StressedSimmAnalytic: sensiScenarioData not set");
+    QL_REQUIRE(analytic()->configurations().todaysMarketParams, "StressedSimmAnalytic: todaysMarketParams not set");
 }
 
 void StressedSimmAnalyticImpl::buildDependencies() {}
 
 void StressedSimmAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
-                                                const std::set<std::string>& runTypes) {
+                                           const std::set<std::string>& runTypes) {
 
     // basic setup
 
@@ -74,13 +75,31 @@ void StressedSimmAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::
 
     QL_REQUIRE(inputs_->portfolio(), "StressedSimmAnalytic::run: No portfolio loaded.");
 
-    QL_REQUIRE(inputs_->crif() == nullptr || inputs_->crif()->empty(), "StressedSimmAnalytic does not support CRIF input");
+    QL_REQUIRE(inputs_->crif() == nullptr || inputs_->crif()->empty(),
+               "StressedSimmAnalytic does not support CRIF input");
+    
 
     CONSOLEW("STRESS_SIMM: Build T0 and Sim Markets and Stress Scenario Generator");
 
     analytic()->buildMarket(loader);
-
+    
     QuantLib::ext::shared_ptr<StressTestScenarioData> scenarioData = stressScenarios_;
+    
+    QL_REQUIRE(inputs_->parSensi(), "StressedSimmAnalytic requires parSensi to be true");
+    QL_REQUIRE(inputs_->alignPillars(), "StressedSimmAnalytic requires alignPillars to be true");
+    QL_REQUIRE(scenarioData->useSpreadedTermStructures(),
+               "StressedSimmAnalytic only supports spreaded term structures for now");
+    
+    // Need to align pillars before building the stress scenarios
+    analytic()->configurations().simMarketParams->toFile("stressed_simm_sim_market_params_before_align.xml");
+    const set<RiskFactorKey::KeyType>& typesDisabled =
+        analytic()->configurations().sensiScenarioData->parConversionExcludes();
+    auto parAnalysis = QuantLib::ext::make_shared<ParSensitivityAnalysis>(
+        inputs_->asof(), analytic()->configurations().simMarketParams, *analytic()->configurations().sensiScenarioData,
+        "", true, typesDisabled);
+    parAnalysis->alignPillars();
+    analytic()->configurations().simMarketParams->toFile("stressed_simm_sim_market_params_after_align.xml");
+    // Convert par stress scenarios
     if (scenarioData != nullptr && scenarioData->hasScenarioWithParShifts()) {
         try {
             QuantLib::ext::shared_ptr<InMemoryReport> parScenarioReport =
@@ -99,6 +118,9 @@ void StressedSimmAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::
         }
     }
 
+
+    std::string marketConfig = inputs_->marketConfig("pricing"); // FIXME
+
     LOG("STRESS_SIMM: Build SimMarket and StressTestScenarioGenerator")
     auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
         analytic()->market(), analytic()->configurations().simMarketParams, marketConfig,
@@ -112,7 +134,8 @@ void StressedSimmAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::
         scenarioData, baseScenario, analytic()->configurations().simMarketParams, simMarket, scenarioFactory,
         simMarket->baseScenarioAbsolute());
     simMarket->scenarioGenerator() = scenarioGenerator;
-
+    
+    analytic()->configurations().simMarketParams->toFile("stressed_simm_sim_market_params.xml");
     CONSOLE("OK");
 
     // generate the stress scenarios and run dependent sensitivity analytic under each of them
@@ -129,48 +152,46 @@ void StressedSimmAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::
 void StressedSimmAnalyticImpl::runStressTest(
     const QuantLib::ext::shared_ptr<StressScenarioGenerator>& scenarioGenerator,
     const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
+    // We require that the simMarketParams and sensiScenarioData are set up correctly for SIMM calculation
+    // We will pass the configs through to the simm -> crif -> sensitivity analytic
+    // TODO - we should align pillars before building the stress scenarios
 
     std::map<std::string, std::vector<QuantLib::ext::shared_ptr<ore::data::InMemoryReport>>> sensitivityReports;
     for (size_t i = 0; i < scenarioGenerator->samples(); ++i) {
         auto scenario = scenarioGenerator->next(inputs_->asof());
         const std::string& label = scenario != nullptr ? scenario->label() : std::string();
-        if ((inputs_->StressedSimmCalcBaseScenario() && label == "BASE") || (label != "BASE")) {
-            try {
-                DLOG("Calculate Sensitivity for scenario " << label);
-                CONSOLE("SENSITIVITY_STRESS: Apply scenario " << label);
-                auto newAnalytic = AnalyticFactory::instance()
-                                       .build("SENSITIVITY", inputs_, analytic()->analyticsManager(), false)
-                                       .second;
-                newAnalytic->configurations().simMarketParams = analytic()->configurations().simMarketParams;
-                newAnalytic->configurations().sensiScenarioData = analytic()->configurations().sensiScenarioData;
-                newAnalytic->setPortfolio(analytic()->portfolio());
-                auto sensitivityImpl = static_cast<PricingAnalyticImpl*>(newAnalytic->impl().get());
-                sensitivityImpl->setOffsetScenario(scenario);
-                sensitivityImpl->setOffsetSimMarketParams(analytic()->configurations().simMarketParams);
-
-                CONSOLE("SENSITIVITY_STRESS: Calculate Sensitivity")
-                newAnalytic->runAnalytic(loader, {"SENSITIVITY"});
-                // Collect sensitivity reports
-                auto rpts = newAnalytic->reports();
-                auto it = rpts.find("SENSITIVITY");
-                QL_REQUIRE(it != rpts.end(), "Sensitivity report not found in Sensitivity analytic reports");
-                for (auto [name, rpt] : it->second) {
-                    // add scenario column to report and copy it, concat it later
-                    if (boost::starts_with(name, "sensitivity")) {
-                        DLOG("Save and extend report " << name);
-                        sensitivityReports[name].push_back(addColumnToExisitingReport("Scenario", label, rpt));
-                    }
+        try {
+            DLOG("Calculate SIMM for scenario " << label);
+            CONSOLE("SIMM_STRESS: Apply scenario " << label);
+            auto newAnalytic =
+                AnalyticFactory::instance().build("SIMM", inputs_, analytic()->analyticsManager(), false).second;
+            newAnalytic->configurations().simMarketParams = analytic()->configurations().simMarketParams;
+            newAnalytic->configurations().sensiScenarioData = analytic()->configurations().sensiScenarioData;
+            newAnalytic->setPortfolio(analytic()->portfolio());
+            auto simmAnalytic = static_cast<SimmAnalytic*>(newAnalytic->impl().get());
+            simmAnalytic->setOffsetScenario(scenario);
+            CONSOLE("SIMM_STRESS: Calculate SIMM")
+            newAnalytic->runAnalytic(loader, {"SIMM"});
+            // Collect SIMM reports
+            auto rpts = newAnalytic->reports();
+            auto it = rpts.find("SIMM");
+            QL_REQUIRE(it != rpts.end(), "SIMM report not found in SIMM analytic reports");
+            for (auto [name, rpt] : it->second) {
+                // add scenario column to report and copy it, concat it later
+                if (boost::starts_with(name, "sensitivity")) {
+                    DLOG("Save and extend report " << name);
+                    sensitivityReports[name].push_back(addColumnToExisitingReport("Scenario", label, rpt));
                 }
-
-                // FIXME: If the sensitivity analytic above is a dependent analytic, then we do not have to add this
-                // timer, otherwise we have to manually add the SensitivityAnalytic::timer
-                analytic()->addTimer("Sensitivity analytic", newAnalytic->getTimer());
-            } catch (const std::exception& e) {
-                StructuredAnalyticsErrorMessage("StressedSimm", "SensitivityCalc",
-                                                "Error during Sensitivity calc under scenario " + label + ", got " +
-                                                    e.what() + ". Skip it")
-                    .log();
             }
+
+            // FIXME: If the sensitivity analytic above is a dependent analytic, then we do not have to add this
+            // timer, otherwise we have to manually add the SensitivityAnalytic::timer
+            analytic()->addTimer("Sensitivity analytic", newAnalytic->getTimer());
+        } catch (const std::exception& e) {
+            StructuredAnalyticsErrorMessage("StressedSimm", "SensitivityCalc",
+                                            "Error during Sensitivity calc under scenario " + label + ", got " +
+                                                e.what() + ". Skip it")
+                .log();
         }
     }
     concatReports(sensitivityReports);
@@ -186,12 +207,6 @@ void StressedSimmAnalyticImpl::concatReports(
             analytic()->addReport(label(), name, report);
         }
     }
-}
-
-void StressedSimmAnalyticImpl::setUpConfigurations() {
-    analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
-    analytic()->configurations().simMarketParams = inputs_->StressedSimmSimMarketParams();
-    analytic()->configurations().sensiScenarioData = inputs_->StressedSimmSensitivityScenarioData();
 }
 
 } // namespace analytics
