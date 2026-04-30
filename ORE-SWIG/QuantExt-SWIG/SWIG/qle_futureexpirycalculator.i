@@ -24,11 +24,8 @@
 %include settings.i
 %include date.i
 
-%{
-using QuantExt::FutureExpiryCalculator;
-%}
-
-%shared_ptr(FutureExpiryCalculator)
+%shared_ptr(QuantExt::FutureExpiryCalculator)
+namespace QuantExt {
 class FutureExpiryCalculator {
   public:
     virtual ~FutureExpiryCalculator() {}
@@ -41,8 +38,10 @@ class FutureExpiryCalculator {
     virtual QuantLib::Date expiryDate(const QuantLib::Date& contractDate, QuantLib::Natural monthOffset = 0,
         bool forOption = false) = 0;
     virtual QuantLib::Date contractDate(const QuantLib::Date& expiryDate) = 0;
-    virtual QuantLib::Date applyFutureMonthOffset(const QuantLib::Date& contractDate, Natural futureMonthOffset) = 0;
+                      virtual QuantLib::Date applyFutureMonthOffset(const QuantLib::Date& contractDate,
+                                              QuantLib::Natural futureMonthOffset) = 0;
 
 };
+                    }
 
 #endif

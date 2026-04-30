@@ -1,0 +1,2 @@
+#TradeId,TradeType,Maturity,MaturityTime,NPV,NpvCurrency,NPV(Base),BaseCurrency,Notional,NotionalCurrency,Notional(Base),NettingSet,CounterParty
+Trade1,Swap,2026-08-10,0.495890,-1072413.268829,USD,-1072413.268829,USD,100000000.00,USD,100000000.00,,DUMMY_CPTY

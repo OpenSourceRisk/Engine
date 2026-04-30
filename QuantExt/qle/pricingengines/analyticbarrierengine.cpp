@@ -17,6 +17,7 @@
 */
 
 #include <ql/exercise.hpp>
+#include <qle/instruments/cashflowresults.hpp>
 #include <qle/pricingengines/analyticbarrierengine.hpp>
 #include <utility>
 
@@ -42,6 +43,18 @@ void AnalyticBarrierEngine::calculate() const {
 
     if (paymentDate_ != Date())
         results_.additionalResults["settlementDate"] = paymentDate_;
+
+    if (auto tmp = results_.additionalResults.find("discountFactor"); tmp != results_.additionalResults.end()) {
+        Real discount = QuantLib::ext::any_cast<Real>(tmp->second);
+
+        std::vector<QuantExt::CashFlowResults> cfResults;
+        cfResults.emplace_back();
+        cfResults.back().amount = results_.value / discount;
+        cfResults.back().payDate = arguments_.exercise->lastDate();
+        cfResults.back().legNumber = 0;
+        cfResults.back().type = "ExpectedFlow";
+        results_.additionalResults["cashFlowResults"] = cfResults;
+    }
 }
 
 } // namespace QuantExt

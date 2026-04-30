@@ -29,6 +29,7 @@
 #include <ored/portfolio/compositeinstrumentwrapper.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
+#include <ored/portfolio/compositetrade.hpp>
 #include <ored/utilities/to_string.hpp>
 
 #include <qle/indexes/fallbackiborindex.hpp>
@@ -431,7 +432,7 @@ void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
                         wrappersTmp.insert(comp->wrappers().begin(), comp->wrappers().end());
                         compositeFound = true;
                     } else {
-                        wrappersTmp.insert(trade->instrument());
+                        wrappersTmp.insert(w);
                     }
                 }
                 wrappers.swap(wrappersTmp);

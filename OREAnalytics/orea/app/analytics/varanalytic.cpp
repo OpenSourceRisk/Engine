@@ -86,6 +86,7 @@ void HistoricalSimulationVarVariables::loadVariablesImpl(const QuantLib::ext::sh
     inputs->loadParameter<bool>(includeExpectedShortfall_, "historicalSimulationVar", "includeExpectedShortfall", false, parseBool);
     inputs->loadParameter<bool>(tradePnL_, "historicalSimulationVar", "tradePnl", false, parseBool);
     inputs->loadParameter<bool>(riskFactorBreakdown_, "historicalSimulationVar", "riskFactorBreakdown", false, parseBool);
+    inputs->loadParameter<bool>(riskClassBreakdown_, "historicalSimulationVar", "riskClassBreakdown", false, parseBool);
 }
 
 /***********************************************************************************
@@ -220,6 +221,7 @@ void HistoricalSimulationVarAnalyticImpl::setUpConfigurations() {
     // inputs_->loadParameter<bool>(riskFactorBreakdown_, "historicalSimulationVar", "riskFactorBreakdown", false,
     //                              std::function<bool(const string&)>(parseBool));
     riskFactorBreakdown_ = varVars->riskFactorBreakdown_;
+    riskClassBreakdown_ = varVars->riskClassBreakdown_;
     if(riskFactorBreakdown_){
         allowPartialScenarios_ = true;
     }
@@ -274,7 +276,7 @@ void HistoricalSimulationVarAnalyticImpl::setVarReport(
         inputs_->baseCurrency(), analytic()->portfolio(), varVars->portfolioFilter_, varVars->varQuantiles_,
         benchmarkVarPeriod, scenarios, std::move(fullRevalArgs), std::move(multiThreadsArgs), varVars->varBreakDown_,
         varVars->includeExpectedShortfall_, varVars->tradePnL_, riskFactorBreakdown_,
-        inputs_->useAtParCouponsCurves(), inputs_->useAtParCouponsTrades());
+        inputs_->useAtParCouponsCurves(), inputs_->useAtParCouponsTrades(), riskClassBreakdown_);
 }
 
 void HistoricalSimulationVarAnalyticImpl::addAdditionalReports(

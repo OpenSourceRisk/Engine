@@ -186,6 +186,7 @@
 #include <ored/portfolio/builders/durationadjustedcms.hpp>
 #include <ored/portfolio/builders/equity.hpp>
 #include <ored/portfolio/builders/equityasianoption.hpp>
+#include <ored/portfolio/builders/equityautodeltahedgeoption.hpp>
 #include <ored/portfolio/builders/equitybarrieroption.hpp>
 #include <ored/portfolio/builders/equitycompositeoption.hpp>
 #include <ored/portfolio/builders/equitydigitaloption.hpp>
@@ -265,6 +266,7 @@
 #include <ored/portfolio/enginedata.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/envelope.hpp>
+#include <ored/portfolio/equityautodeltahedgeoption.hpp>
 #include <ored/portfolio/equitybarrieroption.hpp>
 #include <ored/portfolio/equityderivative.hpp>
 #include <ored/portfolio/equitydigitaloption.hpp>

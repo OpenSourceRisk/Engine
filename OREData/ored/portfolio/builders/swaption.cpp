@@ -62,7 +62,8 @@ Handle<CrossAssetModel> convertToCam(const SwaptionModel& model) {
 QuantLib::ext::shared_ptr<PricingEngine>
 buildMcEngine(const SwaptionModel& model, const std::vector<Handle<YieldTermStructure>>& discountCurves,
               const std::vector<Size>& externalModelIndices, const std::vector<QuantLib::Date>& simulationDates,
-              const std::vector<QuantLib::Date>& stickyCloseOutDates, const EngineBuilder* builder) {
+              const std::vector<QuantLib::Date>& stickyCloseOutDates, const EngineBuilder* builder,
+              const bool generateAdditionalResults) {
     return QuantLib::ext::make_shared<QuantExt::McMultiLegOptionEngine>(
         convertToCam(model),
         parseSequenceType(builder->engineParameter("Training.Sequence", {}, false, "SobolBrownianBridge")),
@@ -86,16 +87,16 @@ buildMcEngine(const SwaptionModel& model, const std::vector<Handle<YieldTermStru
         parseInteger(builder->engineParameter("Regression.MaxSimTimesIR", {}, false, "0")),
         parseInteger(builder->engineParameter("Regression.MaxSimTimesFX", {}, false, "0")),
         parseInteger(builder->engineParameter("Regression.MaxSimTimesEQ", {}, false, "0")),
-        parseVarGroupMode(builder->engineParameter("Regression.VarGroupMode", {}, false, "Global")));
+        parseVarGroupMode(builder->engineParameter("Regression.VarGroupMode", {}, false, "Global")),
+        generateAdditionalResults);
 }
 
-QuantLib::ext::shared_ptr<PricingEngine>
-buildMcCgEngine(const std::string& id, const SwaptionModel& model, const std::vector<std::string>& currencies,
-                const std::vector<Handle<YieldTermStructure>>& discountCurves,
-                const std::vector<Handle<Quote>>& fxSpots,
-                const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
-                const std::vector<std::string> indices, const std::vector<std::string> indexCurrencies,
-                const std::set<Date> simulationDates, const EngineBuilder* builder) {
+QuantLib::ext::shared_ptr<PricingEngine> buildMcCgEngine(
+    const std::string& id, const SwaptionModel& model, const std::vector<std::string>& currencies,
+    const std::vector<Handle<YieldTermStructure>>& discountCurves, const std::vector<Handle<Quote>>& fxSpots,
+    const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
+    const std::vector<std::string> indices, const std::vector<std::string> indexCurrencies,
+    const std::set<Date> simulationDates, const EngineBuilder* builder, const bool generateAdditionalResults) {
 
     Model::Params mcParams;
     mcParams.seed = parseReal(builder->engineParameter("Training.Seed", {}, true));
@@ -127,7 +128,7 @@ buildMcCgEngine(const std::string& id, const SwaptionModel& model, const std::ve
         camCg, mcParams, parseReal(builder->engineParameter("IndicatorSmoothingForValues", {}, false, "0.0")),
         parseReal(builder->engineParameter("IndicatorSmoothingForDerivatives", {}, false, "0.0")),
         parseReal(builder->engineParameter("SqrtSmoothingForDerivatives", {}, false, "0.0")), useCachedSensis, false,
-        true, id);
+        true, id, generateAdditionalResults);
 }
 
 } // namespace
@@ -400,12 +401,6 @@ SwaptionModel SwaptionEngineBuilder::model(const string& id, const std::vector<s
 
     // set some flags
 
-    bool generateAdditionalResults = false;
-    if (auto p = globalParameters().find("GenerateAdditionalResults");
-        p != globalParameters().end()) {
-        generateAdditionalResults = parseBool(p->second);
-    }
-
     auto rt = globalParameters().find("RunType");
     bool allowChangingFallbacks = rt != globalParameters().end() && rt->second != "SensitivityDelta" &&
                                   rt->second != "SensitivityDeltaGamma";
@@ -418,10 +413,9 @@ SwaptionModel SwaptionEngineBuilder::model(const string& id, const std::vector<s
     if (irData.size() == 1) {
 
         auto calib = ext::make_shared<LgmBuilder>(
-            market(), ext::dynamic_pointer_cast<IrLgmData>(irData.front()),
-            configuration(MarketContext::irCalibration), tolerance, continueOnCalibrationError,
-            referenceCalibrationGrid, generateAdditionalResults, id, BlackCalibrationHelper::RelativePriceError,
-            allowChangingFallbacks, allowModelFallbacks, dontCalibrate);
+            market(), ext::dynamic_pointer_cast<IrLgmData>(irData.front()), configuration(MarketContext::irCalibration),
+            tolerance, continueOnCalibrationError, referenceCalibrationGrid, generateAdditionalResults(), id,
+            BlackCalibrationHelper::RelativePriceError, allowChangingFallbacks, allowModelFallbacks, dontCalibrate);
 
         engineFactory()->modelBuilders().insert(std::make_pair(id, calib));
         return ext::dynamic_pointer_cast<LGM>(calib->model());
@@ -474,7 +468,7 @@ QuantLib::ext::shared_ptr<PricingEngine> EuropeanSwaptionEngineBuilder::engineIm
             yts, market_->securitySpread(securitySpread, configuration(MarketContext::pricing))));
     Handle<SwaptionVolatilityStructure> svts =
         market_->swaptionVol(keys.front(), configuration(MarketContext::pricing));
-    return QuantLib::ext::make_shared<BlackMultiLegOptionEngine>(yts, svts);
+    return QuantLib::ext::make_shared<BlackMultiLegOptionEngine>(yts, svts, generateAdditionalResults());
 }
 
 QuantLib::ext::shared_ptr<PricingEngine> LGMGridSwaptionEngineBuilder::engineImpl(
@@ -505,7 +499,8 @@ QuantLib::ext::shared_ptr<PricingEngine> LGMGridSwaptionEngineBuilder::engineImp
             yts, market_->securitySpread(securitySpread, configuration(MarketContext::pricing))));
 
     return QuantLib::ext::make_shared<QuantExt::NumericLgmMultiLegOptionEngine>(
-        lgm, sy, ny, sx, nx, yts, isAmerican ? parseInteger(modelParameter("ExerciseTimeStepsPerYear")) : 0);
+        lgm, sy, ny, sx, nx, yts, isAmerican ? parseInteger(modelParameter("ExerciseTimeStepsPerYear")) : 0,
+        generateAdditionalResults());
 }
 
 QuantLib::ext::shared_ptr<PricingEngine> LGMFDSwaptionEngineBuilder::engineImpl(
@@ -537,7 +532,7 @@ QuantLib::ext::shared_ptr<PricingEngine> LGMFDSwaptionEngineBuilder::engineImpl(
             yts, market_->securitySpread(securitySpread, configuration(MarketContext::pricing))));
     return QuantLib::ext::make_shared<QuantExt::NumericLgmMultiLegOptionEngine>(
         lgm, maxTime, scheme, stateGridPoints, timeStepsPerYear, mesherEpsilon, yts,
-        isAmerican ? parseInteger(modelParameter("ExerciseTimeStepsPerYear")) : 0);
+        isAmerican ? parseInteger(modelParameter("ExerciseTimeStepsPerYear")) : 0, generateAdditionalResults());
 }
 
 QuantLib::ext::shared_ptr<PricingEngine> CamMCSwaptionEngineBuilder::engineImpl(
@@ -564,7 +559,7 @@ QuantLib::ext::shared_ptr<PricingEngine> CamMCSwaptionEngineBuilder::engineImpl(
     return buildMcEngine(std::holds_alternative<std::monostate>(modelOverwrite)
                              ? model(id, keys, dates, maturities, strikes, fxStrikes, isAmerican)
                              : modelOverwrite,
-                         discountCurves, std::vector<Size>(), {}, {}, this);
+                         discountCurves, std::vector<Size>(), {}, {}, this, generateAdditionalResults());
 }
 
 QuantLib::ext::shared_ptr<PricingEngine>
@@ -598,7 +593,8 @@ AmcSwaptionEngineBuilder::engineImpl(const string& id, const std::vector<string>
     std::vector<Size> externalModelIndices;
     Handle<CrossAssetModel> model(getProjectedCrossAssetModel(cam_, selectedComponents, externalModelIndices));
 
-    return buildMcEngine(model, {}, externalModelIndices, simulationDates_, stickyCloseOutDates_, this);
+    return buildMcEngine(model, {}, externalModelIndices, simulationDates_, stickyCloseOutDates_, this,
+                         generateAdditionalResults());
 }
 
 QuantLib::ext::shared_ptr<PricingEngine> CamMCCgSwaptionEngineBuilder::engineImpl(
@@ -655,7 +651,7 @@ QuantLib::ext::shared_ptr<PricingEngine> CamMCCgSwaptionEngineBuilder::engineImp
                                ? model(id, keys, dates, maturities, strikes, fxStrikes, isAmerican)
                                : modelOverwrite,
                            currencies, discountCurves, fxSpots, irIndices, indices, indexCurrencies, simulationDates,
-                           this);
+                           this, generateAdditionalResults());
 }
 
 QuantLib::ext::shared_ptr<PricingEngine> AmcCgSwaptionEngineBuilder::engineImpl(
