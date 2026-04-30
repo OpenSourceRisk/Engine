@@ -38,9 +38,10 @@ HistoricalSimulationVarReport::HistoricalSimulationVarReport(
     const vector<Real>& p, QuantLib::ext::optional<TimePeriod> period,
     const ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen, std::unique_ptr<FullRevalArgs> fullRevalArgs, std::unique_ptr<MultiThreadArgs> multiThreadArgs,
     const bool breakdown, const bool includeExpectedShortfall, const bool tradePnl, const bool riskFactorBreakdown, const bool useAtParCouponsCurves,
-    const bool useAtParCouponsTrades)
+    const bool useAtParCouponsTrades, const bool riskClassBreakdown)
     : VarReport(baseCurrency, portfolio, portfolioFilter, p, period, hisScenGen, nullptr, std::move(fullRevalArgs),
-                std::move(multiThreadArgs), false, useAtParCouponsCurves, useAtParCouponsTrades, tradePnl, riskFactorBreakdown),
+                std::move(multiThreadArgs), false, useAtParCouponsCurves, useAtParCouponsTrades, tradePnl, riskFactorBreakdown,
+                riskClassBreakdown),
                 includeExpectedShortfall_(includeExpectedShortfall) {
     fullReval_ = true;
     tradePnl_ = tradePnl;

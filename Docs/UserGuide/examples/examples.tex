@@ -625,6 +625,10 @@ The analytic is specified as usual in {\tt ore.xml} with the following parameter
 %\item breakdown: boolean, if true the VaR report will contain a breakdown by risk class and risk type, otherwise the report shows the portfolio-level VaR only.
 \item tradePnl: boolean, if true the VaR report will contain a breakdown by tradeID, risk class and risk type, otherwise the report shows the portfolio-level VaR only.
 \item riskFactorBreakdown: boolean, if true the VaR report will contain a breakdown by risk factor.
+\item riskClassBreakdown (optional, default Y): if true (the default), VaR is computed separately for
+  each risk-class / risk-type combination in addition to the aggregate portfolio row. Set to false to
+  compute only the aggregate {\tt [All, All]} row, which significantly reduces runtime when the
+  per-class breakdown is not required.
 \item quantiles: comma separated list of quantiles to be reported
 \item includeExpectedShortfall (optional): boolean, if {\tt Y} the output report contains additional columns {\tt ExpectedShortfall\_<quantile>} reporting the Expected Shortfall (average P\&L in the tail at or below the VaR level) for each quantile; defaults to {\tt N}
 \item portfolioFilter (optional): Only trades with {\tt portfolioId} equal to the provided filter name are processed, see {\tt portfolio.xml}; the entire portfolio is processed, if omitted
