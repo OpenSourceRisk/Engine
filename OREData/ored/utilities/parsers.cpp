@@ -1712,6 +1712,59 @@ std::ostream& operator<<(std::ostream& out, SabrParametricVolatility::ModelVaria
     return out;
 }
 
+SviParametricVolatility::ModelVariant parseSviParametricVolatilityModelVariant(const std::string& s) {
+    static map<string, SviParametricVolatility::ModelVariant> m = {
+        {"Gatheral2004SviRaw", SviParametricVolatility::ModelVariant::Gatheral2004SviRaw},
+        {"Gatheral2004SviNatural", SviParametricVolatility::ModelVariant::Gatheral2004SviNatural},
+        {"Gatheral2004SviJw", SviParametricVolatility::ModelVariant::Gatheral2004SviJw},
+        {"Gatheral2012SsviHeston", SviParametricVolatility::ModelVariant::Gatheral2012SsviHeston},
+        {"Gatheral2012SsviPowerLaw", SviParametricVolatility::ModelVariant::Gatheral2012SsviPowerLaw},
+        {"HendriksMartini2017EssviFirstPowerLaw", SviParametricVolatility::ModelVariant::HendriksMartini2017EssviFirstPowerLaw},
+        {"HendriksMartini2017EssviSecondPowerLaw", SviParametricVolatility::ModelVariant::HendriksMartini2017EssviSecondPowerLaw},
+        {"CorbettaEtAl2019Essvi", SviParametricVolatility::ModelVariant::CorbettaEtAl2019Essvi},
+        {"Mingone2022EssviGJ", SviParametricVolatility::ModelVariant::Mingone2022EssviGJ},
+        {"Mingone2022EssviMM", SviParametricVolatility::ModelVariant::Mingone2022EssviMM}};
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL(
+            "SviParametricVolatilityModelVariant '"
+            << s
+            << "' not recognized, expected one of 'Gatheral2004SviRaw', 'Gatheral2004SviNatural', 'Gatheral2004SviJw', "
+               "'Gatheral2012SsviHeston', 'Gatheral2012SsviPowerLaw', 'HendriksMartini2017EssviFirstPowerLaw', "
+               "'HendriksMartini2017EssviSecondPowerLaw', 'CorbettaEtAl2019Essvi', 'Mingone2022EssviGJ', 'Mingone2022EssviMM'.");
+    }
+}
+
+std::ostream& operator<<(std::ostream& out, SviParametricVolatility::ModelVariant m) {
+    if (m == SviParametricVolatility::ModelVariant::Gatheral2004SviRaw) {
+        out << "Gatheral2004SviRaw";
+    } else if (m == SviParametricVolatility::ModelVariant::Gatheral2004SviNatural) {
+        out << "Gatheral2004SviNatural";
+    } else if (m == SviParametricVolatility::ModelVariant::Gatheral2004SviJw) {
+        out << "Gatheral2004SviJw";
+    } else if (m == SviParametricVolatility::ModelVariant::Gatheral2012SsviHeston) {
+        out << "Gatheral2012SsviHeston";
+    } else if (m == SviParametricVolatility::ModelVariant::Gatheral2012SsviPowerLaw) {
+        out << "Gatheral2012SsviPowerLaw";
+    } else if (m == SviParametricVolatility::ModelVariant::HendriksMartini2017EssviFirstPowerLaw) {
+        out << "HendriksMartini2017EssviFirstPowerLaw";
+    } else if (m == SviParametricVolatility::ModelVariant::HendriksMartini2017EssviSecondPowerLaw) {
+        out << "HendriksMartini2017EssviSecondPowerLaw";
+    } else if (m == SviParametricVolatility::ModelVariant::CorbettaEtAl2019Essvi) {
+        out << "CorbettaEtAl2019Essvi";
+    } else if (m == SviParametricVolatility::ModelVariant::Mingone2022EssviGJ) {
+        out << "Mingone2022EssviGJ";
+    } else if (m == SviParametricVolatility::ModelVariant::Mingone2022EssviMM) {
+        out << "Mingone2022EssviMM";
+    } else {
+        QL_FAIL("SviParametricVolatility::ModelVariant (" << static_cast<int>(m)
+                                                          << ") not recognized. This is an internal error.");
+    }
+    return out;
+}
+
 std::ostream& operator<<(std::ostream& os, Exercise::Type type) {
     if (type == Exercise::European) {
         os << "European";
