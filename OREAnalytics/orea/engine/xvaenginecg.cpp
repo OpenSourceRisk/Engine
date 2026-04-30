@@ -1679,8 +1679,9 @@ void XvaEngineCG::generateSensiReports() {
     auto sensiCube = QuantLib::ext::make_shared<SensitivityCube>(
         sensiResultCube_, sensiScenarioGenerator_->scenarioDescriptions(), sensiScenarioGenerator_->shiftSizes(),
         sensiScenarioGenerator_->shiftSizes(), sensiScenarioGenerator_->shiftSchemes());
-    auto sensiStream = QuantLib::ext::make_shared<SensitivityCubeStream>(sensiCube, simMarketData_->baseCcy());
-    ReportWriter().writeScenarioReport(*sensiReport_, {sensiCube}, 1E-6);
+    auto baseCurrency = simMarketData_->baseCcy();
+    auto sensiStream = QuantLib::ext::make_shared<SensitivityCubeStream>(sensiCube, baseCurrency);
+    ReportWriter().writeScenarioReport(*sensiReport_, {sensiCube}, baseCurrency, 1E-6);
 }
 
 void XvaEngineCG::generateDynamicImRegressionReport() {

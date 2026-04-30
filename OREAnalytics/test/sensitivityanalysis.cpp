@@ -18,7 +18,10 @@
 
 #include <boost/test/unit_test.hpp>
 #include <boost/timer/timer.hpp>
+#include <orea/app/reportwriter.hpp>
 #include <orea/cube/inmemorycube.hpp>
+#include <orea/cube/sensicube.hpp>
+#include <orea/cube/sensitivitycube.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/parametricvar.hpp>
@@ -54,6 +57,7 @@
 #include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/swaption.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/report/inmemoryreport.hpp>
 #include <ored/utilities/osutils.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <oret/toplevelfixture.hpp>
@@ -2008,6 +2012,51 @@ BOOST_AUTO_TEST_CASE(testCrossGamma) {
                                                            << cachedResults.size() << ")");
     ObservationMode::instance().setMode(backupMode);
     IndexManager::instance().clearHistories();
+}
+
+BOOST_AUTO_TEST_CASE(testWriteScenarioReportBaseCurrency) {
+    BOOST_TEST_MESSAGE("Testing writeScenarioReport includes Base Currency column...");
+
+    Date asof(14, April, 2016);
+    set<string> tradeIds = {"Trade_1"};
+    Size numScenarios = 2; // base + 1 up scenario
+
+    auto cube = QuantLib::ext::make_shared<SensiCube>(tradeIds, asof, numScenarios);
+    cube->setT0(100.0, 0, 0);
+    cube->set(110.0, 0, 0, 1, 0); // scenario 1: shifted NPV
+
+    RiskFactorKey rfKey(RiskFactorKey::KeyType::DiscountCurve, "EUR", 0);
+    vector<ShiftScenarioGenerator::ScenarioDescription> scenarioDescriptions;
+    scenarioDescriptions.emplace_back(ShiftScenarioGenerator::ScenarioDescription::Type::Base);
+    scenarioDescriptions.emplace_back(ShiftScenarioGenerator::ScenarioDescription::Type::Up, rfKey, "1Y");
+
+    map<RiskFactorKey, Real> targetShiftSizes = {{rfKey, 0.01}};
+    map<RiskFactorKey, Real> actualShiftSizes = {{rfKey, 0.01}};
+    map<RiskFactorKey, ShiftScheme> shiftSchemes = {{rfKey, ShiftScheme::Forward}};
+
+    auto sensiCube = QuantLib::ext::make_shared<SensitivityCube>(
+        cube, scenarioDescriptions, targetShiftSizes, actualShiftSizes, shiftSchemes);
+
+    InMemoryReport report;
+    string baseCurrency = "EUR";
+    ReportWriter().writeScenarioReport(report, {sensiCube}, baseCurrency);
+
+    // Verify 9 columns including Base Currency
+    BOOST_CHECK_EQUAL(report.columns(), 9);
+    BOOST_CHECK_EQUAL(report.header(3), "Base NPV");
+    BOOST_CHECK_EQUAL(report.header(4), "Base Currency");
+
+    // Verify report has exactly 1 data row
+    BOOST_CHECK_EQUAL(report.rows(), 1);
+
+    // Verify column data values including adjacent Base NPV for alignment confidence
+    BOOST_CHECK_CLOSE(boost::get<double>(report.data(3, 0)), 100.0, 1e-8);
+    BOOST_CHECK_EQUAL(boost::get<string>(report.data(4, 0)), baseCurrency);
+
+    // Verify currency pass-through with a different value
+    InMemoryReport report2;
+    ReportWriter().writeScenarioReport(report2, {sensiCube}, "USD");
+    BOOST_CHECK_EQUAL(boost::get<string>(report2.data(4, 0)), "USD");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
