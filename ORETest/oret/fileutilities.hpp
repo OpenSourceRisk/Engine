@@ -38,7 +38,7 @@ using std::ifstream;
 using std::istreambuf_iterator;
 using std::string;
 
-#ifdef BOOST_MSVC
+#if !defined(BOOST_ALL_NO_LIB) && defined(BOOST_MSVC)
 #define BOOST_LIB_NAME boost_system
 #include <boost/config/auto_link.hpp>
 #define BOOST_LIB_NAME boost_filesystem

@@ -7,7 +7,6 @@ cmake_policy(SET CMP0086 NEW)
 project(ORE-SWIG)
 
 set(CMAKE_SWIG_FLAGS "-fastdispatch")
-option(ORE_USE_ZLIB "Use compression for boost::iostreams" OFF)
 
 include(${PROJECT_SOURCE_DIR}/../cmake/commonSettings.cmake)
 
@@ -31,22 +30,8 @@ get_library_name("OREData" ORED_LIB_NAME)
 get_library_name("QuantExt" QLE_LIB_NAME)
 set_ql_library_name()
 
-# To build the module, we moreover need Boost, Swig, Python
-set(BOOST_COMPONENT_LIST serialization date_time filesystem timer thread log)
-
-
-if(ORE_USE_ZLIB)
-    list(APPEND BOOST_COMPONENT_LIST iostreams)
-    if(MSVC)
-        list(APPEND BOOST_COMPONENT_LIST zlib)
-    endif()
-endif()
-find_package(Boost REQUIRED COMPONENTS ${BOOST_COMPONENT_LIST} OPTIONAL_COMPONENTS system)
 find_package(SWIG REQUIRED)
 find_package(Python REQUIRED COMPONENTS Development)
-if(ORE_USE_ZLIB)
-    find_package(ZLIB REQUIRED)
-endif()
 
 # Load the UseSWIG module from the cmake installation
 include(${SWIG_USE_FILE})
@@ -56,15 +41,10 @@ include_directories(${PROJECT_SOURCE_DIR}/OREAnalytics-SWIG/SWIG)
 include_directories(${PROJECT_SOURCE_DIR}/QuantLib-SWIG/SWIG)
 include_directories(${PROJECT_SOURCE_DIR}/QuantExt-SWIG/SWIG)
 include_directories(${PROJECT_SOURCE_DIR}/OREData-SWIG/SWIG)
-
-#include_directories(${ORE_BUILD}/QuantLib)
-
 include_directories(${QUANTLIB_SOURCE_DIR})
 include_directories(${QUANTEXT_SOURCE_DIR})
 include_directories(${OREDATA_SOURCE_DIR})
 include_directories(${OREANALYTICS_SOURCE_DIR})
-
-include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${Python_INCLUDE_DIRS})
 
 # Add to the list of link directories
@@ -75,6 +55,7 @@ add_link_directory_if_exists("${OREDATA_SOURCE_DIR}/build/ored")
 add_link_directory_if_exists("${OREANALYTICS_SOURCE_DIR}/build/orea")
 
 add_link_directory_if_exists("${CMAKE_BINARY_DIR}/QuantLib")
+add_link_directory_if_exists("${CMAKE_BINARY_DIR}/QuantLib/ql")
 add_link_directory_if_exists("${CMAKE_BINARY_DIR}/ore/QuantLib")
 
 if(EXISTS "${CMAKE_BINARY_DIR}/ore/QuantLib/")
@@ -107,13 +88,13 @@ swig_add_library(OREP TYPE MODULE LANGUAGE python SOURCES ${PROJECT_SOURCE_DIR}/
 set(CMAKE_DEBUG_POSTFIX ${TEMP_CMAKE_DEBUG_POSTFIX})
 
 # Add all libraries to link with
-target_link_libraries(OREP ${Boost_LIBRARIES})
+target_link_libraries(OREP Boost::boost Boost::filesystem Boost::log Boost::serialization Boost::timer)
 target_link_libraries(OREP ${QL_LIB_NAME})
 target_link_libraries(OREP ${QLE_LIB_NAME})
 target_link_libraries(OREP ${ORED_LIB_NAME})
 target_link_libraries(OREP ${OREA_LIB_NAME})
 if(ORE_USE_ZLIB)
-    target_link_libraries(OREP ${ZLIB_LIBRARIES})
+    target_link_libraries(OREP Boost::iostreams ZLIB::ZLIB)
 endif()
 # On windows, do not tell the build which python libs to use.  It automatically
 # looks for python release libs, even in debug, and invoking the line below

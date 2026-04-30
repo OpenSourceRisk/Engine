@@ -55,7 +55,6 @@ EuropeanSwaptionEngineBuilderDeltaGamma::engineImpl(const string& id, const stri
                                                                                computeDeltaVega, computeGamma);
     default:
         QL_FAIL("Swaption volatility type " << svts->volatilityType() << "not covered in EngineFactory");
-        break;
     }
 }
   
