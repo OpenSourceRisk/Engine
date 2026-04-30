@@ -498,6 +498,8 @@ void CDSVolCurve::populateVolatilityQuotes(const BuildVolatilityArgs& args, Cred
             << "," << q->quote()->value() << ")");
     }
 
+    QL_REQUIRE(!quotes.empty(), "CDSVolCurve: found no volatility quotes for curve " << vc.curveID() << ".");
+
     DLOG("CDSVolCurve: finished populating volatility quotes.");
 }
 
@@ -569,6 +571,8 @@ void CDSVolCurve::populateVolatilityPremiaQuotes(const BuildVolatilityArgs& args
         TLOG("Added quote " << q->name() << ": (" << q->expiry() << "," << fixed << setprecision(9) << strike->strike()
             << "," << q->quote()->value() << ")");
     }
+
+    QL_REQUIRE(!quotes.empty(), "CDSVolCurve: found no premium quotes for curve " << vc.curveID() << ".");
 
     DLOG("CDSVolCurve: finished populating volatility premia quotes.");
 }
