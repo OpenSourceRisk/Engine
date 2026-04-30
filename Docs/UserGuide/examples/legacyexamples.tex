@@ -1654,7 +1654,6 @@ engine types. The engine parameters are the same for all products:
     CrossCurrencySwap & CrossAssetModel & AMC \\
     FxOption & CrossAssetModel & AMC \\
     BermudanSwaption & LGM & AMC \\
-    MultiLegOption & CrossAssetModel & AMC \\
   \end{tabular}
   \caption{AMC enabled products with engine and model types}
   \label{tbl:amcconfig}
@@ -1663,8 +1662,7 @@ engine types. The engine parameters are the same for all products:
 \subsubsection*{Additional Features}
 \label{sec:amc_sideproducts}
 
-As a side product the AMC module provides plain MC pricing engines for Bermudan Swaptions and a new trade type
-\verb+MultiLegOption+ with a corresponding MC pricing engine.
+As a side product the AMC module provides plain MC pricing engines for Bermudan Swaptions.
 
 \subsubsection*{MC pricing engine for Bermudan swaptions}\label{sec:mc_bermudan_engine}
 
@@ -1701,118 +1699,6 @@ engine, see \ref{sec:amc_pricingengineconfig}.
   </EngineParameters>
 </Product>
 \end{minted}
-
-\subsubsection*{Multi Leg Options / MC pricing engine}
-
-The following listing shows a sample MultiLegOption trade. It consists of
-
-\begin{enumerate}
-\item an option data block; this is optional, see below
-\item a number of legs; in principle all leg types are supported, the number of legs is arbitrary and they can be in
-  different currencies; if the payment currency of a leg is different from a floating index currency, this is
-  interpreted as a quanto payoff
-\end{enumerate}
-
-If the option block is given, the trade represents a Bermudan swaption on the underlying legs. If the option block is
-missing, the legs themselves represent the trade.
-
-See \cite{methods} for limitations of the multileg option pricing engine.
-
-\begin{minted}[fontsize=\scriptsize]{xml}
-<Trade id="Sample_MultiLegOption">
-  <TradeType>MultiLegOption</TradeType>
-  <Envelope>...</Envelope>
-  <MultiLegOptionData>
-    <OptionData>
-      <LongShort>Long</LongShort>
-      <OptionType>Call</OptionType>
-      <Style>Bermudan</Style>
-      <Settlement>Physical</Settlement>
-      <PayOffAtExpiry>false</PayOffAtExpiry>
-      <ExerciseDates>
-        <ExerciseDate>2026-02-25</ExerciseDate>
-        <ExerciseDate>2027-02-25</ExerciseDate>
-        <ExerciseDate>2028-02-25</ExerciseDate>
-      </ExerciseDates>
-    </OptionData>
-    <LegData>
-      <LegType>Floating</LegType>
-      <Payer>false</Payer>
-      <Currency>USD</Currency>
-      <Notionals>
-        <Notional>100000000</Notional>
-      </Notionals>
-      ...
-    </LegData>
-    <LegData>
-      <LegType>Floating</LegType>
-      <Payer>true</Payer>
-      <Currency>EUR</Currency>
-      <Notionals>
-        <Notional>100000000</Notional>
-      </Notionals>
-      ...
-    </LegData>
-  </MultiLegOptionData>
-</Trade>
-\end{minted}
-
-The pricing engine configuration is similar to that of the MC Bermudan swaption engine, cf.
-\ref{sec:mc_bermudan_engine}, also see the following listing.
-
-\begin{minted}[fontsize=\scriptsize]{xml}
-  <Product type="MultiLegOption">
-  <Model>CrossAssetModel</Model>
-  <ModelParameters>
-    <Parameter name="Tolerance">0.0001</Parameter>
-    <!-- IR -->
-    <Parameter name="IrCalibration">Bootstrap</Parameter>
-    <Parameter name="IrCalibrationStrategy">CoterminalATM</Parameter>
-    <Parameter name="ShiftHorizon">1.0</Parameter>
-    <Parameter name="IrReversion_EUR">0.0050</Parameter>
-    <Parameter name="IrReversion_GBP">0.0070</Parameter>
-    <Parameter name="IrReversion_USD">0.0080</Parameter>
-    <Parameter name="IrReversion">0.0030</Parameter>
-    <Parameter name="IrReversionType">HullWhite</Parameter>
-    <Parameter name="IrVolatilityType">HullWhite</Parameter>
-    <Parameter name="IrVolatility">0.0050</Parameter>
-    <!-- FX -->
-    <Parameter name="FxCalibration">Bootstrap</Parameter>
-    <Parameter name="FxVolatility_EURUSD">0.10</Parameter>
-    <Parameter name="FxVolatility">0.08</Parameter>
-    <Parameter name="ExtrapolateFxVolatility_EURUSD">false</Parameter>
-    <Parameter name="ExtrapolateFxVolatility">true</Parameter>
-    <!-- Correlations IR-IR, IR-FX, FX-FX -->
-    <Parameter name="Corr_IR:EUR_IR:GBP">0.80</Parameter>
-    <Parameter name="Corr_IR:EUR_FX:GBPEUR">-0.50</Parameter>
-    <Parameter name="Corr_IR:GBP_FX:GBPEUR">-0.15</Parameter>
-  </ModelParameters>
-  <Engine>MC</Engine>
-  <EngineParameters>
-    <Parameter name="Training.Sequence">MersenneTwisterAntithetic</Parameter>
-    <Parameter name="Training.Seed">42</Parameter>
-    <Parameter name="Training.Samples">10000</Parameter>
-    <Parameter name="Pricing.Sequence">SobolBrownianBridge</Parameter>
-    <Parameter name="Pricing.Seed">17</Parameter>
-    <Parameter name="Pricing.Samples">25000</Parameter>
-    <Parameter name="Training.BasisFunction">Monomial</Parameter>
-    <Parameter name="Training.BasisFunctionOrder">4</Parameter>
-    <Parameter name="BrownianBridgeOrdering">Steps</Parameter>
-    <Parameter name="SobolDirectionIntegers">JoeKuoD7</Parameter>
-  </EngineParameters>
-</Product>
-\end{minted}
-
-Model Parameters special to that product are
-
-\begin{enumerate}
-\item \verb+IrCalibrationStrategy+ can be \verb+None+, \verb+CoterminalATM+, \verb+UnderlyingATM+
-\item \verb+FXCalibration+ can be \verb+None+ or \verb+Bootstrap+
-\item \verb+ExtrapolateFxVolatility+ can be \verb+true+ or \verb+false+; if false, no calibration instruments are used
-  that require extrapolation of the market fx volatility surface in option expiry direction
-\item \verb+Corr_Key1_Key2+: These entries describe the cross asset model correlations to be used; the syntax for
-  \verb+Key1+ and \verb+Key2+ is the same as in the simulation configuration for the cross asset model
-\end{enumerate}
 
 %--------------------------------------------------------------------
 \subsection{Par Sensitivity Analysis}% Example 40

@@ -648,12 +648,6 @@ def main():
     ql.LegData()
     ql.LegData(ql.CashflowData(), False, "EUR")
 
-    # ore/OREData/ored/portfolio/multilegoption.hpp
-
-    ql.MultiLegOption()
-    ql.MultiLegOption(env0, [leg_data0])
-    ql.MultiLegOption(env0, option_data0, [leg_data0])
-
     # ore/OREData/ored/portfolio/nettingsetdetails.hpp
 
     ql.NettingSetDetails()

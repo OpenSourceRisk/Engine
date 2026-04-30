@@ -29,6 +29,7 @@
 #include <ored/portfolio/schedule.hpp>
 
 #include <ql/cashflow.hpp>
+#include <ql/currency.hpp>
 #include <ql/exercise.hpp>
 #include <ql/time/businessdayconvention.hpp>
 #include <ql/time/calendar.hpp>
@@ -50,11 +51,13 @@ public:
     OptionData(string longShort, string callPut, string style, bool payoffAtExpiry, vector<string> exerciseDates,
                string settlement = "Cash", string settlementMethod = std::string(), const PremiumData& premiumData = {},
                vector<double> exerciseFees = vector<Real>(), vector<double> exercisePrices = vector<Real>(),
-               string noticePeriod = std::string(), string noticeCalendar = std::string(), string noticeConvention = std::string(),
-               const vector<string>& exerciseFeeDates = vector<string>(),
-               const vector<string>& exerciseFeeTypes = vector<string>(), string exerciseFeeSettlementPeriod = std::string(),
-               string exerciseFeeSettlementCalendar = std::string(), string exerciseFeeSettlementConvention = std::string(),
-               string payoffType = std::string(), string payoffType2 = std::string(),
+               string noticePeriod = std::string(), string noticeCalendar = std::string(),
+               string noticeConvention = std::string(), const vector<string>& exerciseFeeDates = vector<string>(),
+               const vector<string>& exerciseFeeTypes = vector<string>(),
+               const vector<string>& exerciseFeeCurrencies = vector<string>(),
+               string exerciseFeeSettlementPeriod = std::string(), string exerciseFeeSettlementCalendar = std::string(),
+               string exerciseFeeSettlementConvention = std::string(), string payoffType = std::string(),
+               string payoffType2 = std::string(),
                const QuantLib::ext::optional<bool>& automaticExercise = QuantLib::ext::nullopt,
                const QuantLib::ext::optional<OptionExerciseData>& exerciseData = QuantLib::ext::nullopt,
                const QuantLib::ext::optional<OptionPaymentData>& paymentData = QuantLib::ext::nullopt,
@@ -66,11 +69,11 @@ public:
           noticeCalendar_(noticeCalendar), noticeConvention_(noticeConvention), settlement_(settlement),
           settlementMethod_(settlementMethod), premiumData_(premiumData), exerciseFees_(exerciseFees),
           exerciseFeeDates_(exerciseFeeDates), exerciseFeeTypes_(exerciseFeeTypes),
-          exerciseFeeSettlementPeriod_(exerciseFeeSettlementPeriod),
+          exerciseFeeCurrencies_(exerciseFeeCurrencies), exerciseFeeSettlementPeriod_(exerciseFeeSettlementPeriod),
           exerciseFeeSettlementCalendar_(exerciseFeeSettlementCalendar),
           exerciseFeeSettlementConvention_(exerciseFeeSettlementConvention), exercisePrices_(exercisePrices),
           automaticExercise_(automaticExercise), exerciseData_(exerciseData), paymentData_(paymentData),
-          midCouponExercise_(midCouponExercise), cashSettlementCurrency_(cashSettlementCurrency), 
+          midCouponExercise_(midCouponExercise), cashSettlementCurrency_(cashSettlementCurrency),
           cashSettlementFxIndex_(cashSettlementFxIndex), cashSettlementFixingDate_(cashSettlementFixingDate) {}
 
     //! \name Inspectors
@@ -92,6 +95,7 @@ public:
     const vector<double>& exerciseFees() const { return exerciseFees_; }
     const vector<string>& exerciseFeeDates() const { return exerciseFeeDates_; }
     const vector<string>& exerciseFeeTypes() const { return exerciseFeeTypes_; }
+    const vector<string>& exerciseFeeCurrencies() const { return exerciseFeeCurrencies_; }
     const string& exerciseFeeSettlementPeriod() const { return exerciseFeeSettlementPeriod_; }
     const string& exerciseFeeSettlementCalendar() const { return exerciseFeeSettlementCalendar_; }
     const string& exerciseFeeSettlementConvention() const { return exerciseFeeSettlementConvention_; }
@@ -155,6 +159,7 @@ private:
     vector<double> exerciseFees_;
     vector<string> exerciseFeeDates_;
     vector<string> exerciseFeeTypes_;
+    vector<string> exerciseFeeCurrencies_;
     string exerciseFeeSettlementPeriod_;
     string exerciseFeeSettlementCalendar_;
     string exerciseFeeSettlementConvention_;
@@ -175,7 +180,8 @@ public:
     /*! TODO removeNoticeDatesAfterLastAccrualStart is only there for backwards compatibility, we should remove it at
        some point and handle such notice dates in the callling code as appropriate. If the exercise style is American
        the flag is set to false always internally. */
-    ExerciseBuilder(const OptionData& optionData, const std::vector<QuantLib::Leg> legs,
+    ExerciseBuilder(const OptionData& optionData, const std::vector<QuantLib::Leg>& legs,
+                    const std::vector<std::string>& legCurrencies = {},
                     bool removeNoticeDatesAfterLastAccrualStart = true);
 
     // null if exercsied or no alive exercise dates
@@ -186,15 +192,17 @@ public:
     const std::vector<QuantLib::Date>& noticeDates() const { return noticeDates_; }
     // alive (cash) settlement dates
     const std::vector<QuantLib::Date>& settlementDates() const { return settlementDates_; }
-
     // true if exercised
     bool isExercised() const { return isExercised_; }
     // only for exercised option: The applicable exercise date
     const QuantLib::Date& exerciseDate() const { return exerciseDate_; }
     // only for exercised options: cash settlement amount or null
-    QuantLib::ext::shared_ptr<QuantLib::CashFlow> cashSettlement() const { return cashSettlement_; }
+    const QuantLib::ext::shared_ptr<QuantLib::CashFlow>& cashSettlement() const { return cashSettlement_; }
+    const std::string& cashSettlementCurrency() const { return cashSettlementCurrency_; }
     // only for exercised options: exercise fee amount or null
-    QuantLib::ext::shared_ptr<QuantLib::CashFlow> feeSettlement() const { return feeSettlement_; }
+    std::vector<std::pair<QuantLib::ext::shared_ptr<QuantLib::CashFlow>, std::string>> feeSettlement() const {
+        return feeSettlement_;
+    }
 
     const QuantLib::Period& noticePeriod() const { return noticePeriod_; }
     const QuantLib::Calendar& noticeCalendar() const { return noticeCalendar_; }
@@ -213,7 +221,8 @@ private:
     bool isExercised_ = false;
     QuantLib::Date exerciseDate_;
     QuantLib::ext::shared_ptr<QuantLib::CashFlow> cashSettlement_;
-    QuantLib::ext::shared_ptr<QuantLib::CashFlow> feeSettlement_;
+    std::string cashSettlementCurrency_;
+    std::vector<std::pair<QuantLib::ext::shared_ptr<QuantLib::CashFlow>, std::string>> feeSettlement_;
 
     // index in all exercise date vector if exercised
     Size exerciseDateIndex_ = QuantLib::Null<QuantLib::Size>();

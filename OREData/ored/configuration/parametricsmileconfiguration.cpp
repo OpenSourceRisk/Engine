@@ -28,7 +28,11 @@ namespace data {
 void ParametricSmileConfiguration::Parameter::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "Parameter");
     name = XMLUtils::getChildValue(node, "Name", true);
-    initialValue = parseListOfValues<Real>(XMLUtils::getChildValue(node, "InitialValue", true), parseReal);
+    // InitialValue is optional: if absent the parameter uses the model-implied default (Null<Real>()).
+    if (XMLUtils::getChildNode(node, "InitialValue"))
+        initialValue = parseListOfValues<Real>(XMLUtils::getChildValue(node, "InitialValue", true), parseReal);
+    else
+        initialValue = {Null<Real>()};
     if (auto n = XMLUtils::getChildNode(node, "IsFixed")) {
         WLOG("parametric smile configuration: the usage of IsFixed = true, false is deprecated, use Calibration = "
              "Fixed, Calibrated, Implied.");
@@ -44,7 +48,12 @@ void ParametricSmileConfiguration::Parameter::fromXML(XMLNode* node) {
 XMLNode* ParametricSmileConfiguration::Parameter::toXML(XMLDocument& doc) const {
     XMLNode* n = doc.allocNode("Parameter");
     XMLUtils::addChild(doc, n, "Name", name);
-    XMLUtils::addChild(doc, n, "InitialValue", initialValue);
+    // Only serialise InitialValue if it contains non-null entries.
+    bool hasNonNull = false;
+    for (auto v : initialValue)
+        if (v != Null<Real>()) { hasNonNull = true; break; }
+    if (hasNonNull)
+        XMLUtils::addChild(doc, n, "InitialValue", initialValue);
     XMLUtils::addChild(doc, n, "Calibration", ore::data::to_string(calibration));
     return n;
 }

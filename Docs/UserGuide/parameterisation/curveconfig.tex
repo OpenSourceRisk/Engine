@@ -301,6 +301,9 @@ The meaning of each of the elements in Listings \ref{lst:fxoptionvol_configurati
   above.
 \item {\tt Linear} or {\tt Cubic} in case of SmileType {\tt Delta} or {\tt BFRR} with default {\tt Linear} for SmileType
   Delta and {\tt Cubic} for SmileType BFRR and Absolute if left blank
+\item An SVI model variant name (e.g.\ {\tt Mingone2022EssviGJ}) in case of SmileType {\tt Delta}, {\tt BFRR}, or
+  {\tt Absolute}, to fit a parametric SVI surface. When an SVI variant is selected the intermediate delta/BFRR surface
+  uses {\tt Linear} interpolation. See the SVI model documentation for supported variant names.
 \end{itemize}
 \item TimeInterpolation [Optional]: specifies whether time interpolation is done in volatility ({\tt V}, default) or
   variance ({\tt V2T})
@@ -507,10 +510,10 @@ The volatility strike surface configuration layout is given in Listing \ref{lst:
 \lstinline!Expiries!: comma separated list of expiry tenors and or expiry dates. A single wildcard character, \lstinline!*!, can be used here also to indicate that all expiries found in the market data for this equity volatility configuration should be used when building the equity volatility surface.
 
 \item
-\lstinline!TimeInterpolation!: interpolation in the option expiry direction. If either \lstinline!Strikes! or \lstinline!Expiries! are configured with a wildcard character, \lstinline!Linear! is used. If both \lstinline!Strikes! and \lstinline!Expiries! are configured explicitly, \lstinline!Linear! or \lstinline!Cubic! is allowed here but the value must agree with the value for \lstinline!StrikeInterpolation!.
+\lstinline!TimeInterpolation!: interpolation in the option expiry direction. If either \lstinline!Strikes! or \lstinline!Expiries! are configured with a wildcard character, \lstinline!Linear! is used. If both \lstinline!Strikes! and \lstinline!Expiries! are configured explicitly, \lstinline!Linear! or \lstinline!Cubic! is allowed, or both may be set to the same SVI model variant name (see below) to fit a parametric SVI surface instead of piecewise interpolation. The value must always agree with the value for \lstinline!StrikeInterpolation!.
 
 \item
-\lstinline!StrikeInterpolation!: interpolation in the strike direction. If either \lstinline!Strikes! or \lstinline!Expiries! are configured with a wildcard character, \lstinline!Linear! is used. If both \lstinline!Strikes! and \lstinline!Expiries! are configured explicitly, \lstinline!Linear! or \lstinline!Cubic! is allowed here but the value must agree with the value for \lstinline!TimeInterpolation!.
+\lstinline!StrikeInterpolation!: interpolation in the strike direction. Allowable values mirror those for \lstinline!TimeInterpolation!: \lstinline!Linear!, \lstinline!Cubic!, or an SVI model variant name. The value must agree with the value for \lstinline!TimeInterpolation!. When both fields are set to an SVI variant (e.g.\ \lstinline!CorbettaEtAl2019Essvi!), the surface is fitted using SVI parametric volatility. Supported SVI variant names: \lstinline!Gatheral2004SviRaw!, \lstinline!Gatheral2004SviNatural!, \lstinline!Gatheral2004SviJw!, \lstinline!Gatheral2012SsviHeston!, \lstinline!Gatheral2012SsviPowerLaw!, \lstinline!CorbettaEtAl2019Essvi!, \lstinline!HendriksMartini2017EssviFirstPowerLaw!, \lstinline!HendriksMartini2017EssviSecondPowerLaw!, \lstinline!Mingone2022EssviGJ!, \lstinline!Mingone2022EssviMM!.
 
 \item
 \lstinline!Extrapolation!: boolean value. If \lstinline!true!, extrapolation is allowed. If \lstinline!false!, extrapolation is not allowed.
@@ -923,10 +926,10 @@ Thirdly, the volatility surface configuration layout is given in Listing \ref{ls
 \lstinline!Expiries!: comma separated list of expiry tenors and or expiry dates. A single wildcard character, \lstinline!*!, can be used here also to indicate that all expiries found in the market data for this CDS volatility configuration should be used when building the CDS volatility surface.
 
 \item
-\lstinline!TimeInterpolation!: interpolation in the option expiry direction. If either \lstinline!Strikes! or \lstinline!Expiries! are configured with a wildcard character, \lstinline!Linear! is used. If both \lstinline!Strikes! and \lstinline!Expiries! are configured explicitly, \lstinline!Linear! or \lstinline!Cubic! is allowed here but the value must agree with the value for \lstinline!StrikeInterpolation!.
+\lstinline!TimeInterpolation!: interpolation in the option expiry direction. If either \lstinline!Strikes! or \lstinline!Expiries! are configured with a wildcard character, \lstinline!Linear! is used. If both \lstinline!Strikes! and \lstinline!Expiries! are configured explicitly, \lstinline!Linear! or \lstinline!Cubic! is allowed, or both may be set to the same SVI model variant name to fit a parametric SVI surface instead of piecewise interpolation. The value must always agree with the value for \lstinline!StrikeInterpolation!.
 
 \item
-\lstinline!StrikeInterpolation!: interpolation in the strike direction. If either \lstinline!Strikes! or \lstinline!Expiries! are configured with a wildcard character, \lstinline!Linear! is used. If both \lstinline!Strikes! and \lstinline!Expiries! are configured explicitly, \lstinline!Linear! or \lstinline!Cubic! is allowed here but the value must agree with the value for \lstinline!TimeInterpolation!.
+\lstinline!StrikeInterpolation!: interpolation in the strike direction. Allowable values mirror those for \lstinline!TimeInterpolation!: \lstinline!Linear!, \lstinline!Cubic!, or an SVI model variant name. The value must agree with \lstinline!TimeInterpolation!. When both fields are set to an SVI variant, the surface is fitted using SVI parametric volatility. Supported SVI variant names: \lstinline!Gatheral2004SviRaw!, \lstinline!Gatheral2004SviNatural!, \lstinline!Gatheral2004SviJw!, \lstinline!Gatheral2012SsviHeston!, \lstinline!Gatheral2012SsviPowerLaw!, \lstinline!CorbettaEtAl2019Essvi!, \lstinline!HendriksMartini2017EssviFirstPowerLaw!, \lstinline!HendriksMartini2017EssviSecondPowerLaw!, \lstinline!Mingone2022EssviGJ!, \lstinline!Mingone2022EssviMM!.
 
 \item
 \lstinline!Extrapolation!: boolean value. If \lstinline!true!, extrapolation is allowed. If \lstinline!false!, extrapolation is not allowed.
@@ -951,6 +954,9 @@ Thirdly, the volatility surface configuration layout is given in Listing \ref{ls
 
 \item
 \lstinline!StrikeFactor!: this node is optional and the allowable value is any positive real number. It defaults to 1. The strikes configured and found in the market data quote strings may not be in absolute terms. For example, a quote string such as \lstinline!INDEX_CDS_OPTION/RATE_LNVOL/CDXIGS33V1/5Y/1M/115! could be given to indicate an index CDS option volatility quote for CDX IG Series 33 Version 1, with underlying index term 5Y expiring in 1M with a strike spread of 115 bps. The strike here is in bps and needs to be divided by 10,000 before being used in the ORE volatility objects. The \lstinline!StrikeFactor! would be set to \lstinline!10000! here.
+
+\item
+\lstinline!ParametricSmileConfiguration!: optional. Only relevant when \lstinline!TimeInterpolation! and \lstinline!StrikeInterpolation! are set to an SVI model variant. Allows the user to pin or warm-start individual model parameters and to control calibration tolerances. The sub-elements mirror those used for swaption parametric smile configuration (see Section~\ref{sss:swaptionconfig}): a \lstinline!Parameters! block listing \lstinline!Name!, \lstinline!InitialValue!, and \lstinline!Calibration! (\lstinline!Fixed!, \lstinline!Implied!, or \lstinline!Calibrated!) per parameter, and a \lstinline!Calibration! block with \lstinline!MaxCalibrationAttempts!, \lstinline!ExitEarlyErrorThreshold!, and \lstinline!MaxAcceptableError!.
 
 \end{itemize}
 
@@ -986,6 +992,49 @@ When the CDS volatility surface is configured as in Listing \ref{lst:cdsvol_surf
 \end{minted}
 \caption{CDS volatility surface configuration}
 \label{lst:cdsvol_surface_config}
+\end{longlisting}
+
+When \lstinline!TimeInterpolation! and \lstinline!StrikeInterpolation! are both set to an SVI model variant name, the \lstinline!StrikeSurface! block supports an optional \lstinline!ParametricSmileConfiguration! node to warm-start or fix individual model parameters. Listing~\ref{lst:cdsvol_svi_config} shows an example using the Corbetta et~al.\ (2019) eSSVI surface variant for a CDS spread volatility surface.
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CDSVolatility>
+  <CurveId>CDXIG5Y</CurveId>
+  <CurveDescription>CDX IG 5Y CDS option vol surface — eSSVI</CurveDescription>
+  <Terms>
+    <Term>
+      <Label>5Y</Label>
+      <Curve>CDXIG/5Y</Curve>
+    </Term>
+    <Term>
+      <Label>7Y</Label>
+      <Curve>CDXIG/7Y</Curve>
+    </Term>
+  </Terms>
+  <StrikeSurface>
+    <Strikes>*</Strikes>
+    <Expiries>*</Expiries>
+    <TimeInterpolation>CorbettaEtAl2019Essvi</TimeInterpolation>
+    <StrikeInterpolation>CorbettaEtAl2019Essvi</StrikeInterpolation>
+    <Extrapolation>true</Extrapolation>
+    <TimeExtrapolation>Flat</TimeExtrapolation>
+    <StrikeExtrapolation>Flat</StrikeExtrapolation>
+    <ParametricSmileConfiguration>
+      <Calibration>
+        <MaxCalibrationAttempts>10</MaxCalibrationAttempts>
+        <ExitEarlyErrorThreshold>0.005</ExitEarlyErrorThreshold>
+        <MaxAcceptableError>0.05</MaxAcceptableError>
+      </Calibration>
+    </ParametricSmileConfiguration>
+  </StrikeSurface>
+  <DayCounter>Actual/365 (Fixed)</DayCounter>
+  <Calendar>weekends only</Calendar>
+  <StrikeType>Spread</StrikeType>
+  <StrikeFactor>10000</StrikeFactor>
+</CDSVolatility>
+\end{minted}
+\caption{CDS volatility SVI surface configuration (Corbetta eSSVI)}
+\label{lst:cdsvol_svi_config}
 \end{longlisting}
 
 \subsubsection{Base Correlations}

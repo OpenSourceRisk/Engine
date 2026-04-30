@@ -25,11 +25,11 @@ namespace QuantExt {
 
 using namespace QuantLib;
 
-ParametricVolatility::ParametricVolatility(const std::vector<MarketSmile> marketSmiles,
+ParametricVolatility::ParametricVolatility(const std::vector<MarketSmile>& marketSmiles,
                                            const MarketModelType marketModelType,
                                            const MarketQuoteType inputMarketQuoteType,
                                            const Handle<YieldTermStructure> discountCurve)
-    : marketSmiles_(std::move(marketSmiles)), marketModelType_(marketModelType),
+    : marketSmiles_(marketSmiles), marketModelType_(marketModelType),
       inputMarketQuoteType_(inputMarketQuoteType), discountCurve_(std::move(discountCurve)) {}
 
 Real ParametricVolatility::convert(const Real inputQuote, const MarketQuoteType inputMarketQuoteType,

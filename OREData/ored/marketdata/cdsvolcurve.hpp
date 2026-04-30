@@ -29,6 +29,7 @@
 #include <ored/marketdata/loader.hpp>
 #include <qle/termstructures/creditvolcurve.hpp>
 #include <qle/termstructures/indexcdsvolstripper.hpp>
+#include <qle/termstructures/sviparametricvolatility.hpp>
 
 namespace ore {
 namespace data {
@@ -118,9 +119,19 @@ private:
     void setVolatilityCurve(
         const QuantLib::Date& asof,
         CDSVolatilityCurveConfig& vc,
+        const VolatilityStrikeSurfaceConfig& vssc,
         const CreditVolQuoteMap& quotes,
         const DefaultCurveCache& requiredCdsCurves,
         bool checkNumQuotes);
+
+    /*! Build a volatility surface backed by SVI parametric volatility using pre-collected per-slice quotes. */
+    void buildSviVolatility(
+        const QuantLib::Date& asof, const CDSVolatilityCurveConfig& vc, const VolatilityStrikeSurfaceConfig& vssc,
+        const std::map<std::tuple<QuantLib::Date, QuantLib::Period, QuantLib::Real>,
+                       QuantLib::Handle<QuantLib::Quote>>& quotes,
+        const std::vector<QuantLib::Period>& effTerms,
+        const std::vector<QuantLib::Handle<QuantExt::CreditCurve>>& termCurves,
+        QuantExt::SviParametricVolatility::ModelVariant modelVariant);
 
     //! Get an explicit expiry date from a CDS option quote's Expiry
     QuantLib::Date getExpiry(const QuantLib::Date& asof, const QuantLib::ext::shared_ptr<Expiry>& expiry) const;

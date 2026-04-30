@@ -52,7 +52,7 @@ public:
     };
 
     virtual ~ParametricVolatility() {}
-    ParametricVolatility(const std::vector<MarketSmile> marketSmiles, const MarketModelType marketModelType,
+    ParametricVolatility(const std::vector<MarketSmile>& marketSmiles, const MarketModelType marketModelType,
                          const MarketQuoteType inputMarketQuoteType,
                          const QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve);
 
