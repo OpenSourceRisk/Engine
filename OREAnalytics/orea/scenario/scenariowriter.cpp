@@ -26,7 +26,7 @@ namespace analytics {
 
 ScenarioWriter::ScenarioWriter(const QuantLib::ext::shared_ptr<ScenarioGenerator>& src, const std::string& filename,
                                const char sep, const string& filemode, const std::vector<RiskFactorKey>& headerKeys,
-                               const bool writeDuplicateDates, Size precision)
+                               const bool writeDuplicateDates, const int precision)
     : src_(src), fp_(nullptr), i_(0), sep_(sep), headerKeys_(headerKeys), writeDuplicateDates_(writeDuplicateDates),
       precision_(precision) {
     open(filename, filemode);
@@ -34,7 +34,7 @@ ScenarioWriter::ScenarioWriter(const QuantLib::ext::shared_ptr<ScenarioGenerator
 
 ScenarioWriter::ScenarioWriter(const std::string& filename, const char sep, const string& filemode,
                                const std::vector<RiskFactorKey>& headerKeys, const bool writeDuplicateDates,
-                               Size precision)
+                               const int precision)
     : fp_(nullptr), i_(0), sep_(sep), headerKeys_(headerKeys), writeDuplicateDates_(writeDuplicateDates),
       precision_(precision) {
     open(filename, filemode);
@@ -43,7 +43,7 @@ ScenarioWriter::ScenarioWriter(const std::string& filename, const char sep, cons
 ScenarioWriter::ScenarioWriter(const QuantLib::ext::shared_ptr<ScenarioGenerator>& src,
                                QuantLib::ext::shared_ptr<ore::data::Report> report,
                                const std::vector<RiskFactorKey>& headerKeys, const bool writeDuplicateDates,
-                               Size precision)
+                               const int precision)
     : src_(src), report_(report), fp_(nullptr), i_(0), sep_(','), headerKeys_(headerKeys),
       writeDuplicateDates_(writeDuplicateDates), precision_(precision) {}
 

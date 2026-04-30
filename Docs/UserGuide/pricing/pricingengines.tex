@@ -591,7 +591,8 @@ The parameters have the following meaning:
 \subsection{Product Type: EuropeanSwaption}
 %--------------------------------------------------------
 \label{sec:EuropeanSwaption_pt}
-Used by trade type: Swaption, for European exercise on vanilla underlying coupon types
+Used by trade type: Swaption, for European exercise, single-currency, if the configured engine does not support the
+trade (e.g. underlying has cap-floored coupons), ore will fall back to the builder configured for BermudanSwaption
 
 Available Model/Engine pairs:
 
@@ -600,7 +601,9 @@ Available Model/Engine pairs:
 \item LGM/Grid
 \item LGM/FD
 \item LGM/MC
+\item LGM/MCCG
 \item LGM/AMC
+\item LGM/AMCCG
 \end{itemize}
 
 Engine description:
@@ -743,12 +746,15 @@ The parameters have the following meaning:
 
 \begin{itemize}
 \item Calibration: Bootstrap, BestFit, None
-\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM, DeltaGammaAdjusted
+\item CalibrationStrategy: None, CoterminalDealStrike, CoterminalATM, DeltaGammaAdjusted
+\item FXCalibration: None, Bootstrap (only relevant for cross-currency swaption)
 \item ReferenceCalibrationGrid: An optional grid, only one calibration instrument per interval is kept
-\item Reversion: The mean reversion
+\item Reversion: The mean reversion (can be attributed by currency)
 \item ReversionType: Hagan, HullWhite
 \item Volatility: The volatility (start value for calibration if calibrated)
 \item VolatilityType: Hagan, HullWhite
+\item FxVolatility: The fx volatility (start value for calibration), only relevant for cross-currency swaption, can be
+  attributed by currency pair in this case
 \item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
 \item Tolerance: Error tolerance for calibration
 \item Training.Sequence: The sequence type for the traning phase, can be MersenneTwister+, MersenneTwisterAntithetc+,
@@ -787,11 +793,16 @@ The parameters have the following meaning:
     <ModelParameters>
         <Parameter name="Calibration">Bootstrap</Parameter>
         <Parameter name="CalibrationStrategy">CoterminalDealStrike</Parameter>
+        <Parameter name="FxCalibration">Bootstrap</Parameter>
         <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
         <Parameter name="Reversion">0.0</Parameter>
+        <Parameter name="Reversion_EUR">0.0</Parameter>
+        <Parameter name="Reversion_SEK">0.0</Parameter>
         <Parameter name="ReversionType">HullWhite</Parameter>
         <Parameter name="Volatility">0.01</Parameter>
         <Parameter name="VolatilityType">Hagan</Parameter>
+        <Parameter name="FxVolatility">0.10</Parameter>
+        <Parameter name="FxVolatility_EURSEK">0.10</Parameter>
         <Parameter name="ShiftHorizon">0.5</Parameter>
         <Parameter name="Tolerance">0.20</Parameter>
     </ModelParameters>
@@ -813,17 +824,46 @@ The parameters have the following meaning:
     </EngineParameters>
 </Product>
 \end{minted}
-\caption{Configuration for Product EuropeanSwaption, Model BlackBachelier, Engine BlackBachelierSwaptionEngine}
+\caption{Configuration for Product EuropeanSwaption, Model LGM, Engine MC}
 \label{lst:peconfig_EuropeanSwaption_LGM_MC}
 \end{longlisting}
+
+LGM/MCCG builds a MacCgMultiLegOptionEngine. The configuration is similar to \ref{lst:peconfig_EuropeanSwaption_LGM_MC}
+with some additional EngineParameters:
+
+\begin{itemize}
+\item UseAD: whether ad is used for first order sensitivity runs
+\item TimeStepsPerYear: minimum time steps per year used for process evolution
+\item IndicatorSmoothingForValues [Optional]: smoothing parameter (according to Fries methodology, 2017, ``epsilon'')
+  applied to indicator functions in cg-based runs for values calculation. Defaults to $0$.
+\item IndicatorSmoothingForDerivatives: as above, smoothing parameter for indicator derivatives calculation. Defaults to $0.0$.
+\item SqrtSmoothingForDerivatives: as above, smoothing parameter for sqrt derivative calculation. Defaults to $0.0$.
+\end{itemize}
 
 LGM/AMC builds a McMultiLegOptionEngine for use in AMC simulations. We refer to the AMC module documentation for further
 details.
 
-%--------------------------------------------------------
-\subsection{Product Type: EuropeanSwaption NonStandard}
-%--------------------------------------------------------
+LGM/AMCCG builds a McMultiLegOptionEngine for use in AMCCG simulations. We refer to the AMC module documentation for
+further details.
 
+%--------------------------------------------------------
+\subsection{Product Type: EuropeanSwaption\_XCcy}
+%--------------------------------------------------------
+\label{sec:EuropeanSwaption_XCcy_pt}
+Used by trade type: Swaption, for European exercise, cross-currency.
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item LGM/MC
+\item LGM/MCCG
+\item LGM/AMC
+\item LGM/AMCCG
+\end{itemize}
+
+%--------------------------------------------------------
+\subsection{Product Type: EuropeanSwaption\_NonStandard}
+%--------------------------------------------------------
 \label{sec:EuropeanSwaption_ns_pt}
 A pricing product type similar to European Swaption in subsection \ref{sec:EuropeanSwaption_pt}.
 
@@ -848,9 +888,9 @@ calibration strategy and pricing models. The user might want to apply the Delta-
 %--------------------------------------------------------
 \subsection{Product Type: BermudanSwaption}
 %--------------------------------------------------------
-
 \label{sec:BermudanSwaption_pt}
-Used by trade type: Swaption, for Bermudan exercise or European exercise on non-vanilla underlying coupon types
+Used by trade type: Swaption, for Bermudan exercise, single-currency, or fallback for European exercise on non-supported
+underlying coupon types (see \ref{sec:EuropeanSwaption_pt}).
 
 Available Model/Engine pairs:
 
@@ -858,7 +898,9 @@ Available Model/Engine pairs:
 \item LGM/Grid
 \item LGM/FD
 \item LGM/MC
+\item LGM/MCCG
 \item LGM/AMC
+\item LGM/AMCCG
 \end{itemize}
 
 Engine description:
@@ -977,11 +1019,14 @@ The parameters have the following meaning:
 \begin{itemize}
 \item Calibration: Bootstrap, BestFit, None
 \item CalibrationStrategy: CoterminalDealStrike, CoterminalATM, DeltaGammaAdjusted
+\item FXCalibration: None, Bootstrap (only relevant for cross-currency swaption)
 \item ReferenceCalibrationGrid: An optional grid, only one calibration instrument per interval is kept
 \item Reversion: The mean reversion
 \item ReversionType: Hagan, HullWhite
 \item Volatility: The volatility (start value for calibration if calibrated)
 \item VolatilityType: Hagan, HullWhite
+\item FxVolatility: The fx volatility (start value for calibration), only relevant for cross-currency swaption, can be
+  attributed by currency pair in this case
 \item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
 \item Tolerance: Error tolerance for calibration
 \item Training.Sequence: The sequence type for the traning phase, can be MersenneTwister+, MersenneTwisterAntithetc+,
@@ -1020,11 +1065,16 @@ The parameters have the following meaning:
     <ModelParameters>
         <Parameter name="Calibration">Bootstrap</Parameter>
         <Parameter name="CalibrationStrategy">CoterminalDealStrike</Parameter>
+        <Parameter name="FxCalibration">Bootstrap</Parameter>
         <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
         <Parameter name="Reversion">0.0</Parameter>
+        <Parameter name="Reversion_EUR">0.0</Parameter>
+        <Parameter name="Reversion_SEK">0.0</Parameter>
         <Parameter name="ReversionType">HullWhite</Parameter>
         <Parameter name="Volatility">0.01</Parameter>
         <Parameter name="VolatilityType">Hagan</Parameter>
+        <Parameter name="FxVolatility">0.10</Parameter>
+        <Parameter name="FxVolatility_EURSEK">0.10</Parameter>
         <Parameter name="ShiftHorizon">0.5</Parameter>
         <Parameter name="Tolerance">0.20</Parameter>
     </ModelParameters>
@@ -1050,11 +1100,41 @@ The parameters have the following meaning:
 \label{lst:peconfig_BermudanSwaption_LGM_MC}
 \end{longlisting}
 
+LGM/MCCG builds a McCgMultiLegOptionEngine. The configuration is similar to \ref{lst:peconfig_BermudanSwaption_LGM_MC}
+with some additional EngineParameters:
+
+\begin{itemize}
+\item UseAD: whether ad is used for first order sensitivity runs
+\item TimeStepsPerYear: minimum time steps per year used for process evolution
+\item IndicatorSmoothingForValues [Optional]: smoothing parameter (according to Fries methodology, 2017, ``epsilon'')
+  applied to indicator functions in cg-based runs for values calculation. Defaults to $0$.
+\item IndicatorSmoothingForDerivatives: as above, smoothing parameter for indicator derivatives calculation. Defaults to $0.0$.
+\item SqrtSmoothingForDerivatives: as above, smoothing parameter for sqrt derivative calculation. Defaults to $0.0$.
+\end{itemize}
+
 LGM/AMC builds a McMultiLegOptionEngine for use in AMC simulations. We refer to the AMC module documentation for further
 details.
 
+LGM/AMCCG builds a McMultiLegOptionEngine for use in AMCCG simulations. We refer to the AMC module documentation for
+further details.
+
 %--------------------------------------------------------
-\subsection{Product Type: BermudanSwaption NonStandard}
+\subsection{Product Type: BermudanSwaption\_XCcy}
+%--------------------------------------------------------
+\label{sec:BermudanSwaption_XCcy_pt}
+Used by trade type: Swaption, for Bermudan exercise, cross-currency
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item LGM/MC
+\item LGM/MCCG
+\item LGM/AMC
+\item LGM/AMCCG
+\end{itemize}
+
+%--------------------------------------------------------
+\subsection{Product Type: BermudanSwaption\_NonStandard}
 %--------------------------------------------------------
 
 A pricing product type very similar to ``Bermudan Swaption'' in \ref{sec:BermudanSwaption_pt}.
@@ -1074,7 +1154,9 @@ Available Model/Engine pairs:
 \item LGM/FD
 \item LGM/Grid (Not recommended due to inferior performance)
 \item LGM/MC
+\item LGM/MCCG
 \item LGM/AMC
+\item LGM/AMCCG
 \end{itemize}
 
 Engine description:
@@ -1197,11 +1279,14 @@ The parameters have the following meaning:
 \begin{itemize}
 \item Calibration: Bootstrap, BestFit, None
 \item CalibrationStrategy: CoterminalDealStrike, CoterminalATM, DeltaGammaAdjusted
+\item FXCalibration: None, Bootstrap (only relevant for cross-currency swaption)
 \item ReferenceCalibrationGrid: An optional grid, only one calibration instrument per interval is kept
-\item Reversion: The mean reversion
+\item Reversion: The mean reversion (can be attributed by currency)
 \item ReversionType: Hagan, HullWhite
 \item Volatility: The volatility (start value for calibration if calibrated)
 \item VolatilityType: Hagan, HullWhite
+\item FxVolatility: The fx volatility (start value for calibration), only relevant for cross-currency swaption, can be
+  attributed by currency pair in this case
 \item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
 \item Tolerance: Error tolerance for calibration
 \item Training.Sequence: The sequence type for the traning phase, can be MersenneTwister+, MersenneTwisterAntithetc+,
@@ -1240,11 +1325,16 @@ The parameters have the following meaning:
     <ModelParameters>
         <Parameter name="Calibration">Bootstrap</Parameter>
         <Parameter name="CalibrationStrategy">CoterminalDealStrike</Parameter>
+        <Parameter name="FxCalibration">Bootstrap</Parameter>
         <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
         <Parameter name="Reversion">0.0</Parameter>
+        <Parameter name="Reversion_EUR">0.0</Parameter>
+        <Parameter name="Reversion_SEK">0.0</Parameter>
         <Parameter name="ReversionType">HullWhite</Parameter>
         <Parameter name="Volatility">0.01</Parameter>
         <Parameter name="VolatilityType">Hagan</Parameter>
+        <Parameter name="FxVolatility">0.10</Parameter>
+        <Parameter name="FxVolatility_EURSEK">0.10</Parameter>
         <Parameter name="ShiftHorizon">0.5</Parameter>
         <Parameter name="Tolerance">0.20</Parameter>
     </ModelParameters>
@@ -1270,8 +1360,29 @@ The parameters have the following meaning:
 \label{lst:peconfig_AmericanSwaption_LGM_MC}
 \end{longlisting}
 
+LGM/MCCG builds a McCgMultiLegOptionEngine. The configuration is similar to \ref{lst:peconfig_AmericanSwaption_LGM_MC}
+with some additional EngineParameters:
+
 LGM/AMC builds a McMultiLegOptionEngine for use in AMC simulations. We refer to the AMC module documentation for further
 details.
+
+LGM/AMCCG builds a McMultiLegOptionEngine for use in AMCCG simulations. We refer to the AMC module documentation for
+further details.
+
+%--------------------------------------------------------
+\subsection{Product Type: AmericanSwaption\_XCcy}
+%--------------------------------------------------------
+\label{sec:AmericanSwaption_XCcy_pt}
+Used by trade type: Swaption, for American exercise, cross-currency
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item LGM/MC
+\item LGM/MCCG
+\item LGM/AMC
+\item LGM/AMCCG
+\end{itemize}
 
 %--------------------------------------------------------
 \subsection{Product Type: AmericanSwaption NonStandard}
@@ -5688,114 +5799,6 @@ The parameters have the following meaning:
 \caption{Configuration for Product FxDoubleTouchOption, Model GarmanKohlhagen, Engine AnalyticDoubleBarrierBinaryEngine}
 \label{lst:peconfig_FxDoubleTouchOption_GarmanKohlhagen_AnalyticDoubleBarrierBinaryEngine}
 \end{longlisting}
-
-%--------------------------------------------------------
-\subsection{Product Type: MultiLegOption}
-%--------------------------------------------------------
-
-Used by trade type: MultiLegOption
-
-Available Model/Engine pairs:
-
-\begin{itemize}
-\item CrossAssetModel/MC
-\item CrossAssetModel/AMC
-\end{itemize}
-
-Engine description:
-
-CrossAssetModel/MC builds a McMultiLegOptionEngine. A sample configuration is shown in listing
-\ref{lst:peconfig_MultiLegOption_CrossAssetModel_MC}
-
-The parameters have the following meaning:
-
-\begin{itemize}
-\item IrCalibration: Bootstrap, BestFit, None
-\item IrCalibrationStrategy: CoterminalDealStrike, CoterminalATM
-\item ReferenceCalibrationGrid: An optional grid, only one calibration instrument per interval is kept
-\item IrReversion: The mean reversion (given per ccy)
-\item IrReversionType: Hagan, HullWhite (given per ccy)
-\item IrVolatility: The volatility (start value for calibration if calibrated, given per ccy)
-\item IrVolatilityType: Hagan, HullWhite (given per ccy)
-\item FxVolatility: The fx volatility (start value for calibration if calibrated, given per ccy)
-\item Corr\_Key1\_key2: The correlations for ir/fx keys (multiple entries possible)
-\item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
-\item Tolerance: Error tolerance for calibration
-\item Training.Sequence: The sequence type for the traning phase, can be MersenneTwister+, MersenneTwisterAntithetc+,
-  Sobol+, Burley2020Sobol+, SobolBrownianBridge+, Burley2020SobolBrownianBridge+
-\item Training.Seed: The seed for the random number generation in the training phase
-\item Training.Samples: The number of samples to be used for the training phase
-\item Pricing.Sequence: The sequence type for the pricing phase, same values allowed as for training
-\item Training.BasisFunction: The type of basis function system to be used for the regression analysis, can be
-  Monomial+, Laguerre+, Hermite+, Hyperbolic+, Legendre+, Chbyshev+, Chebyshev2nd+
-\item BasisFunctionOrder: The order of the basis function system to be used
-\item Pricing.Seed: The seed for the random number generation in the pricing
-\item Pricing.Samples: The number of samples to be used for the pricing phase. If this number is zero, no pricing run is
-  performed, instead the (T0) NPV is estimated from the training phase (this result is used to fill the T0 slice of the
-  NPV cube)
-\item BrownianBridgeOrdering: variate ordering for Brownian bridges, can be Steps+, Factors+, Diagonal+
-\item SobolDirectionIntegers: direction integers for Sobol generator, can be Unit+, Jaeckel+, SobolLevitan+,
-  SobolLevitanLemieux+, JoeKuoD5+, JoeKuoD6+, JoeKuoD7+, Kuo+, Kuo2+, Kuo3+
-\item MinObsDate: if true the conditional expectation of each cashflow is taken from the minimum possible observation
-  date (i.e. the latest exercise or simulation date before the cashflow's event date); recommended setting is true+
-\item RegressorModel: Simple, LaggedFX. If not given, it defaults to Simple. Depending on the choice the regressor is
-  built as follows:
-  \begin{itemize}
-    \item Simple: For an observation date the full model state observed on this date is included in the regressor. No
-      past states are included though.
-    \item LaggedFX: For an observation date the full model state observed on this date is included in the regressor. In
-      addition, past FX states that are relevant for future cashflows are included. For example, for a FX resettable
-      cashflow the FX state observed on the FX reset date is included.
-  \end{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use
-\end{itemize}
-
-\begin{longlisting}
-\begin{minted}[fontsize=\footnotesize]{xml}
-<Product type="MultiLegOption">
-    <Model>CrossAssetModel</Model>
-    <ModelParameters>
-        <Parameter name="IrCalibration">Bootstrap</Parameter>
-        <Parameter name="IrCalibrationStrategy">CoterminalDealStrike</Parameter>
-        <Parameter name="FxCalibration">Bootstrap</Parameter>
-        <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
-        <Parameter name="IrReversion_EUR">0.0</Parameter>
-        <Parameter name="IrReversionType_EUR">HullWhite</Parameter>
-        <Parameter name="IrVolatility_EUR">0.01</Parameter>
-        <Parameter name="IrVolatilityType_EUR">Hagan</Parameter>
-        <Parameter name="IrReversion_GBP">0.0</Parameter>
-        <Parameter name="IrReversionType_GBP">HullWhite</Parameter>
-        <Parameter name="IrVolatility_GBP">0.01</Parameter>
-        <Parameter name="IrVolatilityType_GBP">Hagan</Parameter>
-        <Parameter name="FxVolatility_GBP">0.08</Parameter>
-        <Parameter name="Corr_IR:EUR_FX:GBP">0.23</Parameter>
-        <Parameter name="ShiftHorizon">0.5</Parameter>
-        <Parameter name="Tolerance">0.20</Parameter>
-    </ModelParameters>
-    <Engine>MC</Engine>
-    <EngineParameters>
-        <Parameter name="Training.Sequence">MersenneTwisterAntithetic</Parameter>
-        <Parameter name="Training.Seed">42</Parameter>
-        <Parameter name="Training.Samples">10000</Parameter>
-        <Parameter name="Training.BasisFunction">Monomial</Parameter>
-        <Parameter name="Training.BasisFunctionOrder">6</Parameter>
-        <Parameter name="Pricing.Sequence">SobolBrownianBridge</Parameter>
-        <Parameter name="Pricing.Seed">17</Parameter>
-        <Parameter name="Pricing.Samples">0</Parameter>
-        <Parameter name="BrownianBridgeOrdering">Steps</Parameter>
-        <Parameter name="SobolDirectionIntegers">JoeKuoD7</Parameter>
-        <Parameter name="MinObsDate">true</Parameter>
-        <Parameter name="RegressorModel">Simple</Parameter>
-        <Parameter name="SensitivityTemplate">IR_MC</Parameter>
-    </EngineParameters>
-</Product>
-\end{minted}
-\caption{Configuration for Product MultiLegSwaption, Model CrossAssetModel, Engine MC}
-\label{lst:peconfig_MultiLegOption_CrossAssetModel_MC}
-\end{longlisting}
-
-LGM/AMC builds a McMultiLegOptionEngine for use in AMC simulations. We refer to the AMC module documentation for further
-details.
 
 %--------------------------------------------------------
 \subsection{Product Type: Swap}

@@ -213,7 +213,6 @@
 #include <ored/portfolio/builders/fxtouchoption.hpp>
 #include <ored/portfolio/builders/indexcreditdefaultswap.hpp>
 #include <ored/portfolio/builders/indexcreditdefaultswapoption.hpp>
-#include <ored/portfolio/builders/multilegoption.hpp>
 #include <ored/portfolio/builders/pairwisevarianceswap.hpp>
 #include <ored/portfolio/builders/quantoequityoption.hpp>
 #include <ored/portfolio/builders/quantovanillaoption.hpp>
@@ -318,7 +317,6 @@
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/legdatafactory.hpp>
 #include <ored/portfolio/makenonstandardlegs.hpp>
-#include <ored/portfolio/multilegoption.hpp>
 #include <ored/portfolio/nettingsetdefinition.hpp>
 #include <ored/portfolio/nettingsetdetails.hpp>
 #include <ored/portfolio/nettingsetmanager.hpp>
