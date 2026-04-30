@@ -63,8 +63,7 @@ protected:
 class BlackCPICashFlowPricer : public InflationCashFlowPricer {
 public:
     BlackCPICashFlowPricer(const Handle<QuantLib::CPIVolatilitySurface>& vol = Handle<QuantLib::CPIVolatilitySurface>(),
-                           const Handle<YieldTermStructure>& yts = Handle<YieldTermStructure>(),
-                           const bool useLastFixing = false);
+                           const Handle<YieldTermStructure>& yts = Handle<YieldTermStructure>());
 };
 
 //! Bachelier CPI CashFlow Pricer.
@@ -72,8 +71,7 @@ class BachelierCPICashFlowPricer : public InflationCashFlowPricer {
 public:
     BachelierCPICashFlowPricer(
         const Handle<QuantLib::CPIVolatilitySurface>& vol = Handle<QuantLib::CPIVolatilitySurface>(),
-                           const Handle<YieldTermStructure>& yts = Handle<YieldTermStructure>(),
-                           const bool useLastFixing = false);
+                           const Handle<YieldTermStructure>& yts = Handle<YieldTermStructure>());
 };
 
 class CappedFlooredCPICouponPricer : public QuantLib::CPICouponPricer {
@@ -95,16 +93,14 @@ protected:
 class BlackCPICouponPricer : public CappedFlooredCPICouponPricer {
 public:
     BlackCPICouponPricer(const Handle<QuantLib::CPIVolatilitySurface>& vol = Handle<QuantLib::CPIVolatilitySurface>(),
-                         const Handle<YieldTermStructure>& yts = Handle<YieldTermStructure>(),
-                         const bool useLastFixing = false);
+                         const Handle<YieldTermStructure>& yts = Handle<YieldTermStructure>());
 };
 
 class BachelierCPICouponPricer : public CappedFlooredCPICouponPricer {
 public:
     BachelierCPICouponPricer(
         const Handle<QuantLib::CPIVolatilitySurface>& vol = Handle<QuantLib::CPIVolatilitySurface>(),
-                         const Handle<YieldTermStructure>& yts = Handle<YieldTermStructure>(),
-                         const bool useLastFixing = false);
+                         const Handle<YieldTermStructure>& yts = Handle<YieldTermStructure>());
 };
 
 } // namespace QuantExt

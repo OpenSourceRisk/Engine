@@ -12,6 +12,12 @@
     <Engine>DiscountingCrossCurrencySwapEngine</Engine>
     <EngineParameters/>
   </Product>
+  <Product type="EquityLeg">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>EquityCouponPricer</Engine>
+    <EngineParameters/>
+  </Product>
   <Product type="FxForward">
     <Model>DiscountedCashflows</Model>
     <ModelParameters/>
@@ -360,31 +366,13 @@
       <Parameter name="TimestepPeriod">6M</Parameter>
     </EngineParameters>
   </Product>
-    <Product type="FlexiSwap">
-    <Model>LGM</Model>
+  <Product type="FlexiSwap">
+    <Model>Replication</Model>
     <ModelParameters>
-      <Parameter name="Calibration">Bootstrap</Parameter>
-      <Parameter name="CalibrationStrategy">CoterminalDealStrike</Parameter>
-      <Parameter name="Reversion">0.0</Parameter>
-      <Parameter name="ReversionType">HullWhite</Parameter>
-      <Parameter name="Volatility">0.01</Parameter>
-      <Parameter name="VolatilityType">HullWhite</Parameter>
-      <!-- increased tolerance ! -->
-      <Parameter name="Tolerance">0.001</Parameter>
+      <Parameter name="GlobalModel">true</Parameter>
     </ModelParameters>
-    <Engine>Grid</Engine>
-    <EngineParameters>
-      <!-- SingleSwaptions, SwaptionArray, Automatic -->
-      <Parameter name="method">Automatic</Parameter>
-      <!-- in Automatic mode, if the effective number of swaptions exceeds -->
-      <!-- this parameter, SwaptionArray is used, otherwise SingleSwaptions -->
-      <Parameter name="singleSwaptionThreshold">20.0</Parameter>
-      <!-- numeric integration parameters -->
-      <Parameter name="sy">5.0</Parameter>
-      <Parameter name="ny">20</Parameter>
-      <Parameter name="sx">5.0</Parameter>
-      <Parameter name="nx">20</Parameter>
-    </EngineParameters>
+    <Engine>Replication</Engine>
+    <EngineParameters/>
   </Product>
   <Product type="BalanceGuaranteedSwap">
     <Model>LGM-FlexiSwap</Model>

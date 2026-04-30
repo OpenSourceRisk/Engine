@@ -20,6 +20,7 @@
 #include <ored/marketdata/yieldcurve.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/wildcard.hpp>
+#include <ored/marketdata/marketdatumparser.hpp>
 
 #include <qle/termstructures/generatordefaulttermstructure.hpp>
 #include <qle/termstructures/interpolatedhazardratecurve.hpp>
@@ -40,6 +41,7 @@
 #include <ql/pricingengines/credit/isdacdsengine.hpp>
 #include <ql/pricingengines/credit/midpointcdsengine.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
+#include <ql/time/schedule.hpp>
 // #include <ql/termstructures/yield/bootstraptraits.hpp>
 // #include <ql/termstructures/yield/piecewiseyieldcurve.hpp>
 
@@ -234,7 +236,8 @@ namespace data {
 DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loader,
                            const CurveConfigurations& curveConfigs,
                            map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves,
-                           map<string, QuantLib::ext::shared_ptr<DefaultCurve>>& defaultCurves) {
+                           map<string, QuantLib::ext::shared_ptr<DefaultCurve>>& defaultCurves,
+                           QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData) {
     const QuantLib::ext::shared_ptr<DefaultCurveConfig>& configs = curveConfigs.defaultCurveConfig(spec.curveConfigID());
     bool built = false;
     std::string errors;
@@ -283,7 +286,7 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                 case DefaultCurveConfig::Config::Type::ConvSpreadCDS:
                 case DefaultCurveConfig::Config::Type::Price:
                     buildCdsCurve(configs->curveID(), config.second, asof, spec, loader, yieldCurves,
-                                  implyDefaultFromMarket);
+                                  implyDefaultFromMarket, referenceData);
                     break;
                 case DefaultCurveConfig::Config::Type::HazardRate:
                     buildHazardRateCurve(configs->curveID(), config.second, asof, spec, loader);
@@ -329,7 +332,8 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
 void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveConfig::Config& config, const Date& asof,
                                  const DefaultCurveSpec& spec, const Loader& loader,
                                  map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves,
-                                 bool implyDefaultFromMarket) {
+                                 bool implyDefaultFromMarket,
+                                 QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData) {
 
     LOG("Start building default curve of type SpreadCDS for curve " << curveID << "and  implyDefaultFromMarket = "
         << to_string(implyDefaultFromMarket));
@@ -421,9 +425,11 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
                     continue;
                 };
                 helpers.push_back(QuantLib::ext::make_shared<SpreadCdsHelper>(
-                    quote.value, quote.term, cdsConv->settlementDays(), cdsConv->calendar(), cdsConv->frequency(),
-                    cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(), recoveryRate_, discountCurve, CreditDefaultSwap::PricingModel::Midpoint,
-                    cdsConv->settlesAccrual(), ppt, config.startDate(), cdsConv->lastPeriodDayCounter()));
+                                      quote.value, quote.term, cdsConv->settlementDays(), cdsConv->calendar(),
+                                      cdsConv->frequency(), cdsConv->paymentConvention(), cdsConv->rule(),
+                                      cdsConv->dayCounter(), recoveryRate_, discountCurve,
+                                      CreditDefaultSwap::PricingModel::Midpoint, cdsConv->settlesAccrual(), ppt,
+                                      config.startDate(), cdsConv->lastPeriodDayCounter()));
                 runningSpread = config.runningSpread();
                 helperQuoteTerms[helpers.back()->latestDate()] = quote.term;
             } catch (exception& e) {
@@ -445,6 +451,7 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
                      cdsConv->rule() == DateGeneration::OldCDS) &&
                     cdsMaturity(asof, quote.term, cdsConv->rule()) <= asof + 1 * Days) {
                     auto maturity = cdsMaturity(asof, quote.term, cdsConv->rule());
+                    
                     WLOG("DefaultCurve:: SKIP cds with term "
                          << quote.term << " because cds maturity (" << io::iso_date(maturity)
                          << ") is <= T + 1 (T =" << io::iso_date(asof)
@@ -482,12 +489,13 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
 
                 // Price the fixed-coupon CDS with h and real recovery rate to get upfront
                 Handle<DefaultProbabilityTermStructure> dProb(
-                    boost::shared_ptr<DefaultProbabilityTermStructure>(
+                    ext::shared_ptr<DefaultProbabilityTermStructure>(
                         new FlatHazardRate(0, cdsConv->calendar(), h, Actual365Fixed())
                     )
                 );
 
-                Rate fixedCoupon = config.runningSpread() == QuantLib::Null<Real>() ? 100 / 10000.0 : config.runningSpread();
+                QL_REQUIRE(config.runningSpread() != Null<Real>(), "RunningSpread required with ConvSpread.");
+                Rate fixedCoupon = config.runningSpread();
 
                 // Fixed-coupon CDS; ask for fairUpfront
                 Date upfrontSettle = cdsConv->calendar().advance(asof, cdsConv->upfrontSettlementDays() * Days);
@@ -525,25 +533,49 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
         }
     }else {
         refData.type = "Upfront";
+
         for (auto quote : quotes) {
             // If there is no running spread encoded in the quote, the config must have one.
             runningSpread = quote.runningSpread;
-            if (runningSpread == Null<Real>()) {
+            if (runningSpread == Null<Real>() && !cdsConv->usesReferenceData()) {
                 QL_REQUIRE(config.runningSpread() != Null<Real>(),
                            "A running spread was not provided in the quote "
                                << "string so it must be provided in the config for CDS upfront curve " << curveID);
                 runningSpread = config.runningSpread();
             }
-            auto tmp = QuantLib::ext::make_shared<UpfrontCdsHelper>(
+            QuantLib::ext::shared_ptr<UpfrontCdsHelper> helper;
+            if (cdsConv->usesReferenceData()) {
+                QuantLib::ext::shared_ptr<BondReferenceDatum> refDatum = QuantLib::ext::dynamic_pointer_cast<BondReferenceDatum>(
+                    referenceData->getData(BondReferenceDatum::TYPE, curveID));
+                
+                auto legData = refDatum->bondData().legData.front();
+                if(runningSpread == Null<Real>()) {
+                    QuantLib::ext::shared_ptr<FixedLegData> fixedLegData = QuantLib::ext::dynamic_pointer_cast<FixedLegData>(refDatum->bondData().legData.front().concreteLegData());
+                    QL_REQUIRE(fixedLegData->rates().size() > 0,
+                                "A running spread was not provided in the quote string, the config for the CDS upfront curve " << curveID 
+                                << " or the reference datum " <<refDatum->id());
+                    
+                    runningSpread = fixedLegData->rates().back();
+                }
+                ScheduleData scheduleData = legData.schedule();
+                QuantLib::Schedule schedule = makeSchedule(scheduleData);
+                auto dc = parseDayCounter(legData.dayCounter());
+                helper = QuantLib::ext::make_shared<UpfrontCdsHelper>(
+                    quote.value, runningSpread, schedule, dc, recoveryRate_, discountCurve,
+                    CreditDefaultSwap::PricingModel::Midpoint, cdsConv->upfrontSettlementDays(),
+                    cdsConv->settlesAccrual(), ppt, dc, true);
+            } else {
+                helper = QuantLib::ext::make_shared<UpfrontCdsHelper>(
                     quote.value, runningSpread, quote.term, cdsConv->settlementDays(), cdsConv->calendar(),
                     cdsConv->frequency(), cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(),
-                    recoveryRate_, discountCurve, CreditDefaultSwap::PricingModel::Midpoint, cdsConv->upfrontSettlementDays(), cdsConv->settlesAccrual(), ppt,
-                    config.startDate(), cdsConv->lastPeriodDayCounter());        
-
-            if (tmp->latestDate() > asof) {
-                helpers.push_back(tmp);
+                    recoveryRate_, discountCurve, CreditDefaultSwap::PricingModel::Midpoint,
+                    cdsConv->upfrontSettlementDays(), cdsConv->settlesAccrual(), ppt, config.startDate(),
+                    cdsConv->lastPeriodDayCounter());
             }
-            helperQuoteTerms[tmp->latestDate()] = quote.term;
+            if (helper->latestDate() > asof) {
+                helpers.push_back(helper);
+            }
+            helperQuoteTerms[helper->latestDate()] = quote.term;
         }
     }
 
@@ -699,6 +731,7 @@ void DefaultCurve::buildHazardRateCurve(const std::string& curveID, const Defaul
     }
 
     for (auto quote : quotes) {
+        
         dates.push_back(cal.advance(asof, quote.term, Following, false));
         quoteValues.push_back(quote.value);
     }

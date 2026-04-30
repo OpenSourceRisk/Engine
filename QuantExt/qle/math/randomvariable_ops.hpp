@@ -59,7 +59,7 @@ using RandomVariableGrad = std::function<std::vector<RandomVariable>(const std::
 std::vector<RandomVariableGrad> getRandomVariableGradients(
     const Size size, const Size regressionOrder = 2,
     const QuantLib::LsmBasisSystem::PolynomialType polynomType = QuantLib::LsmBasisSystem::Monomial,
-    const double eps = 0.2, QuantLib::Real regressionVarianceCutoff = Null<Real>());
+    const double eps = 0.2, const double sqrtEps = 1E-8, QuantLib::Real regressionVarianceCutoff = Null<Real>());
 
 // random variable flags which values are needed to compute the gradient
 

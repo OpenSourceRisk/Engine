@@ -24,7 +24,7 @@
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/utilities/indexparser.hpp>
-#include <oret/toplevelfixture.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/termstructures/yield/discountcurve.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
@@ -178,7 +178,7 @@ struct CommonVars {
 
 } // namespace
 
-BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::data::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(EquitySwapTests)
 
@@ -198,6 +198,8 @@ BOOST_AUTO_TEST_CASE(testEquitySwapPriceReturn) {
     QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
     engineData->model("Swap") = "DiscountedCashflows";
     engineData->engine("Swap") = "DiscountingSwapEngine";
+    engineData->model("EquityLeg") = "DiscountedCashflows";
+    engineData->engine("EquityLeg") = "EquityCouponPricer";
     QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
     // build swaps and portfolio
@@ -236,6 +238,8 @@ BOOST_AUTO_TEST_CASE(testEquitySwapTotalReturn) {
     QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
     engineData->model("Swap") = "DiscountedCashflows";
     engineData->engine("Swap") = "DiscountingSwapEngine";
+    engineData->model("EquityLeg") = "DiscountedCashflows";
+    engineData->engine("EquityLeg") = "EquityCouponPricer";
     QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
     // build swaps and portfolio
@@ -275,6 +279,8 @@ BOOST_AUTO_TEST_CASE(testEquitySwapNotionalReset) {
     QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
     engineData->model("Swap") = "DiscountedCashflows";
     engineData->engine("Swap") = "DiscountingSwapEngine";
+    engineData->model("EquityLeg") = "DiscountedCashflows";
+    engineData->engine("EquityLeg") = "EquityCouponPricer";
     QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
     // build swaps and portfolio

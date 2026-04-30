@@ -113,7 +113,8 @@ QuantLib::ext::shared_ptr<OptionPaymentDateAdjuster>
 makeOptionPaymentDateAdjuster(CommoditySpreadOptionData& optionData, const std::vector<Date>& expiryDates) {
 
     if (optionData.optionStrip().has_value()) {
-        return QuantLib::ext::make_shared<OptionStripPaymentDateAdjuster>(expiryDates, optionData.optionStrip().value());
+        return QuantLib::ext::make_shared<OptionStripPaymentDateAdjuster>(expiryDates,
+                                                                          optionData.optionStrip().value());
     } else if (optionData.optionData().paymentData().has_value()) {
         return QuantLib::ext::make_shared<OptionPaymentDataAdjuster>(optionData.optionData().paymentData().value());
     } else {
@@ -159,7 +160,6 @@ void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::Eng
 
     // init engine factory builder
     QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
-    auto engineBuilder = QuantLib::ext::dynamic_pointer_cast<CommoditySpreadOptionEngineBuilder>(builder);
     // get config
     auto config = builder->configuration(MarketContext::pricing);
 
@@ -178,12 +178,13 @@ void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::Eng
 
         QL_REQUIRE(cflb, "CommoditySpreadOption: Expected a CommodityFloatingLegBuilder for leg "
                              << i << " but got " << legData_[i].legType());
+        DLOG("Building commodity leg " << i + 1);
         Leg leg = cflb->buildLeg(legData_[i], engineFactory, requiredFixings_, config);
-
+        DLOG("Built commodity leg " << i + 1 << " with " << leg.size() << " cashflows");
         // setup the cf indexes
         QL_REQUIRE(!leg.empty(), "CommoditySpreadOption: Leg " << i << " has no coupons");
         auto index = QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityCashFlow>(leg.front())->index();
-
+        DLOG("Commodity leg " << i + 1 << " has underlying index " << index->name());
         // check ccy consistency
         auto underlyingCcy = index->priceCurve()->currency();
         auto tmpFx = commLegData->fxIndex();
@@ -220,12 +221,30 @@ void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::Eng
         legs_.push_back(leg);
         legCurrencies_.push_back(legData_[i].currency()); // all legs and cf are priced with the same ccy
     }
-
+    DLOG("Finished building legs, now building the option");
     QL_REQUIRE(legs_[0].size() == legs_[1].size(),
                "CommoditySpreadOption: the two legs must contain the same number of options.");
 
     QL_REQUIRE(legs_[0].size() > 0, "CommoditySpreadOption: need at least one option, please check the trade xml");
 
+    auto firstLongFlow = QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityCashFlow>(legs_[longLegId][0]);
+    auto firstShortFlow = QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityCashFlow>(legs_[shortLegId][0]);
+    QL_REQUIRE(firstLongFlow && firstShortFlow,
+               "CommoditySpreadOption: expected CommodityCashFlow instances in both legs");
+    bool isCalendarSpread =
+        firstLongFlow->index()->underlyingName() == firstShortFlow->index()->underlyingName();
+    string builderProductType = isCalendarSpread ? "CommodityCalendarSpreadOption" : "CommoditySpreadOption";
+
+    if (isCalendarSpread && !engineFactory->engineData()->hasProduct(builderProductType)) {
+        DLOG("No engine configuration for '" << builderProductType << "', falling back to 'CommoditySpreadOption'");
+        builderProductType = "CommoditySpreadOption";
+    }
+
+    builder = engineFactory->builder(builderProductType);
+    auto engineBuilder = QuantLib::ext::dynamic_pointer_cast<CommoditySpreadOptionBaseEngineBuilder>(builder);
+    QL_REQUIRE(engineBuilder,
+               "CommoditySpreadOption: could not cast engine builder for product type '" << builderProductType
+                                                                                           << "'");
     Position::Type positionType = parsePositionType(optionData_.longShort());
     Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
 
@@ -301,15 +320,60 @@ void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::Eng
         if (maturity_ == paymentDate)
             maturityType_ = "Payment Date";
 
+        // check if calendar spread option
+        int contractDifference = 0;
+        if (longFlow->useFuturePrice() && shortFlow->useFuturePrice()) {
+            // compute the offset between the two expiries
+            Date today = QuantLib::Settings::instance().evaluationDate();
+            Date longExpiry = longFlow->index()->expiryDate();
+            Date shortExpiry = shortFlow->index()->expiryDate();
+            auto longFeFcalc = longFlow->expiryCalculator();
+            auto shortFeCalc = shortFlow->expiryCalculator();
+            int longC = 0, shortC = 0;
+            if (today < longExpiry) {
+                auto expiry = today;
+                while (expiry < longExpiry) {
+                    longC++;
+                    expiry = longFeFcalc->nextExpiry(false, expiry);
+                }
+            }
+
+            if (today < shortExpiry) {
+                auto expiry = today;
+                while (expiry < shortExpiry) {
+                    shortC++;
+                    expiry = shortFeCalc->nextExpiry(false, expiry);
+                }
+            }
+            contractDifference = shortC - longC;
+            DLOG("Identified future calendar spread option with offset " << contractDifference
+                                                                         << " between the two legs");
+            additionalData_["calendarSpreadOption"] = true;
+            additionalData_["futureCalendarSpreadOption"] = true;
+            additionalData_["longFutureExpiry"] = longExpiry;
+            additionalData_["shortFutureExpiry"] = shortExpiry;
+            additionalData_["longFutureContinuationExpiry"] = longC;
+            additionalData_["shortFutureContinuationExpiry"] = shortC;
+            additionalData_["futureCalendarSpreadOptionOffset"] = contractDifference;
+        }
+
         // build the instrument for the i-th cfs
         QuantLib::ext::shared_ptr<QuantExt::CommoditySpreadOption> spreadOption =
             QuantLib::ext::make_shared<QuantExt::CommoditySpreadOption>(longFlow, shortFlow, exercise, quantity,
                                                                         strike_, optionType, paymentDate,
                                                                         fxIndexes[longLegId], fxIndexes[shortLegId]);
-
+        DLOG("Built spread option for leg " << i + 1 << " with expiry " << expiryDate << " and payment date "
+                                            << paymentDate);
         // build and assign the engine
+        DLOG("Building engine for spread option " << i + 1);
         QuantLib::ext::shared_ptr<PricingEngine> commoditySpreadOptionEngine =
-            engineBuilder->engine(ccy, envelope().additionalField("discount_curve", false, std::string()), longFlow->index(), shortFlow->index(), id());
+            engineBuilder->engine(ccy, envelope().additionalField("discount_curve", false, std::string()),
+                                  longFlow->index(), shortFlow->index(), id(), contractDifference);
+        QL_REQUIRE(commoditySpreadOptionEngine,
+                   "No engine found for commodity spread option with currency "
+                       << ccy << " discount curve "
+                       << envelope().additionalField("discount_curve", false, std::string()) << " long index "
+                       << longFlow->index()->name() << " short index " << shortFlow->index()->name());
         spreadOption->setPricingEngine(commoditySpreadOptionEngine);
         setSensitivityTemplate(*engineBuilder);
         addProductModelEngine(*engineBuilder);
@@ -325,8 +389,9 @@ void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::Eng
     // Add premium
     auto configuration = engineBuilder->configuration(MarketContext::pricing);
     string discountCurve = envelope().additionalField("discount_curve", false, std::string());
-    Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, firstMultiplier,
-                                       optionData_.premiumData(), -bsInd, ccy, discountCurve, engineFactory, configuration);
+    Date lastPremiumDate =
+        addPremiums(additionalInstruments, additionalMultipliers, firstMultiplier, optionData_.premiumData(), -bsInd,
+                    ccy, discountCurve, engineFactory, configuration);
     maturity_ = std::max(maturity_, lastPremiumDate);
     if (maturity_ == lastPremiumDate)
         maturityType_ = "Last Premium Date";

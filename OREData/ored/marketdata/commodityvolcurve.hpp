@@ -63,7 +63,10 @@ public:
     //@{
     const CommodityVolatilityCurveSpec& spec() const { return spec_; }
     const QuantLib::ext::shared_ptr<QuantLib::BlackVolTermStructure>& volatility() { return volatility_; }
-
+    const QuantLib::ext::shared_ptr<QuantExt::FutureExpiryCalculator>& expiryCalculator() const { return expCalc_; }
+    const QuantLib::ext::shared_ptr<CommodityFutureConvention>& convention() const { return convention_; }
+    bool isCalendarSpreadOption() const { return isCalendarSpreadOption_; }
+    int calendarSpreadOffset() const { return calendarSpreadOffset_; }
     //! Build the calibration info
     void buildVolCalibrationInfo(const Date& asof, QuantLib::ext::shared_ptr<VolatilityConfig>& volatilityConfig,
                                     const CurveConfigurations& curveConfigs, const CommodityVolatilityConfig& config);
@@ -79,7 +82,8 @@ private:
     QuantLib::DayCounter dayCounter_;
     QuantLib::ext::shared_ptr<FxEqCommVolCalibrationInfo> calibrationInfo_;
     QuantLib::Date maxExpiry_;
-
+    bool isCalendarSpreadOption_ = false;
+    int calendarSpreadOffset_ = 0;
     // Populated for delta, moneyness and possibly absolute strike surfaces and left empty for others
     QuantLib::Handle<QuantExt::PriceTermStructure> pts_;
     QuantLib::Handle<QuantLib::YieldTermStructure> yts_;

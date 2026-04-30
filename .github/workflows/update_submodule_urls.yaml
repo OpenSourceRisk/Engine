@@ -1,0 +1,39 @@
+name: Rewrite Submodule URLs on Mirror
+on:
+  push:
+    branches:
+      - '**'
+
+jobs:
+  fix-submodules:
+    runs-on: ubuntu-latest
+    # Only run in ORE-Gitlab, if the push came from GitLab CI
+    # AND ignore our own bot to prevent loops.
+    if: |
+      github.repository == 'OpenSourceRisk/ORE-Gitlab' &&
+      github.event.repository.description == 'mirror acadia repo ORE' &&
+      github.actor != 'github-actions[bot]'
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.ORG_ACTIONS_ACCESS_1 }}
+          fetch-depth: 0
+
+      - name: Update .gitmodules
+        run: |
+          # Appends -Gitlab to URLs ending in QuantLib or QuantLib-SWIG
+          sed -Ei 's|(url = .*QuantLib(-SWIG)?)$|\1-Gitlab|g' .gitmodules
+
+      - name: Commit and Push Changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          if [[ -n "$(git status --porcelain .gitmodules)" ]]; then
+            git add .gitmodules
+            git commit -m "Rewrite submodule URLs on mirror to GitHub."
+            git push
+          else
+            echo "No changes needed to .gitmodules"
+          fi

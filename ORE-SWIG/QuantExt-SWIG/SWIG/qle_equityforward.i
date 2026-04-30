@@ -27,12 +27,8 @@
 
 %include qle_termstructures.i
 
-%{
-using QuantExt::EquityForward;
-using QuantExt::DiscountingEquityForwardEngine;
-%}
-
-%shared_ptr(EquityForward)
+%shared_ptr(QuantExt::EquityForward)
+namespace QuantExt {
 class EquityForward : public Instrument {
   public:
     EquityForward(const std::string& name,
@@ -49,9 +45,11 @@ class EquityForward : public Instrument {
     QuantLib::Date maturityDate();
     QuantLib::Real strike();
 };
+  }
 
-%shared_ptr(DiscountingEquityForwardEngine)
-class DiscountingEquityForwardEngine : public PricingEngine {
+  %shared_ptr(QuantExt::DiscountingEquityForwardEngine)
+  namespace QuantExt {
+  class DiscountingEquityForwardEngine : public PricingEngine {
   public:
     DiscountingEquityForwardEngine(const QuantLib::Handle<QuantExt::EquityIndex2>& equityIndex,
                                    const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
@@ -59,8 +57,9 @@ class DiscountingEquityForwardEngine : public PricingEngine {
                                    const QuantLib::Date& settlementDate = QuantLib::Date(),
                                    const QuantLib::Date& npvDate = QuantLib::Date());
     void calculate();
-    const Handle<EquityIndex2>& equityIndex() const;
+    const QuantLib::Handle<QuantExt::EquityIndex2>& equityIndex() const;
     const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve();
 };
+  }
 
 #endif

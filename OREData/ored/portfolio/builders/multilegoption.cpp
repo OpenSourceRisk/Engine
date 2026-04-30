@@ -184,7 +184,7 @@ QuantLib::ext::shared_ptr<PricingEngine> CamMcMultiLegOptionEngineBuilder::engin
 
     // fx components
 
-    std::vector<QuantLib::ext::shared_ptr<FxBsData>> fxData;
+    std::vector<QuantLib::ext::shared_ptr<FxData>> fxData;
     for (Size i = 1; i < currencies.size(); ++i) {
         string ccyPair = currencies[i].code() + currencies.front().code();
         DLOG("FX component # " << (i - 1) << " (" << ccyPair << ")");
@@ -205,15 +205,15 @@ QuantLib::ext::shared_ptr<PricingEngine> CamMcMultiLegOptionEngineBuilder::engin
             fxExStr.resize(n);
             fxStrikesStr.resize(n);
         }
-        bsData->domesticCcy() = currencies.front().code();
-        bsData->foreignCcy() = currencies[i].code();
-        bsData->calibrationType() = fxCalibration;
-        bsData->calibrateSigma() = fxCalibration == CalibrationType::Bootstrap;
-        bsData->sigmaParamType() = ParamType::Piecewise;
-        bsData->sigmaTimes() = volTimes;
-        bsData->sigmaValues() = vols;
-        bsData->optionExpiries() = fxExStr;
-        bsData->optionStrikes() = fxStrikesStr;
+        bsData->setDomesticCcy(currencies.front().code());
+        bsData->setForeignCcy(currencies[i].code());
+        bsData->setCalibrationType(fxCalibration);
+        bsData->setCalibrateSigma(fxCalibration == CalibrationType::Bootstrap);
+        bsData->setSigmaParamType(ParamType::Piecewise);
+        bsData->setSigmaTimes(volTimes);
+        bsData->setSigmaValues(vols);
+        bsData->setOptionExpiries(fxExStr);
+        bsData->setOptionStrikes(fxStrikesStr);
         fxData.push_back(bsData);
     }
 
@@ -343,11 +343,7 @@ QuantLib::ext::shared_ptr<PricingEngine> AmcCgMultiLegOptionEngineBuilder::engin
     const std::vector<Currency>& currencies, const std::vector<Date>& fixingDates,
     const std::vector<QuantLib::ext::shared_ptr<QuantLib::InterestRateIndex>>& indexes) {
 
-    std::vector<std::string> ccys;
-    std::transform(currencies.begin(), currencies.end(), std::back_inserter(ccys),
-                   [](const Currency& c) { return c.code(); });
-
-    DLOG("Building multi leg option engine for ccys " << boost::join(ccys, ",") << " (from externally given CAM)");
+    DLOG("Building multi leg option engine (from externally given CAM)");
 
     QL_REQUIRE(!currencies.empty(), "CamMcMultiLegOptionEngineBuilder: no currencies given");
     QL_REQUIRE(fixingDates.size() == indexes.size(), "CamMcMultiLegOptionEngineBuilder: fixing dates size ("
@@ -355,8 +351,7 @@ QuantLib::ext::shared_ptr<PricingEngine> AmcCgMultiLegOptionEngineBuilder::engin
                                                          << indexes.size() << ")");
 
     return QuantLib::ext::make_shared<AmcCgMultiLegOptionEngine>(
-        ccys, modelCg_, simulationDates_,
-        parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")));
+        modelCg_, simulationDates_, parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")));
 }
 
 } // namespace data

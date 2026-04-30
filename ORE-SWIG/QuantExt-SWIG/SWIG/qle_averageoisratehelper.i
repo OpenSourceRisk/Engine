@@ -26,32 +26,28 @@
 %include indexes.i
 %include qle_averageois.i
 
-%{
-using QuantExt::AverageOISRateHelper;
-%}
-
-%shared_ptr(AverageOISRateHelper)
+%shared_ptr(QuantExt::AverageOISRateHelper)
+namespace QuantExt {
 class AverageOISRateHelper : public RateHelper {
 public:
     AverageOISRateHelper(const QuantLib::Handle<QuantLib::Quote>& fixedRate,
-                        const QuantLib::Period& spotLagTenor, 
+                        const QuantLib::Period& spotLagTenor,
                         const QuantLib::Period& swapTenor,
-                        const QuantLib::Period& fixedTenor, 
+                        const QuantLib::Period& fixedTenor,
                         const QuantLib::DayCounter& fixedDayCounter,
                         const QuantLib::Calendar& fixedCalendar,
                         QuantLib::BusinessDayConvention fixedConvention,
                         QuantLib::BusinessDayConvention fixedPaymentAdjustment,
                         const ext::shared_ptr<OvernightIndex>& overnightIndex, const bool onIndexGiven,
-                        const QuantLib::Period& onTenor, 
+                        const QuantLib::Period& onTenor,
                         const QuantLib::Handle<QuantLib::Quote>& onSpread,
                         QuantLib::Natural rateCutoff,
                         const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve
                             = QuantLib::Handle<QuantLib::YieldTermStructure>(),
                         const bool discountCurveGiven = false, const bool telescopicValueDates = false);
     QuantLib::Real onSpread() const;
-    ext::shared_ptr<AverageOIS> averageOIS() const;
+    ext::shared_ptr<QuantExt::AverageOIS> averageOIS() const;
 };
+} // namespace QuantExt
 
 #endif
-
-

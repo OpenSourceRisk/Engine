@@ -22,15 +22,19 @@
 %include stl.i
 %include types.i
 
-%{
-using ore::analytics::NPVCube;
-using ore::analytics::JointNPVCube;
-using ore::analytics::InMemoryCubeOpt;
-using ore::analytics::AggregationScenarioData;
-using ore::analytics::AggregationScenarioDataType;
-%}
+%shared_ptr(ore::analytics::NPVCube)
+%shared_ptr(ore::analytics::SensitivityCube)
+%nodefaultctor ore::analytics::SensitivityCube;
+%shared_ptr(ore::analytics::CubeWriter)
+%rename(CubeReader) ore::analytics::CubeCsvReader;
+%shared_ptr(ore::analytics::CubeCsvReader)
+%shared_ptr(ore::analytics::AggregationScenarioData)
+%shared_ptr(ore::analytics::InMemoryCubeOpt<float>);
+%shared_ptr(ore::analytics::InMemoryCubeOpt<double>);
+%shared_ptr(ore::analytics::JointNPVCube)
 
-%shared_ptr(NPVCube)
+namespace ore {
+namespace analytics {
 class NPVCube {
   public:
     //! Return the length of each dimension
@@ -49,16 +53,33 @@ class NPVCube {
     //! Get a T0 value from the cube using index
     virtual Real getT0(Size id, Size depth = 0) const = 0;
     //! Get a T0 value from the cube using trade id
-    virtual Real getT0(const std::string& id, Size depth = 0) const;    
+    virtual Real getT0(const std::string& id, Size depth = 0) const;
     //! Get a value from the cube using index
     virtual Real get(Size id, Size date, Size sample, Size depth = 0) const = 0;
     //! Get a value from the cube using trade id and date
     virtual Real get(const std::string& id, const QuantLib::Date& date, Size sample, Size depth = 0) const;
 };
 
+class SensitivityCube {
+    public:
+        bool hasTrade(const std::string& tradeId) const;
+        QuantLib::Real npv(const std::string& tradeId) const;
+};
+
+class CubeWriter {
+    public:
+        CubeWriter(const std::string& filename);
+        const std::string& filename();
+};
+
+class CubeCsvReader {
+    public:
+        CubeCsvReader(const std::string& filename, const bool useDoublePrecision = false);
+        const std::string& filename() const;
+};
+
 enum class AggregationScenarioDataType : unsigned int { IndexFixing = 0, FXSpot = 1, Numeraire = 2, Generic = 3 };
 
-%shared_ptr(AggregationScenarioData)
 class AggregationScenarioData {
 public:
     //! Return the length of each dimension
@@ -86,9 +107,7 @@ public:
     }
 };
 
-%shared_ptr(InMemoryCubeOpt<float>);
-%shared_ptr(InMemoryCubeOpt<double>);
-template <typename T> class InMemoryCubeOpt : public NPVCube {
+template <typename T> class InMemoryCubeOpt : public ore::analytics::NPVCube {
 public:
     InMemoryCubeOpt(const QuantLib::Date& asof, const std::set<std::string>& ids,
                     const std::vector<QuantLib::Date>& dates, QuantLib::Size samples, const T& t = T());
@@ -108,52 +127,56 @@ public:
     void set(QuantLib::Real value, QuantLib::Size i, QuantLib::Size j, QuantLib::Size k, QuantLib::Size d) override;
 };
 
-%template(SinglePrecisionInMemoryCubeN) InMemoryCubeOpt<float>;
-%template(DoublePrecisionInMemoryCubeN) InMemoryCubeOpt<double>;
+} // namespace analytics
+} // namespace ore
+
+%template(SinglePrecisionInMemoryCubeN) ore::analytics::InMemoryCubeOpt<float>;
+%template(DoublePrecisionInMemoryCubeN) ore::analytics::InMemoryCubeOpt<double>;
 
 %shared_ptr(SinglePrecisionInMemoryCubeN);
 %shared_ptr(DoublePrecisionInMemoryCubeN);
 
-%template(DoublePrecisionInMemoryCubeNVector) std::vector<ext::shared_ptr<InMemoryCubeOpt<double>>>;
+%template(DoublePrecisionInMemoryCubeNVector) std::vector<QuantLib::ext::shared_ptr<ore::analytics::InMemoryCubeOpt<double>>>;
 
-%shared_ptr(JointNPVCube)
-class JointNPVCube : public NPVCube {
+namespace ore {
+namespace analytics {
+class JointNPVCube : public ore::analytics::NPVCube {
 public:
     %extend {
     JointNPVCube(
-        const ext::shared_ptr<NPVCube>& cube1, const ext::shared_ptr<NPVCube>& cube2,
+        const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& cube1, const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& cube2,
         const std::set<std::string>& ids = {}, const bool requireUniqueIds = true) {
-            return new JointNPVCube(cube1, cube2, ids, requireUniqueIds); 
+            return new ore::analytics::JointNPVCube(cube1, cube2, ids, requireUniqueIds);
         }
 
     JointNPVCube(
-        const std::vector<ext::shared_ptr<NPVCube>>& cubes, const std::set<std::string>& ids = {},
+        const std::vector<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>>& cubes, const std::set<std::string>& ids = {},
         const bool requireUniqueIds = true){
-            return new JointNPVCube(cubes, ids, requireUniqueIds);
+            return new ore::analytics::JointNPVCube(cubes, ids, requireUniqueIds);
         }
 
-        JointNPVCube(const ext::shared_ptr<InMemoryCubeOpt<double>>& cube1,
-                     const ext::shared_ptr<InMemoryCubeOpt<double>>& cube2, const std::set<std::string>& ids = {},
+        JointNPVCube(const QuantLib::ext::shared_ptr<InMemoryCubeOpt<double>>& cube1,
+                     const QuantLib::ext::shared_ptr<InMemoryCubeOpt<double>>& cube2, const std::set<std::string>& ids = {},
                      const bool requireUniqueIds = true) {
-            return new JointNPVCube(cube1, cube2, ids, requireUniqueIds);
+            return new ore::analytics::JointNPVCube(cube1, cube2, ids, requireUniqueIds);
         }
 
-        JointNPVCube(const std::vector<ext::shared_ptr<InMemoryCubeOpt<double>>>& cubes,
+        JointNPVCube(const std::vector<QuantLib::ext::shared_ptr<InMemoryCubeOpt<double>>>& cubes,
                      const std::set<std::string>& ids = {}, const bool requireUniqueIds = true) {
-            std::vector<ext::shared_ptr<NPVCube>> npvCubes(cubes.begin(), cubes.end());
-            return new JointNPVCube(npvCubes, ids, requireUniqueIds);
+            std::vector<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>> npvCubes(cubes.begin(), cubes.end());
+            return new ore::analytics::JointNPVCube(npvCubes, ids, requireUniqueIds);
         }
 
-        JointNPVCube(const ext::shared_ptr<InMemoryCubeOpt<float>>& cube1,
-                     const ext::shared_ptr<InMemoryCubeOpt<float>>& cube2, const std::set<std::string>& ids = {},
+        JointNPVCube(const QuantLib::ext::shared_ptr<InMemoryCubeOpt<float>>& cube1,
+                     const QuantLib::ext::shared_ptr<InMemoryCubeOpt<float>>& cube2, const std::set<std::string>& ids = {},
                      const bool requireUniqueIds = true) {
-            return new JointNPVCube(cube1, cube2, ids, requireUniqueIds);
+            return new ore::analytics::JointNPVCube(cube1, cube2, ids, requireUniqueIds);
         }
 
-        JointNPVCube(const std::vector<ext::shared_ptr<InMemoryCubeOpt<float>>>& cubes,
+        JointNPVCube(const std::vector<QuantLib::ext::shared_ptr<InMemoryCubeOpt<float>>>& cubes,
                      const std::set<std::string>& ids = {}, const bool requireUniqueIds = true) {
-            std::vector<ext::shared_ptr<NPVCube>> npvCubes(cubes.begin(), cubes.end());
-            return new JointNPVCube(npvCubes, ids, requireUniqueIds);
+            std::vector<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>> npvCubes(cubes.begin(), cubes.end());
+            return new ore::analytics::JointNPVCube(npvCubes, ids, requireUniqueIds);
         }
     }
     QuantLib::Size numIds() const override;
@@ -171,5 +194,8 @@ public:
     QuantLib::Real get(QuantLib::Size id, QuantLib::Size date, QuantLib::Size sample, QuantLib::Size depth = 0) const override;
     void set(QuantLib::Real value, QuantLib::Size id, QuantLib::Size date, QuantLib::Size sample, QuantLib::Size depth = 0) override;
 };
+
+} // namespace analytics
+} // namespace ore
 
 #endif

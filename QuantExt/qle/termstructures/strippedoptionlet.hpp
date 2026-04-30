@@ -44,6 +44,7 @@ using std::vector;
                         DayCounter dc,
                         VolatilityType type = ShiftedLognormal,
                         Real displacement = 0.0,
+                        bool useEffectiveVolatility = false,
                         const vector<Real>& atmOptionletRates = {});
       StrippedOptionlet(Natural settlementDays,
                         const Calendar& calendar,
@@ -56,6 +57,7 @@ using std::vector;
                         DayCounter dc,
                         VolatilityType type = ShiftedLognormal,
                         Real displacement = 0.0,
+                        bool useEffectiveVolatility = false,
                         const vector<Real>& atmOptionletRates = {});
 
     private:

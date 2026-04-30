@@ -17,6 +17,8 @@
 */
 
 #include <ored/model/crossassetmodeldata.hpp>
+#include <ored/model/fxbsdata.hpp>
+#include <ored/model/fxlvdata.hpp>
 #include <ored/model/inflation/infdkdata.hpp>
 #include <ored/model/inflation/infjydata.hpp>
 #include <ored/model/irhwmodeldata.hpp>
@@ -73,7 +75,11 @@ void InstantaneousCorrelations::fromXML(XMLNode* node) {
     // Configure correlation structure
     LOG("CrossAssetModelData: adding correlations.");
     CorrelationMatrixBuilder cmb;
-    if (auto correlationNode = XMLUtils::getChildNode(node, "InstantaneousCorrelations")) {
+    XMLNode* correlationNode = node;
+    if (XMLUtils::getNodeName(node) != "InstantaneousCorrelations") {
+        correlationNode = XMLUtils::getChildNode(node, "InstantaneousCorrelations");
+    }
+    if (correlationNode != nullptr) {
         vector<XMLNode*> nodes = XMLUtils::getChildrenNodes(correlationNode, "Correlation");
         for (Size i = 0; i < nodes.size(); ++i) {
             CorrelationFactor factor_1 = fromNode(nodes[i], true);
@@ -157,7 +163,19 @@ bool CrossAssetModelData::operator==(const CrossAssetModelData& rhs) {
     }
 
     for (Size i = 0; i < fxConfigs_.size(); i++) {
-        if (*fxConfigs_[i] != *(rhs.fxConfigs_[i])) {
+        auto c1 = QuantLib::ext::dynamic_pointer_cast<FxBsData>(fxConfigs_[i]);
+        auto c2 = QuantLib::ext::dynamic_pointer_cast<FxBsData>(fxConfigs_[i]);
+        auto c3 = QuantLib::ext::dynamic_pointer_cast<FxLvData>(fxConfigs_[i]);
+        auto c4 = QuantLib::ext::dynamic_pointer_cast<FxLvData>(fxConfigs_[i]);
+        if (c1 != nullptr && c2 != nullptr) {
+            if (*c1 != *c2) {
+                return false;
+            }
+        } else if (c3 != nullptr && c4 != nullptr) {
+            if (*c3 != *c4) {
+                return false;
+            }
+        } else {
             return false;
         }
     }
@@ -374,21 +392,26 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
 
     // Configure FX model components
 
-    std::map<std::string, QuantLib::ext::shared_ptr<FxBsData>> fxDataMap;
+    std::map<std::string, QuantLib::ext::shared_ptr<FxData>> fxDataMap;
     XMLNode* fxNode = XMLUtils::getChildNode(modelNode, "ForeignExchangeModels");
     if (fxNode) {
         for (XMLNode* child = XMLUtils::getChildNode(fxNode, "CrossCcyLGM"); child;
              child = XMLUtils::getNextSibling(child, "CrossCcyLGM")) {
-
-            QuantLib::ext::shared_ptr<FxBsData> config(new FxBsData());
+            auto config = QuantLib::ext::make_shared<FxBsData>();
             config->fromXML(child);
-
             for (Size i = 0; i < config->optionExpiries().size(); i++) {
                 LOG("CC-LGM calibration option " << config->optionExpiries()[i] << " " << config->optionStrikes()[i]);
             }
-
             fxDataMap[config->foreignCcy()] = config;
-
+            LOG("CrossAssetModelData: FX config built with key (foreign ccy) " << config->foreignCcy());
+        }
+        for (XMLNode* child = XMLUtils::getChildNode(fxNode, "LocalVol"); child;
+             child = XMLUtils::getNextSibling(child, "LocalVol")) {
+            auto config = QuantLib::ext::make_shared<FxLvData>();
+            config->fromXML(child);
+            LOG("LocalVol calibration grid " << config->calibrationGrid() << ", calibration moneyness "
+                                             << config->calibrationMoneyness());
+            fxDataMap[config->foreignCcy()] = config;
             LOG("CrossAssetModelData: FX config built with key (foreign ccy) " << config->foreignCcy());
         }
     } else {
@@ -617,7 +640,7 @@ void CrossAssetModelData::buildIrConfigs(std::map<std::string, QuantLib::ext::sh
     }
 }
 
-void CrossAssetModelData::buildFxConfigs(std::map<std::string, QuantLib::ext::shared_ptr<FxBsData>>& fxDataMap) {
+void CrossAssetModelData::buildFxConfigs(std::map<std::string, QuantLib::ext::shared_ptr<FxData>>& fxDataMap) {
     // Append FX configurations into the fxConfigs vector in the order of the foreign
     // currencies in the currencies vector.
     // If there is an FX configuration for any of the foreign currencies missing,
@@ -635,12 +658,8 @@ void CrossAssetModelData::buildFxConfigs(std::map<std::string, QuantLib::ext::sh
                 ALOG("Both default FX and " << ccy << " FX configuration missing");
                 QL_FAIL("Both default FX and " << ccy << " FX configuration missing");
             }
-            QuantLib::ext::shared_ptr<FxBsData> def = fxDataMap["default"];
-            QuantLib::ext::shared_ptr<FxBsData> fxData = QuantLib::ext::make_shared<FxBsData>(
-                ccy, def->domesticCcy(), def->calibrationType(), def->calibrateSigma(), def->sigmaParamType(),
-                def->sigmaTimes(), def->sigmaValues(), def->optionExpiries(), def->optionStrikes());
-
-            fxConfigs_.push_back(fxData);
+            QuantLib::ext::shared_ptr<FxData> def = fxDataMap["default"];
+            fxConfigs_.push_back(def->clone(ccy));
         }
         LOG("CrossAssetModelData: FX config added for foreign ccy " << ccy);
     }
@@ -799,8 +818,8 @@ XMLNode* CrossAssetModelData::toXML(XMLDocument& doc) const {
 
     XMLNode* foreignExchangeModelsNode = XMLUtils::addChild(doc, crossAssetModelNode, "ForeignExchangeModels");
     for (Size fxConfigs_Iterator = 0; fxConfigs_Iterator < fxConfigs_.size(); fxConfigs_Iterator++) {
-        XMLNode* crossCcyLgmNode = fxConfigs_[fxConfigs_Iterator]->toXML(doc);
-        XMLUtils::appendNode(foreignExchangeModelsNode, crossCcyLgmNode);
+        XMLNode* fxNode = fxConfigs_[fxConfigs_Iterator]->toXML(doc);
+        XMLUtils::appendNode(foreignExchangeModelsNode, fxNode);
     }
 
     XMLNode* eqModelsNode = XMLUtils::addChild(doc, crossAssetModelNode, "EquityModels");
@@ -843,7 +862,8 @@ XMLNode* CrossAssetModelData::toXML(XMLDocument& doc) const {
 QuantExt::CrossAssetModel::Discretization parseDiscretization(const string& s) {
     static std::map<string, QuantExt::CrossAssetModel::Discretization> m = {
         {"Exact", QuantExt::CrossAssetModel::Discretization::Exact},
-        {"Euler", QuantExt::CrossAssetModel::Discretization::Euler}};
+        {"Euler", QuantExt::CrossAssetModel::Discretization::Euler},
+        {"BestMarginalDiscretization", QuantExt::CrossAssetModel::Discretization::BestMarginalDiscretization}};
 
     auto it = m.find(s);
     if (it != m.end()) {

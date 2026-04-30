@@ -22,12 +22,21 @@
 #pragma once
 
 #include <orea/app/analytic.hpp>
+#include <orea/app/inputvariables.hpp>
 
 namespace ore {
 namespace analytics {
 
 class SaccrCalculator;
 class SaccrTradeData;
+class InputParameters;
+
+struct SaCcrVariables : public InputVariables {
+    void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
+
+    QuantLib::ext::shared_ptr<ore::data::NettingSetManager> nettingSetManager_;
+    QuantLib::ext::shared_ptr<ore::data::CollateralBalances> collateralBalances_;
+};
 
 class SaCcrAnalyticImpl : public Analytic::Impl {
 public:

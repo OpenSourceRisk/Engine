@@ -17,8 +17,8 @@
 */
 
 #include <boost/test/unit_test.hpp>
-#include <oret/datapaths.hpp>
-#include <oret/toplevelfixture.hpp>
+#include <oret/util/datapaths.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 
 #include <ored/portfolio/optionpaymentdata.hpp>
 #include <ql/time/calendars/unitedstates.hpp>
@@ -28,7 +28,7 @@ using namespace boost::unit_test_framework;
 using namespace QuantLib;
 using namespace ore::data;
 
-BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::data::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(OptionPaymentDataTests)
 

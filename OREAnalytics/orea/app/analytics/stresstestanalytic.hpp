@@ -22,15 +22,27 @@
 #pragma once
 
 #include <orea/app/analytic.hpp>
+#include <orea/app/inputvariables.hpp>
 #include <orea/engine/parsensitivityanalysis.hpp>
 #include <orea/scenario/stressscenariodata.hpp>
+
 namespace ore {
 namespace analytics {
+
+class InputParameters;
+
+struct StressTestVariables : public InputVariables {
+    virtual void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
+
+    QuantLib::ext::shared_ptr<ScenarioReader> scenarioReader_;
+};
+
 class StressTestAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "STRESS";
 
-    StressTestAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) {
+    StressTestAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
+        : Analytic::Impl(inputs, QuantLib::ext::make_shared<StressTestVariables>()) {
         setLabel(LABEL);
     }
 

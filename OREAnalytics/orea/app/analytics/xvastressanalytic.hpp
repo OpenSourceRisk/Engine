@@ -29,6 +29,8 @@
 namespace ore {
 namespace analytics {
 
+class InputParameters;
+
 class XvaStressAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "XVA_STRESS";
@@ -46,6 +48,7 @@ private:
     void concatReports(const std::map<std::string, std::vector<QuantLib::ext::shared_ptr<ore::data::InMemoryReport>>>& xvaReports);
 
     QuantLib::ext::shared_ptr<StressTestScenarioData> stressScenarios_;
+    QuantLib::ext::shared_ptr<XvaVariables> xvaVariables_;
 };
 
 class XvaStressAnalytic : public Analytic {

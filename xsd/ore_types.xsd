@@ -774,7 +774,10 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="IMM"/>
       <xs:enumeration value="FirstDayOfMonth"/>
-      <xs:enumeration value="SecondThursday"/>
+      <xs:enumeration value="IMMAUD"/>
+      <xs:enumeration value="SecondThursday"/><!-- backward-compatible alias for IMMAUD -->
+      <xs:enumeration value="IMMNZD"/>
+      <xs:enumeration value="IMMCAD"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -963,6 +966,7 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="Relative"/>
       <xs:enumeration value="Absolute"/>
+	  <xs:enumeration value="EqualTo"/>
     </xs:restriction>
   </xs:simpleType>
 

@@ -1077,6 +1077,70 @@ The parameters have the following interpretation:
 
 See the example in section \ref{example:marketrisk_parametricvar} for a demonstration.
 
+The \textbf{Historical Simulation VaR} analytic performs full-revaluation P\&L generation over historical market
+scenarios and reports VaR quantiles from the resulting empirical distribution. Listing \ref{lst:ore_histsimvar} shows
+a configuration example.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Analytics>
+  <Analytic type="historicalSimulationVar">
+    <Parameter name="active">Y</Parameter>
+    <Parameter name="historicalScenarioFile">scenarios.csv</Parameter>
+    <Parameter name="simulationConfigFile">simulation.xml</Parameter>
+    <Parameter name="historicalPeriod">2017-01-17,2019-12-30</Parameter>
+    <Parameter name="mporDays">10</Parameter>
+    <Parameter name="mporCalendar">USD</Parameter>
+    <Parameter name="mporOverlappingPeriods">true</Parameter>
+    <Parameter name="quantiles">0.01,0.05,0.95,0.99</Parameter>
+    <Parameter name="includeExpectedShortfall">Y</Parameter>
+    <Parameter name="tradePnl">N</Parameter>
+    <Parameter name="riskFactorBreakdown">N</Parameter>
+    <Parameter name="riskClassBreakdown">Y</Parameter>
+    <Parameter name="outputFile">var.csv</Parameter>
+  </Analytic>
+</Analytics>
+\end{minted}
+\caption{ORE analytic: Historical Simulation VaR}
+\label{lst:ore_histsimvar}
+\end{listing}
+
+The parameters have the following interpretation:
+
+\begin{itemize}
+\item {\tt historicalScenarioFile}: csv file containing the market scenarios for each date in the observation
+  periods; the granularity of the scenarios must match the simulation market definition.
+\item {\tt simulationConfigFile}: defines the structure of the simulation market applied in the P\&L calculation,
+  e.g.\ discount and index curves, yield curve tenor points, FX pairs, etc.
+\item {\tt historicalPeriod}: comma-separated date list; an even number of ordered dates is required
+  (d1, d2, d3, d4, \ldots), where each pair defines the start and end of a historical observation period.
+\item {\tt mporDays}: number of calendar days between successive historical scenarios used to compute P\&L effects
+  (typically 1 or 10).
+\item {\tt mporCalendar}: calendar applied in the scenario date calculation.
+\item {\tt mporOverlappingPeriods}: if {\tt true}, overlapping holding periods of length \texttt{mporDays} are used
+  ($t$ to $t{+}10$, $t{+}1$ to $t{+}11$, \ldots); if {\tt false}, consecutive non-overlapping periods are used.
+\item {\tt quantiles}: comma-separated list of quantiles to be reported; each quantile produces one
+  {\tt Quantile\_<p>} column in the output file.
+\item {\tt includeExpectedShortfall} [Optional, default {\tt N}]: if {\tt Y}, additional
+  {\tt ExpectedShortfall\_<p>} columns are appended to the output report for each requested quantile. The
+  Expected Shortfall at confidence level $p$ is the average P\&L of all scenarios that fall at or below
+  the corresponding VaR level; see section~\ref{histsimvar} for the mathematical definition.
+\item {\tt tradePnl} [Optional, default {\tt N}]: if {\tt Y}, the second output report provides a P\&L breakdown by
+  trade ID, risk class and risk type.
+\item {\tt riskFactorBreakdown} [Optional, default {\tt N}]: if {\tt Y}, a third output report provides a
+  P\&L breakdown by individual risk factor.
+\item {\tt riskClassBreakdown} [Optional, default {\tt Y}]: if {\tt Y} (the default), VaR is computed
+  separately for each risk-class / risk-type combination (Interest Rate, FX, Inflation, Equity, Credit,
+  Commodity) in addition to the aggregate portfolio row. Set to {\tt N} to compute only the aggregate
+  {\tt [All, All]} row, which significantly reduces runtime when the per-class breakdown is not required.
+\item {\tt portfolioFilter} [Optional]: only trades whose {\tt portfolioId} matches this filter are processed;
+  the entire portfolio is used if omitted.
+\item {\tt outputFile}: output file name for the main VaR report.
+\end{itemize}
+
+See the example in section \ref{example:marketrisk_histsim} for a demonstration.
+
 \subsubsection{Correlation}
 
 The {\tt Correlation} analytic provide computation of the correlation matrix based on the generated historical scenarios. Listing \ref{lst:ore_corr} shows a configuration example.

@@ -64,16 +64,14 @@ QuantLib::Settlement::Method defaultSettlementMethod(const QuantLib::Settlement:
     else
         return QuantLib::Settlement::ParYieldCurve; // ql < 1.14 behaviour
 }
-} // namespace
 
-// This helper functionality checks for constant definitions of the given 
+// This helper functionality checks for constant definitions of the given
 // notional, the rates and the spreads. Those fields must have the same values everywhere on all legs.
 // Additional to this, the gearing must be equal to one on all floating legs.
 // Finally, the floating legs must be of type IborCoupon, InterpolatedIborCoupon,
 // OvernightIndexedCoupon or AverageONIndexedCoupon.
 // If all those conditions are met, the trade is called standard.
-bool areStandardLegs(const vector<vector<ext::shared_ptr<CashFlow>>> &legs)
-{
+bool areStandardLegs(const vector<vector<ext::shared_ptr<CashFlow>>>& legs) {
 
     // Fields to be checked on the fixed legs
     Real constNotional = Null<Real>();
@@ -83,44 +81,42 @@ bool areStandardLegs(const vector<vector<ext::shared_ptr<CashFlow>>> &legs)
     Real constSpread = Null<Real>();
 
     for (Size i = 0; i < legs.size(); ++i) {
-        for (auto const& c : legs[i]) { 
-           
+        for (auto const& c : legs[i]) {
+
             if (auto cpn = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(c)) {
-                if(constNotional == Null<Real>()) 
+                if (constNotional == Null<Real>())
                     constNotional = cpn->nominal();
                 else if (!QuantLib::close_enough(cpn->nominal(), constNotional))
                     return false;
 
-                if (!QuantLib::close_enough(cpn->gearing() , 1.00))
+                if (!QuantLib::close_enough(cpn->gearing(), 1.00))
                     return false;
-   
-                if(constSpread == Null<Real>())
+
+                if (constSpread == Null<Real>())
                     constSpread = cpn->spread();
                 else if (!QuantLib::close_enough(cpn->spread(), constSpread))
                     return false;
-                
-                if (                    
-                    !(QuantLib::ext::dynamic_pointer_cast<IborCoupon>(c))
-                    && !(QuantLib::ext::dynamic_pointer_cast<QuantExt::InterpolatedIborCoupon>(c))
-                    && !(QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(c))
-                    && !(QuantLib::ext::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(c))
-                )
+
+                if (!(QuantLib::ext::dynamic_pointer_cast<IborCoupon>(c)) &&
+                    !(QuantLib::ext::dynamic_pointer_cast<QuantExt::InterpolatedIborCoupon>(c)) &&
+                    !(QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(c)) &&
+                    !(QuantLib::ext::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(c)))
                     return false; // The trade must then be a non-standard type like e.g. CMS coupon
 
                 continue;
             }
 
             if (auto cpn = QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(c)) {
-                if(constNotional == Null<Real>()) 
+                if (constNotional == Null<Real>())
                     constNotional = cpn->nominal();
                 else if (!QuantLib::close_enough(cpn->nominal(), constNotional))
                     return false;
-   
-                if(constRate == Null<Real>())
+
+                if (constRate == Null<Real>())
                     constRate = cpn->rate();
                 else if (!QuantLib::close_enough(cpn->rate(), constRate))
                     return false;
-                
+
                 continue;
             }
 
@@ -129,11 +125,97 @@ bool areStandardLegs(const vector<vector<ext::shared_ptr<CashFlow>>> &legs)
     }
 
     // Both legs and fields must have been there at least once
-    if(constNotional == Null<Real>() || constRate == Null<Real>() || constSpread == Null<Real>())
-        return false; 
+    if (constNotional == Null<Real>() || constRate == Null<Real>() || constSpread == Null<Real>())
+        return false;
 
     // If no non-constant field and no other subtlety was found return true
     return true;
+}
+} // namespace
+
+std::vector<QuantLib::ext::shared_ptr<InterestRateIndex>> getInterestRateIndexFromLegs(const std::vector<Leg>& legs) {
+    std::vector<QuantLib::ext::shared_ptr<InterestRateIndex>> result;
+    for (auto const& l : legs) {
+        for (auto c : l) {
+            if (auto s = QuantLib::ext::dynamic_pointer_cast<ScaledCoupon>(c)) {
+                c = s->underlyingCoupon();
+            }
+            if (auto cpn = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(c)) {
+                if (auto tmp = QuantLib::ext::dynamic_pointer_cast<IborIndex>(cpn->index())) {
+                    DLOG("found ibor / ois index '" << tmp->name() << "'");
+                    result.push_back(tmp);
+                } else if (auto tmp = QuantLib::ext::dynamic_pointer_cast<SwapIndex>(cpn->index())) {
+                    DLOG("found cms index " << tmp->name() << ", use key '" << tmp->iborIndex()->name()
+                                            << "' to look up vol");
+                    result.push_back(tmp->iborIndex());
+                } else if (auto tmp = QuantLib::ext::dynamic_pointer_cast<BMAIndex>(cpn->index())) {
+                    DLOG("found bma/sifma index '" << tmp->name() << "'");
+                    result.push_back(tmp);
+                }
+            }
+        }
+    }
+    return result;
+}
+
+std::vector<QuantLib::Real> getCalibrationStrikesFromLegs(const std::vector<Leg>& legs,
+                                                          const std::vector<QuantLib::Date>& dates) {
+    std::vector<Real> strikes(dates.size(), Null<Real>());
+    for (Size i = 0; i < dates.size(); ++i) {
+        Real firstFixedRate = Null<Real>(), lastFixedRate = Null<Real>();
+        Real firstFloatSpread = Null<Real>(), lastFloatSpread = Null<Real>();
+        Real firstGearing = Null<Real>(), lastGearing = Null<Real>();
+
+        for (auto const& l : legs) {
+            for (auto const& ci : l) {
+
+                auto c = ci;
+
+                // unpack scaled coupons
+                if (auto scp = QuantLib::ext::dynamic_pointer_cast<ScaledCoupon>(c)) {
+                    c = scp->underlyingCoupon();
+                }
+
+                if (auto cpn = QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(c)) {
+                    if (cpn->accrualStartDate() >= dates[i] && firstFixedRate == Null<Real>())
+                        firstFixedRate = cpn->rate();
+                    lastFixedRate = cpn->rate();
+                } else if (auto cpn = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(c)) {
+                    if (cpn->accrualStartDate() >= dates[i] && firstFloatSpread == Null<Real>()) {
+                        firstFloatSpread = cpn->spread();
+                        firstGearing = cpn->gearing();
+                    }
+                    lastFloatSpread = cpn->spread();
+                    lastGearing = cpn->gearing();
+                }
+            }
+        }
+        // if no first fixed rate (float spread) was found, fall back on the last values
+        if (firstFixedRate == Null<Real>())
+            firstFixedRate = lastFixedRate;
+        if (firstFloatSpread == Null<Real>())
+            firstFloatSpread = lastFloatSpread;
+        // if no first gearing was found, fall back on the last value
+        if (firstGearing == Null<Real>())
+            firstGearing = lastGearing;
+        // construct calibration strike
+        if (firstFixedRate != Null<Real>()) {
+            strikes[i] = firstFixedRate;
+            if (firstFloatSpread != Null<Real>()) {
+                strikes[i] -= firstFloatSpread;
+            }
+        }
+        if (firstGearing != Null<Real>())
+            strikes[i] /= firstGearing;
+        DLOG("calibration strike for ex date "
+             << QuantLib::io::iso_date(dates[i]) << " is "
+             << (strikes[i] == Null<Real>() ? "ATMF" : std::to_string(strikes[i])) << " (fixed rate "
+             << (firstFixedRate == Null<Real>() ? "NA" : std::to_string(firstFixedRate)) << ", spread "
+             << (firstFloatSpread == Null<Real>() ? "NA" : std::to_string(firstFloatSpread)) << ", gearing "
+             << (firstGearing == Null<Real>() ? "NA" : std::to_string(firstGearing)) << ")");
+    }
+
+    return strikes;
 }
 
 void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
@@ -410,93 +492,15 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     // 9.1  determine index (if several, pick first) got get the engine
 
     QuantLib::ext::shared_ptr<InterestRateIndex> index;
-
-    for (auto const& l : underlying_->legs()) {
-        for (auto const& c : l) {
-            if (auto cpn = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(c)) {
-                if (index == nullptr) {
-                    if (auto tmp = QuantLib::ext::dynamic_pointer_cast<IborIndex>(cpn->index())) {
-                        DLOG("found ibor / ois index '" << tmp->name() << "'");
-                        index = tmp;
-                    } else if (auto tmp = QuantLib::ext::dynamic_pointer_cast<SwapIndex>(cpn->index())) {
-                        DLOG("found cms index " << tmp->name() << ", use key '" << tmp->iborIndex()->name()
-                                                << "' to look up vol");
-                        index = tmp->iborIndex();
-                    } else if (auto tmp = QuantLib::ext::dynamic_pointer_cast<BMAIndex>(cpn->index())) {
-                        DLOG("found bma/sifma index '" << tmp->name() << "'");
-                        index = tmp;
-                    }
-                }
-            }
-        }
-    }
-
-    if (index == nullptr) {
+    if(auto tmp = getInterestRateIndexFromLegs(underlying_->legs()); !tmp.empty()) {
+        index = tmp.front();
+    } else {
         DLOG("no ibor, ois, bma/sifma, cms index found, use ccy key to look up vol");
     }
 
     // 9.2 determine strikes for calibration basket (simple approach, a la summit)
 
-    std::vector<Real> strikes(exerciseBuilder_->noticeDates().size(), Null<Real>());
-    for (Size i = 0; i < exerciseBuilder_->noticeDates().size(); ++i) {
-        Real firstFixedRate = Null<Real>(), lastFixedRate = Null<Real>();
-        Real firstFloatSpread = Null<Real>(), lastFloatSpread = Null<Real>();
-        Real firstGearing = Null<Real>(), lastGearing = Null<Real>();
-
-        for (auto const& l : underlying_->legs()) {
-            for (auto const& c : l) {
-                if (auto cpn = QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(c)) {
-                    if (cpn->accrualStartDate() >= exerciseBuilder_->noticeDates()[i] && firstFixedRate == Null<Real>())
-                        firstFixedRate = cpn->rate();
-                    lastFixedRate = cpn->rate();
-                } else if (auto cpn = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(c)) {
-                    if (cpn->accrualStartDate() >= exerciseBuilder_->noticeDates()[i] &&
-                        firstFloatSpread == Null<Real>()) {
-                        firstFloatSpread = cpn->spread();
-                        firstGearing = cpn->gearing();
-                    }
-                    lastFloatSpread = cpn->spread();
-                    lastGearing = cpn->gearing();
-                    if (index == nullptr) {
-                        if (auto tmp = QuantLib::ext::dynamic_pointer_cast<IborIndex>(cpn->index())) {
-                            DLOG("found ibor / ois index '" << tmp->name() << "'");
-                            index = tmp;
-                        } else if (auto tmp = QuantLib::ext::dynamic_pointer_cast<SwapIndex>(cpn->index())) {
-                            DLOG("found cms index " << tmp->name() << ", use key '" << tmp->iborIndex()->name()
-                                                    << "' to look up vol");
-                            index = tmp->iborIndex();
-                        } else if (auto tmp = QuantLib::ext::dynamic_pointer_cast<BMAIndex>(cpn->index())) {
-                            DLOG("found bma/sifma index '" << tmp->name() << "'");
-                            index = tmp;
-                        }
-                    }
-                }
-            }
-        }
-        // if no first fixed rate (float spread) was found, fall back on the last values
-        if(firstFixedRate == Null<Real>())
-            firstFixedRate = lastFixedRate;
-        if(firstFloatSpread == Null<Real>())
-            firstFloatSpread = lastFloatSpread;
-        // if no first gearing was found, fall back on the last value
-        if(firstGearing == Null<Real>())
-            firstGearing = lastGearing;
-        // construct calibration strike
-        if (firstFixedRate != Null<Real>()) {
-            strikes[i] = firstFixedRate;
-            if (firstFloatSpread != Null<Real>()) {
-                strikes[i] -= firstFloatSpread;
-            }
-        }
-        if (firstGearing != Null<Real>())
-            strikes[i] /= firstGearing;
-        DLOG("calibration strike for ex date "
-             << QuantLib::io::iso_date(exerciseBuilder_->noticeDates()[i]) << " is "
-             << (strikes[i] == Null<Real>() ? "ATMF" : std::to_string(strikes[i])) << " (fixed rate "
-             << (firstFixedRate == Null<Real>() ? "NA" : std::to_string(firstFixedRate)) << ", spread "
-             << (firstFloatSpread == Null<Real>() ? "NA" : std::to_string(firstFloatSpread)) << ", gearing "
-             << (firstGearing == Null<Real>() ? "NA" : std::to_string(firstGearing)) << ")");
-    }
+    auto strikes = getCalibrationStrikesFromLegs(underlying_->legs(), exerciseBuilder_->noticeDates());
 
     // 9.3 build underlying swaps, add premiums, build option wrapper
 
@@ -546,9 +550,10 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
 
     // use ibor / ois index as key, if possible, otherwise the npv currency
     swaptionEngine = swaptionBuilder->engine(
-        id(), index == nullptr ? npvCurrency_ : IndexNameTranslator::instance().oreName(index->name()),
-        exerciseBuilder_->noticeDates(), maturitiesEngine, strikesEngine, exerciseType_ == Exercise::American,
-        envelope().additionalField("discount_curve", false), envelope().additionalField("security_spread", false));
+        id(), {index == nullptr ? npvCurrency_ : IndexNameTranslator::instance().oreName(index->name())},
+        exerciseBuilder_->noticeDates(), maturitiesEngine, {strikesEngine}, {}, exerciseType_ == Exercise::American,
+        envelope().additionalField("discount_curve", false), envelope().additionalField("security_spread", false),
+        std::monostate());
 
     timer.stop();
     DLOG("Swaption model calibration time: " << timer.format(default_places, "%w") << " s");
@@ -680,6 +685,25 @@ const std::map<std::string, QuantLib::ext::any>& Swaption::additionalData() cons
             QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(legs_[i][0]);
             if (coupon)
                 additionalData_["originalNotional[" + legID + "]"] = coupon->nominal();
+        }
+    }
+
+    // ATM forward and spread correction of the full underlying swap
+    if (underlying_) {
+        try {
+            const auto& underlyingAd = underlying_->additionalData();
+            auto itAtm = underlyingAd.find("atmForward");
+            if (itAtm != underlyingAd.end()) {
+                additionalData_["atmForward"] = itAtm->second;
+            }
+            auto itSpread = underlyingAd.find("spreadCorrection");
+            if (itSpread != underlyingAd.end()) {
+                additionalData_["spreadCorrection"] = itSpread->second;
+            }
+        } catch (const std::exception& e) {
+            DLOG("Could not retrieve atmForward/spreadCorrection from underlying swap for Swaption " << id()
+                                                                                                       << ": "
+                                                                                                       << e.what());
         }
     }
 

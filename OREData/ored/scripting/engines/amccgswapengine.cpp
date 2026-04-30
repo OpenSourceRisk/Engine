@@ -37,6 +37,9 @@ void AmcCgSwapEngine::calculate() const {
     }
     exercise_ = nullptr;
     AmcCgBaseEngine::calculate();
+
+    if(!amcEnabled_)
+        results_.value = npvValue_;
 }
 
 } // namespace data

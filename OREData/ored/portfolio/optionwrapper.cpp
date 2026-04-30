@@ -31,8 +31,8 @@ namespace ore {
 namespace data {
 
 OptionWrapper::OptionWrapper(const QuantLib::ext::shared_ptr<Instrument>& inst, const bool isLongOption,
-                             const std::vector<Date>& exerciseDate,
-			     const std::vector<Date>& settlementDate, const bool isPhysicalDelivery,
+                             const std::vector<Date>& exerciseDate, const std::vector<Date>& settlementDate,
+                             const bool isPhysicalDelivery,
                              const std::vector<QuantLib::ext::shared_ptr<Instrument>>& undInst, const Real multiplier,
                              const Real undMultiplier,
                              const std::vector<QuantLib::ext::shared_ptr<QuantLib::Instrument>>& additionalInstruments,
@@ -40,8 +40,8 @@ OptionWrapper::OptionWrapper(const QuantLib::ext::shared_ptr<Instrument>& inst, 
     : InstrumentWrapper(inst, multiplier, additionalInstruments, additionalMultipliers), isLong_(isLongOption),
       isPhysicalDelivery_(isPhysicalDelivery), contractExerciseDates_(exerciseDate),
       effectiveExerciseDates_(exerciseDate), settlementDates_(settlementDate), underlyingInstruments_(undInst),
-      activeUnderlyingInstrument_(undInst.at(0)), undMultiplier_(undMultiplier), exercised_(false), exercisable_(true),
-      exerciseDate_(Date()), settlementDate_(Date()) {
+      activeUnderlyingInstrument_(undInst.at(0)), multiplier2_(isLong_ ? 1.0 : -1.0), undMultiplier_(undMultiplier),
+      exercised_(false), exercisable_(true), exerciseDate_(Date()), settlementDate_(Date()) {
     QL_REQUIRE(exerciseDate.size() == undInst.size(), "number of exercise dates ("
                                                           << exerciseDate.size()
                                                           << ") must be equal to underlying instrument vector size ("
@@ -106,6 +106,7 @@ Real OptionWrapper::NPV() const {
 		        exercised_ = true;
 			exerciseDate_ = today;
 			settlementDate_ = settlementDates_[i];
+                        multiplier2_ *= undMultiplier_;
 			// update the cached NPV if available on exercise date
 			if (!instrument_->isExpired())
 			    cachedNpv_ = multiplier2() * getTimedNPV(instrument_) * multiplier_;
@@ -117,8 +118,8 @@ Real OptionWrapper::NPV() const {
     
     if (exercised_) {
         if (isPhysicalDelivery_) {
-	    Real npv = multiplier2() * getTimedNPV(activeUnderlyingInstrument_) * undMultiplier_;
-	    return npv + addNPV;
+            Real npv = multiplier2() * getTimedNPV(activeUnderlyingInstrument_);
+            return npv + addNPV;
 	}
 	else { // cash settlement
 	    ext::optional<bool> inc = Settings::instance().includeTodaysCashFlows();

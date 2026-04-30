@@ -32,6 +32,7 @@
 #include <orea/cube/sensitivitycube.hpp>
 #include <orea/engine/bacvacalculator.hpp>
 #include <orea/engine/cvasensitivitycubestream.hpp>
+#include <orea/engine/sacvasensitivityrecord.hpp>
 #include <orea/engine/sensitivitystream.hpp>
 #include <orea/simm/crifrecord.hpp>
 #include <orea/simm/simmresults.hpp>
@@ -50,7 +51,16 @@
 #include <string>
 
 namespace ore {
+namespace data {
+class AdjustmentFactors;
+};
+};
+
+namespace ore {
 namespace analytics {
+
+class HistoricalScenarioGenerator;
+
 //! Write ORE outputs to reports
 /*! \ingroup app
  */
@@ -179,30 +189,30 @@ public:
                     const bool isFinalSimm = true, QuantLib::Real fxSpot = 1.0, QuantLib::Real outputThreshold = 0.005);
 
     //! Write the SIMM data report i.e. the netted CRIF records used in a SIMM calculation
-    virtual void writeSIMMData(const ore::analytics::Crif& simmData,
+    virtual void writeSIMMData(const Crif& simmData,
                                const QuantLib::ext::shared_ptr<ore::data::Report>& dataReport,
                                const bool hasNettingSetDetails = false);
 
     //! Write out CRIF records to a report
     virtual void writeCrifReport(const QuantLib::ext::shared_ptr<ore::data::Report>& report,
-                                 const QuantLib::ext::shared_ptr<ore::analytics::Crif>& crifRecords);
+                                 const QuantLib::ext::shared_ptr<Crif>& crifRecords);
 
-    virtual void writeScenarioStatistics(const QuantLib::ext::shared_ptr<ore::analytics::ScenarioGenerator>& generator,
-                                         const std::vector<ore::analytics::RiskFactorKey>& keys,
+    virtual void writeScenarioStatistics(const QuantLib::ext::shared_ptr<ScenarioGenerator>& generator,
+                                         const std::vector<RiskFactorKey>& keys,
                                          QuantLib::Size numPaths, const std::vector<QuantLib::Date>& dates,
                                          ore::data::Report& report);
 
-    virtual void writeScenarioDistributions(const QuantLib::ext::shared_ptr<ore::analytics::ScenarioGenerator>& generator,
-                                            const std::vector<ore::analytics::RiskFactorKey>& keys,
+    virtual void writeScenarioDistributions(const QuantLib::ext::shared_ptr<ScenarioGenerator>& generator,
+                                            const std::vector<RiskFactorKey>& keys,
                                             QuantLib::Size numPaths, const std::vector<QuantLib::Date>& dates,
                                             QuantLib::Size distSteps, ore::data::Report& report);
 
     virtual void
-    writeHistoricalScenarioDetails(const QuantLib::ext::shared_ptr<ore::analytics::HistoricalScenarioGenerator>& generator,
+    writeHistoricalScenarioDetails(const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& generator,
                                    ore::data::Report& report);
 
-    virtual void writeStockSplitReport(const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& baseScenario,
-                                       const QuantLib::ext::shared_ptr<ore::analytics::HistoricalScenarioLoader>& hsloader,
+    virtual void writeStockSplitReport(const QuantLib::ext::shared_ptr<Scenario>& baseScenario,
+                                       const QuantLib::ext::shared_ptr<HistoricalScenarioLoader>& hsloader,
                                        const QuantLib::ext::shared_ptr<ore::data::AdjustmentFactors>& adjFactors,
                                        const QuantLib::ext::shared_ptr<ore::data::Report>& report);
 
@@ -211,8 +221,8 @@ public:
 
     void writeHistoricalScenarioDistributions(
         QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hsgen,
-        const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket,
-        const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParams,
+        const QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket,
+        const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketParams,
         QuantLib::ext::shared_ptr<ore::data::Report> histScenDetailsReport, QuantLib::ext::shared_ptr<ore::data::Report> statReport,
         QuantLib::ext::shared_ptr<ore::data::Report> distReport, QuantLib::Size distSteps = Null<Size>());
 
@@ -263,6 +273,12 @@ public:
                                  const Size& principalComponent, ore::data::Report& reportOut);
 
     virtual void writeMeanReversionReport(const Matrix& v, const Matrix& kappa, ore::data::Report& reportOut);
+
+    void writeModelCalibrationReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio);
+
+    void writeModelCalibrationDetailReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio);
+
+    void writeModelPathReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio);
 
 protected:
     std::string nullString_;

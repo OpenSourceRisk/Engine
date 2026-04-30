@@ -21,13 +21,13 @@
 #include <boost/make_shared.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
-#include <oret/datapaths.hpp>
+#include <oret/util/datapaths.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/portfolio/builders/equityforward.hpp>
 #include <ored/portfolio/builders/equityoption.hpp>
 #include <ored/portfolio/equityforward.hpp>
 #include <ored/portfolio/equityoption.hpp>
-#include <oret/toplevelfixture.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
@@ -39,7 +39,7 @@ using namespace boost::unit_test_framework;
 using namespace std;
 using namespace ore::data;
 
-BOOST_FIXTURE_TEST_SUITE(OREDataPlusTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREDataPlusTestSuite, ore::data::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(CompositeTradeTest)
 

@@ -25,27 +25,36 @@
 #include <ored/marketdata/todaysmarketparameters.hpp>
 #include <ored/marketdata/inmemoryloader.hpp>
 #include <ored/portfolio/nettingsetmanager.hpp>
-#include <ored/report/inmemoryreport.hpp>
 #include <ored/utilities/timer.hpp>
 
 #include <orea/aggregation/collateralaccount.hpp>
 #include <orea/aggregation/collatexposurehelper.hpp>
 #include <orea/aggregation/postprocess.hpp>
 #include <orea/cube/cubeinterpretation.hpp>
+#include <orea/cube/cube_io.hpp>
 #include <orea/engine/sensitivitycubestream.hpp>
 #include <orea/engine/parsensitivitycubestream.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 
-#include <orea/app/inputparameters.hpp>
 #include <orea/app/marketcalibrationreport.hpp>
 
 #include <ql/any.hpp>
 #include <iostream>
 
 namespace ore {
+namespace data {
+class CrossAssetModelData;
+class InMemoryReport;
+}; // namespace ore
+}; // namespace data
+
+namespace ore {
 namespace analytics {
 
+class InputParameters;
+struct InputVariables;
 class AnalyticsManager;
+class StressTestScenarioData;
 
 class Analytic {
 public:
@@ -54,7 +63,7 @@ public:
     typedef std::map<std::string, std::map<std::string, QuantLib::ext::shared_ptr<ore::data::InMemoryReport>>>
         analytic_reports;
 
-    typedef std::map<std::string, std::map<std::string, QuantLib::ext::shared_ptr<NPVCube>>>
+    typedef std::map<std::string, std::map<std::string, QuantLib::ext::shared_ptr<NPVCubeWithMetaData>>>
         analytic_npvcubes;
 
     typedef std::map<std::string, std::map<std::string, QuantLib::ext::shared_ptr<AggregationScenarioData>>>
@@ -70,10 +79,10 @@ public:
         bool scenarioGeneratorConfigRequired = false;
         bool crossAssetModelConfigRequired = false;
         QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters> todaysMarketParams;
-        QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> simMarketParams;
-        QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> sensiScenarioData;
-        QuantLib::ext::shared_ptr<ore::analytics::ScenarioGeneratorData> scenarioGeneratorData;
-        QuantLib::ext::shared_ptr<ore::analytics::CrossAssetModelData> crossAssetModelData;
+        QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketParams;
+        QuantLib::ext::shared_ptr<SensitivityScenarioData> sensiScenarioData;
+        QuantLib::ext::shared_ptr<ScenarioGeneratorData> scenarioGeneratorData;
+        QuantLib::ext::shared_ptr<ore::data::CrossAssetModelData> crossAssetModelData;
         QuantLib::ext::shared_ptr<CurveConfigurations> curveConfig;
         QuantLib::ext::shared_ptr<ore::data::EngineData> engineData;
         QuantLib::Date asofDate;
@@ -140,18 +149,10 @@ public:
     //! Analytic results
     analytic_reports reports();
     void addReport(const std::string& key, const std::string& subKey,
-        const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& report) {
-        reports_[key][subKey] = report;
-    }
-    const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& getReport(const std::string& key, const std::string& subKey) {
-        auto it = reports_.find(key);
-        if (it != reports_.end()) {
-			auto it2 = it->second.find(subKey);
-			if (it2 != it->second.end())
-				return it2->second;
-		}
-        QL_FAIL("Could not find report for key " << key << " and subKey " << subKey);
-    }
+                   const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& report);
+    const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& getReport(const std::string& key,
+                                                                          const std::string& subKey);
+    virtual void reset();
 
     analytic_npvcubes& npvCubes() { return npvCubes_; };
     analytic_mktcubes& mktCubes() { return mktCubes_; };
@@ -214,7 +215,9 @@ private:
 class Analytic::Impl {
 public:    
     Impl() {}
-    Impl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : inputs_(inputs) {}
+    Impl(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+         QuantLib::ext::shared_ptr<InputVariables> inputVars = nullptr)
+        : inputs_(inputs), inputVariables_(inputVars) {}
     virtual ~Impl(){}
     
     virtual void runAnalytic(
@@ -222,6 +225,7 @@ public:
         const std::set<std::string>& runTypes = {}) = 0;
     
     void initialise();
+    virtual void reset(){};
     const bool initialised() { return initialised_; };
     virtual void buildDependencies(){};
     virtual void buildConfigurations(){};
@@ -256,8 +260,14 @@ public:
     std::vector<QuantLib::ext::shared_ptr<Analytic>> allDependentAnalytics() const;
     virtual std::vector<QuantLib::Date> additionalMarketDates() const { return {}; }
 
+    QuantLib::ext::shared_ptr<InputVariables> inputVariables() { return inputVariables_; }
+    template <class T> QuantLib::ext::shared_ptr<T> inputVariablesAs() {
+		return QuantLib::ext::dynamic_pointer_cast<T>(inputVariables_);
+	}
+
 protected:
     QuantLib::ext::shared_ptr<InputParameters> inputs_;
+    QuantLib::ext::shared_ptr<InputVariables> inputVariables_;
 
     //! label for logging purposes primarily
     std::string label_;

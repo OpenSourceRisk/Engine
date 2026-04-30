@@ -64,6 +64,7 @@
 #include <ql/time/daycounter.hpp>
 #include <ql/time/period.hpp>
 #include <ql/types.hpp>
+#include <ql/processes/hestonprocess.hpp>
 
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/tokenizer.hpp>
@@ -517,9 +518,6 @@ std::ostream& operator<<(std::ostream& os, SobolBrownianGenerator::Ordering t);
 //! Write QuantLib::SobolRsg::DirectionIntegers to stream
 std::ostream& operator<<(std::ostream& os, SobolRsg::DirectionIntegers t);
     
-//! Enum to string used in ScenarioGeneratorData's toXML
-std::ostream& operator<<(std::ostream& os, QuantExt::CrossAssetModel::Discretization type);
-
 //! Convert text to CommodityFutureConvention::AveragingData::CalculationPeriod
 CommodityFutureConvention::AveragingData::CalculationPeriod parseAveragingDataPeriod(const std::string& s);
 
@@ -637,8 +635,11 @@ MporCashFlowMode parseMporCashFlowMode(const std::string& s);
 /*!
 \ingroup utilities
 */
-QuantLib::Date calculateMporDate(const QuantLib::Size& mporDays, QuantLib::Date asOf = QuantLib::Date(),
-                                 std::string mporCalendar = "US");
+QuantLib::Date calculateMporDate(const QuantLib::Size& mporDays, const QuantLib::Date& asOf = QuantLib::Date(),
+                                 const std::string& mporCalendar = "US");
+
+QuantLib::Date calculateMporDate(const QuantLib::Size& mporDays, const QuantLib::Calendar& mporCalendar,
+                                 const QuantLib::Date& asOf = QuantLib::Date());
 
 //! Write MporCashFlowMode to stream
 /*!
@@ -699,5 +700,13 @@ std::vector<std::string> pairToStrings(std::pair<std::string, std::string> p);
 
 std::string splitByLastDelimiter(const std::string& s, const std::string& delimeter);
 std::string removeAfterLastDelimiter(const std::string& s, const std::string& delimeter);
+
+
+//! Convert text to HestonProcess::Discretization
+/*!
+\ingroup utilities
+*/
+HestonProcess::Discretization parseHestonProcessDiscretization(const std::string& s);
+
 } // namespace data
 } // namespace ore

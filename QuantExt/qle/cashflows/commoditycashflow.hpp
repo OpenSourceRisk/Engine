@@ -30,6 +30,7 @@
 #include <ql/time/date.hpp>
 #include <qle/indexes/commodityindex.hpp>
 #include <qle/indexes/fxindex.hpp>
+#include <qle/time/futureexpirycalculator.hpp>
 
 #include <set>
 
@@ -80,7 +81,8 @@ bool isPricingDate(const QuantLib::Date& d, const QuantLib::Calendar& pricingCal
 class CommodityCashFlow :  public QuantLib::CashFlow {
 public:
     CommodityCashFlow(QuantLib::Real quantity, QuantLib::Real spread, QuantLib::Real gearing, bool useFuturePrice,
-                      const ext::shared_ptr<CommodityIndex>& index, const ext::shared_ptr<FxIndex>& fxIndex);
+                      const ext::shared_ptr<CommodityIndex>& index, const ext::shared_ptr<FxIndex>& fxIndex,
+                      const ext::shared_ptr<FutureExpiryCalculator>& calc = nullptr);
     QuantLib::Real quantity() const { return quantity_; }
     QuantLib::Real spread() const { return spread_; }
     QuantLib::Real gearing() const { return gearing_; }
@@ -100,6 +102,8 @@ public:
     void accept(QuantLib::AcyclicVisitor& v) override;
     //@}
 
+    QuantLib::ext::shared_ptr<FutureExpiryCalculator> expiryCalculator() const { return calc_; }
+
 protected:
     QuantLib::Real quantity_;
     QuantLib::Real spread_;
@@ -108,6 +112,7 @@ protected:
     ext::shared_ptr<CommodityIndex> index_;
     ext::shared_ptr<FxIndex> fxIndex_;
     mutable QuantLib::Real amount_;
+    mutable QuantLib::ext::shared_ptr<FutureExpiryCalculator> calc_;
 };
 } // namespace QuantExt
 

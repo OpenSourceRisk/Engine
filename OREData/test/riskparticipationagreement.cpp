@@ -18,7 +18,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <oret/toplevelfixture.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 
 #include <ored/scripting/engines/analyticblackriskparticipationagreementengine.hpp>
 #include <ored/scripting/engines/numericlgmriskparticipationagreementengine.hpp>
@@ -63,7 +63,7 @@ using namespace boost::accumulators;
 using namespace boost::unit_test_framework;
 using std::vector;
 
-BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::data::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(RiskParticipationAgreementTests)
 

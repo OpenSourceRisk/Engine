@@ -21,11 +21,15 @@
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/simm/utilities.hpp>
+#include <orea/scenario/historicalscenariogenerator.hpp>
 #include <orea/scenario/scenariowriter.hpp>
 
 #include <ored/utilities/marketdata.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/model/assetmodelbuilderbase.hpp>
+#include <ored/scripting/models/assetmodel.hpp>
+#include <ored/scripting/models/heston.hpp>
 
 #include <qle/currencies/currencycomparator.hpp>
 #include <qle/math/distributioncount.hpp>
@@ -1118,7 +1122,9 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, QuantLib::ext::s
                 // Add the multiplier if there are additional results.
                 // Check on 'instMultiplier' already existing is probably unnecessary.
                 if (!thisAddResults.empty() && thisAddResults.count("instMultiplier") == 0) {
-                    thisAddResults["instMultiplier"] = i == 0 ? trade->instrument()->multiplier() : multipliers[i - 1];
+                    thisAddResults["instMultiplier"] =
+                        i == 0 ? trade->instrument()->multiplier() * trade->instrument()->multiplier2()
+                               : multipliers[i - 1];
                 }
 
                 // Write current instrument's additional results.
@@ -2256,7 +2262,7 @@ Real aggregateTradeFlow(const std::string& tradeId, const Date& d0, const Date& 
 
 void ReportWriter::writePnlReport(ore::data::Report& report,
             const ext::shared_ptr<InMemoryReport>& t0NpvReport,
-            const ext::shared_ptr<InMemoryReport>& t0m0p0NpvReport,
+            const ext::shared_ptr<InMemoryReport>& t0m1p0NpvReport,
             const ext::shared_ptr<InMemoryReport>& t1m0p0NpvReport,
             const ext::shared_ptr<InMemoryReport>& t1m1p0NpvReport,
             const ext::shared_ptr<InMemoryReport>& t1m0p1NpvReport,
@@ -2276,12 +2282,12 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
         .addColumn("MaturityTime", double(), 6)
         .addColumn("StartDate", Date())
         .addColumn("EndDate", Date())
-        .addColumn("NPV(t0;m0;p0)", double(), 6) // renamed from NPV(t0)
-        .addColumn("NPV(t0;m1;p0)", double(), 6) // renamed from NPV(asof=t0;mkt=t1)
-        .addColumn("NPV(t1;m0;p0)", double(), 6) // renamed from NPV(asof=t1;mkt=t0)
-        .addColumn("NPV(t1;m1;p0)", double(), 6) // renamed from NPV(t1;portfolio=t0)
-        .addColumn("NPV(t1;m0;p1)", double(), 6) // new column
-        .addColumn("NPV(t1;m1;p1)", double(), 6) // renamed from NPV(t1)
+        .addColumn("NPV(t0_m0_p0)", double(), 6) // renamed from NPV(t0)
+        .addColumn("NPV(t0_m1_p0)", double(), 6) // renamed from NPV(asof=t0;mkt=t1)
+        .addColumn("NPV(t1_m0_p0)", double(), 6) // renamed from NPV(asof=t1;mkt=t0)
+        .addColumn("NPV(t1_m1_p0)", double(), 6) // renamed from NPV(t1;portfolio=t0)
+        .addColumn("NPV(t1_m0_p1)", double(), 6) // new column
+        .addColumn("NPV(t1_m1_p1)", double(), 6) // renamed from NPV(t1)
         .addColumn("Day1PnL", double(), 6)
         .addColumn("TradeChangePnL", double(), 6)
         .addColumn("PeriodCashFlow", double(), 6)
@@ -2303,7 +2309,7 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
     Size baseCcyColumn = 7;
     
     // t0 NPV = NPV(t0;m0;p0)
-    QL_REQUIRE(t0NpvReport->rows() == t0m0p0NpvReport->rows(), "different number of rows in npv reports");
+    QL_REQUIRE(t0NpvReport->rows() == t0m1p0NpvReport->rows(), "different number of rows in npv reports");
     QL_REQUIRE(t0NpvReport->rows() == t1m0p0NpvReport->rows(), "different number of rows in npv reports");
 
     QL_REQUIRE(t0NpvReport->header(tradeIdColumn) == "TradeId", "incorrect trade id column " << tradeIdColumn);
@@ -2314,12 +2320,12 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
     QL_REQUIRE(t0NpvReport->header(baseCcyColumn) == "BaseCurrency", "incorrect base currency column " << baseCcyColumn);
 
     // t0 portfolio as of t0 using the t1 market = NPV(t0;m1;p0)
-    QL_REQUIRE(t0m0p0NpvReport->header(tradeIdColumn) == "TradeId", "incorrect trade id column " << tradeIdColumn);
-    QL_REQUIRE(t0m0p0NpvReport->header(tradeTypeColumn) == "TradeType", "incorrect trade type column " << tradeTypeColumn);
-    QL_REQUIRE(t0m0p0NpvReport->header(maturityDateColumn) == "Maturity", "incorrect maturity date column " << maturityDateColumn);
-    QL_REQUIRE(t0m0p0NpvReport->header(maturityTimeColumn) == "MaturityTime", "incorrect maturity time column " << maturityTimeColumn);
-    QL_REQUIRE(t0m0p0NpvReport->header(npvBaseColumn) == "NPV(Base)", "incorrect npv base column " << npvBaseColumn);
-    QL_REQUIRE(t0m0p0NpvReport->header(baseCcyColumn) == "BaseCurrency", "incorrect base currency column " << baseCcyColumn);
+    QL_REQUIRE(t0m1p0NpvReport->header(tradeIdColumn) == "TradeId", "incorrect trade id column " << tradeIdColumn);
+    QL_REQUIRE(t0m1p0NpvReport->header(tradeTypeColumn) == "TradeType", "incorrect trade type column " << tradeTypeColumn);
+    QL_REQUIRE(t0m1p0NpvReport->header(maturityDateColumn) == "Maturity", "incorrect maturity date column " << maturityDateColumn);
+    QL_REQUIRE(t0m1p0NpvReport->header(maturityTimeColumn) == "MaturityTime", "incorrect maturity time column " << maturityTimeColumn);
+    QL_REQUIRE(t0m1p0NpvReport->header(npvBaseColumn) == "NPV(Base)", "incorrect npv base column " << npvBaseColumn);
+    QL_REQUIRE(t0m1p0NpvReport->header(baseCcyColumn) == "BaseCurrency", "incorrect base currency column " << baseCcyColumn);
 
     // t0 portfolio as of t1 using the t0 market = NPV(t1;m0;p0)
     QL_REQUIRE(t1m0p0NpvReport->header(tradeIdColumn) == "TradeId", "incorrect trade id column " << tradeIdColumn);
@@ -2356,7 +2362,7 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
         try {
             string tradeId = boost::get<string>(t0NpvReport->data(tradeIdColumn, i));
             t0Ids.insert(tradeId);
-            string tradeId2 = boost::get<string>(t0m0p0NpvReport->data(tradeIdColumn, i));
+            string tradeId2 = boost::get<string>(t0m1p0NpvReport->data(tradeIdColumn, i));
             string tradeId3 = boost::get<string>(t1m0p0NpvReport->data(tradeIdColumn, i));
             QL_REQUIRE(tradeId == tradeId2 && tradeId == tradeId3, "inconsistent ordering of NPV reports");
             string tradeType = boost::get<string>(t0NpvReport->data(tradeTypeColumn, i));
@@ -2365,7 +2371,7 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
             string ccy = boost::get<string>(t0NpvReport->data(baseCcyColumn, i));
             QL_REQUIRE(ccy == baseCurrency, "inconsistent NPV and base currencies");
             Real t0Npv = boost::get<Real>(t0NpvReport->data(npvBaseColumn, i));
-            Real t0m0p0Npv = boost::get<Real>(t0m0p0NpvReport->data(npvBaseColumn, i));
+            Real t0m1p0Npv = boost::get<Real>(t0m1p0NpvReport->data(npvBaseColumn, i));
             Real t1m0p0Npv = boost::get<Real>(t1m0p0NpvReport->data(npvBaseColumn, i));
             Real t1m1p0Npv = boost::get<Real>(t1m1p0NpvReport->data(npvBaseColumn, i));
 
@@ -2374,7 +2380,7 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
             Real t1m1p1Npv = it == t1IdMap.end() ? 0.0 : boost::get<Real>(t1m1p1NpvReport->data(npvBaseColumn, it->second));
             
             Real tradeChangePnl = t1m1p1Npv - t1m1p0Npv;
-            Real hypotheticalCleanPnl = t0m0p0Npv - t0Npv;
+            Real hypotheticalCleanPnl = t0m1p0Npv - t0Npv;
             Real periodFlow = aggregateTradeFlow(tradeId, startDate, endDate, t0CashFlowReport, market, configuration, baseCurrency);
             Real matured =
                 (maturityDate <= endDate && close_enough(t1m1p0Npv, 0.0) && close_enough(t1m1p1Npv, 0.0)) ? t0Npv : 0.0;
@@ -2393,7 +2399,7 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
                 .add(startDate)
                 .add(endDate)
                 .add(t0Npv)
-                .add(t0m0p0Npv)
+                .add(t0m1p0Npv)
                 .add(t1m0p0Npv)
                 .add(t1m1p0Npv)
                 .add(t1m0p1Npv)
@@ -2895,7 +2901,6 @@ void ReportWriter::writeCapitalCrifReport(ore::data::Report& report,
 
     report.end();
 }
-  
 
 void ReportWriter::writePcaReport(const std::string& ccy, const Array& eigenValue, const Matrix& eigenVector,
                              const Size& principalComponent, ore::data::Report& reportOut){
@@ -2935,6 +2940,123 @@ void ReportWriter::writeMeanReversionReport(const Matrix& v, const Matrix& kappa
     }
     reportOut.end();
 }
+
+void ReportWriter::writeModelCalibrationReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio) {
+    report.addColumn("TradeID", string())
+        .addColumn("Index", string())
+        .addColumn("Name", string())
+        .addColumn("Value", string());
+
+    for (const auto& [id, trade] : portfolio->trades()) {
+        try {
+            const auto& additionalResults = trade->instrument()->additionalResults();
+            if (auto r = additionalResults.find("Heston.calibration"); r != additionalResults.end()) {
+                DLOG("MultiAssetHeston calibration found in additional results for trade " << id);
+                const std::vector<AssetModelCalibrationResults>& results =
+                    QuantLib::ext::any_cast<const std::vector<AssetModelCalibrationResults>&>(r->second);
+                for (const auto& result : results) {
+                    if (result.constantParameters.size() > 0) {
+                        Size n = result.constantParameters.size();
+                        DLOG("constant paramters: " << n);
+                        for (Size i = 0; i < n; ++i)
+                            report.next()
+                                .add(id)
+                                .add(result.indexName)
+                                .add(result.constantParameters[i].first)
+                                .add(to_string(result.constantParameters[i].second));
+                    } else if (result.piecewiseParameters.size() > 0) {
+                        Size n = result.piecewiseParameters.size();
+                        DLOG("piecewise paramters: " << n);
+                        for (Size i = 0; i < n; ++i)
+                            report.next()
+                                .add(id)
+                                .add(result.indexName)
+                                .add(result.piecewiseParameters[i].first)
+                                .add(result.piecewiseParameters[i].second);
+                    }
+                    report.next().add(id).add(result.indexName).add("Error").add(to_string(result.rmse));
+                }
+            }
+        } catch (std::exception& e) {
+            ALOG("error getting results for trade " << id << ": " << e.what());
+        }
+    }
+    report.end();
+}
+
+void ReportWriter::writeModelCalibrationDetailReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio) {
+    report.addColumn("TradeID", string())
+        .addColumn("Index", string())
+        .addColumn("Expiry", Period())
+        .addColumn("Moneyness", double(), 4)
+        .addColumn("MarketValue", double(), 4)
+        .addColumn("ModelValue", double(), 4)
+        .addColumn("MarketVol", double(), 4)
+        .addColumn("ModelVol", double(), 4)
+        .addColumn("VolDifference", double(), 4);
+
+    for (const auto& [id, trade] : portfolio->trades()) {
+        try {
+            const auto& additionalResults = trade->instrument()->additionalResults();
+            if (auto r = additionalResults.find("Heston.calibration"); r != additionalResults.end()) {
+                DLOG("MultiAssetHeston calibration found in additional results for trade " << id);
+                const std::vector<AssetModelCalibrationResults>& results =
+                    QuantLib::ext::any_cast<const std::vector<AssetModelCalibrationResults>&>(r->second);
+                for (const auto& result : results) {
+                    for (const auto& helper : result.data) {
+                        report.next()
+                            .add(id)
+                            .add(result.indexName)
+                            .add(helper.expiry)
+                            .add(helper.moneyness)
+                            .add(helper.marketValue)
+                            .add(helper.modelValue)
+                            .add(helper.marketVol)
+                            .add(helper.modelVol)
+                            .add(helper.modelVol - helper.marketVol);
+                    }
+                }
+            }
+        } catch (std::exception& e) {
+            ALOG("error getting results for trade " << id << ": " << e.what());
+        }
+    }
+    report.end();
+}
   
+void ReportWriter::writeModelPathReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio) {
+    report.addColumn("TradeId", string())
+        .addColumn("Index", string())
+        .addColumn("Date", Date())
+        .addColumn("Sample", Size())
+        .addColumn("Value", double(), 6);
+
+    Date today = Settings::instance().evaluationDate();
+    for (const auto& [id, trade] : portfolio->trades()) {
+        try {
+            const auto& additionalResults = trade->instrument()->additionalResults();
+            if (auto r = additionalResults.find("Heston.paths"); r != additionalResults.end()) {
+                DLOG("MultiAssetHestonPaths found for trade " << id);
+                const MultiAssetHestonPaths& paths = QuantLib::ext::any_cast<const MultiAssetHestonPaths&>(r->second);
+                DLOG("MultiAssetHestonPaths copied");
+                for (Size d = 0; d < paths.dates.size(); ++d) {
+                    Date date = paths.dates[d];
+                    if (date == today)
+                        continue;
+                    auto it = paths.data.find(date);
+                    for (Size i = 0; i < paths.indexNames.size(); ++i) {
+                        for (Size j = 0; j < paths.samples; ++j) {
+                            report.next().add(id).add(paths.indexNames[i]).add(date).add(j).add(it->second[i][j]);
+                        }
+                    }
+                }
+            }
+        } catch (std::exception& e) {
+            ALOG("error getting results for trade " << id << ": " << e.what());
+        }
+    }
+    report.end();
+}
+
 } // namespace analytics
 } // namespace ore

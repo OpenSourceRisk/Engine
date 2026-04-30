@@ -271,7 +271,8 @@ Crif::findBy(const NettingSetDetails nsd, CrifRecord::ProductClass pc, const Cri
     if (nsdIt == nettingSetDetailsIndex_.right.end() || qIt == qualifierIndex_.right.end())
         return make_pair(idx.end(), idx.end());
 
-    return make_pair(idx.find(make_tuple(nsdIt->second, pc, rt, qIt->second)), idx.end());
+    auto range = idx.equal_range(make_tuple(nsdIt->second, pc, rt, qIt->second));
+    return make_pair(range.first, range.second);
 };
 
 QuantLib::ext::shared_ptr<Crif> Crif::filterNonZeroAmount(double threshold, std::string alwaysIncludeFxRiskCcy) const {

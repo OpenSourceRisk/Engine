@@ -42,7 +42,7 @@ public:
                       const QuantLib::Date& effectiveDate = QuantLib::Date(),
                       CapFloorHelper::QuoteType quoteType = CapFloorHelper::Premium,
                       QuantLib::VolatilityType quoteVolatilityType = QuantLib::Normal,
-                      QuantLib::Real quoteDisplacement = 0.0);
+                      QuantLib::Real quoteDisplacement = 0.0, const bool useEffectiveVolatility = false);
 
     Leg capFloor() const { return capFloor_; }
 
@@ -65,6 +65,7 @@ private:
     CapFloorHelper::QuoteType quoteType_;
     QuantLib::VolatilityType quoteVolatilityType_;
     QuantLib::Real quoteDisplacement_;
+    bool useEffectiveVolatility_ = false;
     QuantLib::Handle<QuantLib::Quote> rawQuote_;
     bool initialised_;
 

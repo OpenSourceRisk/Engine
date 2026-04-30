@@ -26,8 +26,8 @@
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/trade.hpp>
-#include <oret/datapaths.hpp>
-#include <oret/toplevelfixture.hpp>
+#include <oret/util/datapaths.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 
 #include <ql/cashflows/cashflows.hpp>
 #include <ql/cashflows/couponpricer.hpp>
@@ -41,7 +41,7 @@ using namespace ore::data;
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
 
-using ore::test::TopLevelFixture;
+using ore::data::TopLevelFixture;
 using std::ostream;
 
 BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, TopLevelFixture)

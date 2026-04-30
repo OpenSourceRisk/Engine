@@ -26,7 +26,7 @@ jobs:
           - python-wheel: "cp313"
             python-version: "3.13"
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         submodules: recursive
     #    token: ${{ secrets.ORG_ACTIONS_ACCESS }}  

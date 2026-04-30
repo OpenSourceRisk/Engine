@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <oret/toplevelfixture.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/timer/timer.hpp>
 #include <iomanip>
@@ -40,7 +40,7 @@ using namespace QuantExt;
 
 using boost::unit_test_framework::test_suite;
 
-BOOST_FIXTURE_TEST_SUITE(OREPlusCommodityTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREPlusCommodityTestSuite, ore::data::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(CommoditySwaptionTest)
 

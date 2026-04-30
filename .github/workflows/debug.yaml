@@ -1,0 +1,15 @@
+name: Debug Push Metadata
+on:
+  workflow_dispatch: # Remove this line and comment in those below when want to debug again.
+  # push:
+    # branches:
+      # - master
+
+jobs:
+  dump_contexts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"

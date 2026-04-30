@@ -29,3 +29,6 @@ oreex.run("Input/ore_parstress_xccy.xml")
 
 oreex.print_headline("Run ORE for Shifted EUR ESTER Curve NPV Analysis")
 oreex.run("Input/ore_parstress_ester.xml")
+
+oreex.print_headline("Run ORE for Par Stress using OI Future par instruments")
+oreex.run("Input/ore_parstress_irfut.xml")

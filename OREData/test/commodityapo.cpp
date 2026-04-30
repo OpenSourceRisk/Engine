@@ -27,7 +27,7 @@
     out of the money.
 */
 
-#include <oret/toplevelfixture.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/timer/timer.hpp>
 #include <ql/currencies/america.hpp>
@@ -50,7 +50,7 @@ typedef struct {
     QuantLib::Option::Type optionType;
 } ApoTestCase;
 
-BOOST_FIXTURE_TEST_SUITE(OREPlusCommodityTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREPlusCommodityTestSuite, ore::data::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(CommodityApoTest)
 

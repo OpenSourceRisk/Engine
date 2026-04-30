@@ -27,9 +27,11 @@
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/scripting/models/heston.hpp>
 
 #include <qle/instruments/cashflowresults.hpp>
 #include <qle/time/yearcounter.hpp>
+#include <qle/models/assetmodelwrapper.hpp>
 #include <qle/time/monthcounter.hpp>
 
 #include <ql/errors.hpp>
@@ -344,7 +346,9 @@ DateGeneration::Rule parseDateGenerationRule(const string& s) {
                                                   {"OldCDS", DateGeneration::OldCDS},
                                                   {"CDS2015", DateGeneration::CDS2015},
                                                   {"CDS", DateGeneration::CDS},
-                                                  {"LastWednesday", DateGeneration::LastWednesday}};
+                                                  {"LastWednesday", DateGeneration::LastWednesday},
+                                                  {"NthBusinessDay", DateGeneration::NthBusinessDay},
+                                                  {"EighthBusinessDay", DateGeneration::EighthBusinessDay}};
 
     auto it = m.find(s);
     if (it != m.end()) {
@@ -472,11 +476,18 @@ Settlement::Method parseSettlementMethod(const std::string& s) {
     }
 }
 
-QuantLib::Date calculateMporDate(const QuantLib::Size& mporDays, QuantLib::Date asOf, std::string mporCalendar) {
+QuantLib::Date calculateMporDate(const QuantLib::Size& mporDays, const QuantLib::Date& asOf, const std::string& mporCalendar) {
     QuantLib::Calendar mporCal = parseCalendar(mporCalendar);
-    if (asOf == Date())
-        asOf = Settings::instance().evaluationDate();
-    return mporCal.advance(asOf, mporDays, QuantExt::Days);
+    return calculateMporDate(mporDays, mporCal, asOf);
+}
+
+QuantLib::Date calculateMporDate(const QuantLib::Size& mporDays, const QuantLib::Calendar& mporCalendar,
+                                 const QuantLib::Date& asOf) {
+    Date d = asOf;
+    if (d == Date())
+        d = Settings::instance().evaluationDate();
+    return mporCalendar.advance(d, mporDays, QuantExt::Days);
+
 }
 
 Exercise::Type parseExerciseType(const std::string& s) {
@@ -995,8 +1006,14 @@ pair<string, string> parseBoostAny(const QuantLib::ext::any& anyType, Size preci
         resultType = "currency";
         QuantLib::Currency r = QuantLib::ext::any_cast<QuantLib::Currency>(anyType);
         oss << r;
+    } else if (anyType.type() == typeid(MultiAssetHestonPaths)) {
+        resultType = "heston_paths";
+        oss << "see separate report";
+    } else if (anyType.type() == typeid(std::vector<AssetModelCalibrationResults>)) {
+        resultType = "vector_calibration_results";
+        oss << "see separate reports";
     } else {
-        ALOG("Unsupported QuantLib::ext::any type");
+      ALOG("Unsupported QuantLib::ext::any type");
         resultType = "unsupported_type";
     }
     return make_pair(resultType, oss.str());
@@ -1028,10 +1045,15 @@ FutureConvention::DateGenerationRule parseFutureDateGenerationRule(const std::st
         return FutureConvention::DateGenerationRule::IMM;
     else if (s == "FirstDayOfMonth")
         return FutureConvention::DateGenerationRule::FirstDayOfMonth;
-    else if (s == "SecondThursday")
-        return FutureConvention::DateGenerationRule::SecondThursday;
+    else if (s == "IMMAUD" || s == "SecondThursday")  // SecondThursday is a backward-compatible alias for IMMAUD
+        return FutureConvention::DateGenerationRule::IMMAUD;
+    else if (s == "IMMNZD")
+        return FutureConvention::DateGenerationRule::IMMNZD;
+    else if (s == "IMMCAD")
+        return FutureConvention::DateGenerationRule::IMMCAD;
     else {
-        QL_FAIL("FutureConvention /  DateGenerationRule '" << s << "' not known, expect 'IMM', 'FirstDayOfMonth', or 'SecondThursday'");
+        QL_FAIL("FutureConvention /  DateGenerationRule '" << s << "' not known, expect 'IMM', 'FirstDayOfMonth',"
+                " 'IMMAUD' (alias 'SecondThursday'), 'IMMNZD', or 'IMMCAD'");
     }
 }
 
@@ -1040,8 +1062,12 @@ std::ostream& operator<<(std::ostream& os, FutureConvention::DateGenerationRule 
         return os << "IMM";
     else if (t == FutureConvention::DateGenerationRule::FirstDayOfMonth)
         return os << "FirstDayOfMonth";
-    else if (t == FutureConvention::DateGenerationRule::SecondThursday)
-        return os << "SecondThursday";
+    else if (t == FutureConvention::DateGenerationRule::IMMAUD)
+        return os << "IMMAUD";
+    else if (t == FutureConvention::DateGenerationRule::IMMNZD)
+        return os << "IMMNZD";
+    else if (t == FutureConvention::DateGenerationRule::IMMCAD)
+        return os << "IMMCAD";
     else {
         QL_FAIL("Internal error: unknown FutureConvention::DateGenerationRule - check implementation of operator<< "
                 "for this enum");
@@ -1157,17 +1183,6 @@ std::ostream& operator<<(std::ostream& os, SobolRsg::DirectionIntegers t) {
     } else {
         QL_FAIL("Internal error: unknown SobolRsg::DirectionIntegers - check implementation of operator<< "
                 "for this enum");
-    }
-}
-
-std::ostream& operator<<(std::ostream& out, QuantExt::CrossAssetModel::Discretization dis) {
-    switch (dis) {
-    case QuantExt::CrossAssetModel::Discretization::Exact:
-        return out << "Exact";
-    case QuantExt::CrossAssetModel::Discretization::Euler:
-        return out << "Euler";
-    default:
-        return out << "?";
     }
 }
 
@@ -1815,5 +1830,50 @@ std::ostream& operator<<(std::ostream& os, ParConversionMatrixRegularisation reg
     return os;
 }
 
+HestonProcess::Discretization parseHestonProcessDiscretization(const std::string& s) {
+    static std::map<std::string, HestonProcess::Discretization> m = {
+        {"PartialTruncation", HestonProcess::PartialTruncation},
+        {"FullTruncation", HestonProcess::FullTruncation},
+        {"Reflection", HestonProcess::Reflection},
+        {"NonCentralChiSquareVariance", HestonProcess::NonCentralChiSquareVariance},
+        {"QuadraticExponential", HestonProcess::QuadraticExponential},
+        {"QuadraticExponentialMartingale", HestonProcess::QuadraticExponentialMartingale},
+        {"BroadieKayaExactSchemeLobatto", HestonProcess::BroadieKayaExactSchemeLobatto},
+        {"BroadieKayaExactSchemeLaguerre", HestonProcess::BroadieKayaExactSchemeLaguerre},
+        {"BroadieKayaExactSchemeTrapezoidal", HestonProcess::BroadieKayaExactSchemeTrapezoidal}};
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("Cannot convert \"" << s << "\" to HestonProcess::Discretization");
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, HestonProcess::Discretization dis) {
+    if (dis == HestonProcess::PartialTruncation) {
+        os << "PartialTruncation";
+    } else if (dis == HestonProcess::FullTruncation) {
+        os << "FullTruncation";
+    } else if (dis == HestonProcess::Reflection) {
+        os << "Reflection";
+    } else if (dis == HestonProcess::NonCentralChiSquareVariance) {
+        os << "NonCentralChiSquareVariance";
+    } else if (dis == HestonProcess::QuadraticExponential) {
+        os << "QuadraticExponential";
+    } else if (dis == HestonProcess::QuadraticExponentialMartingale) {
+        os << "QuadraticExponentialMartingale";
+    } else if (dis == HestonProcess::BroadieKayaExactSchemeLobatto) {
+        os << "BroadieKayaExactSchemeLobatto";
+    } else if (dis == HestonProcess::BroadieKayaExactSchemeLaguerre) {
+        os << "BroadieKayaExactSchemeLaguerre";
+    } else if (dis == HestonProcess::BroadieKayaExactSchemeTrapezoidal) {
+        os << "BroadieKayaExactSchemeTrapezoidal";
+    } else {
+        QL_FAIL("Unknown HestonProcess::Discretization");
+    }
+    return os;
+}
+
+  
 } // namespace data
 } // namespace ore

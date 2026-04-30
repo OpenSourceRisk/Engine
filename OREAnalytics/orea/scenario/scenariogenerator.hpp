@@ -51,6 +51,8 @@ public:
     //! Reset the generator so calls to next() return the first scenario.
     /*! This allows re-generation of scenarios if required. */
     virtual void reset() = 0;
+
+    virtual long timing() const { return 0; }
 };
 
 //! Scenario generator that generates an entire path

@@ -17,14 +17,17 @@
 */
 
 #include <orea/app/analytics/smrcanalytic.hpp>
+#include <orea/app/inputparameters.hpp>
 #include <orea/engine/smrc.hpp>
 #include <orea/app/reportwriter.hpp>
+#include <ored/report/inmemoryreport.hpp>
 
 namespace ore {
 namespace analytics {
 
 void SmrcAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
+    setGenerateAdditionalResults(true);
 }
 
 void SmrcAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
@@ -43,7 +46,7 @@ void SmrcAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
     if (analytic()->getWriteIntermediateReports()) {
         if (inputs_->outputAdditionalResults()) {
             LOG("Write additional results for SMRC");
-            boost::filesystem::path addResultsReportPath = inputs_->resultsPath() / "additional_results.csv";
+            std::filesystem::path addResultsReportPath = inputs_->resultsPath() / "additional_results.csv";
             CSVFileReport addResultsReport(addResultsReportPath.string(), ',', false, inputs_->csvQuoteChar(),
                                            inputs_->reportNaString(), true);
             ReportWriter(inputs_->reportNaString())
@@ -52,7 +55,7 @@ void SmrcAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
         }
 
         LOG("Write cashflow report for SMRC");
-        boost::filesystem::path cfReportPath = inputs_->resultsPath() / "cashflow.csv";
+        std::filesystem::path cfReportPath = inputs_->resultsPath() / "cashflow.csv";
         CSVFileReport cfReport(cfReportPath.string(), ',', false, inputs_->csvQuoteChar(), inputs_->reportNaString(),
                                false);
         ReportWriter(inputs_->reportNaString())

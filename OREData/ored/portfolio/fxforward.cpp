@@ -16,7 +16,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/make_shared.hpp>
 #include <ored/portfolio/builders/fxforward.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/fxforward.hpp>
@@ -24,8 +23,13 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/xmlutils.hpp>
-#include <ql/cashflows/simplecashflow.hpp>
+
 #include <qle/instruments/fxforward.hpp>
+#include <qle/instruments/fxforwardoptimized.hpp>
+
+#include <ql/cashflows/simplecashflow.hpp>
+
+#include <boost/make_shared.hpp>
 
 namespace ore {
 namespace data {
@@ -150,14 +154,31 @@ void FxForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
     auto fxBuilder = QuantLib::ext::dynamic_pointer_cast<FxForwardEngineBuilderBase>(builder);
     QL_REQUIRE(fxBuilder, "FxForward::build(): internal error: could not cast to FxForwardEngineBuilderBase");
 
-    auto instrument = QuantLib::ext::make_shared<QuantExt::FxForward>(boughtAmount_, boughtCcy, soldAmount_, soldCcy,
-                                                                      maturityDate, false, settlement_ == "Physical",
-                                                                      payDate, payCcy, fixingDate, fxIndex);
+    ext::shared_ptr<QuantLib::Instrument> instrument;
+
+    if (fxBuilder->optimizedInstrument()) {
+        QL_REQUIRE(payCcy == soldCcy, "FxForward: payCcy (" << payCcy << ") must match soldCcy (" << soldCcy.code()
+                                                             << ") for optimized instrument builder.");
+        auto market = builder->market();
+        auto config = builder->configuration(MarketContext::pricing);
+        instrument = QuantLib::ext::make_shared<QuantExt::FxForwardOptimized>(
+            soldAmount_, soldCcy, boughtAmount_, boughtCcy, maturityDate, false, settlement_ == "Physical", payDate,
+            payCcy, fixingDate, fxIndex, market->discountCurve(soldCcy.code(), config),
+            market->discountCurve(boughtCcy.code(), config), market->fxSpot(boughtCcy.code() + soldCcy.code(), config));
+    } else {
+        instrument = QuantLib::ext::make_shared<QuantExt::FxForward>(boughtAmount_, boughtCcy, soldAmount_, soldCcy,
+                                                                     maturityDate, false, settlement_ == "Physical",
+                                                                     payDate, payCcy, fixingDate, fxIndex);
+    }
+
     instrument_.reset(new VanillaInstrument(instrument));
 
-    // set pricing engine
-    instrument_->qlInstrument()->setPricingEngine(
-        fxBuilder->engine(boughtCcy, soldCcy, envelope().additionalField("discount_curve", false)));
+    if (!fxBuilder->optimizedInstrument()) {
+        // set pricing engine
+        instrument_->qlInstrument()->setPricingEngine(
+            fxBuilder->engine(boughtCcy, soldCcy, envelope().additionalField("discount_curve", false)));
+    }
+
     setSensitivityTemplate(*fxBuilder);
     addProductModelEngine(*fxBuilder);
 

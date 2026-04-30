@@ -19,6 +19,7 @@
 #include <qle/models/crossassetanalytics.hpp>
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/models/hwmodel.hpp>
+#include <qle/models/fxlvmodel.hpp>
 #include <qle/models/pseudoparameter.hpp>
 #include <qle/utilities/inflation.hpp>
 
@@ -50,38 +51,92 @@ std::ostream& operator<<(std::ostream& out, const CrossAssetModel::AssetType& ty
     case CrossAssetModel::AssetType::CrState:
         return out << "CrState";
     default:
-        QL_FAIL("Did not recognise cross asset model type " << static_cast<int>(type) << ".");
+        QL_FAIL("Did not recognise CrossAssetModel::AssetType " << static_cast<int>(type) << ".");
+    }
+}
+
+std::ostream& operator<<(std::ostream& out, const CrossAssetModel::ModelType& v) {
+    switch (v) {
+    case CrossAssetModel::ModelType::LGM1F:
+        return out << "LGM1F";
+    case CrossAssetModel::ModelType::HW:
+        return out << "HW";
+    case CrossAssetModel::ModelType::BS:
+        return out << "BS";
+    case CrossAssetModel::ModelType::LV:
+        return out << "LV";
+    case CrossAssetModel::ModelType::DK:
+        return out << "DK";
+    case CrossAssetModel::ModelType::CIRPP:
+        return out << "CIRPP";
+    case CrossAssetModel::ModelType::JY:
+        return out << "JY";
+    case CrossAssetModel::ModelType::GENERIC:
+        return out << "GENERIC";
+    default:
+        QL_FAIL("Did not recognise CrossAssetModel::ModelType " << static_cast<int>(v) << ".");
+    }
+}
+
+std::ostream& operator<<(std::ostream& out, const CrossAssetModel::Discretization& v) {
+    switch (v) {
+    case CrossAssetModel::Discretization::Euler:
+        return out << "Euler";
+    case CrossAssetModel::Discretization::Exact:
+        return out << "Exact";
+    case CrossAssetModel::Discretization::BestMarginalDiscretization:
+        return out << "BestMarginalDiscretization";
+    default:
+        QL_FAIL("Did not recognise CrossAssetModel::AssetType::Discretization " << static_cast<int>(v) << ".");
     }
 }
 
 namespace {
 
-/* derive marginal model discretizations from cam discretization
-   - "cam / Euler" should always map to "marginal model / Euler"
-   - "cam / Exact" should always map to "marginal model / Exact" which is only possible for a subset of models
-   - "cam / BestMarginalDiscretization" is to combine a global Euler scheme with the "best" marginal
-     scheme that is available, e.g. QuadraticExponentialMartingale for a Heston component */
+/* derive marginal model discretizations from cam discretization */
 
-HwModel::Discretization getHwDiscretization(CrossAssetModel::Discretization discretization) {
-    if (discretization == CrossAssetModel::Discretization::Euler)
-        return HwModel::Discretization::Euler;
-    else
-        return HwModel::Discretization::Exact;
-}
+using AT = CrossAssetModel::AssetType;
+using MT = CrossAssetModel::ModelType;
+using DI = CrossAssetModel::Discretization;
 
-LinearGaussMarkovModel::Discretization getLgm1fDiscretization(CrossAssetModel::Discretization discretization) {
-    if (discretization == CrossAssetModel::Discretization::Euler)
-        return LinearGaussMarkovModel::Discretization::Euler;
-    else
-        return LinearGaussMarkovModel::Discretization::Exact;
-}
+static std::map<std::pair<DI, MT>, int> discMap{
+    // LGM1F
+    {{DI::Euler, MT::LGM1F}, static_cast<int>(LinearGaussMarkovModel::Discretization::Euler)},
+    {{DI::BestMarginalDiscretization, MT::LGM1F}, static_cast<int>(LinearGaussMarkovModel::Discretization::Exact)},
+    {{DI::Exact, MT::LGM1F}, static_cast<int>(LinearGaussMarkovModel::Discretization::ExactGlobal)},
+    // HW
+    {{DI::Euler, MT::HW}, static_cast<int>(LinearGaussMarkovModel::Discretization::Euler)},
+    {{DI::BestMarginalDiscretization, MT::HW}, static_cast<int>(LinearGaussMarkovModel::Discretization::Euler)},
+    // {{DI::Exact, MT::HW}, /* no impl */},
+    // BS
+    {{DI::Euler, MT::BS}, static_cast<int>(FxModel::Discretization::Euler)},
+    {{DI::BestMarginalDiscretization, MT::BS}, static_cast<int>(FxModel::Discretization::Exact)},
+    {{DI::Exact, MT::BS}, static_cast<int>(FxModel::Discretization::ExactGlobal)},
+    // LV
+    {{DI::Euler, MT::LV}, static_cast<int>(FxModel::Discretization::Euler)},
+    {{DI::BestMarginalDiscretization, MT::LV}, static_cast<int>(FxModel::Discretization::PC)},
+    // {{DI::Exact, MT::LV}, /* no impl */)},
+    // DK
+    // {{DI::Euler, MT::DK}, /* TODO */},
+    // {{DI::BestMarginalDiscretization, MT::DK}, /* TODO */},
+    // {{DI::Exact, MT::DK}, /* TODO */},
+    // CIRPP
+    // {{DI::Euler, MT::CIRPP}, /* TODO */},
+    // {{DI::BestMarginalDiscretization, MT::CIRPP}, /* TODO */},
+    // {{DI::Exact, MT::CIRPP}, /* TODO */},
+    // JY
+    // {{DI::Euler, MT::JY}, /* TODO */},
+    // {{DI::BestMarginalDiscretization, MT::JY}, /* TODO */},
+    // {{DI::Exact, MT::JY}, /* TDOD */}
+};
 
-CommoditySchwartzModel::Discretization getComSchwartzDiscretization(CrossAssetModel::Discretization discretization) {
-    if (discretization == CrossAssetModel::Discretization::Euler)
-        return CommoditySchwartzModel::Discretization::Euler;
-    else
-        return CommoditySchwartzModel::Discretization::Exact;
-}
+template <class E> E getDiscretization(const DI disc, const MT mt) {
+    if (auto d = discMap.find(std::make_pair(disc, mt)); d != discMap.end())
+        return static_cast<E>(d->second);
+    QL_FAIL("CrossAssetModel: can not map discretization '"
+            << disc << "' to a suitable marginal discretization for model type '" << mt << ".");
+    }
+
 } // namespace
 
 CrossAssetModel::CrossAssetModel(const std::vector<QuantLib::ext::shared_ptr<Parametrization>>& parametrizations,
@@ -113,7 +168,7 @@ CrossAssetModel::CrossAssetModel(const std::vector<QuantLib::ext::shared_ptr<IrM
 
 QuantLib::ext::shared_ptr<CrossAssetStateProcess> CrossAssetModel::stateProcess() const {
     if (stateProcess_ == nullptr) {
-        stateProcess_ = QuantLib::ext::make_shared<CrossAssetStateProcess>(shared_from_this());
+        stateProcess_ = QuantLib::ext::make_shared<CrossAssetStateProcess>(shared_from_this(), dayCounter());
     }
     return stateProcess_;
 }
@@ -304,6 +359,8 @@ CrossAssetModel::getComponentType(const Size i) const {
         return std::make_pair(CrossAssetModel::AssetType::IR, CrossAssetModel::ModelType::LGM1F);
     if (QuantLib::ext::dynamic_pointer_cast<FxBsParametrization>(p_[i]))
         return std::make_pair(CrossAssetModel::AssetType::FX, CrossAssetModel::ModelType::BS);
+    if (QuantLib::ext::dynamic_pointer_cast<FxLvParametrization>(p_[i]))
+        return std::make_pair(CrossAssetModel::AssetType::FX, CrossAssetModel::ModelType::LV);
     if (QuantLib::ext::dynamic_pointer_cast<InfDkParametrization>(p_[i]))
         return std::make_pair(CrossAssetModel::AssetType::INF, CrossAssetModel::ModelType::DK);
     if (QuantLib::ext::dynamic_pointer_cast<InfJyParameterization>(p_[i]))
@@ -332,6 +389,8 @@ Size CrossAssetModel::getNumberOfBrownians(const Size i) const {
     }
     if (QuantLib::ext::dynamic_pointer_cast<FxBsParametrization>(p_[i]))
         return 1;
+    if (QuantLib::ext::dynamic_pointer_cast<FxLvParametrization>(p_[i]))
+        return 1;
     if (QuantLib::ext::dynamic_pointer_cast<InfDkParametrization>(p_[i]))
         return 1;
     if (QuantLib::ext::dynamic_pointer_cast<InfJyParameterization>(p_[i]))
@@ -351,13 +410,24 @@ Size CrossAssetModel::getNumberOfBrownians(const Size i) const {
 
 Size CrossAssetModel::getNumberOfAuxBrownians(const Size i) const {
     if (auto p = QuantLib::ext::dynamic_pointer_cast<IrHwParametrization>(p_[i])) {
-        return HwModel(p, measure_, getHwDiscretization(discretization_), i == 0).m_aux();
+        return HwModel(p, measure_,
+                       getDiscretization<HwModel::Discretization>(discretization_, CrossAssetModel::ModelType::HW),
+                       i == 0)
+            .m_aux();
     }
     if (auto p = QuantLib::ext::dynamic_pointer_cast<IrLgm1fParametrization>(p_[i])) {
-        return LGM(p, measure_, getLgm1fDiscretization(discretization_), i == 0).m_aux();
+        return LGM(p, measure_,
+                   getDiscretization<LinearGaussMarkovModel::Discretization>(discretization_,
+                                                                             CrossAssetModel::ModelType::LGM1F),
+                   i == 0)
+            .m_aux();
     }
     if (QuantLib::ext::dynamic_pointer_cast<FxBsParametrization>(p_[i]))
         return 0;
+    if (QuantLib::ext::dynamic_pointer_cast<FxLvParametrization>(p_[i])) {
+        getDiscretization<FxModel::Discretization>(discretization_, CrossAssetModel::ModelType::LV);
+        return 0;
+    }
     if (QuantLib::ext::dynamic_pointer_cast<InfDkParametrization>(p_[i]))
         return discretization_ == Discretization::Exact ? 1 : 0;
     if (QuantLib::ext::dynamic_pointer_cast<InfJyParameterization>(p_[i]))
@@ -377,14 +447,20 @@ Size CrossAssetModel::getNumberOfAuxBrownians(const Size i) const {
 
 Size CrossAssetModel::getNumberOfStateVariables(const Size i) const {
     if (auto p = QuantLib::ext::dynamic_pointer_cast<IrHwParametrization>(p_[i])) {
-        HwModel m(p, measure_, getHwDiscretization(discretization_), i == 0);
+        HwModel m(p, measure_,
+                  getDiscretization<HwModel::Discretization>(discretization_, CrossAssetModel::ModelType::HW), i == 0);
         return m.n() + m.n_aux();
     }
     if (auto p = QuantLib::ext::dynamic_pointer_cast<IrLgm1fParametrization>(p_[i])) {
-        LGM m(p, measure_, getLgm1fDiscretization(discretization_), i == 0);
+        LGM m(p, measure_,
+              getDiscretization<LinearGaussMarkovModel::Discretization>(discretization_,
+                                                                        CrossAssetModel::ModelType::LGM1F),
+              i == 0);
         return m.n() + m.n_aux();
     }
     if (QuantLib::ext::dynamic_pointer_cast<FxBsParametrization>(p_[i]))
+        return 1;
+    if (QuantLib::ext::dynamic_pointer_cast<FxLvParametrization>(p_[i]))
         return 1;
     if (QuantLib::ext::dynamic_pointer_cast<InfDkParametrization>(p_[i]))
         return 2;
@@ -415,17 +491,6 @@ void CrossAssetModel::updateIndices(const AssetType& t, const Size i, const Size
     wIdx_[(Size)t].push_back(wIdx);
     pIdx_[(Size)t].push_back(pIdx);
     aIdx_[(Size)t].push_back(aIdx);
-    if (discretization_ == Discretization::Euler) {
-        QL_REQUIRE(wIdx_[(Size)t].back() == cIdx_[(Size)t].back(),
-                   "CrossAssetModel::updateIndices(): assertion error, wIdx ("
-                       << wIdx_[(Size)t].back() << ") != cIdx (" << cIdx_[(Size)t].back() << ") for asset type " << t
-                       << " at index " << wIdx_[(Size)t].size() << " for Euler discretization");
-    } else {
-        QL_REQUIRE(wIdx_[(Size)t].back() == pIdx_[(Size)t].back(),
-                   "CrossAssetModel::updateIndices(): assertion error, wIdx ("
-                       << wIdx_[(Size)t].back() << ") != pIdx (" << pIdx_[(Size)t].back() << ") for asset type " << t
-                       << " at index " << wIdx_[(Size)t].size() << " for Exact discretization");
-    }
 }
 
 void CrossAssetModel::initializeParametrizations() {
@@ -453,17 +518,19 @@ void CrossAssetModel::initializeParametrizations() {
     while (i < p_.size() && getComponentType(i).first == CrossAssetModel::AssetType::IR) {
         QL_REQUIRE(j == 0 || getComponentType(i).second == getComponentType(0).second,
                    "All IR models must be of the same type (HW, LGM can not be mixed)");
-        // initialize ir model, if generic constructor was used
-        // evaluate bank account for j = 0 (domestic process
+        // initialize ir model, if generic constructor was used, evaluate bank account for j = 0 (domestic process
         if (genericCtor) {
             if (getComponentType(i).second == ModelType::LGM1F) {
                 irModels_.push_back(QuantLib::ext::make_shared<LinearGaussMarkovModel>(
                     QuantLib::ext::dynamic_pointer_cast<IrLgm1fParametrization>(p_[i]), measure_,
-                    getLgm1fDiscretization(discretization_), j == 0));
+                    getDiscretization<LinearGaussMarkovModel::Discretization>(discretization_,
+                                                                              CrossAssetModel::ModelType::LGM1F),
+                    j == 0));
             } else if (getComponentType(i).second == ModelType::HW) {
-                irModels_.push_back(QuantLib::ext::make_shared<HwModel>(QuantLib::ext::dynamic_pointer_cast<IrHwParametrization>(p_[i]),
-                                                                measure_, getHwDiscretization(discretization_),
-                                                                j == 0));
+                irModels_.push_back(QuantLib::ext::make_shared<HwModel>(
+                    QuantLib::ext::dynamic_pointer_cast<IrHwParametrization>(p_[i]), measure_,
+                    getDiscretization<HwModel::Discretization>(discretization_, CrossAssetModel::ModelType::HW),
+                    j == 0));
             } else {
                 irModels_.push_back(nullptr);
             }
@@ -482,7 +549,16 @@ void CrossAssetModel::initializeParametrizations() {
 
     j = 0;
     while (i < p_.size() && getComponentType(i).first == CrossAssetModel::AssetType::FX) {
-        fxModels_.push_back(QuantLib::ext::make_shared<FxBsModel>(QuantLib::ext::dynamic_pointer_cast<FxBsParametrization>(p_[i])));
+        if (getComponentType(i).second == ModelType::BS) {
+            fxModels_.push_back(
+                QuantLib::ext::make_shared<FxBsModel>(QuantLib::ext::dynamic_pointer_cast<FxBsParametrization>(p_[i])));
+        } else if (getComponentType(i).second == ModelType::LV) {
+            fxModels_.push_back(QuantLib::ext::make_shared<FxLvModel>(
+                QuantLib::ext::dynamic_pointer_cast<FxLvParametrization>(p_[i]),
+                getDiscretization<FxModel::Discretization>(discretization_, CrossAssetModel::ModelType::LV)));
+        } else {
+            fxModels_.push_back(nullptr);
+        }
         updateIndices(CrossAssetModel::AssetType::FX, i, cIdxTmp, wIdxTmp, pIdxTmp, aIdxTmp);
         cIdxTmp += getNumberOfBrownians(i);
         wIdxTmp += getNumberOfBrownians(i) + getNumberOfAuxBrownians(i);
@@ -600,7 +676,9 @@ void CrossAssetModel::initializeParametrizations() {
         QuantLib::ext::shared_ptr<CommoditySchwartzParametrization> csp =
             QuantLib::ext::dynamic_pointer_cast<CommoditySchwartzParametrization>(p_[i]);
         QuantLib::ext::shared_ptr<CommoditySchwartzModel> csm =
-            csp ? QuantLib::ext::make_shared<CommoditySchwartzModel>(csp, getComSchwartzDiscretization(discretization_))
+            csp ? QuantLib::ext::make_shared<CommoditySchwartzModel>(
+                      csp, getDiscretization<CommoditySchwartzModel::Discretization>(discretization_,
+                                                                                     CrossAssetModel::ModelType::BS))
                 : nullptr;
         comModels_.push_back(csm);
         updateIndices(CrossAssetModel::AssetType::COM, i, cIdxTmp, wIdxTmp, pIdxTmp, aIdxTmp);
@@ -930,6 +1008,7 @@ std::pair<Real, Real> CrossAssetModel::infdkV(const Size i, const Time t, const 
 }
 
 std::pair<Real, Real> CrossAssetModel::infdkI(const Size i, const Time t, const Time T, const Real z, const Real y) {
+    
     QL_REQUIRE(t < T || close_enough(t, T), "infdkI: t (" << t << ") <= T (" << T << ") required");
     Real V0, V_tilde;
     std::pair<Real, Real> Vs = infdkV(i, t, T);
@@ -941,11 +1020,12 @@ std::pair<Real, Real> CrossAssetModel::infdkI(const Size i, const Time t, const 
     // TODO account for seasonality ...
     // compute final results depending on z and y
     const auto& zts = infdk(i)->termStructure();
-    auto dc = irlgm1f(0)->termStructure()->dayCounter();
-    bool indexIsInterpolated = true; // FIXME, though in line with the comment below
-    Real growth_t = inflationGrowth(zts, t, dc, indexIsInterpolated);
+    auto relevantDc = dayCounter();
+    QL_REQUIRE(relevantDc.has_value(), "internal error, daycounter should be available, contact dev");
+    bool indexIsInterpolated = true; // the model is continous so we need to compute time in a continous way
+    Real growth_t = inflationGrowth(zts, t, relevantDc, indexIsInterpolated);
     Real It = growth_t * std::exp(Hyt * z - y - V0);
-    Real Itilde_t_T = inflationGrowth(zts, T, dc, indexIsInterpolated) / growth_t * std::exp((HyT - Hyt) * z + V_tilde);
+    Real Itilde_t_T = inflationGrowth(zts, T, relevantDc, indexIsInterpolated) / growth_t * std::exp((HyT - Hyt) * z + V_tilde);
     // concerning interpolation there is an inaccuracy here: if the index
     // is not interpolated, we still simulate the index value as of t
     // (and T), although we should go back to t, T which corresponds to

@@ -18,7 +18,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include <orea/scenario/aggregationscenariodata.hpp>
-#include <oret/toplevelfixture.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 #include <test/oreatoplevelfixture.hpp>
 
 using namespace ore::analytics;

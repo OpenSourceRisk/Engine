@@ -49,6 +49,7 @@
 #include <ored/portfolio/trs.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/simmcurrencies.hpp>
 
 #include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/bondoption.hpp>
@@ -83,7 +84,8 @@ using std::string;
 using ore::data::parseReal;
 using ore::data::parseInteger;
 using ore::data::isPseudoCurrency;
-
+using ore::data::isSimmNonStandardCurrency;
+using ore::data::simmStandardCurrency;
 namespace ore {
 namespace analytics {
 
@@ -439,19 +441,11 @@ static const map<string, CrifRecord::ProductClass> tradeProductClassMap = {
     {"RiskParticipationAgreement", CrifRecord::ProductClass::Credit},
     {"Swap", CrifRecord::ProductClass::Rates},
     {"Swaption", CrifRecord::ProductClass::Rates},
+    {"SwaptionStraddle", CrifRecord::ProductClass::Rates},
     {"SyntheticCDO", CrifRecord::ProductClass::Credit},
     {"TotalReturnSwap", CrifRecord::ProductClass::Rates}};
 
-std::map<std::string, std::string> nonStdCcys = {{"CLF", "CLP"}, {"CNH", "CNY"}, {"COU", "CUP"}, {"CUC", "CUP"},
-                                                 {"MXV", "MXN"}, {"UYI", "UYU"}, {"UYW", "UYU"}};
-
-std::set<std::string> unidadeCcys = {"CLF", "COU", "MXV", "UYW"};
-
 } // namespace
-
-bool isSimmNonStandardCurrency(const std::string& ccy) { return nonStdCcys.find(ccy) != nonStdCcys.end(); }
-
-bool isUnidadeCurrency(const std::string& ccy) { return unidadeCcys.find(ccy) != unidadeCcys.end(); }
 
 bool isIsin(const string& s) {
     // FIXME, this is a bit too broad: Use enumeration for the first two letters? Validate checksum?
@@ -469,28 +463,21 @@ bool isIsin(const string& s) {
     return true;
 }
   
-std::string simmStandardCurrency(const std::string& ccy) {
-    if (auto c = nonStdCcys.find(ccy); c != nonStdCcys.end()) {
-        return c->second;
-    } else {
-        return ccy;
-    }
-}
 
 void convertToSimmStandardCurrency(double& npv, std::string& ccy, const QuantLib::ext::shared_ptr<ore::data::Market> market) {
-    if (!isSimmNonStandardCurrency(ccy))
+    if (!ore::data::isSimmNonStandardCurrency(ccy))
         return;
-    std::string target = simmStandardCurrency(ccy);
+    std::string target = ore::data::simmStandardCurrency(ccy);
     npv *= market->fxRate(ccy + target)->value();
     ccy = target;
 }
 
-void convertToSimmStandardCurrency(std::string& ccy) { ccy = simmStandardCurrency(ccy); }
+void convertToSimmStandardCurrency(std::string& ccy) { ccy = ore::data::simmStandardCurrency(ccy); }
 
 bool convertToSimmStandardCurrencyPair(std::string& ccy) {
     QL_REQUIRE(ccy.size() == 6, "convertToSimmStandardCurrencyPair: expected string of size 6, got '" << ccy << "'");
-    std::string ccy1 = simmStandardCurrency(ccy.substr(0, 3));
-    std::string ccy2 = simmStandardCurrency(ccy.substr(3));
+    std::string ccy1 = ore::data::simmStandardCurrency(ccy.substr(0, 3));
+    std::string ccy2 = ore::data::simmStandardCurrency(ccy.substr(3));
     ccy = ccy1 + ccy2;
     return ccy1 != ccy2;
 }

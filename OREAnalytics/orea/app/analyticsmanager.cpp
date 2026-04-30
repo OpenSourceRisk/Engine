@@ -18,6 +18,7 @@
 
 #include <orea/app/analytics/analyticfactory.hpp>
 #include <orea/app/analyticsmanager.hpp>
+#include <orea/app/inputparameters.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 
@@ -27,15 +28,18 @@
 #include <ql/errors.hpp>
 
 using namespace std;
-using namespace boost::filesystem;
+using namespace std::filesystem;
 using ore::data::InMemoryReport;
 
 namespace ore {
 namespace analytics {
     
-void AnalyticsManager::initialise() {
-    for (const auto& a : inputs_->analytics()) 
-        auto ap = AnalyticFactory::instance().build(a, inputs_, shared_from_this(), true);
+void AnalyticsManager::initialise() {  
+
+    // create all the analytics
+    for (const auto& a : inputs_->analytics())
+        AnalyticFactory::instance().build(a, inputs_, shared_from_this(), true);
+
     initialised_ = true;
 }
 
@@ -275,7 +279,7 @@ void AnalyticsManager::toFile(const ore::analytics::Analytic::analytic_reports& 
             }
             else {
                 ALOG("Report " << reportName << " occurs " << it->second << " times, fix report naming");
-                fileName = analytic + "_" + reportName + "_" + to_string(hits[fileName]);
+                fileName = analytic + "_" + reportName + "_" + to_string(hits[reportName]);
             }
 
             // attach a suffix only if it does not have one already

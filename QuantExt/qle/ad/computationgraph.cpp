@@ -64,6 +64,8 @@ std::size_t ComputationGraph::insert(const std::vector<std::size_t>& predecessor
     predecessors_.push_back(predecessors);
     opId_.push_back(opId);
     for (auto const& p : predecessors) {
+        QL_REQUIRE(p < node,
+                   "ComputationGraph::insert(): illegal predecessor node id (" << p << ") while adding node " << node);
         maxNodeRequiringArg_[p] = node;
     }
     maxNodeRequiringArg_.push_back(0);

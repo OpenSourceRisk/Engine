@@ -1,0 +1,81 @@
+\subsubsection{Rate Digital Option}
+
+A Rate Digital Option is a European cash-or-nothing option on an interest rate fixing. It pays a fixed cash amount if the
+underlying rate index fixing on the fixing date is above the strike (Call) or below the strike (Put). This trade type is
+useful for hedging or replicating Range Accrual coupons, where each daily observation can be decomposed into a digital
+option on the rate.
+
+The \lstinline!RateDigitalOptionData! node is the trade data container for the \emph{RateDigitalOption} trade type. It
+includes one \lstinline!OptionData! trade component sub-node plus elements specific to the Rate Digital Option. The
+structure of an example \lstinline!RateDigitalOptionData! node is shown in Listing
+\ref{lst:ratedigitaloption_data}.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <RateDigitalOptionData>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <OptionType>Call</OptionType>
+        <ExerciseDates>
+          <ExerciseDate>2027-06-20</ExerciseDate>
+        </ExerciseDates>
+      </OptionData>
+      <Index>EUR-EURIBOR-6M</Index>
+      <Strike>0.02</Strike>
+      <PayoffAmount>10000.0</PayoffAmount>
+      <PayoffCurrency>EUR</PayoffCurrency>
+      <FixingDate>2027-06-18</FixingDate>
+      <PaymentDate>2027-06-20</PaymentDate>
+    </RateDigitalOptionData>
+\end{minted}
+\caption{Rate Digital Option data}
+\label{lst:ratedigitaloption_data}
+\end{listing}
+
+The meanings and allowable values of the elements in the \lstinline!RateDigitalOptionData! node follow below.
+
+\begin{itemize}
+
+\item OptionData: This is a trade component sub-node outlined in section \ref{ss:option_data}.
+The relevant fields in the \lstinline!OptionData! node for a RateDigitalOption are:
+
+\begin{itemize}
+\item \lstinline!LongShort!: The allowable values are \emph{Long} or \emph{Short}.
+
+\item \lstinline!OptionType!: \emph{Call} means that the digital payout occurs if the rate fixing is above the strike.
+  \emph{Put} means that the digital payout occurs if the rate fixing is below the strike.
+
+\item \lstinline!Style!: Only \emph{European} exercise style is supported (default if omitted).
+
+\item An \lstinline!ExerciseDates! node where exactly one \lstinline!ExerciseDate! element must be given.
+
+\item Premiums [Optional]: See section \ref{ss:premiums}.
+\end{itemize}
+
+\item Index: The underlying interest rate index whose fixing is observed.
+
+  Allowable values: An alphanumeric string of the form CCY-INDEX-TENOR. Both Ibor indices (e.g.\ \emph{EUR-EURIBOR-6M})
+  and overnight indices (e.g.\ \emph{USD-SOFR}) are supported. See Table \ref{tab:indices}.
+
+\item Strike: The strike rate level for the digital condition.
+
+  Allowable values: A positive real number, expressed in decimal form, e.g.\ \emph{0.02} is a strike of 2\%.
+
+\item PayoffAmount: The fixed cash amount paid if the option expires in-the-money.
+
+  Allowable values: A positive real number.
+
+\item PayoffCurrency: The currency of the payoff amount.
+
+  Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
+
+\item FixingDate: The date on which the rate index fixing is observed.
+
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+
+\item PaymentDate [Optional]: The date on which the payoff is settled. If omitted, defaults to the exercise date.
+
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+
+\end{itemize}

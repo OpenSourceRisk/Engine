@@ -38,8 +38,9 @@ CrossCcyBasisMtMResetSwap::CrossCcyBasisMtMResetSwap(
     QuantLib::ext::optional<Size> foreignFixingDays, QuantLib::ext::optional<Size> foreignRateCutoff,
     QuantLib::ext::optional<bool> foreignIsAveraged, QuantLib::ext::optional<bool> domesticIncludeSpread,
     QuantLib::ext::optional<Period> domesticLookback, QuantLib::ext::optional<Size> domesticFixingDays,
-    QuantLib::ext::optional<Size> domesticRateCutoff, QuantLib::ext::optional<bool> domesticIsAveraged, const bool telescopicValueDates,
-						     const bool fairSpreadLegIsForeign)
+    QuantLib::ext::optional<Size> domesticRateCutoff, QuantLib::ext::optional<bool> domesticIsAveraged,
+    const bool telescopicValueDates, const bool fairSpreadLegIsForeign,
+    QuantLib::ext::optional<bool> foreignObservationShift, QuantLib::ext::optional<bool> domesticObservationShift)
     : CrossCcySwap(3), foreignNominal_(foreignNominal), foreignCurrency_(foreignCurrency),
       foreignSchedule_(foreignSchedule), foreignIndex_(foreignIndex), foreignSpread_(foreignSpread),
       domesticCurrency_(domesticCurrency), domesticSchedule_(domesticSchedule), domesticIndex_(domesticIndex),
@@ -47,9 +48,10 @@ CrossCcyBasisMtMResetSwap::CrossCcyBasisMtMResetSwap(
       foreignPaymentLag_(foreignPaymentLag), domesticPaymentLag_(domesticPaymentLag),
       foreignIncludeSpread_(foreignIncludeSpread), foreignLookback_(foreignLookback),
       foreignFixingDays_(foreignFixingDays), foreignRateCutoff_(foreignRateCutoff),
-      foreignIsAveraged_(foreignIsAveraged), domesticIncludeSpread_(domesticIncludeSpread),
-      domesticLookback_(domesticLookback), domesticFixingDays_(domesticFixingDays),
-      domesticRateCutoff_(domesticRateCutoff), domesticIsAveraged_(domesticIsAveraged),
+      foreignIsAveraged_(foreignIsAveraged), foreignObservationShift_(foreignObservationShift),
+      domesticIncludeSpread_(domesticIncludeSpread), domesticLookback_(domesticLookback),
+      domesticFixingDays_(domesticFixingDays), domesticRateCutoff_(domesticRateCutoff),
+      domesticIsAveraged_(domesticIsAveraged), domesticObservationShift_(domesticObservationShift),
       telescopicValueDates_(telescopicValueDates), fairSpreadLegIsForeign_(fairSpreadLegIsForeign) {
     registerWith(foreignIndex_);
     registerWith(domesticIndex_);
@@ -67,9 +69,10 @@ void CrossCcyBasisMtMResetSwap::initialize() {
                            .withSpread(foreignSpread_)
                            .withPaymentLag(foreignPaymentLag_)
                            .withLookback(foreignLookback_ ? *foreignLookback_ : 0 * Days)
-                           .withFixingDays(foreignFixingDays_ ? *foreignFixingDays_ : 0)
+                           .withFixingDays(foreignFixingDays_ ? *foreignFixingDays_ : Null<Size>())
                            .withRateCutoff(foreignRateCutoff_ ? *foreignRateCutoff_ : 0)
-                           .withTelescopicValueDates(telescopicValueDates_);
+                           .withTelescopicValueDates(telescopicValueDates_)
+                           .withObservationShift(foreignObservationShift_ ? *foreignObservationShift_ : true);
         } else {
             legs_[0] = QuantExt::OvernightLeg(foreignSchedule_, on)
                            .withNotionals(foreignNominal_)
@@ -77,9 +80,10 @@ void CrossCcyBasisMtMResetSwap::initialize() {
                            .withPaymentLag(foreignPaymentLag_)
                            .includeSpread(foreignIncludeSpread_ ? *foreignIncludeSpread_ : false)
                            .withLookback(foreignLookback_ ? *foreignLookback_ : 0 * Days)
-                           .withFixingDays(foreignFixingDays_ ? *foreignFixingDays_ : 0)
+                           .withFixingDays(foreignFixingDays_ ? *foreignFixingDays_ : Null<Size>())
                            .withRateCutoff(foreignRateCutoff_ ? *foreignRateCutoff_ : 0)
-                           .withTelescopicValueDates(telescopicValueDates_);
+                           .withTelescopicValueDates(telescopicValueDates_)
+                           .withObservationShift(foreignObservationShift_ ? *foreignObservationShift_ : true);
         }
     } else {
         // Ibor leg
@@ -110,9 +114,10 @@ void CrossCcyBasisMtMResetSwap::initialize() {
                            .withSpread(domesticSpread_)
                            .withPaymentLag(domesticPaymentLag_)
                            .withLookback(domesticLookback_ ? *domesticLookback_ : 0 * Days)
-                           .withFixingDays(domesticFixingDays_ ? *domesticFixingDays_ : 0)
+                           .withFixingDays(domesticFixingDays_ ? *domesticFixingDays_ : Null<Size>())
                            .withRateCutoff(domesticRateCutoff_ ? *domesticRateCutoff_ : 0)
-                           .withTelescopicValueDates(telescopicValueDates_);
+                           .withTelescopicValueDates(telescopicValueDates_)
+                           .withObservationShift(domesticObservationShift_ ? *domesticObservationShift_ : true);
         } else {
             legs_[1] = QuantExt::OvernightLeg(domesticSchedule_, on)
                            .withNotionals(0.0)
@@ -120,9 +125,10 @@ void CrossCcyBasisMtMResetSwap::initialize() {
                            .withPaymentLag(domesticPaymentLag_)
                            .includeSpread(domesticIncludeSpread_ ? *domesticIncludeSpread_ : false)
                            .withLookback(domesticLookback_ ? *domesticLookback_ : 0 * Days)
-                           .withFixingDays(domesticFixingDays_ ? *domesticFixingDays_ : 0)
+                           .withFixingDays(domesticFixingDays_ ? *domesticFixingDays_ : Null<Size>())
                            .withRateCutoff(domesticRateCutoff_ ? *domesticRateCutoff_ : 0)
-                           .withTelescopicValueDates(telescopicValueDates_);
+                           .withTelescopicValueDates(telescopicValueDates_)
+                           .withObservationShift(domesticObservationShift_ ? *domesticObservationShift_ : true);
         }
     } else {
         // Ibor leg

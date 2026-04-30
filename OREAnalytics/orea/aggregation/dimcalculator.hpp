@@ -24,7 +24,6 @@
 #pragma once
 
 #include <orea/aggregation/collatexposurehelper.hpp>
-#include <orea/app/inputparameters.hpp>
 #include <orea/cube/cubeinterpretation.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/scenario/aggregationscenariodata.hpp>
@@ -53,8 +52,6 @@ using namespace std;
 class DynamicInitialMarginCalculator {
 public:
     DynamicInitialMarginCalculator(
-        //! Global input parameters
-        const QuantLib::ext::shared_ptr<InputParameters>& inputs,
         //! Driving portfolio consistent with the cube below
         const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
         //! NPV cube resulting from the Monte Carlo simulation loop
@@ -69,7 +66,8 @@ public:
         Size horizonCalendarDays = 14,
         //! Actual t0 IM by netting set used to scale the DIM evolution, no scaling if the argument is omitted
         const std::map<std::string, Real>& currentIM = std::map<std::string, Real>(),
-	Size dimCubeDepth = 1);
+        //! Depth of the DIM cube, default is 1
+        Size dimCubeDepth = 1);
 
     virtual ~DynamicInitialMarginCalculator() {}
 
@@ -108,7 +106,6 @@ public:
     const std::map<std::string, Real>& getInitialMarginScaling() const { return nettingSetScaling_; }
 
 protected:
-    QuantLib::ext::shared_ptr<InputParameters> inputs_;
     QuantLib::ext::shared_ptr<Portfolio> portfolio_;
     QuantLib::ext::shared_ptr<NPVCube> cube_, dimCube_;
     QuantLib::ext::shared_ptr<CubeInterpretation> cubeInterpretation_;

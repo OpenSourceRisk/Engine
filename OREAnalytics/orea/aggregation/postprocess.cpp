@@ -177,7 +177,7 @@ PostProcess::PostProcess(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
     if (analytics_["dynamicCredit"]) {
         cvaCalculator_ = QuantLib::ext::make_shared<DynamicCreditXvaCalculator>(
             portfolio_, market_, configuration_,baseCurrency_, dvaName_,
-            fvaBorrowingCurve_, fvaLendingCurve_, analytics_["dim"],
+            fvaBorrowingCurve_, fvaLendingCurve_, analytics_["dva"], analytics_["fva"], analytics_["dim"],
             dimCalculator, exposureCalculator_->exposureCube(),
             nettedExposureCalculator_->exposureCube(), cptyCube_,
             ExposureCalculator::ExposureIndex::EPE,
@@ -188,7 +188,7 @@ PostProcess::PostProcess(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
     } else {
         cvaCalculator_ = QuantLib::ext::make_shared<StaticCreditXvaCalculator>(
             portfolio_, market_, configuration_,baseCurrency_, dvaName_,
-            fvaBorrowingCurve_, fvaLendingCurve_, analytics_["dim"],
+            fvaBorrowingCurve_, fvaLendingCurve_, analytics_["dva"], analytics_["fva"], analytics_["dim"],
             dimCalculator, exposureCalculator_->exposureCube(),
             nettedExposureCalculator_->exposureCube(),
             ExposureCalculator::ExposureIndex::EPE,
@@ -245,6 +245,7 @@ PostProcess::PostProcess(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
     if (analytics_["dynamicCredit"]) {
         allocatedCvaCalculator_ = QuantLib::ext::make_shared<DynamicCreditXvaCalculator>(
             portfolio_, market_, configuration_, baseCurrency_, dvaName_, fvaBorrowingCurve_, fvaLendingCurve_,
+            analytics_["dva"], analytics_["fva"],
             analytics_["dim"], dimCalculator, exposureCalculator_->exposureCube(),
             nettedExposureCalculator_->exposureCube(), cptyCube_, ExposureCalculator::ExposureIndex::allocatedEPE,
             ExposureCalculator::ExposureIndex::allocatedENE, NettedExposureCalculator::ExposureIndex::EPE,
@@ -253,6 +254,7 @@ PostProcess::PostProcess(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
     } else {
         allocatedCvaCalculator_ = QuantLib::ext::make_shared<StaticCreditXvaCalculator>(
             portfolio_, market_, configuration_, baseCurrency_, dvaName_, fvaBorrowingCurve_, fvaLendingCurve_,
+            analytics_["dva"], analytics_["fva"],
             analytics_["dim"], dimCalculator, exposureCalculator_->exposureCube(),
             nettedExposureCalculator_->exposureCube(), ExposureCalculator::ExposureIndex::allocatedEPE,
             ExposureCalculator::ExposureIndex::allocatedENE, NettedExposureCalculator::ExposureIndex::EPE,

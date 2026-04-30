@@ -390,21 +390,22 @@ ExerciseBuilder::ExerciseBuilder(const OptionData& optionData, const std::vector
         // update exercise instance with rebate information
 
         if (exercise_ != nullptr) {
-            vector<double> rebates;
+            vector<vector<double>> rebates;
             for (Size i = 0; i < sortedExerciseDates.size(); ++i) {
                 if (isExerciseDateAlive[i])
-                    rebates.push_back(allRebates[i]);
+                    rebates.push_back({allRebates[i]});
             }
             if (optionData.style() == "American") {
                 // Note: we compute the settl date relative to notification, not exercise here
                 exercise_ = QuantLib::ext::make_shared<QuantExt::RebatedExercise>(
-                    *exercise_, rebates.front(), feeSettlPeriod, feeSettlCal, feeSettlBdc);
+                    *exercise_, rebates.front().front(), feeSettlPeriod, feeSettlCal, feeSettlBdc);
                 auto dbgEx = QuantLib::ext::static_pointer_cast<QuantExt::RebatedExercise>(exercise_);
                 DLOG("Got rebate " << dbgEx->rebate(0) << " for American exercise with fee settle period "
                                    << feeSettlPeriod << ", cal " << feeSettlCal << ", bdc " << feeSettlBdc);
             } else {
                 exercise_ = QuantLib::ext::make_shared<QuantExt::RebatedExercise>(
-                    *exercise_, exerciseDates_, rebates, feeSettlPeriod, feeSettlCal, feeSettlBdc);
+                    *exercise_, exerciseDates_, rebates, std::vector<Currency>(1), feeSettlPeriod, feeSettlCal,
+                    feeSettlBdc);
                 auto dbgEx = QuantLib::ext::static_pointer_cast<QuantExt::RebatedExercise>(exercise_);
                 for (Size i = 0; i < exerciseDates_.size(); ++i) {
                     DLOG("Got rebate " << dbgEx->rebate(i) << " with payment date "

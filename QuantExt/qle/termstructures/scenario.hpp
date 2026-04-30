@@ -16,9 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file scenario/scenario.hpp
+/*! \file qle/termstructures/scenario.hpp
     \brief Scenario class
-    \ingroup scenario
+    \ingroup termstructures
 */
 
 #pragma once
@@ -45,8 +45,6 @@ using QuantLib::Size;
 using std::string;
 
 //! Data types stored in the scenario class
-/*! \ingroup scenario
- */
 class RiskFactorKey {
 public:
     //! Risk Factor types
@@ -78,7 +76,8 @@ public:
         CommodityVolatility,
         SecuritySpread,
         Correlation,
-        CPR
+        CPR,
+        Theta
     };
 
     //! Constructor
@@ -128,8 +127,6 @@ inline bool operator!=(const RiskFactorKey& lhs, const RiskFactorKey& rhs) { ret
 
   This base class provides the interface to add and retrieve data to and from a scenario.
   Concrete simple and memory optimized "compact" scenario classes are derived from this.
-
-  \ingroup scenario
 */
 class Scenario {
 public:
@@ -160,6 +157,13 @@ public:
     //! Get an element from the scenario
     virtual Real get(const RiskFactorKey& key) const = 0;
 
+    //! Get simple integer index if supported, for faster access
+    virtual Size getIndex(const RiskFactorKey& key) const { QL_FAIL("Scenario::getIndex(): not implemented"); }
+    //! Get an element from integer key, for faster access
+    virtual Real get(const Size index) const { QL_FAIL("Scenario::get(int): not implemented"); }
+    //! Add an element via integer key, for faster access
+    virtual void add(const Size index, Real value) { QL_FAIL("Scenario::add(int, double): not implemented"); }
+
     //! Is this an absolute or difference scenario?
     virtual const bool isAbsolute() const = 0;
     //! Set if this is an absolute scenario
@@ -187,7 +191,7 @@ private:
 };
 
 enum class ShiftScheme { Forward, Backward, Central };
-enum class ShiftType { Absolute, Relative };
+enum class ShiftType { Absolute, Relative, EqualTo };
 
 ShiftScheme parseShiftScheme(const std::string& s);
 ShiftType parseShiftType(const std::string& s);

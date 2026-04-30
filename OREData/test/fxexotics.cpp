@@ -40,7 +40,7 @@
 #include <ored/portfolio/fxtouchoption.hpp>
 #include <ored/portfolio/fxoption.hpp>
 #include <ored/portfolio/swap.hpp>
-#include <oret/toplevelfixture.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/currencies/all.hpp>
 #include <ql/indexes/indexmanager.hpp>
@@ -56,7 +56,7 @@ using namespace boost::unit_test_framework;
 using namespace std;
 using namespace ore::data;
 
-BOOST_FIXTURE_TEST_SUITE(OREPlusEquityFXTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREPlusEquityFXTestSuite, ore::data::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(FXOptionTest)
 

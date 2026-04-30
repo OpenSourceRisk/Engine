@@ -53,29 +53,27 @@ public:
         const bool reevaluateExerciseInStickyRun = false, const Size cfOnCpnMaxSimTimes = 1,
         const Period& cfOnCpnAddSimTimesCutoff = Period(), const Size regressionMaxSimTimesIr = 0,
         const Size regressionMaxSimTimesFx = 0, const Size regressionMaxSimTimesEq = 0,
-        const McRegressionModel::VarGroupMode regressionVarGroupMode = McRegressionModel::VarGroupMode::Global);
-    McMultiLegOptionEngine(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model,
-                           const SequenceType calibrationPathGenerator, const SequenceType pricingPathGenerator,
-                           const Size calibrationSamples, const Size pricingSamples, const Size calibrationSeed,
-                           const Size pricingSeed, const Size polynomOrder,
-                           const LsmBasisSystem::PolynomialType polynomType,
-                           const SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Steps,
-                           const SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7,
-                           const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
-                           const std::vector<Date>& simulationDates = std::vector<Date>(),
-                           const std::vector<Date>& stickyCloseOutDates = std::vector<Date>(),
-                           const std::vector<Size>& externalModelIndices = std::vector<Size>(),
-                           const bool minimalObsDate = true,
-                           const McRegressionModel::RegressorModel regressorModel = McRegressionModel::RegressorModel::Simple,
-                           const Real regressionVarianceCutoff = Null<Real>(),
-                           const bool recalibrateOnStickyCloseOutDates = false,
-                           const bool reevaluateExerciseInStickyRun = false,
-                           const Size cfOnCpnMaxSimTimes = 1,
-                           const Period& cfOnCpnAddSimTimesCutoff = Period(),
-                           const Size regressionMaxSimTimesIr = 0,
-                           const Size regressionMaxSimTimesFx = 0,
-                           const Size regressionMaxSimTimesEq = 0,
-                           const McRegressionModel::VarGroupMode regressionVarGroupMode = McRegressionModel::VarGroupMode::Global);
+        const McRegressionModel::VarGroupMode regressionVarGroupMode = McRegressionModel::VarGroupMode::Global,
+        const bool generateAdditionalResults = false);
+
+    McMultiLegOptionEngine(
+        const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const SequenceType calibrationPathGenerator,
+        const SequenceType pricingPathGenerator, const Size calibrationSamples, const Size pricingSamples,
+        const Size calibrationSeed, const Size pricingSeed, const Size polynomOrder,
+        const LsmBasisSystem::PolynomialType polynomType,
+        const SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Steps,
+        const SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7,
+        const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
+        const std::vector<Date>& simulationDates = std::vector<Date>(),
+        const std::vector<Date>& stickyCloseOutDates = std::vector<Date>(),
+        const std::vector<Size>& externalModelIndices = std::vector<Size>(), const bool minimalObsDate = true,
+        const McRegressionModel::RegressorModel regressorModel = McRegressionModel::RegressorModel::Simple,
+        const Real regressionVarianceCutoff = Null<Real>(), const bool recalibrateOnStickyCloseOutDates = false,
+        const bool reevaluateExerciseInStickyRun = false, const Size cfOnCpnMaxSimTimes = 1,
+        const Period& cfOnCpnAddSimTimesCutoff = Period(), const Size regressionMaxSimTimesIr = 0,
+        const Size regressionMaxSimTimesFx = 0, const Size regressionMaxSimTimesEq = 0,
+        const McRegressionModel::VarGroupMode regressionVarGroupMode = McRegressionModel::VarGroupMode::Global,
+        const bool generateAdditionalResults = false);
 
     void calculate() const override;
     const Handle<CrossAssetModel>& model() const { return model_; }

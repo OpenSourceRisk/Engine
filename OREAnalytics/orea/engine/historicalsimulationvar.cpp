@@ -36,11 +36,12 @@ namespace analytics {
 HistoricalSimulationVarReport::HistoricalSimulationVarReport(
     const string& baseCurrency, const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const string& portfolioFilter,
     const vector<Real>& p, QuantLib::ext::optional<TimePeriod> period,
-    const ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen, std::unique_ptr<FullRevalArgs> fullRevalArgs,
+    const ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen, std::unique_ptr<FullRevalArgs> fullRevalArgs, std::unique_ptr<MultiThreadArgs> multiThreadArgs,
     const bool breakdown, const bool includeExpectedShortfall, const bool tradePnl, const bool riskFactorBreakdown, const bool useAtParCouponsCurves,
-    const bool useAtParCouponsTrades)
+    const bool useAtParCouponsTrades, const bool riskClassBreakdown)
     : VarReport(baseCurrency, portfolio, portfolioFilter, p, period, hisScenGen, nullptr, std::move(fullRevalArgs),
-                false, useAtParCouponsCurves, useAtParCouponsTrades, tradePnl, riskFactorBreakdown),
+                std::move(multiThreadArgs), false, useAtParCouponsCurves, useAtParCouponsTrades, tradePnl, riskFactorBreakdown,
+                riskClassBreakdown),
                 includeExpectedShortfall_(includeExpectedShortfall) {
     fullReval_ = true;
     tradePnl_ = tradePnl;
@@ -132,15 +133,19 @@ void HistoricalSimulationVarReport::writeAdditionalReports(
                 for (const auto& r : riskFactorPnls_[s]) {
                     const auto& key = r.first;
                     const std::vector<Real>& vals = r.second;
-                    Size idx = 0;
                     for (const auto& t : tradeIdIdxPairs_) {
-                        report2->next();
-                        report2->add(ore::data::to_string(key));
-                        report2->add(t.first);
-                        report2->add(hisScenGen_->startDates()[s]);
-                        report2->add(hisScenGen_->endDates()[s]);
-                        report2->add(idx < vals.size() ? vals[idx] : 0.0);
-                        ++idx;
+                        if (t.second < vals.size()) {
+                            Real pnl = vals[t.second];
+                            // Only report if not NaN, i.e. the trade is sensitive to this risk factor.
+                            if (!std::isnan(pnl)) {
+                                report2->next();
+                                report2->add(ore::data::to_string(key));
+                                report2->add(t.first);
+                                report2->add(hisScenGen_->startDates()[s]);
+                                report2->add(hisScenGen_->endDates()[s]);
+                                report2->add(pnl);
+                            }
+                        }
                     }
                 }
             }

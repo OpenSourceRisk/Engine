@@ -45,6 +45,7 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="Exact"/>
       <xs:enumeration value="Euler"/>
+      <xs:enumeration value="BestMarginalDiscretization"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -146,15 +147,18 @@
               <xs:element type="hw" name="HWModel" maxOccurs="unbounded" minOccurs="1"/>
             </xs:sequence>
           </xs:choice>
-            <!-- FIXME: poor name -->
         </xs:complexType>
       </xs:element>
       <xs:element name="ForeignExchangeModels" maxOccurs="1" minOccurs="0">
         <xs:complexType>
-          <xs:sequence>
+          <xs:choice>
+            <xs:sequence>
             <xs:element type="crossCurrencyLGM" name="CrossCcyLGM" maxOccurs="unbounded" minOccurs="0"/>
-            <!-- FIXME: poor name (Ccy & LGM) -->
-          </xs:sequence>
+            </xs:sequence>
+            <xs:sequence>
+            <xs:element type="localVol" name="LocalVol" maxOccurs="unbounded" minOccurs="0"/>
+            </xs:sequence>
+          </xs:choice>
         </xs:complexType>
       </xs:element>
       <xs:element name="EquityModels" maxOccurs="1" minOccurs="0">
@@ -291,11 +295,8 @@
         <xs:complexType>
           <xs:all>
             <xs:element type="xs:string" name="Expiries"/>
-            <!-- FIXME: comma delimited list -->
             <xs:element type="xs:string" name="Terms"/>
-            <!-- FIXME: comma delimited list -->
-            <xs:element type="xs:string" name="Strikes"/>
-            <!-- FIXME: comma delimited list -->
+            <xs:element type="xs:string" name="Strikes" minOccurs="0"/>
           </xs:all>
         </xs:complexType>
       </xs:element>
@@ -658,38 +659,6 @@
     </xs:restriction>
   </xs:simpleType>
 
-  <xs:complexType name="crossCurrencyLGM">
-    <xs:all>
-      <!-- FIXME: Why is this here every time?? -->
-      <xs:element type="currencyCode" name="DomesticCcy"/>
-      <!-- FIXME: Currency not Ccy -->
-      <xs:element type="xs:string" name="CalibrationType"/>
-      <xs:element name="Sigma">
-        <xs:complexType>
-          <xs:all>
-            <xs:element type="bool" name="Calibrate"/>
-            <xs:element type="xs:string" name="ParamType"/>
-            <xs:element type="xs:string" name="TimeGrid"/>
-            <!-- FIXME: comma delimited lists -->
-            <xs:element type="xs:string" name="InitialValue"/>
-            <!-- FIXME: comma delimited lists -->
-          </xs:all>
-        </xs:complexType>
-      </xs:element>
-      <xs:element name="CalibrationOptions" minOccurs="0">
-        <xs:complexType>
-          <xs:all>
-            <xs:element type="xs:string" name="Expiries" minOccurs="0"/>
-            <!-- FIXME: comma delimited lists -->
-            <xs:element type="xs:string" name="Strikes"  minOccurs="0"/>
-            <!-- FIXME: comma delimited lists -->
-          </xs:all>
-        </xs:complexType>
-      </xs:element>
-    </xs:all>
-    <xs:attribute type="currencyCodeWithDefault" name="foreignCcy" use="required"/>
-  </xs:complexType>
-
   <xs:complexType name="crossAssetLGM">
     <xs:all>
       <!-- FIXME: Why is this here every time?? -->
@@ -720,6 +689,60 @@
       </xs:element>
     </xs:all>
     <xs:attribute type="xs:string" name="name" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="crossCurrencyLGM">
+    <xs:all>
+      <xs:element type="currencyCode" name="DomesticCcy"/>
+      <xs:element type="xs:string" name="CalibrationType"/>
+      <xs:element name="Sigma">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="bool" name="Calibrate"/>
+            <xs:element type="xs:string" name="ParamType"/>
+            <xs:element type="xs:string" name="TimeGrid"/>
+            <!-- FIXME: comma delimited lists -->
+            <xs:element type="xs:string" name="InitialValue"/>
+            <!-- FIXME: comma delimited lists -->
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="CalibrationOptions" minOccurs="0">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="xs:string" name="Expiries" minOccurs="0"/>
+            <!-- FIXME: comma delimited lists -->
+            <xs:element type="xs:string" name="Strikes"  minOccurs="0"/>
+            <!-- FIXME: comma delimited lists -->
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+    </xs:all>
+    <xs:attribute type="currencyCodeWithDefault" name="foreignCcy" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="localVolSimpleMcParameters">
+    <xs:all>
+      <xs:element type="xs:integer" name="TimeStepsPerYear" minOccurs="0" />
+      <xs:element type="xs:double" name="CalibrationMoneynessMin" minOccurs="0" />
+      <xs:element type="xs:double" name="CalibrationMoneynessMax" minOccurs="0" />
+      <xs:element type="xs:integer" name="nStrikes" minOccurs="0" />
+      <xs:element type="xs:integer" name="Samples" minOccurs="0" />
+      <xs:element type="xs:double" name="d2CdK2Threshold" minOccurs="0" />
+      <xs:element type="xs:integer" name="nPasses" minOccurs="0" />
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="localVol">
+    <xs:all>
+      <xs:element type="currencyCode" name="DomesticCcy" />
+      <xs:element type="xs:string" name="Model"/>
+      <xs:element type="xs:string" name="StochasticRatesCorrection"/>
+      <xs:element type="xs:string" name="CalibrationMoneyness"/>
+      <xs:element type="xs:string" name="CalibrationGrid"/>
+      <xs:element type="localVolSimpleMcParameters" name="SimpleMcParameters" minOccurs="0"/>
+    </xs:all>
+    <xs:attribute type="currencyCodeWithDefault" name="foreignCcy" use="required"/>
   </xs:complexType>
 
   <xs:complexType name="commoditySchwartz">

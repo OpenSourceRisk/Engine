@@ -59,8 +59,8 @@ using namespace QuantLib;
 class CrossAssetModel : public LinkableCalibratedModel, public QuantLib::ext::enable_shared_from_this<CrossAssetModel> {
 public:
     enum class AssetType : Size { IR = 0, FX = 1, INF = 2, CR = 3, EQ = 4, COM = 5, CrState = 6 };
-    enum class ModelType { LGM1F, HW, BS, DK, CIRPP, JY, GAB, GENERIC };
-    enum class Discretization { Euler, Exact };
+    enum class ModelType { LGM1F, HW, BS, LV, DK, CIRPP, JY, GENERIC };
+    enum class Discretization { Euler, Exact, BestMarginalDiscretization };
 
     static constexpr Size numberOfAssetTypes = 7;
 
@@ -166,8 +166,7 @@ public:
     /*! numeraire */
     QuantLib::Real
     numeraire(const Size ccy, const QuantLib::Time t, const QuantLib::Array& x,
-              const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
-              const QuantLib::Array& aux = Array()) const;
+              const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve = Handle<YieldTermStructure>()) const;
 
     /*! discount bond */
     QuantLib::Real discountBond(
@@ -252,9 +251,7 @@ public:
     /*! index of component in the correlation matrix, by offset */
     Size cIdx(const AssetType t, const Size i, const Size offset = 0) const;
 
-    /*! index of component in the Brownian vector (including aux brownians), by offset
-        this is checked to be equal to cIdx for Euler discretization and pIdx for exact discretization
-        as an internal assertion */
+    /*! index of component in the Brownian vector (including aux brownians), by offset */
     Size wIdx(const AssetType t, const Size i, const Size offset = 0) const;
 
     /*! index of component in the stochastic process array, by offset */
@@ -283,7 +280,10 @@ public:
 
     /*! return (I(t), I^tilde(t,T)) in the notation of the book, note that
         I(0) is normalized to 1 here, i.e. you have to multiply the result
-        with the index value (as of the base date of the inflation ts) */
+        with the index value (as of the base date of the inflation ts).
+        DayCounter dc was used to convert dates from the grid to times, used
+        to convert the times to times measure by the inflation day counter
+        */
     std::pair<Real, Real> infdkI(const Size i, const Time t, const Time T, const Real z, const Real y);
 
     /*! return YoYIIS(t) in the notation of the book, the year on year
@@ -444,6 +444,9 @@ public:
        - of asset type component t / index
        - at step i (or at all steps if i is null) */
     std::vector<bool> MoveParameter(const AssetType t, const Size param, const Size index, const Size i);
+
+    //! Returns the day counter of the domestic ir curve or nullopt
+    std::optional<QuantLib::DayCounter> dayCounter() const;
 
 protected:
     /* ctor to be used in extensions, initialize is not called */
@@ -654,10 +657,10 @@ inline const QuantLib::ext::shared_ptr<CrStateParametrization> CrossAssetModel::
     return QuantLib::ext::static_pointer_cast<CrStateParametrization>(p_[idx(CrossAssetModel::AssetType::CrState, i)]);
 }
 
-inline QuantLib::Real CrossAssetModel::numeraire(const Size ccy, const QuantLib::Time t, const QuantLib::Array& x,
-                                                 const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
-                                                 const QuantLib::Array& aux) const {
-    return irModel(ccy)->numeraire(t, x, discountCurve, aux);
+inline QuantLib::Real
+CrossAssetModel::numeraire(const Size ccy, const QuantLib::Time t, const QuantLib::Array& x,
+                           const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve) const {
+    return irModel(ccy)->numeraire(t, x, discountCurve);
 }
 
 inline Real CrossAssetModel::numeraire(const Size ccy, const Time t, const Real x,
@@ -714,7 +717,15 @@ inline std::pair<Real, Real> CrossAssetModel::crS(const Size i, const Size ccy, 
     QL_FAIL("model at " << i << " is not CR-*");
 }
 
-std::ostream& operator<<(std::ostream& out, const CrossAssetModel::AssetType& type);
+inline std::optional<QuantLib::DayCounter> CrossAssetModel::dayCounter() const {
+    if (irModels_.empty() || irModels_[0] == nullptr || irModels_[0]->termStructure().empty())
+        return std::nullopt;
+    return irModels_[0]->termStructure()->dayCounter();
+}
+
+std::ostream& operator<<(std::ostream& out, const CrossAssetModel::AssetType& v);
+std::ostream& operator<<(std::ostream& out, const CrossAssetModel::ModelType& v);
+std::ostream& operator<<(std::ostream& out, const CrossAssetModel::Discretization& v);
 
 } // namespace QuantExt
 

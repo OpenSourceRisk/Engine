@@ -66,8 +66,8 @@ CorrelationFactor parseCorrelationFactor(const string& name, const char separato
                "parseCorrelationFactor(" << name << "): expected 2 or 3 tokens separated by separator ('" << sep
                                          << "'), e.g. 'IR" << sep << "USD' or 'INF" << sep << "UKRPI" << sep << "0'");
 
-    return {parseCamAssetType(tokens[0]), tokens[1],
-            static_cast<Size>(tokens.size() == 3 ? parseInteger(tokens[3]) : 0)};
+        return {parseCamAssetType(tokens[0]), tokens[1],
+            static_cast<Size>(tokens.size() == 3 ? parseInteger(tokens[2]) : 0)};
 }
 
 void CorrelationMatrixBuilder::reset() {
@@ -308,7 +308,7 @@ QuantLib::Matrix CorrelationMatrixBuilder::pearsonCorrelation(const QuantLib::Ma
     Matrix mCorrelation(n, n);
     Array stdDevs(n);
     for (Size i = 0; i < n; i++) {
-        stdDevs[i] = sqrt(mCovariance[i][i]);
+        stdDevs[i] = std::sqrt(mCovariance[i][i]);
     }
     for (Size i = 0; i < n; i++) {
         for (Size j = 0; j < n; j++) {

@@ -183,7 +183,11 @@ df = pd.DataFrame(results,
                   columns=["Method", "Option value", "Error estimate", "Actual error"])
 
 # %%
-df.style.hide()
+if interactive:
+    try:
+        df.style.hide()
+    except (AttributeError, ImportError, ModuleNotFoundError):
+        pass
 
 # %% [markdown]
 # The following displays the results when this is run as a Python script (in which case the cell above is not displayed).

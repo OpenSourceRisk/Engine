@@ -18,6 +18,8 @@
 
 #include <ored/configuration/commodityvolcurveconfig.hpp>
 #include <ored/marketdata/curvespecparser.hpp>
+#include <ored/marketdata/marketdatumparser.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
@@ -36,12 +38,64 @@ CommodityVolatilityConfig::CommodityVolatilityConfig(
     const vector<QuantLib::ext::shared_ptr<VolatilityConfig>>& volatilityConfig, const string& dayCounter,
     const string& calendar, const std::string& futureConventionsId, QuantLib::Natural optionExpiryRollDays,
     const std::string& priceCurveId, const std::string& yieldCurveId, const std::string& quoteSuffix,
-    const OneDimSolverConfig& solverConfig, const QuantLib::ext::optional<bool>& preferOutOfTheMoney)
+    const OneDimSolverConfig& solverConfig, const QuantLib::ext::optional<bool>& preferOutOfTheMoney,
+    const MarketDatum::InstrumentType instrumentType, const int calendarSpreadOffset,
+    const std::string& calendarSpreadUnderlyingName)
     : CurveConfig(curveId, curveDescription), currency_(currency), volatilityConfig_(volatilityConfig),
       dayCounter_(dayCounter), calendar_(calendar), futureConventionsId_(futureConventionsId),
       optionExpiryRollDays_(optionExpiryRollDays), priceCurveId_(priceCurveId), yieldCurveId_(yieldCurveId),
-      quoteSuffix_(quoteSuffix), solverConfig_(solverConfig), preferOutOfTheMoney_(preferOutOfTheMoney) {
+      quoteSuffix_(quoteSuffix), solverConfig_(solverConfig), preferOutOfTheMoney_(preferOutOfTheMoney),
+      instrumentType_(instrumentType), calendarSpreadOffset_(calendarSpreadOffset),
+      calendarSpreadUnderlyingName_(calendarSpreadUnderlyingName) {
+    validate();
     populateQuotes();
+}
+
+void CommodityVolatilityConfig::validate() const {
+    QL_REQUIRE(instrumentType_ == MarketDatum::InstrumentType::COMMODITY_OPTION ||
+                   instrumentType_ == MarketDatum::InstrumentType::COMMODITY_CALENDAR_SPREAD_OPTION,
+               "invalid instrument type " << to_string(instrumentType_));
+
+    if (instrumentType_ != MarketDatum::InstrumentType::COMMODITY_CALENDAR_SPREAD_OPTION)
+        return;
+
+    QL_REQUIRE(calendarSpreadOffset_ > 0,
+               "calendar spread offset should be positive for spread commodity options");
+
+    string underlyingName;
+    int parsedOffset = 0;
+    QL_REQUIRE(parseCommodityCalendarSpreadVolSurfaceName(curveID_, underlyingName, parsedOffset),
+               "curveId '" << curveID_
+                            << "' should be of the form [underlying]_CALENDAR_SPREAD_[offset]");
+    QL_REQUIRE(calendarSpreadOffset_ == parsedOffset,
+               "CalendarSpreadOffset " << calendarSpreadOffset_ << " does not match curveId '" << curveID_
+                                        << "' offset " << parsedOffset);
+    QL_REQUIRE(calendarSpreadUnderlyingName_ == underlyingName,
+               "CalendarSpreadUnderlyingName '" << calendarSpreadUnderlyingName_ << "' does not match curveId '"
+                                               << curveID_ << "' underlying name '" << underlyingName << "'");
+
+    QL_REQUIRE(!volatilityConfig_.empty(), "volatilityConfig must not be empty for spread commodity options");
+    for (const auto& vc : volatilityConfig_) {
+        if (auto cvc = QuantLib::ext::dynamic_pointer_cast<ConstantVolatilityConfig>(vc)) {
+            QL_REQUIRE(cvc->quoteType() == MarketDatum::QuoteType::RATE_NVOL,
+                       "calendar spread options only support RATE_NVOL quotes for ConstantVolatilityConfig");
+            QL_REQUIRE(cvc->volType() == VolatilityConfig::VolatilityType::Normal,
+                       "calendar spread options only support Normal vol type for ConstantVolatilityConfig");
+        } else if (auto vcc = QuantLib::ext::dynamic_pointer_cast<VolatilityCurveConfig>(vc)) {
+            QL_REQUIRE(vcc->quoteType() == MarketDatum::QuoteType::RATE_NVOL,
+                       "calendar spread options only support RATE_NVOL quotes for VolatilityCurveConfig");
+            QL_REQUIRE(vcc->volType() == VolatilityConfig::VolatilityType::Normal,
+                       "calendar spread options only support Normal vol type for VolatilityCurveConfig");
+        } else if (auto vssc = QuantLib::ext::dynamic_pointer_cast<VolatilityStrikeSurfaceConfig>(vc)) {
+            QL_REQUIRE(vssc->quoteType() == MarketDatum::QuoteType::RATE_NVOL,
+                       "calendar spread options only support RATE_NVOL quotes for VolatilityStrikeSurfaceConfig");
+            QL_REQUIRE(vssc->volType() == VolatilityConfig::VolatilityType::Normal,
+                       "calendar spread options only support Normal vol type for VolatilityStrikeSurfaceConfig");
+        } else {
+            QL_FAIL("calendar spread options only support ConstantVolatilityConfig, VolatilityCurveConfig and "
+                    "VolatilityStrikeSurfaceConfig");
+        }
+    }
 }
 
 void CommodityVolatilityConfig::populateRequiredIds() const {
@@ -138,6 +192,11 @@ void CommodityVolatilityConfig::fromXML(XMLNode* node) {
         solverConfig_.fromXML(n);
     }
 
+    instrumentType_ = parseInstrumentType(XMLUtils::getChildValue(node, "InstrumentType", false, "COMMODITY_OPTION"));
+    calendarSpreadOffset_ = parseInteger(XMLUtils::getChildValue(node, "CalendarSpreadOffset", false, "0"));
+    calendarSpreadUnderlyingName_ = XMLUtils::getChildValue(node, "CalendarSpreadUnderlyingName", false);
+    validate();
+
     preferOutOfTheMoney_ = QuantLib::ext::nullopt;
     if (XMLNode* n = XMLUtils::getChildNode(node, "PreferOutOfTheMoney")) {
         preferOutOfTheMoney_ = parseBool(XMLUtils::getNodeValue(n));
@@ -156,6 +215,12 @@ XMLNode* CommodityVolatilityConfig::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
     XMLUtils::addChild(doc, node, "Currency", currency_);
+
+    if (instrumentType_ == MarketDatum::InstrumentType::COMMODITY_CALENDAR_SPREAD_OPTION) {
+        XMLUtils::addChild(doc, node, "InstrumentType", to_string(instrumentType_));
+        XMLUtils::addChild(doc, node, "CalendarSpreadOffset", calendarSpreadOffset_);
+        XMLUtils::addChild(doc, node, "CalendarSpreadUnderlyingName", calendarSpreadUnderlyingName_);
+    }
 
     XMLNode* vnode = doc.allocNode("VolatilityConfig");
     for (auto vc : volatilityConfig_) {
@@ -193,8 +258,14 @@ void CommodityVolatilityConfig::populateQuotes() {
             auto qs = vc->quotes();
             quotes_.insert(quotes_.end(), qs.begin(), qs.end());
         } else if (auto vc = QuantLib::ext::dynamic_pointer_cast<VolatilitySurfaceConfig>(config)) {
+            string curveName = instrumentType() == MarketDatum::InstrumentType::COMMODITY_CALENDAR_SPREAD_OPTION
+                                   ? calendarSpreadUnderlyingName_
+                                   : curveID_;
             string quoteType = to_string(vc->quoteType());
-            string stem = "COMMODITY_OPTION/" + quoteType + "/" + curveID_ + "/" + currency_ + "/";
+            string stem = to_string(instrumentType()) + "/" + quoteType + "/" + curveName + "/";
+            if (instrumentType_ == MarketDatum::InstrumentType::COMMODITY_CALENDAR_SPREAD_OPTION)
+                stem += std::to_string(calendarSpreadOffset_) + "/";
+            stem += currency_ + "/";
             for (const pair<string, string>& p : vc->quotes()) {
                 string q = stem + p.first + "/" + p.second;
                 if (!quoteSuffix_.empty())

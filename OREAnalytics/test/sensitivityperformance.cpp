@@ -19,7 +19,7 @@
 #include "testmarket.hpp"
 #include "testportfolio.hpp"
 #include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 #include <test/oreatoplevelfixture.hpp>
 
 #include <boost/timer/timer.hpp>

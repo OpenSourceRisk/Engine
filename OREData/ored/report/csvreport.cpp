@@ -25,8 +25,6 @@
 #include <ql/math/comparison.hpp>
 #include <ql/math/rounding.hpp>
 
-#include <boost/filesystem/operations.hpp>
-#include <boost/filesystem/path.hpp>
 #include <boost/variant/static_visitor.hpp>
 #include <boost/algorithm/string/join.hpp>
 
@@ -142,10 +140,10 @@ void CSVFileReport::rollover() {
     checkIsOpen("rollover()");
     end();
     version_++;
-    boost::filesystem::path p(baseFilename_);
-    boost::filesystem::path newFilepath =
+    std::filesystem::path p(baseFilename_);
+    std::filesystem::path newFilepath =
         p.parent_path() /
-        boost::filesystem::path(p.stem().string() + "_" + to_string(version_) + p.extension().string());
+        std::filesystem::path(p.stem().string() + "_" + to_string(version_) + p.extension().string());
     filename_ = newFilepath.string();
     open();
 }
@@ -177,7 +175,7 @@ Report& CSVFileReport::next() {
     // check the filesize every for every 1000 rows, and roll if necessary
     if (rolloverSize_ != QuantLib::Null<Size>()) {
         if (j_ >= 10000) {
-            auto fileSize = boost::filesystem::file_size(filename_);
+            auto fileSize = std::filesystem::file_size(filename_);
             TLOG("CSV size of " << filename_ << " is " << fileSize);
             if (fileSize > rolloverSize_ * 1024 * 1024)
                 rollover();

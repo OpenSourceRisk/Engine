@@ -187,7 +187,8 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
         bool curvesRequired = dimension_ == Dimension::SmileVannaVolga || dimension_ == Dimension::SmileDelta ||
                               dimension_ == Dimension::SmileBFRR;
         fxForeignYieldCurveID_ = XMLUtils::getChildValue(node, "FXForeignCurveID", curvesRequired);
-        fxDomesticYieldCurveID_ = XMLUtils::getChildValue(node, "FXDomesticCurveID", curvesRequired);
+        // the domestic curve id is always optional, if not given / empty it is set in the curve builder
+        fxDomesticYieldCurveID_ = XMLUtils::getChildValue(node, "FXDomesticCurveID", false);
     }
 
     timeInterpolation_ =
@@ -328,8 +329,9 @@ void FXVolatilityCurveConfig::populateRequiredIds() const {
         auto forBase2 = baseVolatility2_.substr(0, 3);
         auto domBase2 = baseVolatility2_.substr(3);
 
-        requiredCurveIds_[CurveSpec::CurveType::FXVolatility].insert(domBase1 + forBase1);
-        requiredCurveIds_[CurveSpec::CurveType::FXVolatility].insert(domBase2 + forBase2);
+        // Note: we do not add the inverse pairs (e.g. USDEUR, CHFEUR) as required here,
+        // because buildATMTriangulated() looks up base vols by their original config IDs
+        // (e.g. EURUSD, EURCHF) and handles inversion internally.
 
         // we need to establish the common currency between the two pairs to include the correlations
         std::string baseCcy = "";
@@ -340,23 +342,11 @@ void FXVolatilityCurveConfig::populateRequiredIds() const {
             baseCcy = domBase1;
         }
 
-        // straight pair
+        // We only declare one correlation pair as required; getCorrelationCurve() will
+        // search all 8 permutations (straight, inverse, swapped) at runtime.
         std::string forIndex = "FX-" + fxIndexTag_ + "-" + forTarget + "-" + baseCcy;
         std::string domIndex = "FX-" + fxIndexTag_ + "-" + domTarget + "-" + baseCcy;
         requiredCurveIds_[CurveSpec::CurveType::Correlation].insert(forIndex + "&" + domIndex);
-        // inverse pair
-        requiredCurveIds_[CurveSpec::CurveType::Correlation].insert(domIndex + "&" + forIndex);
-        // inverse fx index1
-        std::string forIndexInverse = "FX-" + fxIndexTag_ + "-" + baseCcy + "-" + forTarget;
-        requiredCurveIds_[CurveSpec::CurveType::Correlation].insert(forIndexInverse + "&" + domIndex);
-        requiredCurveIds_[CurveSpec::CurveType::Correlation].insert(domIndex + "&" + forIndexInverse);
-        // inverse fx index2
-        std::string domIndexInverse = "FX-" + fxIndexTag_ + "-" + baseCcy + "-" + domTarget;
-        requiredCurveIds_[CurveSpec::CurveType::Correlation].insert(forIndex + "&" + domIndexInverse);
-        requiredCurveIds_[CurveSpec::CurveType::Correlation].insert(domIndexInverse + "&" + forIndex);
-        // both fx indices inverted
-        requiredCurveIds_[CurveSpec::CurveType::Correlation].insert(forIndexInverse + "&" + domIndexInverse);
-        requiredCurveIds_[CurveSpec::CurveType::Correlation].insert(domIndexInverse + "&" + forIndexInverse);
     }
 }
 

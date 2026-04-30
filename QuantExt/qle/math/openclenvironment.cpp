@@ -171,31 +171,31 @@ void errorCallback(const char* errinfo, const void* private_info, size_t cb, voi
 
 } // namespace
 
-class OpenClContext : public ComputeContext {
+class OpenClContext final : public ComputeContext {
 public:
     OpenClContext(cl_device_id* device, cl_context* context,
                   const std::vector<std::pair<std::string, std::string>>& deviceInfo,
                   const bool supportsDoublePrecision);
-    ~OpenClContext() override final;
-    void init() override final;
+    ~OpenClContext() override;
+    void init() override;
 
     std::pair<std::size_t, bool> initiateCalculation(const std::size_t n, const std::size_t id = 0,
                                                      const std::size_t version = 0,
-                                                     const Settings settings = {}) override final;
-    void disposeCalculation(const std::size_t n) override final;
-    std::size_t createInputVariable(double v) override final;
-    std::size_t createInputVariable(double* v) override final;
+                                                     const Settings settings = {}) override;
+    void disposeCalculation(const std::size_t n) override;
+    std::size_t createInputVariable(double v) override;
+    std::size_t createInputVariable(double* v) override;
     std::vector<std::vector<std::size_t>> createInputVariates(const std::size_t dim,
-                                                              const std::size_t steps) override final;
+                                                              const std::size_t steps) override;
     std::size_t applyOperation(const std::size_t randomVariableOpCode,
-                               const std::vector<std::size_t>& args) override final;
-    void freeVariable(const std::size_t id) override final;
-    void declareOutputVariable(const std::size_t id) override final;
-    void finalizeCalculation(std::vector<double*>& output) override final;
+                               const std::vector<std::size_t>& args) override;
+    void freeVariable(const std::size_t id) override;
+    void declareOutputVariable(const std::size_t id) override;
+    void finalizeCalculation(std::vector<double*>& output) override;
 
     std::vector<std::pair<std::string, std::string>> deviceInfo() const override;
     bool supportsDoublePrecision() const override;
-    const DebugInfo& debugInfo() const override final;
+    const DebugInfo& debugInfo() const override;
 
 private:
     void updateVariatesPool();
@@ -1266,7 +1266,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
             std::size_t offset = gpuCodeGenerator_[currentId_ - 1].bufferedLocalVarMap(
                                      gpuCodeGenerator_[currentId_ - 1].outputVars()[i].second) *
                                  size_[currentId_ - 1];
-            std::copy(&values[offset], &values[offset + size_[currentId_ - 1]], output[i]);
+            std::copy(&values[offset], &values[offset] + size_[currentId_ - 1], output[i]);
         }
     }
 
@@ -1315,7 +1315,8 @@ void OpenClContext::copyLocalValuesToHost(
         for (auto const& v : vars) {
             std::size_t bid = gpuCodeGenerator_[currentId_ - 1].bufferedLocalVarMap(v.second);
             std::copy(&valuesFloat[counter * size_[currentId_ - 1]],
-                      &valuesFloat[(counter + 1) * size_[currentId_ - 1]], &values[bid * size_[currentId_ - 1]]);
+                      &valuesFloat[counter * size_[currentId_ - 1]] + size_[currentId_ - 1],
+                      &values[bid * size_[currentId_ - 1]]);
             ++counter;
         }
     }
@@ -1336,7 +1337,8 @@ void OpenClContext::copyLocalValuesToDevice(
         std::size_t counter = 0;
         for (auto const& v : vars) {
             std::size_t bid = gpuCodeGenerator_[currentId_ - 1].bufferedLocalVarMap(v.second);
-            std::copy(&values[bid * size_[currentId_ - 1]], &values[(bid + 1) * size_[currentId_ - 1]],
+            std::copy(&values[bid * size_[currentId_ - 1]],
+                      &values[bid * size_[currentId_ - 1]] + size_[currentId_ - 1],
                       &valuesFloat[counter * size_[currentId_ - 1]]);
             ++counter;
         }

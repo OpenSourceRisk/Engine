@@ -407,7 +407,7 @@ void SensitivityScenarioGenerator::generateEquityScenarios(bool up) {
 }
 
 namespace {
-void checkShiftTenors(const std::vector<Period>& effective, const std::vector<Period>& config,
+void checkShiftTenors(const std::vector<Period>& effective, const std::vector<ScenarioCurvePillar>& config,
                       const std::string& curveLabel, bool continueOnError = false) {
     if (effective.size() != config.size()) {
         string message = "mismatch between effective shift tenors (" + std::to_string(effective.size()) +
@@ -478,9 +478,10 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up) {
         if (!valid)
             continue;
 
-        std::vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasYieldCurveTenors(ccy)
-                                              ? simMarketData_->yieldCurveTenors(ccy)
-                                              : data.shiftTenors;
+        std::vector<Period> shiftTenors =
+            overrideTenors_ && simMarketData_->hasYieldCurveTenors(ccy)
+                ? simMarketData_->yieldCurveTenors(ccy)
+                : scenarioPillarsToPeriodVector(asof, data.shiftTenors, true);
         checkShiftTenors(shiftTenors, data.shiftTenors, "Discount Curve " + ccy, continueOnError_);
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
@@ -537,7 +538,7 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up) {
             WLOG("Index " << sim_idx << " in simmarket is not included in sensitivities analysis");
         }
     }
-
+    // Need this to convert IR future expiries YYYY-MM into times / period
     for (auto idx : sensitivityData_->indexCurveShiftData()) {
         string indexName = idx.first;
         Size n_ten;
@@ -585,7 +586,7 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up) {
 
         std::vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasYieldCurveTenors(indexName)
                                               ? simMarketData_->yieldCurveTenors(indexName)
-                                              : data.shiftTenors;
+                                              : scenarioPillarsToPeriodVector(asof, data.shiftTenors, true);
         checkShiftTenors(shiftTenors, data.shiftTenors, "Index Curve " + indexName, continueOnError_);
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
@@ -643,7 +644,7 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(bool up) {
             WLOG("Yield Curve " << sim_yc << " in simmarket is not included in sensitivities analysis");
         }
     }
-
+    // Need this to convert IR future expiries YYYY-MM into times / period
     for (auto y : sensitivityData_->yieldCurveShiftData()) {
         string name = y.first;
         Size n_ten;
@@ -689,7 +690,7 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(bool up) {
 
         const std::vector<Period>& shiftTenors = overrideTenors_ && simMarketData_->hasYieldCurveTenors(name)
                                                      ? simMarketData_->yieldCurveTenors(name)
-                                                     : data.shiftTenors;
+                                                     : scenarioPillarsToPeriodVector(asof, data.shiftTenors, true);
         checkShiftTenors(shiftTenors, data.shiftTenors, "Yield Curve " + name, continueOnError_);
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
@@ -746,7 +747,6 @@ void SensitivityScenarioGenerator::generateDividendYieldScenarios(bool up) {
             WLOG("Equity " << sim << " in simmarket is not included in dividend yield sensitivity analysis");
         }
     }
-
     for (auto d : sensitivityData_->dividendYieldShiftData()) {
         string name = d.first;
         Size n_ten;
@@ -791,9 +791,10 @@ void SensitivityScenarioGenerator::generateDividendYieldScenarios(bool up) {
         if (!valid)
             continue;
 
-        const std::vector<Period>& shiftTenors = overrideTenors_ && simMarketData_->hasEquityDividendTenors(name)
-                                                     ? simMarketData_->equityDividendTenors(name)
-                                                     : data.shiftTenors;
+        const std::vector<Period>& shiftTenors =
+            overrideTenors_ && simMarketData_->hasEquityDividendTenors(name)
+                ? simMarketData_->equityDividendTenors(name)
+                : scenarioPillarsToPeriodVector(asof, data.shiftTenors, false);
         checkShiftTenors(shiftTenors, data.shiftTenors, "Dividend Yield " + name, continueOnError_);
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
@@ -1462,7 +1463,6 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(bool up)
 
     // original curves' buffer
     std::vector<Real> times;
-
     for (auto c : sensitivityData_->creditCurveShiftData()) {
         string name = c.first;
         try {
@@ -1507,9 +1507,10 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(bool up)
         if (!valid)
             continue;
 
-        std::vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasDefaultTenors(name)
-                                              ? simMarketData_->defaultTenors(name)
-                                              : data.shiftTenors;
+        std::vector<Period> shiftTenors =
+            overrideTenors_ && simMarketData_->hasDefaultTenors(name)
+                ? simMarketData_->defaultTenors(name)
+                : scenarioPillarsToPeriodVector(asof, data.shiftTenors, false);
 
         checkShiftTenors(shiftTenors, data.shiftTenors, "Default Curve " + name, continueOnError_);
 
@@ -1660,7 +1661,6 @@ void SensitivityScenarioGenerator::generateZeroInflationScenarios(bool up) {
             WLOG("Zero Inflation Index " << sim_idx << " in simmarket is not included in sensitivities analysis");
         }
     }
-
     for (auto z : sensitivityData_->zeroInflationCurveShiftData()) {
         string indexName = z.first;
         Size n_ten;
@@ -1702,9 +1702,10 @@ void SensitivityScenarioGenerator::generateZeroInflationScenarios(bool up) {
         if (!valid)
             continue;
 
-        std::vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasZeroInflationTenors(indexName)
-                                              ? simMarketData_->zeroInflationTenors(indexName)
-                                              : data.shiftTenors;
+        std::vector<Period> shiftTenors =
+            overrideTenors_ && simMarketData_->hasZeroInflationTenors(indexName)
+                ? simMarketData_->zeroInflationTenors(indexName)
+                : scenarioPillarsToPeriodVector(asof, data.shiftTenors, false);
         checkShiftTenors(shiftTenors, data.shiftTenors, "Zero Inflation " + indexName, continueOnError_);
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
@@ -1807,9 +1808,10 @@ void SensitivityScenarioGenerator::generateYoYInflationScenarios(bool up) {
         if (!valid)
             continue;
 
-        std::vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasYoyInflationTenors(indexName)
-                                              ? simMarketData_->yoyInflationTenors(indexName)
-                                              : data.shiftTenors;
+        std::vector<Period> shiftTenors =
+            overrideTenors_ && simMarketData_->hasYoyInflationTenors(indexName)
+                ? simMarketData_->yoyInflationTenors(indexName)
+                : scenarioPillarsToPeriodVector(asof, data.shiftTenors, false);
         checkShiftTenors(shiftTenors, data.shiftTenors, "YoY Inflation " + indexName, continueOnError_);
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j) {
@@ -2266,7 +2268,11 @@ void SensitivityScenarioGenerator::generateCommodityCurveScenarios(bool up) {
         QL_REQUIRE(!data.shiftTenors.empty(), "Commodity curve shift tenors have not been given");
         vector<Time> shiftTimes(data.shiftTenors.size());
         for (Size j = 0; j < data.shiftTenors.size(); ++j) {
-            shiftTimes[j] = dc.yearFraction(asof, asof + data.shiftTenors[j]);
+            auto p = std::get_if<Period>(&data.shiftTenors[j]);
+            QL_REQUIRE(p != nullptr,
+                       "Unsupported sensitivity shift tenor type '" << data.shiftTenors[j]
+                                                                    << "' for commodity curve '" << name << "'");
+            shiftTimes[j] = dc.yearFraction(asof, asof + *p);
         }
 
         // Can we store a valid shift size?
@@ -2946,7 +2952,7 @@ SensitivityScenarioGenerator::commodityCurveScenarioDescription(const string& co
 
     QL_REQUIRE(sensitivityData_->commodityCurveShiftData().count(commodityName) > 0,
                "Name " << commodityName << " not found in commodity curve shift data");
-    vector<Period>& shiftTenors = sensitivityData_->commodityCurveShiftData()[commodityName]->shiftTenors;
+    auto& shiftTenors = sensitivityData_->commodityCurveShiftData()[commodityName]->shiftTenors;
     QL_REQUIRE(bucket < shiftTenors.size(), "bucket " << bucket << " out of commodity curve bucket range");
 
     RiskFactorKey key(RiskFactorKey::KeyType::CommodityCurve, commodityName, bucket);

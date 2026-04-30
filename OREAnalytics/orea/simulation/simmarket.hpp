@@ -50,7 +50,8 @@ public:
         preUpdate();
         updateDate(d);
         updateScenario(d);
-        postUpdate(d, true);
+        postUpdate(d);
+        fixingManager()->update(d);
         updateAsd(d);
     }
 
@@ -64,7 +65,7 @@ public:
     virtual void updateScenario(const Date&) = 0;
 
     //! Observable reset depending on selected mode, instrument updates
-    virtual void postUpdate(const Date& d, bool withFixings) = 0;
+    virtual void postUpdate(const Date&) = 0;
 
     //! Update aggregation scenario data
     virtual void updateAsd(const Date&) = 0;

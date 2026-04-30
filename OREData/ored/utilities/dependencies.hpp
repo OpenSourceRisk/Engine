@@ -24,6 +24,7 @@
 #pragma once
 
 #include <ored/marketdata/market.hpp>
+#include <ored/configuration/curveconfigurations.hpp>
 
 namespace ore {
 namespace data {
@@ -44,7 +45,8 @@ void addMarketObjectDependencies(
   \ingroup utilities
 */
 std::string marketObjectToCurveSpec(const MarketObject& mo, const std::string& name, const string& baseCcy,
-                                    const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs);
+                                    const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
+                                    bool configFallback = true);
 
 /*! Get the discount curve for the currency \p ccy.
         - if the \p ccy is the base currency, determines the discount curve from the config

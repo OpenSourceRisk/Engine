@@ -16,7 +16,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <orea/app/inputparameters.hpp>
 #include <orea/aggregation/dynamicsimmcalculator.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/vectorutils.hpp>
@@ -40,15 +39,14 @@ using namespace ore::data;
 namespace ore {
 namespace analytics {
 
-DynamicSimmCalculator::DynamicSimmCalculator(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-                                             const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
+DynamicSimmCalculator::DynamicSimmCalculator(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
                                              const QuantLib::ext::shared_ptr<NPVCube>& cube,
                                              const QuantLib::ext::shared_ptr<CubeInterpretation>& cubeInterpretation,
                                              const QuantLib::ext::shared_ptr<AggregationScenarioData>& scenarioData,
                                              const QuantLib::ext::shared_ptr<SimmHelper>& simmHelper,
                                              QuantLib::Real quantile, QuantLib::Size horizonCalendarDays,
                                              const std::map<std::string, Real>& currentIM, const Size& simmCubeDepth)
-    : DynamicInitialMarginCalculator(inputs, portfolio, cube, cubeInterpretation, scenarioData, quantile,
+    : DynamicInitialMarginCalculator(portfolio, cube, cubeInterpretation, scenarioData, quantile,
                                      horizonCalendarDays, currentIM, simmCubeDepth),
       simmHelper_(simmHelper) {}
 

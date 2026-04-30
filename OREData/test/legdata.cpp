@@ -18,7 +18,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include <ored/portfolio/legdata.hpp>
-#include <oret/toplevelfixture.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 
 #include <boost/make_shared.hpp>
 
@@ -26,7 +26,7 @@ using namespace QuantLib;
 using namespace ore::data;
 using namespace boost::unit_test_framework;
 
-BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::data::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(LegDataTests)
 

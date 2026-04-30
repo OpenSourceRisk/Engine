@@ -261,7 +261,7 @@ QuantLib::ext::shared_ptr<IborIndex> parseIborIndex(const string& s, string& ten
     vector<string> tokens;
     split(tokens, s, boost::is_any_of("-"));
     QL_REQUIRE(tokens.size() == 2 || tokens.size() == 3,
-               "Two or three tokens required in " << s << ": CCY-INDEX or CCY-INDEX-TERM");
+               "Two or three \"-\"-delimited tokens required in interest rate index \"" << s << "\": CCY-INDEX or CCY-INDEX-TERM");
 
     // Variables used below
     string indexStem = tokens[0] + "-" + tokens[1];
@@ -629,8 +629,9 @@ QuantLib::ext::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const stri
         pair<bool, QuantLib::ext::shared_ptr<Convention>> p = conventions->get(s, Convention::Type::ZeroInflationIndex);
         if (p.first) {
             auto c = QuantLib::ext::dynamic_pointer_cast<ZeroInflationIndexConvention>(p.second);
-            auto index = QuantLib::ext::make_shared<ZeroInflationIndex>(s, c->region(), c->revised(),
-                                                                c->frequency(), c->availabilityLag(), c->currency(), h);
+            auto index = QuantLib::ext::make_shared<ZeroInflationIndex>(s, c->region(), c->revised(), c->frequency(),
+                                                                        c->availabilityLag(), c->currency(), h,
+                                                                        c->rebasingEvents());
             IndexNameTranslator::instance().add(index->name(), s);
             return index;
         }

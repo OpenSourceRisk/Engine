@@ -23,7 +23,7 @@
 #include <ored/portfolio/enginedata.hpp>
 #include <ored/portfolio/fxoption.hpp>
 #include <ored/utilities/to_string.hpp>
-#include <oret/toplevelfixture.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/daycounters/actual360.hpp>
@@ -104,7 +104,7 @@ private:
 };
 } // namespace
 
-BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::data::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(FXOptionTests)
 

@@ -33,8 +33,10 @@ CrossCcyFixFloatSwap::CrossCcyFixFloatSwap(
     const Calendar& fixedPaymentCalendar, Real floatNominal, const Currency& floatCurrency,
     const Schedule& floatSchedule, const QuantLib::ext::shared_ptr<IborIndex>& floatIndex, Spread floatSpread,
     BusinessDayConvention floatPaymentBdc, Natural floatPaymentLag, const Calendar& floatPaymentCalendar,
-    const bool telescopicValueDates, QuantLib::ext::optional<bool> floatIncludeSpread, QuantLib::ext::optional<Period> floatLookback,
-    QuantLib::ext::optional<Size> floatFixingDays, QuantLib::ext::optional<Size> floatRateCutoff, QuantLib::ext::optional<bool> floatIsAveraged)
+    const bool telescopicValueDates, QuantLib::ext::optional<bool> floatIncludeSpread,
+    QuantLib::ext::optional<Period> floatLookback, QuantLib::ext::optional<Size> floatFixingDays,
+    QuantLib::ext::optional<Size> floatRateCutoff, QuantLib::ext::optional<bool> floatIsAveraged,
+    QuantLib::ext::optional<bool> floatObservationShift)
     : CrossCcySwap(2), type_(type), fixedNominal_(fixedNominal), fixedCurrency_(fixedCurrency),
       fixedSchedule_(fixedSchedule), fixedRate_(fixedRate), fixedDayCount_(fixedDayCount),
       fixedPaymentBdc_(fixedPaymentBdc), fixedPaymentLag_(fixedPaymentLag), fixedPaymentCalendar_(fixedPaymentCalendar),
@@ -43,7 +45,8 @@ CrossCcyFixFloatSwap::CrossCcyFixFloatSwap(
       floatPaymentLag_(floatPaymentLag), floatPaymentCalendar_(floatPaymentCalendar),
       telescopicValueDates_(telescopicValueDates),
       floatIncludeSpread_(floatIncludeSpread), floatLookback_(floatLookback), floatFixingDays_(floatFixingDays),
-      floatRateCutoff_(floatRateCutoff), floatIsAveraged_(floatIsAveraged) {
+      floatRateCutoff_(floatRateCutoff), floatIsAveraged_(floatIsAveraged),
+      floatObservationShift_(floatObservationShift) {
 
     // Build the float leg
     Leg floatLeg;
@@ -54,9 +57,10 @@ CrossCcyFixFloatSwap::CrossCcyFixFloatSwap(
                            .withSpread(floatSpread_)
                            .withPaymentLag(floatPaymentLag_)
                            .withLookback(floatLookback_ ? *floatLookback_ : 0 * Days)
-                           .withFixingDays(floatFixingDays_ ? *floatFixingDays_ : 0)
+                           .withFixingDays(floatFixingDays_ ? *floatFixingDays_ : Null<Size>())
                            .withRateCutoff(floatRateCutoff_ ? *floatRateCutoff_ : 0)
-                           .withTelescopicValueDates(telescopicValueDates_);
+                           .withTelescopicValueDates(telescopicValueDates_)
+                           .withObservationShift(floatObservationShift_ ? *floatObservationShift_ : true);
         } else {
             floatLeg = QuantExt::OvernightLeg(floatSchedule_, on)
                            .withNotionals(floatNominal_)
@@ -64,9 +68,10 @@ CrossCcyFixFloatSwap::CrossCcyFixFloatSwap(
                            .withPaymentLag(floatPaymentLag_)
                            .includeSpread(floatIncludeSpread_ ? *floatIncludeSpread_ : false)
                            .withLookback(floatLookback_ ? *floatLookback_ : 0 * Days)
-                           .withFixingDays(floatFixingDays_ ? *floatFixingDays_ : 0)
+                           .withFixingDays(floatFixingDays_ ? *floatFixingDays_ : Null<Size>())
                            .withRateCutoff(floatRateCutoff_ ? *floatRateCutoff_ : 0)
-                           .withTelescopicValueDates(telescopicValueDates_);
+                           .withTelescopicValueDates(telescopicValueDates_)
+                           .withObservationShift(floatObservationShift_ ? *floatObservationShift_ : true);
         }
     } else {
         floatLeg = IborLeg(floatSchedule_, floatIndex_)

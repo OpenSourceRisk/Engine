@@ -43,9 +43,9 @@ using namespace QuantLib;
     Basically the same remarks as for CrossAssetModel hold
     \ingroup models
 */
-class LinearGaussMarkovModel : public IrModel {
+class LinearGaussMarkovModel final : public IrModel {
 public:
-    enum class Discretization { Euler, Exact };
+    enum class Discretization { Euler, Exact, ExactGlobal };
 
     LinearGaussMarkovModel(const QuantLib::ext::shared_ptr<IrLgm1fParametrization>& parametrization,
                            const Measure measure = Measure::LGM, const Discretization = Discretization::Euler,
@@ -68,14 +68,15 @@ public:
                                 const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve =
                                     Handle<YieldTermStructure>()) const override;
 
-    QuantLib::Real
-    numeraire(const QuantLib::Time t, const QuantLib::Array& x,
-              const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
-              const QuantLib::Array& aux = Array()) const override;
+    QuantLib::Real numeraire(const QuantLib::Time t, const QuantLib::Array& x,
+                             const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve =
+                                 Handle<YieldTermStructure>()) const override;
 
     QuantLib::Real shortRate(const QuantLib::Time t, const QuantLib::Array& x,
                              const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve =
                                  Handle<YieldTermStructure>()) const override;
+
+    Array marginalStep(const Time t0, const Array& x0, const Time dt, const Array& dw) const override;
 
     //! LGM specific methods
 
@@ -151,6 +152,19 @@ public:
     /*! get info on how the model was calibrated */
     const LgmCalibrationInfo& getCalibrationInfo() const { return calibrationInfo_; }
 
+    void enableCache(const bool enable, const std::vector<Size>& loopSizes = {0, 0}) override {
+        enableCache_ = enable;
+        numeraireCacheReady_ = discountBondCacheReady_ = false;
+        discountBondCacheSize_ = loopSizes[0];
+        numeraireCacheSize_ = loopSizes[1];
+        discountBondCacheCounter_ = 0;
+        numeraireCacheCounter_ = 0;
+        discountBondCache_.resize(loopSizes[0]);
+        numeraireCache_.resize(loopSizes[1]);
+    }
+
+    ext::shared_ptr<IrModel> clone() const override;
+
 private:
     QuantLib::ext::shared_ptr<IrLgm1fParametrization> parametrization_;
     QuantLib::ext::shared_ptr<Integrator> integrator_;
@@ -159,6 +173,16 @@ private:
     bool evaluateBankAccount_;
     QuantLib::ext::shared_ptr<StochasticProcess1D> stateProcess_;
     LgmCalibrationInfo calibrationInfo_;
+
+    bool enableCache_ = false;
+    Size discountBondCacheSize_ = 0;
+    Size numeraireCacheSize_ = 0;
+    mutable bool discountBondCacheReady_ = false;
+    mutable bool numeraireCacheReady_ = false;
+    mutable Size discountBondCacheCounter_ = 0;
+    mutable Size numeraireCacheCounter_ = 0;
+    mutable std::vector<std::pair<double, double>> discountBondCache_;
+    mutable std::vector<std::pair<double, double>> numeraireCache_;
 };
 
 typedef LinearGaussMarkovModel LGM;
@@ -168,6 +192,9 @@ typedef LinearGaussMarkovModel LGM;
 inline void LinearGaussMarkovModel::update() {
     parametrization_->update();
     notifyObservers();
+    numeraireCacheReady_ = discountBondCacheReady_ = false;
+    discountBondCacheCounter_ = 0;
+    numeraireCacheCounter_ = 0;
 }
 
 inline void LinearGaussMarkovModel::generateArguments() { update(); }
@@ -180,21 +207,16 @@ inline QuantLib::ext::shared_ptr<StochasticProcess> LinearGaussMarkovModel::stat
 inline QuantLib::Real
 LinearGaussMarkovModel::discountBond(const QuantLib::Time t, const QuantLib::Time T, const QuantLib::Array& x,
                                      const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve) const {
-    QL_REQUIRE(x.size() == n(), "LinearGaussMarkovModel::discountBond() requires input state of dimension " << n());
     return discountBond(t, T, x[0], discountCurve);
 }
 
 inline QuantLib::Real
 LinearGaussMarkovModel::numeraire(const QuantLib::Time t, const QuantLib::Array& x,
-                                  const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
-                                  const QuantLib::Array& aux) const {
-    QL_REQUIRE(x.size() == n(), "LinearGaussMarkovModel::numeraire() requires input state of dimension " << n());
-    QL_REQUIRE(aux.size() == n_aux(),
-               "LinearGaussMarkovModel::numeraire() requires aux input state of dimension " << n_aux());
+                                  const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve) const {
     if (measure() == Measure::LGM) {
         return numeraire(t, x[0], discountCurve);
     } else {
-        return bankAccountNumeraire(t, x[0], aux[0], discountCurve);
+        return bankAccountNumeraire(t, x[0], x[n()], discountCurve);
     }
 }
 
@@ -204,29 +226,64 @@ inline const QuantLib::ext::shared_ptr<IrLgm1fParametrization> LinearGaussMarkov
 
 inline Real LinearGaussMarkovModel::numeraire(const Time t, const Real x,
                                               const Handle<YieldTermStructure> discountCurve) const {
+    // we use a cache (if enabled) specifically in this method for usage in CrossAssetModelScenarioGenerator
+    if (numeraireCacheReady_) {
+        auto tmp =
+            numeraireCache_[numeraireCacheCounter_].first * std::pow(numeraireCache_[numeraireCacheCounter_].second, x);
+        if (++numeraireCacheCounter_ >= numeraireCacheSize_)
+            numeraireCacheCounter_ = 0;
+        return tmp;
+    }
     QL_REQUIRE(t >= 0.0, "t (" << t << ") >= 0 required in LGM::numeraire");
     Real Ht = parametrization_->H(t);
-    return std::exp(Ht * x + 0.5 * Ht * Ht * parametrization_->zeta(t)) /
-           (discountCurve.empty() ? parametrization_->termStructure()->discount(t) : discountCurve->discount(t));
+    Real c1 = std::exp(0.5 * Ht * Ht * parametrization_->zeta(t)) /
+              (discountCurve.empty() ? parametrization_->termStructure()->discount(t) : discountCurve->discount(t));
+    Real c2 = std::exp(Ht);
+    if (enableCache_) {
+        numeraireCache_[numeraireCacheCounter_] = std::make_pair(c1, c2);
+        if (++numeraireCacheCounter_ >= numeraireCacheSize_) {
+            numeraireCacheCounter_ = 0;
+            numeraireCacheReady_ = true;
+        }
+    }
+    return c1 * std::pow(c2, x);
 }
 
 inline Real LinearGaussMarkovModel::discountBond(const Time t, const Time T, const Real x,
                                                  const Handle<YieldTermStructure> discountCurve) const {
+    // we use a cache (if enabled) specifically in this method for usage in CrossAssetModelScenarioGenerator
     if (QuantLib::close_enough(t, T))
         return 1.0;
+    if (discountBondCacheReady_) {
+        auto tmp = discountBondCache_[discountBondCacheCounter_].first *
+                   std::pow(discountBondCache_[discountBondCacheCounter_].second, x);
+        if (++discountBondCacheCounter_ >= discountBondCacheSize_)
+            discountBondCacheCounter_ = 0;
+        return tmp;
+    }
     QL_REQUIRE(T >= t && t >= 0.0, "T(" << T << ") >= t(" << t << ") >= 0 required in LGM::discountBond");
     Real Ht = parametrization_->H(t);
     Real HT = parametrization_->H(T);
-    return (discountCurve.empty()
-                ? parametrization_->termStructure()->discount(T) / parametrization_->termStructure()->discount(t)
-                : discountCurve->discount(T) / discountCurve->discount(t)) *
-           std::exp(-(HT - Ht) * x - 0.5 * (HT * HT - Ht * Ht) * parametrization_->zeta(t));
+    Real c1 = (discountCurve.empty()
+                   ? parametrization_->termStructure()->discount(T) / parametrization_->termStructure()->discount(t)
+                   : discountCurve->discount(T) / discountCurve->discount(t)) *
+              std::exp(-0.5 * (HT * HT - Ht * Ht) * parametrization_->zeta(t));
+    Real c2 = std::exp(-(HT - Ht));
+    if (enableCache_) {
+        discountBondCache_[discountBondCacheCounter_] = std::make_pair(c1, c2);
+        if (++discountBondCacheCounter_ >= discountBondCacheSize_) {
+            discountBondCacheCounter_ = 0;
+            discountBondCacheReady_ = true;
+        }
+    }
+    return c1 * std::pow(c2, x);
 }
 
 inline QuantLib::Real
 LinearGaussMarkovModel::shortRate(const QuantLib::Time t, const QuantLib::Array& x,
                                   const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve) const {
-    QL_FAIL("LGM does not provide short rate.");
+    return discountCurve->forwardRate(t, t, QuantLib::Compounding::Continuous) + x[0] * parametrization_->Hprime(t) +
+           parametrization_->zeta(t) * parametrization_->Hprime(t) * parametrization_->H(t);
 }
 
 inline Real LinearGaussMarkovModel::reducedDiscountBond(const Time t, const Time T, const Real x,
@@ -276,10 +333,9 @@ inline void LinearGaussMarkovModel::calibrateReversionsIterative(
     update();
 }
 
-inline void
-LinearGaussMarkovModel::calibrateVolatilities(const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& helpers,
-                                              OptimizationMethod& method, const EndCriteria& endCriteria,
-                                              const Constraint& constraint, const std::vector<Real>& weights) {
+inline void LinearGaussMarkovModel::calibrateVolatilities(
+    const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& helpers, OptimizationMethod& method,
+    const EndCriteria& endCriteria, const Constraint& constraint, const std::vector<Real>& weights) {
     std::vector<bool> moveVols(parametrization_->parameter(0)->size() + parametrization_->parameter(1)->size(), true);
     for (Size i = 0; i < parametrization_->parameter(0)->size(); ++i)
         moveVols[i] = false;
@@ -287,10 +343,9 @@ LinearGaussMarkovModel::calibrateVolatilities(const std::vector<QuantLib::ext::s
     update();
 }
 
-inline void
-LinearGaussMarkovModel::calibrateReversions(const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& helpers,
-                                            OptimizationMethod& method, const EndCriteria& endCriteria,
-                                            const Constraint& constraint, const std::vector<Real>& weights) {
+inline void LinearGaussMarkovModel::calibrateReversions(
+    const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& helpers, OptimizationMethod& method,
+    const EndCriteria& endCriteria, const Constraint& constraint, const std::vector<Real>& weights) {
     std::vector<bool> moveRevs(parametrization_->parameter(0)->size() + parametrization_->parameter(1)->size(), true);
     for (Size i = 0; i < parametrization_->parameter(1)->size(); ++i)
         moveRevs[parametrization_->parameter(0)->size() + i] = false;

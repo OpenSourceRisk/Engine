@@ -35,6 +35,16 @@ namespace data {
 class AmcCgFxOptionEngineBase : public AmcCgBaseEngine {
 public:
     AmcCgFxOptionEngineBase(const std::string& domCcy, const std::string& forCcy,
+                            const QuantLib::ext::shared_ptr<ModelCG>& modelCg, const Model::Params& mcParams,
+                            const double indicatorSmoothingForValues, const double indicatorSmoothingForDerivatives,
+                            const double sqrtSmoothingForDerivatives, const bool useCachedSensis,
+                            const bool useExternalComputeFramework, const bool useDoublePrecisionForExternalCalculation,
+                            const bool generateAdditionalResults)
+        : AmcCgBaseEngine(modelCg, mcParams, indicatorSmoothingForValues, indicatorSmoothingForDerivatives,
+                          sqrtSmoothingForDerivatives, useCachedSensis, useExternalComputeFramework,
+                          useDoublePrecisionForExternalCalculation, generateAdditionalResults),
+          domCcy_(domCcy), forCcy_(forCcy) {}
+    AmcCgFxOptionEngineBase(const std::string& domCcy, const std::string& forCcy,
                             const QuantLib::ext::shared_ptr<ModelCG>& modelCg, const std::vector<Date>& simulationDates,
                             const bool reevaluateExerciseInStickyCloseOutDateRun)
         : AmcCgBaseEngine(modelCg, simulationDates, reevaluateExerciseInStickyCloseOutDateRun), domCcy_(domCcy),
@@ -52,6 +62,18 @@ protected:
 class AmcCgFxOptionEngine : public AmcCgFxOptionEngineBase, public QuantLib::VanillaOption::engine {
 public:
     AmcCgFxOptionEngine(const std::string& domCcy, const std::string& forCcy,
+                        const QuantLib::ext::shared_ptr<ModelCG>& modelCg, const Model::Params& mcParams,
+                        const double indicatorSmoothingForValues, const double indicatorSmoothingForDerivatives,
+                        const double sqrtSmoothingForDerivatives, const bool useCachedSensis,
+                        const bool useExternalComputeFramework, const bool useDoublePrecisionForExternalCalculation,
+                        const bool generateAdditionalResults)
+        : AmcCgFxOptionEngineBase(domCcy, forCcy, modelCg, mcParams, indicatorSmoothingForValues,
+                                  indicatorSmoothingForDerivatives, sqrtSmoothingForDerivatives, useCachedSensis,
+                                  useExternalComputeFramework, useDoublePrecisionForExternalCalculation,
+                                  generateAdditionalResults) {
+        registerWith(modelCg_);
+    }
+    AmcCgFxOptionEngine(const std::string& domCcy, const std::string& forCcy,
                         const QuantLib::ext::shared_ptr<ModelCG>& modelCg, const std::vector<Date>& simulationDates,
                         const bool reevaluateExerciseInStickyCloseOutDateRun)
         : AmcCgFxOptionEngineBase(domCcy, forCcy, modelCg, simulationDates, reevaluateExerciseInStickyCloseOutDateRun) {
@@ -63,6 +85,20 @@ public:
 class AmcCgFxEuropeanForwardOptionEngine : public AmcCgFxOptionEngineBase,
                                            public QuantExt::VanillaForwardOption::engine {
 public:
+    AmcCgFxEuropeanForwardOptionEngine(const std::string& domCcy, const std::string& forCcy,
+                                       const QuantLib::ext::shared_ptr<ModelCG>& modelCg, const Model::Params& mcParams,
+                                       const double indicatorSmoothingForValues,
+                                       const double indicatorSmoothingForDerivatives,
+                                       const double sqrtSmoothingForDerivatives, const bool useCachedSensis,
+                                       const bool useExternalComputeFramework,
+                                       const bool useDoublePrecisionForExternalCalculation,
+                                       const bool generateAdditionalResults)
+        : AmcCgFxOptionEngineBase(domCcy, forCcy, modelCg, mcParams, indicatorSmoothingForValues,
+                                  indicatorSmoothingForDerivatives, sqrtSmoothingForDerivatives, useCachedSensis,
+                                  useExternalComputeFramework, useDoublePrecisionForExternalCalculation,
+                                  generateAdditionalResults) {
+        registerWith(modelCg_);
+    }
     AmcCgFxEuropeanForwardOptionEngine(const std::string& domCcy, const std::string& forCcy,
                                        const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
                                        const std::vector<Date>& simulationDates,
@@ -76,6 +112,22 @@ public:
 class AmcCgFxEuropeanCSOptionEngine : public AmcCgFxOptionEngineBase,
                                       public QuantExt::CashSettledEuropeanOption::engine {
 public:
+    // non-amc use
+    AmcCgFxEuropeanCSOptionEngine(const std::string& domCcy, const std::string& forCcy,
+                                  const QuantLib::ext::shared_ptr<ModelCG>& modelCg, const Model::Params& mcParams,
+                                  const double indicatorSmoothingForValues,
+                                  const double indicatorSmoothingForDerivatives,
+                                  const double sqrtSmoothingForDerivatives, const bool useCachedSensis,
+                                  const bool useExternalComputeFramework,
+                                  const bool useDoublePrecisionForExternalCalculation,
+                                  const bool generateAdditionalResults)
+        : AmcCgFxOptionEngineBase(domCcy, forCcy, modelCg, mcParams, indicatorSmoothingForValues,
+                                  indicatorSmoothingForDerivatives, sqrtSmoothingForDerivatives, useCachedSensis,
+                                  useExternalComputeFramework, useDoublePrecisionForExternalCalculation,
+                                  generateAdditionalResults) {
+        registerWith(modelCg_);
+    }
+    // amc use
     AmcCgFxEuropeanCSOptionEngine(const std::string& domCcy, const std::string& forCcy,
                                   const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
                                   const std::vector<Date>& simulationDates,

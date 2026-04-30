@@ -34,15 +34,9 @@ QuantLib::ext::shared_ptr<PricingEngine> CreditLinkedSwapEngineBuilder::engineIm
     auto creditCurve = market_->defaultCurve(creditCurveId, configuration(MarketContext::pricing))->curve();
     Handle<Quote> marketRecovery = market_->recoveryRate(creditCurveId, configuration(MarketContext::pricing));
 
-    bool generateAdditionalResults = false;
-    auto p = globalParameters_.find("GenerateAdditionalResults");
-    if (p != globalParameters_.end()) {
-        generateAdditionalResults = parseBool(p->second);
-    }
-
     return QuantLib::ext::make_shared<QuantExt::DiscountingCreditLinkedSwapEngine>(
         irCurve, creditCurve, marketRecovery, parseInteger(engineParameter("TimeStepsPerYear")),
-        generateAdditionalResults);
+        generateAdditionalResults());
 }
 
 } // namespace data

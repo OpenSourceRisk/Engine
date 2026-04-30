@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/scripting/models/blackscholescgbase.hpp
+/*! \file ored/scripting/models/blackscholescg.hpp
     \brief black scholes model base class for n underlyings (fx, equity or commodity)
     \ingroup utilities
 */
