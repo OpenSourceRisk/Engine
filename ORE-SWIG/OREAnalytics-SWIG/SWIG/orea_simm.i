@@ -36,10 +36,15 @@
 %shared_ptr(ore::analytics::SimmBucketMapper)
 %shared_ptr(ore::analytics::SimmBucketMapperBase)
 %shared_ptr(ore::analytics::SimmCalculator)
+%shared_ptr(ore::analytics::SimmConcentration)
+%shared_ptr(ore::analytics::SimmConcentrationBase)
+%shared_ptr(ore::analytics::SimmCalibration)
+%shared_ptr(ore::analytics::SimmCalibrationData)
 
 %nodefaultctor ore::analytics::SimmConfiguration;
 %nodefaultctor ore::analytics::SimmBucketMapper;
 %nodefaultctor ore::analytics::SimmConfigurationBase;
+%nodefaultctor ore::analytics::SimmConcentration;
 
 %template(RegulationSet) std::set<ore::analytics::CrifRecord::Regulation>;
 
@@ -187,13 +192,6 @@ class SimmConfiguration {
     enum class MarginType { Delta, Vega, Curvature, BaseCorr, AdditionalIM, All };
 };
 
-class SimmConfigurationBase : public SimmConfiguration {
-  public:
-    const std::string& name() const;
-    const std::string& version() const;
-    bool hasBuckets(const CrifRecord::RiskType& rt) const;
-};
-
 class SimmBucketMapper {
   public:
     virtual std::string bucket(const CrifRecord::RiskType& riskType, const std::string& qualifier) const = 0;
@@ -210,6 +208,97 @@ class SimmBucketMapperBase : public SimmBucketMapper {
     void addMapping(const CrifRecord::RiskType& riskType, const std::string& qualifier,
                     const std::string& bucket, const std::string& validFrom = "", const std::string& validTo = "",
                     bool fallback = false);
+};
+
+// ============================================================
+// SimmConcentration — abstract base
+// ============================================================
+class SimmConcentration {
+  public:
+    virtual ~SimmConcentration();
+    virtual QuantLib::Real threshold(const CrifRecord::RiskType& riskType,
+                                     const std::string& qualifier) const = 0;
+};
+
+// ============================================================
+// SimmConcentrationBase — concrete base returning QL_MAX_REAL
+// ============================================================
+class SimmConcentrationBase : public SimmConcentration {
+  public:
+    SimmConcentrationBase();
+    QuantLib::Real threshold(const CrifRecord::RiskType& riskType,
+                             const std::string& qualifier) const override;
+};
+
+// ============================================================
+// SimmCalibration — XML-driven calibration data
+// ============================================================
+class SimmCalibration : public ore::data::XMLSerializable {
+  public:
+    SimmCalibration();
+    const std::string& version() const;
+    const std::vector<std::string>& versionNames() const;
+    const std::string& id() const;
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
+};
+
+// ============================================================
+// SimmCalibrationData — container for multiple calibrations
+// ============================================================
+class SimmCalibrationData : public ore::data::XMLSerializable {
+  public:
+    SimmCalibrationData();
+    void add(const QuantLib::ext::shared_ptr<SimmCalibration>& cal);
+    bool hasId(const std::string& id) const;
+    QuantLib::ext::shared_ptr<SimmCalibration> getById(const std::string& id) const;
+    QuantLib::ext::shared_ptr<SimmCalibration> getBySimmVersion(const std::string& id) const;
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
+};
+
+class SimmConfigurationBase : public SimmConfiguration {
+  public:
+    const std::string& name() const;
+    const std::string& version() const;
+    bool hasBuckets(const CrifRecord::RiskType& rt) const;
+
+    // Bucket enumeration
+    QuantLib::ext::shared_ptr<SimmBucketMapper> bucketMapper() const;
+    std::string bucket(const CrifRecord::RiskType& rt, const std::string& qualifier) const;
+    std::vector<std::string> buckets(const CrifRecord::RiskType& rt) const;
+    std::vector<std::string> labels1(const CrifRecord::RiskType& rt) const;
+    std::vector<std::string> labels2(const CrifRecord::RiskType& rt) const;
+
+    // Risk weights
+    QuantLib::Real weight(const CrifRecord::RiskType& rt,
+                          QuantLib::ext::optional<std::string> qualifier = QuantLib::ext::nullopt,
+                          QuantLib::ext::optional<std::string> label_1 = QuantLib::ext::nullopt,
+                          const std::string& calculationCurrency = "") const;
+    QuantLib::Real curvatureWeight(const CrifRecord::RiskType& rt, const std::string& label_1) const;
+    QuantLib::Real historicalVolatilityRatio(const CrifRecord::RiskType& rt) const;
+    QuantLib::Real sigma(const CrifRecord::RiskType& rt,
+                         QuantLib::ext::optional<std::string> qualifier = QuantLib::ext::nullopt,
+                         QuantLib::ext::optional<std::string> label_1 = QuantLib::ext::nullopt,
+                         const std::string& calculationCurrency = "") const;
+    QuantLib::Real curvatureMarginScaling() const;
+
+    // Thresholds
+    QuantLib::Real concentrationThreshold(const CrifRecord::RiskType& rt, const std::string& qualifier) const;
+
+    // Validity and correlation
+    bool isValidRiskType(const CrifRecord::RiskType& rt) const;
+    QuantLib::Real correlationRiskClasses(const SimmConfiguration::RiskClass& rc_1,
+                                          const SimmConfiguration::RiskClass& rc_2) const;
+    QuantLib::Real correlation(const CrifRecord::RiskType& firstRt, const std::string& firstQualifier,
+                               const std::string& firstBucket, const std::string& firstLabel_1,
+                               const std::string& firstLabel_2, const CrifRecord::RiskType& secondRt,
+                               const std::string& secondQualifier, const std::string& secondBucket,
+                               const std::string& secondLabel_1, const std::string& secondLabel_2,
+                               const std::string& calculationCurrency) const;
+
+    // MPOR
+    QuantLib::Size mporDays() const;
 };
 
 class SimmConfiguration_ISDA_V2_6 : public SimmConfigurationBase {
