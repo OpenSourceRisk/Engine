@@ -19,12 +19,21 @@ return is paid). The additional results provided together with the NPV are descr
 \ref{tab:additional_results_generic_trs}. In terms of these result labels, the NPV of the swap is the sum of
 assetLegNpv, fundingLegNpv and additionalCashflowLegNpv.
 
-\begin{table}[H]
-\begin{center}
-\begin{tabular}{|p{5cm}|p{10cm}|}
+\begin{longtable}{|p{10cm}|p{6cm}|}
+\caption{Additional Results Generic Total Return Swap Pricing}
+\label{tab:additional_results_generic_trs} \\
   \hline
   Result Label & Description \\
   \hline
+\endfirsthead
+  \hline
+  Result Label & Description \\
+  \hline
+\endhead
+  \hline
+\endfoot
+  \hline
+\endlastfoot
   underlyingCurrency & The currency of the underlying. \\
   \hline
   returnCurrency & The currency of the return payments. \\
@@ -66,11 +75,7 @@ assetLegNpv, fundingLegNpv and additionalCashflowLegNpv.
   \hline
   fxConversionAdditionalCashflowLegNpvToPnlCurrency & Today's FX conversion factor from additional cashflows currency to pnl currency \\
   \hline
-\end{tabular}
-\end{center}
-\caption{Additional Results Generic Total Return Swap Pricing}
-\label{tab:additional_results_generic_trs}
-\end{table}
+\end{longtable}
 
 
 \underline{Rationale for the accrual method}
@@ -143,3 +148,50 @@ The latter expression represents the accrued amount on the funding leg between $
 the linear accrued amount of the current funding coupon in the practical computation. This shows that under the
 assumptions stated above the valuation of a total return swap under the accrual method is equivalent to the usual
 no-arbitrage valuation.
+
+\underline{Limitation of the accrual method}
+\label{pricing:limitation_trs_wrong_way_risk}
+
+The model assumes that a Total Return Swap (TRS) can be \textbf{closed out immediately} without any additional costs,
+meaning no make whole fees and no unwinding costs. In reality, closing a TRS early is expensive because the bank must
+unwind several hedges:
+\begin{itemize}
+\item repo or back-to-back TRS financing,
+\item early repayment of internal funding,
+\item termination of cross currency hedges if the asset is in another currency.
+\end{itemize}
+The bank also loses future fee income and therefore charges the client a significant make whole fee.
+In practice, TRS trades are rarely closed out.
+
+\smallskip
+
+Under the assumption that TRS cannot be early terminated, the Generic TRS methodology is correct only under the additional assumption
+that a theoretical instrument specific repo discounting curve is used that values the funding leg interest plus the initial price
+payment at maturity at par (i.e. PV equal to initial price). The same repo curve is also used to discount the underlying bond or,
+in the case of equity TRS, as the equity forward curve. In practice, however, TRS are traded under ISDA agreements and are cash
+collateralized. The collateral earns an RFR or OIS rate, not an asset specific repo rate. These RFR or OIS curves generally differ
+from bond and equity repo curves.
+
+\smallskip
+
+The model assumes there is \textbf{no gap risk or wrong way risk}, meaning it assumes the asset can be sold without
+loss if the counterparty defaults. This leads to a valuation that ignores counterparty and market risks.
+However, TRS trades often have wrong way risk, where the chance of the counterparty defaulting is strongly linked to
+the performance of the underlying asset. Because of this, TRS positions are usually heavily overcollateralized,
+with independent amounts or haircuts of 30\% or more. The model also assumes that this overcollateralization fully
+protects against losses during the margin period of risk, and that the trade can always be unwound without loss.
+In reality, this assumption fails. TRS with significant wrong way risk charge very high spreads, far higher than
+funding or capital costs, and banks earn billions from these fees. This clearly shows that the trades do carry
+meaningful counterparty risk, contradicting the model's assumptions.
+
+\smallskip
+
+Beside the above, there are more limiting assumptions, specifically:
+\begin{itemize}
+\item there are no early termination triggers besides the bond default.
+\item the underlying is assumed to be non-callable for fixed income TRS.
+\item assumptions of the underlying model apply directly to the Generic TRS model, e.g. for equity TRS dividends are assumed to be
+continuous (discrete dividends, dividend ex and payment dates are not supported).
+\item ex-coupon dates are not supported for bonds.
+\item payments can always be settled, i.e. capital control events are not modelled (relevant for emerging market TRS).
+\end{itemize}

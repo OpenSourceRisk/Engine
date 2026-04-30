@@ -21,3 +21,18 @@ where:
 \item $\text{FX}_i$: the fx rate converting the equity ccy to the equity leg ccy (if FX conversion is applicable, otherwise set
   this to $1$ in the above formula)
 \end{itemize}
+
+\smallskip
+
+\underline{Limitation of the approach}
+
+The model assumes \textbf{continuous and deterministic dividends}, while in reality they are discrete and paid on specific dates.
+Because the model cannot capture ex dividend or payment dates, PV and P\&L explanations are generally inaccurate.
+As a result, the model has limited suitability for large trading books,
+where accurate PV and P\&L explain are required for desk and financial control purposes.
+
+\smallskip
+
+The approach ignores \textbf{gap and wrong way risk}, please compare the corresponding section within \ref{pricing:limitation_trs_wrong_way_risk} of the generic TRS model.
+
+Finally, payments can always be settled, i.e. capital control events are not modelled. This is especially relevant for emerging market TRS.
