@@ -4,6 +4,7 @@
 """
 
 from ORE import *
+import ORE
 import unittest
 import logging
 
@@ -92,11 +93,114 @@ class FloatingRateFXLinkedNotionalCouponTest(unittest.TestCase):
         """ Test consistency of FX Linked Cash Flow fair price and NPV() """
 
         
+class EquityCouponTest(unittest.TestCase):
+    def setUp(self):
+        """Set up an EquityCoupon with a simple EquityIndex2 and flat curve."""
+        self.todayDate = Date(15, January, 2026)
+        Settings.instance().evaluationDate = self.todayDate
+
+        self.dayCounter = Actual365Fixed()
+        self.flatForward = FlatForward(self.todayDate, 0.03, self.dayCounter)
+        self.ytsHandle = RelinkableYieldTermStructureHandle(self.flatForward)
+
+        self.eqName = "EQ-TEST"
+        self.eqCurrency = USDCurrency()
+        self.eqCalendar = UnitedStates(UnitedStates.NYSE)
+        self.eqSpot = QuoteHandle(SimpleQuote(100.0))
+
+        self.equityIndex = EquityIndex2(
+            self.eqName, self.eqCalendar, self.eqCurrency,
+            self.eqSpot, self.ytsHandle, self.ytsHandle)
+
+        self.startDate = Date(15, January, 2026)
+        self.endDate = Date(15, April, 2026)
+        self.paymentDate = Date(17, April, 2026)
+        self.nominal = 1000000.0
+        self.fixingDays = 0
+
+    def testEquityCouponConstruction(self):
+        """Test EquityCoupon construction and basic accessors."""
+        coupon = EquityCoupon(
+            self.paymentDate, self.nominal,
+            self.startDate, self.endDate,
+            self.fixingDays, self.equityIndex,
+            self.dayCounter, EquityReturnType_Total,
+            1.0, False)
+
+        self.assertEqual(coupon.date(), self.paymentDate)
+        self.assertAlmostEqual(coupon.nominal(), self.nominal, delta=1e-10)
+        self.assertEqual(coupon.returnType(), EquityReturnType_Total)
+        self.assertAlmostEqual(coupon.dividendFactor(), 1.0, delta=1e-10)
+        self.assertFalse(coupon.notionalReset())
+        self.assertEqual(coupon.fixingStartDate(), self.startDate)
+        self.assertEqual(coupon.fixingEndDate(), self.endDate)
+
+    def testEquityCouponPricer(self):
+        """Test EquityCouponPricer attach and initialize."""
+        coupon = EquityCoupon(
+            self.paymentDate, self.nominal,
+            self.startDate, self.endDate,
+            self.fixingDays, self.equityIndex,
+            self.dayCounter, EquityReturnType_Total,
+            1.0, False)
+
+        pricer = EquityCouponPricer()
+        coupon.setPricer(pricer)
+        self.assertIsNotNone(coupon.pricer())
+
+        pricer.initialize(coupon)
+        rate = pricer.swapletRate()
+        self.assertIsInstance(rate, float)
+
+    def testEquityLegConstruction(self):
+        """Test EquityLeg builder produces a non-empty Leg."""
+        schedule = Schedule(
+            self.startDate, Date(15, January, 2027),
+            Period(3, Months), self.eqCalendar,
+            ModifiedFollowing, ModifiedFollowing,
+            DateGeneration.Forward, False)
+
+        leg = EquityLeg(
+            schedule=schedule,
+            equityCurve=self.equityIndex,
+            notionals=[self.nominal],
+            paymentDayCounter=self.dayCounter,
+            returnType=EquityReturnType_Total)
+
+        self.assertGreater(len(leg), 0)
+
+    def testEquityCouponWithNotionalReset(self):
+        """Test EquityCoupon with notional reset enabled."""
+        coupon = EquityCoupon(
+            self.paymentDate, self.nominal,
+            self.startDate, self.endDate,
+            self.fixingDays, self.equityIndex,
+            self.dayCounter, EquityReturnType_Price,
+            1.0, True, 100.0, 10000.0)
+
+        self.assertTrue(coupon.notionalReset())
+        self.assertAlmostEqual(coupon.inputInitialPrice(), 100.0, delta=1e-10)
+        self.assertAlmostEqual(coupon.inputQuantity(), 10000.0, delta=1e-10)
+
+    def testEquityCouponPricerVolSetters(self):
+        """Test EquityCouponPricer volatility and correlation setters."""
+        pricer = EquityCouponPricer()
+
+        eqVol = BlackConstantVol(self.todayDate, self.eqCalendar, 0.20, self.dayCounter)
+        eqVolHandle = BlackVolTermStructureHandle(eqVol)
+        pricer.setEquityVolatility(eqVolHandle)
+
+        fxVol = BlackConstantVol(self.todayDate, self.eqCalendar, 0.10, self.dayCounter)
+        fxVolHandle = BlackVolTermStructureHandle(fxVol)
+        pricer.setFxVolatility(fxVolHandle)
+
+
 if __name__ == '__main__':
     print('testing ORE ' + ORE.__version__)
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(FXLinkedCashFlowTest,'test'))
     suite.addTest(unittest.makeSuite(FloatingRateFXLinkedNotionalCouponTest,'test'))
+    suite.addTest(unittest.makeSuite(EquityCouponTest,'test'))
     unittest.TextTestRunner(verbosity=2).run(suite)
     unittest.main()
 
