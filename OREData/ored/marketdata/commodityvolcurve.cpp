@@ -17,43 +17,51 @@ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <algorithm>
-#include <boost/algorithm/string/join.hpp>
-#include <boost/algorithm/string/replace.hpp>
-#include <boost/range/adaptor/indexed.hpp>
-#include <boost/range/adaptor/transformed.hpp>
 #include <ored/marketdata/commodityvolcurve.hpp>
+#include <ored/marketdata/volsurfacebuilder.hpp>
 #include <ored/utilities/conventionsbasedfutureexpiry.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ored/utilities/wildcard.hpp>
-#include <ql/math/interpolations/bicubicsplineinterpolation.hpp>
-#include <ql/math/interpolations/loginterpolation.hpp>
-#include <ql/math/matrix.hpp>
-#include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
-#include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
-#include <ql/termstructures/volatility/equityfx/blackvariancesurface.hpp>
-#include <ql/time/calendars/weekendsonly.hpp>
+
 #include <qle/indexes/commodityindex.hpp>
 #include <qle/math/flatextrapolation.hpp>
+#include <qle/models/carrmadanarbitragecheck.hpp>
 #include <qle/termstructures/aposurface.hpp>
+#include <qle/termstructures/blackdeltautilities.hpp>
 #include <qle/termstructures/blackinvertedvoltermstructure.hpp>
 #include <qle/termstructures/blackvariancesurfacemoneyness.hpp>
 #include <qle/termstructures/blackvariancesurfacesparse.hpp>
 #include <qle/termstructures/blackvolsurfacedelta.hpp>
-#include <qle/termstructures/eqcommoptionsurfacestripper.hpp>
 #include <qle/termstructures/blackvolsurfaceproxy.hpp>
-#include <qle/termstructures/pricetermstructureadapter.hpp>
-#include <qle/termstructures/blackdeltautilities.hpp>
-#include <ql/pricingengines/blackformula.hpp>
-#include <qle/models/carrmadanarbitragecheck.hpp>
+#include <qle/termstructures/blackvolsurfacesvi.hpp>
 #include <qle/termstructures/calendarspreadfuturepricetermstructure.hpp>
+#include <qle/termstructures/eqcommoptionsurfacestripper.hpp>
+#include <qle/termstructures/pricetermstructureadapter.hpp>
+#include <qle/termstructures/svimodeltraits.hpp>
 
-using namespace std;
+#include <ql/math/interpolations/bicubicsplineinterpolation.hpp>
+#include <ql/math/interpolations/loginterpolation.hpp>
+#include <ql/math/matrix.hpp>
+#include <ql/pricingengines/blackdeltacalculator.hpp>
+#include <ql/pricingengines/blackformula.hpp>
+#include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvariancesurface.hpp>
+#include <ql/time/calendars/weekendsonly.hpp>
+
+#include <boost/algorithm/string/join.hpp>
+#include <boost/algorithm/string/replace.hpp>
+#include <boost/range/adaptor/indexed.hpp>
+#include <boost/range/adaptor/transformed.hpp>
+
+#include <algorithm>
+
 using namespace QuantLib;
 using namespace QuantExt;
+using namespace std;
 
 namespace {
 
@@ -157,7 +165,7 @@ QuantLib::ext::shared_ptr<OptionPriceSurface> optPriceSurface(const CallPutData&
     return QuantLib::ext::make_shared<OptionPriceSurface>(asof, expiries, strikes, prices, dc);
 }
 
-}
+} // anonymous namespace
 
 namespace ore {
 namespace data {
@@ -716,6 +724,78 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     if (vssc.quoteType() == MarketDatum::QuoteType::RATE_LNVOL || vssc.quoteType() == MarketDatum::QuoteType::RATE_SLNVOL ||
         vssc.quoteType() == MarketDatum::QuoteType::RATE_NVOL) {
 
+        // Check if an SVI interpolation model is requested (only valid for RATE_LNVOL)
+        string strikeInterpolation = vssc.strikeInterpolation();
+        SviParametricVolatility::ModelVariant sviModelVariant;
+        bool useSvi = tryParse<SviParametricVolatility::ModelVariant>(strikeInterpolation, sviModelVariant, parseSviParametricVolatilityModelVariant);
+        if (useSvi && vssc.quoteType() == MarketDatum::QuoteType::RATE_LNVOL) {
+            QL_REQUIRE(vssc.timeInterpolation() == strikeInterpolation,
+                       "CommodityVolCurve: SVI requires TimeInterpolation and StrikeInterpolation to be set to the "
+                       "same variant, got '" << vssc.timeInterpolation() << "' vs '" << strikeInterpolation << "'");
+            DLOG("CommodityVolCurve: Building SVI surface with model variant " << strikeInterpolation);
+            QL_REQUIRE(!pts_.empty(), "CommodityVolCurve: price term structure required for SVI strike surface.");
+            QL_REQUIRE(!yts_.empty(), "CommodityVolCurve: yield term structure required for SVI strike surface.");
+
+            Handle<PriceTermStructure> cpts = pts_;
+            Handle<Quote> spot(QuantLib::ext::make_shared<DerivedPriceQuote>(cpts));
+            Handle<YieldTermStructure> pyts =
+                Handle<YieldTermStructure>(QuantLib::ext::make_shared<PriceTermStructureAdapter>(*cpts, *yts_));
+            pyts->enableExtrapolation();
+
+            // Group cpData by expiry, choosing OTM option where possible
+            map<Date, map<Real, pair<Real, Option::Type>>> expiryStrikeData;
+            for (const auto& kv : cpData.data) {
+                const Date& ex = kv.first.expiry;
+                const Real& stk = kv.first.strike;
+                const CallPutDatum& cpd = kv.second;
+                bool useCall = cpd.call != Null<Real>();
+                if (cpd.call != Null<Real>() && cpd.put != Null<Real>()) {
+                    auto it = fwdCurve.find(ex);
+                    if (it != fwdCurve.end()) {
+                        const Real& fwd = it->second;
+                        useCall = (preferOutOfTheMoney && stk >= fwd) || (!preferOutOfTheMoney && stk <= fwd);
+                    }
+                }
+                Real vol = useCall ? cpd.call : cpd.put;
+                Option::Type optType = useCall ? Option::Call : Option::Put;
+                if (vol != Null<Real>())
+                    expiryStrikeData[ex][stk] = {vol, optType};
+            }
+
+            vector<Date> sviDates;
+            vector<vector<Real>> sviStrikes, sviVols;
+            vector<vector<Option::Type>> sviOptionTypes;
+            for (auto& ekv : expiryStrikeData) {
+                vector<Real> stks, vls;
+                vector<Option::Type> types;
+                for (auto& sv : ekv.second) {
+                    stks.push_back(sv.first);
+                    vls.push_back(sv.second.first);
+                    types.push_back(sv.second.second);
+                }
+                if (stks.size() >= 2) {
+                    sviDates.push_back(ekv.first);
+                    sviStrikes.push_back(stks);
+                    sviVols.push_back(vls);
+                    sviOptionTypes.push_back(types);
+                }
+            }
+
+            QL_REQUIRE(!sviDates.empty(), "CommodityVolCurve: no SVI data collected for wildcard strike surface.");
+            if (!sviDates.empty())
+                maxExpiry_ = *std::max_element(sviDates.begin(), sviDates.end());
+
+            volatility_ = buildSviSurface("CommodityVolCurve", asof, sviDates, sviStrikes, sviVols, sviOptionTypes,
+                                          dayCounter_, calendar_, spot, 0, calendar_,
+                                          yts_, pyts, sviModelVariant,
+                                          vssc.parametricSmileConfiguration(), strikeInterpolation);
+            DLOG("CommodityVolCurve: Setting BlackVolatilitySurfaceSvi extrapolation to "
+                 << to_string(vssc.extrapolation()));
+            volatility_->enableExtrapolation(vssc.extrapolation());
+            LOG("CommodityVolCurve: finished building SVI 2-D volatility absolute strike surface");
+            return;
+        }
+
         DLOG("Creating the BlackVarianceSurfaceSparse object");
 
         // Now pick the quotes that we want from the data container. If the fwdCurve was populated above, we use 
@@ -966,6 +1046,66 @@ void CommodityVolCurve::buildVolatilityExplicit(const Date& asof, CommodityVolat
     // set max expiry date (used in buildCalibrationInfo())
     if (!expiryDates.empty())
         maxExpiry_ = *max_element(expiryDates.begin(), expiryDates.end());
+
+    // Check if an SVI interpolation model is requested (only valid for RATE_LNVOL)
+    if (vssc.quoteType() == MarketDatum::QuoteType::RATE_LNVOL) {
+        string strikeInterpolation = vssc.strikeInterpolation();
+        SviParametricVolatility::ModelVariant sviModelVariant;
+        bool useSvi = tryParse<SviParametricVolatility::ModelVariant>(strikeInterpolation, sviModelVariant, parseSviParametricVolatilityModelVariant);
+        if (useSvi) {
+            QL_REQUIRE(vssc.timeInterpolation() == strikeInterpolation,
+                       "CommodityVolCurve: SVI requires TimeInterpolation and StrikeInterpolation to be set to the "
+                       "same variant, got '" << vssc.timeInterpolation() << "' vs '" << strikeInterpolation << "'");
+            DLOG("CommodityVolCurve: Building SVI surface from explicit strike quotes with model variant "
+                 << strikeInterpolation);
+            QL_REQUIRE(!pts_.empty(), "CommodityVolCurve: price term structure required for SVI strike surface.");
+            QL_REQUIRE(!yts_.empty(), "CommodityVolCurve: yield term structure required for SVI strike surface.");
+
+            Handle<PriceTermStructure> cpts = pts_;
+            Handle<Quote> spot(QuantLib::ext::make_shared<DerivedPriceQuote>(cpts));
+            Handle<YieldTermStructure> pyts =
+                Handle<YieldTermStructure>(QuantLib::ext::make_shared<PriceTermStructureAdapter>(*cpts, *yts_));
+            pyts->enableExtrapolation();
+
+            bool preferOutOfTheMoney = !vc.preferOutOfTheMoney() ? true : *vc.preferOutOfTheMoney();
+
+            vector<Date> sviDates;
+            vector<vector<Real>> sviStrikes, sviVols;
+            vector<vector<Option::Type>> sviOptionTypes;
+            for (const auto& row : surfaceData) {
+                const Date& d = row.first;
+                Real atmf = pts_->price(d);
+                vector<Real> stks, vls;
+                vector<Option::Type> types;
+                for (Size i = 0; i < configuredStrikes.size(); ++i) {
+                    if (row.second[i] != Null<Real>()) {
+                        stks.push_back(configuredStrikes[i]);
+                        vls.push_back(row.second[i]);
+                        bool useCall = (preferOutOfTheMoney && configuredStrikes[i] >= atmf) ||
+                                       (!preferOutOfTheMoney && configuredStrikes[i] <= atmf);
+                        types.push_back(useCall ? Option::Call : Option::Put);
+                    }
+                }
+                if (stks.size() >= 2) {
+                    sviDates.push_back(d);
+                    sviStrikes.push_back(stks);
+                    sviVols.push_back(vls);
+                    sviOptionTypes.push_back(types);
+                }
+            }
+
+            QL_REQUIRE(!sviDates.empty(), "CommodityVolCurve: no SVI data collected for explicit strike surface.");
+            volatility_ = buildSviSurface("CommodityVolCurve", asof, sviDates, sviStrikes, sviVols, sviOptionTypes,
+                                          dayCounter_, calendar_, spot, 0, calendar_,
+                                          yts_, pyts, sviModelVariant,
+                                          vssc.parametricSmileConfiguration(), strikeInterpolation);
+            DLOG("CommodityVolCurve: Setting BlackVolatilitySurfaceSvi extrapolation to "
+                 << to_string(vssc.extrapolation()));
+            volatility_->enableExtrapolation(vssc.extrapolation());
+            LOG("CommodityVolCurve: finished building SVI 2-D volatility absolute strike surface (explicit)");
+            return;
+        }
+    }
 
     // Trace log the surface
     TLOG("Explicit strike surface grid points:");
@@ -1223,6 +1363,94 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     if (!expiryDates.empty())
         maxExpiry_ = *std::max_element(expiryDates.begin(), expiryDates.end());
 
+    // Check if an SVI interpolation model is requested
+    {
+        string strikeInterpolation = vdsc.strikeInterpolation();
+        SviParametricVolatility::ModelVariant sviModelVariant;
+        bool useSvi = tryParse<SviParametricVolatility::ModelVariant>(strikeInterpolation, sviModelVariant, parseSviParametricVolatilityModelVariant);
+        if (useSvi) {
+            QL_REQUIRE(vdsc.timeInterpolation() == strikeInterpolation,
+                       "CommodityVolCurve: SVI requires TimeInterpolation and StrikeInterpolation to be set to the "
+                       "same variant, got '" << vdsc.timeInterpolation() << "' vs '" << strikeInterpolation << "'");
+            DLOG("CommodityVolCurve: Building SVI surface from delta quotes with model variant "
+                 << strikeInterpolation);
+            QL_REQUIRE(!pts_.empty(), "CommodityVolCurve: price term structure required for SVI delta surface.");
+            QL_REQUIRE(!yts_.empty(), "CommodityVolCurve: yield term structure required for SVI delta surface.");
+
+            Handle<PriceTermStructure> cpts = pts_;
+            if (vdsc.futurePriceCorrection() && expCalc_)
+                cpts = correctFuturePriceCurve(asof, vc.futureConventionsId(), *pts_, expiryDates);
+            Handle<Quote> spot(QuantLib::ext::make_shared<DerivedPriceQuote>(cpts));
+            Handle<YieldTermStructure> pyts =
+                Handle<YieldTermStructure>(QuantLib::ext::make_shared<PriceTermStructureAdapter>(*cpts, *yts_));
+            pyts->enableExtrapolation();
+
+            bool preferOutOfTheMoney = !vc.preferOutOfTheMoney() ? true : *vc.preferOutOfTheMoney();
+            DeltaVolQuote::DeltaType atmDt = atmDeltaType ? *atmDeltaType : deltaType;
+            Real spotValue = spot->value();
+
+            vector<Date> sviDates;
+            vector<vector<Real>> sviStrikes, sviVols;
+            vector<vector<Option::Type>> sviOptionTypes;
+
+            for (Size i = 0; i < expiryDates.size(); ++i) {
+                const Date& d = expiryDates[i];
+                Real t = dayCounter_.yearFraction(asof, d);
+                Real rfDisc = yts_->discount(d);
+                Real divDisc = pyts->discount(d);
+                Real atmf = spotValue * divDisc / rfDisc;
+
+                vector<Real> stks, vls;
+                vector<Option::Type> types;
+
+                // Put delta strikes
+                for (Size j = 0; j < putDeltas.size(); ++j) {
+                    Real vol_j = vols(i, j);
+                    Real stdDev = vol_j * std::sqrt(t);
+                    BlackDeltaCalculator bdc(Option::Put, deltaType, spotValue, rfDisc, divDisc, stdDev);
+                    stks.push_back(bdc.strikeFromDelta(putDeltas[j]));
+                    vls.push_back(vol_j);
+                    types.push_back(Option::Put);
+                }
+
+                // ATM strike
+                Real atmVol = vols(i, putDeltas.size());
+                Real atmStdDev = atmVol * std::sqrt(t);
+                BlackDeltaCalculator atmBdc(Option::Call, atmDt, spotValue, rfDisc, divDisc, atmStdDev);
+                Real atmStrike = atmBdc.atmStrike(atmType);
+                stks.push_back(atmStrike);
+                vls.push_back(atmVol);
+                types.push_back(preferOutOfTheMoney && atmStrike < atmf ? Option::Put : Option::Call);
+
+                // Call delta strikes
+                for (Size j = 0; j < callDeltas.size(); ++j) {
+                    Real vol_j = vols(i, putDeltas.size() + 1 + j);
+                    Real stdDev = vol_j * std::sqrt(t);
+                    BlackDeltaCalculator bdc(Option::Call, deltaType, spotValue, rfDisc, divDisc, stdDev);
+                    stks.push_back(bdc.strikeFromDelta(callDeltas[j]));
+                    vls.push_back(vol_j);
+                    types.push_back(Option::Call);
+                }
+
+                sviDates.push_back(d);
+                sviStrikes.push_back(stks);
+                sviVols.push_back(vls);
+                sviOptionTypes.push_back(types);
+            }
+
+            QL_REQUIRE(!sviDates.empty(), "CommodityVolCurve: no SVI data collected for delta surface.");
+            volatility_ = buildSviSurface("CommodityVolCurve", asof, sviDates, sviStrikes, sviVols, sviOptionTypes,
+                                          dayCounter_, calendar_, spot, 0, calendar_,
+                                          yts_, pyts, sviModelVariant,
+                                          vdsc.parametricSmileConfiguration(), strikeInterpolation);
+            DLOG("CommodityVolCurve: Setting BlackVolatilitySurfaceSvi extrapolation to "
+                 << to_string(vdsc.extrapolation()));
+            volatility_->enableExtrapolation(vdsc.extrapolation());
+            LOG("CommodityVolCurve: finished building SVI 2-D volatility delta strike surface");
+            return;
+        }
+    }
+
     // Need to multiply each put delta value by -1 before passing it to the BlackVolatilitySurfaceDelta ctor
     // i.e. a put delta of 0.25 that is passed in to the config must be -0.25 when passed to the ctor.
     transform(putDeltas.begin(), putDeltas.end(), putDeltas.begin(), [](Real pd) { return -1.0 * pd; });
@@ -1459,6 +1687,74 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
 
     if (!expiryDates.empty())
         maxExpiry_ = *std::max_element(expiryDates.begin(), expiryDates.end());
+
+    // Check if an SVI interpolation model is requested
+    {
+        string strikeInterpolation = vmsc.strikeInterpolation();
+        SviParametricVolatility::ModelVariant sviModelVariant;
+        bool useSvi = tryParse<SviParametricVolatility::ModelVariant>(strikeInterpolation, sviModelVariant, parseSviParametricVolatilityModelVariant);
+        if (useSvi) {
+            QL_REQUIRE(vmsc.timeInterpolation() == strikeInterpolation,
+                       "CommodityVolCurve: SVI requires TimeInterpolation and StrikeInterpolation to be set to the "
+                       "same variant, got '" << vmsc.timeInterpolation() << "' vs '" << strikeInterpolation << "'");
+            DLOG("CommodityVolCurve: Building SVI surface from moneyness quotes with model variant "
+                 << strikeInterpolation);
+            QL_REQUIRE(!pts_.empty(), "CommodityVolCurve: price term structure required for SVI moneyness surface.");
+
+            Handle<PriceTermStructure> cpts = pts_;
+            if (vmsc.futurePriceCorrection() && expCalc_)
+                cpts = correctFuturePriceCurve(asof, vc.futureConventionsId(), *pts_, expiryDates);
+            Handle<Quote> spot(QuantLib::ext::make_shared<DerivedPriceQuote>(cpts));
+            Handle<YieldTermStructure> pyts;
+            if (!yts_.empty()) {
+                pyts = Handle<YieldTermStructure>(
+                    QuantLib::ext::make_shared<PriceTermStructureAdapter>(*cpts, *yts_));
+                pyts->enableExtrapolation();
+            }
+
+            bool preferOutOfTheMoney = !vc.preferOutOfTheMoney() ? true : *vc.preferOutOfTheMoney();
+            Real spotValue = spot->value();
+
+            vector<Date> sviDates;
+            vector<vector<Real>> sviStrikes, sviVols;
+            vector<vector<Option::Type>> sviOptionTypes;
+            for (const auto& row : surfaceData) {
+                const Date& d = row.first;
+                Real atmf = pts_->price(d);
+                vector<Real> stks, vls;
+                vector<Option::Type> types;
+                for (Size i = 0; i < moneynessLevels.size(); ++i) {
+                    Real strike;
+                    if (moneynessType == MoneynessStrike::Type::Forward)
+                        strike = moneynessLevels[i] * atmf;
+                    else
+                        strike = moneynessLevels[i] * spotValue;
+                    stks.push_back(strike);
+                    vls.push_back(row.second[i]);
+                    types.push_back(preferOutOfTheMoney && strike < atmf ? Option::Put : Option::Call);
+                }
+                if (stks.size() >= 2) {
+                    sviDates.push_back(d);
+                    sviStrikes.push_back(stks);
+                    sviVols.push_back(vls);
+                    sviOptionTypes.push_back(types);
+                }
+            }
+
+            QL_REQUIRE(!sviDates.empty(), "CommodityVolCurve: no SVI data collected for moneyness surface.");
+            Handle<YieldTermStructure> forecastCurve = pyts.empty() ? yts_ : pyts;
+            Handle<YieldTermStructure> discountCurve = yts_.empty() ? forecastCurve : yts_;
+            volatility_ = buildSviSurface("CommodityVolCurve", asof, sviDates, sviStrikes, sviVols, sviOptionTypes,
+                                          dayCounter_, calendar_, spot, 0, calendar_,
+                                          discountCurve, forecastCurve, sviModelVariant,
+                                          vmsc.parametricSmileConfiguration(), strikeInterpolation);
+            DLOG("CommodityVolCurve: Setting BlackVolatilitySurfaceSvi extrapolation to "
+                 << to_string(vmsc.extrapolation()));
+            volatility_->enableExtrapolation(vmsc.extrapolation());
+            LOG("CommodityVolCurve: finished building SVI 2-D volatility moneyness strike surface");
+            return;
+        }
+    }
 
     // Set the strike extrapolation which only matters if extrapolation is turned on for the whole surface.
     // BlackVarianceSurfaceMoneyness time extrapolation is hard-coded to constant in volatility.
