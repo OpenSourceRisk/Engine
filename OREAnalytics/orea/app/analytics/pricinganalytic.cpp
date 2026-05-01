@@ -50,6 +50,11 @@ namespace analytics {
 
 void PricingAnalyticImpl::overwriteResultCurrency(const std::string& ccy) { overwriteResultCurrency_ = ccy; }
 
+void PricingAnalyticImpl::releaseMemory() {
+    sensiAnalysis_.reset();
+    parAnalysis_.reset();
+}
+
 void PricingAnalyticImpl::setUpConfigurations() {    
     if (find(begin(analytic()->analyticTypes()), end(analytic()->analyticTypes()), "SENSITIVITY") !=
         end(analytic()->analyticTypes())) {

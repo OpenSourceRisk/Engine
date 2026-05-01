@@ -153,6 +153,8 @@ public:
     const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& getReport(const std::string& key,
                                                                           const std::string& subKey);
     virtual void reset();
+    //! Release heavy internal state (e.g. scenarios, sim market) while keeping reports intact
+    void releaseMemory();
 
     analytic_npvcubes& npvCubes() { return npvCubes_; };
     analytic_mktcubes& mktCubes() { return mktCubes_; };
@@ -226,6 +228,8 @@ public:
     
     void initialise();
     virtual void reset(){};
+    //! Release heavy internal computation state while keeping reports intact
+    virtual void releaseMemory(){};
     const bool initialised() { return initialised_; };
     virtual void buildDependencies(){};
     virtual void buildConfigurations(){};
