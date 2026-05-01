@@ -187,6 +187,7 @@
 #include <qle/instruments/callablebond.hpp>
 #include <qle/instruments/cashflowresults.hpp>
 #include <qle/instruments/cashposition.hpp>
+#include <qle/instruments/cashsettledamericanoption.hpp>
 #include <qle/instruments/cashsettledeuropeanoption.hpp>
 #include <qle/instruments/cbo.hpp>
 #include <qle/instruments/cdsoption.hpp>
@@ -413,6 +414,7 @@
 #include <qle/pricingengines/blackmultilegoptionengine.hpp>
 #include <qle/pricingengines/blackswaptionenginedeltagamma.hpp>
 #include <qle/pricingengines/cashpositionengine.hpp>
+#include <qle/pricingengines/cashsettledamericanengine.hpp>
 #include <qle/pricingengines/cboengine.hpp>
 #include <qle/pricingengines/cbomcengine.hpp>
 #include <qle/pricingengines/commodityapoengine.hpp>
@@ -514,6 +516,7 @@
 #include <qle/termstructures/blackvolsurfacebfrr.hpp>
 #include <qle/termstructures/blackvolsurfacedelta.hpp>
 #include <qle/termstructures/blackvolsurfaceproxy.hpp>
+#include <qle/termstructures/blackvolsurfacesvi.hpp>
 #include <qle/termstructures/blackvolsurfacewithatm.hpp>
 #include <qle/termstructures/bondyieldshiftedcurvetermstructure.hpp>
 #include <qle/termstructures/brlcdiratehelper.hpp>
@@ -563,6 +566,7 @@
 #include <qle/termstructures/immfraratehelper.hpp>
 #include <qle/termstructures/implieddefaulttermstructure.hpp>
 #include <qle/termstructures/impliedtermstructure.hpp>
+#include <qle/termstructures/indexcdsvolstripper.hpp>
 #include <qle/termstructures/inflation/constantcpivolatility.hpp>
 #include <qle/termstructures/inflation/cpicurve.hpp>
 #include <qle/termstructures/inflation/cpipricevolatilitysurface.hpp>
@@ -626,6 +630,8 @@
 #include <qle/termstructures/subperiodsswaphelper.hpp>
 #include <qle/termstructures/survivalprobabilitycurve.hpp>
 #include <qle/termstructures/survivalprobabilitycurvefromyield.hpp>
+#include <qle/termstructures/svimodeltraits.hpp>
+#include <qle/termstructures/sviparametricvolatility.hpp>
 #include <qle/termstructures/swaptionsabrcube.hpp>
 #include <qle/termstructures/swaptionvolatilityconverter.hpp>
 #include <qle/termstructures/swaptionvolconstantspread.hpp>
@@ -662,5 +668,6 @@
 #include <qle/utilities/scenarioinformation.hpp>
 #include <qle/utilities/serializationdate.hpp>
 #include <qle/utilities/serializationperiod.hpp>
+#include <qle/utilities/solvers.hpp>
 #include <qle/utilities/time.hpp>
 #include <qle/version.hpp>

@@ -162,6 +162,8 @@ void AnalyticsManager::runAnalytics(
         LOG("run analytic with label '" << a.first << "' finished.");
         // then populate the market calibration report if required
         a.second->marketCalibration(marketCalibrationReport);
+        // release heavy internal state (scenarios, sim market, etc.) to free memory before next analytic
+        a.second->releaseMemory();
     }
 
     if (inputs_->portfolio()) {

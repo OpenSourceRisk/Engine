@@ -198,4 +198,66 @@ public:
 } // namespace analytics
 } // namespace ore
 
+%shared_ptr(ore::analytics::CubeInterpretation)
+
+namespace ore {
+namespace analytics {
+
+class CubeInterpretation {
+public:
+    CubeInterpretation(const bool storeFlows, const bool withCloseOutLag,
+                       const bool withExerciseValue = false,
+                       const ext::shared_ptr<ore::data::DateGrid>& dateGrid = ext::shared_ptr<ore::data::DateGrid>(),
+                       const QuantLib::Size storeCreditStateNPVs = 0, const bool flipViewXVA = false);
+
+    //! Inspectors
+    bool storeFlows() const;
+    bool withCloseOutLag() const;
+    bool withExerciseValue() const;
+    const ext::shared_ptr<ore::data::DateGrid>& dateGrid() const;
+    QuantLib::Size storeCreditStateNPVs() const;
+    bool flipViewXVA() const;
+
+    //! Required npv cube depth for this interpretation
+    QuantLib::Size requiredNpvCubeDepth() const;
+
+    //! Indices in depth direction (may be Null<Size>() if not applicable)
+    QuantLib::Size defaultDateNpvIndex() const;
+    QuantLib::Size closeOutDateNpvIndex() const;
+    QuantLib::Size exerciseValueIndex() const;
+    QuantLib::Size mporFlowsIndex() const;
+    QuantLib::Size creditStateNPVsIndex() const;
+
+    //! Value retrieval from cube
+    QuantLib::Real getGenericValue(const ext::shared_ptr<ore::analytics::NPVCube>& cube,
+                                   QuantLib::Size tradeIdx, QuantLib::Size dateIdx,
+                                   QuantLib::Size sampleIdx, QuantLib::Size depth) const;
+    QuantLib::Real getDefaultNpv(const ext::shared_ptr<ore::analytics::NPVCube>& cube,
+                                 QuantLib::Size tradeIdx, QuantLib::Size dateIdx, QuantLib::Size sampleIdx) const;
+    QuantLib::Real getCloseOutNpv(const ext::shared_ptr<ore::analytics::NPVCube>& cube,
+                                  QuantLib::Size tradeIdx, QuantLib::Size dateIdx, QuantLib::Size sampleIdx,
+                                  const ext::shared_ptr<ore::analytics::AggregationScenarioData>& data) const;
+    QuantLib::Real getExerciseValue(const ext::shared_ptr<ore::analytics::NPVCube>& cube,
+                                    QuantLib::Size tradeIdx, QuantLib::Size dateIdx, QuantLib::Size sampleIdx) const;
+    QuantLib::Real getMporPositiveFlows(const ext::shared_ptr<ore::analytics::NPVCube>& cube,
+                                        QuantLib::Size tradeIdx, QuantLib::Size dateIdx, QuantLib::Size sampleIdx) const;
+    QuantLib::Real getMporNegativeFlows(const ext::shared_ptr<ore::analytics::NPVCube>& cube,
+                                        QuantLib::Size tradeIdx, QuantLib::Size dateIdx, QuantLib::Size sampleIdx) const;
+    QuantLib::Real getMporFlows(const ext::shared_ptr<ore::analytics::NPVCube>& cube,
+                                QuantLib::Size tradeIdx, QuantLib::Size dateIdx, QuantLib::Size sampleIdx) const;
+    QuantLib::Real getDefaultAggregationScenarioData(
+        const ext::shared_ptr<ore::analytics::AggregationScenarioData>& data,
+        const ore::analytics::AggregationScenarioDataType& dataType,
+        QuantLib::Size dateIdx, QuantLib::Size sampleIdx, const std::string& qualifier = "") const;
+    QuantLib::Real getCloseOutAggregationScenarioData(
+        const ext::shared_ptr<ore::analytics::AggregationScenarioData>& data,
+        const ore::analytics::AggregationScenarioDataType& dataType,
+        QuantLib::Size dateIdx, QuantLib::Size sampleIdx, const std::string& qualifier = "") const;
+    QuantLib::Size getMporCalendarDays(const ext::shared_ptr<ore::analytics::NPVCube>& cube,
+                                       QuantLib::Size dateIdx) const;
+};
+
+} // namespace analytics
+} // namespace ore
+
 #endif

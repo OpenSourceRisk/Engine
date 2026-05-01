@@ -103,7 +103,6 @@
 #include <ored/portfolio/builders/fxtouchoption.hpp>
 #include <ored/portfolio/builders/indexcreditdefaultswap.hpp>
 #include <ored/portfolio/builders/indexcreditdefaultswapoption.hpp>
-#include <ored/portfolio/builders/multilegoption.hpp>
 #include <ored/portfolio/builders/pairwisevarianceswap.hpp>
 #include <ored/portfolio/builders/quantoequityoption.hpp>
 #include <ored/portfolio/builders/quantovanillaoption.hpp>
@@ -187,7 +186,6 @@
 #include <ored/portfolio/legbuilders.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/legdatafactory.hpp>
-#include <ored/portfolio/multilegoption.hpp>
 #include <ored/portfolio/pairwisevarianceswap.hpp>
 #include <ored/portfolio/referencedata.hpp>
 #include <ored/portfolio/referencedatafactory.hpp>
@@ -319,7 +317,6 @@ void dataBuilders() {
     ORE_REGISTER_TRADE_BUILDER("EquityDigitalOption", EquityDigitalOption, false)
     ORE_REGISTER_TRADE_BUILDER("RateDigitalOption", RateDigitalOption, false)
     ORE_REGISTER_TRADE_BUILDER("CompositeTrade", CompositeTrade, false)
-    ORE_REGISTER_TRADE_BUILDER("MultiLegOption", MultiLegOption, false)
     ORE_REGISTER_TRADE_BUILDER("Swap", Swap, false)
     ORE_REGISTER_TRADE_BUILDER("IndexCreditDefaultSwap", IndexCreditDefaultSwap, false)
     ORE_REGISTER_TRADE_BUILDER("CommodityForward", CommodityForward, false)
@@ -432,7 +429,6 @@ void dataBuilders() {
     ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcFxEuropeanForwardOptionEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcFxEuropeanCSOptionEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcFxForwardEngineBuilder, false)
-    ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcMultiLegOptionEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcEquityForwardEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(ScriptedTradeEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(CallableBondCamAmcEngineBuilder, false)
@@ -444,7 +440,6 @@ void dataBuilders() {
     ORE_REGISTER_AMCCG_ENGINE_BUILDER(AmcCgFxEuropeanForwardOptionEngineBuilder, false)
     ORE_REGISTER_AMCCG_ENGINE_BUILDER(AmcCgFxEuropeanCSOptionEngineBuilder, false)
     ORE_REGISTER_AMCCG_ENGINE_BUILDER(AmcCgFxForwardEngineBuilder, false)
-    ORE_REGISTER_AMCCG_ENGINE_BUILDER(AmcCgMultiLegOptionEngineBuilder, false)
     ORE_REGISTER_AMCCG_ENGINE_BUILDER(ScriptedTradeEngineBuilder, false)
     // (Bond, FwdBond, EquityForward missing compared to "AMC" variants)
 
@@ -573,7 +568,6 @@ void dataBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(CallableBondLgmGridEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CallableBondCamMcEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CboMCEngineBuilder, false)
-    ORE_REGISTER_ENGINE_BUILDER(CamMcMultiLegOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(DiscountingBondFutureEngineBuilder, false)
 
     ORE_REGISTER_ENGINE_BUILDER(ScriptedTradeEngineBuilder, false)

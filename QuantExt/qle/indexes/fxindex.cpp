@@ -123,9 +123,7 @@ void FxIndex::initialise() {
     std::ostringstream tmp;
     tmp << familyName_ << " " << sourceCurrency_.code() << "/" << targetCurrency_.code();
     name_ = tmp.str();
-    QL_DEPRECATED_DISABLE_WARNING
-    registerWith(IndexManager::instance().notifier(name()));
-    QL_DEPRECATED_ENABLE_WARNING
+    registerWith(notifier());
     registerWith(fxSpot_);
     registerWith(sourceYts_);
     registerWith(targetYts_);

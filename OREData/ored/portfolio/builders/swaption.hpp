@@ -26,6 +26,8 @@
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/utilities/log.hpp>
+
+#include <qle/instruments/multilegoption.hpp>
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/models/lgm.hpp>
 
@@ -54,6 +56,8 @@ public:
                         const std::vector<Date>& maturities, const std::vector<std::vector<Real>>& strikes,
                         const std::vector<std::vector<Real>>& fxStrikes, const bool isAmerican) const;
 
+    virtual bool instrumentIsHandled(QuantExt::MultiLegOption& s, std::vector<std::string>& messages) const;
+
 protected:
     CrossAssetModel::Discretization discretization_ = CrossAssetModel::Discretization::Exact;
 
@@ -74,6 +78,7 @@ public:
         : SwaptionEngineBuilder("BlackBachelier", "BlackBachelierSwaptionEngine",
                                 {"EuropeanSwaption", "EuropeanSwaption_NonStandard"}) {}
 
+    bool instrumentIsHandled(QuantExt::MultiLegOption& s, std::vector<std::string>& messages) const override;
 private:
     QuantLib::ext::shared_ptr<PricingEngine>
     engineImpl(const string& id, const std::vector<string>& keys, const std::vector<Date>& dates,
@@ -96,6 +101,8 @@ class LGMGridSwaptionEngineBuilder final : public LGMSwaptionEngineBuilder {
 public:
     LGMGridSwaptionEngineBuilder() : LGMSwaptionEngineBuilder("Grid") {}
 
+    bool instrumentIsHandled(QuantExt::MultiLegOption& s, std::vector<std::string>& messages) const override;
+
 private:
     QuantLib::ext::shared_ptr<PricingEngine>
     engineImpl(const string& id, const std::vector<string>& keys, const std::vector<Date>& dates,
@@ -108,6 +115,8 @@ private:
 class LGMFDSwaptionEngineBuilder final : public LGMSwaptionEngineBuilder {
 public:
     LGMFDSwaptionEngineBuilder() : LGMSwaptionEngineBuilder("FD") {}
+
+    bool instrumentIsHandled(QuantExt::MultiLegOption& s, std::vector<std::string>& messages) const override;
 
 private:
     QuantLib::ext::shared_ptr<PricingEngine>
@@ -126,9 +135,7 @@ public:
         : SwaptionEngineBuilder("LGM", engine,
                                 {"EuropeanSwaption", "EuropeanSwaption_NonStandard", "BermudanSwaption",
                                  "BermudanSwaption_NonStandard", "AmericanSwaption", "AmericanSwaption_NonStandard",
-                                 "EuropeanSwaption_XCcy", "EuropeanSwaption_NonStandard_XCcy", "BermudanSwaption_XCcy",
-                                 "BermudanSwaption_NonStandard_XCcy", "AmericanSwaption_XCcy",
-                                 "AmericanSwaption_NonStandard_XCcy"},
+                                 "EuropeanSwaption_XCcy", "BermudanSwaption_XCcy", "AmericanSwaption_XCcy"},
                                 idBasedKey) {}
 };
 

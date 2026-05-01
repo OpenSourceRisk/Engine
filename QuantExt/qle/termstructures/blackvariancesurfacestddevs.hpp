@@ -39,14 +39,13 @@ using namespace QuantLib;
 //! \ingroup termstructures
 class BlackVarianceSurfaceStdDevs : public BlackVarianceSurfaceMoneyness {
 public:
-    BlackVarianceSurfaceStdDevs(const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times,
-                                const std::vector<Real>& stdDevs,
-                                const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
-                                const DayCounter& dayCounter, const QuantLib::ext::shared_ptr<EqFxIndexBase>& index,
-                                bool stickyStrike = false, bool flatExtrapMoneyness = false,
-                                BlackVolTimeExtrapolation timeExtrapolation = BlackVolTimeExtrapolation::FlatVolatility,
-                                const VolatilityType type = VolatilityType::ShiftedLognormal,
-                                const Real shift = 0.0);
+    BlackVarianceSurfaceStdDevs(
+        const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times,
+        const std::vector<Real>& stdDevs, const std::vector<std::vector<Handle<Quote>>>& blackVolMatrix,
+        const DayCounter& dayCounter, const QuantLib::ext::shared_ptr<EqFxIndexBase>& index, bool stickyStrike = false,
+        bool flatExtrapMoneyness = false,
+        BlackVolTimeExtrapolation::Type timeExtrapolationType = BlackVolTimeExtrapolation::Type::FlatVolatility,
+        const VolatilityType type = VolatilityType::ShiftedLognormal, const Real shift = 0.0);
 
     // A method that takes a reference to a vector of vector of quotes (that will be populated), termstructure,
     // expiry times, and standard deviation points. Fills the quotes with the correct points from the termstructure.
