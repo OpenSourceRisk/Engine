@@ -22,8 +22,34 @@
 %include types.i
 %include ored_iborfallbackconfig.i
 
+%shared_ptr(ore::data::DateGrid)
+
 namespace ore {
 namespace data {
+
+class DateGrid {
+public:
+    DateGrid();
+    DateGrid(const std::string& grid, const QuantLib::Calendar& gridCalendar = QuantLib::TARGET(),
+             const QuantLib::DayCounter& dayCounter = QuantLib::ActualActual(QuantLib::ActualActual::ISDA));
+    DateGrid(const std::vector<QuantLib::Period>& tenors, const QuantLib::Calendar& gridCalendar = QuantLib::TARGET(),
+             const QuantLib::DayCounter& dayCounter = QuantLib::ActualActual(QuantLib::ActualActual::ISDA));
+    DateGrid(const std::vector<QuantLib::Date>& dates, const QuantLib::Calendar& gridCalendar = QuantLib::TARGET(),
+             const QuantLib::DayCounter& dayCounter = QuantLib::ActualActual(QuantLib::ActualActual::ISDA));
+    QuantLib::Size size() const;
+    void addCloseOutDates(const QuantLib::Period& p = QuantLib::Period(2, QuantLib::Weeks));
+    const std::vector<QuantLib::Period>& tenors() const;
+    const std::vector<QuantLib::Date>& dates() const;
+    const std::vector<bool>& isValuationDate() const;
+    const std::vector<bool>& isCloseOutDate() const;
+    std::vector<QuantLib::Date> valuationDates() const;
+    std::vector<QuantLib::Date> closeOutDates() const;
+    const QuantLib::Calendar& calendar() const;
+    const QuantLib::DayCounter& dayCounter() const;
+    const std::vector<QuantLib::Time>& times() const;
+    const QuantLib::TimeGrid& timeGrid() const;
+    QuantLib::Date closeOutDateFromValuationDate(const QuantLib::Date& d) const;
+};
 
 void addMarketObjectDependencies(std::map<std::string, std::map<MarketObject, std::set<std::string>>>* objects,
                                  const ext::shared_ptr<CurveConfigurations>& curveConfigs, const std::string& baseCcy,
