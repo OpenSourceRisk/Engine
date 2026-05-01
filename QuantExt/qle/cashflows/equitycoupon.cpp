@@ -98,6 +98,13 @@ EquityCoupon::EquityCoupon(const Date& paymentDate, Real nominal, const Date& st
     // QL_REQUIRE(!notionalReset_ || quantity_ != Null<Real>(), "EquityCoupon: quantity required if notional resets");
     QL_REQUIRE(notionalReset_ || nominal_ != Null<Real>(),
                "EquityCoupon: notional required if notional does not reset");
+
+    QL_REQUIRE(fixingStartDate_ < fixingEndDate_, "EquityCoupon: fixing start date (" <<
+        io::iso_date(fixingStartDate_) << ") must be before fixing end date (" << io::iso_date(fixingEndDate_) << ").");
+
+    QL_REQUIRE(fixingEndDate_ <= paymentDate, "EquityCoupon: fixing end date (" <<
+        io::iso_date(fixingEndDate_) << ") must not be greater than payment date (" <<
+        io::iso_date(paymentDate) << ").");
 }
 
 void EquityCoupon::setPricer(const QuantLib::ext::shared_ptr<EquityCouponPricer>& pricer) {
