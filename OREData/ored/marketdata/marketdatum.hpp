@@ -1713,15 +1713,21 @@ public:
         \param indexTerm The term of the underlying CDS index e.g. 3Y, 5Y, 7Y, 10Y etc. If not given, defaults to
                          an empty string. Assumed here that the term is encoded in \c indexName.
         \param strike    Strike object defining the quote's strike. If not given, assumed that quote is ATM.
+        \param quoteType The quote type, e.g. price or volatility. If not given, defaults to volatility.
+        \param side      Whether the quote is for a Payer, i.e. `Buyer`, or Receiver, i.e. `Seller`, CDS option.
     */
     IndexCDSOptionQuote(QuantLib::Real value, const QuantLib::Date& asof, const std::string& name,
                         const std::string& indexName, const QuantLib::ext::shared_ptr<Expiry>& expiry,
-                        const std::string& indexTerm = "", const QuantLib::ext::shared_ptr<BaseStrike>& strike = nullptr);
+                        const std::string& indexTerm = "",
+                        const QuantLib::ext::shared_ptr<BaseStrike>& strike = nullptr,
+                        QuoteType quoteType = QuoteType::RATE_LNVOL,
+                        QuantLib::Protection::Side side = QuantLib::Protection::Side::Buyer);
 
 
     //! Make a copy of the market datum
     QuantLib::ext::shared_ptr<MarketDatum> clone() override {
-        return QuantLib::ext::make_shared<IndexCDSOptionQuote>(quote_->value(), asofDate_, name_, indexName_, expiry_, indexTerm_, strike_);
+        return QuantLib::ext::make_shared<IndexCDSOptionQuote>(quote_->value(), asofDate_, name_, indexName_, expiry_,
+            indexTerm_, strike_, quoteType_, side_);
     }
 
     //! \name Inspectors
@@ -1730,6 +1736,7 @@ public:
     const QuantLib::ext::shared_ptr<Expiry>& expiry() const { return expiry_; }
     const std::string& indexTerm() const { return indexTerm_; }
     const QuantLib::ext::shared_ptr<BaseStrike>& strike() const { return strike_; }
+    QuantLib::Protection::Side side() const { return side_; }
     //@}
 
 private:
@@ -1737,6 +1744,7 @@ private:
     QuantLib::ext::shared_ptr<Expiry> expiry_;
     std::string indexTerm_;
     QuantLib::ext::shared_ptr<BaseStrike> strike_;
+    QuantLib::Protection::Side side_;
 
     //! Serialization
     friend class boost::serialization::access;

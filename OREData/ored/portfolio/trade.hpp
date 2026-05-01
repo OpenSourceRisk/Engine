@@ -102,7 +102,7 @@ public:
     //@}
 
     //! Reset trade, clear all base class data. This does not reset accumulated timings for this trade.
-    void reset();
+    virtual void reset();
 
     //! Reset accumulated timings to given values
     void resetPricingStats(const std::size_t numberOfPricings = 0,

@@ -431,16 +431,34 @@ Position::Type parsePositionType(const std::string& s) {
 }
 
 Protection::Side parseProtectionSide(const std::string& s) {
-    static map<string, Protection::Side> m = {{"Buyer", Protection::Buyer},
-                                              {"Seller", Protection::Seller},
-                                              {"B", Protection::Buyer},
-                                              {"S", Protection::Seller}};
+    static map<string, Protection::Side> m = {
+        {"Buyer", Protection::Buyer},
+        {"Seller", Protection::Seller},
+        {"B", Protection::Buyer},
+        {"S", Protection::Seller},
+        {"Payer", Protection::Buyer},
+        {"Receiver", Protection::Seller},
+        {"P", Protection::Buyer},
+        {"R", Protection::Seller}
+    };
 
     auto it = m.find(s);
     if (it != m.end()) {
         return it->second;
     } else {
         QL_FAIL("Protection side \"" << s << "\" not recognized");
+    }
+}
+
+ostream& operator<<(ostream& os, const Protection::Side side)
+{
+    switch (side) {
+        case Protection::Buyer:
+            return os << "Buyer";
+        case Protection::Seller:
+            return os << "Seller";
+        default:
+            QL_FAIL("Unknown Protection::Side");
     }
 }
 
