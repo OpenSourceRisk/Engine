@@ -625,10 +625,12 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
                         itr->second->inflationTermStructure());
                 QL_REQUIRE(ts,
                            "expected yoy inflation term structure for index " << node.name << ", but could not cast");
-                yoyInflationIndices_[make_pair(configuration, node.name)] =
+            QL_DEPRECATED_DISABLE_WARNING
+                           yoyInflationIndices_[make_pair(configuration, node.name)] =
                     Handle<YoYInflationIndex>(QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(
                         parseZeroInflationIndex(node.name, Handle<ZeroInflationTermStructure>()), false,
                         Handle<YoYInflationTermStructure>(ts)));
+            QL_DEPRECATED_ENABLE_WARNING
             }
             break;
         }

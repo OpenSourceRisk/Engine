@@ -43,9 +43,7 @@ BondIndex::BondIndex(const std::string& securityName, const bool dirty, const bo
       bondIssueDateFallback_(bondIssueDateFallback), quotedDirtyPrices_(quotedDirtyPrices) {
 
     registerWith(Settings::instance().evaluationDate());
-    QL_DEPRECATED_DISABLE_WARNING
-    registerWith(IndexManager::instance().notifier(BondIndex::name()));
-    QL_DEPRECATED_ENABLE_WARNING
+    registerWith(notifier());
     registerWith(bond_);
     registerWith(discountCurve_);
     registerWith(defaultCurve_);
@@ -174,9 +172,7 @@ BondFuturesIndex::BondFuturesIndex(const std::string& futureContract, const Date
       conversionFactor_(conversionFactor), dirty_(dirty) {
     registerWith(Settings::instance().evaluationDate());
     registerWith(ctd_);
-    QL_DEPRECATED_DISABLE_WARNING
-    registerWith(IndexManager::instance().notifier(BondFuturesIndex::name()));
-    QL_DEPRECATED_ENABLE_WARNING
+    registerWith(notifier());
 }
 
 std::string BondFuturesIndex::name() const {

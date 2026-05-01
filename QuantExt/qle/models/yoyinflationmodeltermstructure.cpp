@@ -33,7 +33,7 @@ YoYInflationModelTermStructure::YoYInflationModelTermStructure(const QuantLib::e
     : YoYInflationTermStructure(inflationTermStructure(model, index)->baseDate(),
                                 inflationTermStructure(model, index)->baseRate(),
                                 inflationTermStructure(model, index)->observationLag(),
-                                inflationTermStructure(model, index)->frequency(), indexIsInterpolated,
+                                inflationTermStructure(model, index)->frequency(),
                                 inflationTermStructure(model, index)->dayCounter()),
       model_(model), index_(index), indexIsInterpolated_(indexIsInterpolated),
       referenceDate_(inflationTermStructure(model_, index_)->referenceDate()), relativeTime_(0.0) {

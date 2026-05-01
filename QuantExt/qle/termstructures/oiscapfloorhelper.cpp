@@ -44,7 +44,7 @@ OISCapFloorHelper::OISCapFloorHelper(CapFloorHelper::Type type, const Period& te
                                      const bool useEffectiveVolatility)
     : RelativeDateBootstrapHelper<OptionletVolatilityStructure>(
           Handle<Quote>(QuantLib::ext::make_shared<DerivedQuote<std::function<Real(Real)>>>(
-              quote, std::bind(&OISCapFloorHelper::npv, this, std::placeholders::_1)))),
+              quote, std::bind(&OISCapFloorHelper::npv, this, std::placeholders::_1), false))),
       type_(type), tenor_(tenor), rateComputationPeriod_(rateComputationPeriod), strike_(strike), index_(index),
       discountHandle_(discountingCurve), moving_(moving), effectiveDate_(effectiveDate), quoteType_(quoteType),
       quoteVolatilityType_(quoteVolatilityType), quoteDisplacement_(quoteDisplacement),

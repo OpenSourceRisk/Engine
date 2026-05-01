@@ -86,12 +86,12 @@ OptionSurfaceStripper::OptionSurfaceStripper(const QuantLib::ext::shared_ptr<Opt
                                              const Calendar& calendar, const DayCounter& dayCounter,
                                              Exercise::Type type, bool lowerStrikeConstExtrap,
                                              bool upperStrikeConstExtrap,
-                                             QuantLib::BlackVolTimeExtrapolation timeExtrapolation,
+                                             QuantLib::BlackVolTimeExtrapolation::Type timeExtrapolationType,
                                              bool preferOutOfTheMoney, Solver1DOptions solverOptions,
                                              QuantLib::VolatilityType volType, Real displacement)
     : callSurface_(callSurface), putSurface_(putSurface), calendar_(calendar), dayCounter_(dayCounter), type_(type),
       lowerStrikeConstExtrap_(lowerStrikeConstExtrap), upperStrikeConstExtrap_(upperStrikeConstExtrap),
-      timeExtrapolation_(timeExtrapolation), preferOutOfTheMoney_(preferOutOfTheMoney), volType_(volType),
+      timeExtrapolationType_(timeExtrapolationType), preferOutOfTheMoney_(preferOutOfTheMoney), volType_(volType),
       displacement_(displacement), solverOptions_(solverOptions),
       havePrices_(QuantLib::ext::dynamic_pointer_cast<OptionPriceSurface>(callSurface_)) {
 
@@ -206,7 +206,7 @@ void OptionSurfaceStripper::performCalculations() const {
     // Populate the variance surface.
     volSurface_ = QuantLib::ext::make_shared<BlackVarianceSurfaceSparse<>>(
         callSurface_->referenceDate(), calendar_, volExpiries, volStrikes, volData, dayCounter_,
-        lowerStrikeConstExtrap_, upperStrikeConstExtrap_, timeExtrapolation_, volType_, displacement_);
+        lowerStrikeConstExtrap_, upperStrikeConstExtrap_, timeExtrapolationType_, volType_, displacement_);
 }
 
 vector<Real> OptionSurfaceStripper::strikes(const Date& expiry, bool isCall) const {
@@ -283,9 +283,9 @@ EquityOptionSurfaceStripper::EquityOptionSurfaceStripper(
     const QuantLib::ext::shared_ptr<OptionInterpolatorBase>& callSurface,
     const QuantLib::ext::shared_ptr<OptionInterpolatorBase>& putSurface, const Calendar& calendar,
     const DayCounter& dayCounter, Exercise::Type type, bool lowerStrikeConstExtrap, bool upperStrikeConstExtrap,
-    QuantLib::BlackVolTimeExtrapolation timeExtrapolation, bool preferOutOfTheMoney, Solver1DOptions solverOptions)
+    QuantLib::BlackVolTimeExtrapolation::Type timeExtrapolationType, bool preferOutOfTheMoney, Solver1DOptions solverOptions)
     : OptionSurfaceStripper(callSurface, putSurface, calendar, dayCounter, type, lowerStrikeConstExtrap,
-                            upperStrikeConstExtrap, timeExtrapolation, preferOutOfTheMoney, solverOptions, ShiftedLognormal, 0.0),
+                            upperStrikeConstExtrap, timeExtrapolationType, preferOutOfTheMoney, solverOptions, ShiftedLognormal, 0.0),
       equityIndex_(equityIndex) {
     registerWith(equityIndex_);
 }
@@ -309,10 +309,10 @@ CommodityOptionSurfaceStripper::CommodityOptionSurfaceStripper(
     const QuantLib::ext::shared_ptr<OptionInterpolatorBase>& callSurface,
     const QuantLib::ext::shared_ptr<OptionInterpolatorBase>& putSurface, const Calendar& calendar,
     const DayCounter& dayCounter, Exercise::Type type, bool lowerStrikeConstExtrap, bool upperStrikeConstExtrap,
-    QuantLib::BlackVolTimeExtrapolation timeExtrapolation, bool preferOutOfTheMoney, Solver1DOptions solverOptions,
+    QuantLib::BlackVolTimeExtrapolation::Type timeExtrapolationType, bool preferOutOfTheMoney, Solver1DOptions solverOptions,
     VolatilityType volType, Real shift)
     : OptionSurfaceStripper(callSurface, putSurface, calendar, dayCounter, type, lowerStrikeConstExtrap,
-                            upperStrikeConstExtrap, timeExtrapolation, preferOutOfTheMoney, solverOptions),
+                            upperStrikeConstExtrap, timeExtrapolationType, preferOutOfTheMoney, solverOptions),
       priceCurve_(priceCurve), discountCurve_(discountCurve)  {
     registerWith(priceCurve_);
     registerWith(discountCurve_);

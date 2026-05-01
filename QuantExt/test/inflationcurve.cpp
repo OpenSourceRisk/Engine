@@ -93,7 +93,7 @@ buildZeroInflationCurve(CommonData& cd, bool useLastKnownFixing, const QuantLib:
         QuantLib::ext::shared_ptr<QuantLib::ZeroInflationTraits::helper> instrument =
             QuantLib::ext::make_shared<ZeroCouponInflationSwapHelper>(
                 Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(quote)), cd.obsLag, today, maturity, fixingCalendar, bdc,
-                dc, index, isInterpolated ? CPI::Linear : CPI::Flat);
+                dc, index, isInterpolated ? CPI::Linear : CPI::Flat, Pillar::MaturityDate);
         helpers.push_back(instrument);
     }
     Date baseDate =
