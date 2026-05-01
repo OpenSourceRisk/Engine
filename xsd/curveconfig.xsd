@@ -318,7 +318,7 @@
       <xs:element type="xs:string" name="CurveId"/>
       <xs:element type="xs:string" name="CurveDescription"/>
       <xs:element type="xs:string" name="Qualifier"/>
-		<xs:element type="dimensionType" name="Dimension" minOccurs="0"/>
+      <xs:element type="dimensionType" name="Dimension" minOccurs="0"/>
       <xs:element type="volatilityType" name="VolatilityType"/>
       <xs:element type="extrapolationType" name="Extrapolation"/>
       <xs:element type="dayCounter" name="DayCounter"/>
@@ -328,6 +328,39 @@
       <xs:element type="xs:string" name="BondTenors"/>
       <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>
     </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="indexFactorsType">
+    <xs:sequence>
+      <xs:element type="positiveDecimal" name="IndexFactor"/>
+      <xs:element type="positiveDecimal" name="IndexFactorStrike"/>
+      <xs:element type="positiveDecimal" name="RealisedFep"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="priceInfoType">
+    <xs:sequence>
+      <xs:element type="xs:string" name="CdsConventions"/>
+      <xs:element type="positiveDecimal" name="RunningCoupon"/>
+      <xs:element type="indexFactorsType" name="IndexFactors" minOccurs="0"/>
+      <xs:element name="EngineOverride" minOccurs="0">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="NumericalIntegrationEngine"/>
+            <xs:enumeration value="BlackIndexCdsOptionEngine"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="QuoteDimension" minOccurs="0">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="BpsPerOptionNtl"/>
+            <xs:enumeration value="BpsPerOutstandingNtl"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element type="oneDimSolverConfigType" name="OneDimSolverConfig" minOccurs="0"/>
+    </xs:sequence>
   </xs:complexType>
 
   <xs:complexType name="cdsVolatilities">
@@ -348,6 +381,7 @@
                 <xs:all>
                   <xs:element type="xs:string" name="Label"/>
                   <xs:element type="xs:string" name="Curve"/>
+                  <xs:element type="xs:string" name="Maturity" minOccurs="0"/>
                 </xs:all>
               </xs:complexType>
             </xs:element>
@@ -366,6 +400,7 @@
       <xs:element type="xs:string" name="StrikeType" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="QuoteName" minOccurs="0" maxOccurs="1"/>
       <xs:element type="positiveDecimal" name="StrikeFactor" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="priceInfoType" name="PriceInfo" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 
