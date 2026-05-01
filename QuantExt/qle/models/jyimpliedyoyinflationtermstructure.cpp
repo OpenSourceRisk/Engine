@@ -57,7 +57,7 @@ map<Date, Real> JyImpliedYoYInflationTermStructure::yoyRates(const vector<Date>&
     // Will need a YoY index below in the helpers.
     QL_DEPRECATED_DISABLE_WARNING
     QuantLib::ext::shared_ptr<YoYInflationIndex> index =
-        QuantLib::ext::make_shared<YoYInflationIndexWrapper>(model_->infjy(index_)->inflationIndex(), indexIsInterpolated());
+        QuantLib::ext::make_shared<YoYInflationIndexWrapper>(model_->infjy(index_)->inflationIndex(), false);
     QL_DEPRECATED_ENABLE_WARNING
     for (const auto& maturity : dts) {
 
@@ -152,10 +152,8 @@ map<Date, Real> JyImpliedYoYInflationTermStructure::yoyRates(const vector<Date>&
     auto lag = obsLag == -1 * Days ? observationLag() : obsLag;
     auto baseRate = helpers.front()->quote()->value();
     auto baseDate = inflationPeriod(referenceDate_- lag, frequency()).first;
-    QL_DEPRECATED_DISABLE_WARNING
     auto yoyCurve = QuantLib::ext::make_shared<PiecewiseYoYInflationCurve<Linear>>(
-        referenceDate_, baseDate, baseRate, lag, frequency(), indexIsInterpolated(), dayCounter(), helpers);
-    QL_DEPRECATED_ENABLE_WARNING
+        referenceDate_, baseDate, baseRate, lag, frequency(), dayCounter(), helpers);
     // Read the necessary YoY rates from the bootstrapped YoY inflation curve
     map<Date, Real> result;
     for (const auto& maturity : dts) {

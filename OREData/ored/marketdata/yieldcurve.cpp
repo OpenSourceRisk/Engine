@@ -223,7 +223,7 @@ buildYieldCurve(YieldCurve::InterpolationMethod interpolationMethod,
                                                      extrapolation, excludeT0));
         break;
     case YieldCurve::InterpolationMethod::DefaultLogMixedLinearCubic:
-        yieldts.reset(new CurveType<DefaultLogMixedLinearCubic>(dates, data, dayCounter, DefaultLogMixedLinearCubic(n),
+        yieldts.reset(new CurveType<KrugerLogMixedLinearCubic>(dates, data, dayCounter, KrugerLogMixedLinearCubic(n),
                                                                 extrapolation, excludeT0));
         break;
     case YieldCurve::InterpolationMethod::MonotonicLogMixedLinearCubic:
@@ -1032,7 +1032,7 @@ YieldCurve::buildPiecewiseCurve(const std::size_t index, const std::size_t mixed
                           CubicInterpolation::SecondDerivative, 0.0))
             break;
         case InterpolationMethod::DefaultLogMixedLinearCubic:
-            PWYC(ForwardRate, DefaultLogMixedLinearCubic, DefaultLogMixedLinearCubic(mixedInterpolationSize))
+            PWYC(ForwardRate, KrugerLogMixedLinearCubic, KrugerLogMixedLinearCubic(mixedInterpolationSize))
             break;
         case InterpolationMethod::MonotonicLogMixedLinearCubic:
             PWYC(ForwardRate, MonotonicLogMixedLinearCubic, MonotonicLogMixedLinearCubic(mixedInterpolationSize))

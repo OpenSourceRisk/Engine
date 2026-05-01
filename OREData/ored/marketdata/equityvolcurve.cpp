@@ -529,7 +529,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
 
     // Set the strike extrapolation which only matters if extrapolation is turned on for the whole surface.
     bool flatStrikeExtrap = true;
-    BlackVolTimeExtrapolation timeExtrapolation = BlackVolTimeExtrapolation::FlatVolatility;
+    BlackVolTimeExtrapolation::Type timeExtrapolation = BlackVolTimeExtrapolation::Type::FlatVolatility;
     if (vssc.extrapolation()) {
 
         auto strikeExtrapType = parseExtrapolation(vssc.strikeExtrapolation());
@@ -547,7 +547,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
         auto timeExtrapType = parseExtrapolation(vssc.timeExtrapolation());
         if (timeExtrapType == Extrapolation::UseInterpolator) {
             TLOG("EquityVolCurve: Time extrapolation switched to using interpolator.");
-            timeExtrapolation = BlackVolTimeExtrapolation::UseInterpolatorVariance;
+            timeExtrapolation = BlackVolTimeExtrapolation::Type::UseInterpolator;
         } else if (timeExtrapType == Extrapolation::None) {
             TLOG("EquityVolCurve: Time extrapolation cannot be turned off on its own so defaulting to flat.");
         } else if (timeExtrapType == Extrapolation::Flat) {

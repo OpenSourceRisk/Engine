@@ -36,7 +36,7 @@
 #include <ql/processes/blackscholesprocess.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
-
+#include <ql/termstructures/volatility/equityfx/blackvoltimeextrapolation.hpp>
 namespace QuantExt {
 
 //! Abstract base class for the option stripper
@@ -48,7 +48,7 @@ public:
         const QuantLib::ext::shared_ptr<OptionInterpolatorBase>& putSurface, const QuantLib::Calendar& calendar,
         const QuantLib::DayCounter& dayCounter, QuantLib::Exercise::Type type = QuantLib::Exercise::European,
         bool lowerStrikeConstExtrap = true, bool upperStrikeConstExtrap = true,
-        QuantLib::BlackVolTimeExtrapolation timeExtrapolation = QuantLib::BlackVolTimeExtrapolation::FlatVolatility,
+        QuantLib::BlackVolTimeExtrapolation::Type timeExtrapolationType = QuantLib::BlackVolTimeExtrapolation::Type::FlatVolatility,
         bool preferOutOfTheMoney = false,
         Solver1DOptions solverOptions = {},
         QuantLib::VolatilityType volType =
@@ -78,7 +78,7 @@ protected:
     QuantLib::Exercise::Type type_;
     bool lowerStrikeConstExtrap_;
     bool upperStrikeConstExtrap_;
-    QuantLib::BlackVolTimeExtrapolation timeExtrapolation_;
+    QuantLib::BlackVolTimeExtrapolation::Type timeExtrapolationType_;
     bool preferOutOfTheMoney_;
     QuantLib::VolatilityType volType_;
     Real displacement_;
@@ -139,7 +139,7 @@ public:
         const QuantLib::ext::shared_ptr<OptionInterpolatorBase>& putSurface, const QuantLib::Calendar& calendar,
         const QuantLib::DayCounter& dayCounter, QuantLib::Exercise::Type type = QuantLib::Exercise::European,
         bool lowerStrikeConstExtrap = true, bool upperStrikeConstExtrap = true,
-        QuantLib::BlackVolTimeExtrapolation timeExtrapolation = QuantLib::BlackVolTimeExtrapolation::FlatVolatility,
+        QuantLib::BlackVolTimeExtrapolation::Type timeExtrapolationType = QuantLib::BlackVolTimeExtrapolation::Type::FlatVolatility,
         bool preferOutOfTheMoney = false, Solver1DOptions solverOptions = {});
 
 protected:
@@ -165,7 +165,7 @@ public:
         const QuantLib::ext::shared_ptr<OptionInterpolatorBase>& putSurface, const QuantLib::Calendar& calendar,
         const QuantLib::DayCounter& dayCounter, QuantLib::Exercise::Type type = QuantLib::Exercise::European,
         bool lowerStrikeConstExtrap = true, bool upperStrikeConstExtrap = true,
-        QuantLib::BlackVolTimeExtrapolation timeExtrapolation = QuantLib::BlackVolTimeExtrapolation::FlatVolatility,
+        QuantLib::BlackVolTimeExtrapolation::Type timeExtrapolationType = QuantLib::BlackVolTimeExtrapolation::Type::FlatVolatility,
         bool preferOutOfTheMoney = false, Solver1DOptions solverOptions = {},
         QuantLib::VolatilityType volType = QuantLib::VolatilityType::ShiftedLognormal, Real displacement = 0.0);
 
