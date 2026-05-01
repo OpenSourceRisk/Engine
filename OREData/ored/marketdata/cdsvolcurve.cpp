@@ -30,6 +30,8 @@
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <qle/termstructures/creditvolcurve.hpp>
 #include <qle/termstructures/indexcdsvolstripper.hpp>
+#include <qle/termstructures/svimodeltraits.hpp>
+#include <qle/utilities/time.hpp>
 
 using namespace QuantExt;
 using namespace QuantLib;
@@ -467,7 +469,7 @@ void CDSVolCurve::buildVolatility(const Date& asof, CDSVolatilityCurveConfig& vc
     } else {
         CreditVolQuoteMap quotes;
         populateVolatilityQuotes(args, quotes);
-        setVolatilityCurve(asof, vc, quotes, args.requiredCdsCurves, !wildcard);
+        setVolatilityCurve(asof, vc, vssc, quotes, args.requiredCdsCurves, !wildcard);
     }
 }
 
