@@ -17,7 +17,6 @@
 */
 
 #include <qle/termstructures/blackvariancesurfacesparse.hpp>
-#include <ql/termstructures/volatility/equityfx/blackvariancetimeextrapolation.hpp>
 using namespace std;
 using namespace QuantLib;
 
@@ -29,12 +28,12 @@ BlackVarianceSurfaceSparse<StrikeInterpolation, TimeInterpolation>::BlackVarianc
                                                        const vector<Volatility>& volatilities,
                                                        const DayCounter& dayCounter, bool lowerStrikeConstExtrap,
                                                        bool upperStrikeConstExtrap,
-                                                       QuantLib::BlackVolTimeExtrapolation timeExtrapolation,
+                                                       QuantLib::BlackVolTimeExtrapolation::Type timeExtrapolationType,
                                                        const VolatilityType volType,
                                                        const Real shift)
     : BlackVarianceTermStructure(referenceDate, cal, Following, dayCounter, volType, shift),
       OptionInterpolator2d<StrikeInterpolation, TimeInterpolation>(referenceDate, dayCounter, lowerStrikeConstExtrap, upperStrikeConstExtrap),
-      timeExtrapolation_(timeExtrapolation) {
+      timeExtrapolationType_(timeExtrapolationType) {
 
     QL_REQUIRE((strikes.size() == dates.size()) && (dates.size() == volatilities.size()),
                "dates, strikes and volatilities vectors not of equal size.");
@@ -64,18 +63,11 @@ BlackVarianceSurfaceSparse<StrikeInterpolation, TimeInterpolation>::BlackVarianc
 template <class StrikeInterpolation, class TimeInterpolation>
 QuantLib::Real BlackVarianceSurfaceSparse<StrikeInterpolation, TimeInterpolation>::blackVarianceImpl(QuantLib::Time t, QuantLib::Real strike) const {
     QuantLib::Time tb = this->times().back();
-    if (t <= tb || timeExtrapolation_ == BlackVolTimeExtrapolation::UseInterpolatorVariance) {
+    if (t <= tb) {
         return this->getValue(t, strike);
-    }
-    if (timeExtrapolation_ == BlackVolTimeExtrapolation::FlatVolatility) { 
-        auto varianceSurface = [this](double t, double strike, bool extrapolate) -> double { return this->getValue(t, strike); };
-        return timeExtrapolatationBlackVarianceFlat(t, strike, this->times_, varianceSurface);
-    } else if (timeExtrapolation_ == BlackVolTimeExtrapolation::UseInterpolatorVolatility) {
-        auto varianceSurface = [this](double t, double strike, bool extrapolate) -> double { return this->getValue(t, strike); };
-        return timeExtrapolatationBlackVarianceInVolatility(t, strike, this->times_, varianceSurface);
-    } else {
-        QL_FAIL("Unknown time extrapolation method");
-    }
+    } else
+        return BlackVolTimeExtrapolation::extrapolatedVariance(timeExtrapolationType_, t, strike, this->times(),
+                                                               [&](Real t, Real k) { return this->getValue(t, k); });
 };
 
 template class BlackVarianceSurfaceSparse<QuantLib::Linear, QuantLib::Linear>;

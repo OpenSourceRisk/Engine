@@ -78,7 +78,9 @@ void populateReportDataFromAdditionalResults(std::vector<TradeCashflowReportData
         for (auto const& cf : cfResults) {
 
             Real effectiveAmount = Null<Real>();
+            Real baseAmount = Null<Real>();
             Real discountFactor = Null<Real>();
+            Real discountFactorBase = Null<Real>();
             Real presentValue = Null<Real>();
             Real presentValueBase = Null<Real>();
             Real fxRateLocalBase = Null<Real>();
@@ -105,6 +107,10 @@ void populateReportDataFromAdditionalResults(std::vector<TradeCashflowReportData
                     specificDiscountCurve.empty() ? market->discountCurve(ccy, configuration) : specificDiscountCurve;
                 discountFactor = cf.payDate < asof ? 0.0 : discountCurve->discount(cf.payDate);
             }
+            if (ccy != baseCurrency) {                
+                auto baseDiscountCurve = specificDiscountCurve.empty() ? market->discountCurve(baseCurrency, configuration) : specificDiscountCurve;
+                discountFactorBase = cf.payDate < asof ? 0.0 : baseDiscountCurve->discount(cf.payDate);
+            } 
             if (cf.presentValue != Null<Real>()) {
                 presentValue = cf.presentValue * multiplier;
             } else if (effectiveAmount != Null<Real>() && discountFactor != Null<Real>()) {
@@ -118,6 +124,8 @@ void populateReportDataFromAdditionalResults(std::vector<TradeCashflowReportData
                 } catch (...) {
                 }
             }
+            if (cf.amount != Null<Real>() && ccy != baseCurrency && fxRateLocalBase != Null<Real>())
+                baseAmount = cf.amount * fxRateLocalBase;
             if (cf.presentValueBase != Null<Real>()) {
                 presentValueBase = cf.presentValueBase;
             } else if (presentValue != Null<Real>() && fxRateLocalBase != Null<Real>()) {
@@ -147,6 +155,7 @@ void populateReportDataFromAdditionalResults(std::vector<TradeCashflowReportData
             result.back().payDate = cf.payDate;
             result.back().flowType = cf.type;
             result.back().amount = effectiveAmount;
+            result.back().baseAmount = baseAmount;
             result.back().currency = ccy;
             result.back().coupon = cf.rate;
             result.back().accrual = cf.accrualPeriod;
@@ -157,6 +166,7 @@ void populateReportDataFromAdditionalResults(std::vector<TradeCashflowReportData
             result.back().fixingValue = cf.fixingValue;
             result.back().notional = cf.notional * (cf.notional == Null<Real>() ? 1.0 : multiplier);
             result.back().discountFactor = discountFactor;
+            result.back().discountFactorBase = discountFactorBase;
             result.back().presentValue = presentValue;
             result.back().fxRateLocalBase = fxRateLocalBase;
             result.back().presentValueBase = presentValueBase;
@@ -177,7 +187,8 @@ TradeCashflowReportData getCashflowReportData(
     const double fxCcyBase,
     const std::function<ext::shared_ptr<SwaptionVolatilityStructure>(const std::string& qualifier)>& swaptionVol,
     const std::function<ext::shared_ptr<OptionletVolatilityStructure>(const std::string& qualifier)>& capFloorVol,
-    const std::string& overwriteFlowType, const Real overwriteNotional) {
+    const std::string& overwriteFlowType, const Real overwriteNotional,
+    const ext::shared_ptr<YieldTermStructure>& discountCurveBaseCcy) {
 
     QL_REQUIRE(ptrFlow, "getCashflowReportData: prtFlow is null.");
     QL_REQUIRE(discountCurveCcy || ptrFlow->hasOccurred(asof), "getCashflowReportData: discountCurveCcy is null.");
@@ -330,7 +341,9 @@ TradeCashflowReportData getCashflowReportData(
     }
 
     Real effectiveAmount = Null<Real>();
+    Real baseAmount = Null<Real>();
     Real discountFactor = Null<Real>();
+    Real discountFactorBase = Null<Real>();
     Real presentValue = Null<Real>();
     Real presentValueBase = Null<Real>();
     Real floorStrike = Null<Real>();
@@ -340,10 +353,14 @@ TradeCashflowReportData getCashflowReportData(
     Real effectiveFloorVolatility = Null<Real>();
     Real effectiveCapVolatility = Null<Real>();
 
-    if (amount != Null<Real>())
+    if (amount != Null<Real>()) {
         effectiveAmount = amount * multiplier;
+        baseAmount = effectiveAmount * fxCcyBase;
+    }
 
     discountFactor = payDate < asof ? 0.0 : discountCurveCcy->discount(payDate);
+    if (discountCurveBaseCcy)
+        discountFactorBase = payDate < asof ? 0.0 : discountCurveBaseCcy->discount(payDate);
     if (effectiveAmount != Null<Real>())
         presentValue = discountFactor * effectiveAmount;
     try {
@@ -456,6 +473,7 @@ TradeCashflowReportData getCashflowReportData(
     result.payDate = payDate;
     result.flowType = overwriteFlowType.empty() ? flowType : overwriteFlowType;
     result.amount = effectiveAmount;
+    result.baseAmount = baseAmount;
     result.currency = ccy;
     result.coupon = coupon;
     result.accrual = accrual;
@@ -476,6 +494,7 @@ TradeCashflowReportData getCashflowReportData(
     result.capVolatility = capVolatility;
     result.effectiveFloorVolatility = effectiveFloorVolatility;
     result.effectiveCapVolatility = effectiveCapVolatility;
+    result.discountFactorBase = discountFactorBase;
 
     return result;
 }
@@ -489,17 +508,28 @@ std::vector<TradeCashflowReportData> getCashflowReportData(
         swaptionVol,
     const std::function<
         QuantLib::ext::shared_ptr<QuantLib::OptionletVolatilityStructure>(const std::string& qualifier)>& optionletVol,
-    const std::vector<std::string>& overwriteFlowType, const std::vector<Real>& overwriteNotional) {
+    const std::vector<std::string>& overwriteFlowType, const std::vector<Real>& overwriteNotional, 
+    const std::vector<QuantLib::ext::shared_ptr<QuantLib::YieldTermStructure>>& discountCurvesBaseCcy) {
     std::vector<TradeCashflowReportData> result;
     for (Size i = 0; i < legs.size(); ++i) {
         std::string owFlowType = overwriteFlowType.size() > i ? overwriteFlowType[i] : std::string();
         Real owNotional = overwriteNotional.size() > i ? overwriteNotional[i] : Null<Real>();
-        for (Size j = 0; j < legs[i].size(); ++j) {
-            result.push_back(getCashflowReportData(legs[i][j], payer[i], multiplier[i], baseCcy, ccys[i], asof,
-                                                   discountCurvesCcy[i], fxCcyBase[i], swaptionVol, optionletVol,
-                                                   owFlowType, owNotional));
-            result.back().cashflowNo = j + 1;
-            result.back().legNo = i;
+        if (!discountCurvesBaseCcy.empty()) {
+            for (Size j = 0; j < legs[i].size(); ++j) {
+                result.push_back(getCashflowReportData(legs[i][j], payer[i], multiplier[i], baseCcy, ccys[i], asof,
+                                                       discountCurvesCcy[i], fxCcyBase[i], swaptionVol, optionletVol,
+                                                       owFlowType, owNotional, discountCurvesBaseCcy[i]));
+                result.back().cashflowNo = j + 1;
+                result.back().legNo = i;
+            }
+        } else {
+            for (Size j = 0; j < legs[i].size(); ++j) {
+                result.push_back(getCashflowReportData(legs[i][j], payer[i], multiplier[i], baseCcy, ccys[i], asof,
+                                                       discountCurvesCcy[i], fxCcyBase[i], swaptionVol, optionletVol,
+                                                       owFlowType, owNotional));
+                result.back().cashflowNo = j + 1;
+                result.back().legNo = i;
+            }
         }
     }
     return result;

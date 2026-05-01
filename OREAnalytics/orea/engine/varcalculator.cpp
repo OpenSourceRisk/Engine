@@ -29,10 +29,10 @@ VarReport::VarReport(const std::string& baseCurrency, const QuantLib::ext::share
                      std::unique_ptr<SensiRunArgs> sensiArgs, std::unique_ptr<FullRevalArgs> fullRevalArgs,
                      std::unique_ptr<MultiThreadArgs> multiThreadArgs,
                      const bool breakdown, const bool useAtParCouponsCurves, const bool useAtParCouponsTrades, 
-                     const bool tradePnl, const bool riskFactorBreakdown)
+                     const bool tradePnl, const bool riskFactorBreakdown, const bool riskClassBreakdown)
     : MarketRiskReport(baseCurrency, portfolio, portfolioFilter, period, hisScenGen, std::move(sensiArgs),
                        std::move(fullRevalArgs), std::move(multiThreadArgs), breakdown, tradePnl, riskFactorBreakdown, useAtParCouponsCurves,
-                       useAtParCouponsTrades), p_(p) {}
+                       useAtParCouponsTrades, riskClassBreakdown), p_(p) {}
 
 void VarReport::createReports(const ext::shared_ptr<MarketRiskReport::Reports>& reports) {
     int s = reports->reports().size();

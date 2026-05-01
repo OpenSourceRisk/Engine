@@ -18,6 +18,7 @@
 
 #include <ored/portfolio/trswrapper.hpp>
 #include <ored/portfolio/bondposition.hpp>
+#include <ored/portfolio/compositeinstrumentwrapper.hpp>
 #include <qle/indexes/compositeindex.hpp>
 
 #include <ored/utilities/to_string.hpp>
@@ -109,7 +110,13 @@ TRSWrapper::TRSWrapper(
                    << underlying.size() << ") does not match fx index asset  size (" << fxIndexAsset.size() << ")");
 
     for (Size i = 0; i < underlying_.size(); ++i) {
-        registerWith(underlying_[i]->instrument()->qlInstrument());
+        if (auto compositeWrapper = QuantLib::ext::dynamic_pointer_cast<CompositeInstrumentWrapper>(
+                underlying_[i]->instrument())) {
+            for (const auto& w : compositeWrapper->wrappers())
+                registerWith(w->qlInstrument());
+        } else {
+            registerWith(underlying_[i]->instrument()->qlInstrument());
+        }
         registerWith(underlyingIndex_[i]);
     }
 

@@ -1097,6 +1097,7 @@ a configuration example.
     <Parameter name="includeExpectedShortfall">Y</Parameter>
     <Parameter name="tradePnl">N</Parameter>
     <Parameter name="riskFactorBreakdown">N</Parameter>
+    <Parameter name="riskClassBreakdown">Y</Parameter>
     <Parameter name="outputFile">var.csv</Parameter>
   </Analytic>
 </Analytics>
@@ -1129,6 +1130,10 @@ The parameters have the following interpretation:
   trade ID, risk class and risk type.
 \item {\tt riskFactorBreakdown} [Optional, default {\tt N}]: if {\tt Y}, a third output report provides a
   P\&L breakdown by individual risk factor.
+\item {\tt riskClassBreakdown} [Optional, default {\tt Y}]: if {\tt Y} (the default), VaR is computed
+  separately for each risk-class / risk-type combination (Interest Rate, FX, Inflation, Equity, Credit,
+  Commodity) in addition to the aggregate portfolio row. Set to {\tt N} to compute only the aggregate
+  {\tt [All, All]} row, which significantly reduces runtime when the per-class breakdown is not required.
 \item {\tt portfolioFilter} [Optional]: only trades whose {\tt portfolioId} matches this filter are processed;
   the entire portfolio is used if omitted.
 \item {\tt outputFile}: output file name for the main VaR report.

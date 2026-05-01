@@ -682,6 +682,7 @@ public:
 class ExerciseBuilder {
 public:
     ExerciseBuilder(const OptionData& optionData, const std::vector<Leg> legs,
+                    const std::vector<std::string>& legCurrencies = {},
                     bool removeNoticeDatesAfterLastAccrualStart = true);
 };
 

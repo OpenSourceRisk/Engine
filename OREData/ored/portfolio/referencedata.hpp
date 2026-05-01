@@ -243,14 +243,21 @@ public:
 
     const std::string& indexFamily() const { return indexFamily_; }
     const std::string& indexSubFamily() const { return indexSubFamily_; }
+    QuantLib::ext::optional<QuantLib::Size> indexVersion() const { return indexVersion_; }
+    QuantLib::ext::optional<QuantLib::Real> indexFactor() const { return indexFactor_; }
 
     void setIndexFamily(const std::string& indexFamily) { indexFamily_ = indexFamily; }
     void setIndexSubFamily(const std::string& indexSubFamily) { indexSubFamily_ = indexSubFamily; }
+    void setIndexVersion(QuantLib::Size indexVersion) { indexVersion_ = indexVersion; }
+    void setIndexFactor(QuantLib::Real indexFactor) { indexFactor_ = indexFactor; }
 
 private:
     std::set<CreditIndexConstituent> constituents_;
     std::string indexFamily_;
     std::string indexSubFamily_;
+    // Added later so use optional for backward compatibility.
+    QuantLib::ext::optional<QuantLib::Size> indexVersion_;
+    QuantLib::ext::optional<QuantLib::Real> indexFactor_;
 };
 
 
@@ -600,6 +607,8 @@ public:
     virtual QuantLib::ext::shared_ptr<ReferenceDatum>
     getData(const string& type, const string& id, const QuantLib::Date& asof = QuantLib::Null<QuantLib::Date>()) = 0;
     virtual void add(const QuantLib::ext::shared_ptr<ReferenceDatum>& referenceDatum) = 0;
+    virtual std::pair<bool, QuantLib::ext::shared_ptr<ReferenceDatum>> tryGetData(const std::string& type,
+        const std::string& id, const QuantLib::Date& asof = QuantLib::Date()) = 0;
 };
 
 //! Basic Concrete impl that loads an big XML and keeps data in memory
@@ -631,6 +640,8 @@ public:
                  const QuantLib::Date& asof = QuantLib::Null<QuantLib::Date>()) override;
     QuantLib::ext::shared_ptr<ReferenceDatum> getData(const string& type, const string& id,
                                               const QuantLib::Date& asof = QuantLib::Null<QuantLib::Date>()) override;
+    std::pair<bool, QuantLib::ext::shared_ptr<ReferenceDatum>> tryGetData(const std::string& type,
+        const std::string& id, const QuantLib::Date& asof = QuantLib::Date()) override;
     void add(const QuantLib::ext::shared_ptr<ReferenceDatum>& referenceDatum) override;
     // adds a datum from an xml node and returns it (or nullptr if nothing was added due to an error)
     QuantLib::ext::shared_ptr<ReferenceDatum> addFromXMLNode(XMLNode* node, const std::string& id = std::string(),

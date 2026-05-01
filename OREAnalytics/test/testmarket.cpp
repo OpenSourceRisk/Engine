@@ -631,7 +631,7 @@ Handle<YoYInflationIndex> TestMarket::makeYoYInflationIndex(string index, vector
     Date baseDate = QuantExt::ZeroInflation::curveBaseDate(false, asof_, Period(2, Months), ii->frequency(), ii);
     QL_DEPRECATED_DISABLE_WARNING
     QuantLib::ext::shared_ptr<PiecewiseYoYInflationCurve<Linear>> pYoYts(new PiecewiseYoYInflationCurve<Linear>(
-        asof_, baseDate, baseZeroRate, Period(2, Months), ii->frequency(), ii->interpolated(), ActualActual(ActualActual::ISDA), instruments));
+        asof_, baseDate, baseZeroRate, Period(2, Months), ii->frequency(), ActualActual(ActualActual::ISDA), instruments));
     QL_DEPRECATED_ENABLE_WARNING
     pYoYts->recalculate();
     yoyTS = QuantLib::ext::dynamic_pointer_cast<YoYInflationTermStructure>(pYoYts);
@@ -666,7 +666,7 @@ Handle<YoYInflationTermStructure> TestMarket::flatYoYInflationCurve(Real inflati
     dates.erase(std::unique(dates.begin(), dates.end()), dates.end());
     std::vector<Real> rates(dates.size(), inflationRate);
     auto curve = QuantLib::ext::make_shared<QuantLib::InterpolatedYoYInflationCurve<Linear>>(
-        today, dates, rates, 2 * Months, Monthly, false, QuantLib::ActualActual(ActualActual::ISDA));
+        today, dates, rates, 2 * Months, Monthly, QuantLib::ActualActual(ActualActual::ISDA));
     curve->enableExtrapolation();
     return Handle<YoYInflationTermStructure>(curve);
 }
@@ -1182,7 +1182,7 @@ void TestMarketParCurves::createYoYInflationIndex(const string& idxName, const v
     Date baseDate = QuantExt::ZeroInflation::curveBaseDate(false, asof_, conv->observationLag(), zii->frequency(), zii);
     QL_DEPRECATED_DISABLE_WARNING
     yoyCurve = QuantLib::ext::shared_ptr<PiecewiseYoYInflationCurve<Linear>>(new PiecewiseYoYInflationCurve<Linear>(
-        asof_, baseDate, baseRate, conv->observationLag(), yi->frequency(), conv->interpolated(), conv->dayCounter(), instruments));
+        asof_, baseDate, baseRate, conv->observationLag(), yi->frequency(), conv->dayCounter(), instruments));
     QL_DEPRECATED_ENABLE_WARNING
     yoyCurve->enableExtrapolation();
     Handle<YoYInflationTermStructure> its(yoyCurve);

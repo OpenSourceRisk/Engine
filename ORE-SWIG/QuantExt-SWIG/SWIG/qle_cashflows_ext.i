@@ -21,11 +21,19 @@
 
 %include common.i
 %include cashflows.i
+%include volatilities.i
 %include qle_indexes.i
 
 namespace QuantExt {
     class FutureExpiryCalculator;
+    class EquityCouponPricer;
+    class CorrelationTermStructure;
 } // namespace QuantExt
+
+%{
+#include <qle/cashflows/equitycoupon.hpp>
+#include <qle/cashflows/equitycouponpricer.hpp>
+%}
 
 namespace QuantExt {
 
@@ -38,19 +46,136 @@ enum class EquityReturnType {
 
 } // namespace QuantExt
 
+// QuantExt::EquityCoupon – full wrapper replacing previous empty stub
 %shared_ptr(QuantExt::EquityCoupon)
 namespace QuantExt {
 class EquityCoupon : public Coupon {
+  public:
+    EquityCoupon(const Date& paymentDate, Real nominal,
+                 const Date& startDate, const Date& endDate,
+                 Natural fixingDays,
+                 const ext::shared_ptr<QuantExt::EquityIndex2>& equityCurve,
+                 const DayCounter& dayCounter,
+                 EquityReturnType returnType,
+                 Real dividendFactor = 1.0,
+                 bool notionalReset = false,
+                 Real initialPrice = Null<Real>(),
+                 Real quantity = Null<Real>(),
+                 const Date& fixingStartDate = Date(),
+                 const Date& fixingEndDate = Date(),
+                 const Date& refPeriodStart = Date(),
+                 const Date& refPeriodEnd = Date(),
+                 const Date& exCouponDate = Date(),
+                 const ext::shared_ptr<FxIndex>& fxIndex = nullptr,
+                 bool initialPriceIsInTargetCcy = false,
+                 Real legInitialNotional = Null<Real>(),
+                 const Date& legFixingDate = Date());
+
+    Real amount() const;
+    DayCounter dayCounter() const;
+    Real accruedAmount(const Date& d) const;
+    Rate rate() const;
+    Real nominal() const;
+
+    const ext::shared_ptr<QuantExt::EquityIndex2>& equityCurve() const;
+    const ext::shared_ptr<FxIndex>& fxIndex() const;
+    EquityReturnType returnType() const;
+    Real dividendFactor() const;
+    Date fixingStartDate() const;
+    Date fixingEndDate() const;
+    bool notionalReset() const;
+    Real inputQuantity() const;
+    Real inputInitialPrice() const;
+    Real inputNominal() const;
+    std::vector<Date> fixingDates() const;
+    Real initialPrice() const;
+    bool initialPriceIsInTargetCcy() const;
+    Real quantity() const;
+    Real fxRate() const;
+    Real legInitialNotional() const;
+    Date legFixingDate() const;
+
+    void setPricer(const ext::shared_ptr<QuantExt::EquityCouponPricer>&);
+    ext::shared_ptr<QuantExt::EquityCouponPricer> pricer() const;
 };
 } // namespace QuantExt
 
+// QuantExt::EquityCouponPricer – full wrapper replacing previous partial stub
 %shared_ptr(QuantExt::EquityCouponPricer)
 namespace QuantExt {
-class EquityCouponPricer {
+class EquityCouponPricer : public Observer, public Observable {
   public:
+    EquityCouponPricer();
     Rate swapletRate();
+    void initialize(const EquityCoupon& coupon);
+
+    void setEquityVolatility(const Handle<BlackVolTermStructure>& equityVol);
+    void setFxVolatility(const Handle<BlackVolTermStructure>& fxVol);
+    void setCorrelation(const Handle<QuantExt::CorrelationTermStructure>& correlation);
 };
 } // namespace QuantExt
+
+// QuantExt::EquityLeg builder using helper-function-with-kwargs pattern
+%{
+Leg _EquityLeg(
+    const Schedule& schedule,
+    const ext::shared_ptr<QuantExt::EquityIndex2>& equityCurve,
+    const std::vector<Real>& notionals,
+    const DayCounter& paymentDayCounter = DayCounter(),
+    const BusinessDayConvention paymentConvention = Following,
+    const Calendar& paymentCalendar = Calendar(),
+    Natural paymentLag = 0,
+    QuantExt::EquityReturnType returnType = QuantExt::EquityReturnType::Price,
+    Real dividendFactor = 1.0,
+    Real initialPrice = Null<Real>(),
+    bool initialPriceIsInTargetCcy = false,
+    Natural fixingDays = 0,
+    bool notionalReset = false,
+    Real quantity = Null<Real>(),
+    const ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
+    const std::vector<Date>& paymentDates = {},
+    const Schedule& valuationSchedule = Schedule())
+{
+    QuantExt::EquityLeg leg(schedule, equityCurve, fxIndex);
+    leg.withNotionals(notionals)
+       .withPaymentDayCounter(paymentDayCounter)
+       .withPaymentAdjustment(paymentConvention)
+       .withPaymentCalendar(paymentCalendar)
+       .withPaymentLag(paymentLag)
+       .withReturnType(returnType)
+       .withDividendFactor(dividendFactor)
+       .withInitialPrice(initialPrice)
+       .withInitialPriceIsInTargetCcy(initialPriceIsInTargetCcy)
+       .withFixingDays(fixingDays)
+       .withNotionalReset(notionalReset)
+       .withQuantity(quantity)
+       .withPaymentDates(paymentDates)
+       .withValuationSchedule(valuationSchedule);
+    return leg;
+}
+%}
+#if !defined(SWIGJAVA) && !defined(SWIGCSHARP)
+%feature("kwargs") _EquityLeg;
+#endif
+%rename(EquityLeg) _EquityLeg;
+Leg _EquityLeg(
+    const Schedule& schedule,
+    const ext::shared_ptr<QuantExt::EquityIndex2>& equityCurve,
+    const std::vector<Real>& notionals,
+    const DayCounter& paymentDayCounter = DayCounter(),
+    const BusinessDayConvention paymentConvention = Following,
+    const Calendar& paymentCalendar = Calendar(),
+    Natural paymentLag = 0,
+    QuantExt::EquityReturnType returnType = QuantExt::EquityReturnType::Price,
+    Real dividendFactor = 1.0,
+    Real initialPrice = Null<Real>(),
+    bool initialPriceIsInTargetCcy = false,
+    Natural fixingDays = 0,
+    bool notionalReset = false,
+    Real quantity = Null<Real>(),
+    const ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
+    const std::vector<Date>& paymentDates = {},
+    const Schedule& valuationSchedule = Schedule());
 
 %shared_ptr(QuantExt::CommodityCashFlow)
 namespace QuantExt {

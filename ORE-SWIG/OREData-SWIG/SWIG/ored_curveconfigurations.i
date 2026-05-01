@@ -782,16 +782,6 @@ public:
     enum class TimeInterpolation { V, V2T };
     FXVolatilityCurveConfig() {}
     FXVolatilityCurveConfig(const std::string& curveID, const std::string& curveDescription, const FXVolatilityCurveConfig::Dimension& dimension,
-                            const std::vector<std::string>& expiries, const std::vector<std::string>& deltas = std::vector<std::string>(),
-                            const std::string& fxSpotID = "", const std::string& fxForeignCurveID = "",
-                            const std::string& fxDomesticCurveID = "",
-                            const QuantLib::DayCounter& dayCounter = QuantLib::Actual365Fixed(),
-                            const QuantLib::Calendar& calendar = QuantLib::TARGET(),
-                            const FXVolatilityCurveConfig::SmileInterpolation& interp = FXVolatilityCurveConfig::SmileInterpolation::VannaVolga2,
-                            const std::string& conventionsID = "", const std::vector<QuantLib::Size>& smileDelta = {25},
-                            const std::string& smileExtrapolation = "Flat");
-
-    FXVolatilityCurveConfig(const std::string& curveID, const std::string& curveDescription, const FXVolatilityCurveConfig::Dimension& dimension,
                             const std::string& baseVolatility1, const std::string& baseVolatility2,
                             const std::string& fxIndexTag = "GENERIC");
 
@@ -807,6 +797,7 @@ public:
     const std::string& fxSpotID() const;
     const std::string& fxForeignYieldCurveID() const;
     const std::string& fxDomesticYieldCurveID() const;
+    const std::string& smileInterpolationStr() const;
     const FXVolatilityCurveConfig::SmileInterpolation& smileInterpolation() const;
     const std::string& smileExtrapolation() const;
     const FXVolatilityCurveConfig::TimeInterpolation& timeInterpolation() const;
@@ -820,6 +811,49 @@ public:
     double butterflyErrorTolerance() const;
 
 };
+
+%extend FXVolatilityCurveConfig {
+    FXVolatilityCurveConfig(const std::string& curveID, const std::string& curveDescription,
+                            const FXVolatilityCurveConfig::Dimension& dimension,
+                            const std::vector<std::string>& expiries,
+                            const std::vector<std::string>& deltas = std::vector<std::string>(),
+                            const std::string& fxSpotID = "",
+                            const std::string& fxForeignCurveID = "",
+                            const std::string& fxDomesticCurveID = "",
+                            const QuantLib::DayCounter& dayCounter = QuantLib::Actual365Fixed(),
+                            const QuantLib::Calendar& calendar = QuantLib::TARGET(),
+                            const std::string& interp = "VannaVolga2",
+                            const std::string& conventionsID = "",
+                            const std::vector<QuantLib::Size>& smileDelta = std::vector<QuantLib::Size>(1, 25),
+                            const std::string& smileExtrapolation = "Flat") {
+        return new ore::data::FXVolatilityCurveConfig(curveID, curveDescription, dimension,
+                                                     expiries, deltas, fxSpotID,
+                                                     fxForeignCurveID, fxDomesticCurveID,
+                                                     dayCounter, calendar,
+                                                     interp, conventionsID,
+                                                     smileDelta, smileExtrapolation);
+    }
+    FXVolatilityCurveConfig(const std::string& curveID, const std::string& curveDescription,
+                            const FXVolatilityCurveConfig::Dimension& dimension,
+                            const std::vector<std::string>& expiries,
+                            const std::vector<std::string>& deltas,
+                            const std::string& fxSpotID,
+                            const std::string& fxForeignCurveID,
+                            const std::string& fxDomesticCurveID,
+                            const QuantLib::DayCounter& dayCounter,
+                            const QuantLib::Calendar& calendar,
+                            const FXVolatilityCurveConfig::SmileInterpolation& interp,
+                            const std::string& conventionsID = "",
+                            const std::vector<QuantLib::Size>& smileDelta = std::vector<QuantLib::Size>(1, 25),
+                            const std::string& smileExtrapolation = "Flat") {
+        return new ore::data::FXVolatilityCurveConfig(curveID, curveDescription, dimension,
+                                                     expiries, deltas, fxSpotID,
+                                                     fxForeignCurveID, fxDomesticCurveID,
+                                                     dayCounter, calendar,
+                                                     interp, conventionsID,
+                                                     smileDelta, smileExtrapolation);
+    }
+}
 
 class CapFloorVolatilityCurveConfig : public CurveConfig {
 public:

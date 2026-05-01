@@ -169,7 +169,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
         .addColumn("FloorVolatility", double(), 10)
         .addColumn("CapVolatility", double(), 10)
         .addColumn("EffectiveFloorVolatility", double(), 10)
-        .addColumn("EffectiveCapVolatility", double(), 10);
+        .addColumn("EffectiveCapVolatility", double(), 10)
+        .addColumn("Amount(Base)", double(), 4)
+        .addColumn("DiscountFactor(Base)", double(), 10);
 
     for (auto [tradeId, trade]: portfolio->trades()) {
 
@@ -205,7 +207,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                         .add(d.floorVolatility)
                         .add(d.capVolatility)
                         .add(d.effectiveFloorVolatility)
-                        .add(d.effectiveCapVolatility);
+                        .add(d.effectiveCapVolatility)
+                        .add(d.baseAmount)
+                        .add(d.discountFactorBase);
             }
 
         } catch (std::exception& e) {
