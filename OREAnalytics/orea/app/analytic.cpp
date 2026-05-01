@@ -114,6 +114,18 @@ void Analytic::reset() {
     impl_->reset();
 }
 
+void Analytic::releaseMemory() {
+    LOG("Analytic::releaseMemory() called for " << label());
+    MEM_LOG_USING_LEVEL(ORE_WARNING, "Before releaseMemory() " << label());
+    if (impl_) {
+        impl_->releaseMemory();
+        for (const auto& [key, a] : impl_->dependentAnalytics()) {
+            a.first->releaseMemory();
+        }
+    }
+    MEM_LOG_USING_LEVEL(ORE_WARNING, "After releaseMemory() " << label());
+}
+
 void Analytic::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                            const std::set<std::string>& runTypes) {
     MEM_LOG_USING_LEVEL(ORE_WARNING, "Starting " << label() << " Analytic::runAnalytic()");
