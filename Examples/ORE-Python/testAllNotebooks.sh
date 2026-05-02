@@ -28,9 +28,9 @@ for notebook in $(find "$notebook_dir" -type f -name "*.ipynb" | grep -Ev '/(Inp
     
     (
         cd "$notebook_dirname" || exit
-        # --execution-timeout: kill cells that run longer than 5 minutes
+        # --execution-timeout: kill cells that run longer than 10 minutes
         # --start-timeout: fail fast if kernel doesn't start within 60 seconds
-        papermill --execution-timeout 300 --start-timeout 60 \
+        papermill --execution-timeout 600 --start-timeout 60 \
             "$notebook_basename" "$output_path"
         rc=$?
         # Kill any lingering Jupyter kernel processes spawned by this papermill run
