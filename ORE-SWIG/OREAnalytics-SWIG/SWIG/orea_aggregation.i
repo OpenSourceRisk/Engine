@@ -59,6 +59,8 @@ public:
 }
 }
 
+%template(StringDateMap) std::map<std::string, Date>;
+
 %shared_ptr(ore::analytics::ExposureCalculator)
 %nodefaultctor ore::analytics::ExposureCalculator;
 namespace ore {
@@ -67,6 +69,76 @@ class ExposureCalculator {
 public:
     virtual ~ExposureCalculator() {}
     virtual void build();
+
+    // Metadata
+    std::vector<Date> dates();
+    Date today();
+    std::vector<std::string> nettingSetIds();
+    std::map<std::string, Real> nettingSetValueToday();
+    std::map<std::string, Date> nettingSetMaturity();
+    std::vector<Real> times();
+    std::string baseCurrency();
+    QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio();
+    QuantLib::ext::shared_ptr<ore::analytics::NPVCube> npvCube();
+    QuantLib::ext::shared_ptr<ore::data::Market> market();
+
+    // Cube accessor
+    const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& exposureCube();
+
+    // Per-trade exposure profiles
+    std::vector<Real> epe(const std::string& tid);
+    std::vector<Real> ene(const std::string& tid);
+    std::vector<Real> allocatedEpe(const std::string& tid);
+    std::vector<Real> allocatedEne(const std::string& tid);
+    std::vector<Real>& ee_b(const std::string& tid);
+    std::vector<Real>& eee_b(const std::string& tid);
+    std::vector<Real>& pfe(const std::string& tid);
+    Real& epe_b(const std::string& tid);
+    Real& eepe_b(const std::string& tid);
+    std::vector<Real>& epe_b_timeWeighted(const std::string& tid);
+    std::vector<Real>& eepe_b_timeWeighted(const std::string& tid);
+};
+}
+}
+
+%shared_ptr(ore::analytics::NettedExposureCalculator)
+%nodefaultctor ore::analytics::NettedExposureCalculator;
+%feature("flatnested") ore::analytics::NettedExposureCalculator::TimeAveragedExposure;
+%rename(NettedExposureCalculatorTimeAveragedExposure) ore::analytics::NettedExposureCalculator::TimeAveragedExposure;
+namespace ore {
+namespace analytics {
+class NettedExposureCalculator {
+public:
+    virtual ~NettedExposureCalculator() {}
+    virtual void build();
+
+    const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& exposureCube();
+    const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& nettedCube();
+
+    // Per-netting-set profiles
+    std::vector<Real> epe(const std::string& nid);
+    std::vector<Real> ene(const std::string& nid);
+    std::vector<Real>& ee_b(const std::string& nid);
+    std::vector<Real>& eee_b(const std::string& nid);
+    std::vector<Real>& pfe(const std::string& nid);
+    std::vector<Real>& expectedCollateral(const std::string& nid);
+    std::vector<Real>& colvaIncrements(const std::string& nid);
+    std::vector<Real>& collateralFloorIncrements(const std::string& nid);
+    std::vector<Real>& epe_b_timeWeighted(const std::string& nid);
+    std::vector<Real>& eepe_b_timeWeighted(const std::string& nid);
+    Real& epe_b(const std::string& nid);
+    Real& eepe_b(const std::string& nid);
+    Real& colva(const std::string& nid);
+    Real& collateralFloor(const std::string& nid);
+
+    const std::map<std::string, std::string>& counterpartyMap();
+
+    struct TimeAveragedExposure {
+        Real positiveExposureBeforeCollateral;
+        Real negativeExposureBeforeCollateral;
+        Real positiveExposureAfterCollateral;
+        Real negativeExposureAfterCollateral;
+    };
 };
 }
 }
