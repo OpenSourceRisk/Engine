@@ -226,7 +226,7 @@ void SimpleMcLocalVolStochasticRatesCorrection::performCalculations() const {
     } // loop over time grid
 
     // debug output
-    std::ofstream out("localvol.txt");
+    // std::ofstream out("localvol.txt");
     for (Size i = 0; i < timeGrid_.size() - 1; ++i) {
         for (Size j = 0; j < logStrikesMid_.size(); ++j) {
             Real t = timeGrid_[i];
@@ -235,11 +235,11 @@ void SimpleMcLocalVolStochasticRatesCorrection::performCalculations() const {
             Real blackVol = blackVol_->blackVol(t, K);
             Real localVol = source_->localVol(t, K);
             Real corr = this->localVol(t, K) - localVol;
-            out << t << "," << logStrikesMid_[j] << "," << blackVol << "," << localVol << "," << corr << std::endl;
+            // out << t << "," << logStrikesMid_[j] << "," << blackVol << "," << localVol << "," << corr << std::endl;
         }
-        out << std::endl;
+        // out << std::endl;
     }
-    out.close();
+    // out.close();
 }
 
 Volatility SimpleMcLocalVolStochasticRatesCorrection::localVolImpl(Time t, Real strike) const {
