@@ -1,5 +1,4 @@
 # Function for comparing two files.
-from pprint import pprint
 import os
 import argparse
 import collections
@@ -7,15 +6,68 @@ import copy
 import difflib
 import json
 import logging
-import numpy as np
 import pandas as pd
 from datacompy.core import Compare
 import re
 import jsondiff
-from lxml import etree
 from xmldiff import main, formatting
 from pathlib import Path
 
+
+def compare_todaysmarketcalibration(name, file_1, file_2, config=None):
+
+    logger = logging.getLogger(__name__)
+
+    # Attempt to load the two files into DataFrames.
+    success, df_1, df_2 = load_files_df(name, file_1, file_2, config)
+
+    if not success:
+        return False
+
+    if "ResultType" not in df_1.columns:
+        logger.warning("Expected column 'ResultType' is not in file %s.", file_1)
+        return False
+
+    if "ResultType" not in df_2.columns:
+        logger.warning("Expected column 'ResultType' is not in file %s.", file_2)
+        return False
+
+    # Partition the DataFrames on ResultType column e.g. "string" -> DataFrame, "double" -> DataFrame, etc.
+    grouped_dfs_1 = {k: v for k, v in df_1.groupby("ResultType")}
+    grouped_dfs_2 = {k: v for k, v in df_2.groupby("ResultType")}
+
+    # Check that same set of "ResultType" groups are present in both.
+    group_types_1 = set(grouped_dfs_1)
+    group_types_2 = set(grouped_dfs_2)
+    if group_types_1 != group_types_2:
+        logger.warning("Files %s and %s have different sets of 'ResultType' fields.", file_1, file_2)
+        logger.warning("Set of 'ResultType' fields in %s but not in %s: %s.",
+                       file_1, file_2, group_types_1 - group_types_2)
+        logger.warning("Set of 'ResultType' fields in %s but not in %s: %s.",
+                       file_2, file_1, group_types_2 - group_types_1)
+        return False
+
+    # For the rows that have 'ResultType' double, convert ResultValue to float64 to avoid things like -0 != 0 and also
+    # so that the config tolerances are taken into account in the DataFrame comparison below.
+    if "double" in group_types_1:
+        grouped_dfs_1["double"]["ResultValue"] = pd.to_numeric(grouped_dfs_1["double"]["ResultValue"], errors="coerce")
+        grouped_dfs_2["double"]["ResultValue"] = pd.to_numeric(grouped_dfs_2["double"]["ResultValue"], errors="coerce")
+
+    # Now compare the DataFrames for each group separately.
+    all_match = True
+    for result_type in grouped_dfs_1:
+        sub_df_1 = grouped_dfs_1[result_type]
+        sub_df_2 = grouped_dfs_2[result_type]
+        sub_file_1 = f"{file_1} [{result_type}]"
+        sub_file_2 = f"{file_2} [{result_type}]"
+        all_match = all_match and compare_dfs(name, sub_file_1, sub_file_2, sub_df_1, sub_df_2, config)
+
+    return all_match
+
+# Dictionary that allows for custom comparisons for certain file names.
+special_comparators = {
+    "todaysmarketcalibration.csv": compare_todaysmarketcalibration
+}
 
 def is_float(num: str):
     if isinstance(num, (int, float)):
@@ -24,7 +76,7 @@ def is_float(num: str):
         return num.replace(".", "").replace("-", "").isnumeric()
 
 
-def get_config(config, filename) -> dict or None:
+def get_config(config, filename) -> dict | None:
     # Check if config has a configuration for filename_1 or filename_2
     stem, ext = os.path.splitext(filename)
     config_type = ext.replace('.', '')
@@ -101,10 +153,9 @@ def compare_files(file_1, file_2, name, config: dict = None) -> bool:
 
     # Attempt to get the csv comparison configuration to use for the given filenames.
     comp_config = None
+    _, filename_1 = os.path.split(file_1)
+    _, filename_2 = os.path.split(file_2)
     if config:
-        _, filename_1 = os.path.split(file_1)
-        _, filename_2 = os.path.split(file_2)
-        base_filename = os.path.split
         comp_config = get_config(config, filename_1)
 
     # If the file extension is csv, enforce the use of a comparison configuration.
@@ -113,7 +164,9 @@ def compare_files(file_1, file_2, name, config: dict = None) -> bool:
     _, ext_2 = os.path.splitext(file_2)
 
     if comp_config is None:
-        if ext_1 == '.csv' and ext_2 == '.csv':
+        if filename_1 in special_comparators:
+            result = special_comparators[filename_1](name, file_1, file_2)
+        elif ext_1 == '.csv' and ext_2 == '.csv':
             # compare csv without a comparison config
             result = compare_files_df(name, file_1, file_2)
         elif ext_1 == '.xml' and ext_2 == '.xml':
@@ -125,14 +178,54 @@ def compare_files(file_1, file_2, name, config: dict = None) -> bool:
         config_type = comp_config.get('type')
         if config_type == 'csv':
             # If there was a configuration, use it for the comparison.
-            result = compare_files_df(name, file_1, file_2, comp_config.get('config'))
+            if filename_1 in special_comparators:
+                result = special_comparators[filename_1](name, file_1, file_2, comp_config.get('config'))
+            else:
+                result = compare_files_df(name, file_1, file_2, comp_config.get('config'))
         elif config_type == 'json':
-            result = compare_files_json(name, file_1, file_2, comp_config.get('config'))
+            if filename_1 in special_comparators:
+                result = special_comparators[filename_1](name, file_1, file_2, comp_config.get('config'))
+            else:
+                result = compare_files_json(name, file_1, file_2, comp_config.get('config'))
+        else:
+            logger.info('%s: Unrecognized config_type %s comparing file %s against %s.',
+                        name, config_type, file_1, file_2)
+            result = False
 
     logger.info('%s: Finished comparing file %s against %s: %s.', name, file_1, file_2, result)
 
     return result
 
+
+def load_files_df(name, file_1, file_2, config=None):
+    # Load files into dataframes.
+
+    logger = logging.getLogger(__name__)
+
+    logger.debug('%s: Start loading file %s and %s into DataFrame.', name, file_1, file_2)
+
+    # We can force the type of specific columns here.
+    col_types = None
+    if config is not None and 'col_types' in config:
+        col_types = config['col_types']
+
+    # Read the files in to dataframes
+    df_1 = create_df(file_1, col_types)
+    df_2 = create_df(file_2, col_types)
+
+    # Check that a DataFrame could be created for each.
+    success = True
+    if df_1 is None:
+        logger.warning('A DataFrame could not be created from the file %s.', file_1)
+        success = False
+
+    if df_2 is None:
+        logger.warning('A DataFrame could not be created from the file %s.', file_2)
+        success = False
+
+    logger.debug('%s: Finished loading file %s and %s into DataFrame.', name, file_1, file_2)
+
+    return success, df_1, df_2
 
 def compare_files_df(name, file_1, file_2, config=None):
     # Compare files using dataframes and a configuration.
@@ -141,25 +234,19 @@ def compare_files_df(name, file_1, file_2, config=None):
 
     logger.debug('%s: Start comparing file %s against %s using configuration.', name, file_1, file_2)
 
-    # We can force the type of specific columns here.
-    col_types = None
-    if config is not None and 'col_types' in config:
-        col_types = config['col_types']
-    else:
-        col_types
+    # Attempt to load the two files into DataFrames.
+    success, df_1, df_2 = load_files_df(name, file_1, file_2, config)
 
-    # Read the files in to dataframes
-    df_1 = create_df(file_1, col_types)
-    df_2 = create_df(file_2, col_types)
-
-    # Check that a DataFrame could be created for each.
-    if df_1 is None:
-        logger.warning('A DataFrame could not be created from the file %s.', file_1)
+    # If DataFrames could not be loaded for each, we return False early for the comparison.
+    if not success:
         return False
 
-    if df_2 is None:
-        logger.warning('A DataFrame could not be created from the file %s.', file_2)
-        return False
+    return compare_dfs(name, file_1, file_2, df_1, df_2, config)
+
+
+def compare_dfs(name, file_1, file_2, df_1, df_2, config=None):
+
+    logger = logging.getLogger(__name__)
 
     # In most cases, the header column in our csv files starts with a #. Remove it here if necessary.
     for df in [df_1, df_2]:
@@ -372,7 +459,7 @@ def compare_files_df(name, file_1, file_2, config=None):
             sub_df_1 = df_1[col_names].copy(deep=True)
             sub_df_2 = df_2[col_names].copy(deep=True)
 
-            if(sub_df_1.empty and sub_df_2.empty):
+            if sub_df_1.empty and sub_df_2.empty:
                 if not names:
                     logger.warning('The columns, %s, in the files are both empty.', str(names))
                 else:
@@ -397,7 +484,7 @@ def compare_files_df(name, file_1, file_2, config=None):
     logger.debug('The remaining columns in the first file are: %s.', str(rem_cols_1))
     logger.debug('The remaining columns in the second file are: %s.', str(rem_cols_2))
 
-    if(sub_df_1.empty and sub_df_2.empty):
+    if sub_df_1.empty and sub_df_2.empty:
         logger.warning('The dataframes are empty.')
         return True
 
