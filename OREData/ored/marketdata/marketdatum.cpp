@@ -209,9 +209,10 @@ EquityDividendYieldQuote::EquityDividendYieldQuote(Real value, Date asofDate, co
 
 IndexCDSOptionQuote::IndexCDSOptionQuote(QuantLib::Real value, const Date& asof, const string& name,
                                          const string& indexName, const QuantLib::ext::shared_ptr<Expiry>& expiry,
-                                         const string& indexTerm, const QuantLib::ext::shared_ptr<BaseStrike>& strike)
-    : MarketDatum(value, asof, name, QuoteType::RATE_LNVOL, InstrumentType::INDEX_CDS_OPTION), indexName_(indexName),
-      expiry_(expiry), indexTerm_(indexTerm), strike_(strike) {
+                                         const string& indexTerm, const QuantLib::ext::shared_ptr<BaseStrike>& strike,
+                                         QuoteType quoteType, Protection::Side side)
+    : MarketDatum(value, asof, name, quoteType, InstrumentType::INDEX_CDS_OPTION), indexName_(indexName),
+      expiry_(expiry), indexTerm_(indexTerm), strike_(strike), side_(side) {
 
     if (auto date = QuantLib::ext::dynamic_pointer_cast<ExpiryDate>(expiry))
         QL_REQUIRE(asof <= date->expiryDate(), "IndexCDSOptionQuote: Invalid INDEX_CDS_OPTION quote, expiry date "

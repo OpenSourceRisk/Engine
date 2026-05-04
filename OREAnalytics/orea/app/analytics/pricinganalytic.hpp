@@ -54,6 +54,7 @@ public:
         const std::set<std::string>& runTypes = {}) override;
 
     void setUpConfigurations() override;
+    void releaseMemory() override;
     const QuantLib::ext::shared_ptr<SensitivityAnalysis>& sensiAnalysis() { return sensiAnalysis_; }
     const QuantLib::ext::shared_ptr<ParSensitivityAnalysis>& parAnalysis() { return parAnalysis_; }
 

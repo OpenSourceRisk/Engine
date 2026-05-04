@@ -465,9 +465,10 @@ std::vector<TradeCashflowReportData> Trade::cashflows(const std::string& baseCur
         string ccy = legCurrencies()[i];
 
         Handle<YieldTermStructure> discountCurve = specificDiscountCurve;
-        if (discountCurve.empty()) {
+        if (discountCurve.empty()) 
             discountCurve = market->discountCurve(ccy, configuration);
-        }
+            
+        Handle<YieldTermStructure> baseDiscountCurve = market->discountCurve(baseCurrency, configuration);
 
         auto fxRateCcyBase = market->fxRate(npvCurrency_ + baseCurrency, configuration)->value();
         auto fxRateLocalCcy = market->fxRate(ccy + npvCurrency_, configuration)->value();
@@ -478,13 +479,15 @@ std::vector<TradeCashflowReportData> Trade::cashflows(const std::string& baseCur
             if (!ptrFlow->hasOccurred(asof) || includePastCashflows) {
                 result.push_back(getCashflowReportData(
                     ptrFlow, payer, multiplier, baseCurrency, ccy, asof,
-                    specificDiscountCurve.empty() ? *discountCurve : *specificDiscountCurve, fxRateLocalBase,
+                    specificDiscountCurve.empty() ? *discountCurve : *specificDiscountCurve, 
+                    fxRateLocalBase,
                     [&market, &configuration](const std::string qualifier) {
                         return *market->swaptionVol(qualifier, configuration);
                     },
                     [&market, &configuration](const std::string qualifier) {
                         return *market->capFloorVol(qualifier, configuration);
-                    }));
+                    },
+                    std::string(), Null<Real>(), *baseDiscountCurve));
                 result.back().cashflowNo = j + 1;
                 result.back().legNo = i + legNoOffset;
             }

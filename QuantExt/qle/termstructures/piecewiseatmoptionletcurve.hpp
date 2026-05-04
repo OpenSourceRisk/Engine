@@ -230,7 +230,6 @@ void PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::update() {
 
 template <class Interpolator, template <class> class Bootstrap>
 void PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::performCalculations() const {
-
     // Update the quotes from the cap floor term volatility surface
     for (QuantLib::Size i = 0; i < tenors_.size(); i++) {
         quotes_[i]->setValue(cftvc_->volatility(tenors_[i], 0.01));
