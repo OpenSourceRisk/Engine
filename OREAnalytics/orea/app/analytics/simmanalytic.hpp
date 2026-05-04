@@ -31,6 +31,7 @@ namespace analytics {
 
 class InputParameters;
 
+
 class SimmAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "SIMM";
@@ -43,7 +44,7 @@ public:
     void setUpConfigurations() override;
 };
 
-class SimmAnalytic : public Analytic {
+class SimmAnalytic : public Analytic, public WithOffsetScenario {
 public:
     static constexpr const char* crifLookupKey = "CRIF";
   
@@ -59,15 +60,21 @@ public:
     //! Load CRIF from external source, override to generate CRIF
     virtual void loadCrifRecords(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader);
 
-    void setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario) {
+    void setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario,
+                           const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketParams) {
         offsetScenario_ = offsetScenario;
+        offsetSimMarketParams_ = simMarketParams;
     }
+
+    const QuantLib::ext::shared_ptr<Scenario>& offsetScenario() const { return offsetScenario_; }
+    const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams() const { return offsetSimMarketParams_; }
 
 private:
     QuantLib::ext::shared_ptr<Crif> crif_;
     bool hasNettingSetDetails_;
     bool determineWinningRegulations_;
     QuantLib::ext::shared_ptr<Scenario> offsetScenario_;
+    QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> offsetSimMarketParams_;
 };
 
 } // namespace analytics

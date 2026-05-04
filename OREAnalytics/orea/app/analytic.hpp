@@ -56,6 +56,17 @@ struct InputVariables;
 class AnalyticsManager;
 class StressTestScenarioData;
 
+class WithOffsetScenario {
+public:
+    WithOffsetScenario() = default;
+    virtual ~WithOffsetScenario() = default;
+
+    virtual void setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario,
+                                   const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketParams) = 0;
+    virtual const QuantLib::ext::shared_ptr<Scenario>& offsetScenario() const = 0;
+    virtual const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams() const = 0;
+};
+
 class Analytic {
 public:
     class Impl;
