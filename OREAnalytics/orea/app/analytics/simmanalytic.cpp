@@ -46,6 +46,23 @@ void SimmAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
 
     LOG("Get CRIF records from CRIF loader and fill amountUSD");        
     CONSOLEW("SIMM: Load CRIF");
+    auto market = analytic()->market();
+    if (simmAnalytic->offsetScenario() != nullptr && simmAnalytic->offsetSimMarketParams() != nullptr) {
+        bool useSpreadedTermStructures = true; // Hard coded, we want to use spreaded term
+        bool continueOnError = true;           // Hard coded
+        bool overrideTenors = true; // Hard coded, we want to override tenors with those from sim market params
+        auto curveConfigs = analytic()->configurations().curveConfig;
+        std::string marketConfiguration = inputs_->marketConfig("pricing");
+        auto offsetMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
+            market, simmAnalytic->offsetSimMarketParams(), marketConfiguration,
+            curveConfigs ? *curveConfigs : ore::data::CurveConfigurations(),
+            *analytic()->configurations().todaysMarketParams, continueOnError, useSpreadedTermStructures,
+            continueOnError, overrideTenors, inputs_->iborFallbackConfig(), true, simmAnalytic->offsetScenario());
+        analytic()->setMarket(offsetMarket);
+        auto crifAnalytic = dependentAnalytic<CrifAnalyticBase>(SimmAnalytic::crifLookupKey);
+        QL_REQUIRE(crifAnalytic, "CRIF analytic must be of type CrifAnalyticBase");
+        crifAnalytic->setOffsetScenario(simmAnalytic->offsetScenario());
+    }
     simmAnalytic->loadCrifRecords(loader);
     if (simmAnalytic->crif()) {
         CONSOLE("OK");

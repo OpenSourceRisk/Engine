@@ -32,6 +32,7 @@
 #include <orea/app/analytics/scenariogenerationanalytic.hpp>
 #include <orea/app/analytics/sensitivitystressanalytic.hpp>
 #include <orea/app/analytics/simmanalytic.hpp>
+#include <orea/app/analytics/stressedsimmanalytic.hpp>
 #include <orea/app/analytics/stresstestanalytic.hpp>
 #include <orea/app/analytics/varanalytic.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
@@ -57,7 +58,7 @@ namespace ore::analytics {
 using namespace ore::data;
 
 void initBuilders(const bool registerOREAnalytics) {
-
+    std::cout << "Initializing builders" << std::endl;
     static boost::shared_mutex mutex;
     boost::unique_lock<boost::shared_mutex> lock(mutex);
 
@@ -79,6 +80,8 @@ void initBuilders(const bool registerOREAnalytics) {
         ORE_REGISTER_ANALYTIC_BUILDER("SIMM", {}, SimmAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("XVA", xvaAnalyticSubAnalytics, XvaAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("STRESS", {}, StressTestAnalytic, false);
+        ORE_REGISTER_ANALYTIC_BUILDER("SIMM_STRESS", {}, StressedSimmAnalytic, false);
+        LOG("Registed SIM_STRESS builder");
         ORE_REGISTER_ANALYTIC_BUILDER("PAR_SCENARIO", {}, ParScenarioAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("PARSTRESSCONVERSION", {}, ParStressConversionAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("ZEROTOPARSHIFT", {}, ZeroToParShiftAnalytic, false);

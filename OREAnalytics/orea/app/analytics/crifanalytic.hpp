@@ -59,6 +59,9 @@ public:
                 const QuantLib::ext::shared_ptr<CrifMarket>& crifMarket,
                 const QuantLib::ext::shared_ptr<PortfolioFieldGetter>& fieldGetter,
                 double usdSpot) = 0;
+
+    virtual const QuantLib::ext::shared_ptr<Scenario>& offsetScenario() const = 0;
+    virtual void setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario) = 0;
 };
 
 class CrifAnalyticImpl : public Analytic::Impl {
@@ -133,24 +136,24 @@ public:
                  const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio = nullptr,
                  const std::string& baseCurrency = "");
 
-    QuantLib::ext::shared_ptr<ore::analytics::Crif>& crif() { return crif_; }
-    const std::string& baseCurrency() const { return baseCurrency_; }
+    QuantLib::ext::shared_ptr<ore::analytics::Crif>& crif() override { return crif_; }
+    const std::string& baseCurrency() const override { return baseCurrency_; }
 
-    void setPortfolioNoSimmExemptions(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio) {
+    void setPortfolioNoSimmExemptions(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio) override {
         portfolioNoSimmExemptions_ = portfolio;
     }
-    const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolioNoSimmExemptions() const {
+    const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolioNoSimmExemptions() const override {
         return portfolioNoSimmExemptions_;
     }
 
-    void setPortfolioSimmExemptions(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio) {
+    void setPortfolioSimmExemptions(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio) override {
         portfolioSimmExemptions_ = portfolio;
     }
-    const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolioSimmExemptions() const {
+    const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolioSimmExemptions() const override {
         return portfolioSimmExemptions_;
     }
 
-    const set<CrifRecord::Regulation>& simmExemptionOverrides() const { return simmExemptionOverrides_; }
+    const set<CrifRecord::Regulation>& simmExemptionOverrides() const override { return simmExemptionOverrides_; }
 
     //! Creates a CRIF from a sensitivity stream
     QuantLib::ext::shared_ptr<Crif>
@@ -162,11 +165,11 @@ public:
                 const std::set<std::string>& modifiedTrades,
                 const QuantLib::ext::shared_ptr<CrifMarket>& crifMarket,
                 const QuantLib::ext::shared_ptr<PortfolioFieldGetter>& fieldGetter,
-                double usdSpot);
+                double usdSpot) override;
     
-    void setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario) {
-        offsetScenario_ = offsetScenario;
-    }
+    void setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario) override;
+
+    const QuantLib::ext::shared_ptr<Scenario>& offsetScenario() const override { return offsetScenario_; }
     
 private:
     std::string baseCurrency_;

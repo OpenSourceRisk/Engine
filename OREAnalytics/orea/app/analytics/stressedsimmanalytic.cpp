@@ -35,22 +35,45 @@
 namespace ore {
 namespace analytics {
 
+class EnforceParSensiWithAlignPillars {
+public:
+    EnforceParSensiWithAlignPillars(const QuantLib::ext::shared_ptr<InputParameters>& inputs) :
+     inputs_(inputs) {
+        QL_REQUIRE(inputs_, "EnforceParSensiWithAlignPillars: InputParameters is null");
+        alignPillars_ = inputs_->alignPillars();
+        parSensi_ = inputs_->parSensi();
+        inputs_->setParSensi(true);
+        inputs_->setAlignPillars(true);
+    }
+
+    ~EnforceParSensiWithAlignPillars() {
+        inputs_->setParSensi(parSensi_);
+        inputs_->setAlignPillars(alignPillars_);
+    }
+
+private:
+    QuantLib::ext::shared_ptr<InputParameters> inputs_;
+    bool alignPillars_;
+    bool parSensi_;
+};
+
 void StressedSimmVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) {
-    InputVariables::loadVariablesImpl(inputs);
+    LOG("Loading StressedSimmVariables");
     inputs->loadParameterXML<StressTestScenarioData>(stressedSimmScenarioData_, "stressedSimm",
-                                                     "stressedSimmScenarioData");
+                                                     "stressedSimmScenarioData", true);
+    LOG("StressedSimmVariables loaded");
+    LOG("StressedSimmVariables::stressedSimmScenarioData_ has " << (stressedSimmScenarioData_ ? "data" : "no data"));
 }
 
 StressedSimmAnalyticImpl::StressedSimmAnalyticImpl(
-    const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-    const QuantLib::ext::optional<QuantLib::ext::shared_ptr<StressTestScenarioData>>& scenarios)
-    : Analytic::Impl(inputs, QuantLib::ext::make_shared<StressedSimmVariables>()),
-      stressScenarios_(scenarios.value_or(
-          QuantLib::ext::static_pointer_cast<StressedSimmVariables>(inputVariables_)->stressedSimmScenarioData_)) {
+    const QuantLib::ext::shared_ptr<InputParameters>& inputs)
+    : Analytic::Impl(inputs, QuantLib::ext::make_shared<StressedSimmVariables>()) {
+    LOG("Constructing ore::StressedSimmAnalyticImpl");
     setLabel(LABEL);
 }
 
 void StressedSimmAnalyticImpl::setUpConfigurations() {
+    LOG("ore::StressedSimmAnalyticImpl::setUpConfigurations called");
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
     analytic()->configurations().simMarketParams = inputs_->sensiSimMarketParams();
     analytic()->configurations().sensiScenarioData = inputs_->sensiScenarioData();
@@ -82,19 +105,27 @@ void StressedSimmAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::
     CONSOLEW("STRESS_SIMM: Build T0 and Sim Markets and Stress Scenario Generator");
 
     analytic()->buildMarket(loader);
-    
-    QuantLib::ext::shared_ptr<StressTestScenarioData> scenarioData = stressScenarios_;
-    
+    DLOG("StressSIMM: Market built");
+    QuantLib::ext::shared_ptr<StressTestScenarioData> scenarioData =
+        QuantLib::ext::static_pointer_cast<StressedSimmVariables>(inputVariables_)->stressedSimmScenarioData_;
+
+    EnforceParSensiWithAlignPillars enforceParSensiWithAlignPillars {inputs_};
+
     QL_REQUIRE(inputs_->parSensi(), "StressedSimmAnalytic requires parSensi to be true");
     QL_REQUIRE(inputs_->alignPillars(), "StressedSimmAnalytic requires alignPillars to be true");
+    QL_REQUIRE(scenarioData != nullptr, "StressedSimmAnalytic requires stress scenario data");
     QL_REQUIRE(scenarioData->useSpreadedTermStructures(),
                "StressedSimmAnalytic only supports spreaded term structures for now");
     
     // Need to align pillars before building the stress scenarios
+    std::cout << "Aligning pillars for par sensitivity calculation" << std::endl;
+    std::cout << "SimMarketParams set " << (analytic()->configurations().simMarketParams ? "yes" : "no") << std::endl;
     analytic()->configurations().simMarketParams->toFile("stressed_simm_sim_market_params_before_align.xml");
+                                
     const set<RiskFactorKey::KeyType>& typesDisabled =
         analytic()->configurations().sensiScenarioData->parConversionExcludes();
-    auto parAnalysis = QuantLib::ext::make_shared<ParSensitivityAnalysis>(
+    
+        auto parAnalysis = QuantLib::ext::make_shared<ParSensitivityAnalysis>(
         inputs_->asof(), analytic()->configurations().simMarketParams, *analytic()->configurations().sensiScenarioData,
         "", true, typesDisabled);
     parAnalysis->alignPillars();
@@ -119,7 +150,7 @@ void StressedSimmAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::
     }
 
 
-    std::string marketConfig = inputs_->marketConfig("pricing"); // FIXME
+    std::string marketConfig = inputs_->marketConfig("pricing");
 
     LOG("STRESS_SIMM: Build SimMarket and StressTestScenarioGenerator")
     auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
@@ -152,24 +183,28 @@ void StressedSimmAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::
 void StressedSimmAnalyticImpl::runStressTest(
     const QuantLib::ext::shared_ptr<StressScenarioGenerator>& scenarioGenerator,
     const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
-    // We require that the simMarketParams and sensiScenarioData are set up correctly for SIMM calculation
-    // We will pass the configs through to the simm -> crif -> sensitivity analytic
-    // TODO - we should align pillars before building the stress scenarios
+    
 
     std::map<std::string, std::vector<QuantLib::ext::shared_ptr<ore::data::InMemoryReport>>> sensitivityReports;
     for (size_t i = 0; i < scenarioGenerator->samples(); ++i) {
         auto scenario = scenarioGenerator->next(inputs_->asof());
         const std::string& label = scenario != nullptr ? scenario->label() : std::string();
+        std::cout << " Scenario " << label << " coordinates:" << std::endl;
+        for (const auto& coord : scenario->coordinates()) {
+            std::cout << "  " << coord.first.first << " : " << coord.first.second << std::endl;
+            for (const auto& vec : coord.second) {
+                std::cout << to_string(vec) << std::endl;
+            }
+        }
         try {
             DLOG("Calculate SIMM for scenario " << label);
             CONSOLE("SIMM_STRESS: Apply scenario " << label);
-            auto newAnalytic =
-                AnalyticFactory::instance().build("SIMM", inputs_, analytic()->analyticsManager(), false).second;
-            newAnalytic->configurations().simMarketParams = analytic()->configurations().simMarketParams;
-            newAnalytic->configurations().sensiScenarioData = analytic()->configurations().sensiScenarioData;
-            newAnalytic->setPortfolio(analytic()->portfolio());
-            auto simmAnalytic = static_cast<SimmAnalytic*>(newAnalytic->impl().get());
-            simmAnalytic->setOffsetScenario(scenario);
+            auto newAnalytic = dependentAnalytic("SIMM");
+            DLOG("SIMM analytic built for scenario " << label);
+            DLOG("SIMM analytic initialised for scenario " << label);
+            auto simmAnalytic = QuantLib::ext::dynamic_pointer_cast<WithOffsetScenario>(newAnalytic);
+            simmAnalytic->setOffsetScenario(scenario, analytic()->configurations().simMarketParams);
+            DLOG("SIMM analytic configured for scenario " << label);
             CONSOLE("SIMM_STRESS: Calculate SIMM")
             newAnalytic->runAnalytic(loader, {"SIMM"});
             // Collect SIMM reports
@@ -188,8 +223,8 @@ void StressedSimmAnalyticImpl::runStressTest(
             // timer, otherwise we have to manually add the SensitivityAnalytic::timer
             analytic()->addTimer("Sensitivity analytic", newAnalytic->getTimer());
         } catch (const std::exception& e) {
-            StructuredAnalyticsErrorMessage("StressedSimm", "SensitivityCalc",
-                                            "Error during Sensitivity calc under scenario " + label + ", got " +
+            StructuredAnalyticsErrorMessage("StressedSimm", "StressedSIMM",
+                                            "Error during StressedSIMM calc under scenario " + label + ", got " +
                                                 e.what() + ". Skip it")
                 .log();
         }

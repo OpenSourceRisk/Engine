@@ -62,8 +62,10 @@ public:
 
     void setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario,
                            const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketParams) {
+        LOG("Setting offset scenario " << offsetScenario->label() << " for SIMM Analytic with label " << label());
         offsetScenario_ = offsetScenario;
         offsetSimMarketParams_ = simMarketParams;
+        crif_ = nullptr; // reset CRIF so that it gets recalculated with the new scenario
     }
 
     const QuantLib::ext::shared_ptr<Scenario>& offsetScenario() const { return offsetScenario_; }

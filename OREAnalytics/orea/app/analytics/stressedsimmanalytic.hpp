@@ -39,10 +39,9 @@ struct StressedSimmVariables : public InputVariables {
 
 class StressedSimmAnalyticImpl : public Analytic::Impl {
 public:
-    static constexpr const char* LABEL = "STRESS_SIMM";
-    explicit StressedSimmAnalyticImpl(
-        const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-        const QuantLib::ext::optional<QuantLib::ext::shared_ptr<StressTestScenarioData>>& scenarios = {});
+    static constexpr const char* LABEL = "SIMM_STRESS";
+
+    explicit StressedSimmAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs);
 
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                      const std::set<std::string>& runTypes = {}) override;
@@ -63,12 +62,13 @@ private:
 
 class StressedSimmAnalytic : public Analytic {
 public:
-    explicit StressedSimmAnalytic(
-        const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-        const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager,
-        const QuantLib::ext::optional<QuantLib::ext::shared_ptr<StressTestScenarioData>>& scenarios = {})
-        : Analytic(std::make_unique<StressedSimmAnalyticImpl>(inputs, scenarios), {"STRESS_SIM"}, inputs,
-                   analyticsManager, true, false, true, false) {}
+    static constexpr const char* simmLookupKey = "SIMM";
+    explicit StressedSimmAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                                  const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager)
+        : Analytic(std::make_unique<StressedSimmAnalyticImpl>(inputs), {"SIMM_STRESS"}, inputs, analyticsManager, true,
+                   false, true, false) {
+        LOG("Constructed ore::StressedSimmAnalytic");
+    }
 };
 
 } // namespace analytics
