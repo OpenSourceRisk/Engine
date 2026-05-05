@@ -109,23 +109,20 @@ void StressedSimmAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::
     QuantLib::ext::shared_ptr<StressTestScenarioData> scenarioData =
         QuantLib::ext::static_pointer_cast<StressedSimmVariables>(inputVariables_)->stressedSimmScenarioData_;
 
-    EnforceParSensiWithAlignPillars enforceParSensiWithAlignPillars {inputs_};
+    //EnforceParSensiWithAlignPillars enforceParSensiWithAlignPillars {inputs_};
 
-    QL_REQUIRE(inputs_->parSensi(), "StressedSimmAnalytic requires parSensi to be true");
-    QL_REQUIRE(inputs_->alignPillars(), "StressedSimmAnalytic requires alignPillars to be true");
+    //QL_REQUIRE(inputs_->parSensi(), "StressedSimmAnalytic requires parSensi to be true");
+    //QL_REQUIRE(inputs_->alignPillars(), "StressedSimmAnalytic requires alignPillars to be true");
     QL_REQUIRE(scenarioData != nullptr, "StressedSimmAnalytic requires stress scenario data");
     QL_REQUIRE(scenarioData->useSpreadedTermStructures(),
                "StressedSimmAnalytic only supports spreaded term structures for now");
     
     // Need to align pillars before building the stress scenarios
-    std::cout << "Aligning pillars for par sensitivity calculation" << std::endl;
-    std::cout << "SimMarketParams set " << (analytic()->configurations().simMarketParams ? "yes" : "no") << std::endl;
-    analytic()->configurations().simMarketParams->toFile("stressed_simm_sim_market_params_before_align.xml");
-                                
+    /*
     const set<RiskFactorKey::KeyType>& typesDisabled =
         analytic()->configurations().sensiScenarioData->parConversionExcludes();
-    
-        auto parAnalysis = QuantLib::ext::make_shared<ParSensitivityAnalysis>(
+
+    auto parAnalysis = QuantLib::ext::make_shared<ParSensitivityAnalysis>(
         inputs_->asof(), analytic()->configurations().simMarketParams, *analytic()->configurations().sensiScenarioData,
         "", true, typesDisabled);
     parAnalysis->alignPillars();
@@ -148,8 +145,7 @@ void StressedSimmAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::
             StructuredAnalyticsErrorMessage(label(), "ParConversionFailed", e.what()).log();
         }
     }
-
-
+    */
     std::string marketConfig = inputs_->marketConfig("pricing");
 
     LOG("STRESS_SIMM: Build SimMarket and StressTestScenarioGenerator")
@@ -185,21 +181,19 @@ void StressedSimmAnalyticImpl::runStressTest(
     const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
     
 
-    std::map<std::string, std::vector<QuantLib::ext::shared_ptr<ore::data::InMemoryReport>>> sensitivityReports;
+    std::map<std::string, std::vector<QuantLib::ext::shared_ptr<ore::data::InMemoryReport>>> simmReports;
     for (size_t i = 0; i < scenarioGenerator->samples(); ++i) {
         auto scenario = scenarioGenerator->next(inputs_->asof());
         const std::string& label = scenario != nullptr ? scenario->label() : std::string();
-        std::cout << " Scenario " << label << " coordinates:" << std::endl;
-        for (const auto& coord : scenario->coordinates()) {
-            std::cout << "  " << coord.first.first << " : " << coord.first.second << std::endl;
-            for (const auto& vec : coord.second) {
-                std::cout << to_string(vec) << std::endl;
-            }
-        }
         try {
             DLOG("Calculate SIMM for scenario " << label);
             CONSOLE("SIMM_STRESS: Apply scenario " << label);
-            auto newAnalytic = dependentAnalytic("SIMM");
+            auto newAnalytic = ore::analytics::AnalyticFactory::instance().build("SIMM", inputs_, analytic()->analyticsManager(), false).second;
+            newAnalytic->setUp();
+            for( const auto& da : newAnalytic->allDependentAnalytics()){
+                DLOG("Set up dependent analytic " << da->label());
+                da->setUp();
+            }
             DLOG("SIMM analytic built for scenario " << label);
             DLOG("SIMM analytic initialised for scenario " << label);
             auto simmAnalytic = QuantLib::ext::dynamic_pointer_cast<WithOffsetScenario>(newAnalytic);
@@ -213,9 +207,10 @@ void StressedSimmAnalyticImpl::runStressTest(
             QL_REQUIRE(it != rpts.end(), "SIMM report not found in SIMM analytic reports");
             for (auto [name, rpt] : it->second) {
                 // add scenario column to report and copy it, concat it later
-                if (boost::starts_with(name, "sensitivity")) {
+                DLOG("found report " << name << " for scenario " << label);
+                if (name == "simm") {
                     DLOG("Save and extend report " << name);
-                    sensitivityReports[name].push_back(addColumnToExisitingReport("Scenario", label, rpt));
+                    simmReports[analytic()->label()].push_back(addColumnToExisitingReport("Scenario", label, rpt));
                 }
             }
 
@@ -229,14 +224,14 @@ void StressedSimmAnalyticImpl::runStressTest(
                 .log();
         }
     }
-    concatReports(sensitivityReports);
+    concatReports(simmReports);
 }
 
 void StressedSimmAnalyticImpl::concatReports(
     const std::map<std::string, std::vector<QuantLib::ext::shared_ptr<ore::data::InMemoryReport>>>&
-        sensitivityReports) {
-    DLOG("Concat sensitivity reports");
-    for (auto& [name, reports] : sensitivityReports) {
+        simmReports) {
+    DLOG("Concat SIMM reports");
+    for (auto& [name, reports] : simmReports) {
         auto report = concatenateReports(reports);
         if (report != nullptr) {
             analytic()->addReport(label(), name, report);

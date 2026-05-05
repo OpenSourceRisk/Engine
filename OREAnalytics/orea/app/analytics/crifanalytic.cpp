@@ -163,10 +163,6 @@ void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
     analytic()->buildMarket(loader);
     CONSOLE("OK");
 
-    CONSOLEW("CRIF: Build Portfolio");
-    analytic()->buildPortfolio();
-    CONSOLE("OK");
-
     ObservationMode::instance().setMode(ObservationMode::Mode::None);
 
     auto crifAnalytic = dynamic_cast<CrifAnalyticBase*>(analytic());
@@ -186,6 +182,10 @@ void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
         analytic()->setMarket(offsetMarket);
     }
 
+    CONSOLEW("CRIF: Build Portfolio");
+    analytic()->buildPortfolio();
+    CONSOLE("OK");
+
     // Save portfolio state before applying SIMM exemptions
     auto portfolioNoSimmExemptions = QuantLib::ext::make_shared<Portfolio>();
     for (const auto& t : analytic()->portfolio()->trades())
@@ -193,13 +193,12 @@ void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
     crifAnalytic->setPortfolioNoSimmExemptions(portfolioNoSimmExemptions);
 
     auto marketConfig = inputs_->marketConfig("pricing");
-    string reportLabel = crifAnalytic->offsetScenario()? crifAnalytic->offsetScenario()->label() : "";
     // NPV report before applying SIMM exemptions
     auto npvWithoutReport = QuantLib::ext::make_shared<InMemoryReport>();
     ReportWriter(inputs_->reportNaString())
         .writeNpv(*npvWithoutReport, crifAnalytic->baseCurrency(), analytic()->market(), marketConfig,
                   analytic()->portfolio());
-    analytic()->addReport(LABEL, "npv_no_simm_exemptions" + reportLabel, npvWithoutReport);
+    analytic()->addReport(LABEL, "npv_no_simm_exemptions", npvWithoutReport);
     handlePreSimmExemptionsReports(*crifAnalytic, inputs_, marketConfig, npvWithoutReport);
 
     std::set<std::string> removedTrades, modifiedTrades;
@@ -235,22 +234,21 @@ void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
     ReportWriter(inputs_->reportNaString())
         .writeNpv(*npvWithReport, crifAnalytic->baseCurrency(), analytic()->market(), marketConfig,
                   analytic()->portfolio());
-    analytic()->addReport(LABEL, "npv_with_simm_exemptions" + reportLabel, npvWithReport);
-    npvWithReport->toFile("npv_with_simm_exemptions" + reportLabel + ".csv");
+    analytic()->addReport(LABEL, "npv_with_simm_exemptions", npvWithReport);
     // CF report after applying SIMM exemptions
     auto cfWithReport = QuantLib::ext::make_shared<InMemoryReport>();
     ReportWriter(inputs_->reportNaString())
         .writeCashflow(*cfWithReport, crifAnalytic->baseCurrency(), analytic()->portfolio(), analytic()->market(),
                        marketConfig);
-    analytic()->addReport(LABEL, "cashflow_with_simm_exemptions" + reportLabel, cfWithReport);
+    analytic()->addReport(LABEL, "cashflow_with_simm_exemptions", cfWithReport);
     handlePostSimmExemptionsReports(*crifAnalytic, inputs_, marketConfig, npvWithReport, cfWithReport);
-    cfWithReport->toFile("cashflow_with_simm_exemptions" + reportLabel + ".csv");
+
     auto simmOverridesPortfolio =
         buildSimmExemptionOverridePortfolio(*crifAnalytic, inputs_, removedTrades, modifiedTrades);
     if (analytic()->portfolio()->size() == 0 &&
         (!simmOverridesPortfolio || simmOverridesPortfolio->size() == 0)) {
         ALOG("portfolio is empty once SIMM exemptions applied");
-        analytic()->addReport(LABEL, "crif" + reportLabel, QuantLib::ext::make_shared<InMemoryReport>());
+        analytic()->addReport(LABEL, "crif", QuantLib::ext::make_shared<InMemoryReport>());
         return;
     }
 

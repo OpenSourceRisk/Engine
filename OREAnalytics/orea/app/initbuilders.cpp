@@ -58,7 +58,6 @@ namespace ore::analytics {
 using namespace ore::data;
 
 void initBuilders(const bool registerOREAnalytics) {
-    std::cout << "Initializing builders" << std::endl;
     static boost::shared_mutex mutex;
     boost::unique_lock<boost::shared_mutex> lock(mutex);
 
