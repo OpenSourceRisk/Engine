@@ -7,10 +7,16 @@
 import sys
 if sys.version_info.major >= 3:
     from .ORE import *
-    from .ORE import _ORE
+    try:
+        from .ORE import _ORE
+    except ImportError:
+        from .ORE import _OREP as _ORE
 else:
     from ORE import *
-    from ORE import _ORE
+    try:
+        from ORE import _ORE
+    except ImportError:
+        from ORE import _OREP as _ORE
 del sys
 
 __author__ = 'Quaternion Risk Management'

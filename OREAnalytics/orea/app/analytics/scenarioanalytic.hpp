@@ -25,7 +25,13 @@
 
 namespace ore {
 namespace analytics {
-    
+
+class InputParameters;
+
+struct ScenarioVariables : public InputVariables {
+    void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override {};
+};
+
 class ScenarioAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "SCENARIO";

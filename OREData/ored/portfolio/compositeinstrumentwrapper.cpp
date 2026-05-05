@@ -67,8 +67,15 @@ QuantLib::Real CompositeInstrumentWrapper::NPV() const {
 
 const std::map<std::string, QuantLib::ext::any>& CompositeInstrumentWrapper::additionalResults() const {
     additionalResults_.clear();
-    for (auto const& w : wrappers_) {
-        additionalResults_.insert(w->additionalResults().begin(), w->additionalResults().end());
+    for (Size i = 0; i < wrappers_.size(); ++i) {
+        std::string postFix = "_" + std::to_string(i);
+        const auto& cmpResults = wrappers_[i]->additionalResults();
+        for (auto const& r : cmpResults) {
+            additionalResults_[r.first + postFix] = r.second;
+        }
+        additionalResults_["__multiplier" + postFix] = wrappers_[i]->multiplier();
+        additionalResults_["__fx_conversion" + postFix] = fxRates_.empty() ? 1.0 : fxRates_[i]->value();
+        additionalResults_["__npv" + postFix] = wrappers_[i]->NPV();
     }
     return additionalResults_;
 }

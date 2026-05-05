@@ -121,6 +121,7 @@ public:
         COMMODITY_FWD,
         CORRELATION,
         COMMODITY_OPTION,
+        COMMODITY_CALENDAR_SPREAD_OPTION,
         CPR,
         RATING,
         NONE
@@ -738,6 +739,7 @@ public:
 
     //! \name Inspectors
     //@{
+    
     const Period& term() const { return term_; }
     const string& seniority() const { return seniority_; }
     const string& ccy() const { return ccy_; }
@@ -1711,15 +1713,21 @@ public:
         \param indexTerm The term of the underlying CDS index e.g. 3Y, 5Y, 7Y, 10Y etc. If not given, defaults to
                          an empty string. Assumed here that the term is encoded in \c indexName.
         \param strike    Strike object defining the quote's strike. If not given, assumed that quote is ATM.
+        \param quoteType The quote type, e.g. price or volatility. If not given, defaults to volatility.
+        \param side      Whether the quote is for a Payer, i.e. `Buyer`, or Receiver, i.e. `Seller`, CDS option.
     */
     IndexCDSOptionQuote(QuantLib::Real value, const QuantLib::Date& asof, const std::string& name,
                         const std::string& indexName, const QuantLib::ext::shared_ptr<Expiry>& expiry,
-                        const std::string& indexTerm = "", const QuantLib::ext::shared_ptr<BaseStrike>& strike = nullptr);
+                        const std::string& indexTerm = "",
+                        const QuantLib::ext::shared_ptr<BaseStrike>& strike = nullptr,
+                        QuoteType quoteType = QuoteType::RATE_LNVOL,
+                        QuantLib::Protection::Side side = QuantLib::Protection::Side::Buyer);
 
 
     //! Make a copy of the market datum
     QuantLib::ext::shared_ptr<MarketDatum> clone() override {
-        return QuantLib::ext::make_shared<IndexCDSOptionQuote>(quote_->value(), asofDate_, name_, indexName_, expiry_, indexTerm_, strike_);
+        return QuantLib::ext::make_shared<IndexCDSOptionQuote>(quote_->value(), asofDate_, name_, indexName_, expiry_,
+            indexTerm_, strike_, quoteType_, side_);
     }
 
     //! \name Inspectors
@@ -1728,6 +1736,7 @@ public:
     const QuantLib::ext::shared_ptr<Expiry>& expiry() const { return expiry_; }
     const std::string& indexTerm() const { return indexTerm_; }
     const QuantLib::ext::shared_ptr<BaseStrike>& strike() const { return strike_; }
+    QuantLib::Protection::Side side() const { return side_; }
     //@}
 
 private:
@@ -1735,6 +1744,7 @@ private:
     QuantLib::ext::shared_ptr<Expiry> expiry_;
     std::string indexTerm_;
     QuantLib::ext::shared_ptr<BaseStrike> strike_;
+    QuantLib::Protection::Side side_;
 
     //! Serialization
     friend class boost::serialization::access;
@@ -1839,13 +1849,53 @@ private:
     template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
+class CommodityOptionBaseQuote : public MarketDatum {
+public:
+    CommodityOptionBaseQuote(MarketDatum::InstrumentType instrumentType)
+        : MarketDatum(0.0, QuantLib::Date(), "", MarketDatum::QuoteType::RATE_LNVOL, instrumentType),
+          optionType_(QuantLib::Option::Call) {}
+
+    //! Constructor
+    /*! \param instrumentType The type of the commodity option quote, either COMMODITY_OPTION or COMMODITY_CALENDAR_SPREAD_OPTION
+        \param value         The volatility value
+        \param asof          The quote date
+        \param name          The quote name
+        \param quoteType     The quote type, should be RATE_LNVOL
+        \param commodityName The name of the underlying commodity
+        \param quoteCurrency The quote currency
+        \param expiry        Expiry object defining the quote's expiry
+        \param strike        Strike object defining the quote's strike
+        \param optionType    The option type.
+    */
+    CommodityOptionBaseQuote(MarketDatum::InstrumentType instrumentType, QuantLib::Real value,
+                             const QuantLib::Date& asof, const std::string& name, QuoteType quoteType,
+                             const std::string& commodityName, const std::string& quoteCurrency,
+                             const QuantLib::ext::shared_ptr<Expiry>& expiry,
+                             const QuantLib::ext::shared_ptr<BaseStrike>& strike,
+                             QuantLib::Option::Type optionType = QuantLib::Option::Call);
+    //! \name Inspectors
+    //@{
+    const std::string& commodityName() const { return commodityName_; }
+    const std::string& quoteCurrency() const { return quoteCurrency_; }
+    const QuantLib::ext::shared_ptr<Expiry>& expiry() const { return expiry_; }
+    const QuantLib::ext::shared_ptr<BaseStrike>& strike() const { return strike_; }
+    QuantLib::Option::Type optionType() const { return optionType_; }
+    //@}
+protected:
+    std::string commodityName_;
+    std::string quoteCurrency_;
+    QuantLib::ext::shared_ptr<Expiry> expiry_;
+    QuantLib::ext::shared_ptr<BaseStrike> strike_;
+    QuantLib::Option::Type optionType_;
+};
+
 //! Commodity option data class
 /*! This class holds single market points of type COMMODITY_OPTION
     \ingroup marketdata
 */
-class CommodityOptionQuote : public MarketDatum {
+class CommodityOptionQuote : public CommodityOptionBaseQuote {
 public:
-    CommodityOptionQuote() : optionType_(QuantLib::Option::Call) {}
+    CommodityOptionQuote() : CommodityOptionBaseQuote(MarketDatum::InstrumentType::COMMODITY_OPTION) {}
 
     //! Constructor
     /*! \param value         The volatility value
@@ -1868,22 +1918,7 @@ public:
         return QuantLib::ext::make_shared<CommodityOptionQuote>(quote_->value(), asofDate_, name_,
             quoteType_, commodityName_, quoteCurrency_, expiry_, strike_, optionType_);
     }
-
-    //! \name Inspectors
-    //@{
-    const std::string& commodityName() const { return commodityName_; }
-    const std::string& quoteCurrency() const { return quoteCurrency_; }
-    const QuantLib::ext::shared_ptr<Expiry>& expiry() const { return expiry_; }
-    const QuantLib::ext::shared_ptr<BaseStrike>& strike() const { return strike_; }
-    QuantLib::Option::Type optionType() const { return optionType_; }
-    //@}
-
 private:
-    std::string commodityName_;
-    std::string quoteCurrency_;
-    QuantLib::ext::shared_ptr<Expiry> expiry_;
-    QuantLib::ext::shared_ptr<BaseStrike> strike_;
-    QuantLib::Option::Type optionType_;
     //! Serialization
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned int version);
@@ -1917,6 +1952,53 @@ public:
     
     private:
     std::string commodityName_;
+    //! Serialization
+    friend class boost::serialization::access;
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
+};
+
+//! Commodity option data class
+/*! This class holds single market points of type COMMODITY_OPTION
+    \ingroup marketdata
+*/
+class CommodityCalendarSpreadOptionQuote : public CommodityOptionBaseQuote {
+public:
+    CommodityCalendarSpreadOptionQuote()
+        : CommodityOptionBaseQuote(MarketDatum::InstrumentType::COMMODITY_CALENDAR_SPREAD_OPTION) {}
+
+    //! Constructor
+    /*! \param value         The volatility value
+        \param asof          The quote date
+        \param name          The quote name
+        \param quoteType     The quote type, should be RATE_LNVOL
+        \param commodityName The name of the underlying commodity
+        \param offSet        The number of contract expiries between the two contracts in the calendar spread
+        \param quoteCurrency The quote currency
+        \param expiry        Expiry object defining the quote's expiry
+        \param strike        Strike object defining the quote's strike
+        \param optionType    The option type.
+        
+    */
+    CommodityCalendarSpreadOptionQuote(QuantLib::Real value, const QuantLib::Date& asof, const std::string& name,
+                               QuoteType quoteType, const std::string& commodityName, const int offSet,
+                               const std::string& quoteCurrency, const QuantLib::ext::shared_ptr<Expiry>& expiry,
+                               const QuantLib::ext::shared_ptr<BaseStrike>& strike,
+                               QuantLib::Option::Type optionType = QuantLib::Option::Call);
+
+    //! Make a copy of the market datum
+    QuantLib::ext::shared_ptr<MarketDatum> clone() override {
+        return QuantLib::ext::make_shared<CommodityCalendarSpreadOptionQuote>(quote_->value(), asofDate_, name_, quoteType_,
+                                                                      commodityName_, offset_, quoteCurrency_, expiry_,
+                                                                      strike_, optionType_);
+    }
+
+    //! \name Inspectors
+    //@{
+    const int offset() const { return offset_; }
+    //@}
+
+private:
+    int offset_;
     //! Serialization
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned int version);

@@ -21,24 +21,7 @@
 
 %include calendars.i
 
-%{
-using QuantExt::Belgium;
-using QuantExt::CME;
-using QuantExt::Colombia;
-using QuantExt::Cyprus;
-using QuantExt::Greece;
-using QuantExt::ICE;
-using QuantExt::Ireland;
-using QuantExt::IslamicWeekendsOnly;
-using QuantExt::Luxembourg;
-using QuantExt::Malaysia;
-using QuantExt::Netherlands;
-using QuantExt::Peru;
-using QuantExt::Philippines;
-using QuantExt::RussiaModified;
-using QuantExt::Spain;
-using QuantExt::Wmr;
-%}
+namespace QuantExt {
 
 class Belgium : public Calendar {
 	public:
@@ -60,7 +43,7 @@ class Colombia : public Calendar {
 
 /*! Cyrpus Calendar
     Public holidays (data from https://www.centralbank.cy/en/the-bank/working-hours-bank-holidays):
-    
+
     Fixed Dates
     <ul>
     <li>Saturdays</li>
@@ -207,5 +190,7 @@ class Wmr : public Calendar {
         enum Market {Settlement};
         Wmr(Market market = Settlement);
 };
+
+} // namespace QuantExt
 
 #endif

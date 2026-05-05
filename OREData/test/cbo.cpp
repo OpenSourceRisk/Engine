@@ -10,9 +10,9 @@
 
 #include <ored/portfolio/cbo.hpp>
 #include <ored/portfolio/builders/cbo.hpp>
-#include <oret/toplevelfixture.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 
-#include <oret/datapaths.hpp>
+#include <oret/util/datapaths.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/marketdata/csvloader.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
@@ -24,7 +24,7 @@
 
 using namespace ore::data;
 
-BOOST_FIXTURE_TEST_SUITE(OREPlusCreditTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREPlusCreditTestSuite, ore::data::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(CBOTest)
 

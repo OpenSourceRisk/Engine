@@ -86,12 +86,12 @@ OptionSurfaceStripper::OptionSurfaceStripper(const QuantLib::ext::shared_ptr<Opt
                                              const Calendar& calendar, const DayCounter& dayCounter,
                                              Exercise::Type type, bool lowerStrikeConstExtrap,
                                              bool upperStrikeConstExtrap,
-                                             QuantLib::BlackVolTimeExtrapolation timeExtrapolation,
+                                             QuantLib::BlackVolTimeExtrapolation::Type timeExtrapolationType,
                                              bool preferOutOfTheMoney, Solver1DOptions solverOptions,
                                              QuantLib::VolatilityType volType, Real displacement)
     : callSurface_(callSurface), putSurface_(putSurface), calendar_(calendar), dayCounter_(dayCounter), type_(type),
       lowerStrikeConstExtrap_(lowerStrikeConstExtrap), upperStrikeConstExtrap_(upperStrikeConstExtrap),
-      timeExtrapolation_(timeExtrapolation), preferOutOfTheMoney_(preferOutOfTheMoney), volType_(volType),
+      timeExtrapolationType_(timeExtrapolationType), preferOutOfTheMoney_(preferOutOfTheMoney), volType_(volType),
       displacement_(displacement), solverOptions_(solverOptions),
       havePrices_(QuantLib::ext::dynamic_pointer_cast<OptionPriceSurface>(callSurface_)) {
 
@@ -206,7 +206,7 @@ void OptionSurfaceStripper::performCalculations() const {
     // Populate the variance surface.
     volSurface_ = QuantLib::ext::make_shared<BlackVarianceSurfaceSparse<>>(
         callSurface_->referenceDate(), calendar_, volExpiries, volStrikes, volData, dayCounter_,
-        lowerStrikeConstExtrap_, upperStrikeConstExtrap_, timeExtrapolation_, volType_, displacement_);
+        lowerStrikeConstExtrap_, upperStrikeConstExtrap_, timeExtrapolationType_, volType_, displacement_);
 }
 
 vector<Real> OptionSurfaceStripper::strikes(const Date& expiry, bool isCall) const {
@@ -255,44 +255,20 @@ Real OptionSurfaceStripper::implyVol(Date expiry, Real strike, Option::Type type
 }
 
 void OptionSurfaceStripper::setUpSolver() {
+    bool useMinMax;
+    std::tie(brent_, useMinMax) = createSolver1D<Brent>(solverOptions_);
 
-    // Check that enough solver options have been provided.
-    const Real& guess = solverOptions_.initialGuess;
-    QL_REQUIRE(guess != Null<Real>(), "OptionSurfaceStripper: need a valid initial " <<
-        "guess for a price based surface.");
-
-    const Real& accuracy = solverOptions_.accuracy;
-    QL_REQUIRE(accuracy != Null<Real>(), "OptionSurfaceStripper: need a valid accuracy " <<
-        "for a price based surface.");
-
-    // Set maximum evaluations if provided.
-    if (solverOptions_.maxEvaluations != Null<Size>())
-        brent_.setMaxEvaluations(solverOptions_.maxEvaluations);
-
-    // Check and set the lower bound and upper bound
-    if (solverOptions_.lowerBound != Null<Real>() && solverOptions_.upperBound != Null<Real>()) {
-        QL_REQUIRE(solverOptions_.lowerBound < solverOptions_.upperBound, "OptionSurfaceStripper: lowerBound (" <<
-            solverOptions_.lowerBound << ") should be less than upperBound (" << solverOptions_.upperBound << ")");
-    }
-
-    if (solverOptions_.lowerBound != Null<Real>())
-        brent_.setLowerBound(solverOptions_.lowerBound);
-    if (solverOptions_.upperBound != Null<Real>())
-        brent_.setUpperBound(solverOptions_.upperBound);
-
-    // Choose a min/max or step solver based on parameters provided, favouring the min/max based version.
-    const Real& min = solverOptions_.minMax.first;
-    const Real& max = solverOptions_.minMax.second;
-    const Real& step = solverOptions_.step;
+    Real accuracy = solverOptions_.accuracy;
+    Real guess = solverOptions_.initialGuess;
     using std::placeholders::_1;
-    if (min != Null<Real>() && max != Null<Real>()) {
+    if (useMinMax) {
+        auto [min, max] = solverOptions_.minMax;
         typedef Real (Brent::* MinMaxSolver)(const PriceError&, Real, Real, Real, Real) const;
         solver_ = std::bind(static_cast<MinMaxSolver>(&Brent::solve), &brent_, _1, accuracy, guess, min, max);
-    } else if (step != Null<Real>()) {
+    } else {
+        Real step = solverOptions_.step;
         typedef Real(Brent::* StepSolver)(const PriceError&, Real, Real, Real) const;
         solver_ = std::bind(static_cast<StepSolver>(&Brent::solve), &brent_, _1, accuracy, guess, step);
-    } else {
-        QL_FAIL("OptionSurfaceStripper: need a valid step size or (min, max) pair for a price based surface.");
     }
 
 }
@@ -307,9 +283,9 @@ EquityOptionSurfaceStripper::EquityOptionSurfaceStripper(
     const QuantLib::ext::shared_ptr<OptionInterpolatorBase>& callSurface,
     const QuantLib::ext::shared_ptr<OptionInterpolatorBase>& putSurface, const Calendar& calendar,
     const DayCounter& dayCounter, Exercise::Type type, bool lowerStrikeConstExtrap, bool upperStrikeConstExtrap,
-    QuantLib::BlackVolTimeExtrapolation timeExtrapolation, bool preferOutOfTheMoney, Solver1DOptions solverOptions)
+    QuantLib::BlackVolTimeExtrapolation::Type timeExtrapolationType, bool preferOutOfTheMoney, Solver1DOptions solverOptions)
     : OptionSurfaceStripper(callSurface, putSurface, calendar, dayCounter, type, lowerStrikeConstExtrap,
-                            upperStrikeConstExtrap, timeExtrapolation, preferOutOfTheMoney, solverOptions, ShiftedLognormal, 0.0),
+                            upperStrikeConstExtrap, timeExtrapolationType, preferOutOfTheMoney, solverOptions, ShiftedLognormal, 0.0),
       equityIndex_(equityIndex) {
     registerWith(equityIndex_);
 }
@@ -333,10 +309,10 @@ CommodityOptionSurfaceStripper::CommodityOptionSurfaceStripper(
     const QuantLib::ext::shared_ptr<OptionInterpolatorBase>& callSurface,
     const QuantLib::ext::shared_ptr<OptionInterpolatorBase>& putSurface, const Calendar& calendar,
     const DayCounter& dayCounter, Exercise::Type type, bool lowerStrikeConstExtrap, bool upperStrikeConstExtrap,
-    QuantLib::BlackVolTimeExtrapolation timeExtrapolation, bool preferOutOfTheMoney, Solver1DOptions solverOptions,
+    QuantLib::BlackVolTimeExtrapolation::Type timeExtrapolationType, bool preferOutOfTheMoney, Solver1DOptions solverOptions,
     VolatilityType volType, Real shift)
     : OptionSurfaceStripper(callSurface, putSurface, calendar, dayCounter, type, lowerStrikeConstExtrap,
-                            upperStrikeConstExtrap, timeExtrapolation, preferOutOfTheMoney, solverOptions),
+                            upperStrikeConstExtrap, timeExtrapolationType, preferOutOfTheMoney, solverOptions),
       priceCurve_(priceCurve), discountCurve_(discountCurve)  {
     registerWith(priceCurve_);
     registerWith(discountCurve_);

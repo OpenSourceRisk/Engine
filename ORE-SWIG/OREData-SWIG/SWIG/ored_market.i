@@ -19,20 +19,23 @@
 #ifndef ored_market_i
 #define ored_market_i
 
+%include <std_pair.i>
 %include ored_conventions.i
 
-%{
-using ore::data::Market;
-using ore::data::MarketImpl;
-using ore::data::TodaysMarket;
-using ore::data::MarketObject;
+%shared_ptr(ore::data::MarketImpl)
+%shared_ptr(ore::data::TodaysMarket)
+%template(CPICapFloorTermPriceSurfaceHandle) Handle<QuantLib::CPICapFloorTermPriceSurface>;
+%template(YoYCapFloorTermPriceSurfaceHandle) Handle<QuantLib::YoYCapFloorTermPriceSurface>;
+%template(StringPeriodPair) std::pair<std::string, Period>;
 
-using ore::data::YieldCurveType;
-using ore::data::TodaysMarketParameters;
-using ore::data::Loader;
-using ore::data::CurveConfigurations;
-using ore::IborFallbackConfig;
-%}
+namespace ore {
+namespace data {
+
+enum class YieldCurveType {
+  Discount = 0,
+  Yield = 1,
+  EquityDividend = 2
+};
 
 enum class MarketObject {
     DiscountCurve = 0,
@@ -60,164 +63,180 @@ enum class MarketObject {
 };
 
 // Market class passed around as pointer, no construction
-%shared_ptr(MarketImpl)
 class MarketImpl {
   public:
     MarketImpl(const bool handlePseudoCurrencies);
-    Date asofDate() const;
+    QuantLib::Date asofDate() const;
 
     // Yield curves
-    Handle<YieldTermStructure> yieldCurve(const YieldCurveType& type, const std::string& name,
-                                          const std::string& configuration = Market::defaultConfiguration) const;
-    Handle<YieldTermStructure> yieldCurve(const std::string& name,
-                                          const std::string& configuration = Market::defaultConfiguration) const;
-    Handle<YieldTermStructure> discountCurve(const std::string& ccy,
-                              const std::string& configuration = Market::defaultConfiguration) const;
-    
+    QuantLib::Handle<QuantLib::YieldTermStructure> yieldCurve(const ore::data::YieldCurveType& type, const std::string& name,
+                                          const std::string& configuration = ore::data::Market::defaultConfiguration) const;
+    QuantLib::Handle<QuantLib::YieldTermStructure> yieldCurve(const std::string& name,
+                                          const std::string& configuration = ore::data::Market::defaultConfiguration) const;
+    QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve(const std::string& ccy,
+                              const std::string& configuration = ore::data::Market::defaultConfiguration) const;
+
     %extend {
       ext::shared_ptr<IborIndex> iborIndex(const std::string& indexName,
-                                             const std::string& configuration = Market::defaultConfiguration) const {
+                                           const std::string& configuration = ore::data::Market::defaultConfiguration) const {
           return self->iborIndex(indexName, configuration).currentLink();
       }
       ext::shared_ptr<SwapIndex> swapIndex(const std::string& indexName,
-                                             const std::string& configuration = Market::defaultConfiguration) const {
+                                           const std::string& configuration = ore::data::Market::defaultConfiguration) const {
           return self->swapIndex(indexName, configuration).currentLink();
       }
     }
 
     // Swaptions
-    Handle<QuantLib::SwaptionVolatilityStructure>
+    QuantLib::Handle<QuantLib::SwaptionVolatilityStructure>
       swaptionVol(const std::string& ccy,
-                  const std::string& configuration = Market::defaultConfiguration) const;
+                  const std::string& configuration = ore::data::Market::defaultConfiguration) const;
     const std::string shortSwapIndexBase(const std::string& ccy,
-                                         const std::string& configuration = Market::defaultConfiguration) const;
+                                         const std::string& configuration = ore::data::Market::defaultConfiguration) const;
     const std::string swapIndexBase(const std::string& ccy,
-                                    const std::string& configuration = Market::defaultConfiguration) const;
+                                    const std::string& configuration = ore::data::Market::defaultConfiguration) const;
 
     // Yield volatilities
-    Handle<SwaptionVolatilityStructure>
+    QuantLib::Handle<QuantLib::SwaptionVolatilityStructure>
       yieldVol(const std::string& securityID, const std::string& configuration = Market::defaultConfiguration) const;
 
     // FX
-    Handle<Quote> fxSpot(const std::string& ccypair,
-                         const std::string& configuration = Market::defaultConfiguration) const;
-    Handle<BlackVolTermStructure> fxVol(const std::string& ccypair,
-                                        const std::string& configuration = Market::defaultConfiguration) const;
+    QuantLib::Handle<QuantLib::Quote> fxRate(const std::string& ccypair,
+           const std::string& configuration = ore::data::Market::defaultConfiguration) const;
+    QuantLib::Handle<QuantLib::Quote> fxSpot(const std::string& ccypair,
+               const std::string& configuration = ore::data::Market::defaultConfiguration) const;
+    QuantLib::Handle<QuantLib::BlackVolTermStructure> fxVol(const std::string& ccypair,
+                      const std::string& configuration = ore::data::Market::defaultConfiguration) const;
 
     // Default Curves and Recovery Rates
-    Handle<QuantExt::CreditCurve>
+    QuantLib::Handle<QuantExt::CreditCurve>
       defaultCurve(const std::string& name,
                    const std::string& configuration = Market::defaultConfiguration) const;
-    Handle<Quote> recoveryRate(const std::string& name,
+    QuantLib::Handle<QuantLib::Quote> recoveryRate(const std::string& name,
                                const std::string& configuration = Market::defaultConfiguration) const;
 
     // CDS Option volatilities
-    Handle<QuantExt::CreditVolCurve> cdsVol(const std::string& name,
+    QuantLib::Handle<QuantExt::CreditVolCurve> cdsVol(const std::string& name,
                                          const std::string& configuration = Market::defaultConfiguration) const;
 
     // Base correlation structures
-    Handle<QuantExt::BaseCorrelationTermStructure>
+    QuantLib::Handle<QuantExt::BaseCorrelationTermStructure>
       baseCorrelation(const std::string& name,
                       const std::string& configuration = Market::defaultConfiguration) const;
 
     // CapFloor volatilities
-    Handle<OptionletVolatilityStructure>
+    QuantLib::Handle<QuantLib::OptionletVolatilityStructure>
       capFloorVol(const std::string& ccy,
                   const std::string& configuration = Market::defaultConfiguration) const;
+    std::pair<std::string, Period>
+      capFloorVolIndexBase(const std::string& ccy,
+                           const std::string& configuration = Market::defaultConfiguration) const;
 
     // YoY Inflation CapFloor volatilities
-    Handle<QuantExt::YoYOptionletVolatilitySurface>
+    QuantLib::Handle<QuantExt::YoYOptionletVolatilitySurface>
       yoyCapFloorVol(const std::string& ccy,
                      const std::string& configuration = Market::defaultConfiguration) const;
 
     // Inflation Indexes (Pointer rather than Handle)
     %extend {
       ext::shared_ptr<ZeroInflationIndex> zeroInflationIndex(const std::string& indexName,
-                                                               const std::string& configuration =
-                                                                 Market::defaultConfiguration) const {
+                                                             const std::string& configuration =
+                                                               ore::data::Market::defaultConfiguration) const {
           return self->zeroInflationIndex(indexName, configuration).currentLink();
       }
       ext::shared_ptr<YoYInflationIndex> yoyInflationIndex(const std::string& indexName,
-                                                             const std::string& configuration =
-                                                               Market::defaultConfiguration) const {
+                                                           const std::string& configuration =
+                                                             ore::data::Market::defaultConfiguration) const {
           return self->yoyInflationIndex(indexName, configuration).currentLink();
       }
     }
 
     // CPI Inflation Cap Floor Volatility Surfaces
-    Handle<QuantLib::CPIVolatilitySurface>
+    QuantLib::Handle<QuantLib::CPIVolatilitySurface>
       cpiInflationCapFloorVolatilitySurface(const std::string& indexName,
 					    const std::string& configuration = Market::defaultConfiguration) const;
 
     // Equity curves
-    Handle<Quote> equitySpot(const std::string& eqName,
+    QuantLib::Handle<QuantLib::Quote> equitySpot(const std::string& eqName,
                              const std::string& configuration = Market::defaultConfiguration) const;
     %extend {
-      ext::shared_ptr<QuantExt::EquityIndex2> equityCurve(const std::string& indexName,
+      QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> equityCurve(const std::string& indexName,
                                                            const std::string& configuration =
-							   Market::defaultConfiguration) const {
+							   ore::data::Market::defaultConfiguration) const {
           return self->equityCurve(indexName, configuration).currentLink();
       }
     }
 
     // Equity dividend curves
-    Handle<YieldTermStructure>
+    QuantLib::Handle<QuantLib::YieldTermStructure>
       equityDividendCurve(const std::string& eqName,
                           const std::string& configuration = Market::defaultConfiguration) const;
 
     // Equity forecasting curves
-    Handle<YieldTermStructure>
+    QuantLib::Handle<QuantLib::YieldTermStructure>
       equityForecastCurve(const std::string& eqName,
                           const std::string& configuration = Market::defaultConfiguration) const;
 
     // Equity volatilities
-    Handle<BlackVolTermStructure>
+    QuantLib::Handle<QuantLib::BlackVolTermStructure>
       equityVol(const std::string& eqName,
                 const std::string& configuration = Market::defaultConfiguration) const;
 
     // Bond Spreads
-    Handle<Quote>
+    QuantLib::Handle<QuantLib::Quote>
       securitySpread(const std::string& securityID,
                      const std::string& configuration = Market::defaultConfiguration) const;
+    QuantLib::Handle<QuantLib::Quote>
+      conversionFactor(const std::string& securityID,
+                       const std::string& configuration = Market::defaultConfiguration) const;
+    QuantLib::Handle<QuantLib::Quote>
+      securityPrice(const std::string& securityID,
+                    const std::string& configuration = Market::defaultConfiguration) const;
 
     // Commodity price curve
-    Handle<PriceTermStructure>
+    QuantLib::Handle<QuantExt::PriceTermStructure>
       commodityPriceCurve(const std::string& commodityName,
                           const std::string& configuration = Market::defaultConfiguration) const;
 
+    %extend {
+      QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> commodityIndex(
+          const std::string& commodityName,
+          const std::string& configuration = ore::data::Market::defaultConfiguration) const {
+          return self->commodityIndex(commodityName, configuration).currentLink();
+      }
+    }
+
     // Commodity volatility
-    Handle<BlackVolTermStructure>
+    QuantLib::Handle<QuantLib::BlackVolTermStructure>
       commodityVolatility(const std::string& commodityName,
                           const std::string& configuration = Market::defaultConfiguration) const;
 
     // Index-Index Correlations
-    Handle<QuantExt::CorrelationTermStructure>
+    QuantLib::Handle<QuantExt::CorrelationTermStructure>
     correlationCurve(const std::string& index1, const std::string& index2,
                      const std::string& configuration = Market::defaultConfiguration) const;
 
     // Conditional Prepayment Rates
-    Handle<Quote> cpr(const std::string& securityID,
-		      const std::string& configuration = Market::defaultConfiguration) const;
+    QuantLib::Handle<QuantLib::Quote> cpr(const std::string& securityID,
+              const std::string& configuration = ore::data::Market::defaultConfiguration) const;
 };
 
-
-%template(CPICapFloorTermPriceSurfaceHandle) Handle<QuantLib::CPICapFloorTermPriceSurface>;
-%template(YoYCapFloorTermPriceSurfaceHandle) Handle<QuantLib::YoYCapFloorTermPriceSurface>;
-
-%shared_ptr(TodaysMarket)
 class TodaysMarket : public MarketImpl {
  public:
-    TodaysMarket(const Date& asof,
-                 const ext::shared_ptr<TodaysMarketParameters>& params,
-                 const ext::shared_ptr<Loader>& loader,
-                 const ext::shared_ptr<CurveConfigurations>& curveConfigs,
+  TodaysMarket(const QuantLib::Date& asof,
+         const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& params,
+         const QuantLib::ext::shared_ptr<ore::data::Loader>& loader,
+         const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
                  const bool continueOnError = false,
                  bool loadFixings = true,
                  const bool lazyBuild = false,
-                 const ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr,
+                 const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr,
                  const bool preserveQuoteLinkage = false,
-                 const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
-                     QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()));
+         const QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig>& iborFallbackConfig =
+           QuantLib::ext::make_shared<ore::data::IborFallbackConfig>(ore::data::IborFallbackConfig::defaultConfig()));
 };
+
+} // namespace data
+} // namespace ore
 
 #endif

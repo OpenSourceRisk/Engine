@@ -25,6 +25,9 @@
 
 #include <ored/configuration/conventions.hpp>
 #include <ored/marketdata/market.hpp>
+#include <qle/time/futureexpirycalculator.hpp>
+#include <qle/termstructures/pricetermstructure.hpp>
+
 #include <string>
 
 namespace ore {
@@ -128,5 +131,20 @@ std::string fxIndexNameForDailyLows(const QuantLib::ext::shared_ptr<QuantExt::Fx
 
 std::string fxIndexNameForDailyHighs(const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex);
 
+//! Parse a commodity calendar spread volatility surface name.
+//! Expect the name to be of the form underlyingName_CALENDAR_SPREAD_offset, where offset is the number of contract
+//! expiries between the two contracts in the calendar spread. If the name can be parsed successfully, the function
+//! returns true and underlyingName and offset are set accordingly. Otherwise, it returns false and underlyingName is
+//! set to an empty string and offset to 0.
+bool parseCommodityCalendarSpreadVolSurfaceName(const std::string& name, std::string& underlyingName, int& offset);
+
+QuantLib::ext::shared_ptr<QuantExt::PriceTermStructure> getCalendarSpreadPriceCurve(const ore::data::Market* market,
+                                                                          const std::string& name,
+                                                                          const std::string& configuration, int offset,
+                                                                          const std::string& conventionId);
+
+QuantLib::ext::shared_ptr<QuantExt::PriceTermStructure>
+getCalendarSpreadPriceCurve(const ore::data::Market* market, const std::string& name, const std::string& configuration,
+                            int offset, const QuantLib::ext::shared_ptr<QuantExt::FutureExpiryCalculator>& expCal);
 } // namespace data
 } // namespace ore

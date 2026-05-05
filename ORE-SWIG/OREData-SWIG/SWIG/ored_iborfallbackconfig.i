@@ -19,25 +19,37 @@
 #ifndef ored_iborfallbackconfig_i
 #define ored_iborfallbackconfig_i
 
+%{
+typedef ore::data::IborFallbackConfig IborFallbackConfig;
+typedef ore::data::IborFallbackConfig::FallbackData IborFallbackConfigFallbackData;
+%}
+
+%include <std_map.i>
 %include ored_xmlutils.i
+
+class IborFallbackConfigFallbackData {
+public:
+    std::string rfrIndex;
+    QuantLib::Real spread;
+    QuantLib::Date switchDate;
+};
 
 %shared_ptr(IborFallbackConfig)
 class IborFallbackConfig : public XMLSerializable {
 public:
-    struct FallbackData;
-
     IborFallbackConfig();
     IborFallbackConfig(const bool enableIborFallbacks, const bool useRfrCurveInTodaysMarket,
-                       const bool useRfrCurveInSimulationMarket, const std::map<std::string, FallbackData>& fallbacks);
+                       const bool useRfrCurveInSimulationMarket,
+                       const std::map<std::string, IborFallbackConfigFallbackData>& fallbacks);
 
     bool enableIborFallbacks() const;
     bool useRfrCurveInTodaysMarket() const;
     bool useRfrCurveInSimulationMarket() const;
 
-    void addIndexFallbackRule(const string& iborIndex, const FallbackData& fallbackData);
+    void addIndexFallbackRule(const std::string& iborIndex, const IborFallbackConfigFallbackData& fallbackData);
 
-    bool isIndexReplaced(const string& iborIndex, const QuantLib::Date& asof = QuantLib::Date::maxDate()) const;
-    const FallbackData& fallbackData(const string& iborIndex) const;
+    bool isIndexReplaced(const std::string& iborIndex, const QuantLib::Date& asof = QuantLib::Date::maxDate()) const;
+    const IborFallbackConfigFallbackData& fallbackData(const std::string& iborIndex) const;
 
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
@@ -48,5 +60,36 @@ public:
     void logSwitchDates();
 
 };
+
+%template(StringFallbackDataMap) std::map<std::string, IborFallbackConfigFallbackData>;
+
+%extend IborFallbackConfigFallbackData {
+    IborFallbackConfigFallbackData(const std::string& rfrIndex, const QuantLib::Real spread,
+                                   const QuantLib::Date& switchDate) {
+        auto* result = new IborFallbackConfigFallbackData();
+        result->rfrIndex = rfrIndex;
+        result->spread = spread;
+        result->switchDate = switchDate;
+        return result;
+    }
+}
+
+%extend IborFallbackConfig {
+    void addIndexFallbackRule(const std::string& iborIndex, const std::string& rfrIndex,
+                              const QuantLib::Real spread,
+                              const QuantLib::Date& switchDate) {
+        IborFallbackConfigFallbackData fallbackData;
+        fallbackData.rfrIndex = rfrIndex;
+        fallbackData.spread = spread;
+        fallbackData.switchDate = switchDate;
+        self->addIndexFallbackRule(iborIndex, fallbackData);
+    }
+}
+
+#if defined(SWIGPYTHON)
+%pythoncode %{
+IborFallbackConfig.FallbackData = IborFallbackConfigFallbackData
+%}
+#endif
 
 #endif

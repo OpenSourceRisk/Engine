@@ -15,12 +15,12 @@
 */
 
 #include <ored/portfolio/compositetrade.hpp>
+#include <ored/portfolio/compositeinstrumentwrapper.hpp>
 #include <ored/portfolio/optionwrapper.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/portfolio/tradefactory.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
-#include <qle/instruments/multiccycompositeinstrument.hpp>
 
 #include <boost/algorithm/string/case_conv.hpp>
 
@@ -28,13 +28,10 @@ using ore::data::XMLUtils;
 
 namespace ore {
 namespace data {
-using QuantExt::MultiCcyCompositeInstrument;
 
 void CompositeTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("Building Composite Trade: " << id());
     npvCurrency_ = currency_;
-    QuantLib::ext::shared_ptr<MultiCcyCompositeInstrument> compositeInstrument =
-        QuantLib::ext::make_shared<MultiCcyCompositeInstrument>();
     fxRates_.clear();
     fxRatesNotional_.clear();
     legs_.clear();
@@ -45,6 +42,8 @@ void CompositeTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engin
 
     fxRates_.resize(trades_.size(), Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0)));
     fxRatesNotional_.resize(trades_.size(), Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0)));
+
+    std::vector<QuantLib::ext::shared_ptr<InstrumentWrapper>> componentWrappers;
 
     for (Size i = 0; i < trades_.size(); i++) {
         const auto& trade = trades_[i];
@@ -72,15 +71,18 @@ void CompositeTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engin
             fxRatesNotional_[i] = engineFactory->market()->fxRate(trade->notionalCurrency() + npvCurrency_);
 
         QuantLib::ext::shared_ptr<InstrumentWrapper> instrumentWrapper = trade->instrument();
-        Real effectiveMultiplier = (indexQuantity_ == Null<Real>() ? instrumentWrapper->multiplier() : indexQuantity_);
-        if (auto optionWrapper = QuantLib::ext::dynamic_pointer_cast<ore::data::OptionWrapper>(instrumentWrapper)) {
-            effectiveMultiplier *= optionWrapper->isLong() ? 1.0 : -1.0;
-        }
 
-        compositeInstrument->add(instrumentWrapper->qlInstrument(), effectiveMultiplier, fxRates_[i]);
-        for (Size i = 0; i < instrumentWrapper->additionalInstruments().size(); ++i) {
-            compositeInstrument->add(instrumentWrapper->additionalInstruments()[i],
-                                     instrumentWrapper->additionalMultipliers()[i]);
+        if (indexQuantity_ != Null<Real>()) {
+            // Override the multiplier with indexQuantity_, accounting for option long/short direction
+            Real effectiveMultiplier = indexQuantity_;
+            if (auto optionWrapper = QuantLib::ext::dynamic_pointer_cast<ore::data::OptionWrapper>(instrumentWrapper)) {
+                effectiveMultiplier *= optionWrapper->isLong() ? 1.0 : -1.0;
+            }
+            componentWrappers.push_back(QuantLib::ext::make_shared<VanillaInstrument>(
+                instrumentWrapper->qlInstrument(), effectiveMultiplier, instrumentWrapper->additionalInstruments(),
+                instrumentWrapper->additionalMultipliers()));
+        } else {
+            componentWrappers.push_back(instrumentWrapper);
         }
 
         // For cashflows
@@ -92,7 +94,7 @@ void CompositeTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engin
         if (maturity_ == trade->maturity())
             maturityType_ = trade->id() + "Maturity";
     }
-    instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(new VanillaInstrument(compositeInstrument));
+    instrument_ = QuantLib::ext::make_shared<CompositeInstrumentWrapper>(componentWrappers, fxRates_);
 
     notionalCurrency_ = npvCurrency_;
 

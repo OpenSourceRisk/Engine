@@ -3,7 +3,8 @@ Copyright (C) 2016 Quaternion Risk Management Ltd
 All rights reserved.
 */
 
-#include <oret/toplevelfixture.hpp>
+#include <boost/test/unit_test.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 #include <boost/make_shared.hpp>
 #include <orea/scenario/scenariowriter.hpp>
 #include <orea/scenario/simplescenario.hpp>
@@ -32,7 +33,7 @@ private:
     int current_position_;
 };
 
-BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::data::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(CSVScenarioGeneratorTest)
 

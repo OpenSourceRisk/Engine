@@ -139,13 +139,20 @@ future quotes, for example futures on Euribor 3M or SOFR 3M underlyings. The str
 \item Id: The name of the convention.
 \item Index: The underlying index of the futures, this is either a MM (i.e. Ibor) index like e.g. EUR-EURIBOR-3M or an
   overnight index like e.g. USD-SOFR.
-\item DateGenerationRule [Optional]: This should be set to `IMM' when the start and end dates of the future are
-  following the IMM date logic, `FirstDayOfMonth' when the start and end date are the first day of a month, or
-  `SecondThursday' when the expiry date is the second Thursday of the month. If not given this field defaults to `IMM'.
+\item DateGenerationRule [Optional]: Controls how the expiry (and for OI futures, the start) date is derived from the
+  expiry month. Accepted values are listed below. If not given this field defaults to `IMM'.
   \begin{itemize}
-  \item For MM futures `IMM' or `SecondThursday' are allowed. The expiry date for `IMM' is determined as the next 3rd
-    Wednesday of the expiry month of a future. The expiry date for `SecondThursday' is determined as the 2nd Thursday
-    of the expiry month (e.g. used for AUD-BBSW-3M futures).
+  \item For MM futures the following rules are allowed:
+    \begin{itemize}
+    \item \texttt{IMM}: Expiry is the 3rd Wednesday of the expiry month.
+    \item \texttt{IMMAUD} (alias \texttt{SecondThursday}): Expiry is the 2nd Thursday of the expiry month. Used for
+      AUD-BBSW-3M futures. \texttt{SecondThursday} is accepted as a backward-compatible alias and will be serialised
+      as \texttt{IMMAUD}.
+    \item \texttt{IMMNZD}: Expiry is the first Wednesday on or after the 9th day of the expiry month (pure weekday
+      arithmetic, no holiday calendar adjustment). Used for NZD bank-bill futures.
+    \item \texttt{IMMCAD}: Expiry is two business days (using a combined UK and Canada holiday calendar) before the
+      3rd Wednesday of the expiry month. Used for CAD BAX / CORRA futures.
+    \end{itemize}
   \item For an overnight index future `IMM' means that the end date of the future is set to the 3rd Wednesday of the
     expiry month and the start date is set to the 3rd Wednesday of the expiry month minus the future tenor. The setting
     `IMM' applies to SOFR-3M futures for example. `FirstDayOfMonth' on the other hand means that the end date of the
@@ -165,8 +172,9 @@ future quotes, for example futures on Euribor 3M or SOFR 3M underlyings. The str
 \end{itemize}
 
 Listings \ref{lst:future_conventions_euribor_3m}, \ref{lst:future_conventions_aud_bbsw_3m},
-\ref{lst:future_conventions_sofr_3m}, \ref{lst:future_conventions_sofr_1m} show examples for Euribor-3M, AUD-BBSW-3M,
-SOFR-3M and SOFR-1M future conventions.
+\ref{lst:future_conventions_nzd_bkbm_3m}, \ref{lst:future_conventions_cad_corra_3m},
+\ref{lst:future_conventions_sofr_3m}, \ref{lst:future_conventions_sofr_1m} show examples for Euribor-3M,
+AUD-BBSW-3M, NZD-BKBM-3M, CAD-CORRA-3M, SOFR-3M and SOFR-1M future conventions.
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -200,11 +208,38 @@ SOFR-3M and SOFR-1M future conventions.
 <Future>
   <Id>AUD-BBSW-3M-FUTURES-CONVENTIONS</Id>
   <Index>AUD-BBSW-3M</Index>
-  <DateGenerationRule>SecondThursday</DateGenerationRule>
+  <DateGenerationRule>IMMAUD</DateGenerationRule>
 </Future>
 \end{minted}
-\caption{AUD BBSW 3M MM Future conventions (Second Thursday expiry)}
+\caption{AUD BBSW 3M MM Future conventions (IMMAUD -- second Thursday expiry; \texttt{SecondThursday} is a
+backward-compatible alias)}
 \label{lst:future_conventions_aud_bbsw_3m}
+\end{listing}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Future>
+  <Id>NZD-BKBM-3M-FUTURES</Id>
+  <Index>NZD-BKBM-3M</Index>
+  <DateGenerationRule>IMMNZD</DateGenerationRule>
+</Future>
+\end{minted}
+\caption{NZD BKBM 3M MM Future conventions (IMMNZD -- first Wednesday on or after the 9th of the expiry month)}
+\label{lst:future_conventions_nzd_bkbm_3m}
+\end{listing}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Future>
+  <Id>CAD-CORRA-3M-FUTURES</Id>
+  <Index>CAD-CORRA-3M</Index>
+  <DateGenerationRule>IMMCAD</DateGenerationRule>
+</Future>
+\end{minted}
+\caption{CAD CORRA 3M MM Future conventions (IMMCAD -- two UK/Canada business days before the third Wednesday)}
+\label{lst:future_conventions_cad_corra_3m}
 \end{listing}
 
 \begin{listing}[H]
@@ -592,19 +627,24 @@ structure of this node is shown in Listing \ref{lst:xccy_basis_conventions}.
   <EOM> </EOM>
   <IsResettable> </IsResettable>
   <FlatIndexIsResettable> </FlatIndexIsResettable>>
-  <PaymentLag> </PaymentLag>
+  <SpreadTenor> </SpreadTenor>
+  <FlatTenor> </FlatTenor>
+  <FlatPaymentLag> </FlatPaymentLag>
+  <SpreadPaymentLag> </SpreadPaymentLag>
   <FlatPaymentLag> </FlatPaymentLag>
   <!-- for OIS only -->
-  <IncludeSpread> </IncludeSpread>
-  <Lookback> </Lookback>
-  <FixingDays> </FixingDays>
-  <RateCutoff> </RateCutoff>
-  <IsAveraged> </IsAveraged>
+  <SpreadIncludeSpread> </SpreadIncludeSpread>
+  <SpreadLookback> </SpreadLookback>
+  <SpreadFixingDays> </SpreadFixingDays>
+  <SpreadRateCutoff> </SpreadRateCutoff>
+  <SpreadIsAveraged> </SpreadIsAveraged>
+  <SpreadObservationShift> </SpreadObservationShift>
   <FlatIncludeSpread> </FlatIncludeSpread>
   <FlatLookback> </FlatLookback>
   <FlatFixingDays> </FlatFixingDays>
   <FlatRateCutoff> </FlatRateCutoff>
   <FlatIsAveraged> </FlatIsAveraged>
+  <FlatObservationShift> </FlatObservationShift>
 </CrossCurrencyBasis>
 \end{minted}
 \caption{Cross currency basis swap conventions}
@@ -632,11 +672,94 @@ SettlementDays above.
 \item SpreadFixingDays [Optional]: Only relevant if spread leg is OIS, allowable values are 0, 1, 2, ..., defaults to 0 if not given
 \item SpreadRateCutoff [Optional]: Only relevant if spread leg is OIS, allowable values are 0, 1, 2, ..., defaults to 0 if not given
 \item SpreadIsAveraged [Optional]: Only relevant if spread leg is OIS, allowable values are true, false, defaults to false if not given
-\item FlatIncludeSpread [Optional]: Only relevant if spread leg is OIS, allowable values are true, false, defaults to false if not given
-\item FlatLookback [Optional]: Only relevant if spread leg is OIS, allowable values are 0D, 1D, ..., defaults to 0D if not given
-\item FlatFixingDays [Optional]: Only relevant if spread leg is OIS, allowable values are 0, 1, 2, ..., defaults to 0 if not given
-\item FlatRateCutoff [Optional]: Only relevant if spread leg is OIS, allowable values are 0, 1, 2, ..., defaults to 0 if not given
-\item FlatIsAveraged [Optional]: Only relevant if spread leg is OIS, allowable values are true, false, defaults to false if not given
+\item SpreadObservationShift [Optional]: Only relevant if spread leg is OIS, allowable values are true, false, defaults to true if not given
+\item FlatIncludeSpread [Optional]: Only relevant if flat leg is OIS, allowable values are true, false, defaults to false if not given
+\item FlatLookback [Optional]: Only relevant if flat leg is OIS, allowable values are 0D, 1D, ..., defaults to 0D if not given
+\item FlatFixingDays [Optional]: Only relevant if flat leg is OIS, allowable values are 0, 1, 2, ..., defaults to 0 if not given
+\item FlatRateCutoff [Optional]: Only relevant if flat leg is OIS, allowable values are 0, 1, 2, ..., defaults to 0 if not given
+\item FlatIsAveraged [Optional]: Only relevant if flat leg is OIS, allowable values are true, false, defaults to false if not given
+\item FlatObservationShift [Optional]: Only relevant if flat leg is OIS, allowable values are true, false, defaults to true if not given
+\end{itemize}
+
+\subsubsection{Cross Currency Fix Float Swap Conventions}
+A node with name \lstinline!CrossCurrencyFixFloat! is used to store conventions for cross currency fixed versus float swap quotes.
+The structure of this node is shown in Listing \ref{lst:xccy_fix_float_conventions}.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CrossCurrencyFixFloat>
+  <Id> </Id>
+  <SettlementDays> </SettlementDays>
+  <SettlementCalendar> </SettlementCalendar>
+  <SettlementConvention> </SettlementConvention>
+  <FixedCurrency> </FixedCurrency>
+  <FixedFrequency> </FixedFrequency>
+  <FixedConvention> </FixedConvention>
+  <FixedDayCounter> </FixedDayCounter>
+  <Index> </Index>>
+  <EOM> </EOM>
+  <IsResettable> </IsResettable>
+  <FloatIndexIsResettable> </FloatIndexIsResettable>
+  <!-- for OIS only -->
+  <IncludeSpread> </IncludeSpread>
+  <Lookback> </Lookback>
+  <FixingDays> </FixingDays>
+  <RateCutoff> </RateCutoff>
+  <IsAveraged> </IsAveraged>
+  <ObservationShift> </ObservationShift>
+</CrossCurrencyFixFloat>
+\end{minted}
+\caption{Cross currency fix float swap conventions}
+\label{lst:xccy_fix_float_conventions}
+\end{listing}
+
+The meanings of the various elements in this node are as follows:
+\begin{itemize}
+\item \lstinline!SettlementDays!: The number of business days to the start of the cross currency basis swap.
+\item \lstinline!SettlementCalendar!: The business day calendar(s) for both legs
+    It is also used to arrive at the settlement date using the SettlementDays above.
+\item \lstinline!SettlementConvention!: The roll convention for both legs.
+\item \lstinline!FixedCurrency!: The currency of the fixed leg.
+\item \lstinline!FixedFrequency!: The frequency of the fixed leg payments.
+\item \lstinline!FixedConvention!: The business day roll convention for the fixed leg.
+\item \lstinline!FixedDayCounter!: The day count convention for the fixed leg.
+\item \lstinline!Index!: The name of the index on the floating leg.
+\item \lstinline!EOM! [Optional]:
+    \lstinline!true! if the end of month convention is to be used when generating the schedule on both legs, 
+    and \lstinline!false! if not. If not provided, it defaults to \lstinline!false!.
+\item \lstinline!IsResettable! [Optional]: \lstinline!true! if the swap is mark-to-market resetting, 
+    and \lstinline!false! otherwise. If not provided, it defaults to \lstinline!false!.
+\item \lstinline!FloatIndexIsResettable! [Optional]: If the swap is mark-to-market resetting, 
+    then this field indicates which leg's notional resets.
+    It is \lstinline!true! if it is the notional on the floating leg that resets, 
+    and \lstinline!false! if it is the notional on the fixed leg that resets.
+    If not provided, it defaults to \lstinline!true!.
+\end{itemize}
+
+The following fields are only relevant if the floating leg is an overnight indexed leg:
+\begin{itemize}
+\item \lstinline!IncludeSpread! [Optional]: If the leg is compounding,
+    this field indicates whether or not to include the spread in the compounding.
+    The allowable values are \lstinline!true! or \lstinline!false!.
+    The default to \lstinline!false! if not given.
+\item \lstinline!Lookback! [Optional]: The lookback period for the overnight indexed leg.
+    If provided, it must be a period that is a non-negative number of days.
+    The allowable values are \lstinline!0D!, \lstinline!1D! etc.
+    It defaults to \lstinline!0D! if not given.
+\item \lstinline!FixingDays! [Optional]: The fixing lag to be used for the overnight index.
+    If provided, it must be a non-negative integer.
+    If not provided, the natural fixing lag of the overnight index is used.
+\item \lstinline!RateCutoff! [Optional]: The number of rate cut-off days on the overnight leg.
+    If provided, it must be a non-negative integer.
+    If not provided, it defaults to \lstinline!0! i.e. no rate cut-off.
+\item \lstinline!IsAveraged! [Optional]: This flag indicates whether the overnight leg is averaged or compounded.
+    The allowable values are \lstinline!true! or \lstinline!false!.
+    It defaults to \lstinline!false! if not given, i.e. assumes a compounded overnight leg.
+\item \lstinline!ObservationShift! [Optional]: If a non-zero lookback is given,
+    this flag indicates if the there is an observation shift or not.
+    The allowable values are \lstinline!true! or \lstinline!false!.
+    It defaults to \lstinline!true! if not given.
 \end{itemize}
 
 \subsubsection{Inflation Swap Conventions}

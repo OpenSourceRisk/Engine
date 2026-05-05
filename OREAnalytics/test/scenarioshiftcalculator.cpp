@@ -3,7 +3,8 @@
  All rights reserved.
 */
 
-#include <oret/toplevelfixture.hpp>
+#include <boost/test/unit_test.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 #include <orea/scenario/simplescenario.hpp>
 #include <orea/scenario/scenarioshiftcalculator.hpp>
 
@@ -25,7 +26,7 @@ using SpotShiftData = SensitivityScenarioData::SpotShiftData;
 Real tol = 1e-10;
 Date asof(14, Jun, 2018);
 
-BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::data::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(ScenarioShiftCalculatorTest)
 

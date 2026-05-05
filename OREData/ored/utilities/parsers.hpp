@@ -38,6 +38,7 @@
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/pricingengines/mcregressionmodel.hpp>
 #include <qle/termstructures/sabrparametricvolatility.hpp>
+#include <qle/termstructures/sviparametricvolatility.hpp>
 #include <qle/termstructures/scenario.hpp>
 
 #include <ql/cashflows/cpicoupon.hpp>
@@ -64,6 +65,7 @@
 #include <ql/time/daycounter.hpp>
 #include <ql/time/period.hpp>
 #include <ql/types.hpp>
+#include <ql/processes/hestonprocess.hpp>
 
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/tokenizer.hpp>
@@ -234,6 +236,9 @@ QuantLib::Position::Type parsePositionType(const string& s);
 \ingroup utilities
 */
 QuantLib::Protection::Side parseProtectionSide(const string& s);
+
+//! Output operator for QuantLib::Protection::Side
+std::ostream& operator<<(std::ostream& os, const QuantLib::Protection::Side side);
 
 //! Convert text to QuantLib::Settlement::Type
 /*!
@@ -517,9 +522,6 @@ std::ostream& operator<<(std::ostream& os, SobolBrownianGenerator::Ordering t);
 //! Write QuantLib::SobolRsg::DirectionIntegers to stream
 std::ostream& operator<<(std::ostream& os, SobolRsg::DirectionIntegers t);
     
-//! Enum to string used in ScenarioGeneratorData's toXML
-std::ostream& operator<<(std::ostream& os, QuantExt::CrossAssetModel::Discretization type);
-
 //! Convert text to CommodityFutureConvention::AveragingData::CalculationPeriod
 CommodityFutureConvention::AveragingData::CalculationPeriod parseAveragingDataPeriod(const std::string& s);
 
@@ -637,8 +639,11 @@ MporCashFlowMode parseMporCashFlowMode(const std::string& s);
 /*!
 \ingroup utilities
 */
-QuantLib::Date calculateMporDate(const QuantLib::Size& mporDays, QuantLib::Date asOf = QuantLib::Date(),
-                                 std::string mporCalendar = "US");
+QuantLib::Date calculateMporDate(const QuantLib::Size& mporDays, const QuantLib::Date& asOf = QuantLib::Date(),
+                                 const std::string& mporCalendar = "US");
+
+QuantLib::Date calculateMporDate(const QuantLib::Size& mporDays, const QuantLib::Calendar& mporCalendar,
+                                 const QuantLib::Date& asOf = QuantLib::Date());
 
 //! Write MporCashFlowMode to stream
 /*!
@@ -657,6 +662,18 @@ QuantExt::SabrParametricVolatility::ModelVariant parseSabrParametricVolatilityMo
 \ingroup utilities
 */
 std::ostream& operator<<(std::ostream& out, QuantExt::SabrParametricVolatility::ModelVariant m);
+
+//! Parse SviParametricVolatility::ModelVariant
+/*!
+\ingroup utilities
+*/
+QuantExt::SviParametricVolatility::ModelVariant parseSviParametricVolatilityModelVariant(const std::string& s);
+
+//! Write SviParametricVolatility::ModelVariant
+/*!
+\ingroup utilities
+*/
+std::ostream& operator<<(std::ostream& out, QuantExt::SviParametricVolatility::ModelVariant m);
 
 //! Write QuantLib::Exercise::Type
 /*!
@@ -699,5 +716,13 @@ std::vector<std::string> pairToStrings(std::pair<std::string, std::string> p);
 
 std::string splitByLastDelimiter(const std::string& s, const std::string& delimeter);
 std::string removeAfterLastDelimiter(const std::string& s, const std::string& delimeter);
+
+
+//! Convert text to HestonProcess::Discretization
+/*!
+\ingroup utilities
+*/
+HestonProcess::Discretization parseHestonProcessDiscretization(const std::string& s);
+
 } // namespace data
 } // namespace ore

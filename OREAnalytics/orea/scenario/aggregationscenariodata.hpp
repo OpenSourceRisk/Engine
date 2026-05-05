@@ -96,6 +96,13 @@ public:
         }
     }
 
+    //! raw access to data for given type and qualifier
+    virtual vector<vector<double>>* rawData(const AggregationScenarioDataType type, const string& qualifier) {
+        QL_FAIL("AggregationScenarioData::rawData(): not implemented");
+    }
+    //! set method using raw access
+    void set(vector<vector<double>>* rawData, Real value) { (*rawData)[dIndex_][sIndex_] = value; }
+
 private:
     Size dIndex_, sIndex_;
 };
@@ -103,7 +110,7 @@ private:
 //! A concrete in memory implementation of AggregationScenarioData
 /*! \ingroup scenario
  */
-class InMemoryAggregationScenarioData : public AggregationScenarioData {
+class InMemoryAggregationScenarioData final : public AggregationScenarioData {
 public:
     InMemoryAggregationScenarioData() : AggregationScenarioData(), dimDates_(0), dimSamples_(0) {}
     InMemoryAggregationScenarioData(Size dimDates, Size dimSamples)
@@ -133,12 +140,12 @@ public:
     void set(Size dateIndex, Size sampleIndex, Real value, const AggregationScenarioDataType& type,
              const string& qualifier = "") override {
         check(dateIndex, sampleIndex, type, qualifier);
-        auto key = std::make_pair(type, qualifier);
-        auto it = data_.find(key);
-        if (it == data_.end()) {
-            data_.insert(make_pair(key, vector<vector<Real>>(dimDates_, vector<Real>(dimSamples_, 0.0))));
-        }
-        data_[key][dateIndex][sampleIndex] = value;
+        (*getEntry(type, qualifier))[dateIndex][sampleIndex] = value;
+    }
+
+    vector<vector<double>>* rawData(const AggregationScenarioDataType type, const string& qualifier) override {
+        check(0, 0, type, qualifier);
+        return getEntry(type, qualifier);
     }
 
 private:
@@ -149,6 +156,19 @@ private:
                    "sampleIndex (" << sampleIndex << ") out of range 0..." << dimSamples_ - 1);
         return;
     }
+
+    vector<vector<double>>* getEntry(const AggregationScenarioDataType type, const string& qualifier) {
+        auto key = std::make_pair(type, qualifier);
+        vector<vector<Real>>* el;
+        if (auto it = data_.find(key); it == data_.end()) {
+            el = &data_.insert(make_pair(key, vector<vector<Real>>(dimDates_, vector<Real>(dimSamples_, 0.0))))
+                      .first->second;
+        } else {
+            el = &it->second;
+        }
+        return el;
+    }
+
     Size dimDates_, dimSamples_;
     map<std::pair<AggregationScenarioDataType, string>, vector<vector<Real>>> data_;
 };

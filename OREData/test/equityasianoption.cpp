@@ -14,7 +14,7 @@
  */
 
  #include <boost/test/unit_test.hpp>
- #include <oret/toplevelfixture.hpp>
+ #include <ored/utilities/toplevelfixture.hpp>
 
  #include <boost/make_shared.hpp>
 
@@ -92,7 +92,7 @@
 
  } // namespace
 
- BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
+ BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::data::TopLevelFixture)
 
  BOOST_AUTO_TEST_SUITE(EquityAsianOptionTests)
 
@@ -162,8 +162,8 @@
 	 PremiumData premiumData;
          OptionData optionData("Long", to_string(a.type), "European", true, {to_string(expiry)}, "Cash", "",
                                premiumData, vector<Real>(), vector<Real>(), "", "", "", vector<string>(),
-                               vector<string>(), "", "", "", "Asian", "Arithmetic", QuantLib::ext::nullopt, QuantLib::ext::nullopt,
-                               QuantLib::ext::nullopt);
+                               vector<string>(), vector<string>(), "", "", "", "Asian", "Arithmetic",
+                               QuantLib::ext::nullopt, QuantLib::ext::nullopt, QuantLib::ext::nullopt);
 
          QuantLib::ext::shared_ptr<EquityAsianOption> asianOption = QuantLib::ext::make_shared<EquityAsianOption>(
              env, "EquityAsianOption", 1.0, TradeStrike(a.strike, "USD"), optionData, scheduleData,
@@ -261,8 +261,8 @@
 	 PremiumData premiumData;
          OptionData optionData("Long", to_string(a.type), "European", true, {to_string(expiry)}, "Cash", "",
                                premiumData, vector<Real>(), vector<Real>(), "", "", "", vector<string>(),
-                               vector<string>(), "", "", "", "AverageStrike", "Arithmetic", QuantLib::ext::nullopt, QuantLib::ext::nullopt,
-                               QuantLib::ext::nullopt);
+                               vector<string>(), vector<string>(), "", "", "", "AverageStrike", "Arithmetic",
+                               QuantLib::ext::nullopt, QuantLib::ext::nullopt, QuantLib::ext::nullopt);
 
          QuantLib::ext::shared_ptr<EquityAsianOption> asianOption = QuantLib::ext::make_shared<EquityAsianOption>(
              env, "EquityAsianOption", 1.0, TradeStrike(a.strike, "USD"), optionData, scheduleData,

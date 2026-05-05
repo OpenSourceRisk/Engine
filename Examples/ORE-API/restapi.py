@@ -2,13 +2,16 @@
 import argparse
 from urllib.parse import unquote
 import os
-from flask import Flask, request, make_response
+from flask import Flask, request, make_response, jsonify
 import ORE as ore
 from ORE import OREApp
 from oreApi import oreApi, MyCustomException
 
 app = Flask(__name__)
 
+@app.route('/health')
+def health():
+    return jsonify(status="ok", service="restapi")
 
 @app.route('/api/analytics', methods=['POST'])
 def handle_analytics_request():

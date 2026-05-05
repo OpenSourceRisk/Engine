@@ -34,16 +34,26 @@ class AmcCgMultiLegOptionEngine
     : public QuantLib::GenericEngine<QuantExt::MultiLegOption::arguments, QuantExt::MultiLegOption::results>,
       public AmcCgBaseEngine {
 public:
-    AmcCgMultiLegOptionEngine(const std::vector<std::string>& ccys, const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
+    // non-amc use
+    AmcCgMultiLegOptionEngine(const QuantLib::ext::shared_ptr<ModelCG>& modelCg, const Model::Params& mcParams,
+                              const double indicatorSmoothingForValues, const double indicatorSmoothingForDerivatives,
+                              const double sqrtSmoothingForDerivatives, const bool useCachedSensis,
+                              const bool useExternalComputeFramework,
+                              const bool useDoublePrecisionForExternalCalculation, const std::string& id,
+                              const bool generateAdditionalResults)
+        : AmcCgBaseEngine(modelCg, mcParams, indicatorSmoothingForValues, indicatorSmoothingForDerivatives,
+                          sqrtSmoothingForDerivatives, useCachedSensis, useExternalComputeFramework,
+                          useDoublePrecisionForExternalCalculation, generateAdditionalResults) {
+        registerWith(modelCg_);
+    }
+    // amc use
+    AmcCgMultiLegOptionEngine(const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
                               const std::vector<Date>& simulationDates,
                               const bool reevaluateExerciseInStickyCloseOutDateRun)
-        : AmcCgBaseEngine(modelCg, simulationDates, reevaluateExerciseInStickyCloseOutDateRun), ccys_(ccys) {
+        : AmcCgBaseEngine(modelCg, simulationDates, reevaluateExerciseInStickyCloseOutDateRun) {
         registerWith(modelCg);
     }
     void calculate() const override;
-
-private:
-    std::vector<std::string> ccys_;
 };
 
 } // namespace data

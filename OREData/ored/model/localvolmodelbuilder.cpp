@@ -43,8 +43,9 @@ LocalVolModelBuilder::LocalVolModelBuilder(
     const std::vector<ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
     const std::set<Date>& simulationDates, const std::set<Date>& addDates, const Size timeStepsPerYear,
     const Type lvType, const std::vector<Real>& calibrationMoneyness, const std::string& referenceCalibrationGrid,
-    const bool dontCalibrate, const Handle<YieldTermStructure>& baseCurve)
-    : AssetModelBuilderBase(curves, processes, simulationDates, addDates, timeStepsPerYear, baseCurve),
+    const bool dontCalibrate, const Handle<YieldTermStructure>& baseCurve, const bool observeContinuum)
+    : AssetModelBuilderBase(curves, processes, simulationDates, addDates, timeStepsPerYear, baseCurve,
+                            observeContinuum),
       lvType_(lvType), calibrationMoneyness_(calibrationMoneyness), referenceCalibrationGrid_(referenceCalibrationGrid),
       dontCalibrate_(dontCalibrate) {
     // we have to observe the whole vol surface for the Dupire implementation unfortunately; we can specify the time
@@ -124,11 +125,11 @@ std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> LocalVolModelBuilder::
             QuantExt::CarrMadanSurface cmCheck(checkMaturities, checkMoneynesses, processes_[l]->x0(), atmForwards,
                                                callPrices);
             if (!cmCheck.arbitrageFree()) {
-                WLOG("Andreasen-Huge local vol calibration for process #" << l << ": input vol is not arbitrage free.");
-                DLOG("time,moneyness,callSpread,butterfly,calendar");
+                DLOG("Andreasen-Huge local vol calibration for process #" << l << ": input vol is not arbitrage free.");
+                TLOG("time,moneyness,callSpread,butterfly,calendar");
                 for (Size i = 0; i < checkMaturities.size(); ++i)
                     for (Size j = 0; j < checkMoneynesses.size(); ++j)
-                        DLOG(checkMaturities[i] << "," << checkMoneynesses[i] << "," << std::boolalpha
+                        TLOG(checkMaturities[i] << "," << checkMoneynesses[j] << "," << std::boolalpha
                                                 << cmCheck.callSpreadArbitrage()[i][j] << ","
                                                 << cmCheck.butterflyArbitrage()[i][j] << ","
                                                 << cmCheck.calendarArbitrage()[i][j]);
@@ -140,7 +141,6 @@ std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> LocalVolModelBuilder::
                 AndreasenHugeVolatilityInterpl::CubicSpline, AndreasenHugeVolatilityInterpl::Call, 500, Null<Real>(),
                 Null<Real>());
             localVol = Handle<LocalVolTermStructure>(QuantLib::ext::make_shared<AndreasenHugeLocalVolAdapter>(ah));
-            //localVol->enableExtrapolation();
             DLOG("Andreasen-Huge local vol calibration for process #"
                  << l
                  << ": "
@@ -159,6 +159,8 @@ std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> LocalVolModelBuilder::
         } else {
             QL_FAIL("unexpected local vol type");
         }
+
+        localVol->enableExtrapolation();
 
         processes.push_back(QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
             processes_[l]->stateVariable(), processes_[l]->dividendYield(), processes_[l]->riskFreeRate(),
@@ -212,6 +214,17 @@ std::vector<std::vector<std::pair<Real, Real>>> LocalVolModelBuilder::getVolTime
 
 AssetModelWrapper::ProcessType LocalVolModelBuilder::processType() const {
     return AssetModelWrapper::ProcessType::LocalVol;
+}
+
+LocalVolModelBuilder::Type parseLocalVolType(const std::string& s) {
+    static const std::map<std::string, LocalVolModelBuilder::Type> str2LvType = {
+        {"Dupire", LocalVolModelBuilder::Type::Dupire},
+        {"DupireFloored", LocalVolModelBuilder::Type::DupireFloored},
+        {"AndreasenHuge", LocalVolModelBuilder::Type::AndreasenHuge}};
+    auto mdl = str2LvType.find(s);
+    QL_REQUIRE(mdl != str2LvType.end(),
+               "local vol type '" << s << "' not recognized, expected Dupire, DupireFloored, AndreasenHuge.");
+    return mdl->second;
 }
 
 } // namespace data

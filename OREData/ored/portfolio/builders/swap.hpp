@@ -49,6 +49,7 @@ class SwapEngineBuilderBase : public CachingPricingEngineBuilder<string, const C
 public:
     SwapEngineBuilderBase(const std::string& model, const std::string& engine)
         : CachingEngineBuilder(model, engine, {"Swap", "CapFloor_as_Swap"}) {}
+    virtual bool optimizedInstrument() const { return false; }
 
 protected:
     virtual string keyImpl(const Currency& ccy, const std::string& discountCurve, const std::string& securitySpread,
@@ -75,7 +76,22 @@ protected:
         if (!securitySpread.empty())
             yts = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(
                 yts, market_->securitySpread(securitySpread, configuration(MarketContext::pricing))));
+
         return QuantLib::ext::make_shared<QuantLib::DiscountingSwapEngine>(yts);
+    }
+};
+
+//! Engine Builder for Single Currency Swaps, optimized for exposure simulation
+class SwapOptimizedEngineBuilder : public SwapEngineBuilderBase {
+public:
+    SwapOptimizedEngineBuilder() : SwapEngineBuilderBase("Optimized", "Optimized") {}
+    bool optimizedInstrument() const override { return true; }
+
+protected:
+    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const std::string& discountCurve,
+                                                        const std::string& securitySpread,
+                                                        const std::set<std::string>& eqNames) override {
+        return nullptr;
     }
 };
 

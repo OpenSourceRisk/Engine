@@ -17,23 +17,25 @@
 */
 
 #include <orea/app/analytics/calibrationanalytic.hpp>
-
+#include <orea/app/analytics/utilities.hpp>
+#include <orea/app/inputparameters.hpp>
+#include <orea/app/hwhistoricalcalibrationdataloader.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <ored/model/crossassetmodelbuilder.hpp>
+#include <ored/model/hwhistoricalcalibrationmodeldata.hpp>
+#include <ored/model/hwhistoricalcalibrationmodelbuilder.hpp>
 #include <ored/model/modelparameter.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
+#include <ored/report/inmemoryreport.hpp>
 
 #include <qle/models/cirppconstantfellerparametrization.hpp>
 #include <qle/models/cirppconstantparametrization.hpp>
 
-#include <orea/app/hwhistoricalcalibrationdataloader.hpp>
-#include <ored/model/hwhistoricalcalibrationmodeldata.hpp>
-#include <ored/model/hwhistoricalcalibrationmodelbuilder.hpp>
 
 using namespace ore::data;
-using namespace boost::filesystem;
+using namespace std::filesystem;
 
 namespace ore {
 namespace analytics {
@@ -42,18 +44,87 @@ namespace analytics {
  * CalibrationAnalytic: Cross Asset Model calibration and reporting
  ******************************************************************/
 
+void CalibrationVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) {
+    pricingEngine_ = inputs->setupVariables().pricingEngine_;
+    inputs->loadParameterXML<EngineData>(pricingEngine_, "calibration", "pricingEnginesFile");
+
+    inputs->loadParameterXML<CrossAssetModelData>(crossAssetModelData_, "calibration", "crossAssetModelData");
+    if (!crossAssetModelData_)
+        // load default if not provided
+        inputs->loadParameterXML<CrossAssetModelData>(crossAssetModelData_, "calibration", "configFile");
+
+    inputs->loadParameter<std::string>(calibrationModel_, "calibration", "model");
+    if (calibrationModel_ == "HW") {
+        inputs->loadParameter<std::string>(hwCalibrationMode_, "calibration", "mode"); 
+        if (hwCalibrationMode_ == "historical") {
+            inputs->loadParameter<vector<string>>(foreignCurrencies_, "calibration", "foreignCurrencies", false, parseListOfStringValues);
+            inputs->loadParameter<vector<Period>>(curveTenors_, "calibration", "curveTenors", true, parseListOfPeriodValues);
+                        
+            string tmp;
+            inputs->loadParameter<std::string>(tmp, "calibration", "useForwardOrZeroRate");
+            QL_REQUIRE(tmp == "forward" || tmp == "zero",
+                       "useForwardOrZeroRate must be either forward or zero for Calibration Analytics");
+            if (!tmp.empty())
+                useForwardRate_ = (tmp == "forward");
+
+            inputs->loadParameter<bool>(pcaCalibration_, "calibration", "pcaCalibration", false, parseBool);
+            if (pcaCalibration_) {
+                inputs->loadParameter<Date>(startDate_, "calibration", "startDate", true, parseDate);
+                inputs->loadParameter<Date>(endDate_, "calibration", "endDate", true, parseDate);
+
+                inputs->loadParameter<std::string>(scenarioInputFile_, "calibration", "scenarioInputFile", true);
+                if (!scenarioInputFile_.empty())
+                    scenarioInputFile_ = (inputs->setupVariables().inputPath_ / scenarioInputFile_).generic_string();
+
+                inputs->loadParameter<Real>(lambda_, "calibration", "lambda", false, parseReal);
+                inputs->loadParameter<Real>(varianceRetained_, "calibration", "varianceRetained", true, parseReal);
+                QL_REQUIRE(varianceRetained_ > 0.0 && varianceRetained_ <= 1.0, "Variance retained must be 0 < lambda <= 1");
+                                
+                tmp.clear();
+                inputs->loadParameter<std::string>(tmp, "calibration", "pcaOutputFileName");
+                if (!tmp.empty())
+                    pcaOutputFileName_ = (inputs->setupVariables().resultsPath_ / tmp).generic_string();
+            }
+
+            inputs->loadParameter<bool>(meanReversionCalibration_, "calibration", "meanReversionCalibration", false, parseBool);
+            if (meanReversionCalibration_) {            
+                tmp.clear();
+                inputs->loadParameter<std::string>(tmp, "calibration", "pcaInputFileName");
+                if (!tmp.empty())
+                    pcaInputFiles_ = getFileNames(tmp, inputs->setupVariables().inputPath_);
+
+                inputs->loadParameter<Size>(basisFunctionNumber_, "calibration", "basisFunctionNumber", false, parseInteger);
+                inputs->loadParameter<Real>(kappaUpperBound_, "calibration", "kappaUpperBound", false, parseReal);
+                inputs->loadParameter<Size>(haltonMaxGuess_, "calibration", "haltonMaxGuess", false, parseInteger);
+
+
+                tmp.clear();
+                inputs->loadParameter<std::string>(tmp, "calibration", "meanReversionOutputFileName");
+                if (!tmp.empty())
+                    meanReversionOutputFileName_ = (inputs->setupVariables().resultsPath_ / tmp).generic_string();
+            }
+        } else if (hwCalibrationMode_ == "riskNeutral") {
+                // TODO
+        }
+        else
+            ALOG("In Calibration Analytics, only historical or riskNeutral mode are supported for HW model, got " << hwCalibrationMode_);        
+    }
+}
+
 void CalibrationAnalyticImpl::setUpConfigurations() {
     LOG("CalibrationAnalytic::setUpConfigurations() called");
-    if (inputs_->calibrationModel() == "CAM") {
+    auto calibrationVars = ext::dynamic_pointer_cast<CalibrationVariables>(inputVariables_);
+    if (calibrationVars->calibrationModel_ == "CAM") {
         analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
-        analytic()->configurations().crossAssetModelData = inputs_->crossAssetModelData();
+        analytic()->configurations().crossAssetModelData = calibrationVars->crossAssetModelData_;
     }
 }
 
 QuantLib::ext::shared_ptr<EngineFactory> CalibrationAnalyticImpl::engineFactory() {
+    auto calibrationVars = ext::dynamic_pointer_cast<CalibrationVariables>(inputVariables_);
     LOG("CalibrationAnalytic::engineFactory() called");
     QuantLib::ext::shared_ptr<EngineData> edCopy =
-        QuantLib::ext::make_shared<EngineData>(*inputs_->simulationPricingEngine());
+        QuantLib::ext::make_shared<EngineData>(*calibrationVars->pricingEngine_);
     edCopy->globalParameters()["GenerateAdditionalResults"] = inputs_->outputAdditionalResults() ? "true" : "false";
     edCopy->globalParameters()["RunType"] = "Exposure";
     map<MarketContext, string> configurations;
@@ -90,31 +161,33 @@ void CalibrationAnalyticImpl::buildHwHistoricalCalibrationModelData() {
     if (!hwHistoricalModelData_)
         hwHistoricalModelData_ = QuantLib::ext::make_shared<HwHistoricalCalibrationModelData>();
 
-    HwHistoricalCalibrationDataLoader loader(inputs_->baseCurrency(), inputs_->foreignCurrencies(),
-                                             inputs_->curveTenors(), inputs_->startDate(), inputs_->endDate());
+    auto calibrationVars = ext::dynamic_pointer_cast<CalibrationVariables>(inputVariables_);
+
+    HwHistoricalCalibrationDataLoader loader(inputs_->baseCurrency(), calibrationVars->foreignCurrencies_,
+                                             calibrationVars->curveTenors_, calibrationVars->startDate_, calibrationVars->endDate_);
 
     hwHistoricalModelData_->setAsOf(inputs_->asof());
     hwHistoricalModelData_->setBaseCurrency(inputs_->baseCurrency());
-    hwHistoricalModelData_->setForeignCurrencies(inputs_->foreignCurrencies());
-    hwHistoricalModelData_->setCurveTenors(inputs_->curveTenors());
-    hwHistoricalModelData_->setUseForwardRate(inputs_->useForwardRate());
+    hwHistoricalModelData_->setForeignCurrencies(calibrationVars->foreignCurrencies_);
+    hwHistoricalModelData_->setCurveTenors(calibrationVars->curveTenors_);
+    hwHistoricalModelData_->setUseForwardRate(calibrationVars->useForwardRate_);
 
-    if (inputs_->pcaCalibration()) {
-        loader.loadFromScenarioFile(inputs_->scenarioInputFile());
-        hwHistoricalModelData_->setLambda(inputs_->lambda());
-        hwHistoricalModelData_->setVarianceRetained(inputs_->varianceRetained());
+    if (calibrationVars->pcaCalibration_) {
+        loader.loadFromScenarioFile(calibrationVars->scenarioInputFile_);
+        hwHistoricalModelData_->setLambda(calibrationVars->lambda_);
+        hwHistoricalModelData_->setVarianceRetained(calibrationVars->varianceRetained_);
         hwHistoricalModelData_->setIrCurves(loader.moveIrCurves());
         hwHistoricalModelData_->setFxSpots(loader.moveFxSpots());
         hwHistoricalModelData_->setPcaCalibration(true);
     } else {
-        loader.loadPCAFromCsv(inputs_->pcaInputFiles());
+        loader.loadPCAFromCsv(calibrationVars->pcaInputFiles_);
         hwHistoricalModelData_->setPcaFromInput(loader.movePrincipalComponent(), loader.moveEigenValue(), loader.moveEigenVector());
         hwHistoricalModelData_->setPcaCalibration(false);
     }
 
-    if (inputs_->meanReversionCalibration()) {
-        hwHistoricalModelData_->setMeanReversionParams(inputs_->basisFunctionNumber(), inputs_->kappaUpperBound(),
-                                                       inputs_->haltonMaxGuess());
+    if (calibrationVars->meanReversionCalibration_) {
+        hwHistoricalModelData_->setMeanReversionParams(calibrationVars->basisFunctionNumber_, calibrationVars->kappaUpperBound_,
+                                                       calibrationVars->haltonMaxGuess_);
         hwHistoricalModelData_->setMeanReversionCalibration(true);
     } else
         hwHistoricalModelData_->setMeanReversionCalibration(false);
@@ -124,6 +197,7 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
                                           const std::set<std::string>& runTypes) {
 
     SavedSettings settings;
+    auto calibrationVars = ext::dynamic_pointer_cast<CalibrationVariables>(inputVariables_);
 
     string msg = "Running Calibration Analytic";
     LOG(msg << " with asof " << io::iso_date(inputs_->asof()));
@@ -131,7 +205,7 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
 
     Settings::instance().evaluationDate() = inputs_->asof();
 
-    if (inputs_->calibrationModel() == "CAM") {
+    if (calibrationVars->calibrationModel_ == "CAM") {
 
         msg = "Calibration: Build Market";
         LOG(msg);
@@ -147,7 +221,7 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
         ProgressMessage(msg, 0, 1).log();
         auto continueOnErr = false;
         auto allowModelFallbacks = false;
-        auto globalParams = inputs_->simulationPricingEngine()->globalParameters();
+        auto globalParams = calibrationVars->pricingEngine_->globalParameters();
         if (auto c = globalParams.find("ContinueOnCalibrationError"); c != globalParams.end())
             continueOnErr = parseBool(c->second);
         if (auto c = globalParams.find("AllowModelFallbacks"); c != globalParams.end())
@@ -202,7 +276,7 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
 
         // Update Cross Asset Model Data: FX
         for (Size i = 0; i < data->fxConfigs().size(); ++i) {
-            ext::shared_ptr<FxBsData> fxData = data->fxConfigs()[i];
+            ext::shared_ptr<FxBsData> fxData = QuantLib::ext::dynamic_pointer_cast<FxBsData>(data->fxConfigs()[i]);
             ext::shared_ptr<Parametrization> para = model_->fx(i);
             if (auto fxPara = ext::dynamic_pointer_cast<FxBsParametrization>(para)) {
                 LOG("CamData, updating FxBsParametrization:" << " foreign=" << fxData->foreignCcy()
@@ -211,10 +285,10 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
                 // overwrite initial values with calibration results
                 times = fxPara->parameterTimes(0);
                 values = fxPara->parameterValues(0);
-                fxData->sigmaTimes() = std::vector<Real>(times.begin(), times.end());
-                fxData->sigmaValues() = std::vector<Real>(values.begin(), values.end());
+                fxData->setSigmaTimes(std::vector<Real>(times.begin(), times.end()));
+                fxData->setSigmaValues(std::vector<Real>(values.begin(), values.end()));
                 // set calibration flags to false to ensure we reuse the calibration when loading this version
-                fxData->calibrateSigma() = false;
+                fxData->setCalibrateSigma(false);
             } else {
                 StructuredAnalyticsWarningMessage(
                     "CalibrationAnalytic", "Parametrization not processed.",
@@ -412,8 +486,8 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
         auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
         ReportWriter(inputs_->reportNaString()).writeXmlReport(*report, "CrossAssetModel", xml);
         analytic()->addReport("CALIBRATION", "calibration", report);
-    } else if (inputs_->calibrationModel() == "HW") {
-        if (inputs_->hwCalibrationMode() == "Historical") {
+    } else if (calibrationVars->calibrationModel_ == "HW") {
+        if (calibrationVars->hwCalibrationMode_ == "historical") {
             msg = "Calibration: Read data";
             LOG(msg);
             CONSOLEW(msg);
@@ -423,12 +497,12 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
             LOG(msg);
             CONSOLEW(msg);
             hwHistoricalModelBuilder_ = ext::make_shared<HwHistoricalCalibrationModelBuilder>(
-                hwHistoricalModelData_, inputs_->pcaCalibration(), inputs_->meanReversionCalibration(), false);
-            if (inputs_->pcaCalibration()) {
+                hwHistoricalModelData_, calibrationVars->pcaCalibration_, calibrationVars->meanReversionCalibration_, false);
+            if (calibrationVars->pcaCalibration_) {
                 // Write PCA reports
-                LOG("Write PCA Results Reports to " << inputs_->pcaOutputFileName());
-                boost::filesystem::path outputDir = inputs_->resultsPath();
-                boost::filesystem::path baseFileName(inputs_->pcaOutputFileName());
+                LOG("Write PCA Results Reports to " << calibrationVars->pcaOutputFileName_);
+                std::filesystem::path outputDir = inputs_->resultsPath();
+                std::filesystem::path baseFileName(calibrationVars->pcaOutputFileName_);
                 std::string stem = baseFileName.stem().string();
                 std::string extension = baseFileName.extension().string();
                 for (auto const& ccyMatrix : hwHistoricalModelData_->eigenValues()) {
@@ -442,11 +516,11 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
                 }
                 LOG("PCA Results Reports written");
             }
-            if (inputs_->meanReversionCalibration()) {
+            if (calibrationVars->meanReversionCalibration_) {
                 // Write Mean Reversion reports
-                LOG("Write Mean Reversion Results Report to " << inputs_->meanReversionOutputFileName());
-                boost::filesystem::path outputDir = inputs_->resultsPath();
-                boost::filesystem::path baseFileName(inputs_->meanReversionOutputFileName());
+                LOG("Write Mean Reversion Results Report to " << calibrationVars->meanReversionOutputFileName_);
+                std::filesystem::path outputDir = inputs_->resultsPath();
+                std::filesystem::path baseFileName(calibrationVars->meanReversionOutputFileName_);
                 std::string stem = baseFileName.stem().string();
                 std::string extension = baseFileName.extension().string();
                 for (auto const& ccyMatrix : hwHistoricalModelData_->v()) {
@@ -484,10 +558,10 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
                 analytic()->addReport("CALIBRATION", "calibration_StatisticalWithRiskNeutralVolatility", report2);
             }
         } else {
-            QL_FAIL("CalibrationAnalytic::Unsupported HW calibration mode " << inputs_->hwCalibrationMode());
+            QL_FAIL("CalibrationAnalytic::Unsupported HW calibration mode " << calibrationVars->hwCalibrationMode_);
         }
     } else {
-        QL_FAIL("CalibrationAnalytic::Unsupported calibration model " << inputs_->calibrationModel());
+        QL_FAIL("CalibrationAnalytic::Unsupported calibration model " << calibrationVars->calibrationModel_);
     }
     CONSOLE("OK");
 
@@ -495,17 +569,18 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
 }
 
 bool CalibrationAnalytic::requiresMarketData() const {
-    if (inputs_->calibrationModel() == "CAM")
+    auto calibrationVars = ext::dynamic_pointer_cast<CalibrationVariables>(impl_->inputVariables());
+    if (calibrationVars->calibrationModel_ == "CAM")
         return true;
-    else if (inputs_->calibrationModel() == "HW") {
-        if (inputs_->hwCalibrationMode() == "Historical")
+    else if (calibrationVars->calibrationModel_ == "HW") {
+        if (calibrationVars->hwCalibrationMode_ == "historical")
             return false;
         else
             QL_FAIL("CalibrationAnalytic::requiresMarketData(): Unknown HW calibration mode "
-                    << inputs_->hwCalibrationMode());
+                    << calibrationVars->hwCalibrationMode_);
     } else
         QL_FAIL("CalibrationAnalytic::requiresMarketData(): Unknown calibration model "
-                << inputs_->calibrationModel());
+                << calibrationVars->calibrationModel_);
     return false;
 }
 

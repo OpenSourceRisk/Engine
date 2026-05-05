@@ -61,6 +61,7 @@ Date getOpenEndDateReplacement(const std::string& replacementPeriodStr, const Ca
 
    - BondReferenceDatum::TYPE             ("Bond")
    - ConvertibleBondReferenceDatum:TYPE   ("ConvertibleBond")
+   - CallableBondReferenceDatum:TYPE      ("CallableBond")
 
    or an empty string if no reference data was found. */
 
@@ -106,7 +107,7 @@ struct BondFutureUtils {
     enum BondFutureType { ShortTenorUS, LongTenorUS };
 
     static std::pair<QuantLib::Date, QuantLib::Date>
-    deduceDates(const boost::shared_ptr<BondFutureReferenceDatum>& refData);
+    deduceDates(const ext::shared_ptr<BondFutureReferenceDatum>& refData);
 
     static std::pair<QuantLib::Date, QuantLib::Date>
     deduceDates(const std::string& currency, const std::string& contractMonth, const std::string& rootDateStr,

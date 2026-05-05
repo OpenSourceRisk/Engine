@@ -18,13 +18,13 @@
 
 #include <boost/test/unit_test.hpp>
 #include <ored/portfolio/schedule.hpp>
-#include <oret/toplevelfixture.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 
 using namespace boost::unit_test_framework;
 using namespace ore::data;
 using namespace QuantLib;
 
-BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::data::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(ScheduleDataTests)
 

@@ -23,16 +23,37 @@
 #pragma once
 
 #include <orea/app/analytic.hpp>
-#include <orea/app/analytics/pricinganalytic.hpp>
-#include <orea/engine/varcalculator.hpp>
+#include <orea/app/inputvariables.hpp>
+#include <orea/engine/marketriskreport.hpp>
 
 namespace ore {
 namespace analytics {
+
+class InputParameters;
+class VarReport;
+
+struct VarVariables : public InputVariables {
+    virtual void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
+
+    std::vector<Real> varQuantiles_;
+    bool varBreakDown_ = false;
+    std::string portfolioFilter_;
+    std::string lookbackPeriod_;
+    QuantLib::Size horizonDays_ = 10;
+    QuantLib::Calendar horizonCalendar_;
+    bool horizonOverlappingPeriods_ = true;
+    QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketParams_;
+    QuantLib::ext::shared_ptr<SensitivityScenarioData> sensiScenarioData_;
+    QuantLib::ext::shared_ptr<ScenarioReader> scenarioReader_;
+    bool outputHistoricalScenarios_ = false;
+    QuantLib::ext::shared_ptr<ReturnConfiguration> returnConfiguration_;
+};
   
 class VarAnalyticImpl : public Analytic::Impl {
 public:
-    VarAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs, const string& label)
-        : Analytic::Impl(inputs) {
+    VarAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs, const string& label,
+                    QuantLib::ext::shared_ptr<InputVariables> vars)
+        : Analytic::Impl(inputs, vars) {
         setLabel(label);
     }
     virtual void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
@@ -57,18 +78,29 @@ public:
                    false) {}
 };
 
+struct ParametricVarVariables : public VarVariables {
+    void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
+
+    SalvagingAlgorithm::Type varSalvagingAlgorithm_ = SalvagingAlgorithm::None;
+    // Delta, DeltaGammaNormal, MonteCarlo, Cornish-Fisher, Saddlepoint
+    std::string varMethod_ = "DeltaGammaNormal";
+    Size mcVarSamples_ = 1000000;
+    long mcVarSeed_ = 42;
+    std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covarianceData_;
+    QuantLib::ext::shared_ptr<SensitivityStream> sensitivityStream_;
+
+};
+
 class ParametricVarAnalyticImpl : public VarAnalyticImpl {
 public:
     static constexpr const char* LABEL = "PARAMETRIC_VAR";
 
     ParametricVarAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-        : VarAnalyticImpl(inputs, LABEL) {};
+        : VarAnalyticImpl(inputs, LABEL, QuantLib::ext::make_shared<ParametricVarVariables>()) {};
 
     virtual void setUpConfigurations() override;
     virtual QuantLib::ext::shared_ptr<SensitivityStream>
-    sensiStream(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
-        return inputs_->sensitivityStream();
-    };
+    sensiStream(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader);
 
 protected:
     void setVarReport(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) override;
@@ -82,18 +114,28 @@ public:
                       analyticsManager) {}
 };
 
+struct HistoricalSimulationVarVariables : public VarVariables {
+    void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
+    
+    bool tradePnL_ = false;
+    bool includeExpectedShortfall_ = false;
+    bool riskFactorBreakdown_ = false;
+    bool riskClassBreakdown_ = true;
+};
+
 class HistoricalSimulationVarAnalyticImpl : public VarAnalyticImpl {
 public:
     static constexpr const char* LABEL = "HISTSIM_VAR";
 
     HistoricalSimulationVarAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-        : VarAnalyticImpl(inputs, LABEL) {}
+        : VarAnalyticImpl(inputs, LABEL, QuantLib::ext::make_shared<HistoricalSimulationVarVariables>()) {}
     void setUpConfigurations() override;
 
 protected:
     void setVarReport(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) override;
     void addAdditionalReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) override;
     bool riskFactorBreakdown_ = false;
+    bool riskClassBreakdown_ = true;
     bool allowPartialScenarios_ = false;
 };
 
@@ -106,4 +148,4 @@ public:
 };
 
 } // namespace analytics
-} // namespace oreplus
+} // namespace ore

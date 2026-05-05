@@ -66,9 +66,8 @@ void CommodityIndex::init() {
 
     registerWith(curve_);
     registerWith(Settings::instance().evaluationDate());
-    QL_DEPRECATED_DISABLE_WARNING
-    registerWith(IndexManager::instance().notifier(name()));
-    QL_DEPRECATED_ENABLE_WARNING
+    registerWith(notifier());
+    
 }
 
 Real CommodityIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {

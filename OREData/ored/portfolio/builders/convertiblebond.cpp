@@ -250,12 +250,6 @@ QuantLib::ext::shared_ptr<QuantLib::PricingEngine> ConvertibleBondFDDefaultableE
         calibrate = parseBool(calParam->second);
     }
 
-    bool generateAdditionalResults = false;
-    auto genAddParam = globalParameters_.find("GenerateAdditionalResults");
-    if (genAddParam != globalParameters_.end()) {
-        generateAdditionalResults = parseBool(genAddParam->second);
-    }
-
     // set up model and pricing engine
 
     auto modelBuilder = QuantLib::ext::make_shared<DefaultableEquityJumpDiffusionModelBuilder>(
@@ -269,7 +263,7 @@ QuantLib::ext::shared_ptr<QuantLib::PricingEngine> ConvertibleBondFDDefaultableE
         modelBuilder->model(), referenceCurve, treatSecuritySpreadAsCreditSpread ? Handle<Quote>() : spread,
         isExchangeable ? creditCurve : Handle<DefaultProbabilityTermStructure>(), recovery, Handle<FxIndex>(fx),
         staticMesher, engineTimeStepsPerYear, engineStateGridPoints, engineMesherEpsilon, engineMesherScaling,
-        conversionRatioDiscretisationGrid, generateAdditionalResults);
+        conversionRatioDiscretisationGrid, generateAdditionalResults());
 }
 
 } // namespace data

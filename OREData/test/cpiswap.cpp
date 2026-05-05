@@ -25,7 +25,7 @@
 #include <ored/portfolio/swap.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
-#include <oret/toplevelfixture.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 #include <ql/cashflows/cpicoupon.hpp>
 #include <ql/cashflows/cpicouponpricer.hpp>
 #include <ql/cashflows/iborcoupon.hpp>
@@ -175,7 +175,7 @@ private:
 };
 } // namespace
 
-BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::data::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(CPISwapTests)
 
@@ -275,7 +275,7 @@ BOOST_AUTO_TEST_CASE(testCPISwapPrice) {
     Schedule cpiSchedule(startDate, endDate, 1 * Years, UnitedKingdom(), ModifiedFollowing, ModifiedFollowing,
                          DateGeneration::Forward, false);
     Leg floatLeg = IborLeg(floatSchedule, *market->hGBP).withNotionals(10000000.0);
-    Leg cpiLeg = CPILeg(cpiSchedule, *market->hUKRPI, baseCPI, 2 * Months)
+    Leg cpiLeg = QuantLib::CPILeg(cpiSchedule, *market->hUKRPI, baseCPI, 2 * Months)
                      .withFixedRates(0.02)
                      .withNotionals(10000000)
                      .withObservationInterpolation(CPI::Flat)
@@ -283,7 +283,7 @@ BOOST_AUTO_TEST_CASE(testCPISwapPrice) {
                      .withPaymentAdjustment(Following);
     auto pricer = QuantLib::ext::make_shared<CPICouponPricer>(market->hGBP->forwardingTermStructure());
     for (auto const& c : cpiLeg) {
-        if (auto cpn = QuantLib::ext::dynamic_pointer_cast<CPICoupon>(c))
+        if (auto cpn = QuantLib::ext::dynamic_pointer_cast<QuantLib::CPICoupon>(c))
             cpn->setPricer(pricer);
     }
 

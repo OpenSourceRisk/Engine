@@ -57,7 +57,8 @@ public:
                                QuantLib::ext::optional<Period> lookback = QuantLib::ext::nullopt,
                                QuantLib::ext::optional<Size> fixingDays = QuantLib::ext::nullopt,
                                QuantLib::ext::optional<Size> rateCutoff = QuantLib::ext::nullopt,
-                               QuantLib::ext::optional<bool> isAveraged = QuantLib::ext::nullopt);
+                               QuantLib::ext::optional<bool> isAveraged = QuantLib::ext::nullopt,
+                               QuantLib::ext::optional<bool> observationShift = QuantLib::ext::nullopt);
 
     //! \name Observer interface
     //@{
@@ -108,6 +109,7 @@ private:
     QuantLib::ext::optional<Size> fixingDays_;
     QuantLib::ext::optional<Size> rateCutoff_;
     QuantLib::ext::optional<bool> isAveraged_;
+    QuantLib::ext::optional<bool> observationShift_;
 
     QuantLib::ext::shared_ptr<CrossCcyFixFloatSwap> swap_;
     QuantLib::RelinkableHandle<QuantLib::YieldTermStructure> termStructureHandle_;

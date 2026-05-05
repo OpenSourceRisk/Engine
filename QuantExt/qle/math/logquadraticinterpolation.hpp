@@ -46,10 +46,8 @@
                                    Real x_mul = 1, Real x_offset = 0,
                                    Real y_mul = 1, Real y_offset = 0,
                                    Size skip = 0) {
-             impl_ = ext::shared_ptr<Interpolation::Impl>(new
-                 QuantExt::detail::LogInterpolationImpl<I1, I2, Quadratic>(
-                     xBegin, xEnd, yBegin,
-                     Quadratic(x_mul, x_offset, y_mul, y_offset, skip)));
+             impl_ = QuantLib::ext::make_shared<QuantExt::detail::LogInterpolationImpl<I1, I2, Quadratic>>(
+                 xBegin, xEnd, yBegin, Quadratic(x_mul, x_offset, y_mul, y_offset, skip));
              impl_->update(); 
          }
          template <class I1, class I2>
@@ -62,7 +60,7 @@
                            "LogInterpolationImpl<I1,I2,Quadratic>");
 
              ext::shared_ptr<QuadraticInterpolation> p2 =
-                 ext::dynamic_pointer_cast<QuadraticInterpolation>(
+                 ext::static_pointer_cast<QuadraticInterpolation>(
                      p->interpolation());
              QL_REQUIRE(p2, "unable to cast interpolation to "
                             "QuadraticInterpolation");

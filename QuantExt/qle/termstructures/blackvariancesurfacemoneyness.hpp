@@ -29,6 +29,7 @@
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/quote.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvoltimeextrapolation.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 
@@ -52,7 +53,7 @@ public:
                                   const std::vector<Real>& moneyness,
                                   const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
                                   const DayCounter& dayCounter, bool stickyStrike, bool flatExtrapMoneyness = false, 
-                                  BlackVolTimeExtrapolation timeExtrapolation = BlackVolTimeExtrapolation::FlatVolatility,
+                                  BlackVolTimeExtrapolation::Type timeExtrapolationType = BlackVolTimeExtrapolation::Type::FlatVolatility,
                                   const VolatilityType type = VolatilityType::ShiftedLognormal,
                                   const Real shift = 0.0);
 
@@ -61,7 +62,7 @@ public:
                                   const std::vector<Time>& times, const std::vector<Real>& moneyness,
                                   const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
                                   const DayCounter& dayCounter, bool stickyStrike, bool flatExtrapMoneyness = false, 
-                                  BlackVolTimeExtrapolation timeExtrapolation = BlackVolTimeExtrapolation::FlatVolatility,
+                                  BlackVolTimeExtrapolation::Type timeExtrapolationType = BlackVolTimeExtrapolation::Type::FlatVolatility,
                                   const VolatilityType type = VolatilityType::ShiftedLognormal,
                                   const Real shift = 0.0);
 
@@ -99,7 +100,7 @@ protected:
     std::vector<Time> times_;
     std::vector<Real> moneyness_;
     bool flatExtrapMoneyness_;
-    BlackVolTimeExtrapolation timeExtrapolation_;
+    BlackVolTimeExtrapolation::Type timeExtrapolationType_;
 
 private:
     // Shared initialisation
@@ -133,7 +134,7 @@ public:
                                       const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
                                       const DayCounter& dayCounter, bool stickyStrike = false,
                                       bool flatExtrapMoneyness = false, 
-                                      BlackVolTimeExtrapolation timeExtrapolation = BlackVolTimeExtrapolation::FlatVolatility,
+                                      BlackVolTimeExtrapolation::Type timeExtrapolationType = BlackVolTimeExtrapolation::Type::FlatVolatility,
                                       const VolatilityType type = VolatilityType::ShiftedLognormal,
                                       const Real shift = 0.0);
 
@@ -143,7 +144,7 @@ public:
                                       const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
                                       const DayCounter& dayCounter, bool stickyStrike = false,
                                       bool flatExtrapMoneyness = false, 
-                                      BlackVolTimeExtrapolation timeExtrapolation = BlackVolTimeExtrapolation::FlatVolatility,
+                                      BlackVolTimeExtrapolation::Type timeExtrapolationType = BlackVolTimeExtrapolation::Type::FlatVolatility,
                                       const VolatilityType type = VolatilityType::ShiftedLognormal,
                                       const Real shift = 0.0);
 
@@ -162,7 +163,7 @@ public:
                                          const DayCounter& dayCounter, const Handle<YieldTermStructure>& forTS,
                                          const Handle<YieldTermStructure>& domTS, bool stickyStrike = false,
                                          bool flatExtrapMoneyness = false, 
-                                         BlackVolTimeExtrapolation timeExtrapolation = BlackVolTimeExtrapolation::FlatVolatility,
+                                         BlackVolTimeExtrapolation::Type timeExtrapolationType = BlackVolTimeExtrapolation::Type::FlatVolatility,
                                          const VolatilityType type = VolatilityType::ShiftedLognormal,
                                          const Real shift = 0.0);
 
@@ -173,7 +174,7 @@ public:
                                          const DayCounter& dayCounter, const Handle<YieldTermStructure>& forTS,
                                          const Handle<YieldTermStructure>& domTS, bool stickyStrike = false,
                                          bool flatExtrapMoneyness = false, 
-                                         BlackVolTimeExtrapolation timeExtrapolation = BlackVolTimeExtrapolation::FlatVolatility,
+                                         BlackVolTimeExtrapolation::Type timeExtrapolationType = BlackVolTimeExtrapolation::Type::FlatVolatility,
                                          const VolatilityType type = VolatilityType::ShiftedLognormal,
                                          const Real shift = 0.0);
 

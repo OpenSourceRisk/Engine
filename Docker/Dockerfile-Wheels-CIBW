@@ -1,21 +1,44 @@
-
-FROM ${DOCKER_REPO}ore-build-dependencies:${ORE_BUILD_VERSION}
+ARG WHEEL_IMAGE
+FROM ${WHEEL_IMAGE}
 
 ARG WHEEL_ARCH
-ARG WHEEL_IMAGE
 ARG WHEELS_VERSION
 
-ENV PATH="/venv/bin:$PATH"
+# /ore/ORE-SWIG/ and /ore/Docker/ already exist in the wheels_ore2 base image
+# (included via wheels-ore-source.tar.gz in Dockerfile-Wheels-ORE).
+# /ore-swig-prebuilt/ contains the pre-compiled .o files and wrapper .cpp.
 
-ENV CIBW_BUILD="cp310-manylinux_${WHEEL_ARCH} cp312-manylinux_${WHEEL_ARCH}"
-ENV CIBW_MANYLINUX_X86_64_IMAGE=${WHEEL_IMAGE}
-ENV CIBW_MANYLINUX_AARCH64_IMAGE=${WHEEL_IMAGE}
-ENV CIBW_BEFORE_BUILD="chmod +x ORE-SWIG/Wheels-gitlab/before_all_linux.sh && ORE-SWIG/Wheels-gitlab/before_all_linux.sh"
+WORKDIR /ore/ORE-SWIG
 
-WORKDIR /builds/qs/oreplus/ore
-RUN \
-python ../ore/Docker/update_version_number.py -f setup.py -v ${WHEELS_VERSION} && \
-cibuildwheel --output-dir wheelhouse ORE-SWIG
+# Stage pre-built SWIG artifacts into the project directory
+RUN cp /ore-swig-prebuilt/oreanalytics_wrap.cpp . && \
+    mkdir -p .prebuilt && \
+    cp -r /ore-swig-prebuilt/linux-* .prebuilt/ && \
+    chmod +x Wheels-gitlab/oreanalytics-config && \
+    cp Wheels-gitlab/oreanalytics-config .
 
-COPY wheelhouse /wheelhouse
+# Update version and build a wheel for each Python version, then repair for manylinux.
+RUN set -e; \
+    cd /ore && python3 Docker/update_version_number.py -f setup.py -v ${WHEELS_VERSION}; \
+    cd /ore/ORE-SWIG; \
+    mkdir -p /wheelhouse /tmp/wheels; \
+    for PYVER in cp310-cp310 cp311-cp311 cp312-cp312 cp313-cp313 cp314-cp314; do \
+      PYBIN="/opt/python/${PYVER}/bin"; \
+      if [ ! -d "$PYBIN" ]; then \
+        echo "WARNING: $PYBIN not found, skipping $PYVER"; \
+        continue; \
+      fi; \
+      echo "=== Building wheel for $PYVER ==="; \
+      "${PYBIN}/pip" install --quiet setuptools wheel; \
+      ORE_PREBUILT_DIR=/ore/ORE-SWIG/.prebuilt \
+        "${PYBIN}/python" setup.py bdist_wheel -d /tmp/wheels; \
+      rm -rf build/lib.* build/temp.* *.egg-info; \
+    done; \
+    echo "=== Repairing wheels with auditwheel ==="; \
+    for whl in /tmp/wheels/*.whl; do \
+      auditwheel repair "$whl" --plat manylinux_2_28_${WHEEL_ARCH} -w /wheelhouse/; \
+    done; \
+    echo "=== Built wheels ==="; \
+    ls -lh /wheelhouse/
+
 

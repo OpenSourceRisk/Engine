@@ -29,6 +29,7 @@
 #include <qle/instruments/fxforward.hpp>
 #include <qle/instruments/makecds.hpp>
 #include <qle/instruments/subperiodsswap.hpp>
+#include <qle/instruments/moneymarketfuture.hpp>
 #include <qle/instruments/tenorbasisswap.hpp>
 #include <qle/pricingengines/inflationcapfloorengines.hpp>
 
@@ -356,14 +357,14 @@ public:
         if (volType == ShiftedLognormal) {
             constOvts = Handle<OptionletVolatilityStructure>(QuantLib::ext::make_shared<ConstantOptionletVolatility>(
                 0, NullCalendar(), Unadjusted, Handle<Quote>(implVolQuote), Actual365Fixed(), ShiftedLognormal,
-                volDisplacement));
+                volDisplacement, true));
         } else {
             minVol = 1.0e-9;
             maxVol = 0.05;
             constOvts = Handle<OptionletVolatilityStructure>(QuantLib::ext::make_shared<ConstantOptionletVolatility>(
-                0, NullCalendar(), Unadjusted, Handle<Quote>(implVolQuote), Actual365Fixed(), Normal));
+                0, NullCalendar(), Unadjusted, Handle<Quote>(implVolQuote), Actual365Fixed(), Normal, 0.0, true));
         }
-        auto pricer = QuantLib::ext::make_shared<BlackOvernightIndexedCouponPricer>(constOvts, true);
+        auto pricer = QuantLib::ext::make_shared<BlackOvernightIndexedCouponPricer>(constOvts);
 
         const auto& cap = cap_;
         Real price = cap->NPV();
@@ -426,6 +427,14 @@ Real impliedQuote(const QuantLib::ext::shared_ptr<Instrument>& i) {
         return QuantLib::ext::dynamic_pointer_cast<FixedBMASwap>(i)->fairRate();
     if (QuantLib::ext::dynamic_pointer_cast<SubPeriodsSwap>(i))
         return QuantLib::ext::dynamic_pointer_cast<SubPeriodsSwap>(i)->fairRate();
+    if (QuantLib::ext::dynamic_pointer_cast<OvernightIndexFuture>(i)){
+        auto fairQuote =  QuantLib::ext::dynamic_pointer_cast<OvernightIndexFuture>(i)->NPV();
+        return (100.0 - fairQuote) / 100.0;
+    }
+    if (QuantLib::ext::dynamic_pointer_cast<QuantExt::MoneyMarketFuture>(i)) {
+        auto fairQuote =  QuantLib::ext::dynamic_pointer_cast<QuantExt::MoneyMarketFuture>(i)->NPV();
+        return (100.0 - fairQuote) / 100.0;
+    }
     QL_FAIL("ParSensitivitiyAnalysis: impliedQuote(): unknown instrument (is null = " << std::boolalpha
                                                                                       << (i == nullptr) << ")");
 }

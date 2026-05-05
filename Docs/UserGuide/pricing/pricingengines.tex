@@ -591,7 +591,8 @@ The parameters have the following meaning:
 \subsection{Product Type: EuropeanSwaption}
 %--------------------------------------------------------
 \label{sec:EuropeanSwaption_pt}
-Used by trade type: Swaption, for European exercise on vanilla underlying coupon types
+Used by trade type: Swaption, for European exercise, single-currency, if the configured engine does not support the
+trade (e.g. underlying has cap-floored coupons), ore will fall back to the builder configured for BermudanSwaption
 
 Available Model/Engine pairs:
 
@@ -600,7 +601,9 @@ Available Model/Engine pairs:
 \item LGM/Grid
 \item LGM/FD
 \item LGM/MC
+\item LGM/MCCG
 \item LGM/AMC
+\item LGM/AMCCG
 \end{itemize}
 
 Engine description:
@@ -743,12 +746,15 @@ The parameters have the following meaning:
 
 \begin{itemize}
 \item Calibration: Bootstrap, BestFit, None
-\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM, DeltaGammaAdjusted
+\item CalibrationStrategy: None, CoterminalDealStrike, CoterminalATM, DeltaGammaAdjusted
+\item FXCalibration: None, Bootstrap (only relevant for cross-currency swaption)
 \item ReferenceCalibrationGrid: An optional grid, only one calibration instrument per interval is kept
-\item Reversion: The mean reversion
+\item Reversion: The mean reversion (can be attributed by currency)
 \item ReversionType: Hagan, HullWhite
 \item Volatility: The volatility (start value for calibration if calibrated)
 \item VolatilityType: Hagan, HullWhite
+\item FxVolatility: The fx volatility (start value for calibration), only relevant for cross-currency swaption, can be
+  attributed by currency pair in this case
 \item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
 \item Tolerance: Error tolerance for calibration
 \item Training.Sequence: The sequence type for the traning phase, can be MersenneTwister+, MersenneTwisterAntithetc+,
@@ -787,11 +793,16 @@ The parameters have the following meaning:
     <ModelParameters>
         <Parameter name="Calibration">Bootstrap</Parameter>
         <Parameter name="CalibrationStrategy">CoterminalDealStrike</Parameter>
+        <Parameter name="FxCalibration">Bootstrap</Parameter>
         <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
         <Parameter name="Reversion">0.0</Parameter>
+        <Parameter name="Reversion_EUR">0.0</Parameter>
+        <Parameter name="Reversion_SEK">0.0</Parameter>
         <Parameter name="ReversionType">HullWhite</Parameter>
         <Parameter name="Volatility">0.01</Parameter>
         <Parameter name="VolatilityType">Hagan</Parameter>
+        <Parameter name="FxVolatility">0.10</Parameter>
+        <Parameter name="FxVolatility_EURSEK">0.10</Parameter>
         <Parameter name="ShiftHorizon">0.5</Parameter>
         <Parameter name="Tolerance">0.20</Parameter>
     </ModelParameters>
@@ -813,17 +824,46 @@ The parameters have the following meaning:
     </EngineParameters>
 </Product>
 \end{minted}
-\caption{Configuration for Product EuropeanSwaption, Model BlackBachelier, Engine BlackBachelierSwaptionEngine}
+\caption{Configuration for Product EuropeanSwaption, Model LGM, Engine MC}
 \label{lst:peconfig_EuropeanSwaption_LGM_MC}
 \end{longlisting}
+
+LGM/MCCG builds a MacCgMultiLegOptionEngine. The configuration is similar to \ref{lst:peconfig_EuropeanSwaption_LGM_MC}
+with some additional EngineParameters:
+
+\begin{itemize}
+\item UseAD: whether ad is used for first order sensitivity runs
+\item TimeStepsPerYear: minimum time steps per year used for process evolution
+\item IndicatorSmoothingForValues [Optional]: smoothing parameter (according to Fries methodology, 2017, ``epsilon'')
+  applied to indicator functions in cg-based runs for values calculation. Defaults to $0$.
+\item IndicatorSmoothingForDerivatives: as above, smoothing parameter for indicator derivatives calculation. Defaults to $0.0$.
+\item SqrtSmoothingForDerivatives: as above, smoothing parameter for sqrt derivative calculation. Defaults to $0.0$.
+\end{itemize}
 
 LGM/AMC builds a McMultiLegOptionEngine for use in AMC simulations. We refer to the AMC module documentation for further
 details.
 
-%--------------------------------------------------------
-\subsection{Product Type: EuropeanSwaption NonStandard}
-%--------------------------------------------------------
+LGM/AMCCG builds a McMultiLegOptionEngine for use in AMCCG simulations. We refer to the AMC module documentation for
+further details.
 
+%--------------------------------------------------------
+\subsection{Product Type: EuropeanSwaption\_XCcy}
+%--------------------------------------------------------
+\label{sec:EuropeanSwaption_XCcy_pt}
+Used by trade type: Swaption, for European exercise, cross-currency.
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item LGM/MC
+\item LGM/MCCG
+\item LGM/AMC
+\item LGM/AMCCG
+\end{itemize}
+
+%--------------------------------------------------------
+\subsection{Product Type: EuropeanSwaption\_NonStandard}
+%--------------------------------------------------------
 \label{sec:EuropeanSwaption_ns_pt}
 A pricing product type similar to European Swaption in subsection \ref{sec:EuropeanSwaption_pt}.
 
@@ -848,9 +888,9 @@ calibration strategy and pricing models. The user might want to apply the Delta-
 %--------------------------------------------------------
 \subsection{Product Type: BermudanSwaption}
 %--------------------------------------------------------
-
 \label{sec:BermudanSwaption_pt}
-Used by trade type: Swaption, for Bermudan exercise or European exercise on non-vanilla underlying coupon types
+Used by trade type: Swaption, for Bermudan exercise, single-currency, or fallback for European exercise on non-supported
+underlying coupon types (see \ref{sec:EuropeanSwaption_pt}).
 
 Available Model/Engine pairs:
 
@@ -858,7 +898,9 @@ Available Model/Engine pairs:
 \item LGM/Grid
 \item LGM/FD
 \item LGM/MC
+\item LGM/MCCG
 \item LGM/AMC
+\item LGM/AMCCG
 \end{itemize}
 
 Engine description:
@@ -977,11 +1019,14 @@ The parameters have the following meaning:
 \begin{itemize}
 \item Calibration: Bootstrap, BestFit, None
 \item CalibrationStrategy: CoterminalDealStrike, CoterminalATM, DeltaGammaAdjusted
+\item FXCalibration: None, Bootstrap (only relevant for cross-currency swaption)
 \item ReferenceCalibrationGrid: An optional grid, only one calibration instrument per interval is kept
 \item Reversion: The mean reversion
 \item ReversionType: Hagan, HullWhite
 \item Volatility: The volatility (start value for calibration if calibrated)
 \item VolatilityType: Hagan, HullWhite
+\item FxVolatility: The fx volatility (start value for calibration), only relevant for cross-currency swaption, can be
+  attributed by currency pair in this case
 \item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
 \item Tolerance: Error tolerance for calibration
 \item Training.Sequence: The sequence type for the traning phase, can be MersenneTwister+, MersenneTwisterAntithetc+,
@@ -1020,11 +1065,16 @@ The parameters have the following meaning:
     <ModelParameters>
         <Parameter name="Calibration">Bootstrap</Parameter>
         <Parameter name="CalibrationStrategy">CoterminalDealStrike</Parameter>
+        <Parameter name="FxCalibration">Bootstrap</Parameter>
         <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
         <Parameter name="Reversion">0.0</Parameter>
+        <Parameter name="Reversion_EUR">0.0</Parameter>
+        <Parameter name="Reversion_SEK">0.0</Parameter>
         <Parameter name="ReversionType">HullWhite</Parameter>
         <Parameter name="Volatility">0.01</Parameter>
         <Parameter name="VolatilityType">Hagan</Parameter>
+        <Parameter name="FxVolatility">0.10</Parameter>
+        <Parameter name="FxVolatility_EURSEK">0.10</Parameter>
         <Parameter name="ShiftHorizon">0.5</Parameter>
         <Parameter name="Tolerance">0.20</Parameter>
     </ModelParameters>
@@ -1050,11 +1100,41 @@ The parameters have the following meaning:
 \label{lst:peconfig_BermudanSwaption_LGM_MC}
 \end{longlisting}
 
+LGM/MCCG builds a McCgMultiLegOptionEngine. The configuration is similar to \ref{lst:peconfig_BermudanSwaption_LGM_MC}
+with some additional EngineParameters:
+
+\begin{itemize}
+\item UseAD: whether ad is used for first order sensitivity runs
+\item TimeStepsPerYear: minimum time steps per year used for process evolution
+\item IndicatorSmoothingForValues [Optional]: smoothing parameter (according to Fries methodology, 2017, ``epsilon'')
+  applied to indicator functions in cg-based runs for values calculation. Defaults to $0$.
+\item IndicatorSmoothingForDerivatives: as above, smoothing parameter for indicator derivatives calculation. Defaults to $0.0$.
+\item SqrtSmoothingForDerivatives: as above, smoothing parameter for sqrt derivative calculation. Defaults to $0.0$.
+\end{itemize}
+
 LGM/AMC builds a McMultiLegOptionEngine for use in AMC simulations. We refer to the AMC module documentation for further
 details.
 
+LGM/AMCCG builds a McMultiLegOptionEngine for use in AMCCG simulations. We refer to the AMC module documentation for
+further details.
+
 %--------------------------------------------------------
-\subsection{Product Type: BermudanSwaption NonStandard}
+\subsection{Product Type: BermudanSwaption\_XCcy}
+%--------------------------------------------------------
+\label{sec:BermudanSwaption_XCcy_pt}
+Used by trade type: Swaption, for Bermudan exercise, cross-currency
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item LGM/MC
+\item LGM/MCCG
+\item LGM/AMC
+\item LGM/AMCCG
+\end{itemize}
+
+%--------------------------------------------------------
+\subsection{Product Type: BermudanSwaption\_NonStandard}
 %--------------------------------------------------------
 
 A pricing product type very similar to ``Bermudan Swaption'' in \ref{sec:BermudanSwaption_pt}.
@@ -1074,7 +1154,9 @@ Available Model/Engine pairs:
 \item LGM/FD
 \item LGM/Grid (Not recommended due to inferior performance)
 \item LGM/MC
+\item LGM/MCCG
 \item LGM/AMC
+\item LGM/AMCCG
 \end{itemize}
 
 Engine description:
@@ -1197,11 +1279,14 @@ The parameters have the following meaning:
 \begin{itemize}
 \item Calibration: Bootstrap, BestFit, None
 \item CalibrationStrategy: CoterminalDealStrike, CoterminalATM, DeltaGammaAdjusted
+\item FXCalibration: None, Bootstrap (only relevant for cross-currency swaption)
 \item ReferenceCalibrationGrid: An optional grid, only one calibration instrument per interval is kept
-\item Reversion: The mean reversion
+\item Reversion: The mean reversion (can be attributed by currency)
 \item ReversionType: Hagan, HullWhite
 \item Volatility: The volatility (start value for calibration if calibrated)
 \item VolatilityType: Hagan, HullWhite
+\item FxVolatility: The fx volatility (start value for calibration), only relevant for cross-currency swaption, can be
+  attributed by currency pair in this case
 \item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
 \item Tolerance: Error tolerance for calibration
 \item Training.Sequence: The sequence type for the traning phase, can be MersenneTwister+, MersenneTwisterAntithetc+,
@@ -1240,11 +1325,16 @@ The parameters have the following meaning:
     <ModelParameters>
         <Parameter name="Calibration">Bootstrap</Parameter>
         <Parameter name="CalibrationStrategy">CoterminalDealStrike</Parameter>
+        <Parameter name="FxCalibration">Bootstrap</Parameter>
         <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
         <Parameter name="Reversion">0.0</Parameter>
+        <Parameter name="Reversion_EUR">0.0</Parameter>
+        <Parameter name="Reversion_SEK">0.0</Parameter>
         <Parameter name="ReversionType">HullWhite</Parameter>
         <Parameter name="Volatility">0.01</Parameter>
         <Parameter name="VolatilityType">Hagan</Parameter>
+        <Parameter name="FxVolatility">0.10</Parameter>
+        <Parameter name="FxVolatility_EURSEK">0.10</Parameter>
         <Parameter name="ShiftHorizon">0.5</Parameter>
         <Parameter name="Tolerance">0.20</Parameter>
     </ModelParameters>
@@ -1270,8 +1360,29 @@ The parameters have the following meaning:
 \label{lst:peconfig_AmericanSwaption_LGM_MC}
 \end{longlisting}
 
+LGM/MCCG builds a McCgMultiLegOptionEngine. The configuration is similar to \ref{lst:peconfig_AmericanSwaption_LGM_MC}
+with some additional EngineParameters:
+
 LGM/AMC builds a McMultiLegOptionEngine for use in AMC simulations. We refer to the AMC module documentation for further
 details.
+
+LGM/AMCCG builds a McMultiLegOptionEngine for use in AMCCG simulations. We refer to the AMC module documentation for
+further details.
+
+%--------------------------------------------------------
+\subsection{Product Type: AmericanSwaption\_XCcy}
+%--------------------------------------------------------
+\label{sec:AmericanSwaption_XCcy_pt}
+Used by trade type: Swaption, for American exercise, cross-currency
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item LGM/MC
+\item LGM/MCCG
+\item LGM/AMC
+\item LGM/AMCCG
+\end{itemize}
 
 %--------------------------------------------------------
 \subsection{Product Type: AmericanSwaption NonStandard}
@@ -1461,6 +1572,115 @@ The parameters have the following meaning:
 \end{longlisting}
 
 %--------------------------------------------------------
+\subsection{Product Type: IborRangeAccrualLeg}
+%--------------------------------------------------------
+
+Used by trade type: any trade with a Range Accrual leg (leg type RangeAccrual)
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item BGM/FloatingRateCouponPricer
+\item Black/CallSpreadCouponPricer
+\end{itemize}
+
+Engine description:
+
+BGM/FloatingRateCouponPricer builds a \lstinline!RangeAccrualPricerByBgm! for each coupon of the range accrual leg. The
+pricer is based on the BGM (Brace--Gatarek--Musiela) model and uses smile sections from a swaption volatility surface to
+price the range accrual condition. Normal (Bachelier) volatility surfaces are automatically converted to lognormal
+(Black) volatilities internally. A sample configuration is shown in listing
+\ref{lst:peconfig_IborRangeAccrualLeg_BGM_FloatingRateCouponPricer}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item Correlation [optional]: The correlation parameter used by the BGM range accrual pricer. Defaults to \emph{1.0} if
+  omitted.
+
+  Allowable values: Any real number.
+
+\item withFlatVol [optional]: If \emph{true}, a flat volatility smile section is used instead of the market swaption
+  volatility surface. Defaults to \emph{false} if omitted.
+
+  Allowable values: \emph{true}, \emph{false}.
+
+\item FlatVol [optional]: The flat volatility value used when \lstinline!withFlatVol! is set to \emph{true}. Defaults to
+  \emph{1E-6} if omitted.
+
+  Allowable values: Any non-negative real number.
+
+\item ByCallSpread [optional]: If \emph{true}, the range accrual condition is priced using a call-spread approximation,
+  which naturally incorporates the volatility smile (each spread leg is priced at its own strike vol).
+  If \emph{false}, a Black--Scholes digital pricing is used: the digital value is computed analytically using the
+  volatility at the strike, without accounting for the slope of the smile. Defaults to \emph{true} if omitted.
+
+  Allowable values: \emph{true}, \emph{false}.
+
+\item SensitivityTemplate [optional]: the sensitivity template to use.
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="IborRangeAccrualLeg">
+    <Model>BGM</Model>
+    <ModelParameters/>
+    <Engine>FloatingRateCouponPricer</Engine>
+    <EngineParameters>
+        <Parameter name="Correlation">1.0</Parameter>
+        <Parameter name="withFlatVol">false</Parameter>
+        <Parameter name="ByCallSpread">true</Parameter>
+        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product IborRangeAccrualLeg, Model BGM, Engine FloatingRateCouponPricer}
+\label{lst:peconfig_IborRangeAccrualLeg_BGM_FloatingRateCouponPricer}
+\end{longlisting}
+
+Black/CallSpreadCouponPricer builds a \lstinline!RangeAccrualPricerByCallSpread! for the range accrual leg. The pricer
+uses the optionlet (capFloor) volatility surface directly and prices each daily range observation as a call-spread on
+vanilla caplet/floorlet prices:
+$$\text{Digital}(K) \approx \frac{C(K - \varepsilon/2,\, \sigma_{K-\varepsilon/2}) - C(K + \varepsilon/2,\, \sigma_{K+\varepsilon/2})}{\varepsilon}$$
+This is the same model-free replication approach used by the \emph{RateDigitalOption} trade type. It supports both
+Black (shifted-lognormal) and Bachelier (normal) optionlet volatility surfaces natively, without conversion.
+A sample configuration is shown in listing
+\ref{lst:peconfig_IborRangeAccrualLeg_Black_CallSpreadCouponPricer}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item CallSpreadEps [optional]: The width of the call-spread in rate terms. Smaller values approach the analytical
+  digital; larger values smooth the replication. Defaults to \emph{1E-4} (1 basis point) if omitted.
+
+  Allowable values: Any positive real number.
+
+\item withFlatVol [optional]: If \emph{true}, a flat zero-volatility surface is used instead of the market capFloor
+  surface, resulting in intrinsic (zero time value) digital pricing. Defaults to \emph{false} if omitted.
+
+  Allowable values: \emph{true}, \emph{false}.
+
+\item SensitivityTemplate [optional]: the sensitivity template to use.
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="IborRangeAccrualLeg">
+    <Model>Black</Model>
+    <ModelParameters/>
+    <Engine>CallSpreadCouponPricer</Engine>
+    <EngineParameters>
+        <Parameter name="CallSpreadEps">1E-4</Parameter>
+        <Parameter name="withFlatVol">false</Parameter>
+        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product IborRangeAccrualLeg, Model Black, Engine CallSpreadCouponPricer}
+\label{lst:peconfig_IborRangeAccrualLeg_Black_CallSpreadCouponPricer}
+\end{longlisting}
+
+%--------------------------------------------------------
 \subsection{Product Type: CapFlooredInterpolatedIborLeg}
 %--------------------------------------------------------
 
@@ -1481,7 +1701,7 @@ The parameters have the following meaning:
 
 \begin{longlisting}
 \begin{minted}[fontsize=\footnotesize]{xml}
-<Product type="CapFlooredInterpolatedIborCouponLeg">
+<Product type="CapFlooredInterpolatedIborLeg">
     <Model>BlackOrBachelier</Model>
     <ModelParameters/>
     <Engine>BlackInterpolatedIborCouponPricer</Engine>
@@ -1612,8 +1832,6 @@ shown in listing \ref{lst:peconfig_CapFlooredCpiLegCoupons_Black_BlackAnalytic}
 The parameters have the following meaning:
 
 \begin{itemize}
-\item useLastFixingDate: if true, use the last known fixing date as the base date of the volatility structure, otherwise
-  use observation lag
 \item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
@@ -1624,7 +1842,6 @@ The parameters have the following meaning:
     <ModelParameters/>
     <Engine>BlackAnalytic</Engine>
     <EngineParameters>
-          <Parameter name="useLastFixingDate">true</Parameter>
       <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
     </EngineParameters>
 </Product>
@@ -1649,9 +1866,9 @@ shown in listing \ref{lst:peconfig_CappedFlooredCpiLegCashFlows_Black_BlackAnaly
 The parameters have the following meaning:
 
 \begin{itemize}
-\item useLastFixingDate: if true, use the last known fixing date as the base date of the volatility structure, otherwise
-  use observation lag
 \item SensitivityTemplate [optional]: the sensitivity template to use
+\item \item useLastFixingDate [deprecated]: not used anymore, the total
+variance should always be computed from the last known fixing date. This parameter will be ignored.
 \end{itemize}
 
 \begin{longlisting}
@@ -1661,7 +1878,6 @@ The parameters have the following meaning:
     <ModelParameters/>
     <Engine>BlackAnalytic</Engine>
     <EngineParameters>
-          <Parameter name="useLastFixingDate">true</Parameter>
       <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
     </EngineParameters>
 </Product>
@@ -2078,8 +2294,6 @@ of the market surface. A sample configuration is shown in listing
 The parameters have the following meaning:
 
 \begin{itemize}
-\item useLastFixingDate: if true, use the last known fixing date as the base date of the volatility structure, otherwise
-  use observation lag
 \item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
@@ -2090,7 +2304,6 @@ The parameters have the following meaning:
     <ModelParameters/>
     <Engine>CpiCapEngine</Engine>
     <EngineParameters>
-        <Parameter name="useLastFixingDate">true</Parameter>
         <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
     </EngineParameters>
 </Product>
@@ -2911,18 +3124,36 @@ The parameters have the following meaning:
 
 Used by trade type: CommoditySpreadOption
 
-Available Model/Engine pairs: BlackScholes/CommoditySpreadOptionEngine
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item BlackScholes/CommoditySpreadOptionEngine
+\end{itemize}
+
+\subsubsection{BlackScholes/CommoditySpreadOptionEngine}
+
+This engine derives the spread volatility from the individual volatility surfaces of both underlying commodities and
+a correlation assumption. It reads individual commodity vol surfaces from the market and computes the spread option
+price using either the Bachelier model or the Kirk approximation.
 
 Model Parameters:
 \begin{itemize}
     \item Volatility [optional]: Selects the pricing model. If omitted, defaults to AsInputVolatilityType.
     \begin{itemize}
-        \item \textbf{AsInputVolatilityType}: Use Model according to volatility type of the vol curve (normal volatilities use Bachelier model, lognormal volatilities use Kirk Approximation)
-        \item \textbf{Normal}: Use Bachelier model, if needed log-normal input vols are converted into normal vols
-        \item \textbf{Lognormal}: Use Kirk approximation, if needed and possible normal input vols are converted into log-normal vols
-        \item \textbf{ShiftedLognormal}: Use Kirk approximation where both underlyings following a shifted lognormal process, if needed and possible input vols are converted into a shifted lognormal vols with a given displacement.
+        \item \textbf{AsInputVolatilityType}: Use model according to the volatility type of the vol curve (normal
+          volatilities use Bachelier model, lognormal volatilities use Kirk Approximation).
+        \item \textbf{Normal}: Use Bachelier model. Both underlyings are assumed to follow a normal (arithmetic
+          Brownian motion) process. The spread $S = F_1 - F_2$ is then also normally distributed and the spread
+          volatility is computed from the individual volatilities and the correlation as
+          $\sigma_{\text{spread}} = \sqrt{\sigma_1^2 + \sigma_2^2 - 2\rho\,\sigma_1\,\sigma_2}$.
+          If the input vol curves are lognormal, they are converted to normal vols.
+        \item \textbf{Lognormal}: Use Kirk approximation, if needed and possible normal input vols are converted into
+          log-normal vols.
+        \item \textbf{ShiftedLognormal}: Use Kirk approximation where both underlyings follow a shifted lognormal
+          process, if needed and possible input vols are converted into shifted lognormal vols with a given displacement.
     \end{itemize}
-    \item Displacement [optional]: Only relevant for volatility = \textbf{ShiftedLognormal}. The displacement parameter in the shifted lognormal model. Defaults to 0 if omitted.
+    \item Displacement [optional]: Only relevant for volatility = \textbf{ShiftedLognormal}. The displacement parameter
+      in the shifted lognormal model. Defaults to 0 if omitted.
 \end{itemize}
 
 Engine description:
@@ -2977,6 +3208,93 @@ Example configuration:
 \end{minted}
 \caption{Configuration for Product CommoditySpreadOption, Model BlackScholes, Engine CommoditySpreadOptionEngine}
 \label{lst:peconfig_CommoditySpreadOption_BlackScholes_CommoditySpreadOptionEngine}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsection{Product Type: CommodityCalendarSpreadOption}
+%--------------------------------------------------------
+
+Used by trade type: CommodityCalendarSpreadOption
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item BlackScholes/CommoditySpreadOptionEngine
+\item BlackScholes/CommodityCalendarSpreadOptionBachelierEngine
+\end{itemize}
+
+\subsubsection{BlackScholes/CommoditySpreadOptionEngine}
+
+This is the same engine as described for CommoditySpreadOption above. It derives the spread volatility from the
+individual volatility surfaces of the two underlying commodity contracts and uses a correlation assumption to compute a
+calendar spread option price via either the Bachelier model or the Kirk approximation. All model parameters, engine
+parameters, and the qualifier-based parameter lookup described in the CommoditySpreadOption section apply here as well.
+
+See section \ref{lst:peconfig_CommoditySpreadOption_BlackScholes_CommoditySpreadOptionEngine} for configuration details.
+
+\subsubsection{BlackScholes/CommodityCalendarSpreadOptionBachelierEngine}
+
+This engine prices calendar spread options using a directly quoted normal (Bachelier) spread volatility surface. It is
+designed specifically for calendar spreads where both legs reference the same underlying commodity but different contract
+months.
+
+\textbf{How it works:}
+
+The engine constructs the spread vol curve name from the underlying commodity name and the calendar spread offset as
+
+\texttt{<underlying>\_CALENDAR\_SPREAD\_<offset>}
+
+where \texttt{offset} is the number of contract months between the long and short legs (e.g.\ for a spread between the
+1st and 2nd nearby contracts, offset = 1). It then looks up the corresponding commodity volatility surface from the
+market and prices the option using the Bachelier formula with the discount curve and the spread volatility.
+
+\textbf{Volatility Curve Setup:}
+
+The spread volatility surface must be configured as a \texttt{CommodityVolatility} curve in the curve configuration
+using the naming convention \texttt{<underlying>\_CALENDAR\_SPREAD\_<offset>}. The volatility type should be Normal.
+For example, for WTI 1-month calendar spreads, the curve would be named \texttt{NYMEX:CL\_CALENDAR\_SPREAD\_1}.
+
+There are two ways to set up the curve configuration:
+
+\begin{enumerate}
+\item \textbf{Using \texttt{InstrumentType = COMMODITY\_CALENDAR\_SPREAD\_OPTION}}: Set the instrument type to
+  \texttt{COMMODITY\_CALENDAR\_SPREAD\_OPTION} and provide the additional fields \texttt{CalendarSpreadOffset} (the
+  offset between the two contract months) and \texttt{CalendarSpreadUnderlyingName} (the underlying commodity name,
+  e.g.\ \texttt{NYMEX:CL}). These must be consistent with the \texttt{CurveId}. With this setup, a calendar spread
+  forward curve will be built automatically from the underlying commodity forward curve and the commodity future
+  conventions if it is not explicitly provided. The quote names follow the pattern
+  \texttt{COMMODITY\_CALENDAR\_SPREAD\_OPTION/RATE\_NVOL/<underlying>/<offset>/<ccy>/...}.
+
+\item \textbf{Using \texttt{InstrumentType = COMMODITY\_OPTION} (default)}: Use the regular instrument type with normal
+  volatility quotes. The \texttt{CurveId} must still follow the
+  \texttt{<underlying>\_CALENDAR\_SPREAD\_<offset>} naming convention. In this case, the calendar spread forward curve
+  must be explicitly provided as a commodity price curve in the today's market parameters --- it will not be built
+  automatically. The quote names follow the standard pattern
+  \texttt{COMMODITY\_OPTION/RATE\_NVOL/<curveId>/<ccy>/...}.
+\end{enumerate}
+
+\textbf{Engine Parameters:}
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use
+\end{itemize}
+
+A sample configuration is shown in listing
+\ref{lst:peconfig_CommodityCalendarSpreadOption_BlackScholes_BachelierEngine}.
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CommodityCalendarSpreadOption">
+    <Model>BlackScholes</Model>
+    <ModelParameters/>
+    <Engine>CommodityCalendarSpreadOptionBachelierEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CommodityCalendarSpreadOption, Model BlackScholes, Engine CommodityCalendarSpreadOptionBachelierEngine}
+\label{lst:peconfig_CommodityCalendarSpreadOption_BlackScholes_BachelierEngine}
 \end{longlisting}
 
 %--------------------------------------------------------
@@ -3924,7 +4242,7 @@ Engine description:
 
 ScriptedTrade/ScriptedTrade delegates to the scripted trade engine and the associated pricing engine configuration for
 Product Type ScriptedTrade, see there for details. A sample configuration is given in listing
-\ref{lst:peconfig_FxDoubleBarrierOption_ScriptedTrade_ScriptedTrade}. Only FxBarrierOptions are supported at the moment.
+\ref{lst:peconfig_FxDoubleBarrierOption_ScriptedTrade_ScriptedTrade2}. Only FxBarrierOptions are supported at the moment.
 Typical use case for this pricing engine config would XVA calculation within the AMC framework.
 
 The parameters have the following meaning:
@@ -3945,7 +4263,7 @@ The parameters have the following meaning:
 </Product>
 \end{minted}
 \caption{Configuration for Product FxDoubleBarrierOption, Model ScriptedTrade, Engine ScriptedTrade}
-\label{lst:peconfig_FxDoubleBarrierOption_ScriptedTrade_ScriptedTrade}
+\label{lst:peconfig_FxDoubleBarrierOption_ScriptedTrade_ScriptedTrade2}
 \end{longlisting}
 
 %--------------------------------------------------------
@@ -4086,6 +4404,51 @@ The parameters have the following meaning:
 \end{minted}
 \caption{Configuration for Product EquityFutureOption, Model BlackScholes, Engine AnalyticEuropeanForwardEngine}
 \label{lst:peconfig_EquityFutureOption_BlackScholes_AnalyticEuropeanForwardEngine}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsection{Product Type: EquityLeg}
+%--------------------------------------------------------
+
+Used by trade type: any trade referencing an Equity leg
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+  \item DiscountedCashflows/EquityCouponPricer
+  \item BlackQuantoAdjusted/BlackQuantoEquityCouponPricer
+\end{itemize}
+
+Engine description:
+
+DiscountedCashflows/EquityCouponPricer is the default engine pricer for equity legs. BlackQuantoAdjusted/BlackQuantoEquityCouponPricer
+will apply a convexity adjustments following 
+\[e^{\sigma_{\text{eq}}(t) \cdot \sigma_{\text{fx}}(t) \cdot \text{corr}(\text{eq}, \text{fx}, t) \cdot t}\]
+A sample configuration is shown in listing
+\ref{lst:peconfig_EquityLeg_BlackQuantoAdjusted_BlackQuantoEquityCouponPricer}.
+
+DiscountedCashflows/EquityCouponPricer does not take any parameters, while the parameters for BlackQuantoAdjusted/BlackQuantoEquityCouponPricer have the following meaning:
+
+\begin{itemize}
+\item ApplyConvexityAdjustment: whether convexity adjustment will be used for equity swap.
+\item QuantoCurrencyPairs: the currency pairs that the convexity adjustment will apply on.
+
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="EquityLeg">
+    <Model>BlackQuantoAdjusted</Model>
+    <ModelParameters/>
+    <Engine>BlackQuantoEquityCouponPricer</Engine>
+    <EngineParameters>
+        <Parameter name="ApplyConvexityAdjustment">true</Parameter>
+        <Parameter name="QuantoCurrencyPairs">EURUSD</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product EquityLeg, Model BlackQuantoAdjusted, Engine BlackQuantoEquityCouponPricer}
+\label{lst:peconfig_EquityLeg_BlackQuantoAdjusted_BlackQuantoEquityCouponPricer}
 \end{longlisting}
 
 %--------------------------------------------------------
@@ -4323,7 +4686,7 @@ Available Model/Engine pairs:
 Engine description:
 
 BlackScholesMerton/FdBlackScholesVanillaEngine builds a FdBlackScholesVanillaEngine. A sample configuration is shown in listing
-\ref{lst:peconfig_EquityOptionAmerican_BlackScholesMerton_FdBlackScholesVanillaEngine}
+\ref{lst:peconfig_QuantoEquityOptionAmerican_BlackScholesMerton_FdBlackScholesVanillaEngine}
 
 The parameters have the following meaning:
 
@@ -4354,7 +4717,7 @@ The parameters have the following meaning:
 </Product>
 \end{minted}
 \caption{Configuration for Product QuantoEquityOptionAmerican, Model BlackScholesMerton, Engine FdBlackScholesVanillaEngine}
-\label{lst:peconfig_EquityOptionAmerican_BlackScholesMerton_FdBlackScholesVanillaEngine}
+\label{lst:peconfig_QuantoEquityOptionAmerican_BlackScholesMerton_FdBlackScholesVanillaEngine}
 \end{longlisting}
 
 %--------------------------------------------------------
@@ -4468,7 +4831,7 @@ The parameters have the following meaning:
 </Product>
 \end{minted}
 \caption{Configuration for Product BondFuture, Model DiscountedCashflows, Engine BondFutureEngine}
-\label{lst:peconfig_ForwardBond_DiscountedCashflows_DiscountingBondFutureEngine}
+\label{lst:peconfig_BondFuture_DiscountedCashflows_DiscountingBondFutureEngine}
 \end{longlisting}
 
 %--------------------------------------------------------
@@ -5114,6 +5477,65 @@ The parameters have the following meaning:
 \end{longlisting}
 
 %--------------------------------------------------------
+\subsection{Product Type: RateDigitalOption}
+%--------------------------------------------------------
+
+Used by trade type: RateDigitalOption
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item Black/CallSpreadEngine
+\end{itemize}
+
+Engine description:
+
+Black/CallSpreadEngine builds a \lstinline!RateDigitalCallSpreadEngine! that prices a European cash-or-nothing digital
+option on an interest rate fixing via call-spread replication. For a digital call paying $P$ if the fixing $L > K$:
+
+$$\text{PV} = P \times \frac{C(K - \varepsilon/2,\, \sigma_{-}) - C(K + \varepsilon/2,\, \sigma_{+})}{\varepsilon}$$
+
+where $C(K, \sigma)$ is the vanilla caplet/floorlet price at strike $K$ using the market optionlet volatility $\sigma(K)$
+from the cap/floor volatility surface. The formula for a digital put is analogous using put prices. Both Black
+(shifted-lognormal) and Bachelier (normal) volatility types are supported automatically depending on the optionlet
+surface type.
+
+A sample configuration is shown in listing
+\ref{lst:peconfig_RateDigitalOption_Black_CallSpreadEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item CallSpreadEps [optional]: The width of the call-spread in rate terms. Smaller values approximate the analytical
+  digital more closely; larger values smooth the replication. Defaults to \emph{1E-4} (1 bp) if omitted.
+
+  Allowable values: Any positive real number.
+
+\item withFlatVol [optional]: If \emph{true}, replaces the market optionlet volatility surface with a flat zero surface,
+  effectively pricing the digital at its intrinsic value. Defaults to \emph{false} if omitted.
+
+  Allowable values: \emph{true}, \emph{false}.
+
+\item SensitivityTemplate [optional]: the sensitivity template to use.
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="RateDigitalOption">
+    <Model>Black</Model>
+    <ModelParameters/>
+    <Engine>CallSpreadEngine</Engine>
+    <EngineParameters>
+        <Parameter name="CallSpreadEps">1E-4</Parameter>
+        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product RateDigitalOption, Model Black, Engine CallSpreadEngine}
+\label{lst:peconfig_RateDigitalOption_Black_CallSpreadEngine}
+\end{longlisting}
+
+%--------------------------------------------------------
 \subsection{Product Type: FxForward}
 %--------------------------------------------------------
 
@@ -5377,114 +5799,6 @@ The parameters have the following meaning:
 \caption{Configuration for Product FxDoubleTouchOption, Model GarmanKohlhagen, Engine AnalyticDoubleBarrierBinaryEngine}
 \label{lst:peconfig_FxDoubleTouchOption_GarmanKohlhagen_AnalyticDoubleBarrierBinaryEngine}
 \end{longlisting}
-
-%--------------------------------------------------------
-\subsection{Product Type: MultiLegOption}
-%--------------------------------------------------------
-
-Used by trade type: MultiLegOption
-
-Available Model/Engine pairs:
-
-\begin{itemize}
-\item CrossAssetModel/MC
-\item CrossAssetModel/AMC
-\end{itemize}
-
-Engine description:
-
-CrossAssetModel/MC builds a McMultiLegOptionEngine. A sample configuration is shown in listing
-\ref{lst:peconfig_MultiLegOption_CrossAssetModel_MC}
-
-The parameters have the following meaning:
-
-\begin{itemize}
-\item IrCalibration: Bootstrap, BestFit, None
-\item IrCalibrationStrategy: CoterminalDealStrike, CoterminalATM
-\item ReferenceCalibrationGrid: An optional grid, only one calibration instrument per interval is kept
-\item IrReversion: The mean reversion (given per ccy)
-\item IrReversionType: Hagan, HullWhite (given per ccy)
-\item IrVolatility: The volatility (start value for calibration if calibrated, given per ccy)
-\item IrVolatilityType: Hagan, HullWhite (given per ccy)
-\item FxVolatility: The fx volatility (start value for calibration if calibrated, given per ccy)
-\item Corr\_Key1\_key2: The correlations for ir/fx keys (multiple entries possible)
-\item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
-\item Tolerance: Error tolerance for calibration
-\item Training.Sequence: The sequence type for the traning phase, can be MersenneTwister+, MersenneTwisterAntithetc+,
-  Sobol+, Burley2020Sobol+, SobolBrownianBridge+, Burley2020SobolBrownianBridge+
-\item Training.Seed: The seed for the random number generation in the training phase
-\item Training.Samples: The number of samples to be used for the training phase
-\item Pricing.Sequence: The sequence type for the pricing phase, same values allowed as for training
-\item Training.BasisFunction: The type of basis function system to be used for the regression analysis, can be
-  Monomial+, Laguerre+, Hermite+, Hyperbolic+, Legendre+, Chbyshev+, Chebyshev2nd+
-\item BasisFunctionOrder: The order of the basis function system to be used
-\item Pricing.Seed: The seed for the random number generation in the pricing
-\item Pricing.Samples: The number of samples to be used for the pricing phase. If this number is zero, no pricing run is
-  performed, instead the (T0) NPV is estimated from the training phase (this result is used to fill the T0 slice of the
-  NPV cube)
-\item BrownianBridgeOrdering: variate ordering for Brownian bridges, can be Steps+, Factors+, Diagonal+
-\item SobolDirectionIntegers: direction integers for Sobol generator, can be Unit+, Jaeckel+, SobolLevitan+,
-  SobolLevitanLemieux+, JoeKuoD5+, JoeKuoD6+, JoeKuoD7+, Kuo+, Kuo2+, Kuo3+
-\item MinObsDate: if true the conditional expectation of each cashflow is taken from the minimum possible observation
-  date (i.e. the latest exercise or simulation date before the cashflow's event date); recommended setting is true+
-\item RegressorModel: Simple, LaggedFX. If not given, it defaults to Simple. Depending on the choice the regressor is
-  built as follows:
-  \begin{itemize}
-    \item Simple: For an observation date the full model state observed on this date is included in the regressor. No
-      past states are included though.
-    \item LaggedFX: For an observation date the full model state observed on this date is included in the regressor. In
-      addition, past FX states that are relevant for future cashflows are included. For example, for a FX resettable
-      cashflow the FX state observed on the FX reset date is included.
-  \end{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use
-\end{itemize}
-
-\begin{longlisting}
-\begin{minted}[fontsize=\footnotesize]{xml}
-<Product type="MultiLegOption">
-    <Model>CrossAssetModel</Model>
-    <ModelParameters>
-        <Parameter name="IrCalibration">Bootstrap</Parameter>
-        <Parameter name="IrCalibrationStrategy">CoterminalDealStrike</Parameter>
-        <Parameter name="FxCalibration">Bootstrap</Parameter>
-        <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
-        <Parameter name="IrReversion_EUR">0.0</Parameter>
-        <Parameter name="IrReversionType_EUR">HullWhite</Parameter>
-        <Parameter name="IrVolatility_EUR">0.01</Parameter>
-        <Parameter name="IrVolatilityType_EUR">Hagan</Parameter>
-        <Parameter name="IrReversion_GBP">0.0</Parameter>
-        <Parameter name="IrReversionType_GBP">HullWhite</Parameter>
-        <Parameter name="IrVolatility_GBP">0.01</Parameter>
-        <Parameter name="IrVolatilityType_GBP">Hagan</Parameter>
-        <Parameter name="FxVolatility_GBP">0.08</Parameter>
-        <Parameter name="Corr_IR:EUR_FX:GBP">0.23</Parameter>
-        <Parameter name="ShiftHorizon">0.5</Parameter>
-        <Parameter name="Tolerance">0.20</Parameter>
-    </ModelParameters>
-    <Engine>MC</Engine>
-    <EngineParameters>
-        <Parameter name="Training.Sequence">MersenneTwisterAntithetic</Parameter>
-        <Parameter name="Training.Seed">42</Parameter>
-        <Parameter name="Training.Samples">10000</Parameter>
-        <Parameter name="Training.BasisFunction">Monomial</Parameter>
-        <Parameter name="Training.BasisFunctionOrder">6</Parameter>
-        <Parameter name="Pricing.Sequence">SobolBrownianBridge</Parameter>
-        <Parameter name="Pricing.Seed">17</Parameter>
-        <Parameter name="Pricing.Samples">0</Parameter>
-        <Parameter name="BrownianBridgeOrdering">Steps</Parameter>
-        <Parameter name="SobolDirectionIntegers">JoeKuoD7</Parameter>
-        <Parameter name="MinObsDate">true</Parameter>
-        <Parameter name="RegressorModel">Simple</Parameter>
-        <Parameter name="SensitivityTemplate">IR_MC</Parameter>
-    </EngineParameters>
-</Product>
-\end{minted}
-\caption{Configuration for Product MultiLegSwaption, Model CrossAssetModel, Engine MC}
-\label{lst:peconfig_MultiLegOption_CrossAssetModel_MC}
-\end{longlisting}
-
-LGM/AMC builds a McMultiLegOptionEngine for use in AMC simulations. We refer to the AMC module documentation for further
-details.
 
 %--------------------------------------------------------
 \subsection{Product Type: Swap}

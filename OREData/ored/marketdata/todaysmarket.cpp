@@ -43,7 +43,9 @@
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/osutils.hpp>
 #include <qle/indexes/dividendmanager.hpp>
 #include <qle/indexes/equityindex.hpp>
 #include <qle/indexes/fallbackiborindex.hpp>
@@ -53,12 +55,11 @@
 #include <qle/termstructures/blackvolsurfacewithatm.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
 
-#include <tuple>
-
 #include <boost/graph/topological_sort.hpp>
 #include <boost/range/adaptor/map.hpp>
 #include <boost/range/adaptor/reversed.hpp>
-#include <boost/timer/timer.hpp>
+
+#include <tuple>
 
 using namespace std;
 using namespace QuantLib;
@@ -102,9 +103,8 @@ struct Count {
 
 void TodaysMarket::initialise(const Date& asof) {
 
-    std::map<std::string, boost::timer::nanosecond_type> timings;
+    std::map<std::string, long> timings;
     std::map<std::string, Count> counts;
-    boost::timer::cpu_timer timer;
 
     asof_ = asof;
 
@@ -116,22 +116,22 @@ void TodaysMarket::initialise(const Date& asof) {
     if (loadFixings_) {
         // Index fixings - apply them now in case a curve builder needs them
         LOG("Todays Market Loading Fixings");
-        timer.start();
+        auto timingStart = data::os::nanosecondsClock();
         applyFixings(loader_->loadFixings());
-        timings["1 load fixings"] = timer.elapsed().wall;
+        timings["1 load fixings"] = data::os::nanosecondsClock() - timingStart;
         LOG("Todays Market Loading Fixing done.");
 
         // Dividends - apply them now in case a curve builder needs them
         LOG("Todays Market Loading Dividends");
-        timer.start();
+        timingStart = data::os::nanosecondsClock();
         applyDividends(loader_->loadDividends());
-        timings["2 load dividends"] = timer.elapsed().wall;
+        timings["2 load dividends"] = data::os::nanosecondsClock() - timingStart;
         LOG("Todays Market Loading Dividends done.");
     }
 
     // Add all FX quotes from the loader to Triangulation
 
-    timer.start();
+    auto timingStart = data::os::nanosecondsClock();
     if (loader_->hasQuotes(asof_)) {
 	std::map<std::string, Handle<Quote>> fxQuotes;
         for (auto& md : loader_->get(Wildcard("FX/RATE/*"), asof_)) {
@@ -144,18 +144,18 @@ void TodaysMarket::initialise(const Date& asof) {
         WLOG("TodaysMarket::Initialise: no quotes available for date " << asof_);
         return;
     }
-    timings["3 add all fx quotes"] = timer.elapsed().wall;
+    timings["3 add all fx quotes"] = data::os::nanosecondsClock() - timingStart;
 
     // build the dependency graph for all configurations and  build all FX Spots
 
-    timer.start();
+    timingStart = data::os::nanosecondsClock();
     DependencyGraph dg(asof_, params_, curveConfigs_, iborFallbackConfig_, referenceData_);
     map<string, string> buildErrors;
     for (const auto& configuration : params_->configurations()) {
         dg.buildDependencyGraph(configuration.first, buildErrors);
     }
     dependencies_ = dg.reducedDependencies();
-    timings["4 build dep graphs"] = timer.elapsed().wall;
+    timings["4 build dep graphs"] = data::os::nanosecondsClock() - timingStart;
 
     // if market is not build lazily, sort the dependency graph and build the objects
 
@@ -182,7 +182,7 @@ void TodaysMarket::initialise(const Date& asof) {
 
             // Sort the graph topologically
 
-            timer.start();
+            auto timingStart = data::os::nanosecondsClock();
             ReducedGraph& g = dependencies_[configuration];
             std::vector<ReducedVertex> order;
             ReducedIndexMap index = boost::get(boost::vertex_index, g);
@@ -195,7 +195,7 @@ void TodaysMarket::initialise(const Date& asof) {
                     "Topological sort of dependency graph failed for configuration " + configuration + " (" +
                     ore::data::to_string(e.what()) + ").";
             }
-            timings["5 topological sort dep graphs"] += timer.elapsed().wall;
+            timings["5 topological sort dep graphs"] += data::os::nanosecondsClock() - timingStart;
 
             TLOG("Can build objects in the following order:");
             for (auto const& m : order) {
@@ -204,7 +204,7 @@ void TodaysMarket::initialise(const Date& asof) {
 
             Size countSuccess = 0, countError = 0;
             for (auto const& m : order) {
-                timer.start();
+                auto timingStart = data::os::nanosecondsClock();
                 try {
                     buildNode(configuration, g[m]);
                     ++countSuccess;
@@ -215,7 +215,7 @@ void TodaysMarket::initialise(const Date& asof) {
                     ALOG("error while building reduced node " << g[m] << " in configuration " << configuration << ": "
                                                               << e.what());
                 }
-                auto total = timer.elapsed().wall;
+                auto total = data::os::nanosecondsClock() - timingStart;
                 for (auto const& node : g[m].nodes) {
                     timings["6 build " + ore::data::to_string(node.obj)] += total / g[m].nodes.size();
                     counts["6 build " + ore::data::to_string(node.obj)].inc();
@@ -233,7 +233,7 @@ void TodaysMarket::initialise(const Date& asof) {
     // output stats on initialisation phase
 
     DLOG("TodaysMarket build stats:");
-    boost::timer::nanosecond_type sum = 0;
+    long sum = 0;
     for (auto const& t : timings) {
         std::size_t c = counts[t.first].count == 0 ? 1 : counts[t.first].count;
         double timing = static_cast<double>(t.second) / 1.0E6;
@@ -533,7 +533,7 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
                 // build the curve
                 DLOG("Building DefaultCurve for asof " << asof_);
                 QuantLib::ext::shared_ptr<DefaultCurve> defaultCurve = QuantLib::ext::make_shared<DefaultCurve>(
-                    asof_, *defaultspec, *loader_, *curveConfigs_, requiredYieldCurves_, requiredDefaultCurves_);
+                    asof_, *defaultspec, *loader_, *curveConfigs_, requiredYieldCurves_, requiredDefaultCurves_, referenceData_);
                 itr = requiredDefaultCurves_.insert(make_pair(defaultspec->name(), defaultCurve)).first;
             }
             DLOG("Adding DefaultCurve (" << node.name << ") with spec " << *defaultspec << " to configuration "
@@ -554,7 +554,8 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
             if (itr == requiredCDSVolCurves_.end()) {
                 DLOG("Building CDSVol for asof " << asof_);
                 QuantLib::ext::shared_ptr<CDSVolCurve> cdsVolCurve = QuantLib::ext::make_shared<CDSVolCurve>(
-                    asof_, *cdsvolspec, *loader_, *curveConfigs_, requiredCDSVolCurves_, requiredDefaultCurves_);
+                    asof_, *cdsvolspec, *loader_, *curveConfigs_, requiredCDSVolCurves_, requiredDefaultCurves_,
+                    referenceData_);
                 itr = requiredCDSVolCurves_.insert(make_pair(cdsvolspec->name(), cdsVolCurve)).first;
             }
             DLOG("Adding CDSVol (" << node.name << ") with spec " << *cdsvolspec << " to configuration "
@@ -624,10 +625,12 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
                         itr->second->inflationTermStructure());
                 QL_REQUIRE(ts,
                            "expected yoy inflation term structure for index " << node.name << ", but could not cast");
-                yoyInflationIndices_[make_pair(configuration, node.name)] =
+            QL_DEPRECATED_DISABLE_WARNING
+                           yoyInflationIndices_[make_pair(configuration, node.name)] =
                     Handle<YoYInflationIndex>(QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(
                         parseZeroInflationIndex(node.name, Handle<ZeroInflationTermStructure>()), false,
                         Handle<YoYInflationTermStructure>(ts)));
+            QL_DEPRECATED_ENABLE_WARNING
             }
             break;
         }
@@ -813,7 +816,15 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
             // Logic copied from Equity vol section of TodaysMarket for now
             QuantLib::ext::shared_ptr<BlackVolTermStructure> bvts(itr->second->volatility());
             Handle<YieldTermStructure> discount = discountCurve(commodityVolSpec->currency(), configuration);
-            Handle<PriceTermStructure> priceCurve = commodityPriceCurve(commodityName, configuration);
+            Handle<PriceTermStructure> priceCurve;
+
+            if (itr->second->isCalendarSpreadOption()) {
+                auto pts = getCalendarSpreadPriceCurve(this, commodityName, configuration,
+                    itr->second->calendarSpreadOffset(), itr->second->expiryCalculator());
+                priceCurve = Handle<PriceTermStructure>(pts);
+            } else {
+                priceCurve = commodityPriceCurve(commodityName, configuration);
+            }
             Handle<YieldTermStructure> yield = Handle<YieldTermStructure>(
                 QuantLib::ext::make_shared<PriceTermStructureAdapter>(*priceCurve, *discount));
             Handle<Quote> spot(QuantLib::ext::make_shared<SimpleQuote>(priceCurve->price(0, true)));

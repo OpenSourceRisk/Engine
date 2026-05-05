@@ -97,7 +97,7 @@ namespace data {
       "        Active = max(Active, KnockedIn) * (1 - KnockedOut);\n"
       "\n"
       "	       IF BarrierRebate != 0 THEN\n"
-      "	         rebate = (1 - Active) * PAY( LongShort * BarrierRebate, SettlementDate, SettlementDate, BarrierRebateCurrency );\n"
+      "	         rebate = (1 - Active) * LOGPAY( LongShort * BarrierRebate, SettlementDate, SettlementDate, BarrierRebateCurrency, 0, ExpectedFlow );\n"
       "	       END;\n"
       "\n"
       "	       TransatlanticActive = 1;\n"
@@ -133,13 +133,13 @@ namespace data {
       "          END;\n"
       "        END;\n"
       "\n"
-      "	       rebate = rebate + Active * (1 - TransatlanticActive) * PAY( TransatlanticBarrierRebate, SettlementDate, SettlementDate, TransatlanticBarrierRebateCurrency );\n"
+      "       rebate = rebate + Active * (1 - TransatlanticActive) * LOGPAY( TransatlanticBarrierRebate, SettlementDate, SettlementDate, TransatlanticBarrierRebateCurrency, 0, ExpectedFlow );\n"
       "\n"
       "        IF PayoffType == 0 AND SIZE(Underlyings) == 1 THEN\n"
-      "	         value = Active * TransatlanticActive * PAY( LongShort * Quantity * max(0, PutCall * (Underlyings[1](ExpiryDate) - Strike)), ExpiryDate, SettlementDate, PayCurrency ) +\n"
+      "           value = Active * TransatlanticActive * LOGPAY( LongShort * Quantity * max(0, PutCall * (Underlyings[1](ExpiryDate) - Strike)), ExpiryDate, SettlementDate, PayCurrency, 0, ExpectedFlow ) +\n"
       "                  rebate;\n"
-      "	       ELSE\n"
-      "	         value = Active * TransatlanticActive * PAY( LongShort * Amount, ExpiryDate, SettlementDate, PayCurrency ) +\n"
+      "       ELSE"
+      "           value = Active * TransatlanticActive * LOGPAY( LongShort * Amount, ExpiryDate, SettlementDate, PayCurrency, 0, ExpectedFlow ) +\n"
       "                  rebate;\n"
       "	       END;\n"
       "\n"
@@ -167,9 +167,9 @@ namespace data {
       "        NUMBER U, i, k, d, currentNotional, TransatlanticActive, IsKnockedIn, IsKnockedOut, levelIndex;\n"
       "\n"
       "        IF PayoffType == 0 AND SIZE(Underlyings) == 1 THEN\n"
-      "          V = PAY( LongShort * Quantity * max(0, PutCall * (Underlyings[1](ExpiryDate) - Strike)), ExpiryDate, SettlementDate, PayCurrency );\n"
+      "          V = LOGPAY( LongShort * Quantity * max(0, PutCall * (Underlyings[1](ExpiryDate) - Strike)), ExpiryDate, SettlementDate, PayCurrency, 0, ExpectedFlow );\n"
       "        ELSE\n"
-      "          V = PAY( LongShort * Amount, ExpiryDate, SettlementDate, PayCurrency );\n"
+      "          V = LOGPAY( LongShort * Amount, ExpiryDate, SettlementDate, PayCurrency, 0, ExpectedFlow );\n"
       "        END;\n"
       "\n"
       "        TransatlanticActive = 1;\n"
@@ -188,7 +188,7 @@ namespace data {
       "        END;\n"
       "\n"
       "        IF TransatlanticActive == 0 THEN\n"
-      "          V = PAY( LongShort * TransatlanticBarrierRebate, ExpiryDate, SettlementDate, TransatlanticBarrierRebateCurrency );\n"
+      "          V = LOGPAY( LongShort * TransatlanticBarrierRebate, ExpiryDate, SettlementDate, TransatlanticBarrierRebateCurrency, 0, ExpectedFlow );\n"
       "        END;\n"
       "\n"
       "        V_V = V;\n"
@@ -198,7 +198,7 @@ namespace data {
       "        V_KIKO = V * 0;\n"
       "        V_KOKI = V * 0;\n"
       "\n"
-      "        R = PAY( LongShort * BarrierRebate, ExpiryDate, SettlementDate, BarrierRebateCurrency);\n"
+      "        R = LOGPAY( LongShort * BarrierRebate, ExpiryDate, SettlementDate, BarrierRebateCurrency, 0, ExpectedFlow);\n"
       "        R_V = R;\n"
       "        R_NA = R;\n"
       "        R_KI = R * 0;\n"
@@ -405,8 +405,8 @@ namespace data {
       "        Active = max(Active, KnockedIn) * (1 - KnockedOut);\n"
       "\n"
       "	       IF BarrierRebate != 0 THEN\n"
-      "	         rebate = (1 - Active) * PAY( LongShort * BarrierRebate, SettlementDate, SettlementDate, BarrierRebateCurrency );\n"
-      "          rebateAfterKI = KnockedOut * PAY( LongShort * BarrierRebate, SettlementDate, SettlementDate, BarrierRebateCurrency );\n"
+      "	         rebate = (1 - Active) * LOGPAY( LongShort * BarrierRebate, SettlementDate, SettlementDate, BarrierRebateCurrency, 0, ExpectedFlow );\n"
+      "          rebateAfterKI = KnockedOut * LOGPAY( LongShort * BarrierRebate, SettlementDate, SettlementDate, BarrierRebateCurrency, 0, ExpectedFlow );\n"
       "	       END;\n"
       "\n"
       "	       TransatlanticActive = 1;\n"
@@ -442,18 +442,18 @@ namespace data {
       "          END;\n"
       "        END;\n"
       "\n"
-      "	       rebate = rebate + Active * (1 - TransatlanticActive) * PAY( TransatlanticBarrierRebate, SettlementDate, SettlementDate, TransatlanticBarrierRebateCurrency );\n"
-      "        rebateAfterKI = rebateAfterKI + (1 - KnockedOut) * (1 - TransatlanticActive) * PAY( TransatlanticBarrierRebate, SettlementDate, SettlementDate, TransatlanticBarrierRebateCurrency );\n"
+      "	       rebate = rebate + Active * (1 - TransatlanticActive) * LOGPAY( TransatlanticBarrierRebate, SettlementDate, SettlementDate, TransatlanticBarrierRebateCurrency, 0, ExpectedFlow );\n"
+      "        rebateAfterKI = rebateAfterKI + (1 - KnockedOut) * (1 - TransatlanticActive) * LOGPAY( TransatlanticBarrierRebate, SettlementDate, SettlementDate, TransatlanticBarrierRebateCurrency, 0, ExpectedFlow );\n"
       "\n"
       "        IF PayoffType == 0 AND SIZE(Underlyings) == 1 THEN\n"
-      "	         value = Active * TransatlanticActive * PAY( LongShort * Quantity * max(0, PutCall * (Underlyings[1](ExpiryDate) - Strike)), ExpiryDate, SettlementDate, PayCurrency ) +\n"
+      "	         value = Active * TransatlanticActive * LOGPAY( LongShort * Quantity * max(0, PutCall * (Underlyings[1](ExpiryDate) - Strike)), ExpiryDate, SettlementDate, PayCurrency, 0, ExpectedFlow ) +\n"
       "                  rebate;\n"
-      "          valueAfterKI = (1 - KnockedOut) * TransatlanticActive * Quantity *PAY( LongShort  * max(0, PutCall * (Underlyings[1](ExpiryDate) - Strike)), ExpiryDate, SettlementDate, PayCurrency ) +\n"
+      "          valueAfterKI = (1 - KnockedOut) * TransatlanticActive * Quantity *LOGPAY( LongShort  * max(0, PutCall * (Underlyings[1](ExpiryDate) - Strike)), ExpiryDate, SettlementDate, PayCurrency, 0, ExpectedFlow ) +\n"
       "                  rebateAfterKI;\n"
       "	       ELSE\n"
-      "	         value = Active * TransatlanticActive * PAY( LongShort * Amount, ExpiryDate, SettlementDate, PayCurrency ) +\n"
+      "	         value = Active * TransatlanticActive * LOGPAY( LongShort * Amount, ExpiryDate, SettlementDate, PayCurrency, 0, ExpectedFlow ) +\n"
       "                  rebate;\n"
-      "          valueAfterKI = (1 - KnockedOut) * TransatlanticActive *  PAY( LongShort * Amount, ExpiryDate, SettlementDate, PayCurrency ) +\n"
+      "          valueAfterKI = (1 - KnockedOut) * TransatlanticActive *  LOGPAY( LongShort * Amount, ExpiryDate, SettlementDate, PayCurrency, 0, ExpectedFlow ) +\n"
       "                  rebateAfterKI;\n"
       "	       END;\n"
       "\n"
@@ -471,7 +471,7 @@ namespace data {
       "          IF _AMC_SimDates[i] < SettlementDate THEN\n"
       "            IF KnockedOutAtObsTime[i] == 1 THEN\n"
       "              IF BarrierRebate != 0 THEN\n"
-      "                _AMC_NPV[i] = PAY(LongShort * BarrierRebate, SettlementDate, SettlementDate, BarrierRebateCurrency);\n"
+      "                _AMC_NPV[i] = LOGPAY(LongShort * BarrierRebate, SettlementDate, SettlementDate, BarrierRebateCurrency, 0, ExpectedFlow);\n"
       "              ELSE\n"
       "                _AMC_NPV[i] = rebatesAMC[i];\n"
       "              END;\n"
@@ -611,7 +611,7 @@ void GenericBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>&
 
     QL_REQUIRE(optionData_.exerciseDates().size() == 1,
                "OptionData must contain exactly one ExerciseDate, got " << optionData_.exerciseDates().size());
-    events_.emplace_back("ExpiryDate", optionData_.exerciseDates().front());
+    std::string expiryDateStr = optionData_.exerciseDates().front();
 
     if (!settlementDate_.empty()) {
         QL_REQUIRE(
@@ -641,6 +641,23 @@ void GenericBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>&
                              ScheduleData(ScheduleRules(barrierMonitoringStartDate_, barrierMonitoringEndDate_, "1D",
                                                         getUnderlyingCalendar(factory).name(), "F", "F", "Forward")));
     }
+
+    // For European options, if the barrier monitoring schedule end date matches the exercise date
+    // and falls on a holiday, the schedule adjusts it via the term convention. We must adjust
+    // the ExpiryDate in the same way so that ExpiryDate >= last monitoring date holds.
+    if (!barrierMonitoringDates_.rules().empty()) {
+        const auto& rules = barrierMonitoringDates_.rules().front();
+        if (rules.endDate() == expiryDateStr) {
+            Calendar cal = parseCalendar(rules.calendar());
+            std::string termConvStr = rules.termConvention().empty() ? rules.convention() : rules.termConvention();
+            BusinessDayConvention termConv = parseBusinessDayConvention(termConvStr);
+            Date adjustedExpiry = cal.adjust(parseDate(expiryDateStr), termConv);
+            if (adjustedExpiry != parseDate(expiryDateStr)) {
+                expiryDateStr = ore::data::to_string(adjustedExpiry);
+            }
+        }
+    }
+    events_.emplace_back("ExpiryDate", expiryDateStr);
 
     std::vector<std::string> barrierTypes, barrierLevels, barrierRebates, barrierRebateCurrencies,
         barrierRebatePayTimes, barrierStrictComparison;

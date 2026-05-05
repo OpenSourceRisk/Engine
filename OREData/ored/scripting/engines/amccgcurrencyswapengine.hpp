@@ -34,15 +34,24 @@ namespace data {
 
 class AmcCgCurrencySwapEngine : public QuantExt::CurrencySwap::engine, public AmcCgBaseEngine {
 public:
-    AmcCgCurrencySwapEngine(const std::vector<std::string>& ccys, const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
-                            const std::vector<Date>& simulationDates)
-        : AmcCgBaseEngine(modelCg, simulationDates, false), ccys_(ccys) {
-        registerWith(modelCg);
+    // non-amc use
+    AmcCgCurrencySwapEngine(const QuantLib::ext::shared_ptr<ModelCG>& modelCg, const Model::Params& mcParams,
+                            const double indicatorSmoothingForValues, const double indicatorSmoothingForDerivatives,
+                            const double sqrtSmoothingForDerivatives, const bool useCachedSensis,
+                            const bool useExternalComputeFramework, const bool useDoublePrecisionForExternalCalculation,
+                            const bool generateAdditionalResults)
+        : AmcCgBaseEngine(modelCg, mcParams, indicatorSmoothingForValues, indicatorSmoothingForDerivatives,
+                          sqrtSmoothingForDerivatives, useCachedSensis, useExternalComputeFramework,
+                          useDoublePrecisionForExternalCalculation, generateAdditionalResults) {
+        registerWith(modelCg_);
+    }
+    // amc use
+    AmcCgCurrencySwapEngine(const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
+                            const std::vector<QuantLib::Date>& simulationDates = {})
+        : AmcCgBaseEngine(modelCg, simulationDates, false) {
+        registerWith(modelCg_);
     }
     void calculate() const override;
-
-private:
-    std::vector<std::string> ccys_;
 };
 
 } // namespace data

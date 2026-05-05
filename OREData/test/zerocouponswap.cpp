@@ -25,7 +25,7 @@
 #include <ored/portfolio/swap.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
-#include <oret/toplevelfixture.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/indexes/inflation/ukrpi.hpp>
 #include <ql/termstructures/yield/discountcurve.hpp>
@@ -107,7 +107,7 @@ private:
 };
 } // namespace
 
-BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::data::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(ZeroCouponSwapTests)
 

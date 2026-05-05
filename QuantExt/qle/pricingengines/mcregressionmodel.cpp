@@ -196,7 +196,7 @@ McRegressionModel::apply(const Array& initialState,
 
     // check if model is trained
 
-    QL_REQUIRE(isTrained_, "McMultiLegBaseEngine::RegressionMdeol::apply(): internal error: model is not trained.");
+    QL_REQUIRE(isTrained_, "McMultiLegBaseEngine::RegressionModel::apply(): internal error: model is not trained.");
 
     // determine sample size
 
@@ -239,12 +239,19 @@ McRegressionModel::apply(const Array& initialState,
 
             auto t2 = std::lower_bound(pathTimes.begin(), pathTimes.end(), t);
 
-            // t is after last path time => flat extrapolation
-
             if (t2 == pathTimes.end()) {
-                regressor[i] = paths[pathTimes.size() - 1][modelIdx];
-                ++i;
-                continue;
+
+                // t is after last path time, this requires an extrapolation
+
+                // alternative a) no extrapolation allowed (ENABLED)
+                QL_FAIL("McMultiLegBaseEngine::RegressionModel::apply(): path extrapolation at t = "
+                        << t << " > " << *pathTimes.rbegin()
+                        << " requested, which is not allowed. Extend simulation grid.");
+
+                // alternative b) flat extrapolation (DISABLED)
+                // regressor[i] = paths[pathTimes.size() - 1][modelIdx];
+                // ++i;
+                // continue;
             }
 
             // t is before last path time

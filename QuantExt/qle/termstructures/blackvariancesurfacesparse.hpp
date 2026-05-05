@@ -25,7 +25,9 @@
 
 #include <ql/math/interpolations/linearinterpolation.hpp>
 #include <ql/math/interpolations/cubicinterpolation.hpp>
+#include <ql/math/interpolations/backwardflatinterpolation.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvoltimeextrapolation.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <qle/interpolators/optioninterpolator2d.hpp>
 
@@ -42,6 +44,17 @@ struct CubicSpline {
     }
 };
 
+// Default BackwardFlat wrapper
+struct BackwardFlat {
+    BackwardFlat() = default;
+
+    template<class I1, class I2> 
+    auto interpolate(const I1& xBegin, const I1& xEnd, const I2& yBegin) const {
+        auto interpolator_ = QuantLib::BackwardFlat().interpolate(xBegin, xEnd, yBegin);
+        return interpolator_;
+    }
+};
+
 //! Black volatility surface based on sparse matrix.
 //!  \ingroup termstructures
 template <class StrikeInterpolation = QuantLib::Linear, class TimeInterpolation = QuantLib::Linear>
@@ -54,8 +67,8 @@ public:
                                const std::vector<QuantLib::Volatility>& volatilities,
                                const QuantLib::DayCounter& dayCounter, bool lowerStrikeConstExtrap = true,
                                bool upperStrikeConstExtrap = true, 
-                               QuantLib::BlackVolTimeExtrapolation timeExtrapolation
-                                = QuantLib::BlackVolTimeExtrapolation::FlatVolatility,
+                               QuantLib::BlackVolTimeExtrapolation::Type timeExtrapolationType
+                                = QuantLib::BlackVolTimeExtrapolation::Type::FlatVolatility,
                                const QuantLib::VolatilityType volType = QuantLib::VolatilityType::ShiftedLognormal,
                                const Real shift = 0.0);
 
@@ -91,7 +104,7 @@ public:
 protected:
     virtual QuantLib::Real blackVarianceImpl(QuantLib::Time t, QuantLib::Real strike) const override;
 
-    QuantLib::BlackVolTimeExtrapolation timeExtrapolation_;
+    QuantLib::BlackVolTimeExtrapolation::Type timeExtrapolationType_;
 };
 } // namespace QuantExt
 

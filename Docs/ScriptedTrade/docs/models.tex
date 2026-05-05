@@ -58,6 +58,7 @@ wip An example pricing engine configuration looks as follows.
       <!-- FD parameter -->
       <Parameter name="StateGridPoints">200</Parameter>
       <Parameter name="StateGridPoints_SingleUnderlyingIrOptionBwd">50</Parameter>
+      <Parameter name="VarianceStateGridPoints">50</Parameter>
       <Parameter name="MesherEpsilon">1E-4</Parameter>
       <Parameter name="MesherScaling">1.5</Parameter>
       <Parameter name="MesherConcentration">0.1</Parameter>
@@ -69,6 +70,21 @@ wip An example pricing engine configuration looks as follows.
       <Parameter name="UseExernalComputeDevice">false</Parameter>
       <Parameter name="UseDoublePrecisionForExternalCalculation">true</Parameter>
       <Parameter name="ExternalDeviceCompatibilityMode">false</Parameter>
+      <!-- Heston specific -->
+      <Parameter name="Heston.CalibrationMethod">PiecewiseBestFit</Parameter>
+      <Parameter name="Heston.CalibrationExpiries">3M</Parameter>
+      <Parameter name="Heston.CalibrationVarianceTerms">1M, 2M, 3M, 6M, 9M, 1Y</Parameter>
+      <Parameter name="Heston.InitialValues">0.04, 1.0, 0.5, -0.5, 0.04</Parameter> 
+      <Parameter name="Heston.FixedValues">N, N, N, N, N</Parameter>                
+      <Parameter name="Heston.RelaxedFellerConstraint">0.25</Parameter>             
+      <Parameter name="Heston.MaxCalibrationAttempts">0</Parameter>
+      <Parameter name="Heston.MaximumInitialValues">0.1, 20, 3, 0.9, 0.1</Parameter> 
+      <Parameter name="Heston.EarlyExitThreshold">0.005</Parameter>
+      <Parameter name="Heston.MaxAcceptableError">0.01</Parameter>
+      <Parameter name="Heston.ProcessDiscretization">QuadraticExponential</Parameter>
+      <Parameter name="Heston.QuantoProcessDiscretization">FullTruncation</Parameter>
+      <Parameter name="Heston.QuantoTimeStepsPerYear">100</Parameter>
+      <Parameter name="Heston.Debug">true</Parameter>
     </EngineParameters>
   </Product>
 \end{minted}
@@ -76,8 +92,8 @@ wip An example pricing engine configuration looks as follows.
 The model parameters have the following meaning:
 
 \begin{itemize}
-\item Model: The model to be used. Currently BlackScholes, LocalVolDupire, LocalVolAndreasenHuge, GaussianCam are
-  supported.
+\item Model: The model to be used. Currently BlackScholes, LocalVolDupire, LocalVolAndreasenHuge, GaussianCam and
+  Heston are supported.
 \item BaseCcy: The default base ccy for the model. See \ref{baseccy_determination} for the way the base ccy is
   determined for a model.
 \item EnforceBaseCcy: Enforce the base ccy from the model settings to be used, see \ref{baseccy_determination} for more
@@ -121,9 +137,10 @@ The model parameters have the following meaning:
 The engine parameters have the following meaning:
 
 \begin{itemize}
-\item Engine: The engine to be used. Currently MC and FD is supported.
+\item Engine: The engine to be used. Currently MC and FD is supported (for Heston only MC is supported).
 \item Samples: The number of MC samples used. Only relevant for Engine = MC.
 \item StateGridPoints: The number of grid points in state direction. Only relevant for Engine = FD.
+\item VarianceStateGridPoints: The number of grid points in the variance state direction. Only relevant for Engine = FD and Model = Heston.
 \item MesherEpsilon [Optional]: The FD mesher epsilon, optional, defaults to 1E-4.
 \item MesherScaling [Optional]: The FD mesher scaling factor, optional, defaults tp 1.5.
 \item MesherConcentration [Optional]: The FD mesher concentration parameter, optional, defaults to 0.1
@@ -136,7 +153,7 @@ The engine parameters have the following meaning:
 \item RegressionOrder: The order of the polynomial basis to compute conditional expectations via regression
   analysis. Applies to MC only.
 \item SequenceType [Optional]: The sequence type used for pricing. Defaults to SobolBrownianBridge. Possible values
-  SobolBrownianBridge, Burley2020SobolBrownianBridge, MersenneTwister, MersenneTwisterAnithetic, Sobol,
+  SobolBrownianBridge, Burley2020\-Sobol\-Brownian\-Bridge, MersenneTwister, MersenneTwisterAnithetic, Sobol,
   Burley2020Sobol. Applies to MC only.
 \item PolynomType [Optional]: The polynom type used for regression analysis. Defaults to Monomial. Possible values
   Monomial, Laguerre, Hermite, Hyperbolic, Legendre, Chebyshev, Chebychev2nd. Applies to MC only.
@@ -155,8 +172,8 @@ The engine parameters have the following meaning:
 \item Seed [Optional]: The seed for rng in pricing phase. Defaults to 42. Applies to MC only.
 \item TimeStepsPerYear: The number of time steps used to discretise the process. For 0 only the relevant simulation
   times are used. Otherwise at least the given number of step are used in the discretisation grid per year.
-\item CalibrationMoneyness: Moneyness of options used for smile calibration. Applies to the LocalVolAndreasenHuge model
-  only. The moneyness is defined as a ``standardised moneyness'' $\ln(K/F) / \sigma\sqrt{t}$ with $K$ strike, $F$ ATMF
+\item CalibrationMoneyness: Moneyness of options used for smile calibration. Applies to the LocalVolAndreasenHuge and
+  Heston models. The moneyness is defined as a ``standardised moneyness'' $\ln(K/F) / \sigma\sqrt{t}$ with $K$ strike, $F$ ATMF
   forward, $\sigma$ ATMF market vol, $t$ option time to expiry
 \item BootstrapTolerance: tolerance for calibration bootstrap, only applies to model = GaussianCam
 \item IncludePastCashflows [Optional]: if true, LOGPAY() will generate cashflow information for pay dates on or before
@@ -191,8 +208,68 @@ The engine parameters have the following meaning:
 \item IndicatorSmoothingForValues [Optional]: smoothing parameter (according to Fries methodology, 2017, ``epsilon'')
   applied to indicator functions in cg-based runs for values calculation. Defaults to $0$.
 \item IndicatorSmoothingForDerivatives: as above, smoothing parameter for derivatives calculation. Defaults to $0.2$.
+\item SqrtSmoothingForDerivatives: as above, smoothing parameter for sqrt derivative calculation. Defaults to $1E-8$.
 \item ZeroVolatility [Optional]: enforce zero volatility in model SDEs, default is false
+\item Heston-specific parameters [Optional]:
+  \begin{itemize}
+  \item Heston.CalibrationMethod: Choices are ``None'', ``ConstantBestFit'', ``PiecewiseBestFit'', ``PiecewiseBootstrap''. \\
+    ``None'' means no calibration, the initial parameter values are used; \\
+    ``ConstantBestFit'' means calibration of the Heston model with constant parameters only, possibly with restarts (see Heston.MaxCalibrationAttempts below); \\
+    ``PiecewiseBestFit'' means running the former first, followed by a calibration with piecewise constant $\sigma(t)$ and $\rho(t)$
+    Heston parameters for more flexibility in matching several expiries, the other parameters are kept fixed at the previous
+    ``ConstantBestFit'' results; \\
+    ``PiecewiseBootstrap'' is a variation of the former approach with a sequence of calibrations with piecewise constant
+    $\sigma(t)$ and $\rho(t)$, where each calibration in the sequence optimises one expiry or smile section at a time. \\
+    Default: ``ConstantBestFit''
+  \item Heston.CalibrationExpiries [Optional]: Comma-separated list of option expiry terms, will be used for Heston model calibration if provided.
+    Otherwise we use the effective simulation dates to determine calibration option expiries. \\
+    Default: empty list
+  \item Heston.CalibrationVarianceTerms [Optional]: Comma-separated list of terms where annualised variances are computed from the provided
+    option volatility surface; these are used for an initial guess of model parameters $\theta$, $\kappa$ and $v_0$. \\
+    Can be left blank which means we skip this step of generating initial guesses. \\
+    Default: empty list
+  \item Heston.InitialValues [Optional]: Initial values for the five (constant) model parameters in order $\theta$, $\kappa$, $\sigma$,
+    $\rho$, $v_0$. \\
+    Default: $0.04, 1.0, 0.5, -0.5, 0.04$
+  \item Heston.FixedValues [Optional]: Comma-separated list of booleans to indicate which of the five parameters above shall be kept
+    fixed in the ``ConstantBestFit'' calibration (see below), same order as the parmeters above. \\
+    Default: none fixed, i.e. ``N, N, N, N, N''
+  \item Heston.RelaxedFellerConstraint [Optional]: Constraint on $2\kappa\theta/\sigma^2$ to be used in the ``ConstantBestFit''
+    calibration, to be chosen in $[0,1]$; 1 means original Feller constraint, 0 means no constraint, anything in between
+    can be chosen representing a somewhat relaxed Feller constraint. \\
+    Default: 0.25 
+  \item Heston.MaxCalibrationAttempts [Optional]: If set to zero, we calibrate the Heston
+    parameters once (except for fixed parameters, see above), starting from the initial values/guesses; if positive,
+    we perform several calibrations as specified by ``Heston.MaxCalibrationAttempts'' with randomised initial values, keeping the best result. \\
+    Default: 0
+  \item Heston.MaximumInitialValues [Optional]: When using Heston.MaxCalibrationAttempts $>$ 0,  this comma-separated list specifies the range of the
+    initial values searched, in the order $\theta$, $\kappa$, $\sigma$, $\rho$, $v_0$. For $\theta$, $\kappa$, $\rho$,
+    the specified values are upper limits. For $\sigma$, we rather choose $\epsilon = 2\kappa\theta/\sigma^2$, given $\kappa$
+    and $\theta$, randomly between the relaxed Feller constraint (a value in (0,1]) and the specified upper limit ($>1$). \\
+    Default: $0.1, 20, 3, 0.9, 0.1$
+  \item Heston.EarlyExitThreshold [Optional]: When using HestonMaxCalibrationAttempts $>$ 0, exit the search when the calibration error
+    (root mean squared error of implied black volatilities) is below this tolerance. \\
+    Default: 0.005
+  \item Heston.MaxAcceptableError [Optional]: Log an error message if the (best) calibration error exceeds this value.\\
+    Default: 0.05
+  \item Heston.ProcessDiscretization [Optional]: Choice of the HestonProcess discretization (PartialTruncation, FullTruncation,
+    Reflection, NonCentral\-Chi\-SquareVariance, Quadratic\-Exponential, Quadratic\-Exponential\-Martingale,
+    Broadie\-Kaya\-Exact\-SchemeLobatto, Broadie\-Kaya\-Exact\-SchemeLaguerre, BroadieKayaExactSchemeTrapezoidal). \\
+    Default: QuadraticExponential
+  \item Heston.QuantoProcessDiscretization [Optional]: Choice of the HestonProcess discretization in case the indices contain
+    at least one that needs a quanto adjustment \\
+    Default: Use the value of HestonProcessDiscretization above, if missing
+  \item Heston.QuantoTimeStepsPerYear: The number of time steps used in case the indices contain
+    at least one that needs a quanto adjustment, i.e. the HestonQuantoProcessDiscretization might need a finer grid than
+    Heston.ProcessDiscretization \\
+    Default: Use the value of TimeStepsPerYear above, if missing
+  \item Heston.Debug [Optional]: If set to true or Y, we generate a report (assetmodel\_paths.csv) that contains the spot price realisations
+    across all indices, effective simulation dates and MC samples for each trade; moreover we perform additional consistency
+    checks during Heston path generation. \\
+    Default: false
+  \end{itemize}
 \end{itemize}
+
 
 \subsection{Product Tags, trade types, additional qualifiers in the pricing engine configuration}\label{producttags_engineconfig}
 
@@ -295,6 +372,142 @@ See \ref{pricingengine_config} for the impact of the model parameter FullDynamic
 
 \smallskip
 Available Engine types: MC, FD
+
+\subsection{Heston model}
+
+We model Heston processes
+\begin{align*}
+dS &= \mu\,S\,dt + \sqrt{V}\,S\,dW \\
+dV &= \kappa\,(\theta - V)\,dt + \sigma\,\sqrt{V}\,dZ \\
+dW\,dZ &= \rho\,dt
+\end{align*}
+for underlyings EQ, COM, or FX, with drifts $\mu$ chosen such that we match forward prices/rates.
+
+We first describe the case with constant (time-independent) parameters $\theta$, $\kappa$, $\sigma$,
+$\rho$ and $v_0=V(0)$. The case of time-dependent parameters (except for constant $v_0$) is covered at
+the end of this Heston Model section.
+
+\subsubsection*{Calibration}
+
+Each Heston model is calibrated to a section of the vo\-la\-ti\-lity surface,
+specified in terms of option expiries and log-moneyness in smile-direction, i.e. strike prices 
+$$
+K = K_{atm} \times \exp\left(\mbox{moneyness}\times\sigma_{atm}\times\sqrt{\mbox{time-to-expiry}}\right)
+$$
+with at-the-money forward $K_{atm}$ and volatility $\sigma_{atm}$ for the given option expiry.
+
+We currently support two calibration approaches:
+
+\begin{enumerate}
+\item Two-Step Approach:
+  \begin{itemize}
+  \item Fit $\theta$, $\kappa$ and $v_0$ to the variance curve, currently computed from the volatility surface
+    using functionality in the replication variance swap engine in Quant\-Ext (summing option prices across the
+    smile section), and using a simple analytic expression for the Heston-model-implied expected variance.
+  \item Use the above as reasonable initial values for a least-squares fit of all five model pa\-ra\-me\-ters,
+    using a gradient search (Levenberg Marquardt)
+  \end{itemize}
+\item Randomised Initial Values: Here we generate random initial values and perform multiple calibrations
+  using gradient search, keeping the best result. 
+\end{enumerate}
+
+\subsubsection*{Multi-Asset Process Correlation Structure}
+
+For the multi-asset Heston process we need to specify a correlation matrix that covers all stochastic processes
+involved, as in the case of Black-Scholes. The new challenge with multiple Heston processes is that each Heston
+model comes with two processes. In addition to the exogeneous spot-spot correlations (e.g. estimated from
+historical data), we have "internal" Heston model spot-variance correlations (fixed by calibration), and so far
+unspecified spot-variance and variance-variance correlations across the Heston models for different assets.
+We set those following the ``parismonious'' approach in \cite{dimitroff_2011},
+with partial independence assumption for the spot-variance and variance-variance correlations across Heston
+processes, i.e. a dependence structure across models that is induced by the spot-spot correlations $r_{ij}$
+across models, with 2-d block matrices $C_i$ along the diagonal and $C_{ij}$ off-diagonal within the large
+correlation matrix covering all processes:
+$$       
+C_i =\left(\begin{array}{cc} 1 & \rho_i \\ \rho_i & 1 \end{array} \right)
+       \qquad
+C_{ij} = r_{ij}\:\left(\begin{array}{cc} 1 & \rho_j \\ \rho_i & \rho_i \,\rho_j \end{array}\right)
+$$
+With this setup we can generate properly correlated random variates to drive all processes.
+
+\subsubsection*{Decorrelate for QuantLib's Heston Process}
+
+However, we use QuantLib's Heston process implementation, that expects two independent Wiener process increments
+$dW_{1,2}$ which are turned into correlated increments internally. How this is done depends on the chosen
+Heston discretisation: The ``simple'' {\em FullTruncation}, {\em PartialTruncation} and
+{\tt Reflection} schemes construct correlated variates using the lower triangular decomposition of the
+correlation matrix, $d\widetilde W_1=dW_1$ and $d\widetilde W_2=\rho\, dW_1 + \sqrt{1-\rho^2}\,dW_2$, or
+$$
+d\widetilde W = Q_L\:dW\qquad\mbox{with}\qquad
+Q_L = \left(\begin{array}{cc} 1 & 0 \\ \rho_i & \sqrt{1-\rho_i^2} \end{array} \right).
+$$
+The more complex {\em Brodie-Kaya} and {\em QuadraticExponential} schemes use the upper triangular
+decomposition instead, i.e. 
+$$
+d\widetilde W = Q_U\:dW \qquad\mbox{with}\qquad
+Q_U = \left(\begin{array}{cc} \sqrt{1-\rho_i^2} & \rho_i \\ 0 & 1 \end{array} \right).
+$$
+Starting with properly correlated increments $d\widetilde W$ generated by the ``outer'' multi-asset
+process, we need to ``decorrelate'' $d\widetilde W$ such that the follwing ``Heston-internal''
+correlation procedure recovers $d\widetilde W$, i.e. by applying the appropriate inverse
+matrix $Q_{L,U}^{-1}$
+$$
+dW = Q_{L,U}^{-1}\: d\widetilde W \qquad\mbox{so that}\qquad Q_{L,U} dW = Q_{L,U}Q^{-1}_{L,U} d\widetilde W = d\widetilde W
+$$
+with
+$$
+Q_L^{-1} = \left(\begin{array}{cc} 1 & 0 \\ \frac{-\rho}{\sqrt{1-\rho^2}} & \frac{1}{\sqrt{1-\rho^2}}\end{array} \right)  \qquad\mbox{respectively}\qquad
+Q_U^{-1} = \left(\begin{array}{cc} \frac{1}{\sqrt{1-\rho_i^2}} & \frac{-\rho}{\sqrt{1-\rho_i^2}} \\ 0 & 1 \end{array} \right).
+$$
+
+\subsubsection*{Foreign EQ/COM Drift Adjustments}
+
+For EQ/COM indices denoted in a currency other than base/domestic, the system of processes will
+contain at least one FX index that converts from that foreign into domestic/base currency of the calculation,
+which is also modelled with a Heston process. 
+The change of measure from the foreign equity's currency into domestic currency then causes drift adjustments
+in the foreign equity's Heston process \cite{cesarini_2014, stackexchange_40521},
+\begin{align*}
+  \mu(t) &\rightarrow \mu(t) - \rho_{SX}\:\sqrt{V(t)}\:\sqrt{V_X(t)} \\
+  \kappa\,\theta &\rightarrow \kappa\,\theta - \rho_{VX}\: \sigma\:\sqrt{V(t)}\:\sqrt{V_X(t)} 
+\end{align*}
+where $\rho_{SX}$ is the correlation between the EQ/COM spot price process and the FX spot process,
+$\rho_{VX} = \rho_{SX}\,\rho$ the correlation between variance process and FX (see above), and $V_X(t)$
+is the stochastic variance of the FX process. The negative signs of the adjustments are consistent with
+an FX quotation that converts foreign amounts into domestic currency by multiplication (the exchange rate
+is the value of 1 unit of foreign currency expressed in domestic currency). The inverse quotation would require
+flipping the signs. Note that the variance drift adjustment has the potential, depending on the sign of correlations,
+to push the variance process towards the boundary $V=0$, especially when working with relaxed Feller constraints
+-- to be controlled in the implementation of the variance process.
+
+If we set the {\tt FullDynamicFx} parameter in the pricing engine configuration to false, then our FX processes
+are deterministic (zero volatility), and the adjustments vanish.
+
+\medskip
+Available Engine types: MC, FD
+
+\medskip
+Limitations:
+\begin{itemize}
+\item The FD implementation can only handle single assets
+\item The quanto adustment in the MC implementation is applied on top of the discretization scheme chosen for the
+  underlying Heston process; if the adjustment leads to a negative variance, then this is truncated to variance = 0.
+\end{itemize}
+
+\subsubsection*{Time-dependent Parameters}
+
+While $v_0$ is still a constant parameter, we assume here that the remaining parameters $\theta(t)$, $\kappa(t)$,
+$\sigma(t)$ and $\rho(t)$ have a piecewise constant time-dependence with step times chosen to match the expiry
+times of the calibration options. This gives the model more flexibility to match each smile section. 
+
+The calibration process starts with a constant-parameter calibration though. The parameter results from this step
+are then used as initial values for the subsequent calibration with time-dependent parameters.
+The piecewise calibration step varies $\sigma(t)$ and $\rho(t)$ only in the current implementation in ORE,
+while the other parameters are actually kept constant at the previous step's results.
+
+Note that the generalisation to piecewise constant model parameters means that the multi-asset correlation matrices and
+sub-system decorrelation matrices have a piecewise constant time-dependence as well and need to be constructed for each segment
+of $\rho(t)$. 
 
 \subsection{GaussianCam models}
 

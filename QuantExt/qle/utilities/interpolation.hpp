@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file qle/utilities/time.hpp
-    \brief time related utilities.
+/*! \file qle/utilities/interpolation.hpp
+    \brief interpolation related utilities.
 */
 
 #pragma once

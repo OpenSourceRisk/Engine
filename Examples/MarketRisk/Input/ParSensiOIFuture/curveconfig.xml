@@ -1,0 +1,127 @@
+<CurveConfiguration>
+	<YieldCurves>
+		<YieldCurve>
+			<CurveId>USD-SOFR</CurveId>
+			<CurveDescription/>
+			<Currency>USD</Currency>
+			<DiscountCurve>USD-SOFR</DiscountCurve>
+			<Segments>
+				<Simple>
+					<Type>Deposit</Type>
+					<Quotes>
+						<Quote>MM/RATE/USD/SOFR/0D/1D</Quote>
+					</Quotes>
+					<Conventions>USD-ON-SOFR-DEPOSIT</Conventions>
+					<PillarChoice>LastRelevantDate</PillarChoice>
+					<Priority>0</Priority>
+					<MinDistance>1</MinDistance>
+					<ProjectionCurve>USD-SOFR</ProjectionCurve>
+				</Simple>
+				<Simple>
+					<Type>Future</Type>
+					<Quotes>
+						<Quote>OI_FUTURE/PRICE/USD/2026-02/XCME:SRA/3M</Quote>
+						<Quote>OI_FUTURE/PRICE/USD/2026-03/XCME:SRA/3M</Quote>
+						<Quote>OI_FUTURE/PRICE/USD/2026-04/XCME:SRA/3M</Quote>
+						<Quote>OI_FUTURE/PRICE/USD/2026-05/XCME:SRA/3M</Quote>
+						<Quote>OI_FUTURE/PRICE/USD/2026-06/XCME:SRA/3M</Quote>
+						<Quote>OI_FUTURE/PRICE/USD/2026-07/XCME:SRA/3M</Quote>
+						<Quote>OI_FUTURE/PRICE/USD/2026-08/XCME:SRA/3M</Quote>
+						<Quote>OI_FUTURE/PRICE/USD/2026-09/XCME:SRA/3M</Quote>
+						<Quote>OI_FUTURE/PRICE/USD/2026-12/XCME:SRA/3M</Quote>
+						<Quote>OI_FUTURE/PRICE/USD/2027-03/XCME:SRA/3M</Quote>
+						<Quote>OI_FUTURE/PRICE/USD/2027-06/XCME:SRA/3M</Quote>
+					</Quotes>
+					<Conventions>USD-SOFR-3M-FUTURES</Conventions>
+					<PillarChoice>LastRelevantDate</PillarChoice>
+					<Priority>0</Priority>
+					<MinDistance>1</MinDistance>
+				</Simple>
+				<Simple>
+					<Type>OIS</Type>
+					<Quotes>
+						<Quote optional="true">IR_SWAP/RATE/USD/SOFR/0D/1D/2Y</Quote>
+						<Quote optional="true">IR_SWAP/RATE/USD/SOFR/0D/1D/3Y</Quote>
+						<Quote optional="true">IR_SWAP/RATE/USD/SOFR/0D/1D/4Y</Quote>
+						<Quote optional="true">IR_SWAP/RATE/USD/SOFR/0D/1D/5Y</Quote>
+						<Quote optional="true">IR_SWAP/RATE/USD/SOFR/0D/1D/6Y</Quote>
+						<Quote optional="true">IR_SWAP/RATE/USD/SOFR/0D/1D/7Y</Quote>
+						<Quote optional="true">IR_SWAP/RATE/USD/SOFR/0D/1D/8Y</Quote>
+						<Quote optional="true">IR_SWAP/RATE/USD/SOFR/0D/1D/9Y</Quote>
+						<Quote optional="true">IR_SWAP/RATE/USD/SOFR/0D/1D/10Y</Quote>
+						<Quote optional="true">IR_SWAP/RATE/USD/SOFR/0D/1D/12Y</Quote>
+						<Quote optional="true">IR_SWAP/RATE/USD/SOFR/0D/1D/15Y</Quote>
+						<Quote optional="true">IR_SWAP/RATE/USD/SOFR/0D/1D/20Y</Quote>
+						<Quote optional="true">IR_SWAP/RATE/USD/SOFR/0D/1D/25Y</Quote>
+						<Quote optional="true">IR_SWAP/RATE/USD/SOFR/0D/1D/30Y</Quote>
+						<Quote optional="true">IR_SWAP/RATE/USD/SOFR/0D/1D/40Y</Quote>
+						<Quote optional="true">IR_SWAP/RATE/USD/SOFR/0D/1D/50Y</Quote>
+					</Quotes>
+					<Conventions>USD-SOFR-OIS</Conventions>
+					<PillarChoice>LastRelevantDate</PillarChoice>
+					<Priority>0</Priority>
+					<MinDistance>1</MinDistance>
+				</Simple>
+			</Segments>
+			<InterpolationVariable>Discount</InterpolationVariable>
+			<InterpolationMethod>LogLinear</InterpolationMethod>
+			<MixedInterpolationCutoff>1</MixedInterpolationCutoff>
+			<YieldCurveDayCounter>A365</YieldCurveDayCounter>
+			<Tolerance>0.0000000000010000</Tolerance>
+			<Extrapolation>true</Extrapolation>
+			<ExtrapolationMethod>ContinuousForward</ExtrapolationMethod>
+			<ExcludeT0FromInterpolation>false</ExcludeT0FromInterpolation>
+			<BootstrapConfig>
+				<Accuracy>0.0000000000010000</Accuracy>
+				<GlobalAccuracy>0.0000000000010000</GlobalAccuracy>
+				<DontThrow>false</DontThrow>
+				<MaxAttempts>5</MaxAttempts>
+				<MaxFactor>2</MaxFactor>
+				<MinFactor>2</MinFactor>
+				<DontThrowSteps>10</DontThrowSteps>
+				<Global>false</Global>
+				<SmoothnessLambda>0.0000000000000000</SmoothnessLambda>
+			</BootstrapConfig>
+			<Report/>
+		</YieldCurve>
+	</YieldCurves>
+	<ReportConfiguration>
+		<EquityVolatilities>
+			<Report>
+				<ReportOnDeltaGrid>true</ReportOnDeltaGrid>
+				<ReportOnMoneynessGrid>true</ReportOnMoneynessGrid>
+				<Deltas>1P, 5P, 10P, 15P, 20P, 25P, 30P, 35P, 40P, 45P, ATM, 45C, 40C, 35C, 30C, 25C, 20C, 15C, 10C, 5C, 1C</Deltas>
+				<Moneyness>0.5, 0.59999999999999998, 0.69999999999999996, 0.80000000000000004, 0.84999999999999998, 0.90000000000000002, 0.94999999999999996, 0.95999999999999996, 0.96999999999999997, 0.97999999999999998, 0.98999999999999999, 1, 1.01, 1.02, 1.03, 1.04, 1.05, 1.1000000000000001, 1.1499999999999999, 1.2, 1.3, 1.3999999999999999, 1.5</Moneyness>
+				<Expiries>1D, 1W, 2W, 1M, 2M, 3M, 6M, 9M, 1Y, 2Y, 3Y, 5Y, 6Y, 7Y, 8Y, 9Y, 10Y</Expiries>
+			</Report>
+		</EquityVolatilities>
+		<FXVolatilities>
+			<Report>
+				<ReportOnDeltaGrid>true</ReportOnDeltaGrid>
+				<ReportOnMoneynessGrid>true</ReportOnMoneynessGrid>
+				<Deltas>1P, 5P, 10P, 15P, 20P, 25P, 30P, 35P, 40P, 45P, ATM, 45C, 40C, 35C, 30C, 25C, 20C, 15C, 10C, 5C, 1C</Deltas>
+				<Moneyness>0.5, 0.59999999999999998, 0.69999999999999996, 0.80000000000000004, 0.84999999999999998, 0.90000000000000002, 0.94999999999999996, 0.95999999999999996, 0.96999999999999997, 0.97999999999999998, 0.98999999999999999, 1, 1.01, 1.02, 1.03, 1.04, 1.05, 1.1000000000000001, 1.1499999999999999, 1.2, 1.3, 1.3999999999999999, 1.5</Moneyness>
+				<Expiries>1D, 1W, 2W, 1M, 2M, 3M, 6M, 9M, 1Y, 2Y, 3Y, 5Y, 6Y, 7Y, 8Y, 9Y, 10Y</Expiries>
+			</Report>
+		</FXVolatilities>
+		<IRCapFloorVolatilities>
+			<Report>
+				<ReportOnStrikeGrid>true</ReportOnStrikeGrid>
+				<ReportOnStrikeSpreadGrid>false</ReportOnStrikeSpreadGrid>
+				<Strikes>-0.02, -0.01, 0.0000000000000000, 0.01, 0.02, 0.029999999999999999, 0.040000000000000001, 0.050000000000000003, 0.059999999999999998, 0.070000000000000007, 0.080000000000000002, 0.089999999999999997, 0.10000000000000001</Strikes>
+				<Expiries>1M, 3M, 6M, 9M, 12M, 15M, 18M, 21M, 24M, 27M, 30M, 33M, 36M, 39M, 42M, 45M, 48M, 51M, 54M, 57M, 60M, 63M, 66M, 69M, 72M, 75M, 78M, 81M, 84M, 87M, 90M, 93M, 96M, 99M, 102M, 105M, 108M, 111M, 114M, 117M, 120M, 123M, 126M, 129M, 132M, 135M, 138M, 141M, 144M, 147M, 150M, 153M, 156M, 159M, 162M, 165M, 168M, 171M, 174M, 177M, 180M, 183M, 186M, 189M, 192M, 195M, 198M, 201M, 204M, 207M, 210M, 213M, 216M, 219M, 222M, 225M, 228M, 231M, 234M, 237M, 240M, 243M, 246M, 249M, 252M, 255M, 258M, 261M, 264M, 267M, 270M, 273M, 276M, 279M, 282M, 285M, 288M, 291M, 294M, 297M, 300M, 303M, 306M, 309M, 312M, 315M, 318M, 321M, 324M, 327M, 330M, 333M, 336M, 339M, 342M, 345M, 348M, 351M, 354M, 357M, 360M</Expiries>
+			</Report>
+		</IRCapFloorVolatilities>
+		<IRSwaptionVolatilities>
+			<Report>
+				<ReportOnStrikeGrid>false</ReportOnStrikeGrid>
+				<ReportOnStrikeSpreadGrid>true</ReportOnStrikeSpreadGrid>
+				<Strikes>-0.02, -0.01, 0.0000000000000000, 0.01, 0.02, 0.029999999999999999, 0.040000000000000001, 0.050000000000000003, 0.059999999999999998, 0.070000000000000007, 0.080000000000000002, 0.089999999999999997, 0.10000000000000001</Strikes>
+				<StrikeSpreads>-0.02, -0.014999999999999999, -0.01, -0.0050000000000000001, 0.0000000000000000, 0.0050000000000000001, 0.01, 0.014999999999999999, 0.02, 0.029999999999999999</StrikeSpreads>
+				<Expiries>1M, 3M, 6M, 9M, 1Y, 2Y, 3Y, 4Y, 5Y, 7Y, 10Y, 15Y, 20Y, 25Y, 30Y</Expiries>
+				<UnderlyingTenors>1Y, 2Y, 3Y, 4Y, 5Y, 6Y, 7Y, 8Y, 9Y, 10Y, 15Y, 20Y, 25Y, 30Y</UnderlyingTenors>
+			</Report>
+		</IRSwaptionVolatilities>
+	</ReportConfiguration>
+</CurveConfiguration>
+

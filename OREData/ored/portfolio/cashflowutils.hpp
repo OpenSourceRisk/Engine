@@ -47,6 +47,7 @@ struct TradeCashflowReportData {
     QuantLib::Date payDate;
     std::string flowType;
     double amount;
+    double baseAmount;
     std::string currency;
     double coupon;
     double accrual;
@@ -57,6 +58,7 @@ struct TradeCashflowReportData {
     double fixingValue;
     double notional;
     double discountFactor;
+    double discountFactorBase;
     double presentValue;
     double fxRateLocalBase;
     double presentValueBase;
@@ -78,7 +80,8 @@ TradeCashflowReportData getCashflowReportData(
         swaptionVol,
     const std::function<
         QuantLib::ext::shared_ptr<QuantLib::OptionletVolatilityStructure>(const std::string& qualifier)>& optionletVol,
-    const std::string& overwriteFlowType = std::string(), const Real overwriteNotional = Null<Real>());
+    const std::string& overwriteFlowType = std::string(), const Real overwriteNotional = Null<Real>(),
+    const QuantLib::ext::shared_ptr<QuantLib::YieldTermStructure>& discountCurveBaseCcy = nullptr);
 
 // Populate TradeCashflowReportData based on Leg(s). Note: cashfowNo and legNo will _not_ be populated.
 std::vector<TradeCashflowReportData> getCashflowReportData(
@@ -90,7 +93,8 @@ std::vector<TradeCashflowReportData> getCashflowReportData(
         swaptionVol,
     const std::function<
         QuantLib::ext::shared_ptr<QuantLib::OptionletVolatilityStructure>(const std::string& qualifier)>& optionletVol,
-    const std::vector<std::string>& overwriteFlowType = {}, const std::vector<Real>& overwriteNotional = {});
+    const std::vector<std::string>& overwriteFlowType = {}, const std::vector<Real>& overwriteNotional = {}, 
+    const std::vector<QuantLib::ext::shared_ptr<QuantLib::YieldTermStructure>>& discountCurvesBaseCcy = {});
 
 // Populate vector<TradeCashflowReportData> based on additional results map
 void populateReportDataFromAdditionalResults(

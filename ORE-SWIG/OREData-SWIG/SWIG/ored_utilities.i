@@ -22,27 +22,40 @@
 %include types.i
 %include ored_iborfallbackconfig.i
 
-%{
-using std::string;
-using std::map;
+%shared_ptr(ore::data::DateGrid)
 
-using ore::data::addMarketObjectDependencies;
-using ore::data::marketObjectToCurveSpec;
-using ore::data::currencyToDiscountCurve;
-using ore::data::swapIndexDiscountCurve;
-using ore::data::buildCollateralCurveConfig;
-using ore::data::getCollateralisedDiscountCcy;
-using ore::data::isCollateralCurve;
-using ore::data::CurveConfigurations;
-using ore::data::IborFallbackConfig;
-using ore::data::MarketObject;
+namespace ore {
+namespace data {
 
-%}
+class DateGrid {
+public:
+    DateGrid();
+    DateGrid(const std::string& grid, const QuantLib::Calendar& gridCalendar = QuantLib::TARGET(),
+             const QuantLib::DayCounter& dayCounter = QuantLib::ActualActual(QuantLib::ActualActual::ISDA));
+    DateGrid(const std::vector<QuantLib::Period>& tenors, const QuantLib::Calendar& gridCalendar = QuantLib::TARGET(),
+             const QuantLib::DayCounter& dayCounter = QuantLib::ActualActual(QuantLib::ActualActual::ISDA));
+    DateGrid(const std::vector<QuantLib::Date>& dates, const QuantLib::Calendar& gridCalendar = QuantLib::TARGET(),
+             const QuantLib::DayCounter& dayCounter = QuantLib::ActualActual(QuantLib::ActualActual::ISDA));
+    QuantLib::Size size() const;
+    void addCloseOutDates(const QuantLib::Period& p = QuantLib::Period(2, QuantLib::Weeks));
+    const std::vector<QuantLib::Period>& tenors() const;
+    const std::vector<QuantLib::Date>& dates() const;
+    const std::vector<bool>& isValuationDate() const;
+    const std::vector<bool>& isCloseOutDate() const;
+    std::vector<QuantLib::Date> valuationDates() const;
+    std::vector<QuantLib::Date> closeOutDates() const;
+    const QuantLib::Calendar& calendar() const;
+    const QuantLib::DayCounter& dayCounter() const;
+    const std::vector<QuantLib::Time>& times() const;
+    const QuantLib::TimeGrid& timeGrid() const;
+    QuantLib::Date closeOutDateFromValuationDate(const QuantLib::Date& d) const;
+};
+
 void addMarketObjectDependencies(std::map<std::string, std::map<MarketObject, std::set<std::string>>>* objects,
                                  const ext::shared_ptr<CurveConfigurations>& curveConfigs, const std::string& baseCcy,
                                  const std::string& baseCcyDiscountCurve,
                                  ext::shared_ptr<IborFallbackConfig> iborFallbackConfig =
-                                    ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()));
+                                     ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()));
 
 std::string marketObjectToCurveSpec(const MarketObject& mo, const std::string& name, const std::string& baseCcy,
                                     const ext::shared_ptr<CurveConfigurations>& curveConfigs);
@@ -51,16 +64,19 @@ std::string currencyToDiscountCurve(const std::string& ccy, const std::string& b
                                     const std::string& baseCcyDiscountCurve,
                                     const ext::shared_ptr<CurveConfigurations>& curveConfigs);
 
-std::string swapIndexDiscountCurve(const std::string& ccy, const std::string& baseCcy = std::string(), 
-    const std::string& swapIndexConvId = std::string());
+std::string swapIndexDiscountCurve(const std::string& ccy, const std::string& baseCcy = std::string(),
+                                   const std::string& swapIndexConvId = std::string());
 
-void buildCollateralCurveConfig(const string& curveId, const std::string& baseCcy,
-                               const std::string& baseCcyDiscountCurve,
+void buildCollateralCurveConfig(const std::string& curveId, const std::string& baseCcy,
+                                const std::string& baseCcyDiscountCurve,
                                 const ext::shared_ptr<CurveConfigurations>& curveConfigs);
 
 std::set<std::string> getCollateralisedDiscountCcy(const std::string& ccy,
-    const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigs);
+                                                   const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigs);
 
 const bool isCollateralCurve(const std::string& id, std::vector<std::string>& tokens);
+
+} // namespace data
+} // namespace ore
 
 #endif

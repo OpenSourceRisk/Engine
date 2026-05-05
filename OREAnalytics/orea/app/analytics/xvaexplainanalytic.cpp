@@ -21,6 +21,7 @@
 #include <orea/app/analytics/xvaanalytic.hpp>
 #include <orea/app/analytics/xvaexplainanalytic.hpp>
 #include <orea/app/analytics/xvastressanalytic.hpp>
+#include <orea/app/inputparameters.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
@@ -31,17 +32,19 @@
 #include <orea/scenario/scenariowriter.hpp>
 #include <orea/scenario/simplescenario.hpp>
 #include <orea/scenario/stressscenariogenerator.hpp>
+#include <ored/report/inmemoryreport.hpp>
 #include <ored/report/utilities.hpp>
+
 namespace ore {
 namespace analytics {
 
-void curveShiftData(std::map<std::string, ext::shared_ptr<StressTestScenarioData::CurveShiftData>>& data, const RiskFactorKey& key,
-                    double shift, const std::vector<Period>& tenors) {
+void curveShiftData(const QuantLib::Date& asof, std::map<std::string, ext::shared_ptr<StressTestScenarioData::CurveShiftData>>& data, const RiskFactorKey& key,
+                    double shift, const ext::shared_ptr<SensitivityScenarioData::CurveShiftData>& sensiData) {
     if (data.count(key.name) == 0) {
         StressTestScenarioData::CurveShiftData shiftData;
         shiftData.shiftType = ShiftType::Absolute;
-        shiftData.shiftTenors = tenors;
-        shiftData.shifts = std::vector<double>(tenors.size(), 0.0);
+        shiftData.shiftTenors = sensiData->shiftTenors;
+        shiftData.shifts = std::vector<double>(shiftData.shiftTenors.size(), 0.0);
         data[key.name] = ext::make_shared<StressTestScenarioData::CurveShiftData>(shiftData);
     }
     data[key.name]->shifts[key.index] = shift;
@@ -312,34 +315,34 @@ XvaExplainAnalyticImpl::createStressTestData(const QuantLib::ext::shared_ptr<ore
             bool inScope = false;
             switch (key.keytype) {
             case RiskFactorKey::KeyType::DiscountCurve: {
-                curveShiftData(scenario.discountCurveShifts, key, shift,
-                               sensitivityData->discountCurveShiftData()[key.name]->shiftTenors);
-                curveShiftData(fullRevalScenario.discountCurveShifts, key, shift,
-                               sensitivityData->discountCurveShiftData()[key.name]->shiftTenors);
+                curveShiftData(inputs_->asof(), scenario.discountCurveShifts, key, shift,
+                               sensitivityData->discountCurveShiftData()[key.name]);
+                curveShiftData(inputs_->asof(), fullRevalScenario.discountCurveShifts, key, shift,
+                               sensitivityData->discountCurveShiftData()[key.name]);
                 inScope = true;
                 break;
             }
             case RiskFactorKey::KeyType::YieldCurve: {
-                curveShiftData(fullRevalScenario.yieldCurveShifts, key, shift,
-                               sensitivityData->yieldCurveShiftData()[key.name]->shiftTenors);
-                curveShiftData(scenario.yieldCurveShifts, key, shift,
-                               sensitivityData->yieldCurveShiftData()[key.name]->shiftTenors);
+                curveShiftData(inputs_->asof(), fullRevalScenario.yieldCurveShifts, key, shift,
+                               sensitivityData->yieldCurveShiftData()[key.name]);
+                curveShiftData(inputs_->asof(), scenario.yieldCurveShifts, key, shift,
+                               sensitivityData->yieldCurveShiftData()[key.name]);
                 inScope = true;
                 break;
             }
             case RiskFactorKey::KeyType::IndexCurve: {
-                curveShiftData(fullRevalScenario.indexCurveShifts, key, shift,
-                               sensitivityData->indexCurveShiftData()[key.name]->shiftTenors);
-                curveShiftData(scenario.indexCurveShifts, key, shift,
-                               sensitivityData->indexCurveShiftData()[key.name]->shiftTenors);
+                curveShiftData(inputs_->asof(), fullRevalScenario.indexCurveShifts, key, shift,
+                               sensitivityData->indexCurveShiftData()[key.name]);
+                curveShiftData(inputs_->asof(), scenario.indexCurveShifts, key, shift,
+                               sensitivityData->indexCurveShiftData()[key.name]);
                 inScope = true;
                 break;
             }
             case RiskFactorKey::KeyType::SurvivalProbability: {
-                curveShiftData(fullRevalScenario.survivalProbabilityShifts, key, shift,
-                               sensitivityData->creditCurveShiftData()[key.name]->shiftTenors);
-                curveShiftData(scenario.survivalProbabilityShifts, key, shift,
-                               sensitivityData->creditCurveShiftData()[key.name]->shiftTenors);
+                curveShiftData(inputs_->asof(), fullRevalScenario.survivalProbabilityShifts, key, shift,
+                               sensitivityData->creditCurveShiftData()[key.name]);
+                curveShiftData(inputs_->asof(), scenario.survivalProbabilityShifts, key, shift,
+                               sensitivityData->creditCurveShiftData()[key.name]);
                 inScope = true;
                 break;
             }

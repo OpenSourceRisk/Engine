@@ -233,12 +233,14 @@ public:
                      std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr,
                      std::unique_ptr<MultiThreadArgs> multiThreadArgs = nullptr, const bool breakdown = false,
                      const bool requireTradePnl = false, const bool requireRiskFactorPnl = false,
-                     const bool useAtParCouponsCurves = true, const bool useAtParCouponsTrades = true)
+                     const bool useAtParCouponsCurves = true, const bool useAtParCouponsTrades = true,
+                     const bool riskClassBreakdown = true)
         : calculationCurrency_(calculationCurrency), portfolio_(portfolio), portfolioFilter_(portfolioFilter),
           period_(period), hisScenGen_(hisScenGen), sensiArgs_(std::move(sensiArgs)),
           fullRevalArgs_(std::move(fullRevalArgs)), multiThreadArgs_(std::move(multiThreadArgs)), breakdown_(breakdown),
           requireTradePnl_(requireTradePnl), requireRiskFactorPnl_(requireRiskFactorPnl),
-          useAtParCouponsCurves_(useAtParCouponsCurves), useAtParCouponsTrades_(useAtParCouponsTrades) {}
+          useAtParCouponsCurves_(useAtParCouponsCurves), useAtParCouponsTrades_(useAtParCouponsTrades),
+          riskClassBreakdown_(riskClassBreakdown) {}
     virtual ~MarketRiskReport() {}
 
     virtual void initialise();
@@ -281,6 +283,7 @@ protected:
 
     bool useAtParCouponsCurves_ = true;
     bool useAtParCouponsTrades_ = true;
+    bool riskClassBreakdown_ = true;
 
     QuantLib::ext::shared_ptr<MarketRiskGroupBaseContainer> riskGroups_;
     QuantLib::ext::shared_ptr<TradeGroupBaseContainer> tradeGroups_;

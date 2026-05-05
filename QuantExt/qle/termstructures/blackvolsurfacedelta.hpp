@@ -30,6 +30,7 @@
 #include <ql/math/matrix.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvoltimeextrapolation.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/daycounter.hpp>
@@ -98,8 +99,8 @@ public:
                                 InterpolatedSmileSection::InterpolationMethod interpolationMethod =
                                     InterpolatedSmileSection::InterpolationMethod::Linear,
                                 bool flatStrikeExtrapolation = true,
-                                QuantLib::BlackVolTimeExtrapolation timeExtrapolation =
-                                    QuantLib::BlackVolTimeExtrapolation::FlatVolatility);
+                                QuantLib::BlackVolTimeExtrapolation::Type timeExtrapolationType =
+                                    QuantLib::BlackVolTimeExtrapolation::Type::FlatVolatility);
 
     //! \name TermStructure interface
     //@{
@@ -156,7 +157,7 @@ private:
 
     InterpolatedSmileSection::InterpolationMethod interpolationMethod_;
     bool flatStrikeExtrapolation_;
-    QuantLib::BlackVolTimeExtrapolation timeExtrapolation_;
+    QuantLib::BlackVolTimeExtrapolation::Type timeExtrapolationType_;
     Real switchTime_;
 
     // calculate forward for time $t$

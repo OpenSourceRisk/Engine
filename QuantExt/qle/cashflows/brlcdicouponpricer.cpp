@@ -38,9 +38,7 @@ Rate BRLCdiCouponPricer::swapletRate() const {
 
     // Already fixed part of the coupon
     while (i < n && fixingDates[i] < today) {
-        QL_DEPRECATED_DISABLE_WARNING
-        Rate pastFixing = IndexManager::instance().getHistory(index_->name())[fixingDates[i]];
-        QL_DEPRECATED_ENABLE_WARNING
+        Rate pastFixing = index_->pastFixing(fixingDates[i]);
         QL_REQUIRE(pastFixing != Null<Real>(), "Missing " << index_->name() << " fixing for " << fixingDates[i]);
         compoundFactor *= pow(1.0 + pastFixing, dt[i]);
         ++i;

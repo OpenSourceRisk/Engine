@@ -66,6 +66,7 @@ private:
         std::vector<std::string> remainingNames;
     };
 
+    /// \cond
     struct QuoteData {
         struct LessReal {
             bool operator()(const Real& lhs, const Real& rhs) const { return !close_enough(lhs, rhs) && lhs < rhs; }
@@ -84,6 +85,7 @@ private:
         map<Real, Real, LessReal> atp;
         map<pair<Period, Real>, Handle<Quote>, LessDataKey> data;
     };
+    /// \endcond
 
     QuoteData loadQuotes(const QuantLib::Date& asof, const BaseCorrelationCurveConfig& config,
                          const MarketDatum::QuoteType quoteType, const Loader& loader) const;

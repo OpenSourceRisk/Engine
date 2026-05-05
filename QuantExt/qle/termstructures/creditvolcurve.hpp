@@ -23,6 +23,7 @@
 #pragma once
 
 #include <qle/termstructures/creditcurve.hpp>
+#include <qle/termstructures/sviparametricvolatility.hpp>
 
 #include <ql/handle.hpp>
 #include <ql/math/interpolation.hpp>
@@ -86,19 +87,20 @@ protected:
 
 class InterpolatingCreditVolCurve : public CreditVolCurve {
 public:
+    using QuoteKey = std::tuple<QuantLib::Date, QuantLib::Period, QuantLib::Real>;
+    using QuoteMap = std::map<QuoteKey, QuantLib::Handle<QuantLib::Quote>>;
+
     InterpolatingCreditVolCurve(const QuantLib::Natural settlementDays, const QuantLib::Calendar& cal,
                                 QuantLib::BusinessDayConvention bdc, const QuantLib::DayCounter& dc,
                                 const std::vector<QuantLib::Period>& terms,
                                 const std::vector<QuantLib::Handle<CreditCurve>>& termCurves,
-                                const std::map<std::tuple<QuantLib::Date, QuantLib::Period, QuantLib::Real>,
-                                               QuantLib::Handle<QuantLib::Quote>>& quotes,
+                                const QuoteMap& quotes,
                                 const Type& type);
     InterpolatingCreditVolCurve(const QuantLib::Date& referenceDate, const QuantLib::Calendar& cal,
                                 QuantLib::BusinessDayConvention bdc, const QuantLib::DayCounter& dc,
                                 const std::vector<QuantLib::Period>& terms,
                                 const std::vector<QuantLib::Handle<CreditCurve>>& termCurves,
-                                const std::map<std::tuple<QuantLib::Date, QuantLib::Period, QuantLib::Real>,
-                                               QuantLib::Handle<QuantLib::Quote>>& quotes,
+                                const QuoteMap& quotes,
                                 const Type& type);
 
     QuantLib::Real volatility(const QuantLib::Date& exerciseDate, const QuantLib::Real underlyingLength,
@@ -113,7 +115,7 @@ private:
     void createSmile(const QuantLib::Date& expiry, const QuantLib::Period& term, const QuantLib::Date& expiry_m,
                      const QuantLib::Date& expiry_p) const;
 
-    std::map<std::tuple<QuantLib::Date, QuantLib::Period, QuantLib::Real>, QuantLib::Handle<QuantLib::Quote>> quotes_;
+    QuoteMap quotes_;
 
     mutable std::vector<QuantLib::Period> smileTerms_;
     mutable std::vector<QuantLib::Date> smileExpiries_;
@@ -193,6 +195,55 @@ private:
     QuantLib::Real blackVolImpl(QuantLib::Real t, QuantLib::Real strike) const override;
     QuantLib::Handle<QuantExt::CreditVolCurve> vol_;
     QuantLib::Real underlyingLength_;
+};
+
+/*! Credit volatility curve backed by SVI parametric volatility.
+
+    Bridges the SviParametricVolatility hierarchy to the CreditVolCurve interface.
+    The input MarketSmile vector must have non-null underlyingLength values equal to
+    the CDS underlying tenor in years (e.g. dc.yearFraction(exerciseDate, cds.maturity())).
+
+    Supported variants: all 10 SviParametricVolatility::ModelVariant values.
+    - Raw / Natural / JW : per-slice, fully independent, always safe.
+    - Heston / PowerLaw  : shared shape parameters across all CDS tenors (rows).
+    - Corbetta            : per-row calendar-spread constraint.
+    - Mingone GJ / MM    : shared shape parameters across all CDS tenors (rows).
+*/
+class CreditVolCurveSvi : public CreditVolCurve {
+public:
+    CreditVolCurveSvi(
+        const QuantLib::Date& referenceDate, const QuantLib::Calendar& cal,
+        QuantLib::BusinessDayConvention bdc, const QuantLib::DayCounter& dc,
+        const std::vector<QuantLib::Period>& terms,
+        const std::vector<QuantLib::Handle<CreditCurve>>& termCurves, const Type& type,
+        const std::vector<QuantLib::Date>& exerciseDates,
+        const std::vector<QuantLib::Period>& underlyingTerms,
+        const std::vector<std::vector<QuantLib::Real>>& strikes,
+        const std::vector<std::vector<QuantLib::Real>>& vols,
+        SviParametricVolatility::ModelVariant modelVariant,
+        ParametricVolatility::MarketQuoteType inputMarketQuoteType =
+            ParametricVolatility::MarketQuoteType::NormalVolatility,
+        const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve =
+            QuantLib::Handle<QuantLib::YieldTermStructure>(),
+        const std::map<std::pair<QuantLib::Real, QuantLib::Real>,
+                       std::vector<std::pair<QuantLib::Real, ParametricVolatility::ParameterCalibration>>>&
+            modelParameters = {},
+        const std::map<QuantLib::Real, QuantLib::Real>& modelShifts = {},
+        QuantLib::Size maxCalibrationAttempts = 10,
+        QuantLib::Real exitEarlyErrorThreshold = 0.005,
+        QuantLib::Real maxAcceptableError = 0.05,
+        bool enforceNoArbitrage = true);
+
+    QuantLib::Real volatility(const QuantLib::Date& exerciseDate,
+                              const QuantLib::Real underlyingLength,
+                              const QuantLib::Real strike,
+                              const Type& targetType) const override;
+
+    const QuantLib::ext::shared_ptr<ParametricVolatility>& parametricVolatility() const { return svi_; }
+
+private:
+    QuantLib::ext::shared_ptr<ParametricVolatility> svi_;
+    ParametricVolatility::MarketQuoteType quoteType_;
 };
 
 } // namespace QuantExt

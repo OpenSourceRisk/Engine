@@ -32,7 +32,7 @@
 
 #include <ql/errors.hpp>
 
-#ifdef BOOST_MSVC
+#if !defined(BOOST_ALL_NO_LIB) && defined(BOOST_MSVC)
 #include <ored/auto_link.hpp>
 #endif
 
@@ -40,10 +40,13 @@
 
 %}
 
+%include ored_common.i
 %include ored_calendarAdjustmentConfig.i
+%include ored_correlationmatrix.i
 %include ored_curvespec.i
 %include ored_curveconfig.i
 %include ored_curveconfigurations.i
+%include ored_configuration_ext.i
 %include ored_crossassetmodeldata.i
 %include ored_conventions.i
 %include ored_conventionsbasedfutureexpiry.i
@@ -52,8 +55,10 @@
 %include ored_log.i
 %include ored_market.i
 %include ored_marketdatum.i
+%include ored_modelbuilders.i
 %include ored_parsers.i
 %include ored_portfolio.i
+%include ored_portfolio2.i
 %include ored_reports.i
 %include ored_referencedatamanager.i
 %include ored_todaysmarketparameters.i
@@ -63,5 +68,19 @@
 %include ored_volcurves.i
 %include ored_xmlutils.i
 %include ored_yieldcurveconfig.i
+
+#if defined(SWIGPYTHON)
+%pythoncode %{
+_ORED_MODULE_OVERVIEW = """OREData layer bindings.
+
+Contains XML-serialisable configuration, market data abstractions,
+portfolio/trade construction, parsers, loaders, and utility APIs.
+"""
+if __doc__:
+	__doc__ = __doc__ + "\n\n" + _ORED_MODULE_OVERVIEW
+else:
+	__doc__ = _ORED_MODULE_OVERVIEW
+%}
+#endif
 
 #endif

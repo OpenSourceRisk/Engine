@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/test/unit_test.hpp>
 #include "parsensitivityanalysismanual.hpp"
 #include "testmarket.hpp"
 #include "testportfolio.hpp"
@@ -41,7 +42,7 @@
 #include <ored/utilities/osutils.hpp>
 #include <ored/utilities/to_string.hpp>
 
-#include <oret/toplevelfixture.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 
 #include <ql/time/date.hpp>
 

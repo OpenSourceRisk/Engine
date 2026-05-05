@@ -15,8 +15,8 @@
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
-
-#include <oret/toplevelfixture.hpp>
+#include <boost/test/unit_test.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 #include <test/oreatoplevelfixture.hpp>
 #include "testmarket.hpp"
 #include "testportfolio.hpp"
@@ -471,7 +471,9 @@ BOOST_AUTO_TEST_CASE(testSensitivities) {
     ActualActual dc(ActualActual::ISDA); // this is the dc used for the init / sim market curves
     Size i = 0;
     for (auto const& p : sensiData->discountCurveShiftData()["EUR"]->shiftTenors) {
-        bucketTimes.push_back(dc.yearFraction(today, today + p));
+        auto tenor = std::get_if<Period>(&p);
+        QL_REQUIRE(tenor, "Expected a Period tenor");
+        bucketTimes.push_back(dc.yearFraction(today, today + *tenor));
         ostringstream bs;
         bs << p;
         bucketStr.push_back(bs.str());

@@ -23,15 +23,20 @@
 #include <ored/portfolio/swap.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/simmcurrencies.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 
-#include <ql/time/calendars/target.hpp>
 #include <ql/indexes/inflation/euhicp.hpp>
-#include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
+#include <ql/termstructures/yield/zerospreadedtermstructure.hpp>
+#include <ql/time/calendars/target.hpp>
 #include <qle/cashflows/equitycouponpricer.hpp>
+#include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/indexes/fxindex.hpp>
 #include <qle/instruments/currencyswap.hpp>
+#include <qle/instruments/swapoptimized.hpp>
+#include <qle/utilities/fairrate.hpp>
 
 #include <ql/instruments/swap.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
@@ -47,7 +52,7 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
     DLOG("Swap::build() called for trade " << id());
 
     setIsdaTaxonomyFields();
-    
+
     QL_REQUIRE(legData_.size() >= 1, "Swap must have at least 1 leg");
     const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
 
@@ -64,8 +69,7 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
 
     isXCCY_ = false;
     isResetting_ = false;
-    allLegsAreSimmPlainVanillaIrLegs_ = true;
-    
+
     for (Size i = 0; i < numLegs; ++i) {
         // allow minor currencies for Equity legs as some exchanges trade in these, e.g LSE in pence - GBX or GBp
         // minor currencies on other legs will fail here
@@ -77,11 +81,6 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
         if (currencies[i] != currency)
             isXCCY_ = true;
         isResetting_ = isResetting_ || (!legData_[i].isNotResetXCCY());
-        
-        if(!legData_[i].isSimmPlainVanillaIrLeg()){
-            
-            allLegsAreSimmPlainVanillaIrLegs_ = false;
-        }
     }
 
     /* collect currencies from fx indexing and eq names from eq indexing
@@ -119,59 +118,11 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
     }
 
     /* determine whether we have a xccy and whether to use the special xbs curves */
-
     isXCCY_ = isXCCY_ || currenciesWithIndexing.size() > 1;
 
-    static std::set<LegType> eligibleForXbs = {LegType::Fixed, LegType::Floating};
+    bool useXbsCurves = isSimmEligibleXccySwap(legData_, settlement_);
 
-    bool useXbsCurves = true;
-    for(Size i=0;i<numLegs;++i) {
-        useXbsCurves = useXbsCurves && (eligibleForXbs.find(legData_[i].legType()) != eligibleForXbs.end());
-    }
-
-
-    // The npv currency, notional currency and current notional are taken from the first leg that
-    // appears in the XML that has a notional. If no such leg exists the notional currency
-    // and current notional are left empty and the npv currency is set to the first leg's currency
-
-    notionalTakenFromLeg_ = 0;
-    for (; notionalTakenFromLeg_ < legData_.size(); ++notionalTakenFromLeg_) {
-        const LegData& d = legData_[notionalTakenFromLeg_];
-        if (!d.notionals().empty())
-            break;
-    }
-
-    if (notionalTakenFromLeg_ == legData_.size()) {
-        ALOG("no suitable leg found to set notional, set to null and notionalCurrency to empty string");
-        notional_ = Null<Real>();
-        notionalCurrency_ = "";
-        // parse for currency in case first leg is Equity, we only want the major currency for NPV
-        npvCurrency_ = parseCurrencyWithMinors(legData_.front().currency()).code();
-    } else {
-        if (legData_[notionalTakenFromLeg_].schedule().hasData()) {
-            Schedule schedule = makeSchedule(legData_[notionalTakenFromLeg_].schedule());
-            auto notional =
-                buildScheduledVectorNormalised(legData_[notionalTakenFromLeg_].notionals(),
-                                               legData_[notionalTakenFromLeg_].notionalDates(), schedule, 0.0);
-            Date today = Settings::instance().evaluationDate();
-            auto d = std::upper_bound(schedule.dates().begin(), schedule.dates().end(), today);
-            // forward starting => take first notional
-            // on or after last schedule date => zero notional
-            // in between => notional of current period
-            if (d == schedule.dates().begin())
-                notional_ = notional.at(0);
-            else if (d == schedule.dates().end())
-                notional_ = 0.0;
-            else
-                notional_ = notional.at(std::distance(schedule.dates().begin(), d) - 1);
-        } else {
-            notional_ = legData_[notionalTakenFromLeg_].notionals().at(0);
-        }
-        // parse for currency in case leg is Equity, we only want the major currency for NPV and Notional
-        notionalCurrency_ = parseCurrencyWithMinors(legData_[notionalTakenFromLeg_].currency()).code();
-        npvCurrency_ = parseCurrencyWithMinors(legData_[notionalTakenFromLeg_].currency()).code();
-        DLOG("Notional is " << notional_ << " " << notionalCurrency_);
-    }
+    std::tie(notionalTakenFromLeg_, notional_, npvCurrency_, notionalCurrency_) = getSwapNpvAndNotionalInfo(legData_);
 
     Currency npvCcy = parseCurrency(npvCurrency_);
     DLOG("npv currency is " << npvCurrency_);
@@ -204,49 +155,91 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
             new QuantExt::CurrencySwap(legs_, legPayers_, currencies, settlement_ == "Physical", isResetting_));
         QuantLib::ext::shared_ptr<CrossCurrencySwapEngineBuilderBase> swapBuilder =
             QuantLib::ext::dynamic_pointer_cast<CrossCurrencySwapEngineBuilderBase>(builder);
-        QL_REQUIRE(swapBuilder, "No Builder found for CrossCurrencySwap " << id());
-        bool useXccyYieldCurvesForDiscounting = allLegsAreSimmPlainVanillaIrLegs_;
+        QL_REQUIRE(swapBuilder,
+                   "internal error: engine builder for product type CrossCurrencySwap can not be cast, trade " << id());
         swap->setPricingEngine(
-            swapBuilder->engine(currenciesWithIndexing, npvCcy, useXccyYieldCurvesForDiscounting, eqNames));
+            swapBuilder->engine(currenciesWithIndexing, npvCcy, useXbsCurves, eqNames));
         setSensitivityTemplate(*swapBuilder);
         addProductModelEngine(*swapBuilder);
         // take the first legs currency as the npv currency (arbitrary choice)
         instrument_.reset(new VanillaInstrument(swap));
     } else {
-        QuantLib::ext::shared_ptr<QuantLib::Swap> swap(new QuantLib::Swap(legs_, legPayers_));
         QuantLib::ext::shared_ptr<SwapEngineBuilderBase> swapBuilder =
             QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
-        QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
-        swap->setPricingEngine(swapBuilder->engine(npvCcy, envelope().additionalField("discount_curve", false),
-                                                   envelope().additionalField("security_spread", false), eqNames));
+        QL_REQUIRE(swapBuilder, "internal error: engine builder for product type Swap can not be cast, trade " << id());
+        QuantLib::ext::shared_ptr<QuantLib::Instrument> swap;
+        if(swapBuilder->optimizedInstrument()) {
+            auto market = builder->market();
+            auto config = builder->configuration(MarketContext::pricing);
+            swap = QuantLib::ext::make_shared<SwapOptimized>(legs_, legPayers_,
+                                                             market->discountCurve(npvCcy.code(), config));
+        } else {
+            swap = QuantLib::ext::make_shared<QuantLib::Swap>(legs_, legPayers_);
+            swap->setPricingEngine(swapBuilder->engine(npvCcy, envelope().additionalField("discount_curve", false),
+                                                       envelope().additionalField("security_spread", false), eqNames));
+        }
         setSensitivityTemplate(*swapBuilder);
         addProductModelEngine(*swapBuilder);
         instrument_.reset(new VanillaInstrument(swap));
     }
-
-    DLOG("Set instrument wrapper");
 
     // set Leg Currencies
     legCurrencies_ = vector<string>(currencies.size());
     for (Size i = 0; i < currencies.size(); i++)
         legCurrencies_[i] = currencies[i].code();
 
-    // set maturity
-    maturity_ = Date::minDate();
-    Date startDate = Date::maxDate();
-    for (auto const& l : legs_) {
-        if (!l.empty()) {
-            maturity_ = std::max(maturity_, l.back()->date());
-            if (maturity_ == l.back()->date())
-                maturityType_ = "Leg End Date";
-            startDate = std::min(startDate, l.front()->date());
-            QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(l.front());
-            if (coupon)
-                startDate = std::min(startDate, coupon->accrualStartDate());                
+    // set start and maturity dates
+    Date startDate;
+    std::tie(startDate, maturity_, maturityType_) = getSwapStartMaturity(legs_);
+    additionalData_["startDate"] = to_string(startDate);
+
+    // Store discount curves and FX spots for fair rate calculation
+    discountCurves_.resize(numLegs);
+    fxSpots_.resize(numLegs);
+
+    if (isXCCY_) {
+        // Cross-currency swap: per-leg curves and FX spots
+        for (Size i = 0; i < numLegs; ++i) {
+            string ccyCode = currencies[i].code();
+            if (useXbsCurves) {
+                discountCurves_[i] = (xccyYieldCurve)(market, ccyCode, configuration);
+            } else {
+                discountCurves_[i] = market->discountCurve(ccyCode, configuration);
+            }
+            // FX spot: convert leg currency to NPV currency
+            if (ccyCode == npvCcy.code()) {
+                fxSpots_[i] = 1.0;
+            } else {
+                string pair = ccyCode + npvCcy.code();
+                Handle<Quote> fx = market->fxRate(pair, configuration);
+                if (fx.empty()) {
+                    DLOG("Swap::build(): missing FX spot for pair " << pair << " in configuration " << configuration
+                                                                     << ", using 1.0 as placeholder for fair-rate reporting.");
+                    fxSpots_[i] = 1.0;
+                } else {
+                    fxSpots_[i] = fx->value();
+                }
+            }
+        }
+    } else {
+        // Single-currency swap: same curve for all legs, FX spots = 1.0
+        std::string discountCurveName = envelope().additionalField("discount_curve", false);
+        std::string securitySpread = envelope().additionalField("security_spread", false);
+
+        Handle<YieldTermStructure> yts =
+            discountCurveName.empty() ? market->discountCurve(npvCcy.code(), configuration)
+                                      : indexOrYieldCurve(market, discountCurveName, configuration);
+
+        if (!securitySpread.empty()) {
+            yts = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(
+                yts, market->securitySpread(securitySpread, configuration)));
+        }
+
+        for (Size i = 0; i < numLegs; ++i) {
+            discountCurves_[i] = yts;
+            fxSpots_[i] = 1.0;
         }
     }
-
-    additionalData_["startDate"] = to_string(startDate);
 }
 
 void Swap::setIsdaTaxonomyFields() {
@@ -263,8 +256,6 @@ const std::map<std::string,QuantLib::ext::any>& Swap::additionalData() const {
     QuantLib::ext::shared_ptr<QuantLib::Swap> swap = QuantLib::ext::dynamic_pointer_cast<QuantLib::Swap>(instrument_->qlInstrument());
     QuantLib::ext::shared_ptr<QuantExt::CurrencySwap> cswap = QuantLib::ext::dynamic_pointer_cast<QuantExt::CurrencySwap>(instrument_->qlInstrument());
     std::map<std::string, Real> legNpv; // by currency
-    Real floatingNpv = 0.0;
-    Real fixedBps = 0.0;
     for (Size i = 0; i < numLegs; ++i) {
         string legID = to_string(i+1);
         additionalData_["legType[" + legID + "]"] = ore::data::to_string(legData_[i].legType());
@@ -273,15 +264,12 @@ const std::map<std::string,QuantLib::ext::any>& Swap::additionalData() const {
         if (!isXCCY_) {
             if (swap) {
                 additionalData_["legNPV[" + legID + "]"] = swap->legNPV(i);
-                if (allLegsAreSimmPlainVanillaIrLegs_ && legData_[i].legType() == LegType::Floating)
-                    floatingNpv = swap->legNPV(i);            
-                if (allLegsAreSimmPlainVanillaIrLegs_ && legData_[i].legType() == LegType::Fixed) {
+                if (legData_[i].legType() == LegType::Fixed) {
                     additionalData_["PV01[" + legID + "]"] = std::abs(swap->legBPS(i));
-                    fixedBps = swap->legBPS(i);
                 }
             } else
                 ALOG("single currency swap underlying instrument not set, skip leg npv reporting");
-        } 
+        }
         else {
             if (cswap) {
                 // The currency swap has more legs than the swap wrapper (additional notional legs), so aggregate by currency
@@ -296,13 +284,25 @@ const std::map<std::string,QuantLib::ext::any>& Swap::additionalData() const {
                 additionalData_["legNPV[" + legID + "]"] = legNpv;
                 additionalData_["legNPVCCY[" + legID + "]"] = legNpvInCcy;
             }
-            else 
+            else
                 ALOG("cross currency swap underlying instrument not set, skip leg npv reporting");
         }
         setLegBasedAdditionalData(i);
     }
-    if (swap && allLegsAreSimmPlainVanillaIrLegs_ && fixedBps != 0.0) {
-        additionalData_["atmForward"] = (-floatingNpv / fixedBps) / 1E4;
+
+    // Compute fair rate using the new utility function
+    if (!legs_.empty() && !discountCurves_.empty() && discountCurves_.size() == numLegs) {
+        try {
+            auto [atmForward, spreadCorrection] = QuantExt::fairRate(
+                std::vector<Leg>(legs_.begin(), legs_.begin() + numLegs),
+                std::vector<bool>(legPayers_.begin(), legPayers_.begin() + numLegs),
+                discountCurves_,
+                fxSpots_);
+            additionalData_["atmForward"] = atmForward;
+            additionalData_["spreadCorrection"] = spreadCorrection;
+        } catch (const std::exception& e) {
+            DLOG("Could not compute atmForward using fairRate utility: " << e.what());
+        }
     }
     return additionalData_;
 }
@@ -339,28 +339,8 @@ std::string Swap::notionalCurrency() const {
 
 map<AssetClass, set<string>>
 Swap::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
-
-    map<AssetClass, set<string>> result;
-    for (const auto& ld : legData_) {
-        for (auto ind : ld.indices()) {
-            // only handle equity and commodity for now
-            if (ind.substr(0, 5) != "COMM-" && ind.substr(0, 3) != "EQ-")
-                continue;
-
-            QuantLib::ext::shared_ptr<Index> index = parseIndex(ind);
-
-            if (auto ei = QuantLib::ext::dynamic_pointer_cast<EquityIndex2>(index)) {
-                result[AssetClass::EQ].insert(ei->name());
-            } else if (auto ci = QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityIndex>(index)) {
-                result[AssetClass::COM].insert(ci->name());
-            }
-        }
-    }
-
-    if (auto s = envelope().additionalField("security_spread", false); !s.empty())
-        result[AssetClass::BOND] = {s};
-
-    return result;
+    return getSwapUnderlyingIndices(referenceDataManager, legData_,
+                                    envelope().additionalField("security_spread", false));
 }
 
 std::string isdaSubProductSwap(const std::string& tradeId, const vector<LegData>& legData) {
@@ -386,7 +366,8 @@ std::string isdaSubProductSwap(const std::string& tradeId, const vector<LegData>
                  type ==  LegType::DurationAdjustedCMS ||
                  type ==  LegType::FormulaBased ||
                  type == LegType::CommodityFloating ||
-                 type == LegType::EquityMargin)
+                 type == LegType::EquityMargin ||
+                 type == LegType::RangeAccrual)
             nFloating++;
         else {
             ALOG("leg type " << type << " not mapped for trade " << tradeId);
@@ -394,9 +375,9 @@ std::string isdaSubProductSwap(const std::string& tradeId, const vector<LegData>
     }
 
     if (nFixed == 0)
-        return string("Basis");  
+        return string("Basis");
     else if (nFloating >= 1)
-        return string("Fixed Float");  
+        return string("Fixed Float");
     else
         return string("Fixed Fixed");
 }
@@ -418,13 +399,11 @@ void Swap::fromXML(XMLNode* node) {
 
     vector<XMLNode*> nodes = XMLUtils::getChildrenNodes(swapNode, "LegData");
     for (Size i = 0; i < nodes.size(); i++) {
-        auto ld = createLegData();
+        auto ld = ext::make_shared<LegData>();
         ld->fromXML(nodes[i]);
         legData_.push_back(*QuantLib::ext::static_pointer_cast<LegData>(ld));
     }
 }
-
-QuantLib::ext::shared_ptr<LegData> Swap::createLegData() const { return QuantLib::ext::make_shared<LegData>(); }
 
 XMLNode* Swap::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
@@ -436,6 +415,148 @@ XMLNode* Swap::toXML(XMLDocument& doc) const {
     for (Size i = 0; i < legData_.size(); i++)
         XMLUtils::appendNode(swapNode, legData_[i].toXML(doc));
     return node;
+}
+
+std::tuple<Size, Real, std::string, std::string> getSwapNpvAndNotionalInfo(const std::vector<LegData>& legData) {
+
+    // The npv currency, notional currency and current notional are taken from the first leg that
+    // appears in the XML that has a notional. If no such leg exists the notional currency
+    // and current notional are left empty and the npv currency is set to the first leg's currency
+
+    Size notionalTakenFromLeg = 0;
+    for (; notionalTakenFromLeg < legData.size(); ++notionalTakenFromLeg) {
+        const LegData& d = legData[notionalTakenFromLeg];
+        if (!d.notionals().empty())
+            break;
+    }
+
+    Real notional;
+    std::string npvCurrency;
+    std::string notionalCurrency;
+
+    if (notionalTakenFromLeg == legData.size()) {
+        ALOG("no suitable leg found to set notional, set to null and notionalCurrency to empty string");
+        notional = Null<Real>();
+        notionalCurrency = "";
+        // parse for currency in case first leg is Equity, we only want the major currency for NPV
+        npvCurrency = parseCurrencyWithMinors(legData.front().currency()).code();
+    } else {
+        if (legData[notionalTakenFromLeg].schedule().hasData()) {
+            Schedule schedule = makeSchedule(legData[notionalTakenFromLeg].schedule());
+            auto notionalSchedule =
+                buildScheduledVectorNormalised(legData[notionalTakenFromLeg].notionals(),
+                                               legData[notionalTakenFromLeg].notionalDates(), schedule, 0.0);
+            Date today = Settings::instance().evaluationDate();
+            auto d = std::upper_bound(schedule.dates().begin(), schedule.dates().end(), today);
+            // forward starting => take first notional
+            // on or after last schedule date => zero notional
+            // in between => notional of current period
+            if (d == schedule.dates().begin())
+                notional = notionalSchedule.at(0);
+            else if (d == schedule.dates().end())
+                notional = 0.0;
+            else
+                notional = notionalSchedule.at(std::distance(schedule.dates().begin(), d) - 1);
+        } else {
+            notional = legData[notionalTakenFromLeg].notionals().at(0);
+        }
+        // parse for currency in case leg is Equity, we only want the major currency for NPV and Notional
+        notionalCurrency = parseCurrencyWithMinors(legData[notionalTakenFromLeg].currency()).code();
+        npvCurrency = parseCurrencyWithMinors(legData[notionalTakenFromLeg].currency()).code();
+    }
+
+    DLOG("Notional is taken from leg " << notionalTakenFromLeg << ", notional is " << notional << ", npvCurrency is "
+                                       << npvCurrency << ", notionalCurrency is " << notionalCurrency);
+    return std::make_tuple(notionalTakenFromLeg, notional, npvCurrency, notionalCurrency);
+}
+
+std::map<AssetClass, std::set<std::string>>
+getSwapUnderlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager,
+                         const std::vector<LegData>& legData, const std::string& security) {
+
+    map<AssetClass, set<string>> result;
+    for (const auto& ld : legData) {
+        for (auto ind : ld.indices()) {
+            // only handle equity and commodity for now
+            if (ind.substr(0, 5) != "COMM-" && ind.substr(0, 3) != "EQ-")
+                continue;
+
+            QuantLib::ext::shared_ptr<Index> index = parseIndex(ind);
+
+            if (auto ei = QuantLib::ext::dynamic_pointer_cast<EquityIndex2>(index)) {
+                result[AssetClass::EQ].insert(ei->name());
+            } else if (auto ci = QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityIndex>(index)) {
+                result[AssetClass::COM].insert(ci->name());
+            }
+        }
+    }
+
+    if (!security.empty())
+        result[AssetClass::BOND] = {security};
+
+    return result;
+}
+
+std::tuple<Date, Date, std::string> getSwapStartMaturity(const std::vector<Leg>& legs) {
+    Date maturity = Date::minDate();
+    Date startDate = Date::maxDate();
+    std::string maturityType;
+    for (auto const& l : legs) {
+        if (!l.empty()) {
+            maturity = std::max(maturity, l.back()->date());
+            if (maturity == l.back()->date())
+                maturityType = "Leg End Date";
+            startDate = std::min(startDate, l.front()->date());
+            QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(l.front());
+            if (coupon)
+                startDate = std::min(startDate, coupon->accrualStartDate());
+        }
+    }
+    return std::make_tuple(startDate, maturity, maturityType);
+}
+
+//! Return true if the floating leg has at least one cap or floor
+bool floatingLegHasCapFloors(const QuantLib::ext::shared_ptr<FloatingLegData>& floatingLegData) {
+    QL_REQUIRE(floatingLegData, "internal error: expected floating leg data for floating leg, contact dev.");
+    return !floatingLegData->caps().empty() || !floatingLegData->floors().empty();
+}
+
+bool legIsSimmEligableXccySwap(const LegData& ld) {
+    if (ld.legType() != LegType::Fixed && ld.legType() != LegType::Floating && ld.legType() != LegType::Cashflow)
+        return false;
+    if (!ld.indexing().empty()) {
+        return false;
+    }
+    if (ld.legType() == LegType::Floating &&
+        floatingLegHasCapFloors(QuantLib::ext::dynamic_pointer_cast<FloatingLegData>(ld.concreteLegData()))) {
+        return false;
+    }
+    return true;
+}
+
+bool isSimmEligibleXccySwap(const std::vector<LegData>& legData, const std::string& settlement) {
+    if (settlement != "Physical") {
+        return false;
+    }
+
+    std::map<string, bool> legPayerReceiver;
+    std::set<string> standardSimCurrencies;
+    for (Size i = 0; i < legData.size(); i++) {
+        const LegData& ld = legData[i];
+        if (!legIsSimmEligableXccySwap(ld))
+            return false;
+        // check that all legs with the same currency are in the same direction
+        const string& ccy = ld.currency();
+        auto payerReceiverIt = legPayerReceiver.find(ccy);
+        if (payerReceiverIt == legPayerReceiver.end()) {
+            legPayerReceiver[ccy] = ld.isPayer();
+        } else if (payerReceiverIt->second != ld.isPayer()) {
+            return false;
+        }
+        standardSimCurrencies.insert(ore::data::isUnidadeCurrency(ccy) ? ore::data::simmStandardCurrency(ccy) : ccy);
+    }
+    // Dont allow three raw currencies even if two of them are the same standard SIMM currency
+    return legPayerReceiver.size() == 2 && standardSimCurrencies.size() == 2;
 }
 
 } // namespace data

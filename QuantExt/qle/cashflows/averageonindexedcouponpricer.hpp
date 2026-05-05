@@ -18,8 +18,7 @@
 
 /*! \file averageonindexedcouponpricer.hpp
     \brief Pricer for average overnight indexed coupons
-
-        \ingroup cashflows
+    \ingroup cashflows
 */
 
 #ifndef quantext_average_on_indexed_coupon_pricer_hpp
@@ -43,6 +42,7 @@ public:
 
     void initialize(const FloatingRateCoupon& coupon) override;
     Rate swapletRate() const override;
+    std::pair<Rate, Date> effectiveRate(const Date& date) const;
 
     Real swapletPrice() const override { QL_FAIL("swapletPrice not available"); }
     Real capletPrice(Rate) const override { QL_FAIL("capletPrice not available"); }
@@ -52,11 +52,6 @@ public:
 
 protected:
     Approximation approximationType_;
-    Real gearing_;
-    Spread spread_;
-    Time accrualPeriod_;
-    QuantLib::ext::shared_ptr<OvernightIndex> overnightIndex_;
-
     const AverageONIndexedCoupon* coupon_;
 };
 } // namespace QuantExt

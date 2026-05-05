@@ -110,7 +110,7 @@ std::ostream& operator<<(std::ostream& out, Convention::Type type);
 
 //! Repository for currency dependent market conventions
 /*!
-  \ingroup market
+  \ingroup configuration
 */
 class Conventions : public XMLSerializable {
 public:
@@ -312,7 +312,8 @@ private:
  */
 class FutureConvention : public Convention {
 public:
-    enum class DateGenerationRule { IMM, FirstDayOfMonth, SecondThursday };
+    //! SecondThursday is kept as a backward-compatible alias for IMMAUD.
+    enum class DateGenerationRule { IMM, FirstDayOfMonth, IMMAUD, IMMNZD, IMMCAD };
     //! \name Constructors
     //@{
     //! Default constructor
@@ -322,29 +323,36 @@ public:
     //! Index based constructor taking in addition a netting type for ON indices and a date generation rule
     FutureConvention(const string& id, const string& index,
                      const QuantLib::RateAveraging::Type overnightIndexFutureNettingType,
-                     const DateGenerationRule dateGeneration, const string& calendar);
+                     const DateGenerationRule dateGeneration, const string& calendar,
+                     const string& strOvernightIndexTenor_ = "");
     //@}
     //! \name Inspectors
     //@{
     QuantLib::ext::shared_ptr<IborIndex> index() const;
     QuantLib::RateAveraging::Type overnightIndexFutureNettingType() const { return overnightIndexFutureNettingType_; }
+    QuantLib::Period tenor() const { return tenor_; }
     DateGenerationRule dateGenerationRule() const { return dateGenerationRule_; }
     QuantLib::Calendar calendar() const { return calendar_; }
+    bool isOvernightIndexFuture() const { return isOisIndex_; }
+    std::string indexName() const { return strIndex_; }
     //@}
 
     //! Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
-    virtual void build() override {}
+    virtual void build() override;
     //@}
 
 private:
     string strIndex_;
     string strCalendar_;
+    string strOvernightIndexTenor_;
     QuantLib::RateAveraging::Type overnightIndexFutureNettingType_;
     DateGenerationRule dateGenerationRule_;
     QuantLib::Calendar calendar_;
+    QuantLib::Period tenor_;
+    bool isOisIndex_;
 };
 
 //! Container for storing Forward rate Agreement conventions
@@ -902,7 +910,8 @@ public:
                                 const string& strRateCutoff = "", const string& strIsAveraged = "",
                                 const string& strFlatIncludeSpread = "", const string& strFlatLookback = "",
                                 const string& strFlatFixingDays = "", const string& strFlatRateCutoff = "",
-                                const string& strFlatIsAveraged = "", const Conventions* conventions = nullptr);
+                                const string& strFlatIsAveraged = "", const Conventions* conventions = nullptr,
+                                const string& strObservationShift = "", const string& strFlatObservationShift = "");
     //@}
 
     //! \name Inspectors
@@ -930,11 +939,13 @@ public:
     QuantLib::ext::optional<QuantLib::Size> fixingDays() const { return fixingDays_; }
     QuantLib::ext::optional<Size> rateCutoff() const { return rateCutoff_; }
     QuantLib::ext::optional<bool> isAveraged() const { return isAveraged_; }
+    QuantLib::ext::optional<bool> observationShift() const { return observationShift_; }
     QuantLib::ext::optional<bool> flatIncludeSpread() const { return flatIncludeSpread_; }
     QuantLib::ext::optional<QuantLib::Period> flatLookback() const { return flatLookback_; }
     QuantLib::ext::optional<QuantLib::Size> flatFixingDays() const { return flatFixingDays_; }
     QuantLib::ext::optional<Size> flatRateCutoff() const { return flatRateCutoff_; }
     QuantLib::ext::optional<bool> flatIsAveraged() const { return flatIsAveraged_; }
+    QuantLib::ext::optional<bool> flatObservationShift() const { return flatObservationShift_; }
     //@}
 
     //! \name Serialisation
@@ -960,11 +971,13 @@ private:
     QuantLib::ext::optional<QuantLib::Size> fixingDays_;
     QuantLib::ext::optional<Size> rateCutoff_;
     QuantLib::ext::optional<bool> isAveraged_;
+    QuantLib::ext::optional<bool> observationShift_;
     QuantLib::ext::optional<bool> flatIncludeSpread_;
     QuantLib::ext::optional<QuantLib::Period> flatLookback_;
     QuantLib::ext::optional<QuantLib::Size> flatFixingDays_;
     QuantLib::ext::optional<Size> flatRateCutoff_;
     QuantLib::ext::optional<bool> flatIsAveraged_;
+    QuantLib::ext::optional<bool> flatObservationShift_;
 
     // Strings to store the inputs
     string strSettlementDays_;
@@ -985,11 +998,13 @@ private:
     string strFixingDays_;
     string strRateCutoff_;
     string strIsAveraged_;
+    string strObservationShift_;
     string strFlatIncludeSpread_;
     string strFlatLookback_;
     string strFlatFixingDays_;
     string strFlatRateCutoff_;
     string strFlatIsAveraged_;
+    string strFlatObservationShift_;
 };
 
 /*! Container for storing Cross Currency Fix vs Float Swap quote conventions
@@ -1011,7 +1026,7 @@ public:
                                    const std::string& strFloatIndexIsResettable = "",
                                    const string& strIncludeSpread = "", const string& strLookback = "",
                                    const string& strFixingDays = "", const string& strRateCutoff = "",
-                                   const string& strIsAveraged = "");
+                                   const string& strIsAveraged = "", const string& strObservationShift = "");
     //@}
 
     //! \name Inspectors
@@ -1034,6 +1049,7 @@ public:
     QuantLib::ext::optional<QuantLib::Size> fixingDays() const { return fixingDays_; }
     QuantLib::ext::optional<Size> rateCutoff() const { return rateCutoff_; }
     QuantLib::ext::optional<bool> isAveraged() const { return isAveraged_; }
+    QuantLib::ext::optional<bool> observationShift() const { return observationShift_; }
     //@}
 
     //! \name Serialisation interface
@@ -1069,15 +1085,16 @@ private:
     std::string strFixedDayCounter_;
     std::string strIndex_;
     std::string strEom_;
-
     std::string strIsResettable_;
     std::string strFloatIndexIsResettable_;
 
+    // OIS Only
     std::string strIncludeSpread_;
     std::string strLookback_;
     std::string strFixingDays_;
     std::string strRateCutoff_;
     std::string strIsAveraged_;
+    std::string strObservationShift_;
 
     // OIS Only
     QuantLib::ext::optional<bool> includeSpread_;
@@ -1085,6 +1102,7 @@ private:
     QuantLib::ext::optional<QuantLib::Size> fixingDays_;
     QuantLib::ext::optional<Size> rateCutoff_;
     QuantLib::ext::optional<bool> isAveraged_;
+    QuantLib::ext::optional<bool> observationShift_;
 };
 
 //! Container for storing Credit Default Swap quote conventions
@@ -1098,15 +1116,19 @@ public:
     //! Default constructor
     CdsConvention();
 
+    //Reference Data based constructor
+    CdsConvention(const string& id, const bool usesReferenceData);
+
     //! Detailed constructor
     CdsConvention(const string& id, const string& strSettlementDays, const string& strCalendar,
                   const string& strFrequency, const string& strPaymentConvention, const string& strRule,
                   const string& dayCounter, const string& settlesAccrual, const string& paysAtDefaultTime,
-                  const string& strUpfrontSettlementDays = "", const string& lastPeriodDayCounter = "");
+                  const string& strUpfrontSettlementDays = "", const string& lastPeriodDayCounter = "", bool usesReferenceData = false);
     //@}
 
     //! \name Inspectors
     //@{
+    bool usesReferenceData() const { return usesReferenceData_; }
     Natural settlementDays() const { return settlementDays_; }
     const Calendar& calendar() const { return calendar_; }
     Frequency frequency() const { return frequency_; }
@@ -1148,6 +1170,8 @@ private:
     string strPaysAtDefaultTime_;
     string strUpfrontSettlementDays_;
     string strLastPeriodDayCounter_;
+
+    bool usesReferenceData_;
 };
 
 class InflationSwapConvention : public Convention {
@@ -1908,16 +1932,19 @@ public:
         bool revised,
         const std::string& frequency,
         const std::string& availabilityLag,
-        const std::string& currency);
+        const std::string& currency,
+        const std::map<QuantLib::Date, Real>& rebasingEvents = {});
 
     QuantLib::Region region() const;
     bool revised() const { return revised_; }
     QuantLib::Frequency frequency() const { return frequency_; }
     const QuantLib::Period& availabilityLag() const { return availabilityLag_; }
     const QuantLib::Currency& currency() const { return currency_; }
-
+    const std::map<QuantLib::Date, Real>& rebasingEvents() const { return rebasingEvents_; }
+    
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
+    
     void build() override;
 
 private:
@@ -1931,6 +1958,7 @@ private:
     QuantLib::Frequency frequency_;
     QuantLib::Period availabilityLag_;
     QuantLib::Currency currency_;
+    std::map<QuantLib::Date, Real> rebasingEvents_;
 };
 
 /*! Container for storing bond yield calculation conventions

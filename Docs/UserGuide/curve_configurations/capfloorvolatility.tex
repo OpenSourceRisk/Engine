@@ -97,8 +97,8 @@ A comma separated list of valid tenor strings giving the cap floor maturity teno
 \item \lstinline!OptionalQuotes! [Optional]:
 A boolean flag to indicate whether market data quotes for all tenors are required. If true, we attempt to build the curve from whatever quotes are provided. If false, the curve will fail to build if any quotes are missing. This also applies to quotes for the \lstinline!AtmTenors!. Default value is false.
 
-\item \lstinline!IborIndex!:
-A valid interest rate index name giving the index underlying the cap floor quotes. Allowable values are given in the Table \ref{tab:indices}.
+\item \lstinline!Index!:
+A valid interest rate index name giving the index underlying the cap floor quotes. This has to be an ibor, term or overnight index. Allowable values are given in the Table \ref{tab:indices}.
 
 \item \lstinline!DiscountCurve!:
 A reference to a valid discount curve specification that will be used to discount cashflows during the stripping process. It should be of the form \lstinline!Yield/Currency/curve_name! where \lstinline!curve_name! is the name of a yield curve defined in the yield curve configurations.
@@ -117,6 +117,23 @@ This node holds configuration details for the iterative bootstrap that are descr
 
 \item \lstinline!InputType! [Optional]:
 The type of the marketdata input. Allowable values are \lstinline!TermVolatilities! or \lstinline!OptionletVolatilities!. As we are describing term cap volatilities input, this should be set to \lstinline!TermVolatilities! or omitted as shown in Listing \ref{lst:capfloorvol_atm_configuration_term}. If omitted, the default value is \lstinline!TermVolatilities!.
+
+\item \lstinline!RateComputationPeriod! [Optional]:
+For overnight indices, the caplet compounding period, e.g. 3M for USD-SOFR. Not relevant for ibor, term indices.
+
+\item \lstinline!FlatFirstPeriod! [Optional]:
+If true (default) the volatilities of the caplets that form the first par market cap are set to the same value. If false
+and a global bootstrap is used, the caplet volatility at $t=0$ is included in the opimization and the caplet
+volatilities of the first par market cap are interpolated between the value at $t=0$ and the next interpolation
+node. Since the node at $t=0$ adds a degree of freedom, the parameter SmoothnessLambda should be set to a positive value
+in the bootstrap config. See \label{sec:bootstrap_config}.
+
+\item \lstinline!UseEffectiveVolatility! [Optional]:
+Only applies to overnight caplets. If false (default), volatilities in the surface will be ``stripped volatilities'',
+i.e. they will be placed on the first fixing date of the caplet and a decay adjustment will be applied when pricing the
+caplet. If true, volatilities in the surface will be ``effective volatliities'', i.e. they will be placed on the last
+fixing date of the caplet and the market black formula will be used to price such a caplet, using the last fixing date
+to calculate the usual black variance, without decay adjustment.
 
 \end{itemize}
 
@@ -137,13 +154,16 @@ The type of the marketdata input. Allowable values are \lstinline!TermVolatiliti
   <BusinessDayConvention>...</BusinessDayConvention>
   <Tenors>...</Tenors>
   <OptionalQuotes>...</OptionalQuotes>
-  <IborIndex>...</IborIndex>
+  <Index>...</Index>
   <DiscountCurve>...</DiscountCurve>
   <AtmTenors>...</AtmTenors>
   <SettlementDays>...</SettlementDays>
   <InterpolateOn>TermVolatilities</InterpolateOn>
   <BootstrapConfig>...</BootstrapConfig>
   <InputType>TermVolatilities</InputType>
+  <RateComputationPeriod>...</RateComputationPeriod>
+  <FlatFirstPeriod>...</FlatFirstPeriod>
+  <UseEffectiveVolatility>...</UseEffectiveVolatility>
 </CapFloorVolatility>
 \end{minted}
 \caption{ATM cap floor configuration with interpolation on term volatilities.}
@@ -195,8 +215,8 @@ A comma separated list of valid tenor strings giving the cap floor maturity teno
 \item \lstinline!OptionalQuotes! [Optional]:
 A boolean flag to indicate whether market data quotes for all tenors are required. If true, we attempt to build the curve from whatever quotes are provided. If false, the curve will fail to build if any quotes are missing. This also applies to quotes for the \lstinline!AtmTenors!. Default value is false.
 
-\item \lstinline!IborIndex!:
-A valid interest rate index name giving the index underlying the cap floor quotes. Allowable values are given in the Table \ref{tab:indices}.
+\item \lstinline!Index!:
+A valid interest rate index name giving the index underlying the cap floor quotes. This has to be an ibor, term or overnight index. Allowable values are given in the Table \ref{tab:indices}.
 
 \item \lstinline!DiscountCurve!:
 A reference to a valid discount curve specification that will be used to discount cashflows during the stripping process. It should be of the form \lstinline!Yield/Currency/curve_name! where \lstinline!curve_name! is the name of a yield curve defined in the yield curve configurations.
@@ -219,6 +239,23 @@ This node holds configuration details for the iterative bootstrap that are descr
 \item \lstinline!InputType! [Optional]:
 The type of the marketdata input. Allowable values are \lstinline!TermVolatilities! or \lstinline!OptionletVolatilities!. As we are describing term cap volatilities input, this should be set to \lstinline!TermVolatilities! or omitted as shown in Listing \ref{lst:capfloorvol_atm_configuration_opt}. If omitted, the default value is \lstinline!TermVolatilities!.
 
+\item \lstinline!RateComputationPeriod! [Optional]:
+For overnight indices, the caplet compounding period, e.g. 3M for USD-SOFR. Not relevant for ibor, term indices.
+
+\item \lstinline!FlatFirstPeriod! [Optional]:
+If true (default) the volatilities of the caplets that form the first par market cap are set to the same value. If false
+and a global bootstrap is used, the caplet volatility at $t=0$ is included in the opimization and the caplet
+volatilities of the first par market cap are interpolated between the value at $t=0$ and the next interpolation
+node. Since the node at $t=0$ adds a degree of freedom, the parameter SmoothnessLambda should be set to a positive value
+in the bootstrap config. See \label{sec:bootstrap_config}.
+
+\item \lstinline!UseEffectiveVolatility! [Optional]:
+Only applies to overnight caplets. If false (default), volatilities in the surface will be ``stripped volatilities'',
+i.e. they will be placed on the first fixing date of the caplet and a decay adjustment will be applied when pricing the
+caplet. If true, volatilities in the surface will be ``effective volatliities'', i.e. they will be placed on the last
+fixing date of the caplet and the market black formula will be used to price such a caplet, using the last fixing date
+to calculate the usual black variance, without decay adjustment.
+
 \end{itemize}
 
 \begin{longlisting}
@@ -237,7 +274,7 @@ The type of the marketdata input. Allowable values are \lstinline!TermVolatiliti
   <BusinessDayConvention>...</BusinessDayConvention>
   <Tenors>...</Tenors>
   <OptionalQuotes>...</OptionalQuotes>
-  <IborIndex>...</IborIndex>
+  <Index>...</Index>
   <DiscountCurve>...</DiscountCurve>
   <AtmTenors>...</AtmTenors>
   <SettlementDays>...</SettlementDays>
@@ -245,6 +282,9 @@ The type of the marketdata input. Allowable values are \lstinline!TermVolatiliti
   <TimeInterpolation>...</TimeInterpolation>
   <BootstrapConfig>...</BootstrapConfig>
   <InputType>TermVolatilities</InputType>
+  <RateComputationPeriod>...</RateComputationPeriod>
+  <FlatFirstPeriod>...</FlatFirstPeriod>
+  <UseEffectiveVolatility>...</UseEffectiveVolatility>
 </CapFloorVolatility>
 \end{minted}
 \caption{ATM cap floor configuration with interpolation on optionlet volatilities.}
@@ -299,8 +339,8 @@ A comma separated list of valid tenor strings giving the cap floor maturity teno
 \item \lstinline!OptionalQuotes! [Optional]:
 A boolean flag to indicate whether market data quotes for all tenors are required. If true, we attempt to build the curve from whatever quotes are provided. If false, the curve will fail to build if any quotes are missing. This also applies to quotes for the \lstinline!AtmTenors!. Default value is false.
 
-\item \lstinline!IborIndex!:
-A valid interest rate index name giving the index underlying the cap floor quotes. Allowable values are given in the Table \ref{tab:indices}.
+\item \lstinline!Index!:
+A valid interest rate index name giving the index underlying the cap floor quotes. This has to be an ibor, term or overnight index. Allowable values are given in the Table \ref{tab:indices}.
 
 \item \lstinline!DiscountCurve!:
 A reference to a valid discount curve specification that will be used to discount cashflows during the stripping process. It should be of the form \lstinline!Yield/Currency/curve_name! where \lstinline!curve_name! is the name of a yield curve defined in the yield curve configurations.
@@ -319,6 +359,23 @@ This node holds configuration details for the iterative bootstrap that are descr
 
 \item \lstinline!InputType! [Optional]:
 The type of the marketdata input. Allowable values are \lstinline!TermVolatilities! or \lstinline!OptionletVolatilities!. As we are describing term cap volatilities input, this should be set to \lstinline!TermVolatilities! or omitted as shown in Listing \ref{lst:capfloorvol_surface_configuration_term}. If omitted, the default value is \lstinline!TermVolatilities!.
+
+\item \lstinline!RateComputationPeriod! [Optional]:
+For overnight indices, the caplet compounding period, e.g. 3M for USD-SOFR. Not relevant for ibor, term indices.
+
+\item \lstinline!FlatFirstPeriod! [Optional]:
+If true (default) the volatilities of the caplets that form the first par market cap are set to the same value. If false
+and a global bootstrap is used, the caplet volatility at $t=0$ is included in the opimization and the caplet
+volatilities of the first par market cap are interpolated between the value at $t=0$ and the next interpolation
+node. Since the node at $t=0$ adds a degree of freedom, the parameter SmoothnessLambda should be set to a positive value
+in the bootstrap config. See \label{sec:bootstrap_config}.
+
+\item \lstinline!UseEffectiveVolatility! [Optional]:
+Only applies to overnight caplets. If false (default), volatilities in the surface will be ``stripped volatilities'',
+i.e. they will be placed on the first fixing date of the caplet and a decay adjustment will be applied when pricing the
+caplet. If true, volatilities in the surface will be ``effective volatliities'', i.e. they will be placed on the last
+fixing date of the caplet and the market black formula will be used to price such a caplet, using the last fixing date
+to calculate the usual black variance, without decay adjustment.
 
 \end{itemize}
 
@@ -339,13 +396,16 @@ The type of the marketdata input. Allowable values are \lstinline!TermVolatiliti
   <BusinessDayConvention>...</BusinessDayConvention>
   <Tenors>...</Tenors>
   <OptionalQuotes>...</OptionalQuotes>
-  <IborIndex>...</IborIndex>
+  <Index>...</Index>
   <DiscountCurve>...</DiscountCurve>
   <AtmTenors>...</AtmTenors>
   <SettlementDays>...</SettlementDays>
   <InterpolateOn>TermVolatilities</InterpolateOn>
   <BootstrapConfig>...</BootstrapConfig>
   <InputType>TermVolatilities</InputType>
+  <RateComputationPeriod>...</RateComputationPeriod>
+  <FlatFirstPeriod>...</FlatFirstPeriod>
+  <UseEffectiveVolatility>...</UseEffectiveVolatility>
 </CapFloorVolatility>
 \end{minted}
 \caption{Cap floor surface with interpolation on term volatilities.}
@@ -397,8 +457,8 @@ A comma separated list of valid tenor strings giving the cap floor maturity teno
 \item \lstinline!OptionalQuotes! [Optional]:
 A boolean flag to indicate whether market data quotes for all tenors and strikes are required. If true, we attempt to build the curve from whatever quotes are provided. If false, the curve will fail to build if any quotes are missing. This also applies to quotes for the \lstinline!AtmTenors!. Default value is false.
 
-\item \lstinline!IborIndex!:
-A valid interest rate index name giving the index underlying the cap floor quotes. Allowable values are given in the Table \ref{tab:indices}.
+\item \lstinline!Index!:
+A valid interest rate index name giving the index underlying the cap floor quotes. This has to be an ibor, term or overnight index. Allowable values are given in the Table \ref{tab:indices}.
 
 \item \lstinline!DiscountCurve!:
 A reference to a valid discount curve specification that will be used to discount cashflows during the stripping process. It should be of the form \lstinline!Yield/Currency/curve_name! where \lstinline!curve_name! is the name of a yield curve defined in the yield curve configurations.
@@ -438,6 +498,23 @@ This node holds configuration details for the iterative bootstrap that are descr
 \item \lstinline!InputType! [Optional]:
 The type of the marketdata input. Allowable values are \lstinline!TermVolatilities! or \lstinline!OptionletVolatilities!. As we are describing term cap volatilities input, this should be set to \lstinline!TermVolatilities! or omitted as shown in Listing \ref{lst:capfloorvol_surface_configuration_opt}. If omitted, the default value is \lstinline!TermVolatilities!.
 
+\item \lstinline!RateComputationPeriod! [Optional]:
+For overnight indices, the caplet compounding period, e.g. 3M for USD-SOFR. Not relevant for ibor, term indices.
+
+\item \lstinline!FlatFirstPeriod! [Optional]:
+If true (default) the volatilities of the caplets that form the first par market cap are set to the same value. If false
+and a global bootstrap is used, the caplet volatility at $t=0$ is included in the opimization and the caplet
+volatilities of the first par market cap are interpolated between the value at $t=0$ and the next interpolation
+node. Since the node at $t=0$ adds a degree of freedom, the parameter SmoothnessLambda should be set to a positive value
+in the bootstrap config. See \label{sec:bootstrap_config}.
+
+\item \lstinline!UseEffectiveVolatility! [Optional]:
+Only applies to overnight caplets. If false (default), volatilities in the surface will be ``stripped volatilities'',
+i.e. they will be placed on the first fixing date of the caplet and a decay adjustment will be applied when pricing the
+caplet. If true, volatilities in the surface will be ``effective volatliities'', i.e. they will be placed on the last
+fixing date of the caplet and the market black formula will be used to price such a caplet, using the last fixing date
+to calculate the usual black variance, without decay adjustment.
+
 \end{itemize}
 
 \begin{longlisting}
@@ -457,7 +534,7 @@ The type of the marketdata input. Allowable values are \lstinline!TermVolatiliti
   <BusinessDayConvention>...</BusinessDayConvention>
   <Tenors>...</Tenors>
   <OptionalQuotes>...</OptionalQuotes>
-  <IborIndex>...</IborIndex>
+  <Index>...</Index>
   <DiscountCurve>...</DiscountCurve>
   <AtmTenors>...</AtmTenors>
   <SettlementDays>...</SettlementDays>
@@ -467,6 +544,9 @@ The type of the marketdata input. Allowable values are \lstinline!TermVolatiliti
   <QuoteIncludesIndexName>...</QuoteIncludesIndexName>
   <BootstrapConfig>...</BootstrapConfig>
   <InputType>TermVolatilities</InputType>
+  <RateComputationPeriod>...</RateComputationPeriod>
+  <FlatFirstPeriod>...</FlatFirstPeriod>
+  <UseEffectiveVolatility>...</UseEffectiveVolatility>
 </CapFloorVolatility>
 \end{minted}
 \caption{Cap floor surface with interpolation on optionlet volatilities.}
@@ -518,8 +598,8 @@ A comma separated list of valid tenor strings giving the cap floor maturity teno
 \item \lstinline!OptionalQuotes! [Optional]:
 A boolean flag to indicate whether market data quotes for all tenors are required. Optionlet volatilities do not support optional quotes, so this node should be false or omitted. Default value is false.
 
-\item \lstinline!IborIndex!:
-A valid interest rate index name giving the index underlying the cap floor quotes. Allowable values are given in the Table \ref{tab:indices}.
+\item \lstinline!Index!:
+A valid interest rate index name giving the index underlying the cap floor quotes. This has to be an ibor, term or overnight index. Allowable values are given in the Table \ref{tab:indices}.
 
 \item \lstinline!DiscountCurve!:
 A reference to a valid discount curve specification that will be used to discount cashflows. It should be of the form \lstinline!Yield/Currency/curve_name! where \lstinline!curve_name! is the name of a yield curve defined in the yield curve configurations.
@@ -554,7 +634,7 @@ The type of the marketdata input. Allowable values are \lstinline!TermVolatiliti
   <BusinessDayConvention>...</BusinessDayConvention>
   <Tenors>...</Tenors>
   <OptionalQuotes>false</OptionalQuotes>
-  <IborIndex>...</IborIndex>
+  <Index>...</Index>
   <DiscountCurve>...</DiscountCurve>
   <AtmTenors>...</AtmTenors>
   <SettlementDays>...</SettlementDays>
@@ -613,8 +693,8 @@ A comma separated list of valid tenor strings giving the cap floor maturity teno
 \item \lstinline!OptionalQuotes! [Optional]:
 A boolean flag to indicate whether market data quotes for all tenors are required. Optionlet volatilities do not support optional quotes, so this node should be false or omitted. Default value is false.
 
-\item \lstinline!IborIndex!:
-A valid interest rate index name giving the index underlying the cap floor quotes. Allowable values are given in the Table \ref{tab:indices}.
+\item \lstinline!Index!:
+A valid interest rate index name giving the index underlying the cap floor quotes. This has to be an ibor, term or overnight index. Allowable values are given in the Table \ref{tab:indices}.
 
 \item \lstinline!DiscountCurve!:
 A reference to a valid discount curve specification that will be used to discount cashflows. It should be of the form \lstinline!Yield/Currency/curve_name! where \lstinline!curve_name! is the name of a yield curve defined in the yield curve configurations.
@@ -655,7 +735,7 @@ The type of the marketdata input. Allowable values are \lstinline!TermVolatiliti
   <BusinessDayConvention>...</BusinessDayConvention>
   <Tenors>...</Tenors>
   <OptionalQuotes>false</OptionalQuotes>
-  <IborIndex>...</IborIndex>
+  <Index>...</Index>
   <DiscountCurve>...</DiscountCurve>
   <AtmTenors>...</AtmTenors>
   <SettlementDays>...</SettlementDays>
@@ -731,8 +811,8 @@ Specifies the source cap floor volatility surface to use as the base for the pro
 \item \lstinline!CurveId! (within Source):
 The curve identifier of the source cap floor volatility surface that will be used as the base. This must reference an existing cap floor volatility curve configuration.
 
-\item \lstinline!Index! (within Source):
-The interest rate index associated with the source cap floor volatility surface.
+\item \lstinline!Index!:
+A valid interest rate index name giving the index underlying the cap floor quotes. This has to be an ibor, term or overnight index. Allowable values are given in the Table \ref{tab:indices}.
 
 \item \lstinline!RateComputationPeriod! [Optional] (within Source):
 The rate computation period for the source index. This is only required for OIS or BMA/SIFMA indices and should be omitted for standard IBOR indices.

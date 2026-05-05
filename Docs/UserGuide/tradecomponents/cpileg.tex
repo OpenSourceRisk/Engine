@@ -40,6 +40,14 @@ time $t$
 
 Allowable values:  Any positive real number.
 
+\item BaseCPIBase [Optional]: Indicates whether the \emph{BaseCPI} value is already adjusted for all rebasing events from the start date to the evaluation date or not.
+
+If \emph{Current} (the default), the \emph{BaseCPI} is already adjusted for all rebasing events up to today and can be used as-is.
+
+If \emph{StartDate}, the \emph{BaseCPI} corresponds to the index level at the \lstinline!StartDate! and will be automatically adjusted for all rebasing events between start date and today.
+
+Allowable values:  \emph{Current} [default], \emph{StartDate}. 
+
 \item StartDate [Optional]: The start date needs to be provided in case the schedule comprises only a single date. If
   the schedule has at least two dates and a start date is given at the same time, the first schedule date is taken as
   the start date and the supplied \lstinline!StartDate! is ignored.

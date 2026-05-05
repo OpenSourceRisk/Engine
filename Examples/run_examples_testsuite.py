@@ -5,8 +5,6 @@ import logging
 import unittest
 from pathlib import Path
 import pytest
-import collections
-#collections.Callable = collections.abc.Callable
 
 examples_exempt_from_scenariogenerator_samples_overwrite = [
     'Performance',
@@ -30,20 +28,28 @@ from Tools.PythonTools.compare_files import compare_files  # noqa
 from Tools.PythonTools.setup_logging import setup_logging  # noqa
 from Tools.PythonTools.merge_comparison_configs import merge_configurations  # noqa
 
+logger = logging.getLogger(__name__)
+
+# Allow an environment variable to be provided as a flag.
+def get_env_bool(var_name, default=False):
+    val = os.getenv(var_name)
+    if val is None:
+        return default
+    return val.lower() in ("true", "1", "yes", "on", "t")
 
 # Get all files in a directory
 def get_files(dirname):
     res = []
     for cur_path, subdirs, files in os.walk(dirname):
         for file in files:
-            res.append(os.path.relpath(os.path.join(cur_path, file), dirname))
+            res.append(os.path.relpath(os.path.join(str(cur_path), file), dirname))
     return res
 
 
 # Unit test class
 class TestExamples(unittest.TestCase):
     def setUp(self):
-        self.logger = logging.getLogger(__name__)
+        self.logger = logger
 
     def compFiles(self, file1, file2, comp_config):
         self.logger.info('{}: Checking {} and {}'.format(self._testMethodName, file1, file2))
@@ -55,9 +61,14 @@ class TestExamples(unittest.TestCase):
                         'Error comparing {} to {}'.format(file1, file2))
 
     def compAllFiles(self, comp_config):
-        if os.path.isdir(os.path.join(os.getcwd(), 'ExpectedOutput')):
+        curr_dir = os.getcwd()
+        dir_leaf = os.path.basename(os.path.normpath(curr_dir))
+        if os.path.isdir(os.path.join(curr_dir, 'ExpectedOutput')):
             for f in get_files('ExpectedOutput'):
-                self.compFiles(os.path.join('ExpectedOutput', f), os.path.join('Output', f), comp_config)
+                with self.subTest(test_name=dir_leaf, filename=f):
+                    exp_file = os.path.join('ExpectedOutput', f)
+                    out_file = os.path.join('Output', f)
+                    self.compFiles(exp_file, out_file, comp_config)
         else:
             self.logger.warning('No ExpectedOutput folder detected, skipped.')
 
@@ -67,9 +78,10 @@ class TestExamples(unittest.TestCase):
             if name.endswith(exname):
                 os.environ['OVERWRITE_SCENARIOGENERATOR_SAMPLES'] = ''
         self.logger.info('{}: run {}'.format(self._testMethodName, name))
-        ret = run_example(name)
-        os.environ['OVERWRITE_SCENARIOGENERATOR_SAMPLES'] = ''
-        assert ret == 0
+        if not get_env_bool('ORE_EXAMPLES_COMPARE_ONLY'):
+            ret = run_example(name)
+            os.environ['OVERWRITE_SCENARIOGENERATOR_SAMPLES'] = ''
+            assert ret == 0
 
         self.logger.info('{}: run regression on {}'.format(self._testMethodName, name))
         current_dir = os.getcwd()
@@ -110,18 +122,32 @@ def add_utest(name):
 # Need to have this as a function and call it before unitest.main()
 # https://stackoverflow.com/questions/2798956/python-unittest-generate-multiple-tests-programmatically
 def regress_all_utests():
-    i = 1
-    examples=get_list_of_examples()
-    legacyexamples=get_list_of_legacy_examples()
-    academy=get_list_ore_academy()
-    allexamples = sorted(examples + academy + legacyexamples)
-    print("Legacy:", legacyexamples)
-    print("Examples:", examples)
-    print("Academy:", academy)
-    for name in allexamples:
+    all_examples = None
+
+    # If a file containing a list of examples to run is provided via environment variable, use it.
+    test_list_file = os.getenv('ORE_EXAMPLES_TEST_FILE')
+    if test_list_file:
+        test_list_file_path = Path(test_list_file)
+        if test_list_file_path.exists():
+            all_examples = sorted(test_list_file_path.read_text().splitlines())
+            logger.info('Examples from ORE_EXAMPLES_TEST_FILE: {}'.format(all_examples))
+        else:
+            logger.warning('ORE_EXAMPLES_TEST_FILE provided, {}, but the path does not exist.'.format(test_list_file))
+            logger.warning('Will continue and run all examples.')
+
+    if all_examples is None:
+        examples = get_list_of_examples()
+        legacy_examples = get_list_of_legacy_examples()
+        academy = get_list_ore_academy()
+        all_examples = sorted(examples + academy + legacy_examples)
+        logger.info('Legacy: {}'.format(legacy_examples))
+        logger.info('Examples: {}'.format(examples))
+        logger.info('Academy: {}'.format(academy))
+
+    for name in all_examples:
         # For Linux/docker: Replace the '/' in testable_name and class_name 
         name2 = name.replace('/', '-', 1)
-        print("add test:", name, name2)
+        logger.info('Add test: {}, {}'.format(name, name2))
         testable = add_utest(name)
         testable_name = 'test_{0}'.format(name2)
         testable.__name__ = testable_name

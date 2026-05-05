@@ -121,13 +121,13 @@ The meanings and allowable values for the \lstinline!VolatilityBarrierOptionData
   Allowable values: Any non-negative number.
   \item{}[longShort] \lstinline!LongShort!: Own party position in the option. \emph{Long} corresponds to exchanging PutNotional in PutCcy for CallNotional in CallCcy at expiry. \\
   Allowable values: \emph{Long, Short}.
-  \item{}[index] \lstinline!Underlying!: Underlying FX/EQ/COM index. \\
+  \item{}[index] \lstinline!Underlying!: Underlying FX/EQ/COM index. For FX, where the underlying is provided in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should be \lstinline!CCY2! \\
   Allowable values: See Section \ref{data_index} for allowable values.
   \item{}[event] \lstinline!ValuationSchedule!: The schedule defining the (daily) observation period for the variance accrual. \\
   Allowable values: See Section \ref{ss:schedule_data}.
   \item{}[barrierType] \lstinline!BarrierType!: Whether the barrier is a (\emph{DownIn} or \emph{UpIn}) barrier. \\
   Allowable values: \emph{DownIn, UpIn}.
-  \item{}[number] \lstinline!BarrierLevel!: The agreed volatility barrier level. \\
+  \item{}[number] \lstinline!BarrierLevel!: The agreed volatility barrier level. Expressed in decimal form, it is a volatlity.\\
   Allowable values: Any non-negative real number.
   \item{}[event] \lstinline!SettlementDate!: The date on which the option payoff is settled. \\
   Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
@@ -135,7 +135,9 @@ The meanings and allowable values for the \lstinline!VolatilityBarrierOptionData
   Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
   \item{}[number] \lstinline!Premium!: The option premium. \\
   Allowable values: Any non-negative real number.
-  \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
+  \item{}[event] \lstinline!Expiry!: The option expiration date. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[currency] \lstinline!PayCcy!: The payment currency of the premium and option. For FX, where the underlying is provided
       in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
       be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
       COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
@@ -245,7 +247,7 @@ The meanings and allowable values for the \lstinline!DualEuroBinaryOptionData! n
 \begin{itemize}
   \item{}[longShort] \lstinline!LongShort!: Own party position in the option. \emph{Long} corresponds to receiving the settlement amount at expiry. \\
   Allowable values: \emph{Long, Short}.
-  \item{}[index] \lstinline!Underlying!: Underlying index. \\
+  \item{}[index] \lstinline!Underlying!: Underlying index. For FX, where the underlying is provided in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should be \lstinline!CCY2!\\
   Allowable values: See Section \ref{data_index} for allowable values.
   \item{}[event] \lstinline!ValuationSchedule!: The schedule defining the (daily) observation period for the variance accrual. \\
   Allowable values: See Section \ref{ss:schedule_data}.
@@ -257,7 +259,7 @@ The meanings and allowable values for the \lstinline!DualEuroBinaryOptionData! n
   Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
   \item{}[number] \lstinline!VolBarrierType!: Whether the realized volatility barrier is a (\emph{DownIn} or \emph{UpIn}) barrier. \\
   Allowable values: \emph{DownIn, UpIn}.
-  \item{}[number] \lstinline!VolBarrierLevel!: The agreed volatility barrier level. \\
+  \item{}[number] \lstinline!VolBarrierLevel!: The agreed volatility barrier level. Expressed in decimal form, it is a volatlity.\\
   Allowable values: Any non-negative real number.
   \item{}[number] \lstinline!SettlementAmount!: The settlement amount. \\
   Allowable values: Any non-negative real number.
@@ -267,7 +269,9 @@ The meanings and allowable values for the \lstinline!DualEuroBinaryOptionData! n
   Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
   \item{}[number] \lstinline!Premium!: The option premium. \\
   Allowable values: Any non-negative real number.
-  \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
+  \item{}[event] \lstinline!Expiry!: The option expiration date. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[currency] \lstinline!PayCcy!: The payment currency of the premium and option. For FX, where the underlying is provided
       in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
       be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
       COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
@@ -2672,6 +2676,214 @@ The meanings and allowable values in the \lstinline!BestOfAirbagData! node below
       COMM underlyings), this will result in a quanto payoff. The \lstinline!StrikePrices! and \lstinline!BarrierLevels! should be expressed in
       as amount of CCY1 in CCY2.Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
         Allowable values: See Table \ref{tab:currency} for allowable currency codes.
+\end{itemize}
+
+\subsubsection{Callable Range Accrual}
+
+% we only have a scripted trade representation for this at the moment
+
+A Callable Range Accrual is represented as {\em scripted trades}, refer to Section
+\ref{app:scriptedtrade} for an introduction. This product consists of a range accrual leg and a floating
+leg, with an optional Bermudan callability feature.
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Trade id="CallableRangeAccrual">
+  <TradeType>ScriptedTrade</TradeType>
+  <Envelope>
+    <CounterParty>CPTY_A</CounterParty>
+    <NettingSetId>CPTY_A</NettingSetId>
+    <AdditionalFields/>
+  </Envelope>
+  <CallableRangeAccrualData>
+    <IsCallable type="bool">true</IsCallable>
+    <PayCcy type="currency">EUR</PayCcy>
+    <PremiumAmount type="number">1000</PremiumAmount>
+    <PremiumPayDate type="event">2020-11-26</PremiumPayDate>
+    <PremiumCcy type="currency">EUR</PremiumCcy>
+    <LongShort type="longShort">Long</LongShort>
+    <ExerciseDates type="event">
+      <ScheduleData>
+        <Rules>
+          <StartDate>20160301</StartDate>
+          <EndDate>20200301</EndDate>
+          <Tenor>1Y</Tenor>
+          <Calendar>TARGET</Calendar>
+          <Convention>MF</Convention>
+          <TermConvention>MF</TermConvention>
+          <Rule>Forward</Rule>
+        </Rules>
+      </ScheduleData>
+    </ExerciseDates>
+    <FloatingPayer type="bool">true</FloatingPayer>
+    <FloatingNotional type="number">10000000</FloatingNotional>
+    <FloatingIndex type="index">EUR-EURIBOR-6M</FloatingIndex>
+    <FloatingSpread type="number">0.0000</FloatingSpread>
+    <FloatingDayCounter type="dayCounter">Actual/360</FloatingDayCounter>
+    <FloatingSchedule type="event">
+      <ScheduleData>
+        <Rules>
+          <StartDate>20160301</StartDate>
+          <EndDate>20200301</EndDate>
+          <Tenor>1Y</Tenor>
+          <Calendar>TARGET</Calendar>
+          <Convention>MF</Convention>
+          <TermConvention>MF</TermConvention>
+          <Rule>Forward</Rule>
+        </Rules>
+      </ScheduleData>
+    </FloatingSchedule>
+    <RangeAccrualIndex type="index">EUR-EURIBOR-6M</RangeAccrualIndex>
+    <RangeAccrualPayer type="bool">false</RangeAccrualPayer>
+    <RangeAccrualCoupon type="number">0.1</RangeAccrualCoupon>
+    <RangeAccrualNotional type="number">10000000</RangeAccrualNotional>
+    <RangeAccrualDayCounter type="dayCounter">Actual/360</RangeAccrualDayCounter>
+    <RangeAccrualSchedule type="event">
+      <ScheduleData>
+        <Rules>
+          <StartDate>20160301</StartDate>
+          <EndDate>20200301</EndDate>
+          <Tenor>1Y</Tenor>
+          <Calendar>TARGET</Calendar>
+          <Convention>MF</Convention>
+          <TermConvention>MF</TermConvention>
+          <Rule>Forward</Rule>
+        </Rules>
+      </ScheduleData>
+    </RangeAccrualSchedule>
+    <RangeUpperBounds type="number">
+      <Value>1</Value>
+      <Value>2</Value>
+      <Value>2.5</Value>
+      <Value>10</Value>
+    </RangeUpperBounds>
+    <RangeLowerBounds type="number">
+      <Value>0</Value>
+      <Value>0</Value>
+      <Value>0</Value>
+      <Value>0</Value>
+    </RangeLowerBounds>
+  </CallableRangeAccrualData>
+</Trade>
+\end{minted}
+
+The script referenced in the trade above is shown in Listing \ref{lst:callable_range_accrual}.
+
+\begin{listing}[hbt]
+\begin{minted}[fontsize=\footnotesize]{Basic}
+REQUIRE SIZE(RangeLowerBounds) == SIZE(RangeUpperBounds);
+NUMBER UnderlyingNpv, EstimatedPayoff, premium, RangeAccrualAmount;
+NUMBER n, d, i, j, lastRangeAccrualIndex, lastFloatLegIndex, fixing;
+lastRangeAccrualIndex = SIZE(RangeAccrualSchedule);
+lastFloatLegIndex = SIZE(FloatingSchedule);
+
+IF IsCallable == 1 THEN
+  FOR i IN (SIZE(ExerciseDates), 1, -1) DO
+    FOR j IN (lastRangeAccrualIndex, 2, -1) DO
+      IF RangeAccrualSchedule[j-1] >= ExerciseDates[i] THEN
+        fixing = RangeAccrualIndex(RangeAccrualSchedule[j]);
+        IF fixing >= RangeLowerBounds[j-1] AND fixing <= RangeUpperBounds[j-1] THEN
+          n = n + 1;
+        END;
+        lastRangeAccrualIndex = j-1;
+      END;
+    END;
+    RangeAccrualAmount = RangeAccrualNotional * RangeAccrualCoupon * n / SIZE(RangeAccrualSchedule);
+    FOR j IN (lastRangeAccrualIndex, 2, -1) DO
+      IF RangeAccrualSchedule[j-1] >= ExerciseDates[i] THEN
+        UnderlyingNpv = UnderlyingNpv + PAY( RangeAccrualAmount *
+          dcf( RangeAccrualDayCounter, RangeAccrualSchedule[j-1], RangeAccrualSchedule[j] ),
+          ExerciseDates[i], RangeAccrualSchedule[j], PayCcy );
+        lastRangeAccrualIndex = j-1;
+      END;
+    END;
+    FOR j IN (lastFloatLegIndex, 2, -1) DO
+      IF FloatingSchedule[j-1] >= ExerciseDates[i] THEN
+        UnderlyingNpv = UnderlyingNpv - PAY( FloatingNotional *
+          (FloatingIndex(FloatingSchedule[j-1]) + FloatingSpread) *
+          dcf( FloatingDayCounter, FloatingSchedule[j-1], FloatingSchedule[j] ),
+          FloatingSchedule[j-1], FloatingSchedule[j], PayCcy );
+        lastFloatLegIndex = j-1;
+      END;
+    END;
+    EstimatedPayoff = NPV( RangeAccrualPayer * UnderlyingNpv, ExerciseDates[i]);
+    IF EstimatedPayoff > 0 AND
+       EstimatedPayoff > NPV( Option, ExerciseDates[i], EstimatedPayoff > 0 ) THEN
+      Option = RangeAccrualPayer * UnderlyingNpv;
+    END;
+  END;
+ELSE
+  FOR d IN (SIZE(RangeAccrualSchedule), 1, 1) DO
+    fixing = RangeAccrualIndex(RangeAccrualSchedule[d]);
+    IF fixing >= RangeLowerBounds[d] AND fixing <= RangeUpperBounds[d] THEN
+      n = n + 1;
+    END;
+  END;
+  RangeAccrualAmount = RangeAccrualNotional * RangeAccrualCoupon * n / SIZE(RangeAccrualSchedule);
+  FOR d IN (SIZE(RangeAccrualSchedule), 1, 1) DO
+    UnderlyingNpv = UnderlyingNpv + PAY( RangeAccrualAmount *
+      dcf( RangeAccrualDayCounter, RangeAccrualSchedule[j-1], RangeAccrualSchedule[j] ),
+      RangeAccrualSchedule[d], RangeAccrualSchedule[d], PayCcy );
+  END;
+  FOR j IN (2, lastFloatLegIndex, 1) DO
+    UnderlyingNpv = UnderlyingNpv - PAY( FloatingNotional *
+      (FloatingIndex(FloatingSchedule[j]) + FloatingSpread) *
+      dcf( FloatingDayCounter, FloatingSchedule[j-1], FloatingSchedule[j] ),
+      FloatingSchedule[j], FloatingSchedule[j], PayCcy );
+  END;
+  Option = RangeAccrualPayer * UnderlyingNpv;
+END;
+premium = PAY(PremiumAmount, PremiumPayDate, PremiumPayDate, PremiumCcy);
+Option = Option * LongShort - premium;
+\end{minted}
+\caption{Payoff script for a Callable Range Accrual.}
+\label{lst:callable_range_accrual}
+\end{listing}
+
+The meanings and allowable values in the \lstinline!CallableRangeAccrualData! node below.
+
+\begin{itemize}
+  \item{}[bool] \lstinline!IsCallable!: Activates the Bermudan callability feature when set to \emph{true}. \\
+  Allowable values: \emph{true, false}.
+  \item{}[currency] \lstinline!PayCcy!: The payment currency. \\
+  Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
+  \item{}[number] \lstinline!PremiumAmount!: The upfront amount. \\
+  Allowable values: Any non-negative number.
+  \item{}[event] \lstinline!PremiumPayDate!: The upfront payment date. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[currency] \lstinline!PremiumCcy!: The currency of the upfront. \\
+  Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
+  \item{}[longShort] \lstinline!LongShort!: Own party position in the option. \\
+  Allowable values: \emph{Long, Short}.
+  \item{}[event] \lstinline!ExerciseDates!: The Bermudan option exercise dates. Only used when \lstinline!IsCallable! is \emph{true}. \\
+  Allowable values: See Section \ref{ss:schedule_data} ScheduleData.
+  \item{}[bool] \lstinline!FloatingPayer!: Indicates if the party is the payer (\emph{true}) or receiver (\emph{false}) of the floating leg. \\
+  Allowable values: \emph{true, false}.
+  \item{}[number] \lstinline!FloatingNotional!: The notional amount of the floating leg. \\
+  Allowable values: Any non-negative number.
+  \item{}[index] \lstinline!FloatingIndex!: The floating rate index for the floating leg. \\
+  Allowable values: See Section \ref{data_index} for allowable values.
+  \item{}[number] \lstinline!FloatingSpread!: The spread added to the floating rate. \\
+  Allowable values: Any number.
+  \item{}[dayCounter] \lstinline!FloatingDayCounter!: The day count convention for the floating leg. \\
+  Allowable values: See Table \ref{tab:daycount} Day Count Convention.
+  \item{}[event] \lstinline!FloatingSchedule!: The schedule of the floating leg payment dates. \\
+  Allowable values: See Section \ref{ss:schedule_data} ScheduleData.
+  \item{}[index] \lstinline!RangeAccrualIndex!: The index used for range accrual observation. \\
+  Allowable values: See Section \ref{data_index} for allowable values.
+  \item{}[bool] \lstinline!RangeAccrualPayer!: Indicates if the party is the payer (\emph{true}) or receiver (\emph{false}) of the range accrual leg. \\
+  Allowable values: \emph{true, false}.
+  \item{}[number] \lstinline!RangeAccrualCoupon!: The coupon rate for the range accrual leg. \\
+  Allowable values: Any number.
+  \item{}[number] \lstinline!RangeAccrualNotional!: The notional amount of the range accrual leg. \\
+  Allowable values: Any non-negative number.
+  \item{}[dayCounter] \lstinline!RangeAccrualDayCounter!: The day count convention for the range accrual leg. \\
+  Allowable values: See Table \ref{tab:daycount} Day Count Convention.
+  \item{}[event] \lstinline!RangeAccrualSchedule!: The schedule of the range accrual observation/payment dates. \\
+  Allowable values: See Section \ref{ss:schedule_data} ScheduleData.
+  \item{}[number] \lstinline!RangeUpperBounds!: The upper bounds of the fixing ranges for each period. The accrual coupon is paid if the index fixing falls within the range. \\
+  Allowable values: Any number. Array size must match the number of periods in \lstinline!RangeAccrualSchedule!.
+  \item{}[number] \lstinline!RangeLowerBounds!: The lower bounds of the fixing ranges for each period. The accrual coupon is paid if the index fixing falls within the range. \\
+  Allowable values: Any number. Array size must match the number of periods in \lstinline!RangeAccrualSchedule!.
 \end{itemize}
 
 \clearpage

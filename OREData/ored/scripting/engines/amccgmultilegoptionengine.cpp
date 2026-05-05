@@ -32,6 +32,9 @@ void AmcCgMultiLegOptionEngine::calculate() const {
     cashSettlementDates_ = arguments_.settlementDates;
 
     AmcCgBaseEngine::calculate();
+
+    if(!amcEnabled_)
+        results_.value = npvValue_;
 }
 
 } // namespace data

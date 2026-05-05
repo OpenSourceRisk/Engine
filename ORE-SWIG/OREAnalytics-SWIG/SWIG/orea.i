@@ -33,15 +33,13 @@
 
 #include <orea/orea.hpp>
 
-#ifdef BOOST_MSVC
+#if !defined(BOOST_ALL_NO_LIB) && defined(BOOST_MSVC)
 #include <orea/auto_link.hpp>
 #define BOOST_LIB_NAME boost_regex
 #include <boost/config/auto_link.hpp>
 #define BOOST_LIB_NAME boost_serialization
 #include <boost/config/auto_link.hpp>
 #define BOOST_LIB_NAME boost_date_time
-#include <boost/config/auto_link.hpp>
-#define BOOST_LIB_NAME boost_filesystem
 #include <boost/config/auto_link.hpp>
 #define BOOST_LIB_NAME boost_system
 #include <boost/config/auto_link.hpp>
@@ -55,9 +53,30 @@
 
 %include <windows.i>
 
+%include orea_common.i
 %include orea_app.i
 %include orea_cube.i
 %include orea_scenariosimmarketparameters.i
 %include orea_scenario.i
+%include orea_simulation.i
+%include orea_scenario_ext.i
+%include orea_engine.i
+%include orea_aggregation.i
+%include orea_simm.i
+%include orea_analytics.i
+
+#if defined(SWIGPYTHON)
+%pythoncode %{
+_OREA_MODULE_OVERVIEW = """OREAnalytics layer bindings.
+
+Contains application wiring, scenario/simulation configuration,
+cube interfaces, sensitivity engines, aggregation utilities, and SIMM APIs.
+"""
+if __doc__:
+    __doc__ = __doc__ + "\n\n" + _OREA_MODULE_OVERVIEW
+else:
+    __doc__ = _OREA_MODULE_OVERVIEW
+%}
+#endif
 
 #endif

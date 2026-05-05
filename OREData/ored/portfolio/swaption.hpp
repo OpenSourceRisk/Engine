@@ -70,7 +70,7 @@ private:
 
     //! build underlying swaps for exposure simulation
     std::vector<QuantLib::ext::shared_ptr<Instrument>>
-    buildUnderlyingSwaps(const QuantLib::ext::shared_ptr<PricingEngine>&, const std::vector<Date>&);
+    buildUnderlyingSwaps(const QuantLib::ext::shared_ptr<PricingEngine>&, const std::vector<Date>&, const bool isXccy);
 
     //! build underlying swaps for calibation under delta-gamma-adjusted method
     std::vector<QuantLib::ext::shared_ptr<FixedVsFloatingSwap>>
@@ -84,6 +84,18 @@ private:
     Settlement::Type settlementType_;
     Settlement::Method settlementMethod_;
 };
+
+//! utility function to get different currencies and legs per currency
+std::pair<std::vector<std::string>, std::vector<std::vector<Leg>>>
+getLegsPerCurrency(const std::vector<Leg>& legs, const std::vector<std::string>& currencies);
+
+//! utility function to extract index from underlying legs
+std::vector<QuantLib::ext::shared_ptr<InterestRateIndex>> getInterestRateIndexFromLegs(const std::vector<Leg>& legs);
+
+//! utility function to determine calibration strikes from legs, simple approach
+std::vector<QuantLib::Real> getCalibrationStrikesFromLegs(const std::vector<Leg>& legs,
+                                                          const std::vector<QuantLib::Date>& dates);
+
 
 } // namespace data
 } // namespace ore

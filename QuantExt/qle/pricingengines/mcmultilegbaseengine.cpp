@@ -38,11 +38,12 @@ McMultiLegBaseEngine::McMultiLegBaseEngine(
     const LsmBasisSystem::PolynomialType polynomType, const SobolBrownianGenerator::Ordering ordering,
     SobolRsg::DirectionIntegers directionIntegers, const std::vector<Handle<YieldTermStructure>>& discountCurves,
     const std::vector<Date>& simulationDates, const std::vector<Date>& stickyCloseOutDates,
-    const std::vector<Size>& externalModelIndices, const bool minimalObsDate, const McRegressionModel::RegressorModel regressorModel,
-    const Real regressionVarianceCutoff, const bool recalibrateOnStickyCloseOutDates,
-    const bool reevaluateExerciseInStickyRun, const Size cfOnCpnMaxSimTimes,
-    const Period& cfOnCpnAddSimTimesCutoff, const Size regressionMaxSimTimesIr, const Size regressionMaxSimTimesFx,
-    const Size regressionMaxSimTimesEq, const McRegressionModel::VarGroupMode regressionVarGroupMode)
+    const std::vector<Size>& externalModelIndices, const bool minimalObsDate,
+    const McRegressionModel::RegressorModel regressorModel, const Real regressionVarianceCutoff,
+    const bool recalibrateOnStickyCloseOutDates, const bool reevaluateExerciseInStickyRun,
+    const Size cfOnCpnMaxSimTimes, const Period& cfOnCpnAddSimTimesCutoff, const Size regressionMaxSimTimesIr,
+    const Size regressionMaxSimTimesFx, const Size regressionMaxSimTimesEq,
+    const McRegressionModel::VarGroupMode regressionVarGroupMode, const bool generateAdditionalResults)
     : model_(model), calibrationPathGenerator_(calibrationPathGenerator), pricingPathGenerator_(pricingPathGenerator),
       calibrationSamples_(calibrationSamples), pricingSamples_(pricingSamples), calibrationSeed_(calibrationSeed),
       pricingSeed_(pricingSeed), polynomOrder_(polynomOrder), polynomType_(polynomType), ordering_(ordering),
@@ -51,13 +52,10 @@ McMultiLegBaseEngine::McMultiLegBaseEngine(
       minimalObsDate_(minimalObsDate), regressorModel_(regressorModel),
       regressionVarianceCutoff_(regressionVarianceCutoff),
       recalibrateOnStickyCloseOutDates_(recalibrateOnStickyCloseOutDates),
-      reevaluateExerciseInStickyRun_(reevaluateExerciseInStickyRun),
-      cfOnCpnMaxSimTimes_(cfOnCpnMaxSimTimes),
-      cfOnCpnAddSimTimesCutoff_(cfOnCpnAddSimTimesCutoff),
-      regressionMaxSimTimesIr_(regressionMaxSimTimesIr),
-      regressionMaxSimTimesFx_(regressionMaxSimTimesFx),
-      regressionMaxSimTimesEq_(regressionMaxSimTimesEq),
-      regressionVarGroupMode_(regressionVarGroupMode) {
+      reevaluateExerciseInStickyRun_(reevaluateExerciseInStickyRun), cfOnCpnMaxSimTimes_(cfOnCpnMaxSimTimes),
+      cfOnCpnAddSimTimesCutoff_(cfOnCpnAddSimTimesCutoff), regressionMaxSimTimesIr_(regressionMaxSimTimesIr),
+      regressionMaxSimTimesFx_(regressionMaxSimTimesFx), regressionMaxSimTimesEq_(regressionMaxSimTimesEq),
+      regressionVarGroupMode_(regressionVarGroupMode), generateAdditionalResults_(generateAdditionalResults) {
 
     if (discountCurves_.empty())
         discountCurves_.resize(model_->components(CrossAssetModel::AssetType::IR));
@@ -204,15 +202,24 @@ void McMultiLegBaseEngine::calculateModels(
         // update path value rebate
 
         if (isExerciseTime && rebatedExercise != nullptr) {
-            if (rebatedExercise->rebate(rebateIndex) != 0.0) {
-                Size simulationTimes_idx = std::distance(simulationTimes.begin(), simulationTimes.find(*t));
-                Real payTime = time(rebatedExercise->rebatePaymentDate(rebateIndex));
-                if (payTime >= 0.0) {
-                    pathValueRebate = lgmVectorised_[0].reducedDiscountBond(
-                                          *t, payTime, pathValues[simulationTimes_idx][0], discountCurves_[0]) *
-                                      RandomVariable(calibrationSamples_, rebatedExercise->rebate(rebateIndex));
-                } else {
-                    pathValueRebate = RandomVariable(calibrationSamples_, 0.0);
+            pathValueRebate = RandomVariable(calibrationSamples_, 0.0);
+            for (Size k = 0; k < rebatedExercise->rebateCurrencies().size(); ++k) {
+                if (rebatedExercise->rebate(rebateIndex, k) != 0.0) {
+                    Size ccyIndex = rebatedExercise->rebateCurrency(k).empty()
+                                        ? 0
+                                        : model_->ccyIndex(rebatedExercise->rebateCurrency(k));
+                    Size simulationTimes_idx = std::distance(simulationTimes.begin(), simulationTimes.find(*t));
+                    Real payTime = time(rebatedExercise->rebatePaymentDate(rebateIndex));
+                    if (payTime >= 0.0) {
+                        auto tmpRebate = lgmVectorised_[0].reducedDiscountBond(
+                                             *t, payTime, pathValues[simulationTimes_idx][0], discountCurves_[0]) *
+                                         rebatedExercise->rebate(rebateIndex,k);
+                        if (ccyIndex > 0) {
+                            tmpRebate *= exp(pathValues[simulationTimes_idx]
+                                                       [model_->pIdx(CrossAssetModel::AssetType::FX, ccyIndex - 1)]);
+                        }
+                        pathValueRebate += tmpRebate;
+                    }
                 }
             }
             --rebateIndex;
@@ -230,6 +237,7 @@ void McMultiLegBaseEngine::calculateModels(
                                              simulationTimes);
 
             if (pathValueRebate.initialised()) {
+                // FIXME do we need this? the pathValueRebate is known at time t
                 regModelRebate[counter] = McRegressionModel(
                     *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
                     regressorModel_, regressionVarianceCutoff_, regressionMaxSimTimesIr_, regressionMaxSimTimesFx_,
@@ -442,11 +450,11 @@ void McMultiLegBaseEngine::calculate() const {
         maxTime = std::max(maxTime, *m);
 
     std::set<Real> xvaTimes;
-
-    for (auto const& d : simulationDates_) {
-        if (auto t = time(d); t < maxTime + tinyTime) {
-            xvaTimes.insert(time(d));
-        }
+    bool overshoot = false;
+    for (auto d = simulationDates_.begin(); d != simulationDates_.end() && !overshoot; ++d) {
+        double t = time(*d);
+        xvaTimes.insert(t);
+        overshoot = t > maxTime + tinyTime;
     }
 
     /* build combined time sets */

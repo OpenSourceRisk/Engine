@@ -1,0 +1,17 @@
+<Portfolio>
+  <Trade id="TestedCBO">
+    <TradeType>CBO</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <CBOData>
+      <CBOInvestment>
+        <TrancheName>JuniorNote</TrancheName>
+        <Notional>1802750.20</Notional>
+        <StructureId>Pegasus</StructureId>
+      </CBOInvestment>
+    </CBOData>
+  </Trade>
+</Portfolio>

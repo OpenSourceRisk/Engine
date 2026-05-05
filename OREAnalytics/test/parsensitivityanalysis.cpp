@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/test/unit_test.hpp>
 #include "parsensitivityanalysis.hpp"
 #include "testmarket.hpp"
 #include "testportfolio.hpp"
@@ -1433,9 +1434,10 @@ void ParSensitivityAnalysisTest::test1dZeroShifts() {
 
     // apply zero shifts for tenors on the shift curve
     // collect shifted data at tenors of the underlying curve
-    // aggregate "observed" shifts
+    // aggregate "observed" shiftss
     // compare to expected total shifts
-    vector<Period> shiftTenors = sensiData->discountCurveShiftData()["EUR"]->shiftTenors;
+    vector<Period> shiftTenors =
+        scenarioPillarsToPeriodVector(today, sensiData->discountCurveShiftData()["EUR"]->shiftTenors, false);
     vector<Time> shiftTimes(shiftTenors.size());
     for (Size i = 0; i < shiftTenors.size(); ++i)
         shiftTimes[i] = dc.yearFraction(today, today + shiftTenors[i]);

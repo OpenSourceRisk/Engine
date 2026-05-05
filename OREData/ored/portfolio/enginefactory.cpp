@@ -51,6 +51,14 @@ std::string EngineBuilder::getParameter(const std::map<std::string, std::string>
     return defaultValue;
 }
 
+bool EngineBuilder::generateAdditionalResults() const {
+    if (auto p = globalParameters().find("GenerateAdditionalResults");
+        p != globalParameters().end()) {
+        return parseBool(p->second);
+    }
+    return false;
+}
+
 std::string EngineBuilder::engineParameter(const std::string& p, const std::vector<std::string>& qualifiers,
                                            const bool mandatory, const std::string& defaultValue) const {
     return getParameter(engineParameters_, p, qualifiers, mandatory, defaultValue);
@@ -266,6 +274,10 @@ QuantLib::ext::shared_ptr<LegBuilder> EngineFactory::legBuilder(const LegType& l
 
 set<std::pair<string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>>& EngineFactory::modelBuilders() {
     return modelBuilders_;
+}
+
+  set<std::pair<string, QuantLib::ext::shared_ptr<ore::data::Model>>>& EngineFactory::scriptingModels() {
+    return scriptingModels_;
 }
 
 void EngineFactory::setEngineParameterOverrides(const std::vector<ParameterOverride>& overrides) {

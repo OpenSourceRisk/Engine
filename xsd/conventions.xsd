@@ -50,12 +50,12 @@
   <xs:complexType name="cdsConventionsType">
     <xs:all>
       <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="xs:integer" name="SettlementDays" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="xs:string" name="Calendar" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="frequencyType" name="Frequency" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="businessDayConvention" name="PaymentConvention" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="dateRule" name="Rule" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="dayCounter" name="DayCounter" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:integer" name="SettlementDays" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Calendar" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="frequencyType" name="Frequency" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="businessDayConvention" name="PaymentConvention" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="dateRule" name="Rule" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:nonNegativeInteger" name="UpfrontSettlementDays" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="SettlesAccrual" minOccurs="1" maxOccurs="1"/>
       <xs:element type="bool" name="PaysAtDefaultTime" minOccurs="1" maxOccurs="1"/>
@@ -83,6 +83,7 @@
       <xs:element type="futureDateGenerationRule" name="DateGenerationRule" minOccurs="0" maxOccurs="1"/>
       <xs:element type="overnightIndexFutureNettingType" name="OvernightIndexFutureNettingType" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="Calendar" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="OvernightIndexTenor" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 
@@ -226,11 +227,13 @@
       <xs:element type="xs:integer" name="SpreadFixingDays" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:integer" name="SpreadRateCutoff" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="SpreadIsAveraged" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="SpreadObservationShift" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="FlatIncludeSpread" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="FlatLookback" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:integer" name="FlatFixingDays" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:integer" name="FlatRateCutoff" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="FlatIsAveraged" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="FlatObservationShift" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 
@@ -248,6 +251,12 @@
       <xs:element type="bool" name="EOM" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="IsResettable" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="FloatIndexIsResettable" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="IncludeSpread" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Lookback" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:integer" name="FixingDays" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:integer" name="RateCutoff" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="IsAveraged" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="ObservationShift" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 

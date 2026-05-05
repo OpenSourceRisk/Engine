@@ -1,0 +1,27 @@
+include("${CMAKE_CURRENT_LIST_DIR}/OreTargets.cmake")
+
+include(CMakeFindDependencyMacro)
+
+# Mandatory dependencies
+find_dependency(Boost REQUIRED COMPONENTS @BOOST_COMPONENT_LIST@)
+
+# Optional dependencies
+if(@ORE_BUILD_QL_SEPARATELY@)
+    find_dependency(QuantLib REQUIRED)
+endif()
+
+if(@ORE_ENABLE_OPENCL@)
+    find_dependency(OpenCL REQUIRED)
+endif()
+
+if (@ORE_PYTHON_INTEGRATION@)
+    if(@MANYLINUX@)
+        find_dependency(Python REQUIRED COMPONENTS Interpreter Development.Module)
+    else()
+        find_dependency(Python REQUIRED COMPONENTS Interpreter Development)
+    endif()
+endif()
+
+if(@ORE_EIGEN_WAS_FOUND@)
+    find_dependency(Eigen3 3.3 REQUIRED)
+endif()

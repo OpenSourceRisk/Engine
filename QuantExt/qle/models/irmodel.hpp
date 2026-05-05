@@ -56,6 +56,9 @@ public:
      * schemes */
     virtual Size m_aux() const = 0;
 
+    /*! get initial value of state */
+    virtual Array initialValue() const { return Array(n() + n_aux(), 0.0); }
+
     /*! stochastic process, this has dimension n() + n_aux() and m() + m_aux() Brownian drivers */
     virtual QuantLib::ext::shared_ptr<StochasticProcess> stateProcess() const = 0;
 
@@ -64,16 +67,24 @@ public:
         const QuantLib::Time t, const QuantLib::Time T, const QuantLib::Array& x,
         const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve = Handle<YieldTermStructure>()) const = 0;
 
-    /*! numeraire depending on state and aux state (of dimensions n(), n_aux() */
-    virtual QuantLib::Real
-    numeraire(const QuantLib::Time t, const QuantLib::Array& x,
-              const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
-              const QuantLib::Array& aux = Array()) const = 0;
+    /*! numeraire depending on state (including aux state) of dimension n() + n_aux() */
+    virtual QuantLib::Real numeraire(
+        const QuantLib::Time t, const QuantLib::Array& x,
+        const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve = Handle<YieldTermStructure>()) const = 0;
 
     /*! short rate at t */
     virtual QuantLib::Real shortRate(
         const QuantLib::Time t, const QuantLib::Array& x,
         const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve = Handle<YieldTermStructure>()) const = 0;
+
+    /*! perform an Euler step */
+    virtual Array marginalStep(const Time t0, const Array& x0, const Time dt, const Array& dw) const = 0;
+
+    /*! allow caching for better performance, at the cost of an increased memory footprint */
+    virtual void enableCache(const bool enable, const std::vector<Size>& loopSizes) {}
+
+    /*! clone the irmodel */
+    virtual ext::shared_ptr<IrModel> clone() const = 0;
 };
 
 } // namespace QuantExt

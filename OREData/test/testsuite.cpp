@@ -18,26 +18,30 @@
 
 #include <iomanip>
 #include <iostream>
-using namespace std;
 
 // Boost
-#include <boost/make_shared.hpp>
 #include <boost/timer/timer.hpp>
 using boost::timer::cpu_timer;
 
 // Boost.Test
-#define BOOST_TEST_MODULE OREDataTestSuite
-#include <boost/test/unit_test.hpp>
+#define BOOST_TEST_MODULE "OREDataTestSuite"
+#ifdef ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER
+#include <test-suite/paralleltestrunner.hpp>
+#else
+#include <boost/test/included/unit_test.hpp>
+#endif
+
 using boost::unit_test::test_suite;
 using boost::unit_test::framework::master_test_suite;
+using namespace std;
 
-#include <oret/basedatapath.hpp>
-#include <oret/datapaths.hpp>
-#include <oret/oret.hpp>
+#include <oret/util/basedatapath.hpp>
+#include <oret/util/datapaths.hpp>
+#include <oret/logging/log.hpp>
 using ore::test::getBaseDataPath;
 using ore::test::setupTestLogging;
 
-#ifdef BOOST_MSVC
+#if !defined(BOOST_ALL_NO_LIB) && defined(BOOST_MSVC)
 #include <ored/auto_link.hpp>
 #include <ql/auto_link.hpp>
 #include <qle/auto_link.hpp>

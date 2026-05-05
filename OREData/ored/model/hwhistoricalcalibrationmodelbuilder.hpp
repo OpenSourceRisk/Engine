@@ -4,8 +4,8 @@
 */
 
 /*!
-  \file orea/app/hwhistoricalcalibrationmodelbuilder.hpp
-  \Model builder for Hull-White historical calibration model
+  \file ored/model/hwhistoricalcalibrationmodelbuilder.hpp
+  \brief builder for Hull-White historical calibration model
  */
 
 #pragma once

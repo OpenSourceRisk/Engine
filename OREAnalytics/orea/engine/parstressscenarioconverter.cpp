@@ -159,13 +159,13 @@ bool checkCurveShiftData(const std::string& name, const ext::shared_ptr<StressTe
     if (it == sensiData.end()) {
         StructuredConfigurationWarningMessage(
             "StressScenario", name, "Par Shift to zero conversion",
-            "no par sensitivity scenario found. Please add par sensi config").log();
+            "no sensitivity config found for '" + name + "'. Please add par sensi config").log();
         return false;
     }
     auto parShiftData = ext::dynamic_pointer_cast<SensitivityScenarioData::CurveShiftParData>(it->second);
     if (parShiftData == nullptr) {
         StructuredConfigurationWarningMessage("StressScenario", name, "Par Shift to zero conversion",
-                                              "no par sensitivity scenario found. Please add par sensi config")
+                                              "no par sensitivity config found for '" + name + "'. Please add par sensi config")
             .log();
         return false;
     }
@@ -181,15 +181,39 @@ bool checkCurveShiftData(const std::string& name, const ext::shared_ptr<StressTe
         return false;
     }
     for (size_t i = 0; i < nParShifts; ++i){
-        if (parShiftData->shiftTenors[i] != stressShiftData->shiftTenors[i]){
-            StructuredConfigurationWarningMessage("StressScenario", name, "Par Shift to zero conversion",
+        auto periodParShift  = std::get_if<QuantLib::Period>(&parShiftData->shiftTenors[i]);
+        auto periodStressShift  = std::get_if<QuantLib::Period>(&stressShiftData->shiftTenors[i]);
+        if ((periodParShift != nullptr && periodStressShift == nullptr) || (periodParShift == nullptr && periodStressShift != nullptr)){
+             StructuredConfigurationWarningMessage("StressScenario", name, "Par Shift to zero conversion",
                                                   "tenors are not aligned, " + to_string(i) + " par Pillar is " +
-                                                      to_string(parShiftData->shiftTenors[i]) +
+                                                      (periodParShift != nullptr ? to_string(*periodParShift) : "not a period") +
                                                       " vs stress shift piller " +
-                                                      to_string(stressShiftData->shiftTenors[i]) +
+                                                      (periodStressShift != nullptr ? to_string(*periodStressShift) : "not a period") +
                                                       ". Please align pillars of stress test and par sensi config")
                 .log();
-            return false;
+             return false;
+        }
+        if (periodParShift != nullptr && periodStressShift != nullptr){
+            if (*periodParShift != *periodStressShift){
+                StructuredConfigurationWarningMessage("StressScenario", name, "Par Shift to zero conversion",
+                                                      "tenors are not aligned, " + to_string(i) + " par Pillar is " +
+                                                          to_string(*periodParShift) + " vs stress shift piller " +
+                                                          to_string(*periodStressShift) +                                                ". Please align pillars of stress test and par sensi config")
+                    .log();
+                return false;
+            }
+        } 
+        auto expiryParShift  = std::get_if<IrFutureExpiryYearMonth>(&parShiftData->shiftTenors[i]);
+        auto expiryStressShift  = std::get_if<IrFutureExpiryYearMonth>(&stressShiftData->shiftTenors[i]);
+        if (expiryParShift != nullptr && expiryStressShift != nullptr && (expiryParShift->month() != expiryStressShift->month() || expiryParShift->year() != expiryStressShift->year())){
+             StructuredConfigurationWarningMessage("StressScenario", name, "Par Shift to zero conversion",
+                                                  "tenors are not aligned, " + to_string(i) + " par Pillar is " +
+                                                      (expiryParShift != nullptr ? expiryParShift->toString() : "not an expiry") +
+                                                      " vs stress shift piller " +
+                                                      (expiryStressShift != nullptr ? expiryStressShift->toString() : "not an expiry") +
+                                                      ". Please align pillars of stress test and par sensi config")
+                .log();
+             return false;
         }
     }
     return true;
@@ -315,10 +339,10 @@ ParStressScenarioConverter::ParStressScenarioConverter(
     const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParams,
     const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensiScenarioData,
     const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket,
-    const ore::analytics::ParSensitivityInstrumentBuilder::Instruments& parInstruments, bool useSpreadedTermStructure)
+    const ore::analytics::ParSensitivityInstrumentBuilder::Instruments& parInstruments)
     : asof_(asof), sortedParInstrumentRiskFactorKeys_(sortedParInstrumentRiskFactorKeys),
       simMarketParams_(simMarketParams), sensiScenarioData_(sensiScenarioData), simMarket_(simMarket),
-      parInstruments_(parInstruments), useSpreadedTermStructure_(useSpreadedTermStructure) {}
+      parInstruments_(parInstruments) {}
 
 ParStressScenarioConverter::ConversionResults 
 ParStressScenarioConverter::convertScenario(const StressTestScenarioData::StressTestData& parStressScenario) const {
@@ -479,7 +503,7 @@ double ParStressScenarioConverter::shiftsSizeForScenario(const RiskFactorKey rfK
     case RiskFactorKey::KeyType::SurvivalProbability: {
         double ttm = maturityTime(rfKey);
         DLOG("TTM " << ttm);
-        if (!useSpreadedTermStructure_) {
+        if (!sensiScenarioData_->useSpreadedTermStructures()) {
             shift = -std::log(targetValue / baseValue) / ttm;
         } else {
             shift = -std::log(targetValue) / ttm;
@@ -488,7 +512,7 @@ double ParStressScenarioConverter::shiftsSizeForScenario(const RiskFactorKey rfK
         break;
     }
     case RiskFactorKey::KeyType::OptionletVolatility:
-        if (!useSpreadedTermStructure_) {
+        if (!sensiScenarioData_->useSpreadedTermStructures()) {
             shift = targetValue - baseValue;
         } else {
             shift = targetValue;
@@ -528,7 +552,7 @@ void ParStressScenarioConverter::updateTargetStressTestScenarioData(
         if (stressScenario.discountCurveShifts.count(key.name) == 0) {
             StressTestScenarioData::CurveShiftData newData;
             newData.shiftType = ShiftType::Absolute;
-            newData.shiftTenors = simMarketParams_->yieldCurveTenors(key.name);
+            newData.shiftTenors = getShiftTenors(key);
             newData.shifts = std::vector<double>(newData.shiftTenors.size(), 0.0);
             newData.shifts[key.index] = zeroShift;
             stressScenario.discountCurveShifts.insert(
@@ -540,7 +564,7 @@ void ParStressScenarioConverter::updateTargetStressTestScenarioData(
         if (stressScenario.indexCurveShifts.count(key.name) == 0) {
             StressTestScenarioData::CurveShiftData newData;
             newData.shiftType = ShiftType::Absolute;
-            newData.shiftTenors = simMarketParams_->yieldCurveTenors(key.name);
+            newData.shiftTenors = getShiftTenors(key);
             newData.shifts = std::vector<double>(newData.shiftTenors.size(), 0.0);
             newData.shifts[key.index] = zeroShift;
             stressScenario.indexCurveShifts.insert({key.name, ext::make_shared<StressTestScenarioData::CurveShiftData>(newData)});
@@ -551,7 +575,7 @@ void ParStressScenarioConverter::updateTargetStressTestScenarioData(
         if (stressScenario.survivalProbabilityShifts.count(key.name) == 0) {
             StressTestScenarioData::CurveShiftData newData;
             newData.shiftType = ShiftType::Absolute;
-            newData.shiftTenors = simMarketParams_->defaultTenors(key.name);
+            newData.shiftTenors = getShiftTenors(key);
             newData.shifts = std::vector<double>(newData.shiftTenors.size(), 0.0);
             newData.shifts[key.index] = zeroShift;
             stressScenario.survivalProbabilityShifts.insert(
@@ -581,11 +605,11 @@ void ParStressScenarioConverter::updateTargetStressTestScenarioData(
 }
 
 double ParStressScenarioConverter::lowerBound(const RiskFactorKey key) const {
-    if (useSpreadedTermStructure_ && key.keytype == RiskFactorKey::KeyType::OptionletVolatility) {
+    if (sensiScenarioData_->useSpreadedTermStructures() && key.keytype == RiskFactorKey::KeyType::OptionletVolatility) {
         return minVol_ - simMarket_->baseScenarioAbsolute()->get(key);
     } else if (key.keytype == RiskFactorKey::KeyType::OptionletVolatility) {
         return minVol_;
-    } else if (useSpreadedTermStructure_ && (key.keytype == RiskFactorKey::KeyType::DiscountCurve ||
+    } else if (sensiScenarioData_->useSpreadedTermStructures() && (key.keytype == RiskFactorKey::KeyType::DiscountCurve ||
                                              key.keytype == RiskFactorKey::KeyType::YieldCurve ||
                                              key.keytype == RiskFactorKey::KeyType::IndexCurve ||
                                              key.keytype == RiskFactorKey::KeyType::SurvivalProbability)) {
@@ -596,17 +620,46 @@ double ParStressScenarioConverter::lowerBound(const RiskFactorKey key) const {
 }
 
 double ParStressScenarioConverter::upperBound(const RiskFactorKey key) const {
-    if (useSpreadedTermStructure_ && key.keytype == RiskFactorKey::KeyType::OptionletVolatility) {
+    if (sensiScenarioData_->useSpreadedTermStructures() && key.keytype == RiskFactorKey::KeyType::OptionletVolatility) {
         return maxVol_ * simMarket_->baseScenarioAbsolute()->get(key);
     } else if (key.keytype == RiskFactorKey::KeyType::OptionletVolatility) {
         return maxVol_ * simMarket_->baseScenarioAbsolute()->get(key);
-    } else if (useSpreadedTermStructure_ && (key.keytype == RiskFactorKey::KeyType::DiscountCurve ||
+    } else if (sensiScenarioData_->useSpreadedTermStructures() && (key.keytype == RiskFactorKey::KeyType::DiscountCurve ||
                                              key.keytype == RiskFactorKey::KeyType::YieldCurve ||
                                              key.keytype == RiskFactorKey::KeyType::IndexCurve ||
                                              key.keytype == RiskFactorKey::KeyType::SurvivalProbability)) {
         return maxDiscountFactor_ / simMarket_->baseScenarioAbsolute()->get(key);
     } else {
         return maxDiscountFactor_;
+    }
+}
+
+std::vector<ScenarioCurvePillar> ParStressScenarioConverter::getShiftTenors(const RiskFactorKey& key) const {
+    std::vector<ScenarioCurvePillar> tenors;
+    switch (key.keytype) {
+    case RiskFactorKey::KeyType::DiscountCurve: {
+        for (const auto& t : simMarketParams_->yieldCurveTenors(key.name)) {
+            tenors.push_back(t);
+        }
+        return tenors;
+    }
+    case RiskFactorKey::KeyType::YieldCurve:
+        for (const auto& t : simMarketParams_->yieldCurveTenors(key.name)) {
+            tenors.push_back(t);
+        }
+        return tenors;
+    case RiskFactorKey::KeyType::IndexCurve:
+        for (const auto& t : simMarketParams_->yieldCurveTenors(key.name)) {
+            tenors.push_back(t);
+        }
+        return tenors;
+    case RiskFactorKey::KeyType::SurvivalProbability:
+        for (const auto& t : simMarketParams_->defaultTenors(key.name)) {
+            tenors.push_back(t);
+        }
+        return tenors;
+    default:
+        QL_FAIL("Unsupported par instrument type for shift tenors " << key.keytype);
     }
 }
 } // namespace analytics

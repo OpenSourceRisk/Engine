@@ -63,6 +63,7 @@ marketdata/swaptionvolcurve.cpp
 marketdata/todaysmarket.cpp
 marketdata/todaysmarketcalibrationinfo.cpp
 marketdata/todaysmarketparameters.cpp
+marketdata/volsurfacebuilder.cpp
 marketdata/wrappedmarket.cpp
 marketdata/yieldcurve.cpp
 marketdata/yieldvolcurve.cpp
@@ -75,6 +76,7 @@ model/calibrationinstruments/cpicapfloor.cpp
 model/calibrationinstruments/yoycapfloor.cpp
 model/calibrationinstruments/yoyswap.cpp
 model/calibrationpointcache.cpp
+model/camcorrelationsfromindexcorrelations.cpp
 model/commodityschwartzmodelbuilder.cpp
 model/commodityschwartzmodeldata.cpp
 model/crcirbuilder.cpp
@@ -87,7 +89,10 @@ model/eqbsbuilder.cpp
 model/eqbsdata.cpp
 model/fxbsbuilder.cpp
 model/fxbsdata.cpp
+model/fxdata.cpp
+model/fxlvdata.cpp
 model/hestonmodelbuilder.cpp
+model/hestonmodelcalibration.cpp
 model/hwbuilder.cpp
 model/hwhistoricalcalibrationmodelbuilder.cpp
 model/hwhistoricalcalibrationmodeldata.cpp
@@ -153,6 +158,7 @@ portfolio/builders/commodityapomodelbuilder.cpp
 portfolio/builders/commodityasianoption.cpp
 portfolio/builders/commodityforward.cpp
 portfolio/builders/commodityoption.cpp
+portfolio/builders/rangeaccrualleg.cpp
 portfolio/builders/commodityspreadoption.cpp
 portfolio/builders/commodityswap.cpp
 portfolio/builders/commodityswaption.cpp
@@ -164,12 +170,15 @@ portfolio/builders/creditlinkedswap.cpp
 portfolio/builders/currencyswap.cpp
 portfolio/builders/deltagammaengines.cpp
 portfolio/builders/durationadjustedcms.cpp
+portfolio/builders/equity.cpp
 portfolio/builders/equityasianoption.cpp
 portfolio/builders/equitybarrieroption.cpp
 portfolio/builders/equitycompositeoption.cpp
 portfolio/builders/equitydigitaloption.cpp
+portfolio/builders/ratedigitaloption.cpp
 portfolio/builders/equitydoublebarrieroption.cpp
 portfolio/builders/equitydoubletouchoption.cpp
+portfolio/builders/equityautodeltahedgeoption.cpp
 portfolio/builders/equityforward.cpp
 portfolio/builders/equityfuturesoption.cpp
 portfolio/builders/equityoption.cpp
@@ -190,7 +199,6 @@ portfolio/builders/fxoption.cpp
 portfolio/builders/fxtouchoption.cpp
 portfolio/builders/indexcreditdefaultswap.cpp
 portfolio/builders/indexcreditdefaultswapoption.cpp
-portfolio/builders/multilegoption.cpp
 portfolio/builders/pairwisevarianceswap.cpp
 portfolio/builders/quantoequityoption.cpp
 portfolio/builders/riskparticipationagreement.cpp
@@ -242,6 +250,8 @@ portfolio/enginefactory.cpp
 portfolio/envelope.cpp
 portfolio/equitybarrieroption.cpp
 portfolio/equitydigitaloption.cpp
+portfolio/ratedigitaloption.cpp
+portfolio/equityautodeltahedgeoption.cpp
 portfolio/equitydoublebarrieroption.cpp
 portfolio/equitydoubletouchoption.cpp
 portfolio/equityeuropeanbarrieroption.cpp
@@ -288,7 +298,6 @@ portfolio/legbuilders.cpp
 portfolio/legdata.cpp
 portfolio/legdatafactory.cpp
 portfolio/makenonstandardlegs.cpp
-portfolio/multilegoption.cpp
 portfolio/nettingsetdefinition.cpp
 portfolio/nettingsetdetails.cpp
 portfolio/nettingsetmanager.cpp
@@ -310,6 +319,7 @@ portfolio/scriptedtrade.cpp
 portfolio/strikeresettableoption.cpp
 portfolio/swap.cpp
 portfolio/swaption.cpp
+portfolio/swaptionstraddle.cpp
 portfolio/tarf.cpp
 portfolio/tlockdata.cpp
 portfolio/trade.cpp
@@ -397,6 +407,7 @@ utilities/marketdata.cpp
 utilities/osutils.cpp
 utilities/parsers.cpp
 utilities/progressbar.cpp
+utilities/simmcurrencies.cpp
 utilities/strike.cpp
 utilities/timeperiod.cpp
 utilities/timer.cpp
@@ -477,6 +488,7 @@ marketdata/swaptionvolcurve.hpp
 marketdata/todaysmarket.hpp
 marketdata/todaysmarketcalibrationinfo.hpp
 marketdata/todaysmarketparameters.hpp
+marketdata/volsurfacebuilder.hpp
 marketdata/wrappedmarket.hpp
 marketdata/yieldcurve.hpp
 marketdata/yieldvolcurve.hpp
@@ -489,6 +501,7 @@ model/calibrationinstruments/cpicapfloor.hpp
 model/calibrationinstruments/yoycapfloor.hpp
 model/calibrationinstruments/yoyswap.hpp
 model/calibrationpointcache.hpp
+model/camcorrelationsfromindexcorrelations.hpp
 model/commodityschwartzmodelbuilder.hpp
 model/commodityschwartzmodeldata.hpp
 model/crcirbuilder.hpp
@@ -501,7 +514,10 @@ model/eqbsbuilder.hpp
 model/eqbsdata.hpp
 model/fxbsbuilder.hpp
 model/fxbsdata.hpp
+model/fxdata.hpp
+model/fxlvdata.hpp
 model/hestonmodelbuilder.hpp
+model/hestonmodelcalibration.hpp
 model/hwbuilder.hpp
 model/hwhistoricalcalibrationmodelbuilder.hpp
 model/hwhistoricalcalibrationmodeldata.hpp
@@ -571,6 +587,7 @@ portfolio/builders/commodityapomodelbuilder.hpp
 portfolio/builders/commodityasianoption.hpp
 portfolio/builders/commodityforward.hpp
 portfolio/builders/commodityoption.hpp
+portfolio/builders/rangeaccrualleg.hpp
 portfolio/builders/commodityspreadoption.hpp
 portfolio/builders/commodityswap.hpp
 portfolio/builders/commodityswaption.hpp
@@ -582,12 +599,15 @@ portfolio/builders/creditlinkedswap.hpp
 portfolio/builders/currencyswap.hpp
 portfolio/builders/deltagammaengines.hpp
 portfolio/builders/durationadjustedcms.hpp
+portfolio/builders/equity.hpp
 portfolio/builders/equityasianoption.hpp
 portfolio/builders/equitybarrieroption.hpp
 portfolio/builders/equitycompositeoption.hpp
 portfolio/builders/equitydigitaloption.hpp
+portfolio/builders/ratedigitaloption.hpp
 portfolio/builders/equitydoublebarrieroption.hpp
 portfolio/builders/equitydoubletouchoption.hpp
+portfolio/builders/equityautodeltahedgeoption.hpp
 portfolio/builders/equityforward.hpp
 portfolio/builders/equityfuturesoption.hpp
 portfolio/builders/equityoption.hpp
@@ -608,7 +628,6 @@ portfolio/builders/fxoption.hpp
 portfolio/builders/fxtouchoption.hpp
 portfolio/builders/indexcreditdefaultswap.hpp
 portfolio/builders/indexcreditdefaultswapoption.hpp
-portfolio/builders/multilegoption.hpp
 portfolio/builders/pairwisevarianceswap.hpp
 portfolio/builders/quantoequityoption.hpp
 portfolio/builders/quantovanillaoption.hpp
@@ -663,6 +682,8 @@ portfolio/envelope.hpp
 portfolio/equitybarrieroption.hpp
 portfolio/equityderivative.hpp
 portfolio/equitydigitaloption.hpp
+portfolio/ratedigitaloption.hpp
+portfolio/equityautodeltahedgeoption.hpp
 portfolio/equitydoublebarrieroption.hpp
 portfolio/equitydoubletouchoption.hpp
 portfolio/equityeuropeanbarrieroption.hpp
@@ -710,7 +731,6 @@ portfolio/legbuilders.hpp
 portfolio/legdata.hpp
 portfolio/legdatafactory.hpp
 portfolio/makenonstandardlegs.hpp
-portfolio/multilegoption.hpp
 portfolio/nettingsetdefinition.hpp
 portfolio/nettingsetdetails.hpp
 portfolio/nettingsetmanager.hpp
@@ -737,6 +757,7 @@ portfolio/structuredtradeerror.hpp
 portfolio/structuredtradewarning.hpp
 portfolio/swap.hpp
 portfolio/swaption.hpp
+portfolio/swaptionstraddle.hpp
 portfolio/tarf.hpp
 portfolio/tlockdata.hpp
 portfolio/trade.hpp
@@ -832,36 +853,54 @@ utilities/osutils.hpp
 utilities/parsers.hpp
 utilities/progressbar.hpp
 utilities/serializationdaycounter.hpp
+utilities/simmcurrencies.hpp
 utilities/strike.hpp
 utilities/timeperiod.hpp
 utilities/timer.hpp
+utilities/toplevelfixture.hpp
 utilities/to_string.hpp
 utilities/vectorutils.hpp
 utilities/wildcard.hpp
 utilities/xmlutils.hpp
 version.hpp)
 
-writeAll("ored" "ored.hpp" "auto_link.hpp" "${OREData_HDR}")
-add_library(${ORED_LIB_NAME} ${OREData_SRC})
-target_link_libraries(${ORED_LIB_NAME} ${QLE_LIB_NAME})
-target_link_libraries(${ORED_LIB_NAME} ${QL_LIB_NAME})
-target_link_libraries(${ORED_LIB_NAME} ${Boost_LIBRARIES})
+writeAll("ored" "${CMAKE_CURRENT_LIST_DIR}/ored.hpp" "auto_link.hpp" "${OREData_HDR}")
+add_library(${ORED_LIB_NAME} ${OREData_SRC} ${OREData_HDR} "ored.hpp")
+add_library(${ORE_PACKAGE_NAME}::${ORED_LIB_NAME} ALIAS ${ORED_LIB_NAME})
 
+target_include_directories(${ORED_LIB_NAME} PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
 
-if (QL_USE_PCH)
-target_precompile_headers(${ORED_LIB_NAME}
-  PUBLIC
-    <ored/portfolio/enginefactory.hpp>
-    <ored/utilities/log.hpp>
-    <ored/utilities/parsers.hpp>)
+target_link_libraries(${ORED_LIB_NAME}
+    PRIVATE
+        ${RAPIDXML_NAME}
+        Boost::iostreams
+    PUBLIC
+        ${ORE_PACKAGE_NAME}::${QLE_LIB_NAME}
+        Boost::log
+)
+
+if(ORE_USE_ZLIB)
+    target_link_libraries(${ORED_LIB_NAME} PRIVATE ZLIB::ZLIB)
+    target_compile_definitions(${ORED_LIB_NAME} PRIVATE ORE_USE_ZLIB)
 endif()
 
-install(DIRECTORY . DESTINATION include/ored
-        FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h")
+if (QL_USE_PCH)
+    target_precompile_headers(${ORED_LIB_NAME}
+        PUBLIC
+            $<BUILD_INTERFACE:<ored/portfolio/enginefactory.hpp$<ANGLE-R>>
+            $<BUILD_INTERFACE:<ored/utilities/log.hpp$<ANGLE-R>>
+            $<BUILD_INTERFACE:<ored/utilities/parsers.hpp$<ANGLE-R>>
+    )
+endif()
 
-install(TARGETS ${ORED_LIB_NAME}
-        ARCHIVE DESTINATION lib
-        LIBRARY DESTINATION lib
-        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
-        )
+# Installation properties.
+install(TARGETS ${ORED_LIB_NAME} EXPORT ${ORE_PACKAGE_NAME}Targets)
 
+install(
+    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
+)

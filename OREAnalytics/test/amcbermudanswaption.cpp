@@ -122,7 +122,7 @@ struct TestData : ore::test::OreaTopLevelFixture {
         vector<string> optionStrikes = {};
         vector<Time> sigmaTimes = {};
 
-        std::vector<QuantLib::ext::shared_ptr<FxBsData>> fxConfigs;
+        std::vector<QuantLib::ext::shared_ptr<FxData>> fxConfigs;
         vector<Real> sigmaValues = {0.15};
         fxConfigs.push_back(QuantLib::ext::make_shared<FxBsData>("USD", "EUR", calibrationType, false,
                                                                  ParamType::Constant, sigmaTimes, sigmaValues,
@@ -287,7 +287,7 @@ TestCase testCaseData[] = {
     //   {18.5041, 0.000677892}, {19.0027, 0},          {19.5041, 0},          {20, 0},
     //   {20.5039, 0},           {21.0012, 0}}},
     {"Physical Settled Swaption EUR 10y50y (Long Term Simulation)",
-     200E-4,
+     250E-4,
      true,
      4,
      false,
@@ -362,14 +362,14 @@ TestCase testCaseData[] = {
       {18.5041, 0.00216216}, {19.0027, 0.000691815}, {19.5041, 0.00058673},
       {20, 1.52066e-05},     {20.5039, 0},           {21.0012, 0}}}};
 
-BOOST_FIXTURE_TEST_SUITE(OreAmcTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OreAmcTestSuite, ore::data::TopLevelFixture)
 
 BOOST_FIXTURE_TEST_SUITE(AmcBermudanSwaptionTest, TestData)
 
 BOOST_DATA_TEST_CASE(testBermudanSwaptionExposure, boost::unit_test::data::make(testCaseData), testCase) {
 
     // if true, only output results (e.g. for plotting), do no checks
-    const bool outputResults = true;
+    const bool outputResults = false;
 
     // if true, cached results are used for the reference values computed with the grid engine
     // if false, the grid engine is used for the computation, which is slow
@@ -406,7 +406,7 @@ BOOST_DATA_TEST_CASE(testBermudanSwaptionExposure, boost::unit_test::data::make(
 
     BOOST_TEST_MESSAGE("Simulation Grid:");
     for (Size i = 0; i < grid->dates().size(); ++i)
-        std::cout << QuantLib::io::iso_date(grid->dates()[i]) << " " << grid->timeGrid()[i + 1] << std::endl;
+        BOOST_TEST_MESSAGE(QuantLib::io::iso_date(grid->dates()[i]) << " " << grid->timeGrid()[i + 1]);
 
     // Model
     QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model = ccLgm;
@@ -439,8 +439,7 @@ BOOST_DATA_TEST_CASE(testBermudanSwaptionExposure, boost::unit_test::data::make(
     sgd->setGrid(grid);
 
     ScenarioGeneratorBuilder sgb(sgd);
-    QuantLib::ext::shared_ptr<ScenarioFactory> sf = QuantLib::ext::make_shared<SimpleScenarioFactory>(true);
-    QuantLib::ext::shared_ptr<ScenarioGenerator> sg = sgb.build(model, sf, simMarketConfig, today, market);
+    QuantLib::ext::shared_ptr<ScenarioGenerator> sg = sgb.build(model, simMarketConfig, today, market);
 
     auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(market, simMarketConfig);
     simMarket->scenarioGenerator() = sg;

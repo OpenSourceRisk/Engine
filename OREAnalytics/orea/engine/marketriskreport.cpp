@@ -159,7 +159,7 @@ void MarketRiskReport::initialise() {
                 vector<Date>(1, fullRevalArgs_->simMarket_->asofDate()), hisScenGen_->numScenarios());
 
             histPnlGen_ = ext::make_shared<HistoricalPnlGenerator>(
-                calculationCurrency_, portfolio_, fullRevalArgs_->simMarket_, 
+                calculationCurrency_, portfolio_, fullRevalArgs_->simMarket_,
                 hisScenGen_, cube, factory_->modelBuilders(), fullRevalArgs_->dryRun_);
         } else {
             histPnlGen_ = ext::make_shared<HistoricalPnlGenerator>(
@@ -220,11 +220,17 @@ void MarketRiskReport::initialiseRiskGroups() {
     }
 
     // Create the Var risk groups, pairs of risk class/type
-    for (auto rc : MarketRiskConfiguration::riskClasses(true)) {
-        for (auto rt : MarketRiskConfiguration::riskTypes(true)) {
-            auto riskGroup = QuantLib::ext::make_shared<MarketRiskGroup>(rc, rt);
-            riskGroups_->add(riskGroup);
+    if (riskClassBreakdown_) {
+        for (auto rc : MarketRiskConfiguration::riskClasses(true)) {
+            for (auto rt : MarketRiskConfiguration::riskTypes(true)) {
+                auto riskGroup = QuantLib::ext::make_shared<MarketRiskGroup>(rc, rt);
+                riskGroups_->add(riskGroup);
+            }
         }
+    } else {
+        // Only the aggregate [All, All] group
+        riskGroups_->add(QuantLib::ext::make_shared<MarketRiskGroup>(
+            MarketRiskConfiguration::RiskClass::All, MarketRiskConfiguration::RiskType::All));
     }
     riskGroups_->reset();
     tradeGroups_->reset();
@@ -256,7 +262,7 @@ void MarketRiskReport::registerProgressIndicators() {
 void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports>& reports) {
     initialise();
     registerProgressIndicators();
-    
+
     LOG("Creating reports");
     createReports(reports);
 
@@ -266,7 +272,7 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
     if (sensiBased_)
         // Create a sensitivity aggregator. Will be used if running sensi-based backtest.
         sensiAgg = ext::make_shared<SensitivityAggregator>(tradeIdGroups_);
-    
+
     bool runDetailTrd = runTradeDetail(reports);
     bool runDetailRF = runRiskFactorDetail(reports);
     addPnlCalculators(reports);
@@ -302,7 +308,7 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
                 }
             }
         }
-        
+
         bool runSensiBased = sensiBased_;
 
         // loop over all the trade groups
@@ -316,8 +322,8 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
                 continue;
 
             MEM_LOG;
-            LOG("Start processing for RiskGroup: " << riskGroup << ", TradeGroup: " << tradeGroup); 
-            
+            LOG("Start processing for RiskGroup: " << riskGroup << ", TradeGroup: " << tradeGroup);
+
             writePnl_ = tradeGroup->allLevel() && riskGroup->allLevel();
             tradeIdIdxPairs_ = tradeIdGroups_.at(tradeGroupKey(tradeGroup));
             if (tradeIdIdxPairs_.size() == 0) {
@@ -433,7 +439,7 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
                 }
             }
             // Do the full revaluation step
-            if (runFullReval(riskGroup))                                
+            if (runFullReval(riskGroup))
                 handleFullRevalResults(reports, riskGroup, tradeGroup);
 
             writeReports(reports, riskGroup, tradeGroup);
@@ -465,7 +471,7 @@ void MarketRiskReport::reset(const ext::shared_ptr<MarketRiskGroupBase>& riskGro
 
 void MarketRiskReport::closeReports(const ext::shared_ptr<MarketRiskReport::Reports>& reports) {
     for (const auto& r : reports->reports())
-        r->end();    
+        r->end();
 }
 
 QuantLib::ext::shared_ptr<ore::analytics::ScenarioFilter>

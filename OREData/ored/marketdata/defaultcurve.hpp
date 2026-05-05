@@ -53,7 +53,8 @@ public:
     //! Detailed constructor
     DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
                  map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves,
-                 map<string, QuantLib::ext::shared_ptr<DefaultCurve>>& defaultCurves);
+                 map<string, QuantLib::ext::shared_ptr<DefaultCurve>>& defaultCurves,
+                 QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData);
     //@}
     //! \name Inspectors
     //@{
@@ -65,12 +66,13 @@ private:
     DefaultCurveSpec spec_;
     QuantLib::ext::shared_ptr<QuantExt::CreditCurve> curve_;
     Real recoveryRate_;
-
+    
     //! Build a default curve from CDS spread quotes
     void buildCdsCurve(const std::string& curveID, const DefaultCurveConfig::Config& config, const QuantLib::Date& asof,
                        const DefaultCurveSpec& spec, const Loader& loader,
                        std::map<std::string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves,
-                       bool implyDefaultFromMarket);
+                       bool implyDefaultFromMarket,
+                       QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData);
 
     //! Build a default curve from hazard rate quotes
     void buildHazardRateCurve(const std::string& curveID, const DefaultCurveConfig::Config& config,
@@ -99,6 +101,13 @@ private:
                                        const Date& asof, const DefaultCurveSpec& spec,
                                        std::map<std::string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves);
 };
+
+//! Shared logic to create credit curve reference data from CDS conventions.
+QuantExt::CreditCurve::RefData createRefData(const QuantLib::Period& indexTerm,
+    const QuantLib::Date& startDate,
+    const QuantLib::ext::shared_ptr<CdsConvention>& cdsConvention,
+    QuantLib::Real runningSpread = QuantLib::Null<QuantLib::Real>(),
+    bool eom = false);
 
 } // namespace data
 } // namespace ore

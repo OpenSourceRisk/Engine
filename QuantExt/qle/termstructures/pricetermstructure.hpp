@@ -49,8 +49,8 @@ public:
 
     //! \name Prices
     //@{
-    QuantLib::Real price(QuantLib::Time t, bool extrapolate = false) const;
-    QuantLib::Real price(const QuantLib::Date& d, bool extrapolate = false) const;
+    virtual QuantLib::Real price(QuantLib::Time t, bool extrapolate = false) const;
+    virtual QuantLib::Real price(const QuantLib::Date& d, bool extrapolate = false) const;
     //@}
 
     //! \name Observer interface

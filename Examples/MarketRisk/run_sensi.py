@@ -14,7 +14,7 @@ print("+----------------------------------------+")
 oreex.print_headline("Run ORE for Sensitivity")
 oreex.run("Input/ore_sensi.xml")
 
-#oreex.print_headline("Run ORE for Parametric VaR Analysis")
-#oreex.run("Input/ore_var.xml")
+oreex.print_headline("Run ORE for Par Sensitivity with IR Futures")
+oreex.run("Input/ore_parsensi_irfut.xml")
 
 

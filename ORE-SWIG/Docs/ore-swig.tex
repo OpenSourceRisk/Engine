@@ -34,7 +34,7 @@
     Download and install required software. For development purposes, use GitLab repos for QuantLib and ORE.
 \begin{enumerate}
     \item Microsoft Visual Studio (including necessary program files)
-    \item Python (3.6 and higher)
+    \item Python (3.8 to 3.13)
     \item Boost (preferably 1.72.0)
     \item SWIG (3.0 and higher for MacOS/Linux, 4.3 and higher for Windows)
     \item QuantLib
@@ -43,18 +43,20 @@
 
 Set the following environment variables:
 \begin{enumerate}
-    \item BOOST AND BOOST\_LIB
+    \item BOOST and BOOST\_LIB
     \item ORE\_DIR
-    \item SWIG\_DIR and SWIG\_EXECUTABLE 
+    \item SWIG\_DIR and SWIG\_EXECUTABLE
     \item Python Scripts in PATH
+    \item ORE\_STATIC\_RUNTIME (Windows builds)
 \end{enumerate}
 
 To build and run ORE-SWIG, there are two methods as outlined in the README: (1) CMAKE, (2) setup.py scripts. You can build individual levels (ex. only QuantExt-SWIG) by running the following in the respective directory
 \begin{lstlisting}
-        python setup.py wrap 
-        python setup.py build 
-        python seutp.py test 
-        python setup.py install 
+        SET ORE_STATIC_RUNTIME=1
+        python setup.py wrap
+        python setup.py build
+        python setup.py test
+        python setup.py install
 \end{lstlisting}
 
 If using the python setup.py method, please ensure that the config files for each directory has the proper prefix path (i.e. the path to ORE on your machine).
@@ -67,16 +69,16 @@ After proper installation, you can look through the test scripts to see the gene
 \begin{enumerate}
     \item error LNK1112: Module machine type x86 conflicts with target machine type x64.\\
     \-\hspace{1cm}\rotatebox[origin=c]{180}{$\Lsh$}  Ensure that Python is not 3.10 (3.6 and higher)\\
-    
+
     \item error LNK2001: unresolved external symbol. \\
     \-\hspace{1cm}\rotatebox[origin=c]{180}{$\Lsh$}  Ensure that the ORE build has all the proper linked files in its props file.\\
-    
+
     \item error LNK1181: Input File "QuantExt-x64-mt.lib" cannot be opened. \\
     \-\hspace{1cm}\rotatebox[origin=c]{180}{$\Lsh$}  Ensure that ORE has been built in the correct Debug or Release version and the correct \\\-\hspace{1cm} machine type (x64 vs x86).\\
     \\
-    
+
     \textbf{The following fixes should come after ensuring that the classes in the interface file are up to date with the ORE classes (i.e. correct number of arguments, correct types being passed, etc.)} \\
-    
+
     \item error no proxy class is created - an incomplete swigpy object of type boost::shared\_ptr\\
         \centerline{ \textit{or} } \\
     if there is an error with any of the variables and after checking the type it only declares it a SwigPyObject - NOT SwigPyObject as proxy class for X \\
@@ -86,16 +88,16 @@ After proper installation, you can look through the test scripts to see the gene
     error overloaded function, wrong type or number of arguments \\
     \-\hspace{1cm}\rotatebox[origin=c]{180}{$\Lsh$} Ensure that all boost::shared\_ptrs are written as ext::shared\_ptr in the interface files. \\
     \-\hspace{1cm}\rotatebox[origin=c]{180}{$\Lsh$} For the latter issue, you can also go into the \_wrap file and print out the value of \_v at the \\ \-\hspace{1cm}respective method's if statement to identify exactly which argument is throwing the error.
-    
+
     \item error: cannot find X class \\
     \-\hspace{1cm}\rotatebox[origin=c]{180}{$\Lsh$} add the highlighted text to generate a text file with all the classes created during swig build.
     \begin{lstlisting}[escapeinside ={\%,}, escapechar={!}]
             os.system('swig !\colorbox{yellow}{ -debug-classes -Wall -I./ -I../dependencies/}!
-            -python -py3 -c++' + '-I%s ' % swig_dir + 
+            -python -py3 -c++' + '-I%s ' % swig_dir +
             '-outdir QuantLib -o QuantLib/quantlib_wrap.cpp ' +
             'quantlib.i !\colorbox{yellow}{ $>$  generatedClasses.txt}!')
     \end{lstlisting}
-    
+
     \textbf{Docker/Unix Build Errors}
     \item \textbf{(fixed in recent oreplus)} error cannot convert \\ 'const boost::shared\_ptr$<$QuantExt::YoYInflaionCapFloorEngine$>$' to '\\ const boost::shared\_ptr$<$QuantLib::YoYInflationCapFloorEngine\&$>$ in \\ kinterpolatedyoyoptionletvolatilitysurface.hpp.\\
     \-\hspace{1cm}\rotatebox[origin=c]{180}{$\Lsh$} add \colorbox{yellow}{QuantLib::}YoYInflationCapFloorEngine to line 58, 73, 103.\\
@@ -104,11 +106,11 @@ After proper installation, you can look through the test scripts to see the gene
     \-\hspace{1cm}\rotatebox[origin=c]{180}{$\Lsh$} specify that the 'close\_enough' function is from ql/math/conversions.hpp \\ \-\hspace{1cm} not qle/math/randomvariable.hpp \\
 
     \item error: oreanalytics-config: not found. \\
-    \-\hspace{1cm}\rotatebox[origin=c]{180}{$\Lsh$} run dos2unix oreanalytics to modify newline characters so they are Unix compatible. \\ \-\hspace{1cm}In setup.py ensure that the config file is called as '. ./X-config' 
+    \-\hspace{1cm}\rotatebox[origin=c]{180}{$\Lsh$} run dos2unix oreanalytics to modify newline characters so they are Unix compatible. \\ \-\hspace{1cm}In setup.py ensure that the config file is called as '. ./X-config'
 
     \item error: cannot find qle/version.hpp \\
     \-\hspace{1cm}\rotatebox[origin=c]{180}{$\Lsh$} Ensure that all libraries and directories are included during compilation. \\ \-\hspace{1cm} Located in each directory's config files for Unix through setup.py build method.
-    
+
     \item error: Failed to allocate 4194304*16 bytes. \\
     \-\hspace{1cm}\rotatebox[origin=c]{180}{$\Lsh$} Ensure that you are using Swig 4.3.0 on Windows. \\ \-\hspace{1cm} If you opt to build Swig from source, ensure that you are building the x64 executable.
 
@@ -120,10 +122,22 @@ After proper installation, you can look through the test scripts to see the gene
 \section*{SWIG and Needed Tasks}
 Briefly, SWIG wraps C++ code and makes them accessible to higher level scripting languages (ex. Python). In order to do so, the general task is to write SWIG interface (.i) files that introduce the code (from .hpp file) you want to access. Be sure, when copying over to change all boost::shared\_ptrs to ext::shared\_ptrs.\\
 
-\subsection*{To Do:}
-I. Currently, new interface files have been created but OREData and OREAnalytics require new python test scripts to confirm. \\
+\subsection*{Recent Expansion Highlights}
+The SWIG bindings expansion introduced substantial coverage and infrastructure updates across QuantExt, OREData, and OREAnalytics. Highlights include:
+\begin{enumerate}
+    \item Shared SWIG infrastructure files and common typemaps for cleaner layering and reduced duplication.
+    \item New and extended wrappers for analytics (scenario, engine, aggregation, simulation, SIMM, analytics orchestration), model builders, model data, and portfolio/configuration areas.
+    \item Master include files updated so new layer wrappers are compiled into the single \texttt{ORE} Python module.
+    \item Documentation enhancements in SWIG entry points:
+    \begin{enumerate}
+        \item \texttt{\%feature("autodoc", "1")} enabled for Python bindings.
+        \item Global \texttt{\%feature("docstring")} support enabled.
+        \item Layer-level \texttt{\%pythoncode} module overview blocks added for QuantExt, OREData, and OREAnalytics.
+    \end{enumerate}
+    \item Build validation flow standardised on Windows with \texttt{SET ORE\_STATIC\_RUNTIME=1} before wrap/build/test.
+\end{enumerate}
 
-II. OREAnalytics encounters the following error when building on Windows:
+The historical Windows linker issue remains relevant in some environments:
 \begin{lstlisting}[basicstyle=\small]
 OREData-x64-mt.lib(osutils.obj) : error LNK2001: unresolved external symbol
 __imp_GetUserNameA
@@ -133,7 +147,7 @@ error: command 'C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\
 VC\\Tools\\MSVC\\14.32.31326\\bin\\HostX86\\x64\\link.exe'
 failed with exit status 1120
 \end{lstlisting}
-The current hacky fix for that would be to comment out the function in OREData/utilities/osutils.* in ore. Howevwer the function is used in restore.
+The current hacky fix for that would be to comment out the function in OREData/utilities/osutils.* in ore. However, the function is used in restore.
 
 
 
@@ -218,7 +232,7 @@ The current hacky fix for that would be to comment out the function in OREData/u
                 \subitem SwaptionVolatilityConstantSpread
                 \subitem SwapConventions
                 \subitem SwaptionVolatilityConverter
-                \subitem BlackVolatilityConverter    
+                \subitem BlackVolatilityConverter
         \item \textbf{qle\_calendars.i}
                 \subitem Austria
                 \subitem Belgium
@@ -393,8 +407,8 @@ The current hacky fix for that would be to comment out the function in OREData/u
             \item \textbf{ored\_volcurves.i}
                 \subitem GenerticYieldVolCurve
                 \subitem SwaptionVolCurve
-                
-                
+
+
     \end{enumerate}
 \end{multicols}
 
@@ -413,7 +427,7 @@ The current hacky fix for that would be to comment out the function in OREData/u
 \section*{General Warning Encountered throughout SWIG Builds}
 \subsection{General SWIG}
 \begin{verbatim}
-    SWIG(1) : Warning 125: Use of the include path to find the input file is deprecated 
+    SWIG(1) : Warning 125: Use of the include path to find the input file is deprecated
     and will not work with ccache. Please include the path when specifying the input file.
 \end{verbatim}
 \subsection{QuantLib}
@@ -427,12 +441,12 @@ The current hacky fix for that would be to comment out the function in OREData/u
     ..\SWIG\swap.i(378) : Warning 321: 'type' conflicts with a built-in name in python
     ..\SWIG\swap.i(549) : Warning 321: 'type' conflicts with a built-in name in python
     ..\SWIG\inflation.i(718) : Warning 321: 'type' conflicts with a built-in name in python
-    ..\SWIG\inflation.i(1048) : Warning 321: 'slice' conflicts with a built-in 
+    ..\SWIG\inflation.i(1048) : Warning 321: 'slice' conflicts with a built-in
                                               name in python
     ..\SWIG\bonds.i(53) : Warning 321: 'type' conflicts with a built-in name in python
     ..\SWIG\bonds.i(445) : Warning 321: 'type' conflicts with a built-in name in python
     ..\SWIG\capfloor.i(55) : Warning 321: 'type' conflicts with a built-in name in python
-    ..\SWIG\exchangerates.i(39) : Warning 321: 'type' conflicts with a built-in 
+    ..\SWIG\exchangerates.i(39) : Warning 321: 'type' conflicts with a built-in
                                                 name in python
     ..\SWIG\fdm.i(322) : Warning 321: 'apply' conflicts with a built-in name in python
     ..\SWIG\fdm.i(914) : Warning 321: 'apply' conflicts with a built-in name in python
@@ -451,38 +465,38 @@ The current hacky fix for that would be to comment out the function in OREData/u
     ..\SWIG\swap.i(53) : Warning 509: Overloaded method Swap::Swap(std::vector< Leg,
         std::allocator< Leg > > const &,std::vector< bool,std::allocator< bool > > const &)
         effectively ignored,
-    ..\SWIG\swap.i(51) : Warning 509: as it is shadowed by Swap::Swap(std::vector< 
-        ext::shared_ptr< CashFlow >, std::allocator< ext::shared_ptr< CashFlow > > > 
-        const &, std::vector< ext::shared_ptr< CashFlow >, std::allocator< 
+    ..\SWIG\swap.i(51) : Warning 509: as it is shadowed by Swap::Swap(std::vector<
+        ext::shared_ptr< CashFlow >, std::allocator< ext::shared_ptr< CashFlow > > >
+        const &, std::vector< ext::shared_ptr< CashFlow >, std::allocator<
         ext::shared_ptr< CashFlow > > > const &).
 \end{verbatim}
 
 \subsection{QuantExt}
 \begin{verbatim}
-    ..\SWIG\qle_termstructures.i(101) : Warning 302: Identifier 'SwaptionVolatilityCube' 
+    ..\SWIG\qle_termstructures.i(101) : Warning 302: Identifier 'SwaptionVolatilityCube'
                                         redefined (ignored),
-    ..\..\QuantLib-SWIG\SWIG\volatilities.i(628) : Warning 302: previous definition of 
+    ..\..\QuantLib-SWIG\SWIG\volatilities.i(628) : Warning 302: previous definition of
                                                    'SwaptionVolatilityCube'.
-    ..\SWIG\qle_termstructures.i(236) : Warning 325: Nested struct not currently supported 
+    ..\SWIG\qle_termstructures.i(236) : Warning 325: Nested struct not currently supported
                                         (RefData ignored)
     ..\SWIG\qle_averageois.i(81) : Warning 314: 'None' is a python keyword, renaming to '_None'
-    ..\SWIG\qle_termstructures.i(219) : Warning 401: Nothing known about base class 'Observer'. 
+    ..\SWIG\qle_termstructures.i(219) : Warning 401: Nothing known about base class 'Observer'.
                                         Ignored.
-    ..\SWIG\qle_termstructures.i(251) : Warning 401: Nothing known about base class 
+    ..\SWIG\qle_termstructures.i(251) : Warning 401: Nothing known about base class
                                         'QuantLib::VolatilityTermStructure'. Ignored.
 
 \end{verbatim}
 
 \subsection{OREData}
 \begin{verbatim}
-    ..\SWIG\ored_market.i(178) : Warning 302: Identifier 'YoYOptionletVolatilitySurfaceHandle' 
-                                redefined (ignored) (Renamed from 
+    ..\SWIG\ored_market.i(178) : Warning 302: Identifier 'YoYOptionletVolatilitySurfaceHandle'
+                                redefined (ignored) (Renamed from
                                 'Handle< QuantExt::YoYOptionletVolatilitySurface >'),
-    ..\..\QuantLib-SWIG\SWIG\volatilities.i(176) : Warning 302: previous definition of 
-                                                'YoYOptionletVolatilitySurfaceHandle' 
-                                                (Renamed from 
+    ..\..\QuantLib-SWIG\SWIG\volatilities.i(176) : Warning 302: previous definition of
+                                                'YoYOptionletVolatilitySurfaceHandle'
+                                                (Renamed from
                                                 'Handle< YoYOptionletVolatilitySurface >').
-\end{verbatim}      
+\end{verbatim}
 
 
 

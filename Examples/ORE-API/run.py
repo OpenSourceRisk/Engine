@@ -1,14 +1,21 @@
 #!/usr/bin/env python
 
-import sys
-sys.path.append('../')
-from ore_examples_helper import OreExample
-
-oreex = OreExample(sys.argv[1] if len(sys.argv)>1 else False)
+import os, time, subprocess
 
 print("+-----------------------------------------------------+")
 print("| ORE-API                                             |")
 print("+-----------------------------------------------------+")
 
-# don't do anything yet
+proc1 = subprocess.Popen(['python3 simplefileserver.py'], shell=True)
+time.sleep(5)
+
+proc2 = subprocess.Popen(['python3 restapi.py'], shell=True)
+time.sleep(5)
+
+# system call, so that we wait until it is completed
+os.system('python3 request.py')
+
+# then terminate the sub processes
+proc1.terminate()
+proc2.terminate()
 

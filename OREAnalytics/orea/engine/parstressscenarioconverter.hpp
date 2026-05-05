@@ -57,8 +57,7 @@ public:
         const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParams,
         const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensiScenarioData,
         const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket,
-        const ore::analytics::ParSensitivityInstrumentBuilder::Instruments& parInstruments,
-        bool useSpreadedTermStructure);
+        const ore::analytics::ParSensitivityInstrumentBuilder::Instruments& parInstruments);
 
     //! Convert par shifts in a stress scenario to zero shifts
     ConversionResults convertScenario(const StressTestScenarioData::StressTestData& scenario) const;
@@ -88,13 +87,14 @@ private:
     double lowerBound(const RiskFactorKey key) const;
     double upperBound(const RiskFactorKey key) const;
 
+    std::vector<ScenarioCurvePillar> getShiftTenors(const RiskFactorKey& key) const;
+    
     QuantLib::Date asof_;
     const std::vector<RiskFactorKey> sortedParInstrumentRiskFactorKeys_;
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> simMarketParams_;
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> sensiScenarioData_;
     mutable QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket> simMarket_;
     const ore::analytics::ParSensitivityInstrumentBuilder::Instruments& parInstruments_;
-    bool useSpreadedTermStructure_ = true;
 
     double minVol_ = 1e-8;
     double maxVol_ = 10.0;

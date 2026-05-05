@@ -18,6 +18,8 @@
 
 #include <orea/app/analytic.hpp>
 #include <orea/app/analyticsmanager.hpp>
+#include <orea/app/inputparameters.hpp>
+#include <orea/app/inputvariables.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/marketdataloader.hpp>
 #include <orea/app/portfolioanalyser.hpp>
@@ -37,7 +39,6 @@
 #include <ored/marketdata/bondspreadimply.hpp>
 #include <ored/portfolio/builders/currencyswap.hpp>
 #include <ored/portfolio/builders/fxoption.hpp>
-#include <ored/portfolio/builders/multilegoption.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/utilities/indexparser.hpp>
@@ -45,7 +46,7 @@
 #include <iostream>
 
 using namespace ore::data;
-using namespace boost::filesystem;
+using namespace std::filesystem;
 using boost::timer::cpu_timer;
 using boost::timer::default_places;
 
@@ -92,6 +93,39 @@ Analytic::analytic_reports Analytic::reports() {
     return rpts;
 }
 
+void Analytic::addReport(const std::string& key, const std::string& subKey,
+               const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& report) {
+    reports_[key][subKey] = report;
+}
+const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& Analytic::getReport(const std::string& key,
+                                                                      const std::string& subKey) {
+    auto it = reports_.find(key);
+    if (it != reports_.end()) {
+        auto it2 = it->second.find(subKey);
+        if (it2 != it->second.end())
+            return it2->second;
+    }
+    QL_FAIL("Could not find report for key " << key << " and subKey " << subKey);
+}
+
+void Analytic::reset() {
+    analyticComplete_ = false;
+    reports_.clear();
+    impl_->reset();
+}
+
+void Analytic::releaseMemory() {
+    LOG("Analytic::releaseMemory() called for " << label());
+    MEM_LOG_USING_LEVEL(ORE_WARNING, "Before releaseMemory() " << label());
+    if (impl_) {
+        impl_->releaseMemory();
+        for (const auto& [key, a] : impl_->dependentAnalytics()) {
+            a.first->releaseMemory();
+        }
+    }
+    MEM_LOG_USING_LEVEL(ORE_WARNING, "After releaseMemory() " << label());
+}
+
 void Analytic::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                            const std::set<std::string>& runTypes) {
     MEM_LOG_USING_LEVEL(ORE_WARNING, "Starting " << label() << " Analytic::runAnalytic()");
@@ -112,6 +146,8 @@ void Analytic::initialise() {
 
 void Analytic::Impl::initialise() {
     if (!initialised_) {
+        if (inputVariables_)
+            inputVariables_->loadVariables(inputs_);
         buildDependencies();
         setUpConfigurations();
         for (const auto& [_, a] : dependentAnalytics_)

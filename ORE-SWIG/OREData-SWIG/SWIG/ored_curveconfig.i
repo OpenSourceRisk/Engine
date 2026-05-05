@@ -22,13 +22,10 @@
 %include ored_curvespec.i
 %include ored_xmlutils.i
 
-%{
-using ore::data::CurveConfig;
-using ore::data::CurveSpec;
-%}
-
-%shared_ptr(CurveConfig)
-class CurveConfig : public XMLSerializable {
+%shared_ptr(ore::data::CurveConfig)
+namespace ore {
+namespace data {
+class CurveConfig : public ore::data::XMLSerializable {
 public:
     CurveConfig(const std::string& curveID, const std::string& curveDescription, const std::vector<std::string>& quotes = std::vector<std::string>());
     CurveConfig();
@@ -36,12 +33,15 @@ public:
     const std::string& curveID() const;
     const std::string& curveDescription() const;
     std::string& curveID();
-    std::string& curveDescription();    
+    std::string& curveDescription();
     std::set<std::string> requiredCurveIds(const CurveSpec::CurveType& curveType);
     std::map<CurveSpec::CurveType, std::set<std::string>> requiredCurveIds();
     void setRequiredCurveIds(const CurveSpec::CurveType& curveType, const std::set<std::string>& ids);
     void setRequiredCurveIds(const std::map<CurveSpec::CurveType, std::set<std::string>>& ids);
     const std::vector<std::string>& quotes();
 };
+
+} // namespace data
+} // namespace ore
 
 #endif

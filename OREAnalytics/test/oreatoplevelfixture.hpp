@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include <oret/toplevelfixture.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 
 #include <orea/engine/observationmode.hpp>
 
@@ -30,6 +30,7 @@ namespace ore {
 namespace test {
 
 using ore::analytics::ObservationMode;
+using ore::data::TopLevelFixture;
 
 //! OREAnalytics Top level fixture
 class OreaTopLevelFixture : public TopLevelFixture {

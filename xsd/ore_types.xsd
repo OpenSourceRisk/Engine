@@ -507,6 +507,27 @@
     </xs:restriction>
   </xs:simpleType>
 
+  <xs:simpleType name="sviModelVariantType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Gatheral2004SviRaw"/>
+      <xs:enumeration value="Gatheral2004SviNatural"/>
+      <xs:enumeration value="Gatheral2004SviJw"/>
+      <xs:enumeration value="Gatheral2012SsviHeston"/>
+      <xs:enumeration value="Gatheral2012SsviPowerLaw"/>
+      <xs:enumeration value="HendriksMartini2017EssviFirstPowerLaw"/>
+      <xs:enumeration value="HendriksMartini2017EssviSecondPowerLaw"/>
+      <xs:enumeration value="CorbettaEtAl2019Essvi"/>
+      <xs:enumeration value="Mingone2022EssviGJ"/>
+      <xs:enumeration value="Mingone2022EssviMM"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- Union of standard interpolation methods and SVI parametric model variants.
+       Used for TimeInterpolation and StrikeInterpolation on volatility surfaces. -->
+  <xs:simpleType name="volatilityInterpolationType">
+    <xs:union memberTypes="interpolationMethodType sviModelVariantType"/>
+  </xs:simpleType>
+
   <xs:simpleType name="cdsType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="SpreadCDS"/>
@@ -544,13 +565,17 @@
   </xs:simpleType>
 
   <xs:simpleType name="fxVolInterpolation">
-    <xs:restriction base="xs:string">
-      <xs:enumeration value=""/>
-      <xs:enumeration value="VannaVolga1"/>
-      <xs:enumeration value="VannaVolga2"/>
-      <xs:enumeration value="Linear"/>
-      <xs:enumeration value="Cubic"/>
-    </xs:restriction>
+    <xs:union memberTypes="sviModelVariantType">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value=""/>
+          <xs:enumeration value="VannaVolga1"/>
+          <xs:enumeration value="VannaVolga2"/>
+          <xs:enumeration value="Linear"/>
+          <xs:enumeration value="Cubic"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:union>
   </xs:simpleType>
 
   <xs:simpleType name="correlationType">
@@ -774,7 +799,10 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="IMM"/>
       <xs:enumeration value="FirstDayOfMonth"/>
-      <xs:enumeration value="SecondThursday"/>
+      <xs:enumeration value="IMMAUD"/>
+      <xs:enumeration value="SecondThursday"/><!-- backward-compatible alias for IMMAUD -->
+      <xs:enumeration value="IMMNZD"/>
+      <xs:enumeration value="IMMCAD"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -963,6 +991,7 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="Relative"/>
       <xs:enumeration value="Absolute"/>
+	  <xs:enumeration value="EqualTo"/>
     </xs:restriction>
   </xs:simpleType>
 

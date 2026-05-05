@@ -32,10 +32,8 @@ using namespace QuantLib;
 namespace QuantExt {
 
 CPICapFloorEngine::CPICapFloorEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
-                                     const QuantLib::Handle<QuantLib::CPIVolatilitySurface>& surface,
-                                     const bool ttmFromLastAvailableFixing)
-    : discountCurve_(discountCurve), volatilitySurface_(surface),
-      ttmFromLastAvailableFixing_(ttmFromLastAvailableFixing) {
+                                     const QuantLib::Handle<QuantLib::CPIVolatilitySurface>& surface)
+    : discountCurve_(discountCurve), volatilitySurface_(surface) {
     registerWith(discountCurve_);
     registerWith(volatilitySurface_);
 }
@@ -78,7 +76,7 @@ void CPICapFloorEngine::calculate() const {
     Real atmGrowth = atmCPIFixing / optionBaseFixing;
     Real strike = std::pow(1.0 + arguments_.strike, timeToMaturityFromInception); 
 
-    auto lastKnownFixingDate = ZeroInflation::lastAvailableFixing(*index, volatilitySurface_->referenceDate());
+    auto lastKnownFixingDate = index->zeroInflationTermStructure()->baseDate();
     auto observationPeriod = inflationPeriod(optionObservationDate, index->frequency());
     auto requiredFixing = isInterpolated ? observationPeriod.first : observationPeriod.second + 1 * Days;
     
@@ -101,14 +99,10 @@ void CPICapFloorEngine::calculate() const {
             index->zeroInflationTermStructure()->dayCounter(), volatilitySurface_->baseDate(), optionObservationDate);
         strikeZeroRate = pow(optionBaseFixing / surfaceBaseFixing * strike, 1.0 / ttmFromSurfaceBaseDate) - 1.0;
         vol = volatilitySurface_->volatility(optionObservationDate, strikeZeroRate, 0 * Days);
-        if (ttmFromLastAvailableFixing_) {
-            auto ttm =
-                inflationYearFraction(volatilitySurface_->frequency(), volatilitySurface_->indexIsInterpolated(),
-                                      volatilitySurface_->dayCounter(), lastKnownFixingDate, optionObservationDate);
-            stdDev = std::sqrt(ttm * vol * vol);
-        } else {
-            stdDev = std::sqrt(volatilitySurface_->totalVariance(optionObservationDate, strikeZeroRate, 0 * Days));
-        }
+        auto ttm =
+            inflationYearFraction(volatilitySurface_->frequency(), volatilitySurface_->indexIsInterpolated(),
+                                  volatilitySurface_->dayCounter(), lastKnownFixingDate, optionObservationDate);
+        stdDev = std::sqrt(ttm * vol * vol);
     }
     results_.value = optionPriceImpl(arguments_.type, strike, atmGrowth, stdDev, d);
 

@@ -70,5 +70,24 @@ public:
         : AmericanOptionBAWEngineBuilder("BlackScholesMerton", {"EquityOptionAmerican"}, AssetClass::EQ) {}
 };
 
+/*! Engine builder for American cash-settled equity options using finite difference.
+    \ingroup builders
+ */
+class EquityAmericanCSOptionFDEngineBuilder : public AmericanCSOptionFDEngineBuilder {
+public:
+    EquityAmericanCSOptionFDEngineBuilder()
+        : AmericanCSOptionFDEngineBuilder("BlackScholesMerton", {"EquityOptionAmericanCS"}, AssetClass::EQ, expiryDate_) {
+    }
+};
+
+/*! Engine builder for American cash-settled equity options using Barone-Adesi and Whaley approximation.
+    \ingroup builders 
+ */
+class EquityAmericanCSOptionBAWEngineBuilder : public AmericanCSOptionBAWEngineBuilder {
+public:
+    EquityAmericanCSOptionBAWEngineBuilder()
+        : AmericanCSOptionBAWEngineBuilder("BlackScholesMerton", {"EquityOptionAmericanCS"}, AssetClass::EQ) {}
+};
+
 } // namespace data
 } // namespace ore
