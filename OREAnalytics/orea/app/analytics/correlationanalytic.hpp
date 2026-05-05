@@ -41,6 +41,7 @@ struct CorrelationVariables : public InputVariables {
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> sensiScenarioData_;
     string lookbackPeriod_;
     string filterTenor_;
+    string filterTenorOverrides_;
     // Pearson, Kendall-Rank
     std::string correlationMethod_ = "Pearson";
     QuantLib::Size horizonDays_ = 10;

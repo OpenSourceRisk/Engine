@@ -21,6 +21,8 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
 
+#include <sstream>
+
 using namespace QuantLib;
 using namespace ore::data;
 
@@ -28,16 +30,12 @@ namespace ore {
 namespace analytics {
 
 FilteredScenarioReader::FilteredScenarioReader(const QuantLib::ext::shared_ptr<ScenarioReader>& reader,
-                                               const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simParams,
-                                               const Period& filterTenor,
+                                               const std::set<RiskFactorKey>& allowedKeys,
                                                const QuantLib::ext::shared_ptr<ScenarioFactory>& factory)
-    : reader_(reader), simParams_(simParams), filterTenor_(filterTenor), factory_(factory) {
+    : reader_(reader), allowedKeys_(allowedKeys), factory_(factory) {
     QL_REQUIRE(reader_, "FilteredScenarioReader: underlying reader must not be null");
-    QL_REQUIRE(simParams_, "FilteredScenarioReader: simulation market parameters must not be null");
     QL_REQUIRE(factory_, "FilteredScenarioReader: scenario factory must not be null");
-    buildAllowedKeys();
-    LOG("FilteredScenarioReader: filtering scenarios to tenor " << filterTenor_
-        << ", allowed " << allowedKeys_.size() << " risk factor keys");
+    LOG("FilteredScenarioReader: filtering scenarios to " << allowedKeys_.size() << " allowed risk factor keys");
 }
 
 void FilteredScenarioReader::load(const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simParams,
@@ -65,13 +63,34 @@ QuantLib::ext::shared_ptr<Scenario> FilteredScenarioReader::scenario() const {
     return filtered;
 }
 
-bool FilteredScenarioReader::tenorMatches(const std::vector<Period>& tenors, Size index) const {
+TenorFilteredScenarioReader::TenorFilteredScenarioReader(const QuantLib::ext::shared_ptr<ScenarioReader>& reader,
+                                                         const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simParams,
+                                                         const Period& filterTenor,
+                                                         const QuantLib::ext::shared_ptr<ScenarioFactory>& factory,
+                                                         const std::map<std::string, Period>& tenorOverrides)
+    : FilteredScenarioReader(reader, {}, factory), simParams_(simParams), filterTenor_(filterTenor),
+      tenorOverrides_(tenorOverrides) {
+    QL_REQUIRE(simParams_, "TenorFilteredScenarioReader: simulation market parameters must not be null");
+    buildAllowedKeys();
+    LOG("TenorFilteredScenarioReader: filtering scenarios to tenor " << filterTenor_
+        << " with " << tenorOverrides_.size() << " overrides"
+        << ", allowed " << allowedKeys_.size() << " risk factor keys");
+}
+
+bool TenorFilteredScenarioReader::tenorMatches(const std::vector<Period>& tenors, Size index) const {
     if (index < tenors.size())
         return tenors[index] == filterTenor_;
     return false;
 }
 
-void FilteredScenarioReader::buildAllowedKeys() {
+Period TenorFilteredScenarioReader::effectiveTenor(RiskFactorKey::KeyType keyType, const std::string& name) const {
+    std::ostringstream os;
+    os << keyType << "/" << name;
+    auto it = tenorOverrides_.find(os.str());
+    return it != tenorOverrides_.end() ? it->second : filterTenor_;
+}
+
+void TenorFilteredScenarioReader::buildAllowedKeys() {
     // We read the first scenario to discover all keys, then decide which to allow.
     // We don't need to actually read data here - we just need to know which keys exist.
     // Instead we build allowed keys purely from the simParams configuration.
@@ -84,15 +103,16 @@ void FilteredScenarioReader::buildAllowedKeys() {
         for (const auto& name : names) {
             try {
                 const auto& tenors = getTenors(name);
+                Period target = effectiveTenor(keyType, name);
                 for (Size i = 0; i < tenors.size(); ++i) {
-                    if (tenors[i] == filterTenor_) {
+                    if (tenors[i] == target) {
                         allowedKeys_.insert(RiskFactorKey(keyType, name, i));
-                        DLOG("FilteredScenarioReader: allowing " << keyType << "/" << name << "/" << i
+                        DLOG("TenorFilteredScenarioReader: allowing " << keyType << "/" << name << "/" << i
                              << " (tenor " << tenors[i] << ")");
                     }
                 }
             } catch (const std::exception& e) {
-                DLOG("FilteredScenarioReader: skipping " << keyType << "/" << name << ": " << e.what());
+                DLOG("TenorFilteredScenarioReader: skipping " << keyType << "/" << name << ": " << e.what());
             }
         }
     };
@@ -164,10 +184,11 @@ void FilteredScenarioReader::buildAllowedKeys() {
                 const auto& strikes = simParams_->swapVolStrikeSpreads(name);
                 Size J = terms.size();
                 Size K = strikes.size();
+                Period target = effectiveTenor(KT::SwaptionVolatility, name);
                 for (Size i = 0; i < expiries.size(); ++i) {
                     for (Size j = 0; j < J; ++j) {
                         for (Size k = 0; k < K; ++k) {
-                            if (expiries[i] == filterTenor_ || terms[j] == filterTenor_) {
+                            if (expiries[i] == target || terms[j] == target) {
                                 Size index = i * J * K + j * K + k;
                                 allowedKeys_.insert(RiskFactorKey(KT::SwaptionVolatility, name, index));
                             }
@@ -175,7 +196,7 @@ void FilteredScenarioReader::buildAllowedKeys() {
                     }
                 }
             } catch (const std::exception& e) {
-                DLOG("FilteredScenarioReader: skipping SwaptionVolatility/" << name << ": " << e.what());
+                DLOG("TenorFilteredScenarioReader: skipping SwaptionVolatility/" << name << ": " << e.what());
             }
         }
     }
@@ -187,16 +208,17 @@ void FilteredScenarioReader::buildAllowedKeys() {
             try {
                 const auto& expiries = simParams_->yieldVolExpiries();
                 const auto& terms = simParams_->yieldVolTerms();
+                Period target = effectiveTenor(KT::YieldVolatility, name);
                 for (Size i = 0; i < expiries.size(); ++i) {
                     for (Size j = 0; j < terms.size(); ++j) {
-                        if (expiries[i] == filterTenor_ || terms[j] == filterTenor_) {
+                        if (expiries[i] == target || terms[j] == target) {
                             Size index = i * terms.size() + j;
                             allowedKeys_.insert(RiskFactorKey(KT::YieldVolatility, name, index));
                         }
                     }
                 }
             } catch (const std::exception& e) {
-                DLOG("FilteredScenarioReader: skipping YieldVolatility/" << name << ": " << e.what());
+                DLOG("TenorFilteredScenarioReader: skipping YieldVolatility/" << name << ": " << e.what());
             }
         }
     }
@@ -207,13 +229,14 @@ void FilteredScenarioReader::buildAllowedKeys() {
         for (const auto& name : names) {
             try {
                 const auto& expiries = simParams_->fxVolExpiries(name);
+                Period target = effectiveTenor(KT::FXVolatility, name);
                 if (simParams_->fxVolIsSurface(name)) {
                     Size m = expiries.size();
                     Size n = simParams_->fxUseMoneyness(name) ? simParams_->fxVolMoneyness(name).size()
                                                               : simParams_->fxVolStdDevs(name).size();
                     for (Size i = 0; i < n; ++i) {
                         for (Size j = 0; j < m; ++j) {
-                            if (expiries[j] == filterTenor_) {
+                            if (expiries[j] == target) {
                                 Size idx = i * m + j;
                                 allowedKeys_.insert(RiskFactorKey(KT::FXVolatility, name, idx));
                             }
@@ -221,13 +244,13 @@ void FilteredScenarioReader::buildAllowedKeys() {
                     }
                 } else {
                     for (Size j = 0; j < expiries.size(); ++j) {
-                        if (expiries[j] == filterTenor_) {
+                        if (expiries[j] == target) {
                             allowedKeys_.insert(RiskFactorKey(KT::FXVolatility, name, j));
                         }
                     }
                 }
             } catch (const std::exception& e) {
-                DLOG("FilteredScenarioReader: skipping FXVolatility/" << name << ": " << e.what());
+                DLOG("TenorFilteredScenarioReader: skipping FXVolatility/" << name << ": " << e.what());
             }
         }
     }
@@ -238,13 +261,14 @@ void FilteredScenarioReader::buildAllowedKeys() {
         for (const auto& name : names) {
             try {
                 const auto& expiries = simParams_->equityVolExpiries(name);
+                Period target = effectiveTenor(KT::EquityVolatility, name);
                 if (simParams_->equityVolIsSurface(name)) {
                     Size m = expiries.size();
                     Size n = simParams_->equityUseMoneyness(name) ? simParams_->equityVolMoneyness(name).size()
                                                                   : simParams_->equityVolStandardDevs(name).size();
                     for (Size i = 0; i < n; ++i) {
                         for (Size j = 0; j < m; ++j) {
-                            if (expiries[j] == filterTenor_) {
+                            if (expiries[j] == target) {
                                 Size idx = i * m + j;
                                 allowedKeys_.insert(RiskFactorKey(KT::EquityVolatility, name, idx));
                             }
@@ -252,13 +276,13 @@ void FilteredScenarioReader::buildAllowedKeys() {
                     }
                 } else {
                     for (Size j = 0; j < expiries.size(); ++j) {
-                        if (expiries[j] == filterTenor_) {
+                        if (expiries[j] == target) {
                             allowedKeys_.insert(RiskFactorKey(KT::EquityVolatility, name, j));
                         }
                     }
                 }
             } catch (const std::exception& e) {
-                DLOG("FilteredScenarioReader: skipping EquityVolatility/" << name << ": " << e.what());
+                DLOG("TenorFilteredScenarioReader: skipping EquityVolatility/" << name << ": " << e.what());
             }
         }
     }
@@ -271,8 +295,9 @@ void FilteredScenarioReader::buildAllowedKeys() {
                 const auto& expiries = simParams_->capFloorVolExpiries(name);
                 const auto& strikes = simParams_->capFloorVolStrikes(name);
                 Size J = strikes.empty() ? 1 : strikes.size();
+                Period target = effectiveTenor(KT::OptionletVolatility, name);
                 for (Size i = 0; i < expiries.size(); ++i) {
-                    if (expiries[i] == filterTenor_) {
+                    if (expiries[i] == target) {
                         for (Size j = 0; j < J; ++j) {
                             Size index = i * J + j;
                             allowedKeys_.insert(RiskFactorKey(KT::OptionletVolatility, name, index));
@@ -280,7 +305,7 @@ void FilteredScenarioReader::buildAllowedKeys() {
                     }
                 }
             } catch (const std::exception& e) {
-                DLOG("FilteredScenarioReader: skipping OptionletVolatility/" << name << ": " << e.what());
+                DLOG("TenorFilteredScenarioReader: skipping OptionletVolatility/" << name << ": " << e.what());
             }
         }
     }
@@ -290,8 +315,9 @@ void FilteredScenarioReader::buildAllowedKeys() {
         auto names = simParams_->cdsVolNames();
         const auto& expiries = simParams_->cdsVolExpiries();
         for (const auto& name : names) {
+            Period target = effectiveTenor(KT::CDSVolatility, name);
             for (Size i = 0; i < expiries.size(); ++i) {
-                if (expiries[i] == filterTenor_) {
+                if (expiries[i] == target) {
                     allowedKeys_.insert(RiskFactorKey(KT::CDSVolatility, name, i));
                 }
             }
@@ -305,12 +331,13 @@ void FilteredScenarioReader::buildAllowedKeys() {
             try {
                 const auto& expiries = simParams_->commodityVolExpiries(name);
                 const auto& moneyness = simParams_->commodityVolMoneyness(name);
+                Period target = effectiveTenor(KT::CommodityVolatility, name);
                 if (moneyness.size() > 1) {
                     Size m = expiries.size();
                     Size n = moneyness.size();
                     for (Size i = 0; i < n; ++i) {
                         for (Size j = 0; j < m; ++j) {
-                            if (expiries[j] == filterTenor_) {
+                            if (expiries[j] == target) {
                                 Size idx = i * m + j;
                                 allowedKeys_.insert(RiskFactorKey(KT::CommodityVolatility, name, idx));
                             }
@@ -318,13 +345,13 @@ void FilteredScenarioReader::buildAllowedKeys() {
                     }
                 } else {
                     for (Size j = 0; j < expiries.size(); ++j) {
-                        if (expiries[j] == filterTenor_) {
+                        if (expiries[j] == target) {
                             allowedKeys_.insert(RiskFactorKey(KT::CommodityVolatility, name, j));
                         }
                     }
                 }
             } catch (const std::exception& e) {
-                DLOG("FilteredScenarioReader: skipping CommodityVolatility/" << name << ": " << e.what());
+                DLOG("TenorFilteredScenarioReader: skipping CommodityVolatility/" << name << ": " << e.what());
             }
         }
     }
@@ -337,8 +364,9 @@ void FilteredScenarioReader::buildAllowedKeys() {
                 const auto& terms = simParams_->baseCorrelationTerms();
                 const auto& detach = simParams_->baseCorrelationDetachmentPoints();
                 Size J = detach.size();
+                Period target = effectiveTenor(KT::BaseCorrelation, name);
                 for (Size i = 0; i < terms.size(); ++i) {
-                    if (terms[i] == filterTenor_) {
+                    if (terms[i] == target) {
                         for (Size j = 0; j < J; ++j) {
                             Size index = i * J + j;
                             allowedKeys_.insert(RiskFactorKey(KT::BaseCorrelation, name, index));
@@ -346,7 +374,7 @@ void FilteredScenarioReader::buildAllowedKeys() {
                     }
                 }
             } catch (const std::exception& e) {
-                DLOG("FilteredScenarioReader: skipping BaseCorrelation/" << name << ": " << e.what());
+                DLOG("TenorFilteredScenarioReader: skipping BaseCorrelation/" << name << ": " << e.what());
             }
         }
     }
@@ -362,8 +390,9 @@ void FilteredScenarioReader::buildAllowedKeys() {
                 } else {
                     const auto& strikes = simParams_->correlationStrikes();
                     Size J = strikes.empty() ? 1 : strikes.size();
+                    Period target = effectiveTenor(KT::Correlation, name);
                     for (Size i = 0; i < expiries.size(); ++i) {
-                        if (expiries[i] == filterTenor_) {
+                        if (expiries[i] == target) {
                             for (Size j = 0; j < J; ++j) {
                                 Size index = i * J + j;
                                 allowedKeys_.insert(RiskFactorKey(KT::Correlation, name, index));
@@ -372,7 +401,7 @@ void FilteredScenarioReader::buildAllowedKeys() {
                     }
                 }
             } catch (const std::exception& e) {
-                DLOG("FilteredScenarioReader: skipping Correlation/" << name << ": " << e.what());
+                DLOG("TenorFilteredScenarioReader: skipping Correlation/" << name << ": " << e.what());
             }
         }
     }
@@ -385,8 +414,9 @@ void FilteredScenarioReader::buildAllowedKeys() {
                 const auto& expiries = simParams_->yoyInflationCapFloorVolExpiries(name);
                 const auto& strikes = simParams_->yoyInflationCapFloorVolStrikes(name);
                 Size J = strikes.empty() ? 1 : strikes.size();
+                Period target = effectiveTenor(KT::YoYInflationCapFloorVolatility, name);
                 for (Size i = 0; i < expiries.size(); ++i) {
-                    if (expiries[i] == filterTenor_) {
+                    if (expiries[i] == target) {
                         for (Size j = 0; j < J; ++j) {
                             Size index = i * J + j;
                             allowedKeys_.insert(RiskFactorKey(KT::YoYInflationCapFloorVolatility, name, index));
@@ -394,7 +424,7 @@ void FilteredScenarioReader::buildAllowedKeys() {
                     }
                 }
             } catch (const std::exception& e) {
-                DLOG("FilteredScenarioReader: skipping YoYInflationCapFloorVolatility/" << name << ": " << e.what());
+                DLOG("TenorFilteredScenarioReader: skipping YoYInflationCapFloorVolatility/" << name << ": " << e.what());
             }
         }
     }
@@ -407,8 +437,9 @@ void FilteredScenarioReader::buildAllowedKeys() {
                 const auto& expiries = simParams_->zeroInflationCapFloorVolExpiries(name);
                 const auto& strikes = simParams_->zeroInflationCapFloorVolStrikes(name);
                 Size J = strikes.empty() ? 1 : strikes.size();
+                Period target = effectiveTenor(KT::ZeroInflationCapFloorVolatility, name);
                 for (Size i = 0; i < expiries.size(); ++i) {
-                    if (expiries[i] == filterTenor_) {
+                    if (expiries[i] == target) {
                         for (Size j = 0; j < J; ++j) {
                             Size index = i * J + j;
                             allowedKeys_.insert(RiskFactorKey(KT::ZeroInflationCapFloorVolatility, name, index));
@@ -416,7 +447,7 @@ void FilteredScenarioReader::buildAllowedKeys() {
                     }
                 }
             } catch (const std::exception& e) {
-                DLOG("FilteredScenarioReader: skipping ZeroInflationCapFloorVolatility/" << name << ": " << e.what());
+                DLOG("TenorFilteredScenarioReader: skipping ZeroInflationCapFloorVolatility/" << name << ": " << e.what());
             }
         }
     }
@@ -427,7 +458,7 @@ void FilteredScenarioReader::buildAllowedKeys() {
         allowNoTenor(KT::CPR, names);
     }
 
-    LOG("FilteredScenarioReader: built " << allowedKeys_.size() << " allowed risk factor keys for tenor " << filterTenor_);
+    LOG("TenorFilteredScenarioReader: built " << allowedKeys_.size() << " allowed risk factor keys for tenor " << filterTenor_);
 }
 
 } // namespace analytics

@@ -28,6 +28,10 @@
 #include <ored/marketdata/adjustedinmemoryloader.hpp>
 #include <ored/report/inmemoryreport.hpp>
 
+#include <boost/property_tree/json_parser.hpp>
+
+#include <sstream>
+
 using namespace ore::data;
 using namespace std::filesystem;
 using namespace QuantLib::ext;
@@ -53,7 +57,8 @@ void CorrelationVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<Inp
 
     inputs->loadParameter<bool>(horizonOverlappingPeriods_, correlationAnalytics, vector<string>({"horizonOverlappingPeriods", "mporOverlappingPeriods"}), false, parseBool);
     inputs->loadParameter<bool>(allowPartialScenarios_, correlationAnalytics, "allowPartialScenarios", false, parseBool);
-    inputs->loadParameter<string>(filterTenor_, correlationAnalytics, "filteredScenarioTenor", false);
+    inputs->loadParameter<string>(filterTenor_, correlationAnalytics, "filteredCorrelationScenarioTenor", false);
+    inputs->loadParameter<string>(filterTenorOverrides_, correlationAnalytics, "filteredTenorCorrelationRFMapping", false);
     
     TimePeriod hsPeriod = totalTimePeriod(vector<string>({lookbackPeriod_}), horizonDays_, horizonCalendar_);
     QL_REQUIRE(hsPeriod.numberOfContiguousParts() == 1,
@@ -66,7 +71,22 @@ void CorrelationVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<Inp
     if (!filterTenor_.empty() && scenarioReader_ && simMarketParams_) {
         Period tenor = parsePeriod(filterTenor_);
         auto factory = QuantLib::ext::make_shared<SimpleScenarioFactory>(true);
-        scenarioReader_ = QuantLib::ext::make_shared<FilteredScenarioReader>(scenarioReader_, simMarketParams_, tenor, factory);
+
+        // Parse per-risk-factor tenor overrides if provided
+        std::map<std::string, Period> tenorOverrides;
+        if (!filterTenorOverrides_.empty()) {
+            // Expected format: {"KeyType/Name":"Tenor", ...}
+            std::istringstream iss(filterTenorOverrides_);
+            boost::property_tree::ptree pt;
+            boost::property_tree::json_parser::read_json(iss, pt);
+            for (const auto& [key, value] : pt) {
+                tenorOverrides[key] = parsePeriod(value.get_value<string>());
+                LOG("Tenor override: " << key << " -> " << value.get_value<string>());
+            }
+        }
+
+        scenarioReader_ = QuantLib::ext::make_shared<TenorFilteredScenarioReader>(scenarioReader_, simMarketParams_, tenor,
+                                                                                  factory, tenorOverrides);
         LOG("Applied tenor filter " << filterTenor_ << " to correlation scenario reader");
     }
 }

@@ -35,7 +35,8 @@
       <Parameter name="historicalPeriod">2016-12-30,2019-12-30</Parameter>
       <Parameter name="mporDays">10</Parameter>
       <Parameter name="mporCalendar">USD</Parameter>
-      <Parameter name="filteredScenarioTenor">2Y</Parameter>
+      <Parameter name="filteredCorrelationScenarioTenor">2Y</Parameter>
+      <Parameter name="filteredTenorCorrelationRFMapping">{"DiscountCurve/USD":"2Y", "IndexCurve/USD-FedFunds":"1Y"}</Parameter>
       <Parameter name="outputFile">correlation.csv</Parameter>
     </Analytic>
   </Analytics>
