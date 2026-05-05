@@ -379,6 +379,7 @@ termstructures/blackvolsurfaceabsolute.cpp
 termstructures/blackvolsurfacebfrr.cpp
 termstructures/blackvolsurfacedelta.cpp
 termstructures/blackvolsurfaceproxy.cpp
+termstructures/blackvolsurfacesvi.cpp
 termstructures/blackvolsurfacewithatm.cpp
 termstructures/brlcdiratehelper.cpp
 termstructures/capfloorhelper.cpp
@@ -413,6 +414,7 @@ termstructures/generatordefaulttermstructure.cpp
 termstructures/hazardspreadeddefaulttermstructure.cpp
 termstructures/iborfallbackcurve.cpp
 termstructures/immfraratehelper.cpp
+termstructures/indexcdsvolstripper.cpp
 termstructures/inflation/constantcpivolatility.cpp
 termstructures/inflation/cpicurve.cpp
 termstructures/inflation/cpivolatilitystructure.cpp
@@ -429,6 +431,8 @@ termstructures/pricetermstructureadapter.cpp
 termstructures/proxyoptionletvolatility.cpp
 termstructures/proxyswaptionvolatility.cpp
 termstructures/sabrparametricvolatility.cpp
+termstructures/svimodeltraits.cpp
+termstructures/sviparametricvolatility.cpp
 termstructures/scenario.cpp
 termstructures/simplemclocalvolstochasticratescorrection.cpp
 termstructures/spreadedblackvolatilitycurve.cpp
@@ -985,6 +989,7 @@ termstructures/blackvolsurfaceabsolute.hpp
 termstructures/blackvolsurfacebfrr.hpp
 termstructures/blackvolsurfacedelta.hpp
 termstructures/blackvolsurfaceproxy.hpp
+termstructures/blackvolsurfacesvi.hpp
 termstructures/blackvolsurfacewithatm.hpp
 termstructures/bondyieldshiftedcurvetermstructure.hpp
 termstructures/brlcdiratehelper.hpp
@@ -1034,6 +1039,7 @@ termstructures/iborfallbackcurve.hpp
 termstructures/immfraratehelper.hpp
 termstructures/implieddefaulttermstructure.hpp
 termstructures/impliedtermstructure.hpp
+termstructures/indexcdsvolstripper.hpp
 termstructures/inflation/constantcpivolatility.hpp
 termstructures/inflation/cpicurve.hpp
 termstructures/inflation/cpipricevolatilitysurface.hpp
@@ -1071,6 +1077,8 @@ termstructures/probabilitytraits.hpp
 termstructures/proxyoptionletvolatility.hpp
 termstructures/proxyswaptionvolatility.hpp
 termstructures/sabrparametricvolatility.hpp
+termstructures/svimodeltraits.hpp
+termstructures/sviparametricvolatility.hpp
 termstructures/sabrstrippedoptionletadapter.hpp
 termstructures/scenario.hpp
 termstructures/simplemclocalvolstochasticratescorrection.hpp
@@ -1133,6 +1141,7 @@ utilities/savedobservablesettings.hpp
 utilities/scenarioinformation.hpp
 utilities/serializationdate.hpp
 utilities/serializationperiod.hpp
+utilities/solvers.hpp
 utilities/time.hpp
 version.hpp)
 
@@ -1200,7 +1209,7 @@ endif()
 # ORE_EIGEN_WAS_FOUND is recorded here to be used in OreConfig.cmake.in.
 # Need CACHE because configure_file is called from the top level ORE CMakeLists.txt file.
 SET(ORE_EIGEN_WAS_FOUND FALSE CACHE INTERNAL "Record if Eigen was found.")
-find_package(Eigen3 3.3 NO_MODULE)
+find_package(Eigen3 NO_MODULE)
 if(TARGET Eigen3::Eigen)
     target_link_libraries(${QLE_LIB_NAME} PRIVATE Eigen3::Eigen)
     target_compile_definitions(${QLE_LIB_NAME} PRIVATE ORE_USE_EIGEN)

@@ -323,11 +323,9 @@ void InterpolatedYoYCapFloorTermPriceSurface<I2D, I1D>::calculateYoYTermStructur
     Rate baseYoYRate = atmYoYSwapRate(referenceDate()); //!
     QuantLib::Date baseDate = QuantExt::ZeroInflation::curveBaseDate(
         false, nominalTS_->referenceDate(), observationLag(), yoyIndex()->frequency(), yoyIndex());
-    QL_DEPRECATED_DISABLE_WARNING
         QuantLib::ext::shared_ptr<PiecewiseYoYInflationCurve<I1D>> pYITS(new PiecewiseYoYInflationCurve<I1D>(
-        nominalTS_->referenceDate(), baseDate, baseYoYRate, observationLag(), yoyIndex()->frequency(), yoyIndex()->interpolated(),
+        nominalTS_->referenceDate(), baseDate, baseYoYRate, observationLag(), yoyIndex()->frequency(),
         dayCounter(), YYhelpers));
-    QL_DEPRECATED_ENABLE_WARNING
     pYITS->recalculate();
     yoy_ = pYITS; // store
 

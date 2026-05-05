@@ -38,14 +38,14 @@ namespace QuantExt {
 using namespace QuantLib;
 
 SabrParametricVolatility::SabrParametricVolatility(
-    const ModelVariant modelVariant, const std::vector<MarketSmile> marketSmiles, const MarketModelType marketModelType,
+    const ModelVariant modelVariant, const std::vector<MarketSmile>& marketSmiles, const MarketModelType marketModelType,
     const MarketQuoteType inputMarketQuoteType, const Handle<YieldTermStructure> discountCurve,
-    const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, ParameterCalibration>>>
+    const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, ParameterCalibration>>>&
         modelParameters,
     const std::map<QuantLib::Real, QuantLib::Real>& modelShifts, const Size maxCalibrationAttempts,
     const Real exitEarlyErrorThreshold, const Real maxAcceptableError)
     : ParametricVolatility(marketSmiles, marketModelType, inputMarketQuoteType, discountCurve),
-      modelVariant_(modelVariant), modelParameters_(std::move(modelParameters)), modelShifts_(modelShifts),
+      modelVariant_(modelVariant), modelParameters_(modelParameters), modelShifts_(modelShifts),
       maxCalibrationAttempts_(maxCalibrationAttempts), exitEarlyErrorThreshold_(exitEarlyErrorThreshold),
       maxAcceptableError_(maxAcceptableError) {
     calculate();
@@ -559,6 +559,16 @@ void SabrParametricVolatility::calculate() {
     if (modelParameters_.empty()) {
         for (auto const& s : marketSmiles_) {
             modelParameters_[std::make_pair(s.timeToExpiry, s.underlyingLength)] = defaultModelParameters();
+        }
+    }
+
+    // Replace any Null<Real>() initial value with the model's hard-coded default for that parameter index.
+    // Null<Real>() means "<InitialValue> was omitted" in XML.
+    auto const sabrDefaults = defaultModelParameters();
+    for (auto& [key, params] : modelParameters_) {
+        for (Size i = 0; i < params.size() && i < sabrDefaults.size(); ++i) {
+            if (params[i].first == Null<Real>())
+                params[i].first = sabrDefaults[i].first;
         }
     }
 

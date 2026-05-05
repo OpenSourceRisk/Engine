@@ -99,6 +99,7 @@ Listing \ref{lst:comm_vol_strike_surface_config} outlines the configuration for 
     <Expiries>...</Expiries>
     <TimeInterpolation>...</TimeInterpolation>
     <StrikeInterpolation>...</StrikeInterpolation>
+    <ParametricSmileConfiguration>...</ParametricSmileConfiguration>
     <Extrapolation>...</Extrapolation>
     <TimeExtrapolation>...</TimeExtrapolation>
     <StrikeExtrapolation>...</StrikeExtrapolation>
@@ -145,9 +146,13 @@ This can be a single wildcard value \lstinline!*! or a comma separated list of e
 
 \item \lstinline!TimeInterpolation!:
 Indicates the interpolation in the time direction. The allowable values for \lstinline!TimeInterpolation! are \lstinline!Linear!, \lstinline!Cubic! and \lstinline!BackwardFlat!. If neither \lstinline!Strikes! nor \lstinline!Expiries! use the single wildcard value \lstinline!*!, \lstinline!TimeInterpolation! and \lstinline!StrikeInterpolation! must have the same value. If it does not, then \lstinline!Linear! is used for both. In other words, if neither \lstinline!Strikes! nor \lstinline!Expiries! use the single wildcard value \lstinline!*!, we can configure bilinear or bicubic interpolation. If either \lstinline!Strikes! or \lstinline!Expiries! use the single wildcard value \lstinline!*!, \lstinline!TimeInterpolation! and \lstinline!StrikeInterpolation! can be different. For backward compatibility, if either \lstinline!Strikes! or \lstinline!Expiries! use the single wildcard value \lstinline!*!, \lstinline!TimeInterpolation! and \lstinline!StrikeInterpolation! will use Linear as default value or when input values are not in allowable list. Again, in all cases, the interpolation is carried out on the variance.
+Alternatively, both \lstinline!TimeInterpolation! and \lstinline!StrikeInterpolation! may be set to the same SVI model variant name (requiring \lstinline!PriceCurveId! and \lstinline!YieldCurveId!) to fit a parametric SVI surface instead of piecewise interpolation. Supported SVI variant names: \lstinline!Gatheral2004SviRaw!, \lstinline!Gatheral2004SviNatural!, \lstinline!Gatheral2004SviJw!, \lstinline!Gatheral2012SsviHeston!, \lstinline!Gatheral2012SsviPowerLaw!, \lstinline!CorbettaEtAl2019Essvi!, \lstinline!HendriksMartini2017EssviFirstPowerLaw!, \lstinline!HendriksMartini2017EssviSecondPowerLaw!, \lstinline!Mingone2022EssviGJ!, \lstinline!Mingone2022EssviMM!. See the SVI model documentation for details on parameters and calibration.
 
 \item \lstinline!StrikeInterpolation!:
-Indicates the interpolation in the strike direction. The requirements are exactly as outlined for the \lstinline!TimeInterpolation! node.
+Indicates the interpolation in the strike direction. The requirements are exactly as outlined for the \lstinline!TimeInterpolation! node, including support for SVI model variant names.
+
+\item \lstinline!ParametricSmileConfiguration! [Optional]:
+Only relevant when \lstinline!TimeInterpolation! and \lstinline!StrikeInterpolation! are set to an SVI model variant. Allows the user to pin or warm-start individual model parameters and to control calibration tolerances. The sub-elements are: a \lstinline!Parameters! block listing \lstinline!Name!, \lstinline!InitialValue!, and \lstinline!Calibration! (\lstinline!Fixed!, \lstinline!Implied!, or \lstinline!Calibrated!) per parameter, and a \lstinline!Calibration! block with \lstinline!MaxCalibrationAttempts!, \lstinline!ExitEarlyErrorThreshold!, and \lstinline!MaxAcceptableError!.
 
 \item \lstinline!Extrapolation!:
 A boolean value indicating if extrapolation is allowed.
@@ -223,6 +228,7 @@ Listing \ref{lst:comm_vol_mny_surface_config} outlines the configuration for the
     <Expiries>...</Expiries>
     <TimeInterpolation>...</TimeInterpolation>
     <StrikeInterpolation>...</StrikeInterpolation>
+    <ParametricSmileConfiguration>...</ParametricSmileConfiguration>
     <Extrapolation>...</Extrapolation>
     <TimeExtrapolation>...</TimeExtrapolation>
     <StrikeExtrapolation>...</StrikeExtrapolation>
@@ -249,10 +255,13 @@ The allowable values are \lstinline!Spot! for spot moneyness and \lstinline!Fwd!
 This must be a comma separated list of moneyness values. A moneyness value of $1$ indicates a strike equal to spot or forward depending on the value given in the \lstinline!MoneynessType! node.
 
 \item \lstinline!TimeInterpolation!:
-Only \lstinline!Linear! is currently supported here.
+Allowable values are \lstinline!Linear!, \lstinline!Cubic!, or an SVI model variant name. When both \lstinline!TimeInterpolation! and \lstinline!StrikeInterpolation! are set to the same SVI variant, a parametric SVI surface is fitted (requiring \lstinline!PriceCurveId! and \lstinline!YieldCurveId!). See the \lstinline!StrikeSurface! section above for the list of supported SVI variant names.
 
 \item \lstinline!StrikeInterpolation!:
-Only \lstinline!Linear! is currently supported here.
+Allowable values are \lstinline!Linear!, \lstinline!NaturalCubic!, \lstinline!FinancialCubic!, \lstinline!CubicSpline!, or an SVI model variant name. When set to an SVI variant, \lstinline!TimeInterpolation! must be set to the same variant.
+
+\item \lstinline!ParametricSmileConfiguration! [Optional]:
+Only relevant when \lstinline!TimeInterpolation! and \lstinline!StrikeInterpolation! are set to an SVI model variant. Allows the user to pin or warm-start individual model parameters and to control calibration tolerances. The sub-elements are: a \lstinline!Parameters! block listing \lstinline!Name!, \lstinline!InitialValue!, and \lstinline!Calibration! (\lstinline!Fixed!, \lstinline!Implied!, or \lstinline!Calibrated!) per parameter, and a \lstinline!Calibration! block with \lstinline!MaxCalibrationAttempts!, \lstinline!ExitEarlyErrorThreshold!, and \lstinline!MaxAcceptableError!.
 
 \item \lstinline!Extrapolation!:
 A boolean value indicating if extrapolation is allowed.
@@ -313,6 +322,7 @@ Listing \ref{lst:comm_vol_delta_surface_config} outlines the configuration for t
     <Expiries>...</Expiries>
     <TimeInterpolation>...</TimeInterpolation>
     <StrikeInterpolation>...</StrikeInterpolation>
+    <ParametricSmileConfiguration>...</ParametricSmileConfiguration>
     <Extrapolation>...</Extrapolation>
     <TimeExtrapolation>...</TimeExtrapolation>
     <StrikeExtrapolation>...</StrikeExtrapolation>
@@ -351,10 +361,13 @@ A comma separated list of one or more call deltas to use in the volatility surfa
 A comma separated list of one or more expiries (e.g. 1W, 1M) to load. Supports using the single wildcard value \lstinline!*!.
 
 \item \lstinline!TimeInterpolation!:
-Only \lstinline!Linear! is currently supported here.
+Allowable values are \lstinline!Linear!, or an SVI model variant name. When both \lstinline!TimeInterpolation! and \lstinline!StrikeInterpolation! are set to the same SVI variant, a parametric SVI surface is fitted (requiring \lstinline!PriceCurveId! and \lstinline!YieldCurveId!). See the \lstinline!StrikeSurface! section above for the list of supported SVI variant names.
 
 \item \lstinline!StrikeInterpolation!:
-Allowable values are \lstinline!Linear!, \lstinline!NaturalCubic!, \lstinline!FinancialCubic! and \lstinline!CubicSpline!.
+Allowable values are \lstinline!Linear!, \lstinline!NaturalCubic!, \lstinline!FinancialCubic!, \lstinline!CubicSpline!, or an SVI model variant name (see \lstinline!StrikeSurface! for supported names). When set to an SVI variant, \lstinline!TimeInterpolation! must be set to the same variant.
+
+\item \lstinline!ParametricSmileConfiguration! [Optional]:
+Only relevant when \lstinline!TimeInterpolation! and \lstinline!StrikeInterpolation! are set to an SVI model variant. Allows the user to pin or warm-start individual model parameters and to control calibration tolerances. The sub-elements are: a \lstinline!Parameters! block listing \lstinline!Name!, \lstinline!InitialValue!, and \lstinline!Calibration! (\lstinline!Fixed!, \lstinline!Implied!, or \lstinline!Calibrated!) per parameter, and a \lstinline!Calibration! block with \lstinline!MaxCalibrationAttempts!, \lstinline!ExitEarlyErrorThreshold!, and \lstinline!MaxAcceptableError!.
 
 \item \lstinline!Extrapolation!:
 A boolean value indicating if extrapolation is allowed.

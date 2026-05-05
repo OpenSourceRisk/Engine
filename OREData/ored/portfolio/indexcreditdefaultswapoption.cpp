@@ -42,15 +42,21 @@ using std::string;
 namespace ore {
 namespace data {
 
+using CPSD = CreditPortfolioSensitivityDecomposition;
+
 IndexCreditDefaultSwapOption::IndexCreditDefaultSwapOption()
-    : Trade("IndexCreditDefaultSwapOption"), strike_(Null<Real>()) {}
+    : Trade("IndexCreditDefaultSwapOption"), strike_(Null<Real>()), sensitivityDecomposition_(CPSD::Underlying),
+      effectiveStrike_(Null<Real>()), defaultHasOccured_(false) {}
 
 IndexCreditDefaultSwapOption::IndexCreditDefaultSwapOption(const Envelope& env, const IndexCreditDefaultSwapData& swap,
                                                            const OptionData& option, Real strike,
                                                            const string& indexTerm, const string& strikeType,
                                                            const Date& tradeDate, const Date& fepStartDate)
     : Trade("IndexCreditDefaultSwapOption", env), swap_(swap), option_(option), strike_(strike),
-      indexTerm_(indexTerm), strikeType_(strikeType), tradeDate_(tradeDate), fepStartDate_(fepStartDate) {}
+      indexTerm_(indexTerm), strikeType_(strikeType), tradeDate_(tradeDate), fepStartDate_(fepStartDate),
+      tradeDateStr_(tradeDate != Date() ? to_string(tradeDate) : ""),
+      fepStartDateStr_(fepStartDate != Date() ? to_string(fepStartDate) : ""),
+      sensitivityDecomposition_(CPSD::Underlying), effectiveStrike_(Null<Real>()), defaultHasOccured_(false) {}
 
 void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
@@ -73,27 +79,29 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
         ALOG("Credit index reference data missing for entity " << entity << ", isdaSubProduct left blank");
     }
     // skip the transaction level mapping for now
-    additionalData_["isdaTransaction"] = string("");  
+    additionalData_["isdaTransaction"] = string("");
 
     // Dates
-    const QuantLib::ext::shared_ptr<Market>& market = engineFactory->market();
+    const ext::shared_ptr<Market>& market = engineFactory->market();
     Date asof = market->asofDate();
     if (asof == Null<Date>() || asof == Date()) {
         asof = Settings::instance().evaluationDate();
     }
 
     bool defaultTradeDateIsUsed = false;
-    if (tradeDate_ == Date()) {
+    if (tradeDateStr_.empty()) {
         tradeDate_ = asof;
         defaultTradeDateIsUsed = true;
     } else {
+        tradeDate_ = parseDate(tradeDateStr_);
         QL_REQUIRE(tradeDate_ <= asof, "Trade date (" << io::iso_date(tradeDate_) << ") should be on or "
                                                       << "before the valuation date (" << io::iso_date(asof) << ")");
     }
 
-    if (fepStartDate_ == Date()) {
+    if (fepStartDateStr_.empty()) {
         fepStartDate_ = tradeDate_;
     } else {
+        fepStartDate_ = parseDate(fepStartDateStr_);
         QL_REQUIRE(fepStartDate_ <= tradeDate_, "Front end protection start date ("
                                                     << io::iso_date(fepStartDate_)
                                                     << ") should be on or before the trade date ("
@@ -105,7 +113,6 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
     auto legData = swap_.leg();
     const auto& ntls = legData.notionals();
     QL_REQUIRE(ntls.size() == 1, "IndexCreditDefaultSwapOption requires a single notional.");
-    notionals_ = Notionals();
     notionals_.full = ntls.front();
     notionalCurrency_ = legData.currency();
     npvCurrency_ = legData.currency();
@@ -183,8 +190,6 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
     auto side = legData.isPayer() ? Protection::Side::Buyer : Protection::Side::Seller;
 
     // Populate the constituents and determine the various notional amounts.
-    constituents_.clear();
-    defaultHasOccured_ = false;
     if (swap_.basket().constituents().size() > 1) {
         fromBasket(asof, constituents_);
     } else {
@@ -310,7 +315,6 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
     auto strikeType = parseCdsOptionStrikeType(effectiveStrikeType_);
 
     // Determine the index term;
-    effectiveIndexTerm_ = 5 * Years;
     if (!indexTerm_.empty()) {
         // if the option has an explicit index term set, we use that
         effectiveIndexTerm_ = parsePeriod(indexTerm_);
@@ -322,9 +326,9 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
     }
 
     // Build the option
-    auto option = QuantLib::ext::make_shared<QuantExt::IndexCdsOption>(cds, exercise, effectiveStrike_, strikeType, settleType,
-                                                               notionals_.tradeDate, notionals_.realisedFep,
-                                                               effectiveIndexTerm_);
+    auto option = ext::make_shared<QuantExt::IndexCdsOption>(cds, exercise, effectiveStrike_, strikeType, settleType,
+                                                             notionals_.tradeDate, notionals_.realisedFep,
+                                                             effectiveIndexTerm_);
     // the vol curve id is the credit curve id stripped by a term, if the credit curve id should contain one
     auto p = splitCurveIdWithTenor(swap_.creditCurveId());
     volCurveId_ = p.first;
@@ -348,7 +352,7 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
     Real indicatorLongShort = positionType == Position::Long ? 1.0 : -1.0;
 
     // Include premium if enough information is provided
-    vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
+    vector<ext::shared_ptr<Instrument>> additionalInstruments;
     vector<Real> additionalMultipliers;
     string configuration = iCdsOptionEngineBuilder->configuration(MarketContext::pricing);
     string discountCurve = envelope().additionalField("discount_curve", false, std::string());
@@ -365,13 +369,13 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
     // the expiry date with no assumptions on an (automatic) exercise. Therefore we build a vanilla
     // instrument if the exercise date is <= the eval date at build time.
     if (settleType == Settlement::Cash || exerciseDate <= Settings::instance().evaluationDate()) {
-        instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(option, indicatorLongShort, additionalInstruments,
+        instrument_ = ext::make_shared<VanillaInstrument>(option, indicatorLongShort, additionalInstruments,
                                                             additionalMultipliers);
     } else {
         bool isLong = positionType == Position::Long;
         bool isPhysical = settleType == Settlement::Physical;
-        instrument_ = QuantLib::ext::make_shared<EuropeanOptionWrapper>(option, isLong, exerciseDate, exerciseDate, isPhysical, cds, 1.0, 1.0,
-                                                                additionalInstruments, additionalMultipliers);
+        instrument_ = ext::make_shared<EuropeanOptionWrapper>(option, isLong, exerciseDate, exerciseDate, isPhysical,
+            cds, 1.0, 1.0, additionalInstruments, additionalMultipliers);
     }
 
     sensitivityDecomposition_ = iCdsOptionEngineBuilder->sensitivityDecomposition();
@@ -387,6 +391,20 @@ Real IndexCreditDefaultSwapOption::notional() const {
     return notionals_.valuationDate;
 }
 
+void IndexCreditDefaultSwapOption::reset() {
+    tradeDate_ = Date();
+    fepStartDate_ = Date();
+    sensitivityDecomposition_ = CPSD::Underlying;
+    effectiveStrike_ = Null<Real>();
+    effectiveStrikeType_.clear();
+    effectiveIndexTerm_ = Period();
+    volCurveId_.clear();
+    notionals_ = Notionals();
+    defaultHasOccured_ = false;
+    constituents_.clear();
+    Trade::reset();
+}
+
 void IndexCreditDefaultSwapOption::fromXML(XMLNode* node) {
 
     Trade::fromXML(node);
@@ -396,13 +414,11 @@ void IndexCreditDefaultSwapOption::fromXML(XMLNode* node) {
     strike_ = XMLUtils::getChildValueAsDouble(iCdsOptionData, "Strike", false, Null<Real>());
     indexTerm_ = XMLUtils::getChildValue(iCdsOptionData, "IndexTerm", false);
     strikeType_ = XMLUtils::getChildValue(iCdsOptionData, "StrikeType", false);
-    tradeDate_ = Date();
     if (auto n = XMLUtils::getChildNode(iCdsOptionData, "TradeDate")) {
-        tradeDate_ = parseDate(XMLUtils::getNodeValue(n));
+        tradeDateStr_ = XMLUtils::getNodeValue(n);
     }
-    fepStartDate_ = Date();
     if (auto n = XMLUtils::getChildNode(iCdsOptionData, "FrontEndProtectionStartDate")) {
-        fepStartDate_ = parseDate(XMLUtils::getNodeValue(n));
+        fepStartDateStr_ = XMLUtils::getNodeValue(n);
     }
 
     XMLNode* iCdsData = XMLUtils::getChildNode(iCdsOptionData, "IndexCreditDefaultSwapData");
@@ -427,10 +443,10 @@ XMLNode* IndexCreditDefaultSwapOption::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, iCdsOptionData, "IndexTerm", indexTerm_);
     if (strikeType_ != "")
         XMLUtils::addChild(doc, iCdsOptionData, "StrikeType", strikeType_);
-    if (tradeDate_ != Date())
-        XMLUtils::addChild(doc, iCdsOptionData, "TradeDate", to_string(tradeDate_));
-    if (fepStartDate_ != Date())
-        XMLUtils::addChild(doc, iCdsOptionData, "FrontEndProtectionStartDate", to_string(fepStartDate_));
+    if (!tradeDateStr_.empty())
+        XMLUtils::addChild(doc, iCdsOptionData, "TradeDate", tradeDateStr_);
+    if (!fepStartDateStr_.empty())
+        XMLUtils::addChild(doc, iCdsOptionData, "FrontEndProtectionStartDate", fepStartDateStr_);
 
     XMLUtils::appendNode(iCdsOptionData, swap_.toXML(doc));
     XMLUtils::appendNode(iCdsOptionData, option_.toXML(doc));
@@ -457,6 +473,10 @@ QuantLib::Option::Type IndexCreditDefaultSwapOption::callPut() const {
 }
 
 const string& IndexCreditDefaultSwapOption::strikeType() const { return strikeType_; }
+
+const string& IndexCreditDefaultSwapOption::tradeDateStr() const { return tradeDateStr_; }
+
+const string& IndexCreditDefaultSwapOption::fepStartDateStr() const { return fepStartDateStr_; }
 
 const Date& IndexCreditDefaultSwapOption::tradeDate() const { return tradeDate_; }
 

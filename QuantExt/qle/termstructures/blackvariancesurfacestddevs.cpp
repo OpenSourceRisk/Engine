@@ -29,9 +29,9 @@ BlackVarianceSurfaceStdDevs::BlackVarianceSurfaceStdDevs(
     const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times, const std::vector<Real>& stdDevs,
     const std::vector<std::vector<Handle<Quote>>>& blackVolMatrix, const DayCounter& dayCounter,
     const QuantLib::ext::shared_ptr<EqFxIndexBase>& index, bool stickyStrike, bool flatExtrapMoneyness,
-    BlackVolTimeExtrapolation timeExtrapolation, const VolatilityType type, const Real shift)
+    BlackVolTimeExtrapolation::Type timeExtrapolationType, const VolatilityType type, const Real shift)
     : BlackVarianceSurfaceMoneyness(cal, spot, times, stdDevs, blackVolMatrix, dayCounter, stickyStrike,
-                                    flatExtrapMoneyness, timeExtrapolation, type, shift),
+                                    flatExtrapMoneyness, timeExtrapolationType, type, shift),
       index_(index), flatExtrapolateMoneyness_(flatExtrapMoneyness) {
 
     // set up atm variance curve - maybe just take ATM vols in

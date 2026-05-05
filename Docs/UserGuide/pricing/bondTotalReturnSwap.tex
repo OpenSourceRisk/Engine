@@ -120,3 +120,29 @@ maturity in this context.
 \item $NPV_{FundingLeg}(t)$ is the value of the TRS pay leg which is
  assumed here to be  a vanilla fixed or floating leg.
 \end{itemize}
+
+\underline{Limitation of the method}
+
+The model assumes a \textbf{golden CSA}, which is common for most derivative trades.
+However, in practice, TRS contracts often override the CSA.
+TRS agreements typically specify a simple accrual based PV calculation for variation margin, calculated daily.
+This makes TRS margining similar to repo transactions, which use the same approach.
+As a result, variation margin disputes are rare for TRS trades.
+However, the accrual PV method has several weaknesses (please compare the limitation of the generic TRS model) and usually produces values that differ from Bond TRS model PVs.
+This means the golden CSA assumption is often not valid for TRS. Nonetheless, it is industry practice.
+
+\smallskip
+
+The model ignores \textbf{gap and wrong way risk}, please compare the corresponding section within \ref{pricing:limitation_trs_wrong_way_risk} of the generic TRS model.
+
+\smallskip
+
+Beside the above, there are more limiting assumptions, specifically:
+\begin{itemize}
+\item there are no early termination triggers besides the bond default.
+\item when bond defaults, close out at market value is assumed, i.e. the funding leg interest is valued using CSA discounting for closeout.
+\item interest and hazard rates are assumed deterministic.
+\item the underlying is assumed to be non-callable.
+\item ex-coupon dates are not supported for bonds.
+\item payments can always be settled, i.e. capital control events are not modelled (relevant for emerging market TRS).
+\end{itemize}

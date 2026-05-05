@@ -68,7 +68,6 @@
       <xs:element type="creditLinkedSwapData" name="CreditLinkedSwapData"/>
       <xs:element type="indexCreditDefaultSwapData" name="IndexCreditDefaultSwapData"/>
       <xs:element type="indexCreditDefaultSwapOptionData" name="IndexCreditDefaultSwapOptionData"/>
-      <xs:element type="multiLegOptionData" name="MultiLegOptionData"/>
       <xs:element type="ascotData" name="AscotData"/>
       <xs:element type="convertibleBondData" name="ConvertibleBondData"/>
       <xs:element type="callableBondData" name="CallableBondData"/>
@@ -353,6 +352,7 @@
                   <xs:extension base="xs:float">
                     <xs:attribute name="type" type="xs:string" />
                     <xs:attribute name="startDate" type="xs:string" />
+                    <xs:attribute name="currency" type="xs:string" />
                   </xs:extension>
                 </xs:simpleContent>
               </xs:complexType>
@@ -1323,7 +1323,6 @@
       <xs:enumeration value="EquityPosition"/>
       <xs:enumeration value="EquityOptionPosition"/>
       <xs:enumeration value="BondPosition"/>
-      <xs:enumeration value="MultiLegOption"/>
       <xs:enumeration value="IndexCreditDefaultSwap"/>
       <xs:enumeration value="IndexCreditDefaultSwapOption"/>
       <xs:enumeration value="SyntheticCDO"/>
@@ -2137,13 +2136,6 @@
         <xs:element type="optionData" name="OptionData"/>
       </xs:sequence>
     </xs:choice>
-  </xs:complexType>
-
-  <xs:complexType name="multiLegOptionData">
-    <xs:sequence>
-      <xs:element type="optionData" name="OptionData"  maxOccurs="unbounded" minOccurs="1"/>
-      <xs:element type="legData" name="LegData"  maxOccurs="unbounded" minOccurs="1"/>
-    </xs:sequence>
   </xs:complexType>
 
   <xs:complexType name="nameData">

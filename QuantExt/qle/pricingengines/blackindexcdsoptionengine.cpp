@@ -36,7 +36,7 @@ void BlackIndexCdsOptionEngine::doCalc() const {
     if (arguments_.strikeType == CdsOption::Spread)
         spreadStrikeCalculate(fep());
     else
-        priceStrikeCalculate(fep());
+        priceStrikeCalculate();
 }
 
 void BlackIndexCdsOptionEngine::spreadStrikeCalculate(Real fep) const {
@@ -111,7 +111,7 @@ void BlackIndexCdsOptionEngine::spreadStrikeCalculate(Real fep) const {
     }
 }
 
-void BlackIndexCdsOptionEngine::priceStrikeCalculate(Real fep) const {
+void BlackIndexCdsOptionEngine::priceStrikeCalculate() const {
 
     // Underlying index CDS.
     const auto& cds = *arguments_.swap;
@@ -119,14 +119,15 @@ void BlackIndexCdsOptionEngine::priceStrikeCalculate(Real fep) const {
     const Real& tradeDateNtl = arguments_.tradeDateNtl;
     bool cashSettled = arguments_.settlementType == Settlement::Cash;
 
-    // effective strike (strike is expressed w.r.t. trade date notional by market convention)
-    Real effStrike = 1.0 - tradeDateNtl / cds.notional() * (1.0 - arguments_.strike);
-
     // Discount factor to exercise
     const Date& exerciseDate = arguments_.exercise->dates().front();
     Real exerciseTime = volatility_->timeFromReference(exerciseDate);
     DiscountFactor discTradeCollToExercise = discountTradeCollateral_->discount(exerciseDate);
     DiscountFactor discSwapCurrToExercise = discountSwapCurrency_->discount(exerciseDate);
+
+    // effective strike (strike is expressed w.r.t. trade date notional by market convention)
+    Real rFep = realizedFep() / discTradeCollToExercise;
+    Real effStrike = 1.0 - (tradeDateNtl * (1.0 - arguments_.strike) - rFep) / cds.notional();
 
     // NPV from buyer's perspective gives upfront, as of valuation date, with correct sign.
     Real npv = cds.side() == Protection::Buyer ? cds.NPV() : -cds.NPV();
@@ -135,11 +136,15 @@ void BlackIndexCdsOptionEngine::priceStrikeCalculate(Real fep) const {
         1 - npv / cds.notional() / (cashSettled ? discSwapCurrToExercise : discTradeCollToExercise);
 
     // Front end protection adjusted forward price.
-    Real Fp = forwardPrice - fep / cds.notional() / discTradeCollToExercise;
+    Real urFep = unrealizedFep() / discTradeCollToExercise;
+    Real Fp = forwardPrice - urFep / cds.notional();
 
-    // Read the volatility from the volatility surface
-    Real volatility = volatility_->volatility(exerciseDate, QuantExt::periodToTime(arguments_.indexTerm), effStrike,
-                                              CreditVolCurve::Type::Price);
+    // Read the volatility from the volatility surface. Stripped surfaces and those from provider supply volatilities 
+    // for old series versions on the original strike. So, use original strike here rather than effective strike. If we 
+    // move to using the on-the-run series verion volatility surface to price older series versions, we should switch 
+    // to using effective strike here as well.
+    Real volatility = volatility_->volatility(exerciseDate, QuantExt::periodToTime(arguments_.indexTerm),
+        arguments_.strike, CreditVolCurve::Type::Price);
     Real stdDev = volatility * std::sqrt(exerciseTime);
 
     // If protection buyer, put on price.

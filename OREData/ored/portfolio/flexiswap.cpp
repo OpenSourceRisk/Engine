@@ -133,16 +133,15 @@ void FlexiSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
     // build swap part
 
     Currency npvCcy = parseCurrency(npvCurrency_);
-    std::vector<Currency> legCcys;
-    std::transform(legCurrencies_.begin(), legCurrencies_.end(), std::back_inserter(legCcys),
-                   [](const std::string& ccy) { return parseCurrency(ccy); });
 
     ext::shared_ptr<Instrument> swap;
     if (isXCcy) {
-        swap = ext::make_shared<QuantExt::CurrencySwap>(legs_, legPayers_, legCcys);
+        swap = ext::make_shared<QuantExt::CurrencySwap>(
+            legs_, legPayers_, parseVectorOfValues(legCurrencies_, std::function<Currency(string)>(parseCurrency)));
         auto swapBuilder =
             ext::dynamic_pointer_cast<CrossCurrencySwapEngineBuilder>(engineFactory->builder("CrossCurrencySwap"));
-        swap->setPricingEngine(swapBuilder->engine(legCcys, npvCcy, false, {}));
+        swap->setPricingEngine(swapBuilder->engine(
+            parseVectorOfValues(legCurrencies_, std::function<Currency(string)>(parseCurrency)), npvCcy, false, {}));
     } else {
         swap = ext::make_shared<QuantLib::Swap>(legs_, legPayers_);
         auto swapBuilder = ext::dynamic_pointer_cast<SwapEngineBuilderBase>(engineFactory->builder("Swap"));
@@ -161,27 +160,18 @@ void FlexiSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
 
     auto positionType = parsePositionType(optionLongShort_);
 
-    std::vector<Currency> couponLegCurrencies(legCcys.begin(), std::next(legCcys.begin(), underlyingData_.size()));
+    std::vector<std::string> couponLegCurrencies(legCurrencies_.begin(),
+                                                 std::next(legCurrencies_.begin(), underlyingData_.size()));
     std::vector<bool> couponLegPayers(legPayers_.begin(), std::next(legPayers_.begin(), underlyingData_.size()));
 
-    auto basket = generateFlexiSwapReplication(today, couponLegCopies, couponLegPayers, couponLegCurrencies,
-                                               lowerNotionalBounds, positionType == Position::Type::Long,
-                                               generateNotionalExchanges, generateNotionalExchanges);
+    auto basket = generateFlexiSwapReplication(
+        today, couponLegCopies, couponLegPayers,
+        parseVectorOfValues(couponLegCurrencies, std::function<Currency(string)>(parseCurrency)), lowerNotionalBounds,
+        positionType == Position::Type::Long, generateNotionalExchanges, generateNotionalExchanges);
 
     // determine qualifiers, calibration strikes ir, fx (latter is set to ATMF), exercise dates, maturities
 
-    std::vector<std::string> differentCcys;
-    std::vector<std::vector<Leg>> legsPerCcy;
-
-    for (Size j = 0; j < couponLegCopies.size(); ++j) {
-        Size idx = std::distance(differentCcys.begin(),
-                                 std::find(differentCcys.begin(), differentCcys.end(), couponLegCurrencies[j].code()));
-        if (idx == differentCcys.size()) {
-            differentCcys.push_back(couponLegCurrencies[j].code());
-            legsPerCcy.push_back({});
-        }
-        legsPerCcy[idx].push_back(couponLegCopies[j]);
-    }
+    auto [differentCcys, legsPerCcy] = getLegsPerCurrency(couponLegCopies, couponLegCurrencies);
 
     std::set<Date> differentDates;
     Date maxMaturityDate = Date::minDate();
