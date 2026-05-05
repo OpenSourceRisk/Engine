@@ -1,8 +1,5 @@
 # syntax = docker/dockerfile:1.2
-ARG DOCKER_REPO
 ARG ORE_BUILD_VERSION
-ARG DEBIAN_TAG
-ARG CMAKE_BUILD_TYPE
 FROM ${DOCKER_REPO}ore-build-dependencies:${ORE_BUILD_VERSION} as orebuild
 
 LABEL Quaternion Risk Management
@@ -11,46 +8,48 @@ LABEL Description="Build ORE"
 ARG NUM_CORES
 ARG CMAKE_BUILD_TYPE
 
-# Source archive is created in CI before_script (see ci/build_ore.yml)
-# This replaces 15 individual COPY statements with a single ADD for faster buildah builds
-ADD ore-source.tar.gz /ore/
+# Exclusions are performed by .dockerignore
+COPY CMakeLists.txt /ore/CMakeLists.txt
+COPY QuantLib /ore/QuantLib
+COPY QuantExt /ore/QuantExt
+COPY OREData /ore/OREData
+COPY OREAnalytics /ore/OREAnalytics
+COPY App /ore/App
+COPY ThirdPartyLibs /ore/ThirdPartyLibs
+COPY ORETest /ore/ORETest
+COPY cmake /ore/cmake
+COPY ORE-SWIG/CMakeLists.txt /ore/ORE-SWIG/CMakeLists.txt
+COPY ORE-SWIG/test /ore/ORE-SWIG/test
+COPY ORE-SWIG/OREAnalytics-SWIG /ore/ORE-SWIG/OREAnalytics-SWIG
+COPY ORE-SWIG/OREData-SWIG /ore/ORE-SWIG/OREData-SWIG
+COPY ORE-SWIG/QuantExt-SWIG /ore/ORE-SWIG/QuantExt-SWIG
+COPY ORE-SWIG/QuantLib-SWIG /ore/ORE-SWIG/QuantLib-SWIG
+
+ENV PATH="/usr/lib/ccache:$PATH"
+ENV CCACHE_DIR="/ccache"
+ENV CCACHE_MAXSIZE="10G"
+# needed if QL_USE_PCH is ON
+#ENV CCACHE_SLOPPINESS="pch_defines,time_macros,pch_defines,time_macros,include_file_mtime,include_file_ctim"
 
 # - add  -fpch-preprocess to CMAKE_CXX_FLAGS when QL_USE_PCH is set to ON
 RUN cd /ore \
   && mkdir -p build.ore && cd build.ore \
-  && cmake .. -GNinja -DCMAKE_CXX_COMPILER_LAUNCHER=sccache -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER=/usr/bin/clang++ \
+  && cmake .. -GNinja -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER=/usr/bin/clang++ \
     -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=lld" -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld" \
     -DORE_BUILD_SWIG=ON -DORE_PYTHON_INTEGRATION=ON -DQL_USE_PCH=OFF \
     -DORE_BUILD_DOC=ON -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
     -DCMAKE_CXX_FLAGS="-D BOOST_ENABLE_ASSERT_HANDLER $([ "$(uname -m)" = "x86_64" ] && echo "-mavx2")" \
     -DQL_ENABLE_SESSIONS=ON -DQL_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON -DQL_BUILD_EXAMPLES=OFF \
     -DQL_BUILD_BENCHMARK=OFF -DORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON -DORE_USE_ZLIB=ON \
-    -DORE_ENABLE_OPENCL=ON -DORE_MULTITHREADING_CPU_AFFINITY=ON -DCMAKE_POLICY_DEFAULT_CMP0167=NEW \
-    -DORE_SWIG_DISABLE_OPTIMIZATION=ON
-
-ARG SCCACHE_BUCKET
-ARG SCCACHE_REGION
-ARG SCCACHE_S3_USE_SSL
-ARG SCCACHE_S3_KEY_PREFIX
-ARG SCCACHE_IDLE_TIMEOUT
+    -DORE_ENABLE_OPENCL=ON -DORE_MULTITHREADING_CPU_AFFINITY=ON -DCMAKE_POLICY_DEFAULT_CMP0167=NEW
 
 WORKDIR /ore/build.ore
-RUN set -e; \
-  [ -n "${SCCACHE_BUCKET}" ] && export SCCACHE_BUCKET; \
-  [ -n "${SCCACHE_REGION}" ] && export SCCACHE_REGION; \
-  [ -n "${SCCACHE_S3_USE_SSL}" ] && export SCCACHE_S3_USE_SSL; \
-  [ -n "${SCCACHE_S3_KEY_PREFIX}" ] && export SCCACHE_S3_KEY_PREFIX; \
-  [ -n "${SCCACHE_IDLE_TIMEOUT}" ] && export SCCACHE_IDLE_TIMEOUT; \
-  sccache --start-server \
-  || echo "WARNING: sccache server failed to start — caching may be unavailable"; \
-  cmake --build . -- -j ${NUM_CORES} install; \
-  BUILD_EXIT=$?; \
-  sccache --show-stats || true; \
-  if [ $BUILD_EXIT -ne 0 ]; then exit $BUILD_EXIT; fi
+RUN --mount=type=cache,id=ccache-ore,target=/ccache/ ccache -z \
+  && cmake --build . -- -j ${NUM_CORES} \
+  && cmake --install . \
+  && ccache -s
 
 WORKDIR /
-# Stage all artifacts and bundle into a single tar for faster cross-stage copy
-# (single RUN avoids extra buildah layer checkpoints)
 RUN mkdir -p html \
   && mkdir /html/ored && cp -r /ore/OREData/doc/html/* /html/ored \
   && mkdir /html/orea && cp -r /ore/OREAnalytics/doc/html/* /html/orea \
@@ -62,29 +61,26 @@ RUN mkdir -p html \
   && mkdir -p oreswig/pythonlib \
   && mv /ore/build.ore/ORE-SWIG/ORE.py /oreswig/pythonlib \
   && mv /ore/build.ore/ORE-SWIG/_OREP.so /oreswig/pythonlib \
-  && rm -rf ore \
-  && mkdir -p /boostlibs \
-  && find /usr/lib -maxdepth 2 -type f -name 'libboost*.so*' -exec cp {} /boostlibs/ \; \
-  && mkdir -p /opencllibs \
-  && find /usr/lib -maxdepth 2 -type f -name 'libOpenCL*' -exec cp {} /opencllibs/ \; \
-  && tar cf /stage-output.tar \
-      /usr/local/include \
-      /usr/local/lib \
-      /usr/local/bin \
-      /boostlibs \
-      /opencllibs \
-      /usr/lib/llvm-19 \
-      /usr/include/boost \
-      /usr/include/CL \
-      /oreswig \
-      /doxy_tagfiles
+  && rm -rf ore
 
+RUN mkdir -p /boostlibs && \
+    find /usr/lib -type f -name 'libboost*.so*' -exec cp {} /boostlibs/ \;
+RUN mkdir -p /opencllibs && \
+    find /usr/lib -type f -name 'libOpenCL*' -exec cp {} /opencllibs/ \;
+
+ARG DEBIAN_TAG
 FROM ${DOCKER_REPO}debian:${DEBIAN_TAG}
 
-COPY --from=orebuild /stage-output.tar /stage-output.tar
-RUN tar xf /stage-output.tar -C / && rm /stage-output.tar \
-  && cp /boostlibs/* /usr/local/lib/ && rm -rf /boostlibs \
-  && cp /opencllibs/* /usr/local/lib/ && rm -rf /opencllibs
+COPY --from=orebuild /usr/local/include /usr/local/include
+COPY --from=orebuild /usr/local/lib/ /usr/local/lib
+COPY --from=orebuild /usr/local/bin/ /usr/local/bin
+COPY --from=orebuild /boostlibs/ /usr/local/lib/
+COPY --from=orebuild /opencllibs/ /usr/local/lib/
+COPY --from=orebuild /usr/lib/llvm-19/ /usr/lib/llvm-19
+COPY --from=orebuild /usr/include/boost/ /usr/include/boost
+COPY --from=orebuild /usr/include/CL /usr/include/CL
+COPY --from=orebuild /oreswig /oreswig
+COPY --from=orebuild /doxy_tagfiles /doxy_tagfiles
 
 RUN ldconfig
 CMD bash
