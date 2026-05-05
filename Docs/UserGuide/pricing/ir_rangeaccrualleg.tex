@@ -41,7 +41,7 @@ if the payout is made at time $T_p > S$. We shift to the $T_p$-forward measure a
 $T_p$-forward w.r.t. $S$-forward measure $\zeta(\cdot)$. We get
 
 \begin{equation}
-\frac{\zeta(S)}{\zeta(t)} = \frac{P(S,T_p)P(t,S)}{P(t,T_p)P(S,S)} 
+\frac{\zeta(S)}{\zeta(t)} = \frac{P(S,T_p)P(t,S)}{P(t,T_p)P(S,S)}
 \end{equation}
 
 and
@@ -79,7 +79,7 @@ under the $T_p$-forward measure
 \end{split}
 \end{equation}
 
-We can express the bond volatility $\sigma_p(t,U)$ as 
+We can express the bond volatility $\sigma_p(t,U)$ as
 
 \begin{equation}\label{pricing:ir_rangeaccrualleg_bondvol}
 \sigma_P(t,U) = \alpha(t) \left( H(U) - H(t) \right)
@@ -88,13 +88,13 @@ We can express the bond volatility $\sigma_p(t,U)$ as
 with $H(s)$ as defined below. This follows direcly from \cite{Andersen_Piterbarg_2010}, (4.36)
 
 \begin{equation}
-\sigma_f(t,T) = \frac{\partial}{\partial T} \sigma_P(t,T) 
+\sigma_f(t,T) = \frac{\partial}{\partial T} \sigma_P(t,T)
 \end{equation}
 
 i.e.
 
 \begin{equation}
-\sigma_P(t,T) = \int_0^T \sigma_f(t,u) du 
+\sigma_P(t,T) = \int_0^T \sigma_f(t,u) du
 \end{equation}
 
 and the separability condition
@@ -102,7 +102,7 @@ and the separability condition
 \begin{equation}
 \sigma_f(t,T) = g(t)h(T)
 \end{equation}
- 
+
 for the LGM / HW model class, where $g(t) = \alpha(t)$ is the LGM volatility by construction of the LGM model
 formulation and $h(s)$ is usually related to a mean reversion $\kappa(u)$ via $h(s) = e^{-\int_0^s \kappa(u) du}$.
 $H(T)$ is then defined as $\int_0^T h(s) ds$.
