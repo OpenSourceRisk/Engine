@@ -58,7 +58,7 @@ void CorrelationVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<Inp
     inputs->loadParameter<bool>(horizonOverlappingPeriods_, correlationAnalytics, vector<string>({"horizonOverlappingPeriods", "mporOverlappingPeriods"}), false, parseBool);
     inputs->loadParameter<bool>(allowPartialScenarios_, correlationAnalytics, "allowPartialScenarios", false, parseBool);
     inputs->loadParameter<string>(filterTenor_, correlationAnalytics, "filteredCorrelationScenarioTenor", false);
-    inputs->loadParameter<string>(filterTenorOverrides_, correlationAnalytics, "filteredTenorCorrelationRFMapping", false);
+    inputs->loadParameter<string>(filterTenorOverrides_, correlationAnalytics, "filteredCorrelationScenarioTenorOverrides", false);
     
     TimePeriod hsPeriod = totalTimePeriod(vector<string>({lookbackPeriod_}), horizonDays_, horizonCalendar_);
     QL_REQUIRE(hsPeriod.numberOfContiguousParts() == 1,
