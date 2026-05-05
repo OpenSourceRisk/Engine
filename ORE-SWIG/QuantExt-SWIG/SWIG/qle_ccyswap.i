@@ -26,11 +26,8 @@
 %include marketelements.i
 %include exchangerates.i
 
-%{
-using QuantExt::CrossCcySwap;
-%}
-
-%shared_ptr(CrossCcySwap)
+%shared_ptr(QuantExt::CrossCcySwap)
+namespace QuantExt {
 class CrossCcySwap : public Swap {
   public:
     CrossCcySwap(const QuantLib::Leg& firstLeg,
@@ -41,12 +38,10 @@ class CrossCcySwap : public Swap {
                  const std::vector<bool>& payer,
                  const std::vector<QuantLib::Currency>& currencies);
 };
+}
 
-%{
-using QuantExt::CrossCcySwapEngine;
-%}
-
-%shared_ptr(CrossCcySwapEngine)
+%shared_ptr(QuantExt::CrossCcySwapEngine)
+namespace QuantExt {
 class CrossCcySwapEngine : public PricingEngine {
   public:
     CrossCcySwapEngine(const QuantLib::Currency& ccy1,
@@ -58,5 +53,6 @@ class CrossCcySwapEngine : public PricingEngine {
                        const QuantLib::Date& settlementDate = QuantLib::Date(),
                        const QuantLib::Date& npvDate = QuantLib::Date());
 };
+}
 
 #endif

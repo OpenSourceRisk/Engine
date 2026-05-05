@@ -78,7 +78,7 @@ public:
             QuantExt::ZeroInflation::curveBaseDate(false, asof, Period(3, Months), Monthly, index);
         QuantLib::ext::shared_ptr<YoYInflationTermStructure> yoyTs =
             QuantLib::ext::make_shared<PiecewiseYoYInflationCurve<Linear>>(
-                asof, baseDate, ratesZCII[0] / 100, Period(3, Months), Monthly, index->interpolated(), Actual365Fixed(),
+                asof, baseDate, ratesZCII[0] / 100, Period(3, Months), Monthly, Actual365Fixed(),
                 instruments);
 
         yoyInflationIndices_[make_pair(Market::defaultConfiguration, "EUHICPXT")] =

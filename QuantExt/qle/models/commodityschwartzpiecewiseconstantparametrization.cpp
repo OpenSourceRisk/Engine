@@ -30,7 +30,7 @@ CommoditySchwartzPiecewiseConstantParametrization::CommoditySchwartzPiecewiseCon
                                                                    const QuantLib::ext::shared_ptr<QuantLib::Constraint>& aConstraint,
                                                                    bool driftFreeState)
     : CommoditySchwartzParametrization(currency, name, priceCurve, fxSpotToday, driftFreeState),
-      PiecewiseConstantHelper1(aTimes, QuantLib::ext::make_shared<QuantLib::NoConstraint>(), false),
+      PiecewiseConstantHelper1(aTimes, aConstraint, false, true),
       sigma_(QuantLib::ext::make_shared<PseudoParameter>(1)), 
       kappa_(QuantLib::ext::make_shared<PseudoParameter>(1)) {
     sigma_->setParam(0, inverse(0, sigma));

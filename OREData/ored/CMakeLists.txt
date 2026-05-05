@@ -63,6 +63,7 @@ marketdata/swaptionvolcurve.cpp
 marketdata/todaysmarket.cpp
 marketdata/todaysmarketcalibrationinfo.cpp
 marketdata/todaysmarketparameters.cpp
+marketdata/volsurfacebuilder.cpp
 marketdata/wrappedmarket.cpp
 marketdata/yieldcurve.cpp
 marketdata/yieldvolcurve.cpp
@@ -177,6 +178,7 @@ portfolio/builders/equitydigitaloption.cpp
 portfolio/builders/ratedigitaloption.cpp
 portfolio/builders/equitydoublebarrieroption.cpp
 portfolio/builders/equitydoubletouchoption.cpp
+portfolio/builders/equityautodeltahedgeoption.cpp
 portfolio/builders/equityforward.cpp
 portfolio/builders/equityfuturesoption.cpp
 portfolio/builders/equityoption.cpp
@@ -197,7 +199,6 @@ portfolio/builders/fxoption.cpp
 portfolio/builders/fxtouchoption.cpp
 portfolio/builders/indexcreditdefaultswap.cpp
 portfolio/builders/indexcreditdefaultswapoption.cpp
-portfolio/builders/multilegoption.cpp
 portfolio/builders/pairwisevarianceswap.cpp
 portfolio/builders/quantoequityoption.cpp
 portfolio/builders/riskparticipationagreement.cpp
@@ -250,6 +251,7 @@ portfolio/envelope.cpp
 portfolio/equitybarrieroption.cpp
 portfolio/equitydigitaloption.cpp
 portfolio/ratedigitaloption.cpp
+portfolio/equityautodeltahedgeoption.cpp
 portfolio/equitydoublebarrieroption.cpp
 portfolio/equitydoubletouchoption.cpp
 portfolio/equityeuropeanbarrieroption.cpp
@@ -296,7 +298,6 @@ portfolio/legbuilders.cpp
 portfolio/legdata.cpp
 portfolio/legdatafactory.cpp
 portfolio/makenonstandardlegs.cpp
-portfolio/multilegoption.cpp
 portfolio/nettingsetdefinition.cpp
 portfolio/nettingsetdetails.cpp
 portfolio/nettingsetmanager.cpp
@@ -487,6 +488,7 @@ marketdata/swaptionvolcurve.hpp
 marketdata/todaysmarket.hpp
 marketdata/todaysmarketcalibrationinfo.hpp
 marketdata/todaysmarketparameters.hpp
+marketdata/volsurfacebuilder.hpp
 marketdata/wrappedmarket.hpp
 marketdata/yieldcurve.hpp
 marketdata/yieldvolcurve.hpp
@@ -605,6 +607,7 @@ portfolio/builders/equitydigitaloption.hpp
 portfolio/builders/ratedigitaloption.hpp
 portfolio/builders/equitydoublebarrieroption.hpp
 portfolio/builders/equitydoubletouchoption.hpp
+portfolio/builders/equityautodeltahedgeoption.hpp
 portfolio/builders/equityforward.hpp
 portfolio/builders/equityfuturesoption.hpp
 portfolio/builders/equityoption.hpp
@@ -625,7 +628,6 @@ portfolio/builders/fxoption.hpp
 portfolio/builders/fxtouchoption.hpp
 portfolio/builders/indexcreditdefaultswap.hpp
 portfolio/builders/indexcreditdefaultswapoption.hpp
-portfolio/builders/multilegoption.hpp
 portfolio/builders/pairwisevarianceswap.hpp
 portfolio/builders/quantoequityoption.hpp
 portfolio/builders/quantovanillaoption.hpp
@@ -681,6 +683,7 @@ portfolio/equitybarrieroption.hpp
 portfolio/equityderivative.hpp
 portfolio/equitydigitaloption.hpp
 portfolio/ratedigitaloption.hpp
+portfolio/equityautodeltahedgeoption.hpp
 portfolio/equitydoublebarrieroption.hpp
 portfolio/equitydoubletouchoption.hpp
 portfolio/equityeuropeanbarrieroption.hpp
@@ -728,7 +731,6 @@ portfolio/legbuilders.hpp
 portfolio/legdata.hpp
 portfolio/legdatafactory.hpp
 portfolio/makenonstandardlegs.hpp
-portfolio/multilegoption.hpp
 portfolio/nettingsetdefinition.hpp
 portfolio/nettingsetdetails.hpp
 portfolio/nettingsetmanager.hpp

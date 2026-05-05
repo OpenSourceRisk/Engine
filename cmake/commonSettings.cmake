@@ -164,7 +164,7 @@ else()
     # If there are unusual options or specific issues, we can add back the call to either one.
     # CMake supported compiler IDs are documented here:
     # https://cmake.org/cmake/help/latest/variable/CMAKE_LANG_COMPILER_ID.html
-    set(clangs_to_check "AppleClang,Clang")
+    set(clangs_to_check "AppleClang")
     add_link_options(
         -pthread
         $<$<AND:$<BOOL:${APPLE}>,$<CXX_COMPILER_ID:${clangs_to_check}>>:-flat_namespace>

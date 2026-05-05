@@ -229,7 +229,6 @@ template <class Interpolator> void InterpolatedCapFloorTermVolCurve<Interpolator
 }
 
 template <class Interpolator> void InterpolatedCapFloorTermVolCurve<Interpolator>::performCalculations() const {
-
     // Populate the InterpolatedCurve members
     // We make the time zero volatility equal to zero here. However, if flatFirstPeriod is set to true, there is no
     // interpolation between time 0 and the first option date so this value of 0.0 is effectively ignored.

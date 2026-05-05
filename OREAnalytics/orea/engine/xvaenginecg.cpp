@@ -1659,7 +1659,7 @@ void XvaEngineCG::calculateSensitivities() {
 
             simMarket_->preUpdate();
             simMarket_->updateScenario(asof_);
-            simMarket_->postUpdate(asof_, false);
+            simMarket_->postUpdate(asof_);
 
             // recalibrate the model
 

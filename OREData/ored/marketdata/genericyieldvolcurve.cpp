@@ -30,6 +30,7 @@
 #include <qle/termstructures/swaptionvolatilityconverter.hpp>
 #include <qle/termstructures/swaptionvolcube2.hpp>
 #include <qle/termstructures/swaptionvolcubewithatm.hpp>
+#include <qle/math/flatextrapolation.hpp>
 
 #include <ql/pricingengines/blackformula.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionconstantvol.hpp>
@@ -397,37 +398,70 @@ GenericYieldVolCurve::GenericYieldVolCurve(
 
                 // post processing: extrapolate leftmost non-zero value flat to the left and overwrite
                 // zero values
+
                 for (Size i = 0; i < smileOptionTenors.size(); ++i) {
                     for (Size j = 0; j < smileUnderlyingTenors.size(); ++j) {
+
+                        int nonZeroValues = 0;
                         Real lastNonZeroValue = 0.0;
-                        bool foundAtLeastOneValue = false;
+                        vector<Real> x, y;
+                        
                         for (Size k = 0; k < spreads.size(); ++k) {
+                            int spreadIndex = spreads.size() - 1 - k;
+                            // read vol spread quotes
                             QuantLib::ext::shared_ptr<SimpleQuote> q = QuantLib::ext::dynamic_pointer_cast<SimpleQuote>(
-                                *volSpreadHandles[i * smileUnderlyingTenors.size() + j][spreads.size() - 1 - k]);
+                                *volSpreadHandles[i * smileUnderlyingTenors.size() + j][spreadIndex]);
                             QL_REQUIRE(q, "internal error: expected simple quote");
-                            // do not overwrite vol spread for zero strike spread (ATM point)
-                            if (zero[i * smileUnderlyingTenors.size() + j][spreads.size() - 1 - k] &&
-                                !close_enough(spreads[spreads.size() - 1 - k], 0.0)) {
-                                q->setValue(lastNonZeroValue);
-                                DLOG("Overwrite vol spread for " << config->curveID() << "/" << smileOptionTenors[i]
-                                                                 << "/" << smileUnderlyingTenors[j] << "/"
-                                                                 << spreads[spreads.size() - 1 - k] << " with "
-                                                                 << lastNonZeroValue << " since market quote is zero");
-                            }
-                            // update last non-zero value
-                            if (!zero[i * smileUnderlyingTenors.size() + j][spreads.size() - 1 - k]) {
-                                lastNonZeroValue = q->value();
-                                foundAtLeastOneValue = true;
+
+                            if (!zero[i * smileUnderlyingTenors.size() + j][spreadIndex]) {
+                                x.push_back(spreads[spreadIndex]);
+                                y.push_back(q->value());
+                                nonZeroValues++;
                             }
                         }
-                        if (!foundAtLeastOneValue) {
+
+                        // edge case 1: all values are missing (or zero)
+                        if (nonZeroValues == 0) {
                             StructuredCurveWarningMessage(
                                 name, "Volatility curve building partially fails due to missing data.",
                                 "No data for entire smile " + ore::data::to_string(smileOptionTenors[i]) + "/" +
-                                    ore::data::to_string(smileUnderlyingTenors[j]) +
-                                    ". Should the list of SmileOptionTenors resp. "
-                                    "SmileSwapTenors be updated in the curve configuration?")
-                                .log();
+                                ore::data::to_string(smileUnderlyingTenors[j]) +
+                                ". Should the list of SmileOptionTenors resp. "
+                                "SmileSwapTenors be updated in the curve configuration?")
+                            .log();
+                        }
+
+                        // edge case 2: only one non-zero value, we perform a flat extrapolation
+                        if (nonZeroValues == 1) {
+                            // add a ghost point to simulate flat extrapolation using linear interpolation object
+                            y.push_back(y.front());
+                            x.push_back(x.front() + 1);
+                        }
+
+                        if (nonZeroValues > 0) {
+
+                            auto li = ext::make_shared<LinearInterpolation>(x.begin(), x.end(), y.begin());
+                            auto f = ext::make_shared<FlatExtrapolation>(li);
+                            f->enableExtrapolation();
+
+                            for (Size k = 0; k < spreads.size(); ++k) {
+                                int spreadIndex = spreads.size() - 1 - k;
+                                // read vol spread quotes
+                                QuantLib::ext::shared_ptr<SimpleQuote> q =
+                                    QuantLib::ext::dynamic_pointer_cast<SimpleQuote>(
+                                        *volSpreadHandles[i * smileUnderlyingTenors.size() + j][spreadIndex]);
+                                QL_REQUIRE(q, "internal error: expected simple quote");
+
+                                // do not overwrite vol spread for zero strike spread (ATM point)
+                                if (zero[i * smileUnderlyingTenors.size() + j][spreadIndex] &&
+                                    !close_enough(spreads[spreadIndex], 0.0)) {
+                                    q->setValue((*f)(spreads[spreadIndex]));
+                                    DLOG("Overwrite vol spread for "
+                                         << config->curveID() << "/" << smileOptionTenors[i] << "/"
+                                         << smileUnderlyingTenors[j] << "/" << spreads[spreads.size() - 1 - k]
+                                         << " with " << lastNonZeroValue << " since market quote is zero");
+                                }
+                            }
                         }
                     }
                 }
@@ -508,6 +542,7 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                             : QuantLib::ShiftedLognormal,
                         initialModelParameters, config->outputShift(), config->modelShift(), maxCalibrationAttempts,
                         exitEarlyErrorThreshold, maxAcceptableError);
+                    cube->enableExtrapolation();
                 }
 
                 // Wrap it in a SwaptionVolCubeWithATM, disable short-cut for atm vol retrieval

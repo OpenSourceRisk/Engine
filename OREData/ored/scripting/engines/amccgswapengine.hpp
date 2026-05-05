@@ -38,10 +38,10 @@ public:
                     const Model::Params& mcParams, const double indicatorSmoothingForValues,
                     const double indicatorSmoothingForDerivatives, const double sqrtSmoothingForDerivatives,
                     const bool useCachedSensis, const bool useExternalComputeFramework,
-                    const bool useDoublePrecisionForExternalCalculation)
+                    const bool useDoublePrecisionForExternalCalculation, const bool generateAdditionalResults)
         : AmcCgBaseEngine(modelCg, mcParams, indicatorSmoothingForValues, indicatorSmoothingForDerivatives,
                           sqrtSmoothingForDerivatives, useCachedSensis, useExternalComputeFramework,
-                          useDoublePrecisionForExternalCalculation),
+                          useDoublePrecisionForExternalCalculation, generateAdditionalResults),
           ccy_(ccy) {
         registerWith(modelCg_);
     }

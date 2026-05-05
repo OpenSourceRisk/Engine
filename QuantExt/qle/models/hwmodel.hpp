@@ -97,6 +97,8 @@ public:
     void update() override;
     void generateArguments() override;
 
+    ext::shared_ptr<IrModel> clone() const override;
+
 private:
     QuantLib::ext::shared_ptr<IrHwParametrization> parametrization_;
     Measure measure_;

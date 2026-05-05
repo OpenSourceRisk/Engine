@@ -71,12 +71,7 @@ void NPVCalculator::calculateT0(const QuantLib::ext::shared_ptr<Trade>& trade, S
 
 Real NPVCalculator::npv(Size tradeIndex, const QuantLib::ext::shared_ptr<Trade>& trade,
                         const QuantLib::ext::shared_ptr<SimMarket>& simMarket) {
-    Real npv = trade->instrument()->NPV();
-    if (close_enough(npv, 0.0))
-        return npv;
-    Real fx = fxRates_[tradeCcyIndex_[tradeIndex]];
-    Real numeraire = simMarket->numeraire();
-    return npv * fx / numeraire;
+    return trade->instrument()->NPV() * fxRates_[tradeCcyIndex_[tradeIndex]] / simMarket->numeraire();
 }
 
 Real ExerciseCalculator::npv(Size tradeIndex, const QuantLib::ext::shared_ptr<Trade>& trade,

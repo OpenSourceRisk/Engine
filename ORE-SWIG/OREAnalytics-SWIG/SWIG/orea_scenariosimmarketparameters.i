@@ -16,21 +16,16 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#ifndef orea_scenariosimmarketparameters.i
-#define orea_scenariosimmarketparameters.i
+#ifndef orea_scenariosimmarketparameters_i
+#define orea_scenariosimmarketparameters_i
 
 %include stl.i
 %include types.i
 %include ored_xmlutils.i
 
-%{
-using ore::analytics::ScenarioSimMarketParameters;
-using ore::analytics::RiskFactorKey;
-
-using ore::data::XMLSerializable;
-%}
-
-%shared_ptr(ScenarioSimMarketParameters)
+%shared_ptr(ore::analytics::ScenarioSimMarketParameters)
+namespace ore {
+namespace analytics {
 class ScenarioSimMarketParameters {
 public:
     ScenarioSimMarketParameters();
@@ -41,11 +36,11 @@ public:
 
     const std::string& baseCcy() const;
     const std::vector<std::string>& ccys() const;
-    std::vector<std::string> paramsLookup(RiskFactorKey::KeyType k) const;
-    bool hasParamsName(RiskFactorKey::KeyType kt, std::string name) const;
-    void addParamsName(RiskFactorKey::KeyType kt, std::vector<std::string> names);
-    bool paramsSimulate(RiskFactorKey::KeyType kt) const;
-    void setParamsSimulate(RiskFactorKey::KeyType kt, bool simulate);
+    std::vector<std::string> paramsLookup(ore::analytics::RiskFactorKey::KeyType k) const;
+    bool hasParamsName(ore::analytics::RiskFactorKey::KeyType kt, std::string name) const;
+    void addParamsName(ore::analytics::RiskFactorKey::KeyType kt, std::vector<std::string> names);
+    bool paramsSimulate(ore::analytics::RiskFactorKey::KeyType kt) const;
+    void setParamsSimulate(ore::analytics::RiskFactorKey::KeyType kt, bool simulate);
 
     std::vector<std::string> discountCurveNames() const;
 
@@ -116,7 +111,7 @@ public:
     const std::string& defaultCurveExtrapolation() const;
 
     bool simulateCdsVols() const;
-    bool simulateCdsVolATMOnly() const;  
+    bool simulateCdsVolATMOnly() const;
     const std::vector<QuantLib::Period>& cdsVolExpiries() const;
     std::vector<std::string> cdsVolNames() const;
     const std::string& cdsVolDecayMode() const;
@@ -138,7 +133,7 @@ public:
     const std::vector<QuantLib::Real>& fxVolMoneyness(const std::string& ccypair) const;
     const std::vector<QuantLib::Real>& fxVolStdDevs(const std::string& ccypair) const;
     const std::string& fxVolSmileDynamics(const std::string& key) const;
-    
+
     bool simulateEquityVols() const;
     bool simulateEquityVolATMOnly() const;
     bool equityUseMoneyness(const std::string& key) const;
@@ -170,7 +165,7 @@ public:
     std::vector<std::string> yoyInflationIndices() const;
     const std::vector<QuantLib::Period>& yoyInflationTenors(const std::string& key) const;
     bool hasYoyInflationTenors(const std::string& key) const;
-    
+
     bool commodityCurveSimulate() const;
     std::vector<std::string> commodityNames() const;
     const std::vector<QuantLib::Period>& commodityCurveTenors(const std::string& commodityName) const;
@@ -191,8 +186,8 @@ public:
 
     QuantLib::Size numberOfCreditStates() const;
 
-    const std::map<RiskFactorKey::KeyType, std::pair<bool, std::set<std::string>>>& parameters() const;
-        
+    const std::map<ore::analytics::RiskFactorKey::KeyType, std::pair<bool, std::set<std::string>>>& parameters() const;
+
     std::vector<std::string>& ccys();
     void setDiscountCurveNames(std::vector<std::string> names);
     void setYieldCurveNames(std::vector<std::string> names);
@@ -214,7 +209,7 @@ public:
     void setSwapVolStrikeSpreads(const std::string& key, const std::vector<QuantLib::Rate>& strikes);
     std::string& swapVolDecayMode();
     void setSwapVolSmileDynamics(const std::string& key, const std::string& smileDynamics);
-  
+
     void setSimulateYieldVols(bool simulate);
     std::vector<QuantLib::Period>& yieldVolTerms();
     void setYieldVolNames(std::vector<std::string> names);
@@ -333,7 +328,7 @@ public:
     void setNumberOfCreditStates(QuantLib::Size numberOfCreditStates);
     bool operator==(const ScenarioSimMarketParameters& rhs);
     bool operator!=(const ScenarioSimMarketParameters& rhs);
-    
+
     %extend {
       void setBaseCcy(std::string ccy) {
           self->baseCcy() = ccy;
@@ -350,5 +345,8 @@ public:
       }
     }
 };
+
+} // namespace analytics
+} // namespace ore
 
 #endif

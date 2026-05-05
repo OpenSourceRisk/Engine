@@ -231,7 +231,8 @@ NumericLgmMultiLegOptionEngineBase::CashflowInfo NumericLgmMultiLegOptionEngineB
                 };
                 done = true;
             }
-        } else if (auto cfon = QuantLib::ext::dynamic_pointer_cast<QuantExt::CappedFlooredOvernightIndexedCoupon>(cpn)) {
+        } else if (auto cfon =
+                       QuantLib::ext::dynamic_pointer_cast<QuantExt::CappedFlooredOvernightIndexedCoupon>(cpn)) {
             auto und = cfon->underlying();
             info.exactEstimationTime_ = timeFromReference(und->fixingDates().front());
             info.calculator_ = [cfon, und, T, payrec, multiplier](const LgmVectorised& lgm, const Real t,
@@ -247,7 +248,8 @@ NumericLgmMultiLegOptionEngineBase::CashflowInfo NumericLgmMultiLegOptionEngineB
                        lgm.reducedDiscountBond(t, T, x, discountCurve);
             };
             done = true;
-        } else if (auto cfav = QuantLib::ext::dynamic_pointer_cast<QuantExt::CappedFlooredAverageONIndexedCoupon>(cpn)) {
+        } else if (auto cfav =
+                       QuantLib::ext::dynamic_pointer_cast<QuantExt::CappedFlooredAverageONIndexedCoupon>(cpn)) {
             auto und = cfav->underlying();
             info.exactEstimationTime_ = timeFromReference(und->fixingDates().front());
             info.calculator_ = [cfav, und, T, payrec, multiplier](const LgmVectorised& lgm, const Real t,
@@ -334,7 +336,8 @@ NumericLgmMultiLegOptionEngineBase::CashflowInfo NumericLgmMultiLegOptionEngineB
 
     QL_REQUIRE(
         info.belongsToUnderlyingMaxTime_ != Null<Real>(),
-        "NumericLgmMultiLegOptionEngineBase: internal error: cashflow info: belongsToUnderlyingMaxTime_ is null. " + cashflowDescription);
+        "NumericLgmMultiLegOptionEngineBase: internal error: cashflow info: belongsToUnderlyingMaxTime_ is null. " +
+            cashflowDescription);
     QL_REQUIRE(info.maxEstimationTime_ != Null<Real>() || info.exactEstimationTime_ != Null<Real>(),
                "NumericLgmMultiLegOptionEngineBase: internal error: both maxEstimationTime_ and exactEstimationTime_ "
                "is null. " +
@@ -372,9 +375,10 @@ RandomVariable getRebatePv(const LgmVectorised& lgm, const Real t, const RandomV
 
 NumericLgmMultiLegOptionEngineBase::NumericLgmMultiLegOptionEngineBase(
     const QuantLib::ext::shared_ptr<LgmBackwardSolver>& solver, const Handle<YieldTermStructure>& discountCurve,
-    const Size americanExerciseTimeStepsPerYear)
+    const Size americanExerciseTimeStepsPerYear, const bool generateAdditionalResults)
     : solver_(solver), discountCurve_(discountCurve),
-      americanExerciseTimeStepsPerYear_(americanExerciseTimeStepsPerYear) {}
+      americanExerciseTimeStepsPerYear_(americanExerciseTimeStepsPerYear),
+      generateAdditionalResults_(generateAdditionalResults) {}
 
 bool NumericLgmMultiLegOptionEngineBase::instrumentIsHandled(const MultiLegOption& m,
                                                              std::vector<std::string>& messages) {
@@ -545,6 +549,12 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
     RandomVariable provisionalNpv(solver_->gridSize(), 0.0);
     RandomVariable provisionalNpvNonCached(solver_->gridSize(), 0.0);
 
+    std::vector<RandomVariable> europeanOptionNpv;
+    if (generateAdditionalResults_) {
+        europeanOptionNpv.resize(optionTimes.size(), RandomVariable(solver_->gridSize(), 0.0));
+    }
+    Size europeanOptionCounter = optionTimes.size() - 1;
+
     std::vector<RandomVariable> cache(cashflows.size());
 
     for (auto it = timeGrid.rbegin(); it != timeGrid.rend(); ++it) {
@@ -598,6 +608,10 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
                 getRebatePv(lgm, t_from, state, discountCurve_, rebatedExercise,
                             exercise_->type() == Exercise::American ? Null<Date>() : optionDates.at(t_from));
             optionNpv = max(optionNpv, underlyingNpv + provisionalNpv + provisionalNpvNonCached + rebateNpv);
+            if(generateAdditionalResults_) {
+                europeanOptionNpv[europeanOptionCounter--] =
+                    max(0.0, underlyingNpv + provisionalNpv + provisionalNpvNonCached + rebateNpv);
+            }
         }
 
         // roll back
@@ -605,6 +619,10 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
         if (t_from != t_to) {
             underlyingNpv = solver_->rollback(underlyingNpv, t_from, t_to);
             optionNpv = solver_->rollback(optionNpv, t_from, t_to);
+            if (generateAdditionalResults_) {
+                for (auto& e : europeanOptionNpv)
+                    e = solver_->rollback(e, t_from, t_to);
+            }
             for (auto& c : cache) {
                 if (!c.initialised())
                     continue;
@@ -627,38 +645,55 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
     }
     underlyingNpv_ += provisionalNpvNonCached.at(0);
 
-    additionalResults_ = getAdditionalResultsMap(solver_->model()->getCalibrationInfo());
+    if (generateAdditionalResults_) {
+        additionalResults_ = getAdditionalResultsMap(solver_->model()->getCalibrationInfo());
 
-    if (rebatedExercise) {
-        for (Size i = 0; i < rebatedExercise->dates().size(); ++i) {
-            std::ostringstream d;
-            d << QuantLib::io::iso_date(rebatedExercise->dates()[i]);
-            additionalResults_["exerciseFee_" + d.str()] = -rebatedExercise->rebate(i);
+        if (rebatedExercise) {
+            for (Size i = 0; i < rebatedExercise->dates().size(); ++i) {
+                std::ostringstream d;
+                d << QuantLib::io::iso_date(rebatedExercise->dates()[i]);
+                additionalResults_["exerciseFee_" + d.str()] = -rebatedExercise->rebate(i);
+            }
         }
+
+        Real maxEuropeanNpv = 0.0;
+        Real maxEuropeanTime;
+        Date maxEuropeanDate;
+        for(Size i=0;i<europeanOptionNpv.size();++i) {
+            additionalResults_["europeanOptionNpv_" + std::to_string(i)] = europeanOptionNpv[i].at(0);
+            if(europeanOptionNpv[i].at(0) > maxEuropeanNpv) {
+                maxEuropeanNpv = europeanOptionNpv[i].at(0);
+                maxEuropeanTime = *std::next(optionTimes.begin(), i);
+                if (auto f = optionDates.find(maxEuropeanTime); f != optionDates.end()) {
+                    maxEuropeanDate = f->second;
+                }
+            }
+        }
+        additionalResults_["europeanOptionNpvMax"] = maxEuropeanNpv;
+        additionalResults_["euroepanOptionNpvMax_optionTime"] = maxEuropeanTime;
+        additionalResults_["euroepanOptionNpvMax_optionDate"] = maxEuropeanDate;
     }
 
 } // NumericLgmMultiLegOptionEngineBase::calculate()
 
-NumericLgmMultiLegOptionEngine::NumericLgmMultiLegOptionEngine(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model,
-                                                               const Real sy, const Size ny, const Real sx,
-                                                               const Size nx,
-                                                               const Handle<YieldTermStructure>& discountCurve,
-                                                               const Size americanExerciseTimeStepsPerYear)
+NumericLgmMultiLegOptionEngine::NumericLgmMultiLegOptionEngine(
+    const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const Real sy, const Size ny, const Real sx,
+    const Size nx, const Handle<YieldTermStructure>& discountCurve, const Size americanExerciseTimeStepsPerYear,
+    const bool generateAdditionalResults)
     : NumericLgmMultiLegOptionEngineBase(QuantLib::ext::make_shared<LgmConvolutionSolver2>(model, sy, ny, sx, nx),
-                                         discountCurve, americanExerciseTimeStepsPerYear) {
+                                         discountCurve, americanExerciseTimeStepsPerYear, generateAdditionalResults) {
     registerWith(solver_->model());
     registerWith(discountCurve_);
 }
 
-NumericLgmMultiLegOptionEngine::NumericLgmMultiLegOptionEngine(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model,
-                                                               const Real maxTime, const QuantLib::FdmSchemeDesc scheme,
-                                                               const Size stateGridPoints, const Size timeStepsPerYear,
-                                                               const Real mesherEpsilon,
-                                                               const Handle<YieldTermStructure>& discountCurve,
-                                                               const Size americanExerciseTimeStepsPerYear)
-    : NumericLgmMultiLegOptionEngineBase(
-          QuantLib::ext::make_shared<LgmFdSolver>(model, maxTime, scheme, stateGridPoints, timeStepsPerYear, mesherEpsilon),
-          discountCurve, americanExerciseTimeStepsPerYear) {
+NumericLgmMultiLegOptionEngine::NumericLgmMultiLegOptionEngine(
+    const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const Real maxTime,
+    const QuantLib::FdmSchemeDesc scheme, const Size stateGridPoints, const Size timeStepsPerYear,
+    const Real mesherEpsilon, const Handle<YieldTermStructure>& discountCurve,
+    const Size americanExerciseTimeStepsPerYear, const bool generateAdditionalResults)
+    : NumericLgmMultiLegOptionEngineBase(QuantLib::ext::make_shared<LgmFdSolver>(
+                                             model, maxTime, scheme, stateGridPoints, timeStepsPerYear, mesherEpsilon),
+                                         discountCurve, americanExerciseTimeStepsPerYear, generateAdditionalResults) {
     registerWith(solver_->model());
     registerWith(discountCurve_);
 }
@@ -679,16 +714,19 @@ void NumericLgmMultiLegOptionEngine::calculate() const {
 
     results_.value = npv_;
     results_.underlyingNpv = underlyingNpv_;
-    results_.additionalResults = additionalResults_;
-    results_.additionalResults["underlyingNpv"] = underlyingNpv_;
+    if (generateAdditionalResults_) {
+        results_.additionalResults = additionalResults_;
+        results_.additionalResults["underlyingNpv"] = underlyingNpv_;
+    }
 } // NumericLgmSwaptionEngine::calculate
 
 NumericLgmSwaptionEngine::NumericLgmSwaptionEngine(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model,
                                                    const Real sy, const Size ny, const Real sx, const Size nx,
                                                    const Handle<YieldTermStructure>& discountCurve,
-                                                   const Size americanExerciseTimeStepsPerYear)
+                                                   const Size americanExerciseTimeStepsPerYear,
+                                                   const bool generateAdditionalResults)
     : NumericLgmMultiLegOptionEngineBase(QuantLib::ext::make_shared<LgmConvolutionSolver2>(model, sy, ny, sx, nx),
-                                         discountCurve, americanExerciseTimeStepsPerYear) {
+                                         discountCurve, americanExerciseTimeStepsPerYear, generateAdditionalResults) {
     registerWith(solver_->model());
     registerWith(discountCurve_);
 }
@@ -698,10 +736,11 @@ NumericLgmSwaptionEngine::NumericLgmSwaptionEngine(const QuantLib::ext::shared_p
                                                    const Size stateGridPoints, const Size timeStepsPerYear,
                                                    const Real mesherEpsilon,
                                                    const Handle<YieldTermStructure>& discountCurve,
-                                                   const Size americanExerciseTimeStepsPerYear)
-    : NumericLgmMultiLegOptionEngineBase(
-          QuantLib::ext::make_shared<LgmFdSolver>(model, maxTime, scheme, stateGridPoints, timeStepsPerYear, mesherEpsilon),
-          discountCurve, americanExerciseTimeStepsPerYear) {
+                                                   const Size americanExerciseTimeStepsPerYear,
+                                                   const bool generateAdditionalResults)
+    : NumericLgmMultiLegOptionEngineBase(QuantLib::ext::make_shared<LgmFdSolver>(
+                                             model, maxTime, scheme, stateGridPoints, timeStepsPerYear, mesherEpsilon),
+                                         discountCurve, americanExerciseTimeStepsPerYear, generateAdditionalResults) {
     registerWith(solver_->model());
     registerWith(discountCurve_);
 }
@@ -724,26 +763,30 @@ void NumericLgmSwaptionEngine::calculate() const {
     NumericLgmMultiLegOptionEngineBase::calculate();
 
     results_.value = npv_;
-    results_.additionalResults = additionalResults_;
-    results_.additionalResults["underlyingNpv"] = underlyingNpv_;
+    if (generateAdditionalResults_) {
+        results_.additionalResults = additionalResults_;
+        results_.additionalResults["underlyingNpv"] = underlyingNpv_;
+    }
 } // NumericLgmSwaptionEngine::calculate
 
 NumericLgmNonstandardSwaptionEngine::NumericLgmNonstandardSwaptionEngine(
-    const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const Real sy, const Size ny, const Real sx, const Size nx,
-    const Handle<YieldTermStructure>& discountCurve, const Size americanExerciseTimeStepsPerYear)
+    const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const Real sy, const Size ny, const Real sx,
+    const Size nx, const Handle<YieldTermStructure>& discountCurve, const Size americanExerciseTimeStepsPerYear,
+    const bool generateAdditionalResults)
     : NumericLgmMultiLegOptionEngineBase(QuantLib::ext::make_shared<LgmConvolutionSolver2>(model, sy, ny, sx, nx),
-                                         discountCurve, americanExerciseTimeStepsPerYear) {
+                                         discountCurve, americanExerciseTimeStepsPerYear, generateAdditionalResults) {
     registerWith(solver_->model());
     registerWith(discountCurve_);
 }
 
 NumericLgmNonstandardSwaptionEngine::NumericLgmNonstandardSwaptionEngine(
-    const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const Real maxTime, const QuantLib::FdmSchemeDesc scheme,
-    const Size stateGridPoints, const Size timeStepsPerYear, const Real mesherEpsilon,
-    const Handle<YieldTermStructure>& discountCurve, const Size americanExerciseTimeStepsPerYear)
-    : NumericLgmMultiLegOptionEngineBase(
-          QuantLib::ext::make_shared<LgmFdSolver>(model, maxTime, scheme, stateGridPoints, timeStepsPerYear, mesherEpsilon),
-          discountCurve, americanExerciseTimeStepsPerYear) {
+    const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const Real maxTime,
+    const QuantLib::FdmSchemeDesc scheme, const Size stateGridPoints, const Size timeStepsPerYear,
+    const Real mesherEpsilon, const Handle<YieldTermStructure>& discountCurve,
+    const Size americanExerciseTimeStepsPerYear, const bool generateAdditionalResults)
+    : NumericLgmMultiLegOptionEngineBase(QuantLib::ext::make_shared<LgmFdSolver>(
+                                             model, maxTime, scheme, stateGridPoints, timeStepsPerYear, mesherEpsilon),
+                                         discountCurve, americanExerciseTimeStepsPerYear, generateAdditionalResults) {
     registerWith(solver_->model());
     registerWith(discountCurve_);
 }
@@ -766,8 +809,10 @@ void NumericLgmNonstandardSwaptionEngine::calculate() const {
     NumericLgmMultiLegOptionEngineBase::calculate();
 
     results_.value = npv_;
-    results_.additionalResults = additionalResults_;
-    results_.additionalResults["underlyingNpv"] = underlyingNpv_;
+    if (generateAdditionalResults_) {
+        results_.additionalResults = additionalResults_;
+        results_.additionalResults["underlyingNpv"] = underlyingNpv_;
+    }
 } // NumericLgmSwaptionEngine::calculate
 
 } // namespace QuantExt

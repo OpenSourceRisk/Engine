@@ -120,6 +120,7 @@ struct HistoricalSimulationVarVariables : public VarVariables {
     bool tradePnL_ = false;
     bool includeExpectedShortfall_ = false;
     bool riskFactorBreakdown_ = false;
+    bool riskClassBreakdown_ = true;
 };
 
 class HistoricalSimulationVarAnalyticImpl : public VarAnalyticImpl {
@@ -134,6 +135,7 @@ protected:
     void setVarReport(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) override;
     void addAdditionalReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) override;
     bool riskFactorBreakdown_ = false;
+    bool riskClassBreakdown_ = true;
     bool allowPartialScenarios_ = false;
 };
 

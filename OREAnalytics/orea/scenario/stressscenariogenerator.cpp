@@ -165,7 +165,11 @@ void StressScenarioGenerator::addFxShifts(StressTestScenarioData::StressTestData
 
         RiskFactorKey key(RiskFactorKey::KeyType::FXSpot, ccypair);
         Real rate = scenario->get(key);
-        Real newRate = relShift ? rate * (1.0 + size) : (rate + size);
+        Real newRate;
+        if (type == ShiftType::EqualTo)
+            newRate = size;
+        else
+            newRate = relShift ? rate * (1.0 + size) : (rate + size);
         scenario->add(RiskFactorKey(RiskFactorKey::KeyType::FXSpot, ccypair),
                       useSpreadedTermStructures_ ? newRate / rate : newRate);
     }
@@ -190,8 +194,11 @@ void StressScenarioGenerator::addEquityShifts(StressTestScenarioData::StressTest
 
         RiskFactorKey key(RiskFactorKey::KeyType::EquitySpot, equity);
         Real rate = baseScenarioAbsolute_->get(key);
-
-        Real newRate = relShift ? rate * (1.0 + size) : (rate + size);
+        Real newRate;
+        if (type == ShiftType::EqualTo)
+            newRate = size;
+        else
+            newRate = relShift ? rate * (1.0 + size) : (rate + size);
         scenario->add(RiskFactorKey(RiskFactorKey::KeyType::EquitySpot, equity),
                       useSpreadedTermStructures_ ? newRate / rate : newRate);
     }
@@ -234,7 +241,16 @@ void StressScenarioGenerator::addCommodityCurveShifts(StressTestScenarioData::St
             basePrices[j] = baseScenarioAbsolute_->get(key);
         }
 
-        std::vector<Period> shiftTenors = data.shiftTenors;
+        std::vector<Period> shiftTenors;
+        for (const auto& t : data.shiftTenors) {
+            if (auto p = std::get_if<Period>(&t)) {
+                shiftTenors.push_back(*p);
+            } else {
+                QL_FAIL("Unsupported stresstest shift tenor type '" << t << "' for commodity curve '" << commodity
+                                                                    << "'");
+            }
+        }
+
         QL_REQUIRE(shiftTenors.size() > 0, "Commodity shift tenors not specified");
         std::vector<Real> shifts = data.shifts;
         QL_REQUIRE(shiftTenors.size() == shifts.size(), "shift tenor and shift size vectors do not match");
@@ -244,7 +260,8 @@ void StressScenarioGenerator::addCommodityCurveShifts(StressTestScenarioData::St
 
         // apply price shift at tenor point j
         for (Size j = 0; j < shiftTenors.size(); ++j)
-            applyShift(j, shifts[j], true, shiftType, shiftTimes, basePrices, times, shiftedPrices, j == 0 ? true : false);
+            applyShift(j, shifts[j], true, shiftType, shiftTimes, basePrices, times, shiftedPrices,
+                        j == 0 ? true : false);
 
         // store shifted commodity price curve in the scenario
         for (Size k = 0; k < n_ten; ++k) {
@@ -282,7 +299,7 @@ void StressScenarioGenerator::addDiscountCurveShifts(StressTestScenarioData::Str
         StressTestScenarioData::CurveShiftData data = *d.second;
         ShiftType shiftType = data.shiftType;
         //DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(ccy));
-	DayCounter dc;
+	    DayCounter dc;
         if(auto s = simMarket_.lock()) {
             dc = s->discountCurve(ccy)->dayCounter();
         } else {
@@ -297,17 +314,33 @@ void StressScenarioGenerator::addDiscountCurveShifts(StressTestScenarioData::Str
             zeros[j] = -std::log(quote) / times[j];
         }
 
-        std::vector<Period> shiftTenors = data.shiftTenors;
+        std::vector<Period> shiftTenors;
+        for (const auto& t : data.shiftTenors) {
+            if (auto p = std::get_if<Period>(&t)) {
+                shiftTenors.push_back(*p);
+            } else {
+                QL_FAIL("Unsupported stresstest shift tenor type '" << t <<  "' for discount curve '" << ccy << "'");
+            }
+        }
         QL_REQUIRE(shiftTenors.size() > 0, "Discount shift tenors not specified");
         std::vector<Real> shifts = data.shifts;
         QL_REQUIRE(shiftTenors.size() == shifts.size(), "shift tenor and shift size vectors do not match");
         std::vector<Time> shiftTimes(shiftTenors.size());
-        for (Size j = 0; j < shiftTenors.size(); ++j)
+        bool eqShift = shiftType == ShiftType::EqualTo;
+        bool givenZeros = data.shiftingZeros;
+
+        for (Size j = 0; j < shiftTenors.size(); ++j) {
             shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
+            // if we are given fixed discount curves, convert them to their zeros
+            if (eqShift && !givenZeros) {
+                shifts[j] = -std::log(shifts[j]) / shiftTimes[j];
+            }
+        }
 
         // apply zero rate shift at tenor point j
         for (Size j = 0; j < shiftTenors.size(); ++j)
-            applyShift(j, shifts[j], true, shiftType, shiftTimes, zeros, times, shiftedZeros, j == 0 ? true : false);
+            applyShift(j, shifts[j], true, shiftType, shiftTimes, zeros, times, shiftedZeros,
+                        j == 0 ? true : false);
 
         // store shifted discount curve in the scenario
         for (Size k = 0; k < n_ten; ++k) {
@@ -346,8 +379,10 @@ void StressScenarioGenerator::addSurvivalProbabilityShifts(StressTestScenarioDat
 
         StressTestScenarioData::CurveShiftData data = *d.second;
         ShiftType shiftType = data.shiftType;
+        bool eqShift = shiftType == ShiftType::EqualTo;
+        bool givenZeros = data.shiftingZeros;
         //DayCounter dc = parseDayCounter(simMarketData_->defaultCurveDayCounter(name));
-	DayCounter dc;
+	    DayCounter dc;
         if(auto s = simMarket_.lock()) {
             dc = s->defaultCurve(name)->curve()->dayCounter();
         } else {
@@ -362,17 +397,28 @@ void StressScenarioGenerator::addSurvivalProbabilityShifts(StressTestScenarioDat
             zeros[j] = -std::log(quote) / times[j];
         }
 
-        std::vector<Period> shiftTenors = data.shiftTenors;
+        std::vector<Period> shiftTenors;
+        for (const auto& t : data.shiftTenors) {
+            if (auto p = std::get_if<Period>(&t)) {
+                shiftTenors.push_back(*p);
+            } else {
+                QL_FAIL("Unsupported stresstest shift tenor type '" << t << "' for survival probability curve '" << name
+                                                                    << "'");
+            }
+        }
         QL_REQUIRE(shiftTenors.size() > 0, "Survival Probability shift tenors not specified");
         std::vector<Real> shifts = data.shifts;
         QL_REQUIRE(shiftTenors.size() == shifts.size(), "shift tenor and shift size vectors do not match");
         std::vector<Time> shiftTimes(shiftTenors.size());
-        for (Size j = 0; j < shiftTenors.size(); ++j)
+        for (Size j = 0; j < shiftTenors.size(); ++j) {
             shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
-
+            if (eqShift && !givenZeros)
+                shifts[j] = -std::log(shifts[j]) / shiftTimes[j];
+        }
         // apply zero rate shift at tenor point j
         for (Size j = 0; j < shiftTenors.size(); ++j)
-            applyShift(j, shifts[j], true, shiftType, shiftTimes, zeros, times, shiftedZeros, j == 0 ? true : false);
+            applyShift(j, shifts[j], true, shiftType, shiftTimes, zeros, times, shiftedZeros,
+                        j == 0 ? true : false);
 
         // store shifted discount curve in the scenario
         for (Size k = 0; k < n_ten; ++k) {
@@ -414,7 +460,7 @@ void StressScenarioGenerator::addIndexCurveShifts(StressTestScenarioData::Stress
         StressTestScenarioData::CurveShiftData data = *d.second;
         ShiftType shiftType = data.shiftType;
         //DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(indexName));
-	DayCounter dc;
+	    DayCounter dc;
         if(auto s = simMarket_.lock()) {
             dc = s->iborIndex(indexName)->forwardingTermStructure()->dayCounter();
         } else {
@@ -429,13 +475,26 @@ void StressScenarioGenerator::addIndexCurveShifts(StressTestScenarioData::Stress
             zeros[j] = -std::log(quote) / times[j];
         }
 
-        std::vector<Period> shiftTenors = data.shiftTenors;
+        std::vector<Period> shiftTenors;
+        for (const auto& t : data.shiftTenors) {
+            if (auto p = std::get_if<Period>(&t)) {
+                shiftTenors.push_back(*p);
+            } else {
+                QL_FAIL("Unsupported stresstest shift tenor type '" << t << "' for index curve '" << indexName << "'");
+            }
+        }
         QL_REQUIRE(shiftTenors.size() > 0, "Index curve shift tenors not specified");
         std::vector<Real> shifts = data.shifts;
         QL_REQUIRE(shiftTenors.size() == shifts.size(), "shift tenor and shift size vectors do not match");
         std::vector<Time> shiftTimes(shiftTenors.size());
-        for (Size j = 0; j < shiftTenors.size(); ++j)
+        bool eqShift = shiftType == ShiftType::EqualTo;
+        bool givenZeros = data.shiftingZeros;
+
+        for (Size j = 0; j < shiftTenors.size(); ++j) {
             shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
+            if (eqShift && !givenZeros)
+                shifts[j] = -std::log(shifts[j]) / shiftTimes[j];
+        }
 
         for (Size j = 0; j < shiftTenors.size(); ++j)
             applyShift(j, shifts[j], true, shiftType, shiftTimes, zeros, times, shiftedZeros, j == 0 ? true : false);
@@ -479,8 +538,10 @@ void StressScenarioGenerator::addYieldCurveShifts(StressTestScenarioData::Stress
 
         StressTestScenarioData::CurveShiftData data = *d.second;
         ShiftType shiftType = data.shiftType;
+        bool eqShift = shiftType == ShiftType::EqualTo;
+        bool givenZeros = data.shiftingZeros;
         //DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(name));
-	DayCounter dc;
+	    DayCounter dc;
         if(auto s = simMarket_.lock()) {
             dc = s->yieldCurve(name)->dayCounter();
         } else {
@@ -495,19 +556,32 @@ void StressScenarioGenerator::addYieldCurveShifts(StressTestScenarioData::Stress
             zeros[j] = -std::log(quote) / times[j];
         }
 
-        std::vector<Period> shiftTenors = data.shiftTenors;
+        std::vector<Period> shiftTenors;
+        for (const auto& t : data.shiftTenors) {
+            if (auto p = std::get_if<Period>(&t)) {
+                shiftTenors.push_back(*p);
+            } else {
+                QL_FAIL("Unsupported stresstest shift tenor type '" << t << "' for yield curve '" << name << "'");
+            }
+        }
         QL_REQUIRE(shiftTenors.size() > 0, "Yield curve shift tenors not specified");
         std::vector<Real> shifts = data.shifts;
         QL_REQUIRE(shiftTenors.size() == shifts.size(), "shift tenor and shift size vectors do not match");
         std::vector<Time> shiftTimes(shiftTenors.size());
-        for (Size j = 0; j < shiftTenors.size(); ++j)
-            shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
-            // DLOG("apply yield curve shift " << shifts[j] << " to curve " << name << " at tenor " << shiftTenors[j]
+            shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
+            if (eqShift && !givenZeros)
+                shifts[j] = -std::log(shifts[j]) / shiftTimes[j];
+        }
+
+        for (Size j = 0; j < shiftTenors.size(); ++j) {
+            // DLOG("apply yield curve shift " << shifts[j] << " to curve " << name << " at tenor " <<
+            // shiftTenors[j]
             //                                 << ", time " << shiftTimes[j]);
             // apply zero rate shift at tenor point j
-            applyShift(j, shifts[j], true, shiftType, shiftTimes, zeros, times, shiftedZeros, j == 0 ? true : false);
+            applyShift(j, shifts[j], true, shiftType, shiftTimes, zeros, times, shiftedZeros,
+                        j == 0 ? true : false);
         }
 
         // store shifted discount curve in the scenario
@@ -597,7 +671,7 @@ void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestD
             size_t weightPos = std::distance(shiftTenors.begin(), it);
             double referenceWeight = data.weights[weightPos];
             QL_REQUIRE(referenceWeight > 0.0 && !QuantLib::close_enough(referenceWeight, 0.0),
-                       "Only strict positive reference weight is allowed");
+                        "Only strict positive reference weight is allowed");
             const double weightedRefShift = referenceShift / referenceWeight;
             DLOG("Compute shifts from weights")
             DLOG("j,pillar,time,shift")
@@ -702,7 +776,8 @@ void StressScenarioGenerator::addEquityVolShifts(StressTestScenarioData::StressT
         // FIXME: Apply same shifts to non-ATM vectors if present
         for (Size j = 0; j < shiftTenors.size(); ++j) {
             // apply shift at tenor point j
-            applyShift(j, shifts[j], true, shiftType, shiftTimes, values, times, shiftedValues, j == 0 ? true : false);
+            applyShift(j, shifts[j], true, shiftType, shiftTimes, values, times, shiftedValues,
+                        j == 0 ? true : false);
         }
 
         for (Size k = 0; k < n_eqvol_exp; ++k) {
@@ -865,12 +940,12 @@ void StressScenarioGenerator::addSwaptionVolShifts(StressTestScenarioData::Stres
                     shift = data.parallelShiftSize;
                 else {
                     QL_REQUIRE(shifts.find(key) != shifts.end(), "swaption vol shift not found for expiry "
-                                                                     << data.shiftExpiries[j] << " and term "
-                                                                     << data.shiftTerms[k]);
+                                                                        << data.shiftExpiries[j] << " and term "
+                                                                        << data.shiftTerms[k]);
                     shift = shifts[key];
                 }
-                applyShift(j, k, shift, true, shiftType, shiftExpiryTimes, shiftTermTimes, volExpiryTimes, volTermTimes,
-                           volData, shiftedVolData, j == 0 && k == 0);
+                applyShift(j, k, shift, true, shiftType, shiftExpiryTimes, shiftTermTimes, volExpiryTimes,
+                            volTermTimes, volData, shiftedVolData, j == 0 && k == 0);
             }
         }
 
@@ -1004,7 +1079,11 @@ void StressScenarioGenerator::addSecuritySpreadShifts(StressTestScenarioData::St
         RiskFactorKey key(RiskFactorKey::KeyType::SecuritySpread, bond);
         Real base_spread = baseScenarioAbsolute_->get(key);
 
-        Real newSpread = relShift ? base_spread * (1.0 + size) : (base_spread + size);
+        Real newSpread;
+        if (type == ShiftType::EqualTo)
+            newSpread = size;
+        else
+            newSpread = relShift ? base_spread * (1.0 + size) : (base_spread + size);
         scenario->add(RiskFactorKey(RiskFactorKey::KeyType::SecuritySpread, bond),
                       useSpreadedTermStructures_ ? newSpread - base_spread : newSpread);
     }
@@ -1029,7 +1108,11 @@ void StressScenarioGenerator::addRecoveryRateShifts(StressTestScenarioData::Stre
 
         RiskFactorKey key(RiskFactorKey::KeyType::RecoveryRate, isin);
         Real base_recoveryRate = baseScenarioAbsolute_->get(key);
-        Real new_recoveryRate = relShift ? base_recoveryRate * (1.0 + size) : (base_recoveryRate + size);
+        Real new_recoveryRate;
+        if (type == ShiftType::EqualTo)
+            new_recoveryRate = size;
+        else
+            new_recoveryRate = relShift ? base_recoveryRate * (1.0 + size) : (base_recoveryRate + size);
         scenario->add(RiskFactorKey(RiskFactorKey::KeyType::RecoveryRate, isin),
                       useSpreadedTermStructures_ ? new_recoveryRate - base_recoveryRate
                                                                : new_recoveryRate);

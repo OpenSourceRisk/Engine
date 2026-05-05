@@ -19,7 +19,6 @@
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
 #include <ql/quotes/simplequote.hpp>
-#include <ql/termstructures/volatility/equityfx/blackvariancetimeextrapolation.hpp>
 #include <ql/termstructures/yield/forwardcurve.hpp>
 #include <ql/utilities/dataformatters.hpp>
 #include <qle/termstructures/blackvariancesurfacemoneyness.hpp>
@@ -31,10 +30,11 @@ namespace QuantExt {
 BlackVarianceSurfaceMoneyness::BlackVarianceSurfaceMoneyness(
     const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times, const std::vector<Real>& moneyness,
     const std::vector<std::vector<Handle<Quote>>>& blackVolMatrix, const DayCounter& dayCounter, bool stickyStrike,
-    bool flatExtrapMoneyness, BlackVolTimeExtrapolation timeExtrapolation, const VolatilityType type, const Real shift)
+    bool flatExtrapMoneyness, BlackVolTimeExtrapolation::Type timeExtrapolationType, const VolatilityType type,
+    const Real shift)
     : BlackVarianceTermStructure(0, cal, Following, dayCounter, type, shift), stickyStrike_(stickyStrike), spot_(spot),
       times_(times), moneyness_(moneyness), flatExtrapMoneyness_(flatExtrapMoneyness),
-      timeExtrapolation_(timeExtrapolation), quotes_(blackVolMatrix) {
+      timeExtrapolationType_(timeExtrapolationType), quotes_(blackVolMatrix) {
     init();
 }
 
@@ -42,11 +42,10 @@ BlackVarianceSurfaceMoneyness::BlackVarianceSurfaceMoneyness(
     const Date& referenceDate, const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times,
     const std::vector<Real>& moneyness, const std::vector<std::vector<Handle<Quote>>>& blackVolMatrix,
     const DayCounter& dayCounter, bool stickyStrike, bool flatExtrapMoneyness,
-    BlackVolTimeExtrapolation timeExtrapolation, const VolatilityType type, const Real shift)
-    : BlackVarianceTermStructure(referenceDate, cal, Following, dayCounter, type, shift), 
-      stickyStrike_(stickyStrike), spot_(spot),
-      times_(times), moneyness_(moneyness), flatExtrapMoneyness_(flatExtrapMoneyness),
-      timeExtrapolation_(timeExtrapolation), quotes_(blackVolMatrix) {
+    BlackVolTimeExtrapolation::Type timeExtrapolationType, const VolatilityType type, const Real shift)
+    : BlackVarianceTermStructure(referenceDate, cal, Following, dayCounter, type, shift), stickyStrike_(stickyStrike),
+      spot_(spot), times_(times), moneyness_(moneyness), flatExtrapMoneyness_(flatExtrapMoneyness),
+      timeExtrapolationType_(timeExtrapolationType), quotes_(blackVolMatrix) {
     init();
 }
 
@@ -113,31 +112,28 @@ Real BlackVarianceSurfaceMoneyness::blackVarianceImpl(Time t, Real strike) const
 }
 
 Real BlackVarianceSurfaceMoneyness::blackVarianceMoneyness(Time t, Real m) const {
-    if (t <= times_.back() || timeExtrapolation_ == BlackVolTimeExtrapolation::UseInterpolatorVariance) {
+    if (t <= times_.back()) {
         return varianceSurface_(t, m, true);
-    } else if (t > times_.back() && timeExtrapolation_ == BlackVolTimeExtrapolation::FlatVolatility) {
-        return timeExtrapolatationBlackVarianceFlat(t, m, times_, varianceSurface_);
-    } else if (t > times_.back() && timeExtrapolation_ == BlackVolTimeExtrapolation::UseInterpolatorVolatility) {
-        return timeExtrapolatationBlackVarianceInVolatility(t, m, times_, varianceSurface_);
-    } else {
-        QL_FAIL("Unknown time extrapolation method");
-    }
+    } else
+        return BlackVolTimeExtrapolation::extrapolatedVariance(
+            timeExtrapolationType_, t, m, times_, [this](Time t, Real m) { return varianceSurface_(t, m, true); });
 }
 
 BlackVarianceSurfaceMoneynessSpot::BlackVarianceSurfaceMoneynessSpot(
     const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times, const std::vector<Real>& moneyness,
     const std::vector<std::vector<Handle<Quote>>>& blackVolMatrix, const DayCounter& dayCounter, bool stickyStrike,
-    bool flatExtrapMoneyness, BlackVolTimeExtrapolation timeExtrapolation, const VolatilityType type, const Real shift)
+    bool flatExtrapMoneyness, BlackVolTimeExtrapolation::Type timeExtrapolationType, const VolatilityType type,
+    const Real shift)
     : BlackVarianceSurfaceMoneyness(cal, spot, times, moneyness, blackVolMatrix, dayCounter, stickyStrike,
-                                    flatExtrapMoneyness, timeExtrapolation, type, shift) {}
+                                    flatExtrapMoneyness, timeExtrapolationType, type, shift) {}
 
 BlackVarianceSurfaceMoneynessSpot::BlackVarianceSurfaceMoneynessSpot(
     const Date& referenceDate, const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times,
     const std::vector<Real>& moneyness, const std::vector<std::vector<Handle<Quote>>>& blackVolMatrix,
-    const DayCounter& dayCounter, bool stickyStrike, bool flatExtrapMoneyness, BlackVolTimeExtrapolation timeExtrapolation,
-    const VolatilityType type, const Real shift)
+    const DayCounter& dayCounter, bool stickyStrike, bool flatExtrapMoneyness,
+    BlackVolTimeExtrapolation::Type timeExtrapolationType, const VolatilityType type, const Real shift)
     : BlackVarianceSurfaceMoneyness(referenceDate, cal, spot, times, moneyness, blackVolMatrix, dayCounter,
-                                    stickyStrike, flatExtrapMoneyness, timeExtrapolation, type, shift) {}
+                                    stickyStrike, flatExtrapMoneyness, timeExtrapolationType, type, shift) {}
 
 Real BlackVarianceSurfaceMoneynessSpot::moneyness(Time, Real strike) const {
     if (strike == Null<Real>() || strike == 0) {
@@ -159,9 +155,9 @@ BlackVarianceSurfaceMoneynessForward::BlackVarianceSurfaceMoneynessForward(
     const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times, const std::vector<Real>& moneyness,
     const std::vector<std::vector<Handle<Quote>>>& blackVolMatrix, const DayCounter& dayCounter,
     const Handle<YieldTermStructure>& forTS, const Handle<YieldTermStructure>& domTS, bool stickyStrike,
-    bool flatExtrapMoneyness, BlackVolTimeExtrapolation timeExtrapolation, const VolatilityType type, const Real shift)
+    bool flatExtrapMoneyness, BlackVolTimeExtrapolation::Type timeExtrapolationType, const VolatilityType type, const Real shift)
     : BlackVarianceSurfaceMoneyness(cal, spot, times, moneyness, blackVolMatrix, dayCounter, stickyStrike,
-                                    flatExtrapMoneyness, timeExtrapolation, type, shift),
+                                    flatExtrapMoneyness, timeExtrapolationType, type, shift),
       forTS_(forTS), domTS_(domTS) {
     init();
 }
@@ -170,10 +166,10 @@ BlackVarianceSurfaceMoneynessForward::BlackVarianceSurfaceMoneynessForward(
     const Date& referenceDate, const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times,
     const std::vector<Real>& moneyness, const std::vector<std::vector<Handle<Quote>>>& blackVolMatrix,
     const DayCounter& dayCounter, const Handle<YieldTermStructure>& forTS, const Handle<YieldTermStructure>& domTS,
-    bool stickyStrike, bool flatExtrapMoneyness, BlackVolTimeExtrapolation timeExtrapolation,
+    bool stickyStrike, bool flatExtrapMoneyness, BlackVolTimeExtrapolation::Type timeExtrapolationType,
     const VolatilityType type, const Real shift)
     : BlackVarianceSurfaceMoneyness(referenceDate, cal, spot, times, moneyness, blackVolMatrix, dayCounter,
-                                    stickyStrike, flatExtrapMoneyness, timeExtrapolation, type, shift),
+                                    stickyStrike, flatExtrapMoneyness, timeExtrapolationType, type, shift),
       forTS_(forTS), domTS_(domTS) {
     init();
 }

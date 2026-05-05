@@ -102,5 +102,12 @@ private:
                                        std::map<std::string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves);
 };
 
+//! Shared logic to create credit curve reference data from CDS conventions.
+QuantExt::CreditCurve::RefData createRefData(const QuantLib::Period& indexTerm,
+    const QuantLib::Date& startDate,
+    const QuantLib::ext::shared_ptr<CdsConvention>& cdsConvention,
+    QuantLib::Real runningSpread = QuantLib::Null<QuantLib::Real>(),
+    bool eom = false);
+
 } // namespace data
 } // namespace ore

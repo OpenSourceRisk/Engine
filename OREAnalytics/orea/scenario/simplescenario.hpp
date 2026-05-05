@@ -39,6 +39,7 @@ public:
         std::map<RiskFactorKey, std::size_t> keyIndex;
         std::map<std::pair<RiskFactorKey::KeyType, std::string>, std::vector<std::vector<QuantLib::Real>>> coordinates;
         std::size_t keysHash = 0;
+        void refreshKeysHash();
     };
 
     SimpleScenario() {}
@@ -69,7 +70,11 @@ public:
     void add(const RiskFactorKey& key, QuantLib::Real value) override;
     QuantLib::Real get(const RiskFactorKey& key) const override;
 
-    //! This does _not_ close the shared data
+    QuantLib::Size getIndex(const RiskFactorKey& key) const override;
+    QuantLib::Real get(const QuantLib::Size index) const override;
+    void add(const QuantLib::Size index, QuantLib::Real value) override;
+
+    //! This does _not_ clone the shared data
     QuantLib::ext::shared_ptr<Scenario> clone() const override;
 
     void setAbsolute(const bool isAbsolute) override;
