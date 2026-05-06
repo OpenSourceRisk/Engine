@@ -29,6 +29,32 @@ namespace analytics {
 
 void BaCvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) {
     inputs->loadParameterXML<NettingSetManager>(nettingSetManager_, "bacva", "csaFile");
+
+    // Set simmVersion if not already set — required before setSimmBucketMapperFromFile
+    std::string tmp;
+    inputs->loadParameter<std::string>(tmp, "bacva", "simmVersion");
+    if (!tmp.empty())
+        inputs->setSimmVersion(tmp);
+    else if (inputs->simmVersion().empty()) {
+        inputs->setSimmVersion("2.1");
+        WLOG("Setting SIMM version to " << inputs->simmVersion() << " for BA-CVA");
+    }
+
+    tmp = {};
+    inputs->loadParameter<std::string>(tmp, "bacva", "nameMappingInputFile");
+    if (!tmp.empty()) {
+        std::string nameMappingFile = (inputs->setupVariables().inputPath_ / tmp).generic_string();
+        inputs->setSimmNameMapperFromFile(nameMappingFile);
+        LOG("Loading SIMM name mapping from file " << nameMappingFile);
+    }
+
+    tmp = {};
+    inputs->loadParameter<std::string>(tmp, "bacva", "bucketMappingInputFile");
+    if (!tmp.empty()) {
+        std::string bucketMappingFile = (inputs->setupVariables().inputPath_ / tmp).generic_string();
+        inputs->setSimmBucketMapperFromFile(bucketMappingFile);
+        LOG("Loading SIMM bucket mapping from file " << bucketMappingFile);
+    }
 }
 
 void BaCvaAnalyticImpl::setUpConfigurations() {
