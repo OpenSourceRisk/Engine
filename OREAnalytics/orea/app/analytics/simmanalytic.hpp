@@ -22,6 +22,7 @@
 #pragma once
 
 #include <orea/app/analytic.hpp>
+#include <orea/app/inputvariables.hpp>
 #include <orea/simm/crif.hpp>
 #include <orea/app/analytics/crifanalytic.hpp>
 #include <orea/app/analytics/analyticfactory.hpp>
@@ -31,11 +32,15 @@ namespace analytics {
 
 class InputParameters;
 
+struct SimmVariables : public InputVariables {
+    void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
+};
+
 class SimmAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "SIMM";
 
-    SimmAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) {
+    SimmAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs, QuantLib::ext::make_shared<SimmVariables>()) {
         setLabel(LABEL);
     }
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
