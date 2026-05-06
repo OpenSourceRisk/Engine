@@ -190,6 +190,8 @@ void StressedSimmAnalyticImpl::runStressTest(
             CONSOLE("SIMM_STRESS: Apply scenario " << label);
             auto newAnalytic = ore::analytics::AnalyticFactory::instance().build("SIMM", inputs_, analytic()->analyticsManager(), false).second;
             newAnalytic->setUp();
+            newAnalytic->configurations().todaysMarketParams = analytic()->configurations().todaysMarketParams;
+            newAnalytic->configurations().simMarketParams = analytic()->configurations().simMarketParams;
             for( const auto& da : newAnalytic->allDependentAnalytics()){
                 DLOG("Set up dependent analytic " << da->label());
                 da->setUp();
