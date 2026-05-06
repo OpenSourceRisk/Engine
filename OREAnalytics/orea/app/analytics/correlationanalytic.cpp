@@ -43,7 +43,7 @@ void CorrelationVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<Inp
     vector<string> correlationAnalytics = {"correlation", "xva"};
 
     inputs->loadParameterXML<ScenarioSimMarketParameters>(simMarketParams_, correlationAnalytics,
-                                                              vector<string>({"simulationConfigFile", "simulationUri"}));
+                                                              vector<string>({"simulationConfigFile", "scenarioSimulationUri"}));
     inputs->loadParameterXML<SensitivityScenarioData>(sensiScenarioData_, correlationAnalytics, "sensitivityConfigFile");
 
     inputs->loadParameter<string>(lookbackPeriod_, correlationAnalytics,
@@ -57,8 +57,7 @@ void CorrelationVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<Inp
 
     inputs->loadParameter<bool>(horizonOverlappingPeriods_, correlationAnalytics, vector<string>({"horizonOverlappingPeriods", "mporOverlappingPeriods"}), false, parseBool);
     inputs->loadParameter<bool>(allowPartialScenarios_, correlationAnalytics, "allowPartialScenarios", false, parseBool);
-    inputs->loadParameter<string>(filterTenor_, correlationAnalytics, "filteredCorrelationScenarioTenor", false);
-    inputs->loadParameter<string>(filterTenorOverrides_, correlationAnalytics, "filteredCorrelationScenarioTenorOverrides", false);
+    inputs->loadParameter<string>(filterCamCorrelationScenarioTenor_, correlationAnalytics, "filterCamCorrelationScenarioTenor", false);
     
     TimePeriod hsPeriod = totalTimePeriod(vector<string>({lookbackPeriod_}), horizonDays_, horizonCalendar_);
     QL_REQUIRE(hsPeriod.numberOfContiguousParts() == 1,
@@ -68,26 +67,23 @@ void CorrelationVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<Inp
                                                  hsPeriod.endDates().front());
 
     // Apply tenor filter if specified
-    if (!filterTenor_.empty() && scenarioReader_ && simMarketParams_) {
-        Period tenor = parsePeriod(filterTenor_);
+    if (!filterCamCorrelationScenarioTenor_.empty() && scenarioReader_ && simMarketParams_) {
         auto factory = QuantLib::ext::make_shared<SimpleScenarioFactory>(true);
 
-        // Parse per-risk-factor tenor overrides if provided
-        std::map<std::string, Period> tenorOverrides;
-        if (!filterTenorOverrides_.empty()) {
-            // Expected format: {"KeyType/Name":"Tenor", ...}
-            std::istringstream iss(filterTenorOverrides_);
-            boost::property_tree::ptree pt;
-            boost::property_tree::json_parser::read_json(iss, pt);
-            for (const auto& [key, value] : pt) {
-                tenorOverrides[key] = parsePeriod(value.get_value<string>());
-                LOG("Tenor override: " << key << " -> " << value.get_value<string>());
-            }
+        // Parse JSON dict of regex patterns -> tenors
+        // Format: {"regex_pattern":"Tenor", ...}
+        std::vector<std::pair<std::string, Period>> regexTenors;
+        std::istringstream iss(filterCamCorrelationScenarioTenor_);
+        boost::property_tree::ptree pt;
+        boost::property_tree::json_parser::read_json(iss, pt);
+        for (const auto& [key, value] : pt) {
+            regexTenors.emplace_back(key, parsePeriod(value.get_value<string>()));
+            LOG("Tenor filter regex: " << key << " -> " << value.get_value<string>());
         }
 
-        scenarioReader_ = QuantLib::ext::make_shared<TenorFilteredScenarioReader>(scenarioReader_, simMarketParams_, tenor,
-                                                                                  factory, tenorOverrides);
-        LOG("Applied tenor filter " << filterTenor_ << " to correlation scenario reader");
+        scenarioReader_ = QuantLib::ext::make_shared<TenorFilteredScenarioReader>(scenarioReader_, simMarketParams_,
+                                                                                  factory, regexTenors);
+        LOG("Applied regex-based tenor filter to correlation scenario reader");
     }
 }
 

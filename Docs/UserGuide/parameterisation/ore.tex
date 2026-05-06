@@ -1156,8 +1156,7 @@ The {\tt Correlation} analytic provide computation of the correlation matrix bas
       <Parameter name="historicalScenarioFile">scenarios.csv</Parameter>
       <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
       <Parameter name="historicalPeriod">2016-12-30,2019-12-30</Parameter>
-      <Parameter name="filteredCorrelationScenarioTenor">2Y</Parameter>
-      <Parameter name="filteredCorrelationScenarioTenorOverrides">{"DiscountCurve/USD":"2Y", "IndexCurve/USD-FedFunds":"1Y"}</Parameter>
+      <Parameter name="filterCamCorrelationScenarioTenor">{"DiscountCurve/.*":"2Y", "IndexCurve/USD-FedFunds":"1Y"}</Parameter>
       <Parameter name="mporDays">10</Parameter>
       <Parameter name="mporCalendar">USD</Parameter>
       <Parameter name="outputFile">correlation.csv</Parameter>
@@ -1178,8 +1177,7 @@ The parameters have the following interpretation:
 \item {\tt historicalScenarioFile}: csv file containing the market scenarios for each date in the observation periods defined below; the granularity of the scenarios (e.g. discount and index curves, number of yield curve tenors) needs to match the simulation market definition above; each yield curve tenor scenario is represented as a discount factor.
 \item {\tt sensitivityConfigFile}: Sensitivity parameterisation for the sensitivity analysis on asofDate.
 \item {\tt historicalPeriod}: comma-separated date list, an even number of ordered dates is required (d1, d2, d3, d4, ...), where each pair (d1-d2, d3-d4, ...) defines the start and end of historical observation periods used.
-\item {\tt filteredCorrelationScenarioTenor}: Tenor used to filter the correlation output to a single representative tenor per yield curve risk factor.
-\item {\tt filteredCorrelationScenarioTenorOverrides}: JSON object mapping risk factor names to their representative tenors for the filtered correlation output, e.g. \verb+{"DiscountCurve/USD":"2Y", "IndexCurve/USD-FedFunds":"1Y"}+. This allows overriding the default {\tt filteredCorrelationScenarioTenor} on a per-risk-factor basis.
+\item {\tt filterCamCorrelationScenarioTenor}: JSON object mapping regex patterns to tenors for filtering correlation scenario output. Patterns are matched against risk factor keys (format ``KeyType/Name'') in reverse order (last entry has highest priority). If no pattern matches a risk factor, all tenors are included. Example: \verb+{"DiscountCurve/.*":"5Y", "DiscountCurve/USD/.*":"3Y", "IndexCurve/USD-FedFunds":"10Y"}+.
 \item {\tt mporDays}: Alternatively, the second date can be specified in terms of calendar days from asofDate.
 \item {\tt mporCalendar}: Calendar for computing the mporDate from asofDate and mporDays.
 \item {\tt outputFile}: Output file name

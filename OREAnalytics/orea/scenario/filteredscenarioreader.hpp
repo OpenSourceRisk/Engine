@@ -27,11 +27,14 @@
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/scenariofactory.hpp>
 
+#include <boost/optional.hpp>
 #include <ql/time/period.hpp>
 
 #include <map>
+#include <regex>
 #include <set>
 #include <string>
+#include <vector>
 
 namespace ore {
 namespace analytics {
@@ -77,7 +80,7 @@ protected:
 */
 class TenorFilteredScenarioReader : public FilteredScenarioReader {
 public:
-    /*! Constructor
+    /*! Constructor with default tenor and optional per-key overrides
         \param reader         The underlying scenario reader to wrap
         \param simParams      The simulation market parameters providing index-to-tenor mapping
         \param filterTenor    The default tenor to filter on (e.g. Period(5, Years))
@@ -92,6 +95,20 @@ public:
                                 const QuantLib::ext::shared_ptr<ScenarioFactory>& factory,
                                 const std::map<std::string, QuantLib::Period>& tenorOverrides = {});
 
+    /*! Constructor with regex-based tenor filter dictionary.
+        Entries are matched in reverse order (last entry first). The first regex that matches
+        a risk factor key determines the tenor filter for that key. If no regex matches,
+        all tenors for that risk factor are included (no filtering).
+        \param reader         The underlying scenario reader to wrap
+        \param simParams      The simulation market parameters providing index-to-tenor mapping
+        \param factory        Scenario factory for creating filtered scenarios
+        \param regexTenors    Ordered list of (regex_pattern, tenor) pairs. Matched bottom-up.
+    */
+    TenorFilteredScenarioReader(const QuantLib::ext::shared_ptr<ScenarioReader>& reader,
+                                const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simParams,
+                                const QuantLib::ext::shared_ptr<ScenarioFactory>& factory,
+                                const std::vector<std::pair<std::string, QuantLib::Period>>& regexTenors);
+
 private:
     //! Build the set of allowed risk factor keys based on the filter tenor
     void buildAllowedKeys();
@@ -99,12 +116,17 @@ private:
     //! Get the effective tenor for a given key type and name (uses override if present, else default)
     QuantLib::Period effectiveTenor(RiskFactorKey::KeyType keyType, const std::string& name) const;
 
+    //! Get the effective tenor using regex matching (reverse order). Returns boost::none if no match.
+    boost::optional<QuantLib::Period> effectiveTenorRegex(RiskFactorKey::KeyType keyType, const std::string& name) const;
+
     //! Check if a tenor-based risk factor key at the given index matches the filter
     bool tenorMatches(const std::vector<QuantLib::Period>& tenors, QuantLib::Size index) const;
 
     QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simParams_;
     QuantLib::Period filterTenor_;
     std::map<std::string, QuantLib::Period> tenorOverrides_;
+    std::vector<std::pair<std::regex, QuantLib::Period>> regexTenors_;
+    bool useRegexMode_ = false;
 };
 
 } // namespace analytics
