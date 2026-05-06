@@ -57,6 +57,12 @@ set_property(TARGET OREP APPEND PROPERTY SWIG_COMPILE_OPTIONS -fastdispatch -inc
 # Add all libraries to link with
 target_link_libraries(OREP PRIVATE ${OREA_LIB_NAME} Boost::iostreams)
 
+# SWIG wrapper is pure call-forwarding glue code — optimization provides no runtime
+# benefit but adds ~5 minutes to the build on a ~300k line translation unit.
+if(NOT MSVC AND ORE_SWIG_DISABLE_OPTIMIZATION)
+    target_compile_options(OREP PRIVATE -O0)
+endif()
+
 if(ORE_USE_ZLIB)
     target_link_libraries(OREP PRIVATE ZLIB::ZLIB)
     target_compile_definitions(OREP PRIVATE ORE_USE_ZLIB)
