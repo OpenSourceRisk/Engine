@@ -35,28 +35,6 @@
 namespace ore {
 namespace analytics {
 
-class EnforceParSensiWithAlignPillars {
-public:
-    EnforceParSensiWithAlignPillars(const QuantLib::ext::shared_ptr<InputParameters>& inputs) :
-     inputs_(inputs) {
-        QL_REQUIRE(inputs_, "EnforceParSensiWithAlignPillars: InputParameters is null");
-        alignPillars_ = inputs_->alignPillars();
-        parSensi_ = inputs_->parSensi();
-        inputs_->setParSensi(true);
-        inputs_->setAlignPillars(true);
-    }
-
-    ~EnforceParSensiWithAlignPillars() {
-        inputs_->setParSensi(parSensi_);
-        inputs_->setAlignPillars(alignPillars_);
-    }
-
-private:
-    QuantLib::ext::shared_ptr<InputParameters> inputs_;
-    bool alignPillars_;
-    bool parSensi_;
-};
-
 void StressedSimmVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) {
     LOG("Loading StressedSimmVariables");
     inputs->loadParameterXML<StressTestScenarioData>(stressedSimmScenarioData_, "stressedSimm",
@@ -109,24 +87,19 @@ void StressedSimmAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::
     QuantLib::ext::shared_ptr<StressTestScenarioData> scenarioData =
         QuantLib::ext::static_pointer_cast<StressedSimmVariables>(inputVariables_)->stressedSimmScenarioData_;
 
-    //EnforceParSensiWithAlignPillars enforceParSensiWithAlignPillars {inputs_};
-
-    //QL_REQUIRE(inputs_->parSensi(), "StressedSimmAnalytic requires parSensi to be true");
-    //QL_REQUIRE(inputs_->alignPillars(), "StressedSimmAnalytic requires alignPillars to be true");
     QL_REQUIRE(scenarioData != nullptr, "StressedSimmAnalytic requires stress scenario data");
     QL_REQUIRE(scenarioData->useSpreadedTermStructures(),
                "StressedSimmAnalytic only supports spreaded term structures for now");
     
     // Need to align pillars before building the stress scenarios
-    /*
+    
     const set<RiskFactorKey::KeyType>& typesDisabled =
         analytic()->configurations().sensiScenarioData->parConversionExcludes();
-
+    
     auto parAnalysis = QuantLib::ext::make_shared<ParSensitivityAnalysis>(
         inputs_->asof(), analytic()->configurations().simMarketParams, *analytic()->configurations().sensiScenarioData,
         "", true, typesDisabled);
     parAnalysis->alignPillars();
-    analytic()->configurations().simMarketParams->toFile("stressed_simm_sim_market_params_after_align.xml");
     // Convert par stress scenarios
     if (scenarioData != nullptr && scenarioData->hasScenarioWithParShifts()) {
         try {
@@ -145,7 +118,7 @@ void StressedSimmAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::
             StructuredAnalyticsErrorMessage(label(), "ParConversionFailed", e.what()).log();
         }
     }
-    */
+    
     std::string marketConfig = inputs_->marketConfig("pricing");
 
     LOG("STRESS_SIMM: Build SimMarket and StressTestScenarioGenerator")
@@ -161,8 +134,6 @@ void StressedSimmAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::
         scenarioData, baseScenario, analytic()->configurations().simMarketParams, simMarket, scenarioFactory,
         simMarket->baseScenarioAbsolute());
     simMarket->scenarioGenerator() = scenarioGenerator;
-    
-    analytic()->configurations().simMarketParams->toFile("stressed_simm_sim_market_params.xml");
     CONSOLE("OK");
 
     // generate the stress scenarios and run dependent sensitivity analytic under each of them
@@ -212,7 +183,7 @@ void StressedSimmAnalyticImpl::runStressTest(
                 DLOG("found report " << name << " for scenario " << label);
                 if (name == "simm") {
                     DLOG("Save and extend report " << name);
-                    simmReports[analytic()->label()].push_back(addColumnToExisitingReport("Scenario", label, rpt));
+                    simmReports["stressed_simm"].push_back(addColumnToExisitingReport("Scenario", label, rpt));
                 }
             }
 
