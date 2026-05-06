@@ -558,6 +558,21 @@
       <xs:element type="frequencyType" name="Frequency" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="AvailabilityLag" minOccurs="1" maxOccurs="1"/>
       <xs:element type="currencyCode" name="Currency" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="RebasingEvents" minOccurs="0" maxOccurs="1">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="Event" minOccurs="1" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:decimal">
+                    <xs:attribute name="date" type="xs:date" use="required"/>
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
     </xs:all>
   </xs:complexType>
 
