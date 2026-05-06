@@ -60,6 +60,7 @@
       <xs:element type="bool" name="SettlesAccrual" minOccurs="1" maxOccurs="1"/>
       <xs:element type="bool" name="PaysAtDefaultTime" minOccurs="1" maxOccurs="1"/>
       <xs:element type="dayCounter" name="LastPeriodDayCounter" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="UsesReferenceData" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 
@@ -564,8 +565,8 @@
             <xs:element name="Event" minOccurs="1" maxOccurs="unbounded">
               <xs:complexType>
                 <xs:simpleContent>
-                  <xs:extension base="xs:decimal">
-                    <xs:attribute name="date" type="xs:date" use="required"/>
+                  <xs:extension base="xs:double">
+                    <xs:attribute name="date" type="date" use="required"/>
                   </xs:extension>
                 </xs:simpleContent>
               </xs:complexType>
