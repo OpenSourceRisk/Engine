@@ -32,10 +32,17 @@ namespace analytics {
 
 class InputParameters;
 
+}
+namespace data {
+class CounterpartyManager;
+}
+namespace analytics {
+
 struct SaCvaVariables : public InputVariables {
     void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
 
     QuantLib::ext::shared_ptr<ore::data::NettingSetManager> nettingSetManager_;
+    QuantLib::ext::shared_ptr<ore::data::CounterpartyManager> counterpartyManager_;
 };
 
 class SaCvaAnalyticImpl : public Analytic::Impl {
@@ -43,7 +50,7 @@ public:
     static constexpr const char* LABEL = "SA_CVA";
     static constexpr const char* sensiLookupKey = "SENSI";
 
-    SaCvaAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) {
+    SaCvaAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs, QuantLib::ext::make_shared<SaCvaVariables>()) {
         setLabel(LABEL);}
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                      const std::set<std::string>& runTypes = {}) override;

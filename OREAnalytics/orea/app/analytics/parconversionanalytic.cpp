@@ -34,6 +34,8 @@ using namespace std::filesystem;
 namespace ore {
 namespace analytics {
 
+void ParConversionVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) { }
+
 std::map<RiskFactorKey, std::string> getScenarioDescriptions(QuantLib::ext::shared_ptr<ScenarioGenerator> scenGen) {
     std::map<RiskFactorKey, std::string> descriptions;
     auto sensiScenGen = QuantLib::ext::dynamic_pointer_cast<SensitivityScenarioGenerator>(scenGen);

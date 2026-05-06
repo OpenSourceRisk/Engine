@@ -23,6 +23,7 @@
 #pragma once
 
 #include <orea/app/analytic.hpp>
+#include <orea/app/inputvariables.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
 #include <ored/report/inmemoryreport.hpp>
 #include <orea/scenario/stressscenariogenerator.hpp>
@@ -30,6 +31,10 @@ namespace ore {
 namespace analytics {
 
 class InputParameters;
+
+struct XvaStressVariables : public InputVariables {
+    void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
+};
 
 class XvaStressAnalyticImpl : public Analytic::Impl {
 public:

@@ -172,6 +172,7 @@ else()
 
     add_compile_options(
         -pthread
+        -fno-math-errno
         -Wall
         -Werror=non-virtual-dtor
         -Werror=reorder

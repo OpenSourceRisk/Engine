@@ -22,18 +22,23 @@
 #pragma once
 
 #include <orea/app/analytic.hpp>
+#include <orea/app/inputvariables.hpp>
 
 namespace ore {
 namespace analytics {
 
 class InputParameters;
 
+struct SmrcVariables : public InputVariables {
+    void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
+};
+
 class SmrcAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "SMRC";
 
     SmrcAnalyticImpl(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs)
-        : Analytic::Impl(inputs) {
+        : Analytic::Impl(inputs, QuantLib::ext::make_shared<SmrcVariables>()) {
         setLabel(LABEL);
     }
     virtual void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
