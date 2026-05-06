@@ -22,11 +22,16 @@
 #pragma once
 
 #include <orea/app/analytic.hpp>
+#include <orea/app/inputvariables.hpp>
 
 namespace ore {
 namespace analytics {
 
 class InputParameters;
+
+struct ParStressConversionVariables : public InputVariables {
+    void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
+};
 
 class ParStressConversionAnalyticImpl : public Analytic::Impl {
 public:
@@ -34,7 +39,7 @@ public:
 
     ParStressConversionAnalyticImpl(
         const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-        : Analytic::Impl(inputs) {
+        : Analytic::Impl(inputs, QuantLib::ext::make_shared<ParStressConversionVariables>()) {
         setLabel(LABEL);
     }
 

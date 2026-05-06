@@ -31,6 +31,8 @@ using namespace std::filesystem;
 namespace ore {
 namespace analytics {
 
+void ZeroToParShiftVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) { }
+
 void ZeroToParShiftAnalyticImpl::setUpConfigurations() {
     const auto stressData = inputs_->stressScenarioData();
     analytic()->configurations().simulationConfigRequired = true;
