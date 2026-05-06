@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include <ql/instruments/creditdefaultswap.hpp>
 #include <ql/termstructures/defaulttermstructure.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
@@ -48,6 +49,9 @@ public:
         QuantLib::DayCounter lastPeriodDayCounter = QuantLib::Actual360(true);
         QuantLib::Natural cashSettlementDays = 3;
         std::string type = std::string();
+        bool settlesAccrual = true;
+        bool rebatesAccrual = true;
+        QuantLib::CreditDefaultSwap::ProtectionPaymentTime protPmtTime = QuantLib::CreditDefaultSwap::atDefault;
     };
 
     explicit CreditCurve(const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& curve,

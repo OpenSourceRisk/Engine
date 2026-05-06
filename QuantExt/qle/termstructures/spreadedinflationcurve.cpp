@@ -67,13 +67,12 @@ Real SpreadedZeroInflationCurve::zeroRateImpl(Time t) const {
     return referenceCurve_->zeroRate(t) + (*interpolation_)(t);
 }
 
-QL_DEPRECATED_DISABLE_WARNING
 SpreadedYoYInflationCurve::SpreadedYoYInflationCurve(const Handle<YoYInflationTermStructure>& referenceCurve,
                                                      const std::vector<Time>& times,
                                                      const std::vector<Handle<Quote>>& quotes)
     : YoYInflationTermStructure(referenceCurve->baseDate(), referenceCurve->baseRate(),
                                 referenceCurve->observationLag(), referenceCurve->frequency(),
-                                referenceCurve->indexIsInterpolated(), referenceCurve->dayCounter(),
+                                referenceCurve->dayCounter(),
                                 referenceCurve->seasonality()),
       referenceCurve_(referenceCurve), times_(times), quotes_(quotes), data_(times_.size(), 1.0) {
     QL_REQUIRE(times_.size() > 1, "SpreadedZeroInflationCurve: at least two times required");
@@ -87,7 +86,6 @@ SpreadedYoYInflationCurve::SpreadedYoYInflationCurve(const Handle<YoYInflationTe
     interpolation_->enableExtrapolation();
     registerWith(referenceCurve_);
 }
-QL_DEPRECATED_ENABLE_WARNING
 
 Date SpreadedYoYInflationCurve::baseDate() const { return referenceCurve_->baseDate(); }
 

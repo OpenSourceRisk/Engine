@@ -44,7 +44,7 @@ public:
         QuantLib::ext::shared_ptr<FxModel> S, QuantLib::Handle<QuantLib::YieldTermStructure> r0,
         QuantLib::Handle<QuantLib::YieldTermStructure> q0, Matrix correlation_r_q_S, Real maxTime = 10.0,
         Real minStrike = -3.0, Real maxStrike = 3.0, Size timeStepsPerYear = 24, Size nStrikes = 25,
-        Size nPaths = 10000, Real d2CdK2Threshold = 0.01, Size nPasses = 1);
+        Size nPaths = 16384, Real d2CdK2Threshold = 0.01, Size nPasses = 1);
 
     Date maxDate() const override { return source_->maxDate(); }
     Real minStrike() const override { return source_->minStrike(); }

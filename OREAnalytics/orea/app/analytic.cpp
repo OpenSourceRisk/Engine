@@ -39,7 +39,6 @@
 #include <ored/marketdata/bondspreadimply.hpp>
 #include <ored/portfolio/builders/currencyswap.hpp>
 #include <ored/portfolio/builders/fxoption.hpp>
-#include <ored/portfolio/builders/multilegoption.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/utilities/indexparser.hpp>
@@ -113,6 +112,18 @@ void Analytic::reset() {
     analyticComplete_ = false;
     reports_.clear();
     impl_->reset();
+}
+
+void Analytic::releaseMemory() {
+    LOG("Analytic::releaseMemory() called for " << label());
+    MEM_LOG_USING_LEVEL(ORE_WARNING, "Before releaseMemory() " << label());
+    if (impl_) {
+        impl_->releaseMemory();
+        for (const auto& [key, a] : impl_->dependentAnalytics()) {
+            a.first->releaseMemory();
+        }
+    }
+    MEM_LOG_USING_LEVEL(ORE_WARNING, "After releaseMemory() " << label());
 }
 
 void Analytic::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
