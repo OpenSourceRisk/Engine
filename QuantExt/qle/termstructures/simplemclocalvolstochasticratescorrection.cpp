@@ -226,20 +226,20 @@ void SimpleMcLocalVolStochasticRatesCorrection::performCalculations() const {
     } // loop over time grid
 
     // debug output
-    std::ofstream out("localvol.txt");
-    for (Size i = 0; i < timeGrid_.size() - 1; ++i) {
-        for (Size j = 0; j < logStrikesMid_.size(); ++j) {
-            Real t = timeGrid_[i];
-            Real F = S_->fxSpotToday()->value() * q0_->discount(t) / r0_->discount(t);
-            Real K = F * std::exp(logStrikesMid_[j] * std::sqrt(atmVarianceData_[i]));
-            Real blackVol = blackVol_->blackVol(t, K);
-            Real localVol = source_->localVol(t, K);
-            Real corr = this->localVol(t, K) - localVol;
-            out << t << "," << logStrikesMid_[j] << "," << blackVol << "," << localVol << "," << corr << std::endl;
-        }
-        out << std::endl;
-    }
-    out.close();
+    //std::ofstream out("localvol.txt");
+    //for (Size i = 0; i < timeGrid_.size() - 1; ++i) {
+    //    for (Size j = 0; j < logStrikesMid_.size(); ++j) {
+    //        Real t = timeGrid_[i];
+    //        Real F = S_->fxSpotToday()->value() * q0_->discount(t) / r0_->discount(t);
+    //        Real K = F * std::exp(logStrikesMid_[j] * std::sqrt(atmVarianceData_[i]));
+    //        Real blackVol = blackVol_->blackVol(t, K);
+    //        Real localVol = source_->localVol(t, K);
+    //        Real corr = this->localVol(t, K) - localVol;
+    //        out << t << "," << logStrikesMid_[j] << "," << blackVol << "," << localVol << "," << corr << std::endl;
+    //    }
+    //    out << std::endl;
+    //}
+    //out.close();
 }
 
 Volatility SimpleMcLocalVolStochasticRatesCorrection::localVolImpl(Time t, Real strike) const {
