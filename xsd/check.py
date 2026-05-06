@@ -6,6 +6,7 @@ from lxml.etree import XMLSchemaParseError
 from lxml.etree import XMLSyntaxError
 import sys
 from typing import Iterable, List, Optional
+from pathlib import Path
 
 # Global result flag: True means no schema errors encountered; set to False on any schema error
 ERROR: bool = True
@@ -16,11 +17,15 @@ def remove_temp_files(dir_name:str) -> None:
     This function removes temporary xsd files created during the validation process.
     If no errors occurred (ERROR is True), also remove check.log.
     """
+    for f in Path(dir_name).glob("new_*.xsd"):
+        f.unlink()
 
     # Remove check.log only if there were no schema errors
     if ERROR:
         check_log_path = os.path.join(dir_name, 'check.log')
         if os.path.exists(check_log_path):
+            # Need to shut down logging before attempting to delete check.log
+            logging.shutdown()
             os.remove(check_log_path)
 
 def iter_xml_files(root_dir: str):
