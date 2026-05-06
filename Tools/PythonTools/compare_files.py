@@ -11,6 +11,7 @@ from datacompy.core import Compare
 import re
 import tempfile
 import jsondiff
+from lxml import etree
 from xmldiff import main, formatting
 from pathlib import Path
 
