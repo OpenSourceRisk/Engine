@@ -207,4 +207,4 @@ if __name__ == '__main__':
     main(xml_path=args.xml_path, jobs=args.jobs)
 
     if not ERROR:
-        sys.exit(-1)
+        sys.exit(1)
