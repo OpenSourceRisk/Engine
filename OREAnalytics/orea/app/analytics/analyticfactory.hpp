@@ -49,8 +49,7 @@ public:
     virtual ~AbstractAnalyticBuilder() {}
     virtual QuantLib::ext::shared_ptr<Analytic>
     build(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-          const QuantLib::ext::weak_ptr<AnalyticsManager>& analyticsManager,
-          const bool cacheDependentAnalytics) const = 0;
+          const QuantLib::ext::weak_ptr<AnalyticsManager>& analyticsManager) const = 0;
 };
 
 //! Template AnalyticBuilder class
@@ -61,9 +60,8 @@ template <class T> class AnalyticBuilder : public AbstractAnalyticBuilder {
 public:
     virtual QuantLib::ext::shared_ptr<Analytic> build(
         const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-        const QuantLib::ext::weak_ptr<AnalyticsManager>& analyticsManager,
-        const bool cacheDependentAnalytics) const override {
-        auto a = QuantLib::ext::make_shared<T>(inputs, analyticsManager, cacheDependentAnalytics);
+        const QuantLib::ext::weak_ptr<AnalyticsManager>& analyticsManager) const override {
+        auto a = QuantLib::ext::make_shared<T>(inputs, analyticsManager);
         a->initialise();
         return a;
     }

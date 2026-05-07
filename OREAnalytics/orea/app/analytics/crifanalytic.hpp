@@ -77,6 +77,12 @@ public:
     void setUpConfigurations() override;
     void buildDependencies() override;
 
+    void reset() override {
+        for (auto& a : dependentAnalytics_) {
+            a.second.first->reset();
+        }
+    }
+
 protected:
     virtual void handlePreSimmExemptionsReports(CrifAnalyticBase& crifAnalytic,
                                                 const QuantLib::ext::shared_ptr<InputParameters>& inputs,
@@ -171,6 +177,14 @@ public:
 
     const QuantLib::ext::shared_ptr<Scenario>& offsetScenario() const override { return offsetScenario_; }
     
+    void reset() override {
+        Analytic::reset();
+        offsetScenario_ = nullptr;
+        portfolioNoSimmExemptions_ = nullptr;
+        portfolioSimmExemptions_ = nullptr;
+        crif_ = nullptr;
+    }
+
 private:
     std::string baseCurrency_;
     QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolioNoSimmExemptions_;
