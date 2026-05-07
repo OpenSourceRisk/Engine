@@ -162,7 +162,6 @@ void XvaStressAnalyticImpl::runStressTest(const QuantLib::ext::shared_ptr<Stress
 
     std::map<std::string, std::vector<QuantLib::ext::shared_ptr<ore::data::InMemoryReport>>> xvaReports;
     auto xvaAnalytic = dependentAnalytic<XvaAnalytic>("XVA");
-    auto xvaImpl = static_cast<XvaAnalyticImpl*>(xvaAnalytic->impl().get());
     for (size_t i = 0; i < scenarioGenerator->samples(); ++i) {
         auto scenario = scenarioGenerator->next(inputs_->asof());
         const std::string& label = scenario != nullptr ? scenario->label() : std::string();
@@ -170,8 +169,7 @@ void XvaStressAnalyticImpl::runStressTest(const QuantLib::ext::shared_ptr<Stress
             xvaAnalytic->reset();
             DLOG("Calculate XVA for scenario " << label);
             CONSOLE("XVA_STRESS: Apply scenario " << label);
-            xvaImpl->setOffsetScenario(scenario);
-            xvaImpl->setOffsetSimMarketParams(analytic()->configurations().simMarketParams);
+            xvaAnalytic->setOffsetScenario(scenario, analytic()->configurations().simMarketParams);
 
             CONSOLE("XVA_STRESS: Calculate Exposure and XVA");
             xvaAnalytic->runAnalytic(loader, {"EXPOSURE", "XVA"});

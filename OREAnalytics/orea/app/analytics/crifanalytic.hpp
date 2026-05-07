@@ -59,9 +59,6 @@ public:
                 const QuantLib::ext::shared_ptr<CrifMarket>& crifMarket,
                 const QuantLib::ext::shared_ptr<PortfolioFieldGetter>& fieldGetter,
                 double usdSpot) = 0;
-
-    virtual const QuantLib::ext::shared_ptr<Scenario>& offsetScenario() const = 0;
-    virtual void setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario) = 0;
 };
 
 class CrifAnalyticImpl : public Analytic::Impl {
@@ -76,12 +73,6 @@ public:
                      const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
     void buildDependencies() override;
-
-    void reset() override {
-        for (auto& a : dependentAnalytics_) {
-            a.second.first->reset();
-        }
-    }
 
 protected:
     virtual void handlePreSimmExemptionsReports(CrifAnalyticBase& crifAnalytic,
@@ -173,10 +164,6 @@ public:
                 const QuantLib::ext::shared_ptr<PortfolioFieldGetter>& fieldGetter,
                 double usdSpot) override;
     
-    void setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario) override;
-
-    const QuantLib::ext::shared_ptr<Scenario>& offsetScenario() const override { return offsetScenario_; }
-    
     void reset() override {
         Analytic::reset();
         offsetScenario_ = nullptr;
@@ -191,7 +178,6 @@ private:
     QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolioSimmExemptions_;
     set<CrifRecord::Regulation> simmExemptionOverrides_;
     QuantLib::ext::shared_ptr<ore::analytics::Crif> crif_;
-    QuantLib::ext::shared_ptr<Scenario> offsetScenario_;
 };
   
 } // namespace analytics

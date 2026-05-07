@@ -161,6 +161,7 @@ void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
 
     CONSOLEW("CRIF: Build Market");
     analytic()->buildMarket(loader);
+    analytic()->applyOffsetScenario();
     CONSOLE("OK");
 
     ObservationMode::instance().setMode(ObservationMode::Mode::None);
@@ -168,19 +169,6 @@ void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
     auto crifAnalytic = dynamic_cast<CrifAnalyticBase*>(analytic());
     QL_REQUIRE(crifAnalytic, "Analytic must be of type CRIF");
 
-    if (crifAnalytic->offsetScenario() != nullptr){
-        bool useSpreadedTermStructures = true; // Hard coded, we want to use spreaded term
-        bool continueOnError = true;           // Hard coded
-        bool overrideTenors = true; // Hard coded, we want to override tenors with those from sim market params
-        auto curveConfigs = analytic()->configurations().curveConfig;
-        std::string marketConfiguration = inputs_->marketConfig("pricing");
-        auto offsetMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
-            analytic()->market(), analytic()->configurations().simMarketParams, marketConfiguration,
-            curveConfigs ? *curveConfigs : ore::data::CurveConfigurations(),
-            *analytic()->configurations().todaysMarketParams, continueOnError, useSpreadedTermStructures,
-            continueOnError, overrideTenors, inputs_->iborFallbackConfig(), true, crifAnalytic->offsetScenario());
-        analytic()->setMarket(offsetMarket);
-    }
 
     CONSOLEW("CRIF: Build Portfolio");
     analytic()->buildPortfolio();
@@ -259,13 +247,6 @@ void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
     sensiAnalytic->configurations().todaysMarketParams = analytic()->configurations().todaysMarketParams;
     sensiAnalytic->configurations().simMarketParams = analytic()->configurations().simMarketParams;
     sensiAnalytic->configurations().sensiScenarioData = analytic()->configurations().sensiScenarioData;
-
-    // Set offset scenario on the sensitivity analytic if it's a stressed CRIF run
-    if (crifAnalytic->offsetScenario() != nullptr) {
-        auto offsetScenario = crifAnalytic->offsetScenario();
-        auto pricingImpl = static_cast<PricingAnalyticImpl*>(sensiAnalytic->impl().get());
-        pricingImpl->setOffsetScenario(offsetScenario);
-    }
 
     QuantLib::ext::shared_ptr<SensitivityStream> ssSimmOverrides =
         computeExtraSensitivityStream(*crifAnalytic, inputs_, loader, sensiAnalytic, simmOverridesPortfolio);
@@ -362,15 +343,6 @@ CrifAnalytic::computeCrif(const QuantLib::ext::shared_ptr<ore::data::Portfolio>&
     }
     stopTimer("computeCrif()");
     return QuantLib::ext::make_shared<ore::analytics::Crif>();
-}
-
-void CrifAnalytic::setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario) {
-    offsetScenario_ = offsetScenario;
-    auto sensiAnalytic = QuantLib::ext::dynamic_pointer_cast<PricingAnalytic>(
-        impl_->dependentAnalytic(CrifAnalyticImpl::sensitivityLookUpKey));
-    QL_REQUIRE(sensiAnalytic,
-               "CrifAnalytic::setOffsetScenario: dependent SENSITIVITY analytic not found or of wrong type");
-    sensiAnalytic->setOffsetScenario(offsetScenario);
 }
 
 } // namespace analytics

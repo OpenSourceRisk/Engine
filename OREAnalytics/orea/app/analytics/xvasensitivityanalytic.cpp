@@ -340,8 +340,7 @@ void XvaSensitivityAnalyticImpl::computeXvaUnderScenarios(std::map<size_t, ext::
     auto simMarketParams = analytic()->configurations().simMarketParams;
 
     auto xvaAnalytic = dependentAnalytic("XVA");
-    auto xvaImpl = static_cast<XvaAnalyticImpl*>(xvaAnalytic->impl().get());
-
+    
     for (size_t i = 0; i < scenarioGenerator->samples(); ++i) {
         auto scenario = scenarioGenerator->next(inputs_->asof());
         auto desc = scenarioGenerator->scenarioDescriptions()[i];
@@ -350,8 +349,7 @@ void XvaSensitivityAnalyticImpl::computeXvaUnderScenarios(std::map<size_t, ext::
             DLOG("Calculate XVA for scenario " << label);
             CONSOLE("XVA_SENSITIVITY: Apply scenario " << label);
             xvaAnalytic->reset();
-            xvaImpl->setOffsetScenario(scenario);
-            xvaImpl->setOffsetSimMarketParams(simMarketParams);
+            xvaAnalytic->setOffsetScenario(scenario, simMarketParams);
 	    
 	        CONSOLE("XVA_SENSITIVITY: Calculate Exposure and XVA")
             xvaAnalytic->runAnalytic(loader, {"EXPOSURE", "XVA"});

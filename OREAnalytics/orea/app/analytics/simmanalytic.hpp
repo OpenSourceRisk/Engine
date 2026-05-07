@@ -43,14 +43,9 @@ public:
                      const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
 
-    void reset() override {
-        for (auto& a : dependentAnalytics_) {
-            a.second.first->reset();
-        }
-    }
 };
 
-class SimmAnalytic : public Analytic, public WithOffsetScenario {
+class SimmAnalytic : public Analytic {
 public:
     static constexpr const char* crifLookupKey = "CRIF";
   
@@ -66,16 +61,6 @@ public:
     //! Load CRIF from external source, override to generate CRIF
     virtual void loadCrifRecords(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader);
 
-    void setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario,
-                           const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketParams) {
-        LOG("Setting offset scenario " << offsetScenario->label() << " for SIMM Analytic with label " << label());
-        offsetScenario_ = offsetScenario;
-        offsetSimMarketParams_ = simMarketParams;
-    }
-
-    const QuantLib::ext::shared_ptr<Scenario>& offsetScenario() const { return offsetScenario_; }
-    const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams() const { return offsetSimMarketParams_; }
-
     void reset() override {
         Analytic::reset();
         offsetScenario_ = nullptr;
@@ -87,7 +72,6 @@ private:
     QuantLib::ext::shared_ptr<Crif> crif_;
     bool hasNettingSetDetails_;
     bool determineWinningRegulations_;
-    QuantLib::ext::shared_ptr<Scenario> offsetScenario_;
     QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> offsetSimMarketParams_;
 };
 

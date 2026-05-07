@@ -55,18 +55,6 @@ class InputParameters;
 struct InputVariables;
 class AnalyticsManager;
 class StressTestScenarioData;
-
-class WithOffsetScenario {
-public:
-    WithOffsetScenario() = default;
-    virtual ~WithOffsetScenario() = default;
-
-    virtual void setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario,
-                                   const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketParams) = 0;
-    virtual const QuantLib::ext::shared_ptr<Scenario>& offsetScenario() const = 0;
-    virtual const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams() const = 0;
-};
-
 class Analytic {
 public:
     class Impl;
@@ -193,6 +181,32 @@ public:
     }
     void addTimer(const std::string& key, const Timer& timer) { timer_.addTimer(key, timer); }
 
+    void setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario,
+                           const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketParams);
+
+    const QuantLib::ext::shared_ptr<Scenario>& offsetScenario() const {
+        return offsetScenario_;
+    }
+
+    const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams() const {
+        return offsetSimMarketParams_ == nullptr ? configurations_.simMarketParams : offsetSimMarketParams_;
+    }
+
+    void applyOffsetScenario(bool continueOnError = true, bool useSpreadedTermStructures = true,
+                             bool overrideTenors = true) {
+        if (offsetScenario() == nullptr)
+            return;
+        DLOG("apply offset scenario " << offsetScenario()->label() << " to analytic " << label());
+        auto curveConfigs = configurations_.curveConfig;
+        std::string marketConfiguration = inputs_->marketConfig("pricing");
+        auto offsetMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
+            market_, offsetSimMarketParams(), marketConfiguration,
+            curveConfigs ? *curveConfigs : ore::data::CurveConfigurations(), *configurations_.todaysMarketParams,
+            continueOnError, useSpreadedTermStructures, continueOnError, overrideTenors, inputs_->iborFallbackConfig(),
+            true, offsetScenario());
+        setMarket(offsetMarket);
+    }
+
 protected:
     std::unique_ptr<Impl> impl_;
 
@@ -221,6 +235,9 @@ protected:
 
     Timer timer_;
 
+    QuantLib::ext::shared_ptr<Scenario> offsetScenario_;
+    QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> offsetSimMarketParams_;
+
 private:
     bool analyticComplete_ = false;
 };
@@ -238,7 +255,12 @@ public:
         const std::set<std::string>& runTypes = {}) = 0;
     
     void initialise();
-    virtual void reset(){};
+    
+    virtual void reset() {
+        for (auto& a : dependentAnalytics_) {
+            a.second.first->reset();
+        }
+    }
     //! Release heavy internal computation state while keeping reports intact
     virtual void releaseMemory(){};
     const bool initialised() { return initialised_; };
@@ -295,6 +317,9 @@ private:
     bool generateAdditionalResults_ = false;
     bool initialised_ = false;
 };
+
+//! Construct a scenario simMarket by applying the offset scenario to the market of the given analytic and set
+
 
 /*! Market analytics
   Does not need a portfolio

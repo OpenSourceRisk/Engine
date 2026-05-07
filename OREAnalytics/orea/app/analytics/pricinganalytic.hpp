@@ -58,15 +58,6 @@ public:
     const QuantLib::ext::shared_ptr<SensitivityAnalysis>& sensiAnalysis() { return sensiAnalysis_; }
     const QuantLib::ext::shared_ptr<ParSensitivityAnalysis>& parAnalysis() { return parAnalysis_; }
 
-    void setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario) {
-        offsetScenario_ = offsetScenario;
-    }
-
-    void setOffsetSimMarketParams(
-        const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams) {
-        offsetSimMarketParams_ = offsetSimMarketParams;
-    }
-
     void overwriteResultCurrency(const std::string& ccy);
 
 private:
@@ -74,8 +65,6 @@ private:
     QuantLib::ext::shared_ptr<ParSensitivityAnalysis> parAnalysis_;
 
 protected:
-    QuantLib::ext::shared_ptr<Scenario> offsetScenario_;
-    QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> offsetSimMarketParams_;
     std::optional<std::string> overwriteResultCurrency_;
 };
 
@@ -87,10 +76,6 @@ public:
                     const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager)
         : Analytic(std::make_unique<PricingAnalyticImpl>(inputs), pricingAnalyticSubAnalytics, inputs,
                    analyticsManager) {}
-
-    void setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario) {
-        static_cast<PricingAnalyticImpl*>(impl_.get())->setOffsetScenario(offsetScenario);
-    }
 };
  
 } // namespace analytics

@@ -110,6 +110,8 @@ const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& Analytic::getReport(
 
 void Analytic::reset() {
     analyticComplete_ = false;
+    offsetScenario_ = nullptr;
+    offsetSimMarketParams_ = nullptr;
     reports_.clear();
     impl_->reset();
 }
@@ -141,6 +143,15 @@ void Analytic::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLo
 void Analytic::initialise() {
     if (impl() && !impl()->initialised()) {
         impl()->initialise();
+    }
+}
+
+void Analytic::setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario,
+                                 const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketParams) {
+    offsetScenario_ = offsetScenario;
+    offsetSimMarketParams_ = simMarketParams;
+    for (auto& a : impl_->dependentAnalytics()) {
+        a.second.first->setOffsetScenario(offsetScenario, simMarketParams);
     }
 }
 

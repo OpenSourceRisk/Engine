@@ -167,8 +167,7 @@ void StressedSimmAnalyticImpl::runStressTest(
         try {
             simmAnalytic->reset();
             DLOG("Calculate SIMM for scenario " << label);
-            auto offsetAnalytic = QuantLib::ext::dynamic_pointer_cast<WithOffsetScenario>(simmAnalytic);
-            offsetAnalytic->setOffsetScenario(scenario, analytic()->configurations().simMarketParams);
+            simmAnalytic->setOffsetScenario(scenario, nullptr);
             DLOG("SIMM analytic configured for scenario " << label);
             CONSOLE("SIMM_STRESS: Calculate SIMM")
             simmAnalytic->runAnalytic(loader, {"SIMM"});
