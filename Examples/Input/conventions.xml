@@ -889,7 +889,7 @@
     <FixedConvention>Following</FixedConvention>
     <FixedPaymentConvention>Following</FixedPaymentConvention>
     <Rule>Backward</Rule>
-    <RateCutoff>1</RateCutoff>
+    <RateCutoff>0</RateCutoff>
   </OIS>
   <OIS>
     <Id>DKK-OIS-CONVENTIONS</Id>
@@ -902,7 +902,7 @@
     <FixedConvention>Following</FixedConvention>
     <FixedPaymentConvention>Following</FixedPaymentConvention>
     <Rule>Backward</Rule>
-    <RateCutoff>1</RateCutoff>
+    <RateCutoff>0</RateCutoff>
   </OIS>
   <OIS>
     <Id>SEK-OIS-CONVENTIONS</Id>
@@ -915,7 +915,7 @@
     <FixedConvention>Following</FixedConvention>
     <FixedPaymentConvention>Following</FixedPaymentConvention>
     <Rule>Backward</Rule>
-    <RateCutoff>1</RateCutoff>
+    <RateCutoff>0</RateCutoff>
   </OIS>
   <OIS>
     <Id>CHF-OIS-CONVENTIONS</Id>
@@ -928,7 +928,7 @@
     <FixedConvention>Following</FixedConvention>
     <FixedPaymentConvention>Following</FixedPaymentConvention>
     <Rule>Backward</Rule>
-    <RateCutoff>1</RateCutoff>
+    <RateCutoff>0</RateCutoff>
   </OIS>
   <OIS>
     <Id>CHF-OIS-SARON-CONVENTIONS</Id>
@@ -941,7 +941,7 @@
     <FixedConvention>Following</FixedConvention>
     <FixedPaymentConvention>Following</FixedPaymentConvention>
     <Rule>Backward</Rule>
-    <RateCutoff>1</RateCutoff>
+    <RateCutoff>0</RateCutoff>
   </OIS>
   <OIS>
     <Id>USD-OIS-CONVENTIONS</Id>
@@ -954,7 +954,7 @@
     <FixedConvention>Following</FixedConvention>
     <FixedPaymentConvention>Following</FixedPaymentConvention>
     <Rule>Backward</Rule>
-    <RateCutoff>1</RateCutoff>
+    <RateCutoff>0</RateCutoff>
   </OIS>
   <AverageOIS>
     <Id>USD-AVERAGE-OIS-CONVENTIONS</Id>
@@ -979,7 +979,7 @@
     <FixedConvention>Following</FixedConvention>
     <FixedPaymentConvention>Following</FixedPaymentConvention>
     <Rule>Backward</Rule>
-    <RateCutoff>1</RateCutoff>
+    <RateCutoff>0</RateCutoff>
   </OIS>
   <OIS>
     <Id>JPY-OIS-CONVENTIONS</Id>
@@ -992,7 +992,7 @@
     <FixedConvention>Following</FixedConvention>
     <FixedPaymentConvention>Following</FixedPaymentConvention>
     <Rule>Backward</Rule>
-    <RateCutoff>1</RateCutoff>
+    <RateCutoff>0</RateCutoff>
   </OIS>
   <OIS>
     <Id>CAD-OIS-CONVENTIONS</Id>
@@ -1005,7 +1005,7 @@
     <FixedConvention>Following</FixedConvention>
     <FixedPaymentConvention>Following</FixedPaymentConvention>
     <Rule>Backward</Rule>
-    <RateCutoff>1</RateCutoff>
+    <RateCutoff>0</RateCutoff>
   </OIS>
   <!-- Tenor Basis Swaps -->
   <TenorBasisTwoSwap>

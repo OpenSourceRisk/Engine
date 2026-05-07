@@ -350,6 +350,8 @@ void Analytic::buildPortfolio(const bool emitStructuredError) {
  * MARKET Analytic
  *******************************************************************/
 
+void MarketDataVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) { }
+
 void MarketDataAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
 }

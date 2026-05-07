@@ -130,7 +130,7 @@
   <xs:complexType name="parametricSmileConfigParameter">
     <xs:all>
       <xs:element type="xs:string" name="Name"/>
-      <xs:element type="xs:string" name="InitialValue"/>
+      <xs:element type="xs:string" name="InitialValue" minOccurs="0" maxOccurs="1"/>
       <xs:element type="parametricVolatilityParameterCalibration" name="Calibration"/>
     </xs:all>
   </xs:complexType>
@@ -332,9 +332,9 @@
 
   <xs:complexType name="indexFactorsType">
     <xs:sequence>
-      <xs:element type="positiveDecimal" name="IndexFactor"/>
-      <xs:element type="positiveDecimal" name="IndexFactorStrike"/>
-      <xs:element type="positiveDecimal" name="RealisedFep"/>
+      <xs:element type="non-negative-decimal" name="IndexFactor"/>
+      <xs:element type="non-negative-decimal" name="IndexFactorStrike"/>
+      <xs:element type="non-negative-decimal" name="RealisedFep"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -515,6 +515,7 @@
       <xs:element type="bool" name="UseEffeciveVolatility" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bootstrapConfigType" name="BootstrapConfig" minOccurs="0" maxOccurs="1"/>
       <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>
+      <xs:element type="bool" name="UseEffectiveVolatility" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 

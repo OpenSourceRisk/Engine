@@ -26,6 +26,8 @@ using namespace ore::analytics;
 namespace ore {
 namespace analytics {
 
+void ScenarioVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) { }
+
 void ScenarioAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
     analytic()->configurations().simMarketParams = inputs_->scenarioSimMarketParams();
