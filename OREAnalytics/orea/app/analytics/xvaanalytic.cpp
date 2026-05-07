@@ -164,6 +164,7 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
      **********************/
 
     inputs->loadParameter<bool>(generateCorrelations_, "xva", "generateCorrelations", false, parseBool);
+    inputs->loadParameter<bool>(outputCrossAssetModelData_, "xva", "outputCrossAssetModelData", false, parseBool);
     inputs->loadParameter<bool>(xvaUseDoublePrecisionCubes_, "xva", "useDoublePrecisionCubes", false, parseBool);
     xvaBaseCurrency_ = inputs->setupVariables().baseCurrency_;
     inputs->loadParameter<string>(xvaBaseCurrency_, pfeAnalytics, "baseCurrency", false);
@@ -1763,6 +1764,19 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
         CONSOLE("OK");
         ProgressMessage(msg, 1, 1).log();
+    }
+
+    // Output CrossAssetModelData XML if requested
+    if (xvaVars->outputCrossAssetModelData_ && analytic()->configurations().crossAssetModelData) {
+        string camXml = analytic()->configurations().crossAssetModelData->toXMLString();
+        DLOG("CrossAssetModel XML:\n" << camXml);
+        std::filesystem::path camXmlPath = inputs_->resultsPath() / "crossassetmodel_xva.xml";
+        std::ofstream camFile(camXmlPath.string());
+        if (camFile.is_open()) {
+            camFile << camXml;
+            camFile.close();
+            LOG("Written CrossAssetModelData XML to " << camXmlPath.string());
+        }
     }
 
     // reset that mode
