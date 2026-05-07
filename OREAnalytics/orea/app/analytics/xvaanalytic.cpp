@@ -276,7 +276,7 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
     inputs->loadParameterXML<CollateralBalances>(collateralBalances_, pfeOrSetupAnalytics, "collateralBalancesFile");
     
     string correlationInputFile;
-    inputs->loadParameter<string>(correlationInputFile, "xva", "correlationInputFile", false);
+    inputs->loadParameter<string>(correlationInputFile, "xva", vector<string>({"correlationInputFile", "correlationUri"}), false);
     if (!correlationInputFile.empty())
         correlationData_ = loadCorrelationDataFromFile((inputs->setupVariables().inputPath_ / correlationInputFile).generic_string());
         
@@ -399,6 +399,8 @@ void XvaAnalyticImpl::feedCorrelationToCAM(const std::map<std::pair<RiskFactorKe
     QL_REQUIRE(correlationData.size()>0," No Correlations.");
     // Instantaneous Correlation is a pair of smth "IR:USD, IR:GBP, EQ:SP5 etc.
     std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>> mapInstantaneousCor;
+    // Track which RiskFactorKey was used for each CorrelationKey to detect duplicates
+    std::map<CorrelationKey, std::pair<RiskFactorKey, RiskFactorKey>> sourceKeys;
     std::vector<std::string> vecAssetType = {"DiscountCurve", "FXSpot", "EquitySpot", "SurvivalProbability", "ZeroInflationCurve", "CommodityCurve"};
     for (auto const& cor : correlationData) {
         RiskFactorKey pair1 = cor.first.first;
@@ -414,13 +416,26 @@ void XvaAnalyticImpl::feedCorrelationToCAM(const std::map<std::pair<RiskFactorKe
                     (ore::data::to_string(pair1.keytype) == ore::data::to_string(pair2.keytype)))) {
                 string asset1 = mapRiskFactorToAssetType(pair1.keytype);
                 string asset2 = mapRiskFactorToAssetType(pair2.keytype);
-                CorrelationFactor corrFactor1{parseCamAssetType(asset1), pair1.name, pair1.index};
-                CorrelationFactor corrFactor2{parseCamAssetType(asset2), pair2.name, pair2.index};
+                // The factor index is always 0: the RiskFactorKey index refers to the tenor pillar,
+                // not the model factor. Multi-factor models (e.g. JY for INF) are not supported here.
+                CorrelationFactor corrFactor1{parseCamAssetType(asset1), pair1.name, 0};
+                CorrelationFactor corrFactor2{parseCamAssetType(asset2), pair2.name, 0};
                 std::pair<CorrelationFactor, CorrelationFactor> correlationKey =
                     std::make_pair(corrFactor1, corrFactor2);
+                if (mapInstantaneousCor.count(correlationKey) > 0) {
+                    auto& prev = sourceKeys[correlationKey];
+                    QL_FAIL("feedCorrelationToCAM: duplicate mapping to instantaneous correlation ("
+                            << corrFactor1 << "," << corrFactor2 << "). "
+                            << "First from (" << prev.first << "," << prev.second << "), "
+                            << "now from (" << pair1 << "," << pair2 << "). "
+                            << "Ensure the input correlation data maps uniquely to CAM factors "
+                            << "(use filterCamCorrelationScenarioTenor to select a single tenor per risk factor).");
+                }
                 mapInstantaneousCor[correlationKey] =
                     QuantLib::Handle<QuantLib::Quote>(QuantLib::ext::make_shared<SimpleQuote>(cor.second));
-                TLOG("Replaced correlation: (" << corrFactor1 << "," << corrFactor2 << ") = " << cor.second << ".");
+                sourceKeys[correlationKey] = cor.first;
+                TLOG("Mapped correlation: (" << pair1 << "," << pair2 << ") -> ("
+                     << corrFactor1 << "," << corrFactor2 << ") = " << cor.second << ".");
             }
         }
     }
