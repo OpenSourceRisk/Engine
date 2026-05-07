@@ -326,6 +326,20 @@ void Analytic::buildMarket(const QuantLib::ext::shared_ptr<ore::data::InMemoryLo
         LOG("Market Build time " << setprecision(2) << mTimer->format(default_places, "%w") << " sec");
 }
 
+void Analytic::applyOffsetScenario(bool continueOnError, bool useSpreadedTermStructures, bool overrideTenors) {
+    if (offsetScenario() == nullptr)
+        return;
+    DLOG("apply offset scenario " << offsetScenario()->label() << " to analytic " << label());
+    auto curveConfigs = configurations_.curveConfig;
+    std::string marketConfiguration = inputs_->marketConfig("pricing");
+    auto offsetMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
+        market_, offsetSimMarketParams(), marketConfiguration,
+        curveConfigs ? *curveConfigs : ore::data::CurveConfigurations(), *configurations_.todaysMarketParams,
+        continueOnError, useSpreadedTermStructures, continueOnError, overrideTenors, inputs_->iborFallbackConfig(),
+        true, offsetScenario());
+    setMarket(offsetMarket);
+}
+
 void Analytic::marketCalibration(const std::vector<QuantLib::ext::shared_ptr<MarketCalibrationReportBase>>& mcr) {
     for (auto r : mcr)
         r->populateReport(market_, configurations().todaysMarketParams);

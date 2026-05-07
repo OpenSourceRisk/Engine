@@ -193,19 +193,7 @@ public:
     }
 
     void applyOffsetScenario(bool continueOnError = true, bool useSpreadedTermStructures = true,
-                             bool overrideTenors = true) {
-        if (offsetScenario() == nullptr)
-            return;
-        DLOG("apply offset scenario " << offsetScenario()->label() << " to analytic " << label());
-        auto curveConfigs = configurations_.curveConfig;
-        std::string marketConfiguration = inputs_->marketConfig("pricing");
-        auto offsetMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
-            market_, offsetSimMarketParams(), marketConfiguration,
-            curveConfigs ? *curveConfigs : ore::data::CurveConfigurations(), *configurations_.todaysMarketParams,
-            continueOnError, useSpreadedTermStructures, continueOnError, overrideTenors, inputs_->iborFallbackConfig(),
-            true, offsetScenario());
-        setMarket(offsetMarket);
-    }
+                             bool overrideTenors = true);
 
 protected:
     std::unique_ptr<Impl> impl_;
