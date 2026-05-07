@@ -22,6 +22,7 @@
 #pragma once
 
 #include <orea/app/analytic.hpp>
+#include <orea/app/inputvariables.hpp>
 #include <orea/engine/parsensitivityanalysis.hpp>
 #include <orea/scenario/stressscenariodata.hpp>
 namespace ore {
@@ -29,11 +30,15 @@ namespace analytics {
 
 class InputParameters;
 
+struct ZeroToParShiftVariables : public InputVariables {
+    void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
+};
+
 class ZeroToParShiftAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "ZEROTOPARSHIFT";
 
-    ZeroToParShiftAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) {
+    ZeroToParShiftAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs, QuantLib::ext::make_shared<ZeroToParShiftVariables>()) {
         setLabel(LABEL);
     }
 

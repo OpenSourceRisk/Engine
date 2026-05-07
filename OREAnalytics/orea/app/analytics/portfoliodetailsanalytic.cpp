@@ -23,6 +23,8 @@
 namespace ore {
 namespace analytics {
 
+void PortfolioDetailsVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) { }
+
 void PortfolioDetailsAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
 		const std::set<std::string>& runTypes) {
 

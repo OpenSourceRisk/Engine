@@ -24,6 +24,7 @@
 #include <orea/simm/crifgenerator.hpp>
 #include <orea/simm/crifmarket.hpp>
 #include <orea/simm/portfoliomodifier.hpp>
+#include <orea/simm/simmbasicnamemapper.hpp>
 #include <orea/simm/simmtradedata.hpp>
 #include <orea/simm/utilities.hpp>
 #include <orea/engine/bufferedsensitivitystream.hpp>
@@ -42,6 +43,61 @@ using namespace std::filesystem;
 
 namespace ore {
 namespace analytics {
+
+void CrifVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) {
+    auto inputPath = inputs->setupVariables().inputPath_;
+
+    // Set SIMM version for CRIF generation (try crif, then saccr, then simm/version, then default)
+    std::string tmp;
+    inputs->loadParameter<std::string>(tmp, "crif", "simmVersion");
+    if (tmp.empty())
+        inputs->loadParameter<std::string>(tmp, "saccr", "simmVersion");
+    if (tmp.empty())
+        inputs->loadParameter<std::string>(tmp, "simm", "version");
+    if (!tmp.empty()) {
+        inputs->setSimmVersion(tmp);
+    } else if (inputs->simmVersion().empty()) {
+        inputs->setSimmVersion("2.6");
+        LOG("set SIMM version for CRIF generation to " << inputs->simmVersion());
+    }
+
+    // Load name mapper (try crif, then saccr, then simm, then npv, then setup)
+    tmp = {};
+    inputs->loadParameter<std::string>(tmp, "crif", "nameMappingInputFile");
+    if (tmp.empty())
+        inputs->loadParameter<std::string>(tmp, "saccr", "nameMappingInputFile");
+    if (tmp.empty())
+        inputs->loadParameter<std::string>(tmp, "simm", "nameMappingInputFile");
+    if (tmp.empty())
+        inputs->loadParameter<std::string>(tmp, "npv", "nameMappingInputFile");
+    if (tmp.empty())
+        inputs->loadParameter<std::string>(tmp, "setup", "nameMappingInputFile");
+    if (!tmp.empty()) {
+        std::string fileName = (inputPath / tmp).generic_string();
+        LOG("simmNameMapper file name: " << fileName);
+        inputs->setSimmNameMapperFromFile(fileName);
+    } else if (!inputs->simmNameMapper()) {
+        auto nameMapper = QuantLib::ext::make_shared<SimmBasicNameMapper>();
+        inputs->setSimmNameMapper(nameMapper);
+    }
+
+    // Load bucket mapper (try crif, then saccr, then simm, then npv, then setup)
+    tmp = {};
+    inputs->loadParameter<std::string>(tmp, "crif", "bucketMappingInputFile");
+    if (tmp.empty())
+        inputs->loadParameter<std::string>(tmp, "saccr", "bucketMappingInputFile");
+    if (tmp.empty())
+        inputs->loadParameter<std::string>(tmp, "simm", "bucketMappingInputFile");
+    if (tmp.empty())
+        inputs->loadParameter<std::string>(tmp, "npv", "bucketMappingInputFile");
+    if (tmp.empty())
+        inputs->loadParameter<std::string>(tmp, "setup", "bucketMappingInputFile");
+    if (!tmp.empty()) {
+        std::string fileName = (inputPath / tmp).generic_string();
+        LOG("simmBucketMapper file name: " << fileName);
+        inputs->setSimmBucketMapperFromFile(fileName);
+    }
+}
   
 void CrifAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();

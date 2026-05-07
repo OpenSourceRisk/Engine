@@ -34,9 +34,11 @@
 namespace ore {
 namespace analytics {
 
+void SensitivityStressVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) { }
+
 SensitivityStressAnalyticImpl::SensitivityStressAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
                                              const QuantLib::ext::optional<QuantLib::ext::shared_ptr<StressTestScenarioData>>& scenarios)
-    : Analytic::Impl(inputs), stressScenarios_(scenarios.value_or(inputs->sensitivityStressScenarioData())) {
+    : Analytic::Impl(inputs, QuantLib::ext::make_shared<SensitivityStressVariables>()), stressScenarios_(scenarios.value_or(inputs->sensitivityStressScenarioData())) {
     setLabel(LABEL);
 }
 

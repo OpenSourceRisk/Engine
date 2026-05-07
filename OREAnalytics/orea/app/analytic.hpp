@@ -37,6 +37,7 @@
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 
 #include <orea/app/marketcalibrationreport.hpp>
+#include <orea/app/inputvariables.hpp>
 
 #include <ql/any.hpp>
 #include <iostream>
@@ -52,7 +53,6 @@ namespace ore {
 namespace analytics {
 
 class InputParameters;
-struct InputVariables;
 class AnalyticsManager;
 class StressTestScenarioData;
 class Analytic {
@@ -318,8 +318,9 @@ private:
     bool initialised_ = false;
 };
 
-//! Construct a scenario simMarket by applying the offset scenario to the market of the given analytic and set
-
+struct MarketDataVariables : public InputVariables {
+    void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
+};
 
 /*! Market analytics
   Does not need a portfolio
@@ -330,7 +331,7 @@ class MarketDataAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "MARKETDATA";
 
-    MarketDataAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) {
+    MarketDataAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs, QuantLib::ext::make_shared<MarketDataVariables>()) {
         setLabel(LABEL);
     }
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader, 

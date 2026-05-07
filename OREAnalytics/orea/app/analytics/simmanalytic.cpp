@@ -31,6 +31,8 @@ using namespace std::filesystem;
 namespace ore {
 namespace analytics {
 
+void SimmVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) { }
+
 void SimmAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
 }

@@ -38,6 +38,36 @@ void SaCcrVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputPara
         nettingSetManager_->loadAll();
 
     inputs->loadParameterXML<CollateralBalances>(collateralBalances_, analyitcStrs, "collateralBalancesFile");
+
+    // Load counterparty manager from saccr section (overrides setup section if present)
+    inputs->loadParameterXML<CounterpartyManager>(counterpartyManager_, "saccr", "counterpartyFile");
+
+    // Commodity asset class uses SIMM name and bucket mapping for hedging set definitions
+    // Note that Equities use reference data for that purpose
+    std::string tmp;
+    inputs->loadParameter<std::string>(tmp, "saccr", "simmVersion");
+    if (!tmp.empty())
+        inputs->setSimmVersion(tmp);
+    else if (inputs->simmVersion().empty()) {
+        inputs->setSimmVersion("2.1");
+        WLOG("Setting SIMM version to " << inputs->simmVersion() << " for SACCR");
+    }
+
+    tmp = {};
+    inputs->loadParameter<std::string>(tmp, "saccr", "nameMappingInputFile");
+    if (!tmp.empty()) {
+        std::string nameMappingFile = (inputs->setupVariables().inputPath_ / tmp).generic_string();
+        inputs->setSimmNameMapperFromFile(nameMappingFile);
+        LOG("Loading SIMM name mapping from file " << nameMappingFile);
+    }
+
+    tmp = {};
+    inputs->loadParameter<std::string>(tmp, "saccr", "bucketMappingInputFile");
+    if (!tmp.empty()) {
+        std::string bucketMappingFile = (inputs->setupVariables().inputPath_ / tmp).generic_string();
+        inputs->setSimmBucketMapperFromFile(bucketMappingFile);
+        LOG("Loading SIMM bucket mapping from file " << bucketMappingFile);
+    }
 }
 
 SaCcrAnalyticImpl::SaCcrAnalyticImpl(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs)
@@ -98,8 +128,9 @@ void SaCcrAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<InMemoryLoad
                                                              : QuantLib::ext::make_shared<NettingSetManager>();
 
     // Load counterparty information if provided
-    auto counterpartyManager = inputs_->counterpartyManager() ? inputs_->counterpartyManager()
-                                                                   : QuantLib::ext::make_shared<CounterpartyManager>();
+    auto counterpartyManager = saccrVars->counterpartyManager_ ? saccrVars->counterpartyManager_
+                                 : (inputs_->counterpartyManager() ? inputs_->counterpartyManager()
+                                   : QuantLib::ext::make_shared<CounterpartyManager>());
 
     QuantLib::ext::shared_ptr<InMemoryReport> saCcrReport = QuantLib::ext::make_shared<InMemoryReport>();
 
