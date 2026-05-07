@@ -48,7 +48,7 @@ BlackScholesCG::BlackScholesCG(const ModelCG::Type type, const Size paths, const
                                const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
                                const std::string& calibration, const std::vector<Real>& calibrationStrikes)
     : BlackScholesCG(type, paths, {currency}, {curve}, {}, {}, {}, {index}, {indexCurrency}, model, {}, simulationDates,
-                     iborFallbackConfig, calibration, {{index, calibrationStrikes}}) {}
+                     std::vector<bool>{}, iborFallbackConfig, calibration, {{index, calibrationStrikes}}) {}
 
 BlackScholesCG::BlackScholesCG(
     const ModelCG::Type type, const Size paths, const std::vector<std::string>& currencies,
@@ -58,10 +58,11 @@ BlackScholesCG::BlackScholesCG(
     const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
     const Handle<AssetModelWrapper>& model,
     const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
-    const std::set<Date>& simulationDates, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
-    const std::string& calibration, const std::map<std::string, std::vector<Real>>& calibrationStrikes)
+    const std::set<Date>& simulationDates, const std::vector<bool>& isNumeraireCurrency,
+    const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig, const std::string& calibration,
+    const std::map<std::string, std::vector<Real>>& calibrationStrikes)
     : ModelCGImpl(type, curves.at(0)->dayCounter(), paths, currencies, irIndices, infIndices, indices, indexCurrencies,
-                  simulationDates, iborFallbackConfig),
+                  simulationDates, isNumeraireCurrency, iborFallbackConfig),
       curves_(curves), fxSpots_(fxSpots), model_(model), correlations_(correlations), calibration_(calibration),
       calibrationStrikes_(calibrationStrikes) {
 
@@ -769,6 +770,10 @@ std::size_t BlackScholesCG::numeraire(const Date& s) const {
         addModelParameter(ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, currencies_[0], {}, s),
                           [c, s] { return c->discount(s); });
     return cg_div(*g_, cg_const(*g_, 1.0), ds);
+}
+
+std::size_t BlackScholesCG::zeta(const Date& s, const std::string& currency) const {
+    QL_FAIL("BlackScholesCG::zeta(): not implemented.");
 }
 
 std::size_t BlackScholesCG::getFxSpot(const Size idx) const {

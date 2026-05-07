@@ -55,7 +55,7 @@ public:
 
     class ModelParameter {
     public:
-        /* '*derived*' model parameters depend on other more fundamental nodes and parameters and are
+        /* '*derived*' model parameters depend on other, more fundamental nodes and parameters and are
            only there to cache results in a convenient way, i.e. we could use a separate class for them */
         enum class Type {
             none,                    // type not set (= model param is not initialized)
@@ -82,7 +82,10 @@ public:
             lgm_discountBond,        // dito, *derived*
             lgm_reducedDiscountBond, // dito, *derived*
             interpolated_undpath,    // interpolated underlying path value (only gcam), *derived*
-            interpolated_irstate     // interpolated ir state value (only gcam), *derived*
+            interpolated_irstate,    // interpolated ir state value (only gcam), *derived*
+            pay,                     // pay function cache (ModelCGImpl), *derived*
+            eval,                    // eval function cache (ModelCGImpl), *derived*
+            fxSpotT0,                // possibly triangulated fx spot t0, *derived*
         };
 
         ~ModelParameter() = default;
@@ -166,6 +169,9 @@ public:
     // the list of supported model currencies
     virtual const std::vector<std::string>& currencies() const = 0;
 
+    // marks the currencies that can be used as numeraire
+    virtual const std::vector<bool>& isNumeraireCurrency() const = 0;
+
     // time between two dates d1 <= d2, default actact should be overriden in derived claases if appropriate
     virtual std::size_t dt(const Date& d1, const Date& d2) const;
 
@@ -203,6 +209,9 @@ public:
 
     /* get numeraire N(s) for s >= referenceDate */
     virtual std::size_t numeraire(const Date& s) const = 0;
+
+    /* get measure change  FX_ccy(t) * N_ccy(t) / N_base(t) for an admissable numeraire currency ccy*/
+    virtual std::size_t zeta(const Date& s, const std::string& currency) const = 0;
 
     // forward looking daily comp/avg, obsdate <= start < end required, result must be as of max(refdate, obsdate)
     virtual std::size_t fwdCompAvg(const bool isAvg, const std::string& index, const Date& obsdate, const Date& start,

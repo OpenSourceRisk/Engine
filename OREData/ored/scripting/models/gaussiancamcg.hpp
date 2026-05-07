@@ -38,7 +38,7 @@
 namespace ore {
 namespace data {
 
-class GaussianCamCG : public ModelCGImpl {
+class GaussianCamCG final : public ModelCGImpl {
 public:
     /* For the constructor arguments see ModelCGImpl, plus the notes in GaussianCam */
     GaussianCamCG(const Handle<CrossAssetModel>& cam, const Size paths, const std::vector<std::string>& currencies,
@@ -46,7 +46,7 @@ public:
                   const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
                   const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
                   const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
-                  const std::set<Date>& simulationDates,
+                  const std::set<Date>& simulationDates, const std::vector<bool>& isNumeraireCurrency = {},
                   const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
                       QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
                   const std::vector<std::string>& conditionalExpectationModelStates = {},
@@ -60,6 +60,7 @@ public:
     std::set<std::size_t> npvRegressors(const Date& obsdate,
                                         const std::optional<std::set<std::string>>& relevantCurrencies) const override;
     std::size_t numeraire(const Date& s) const override;
+    std::size_t zeta(const Date& s, const std::string& currency) const override;
     std::size_t fwdCompAvg(const bool isAvg, const std::string& indexInput, const Date& obsdate, const Date& start,
                            const Date& end, const Real spread, const Real gearing, const Integer lookback,
                            const Natural rateCutoff, const Natural fixingDays, const bool includeSpread, const Real cap,

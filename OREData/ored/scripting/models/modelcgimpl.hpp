@@ -58,6 +58,7 @@ public:
        - indexCurrencies: index ccy for eq, comm, ir and the foreign ccy for fx indices
        - conventions: currently needed to resolve comm indices only
        - simulationDates: currently needed to resolve comm indices only
+       - isNumeraireCurrency: marks the currencies that can be used as numeraire
        - the conversion of a payment ccy != base ccy uses the fx index value (if existent), otherwise the zero vol
          version (i.e. the given fx spot and curves)
        - new and inverse currency pairs are implied from the existing ones in eval() for non-historical fixings
@@ -68,12 +69,14 @@ public:
                 const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
                 const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
                 const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
-                const std::set<Date>& simulationDates, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig);
+                const std::set<Date>& simulationDates, const std::vector<bool>& isNumeraireCurrency,
+                const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig);
 
     // Model interface implementation (partial)
     Real actualTimeFromReference(const Date& d) const override;
     const std::string& baseCcy() const override { return currencies_.front(); }
     const std::vector<std::string>& currencies() const override { return currencies_; }
+    const std::vector<bool>& isNumeraireCurrency() const override { return isNumeraireCurrency_; }
     std::size_t dt(const Date& d1, const Date& d2) const override;
     std::size_t pay(const std::size_t amount, const Date& obsdate, const Date& paydate,
                     const std::string& currency) const override;
@@ -115,6 +118,7 @@ protected:
     std::vector<std::string> currencies_;
     std::vector<std::string> indexCurrencies_;
     std::set<Date> simulationDates_;
+    std::vector<bool> isNumeraireCurrency_;
     QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig_;
 
     std::vector<std::pair<IndexInfo, QuantLib::ext::shared_ptr<InterestRateIndex>>> irIndices_;

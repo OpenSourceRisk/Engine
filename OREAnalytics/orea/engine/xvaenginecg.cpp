@@ -214,6 +214,8 @@ void XvaEngineCG::buildCam() {
             irIndices.push_back(std::make_pair(dsc, *simMarket_->iborIndex(dsc)));
     }
 
+    std::vector<bool> isNumeraireCurrency;
+
     // note: - these must be fine enough for Euler, e.g. weekly over the whole simulation period
 
     valuationDates_ = scenarioGeneratorData_->getGrid()->valuationDates();
@@ -239,8 +241,8 @@ void XvaEngineCG::buildCam() {
     // note: projectedStateProcessIndices can be removed from GaussianCamCG constructor most probably?
     model_ = QuantLib::ext::make_shared<GaussianCamCG>(
         camBuilder_->model(), scenarioGeneratorData_->samples(), currencies, curves, fxSpots, irIndices, infIndices,
-        indices, indexCurrencies, simulationDates_, iborFallbackConfig_, std::vector<std::string>(),
-        stickyCloseOutDates_, timeStepsPerYear);
+        indices, indexCurrencies, simulationDates_, isNumeraireCurrency, iborFallbackConfig_,
+        std::vector<std::string>(), stickyCloseOutDates_, timeStepsPerYear);
     // this is actually necessary, FIXME why? There is a calculate() missing in the model impl. then?
     model_->calculate();
 
