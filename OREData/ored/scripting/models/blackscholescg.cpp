@@ -432,8 +432,7 @@ void BlackScholesCG::performCalculations() const {
 
     for (Size j = 0; j < indices_.size(); ++j) {
         for (Size i = 0; i < effectiveSimulationDates_.size() - 1; ++i) {
-            randomVariates_[j][i] = cg_var(*g_, "__rv_" + std::to_string(j) + "_" + std::to_string(i),
-                                           ComputationGraph::VarDoesntExist::Create);
+            randomVariates_[j][i] = cg_insert(*g_);
         }
     }
 
