@@ -45,7 +45,7 @@ public:
                   const Handle<YieldTermStructure>& discountingCurve = Handle<YieldTermStructure>(),
                   bool discountCurveGiven = false, bool telescopicValueDates = false,
                   Pillar::Choice pillar = Pillar::LastRelevantDate, Date customPillarDate = Date(),
-                  const Calendar& paymentCalendar = Calendar());
+                  const Calendar& paymentCalendar = Calendar(), QuantLib::Natural rateCutoff = 0);
     //! \name RateHelper interface
     //@{
     Real impliedQuote() const override;
@@ -83,6 +83,7 @@ protected:
     RelinkableHandle<YieldTermStructure> discountRelinkableHandle_;
     bool telescopicValueDates_;
     Pillar::Choice pillarChoice_;
+    QuantLib::Natural rateCutoff_;
 };
 
 //! Rate helper for bootstrapping using Overnight Indexed Swaps
@@ -99,7 +100,7 @@ public:
                        const Handle<YieldTermStructure>& discountingCurve = Handle<YieldTermStructure>(),
                        const bool discountCurveGiven = false, bool telescopicValueDates = false,
                        Pillar::Choice pillar = Pillar::LastRelevantDate, Date customPillarDate = Date(),
-                       const Calendar& paymentCalendar = Calendar());
+                       const Calendar& paymentCalendar = Calendar(), QuantLib::Natural rateCutoff = 0);
 
     //! \name RateHelper interface
     //@{
@@ -133,6 +134,7 @@ protected:
     RelinkableHandle<YieldTermStructure> discountRelinkableHandle_;
     bool telescopicValueDates_;
     Pillar::Choice pillarChoice_;
+    QuantLib::Natural rateCutoff_;
 };
 } // namespace QuantExt
 
