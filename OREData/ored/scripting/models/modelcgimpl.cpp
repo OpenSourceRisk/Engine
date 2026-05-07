@@ -69,8 +69,7 @@ ModelCGImpl::ModelCGImpl(
         QL_REQUIRE(!c.empty(), "empty currency string");
 
     isNumeraireCurrency_.resize(currencies_.size(), false);
-    QL_REQUIRE(isNumeraireCurrency_.front(),
-               "ModelCGImpl: first currency (" << currencies_.front() << ") must be admissable numeraire currency.");
+    isNumeraireCurrency_.front() = true;
 
     // look for fx indices, check consistency with currencies and index currencies vectors
 
