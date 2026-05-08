@@ -23,9 +23,10 @@
 // clang-format on
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/averageonindexedcouponpricer.hpp>
-#include <format>
 #include <oret/util/datapaths.hpp>
 #include <string>
+#include <sstream>
+#include <iomanip>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -71,10 +72,15 @@ BOOST_DATA_TEST_CASE(testCpnAccruals, idxCpnVariants, lb, os, ts, useApprox, rco
 #endif
 {
     // Create the coupon ID for output file.
-    string strOs = os ? "os" : "nos";
-    string strTs = ts ? "ts" : "nts";
-    string strApprox = useApprox ? "approx" : "napprox";
-    string cpnName = format("acc_{:02d}_lb-{}_{}_rco-{}_{}_{}", idx, lb, strOs, rco, strTs, strApprox);
+    ostringstream oss;
+    oss << "acc_"
+        << std::setw(2) << std::setfill('0') << idx
+        << "_lb-" << lb
+        << "_" << (os ? "os" : "nos")
+        << "_rco-" << rco
+        << "_" << (ts ? "ts" : "nts")
+        << "_" << (useApprox ? "approx" : "napprox");
+    string cpnName = oss.str();
 
     // Create the coupon.
     TestCouponData tcd;
@@ -110,12 +116,17 @@ BOOST_DATA_TEST_CASE(testCpnAccrualsGearingSpread, idxGsCpnVariants, gearing, sp
 #endif
 {
     // Create the coupon ID for output file, maintaining format of previous tests with additional fields.
-    string strTs = ts ? "ts" : "nts";
-    string strSibd = sibd ? "sibd" : "sih";
-    string strEibd = eibd ? "eibd" : "eih";
-    string strApprox = useApprox ? "approx" : "napprox";
-    string cpnName = format("gs_{:02d}_lb-0_nos_rco-0_{}_g-{:g}_s-{:g}_{}_{}_{}",
-        idx, strTs, gearing, spread, strSibd, strEibd, strApprox);
+    ostringstream oss;
+    oss << "gs_"
+        << std::setw(2) << std::setfill('0') << idx
+        << "_lb-0_nos_rco-0_"
+        << (ts ? "ts" : "nts")
+        << "_g-" << gearing
+        << "_s-" << spread
+        << "_" << (sibd ? "sibd" : "sih")
+        << "_" << (eibd ? "eibd" : "eih")
+        << "_" << (useApprox ? "approx" : "napprox");
+    string cpnName = oss.str();
 
     // Create the coupon.
     TestCouponData tcd;
@@ -143,8 +154,13 @@ BOOST_DATA_TEST_CASE(testCpnAccrualsAll, bdata::make({true, false}) ^ bdata::xra
 {
     // Create the coupon ID for output file, maintaining format of previous tests with additional fields.
     // fl-1 indicates fixing lag of 1 BD.
-    string strApprox = useApprox ? "approx" : "napprox";
-    string cpnName = format("all_{:02d}_lb-2_os_rco-3_nts_g-1p5_s-10_{}_sibd_eibd_fl-1", idx, strApprox);
+    ostringstream oss;
+    oss << "all_"
+        << std::setw(2) << std::setfill('0') << idx
+        << "_lb-2_os_rco-3_nts_g-1p5_s-10_"
+        << (useApprox ? "approx" : "napprox")
+        << "_sibd_eibd_fl-1";
+    string cpnName = oss.str();
 
     // Create the coupon.
     TestCouponData tcd;
