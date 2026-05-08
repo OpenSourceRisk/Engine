@@ -1,8 +1,5 @@
 """Tests for XvaCalculator, StaticCreditXvaCalculator, and DynamicCreditXvaCalculator
 SWIG bindings.
-
-Validates that ACADIAQPR-14074 result-accessor methods and the two concrete XVA
-calculator subclasses are correctly exposed in the ORE Python module.
 """
 
 import unittest
