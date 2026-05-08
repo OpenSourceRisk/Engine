@@ -214,8 +214,6 @@ void XvaEngineCG::buildCam() {
             irIndices.push_back(std::make_pair(dsc, *simMarket_->iborIndex(dsc)));
     }
 
-    std::vector<bool> isNumeraireCurrency;
-
     // note: - these must be fine enough for Euler, e.g. weekly over the whole simulation period
 
     valuationDates_ = scenarioGeneratorData_->getGrid()->valuationDates();
