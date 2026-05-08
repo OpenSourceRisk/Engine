@@ -143,6 +143,16 @@ std::ostream& operator<<(std::ostream& o, const ModelCG::ModelParameter::Type& t
         return o << "interpolated_undpath";
     case ModelCG::ModelParameter::Type::interpolated_irstate:
         return o << "interpolated_irstate";
+    case ModelCG::ModelParameter::Type::pay:
+        return o << "pay";
+    case ModelCG::ModelParameter::Type::eval:
+        return o << "eval";
+    case ModelCG::ModelParameter::Type::fxSpotT0:
+        return o << "fxSpotT0";
+    case ModelCG::ModelParameter::Type::fxRate:
+        return o << "fxRate";
+    case ModelCG::ModelParameter::Type::radonNikodymDerivative:
+        return o << "radonNikodymDerivative";
     }
     return o << "unknown";
 }
