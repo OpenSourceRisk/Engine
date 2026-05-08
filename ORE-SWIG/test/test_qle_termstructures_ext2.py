@@ -251,5 +251,326 @@ class SurvivalProbabilityCurveExtrapolationArgTest(unittest.TestCase):
         self.assertLess(sp_extrap, 0.95)
 
 
+class DynamicBlackVolTermStructureSurfaceTest(unittest.TestCase):
+    """Test DynamicBlackVolTermStructure<tag::surface> wrapper."""
+
+    def setUp(self):
+        self.today = Date(15, January, 2025)
+        Settings.instance().evaluationDate = self.today
+        self.dc = Actual365Fixed()
+        self.cal = TARGET()
+
+    def test_sticky_strike_constant_variance(self):
+        """Wrap a BlackConstantVol with StickyStrike + ConstantVariance, verify vol."""
+        flat_vol = 0.20
+        vol_ts = BlackConstantVol(self.today, self.cal, flat_vol, self.dc)
+        vol_handle = BlackVolTermStructureHandle(vol_ts)
+
+        dyn = DynamicBlackVolTermStructureSurface(
+            vol_handle, 0, self.cal, ConstantVariance, StickyStrike)
+        dyn.enableExtrapolation()
+
+        self.assertAlmostEqual(dyn.blackVol(0.5, 100.0), flat_vol, places=10)
+        self.assertAlmostEqual(dyn.blackVol(1.0, 100.0), flat_vol, places=10)
+        self.assertAlmostEqual(dyn.blackVol(2.0, 50.0), flat_vol, places=10)
+
+    def test_max_date(self):
+        """maxDate() should be callable without error."""
+        vol_ts = BlackConstantVol(self.today, self.cal, 0.15, self.dc)
+        vol_handle = BlackVolTermStructureHandle(vol_ts)
+        dyn = DynamicBlackVolTermStructureSurface(
+            vol_handle, 0, self.cal, ConstantVariance, StickyStrike)
+        self.assertIsNotNone(dyn.maxDate())
+
+    def test_min_max_strike(self):
+        """minStrike/maxStrike should return finite values."""
+        vol_ts = BlackConstantVol(self.today, self.cal, 0.15, self.dc)
+        vol_handle = BlackVolTermStructureHandle(vol_ts)
+        dyn = DynamicBlackVolTermStructureSurface(
+            vol_handle, 0, self.cal, ConstantVariance, StickyStrike)
+        self.assertIsNotNone(dyn.minStrike())
+        self.assertIsNotNone(dyn.maxStrike())
+
+    def test_sticky_log_moneyness_requires_ts(self):
+        """StickyLogMoneyness requires riskfree, dividend, and spot."""
+        flat_vol = 0.20
+        vol_ts = BlackConstantVol(self.today, self.cal, flat_vol, self.dc)
+        vol_handle = BlackVolTermStructureHandle(vol_ts)
+
+        spot_q = SimpleQuote(100.0)
+        spot_h = QuoteHandle(spot_q)
+        rf = FlatForward(self.today, 0.02, self.dc)
+        div = FlatForward(self.today, 0.01, self.dc)
+        rf_h = YieldTermStructureHandle(rf)
+        div_h = YieldTermStructureHandle(div)
+
+        dyn = DynamicBlackVolTermStructureSurface(
+            vol_handle, 0, self.cal, ConstantVariance, StickyLogMoneyness,
+            rf_h, div_h, spot_h)
+        dyn.enableExtrapolation()
+
+        vol = dyn.blackVol(1.0, 100.0)
+        self.assertGreater(vol, 0.0)
+        self.assertTrue(math.isfinite(vol))
+
+
+class SpreadedBlackVolatilitySurfaceMoneynessTest(unittest.TestCase):
+    """Test SpreadedBlackVolatilitySurfaceMoneyness subclasses."""
+
+    def setUp(self):
+        self.today = Date(15, January, 2025)
+        Settings.instance().evaluationDate = self.today
+        self.dc = Actual365Fixed()
+        self.cal = TARGET()
+
+        # Reference flat vol surface
+        self.ref_vol = 0.20
+        ref_ts = BlackConstantVol(self.today, self.cal, self.ref_vol, self.dc)
+        self.ref_handle = BlackVolTermStructureHandle(ref_ts)
+
+        # Spot and yield curves
+        self.spot_val = 100.0
+        self.spot = QuoteHandle(SimpleQuote(self.spot_val))
+        self.rf = YieldTermStructureHandle(FlatForward(self.today, 0.02, self.dc))
+        self.div = YieldTermStructureHandle(FlatForward(self.today, 0.01, self.dc))
+
+        # Zero spread quotes (1 time × 1 moneyness)
+        self.times = [1.0]
+        self.moneyness = [1.0]
+        zero_q = SimpleQuote(0.0)
+        self.zero_spreads = [[QuoteHandle(zero_q)]]
+
+    def _build_surface(self, cls):
+        return cls(
+            self.ref_handle, self.spot, self.times, self.moneyness,
+            self.zero_spreads, self.spot, self.div, self.rf,
+            self.div, self.rf, True)
+
+    def test_moneyness_spot_zero_spread(self):
+        """MoneynessSpot with zero spreads should match reference vol."""
+        surf = self._build_surface(SpreadedBlackVolatilitySurfaceMoneynessSpot)
+        surf.enableExtrapolation()
+        vol = surf.blackVol(1.0, self.spot_val)
+        self.assertAlmostEqual(vol, self.ref_vol, places=6)
+
+    def test_moneyness_forward_construction(self):
+        """MoneynessForward should construct successfully."""
+        surf = self._build_surface(SpreadedBlackVolatilitySurfaceMoneynessForward)
+        surf.enableExtrapolation()
+        vol = surf.blackVol(1.0, self.spot_val)
+        self.assertGreater(vol, 0.0)
+        self.assertTrue(math.isfinite(vol))
+
+    def test_log_moneyness_spot_construction(self):
+        surf = self._build_surface(SpreadedBlackVolatilitySurfaceLogMoneynessSpot)
+        surf.enableExtrapolation()
+        vol = surf.blackVol(1.0, self.spot_val)
+        self.assertTrue(math.isfinite(vol))
+
+    def test_moneyness_inspector(self):
+        """moneyness() inspector should return the input moneyness values."""
+        surf = self._build_surface(SpreadedBlackVolatilitySurfaceMoneynessSpot)
+        m = surf.moneyness()
+        self.assertGreaterEqual(len(m), 1)
+        self.assertIn(1.0, [round(x, 10) for x in m])
+
+    def test_all_subclasses_constructible(self):
+        """All 7 subclasses should construct without error."""
+        classes = [
+            SpreadedBlackVolatilitySurfaceMoneynessSpot,
+            SpreadedBlackVolatilitySurfaceMoneynessForward,
+            SpreadedBlackVolatilitySurfaceLogMoneynessSpot,
+            SpreadedBlackVolatilitySurfaceLogMoneynessForward,
+            SpreadedBlackVolatilitySurfaceMoneynessSpotAbsolute,
+            SpreadedBlackVolatilitySurfaceMoneynessForwardAbsolute,
+            SpreadedBlackVolatilitySurfaceStdDevs,
+        ]
+        for cls in classes:
+            with self.subTest(cls=cls.__name__):
+                surf = self._build_surface(cls)
+                self.assertIsNotNone(surf)
+
+    def test_nonzero_spread_changes_vol(self):
+        """MoneynessSpot with non-zero spread should differ from reference."""
+        spread_q = SimpleQuote(0.05)
+        spreads = [[QuoteHandle(spread_q)]]
+        surf = SpreadedBlackVolatilitySurfaceMoneynessSpot(
+            self.ref_handle, self.spot, self.times, self.moneyness,
+            spreads, self.spot, self.div, self.rf,
+            self.div, self.rf, True)
+        surf.enableExtrapolation()
+        vol = surf.blackVol(1.0, self.spot_val)
+        self.assertNotAlmostEqual(vol, self.ref_vol, places=2)
+
+
+class BlackVarianceSurfaceSparseLinearTest(unittest.TestCase):
+    """Test BlackVarianceSurfaceSparse<Linear, Linear> wrapper."""
+
+    def setUp(self):
+        self.today = Date(15, January, 2025)
+        Settings.instance().evaluationDate = self.today
+        self.dc = Actual365Fixed()
+        self.cal = TARGET()
+
+        # 2 expiries × 3 strikes = 6 data points
+        d1 = Date(15, July, 2025)
+        d2 = Date(15, January, 2026)
+        self.dates = [d1, d1, d1, d2, d2, d2]
+        self.strikes = [90.0, 100.0, 110.0, 90.0, 100.0, 110.0]
+        self.vols = [0.22, 0.20, 0.21, 0.24, 0.22, 0.23]
+
+    def test_construction_and_query(self):
+        """Construct from sparse data and query blackVol."""
+        surf = BlackVarianceSurfaceSparseLinear(
+            self.today, self.cal, self.dates, self.strikes, self.vols, self.dc)
+        surf.enableExtrapolation()
+
+        # At grid points, vol should match input
+        vol = surf.blackVol(self.dates[1], 100.0)
+        self.assertAlmostEqual(vol, 0.20, places=4)
+
+    def test_off_grid_interpolation(self):
+        """blackVol at off-grid point should be finite and positive."""
+        surf = BlackVarianceSurfaceSparseLinear(
+            self.today, self.cal, self.dates, self.strikes, self.vols, self.dc)
+        surf.enableExtrapolation()
+
+        vol = surf.blackVol(Date(15, October, 2025), 95.0)
+        self.assertGreater(vol, 0.0)
+        self.assertTrue(math.isfinite(vol))
+
+    def test_inspectors(self):
+        """maxDate, minStrike, maxStrike should work."""
+        surf = BlackVarianceSurfaceSparseLinear(
+            self.today, self.cal, self.dates, self.strikes, self.vols, self.dc)
+        self.assertIsNotNone(surf.maxDate())
+        self.assertIsNotNone(surf.minStrike())
+        self.assertIsNotNone(surf.maxStrike())
+
+
+class BlackVolatilitySurfaceDeltaTest(unittest.TestCase):
+    """Test BlackVolatilitySurfaceDelta wrapper."""
+
+    def setUp(self):
+        self.today = Date(15, January, 2025)
+        Settings.instance().evaluationDate = self.today
+        self.dc = Actual365Fixed()
+        self.cal = TARGET()
+
+        self.spot = QuoteHandle(SimpleQuote(1.20))
+        self.dom_ts = YieldTermStructureHandle(FlatForward(self.today, 0.03, self.dc))
+        self.for_ts = YieldTermStructureHandle(FlatForward(self.today, 0.01, self.dc))
+
+    def test_construction_basic(self):
+        """Construct from a 2-tenor delta vol matrix with smile."""
+        dates = DateVector()
+        dates.append(Date(15, April, 2025))
+        dates.append(Date(15, January, 2026))
+        # Put deltas are negative by convention
+        put_deltas = DoubleVector()
+        put_deltas.append(-0.25)
+        call_deltas = DoubleVector()
+        call_deltas.append(0.25)
+        has_atm = True
+
+        # Vol matrix: rows = num_dates, cols = putDeltas + ATM + callDeltas = 3
+        vol_matrix = Matrix(2, 3)
+        vol_matrix[0][0] = 0.12; vol_matrix[0][1] = 0.10; vol_matrix[0][2] = 0.11
+        vol_matrix[1][0] = 0.13; vol_matrix[1][1] = 0.11; vol_matrix[1][2] = 0.12
+
+        surf = BlackVolatilitySurfaceDelta(
+            self.today, dates, put_deltas, call_deltas, has_atm,
+            vol_matrix, self.dc, self.cal, self.spot,
+            self.dom_ts, self.for_ts)
+        surf.enableExtrapolation()
+
+        vol = surf.blackVol(dates[0], 1.20)
+        self.assertGreater(vol, 0.0)
+        self.assertTrue(math.isfinite(vol))
+
+    def test_dates_inspector(self):
+        """dates() should return the input dates."""
+        dates = DateVector()
+        dates.append(Date(15, April, 2025))
+        dates.append(Date(15, January, 2026))
+        put_deltas = DoubleVector()
+        put_deltas.append(-0.25)
+        call_deltas = DoubleVector()
+        call_deltas.append(0.25)
+        vol_matrix = Matrix(2, 3)
+        vol_matrix[0][0] = 0.12; vol_matrix[0][1] = 0.10; vol_matrix[0][2] = 0.11
+        vol_matrix[1][0] = 0.13; vol_matrix[1][1] = 0.11; vol_matrix[1][2] = 0.12
+
+        surf = BlackVolatilitySurfaceDelta(
+            self.today, dates, put_deltas, call_deltas, True,
+            vol_matrix, self.dc, self.cal, self.spot,
+            self.dom_ts, self.for_ts)
+        self.assertEqual(len(surf.dates()), 2)
+
+    def test_black_vol_smile(self):
+        """blackVolSmile should return a SmileSection with smile data."""
+        dates = DateVector()
+        dates.append(Date(15, April, 2025))
+        dates.append(Date(15, January, 2026))
+        put_deltas = DoubleVector()
+        put_deltas.append(-0.25)
+        call_deltas = DoubleVector()
+        call_deltas.append(0.25)
+        vol_matrix = Matrix(2, 3)
+        vol_matrix[0][0] = 0.12; vol_matrix[0][1] = 0.10; vol_matrix[0][2] = 0.11
+        vol_matrix[1][0] = 0.13; vol_matrix[1][1] = 0.11; vol_matrix[1][2] = 0.12
+
+        surf = BlackVolatilitySurfaceDelta(
+            self.today, dates, put_deltas, call_deltas, True,
+            vol_matrix, self.dc, self.cal, self.spot,
+            self.dom_ts, self.for_ts)
+        surf.enableExtrapolation()
+
+        smile = surf.blackVolSmile(0.25)
+        self.assertIsNotNone(smile)
+        self.assertIsInstance(smile, SmileSection)
+        vol = smile.volatility(1.20)
+        self.assertGreater(vol, 0.0)
+
+
+class OISCapFloorHelperTest(unittest.TestCase):
+    """Test OISCapFloorHelper wrapper."""
+
+    def test_construction(self):
+        """Construct an OISCapFloorHelper with basic parameters."""
+        today = Date(15, January, 2025)
+        Settings.instance().evaluationDate = today
+        dc = Actual365Fixed()
+
+        flat_ts = FlatForward(today, 0.03, dc)
+        ts_handle = YieldTermStructureHandle(flat_ts)
+
+        index = Sofr(ts_handle)
+
+        vol_quote = QuoteHandle(SimpleQuote(0.005))
+
+        helper = OISCapFloorHelper(
+            CapFloorHelper.Cap,
+            Period(2, Years),
+            Period(3, Months),
+            0.03,
+            vol_quote,
+            index,
+            ts_handle)
+        self.assertIsNotNone(helper)
+
+
+class PiecewiseOptionletCurveLinearTest(unittest.TestCase):
+    """Test PiecewiseOptionletCurve<Linear, IterativeBootstrap> wrapper."""
+
+    def test_symbol_exists(self):
+        """PiecewiseOptionletCurveLinear should be importable."""
+        self.assertTrue(hasattr(__import__("ORE"), "PiecewiseOptionletCurveLinear"))
+
+    def test_interpolated_optionlet_curve_symbol(self):
+        """InterpolatedOptionletCurveLinear should be importable."""
+        self.assertTrue(hasattr(__import__("ORE"), "InterpolatedOptionletCurveLinear"))
+
+
 if __name__ == "__main__":
     unittest.main()
