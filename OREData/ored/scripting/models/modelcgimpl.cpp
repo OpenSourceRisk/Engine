@@ -129,29 +129,10 @@ std::size_t ModelCGImpl::pay(const std::size_t amount, const Date& obsdate, cons
     QL_REQUIRE(c != currencies_.end(), "currency " << currency << " not handled");
     Size cidx = std::distance(currencies_.begin(), c);
 
-    // do we have a dynamic fx underlying to convert to base at the effective date?
-
-    std::size_t fxSpot = ComputationGraph::nan;
-    for (Size i = 0; i < indexCurrencies_.size(); ++i) {
-        if (indices_.at(i).isFx() && currency == indexCurrencies_[i]) {
-            fxSpot = getIndexValue(i, effectiveDate);
-            break;
-        }
-    }
-
-    // if no we use the zero vol fx spot at the effective date
-
-    if (fxSpot == ComputationGraph::nan) {
-        if (cidx > 0)
-            fxSpot = cg_div(*g_, cg_mult(*g_, getFxSpot(cidx - 1), getDiscount(cidx, referenceDate(), effectiveDate)),
-                            getDiscount(0, referenceDate(), effectiveDate));
-        else
-            fxSpot = cg_const(*g_, 1.0);
-    }
-
     // discount from pay to obs date on ccy curve, convert to base ccy and divide by the numeraire
 
-    n = cg_mult(*g_, cg_div(*g_, getDiscount(cidx, effectiveDate, paydate), numeraire(effectiveDate)), fxSpot);
+    n = cg_mult(*g_, cg_div(*g_, getDiscount(cidx, effectiveDate, paydate), numeraire(effectiveDate)),
+                fxRate(effectiveDate, currency));
 
     id.setNode(n);
     cachedParameters_.insert(id);
@@ -165,6 +146,51 @@ std::size_t ModelCGImpl::discount(const Date& obsdate, const Date& paydate, cons
     QL_REQUIRE(c != currencies_.end(), "currency " << currency << " not handled");
     Size cidx = std::distance(currencies_.begin(), c);
     return getDiscount(cidx, obsdate, paydate);
+}
+
+std::size_t ModelCGImpl::fxRate(const Date& obsdate, const std::string& currency) const {
+    ModelCG::ModelParameter id(ModelCG::ModelParameter::Type::fxRate, currency, {}, obsdate);
+    if (auto m = cachedParameters_.find(id), id != cachedParameters_.end()) {
+        return m->node();
+    }
+
+    // do we have a dynamic fx underlying to convert to base at the effective date?
+
+    std::size_t fxSpot = ComputationGraph::nan;
+    for (Size i = 0; i < indexCurrencies_.size(); ++i) {
+        if (indices_.at(i).isFx() && currency == indexCurrencies_[i]) {
+            fxSpot = getIndexValue(i, obsdate);
+            break;
+        }
+    }
+
+    // if no we use the zero vol fx spot at the effective date
+
+    if (fxSpot == ComputationGraph::nan) {
+        if (cidx > 0)
+            fxSpot = cg_div(*g_, cg_mult(*g_, getFxSpot(cidx - 1), getDiscount(cidx, referenceDate(), obsdate)),
+                            getDiscount(0, referenceDate(), obsdate));
+        else
+            fxSpot = cg_const(*g_, 1.0);
+    }
+
+    id.setNode(fxSpot);
+    cachedParameters_.insert(id);
+    return fxSpot;
+}
+
+std::size_t ModelCGImpl::radonNikodynDerivative(const Date& s, const std::string& currency) const {
+
+    ModelCG::ModelParameter id(ModelCG::ModelParameter::Type::radonNikodymDerivative, currency, {}, s);
+    if (auto m = cachedParameters_.find(id), id != cachedParameters_.end()) {
+        return m->node();
+    }
+
+    auto tmp =
+        cg_mult(*g_, fxRate(d, currencies[j]), cg_div(*g_, numeraire(s, currencies[j]), numeraire(s, currencies[0])));
+    id.setNode(tmp);
+    cachedParameters_.insert(id);
+    return tmp;
 }
 
 namespace {

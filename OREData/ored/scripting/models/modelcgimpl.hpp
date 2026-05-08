@@ -35,14 +35,8 @@
 namespace ore {
 namespace data {
 
-/* This class provides an implementation of the model interface. Derived classes have to implement
-   - ModelCG::referenceDate()
-   - ModelCG::npv()
-   - ModelCG::numeraire()
-   - ModelCG::fwdCompAvg()
-   - ModelCG::getDirectFxSpotT0()
-   - ModelCG::getDirectDiscountT0()
-   and the interface defined by this class (the pure virtual methods defined below) */
+/* This class provides an implementation of part of the model interface. Derived classes have to implement
+   the rest and some additional pure virtual methods defined in this class */
 class ModelCGImpl : public ModelCG {
 public:
     /* Constructor arguments:
@@ -81,6 +75,8 @@ public:
     std::size_t pay(const std::size_t amount, const Date& obsdate, const Date& paydate,
                     const std::string& currency) const override;
     std::size_t discount(const Date& obsdate, const Date& paydate, const std::string& currency) const override;
+    std::size_t fxRate(const Date& obsdate, const std::string& curreny) const override;
+    std::size_t radonNikodymDerivative(const Date& s, const std::string& currency) const override;
     std::size_t eval(const std::string& index, const Date& obsdate, const Date& fwddate,
                      const bool returnMissingMissingAsNull = false,
                      const bool ignoreTodaysFixing = false) const override;

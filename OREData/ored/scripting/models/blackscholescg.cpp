@@ -764,10 +764,13 @@ std::size_t BlackScholesCG::getDiscount(const Size idx, const Date& s, const Dat
     return cg_div(*g_, nt, ns);
 }
 
-std::size_t BlackScholesCG::numeraire(const Date& s) const {
-    auto c = curves_.at(0);
+std::size_t BlackScholesCG::numeraire(const Date& s, const std::string& currency) const {
+    auto ccy = std::find(currencies_.begin(), currencies_.end(), currency);
+    QL_REQUIRE(ccy != currencies_.end(), "currency " << currency << " not handled");
+    Size cidx = std::distance(currencies_.begin(), ccy);
+    auto c = curves_.at(cidx);
     std::size_t ds =
-        addModelParameter(ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, currencies_[0], {}, s),
+        addModelParameter(ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, currencies_[cidx], {}, s),
                           [c, s] { return c->discount(s); });
     return cg_div(*g_, cg_const(*g_, 1.0), ds);
 }

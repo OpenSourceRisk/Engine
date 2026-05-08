@@ -86,7 +86,7 @@ public:
                     const std::optional<std::set<std::size_t>>& overwriteRegressors) const override;
     std::set<std::size_t> npvRegressors(const Date& obsdate,
                                         const std::optional<std::set<std::string>>& relevantCurrencies) const override;
-    std::size_t numeraire(const Date& s) const override;
+    std::size_t numeraire(const Date& s, const std::string& currency) const override;
     virtual std::size_t zeta(const Date& s, const std::string& currency) const override;
     std::size_t fwdCompAvg(const bool isAvg, const std::string& indexInput, const Date& obsdate, const Date& start,
                            const Date& end, const Real spread, const Real gearing, const Integer lookback,

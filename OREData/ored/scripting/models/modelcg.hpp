@@ -86,6 +86,8 @@ public:
             pay,                     // pay function cache (ModelCGImpl), *derived*
             eval,                    // eval function cache (ModelCGImpl), *derived*
             fxSpotT0,                // possibly triangulated fx spot t0, *derived*
+            fxRate,                  // fx rate (to base ccy) at an obs date, *derived*
+            radonNikodymDerivative   // radon-nikodym derivative *derived*
         };
 
         ~ModelParameter() = default;
@@ -182,6 +184,9 @@ public:
     // refdate <= obsdate <= paydate required
     virtual std::size_t discount(const Date& obsdate, const Date& paydate, const std::string& currency) const = 0;
 
+    // fx rate at date obsdate, refdate <= obsdate required
+    virtual std::size_t fxRate(const Date& obsdate, const std::string& curreny) const = 0;
+
     // refdate <= obsdate required
     // overwriteRegressors - if given - replaces the automatically generated regressor node set
     virtual std::size_t npv(const std::size_t amount, const Date& obsdate, const std::size_t filter,
@@ -207,11 +212,11 @@ public:
                              const bool returnMissingFixingAsNull = false,
                              const bool ignoreTodaysFixing = false) const = 0;
 
-    /* get numeraire N(s) for s >= referenceDate */
-    virtual std::size_t numeraire(const Date& s) const = 0;
+    /* get numeraire N(s) for s >= referenceDate and currency (empty is read as base ccy) */
+    virtual std::size_t numeraire(const Date& s, const std::string& currency = {}) const = 0;
 
-    /* get measure change  FX_ccy(t) * N_ccy(t) / N_base(t) for an admissable numeraire currency ccy*/
-    virtual std::size_t zeta(const Date& s, const std::string& currency) const = 0;
+    /* get Radon-Nikodym derivative FX_ccy(t) * N_ccy(t) / N_base(t) for an admissable numeraire currency ccy */
+    virtual std::size_t radonNikodymDerivative(const Date& s, const std::string& currency) const = 0;
 
     // forward looking daily comp/avg, obsdate <= start < end required, result must be as of max(refdate, obsdate)
     virtual std::size_t fwdCompAvg(const bool isAvg, const std::string& index, const Date& obsdate, const Date& start,

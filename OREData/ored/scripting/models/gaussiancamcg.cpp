@@ -647,11 +647,14 @@ std::size_t GaussianCamCG::getDiscount(const Size idx, const Date& s, const Date
                               Handle<YieldTermStructure>(), "default");
 }
 
-std::size_t GaussianCamCG::numeraire(const Date& s) const {
+std::size_t GaussianCamCG::numeraire(const Date& s, const std::string& currency) const {
+    auto ccy = std::find(currencies_.begin(), currencies_.end(), currency);
+    QL_REQUIRE(ccy != currencies_.end(), "currency currency not handled");
+    Size cidx = std::distance(currencies_.begin(), ccy);
     auto cam(cam_);
-    Size cpidx = currencyPositionInCam_[0];
-    LgmCG lgmcg(currencies_[0], *g_, [cam, cpidx] { return cam->irlgm1f(cpidx); }, modelParameters_, cachedParameters_);
-    return lgmcg.numeraire(s, getInterpolatedIrState(adjustForStickyCloseOut(s), 0), Handle<YieldTermStructure>(),
+    Size cpidx = currencyPositionInCam_[ccy];
+    LgmCG lgmcg(currency, *g_, [cam, cpidx] { return cam->irlgm1f(cpidx); }, modelParameters_, cachedParameters_);
+    return lgmcg.numeraire(s, getInterpolatedIrState(adjustForStickyCloseOut(s), cidx), Handle<YieldTermStructure>(),
                            "default");
 }
 
