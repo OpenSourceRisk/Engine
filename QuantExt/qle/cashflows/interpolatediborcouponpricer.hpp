@@ -91,7 +91,7 @@ public:
         const TimingAdjustment timingAdjustment = Black76,
         const Handle<Quote> correlation = Handle<Quote>(QuantLib::ext::shared_ptr<Quote>(new QuantLib::SimpleQuote(1.0))),
         const QuantLib::ext::optional<bool> useIndexedCoupon = QuantLib::ext::nullopt)
-        : InterpolatedIborCouponPricer(v, useIndexedCoupon), timingAdjustment_(timingAdjustment), correlation_(correlation) {
+        : InterpolatedIborCouponPricer(v, useIndexedCoupon), discount_(0), timingAdjustment_(timingAdjustment), correlation_(correlation) {
         QL_REQUIRE(timingAdjustment_ == Black76 || timingAdjustment_ == BivariateLognormal,
                    "unknown timing adjustment (code " << timingAdjustment_ << ")");
         registerWith(correlation_);
