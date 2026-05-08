@@ -224,7 +224,7 @@ SabrStrippedOptionletAdapter<TimeInterpolator>::SabrStrippedOptionletAdapter(
     : OptionletVolatilityStructure(sob->settlementDays(), sob->calendar(), sob->businessDayConvention(),
                                    sob->dayCounter()),
       optionletBase_(sob), ti_(ti), modelVariant_(modelVariant), outputVolatilityType_(outputVolatilityType),
-      outputDisplacement_(outputDisplacement), initialModelParameters_(initialModelParameters),
+      outputDisplacement_(outputDisplacement), modelDisplacement_(modelDisplacement), initialModelParameters_(initialModelParameters),
       maxCalibrationAttempts_(maxCalibrationAttempts), exitEarlyErrorThreshold_(exitEarlyErrorThreshold),
       maxAcceptableError_(maxAcceptableError), strikes_(strikes), volSpreads_(volSpreads), stickySabr_(stickySabr) {
     init();
@@ -242,7 +242,7 @@ SabrStrippedOptionletAdapter<TimeInterpolator>::SabrStrippedOptionletAdapter(
     const std::vector<std::vector<Handle<Quote>>>& volSpreads, bool stickySabr)
     : OptionletVolatilityStructure(referenceDate, sob->calendar(), sob->businessDayConvention(), sob->dayCounter()),
       optionletBase_(sob), ti_(ti), modelVariant_(modelVariant), outputVolatilityType_(outputVolatilityType),
-      outputDisplacement_(outputDisplacement), initialModelParameters_(initialModelParameters),
+      outputDisplacement_(outputDisplacement), modelDisplacement_(modelDisplacement), initialModelParameters_(initialModelParameters),
       maxCalibrationAttempts_(maxCalibrationAttempts), exitEarlyErrorThreshold_(exitEarlyErrorThreshold),
       maxAcceptableError_(maxAcceptableError), strikes_(strikes), volSpreads_(volSpreads), stickySabr_(stickySabr) {
     init();

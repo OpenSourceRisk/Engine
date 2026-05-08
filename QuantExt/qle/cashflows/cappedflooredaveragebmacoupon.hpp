@@ -103,11 +103,11 @@ public:
 
 protected:
     Handle<OptionletVolatilityStructure> capletVol_;
-    bool effectiveVolatilityInput_;
-    mutable Real effectiveCapletVolatility_;
-    mutable Real effectiveFloorletVolatility_;
-    mutable Real strippedCapletVolatility_;
-    mutable Real strippedFloorletVolatility_;
+    bool effectiveVolatilityInput_ = false;
+    mutable Real effectiveCapletVolatility_ = Null<Real>();
+    mutable Real effectiveFloorletVolatility_ = Null<Real>();
+    mutable Real strippedCapletVolatility_ = Null<Real>();
+    mutable Real strippedFloorletVolatility_ = Null<Real>();
 };
 
 } // namespace QuantExt
