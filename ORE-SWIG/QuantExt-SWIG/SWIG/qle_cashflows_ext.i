@@ -177,6 +177,111 @@ Leg _EquityLeg(
     const std::vector<Date>& paymentDates = {},
     const Schedule& valuationSchedule = Schedule());
 
+// QuantExt::IndexedCoupon – coupon with an indexed notional multiplier
+%{
+#include <qle/cashflows/indexedcoupon.hpp>
+%}
+
+%shared_ptr(QuantExt::IndexedCoupon)
+namespace QuantExt {
+class IndexedCoupon : public Coupon {
+  public:
+    IndexedCoupon(const ext::shared_ptr<Coupon>& c, Real qty,
+                  const ext::shared_ptr<Index>& index,
+                  const Date& fixingDate);
+    IndexedCoupon(const ext::shared_ptr<Coupon>& c, Real qty,
+                  Real initialFixing);
+
+    Real amount() const;
+    Real nominal() const;
+    Rate rate() const;
+    DayCounter dayCounter() const;
+    Real accruedAmount(const Date& d) const;
+
+    ext::shared_ptr<Coupon> underlying() const;
+    Real quantity() const;
+    ext::shared_ptr<Index> index() const;
+    const Date& fixingDate() const;
+    Real initialFixing() const;
+    Real multiplier() const;
+};
+} // namespace QuantExt
+
+// QuantExt::IndexWrappedCashFlow – cashflow with an indexed notional multiplier
+%shared_ptr(QuantExt::IndexWrappedCashFlow)
+namespace QuantExt {
+class IndexWrappedCashFlow : public CashFlow {
+  public:
+    IndexWrappedCashFlow(const ext::shared_ptr<CashFlow>& c, Real qty,
+                         const ext::shared_ptr<Index>& index,
+                         const Date& fixingDate);
+    IndexWrappedCashFlow(const ext::shared_ptr<CashFlow>& c, Real qty,
+                         Real initialFixing);
+
+    Date date() const;
+    Real amount() const;
+
+    ext::shared_ptr<CashFlow> underlying() const;
+    Real quantity() const;
+    ext::shared_ptr<Index> index() const;
+    const Date& fixingDate() const;
+    Real initialFixing() const;
+    Real multiplier() const;
+};
+} // namespace QuantExt
+
+// Free functions for unpacking indexed coupons/cashflows
+namespace QuantExt {
+    ext::shared_ptr<CashFlow> unpackIndexedCouponOrCashFlow(
+        const ext::shared_ptr<CashFlow>& c);
+    ext::shared_ptr<Coupon> unpackIndexedCoupon(
+        const ext::shared_ptr<Coupon>& c);
+    ext::shared_ptr<CashFlow> unpackIndexWrappedCashFlow(
+        const ext::shared_ptr<CashFlow>& c);
+    Real getIndexedCouponOrCashFlowMultiplier(
+        const ext::shared_ptr<CashFlow>& c);
+}
+
+// QuantExt::IndexedCouponLeg builder using helper-function-with-kwargs pattern
+%{
+Leg _IndexedCouponLeg(
+    const Leg& underlyingLeg,
+    Real qty,
+    const ext::shared_ptr<Index>& index,
+    Real initialFixing = Null<Real>(),
+    Real initialNotionalFixing = Null<Real>(),
+    Size fixingDays = 0,
+    const Calendar& fixingCalendar = Calendar(),
+    const BusinessDayConvention& fixingConvention = Following,
+    bool inArrearsFixing = false)
+{
+    QuantExt::IndexedCouponLeg leg(underlyingLeg, qty, index);
+    if (initialFixing != Null<Real>())
+        leg.withInitialFixing(initialFixing);
+    if (initialNotionalFixing != Null<Real>())
+        leg.withInitialNotionalFixing(initialNotionalFixing);
+    leg.withFixingDays(fixingDays)
+       .withFixingCalendar(fixingCalendar)
+       .withFixingConvention(fixingConvention)
+       .inArrearsFixing(inArrearsFixing);
+    return leg;
+}
+%}
+#if !defined(SWIGJAVA) && !defined(SWIGCSHARP)
+%feature("kwargs") _IndexedCouponLeg;
+#endif
+%rename(IndexedCouponLeg) _IndexedCouponLeg;
+Leg _IndexedCouponLeg(
+    const Leg& underlyingLeg,
+    Real qty,
+    const ext::shared_ptr<Index>& index,
+    Real initialFixing = Null<Real>(),
+    Real initialNotionalFixing = Null<Real>(),
+    Size fixingDays = 0,
+    const Calendar& fixingCalendar = Calendar(),
+    const BusinessDayConvention& fixingConvention = Following,
+    bool inArrearsFixing = false);
+
 %shared_ptr(QuantExt::CommodityCashFlow)
 namespace QuantExt {
 class CommodityCashFlow : public CashFlow {
