@@ -9,7 +9,6 @@ import unittest
 
 import ORE
 
-
 def _make_factory():
     return ORE.SimpleScenarioFactory()
 
