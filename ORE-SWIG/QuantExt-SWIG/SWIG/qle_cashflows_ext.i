@@ -317,6 +317,148 @@ class CommodityIndexedCashFlow : public CommodityCashFlow {
 };
 } // namespace QuantExt
 
+// QuantExt::CommodityQuantityFrequency enum
+namespace QuantExt {
+enum class CommodityQuantityFrequency {
+    PerCalculationPeriod,
+    PerCalendarDay,
+    PerPricingDay,
+    PerHour,
+    PerHourAndCalendarDay
+};
+} // namespace QuantExt
+
+// QuantExt::CommodityIndexedAverageCashFlow
+%shared_ptr(QuantExt::CommodityIndexedAverageCashFlow)
+namespace QuantExt {
+class CommodityIndexedAverageCashFlow : public CommodityCashFlow {
+  public:
+    enum class PaymentTiming { InAdvance, InArrears };
+
+    // Constructor 1: explicit payment date
+    CommodityIndexedAverageCashFlow(
+        QuantLib::Real quantity, const QuantLib::Date& startDate, const QuantLib::Date& endDate,
+        const QuantLib::Date& paymentDate, const ext::shared_ptr<CommodityIndex>& index,
+        const QuantLib::Calendar& pricingCalendar = QuantLib::Calendar(),
+        QuantLib::Real spread = 0.0, QuantLib::Real gearing = 1.0,
+        bool useFuturePrice = false, QuantLib::Natural deliveryDateRoll = 0,
+        QuantLib::Integer futureMonthOffset = 0,
+        const ext::shared_ptr<FutureExpiryCalculator>& calc = nullptr,
+        bool includeEndDate = true, bool excludeStartDate = true,
+        bool useBusinessDays = true);
+
+    // Constructor 2: deduced payment date
+    CommodityIndexedAverageCashFlow(
+        QuantLib::Real quantity, const QuantLib::Date& startDate, const QuantLib::Date& endDate,
+        QuantLib::Natural paymentLag, QuantLib::Calendar paymentCalendar,
+        QuantLib::BusinessDayConvention paymentConvention,
+        const ext::shared_ptr<CommodityIndex>& index,
+        const QuantLib::Calendar& pricingCalendar = QuantLib::Calendar(),
+        QuantLib::Real spread = 0.0, QuantLib::Real gearing = 1.0,
+        CommodityIndexedAverageCashFlow::PaymentTiming paymentTiming
+            = CommodityIndexedAverageCashFlow::PaymentTiming::InArrears,
+        bool useFuturePrice = false, QuantLib::Natural deliveryDateRoll = 0,
+        QuantLib::Integer futureMonthOffset = 0,
+        const ext::shared_ptr<FutureExpiryCalculator>& calc = nullptr,
+        bool includeEndDate = true, bool excludeStartDate = true,
+        const QuantLib::Date& paymentDateOverride = Date(),
+        bool useBusinessDays = true);
+
+    // Accessors
+    const QuantLib::Date& startDate() const;
+    const QuantLib::Date& endDate() const;
+    ext::shared_ptr<CommodityIndex> index() const;
+    QuantLib::Natural deliveryDateRoll() const;
+    QuantLib::Integer futureMonthOffset() const;
+    bool useBusinessDays() const;
+    QuantLib::Real periodQuantity() const;
+    QuantLib::Date date() const;
+    QuantLib::Real amount() const;
+};
+} // namespace QuantExt
+
+// QuantExt::CommodityIndexedAverageLeg builder using helper-function-with-kwargs pattern
+%{
+Leg _CommodityIndexedAverageLeg(
+    const Schedule& schedule,
+    const ext::shared_ptr<QuantExt::CommodityIndex>& index,
+    const std::vector<Real>& quantities,
+    Natural paymentLag = 0,
+    const Calendar& paymentCalendar = Calendar(),
+    BusinessDayConvention paymentConvention = Following,
+    const Calendar& pricingCalendar = Calendar(),
+    const std::vector<Real>& spreads = {},
+    const std::vector<Real>& gearings = {},
+    QuantExt::CommodityIndexedAverageCashFlow::PaymentTiming paymentTiming
+        = QuantExt::CommodityIndexedAverageCashFlow::PaymentTiming::InArrears,
+    bool useFuturePrice = false,
+    Natural deliveryDateRoll = 0,
+    Integer futureMonthOffset = 0,
+    const ext::shared_ptr<QuantExt::FutureExpiryCalculator>& calc = nullptr,
+    bool includeEndDate = true,
+    bool excludeStartDate = true,
+    bool useBusinessDays = true,
+    QuantExt::CommodityQuantityFrequency quantityFrequency
+        = QuantExt::CommodityQuantityFrequency::PerCalculationPeriod,
+    const ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr)
+{
+    QuantExt::CommodityIndexedAverageLeg leg(schedule, index);
+    if (quantities.size() == 1)
+        leg.withQuantities(quantities[0]);
+    else
+        leg.withQuantities(quantities);
+    leg.withPaymentLag(paymentLag)
+       .withPaymentCalendar(paymentCalendar)
+       .withPaymentConvention(paymentConvention)
+       .withPricingCalendar(pricingCalendar)
+       .paymentTiming(paymentTiming)
+       .useFuturePrice(useFuturePrice)
+       .withDeliveryDateRoll(deliveryDateRoll)
+       .withFutureMonthOffset(futureMonthOffset)
+       .withFutureExpiryCalculator(calc)
+       .includeEndDate(includeEndDate)
+       .excludeStartDate(excludeStartDate)
+       .useBusinessDays(useBusinessDays)
+       .withQuantityFrequency(quantityFrequency)
+       .withFxIndex(fxIndex);
+    if (spreads.size() == 1)
+        leg.withSpreads(spreads[0]);
+    else if (!spreads.empty())
+        leg.withSpreads(spreads);
+    if (gearings.size() == 1)
+        leg.withGearings(gearings[0]);
+    else if (!gearings.empty())
+        leg.withGearings(gearings);
+    return leg;
+}
+%}
+#if !defined(SWIGJAVA) && !defined(SWIGCSHARP)
+%feature("kwargs") _CommodityIndexedAverageLeg;
+#endif
+%rename(CommodityIndexedAverageLeg) _CommodityIndexedAverageLeg;
+Leg _CommodityIndexedAverageLeg(
+    const Schedule& schedule,
+    const ext::shared_ptr<QuantExt::CommodityIndex>& index,
+    const std::vector<Real>& quantities,
+    Natural paymentLag = 0,
+    const Calendar& paymentCalendar = Calendar(),
+    BusinessDayConvention paymentConvention = Following,
+    const Calendar& pricingCalendar = Calendar(),
+    const std::vector<Real>& spreads = {},
+    const std::vector<Real>& gearings = {},
+    QuantExt::CommodityIndexedAverageCashFlow::PaymentTiming paymentTiming
+        = QuantExt::CommodityIndexedAverageCashFlow::PaymentTiming::InArrears,
+    bool useFuturePrice = false,
+    Natural deliveryDateRoll = 0,
+    Integer futureMonthOffset = 0,
+    const ext::shared_ptr<QuantExt::FutureExpiryCalculator>& calc = nullptr,
+    bool includeEndDate = true,
+    bool excludeStartDate = true,
+    bool useBusinessDays = true,
+    QuantExt::CommodityQuantityFrequency quantityFrequency
+        = QuantExt::CommodityQuantityFrequency::PerCalculationPeriod,
+    const ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr);
+
 %shared_ptr(QuantExt::TRSCashFlow)
 namespace QuantExt {
 class TRSCashFlow : public CashFlow {
