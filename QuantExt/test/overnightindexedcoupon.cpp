@@ -24,9 +24,10 @@
 #include <ql/time/calendars/unitedstates.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <map>
-#include <format>
 #include <oret/util/datapaths.hpp>
 #include <string>
+#include <sstream>
+#include <iomanip>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -1957,9 +1958,13 @@ BOOST_DATA_TEST_CASE(testCpnAccruals, idxCpnVariants, lb, os, ts, rco, idx)
 #endif
 {
     // Create the coupon ID for output file.
-    string strOs = os ? "os" : "nos";
-    string strTs = ts ? "ts" : "nts";
-    string cpnName = format("{:02d}_lb-{}_{}_rco-{}_{}", idx, lb, strOs, rco, strTs);
+    ostringstream oss;
+    oss << std::setw(2) << std::setfill('0') << idx
+        << "_lb-" << lb
+        << "_" << (os ? "os" : "nos")
+        << "_rco-" << rco
+        << "_" << (ts ? "ts" : "nts");
+    string cpnName = oss.str();
 
     // Create the coupon.
     TestCouponData tcd;
@@ -1988,12 +1993,16 @@ BOOST_DATA_TEST_CASE(testCpnAccrualsGearingSpread, idxGsCpnVariants, gearing, sp
 #endif
 {
     // Create the coupon ID for output file, maintaining format of previous tests with additional fields.
-    string strTs = ts ? "ts" : "nts";
-    string strIncSpr = incSpr ? "inc-spr" : "exc-spr";
-    string strSibd = sibd ? "sibd" : "sih";
-    string strEibd = eibd ? "eibd" : "eih";
-    string cpnName = format("{:02d}_lb-0_nos_rco-0_{}_g-{:g}_s-{:g}_{}_{}_{}",
-        idx, strTs, gearing, spread, strIncSpr, strSibd, strEibd);
+    ostringstream oss;
+    oss << std::setw(2) << std::setfill('0') << idx
+        << "_lb-0_nos_rco-0_"
+        << (ts ? "ts" : "nts")
+        << "_g-" << gearing
+        << "_s-" << spread
+        << "_" << (incSpr ? "inc-spr" : "exc-spr")
+        << "_" << (sibd ? "sibd" : "sih")
+        << "_" << (eibd ? "eibd" : "eih");
+    string cpnName = oss.str();
 
     // Create the coupon.
     TestCouponData tcd;

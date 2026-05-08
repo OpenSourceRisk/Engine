@@ -20,7 +20,7 @@
 #include <oret/util/fileutilities.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <qle/termstructures/interpolateddiscountcurve2.hpp>
-#include <format>
+#include <iomanip>
 #include <fstream>
 
 namespace QuantExt {
@@ -114,6 +114,7 @@ void runCpnAccrualTest(const OvernightIndexedCouponBase& cpn, const path& outFil
     outFile << endl;
 
     // Calculate and write the test results.
+    outFile << std::fixed << std::setprecision(4);
     for (Date evalDate = startEvalDate; evalDate <= stopDate; ++evalDate) {
         Settings::instance().evaluationDate() = evalDate;
         outFile << io::iso_date(evalDate);
@@ -126,11 +127,11 @@ void runCpnAccrualTest(const OvernightIndexedCouponBase& cpn, const path& outFil
         loadFixingsUpToDate(evalDate, cpn.overnightIndex());
 
         for (Date accDate = startAccDate; accDate <= stopDate; ++accDate) {
-            outFile << "," << format("{:.4f}", cpn.accruedAmount(accDate));
+            outFile << "," << cpn.accruedAmount(accDate);
         }
 
         // Tag on the coupon amount as well.
-        outFile << "," << format("{:.4f}", cpn.amount());
+        outFile << "," << cpn.amount();
 
         outFile << endl;
     }

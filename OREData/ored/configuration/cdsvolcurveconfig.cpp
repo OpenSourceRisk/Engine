@@ -22,7 +22,6 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
-#include <format>
 
 using ore::data::XMLUtils;
 using namespace QuantLib;
@@ -337,7 +336,7 @@ void CDSVolatilityCurveConfig::populateRequiredIds() const {
 string CDSVolatilityCurveConfig::quoteStem(MarketDatum::QuoteType quoteType) const
 {
     string name = !quoteName_.empty() ? quoteName_ : curveID_;
-    return std::format("INDEX_CDS_OPTION/{}/{}/", to_string(quoteType), name);
+    return "INDEX_CDS_OPTION/" + to_string(quoteType) + "/" + name + "/";
 }
 
 void CDSVolatilityCurveConfig::validate(const string& checkSite) const
