@@ -143,6 +143,13 @@ public:
 }
 }
 
+%rename(tradeCvaMap)         ore::analytics::ValueAdjustmentCalculator::tradeCva();
+%rename(tradeDvaMap)         ore::analytics::ValueAdjustmentCalculator::tradeDva();
+%rename(nettingSetCvaMap)    ore::analytics::ValueAdjustmentCalculator::nettingSetCva();
+%rename(nettingSetDvaMap)    ore::analytics::ValueAdjustmentCalculator::nettingSetDva();
+%rename(nettingSetSumCvaMap) ore::analytics::ValueAdjustmentCalculator::nettingSetSumCva();
+%rename(nettingSetSumDvaMap) ore::analytics::ValueAdjustmentCalculator::nettingSetSumDva();
+
 %shared_ptr(ore::analytics::ValueAdjustmentCalculator)
 %nodefaultctor ore::analytics::ValueAdjustmentCalculator;
 %rename(XvaCalculator) ore::analytics::ValueAdjustmentCalculator;
@@ -152,6 +159,63 @@ class ValueAdjustmentCalculator {
 public:
     virtual ~ValueAdjustmentCalculator() {}
     virtual void build();
+
+    virtual const std::vector<QuantLib::Date>& dates();
+    virtual const QuantLib::Date asof();
+
+    // No-arg overloads return full result maps (renamed to avoid collision)
+    const std::map<std::string, QuantLib::Real>& tradeCva();
+    const std::map<std::string, QuantLib::Real>& tradeDva();
+    const std::map<std::string, QuantLib::Real>& nettingSetCva();
+    const std::map<std::string, QuantLib::Real>& nettingSetDva();
+    const std::map<std::string, QuantLib::Real>& nettingSetSumCva();
+    const std::map<std::string, QuantLib::Real>& nettingSetSumDva();
+
+    // Per-trade scalar accessors
+    const QuantLib::Real& tradeCva(const std::string& trade);
+    const QuantLib::Real& tradeDva(const std::string& trade);
+    const QuantLib::Real& tradeFba(const std::string& trade);
+    const QuantLib::Real& tradeFba_exOwnSp(const std::string& trade);
+    const QuantLib::Real& tradeFba_exAllSp(const std::string& trade);
+    const QuantLib::Real& tradeFca(const std::string& trade);
+    const QuantLib::Real& tradeFca_exOwnSp(const std::string& trade);
+    const QuantLib::Real& tradeFca_exAllSp(const std::string& trade);
+    const QuantLib::Real& tradeMva(const std::string& trade);
+
+    // Per-netting-set scalar accessors
+    const QuantLib::Real& nettingSetCva(const std::string& nettingSet);
+    const QuantLib::Real& nettingSetDva(const std::string& nettingSet);
+    const QuantLib::Real& nettingSetFba(const std::string& nettingSet);
+    const QuantLib::Real& nettingSetFba_exOwnSp(const std::string& nettingSet);
+    const QuantLib::Real& nettingSetFba_exAllSp(const std::string& nettingSet);
+    const QuantLib::Real& nettingSetFca(const std::string& nettingSet);
+    const QuantLib::Real& nettingSetFca_exOwnSp(const std::string& nettingSet);
+    const QuantLib::Real& nettingSetFca_exAllSp(const std::string& nettingSet);
+    const QuantLib::Real& nettingSetMva(const std::string& nettingSet);
+    const QuantLib::Real& nettingSetSumCva(const std::string& nettingSet);
+    const QuantLib::Real& nettingSetSumDva(const std::string& nettingSet);
+};
+}
+}
+
+%shared_ptr(ore::analytics::StaticCreditXvaCalculator)
+%nodefaultctor ore::analytics::StaticCreditXvaCalculator;
+namespace ore {
+namespace analytics {
+class StaticCreditXvaCalculator : public ValueAdjustmentCalculator {
+public:
+    virtual ~StaticCreditXvaCalculator() {}
+};
+}
+}
+
+%shared_ptr(ore::analytics::DynamicCreditXvaCalculator)
+%nodefaultctor ore::analytics::DynamicCreditXvaCalculator;
+namespace ore {
+namespace analytics {
+class DynamicCreditXvaCalculator : public ValueAdjustmentCalculator {
+public:
+    virtual ~DynamicCreditXvaCalculator() {}
 };
 }
 }
