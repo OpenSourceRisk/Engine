@@ -62,7 +62,8 @@ public:
                QuantLib::Real runningSpread = QuantLib::Null<Real>(),
                const QuantLib::Period& indexTerm = 0 * QuantLib::Days,
                const QuantLib::ext::optional<bool>& implyDefaultFromMarket = QuantLib::ext::nullopt, const bool allowNegativeRates = false,
-               const int priority = 0);
+               const int priority = 0,
+               const QuantLib::ext::optional<bool>& priceIsUpfront = QuantLib::ext::nullopt);
         Config()
             : extrapolation_(true), spotLag_(0), runningSpread_(QuantLib::Null<Real>()), indexTerm_(0 * QuantLib::Days),
               allowNegativeRates_(false) {}
@@ -96,6 +97,9 @@ public:
         const string& initialState() const { return initialState_; }
         const vector<string>& states() const { return states_; }
         const string& reinterpretedYieldCurveID() const { return reinterpretedYieldCurveID_; }
+        // If `Type` is `Price`, this determines if the price is to be interpreted as an upfront amount (true or not 
+        // set) or as a price (if set and false). Note that upfront = 1 - price.
+        const QuantLib::ext::optional<bool>& priceIsUpfront() const { return priceIsUpfront_; }
        //@}
 
         //! \name Setters
@@ -119,6 +123,7 @@ public:
         QuantLib::ext::optional<bool>& implyDefaultFromMarket() { return implyDefaultFromMarket_; }
         bool& allowNegativeRates() { return allowNegativeRates_; }
         std::string& reinterpretedYieldCurveID() { return reinterpretedYieldCurveID_; }
+        QuantLib::ext::optional<bool>& priceIsUpfront() { return priceIsUpfront_; }
         //@}
 
     private:
@@ -166,6 +171,7 @@ public:
         bool allowNegativeRates_;
 
         int priority_ = 0;
+        QuantLib::ext::optional<bool> priceIsUpfront_;
     };
 
     //! the curve builder will try to build the configs by ascending key in the map, first success wins
