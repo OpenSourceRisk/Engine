@@ -81,7 +81,6 @@ public:
         MonotonicLogCubicSpline,
         Hermite,
         CubicSpline,
-        DefaultLogMixedLinearCubic,
         MonotonicLogMixedLinearCubic,
         KrugerLogMixedLinearCubic,
         LogMixedLinearCubicNaturalSpline,
