@@ -51,12 +51,11 @@ GaussianCamCG::GaussianCamCG(
     const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
     const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
     const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
-    const std::set<Date>& simulationDates, const std::vector<bool>& isNumeraireCurrency,
-    const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
+    const std::set<Date>& simulationDates, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
     const std::vector<std::string>& conditionalExpectationModelStates, const std::vector<Date>& stickyCloseOutDates,
     const Size timeStepsPerYear)
     : ModelCGImpl(ModelCG::Type::MC, curves.front()->dayCounter(), paths, currencies, irIndices, infIndices, indices,
-                  indexCurrencies, simulationDates, isNumeraireCurrency, iborFallbackConfig),
+                  indexCurrencies, simulationDates, iborFallbackConfig),
       cam_(cam), curves_(curves), fxSpots_(fxSpots), timeStepsPerYear_(timeStepsPerYear),
       stickyCloseOutDates_(stickyCloseOutDates) {
 
@@ -652,14 +651,10 @@ std::size_t GaussianCamCG::numeraire(const Date& s, const std::string& currency)
     QL_REQUIRE(ccy != currencies_.end(), "currency currency not handled");
     Size cidx = std::distance(currencies_.begin(), ccy);
     auto cam(cam_);
-    Size cpidx = currencyPositionInCam_[ccy];
+    Size cpidx = currencyPositionInCam_[cidx];
     LgmCG lgmcg(currency, *g_, [cam, cpidx] { return cam->irlgm1f(cpidx); }, modelParameters_, cachedParameters_);
     return lgmcg.numeraire(s, getInterpolatedIrState(adjustForStickyCloseOut(s), cidx), Handle<YieldTermStructure>(),
                            "default");
-}
-
-std::size_t GaussianCamCG::zeta(const Date& s, const std::string& currency) const {
-    return ComputationGraph::nan; // TODO
 }
 
 std::size_t GaussianCamCG::getFxSpot(const Size idx) const {

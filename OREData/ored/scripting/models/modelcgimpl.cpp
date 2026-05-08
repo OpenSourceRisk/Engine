@@ -39,11 +39,9 @@ ModelCGImpl::ModelCGImpl(
     const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
     const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
     const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
-    const std::set<Date>& simulationDates, const std::vector<bool>& isNumeraireCurrency,
-    const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig)
+    const std::set<Date>& simulationDates, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig)
     : ModelCG(size), type_(type), dayCounter_(dayCounter), currencies_(currencies), indexCurrencies_(indexCurrencies),
-      simulationDates_(simulationDates), isNumeraireCurrency_(isNumeraireCurrency),
-      iborFallbackConfig_(iborFallbackConfig) {
+      simulationDates_(simulationDates), iborFallbackConfig_(iborFallbackConfig) {
 
     // populate index vectors
 
@@ -67,9 +65,6 @@ ModelCGImpl::ModelCGImpl(
 
     for (auto const& c : currencies_)
         QL_REQUIRE(!c.empty(), "empty currency string");
-
-    isNumeraireCurrency_.resize(currencies_.size(), false);
-    isNumeraireCurrency_.front() = true;
 
     // look for fx indices, check consistency with currencies and index currencies vectors
 
@@ -150,9 +145,13 @@ std::size_t ModelCGImpl::discount(const Date& obsdate, const Date& paydate, cons
 
 std::size_t ModelCGImpl::fxRate(const Date& obsdate, const std::string& currency) const {
     ModelCG::ModelParameter id(ModelCG::ModelParameter::Type::fxRate, currency, {}, obsdate);
-    if (auto m = cachedParameters_.find(id), id != cachedParameters_.end()) {
+    if (auto m = cachedParameters_.find(id); m != cachedParameters_.end()) {
         return m->node();
     }
+
+    auto ccy = std::find(currencies_.begin(), currencies_.end(), currency);
+    QL_REQUIRE(ccy != currencies_.end(), "currency " << currency << " no handled");
+    Size cidx = std::distance(currencies_.begin(), ccy);
 
     // do we have a dynamic fx underlying to convert to base at the effective date?
 
@@ -179,15 +178,13 @@ std::size_t ModelCGImpl::fxRate(const Date& obsdate, const std::string& currency
     return fxSpot;
 }
 
-std::size_t ModelCGImpl::radonNikodynDerivative(const Date& s, const std::string& currency) const {
-
+std::size_t ModelCGImpl::radonNikodymDerivative(const Date& s, const std::string& currency) const {
     ModelCG::ModelParameter id(ModelCG::ModelParameter::Type::radonNikodymDerivative, currency, {}, s);
-    if (auto m = cachedParameters_.find(id), id != cachedParameters_.end()) {
+    if (auto m = cachedParameters_.find(id); m != cachedParameters_.end()) {
         return m->node();
     }
 
-    auto tmp =
-        cg_mult(*g_, fxRate(d, currencies[j]), cg_div(*g_, numeraire(s, currencies[j]), numeraire(s, currencies[0])));
+    auto tmp = cg_mult(*g_, fxRate(s, currency), cg_div(*g_, numeraire(s, currency), numeraire(s, currencies_[0])));
     id.setNode(tmp);
     cachedParameters_.insert(id);
     return tmp;

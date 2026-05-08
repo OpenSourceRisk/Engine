@@ -117,9 +117,8 @@ QuantLib::ext::shared_ptr<PricingEngine> buildMcCgEngine(
         convertToCam(model), parseInteger(builder->engineParameter("Training.Samples", {}, true, std::string())),
         currencies, discountCurves, fxSpots, irIndices,
         std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>{}, indices, indexCurrencies,
-        simulationDates, std::vector<bool>{}, builder->engineFactory()->iborFallbackConfig(),
-        std::vector<std::string>{}, std::vector<Date>{},
-        parseInteger(builder->engineParameter("TimeStepsPerYear", {}, true)));
+        simulationDates, builder->engineFactory()->iborFallbackConfig(), std::vector<std::string>{},
+        std::vector<Date>{}, parseInteger(builder->engineParameter("TimeStepsPerYear", {}, true)));
 
     auto rt = builder->globalParameters().find("RunType");
     std::string runType = rt != builder->globalParameters().end() ? rt->second : "<<no run type set>>";

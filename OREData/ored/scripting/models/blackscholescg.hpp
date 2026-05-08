@@ -65,7 +65,7 @@ public:
         const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
         const Handle<AssetModelWrapper>& model,
         const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
-        const std::set<Date>& simulationDates, const std::vector<bool>& isNumeraireCurrency = {},
+        const std::set<Date>& simulationDates,
         const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
             QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
         const std::string& calibration = "ATM",
@@ -86,8 +86,7 @@ public:
                     const std::optional<std::set<std::size_t>>& overwriteRegressors) const override;
     std::set<std::size_t> npvRegressors(const Date& obsdate,
                                         const std::optional<std::set<std::string>>& relevantCurrencies) const override;
-    std::size_t numeraire(const Date& s, const std::string& currency) const override;
-    virtual std::size_t zeta(const Date& s, const std::string& currency) const override;
+    std::size_t numeraire(const Date& s, const std::string& currency = {}) const override;
     std::size_t fwdCompAvg(const bool isAvg, const std::string& indexInput, const Date& obsdate, const Date& start,
                            const Date& end, const Real spread, const Real gearing, const Integer lookback,
                            const Natural rateCutoff, const Natural fixingDays, const bool includeSpread, const Real cap,

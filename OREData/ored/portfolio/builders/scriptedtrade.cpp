@@ -1334,7 +1334,7 @@ void ScriptedTradeEngineBuilder::buildBlackScholes(
         modelCG_ = QuantLib::ext::make_shared<BlackScholesCG>(
             ModelCG::Type::MC, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
             modelIndices_, modelIndicesCurrencies_, builder->model(), correlations_, simulationDates_,
-            std::vector<bool>{}, iborFallbackConfig, calibration_, filteredStrikes);
+            iborFallbackConfig, calibration_, filteredStrikes);
     } else {
         model_ = QuantLib::ext::make_shared<BlackScholes>(
             Model::Type::MC, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
@@ -1857,7 +1857,7 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(
     if (useCg_) {
         modelCG_ = QuantLib::ext::make_shared<GaussianCamCG>(
             camBuilder->model(), modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
-            modelIndices_, modelIndicesCurrencies_, simulationDates_, std::vector<bool>{}, iborFallbackConfig,
+            modelIndices_, modelIndicesCurrencies_, simulationDates_, iborFallbackConfig,
             conditionalExpectationModelStates, std::vector<Date>{},
             camBuilder->model()->discretization() == CrossAssetModel::Discretization::Exact ? 0 : timeStepsPerYear_);
     } else {
@@ -2024,7 +2024,7 @@ void ScriptedTradeEngineBuilder::buildGaussianCamAMC(
     if (useCg_) {
         modelCG_ = QuantLib::ext::make_shared<GaussianCamCG>(
             projectedModel, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
-            modelIndices_, modelIndicesCurrencies_, simulationDates_, std::vector<bool>{}, iborFallbackConfig,
+            modelIndices_, modelIndicesCurrencies_, simulationDates_, iborFallbackConfig,
             conditionalExpectationModelStates, std::vector<Date>{},
             projectedModel->discretization() == CrossAssetModel::Discretization::Exact ? 0 : timeStepsPerYear_);
     } else {
