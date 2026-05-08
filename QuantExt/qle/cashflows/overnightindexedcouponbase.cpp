@@ -296,6 +296,10 @@ const vector<Rate>& OvernightIndexedCouponBase::indexFixings() const {
         updateSchedules();
 
     fixings_.resize(n_);
+    QL_REQUIRE(rateCutoff_ <= n_,
+               "OvernightIndexedCoupon: rate cut-off ("
+                                           << rateCutoff_ << ") cannot be greater than number of fixings ("
+                                           << n_ << ").");
 
     // Fixings up to rate cut-off (if any).
     for (Size i = 0; i < n_ - rateCutoff_; ++i) {

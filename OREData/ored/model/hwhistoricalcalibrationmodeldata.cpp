@@ -46,6 +46,8 @@ XMLNode* HwHistoricalCalibrationModelData::toXML(XMLDocument& doc) const {
             for (Size i = 0; i < ccyMatrix.second.size(); i++) {
                 kappa_vec.push_back(ccyMatrix.second[i]);
             }
+            QL_REQUIRE(irSigma_.find(ccyMatrix.first) != irSigma_.end(),
+                       "Sigma matrix not found for currency " << ccyMatrix.first);
             Matrix sigmaFormat = irSigma_.find(ccyMatrix.first)->second;
             for (Size i = 0; i < sigmaFormat.rows(); i++) {
                 vector<Real> vec_inner;
@@ -182,6 +184,8 @@ XMLNode* HwHistoricalCalibrationModelData::toXML2(XMLDocument& doc) const {
 
             vector<string> formattedRatios;
             formattedRatios.push_back("1"); // First ratio is always 1
+            QL_REQUIRE(principalComponents_.find(ccyMatrix.first) != principalComponents_.end(),
+                       "Principal components not found for currency " << ccyMatrix.first);
             for (Size i = 1; i < principalComponents_.find(ccyMatrix.first)->second; i++) {
                 std::ostringstream oss;
                 oss << std::defaultfloat << (eigenValues_.find(ccyMatrix.first)->second[i] / firstEigenValue);

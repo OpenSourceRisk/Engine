@@ -211,7 +211,11 @@ namespace test_tools {
 namespace tt_detail {
 template <> struct print_log_value<boost::tuple<InterpolationType, bool> > {
     void operator()(ostream& os, const boost::tuple<InterpolationType, bool>& tp) {
+        std::ios::fmtflags f(os.flags());
+        std::streamsize p = os.precision();
         os << to_string(boost::get<0>(tp)) << ", " << boolalpha << boost::get<1>(tp);
+        os.flags(f);
+        os.precision(p);
     }
 };
 } // namespace tt_detail

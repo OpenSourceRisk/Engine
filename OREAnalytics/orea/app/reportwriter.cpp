@@ -3048,6 +3048,8 @@ void ReportWriter::writeModelPathReport(ore::data::Report& report, const ext::sh
                     if (date == today)
                         continue;
                     auto it = paths.data.find(date);
+                    if (it == paths.data.end())
+                        continue;
                     for (Size i = 0; i < paths.indexNames.size(); ++i) {
                         for (Size j = 0; j < paths.samples; ++j) {
                             report.next().add(id).add(paths.indexNames[i]).add(date).add(j).add(it->second[i][j]);

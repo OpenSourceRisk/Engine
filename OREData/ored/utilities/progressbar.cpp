@@ -62,6 +62,8 @@ void SimpleProgressBar::updateProgress(const unsigned long progress, const unsig
                                         ? static_cast<std::size_t>(messageWidth_)
                                         : key_.size()) +
                                    static_cast<std::size_t>(barWidth_) + 10;
+    std::ios::fmtflags f(std::cout.flags());
+    std::streamsize p = std::cout.precision();
     if (progress >= total) {
         std::cout << "\r" << std::string(clearWidth, ' ') << "\r";
         std::cout << std::setw(messageWidth_) << std::left << key_;
@@ -89,6 +91,8 @@ void SimpleProgressBar::updateProgress(const unsigned long progress, const unsig
         std::cout << "] ";
     std::cout << static_cast<int>(ratio * 100.0) << " %\r";
     std::cout.flush();
+    std::cout.flags(f);
+    std::cout.precision(p);
     updateCounter_++;
 }
 

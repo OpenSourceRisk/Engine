@@ -143,8 +143,8 @@ private:
     bool telescopicValueDates_;
     bool fairSpreadLegIsForeign_;
 
-    mutable Spread fairForeignSpread_;
-    mutable Spread fairDomesticSpread_;
+    mutable Spread fairForeignSpread_ = Null<Spread>();
+    mutable Spread fairDomesticSpread_ = Null<Spread>();
 };
 
 //! \ingroup instruments

@@ -1289,10 +1289,10 @@ QuantLib::ext::shared_ptr<QuantLib::IborIndex> CrossCcyFixFloatSwapConvention::i
 }
 
 CdsConvention::CdsConvention() : settlementDays_(0), frequency_(Quarterly), paymentConvention_(Following),
-    rule_(DateGeneration::CDS2015), settlesAccrual_(true), paysAtDefaultTime_(true), upfrontSettlementDays_(3) {}
+    rule_(DateGeneration::CDS2015), settlesAccrual_(true), paysAtDefaultTime_(true), upfrontSettlementDays_(3), usesReferenceData_(false) {}
 
 CdsConvention::CdsConvention(const string& id, const bool usesReferenceData)
-    : Convention(id, Type::CDS), usesReferenceData_(usesReferenceData) {}
+    : Convention(id, Type::CDS), usesReferenceData_(usesReferenceData), settlementDays_(Null<Natural>()), frequency_(Null<Frequency>()), paymentConvention_(Following), rule_(DateGeneration::CDS2015), settlesAccrual_(true), paysAtDefaultTime_(true), upfrontSettlementDays_(Null<Natural>()) {}
 
 CdsConvention::CdsConvention(const string& id, const string& strSettlementDays, const string& strCalendar,
                              const string& strFrequency, const string& strPaymentConvention, const string& strRule,
