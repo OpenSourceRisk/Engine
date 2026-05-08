@@ -195,12 +195,110 @@ class EquityCouponTest(unittest.TestCase):
         pricer.setFxVolatility(fxVolHandle)
 
 
+class IndexedCouponTest(unittest.TestCase):
+    def setUp(self):
+        """Set up an IndexedCoupon wrapping a FixedRateCoupon."""
+        self.todayDate = Date(15, January, 2026)
+        Settings.instance().evaluationDate = self.todayDate
+
+        self.dayCounter = Actual365Fixed()
+        self.nominal = 1000000.0
+        self.rate = 0.05
+        self.startDate = Date(15, January, 2026)
+        self.endDate = Date(15, April, 2026)
+        self.paymentDate = Date(17, April, 2026)
+
+        self.underlying = FixedRateCoupon(
+            self.paymentDate, self.nominal,
+            self.rate, self.dayCounter,
+            self.startDate, self.endDate)
+
+    def testIndexedCouponFixedMultiplier(self):
+        """Test IndexedCoupon with a fixed multiplier."""
+        qty = 2.0
+        initialFixing = 1.5
+        coupon = IndexedCoupon(self.underlying, qty, initialFixing)
+
+        self.assertAlmostEqual(coupon.quantity(), qty, delta=1e-10)
+        self.assertAlmostEqual(coupon.initialFixing(), initialFixing, delta=1e-10)
+        expectedMultiplier = qty * initialFixing
+        self.assertAlmostEqual(coupon.multiplier(), expectedMultiplier, delta=1e-10)
+
+        underlyingAmount = self.underlying.amount()
+        self.assertAlmostEqual(coupon.amount(), underlyingAmount * expectedMultiplier, delta=1e-6)
+
+    def testIndexedCouponAccessors(self):
+        """Test IndexedCoupon basic accessors."""
+        qty = 1.0
+        initialFixing = 2.0
+        coupon = IndexedCoupon(self.underlying, qty, initialFixing)
+
+        self.assertIsNotNone(coupon.underlying())
+        self.assertEqual(coupon.dayCounter(), self.dayCounter)
+        self.assertAlmostEqual(coupon.nominal(), self.nominal * qty * initialFixing, delta=1e-6)
+
+    def testIndexWrappedCashFlowFixedMultiplier(self):
+        """Test IndexWrappedCashFlow with a fixed multiplier."""
+        qty = 3.0
+        initialFixing = 1.25
+        wrapped = IndexWrappedCashFlow(self.underlying, qty, initialFixing)
+
+        self.assertEqual(wrapped.date(), self.paymentDate)
+        expectedMultiplier = qty * initialFixing
+        self.assertAlmostEqual(wrapped.multiplier(), expectedMultiplier, delta=1e-10)
+        self.assertAlmostEqual(wrapped.amount(), self.underlying.amount() * expectedMultiplier, delta=1e-6)
+
+    def testIndexedCouponLegBuilder(self):
+        """Test IndexedCouponLeg builder produces a non-empty Leg."""
+        calendar = TARGET()
+        schedule = Schedule(
+            self.startDate, Date(15, January, 2027),
+            Period(3, Months), calendar,
+            ModifiedFollowing, ModifiedFollowing,
+            DateGeneration.Forward, False)
+
+        fixedLeg = FixedRateLeg(schedule, self.dayCounter, [self.nominal], [self.rate])
+
+        flatForward = FlatForward(self.todayDate, 0.03, self.dayCounter)
+        ytsHandle = RelinkableYieldTermStructureHandle(flatForward)
+        eqSpot = QuoteHandle(SimpleQuote(100.0))
+        eqIndex = EquityIndex2("EQ-IDX", calendar, USDCurrency(), eqSpot, ytsHandle, ytsHandle)
+
+        leg = IndexedCouponLeg(
+            underlyingLeg=fixedLeg,
+            qty=1.0,
+            index=eqIndex,
+            initialFixing=100.0,
+            fixingCalendar=calendar)
+
+        self.assertGreater(len(leg), 0)
+
+    def testUnpackIndexedCoupon(self):
+        """Test unpackIndexedCoupon returns the underlying coupon."""
+        qty = 2.0
+        initialFixing = 1.5
+        coupon = IndexedCoupon(self.underlying, qty, initialFixing)
+
+        unpacked = unpackIndexedCoupon(coupon)
+        self.assertIsNotNone(unpacked)
+
+    def testGetMultiplier(self):
+        """Test getIndexedCouponOrCashFlowMultiplier returns correct value."""
+        qty = 2.0
+        initialFixing = 1.5
+        coupon = IndexedCoupon(self.underlying, qty, initialFixing)
+
+        multiplier = getIndexedCouponOrCashFlowMultiplier(coupon)
+        self.assertAlmostEqual(multiplier, qty * initialFixing, delta=1e-10)
+
+
 if __name__ == '__main__':
     print('testing ORE ' + ORE.__version__)
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(FXLinkedCashFlowTest,'test'))
     suite.addTest(unittest.makeSuite(FloatingRateFXLinkedNotionalCouponTest,'test'))
     suite.addTest(unittest.makeSuite(EquityCouponTest,'test'))
+    suite.addTest(unittest.makeSuite(IndexedCouponTest,'test'))
     unittest.TextTestRunner(verbosity=2).run(suite)
     unittest.main()
 
