@@ -1292,7 +1292,9 @@ CdsConvention::CdsConvention() : settlementDays_(0), frequency_(Quarterly), paym
     rule_(DateGeneration::CDS2015), settlesAccrual_(true), paysAtDefaultTime_(true), upfrontSettlementDays_(3), usesReferenceData_(false) {}
 
 CdsConvention::CdsConvention(const string& id, const bool usesReferenceData)
-    : Convention(id, Type::CDS), usesReferenceData_(usesReferenceData), settlementDays_(Null<Natural>()), frequency_(Null<Frequency>()), paymentConvention_(Following), rule_(DateGeneration::CDS2015), settlesAccrual_(true), paysAtDefaultTime_(true), upfrontSettlementDays_(Null<Natural>()) {}
+    : Convention(id, Type::CDS), settlementDays_(Null<Natural>()), frequency_(Null<Frequency>()),
+      paymentConvention_(Following), rule_(DateGeneration::CDS2015), settlesAccrual_(true), paysAtDefaultTime_(true),
+      upfrontSettlementDays_(Null<Natural>(), usesReferenceData_(usesReferenceData), ) {}
 
 CdsConvention::CdsConvention(const string& id, const string& strSettlementDays, const string& strCalendar,
                              const string& strFrequency, const string& strPaymentConvention, const string& strRule,
