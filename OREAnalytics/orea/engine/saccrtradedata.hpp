@@ -205,7 +205,8 @@ public:
         UnderlyingData underlyingData; // SA-CCR/ORE assetClass, qualifier/underlyingName, isIndex
         HedgingData hedgingData;       // hedgingSet, hedgingSubset, isVol
         std::string currency;          // currency of the notional and other amounts
-        QuantLib::Real adjustedNotional, delta;
+        QuantLib::Real adjustedNotional = QuantLib::Null<Real>();
+        QuantLib::Real delta;
         QuantLib::Real maturity = QuantLib::Null<QuantLib::Real>();
         QuantLib::Real maturityFactor = QuantLib::Null<QuantLib::Real>();
         bool isOption, isVol;

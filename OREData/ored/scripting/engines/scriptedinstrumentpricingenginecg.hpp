@@ -98,7 +98,7 @@ private:
     // store base scenario model parameters to compute sensi-based NPVs
 
     mutable bool haveBaseValues_ = false;
-    mutable double baseNpv_;
+    mutable double baseNpv_ = Null<double>();
     mutable std::vector<std::pair<std::size_t, double>> baseModelParams_;
     mutable std::vector<double> sensis_;
     mutable std::map<std::string, QuantLib::ext::any> instrumentAdditionalResults_;
