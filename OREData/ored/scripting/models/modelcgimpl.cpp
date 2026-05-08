@@ -131,7 +131,7 @@ std::size_t ModelCGImpl::pay(const std::size_t amount, const Date& obsdate, cons
 
     // do we have a dynamic fx underlying to convert to base at the effective date?
 
-    std::size_t fxSpot = 0;
+    std::size_t fxSpot = ComputationGraph::nan;
     for (Size i = 0; i < indexCurrencies_.size(); ++i) {
         if (indices_.at(i).isFx() && currency == indexCurrencies_[i]) {
             fxSpot = getIndexValue(i, effectiveDate);
@@ -141,7 +141,7 @@ std::size_t ModelCGImpl::pay(const std::size_t amount, const Date& obsdate, cons
 
     // if no we use the zero vol fx spot at the effective date
 
-    if (fxSpot == 0) {
+    if (fxSpot == ComputationGraph::nan) {
         if (cidx > 0)
             fxSpot = cg_div(*g_, cg_mult(*g_, getFxSpot(cidx - 1), getDiscount(cidx, referenceDate(), effectiveDate)),
                             getDiscount(0, referenceDate(), effectiveDate));
