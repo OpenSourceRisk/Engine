@@ -55,6 +55,57 @@ public:
     virtual ~DynamicInitialMarginCalculator() {}
     virtual void build() = 0;
     const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& dimCube() const;
+
+    // Result accessors
+    const std::vector<std::vector<QuantLib::Real>>& dynamicIM(const std::string& nettingSet) const;
+    const std::vector<std::vector<QuantLib::Real>>& cashFlow(const std::string& nettingSet) const;
+    const std::vector<QuantLib::Real>& expectedIM(const std::string& nettingSet) const;
+    const std::map<std::string, QuantLib::Real>& currentIM() const;
+    const std::map<std::string, QuantLib::Real>& getInitialMarginScaling() const;
+};
+}
+}
+
+%shared_ptr(ore::analytics::RegressionDynamicInitialMarginCalculator)
+%nodefaultctor ore::analytics::RegressionDynamicInitialMarginCalculator;
+namespace ore {
+namespace analytics {
+class RegressionDynamicInitialMarginCalculator : public DynamicInitialMarginCalculator {
+public:
+    virtual ~RegressionDynamicInitialMarginCalculator() {}
+    void build() override;
+    const std::map<std::string, QuantLib::Real>& unscaledCurrentDIM() const;
+    const std::vector<std::vector<QuantLib::Real>>& localRegressionResults(const std::string& nettingSet);
+    const std::vector<QuantLib::Real>& zeroOrderResults(const std::string& nettingSet);
+    const std::vector<QuantLib::Real>& simpleResultsUpper(const std::string& nettingSet);
+    const std::vector<QuantLib::Real>& simpleResultsLower(const std::string& nettingSet);
+};
+}
+}
+
+%shared_ptr(ore::analytics::FlatDynamicInitialMarginCalculator)
+%nodefaultctor ore::analytics::FlatDynamicInitialMarginCalculator;
+namespace ore {
+namespace analytics {
+class FlatDynamicInitialMarginCalculator : public DynamicInitialMarginCalculator {
+public:
+    virtual ~FlatDynamicInitialMarginCalculator() {}
+    void build() override;
+    const std::map<std::string, QuantLib::Real>& unscaledCurrentDIM() const;
+    const std::vector<QuantLib::Real>& dimResults(const std::string& nettingSet) const;
+};
+}
+}
+
+%shared_ptr(ore::analytics::DirectDynamicInitialMarginCalculator)
+%nodefaultctor ore::analytics::DirectDynamicInitialMarginCalculator;
+namespace ore {
+namespace analytics {
+class DirectDynamicInitialMarginCalculator : public DynamicInitialMarginCalculator {
+public:
+    virtual ~DirectDynamicInitialMarginCalculator() {}
+    void build() override;
+    const std::map<std::string, QuantLib::Real>& unscaledCurrentDIM() const;
 };
 }
 }
