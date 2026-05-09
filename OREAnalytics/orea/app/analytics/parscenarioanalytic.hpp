@@ -22,11 +22,16 @@
 #pragma once
 
 #include <orea/app/analytic.hpp>
+#include <orea/app/inputvariables.hpp>
 
 namespace ore {
 namespace analytics {
 
 class InputParameters;
+
+struct ParScenarioVariables : public InputVariables {
+    void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
+};
 
 // Computes the fair par rates
 class ParScenarioAnalyticImpl : public Analytic::Impl {
@@ -35,7 +40,7 @@ public:
 
     ParScenarioAnalyticImpl(
         const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-        : Analytic::Impl(inputs) {
+        : Analytic::Impl(inputs, QuantLib::ext::make_shared<ParScenarioVariables>()) {
         setLabel(LABEL);
     }
 

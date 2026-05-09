@@ -23,6 +23,7 @@
 #pragma once
 
 #include <orea/app/analytic.hpp>
+#include <orea/app/inputvariables.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
 #include <orea/scenario/sensitivityscenariogenerator.hpp>
 #include <ored/report/inmemoryreport.hpp>
@@ -75,6 +76,10 @@ struct ZeroSensiResults {
 struct ParSensiResults {
     std::map<XvaResults::Adjustment, QuantLib::ext::shared_ptr<ZeroToParCube>> tradeParSensiCube_;
     std::map<XvaResults::Adjustment, QuantLib::ext::shared_ptr<ZeroToParCube>> nettingParSensiCube_;
+};
+
+struct XvaSensitivityVariables : public InputVariables {
+    void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
 };
 
 class XvaSensitivityAnalyticImpl : public Analytic::Impl {

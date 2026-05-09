@@ -8,6 +8,7 @@
       <xs:element type="parameterListType" name="Logging" minOccurs="0" />
       <xs:element type="parameterListType" name="Markets" minOccurs="0" />
       <xs:element type="analyticsType" name="Analytics"/>
+      <xs:element type="parameterListType" name="Restore" minOccurs="0" />
     </xs:all>
   </xs:complexType>
 
