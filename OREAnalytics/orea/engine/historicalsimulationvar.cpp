@@ -38,7 +38,7 @@ HistoricalSimulationVarReport::HistoricalSimulationVarReport(
     const vector<Real>& p, QuantLib::ext::optional<TimePeriod> period,
     const ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen, std::unique_ptr<FullRevalArgs> fullRevalArgs, std::unique_ptr<MultiThreadArgs> multiThreadArgs,
     const bool breakdown, const bool includeExpectedShortfall, const bool tradePnl, const bool riskFactorBreakdown, const bool useAtParCouponsCurves,
-    const bool useAtParCouponsTrades, const bool riskClassBreakdown)
+    const bool useAtParCouponsTrades, const bool riskClassBreakdown, const bool includeTheta)
     : VarReport(baseCurrency, portfolio, portfolioFilter, p, period, hisScenGen, nullptr, std::move(fullRevalArgs),
                 std::move(multiThreadArgs), false, useAtParCouponsCurves, useAtParCouponsTrades, tradePnl, riskFactorBreakdown,
                 riskClassBreakdown),
@@ -46,6 +46,7 @@ HistoricalSimulationVarReport::HistoricalSimulationVarReport(
     fullReval_ = true;
     tradePnl_ = tradePnl;
     riskFactorBreakdown_ = riskFactorBreakdown;
+    includeTheta_ = includeTheta;
 }
 
 void HistoricalSimulationVarReport::createVarCalculator() {
@@ -92,6 +93,34 @@ void HistoricalSimulationVarReport::handleFullRevalResults(const ext::shared_ptr
         riskFactorPnls_ = histPnlGen_->riskFactorLevelPnlSeries(period_.value());
     } else {
         tradePnls_ = histPnlGen_->tradeLevelPnl(period_.value(), tradeIdIdxPairs_);
+    }
+
+    // Add theta adjustment to PnLs if enabled
+    if (includeTheta_ && !thetaPerTrade_.empty()) {
+        if (!pnls_.empty()) {
+            // Compute aggregate theta for the current trade group
+            Real totalTheta = 0.0;
+            for (const auto& [tradeId, idx] : tradeIdIdxPairs_) {
+                auto it = thetaPerTrade_.find(tradeId);
+                if (it != thetaPerTrade_.end())
+                    totalTheta += it->second;
+            }
+            for (auto& p : pnls_)
+                p += totalTheta;
+        }
+        if (!tradePnls_.empty()) {
+            // Build a vector of per-trade theta in tradeIdIdxPairs_ order
+            std::vector<Real> tradeThetas;
+            tradeThetas.reserve(tradeIdIdxPairs_.size());
+            for (const auto& [tradeId, idx] : tradeIdIdxPairs_) {
+                auto it = thetaPerTrade_.find(tradeId);
+                tradeThetas.push_back(it != thetaPerTrade_.end() ? it->second : 0.0);
+            }
+            for (auto& scenarioPnls : tradePnls_) {
+                for (Size i = 0; i < scenarioPnls.size() && i < tradeThetas.size(); ++i)
+                    scenarioPnls[i] += tradeThetas[i];
+            }
+        }
     }
 }
 

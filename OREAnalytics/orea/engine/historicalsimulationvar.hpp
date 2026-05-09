@@ -78,7 +78,11 @@ public:
                                   const bool breakdown = false, const bool includeExpectedShortfall = false,
                                   const bool tradePnl = false, const bool riskFactorBreakdown = false,
                                   const bool useAtParCouponsCurves = true, const bool useAtParCouponsTrades = true,
-                                  const bool riskClassBreakdown = true);
+                                  const bool riskClassBreakdown = true,
+                                  const bool includeTheta = false);
+
+    //! Set per-trade theta values to be added to historical PnLs
+    void setThetaPerTrade(const std::map<std::string, QuantLib::Real>& thetaPerTrade) { thetaPerTrade_ = thetaPerTrade; }
 
     void createAdditionalReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) override;
 
@@ -106,6 +110,8 @@ private:
     bool includeExpectedShortfall_ = false;
     bool tradePnl_ = false;
     bool riskFactorBreakdown_ = false;
+    bool includeTheta_ = false;
+    std::map<std::string, QuantLib::Real> thetaPerTrade_;
     int countRF_ = 0;
 };
 
