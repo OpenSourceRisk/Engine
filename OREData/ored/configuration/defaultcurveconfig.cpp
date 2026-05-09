@@ -25,10 +25,10 @@
 
 #include <boost/algorithm/string.hpp>
 
-using QuantLib::Date;
-
 namespace ore {
 namespace data {
+
+using namespace QuantLib;
 
 DefaultCurveConfig::DefaultCurveConfig(const string& curveId, const string& curveDescription, const string& currency,
                                        const std::map<int, Config>& configs)
@@ -123,13 +123,13 @@ DefaultCurveConfig::Config::Config(const Type& type, const string& discountCurve
                                    const Date& startDate, const BootstrapConfig& bootstrapConfig,
                                    QuantLib::Real runningSpread, const QuantLib::Period& indexTerm,
                                    const QuantLib::ext::optional<bool>& implyDefaultFromMarket, const bool allowNegativeRates,
-                                   const int priority)
+                                   const int priority, const ext::optional<bool>& priceIsUpfront)
     : cdsQuotes_(cdsQuotes), type_(type), discountCurveID_(discountCurveID), recoveryRateQuote_(recoveryRateQuote),
       dayCounter_(dayCounter), conventionID_(conventionID), extrapolation_(extrapolation),
       benchmarkCurveID_(benchmarkCurveID), sourceCurveID_(sourceCurveID), pillars_(pillars), calendar_(calendar),
       spotLag_(spotLag), startDate_(startDate), bootstrapConfig_(bootstrapConfig), runningSpread_(runningSpread),
       indexTerm_(indexTerm), implyDefaultFromMarket_(implyDefaultFromMarket), allowNegativeRates_(allowNegativeRates),
-      priority_(priority) {}
+      priority_(priority), priceIsUpfront_(priceIsUpfront) {}
 
 void DefaultCurveConfig::Config::fromXML(XMLNode* node) {
     auto prioStr = XMLUtils::getAttribute(node, "priority");
@@ -236,6 +236,8 @@ void DefaultCurveConfig::Config::fromXML(XMLNode* node) {
         if (XMLNode* n = XMLUtils::getChildNode(node, "BootstrapConfig")) {
             bootstrapConfig_.fromXML(n);
         }
+        if (XMLNode* n = XMLUtils::getChildNode(node, "PriceIsUpfront"))
+            priceIsUpfront_ = parseBool(XMLUtils::getNodeValue(n));
     }
 }
 
@@ -306,6 +308,8 @@ XMLNode* DefaultCurveConfig::Config::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, node, "ImplyDefaultFromMarket", *implyDefaultFromMarket_);
     XMLUtils::appendNode(node, bootstrapConfig_.toXML(doc));
     XMLUtils::addChild(doc, node, "AllowNegativeRates", allowNegativeRates_);
+    if (priceIsUpfront_)
+        XMLUtils::addChild(doc, node, "PriceIsUpfront", *priceIsUpfront_);
     return node;
 }
 

@@ -60,6 +60,7 @@ public:
 }
 
 %template(StringDateMap) std::map<std::string, Date>;
+%template(StringSizeMap) std::map<std::string, QuantLib::Size>;
 
 %shared_ptr(ore::analytics::ExposureCalculator)
 %nodefaultctor ore::analytics::ExposureCalculator;
@@ -143,6 +144,13 @@ public:
 }
 }
 
+%rename(tradeCvaMap)         ore::analytics::ValueAdjustmentCalculator::tradeCva();
+%rename(tradeDvaMap)         ore::analytics::ValueAdjustmentCalculator::tradeDva();
+%rename(nettingSetCvaMap)    ore::analytics::ValueAdjustmentCalculator::nettingSetCva();
+%rename(nettingSetDvaMap)    ore::analytics::ValueAdjustmentCalculator::nettingSetDva();
+%rename(nettingSetSumCvaMap) ore::analytics::ValueAdjustmentCalculator::nettingSetSumCva();
+%rename(nettingSetSumDvaMap) ore::analytics::ValueAdjustmentCalculator::nettingSetSumDva();
+
 %shared_ptr(ore::analytics::ValueAdjustmentCalculator)
 %nodefaultctor ore::analytics::ValueAdjustmentCalculator;
 %rename(XvaCalculator) ore::analytics::ValueAdjustmentCalculator;
@@ -152,6 +160,63 @@ class ValueAdjustmentCalculator {
 public:
     virtual ~ValueAdjustmentCalculator() {}
     virtual void build();
+
+    virtual const std::vector<QuantLib::Date>& dates();
+    virtual const QuantLib::Date asof();
+
+    // No-arg overloads return full result maps (renamed to avoid collision)
+    const std::map<std::string, QuantLib::Real>& tradeCva();
+    const std::map<std::string, QuantLib::Real>& tradeDva();
+    const std::map<std::string, QuantLib::Real>& nettingSetCva();
+    const std::map<std::string, QuantLib::Real>& nettingSetDva();
+    const std::map<std::string, QuantLib::Real>& nettingSetSumCva();
+    const std::map<std::string, QuantLib::Real>& nettingSetSumDva();
+
+    // Per-trade scalar accessors
+    const QuantLib::Real& tradeCva(const std::string& trade);
+    const QuantLib::Real& tradeDva(const std::string& trade);
+    const QuantLib::Real& tradeFba(const std::string& trade);
+    const QuantLib::Real& tradeFba_exOwnSp(const std::string& trade);
+    const QuantLib::Real& tradeFba_exAllSp(const std::string& trade);
+    const QuantLib::Real& tradeFca(const std::string& trade);
+    const QuantLib::Real& tradeFca_exOwnSp(const std::string& trade);
+    const QuantLib::Real& tradeFca_exAllSp(const std::string& trade);
+    const QuantLib::Real& tradeMva(const std::string& trade);
+
+    // Per-netting-set scalar accessors
+    const QuantLib::Real& nettingSetCva(const std::string& nettingSet);
+    const QuantLib::Real& nettingSetDva(const std::string& nettingSet);
+    const QuantLib::Real& nettingSetFba(const std::string& nettingSet);
+    const QuantLib::Real& nettingSetFba_exOwnSp(const std::string& nettingSet);
+    const QuantLib::Real& nettingSetFba_exAllSp(const std::string& nettingSet);
+    const QuantLib::Real& nettingSetFca(const std::string& nettingSet);
+    const QuantLib::Real& nettingSetFca_exOwnSp(const std::string& nettingSet);
+    const QuantLib::Real& nettingSetFca_exAllSp(const std::string& nettingSet);
+    const QuantLib::Real& nettingSetMva(const std::string& nettingSet);
+    const QuantLib::Real& nettingSetSumCva(const std::string& nettingSet);
+    const QuantLib::Real& nettingSetSumDva(const std::string& nettingSet);
+};
+}
+}
+
+%shared_ptr(ore::analytics::StaticCreditXvaCalculator)
+%nodefaultctor ore::analytics::StaticCreditXvaCalculator;
+namespace ore {
+namespace analytics {
+class StaticCreditXvaCalculator : public ValueAdjustmentCalculator {
+public:
+    virtual ~StaticCreditXvaCalculator() {}
+};
+}
+}
+
+%shared_ptr(ore::analytics::DynamicCreditXvaCalculator)
+%nodefaultctor ore::analytics::DynamicCreditXvaCalculator;
+namespace ore {
+namespace analytics {
+class DynamicCreditXvaCalculator : public ValueAdjustmentCalculator {
+public:
+    virtual ~DynamicCreditXvaCalculator() {}
 };
 }
 }
@@ -162,8 +227,82 @@ namespace ore {
 namespace analytics {
 class PostProcess {
 public:
+    // Cube accessors
     const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& cube();
     const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& netCube();
+    const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& cptyCube();
+
+    // Trade-level exposure profiles
+    const std::vector<QuantLib::Real>& tradeEPE(const std::string& tradeId);
+    const std::vector<QuantLib::Real>& tradeENE(const std::string& tradeId);
+    const std::vector<QuantLib::Real>& tradeEE_B(const std::string& tradeId);
+    const QuantLib::Real& tradeEPE_B(const std::string& tradeId);
+    const std::vector<QuantLib::Real>& tradeEEE_B(const std::string& tradeId);
+    const QuantLib::Real& tradeEEPE_B(const std::string& tradeId);
+    const std::vector<QuantLib::Real>& tradePFE(const std::string& tradeId);
+    const std::vector<QuantLib::Real>& tradeEPE_B_timeWeighted(const std::string& tradeId);
+    const std::vector<QuantLib::Real>& tradeEEPE_B_timeWeighted(const std::string& tradeId);
+
+    // Netting-set-level exposure profiles
+    const std::vector<QuantLib::Real>& netEPE(const std::string& nettingSetId);
+    const std::vector<QuantLib::Real>& netENE(const std::string& nettingSetId);
+    const std::vector<QuantLib::Real>& netEE_B(const std::string& nettingSetId);
+    const QuantLib::Real& netEPE_B(const std::string& nettingSetId);
+    const std::vector<QuantLib::Real>& netEEE_B(const std::string& nettingSetId);
+    const QuantLib::Real& netEEPE_B(const std::string& nettingSetId);
+    const std::vector<QuantLib::Real>& netPFE(const std::string& nettingSetId);
+    const std::vector<QuantLib::Real>& netEPE_B_timeWeighted(const std::string& nettingSetId);
+    const std::vector<QuantLib::Real>& netEEPE_B_timeWeighted(const std::string& nettingSetId);
+    const std::vector<QuantLib::Real>& expectedCollateral(const std::string& nettingSetId);
+    const std::vector<QuantLib::Real>& colvaIncrements(const std::string& nettingSetId);
+    const std::vector<QuantLib::Real>& collateralFloorIncrements(const std::string& nettingSetId);
+
+    // Allocated exposure profiles
+    const std::vector<QuantLib::Real>& allocatedTradeEPE(const std::string& tradeId);
+    const std::vector<QuantLib::Real>& allocatedTradeENE(const std::string& tradeId);
+
+    // Trade-level XVA scalars
+    QuantLib::Real tradeCVA(const std::string& tradeId);
+    QuantLib::Real tradeDVA(const std::string& tradeId);
+    QuantLib::Real tradeMVA(const std::string& tradeId);
+    QuantLib::Real tradeFBA(const std::string& tradeId);
+    QuantLib::Real tradeFCA(const std::string& tradeId);
+    QuantLib::Real tradeFBA_exOwnSP(const std::string& tradeId);
+    QuantLib::Real tradeFCA_exOwnSP(const std::string& tradeId);
+    QuantLib::Real tradeFBA_exAllSP(const std::string& tradeId);
+    QuantLib::Real tradeFCA_exAllSP(const std::string& tradeId);
+    QuantLib::Real allocatedTradeCVA(const std::string& tradeId);
+    QuantLib::Real allocatedTradeDVA(const std::string& tradeId);
+
+    // Netting-set-level XVA scalars
+    QuantLib::Real nettingSetCVA(const std::string& nettingSetId);
+    QuantLib::Real nettingSetDVA(const std::string& nettingSetId);
+    QuantLib::Real nettingSetMVA(const std::string& nettingSetId);
+    QuantLib::Real nettingSetFBA(const std::string& nettingSetId);
+    QuantLib::Real nettingSetFCA(const std::string& nettingSetId);
+    QuantLib::Real nettingSetOurKVACCR(const std::string& nettingSetId);
+    QuantLib::Real nettingSetTheirKVACCR(const std::string& nettingSetId);
+    QuantLib::Real nettingSetOurKVACVA(const std::string& nettingSetId);
+    QuantLib::Real nettingSetTheirKVACVA(const std::string& nettingSetId);
+    QuantLib::Real nettingSetFBA_exOwnSP(const std::string& nettingSetId);
+    QuantLib::Real nettingSetFCA_exOwnSP(const std::string& nettingSetId);
+    QuantLib::Real nettingSetFBA_exAllSP(const std::string& nettingSetId);
+    QuantLib::Real nettingSetFCA_exAllSP(const std::string& nettingSetId);
+    QuantLib::Real nettingSetCOLVA(const std::string& nettingSetId);
+    QuantLib::Real nettingSetCollateralFloor(const std::string& nettingSetId);
+
+    // CVA spread sensitivity inspectors
+    std::vector<QuantLib::Real> netCvaHazardRateSensitivity(const std::string& nettingSetId);
+    std::vector<QuantLib::Real> netCvaSpreadSensitivity(const std::string& nettingSetId);
+    const std::vector<QuantLib::Real>& spreadSensitivityTimes();
+    const std::vector<QuantLib::Period>& spreadSensitivityGrid();
+    QuantLib::Real cvaSpreadSensiShiftSize();
+
+    // Other inspectors
+    const std::map<std::string, QuantLib::Size> tradeIds();
+    const std::map<std::string, QuantLib::Size> nettingSetIds();
+    const std::map<std::string, std::string>& counterpartyId();
+    const QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio();
 };
 }
 }
