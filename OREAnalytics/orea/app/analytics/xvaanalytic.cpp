@@ -528,15 +528,14 @@ void XvaAnalyticImpl::applyConfigurationFallback(const QuantLib::ext::shared_ptr
     }
 }
 
-QuantLib::ext::shared_ptr<EngineFactory> XvaAnalyticImpl::engineFactory() {
+void XvaAnalyticImpl::buildEngineFactory() {
     LOG("XvaAnalytic::engineFactory() called");
 
     auto xvaVars = ext::dynamic_pointer_cast<XvaVariables>(inputVariables_);
-    QuantLib::ext::shared_ptr<EngineData> edCopy =
-        QuantLib::ext::make_shared<EngineData>(*xvaVars->simulationPricingEngine_);
-    edCopy->globalParameters()["GenerateAdditionalResults"] = inputs_->outputAdditionalResults() ? "true" : "false";
-    edCopy->globalParameters()["RunType"] = "Exposure";
-    edCopy->globalParameters()["McType"] = "Classic";
+    engineData_ = QuantLib::ext::make_shared<EngineData>(*xvaVars->simulationPricingEngine_);
+    engineData->globalParameters()["GenerateAdditionalResults"] = inputs_->outputAdditionalResults() ? "true" : "false";
+    engineData_->globalParameters()["RunType"] = "Exposure";
+    engineData_->globalParameters()["McType"] = "Classic";
     map<MarketContext, string> configurations;
     configurations[MarketContext::irCalibration] = inputs_->marketConfig("lgmcalibration");
     configurations[MarketContext::fxCalibration] = inputs_->marketConfig("fxcalibration");
@@ -549,11 +548,11 @@ QuantLib::ext::shared_ptr<EngineFactory> XvaAnalyticImpl::engineFactory() {
         // link to the sim market here
         QL_REQUIRE(simMarket_, "Simulaton market not set");
         engineFactory_ = QuantLib::ext::make_shared<EngineFactory>(
-            edCopy, simMarket_, configurations, inputs_->refDataManager(), inputs_->iborFallbackConfig());
+            engineData_, simMarket_, configurations, inputs_->refDataManager(), inputs_->iborFallbackConfig());
     } else {
         // we just link to today's market if simulation is not required
         engineFactory_ = QuantLib::ext::make_shared<EngineFactory>(
-            edCopy, analytic()->market(), configurations, inputs_->refDataManager(), inputs_->iborFallbackConfig());
+            engineData_, analytic()->market(), configurations, inputs_->refDataManager(), inputs_->iborFallbackConfig());
     }
     return engineFactory_;
 }
@@ -774,8 +773,8 @@ XvaAnalyticImpl::classicRun(const QuantLib::ext::shared_ptr<Portfolio>& portfoli
     for (const auto& [tradeId, trade] : portfolio->trades())
         classicPortfolio_->add(trade);
     QL_REQUIRE(analytic()->market(), "today's market not set");
-    QuantLib::ext::shared_ptr<EngineFactory> factory = engineFactory();
-    classicPortfolio_->build(factory, "analytic/" + label(), true, inputs_->useAtParCouponsTrades());
+    buildEngineFactory();
+    classicPortfolio_->build(engineFactory_, "analytic/" + label(), true, inputs_->useAtParCouponsTrades());
     Date maturityDate = inputs_->asof();
     if (inputs_->portfolioFilterDate() != Null<Date>())
         maturityDate = inputs_->portfolioFilterDate();
@@ -858,7 +857,7 @@ void XvaAnalyticImpl::buildClassicCube(const QuantLib::ext::shared_ptr<Portfolio
 
         // single-threaded engine run
 
-        ValuationEngine engine(inputs_->asof(), grid_, simMarket_);
+        ValuationEngine engine(inputs_->asof(), grid_, simMarket_, engineFactory_->modelBuilders(), false);
         engine.registerProgressIndicator(progressBar);
         engine.registerProgressIndicator(progressLog);
         engine.buildCube(portfolio, cube_, calculators(), ValuationEngine::ErrorPolicy::RemoveAll,
@@ -900,7 +899,7 @@ void XvaAnalyticImpl::buildClassicCube(const QuantLib::ext::shared_ptr<Portfolio
 
         MultiThreadedValuationEngine engine(
             inputs_->nThreads(), inputs_->asof(), grid_, samples_, analytic()->loader(), scenarioGenerator_,
-            xvaVars->simulationPricingEngine_, inputs_->curveConfigs().get(),
+            engineData_, inputs_->curveConfigs().get(),
             analytic()->configurations().todaysMarketParams, inputs_->marketConfig("simulation"),
             analytic()->configurations().simMarketParams, false, false, QuantLib::ext::make_shared<ScenarioFilter>(),
             inputs_->refDataManager(), inputs_->iborFallbackConfig(), true, false, false, cubeFactory, {},
