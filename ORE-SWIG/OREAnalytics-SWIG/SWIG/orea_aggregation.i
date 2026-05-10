@@ -221,6 +221,109 @@ public:
 }
 }
 
+// --- CVASpreadSensitivityCalculator ---
+
+%shared_ptr(ore::analytics::CVASpreadSensitivityCalculator)
+namespace ore {
+namespace analytics {
+class CVASpreadSensitivityCalculator {
+public:
+    CVASpreadSensitivityCalculator(const std::string& key,
+                                   const QuantLib::Date& asof,
+                                   const std::vector<QuantLib::Real>& epe,
+                                   const std::vector<QuantLib::Date>& dates,
+                                   const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& dts,
+                                   const QuantLib::Real& recovery,
+                                   const QuantLib::Handle<QuantLib::YieldTermStructure>& yts,
+                                   const std::vector<QuantLib::Period>& shiftTenors,
+                                   QuantLib::Real shiftSize = 0.0001);
+
+    const std::string key();
+    QuantLib::Date asof();
+    const std::vector<QuantLib::Real>& exposureProfile();
+    const std::vector<QuantLib::Date>& exposureDateGrid();
+    QuantLib::Real recoveryRate();
+    const std::vector<QuantLib::Period> shiftTenors();
+
+    const std::vector<QuantLib::Real> shiftTimes();
+    QuantLib::Real shiftSize();
+    const std::vector<QuantLib::Real> hazardRateSensitivities();
+    const std::vector<QuantLib::Real> cdsSpreadSensitivities();
+};
+}
+}
+
+// --- ExposureAllocator and subclasses ---
+
+%shared_ptr(ore::analytics::ExposureAllocator)
+%nodefaultctor ore::analytics::ExposureAllocator;
+namespace ore {
+namespace analytics {
+class ExposureAllocator {
+public:
+    enum class AllocationMethod {
+        None,
+        Marginal,
+        RelativeFairValueGross,
+        RelativeFairValueNet,
+        RelativeXVA
+    };
+
+    virtual ~ExposureAllocator() {}
+    const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& exposureCube();
+    virtual void build();
+};
+
+ExposureAllocator::AllocationMethod parseAllocationMethod(const std::string& s);
+}
+}
+
+%shared_ptr(ore::analytics::RelativeFairValueNetExposureAllocator)
+%nodefaultctor ore::analytics::RelativeFairValueNetExposureAllocator;
+namespace ore {
+namespace analytics {
+class RelativeFairValueNetExposureAllocator : public ExposureAllocator {
+public:
+    virtual ~RelativeFairValueNetExposureAllocator() {}
+};
+}
+}
+
+%shared_ptr(ore::analytics::RelativeFairValueGrossExposureAllocator)
+%nodefaultctor ore::analytics::RelativeFairValueGrossExposureAllocator;
+namespace ore {
+namespace analytics {
+class RelativeFairValueGrossExposureAllocator : public ExposureAllocator {
+public:
+    virtual ~RelativeFairValueGrossExposureAllocator() {}
+};
+}
+}
+
+%shared_ptr(ore::analytics::RelativeXvaExposureAllocator)
+%nodefaultctor ore::analytics::RelativeXvaExposureAllocator;
+namespace ore {
+namespace analytics {
+class RelativeXvaExposureAllocator : public ExposureAllocator {
+public:
+    virtual ~RelativeXvaExposureAllocator() {}
+};
+}
+}
+
+%shared_ptr(ore::analytics::NoneExposureAllocator)
+%nodefaultctor ore::analytics::NoneExposureAllocator;
+namespace ore {
+namespace analytics {
+class NoneExposureAllocator : public ExposureAllocator {
+public:
+    virtual ~NoneExposureAllocator() {}
+};
+}
+}
+
+// --- PostProcess ---
+
 %shared_ptr(ore::analytics::PostProcess)
 %nodefaultctor ore::analytics::PostProcess;
 namespace ore {
