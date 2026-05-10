@@ -198,7 +198,8 @@ public:
     void buildDependencies() override;
 
 protected:
-    void buildEngineFactory() override;
+    QuantLib::ext::shared_ptr<ore::data::EngineFactory> engineFactory() override { return engineFactory_; }
+    void buildEngineFactory();
     void buildScenarioSimMarket();
     void buildCrossAssetModel(bool continueOnError, bool allowModelFallbacks);
     void buildScenarioGenerator(bool continueOnError, bool allowModelFallbacks);

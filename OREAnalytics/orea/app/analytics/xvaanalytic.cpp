@@ -533,7 +533,7 @@ void XvaAnalyticImpl::buildEngineFactory() {
 
     auto xvaVars = ext::dynamic_pointer_cast<XvaVariables>(inputVariables_);
     engineData_ = QuantLib::ext::make_shared<EngineData>(*xvaVars->simulationPricingEngine_);
-    engineData->globalParameters()["GenerateAdditionalResults"] = inputs_->outputAdditionalResults() ? "true" : "false";
+    engineData_->globalParameters()["GenerateAdditionalResults"] = inputs_->outputAdditionalResults() ? "true" : "false";
     engineData_->globalParameters()["RunType"] = "Exposure";
     engineData_->globalParameters()["McType"] = "Classic";
     map<MarketContext, string> configurations;
@@ -554,7 +554,6 @@ void XvaAnalyticImpl::buildEngineFactory() {
         engineFactory_ = QuantLib::ext::make_shared<EngineFactory>(
             engineData_, analytic()->market(), configurations, inputs_->refDataManager(), inputs_->iborFallbackConfig());
     }
-    return engineFactory_;
 }
 
 void XvaAnalyticImpl::buildScenarioSimMarket() {
@@ -774,7 +773,7 @@ XvaAnalyticImpl::classicRun(const QuantLib::ext::shared_ptr<Portfolio>& portfoli
         classicPortfolio_->add(trade);
     QL_REQUIRE(analytic()->market(), "today's market not set");
     buildEngineFactory();
-    classicPortfolio_->build(engineFactory_, "analytic/" + label(), true, inputs_->useAtParCouponsTrades());
+    classicPortfolio_->build(engineFactory(), "analytic/" + label(), true, inputs_->useAtParCouponsTrades());
     Date maturityDate = inputs_->asof();
     if (inputs_->portfolioFilterDate() != Null<Date>())
         maturityDate = inputs_->portfolioFilterDate();
@@ -857,7 +856,7 @@ void XvaAnalyticImpl::buildClassicCube(const QuantLib::ext::shared_ptr<Portfolio
 
         // single-threaded engine run
 
-        ValuationEngine engine(inputs_->asof(), grid_, simMarket_, engineFactory_->modelBuilders(), false);
+        ValuationEngine engine(inputs_->asof(), grid_, simMarket_, engineFactory()->modelBuilders(), false);
         engine.registerProgressIndicator(progressBar);
         engine.registerProgressIndicator(progressLog);
         engine.buildCube(portfolio, cube_, calculators(), ValuationEngine::ErrorPolicy::RemoveAll,
