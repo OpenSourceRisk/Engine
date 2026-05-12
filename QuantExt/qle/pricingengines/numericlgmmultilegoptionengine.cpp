@@ -293,16 +293,22 @@ NumericLgmMultiLegOptionEngineBase::CashflowInfo NumericLgmMultiLegOptionEngineB
             };
             done = true;
         } else if (auto ra = QuantLib::ext::dynamic_pointer_cast<QuantLib::RangeAccrualFloatersCoupon>(cpn)) {
-            // Range accrual coupon: the analytical pricer (BGM or CallSpread) computes the
-            // expected coupon amount using the current yield curve and vol surface.
-            // In the LGM tree we treat this as a deterministic cashflow (amount frozen at the
-            // pricer-computed value). This captures the range observation probability
-            // analytically while the LGM model handles the discounting and exercise decision.
+            // Range accrual coupon: use the analytical digital caplet/floorlet formula in the
+            // LGM1F model (see ORE documentation 5.1.25) to compute the probability of each
+            // observation being in the range, conditional on the LGM state.
             info.maxEstimationTime_ = timeFromReference(ra->fixingDate());
-            info.calculator_ = [ra, T, payrec, multiplier](const LgmVectorised& lgm, const Real t,
+            auto iborIndex = QuantLib::ext::dynamic_pointer_cast<IborIndex>(ra->index());
+            QL_REQUIRE(iborIndex != nullptr,
+                       "NumericLgmMultiLegOptionEngineBase::buildCashflowInfo(): range accrual coupon requires an "
+                       "IborIndex. " + cashflowDescription);
+            info.calculator_ = [ra, iborIndex, T, payrec, multiplier](const LgmVectorised& lgm, const Real t,
                                                            const RandomVariable& x,
                                                            const Handle<YieldTermStructure>& discountCurve) {
-                return multiplier * RandomVariable(x.size(), ra->amount() * payrec) *
+                return multiplier *
+                       lgm.rangeAccrualRate(iborIndex, ra->fixingDate(), ra->observationDates(),
+                                            ra->lowerTrigger(), ra->upperTrigger(),
+                                            ra->gearing(), ra->spread(), T, t, x) *
+                       RandomVariable(x.size(), ra->accrualPeriod() * ra->nominal() * payrec) *
                        lgm.reducedDiscountBond(t, T, x, discountCurve);
             };
             done = true;

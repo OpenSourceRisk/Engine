@@ -108,6 +108,29 @@ public:
                                   const Spread spread, const Real gearing,
                                   const Time accrualPeriod) const;
 
+   /*! Analytical pricing of a range accrual coupon in the LGM1F model.
+       Each observation is priced as a digital caplet/floorlet using the closed-form formula
+       for digital options on zero bonds with delayed payment (see ORE documentation 5.1.25).
+       Requires observation time t <= earliest observation fixing date.
+       \param index the underlying Ibor index for the range observations
+       \param fixingDate the fixing date of the coupon rate
+       \param observationDates the observation dates within the accrual period
+       \param lowerTrigger the lower range bound
+       \param upperTrigger the upper range bound
+       \param gearing the coupon gearing
+       \param spread the coupon spread
+       \param payTime the payment time (year fraction)
+       \param t the current observation/simulation time
+       \param x the LGM state variable
+   */
+    RandomVariable rangeAccrualRate(const QuantLib::ext::shared_ptr<IborIndex>& index,
+                                    const Date& fixingDate,
+                                    const std::vector<Date>& observationDates,
+                                    const Real lowerTrigger, const Real upperTrigger,
+                                    const Real gearing, const Spread spread,
+                                    const Time payTime,
+                                    const Time t, const RandomVariable& x) const;
+
 private:
     QuantLib::ext::shared_ptr<IrLgm1fParametrization> p_;
 };

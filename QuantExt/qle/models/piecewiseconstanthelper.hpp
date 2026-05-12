@@ -53,6 +53,8 @@ public:
     void update() const;
     /*! this returns the transformed value */
     Real y(const Time t) const;
+    //! int_0^t y(s) ds
+    Real int_y(const Time t) const;
     //! int_0^t y^2(s) ds
     Real int_y_sqr(const Time t) const;
 
@@ -298,6 +300,20 @@ inline Real PiecewiseConstantHelper3::y1(const Time t) const {
 
 inline Real PiecewiseConstantHelper3::y2(const Time t) const {
     return direct2(QL_PIECEWISE_FUNCTION(t2_, y2_->params(), t));
+}
+
+inline Real PiecewiseConstantHelper1::int_y(const Time t) const {
+    if (t < 0.0)
+        return 0.0;
+    Size i = std::upper_bound(t_.begin(), t_.end(), t) - t_.begin();
+    Real res = 0.0;
+    for (Size j = 0; j < i && j < t_.size(); ++j) {
+        Real a = direct(y_->params()[std::min(j, y_->size() - 1)]);
+        res += a * (t_[j] - (j == 0 ? 0.0 : t_[j - 1]));
+    }
+    Real a = direct(y_->params()[std::min(i, y_->size() - 1)]);
+    res += a * (t - (i == 0 ? 0.0 : t_[i - 1]));
+    return res;
 }
 
 inline Real PiecewiseConstantHelper1::int_y_sqr(const Time t) const {

@@ -50,6 +50,8 @@ public:
     virtual Real Hprime(const Time t) const;
     virtual Real Hprime2(const Time t) const;
     virtual Real hullWhiteSigma(const Time t) const;
+    /*! \f[ \int_0^t \alpha(u) du \f] */
+    virtual Real intAlpha(const Time t) const;
     const Handle<TS> termStructure() const;
 
     /*! \f[ \int_0^t alpha^2(u) H^n(u) du \f]*/
@@ -103,6 +105,16 @@ template <class TS> inline Real Lgm1fParametrization<TS>::hullWhiteSigma(const T
 }
 
 template <class TS> inline Real Lgm1fParametrization<TS>::kappa(const Time t) const { return -Hprime2(t) / Hprime(t); }
+
+template <class TS> inline Real Lgm1fParametrization<TS>::intAlpha(const Time t) const {
+    Real sum = 0.0;
+    Size n = std::max<Size>(1, static_cast<Size>(t / h_));
+    Real dt = t / n;
+    for (Size i = 0; i < n; ++i) {
+        sum += alpha(i * dt + 0.5 * dt) * dt;
+    }
+    return sum;
+}
 
 template <class TS> inline const Handle<TS> Lgm1fParametrization<TS>::termStructure() const { return termStructure_; }
 

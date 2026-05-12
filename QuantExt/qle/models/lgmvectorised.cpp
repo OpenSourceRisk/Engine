@@ -666,4 +666,126 @@ RandomVariable LgmVectorised::subPeriodsRate(const QuantLib::ext::shared_ptr<Int
     return rate;
 }
 
+RandomVariable LgmVectorised::rangeAccrualRate(const QuantLib::ext::shared_ptr<IborIndex>& index,
+                                               const Date& fixingDate,
+                                               const std::vector<Date>& observationDates,
+                                               const Real lowerTrigger, const Real upperTrigger,
+                                               const Real gearing, const Spread spread,
+                                               const Time payTime,
+                                               const Time t, const RandomVariable& x) const {
+
+    // Analytical pricing of a range accrual coupon in the LGM1F model.
+    // The range accrual is decomposed into a weighted sum of digital caplets/floorlets.
+    // For each observation date i, we compute P(lowerTrigger < L_i < upperTrigger | z(t) = x)
+    // using the closed-form digital caplet formula under the T_p-forward measure.
+    //
+    // Reference: ORE documentation section 5.1.25 (Range Accrual Leg, LGM pricing for callable structures)
+    //
+    // Key formula: P(L(S,S,T) > K | x) = Phi((ln K* - mu) / sigma) where
+    //   K* = 1 / (1 + tau * K)
+    //   mu = ln P^fwd(t,S,T|x) + [(H(Tp)-H(S))(H(T)-H(S)) - 0.5*(H(T)-H(S))^2] * (zeta(S) - zeta(t))
+    //   sigma = |H(T) - H(S)| * sqrt(zeta(S) - zeta(t))
+
+    QL_REQUIRE(!observationDates.empty(), "LgmVectorised::rangeAccrualRate(): observation dates list is empty");
+
+    Size sample = x.size();
+    Date today = Settings::instance().evaluationDate();
+
+    Handle<YieldTermStructure> curve = index->forwardingTermStructure();
+    QL_REQUIRE(!curve.empty(),
+               "LgmVectorised::rangeAccrualRate(): null term structure set to this instance of " << index->name());
+
+    Size n = observationDates.size();
+    RandomVariable rangeAccrualFactor(sample, 0.0);
+
+    Real H_Tp = p_->H(payTime);
+    Real zeta_t = p_->zeta(t);
+
+    for (Size i = 0; i < n; ++i) {
+        Date obsDate = observationDates[i];
+
+        // If observation is in the past, check against the actual fixing
+        if (obsDate <= today) {
+            Rate pastFixing = index->fixing(obsDate);
+            if (pastFixing >= lowerTrigger && pastFixing <= upperTrigger) {
+                rangeAccrualFactor += RandomVariable(sample, 1.0);
+            }
+            continue;
+        }
+
+        // Future observation: use the analytical digital caplet formula
+
+        // Compute the forward period [S_i, T_i] for the observation Ibor rate
+        Date valueDate = index->valueDate(obsDate);
+        Date maturityDate = index->maturityDate(valueDate);
+        Real tau_i = index->dayCounter().yearFraction(valueDate, maturityDate);
+
+        Real S_i = p_->termStructure()->timeFromReference(valueDate);
+        Real T_i = p_->termStructure()->timeFromReference(maturityDate);
+
+        // Ensure S_i > t for the formula to apply
+        if (S_i <= t) {
+            // If the value date has passed but we don't have a fixing, use forward rate
+            RandomVariable fwdRate = fixing(index, obsDate, t, x);
+            RandomVariable inRange = indicatorGeq(fwdRate, RandomVariable(sample, lowerTrigger)) *
+                                     indicatorGeq(RandomVariable(sample, upperTrigger), fwdRate);
+            rangeAccrualFactor += inRange;
+            continue;
+        }
+
+        Real H_S = p_->H(S_i);
+        Real H_T = p_->H(T_i);
+        Real zeta_S = p_->zeta(S_i);
+
+        // sigma = |H(T) - H(S)| * sqrt(zeta(S) - zeta(t))
+        Real dH = H_T - H_S;
+        Real dZeta = zeta_S - zeta_t;
+        Real sigma = std::abs(dH) * std::sqrt(std::max(dZeta, 0.0));
+
+        if (sigma < 1.0e-12) {
+            // Zero volatility: use deterministic forward rate
+            RandomVariable fwdRate = fixing(index, obsDate, t, x);
+            RandomVariable inRange = indicatorGeq(fwdRate, RandomVariable(sample, lowerTrigger)) *
+                                     indicatorGeq(RandomVariable(sample, upperTrigger), fwdRate);
+            rangeAccrualFactor += inRange;
+            continue;
+        }
+
+        // Compute ln P^fwd(t, S_i, T_i | x) = ln(P^fwd(T_i)/P^fwd(S_i)) - (H_T - H_S)*x - 0.5*zeta(t)*(H_T^2 - H_S^2)
+        Real fwdBondT0 = std::log(curve->discount(T_i) / curve->discount(S_i));
+        RandomVariable lnFwdBond = RandomVariable(sample, fwdBondT0) - dH * x -
+                                   RandomVariable(sample, 0.5 * zeta_t * (H_T * H_T - H_S * H_S));
+
+        // mu = ln P^fwd(t,S,T|x) + [(H(Tp)-H(S))(H(T)-H(S)) - 0.5*(H(T)-H(S))^2] * (zeta(S) - zeta(t))
+        Real convexityAdj = ((H_Tp - H_S) * dH - 0.5 * dH * dH) * dZeta;
+        RandomVariable mu = lnFwdBond + RandomVariable(sample, convexityAdj);
+
+        // P(L > K) = Phi((ln K* - mu) / sigma)
+        // P(lower < L < upper) = P(L > lower) - P(L > upper)
+
+        // Lower trigger: P(L > lowerTrigger)
+        Real Kstar_lower = 1.0 / (1.0 + tau_i * lowerTrigger);
+        RandomVariable d_lower = (RandomVariable(sample, std::log(Kstar_lower)) - mu) / RandomVariable(sample, sigma);
+        RandomVariable probAboveLower = normalCdf(d_lower);
+
+        // Upper trigger: P(L > upperTrigger)
+        Real Kstar_upper = 1.0 / (1.0 + tau_i * upperTrigger);
+        RandomVariable d_upper = (RandomVariable(sample, std::log(Kstar_upper)) - mu) / RandomVariable(sample, sigma);
+        RandomVariable probAboveUpper = normalCdf(d_upper);
+
+        // Probability of being in range
+        rangeAccrualFactor += probAboveLower - probAboveUpper;
+    }
+
+    // Average over all observation dates
+    rangeAccrualFactor /= RandomVariable(sample, static_cast<Real>(n));
+
+    // Compute the coupon rate: (gearing * L_fixing + spread) * rangeAccrualFactor
+    RandomVariable forwardRate = fixing(index, fixingDate, t, x);
+    RandomVariable rate = (RandomVariable(sample, gearing) * forwardRate + RandomVariable(sample, spread)) *
+                          rangeAccrualFactor;
+
+    return rate;
+}
+
 } // namespace QuantExt
