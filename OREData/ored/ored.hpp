@@ -75,6 +75,7 @@
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/marketdata/todaysmarketcalibrationinfo.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
+#include <ored/marketdata/volsurfacebuilder.hpp>
 #include <ored/marketdata/wrappedmarket.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
 #include <ored/marketdata/yieldvolcurve.hpp>
@@ -186,6 +187,7 @@
 #include <ored/portfolio/builders/durationadjustedcms.hpp>
 #include <ored/portfolio/builders/equity.hpp>
 #include <ored/portfolio/builders/equityasianoption.hpp>
+#include <ored/portfolio/builders/equityautodeltahedgeoption.hpp>
 #include <ored/portfolio/builders/equitybarrieroption.hpp>
 #include <ored/portfolio/builders/equitycompositeoption.hpp>
 #include <ored/portfolio/builders/equitydigitaloption.hpp>
@@ -211,7 +213,6 @@
 #include <ored/portfolio/builders/fxtouchoption.hpp>
 #include <ored/portfolio/builders/indexcreditdefaultswap.hpp>
 #include <ored/portfolio/builders/indexcreditdefaultswapoption.hpp>
-#include <ored/portfolio/builders/multilegoption.hpp>
 #include <ored/portfolio/builders/pairwisevarianceswap.hpp>
 #include <ored/portfolio/builders/quantoequityoption.hpp>
 #include <ored/portfolio/builders/quantovanillaoption.hpp>
@@ -265,6 +266,7 @@
 #include <ored/portfolio/enginedata.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/envelope.hpp>
+#include <ored/portfolio/equityautodeltahedgeoption.hpp>
 #include <ored/portfolio/equitybarrieroption.hpp>
 #include <ored/portfolio/equityderivative.hpp>
 #include <ored/portfolio/equitydigitaloption.hpp>
@@ -315,7 +317,6 @@
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/legdatafactory.hpp>
 #include <ored/portfolio/makenonstandardlegs.hpp>
-#include <ored/portfolio/multilegoption.hpp>
 #include <ored/portfolio/nettingsetdefinition.hpp>
 #include <ored/portfolio/nettingsetdetails.hpp>
 #include <ored/portfolio/nettingsetmanager.hpp>

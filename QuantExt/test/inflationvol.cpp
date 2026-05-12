@@ -34,6 +34,7 @@
 #include <qle/termstructures/inflation/cpipricevolatilitysurface.hpp>
 #include <qle/termstructures/interpolatedcpivolatilitysurface.hpp>
 #include <qle/utilities/inflation.hpp>
+#include <qle/time/monthcounter.hpp>
 
 using namespace boost::unit_test_framework;
 using namespace QuantLib;
@@ -121,7 +122,7 @@ buildZeroInflationCurve(CommonData& cd, bool useLastKnownFixing, const QuantLib:
         QuantLib::ext::shared_ptr<QuantExt::ZeroInflationTraits::helper> instrument =
             QuantLib::ext::make_shared<ZeroCouponInflationSwapHelper>(
                 Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(quote)), cd.obsLag, start, maturity, cd.fixingCalendar, bdc, dc,
-                index, isInterpolated ? CPI::Linear : CPI::Flat);
+                index, isInterpolated ? CPI::Linear : CPI::Flat, Pillar::MaturityDate);
         helpers.push_back(instrument);
     }
     Date baseDate =
@@ -498,6 +499,7 @@ BOOST_AUTO_TEST_CASE(testVolatiltiySurfaceWithStartDate) {
     Date today(15, July, 2022);
     cd.today = today;
     cd.obsLag = 3 * Months;
+    cd.dayCounter = QuantExt::MonthCounter();
     Settings::instance().evaluationDate() = today;
     std::map<Date, double> fixings{{Date(1, Mar, 2022), 100.0}};
     // the Q2 fixing not published yet, the zciis swaps and caps start on 15th Jun and

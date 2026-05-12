@@ -222,10 +222,6 @@ buildYieldCurve(YieldCurve::InterpolationMethod interpolationMethod,
                                                            CubicInterpolation::SecondDerivative, 0.0),
                                                      extrapolation, excludeT0));
         break;
-    case YieldCurve::InterpolationMethod::DefaultLogMixedLinearCubic:
-        yieldts.reset(new CurveType<DefaultLogMixedLinearCubic>(dates, data, dayCounter, DefaultLogMixedLinearCubic(n),
-                                                                extrapolation, excludeT0));
-        break;
     case YieldCurve::InterpolationMethod::MonotonicLogMixedLinearCubic:
         yieldts.reset(new CurveType<MonotonicLogMixedLinearCubic>(
             dates, data, dayCounter, MonotonicLogMixedLinearCubic(n), extrapolation, excludeT0));
@@ -332,8 +328,8 @@ YieldCurve::InterpolationMethod parseYieldCurveInterpolationMethod(const string&
         return YieldCurve::InterpolationMethod::Hermite;
     else if (s == "CubicSpline")
         return YieldCurve::InterpolationMethod::CubicSpline;
-    else if (s == "DefaultLogMixedLinearCubic")
-        return YieldCurve::InterpolationMethod::DefaultLogMixedLinearCubic;
+    else if (s == "DefaultLogMixedLinearCubic") // deprecated,for backwards compatibility
+        return YieldCurve::InterpolationMethod::KrugerLogMixedLinearCubic;
     else if (s == "MonotonicLogMixedLinearCubic")
         return YieldCurve::InterpolationMethod::MonotonicLogMixedLinearCubic;
     else if (s == "KrugerLogMixedLinearCubic")
@@ -392,8 +388,6 @@ std::ostream& operator<<(std::ostream& out, const YieldCurve::InterpolationMetho
         return out << "Hermite";
     else if (m == YieldCurve::InterpolationMethod::CubicSpline)
         return out << "CubicSpline";
-    else if (m == YieldCurve::InterpolationMethod::DefaultLogMixedLinearCubic)
-        return out << "DefaultLogMixedLinearCubic";
     else if (m == YieldCurve::InterpolationMethod::MonotonicLogMixedLinearCubic)
         return out << "MonotonicLogMixedLinearCubic";
     else if (m == YieldCurve::InterpolationMethod::KrugerLogMixedLinearCubic)
@@ -883,9 +877,6 @@ YieldCurve::buildPiecewiseCurve(const std::size_t index, const std::size_t mixed
                  LogCubic(CubicInterpolation::Spline, true, CubicInterpolation::SecondDerivative, 0.0,
                           CubicInterpolation::SecondDerivative, 0.0))
             break;
-        case InterpolationMethod::DefaultLogMixedLinearCubic:
-            PWYC(ZeroYield, DefaultLogMixedLinearCubic, DefaultLogMixedLinearCubic(mixedInterpolationSize))
-            break;
         case InterpolationMethod::MonotonicLogMixedLinearCubic:
             PWYC(ZeroYield, MonotonicLogMixedLinearCubic, MonotonicLogMixedLinearCubic(mixedInterpolationSize))
             break;
@@ -957,9 +948,6 @@ YieldCurve::buildPiecewiseCurve(const std::size_t index, const std::size_t mixed
                  LogCubic(CubicInterpolation::Spline, true, CubicInterpolation::SecondDerivative, 0.0,
                           CubicInterpolation::SecondDerivative, 0.0))
             break;
-        case InterpolationMethod::DefaultLogMixedLinearCubic:
-            PWYC(Discount, DefaultLogMixedLinearCubic, DefaultLogMixedLinearCubic(mixedInterpolationSize))
-            break;
         case InterpolationMethod::MonotonicLogMixedLinearCubic:
             PWYC(Discount, MonotonicLogMixedLinearCubic, MonotonicLogMixedLinearCubic(mixedInterpolationSize))
             break;
@@ -1030,9 +1018,6 @@ YieldCurve::buildPiecewiseCurve(const std::size_t index, const std::size_t mixed
             PWYC(ForwardRate, LogCubic,
                  LogCubic(CubicInterpolation::Spline, true, CubicInterpolation::SecondDerivative, 0.0,
                           CubicInterpolation::SecondDerivative, 0.0))
-            break;
-        case InterpolationMethod::DefaultLogMixedLinearCubic:
-            PWYC(ForwardRate, DefaultLogMixedLinearCubic, DefaultLogMixedLinearCubic(mixedInterpolationSize))
             break;
         case InterpolationMethod::MonotonicLogMixedLinearCubic:
             PWYC(ForwardRate, MonotonicLogMixedLinearCubic, MonotonicLogMixedLinearCubic(mixedInterpolationSize))
@@ -2601,7 +2586,7 @@ void YieldCurve::addOISs(const std::size_t index, const QuantLib::ext::shared_pt
                         oisConvention->eom(), oisConvention->fixedFrequency(), oisConvention->fixedConvention(),
                         oisConvention->fixedPaymentConvention(), oisConvention->rule(), discountCurve_[index],
                         discountCurveGiven_[index], true, pillarChoice(segment->pillarChoice()), Date(),
-                        oisConvention->paymentCalendar());
+                        oisConvention->paymentCalendar(), oisConvention->rateCutoff());
                     instruments.push_back(
                         {oisHelper, mainPillarDate(segment->pillarChoice(), oisHelper->pillarDate()),
                          additionalPillarDates(segment->pillarChoice(), oisHelper->earliestDate()), "OIS",
@@ -2624,7 +2609,7 @@ void YieldCurve::addOISs(const std::size_t index, const QuantLib::ext::shared_pt
                         oisConvention->fixedFrequency(), oisConvention->fixedConvention(),
                         oisConvention->fixedPaymentConvention(), oisConvention->rule(), discountCurve_[index],
                         discountCurveGiven_[index], true, pillarChoice(segment->pillarChoice()), Date(),
-                        oisConvention->paymentCalendar());
+                        oisConvention->paymentCalendar(), oisConvention->rateCutoff());
                     instruments.push_back(
                         {oisHelper, mainPillarDate(segment->pillarChoice(), oisHelper->pillarDate()),
                          additionalPillarDates(segment->pillarChoice(), oisHelper->earliestDate()), "OIS Dated",

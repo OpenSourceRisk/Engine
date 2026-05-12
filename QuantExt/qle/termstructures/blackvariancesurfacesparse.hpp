@@ -27,6 +27,7 @@
 #include <ql/math/interpolations/cubicinterpolation.hpp>
 #include <ql/math/interpolations/backwardflatinterpolation.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvoltimeextrapolation.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <qle/interpolators/optioninterpolator2d.hpp>
 
@@ -66,8 +67,8 @@ public:
                                const std::vector<QuantLib::Volatility>& volatilities,
                                const QuantLib::DayCounter& dayCounter, bool lowerStrikeConstExtrap = true,
                                bool upperStrikeConstExtrap = true, 
-                               QuantLib::BlackVolTimeExtrapolation timeExtrapolation
-                                = QuantLib::BlackVolTimeExtrapolation::FlatVolatility,
+                               QuantLib::BlackVolTimeExtrapolation::Type timeExtrapolationType
+                                = QuantLib::BlackVolTimeExtrapolation::Type::FlatVolatility,
                                const QuantLib::VolatilityType volType = QuantLib::VolatilityType::ShiftedLognormal,
                                const Real shift = 0.0);
 
@@ -103,7 +104,7 @@ public:
 protected:
     virtual QuantLib::Real blackVarianceImpl(QuantLib::Time t, QuantLib::Real strike) const override;
 
-    QuantLib::BlackVolTimeExtrapolation timeExtrapolation_;
+    QuantLib::BlackVolTimeExtrapolation::Type timeExtrapolationType_;
 };
 } // namespace QuantExt
 

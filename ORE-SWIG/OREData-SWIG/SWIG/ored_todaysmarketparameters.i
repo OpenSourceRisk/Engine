@@ -23,15 +23,8 @@
 %include <std_string.i>
 %include ored_xmlutils.i
 
-%{
-// put c++ declarations here
-using ore::data::TodaysMarketParameters;
-using ore::data::MarketConfiguration;
-using ore::data::MarketObject;
-using ore::data::XMLDocument;
-using ore::data::XMLSerializable;
-using ore::data::parseMarketObject;
-%}
+namespace ore {
+namespace data {
 
 MarketObject parseMarketObject(const std::string& mo);
 
@@ -43,11 +36,15 @@ public:
     void add(const MarketConfiguration& o);
 };
 
+} // namespace data
+} // namespace ore
 
-%template() std::pair<std::string, MarketConfiguration>;
-%template(TodaysMarketConfigVector) std::vector<std::pair<std::string, MarketConfiguration>>;
-%shared_ptr(TodaysMarketParameters)
-class TodaysMarketParameters : public XMLSerializable {
+%template() std::pair<std::string, ore::data::MarketConfiguration>;
+%template(TodaysMarketConfigVector) std::vector<std::pair<std::string, ore::data::MarketConfiguration>>;
+%shared_ptr(ore::data::TodaysMarketParameters)
+namespace ore {
+namespace data {
+class TodaysMarketParameters : public ore::data::XMLSerializable {
   public:
     TodaysMarketParameters();
 
@@ -65,8 +62,11 @@ class TodaysMarketParameters : public XMLSerializable {
     bool empty();
     void addConfiguration(const std::string& name, const MarketConfiguration& configuration);
     void addMarketObject(const MarketObject o, const std::string& id, const std::map<std::string, std::string>& assignments);
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 };
+
+  } // namespace data
+  } // namespace ore
 
 #endif

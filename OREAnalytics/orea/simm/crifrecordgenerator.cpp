@@ -75,7 +75,7 @@ double VolatilityDataCrif::vegaTimesVol(ore::analytics::RiskFactorKey::KeyType r
         return sensitivity / shiftData.shiftSize;
     } else {
         double vol = getVolatility(rfType, rfName, expiryTenor, underlyingTerm);
-        TLOG("For (" << rfType << ") sensitivity (" << rfName << "," << expiryTenor << "," << underlyingTerm << "), "
+        DLOG("[crif-vol-weighting] For (" << rfType << ") sensitivity (" << rfName << "," << expiryTenor << "," << underlyingTerm << "), "
                      << std::fixed << std::setprecision(2) << "(sensi, atm_vol, shift_size) is (" << sensitivity
                      << std::setprecision(9) << "," << vol << "," << shiftData.shiftSize << ").");
         return sensitivity * vol / shiftData.shiftSize;
@@ -551,6 +551,9 @@ CrifRecordData CrifRecordGenerator::irVolatilityImpl(const ore::analytics::Sensi
 
         // Update the sensitivity to give the optionlet vega expected in the CRIF (before summing at the expiry
         // level).
+        DLOG("[crif-vol-weighting] For (" << sr.key_1.keytype << ") sensitivity (" << sr.key_1.name << ", " << rfTokens[0] << "), "
+                     << std::fixed << std::setprecision(2) << "(sensi, atm_vol, shift_size) is (" << sr.delta
+                     << std::setprecision(9) << ", " << vol << ", " << shiftSize << ").");
         data.sensitivity = vol * sr.delta / shiftSize;
     }
     return data;

@@ -30,24 +30,12 @@
 %include qle_indexes.i
 %include qle_termstructures.i
 
-%{
-using QuantExt::CrossCcyBasisSwap;
-using QuantExt::CrossCcyBasisMtMResetSwap;
-using QuantExt::CommodityForward;
-using QuantExt::DiscountingCommodityForwardEngine;
-using QuantExt::FxForward;
-using QuantExt::DiscountingFxForwardEngine;
-using QuantExt::Payment;
-using QuantExt::PaymentDiscountingEngine;
-using QuantExt::Deposit;
-using QuantExt::DepositEngine;
-using QuantExt::VarianceSwap2;
-using QuantExt::GeneralisedReplicatingVarianceSwapEngine;
-%}
+%rename(QLECallableBond) QuantExt::CallableBond;
+%rename(QLEBalanceGuaranteedSwap) QuantExt::BalanceGuaranteedSwap;
 
-
-%shared_ptr(CrossCcyBasisSwap)
-class CrossCcyBasisSwap : public CrossCcySwap {
+%shared_ptr(QuantExt::CrossCcyBasisSwap)
+namespace QuantExt {
+class CrossCcyBasisSwap : public QuantExt::CrossCcySwap {
   public:
     CrossCcyBasisSwap(QuantLib::Real payNominal,
                       const QuantLib::Currency& payCurrency,
@@ -74,10 +62,12 @@ class CrossCcyBasisSwap : public CrossCcySwap {
     QuantLib::Spread fairPaySpread() const;
     QuantLib::Spread fairRecSpread() const;
 };
+}
 
 
-%shared_ptr(CrossCcyBasisMtMResetSwap)
-class CrossCcyBasisMtMResetSwap : public CrossCcySwap {
+%shared_ptr(QuantExt::CrossCcyBasisMtMResetSwap)
+namespace QuantExt {
+class CrossCcyBasisMtMResetSwap : public QuantExt::CrossCcySwap {
   public:
     CrossCcyBasisMtMResetSwap(Real foreignNominal,
                               const Currency& foreignCurrency,
@@ -93,9 +83,11 @@ class CrossCcyBasisMtMResetSwap : public CrossCcySwap {
     Spread fairForeignSpread() const;
     Spread fairDomesticSpread() const;
 };
+}
 
 
-%shared_ptr(Deposit)
+%shared_ptr(QuantExt::Deposit)
+namespace QuantExt {
 class Deposit : public Instrument {
   public:
     Deposit(const QuantLib::Real nominal,
@@ -115,8 +107,10 @@ class Deposit : public Instrument {
     QuantLib::Real fairRate() const;
     const QuantLib::Leg& leg() const;
 };
+}
 
-%shared_ptr(DepositEngine)
+%shared_ptr(QuantExt::DepositEngine)
+namespace QuantExt {
 class DepositEngine : public PricingEngine {
   public:
     DepositEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve = QuantLib::Handle<QuantLib::YieldTermStructure>(),
@@ -124,8 +118,10 @@ class DepositEngine : public PricingEngine {
                   QuantLib::Date settlementDate = QuantLib::Date(),
                   QuantLib::Date npvDate = QuantLib::Date());
 };
+}
 
-%shared_ptr(Payment)
+%shared_ptr(QuantExt::Payment)
+namespace QuantExt {
 class Payment : public Instrument {
   public:
     Payment(const QuantLib::Real amount,
@@ -134,22 +130,26 @@ class Payment : public Instrument {
     const ext::shared_ptr<SimpleCashFlow>& cashFlow() const;
     QuantLib::Currency currency() const;
 };
+}
 
 
-%shared_ptr(PaymentDiscountingEngine)
+%shared_ptr(QuantExt::PaymentDiscountingEngine)
+namespace QuantExt {
 class PaymentDiscountingEngine : public PricingEngine {
   public:
     PaymentDiscountingEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
                              const QuantLib::Handle<QuantLib::Quote>& spotFX = QuantLib::Handle<QuantLib::Quote>(),
                              QuantLib::ext::optional<bool> includeSettlementDateFlows = QuantLib::ext::nullopt,
                              const QuantLib::Date& settlementDate = QuantLib::Date(),
-                             const QuantLib::Date& npvDate = QuantLib::Date());    
-    const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve();    
+                             const QuantLib::Date& npvDate = QuantLib::Date());
+    const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve();
     const QuantLib::Handle<QuantLib::Quote>& spotFX();
 };
+}
 
 
-%shared_ptr(FxForward)
+%shared_ptr(QuantExt::FxForward)
+namespace QuantExt {
 class FxForward : public Instrument {
   public:
     FxForward(const QuantLib::Real& nominal1,
@@ -166,9 +166,11 @@ class FxForward : public Instrument {
     QuantLib::Date maturityDate() const;
     bool payCurrency1() const;
 };
+}
 
 
-%shared_ptr(DiscountingFxForwardEngine)
+%shared_ptr(QuantExt::DiscountingFxForwardEngine)
+namespace QuantExt {
 class DiscountingFxForwardEngine : public PricingEngine {
   public:
     DiscountingFxForwardEngine(const QuantLib::Currency& ccy1,
@@ -179,43 +181,51 @@ class DiscountingFxForwardEngine : public PricingEngine {
                                const QuantLib::Date& settlementDate = QuantLib::Date(),
                                const QuantLib::Date& npvDate = QuantLib::Date());
 };
+                }
 
 
-%shared_ptr(CommodityForward)
-class CommodityForward : public Instrument {
+                %shared_ptr(QuantExt::CommodityForward)
+                namespace QuantExt {
+                class CommodityForward : public Instrument {
 public:
-    CommodityForward(const ext::shared_ptr<CommodityIndex>& index,
+                  CommodityForward(const ext::shared_ptr<QuantExt::CommodityIndex>& index,
                      const QuantLib::Currency& currency,
                      QuantLib::Position::Type position,
                      QuantLib::Real quantity,
                      const QuantLib::Date& maturityDate,
                      QuantLib::Real strike);
-    const ext::shared_ptr<CommodityIndex>& index() const;
+                  const ext::shared_ptr<QuantExt::CommodityIndex>& index() const;
     const QuantLib::Currency& currency() const;
     QuantLib::Position::Type position() const;
     QuantLib::Real quantity() const;
     const QuantLib::Date& maturityDate() const;
     QuantLib::Real strike() const;
 };
+                }
 
-%shared_ptr(DiscountingCommodityForwardEngine)
-class DiscountingCommodityForwardEngine : public PricingEngine {
+                %shared_ptr(QuantExt::DiscountingCommodityForwardEngine)
+                namespace QuantExt {
+                class DiscountingCommodityForwardEngine : public PricingEngine {
 public:
     DiscountingCommodityForwardEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
                                       QuantLib::ext::optional<bool> includeSettlementDateFlows = QuantLib::ext::nullopt,
                                       const QuantLib::Date& npvDate = QuantLib::Date());
 };
+                }
 
-%shared_ptr(VarianceSwap2)
-class VarianceSwap2 : public Instrument {
+                %shared_ptr(QuantExt::VarianceSwap2)
+                namespace QuantExt {
+                class VarianceSwap2 : public Instrument {
 public:
     VarianceSwap2(Position::Type position, Real strike, Real notional,
                   const Date& startDate, const Date& maturityDate,
                   const Calendar& calendar, bool addPastDividends);
 };
+                }
 
-%shared_ptr(GeneralisedReplicatingVarianceSwapEngine)
-class GeneralisedReplicatingVarianceSwapEngine : public PricingEngine {
+                %shared_ptr(QuantExt::GeneralisedReplicatingVarianceSwapEngine)
+                namespace QuantExt {
+                class GeneralisedReplicatingVarianceSwapEngine : public PricingEngine {
 public:
     class VarSwapSettings {
     public:
@@ -240,5 +250,112 @@ public:
                                              const VarSwapSettings settings = VarSwapSettings(),
                                              const bool staticTodaysSpot = true);
  };
+}
+
+%shared_ptr(QuantExt::MultiLegOption)
+namespace QuantExt {
+class MultiLegOption : public Instrument {
+  public:
+    MultiLegOption(const std::vector<Leg>& legs,
+                   const std::vector<bool>& payer,
+                   const std::vector<Currency>& currency,
+                   const QuantLib::ext::shared_ptr<Exercise>& exercise = QuantLib::ext::shared_ptr<Exercise>(),
+                   const Settlement::Type settlementType = Settlement::Physical,
+                   Settlement::Method settlementMethod = Settlement::PhysicalOTC,
+                   const std::vector<Date>& settlementDates = std::vector<Date>(),
+                   const bool midCouponExericse = false,
+                   const Period& noticePeriod = 0 * Days,
+                   const Calendar& noticeCalendar = NullCalendar(),
+                   const BusinessDayConvention noticeConvention = Following);
+    const std::vector<Leg>& legs() const;
+    const std::vector<bool>& payer() const;
+    const std::vector<Currency>& currency() const;
+    const QuantLib::ext::shared_ptr<Exercise> exercise() const;
+    Real underlyingNpv() const;
+};
+}
+
+%shared_ptr(QuantExt::BondTRS)
+namespace QuantExt {
+class BondTRS : public Instrument {
+  public:
+    BondTRS(const QuantLib::ext::shared_ptr<QuantExt::BondIndex>& bondIndex,
+            const Real bondNotional,
+            const Real initialPrice,
+            const std::vector<Leg>& fundingLeg,
+            const bool payTotalReturnLeg,
+            const std::vector<Date>& valuationDates,
+            const std::vector<Date>& paymentDates,
+            const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
+            bool payBondCashFlowsImmediately = false,
+            const Currency& fundingCurrency = Currency(),
+            const Currency& bondCurrency = Currency(),
+            const bool applyFXIndexFixingDays = false,
+            const Period& payLagPeriod = Period(),
+            const Calendar& paymentCalendar = WeekendsOnly());
+
+    Real bondNotional() const;
+    Real initialPrice() const;
+    bool payTotalReturnLeg() const;
+    const std::vector<Date>& valuationDates() const;
+    const std::vector<Date>& paymentDates() const;
+};
+}
+
+%shared_ptr(QuantExt::GenericSwaption)
+namespace QuantExt {
+class GenericSwaption : public Option {
+  public:
+    GenericSwaption(const ext::shared_ptr<QuantLib::Swap>& swap,
+                    const ext::shared_ptr<Exercise>& exercise,
+                    QuantLib::Settlement::Type delivery = QuantLib::Settlement::Physical,
+                    QuantLib::Settlement::Method settlementMethod = QuantLib::Settlement::PhysicalOTC);
+
+    Settlement::Type settlementType() const;
+    Settlement::Method settlementMethod() const;
+    const ext::shared_ptr<QuantLib::Swap>& underlyingSwap() const;
+    Real underlyingValue() const;
+};
+}
+
+%shared_ptr(QuantExt::RiskParticipationAgreement)
+namespace QuantExt {
+class RiskParticipationAgreement : public Instrument {
+  public:
+    RiskParticipationAgreement(const std::vector<Leg>& underlying,
+                               const std::vector<bool>& underlyingPayer,
+                               const std::vector<std::string>& underlyingCcys,
+                               const std::vector<Leg>& protectionFee,
+                               const bool protectionFeePayer,
+                               const std::vector<std::string>& protectionFeeCcys,
+                               const Real participationRate,
+                               const Date& protectionStart,
+                               const Date& protectionEnd,
+                               const bool settlesAccrual,
+                               const Real fixedRecoveryRate = Null<Real>(),
+                               const QuantLib::ext::shared_ptr<QuantLib::Exercise>& exercise = nullptr,
+                               const bool exerciseIsLong = false,
+                               const std::vector<QuantLib::ext::shared_ptr<CashFlow>>& premium = std::vector<QuantLib::ext::shared_ptr<CashFlow>>(),
+                               const bool nakedOption = false);
+};
+}
+
+%shared_ptr(QuantExt::ConvertibleBond2)
+namespace QuantExt {
+class ConvertibleBond2 : public Bond {
+};
+}
+
+%shared_ptr(QuantExt::CallableBond)
+namespace QuantExt {
+class CallableBond : public Bond {
+};
+}
+
+%shared_ptr(QuantExt::BalanceGuaranteedSwap)
+namespace QuantExt {
+class BalanceGuaranteedSwap : public Swap {
+};
+}
 
 #endif

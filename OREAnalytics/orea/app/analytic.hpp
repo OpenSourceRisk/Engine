@@ -37,6 +37,7 @@
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 
 #include <orea/app/marketcalibrationreport.hpp>
+#include <orea/app/inputvariables.hpp>
 
 #include <ql/any.hpp>
 #include <iostream>
@@ -52,7 +53,6 @@ namespace ore {
 namespace analytics {
 
 class InputParameters;
-struct InputVariables;
 class AnalyticsManager;
 class StressTestScenarioData;
 
@@ -153,6 +153,8 @@ public:
     const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& getReport(const std::string& key,
                                                                           const std::string& subKey);
     virtual void reset();
+    //! Release heavy internal state (e.g. scenarios, sim market) while keeping reports intact
+    void releaseMemory();
 
     analytic_npvcubes& npvCubes() { return npvCubes_; };
     analytic_mktcubes& mktCubes() { return mktCubes_; };
@@ -226,6 +228,8 @@ public:
     
     void initialise();
     virtual void reset(){};
+    //! Release heavy internal computation state while keeping reports intact
+    virtual void releaseMemory(){};
     const bool initialised() { return initialised_; };
     virtual void buildDependencies(){};
     virtual void buildConfigurations(){};
@@ -281,6 +285,10 @@ private:
     bool initialised_ = false;
 };
 
+struct MarketDataVariables : public InputVariables {
+    void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
+};
+
 /*! Market analytics
   Does not need a portfolio
   Builds the market
@@ -290,7 +298,7 @@ class MarketDataAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "MARKETDATA";
 
-    MarketDataAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) {
+    MarketDataAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs, QuantLib::ext::make_shared<MarketDataVariables>()) {
         setLabel(LABEL);
     }
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader, 

@@ -18,6 +18,7 @@
 
 #include <qle/termstructures/creditvolcurve.hpp>
 
+#include <qle/utilities/time.hpp>
 #include <ql/instruments/creditdefaultswap.hpp>
 #include <ql/pricingengines/credit/midpointcdsengine.hpp>
 #include <qle/math/flatextrapolation.hpp>
@@ -628,6 +629,101 @@ Date BlackVolFromCreditVolWrapper::maxDate() const { return vol_->maxDate(); }
 
 Real BlackVolFromCreditVolWrapper::blackVolImpl(Real t, Real strike) const {
     return vol_->volatility(t, underlyingLength_, strike, vol_->type());
+}
+
+CreditVolCurveSvi::CreditVolCurveSvi(
+    const Date& referenceDate, const Calendar& cal, BusinessDayConvention bdc, const DayCounter& dc,
+    const std::vector<Period>& terms, const std::vector<Handle<CreditCurve>>& termCurves, const Type& type,
+    const std::vector<Date>& exerciseDates, const std::vector<Period>& underlyingTerms,
+    const std::vector<std::vector<Real>>& strikes, const std::vector<std::vector<Real>>& vols,
+    SviParametricVolatility::ModelVariant modelVariant,
+    ParametricVolatility::MarketQuoteType inputMarketQuoteType,
+    const Handle<YieldTermStructure>& discountCurve,
+    const std::map<std::pair<Real, Real>, std::vector<std::pair<Real, ParametricVolatility::ParameterCalibration>>>&
+        modelParameters,
+    const std::map<Real, Real>& modelShifts,
+    Size maxCalibrationAttempts, Real exitEarlyErrorThreshold, Real maxAcceptableError,
+    bool enforceNoArbitrage)
+    : CreditVolCurve(referenceDate, cal, bdc, dc, terms, termCurves, type),
+      quoteType_(inputMarketQuoteType) {
+
+    QL_REQUIRE(inputMarketQuoteType == ParametricVolatility::MarketQuoteType::NormalVolatility ||
+               inputMarketQuoteType == ParametricVolatility::MarketQuoteType::ShiftedLognormalVolatility,
+               "CreditVolCurveSvi: inputMarketQuoteType must be NormalVolatility or ShiftedLognormalVolatility");
+
+    QL_REQUIRE(exerciseDates.size() == underlyingTerms.size(),
+               "CreditVolCurveSvi: exerciseDates size (" << exerciseDates.size()
+                   << ") != underlyingTerms size (" << underlyingTerms.size() << ")");
+    QL_REQUIRE(exerciseDates.size() == strikes.size(),
+               "CreditVolCurveSvi: exerciseDates size (" << exerciseDates.size()
+                   << ") != strikes size (" << strikes.size() << ")");
+    QL_REQUIRE(exerciseDates.size() == vols.size(),
+               "CreditVolCurveSvi: exerciseDates size (" << exerciseDates.size()
+                   << ") != vols size (" << vols.size() << ")");
+
+    std::vector<ParametricVolatility::MarketSmile> marketSmiles;
+    marketSmiles.reserve(exerciseDates.size());
+    for (Size i = 0; i < exerciseDates.size(); ++i) {
+        QL_REQUIRE(strikes[i].size() == vols[i].size(),
+                   "CreditVolCurveSvi: strikes size (" << strikes[i].size() << ") != vols size (" << vols[i].size()
+                       << ") for slice " << i);
+        QL_REQUIRE(!strikes[i].empty(), "CreditVolCurveSvi: empty strikes for slice " << i);
+
+        ParametricVolatility::MarketSmile smile;
+        smile.timeToExpiry = dayCounter().yearFraction(referenceDate, exerciseDates[i]);
+        smile.underlyingLength = periodToTime(underlyingTerms[i]);
+        smile.forward = atmStrike(exerciseDates[i], smile.underlyingLength);
+        smile.lognormalShift = 0.0;
+        smile.strikes = strikes[i];
+        smile.marketQuotes = vols[i];
+        marketSmiles.push_back(std::move(smile));
+    }
+
+    const auto marketModelType = ParametricVolatility::MarketModelType::Black76;
+
+    if (modelVariant == SviParametricVolatility::ModelVariant::Gatheral2004SviRaw ||
+        modelVariant == SviParametricVolatility::ModelVariant::Gatheral2004SviNatural ||
+        modelVariant == SviParametricVolatility::ModelVariant::Gatheral2004SviJw) {
+        svi_ = QuantLib::ext::make_shared<SviParametricVolatility>(
+            modelVariant, marketSmiles, marketModelType, inputMarketQuoteType, discountCurve, modelParameters,
+            modelShifts, maxCalibrationAttempts, exitEarlyErrorThreshold, maxAcceptableError);
+    } else if (modelVariant == SviParametricVolatility::ModelVariant::Gatheral2012SsviHeston ||
+               modelVariant == SviParametricVolatility::ModelVariant::Gatheral2012SsviPowerLaw) {
+        svi_ = QuantLib::ext::make_shared<SsviParametricVolatility>(
+            modelVariant, marketSmiles, marketModelType, inputMarketQuoteType, discountCurve, modelParameters,
+            modelShifts, maxCalibrationAttempts, exitEarlyErrorThreshold, maxAcceptableError,
+            enforceNoArbitrage, false);
+    } else if (modelVariant == SviParametricVolatility::ModelVariant::CorbettaEtAl2019Essvi) {
+        svi_ = QuantLib::ext::make_shared<SsviParametricVolatilityRobust>(
+            modelVariant, marketSmiles, marketModelType, inputMarketQuoteType, discountCurve, modelParameters,
+            modelShifts, maxCalibrationAttempts, exitEarlyErrorThreshold, maxAcceptableError,
+            enforceNoArbitrage, false);
+    } else if (modelVariant == SviParametricVolatility::ModelVariant::Mingone2022EssviGJ ||
+               modelVariant == SviParametricVolatility::ModelVariant::Mingone2022EssviMM) {
+        svi_ = QuantLib::ext::make_shared<SsviParametricVolatilityGlobal>(
+            modelVariant, marketSmiles, marketModelType, inputMarketQuoteType, discountCurve, modelParameters,
+            modelShifts, maxCalibrationAttempts, exitEarlyErrorThreshold, maxAcceptableError,
+            true, false);
+    } else {
+        QL_FAIL("CreditVolCurveSvi: unsupported model variant " << static_cast<int>(modelVariant));
+    }
+
+    enableExtrapolation();
+}
+
+Real CreditVolCurveSvi::volatility(const Date& exerciseDate, const Real underlyingLength, const Real strike,
+                                    const Type& targetType) const {
+    QL_REQUIRE(targetType == type(),
+               "CreditVolCurveSvi: targetType (" << (targetType == Type::Spread ? "Spread" : "Price")
+                                                 << ") != curve type (" << (type() == Type::Spread ? "Spread" : "Price")
+                                                 << ")");
+
+    Real t = dayCounter().yearFraction(referenceDate(), exerciseDate);
+    t = std::max(t, 1.0 / 365.0);
+
+    Real fwd = atmStrike(exerciseDate, underlyingLength);
+
+    return svi_->evaluate(t, underlyingLength, strike, fwd, quoteType_);
 }
 
 } // namespace QuantExt

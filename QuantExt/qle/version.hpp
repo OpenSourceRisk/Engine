@@ -24,9 +24,9 @@
 #define quantext_version_hpp
 
 //! Version string
-#define OPEN_SOURCE_RISK_VERSION "1.8.15.0"
+#define OPEN_SOURCE_RISK_VERSION "1.8.16.0"
 
 //! Version number
-#define OPEN_SOURCE_RISK_VERSION_NUM 1081500
+#define OPEN_SOURCE_RISK_VERSION_NUM 1081600
 
 #endif

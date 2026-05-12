@@ -1,0 +1,112 @@
+\subsubsection{Equity Auto Delta Hedged Option}
+
+The \lstinline!EquityAutoDeltaHedgedOptionData! node is the trade data container for the
+\emph{EquityAutoDeltaHedgedOption} trade type.  This trade type represents a structured
+product consisting of one or more batches of European equity options with an embedded
+discrete delta-hedging strategy.
+
+The structure of an example \lstinline!EquityAutoDeltaHedgedOptionData! node is shown in
+Listing \ref{lst:eqautodeltahedged_data}.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<EquityAutoDeltaHedgedOptionData>
+  <Volatility>0.05</Volatility>
+  <DriftRate>0.00</DriftRate>
+  <Underlyings>
+    <Underlying>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <OptionType>Call</OptionType>
+        <Style>European</Style>
+        <Settlement>Cash</Settlement>
+        <ExerciseDates>
+          <ExerciseDate>2021-01-29</ExerciseDate>
+        </ExerciseDates>
+        <PremiumAmount>9.36</PremiumAmount>
+        <PremiumCurrency>USD</PremiumCurrency>
+        <PremiumPayDate>2019-03-01</PremiumPayDate>
+      </OptionData>
+      <Name>RIC:HSBA.L</Name>
+      <Currency>USD</Currency>
+      <Strike>3.5</Strike>
+      <StrikeCurrency>USD</StrikeCurrency>
+      <Quantity>51400</Quantity>
+    </Underlying>
+    <Underlying>
+      ...
+    </Underlying>
+  </Underlyings>
+  <ObservationStartDate>2020-11-11</ObservationStartDate>
+</EquityAutoDeltaHedgedOptionData>
+\end{minted}
+\caption{Equity Auto Delta Hedged Option data}
+\label{lst:eqautodeltahedged_data}
+\end{listing}
+
+The meanings and allowable values of the elements in the
+\lstinline!EquityAutoDeltaHedgedOptionData! node follow below.
+
+\begin{itemize}
+
+\item \lstinline!Volatility! [Mandatory]:  The hedging volatility $\sigma_h$ used in the
+  Black--Scholes delta computation for the daily delta-hedge rebalancing.
+  Expressed as a decimal (e.g.\ \texttt{0.05} for 5\%).
+
+  Allowable values: any non-negative real number.
+
+\item \lstinline!DriftRate! [Mandatory]:  The continuously compounded rate $r$ used in the
+  contractual forward formula $F_{t,T} = S_t \cdot e^{r\,\tau}$, where $\tau$ is the
+  Actual/365~(Fixed) year fraction from observation date to expiry.
+
+  Allowable values: any real number (typically \texttt{0.00}).
+
+\item \lstinline!Underlyings! [Mandatory]:  A container node holding one or more
+  \lstinline!Underlying! child nodes.  Each \lstinline!Underlying! defines a single batch
+  of options within the auto delta hedged structure.
+
+  \begin{itemize}
+
+  \item \lstinline!OptionData!:  This is a trade component sub-node outlined in
+    section~\ref{ss:option_data}.  The relevant fields are:
+
+    \begin{itemize}
+    \item \lstinline!LongShort!:  The allowable values are \emph{Long} or \emph{Short}.
+    \item \lstinline!OptionType!:  The allowable values are \emph{Call} or \emph{Put}.
+    \item \lstinline!Style!:  Must be \emph{European}.
+    \item \lstinline!Settlement!:  Must be \emph{Cash}.
+    \item An \lstinline!ExerciseDates! node with exactly one \lstinline!ExerciseDate!.
+    \item \lstinline!PremiumAmount!, \lstinline!PremiumCurrency!, \lstinline!PremiumPayDate!:
+      Exactly one premium per underlying is required.  The premium is included in the equity
+      amount calculation at expiry.
+    \end{itemize}
+
+  \item \lstinline!Name! [Mandatory]:  The identifier of the underlying equity or equity index.
+
+    Allowable values: See \lstinline!Name! for equity trades in Table~\ref{tab:equity_name}.
+
+  \item \lstinline!Currency! [Mandatory]:  The payment currency.
+
+    Allowable values: See \lstinline!Currency! in Table~\ref{tab:allow_stand_data}.
+
+  \item \lstinline!Strike! [Mandatory]:  The option strike price.
+
+    Allowable values: any positive real number.
+
+  \item \lstinline!StrikeCurrency! [Optional]:  The currency of the strike.
+
+    Allowable values: See \lstinline!Currency! in Table~\ref{tab:allow_stand_data}.
+
+  \item \lstinline!Quantity! [Mandatory]:  The number of underlying options in this batch ($N^i$).
+
+    Allowable values: any positive real number.
+
+  \end{itemize}
+
+\item \lstinline!ObservationStartDate! [Mandatory]:  The date from which the discrete
+  delta-hedging observation begins.  Historical fixings of the equity index between the
+  observation start date and the valuation date are used to compute the realized hedge P\&L.
+
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+
+\end{itemize}

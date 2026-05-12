@@ -556,7 +556,8 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
             if (itr == requiredCDSVolCurves_.end()) {
                 DLOG("Building CDSVol for asof " << asof_);
                 QuantLib::ext::shared_ptr<CDSVolCurve> cdsVolCurve = QuantLib::ext::make_shared<CDSVolCurve>(
-                    asof_, *cdsvolspec, *loader_, *curveConfigs_, requiredCDSVolCurves_, requiredDefaultCurves_);
+                    asof_, *cdsvolspec, *loader_, *curveConfigs_, requiredCDSVolCurves_, requiredDefaultCurves_,
+                    referenceData_);
                 itr = requiredCDSVolCurves_.insert(make_pair(cdsvolspec->name(), cdsVolCurve)).first;
             }
             DLOG("Adding CDSVol (" << node.name << ") with spec " << *cdsvolspec << " to configuration "
@@ -626,10 +627,12 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
                         itr->second->inflationTermStructure());
                 QL_REQUIRE(ts,
                            "expected yoy inflation term structure for index " << node.name << ", but could not cast");
-                yoyInflationIndices_[make_pair(configuration, node.name)] =
+            QL_DEPRECATED_DISABLE_WARNING
+                           yoyInflationIndices_[make_pair(configuration, node.name)] =
                     Handle<YoYInflationIndex>(QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(
                         parseZeroInflationIndex(node.name, Handle<ZeroInflationTermStructure>()), false,
                         Handle<YoYInflationTermStructure>(ts)));
+            QL_DEPRECATED_ENABLE_WARNING
             }
             break;
         }
