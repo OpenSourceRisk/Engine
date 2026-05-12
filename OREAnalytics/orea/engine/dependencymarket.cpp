@@ -222,13 +222,12 @@ Handle<IborIndex> DependencyMarket::iborIndex(const string& name, const string& 
         QL_REQUIRE(oi != nullptr, "DependencyMarket::iborIndex(): could not cast rfr index '"
                                       << rfrName << "' to OvernightIndex, this is unexpected.");
         auto fallbackData = iborFallbackConfig_->fallbackData(name);
-	if (auto original = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(iip))
+        if (auto original = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(iip))
             ii = Handle<IborIndex>(QuantLib::ext::make_shared<QuantExt::FallbackOvernightIndex>(
-                original, oi, fallbackData.spread,
-                                                                               fallbackData.switchDate, false));
-	else
-	    ii = Handle<IborIndex>(QuantLib::ext::make_shared<QuantExt::FallbackIborIndex>(*ii, oi, fallbackData.spread,
-                                                                               fallbackData.switchDate, false));
+                original, oi, fallbackData.spread, fallbackData.switchDate, false));
+        else
+            ii = Handle<IborIndex>(QuantLib::ext::make_shared<QuantExt::FallbackIborIndex>(
+                *ii, oi, fallbackData.spread, fallbackData.switchDate, false));
         DLOG("Adding rfr fallback index '" << rfrName << "' for ibor index '" << name << "'");
     }
 

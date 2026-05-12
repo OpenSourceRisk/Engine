@@ -254,15 +254,15 @@ BondFutureUtils::deduceDates(const std::string& currency, const std::string& con
 
 BondFutureUtils::BondFutureType BondFutureUtils::getBondFutureType(const std::string& deliverableGrade) {
 
-    //                         Deliverable Maturities	    CME Globex  Bloomberg
-    // 2-Year T-Note                 1 3/4 to 2 years	           ZT          TU
-    // 3-Year T-Note                  9/12 to 3 years	          Z3N          3Y
-    // 5-Year T-Note             4 1/6 to 5 1/4 years	           ZF          FV
-    // 10-Year T-Note                6 1/2 to 8 years	           ZN          TY
-    // Ultra 10-Year T-Note 	   9 5/12 to 10 Years	           TN         UXY
-    // T-Bond                 15 years up to 25 years	           ZB          US
-    // 20-Year T-Bond       19 2/12 to 19 11/12 years	          TWE         TWE
-    // Ultra T-Bond	         25 years to 30 years	           UB          WN
+    //                         Deliverable Maturities    CME Globex  Bloomberg
+    // 2-Year T-Note                 1 3/4 to 2 years           ZT          TU
+    // 3-Year T-Note                  9/12 to 3 years          Z3N          3Y
+    // 5-Year T-Note             4 1/6 to 5 1/4 years           ZF          FV
+    // 10-Year T-Note                6 1/2 to 8 years           ZN          TY
+    // Ultra 10-Year T-Note        9 5/12 to 10 years           TN         UXY
+    // T-Bond                 15 years up to 25 years           ZB          US
+    // 20-Year T-Bond       19 2/12 to 19 11/12 years          TWE         TWE
+    // Ultra T-Bond              25 years to 30 years           UB          WN
     // source: https://www.cmegroup.com/trading/interest-rates/basics-of-us-treasury-futures.html
 
     string val_up = boost::to_upper_copy(deliverableGrade);
