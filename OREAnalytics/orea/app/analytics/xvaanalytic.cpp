@@ -528,7 +528,7 @@ void XvaAnalyticImpl::applyConfigurationFallback(const QuantLib::ext::shared_ptr
     }
 }
 
-void XvaAnalyticImpl::buildEngineFactory() {
+QuantLib::ext::shared_ptr<EngineFactory> XvaAnalyticImpl::engineFactory() {
     LOG("XvaAnalytic::engineFactory() called");
 
     auto xvaVars = ext::dynamic_pointer_cast<XvaVariables>(inputVariables_);
@@ -554,6 +554,7 @@ void XvaAnalyticImpl::buildEngineFactory() {
         engineFactory_ = QuantLib::ext::make_shared<EngineFactory>(
             engineData_, analytic()->market(), configurations, inputs_->refDataManager(), inputs_->iborFallbackConfig());
     }
+    return engineFactory_;
 }
 
 void XvaAnalyticImpl::buildScenarioSimMarket() {
@@ -1340,8 +1341,6 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     analytic()->buildMarket(loader);
     CONSOLE("OK");
     ProgressMessage(msg, 1, 1).log();
-
-    buildEngineFactory();
 
     if (xvaVars->amcCg_ == XvaEngineCG::Mode::Full) {
         // note: market configs both set to simulation, see note in xvaenginecg, we'd need inccy config
