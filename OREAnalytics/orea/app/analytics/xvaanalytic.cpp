@@ -772,7 +772,6 @@ XvaAnalyticImpl::classicRun(const QuantLib::ext::shared_ptr<Portfolio>& portfoli
     for (const auto& [tradeId, trade] : portfolio->trades())
         classicPortfolio_->add(trade);
     QL_REQUIRE(analytic()->market(), "today's market not set");
-    buildEngineFactory();
     classicPortfolio_->build(engineFactory(), "analytic/" + label(), true, inputs_->useAtParCouponsTrades());
     Date maturityDate = inputs_->asof();
     if (inputs_->portfolioFilterDate() != Null<Date>())
@@ -1341,6 +1340,8 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     analytic()->buildMarket(loader);
     CONSOLE("OK");
     ProgressMessage(msg, 1, 1).log();
+
+    buildEngineFactory();
 
     if (xvaVars->amcCg_ == XvaEngineCG::Mode::Full) {
         // note: market configs both set to simulation, see note in xvaenginecg, we'd need inccy config
