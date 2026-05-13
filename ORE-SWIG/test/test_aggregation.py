@@ -16,6 +16,13 @@ class AggregationBindingSmokeTest(unittest.TestCase):
             "DynamicInitialMarginCalculator",
             "CollateralAccount",
             "XvaCalculator",
+            "CVASpreadSensitivityCalculator",
+            "ExposureAllocator",
+            "RelativeFairValueNetExposureAllocator",
+            "RelativeFairValueGrossExposureAllocator",
+            "RelativeXvaExposureAllocator",
+            "NoneExposureAllocator",
+            "parseAllocationMethod",
         ]
         for name in required:
             self.assertTrue(hasattr(ORE, name), msg=f"Missing ORE symbol: {name}")
