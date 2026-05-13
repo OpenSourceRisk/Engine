@@ -63,6 +63,11 @@ class XvaAnalytic : public ore::analytics::Analytic {
             return new ore::analytics::XvaAnalytic(
                 inputs, QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>());
         }
+        QuantLib::ext::shared_ptr<ore::analytics::PostProcess> postProcess() {
+            auto* impl = dynamic_cast<ore::analytics::XvaAnalyticImpl*>($self->impl().get());
+            if (!impl) return nullptr;
+            return impl->postProcess();
+        }
     }
 };
 }
@@ -122,5 +127,13 @@ class AnalyticFactory {
 };
 }
 }
+
+// Helper to downcast Analytic to XvaAnalytic
+%inline %{
+QuantLib::ext::shared_ptr<ore::analytics::XvaAnalytic> asXvaAnalytic(
+    QuantLib::ext::shared_ptr<ore::analytics::Analytic> analytic) {
+    return QuantLib::ext::dynamic_pointer_cast<ore::analytics::XvaAnalytic>(analytic);
+}
+%}
 
 #endif

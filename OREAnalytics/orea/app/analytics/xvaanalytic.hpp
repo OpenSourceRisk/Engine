@@ -197,6 +197,9 @@ public:
     }
     void buildDependencies() override;
 
+    //! Access the post-process results (available after runAnalytic completes)
+    const QuantLib::ext::shared_ptr<PostProcess>& postProcess() const { return postProcess_; }
+
 protected:
     QuantLib::ext::shared_ptr<ore::data::EngineFactory> engineFactory() override;
     void buildScenarioSimMarket();
