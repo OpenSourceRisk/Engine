@@ -226,6 +226,7 @@ protected:
     QuantLib::ext::shared_ptr<ScenarioSimMarket> simMarket_;
     QuantLib::ext::shared_ptr<ScenarioSimMarket> simMarketCalibration_;
     QuantLib::ext::shared_ptr<ScenarioSimMarket> offsetSimMarket_;
+    QuantLib::ext::shared_ptr<EngineData> engineData_;
     QuantLib::ext::shared_ptr<EngineFactory> engineFactory_;
     QuantLib::ext::shared_ptr<CrossAssetModel> model_;
     QuantLib::ext::shared_ptr<ScenarioGenerator> scenarioGenerator_;
