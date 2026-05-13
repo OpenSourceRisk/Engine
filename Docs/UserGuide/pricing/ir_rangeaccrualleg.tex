@@ -27,7 +27,7 @@ time $S$ is given by
 with a strike $K$ and the Ibor rate
 
 \begin{equation}
-L(t,S,T) := \frac{1}{\tau} \left( \frac{P(t,S)}{P(t,T} - 1 \right)
+L(t,S,T) := \frac{1}{\tau} \left( \frac{P(t,S)}{P(t,T)} - 1 \right)
 \end{equation}
 
 where $P(t,T)$ is the zero bond price on the forward estimation curve of $L$. The caplet price $V$ calculated in the
@@ -123,10 +123,31 @@ and variance
 \sigma^2 = \int_t^S ( \sigma_P(u,T) - \sigma_P(u,S) )^2 du
 \end{equation}
 
-Using \ref{pricing:ir_rangeaccrualleg_bondvol} we can write the mean as
+Using \ref{pricing:ir_rangeaccrualleg_bondvol} we compute the differences appearing in the integrands:
+
+\begin{equation}
+\sigma_P(u,T_p) - \sigma_P(u,S) = \alpha(u)(H(T_p) - H(u)) - \alpha(u)(H(S) - H(u)) = \alpha(u)(H(T_p) - H(S))
+\end{equation}
+
+\begin{equation}
+\sigma_P(u,T) - \sigma_P(u,S) = \alpha(u)(H(T) - H(u)) - \alpha(u)(H(S) - H(u)) = \alpha(u)(H(T) - H(S))
+\end{equation}
+
+Note that these differences are proportional to $\alpha(u)$ with constant factors $(H(T_p)-H(S))$ and $(H(T)-H(S))$
+respectively. Substituting into the integrals:
+
+\begin{equation}
+\int_t^S ( \sigma_P(u,T_p) - \sigma_P(u,S) )( \sigma_P(u,T) - \sigma_P(u,S) ) du = (H(T_p)-H(S))(H(T)-H(S)) \int_t^S \alpha^2(u) du
+\end{equation}
+
+\begin{equation}
+\int_t^S ( \sigma_P(u,T) - \sigma_P(u,S) )^2 du = (H(T)-H(S))^2 \int_t^S \alpha^2(u) du
+\end{equation}
+
+Therefore the mean becomes
 
 \begin{equation}\label{pricing:ir_rangeaccrualleg_mu}
-\mu = \ln P(t,S,T) + (H(T_p)-H(S))(H(T)-H(S)) \left[ \int_t^S \alpha(u) du \right]^2
+\mu = \ln P(t,S,T) + \left[ (H(T_p)-H(S))(H(T)-H(S)) - \frac{1}{2}(H(T)-H(S))^2 \right] \int_t^S \alpha^2(u) du
 \end{equation}
 
 and the variance as
