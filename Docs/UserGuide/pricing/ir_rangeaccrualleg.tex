@@ -179,8 +179,3 @@ and $\mu$ and $\sigma$ as in \ref{pricing:ir_rangeaccrualleg_mu}, \ref{pricing:i
 \begin{equation}
 V(t) = P(t,T_p) E^{T_p}_t( 1_{L(S,S,T) < K} ) = P(t, T_p) \left[ 1 - \Phi^{-1}\left( \frac{ \ln K^* - \mu }{\sigma} \right) \right]
 \end{equation}
-
-Note / TODO: The quantities $H(T)$ and $\int_t^S \alpha(u)^2 du$
-in \ref{pricing:ir_rangeaccrualleg_mu}, \ref{pricing:ir_rangeaccrualleg_sigma} can be retrieved from LgmParametrization
-directly in an efficient way. TODO: We should also provide an efficient implementation of $\int_t^S \alpha(u) du$, which
-we do not have at the moment, but which can be easily added.
