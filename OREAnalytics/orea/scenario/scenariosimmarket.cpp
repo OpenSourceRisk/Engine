@@ -543,6 +543,13 @@ ScenarioSimMarket::ScenarioSimMarket(
                             ich->enableExtrapolation();
 
                         QuantLib::ext::shared_ptr<IborIndex> i = index->clone(ich);
+
+                        // unpack original index, if i is a fallback index itself
+                        if (auto f = QuantLib::ext::dynamic_pointer_cast<FallbackOvernightIndex>(i))
+                            i = f->originalIndex();
+                        else if (auto f = QuantLib::ext::dynamic_pointer_cast<FallbackIborIndex>(i))
+                            i = f->originalIndex();
+
                         if (iborFallbackConfig_ && iborFallbackConfig_->isIndexReplaced(name, asof_)) {
                             // handle ibor fallback indices
                             auto fallbackData = iborFallbackConfig_->fallbackData(name);
