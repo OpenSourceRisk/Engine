@@ -36,22 +36,17 @@ namespace ore {
 namespace analytics {
 
 void StressedSimmVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) {
-    LOG("Loading StressedSimmVariables");
     inputs->loadParameterXML<StressTestScenarioData>(stressedSimmScenarioData_, "stressedSimm",
                                                      "stressedSimmScenarioData", true);
-    LOG("StressedSimmVariables loaded");
-    LOG("StressedSimmVariables::stressedSimmScenarioData_ has " << (stressedSimmScenarioData_ ? "data" : "no data"));
 }
 
 StressedSimmAnalyticImpl::StressedSimmAnalyticImpl(
     const QuantLib::ext::shared_ptr<InputParameters>& inputs)
     : Analytic::Impl(inputs, QuantLib::ext::make_shared<StressedSimmVariables>()) {
-    LOG("Constructing ore::StressedSimmAnalyticImpl");
     setLabel(LABEL);
 }
 
 void StressedSimmAnalyticImpl::setUpConfigurations() {
-    LOG("ore::StressedSimmAnalyticImpl::setUpConfigurations called");
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
     analytic()->configurations().simMarketParams = inputs_->sensiSimMarketParams();
     analytic()->configurations().sensiScenarioData = inputs_->sensiScenarioData();
@@ -177,9 +172,7 @@ void StressedSimmAnalyticImpl::runStressTest(
             QL_REQUIRE(it != rpts.end(), "SIMM report not found in SIMM analytic reports");
             for (auto [name, rpt] : it->second) {
                 // add scenario column to report and copy it, concat it later
-                DLOG("found report " << name << " for scenario " << label);
                 if (name == "simm") {
-                    DLOG("Save and extend report " << name);
                     simmReports["stressed_simm"].push_back(addColumnToExisitingReport("Scenario", label, rpt));
                 }
             }
