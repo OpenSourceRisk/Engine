@@ -602,7 +602,9 @@ StructuredMessage::StructuredMessage(const Category& category, const Group& grou
 
     // Retrieve stacktrace captured at the point the exception was thrown
     if (!g_lastThrowStacktrace.empty()) {
-        data_["stacktrace"] = g_lastThrowStacktrace;
+        if (ore::data::Log::instance().mask() >= ORE_DEBUG) {
+            data_["stacktrace"] = g_lastThrowStacktrace;
+        }
         g_lastThrowStacktrace.clear();
     }
 
