@@ -210,9 +210,9 @@ void PricingAnalyticImpl::runAnalytic(
                 LOG("Multi-threaded sensi analysis created");
             }
 
-            if (offsetScenario_ != nullptr) {
-                sensiAnalysis_->setOffsetScenario(offsetScenario_);
-                sensiAnalysis_->setOffsetSimMarketParams(offsetSimMarketParams_);
+            if (analytic()->offsetScenario() != nullptr) {
+                sensiAnalysis_->setOffsetScenario(analytic()->offsetScenario());
+                sensiAnalysis_->setOffsetSimMarketParams(analytic()->offsetSimMarketParams());
             }
 
             const set<RiskFactorKey::KeyType>& typesDisabled = analytic()->configurations().sensiScenarioData->parConversionExcludes();
