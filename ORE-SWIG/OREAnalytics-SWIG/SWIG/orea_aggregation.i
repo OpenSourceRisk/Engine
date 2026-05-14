@@ -55,6 +55,57 @@ public:
     virtual ~DynamicInitialMarginCalculator() {}
     virtual void build() = 0;
     const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& dimCube() const;
+
+    // Result accessors
+    const std::vector<std::vector<QuantLib::Real>>& dynamicIM(const std::string& nettingSet) const;
+    const std::vector<std::vector<QuantLib::Real>>& cashFlow(const std::string& nettingSet) const;
+    const std::vector<QuantLib::Real>& expectedIM(const std::string& nettingSet) const;
+    const std::map<std::string, QuantLib::Real>& currentIM() const;
+    const std::map<std::string, QuantLib::Real>& getInitialMarginScaling() const;
+};
+}
+}
+
+%shared_ptr(ore::analytics::RegressionDynamicInitialMarginCalculator)
+%nodefaultctor ore::analytics::RegressionDynamicInitialMarginCalculator;
+namespace ore {
+namespace analytics {
+class RegressionDynamicInitialMarginCalculator : public DynamicInitialMarginCalculator {
+public:
+    virtual ~RegressionDynamicInitialMarginCalculator() {}
+    void build() override;
+    const std::map<std::string, QuantLib::Real>& unscaledCurrentDIM() const;
+    const std::vector<std::vector<QuantLib::Real>>& localRegressionResults(const std::string& nettingSet);
+    const std::vector<QuantLib::Real>& zeroOrderResults(const std::string& nettingSet);
+    const std::vector<QuantLib::Real>& simpleResultsUpper(const std::string& nettingSet);
+    const std::vector<QuantLib::Real>& simpleResultsLower(const std::string& nettingSet);
+};
+}
+}
+
+%shared_ptr(ore::analytics::FlatDynamicInitialMarginCalculator)
+%nodefaultctor ore::analytics::FlatDynamicInitialMarginCalculator;
+namespace ore {
+namespace analytics {
+class FlatDynamicInitialMarginCalculator : public DynamicInitialMarginCalculator {
+public:
+    virtual ~FlatDynamicInitialMarginCalculator() {}
+    void build() override;
+    const std::map<std::string, QuantLib::Real>& unscaledCurrentDIM() const;
+    const std::vector<QuantLib::Real>& dimResults(const std::string& nettingSet) const;
+};
+}
+}
+
+%shared_ptr(ore::analytics::DirectDynamicInitialMarginCalculator)
+%nodefaultctor ore::analytics::DirectDynamicInitialMarginCalculator;
+namespace ore {
+namespace analytics {
+class DirectDynamicInitialMarginCalculator : public DynamicInitialMarginCalculator {
+public:
+    virtual ~DirectDynamicInitialMarginCalculator() {}
+    void build() override;
+    const std::map<std::string, QuantLib::Real>& unscaledCurrentDIM() const;
 };
 }
 }
@@ -220,6 +271,109 @@ public:
 };
 }
 }
+
+// --- CVASpreadSensitivityCalculator ---
+
+%shared_ptr(ore::analytics::CVASpreadSensitivityCalculator)
+namespace ore {
+namespace analytics {
+class CVASpreadSensitivityCalculator {
+public:
+    CVASpreadSensitivityCalculator(const std::string& key,
+                                   const QuantLib::Date& asof,
+                                   const std::vector<QuantLib::Real>& epe,
+                                   const std::vector<QuantLib::Date>& dates,
+                                   const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& dts,
+                                   const QuantLib::Real& recovery,
+                                   const QuantLib::Handle<QuantLib::YieldTermStructure>& yts,
+                                   const std::vector<QuantLib::Period>& shiftTenors,
+                                   QuantLib::Real shiftSize = 0.0001);
+
+    const std::string key();
+    QuantLib::Date asof();
+    const std::vector<QuantLib::Real>& exposureProfile();
+    const std::vector<QuantLib::Date>& exposureDateGrid();
+    QuantLib::Real recoveryRate();
+    const std::vector<QuantLib::Period> shiftTenors();
+
+    const std::vector<QuantLib::Real> shiftTimes();
+    QuantLib::Real shiftSize();
+    const std::vector<QuantLib::Real> hazardRateSensitivities();
+    const std::vector<QuantLib::Real> cdsSpreadSensitivities();
+};
+}
+}
+
+// --- ExposureAllocator and subclasses ---
+
+%shared_ptr(ore::analytics::ExposureAllocator)
+%nodefaultctor ore::analytics::ExposureAllocator;
+namespace ore {
+namespace analytics {
+class ExposureAllocator {
+public:
+    enum class AllocationMethod {
+        None,
+        Marginal,
+        RelativeFairValueGross,
+        RelativeFairValueNet,
+        RelativeXVA
+    };
+
+    virtual ~ExposureAllocator() {}
+    const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& exposureCube();
+    virtual void build();
+};
+
+ExposureAllocator::AllocationMethod parseAllocationMethod(const std::string& s);
+}
+}
+
+%shared_ptr(ore::analytics::RelativeFairValueNetExposureAllocator)
+%nodefaultctor ore::analytics::RelativeFairValueNetExposureAllocator;
+namespace ore {
+namespace analytics {
+class RelativeFairValueNetExposureAllocator : public ExposureAllocator {
+public:
+    virtual ~RelativeFairValueNetExposureAllocator() {}
+};
+}
+}
+
+%shared_ptr(ore::analytics::RelativeFairValueGrossExposureAllocator)
+%nodefaultctor ore::analytics::RelativeFairValueGrossExposureAllocator;
+namespace ore {
+namespace analytics {
+class RelativeFairValueGrossExposureAllocator : public ExposureAllocator {
+public:
+    virtual ~RelativeFairValueGrossExposureAllocator() {}
+};
+}
+}
+
+%shared_ptr(ore::analytics::RelativeXvaExposureAllocator)
+%nodefaultctor ore::analytics::RelativeXvaExposureAllocator;
+namespace ore {
+namespace analytics {
+class RelativeXvaExposureAllocator : public ExposureAllocator {
+public:
+    virtual ~RelativeXvaExposureAllocator() {}
+};
+}
+}
+
+%shared_ptr(ore::analytics::NoneExposureAllocator)
+%nodefaultctor ore::analytics::NoneExposureAllocator;
+namespace ore {
+namespace analytics {
+class NoneExposureAllocator : public ExposureAllocator {
+public:
+    virtual ~NoneExposureAllocator() {}
+};
+}
+}
+
+// --- PostProcess ---
 
 %shared_ptr(ore::analytics::PostProcess)
 %nodefaultctor ore::analytics::PostProcess;
