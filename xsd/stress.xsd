@@ -58,7 +58,7 @@
       <xs:element type="stressyieldcurves" name="YieldCurves" minOccurs="0"/>
       <xs:element type="fxspots" name="FxSpots" minOccurs="0"/>
       <xs:element type="stressfxvolatilities" name="FxVolatilities" minOccurs="0"/>
-      <xs:element type="swaptionvolatilities" name="SwaptionVolatilities" minOccurs="0"/>
+      <xs:element type="stressswaptionvolatilities" name="SwaptionVolatilities" minOccurs="0"/>
       <xs:element type="stresscapfloorvolatilities" name="CapFloorVolatilities" minOccurs="0"/>
       <xs:element type="equityspots" name="EquitySpots" minOccurs="0"/>
       <xs:element type="equityvolatilities" name="EquityVolatilities" minOccurs="0"/>
@@ -190,7 +190,39 @@
 		<xs:attribute type="xs:string" name="name" use="required"/>
 	</xs:complexType>
 
-	<xs:complexType name="stresscommoditycurves">
+  <xs:complexType name="stressswaptionvolatilities">
+    <xs:sequence>
+      <xs:element type="stressswaptionvolatility" name="SwaptionVolatility" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="stressswaptionvolatility">
+    <xs:sequence>
+      <xs:element type="shiftTypeEntry" name="ShiftType"/>
+      <xs:element name="Shifts">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="Shift" maxOccurs="unbounded" minOccurs="0">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute type="xs:string" name="expiry"/>
+                    <xs:attribute type="xs:string" name="term"/>
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element type="xs:string" name="ShiftExpiries"/>
+      <xs:element type="xs:string" name="ShiftTerms"/>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="key"/>
+    <xs:attribute type="xs:string" name="ccy"/> <!-- deprecated -->
+  </xs:complexType>
+
+  <xs:complexType name="stresscommoditycurves">
     <xs:sequence>
       <xs:element type="stresscommoditycurve" name="CommodityCurve" maxOccurs="unbounded" minOccurs="0"/>
     </xs:sequence>

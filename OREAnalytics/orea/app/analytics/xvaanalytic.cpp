@@ -564,31 +564,31 @@ void XvaAnalyticImpl::buildScenarioSimMarket() {
         analytic()->market(), analytic()->configurations().simMarketParams,
         QuantLib::ext::make_shared<FixingManager>(inputs_->asof()), configuration, *inputs_->curveConfigs().get(),
         *analytic()->configurations().todaysMarketParams, inputs_->continueOnError(), false, true,
-        xvaVars->allowPartialScenarios_, inputs_->iborFallbackConfig(), false, offsetScenario_);
+        xvaVars->allowPartialScenarios_, inputs_->iborFallbackConfig(), false, analytic()->offsetScenario());
 
-    if (offsetScenario_ == nullptr) {
+    if (analytic()->offsetScenario() == nullptr) {
         simMarketCalibration_ = simMarket_;
         offsetSimMarket_ = simMarket_;
     } else {
         // set useSpreadedTermstructure to true, yield better results in calibration of the CAM
         simMarketCalibration_ = QuantLib::ext::make_shared<ScenarioSimMarket>(
-            analytic()->market(), offsetSimMarketParams_,
+            analytic()->market(), analytic()->offsetSimMarketParams(),
             QuantLib::ext::make_shared<FixingManager>(inputs_->asof()), configuration, *inputs_->curveConfigs().get(), 
             *analytic()->configurations().todaysMarketParams, inputs_->continueOnError(), true, true, 
-            xvaVars->allowPartialScenarios_, inputs_->iborFallbackConfig(), false, offsetScenario_);
+            xvaVars->allowPartialScenarios_, inputs_->iborFallbackConfig(), false, analytic()->offsetScenario());
 
         // Create a third market used for AMC and Postprocessor, holds a larger simmarket, e.g. default curves
         offsetSimMarket_ = QuantLib::ext::make_shared<ScenarioSimMarket>(
-            analytic()->market(), offsetSimMarketParams_, QuantLib::ext::make_shared<FixingManager>(inputs_->asof()),
+            analytic()->market(), analytic()->offsetSimMarketParams(), QuantLib::ext::make_shared<FixingManager>(inputs_->asof()),
             configuration, *inputs_->curveConfigs().get(), *analytic()->configurations().todaysMarketParams,
             inputs_->continueOnError(), true, true, xvaVars->allowPartialScenarios_, inputs_->iborFallbackConfig(),
-            false, offsetScenario_);
+            false, analytic()->offsetScenario());
 
         TLOG("XvaAnalytic: Offset Scenario used in building SimMarket");
-        TLOG("XvaAnalytic: Offset scenario is absolute = " << offsetScenario_->isAbsolute());
+        TLOG("XvaAnalytic: Offset scenario is absolute = " << analytic()->offsetScenario()->isAbsolute());
         TLOG("RfKey,OffsetScenarioValue");
-        for (const auto& key : offsetScenario_->keys()) {
-            TLOG(key << " : " << offsetScenario_->get(key));
+        for (const auto& key : analytic()->offsetScenario()->keys()) {
+            TLOG(key << " : " << analytic()->offsetScenario()->get(key));
         }
     }
 
@@ -618,7 +618,7 @@ void XvaAnalyticImpl::buildScenarioGenerator(const bool continueOnCalibrationErr
             buildCrossAssetModel(continueOnCalibrationError, allowModelFallbacks);
         ScenarioGeneratorBuilder sgb(analytic()->configurations().scenarioGeneratorData);
         string config = inputs_->marketConfig("simulation");
-        auto market = offsetScenario_ == nullptr ? analytic()->market() : simMarketCalibration_;
+        auto market = analytic()->offsetScenario() == nullptr ? analytic()->market() : simMarketCalibration_;
         scenarioGenerator_ =
             sgb.build(model_, analytic()->configurations().simMarketParams, inputs_->asof(), market, config,
                       QuantLib::ext::make_shared<MultiPathGeneratorFactory>(), xvaVars->amcPathDataOutput_);
@@ -641,7 +641,7 @@ void XvaAnalyticImpl::buildScenarioGenerator(const bool continueOnCalibrationErr
 void XvaAnalyticImpl::buildCrossAssetModel(const bool continueOnCalibrationError, const bool allowModelFallbacks) {
     LOG("XVA: Build Simulation Model (continueOnCalibrationError = "
         << std::boolalpha << continueOnCalibrationError << ", allowModelFallbacks = " << allowModelFallbacks << ")");
-    ext::shared_ptr<Market> market = offsetScenario_ != nullptr ? simMarketCalibration_ : analytic()->market();
+    ext::shared_ptr<Market> market = analytic()->offsetScenario() != nullptr ? simMarketCalibration_ : analytic()->market();
     QL_REQUIRE(market != nullptr, "Internal error, buildCrossAssetModel needs to be called after the market is built.");
 
     CrossAssetModelBuilder modelBuilder(market, analytic()->configurations().crossAssetModelData,
@@ -902,7 +902,7 @@ void XvaAnalyticImpl::buildClassicCube(const QuantLib::ext::shared_ptr<Portfolio
             analytic()->configurations().todaysMarketParams, inputs_->marketConfig("simulation"),
             analytic()->configurations().simMarketParams, false, false, QuantLib::ext::make_shared<ScenarioFilter>(),
             inputs_->refDataManager(), inputs_->iborFallbackConfig(), true, false, false, cubeFactory, {},
-            cptyCubeFactory, "xva-simulation", offsetScenario_, inputs_->useAtParCouponsCurves(),
+            cptyCubeFactory, "xva-simulation", analytic()->offsetScenario(), inputs_->useAtParCouponsCurves(),
             inputs_->useAtParCouponsTrades());
 
         engine.setAggregationScenarioData(scenarioData_);
@@ -941,7 +941,7 @@ XvaAnalyticImpl::amcEngineFactory(const QuantLib::ext::shared_ptr<QuantExt::Cros
     configurations[MarketContext::irCalibration] = inputs_->marketConfig("lgmcalibration");
     configurations[MarketContext::fxCalibration] = inputs_->marketConfig("fxcalibration");
     configurations[MarketContext::pricing] = inputs_->marketConfig("pricing");
-    ext::shared_ptr<ore::data::Market> market = offsetScenario_ == nullptr ? analytic()->market() : offsetSimMarket_;
+    ext::shared_ptr<ore::data::Market> market = analytic()->offsetScenario() == nullptr ? analytic()->market() : offsetSimMarket_;
     auto factory = QuantLib::ext::make_shared<EngineFactory>(
         edCopy, market, configurations, inputs_->refDataManager(), inputs_->iborFallbackConfig(),
         EngineBuilderFactory::instance().generateAmcEngineBuilders(cam, simDates, stickyCloseOutDates));
@@ -1054,7 +1054,7 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun, bool continueOnCalibrationError,
         engine.registerProgressIndicator(progressBar);
         engine.registerProgressIndicator(progressLog);
         engine.setAggregationScenarioData(scenarioData_);
-        engine.setOffsetScenario(offsetScenario_);
+        engine.setOffsetScenario(analytic()->offsetScenario());
         engine.setNpvOutputCube(amcCube_);
         if (xvaVars->xvaCgDynamicIM_) {
             engine.setDynamicIMOutputCube(nettingSetCube_);
@@ -1071,7 +1071,7 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun, bool continueOnCalibrationError,
         if (inputs_->nThreads() == 1) {
             initCube(amcCube_, amcPortfolio_->ids(), cubeDepth_);
             ext::shared_ptr<ore::data::Market> market =
-                !offsetScenario_ ? analytic()->market() : offsetSimMarket_;
+                !analytic()->offsetScenario() ? analytic()->market() : offsetSimMarket_;
 
             AMCValuationEngine amcEngine(
                 model_, analytic()->configurations().scenarioGeneratorData, market,
@@ -1097,7 +1097,7 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun, bool continueOnCalibrationError,
             };
 
             auto simMarketParams =
-                !offsetScenario_ ? analytic()->configurations().simMarketParams : offsetSimMarketParams_;
+                !analytic()->offsetScenario() ? analytic()->configurations().simMarketParams : analytic()->offsetSimMarketParams();
 
             AMCValuationEngine amcEngine(
                 inputs_->nThreads(), inputs_->asof(), samples_, analytic()->loader(),
@@ -1112,7 +1112,7 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun, bool continueOnCalibrationError,
                 inputs_->marketConfig("infcalibration"), inputs_->marketConfig("crcalibration"),
                 inputs_->marketConfig("simulation"), xvaVars->amcPathDataInput_, xvaVars->amcPathDataOutput_,
                 xvaVars->amcIndividualTrainingInput_, xvaVars->amcIndividualTrainingOutput_,
-                inputs_->refDataManager(), inputs_->iborFallbackConfig(), true, cubeFactory, offsetScenario_,
+                inputs_->refDataManager(), inputs_->iborFallbackConfig(), true, cubeFactory, analytic()->offsetScenario(),
                 simMarketParams, continueOnCalibrationError, allowModelFallbacks, inputs_->useAtParCouponsCurves(),
                 inputs_->useAtParCouponsTrades());
 
@@ -1252,7 +1252,7 @@ void XvaAnalyticImpl::runPostProcessor() {
 
     LOG("baseCurrency " << baseCurrency);
 
-    auto market = offsetScenario_ == nullptr ? analytic()->market() : offsetSimMarket_;
+    auto market = analytic()->offsetScenario() == nullptr ? analytic()->market() : offsetSimMarket_;
 
     postProcess_ = QuantLib::ext::make_shared<PostProcess>(
         analytic()->portfolio(), netting, balances, market, marketConfiguration, cube_, scenarioData_, analytics,
@@ -1271,8 +1271,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
                                   const std::set<std::string>& runTypes) {
     auto xvaVars = ext::dynamic_pointer_cast<XvaVariables>(inputVariables_);
     LOG("XVA analytic is running with amc cg mode '" << xvaVars->amcCg_ << "'.");
-
-    QL_REQUIRE(!((offsetScenario_ == nullptr) ^ (offsetSimMarketParams_ == nullptr)),
+    QL_REQUIRE(analytic()->offsetScenario() == nullptr || analytic()->offsetSimMarketParams() != nullptr,
                "Need offsetScenario and corresponding simMarketParameter");
 
     SavedSettings settings;
