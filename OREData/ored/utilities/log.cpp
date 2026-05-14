@@ -36,6 +36,45 @@
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
 
+#define BOOST_STACKTRACE_GNU_SOURCE_NOT_REQUIRED
+#include <boost/stacktrace.hpp>
+#include <dlfcn.h>
+#include <cxxabi.h>
+
+// Thread-local storage for the stacktrace captured at the point an exception is thrown
+static thread_local std::string g_lastThrowStacktrace;
+
+typedef void (*cxa_throw_type)(void*, std::type_info*, void(*)(void*));
+
+static std::string formatStacktrace(const boost::stacktrace::stacktrace& st) {
+    std::string result;
+    int count = 0;
+    for (const auto& frame : st) {
+        std::string name = frame.name();
+        if (name.empty())
+            continue;
+        // Skip internal frames (stacktrace internals, __cxa_throw itself, etc.)
+        if (name.find("__cxa_throw") != std::string::npos ||
+            name.find("boost::stacktrace") != std::string::npos)
+            continue;
+        if (!result.empty())
+            result += " in ";
+        result += name;
+        if (++count >= 3)
+            break;
+    }
+    return result;
+}
+
+extern "C" {
+void __cxa_throw(void* thrown_exception, std::type_info* tinfo, void(*dest)(void*)) {
+    g_lastThrowStacktrace = formatStacktrace(boost::stacktrace::stacktrace());
+    static cxa_throw_type real_cxa_throw = reinterpret_cast<cxa_throw_type>(dlsym(RTLD_NEXT, "__cxa_throw"));
+    real_cxa_throw(thrown_exception, tinfo, dest);
+    __builtin_unreachable();
+}
+}
+
 using namespace std::filesystem;
 using namespace boost::posix_time;
 using namespace std;
@@ -560,6 +599,12 @@ StructuredMessage::StructuredMessage(const Category& category, const Group& grou
     data_["category"] = to_string(category);
     data_["group"] = to_string(group);
     data_["message"] = message;
+
+    // Retrieve stacktrace captured at the point the exception was thrown
+    if (!g_lastThrowStacktrace.empty()) {
+        data_["stacktrace"] = g_lastThrowStacktrace;
+        g_lastThrowStacktrace.clear();
+    }
 
     if (!subFields.empty()) {
         vector<QuantLib::ext::any> subFieldsVector;

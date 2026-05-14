@@ -877,9 +877,11 @@ target_link_libraries(${ORED_LIB_NAME}
     PRIVATE
         ${RAPIDXML_NAME}
         Boost::iostreams
+        ${CMAKE_DL_LIBS}
     PUBLIC
         ${ORE_PACKAGE_NAME}::${QLE_LIB_NAME}
         Boost::log
+        Boost::stacktrace_basic
 )
 
 if(ORE_USE_ZLIB)
