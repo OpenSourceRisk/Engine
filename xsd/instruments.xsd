@@ -2078,7 +2078,7 @@
       <xs:element type="xs:string" name="Type"/>
       <xs:element type="xs:string" name="Name"/>
       <xs:element type="xs:string" name="IdentifierType" minOccurs="0"/>
-      <xs:element type="currencyCode" name="Currency" minOccurs="0"/>
+      <xs:element type="extendedCurrencyCode" name="Currency" minOccurs="0"/>
       <xs:element type="xs:string" name="Exchange" minOccurs="0"/>
       <xs:element type="xs:float" name="Weight" minOccurs="0"/>
       <xs:element type="xs:string" name="PriceType" minOccurs="0"/>
@@ -2504,13 +2504,13 @@
       <xs:enumeration value="Fixed"/>
     </xs:restriction>
   </xs:simpleType>
-  
+
   <xs:simpleType name="trsFxConversion">
     <xs:restriction base="xs:string">
       <xs:enumeration value="Start"/>
       <xs:enumeration value="End"/>
     </xs:restriction>
-  </xs:simpleType>  
+  </xs:simpleType>
 
   <xs:complexType name="trsFundingData">
     <xs:choice minOccurs="0" maxOccurs="unbounded">
@@ -2665,7 +2665,7 @@
   </xs:complexType>
 
   <xs:complexType name="cboBondBasketData">
-    
+
 	<xs:sequence>
 		<xs:element ref="subTradeGroup" maxOccurs="unbounded"/>
       <!-- <xs:element name="Trade" maxOccurs="unbounded"> -->
@@ -3421,7 +3421,7 @@
       <xs:element type="stFreeStyleCurrency" name="PayCcy"/>
     </xs:all>
   </xs:complexType>
-  
+
   <xs:complexType name="pairwiseGeometricVarianceDispersionSwapData">
     <xs:all>
       <xs:element type="stFreeStyleLongShort" name="LongShort"/>
