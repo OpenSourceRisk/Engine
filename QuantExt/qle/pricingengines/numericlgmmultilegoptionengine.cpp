@@ -442,6 +442,9 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
 
     // handle empty exercise
 
+    auto const& ts = solver_->model()->parametrization()->termStructure();
+    Date refDate = ts->referenceDate();
+
     if (exercise_ == nullptr) {
         npv_ = 0.0;
         for (Size i = 0; i < legs_.size(); ++i) {
@@ -458,8 +461,6 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
     // we have a non-empty exercise
 
     auto rebatedExercise = QuantLib::ext::dynamic_pointer_cast<QuantExt::RebatedExercise>(exercise_);
-    auto const& ts = solver_->model()->parametrization()->termStructure();
-    Date refDate = ts->referenceDate();
 
     /* Build the cashflow info */
 
