@@ -36,6 +36,8 @@
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
 
+#include <atomic>
+
 #define BOOST_STACKTRACE_GNU_SOURCE_NOT_REQUIRED
 #include <boost/stacktrace.hpp>
 #include <dlfcn.h>
@@ -66,9 +68,12 @@ static std::string formatStacktrace(const boost::stacktrace::stacktrace& st) {
     return result;
 }
 
+namespace ore { namespace data { extern std::atomic<bool> g_captureStacktraces; } }
+
 extern "C" {
 void __cxa_throw(void* thrown_exception, std::type_info* tinfo, void(*dest)(void*)) {
-    g_lastThrowStacktrace = formatStacktrace(boost::stacktrace::stacktrace());
+    if (ore::data::g_captureStacktraces.load(std::memory_order_relaxed))
+        g_lastThrowStacktrace = formatStacktrace(boost::stacktrace::stacktrace());
     static cxa_throw_type real_cxa_throw = reinterpret_cast<cxa_throw_type>(dlsym(RTLD_NEXT, "__cxa_throw"));
     real_cxa_throw(thrown_exception, tinfo, dest);
     __builtin_unreachable();
@@ -92,6 +97,9 @@ BOOST_LOG_ATTRIBUTE_KEYWORD(messageType, "MessageType", std::string);
 
 namespace ore {
 namespace data {
+
+// Atomic flag to control whether stacktrace capture is enabled (set via Log::setMask)
+std::atomic<bool> g_captureStacktraces{false};
 
 using namespace QuantLib;
 
