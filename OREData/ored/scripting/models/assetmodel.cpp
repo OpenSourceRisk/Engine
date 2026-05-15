@@ -39,11 +39,11 @@ using namespace QuantExt;
 AssetModel::AssetModel(const Model::Type type, const Size paths, const std::string& currency,
                        const Handle<YieldTermStructure>& curve, const std::string& index,
                        const std::string& indexCurrency, const Handle<AssetModelWrapper>& model,
-                       const std::set<Date>& simulationDates,
+                       const std::set<Date>& simulationDates, const std::set<Date>& addDates,
                        const ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig, const std::string& calibration,
-                       const std::vector<Real>& calibrationStrikes, const Params& params, bool debug)
+                       const std::vector<Real>& calibrationStrikes, const Params& params)
     : AssetModel(type, paths, {currency}, {curve}, {}, {}, {}, {index}, {indexCurrency}, {currency}, model, {},
-                 simulationDates, iborFallbackConfig, calibration, {{index, calibrationStrikes}}, params, debug) {}
+                 simulationDates, addDates, iborFallbackConfig, calibration, {{index, calibrationStrikes}}, params) {}
 
 AssetModel::AssetModel(
     const Model::Type type, const Size paths, const std::vector<std::string>& currencies,
@@ -53,14 +53,14 @@ AssetModel::AssetModel(
     const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
     const std::set<std::string>& payCcys, const Handle<AssetModelWrapper>& model,
     const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
-    const std::set<Date>& simulationDates, const ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
-    const std::string& calibration, const std::map<std::string, std::vector<Real>>& calibrationStrikes,
-    const Params& params, bool debug)
+    const std::set<Date>& simulationDates, const std::set<Date>& addDates,
+    const ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig, const std::string& calibration,
+    const std::map<std::string, std::vector<Real>>& calibrationStrikes, const Params& params)
     : ModelImpl(type, params, curves.at(0)->dayCounter(), paths, currencies, irIndices, infIndices, indices,
                 indexCurrencies, simulationDates, iborFallbackConfig),
       curves_(curves), fxSpots_(fxSpots), payCcys_(payCcys), model_(model), correlations_(correlations),
-      calibration_(calibration), calibrationStrikes_(calibrationStrikes), debug_(debug) {
-  
+      addDates_(addDates), calibration_(calibration), calibrationStrikes_(calibrationStrikes) {
+
     // check inputs
 
     QL_REQUIRE(!model_.empty(), "model is empty");
@@ -168,9 +168,27 @@ void AssetModel::performCalculations() const {
     if (indices_.empty())
         return;
 
+    // init volTimesStrikes, and curve times
+
+    volTimesStrikes_.clear();
+    curveTimes_.clear();
+
+    volTimesStrikes_.resize(indices_.size());
+    curveTimes_.insert(timeGrid_.begin() + 1, timeGrid_.end());
+    for (auto const& d : addDates_) {
+        if (d > curves_.front()->referenceDate()) {
+            curveTimes_.insert(curves_.front()->timeFromReference(d));
+        }
+    }
+
     // do the model specific calculations
 
     performModelCalculations();
+
+    // set the volTimestrikes and curveTimes in the model
+
+    model_->setCurveTimes(curveTimes_);
+    model_->setVolTimesStrikes(volTimesStrikes_);
 }
 
 void AssetModel::initUnderlyingPathsMc() const {
@@ -182,13 +200,13 @@ void AssetModel::initUnderlyingPathsMc() const {
                 std::vector<RandomVariable>(model_->processes().size(), RandomVariable(trainingSamples(), 0.0));
             auxPathsTraining_[d] =
                 std::vector<RandomVariable>(model_->processes().size(), RandomVariable(trainingSamples(), 0.0));
-	}
+        }
     }
 }
 
 void AssetModel::setReferenceDateValuesMc() const {
     for (Size l = 0; l < indices_.size(); ++l) {
-	underlyingPaths_[*effectiveSimulationDates_.begin()][l].setAll(initialValue(l));
+        underlyingPaths_[*effectiveSimulationDates_.begin()][l].setAll(initialValue(l));
         if (trainingSamples() != Null<Size>()) {
             underlyingPathsTraining_[*effectiveSimulationDates_.begin()][l].setAll(initialValue(l));
         }
@@ -415,12 +433,12 @@ RandomVariable AssetModel::npv(const RandomVariable& amount, const Date& obsdate
             for (auto const& r : underlyingPaths_.at(obsdate))
                 state.push_back(&r);
         }
-	
+
         if (!auxPaths_.empty()) {
             for (auto const& r : auxPaths_.at(obsdate))
                 state.push_back(&r);
         }
-	
+
         Size nModelStates = state.size();
 
         if (addRegressor1.initialised() && (memSlot || !addRegressor1.deterministic()))
@@ -475,11 +493,10 @@ RandomVariable AssetModel::npv(const RandomVariable& amount, const Date& obsdate
 
             // train coefficients
 
-            coeff =
-                regressionCoefficients(amount, state,
-                                       multiPathBasisSystem(state.size(), params_.regressionOrder, params_.polynomType,
-                                                            {}, minSize),
-                                       filter, RandomVariableRegressionMethod::QR);
+            coeff = regressionCoefficients(
+                amount, state,
+                multiPathBasisSystem(state.size(), params_.regressionOrder, params_.polynomType, {}, minSize), filter,
+                RandomVariableRegressionMethod::QR);
             DLOG("AssetModel::npv(" << ore::data::to_string(obsdate) << "): regression coefficients are " << coeff
                                     << " (got model state size " << nModelStates << " and " << nAddReg
                                     << " additional regressors, coordinate transform " << coordinateTransform.columns()

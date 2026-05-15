@@ -53,6 +53,8 @@ AssetModelBuilderBase::AssetModelBuilderBase(
         registerWith(p->riskFreeRate());
         registerWith(p->dividendYield());
         marketObserver_->registerWith(p->stateVariable());
+        if (observeContinuum_)
+            marketObserver_->registerWith(p->blackVolatility());
     }
 
     registerWith(marketObserver_);
@@ -81,7 +83,10 @@ Handle<AssetModelWrapper> AssetModelBuilderBase::model() const {
 
 bool AssetModelBuilderBase::requiresRecalibration() const {
     setupDatesAndTimes();
-    return calibrationPointsChanged(false) || marketObserver_->hasUpdated(false) || forceCalibration_;
+    if (!initialCalibrationIsDone_ || forceCalibration_ || marketObserver_->hasUpdated(false))
+        return true;
+    auto [calibrationPointsChangedBuilder, calibrationPointsChangedModel] = calibrationPointsChanged(false);
+    return calibrationPointsChangedBuilder || calibrationPointsChangedModel;
 }
 
 void AssetModelBuilderBase::newCalcWithoutRecalibration() const { calculate(); }
@@ -115,58 +120,79 @@ void AssetModelBuilderBase::performCalculations() const {
 
         // update vol and curves cache
 
-        calibrationPointsChanged(true);
+        auto [calibrationPointsChangedBuilder, calibrationPointsChangedModel] = calibrationPointsChanged(true);
 
         // reset market observer's updated flag
 
         marketObserver_->hasUpdated(true);
 
+        // clear points used for notification filtering (will be set in getCalibratedProcesses)
+
+        curveTimes_.clear();
+        volTimesStrikes_.clear();
+
         // setup model
 
-        model_.linkTo(QuantLib::ext::make_shared<AssetModelWrapper>(processType(), getCalibratedProcesses(),
-                                                                    effectiveSimulationDates_, discretisationTimeGrid_,
-                                                                    calibrationResults_));
+        if (!initialCalibrationIsDone_ || calibrationPointsChangedBuilder) {
+            model_.linkTo(QuantLib::ext::make_shared<AssetModelWrapper>(
+                processType(), getCalibratedProcesses(), effectiveSimulationDates_, discretisationTimeGrid_,
+                model_.empty() ? std::set<Real>{} : model_->getCurveTimes(),
+                model_.empty() ? std::vector<std::set<std::pair<Real, Real>>>{} : model_->getVolTimesStrikes(),
+                calibrationResults_));
+            initialCalibrationIsDone_ = true;
+        }
 
         // notify model observers
+
         model_->notifyObservers();
+
+        // populate points for notification filtering provided by model
+
+        curveTimesModel_ = model_->getCurveTimes();
+        volTimesStrikesModel_ = model_->getVolTimesStrikes();
+        std::cout << "got volTimesStrikes " << volTimesStrikesModel_.size() << std::endl;
     }
 }
 
-bool AssetModelBuilderBase::calibrationPointsChanged(const bool updateCache) const {
+void AssetModelBuilderBase::buildCacheData(const std::set<Real>& curveTimes,
+                                           const std::vector<std::set<std::pair<Real, Real>>>& volTimesStrikes,
+                                           std::vector<std::vector<Real>>& curveData,
+                                           std::vector<std::vector<Real>>& volData) const {
 
-    if(observeContinuum_)
-        return true;
-
-    // get times for curves and times / strikes for vols
-
-    std::vector<std::vector<Real>> curveTimes = getCurveTimes();
-    std::vector<std::vector<std::pair<Real, Real>>> volTimesStrikes = getVolTimesStrikes();
-
-    // build data
-
-    std::vector<std::vector<Real>> curveData;
-    for (Size i = 0; i < curveTimes.size(); ++i) {
+    for (Size i = 0; i < curveData.size(); ++i) {
         curveData.push_back(std::vector<Real>());
-        for (Size j = 0; j < curveTimes[i].size(); ++j) {
-            curveData.back().push_back(allCurves_[i]->discount(curveTimes[i][j]));
+        for (auto t : curveTimes) {
+            curveData.back().push_back(allCurves_[i]->discount(t));
         }
     }
 
-    std::vector<std::vector<Real>> volData;
     for (Size i = 0; i < volTimesStrikes.size(); ++i) {
         volData.push_back(std::vector<Real>());
-        for (Size j = 0; j < volTimesStrikes[i].size(); ++j) {
-            Real k = volTimesStrikes[i][j].second;
-            // check for null = ATM
+        for (auto [t, k] : volTimesStrikes[i]) {
             if (k == Null<Real>())
-                k = atmForward(processes_[i]->x0(), processes_[i]->riskFreeRate(), processes_[i]->dividendYield(),
-                               volTimesStrikes[i][j].first);
-            volData.back().push_back(vols_[i]->blackVol(volTimesStrikes[i][j].first, k));
+                k = atmForward(processes_[i]->x0(), processes_[i]->riskFreeRate(), processes_[i]->dividendYield(), t);
+            volData.back().push_back(vols_[i]->blackVol(t, k));
+        }
+    }
+}
+
+std::pair<bool, bool> AssetModelBuilderBase::calibrationPointsChanged(const bool updateCache) const {
+    std::vector<std::vector<Real>> curveData, curveDataModel;
+    std::vector<std::vector<Real>> volData, volDataModel;
+
+    buildCacheData(curveTimes_, volTimesStrikes_, curveData, volData);
+    buildCacheData(curveTimesModel_, volTimesStrikesModel_, curveDataModel, volDataModel);
+
+    for (auto const& v : volTimesStrikesModel_) {
+        for (auto const& [t, k] : v) {
+            std::cout << " volTimesStrikesModel: " << t << "," << k << std::endl;
         }
     }
 
-    // check if something has changed
-    return cache_.hasChanged(curveTimes, curveData, volTimesStrikes, volData, updateCache);
+    return std::make_pair(cache_.hasChanged(std::vector<std::set<Real>>(curveData.size(), curveTimes_), curveData,
+                                            volTimesStrikes_, volData, updateCache),
+                          cacheModel_.hasChanged(std::vector<std::set<Real>>(curveData.size(), curveTimesModel_),
+                                                 curveDataModel, volTimesStrikesModel_, volDataModel, updateCache));
 }
 
 } // namespace data

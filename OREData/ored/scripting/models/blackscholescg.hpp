@@ -65,7 +65,7 @@ public:
         const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
         const Handle<AssetModelWrapper>& model,
         const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
-        const std::set<Date>& simulationDates,
+        const std::set<Date>& simulationDates, const std::set<Date>& addDaes,
         const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
             QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
         const std::string& calibration = "ATM",
@@ -75,6 +75,7 @@ public:
     BlackScholesCG(const ModelCG::Type type, const Size paths, const std::string& currency,
                    const Handle<YieldTermStructure>& curve, const std::string& index, const std::string& indexCurrency,
                    const Handle<AssetModelWrapper>& model, const std::set<Date>& simulationDates,
+                   const std::set<Date>& addDates,
                    const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
                        QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
                    const std::string& calibration = "ATM", const std::vector<Real>& calibrationStrikes = {});
@@ -112,7 +113,8 @@ protected:
     std::vector<Handle<Quote>> fxSpots_;
     Handle<AssetModelWrapper> model_;
     std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>> correlations_;
-    std::vector<Date> simulationDates_;
+    std::set<Date> addDates_;
+
 
     // The calibration to use, ATM or Deal
     std::string calibration_;
@@ -125,6 +127,9 @@ protected:
     mutable std::set<Date> effectiveSimulationDates_; // the dates effectively simulated (including today)
     mutable TimeGrid timeGrid_;                       // the (possibly refined) time grid for the simulation
     mutable std::vector<Size> positionInTimeGrid_;    // for each effective simulation date the index in the time grid
+    mutable std::vector<double> effectiveCalibrationStrikes_; // final eff cal strike for each index
+    mutable std::set<Real> curveTimes_;                       // curve times (notification filtering)
+    mutable std::vector<std::set<std::pair<Real, Real>>> volTimesStrikes_; // volTimesStrikes (notification filtering)
 
     // updated in derived classes' performCalculations() whenever cg version changes
     mutable std::map<Date, std::vector<std::size_t>> underlyingPaths_; // per simulation date index states

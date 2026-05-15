@@ -1333,13 +1333,13 @@ void ScriptedTradeEngineBuilder::buildBlackScholes(
     if (useCg_) {
         modelCG_ = QuantLib::ext::make_shared<BlackScholesCG>(
             ModelCG::Type::MC, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
-            modelIndices_, modelIndicesCurrencies_, builder->model(), correlations_, simulationDates_,
+            modelIndices_, modelIndicesCurrencies_, builder->model(), correlations_, simulationDates_, addDates_,
             iborFallbackConfig, calibration_, filteredStrikes);
     } else {
         model_ = QuantLib::ext::make_shared<BlackScholes>(
             Model::Type::MC, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
             modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_,
-            iborFallbackConfig, calibration_, filteredStrikes, params_);
+            addDates_, iborFallbackConfig, calibration_, filteredStrikes, params_);
     }
     engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
 }
@@ -1353,7 +1353,7 @@ void ScriptedTradeEngineBuilder::buildFdBlackScholes(
         getCalibrationStrikesVector(filteredStrikes, modelIndices_), baseCcyModelCurve_);
     model_ = QuantLib::ext::make_shared<BlackScholes>(
         Model::Type::FD, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
-        modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_,
+        modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_, addDates_,
         iborFallbackConfig, calibration_, filteredStrikes, params_);
     engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
 }
@@ -1376,7 +1376,7 @@ void ScriptedTradeEngineBuilder::buildLocalVol(
         referenceCalibrationGrid_, !calibrate_ || zeroVolatility_, baseCcyModelCurve_);
     model_ = QuantLib::ext::make_shared<LocalVol>(
         Model::Type::MC, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
-        modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_,
+        modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_, addDates_,
         iborFallbackConfig, "Smile", filteredStrikes, params_);
     engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
 }
@@ -1399,11 +1399,10 @@ void ScriptedTradeEngineBuilder::buildFdLocalVol(
         referenceCalibrationGrid_, !calibrate_ || zeroVolatility_, baseCcyModelCurve_);
     model_ = QuantLib::ext::make_shared<LocalVol>(
         Model::Type::FD, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
-        modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_,
+        modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_, addDates_,
         iborFallbackConfig, "Smile", filteredStrikes, params_);
     engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
 }
-
 
 bool ScriptedTradeEngineBuilder::containsQuanto() {
     Size n = modelIndices_.size();
@@ -1445,8 +1444,8 @@ void ScriptedTradeEngineBuilder::buildHeston(const std::string& id,
         discretization, referenceCalibrationGrid_, !calibrate_ || zeroVolatility_, baseCcyModelCurve_);
     model_ = QuantLib::ext::make_shared<Heston>(
         Model::Type::MC, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
-        modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_,
-        iborFallbackConfig, "Smile", filteredStrikes, params_, debug_);
+        modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_, addDates_,
+        iborFallbackConfig, "Smile", filteredStrikes, params_);
     engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
     engineFactory()->scriptingModels().insert(std::make_pair(id, model_));
     LOG("ScriptedTradeEngineBuilder::buildHeston() done");
@@ -1470,7 +1469,7 @@ void ScriptedTradeEngineBuilder::buildFdHeston(
         discretization, referenceCalibrationGrid_, !calibrate_ || zeroVolatility_, baseCcyModelCurve_);
     model_ = QuantLib::ext::make_shared<Heston>(
         Model::Type::FD, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
-        modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_,
+        modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_, addDates_,
         iborFallbackConfig, "Smile", filteredStrikes, params_);
     engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
 }

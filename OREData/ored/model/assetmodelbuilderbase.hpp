@@ -67,15 +67,16 @@ protected:
     AssetModelBuilderBase(const Handle<YieldTermStructure>& curve,
                           const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process);
 
-    virtual void setupDatesAndTimes() const;
-
     virtual AssetModelWrapper::ProcessType processType() const = 0;
     virtual std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> getCalibratedProcesses() const = 0;
-    virtual std::vector<std::vector<Real>> getCurveTimes() const = 0;
-    virtual std::vector<std::vector<std::pair<Real, Real>>> getVolTimesStrikes() const = 0;
+
+    virtual void setupDatesAndTimes() const;
 
     void performCalculations() const override;
-    bool calibrationPointsChanged(const bool updateCache) const;
+    std::pair<bool, bool> calibrationPointsChanged(const bool updateCache) const;
+    void buildCacheData(const std::set<Real>& curveTimes,
+                        const std::vector<std::set<std::pair<Real, Real>>>& volTimesStrikes,
+                        std::vector<std::vector<Real>>& curveData, std::vector<std::vector<Real>>& volData) const;
 
     std::vector<Handle<YieldTermStructure>> curves_;
     Handle<YieldTermStructure> baseCurve_;
@@ -88,16 +89,18 @@ protected:
     mutable TimeGrid discretisationTimeGrid_;         // the (possibly refined) time grid for the simulation
 
     mutable RelinkableHandle<AssetModelWrapper> model_;
+    mutable bool initialCalibrationIsDone_ = false;
 
     bool forceCalibration_ = false;
     QuantLib::ext::shared_ptr<MarketObserver> marketObserver_;
 
     std::vector<Handle<BlackVolTermStructure>> vols_;
     std::vector<Handle<YieldTermStructure>> allCurves_;
-    mutable CalibrationPointCache cache_;
-    //mutable std::map<std::string, CalibrationResults> calibrationResults_;
-    mutable std::vector<AssetModelCalibrationResults> calibrationResults_;
+    mutable CalibrationPointCache cache_, cacheModel_;
+    mutable std::set<Real> curveTimes_, curveTimesModel_;
+    mutable std::vector<std::set<std::pair<Real, Real>>> volTimesStrikes_, volTimesStrikesModel_;
 
+    mutable std::vector<AssetModelCalibrationResults> calibrationResults_;
 };
 
 } // namespace data

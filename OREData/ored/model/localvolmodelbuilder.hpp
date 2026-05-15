@@ -56,10 +56,6 @@ public:
 
     AssetModelWrapper::ProcessType processType() const override;
 
-protected:
-    std::vector<std::vector<Real>> getCurveTimes() const override;
-    std::vector<std::vector<std::pair<Real, Real>>> getVolTimesStrikes() const override;
-
 private:
     Type lvType_;
     std::vector<Real> calibrationMoneyness_;

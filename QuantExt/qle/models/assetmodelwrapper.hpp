@@ -68,7 +68,9 @@ public:
     AssetModelWrapper(const ProcessType processType,
                       const std::vector<QuantLib::ext::shared_ptr<StochasticProcess>>& processes,
                       const std::set<Date>& effectiveSimulationDates, const TimeGrid& discretisationTimeGrid,
-		      const std::vector<AssetModelCalibrationResults>& calibrationResults = std::vector<AssetModelCalibrationResults>());
+                      std::set<Real> curveTimes = {}, std::vector<std::set<std::pair<Real, Real>>> volTimesStrikes = {},
+                      const std::vector<AssetModelCalibrationResults>& calibrationResults =
+                          std::vector<AssetModelCalibrationResults>());
 
     const std::vector<QuantLib::ext::shared_ptr<StochasticProcess>>& processes() const;
     const std::set<Date>& effectiveSimulationDates() const;
@@ -81,7 +83,14 @@ public:
 
     ProcessType processType() const;
 
-    const std::vector<AssetModelCalibrationResults>& calibration() { return calibration_; }
+    const std::vector<AssetModelCalibrationResults>& calibration() const { return calibrationResults_; }
+
+    /* set / get curveTimes and volTimesStrikes relevant for the AssetModel, this is used for notification filtering in
+       AssetModelBuilderBase. */
+    std::set<Real> getCurveTimes() const { return curveTimes_; }
+    std::vector<std::set<std::pair<Real, Real>>> getVolTimesStrikes() { return volTimesStrikes_; }
+    void setCurveTimes(std::set<Real> t) const { curveTimes_ = std::move(t); }
+    void setVolTimesStrikes(std::vector<std::set<std::pair<Real, Real>>> v) { volTimesStrikes_ = std::move(v); }
 
 private:
     void update() override;
@@ -92,7 +101,9 @@ private:
     std::vector<QuantLib::ext::shared_ptr<PiecewiseTimeDependentHestonProcess>> ptdHestonProcesses_;
     std::set<Date> effectiveSimulationDates_;
     TimeGrid discretisationTimeGrid_;
-    std::vector<AssetModelCalibrationResults> calibration_;
+    mutable std::set<Real> curveTimes_;
+    mutable std::vector<std::set<std::pair<Real, Real>>> volTimesStrikes_;
+    std::vector<AssetModelCalibrationResults> calibrationResults_;
 };
 
 } // namespace QuantExt
