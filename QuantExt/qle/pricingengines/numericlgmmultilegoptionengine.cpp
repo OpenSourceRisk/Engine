@@ -468,8 +468,6 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
 
     for (Size i = 0; i < legs_.size(); ++i) {
         for (Size j = 0; j < legs_[i].size(); ++j) {
-            if (legs_[i][j]->date() <= refDate)
-                continue;
             cashflows.push_back(buildCashflowInfo(
                 legs_[i][j], payer_[i] ? -1.0 : 1.0,
                 [this](const Date& d) {
