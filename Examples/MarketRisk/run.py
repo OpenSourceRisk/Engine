@@ -12,6 +12,7 @@ cases = [ "run_sensi.py",           # 15, 40
           "run_stress.py",          # 15, 77
           "run_parstress.py",       # 63
           "run_histsimvar.py",      # 58
+          "run_histsimvartheta.py", 
           "run_smrc.py",            # 68
           "run_pnlexplain.py",      # 62
           "run_parconversion.py",   # 50
