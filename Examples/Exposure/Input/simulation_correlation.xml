@@ -1,0 +1,36 @@
+<Simulation>
+	<Market>
+		<BaseCurrency>EUR</BaseCurrency>
+		<Currencies>
+			<Currency>EUR</Currency>
+			<Currency>GBP</Currency>
+			<Currency>USD</Currency>
+		</Currencies>
+		<YieldCurves>
+			<Configuration curve="">
+				<Tenors>3M, 6M, 1Y, 2Y, 5Y, 10Y, 15Y, 20Y</Tenors>
+				<Interpolation>LogLinear</Interpolation>
+				<Extrapolation>FlatZero</Extrapolation>
+			</Configuration>
+		</YieldCurves>
+		<FxRates>
+			<CurrencyPairs>
+				<CurrencyPair>EURUSD</CurrencyPair>
+				<CurrencyPair>GBPUSD</CurrencyPair>
+			</CurrencyPairs>
+		</FxRates>
+		<Indices>
+			<Index>EUR-EURIBOR-3M</Index>
+			<Index>GBP-LIBOR-3M</Index>
+			<Index>USD-LIBOR-3M</Index>
+		</Indices>
+		<BenchmarkCurves/>
+		<CreditStates>
+			<NumberOfFactors>0</NumberOfFactors>
+		</CreditStates>
+		<AggregationScenarioDataCreditStates>
+			<NumberOfFactors>0</NumberOfFactors>
+		</AggregationScenarioDataCreditStates>
+	</Market>
+</Simulation>
+
