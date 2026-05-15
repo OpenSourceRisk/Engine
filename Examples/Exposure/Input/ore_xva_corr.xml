@@ -58,7 +58,7 @@
     </Analytic>
     <Analytic type="xva">
       <Parameter name="active">Y</Parameter>
-      <Parameter name="generateCorrelations">Y</Parameter>
+      <Parameter name="outputCrossAssetModelData">Y</Parameter>
       <Parameter name="useXvaRunner">N</Parameter>
       <Parameter name="csaFile">netting.xml</Parameter>
       <Parameter name="cubeFile">cube.csv.gz</Parameter>
@@ -68,8 +68,9 @@
       <Parameter name="cva">Y</Parameter>
       <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
       <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
-      <!--<Parameter name="correlationInputFile">correlation.csv</Parameter>-->
-      <Parameter name="marketConfigFile">simulation_ccs.xml</Parameter>
+      <Parameter name="correlationInputFile">correlation.csv</Parameter>
+      <Parameter name="scenarioCorrSimulation">simulation_correlation.xml</Parameter>
+      <Parameter name="simulationConfigFile">simulation_ccs.xml</Parameter>
       <Parameter name="historicalScenarioFile">scenarios.csv</Parameter>
       <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
       <Parameter name="historicalPeriod">2016-01-01,2019-12-30</Parameter>
