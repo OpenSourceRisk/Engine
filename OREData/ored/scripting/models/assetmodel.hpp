@@ -132,6 +132,7 @@ protected:
     Real getFxSpot(const Size idx) const override;
     RandomVariable getFutureBarrierProb(const std::string& index, const Date& obsdate1, const Date& obsdate2,
                                         const RandomVariable& barrier, const bool above) const override;
+    void populateAdditionalResultsPathLevel() const override;
 
     // helper functions
     Matrix getCorrelation() const;

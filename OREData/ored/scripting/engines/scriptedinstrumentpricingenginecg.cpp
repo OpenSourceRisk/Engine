@@ -77,8 +77,8 @@ ScriptedInstrumentPricingEngineCG::ScriptedInstrumentPricingEngineCG(
     const Model::Params& params, const double indicatorSmoothingForValues,
     const double indicatorSmoothingForDerivatives, const double sqrtSmoothingForDerivatives, const std::string& script,
     const bool interactive, const bool amcEnabled, const bool generateAdditionalResults,
-    const bool includePastCashflows, const bool useCachedSensis, const bool useExternalComputeFramework,
-    const bool useDoublePrecisionForExternalCalculation)
+    const bool generateAdditionalResultsPathLevel, const bool includePastCashflows, const bool useCachedSensis,
+    const bool useExternalComputeFramework, const bool useDoublePrecisionForExternalCalculation)
     : npv_(npv), additionalResults_(additionalResults), model_(model), minimalModelCcys_(minimalModelCcys),
       amcCgComponents_(amcCgComponents), amcCgTargetValue_(amcCgTargetValue),
       amcCgTargetDerivative_(amcCgTargetDerivative), ast_(ast), context_(context), params_(params),
@@ -86,6 +86,7 @@ ScriptedInstrumentPricingEngineCG::ScriptedInstrumentPricingEngineCG(
       indicatorSmoothingForDerivatives_(indicatorSmoothingForDerivatives),
       sqrtSmoothingForDerivatives_(sqrtSmoothingForDerivatives), script_(script), interactive_(interactive),
       amcEnabled_(amcEnabled), generateAdditionalResults_(generateAdditionalResults),
+      generateAdditionalResultsPathLevel_(generateAdditionalResultsPathLevel),
       includePastCashflows_(includePastCashflows), useCachedSensis_(useCachedSensis),
       useExternalComputeFramework_(useExternalComputeFramework),
       useDoublePrecisionForExternalCalculation_(useDoublePrecisionForExternalCalculation) {
@@ -565,6 +566,9 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
             // set additional results from the model
 
             instrumentAdditionalResults_.insert(model_->additionalResults().begin(), model_->additionalResults().end());
+            if(generateAdditionalResultsPathLevel_)
+                instrumentAdditionalResultsPathLevel_.insert(model_->additionalResultsPathLevel().begin(),
+                                                             model_->additionalResultsPathLevel().end());
 
         } // if generate additional results
 

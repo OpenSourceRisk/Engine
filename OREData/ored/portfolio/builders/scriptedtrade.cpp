@@ -363,7 +363,7 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
         engine = QuantLib::ext::make_shared<ScriptedInstrumentPricingEngine>(
             script.npv(), script.results(), model_, ast_, context, script.code(), interactive_, amcCam_ != nullptr,
             std::set<std::string>(script.stickyCloseOutStates().begin(), script.stickyCloseOutStates().end()),
-            generateAdditionalResults(), includePastCashflows_, staticNpvMem_);
+            generateAdditionalResults(), generateAdditionalResultsPathLevel_, includePastCashflows_, staticNpvMem_);
     } else if (modelCG_) {
         auto rt = globalParameters_.find("RunType");
         std::string runType = rt != globalParameters_.end() ? rt->second : "<<no run type set>>";
@@ -383,8 +383,9 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
             script.npv(), script.results(), modelCG_, std::set<std::string>(modelCcys_.begin(), modelCcys_.end()),
             script.amcCgComponents(), script.amcCgTargetValue(), script.amcCgTargetDerivative(), ast_, context, params_,
             indicatorSmoothingForValues_, indicatorSmoothingForDerivatives_, sqrtSmoothingForDerivatives_,
-            script.code(), interactive_, buildingAmcCg_, generateAdditionalResults(), includePastCashflows_,
-            useCachedSensis, useExternalDev, useDoublePrecisionForExternalCalculation_);
+            script.code(), interactive_, buildingAmcCg_, generateAdditionalResults(),
+            generateAdditionalResultsPathLevel_, includePastCashflows_, useCachedSensis, useExternalDev,
+            useDoublePrecisionForExternalCalculation_);
         if (useExternalDev) {
             ComputeEnvironment::instance().selectContext(externalComputeDevice_);
         }
@@ -393,7 +394,8 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
     LOG("engine built for model " << modelParam_ << " / " << engineParam_ << ", modelSize = " << modelSize_
                                   << ", interactive = " << interactive_ << ", amcEnabled = " << buildingAmc_
                                   << ", amccgEnabled = " << buildingAmcCg_
-                                  << ", generateAdditionalResults = " << generateAdditionalResults());
+                                  << ", generateAdditionalResults = " << generateAdditionalResults()
+                                  << ", generateAdditionalResultsPathLevel = " << generateAdditionalResultsPathLevel_);
     return engine;
 }
 
@@ -564,6 +566,8 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
     sqrtSmoothingForDerivatives_ =
         parseReal(engineParameter("SqrtSmoothingForDerivatives", getModelEngineQualifiers(), false, "1E-8"));
     referenceCalibrationGrid_ = modelParameter("ReferenceCalibrationGrid", getModelEngineQualifiers(), false, "");
+    generateAdditionalResultsPathLevel_ =
+        parseBool(engineParameter("AdditionalResultsPathLevel", getModelEngineQualifiers(), false, "false"));
 
     // usage of ad or an external device implies usage of cg
     if (useAd_ || useExternalComputeDevice_)
@@ -604,19 +608,12 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
         hestonCalibrationMethod_ = engineParameter("Heston.CalibrationMethod", getModelEngineQualifiers(), false, "ConstantBestFit");
         hestonEarlyExitThreshold_ = parseReal(engineParameter("Heston.EarlyExitThreshold", getModelEngineQualifiers(), false, "0.005"));
         hestonMaxAcceptableError_ = parseReal(engineParameter("Heston.MaxAcceptableError", getModelEngineQualifiers(), false, "0.05"));
-        hestonProcessDiscretization_ =
-	  parseHestonProcessDiscretization(engineParameter("Heston.ProcessDiscretization", getModelEngineQualifiers(), false, "QuadraticExponential"));
+        auto tmp = engineParameter("Heston.ProcessDiscretization", getModelEngineQualifiers(), false, "QuadraticExponential");
+        hestonProcessDiscretization_ = parseHestonProcessDiscretization(tmp);
         hestonQuantoTimeStepsPerYear_ = parseInteger(engineParameter(
             "HestonQuantoTimeStepsPerYear", getModelEngineQualifiers(), false, to_string(timeStepsPerYear_)));
-        try {
-            // We cannot use the above with to_string(hestonProcessDiscretization_), because discretization is an enum
-            // rather than an enum class
-            hestonQuantoProcessDiscretization_ = parseHestonProcessDiscretization(
-                engineParameter("Heston.QuantoProcessDiscretization", getModelEngineQualifiers()));
-        } catch (std::exception& e) {
-            hestonQuantoProcessDiscretization_ = hestonProcessDiscretization_;
-        }
-        debug_ = parseBool(engineParameter("Heston.Debug", getModelEngineQualifiers(), false, "false"));
+        hestonQuantoProcessDiscretization_ = parseHestonProcessDiscretization(
+            engineParameter("Heston.QuantoProcessDiscretization", getModelEngineQualifiers(), "false", tmp));
     }
 
     if (engineParam_ == "MC") {

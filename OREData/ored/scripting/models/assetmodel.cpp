@@ -24,6 +24,7 @@
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/averageonindexedcouponpricer.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
+#include <qle/instruments/pathlevelresult.hpp>
 #include <qle/math/randomvariablelsmbasissystem.hpp>
 
 #include <ql/math/comparison.hpp>
@@ -596,6 +597,23 @@ RandomVariable AssetModel::getFutureBarrierProb(const std::string& index, const 
                                                 const RandomVariable& barrier, const bool above) const {
     QL_FAIL("AssetModel::getFutureBarrierProb(): not implemented for AssetModelWrapper process type ("
             << static_cast<int>(model_->processType()) << ").");
+}
+
+void AssetModel::populateAdditionalResultsPathLevel() const {
+
+    std::vector<PathLevelResult> pathLevelResults;
+    for (auto const& [d, p] : underlyingPaths_) {
+        for (Size i = 0; i < indices_.size(); ++i) {
+            PathLevelResult r;
+            r.resultId = indices_[i].name() + "_" + ore::data::to_string(d);
+            for (Size k = 0; k < size(); ++k) {
+                r.values[k] = p[i][k];
+            }
+            pathLevelResults.push_back(r);
+        }
+    }
+
+    additionalResults_["__path_level_results__"] = pathLevelResults;
 }
 
 } // namespace data

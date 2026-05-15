@@ -50,8 +50,9 @@ public:
         const double indicatorSmoothingForValues, const double indicatorSmoothingForDerivatives,
         const double sqrtSmoothingForDerivatives, const std::string& script = "", const bool interactive = false,
         const bool amcEnabled = false, const bool generateAdditionalResults = false,
-        const bool includePastCashflows = false, const bool useCachedSensis = false,
-        const bool useExternalComputeFramework = false, const bool useDoublePrecisionForExternalCalculation = false);
+        const bool generateAdditionalResultsPathLevel = false, const bool includePastCashflows = false,
+        const bool useCachedSensis = false, const bool useExternalComputeFramework = false,
+        const bool useDoublePrecisionForExternalCalculation = false);
     ~ScriptedInstrumentPricingEngineCG();
 
     bool lastCalculationWasValid() const { return lastCalculationWasValid_; }
@@ -102,6 +103,7 @@ private:
     mutable std::vector<std::pair<std::size_t, double>> baseModelParams_;
     mutable std::vector<double> sensis_;
     mutable std::map<std::string, QuantLib::ext::any> instrumentAdditionalResults_;
+    mutable std::map<std::string, QuantLib::ext::any> instrumentAdditionalResultsPathLevel_;
 
     // inputs
 
@@ -123,6 +125,7 @@ private:
     bool interactive_;
     bool amcEnabled_;
     bool generateAdditionalResults_;
+    bool generateAdditionalResultsPathLevel_;
     bool includePastCashflows_;
     bool useCachedSensis_;
     bool useExternalComputeFramework_;

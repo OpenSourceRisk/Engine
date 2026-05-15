@@ -225,7 +225,18 @@ public:
     virtual void resetNPVMem() {}
 
     // additional results provided by the model
-    const std::map<std::string, QuantLib::ext::any>& additionalResults() const { return additionalResults_; }
+    const std::map<std::string, QuantLib::ext::any>& additionalResults() const {
+        if (additionalResults_.empty())
+            populateAdditionalResults();
+        return additionalResults_;
+    }
+
+    // path level additional results provided by the model
+    const std::map<std::string, QuantLib::ext::any>& additionalResultsPathLevel() const {
+        if (additionalResultsPathLevel_.empty())
+            populateAdditionalResultsPathLevel();
+        return additionalResultsPathLevel_;
+    }
 
     // CG / AD part of the interface
     virtual std::size_t cgVersion() const = 0;
@@ -258,6 +269,7 @@ public:
 protected:
     // map with additional results provided by this model instance
     mutable std::map<std::string, QuantLib::ext::any> additionalResults_;
+    mutable std::map<std::string, QuantLib::ext::any> additionalResultsPathLevel_;
 
     // the underlying computation graph
     QuantLib::ext::shared_ptr<QuantExt::ComputationGraph> g_;
@@ -268,6 +280,10 @@ protected:
 
 private:
     void performCalculations() const override {}
+
+    // populate additional results on demand
+    virtual void populateAdditionalResults() const {}
+    virtual void populateAdditionalResultsPathLevel() const {}
 
     // size of random variables within model
     const QuantLib::Size n_;

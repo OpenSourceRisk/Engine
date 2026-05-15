@@ -97,6 +97,8 @@ public:
     Real getDirectDiscountT0(const Date& paydate, const std::string& currency) const override;
 
 protected:
+    void populateAdditionalResults() const override;
+
     // ModelImpl interface implementation
     void performCalculations() const override;
     std::size_t getIndexValue(const Size indexNo, const Date& d, const Date& fwd = Null<Date>()) const override;

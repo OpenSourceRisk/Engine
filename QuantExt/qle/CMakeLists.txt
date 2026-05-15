@@ -699,6 +699,7 @@ instruments/multilegoption.hpp
 instruments/nullinstrument.hpp
 instruments/outperformanceoption.hpp
 instruments/pairwisevarianceswap.hpp
+instruments/pathlevelresult.hpp
 instruments/payment.hpp
 instruments/rebatedexercise.hpp
 instruments/riskparticipationagreement.hpp

@@ -125,6 +125,8 @@ void ScriptedInstrumentPricingEngine::calculate() const {
     results_.value = model_->extractT0Result(boost::get<RandomVariable>(npv->second));
     DLOG("got NPV = " << results_.value << " " << model_->baseCcy());
 
+    std::cout << "pe: calculate " << results_.value << std::endl;
+
     // set additional results, if this feature is enabled
 
     if (generateAdditionalResults_) {
@@ -226,6 +228,9 @@ void ScriptedInstrumentPricingEngine::calculate() const {
         // set additional results from the model
 
         results_.additionalResults.insert(model_->additionalResults().begin(), model_->additionalResults().end());
+        if(generateAdditionalResultsPathLevel_)
+            results_.additionalResults.insert(model_->additionalResultsPathLevel().begin(),
+                                              model_->additionalResultsPathLevel().end());
 
     } // if generate additional results
 
