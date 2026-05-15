@@ -47,6 +47,7 @@
 #include <orea/app/analytics/sensitivitystressanalytic.hpp>
 #include <orea/app/analytics/simmanalytic.hpp>
 #include <orea/app/analytics/smrcanalytic.hpp>
+#include <orea/app/analytics/stressedsimmanalytic.hpp>
 #include <orea/app/analytics/stresstestanalytic.hpp>
 #include <orea/app/analytics/utilities.hpp>
 #include <orea/app/analytics/varanalytic.hpp>
