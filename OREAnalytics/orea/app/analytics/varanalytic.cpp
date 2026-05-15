@@ -341,8 +341,11 @@ HistoricalSimulationVarAnalyticImpl::computeTheta(const QuantLib::ext::shared_pt
         false, inputs_->iborFallbackConfig());
 
     // Build the portfolio against the theta sim market
+    QuantLib::ext::shared_ptr<EngineData> edCopy = QuantLib::ext::make_shared<EngineData>(*inputs_->pricingEngine());
+    edCopy->globalParameters()["GenerateAdditionalResults"] = "true";
+    edCopy->globalParameters()["RunType"] = "HistoricalPnL";
     auto thetaFactory = QuantLib::ext::make_shared<EngineFactory>(
-        inputs_->pricingEngine(), thetaSimMarket, std::map<MarketContext, string>(), inputs_->refDataManager(),
+        edCopy, thetaSimMarket, std::map<MarketContext, string>(), inputs_->refDataManager(),
         inputs_->iborFallbackConfig());
 
     auto thetaPortfolio = QuantLib::ext::make_shared<Portfolio>();
@@ -384,11 +387,6 @@ HistoricalSimulationVarAnalyticImpl::computeTheta(const QuantLib::ext::shared_pt
     // Restore fixings and evaluation date
     thetaFixingManager->reset();
     Settings::instance().evaluationDate() = t0;
-
-    // Real totalTheta = 0.0;
-    // for (const auto& [id, theta] : thetaMap)
-    //     totalTheta += theta;
-    // LOG("Theta computation completed, total theta = " << totalTheta << " across " << thetaMap.size() << " trades");
 
     return thetaMap;
 }

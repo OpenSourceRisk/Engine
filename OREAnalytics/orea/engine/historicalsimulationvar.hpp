@@ -82,7 +82,7 @@ public:
                                   const bool includeTheta = false);
 
     //! Set per-trade theta values to be added to historical PnLs
-    void setThetaPerTrade(const std::map<std::string, QuantLib::Real>& thetaPerTrade) { thetaPerTrade_ = thetaPerTrade; }
+    void setThetaPerTrade(const std::map<std::string, QuantLib::Real>& thetaPerTrade) { thetaPerTrade_ = std::move(thetaPerTrade); }
 
     void createAdditionalReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) override;
 
