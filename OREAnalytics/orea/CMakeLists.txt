@@ -42,6 +42,7 @@ app/analytics/scenariogenerationanalytic.cpp
 app/analytics/sensitivitystressanalytic.cpp
 app/analytics/simmanalytic.cpp
 app/analytics/smrcanalytic.cpp
+app/analytics/stressedsimmanalytic.cpp
 app/analytics/stresstestanalytic.cpp
 app/analytics/utilities.cpp
 app/analytics/varanalytic.cpp
@@ -259,6 +260,7 @@ app/analytics/scenariogenerationanalytic.hpp
 app/analytics/sensitivitystressanalytic.hpp
 app/analytics/simmanalytic.hpp
 app/analytics/smrcanalytic.hpp
+app/analytics/stressedsimmanalytic.hpp
 app/analytics/stresstestanalytic.hpp
 app/analytics/utilities.hpp
 app/analytics/varanalytic.hpp

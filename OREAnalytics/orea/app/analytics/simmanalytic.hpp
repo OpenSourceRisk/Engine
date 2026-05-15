@@ -46,6 +46,7 @@ public:
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                      const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
+
 };
 
 class SimmAnalytic : public Analytic {
@@ -64,10 +65,18 @@ public:
     //! Load CRIF from external source, override to generate CRIF
     virtual void loadCrifRecords(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader);
 
+    void reset() override {
+        Analytic::reset();
+        offsetScenario_ = nullptr;
+        offsetSimMarketParams_ = nullptr;
+        crif_ = nullptr;
+    }
+
 private:
     QuantLib::ext::shared_ptr<Crif> crif_;
     bool hasNettingSetDetails_;
     bool determineWinningRegulations_;
+    QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> offsetSimMarketParams_;
 };
 
 } // namespace analytics

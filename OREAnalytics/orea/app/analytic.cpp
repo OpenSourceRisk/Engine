@@ -110,6 +110,8 @@ const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& Analytic::getReport(
 
 void Analytic::reset() {
     analyticComplete_ = false;
+    offsetScenario_ = nullptr;
+    offsetSimMarketParams_ = nullptr;
     reports_.clear();
     impl_->reset();
 }
@@ -141,6 +143,15 @@ void Analytic::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLo
 void Analytic::initialise() {
     if (impl() && !impl()->initialised()) {
         impl()->initialise();
+    }
+}
+
+void Analytic::setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario,
+                                 const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketParams) {
+    offsetScenario_ = offsetScenario;
+    offsetSimMarketParams_ = simMarketParams;
+    for (auto& a : impl_->dependentAnalytics()) {
+        a.second.first->setOffsetScenario(offsetScenario, simMarketParams);
     }
 }
 
@@ -313,6 +324,20 @@ void Analytic::buildMarket(const QuantLib::ext::shared_ptr<ore::data::InMemoryLo
     QuantLib::ext::optional<cpu_timer> mTimer = stopTimer("buildMarket()", returnTimer);
     if (mTimer)
         LOG("Market Build time " << setprecision(2) << mTimer->format(default_places, "%w") << " sec");
+}
+
+void Analytic::applyOffsetScenario(bool continueOnError, bool useSpreadedTermStructures, bool overrideTenors) {
+    if (offsetScenario() == nullptr)
+        return;
+    DLOG("apply offset scenario " << offsetScenario()->label() << " to analytic " << label());
+    auto curveConfigs = configurations_.curveConfig;
+    std::string marketConfiguration = inputs_->marketConfig("pricing");
+    auto offsetMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
+        market_, offsetSimMarketParams(), marketConfiguration,
+        curveConfigs ? *curveConfigs : ore::data::CurveConfigurations(), *configurations_.todaysMarketParams,
+        continueOnError, useSpreadedTermStructures, continueOnError, overrideTenors, inputs_->iborFallbackConfig(),
+        true, offsetScenario());
+    setMarket(offsetMarket);
 }
 
 void Analytic::marketCalibration(const std::vector<QuantLib::ext::shared_ptr<MarketCalibrationReportBase>>& mcr) {
