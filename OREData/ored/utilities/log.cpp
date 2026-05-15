@@ -43,8 +43,9 @@
 #include <dlfcn.h>
 #include <cxxabi.h>
 
-// Thread-local storage for the stacktrace captured at the point an exception is thrown
-static thread_local std::string g_lastThrowStacktrace;
+// Thread-local storage for the raw stacktrace captured at the point an exception is thrown
+static thread_local boost::stacktrace::stacktrace g_lastThrowStacktrace;
+static thread_local bool g_hasStacktrace{false};
 
 typedef void (*cxa_throw_type)(void*, std::type_info*, void(*)(void*));
 
@@ -72,8 +73,10 @@ namespace ore { namespace data { extern std::atomic<bool> g_captureStacktraces; 
 
 extern "C" {
 void __cxa_throw(void* thrown_exception, std::type_info* tinfo, void(*dest)(void*)) {
-    if (ore::data::g_captureStacktraces.load(std::memory_order_relaxed))
-        g_lastThrowStacktrace = formatStacktrace(boost::stacktrace::stacktrace());
+    if (ore::data::g_captureStacktraces.load(std::memory_order_relaxed)) {
+        g_lastThrowStacktrace = boost::stacktrace::stacktrace();
+        g_hasStacktrace = true;
+    }
     static cxa_throw_type real_cxa_throw = reinterpret_cast<cxa_throw_type>(dlsym(RTLD_NEXT, "__cxa_throw"));
     real_cxa_throw(thrown_exception, tinfo, dest);
     __builtin_unreachable();
@@ -609,11 +612,11 @@ StructuredMessage::StructuredMessage(const Category& category, const Group& grou
     data_["message"] = message;
 
     // Retrieve stacktrace captured at the point the exception was thrown
-    if (!g_lastThrowStacktrace.empty()) {
+    if (g_hasStacktrace) {
         if (ore::data::Log::instance().mask() >= ORE_DEBUG) {
-            data_["stacktrace"] = g_lastThrowStacktrace;
+            data_["stacktrace"] = formatStacktrace(g_lastThrowStacktrace);
         }
-        g_lastThrowStacktrace.clear();
+        g_hasStacktrace = false;
     }
 
     if (!subFields.empty()) {
