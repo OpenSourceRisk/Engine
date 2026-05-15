@@ -108,7 +108,7 @@ void BlackScholesLocalVolBase::performCalculationsFd(const bool localVol) const 
     }
 
     operator_ = QuantLib::ext::make_shared<QuantExt::FdmBlackScholesOp>(
-        mesher_, model_->generalizedBlackScholesProcesses()[0], calibrationStrikes[0], localVol_, 1E-10, 0,
+        mesher_, model_->generalizedBlackScholesProcesses()[0], calibrationStrikes[0], localVol, 1E-10, 0,
         quantoHelper, false, true);
 
     // 4 set up bwd solver, hardcoded Douglas scheme (= CrankNicholson)

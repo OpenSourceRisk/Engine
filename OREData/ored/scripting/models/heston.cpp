@@ -348,7 +348,7 @@ void Heston::setAdditionalResults() const {
     if (model_->calibration().size() > 0)
         additionalResults_["Heston.calibration"] = model_->calibration();
 
-    if (debug_ && type_ == Model::Type::MC) {
+    if (false && type_ == Model::Type::MC) {
         // copy path data
         MultiAssetHestonPaths paths;
         paths.samples = size();

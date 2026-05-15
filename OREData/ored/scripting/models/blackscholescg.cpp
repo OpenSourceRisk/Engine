@@ -477,10 +477,6 @@ void BlackScholesCG::performCalculations() const {
     model_->setCurveTimes(curveTimes_);
     model_->setVolTimesStrikes(volTimesStrikes_);
 
-}
-
-void BlackScholesCG::populateAdditionalResults() const {
-
     // set additional results provided by this model
 
     for (auto const& c : correlations_) {
@@ -488,9 +484,9 @@ void BlackScholesCG::populateAdditionalResults() const {
             c.second->correlation(0.0);
     }
 
-    for (Size i = 0; i < calibrationStrikes.size(); ++i) {
+    for (Size i = 0; i < effectiveCalibrationStrikes_.size(); ++i) {
         additionalResults_["BlackScholes.CalibrationStrike_" + indices_[i].name()] =
-            (calibrationStrikes[i] == Null<Real>() ? "ATMF" : std::to_string(calibrationStrikes[i]));
+            (effectiveCalibrationStrikes_[i] == Null<Real>() ? "ATMF" : std::to_string(effectiveCalibrationStrikes_[i]));
     }
 
     for (Size i = 0; i < indices_.size(); ++i) {
@@ -502,7 +498,7 @@ void BlackScholesCG::populateAdditionalResults() const {
                                       model_->generalizedBlackScholesProcesses()[i]->dividendYield(), t);
             if (timeStep > 0) {
                 Real volatility = model_->generalizedBlackScholesProcesses()[i]->blackVolatility()->blackVol(
-                    t, calibrationStrikes[i] == Null<Real>() ? forward : calibrationStrikes[i]);
+                    t, effectiveCalibrationStrikes_[i] == Null<Real>() ? forward : effectiveCalibrationStrikes_[i]);
                 additionalResults_["BlackScholes.Volatility_" + indices_[i].name() + "_" + ore::data::to_string(d)] =
                     volatility;
             }

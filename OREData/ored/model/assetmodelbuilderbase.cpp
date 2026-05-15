@@ -150,7 +150,6 @@ void AssetModelBuilderBase::performCalculations() const {
 
         curveTimesModel_ = model_->getCurveTimes();
         volTimesStrikesModel_ = model_->getVolTimesStrikes();
-        std::cout << "got volTimesStrikes " << volTimesStrikesModel_.size() << std::endl;
     }
 }
 
@@ -182,12 +181,6 @@ std::pair<bool, bool> AssetModelBuilderBase::calibrationPointsChanged(const bool
 
     buildCacheData(curveTimes_, volTimesStrikes_, curveData, volData);
     buildCacheData(curveTimesModel_, volTimesStrikesModel_, curveDataModel, volDataModel);
-
-    for (auto const& v : volTimesStrikesModel_) {
-        for (auto const& [t, k] : v) {
-            std::cout << " volTimesStrikesModel: " << t << "," << k << std::endl;
-        }
-    }
 
     return std::make_pair(cache_.hasChanged(std::vector<std::set<Real>>(curveData.size(), curveTimes_), curveData,
                                             volTimesStrikes_, volData, updateCache),
