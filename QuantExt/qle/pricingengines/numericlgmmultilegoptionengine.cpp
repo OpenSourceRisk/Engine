@@ -446,6 +446,8 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
         npv_ = 0.0;
         for (Size i = 0; i < legs_.size(); ++i) {
             for (Size j = 0; j < legs_[i].size(); ++j) {
+                if (legs_[i][j]->date() <= refDate)
+                    continue;
                 npv_ += legs_[i][j]->amount() * discountCurve_->discount(legs_[i][j]->date());
             }
         }
