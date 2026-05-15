@@ -121,6 +121,41 @@ void HistoricalSimulationVarReport::handleFullRevalResults(const ext::shared_ptr
                     scenarioPnls[i] += tradeThetas[i];
             }
         }
+        // Distribute theta proportionally across risk factor PnLs so that
+        // sum(rf_pnl) per trade equals the total trade PnL (which includes theta).
+        // For each trade t in each scenario s:
+        //   adjusted_rf_pnl[k][t] = rf_pnl[k][t] * (1 + theta_t / sum_k(rf_pnl[k][t]))
+        if (riskFactorBreakdown_ && !riskFactorPnls_.empty()) {
+            // Build per-trade theta vector in tradeIdIdxPairs_ order
+            std::vector<Real> thetaVec(tradeIdIdxPairs_.size(), 0.0);
+            for (const auto& [tradeId, idx] : tradeIdIdxPairs_) {
+                auto it = thetaPerTrade_.find(tradeId);
+                if (it != thetaPerTrade_.end())
+                    thetaVec[idx] = it->second;
+            }
+            Size numTrades = tradeIdIdxPairs_.size();
+            for (Size s = 0; s < riskFactorPnls_.size(); ++s) {
+                if (riskFactorPnls_[s].empty())
+                    continue;
+                // Compute sum of RF PnLs per trade for this scenario
+                std::vector<Real> sumRfPnl(numTrades, 0.0);
+                for (const auto& [key, vals] : riskFactorPnls_[s]) {
+                    for (Size t = 0; t < numTrades && t < vals.size(); ++t) {
+                        if (!std::isnan(vals[t]))
+                            sumRfPnl[t] += vals[t];
+                    }
+                }
+                // Scale each RF PnL proportionally to absorb theta
+                for (auto& [key, vals] : riskFactorPnls_[s]) {
+                    for (Size t = 0; t < numTrades && t < vals.size(); ++t) {
+                        if (std::isnan(vals[t]) || vals[t] == 0.0)
+                            continue;
+                        if (sumRfPnl[t] != 0.0)
+                            vals[t] *= (1.0 + thetaVec[t] / sumRfPnl[t]);
+                    }
+                }
+            }
+        }
     }
 }
 
