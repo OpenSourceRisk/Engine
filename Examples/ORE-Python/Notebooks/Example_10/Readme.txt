@@ -1,23 +1,23 @@
 Example 10 - Cross-Currency Swap Pricing with the ORE Python Addin
 
 Prices a 1-year EUR/USD cross-currency (xccy) basis swap using the ORE SWIG
-Python wrapper, mirroring discovery2.ipynb cell by cell while using the
-file-based OREApp(Parameters) workflow of the other Example_N notebooks.
+Python wrapper.  All market configurations and market data are defined
+entirely in Python — no XML configuration files or external data files are
+required.
 
 Demonstrates:
-  - ZeroRateConvention, FXConvention, CrossCcyBasisSwapConvention in Python
+  - ZeroRateConvention, FXConvention in Python
   - EngineData, CurveConfigurations, TodaysMarketParameters in Python
   - ScheduleData, FloatingLegData, LegData, ORESwap: programmatic trade
-  - OREApp(Parameters) file-based NPV and stress analytics
+  - InputParameters + OREApp + MarketDataInMemoryLoader: NPV analytics
   - StressTestScenarioData, ScenarioSimMarketParameters object API
-  - Portfolio.fromFile and trade introspection
-  - CSV report extraction into pandas DataFrames
+  - In-memory report extraction into pandas DataFrames
 
 Prerequisites:
-  - Python 3.12 (64-bit)
-  - ORE SWIG extension built; set ORESWIG_PKG, e.g.:
+  - Python 3 (64-bit)
+  - ORE Python package: pip install open-source-risk-engine
+    or set ORESWIG_PKG to a local ORE-SWIG build directory, e.g.:
       set ORESWIG_PKG=<build>\ORE-SWIG;<build>\ORE-SWIG\Release
-  - pip install jupyter pandas lxml setuptools
+  - pip install jupyter pandas
 
-Market data: Input/
-Output logs and CSV: Output/
+Output logs: Output/
