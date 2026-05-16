@@ -36,9 +36,10 @@ public:
 
     //! Constructor to set up a bondfuture from reference data
     BondFuture(const string& contractName, Real contractNotional, const std::string longShort = "Long",
-               Envelope env = Envelope(), QuantLib::ext::optional<bool> applyConversionFactor = QuantLib::ext::nullopt)
+               Envelope env = Envelope(), QuantLib::ext::optional<bool> applyConversionFactor = QuantLib::ext::nullopt,
+               QuantLib::ext::optional<bool> useFuturePrice = QuantLib::ext::nullopt)
         : Trade("BondFuture", env), contractName_(contractName), contractNotional_(contractNotional),
-          longShort_(longShort), applyConversionFactor_(applyConversionFactor) {}
+          longShort_(longShort), applyConversionFactor_(applyConversionFactor), useFuturePrice_(useFuturePrice) {}
 
     virtual void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
 
@@ -46,6 +47,7 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 
     bool applyConversionFactor() const;
+    bool useFuturePrice() const;
 
     // Available after build() was called
     const BondData& bondData() const { return bondData_; }
@@ -67,6 +69,7 @@ private:
     // as the TRS is on the bond future contract and not on the underlying bonds. In that case, this flag should be set 
     // to false.
     QuantLib::ext::optional<bool> applyConversionFactor_;
+    QuantLib::ext::optional<bool> useFuturePrice_;
     QuantLib::ext::shared_ptr<BondFutureReferenceDatum> refData_;
 };
 

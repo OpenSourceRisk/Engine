@@ -183,6 +183,7 @@ protected:
     std::string portfolioId_;
     bool portfolioDeriv_ = false;
     double indexQuantity_ = 1;
+    QuantLib::ext::optional<bool> pricePerIndexUnit_;
 };
 
 TRS::FundingData::NotionalType parseTrsFundingNotionalType(const std::string& s);

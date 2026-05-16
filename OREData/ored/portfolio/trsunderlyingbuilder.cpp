@@ -33,6 +33,8 @@
 #include <qle/instruments/forwardbond.hpp>
 #include <qle/instruments/bondfuture.hpp>
 
+using namespace QuantLib;
+
 namespace ore {
 namespace data {
 
@@ -452,6 +454,19 @@ void DerivativeTrsUnderlyingBuilder::build(
         const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
         getFxIndex,
     const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const {
+
+    // If we have a bond future as part of the basket and we want to use its price level, as opposed to its NPV, use 
+    // the BondFutureTrsUnderlyingBuilder::build method to populate things.
+    if (auto bondFuture = QuantLib::ext::dynamic_pointer_cast<BondFuture>(underlying)) {
+        if (bondFuture->useFuturePrice()) {
+            auto builder = TrsUnderlyingBuilderFactory::instance().getBuilder(underlying->tradeType());
+            builder->build(parentId, underlying, valuationDates, paymentDates, fundingCurrency, engineFactory,
+                underlyingIndex, underlyingMultiplier, indexQuantities, fxIndices, initialPrice, assetCurrency,
+                creditRiskCurrency, creditQualifierMapping, getFxIndex, underlyingDerivativeId, fixings, returnLegs);
+        }
+        return;
+    }
+
     assetCurrency = underlying->npvCurrency();
     auto indexName = "GENERIC-" + underlyingDerivativeId;
     IndexNameTranslator::instance().add(indexName, indexName);

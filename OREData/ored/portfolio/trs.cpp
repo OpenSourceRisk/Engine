@@ -209,6 +209,8 @@ void TRS::fromXML(XMLNode* node) {
         QL_REQUIRE(portfolioId_ != "", "BasketName must not be empty.");
         portfolioDeriv_ = true;
         indexQuantity_ = XMLUtils::getChildValueAsDouble(underlyingTradeNodes3, "IndexQuantity", false, 1);
+        if (auto n = XMLUtils::getChildNode(underlyingTradeNodes3, "PriceIsPerUnit"))
+            pricePerIndexUnit_ = parseBool(XMLUtils::getNodeValue(n));
     }
     QL_REQUIRE(!underlyingTradeNodes.empty() || !underlyingSubTradeNodes.empty() || !underlyingTradeNodes2.empty() ||
                    !portfolioId_.empty(),
@@ -391,6 +393,7 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     QL_REQUIRE(fundingCurrencies.size() <= 1, "funding leg currencies must match");
     QuantLib::Real portfolioInitialPrice = Null<Real>();
 
+    Real quantityForWrapper = 1;
     if (!portfolioId_.empty() && portfolioDeriv_) {
         populateFromReferenceData(engineFactory->referenceData());
         std::string indexName = "GENERIC-" + portfolioId_;
@@ -404,7 +407,9 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
         // The try-catch is used to avoid a failure as we load the data (i.e fixings) at the second run after portfolio construction.
         try {
             portfolioInitialPrice = underlyingIndex->fixing(date);
-        } catch (...) { }                
+        } catch (...) { }
+        if (pricePerIndexUnit_.value_or(false))
+            quantityForWrapper = indexQuantity_;
     }
 
     // a builder might update the underlying (e.g. promote it from bond to convertible bond)
@@ -829,7 +834,8 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
         parseCurrency(returnData_.currency()), valuationDates, paymentDates, fundingLegs, fundingNotionalTypes,
         parseCurrency(fundingCurrency), fundingData_.fundingResetGracePeriod(), returnData_.payer(), fundingLegPayer,
         additionalCashflowLeg, additionalCashflowLegPayer, parseCurrency(additionalCashflowLegCurrency), fxIndexAsset,
-        fxIndexReturn, fxIndexAdditionalCashflows, fxIndices, returnData_.fxConversionAtPeriodEnd());
+        fxIndexReturn, fxIndexAdditionalCashflows, fxIndices, returnData_.fxConversionAtPeriodEnd(),
+        quantityForWrapper, pricePerIndexUnit_.value_or(false));
 
     Handle<YieldTermStructure> additionalCashflowCurrencyDiscountCurve;
     if (!additionalCashflowLeg.empty()) {
