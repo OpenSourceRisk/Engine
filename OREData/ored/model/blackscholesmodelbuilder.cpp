@@ -63,7 +63,6 @@ std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> BlackScholesModelBuild
         }
         for (Size j = 1; j < discretisationTimeGrid_.size(); ++j) {
             volTimesStrikes_[i].insert(std::make_pair(discretisationTimeGrid_[j], strike));
-            curveTimes_.insert(discretisationTimeGrid_[j]);
         }
     }
 

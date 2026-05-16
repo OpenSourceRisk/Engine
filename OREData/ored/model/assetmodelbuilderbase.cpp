@@ -122,6 +122,11 @@ void AssetModelBuilderBase::performCalculations() const {
         curveTimes_ = curveTimesBase_;
         volTimesStrikes_ = volTimesStrikesBase_;
 
+        for (Size j = 1; j < discretisationTimeGrid_.size(); ++j) {
+            curveTimes_.insert(discretisationTimeGrid_[j]);
+        }
+
+
         // setup model
 
         model_.linkTo(QuantLib::ext::make_shared<AssetModelWrapper>(processType(), getCalibratedProcesses(),

@@ -118,11 +118,6 @@ AssetModel::AssetModel(
             volTimesStrikes_[i].insert({{timeGrid_.back(), calibrationStrikes[0]}});
     }
 
-    // FD only: for one (or no) underlying, everything works as usual
-
-    if (type_ == Type::MC || indices_.size() <= 1)
-        return;
-
     // if we have one underlying + one FX index, we do a 1D PDE with a quanto adjustment under certain circumstances
 
     if (indices_.size() == 2) {
@@ -155,10 +150,6 @@ AssetModel::AssetModel(
         }
     }
 
-    // otherwise we need more than one dimension, which we currently not support
-
-    QL_FAIL("AssetModel: model does not support multi-dim fd schemes currently, use mc instead.");
-
     // add volTimesStrikes and curve times for quanto adjsutment
 
     if (applyQuantoAdjustment_) {
@@ -170,6 +161,10 @@ AssetModel::AssetModel(
         for (Size i = 0; i < indices_.size(); ++i)
             volTimesStrikes_[i].insert(tmp.begin(), tmp.end());
     }
+
+    // otherwise we need more than one dimension, which we currently not support
+
+    QL_FAIL("AssetModel: model does not support multi-dim fd schemes currently, use mc instead.");
 
 } // AssetModel ctor
 
