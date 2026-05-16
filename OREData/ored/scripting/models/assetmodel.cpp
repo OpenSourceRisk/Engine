@@ -162,9 +162,11 @@ AssetModel::AssetModel(
             volTimesStrikes_[i].insert(tmp.begin(), tmp.end());
     }
 
-    // otherwise we need more than one dimension, which we currently not support
+    // check we have 1 index or 2 indices + quantoAdjustment, otherwise we can not handle this
 
-    QL_FAIL("AssetModel: model does not support multi-dim fd schemes currently, use mc instead.");
+    QL_REQUIRE(indices_.size() == 1 || applyQuantoAdjustment_,
+               "AssetModel: model does not support multi-dim fd schemes currently, use mc instead, got "
+                   << indices_.size() << " indices and can not apply quanto-adjustment to reduce dimension to 1");
 
 } // AssetModel ctor
 
