@@ -27,8 +27,10 @@ BlackScholesModelBuilder::BlackScholesModelBuilder(
     const std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
     const std::set<Date>& simulationDates, const std::set<Date>& addDates, const Size timeStepsPerYear,
     const std::string& calibration, const std::vector<std::vector<Real>>& calibrationStrikes,
-    const Handle<YieldTermStructure>& baseCurve)
-    : AssetModelBuilderBase(curves, processes, simulationDates, addDates, timeStepsPerYear, baseCurve, false),
+    const Handle<YieldTermStructure>& baseCurve, const std::set<Real>& curveTimes,
+    const std::vector<std::set<std::pair<Real, Real>>>& volTimesStrikes)
+    : AssetModelBuilderBase(curves, processes, simulationDates, addDates, timeStepsPerYear, baseCurve, false,
+                            curveTimes, volTimesStrikes),
       calibration_(calibration),
       calibrationStrikes_(calibrationStrikes.empty() ? std::vector<std::vector<Real>>(processes.size())
                                                      : calibrationStrikes) {
@@ -41,8 +43,10 @@ BlackScholesModelBuilder::BlackScholesModelBuilder(
     const Handle<YieldTermStructure>& curve, const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
     const std::set<Date>& simulationDates, const std::set<Date>& addDates, const Size timeStepsPerYear,
     const std::string& calibration, const std::vector<Real>& calibrationStrikes,
-    const Handle<YieldTermStructure>& baseCurve)
-    : AssetModelBuilderBase(curve, process, simulationDates, addDates, timeStepsPerYear, baseCurve, false),
+    const Handle<YieldTermStructure>& baseCurve, const std::set<Real>& curveTimes,
+    const std::vector<std::set<std::pair<Real, Real>>>& volTimesStrikes)
+    : AssetModelBuilderBase(curve, process, simulationDates, addDates, timeStepsPerYear, baseCurve, false, curveTimes,
+                            volTimesStrikes),
       calibration_(calibration), calibrationStrikes_(1, calibrationStrikes) {}
 
 std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> BlackScholesModelBuilder::getCalibratedProcesses() const {
@@ -57,9 +61,9 @@ std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> BlackScholesModelBuild
         } else {
             QL_FAIL("BlackScholesModelBuilder: calibration '" << calibration_ << "' not known, expected ATM or Deal");
         }
-        volTimesStrikes_.push_back({});
         for (Size j = 1; j < discretisationTimeGrid_.size(); ++j) {
-            volTimesStrikes_.back().insert(std::make_pair(discretisationTimeGrid_[j], strike));
+            volTimesStrikes_[i].insert(std::make_pair(discretisationTimeGrid_[j], strike));
+            curveTimes_.insert(discretisationTimeGrid_[j]);
         }
     }
 

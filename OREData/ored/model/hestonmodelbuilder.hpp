@@ -57,7 +57,8 @@ public:
                        Real earlyExitThreshold = 0.005, Real maxAcceptableError = 0.05,
                        const HestonProcess::Discretization& discretization = HestonProcess::QuadraticExponential,
                        const std::string& referenceCalibrationGrid = "", const bool dontCalibrate = false,
-                       const Handle<YieldTermStructure>& baseCurve = {});
+                       const Handle<YieldTermStructure>& baseCurve = {}, const std::set<Real>& curveTimes = {},
+                       const std::vector<std::set<std::pair<Real, Real>>>& volTimesStrikes = {});
     HestonModelBuilder(const std::string& index, const Handle<YieldTermStructure>& curve,
                        const ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
                        const std::set<Date>& simulationDates = {}, const std::set<Date>& addDates = {},
@@ -76,7 +77,8 @@ public:
                        Real earlyExitThreshold = 0.005, Real maxAcceptableError = 0.05,
                        const HestonProcess::Discretization& discretization = HestonProcess::QuadraticExponential,
                        const std::string& referenceCalibrationGrid = "", const bool dontCalibrate = false,
-                       const Handle<YieldTermStructure>& baseCurve = {})
+                       const Handle<YieldTermStructure>& baseCurve = {}, const std::set<Real>& curveTimes = {},
+                       const std::vector<std::set<std::pair<Real, Real>>>& volTimesStrikes = {})
         : HestonModelBuilder({index}, std::vector<Handle<YieldTermStructure>>{curve},
                              std::vector<ext::shared_ptr<GeneralizedBlackScholesProcess>>{process}, simulationDates,
                              addDates, timeStepsPerYear, calibrationExpiries, calibrationMoneyness,

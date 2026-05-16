@@ -38,12 +38,13 @@ using namespace QuantExt;
 
 AssetModel::AssetModel(const Model::Type type, const Size paths, const std::string& currency,
                        const Handle<YieldTermStructure>& curve, const std::string& index,
-                       const std::string& indexCurrency, const Handle<AssetModelWrapper>& model,
-                       const std::set<Date>& simulationDates, const std::set<Date>& addDates,
+                       const std::string& indexCurrency, const std::set<Date>& simulationDates,
+                       const Size timeStepsPerYear, const std::set<Date>& addDates,
                        const ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig, const std::string& calibration,
                        const std::vector<Real>& calibrationStrikes, const Params& params)
-    : AssetModel(type, paths, {currency}, {curve}, {}, {}, {}, {index}, {indexCurrency}, {currency}, model, {},
-                 simulationDates, addDates, iborFallbackConfig, calibration, {{index, calibrationStrikes}}, params) {}
+    : AssetModel(type, paths, {currency}, {curve}, {}, {}, {}, {index}, {indexCurrency}, {currency}, {},
+                 simulationDates, timeStepsPerYear, addDates, iborFallbackConfig, calibration,
+                 {{index, calibrationStrikes}}, params) {}
 
 AssetModel::AssetModel(
     const Model::Type type, const Size paths, const std::vector<std::string>& currencies,
@@ -51,38 +52,34 @@ AssetModel::AssetModel(
     const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
     const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
     const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
-    const std::set<std::string>& payCcys, const Handle<AssetModelWrapper>& model,
+    const std::set<std::string>& payCcys,
     const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
-    const std::set<Date>& simulationDates, const std::set<Date>& addDates,
+    const std::set<Date>& simulationDates, const Size timeStepsPerYear, const std::set<Date>& addDates,
     const ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig, const std::string& calibration,
     const std::map<std::string, std::vector<Real>>& calibrationStrikes, const Params& params)
     : ModelImpl(type, params, curves.at(0)->dayCounter(), paths, currencies, irIndices, infIndices, indices,
                 indexCurrencies, simulationDates, iborFallbackConfig),
-      curves_(curves), fxSpots_(fxSpots), payCcys_(payCcys), model_(model), correlations_(correlations),
-      addDates_(addDates), calibration_(calibration), calibrationStrikes_(calibrationStrikes) {
+      curves_(curves), fxSpots_(fxSpots), payCcys_(payCcys), correlations_(correlations),
+      timeStepsPerYear_(timeStepsPerYear), addDates_(addDates), calibration_(calibration),
+      calibrationStrikes_(calibrationStrikes) {
 
     // check inputs
 
-    QL_REQUIRE(!model_.empty(), "model is empty");
-    QL_REQUIRE(!curves_.empty(), "no curves given");
-    QL_REQUIRE(currencies_.size() == curves_.size(), "number of currencies (" << currencies_.size()
-                                                                              << ") does not match number of curves ("
-                                                                              << curves_.size() << ")");
+    QL_REQUIRE(!curves_.empty(), "AssetModel: no curves given");
+    QL_REQUIRE(currencies_.size() == curves_.size(), "AssetModel: number of currencies ("
+                                                         << currencies_.size() << ") does not match number of curves ("
+                                                         << curves_.size() << ")");
     QL_REQUIRE(currencies_.size() == fxSpots_.size() + 1,
-               "number of currencies (" << currencies_.size() << ") does not match number of fx spots ("
-                                        << fxSpots_.size() << ") + 1");
-
-    QL_REQUIRE(indices_.size() == model_->processes().size(),
-               "mismatch of processes size (" << model_->processes().size() << ") and number of indices ("
-                                              << indices_.size() << ")");
+               "AssetModel:number of currencies (" << currencies_.size() << ") does not match number of fx spots ("
+                                                   << fxSpots_.size() << ") + 1");
 
     for (auto const& c : payCcys) {
         QL_REQUIRE(std::find(currencies_.begin(), currencies_.end(), c) != currencies_.end(),
-                   "pay ccy '" << c << "' not found in currencies list.");
+                   "AssetModel: pay ccy '" << c << "' not found in currencies list.");
     }
 
     QL_REQUIRE(calibration_ == "ATM" || calibration_ == "Deal" || calibration == "Smile",
-               "calibration '" << calibration_ << "' invalid, expected one of ATM, Deal, Smile");
+               "AssetModel: calibration '" << calibration_ << "' invalid, expected one of ATM, Deal, Smile");
 
     // register with observables
 
@@ -91,16 +88,44 @@ AssetModel::AssetModel(
     for (auto const& o : correlations_)
         registerWith(o.second);
 
-    registerWith(model_);
+    // populate eff sim dates and time grid
+
+    setupDatesAndTimes();
+
+    // populate volTimesStrikes, and curve times
+
+    volTimesStrikes_.clear();
+    curveTimes_.clear();
+
+    volTimesStrikes_.resize(indices_.size());
+    curveTimes_.insert(timeGrid_.begin() + 1, timeGrid_.end());
+    for (auto const& d : addDates_) {
+        if (d > curves_.front()->referenceDate()) {
+            curveTimes_.insert(curves_.front()->timeFromReference(d));
+        }
+    }
+
+    // for MC we are done at this point
+
+    if (type_ == Type::MC)
+        return;
+
+    // for FD add volTimesStrikes and curve times for (dynamic) mesher
+
+    if (!params_.staticMesher) {
+        auto calibrationStrikes = getCalibrationStrikes();
+        for (Size i = 0; i < indices_.size(); ++i)
+            volTimesStrikes_[i].insert({{timeGrid_.back(), calibrationStrikes[0]}});
+    }
 
     // FD only: for one (or no) underlying, everything works as usual
 
-    if (type_ == Type::MC || model_->processes().size() <= 1)
+    if (type_ == Type::MC || indices_.size() <= 1)
         return;
 
     // if we have one underlying + one FX index, we do a 1D PDE with a quanto adjustment under certain circumstances
 
-    if (model_->processes().size() == 2) {
+    if (indices_.size() == 2) {
         // check whether we have exactly one pay ccy ...
         if (payCcys_.size() == 1) {
             std::string payCcy = *payCcys_.begin();
@@ -134,9 +159,39 @@ AssetModel::AssetModel(
 
     QL_FAIL("AssetModel: model does not support multi-dim fd schemes currently, use mc instead.");
 
+    // add volTimesStrikes and curve times for quanto adjsutment
+
+    if (applyQuantoAdjustment_) {
+
+        std::set<std::pair<Real, Real>> tmp;
+        for (Size i = 0; i < timeGrid_.size(); ++i) {
+            tmp.insert(std::make_pair(timeGrid_[i], Null<Real>()));
+        }
+        for (Size i = 0; i < indices_.size(); ++i)
+            volTimesStrikes_[i].insert(tmp.begin(), tmp.end());
+    }
+
 } // AssetModel ctor
 
+void AssetModel::setModel(const Handle<AssetModelWrapper>& model) {
+    unregisterWith(model_);
+    model_ = model;
+    registerWith(model_);
+}
+
+void AssetModel::setupDatesAndTimes() const {
+    Date referenceDate = curves_.front()->referenceDate();
+    effectiveSimulationDates_ = std::set<Date>(simulationDates_.lower_bound(referenceDate), simulationDates_.end());
+    effectiveSimulationDates_.insert(referenceDate);
+    timeGrid_ = buildTimeGrid(referenceDate, curves_.front()->dayCounter(), simulationDates_, timeStepsPerYear_);
+}
+
 void AssetModel::performCalculations() const {
+
+    QL_REQUIRE(!model_.empty(), "AssetModel: model is empty");
+    QL_REQUIRE(indices_.size() == model_->processes().size(),
+               "AssetModel: mismatch of processes size (" << model_->processes().size() << ") and number of indices ("
+                                                          << indices_.size() << ")");
 
     QL_REQUIRE(!inTrainingPhase_, "AssetModel::performCalculations(): state inTrainingPhase should be false, this was "
                                   "not resetted appropriately.");
@@ -145,17 +200,11 @@ void AssetModel::performCalculations() const {
 
     // set up time grid
 
-    effectiveSimulationDates_ = model_->effectiveSimulationDates();
+    setupDatesAndTimes();
 
-    std::vector<Real> times;
-    for (auto const& d : effectiveSimulationDates_) {
-        times.push_back(timeFromReference(d));
-    }
-
-    timeGrid_ = model_->discretisationTimeGrid();
-    positionInTimeGrid_.resize(times.size());
+    positionInTimeGrid_.resize(effectiveSimulationDates_.size());
     for (Size i = 0; i < positionInTimeGrid_.size(); ++i)
-        positionInTimeGrid_[i] = timeGrid_.index(times[i]);
+        positionInTimeGrid_[i] = timeGrid_.index(timeFromReference(*std::next(effectiveSimulationDates_.begin(), i)));
 
     underlyingPaths_.clear();
     underlyingPathsTraining_.clear();
@@ -168,27 +217,9 @@ void AssetModel::performCalculations() const {
     if (indices_.empty())
         return;
 
-    // init volTimesStrikes, and curve times
-
-    volTimesStrikes_.clear();
-    curveTimes_.clear();
-
-    volTimesStrikes_.resize(indices_.size());
-    curveTimes_.insert(timeGrid_.begin() + 1, timeGrid_.end());
-    for (auto const& d : addDates_) {
-        if (d > curves_.front()->referenceDate()) {
-            curveTimes_.insert(curves_.front()->timeFromReference(d));
-        }
-    }
-
     // do the model specific calculations
 
     performModelCalculations();
-
-    // set the volTimestrikes and curveTimes in the model
-
-    model_->setCurveTimes(curveTimes_);
-    model_->setVolTimesStrikes(volTimesStrikes_);
 }
 
 void AssetModel::initUnderlyingPathsMc() const {

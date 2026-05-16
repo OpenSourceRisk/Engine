@@ -83,10 +83,6 @@ void BlackScholesLocalVolBase::performCalculationsFd(const bool localVol) const 
             QuantLib::ext::make_shared<FdmMesherComposite>(QuantLib::ext::make_shared<QuantExt::FdmBlackScholesMesher>(
                 size(), model_->generalizedBlackScholesProcesses()[0], timeGrid_.back(), effStrike, Null<Real>(),
                 Null<Real>(), params_.mesherEpsilon, params_.mesherScaling, cPoints[0]));
-        if (!params_.staticMesher) {
-            for (Size i = 0; i < indices_.size(); ++i)
-                volTimesStrikes_[i].insert({{timeGrid_.back(), calibrationStrikes[0]}});
-        }
     }
 
     // 3 set up operator using atmf vol and without discounting, floor forward variances at zero
@@ -99,12 +95,6 @@ void BlackScholesLocalVolBase::performCalculationsFd(const bool localVol) const 
             *curves_[quantoTargetCcyIndex_], *curves_[quantoSourceCcyIndex_],
             *model_->generalizedBlackScholesProcesses()[1]->blackVolatility(), quantoCorr, Null<Real>(),
             model_->generalizedBlackScholesProcesses()[1]->x0(), false, true);
-        std::set<std::pair<Real, Real>> tmp;
-        for (Size i = 0; i < timeGrid_.size(); ++i) {
-            tmp.insert(std::make_pair(timeGrid_[i], Null<Real>()));
-        }
-        for (Size i = 0; i < indices_.size(); ++i)
-            volTimesStrikes_[i].insert(tmp.begin(), tmp.end());
     }
 
     operator_ = QuantLib::ext::make_shared<QuantExt::FdmBlackScholesOp>(

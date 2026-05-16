@@ -165,8 +165,7 @@ void Heston::performCalculationsFd() const {
             *curves_[quantoTargetCcyIndex_], *curves_[quantoSourceCcyIndex_],
             *model_->generalizedBlackScholesProcesses()[1]->blackVolatility(), quantoCorr, Null<Real>(),
             model_->generalizedBlackScholesProcesses()[1]->x0(), false, true);
-
-        // FIXME - once this is working (see above), populate volTimesStrikes and curveTimes with additional points
+        // once this is working, dobule check additional volTimesStrikes in AssetModel ctor
     }
 
     operator_ = QuantLib::ext::make_shared<QuantExt::FdmHestonOp>(mesher_, process, quantoHelper, nullptr,

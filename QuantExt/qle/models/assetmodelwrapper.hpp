@@ -68,7 +68,6 @@ public:
     AssetModelWrapper(const ProcessType processType,
                       const std::vector<QuantLib::ext::shared_ptr<StochasticProcess>>& processes,
                       const std::set<Date>& effectiveSimulationDates, const TimeGrid& discretisationTimeGrid,
-                      std::set<Real> curveTimes = {}, std::vector<std::set<std::pair<Real, Real>>> volTimesStrikes = {},
                       const std::vector<AssetModelCalibrationResults>& calibrationResults =
                           std::vector<AssetModelCalibrationResults>());
 
@@ -85,13 +84,6 @@ public:
 
     const std::vector<AssetModelCalibrationResults>& calibration() const { return calibrationResults_; }
 
-    /* set / get curveTimes and volTimesStrikes relevant for the AssetModel, this is used for notification filtering in
-       AssetModelBuilderBase. */
-    std::set<Real> getCurveTimes() const { return curveTimes_; }
-    std::vector<std::set<std::pair<Real, Real>>> getVolTimesStrikes() { return volTimesStrikes_; }
-    void setCurveTimes(std::set<Real> t) const { curveTimes_ = std::move(t); }
-    void setVolTimesStrikes(std::vector<std::set<std::pair<Real, Real>>> v) { volTimesStrikes_ = std::move(v); }
-
 private:
     void update() override;
     ProcessType processType_ = ProcessType::None;
@@ -101,8 +93,6 @@ private:
     std::vector<QuantLib::ext::shared_ptr<PiecewiseTimeDependentHestonProcess>> ptdHestonProcesses_;
     std::set<Date> effectiveSimulationDates_;
     TimeGrid discretisationTimeGrid_;
-    mutable std::set<Real> curveTimes_;
-    mutable std::vector<std::set<std::pair<Real, Real>>> volTimesStrikes_;
     std::vector<AssetModelCalibrationResults> calibrationResults_;
 };
 

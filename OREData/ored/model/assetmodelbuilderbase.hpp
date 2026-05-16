@@ -45,12 +45,14 @@ public:
                           const std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
                           const std::set<Date>& simulationDates, const std::set<Date>& addDates,
                           const Size timeStepsPerYear, const Handle<YieldTermStructure>& baseCurve = {},
-                          const bool observeContinuum = false);
+                          const bool observeContinuum = false, const std::set<Real>& curveTimes = {},
+                          const std::vector<std::set<std::pair<Real, Real>>>& volTimesStrikes = {});
     AssetModelBuilderBase(const Handle<YieldTermStructure>& curve,
                           const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
                           const std::set<Date>& simulationDates, const std::set<Date>& addDates,
                           const Size timeStepsPerYear, const Handle<YieldTermStructure>& baseCurve = {},
-                          const bool observeContinuum = false);
+                          const bool observeContinuum = false, const std::set<Real>& curveTimes = {},
+                          const std::vector<std::set<std::pair<Real, Real>>>& volTimesStrikes = {});
 
     Handle<AssetModelWrapper> model() const;
     const std::set<Date>& simulationDates() const { return simulationDates_; }
@@ -73,7 +75,7 @@ protected:
     virtual void setupDatesAndTimes() const;
 
     void performCalculations() const override;
-    std::pair<bool, bool> calibrationPointsChanged(const bool updateCache) const;
+    bool calibrationPointsChanged(const bool updateCache) const;
     void buildCacheData(const std::set<Real>& curveTimes,
                         const std::vector<std::set<std::pair<Real, Real>>>& volTimesStrikes,
                         std::vector<std::vector<Real>>& curveData, std::vector<std::vector<Real>>& volData) const;
@@ -89,7 +91,6 @@ protected:
     mutable TimeGrid discretisationTimeGrid_;         // the (possibly refined) time grid for the simulation
 
     mutable RelinkableHandle<AssetModelWrapper> model_;
-    mutable bool initialCalibrationIsDone_ = false;
 
     bool forceCalibration_ = false;
     QuantLib::ext::shared_ptr<MarketObserver> marketObserver_;
@@ -97,8 +98,8 @@ protected:
     std::vector<Handle<BlackVolTermStructure>> vols_;
     std::vector<Handle<YieldTermStructure>> allCurves_;
     mutable CalibrationPointCache cache_, cacheModel_;
-    mutable std::set<Real> curveTimes_, curveTimesModel_;
-    mutable std::vector<std::set<std::pair<Real, Real>>> volTimesStrikes_, volTimesStrikesModel_;
+    mutable std::set<Real> curveTimesBase_, curveTimes_;
+    mutable std::vector<std::set<std::pair<Real, Real>>> volTimesStrikesBase_, volTimesStrikes_;
 
     mutable std::vector<AssetModelCalibrationResults> calibrationResults_;
 };

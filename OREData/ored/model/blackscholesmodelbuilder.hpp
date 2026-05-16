@@ -38,13 +38,15 @@ public:
                              const std::set<Date>& simulationDates, const std::set<Date>& addDates,
                              const Size timeStepsPerYear = 0, const std::string& calibration = "ATM",
                              const std::vector<std::vector<Real>>& calibrationStrikes = {},
-                             const Handle<YieldTermStructure>& baseCurve = {});
+                             const Handle<YieldTermStructure>& baseCurve = {}, const std::set<Real>& curveTimes = {},
+                             const std::vector<std::set<std::pair<Real, Real>>>& volTimesStrikes = {});
     BlackScholesModelBuilder(const Handle<YieldTermStructure>& curve,
                              const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
                              const std::set<Date>& simulationDates, const std::set<Date>& addDates,
                              const Size timeStepsPerYear = 0, const std::string& calibration = "ATM",
                              const std::vector<Real>& calibrationStrikes = {},
-                             const Handle<YieldTermStructure>& baseCurve = {});
+                             const Handle<YieldTermStructure>& baseCurve = {}, const std::set<Real>& curveTimes = {},
+                             const std::vector<std::set<std::pair<Real, Real>>>& volTimesStrikes = {});
 
     std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> getCalibratedProcesses() const override;
     AssetModelWrapper::ProcessType processType() const override;

@@ -43,9 +43,11 @@ LocalVolModelBuilder::LocalVolModelBuilder(
     const std::vector<ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
     const std::set<Date>& simulationDates, const std::set<Date>& addDates, const Size timeStepsPerYear,
     const Type lvType, const std::vector<Real>& calibrationMoneyness, const std::string& referenceCalibrationGrid,
-    const bool dontCalibrate, const Handle<YieldTermStructure>& baseCurve, const bool observeContinuum)
+    const bool dontCalibrate, const Handle<YieldTermStructure>& baseCurve, const bool observeContinuum,
+    const std::set<Real>& curveTimes, const std::vector<std::set<std::pair<Real, Real>>>& volTimesStrikes)
     : AssetModelBuilderBase(curves, processes, simulationDates, addDates, timeStepsPerYear, baseCurve,
-                            observeContinuum || lvType == Type::Dupire || lvType == Type::DupireFloored),
+                            observeContinuum || lvType == Type::Dupire || lvType == Type::DupireFloored, curveTimes,
+                            volTimesStrikes),
       lvType_(lvType), calibrationMoneyness_(calibrationMoneyness), referenceCalibrationGrid_(referenceCalibrationGrid),
       dontCalibrate_(dontCalibrate) {}
 
@@ -83,7 +85,6 @@ std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> LocalVolModelBuilder::
             // with strikes given in terms of moneyness K / atmForward
             AndreasenHugeVolatilityInterpl::CalibrationSet calSet;
 
-            volTimesStrikes_.push_back({});
             for (auto const& d : effectiveSimulationDates_) {
                 if (d <= curves_.front()->referenceDate())
                     continue;
@@ -115,7 +116,7 @@ std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> LocalVolModelBuilder::
                         curveTimes_.insert(t);
                     }
                     // add atm point used for calculating the strikes (usually included above anyway)
-                    volTimesStrikes_.back().insert(std::make_pair(t, Null<Real>()));
+                    volTimesStrikes_[l].insert(std::make_pair(t, Null<Real>()));
                     if (refCalDate != referenceCalibrationDates.end()) {
                         lastRefCalDate = *refCalDate;
                     }

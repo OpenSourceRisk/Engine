@@ -67,9 +67,9 @@ public:
         const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
         const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
         const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
-        const std::set<std::string>& payCcys, const Handle<AssetModelWrapper>& model,
+        const std::set<std::string>& payCcys,
         const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
-        const std::set<Date>& simulationDates, const std::set<Date>& addDates,
+        const std::set<Date>& simulationDates, const Size timeStepsPerYear, const std::set<Date>& addDates,
         const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
             QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
         const std::string& calibration = "ATM", const std::map<std::string, std::vector<Real>>& calibrationStrikes = {},
@@ -77,8 +77,8 @@ public:
 
     // ctor for single underlying
     AssetModel(const Type Type, const Size size, const std::string& currency, const Handle<YieldTermStructure>& curve,
-               const std::string& index, const std::string& indexCurrency, const Handle<AssetModelWrapper>& model,
-               const std::set<Date>& simulationDates, const std::set<Date>& addDates,
+               const std::string& index, const std::string& indexCurrency, const std::set<Date>& simulationDates,
+               const Size timeStepsPerYear, const std::set<Date>& addDates,
                const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
                    QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
                const std::string& calibration = "ATM", const std::vector<Real>& calibrationStrikes = {},
@@ -113,6 +113,11 @@ public:
     const std::set<Date>& effectiveSimulationDates() { return effectiveSimulationDates_; }
     const QuantLib::ext::shared_ptr<FdmMesher>& mesher() { return mesher_; }
 
+    void setModel(const Handle<AssetModelWrapper>& model);
+
+    const std::set<Real> curveTimes() const { return curveTimes_; }
+    const std::vector<std::set<std::pair<Real, Real>>> volTimesStrikes() const { return volTimesStrikes_; };
+
 protected:
     // to be implemented by derived classes
     virtual void performModelCalculations() const = 0;
@@ -136,6 +141,7 @@ protected:
     std::vector<Real> getCalibrationStrikes() const;
     void initUnderlyingPathsMc() const;
     void setReferenceDateValuesMc() const;
+    void setupDatesAndTimes() const;
 
     struct comp {
         comp(const std::string& indexInput) : indexInput_(indexInput) {}
@@ -152,6 +158,7 @@ protected:
     Handle<AssetModelWrapper> model_;
 
     std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>> correlations_;
+    Size timeStepsPerYear_;
     std::set<Date> addDates_;
     std::string calibration_;
     std::map<std::string, std::vector<Real>> calibrationStrikes_;
