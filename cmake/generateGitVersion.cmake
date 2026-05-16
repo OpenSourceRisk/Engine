@@ -1,5 +1,3 @@
-set(GIT_HASH "unknown")
-
 find_package(Git QUIET)
 
 if(GIT_FOUND)
@@ -10,8 +8,10 @@ if(GIT_FOUND)
         OUTPUT_STRIP_TRAILING_WHITESPACE
         ERROR_QUIET
     )
-    if(RETURN_CODE EQUAL 0)
-        message(STATUS "Git hash is ${GIT_HASH}")
-        configure_file(${IN_FILE} ${OUT_FILE} @ONLY)
+    if(NOT RETURN_CODE EQUAL 0)
+        set(GIT_HASH "unknown")
     endif()
 endif()
+
+message(STATUS "Git hash is ${GIT_HASH}")
+configure_file(${IN_FILE} ${OUT_FILE} @ONLY)

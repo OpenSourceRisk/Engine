@@ -1151,7 +1151,6 @@ add_library(${QLE_LIB_NAME} ${QuantExt_SRC} ${QuantExt_HDR} "quantext.hpp")
 # (locally) and in the split build during CI i.e. build ORE, import ORE CMake targets, build OREPlus.
 add_library(${ORE_PACKAGE_NAME}::${QLE_LIB_NAME} ALIAS ${QLE_LIB_NAME})
 
-
 add_custom_target(gitVersionGeneration ALL
     COMMAND ${CMAKE_COMMAND}
             -D IN_FILE=${CMAKE_CURRENT_LIST_DIR}/gitversion.hpp.in
