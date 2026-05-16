@@ -140,6 +140,7 @@ public:
     }
 
     void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
+    void reset() override;
 
     //! Inspectors
     //@{
@@ -180,8 +181,8 @@ protected:
     void populateFromReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const;
     void getTradesFromReferenceData(const QuantLib::ext::shared_ptr<PortfolioBasketReferenceDatum>& ptfReferenceDatum) const;
     std::string portfolioId_;
-    bool portfolioDeriv_;
-    double indexQuantity_;
+    bool portfolioDeriv_ = false;
+    double indexQuantity_ = 1;
 };
 
 TRS::FundingData::NotionalType parseTrsFundingNotionalType(const std::string& s);

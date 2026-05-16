@@ -360,20 +360,20 @@ TRS::getFxIndex(const QuantLib::ext::shared_ptr<Market> market, const std::strin
                                                                                                : FXConversion::End);
 }*/
 
+void TRS::reset() {
+    creditRiskCurrency_.clear();
+    creditQualifierMapping_.clear();
+    underlying_.clear();
+    underlyingDerivativeId_.clear();
+    Trade::reset();
+}
+
 void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     DLOG("TRS::build() called for id = " << id());
-
-    // clear trade members
-
-    reset();
-
-    creditRiskCurrency_.clear();
-    creditQualifierMapping_.clear();
     notionalCurrency_ = returnData_.currency();
 
     // checks
-
     std::set<bool> fundingLegPayers;
     std::set<std::string> fundingCurrencies;
 
@@ -646,8 +646,8 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     if (initialPrice != Null<Real>()) {
         DLOG("initial price is given as " << initialPrice << " " << initialPriceCurrency);
-	initialPrice = convertMinorToMajorCurrency(initialPriceCurrency, initialPrice);
-	DLOG("initial price after conversion to major ccy " << initialPrice);
+        initialPrice = convertMinorToMajorCurrency(initialPriceCurrency, initialPrice);
+        DLOG("initial price after conversion to major ccy " << initialPrice);
     } else {
         DLOG("no initial price is given");
     }
@@ -940,7 +940,6 @@ void TRS::getTradesFromReferenceData(const QuantLib::ext::shared_ptr<PortfolioBa
     QL_REQUIRE(ptfReferenceDatum, "populateFromReferenceData(): empty portfolio reference datum given");
 
     auto refData = ptfReferenceDatum->getTrades();
-    underlying_.clear();
     for (Size i = 0; i < refData.size(); i++) {
         underlyingDerivativeId_.push_back((portfolioId_));
         refData[i]->isSubTrade() = true;
