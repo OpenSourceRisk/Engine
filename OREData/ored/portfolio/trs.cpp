@@ -308,13 +308,22 @@ XMLNode* TRS::toXML(XMLDocument& doc) const {
     XMLNode* underlyingDataNode = doc.allocNode("UnderlyingData");
     XMLUtils::appendNode(dataNode, underlyingDataNode);
 
-    for (Size i = 0; i < underlying_.size(); ++i) {
-        if (underlyingDerivativeId_[i].empty()) {
-            XMLUtils::appendNode(underlyingDataNode, underlying_[i]->toXML(doc));
-        } else {
-            auto d = XMLUtils::addChild(doc, underlyingDataNode, "Derivative");
-            XMLUtils::addChild(doc, d, "Id", underlyingDerivativeId_[i]);
-            XMLUtils::appendNode(d, underlying_[i]->toXML(doc));
+    if (!portfolioId_.empty() && portfolioDeriv_) {
+        XMLNode* pitdNode = doc.allocNode("PortfolioIndexTradeData");
+        XMLUtils::addChild(doc, pitdNode, "BasketName", portfolioId_);
+        XMLUtils::addChild(doc, pitdNode, "IndexQuantity", indexQuantity_);
+        if (pricePerIndexUnit_)
+            XMLUtils::addChild(doc, pitdNode, "PriceIsPerUnit", *pricePerIndexUnit_);
+        XMLUtils::appendNode(underlyingDataNode, pitdNode);
+    } else {
+        for (Size i = 0; i < underlying_.size(); ++i) {
+            if (underlyingDerivativeId_[i].empty()) {
+                XMLUtils::appendNode(underlyingDataNode, underlying_[i]->toXML(doc));
+            } else {
+                auto d = XMLUtils::addChild(doc, underlyingDataNode, "Derivative");
+                XMLUtils::addChild(doc, d, "Id", underlyingDerivativeId_[i]);
+                XMLUtils::appendNode(d, underlying_[i]->toXML(doc));
+            }
         }
     }
 
