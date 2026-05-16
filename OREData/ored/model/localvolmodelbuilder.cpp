@@ -112,7 +112,7 @@ std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> LocalVolModelBuilder::
                         option->setPricingEngine(QuantLib::ext::make_shared<AnalyticEuropeanEngine>(processes_[l]));
                         callPrices.back().push_back(option->NPV());
                         checkMoneynesses.push_back(strike / atmLevel);
-                        volTimesStrikes_.back().insert(std::make_pair(t, strike));
+                        volTimesStrikes_[l].insert(std::make_pair(t, strike));
                         curveTimes_.insert(t);
                     }
                     // add atm point used for calculating the strikes (usually included above anyway)

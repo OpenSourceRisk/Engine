@@ -49,8 +49,6 @@ std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> CommodityApoModelBuild
         if (apo_->underlyingFlow()->date() > curves_.front()->referenceDate())
             curveTimes_.insert(curves_.front()->timeFromReference(apo_->underlyingFlow()->date()));
 
-        volTimesStrikes_.push_back({});
-
         auto vol = processes_.front()->blackVolatility();
         std::set<QuantLib::Date> expiries;
         Real effectiveStrike = apo_->effectiveStrike();
@@ -66,13 +64,12 @@ std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> CommodityApoModelBuild
                 if (apo_->underlyingFlow()->useFuturePrice()) {
                     Date expiry = p.second->expiryDate();
                     if (expiries.find(expiry) == expiries.end()) {
-                        volTimesStrikes_.back().insert(std::make_pair(vol->timeFromReference(expiry), effectiveStrike));
+                        volTimesStrikes_[0].insert(std::make_pair(vol->timeFromReference(expiry), effectiveStrike));
                         expiries.insert(expiry);
                     }
                 } else {
                     if (expiries.find(p.first) == expiries.end()) {
-                        volTimesStrikes_.back().insert(
-                            std::make_pair(vol->timeFromReference(p.first), effectiveStrike));
+                        volTimesStrikes_[0].insert(std::make_pair(vol->timeFromReference(p.first), effectiveStrike));
                         expiries.insert(p.first);
                     }
                 }

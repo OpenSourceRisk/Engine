@@ -48,9 +48,9 @@ AssetModelBuilderBase::AssetModelBuilderBase(
     if (volTimesStrikesBase_.empty())
         volTimesStrikesBase_.resize(processes_.size());
 
-    QL_REQUIRE(processes.size() == volTimesStrikes.size(), "AssetModelBuilderBase: processes ("
-                                                               << processes.size() << ") must match volTimesStrikes ("
-                                                               << volTimesStrikes.size() << ")");
+    QL_REQUIRE(processes.size() == volTimesStrikesBase_.size(),
+               "AssetModelBuilderBase: processes (" << processes.size() << ") must match volTimesStrikes ("
+                                                    << volTimesStrikesBase_.size() << ")");
 
     marketObserver_ = QuantLib::ext::make_shared<MarketObserver>();
 
