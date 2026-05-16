@@ -103,6 +103,8 @@ void BondFuture::fromXML(XMLNode* node) {
     contractName_ = XMLUtils::getChildValue(bondFutureNode, "ContractName", true);
     contractNotional_ = XMLUtils::getChildValueAsDouble(bondFutureNode, "ContractNotional", true);
     longShort_ = XMLUtils::getChildValue(bondFutureNode, "LongShort", true);
+    if (auto n = XMLUtils::getChildNode(bondFutureNode, "ApplyConversionFactor"))
+        applyConversionFactor_ = parseBool(XMLUtils::getNodeValue(n));
 }
 
 XMLNode* BondFuture::toXML(XMLDocument& doc) const {
@@ -111,8 +113,15 @@ XMLNode* BondFuture::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node2, "ContractName", contractName_);
     XMLUtils::addChild(doc, node2, "ContractNotional", contractNotional_);
     XMLUtils::addChild(doc, node2, "LongShort", longShort_);
+    if (applyConversionFactor_)
+        XMLUtils::addChild(doc, node2, "ApplyConversionFactor", *applyConversionFactor_);
     XMLUtils::appendNode(node, node2);
     return node;
+}
+
+bool BondFuture::applyConversionFactor() const
+{
+    return applyConversionFactor_.value_or(true);
 }
 
 std::map<AssetClass, std::set<std::string>>

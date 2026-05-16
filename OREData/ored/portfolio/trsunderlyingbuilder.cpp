@@ -145,7 +145,8 @@ void BondFutureTrsUnderlyingBuilder::build(
     QL_REQUIRE(qlBondFuture, "expected QuantExt::BondFUture, could not cast");
 
     underlyingIndex = qlBondFuture->index();
-    underlyingMultiplier = qlBondFuture->contractNotional() * qlBondFuture->index()->conversionFactor();
+    Real factor = t->applyConversionFactor() ? qlBondFuture->index()->conversionFactor() : 1.0;
+    underlyingMultiplier = qlBondFuture->contractNotional() * factor;
 
     indexQuantities[underlyingIndex->name()] = underlyingMultiplier;
 
