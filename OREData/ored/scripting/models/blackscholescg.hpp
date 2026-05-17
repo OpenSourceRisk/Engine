@@ -101,8 +101,6 @@ public:
     const std::vector<std::set<std::pair<Real, Real>>> volTimesStrikes() const { return volTimesStrikes_; };
 
 protected:
-    void populateAdditionalResults() const override;
-
     // ModelImpl interface implementation
     void performCalculations() const override;
     std::size_t getIndexValue(const Size indexNo, const Date& d, const Date& fwd = Null<Date>()) const override;

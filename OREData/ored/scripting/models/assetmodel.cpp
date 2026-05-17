@@ -651,6 +651,7 @@ void AssetModel::populateAdditionalResultsPathLevel() const {
         for (Size i = 0; i < indices_.size(); ++i) {
             PathLevelResult r;
             r.resultId = indices_[i].name() + "_" + ore::data::to_string(d);
+            r.values.resize(size());
             for (Size k = 0; k < size(); ++k) {
                 r.values[k] = p[i][k];
             }
@@ -658,7 +659,7 @@ void AssetModel::populateAdditionalResultsPathLevel() const {
         }
     }
 
-    additionalResults_["__path_level_results__"] = pathLevelResults;
+    additionalResultsPathLevel_["__path_level_results_asset_mdoel"] = pathLevelResults;
 }
 
 } // namespace data

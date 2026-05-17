@@ -1185,10 +1185,11 @@ void ReportWriter::writeAdditionalResultsPathLevelReport(ore::data::Report& repo
         .addColumn("Index", Size())
         .addColumn("Value", double(), precision);
     for (auto const& [tId, trade] : portfolio->trades()) {
-        auto const& addRes = trade->instrument()->additionalResults();
-        if (auto r = addRes.find("__path_level_results__"); r != addRes.end()) {
-            if (r->second.type() == typeid(std::vector<PathLevelResult>)) {
-                for (auto const& p : ext::any_cast<const std::vector<PathLevelResult>&>(r->second)) {
+        for (auto const& [label, result] : trade->instrument()->additionalResults()) {
+            std::cout << "got result " << label << std::endl;
+            if (result.type() == typeid(std::vector<PathLevelResult>)) {
+                std::cout << "got path level result" << std::endl;
+                for (auto const& p : ext::any_cast<const std::vector<PathLevelResult>&>(result)) {
                     for (Size i = 0; i < p.values.size(); ++i) {
                         report.next().add(tId).add(p.resultId).add(i).add(p.values[i]);
                     }

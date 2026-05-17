@@ -1026,7 +1026,7 @@ pair<string, string> parseBoostAny(const QuantLib::ext::any& anyType, Size preci
         auto const& r = QuantLib::ext::any_cast<const QuantLib::Currency&>(anyType);
         oss << r;
     } else if (anyType.type() == typeid(std::vector<PathLevelResult>)) {
-        resultType = "path_level_result";
+        resultType = "path_level_results";
         oss << "see separate report";
     } else if (anyType.type() == typeid(std::vector<AssetModelCalibrationResults>)) {
         resultType = "vector_calibration_results";

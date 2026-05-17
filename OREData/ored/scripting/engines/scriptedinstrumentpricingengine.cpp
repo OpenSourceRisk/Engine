@@ -24,6 +24,7 @@
 #include <ored/utilities/log.hpp>
 
 #include <qle/instruments/cashflowresults.hpp>
+#include <qle/instruments/pathlevelresult.hpp>
 #include <qle/math/randomvariable.hpp>
 
 namespace ore {
@@ -125,8 +126,6 @@ void ScriptedInstrumentPricingEngine::calculate() const {
     results_.value = model_->extractT0Result(boost::get<RandomVariable>(npv->second));
     DLOG("got NPV = " << results_.value << " " << model_->baseCcy());
 
-    std::cout << "pe: calculate " << results_.value << std::endl;
-
     // set additional results, if this feature is enabled
 
     if (generateAdditionalResults_) {
@@ -139,6 +138,13 @@ void ScriptedInstrumentPricingEngine::calculate() const {
                 results_.additionalResults[r.first] = t;
                 addMcErrorEstimate(r.first + "_MCErrEst", s->second);
                 DLOG("got additional result '" << r.first << "' referencing script variable '" << r.second << "'");
+                if (generateAdditionalResultsPathLevel_ && s->second.which() == ValueTypeWhich::Number) {
+                    std::vector<QuantExt::PathLevelResult> pathLevelResult(1);
+                    pathLevelResult.back().resultId = r.first;
+                    pathLevelResult.back().values =
+                        static_cast<std::vector<double>>(boost::get<RandomVariable>(s->second));
+                    results_.additionalResults[r.first + "_pathlevel"] = pathLevelResult;
+                }
                 resultSet = true;
             }
             auto v = workingContext->arrays.find(r.second);
@@ -150,6 +156,8 @@ void ScriptedInstrumentPricingEngine::calculate() const {
                 std::vector<double> tmpdouble;
                 std::vector<std::string> tmpstring;
                 std::vector<QuantLib::Date> tmpdate;
+                std::vector<QuantExt::PathLevelResult> pathLevelResult;
+                Size counter = 0;
                 for (auto const& d : v->second) {
                     QuantLib::ext::any t = valueToAny(model_, d);
                     if (t.type() == typeid(double))
@@ -162,6 +170,12 @@ void ScriptedInstrumentPricingEngine::calculate() const {
                         QL_FAIL("unexpected result type '" << t.type().name() << "' for result variable '" << r.first
                                                            << "' referencing script variable '" << r.second << "'");
                     }
+                    if(generateAdditionalResultsPathLevel_ && d.which() == ValueTypeWhich::Number) {
+                        pathLevelResult.push_back({});
+                        pathLevelResult.back().resultId = r.first + "[" + std::to_string(counter) + "]";
+                        pathLevelResult.back().values = static_cast<std::vector<double>>(boost::get<RandomVariable>(d));
+                    }
+                    ++counter;
                 }
                 QL_REQUIRE((int)!tmpdouble.empty() + (int)!tmpstring.empty() + (int)!tmpdate.empty() == 1,
                            "expected exactly one result type in result array '" << v->first << "'");
@@ -177,6 +191,9 @@ void ScriptedInstrumentPricingEngine::calculate() const {
                 else {
                     QL_FAIL("got empty result vector for result variable '"
                             << r.first << "' referencing script variable '" << r.second << "', this is unexpected");
+                }
+                if(generateAdditionalResultsPathLevel_) {
+                    results_.additionalResults[r.first + "_pathlevel"] = pathLevelResult;
                 }
                 std::vector<double> errEst;
                 for (auto const& d : v->second) {
