@@ -32,7 +32,6 @@
 #include <ql/methods/finitedifferences/solvers/fdmhestonsolver.hpp>
 #include <ql/methods/finitedifferences/stepconditions/fdmstepconditioncomposite.hpp>
 #include <ql/methods/finitedifferences/utilities/fdminnervaluecalculator.hpp>
-#include <sstream>
 
 namespace ore {
 namespace data {
@@ -95,10 +94,12 @@ void Heston::performCalculationsMc() const {
 
 void Heston::performCalculationsFd() const {
     DLOG("Heston::performCalculationsFd() called");
+
+    // FIXME quanto case will not work, see below, and piecewise heston processes will not work either?
     QL_REQUIRE(model_->hestonProcesses().size() == 1, "a single Heston process with constant parameters is expected");
     auto process = model_->hestonProcesses()[0];
     
-    // 0c if we only have one effective sim date (today), we set the underlying values = spot
+    // 0 if we only have one effective sim date (today), we set the underlying values = spot
 
     if (effectiveSimulationDates_.size() == 1) {
         underlyingValues_ = RandomVariable(size(), model_->generalizedBlackScholesProcesses()[0]->x0());
@@ -135,24 +136,20 @@ void Heston::performCalculationsFd() const {
 
         // variance mesher
         const Size vGrid = params_.varianceStateGridPoints;
-	// tGridMin and tGridAvgSteps as in FdHestonVanillaEngine
+	// tGridMin and tGridAvgSteps as in FdHestonVanillaEngine, FIXME, configurable
         const Size tGridMin = 5;
         const Size tGridAvgSteps = std::max(tGridMin, timeGrid_.size() / 50);
         const ext::shared_ptr<FdmHestonVarianceMesher> vMesher =
             ext::make_shared<FdmHestonVarianceMesher>(vGrid, process, maturity, tGridAvgSteps);
 
         // equity mesher
-        const Size xGrid = params_.stateGridPoints; 
-        ext::shared_ptr<QuantExt::FdmBlackScholesMesher> equityMesher;	
         auto processHelper = QuantExt::FdmBlackScholesMesher::processHelper(
             process->s0(), process->dividendYield(), process->riskFreeRate(), vMesher->volaEstimate());
         QL_REQUIRE(calibrationStrikes.size() > 0, "empty calibration strikes");
         Real strike = calibrationStrikes[0] == Null<Real>() ? atmForward(0, timeGrid_.back()) : calibrationStrikes[0];	
-	//Real scaling = params_.mesherScaling;
-	Real scaling = 2.0; // FdHestonVanillaEngine uses hard-coded scaling 2.0
-	// FIXME: What about other critical points - how to use FdmBlackScholesMultiStrikeMesher?
-        equityMesher = QuantLib::ext::make_shared<QuantExt::FdmBlackScholesMesher>(
-            xGrid, processHelper, maturity, strike, Null<Real>(), Null<Real>(), params_.mesherEpsilon,
+	Real scaling = 2.0;//FIXME params_.mesherScaling;
+        auto equityMesher = QuantLib::ext::make_shared<QuantExt::FdmBlackScholesMesher>(
+            params_.stateGridPoints, processHelper, maturity, strike, Null<Real>(), Null<Real>(), params_.mesherEpsilon,
             scaling, cPoints[0]);
 
         mesher_ = ext::make_shared<FdmMesherComposite>(equityMesher, vMesher);
@@ -168,15 +165,11 @@ void Heston::performCalculationsFd() const {
             *curves_[quantoTargetCcyIndex_], *curves_[quantoSourceCcyIndex_],
             *model_->generalizedBlackScholesProcesses()[1]->blackVolatility(), quantoCorr, Null<Real>(),
             model_->generalizedBlackScholesProcesses()[1]->x0(), false, true);
+        // once this is working, dobule check additional volTimesStrikes in AssetModel ctor
     }
 
-    ext::shared_ptr<LocalVolTermStructure> leverageFct = nullptr;
-    Real mixingFactor = 1.0;
-    // Avoid discounting in the operator because we feed discounted payoffs!
-    bool discounting = false;
-
-    operator_ = QuantLib::ext::make_shared<QuantExt::FdmHestonOp>(mesher_, process, quantoHelper, leverageFct,
-                                                                  mixingFactor, discounting);
+    operator_ = QuantLib::ext::make_shared<QuantExt::FdmHestonOp>(mesher_, process, quantoHelper, nullptr,
+                                                                 1.0,false);
 
     std::vector<QuantLib::ext::shared_ptr<BoundaryCondition<FdmLinearOp>>> boundaries;
     ext::shared_ptr<FdmStepConditionComposite> stepCondition = nullptr;

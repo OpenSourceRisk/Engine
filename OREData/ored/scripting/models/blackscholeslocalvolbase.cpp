@@ -76,11 +76,12 @@ void BlackScholesLocalVolBase::performCalculationsFd() const {
     // 2 set up mesher if we do not have one already or if we want to rebuild it every time
 
     if (mesher_ == nullptr || !params_.staticMesher) {
+        Real effStrike =
+            calibrationStrikes[0] == Null<Real>() ? atmForward(0, timeGrid_.back()) : calibrationStrikes[0];
         mesher_ =
             QuantLib::ext::make_shared<FdmMesherComposite>(QuantLib::ext::make_shared<QuantExt::FdmBlackScholesMesher>(
-                size(), model_->generalizedBlackScholesProcesses()[0], timeGrid_.back(),
-                calibrationStrikes[0] == Null<Real>() ? atmForward(0, timeGrid_.back()) : calibrationStrikes[0],
-                Null<Real>(), Null<Real>(), params_.mesherEpsilon, params_.mesherScaling, cPoints[0]));
+                size(), model_->generalizedBlackScholesProcesses()[0], timeGrid_.back(), effStrike, Null<Real>(),
+                Null<Real>(), params_.mesherEpsilon, params_.mesherScaling, cPoints[0]));
     }
 
     // 3 set up operator using atmf vol and without discounting, floor forward variances at zero
@@ -96,8 +97,8 @@ void BlackScholesLocalVolBase::performCalculationsFd() const {
     }
 
     operator_ = QuantLib::ext::make_shared<QuantExt::FdmBlackScholesOp>(
-        mesher_, model_->generalizedBlackScholesProcesses()[0], calibrationStrikes[0], localVol, 1E-10, 0, quantoHelper,
-        false, true);
+        mesher_, model_->generalizedBlackScholesProcesses()[0], calibrationStrikes[0], localVol, 1E-10, 0,
+        quantoHelper, false, true);
 
     // 4 set up bwd solver, hardcoded Douglas scheme (= CrankNicholson)
 

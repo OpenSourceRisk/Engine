@@ -25,6 +25,7 @@
 
 #include <ql/time/date.hpp>
 
+#include <set>
 #include <vector>
 
 namespace ore {
@@ -34,14 +35,14 @@ using namespace QuantLib;
 
 class CalibrationPointCache {
 public:
-    bool hasChanged(const std::vector<std::vector<Real>>& curveTimes, const std::vector<std::vector<Real>>& curveData,
-                    const std::vector<std::vector<std::pair<Real, Real>>>& volTimesStrikes,
+    bool hasChanged(const std::vector<std::set<Real>>& curveTimes, const std::vector<std::vector<Real>>& curveData,
+                    const std::vector<std::set<std::pair<Real, Real>>>& volTimesStrikes,
                     const std::vector<std::vector<Real>>& volData, const bool updateCache);
 
 private:
     Date referenceDate_;
-    std::vector<std::vector<Real>> curveTimes_;
-    std::vector<std::vector<std::pair<Real, Real>>> volTimesStrikes_;
+    std::vector<std::set<Real>> curveTimes_;
+    std::vector<std::set<std::pair<Real, Real>>> volTimesStrikes_;
     std::vector<std::vector<Real>> curveData_, volData_;
 };
 

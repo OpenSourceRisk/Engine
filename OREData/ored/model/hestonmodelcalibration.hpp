@@ -98,6 +98,9 @@ public:
     const AssetModelCalibrationResults& results() const { return results_; }
     const AssetModelCalibrationResults& piecewiseResults() const { return piecewiseResults_; }
 
+    std::vector<Real> curveTimes() const { return curveTimes_; }
+    std::vector<std::pair<Real, Real>> volTimesStrikes() const { return volTimesStrikes_; }
+
 private:
     class VarianceCalculator : public GeneralisedReplicatingVarianceSwapEngine {
     public:
@@ -153,6 +156,8 @@ private:
     std::vector<Time> varianceTimes_;
     std::vector<Real> annualisedVariances_;
     AssetModelCalibrationResults results_, piecewiseResults_;
+    std::vector<Real> curveTimes_;                       // curve times (notification filtering)
+    std::vector<std::pair<Real, Real>> volTimesStrikes_; // volTimesStrikes (notification filtering)
 };
 
 class RelaxedFellerConstraint : public Constraint {

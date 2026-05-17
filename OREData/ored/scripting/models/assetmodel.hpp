@@ -57,7 +57,7 @@ public:
        - regressionOrder is the regression order used to compute conditional expectations in npv()
        - processes: hold spot, rate and div ts and vol for each given index
        - we assume that the given correlations are constant and read the value only at t = 0
-       - calibration = "ATM", "Deal", "LocalVol"
+       - calibration = "ATM", "Deal", "Smile"
        - calibration strikes are given as a map indexName => strike, if an index is missing in this map, the calibration
          strike will be atmf
     */
@@ -67,24 +67,22 @@ public:
         const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
         const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
         const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
-        const std::set<std::string>& payCcys, const Handle<AssetModelWrapper>& model,
+        const std::set<std::string>& payCcys,
         const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
-        const std::set<Date>& simulationDates,
+        const std::set<Date>& simulationDates, const Size timeStepsPerYear, const std::set<Date>& addDates,
         const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
             QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
         const std::string& calibration = "ATM", const std::map<std::string, std::vector<Real>>& calibrationStrikes = {},
-        const Params& params = {},
-	bool debug = false);
+        const Params& params = {});
 
     // ctor for single underlying
     AssetModel(const Type Type, const Size size, const std::string& currency, const Handle<YieldTermStructure>& curve,
-               const std::string& index, const std::string& indexCurrency, const Handle<AssetModelWrapper>& model,
-               const std::set<Date>& simulationDates,
+               const std::string& index, const std::string& indexCurrency, const std::set<Date>& simulationDates,
+               const Size timeStepsPerYear, const std::set<Date>& addDates,
                const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
                    QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
                const std::string& calibration = "ATM", const std::vector<Real>& calibrationStrikes = {},
-               const Params& params = {},
-	       bool debug = false);
+               const Params& params = {});
 
     // Model interface implementation
     const Date& referenceDate() const override;
@@ -115,6 +113,11 @@ public:
     const std::set<Date>& effectiveSimulationDates() { return effectiveSimulationDates_; }
     const QuantLib::ext::shared_ptr<FdmMesher>& mesher() { return mesher_; }
 
+    void setModel(const Handle<AssetModelWrapper>& model);
+
+    const std::set<Real> curveTimes() const { return curveTimes_; }
+    const std::vector<std::set<std::pair<Real, Real>>> volTimesStrikes() const { return volTimesStrikes_; };
+
 protected:
     // to be implemented by derived classes
     virtual void performModelCalculations() const = 0;
@@ -139,6 +142,7 @@ protected:
     std::vector<Real> getCalibrationStrikes() const;
     void initUnderlyingPathsMc() const;
     void setReferenceDateValuesMc() const;
+    void setupDatesAndTimes() const;
 
     struct comp {
         comp(const std::string& indexInput) : indexInput_(indexInput) {}
@@ -153,8 +157,10 @@ protected:
     std::vector<Handle<Quote>> fxSpots_;
     std::set<std::string> payCcys_;
     Handle<AssetModelWrapper> model_;
+
     std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>> correlations_;
-    std::vector<Date> simulationDates_;
+    Size timeStepsPerYear_;
+    std::set<Date> addDates_;
     std::string calibration_;
     std::map<std::string, std::vector<Real>> calibrationStrikes_;
 
@@ -163,22 +169,21 @@ protected:
     Size quantoSourceCcyIndex_, quantoTargetCcyIndex_;
     Real quantoCorrelationMultiplier_;
 
-    // generate extra output with model additional results
-    bool debug_;
-  
     // these all except underlyingPaths_ are initialised when the interface functions above are called
     mutable Date referenceDate_;                      // the model reference date
     mutable std::set<Date> effectiveSimulationDates_; // the dates effectively simulated (including today)
     mutable TimeGrid timeGrid_;                       // the (possibly refined) time grid for the simulation
     mutable std::vector<Size> positionInTimeGrid_;    // for each effective simulation date the index in the time grid
     mutable Matrix correlation_;                      // the correlation matrix (constant in time)
+    mutable std::set<Real> curveTimes_;               // curve times (notification filtering)
+    mutable std::vector<std::set<std::pair<Real, Real>>> volTimesStrikes_; // volTimesStrikes (notification filtering)
 
     // used for MC only:
     mutable std::map<Date, std::vector<RandomVariable>> underlyingPaths_;         // per simulation date index states
     mutable std::map<Date, std::vector<RandomVariable>> auxPaths_;                // per simulation date index states
     mutable std::map<Date, std::vector<RandomVariable>> underlyingPathsTraining_; // ditto (training phase)
-    mutable std::map<Date, std::vector<RandomVariable>> auxPathsTraining_;          
-    mutable bool inTrainingPhase_ = false;   // are we currently using training paths?
+    mutable std::map<Date, std::vector<RandomVariable>> auxPathsTraining_;
+    mutable bool inTrainingPhase_ = false; // are we currently using training paths?
     mutable std::map<long, std::tuple<Array, Size, Matrix>> storedRegressionModel_; // stored regression coefficients
 
     // used for FD only:

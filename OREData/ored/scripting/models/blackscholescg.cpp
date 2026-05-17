@@ -43,12 +43,12 @@ using namespace QuantExt;
 
 BlackScholesCG::BlackScholesCG(const ModelCG::Type type, const Size paths, const std::string& currency,
                                const Handle<YieldTermStructure>& curve, const std::string& index,
-                               const std::string& indexCurrency, const Handle<AssetModelWrapper>& model,
-                               const std::set<Date>& simulationDates,
+                               const std::string& indexCurrency, const std::set<Date>& simulationDates,
+                               const Size timeStepsPerYear, const std::set<Date>& addDates,
                                const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
                                const std::string& calibration, const std::vector<Real>& calibrationStrikes)
-    : BlackScholesCG(type, paths, {currency}, {curve}, {}, {}, {}, {index}, {indexCurrency}, model, {}, simulationDates,
-                     iborFallbackConfig, calibration, {{index, calibrationStrikes}}) {}
+    : BlackScholesCG(type, paths, {currency}, {curve}, {}, {}, {}, {index}, {indexCurrency}, {}, simulationDates,
+                     timeStepsPerYear, addDates, iborFallbackConfig, calibration, {{index, calibrationStrikes}}) {}
 
 BlackScholesCG::BlackScholesCG(
     const ModelCG::Type type, const Size paths, const std::vector<std::string>& currencies,
@@ -56,31 +56,27 @@ BlackScholesCG::BlackScholesCG(
     const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
     const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
     const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
-    const Handle<AssetModelWrapper>& model,
     const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
-    const std::set<Date>& simulationDates, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
-    const std::string& calibration, const std::map<std::string, std::vector<Real>>& calibrationStrikes)
+    const std::set<Date>& simulationDates, const Size timeStepsPerYear, const std::set<Date>& addDates,
+    const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig, const std::string& calibration,
+    const std::map<std::string, std::vector<Real>>& calibrationStrikes)
     : ModelCGImpl(type, curves.at(0)->dayCounter(), paths, currencies, irIndices, infIndices, indices, indexCurrencies,
                   simulationDates, iborFallbackConfig),
-      curves_(curves), fxSpots_(fxSpots), model_(model), correlations_(correlations), calibration_(calibration),
+      curves_(curves), fxSpots_(fxSpots), correlations_(correlations),
+      timeStepsPerYear_(timeStepsPerYear), addDates_(addDates), calibration_(calibration),
       calibrationStrikes_(calibrationStrikes) {
 
     QL_REQUIRE(type == ModelCG::Type::MC, "BlackScholesCG: FD is not yet supported as a model type");
 
     // check inputs
 
-    QL_REQUIRE(!model_.empty(), "model is empty");
-    QL_REQUIRE(!curves_.empty(), "no curves given");
-    QL_REQUIRE(currencies_.size() == curves_.size(), "number of currencies (" << currencies_.size()
-                                                                              << ") does not match number of curves ("
-                                                                              << curves_.size() << ")");
+    QL_REQUIRE(!curves_.empty(), "BlackScholesCG: no curves given");
+    QL_REQUIRE(currencies_.size() == curves_.size(), "BlackScholesCG: number of currencies ("
+                                                         << currencies_.size() << ") does not match number of curves ("
+                                                         << curves_.size() << ")");
     QL_REQUIRE(currencies_.size() == fxSpots_.size() + 1,
-               "number of currencies (" << currencies_.size() << ") does not match number of fx spots ("
-                                        << fxSpots_.size() << ") + 1");
-
-    QL_REQUIRE(indices_.size() == model_->processes().size(),
-               "mismatch of processes size (" << model_->processes().size() << ") and number of indices ("
-                                              << indices_.size() << ")");
+               "BlackScholesCG: number of currencies (" << currencies_.size() << ") does not match number of fx spots ("
+                                                        << fxSpots_.size() << ") + 1");
 
     // register with observables
 
@@ -89,8 +85,22 @@ BlackScholesCG::BlackScholesCG(
     for (auto const& o : correlations_)
         registerWith(o.second);
 
-    registerWith(model_);
+    // populate eff sim dates and time grid
 
+    setupDatesAndTimes();
+
+    // populate volTimesStrikes, and curve times
+
+    volTimesStrikes_.clear();
+    curveTimes_.clear();
+
+    volTimesStrikes_.resize(indices_.size());
+    curveTimes_.insert(timeGrid_.begin() + 1, timeGrid_.end());
+    for (auto const& d : addDates_) {
+        if (d > curves_.front()->referenceDate()) {
+            curveTimes_.insert(curves_.front()->timeFromReference(d));
+        }
+    }
 } // BlackScholesBase ctor
 
 namespace {
@@ -278,6 +288,19 @@ struct SqrtCovCalculator : public QuantLib::LazyObject {
 
 } // namespace
 
+void BlackScholesCG::setModel(const Handle<AssetModelWrapper>& model) {
+    unregisterWith(model_);
+    model_ = model;
+    registerWith(model_);
+}
+
+void BlackScholesCG::setupDatesAndTimes() const {
+    Date referenceDate = curves_.front()->referenceDate();
+    effectiveSimulationDates_ = std::set<Date>(simulationDates_.lower_bound(referenceDate), simulationDates_.end());
+    effectiveSimulationDates_.insert(referenceDate);
+    timeGrid_ = buildTimeGrid(referenceDate, curves_.front()->dayCounter(), simulationDates_, timeStepsPerYear_);
+}
+
 const Date& BlackScholesCG::referenceDate() const {
     calculate();
     return referenceDate_;
@@ -285,9 +308,18 @@ const Date& BlackScholesCG::referenceDate() const {
 
 void BlackScholesCG::performCalculations() const {
 
+    QL_REQUIRE(!model_.empty(), "BlackScholesCG: model is empty");
+    QL_REQUIRE(indices_.size() == model_->processes().size(),
+               "BlackScholesCG: mismatch of processes size (" << model_->processes().size()
+                                                              << ") and number of indices (" << indices_.size() << ")");
+
     // needed for base class performCalculations()
 
     referenceDate_ = curves_.front()->referenceDate();
+
+    // set up time grid
+
+    setupDatesAndTimes();
 
     // update cg version if necessary (eval date changed)
 
@@ -335,17 +367,16 @@ void BlackScholesCG::performCalculations() const {
 
     // determine calibration strikes
 
-    std::vector<Real> calibrationStrikes;
     if (calibration_ == "ATM") {
-        calibrationStrikes.resize(indices_.size(), Null<Real>());
+        effectiveCalibrationStrikes_.resize(indices_.size(), Null<Real>());
     } else if (calibration_ == "Deal") {
         for (Size i = 0; i < indices_.size(); ++i) {
             auto f = calibrationStrikes_.find(indices_[i].name());
             if (f != calibrationStrikes_.end() && !f->second.empty()) {
-                calibrationStrikes.push_back(f->second[0]);
+                effectiveCalibrationStrikes_.push_back(f->second[0]);
                 TLOG("calibration strike for index '" << indices_[i] << "' is " << f->second[0]);
             } else {
-                calibrationStrikes.push_back(Null<Real>());
+                effectiveCalibrationStrikes_.push_back(Null<Real>());
                 TLOG("calibration strike for index '" << indices_[i] << "' is ATMF");
             }
         }
@@ -356,9 +387,9 @@ void BlackScholesCG::performCalculations() const {
     // generate computation graph of underlying paths dependend on the drift and sqrtCov between simulation
     // dates, which we treat as model parameters
 
-    auto sqrtCovCalc = QuantLib::ext::make_shared<SqrtCovCalculator>(indices_, indexCurrencies_, correlations_,
-                                                                     effectiveSimulationDates_, timeGrid_,
-                                                                     positionInTimeGrid_, model_, calibrationStrikes);
+    auto sqrtCovCalc = QuantLib::ext::make_shared<SqrtCovCalculator>(
+        indices_, indexCurrencies_, correlations_, effectiveSimulationDates_, timeGrid_, positionInTimeGrid_, model_,
+        effectiveCalibrationStrikes_);
 
     std::vector<std::vector<std::size_t>> drift(effectiveSimulationDates_.size() - 1,
                                                 std::vector<std::size_t>(indices_.size(), ComputationGraph::nan));

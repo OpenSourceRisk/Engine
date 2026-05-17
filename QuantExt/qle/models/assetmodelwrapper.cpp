@@ -30,9 +30,9 @@ AssetModelWrapper::AssetModelWrapper(const ProcessType processType,
                                      const std::vector<QuantLib::ext::shared_ptr<StochasticProcess>>& processes,
                                      const std::set<Date>& effectiveSimulationDates,
                                      const TimeGrid& discretisationTimeGrid,
-				     const std::vector<AssetModelCalibrationResults>& calibration)
+                                     const std::vector<AssetModelCalibrationResults>& calibrationResults)
     : processType_(processType), processes_(processes), effectiveSimulationDates_(effectiveSimulationDates),
-      discretisationTimeGrid_(discretisationTimeGrid), calibration_(calibration) {
+      discretisationTimeGrid_(discretisationTimeGrid), calibrationResults_(calibrationResults) {
 
     for (auto const& p : processes_) {
         switch (processType_) {

@@ -276,10 +276,6 @@ set<std::pair<string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>>& Engin
     return modelBuilders_;
 }
 
-  set<std::pair<string, QuantLib::ext::shared_ptr<ore::data::Model>>>& EngineFactory::scriptingModels() {
-    return scriptingModels_;
-}
-
 void EngineFactory::setEngineParameterOverrides(const std::vector<ParameterOverride>& overrides) {
     engineParameterOverrides_ = overrides;
     buildersDirty_ = true;
