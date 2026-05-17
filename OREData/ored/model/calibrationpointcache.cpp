@@ -23,9 +23,9 @@
 namespace ore {
 namespace data {
 
-bool CalibrationPointCache::hasChanged(const std::vector<std::vector<Real>>& curveTimes,
+bool CalibrationPointCache::hasChanged(const std::vector<std::set<Real>>& curveTimes,
                                        const std::vector<std::vector<Real>>& curveData,
-                                       const std::vector<std::vector<std::pair<Real, Real>>>& volTimesStrikes,
+                                       const std::vector<std::set<std::pair<Real, Real>>>& volTimesStrikes,
                                        const std::vector<std::vector<Real>>& volData, const bool updateCache) {
 
     bool dirty = false;
@@ -39,8 +39,9 @@ bool CalibrationPointCache::hasChanged(const std::vector<std::vector<Real>>& cur
 
     for (Size i = 0; i < curveTimes.size() && !dirty; ++i) {
         dirty = dirty || (curveTimes[i].size() != curveTimes_[i].size());
-        for (Size j = 0; j < curveTimes[i].size() && !dirty; ++j) {
-            dirty = dirty || curveTimes[i][j] != curveTimes_[i][j];
+        for (auto it = curveTimes[i].begin(), it2 = curveTimes_[i].begin(); it != curveTimes[i].end() && !dirty;
+             ++it, ++it2) {
+            dirty = dirty || *it != *it2;
         }
     }
 
@@ -53,9 +54,10 @@ bool CalibrationPointCache::hasChanged(const std::vector<std::vector<Real>>& cur
 
     for (Size i = 0; i < volTimesStrikes.size() && !dirty; ++i) {
         dirty = dirty || (volTimesStrikes[i].size() != volTimesStrikes_[i].size());
-        for (Size j = 0; j < volTimesStrikes[i].size() && !dirty; ++j) {
-            dirty = dirty || volTimesStrikes[i][j].first != volTimesStrikes_[i][j].first;
-            dirty = dirty || volTimesStrikes[i][j].second != volTimesStrikes_[i][j].second;
+        for (auto it = volTimesStrikes[i].begin(), it2 = volTimesStrikes[i].begin();
+             it != volTimesStrikes[i].end() && !dirty; ++it, ++it2) {
+            dirty = dirty || it->first != it2->first;
+            dirty = dirty || it2->second != it2->second;
         }
     }
 

@@ -811,5 +811,14 @@ parseScriptedInflationIndex(const std::string& indexName) {
                            plainIndexName, interpolated);
 }
 
+TimeGrid buildTimeGrid(const Date& referenceDate, const DayCounter& dayCounter, const std::set<Date>& dates,
+                       const Size timeStepsPerYear) {
+    std::vector<Real> times(1, 0.0);
+    for (auto f = dates.lower_bound(referenceDate); f != dates.end(); ++f)
+        times.push_back(dayCounter.yearFraction(referenceDate, *f));
+    Size steps = std::max(std::lround(timeStepsPerYear * times.back() + 0.5), 1l);
+    return TimeGrid(times.begin(), times.end(), steps);
+}
+
 } // namespace data
 } // namespace ore
