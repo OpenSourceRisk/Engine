@@ -1155,6 +1155,7 @@ add_custom_target(gitVersionGeneration ALL
     COMMAND ${CMAKE_COMMAND}
             -D IN_FILE=${CMAKE_CURRENT_LIST_DIR}/gitversion.hpp.in
             -D OUT_FILE=${CMAKE_CURRENT_LIST_DIR}/gitversion.hpp
+            -D GIT_HASH=${GIT_HASH}
             -P "${PROJECT_SOURCE_DIR}/cmake/generateGitVersion.cmake"
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
