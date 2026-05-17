@@ -1322,89 +1322,6 @@ std::vector<std::vector<Real>> getCalibrationStrikesVector(const std::map<std::s
 
 } // namespace
 
-void ScriptedTradeEngineBuilder::buildBlackScholes(
-    const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig) {
-    Real T = modelCurves_.front()->timeFromReference(lastRelevantDate_);
-    auto filteredStrikes = filterBlackScholesCalibrationStrikes(calibrationStrikes_, modelIndices_, processes_, T);
-    // ignore timeStepsPerYear if we have no correlations, i.e. we can take large timesteps without changing anything
-    auto builder = QuantLib::ext::make_shared<BlackScholesModelBuilder>(
-        modelCurves_, processes_, simulationDates_, addDates_, correlations_.empty() ? 0 : timeStepsPerYear_,
-        calibration_, getCalibrationStrikesVector(filteredStrikes, modelIndices_), baseCcyModelCurve_);
-    if (useCg_) {
-        modelCG_ = QuantLib::ext::make_shared<BlackScholesCG>(
-            ModelCG::Type::MC, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
-            modelIndices_, modelIndicesCurrencies_, builder->model(), correlations_, simulationDates_,
-            iborFallbackConfig, calibration_, filteredStrikes);
-    } else {
-        model_ = QuantLib::ext::make_shared<BlackScholes>(
-            Model::Type::MC, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
-            modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_,
-            iborFallbackConfig, calibration_, filteredStrikes, params_);
-    }
-    engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
-}
-
-void ScriptedTradeEngineBuilder::buildFdBlackScholes(
-    const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig) {
-    Real T = modelCurves_.front()->timeFromReference(lastRelevantDate_);
-    auto filteredStrikes = filterBlackScholesCalibrationStrikes(calibrationStrikes_, modelIndices_, processes_, T);
-    auto builder = QuantLib::ext::make_shared<BlackScholesModelBuilder>(
-        modelCurves_, processes_, simulationDates_, addDates_, timeStepsPerYear_, calibration_,
-        getCalibrationStrikesVector(filteredStrikes, modelIndices_), baseCcyModelCurve_);
-    model_ = QuantLib::ext::make_shared<BlackScholes>(
-        Model::Type::FD, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
-        modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_,
-        iborFallbackConfig, calibration_, filteredStrikes, params_);
-    engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
-}
-
-void ScriptedTradeEngineBuilder::buildLocalVol(
-    const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig) {
-    LocalVolModelBuilder::Type lvType;
-    if (modelParam_ == "LocalVolDupire")
-        lvType = LocalVolModelBuilder::Type::Dupire;
-    else if (modelParam_ == "LocalVolAndreasenHuge")
-        lvType = LocalVolModelBuilder::Type::AndreasenHuge;
-    else {
-        QL_FAIL("local vol model type " << modelParam_ << " not recognised.");
-    }
-
-    Real T = modelCurves_.front()->timeFromReference(lastRelevantDate_);
-    auto filteredStrikes = filterBlackScholesCalibrationStrikes(calibrationStrikes_, modelIndices_, processes_, T);
-    auto builder = QuantLib::ext::make_shared<LocalVolModelBuilder>(
-        modelCurves_, processes_, simulationDates_, addDates_, timeStepsPerYear_, lvType, calibrationMoneyness_,
-        referenceCalibrationGrid_, !calibrate_ || zeroVolatility_, baseCcyModelCurve_);
-    model_ = QuantLib::ext::make_shared<LocalVol>(
-        Model::Type::MC, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
-        modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_,
-        iborFallbackConfig, "Smile", filteredStrikes, params_);
-    engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
-}
-
-void ScriptedTradeEngineBuilder::buildFdLocalVol(
-    const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig) {
-    LocalVolModelBuilder::Type lvType;
-    if (modelParam_ == "LocalVolDupire")
-        lvType = LocalVolModelBuilder::Type::Dupire;
-    else if (modelParam_ == "LocalVolAndreasenHuge")
-        lvType = LocalVolModelBuilder::Type::AndreasenHuge;
-    else {
-        QL_FAIL("local vol model type " << modelParam_ << " not recognised.");
-    }
-
-    Real T = modelCurves_.front()->timeFromReference(lastRelevantDate_);
-    auto filteredStrikes = filterBlackScholesCalibrationStrikes(calibrationStrikes_, modelIndices_, processes_, T);
-    auto builder = QuantLib::ext::make_shared<LocalVolModelBuilder>(
-        modelCurves_, processes_, simulationDates_, addDates_, timeStepsPerYear_, lvType, calibrationMoneyness_,
-        referenceCalibrationGrid_, !calibrate_ || zeroVolatility_, baseCcyModelCurve_);
-    model_ = QuantLib::ext::make_shared<LocalVol>(
-        Model::Type::FD, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
-        modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_,
-        iborFallbackConfig, "Smile", filteredStrikes, params_);
-    engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
-}
-
-
 bool ScriptedTradeEngineBuilder::containsQuanto() {
     Size n = modelIndices_.size();
     std::vector<IndexInfo> indexInfo;
@@ -1424,9 +1341,109 @@ bool ScriptedTradeEngineBuilder::containsQuanto() {
     return false;
 }
 
+void ScriptedTradeEngineBuilder::buildBlackScholes(
+    const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig) {
+    Real T = modelCurves_.front()->timeFromReference(lastRelevantDate_);
+    auto filteredStrikes = filterBlackScholesCalibrationStrikes(calibrationStrikes_, modelIndices_, processes_, T);
+    // ignore timeStepsPerYear if we have no correlations, i.e. we can take large timesteps without changing anything
+    Size effectiveTimeStepsPerYear = correlations_.empty() ? 0 : timeStepsPerYear_;
+    std::set<Real> curveTimes;
+    std::vector<std::set<std::pair<Real, Real>>> volTimesStrikes;
+    if (useCg_) {
+        modelCG_ = QuantLib::ext::make_shared<BlackScholesCG>(
+            ModelCG::Type::MC, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
+            modelIndices_, modelIndicesCurrencies_, correlations_, simulationDates_, effectiveTimeStepsPerYear,
+            addDates_, iborFallbackConfig, calibration_, filteredStrikes);
+        curveTimes = ext::static_pointer_cast<BlackScholesCG>(modelCG_)->curveTimes();
+        volTimesStrikes = ext::static_pointer_cast<BlackScholesCG>(modelCG_)->volTimesStrikes();
+    } else {
+        model_ = QuantLib::ext::make_shared<BlackScholes>(
+            Model::Type::MC, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
+            modelIndices_, modelIndicesCurrencies_, payCcys_, correlations_, simulationDates_,
+            effectiveTimeStepsPerYear, addDates_, iborFallbackConfig, calibration_, filteredStrikes, params_);
+        curveTimes = ext::static_pointer_cast<BlackScholes>(model_)->curveTimes();
+        volTimesStrikes = ext::static_pointer_cast<BlackScholes>(model_)->volTimesStrikes();
+    }
+    auto builder = QuantLib::ext::make_shared<BlackScholesModelBuilder>(
+        modelCurves_, processes_, simulationDates_, addDates_, effectiveTimeStepsPerYear, calibration_,
+        getCalibrationStrikesVector(filteredStrikes, modelIndices_), baseCcyModelCurve_, curveTimes, volTimesStrikes);
+    if (useCg_) {
+        ext::static_pointer_cast<BlackScholesCG>(modelCG_)->setModel(builder->model());
+    } else {
+        ext::static_pointer_cast<BlackScholes>(model_)->setModel(builder->model());
+    }
+    engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
+}
+
+void ScriptedTradeEngineBuilder::buildFdBlackScholes(
+    const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig) {
+    Real T = modelCurves_.front()->timeFromReference(lastRelevantDate_);
+    auto filteredStrikes = filterBlackScholesCalibrationStrikes(calibrationStrikes_, modelIndices_, processes_, T);
+    model_ = QuantLib::ext::make_shared<BlackScholes>(
+        Model::Type::FD, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
+        modelIndices_, modelIndicesCurrencies_, payCcys_, correlations_, simulationDates_,
+        timeStepsPerYear_, addDates_, iborFallbackConfig, calibration_, filteredStrikes, params_);
+    auto builder = QuantLib::ext::make_shared<BlackScholesModelBuilder>(
+        modelCurves_, processes_, simulationDates_, addDates_, timeStepsPerYear_, calibration_,
+        getCalibrationStrikesVector(filteredStrikes, modelIndices_), baseCcyModelCurve_,
+        ext::static_pointer_cast<BlackScholes>(model_)->curveTimes(),
+        ext::static_pointer_cast<BlackScholes>(model_)->volTimesStrikes());
+    ext::dynamic_pointer_cast<BlackScholes>(model_)->setModel(builder->model());
+    engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
+}
+
+void ScriptedTradeEngineBuilder::buildLocalVol(
+    const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig) {
+    LocalVolModelBuilder::Type lvType;
+    if (modelParam_ == "LocalVolDupire")
+        lvType = LocalVolModelBuilder::Type::Dupire;
+    else if (modelParam_ == "LocalVolAndreasenHuge")
+        lvType = LocalVolModelBuilder::Type::AndreasenHuge;
+    else {
+        QL_FAIL("local vol model type " << modelParam_ << " not recognised.");
+    }
+    Real T = modelCurves_.front()->timeFromReference(lastRelevantDate_);
+    auto filteredStrikes = filterBlackScholesCalibrationStrikes(calibrationStrikes_, modelIndices_, processes_, T);
+    model_ = QuantLib::ext::make_shared<LocalVol>(
+        Model::Type::MC, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
+        modelIndices_, modelIndicesCurrencies_, payCcys_, correlations_, simulationDates_,
+        timeStepsPerYear_, addDates_, iborFallbackConfig, "Smile", filteredStrikes, params_);
+    auto builder = QuantLib::ext::make_shared<LocalVolModelBuilder>(
+        modelCurves_, processes_, simulationDates_, addDates_, timeStepsPerYear_, lvType, calibrationMoneyness_,
+        referenceCalibrationGrid_, !calibrate_ || zeroVolatility_, baseCcyModelCurve_, false,
+        ext::static_pointer_cast<LocalVol>(model_)->curveTimes(),
+        ext::static_pointer_cast<LocalVol>(model_)->volTimesStrikes());
+    ext::dynamic_pointer_cast<LocalVol>(model_)->setModel(builder->model());
+    engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
+}
+
+void ScriptedTradeEngineBuilder::buildFdLocalVol(
+    const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig) {
+    LocalVolModelBuilder::Type lvType;
+    if (modelParam_ == "LocalVolDupire")
+        lvType = LocalVolModelBuilder::Type::Dupire;
+    else if (modelParam_ == "LocalVolAndreasenHuge")
+        lvType = LocalVolModelBuilder::Type::AndreasenHuge;
+    else {
+        QL_FAIL("local vol model type " << modelParam_ << " not recognised.");
+    }
+    Real T = modelCurves_.front()->timeFromReference(lastRelevantDate_);
+    auto filteredStrikes = filterBlackScholesCalibrationStrikes(calibrationStrikes_, modelIndices_, processes_, T);
+    model_ = QuantLib::ext::make_shared<LocalVol>(
+        Model::Type::FD, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
+        modelIndices_, modelIndicesCurrencies_, payCcys_, correlations_, simulationDates_, timeStepsPerYear_, addDates_,
+        iborFallbackConfig, "Smile", filteredStrikes, params_);
+    auto builder = QuantLib::ext::make_shared<LocalVolModelBuilder>(
+        modelCurves_, processes_, simulationDates_, addDates_, timeStepsPerYear_, lvType, calibrationMoneyness_,
+        referenceCalibrationGrid_, !calibrate_ || zeroVolatility_, baseCcyModelCurve_, false,
+        ext::static_pointer_cast<LocalVol>(model_)->curveTimes(),
+        ext::static_pointer_cast<LocalVol>(model_)->volTimesStrikes());
+    ext::dynamic_pointer_cast<LocalVol>(model_)->setModel(builder->model());
+    engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
+}
+
 void ScriptedTradeEngineBuilder::buildHeston(const std::string& id,
                                              const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig) {
-    LOG("ScriptedTradeEngineBuilder::buildHeston() called");
     Real T = modelCurves_.front()->timeFromReference(lastRelevantDate_);
     auto filteredStrikes = filterBlackScholesCalibrationStrikes(calibrationStrikes_, modelIndices_, processes_, T);
     Size steps = timeStepsPerYear_;
@@ -1434,22 +1451,23 @@ void ScriptedTradeEngineBuilder::buildHeston(const std::string& id,
     if (containsQuanto()) {
         steps = hestonQuantoTimeStepsPerYear_;
         discretization = hestonQuantoProcessDiscretization_;
-	ALOG("Overriding time steps and Heston process discretization with Heston Quanto values: "
-	     << steps << " and " << discretization);
+        ALOG("Overriding time steps and Heston process discretization with Heston Quanto values: " << steps << " and "
+                                                                                                   << discretization);
     }
-    auto builder = QuantLib::ext::make_shared<HestonModelBuilder>(
-        modelIndices_, modelCurves_, processes_, simulationDates_, addDates_, steps,
-        hestonCalibrationExpiries_, calibrationMoneyness_, hestonCalibrationVarianceTerms_, hestonInitialValues_,
-        hestonFixedValues_, hestonCalibrationMethod_, hestonMaximumInitialValues_, hestonRelaxedFellerConstraint_,
-        hestonMaxCalibrationAttempts_, hestonEarlyExitThreshold_, hestonMaxAcceptableError_,
-        discretization, referenceCalibrationGrid_, !calibrate_ || zeroVolatility_, baseCcyModelCurve_);
     model_ = QuantLib::ext::make_shared<Heston>(
         Model::Type::MC, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
-        modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_,
-        iborFallbackConfig, "Smile", filteredStrikes, params_, debug_);
+        modelIndices_, modelIndicesCurrencies_, payCcys_, correlations_, simulationDates_, steps,
+        addDates_, iborFallbackConfig, "Smile", filteredStrikes, params_);
+    auto builder = QuantLib::ext::make_shared<HestonModelBuilder>(
+        modelIndices_, modelCurves_, processes_, simulationDates_, addDates_, steps, hestonCalibrationExpiries_,
+        calibrationMoneyness_, hestonCalibrationVarianceTerms_, hestonInitialValues_, hestonFixedValues_,
+        hestonCalibrationMethod_, hestonMaximumInitialValues_, hestonRelaxedFellerConstraint_,
+        hestonMaxCalibrationAttempts_, hestonEarlyExitThreshold_, hestonMaxAcceptableError_, discretization,
+        referenceCalibrationGrid_, !calibrate_ || zeroVolatility_, baseCcyModelCurve_,
+        ext::static_pointer_cast<Heston>(model_)->curveTimes(),
+        ext::static_pointer_cast<Heston>(model_)->volTimesStrikes());
+    ext::dynamic_pointer_cast<Heston>(model_)->setModel(builder->model());
     engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
-    engineFactory()->scriptingModels().insert(std::make_pair(id, model_));
-    LOG("ScriptedTradeEngineBuilder::buildHeston() done");
 }
 
 void ScriptedTradeEngineBuilder::buildFdHeston(
@@ -1463,15 +1481,16 @@ void ScriptedTradeEngineBuilder::buildFdHeston(
         discretization = hestonQuantoProcessDiscretization_;
     }
     auto builder = QuantLib::ext::make_shared<HestonModelBuilder>(
-        modelIndices_, modelCurves_, processes_, simulationDates_, addDates_, steps,
-        hestonCalibrationExpiries_, calibrationMoneyness_, hestonCalibrationVarianceTerms_, hestonInitialValues_,
-        hestonFixedValues_, hestonCalibrationMethod_, hestonMaximumInitialValues_, hestonRelaxedFellerConstraint_,
-        hestonMaxCalibrationAttempts_, hestonEarlyExitThreshold_, hestonMaxAcceptableError_,
-        discretization, referenceCalibrationGrid_, !calibrate_ || zeroVolatility_, baseCcyModelCurve_);
+        modelIndices_, modelCurves_, processes_, simulationDates_, addDates_, steps, hestonCalibrationExpiries_,
+        calibrationMoneyness_, hestonCalibrationVarianceTerms_, hestonInitialValues_, hestonFixedValues_,
+        hestonCalibrationMethod_, hestonMaximumInitialValues_, hestonRelaxedFellerConstraint_,
+        hestonMaxCalibrationAttempts_, hestonEarlyExitThreshold_, hestonMaxAcceptableError_, discretization,
+        referenceCalibrationGrid_, !calibrate_ || zeroVolatility_, baseCcyModelCurve_);
     model_ = QuantLib::ext::make_shared<Heston>(
         Model::Type::FD, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
-        modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_,
+        modelIndices_, modelIndicesCurrencies_, payCcys_, correlations_, simulationDates_, steps, addDates_,
         iborFallbackConfig, "Smile", filteredStrikes, params_);
+    ext::dynamic_pointer_cast<Heston>(model_)->setModel(builder->model());
     engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
 }
 

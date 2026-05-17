@@ -68,7 +68,8 @@ public:
     AssetModelWrapper(const ProcessType processType,
                       const std::vector<QuantLib::ext::shared_ptr<StochasticProcess>>& processes,
                       const std::set<Date>& effectiveSimulationDates, const TimeGrid& discretisationTimeGrid,
-		      const std::vector<AssetModelCalibrationResults>& calibrationResults = std::vector<AssetModelCalibrationResults>());
+                      const std::vector<AssetModelCalibrationResults>& calibrationResults =
+                          std::vector<AssetModelCalibrationResults>());
 
     const std::vector<QuantLib::ext::shared_ptr<StochasticProcess>>& processes() const;
     const std::set<Date>& effectiveSimulationDates() const;
@@ -81,7 +82,7 @@ public:
 
     ProcessType processType() const;
 
-    const std::vector<AssetModelCalibrationResults>& calibration() { return calibration_; }
+    const std::vector<AssetModelCalibrationResults>& calibration() const { return calibrationResults_; }
 
 private:
     void update() override;
@@ -92,7 +93,7 @@ private:
     std::vector<QuantLib::ext::shared_ptr<PiecewiseTimeDependentHestonProcess>> ptdHestonProcesses_;
     std::set<Date> effectiveSimulationDates_;
     TimeGrid discretisationTimeGrid_;
-    std::vector<AssetModelCalibrationResults> calibration_;
+    std::vector<AssetModelCalibrationResults> calibrationResults_;
 };
 
 } // namespace QuantExt
