@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file pathresult.hpp
+/*! \file pathlevelresult.hpp
     \brief class holding additional results on path level
 
     \ingroup instruments
