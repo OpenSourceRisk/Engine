@@ -648,45 +648,46 @@ void AssetModel::populateAdditionalResultsPathLevel() const {
 
     std::vector<PathLevelResult> pathLevelResults;
 
-    // MC
+    if (type_ == Type::MC) {
 
-    for (auto const& [d, p] : underlyingPaths_) {
-        for (Size i = 0; i < indices_.size(); ++i) {
+        for (auto const& [d, p] : underlyingPaths_) {
+            for (Size i = 0; i < indices_.size(); ++i) {
+                PathLevelResult r;
+                r.resultId = indices_[i].name();
+                r.index = i;
+                r.date = d;
+                r.time = timeFromReference(d);
+                r.values = static_cast<std::vector<double>>(p[i]);
+                pathLevelResults.push_back(r);
+            }
             PathLevelResult r;
-            r.resultId = indices_[i].name();
-            r.index = i;
+            r.resultId = "NUMERAIRE";
             r.date = d;
             r.time = timeFromReference(d);
-            r.values = static_cast<std::vector<double>>(p[i]);
+            r.values = static_cast<std::vector<double>>(getNumeraire(d));
             pathLevelResults.push_back(r);
         }
-        PathLevelResult r;
-        r.resultId = "NUMERAIRE";
-        r.date = d;
-        r.time = timeFromReference(d);
-        r.values = static_cast<std::vector<double>>(getNumeraire(d));
-        pathLevelResults.push_back(r);
-    }
 
-    // FD
+    } else {
 
-    for (Size d = 0; d < effectiveSimulationDates_.size(); ++d) {
-        Date date = *std::next(effectiveSimulationDates_.begin(), d);
-        for (Size i = 0; i < indices_.size(); ++i) {
+        for (Size d = 0; d < effectiveSimulationDates_.size(); ++d) {
+            Date date = *std::next(effectiveSimulationDates_.begin(), d);
+            for (Size i = 0; i < indices_.size(); ++i) {
+                PathLevelResult r;
+                r.resultId = indices_[i].name();
+                r.index = i;
+                r.date = date;
+                r.time = timeFromReference(date);
+                r.values = static_cast<std::vector<double>>(underlyingValues_);
+                pathLevelResults.push_back(r);
+            }
             PathLevelResult r;
-            r.resultId = indices_[i].name();
-            r.index = i;
-            r.date = date;
+            r.resultId = "NUMERAIRE";
+            r.date = *std::next(effectiveSimulationDates_.begin(), d);
             r.time = timeFromReference(date);
-            r.values = static_cast<std::vector<double>>(underlyingValues_);
+            r.values = static_cast<std::vector<double>>(getNumeraire(r.date));
             pathLevelResults.push_back(r);
         }
-        PathLevelResult r;
-        r.resultId = "NUMERAIRE";
-        r.date = *std::next(effectiveSimulationDates_.begin(), d);
-        r.time = timeFromReference(date);
-        r.values = static_cast<std::vector<double>>(getNumeraire(r.date));
-        pathLevelResults.push_back(r);
     }
 
     additionalResultsPathLevel_["assetmodel_results_pathlevel"] = pathLevelResults;
