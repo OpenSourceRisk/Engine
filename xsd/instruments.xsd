@@ -2489,16 +2489,6 @@
 		  </xs:sequence>
          </xs:complexType>
         </xs:element>
-		<!-- <xs:element name="Trade"> -->
-         <!-- <xs:complexType> -->
-           <!-- <xs:sequence> -->
-            <!-- <xs:element type="oreTradeType" name="TradeType"/> -->
-            <!-- <xs:element type="envelope" name="Envelope" minOccurs="0"/> -->
-            <!-- <xs:group ref="oreTradeData"/> -->
-            <!-- </xs:sequence> -->
-          <!-- <xs:attribute type="xs:string" name="id"/> -->
-         <!-- </xs:complexType> -->
-        <!-- </xs:element> -->
 		<xs:element ref="subTradeGroup"/>
         <xs:element name="PortfolioIndexTradeData" minOccurs="0">
          <xs:complexType>
@@ -2660,14 +2650,15 @@
       </xs:element>
       <xs:element name="Underlying">
         <xs:complexType>
-          <xs:choice>
-            <xs:sequence>
-              <xs:element type="optionData" name="OptionData" minOccurs="0"/>
-          <xs:element type="xs:boolean" name="NakedOption" minOccurs="0"/>
-              <xs:element type="legData" name="LegData" maxOccurs="unbounded"/>
-            </xs:sequence>
-            <xs:element type="tlockData" name="TreasuryLockData"/>
-          </xs:choice>
+          <xs:annotation>
+            <xs:documentation>LegData and TreasuryLockData are mutually exclusive at runtime; XSD 1.0 cannot enforce this constraint.</xs:documentation>
+          </xs:annotation>
+          <xs:sequence>
+            <xs:element type="optionData" name="OptionData" minOccurs="0"/>
+            <xs:element type="legData" name="LegData" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element type="xs:boolean" name="NakedOption" minOccurs="0"/>
+            <xs:element type="tlockData" name="TreasuryLockData" minOccurs="0"/>
+          </xs:sequence>
         </xs:complexType>
       </xs:element>
     </xs:all>
@@ -2705,19 +2696,8 @@
   </xs:complexType>
 
   <xs:complexType name="cboBondBasketData">
-    
-	<xs:sequence>
-		<xs:element ref="subTradeGroup" maxOccurs="unbounded"/>
-      <!-- <xs:element name="Trade" maxOccurs="unbounded"> -->
-        <!-- <xs:complexType> -->
-          <!-- <xs:all> -->
-            <!-- <xs:element type="oreTradeType" name="TradeType"/> -->
-            <!-- <xs:element type="envelope" name="Envelope" minOccurs="0"/> -->
-            <!-- <xs:element type="bondData" name="BondData" maxOccurs="1" minOccurs="0"/> -->
-          <!-- </xs:all> -->
-          <!-- <xs:attribute type="xs:string" name="id"/> -->
-        <!-- </xs:complexType> -->
-      <!-- </xs:element> -->
+    <xs:sequence>
+      <xs:element ref="subTradeGroup" maxOccurs="unbounded"/>
     </xs:sequence>
   </xs:complexType>
 
