@@ -54,15 +54,13 @@ void CorrelationReport::calculate(const ext::shared_ptr<Report>& report) {
         correlationMatrix_ = covCalculator->correlation();
         DLOG("CorrelationMatric of size "<<correlationMatrix_.columns()<<"x"<<correlationMatrix_.rows());
     } else if (correlationMethod_ == "KendallRank") {
-        std::set<std::string> ids = cube->ids();
         std::vector<QuantLib::Date> d = cube->dates();
-        Size i = 0;
         int nbScenario = sensiPnlCalculator_->getScenarioNumber();
         QuantLib::Matrix mSensi(nbScenario, deltaKeys.size());
-        for (auto it = ids.begin(); it != ids.end(); it++, i++) {
+        for (Size i = 0; i < deltaKeys.size(); i++) {
+            std::string keyStr = ore::data::to_string(deltaKeys[i]);
             for (int j = 0; j < nbScenario; j++) {
-                QuantLib::Real cubeValue = cube->get(*it, d[0], j);
-                mSensi[j][i] = cubeValue;
+                mSensi[j][i] = cube->get(keyStr, d[0], j);
             }
         }
         correlationMatrix_ = corrMatrix.kendallCorrelation(mSensi);

@@ -63,9 +63,8 @@ public:
         const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
         const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
         const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
-        const Handle<AssetModelWrapper>& model,
         const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
-        const std::set<Date>& simulationDates,
+        const std::set<Date>& simulationDates, const Size timeStepsPerYear, const std::set<Date>& addDaes,
         const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
             QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
         const std::string& calibration = "ATM",
@@ -74,7 +73,7 @@ public:
     // ctor for single underlying
     BlackScholesCG(const ModelCG::Type type, const Size paths, const std::string& currency,
                    const Handle<YieldTermStructure>& curve, const std::string& index, const std::string& indexCurrency,
-                   const Handle<AssetModelWrapper>& model, const std::set<Date>& simulationDates,
+                   const std::set<Date>& simulationDates, const Size timeStepsPerYear, const std::set<Date>& addDates,
                    const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
                        QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
                    const std::string& calibration = "ATM", const std::vector<Real>& calibrationStrikes = {});
@@ -96,6 +95,11 @@ public:
     Real getDirectFxSpotT0(const std::string& forCcy, const std::string& domCcy) const override;
     Real getDirectDiscountT0(const Date& paydate, const std::string& currency) const override;
 
+    void setModel(const Handle<AssetModelWrapper>& model);
+
+    const std::set<Real> curveTimes() const { return curveTimes_; }
+    const std::vector<std::set<std::pair<Real, Real>>> volTimesStrikes() const { return volTimesStrikes_; };
+
 protected:
     // ModelImpl interface implementation
     void performCalculations() const override;
@@ -107,12 +111,16 @@ protected:
     std::size_t getFutureBarrierProb(const std::string& index, const Date& obsdate1, const Date& obsdate2,
                                      const std::size_t barrier, const bool above) const override;
 
+    // helper functions
+    void setupDatesAndTimes() const;
+
     // input parameters
     std::vector<Handle<YieldTermStructure>> curves_;
     std::vector<Handle<Quote>> fxSpots_;
-    Handle<AssetModelWrapper> model_;
     std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>> correlations_;
-    std::vector<Date> simulationDates_;
+    Size timeStepsPerYear_;
+    std::set<Date> addDates_;
+    Handle<AssetModelWrapper> model_; // via setter
 
     // The calibration to use, ATM or Deal
     std::string calibration_;
@@ -125,6 +133,9 @@ protected:
     mutable std::set<Date> effectiveSimulationDates_; // the dates effectively simulated (including today)
     mutable TimeGrid timeGrid_;                       // the (possibly refined) time grid for the simulation
     mutable std::vector<Size> positionInTimeGrid_;    // for each effective simulation date the index in the time grid
+    mutable std::vector<double> effectiveCalibrationStrikes_; // final eff cal strike for each index
+    mutable std::set<Real> curveTimes_;                       // curve times (notification filtering)
+    mutable std::vector<std::set<std::pair<Real, Real>>> volTimesStrikes_; // volTimesStrikes (notification filtering)
 
     // updated in derived classes' performCalculations() whenever cg version changes
     mutable std::map<Date, std::vector<std::size_t>> underlyingPaths_; // per simulation date index states

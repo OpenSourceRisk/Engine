@@ -1067,9 +1067,18 @@ void OREAppInputParameters::loadParameters() {
     LOG("SIMM");
     tmp = params_->getString("simm", "active", false);
     bool doSimm = !tmp.empty() ? parseBool(tmp) : false;
+    tmp = params_->getString("stressedSimm", "active", false);
+    bool doSimmStressed = !tmp.empty() ? parseBool(tmp) : false;
+
     if (doSimm) {
         insertAnalytic("SIMM");
+    }
 
+    if (doSimmStressed) {
+        insertAnalytic("SIMM_STRESS");
+    }
+
+    if (doSimm || doSimmStressed) {
         tmp = params_->getString("simm", "version", false);
         if (tmp != "")
             setSimmVersion(tmp);

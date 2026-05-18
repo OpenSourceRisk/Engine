@@ -57,8 +57,9 @@ public:
                        Real earlyExitThreshold = 0.005, Real maxAcceptableError = 0.05,
                        const HestonProcess::Discretization& discretization = HestonProcess::QuadraticExponential,
                        const std::string& referenceCalibrationGrid = "", const bool dontCalibrate = false,
-                       const Handle<YieldTermStructure>& baseCurve = {}, const bool observeContinuum = false);
-    HestonModelBuilder(const std::vector<std::string>& indices, const Handle<YieldTermStructure>& curve,
+                       const Handle<YieldTermStructure>& baseCurve = {}, const std::set<Real>& curveTimes = {},
+                       const std::vector<std::set<std::pair<Real, Real>>>& volTimesStrikes = {});
+    HestonModelBuilder(const std::string& index, const Handle<YieldTermStructure>& curve,
                        const ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
                        const std::set<Date>& simulationDates = {}, const std::set<Date>& addDates = {},
                        const Size timeStepsPerYear = 1,
@@ -76,22 +77,18 @@ public:
                        Real earlyExitThreshold = 0.005, Real maxAcceptableError = 0.05,
                        const HestonProcess::Discretization& discretization = HestonProcess::QuadraticExponential,
                        const std::string& referenceCalibrationGrid = "", const bool dontCalibrate = false,
-                       const Handle<YieldTermStructure>& baseCurve = {}, const bool observeContinuum = false)
-        : HestonModelBuilder(indices, std::vector<Handle<YieldTermStructure>>{curve},
+                       const Handle<YieldTermStructure>& baseCurve = {}, const std::set<Real>& curveTimes = {},
+                       const std::vector<std::set<std::pair<Real, Real>>>& volTimesStrikes = {})
+        : HestonModelBuilder({index}, std::vector<Handle<YieldTermStructure>>{curve},
                              std::vector<ext::shared_ptr<GeneralizedBlackScholesProcess>>{process}, simulationDates,
                              addDates, timeStepsPerYear, calibrationExpiries, calibrationMoneyness,
                              calibrationVarianceTerms, initialValues, fixedValues, calibrationMethod,
                              maximumInitialValues, relaxedFellerConstraint, maxCalibrationAttempts, earlyExitThreshold,
-                             maxAcceptableError, discretization, referenceCalibrationGrid, dontCalibrate, baseCurve,
-                             observeContinuum) {}
+                             maxAcceptableError, discretization, referenceCalibrationGrid, dontCalibrate, baseCurve) {}
 
     std::vector<ext::shared_ptr<StochasticProcess>> getCalibratedProcesses() const override;
 
     AssetModelWrapper::ProcessType processType() const override;
-
-protected:
-    std::vector<std::vector<Real>> getCurveTimes() const override;
-    std::vector<std::vector<std::pair<Real, Real>>> getVolTimesStrikes() const override;
 
 private:
     std::vector<std::string> indices_;
