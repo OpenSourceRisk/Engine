@@ -650,16 +650,22 @@ void AssetModel::populateAdditionalResultsPathLevel() const {
     for (auto const& [d, p] : underlyingPaths_) {
         for (Size i = 0; i < indices_.size(); ++i) {
             PathLevelResult r;
-            r.resultId = indices_[i].name() + "_" + ore::data::to_string(d);
-            r.values.resize(size());
-            for (Size k = 0; k < size(); ++k) {
-                r.values[k] = p[i][k];
-            }
+            r.resultId = indices_[i].name();
+            r.index = i;
+            r.date = d;
+            r.time = timeFromReference(d);
+            r.values = static_cast<std::vector<double>>(p[i]);
             pathLevelResults.push_back(r);
         }
+        PathLevelResult r;
+        r.resultId = "NUMERAIRE";
+        r.date = d;
+        r.time = timeFromReference(d);
+        r.values = static_cast<std::vector<double>>(getNumeraire(d));
+        pathLevelResults.push_back(r);
     }
 
-    additionalResultsPathLevel_["__path_level_results_asset_mdoel"] = pathLevelResults;
+    additionalResultsPathLevel_["assetmodel_results_pathlevel"] = pathLevelResults;
 }
 
 } // namespace data
