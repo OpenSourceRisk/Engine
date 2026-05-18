@@ -670,6 +670,7 @@
       <xs:enumeration value="European"/>
       <xs:enumeration value="Bermudan"/>
       <xs:enumeration value="American"/>
+      <xs:enumeration value="Asian"/>
     </xs:restriction>
   </xs:simpleType>
 
