@@ -260,8 +260,6 @@
 
   <xs:complexType name="swapData">
     <xs:sequence>
-      <xs:element type="xs:boolean" name="RoundNettedFloatingLegs" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="xs:nonNegativeInteger" name="NettingPrecision" minOccurs="0" maxOccurs="1"/>
       <xs:element type="settlementType" name="Settlement" maxOccurs="1" minOccurs="0"/>
       <xs:element type="legData" name="LegData" maxOccurs="unbounded" minOccurs="1"/>
     </xs:sequence>
@@ -395,7 +393,6 @@
       <xs:element type="xs:string" name="PriceQuoteBaseValue" minOccurs="0"/>
       <xs:element type="xs:string" name="BondNotional" minOccurs="0"/>
       <xs:element type="bondPriceType" name="PriceType" minOccurs="0"/>
-      <xs:element type="xs:string" name="Payer" minOccurs="0"/>
       <xs:element type="legData" name="LegData" maxOccurs="unbounded" minOccurs="0"/>
       <xs:element type="bool" name="CreditRisk" minOccurs="0"/>
       <xs:element type="xs:string" name="SubType" minOccurs="0"/>
@@ -1959,7 +1956,6 @@
     <xs:all>
       <xs:element type="xs:string" name="IssuerId" minOccurs="0"/>
       <xs:element ref="creditCurveIdType"/>
-      <xs:element type="xs:string" name="ReferenceObligation" minOccurs="0"/>
       <xs:element type="bool" name="SettlesAccrual" minOccurs="0"/>
       <xs:element type="bool" name="RebatesAccrual" minOccurs="0"/>
       <xs:element type="bool" name="PaysAtDefaultTime" minOccurs="0">
@@ -2190,7 +2186,7 @@
   <xs:complexType name="indexCreditDefaultSwapData">
     <xs:all>
       <xs:element type="xs:string" name="IssuerId" minOccurs="0"/>
-      <xs:element type="xs:string" name="CreditCurveId"/>
+      <xs:element ref="creditCurveIdType"/>
       <xs:element type="bool" name="SettlesAccrual" minOccurs="0"/>
       <xs:element type="bool" name="RebatesAccrual" minOccurs="0"/>
       <xs:element type="bool" name="PaysAtDefaultTime" minOccurs="0">
@@ -2202,9 +2198,11 @@
       <xs:element type="date" name="ProtectionStart" minOccurs="0"/>
       <xs:element type="date" name="UpfrontDate" minOccurs="0"/>
       <xs:element type="xs:float" name="UpfrontFee" minOccurs="0"/>
+      <xs:element type="xs:float" name="FixedRecoveryRate" minOccurs="0"/>
       <xs:element type="legData" name="LegData"/>
       <xs:element type="date" name="TradeDate" minOccurs="0"/>
       <xs:element type="xs:nonNegativeInteger" name="CashSettlementDays" minOccurs="0"/>
+      <xs:element type="date" name="IndexStartDateHint" minOccurs="0"/>
       <xs:element type="basketData" name="BasketData" maxOccurs="1" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
@@ -2494,7 +2492,7 @@
          <xs:complexType>
            <xs:sequence>
             <xs:element type="xs:string" name="BasketName" minOccurs="1"/>
-            <xs:element type="xs:string" name="IndexQuantity" minOccurs="0"/>
+            <xs:element type="xs:double" name="IndexQuantity" minOccurs="0"/>
            </xs:sequence>
          </xs:complexType>
         </xs:element>
