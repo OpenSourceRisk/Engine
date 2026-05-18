@@ -1045,6 +1045,8 @@ void addAnyResults(Report& report, const std::string& tradeId, const std::string
         vector<std::string> tokens;
         string vect = p.second;
         vect.erase(remove(vect.begin(), vect.end(), '\"'), vect.end());
+        if (vect.empty())
+            return;
         boost::split(tokens, vect, boost::is_any_of(","));
         for (Size i = 0; i < tokens.size(); ++i) {
             boost::trim(tokens[i]);
@@ -1190,7 +1192,6 @@ void ReportWriter::writeAdditionalResultsPathLevelReport(ore::data::Report& repo
     for (auto const& [tId, trade] : portfolio->trades()) {
         try {
             for (auto const& [label, result] : trade->instrument()->additionalResults()) {
-                std::cout << "got result " << label << std::endl;
                 if (result.type() == typeid(std::vector<PathLevelResult>)) {
                     for (auto const& p : ext::any_cast<const std::vector<PathLevelResult>&>(result)) {
                         for (Size i = 0; i < p.values.size(); ++i) {
