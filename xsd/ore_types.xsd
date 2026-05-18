@@ -739,6 +739,14 @@
     </xs:restriction>
   </xs:simpleType>
 
+  <xs:simpleType name="protectionPaymentTime">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="atDefault"/>
+      <xs:enumeration value="atPeriodEnd"/>
+      <xs:enumeration value="atMaturity"/>
+    </xs:restriction>
+  </xs:simpleType>
+
   <xs:simpleType name="bondPriceType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="Clean"/>

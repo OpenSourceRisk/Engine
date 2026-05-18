@@ -326,11 +326,11 @@
 
   <xs:complexType name="optionData">
     <xs:all>
-      <xs:element type="xs:string" name="LongShort"/>
-      <xs:element type="xs:string" name="OptionType" minOccurs="0"/>
+      <xs:element type="longShort" name="LongShort"/>
+      <xs:element type="optionType" name="OptionType" minOccurs="0"/>
       <xs:element type="xs:string" name="PayoffType" minOccurs="0"/>
       <xs:element type="xs:string" name="PayoffType2" minOccurs="0"/>
-      <xs:element type="xs:string" name="Style" minOccurs="0"/>
+      <xs:element type="exerciseStyle" name="Style" minOccurs="0"/>
       <xs:element type="xs:string" name="NoticePeriod" minOccurs="0"/>
       <xs:element type="xs:string" name="NoticeCalendar" minOccurs="0"/>
       <xs:element type="xs:string" name="NoticeConvention" minOccurs="0"/>
@@ -862,8 +862,16 @@
             <xs:all>
               <xs:element type="extendedCurrencyCode" name="EquityCurrency" minOccurs="0" maxOccurs="1"/>
               <xs:element type="xs:string" name="FXIndex" minOccurs="0" maxOccurs="1"/>
-              <xs:element type="xs:integer" name="FXIndexFixingDays" minOccurs="0" maxOccurs="1"/>
-              <xs:element type="xs:string" name="FXIndexCalendar" minOccurs="0" maxOccurs="1"/>
+              <xs:element type="xs:integer" name="FXIndexFixingDays" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                  <xs:documentation>Deprecated. Fixing days are taken from the FX index definition.</xs:documentation>
+                </xs:annotation>
+              </xs:element>
+              <xs:element type="xs:string" name="FXIndexCalendar" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                  <xs:documentation>Deprecated. Fixing calendar is taken from the FX index definition.</xs:documentation>
+                </xs:annotation>
+              </xs:element>
             </xs:all>
           </xs:complexType>
         </xs:element>
@@ -1127,8 +1135,16 @@
                     <xs:all>
                       <xs:element type="extendedCurrencyCode" name="EquityCurrency" minOccurs="0" maxOccurs="1"/>
                       <xs:element type="xs:string" name="FXIndex" minOccurs="0" maxOccurs="1"/>
-                      <xs:element type="xs:integer" name="FXIndexFixingDays" minOccurs="0" maxOccurs="1"/>
-                      <xs:element type="xs:string" name="FXIndexCalendar" minOccurs="0" maxOccurs="1"/>
+                      <xs:element type="xs:integer" name="FXIndexFixingDays" minOccurs="0" maxOccurs="1">
+                        <xs:annotation>
+                          <xs:documentation>Deprecated. Fixing days are taken from the FX index definition.</xs:documentation>
+                        </xs:annotation>
+                      </xs:element>
+                      <xs:element type="xs:string" name="FXIndexCalendar" minOccurs="0" maxOccurs="1">
+                        <xs:annotation>
+                          <xs:documentation>Deprecated. Fixing calendar is taken from the FX index definition.</xs:documentation>
+                        </xs:annotation>
+                      </xs:element>
                     </xs:all>
                   </xs:complexType>
                 </xs:element>
@@ -1388,7 +1404,11 @@
       <xs:enumeration value="EquityOutperformanceOption"/>
       <xs:enumeration value="EquityPairwiseVarianceSwap"/>
       <xs:enumeration value="FxPairwiseVarianceSwap"/>
-      <xs:enumeration value="CommodityPairwiseVarianceSwap"/>
+      <xs:enumeration value="CommodityPairwiseVarianceSwap">
+        <xs:annotation>
+          <xs:documentation>No active C++ trade factory registration. Retained for compatibility; verify before use.</xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
       <!-- scripted trades -->
       <xs:enumeration value="ScriptedTrade"/>
       <xs:enumeration value="EquityBasketVarianceSwap"/>
@@ -1942,8 +1962,12 @@
       <xs:element type="xs:string" name="ReferenceObligation" minOccurs="0"/>
       <xs:element type="bool" name="SettlesAccrual" minOccurs="0"/>
       <xs:element type="bool" name="RebatesAccrual" minOccurs="0"/>
-      <xs:element type="bool" name="PaysAtDefaultTime" minOccurs="0"/>
-      <xs:element type="xs:string" name="ProtectionPaymentTime" minOccurs="0"/>
+      <xs:element type="bool" name="PaysAtDefaultTime" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Deprecated. Use ProtectionPaymentTime instead.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element type="protectionPaymentTime" name="ProtectionPaymentTime" minOccurs="0"/>
       <xs:element type="date" name="ProtectionStart" minOccurs="0"/>
       <xs:element type="date" name="UpfrontDate" minOccurs="0"/>
       <xs:element type="xs:float" name="UpfrontFee" minOccurs="0"/>
@@ -2169,8 +2193,12 @@
       <xs:element type="xs:string" name="CreditCurveId"/>
       <xs:element type="bool" name="SettlesAccrual" minOccurs="0"/>
       <xs:element type="bool" name="RebatesAccrual" minOccurs="0"/>
-      <xs:element type="bool" name="PaysAtDefaultTime" minOccurs="0"/>
-      <xs:element type="xs:string" name="ProtectionPaymentTime" minOccurs="0"/>
+      <xs:element type="bool" name="PaysAtDefaultTime" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Deprecated. Use ProtectionPaymentTime instead.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element type="protectionPaymentTime" name="ProtectionPaymentTime" minOccurs="0"/>
       <xs:element type="date" name="ProtectionStart" minOccurs="0"/>
       <xs:element type="date" name="UpfrontDate" minOccurs="0"/>
       <xs:element type="xs:float" name="UpfrontFee" minOccurs="0"/>
@@ -2261,8 +2289,12 @@
       <xs:element type="emptyFloat" name="UpfrontFee" minOccurs="0"/>
       <xs:element type="bool" name="SettlesAccrual" minOccurs="0"/>
       <xs:element type="bool" name="RebatesAccrual" minOccurs="0"/>
-      <xs:element type="bool" name="PaysAtDefaultTime" minOccurs="0"/>
-      <xs:element type="xs:string" name="ProtectionPaymentTime" minOccurs="0"/>
+      <xs:element type="bool" name="PaysAtDefaultTime" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Deprecated. Use ProtectionPaymentTime instead.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element type="protectionPaymentTime" name="ProtectionPaymentTime" minOccurs="0"/>
       <xs:element type="xs:float" name="FixedRecoveryRate" minOccurs="0"/>
       <xs:element type="xs:float" name="AttachmentPoint"/>
       <xs:element type="xs:float" name="DetachmentPoint"/>
@@ -2304,9 +2336,17 @@
   <xs:complexType name="fxTermsData">
     <xs:sequence>
       <xs:element type="xs:string" name="FXIndex" minOccurs="1" maxOccurs="unbounded"/>
-      <!-- just kept here for backward compatibility of the schema, these elements are not used any more -->
-      <xs:element type="xs:integer" name="FXIndexFixingDays" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="xs:string" name="FXIndexCalendar" minOccurs="0" maxOccurs="1"/>
+      <!-- Retained for backward compatibility; these elements are no longer used by the parser -->
+      <xs:element type="xs:integer" name="FXIndexFixingDays" minOccurs="0" maxOccurs="1">
+        <xs:annotation>
+          <xs:documentation>Deprecated. Retained for schema backward compatibility only; ignored by the parser.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element type="xs:string" name="FXIndexCalendar" minOccurs="0" maxOccurs="1">
+        <xs:annotation>
+          <xs:documentation>Deprecated. Retained for schema backward compatibility only; ignored by the parser.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
       <xs:element type="xs:boolean" name="ApplyFXIndexFixingDays" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
@@ -3039,8 +3079,16 @@
       <xs:element type="cbConversionResetData" name="ConversionResets" minOccurs="0"/>
       <xs:element type="underlying" name="Underlying" minOccurs="0"/>
       <xs:element type="xs:string" name="FXIndex" minOccurs="0"/>
-      <xs:element type="calendar" name="FXIndexCalendar" minOccurs="0"/>
-      <xs:element type="xs:integer" name="FXIndexFixingDays" minOccurs="0"/>
+      <xs:element type="calendar" name="FXIndexCalendar" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Deprecated. Fixing calendar is taken from the FX index definition.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element type="xs:integer" name="FXIndexFixingDays" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Deprecated. Fixing days are taken from the FX index definition.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
       <xs:element type="cbExchangeableData" name="Exchangeable" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
@@ -5141,8 +5189,12 @@
       <xs:element type="date" name="ProtectionStart" minOccurs="0"/>
       <xs:element type="date" name="ProtectionEnd" minOccurs="0"/>
       <xs:element type="bool" name="SettlesAccrual" minOccurs="0"/>
-      <xs:element type="bool" name="PaysAtDefaultTime" minOccurs="0"/>
-      <xs:element type="xs:string" name="ProtectionPaymentTime" minOccurs="0"/>
+      <xs:element type="bool" name="PaysAtDefaultTime" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Deprecated. Use ProtectionPaymentTime instead.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element type="protectionPaymentTime" name="ProtectionPaymentTime" minOccurs="0"/>
       <xs:element type="date" name="UpfrontDate" minOccurs="0"/>
       <xs:element type="xs:float" name="UpfrontFee" minOccurs="0"/>
       <xs:element type="xs:float" name="FixedRecoveryRate" minOccurs="0"/>
