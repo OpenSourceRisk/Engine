@@ -2886,7 +2886,7 @@
     <xs:all>
     <xs:element type="date" name="Date"/>
     <xs:element type="xs:string" name="Type"/>
-    <xs:element type="cbPepsData" name="PepsData"/>
+    <xs:element type="cbPepsData" name="PepsData" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 
@@ -2956,7 +2956,7 @@
       <xs:element name="GlobalFloors" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
-            <xs:element name="GloobalFloor" minOccurs="0" maxOccurs="unbounded">
+            <xs:element name="GlobalFloor" minOccurs="0" maxOccurs="unbounded">
               <xs:complexType>
                 <xs:simpleContent>
                   <xs:extension base="xs:float">
