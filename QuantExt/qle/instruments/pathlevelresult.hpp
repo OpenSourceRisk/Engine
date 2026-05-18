@@ -24,10 +24,15 @@
 
 #pragma once
 
+#include <ql/utilities/null.hpp>
+
 namespace QuantExt {
 
 struct PathLevelResult {
     std::string resultId;
+    QuantLib::Size index = QuantLib::Null<Size>();
+    QuantLib::Date date;
+    double time = QuantLib::Null<double>();
     std::vector<double> values;
 };
 
