@@ -671,19 +671,20 @@ void AssetModel::populateAdditionalResultsPathLevel() const {
     // FD
 
     for (Size d = 0; d < effectiveSimulationDates_.size(); ++d) {
+        Date date = *std::next(effectiveSimulationDates_.begin(), d);
         for (Size i = 0; i < indices_.size(); ++i) {
             PathLevelResult r;
             r.resultId = indices_[i].name();
             r.index = i;
-            r.date = *std::next(effectiveSimulationDates_.begin(), d);
-            r.time = timeFromReference(r.date);
+            r.date = date;
+            r.time = timeFromReference(date);
             r.values = static_cast<std::vector<double>>(underlyingValues_);
             pathLevelResults.push_back(r);
         }
         PathLevelResult r;
         r.resultId = "NUMERAIRE";
         r.date = *std::next(effectiveSimulationDates_.begin(), d);
-        r.time = timeFromReference(r.date);
+        r.time = timeFromReference(date);
         r.values = static_cast<std::vector<double>>(getNumeraire(r.date));
         pathLevelResults.push_back(r);
     }
