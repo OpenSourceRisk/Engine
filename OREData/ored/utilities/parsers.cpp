@@ -1069,9 +1069,11 @@ FutureConvention::DateGenerationRule parseFutureDateGenerationRule(const std::st
         return FutureConvention::DateGenerationRule::IMMNZD;
     else if (s == "IMMCAD")
         return FutureConvention::DateGenerationRule::IMMCAD;
+    else if (s == "IMMEUR")
+        return FutureConvention::DateGenerationRule::IMMEUR;
     else {
         QL_FAIL("FutureConvention /  DateGenerationRule '" << s << "' not known, expect 'IMM', 'FirstDayOfMonth',"
-                " 'IMMAUD' (alias 'SecondThursday'), 'IMMNZD', or 'IMMCAD'");
+                " 'IMMAUD' (alias 'SecondThursday'), 'IMMNZD', 'IMMCAD', or 'IMMEUR'");
     }
 }
 
@@ -1086,6 +1088,8 @@ std::ostream& operator<<(std::ostream& os, FutureConvention::DateGenerationRule 
         return os << "IMMNZD";
     else if (t == FutureConvention::DateGenerationRule::IMMCAD)
         return os << "IMMCAD";
+    else if (t == FutureConvention::DateGenerationRule::IMMEUR)
+        return os << "IMMEUR";
     else {
         QL_FAIL("Internal error: unknown FutureConvention::DateGenerationRule - check implementation of operator<< "
                 "for this enum");
