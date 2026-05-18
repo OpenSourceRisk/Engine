@@ -58,15 +58,17 @@ public:
     //@}
 
 protected:
-    VanillaOptionTrade(AssetClass assetClassUnderlying)
-        : Trade("VanillaOption"), assetClassUnderlying_(assetClassUnderlying), quantity_(0) {}
-    VanillaOptionTrade(const Envelope& env, AssetClass assetClassUnderlying, OptionData option, string assetName,
-                       string currency, double quantity, TradeStrike strike,
-                       const QuantLib::ext::shared_ptr<QuantLib::Index>& index = nullptr, const std::string& indexName = "",
+    VanillaOptionTrade(std::string tradeType, AssetClass assetClassUnderlying)
+        : Trade(std::move(tradeType)), assetClassUnderlying_(std::move(assetClassUnderlying)), quantity_(0) {}
+    VanillaOptionTrade(std::string tradeType, const Envelope& env, AssetClass assetClassUnderlying, OptionData option,
+                       string assetName, string currency, double quantity, TradeStrike strike,
+                       const QuantLib::ext::shared_ptr<QuantLib::Index>& index = nullptr,
+                       const std::string& indexName = "",
                        QuantLib::Date forwardDate = QuantLib::Date())
-        : Trade("VanillaOption", env), assetClassUnderlying_(assetClassUnderlying), option_(option),
-          assetName_(assetName), currency_(currency), quantity_(quantity), strike_(strike), index_(index),
-          indexName_(indexName), forwardDate_(forwardDate) {}
+        : Trade(std::move(tradeType), env), assetClassUnderlying_(std::move(assetClassUnderlying)),
+            option_(std::move(option)), assetName_(std::move(assetName)), currency_(std::move(currency)),
+            quantity_(quantity), strike_(std::move(strike)), index_(index), indexName_(indexName),
+            forwardDate_(std::move(forwardDate)) {}
 
     AssetClass assetClassUnderlying_;
     OptionData option_;
