@@ -266,12 +266,14 @@ void ScriptedInstrumentPricingEngine::calculate() const {
                     paylog->amounts().at(i) / RandomVariable(paylog->amounts().at(i).size(), (fx * discount)));
             }
         }
-        results_.additionalResults["cashFlowResults"] = cashFlowResults;
-        results_.additionalResults["cashFlowResults_MCErrEst"] = cashFlowMcErr;
-        results_.additionalResults["cashFlowDiscount"] = cashFlowDiscount;
-        results_.additionalResults["cashFlowFxRate"] = cashFlowFxRate;
-        if (generateAdditionalResultsPathLevel_)
-            results_.additionalResults["cashflowResults_pathlevel"] = pathLevelResult;
+        if (paylog->size() > 0) {
+            results_.additionalResults["cashFlowResults"] = cashFlowResults;
+            results_.additionalResults["cashFlowResults_MCErrEst"] = cashFlowMcErr;
+            results_.additionalResults["cashFlowDiscount"] = cashFlowDiscount;
+            results_.additionalResults["cashFlowFxRate"] = cashFlowFxRate;
+            if (generateAdditionalResultsPathLevel_)
+                results_.additionalResults["cashflowResults_pathlevel"] = pathLevelResult;
+        }
 
         // set additional results from the model
 
