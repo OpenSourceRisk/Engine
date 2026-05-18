@@ -19,21 +19,21 @@
 #include <ored/model/utilities.hpp>
 
 #include <ored/model/localvolmodelbuilder.hpp>
-#include <ored/utilities/log.hpp>
 #include <ored/utilities/dategrid.hpp>
+#include <ored/utilities/log.hpp>
 
 #include <qle/models/carrmadanarbitragecheck.hpp>
 
 #include <ql/exercise.hpp>
 #include <ql/instruments/payoffs.hpp>
 #include <ql/instruments/vanillaoption.hpp>
+#include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
 #include <ql/termstructures/volatility/equityfx/andreasenhugelocalvoladapter.hpp>
 #include <ql/termstructures/volatility/equityfx/andreasenhugevolatilityinterpl.hpp>
 #include <ql/termstructures/volatility/equityfx/localconstantvol.hpp>
 #include <ql/termstructures/volatility/equityfx/localvolsurface.hpp>
 #include <ql/termstructures/volatility/equityfx/noexceptlocalvolsurface.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
-#include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
 
 namespace ore {
 namespace data {
@@ -43,25 +43,21 @@ LocalVolModelBuilder::LocalVolModelBuilder(
     const std::vector<ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
     const std::set<Date>& simulationDates, const std::set<Date>& addDates, const Size timeStepsPerYear,
     const Type lvType, const std::vector<Real>& calibrationMoneyness, const std::string& referenceCalibrationGrid,
-    const bool dontCalibrate, const Handle<YieldTermStructure>& baseCurve, const bool observeContinuum)
+    const bool dontCalibrate, const Handle<YieldTermStructure>& baseCurve, const bool observeContinuum,
+    const std::set<Real>& curveTimes, const std::vector<std::set<std::pair<Real, Real>>>& volTimesStrikes)
     : AssetModelBuilderBase(curves, processes, simulationDates, addDates, timeStepsPerYear, baseCurve,
-                            observeContinuum),
+                            observeContinuum || lvType == Type::Dupire || lvType == Type::DupireFloored, curveTimes,
+                            volTimesStrikes),
       lvType_(lvType), calibrationMoneyness_(calibrationMoneyness), referenceCalibrationGrid_(referenceCalibrationGrid),
-      dontCalibrate_(dontCalibrate) {
-    // we have to observe the whole vol surface for the Dupire implementation unfortunately; we can specify the time
-    // steps that are relevant, but not a set of discrete strikes
-    if (lvType == Type::Dupire) {
-        for (auto const& p : processes_) {
-            marketObserver_->registerWith(p->blackVolatility());
-        }
-    }
-}
+      dontCalibrate_(dontCalibrate) {}
 
 std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> LocalVolModelBuilder::getCalibratedProcesses() const {
 
     QL_REQUIRE(lvType_ != Type::AndreasenHuge || !calibrationMoneyness_.empty(), "no calibration moneyness provided");
 
     calculate();
+
+    // build processes and populate volTimesStrikes
 
     std::vector<Date> referenceCalibrationDates;
     if (!referenceCalibrationGrid_.empty())
@@ -74,9 +70,10 @@ std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> LocalVolModelBuilder::
 
         Handle<LocalVolTermStructure> localVol;
         if (dontCalibrate_) {
-            localVol = Handle<LocalVolTermStructure>(
-                QuantLib::ext::make_shared<LocalConstantVol>(0, NullCalendar(), 0.10, ActualActual(ActualActual::ISDA)));
+            localVol = Handle<LocalVolTermStructure>(QuantLib::ext::make_shared<LocalConstantVol>(
+                0, NullCalendar(), 0.10, ActualActual(ActualActual::ISDA)));
         } else if (lvType_ == Type::AndreasenHuge) {
+
             // for checking arbitrage free input prices, just for logging purposes at this point
             // notice that we need a uniform strike grid here, so this is not the same as the one below
             // we choose the strike grid to be the one for the last calibration point
@@ -87,6 +84,7 @@ std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> LocalVolModelBuilder::
             // we choose the calibration set to be OTM options on the effective future simulation dates
             // with strikes given in terms of moneyness K / atmForward
             AndreasenHugeVolatilityInterpl::CalibrationSet calSet;
+
             for (auto const& d : effectiveSimulationDates_) {
                 if (d <= curves_.front()->referenceDate())
                     continue;
@@ -114,7 +112,11 @@ std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> LocalVolModelBuilder::
                         option->setPricingEngine(QuantLib::ext::make_shared<AnalyticEuropeanEngine>(processes_[l]));
                         callPrices.back().push_back(option->NPV());
                         checkMoneynesses.push_back(strike / atmLevel);
+                        volTimesStrikes_[l].insert(std::make_pair(t, strike));
+                        curveTimes_.insert(t);
                     }
+                    // add atm point used for calculating the strikes (usually included above anyway)
+                    volTimesStrikes_[l].insert(std::make_pair(t, Null<Real>()));
                     if (refCalDate != referenceCalibrationDates.end()) {
                         lastRefCalDate = *refCalDate;
                     }
@@ -145,17 +147,16 @@ std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> LocalVolModelBuilder::
                  << l
                  << ": "
                     "calibration error min="
-                 << std::scientific << std::setprecision(6) << std::get<0>(ah->calibrationError()) << " max="
-                 << std::get<1>(ah->calibrationError()) << " avg=" << std::get<2>(ah->calibrationError()));
+                 << std::scientific << std::setprecision(6) << std::get<0>(ah->calibrationError())
+                 << " max=" << std::get<1>(ah->calibrationError()) << " avg=" << std::get<2>(ah->calibrationError()));
         } else if (lvType_ == Type::Dupire) {
-            localVol = Handle<LocalVolTermStructure>(
-                QuantLib::ext::make_shared<LocalVolSurface>(processes_[l]->blackVolatility(), processes_[l]->riskFreeRate(),
-                                                    processes_[l]->dividendYield(), processes_[l]->stateVariable()));
+            localVol = Handle<LocalVolTermStructure>(QuantLib::ext::make_shared<LocalVolSurface>(
+                processes_[l]->blackVolatility(), processes_[l]->riskFreeRate(), processes_[l]->dividendYield(),
+                processes_[l]->stateVariable()));
         } else if (lvType_ == Type::DupireFloored) {
-            localVol = Handle<LocalVolTermStructure>(
-                QuantLib::ext::make_shared<NoExceptLocalVolSurface>(processes_[l]->blackVolatility(), processes_[l]->riskFreeRate(),
-                                                            processes_[l]->dividendYield(), processes_[l]->stateVariable(),
-                                                            0.0));
+            localVol = Handle<LocalVolTermStructure>(QuantLib::ext::make_shared<NoExceptLocalVolSurface>(
+                processes_[l]->blackVolatility(), processes_[l]->riskFreeRate(), processes_[l]->dividendYield(),
+                processes_[l]->stateVariable(), 0.0));
         } else {
             QL_FAIL("unexpected local vol type");
         }
@@ -168,48 +169,6 @@ std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> LocalVolModelBuilder::
     }
 
     return processes;
-}
-
-std::vector<std::vector<Real>> LocalVolModelBuilder::getCurveTimes() const {
-    std::vector<Real> timesExt(discretisationTimeGrid_.begin() + 1, discretisationTimeGrid_.end());
-    for (auto const& d : addDates_) {
-        if (d > curves_.front()->referenceDate()) {
-            timesExt.push_back(curves_.front()->timeFromReference(d));
-        }
-    }
-    std::sort(timesExt.begin(), timesExt.end());
-    auto it = std::unique(timesExt.begin(), timesExt.end(),
-                          [](const Real x, const Real y) { return QuantLib::close_enough(x, y); });
-    timesExt.resize(std::distance(timesExt.begin(), it));
-    return std::vector<std::vector<Real>>(allCurves_.size(), timesExt);
-}
-
-std::vector<std::vector<std::pair<Real, Real>>> LocalVolModelBuilder::getVolTimesStrikes() const {
-    std::vector<std::vector<std::pair<Real, Real>>> volTimesStrikes;
-    // for the Dupire implementation we observe the whole vol surface anyhow (see ctor above)
-    if (lvType_ == Type::Dupire)
-        return volTimesStrikes;
-    std::vector<Real> times;
-    if (lvType_ == Type::AndreasenHuge) {
-        for (auto const& d : effectiveSimulationDates_) {
-            if (d > curves_.front()->referenceDate())
-                times.push_back(processes_.front()->riskFreeRate()->timeFromReference(d));
-        }
-    } else {
-        times = std::vector<Real>(discretisationTimeGrid_.begin() + 1, discretisationTimeGrid_.end());
-    }
-    for (auto const& p : processes_) {
-        volTimesStrikes.push_back(std::vector<std::pair<Real, Real>>());
-        for (auto const t : times) {
-            Real atmLevel = atmForward(p->x0(), p->riskFreeRate(), p->dividendYield(), t);
-            Real atmMarketVol = std::max(1e-4, p->blackVolatility()->blackVol(t, atmLevel));
-            for (auto const m : calibrationMoneyness_) {
-                Real strike = atmLevel * std::exp(m * atmMarketVol * std::sqrt(t));
-                volTimesStrikes.back().push_back(std::make_pair(t, strike));
-            }
-        }
-    }
-    return volTimesStrikes;
 }
 
 AssetModelWrapper::ProcessType LocalVolModelBuilder::processType() const {

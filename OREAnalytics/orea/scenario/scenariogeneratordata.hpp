@@ -114,7 +114,6 @@ private:
     bool withMporStickyDate_;
     Size timeStepsPerYear_;
     Period closeOutLag_;
-    MporCashFlowMode mporCashFlowMode_;
     string gridString_;
 };
 

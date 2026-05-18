@@ -77,6 +77,7 @@ struct XvaVariables : public InputVariables {
     bool writeCube_ = false;
     bool writeScenarios_ = false;
     bool generateCorrelations_ = false;
+    bool outputCrossAssetModelData_ = false;
     bool cubeNpvOverlay_ = false;
     QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> exposureSimMarketParams_;
     QuantLib::ext::shared_ptr<ScenarioGeneratorData> scenarioGeneratorData_;
@@ -171,12 +172,9 @@ public:
     static constexpr const char* corrLookupKey = "CORRELATION";
 
     explicit XvaAnalyticImpl(
-        const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-        const QuantLib::ext::shared_ptr<Scenario>& offsetScenario = nullptr,
-        const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr)
-        : Analytic::Impl(inputs, QuantLib::ext::make_shared<XvaVariables>()), offsetScenario_(offsetScenario),
-          offsetSimMarketParams_(offsetSimMarketParams) {
-        setLabel(LABEL);;
+        const QuantLib::ext::shared_ptr<InputParameters>& inputs)
+        : Analytic::Impl(inputs, QuantLib::ext::make_shared<XvaVariables>()) {
+        setLabel(LABEL);
     }
     virtual void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                              const std::set<std::string>& runTypes = {}) override;
@@ -187,14 +185,6 @@ public:
 
     void applyConfigurationFallback(const QuantLib::ext::shared_ptr<Portfolio>& portfolio);
 
-    void setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario) {
-        offsetScenario_ = offsetScenario;
-    }
-        
-    void setOffsetSimMarketParams(
-        const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams) {
-        offsetSimMarketParams_ = offsetSimMarketParams;
-    }
     void buildDependencies() override;
 
 protected:
@@ -236,8 +226,6 @@ protected:
     QuantLib::ext::shared_ptr<CubeInterpretation> cubeInterpreter_;
     QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator> dimCalculator_;
     QuantLib::ext::shared_ptr<PostProcess> postProcess_;
-    QuantLib::ext::shared_ptr<Scenario> offsetScenario_;
-    QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> offsetSimMarketParams_;
     QuantLib::ext::shared_ptr<SensitivityStorageManager> sensitivityStorageManager_;
     Size cubeDepth_ = 0;
     QuantLib::ext::shared_ptr<DateGrid> grid_;
@@ -253,10 +241,8 @@ static const std::set<std::string> xvaAnalyticSubAnalytics{"XVA", "EXPOSURE", "P
 class XvaAnalytic : public Analytic {
 public:
     explicit XvaAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-                         const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager,
-                         const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
-                         const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr)
-        : Analytic(std::make_unique<XvaAnalyticImpl>(inputs, offSetScenario, offsetSimMarketParams),
+                         const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager)
+        : Analytic(std::make_unique<XvaAnalyticImpl>(inputs),
                    xvaAnalyticSubAnalytics, inputs, analyticsManager, false, false, false, false) {}
 };
 
