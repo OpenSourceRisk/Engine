@@ -647,6 +647,9 @@ RandomVariable AssetModel::getFutureBarrierProb(const std::string& index, const 
 void AssetModel::populateAdditionalResultsPathLevel() const {
 
     std::vector<PathLevelResult> pathLevelResults;
+
+    // MC
+
     for (auto const& [d, p] : underlyingPaths_) {
         for (Size i = 0; i < indices_.size(); ++i) {
             PathLevelResult r;
@@ -662,6 +665,26 @@ void AssetModel::populateAdditionalResultsPathLevel() const {
         r.date = d;
         r.time = timeFromReference(d);
         r.values = static_cast<std::vector<double>>(getNumeraire(d));
+        pathLevelResults.push_back(r);
+    }
+
+    // FD
+
+    for (Size d = 0; d < effectiveSimulationDates_.size(); ++d) {
+        for (Size i = 0; i < indices_.size(); ++i) {
+            PathLevelResult r;
+            r.resultId = indices_[i].name();
+            r.index = i;
+            r.date = *std::next(effectiveSimulationDates_.begin(), d);
+            r.time = timeFromReference(r.date);
+            r.values = static_cast<std::vector<double>>(underlyingValues_);
+            pathLevelResults.push_back(r);
+        }
+        PathLevelResult r;
+        r.resultId = "NUMERAIRE";
+        r.date = *std::next(effectiveSimulationDates_.begin(), d);
+        r.time = timeFromReference(r.date);
+        r.values = static_cast<std::vector<double>>(getNumeraire(r.date));
         pathLevelResults.push_back(r);
     }
 
