@@ -28,6 +28,7 @@
 
 #include <set>
 #include <string>
+#include <variant>
 
 namespace ore {
 namespace data {
