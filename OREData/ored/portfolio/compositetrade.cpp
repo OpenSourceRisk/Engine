@@ -103,11 +103,11 @@ void CompositeTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engin
         requiredFixings_.addData(t->requiredFixings());
 }
 
-QuantLib::Real CompositeTrade::notional() const {
+QuantLib::Real CompositeTrade::notional(NotionalType type) const {
     vector<Real> notionals;
     // trade is not guaranteed to provide a non-null notional
     for (const QuantLib::ext::shared_ptr<Trade>& trade : trades_)
-        notionals.push_back(trade->notional() != Null<Real>() ? trade->notional() : 0.0);
+        notionals.push_back(trade->notional(type) != Null<Real>() ? trade->notional(type) : 0.0);
 
     // need to convert the component notionals to the composite currency.
     QL_REQUIRE(notionals.size() == fxRates_.size(), "Size mismatch between notionals and fxRates");

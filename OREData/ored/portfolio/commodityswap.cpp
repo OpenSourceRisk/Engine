@@ -377,40 +377,47 @@ const std::map<std::string,QuantLib::ext::any>& CommoditySwap::additionalData() 
     return additionalData_;
 }
 
-QuantLib::Real CommoditySwap::notional() const {
-    // For cross-currency, try to get the notional from the engine's additional results
+QuantLib::Real CommoditySwap::notional(NotionalType type) const {
     if (isXCCY_) {
+        const string key = (type == NotionalType::IMSchedule) ? "aggregatedNotional" : "currentNotional";
         try {
-            return instrument_->qlInstrument(true)->result<Real>("currentNotional");
+            return instrument_->qlInstrument(true)->result<Real>(key);
         } catch (const std::exception& e) {
-            ALOG("Could not retrieve currentNotional from xccy commodity swap engine: " << e.what());
+            ALOG("Could not retrieve " << key << " from xccy commodity swap engine for " << id() << ": " << e.what());
             return Null<Real>();
         }
     }
+
     Date asof = Settings::instance().evaluationDate();
-    Real currentAmount = Null<Real>();
-    // Get maximum current cash flow amount (quantity * strike, quantity * spot/forward price) across legs
-    // include gearings and spreads; 
-    for (Size i = 0; i < legs_.size(); ++i) {
-        for (Size j = 0; j < legs_[i].size(); ++j) {
-            QuantLib::ext::shared_ptr<CashFlow> flow = legs_[i][j];
-            // pick flow with earliest payment date on this leg
-            if (flow->date() > asof) {
-                if (currentAmount == Null<Real>())
-                    currentAmount = flow->amount();
-                else // set on a previous leg already, set to maximum
-                    currentAmount = std::max(currentAmount, flow->amount());
-                break; // move on to the next leg
+    Real result = 0;
+    bool found = false;
+
+    if (type == NotionalType::IMSchedule) {
+        // for IM schedule we take max total units accros all legs, sum of all qty * strike / price per leg
+        for (Size i = 0; i < legs_.size(); ++i) {
+            Real legAmount = 0.0;
+            for (auto cf = CashFlows::nextCashFlow(legs_[i], false, asof); cf != legs_[i].end(); ++cf) {
+                legAmount += (*cf)->amount();
+                found = true;
+            }
+            result = std::max(result, legAmount);
+        }
+    } else {
+        // default is max current period notional accros all legs (qty * strike/price)
+        for (Size i = 0; i < legs_.size(); ++i) {
+            auto nextFlow = CashFlows::nextCashFlow(legs_[i], false, asof);
+            if (nextFlow != legs_[i].end()) {
+                auto amount = (*nextFlow)->amount();
+                found = true;
+                result = std::max(result, amount);
             }
         }
     }
+    if (found)
+        return result;
 
-    if (currentAmount != Null<Real>()) {
-        return currentAmount;
-    } else {
-        ALOG("Error retrieving current notional for commodity swap " << id() << " as of " << io::iso_date(asof));
-        return Null<Real>();
-    }
+    ALOG("Error retrieving notional for commodity swap " << id() << " as of " << io::iso_date(asof));
+    return Null<Real>();
 }
 
 std::map<AssetClass, std::set<std::string>>

@@ -39,34 +39,38 @@ DiscountingCommodityCurrencySwapEngine::DiscountingCommodityCurrencySwapEngine(
 
 void DiscountingCommodityCurrencySwapEngine::calculate() const {
     DiscountingCurrencySwapEngine::calculate();
-    // Compute currentNotional: max current cashflow amount across legs, converted to notional currency
+    // Compute currentNotional: max first future cashflow amount across legs, converted to notional currency
+    // Compute aggregatedNotional: max total future cashflow amount across legs, converted to notional currency
     Date asof = Settings::instance().evaluationDate();
-    Real currentNotional = Null<Real>();
-
+    Real currentNotional = 0.0;
+    Real aggregatedNotional = 0.0;
+    bool found = false;
     for (Size i = 0; i < arguments_.legs.size(); ++i) {
-        for (Size j = 0; j < arguments_.legs[i].size(); ++j) {
-            QuantLib::ext::shared_ptr<CashFlow> flow = arguments_.legs[i][j];
-            if (flow->date() > asof) {
-                Real amount = flow->amount();
-                // Convert to notional currency
-                auto it = notionalFxQuotes_.find(arguments_.currency[i].code());
-                QL_REQUIRE(it != notionalFxQuotes_.end(),
-                           "No notional FX quote found for currency " << arguments_.currency[i].code());
-                QL_REQUIRE(!it->second.empty(),
-                           "Invalid notional FX quote for currency " << arguments_.currency[i].code());
-                amount *= it->second->value();
-                if (currentNotional == Null<Real>())
-                    currentNotional = amount;
-                else
-                    currentNotional = std::max(currentNotional, amount);
-                break; // move to next leg
-            }
+        auto it = notionalFxQuotes_.find(arguments_.currency[i].code());
+        QL_REQUIRE(it != notionalFxQuotes_.end(),
+                   "No notional FX quote found for currency " << arguments_.currency[i].code());
+        QL_REQUIRE(!it->second.empty(),
+                   "Invalid notional FX quote for currency " << arguments_.currency[i].code());
+        Real fx = it->second->value();
+        // Current notional: first future cashflow
+        auto cf = CashFlows::nextCashFlow(arguments_.legs[i], false, asof);
+        if (cf != arguments_.legs[i].end()) {
+            Real amount = (*cf)->amount() * fx;
+            currentNotional = std::max(currentNotional, amount);
+            found = true;
         }
+        // Aggregated notional: sum of all future cashflows
+        Real legAggregatedNotional = 0.0;
+        for (auto j = cf; j != arguments_.legs[i].end(); ++j) {
+            legAggregatedNotional += (*j)->amount() * fx;
+        }
+        aggregatedNotional = std::max(aggregatedNotional, legAggregatedNotional);
     }
 
-    if (currentNotional != Null<Real>()) {
+    if (found) {
         results_.additionalResults["currentNotional"] = currentNotional;
         results_.additionalResults["notionalCurrency"] = notionalCurrency_.code();
+        results_.additionalResults["aggregatedNotional"] = aggregatedNotional;
     }
 }
 
