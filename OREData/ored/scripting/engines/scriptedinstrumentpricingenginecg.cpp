@@ -183,9 +183,11 @@ void ScriptedInstrumentPricingEngineCG::buildComputationGraph(const bool stickyC
                    "ScriptedInstrumentPricingEngineCG::calculate(): did not find amc exposure result _AMC_NPV");
 
         tradeExposure->clear();
-        tradeExposure->resize(s->second.size() + 1);
+        tradeExposure->resize(1, SimpleTradeExposure());
 
         if (amcCgComponents_.empty()) {
+
+            tradeExposure->resize(s->second.size() + 1, SimpleTradeExposure());
 
             for (Size i = 0; i < tradeExposure->size(); ++i) {
 
@@ -197,13 +199,15 @@ void ScriptedInstrumentPricingEngineCG::buildComputationGraph(const bool stickyC
                            "ScriptedInstrumentPricingEngineCG::buildComputationGraph(): variable "
                                << name << " (arrays are written with suffix _{index}) not found.");
 
-                (*tradeExposure)[i].componentPathValues.resize(1);
-                (*tradeExposure)[i].componentPathValues[0] = n;
-
-                (*tradeExposure)[i].regressors = model_->npvRegressors(valDate, minimalModelCcys_);
+                std::get<SimpleTradeExposure>((*tradeExposure)[i]).groups.push_back({});
+                std::get<SimpleTradeExposure>((*tradeExposure)[i]).groups.back().pathValue = n;
+                std::get<SimpleTradeExposure>((*tradeExposure)[i]).groups.back().regressors =
+                    model_->npvRegressors(valDate, minimalModelCcys_);
             }
 
         } else {
+
+            tradeExposure->resize(s->second.size() + 1, ComplexTradeExposure());
 
             QL_REQUIRE(!amcCgTargetValue_.empty(),
                        "ScriptedInstrumentPricingEngineCG::buildComputationGraph(): non-empty components vector "
@@ -215,43 +219,41 @@ void ScriptedInstrumentPricingEngineCG::buildComputationGraph(const bool stickyC
             for (Size i = 0; i < tradeExposure->size(); ++i) {
 
                 if (i == 0) {
-                    (*tradeExposure)[i].componentPathValues.resize(1);
+
+                    std::get<SimpleTradeExposure>((*tradeExposure)[i]).groups.push_back({});
                     std::size_t n = g->variable(npv_, ComputationGraph::VarDoesntExist::Nan);
                     QL_REQUIRE(n != ComputationGraph::nan,
                                "ScriptedInstrumentPricingEngineCG::buildComputationGraph(): variable "
                                    << npv_ << " not found.");
+                    std::get<SimpleTradeExposure>((*tradeExposure)[i]).groups.back().pathValue = n;
+                    std::get<SimpleTradeExposure>((*tradeExposure)[i]).groups.back().regressors =
+                        model_->npvRegressors(model_->referenceDate(), minimalModelCcys_);
 
-                    (*tradeExposure)[i].componentPathValues.resize(1);
-                    (*tradeExposure)[i].componentPathValues[0] = n;
+                } else {
 
-                    (*tradeExposure)[i].regressors = model_->npvRegressors(model_->referenceDate(), minimalModelCcys_);
-                    continue;
-                }
+                    for (Size c = 0; c < amcCgComponents_.size(); ++c) {
+                        std::size_t n = g->variable(amcCgComponents_[c] + "_" + std::to_string(i - 1),
+                                                    ComputationGraph::VarDoesntExist::Nan);
+                        QL_REQUIRE(n != ComputationGraph::nan,
+                                   "ScriptedInstrumentPricingEngineCG::buildComputationGraph(): array "
+                                       << amcCgComponents_[c] << " at index " << i << " not found.");
+                        std::get<ComplexTradeExposure>((*tradeExposure)[i]).componentPathValues.push_back(n);
+                    }
 
-                (*tradeExposure)[i].componentPathValues.resize(amcCgComponents_.size());
-
-                for (Size c = 0; c < amcCgComponents_.size(); ++c) {
-                    std::size_t n = g->variable(amcCgComponents_[c] + "_" + std::to_string(i - 1),
+                    std::size_t n = g->variable(amcCgTargetValue_ + "_" + std::to_string(i - 1),
                                                 ComputationGraph::VarDoesntExist::Nan);
                     QL_REQUIRE(n != ComputationGraph::nan,
                                "ScriptedInstrumentPricingEngineCG::buildComputationGraph(): array "
-                                   << amcCgComponents_[c] << " at index " << i << " not found.");
-                    (*tradeExposure)[i].componentPathValues[c] = n;
+                                   << amcCgTargetValue_ << " at index " << (i + 1) << " not found.");
+                    std::get<ComplexTradeExposure>((*tradeExposure)[i]).targetConditionalExpectation = n;
+
+                    n = g->variable(effectiveAmcCgTargetDerivative + "_" + std::to_string(i - 1),
+                                    ComputationGraph::VarDoesntExist::Nan);
+                    QL_REQUIRE(n != ComputationGraph::nan,
+                               "ScriptedInstrumentPricingEngineCG::buildComputationGraph(): array "
+                                   << effectiveAmcCgTargetDerivative << " at index " << i << " not found.");
+                    std::get<ComplexTradeExposure>((*tradeExposure)[i + 1]).targetConditionalExpectationDerivative = n;
                 }
-
-                std::size_t n =
-                    g->variable(amcCgTargetValue_ + "_" + std::to_string(i - 1), ComputationGraph::VarDoesntExist::Nan);
-                QL_REQUIRE(n != ComputationGraph::nan,
-                           "ScriptedInstrumentPricingEngineCG::buildComputationGraph(): array "
-                               << amcCgTargetValue_ << " at index " << (i + 1) << " not found.");
-                (*tradeExposure)[i].targetConditionalExpectation = n;
-
-                n = g->variable(effectiveAmcCgTargetDerivative + "_" + std::to_string(i - 1),
-                                ComputationGraph::VarDoesntExist::Nan);
-                QL_REQUIRE(n != ComputationGraph::nan,
-                           "ScriptedInstrumentPricingEngineCG::buildComputationGraph(): array "
-                               << effectiveAmcCgTargetDerivative << " at index " << i << " not found.");
-                (*tradeExposure)[i + 1].targetConditionalExpectationDerivative = n;
             }
         }
     }

@@ -279,16 +279,16 @@ private:
 
     /* for dynamic im calculation */
     struct DynamicImInfo {
-        // plain trade ids, i.e. trades without TradeExposure::targetConditionalExpectation
+        // simple trade ids, i.e. trades without TradeExposure::targetConditionalExpectation
         // the id is the pair of trade id and component
-        std::set<std::pair<std::size_t, std::size_t>> plainTradeIds;
-        // sum of path exposures for plain trades, grouped by relevant model parameters
-        std::map<std::set<ModelCG::ModelParameter>, std::size_t> plainTradeSumGrouped;
-        // set of regressor nodes and var groups for plain trades
-        std::set<std::size_t> plainTradeRegressors;
-        std::set<std::set<std::size_t>> plainTradeRegressorGroups;
+        std::set<std::pair<std::size_t, std::size_t>> simpleTradeIds;
+        // sum of path exposures for simple trades, grouped by relevant model parameters
+        std::map<std::set<ModelCG::ModelParameter>, std::size_t> simpleTradeSumGrouped;
+        // set of regressor nodes and var groups for simple trades
+        std::set<std::size_t> simpleTradeRegressors;
+        std::set<std::set<std::size_t>> simpleTradeRegressorGroups;
         // indices in tradeExposureValuation with TradeExposure::targetConditionalExpectation set
-        std::set<std::pair<std::size_t, std::size_t>> individualTradeIds;
+        std::set<std::pair<std::size_t, std::size_t>> complexTradeIds;
     };
 
     // dynamic im info per valuation date,

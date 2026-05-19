@@ -778,23 +778,31 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun, st
     }
 
     tradeExposure->clear();
-    tradeExposure->resize(simDates.size() + 1);
+    tradeExposure->resize(1, SimpleTradeExposure());
 
-    (*tradeExposure)[0].componentPathValues = {npv_};
+    std::get<SimpleTradeExposure>((*tradeExposure)[0]).groups.push_back({});
+    std::get<SimpleTradeExposure>((*tradeExposure)[0]).groups.back().pathValue = npv_;
 
     if (exerciseDates.empty()) {
+
+        tradeExposure->resize(simDates.size() + 1, SimpleTradeExposure());
 
         // if we don't have an exercise, we return the dirty npv of the underlying at all times
 
         for (Size counter = 0; counter < simDates.size(); ++counter) {
-            (*tradeExposure)[counter + 1].componentPathValues = {pathValueUndDirty[counter]};
-            (*tradeExposure)[counter + 1].regressors =
+
+            std::get<SimpleTradeExposure>((*tradeExposure)[counter + 1]).groups.push_back({});
+            std::get<SimpleTradeExposure>((*tradeExposure)[counter + 1]).groups.back().pathValue =
+                pathValueUndDirty[counter];
+            std::get<SimpleTradeExposure>((*tradeExposure)[counter + 1]).groups.back().regressors =
                 modelCg_->npvRegressors(*std::next(simDates.begin(), counter), relevantCurrencies_);
         }
 
     } else {
 
-        // iterative through simulation + exercise dates in forward direction
+        tradeExposure->resize(simDates.size() + 1, ComplexTradeExposure());
+
+        // iterate through simulation + exercise dates in forward direction
 
         Size counter = 0;
         Size simCounter = 0;
@@ -891,7 +899,7 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun, st
                 std::size_t comp1 = g.insert({exercisedValue}, RandomVariableOpCode::None);
                 std::size_t comp2 = g.insert({futureOptionValue}, RandomVariableOpCode::None);
 
-                (*tradeExposure)[simCounter + 1].componentPathValues = {comp1, comp2};
+                std::get<ComplexTradeExposure>((*tradeExposure)[simCounter + 1]).componentPathValues = {comp1, comp2};
 
                 std::size_t exercisedValueCond = createRegressionModel(
                     comp1, d, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; },
@@ -903,15 +911,16 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun, st
                 // we can not take max(0, futureOptionValueCond) here, because the part between startNodeRecombine
                 // to targetConditionalExpectationDerivatives is applied to derivatives, which we do not want to
                 // floor at zero
-                (*tradeExposure)[simCounter + 1].targetConditionalExpectationDerivative =
+                std::get<ComplexTradeExposure>((*tradeExposure)[simCounter + 1])
+                    .targetConditionalExpectationDerivative =
                     cg_add(g, cg_mult(g, wasExercised, exercisedValueCond),
                            cg_mult(g, cg_subtract(g, cg_const(g, 1.0), wasExercised), futureOptionValueCond));
 
-                (*tradeExposure)[simCounter + 1].targetConditionalExpDerivativeNpvNodes = {exercisedValueCond,
-                                                                                           futureOptionValueCond};
+                std::get<ComplexTradeExposure>((*tradeExposure)[simCounter + 1])
+                    .targetConditionalExpDerivativeNpvNodes = {exercisedValueCond, futureOptionValueCond};
 
                 // here we can take max(0, futureOptionValueCond)
-                (*tradeExposure)[simCounter + 1].targetConditionalExpectation =
+                std::get<ComplexTradeExposure>((*tradeExposure)[simCounter + 1]).targetConditionalExpectation =
                     cg_add(g, cg_mult(g, wasExercised, exercisedValueCond),
                            cg_mult(g, cg_subtract(g, cg_const(g, 1.0), wasExercised),
                                    cg_max(g, cg_const(g, 0.0), futureOptionValueCond)));
