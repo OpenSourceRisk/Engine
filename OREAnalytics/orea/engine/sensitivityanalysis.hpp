@@ -185,7 +185,7 @@ private:
 
     bool useSingleThreadedEngine_;
     // additional members needed for multihreaded constructor
-    Size nThreads_;
+    Size nThreads_ = 1;
     QuantLib::ext::shared_ptr<ore::data::Loader> loader_;
     std::string context_;
     bool useAtParCouponsCurves_ = true;

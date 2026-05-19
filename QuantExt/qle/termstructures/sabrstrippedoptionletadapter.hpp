@@ -141,7 +141,7 @@ private:
     QuantExt::SabrParametricVolatility::ModelVariant modelVariant_;
     QuantLib::ext::optional<QuantLib::VolatilityType> outputVolatilityType_;
     QuantLib::Real outputDisplacement_;
-    QuantLib::Real modelDisplacement_;
+    QuantLib::Real modelDisplacement_ = Null<Real>();
     std::vector<std::vector<std::pair<Real, ParametricVolatility::ParameterCalibration>>> initialModelParameters_;
     QuantLib::Size maxCalibrationAttempts_;
     QuantLib::Real exitEarlyErrorThreshold_;

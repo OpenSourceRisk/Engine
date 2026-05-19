@@ -141,9 +141,11 @@ void SensitivityCubeStream::updateForNewTrade() {
     if (tradeIdx_ != cubes_[currentCubeIdx_]->tradeIdx().end()) {
 
         // add trade currency
-        if (!tradeCurrency_.empty())
+        if (!tradeCurrency_.empty()) {
+            QL_REQUIRE(tradeCurrency_.find(tradeIdx_->first) != tradeCurrency_.end(),
+                       "cannot find currency for trade " << tradeIdx_->first << "in tradeCurrency map");
             currentTradeCurrency_ = tradeCurrency_.find(tradeIdx_->first)->second;
-
+        }
         // add delta keys
 
         for (auto const& [idx, _] : cubes_[currentCubeIdx_]->npvCube()->getTradeNPVs(tradeIdx_->second)) {

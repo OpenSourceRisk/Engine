@@ -50,10 +50,15 @@ struct TestDatum {
 };
 
 std::ostream& operator<<(std::ostream& o, const TestDatum& d) {
-    return o << "[" << d.testLabel << ": benchmarkRate=" << d.benchmarkRate << ", defaultSpread=" << d.defaultSpread
+    std::ios::fmtflags f(o.flags());
+    std::streamsize p = o.precision();
+    o << "[" << d.testLabel << ": benchmarkRate=" << d.benchmarkRate << ", defaultSpread=" << d.defaultSpread
              << ", securitySpread=" << d.securitySpread << ", oisRate=" << d.oisRate
              << ", euriborRate=" << d.euriborRate << ", bondFixing=" << d.bondFixing << ", seasoned=" << std::boolalpha
              << d.seasoned << "]";
+    o.flags(f);
+    o.precision(p);
+    return o;
 }
 
 TestDatum testData[] = {{"singleCurve, zero credit spread, no  sec spread", 0.03, 0.00, 0.00, 0.02, 0.02, 1.10, false},

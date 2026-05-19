@@ -44,7 +44,8 @@ McCamFxOptionEngineBase::McCamFxOptionEngineBase(
                            reevaluateExerciseInStickyRun, cfOnCpnMaxSimTimes, cfOnCpnAddSimTimesCutoff,
                            regressionMaxSimTimesIr, regressionMaxSimTimesFx, regressionMaxSimTimesEq,
                            regressionVarGroupMode),
-      domesticCcy_(domesticCcy), foreignCcy_(foreignCcy), npvCcy_(npvCcy) {}
+      domesticCcy_(domesticCcy), foreignCcy_(foreignCcy), npvCcy_(npvCcy), fxOptionResultValue_(Null<Real>()),
+      fxOptionUnderlyingNpv_(Null<Real>()) {}
 
 void McCamFxOptionEngineBase::setupLegs() const {
     QL_REQUIRE(payoff_, "McCamFxOptionEngineBase: payoff has unexpected type");

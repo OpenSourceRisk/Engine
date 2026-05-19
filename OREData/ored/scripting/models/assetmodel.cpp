@@ -59,7 +59,8 @@ AssetModel::AssetModel(
     : ModelImpl(type, params, curves.at(0)->dayCounter(), paths, currencies, irIndices, infIndices, indices,
                 indexCurrencies, simulationDates, iborFallbackConfig),
       curves_(curves), fxSpots_(fxSpots), payCcys_(payCcys), model_(model), correlations_(correlations),
-      calibration_(calibration), calibrationStrikes_(calibrationStrikes), debug_(debug) {
+      calibration_(calibration), calibrationStrikes_(calibrationStrikes), quantoSourceCcyIndex_(Null<Size>()),
+      quantoTargetCcyIndex_(Null<Size>()), quantoCorrelationMultiplier_(Null<Real>()), debug_(debug) {
   
     // check inputs
 

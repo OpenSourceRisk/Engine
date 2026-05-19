@@ -526,6 +526,8 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
                 for (auto const& ccyMatrix : hwHistoricalModelData_->v()) {
                     std::string ccy = ccyMatrix.first;
                     Matrix v = ccyMatrix.second;
+                    QL_REQUIRE(hwHistoricalModelData_->kappa().find(ccy) != hwHistoricalModelData_->kappa().end(),
+                               "Kappa matrix not found for currency " << ccy);
                     Matrix kappa = hwHistoricalModelData_->kappa().find(ccy)->second;
 
                     CSVFileReport report((outputDir / (stem + "_" + ccy + extension)).string());

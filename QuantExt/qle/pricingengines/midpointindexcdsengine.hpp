@@ -49,7 +49,7 @@ private:
     Real expectedLoss(const Date& defaultDate, const Date& d1, const Date& d2, const Real notional) const override;
 
     Handle<DefaultProbabilityTermStructure> probability_;
-    Real recoveryRate_;
+    Real recoveryRate_ = Null<Real>();
 
     const std::vector<Handle<DefaultProbabilityTermStructure>> underlyingProbability_;
     const std::vector<Real> underlyingRecoveryRate_;

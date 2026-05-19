@@ -329,7 +329,7 @@ private:
                                   timing_partc_ = 0,timing_partc2_ = 0, timing_partd_ = 0, timing_popparam_ = 0, timing_poprv_ = 0,
                                   timing_fwd_ = 0, timing_dynamicIM_ = 0, timing_bwd_ = 0, timing_sensi_ = 0,
                                   timing_asd_ = 0, timing_outcube_ = 0, timing_imcube_ = 0, timing_total_ = 0;
-    std::size_t numberOfRedNodes_, rvMemMax_;
+    std::size_t numberOfRedNodes_ = 0, rvMemMax_ = 0;
 
     // data to populate dynamicImRegressionReport_
 

@@ -51,6 +51,8 @@ const RandomVariable& convertToRandomVariable(const RandomVariable& c) { return 
 RandomVariable convertToRandomVariable(const Filter& c) { return RandomVariable(c); }
 
 template <typename C> std::ostream& output(std::ostream& out, const C& c) {
+    std::ios::fmtflags f(out.flags());
+    std::streamsize p = out.precision();
     if (!c.initialised()) {
         out << "na";
     } else if (c.deterministic()) {
@@ -100,7 +102,8 @@ template <typename C> std::ostream& output(std::ostream& out, const C& c) {
             out << "<unknown output pattern>";
         }
     }
-
+    out.flags(f);
+    out.precision(p);
     return out;
 }
 } // namespace

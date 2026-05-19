@@ -59,13 +59,13 @@ public:
         bool operator!=(const SimpleMcParameters& rhs) const = default;
 
         private:
-        Size timeStepsPerYear_;
-        Real calibrationMoneynessMin_;
-        Real calibrationMoneynessMax_;
-        Size nStrikes_;
-        Size samples_;
-        Real d2CdK2Threshold_;
-        Size nPasses_;
+        Size timeStepsPerYear_ = 24;
+        Real calibrationMoneynessMin_ = -3.0;
+        Real calibrationMoneynessMax_ = 3.0;
+        Size nStrikes_ = 25;
+        Size samples_ = 10000;
+        Real d2CdK2Threshold_ = 0.01;
+        Size nPasses_ = 1;
     };
 
     FxLvData() : FxData({}, {}, "LocalVol") {}
