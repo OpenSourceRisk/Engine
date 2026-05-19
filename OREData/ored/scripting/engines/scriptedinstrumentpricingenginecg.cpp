@@ -25,6 +25,7 @@
 #include <qle/ad/forwardevaluation.hpp>
 #include <qle/ad/ssaform.hpp>
 #include <qle/instruments/cashflowresults.hpp>
+#include <qle/instruments/pathlevelresult.hpp>
 #include <qle/math/computeenvironment.hpp>
 #include <qle/math/randomvariable.hpp>
 #include <qle/methods/multipathvariategenerator.hpp>
@@ -64,6 +65,18 @@ double externalAverage(const std::vector<double>& v) {
 
 } // namespace
 
+Real ScriptedInstrumentPricingEngineCG::addMcErrorEstimate(const std::string& label, const ValueType& v) const {
+    if (model_->type() != ModelCG::Type::MC)
+        return Null<Real>();
+    if (v.which() != ValueTypeWhich::Number)
+        return Null<Real>();
+    Real var = variance(boost::get<RandomVariable>(v)).at(0);
+    Real errEst = std::sqrt(var / static_cast<double>(model_->size()));
+    if (!label.empty())
+        instrumentAdditionalResults_[label] = errEst;
+    return errEst;
+}
+
 ScriptedInstrumentPricingEngineCG::~ScriptedInstrumentPricingEngineCG() {
     if (externalCalculationId_)
         ComputeEnvironment::instance().context().disposeCalculation(externalCalculationId_);
@@ -77,8 +90,8 @@ ScriptedInstrumentPricingEngineCG::ScriptedInstrumentPricingEngineCG(
     const Model::Params& params, const double indicatorSmoothingForValues,
     const double indicatorSmoothingForDerivatives, const double sqrtSmoothingForDerivatives, const std::string& script,
     const bool interactive, const bool amcEnabled, const bool generateAdditionalResults,
-    const bool includePastCashflows, const bool useCachedSensis, const bool useExternalComputeFramework,
-    const bool useDoublePrecisionForExternalCalculation)
+    const bool generateAdditionalResultsPathLevel, const bool includePastCashflows, const bool useCachedSensis,
+    const bool useExternalComputeFramework, const bool useDoublePrecisionForExternalCalculation)
     : npv_(npv), additionalResults_(additionalResults), model_(model), minimalModelCcys_(minimalModelCcys),
       amcCgComponents_(amcCgComponents), amcCgTargetValue_(amcCgTargetValue),
       amcCgTargetDerivative_(amcCgTargetDerivative), ast_(ast), context_(context), params_(params),
@@ -86,6 +99,7 @@ ScriptedInstrumentPricingEngineCG::ScriptedInstrumentPricingEngineCG(
       indicatorSmoothingForDerivatives_(indicatorSmoothingForDerivatives),
       sqrtSmoothingForDerivatives_(sqrtSmoothingForDerivatives), script_(script), interactive_(interactive),
       amcEnabled_(amcEnabled), generateAdditionalResults_(generateAdditionalResults),
+      generateAdditionalResultsPathLevel_(generateAdditionalResultsPathLevel),
       includePastCashflows_(includePastCashflows), useCachedSensis_(useCachedSensis),
       useExternalComputeFramework_(useExternalComputeFramework),
       useDoublePrecisionForExternalCalculation_(useDoublePrecisionForExternalCalculation) {
@@ -460,20 +474,35 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
 
         DLOG("got NPV = " << results_.value << " " << model_->baseCcy());
 
-        // extract additional results
+        // extract additional results (TODO support external compute framework)
 
-        if (generateAdditionalResults_) {
+        instrumentAdditionalResults_.clear();
 
-            instrumentAdditionalResults_.clear();
+        if (generateAdditionalResults_ && !useExternalComputeFramework_) {
+
+            // set npv mc error estimate
+
+            results_.errorEstimate = addMcErrorEstimate("NPV_MCErrEst", values[baseNpvNode]);
 
             for (auto const& r : additionalResults_) {
+
+                // scalar additional results
 
                 auto s = workingContext_->scalars.find(r.second);
                 bool resultSet = false;
                 if (s != workingContext_->scalars.end()) {
                     if (s->second.which() == ValueTypeWhich::Number) {
-                        instrumentAdditionalResults_[r.first] =
-                            model_->extractT0Result(values[cg_var(*g, r.second + "_0")]);
+                        std::size_t node = cg_var(*g, r.second + "_0");
+                        instrumentAdditionalResults_[r.first] = model_->extractT0Result(values[node]);
+                        addMcErrorEstimate(r.first + "_MCErrEst", values[node]);
+                        if (generateAdditionalResultsPathLevel_) {
+                            std::vector<QuantExt::PathLevelResult> pathLevelResult(1);
+                            pathLevelResult.back().resultId = r.first;
+                            pathLevelResult.back().values =
+                                static_cast<std::vector<double>>(boost::get<RandomVariable>(values[node]));
+                            pathLevelResult.back().time = boost::get<RandomVariable>(values[node]).time();
+                            instrumentAdditionalResults_[r.first + "_pathlevel"] = pathLevelResult;
+                        }
                     } else {
                         QuantLib::ext::any t = valueToAnyCg(s->second);
                         instrumentAdditionalResults_[r.first] = t;
@@ -481,6 +510,9 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
                     DLOG("got additional result '" << r.first << "' referencing script variable '" << r.second << "'");
                     resultSet = true;
                 }
+
+                // vector additional results
+
                 auto v = workingContext_->arrays.find(r.second);
                 if (v != workingContext_->arrays.end()) {
                     QL_REQUIRE(!resultSet, "result variable '"
@@ -488,12 +520,25 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
                                                << "' appears both as a scalar and an array, this is unexpected");
                     QL_REQUIRE(!v->second.empty(), "result variable '" << v->first << "' is an empty array.");
                     std::vector<double> tmpdouble;
+                    std::vector<double> tmpdoubleErrEst;
                     std::vector<std::string> tmpstring;
                     std::vector<QuantLib::Date> tmpdate;
+                    std::vector<QuantExt::PathLevelResult> pathLevelResult;
+                    Size counter = 0;
                     for (Size i = 0; i < v->second.size(); ++i) {
                         if (v->second[i].which() == ValueTypeWhich::Number) {
-                            tmpdouble.push_back(
-                                model_->extractT0Result(values[cg_var(*g, r.second + "_" + std::to_string(i))]));
+                            std::size_t node = cg_var(*g, r.second + "_" + std::to_string(i));
+                            tmpdouble.push_back(model_->extractT0Result(values[node]));
+                            tmpdoubleErrEst.push_back(addMcErrorEstimate(std::string(), values[node]));
+                            if (generateAdditionalResultsPathLevel_) {
+                                pathLevelResult.push_back({});
+                                pathLevelResult.back().resultId = r.first;
+                                pathLevelResult.back().index = counter;
+                                pathLevelResult.back().values =
+                                    static_cast<std::vector<double>>(boost::get<RandomVariable>(values[node]));
+                                pathLevelResult.back().time = boost::get<RandomVariable>(values[node]).time();
+                            }
+                            ++counter;
                         } else {
                             QuantLib::ext::any t = valueToAnyCg(v->second[i]);
                             if (t.type() == typeid(std::string))
@@ -512,9 +557,14 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
                     DLOG("got additional result '" << r.first << "' referencing script variable '" << r.second
                                                    << "' vector of size "
                                                    << tmpdouble.size() + tmpstring.size() + tmpdate.size());
-                    if (!tmpdouble.empty())
+                    if (!tmpdouble.empty()) {
                         instrumentAdditionalResults_[r.first] = tmpdouble;
-                    else if (!tmpstring.empty())
+                        if (tmpdoubleErrEst.front() != Null<Real>())
+                            instrumentAdditionalResults_[r.first + "_MCErrEst"] = tmpdoubleErrEst;
+                        if (generateAdditionalResultsPathLevel_) {
+                            instrumentAdditionalResults_[r.first + "_pathlevel"] = pathLevelResult;
+                        }
+                    } else if (!tmpstring.empty())
                         instrumentAdditionalResults_[r.first] = tmpstring;
                     else if (!tmpdate.empty())
                         instrumentAdditionalResults_[r.first] = tmpdate;
@@ -539,6 +589,11 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
 
             paylog->consolidateAndSort();
             std::vector<CashFlowResults> cashFlowResults(paylog->size());
+            std::vector<double> cashFlowDiscount(paylog->size());
+            std::vector<double> cashFlowFxRate(paylog->size());
+            std::vector<double> cashFlowMcErr(paylog->size());
+            std::map<Size, Size> cashflowNumber;
+            std::vector<QuantExt::PathLevelResult> pathLevelResult(paylog->size());
             for (Size i = 0; i < paylog->size(); ++i) {
                 // cashflow is written as expectation of deflated base ccy amount at T0, converted to flow ccy
                 // with the T0 FX Spot and compounded back to the pay date on T0 curves
@@ -550,21 +605,49 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
                     discount = model_->getDirectDiscountT0(paylog->dates().at(i), paylog->currencies().at(i));
                     cashFlowResults[i].amount /= fx * discount;
                 }
+                cashFlowDiscount[i] = discount;
+                cashFlowFxRate[i] = fx;
                 cashFlowResults[i].fixingDate = paylog->obsDates().at(i);
                 cashFlowResults[i].payDate = paylog->dates().at(i);
                 cashFlowResults[i].currency = paylog->currencies().at(i);
                 cashFlowResults[i].legNumber = paylog->legNos().at(i);
                 cashFlowResults[i].type = paylog->cashflowTypes().at(i);
+                cashFlowResults[i].discountFactor = discount;
+                std::string cashflowLabel = "cashflow_" + std::to_string(paylog->legNos().at(i)) + "_" +
+                                            std::to_string(++cashflowNumber[paylog->legNos().at(i)]);
+                if (generateAdditionalResultsPathLevel_ && paylog->dates().at(i) > model_->referenceDate()) {
+                    pathLevelResult[i].resultId = cashflowLabel;
+                    pathLevelResult[i].index = i;
+                    pathLevelResult[i].date = cashFlowResults[i].payDate;
+                    pathLevelResult[i].values =
+                        static_cast<std::vector<double>>(paylog->amounts().at(i) / (fx * discount));
+                    pathLevelResult[i].time = paylog->amounts().at(i).time();
+                }
                 DLOG("got cashflow " << QuantLib::io::iso_date(cashFlowResults[i].payDate) << " "
                                      << cashFlowResults[i].currency << cashFlowResults[i].amount << " "
                                      << cashFlowResults[i].currency << "-" << model_->baseCcy() << " " << fx
                                      << "discount(" << cashFlowResults[i].currency << ") " << discount);
+                if (paylog->dates().at(i) > model_->referenceDate()) {
+                    cashFlowMcErr[i] = addMcErrorEstimate(
+                        std::string(),
+                        paylog->amounts().at(i) / RandomVariable(paylog->amounts().at(i).size(), (fx * discount)));
+                }
             }
-            instrumentAdditionalResults_["cashFlowResults"] = cashFlowResults;
+            if (paylog->size() > 0) {
+                instrumentAdditionalResults_["cashFlowResults"] = cashFlowResults;
+                instrumentAdditionalResults_["cashFlowResults_MCErrEst"] = cashFlowMcErr;
+                instrumentAdditionalResults_["cashFlowDiscount"] = cashFlowDiscount;
+                instrumentAdditionalResults_["cashFlowFxRate"] = cashFlowFxRate;
+                if (generateAdditionalResultsPathLevel_)
+                    instrumentAdditionalResults_["cashflowResults_pathlevel"] = pathLevelResult;
+            }
 
             // set additional results from the model
 
             instrumentAdditionalResults_.insert(model_->additionalResults().begin(), model_->additionalResults().end());
+            if (generateAdditionalResultsPathLevel_)
+                instrumentAdditionalResultsPathLevel_.insert(model_->additionalResultsPathLevel().begin(),
+                                                             model_->additionalResultsPathLevel().end());
 
         } // if generate additional results
 

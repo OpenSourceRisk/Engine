@@ -24,6 +24,7 @@
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/averageonindexedcouponpricer.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
+#include <qle/instruments/pathlevelresult.hpp>
 #include <qle/math/randomvariablelsmbasissystem.hpp>
 
 #include <ql/math/comparison.hpp>
@@ -641,6 +642,55 @@ RandomVariable AssetModel::getFutureBarrierProb(const std::string& index, const 
                                                 const RandomVariable& barrier, const bool above) const {
     QL_FAIL("AssetModel::getFutureBarrierProb(): not implemented for AssetModelWrapper process type ("
             << static_cast<int>(model_->processType()) << ").");
+}
+
+void AssetModel::populateAdditionalResultsPathLevel() const {
+
+    std::vector<PathLevelResult> pathLevelResults;
+
+    if (type_ == Type::MC) {
+
+        for (auto const& [d, p] : underlyingPaths_) {
+            for (Size i = 0; i < indices_.size(); ++i) {
+                PathLevelResult r;
+                r.resultId = indices_[i].name();
+                r.index = i;
+                r.date = d;
+                r.time = timeFromReference(d);
+                r.values = static_cast<std::vector<double>>(p[i]);
+                pathLevelResults.push_back(r);
+            }
+            PathLevelResult r;
+            r.resultId = "NUMERAIRE";
+            r.date = d;
+            r.time = timeFromReference(d);
+            r.values = static_cast<std::vector<double>>(getNumeraire(d));
+            pathLevelResults.push_back(r);
+        }
+
+    } else {
+
+        for (Size d = 0; d < effectiveSimulationDates_.size(); ++d) {
+            Date date = *std::next(effectiveSimulationDates_.begin(), d);
+            for (Size i = 0; i < indices_.size(); ++i) {
+                PathLevelResult r;
+                r.resultId = indices_[i].name();
+                r.index = i;
+                r.date = date;
+                r.time = timeFromReference(date);
+                r.values = static_cast<std::vector<double>>(underlyingValues_);
+                pathLevelResults.push_back(r);
+            }
+            PathLevelResult r;
+            r.resultId = "NUMERAIRE";
+            r.date = *std::next(effectiveSimulationDates_.begin(), d);
+            r.time = timeFromReference(date);
+            r.values = static_cast<std::vector<double>>(getNumeraire(r.date));
+            pathLevelResults.push_back(r);
+        }
+    }
+
+    additionalResultsPathLevel_["assetmodel_results_pathlevel"] = pathLevelResults;
 }
 
 } // namespace data

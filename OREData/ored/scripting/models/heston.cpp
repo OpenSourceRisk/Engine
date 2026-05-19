@@ -185,10 +185,6 @@ void Heston::performCalculationsFd() const {
         values[iter.index()] = mesher_->location(iter, 0);
     underlyingValues_ = exp(RandomVariable(values));
     
-    // 6 set additional results
-
-    setAdditionalResults();
-
     DLOG("Heston::performCalculationsFd() done");
 }
 
@@ -232,7 +228,6 @@ void Heston::generatePaths() const {
                            correlation, sqrtCorr, eqComIdx);
     }
 
-    setAdditionalResults();
 }
 
 void Heston::populatePathValues(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
@@ -300,7 +295,7 @@ void Heston::populatePathValues(const Size nSamples, std::map<Date, std::vector<
     }
 }
 
-void Heston::setAdditionalResults() const {
+void Heston::populateAdditionalResults() const {
 
     Matrix correlation = getCorrelation();
     
@@ -346,24 +341,6 @@ void Heston::setAdditionalResults() const {
 
     if (model_->calibration().size() > 0)
         additionalResults_["Heston.calibration"] = model_->calibration();
-
-    if (false && type_ == Model::Type::MC) {
-        // copy path data
-        MultiAssetHestonPaths paths;
-        paths.samples = size();
-        for (auto i : indices_)
-            paths.indexNames.push_back(i.name());
-        for (auto d : effectiveSimulationDates_) {
-            paths.dates.push_back(d);
-            paths.data[d] = std::vector<std::vector<Real>>(indices_.size(), std::vector<Real>(size(), 0.0));
-            for (Size i = 0; i < indices_.size(); ++i) {
-                for (Size j = 0; j < size(); ++j) {
-                    paths.data[d][i][j] = underlyingPaths_[d][i][j];
-                }
-            }
-        }
-        additionalResults_["Heston.paths"] = paths;
-    }
 }
 
 Real Heston::extractT0Result(const RandomVariable& value) const {
