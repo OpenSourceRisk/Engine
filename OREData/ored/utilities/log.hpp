@@ -33,7 +33,6 @@
 #define ORE_DATA 64    // 01000000  127
 #define ORE_MEMORY 128 // 10000000  255
 
-#include <atomic>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -462,8 +461,6 @@ public:
     void setMask(unsigned mask) {
         boost::unique_lock<boost::shared_mutex> lock(mutex());
         mask_ = mask;
-        extern std::atomic<bool> g_captureStacktraces;
-        g_captureStacktraces.store(mask >= ORE_DEBUG, std::memory_order_relaxed);
     }
     const std::filesystem::path& rootPath() {
         boost::shared_lock<boost::shared_mutex> lock(mutex());

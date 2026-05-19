@@ -36,8 +36,6 @@
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
 
-#include <atomic>
-
 #if !defined(_WIN32)
 #define BOOST_STACKTRACE_GNU_SOURCE_NOT_REQUIRED
 #include <boost/stacktrace.hpp>
