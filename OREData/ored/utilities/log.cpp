@@ -104,11 +104,6 @@ BOOST_LOG_ATTRIBUTE_KEYWORD(messageType, "MessageType", std::string);
 namespace ore {
 namespace data {
 
-// Atomic flag to control whether stacktrace capture is enabled (set via Log::setMask)
-#if !defined(_WIN32)
-std::atomic<bool> g_captureStacktraces{false};
-#endif
-
 using namespace QuantLib;
 
 const string StderrLogger::name = "StderrLogger";
