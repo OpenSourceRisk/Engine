@@ -189,6 +189,7 @@ protected:
     bool includePastCashflows_;
     bool staticNpvMem_;
     Real indicatorSmoothingForValues_, indicatorSmoothingForDerivatives_, sqrtSmoothingForDerivatives_;
+    bool generateAdditionalResultsPathLevel_;
     // Heston related
     std::vector<Period> hestonCalibrationExpiries_;
     std::vector<Period> hestonCalibrationVarianceTerms_;
@@ -203,7 +204,6 @@ protected:
     HestonProcess::Discretization hestonProcessDiscretization_;
     Size hestonQuantoTimeStepsPerYear_;
     HestonProcess::Discretization hestonQuantoProcessDiscretization_;
-    bool debug_;
 };
 
 } // namespace data

@@ -21,12 +21,15 @@
 
 #include <qle/math/randomvariablelsmbasissystem.hpp>
 #include <qle/methods/multipathvariategenerator.hpp>
+#include <qle/instruments/pathlevelresult.hpp>
 
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 
+#include <ql/math/comparison.hpp>
+#include <ql/quotes/simplequote.hpp>
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/averageonindexedcouponpricer.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
@@ -35,13 +38,12 @@
 #include <qle/models/jyimpliedzeroinflationtermstructure.hpp>
 #include <qle/models/lgmvectorised.hpp>
 #include <qle/utilities/inflation.hpp>
-#include <ql/math/comparison.hpp>
-#include <ql/quotes/simplequote.hpp>
 
 namespace {
 
-QuantExt::RandomVariable sesonalizeCPIRandomVariable(const QuantLib::Date& observationDate, const QuantExt::RandomVariable& CPI,
-                                                     const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationTermStructure>& ts) {
+QuantExt::RandomVariable
+sesonalizeCPIRandomVariable(const QuantLib::Date& observationDate, const QuantExt::RandomVariable& CPI,
+                            const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationTermStructure>& ts) {
     if (ts->seasonality() == nullptr) {
         return CPI;
     }
@@ -493,7 +495,7 @@ RandomVariable GaussianCam::getInfIndexValue(const Size indexNo, const Date& d, 
     Date fixingDate = d;
     Date obsDate = d;
     if (fwd != Null<Date>())
-        fixingDate = fwd;    
+        fixingDate = fwd;
     const auto& index = infIndices_[indexNo].second;
     const auto& zits = index->zeroInflationTermStructure().currentLink();
     auto lag = simulationLag(zits);
@@ -688,10 +690,10 @@ RandomVariable GaussianCam::npv(const RandomVariable& amount, const Date& obsdat
 
         // train coefficients
 
-        coeff = regressionCoefficients(amount, state,
-                                       multiPathBasisSystem(state.size(), params_.regressionOrder, params_.polynomType,
-                                                            {}, minSize),
-                                       filter, RandomVariableRegressionMethod::QR);
+        coeff = regressionCoefficients(
+            amount, state,
+            multiPathBasisSystem(state.size(), params_.regressionOrder, params_.polynomType, {}, minSize), filter,
+            RandomVariableRegressionMethod::QR);
         DLOG("GaussianCam::npv(" << ore::data::to_string(obsdate) << "): regression coefficients are " << coeff
                                  << " (got model state size " << nModelStates << " and " << nAddReg
                                  << " additional regressors, coordinate transform " << coordinateTransform.columns()
@@ -774,6 +776,39 @@ void GaussianCam::injectPaths(const std::vector<QuantLib::Real>* pathTimes,
     update();
 }
 
+void GaussianCam::populateAdditionalResultsPathLevel() const {
+
+    std::vector<PathLevelResult> pathLevelResults;
+
+    for (auto const& [d, p] : underlyingPaths_) {
+        for (Size i = 0; i < indices_.size(); ++i) {
+            PathLevelResult r;
+            r.resultId = indices_[i].name();
+            r.index = i;
+            r.date = d;
+            r.time = timeFromReference(d);
+            r.values = static_cast<std::vector<double>>(p[i]);
+            pathLevelResults.push_back(r);
+        }
+        for (Size i = 0; i < irIndices_.size(); ++i) {
+            PathLevelResult r;
+            r.resultId = irIndices_[i].first.name();
+            r.index = i;
+            r.date = d;
+            r.time = timeFromReference(d);
+            r.values = static_cast<std::vector<double>>(getIrIndexValue(i, d));
+            pathLevelResults.push_back(r);
+        }
+        PathLevelResult r;
+        r.resultId = "NUMERAIRE";
+        r.date = d;
+        r.time = timeFromReference(d);
+        r.values = static_cast<std::vector<double>>(getNumeraire(d));
+        pathLevelResults.push_back(r);
+    }
+
+    additionalResultsPathLevel_["gaussiancam_results_pathlevel"] = pathLevelResults;
+}
 
 } // namespace data
 } // namespace ore

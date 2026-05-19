@@ -283,11 +283,19 @@ CompositeTrade::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataM
 const std::map<std::string, QuantLib::ext::any>& CompositeTrade::additionalData() const {
     additionalData_.clear();
     Size counter = 0;
+    std::map<std::string, double> indexQuantities;
     for (auto const& t : trades_) {
         for (auto const& d : t->additionalData()) {
-            additionalData_[d.first + "_" + std::to_string(counter)] = d.second;
+            if (d.first.starts_with("underlying_quantity_")) {
+                indexQuantities[d.first] += QuantLib::ext::any_cast<double>(d.second);
+            } else {
+                additionalData_[d.first + "_" + std::to_string(counter)] = d.second;
+            }
         }
         ++counter;
+    }
+    for (auto const& [k, v] : indexQuantities) {
+        additionalData_[k] = v;
     }
     return additionalData_;
 }

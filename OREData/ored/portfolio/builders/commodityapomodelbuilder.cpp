@@ -9,7 +9,7 @@
   under the terms of the Modified BSD License.  You should have received a
   copy of the license along with this program.
   The license is also available online at <http://opensourcerisk.org>
-  
+
   This program is distributed on the basis that it will form a useful
   contribution to risk analytics and model standardisation, but WITHOUT
   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -42,55 +42,47 @@ void CommodityApoModelBuilder::setupDatesAndTimes() const {
 }
 
 std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> CommodityApoModelBuilder::getCalibratedProcesses() const {
-    // nothing to do, return original processes
-    std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> result(processes_.size());
-    std::transform(processes_.begin(), processes_.end(), result.begin(),
-                   [](const QuantLib::ext::shared_ptr<StochasticProcess>& p) { return p; });
-    return result;
-}
 
-std::vector<std::vector<Real>> CommodityApoModelBuilder::getCurveTimes() const {
-    // collect times relevant on the discount curve
-    std::vector<Real> times;
-    if (dontCalibrate_)
-        return {times};
-    if (apo_->underlyingFlow()->date() > curves_.front()->referenceDate())
-        times.push_back(curves_.front()->timeFromReference(apo_->underlyingFlow()->date()));
-    return {times};
-}
+    // populate curveTimes, volTimesStrike
 
-std::vector<std::vector<std::pair<Real, Real>>> CommodityApoModelBuilder::getVolTimesStrikes() const {
-    // collect times relevant on the vol surface
-    std::vector<std::pair<Real, Real>> result;
-    if (dontCalibrate_)
-        return {result};
-    auto vol = processes_.front()->blackVolatility();
-    std::set<QuantLib::Date> expiries;
-    Real effectiveStrike = apo_->effectiveStrike();
-    try {
-        effectiveStrike -= apo_->accrued(curves_.front()->referenceDate());
-    } catch (...) {
-        // The accrued calculation might fail due to missing fixings and this will cause an error in the
-        // instrument pricing. We don't throw an error here since the apo might actually be expired so
-        // that no pricing is required at all.
-    }
-    for (auto const& p : apo_->underlyingFlow()->indices()) {
-        if (p.first > curves_.front()->referenceDate()) {
-            if (apo_->underlyingFlow()->useFuturePrice()) {
-                Date expiry = p.second->expiryDate();
-                if (expiries.find(expiry) == expiries.end()) {
-                    result.push_back(std::make_pair(vol->timeFromReference(expiry), effectiveStrike));
-                    expiries.insert(expiry);
-                }
-            } else {
-                if (expiries.find(p.first) == expiries.end()) {
-                    result.push_back(std::make_pair(vol->timeFromReference(p.first), effectiveStrike));
-                    expiries.insert(p.first);
+    if (!dontCalibrate_) {
+        if (apo_->underlyingFlow()->date() > curves_.front()->referenceDate())
+            curveTimes_.insert(curves_.front()->timeFromReference(apo_->underlyingFlow()->date()));
+
+        auto vol = processes_.front()->blackVolatility();
+        std::set<QuantLib::Date> expiries;
+        Real effectiveStrike = apo_->effectiveStrike();
+        try {
+            effectiveStrike -= apo_->accrued(curves_.front()->referenceDate());
+        } catch (...) {
+            // The accrued calculation might fail due to missing fixings and this will cause an error in the
+            // instrument pricing. We don't throw an error here since the apo might actually be expired so
+            // that no pricing is required at all.
+        }
+        for (auto const& p : apo_->underlyingFlow()->indices()) {
+            if (p.first > curves_.front()->referenceDate()) {
+                if (apo_->underlyingFlow()->useFuturePrice()) {
+                    Date expiry = p.second->expiryDate();
+                    if (expiries.find(expiry) == expiries.end()) {
+                        volTimesStrikes_[0].insert(std::make_pair(vol->timeFromReference(expiry), effectiveStrike));
+                        expiries.insert(expiry);
+                    }
+                } else {
+                    if (expiries.find(p.first) == expiries.end()) {
+                        volTimesStrikes_[0].insert(std::make_pair(vol->timeFromReference(p.first), effectiveStrike));
+                        expiries.insert(p.first);
+                    }
                 }
             }
         }
     }
-    return {result};
+
+    // nothing to do, return original processes
+
+    std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> result(processes_.size());
+    std::transform(processes_.begin(), processes_.end(), result.begin(),
+                   [](const QuantLib::ext::shared_ptr<StochasticProcess>& p) { return p; });
+    return result;
 }
 
 AssetModelWrapper::ProcessType CommodityApoModelBuilder::processType() const {

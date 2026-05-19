@@ -33,6 +33,7 @@
 #include <qle/time/yearcounter.hpp>
 #include <qle/models/assetmodelwrapper.hpp>
 #include <qle/time/monthcounter.hpp>
+#include <qle/instruments/pathlevelresult.hpp>
 
 #include <ql/errors.hpp>
 #include <ql/indexes/all.hpp>
@@ -939,7 +940,7 @@ pair<string, string> parseBoostAny(const QuantLib::ext::any& anyType, Size preci
             oss << std::fixed << std::setprecision(precision) << r;
     } else if (anyType.type() == typeid(std::string)) {
         resultType = "string";
-        std::string r = QuantLib::ext::any_cast<std::string>(anyType);
+        auto const& r = QuantLib::ext::any_cast<const std::string&>(anyType);
         oss << std::fixed << std::setprecision(precision) << r;
     } else if (anyType.type() == typeid(Date)) {
         resultType = "date";
@@ -949,7 +950,7 @@ pair<string, string> parseBoostAny(const QuantLib::ext::any& anyType, Size preci
         oss << std::boolalpha << QuantLib::ext::any_cast<bool>(anyType);
     } else if (anyType.type() == typeid(std::vector<bool>)) {
         resultType = "vector_bool";
-        std::vector<bool> r = QuantLib::ext::any_cast<std::vector<bool>>(anyType);
+        auto const& r = QuantLib::ext::any_cast<const std::vector<bool>&>(anyType);
         if (r.size() == 0) {
             oss << "";
         } else {
@@ -961,7 +962,7 @@ pair<string, string> parseBoostAny(const QuantLib::ext::any& anyType, Size preci
         }
     } else if (anyType.type() == typeid(std::vector<double>)) {
         resultType = "vector_double";
-        std::vector<double> r = QuantLib::ext::any_cast<std::vector<double>>(anyType);
+        auto const& r = QuantLib::ext::any_cast<const std::vector<double>&>(anyType);
         if (r.size() == 0) {
             oss << "";
         } else {
@@ -977,7 +978,7 @@ pair<string, string> parseBoostAny(const QuantLib::ext::any& anyType, Size preci
         }
     } else if (anyType.type() == typeid(std::vector<Date>)) {
         resultType = "vector_date";
-        std::vector<Date> r = QuantLib::ext::any_cast<std::vector<Date>>(anyType);
+        auto const& r = QuantLib::ext::any_cast<const std::vector<Date>&>(anyType);
         if (r.size() == 0) {
             oss << "";
         } else {
@@ -989,7 +990,7 @@ pair<string, string> parseBoostAny(const QuantLib::ext::any& anyType, Size preci
         }
     } else if (anyType.type() == typeid(std::vector<std::string>)) {
         resultType = "vector_string";
-        std::vector<std::string> r = QuantLib::ext::any_cast<std::vector<std::string>>(anyType);
+        auto const& r = QuantLib::ext::any_cast<const std::vector<std::string>&>(anyType);
         if (r.size() == 0) {
             oss << "";
         } else {
@@ -1001,7 +1002,7 @@ pair<string, string> parseBoostAny(const QuantLib::ext::any& anyType, Size preci
         }
     } else if (anyType.type() == typeid(std::vector<CashFlowResults>)) {
         resultType = "vector_cashflows";
-        std::vector<CashFlowResults> r = QuantLib::ext::any_cast<std::vector<CashFlowResults>>(anyType);
+        auto const& r = QuantLib::ext::any_cast<const std::vector<CashFlowResults>&>(anyType);
         if (!r.empty()) {
             oss << std::fixed << std::setprecision(precision) << "\"" << r[0];
             for (Size i = 1; i < r.size(); ++i) {
@@ -1011,21 +1012,21 @@ pair<string, string> parseBoostAny(const QuantLib::ext::any& anyType, Size preci
         }
     } else if (anyType.type() == typeid(QuantLib::Matrix)) {
         resultType = "matrix";
-        QuantLib::Matrix r = QuantLib::ext::any_cast<QuantLib::Matrix>(anyType);
+        auto const& r = QuantLib::ext::any_cast<const QuantLib::Matrix&>(anyType);
         std::regex pattern("\n");
         std::ostringstream tmp;
         tmp << std::setprecision(precision) << r;
         oss << std::fixed << std::regex_replace(tmp.str(), pattern, std::string(""));
     } else if (anyType.type() == typeid(QuantLib::Array)) {
         resultType = "array";
-        QuantLib::Array r = QuantLib::ext::any_cast<QuantLib::Array>(anyType);
+        auto const& r = QuantLib::ext::any_cast<const QuantLib::Array&>(anyType);
         oss << std::fixed << std::setprecision(precision) << r;
     } else if (anyType.type() == typeid(QuantLib::Currency)) {
         resultType = "currency";
-        QuantLib::Currency r = QuantLib::ext::any_cast<QuantLib::Currency>(anyType);
+        auto const& r = QuantLib::ext::any_cast<const QuantLib::Currency&>(anyType);
         oss << r;
-    } else if (anyType.type() == typeid(MultiAssetHestonPaths)) {
-        resultType = "heston_paths";
+    } else if (anyType.type() == typeid(std::vector<PathLevelResult>)) {
+        resultType = "path_level_results";
         oss << "see separate report";
     } else if (anyType.type() == typeid(std::vector<AssetModelCalibrationResults>)) {
         resultType = "vector_calibration_results";
@@ -1069,9 +1070,11 @@ FutureConvention::DateGenerationRule parseFutureDateGenerationRule(const std::st
         return FutureConvention::DateGenerationRule::IMMNZD;
     else if (s == "IMMCAD")
         return FutureConvention::DateGenerationRule::IMMCAD;
+    else if (s == "IMMEUR")
+        return FutureConvention::DateGenerationRule::IMMEUR;
     else {
         QL_FAIL("FutureConvention /  DateGenerationRule '" << s << "' not known, expect 'IMM', 'FirstDayOfMonth',"
-                " 'IMMAUD' (alias 'SecondThursday'), 'IMMNZD', or 'IMMCAD'");
+                " 'IMMAUD' (alias 'SecondThursday'), 'IMMNZD', 'IMMCAD', or 'IMMEUR'");
     }
 }
 
@@ -1086,6 +1089,8 @@ std::ostream& operator<<(std::ostream& os, FutureConvention::DateGenerationRule 
         return os << "IMMNZD";
     else if (t == FutureConvention::DateGenerationRule::IMMCAD)
         return os << "IMMCAD";
+    else if (t == FutureConvention::DateGenerationRule::IMMEUR)
+        return os << "IMMEUR";
     else {
         QL_FAIL("Internal error: unknown FutureConvention::DateGenerationRule - check implementation of operator<< "
                 "for this enum");

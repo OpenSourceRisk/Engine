@@ -103,6 +103,9 @@ private:
                             std::map<Date, std::vector<RandomVariable>>& irStates,
                             std::map<Date, std::vector<std::pair<RandomVariable, RandomVariable>>>& infStates,
                             const std::vector<Real>& times, const bool isTraining) const;
+
+    void populateAdditionalResultsPathLevel() const override;
+
     // input parameters
     const Handle<CrossAssetModel> cam_;
     const std::vector<Handle<YieldTermStructure>> curves_;
