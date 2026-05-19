@@ -45,9 +45,9 @@ Real BlackScholesLocalVolBase::compoundingFactor(const Size indexNo, const Date&
            (p->riskFreeRate()->discount(d1) / p->riskFreeRate()->discount(d2));
 }
 
-void BlackScholesLocalVolBase::performCalculationsFd(const bool localVol) const {
+void BlackScholesLocalVolBase::performCalculationsFd() const {
 
-    // 0c if we only have one effective sim date (today), we set the underlying values = spot
+    // 0b  if we only have one effective sim date (today), we set the underlying values = spot
 
     if (effectiveSimulationDates_.size() == 1) {
         underlyingValues_ = RandomVariable(size(), model_->generalizedBlackScholesProcesses()[0]->x0());
@@ -66,8 +66,7 @@ void BlackScholesLocalVolBase::performCalculationsFd(const bool localVol) const 
         auto f = calibrationStrikes_.find(indices_[i].name());
         if (f != calibrationStrikes_.end()) {
             for (Size j = 0; j < std::min(f->second.size(), params_.mesherMaxConcentratingPoints); ++j) {
-                cPoints.back().push_back(
-                    std::make_tuple(std::log(f->second[j]), params_.mesherConcentration, false));
+                cPoints.back().push_back(std::make_tuple(std::log(f->second[j]), params_.mesherConcentration, false));
                 TLOG("added critical point at strike " << f->second[j] << " with concentration "
                                                        << params_.mesherConcentration);
             }
@@ -98,7 +97,7 @@ void BlackScholesLocalVolBase::performCalculationsFd(const bool localVol) const 
     }
 
     operator_ = QuantLib::ext::make_shared<QuantExt::FdmBlackScholesOp>(
-        mesher_, model_->generalizedBlackScholesProcesses()[0], calibrationStrikes[0], localVol, 1E-10, 0,
+        mesher_, model_->generalizedBlackScholesProcesses()[0], calibrationStrikes[0], localVol_, 1E-10, 0,
         quantoHelper, false, true);
 
     // 4 set up bwd solver, hardcoded Douglas scheme (= CrankNicholson)
@@ -111,15 +110,11 @@ void BlackScholesLocalVolBase::performCalculationsFd(const bool localVol) const 
 
     auto locations = mesher_->locations(0);
     underlyingValues_ = exp(RandomVariable(locations));
-
-    // 6 set additional results
-
-    setAdditionalResults(localVol);
 }
 
-void BlackScholesLocalVolBase::setAdditionalResults(const bool localVol) const {
+void BlackScholesLocalVolBase::populateAdditionalResults() const {
 
-    std::string label = localVol ? "LocalVol" : "BlackScholes";
+    std::string label = localVol_ ? "LocalVol" : "BlackScholes";
 
     Matrix correlation = getCorrelation();
 
