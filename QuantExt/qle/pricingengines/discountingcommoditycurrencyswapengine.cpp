@@ -42,8 +42,8 @@ void DiscountingCommodityCurrencySwapEngine::calculate() const {
     // Compute currentNotional: max first future cashflow amount across legs, converted to notional currency
     // Compute aggregatedNotional: max total future cashflow amount across legs, converted to notional currency
     Date asof = Settings::instance().evaluationDate();
-    Real currentNotional = 0.0;
-    Real aggregatedNotional = 0.0;
+    Real currentNotional = QL_MIN_REAL;
+    Real aggregatedNotional = QL_MIN_REAL;
     bool found = false;
     for (Size i = 0; i < arguments_.legs.size(); ++i) {
         auto it = notionalFxQuotes_.find(arguments_.currency[i].code());

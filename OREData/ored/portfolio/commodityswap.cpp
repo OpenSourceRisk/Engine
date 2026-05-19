@@ -389,7 +389,7 @@ QuantLib::Real CommoditySwap::notional(NotionalType type) const {
     }
 
     Date asof = Settings::instance().evaluationDate();
-    Real result = 0;
+    Real result = QL_MIN_REAL;
     bool found = false;
 
     if (type == NotionalType::IMSchedule) {
