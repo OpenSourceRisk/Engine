@@ -38,6 +38,12 @@ namespace analytics {
 void StressedSimmVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) {
     inputs->loadParameterXML<StressTestScenarioData>(stressedSimmScenarioData_, "stressedSimm",
                                                      "stressedSimmScenarioData", true);
+
+    std::string tmp;
+    inputs->loadParameter<std::string>(tmp, "stressedSimm", "version");
+    if (!tmp.empty())
+        inputs->setSimmVersion(tmp);
+    QL_REQUIRE(!inputs->simmVersion().empty(), "SIMM version must not be empty for STRESSED SIMM");
 }
 
 StressedSimmAnalyticImpl::StressedSimmAnalyticImpl(

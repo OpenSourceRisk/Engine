@@ -54,12 +54,9 @@ void CrifVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParam
         inputs->loadParameter<std::string>(tmp, "saccr", "simmVersion");
     if (tmp.empty())
         inputs->loadParameter<std::string>(tmp, "simm", "version");
-    if (!tmp.empty()) {
+    if (!tmp.empty())
         inputs->setSimmVersion(tmp);
-    } else if (inputs->simmVersion().empty()) {
-        inputs->setSimmVersion("2.6");
-        LOG("set SIMM version for CRIF generation to " << inputs->simmVersion());
-    }
+    QL_REQUIRE(!inputs->simmVersion().empty(), "SIMM version must not be empty for CRIF");
 
     // Load name mapper (try crif, then saccr, then simm, then npv, then setup)
     tmp = {};
