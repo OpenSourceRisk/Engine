@@ -147,6 +147,9 @@ public:
                                               const std::string& configuration, const std::string& baseCurrency,
                                               const std::size_t precision = 6);
 
+    virtual void writeAdditionalResultsPathLevelReport(ore::data::Report& report,
+                                                       const ext::shared_ptr<Portfolio>& portfolio,
+                                                       const std::size_t precision = 6);
     virtual void writeMarketData(ore::data::Report& report, const QuantLib::ext::shared_ptr<ore::data::Loader>& loader, const QuantLib::Date& asof,
         const set<string>& quoteNames, bool returnAll);
 
@@ -277,8 +280,6 @@ public:
     void writeModelCalibrationReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio);
 
     void writeModelCalibrationDetailReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio);
-
-    void writeModelPathReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio);
 
 protected:
     std::string nullString_;
