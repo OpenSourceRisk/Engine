@@ -393,14 +393,28 @@ QuantLib::Real CommoditySwap::notional(NotionalType type) const {
     bool found = false;
 
     if (type == NotionalType::IMSchedule) {
-        // for IM schedule we take max total units accros all legs, sum of all qty * strike / price per leg
-        for (Size i = 0; i < legs_.size(); ++i) {
-            Real legAmount = 0.0;
-            for (auto cf = CashFlows::nextCashFlow(legs_[i], false, asof); cf != legs_[i].end(); ++cf) {
-                legAmount += (*cf)->amount();
-                found = true;
+        // if fixed float let, most participants use the fixed leg notional IM Schedule calculation,
+        // based on a survey, so we follow this
+        if (!fixedLegIds_.empty()) {
+            auto legs = roundNettedFloatingLegs_ ? originalLegsBeforeNetting_ : legs_;
+            for (const auto& i : fixedLegIds_) {
+                Real legAmount = 0.0;
+                for (auto cf = CashFlows::nextCashFlow(legs[i], false, asof); cf != legs[i].end(); ++cf) {
+                    legAmount += (*cf)->amount();
+                    found = true;
+                }
+                result = std::max(result, legAmount);
             }
-            result = std::max(result, legAmount);
+        } else {
+            // only floating legs, use the max of the leg amounts, use the netted legs if netting is on.
+            for (Size i = 0; i < legs_.size(); ++i) {
+                Real legAmount = 0.0;
+                for (auto cf = CashFlows::nextCashFlow(legs_[i], false, asof); cf != legs_[i].end(); ++cf) {
+                    legAmount += (*cf)->amount();
+                    found = true;
+                }
+                result = std::max(result, legAmount);
+            }
         }
     } else {
         // default is max current period notional accros all legs (qty * strike/price)
