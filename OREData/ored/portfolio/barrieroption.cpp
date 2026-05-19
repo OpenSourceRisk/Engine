@@ -248,7 +248,7 @@ FxOptionWithBarrier::getDelegatingBuilder(const QuantLib::ext::shared_ptr<Engine
     QuantLib::ext::shared_ptr<FxBarrierOptionScriptedEngineBuilder> fxEuropeanBarrierOptionBuilder;
     try {
         fxEuropeanBarrierOptionBuilder =
-            QuantLib::ext::dynamic_pointer_cast<FxBarrierOptionScriptedEngineBuilder>(ef->builder("FxBarrierOption"));
+            QuantLib::ext::dynamic_pointer_cast<FxBarrierOptionScriptedEngineBuilder>(ef->builder(tradeType()));
         DLOG("FxEuropeanBarrierOptionScriptedEngineBuilder found for trade " << tradeType_);
     } catch (...) {
         // no delegating builder found
