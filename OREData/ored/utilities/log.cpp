@@ -71,8 +71,6 @@ static std::string formatStacktrace(const boost::stacktrace::stacktrace& st) {
     return result;
 }
 
-namespace ore { namespace data { extern std::atomic<bool> g_captureStacktraces; } }
-
 extern "C" {
 void __cxa_throw(void* thrown_exception, std::type_info* tinfo, void(*dest)(void*)) {
     if (ore::data::Log::instance().mask() >= ORE_DEBUG) {
