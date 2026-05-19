@@ -38,11 +38,15 @@
 
 #include <atomic>
 
+#if !defined(_WIN32)
 #define BOOST_STACKTRACE_GNU_SOURCE_NOT_REQUIRED
 #include <boost/stacktrace.hpp>
 #include <dlfcn.h>
 #include <cxxabi.h>
+#endif
 
+
+#if !defined(_WIN32)
 // Thread-local storage for the raw stacktrace captured at the point an exception is thrown
 static thread_local boost::stacktrace::stacktrace g_lastThrowStacktrace;
 static thread_local bool g_hasStacktrace{false};
@@ -73,7 +77,7 @@ namespace ore { namespace data { extern std::atomic<bool> g_captureStacktraces; 
 
 extern "C" {
 void __cxa_throw(void* thrown_exception, std::type_info* tinfo, void(*dest)(void*)) {
-    if (ore::data::g_captureStacktraces.load(std::memory_order_relaxed)) {
+    if (ore::data::Log::instance().mask() >= ORE_DEBUG) {
         g_lastThrowStacktrace = boost::stacktrace::stacktrace();
         g_hasStacktrace = true;
     }
@@ -82,6 +86,7 @@ void __cxa_throw(void* thrown_exception, std::type_info* tinfo, void(*dest)(void
     __builtin_unreachable();
 }
 }
+#endif
 
 using namespace std::filesystem;
 using namespace boost::posix_time;
@@ -102,7 +107,9 @@ namespace ore {
 namespace data {
 
 // Atomic flag to control whether stacktrace capture is enabled (set via Log::setMask)
+#if !defined(_WIN32)
 std::atomic<bool> g_captureStacktraces{false};
+#endif
 
 using namespace QuantLib;
 
@@ -612,12 +619,14 @@ StructuredMessage::StructuredMessage(const Category& category, const Group& grou
     data_["message"] = message;
 
     // Retrieve stacktrace captured at the point the exception was thrown
-    if (g_hasStacktrace) {
-        if (ore::data::Log::instance().mask() >= ORE_DEBUG) {
-            data_["stacktrace"] = formatStacktrace(g_lastThrowStacktrace);
+    #if !defined(_WIN32)
+        if (g_hasStacktrace) {
+            if (ore::data::Log::instance().mask() >= ORE_DEBUG) {
+                data_["stacktrace"] = formatStacktrace(g_lastThrowStacktrace);
+            }
+            g_hasStacktrace = false;
         }
-        g_hasStacktrace = false;
-    }
+    #endif
 
     if (!subFields.empty()) {
         vector<QuantLib::ext::any> subFieldsVector;
