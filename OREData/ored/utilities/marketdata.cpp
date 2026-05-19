@@ -36,6 +36,7 @@
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/canada.hpp>
 #include <ql/time/calendars/unitedkingdom.hpp>
+#include <ql/time/calendars/germany.hpp>
 #include <ql/time/calendars/jointcalendar.hpp>
 
 #include <boost/algorithm/string.hpp>
@@ -343,6 +344,10 @@ Date getMmFutureExpiryDate(QuantLib::Month expiryMonth, QuantLib::Natural expiry
 
     if (rule == FutureConvention::DateGenerationRule::IMM) {
         return IMM::nextDate(refDate, false);  // Third Wednesday
+    } else if (rule == FutureConvention::DateGenerationRule::IMMEUR) {
+        // Two TARGET business days before the third Wednesday of the expiry month (e.g. EUR-EURIBOR-3M futures).
+        auto thirdWednesday = IMM::nextDate(refDate, false); 
+        return Germany(Germany::Eurex).advance(thirdWednesday, -2, Days, Preceding);  
     } else if (rule == FutureConvention::DateGenerationRule::IMMAUD) {
         // Second Thursday of the expiry month (e.g. AUD-BBSW-3M futures).
         return Date::nthWeekday(2, Thursday, expiryMonth, expiryYear);

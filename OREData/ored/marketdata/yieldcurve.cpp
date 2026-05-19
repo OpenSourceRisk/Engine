@@ -2380,10 +2380,11 @@ void YieldCurve::addFutures(const std::size_t index, const QuantLib::ext::shared
                 // Create a MM future helper
                 QL_REQUIRE(
                     futureConvention->dateGenerationRule() == FutureConvention::DateGenerationRule::IMM ||
+                    futureConvention->dateGenerationRule() == FutureConvention::DateGenerationRule::IMMEUR ||
                     futureConvention->dateGenerationRule() == FutureConvention::DateGenerationRule::IMMAUD ||
                     futureConvention->dateGenerationRule() == FutureConvention::DateGenerationRule::IMMNZD ||
                     futureConvention->dateGenerationRule() == FutureConvention::DateGenerationRule::IMMCAD,
-                    "For MM Futures only 'IMM', 'IMMAUD' (alias 'SecondThursday'), 'IMMNZD', or 'IMMCAD' are allowed "
+                    "For MM Futures only 'IMM', 'IMMEUR' (2 bd before ThirdWednesday), 'IMMAUD' (alias 'SecondThursday'), 'IMMNZD', or 'IMMCAD' are allowed "
                     "as date generation rules, check the future convention '"
                         << segment->conventionsID() << "'");
                 Date immDate = getMmFutureExpiryDate(futureQuote->expiryMonth(), futureQuote->expiryYear(),
