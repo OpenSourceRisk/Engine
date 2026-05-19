@@ -91,6 +91,7 @@ private:
     std::vector<std::string> originalLegCurrenciesBeforeNetting_;
     std::set<QuantLib::Size> nettedLegIds_;
     std::set<QuantLib::Size> fixedLegIds_, floatingLegIds_;
+    std::map<QuantLib::Size, QuantLib::Size> fixedLegIdxAfterNetting_;
 };
 
 } // namespace data

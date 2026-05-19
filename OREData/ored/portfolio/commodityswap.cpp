@@ -232,8 +232,8 @@ const std::map<std::string,QuantLib::ext::any>& CommoditySwap::additionalData() 
             additionalData_["legNPV[" + legID + "]"] = cswap->legNPV(i);
             additionalData_["legNPVCCY[" + legID + "]"] = cswap->inCcyLegNPV(i);
         } else if (swap && (!roundNettedFloatingLegs_ || fixedLegIds_.count(i) == 1)) {
-            // if netted output only fixed legs, we add netted leg later
-            additionalData_["legNPV[" + legID + "]"] = swap->legNPV(i);
+            Size fixedLegId = roundNettedFloatingLegs_ ? fixedLegIdxAfterNetting_.at(i) : i;
+            additionalData_["legNPV[" + legID + "]"] = swap->legNPV(fixedLegId);
         } else
             ALOG("commodity swap underlying instrument not set, skip leg npv reporting");
         for (Size j = 0; j < legs[i].size(); ++j) {
@@ -516,6 +516,7 @@ void CommoditySwap::buildNettedLegs(const QuantLib::ext::shared_ptr<EngineFactor
     
     // Collect fixed legs directly to the result
     for (const auto& fixedLegId: fixedLegIds_) {
+        fixedLegIdxAfterNetting_[fixedLegId] = legs.size();
         legs.push_back(originalLegsBeforeNetting_[fixedLegId]);
         legPayers.push_back(originalLegPayersBeforeNetting_[fixedLegId]);
         legCurrencies.push_back(originalLegCurrenciesBeforeNetting_[fixedLegId]);
