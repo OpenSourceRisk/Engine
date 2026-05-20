@@ -199,7 +199,7 @@ void BarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
                 tradeCurrency(), discountCurve, engineFactory, engineFactory->configuration(MarketContext::pricing));
 }
 
-QuantLib::Real BarrierOption::notional() const {
+QuantLib::Real BarrierOption::notional(NotionalType type) const {
     return delegatingTrade_ != nullptr ? delegatingTrade_->notional() : Trade::notional();
 }
 

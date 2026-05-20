@@ -56,7 +56,7 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
-    QuantLib::Real notional() const override;
+    QuantLib::Real notional(NotionalType type = NotionalType::Default) const override;
     const std::map<std::string, QuantLib::ext::any>& additionalData() const override;
 
     bool isExercised() const;
