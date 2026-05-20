@@ -364,15 +364,16 @@ public:
     //! \name Constructors
     //@{
     //! Default constructor
-    FraConvention() {}
+    FraConvention() : endDateFromStart_(false) {}
     //! Index based constructor
-    FraConvention(const string& id, const string& index);
+    FraConvention(const string& id, const string& index, bool endDateFromStart = false);
     //@}
 
     //! \name Inspectors
     //@{
     QuantLib::ext::shared_ptr<IborIndex> index() const;
     const string& indexName() const { return strIndex_; }
+    bool endDateFromStart() const { return endDateFromStart_; }
     //@}
 
     //! \name Serialisation
@@ -384,6 +385,7 @@ public:
 
 private:
     string strIndex_;
+    bool endDateFromStart_;
 };
 
 //! Container for storing Overnight Index Swap conventions

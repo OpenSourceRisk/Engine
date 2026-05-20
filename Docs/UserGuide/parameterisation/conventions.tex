@@ -279,8 +279,15 @@ backward-compatible alias)}
 \subsubsection{FRA Conventions}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 A node with name \emph{FRA} is used to store conventions for FRA quotes. The structure of this node is shown in Listing
-\ref{lst:fra_conventions}. The only piece of information needed is the underlying index name and this is given in the
+\ref{lst:fra_conventions}. The underlying index name is given in the
 \lstinline!Index! node. For example, this could be EUR-EURIBOR-6M, CHF-LIBOR-6M etc.
+
+The optional \lstinline!EndDateConvention! node controls how the FRA maturity (end) date is calculated:
+\begin{itemize}
+\item \lstinline!FromSpot! (default) --- the end date is obtained by a single date roll from the spot date, applying the combined duration of the forward start period and the index tenor.
+\item \lstinline!FromStart! --- the end date is obtained in two steps: first, the start date is computed by rolling from spot by the forward start period; second, the end date is computed by rolling from that start date by the index tenor. When date adjustments (e.g., end-of-month, business day conventions) apply unevenly across intermediate dates, these two approaches may yield different results.
+\end{itemize}
+If the \lstinline!EndDateConvention! node is omitted, \lstinline!FromSpot! is assumed for backward compatibility.
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -288,6 +295,7 @@ A node with name \emph{FRA} is used to store conventions for FRA quotes. The str
 <FRA>
   <Id> </Id>
   <Index> </Index>
+  <EndDateConvention> </EndDateConvention>
 </FRA>
 \end{minted}
 \caption{FRA conventions}

@@ -2467,14 +2467,18 @@ void YieldCurve::addFras(const std::size_t index, const QuantLib::ext::shared_pt
                 Size imm1 = immFraQuote->imm1();
                 Size imm2 = immFraQuote->imm2();
                 helper = QuantLib::ext::make_shared<FraRateHelper>(
-                    immFraQuote->quote(), imm1, imm2, fraConvention->index(), pillarChoice(segment->pillarChoice()));
+                    immFraQuote->quote(), imm1, imm2, fraConvention->index(),
+                    pillarChoice(segment->pillarChoice()), Date(), true,
+                    fraConvention->endDateFromStart());
             } else if (marketQuote->instrumentType() == MarketDatum::InstrumentType::FRA) {
                 QuantLib::ext::shared_ptr<FRAQuote> fraQuote;
                 fraQuote = QuantLib::ext::dynamic_pointer_cast<FRAQuote>(marketQuote);
                 Period periodToStart = fraQuote->fwdStart();
 
                 helper = QuantLib::ext::make_shared<FraRateHelper>(
-                    fraQuote->quote(), periodToStart, fraConvention->index(), pillarChoice(segment->pillarChoice()));
+                    fraQuote->quote(), periodToStart, fraConvention->index(),
+                    pillarChoice(segment->pillarChoice()), Date(), true,
+                    fraConvention->endDateFromStart());
             } else {
                 QL_FAIL("Market quote not of type FRA.");
             }
