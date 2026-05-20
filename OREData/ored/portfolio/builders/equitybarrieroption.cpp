@@ -63,7 +63,7 @@ GenericBarrierOptionData parseEquityBarrierOption(const ore::data::EquityOptionW
                                                "cast to ore::data::EquityOptionWithBarrier. Contact dev.");
     GenericBarrierOptionData data;
     std::string indexName = equityBarrierOption->getIndex()->name();
-    data.underlying = QuantLib::ext::make_shared<EquityUnderlying>("EQ", indexName, 1.0);
+    data.underlying = QuantLib::ext::make_shared<EquityUnderlying>(indexName);
     data.optionData = equityBarrierOption->option();
     // Barrier
     const auto& barrier = equityBarrierOption->barrier();
