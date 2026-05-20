@@ -51,6 +51,12 @@
     <Engine>ScriptedTrade</Engine>
     <EngineParameters />
   </Product>
+  <Product type="FxDoubleBarrierOption">
+    <Model>ScriptedTrade</Model>
+    <ModelParameters />
+    <Engine>ScriptedTrade</Engine>
+    <EngineParameters />
+  </Product>
   <Product type="FxOption">
     <Model>CrossAssetModel</Model>
     <ModelParameters/>
