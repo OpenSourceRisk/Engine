@@ -93,7 +93,8 @@ protected:
     mutable bool includeReferenceDateEvents_;
 
     // set by engine
-    mutable std::set<std::string> relevantCurrencies_;
+    mutable std::set<std::set<std::string>> relevantCurrencies_;
+    mutable std::set<std::string> flatRelevantCurrencies_;
     mutable std::size_t npv_;
     mutable double npvValue_;
 
@@ -113,8 +114,8 @@ private:
         Size legNo = Null<Size>(), cfNo = Null<Size>();
         Date payDate = Null<Date>();
         Date exIntoCriterionDate = Null<Date>();
-        std::string payCcy;
-        std::set<std::string> addCcys; // from index, fx linked etc.
+        // pay ccy + if applicable  additional ccys (from index, fx linked etc.)
+        std::set<std::string> currencies;
         bool payer = false;
         std::size_t flowNode;
     };
