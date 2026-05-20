@@ -128,7 +128,7 @@ void EquitySwap::setIsdaTaxonomyFields() {
     additionalData_["isdaTransaction"] = string("");
 }
 
-QuantLib::Real EquitySwap::notional() const {
+QuantLib::Real EquitySwap::notional(NotionalType type) const {
     Date asof = Settings::instance().evaluationDate();
     if (legs_.size() > equityLegIndex_) {
         for (auto const& c : legs_[equityLegIndex_]) {

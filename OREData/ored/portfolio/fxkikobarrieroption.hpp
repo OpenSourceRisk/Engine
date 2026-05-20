@@ -64,7 +64,7 @@ public:
     const string& calendar() const { return calendar_; }
     const string& fxIndex() const { return fxIndex_; }
     QuantLib::Real strike() const { return soldAmount_ / boughtAmount_; }
-    QuantLib::Real notional() const override;
+    QuantLib::Real notional(NotionalType type = NotionalType::Default) const override;
     string notionalCurrency() const override;
     //@}
 

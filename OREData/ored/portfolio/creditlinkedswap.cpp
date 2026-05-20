@@ -202,7 +202,7 @@ void CreditLinkedSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
     DLOG("RecoveryPayments    legs: " << recoveryPayments_.size());
 }
 
-QuantLib::Real CreditLinkedSwap::notional() const {
+QuantLib::Real CreditLinkedSwap::notional(NotionalType type) const {
     Real notional = 0.0;
     for (auto const& l : legs_)
         notional = std::max(notional, currentNotional(l));

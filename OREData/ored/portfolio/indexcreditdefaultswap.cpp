@@ -268,7 +268,7 @@ const std::map<std::string, QuantLib::ext::any>& IndexCreditDefaultSwap::additio
 }
 
 
-QuantLib::Real IndexCreditDefaultSwap::notional() const {
+QuantLib::Real IndexCreditDefaultSwap::notional(NotionalType type) const {
     Date asof = Settings::instance().evaluationDate();
     // get the current notional from the premium leg
     for (Size i = 0; i < legs_[0].size(); ++i) {
