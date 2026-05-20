@@ -577,30 +577,13 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun, st
         }
     }
 
-    /* populate relevant currency sets:
+    /* populate relevant currency sets */
 
-       - if there is no exercise, we can decompose the underlying path dirty npv into the relevant
-         currency sets per flow
-
-       - if there is exercse, we have to use a global currency set (we _could_ use decomposed sets
-         for conditional expectations of the underlying npv, but not for the option npv, so for
-         simplicity we just use one set for everything, at least for now).
-
-       note: a single flow can be dependent on several currencies, therefore we need currency sets */
-
-    std::set<std::string> singleCurrencySet;
     for (auto const& c : cashflowInfo) {
-        if (exerciseDates.empty()) {
-            relevantCurrencies_.insert(c.currencies);
-        } else {
-            singleCurrencySet.insert(c.currencies.begin(), c.currencies.end());
-        }
-    }
-    if (!exerciseDates.empty()) {
-        relevantCurrencies_.insert(singleCurrencySet);
+        relevantCurrencies_.insert(c.currencies);
     }
 
-    for(auto const& cs: relevantCurrencies_) {
+    for (auto const& cs : relevantCurrencies_) {
         flatRelevantCurrencies_.insert(cs.begin(), cs.end());
     }
 
