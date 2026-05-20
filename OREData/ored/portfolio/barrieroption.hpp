@@ -205,6 +205,8 @@ public:
     QuantLib::Real tradeMultiplier() override { return quantity_; }
     Currency tradeCurrency() override { return currency_; }
     const QuantLib::Handle<QuantLib::Quote>& spotQuote() override { return eqIndex_->equitySpot(); }
+    QuantLib::ext::shared_ptr<DelegatingEngineBuilder>
+    getDelegatingBuilder(const QuantLib::ext::shared_ptr<EngineFactory>& ef) override;
     std::string indexFixingName() override { return "EQ-" + eqIndex_->name(); };
 
     void fromXML(ore::data::XMLNode* node) override { BarrierOption::fromXML(node); }

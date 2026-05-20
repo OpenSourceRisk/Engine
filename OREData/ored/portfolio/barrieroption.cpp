@@ -17,6 +17,7 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/portfolio/barrieroptionwrapper.hpp>
 #include <ored/portfolio/builders/fxbarrieroption.hpp>
+#include <ored/portfolio/builders/equitybarrieroption.hpp>
 #include <ored/portfolio/barrieroption.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
 
@@ -373,6 +374,19 @@ void EquityOptionWithBarrier::additionalToXml(XMLDocument& doc, XMLNode* node) c
     XMLUtils::appendNode(node, tradeStrike_.toXML(doc));
     XMLUtils::addChild(doc, node, "Currency", currencyStr_);
     XMLUtils::addChild(doc, node, "Quantity", quantity_);
+}
+
+QuantLib::ext::shared_ptr<DelegatingEngineBuilder>
+EquityOptionWithBarrier::getDelegatingBuilder(const QuantLib::ext::shared_ptr<EngineFactory>& ef) {
+    QuantLib::ext::shared_ptr<EquityBarrierOptionScriptedEngineBuilder> equityBarrierOptionBuilder;
+    try {
+        equityBarrierOptionBuilder =
+            QuantLib::ext::dynamic_pointer_cast<EquityBarrierOptionScriptedEngineBuilder>(ef->builder(tradeType()));
+        DLOG("EquityBarrierOptionScriptedEngineBuilder found for trade " << tradeType_);
+    } catch (...) {
+        // no delegating builder found
+    }
+    return equityBarrierOptionBuilder;
 }
 
 } // namespace data
