@@ -54,6 +54,8 @@ void CrifVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParam
         inputs->loadParameter<std::string>(tmp, "saccr", "simmVersion");
     if (tmp.empty())
         inputs->loadParameter<std::string>(tmp, "simm", "version");
+    if (tmp.empty())
+        inputs->loadParameter<std::string>(tmp, "portfolioDetails", "version");
     if (!tmp.empty())
         inputs->setSimmVersion(tmp);
     QL_REQUIRE(!inputs->simmVersion().empty(), "SIMM version must not be empty for CRIF");

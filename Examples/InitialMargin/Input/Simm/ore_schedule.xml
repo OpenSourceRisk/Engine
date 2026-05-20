@@ -25,6 +25,7 @@
   <Analytics>
     <Analytic type="imschedule">
       <Parameter name="active">Y</Parameter>
+      <Parameter name="version">2.1</Parameter>
       <Parameter name="crif">crif_schedule.csv</Parameter>
       <Parameter name="calculationCurrency">USD</Parameter>
     </Analytic>
