@@ -28,6 +28,8 @@ using namespace std::filesystem;
 namespace ore {
 namespace analytics {
 
+void ParStressConversionVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) { }
+
 void ParStressConversionAnalyticImpl::setUpConfigurations() {
     const auto stressData =  inputs_->parStressScenarioData();
     analytic()->configurations().simulationConfigRequired = true;

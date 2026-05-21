@@ -520,7 +520,8 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
             }
         }
     }else {
-        refData.type = "Upfront";
+        bool priceIsUpfront = config.priceIsUpfront().value_or(true);
+        refData.type = priceIsUpfront ? "Upfront" : "Price";
 
         for (auto quote : quotes) {
             // If there is no running spread encoded in the quote, the config must have one.
@@ -532,6 +533,7 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
                 runningSpread = config.runningSpread();
             }
             QuantLib::ext::shared_ptr<UpfrontCdsHelper> helper;
+            Real quoteValue = priceIsUpfront ? quote.value : 1 - quote.value;
             if (cdsConv->usesReferenceData()) {
                 QuantLib::ext::shared_ptr<BondReferenceDatum> refDatum = QuantLib::ext::dynamic_pointer_cast<BondReferenceDatum>(
                     referenceData->getData(BondReferenceDatum::TYPE, curveID));
@@ -549,12 +551,12 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
                 QuantLib::Schedule schedule = makeSchedule(scheduleData);
                 auto dc = parseDayCounter(legData.dayCounter());
                 helper = QuantLib::ext::make_shared<UpfrontCdsHelper>(
-                    quote.value, runningSpread, schedule, dc, recoveryRate_, discountCurve,
+                    quoteValue, runningSpread, schedule, dc, recoveryRate_, discountCurve,
                     CreditDefaultSwap::PricingModel::Midpoint, cdsConv->upfrontSettlementDays(),
                     cdsConv->settlesAccrual(), ppt, dc, true);
             } else {
                 helper = QuantLib::ext::make_shared<UpfrontCdsHelper>(
-                    quote.value, runningSpread, quote.term, cdsConv->settlementDays(), cdsConv->calendar(),
+                    quoteValue, runningSpread, quote.term, cdsConv->settlementDays(), cdsConv->calendar(),
                     cdsConv->frequency(), cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(),
                     recoveryRate_, discountCurve, CreditDefaultSwap::PricingModel::Midpoint,
                     cdsConv->upfrontSettlementDays(), cdsConv->settlesAccrual(), ppt, config.startDate(),

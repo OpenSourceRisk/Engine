@@ -37,6 +37,7 @@
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 
 #include <orea/app/marketcalibrationreport.hpp>
+#include <orea/app/inputvariables.hpp>
 
 #include <ql/any.hpp>
 #include <iostream>
@@ -52,10 +53,8 @@ namespace ore {
 namespace analytics {
 
 class InputParameters;
-struct InputVariables;
 class AnalyticsManager;
 class StressTestScenarioData;
-
 class Analytic {
 public:
     class Impl;
@@ -182,6 +181,20 @@ public:
     }
     void addTimer(const std::string& key, const Timer& timer) { timer_.addTimer(key, timer); }
 
+    void setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario,
+                           const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketParams);
+
+    const QuantLib::ext::shared_ptr<Scenario>& offsetScenario() const {
+        return offsetScenario_;
+    }
+
+    const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams() const {
+        return offsetSimMarketParams_ == nullptr ? configurations_.simMarketParams : offsetSimMarketParams_;
+    }
+
+    void applyOffsetScenario(bool continueOnError = true, bool useSpreadedTermStructures = true,
+                             bool overrideTenors = true);
+
 protected:
     std::unique_ptr<Impl> impl_;
 
@@ -210,6 +223,9 @@ protected:
 
     Timer timer_;
 
+    QuantLib::ext::shared_ptr<Scenario> offsetScenario_;
+    QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> offsetSimMarketParams_;
+
 private:
     bool analyticComplete_ = false;
 };
@@ -227,7 +243,12 @@ public:
         const std::set<std::string>& runTypes = {}) = 0;
     
     void initialise();
-    virtual void reset(){};
+    
+    virtual void reset() {
+        for (auto& a : dependentAnalytics_) {
+            a.second.first->reset();
+        }
+    }
     //! Release heavy internal computation state while keeping reports intact
     virtual void releaseMemory(){};
     const bool initialised() { return initialised_; };
@@ -285,6 +306,10 @@ private:
     bool initialised_ = false;
 };
 
+struct MarketDataVariables : public InputVariables {
+    void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
+};
+
 /*! Market analytics
   Does not need a portfolio
   Builds the market
@@ -294,7 +319,7 @@ class MarketDataAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "MARKETDATA";
 
-    MarketDataAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) {
+    MarketDataAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs, QuantLib::ext::make_shared<MarketDataVariables>()) {
         setLabel(LABEL);
     }
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader, 

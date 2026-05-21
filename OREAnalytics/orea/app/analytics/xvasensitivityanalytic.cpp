@@ -35,6 +35,8 @@
 namespace ore {
 namespace analytics {
 
+void XvaSensitivityVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) { }
+
 XvaResults::XvaResults(const QuantLib::ext::shared_ptr<InMemoryReport>& xvaReport) {
     QL_REQUIRE(xvaReport != nullptr, "Empty xvaReport, can not extract any values");
     QL_REQUIRE(xvaReport->hasHeader("TradeId"), "Expect column 'tradeId' in XVA report.");
@@ -98,7 +100,7 @@ void XvaSensitivityAnalyticImpl::buildDependencies() {
 }
 
 XvaSensitivityAnalyticImpl::XvaSensitivityAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-    : Analytic::Impl(inputs) {
+    : Analytic::Impl(inputs, QuantLib::ext::make_shared<XvaSensitivityVariables>()) {
     setLabel(LABEL);
 }
    
@@ -340,8 +342,7 @@ void XvaSensitivityAnalyticImpl::computeXvaUnderScenarios(std::map<size_t, ext::
     auto simMarketParams = analytic()->configurations().simMarketParams;
 
     auto xvaAnalytic = dependentAnalytic("XVA");
-    auto xvaImpl = static_cast<XvaAnalyticImpl*>(xvaAnalytic->impl().get());
-
+    
     for (size_t i = 0; i < scenarioGenerator->samples(); ++i) {
         auto scenario = scenarioGenerator->next(inputs_->asof());
         auto desc = scenarioGenerator->scenarioDescriptions()[i];
@@ -350,8 +351,7 @@ void XvaSensitivityAnalyticImpl::computeXvaUnderScenarios(std::map<size_t, ext::
             DLOG("Calculate XVA for scenario " << label);
             CONSOLE("XVA_SENSITIVITY: Apply scenario " << label);
             xvaAnalytic->reset();
-            xvaImpl->setOffsetScenario(scenario);
-            xvaImpl->setOffsetSimMarketParams(simMarketParams);
+            xvaAnalytic->setOffsetScenario(scenario, simMarketParams);
 	    
 	        CONSOLE("XVA_SENSITIVITY: Calculate Exposure and XVA")
             xvaAnalytic->runAnalytic(loader, {"EXPOSURE", "XVA"});

@@ -624,6 +624,22 @@
           }
         ]
       },
+      "ba_cva\\.csv": {
+        "keys": [
+          "Counterparty",
+          "NettingSet",
+          "Analytic"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "Value"
+            ],
+            "abs_tol": 1e-06,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
       "stresstest\\.csv": {
         "keys": [
           "TradeId",
@@ -796,6 +812,42 @@
               "Status",
               "StatusDecorrelated",
               "SIMMResultCurreny"
+            ],
+            "abs_tol": null,
+            "rel_tol": null
+          }
+        ]
+      },
+      "stressed_simm\\.csv": {
+        "keys": [
+          "Scenario",
+          "Portfolio",
+          "ProductClass",
+          "RiskClass",
+          "MarginType",
+          "Bucket",
+          "SimmSide"
+        ],
+        "use_cols": [
+          "InitialMargin",
+          "Currency",
+          "CalculationCurrency"
+        ],
+        "optional_keys": [
+          "Regulation"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "InitialMargin"
+            ],
+            "abs_tol": 0.1,
+            "rel_tol": 1e-12
+          },
+          {
+            "names": [
+              "Currency",
+              "CalculationCurrency"
             ],
             "abs_tol": null,
             "rel_tol": null
@@ -1355,7 +1407,7 @@
           }
         ]
       },
-      "flownpv\\.csv": {
+      ".*flownpv\\.csv": {
         "keys": [
           "TradeId"
         ],
@@ -1380,6 +1432,23 @@
               "NPV(Base)"
             ],
             "abs_tol": 1e-06,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      ".*additional_results_path_level\\.csv": {
+        "keys": [
+          "TradeId",
+          "ResultId",
+          "Index",
+          "Path"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "Value"
+            ],
+            "abs_tol": null,
             "rel_tol": 1e-12
           }
         ]

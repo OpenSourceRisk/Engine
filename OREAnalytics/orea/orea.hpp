@@ -47,6 +47,7 @@
 #include <orea/app/analytics/sensitivitystressanalytic.hpp>
 #include <orea/app/analytics/simmanalytic.hpp>
 #include <orea/app/analytics/smrcanalytic.hpp>
+#include <orea/app/analytics/stressedsimmanalytic.hpp>
 #include <orea/app/analytics/stresstestanalytic.hpp>
 #include <orea/app/analytics/utilities.hpp>
 #include <orea/app/analytics/varanalytic.hpp>
@@ -157,6 +158,7 @@
 #include <orea/scenario/cvascenarioloader.hpp>
 #include <orea/scenario/deltascenario.hpp>
 #include <orea/scenario/deltascenariofactory.hpp>
+#include <orea/scenario/filteredscenarioreader.hpp>
 #include <orea/scenario/historicalscenariogenerator.hpp>
 #include <orea/scenario/historicalscenarioreturn.hpp>
 #include <orea/scenario/lgmscenariogenerator.hpp>

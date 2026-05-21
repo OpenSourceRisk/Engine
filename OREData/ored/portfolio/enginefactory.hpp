@@ -287,9 +287,6 @@ public:
     //! return model builders
     set<std::pair<string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>>& modelBuilders();
 
-    //! return scripting models
-    set<std::pair<string, QuantLib::ext::shared_ptr<ore::data::Model>>>& scriptingModels();
-
     struct ParameterOverride {
         std::string source;
         std::function<bool(string)> applies;

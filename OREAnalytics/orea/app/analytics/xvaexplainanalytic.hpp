@@ -23,6 +23,7 @@
 #pragma once
 
 #include <orea/app/analytic.hpp>
+#include <orea/app/inputvariables.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
 #include <orea/scenario/stressscenariogenerator.hpp>
 #include <ored/report/inmemoryreport.hpp>
@@ -57,6 +58,10 @@ private:
 };
 
 bool operator<(const XvaExplainResults::XvaReportKey& lhs, const XvaExplainResults::XvaReportKey& rhs);
+
+struct XvaExplainVariables : public InputVariables {
+    void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
+};
 
 //! Explain market implied XVA changes by full revalulation in par rate domain
 //! Time and portfolio effects are excluded by this explain

@@ -583,6 +583,7 @@ public:
 
     // Setters for Correlation
     void setCorrelationMethod(const std::string& s) { parameters_.set("correlation", "correlationMethod", s); }
+    void setCorrelationUri(const std::string& s) { parameters_.set("xva", "correlationUri", s); }
 
     // Setters for exposure simulation
     void setExposureIncludeTodaysCashFlows(bool b) { parameters_.set("simulation", "includeTodaysCashFlows", b); }
@@ -645,6 +646,9 @@ public:
     void setCollateralBalances(const QuantLib::ext::shared_ptr<CollateralBalances>& xml) { parameters_.set("xva", "collateralBalancesFile", xml); };
     void setReportBufferSize(Size s) { setupVariables_.reportBufferSize_ = s; }
     void setCounterpartyManager(const std::string& xml);
+    void setCounterpartyManager(const QuantLib::ext::shared_ptr<ore::data::CounterpartyManager>& cm) {
+        setupVariables_.counterpartyManager_ = cm;
+    }
     void setCalibrationModel(const std::string& s) { parameters_.set("calibration", "model", s); }
     void setHwCalibrationMode(const std::string& s) { parameters_.set("calibration", "mode", s); }
     void setPcaCalibration(bool b) { parameters_.set("calibration", "pcaCalibration", b); }
@@ -803,6 +807,7 @@ public:
         simmCalibrationData_ = s;
     }
     void setSimmCalibrationDataFromFile(const std::string& fileName);
+    void setSimmCalculationCurrency(const std::string& s) { simmCalculationCurrencyCall_ = s; simmCalculationCurrencyPost_ = s; }
     void setSimmCalculationCurrencyCall(const std::string& s) { simmCalculationCurrencyCall_ = s; }
     void setSimmCalculationCurrencyPost(const std::string& s) { simmCalculationCurrencyPost_ = s; }
     void setSimmResultCurrency(const std::string& s) { simmResultCurrency_ = s; }
@@ -1084,7 +1089,7 @@ public:
      **************************************************/
 
     const QuantLib::Date& cashflowHorizon() const { return cashflowHorizon_; };
-    const QuantLib::Date& portfolioFilterDate() const { return portfolioFilterDate_; }    
+    const QuantLib::Date& portfolioFilterDate() const { return portfolioFilterDate_; }
 
     /******************
      * Getters for SIMM
@@ -1100,6 +1105,7 @@ public:
     const std::string& simmReportingCurrency() const { return simmReportingCurrency_; }
     bool enforceIMRegulations() const { return enforceIMRegulations_; }
     bool removeInvalidCrifRecords() const { return removeInvalidCrifRecords_; }
+    bool useSimmParameters() const { return useSimmParameters_; }
     QuantLib::ext::shared_ptr<SimmConfiguration> getSimmConfiguration();
     bool writeSimmIntermediateReports() const { return writeSimmIntermediateReports_; }
 
@@ -1183,6 +1189,12 @@ public:
         return zeroToParShiftSensitivityScenarioData_;
     }
         
+    /************************************
+     * Getters for portfolio details
+     ************************************/
+    const std::string& detailsConfigType() const { return detailsConfigType_; }
+    void setDetailsConfigType(const std::string& type) { detailsConfigType_ = type; }
+
     /*************************************
      * List of analytics that shall be run
      *************************************/
@@ -1229,6 +1241,9 @@ protected:
      *************/
     bool outputTodaysMarketCalibration_ = true;
     std::size_t todaysMarketCalibrationPrecision_ = 8;
+
+    // Portfolio Details
+    std::string detailsConfigType_ = "BASIC";
 
     /***********************************
      * CASHFLOW and CASHFLOWNPV analytic

@@ -23,6 +23,11 @@
 namespace ore {
 namespace analytics {
 
+typedef std::map<ore::data::MarketObject, std::set<std::string>> MarketObjectSets;
+typedef std::map<ore::analytics::RiskFactorKey::KeyType, std::set<std::string>> RiskFactorSets;
+
+void PortfolioDetailsVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) { }
+
 void PortfolioDetailsAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
 		const std::set<std::string>& runTypes) {
 
@@ -95,6 +100,58 @@ void PortfolioDetailsAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<o
     uiReport->end();
     analytic()->addReport(label_, "underlying_indices", uiReport);
 
+    // trade-by-trade market object and risk factor reports
+    // run a portfolio_analyser for each trade in the portfolio to generate a trade-by-trade report.
+    std::map<string, MarketObjectSets> tradeMarketObjects;
+    std::map<string, RiskFactorSets> tradeRiskFactors;
+    for (const auto& t : effectivePortfolio->trades()) {
+        auto singleTradePortfolio = QuantLib::ext::make_shared<ore::data::Portfolio>();
+        singleTradePortfolio->add(t.second);
+        auto tradeAnalyser = QuantLib::ext::make_shared<PortfolioAnalyser>(
+            singleTradePortfolio, inputs_->pricingEngine(), inputs_->baseCurrency(),
+            analytic()->configurations().curveConfig, inputs_->refDataManager(), inputs_->iborFallbackConfig());
+        tradeMarketObjects[t.first] = tradeAnalyser->marketObjects();
+        tradeRiskFactors[t.first] = tradeAnalyser->riskFactors();
+    }
+
+    // now construct the market object report (should be moved to portfolio analyser)
+    QuantLib::ext::shared_ptr<ore::data::InMemoryReport> tmoReport =
+        QuantLib::ext::make_shared<ore::data::InMemoryReport>();
+
+    (*tmoReport)
+        .addColumn("TradeId", string())
+        .addColumn("MarketObjectType", string())
+        .addColumn("MarketObjectName", string());
+
+    for (const auto& [tradeId, marketObjects] : tradeMarketObjects) {
+        for (const auto& [marketObject, names] : marketObjects) {
+            for (const string& name : names) {
+                (*tmoReport).next().add(tradeId).add(to_string(marketObject)).add(name);
+            }
+        }
+    }
+
+    analytic()->addReport(label_, "tradewise_market_objects", tmoReport);
+
+    // now construct the risk factor report (should be moved to portfolio analyser)
+    QuantLib::ext::shared_ptr<ore::data::InMemoryReport> trfReport =
+        QuantLib::ext::make_shared<ore::data::InMemoryReport>();
+    (*trfReport)
+        .addColumn("TradeId", string())
+        .addColumn("RiskFactorType", string())
+        .addColumn("RiskFactorName", string());
+
+    // Build report
+    for (const auto& [tradeId, riskFactors] : tradeRiskFactors) {
+        for (const auto& [riskFactor, names] : riskFactors) {
+            for (const string& name : names) {
+                (*trfReport).next().add(tradeId).add(to_string(riskFactor)).add(name);
+            }
+        }
+    }
+
+    analytic()->addReport(label_, "tradewise_risk_factors", trfReport);
+    // end tradewise reports.
 }
 
 

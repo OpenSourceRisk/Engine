@@ -39,14 +39,18 @@ public:
                          const Size timeStepsPerYear = 1, const Type lvType = Type::Dupire,
                          const std::vector<Real>& calibrationMoneyness = {-2.0, -1.0, 0.0, 1.0, 2.0},
                          const std::string& referenceCalibrationGrid = "", const bool dontCalibrate = false,
-                         const Handle<YieldTermStructure>& baseCurve = {}, const bool observeContinuum = false);
+                         const Handle<YieldTermStructure>& baseCurve = {}, const bool observeContinuum = false,
+                         const std::set<Real>& curveTimes = {},
+                         const std::vector<std::set<std::pair<Real, Real>>>& volTimesStrikes = {});
     LocalVolModelBuilder(const Handle<YieldTermStructure>& curve,
                          const ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
                          const std::set<Date>& simulationDates = {}, const std::set<Date>& addDates = {},
                          const Size timeStepsPerYear = 1, const Type lvType = Type::Dupire,
                          const std::vector<Real>& calibrationMoneyness = {-2.0, -1.0, 0.0, 1.0, 2.0},
                          const std::string& referenceCalibrationGrid = "", const bool dontCalibrate = false,
-                         const Handle<YieldTermStructure>& baseCurve = {}, const bool observeContinuum = false)
+                         const Handle<YieldTermStructure>& baseCurve = {}, const bool observeContinuum = false,
+                         const std::set<Real>& curveTimes = {},
+                         const std::vector<std::set<std::pair<Real, Real>>>& volTimesStrikes = {})
         : LocalVolModelBuilder(std::vector<Handle<YieldTermStructure>>{curve},
                                std::vector<ext::shared_ptr<GeneralizedBlackScholesProcess>>{process}, simulationDates,
                                addDates, timeStepsPerYear, lvType, calibrationMoneyness, referenceCalibrationGrid,
@@ -55,10 +59,6 @@ public:
     std::vector<ext::shared_ptr<StochasticProcess>> getCalibratedProcesses() const override;
 
     AssetModelWrapper::ProcessType processType() const override;
-
-protected:
-    std::vector<std::vector<Real>> getCurveTimes() const override;
-    std::vector<std::vector<std::pair<Real, Real>>> getVolTimesStrikes() const override;
 
 private:
     Type lvType_;

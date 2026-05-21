@@ -50,7 +50,7 @@ public:
 
     void build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) override;
 
-    QuantLib::Real notional() const override;
+    QuantLib::Real notional(NotionalType type = NotionalType::Default) const override;
 
 private:
     std::string creditCurveId_;

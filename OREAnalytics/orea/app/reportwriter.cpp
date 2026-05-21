@@ -32,6 +32,7 @@
 #include <ored/scripting/models/heston.hpp>
 
 #include <qle/currencies/currencycomparator.hpp>
+#include <qle/instruments/pathlevelresult.hpp>
 #include <qle/math/distributioncount.hpp>
 
 #include <ql/cashflows/floatingratecoupon.hpp>
@@ -1044,6 +1045,8 @@ void addAnyResults(Report& report, const std::string& tradeId, const std::string
         vector<std::string> tokens;
         string vect = p.second;
         vect.erase(remove(vect.begin(), vect.end(), '\"'), vect.end());
+        if (vect.empty())
+            return;
         boost::split(tokens, vect, boost::is_any_of(","));
         for (Size i = 0; i < tokens.size(); ++i) {
             boost::trim(tokens[i]);
@@ -1173,6 +1176,43 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, QuantLib::ext::s
     report.end();
 
     LOG("AdditionalResults report written");
+}
+
+void ReportWriter::writeAdditionalResultsPathLevelReport(ore::data::Report& report,
+                                                         const ext::shared_ptr<Portfolio>& portfolio,
+                                                         const std::size_t precision) {
+    LOG("Write additional results path level report");
+    report.addColumn("TradeId", string())
+        .addColumn("ResultId", string())
+        .addColumn("Index", Size())
+        .addColumn("Date", Date())
+        .addColumn("Time", double(), precision)
+        .addColumn("Path", Size())
+        .addColumn("Value", double(), precision);
+    for (auto const& [tId, trade] : portfolio->trades()) {
+        try {
+            for (auto const& [label, result] : trade->instrument()->additionalResults()) {
+                if (result.type() == typeid(std::vector<PathLevelResult>)) {
+                    for (auto const& p : ext::any_cast<const std::vector<PathLevelResult>&>(result)) {
+                        for (Size i = 0; i < p.values.size(); ++i) {
+                            report.next()
+                                .add(tId)
+                                .add(p.resultId)
+                                .add(p.index)
+                                .add(p.date)
+                                .add(p.time)
+                                .add(i)
+                                .add(p.values[i]);
+                        }
+                    }
+                }
+            }
+        } catch (const std::exception& e) {
+            // any exception is reported in additional results report already
+        }
+    }
+    report.end();
+    LOG("Write additional results path breakdown report written");
 }
 
 void ReportWriter::addMarketDatum(Report& report, const ore::data::MarketDatum& md, const Date& actualDate) {
@@ -3018,42 +3058,6 @@ void ReportWriter::writeModelCalibrationDetailReport(ore::data::Report& report, 
                             .add(helper.marketVol)
                             .add(helper.modelVol)
                             .add(helper.modelVol - helper.marketVol);
-                    }
-                }
-            }
-        } catch (std::exception& e) {
-            ALOG("error getting results for trade " << id << ": " << e.what());
-        }
-    }
-    report.end();
-}
-  
-void ReportWriter::writeModelPathReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio) {
-    report.addColumn("TradeId", string())
-        .addColumn("Index", string())
-        .addColumn("Date", Date())
-        .addColumn("Sample", Size())
-        .addColumn("Value", double(), 6);
-
-    Date today = Settings::instance().evaluationDate();
-    for (const auto& [id, trade] : portfolio->trades()) {
-        try {
-            const auto& additionalResults = trade->instrument()->additionalResults();
-            if (auto r = additionalResults.find("Heston.paths"); r != additionalResults.end()) {
-                DLOG("MultiAssetHestonPaths found for trade " << id);
-                const MultiAssetHestonPaths& paths = QuantLib::ext::any_cast<const MultiAssetHestonPaths&>(r->second);
-                DLOG("MultiAssetHestonPaths copied");
-                for (Size d = 0; d < paths.dates.size(); ++d) {
-                    Date date = paths.dates[d];
-                    if (date == today)
-                        continue;
-                    auto it = paths.data.find(date);
-                    if (it == paths.data.end())
-                        continue;
-                    for (Size i = 0; i < paths.indexNames.size(); ++i) {
-                        for (Size j = 0; j < paths.samples; ++j) {
-                            report.next().add(id).add(paths.indexNames[i]).add(date).add(j).add(it->second[i][j]);
-                        }
                     }
                 }
             }

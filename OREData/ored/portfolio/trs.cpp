@@ -760,8 +760,11 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
                         if (currentIdx > 0)
                             --currentIdx;
                         Date fixingDate = valuationDates[currentIdx];
-                        for (auto const& [n, _] : indexNamesAndQty)
-                            requiredFixings_.addFixingDate(fixingDate, n, cpn->date(), false, false);
+                        for (auto const& [n, _] : indexNamesAndQty) {
+                            requiredFixings_.addFixingDate(
+                                underlyingIndex[j]->fixingCalendar().adjust(fixingDate, Preceding), n, cpn->date(),
+                                false, false);
+                        }
                         for (auto const& n : fxIndices) {
                             requiredFixings_.addFixingDate(n.second->fixingCalendar().adjust(fixingDate, Preceding),
                                                            n.first, cpn->date(), false, false);
@@ -876,7 +879,7 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     }
 }
 
-QuantLib::Real TRS::notional() const {
+QuantLib::Real TRS::notional(NotionalType type) const {
     // try to get the notional from the additional results of the instrument
     try {
         return instrument_->qlInstrument()->result<Real>("currentNotional");

@@ -52,7 +52,7 @@ public:
     void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
 
     //! Trade interface
-    QuantLib::Real notional() const override;
+    QuantLib::Real notional(NotionalType type = NotionalType::Default) const override;
     string notionalCurrency() const override;
 
     //! \name Serialisation

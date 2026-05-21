@@ -72,6 +72,7 @@ set(ORE_TEST_UTIL_NAME "TestUtil")
 
 # define build type clang address sanitizer + undefined behaviour + LIBCPP assertions, but keep O2
 set(CMAKE_CXX_FLAGS_CLANG_ASAN_O2 "-fsanitize=address,undefined -fno-omit-frame-pointer -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG -g -O2")
+set(CMAKE_CXX_FLAGS_CLANG_MEMORY_O1 "-fsanitize=memory -fno-omit-frame-pointer -fsanitize-memory-track-origins=2 -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG -g -O1")
 
 # add compiler flag, if not already present
 macro(add_compiler_flag flag supportsFlag)
@@ -172,6 +173,7 @@ else()
 
     add_compile_options(
         -pthread
+        -fno-math-errno
         -Wall
         -Werror=non-virtual-dtor
         -Werror=reorder
@@ -228,7 +230,7 @@ endif()
 set(Boost_NO_WARN_NEW_VERSIONS ON)
 
 # Find Boost components.
-list(APPEND BOOST_COMPONENT_LIST filesystem serialization timer log iostreams thread)
+list(APPEND BOOST_COMPONENT_LIST filesystem serialization timer log iostreams thread stacktrace_basic)
 find_package(Boost REQUIRED COMPONENTS ${BOOST_COMPONENT_LIST})
 
 if (MSVC)

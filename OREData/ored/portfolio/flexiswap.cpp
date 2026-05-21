@@ -268,7 +268,7 @@ void FlexiSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
     addProductModelEngine(*builder);
 }
 
-QuantLib::Real FlexiSwap::notional() const {
+QuantLib::Real FlexiSwap::notional(NotionalType type) const {
     if (notionalTakenFromLeg_ < legs_.size()) {
         Real n = currentNotional(legs_[notionalTakenFromLeg_]);
         if (fabs(n) > QL_EPSILON) {

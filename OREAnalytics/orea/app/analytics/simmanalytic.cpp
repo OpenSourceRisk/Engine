@@ -31,6 +31,8 @@ using namespace std::filesystem;
 namespace ore {
 namespace analytics {
 
+void SimmVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) { }
+
 void SimmAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
 }
@@ -39,6 +41,8 @@ void SimmAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
                                    const std::set<std::string>& runTypes) {
     CONSOLEW("SIMM: Build Market");
     analytic()->buildMarket(loader, false);
+    // Could be stressed or offset, so apply scenario if one is set
+    analytic()->applyOffsetScenario();
     CONSOLE("OK");
 
     auto simmAnalytic = static_cast<SimmAnalytic*>(analytic());

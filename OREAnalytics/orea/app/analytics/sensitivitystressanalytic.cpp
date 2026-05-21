@@ -34,9 +34,11 @@
 namespace ore {
 namespace analytics {
 
+void SensitivityStressVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) { }
+
 SensitivityStressAnalyticImpl::SensitivityStressAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
                                              const QuantLib::ext::optional<QuantLib::ext::shared_ptr<StressTestScenarioData>>& scenarios)
-    : Analytic::Impl(inputs), stressScenarios_(scenarios.value_or(inputs->sensitivityStressScenarioData())) {
+    : Analytic::Impl(inputs, QuantLib::ext::make_shared<SensitivityStressVariables>()), stressScenarios_(scenarios.value_or(inputs->sensitivityStressScenarioData())) {
     setLabel(LABEL);
 }
 
@@ -126,9 +128,7 @@ void SensitivityStressAnalyticImpl::runStressTest(const QuantLib::ext::shared_pt
                 newAnalytic->configurations().simMarketParams = analytic()->configurations().simMarketParams;
                 newAnalytic->configurations().sensiScenarioData = analytic()->configurations().sensiScenarioData;
                 newAnalytic->setPortfolio(analytic()->portfolio());
-                auto sensitivityImpl = static_cast<PricingAnalyticImpl*>(newAnalytic->impl().get());
-                sensitivityImpl->setOffsetScenario(scenario);
-                sensitivityImpl->setOffsetSimMarketParams(analytic()->configurations().simMarketParams);
+                newAnalytic->setOffsetScenario(scenario, analytic()->configurations().simMarketParams);
 
                 CONSOLE("SENSITIVITY_STRESS: Calculate Sensitivity")
                 newAnalytic->runAnalytic(loader, {"SENSITIVITY"});

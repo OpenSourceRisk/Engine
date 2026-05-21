@@ -32,13 +32,14 @@ OISRateHelper::OISRateHelper(Natural settlementDays, const Period& swapTenor, co
                              BusinessDayConvention paymentAdjustment, DateGeneration::Rule rule,
                              const Handle<YieldTermStructure>& discountingCurve, const bool discountCurveGiven,
                              bool telescopicValueDates, Pillar::Choice pillar, Date customPillarDate,
-                             const Calendar& paymentCalendar)
+                             const Calendar& paymentCalendar, Natural rateCutoff)
     : RelativeDateRateHelper(fixedRate), settlementDays_(settlementDays), swapTenor_(swapTenor),
       overnightIndex_(overnightIndex), onIndexGiven_(onIndexGiven), fixedDayCounter_(fixedDayCounter),
       fixedCalendar_(fixedCalendar), paymentLag_(paymentLag), endOfMonth_(endOfMonth),
       paymentFrequency_(paymentFrequency), fixedConvention_(fixedConvention), paymentAdjustment_(paymentAdjustment),
       rule_(rule), paymentCalendar_(paymentCalendar), discountHandle_(discountingCurve),
-      discountCurveGiven_(discountCurveGiven), telescopicValueDates_(telescopicValueDates), pillarChoice_(pillar) {
+      discountCurveGiven_(discountCurveGiven), telescopicValueDates_(telescopicValueDates), pillarChoice_(pillar),
+      rateCutoff_(rateCutoff) {
 
     pillarDate_ = customPillarDate;
 
@@ -69,10 +70,10 @@ void OISRateHelper::initializeDates() {
                 .withPaymentAdjustment(paymentAdjustment_)
                 .withPaymentLag(paymentLag_)
                 .withDiscountingTermStructure(discountRelinkableHandle_)
-                .withTelescopicValueDates(telescopicValueDates_);
-    // TODO: patch QL?
-    //.withFixedAccrualConvention(fixedConvention_)
-    //..withFixedCalendar(fixedCalendar_)
+                .withTelescopicValueDates(telescopicValueDates_)
+                .withFixedLegCalendar(fixedCalendar_)
+                .withFixedLegConvention(fixedConvention_)
+                .withLockoutDays(rateCutoff_);
 
     earliestDate_ = swap_->startDate();
     maturityDate_ = swap_->maturityDate();
@@ -148,12 +149,13 @@ DatedOISRateHelper::DatedOISRateHelper(const Date& startDate, const Date& endDat
                                        BusinessDayConvention fixedConvention, BusinessDayConvention paymentAdjustment,
                                        DateGeneration::Rule rule, const Handle<YieldTermStructure>& discountingCurve,
                                        const bool discountCurveGiven, bool telescopicValueDates, Pillar::Choice pillar,
-                                       Date customPillarDate, const Calendar& paymentCalendar)
+                                       Date customPillarDate, const Calendar& paymentCalendar, Natural rateCutoff)
     : RateHelper(fixedRate), overnightIndex_(overnightIndex), onIndexGiven_(onIndexGiven),
       fixedDayCounter_(fixedDayCounter), fixedCalendar_(fixedCalendar), paymentLag_(paymentLag),
       paymentFrequency_(paymentFrequency), fixedConvention_(fixedConvention), paymentAdjustment_(paymentAdjustment),
       rule_(rule), paymentCalendar_(paymentCalendar), discountHandle_(discountingCurve),
-      discountCurveGiven_(discountCurveGiven), telescopicValueDates_(telescopicValueDates), pillarChoice_(pillar) {
+      discountCurveGiven_(discountCurveGiven), telescopicValueDates_(telescopicValueDates), pillarChoice_(pillar),
+      rateCutoff_(rateCutoff) {
 
     pillarDate_ = customPillarDate;
 
@@ -176,14 +178,14 @@ DatedOISRateHelper::DatedOISRateHelper(const Date& startDate, const Date& endDat
                 .withFixedLegDayCount(fixedDayCounter_)
                 .withPaymentFrequency(paymentFrequency_)
                 .withRule(rule_)
-                // TODO: patch QL
-                //.withFixedAccrualConvention(fixedConvention_)
-                // .withFixedCalendar(fixedCalendar_)
+                .withFixedLegConvention(fixedConvention_)
+                .withFixedLegCalendar(fixedCalendar_)
                 .withPaymentCalendar(paymentCal)
                 .withPaymentAdjustment(paymentAdjustment_)
                 .withPaymentLag(paymentLag_)
                 .withDiscountingTermStructure(termStructureHandle_)
-                .withTelescopicValueDates(telescopicValueDates_);
+                .withTelescopicValueDates(telescopicValueDates_)
+                .withLockoutDays(rateCutoff_);
 
     earliestDate_ = swap_->startDate();
     maturityDate_ = swap_->maturityDate();

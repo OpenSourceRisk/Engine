@@ -43,6 +43,7 @@
 #include <ql/indexes/swapindex.hpp>
 #include <ql/models/calibrationhelper.hpp>
 #include <ql/termstructures/volatility/inflation/cpivolatilitystructure.hpp>
+#include <ql/timegrid.hpp>
 
 #include <boost/variant.hpp>
 
@@ -260,6 +261,10 @@ QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> parseScriptedCommodityIndex(
 */
 std::tuple<QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex>, std::string, bool>
 parseScriptedInflationIndex(const std::string& indexName);
+
+/*! Build a time grid based on given dates and time steps per year */
+QuantLib::TimeGrid buildTimeGrid(const Date& referenceDate, const DayCounter& dayCounter, const std::set<Date>& dates,
+                                 const Size timeStepsPerYear);
 
 } // namespace data
 } // namespace ore

@@ -24,6 +24,7 @@
 #pragma warning(disable : 4503)
 #endif
 
+#include <orea/app/analytics/utilities.hpp>
 #include <orea/app/cleanupsingletons.hpp>
 #include <orea/app/marketdatabinaryloader.hpp>
 #include <orea/app/marketdatacsvloader.hpp>
@@ -41,6 +42,7 @@
 
 #include <ored/configuration/currencyconfig.hpp>
 #include <ored/portfolio/collateralbalance.hpp>
+#include <ored/portfolio/counterpartymanager.hpp>
 #include <ored/report/inmemoryreport.hpp>
 #include <ored/utilities/calendaradjustmentconfig.hpp>
 
@@ -393,13 +395,17 @@ void OREApp::initFromParams() {
 
     // Read all inputs from params and files referenced in params
     CONSOLEW("Loading inputs");
-    inputs_ = QuantLib::ext::make_shared<OREAppInputParameters>(params_);
+    inputs_ = createInputParameters(params_);
     inputs_->loadParameters();
     outputs_ = QuantLib::ext::make_shared<OutputParameters>(params_);
     CONSOLE("OK");
 
     Settings::instance().evaluationDate() = inputs_->asof();
     LOG("initFromParameters done, requested analytics:" << to_string(inputs_->analytics()));
+}
+
+QuantLib::ext::shared_ptr<InputParameters> OREApp::createInputParameters(const QuantLib::ext::shared_ptr<Parameters>& params) {
+    return QuantLib::ext::make_shared<OREAppInputParameters>(params);
 }
 
 void OREApp::initFromInputs() {
@@ -657,7 +663,7 @@ void OREAppInputParameters::loadParameters() {
     // switch default for backward compatibility
     setEntireMarket(true);
     setAllFixings(true);
-    setEomInflationFixings(false);
+    setEomInflationFixings(true);
     setBuildFailedTrades(false);
 
     QL_REQUIRE(params_->hasGroup("setup"), "parameter group 'setup' missing");
@@ -693,6 +699,17 @@ void OREAppInputParameters::loadParameters() {
     tmp = params_->getString("curves", "todaysMarketCalibrationPrecision", false);
     if (tmp != "")
         setTodaysMarketCalibrationPrecision(parseInteger(tmp));
+    
+    /*************
+     * CASHFLOWNPV
+     *************/
+    tmp = params_->getString("cashflownpv", "active", false);
+    if (!tmp.empty() && parseBool(tmp))
+        insertAnalytic("CASHFLOWNPV");
+    
+    tmp = params_->getString("cashflownpv", "cashFlowHorizon", false);
+    if (tmp != "")
+        setCashflowHorizon(tmp);
 
     /*************
      * SENSITIVITY
@@ -1050,9 +1067,18 @@ void OREAppInputParameters::loadParameters() {
     LOG("SIMM");
     tmp = params_->getString("simm", "active", false);
     bool doSimm = !tmp.empty() ? parseBool(tmp) : false;
+    tmp = params_->getString("stressedSimm", "active", false);
+    bool doSimmStressed = !tmp.empty() ? parseBool(tmp) : false;
+
     if (doSimm) {
         insertAnalytic("SIMM");
+    }
 
+    if (doSimmStressed) {
+        insertAnalytic("SIMM_STRESS");
+    }
+
+    if (doSimm || doSimmStressed) {
         tmp = params_->getString("simm", "version", false);
         if (tmp != "")
             setSimmVersion(tmp);
@@ -1095,20 +1121,22 @@ void OREAppInputParameters::loadParameters() {
             }
 
             auto nameMapper = QuantLib::ext::make_shared<SimmBasicNameMapper>();
-            tmp = params_->getString("crif", "nameMappingInputFile", false);
+            tmp = params_->getString("setup", "nameMappingInputFile", false);
             if (tmp != "") {
                 string fileName = (setupVariables_.inputPath_ / tmp).generic_string();
                 LOG("simmNameMapper file name: " << fileName);
-                nameMapper->fromFile(fileName);
+                if (std::filesystem::exists(fileName))
+                    nameMapper->fromFile(fileName);
             }
             simmNameMapper_ = nameMapper;
 
             auto bucketMapper = QuantLib::ext::make_shared<SimmBucketMapperBase>();
-            tmp = params_->getString("crif", "bucketMappingInputFile", false);
+            tmp = params_->getString("setup", "bucketMappingInputFile", false);
             if (tmp != "") {
                 string fileName = (setupVariables_.inputPath_ / tmp).generic_string();
                 LOG("simmBucketMapper file name: " << fileName);
-                bucketMapper->fromFile(fileName);
+                if (std::filesystem::exists(fileName))
+                    bucketMapper->fromFile(fileName);
             }
             simmBucketMapper_ = bucketMapper;
         }
@@ -1119,6 +1147,8 @@ void OREAppInputParameters::loadParameters() {
             setSimmCalculationCurrencyPost(tmp);
         } else {
             QL_REQUIRE(baseCurrency() != "", "either base currency or calculation currency is required");
+            setSimmCalculationCurrencyCall(baseCurrency());
+            setSimmCalculationCurrencyPost(baseCurrency());
         }
 
         tmp = params_->getString("simm", "calculationCurrencyCall", false);
@@ -1160,9 +1190,6 @@ void OREAppInputParameters::loadParameters() {
             string tmpSimm = params_->getString("simm", "version", false);
             QL_REQUIRE(!doSimm || tmp == tmpSimm, "version for imschedule and simm should match");
             setSimmVersion(tmp);
-        } else if (simmVersion() == "") {
-            LOG("set SIMM version for IM Schedule to 2.6, required to load CRIF")
-            setSimmVersion("2.6");
         }
 
         tmp = params_->getString("imschedule", "crif", false);
@@ -1179,8 +1206,10 @@ void OREAppInputParameters::loadParameters() {
             QL_REQUIRE(!doSimm || tmp == tmpSimm, "calculation currency for for imschedule and simm should match");
             setSimmCalculationCurrencyCall(tmp);
             setSimmCalculationCurrencyPost(tmp);
-        } else {
+        } else if (simmCalculationCurrencyCall() == "") {
             QL_REQUIRE(baseCurrency() != "", "either base currency or calculation currency is required");
+            setSimmCalculationCurrencyCall(baseCurrency());
+            setSimmCalculationCurrencyPost(baseCurrency());
         }
 
         tmp = params_->getString("imschedule", "calculationCurrencyCall", false);
@@ -1446,22 +1475,25 @@ void OREAppInputParameters::loadParameters() {
      if (!tmp.empty() && parseBool(tmp)) {
          insertAnalytic("SA_CVA");
 
-         tmp = params_->getString("sacva", "saCvaNetSensitivitiesFile", false);
+         // Forward curveSensiGrid, vegaSensiGrid from sacva to simulation section
+         // (requires access to parameters_ so cannot be moved to loadVariablesImpl)
+         tmp = params_->getString("sacva", "curveSensiGrid", false);
          if (!tmp.empty()) {
-             string file = (setupVariables_.inputPath_ / tmp).generic_string();
-             LOG("Loading aggregated SA-CVA sensitivity input from file" << file);
-             setSaCvaNetSensitivitiesFromFile(file);
-         } else {
-             tmp = params_->getString("sacva", "cvaSensitivitiesFile", false);
-             if (!tmp.empty()) {
-                 string file = (setupVariables_.inputPath_ / tmp).generic_string();
-                 LOG("Loading granular cva sensitivity input from file" << file);
-                 setCvaSensitivitiesFromFile(file);
-             }
-	 }
+             LOG("Loading curveSensiGrid from sacva section: " << tmp);
+             vector<double> grid = parseListOfRealValues(tmp);
+             parameters_.set("simulation", "curveSensiGrid", grid);
+         }
+         tmp = params_->getString("sacva", "vegaSensiGrid", false);
+         if (!tmp.empty()) {
+             LOG("Loading vegaSensiGrid from sacva section: " << tmp);
+             vector<double> grid = parseListOfRealValues(tmp);
+             parameters_.set("simulation", "vegaSensiGrid", grid);
+         }
 
-	 // if both above failed: run the sub-analytic
-	 if (saCvaNetSensitivities().size() == 0) {
+	 // if no sensitivity files provided: run the sub-analytic
+	 tmp = params_->getString("sacva", "saCvaNetSensitivitiesFile", false);
+	 std::string tmp2 = params_->getString("sacva", "cvaSensitivitiesFile", false);
+	 if (tmp.empty() && tmp2.empty()) {
 	     // Ensure that we have the XVA Sensitivity analytic configured, see above
 	     QL_REQUIRE(analytics().find("XVA_SENSITIVITY") != analytics().end(),
 			"SA-CVA needs the XVA Sensitivity analytic configured unless sensitivities are provided as "
@@ -1476,33 +1508,8 @@ void OREAppInputParameters::loadParameters() {
       *********************/
 
      tmp = params_->getString("saccr", "active", false);
-     if (!tmp.empty() && parseBool(tmp)) {
+     if (!tmp.empty() && parseBool(tmp))
          insertAnalytic("SA_CCR");
-
-         // Commodity asset class uses SIMM name and bucket mapping for hedging set definitions
-	     // Note that Equities use reference data for that purpose
-         tmp = params_->getString("saccr", "simmVersion", false);
-         if (tmp != "")
-             setSimmVersion(tmp);
-         else if (simmVersion_ == "") {
-             setSimmVersion("2.6");
-             WLOG("Setting SIMM version to 2.6 for SACCR");
-         }
-
-         tmp = params_->getString("saccr", "simmNameMapping", false);
-         if (tmp != "") {
-             string nameMappingFile = (setupVariables_.inputPath_ / tmp).generic_string();
-             setSimmNameMapperFromFile(nameMappingFile);
-             LOG("Loading SIMM bucket mapping from file " << nameMappingFile);
-         }
-
-         tmp = params_->getString("saccr", "simmBucketMapping", false);
-         if (tmp != "") {
-             string bucketMappingFile = (setupVariables_.inputPath_ / tmp).generic_string();
-             setSimmBucketMapperFromFile(bucketMappingFile);
-             LOG("Loading SIMM bucket mapping from file " << bucketMappingFile);
-         }
-     }
 
      /*********************
       * CVA Capital: BA-CVA
@@ -1519,6 +1526,96 @@ void OREAppInputParameters::loadParameters() {
      tmp = params_->getString("smrc", "active", false);
      if (!tmp.empty() && parseBool(tmp))
          insertAnalytic("SMRC");
+
+     /*************
+      * FRTB
+      *************/
+
+     tmp = params_->getString("frtb", "active", false);
+     if (!tmp.empty() && parseBool(tmp))
+         insertAnalytic("FRTB");
+
+     /*************************
+      * NPV Lagged
+      *************************/
+
+     tmp = params_->getString("npvLagged", "active", false);
+     if (!tmp.empty() && parseBool(tmp))
+         insertAnalytic("NPV_LAGGED");
+
+     /*************************
+      * TOTAL IM
+      *************************/
+
+     tmp = params_->getString("totalIM", "active", false);
+     if (!tmp.empty() && parseBool(tmp))
+         insertAnalytic("TOTAL_IM");
+
+     /*************************
+      * IM Impact
+      *************************/
+
+     tmp = params_->getString("imImpact", "active", false);
+     if (!tmp.empty() && parseBool(tmp))
+         insertAnalytic("IM_IMPACT");
+
+     /*************************
+      * SIMM Backtest
+      *************************/
+
+     tmp = params_->getString("simmBacktest", "active", false);
+     bool doSimmBacktest = !tmp.empty() ? parseBool(tmp) : false;
+
+    if (doSimmBacktest) {
+        insertAnalytic("SIMM_BACKTEST");
+
+        tmp = params_->getString("simmBacktest", "crif", false);
+        if (tmp != "") {
+            string file = (setupVariables_.inputPath_ / tmp).generic_string();
+            setCrifFromFile(file, csvEolChar(), csvSeparator(), '\"', csvEscapeChar());
+        }
+
+    }
+
+     /*************************
+      * CRIF to Trade
+      *************************/
+
+     tmp = params_->getString("crifToTrade", "active", false);
+     if (!tmp.empty() && parseBool(tmp))
+         insertAnalytic("CRIF_TO_TRADE");
+
+     /*************************
+      * FRTB CRIF
+      *************************/
+
+     tmp = params_->getString("frtbCrif", "active", false);
+     if (!tmp.empty() && parseBool(tmp))
+         insertAnalytic("FRTBCRIF");
+
+     /*************************
+      * Fixing Estimate
+      *************************/
+
+     tmp = params_->getString("fixingEstimate", "active", false);
+     if (!tmp.empty() && parseBool(tmp))
+         insertAnalytic("FIXING_ESTIMATE");
+
+     /*************************
+      * SIMM Optimization
+      *************************/
+
+     tmp = params_->getString("simmOptimization", "active", false);
+     if (!tmp.empty() && parseBool(tmp))
+         insertAnalytic("SIMM_OPTIMIZATION");
+
+     /*************************
+      * STRESS
+      *************************/
+
+     tmp = params_->getString("stress", "active", false);
+     if (!tmp.empty() && parseBool(tmp))
+         insertAnalytic("STRESS");
 
      /*************
       * cashflow npv and dynamic backtesting
@@ -1618,6 +1715,10 @@ void OREAppInputParameters::loadParameters() {
     tmp = params_->getString("portfolioDetails", "active", false);
     if (!tmp.empty() && parseBool(tmp))
         insertAnalytic("PORTFOLIO_DETAILS");
+    
+    tmp = params_->getString("portfolioDetails", "portfolio_details_configuration", false);
+    if (!tmp.empty())
+        setDetailsConfigType(tmp);
 
     /*****************
      * CRIF Generation
@@ -1653,13 +1754,12 @@ void OREAppInputParameters::loadParameters() {
 	    tmp = params_->getString("crif", "simmVersion", false);
         if (tmp != "") {
             setSimmVersion(tmp);
-        } else {
-            LOG("set SIMM version for CRIF generation to 2.6")
-            setSimmVersion("2.6");
         }
 
 	    auto nameMapper = QuantLib::ext::make_shared<SimmBasicNameMapper>();
-	    tmp = params_->getString("crif", "nameMappingInputFile", false);
+	    tmp = params_->getString("setup", "nameMappingInputFile", false);
+	    if (tmp.empty())
+	        tmp = params_->getString("crif", "nameMappingInputFile", false);
 	    if (tmp != "") {
 	       string fileName = (setupVariables_.inputPath_ / tmp).generic_string();
 	       LOG("simmNameMapper file name: " << fileName);
@@ -1668,7 +1768,9 @@ void OREAppInputParameters::loadParameters() {
 	    simmNameMapper_ = nameMapper;
 
 	    auto bucketMapper = QuantLib::ext::make_shared<SimmBucketMapperBase>();
-	    tmp = params_->getString("crif", "bucketMappingInputFile", false);
+	    tmp = params_->getString("setup", "bucketMappingInputFile", false);
+	    if (tmp.empty())
+	        tmp = params_->getString("crif", "bucketMappingInputFile", false);
 	    if (tmp != "") {
 	       string fileName = (setupVariables_.inputPath_ / tmp).generic_string();
 	       LOG("simmBucketMapper file name: " << fileName);

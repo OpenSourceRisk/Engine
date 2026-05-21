@@ -61,7 +61,8 @@ class ValuationCalculator;
   \ingroup simulation
 */
 
-class SensitivityAnalysis : public ore::data::ProgressReporter {
+class 
+SensitivityAnalysis : public ore::data::ProgressReporter {
 public:
     //! Constructor using single-threaded engine
     SensitivityAnalysis(

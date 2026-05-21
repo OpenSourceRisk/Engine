@@ -132,7 +132,9 @@ public:
     void add(const QuantExt::RiskFactorKey& key, QuantLib::Real value) override;
     QuantLib::Real get(const QuantExt::RiskFactorKey& key) const override;
     const bool isAbsolute() const override;
+    void setAbsolute(const bool b) override;
     const bool isPar() const override;
+    void setPar(const bool b) override;
     const std::map<std::pair<QuantExt::RiskFactorKey::KeyType, std::string>, std::vector<std::vector<QuantLib::Real>>>&
     coordinates() const override;
     QuantLib::ext::shared_ptr<QuantExt::Scenario> clone() const override;

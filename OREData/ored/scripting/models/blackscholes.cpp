@@ -30,10 +30,11 @@ using namespace QuantLib;
 using namespace QuantExt;
 
 void BlackScholes::performModelCalculations() const {
+    localVol_ = false;
     if (type_ == Model::Type::MC)
         performCalculationsMc();
     else if (type_ == Model::Type::FD)
-        performCalculationsFd(false);
+        performCalculationsFd();
 }
 
 void BlackScholes::performCalculationsMc() const {
@@ -155,8 +156,6 @@ void BlackScholes::generatePaths() const {
                                                          params_.sobolOrdering, params_.sobolDirectionIntegers),
                            drift, sqrtCov);
     }
-
-    setAdditionalResults(false);
 } // generatePathsBs()
 
 void BlackScholes::populatePathValues(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,

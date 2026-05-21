@@ -38,8 +38,11 @@
 namespace ore {
 namespace analytics {
 
+void XvaExplainVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) { }
+
 void curveShiftData(const QuantLib::Date& asof, std::map<std::string, ext::shared_ptr<StressTestScenarioData::CurveShiftData>>& data, const RiskFactorKey& key,
                     double shift, const ext::shared_ptr<SensitivityScenarioData::CurveShiftData>& sensiData) {
+
     if (data.count(key.name) == 0) {
         StressTestScenarioData::CurveShiftData shiftData;
         shiftData.shiftType = ShiftType::Absolute;
@@ -173,7 +176,7 @@ bool operator<(const XvaExplainResults::XvaReportKey& a, const XvaExplainResults
 }
 
 XvaExplainAnalyticImpl::XvaExplainAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-    : Analytic::Impl(inputs) {
+    : Analytic::Impl(inputs, QuantLib::ext::make_shared<XvaExplainVariables>()) {
     setLabel(LABEL);
     mporDate_ = inputs_->mporDate() != Date()
                     ? inputs_->mporDate()

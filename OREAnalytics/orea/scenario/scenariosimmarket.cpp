@@ -542,7 +542,14 @@ ScenarioSimMarket::ScenarioSimMarket(
                         if (wrapperIndex->allowsExtrapolation())
                             ich->enableExtrapolation();
 
+                        // unpack original index, if i is a fallback index itself
+                        if (auto f = QuantLib::ext::dynamic_pointer_cast<FallbackOvernightIndex>(*index))
+                            index = Handle<IborIndex>(f->originalIndex());
+                        else if (auto f = QuantLib::ext::dynamic_pointer_cast<FallbackIborIndex>(*index))
+                            index = Handle<IborIndex>(f->originalIndex());
+
                         QuantLib::ext::shared_ptr<IborIndex> i = index->clone(ich);
+
                         if (iborFallbackConfig_ && iborFallbackConfig_->isIndexReplaced(name, asof_)) {
                             // handle ibor fallback indices
                             auto fallbackData = iborFallbackConfig_->fallbackData(name);
@@ -558,9 +565,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                                            << fallbackData.rfrIndex
                                            << "' to overnight index when building the ibor fallback index '" << name
                                            << "'");
-                            if (auto original = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(i))
+                            if (auto on = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(i))
                                 i = QuantLib::ext::make_shared<QuantExt::FallbackOvernightIndex>(
-                                original, rfrInd, fallbackData.spread, fallbackData.switchDate,
+                                    on, rfrInd, fallbackData.spread, fallbackData.switchDate,
                                     iborFallbackConfig_->useRfrCurveInSimulationMarket());
                             else
                                 i = QuantLib::ext::make_shared<QuantExt::FallbackIborIndex>(

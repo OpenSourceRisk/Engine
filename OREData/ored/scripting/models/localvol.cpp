@@ -25,10 +25,11 @@ using namespace QuantLib;
 using namespace QuantExt;
 
 void LocalVol::performModelCalculations() const {
+    localVol_ = true;
     if (type_ == Model::Type::MC)
         performCalculationsMc();
     else if (type_ == Model::Type::FD)
-        performCalculationsFd(true);
+        performCalculationsFd();
 }
 
 void LocalVol::performCalculationsMc() const {
@@ -106,8 +107,6 @@ void LocalVol::generatePaths() const {
                                                            params_.sobolOrdering, params_.sobolDirectionIntegers),
                              correlation, sqrtCorr, deterministicDrift, eqComIdx, t, dt, sqrtdt);
     }
-
-    setAdditionalResults(true);
 } // generatePathsLv()
 
 void LocalVol::populatePathValuesLv(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,

@@ -110,6 +110,9 @@ protected:
                               const QuantLib::ext::shared_ptr<Parameters>& params);
     QuantLib::ext::shared_ptr<CSVLoader> buildCsvLoader(const QuantLib::ext::shared_ptr<Parameters>& params);
 
+    //! Factory method for creating InputParameters, override in derived classes
+    virtual QuantLib::ext::shared_ptr<InputParameters> createInputParameters(const QuantLib::ext::shared_ptr<Parameters>& params);
+
     void initFromParams();
     void initFromInputs();
       
