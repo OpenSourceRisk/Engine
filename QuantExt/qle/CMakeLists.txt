@@ -173,6 +173,7 @@ math/differentialevolution_mt.cpp
 math/discretedistribution.cpp
 math/fillemptymatrix.cpp
 math/gpucodegenerator.cpp
+math/gpuqrsolve.cpp
 math/matrixfunctions.cpp
 math/openclenvironment.cpp
 math/randomvariable.cpp

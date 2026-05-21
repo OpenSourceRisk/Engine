@@ -18,9 +18,8 @@
 
 #include <qle/math/randomvariable.hpp>
 #include <qle/math/randomvariablelsmbasissystem.hpp>
-
 #ifdef ORE_ENABLE_CUDA
-#include <qle/math/gpuqrsolve_multistream.hpp>
+#include <qle/math/gpuqrsolve.hpp>
 #endif
 
 #include <ql/experimental/math/moorepenroseinverse.hpp>
@@ -1323,7 +1322,7 @@ Array regressionCoefficients(
         }
     } else if (regressionMethod == RandomVariableRegressionMethod::QR) {
 #ifdef ORE_ENABLE_CUDA
-        res = gpuQrSolveMultiStream(A, b);
+        res = gpuQrSolve(A, b);
 #else
         res = qrSolve(A, b);
 #endif
