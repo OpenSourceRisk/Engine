@@ -42,7 +42,7 @@ public:
     const string& currency() { return currency_; }
     double strike() { return strike_; }
     //double notional() const override { return notional_; }
-    double notional() const override;
+    double notional(NotionalType type = NotionalType::Default) const override;
     const string& startDate() { return startDate_; }
     const string& endDate() { return endDate_; }
     const string& calendar() { return calendar_; }

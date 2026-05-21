@@ -381,7 +381,7 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
     sensitivityDecomposition_ = iCdsOptionEngineBuilder->sensitivityDecomposition();
 }
 
-Real IndexCreditDefaultSwapOption::notional() const {
+Real IndexCreditDefaultSwapOption::notional(NotionalType type) const {
 
     if (notionals_.valuationDate == Null<Real>()) {
         ALOG("Error retrieving current notional for index credit default swap option "

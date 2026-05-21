@@ -41,7 +41,7 @@ public:
         : Trade("CommoditySwaption", env), legData_(legData) {}
 
     void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory) override;
-    QuantLib::Real notional() const override;
+    QuantLib::Real notional(NotionalType type = NotionalType::Default) const override;
 
     //! Add underlying Commodity names
     std::map<AssetClass, std::set<std::string>>

@@ -307,7 +307,7 @@ const std::map<std::string,QuantLib::ext::any>& Swap::additionalData() const {
     return additionalData_;
 }
 
-QuantLib::Real Swap::notional() const {
+QuantLib::Real Swap::notional(NotionalType type) const {
     // try to get the notional from the additional results of the instrument
     try {
         return instrument_->qlInstrument(true)->result<Real>("currentNotional");

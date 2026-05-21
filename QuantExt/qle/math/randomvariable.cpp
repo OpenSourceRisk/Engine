@@ -18,9 +18,8 @@
 
 #include <qle/math/randomvariable.hpp>
 #include <qle/math/randomvariablelsmbasissystem.hpp>
-
 #ifdef ORE_ENABLE_CUDA
-#include <qle/math/gpuqrsolve_multistream.hpp>
+#include <qle/math/gpuqrsolve.hpp>
 #endif
 
 #include <ql/experimental/math/moorepenroseinverse.hpp>
@@ -457,6 +456,19 @@ RandomVariable::operator Array() const {
         stopDataStats(n_);
     }
     return array;
+}
+
+RandomVariable::operator std::vector<double>() const {
+    std::vector<double> v(n_);
+    if (deterministic_)
+        std::fill(v.begin(), v.end(), constantData_);
+    else if (n_ != 0) {
+        resumeDataStats();
+        // std::memcpy(array.begin(), data_, n_ * sizeof(double));
+        std::copy(data_, data_ + n_, v.begin());
+        stopDataStats(n_);
+    }
+    return v;
 }
 
 void RandomVariable::clear() {
@@ -1310,7 +1322,7 @@ Array regressionCoefficients(
         }
     } else if (regressionMethod == RandomVariableRegressionMethod::QR) {
 #ifdef ORE_ENABLE_CUDA
-        res = gpuQrSolveMultiStream(A, b);
+        res = gpuQrSolve(A, b);
 #else
         res = qrSolve(A, b);
 #endif

@@ -118,7 +118,7 @@ void FxSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory
 }
 
   
-QuantLib::Real FxSwap::notional() const {
+QuantLib::Real FxSwap::notional(NotionalType type) const {
     // try to get the notional from the additional results of the instrument
     try {
         return instFar_->result<Real>("currentNotional");

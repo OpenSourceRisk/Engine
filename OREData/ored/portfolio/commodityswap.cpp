@@ -232,8 +232,8 @@ const std::map<std::string,QuantLib::ext::any>& CommoditySwap::additionalData() 
             additionalData_["legNPV[" + legID + "]"] = cswap->legNPV(i);
             additionalData_["legNPVCCY[" + legID + "]"] = cswap->inCcyLegNPV(i);
         } else if (swap && (!roundNettedFloatingLegs_ || fixedLegIds_.count(i) == 1)) {
-            // if netted output only fixed legs, we add netted leg later
-            additionalData_["legNPV[" + legID + "]"] = swap->legNPV(i);
+            Size fixedLegId = roundNettedFloatingLegs_ ? fixedLegIdxAfterNetting_.at(i) : i;
+            additionalData_["legNPV[" + legID + "]"] = swap->legNPV(fixedLegId);
         } else
             ALOG("commodity swap underlying instrument not set, skip leg npv reporting");
         for (Size j = 0; j < legs[i].size(); ++j) {
@@ -377,40 +377,61 @@ const std::map<std::string,QuantLib::ext::any>& CommoditySwap::additionalData() 
     return additionalData_;
 }
 
-QuantLib::Real CommoditySwap::notional() const {
-    // For cross-currency, try to get the notional from the engine's additional results
+QuantLib::Real CommoditySwap::notional(NotionalType type) const {
     if (isXCCY_) {
+        const string key = (type == NotionalType::IMSchedule) ? "aggregatedNotional" : "currentNotional";
         try {
-            return instrument_->qlInstrument(true)->result<Real>("currentNotional");
+            return instrument_->qlInstrument(true)->result<Real>(key);
         } catch (const std::exception& e) {
-            ALOG("Could not retrieve currentNotional from xccy commodity swap engine: " << e.what());
+            ALOG("Could not retrieve " << key << " from xccy commodity swap engine for " << id() << ": " << e.what());
             return Null<Real>();
         }
     }
+
     Date asof = Settings::instance().evaluationDate();
-    Real currentAmount = Null<Real>();
-    // Get maximum current cash flow amount (quantity * strike, quantity * spot/forward price) across legs
-    // include gearings and spreads; 
-    for (Size i = 0; i < legs_.size(); ++i) {
-        for (Size j = 0; j < legs_[i].size(); ++j) {
-            QuantLib::ext::shared_ptr<CashFlow> flow = legs_[i][j];
-            // pick flow with earliest payment date on this leg
-            if (flow->date() > asof) {
-                if (currentAmount == Null<Real>())
-                    currentAmount = flow->amount();
-                else // set on a previous leg already, set to maximum
-                    currentAmount = std::max(currentAmount, flow->amount());
-                break; // move on to the next leg
+    Real result = QL_MIN_REAL;
+    bool found = false;
+
+    if (type == NotionalType::IMSchedule) {
+        // if fixed float let, most participants use the fixed leg notional IM Schedule calculation,
+        // based on a survey, so we follow this
+        if (!fixedLegIds_.empty()) {
+            auto legs = roundNettedFloatingLegs_ ? originalLegsBeforeNetting_ : legs_;
+            for (const auto& i : fixedLegIds_) {
+                Real legAmount = 0.0;
+                for (auto cf = CashFlows::nextCashFlow(legs[i], false, asof); cf != legs[i].end(); ++cf) {
+                    legAmount += (*cf)->amount();
+                    found = true;
+                }
+                result = std::max(result, legAmount);
+            }
+        } else {
+            // only floating legs, use the max of the leg amounts, use the netted legs if netting is on.
+            for (Size i = 0; i < legs_.size(); ++i) {
+                Real legAmount = 0.0;
+                for (auto cf = CashFlows::nextCashFlow(legs_[i], false, asof); cf != legs_[i].end(); ++cf) {
+                    legAmount += (*cf)->amount();
+                    found = true;
+                }
+                result = std::max(result, legAmount);
+            }
+        }
+    } else {
+        // default is max current period notional accros all legs (qty * strike/price)
+        for (Size i = 0; i < legs_.size(); ++i) {
+            auto nextFlow = CashFlows::nextCashFlow(legs_[i], false, asof);
+            if (nextFlow != legs_[i].end()) {
+                auto amount = (*nextFlow)->amount();
+                found = true;
+                result = std::max(result, amount);
             }
         }
     }
+    if (found)
+        return result;
 
-    if (currentAmount != Null<Real>()) {
-        return currentAmount;
-    } else {
-        ALOG("Error retrieving current notional for commodity swap " << id() << " as of " << io::iso_date(asof));
-        return Null<Real>();
-    }
+    ALOG("Error retrieving notional for commodity swap " << id() << " as of " << io::iso_date(asof));
+    return Null<Real>();
 }
 
 std::map<AssetClass, std::set<std::string>>
@@ -509,6 +530,7 @@ void CommoditySwap::buildNettedLegs(const QuantLib::ext::shared_ptr<EngineFactor
     
     // Collect fixed legs directly to the result
     for (const auto& fixedLegId: fixedLegIds_) {
+        fixedLegIdxAfterNetting_[fixedLegId] = legs.size();
         legs.push_back(originalLegsBeforeNetting_[fixedLegId]);
         legPayers.push_back(originalLegPayersBeforeNetting_[fixedLegId]);
         legCurrencies.push_back(originalLegCurrenciesBeforeNetting_[fixedLegId]);

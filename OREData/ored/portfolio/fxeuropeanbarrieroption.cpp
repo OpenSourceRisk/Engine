@@ -440,7 +440,7 @@ Real FxEuropeanBarrierOption::strike() const {
     return soldAmount_ / boughtAmount_;
 }
 
-QuantLib::Real FxEuropeanBarrierOption::notional() const {
+QuantLib::Real FxEuropeanBarrierOption::notional(NotionalType type) const {
     return delegatingBuilderTrade_ != nullptr ? delegatingBuilderTrade_->notional() : Trade::notional();
 }
 

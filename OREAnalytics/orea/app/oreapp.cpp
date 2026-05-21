@@ -1082,10 +1082,6 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->getString("simm", "version", false);
         if (tmp != "")
             setSimmVersion(tmp);
-        else if (simmVersion() == "") {
-            LOG("set SIMM version to 2.1 (default)");
-            setSimmVersion("2.1");
-        }
 
         tmp = params_->getString("simm", "mporDays", false);
         if (tmp != "")
@@ -1194,9 +1190,6 @@ void OREAppInputParameters::loadParameters() {
             string tmpSimm = params_->getString("simm", "version", false);
             QL_REQUIRE(!doSimm || tmp == tmpSimm, "version for imschedule and simm should match");
             setSimmVersion(tmp);
-        } else if (simmVersion() == "") {
-            LOG("set SIMM version for IM Schedule to 2.6, required to load CRIF")
-            setSimmVersion("2.6");
         }
 
         tmp = params_->getString("imschedule", "crif", false);
@@ -1761,9 +1754,6 @@ void OREAppInputParameters::loadParameters() {
 	    tmp = params_->getString("crif", "simmVersion", false);
         if (tmp != "") {
             setSimmVersion(tmp);
-        } else {
-            LOG("set SIMM version for CRIF generation to 2.6")
-            setSimmVersion("2.6");
         }
 
 	    auto nameMapper = QuantLib::ext::make_shared<SimmBasicNameMapper>();

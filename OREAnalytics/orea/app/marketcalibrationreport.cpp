@@ -58,10 +58,33 @@ void MarketCalibrationReportBase::populateReport(const QuantLib::ext::shared_ptr
     if (calibrationFilters_.mdFilterCurves) {
         // First cut at adding curves
 
-        // TODO simplify that and just loop over yield and dividend curve calibration info, the only change
-        // would be that we would not be able to set the discountCurve flag any more, not sure if that is very
-        // important? add to curves here Add discount curves first, so EUR-EONIA gets marked as a discount curve
-        // even if it is an IndexCurve too
+        // We process IndexCurve first because the index (forward) curve contains all the information
+        // of the discount curve (discount factors, zero rates) plus forward rates. If a curve is both
+        // a discount curve and an index curve (e.g. AONIA when base ccy is AUD), we want to output the
+        // version with forward rates. The duplicate detection will then skip the discount-only version.
+
+        // Collect discount curve specs to correctly set isDiscount flag on index curves
+        std::set<std::string> discountCurveSpecs;
+        if (todaysMarketParams->hasMarketObject(MarketObject::DiscountCurve)) {
+            for (auto it : todaysMarketParams->mapping(MarketObject::DiscountCurve, Market::defaultConfiguration)) {
+                discountCurveSpecs.insert(it.second);
+            }
+        }
+
+        if (todaysMarketParams->hasMarketObject(MarketObject::IndexCurve)) {
+            for (auto it : todaysMarketParams->mapping(MarketObject::IndexCurve, Market::defaultConfiguration)) {
+                auto yts = calibrationInfo->yieldCurveCalibrationInfo.find(it.second);
+                bool isAlsoDiscount = discountCurveSpecs.count(it.second) > 0;
+                try {
+                    auto index = market->iborIndex(it.first);
+                    if (yts != calibrationInfo->yieldCurveCalibrationInfo.end())
+                        addYieldCurve(calibrationInfo->asof, yts->second, getCurveName(it.second), isAlsoDiscount, label, index);
+                } catch (...) {
+                    if (yts != calibrationInfo->yieldCurveCalibrationInfo.end())
+                        addYieldCurve(calibrationInfo->asof, yts->second, getCurveName(it.second), isAlsoDiscount, label);
+                }
+            }
+        }
         if (todaysMarketParams->hasMarketObject(MarketObject::DiscountCurve)) {
             for (auto it : todaysMarketParams->mapping(MarketObject::DiscountCurve, Market::defaultConfiguration)) {
                 auto yts = calibrationInfo->yieldCurveCalibrationInfo.find(it.second);
@@ -81,19 +104,6 @@ void MarketCalibrationReportBase::populateReport(const QuantLib::ext::shared_ptr
                 auto yts = calibrationInfo->dividendCurveCalibrationInfo.find(it.second);
                 if (yts != calibrationInfo->dividendCurveCalibrationInfo.end())
                     addYieldCurve(calibrationInfo->asof, yts->second, getCurveName(it.second), false, label);
-            }
-        }
-        if (todaysMarketParams->hasMarketObject(MarketObject::IndexCurve)) {
-            for (auto it : todaysMarketParams->mapping(MarketObject::IndexCurve, Market::defaultConfiguration)) {
-                auto yts = calibrationInfo->yieldCurveCalibrationInfo.find(it.second);
-                try {
-                    auto index = market->iborIndex(it.first);
-                    if (yts != calibrationInfo->yieldCurveCalibrationInfo.end())
-                        addYieldCurve(calibrationInfo->asof, yts->second, getCurveName(it.second), false, label, index);
-                } catch (...) {
-                    if (yts != calibrationInfo->yieldCurveCalibrationInfo.end())
-                        addYieldCurve(calibrationInfo->asof, yts->second, getCurveName(it.second), false, label);
-                }
             }
         }
     }

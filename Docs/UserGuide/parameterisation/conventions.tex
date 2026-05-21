@@ -152,6 +152,8 @@ future quotes, for example futures on Euribor 3M or SOFR 3M underlyings. The str
       arithmetic, no holiday calendar adjustment). Used for NZD bank-bill futures.
     \item \texttt{IMMCAD}: Expiry is two business days (using a combined UK and Canada holiday calendar) before the
       3rd Wednesday of the expiry month. Used for CAD BAX / CORRA futures.
+    \item \texttt{IMMEUR}: Expiry is two EUREX business days before the 3rd Wednesday of the expiry month. Used for
+      EUR-EURIBOR-3M futures.
     \end{itemize}
   \item For an overnight index future `IMM' means that the end date of the future is set to the 3rd Wednesday of the
     expiry month and the start date is set to the 3rd Wednesday of the expiry month minus the future tenor. The setting
@@ -196,9 +198,10 @@ AUD-BBSW-3M, NZD-BKBM-3M, CAD-CORRA-3M, SOFR-3M and SOFR-1M future conventions.
 <Future>
   <Id>EURIBOR-3M-FUTURES</Id>
   <Index>EUR-EURIBOR-3M</Index>
+  <DateGenerationRule>IMMEUR</DateGenerationRule>
 </Future>
 \end{minted}
-\caption{Euribor 3M MM Future conventions}
+\caption{Euribor 3M MM Future conventions (IMMEUR -- two EUREX business days before the third Wednesday)}
 \label{lst:future_conventions_euribor_3m}
 \end{listing}
 

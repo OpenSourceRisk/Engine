@@ -109,7 +109,7 @@ void VarSwap::build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& e
     }
 }
 
-QuantLib::Real VarSwap::notional() const {
+QuantLib::Real VarSwap::notional(NotionalType type) const {
     MomentType momentType = parseMomentType(momentType_);
     if (momentType == MomentType::Variance) {
         Real varianceNotional = notional_ / (2 * 100 * strike_);

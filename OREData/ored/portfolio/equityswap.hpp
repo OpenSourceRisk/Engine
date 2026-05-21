@@ -50,7 +50,7 @@ public:
     //! Trade interface
     virtual void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
     void setIsdaTaxonomyFields() override;
-    QuantLib::Real notional() const override;
+    QuantLib::Real notional(NotionalType type = NotionalType::Default) const override;
     std::string notionalCurrency() const override;
 
 private:

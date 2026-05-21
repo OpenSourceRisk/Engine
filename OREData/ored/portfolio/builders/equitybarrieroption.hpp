@@ -127,5 +127,14 @@ protected:
 
 };
 
+class EquityBarrierOptionScriptedEngineBuilder : public DelegatingEngineBuilder {
+public:
+    EquityBarrierOptionScriptedEngineBuilder()
+        : DelegatingEngineBuilder("ScriptedTrade", "ScriptedTrade", {"EquityBarrierOption", "EquityDoubleBarrierOption"}) {}
+    QuantLib::ext::shared_ptr<ore::data::Trade>
+    build(const Trade* trade, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) override;
+    std::string effectiveTradeType() const override { return "ScriptedTrade"; }
+};
+
 } // namespace data
 } // namespace ore
