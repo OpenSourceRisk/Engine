@@ -90,7 +90,6 @@ protected:
         const double sqrtOneMinusRho = std::sqrt(1.0 - baseCorrelation_->value());
         const double n = static_cast<double>(nSamples_);
         double trancheLoss = 0.0;
-        double zeroTrancheLoss = 0.0;
         double expectedLossIndex = 0.0;
         const size_t nConstituents = pds.size();
         std::vector<double> xs(nConstituents * nSamples_, 0.0);
@@ -112,7 +111,6 @@ protected:
                     }
                 }
             }
-            expectedLossIndex += loss;
 
             trancheLoss +=
                 std::max(loss - basket_->attachmentAmount(), 0.0) - std::max(loss - basket_->detachmentAmount(), 0.0);
