@@ -158,7 +158,7 @@ namespace {
             if (c.priorWeight() == Null<Real>())
                 continue;
             indexFactor -= c.priorWeight();
-            defaultInfo.try_emplace(c.auctionDate(), c.priorWeight(), c.recovery());
+            defaultInfo.try_emplace(c.auctionDate(), std::make_pair(c.priorWeight(), c.recovery()));
         }
 
         // If version is 1 and there are no defaults, can just proceed with default `IndexFactors`. Usual case.
