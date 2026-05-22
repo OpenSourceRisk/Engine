@@ -670,7 +670,6 @@
       <xs:enumeration value="European"/>
       <xs:enumeration value="Bermudan"/>
       <xs:enumeration value="American"/>
-      <xs:enumeration value="Asian"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -737,14 +736,6 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="Call"/>
       <xs:enumeration value="Put"/>
-    </xs:restriction>
-  </xs:simpleType>
-
-  <xs:simpleType name="protectionPaymentTime">
-    <xs:restriction base="xs:string">
-      <xs:enumeration value="atDefault"/>
-      <xs:enumeration value="atPeriodEnd"/>
-      <xs:enumeration value="atMaturity"/>
     </xs:restriction>
   </xs:simpleType>
 
