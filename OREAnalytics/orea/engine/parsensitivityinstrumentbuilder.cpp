@@ -1130,12 +1130,18 @@ std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Date> ParSensitivityI
         QuantLib::ext::shared_ptr<OvernightIndex> overnightIndex =
             QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(index->clone(indexTs));
 
+        QL_REQUIRE(futureConvention->overnightIndexTenor().has_value(),
+                   "ParSensitivityInstrumentBuilder::makeIrFuture(): Overnight future convention for index "
+                       << index->name() << " does not have an overnight index tenor");
+        
+        auto tenor = futureConvention->overnightIndexTenor().value();
+
         removeTodaysFixingIndices.insert(overnightIndex->name());
         LOG("Creating OIS future with index " << overnightIndex->name() << " and term " << term << " using tenor "
-                                              << futureConvention->tenor() << " and date generation rule "
+                                              << tenor << " and date generation rule "
                                               << futureConvention->dateGenerationRule());
         auto [startDate, endDate] =
-            getOiFutureStartEndDate(term.month(), term.year(), futureConvention->tenor(),
+            getOiFutureStartEndDate(term.month(), term.year(), tenor,
                                     futureConvention->dateGenerationRule(), futureConvention->calendar());
         if (endDate < asof) {
             // TODO :SKIP
