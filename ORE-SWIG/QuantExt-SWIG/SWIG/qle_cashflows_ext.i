@@ -476,7 +476,59 @@ class TRSCashFlow : public CashFlow {
     Date date() const override;
     const Date& fixingStartDate() const;
     const Date& fixingEndDate() const;
+    Real initialPrice() const;
 };
 } // namespace QuantExt
+
+// QuantExt::BondTRSCashFlow – bond TRS cashflow (subclass of TRSCashFlow)
+%shared_ptr(QuantExt::BondTRSCashFlow)
+namespace QuantExt {
+class BondTRSCashFlow : public TRSCashFlow {
+  public:
+    BondTRSCashFlow(const Date& paymentDate,
+                    const Date& fixingStartDate,
+                    const Date& fixingEndDate,
+                    Real bondNotional,
+                    const ext::shared_ptr<Index>& index,
+                    Real initialPrice = Null<Real>(),
+                    const ext::shared_ptr<FxIndex>& fxIndex = nullptr,
+                    bool applyFXIndexFixingDays = false);
+
+    Real notional(Date date) const;
+    Real notional() const;
+    void setFixingStartDate(Date fixingDate);
+};
+} // namespace QuantExt
+
+// QuantExt::BondTRSLeg builder using helper-function-with-kwargs pattern
+%{
+Leg _BondTRSLeg(
+    const std::vector<Date>& valuationDates,
+    const std::vector<Date>& paymentDates,
+    Real bondNotional,
+    const ext::shared_ptr<Index>& index,
+    const ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
+    Real initialPrice = Null<Real>(),
+    bool applyFXIndexFixingDays = false)
+{
+    QuantExt::BondTRSLeg leg(valuationDates, paymentDates, bondNotional, index, fxIndex);
+    if (initialPrice != Null<Real>())
+        leg.withInitialPrice(initialPrice);
+    leg.withApplyFXIndexFixingDays(applyFXIndexFixingDays);
+    return leg;
+}
+%}
+#if !defined(SWIGJAVA) && !defined(SWIGCSHARP)
+%feature("kwargs") _BondTRSLeg;
+#endif
+%rename(BondTRSLeg) _BondTRSLeg;
+Leg _BondTRSLeg(
+    const std::vector<Date>& valuationDates,
+    const std::vector<Date>& paymentDates,
+    Real bondNotional,
+    const ext::shared_ptr<Index>& index,
+    const ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
+    Real initialPrice = Null<Real>(),
+    bool applyFXIndexFixingDays = false);
 
 #endif
