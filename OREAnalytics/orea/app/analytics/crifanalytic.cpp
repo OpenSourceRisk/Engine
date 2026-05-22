@@ -334,6 +334,8 @@ void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
         handleMainSensitivityReports(*crifAnalytic, inputs_, sensiAnalytic);
 
         CONSOLE("OK");
+    } else {
+        sensiAnalysis = static_cast<PricingAnalyticImpl*>(sensiAnalytic->impl().get())->sensiAnalysis();
     }
 
     QuantLib::ext::shared_ptr<SimmConfiguration> simmConfiguration = inputs_->getSimmConfiguration();
