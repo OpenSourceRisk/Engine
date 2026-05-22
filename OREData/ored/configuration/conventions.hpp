@@ -330,7 +330,10 @@ public:
     //@{
     QuantLib::ext::shared_ptr<IborIndex> index() const;
     QuantLib::RateAveraging::Type overnightIndexFutureNettingType() const { return overnightIndexFutureNettingType_; }
-    QuantLib::Period tenor() const { return tenor_; }
+    //QuantLib::Period tenor() const { return tenor_; }
+    std::optional<QuantLib::Period> overnightIndexTenor() const {
+        return overnightIndexTenor_;
+    }
     DateGenerationRule dateGenerationRule() const { return dateGenerationRule_; }
     QuantLib::Calendar calendar() const { return calendar_; }
     bool isOvernightIndexFuture() const { return isOisIndex_; }
@@ -351,7 +354,7 @@ private:
     QuantLib::RateAveraging::Type overnightIndexFutureNettingType_;
     DateGenerationRule dateGenerationRule_;
     QuantLib::Calendar calendar_;
-    QuantLib::Period tenor_;
+    std::optional<QuantLib::Period> overnightIndexTenor_ = std::nullopt;
     bool isOisIndex_;
 };
 
