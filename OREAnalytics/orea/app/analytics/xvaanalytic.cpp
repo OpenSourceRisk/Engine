@@ -16,6 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <qle/math/gpuqrsolve.hpp>
+
 #include <orea/aggregation/dimflatcalculator.hpp>
 #include <orea/aggregation/dimdirectcalculator.hpp>
 #include <orea/aggregation/dimregressioncalculator.hpp>
@@ -87,6 +89,13 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
     inputs->loadParameter<string>(amcPathDataOutput_, "simulation", "amcPathDataOutput", false);
     inputs->loadParameter<bool>(amcIndividualTrainingInput_, "xsimulationva", "amcIndividualTrainingInput", false, parseBool);
     inputs->loadParameter<bool>(amcIndividualTrainingOutput_, "simulation", "amcIndividualTrainingOutput", false, parseBool);
+
+    // Opt-in: route AMC regression QR through GPU (cuSOLVER).
+    {
+        bool tmp = false;
+        inputs->loadParameter<bool>(tmp, "simulation", "amcUseGpuRegression", false, parseBool);
+        QuantExt::setUseGpuRegression(tmp);
+    }
 
     scenarioReader_ = inputs->loadScenarioReader("simulation", "scenarioFile");
     inputs->loadParameterXML<EngineData>(simulationPricingEngine_, "simulation", "pricingEnginesFile");

@@ -280,7 +280,8 @@ XMLNode* FutureConvention::toXML(XMLDocument& doc) const {
 
 QuantLib::ext::shared_ptr<IborIndex> FutureConvention::index() const { return parseIborIndex(strIndex_); }
 
-FraConvention::FraConvention(const string& id, const string& index) : Convention(id, Type::FRA), strIndex_(index) {
+FraConvention::FraConvention(const string& id, const string& index, bool endDateFromStart)
+    : Convention(id, Type::FRA), strIndex_(index), endDateFromStart_(endDateFromStart) {
     parseIborIndex(strIndex_);
 }
 
@@ -291,6 +292,16 @@ void FraConvention::fromXML(XMLNode* node) {
     id_ = XMLUtils::getChildValue(node, "Id", true);
     strIndex_ = XMLUtils::getChildValue(node, "Index", true);
     parseIborIndex(strIndex_);
+
+    string endDateConvStr = XMLUtils::getChildValue(node, "EndDateConvention", false);
+    if (endDateConvStr == "FromStart") {
+        endDateFromStart_ = true;
+    } else {
+        QL_REQUIRE(endDateConvStr.empty() || endDateConvStr == "FromSpot",
+                   "FraConvention: unknown EndDateConvention '" << endDateConvStr
+                   << "', expected 'FromSpot' or 'FromStart'");
+        endDateFromStart_ = false;
+    }
 }
 
 XMLNode* FraConvention::toXML(XMLDocument& doc) const {
@@ -298,6 +309,8 @@ XMLNode* FraConvention::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("FRA");
     XMLUtils::addChild(doc, node, "Id", id_);
     XMLUtils::addChild(doc, node, "Index", strIndex_);
+    if (endDateFromStart_)
+        XMLUtils::addChild(doc, node, "EndDateConvention", string("FromStart"));
 
     return node;
 }
