@@ -171,6 +171,10 @@ future quotes, for example futures on Euribor 3M or SOFR 3M underlyings. The str
 \item OvernightIndexFutureNettingType [Optional]: Only relevant for OI futures. Can be `Compounding' (which is also the
   default value if no value is given) or `Averaging'. For example, SOFR 3M futures are compounding while SOFR 1M futures
   are averaging the daily overnight fixings over the calculation period of the future.
+\item OvernightIndexTenor [Optional]: This field is mandatory for par sensitivity calculation when using overnight index futures.
+  Specifies the tenor for the future (e.g., 3M for SOFR futures). When specified, the tenor must match the tenor in the market data quotes during curve
+  building, otherwise an error will be raised. For example, for SOFR 3M futures, this should be set to 3M. This field can be left blank if no par conversion
+  is needed (i.e., for curve building only).
 \end{itemize}
 
 Listings \ref{lst:future_conventions_euribor_3m}, \ref{lst:future_conventions_aud_bbsw_3m},
