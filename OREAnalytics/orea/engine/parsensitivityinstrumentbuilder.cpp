@@ -1133,22 +1133,21 @@ std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Date> ParSensitivityI
         QL_REQUIRE(futureConvention->overnightIndexTenor().has_value(),
                    "ParSensitivityInstrumentBuilder::makeIrFuture(): Overnight future convention for index "
                        << index->name() << " does not have an overnight index tenor");
-        
+
         auto tenor = futureConvention->overnightIndexTenor().value();
 
         removeTodaysFixingIndices.insert(overnightIndex->name());
-        LOG("Creating OIS future with index " << overnightIndex->name() << " and term " << term << " using tenor "
-                                              << tenor << " and date generation rule "
-                                              << futureConvention->dateGenerationRule());
-        auto [startDate, endDate] =
-            getOiFutureStartEndDate(term.month(), term.year(), tenor,
-                                    futureConvention->dateGenerationRule(), futureConvention->calendar());
+        DLOG("Creating OIS future with index " << overnightIndex->name() << " and term " << term << " using tenor "
+                                               << tenor << " and date generation rule "
+                                               << futureConvention->dateGenerationRule());
+        auto [startDate, endDate] = getOiFutureStartEndDate(
+            term.month(), term.year(), tenor, futureConvention->dateGenerationRule(), futureConvention->calendar());
         if (endDate < asof) {
             // TODO :SKIP
             QL_FAIL("ParSensitivityInstrumentBuilder::makeIrFuture(): OIS Future with expiry "
                     << term << " has already expired (expiry date: " << endDate << ", asof: " << asof << ")");
         }
-        LOG("Creating OIS future with start date " << startDate << " and end date " << endDate);
+        DLOG("Creating OIS future with start date " << startDate << " and end date " << endDate);
         auto future = ext::make_shared<OvernightIndexFuture>(overnightIndex, startDate, endDate, Handle<Quote>(),
                                                              futureConvention->overnightIndexFutureNettingType());
         return {future, future->maturityDate()};
