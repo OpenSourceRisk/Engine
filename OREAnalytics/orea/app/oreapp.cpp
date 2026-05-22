@@ -69,16 +69,14 @@ namespace ore {
 namespace analytics {
 
 //! Constructor that uses ORE parameters and input data from files
-OREApp::OREApp(QuantLib::ext::shared_ptr<Parameters> params, bool console = false,
-               const std::filesystem::path& logRootPath = std::filesystem::path())
+OREApp::OREApp(QuantLib::ext::shared_ptr<Parameters> params, bool console, const std::filesystem::path& logRootPath)
     : params_(params), inputs_(nullptr), console_(console), logRootPath_(logRootPath) {
     ore::data::os::setAssertHandler();
 }
 
 //! Constructor that assumes we have already assembled input parameters via API
-OREApp::OREApp(const QuantLib::ext::shared_ptr<InputParameters>& inputs, const std::string& logFile = "",
-               Size logLevel = 31, bool console = false, bool clearLog = true,
-               const std::filesystem::path& logRootPath = std::filesystem::path())
+OREApp::OREApp(const QuantLib::ext::shared_ptr<InputParameters>& inputs, const std::string& logFile, Size logLevel,
+               bool console, bool clearLog, const std::filesystem::path& logRootPath)
     : params_(nullptr), inputs_(inputs), logFile_(logFile), logMask_(logLevel), console_(console), clearLog_(clearLog),
       logRootPath_(logRootPath) {
     ore::data::os::setAssertHandler();
