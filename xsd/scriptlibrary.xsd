@@ -77,9 +77,9 @@
       </xs:element>
       <xs:element name="ScheduleCoarsening" minOccurs="0">
         <xs:complexType>
-          <xs:sequence>
-            <xs:element type="xs:string" name="EligibleSchedule" minOccurs="0" maxOccurs="unbounded"/>
-          </xs:sequence>
+          <xs:all>
+            <xs:element type="xs:string" name="EligibleSchedule" minOccurs="0"/>
+          </xs:all>
         </xs:complexType>
       </xs:element>
       <xs:element name="NewSchedules" minOccurs="0">
@@ -129,7 +129,7 @@
             <xs:element name="Components" minOccurs="0">
               <xs:complexType>
                 <xs:sequence>
-                  <xs:element type="xs:string" name="Component" minOccurs="0" maxOccurs="unbounded"/>
+                  <xs:element type="xs:string" name="Component" minOccurs="0"/>
                 </xs:sequence>
               </xs:complexType>
             </xs:element>

@@ -670,7 +670,6 @@
       <xs:enumeration value="European"/>
       <xs:enumeration value="Bermudan"/>
       <xs:enumeration value="American"/>
-      <xs:enumeration value="Asian"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -740,14 +739,6 @@
     </xs:restriction>
   </xs:simpleType>
 
-  <xs:simpleType name="protectionPaymentTime">
-    <xs:restriction base="xs:string">
-      <xs:enumeration value="atDefault"/>
-      <xs:enumeration value="atPeriodEnd"/>
-      <xs:enumeration value="atMaturity"/>
-    </xs:restriction>
-  </xs:simpleType>
-
   <xs:simpleType name="bondPriceType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="Clean"/>
@@ -813,7 +804,6 @@
       <xs:enumeration value="SecondThursday"/><!-- backward-compatible alias for IMMAUD -->
       <xs:enumeration value="IMMNZD"/>
       <xs:enumeration value="IMMCAD"/>
-      <xs:enumeration value="IMMEUR"/>
     </xs:restriction>
   </xs:simpleType>
 
