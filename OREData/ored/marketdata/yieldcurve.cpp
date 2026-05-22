@@ -2318,7 +2318,11 @@ void YieldCurve::addFutures(const std::size_t index, const QuantLib::ext::shared
                 QL_REQUIRE(futureQuote->tenor().units() == Months || futureQuote->tenor().units() == Years,
                            "Tenor of future quote (" << futureQuote->name()
                                                      << ") must be expressed in months or years");
-
+                QL_REQUIRE(!futureConvention->overnightIndexTenor().has_value() ||
+                               futureConvention->overnightIndexTenor().value() == futureQuote->tenor(),
+                           "Overnight index tenor in future convention for index "
+                               << on->name() << " must match the tenor of the future quote (" << futureQuote->name()
+                               << ")");
                 // Create a Overnight index future helper
                 Date startDate, endDate;
                 std::pair<Date, Date> startEndDate;
