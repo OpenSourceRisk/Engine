@@ -22,6 +22,7 @@
 %include stl.i
 %include std_set.i
 %include std_map.i
+%include std_pair.i
 %include types.i
 
 %include ored_portfolio.i
@@ -391,9 +392,21 @@ class SimmCalculator {
 
     const std::string& calculationCurrency(const SimmConfiguration::SimmSide& side) const;
     const std::string& resultCurrency() const;
+
+    const CrifRecord::Regulation& winningRegulations(const SimmConfiguration::SimmSide& side,
+        const ore::data::NettingSetDetails& nettingSetDetails) const;
+    const SimmResults& simmResults(const SimmConfiguration::SimmSide& side,
+        const ore::data::NettingSetDetails& nettingSetDetails,
+        const std::set<CrifRecord::Regulation>& regulation) const;
+    const std::pair<CrifRecord::Regulation, SimmResults>& finalSimmResults(
+        const SimmConfiguration::SimmSide& side,
+        const ore::data::NettingSetDetails& nettingSetDetails) const;
+    const QuantLib::ext::shared_ptr<Crif>& simmParameters() const;
 };
 
   } // namespace analytics
   } // namespace ore
+
+%template(RegulationSimmResultsPair) std::pair<ore::analytics::CrifRecord::Regulation, ore::analytics::SimmResults>;
 
 #endif
