@@ -179,12 +179,67 @@ class InMemoryLoaderTest(LoaderTest, unittest.TestCase):
 
 
         
+class CompositeAndClonedLoaderTest(unittest.TestCase):
+    """Validate CompositeLoader and ClonedLoader bindings (ACADIAQPR-14132)."""
+
+    def _make_loader(self, quotes):
+        """Create an InMemoryLoader populated with a dict of {name: value} quotes."""
+        loader = InMemoryLoader()
+        asof = Date(5, February, 2016)
+        for name, value in quotes.items():
+            loader.add(asof, name, value)
+        return loader, asof
+
+    def test_composite_loader_merges_two_in_memory_loaders(self):
+        loader_a, asof = self._make_loader({"FX/RATE/EUR/USD": 1.10})
+        loader_b, _ = self._make_loader({"FX/RATE/GBP/USD": 1.25})
+
+        composite = CompositeLoader(loader_a, loader_b)
+        self.assertTrue(composite.has("FX/RATE/EUR/USD", asof))
+        self.assertTrue(composite.has("FX/RATE/GBP/USD", asof))
+
+        eur_quote = composite.get("FX/RATE/EUR/USD", asof)
+        self.assertAlmostEqual(eur_quote.quote().value(), 1.10)
+
+        gbp_quote = composite.get("FX/RATE/GBP/USD", asof)
+        self.assertAlmostEqual(gbp_quote.quote().value(), 1.25)
+
+    def test_composite_loader_loadquotes_returns_combined(self):
+        loader_a, asof = self._make_loader({"FX/RATE/USD/EUR": 0.91})
+        loader_b, _ = self._make_loader({"FX/RATE/GBP/USD": 1.25})
+
+        composite = CompositeLoader(loader_a, loader_b)
+        all_quotes = composite.loadQuotes(asof)
+        names = {q.name() for q in all_quotes}
+        self.assertIn("FX/RATE/USD/EUR", names)
+        self.assertIn("FX/RATE/GBP/USD", names)
+
+    def test_cloned_loader_snapshots_in_memory_loader(self):
+        loader, asof = self._make_loader({"FX/RATE/USD/JPY": 110.0})
+        cloned = ClonedLoader(asof, loader)
+
+        self.assertTrue(cloned.has("FX/RATE/USD/JPY", asof))
+        jpy_quote = cloned.get("FX/RATE/USD/JPY", asof)
+        self.assertAlmostEqual(jpy_quote.quote().value(), 110.0)
+
+    def test_cloned_loader_is_snapshot_of_original(self):
+        """Changes to source loader after cloning do not affect the clone."""
+        loader, asof = self._make_loader({"FX/RATE/USD/CHF": 0.90})
+        cloned = ClonedLoader(asof, loader)
+
+        loader.add(asof, "FX/RATE/EUR/CHF", 0.95)
+
+        self.assertTrue(cloned.has("FX/RATE/USD/CHF", asof))
+        self.assertFalse(cloned.has("FX/RATE/EUR/CHF", asof))
+
+
 if __name__ == '__main__':
     import ORE
     print('testing ORE ' + ORE.__version__)
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(CSVLoaderTest,'test'))
     suite.addTest(unittest.makeSuite(InMemoryLoaderTest,'test'))
+    suite.addTest(unittest.makeSuite(CompositeAndClonedLoaderTest,'test'))
     unittest.TextTestRunner(verbosity=2).run(suite)
     unittest.main()
 

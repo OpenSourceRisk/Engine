@@ -897,6 +897,17 @@ def main():
     ql.FxWorstOfBasketSwap()
     ql.CommodityWorstOfBasketSwap()
 
+    # ore/OREData/ored/portfolio/equityautodeltahedgeoption.hpp
+
+    ql.UnderlyingOptionData()
+    ql.EquityAutoDeltaHedgedOption()
+
+    # ore/OREData/ored/portfolio/ratedigitaloption.hpp
+
+    ql.RateDigitalOption()
+    ql.RateDigitalOption(env0, option_data0, "EUR-EURIBOR-6M", 0.02, 10000.0,
+                         "EUR", qlEvalDateStr, qlEndDateStr)
+
 
 if __name__ == "__main__":
     main()
