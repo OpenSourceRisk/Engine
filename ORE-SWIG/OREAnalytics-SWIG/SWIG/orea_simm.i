@@ -47,8 +47,6 @@
 %nodefaultctor ore::analytics::SimmConfigurationBase;
 %nodefaultctor ore::analytics::SimmConcentration;
 
-%template(RegulationSet) std::set<ore::analytics::CrifRecord::Regulation>;
-
 namespace ore {
 namespace analytics {
 class CrifRecord {
@@ -157,7 +155,37 @@ class CrifRecord {
     enum class SaccrRegulation : unsigned char { Basel, CRR2, Unspecified, Invalid };
     enum class CurvatureScenario { Empty, Up, Down };
 
+    // Public data members
+    std::string tradeId;
+    std::string tradeType;
+    ore::data::NettingSetDetails nettingSetDetails;
+    ProductClass productClass;
+    RiskType riskType;
+    std::string qualifier;
+    std::string bucket;
+    std::string label1;
+    std::string label2;
+    std::string amountCurrency;
+    QuantLib::Real amount;
+    QuantLib::Real amountUsd;
+    std::string endDate;
+    IMModel imModel;
+    std::set<Regulation> collectRegulations;
+    std::set<Regulation> postRegulations;
+
     CrifRecord();
+    CrifRecord(std::string tradeId, std::string tradeType,
+               const ore::data::NettingSetDetails& nettingSetDetails,
+               ProductClass productClass, RiskType riskType,
+               std::string qualifier, std::string bucket,
+               std::string label1, std::string label2,
+               std::string amountCurrency, QuantLib::Real amount,
+               QuantLib::Real amountUsd,
+               IMModel imModel = IMModel::Empty,
+               std::set<Regulation> collectRegulations = {},
+               std::set<Regulation> postRegulations = {},
+               std::string endDate = "");
+
     RecordType type() const;
     bool hasAmountCcy() const;
     bool hasAmount() const;
@@ -170,6 +198,16 @@ class CrifRecord {
     bool isFrtbCurvatureRisk() const;
     CurvatureScenario frtbCurveatureScenario() const;
 };
+
+} // namespace analytics
+} // namespace ore
+
+// Declare RegulationSet after CrifRecord::Regulation is fully defined so SWIG
+// can match std::set<Regulation> data members in CrifRecord to this template.
+%template(RegulationSet) std::set<ore::analytics::CrifRecord::Regulation>;
+
+namespace ore {
+namespace analytics {
 
 class Crif {
   public:
@@ -185,6 +223,22 @@ class Crif {
     const bool hasCrifRecords() const;
     const bool hasSimmParameters() const;
 };
+
+%extend Crif {
+    std::vector<ore::analytics::CrifRecord> records() const {
+        std::vector<ore::analytics::CrifRecord> result;
+        result.reserve($self->size());
+        for (auto it = $self->cbegin(); it != $self->cend(); ++it)
+            result.push_back(it->toCrifRecord());
+        return result;
+    }
+    %pythoncode %{
+        def __iter__(self):
+            return iter(self.records())
+        def __len__(self):
+            return int(self.size())
+    %}
+}
 
 class SimmConfiguration {
   public:
@@ -250,10 +304,10 @@ class SimmCalibration : public ore::data::XMLSerializable {
 class SimmCalibrationData : public ore::data::XMLSerializable {
   public:
     SimmCalibrationData();
-    void add(const QuantLib::ext::shared_ptr<SimmCalibration>& cal);
+    void add(const ext::shared_ptr<SimmCalibration>& cal);
     bool hasId(const std::string& id) const;
-    QuantLib::ext::shared_ptr<SimmCalibration> getById(const std::string& id) const;
-    QuantLib::ext::shared_ptr<SimmCalibration> getBySimmVersion(const std::string& id) const;
+    ext::shared_ptr<SimmCalibration> getById(const std::string& id) const;
+    ext::shared_ptr<SimmCalibration> getBySimmVersion(const std::string& id) const;
     void fromXML(ore::data::XMLNode* node) override;
     ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 };
@@ -265,7 +319,7 @@ class SimmConfigurationBase : public SimmConfiguration {
     bool hasBuckets(const CrifRecord::RiskType& rt) const;
 
     // Bucket enumeration
-    QuantLib::ext::shared_ptr<SimmBucketMapper> bucketMapper() const;
+    ext::shared_ptr<SimmBucketMapper> bucketMapper() const;
     std::string bucket(const CrifRecord::RiskType& rt, const std::string& qualifier) const;
     std::vector<std::string> buckets(const CrifRecord::RiskType& rt) const;
     std::vector<std::string> labels1(const CrifRecord::RiskType& rt) const;
@@ -304,7 +358,7 @@ class SimmConfigurationBase : public SimmConfiguration {
 
 class SimmConfiguration_ISDA_V2_6 : public SimmConfigurationBase {
   public:
-    SimmConfiguration_ISDA_V2_6(const QuantLib::ext::shared_ptr<SimmBucketMapper>& simmBucketMapper,
+    SimmConfiguration_ISDA_V2_6(const ext::shared_ptr<SimmBucketMapper>& simmBucketMapper,
                                 const QuantLib::Size& mporDays = 10,
                                 const std::string& name = "SIMM ISDA 2.6 (16 August 2023)",
                                 const std::string version = "2.6");
@@ -313,7 +367,7 @@ class SimmConfiguration_ISDA_V2_6 : public SimmConfigurationBase {
       auto mapper = QuantLib::ext::make_shared<ore::analytics::SimmBucketMapperBase>();
       return new ore::analytics::SimmConfiguration_ISDA_V2_6(mapper);
     }
-    SimmConfiguration_ISDA_V2_6(const QuantLib::ext::shared_ptr<ore::analytics::SimmBucketMapperBase>& simmBucketMapper,
+    SimmConfiguration_ISDA_V2_6(const ext::shared_ptr<ore::analytics::SimmBucketMapperBase>& simmBucketMapper,
                   const QuantLib::Size& mporDays = 10,
                   const std::string& name = "SIMM ISDA 2.6 (16 August 2023)",
                   const std::string version = "2.6") {
@@ -345,28 +399,56 @@ class SimmResults {
 class CrifLoader {
   public:
     virtual ~CrifLoader();
-    virtual QuantLib::ext::shared_ptr<Crif> loadCrif();
-    const QuantLib::ext::shared_ptr<SimmConfiguration>& simmConfiguration();
+    virtual ext::shared_ptr<Crif> loadCrif();
+    const ext::shared_ptr<SimmConfiguration>& simmConfiguration();
 };
 
 class CsvFileCrifLoader : public CrifLoader {
   public:
   CsvFileCrifLoader(const std::string& filename,
-            const QuantLib::ext::shared_ptr<SimmConfiguration>& configuration,
+            const ext::shared_ptr<SimmConfiguration>& configuration,
             const std::vector<std::set<std::string>>& additionalHeaders = {}, bool updateMapper = false,
             bool aggregateTrades = true, bool allowUseCounterpartyTrade = true, char eol = '\n',
             char delim = '\t', char quoteChar = '\0', char escapeChar = '\\',
             const std::string& nullString = "#N/A");
+  %extend {
+    CsvFileCrifLoader(const std::string& filename,
+              const ext::shared_ptr<ore::analytics::SimmConfiguration_ISDA_V2_6>& configuration,
+              const std::vector<std::set<std::string>>& additionalHeaders = {}, bool updateMapper = false,
+              bool aggregateTrades = true, bool allowUseCounterpartyTrade = true, char eol = '\n',
+              char delim = '\t', char quoteChar = '\0', char escapeChar = '\\',
+              const std::string& nullString = "#N/A") {
+      return new ore::analytics::CsvFileCrifLoader(
+          filename,
+          QuantLib::ext::static_pointer_cast<ore::analytics::SimmConfiguration>(configuration),
+          additionalHeaders, updateMapper, aggregateTrades, allowUseCounterpartyTrade,
+          eol, delim, quoteChar, escapeChar, nullString);
+    }
+  }
 };
 
 class CsvBufferCrifLoader : public CrifLoader {
   public:
   CsvBufferCrifLoader(const std::string& buffer,
-            const QuantLib::ext::shared_ptr<SimmConfiguration>& configuration,
+            const ext::shared_ptr<SimmConfiguration>& configuration,
             const std::vector<std::set<std::string>>& additionalHeaders = {}, bool updateMapper = false,
             bool aggregateTrades = true, bool allowUseCounterpartyTrade = true, char eol = '\n',
             char delim = '\t', char quoteChar = '\0', char escapeChar = '\\',
             const std::string& nullString = "#N/A");
+  %extend {
+    CsvBufferCrifLoader(const std::string& buffer,
+              const ext::shared_ptr<ore::analytics::SimmConfiguration_ISDA_V2_6>& configuration,
+              const std::vector<std::set<std::string>>& additionalHeaders = {}, bool updateMapper = false,
+              bool aggregateTrades = true, bool allowUseCounterpartyTrade = true, char eol = '\n',
+              char delim = '\t', char quoteChar = '\0', char escapeChar = '\\',
+              const std::string& nullString = "#N/A") {
+      return new ore::analytics::CsvBufferCrifLoader(
+          buffer,
+          QuantLib::ext::static_pointer_cast<ore::analytics::SimmConfiguration>(configuration),
+          additionalHeaders, updateMapper, aggregateTrades, allowUseCounterpartyTrade,
+          eol, delim, quoteChar, escapeChar, nullString);
+    }
+  }
 };
 
 %nodefaultctor SimmCalculator;
@@ -379,34 +461,50 @@ class SimmCalculator {
             auto crif = QuantLib::ext::make_shared<ore::analytics::Crif>();
       return new ore::analytics::SimmCalculator(crif, config);
         }
-        SimmCalculator(const QuantLib::ext::shared_ptr<ore::analytics::Crif>& crif,
-             const QuantLib::ext::shared_ptr<ore::analytics::SimmConfiguration>& simmConfiguration) {
+        SimmCalculator(const ext::shared_ptr<ore::analytics::Crif>& crif,
+             const ext::shared_ptr<ore::analytics::SimmConfiguration>& simmConfiguration) {
       return new ore::analytics::SimmCalculator(crif, simmConfiguration);
         }
-        SimmCalculator(const QuantLib::ext::shared_ptr<ore::analytics::Crif>& crif,
-             const QuantLib::ext::shared_ptr<ore::analytics::SimmConfiguration_ISDA_V2_6>& simmConfiguration) {
+        SimmCalculator(const ext::shared_ptr<ore::analytics::Crif>& crif,
+             const ext::shared_ptr<ore::analytics::SimmConfiguration_ISDA_V2_6>& simmConfiguration) {
       return new ore::analytics::SimmCalculator(
         crif, QuantLib::ext::static_pointer_cast<ore::analytics::SimmConfiguration>(simmConfiguration));
         }
+        // Wrapper for simmParameters() to dereference the const reference
+        ext::shared_ptr<ore::analytics::Crif> simmParameters() const {
+          return $self->simmParameters();
+        }
+        // Convenience overload: query results for a single Regulation value.
+        // winningRegulations() returns CrifRecord::Regulation; passing that enum
+        // value directly to the set-based simmResults() is not possible from
+        // Python because SWIG's std::set template does not accept plain ints.
+        // This overload wraps the single value in a singleton set internally.
+        const ore::analytics::SimmResults& simmResults(
+            const ore::analytics::SimmConfiguration::SimmSide& side,
+            const ore::data::NettingSetDetails& nettingSetDetails,
+            const ore::analytics::CrifRecord::Regulation& regulation) const {
+            return $self->simmResults(side, nettingSetDetails,
+                                      std::set<ore::analytics::CrifRecord::Regulation>{regulation});
+        }
     }
 
-    const std::string& calculationCurrency(const SimmConfiguration::SimmSide& side) const;
-    const std::string& resultCurrency() const;
+   const std::string& calculationCurrency(const SimmConfiguration::SimmSide& side) const;
+   const std::string& resultCurrency() const;
 
-    const CrifRecord::Regulation& winningRegulations(const SimmConfiguration::SimmSide& side,
-        const ore::data::NettingSetDetails& nettingSetDetails) const;
-    const SimmResults& simmResults(const SimmConfiguration::SimmSide& side,
-        const ore::data::NettingSetDetails& nettingSetDetails,
-        const std::set<CrifRecord::Regulation>& regulation) const;
-    const std::pair<CrifRecord::Regulation, SimmResults>& finalSimmResults(
-        const SimmConfiguration::SimmSide& side,
-        const ore::data::NettingSetDetails& nettingSetDetails) const;
-    const QuantLib::ext::shared_ptr<Crif>& simmParameters() const;
+   const CrifRecord::Regulation& winningRegulations(const SimmConfiguration::SimmSide& side,
+       const ore::data::NettingSetDetails& nettingSetDetails) const;
+   const SimmResults& simmResults(const SimmConfiguration::SimmSide& side,
+       const ore::data::NettingSetDetails& nettingSetDetails,
+       const std::set<CrifRecord::Regulation>& regulation) const;
+   const std::pair<CrifRecord::Regulation, SimmResults>& finalSimmResults(
+       const SimmConfiguration::SimmSide& side,
+       const ore::data::NettingSetDetails& nettingSetDetails) const;
 };
 
   } // namespace analytics
   } // namespace ore
 
 %template(RegulationSimmResultsPair) std::pair<ore::analytics::CrifRecord::Regulation, ore::analytics::SimmResults>;
+%template(CrifRecordVector) std::vector<ore::analytics::CrifRecord>;
 
 #endif
