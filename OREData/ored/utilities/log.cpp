@@ -62,11 +62,10 @@ static std::string formatStacktrace(const boost::stacktrace::stacktrace& st) {
         if (name.find("__cxa_throw") != std::string::npos ||
             name.find("boost::stacktrace") != std::string::npos)
             continue;
-        if (!result.empty())
-            result += " in ";
-        result += name;
-        if (++count >= 3)
-            break;
+        if(!result.empty())
+            result += "    ";
+        result += "#" + std::to_string(count) + ": " + name;
+        ++count;
     }
     return result;
 }
