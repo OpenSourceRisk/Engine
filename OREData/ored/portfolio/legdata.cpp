@@ -1278,7 +1278,7 @@ Leg makeZCFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplace
 void applyStubInterpolation(Leg::iterator c, const std::string& shortIndexStr, const std::string& longIndexStr,
                             const std::string& roundingTypeStr, const std::string& roundingPrecisionStr,
                             const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-                            const bool useOriginalIndexCurve, const Size accrualDays) {
+                            const bool useOriginalIndexCurve, const Size accrualDays, const Size fixingDays) {
     if (shortIndexStr.empty() && longIndexStr.empty()) {
         return;
     }
@@ -1300,6 +1300,7 @@ void applyStubInterpolation(Leg::iterator c, const std::string& shortIndexStr, c
         iborCpn = QuantLib::ext::dynamic_pointer_cast<IborCoupon>(*c);
     }
     QL_REQUIRE(iborCpn, "applyStubInterpolation(): unable to unpack coupon to ibor coupon");
+    Size fDays = fixingDays == Null<Size>() ? iborCpn->fixingDays() : fixingDays;
     // ... replace it with an interpolated Ibor Coupon ...
     QuantLib::ext::shared_ptr<IborIndex> idx1, idx2;
     if (!shortIndexStr.empty())
@@ -1316,7 +1317,7 @@ void applyStubInterpolation(Leg::iterator c, const std::string& shortIndexStr, c
         // actually no interpolation, only one index is given effectively, so we can use an Ibor Coupon
         tmp = QuantLib::ext::make_shared<IborCoupon>(
             iborCpn->date(), iborCpn->nominal(), iborCpn->accrualStartDate(), iborCpn->accrualEndDate(),
-            iborCpn->fixingDays(),
+            fDays,
             useOriginalIndexCurve ? idx1->clone(iborCpn->iborIndex()->forwardingTermStructure()) : idx1,
             iborCpn->gearing(), iborCpn->spread(), iborCpn->referencePeriodStart(), iborCpn->referencePeriodEnd(),
             iborCpn->dayCounter(), iborCpn->isInArrears(), iborCpn->exCouponDate());
@@ -1334,7 +1335,7 @@ void applyStubInterpolation(Leg::iterator c, const std::string& shortIndexStr, c
             useOriginalIndexCurve ? iborCpn->iborIndex()->forwardingTermStructure() : Handle<YieldTermStructure>());
         tmp = QuantLib::ext::make_shared<InterpolatedIborCoupon>(
             iborCpn->date(), iborCpn->nominal(), iborCpn->accrualStartDate(), iborCpn->accrualEndDate(),
-            iborCpn->fixingDays(), interpolatedIndex, iborCpn->gearing(), iborCpn->spread(),
+            fDays, interpolatedIndex, iborCpn->gearing(), iborCpn->spread(),
             iborCpn->referencePeriodStart(), iborCpn->referencePeriodEnd(), iborCpn->dayCounter(),
             iborCpn->isInArrears(), iborCpn->exCouponDate(), iborCpn->iborIndex());
         DLOG("created InterpolatedIborIndex for accrual period "
@@ -1512,7 +1513,7 @@ Leg makeIborLeg(const LegData& data, const QuantLib::ext::shared_ptr<IborIndex>&
             // front / back stub interpolation
             applyStubInterpolation(leg.begin(), floatData->frontStubShortIndex(), floatData->frontStubLongIndex(),
                                    floatData->frontStubRoundingType(), floatData->frontStubRoundingPrecision(), engineFactory,
-                                   floatData->stubUseOriginalCurve());
+                                   floatData->stubUseOriginalCurve(), Null<Size>(), fixingDays);
             if (leg.size() == 1
                 && !floatData->frontStubShortIndex().empty() && !floatData->frontStubLongIndex().empty()
                 && !floatData->backStubShortIndex().empty() && !floatData->backStubLongIndex().empty()) {
@@ -1521,7 +1522,7 @@ Leg makeIborLeg(const LegData& data, const QuantLib::ext::shared_ptr<IborIndex>&
             } else {
                 applyStubInterpolation(leg.end() - 1, floatData->backStubShortIndex(), floatData->backStubLongIndex(),
                                        floatData->backStubRoundingType(), floatData->backStubRoundingPrecision(), engineFactory,
-                                       floatData->stubUseOriginalCurve());
+                                       floatData->stubUseOriginalCurve(), Null<Size>(), fixingDays);
             }
             return leg;
         }
@@ -1635,7 +1636,7 @@ Leg makeIborLeg(const LegData& data, const QuantLib::ext::shared_ptr<IborIndex>&
     // front / back stub interpolation
     applyStubInterpolation(tmpLeg.begin(), floatData->frontStubShortIndex(), floatData->frontStubLongIndex(),
                            floatData->frontStubRoundingType(), floatData->frontStubRoundingPrecision(), engineFactory,
-                           floatData->stubUseOriginalCurve());
+                           floatData->stubUseOriginalCurve(), Null<Size>(), fixingDays);
     if (tmpLeg.size() == 1
         && !floatData->frontStubShortIndex().empty() && !floatData->frontStubLongIndex().empty()
         && !floatData->backStubShortIndex().empty() && !floatData->backStubLongIndex().empty()) {
@@ -1644,7 +1645,7 @@ Leg makeIborLeg(const LegData& data, const QuantLib::ext::shared_ptr<IborIndex>&
     } else {
         applyStubInterpolation(tmpLeg.end() - 1, floatData->backStubShortIndex(), floatData->backStubLongIndex(),
                                floatData->backStubRoundingType(), floatData->backStubRoundingPrecision(), engineFactory,
-                               floatData->stubUseOriginalCurve());
+                               floatData->stubUseOriginalCurve(), Null<Size>(), fixingDays);
     }
 
     // return the leg
