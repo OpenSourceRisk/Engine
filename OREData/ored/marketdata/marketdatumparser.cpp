@@ -958,6 +958,38 @@ QuantLib::ext::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const 
         return QuantLib::ext::make_shared<TransitionProbabilityQuote>(value, asof, datumName, name, fromRating, toRating);
     }
 
+    case MarketDatum::InstrumentType::BOND_FUTURE_OPTION: {
+        // Quote of the form:
+        // BOND_FUTURE_OPTION/<QUOTE_TYPE>/<UNDERLYING_CONTRACT_NAME>/<EXPIRY>/<STRIKE>/<EX_TYPE>/<PUT_CALL>
+        // where:
+        // - QUOTE_TYPE is either RATE_LNVOL or PRICE
+        // - UNDERLYING_CONTRACT_NAME is the name of the underlying bond future contract, e.g. "TYM26"
+        // - EXPIRY is the option expiry date, format YYYY-MM-DD
+        // - STRIKE is the absolute strike price of the bond future option. A strike factor may be given at the curve 
+        //   configuration level so the strike here can be given as a multiple e.g. 97.5 for 0.975 with strike factor 
+        //   in the configuration of 100.
+        // - EX_TYPE is either A for American or E for European
+        // - PUT_CALL is either C for Call or P for Put
+
+        // Checks.
+        QL_REQUIRE(tokens.size() == 7, "7 tokens expected in " << datumName);
+        QL_REQUIRE(quoteType == MarketDatum::QuoteType::RATE_LNVOL || quoteType == MarketDatum::QuoteType::PRICE,
+            "invalid quote type for " << datumName << ". Expected RATE_LNVOL or PRICE.");
+        QL_REQUIRE(tokens[5] == "A" || tokens[5] == "E", "expected A for American or E for European as the "
+            "penultimate element in " << datumName);
+        QL_REQUIRE(tokens[6] == "C" || tokens[6] == "P", "expected C for call or P for put as the last "
+            "element in " << datumName);
+
+        const string& contractName = tokens[2];
+        const string& expiry = tokens[3];
+        auto strike = parseBaseStrike(tokens[4]);
+        const string& exerciseType = tokens[5];
+        bool isCall = tokens[6] == "C";
+
+        return QuantLib::ext::make_shared<BondFutureOptionQuote>(value, asof, datumName, quoteType,
+            contractName, expiry, strike, exerciseType, isCall);
+    }
+
     default:
         QL_FAIL("Cannot convert \"" << datumName << "\" to MarketDatum");
     } // switch instrument type
