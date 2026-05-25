@@ -54,12 +54,11 @@ void CrifVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParam
         inputs->loadParameter<std::string>(tmp, "saccr", "simmVersion");
     if (tmp.empty())
         inputs->loadParameter<std::string>(tmp, "simm", "version");
-    if (!tmp.empty()) {
+    if (tmp.empty())
+        inputs->loadParameter<std::string>(tmp, "portfolioDetails", "version");
+    if (!tmp.empty())
         inputs->setSimmVersion(tmp);
-    } else if (inputs->simmVersion().empty()) {
-        inputs->setSimmVersion("2.6");
-        LOG("set SIMM version for CRIF generation to " << inputs->simmVersion());
-    }
+    QL_REQUIRE(!inputs->simmVersion().empty(), "SIMM version must not be empty for CRIF");
 
     // Load name mapper (try crif, then saccr, then simm, then npv, then setup)
     tmp = {};
@@ -335,6 +334,8 @@ void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
         handleMainSensitivityReports(*crifAnalytic, inputs_, sensiAnalytic);
 
         CONSOLE("OK");
+    } else {
+        sensiAnalysis = static_cast<PricingAnalyticImpl*>(sensiAnalytic->impl().get())->sensiAnalysis();
     }
 
     QuantLib::ext::shared_ptr<SimmConfiguration> simmConfiguration = inputs_->getSimmConfiguration();

@@ -35,10 +35,7 @@ void BaCvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputPara
     inputs->loadParameter<std::string>(tmp, "bacva", "simmVersion");
     if (!tmp.empty())
         inputs->setSimmVersion(tmp);
-    else if (inputs->simmVersion().empty()) {
-        inputs->setSimmVersion("2.1");
-        WLOG("Setting SIMM version to " << inputs->simmVersion() << " for BA-CVA");
-    }
+    QL_REQUIRE(!inputs->simmVersion().empty(), "SIMM version must not be empty for BA-CVA");
 
     tmp = {};
     inputs->loadParameter<std::string>(tmp, "bacva", "nameMappingInputFile");

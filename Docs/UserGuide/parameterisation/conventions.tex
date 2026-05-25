@@ -152,6 +152,8 @@ future quotes, for example futures on Euribor 3M or SOFR 3M underlyings. The str
       arithmetic, no holiday calendar adjustment). Used for NZD bank-bill futures.
     \item \texttt{IMMCAD}: Expiry is two business days (using a combined UK and Canada holiday calendar) before the
       3rd Wednesday of the expiry month. Used for CAD BAX / CORRA futures.
+    \item \texttt{IMMEUR}: Expiry is two EUREX business days before the 3rd Wednesday of the expiry month. Used for
+      EUR-EURIBOR-3M futures.
     \end{itemize}
   \item For an overnight index future `IMM' means that the end date of the future is set to the 3rd Wednesday of the
     expiry month and the start date is set to the 3rd Wednesday of the expiry month minus the future tenor. The setting
@@ -169,6 +171,10 @@ future quotes, for example futures on Euribor 3M or SOFR 3M underlyings. The str
 \item OvernightIndexFutureNettingType [Optional]: Only relevant for OI futures. Can be `Compounding' (which is also the
   default value if no value is given) or `Averaging'. For example, SOFR 3M futures are compounding while SOFR 1M futures
   are averaging the daily overnight fixings over the calculation period of the future.
+\item OvernightIndexTenor [Optional]: This field is mandatory for par sensitivity calculation when using overnight index futures.
+  Specifies the tenor for the future (e.g., 3M for SOFR futures). When specified, the tenor must match the tenor in the market data quotes during curve
+  building, otherwise an error will be raised. For example, for SOFR 3M futures, this should be set to 3M. This field can be left blank if no par conversion
+  is needed (i.e., for curve building only).
 \end{itemize}
 
 Listings \ref{lst:future_conventions_euribor_3m}, \ref{lst:future_conventions_aud_bbsw_3m},
@@ -196,9 +202,10 @@ AUD-BBSW-3M, NZD-BKBM-3M, CAD-CORRA-3M, SOFR-3M and SOFR-1M future conventions.
 <Future>
   <Id>EURIBOR-3M-FUTURES</Id>
   <Index>EUR-EURIBOR-3M</Index>
+  <DateGenerationRule>IMMEUR</DateGenerationRule>
 </Future>
 \end{minted}
-\caption{Euribor 3M MM Future conventions}
+\caption{Euribor 3M MM Future conventions (IMMEUR -- two EUREX business days before the third Wednesday)}
 \label{lst:future_conventions_euribor_3m}
 \end{listing}
 
@@ -276,8 +283,15 @@ backward-compatible alias)}
 \subsubsection{FRA Conventions}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 A node with name \emph{FRA} is used to store conventions for FRA quotes. The structure of this node is shown in Listing
-\ref{lst:fra_conventions}. The only piece of information needed is the underlying index name and this is given in the
+\ref{lst:fra_conventions}. The underlying index name is given in the
 \lstinline!Index! node. For example, this could be EUR-EURIBOR-6M, CHF-LIBOR-6M etc.
+
+The optional \lstinline!EndDateConvention! node controls how the FRA maturity (end) date is calculated:
+\begin{itemize}
+\item \lstinline!FromSpot! (default) --- the end date is obtained by a single date roll from the spot date, applying the combined duration of the forward start period and the index tenor.
+\item \lstinline!FromStart! --- the end date is obtained in two steps: first, the start date is computed by rolling from spot by the forward start period; second, the end date is computed by rolling from that start date by the index tenor. When date adjustments (e.g., end-of-month, business day conventions) apply unevenly across intermediate dates, these two approaches may yield different results.
+\end{itemize}
+If the \lstinline!EndDateConvention! node is omitted, \lstinline!FromSpot! is assumed for backward compatibility.
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -285,6 +299,7 @@ A node with name \emph{FRA} is used to store conventions for FRA quotes. The str
 <FRA>
   <Id> </Id>
   <Index> </Index>
+  <EndDateConvention> </EndDateConvention>
 </FRA>
 \end{minted}
 \caption{FRA conventions}

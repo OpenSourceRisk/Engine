@@ -226,6 +226,7 @@
 #include <qle/instruments/nullinstrument.hpp>
 #include <qle/instruments/outperformanceoption.hpp>
 #include <qle/instruments/pairwisevarianceswap.hpp>
+#include <qle/instruments/pathlevelresult.hpp>
 #include <qle/instruments/payment.hpp>
 #include <qle/instruments/rebatedexercise.hpp>
 #include <qle/instruments/riskparticipationagreement.hpp>

@@ -414,7 +414,7 @@ void VanillaOptionTrade::setNotionalAndCurrencies() {
     notionalCurrency_ = ccy.code();
 }
 
-QuantLib::Real VanillaOptionTrade::notional() const {
+QuantLib::Real VanillaOptionTrade::notional(NotionalType type) const {
     return delegatingBuilderTrade_ != nullptr ? delegatingBuilderTrade_->notional() : Trade::notional();
 }
 

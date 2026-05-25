@@ -894,7 +894,7 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     }
 }
 
-QuantLib::Real TRS::notional() const {
+QuantLib::Real TRS::notional(NotionalType type) const {
     // try to get the notional from the additional results of the instrument
     try {
         return instrument_->qlInstrument()->result<Real>("currentNotional");

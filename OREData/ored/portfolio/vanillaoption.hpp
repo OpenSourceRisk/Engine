@@ -43,7 +43,7 @@ public:
     void setNotionalAndCurrencies();
 
     //! Trade interface
-    QuantLib::Real notional() const override;
+    QuantLib::Real notional(NotionalType type = NotionalType::Default) const override;
     string notionalCurrency() const override;
 
     //! \name Inspectors

@@ -172,6 +172,7 @@ struct RandomVariable {
     // interop with ql classes
     explicit RandomVariable(const QuantLib::Array& data, const Real time = Null<Real>());
     explicit operator Array() const;
+    explicit operator std::vector<double>() const;
     void copyToMatrixCol(QuantLib::Matrix&, const Size j) const;
     // modifiers
     void clear();

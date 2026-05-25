@@ -173,6 +173,7 @@ math/differentialevolution_mt.cpp
 math/discretedistribution.cpp
 math/fillemptymatrix.cpp
 math/gpucodegenerator.cpp
+math/gpuqrsolve.cpp
 math/matrixfunctions.cpp
 math/openclenvironment.cpp
 math/randomvariable.cpp
@@ -700,6 +701,7 @@ instruments/multilegoption.hpp
 instruments/nullinstrument.hpp
 instruments/outperformanceoption.hpp
 instruments/pairwisevarianceswap.hpp
+instruments/pathlevelresult.hpp
 instruments/payment.hpp
 instruments/rebatedexercise.hpp
 instruments/riskparticipationagreement.hpp

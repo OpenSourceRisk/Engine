@@ -121,6 +121,8 @@ struct HistoricalSimulationVarVariables : public VarVariables {
     bool includeExpectedShortfall_ = false;
     bool riskFactorBreakdown_ = false;
     bool riskClassBreakdown_ = true;
+    bool includeTheta_ = false;
+    bool includePeriodCashflow_ = false;
 };
 
 class HistoricalSimulationVarAnalyticImpl : public VarAnalyticImpl {
@@ -134,6 +136,7 @@ public:
 protected:
     void setVarReport(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) override;
     void addAdditionalReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) override;
+    std::map<std::string, QuantLib::Real> computeTheta(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) const;
     bool riskFactorBreakdown_ = false;
     bool riskClassBreakdown_ = true;
     bool allowPartialScenarios_ = false;

@@ -77,6 +77,8 @@ private:
     RandomVariable getNumeraire(const Date& s) const override;
     Real getFxSpot(const Size idx) const override;
 
+   void populateAdditionalResultsPathLevel() const override;
+
     // input parameters
     Handle<CrossAssetModel> cam_;
     std::string currency_;
