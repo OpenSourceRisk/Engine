@@ -75,11 +75,17 @@ maturity = 1.0      # Time to expiry (1 year)
 # Build the execution context
 ctx = ore.Context()
 ctx.resetSize(1)
+# Input variables
 ctx.setScalar("S", spot)
 ctx.setScalar("K", strike)
 ctx.setScalar("r", rate)
 ctx.setScalar("sigma", vol)
 ctx.setScalar("T", maturity)
+# Output variables (must be pre-declared)
+ctx.setScalar("d1", 0.0)
+ctx.setScalar("d2", 0.0)
+ctx.setScalar("CallPV", 0.0)
+ctx.setScalar("PutPV", 0.0)
 
 # Execute the pricing script
 engine = ore.ScriptEngine(parser.ast(), ctx)
@@ -163,6 +169,11 @@ for s in spot_levels:
     ctx.setScalar("r", 0.05)
     ctx.setScalar("sigma", 0.20)
     ctx.setScalar("T", 1.0)
+    # Pre-declare output variables
+    ctx.setScalar("d1", 0.0)
+    ctx.setScalar("d2", 0.0)
+    ctx.setScalar("CallPV", 0.0)
+    ctx.setScalar("PutPV", 0.0)
 
     engine = ore.ScriptEngine(parser.ast(), ctx)
     engine.run(BLACK_SCHOLES_SCRIPT)
@@ -189,6 +200,11 @@ def compute_greeks(S, K, r, sigma, T, bump=0.01):
         ctx.setScalar("r", r)
         ctx.setScalar("sigma", vol)
         ctx.setScalar("T", time)
+        # Pre-declare output variables
+        ctx.setScalar("d1", 0.0)
+        ctx.setScalar("d2", 0.0)
+        ctx.setScalar("CallPV", 0.0)
+        ctx.setScalar("PutPV", 0.0)
         eng = ore.ScriptEngine(parser.ast(), ctx)
         eng.run(BLACK_SCHOLES_SCRIPT)
         return ctx.getScalar("CallPV")
