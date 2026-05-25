@@ -75,6 +75,7 @@ protected:
         return QuantLib::ext::make_shared<QuantLib::BlackProcess>(futurePrice, discountCurve, vol);
     }
 
+private:
     // Store the result of the index creation in case it is needed from the builder.
     BondFutureUtils::IndexResults indexResults_;
 };

@@ -367,15 +367,9 @@ TRS::getFxIndex(const QuantLib::ext::shared_ptr<Market> market, const std::strin
     return fx;
 }
 
-/*TRS::FXConversion TRS::ReturnData::parseFXConversion(string fxConv_) { return  (fxConv_ == "Start" ? FXConversion::Start
-                                                                                               : FXConversion::End);
-}*/
-
 void TRS::reset() {
     creditRiskCurrency_.clear();
     creditQualifierMapping_.clear();
-    underlying_.clear();
-    underlyingDerivativeId_.clear();
     Trade::reset();
 }
 
@@ -957,6 +951,8 @@ void TRS::getTradesFromReferenceData(const QuantLib::ext::shared_ptr<PortfolioBa
     DLOG("populating portfolio basket data from reference data");
     QL_REQUIRE(ptfReferenceDatum, "populateFromReferenceData(): empty portfolio reference datum given");
 
+    underlying_.clear();
+    underlyingDerivativeId_.clear();
     auto refData = ptfReferenceDatum->getTrades();
     for (Size i = 0; i < refData.size(); i++) {
         underlyingDerivativeId_.push_back((portfolioId_));

@@ -51,36 +51,43 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory)
     BondFutureUtils::addIsdaTaxonomy(additionalData_);
     bool isLong = parsePositionType(longShort_) == QuantLib::Position::Type::Long;
 
-    // Create the bond future index and get all associated results.
-    auto res = BondFutureUtils::createIndex(contractName_, engineFactory);
-    refData_ = res.refData;
-    bondData_ = res.ctdBuilderResult.bondData;
+    // Get the pricing engine builder for bond future.
+    ext::shared_ptr<EngineBuilder> engineBuilder = engineFactory->builder("BondFuture");
+    QL_REQUIRE(engineBuilder, "BondFuture::build: no engine builder found for type BondFuture.");
+    auto bfEngineBuilder = ext::dynamic_pointer_cast<BondFutureEngineBuilder>(engineBuilder);
+    QL_REQUIRE(bfEngineBuilder, "BondFuture::build: engine builder for type BondFuture cannot "
+        "be cast to a BondFutureEngineBuilder.");
+
+    // Get the bond future pricing engine. Only after call to engine(...), are indexResults() below available.
+    auto bfEngine = bfEngineBuilder->engine(contractName_);
+
+    // Information gathered during the creation of the bond future index for contractName_.
+    const auto& indexResults = bfEngineBuilder->indexResults();
+    refData_ = indexResults.refData;
+    bondData_ = indexResults.ctdBuilderResult.bondData;
 
     // Create the bond future instrument.
     const auto& bondFutureData = refData_->bondFutureData();
     bool physicalSettle = bondFutureData.settlement == "Physical";
     auto instr = QuantLib::ext::make_shared<QuantExt::BondFuture>(
-        res.index, contractNotional_, isLong, res.futureSettle, physicalSettle);
+        indexResults.index, contractNotional_, isLong, indexResults.futureSettle, physicalSettle);
 
     // Set its pricing engine.
-    auto builder = ext::dynamic_pointer_cast<BondFutureEngineBuilder>(engineFactory->builder("BondFuture"));
-    QL_REQUIRE(builder, "BondFuture::build: could not cast engine builder found for "
-        "BondFuture to a BondFutureEngineBuilder.");
-    instr->setPricingEngine(builder->engine(id(), bondFutureData.currency, res.ctdConversionFactor));
+    instr->setPricingEngine(bfEngine);
 
     Date today = Settings::instance().evaluationDate();
-    string oreIndexName = IndexNameTranslator::instance().oreName(res.index->name());
-    requiredFixings_.addFixingDate(today, oreIndexName, res.futureSettle);
+    string oreIndexName = IndexNameTranslator::instance().oreName(indexResults.index->name());
+    requiredFixings_.addFixingDate(today, oreIndexName, indexResults.futureSettle);
 
-    setSensitivityTemplate(*builder);
-    addProductModelEngine(*builder);
+    setSensitivityTemplate(*bfEngineBuilder);
+    addProductModelEngine(*bfEngineBuilder);
     instrument_ = ext::make_shared<VanillaInstrument>(instr, 1.0);
 
-    maturity_ = res.futureSettle;
+    maturity_ = indexResults.futureSettle;
     maturityType_ = "Contract settled";
     npvCurrency_ = bondFutureData.currency;
     notional_ = contractNotional_;
-    legs_ = vector<Leg>(1, res.ctdBuilderResult.bond->cashflows());
+    legs_ = vector<Leg>(1, indexResults.ctdBuilderResult.bond->cashflows());
     legCurrencies_ = vector<string>(1, bondFutureData.currency);
     legPayers_ = vector<bool>(1, isLong);
 }
