@@ -19,6 +19,7 @@
 #include <orea/app/analytics/stresstestanalytic.hpp>
 #include <orea/app/inputparameters.hpp>
 #include <orea/app/reportwriter.hpp>
+#include <orea/engine/multithreadedstresstest.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/parsensitivityanalysis.hpp>
 #include <orea/engine/parstressconverter.hpp>
@@ -114,12 +115,26 @@ void StressTestAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
                       scenarioReport, inputs_->useAtParCouponsTrades());
     } else {
         QL_REQUIRE(scenarioData, "StressTestAnalytic::runAnalytic: No stress scenario data provided.");
-        runStressTest(analytic()->portfolio(), analytic()->market(), marketConfig, inputs_->pricingEngine(),
-                      analytic()->configurations().simMarketParams, scenarioData, report, cfReport,
-                      inputs_->stressThreshold(), inputs_->stressPrecision(), inputs_->includePastCashflows(),
-                      *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams,
-                      nullptr, inputs_->refDataManager(), inputs_->iborFallbackConfig(), inputs_->continueOnError(),
-                      scenarioReport, inputs_->useAtParCouponsTrades());
+        Size nThreads = inputs_->nThreads();
+        if (nThreads > 1) {
+            LOG("Running multi-threaded stress test with " << nThreads << " threads");
+            MultiThreadedStressTest stressTest(
+                nThreads, analytic()->portfolio(), analytic()->market(), marketConfig, inputs_->pricingEngine(),
+                analytic()->configurations().simMarketParams, scenarioData, *analytic()->configurations().curveConfig,
+                *analytic()->configurations().todaysMarketParams, nullptr, inputs_->refDataManager(),
+                inputs_->iborFallbackConfig(), loader, inputs_->continueOnError(), inputs_->useAtParCouponsTrades());
+            stressTest.registerProgressIndicator(
+                QuantLib::ext::make_shared<ProgressLog>("stress scenarios", 100, oreSeverity::notice));
+            stressTest.runStressTest(report, cfReport, inputs_->stressThreshold(), inputs_->stressPrecision(),
+                                     inputs_->includePastCashflows(), scenarioReport);
+        } else {
+            runStressTest(analytic()->portfolio(), analytic()->market(), marketConfig, inputs_->pricingEngine(),
+                          analytic()->configurations().simMarketParams, scenarioData, report, cfReport,
+                          inputs_->stressThreshold(), inputs_->stressPrecision(), inputs_->includePastCashflows(),
+                          *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams,
+                          nullptr, inputs_->refDataManager(), inputs_->iborFallbackConfig(), inputs_->continueOnError(),
+                          scenarioReport, inputs_->useAtParCouponsTrades());
+        }
     }
 
     analytic()->addReport(label(), "stress", report);

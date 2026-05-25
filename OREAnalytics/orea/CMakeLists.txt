@@ -95,6 +95,7 @@ engine/marketriskbacktest.cpp
 engine/marketriskreport.cpp
 engine/mporcalculator.cpp
 engine/multistatenpvcalculator.cpp
+engine/multithreadedstresstest.cpp
 engine/multithreadedvaluationengine.cpp
 engine/npvrecord.cpp
 engine/parametricvar.cpp
@@ -321,6 +322,7 @@ engine/marketriskbacktest.hpp
 engine/marketriskreport.hpp
 engine/mporcalculator.hpp
 engine/multistatenpvcalculator.hpp
+engine/multithreadedstresstest.hpp
 engine/multithreadedvaluationengine.hpp
 engine/npvrecord.hpp
 engine/observationmode.hpp
