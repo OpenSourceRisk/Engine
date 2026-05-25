@@ -30,6 +30,7 @@
 #include <ored/portfolio/barrieroptionwrapper.hpp>
 #include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/bondfuture.hpp>
+#include <ored/portfolio/bondfutureoption.hpp>
 #include <ored/portfolio/bondoption.hpp>
 #include <ored/portfolio/bondposition.hpp>
 #include <ored/portfolio/bondrepo.hpp>
@@ -39,6 +40,7 @@
 #include <ored/portfolio/builders/balanceguaranteedswap.hpp>
 #include <ored/portfolio/builders/bond.hpp>
 #include <ored/portfolio/builders/bondfuture.hpp>
+#include <ored/portfolio/builders/bondfutureoption.hpp>
 #include <ored/portfolio/builders/bondoption.hpp>
 #include <ored/portfolio/builders/bondrepo.hpp>
 #include <ored/portfolio/builders/bondtotalreturnswap.hpp>
@@ -400,6 +402,7 @@ void dataBuilders() {
     ORE_REGISTER_TRADE_BUILDER("BalanceGuaranteedSwap", BalanceGuaranteedSwap, false)
     ORE_REGISTER_TRADE_BUILDER("CallableSwap", CallableSwap, false)
     ORE_REGISTER_TRADE_BUILDER("FlexiSwap", FlexiSwap, false)
+    ORE_REGISTER_TRADE_BUILDER("BondFutureOption", BondFutureOption, false)
 
     ORE_REGISTER_LEGBUILDER("CommodityFixedLegBuilder", CommodityFixedLegBuilder, false)
     ORE_REGISTER_LEGBUILDER("CommodityFloatingLegBuilder", CommodityFloatingLegBuilder, false)
@@ -595,6 +598,7 @@ void dataBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(FlexiSwapEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(BalanceGuaranteedSwapDiscountingEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(BalanceGuaranteedSwapFlexiSwapLGMGridEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(BondFutureEuropeanOptionEngineBuilder, false)
 
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("Bond", BondTrsUnderlyingBuilder, false)
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("BondFuture", BondFutureTrsUnderlyingBuilder, false)

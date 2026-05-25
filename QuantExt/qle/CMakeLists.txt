@@ -362,6 +362,7 @@ processes/multiassetquantohestonprocess.cpp
 processes/ptdhestonprocess.cpp
 processes/quantohestonprocess.cpp
 python_integration/pythonfunctions.cpp
+quotes/bondfuturequote.cpp
 quotes/logquote.cpp
 termstructures/aposurface.cpp
 termstructures/averagefuturepricehelper.cpp
@@ -965,6 +966,7 @@ processes/ptdhestonprocess.hpp
 processes/quantohestonprocess.hpp
 python_integration/pythonfunctions.hpp
 quotes/basecorrelationquote.hpp
+quotes/bondfuturequote.hpp
 quotes/compositevectorquote.hpp
 quotes/exceptionquote.hpp
 quotes/logquote.hpp

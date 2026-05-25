@@ -141,6 +141,7 @@
 #include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/bondbasket.hpp>
 #include <ored/portfolio/bondfuture.hpp>
+#include <ored/portfolio/bondfutureoption.hpp>
 #include <ored/portfolio/bondoption.hpp>
 #include <ored/portfolio/bondposition.hpp>
 #include <ored/portfolio/bondrepo.hpp>
@@ -151,6 +152,7 @@
 #include <ored/portfolio/builders/balanceguaranteedswap.hpp>
 #include <ored/portfolio/builders/bond.hpp>
 #include <ored/portfolio/builders/bondfuture.hpp>
+#include <ored/portfolio/builders/bondfutureoption.hpp>
 #include <ored/portfolio/builders/bondoption.hpp>
 #include <ored/portfolio/builders/bondrepo.hpp>
 #include <ored/portfolio/builders/bondtotalreturnswap.hpp>

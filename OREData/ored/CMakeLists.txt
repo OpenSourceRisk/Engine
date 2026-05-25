@@ -127,6 +127,7 @@ portfolio/bestentryoption.cpp
 portfolio/bond.cpp
 portfolio/bondbasket.cpp
 portfolio/bondfuture.cpp
+portfolio/bondfutureoption.cpp
 portfolio/bondoption.cpp
 portfolio/bondposition.cpp
 portfolio/bondrepo.cpp
@@ -554,6 +555,7 @@ portfolio/bestentryoption.hpp
 portfolio/bond.hpp
 portfolio/bondbasket.hpp
 portfolio/bondfuture.hpp
+portfolio/bondfutureoption.hpp
 portfolio/bondoption.hpp
 portfolio/bondposition.hpp
 portfolio/bondrepo.hpp
@@ -564,6 +566,7 @@ portfolio/builders/asianoption.hpp
 portfolio/builders/balanceguaranteedswap.hpp
 portfolio/builders/bond.hpp
 portfolio/builders/bondfuture.hpp
+portfolio/builders/bondfutureoption.hpp
 portfolio/builders/bondoption.hpp
 portfolio/builders/bondrepo.hpp
 portfolio/builders/bondtotalreturnswap.hpp

@@ -70,6 +70,14 @@ protected:
             quantity_(quantity), strike_(std::move(strike)), index_(index), indexName_(indexName),
             forwardDate_(std::move(forwardDate)) {}
 
+    std::pair<QuantLib::Exercise::Type, QuantLib::ext::shared_ptr<QuantLib::Exercise>> exerciseDetails();
+
+    std::pair<QuantLib::Option::Type, QuantLib::ext::shared_ptr<QuantLib::StrikedTypePayoff>> payoffDetails() const;
+
+    void setInstrumentWrapper(const QuantLib::ext::shared_ptr<Instrument>& mainInstrument,
+        const std::string& discountCurve, const QuantLib::Currency& npvCurrency,
+        const std::string& configuration, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory);
+
     AssetClass assetClassUnderlying_;
     OptionData option_;
     string assetName_;

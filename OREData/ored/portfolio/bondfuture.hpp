@@ -23,6 +23,7 @@
 #pragma once
 
 #include <ored/portfolio/referencedata.hpp>
+#include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/trade.hpp>
 #include <ql/instruments/bond.hpp>
 

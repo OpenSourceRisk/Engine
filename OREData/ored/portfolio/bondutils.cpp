@@ -22,9 +22,8 @@
 #include <ored/portfolio/convertiblebondreferencedata.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/utilities/log.hpp>
-
+#include <ored/portfolio/builders/bondfuture.hpp>
 #include <qle/pricingengines/forwardenabledbondengine.hpp>
-
 #include <ql/cashflows/fixedratecoupon.hpp>
 
 namespace ore {
@@ -490,6 +489,66 @@ void BondFutureUtils::modifyToForwardBond(const Date& expiry, QuantLib::ext::sha
     bond = modifiedBond;
 }
 
+map<AssetClass, set<string>> BondFutureUtils::underlyingBondIndices(const string& contractName,
+    const ext::shared_ptr<ReferenceDataManager>& referenceDataManager)
+{
+    map<AssetClass, set<string>> result;
+    if (referenceDataManager && referenceDataManager->hasData("BondFuture", contractName)) {
+        auto refData = ext::dynamic_pointer_cast<BondFutureReferenceDatum>(
+            referenceDataManager->getData("BondFuture", contractName));
+        for (const auto& sec : refData->bondFutureData().deliveryBasket) {
+            result[AssetClass::BOND].insert(StructuredSecurityId(sec, contractName));
+            result[AssetClass::BOND].insert(sec);
+        }
+    }
+    return result;
+}
+
+void BondFutureUtils::addIsdaTaxonomy(map<string, ext::any>& additionalData)
+{
+    // ISDA taxonomy https://www.isda.org/a/20EDE/q4-2011-credit-standardisation-legend.pdf
+    // TODO: clarify ISDA taxonomy
+    additionalData["isdaAssetClass"] = string("Credit");
+    additionalData["isdaBaseProduct"] = string("Other");
+    additionalData["isdaSubProduct"] = string("");
+    additionalData["isdaTransaction"] = string("");
+}
+
+BondFutureUtils::IndexResults BondFutureUtils::createIndex(const string& contractName,
+    const ext::shared_ptr<EngineFactory>& engineFactory)
+{
+    IndexResults res;
+
+    const auto& refData = engineFactory->referenceData();
+    auto resPair = refData->tryGetData("BondFuture", contractName);
+    QL_REQUIRE(resPair.first, "BondFutureUtils::getCtdBondDetails: no bond future reference data "
+        "found for contract " << contractName << ".");
+
+    res.refData = ext::dynamic_pointer_cast<BondFutureReferenceDatum>(resPair.second);
+    QL_REQUIRE(res.refData, "BondFutureUtils::getCtdBondDetails: could not cast reference data "
+        "found for contract " << contractName << " to a BondFutureReferenceDatum.");
+
+    auto builder = ext::dynamic_pointer_cast<BondFutureEngineBuilder>(engineFactory->builder("BondFuture"));
+    QL_REQUIRE(builder, "BondFutureUtils::getCtdBondDetails: could not cast engine builder found for "
+        "BondFuture to a BondFutureEngineBuilder.");
+
+    const auto& params = builder->globalParameters();
+    bool pricing = params.count("Calibrate") == 0 || parseBool(params.at("Calibrate"));
+
+    std::tie(res.ctdSecurityId, res.ctdConversionFactor) = BondFutureUtils::identifyCtdBond(
+        engineFactory, contractName, !pricing);
+    std::tie(res.futureExpiry, res.futureSettle) = BondFutureUtils::deduceDates(res.refData);
+
+    StructuredSecurityId ssid(res.ctdSecurityId, contractName);
+    res.ctdBuilderResult = BondFactory::instance().build(engineFactory, refData, ssid);
+
+    const string& strIsDirtyPrice = res.refData->bondFutureData().dirtyQuotation;
+    bool isDirtyPrice = strIsDirtyPrice.empty() ? false : parseBool(strIsDirtyPrice);
+    res.index = QuantLib::ext::make_shared<QuantExt::BondFuturesIndex>(
+        contractName, res.futureExpiry, res.ctdBuilderResult.bond, res.ctdConversionFactor, isDirtyPrice);
+
+    return res;
+}
 
 } // namespace data
 } // namespace ore

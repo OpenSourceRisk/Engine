@@ -37,66 +37,56 @@
 
 using namespace QuantLib;
 using namespace QuantExt;
+using std::map;
+using std::set;
+using std::string;
 
 namespace ore {
 namespace data {
 
-void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
+void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory)
+{
     DLOG("BondFuture::build() called for trade " << id());
 
-    // ISDA taxonomy https://www.isda.org/a/20EDE/q4-2011-credit-standardisation-legend.pdf
-    // TODO: clarify ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Credit");
-    additionalData_["isdaBaseProduct"] = string("Other");
-    additionalData_["isdaSubProduct"] = string("");
-    additionalData_["isdaTransaction"] = string("");
-
+    BondFutureUtils::addIsdaTaxonomy(additionalData_);
     bool isLong = parsePositionType(longShort_) == QuantLib::Position::Type::Long;
 
-    QL_REQUIRE(engineFactory->referenceData()->hasData("BondFuture", contractName_),
-               "BondFutureUtils::identifyCtdBond(): no bond future reference data found for " << contractName_);
+    // Create the bond future index and get all associated results.
+    auto res = BondFutureUtils::createIndex(contractName_, engineFactory);
+    refData_ = res.refData;
+    bondData_ = res.ctdBuilderResult.bondData;
 
-    refData_ = QuantLib::ext::dynamic_pointer_cast<BondFutureReferenceDatum>(
-        engineFactory->referenceData()->getData("BondFuture", contractName_));
+    // Create the bond future instrument.
+    const auto& bondFutureData = refData_->bondFutureData();
+    bool physicalSettle = bondFutureData.settlement == "Physical";
+    auto instr = QuantLib::ext::make_shared<QuantExt::BondFuture>(
+        res.index, contractNotional_, isLong, res.futureSettle, physicalSettle);
 
-    auto builder = QuantLib::ext::dynamic_pointer_cast<BondFutureEngineBuilder>(engineFactory->builder("BondFuture"));
-
-    bool pricing =
-        builder->globalParameters().count("Calibrate") == 0 || parseBool(builder->globalParameters().at("Calibrate"));
-
-    auto [ctd, conversionFactor] = BondFutureUtils::identifyCtdBond(engineFactory, contractName_, !pricing);
-    auto [expiry, settlement] = BondFutureUtils::deduceDates(refData_);
-
-    auto b = BondFactory::instance().build(engineFactory, engineFactory->referenceData(),
-                                           StructuredSecurityId(ctd, contractName_));
-    auto index = QuantLib::ext::make_shared<QuantExt::BondFuturesIndex>(
-        contractName_, expiry, b.bond, conversionFactor,
-        refData_->bondFutureData().dirtyQuotation.empty() ? false
-                                                          : parseBool(refData_->bondFutureData().dirtyQuotation));
-    auto instr = QuantLib::ext::make_shared<QuantExt::BondFuture>(index, contractNotional_, isLong, settlement,
-                                                                  refData_->bondFutureData().settlement == "Physical");
-
-    bondData_ = b.bondData;
-
-    instr->setPricingEngine(builder->engine(id(), refData_->bondFutureData().currency, conversionFactor));
+    // Set its pricing engine.
+    auto builder = ext::dynamic_pointer_cast<BondFutureEngineBuilder>(engineFactory->builder("BondFuture"));
+    QL_REQUIRE(builder, "BondFuture::build: could not cast engine builder found for "
+        "BondFuture to a BondFutureEngineBuilder.");
+    instr->setPricingEngine(builder->engine(id(), bondFutureData.currency, res.ctdConversionFactor));
 
     Date today = Settings::instance().evaluationDate();
-    requiredFixings_.addFixingDate(today, IndexNameTranslator::instance().oreName(index->name()), settlement);
+    string oreIndexName = IndexNameTranslator::instance().oreName(res.index->name());
+    requiredFixings_.addFixingDate(today, oreIndexName, res.futureSettle);
 
     setSensitivityTemplate(*builder);
     addProductModelEngine(*builder);
-    instrument_.reset(new VanillaInstrument(instr, 1.0));
+    instrument_ = ext::make_shared<VanillaInstrument>(instr, 1.0);
 
-    maturity_ = settlement;
+    maturity_ = res.futureSettle;
     maturityType_ = "Contract settled";
-    npvCurrency_ = refData_->bondFutureData().currency;
+    npvCurrency_ = bondFutureData.currency;
     notional_ = contractNotional_;
-    legs_ = vector<Leg>(1, b.bond->cashflows());
-    legCurrencies_ = vector<string>(1, refData_->bondFutureData().currency);
+    legs_ = vector<Leg>(1, res.ctdBuilderResult.bond->cashflows());
+    legCurrencies_ = vector<string>(1, bondFutureData.currency);
     legPayers_ = vector<bool>(1, isLong);
 }
 
-void BondFuture::fromXML(XMLNode* node) {
+void BondFuture::fromXML(XMLNode* node)
+{
     Trade::fromXML(node);
     XMLNode* bondFutureNode = XMLUtils::getChildNode(node, "BondFutureData");
     QL_REQUIRE(bondFutureNode, "BondFuture::fromXML(): no BondFutureData Node");
@@ -109,17 +99,18 @@ void BondFuture::fromXML(XMLNode* node) {
         useFuturePrice_ = parseBool(XMLUtils::getNodeValue(n));
 }
 
-XMLNode* BondFuture::toXML(XMLDocument& doc) const {
+XMLNode* BondFuture::toXML(XMLDocument& doc) const
+{
     XMLNode* node = Trade::toXML(doc);
-    XMLNode* node2 = doc.allocNode("BondFutureData");
-    XMLUtils::addChild(doc, node2, "ContractName", contractName_);
-    XMLUtils::addChild(doc, node2, "ContractNotional", contractNotional_);
-    XMLUtils::addChild(doc, node2, "LongShort", longShort_);
+    XMLNode* bondFutureNode = doc.allocNode("BondFutureData");
+    XMLUtils::addChild(doc, bondFutureNode, "ContractName", contractName_);
+    XMLUtils::addChild(doc, bondFutureNode, "ContractNotional", contractNotional_);
+    XMLUtils::addChild(doc, bondFutureNode, "LongShort", longShort_);
     if (applyConversionFactor_)
-        XMLUtils::addChild(doc, node2, "ApplyConversionFactor", *applyConversionFactor_);
+        XMLUtils::addChild(doc, bondFutureNode, "ApplyConversionFactor", *applyConversionFactor_);
     if (useFuturePrice_)
-        XMLUtils::addChild(doc, node2, "UseFuturePrice", *useFuturePrice_);
-    XMLUtils::appendNode(node, node2);
+        XMLUtils::addChild(doc, bondFutureNode, "UseFuturePrice", *useFuturePrice_);
+    XMLUtils::appendNode(node, bondFutureNode);
     return node;
 }
 
@@ -133,18 +124,10 @@ bool BondFuture::useFuturePrice() const
     return useFuturePrice_.value_or(false);
 }
 
-std::map<AssetClass, std::set<std::string>>
-BondFuture::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
-    std::map<AssetClass, std::set<std::string>> result;
-    if (referenceDataManager && referenceDataManager->hasData("BondFuture", contractName_)) {
-        auto refData = QuantLib::ext::dynamic_pointer_cast<BondFutureReferenceDatum>(
-            referenceDataManager->getData("BondFuture", contractName_));
-        for (const auto& sec : refData->bondFutureData().deliveryBasket) {
-            result[AssetClass::BOND].insert(StructuredSecurityId(sec, contractName_));
-            result[AssetClass::BOND].insert(sec);
-        }
-    }
-    return result;
+map<AssetClass, set<string>> BondFuture::underlyingIndices(
+    const ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const
+{
+    return BondFutureUtils::underlyingBondIndices(contractName_, referenceDataManager);
 }
 
 } // namespace data

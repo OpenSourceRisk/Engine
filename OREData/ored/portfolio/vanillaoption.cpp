@@ -51,34 +51,20 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
     if (strike_.currency().empty())
         strike_.setCurrency(ccy.code());
 
+    // Exercise
+    auto [exerciseType, exercise] = exerciseDetails();
+
     // Payoff
-    Option::Type type = parseOptionType(option_.callPut());
-    QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, strike_.value()));
-    QuantLib::Exercise::Type exerciseType = parseExerciseType(option_.style());
-    QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of exercise dates");
-    expiryDate_ = parseDate(option_.exerciseDates().front());
-    maturity_ = expiryDate_;
-    maturityType_ = "Expiry Date";
+    auto [type, payoff] = payoffDetails();
+
+    // Potentially override maturity_ and maturityType_ set in exerciseDetails() above.
     if (paymentDate_ != Null<Date>()) {
         if(tradeType_!="FxOption"){
             maturity_ = paymentDate_;
         }
         maturityType_ = "Payment Date";
     }
-    // Exercise
-    QuantLib::ext::shared_ptr<Exercise> exercise;
-    switch (exerciseType) {
-    case QuantLib::Exercise::Type::European: {
-        exercise = QuantLib::ext::make_shared<EuropeanExercise>(expiryDate_);
-        break;
-    }
-    case QuantLib::Exercise::Type::American: {
-        exercise = QuantLib::ext::make_shared<AmericanExercise>(expiryDate_, option_.payoffAtExpiry());
-        break;
-    }
-    default:
-        QL_FAIL("Option Style " << option_.style() << " is not supported");
-    }
+
     // Create the instrument and then populate the name for the engine builder.
     QuantLib::ext::shared_ptr<Instrument> vanilla;
     string tradeTypeBuilder = tradeType_;
@@ -410,20 +396,7 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
         configuration = quantoVanillaOptionBuilder->configuration(MarketContext::pricing);
     }
 
-    Position::Type positionType = parsePositionType(option_.longShort());
-    Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
-    Real mult = quantity_ * bsInd;
-
-    std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
-    std::vector<Real> additionalMultipliers;
-    Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, mult, option_.premiumData(),
-                                         -bsInd, npvCurrency, discountCurve, engineFactory, configuration);
-    maturity_ = std::max(maturity_, lastPremiumDate);
-    if (maturity_ == lastPremiumDate)
-        maturityType_ = "Last Premium Date";
-
-    instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(
-        new VanillaInstrument(vanilla, mult, additionalInstruments, additionalMultipliers));
+    setInstrumentWrapper(vanilla, discountCurve, npvCurrency, configuration, engineFactory);
 }
 
 void VanillaOptionTrade::setNotionalAndCurrencies() {
@@ -447,6 +420,63 @@ QuantLib::Real VanillaOptionTrade::notional() const {
 
 string VanillaOptionTrade::notionalCurrency() const {
     return delegatingBuilderTrade_ != nullptr ? delegatingBuilderTrade_->notionalCurrency() : Trade::notionalCurrency();
+}
+
+pair<Exercise::Type, ext::shared_ptr<Exercise>> VanillaOptionTrade::exerciseDetails()
+{
+    const auto& exDates = option_.exerciseDates();
+    QL_REQUIRE(exDates.size() == 1, "VanillaOptionTrade::build: expected 1 "
+        "exercise date but got " << exDates.size() << ".");
+    expiryDate_ = parseDate(exDates.front());
+    maturity_ = expiryDate_;
+    maturityType_ = "Expiry Date";
+
+    Exercise::Type exerciseType = parseExerciseType(option_.style());
+
+    ext::shared_ptr<Exercise> exercise;
+    switch (exerciseType)
+    {
+    case Exercise::Type::European:
+        exercise = ext::make_shared<EuropeanExercise>(expiryDate_);
+        break;
+    case Exercise::Type::American:
+        exercise = ext::make_shared<AmericanExercise>(expiryDate_, option_.payoffAtExpiry());
+        break;
+    default:
+        QL_FAIL("Option style " << option_.style() << " is not supported on VanillaOptionTrade.");
+    }
+
+    return {exerciseType, exercise};
+}
+
+pair<Option::Type, ext::shared_ptr<StrikedTypePayoff>> VanillaOptionTrade::payoffDetails() const
+{
+    Option::Type type = parseOptionType(option_.callPut());
+    ext::shared_ptr<StrikedTypePayoff> payoff = ext::make_shared<PlainVanillaPayoff>(type, strike_.value());
+    return {type, payoff};
+}
+
+void VanillaOptionTrade::setInstrumentWrapper(const ext::shared_ptr<Instrument>& mainInstrument,
+    const string& discountCurve, const Currency& npvCurrency, const string& configuration,
+    const ext::shared_ptr<EngineFactory>& engineFactory)
+{
+    Real longShortIndicator = parsePositionType(option_.longShort()) == Position::Long ? 1.0 : -1.0;
+    Real mainMultiplier = quantity_ * longShortIndicator;
+
+    // Get any premiums that need to be added to the wrapper.
+    vector<ext::shared_ptr<Instrument>> additionalInstruments;
+    vector<Real> additionalMultipliers;
+    Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, mainMultiplier,
+        option_.premiumData(), -longShortIndicator, npvCurrency, discountCurve, engineFactory, configuration);
+
+    // Update maturity if necessary.
+    maturity_ = std::max(maturity_, lastPremiumDate);
+    if (maturity_ == lastPremiumDate)
+        maturityType_ = "Last Premium Date";
+
+    // Set the final instrument wrapper.
+    instrument_ = ext::make_shared<VanillaInstrument>(
+        mainInstrument, mainMultiplier, additionalInstruments, additionalMultipliers);
 }
 
 } // namespace data
