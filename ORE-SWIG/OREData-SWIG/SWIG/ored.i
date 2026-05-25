@@ -66,6 +66,7 @@
 %include ored_tradegenerator.i
 %include ored_utilities.i
 %include ored_volcurves.i
+%include ored_scriptengine.i
 %include ored_xmlutils.i
 %include ored_yieldcurveconfig.i
 
