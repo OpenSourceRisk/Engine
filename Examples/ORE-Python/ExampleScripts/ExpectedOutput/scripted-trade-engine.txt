@@ -1,4 +1,5 @@
-﻿Black-Scholes script parsed successfully.
+RUN scripted-trade-engine.py
+Black-Scholes script parsed successfully.
 
 AST:
 Sequence
