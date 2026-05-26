@@ -44,6 +44,7 @@
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
 #include <boost/accumulators/statistics/weighted_sum.hpp>
+#include <boost/bimap.hpp>
 #include <boost/timer/timer.hpp>
 
 namespace ore {
@@ -278,6 +279,49 @@ void XvaEngineCG::buildPortfolio() {
     DLOG("XvaEngineCG: build trades (" << portfolio_->size() << ") done.");
 }
 
+namespace {
+std::map<std::set<std::string>, std::string>
+buildBaseCcySuggestions(const std::string& baseCcy, const std::set<std::set<std::string>>& currencySets) const {
+
+    std::map<std::set<std : string>, std::string> result;
+
+    std::vector<std::set<std::string>> ccySets(currencySets.begin(), currencySets.end());
+    std::vector<bool> processed(ccySets.size(), false);
+    boost::bimap<std::string, Size> freq;
+
+    for (Size i = 0; i < ccySets.size(); ++i) {
+        if (ccySets[i].size() == 1) {
+            // one-ccy sets map to that currency, trivially
+            result[ccySets[i]] = *ccySets[i].begin();
+            processed[i] = true;
+        } else {
+            // for the others, build a frequency map
+            for (auto const& ccy : ccySets[i]) {
+                freq[ccy]++;
+            }
+        }
+    }
+
+    // process the frequency map
+
+    for (auto f = freq.right.rbegin(); f != freq.right.rend(); ++f) {
+        for (Size i = 0; i < ccySets.size(); ++i) {
+            if (!processed[i] && ccySets[i].find(f->second) != ccySets[i].end()) {
+                result[ccySets[i]] = f->second;
+                processed[i] = true;
+            }
+        }
+    }
+
+    // check and return result
+
+    QL_REQUIRE(std::all_of(processed.begin(), processed.end(), std::identity()),
+               "XvaEngineCG::buildBaseCcySuggestions(): internal error, not all ccy sets were processed.");
+
+    return result;
+}
+} // namespace
+
 void XvaEngineCG::buildCgPartB() {
     DLOG("XvaEngineCG: build computation graph for all trades (part B)");
 
@@ -295,15 +339,75 @@ void XvaEngineCG::buildCgPartB() {
 
     tradeExposureMetaInfo_.resize(portfolio_->trades().size());
 
+    // prepare trade data for processing
+
+    struct TradeData {
+        Size tradeIndex;
+        QuantLib::ext::shared_ptr<AmcCgPricingEngine> engine;
+        double multiplier;
+        std::string description;
+    }
+
+    std::vector<TradeData>
+        tradeData;
+
+    Size tradeIndex = 0;
+    for (auto const& [id, trade] : portfolio_->trades()) {
+        // trigger setupArguments()
+        if (!trade->instrument()->qlInstrument()->isCalculated())
+            trade->instrument()->qlInstrument()->recalculate();
+
+        // main instrument
+        tradeData.push_back({tradeIndex,
+                             QuantLib::ext::dynamic_pointer_cast<AmcCgPricingEngine>(
+                                 trade->instrument()->qlInstrument()->pricingEngine()),
+                             multiplier, "main"});
+
+        // fees as single currency swaps per currency
+        std::map<std::string, std::pair<std::vector<Real>, std::vector<std::string>>> tradeFees;
+        for (Size i = 0; i < trade->instrument()->additionalInstruments().size(); ++i) {
+            if (auto p = QuantLib::ext::dynamic_pointer_cast<QuantExt::Payment>(
+                    trade->instrument()->additionalInstruments()[i])) {
+                tradeFees[p->currency().code()].first.push_back(p->cashFlow()->amount() *
+                                                                trade->instrument()->additionalMultipliers()[i]);
+                tradeFees[p->currency().code()].second.push_back(ore::data::to_string(p->cashFlow()->date()));
+            } else {
+                StructuredTradeErrorMessage(trade, "Additional instrument is ignored in AMCCG simulation",
+                                            "only QuantExt::Payment is handled as additional instrument.")
+                    .log();
+            }
+        }
+        for (auto const& [ccy, flows] : tradeFees) {
+            ore::data::Swap swap(
+                Envelope(), {LegData(QuantLib::ext::make_shared<CashflowData>(flows.first, flows.second), false, ccy)});
+            swap.build(engineFactory_);
+            // trigger setupArguments
+            if (!swap.instrument()->qlInstrument()->isCalculated())
+                swap.instrument()->qlInstrument()->recalculate();
+            tradeData.push_back({tradeIndex,
+                                 QuantLib::ext::dynamic_pointer_cast<AmcCgPricingEngine>(
+                                     swap.instrument()->qlInstrument()->pricingEngine()),
+                                 1.0, "fee"});
+        }
+        ++tradeIndex;
+    }
+
+    // build base ccy suggestions
+
+    std::set<std::set<std::string>> currencySets;
+    for (auto const& d : tradeData) {
+        auto s = d.pricingEngine->relevantCurrencySets();
+        currencySets.insert(s.begin(), s.end());
+    }
+    auto baseCcySuggestions = buildBaseCcySuggestions(model_->baseCurrency(), currencySets);
+
+    // build the cg of the trades
+
     Size tradeIndex = 0;
     for (auto const& [id, trade] : portfolio_->trades()) {
 
         if (useRedBlocks_)
             g->startRedBlock();
-
-        // trigger setupArguments
-        if (!trade->instrument()->qlInstrument()->isCalculated())
-            trade->instrument()->qlInstrument()->recalculate();
 
         auto populateTradeExposure = [&](const Size tradeIndex,
                                          std::vector<std::vector<std::vector<TradeExposure>>>& data,
@@ -322,15 +426,12 @@ void XvaEngineCG::buildCgPartB() {
             }
         };
 
-        auto processTrade = [&](const Size tradeInddex, const QuantLib::ext::shared_ptr<PricingEngine>& engine,
+        auto processTrade = [&](const Size tradeInddex, const QuantLib::ext::shared_ptr<AmcCgPricingEngine>& engine,
                                 double multiplier, const std::string& desc) {
-            auto amcCgEngine = QuantLib::ext::dynamic_pointer_cast<AmcCgPricingEngine>(engine);
-            QL_REQUIRE(engine,
-                       "XvaEngineCG: expected to get AmcCgPricingEngine for trade '" << id << "' (" << desc << ")");
             std::vector<TradeExposure> tradeExposure;
             TradeExposureMetaInfo metaInfo;
             try {
-                amcCgEngine->buildComputationGraph(false, &tradeExposure, &metaInfo);
+                engine->buildComputationGraph(false, &tradeExposure, &metaInfo, baseCcySuggestions);
             } catch (const std::exception& e) {
                 QL_FAIL("XvaEngineCG::buildCgPartB(): failed to build cg for trade '" << id << "' (" << desc
                                                                                       << "): " << e.what());
@@ -348,7 +449,7 @@ void XvaEngineCG::buildCgPartB() {
                     model_->useStickyCloseOutDates(true);
                     tradeExposure.clear();
                     try {
-                        amcCgEngine->buildComputationGraph(true, &tradeExposure, &metaInfo);
+                        engine->buildComputationGraph(true, &tradeExposure, &metaInfo, baseCcySuggestions);
                     } catch (const std::exception& e) {
                         QL_FAIL("XvaEngineCG::buildCgPartB(): failed to build cg for trade '" << id << "' (" << desc
                                                                                               << "): " << e.what());
@@ -365,35 +466,10 @@ void XvaEngineCG::buildCgPartB() {
             }
         };
 
-        // process main instrument
+        // process trade data
 
-        double multiplier = trade->instrument()->multiplier() * trade->instrument()->multiplier2();
-        processTrade(tradeIndex, trade->instrument()->qlInstrument()->pricingEngine(), multiplier, "main");
-
-        // process fees as single currency swaps per currency
-
-        std::map<std::string, std::pair<std::vector<Real>, std::vector<std::string>>> tradeFees;
-        for (Size i = 0; i < trade->instrument()->additionalInstruments().size(); ++i) {
-            if (auto p = QuantLib::ext::dynamic_pointer_cast<QuantExt::Payment>(
-                    trade->instrument()->additionalInstruments()[i])) {
-                tradeFees[p->currency().code()].first.push_back(p->cashFlow()->amount() *
-                                                                trade->instrument()->additionalMultipliers()[i]);
-                tradeFees[p->currency().code()].second.push_back(ore::data::to_string(p->cashFlow()->date()));
-            } else {
-                StructuredTradeErrorMessage(trade, "Additional instrument is ignored in AMCCG simulation",
-                                            "only QuantExt::Payment is handled as additional instrument.")
-                    .log();
-            }
-        }
-
-        for (auto const& [ccy, flows] : tradeFees) {
-            ore::data::Swap swap(
-                Envelope(), {LegData(QuantLib::ext::make_shared<CashflowData>(flows.first, flows.second), false, ccy)});
-            swap.build(engineFactory_);
-            // trigger setupArguments
-            if (!swap.instrument()->qlInstrument()->isCalculated())
-                swap.instrument()->qlInstrument()->recalculate();
-            processTrade(tradeIndex, swap.instrument()->qlInstrument()->pricingEngine(), 1.0, "fee");
+        for (auto const& d : tradeData) {
+            processTrade(d.tradeIndex, d.engine, d.multiplier.d.description);
         }
 
         // end the trade's red block and continue with next trade in loop
@@ -410,37 +486,10 @@ void XvaEngineCG::buildCgPartB() {
          << model_->computationGraph()->size());
 }
 
-std::pair<std::set<std::size_t>, std::set<std::set<std::size_t>>>
-XvaEngineCG::getRegressors(const std::size_t dateIndex, const Date& obsDate,
-                           const std::set<std::pair<Size, Size>>& tradeIds, const bool isValuation) {
-    std::set<std::set<std::size_t>> pfRegressorGroups;
-    std::set<std::size_t> pfRegressors;
-    for (auto const [id, k] : tradeIds) {
-        auto tradeRegressors = std::get<SimpleTradeExposure>((isValuation ? tradeExposureValuation_[id][dateIndex][k]
-                                                                          : tradeExposureCloseOut_[id][dateIndex][k]))
-                                   .groups[0]
-                                   .regressors;
-        pfRegressorGroups.insert(tradeRegressors);
-        pfRegressors.insert(tradeRegressors.begin(), tradeRegressors.end());
-    }
-
-    std::set<std::set<std::size_t>> pfRegressorPosGroups;
-    for (const auto& g : pfRegressorGroups) {
-        std::set<std::size_t> group;
-        std::transform(g.begin(), g.end(), std::inserter(group, group.end()), [&pfRegressors](std::size_t v) {
-            return std::distance(pfRegressors.begin(), pfRegressors.find(v));
-        });
-        pfRegressorPosGroups.insert(group);
-    }
-
-    return std::make_pair(pfRegressors, pfRegressorPosGroups);
-}
-
-std::size_t XvaEngineCG::createPortfolioExposureNode(const std::size_t dateIndex, const bool isValuationDate) {
-
+std::size_t XvaEngineCG::createExposureNode(const std::size_t dateIndex, const bool isValuationDate) {
     auto g = model_->computationGraph();
 
-    // determine valuation date and if applicable closeout date
+    // determine valuation date and - if applicable - closeout date
 
     Date valuationDate = dateIndex == 0 ? model_->referenceDate() : *std::next(valuationDates_.begin(), dateIndex - 1);
     Date closeOutDate;
@@ -458,84 +507,62 @@ std::size_t XvaEngineCG::createPortfolioExposureNode(const std::size_t dateIndex
 
     model_->useStickyCloseOutDates(!stickyCloseOutDates_.empty() && !isValuationDate);
 
-    // build the vector of nodes over which we sum the npvs
+    // sum the exposures
 
-    std::vector<std::size_t> tradeSumComplex;
-    std::vector<std::size_t> tradeSumSimple;
-    std::set<std::pair<Size, Size>> simpleTradeIds;
-    for (Size j = 0; j < portfolio_->trades().size(); ++j) {
-        for (Size k = 0; k < tradeExposureValuation_[j][dateIndex].size(); ++k) {
-            auto const& exposure =
-                isValuationDate ? tradeExposureValuation_[j][dateIndex][k] : tradeExposureCloseOut_[j][dateIndex][k];
-            if (std::holds_alternative<SimpleTradeExposure>(exposure)) {
-                tradeSumSimple.push_back(cg_mult(*g, cg_const(*g, std::get<SimpleTradeExposure>(exposure).multiplier),
-                                                 std::get<SimpleTradeExposure>(exposure).groups[0].pathValue));
-                simpleTradeIds.insert(std::make_pair(j, k));
-            } else {
-                tradeSumComplex.push_back(
-                    cg_mult(*g, cg_const(*g, std::get<ComplexTradeExposure>(exposure).multiplier),
-                            std::get<ComplexTradeExposure>(exposure).targetConditionalExpectation));
+    std::vector<std::size_t> values;
+
+    std::map<std::pair<std::string, std::set<std::size_t>>, std::vector<std::size_t>> simplePathValues;
+
+    for (auto const exposure : exposures) {
+        if (std::holds_alternative<SimpleTradeExposure>(*exposure)) {
+            auto const& simple = std::get<SimpleTradeExposure>(*exposure);
+            for (auto const& g : simple.groups) {
+                simplePathValues[std::make_pair(g.baseCurrency, g.regressor)].push_back(
+                    cg_mult(*g, cg_const(*g, simple.multiplier), simple.pathValue));
             }
+        } else {
+            auto const& complex = std::get<ComplexTradeExposure>(*exposure);
+            values.push_back(model_->convertToBaseCcy(
+                obsDate, cg_mult(*g, complex.targetConditionalExpectation, complex.multiplier), complex.baseCurrency));
         }
     }
 
-    // get the regressors and regressor pos groups
-
-    auto [pfRegressors, pfRegressorPosGroups] = getRegressors(dateIndex, obsDate, simpleTradeIds, isValuationDate);
-
-    // build the portfolio exposure nodes
-
-    std::size_t simpleTradePathExposure = cg_add(*g, tradeSumSimple);
-    std::size_t simpleTradeExposure =
-        model_->npv(simpleTradePathExposure, obsDate, cg_const(*g, 1.0), std::nullopt, {}, pfRegressors);
-    std::size_t complexTradeExposure = cg_add(*g, tradeSumComplex);
-
-    pfRegressorPosGroups_[simpleTradeExposure] = pfRegressorPosGroups;
-
-    std::size_t totalExposure = cg_add(*g, simpleTradeExposure, complexTradeExposure);
+    for (auto const& [ccys, nodes] : simplePathValues) {
+        values.push_back(model_->convertToBaseCcy(obsDate,
+                                                  model_->npv(cg_add(*g, nodes), obsDate, cg_const(*g, 1.0),
+                                                              std::nullopt, {}, ccys.second, ccys.first),
+                                                  ccys.first),
+                         ccys.first);
+    }
 
     // diable stickyness again
 
     model_->useStickyCloseOutDates(false);
 
-    // return the pathwise and conditional expectation nodes
+    // return result
 
-    return totalExposure;
+    return cg_add(*g, values);
+}
+
+std::size_t XvaEngineCG::createPortfolioExposureNode(const std::size_t dateIndex, const bool isValuationDate) {
+    std::vector<TradeExposure*> exposures;
+    for (Size j = 0; j < portfolio_->trades().size(); ++j) {
+        for (Size k = 0; k < tradeExposureValuation_[j][dateIndex].size(); ++k) {
+            exposures.push_back(isValuationDate ? &tradeExposureValuation_[j][dateIndex][k]
+                                                : &tradeExposureCloseOut_[j][dateIndex][k]);
+        }
+    }
+    return createExposureNode(exposures);
 }
 
 std::size_t XvaEngineCG::createTradeExposureNode(const std::size_t dateIndex, const std::size_t tradeIndex,
                                                  const bool isValuationDate) {
-
-    auto g = model_->computationGraph();
-
-    Date valuationDate = dateIndex == 0 ? model_->referenceDate() : *std::next(valuationDates_.begin(), dateIndex - 1);
-    Date closeOutDate;
-    if (!isValuationDate) {
-        closeOutDate = dateIndex == 0 ? model_->referenceDate() : closeOutDates_[dateIndex - 1];
-    }
-    Date obsDate = valuationDate;
-    if (stickyCloseOutDates_.empty() && !isValuationDate)
-        obsDate = closeOutDate;
-
-    model_->useStickyCloseOutDates(!stickyCloseOutDates_.empty() && !isValuationDate);
-
-    std::vector<std::size_t> result;
+    std::vector<TradeExposure*> exposures;
     for (auto const& exposure : isValuationDate ? tradeExposureValuation_[tradeIndex][dateIndex]
                                                 : tradeExposureCloseOut_[tradeIndex][dateIndex]) {
-        if (std::holds_alternative<SimpleTradeExposure>(exposure)) {
-            result.push_back(model_->npv(cg_mult(*g, cg_const(*g, std::get<SimpleTradeExposure>(exposure).multiplier),
-                                                 std::get<SimpleTradeExposure>(exposure).groups[0].pathValue),
-                                         obsDate, cg_const(*g, 1.0), {}, {},
-                                         std::get<SimpleTradeExposure>(exposure).groups[0].regressors));
-        } else {
-            result.push_back(cg_mult(*g, cg_const(*g, std::get<ComplexTradeExposure>(exposure).multiplier),
-                                     std::get<ComplexTradeExposure>(exposure).targetConditionalExpectation));
-        }
+        exposures.push_back(&exposure);
     }
-
-    model_->useStickyCloseOutDates(false);
-
-    return cg_add(*g, result);
+    return createExposureNode(exposures);
 }
 
 void XvaEngineCG::buildCgPartC() {
@@ -581,27 +608,30 @@ void XvaEngineCG::buildCgDynamicIM() {
 
     for (Size i = 0; i < valuationDates_.size() + 1; ++i) {
         dynamicImInfo_.push_back({});
-        std::map<std::set<ModelCG::ModelParameter>, std::vector<std::size_t>> simpleTradeExposures;
+
+        std::map<DynamicImInfo::SimpleKey, std::vector<std::size_t>> pathValues;
+
         for (Size j = 0; j < portfolio_->trades().size(); ++j) {
             for (Size k = 0; k < tradeExposureValuation_[j][i].size(); ++k) {
                 if (std::holds_alternative<SimpleTradeExposure>(tradeExposureValuation_[j][i][k])) {
-                    dynamicImInfo_.back().simpleTradeIds.insert(std::make_pair(j, k));
-                    simpleTradeExposures[tradeExposureMetaInfo_[j][k].relevantModelParameters].push_back(cg_mult(
-                        *g, cg_const(*g, std::get<SimpleTradeExposure>(tradeExposureValuation_[j][i][k]).multiplier),
-                        std::get<SimpleTradeExposure>(tradeExposureValuation_[j][i][k]).groups[0].pathValue));
+                    const auto& simple = std::get<SimpleTradeExposure>(tradeExposureValuation_[j][i][k]);
+                    pathValues[{tradeExposureMetaInfo_[j][k].relevantModelParameters, simple.regressors,
+                                simple.baseCurrency,
+                                model_->convertToBaseCcy(valuationDates_[i], cg_const(*g, 1.0), simple.baseCurrency)}]
+                        .push_back(cg_mult(*g, cg_const(*g, simple.multiplier), simple.pathValue));
+
                 } else {
-                    dynamicImInfo_.back().complexTradeIds.insert(std::make_pair(j, k));
+                    const auto& complex = std::get<ComplexTradeExposure>(tradeExposureValuation_[j][i][k]);
+                    dynamicImInfo_.back().complexTradeData.insert(
+                        {std::make_pair(j, k),
+                         model_->convertToBaseCcy(valuationDates_[i], cg_const(*g, 1.0), complex.baseCurrency)});
                 }
             }
         }
 
-        for (auto const& [s, v] : simpleTradeExposures) {
-            dynamicImInfo_.back().simpleTradeSumGrouped[s] = cg_add(*g, v);
+        for (auto const& [key, values] : pathValues) {
+            dynamicImInfo_.back().simplePathValues[key] = cg_add(*g, values);
         }
-
-        std::tie(dynamicImInfo_.back().simpleTradeRegressors, dynamicImInfo_.back().simpleTradeRegressorGroups) =
-            getRegressors(i, i == 0 ? model_->referenceDate() : *std::next(valuationDates_.begin(), i - 1),
-                          dynamicImInfo_.back().simpleTradeIds, true);
     }
 
     timing_partc2_ = timer.elapsed().wall;
@@ -749,17 +779,16 @@ void XvaEngineCG::doForwardEvaluation() {
 
     if (enableDynamicIM_) {
         for (std::size_t i = 0; i < valuationDates_.size(); ++i) {
+            for (auto const& [key, val] : dynamicImInfo_[i].simplePathValues)
+                keepNodes_[key.conversionToBaseCcy] = true;
+            for (auto const& [key, val] : dynamicImInfo_[i].complexTradeData)
+                keepNodes_[key.conversionToBaseCcy] = true;
             for (std::size_t j = 0; j < tradeExposureMetaInfo_.size(); ++j) {
                 for (std::size_t k = 0; k < tradeExposureValuation_[j][i + 1].size(); ++k) {
                     if (std::holds_alternative<ComplexTradeExposure>(tradeExposureValuation_[j][i + 1][k])) {
-                        for (auto const n :
-                             dependentNodes(*g,
-                                            std::get<ComplexTradeExposure>(tradeExposureValuation_[j][i + 1][k])
-                                                    .componentPathValues.back() +
-                                                1,
-                                            std::get<ComplexTradeExposure>(tradeExposureValuation_[j][i + 1][k])
-                                                    .targetConditionalExpectationDerivative +
-                                                1)) {
+                        auto complex = std::get<ComplexTradeExposure>(tradeExposureValuation_[j][i + 1][k]);
+                        for (auto const n : dependentNodes(*g, complex.componentPathValues.back() + 1,
+                                                           complex.targetConditionalExpectationDerivative + 1)) {
                             keepNodes_[n] = true;
                         }
                     }
@@ -1043,20 +1072,34 @@ void XvaEngineCG::generateXvaReports() {
     epeReport_->end();
 }
 
-void XvaEngineCG::dynamicImAddToPathSensis(const std::set<ModelCG::ModelParameter>& parameterGroup, const Date& valDate,
-                                           const double t, const std::map<std::string, std::size_t>& currencyLookup,
-                                           const std::vector<IrDeltaParConverter>& irDeltaConverter,
-                                           const std::vector<LgmSwaptionVegaParConverter>& irVegaConverter,
-                                           const std::vector<CcLgmFxOptionVegaParConverter>& fxVegaConverter,
-                                           std::vector<std::vector<RandomVariable>>& pathIrDelta,
-                                           std::vector<RandomVariable>& pathFxDelta,
-                                           std::vector<std::vector<RandomVariable>>& pathIrVega,
-                                           std::vector<std::vector<RandomVariable>>& pathFxVega) {
+void XvaEngineCG::dynamicImAddToPathSensis(
+    const std::set<ModelCG::ModelParameter>& modelParameters, const Date& valDate, const double t,
+    const std::map<std::string, std::size_t>& currencyLookup, const std::vector<IrDeltaParConverter>& irDeltaConverter,
+    const std::vector<LgmSwaptionVegaParConverter>& irVegaConverter,
+    const std::vector<CcLgmFxOptionVegaParConverter>& fxVegaConverter,
+    std::vector < std::vector < RandomVariable >>> &pathIrDelta, std::vector < RandomVariable >> &pathFxDelta,
+    std::vector<std::vector<RandomVariable>>& pathIrVega, std::vector<std::vector<RandomVariable>>& pathFxVega) {
+
+    if (pathIrDelta.empty())
+        pathIrDelta = std::vector<std::vector<RandomVariable>>(
+            model_->currencies().size(),
+            std::vector<RandomVariable>(irDeltaTerms.size(), RandomVariable(model_->size())));
+    if (pathFxDelta.empty())
+        pathFxDelta = std::vector<RandomVariable>(model_->currencies().size() - 1, RandomVariable(model_->size()));
+    if (pathIrVega.empty())
+        pathIrVega = std::vector<std::vector<RandomVariable>>(
+            model_->currencies().size(),
+            std::vector<RandomVariable>(irVegaTerms.size(), RandomVariable(model_->size())));
+    if (pathFxVega.empty())
+        pathFxVega = std::vector<std::vector<RandomVariable>>(
+            model_->currencies().size() - 1,
+            std::vector<RandomVariable>(fxVegaTerms.size(), RandomVariable(model_->size())));
 
     for (auto const& p : model_->modelParameters()) {
 
         // if the model parameter is not wanted for the current parameter group, we ignore its contribution
-        if (parameterGroup.find(ModelCG::ModelParameter(p.type(), p.qualifier())) == parameterGroup.end()) {
+        if (simpleKey.modelParameters.find(ModelCG::ModelParameter(p.type(), p.qualifier())) ==
+            simpleKey.modelParmaeters.end()) {
             continue;
         }
 
@@ -1181,7 +1224,8 @@ void XvaEngineCG::dynamicImAddToConvertedSensis(
 
 RandomVariable XvaEngineCG::dynamicImCombineComponents(const std::vector<const RandomVariable*>& componentDerivatives,
                                                        const Size tradeId, const Size k, const Size timeStep,
-                                                       const std::string& label, const double multiplier) {
+                                                       const std::string& label, const double multiplier,
+                                                       const std::size_t convertToBaseCurrency) {
 
     auto data = std::get<ComplexTradeExposure>(tradeExposureValuation_[tradeId][timeStep][k]);
 
@@ -1252,7 +1296,7 @@ RandomVariable XvaEngineCG::dynamicImCombineComponents(const std::vector<const R
 
     // return the conditional expectation
 
-    return tmp[endNode] * RandomVariable(tmp[endNode].size(), multiplier);
+    return tmp[endNode] * RandomVariable(tmp[endNode].size(), multiplier) * values_[convertToBaseCurrency];
 }
 
 void XvaEngineCG::calculateDynamicIM() {
@@ -1349,18 +1393,14 @@ void XvaEngineCG::calculateDynamicIM() {
         /* calculate path derivatives for simple trades, grouped by model parameter groups to be able
            to filter out unwanted sensitivities that are artifacts of the simulation */
 
-        std::vector<std::vector<RandomVariable>> pathIrDelta(
-            model_->currencies().size(),
-            std::vector<RandomVariable>(irDeltaTerms.size(), RandomVariable(model_->size())));
-        std::vector<RandomVariable> pathFxDelta(model_->currencies().size() - 1, RandomVariable(model_->size()));
-        std::vector<std::vector<RandomVariable>> pathIrVega(
-            model_->currencies().size(),
-            std::vector<RandomVariable>(irVegaTerms.size(), RandomVariable(model_->size())));
-        std::vector<std::vector<RandomVariable>> pathFxVega(
-            model_->currencies().size() - 1,
-            std::vector<RandomVariable>(fxVegaTerms.size(), RandomVariable(model_->size())));
+        std::map<std::pair<std::size_t, std::set<std::size_t>>, std::vector<std::vector<RandomVariable>>> pathIrDelta;
+        std::map<std::pair<std::size_t, std::set<std::size_t>>, std::vector<RandomVariable>> pathFxDelta;
+        std::map<std::pair<std::size_t, std::set<std::size_t>>, std::vector<std::vector<RandomVariable>>> pathIrVega;
+        std::map<std::pair<std::size_t, std::set<std::size_t>>, std::vector<std::vector<RandomVariable>>> pathFxVega;
 
-        for (auto const& [parameterGroup, exposureNode] : dynamicImInfo_[i].simpleTradeSumGrouped) {
+        for (auto const& [simpleKey, exposureNode] : dynamicImInfo_[i].simplePathValues) {
+
+            auto key = std::make_pair(simpleKey.baseCurrency, simpleKey, regressors);
 
             // init derivatives container
 
@@ -1376,17 +1416,24 @@ void XvaEngineCG::calculateDynamicIM() {
                                 RandomVariableOpCode::ConditionalExpectation,
                                 ops_[RandomVariableOpCode::ConditionalExpectation]);
 
-            dynamicImAddToPathSensis(parameterGroup, valDate, t, currencyLookup, irDeltaConverter, irVegaConverter,
-                                     fxVegaConverter, pathIrDelta, pathFxDelta, pathIrVega, pathFxVega);
+            dynamicImAddToPathSensis(simpleKey.modelParameters, valDate, t, currencyLookup, irDeltaConverter,
+                                     irVegaConverter, fxVegaConverter, pathIrDelta[key], pathFxDelta[key],
+                                     pathIrVega[key], pathFxVega[key]);
 
         } // loop over parameter groups
 
         // calculate conditional expectations on the aggregated sensis and convert to par if applicable
 
-        std::vector<RandomVariable> tmpIrDelta(irDeltaTerms.size(), RandomVariable(model_->size()));
-        RandomVariable tmpFxDelta(model_->size());
-        std::vector<RandomVariable> tmpIrVega(irVegaTerms.size(), RandomVariable(model_->size()));
-        std::vector<RandomVariable> tmpFxVega(fxVegaTerms.size(), RandomVariable(model_->size()));
+        std::vector<std::vector<RandomVariable>> tmpIrDelta(
+            model_->currencies().size(),
+            std::vector<RandomVariable>(irDeltaTerms.size(), RandomVariable(model_->size())));
+        std::vector<RandomVariable> tmpFxDelta(model_->currencies().size() - 1, RandomVariable(model_->size()));
+        std::vector<std::vector<RandomVariable>> tmpIrVega(
+            model_->currencies().size(),
+            std::vector<RandomVariable>(irVegaTerms.size(), RandomVariable(model_->size())));
+        std::vector<std::vector<RandomVariable>> tmpFxVega(
+            model_->currencies().size() - 1,
+            std::vector<RandomVariable>(fxVegaTerms.size(), RandomVariable(model_->size())));
 
         std::vector<std::vector<RandomVariable>> conditionalIrDelta(
             model_->currencies().size(),
@@ -1399,14 +1446,22 @@ void XvaEngineCG::calculateDynamicIM() {
             model_->currencies().size() - 1,
             std::vector<RandomVariable>(fxVegaTerms.size(), RandomVariable(model_->size())));
 
-        auto regressorGroups = dynamicImInfo_[i].simpleTradeRegressorGroups;
-
-        auto condExp = [this, &regressorGroups, i](const std::vector<const RandomVariable*>& args,
-                                                   const std::string& label) {
-            auto result = randomVariableOpConditionalExpectation(
-                model_->size(), regressionOrderDynamicIm_, QuantLib::LsmBasisSystem::Monomial,
-                regressionVarianceCutoffDynamicIm_, regressorGroups, usePythonIntegrationDynamicIm_, args);
-
+        auto condExp = [this, i](const RandomVariable* regressand, const std::size_t baseCurrencyConversion,
+                                 const std::set<std::size_t>& regressors, const std::string& label) {
+            // first entry is populated below with each regressand
+            std::vector<const RandomVariable*> args(1);
+            // second entry is the filter which we set to trivial here
+            RandomVariable trivialFilter(model_->size(), 1.0);
+            args.push_back(&trivialFilter);
+            // the remaining entries are the regressors
+            for (const auto& r : regressors)
+                args.push_back(&values_[r]);
+            auto result = values_[baseCurrencyConversion] *
+                          randomVariableOpConditionalExpectation(model_->size(), regressionOrderDynamicIm_,
+                                                                 QuantLib::LsmBasisSystem::Monomial,
+                                                                 regressionVarianceCutoffDynamicIm_, regressorGroups,
+                                                                 usePythonIntegrationDynamicIm_, args);
+            // just to populate debug report on im regression
             if (std::find(regressionReportTimeStepsDynamicIM_.begin(), regressionReportTimeStepsDynamicIM_.end(), i) !=
                     regressionReportTimeStepsDynamicIM_.end() &&
                 !close_enough_all(*args[0], RandomVariable(args[0]->size(), 0.0))) {
@@ -1417,60 +1472,69 @@ void XvaEngineCG::calculateDynamicIM() {
                     rv.push_back(*args[i]);
                 dynamicImRegressionReportData_.push_back({i, "SimpleTrades", label, rv});
             }
-
+            // return result
             return result;
         };
 
-        // first entry is populated below with each regressand
-        std::vector<const RandomVariable*> args(1);
-        // second entry is the filter which we set to trivial here
-        RandomVariable trivialFilter(model_->size(), 1.0);
-        args.push_back(&trivialFilter);
-        // the remaining entries are the regressors
-        for (const auto& r : dynamicImInfo_[i].simpleTradeRegressors)
-            args.push_back(&values_[r]);
+        // ir delta
 
-        for (std::size_t ccy = 0; ccy < model_->currencies().size(); ++ccy) {
-
-            // ir delta
-
-            for (std::size_t b = 0; b < irDeltaTerms.size(); ++b) {
-                args[0] = &pathIrDelta[ccy][b];
-                tmpIrDelta[b] =
-                    condExp(args, "irDelta_" + model_->currencies()[ccy] + "_" + ore::data::to_string(irDeltaTerms[b]));
-            }
-
-            // ir vega (including par conversion)
-
-            for (std::size_t b = 0; b < irVegaTerms.size(); ++b) {
-                args[0] = &pathIrVega[ccy][b];
-                tmpIrVega[b] =
-                    condExp(args, "irVega_" + model_->currencies()[ccy] + "_" + ore::data::to_string(irVegaTerms[b]));
-            }
-
-            if (ccy > 0) {
-
-                // fx delta
-                args[0] = &pathFxDelta[ccy - 1];
-                tmpFxDelta = condExp(args, "fxDelta" + model_->currencies()[ccy]);
-
-                // fx vega (including par conversion)
-
-                for (std::size_t b = 0; b < fxVegaTerms.size(); ++b) {
-                    args[0] = &pathFxVega[ccy - 1][b];
-                    tmpFxVega[b] = condExp(args, "fxVega_" + model_->currencies()[ccy] + "_" +
-                                                     ore::data::to_string(fxVegaTerms[b]));
+        for (auto const& [key, val] : pathIrDelta) {
+            for (std::size_t ccy = 0; ccy < model_->currencies().size(); ++ccy) {
+                for (std::size_t b = 0; b < irDeltaTerms.size(); ++b) {
+                    tmpIrDelta[ccy][b] =
+                        condExp(&val[ccy][b], key.first, key.second,
+                                "irDelta_" + model_->currencies()[ccy] + "_" + ore::data::to_string(irDeltaTerms[b]));
                 }
             }
+        }
 
-            dynamicImAddToConvertedSensis(ccy, tmpIrDelta, tmpIrVega, tmpFxVega, tmpFxDelta, irDeltaConverter,
-                                          irVegaConverter, fxVegaConverter, conditionalIrDelta, conditionalFxDelta,
-                                          conditionalIrVega, conditionalFxVega);
+        // ir vega
+
+        for (auto const& [key, val] : pathIrVega) {
+            for (std::size_t ccy = 0; ccy < model_->currencies().size(); ++ccy) {
+                for (std::size_t b = 0; b < irVegaTerms.size(); ++b) {
+                    tmpIrDelta[ccy][b] =
+                        condExp(&val[ccy][b], key.first, key.second,
+                                "irVega_" + model_->currencies()[ccy] + "_" + ore::data::to_string(irVegaTerms[b]));
+                }
+            }
+        }
+
+        // fx delta
+
+        for (auto const& [key, val] : pathFxDelta) {
+            for (std::size_t ccy = 1; ccy < model_->currencies().size(); ++ccy) {
+                tmpFxDelta[ccy - 1] =
+                    condExp(&val[ccy - 1], key.first, key.second, "fxDelta_" + model_->currencies()[ccy]);
+            }
+        }
+
+        // fx vega
+
+        for (auto const& [key, val] : pathFxVega) {
+            for (std::size_t ccy = 1; ccy < model_->currencies().size(); ++ccy) {
+                for (std::size_t b = 0; b < fxVegaTerms.size(); ++b) {
+                    tmpFxVega[ccy - 1][b] =
+                        condExp(&val[ccy - 1][b], key.first, key.second,
+                                "irVega_" + model_->currencies()[ccy] + "_" + ore::data::to_string(fxVegaTerms[b]));
+                }
+            }
+        }
+
+        // add them to the converted sensis
+
+        for (std::size_t ccy = 0; ccy < model_->currencies().size(); ++ccy) {
+            dynamicImAddToConvertedSensis(ccy, tmpIrDelta[ccy], tmpIrVega[ccy], tmpFxVega[ccy - 1], tmpFxDelta[ccy - 1],
+                                          irDeltaConverter, irVegaConverter, fxVegaConverter, conditionalIrDelta,
+                                          conditionalFxDelta, conditionalIrVega, conditionalFxVega);
         }
 
         // handle complex trades
 
-        for (auto [tradeId, k] : dynamicImInfo_[i].complexTradeIds) {
+        for (const auto& complexKey : dynamicImInfo_[i].complexTradeData) {
+
+            auto tradeId = complexKey.complexTradeId.first;
+            auto k = complexKey.complexTradeId.second;
 
             auto parameterGroup = tradeExposureMetaInfo_[tradeId][k].relevantModelParameters;
 
@@ -1521,44 +1585,43 @@ void XvaEngineCG::calculateDynamicIM() {
 
             std::vector<const RandomVariable*> compDer(nComponents);
 
-            // set to 0 because they are only set below for ccy > 0
-            tmpFxDelta.setAll(0.0);
-            for (auto& r : tmpFxVega)
-                r.setAll(0.0);
-
             for (std::size_t ccy = 0; ccy < model_->currencies().size(); ++ccy) {
 
                 for (std::size_t b = 0; b < irDeltaTerms.size(); ++b) {
                     for (std::size_t comp = 0; comp < nComponents; ++comp)
                         compDer[comp] = &pathIrDeltaC[comp][ccy][b];
-                    tmpIrDelta[b] = dynamicImCombineComponents(compDer, tradeId, k, i,
-                                                               "irDelta_" + model_->currencies()[ccy] + "_" +
-                                                                   ore::data::to_string(irDeltaTerms[b]),
-                                                               data.multiplier);
+                    tmpIrDelta[ccy][b] = dynamicImCombineComponents(compDer, tradeId, k, i,
+                                                                    "irDelta_" + model_->currencies()[ccy] + "_" +
+                                                                        ore::data::to_string(irDeltaTerms[b]),
+                                                                    data.multiplier, complexKey.conversionToBaseCcy);
                 }
                 for (std::size_t b = 0; b < irVegaTerms.size(); ++b) {
                     for (std::size_t comp = 0; comp < nComponents; ++comp)
                         compDer[comp] = &pathIrVegaC[comp][ccy][b];
-                    tmpIrVega[b] = dynamicImCombineComponents(compDer, tradeId, k, i,
-                                                              "irVega_" + model_->currencies()[ccy] + "_" +
-                                                                  ore::data::to_string(irVegaTerms[b]),
-                                                              data.multiplier);
+                    tmpIrVega[ccy][b] = dynamicImCombineComponents(compDer, tradeId, k, i,
+                                                                   "irVega_" + model_->currencies()[ccy] + "_" +
+                                                                       ore::data::to_string(irVegaTerms[b]),
+                                                                   data.multiplier, complexKey.conversionToBaseCcy);
                 }
                 if (ccy > 0) {
                     for (std::size_t comp = 0; comp < nComponents; ++comp)
                         compDer[comp] = &pathFxDeltaC[comp][ccy - 1];
-                    tmpFxDelta = dynamicImCombineComponents(compDer, tradeId, k, i,
-                                                            "fxDelta" + model_->currencies()[ccy], data.multiplier);
+                    tmpFxDelta[ccy - 1] = dynamicImCombineComponents(
+                        compDer, tradeId, k, i, "fxDelta" + model_->currencies()[ccy], data.multiplier);
                     for (std::size_t b = 0; b < fxVegaTerms.size(); ++b) {
                         for (std::size_t comp = 0; comp < nComponents; ++comp)
                             compDer[comp] = &pathFxVegaC[comp][ccy - 1][b];
-                        tmpFxVega[b] = dynamicImCombineComponents(compDer, tradeId, k, i,
-                                                                  "fxVega_" + model_->currencies()[ccy] + "_" +
-                                                                      ore::data::to_string(fxVegaTerms[b]),
-                                                                  data.multiplier);
+                        tmpFxVega[ccy - 1][b] = dynamicImCombineComponents(
+                            compDer, tradeId, k, i,
+                            "fxVega_" + model_->currencies()[ccy] + "_" + ore::data::to_string(fxVegaTerms[b]),
+                            data.multiplier, complexKey.conversionToBaseCcy);
                     }
                 }
+            }
 
+            // add them to the converted sensis
+
+            for (std::size_t ccy = 0; ccy < model_->currencies().size(); ++ccy) {
                 dynamicImAddToConvertedSensis(ccy, tmpIrDelta, tmpIrVega, tmpFxVega, tmpFxDelta, irDeltaConverter,
                                               irVegaConverter, fxVegaConverter, conditionalIrDelta, conditionalFxDelta,
                                               conditionalIrVega, conditionalFxVega);

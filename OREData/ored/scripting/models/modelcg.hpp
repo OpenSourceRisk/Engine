@@ -168,6 +168,9 @@ public:
     // the base ccy of the model
     virtual const std::string& baseCcy() const = 0;
 
+    // the available alternative base currencies of the model
+    virtual const std::set<std::string>& availableBaseCurrencies() const = 0;
+
     // the list of supported model currencies
     virtual const std::vector<std::string>& currencies() const = 0;
 
@@ -176,7 +179,7 @@ public:
 
     // result must be as of max(refdate, obsdate); refdate < paydate and obsdate <= paydate required
     virtual std::size_t pay(const std::size_t amount, const Date& obsdate, const Date& paydate,
-                            const std::string& currency) const = 0;
+                            const std::string& currency, const std::string& baseCurrency = {}) const = 0;
 
     // refdate <= obsdate <= paydate required
     virtual std::size_t discount(const Date& obsdate, const Date& paydate, const std::string& currency) const = 0;
@@ -188,12 +191,14 @@ public:
     // overwriteRegressors - if given - replaces the automatically generated regressor node set
     virtual std::size_t npv(const std::size_t amount, const Date& obsdate, const std::size_t filter,
                             const std::optional<long>& memSlot, const std::set<std::size_t> addRegressors,
-                            const std::optional<std::set<std::size_t>>& overwriteRegressors) const = 0;
+                            const std::optional<std::set<std::size_t>>& overwriteRegressors,
+                            const std::string& baseCurrency = {}) const = 0;
 
     // default regressors used in npv()
     // relevant currencies - if not none - restrict the set of currencies for which regressors are generated
-    virtual std::set<std::size_t>
-    npvRegressors(const Date& obsdate, const std::optional<std::set<std::string>>& relevantCurrencies) const = 0;
+    virtual std::set<std::size_t> npvRegressors(const Date& obsdate,
+                                                const std::optional<std::set<std::string>>& relevantCurrencies,
+                                                const std::string& baseCurrrency = {}) const = 0;
 
     /* eval index at (past or future) obsdate:
        - if fwddate != null, fwddate > obsdate is required. A check must be implemented that the obsdate allows for

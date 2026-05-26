@@ -1066,7 +1066,7 @@ public:
             RandomVariable result; // uninitialised, since model dependent
             value.push(result);
             std::size_t node =
-                pay <= model_->referenceDate() ? cg_const(g_, 0.0) : model_->pay(amount_node, obs, pay, pccy);
+                pay <= model_->referenceDate() ? cg_const(g_, 0.0) : model_->pay(amount_node, obs, pay, pccy, baseCcy_);
             std::size_t cfnode = pay <= model_->referenceDate() ? amount_node : node;
             value_node.push(node);
             TRACE("pay( " << amount << " , " << obsdate << " , " << paydate << " , " << paycurr << " ) (#" << node
@@ -1184,7 +1184,7 @@ public:
         }
         value.push(RandomVariable()); // uninitialized, since model dependent
         std::size_t node = model_->npv(amount_node, obs, regFilter_node, mem, {addRegressor1_node, addRegressor2_node},
-                                       model_->npvRegressors(obs, minimalModelCcys_));
+                                       model_->npvRegressors(obs, minimalModelCcys_, baseCcy_), baseCcy_);
         value_node.push(node);
         if (hasMemSlot) {
             TRACE("npvmem( " << amount << " , " << obsdate << " , " << memSlot << " , " << regFilter << " , "

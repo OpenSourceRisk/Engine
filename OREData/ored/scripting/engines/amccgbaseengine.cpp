@@ -92,20 +92,116 @@ AmcCgBaseEngine::AmcCgBaseEngine(const QuantLib::ext::shared_ptr<ModelCG>& model
     : modelCg_(modelCg), amcEnabled_(true), simulationDates_(simulationDates),
       reevaluateExerciseInStickyCloseOutDateRun_(reevaluateExerciseInStickyCloseOutDateRun) {}
 
-AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext::shared_ptr<QuantLib::CashFlow> flow,
-                                                                  const std::string& payCcy, bool payer, Size legNo,
-                                                                  Size cfNo) const {
+std::set<std::string> AmcCgBaseEngine::getCashflowCurrencies(QuantLib::ext::shared_ptr<QuantLib::CashFlow> flow,
+                                                             const std::string& payCcy) {
+    std::set<std::string> currencies;
+
+    currencies.insert(payCcy);
+
+    if (auto fxl = QuantLib::ext::dynamic_pointer_cast<FXLinkedCashFlow>(flow)) {
+        currencies.insert(fxl->fxIndex()->sourceCurrency().code());
+        currencies.insert(fxl->fxIndex()->targetCurrency().code());
+    }
+
+    if (auto indexCpn = QuantLib::ext::dynamic_pointer_cast<IndexedCoupon>(flow)) {
+        if (auto fxIndex = QuantLib::ext::dynamic_pointer_cast<FxIndex>(indexCpn->index())) {
+            currencies.insert(fxIndex->sourceCurrency().code());
+            currencies.insert(fxIndex->targetCurrency().code());
+        }
+    } else if (auto fxl = QuantLib::ext::dynamic_pointer_cast<FloatingRateFXLinkedNotionalCoupon>(flow)) {
+        currencies.insert(fxl->fxIndex()->sourceCurrency().code());
+        currencies.insert(fxl->fxIndex()->targetCurrency().code());
+    }
+
+    if (auto ibor = QuantLib::ext::dynamic_pointer_cast<IborCoupon>(flow)) {
+        currencies.insert(ibor->index()->currency().code());
+        return currencies;
+    }
+    if (auto ibor = QuantLib::ext::dynamic_pointer_cast<InterpolatedIborCoupon>(flow)) {
+        currencies.insert(ibor->index()->currency().code());
+        return currencies;
+    }
+    if (auto cms = QuantLib::ext::dynamic_pointer_cast<CmsCoupon>(flow)) {
+        currencies.insert(cms->index()->currency().code());
+        return currencies;
+    }
+    if (auto on = QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(flow)) {
+        currencies.insert(on->index()->currency().code());
+        return currencies;
+    }
+    if (auto cfon = QuantLib::ext::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(flow)) {
+        auto on = cfon->underlying();
+        currencies.insert(on->index()->currency().code());
+        return currencies;
+    }
+    if (auto av = QuantLib::ext::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(flow)) {
+        currencies.insert(av->index()->currency().code());
+        return currencies;
+    }
+    if (auto cfav = QuantLib::ext::dynamic_pointer_cast<CappedFlooredAverageONIndexedCoupon>(flow)) {
+        auto av = cfav->underlying();
+        currencies.insert(av->index()->currency().code());
+        return currencies;
+    }
+    if (auto bma = QuantLib::ext::dynamic_pointer_cast<AverageBMACoupon>(flow)) {
+        currencies.insert(bma->index()->currency().code());
+        return currencies;
+    }
+    if (auto cfbma = QuantLib::ext::dynamic_pointer_cast<CappedFlooredAverageBMACoupon>(flow)) {
+        auto bma = cfbma->underlying();
+        currencies.insert(bma->index()->currency().code());
+        return currencies;
+    }
+    if (auto sub = QuantLib::ext::dynamic_pointer_cast<SubPeriodsCoupon1>(flow)) {
+        currencies.insert(sub->index()->currency().code());
+        return currencies;
+    }
+
+    return currencies;
+}
+
+AmcCgBaseEngine::CashflowInfo
+AmcCgBaseEngine::createCashflowInfo(QuantLib::ext::shared_ptr<QuantLib::CashFlow> flow, const std::string& payCcy,
+                                    const bool payer, const Size legNo, const Size cfNo,
+                                    const std::map<std::set<std::string>, std::string>& baseCurrencySuggestions) const {
 
     CashflowInfo info;
     QuantExt::ComputationGraph& g = *modelCg_->computationGraph();
 
-    // set some common info: pay time, pay ccy, payer, exercise into decision time
+    // set some common info
 
     info.legNo = legNo;
     info.cfNo = cfNo;
     info.payDate = flow->date();
     info.currencies.insert(payCcy);
     info.payer = payer;
+
+    // set base currency for cashflow
+
+    auto cfCurrencies = getCashflowCurrencies(flow, payCcy);
+
+    if (auto f = baseCurrencySuggestions.find(cfCurrencies); f != baseCurrencySuggestions.end()) {
+
+        // first priority is the external suggestions
+
+        info.baseCurrency = f->second;
+
+    } else {
+
+        /* second priorty is to search for a common currency in cf currencies and available model base currencies,
+           and if there is no such currency, use the model base currency as third and last priority */
+
+        std::vector<std::string> commonCurrencies;
+        std::set_intersection(modelCg_->availableBaseCurrencies().begin(), modelCg_->availableBaseCurrencies().end(),
+                              cfCurrencies.begin(), cfCurrencies.end(), std::back_inserter(commonCurrencies));
+        if (!commonCurrencies.empty())
+            info.baseCurrency = commonCurrencies.front();
+        else
+            info.baseCurrency = modelCg_->baseCurrency();
+
+    }
+
+    // set exercise criteria
 
     auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow);
     if (cpn && cpn->accrualStartDate() < flow->date()) {
@@ -115,6 +211,7 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
     }
 
     // Handle scaling
+
     Real multiplier = payer ? -1.0 : 1.0;
     if (auto scf = QuantLib::ext::dynamic_pointer_cast<ScaledCashFlow>(flow)) {
         multiplier *= scf->multiplier();
@@ -125,24 +222,28 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
     }
 
     // handle SimpleCashflow
+
     if (QuantLib::ext::dynamic_pointer_cast<SimpleCashFlow>(flow) != nullptr) {
-        info.flowNode = modelCg_->pay(cg_const(g, multiplier * flow->amount()), flow->date(), flow->date(), payCcy);
+        info.flowNode = modelCg_->pay(cg_const(g, multiplier * flow->amount()), flow->date(), flow->date(), payCcy,
+                                      info.baseCurrency);
         return info;
     }
 
     // handle fx linked fixed cashflow
+
     if (auto fxl = QuantLib::ext::dynamic_pointer_cast<FXLinkedCashFlow>(flow)) {
         Date fxLinkedFixingDate = fxl->fxFixingDate();
         std::string fxIndex = IndexNameTranslator::instance().oreName(fxl->fxIndex()->name());
         info.flowNode = modelCg_->pay(
             cg_mult(g, cg_const(g, fxl->foreignAmount()), modelCg_->eval(fxIndex, fxLinkedFixingDate, Null<Date>())),
-            flow->date(), flow->date(), payCcy);
+            flow->date(), flow->date(), payCcy, info.baseCurrency);
         info.currencies.insert(fxl->fxIndex()->sourceCurrency().code());
         info.currencies.insert(fxl->fxIndex()->targetCurrency().code());
         return info;
     }
 
     // handle some wrapped coupon types: extract the wrapper info and continue with underlying flow
+
     bool isFxLinked = false;
     bool isFxIndexed = false;
     std::string fxLinkedIndex;
@@ -192,15 +293,17 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
     // handle the coupon types
 
     if (QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(flow) != nullptr) {
-        info.flowNode = modelCg_->pay(cg_const(g, multiplier * flow->amount()), flow->date(), flow->date(), payCcy);
+        info.flowNode = modelCg_->pay(cg_const(g, multiplier * flow->amount()), flow->date(), flow->date(), payCcy,
+                                      info.baseCurrency);
         return info;
     }
 
     if (auto ibor = QuantLib::ext::dynamic_pointer_cast<IborCoupon>(flow)) {
-        std::string indexName = IndexNameTranslator::instance().oreName(ibor->index()->name());
-        std::size_t fixing = modelCg_->eval(indexName, ibor->fixingDate(), Null<Date>());
 
         info.currencies.insert(ibor->index()->currency().code());
+
+        std::string indexName = IndexNameTranslator::instance().oreName(ibor->index()->name());
+        std::size_t fixing = modelCg_->eval(indexName, ibor->fixingDate(), Null<Date>());
 
         std::size_t effectiveRate;
         if (isCapFloored) {
@@ -228,7 +331,7 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
                                   cg_const(g, multiplier * (isFxLinked ? fxLinkedForeignNominal : ibor->nominal()) *
                                                   ibor->accrualPeriod()),
                                   effectiveRate),
-                          flow->date(), flow->date(), payCcy);
+                          flow->date(), flow->date(), payCcy, info.baseCurrency);
         if (isFxLinked || isFxIndexed) {
             info.flowNode = cg_mult(g, info.flowNode, fxLinkedNode);
         }
@@ -236,6 +339,9 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
     }
 
     if (auto ibor = QuantLib::ext::dynamic_pointer_cast<InterpolatedIborCoupon>(flow)) {
+
+        info.currencies.insert(ibor->index()->currency().code());
+
         std::string indexNameShort =
             IndexNameTranslator::instance().oreName(ibor->interpolatedIborIndex()->shortIndex()->name());
         std::string indexNameLong =
@@ -246,8 +352,6 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
         std::size_t longWeight = cg_const(g, ibor->interpolatedIborIndex()->longWeight(ibor->fixingDate()));
         std::size_t fixing = cg_add(g, cg_mult(g, shortWeight, fixingShort), cg_mult(g, longWeight, fixingLong));
 
-        info.currencies.insert(ibor->index()->currency().code());
-
         std::size_t effectiveRate;
         if (isCapFloored) {
             std::size_t swapletRate = cg_const(g, 0.0);
@@ -274,7 +378,7 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
                                   cg_const(g, multiplier * (isFxLinked ? fxLinkedForeignNominal : ibor->nominal()) *
                                                   ibor->accrualPeriod()),
                                   effectiveRate),
-                          flow->date(), flow->date(), payCcy);
+                          flow->date(), flow->date(), payCcy, info.baseCurrency);
         if (isFxLinked || isFxIndexed) {
             info.flowNode = cg_mult(g, info.flowNode, fxLinkedNode);
         }
@@ -282,10 +386,11 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
     }
 
     if (auto cms = QuantLib::ext::dynamic_pointer_cast<CmsCoupon>(flow)) {
-        std::string indexName = IndexNameTranslator::instance().oreName(cms->index()->name());
-        std::size_t fixing = modelCg_->eval(indexName, cms->fixingDate(), Null<Date>());
 
         info.currencies.insert(cms->index()->currency().code());
+
+        std::string indexName = IndexNameTranslator::instance().oreName(cms->index()->name());
+        std::size_t fixing = modelCg_->eval(indexName, cms->fixingDate(), Null<Date>());
 
         std::size_t effectiveRate;
         if (isCapFloored) {
@@ -313,7 +418,7 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
                                   cg_const(g, multiplier * (isFxLinked ? fxLinkedForeignNominal : cms->nominal()) *
                                                   cms->accrualPeriod()),
                                   effectiveRate),
-                          flow->date(), flow->date(), payCcy);
+                          flow->date(), flow->date(), payCcy, info.baseCurrency);
         if (isFxLinked || isFxIndexed) {
             info.flowNode = cg_mult(g, info.flowNode, fxLinkedNode);
         }
@@ -321,9 +426,10 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
     }
 
     if (auto on = QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(flow)) {
-        std::string indexName = IndexNameTranslator::instance().oreName(on->index()->name());
 
         info.currencies.insert(on->index()->currency().code());
+
+        std::string indexName = IndexNameTranslator::instance().oreName(on->index()->name());
 
         QL_REQUIRE(on->lookback().units() == QuantLib::Days,
                    "AmcCgBaseEngine::createCashflowInfo(): on coupon has lookback with units != Days ("
@@ -337,7 +443,7 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
                                   cg_const(g, multiplier * (isFxLinked ? fxLinkedForeignNominal : on->nominal()) *
                                                   on->accrualPeriod()),
                                   fixing),
-                          flow->date(), flow->date(), payCcy);
+                          flow->date(), flow->date(), payCcy, info.baseCurrency);
         if (isFxLinked || isFxIndexed) {
             info.flowNode = cg_mult(g, info.flowNode, fxLinkedNode);
         }
@@ -345,10 +451,12 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
     }
 
     if (auto cfon = QuantLib::ext::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(flow)) {
+
         auto on = cfon->underlying();
-        std::string indexName = IndexNameTranslator::instance().oreName(on->index()->name());
 
         info.currencies.insert(on->index()->currency().code());
+
+        std::string indexName = IndexNameTranslator::instance().oreName(on->index()->name());
 
         QL_REQUIRE(on->lookback().units() == QuantLib::Days,
                    "AmcCgBaseEngine::createCashflowInfo(): cfon coupon has lookback with units != Days ("
@@ -362,7 +470,7 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
                                   cg_const(g, multiplier * (isFxLinked ? fxLinkedForeignNominal : on->nominal()) *
                                                   on->accrualPeriod()),
                                   fixing),
-                          flow->date(), flow->date(), payCcy);
+                          flow->date(), flow->date(), payCcy, info.baseCurrency);
         if (isFxLinked || isFxIndexed) {
             info.flowNode = cg_mult(g, info.flowNode, fxLinkedNode);
         }
@@ -370,9 +478,10 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
     }
 
     if (auto av = QuantLib::ext::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(flow)) {
-        std::string indexName = IndexNameTranslator::instance().oreName(av->index()->name());
 
         info.currencies.insert(av->index()->currency().code());
+
+        std::string indexName = IndexNameTranslator::instance().oreName(av->index()->name());
 
         QL_REQUIRE(av->lookback().units() == QuantLib::Days,
                    "AmcCgBaseEngine::createCashflowInfo(): av coupon has lookback with units != Days ("
@@ -386,7 +495,7 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
                                   cg_const(g, multiplier * (isFxLinked ? fxLinkedForeignNominal : av->nominal()) *
                                                   av->accrualPeriod()),
                                   fixing),
-                          flow->date(), flow->date(), payCcy);
+                          flow->date(), flow->date(), payCcy, info.baseCurrency);
         if (isFxLinked || isFxIndexed) {
             info.flowNode = cg_mult(g, info.flowNode, fxLinkedNode);
         }
@@ -394,10 +503,12 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
     }
 
     if (auto cfav = QuantLib::ext::dynamic_pointer_cast<CappedFlooredAverageONIndexedCoupon>(flow)) {
+
         auto av = cfav->underlying();
-        std::string indexName = IndexNameTranslator::instance().oreName(av->index()->name());
 
         info.currencies.insert(av->index()->currency().code());
+
+        std::string indexName = IndexNameTranslator::instance().oreName(av->index()->name());
 
         QL_REQUIRE(av->lookback().units() == QuantLib::Days,
                    "AmcCgBaseEngine::createCashflowInfo(): cfon coupon has lookback with units != Days ("
@@ -411,7 +522,7 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
                                   cg_const(g, multiplier * (isFxLinked ? fxLinkedForeignNominal : av->nominal()) *
                                                   av->accrualPeriod()),
                                   fixing),
-                          flow->date(), flow->date(), payCcy);
+                          flow->date(), flow->date(), payCcy, info.baseCurrency);
         if (isFxLinked || isFxIndexed) {
             info.flowNode = cg_mult(g, info.flowNode, fxLinkedNode);
         }
@@ -419,9 +530,10 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
     }
 
     if (auto bma = QuantLib::ext::dynamic_pointer_cast<AverageBMACoupon>(flow)) {
-        std::string indexName = IndexNameTranslator::instance().oreName(bma->index()->name());
 
         info.currencies.insert(bma->index()->currency().code());
+
+        std::string indexName = IndexNameTranslator::instance().oreName(bma->index()->name());
 
         std::size_t fixing = modelCg_->eval(indexName, bma->fixingDates().front(), Null<Date>());
         std::size_t effectiveRate =
@@ -431,7 +543,7 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
                                   cg_const(g, multiplier * (isFxLinked ? fxLinkedForeignNominal : bma->nominal()) *
                                                   bma->accrualPeriod()),
                                   effectiveRate),
-                          flow->date(), flow->date(), payCcy);
+                          flow->date(), flow->date(), payCcy, info.baseCurrency);
         if (isFxLinked || isFxIndexed) {
             info.flowNode = cg_mult(g, info.flowNode, fxLinkedNode);
         }
@@ -439,11 +551,13 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
     }
 
     if (auto cfbma = QuantLib::ext::dynamic_pointer_cast<CappedFlooredAverageBMACoupon>(flow)) {
+
         auto bma = cfbma->underlying();
-        std::string indexName = IndexNameTranslator::instance().oreName(bma->index()->name());
-        std::size_t fixing = modelCg_->eval(indexName, bma->fixingDates().front(), Null<Date>());
 
         info.currencies.insert(bma->index()->currency().code());
+
+        std::string indexName = IndexNameTranslator::instance().oreName(bma->index()->name());
+        std::size_t fixing = modelCg_->eval(indexName, bma->fixingDates().front(), Null<Date>());
 
         effFloor = cfbma->effectiveFloor();
         effCap = cfbma->effectiveFloor();
@@ -477,7 +591,7 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
                                   cg_const(g, multiplier * (isFxLinked ? fxLinkedForeignNominal : bma->nominal()) *
                                                   bma->accrualPeriod()),
                                   effectiveRate),
-                          flow->date(), flow->date(), payCcy);
+                          flow->date(), flow->date(), payCcy, info.baseCurrency);
         if (isFxLinked || isFxIndexed) {
             info.flowNode = cg_mult(g, info.flowNode, fxLinkedNode);
         }
@@ -485,9 +599,10 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
     }
 
     if (auto sub = QuantLib::ext::dynamic_pointer_cast<SubPeriodsCoupon1>(flow)) {
-        std::string indexName = IndexNameTranslator::instance().oreName(sub->index()->name());
 
         info.currencies.insert(sub->index()->currency().code());
+
+        std::string indexName = IndexNameTranslator::instance().oreName(sub->index()->name());
 
         std::size_t fixing = modelCg_->eval(indexName, sub->fixingDates().front(), Null<Date>());
         std::size_t effectiveRate =
@@ -497,7 +612,7 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
                                   cg_const(g, multiplier * (isFxLinked ? fxLinkedForeignNominal : sub->nominal()) *
                                                   sub->accrualPeriod()),
                                   effectiveRate),
-                          flow->date(), flow->date(), payCcy);
+                          flow->date(), flow->date(), payCcy, info.baseCurrency);
         if (isFxLinked || isFxIndexed) {
             info.flowNode = cg_mult(g, info.flowNode, fxLinkedNode);
         }
@@ -507,8 +622,37 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
     QL_FAIL("McMultiLegBaseEngine::createCashflowInfo(): unhandled coupon leg " << legNo << " cashflow " << cfNo);
 }
 
-void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun, std::vector<TradeExposure>* tradeExposure,
-                                            TradeExposureMetaInfo* tradeExposureMetaInfo) const {
+bool AmcCgBaseEngine::isComplexTrade() const {
+    if (exercise_ != nullptr) {
+        for (auto const& d : exercise_->dates()) {
+            if (d < modelCg_->referenceDate() || (!includeReferenceDateEvents_ && d == modelCg_->referenceDate()))
+                continue;
+            return true;
+        }
+    }
+    return false;
+}
+
+std::set<std::set<std::string>> AmcCgBaseEngine::relevantCurrencySets() const {
+    std::set<std::set<std::string>> ccySets;
+    Size legNo = 0;
+    for (auto const& leg : leg_) {
+        for (auto const& cashflow : leg) {
+            // we can skip cashflows that are paid
+            if (cashflow->date() < modelCg_->referenceDate() ||
+                (!includeTodaysCashflows_ && cashflow->date() == modelCg_->referenceDate()))
+                continue;
+            ccySets.insert(getCashflowCurrencies(cashflow, currency_[legNo]));
+        }
+        ++legNo;
+    }
+    return ccySets;
+}
+
+void AmcCgBaseEngine::buildComputationGraph(
+    const bool stickyCloseOutDateRun, std::vector<TradeExposure>* tradeExposure,
+    TradeExposureMetaInfo* tradeExposureMetaInfo,
+    const std::map<std::set<std::string>, std::string>& baseCurrencySuggestions) const {
 
     QL_REQUIRE((tradeExposure == nullptr) == (tradeExposureMetaInfo == nullptr),
                "AmcCgBaseEngine::buildComputationGraph(): tradeExposure and tradeExposureMetaInfo must both be null or "
@@ -526,7 +670,9 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun, st
                                   ? *Settings::instance().includeTodaysCashFlows()
                                   : includeReferenceDateEvents_;
 
+    relevantCurrencySets_.clear();
     relevantCurrencies_.clear();
+    currencySetBaseCurrency_.clear();
 
     // check data set by derived engines
 
@@ -536,26 +682,6 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun, st
     QL_REQUIRE(payer_.size() == leg_.size(), "McMultiLegBaseEngine: number of legs ("
                                                  << leg_.size() << ") does not match payer flag (" << payer_.size()
                                                  << ")");
-
-    // populate the info to generate the (alive) cashflow amounts
-
-    std::vector<CashflowInfo> cashflowInfo;
-
-    Size legNo = 0;
-    for (auto const& leg : leg_) {
-        Size cashflowNo = 0;
-        for (auto const& cashflow : leg) {
-            // we can skip cashflows that are paid
-            if (cashflow->date() < modelCg_->referenceDate() ||
-                (!includeTodaysCashflows_ && cashflow->date() == modelCg_->referenceDate()))
-                continue;
-            // for an alive cashflow, populate the data
-            cashflowInfo.push_back(createCashflowInfo(cashflow, currency_[legNo], payer_[legNo], legNo, cashflowNo));
-            // increment counter
-            ++cashflowNo;
-        }
-        ++legNo;
-    }
 
     /* build set of relevant exercise dates and corresponding cash settlement times (if applicable) */
 
@@ -577,15 +703,81 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun, st
         }
     }
 
-    /* populate relevant currency sets */
+    // populate the info to generate the (alive) cashflow amounts
 
-    for (auto const& c : cashflowInfo) {
-        relevantCurrencies_.insert(c.currencies);
+    std::vector<CashflowInfo> cashflowInfo;
+    Size legNo = 0;
+    for (auto const& leg : leg_) {
+        Size cashflowNo = 0;
+        for (auto const& cashflow : leg) {
+            // we can skip cashflows that are paid
+            if (cashflow->date() < modelCg_->referenceDate() ||
+                (!includeTodaysCashflows_ && cashflow->date() == modelCg_->referenceDate()))
+                continue;
+            // for an alive cashflow, populate the data
+            cashflowInfo.push_back(createCashflowInfo(cashflow, currency_[legNo], payer_[legNo], legNo, cashflowNo,
+                                                      baseCurrencySuggestions));
+            // increment counter
+            ++cashflowNo;
+        }
+        ++legNo;
     }
 
-    for (auto const& cs : relevantCurrencies_) {
-        flatRelevantCurrencies_.insert(cs.begin(), cs.end());
+    // set relevant currencies and update cf currencies accordingly
+
+    std::string complexBaseCurrency;
+
+    if (exerciseDates.empty()) {
+
+        // if we have no optionality, we add the base ccy to the cf currencies, and group by the resulting currency sets 
+
+        for (auto const& cf : cashflowInfo) {
+            cf.currencies.insert(cf.baseCurrency);
+            relevantCurrencySets_.insert(cf.currencies);
+            if(auto f = currencySetBaseCurrency_.find(cf.currencies); f != currencySetBaseCurrency_.end()) {
+                QL_REQUIRE(f->second == cf.baseCurrency,
+                           "AmcCgBaseEngine: internal error when mapping currency sets to base ccys, the same set ["
+                               << boost::join(cf.currencies, ",") << "] is mapped to non-unique base currency ("
+                               << f->second << "," << cf.baseCurrency << ")");
+            } else {
+                currencySetBaseCurrency_.insert({cf.currencies, cf.baseCurrency});
+            }
+        }
+
+    } else {
+
+        // if we have optionality, we only use one base currency and one currency set for all cashflows
+
+        std::set<std::string> allCcys;
+        for (auto const& cf : cashflowInfo) {
+            allCcys.insert(cf.currencies.begin(), cf.currencies.end());
+            allCcys.insert(cf.baseCurrency);
+        }
+
+        complexBaseCurrency = cashflowInfo.front().baseCurrency;
+        if (any_of(cashflowInfo.begin(), cashfloInfo.end(),
+                   [&complexBaseCurrency](const auto& cf) { return cf.baseCurrency != complexBaseCurrency; })) {
+            std::vector<std::string> commonCurrencies;
+            std::set_intersection(modelCg_->availableBaseCurrencies().begin(),
+                                  modelCg_->availableBaseCurrencies().end(), allCcys.begin(), allCcys.end(),
+                                  std::back_inserter(commonCurrencies));
+            if (!commonCurrencies.empty())
+                complexBaseCurrency = commonCurrencies.front();
+            else
+                complexBaseCurrency = modelCg_->baseCurrency();
+            for (auto& cf : cashflowInfo)
+                cf.baseCurrency = complexBaseCurrency;
+        }
+
+        for (auto& cf : cashflowInfo) {
+            cf.currencies = allCcys;
+        }
+
+        relevantCurrencySets_.insert(allCcys);
+
+        currencySetBaseCurrency_[allCcys] = complexBaseCurrency_;
     }
+
 
     // build the set of simulation dates and union of simulation and exercise dates
 
@@ -596,12 +788,12 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun, st
 
     // create the path values
 
-    std::vector<std::size_t> pathValueUndDirtyRunning(relevantCurrencies_.size(), cg_const(g, 0.0)); // per ccy set
+    std::vector<std::size_t> pathValueUndDirtyRunning(relevantCurrencySets_.size(), cg_const(g, 0.0)); // per ccy set
     std::size_t pathValueUndExIntoRunning = cg_const(g, 0.0);
 
     std::vector<std::vector<std::size_t>> pathValueUndDirty(
         simExDates.size(),
-        std::vector<std::size_t>(relevantCurrencies_.size(), cg_const(g, 0.0))); // per sim date, ccy set
+        std::vector<std::size_t>(relevantCurrencySets_.size(), cg_const(g, 0.0))); // per sim date, ccy set
     std::vector<std::size_t> pathValueUndExInto(simExDates.size(), cg_const(g, 0.0));
     std::vector<std::size_t> pathValueOption(simExDates.size() + 1, cg_const(g, 0.0)); // +1 for convenience
     std::vector<std::size_t> pathValueRebate(simExDates.size() + 1, cg_const(g, 0.0)); // +1 for convenience
@@ -625,7 +817,7 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun, st
 
         // collect the contributions so that we can generate a single add node in the graph
         std::vector<std::vector<std::size_t>> pathValueUndDirtyContribution; // per ccy set a vector of nodes
-        for (Size ccySet = 0; ccySet < relevantCurrencies_.size(); ++ccySet) {
+        for (Size ccySet = 0; ccySet < relevantCurrencySets_.size(); ++ccySet) {
             pathValueUndDirtyContribution.push_back(std::vector<std::size_t>(1, pathValueUndDirtyRunning[ccySet]));
         }
         std::vector<std::size_t> pathValueUndExIntoContribution(1, pathValueUndExIntoRunning);
@@ -650,8 +842,8 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun, st
 
             bool isPartOfUnderlying = cashflowInfo[i].payDate > *d - (includeTodaysCashflows_ ? 1 : 0);
             Size ccySet = std::distance(
-                relevantCurrencies_.begin(),
-                std::find(relevantCurrencies_.begin(), relevantCurrencies_.end(), cashflowInfo[i].currencies));
+                relevantCurrencySets_.begin(),
+                std::find(relevantCurrencySets_.begin(), relevantCurrencySets_.end(), cashflowInfo[i].currencies));
 
             if (cfStatus[i] == CfStatus::open) {
                 if (isPartOfExercise) {
@@ -672,7 +864,7 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun, st
             }
         }
 
-        for (Size ccySet = 0; ccySet < relevantCurrencies_.size(); ++ccySet)
+        for (Size ccySet = 0; ccySet < relevantCurrencySets_.size(); ++ccySet)
             pathValueUndDirtyRunning[ccySet] = cg_add(g, pathValueUndDirtyContribution[ccySet]);
         pathValueUndExIntoRunning = cg_add(g, pathValueUndExIntoContribution);
 
@@ -691,7 +883,8 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun, st
                                                  rebatedExercise->rebatePaymentDate(exerciseTimes_idx),
                                                  rebatedExercise->rebateCurrency(k).empty()
                                                      ? currency_.front()
-                                                     : rebatedExercise->rebateCurrency(k).code()));
+                                                     : rebatedExercise->rebateCurrency(k).code()),
+                                   complexBaseCurrency);
                     }
                 }
             }
@@ -769,9 +962,8 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun, st
         return;
 
     tradeExposureMetaInfo->hasVega = exercise_ != nullptr;
-    tradeExposureMetaInfo->relevantCurrencies = flatRelevantCurrencies_;
 
-    for (auto const& ccy : flatRelevantCurrencies_) {
+    for (auto const& ccy : relevantCurrencies_) {
         tradeExposureMetaInfo->relevantModelParameters.insert(
             ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, ccy));
         if (ccy != modelCg_->baseCcy()) {
@@ -802,11 +994,22 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun, st
 
         for (Size counter = 0; counter < simDates.size(); ++counter) {
 
-            std::get<SimpleTradeExposure>((*tradeExposure)[counter + 1]).groups.push_back({});
-            std::get<SimpleTradeExposure>((*tradeExposure)[counter + 1]).groups.back().pathValue =
-                cg_add(g, pathValueUndDirty[counter]);
-            std::get<SimpleTradeExposure>((*tradeExposure)[counter + 1]).groups.back().regressors =
-                modelCg_->npvRegressors(*std::next(simDates.begin(), counter), flatRelevantCurrencies_);
+            for (Size ccySet = 0; ccySet < relevantCurrencySets_.size(); ++ccySet) {
+                std::get<SimpleTradeExposure>((*tradeExposure)[counter + 1]).groups.push_back({});
+                std::get<SimpleTradeExposure>((*tradeExposure)[counter + 1]).groups.back().pathValue =
+                    pathValueUndDirty[counter][ccySet];
+                auto const& currencySet = *std::next(relevantCurrencySets_.begin(), ccySet);
+                std::string baseCcurency = relevantCurrencyBaseCurrency_.at(currencySet);
+                std::get<SimpleTradeExposure>((*tradeExposure)[counter + 1]).groups.back().regressors =
+                    modelCg_->npvRegressors(*std::next(simDates.begin(), counter), currencySet, baseCurrency);
+                std::get<SimpleTradeExposure>((*tradeExposure)[counter + 1]).groups.back().baseCurrency = baseCurrency;
+                std::cout
+                    << "simDate #" << counter << ": "
+                    << std::get<SimpleTradeExposure>((*tradeExposure)[counter + 1]).groups.back().regressors.size()
+                    << " regressors, baseCurrency = "
+                    << std::get<SimpleTradeExposure>((*tradeExposure)[counter + 1]).groups.back().baseCurrency
+                    << std::endl;
+            }
         }
 
     } else {
@@ -951,7 +1154,7 @@ std::size_t AmcCgBaseEngine::createRegressionModel(const std::size_t amount, con
                                                    const std::function<bool(std::size_t)>& cashflowRelevant,
                                                    const std::size_t filter) const {
     // TODO use relevant cashflow info to refine regressor if regressor model == LaggedFX
-    auto regressors = modelCg_->npvRegressors(d, flatRelevantCurrencies_);
+    auto regressors = modelCg_->npvRegressors(d, relevantCurrencies_);
     return modelCg_->npv(amount, d, filter, std::nullopt, {}, regressors);
 }
 

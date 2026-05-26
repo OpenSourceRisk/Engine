@@ -381,9 +381,9 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
         }
         engine = QuantLib::ext::make_shared<ScriptedInstrumentPricingEngineCG>(
             script.npv(), script.results(), modelCG_, std::set<std::string>(modelCcys_.begin(), modelCcys_.end()),
-            script.amcCgComponents(), script.amcCgTargetValue(), script.amcCgTargetDerivative(), ast_, context, params_,
-            indicatorSmoothingForValues_, indicatorSmoothingForDerivatives_, sqrtSmoothingForDerivatives_,
-            script.code(), interactive_, buildingAmcCg_, generateAdditionalResults(),
+            baseCcy_, script.amcCgComponents(), script.amcCgTargetValue(), script.amcCgTargetDerivative(), ast_,
+            context, params_, indicatorSmoothingForValues_, indicatorSmoothingForDerivatives_,
+            sqrtSmoothingForDerivatives_, script.code(), interactive_, buildingAmcCg_, generateAdditionalResults(),
             generateAdditionalResultsPathLevel_, includePastCashflows_, useCachedSensis, useExternalDev,
             useDoublePrecisionForExternalCalculation_);
         if (useExternalDev) {
@@ -870,6 +870,7 @@ void ScriptedTradeEngineBuilder::compileModelCcyList() {
     // required FX spot processes in the projected model we use for the scripted trade; the only exception is
     // if we have only one ccy in the final scripted trade model anyway (i.e. only one IR process), in which
     // case we can go with that one currency and don't need a more complicated model
+    bool addBaseCcyToModelCcys = true;
     if (amcCam_ != nullptr) {
         std::string newBaseCcy_ = amcCam_->ir(0)->currency().code();
         if (newBaseCcy_ == baseCcy_) {
@@ -884,10 +885,23 @@ void ScriptedTradeEngineBuilder::compileModelCcyList() {
                                  << "), because it is a single currency model");
             }
         }
+    } else if(amcCgModel_ != nullptr) {
+        // for AMC-CG we check if the available base currencies contain
+        std::vector<std::string> commonCurrencies;
+        std::set_intersection(modelCg_->availableBaseCurrencies().begin(), modelCg_->availableBaseCurrencies().end(),
+                              tmpCcys.begin(), tmpCcys.end(), std::back_inserter(commonCurrencies));
+        if (!commonCurrencies.empty()) {
+            baseCcy_ = commonCurrencies.front();
+            addBaseCcyToModelCcys = false;
+        } else {
+            baseCcy_ = amcCgModel_->baseCcy();
+        }
     }
 
     // build currency vector with the base ccy at the front
-    modelCcys_ = std::vector<std::string>(1, baseCcy_);
+    modelCcys_.clear();
+    if (addBaseCcyToModelCcys)
+        modelCcys_.push_back(baseCcy);
     for (auto const& c : tmpCcys)
         if (c != baseCcy_)
             modelCcys_.push_back(c);

@@ -52,9 +52,12 @@ public:
                     const std::vector<QuantLib::Date>& simulationDates = {},
                     const bool reevaluateExerciseInStickyCloseOutDateRun = false);
 
-    void buildComputationGraph(const bool stickyCloseOutDateRun = false,
-                               std::vector<TradeExposure>* tradeExposure = nullptr,
-                               TradeExposureMetaInfo* tradeExposureMetaInfo = nullptr) const override;
+    std::set<std::set<std::string>> relevantCurrencySets() const override;
+    bool isComplexTrade() const override;
+    void buildComputationGraph(
+        const bool stickyCloseOutDateRun = false, std::vector<TradeExposure>* tradeExposure = nullptr,
+        TradeExposureMetaInfo* tradeExposureMetaInfo = nullptr,
+        const std::map<std::set<std::string>, std::string>& baseCurrencySuggestions = {}) const override;
     void calculate() const;
 
 protected:
@@ -93,8 +96,9 @@ protected:
     mutable bool includeReferenceDateEvents_;
 
     // set by engine
-    mutable std::set<std::set<std::string>> relevantCurrencies_;
-    mutable std::set<std::string> flatRelevantCurrencies_;
+    mutable std::set<std::set<std::string>> relevantCurrencySets_;
+    mutable std::set<std::string> relevantCurrencies_;
+    mutbale std::map<std::set<std::string>, std::string> currencySetBaseCurrency_;
     mutable std::size_t npv_;
     mutable double npvValue_;
 
@@ -109,20 +113,28 @@ protected:
     mutable std::vector<double> sensis_;
 
 private:
+
     // data structure storing info needed to generate the amount for a cashflow
     struct CashflowInfo {
         Size legNo = Null<Size>(), cfNo = Null<Size>();
         Date payDate = Null<Date>();
         Date exIntoCriterionDate = Null<Date>();
-        // pay ccy + if applicable  additional ccys (from index, fx linked etc.)
+        // pay ccy + if applicable  additional ccys (from index, fx linked etc.) + baseCurrency
         std::set<std::string> currencies;
+        // base ccy that is used in the flow node
+        std::string baseCurrency;
         bool payer = false;
         std::size_t flowNode;
     };
 
+    // get the relevant currencies for a cashflow
+    std::set<std::string> getCashflowCurrencies(QuantLib::ext::shared_ptr<QuantLib::CashFlow> flow,
+                                                                  const std::string& payCcy);
+
     // create the info for a given flow
     CashflowInfo createCashflowInfo(QuantLib::ext::shared_ptr<QuantLib::CashFlow> flow, const std::string& payCcy,
-                                    bool payer, Size legNo, Size cfNo) const;
+                                    const bool payer, const Size legNo, const Size cfNo,
+                                    const std::map<std::set<std::string>, std::string>& baseCurrencySuggestions) const;
 
     // create a regression model (i.e. an npv - node in the graph)
     std::size_t createRegressionModel(const std::size_t amount, const Date& d,

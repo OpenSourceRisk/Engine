@@ -150,15 +150,12 @@ private:
                                  std::vector<RandomVariable>& values,
                                  std::vector<ExternalRandomVariable>& valuesExternal) const;
 
-    std::pair<std::set<std::size_t>, std::set<std::set<std::size_t>>>
-    getRegressors(const std::size_t dateIndex, const Date& obsDate, const std::set<std::pair<Size, Size>>& tradeIds,
-                  const bool regressors);
-
+    std::size_t createExposureNode(const std::vector<TradeExposure*>& exposures);
     std::size_t createPortfolioExposureNode(const std::size_t dateIndex, const bool isValuationDate);
     std::size_t createTradeExposureNode(const std::size_t dateIndex, const std::size_t tradeIndex,
                                         const bool isValuationDate);
 
-    void dynamicImAddToPathSensis(const std::set<ModelCG::ModelParameter>& parameterGroup, const Date& valDate,
+    void dynamicImAddToPathSensis(const std::set<ModelCG::ModelParameter>& modelParameters, const Date& valDate,
                                   const double t, const std::map<std::string, std::size_t>& currencyLookup,
                                   const std::vector<IrDeltaParConverter>& irDeltaConverter,
                                   const std::vector<LgmSwaptionVegaParConverter>& irVegaConverter,
@@ -179,7 +176,8 @@ private:
                                        std::vector<std::vector<RandomVariable>>& conditionalFxVega);
     RandomVariable dynamicImCombineComponents(const std::vector<const RandomVariable*>& componentDerivatives,
                                               const Size tradeId, const Size k, const Size timeStep,
-                                              const std::string& label, const double multiplier);
+                                              const std::string& label, const double multiplier,
+                                              const std::size_t convertToBaseCurrency);
 
     // set via additional methods
 
@@ -277,18 +275,22 @@ private:
     std::vector<std::vector<std::size_t>> tradeExposureNodes_;
     std::vector<std::vector<std::size_t>> tradeExposureCloseOutNodes_;
 
-    /* for dynamic im calculation */
+    /* for dynamic im calculation, per time step data */
     struct DynamicImInfo {
-        // simple trade ids, i.e. trades without TradeExposure::targetConditionalExpectation
-        // the id is the pair of trade id and component
-        std::set<std::pair<std::size_t, std::size_t>> simpleTradeIds;
-        // sum of path exposures for simple trades, grouped by relevant model parameters
-        std::map<std::set<ModelCG::ModelParameter>, std::size_t> simpleTradeSumGrouped;
-        // set of regressor nodes and var groups for simple trades
-        std::set<std::size_t> simpleTradeRegressors;
-        std::set<std::set<std::size_t>> simpleTradeRegressorGroups;
-        // indices in tradeExposureValuation with TradeExposure::targetConditionalExpectation set
-        std::set<std::pair<std::size_t, std::size_t>> complexTradeIds;
+        // simple trade data
+        struct SimpleKey {
+            std::set<ModelCG::ModelParameter> modelParameters;
+            std::set<std::size_t> regressors;
+            std::string baseCurrency;
+            std::size_t conversionToBaseCcy;
+        };
+        std::map<SimpleKey, std::size_t> simplePathValues;
+        // complex trade data
+        struct ComplexKey {
+            std::pair<std::size_t, std::size_t> complexTradeId;
+            std::size_t conversionToBaseCcy;
+        };
+        std::set<ComplexKey> complexTradeData;
     };
 
     // dynamic im info per valuation date,
@@ -296,7 +298,9 @@ private:
 
     /* regressor groups, set for the npv()-nodes involved in the following members, to be used to set up ops_:
        - pfExposureValuation
-       - pfExposureCloseOut   */
+       - pfExposureCloseOut
+       note: not used at the moment.
+    */
     std::map<std::size_t, std::set<std::set<std::size_t>>> pfRegressorPosGroups_;
 
     // dynamic im per netting set
@@ -326,9 +330,10 @@ private:
     QuantLib::ext::shared_ptr<DoublePrecisionSensiCube> sensiResultCube_;
 
     boost::timer::nanosecond_type timing_t0_ = 0, timing_ssm_ = 0, timing_parta_ = 0, timing_pf_ = 0, timing_partb_ = 0,
-                                  timing_partc_ = 0,timing_partc2_ = 0, timing_partd_ = 0, timing_popparam_ = 0, timing_poprv_ = 0,
-                                  timing_fwd_ = 0, timing_dynamicIM_ = 0, timing_bwd_ = 0, timing_sensi_ = 0,
-                                  timing_asd_ = 0, timing_outcube_ = 0, timing_imcube_ = 0, timing_total_ = 0;
+                                  timing_partc_ = 0, timing_partc2_ = 0, timing_partd_ = 0, timing_popparam_ = 0,
+                                  timing_poprv_ = 0, timing_fwd_ = 0, timing_dynamicIM_ = 0, timing_bwd_ = 0,
+                                  timing_sensi_ = 0, timing_asd_ = 0, timing_outcube_ = 0, timing_imcube_ = 0,
+                                  timing_total_ = 0;
     std::size_t numberOfRedNodes_, rvMemMax_;
 
     // data to populate dynamicImRegressionReport_

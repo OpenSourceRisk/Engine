@@ -50,7 +50,8 @@ public:
     ComputationGraphBuilder(ComputationGraph& g, const std::vector<std::string>& opLabels, const ASTNodePtr root,
                             const QuantLib::ext::shared_ptr<Context> context,
                             const QuantLib::ext::shared_ptr<ModelCG> model = nullptr,
-                            const std::optional<std::set<std::string>>& minimalModelCcys = std::nullopt)
+                            const std::optional<std::set<std::string>>& minimalModelCcys = std::nullopt,
+                            const std::string& baseCcy = {})
         : g_(g), opLabels_(opLabels), root_(root), context_(context), model_(model),
           minimalModelCcys_(minimalModelCcys) {}
     void run(const bool generatePayLog, const bool includePastCashflows = false, const std::string& script = "",
@@ -66,6 +67,7 @@ private:
     QuantLib::ext::shared_ptr<Context> context_;
     QuantLib::ext::shared_ptr<ModelCG> model_;
     std::optional<std::set<std::string>> minimalModelCcys_;
+    std::string baseCcy_;
 
     std::set<std::size_t> keepNodes_;
     std::vector<PayLogEntry> payLogEntries_;

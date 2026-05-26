@@ -93,7 +93,7 @@ ScriptedInstrumentPricingEngineCG::ScriptedInstrumentPricingEngineCG(
     const bool generateAdditionalResultsPathLevel, const bool includePastCashflows, const bool useCachedSensis,
     const bool useExternalComputeFramework, const bool useDoublePrecisionForExternalCalculation)
     : npv_(npv), additionalResults_(additionalResults), model_(model), minimalModelCcys_(minimalModelCcys),
-      amcCgComponents_(amcCgComponents), amcCgTargetValue_(amcCgTargetValue),
+      baseCcy_(baseCcy), amcCgComponents_(amcCgComponents), amcCgTargetValue_(amcCgTargetValue),
       amcCgTargetDerivative_(amcCgTargetDerivative), ast_(ast), context_(context), params_(params),
       indicatorSmoothingForValues_(indicatorSmoothingForValues),
       indicatorSmoothingForDerivatives_(indicatorSmoothingForDerivatives),
@@ -123,9 +123,16 @@ ScriptedInstrumentPricingEngineCG::ScriptedInstrumentPricingEngineCG(
     }
 }
 
-void ScriptedInstrumentPricingEngineCG::buildComputationGraph(const bool stickyCloseOutDateRun,
-                                                              std::vector<TradeExposure>* tradeExposure,
-                                                              TradeExposureMetaInfo* tradeExposureMetaInfo) const {
+bool ScriptedInstrumentPricingEngineCG::isComplexTrade() const { return true; }
+
+std::set<std::set<std::string>> ScriptedInstrumentPricingEngineCG::relevantCurrencySets() const {
+    return {minimalModelCcys_};
+}
+
+void ScriptedInstrumentPricingEngineCG::buildComputationGraph(
+    const bool stickyCloseOutDateRun, std::vector<TradeExposure>* tradeExposure,
+    TradeExposureMetaInfo* tradeExposureMetaInfo,
+    const std::map<std::set<std::string>, std::string>& baseCurrencySuggestions) const {
 
     // TODO add sticky close-out states
 
@@ -176,8 +183,8 @@ void ScriptedInstrumentPricingEngineCG::buildComputationGraph(const bool stickyC
 
     // build graph
 
-    ComputationGraphBuilder cgBuilder(*g, getRandomVariableOpLabels(), ast_, workingContext_, model_,
-                                      minimalModelCcys_);
+    ComputationGraphBuilder cgBuilder(*g, getRandomVariableOpLabels(), ast_, workingContext_, model_, minimalModelCcys_,
+                                      baseCcy_);
     cgBuilder.run(generateAdditionalResults_, includePastCashflows_, script_, interactive_);
     DLOG("Built computation graph version " << cgVersion_ << " size is " << g->size());
     TLOGGERSTREAM(ssaForm(*g, getRandomVariableOpLabels()));
@@ -215,8 +222,9 @@ void ScriptedInstrumentPricingEngineCG::buildComputationGraph(const bool stickyC
 
                 std::get<SimpleTradeExposure>((*tradeExposure)[i]).groups.push_back({});
                 std::get<SimpleTradeExposure>((*tradeExposure)[i]).groups.back().pathValue = n;
+                std::get<SimpleTradeExposure>((*tradeExposure)[i]).groups.back().baseCurrency = baseCcy_;
                 std::get<SimpleTradeExposure>((*tradeExposure)[i]).groups.back().regressors =
-                    model_->npvRegressors(valDate, minimalModelCcys_);
+                    model_->npvRegressors(valDate, minimalModelCcys_, baseCcy_);
             }
 
         } else {
@@ -241,7 +249,7 @@ void ScriptedInstrumentPricingEngineCG::buildComputationGraph(const bool stickyC
                                    << npv_ << " not found.");
                     std::get<SimpleTradeExposure>((*tradeExposure)[i]).groups.back().pathValue = n;
                     std::get<SimpleTradeExposure>((*tradeExposure)[i]).groups.back().regressors =
-                        model_->npvRegressors(model_->referenceDate(), minimalModelCcys_);
+                        model_->npvRegressors(model_->referenceDate(), minimalModelCcys_, baseCcy_);
 
                 } else {
 
@@ -267,6 +275,8 @@ void ScriptedInstrumentPricingEngineCG::buildComputationGraph(const bool stickyC
                                "ScriptedInstrumentPricingEngineCG::buildComputationGraph(): array "
                                    << effectiveAmcCgTargetDerivative << " at index " << i << " not found.");
                     std::get<ComplexTradeExposure>((*tradeExposure)[i + 1]).targetConditionalExpectationDerivative = n;
+
+                    std::get<ComplexTradeExposure>((*tradeExposure)[i + 1]).baseCurrency = baseCcy_;
                 }
             }
         }
@@ -275,7 +285,6 @@ void ScriptedInstrumentPricingEngineCG::buildComputationGraph(const bool stickyC
     if (tradeExposureMetaInfo != nullptr) {
 
         tradeExposureMetaInfo->hasVega = true;
-        tradeExposureMetaInfo->relevantCurrencies = minimalModelCcys_;
 
         for (auto const& ccy : minimalModelCcys_) {
             tradeExposureMetaInfo->relevantModelParameters.insert(

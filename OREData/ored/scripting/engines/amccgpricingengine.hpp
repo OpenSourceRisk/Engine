@@ -41,7 +41,7 @@ struct SimpleTradeExposure {
     struct RegressorGroup {
         std::set<std::size_t> regressors;
         std::size_t pathValue;
-        std::string measureChangeCurrency;
+        std::string baseCurrency;
     };
     std::vector<RegressorGroup> groups;
 };
@@ -68,23 +68,25 @@ struct ComplexTradeExposure {
     std::size_t targetConditionalExpectation = QuantExt::ComputationGraph::nan;
     std::size_t targetConditionalExpectationDerivative = QuantExt::ComputationGraph::nan;
     std::vector<std::size_t> targetConditionalExpDerivativeNpvNodes; // only for regression detail report
-    std::string measureChangeCurrency;
+    std::string baseCurrency;
 };
 
 using TradeExposure = std::variant<std::monostate, SimpleTradeExposure, ComplexTradeExposure>;
 
 struct TradeExposureMetaInfo {
     bool hasVega = false;
-    std::set<std::string> relevantCurrencies;
     std::set<ModelCG::ModelParameter> relevantModelParameters;
 };
 
 class AmcCgPricingEngine {
 public:
     virtual ~AmcCgPricingEngine() {}
-    virtual void buildComputationGraph(const bool stickyCloseOutDateRun = false,
-                                       std::vector<TradeExposure>* tradeExposure = nullptr,
-                                       TradeExposureMetaInfo* tradeExposureMetaInfo = nullptr) const = 0;
+    virtual bool isComplexTrade() const = 0;
+    virtual std::set<std::set<std::string>> relevantCurrencySets() const = 0;
+    virtual void
+    buildComputationGraph(const bool stickyCloseOutDateRun = false, std::vector<TradeExposure>* tradeExposure = nullptr,
+                          TradeExposureMetaInfo* tradeExposureMetaInfo = nullptr,
+                          const std::map<std::set<std::string>, std::string>& baseCurrencySuggestions = {}) const = 0;
 };
 
 } // namespace data
