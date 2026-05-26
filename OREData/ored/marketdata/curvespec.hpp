@@ -58,7 +58,8 @@ public:
         Commodity = 14,
         CommodityVolatility = 15,
         Correlation = 16,
-        SwapIndex = 17
+        SwapIndex = 17,
+        BondFutureVolatility = 18
     };
 
     //! Default constructor
@@ -502,6 +503,27 @@ public:
     string subName() const override { return curveConfigID(); }
     //@}
 
+};
+
+/**
+ * Bond future volatility curve description
+ * \ingroup curves
+ */
+class BondFutureVolatilityCurveSpec : public CurveSpec {
+public:
+    //! \name Constructors
+    //@{
+    //! Default constructor
+    BondFutureVolatilityCurveSpec() {}
+    //! Detailed constructor
+    BondFutureVolatilityCurveSpec(const std::string& contractName) : CurveSpec(contractName) {}
+    //@}
+
+    //! \name Inspectors
+    //@{
+    CurveType baseType() const override { return CurveType::BondFutureVolatility; }
+    std::string subName() const override { return curveConfigID(); }
+    //@}
 };
 
 } // namespace data
