@@ -148,7 +148,7 @@ print(f"                  Error = {abs(parity_lhs - parity_rhs):.2e}")
 
 assert abs(call_pv - call_py) < 1e-10, "Call PV mismatch!"
 assert abs(put_pv - put_py) < 1e-10, "Put PV mismatch!"
-print("\n✓ All results verified to machine precision")
+print("\n[OK] All results verified to machine precision")
 
 # %% [markdown]
 # ## 4. Scenario Analysis — Spot Ladder
