@@ -345,11 +345,9 @@ CorrelationQuote::CorrelationQuote(Real value, const Date& asof, const string& n
 }
 
 BondFutureOptionQuote::BondFutureOptionQuote(Real value, Date asofDate, const string& name,
-    QuoteType quoteType, string contractName, string expiry, ext::shared_ptr<BaseStrike> strike,
-    string exerciseType, bool isCall)
+    QuoteType quoteType, string contractName, string expiry, ext::shared_ptr<BaseStrike> strike, bool isCall)
     : MarketDatum(value, asofDate, name, quoteType, InstrumentType::BOND_FUTURE_OPTION),
-      contractName_(std::move(contractName)), expiry_(std::move(expiry)), strike_(std::move(strike)),
-      exerciseType_(std::move(exerciseType)), isCall_(isCall)
+      contractName_(std::move(contractName)), expiry_(std::move(expiry)), strike_(std::move(strike)), isCall_(isCall)
 {
     // Only support explicit expiry dates for now.
     Date expiryDate = parseDate(expiry);
@@ -738,7 +736,6 @@ template <class Archive> void BondFutureOptionQuote::serialize(Archive& ar, cons
     ar& contractName_;
     ar& expiry_;
     ar& strike_;
-    ar& exerciseType_;
     ar& isCall_;
 }
 

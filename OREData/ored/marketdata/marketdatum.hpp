@@ -2211,14 +2211,13 @@ public:
         std::string contractName,
         std::string expiry,
         QuantLib::ext::shared_ptr<BaseStrike> strike,
-        std::string exerciseType,
         bool isCall = true);
 
     //! Make a copy of the market datum
     QuantLib::ext::shared_ptr<MarketDatum> clone() override
     {
         return QuantLib::ext::make_shared<BondFutureOptionQuote>(quote_->value(), asofDate_, name_, quoteType_,
-            contractName_, expiry_, strike_, exerciseType_, isCall_);
+            contractName_, expiry_, strike_, isCall_);
     }
 
     //! \name Inspectors
@@ -2226,7 +2225,6 @@ public:
     const std::string& contractName() const { return contractName_; }
     const std::string& expiry() const { return expiry_; }
     const QuantLib::ext::shared_ptr<BaseStrike>& strike() const { return strike_; }
-    const std::string& exerciseType() const { return exerciseType_; }
     bool isCall() { return isCall_; }
     //@}
 
@@ -2234,7 +2232,6 @@ private:
     std::string contractName_;
     std::string expiry_;
     QuantLib::ext::shared_ptr<BaseStrike> strike_;
-    std::string exerciseType_;
     bool isCall_ = true;
 
     //! Serialization
