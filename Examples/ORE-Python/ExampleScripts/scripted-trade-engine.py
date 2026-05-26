@@ -269,6 +269,8 @@ ctx.resetSize(1)
 ctx.setScalar("S", 105.0)
 ctx.setScalar("K", 100.0)
 ctx.setScalar("Notional", 1000000.0)
+# Pre-declare output variable
+ctx.setScalar("Payoff", 0.0)
 
 engine = ore.ScriptEngine(parser_dig.ast(), ctx)
 engine.run(digital_script)
@@ -280,6 +282,8 @@ ctx2.resetSize(1)
 ctx2.setScalar("S", 95.0)
 ctx2.setScalar("K", 100.0)
 ctx2.setScalar("Notional", 1000000.0)
+# Pre-declare output variable
+ctx2.setScalar("Payoff", 0.0)
 
 engine2 = ore.ScriptEngine(parser_dig.ast(), ctx2)
 engine2.run(digital_script)
@@ -311,6 +315,10 @@ for s in [80, 85, 90, 95, 100, 105, 110, 115, 120]:
     ctx.setScalar("Kcall", 110.0)
     ctx.setScalar("Kput", 90.0)
     ctx.setScalar("Notional", 100.0)
+    # Pre-declare output variables
+    ctx.setScalar("longCall", 0.0)
+    ctx.setScalar("shortPut", 0.0)
+    ctx.setScalar("Payoff", 0.0)
 
     engine = ore.ScriptEngine(parser_collar.ast(), ctx)
     engine.run(collar_script)
@@ -342,6 +350,11 @@ ctx = ore.Context()
 ctx.resetSize(1)
 ctx.setScalar("NumObs", 12.0)
 ctx.setScalar("K", 5.0)
+# Pre-declare output variables and loop variable
+ctx.setScalar("sum", 0.0)
+ctx.setScalar("i", 0.0)
+ctx.setScalar("avgIndex", 0.0)
+ctx.setScalar("AsianPayoff", 0.0)
 
 engine = ore.ScriptEngine(parser_asian.ast(), ctx)
 engine.run(asian_script)
