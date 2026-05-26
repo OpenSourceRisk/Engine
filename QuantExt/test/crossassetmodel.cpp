@@ -2414,7 +2414,7 @@ BOOST_DATA_TEST_CASE(testZeroInflationMartingaleTest,
             auto tauSim = infDc.yearFraction(BaseDateT1, inflationObsDate);
             BOOST_TEST_MESSAGE("tauSim " << tauSim);
             auto zeroRate =
-                std::pow(inflationGrowth(model, 0, T, T2_index, zeur1, infeurz1, indexIsInterpolated), 1.0 / tauSim) -
+                std::pow(inflationGrowth(model, 0, T, T2_index, zeur1, infeurz1), 1.0 / tauSim) -
                 1.0;
             infeur1(seasonalizeCPI(inflationObsDate, exp(infeury1) * std::pow(1.0 + zeroRate, tauSim), d.infEurTs) * model->discountBond(0, T, T2_discount, zeur1) /
                     model->numeraire(0, T, zeur1));
@@ -2431,7 +2431,7 @@ BOOST_DATA_TEST_CASE(testZeroInflationMartingaleTest,
             auto baseCPI = seasonalizeCPI(BaseDateT1, exp(infgbpy1), d.infGbpTs);
             auto tauSim = infDc.yearFraction(BaseDateT1, inflationObsDate);
             auto zeroRate =
-                std::pow(inflationGrowth(model, 1, T, T2_index, zgbp1, infgbpz1, indexIsInterpolated), 1.0 / tauSim) -
+                std::pow(inflationGrowth(model, 1, T, T2_index, zgbp1, infgbpz1), 1.0 / tauSim) -
                 1.0;
             auto adjZeroRate = continuousSeasonalityAdjustment(BaseDateT1, inflationObsDate, zeroRate, tauSim,
                                                                d.infGbpTs.currentLink());
@@ -2720,7 +2720,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
             infeur1(sinfeur1.first * sinfeur1.second * d.modelExact->discountBond(0, T, T2, zeur1) /
                 d.modelExact->numeraire(0, T, zeur1));
         } else {
-            infeur1(exp(infeury1) * inflationGrowth(d.modelExact, 0, T, T2, zeur1, infeurz1, indexIsInterpolated) *
+            infeur1(exp(infeury1) * inflationGrowth(d.modelExact, 0, T, T2, zeur1, infeurz1) *
                     d.modelExact->discountBond(0, T, T2, zeur1) / d.modelExact->numeraire(0, T, zeur1));
         }
         // GBP CPI indexed bond
@@ -2729,7 +2729,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
             infgbp1(sinfgbp1.first * sinfgbp1.second * d.modelExact->discountBond(2, T, T2, zgbp1) * fxgbp1 /
                 d.modelExact->numeraire(0, T, zeur1));
         } else {
-            infgbp1(exp(infgbpy1) * inflationGrowth(d.modelExact, 1, T, T2, zgbp1, infgbpz1, indexIsInterpolated) *
+            infgbp1(exp(infgbpy1) * inflationGrowth(d.modelExact, 1, T, T2, zgbp1, infgbpz1) *
                 d.modelExact->discountBond(2, T, T2, zgbp1) * fxgbp1 / d.modelExact->numeraire(0, T, zeur1));
         }
         // EUR defaultable zerobond
@@ -2748,7 +2748,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
             infeur2(sinfeur2.first * sinfeur2.second * d.modelExact->discountBond(0, T, T2, zeur2) /
                 d.modelExact->numeraire(0, T, zeur2));
         } else {
-            infeur2(exp(infeury2) * inflationGrowth(d.modelExact, 0, T, T2, zeur2, infeurz2, indexIsInterpolated) *
+            infeur2(exp(infeury2) * inflationGrowth(d.modelExact, 0, T, T2, zeur2, infeurz2) *
                     d.modelExact->discountBond(0, T, T2, zeur2) / d.modelExact->numeraire(0, T, zeur2));
         }
         // GBP CPI indexed bond
@@ -2757,7 +2757,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
             infgbp2(sinfgbp2.first * sinfgbp2.second * d.modelExact->discountBond(2, T, T2, zgbp2) * fxgbp2 /
                 d.modelExact->numeraire(0, T, zeur2));
         } else {
-            infgbp2(exp(infgbpy2) * inflationGrowth(d.modelExact, 1, T, T2, zgbp2, infgbpz2, indexIsInterpolated) *
+            infgbp2(exp(infgbpy2) * inflationGrowth(d.modelExact, 1, T, T2, zgbp2, infgbpz2) *
                     d.modelExact->discountBond(2, T, T2, zgbp2) * fxgbp2 / d.modelExact->numeraire(0, T, zeur2));
         }
         // EUR defaultable zerobond

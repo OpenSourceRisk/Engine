@@ -26,6 +26,7 @@ using QuantLib::Linear;
 QuantLib::ext::shared_ptr<YoYCapFloorTermPriceSurface> YoYPriceSurfaceFromVolatilities::operator()(
     const QuantLib::ext::shared_ptr<QuantLib::CapFloorTermVolSurface>& volSurface,
     const QuantLib::ext::shared_ptr<YoYInflationIndex>& index,
+    const QuantLib::Period& obsLag,
     QuantLib::CPI::InterpolationType interpolation,
     const QuantLib::Handle<QuantLib::YieldTermStructure>& nominalTs, QuantLib::VolatilityType type,
     QuantLib::Real displacement) {
@@ -33,7 +34,6 @@ QuantLib::ext::shared_ptr<YoYCapFloorTermPriceSurface> YoYPriceSurfaceFromVolati
     QL_REQUIRE(index != nullptr, "YoYPriceSurfaceFromVolatilties: missing yoy index");
     QL_REQUIRE(!nominalTs.empty(), "YoYPriceSurfaceFromVolatilties: missing discount curve");
     Calendar cal = volSurface->calendar();
-    Period obsLag = index->yoyInflationTermStructure()->observationLag();
     Size settDays = volSurface->settlementDays();
     DayCounter dc = index->yoyInflationTermStructure()->dayCounter();
     BusinessDayConvention bdc = volSurface->businessDayConvention();

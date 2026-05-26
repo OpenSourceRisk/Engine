@@ -43,7 +43,8 @@ public:
     /*! Constructor taking the cross asset model, \p model, and the index of the relevant inflation component within 
         the model, \p index.
     */
-    YoYInflationModelTermStructure(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, QuantLib::Size index, bool indexIsInterpolated);
+    YoYInflationModelTermStructure(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, QuantLib::Size index,
+                                   const std::optional<QuantLib::DayCounter>& simulationDayCounter = std::nullopt);
 
     //! \name Observer interface
     //@{
@@ -71,18 +72,20 @@ public:
     //! Set the current state and move the reference date to date \p d
     void move(const QuantLib::Date& d, const QuantLib::Array& s);
 
-    /*! Hides the YoYInflationTermStructure::yoyRate method. The parameters \p forceLinearInterpolation and 
+    /*! Hides the YoYInflationTermStructure::yoyRate method. The parameters \p forceLinearInterpolation and
         \p extrapolate are ignored.
     */
+    [[deprecated("Use the overload without a lag instead")]]
     QuantLib::Real yoyRate(const QuantLib::Date& d, const QuantLib::Period& obsLag = -1 * QuantLib::Days,
-        bool forceLinearInterpolation = false, bool extrapolate = false) const;
+                           bool forceLinearInterpolation = false, bool extrapolate = false) const;
 
-    /*! Return the year-on-year rates for the maturities associated with \p dates. If an \p obsLag is explicitly 
-        provided and not set to <code>-1 * QuantLib::Days</code>, it is used as the observation lag. Otherwise, the 
-        term structure's observation lag is used.
-    */
-    virtual std::map<QuantLib::Date, QuantLib::Real> yoyRates(const std::vector<QuantLib::Date>& dates,
-        const QuantLib::Period& obsLag = -1 * QuantLib::Days) const = 0;
+    QuantLib::Real yoyRate(const QuantLib::Date& d, bool extrapolate = false) const {
+        QL_DEPRECATED_DISABLE_WARNING
+        return yoyRate(d, 0 * QuantLib::Days, false, extrapolate);
+        QL_DEPRECATED_ENABLE_WARNING
+    }
+
+    
 
     void enableCache(const bool b = true) const { enableCache_ = b; }
     virtual void clearCache() const {}
@@ -90,7 +93,7 @@ public:
 protected:
     QuantLib::ext::shared_ptr<CrossAssetModel> model_;
     QuantLib::Size index_;
-    bool indexIsInterpolated_;
+    std::optional<QuantLib::DayCounter> simulationDayCounter_;
     // Hides referenceDate_ in TermStructure.
     QuantLib::Date referenceDate_;
     QuantLib::Time relativeTime_;
@@ -106,6 +109,22 @@ protected:
         called.
     */
     virtual void checkState() const {}
+
+    QuantLib::Time simulationLag() const {
+        auto its = inflationTermStructure(model_, index_);
+        return simulationDayCounter_.value_or(dayCounter()).yearFraction(its->baseDate(), its->referenceDate());
+    }
+
+    QuantLib::Size simulationLagDays() const {
+        auto its = inflationTermStructure(model_, index_);
+        return its->referenceDate() - its->baseDate();
+    }
+
+    /*! Return the year-on-year rates for the maturities associated with \p dates. If an \p obsLag is explicitly 
+        provided and not set to <code>-1 * QuantLib::Days</code>, it is used as the observation lag. Otherwise, the 
+        term structure's observation lag is used.
+    */
+    virtual std::map<QuantLib::Date, QuantLib::Real> yoyRates(const std::vector<QuantLib::Date>& dates) const = 0;
 
     mutable bool enableCache_ = false;
 };

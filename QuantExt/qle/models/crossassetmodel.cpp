@@ -1022,10 +1022,9 @@ std::pair<Real, Real> CrossAssetModel::infdkI(const Size i, const Time t, const 
     const auto& zts = infdk(i)->termStructure();
     auto relevantDc = dayCounter();
     QL_REQUIRE(relevantDc.has_value(), "internal error, daycounter should be available, contact dev");
-    bool indexIsInterpolated = true; // the model is continous so we need to compute time in a continous way
-    Real growth_t = inflationGrowth(zts, t, relevantDc, indexIsInterpolated);
+    Real growth_t = inflationGrowth(zts, t, relevantDc);
     Real It = growth_t * std::exp(Hyt * z - y - V0);
-    Real Itilde_t_T = inflationGrowth(zts, T, relevantDc, indexIsInterpolated) / growth_t * std::exp((HyT - Hyt) * z + V_tilde);
+    Real Itilde_t_T = inflationGrowth(zts, T, relevantDc) / growth_t * std::exp((HyT - Hyt) * z + V_tilde);
     // concerning interpolation there is an inaccuracy here: if the index
     // is not interpolated, we still simulate the index value as of t
     // (and T), although we should go back to t, T which corresponds to

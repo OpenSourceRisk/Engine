@@ -128,6 +128,14 @@ public:
     Handle<Quote> cpr(const string& securityID,
                       const string& configuration = Market::defaultConfiguration) const override;
 
+    std::map<QuantLib::Period, QuantLib::Period>
+    zeroInflationObservationLags(const string& indexName,
+                                 const string& configuration = Market::defaultConfiguration) const override;
+
+    std::map<QuantLib::Period, QuantLib::Period>
+    yoyInflationObservationLags(const string& indexName,
+                                const string& configuration = Market::defaultConfiguration) const override;
+
 protected:
     QuantLib::ext::shared_ptr<Market> market_;
 };

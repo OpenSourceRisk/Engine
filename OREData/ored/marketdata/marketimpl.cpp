@@ -354,9 +354,23 @@ Handle<ZeroInflationIndex> MarketImpl::zeroInflationIndex(const string& indexNam
     return lookup<Handle<ZeroInflationIndex>>(zeroInflationIndices_, indexName, configuration, "zero inflation index");
 }
 
+std::map<QuantLib::Period, QuantLib::Period>
+MarketImpl::zeroInflationObservationLags(const string& indexName, const string& configuration) const {
+    require(MarketObject::ZeroInflationCurve, indexName, configuration);
+    return lookup<std::map<QuantLib::Period, QuantLib::Period>>(zeroInflationObservationLags_, indexName, configuration,
+                                                                "zero inflation observation lags");
+}
+
 Handle<YoYInflationIndex> MarketImpl::yoyInflationIndex(const string& indexName, const string& configuration) const {
     require(MarketObject::YoYInflationCurve, indexName, configuration);
     return lookup<Handle<YoYInflationIndex>>(yoyInflationIndices_, indexName, configuration, "yoy inflation index");
+}
+
+std::map<QuantLib::Period, QuantLib::Period>
+MarketImpl::yoyInflationObservationLags(const string& indexName, const string& configuration) const {
+    require(MarketObject::YoYInflationCurve, indexName, configuration);
+    return lookup<std::map<QuantLib::Period, QuantLib::Period>>(yoyInflationObservationLags_, indexName, configuration,
+                                                                "yoy inflation observation lags");
 }
 
 Handle<CPIVolatilitySurface> MarketImpl::cpiInflationCapFloorVolatilitySurface(const string& indexName,

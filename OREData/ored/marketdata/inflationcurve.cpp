@@ -115,7 +115,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                 Date maturity = results.latestMaturity;
                 for (Size i = 1; i < 60 * 12; ++i) {
                     Date current = inflationPeriod(curve_->baseDate() + i * Months, curve_->frequency()).first;
-                    if (current + curve_->observationLag() <= maturity)
+                    if (current <= maturity)
                         pillarDates.push_back(current);
                     else
                         break;
@@ -159,7 +159,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                 }
                 for (Size i = 0; i < pillarDates.size(); ++i) {
                     calInfo->pillarDates.push_back(pillarDates[i]);
-                    calInfo->zeroRates.push_back(zcCurve->zeroRate(pillarDates[i], 0 * Days));
+                    calInfo->zeroRates.push_back(zcCurve->zeroRate(pillarDates[i]));
                     calInfo->times.push_back(zcCurve->timeFromReference(pillarDates[i]));
                     Real cpi = 0.0;
                     try {
@@ -272,80 +272,82 @@ InflationCurve::CurveBuildResults
     QuantLib::ext::shared_ptr<ZeroInflationIndex> index;
     QuantLib::Period obsLagFromSegment = 0 * Days;
     for (const auto& segment : config->segments()) {
-            auto convention =
-                QuantLib::ext::dynamic_pointer_cast<InflationSwapConvention>(conventions->get(segment.convention()));
-            QL_REQUIRE(convention, "InflationSwap Conventions for " << segment.convention() << " not found.");
-            auto p = getStartAndLag(asof, *convention);
-            Date swapStart = p.first;
-            if (p.second != 0 * Days) {
-                // keep the largest lag across all segments for the curve as observation lag,
-                // only relevant if we have multiple segments and publication rules given, otherwise we use lag
-                // from the curve config
-                obsLagFromSegment = obsLagFromSegment == 0 * Days ? p.second : std::max(obsLagFromSegment, p.second);
-            }
-            QL_REQUIRE(index == nullptr || index->name() == convention->index()->name(),
-                       "all segments must use the same zero inflation index");
-            index = convention->index();
-            
-            for (const auto& q : segment.quotes()) {
-                auto md = loader.get(q, asof);
-                QL_REQUIRE(md, "MarketDatum " << md << " required to build inflation curve " << config->curveID()
-                                              << " not found in market data for date " << asof);
-                QL_REQUIRE(md->asofDate() == asof,
-                           "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
-                QL_REQUIRE(md->instrumentType() == MarketDatum::InstrumentType::ZC_INFLATIONSWAP,
-                           "MarketDatum " << md << " is not a valid inflation swap quote");
-                auto zcq = QuantLib::ext::dynamic_pointer_cast<ZcInflationSwapQuote>(md);
-                QL_REQUIRE(zcq, "Could not cast to ZcInflationSwapQuote, internal error.");
-                CPI::InterpolationType observationInterpolation = convention->interpolated() ? CPI::Linear : CPI::Flat;
-                Date maturity = swapStart + zcq->term();
-                results.latestMaturity =
-                    results.latestMaturity == Date() ? maturity : std::max(results.latestMaturity, maturity);
-                DLOG("Zero inflation swap " << zcq->name() << " maturity " << maturity << " term " << zcq->term()
-                                            << " quote " << zcq->quote()->value());
-                auto instrument = QuantLib::ext::make_shared<ZeroCouponInflationSwapHelper>(
-                    zcq->quote(), convention->observationLag(), swapStart, maturity, convention->fixCalendar(),
-                    convention->fixConvention(), convention->dayCounter(), index, observationInterpolation,
-                    Pillar::Choice::MaturityDate);
-
-                // Unregister with inflation index. See PR #326 on github for details.
-                instrument->unregisterWithAll();
-                instrument->registerWith(zcq->quote());
-
-                helpers.push_back(instrument);
-                results.pillarDates.push_back(instrument->pillarDate());
-                results.mdQuoteLabels.push_back(md->name());
-                results.mdQuoteValues.push_back(md->quote()->value());
-                results.rateHelperTypes.push_back("ZeroCouponInflation");
-                results.cashflowGenerators.push_back(
-                    std::function<std::vector<TradeCashflowReportData>()>([instrument, index, asof, nominalTs]() {
-                        return getCashflowReportData(
-                            {instrument->swap()->leg(0), instrument->swap()->leg(1)}, {false, true}, {1.0, 1.0},
-                            index->currency().code(), {index->currency().code(), index->currency().code()}, asof,
-                            {*nominalTs, *nominalTs}, {1.0, 1.0}, {}, {}, {"Interest", ""}, {1.0E6, 1.0E6});
-                    }));
-            }
+        auto convention =
+            QuantLib::ext::dynamic_pointer_cast<InflationSwapConvention>(conventions->get(segment.convention()));
+        QL_REQUIRE(convention, "InflationSwap Conventions for " << segment.convention() << " not found.");
+        auto p = getStartAndLag(asof, *convention);
+        Date swapStart = p.first;
+        if (p.second != 0 * Days) {
+            // keep the largest lag across all segments for the curve as observation lag,
+            // only relevant if we have multiple segments and publication rules given, otherwise we use lag
+            // from the curve config
+            obsLagFromSegment = obsLagFromSegment == 0 * Days ? p.second : std::max(obsLagFromSegment, p.second);
         }
-    auto curveObsLag = obsLagFromSegment != 0 * Days ? obsLagFromSegment : config->lag();
+        QL_REQUIRE(index == nullptr || index->name() == convention->index()->name(),
+                   "all segments must use the same zero inflation index");
+        index = convention->index();
+
+        for (const auto& q : segment.quotes()) {
+            auto md = loader.get(q, asof);
+            QL_REQUIRE(md, "MarketDatum " << md << " required to build inflation curve " << config->curveID()
+                                          << " not found in market data for date " << asof);
+            QL_REQUIRE(md->asofDate() == asof,
+                       "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
+            QL_REQUIRE(md->instrumentType() == MarketDatum::InstrumentType::ZC_INFLATIONSWAP,
+                       "MarketDatum " << md << " is not a valid inflation swap quote");
+            auto zcq = QuantLib::ext::dynamic_pointer_cast<ZcInflationSwapQuote>(md);
+            QL_REQUIRE(zcq, "Could not cast to ZcInflationSwapQuote, internal error.");
+            CPI::InterpolationType observationInterpolation = convention->interpolated() ? CPI::Linear : CPI::Flat;
+            Date maturity = swapStart + zcq->term();
+            results.latestMaturity =
+                results.latestMaturity == Date() ? maturity : std::max(results.latestMaturity, maturity);
+            results.observationLags[convention->observationLag()] = convention->observationLag();
+            DLOG("Zero inflation swap " << zcq->name() << " maturity " << maturity << " term " << zcq->term()
+                                        << " quote " << zcq->quote()->value());
+            auto instrument = QuantLib::ext::make_shared<ZeroCouponInflationSwapHelper>(
+                zcq->quote(), convention->observationLag(), swapStart, maturity, convention->fixCalendar(),
+                convention->fixConvention(), convention->dayCounter(), index, observationInterpolation,
+                Pillar::Choice::MaturityDate);
+
+            // Unregister with inflation index. See PR #326 on github for details.
+            instrument->unregisterWithAll();
+            instrument->registerWith(zcq->quote());
+
+            helpers.push_back(instrument);
+            results.pillarDates.push_back(instrument->pillarDate());
+            results.mdQuoteLabels.push_back(md->name());
+            results.mdQuoteValues.push_back(md->quote()->value());
+            results.rateHelperTypes.push_back("ZeroCouponInflation");
+            results.cashflowGenerators.push_back(
+                std::function<std::vector<TradeCashflowReportData>()>([instrument, index, asof, nominalTs]() {
+                    return getCashflowReportData(
+                        {instrument->swap()->leg(0), instrument->swap()->leg(1)}, {false, true}, {1.0, 1.0},
+                        index->currency().code(), {index->currency().code(), index->currency().code()}, asof,
+                        {*nominalTs, *nominalTs}, {1.0, 1.0}, {}, {}, {"Interest", ""}, {1.0E6, 1.0E6});
+                }));
+        }
+    }
+    // use longest lag from segments, only used to derive the base date of the curve if not used last fixing date
+    auto maxObsLag = obsLagFromSegment != 0 * Days ? obsLagFromSegment : config->lag(); 
 
     QuantLib::Date baseDate = QuantExt::ZeroInflation::curveBaseDate(
-                config->useLastAvailableFixingAsBaseDate(), asof, curveObsLag, config->frequency(), index);
+                config->useLastAvailableFixingAsBaseDate(), asof, maxObsLag, config->frequency(), index);
 
     if (config->interpolationVariable() == InflationCurveConfig::InterpolationVariable::ZeroRate) {
 
         results.curve = QuantLib::ext::make_shared<PiecewiseZeroInflationCurve<Linear>>(
-            asof, baseDate, curveObsLag, config->frequency(), config->dayCounter(), helpers, seasonality,
+            asof, baseDate, config->frequency(), config->dayCounter(), helpers, seasonality,
             config->tolerance());
     } else {
         auto baseFixing = index->fixing(baseDate, true);
         if (config->interpolationMethod().empty() || config->interpolationMethod() == "Linear") {
 
             results.curve = QuantLib::ext::make_shared<QuantExt::PiecewiseCPIInflationCurve<Linear>>(
-                asof, baseDate, baseFixing, curveObsLag, config->frequency(), config->dayCounter(), helpers,
+                asof, baseDate, baseFixing, config->frequency(), config->dayCounter(), helpers,
                 seasonality, config->tolerance());
         } else if (config->interpolationMethod() == "LogLinear") {
             results.curve = QuantLib::ext::make_shared<QuantExt::PiecewiseCPIInflationCurve<LogLinear>>(
-                asof, baseDate, baseFixing, curveObsLag, config->frequency(), config->dayCounter(), helpers,
+                asof, baseDate, baseFixing, config->frequency(), config->dayCounter(), helpers,
                 seasonality, config->tolerance());
         } else {
             QL_FAIL("Interpolation method " << config->interpolationMethod()
@@ -381,11 +383,12 @@ InflationCurve::CurveBuildResults
             // only relevant if we have multiple segments and publication rules given, otherwise we use lag
             // from the curve config
             obsLagFromSegment = obsLagFromSegment == 0 * Days ? p.second : std::max(obsLagFromSegment, p.second);
+            results.observationLags[convention->observationLag()] = convention->observationLag();
         }
         QL_REQUIRE(zcIndex == nullptr || zcIndex == convention->index(),
                    "all segments must use the same zero inflation index");
         zcIndex = convention->index();
-        index = QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(zcIndex, convention->interpolated());
+        index = QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(zcIndex);
         for (const auto& q : segment.quotes()) {
             auto md = loader.get(q, asof);
             QL_REQUIRE(md, "MarketDatum " << md << " required to build inflation curve " << config->curveID()
@@ -440,9 +443,9 @@ InflationCurve::CurveBuildResults
     Real baseRate = config->baseRate() != Null<Real>() ? config->baseRate() : helpers.front()->quote()->value();
     Date baseDate = QuantExt::ZeroInflation::curveBaseDate(false, asof, curveObsLag, config->frequency(), index);
 
-    results.curve = QuantLib::ext::shared_ptr<PiecewiseYoYInflationCurve<Linear>>(new PiecewiseYoYInflationCurve<Linear>(
-        asof, baseDate, baseRate, curveObsLag, config->frequency(), config->dayCounter(),
-        helpers, {}, config->tolerance()));
+    results.curve =
+        QuantLib::ext::shared_ptr<PiecewiseYoYInflationCurve<Linear>>(new PiecewiseYoYInflationCurve<Linear>(
+            asof, baseDate, baseRate, config->frequency(), config->dayCounter(), helpers, {}, config->tolerance()));
     results.index = zcIndex;
     
     return results;
@@ -455,10 +458,8 @@ InflationCurve::computeFairYoYQuote(const QuantLib::Date& swapStart, const Quant
                                     const QuantLib::ext::shared_ptr<InflationTermStructure>& zcCurve,
                                     const Handle<YieldTermStructure>& nominalTs,
                                     const QuantLib::Period term, const double zcQuote) const {
-    auto conversionIndex = QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(
-        ziIndex->clone(Handle<ZeroInflationTermStructure>(
-            QuantLib::ext::dynamic_pointer_cast<ZeroInflationTermStructure>(zcCurve))),
-        conv->interpolated());
+    auto conversionIndex = QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(ziIndex->clone(
+        Handle<ZeroInflationTermStructure>(QuantLib::ext::dynamic_pointer_cast<ZeroInflationTermStructure>(zcCurve))));
     QuantLib::ext::shared_ptr<InflationCouponPricer> yoyCpnPricer =
         QuantLib::ext::make_shared<YoYInflationCouponPricer>(nominalTs);
     // construct a yoy swap just as it is done in the yoy inflation helper

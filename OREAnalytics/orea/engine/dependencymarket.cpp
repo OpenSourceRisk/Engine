@@ -498,7 +498,7 @@ Handle<YoYInflationIndex> DependencyMarket::yoyInflationIndex(const string& name
     Handle<YoYInflationTermStructure> its(yoyCurve);
     its->enableExtrapolation();
     return Handle<YoYInflationIndex>(
-        QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(ii, false, its));
+        QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(ii, its));
 }
 
 Handle<QuantLib::CPIVolatilitySurface> DependencyMarket::cpiInflationCapFloorVolatilitySurface(const string& name,
@@ -663,6 +663,16 @@ DependencyMarket::correlationCurve(const std::string& index1, const std::string&
     return Handle<QuantExt::CorrelationTermStructure>(
         QuantLib::ext::make_shared<QuantExt::FlatCorrelation>(0, NullCalendar(), 0, ActualActual(ActualActual::ISDA)));
 }
+
+std::map<QuantLib::Period, QuantLib::Period>
+DependencyMarket::zeroInflationObservationLags(const string& indexName, const string& configuration) const {
+    return {{1 * Years, 3 * Months}};
+};
+
+std::map<QuantLib::Period, QuantLib::Period>
+DependencyMarket::yoyInflationObservationLags(const string& indexName, const string& configuration) const {
+    return {{1 * Years, 3 * Months}};
+};
 
 bool DependencyMarket::hasRiskFactorType(const RiskFactorKey::KeyType& riskFactorType) const {
     return riskFactors_.find(riskFactorType) != riskFactors_.end();

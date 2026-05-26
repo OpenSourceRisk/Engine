@@ -26,26 +26,19 @@ using QuantLib::Time;
 
 namespace QuantExt {
 
-QL_DEPRECATED_DISABLE_WARNING
-
-YoYInflationModelTermStructure::YoYInflationModelTermStructure(const QuantLib::ext::shared_ptr<CrossAssetModel>& model,
-                                                               Size index, bool indexIsInterpolated)
-    : YoYInflationTermStructure(inflationTermStructure(model, index)->baseDate(),
-                                inflationTermStructure(model, index)->baseRate(),
-                                inflationTermStructure(model, index)->observationLag(),
-                                inflationTermStructure(model, index)->frequency(),
-                                inflationTermStructure(model, index)->dayCounter()),
-      model_(model), index_(index), indexIsInterpolated_(indexIsInterpolated),
+YoYInflationModelTermStructure::YoYInflationModelTermStructure(
+    const QuantLib::ext::shared_ptr<CrossAssetModel>& model, Size index,
+    const std::optional<QuantLib::DayCounter>& simulationDayCounter)
+    : YoYInflationTermStructure(
+          inflationTermStructure(model, index)->baseDate(), inflationTermStructure(model, index)->baseRate(),
+          inflationTermStructure(model, index)->frequency(), inflationTermStructure(model, index)->dayCounter()),
+      model_(model), index_(index), simulationDayCounter_(simulationDayCounter),
       referenceDate_(inflationTermStructure(model_, index_)->referenceDate()), relativeTime_(0.0) {
     registerWith(model_);
     update();
 }
 
-QL_DEPRECATED_ENABLE_WARNING
-
-void YoYInflationModelTermStructure::update() {
-    notifyObservers();
-}
+void YoYInflationModelTermStructure::update() { notifyObservers(); }
 
 Date YoYInflationModelTermStructure::maxDate() const {
     // we don't care. Let the underlying classes throw exceptions if applicable
@@ -57,22 +50,19 @@ Time YoYInflationModelTermStructure::maxTime() const {
     return QL_MAX_REAL;
 }
 
-const Date& YoYInflationModelTermStructure::referenceDate() const {
-    return referenceDate_;
-}
-
-Date YoYInflationModelTermStructure::baseDate() const {
-    if (indexIsInterpolated_) {
-        return referenceDate_ - observationLag_;
-    } else {
-        return inflationPeriod(referenceDate_ - observationLag_, frequency()).first;
-    }
-}
+const Date& YoYInflationModelTermStructure::referenceDate() const { return referenceDate_; }
 
 void YoYInflationModelTermStructure::referenceDate(const Date& d) {
     referenceDate_ = d;
-    relativeTime_ = dayCounter().yearFraction(inflationTermStructure(model_, index_)->referenceDate(), referenceDate_);
+    // we use the simulation day counter, otherwise both times could be from different times
+    relativeTime_ = simulationDayCounter_.value_or(dayCounter())
+                        .yearFraction(inflationTermStructure(model_, index_)->referenceDate(), referenceDate_);
     update();
+}
+
+Date YoYInflationModelTermStructure::baseDate() const {
+    // The inflation models are continous time, we need to keep the initial lag here constant
+    return referenceDate_ - simulationLagDays();
 }
 
 void YoYInflationModelTermStructure::state(const Array& s) {
@@ -87,12 +77,12 @@ void YoYInflationModelTermStructure::move(const Date& d, const Array& s) {
 }
 
 Real YoYInflationModelTermStructure::yoyRate(const Date& d, const Period& obsLag, bool forceLinearInterpolation,
-    bool extrapolate) const {
-    return yoyRates({ d }, obsLag).at(d);
+                                             bool extrapolate) const {
+    return yoyRates({d}).at(d);
 }
 
 Real YoYInflationModelTermStructure::yoyRateImpl(Time t) const {
     QL_FAIL("YoYInflationModelTermStructure::yoyRateImpl cannot be called.");
 }
 
-}
+} // namespace QuantExt

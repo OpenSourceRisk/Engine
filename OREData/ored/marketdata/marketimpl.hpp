@@ -117,9 +117,17 @@ public:
 
     //! Inflation Indexes
     virtual Handle<ZeroInflationIndex>
-    zeroInflationIndex(const string& indexName, const string& configuration = Market::defaultConfiguration) const override;
+    zeroInflationIndex(const string& indexName,
+                       const string& configuration = Market::defaultConfiguration) const override;
+    std::map<QuantLib::Period, QuantLib::Period>
+    zeroInflationObservationLags(const string& indexName,
+                                 const string& configuration = Market::defaultConfiguration) const override;
     virtual Handle<YoYInflationIndex>
-    yoyInflationIndex(const string& indexName, const string& configuration = Market::defaultConfiguration) const override;
+    yoyInflationIndex(const string& indexName,
+                      const string& configuration = Market::defaultConfiguration) const override;
+    std::map<QuantLib::Period, QuantLib::Period>
+    yoyInflationObservationLags(const string& indexName,
+                                const string& configuration = Market::defaultConfiguration) const override;
 
     //! Inflation Cap Floor Volatility Surfaces
     virtual Handle<QuantLib::CPIVolatilitySurface>
@@ -222,7 +230,9 @@ protected:
     mutable map<pair<string, string>, std::pair<string, QuantLib::Period>> capFloorIndexBase_;
     mutable map<pair<string, string>, Handle<YoYOptionletVolatilitySurface>> yoyCapFloorVolSurfaces_;
     mutable map<pair<string, string>, Handle<ZeroInflationIndex>> zeroInflationIndices_;
+    mutable map<pair<string, string>, std::map<QuantLib::Period, QuantLib::Period>> zeroInflationObservationLags_;
     mutable map<pair<string, string>, Handle<YoYInflationIndex>> yoyInflationIndices_;
+    mutable map<pair<string, string>, std::map<QuantLib::Period, QuantLib::Period>> yoyInflationObservationLags_;
     mutable map<pair<string, string>, Handle<QuantLib::CPIVolatilitySurface>> cpiInflationCapFloorVolatilitySurfaces_;
     mutable map<pair<string, string>, Handle<Quote>> equitySpots_;
     mutable map<pair<string, string>, Handle<BlackVolTermStructure>> equityVols_;

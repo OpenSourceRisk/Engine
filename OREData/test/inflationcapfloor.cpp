@@ -60,7 +60,7 @@ public:
         QuantLib::ext::shared_ptr<ZeroInflationIndex> zcindex = QuantLib::ext::shared_ptr<EUHICPXT>(new EUHICPXT());
         ;
         QuantLib::ext::shared_ptr<YoYInflationIndex> index =
-            QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(zcindex, false);
+            QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(zcindex);
 
         std::vector<Date> datesZCII = {asof + 1 * Years, asof + 2 * Years, asof + 5 * Years, asof + 10 * Years,
                                        asof + 20 * Years};
@@ -83,7 +83,7 @@ public:
 
         yoyInflationIndices_[make_pair(Market::defaultConfiguration, "EUHICPXT")] =
             Handle<YoYInflationIndex>(QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(
-                parseZeroInflationIndex("EUHICPXT"), false, Handle<YoYInflationTermStructure>(yoyTs)));
+                parseZeroInflationIndex("EUHICPXT"), Handle<YoYInflationTermStructure>(yoyTs)));
 
         // Add EUHICPXT yoy volatility term structure
         QuantLib::ext::shared_ptr<QuantLib::ConstantYoYOptionletVolatility> volSurface =

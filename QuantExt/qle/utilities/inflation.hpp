@@ -49,13 +49,13 @@ QuantLib::Time inflationTime(const QuantLib::Date& date,
     coupon bond price at time zero for maturity \f$ t \f$ and \f$ P_n(0, t) \f$ is the nominal zero coupon bond price.
 */
 QuantLib::Real inflationGrowth(const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts, QuantLib::Time t,
-                               const std::optional<QuantLib::DayCounter>& dc, bool indexIsInterpolated);
+                               const std::optional<QuantLib::DayCounter>& dc);
 
 /*! Utility for calculating the ratio \f$ \frac{P_r(0, t)}{P_n(0, t)} \f$ where \f$ P_r(0, t) \f$ is the real zero
     coupon bond price at time zero for maturity \f$ t \f$ and \f$ P_n(0, t) \f$ is the nominal zero coupon bond price.
 */
 QuantLib::Real inflationGrowth(const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts,
-    QuantLib::Time t, bool indexIsInterpolated);
+    QuantLib::Time t);
 
 int simulationLag(const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts);
 
@@ -159,6 +159,37 @@ bool isCPIVolSurfaceLogNormal(const QuantLib::ext::shared_ptr<QuantLib::CPIVolat
 
 
 }
+
+class InflationObservationLagFinder{
+    public:
+        InflationObservationLagFinder(const std::map<QuantLib::Period, QuantLib::Period>& observationLags, const QuantLib::Date& refDate)
+            : refDate_(refDate) {
+            for (const auto& [tenor, obsLag] : observationLags) {
+                maturityObsLag_[refDate_ + obsLag] = obsLag;
+            }
+        }
+    
+        QuantLib::Period operator()(const QuantLib::Period& p) const {
+            QuantLib::Date maturity = refDate_ + p;
+            return operator()(maturity);
+        }
+
+        QuantLib::Period operator()(const QuantLib::Date& d) const {
+            auto it = maturityObsLag_.upper_bound(d);
+            if (it == maturityObsLag_.begin()) {
+                // all observation lags are for maturities after the given maturity, return the first one
+                return maturityObsLag_.begin()->second;
+            }
+            else {
+                // return the observation lag for the largest maturity smaller than or equal to the given maturity
+                return std::prev(it)->second;
+            }
+        }
+    
+    private:
+        QuantLib::Date refDate_;
+        std::map<QuantLib::Date, QuantLib::Period> maturityObsLag_;
+};
 
 
 } // namespace QuantExt

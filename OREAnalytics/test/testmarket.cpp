@@ -397,7 +397,7 @@ TestMarket::TestMarket(Date asof, bool swapVolCube) : MarketImpl(false) {
     auto zeroIndex = Handle<ZeroInflationIndex>(QuantLib::ext::make_shared<UKRPI>(flatZeroInflationCurve(0.02, 0.01)));
     zeroInflationIndices_[make_pair(Market::defaultConfiguration, "UKRP1")] = zeroIndex;
     yoyInflationIndices_[make_pair(Market::defaultConfiguration, "UKRP1")] = Handle<YoYInflationIndex>(
-        QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(*zeroIndex, false, flatYoYInflationCurve(0.02, 0.01)));
+        QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(*zeroIndex, flatYoYInflationCurve(0.02, 0.01)));
 
     // build inflation cap / floor vol curves
     yoyCapFloorVolSurfaces_[make_pair(Market::defaultConfiguration, "UKRP1")] =
@@ -412,7 +412,7 @@ TestMarket::TestMarket(Date asof, bool swapVolCube) : MarketImpl(false) {
 
     // build UKRPI index
     QuantLib::ext::shared_ptr<ZeroInflationIndex> ii = parseZeroInflationIndex("UKRPI");
-    QuantLib::ext::shared_ptr<YoYInflationIndex> yi = QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(ii, false);
+    QuantLib::ext::shared_ptr<YoYInflationIndex> yi = QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(ii);
 
     RelinkableHandle<ZeroInflationTermStructure> hcpi;
     ii = QuantLib::ext::shared_ptr<UKRPI>(new UKRPI(hcpi));
@@ -428,7 +428,7 @@ TestMarket::TestMarket(Date asof, bool swapVolCube) : MarketImpl(false) {
 
     // build EUHICPXT index
     QuantLib::ext::shared_ptr<ZeroInflationIndex> euii = parseZeroInflationIndex("EUHICPXT");
-    QuantLib::ext::shared_ptr<YoYInflationIndex> euyi = QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(euii, false);
+    QuantLib::ext::shared_ptr<YoYInflationIndex> euyi = QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(euii);
 
     RelinkableHandle<ZeroInflationTermStructure> euhcpi;
     euii = QuantLib::ext::shared_ptr<EUHICPXT>(new EUHICPXT(euhcpi));
@@ -1165,7 +1165,7 @@ void TestMarketParCurves::createYoYInflationIndex(const string& idxName, const v
     yoyInflationRateHelperValuesMap_[idxName] = parQuotes;
 
     QuantLib::ext::shared_ptr<ZeroInflationIndex> zii = parseZeroInflationIndex("UKRPI");
-    QuantLib::ext::shared_ptr<YoYInflationIndex> yi = QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(zii, false);
+    QuantLib::ext::shared_ptr<YoYInflationIndex> yi = QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(zii);
     string ccy = zii->currency().code();
     QuantLib::ext::shared_ptr<ore::data::InflationSwapConvention> conv =
         QuantLib::ext::dynamic_pointer_cast<ore::data::InflationSwapConvention>(conventions->get(idxName));

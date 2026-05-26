@@ -384,7 +384,7 @@ void CrossAssetModelScenarioGenerator::init() {
         QL_REQUIRE(mt == CrossAssetModel::ModelType::DK || mt == CrossAssetModel::ModelType::JY,
                    "CrossAssetModelScenarioGenerator: expected inflation model to be JY or DK.");
         QuantLib::ext::shared_ptr<ZeroInflationModelTermStructure> ts;
-
+        
         if (mt == CrossAssetModel::ModelType::DK) {
             ts = QuantLib::ext::make_shared<DkImpliedZeroInflationTermStructure>(model_, idx, dateGrid_->dayCounter());
         } else {
@@ -392,7 +392,7 @@ void CrossAssetModelScenarioGenerator::init() {
             QL_REQUIRE(model_->modelType(CrossAssetModel::AssetType::IR, 0) == CrossAssetModel::ModelType::LGM1F,
                        "Simulation of INF JY model is only supported for LGM1F ir model type.");
         }
-        zeroInfCurves_.emplace_back(idx, ccyIdx, mt, ts);
+        zeroInfCurves_.emplace_back(idx, ccyIdx, mt, ts, name);
         ts->enableCache();
     }
 
@@ -411,7 +411,7 @@ void CrossAssetModelScenarioGenerator::init() {
         }
         QL_REQUIRE(model_->modelType(CrossAssetModel::AssetType::IR, 0) == CrossAssetModel::ModelType::LGM1F,
                    "Simulation of INF DK or JY model for YoY curves is only supported for LGM1F ir model type.");
-        yoyInfCurves_.emplace_back(idx, ccyIdx, mt, ts);
+        yoyInfCurves_.emplace_back(idx, ccyIdx, mt, ts, name);
         ts->enableCache();
     }
 
@@ -621,7 +621,7 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
         // Zero inflation curves
         for (Size j = 0; j < zeroInfCurves_.size(); ++j) {
 
-            auto [idx, ccyIdx, modelType, ts] = zeroInfCurves_[j];
+            auto [idx, ccyIdx, modelType, ts, indexName] = zeroInfCurves_[j];
 
             // State variables needed depends on model, 3 for JY and 2 for DK.
             
@@ -637,10 +637,12 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
             // Update the term structure's date and state.
             ts->move(dates_[i], state);
 
+            
             // Populate the zero inflation scenario values based on the current date and state.
+            auto index = *initMarket_->zeroInflationIndex(indexName);
+            // use the latest observation lag if there are more than one
+            auto obsLag = initMarket_->zeroInflationObservationLags(indexName).rbegin()->second; 
             for (Size k = 0; k < ten_zinf_[j].size(); k++) {
-                auto index = *initMarket_->zeroInflationIndex(model_->inf(idx)->name());
-                auto obsLag = ts->observationLag();
                 auto zeroRate =
                     scenarioInflationZeroRateFromModelTs(dates_[i], ten_zinf_[j][k], obsLag, index, ts, modelType, dc);
                 scenarios[i]->add(rfKeyCounter++, zeroRate);
@@ -650,23 +652,24 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
         // YoY inflation curves
         for (Size j = 0; j < yoyInfCurves_.size(); ++j) {
 
-            auto tup = yoyInfCurves_[j];
+            auto [idx, ccyIdx, modelType, ts, indexName] = yoyInfCurves_[j];
 
             // For YoY model implied term structure, JY and DK both need 3 state variables.
-            auto idx = std::get<0>(tup);
+    
             Array state(3);
             state[0] = sample.value[model_->pIdx(CrossAssetModel::AssetType::INF, idx, 0)][gridIndexInPath_[i + 1]];
             state[1] = sample.value[model_->pIdx(CrossAssetModel::AssetType::INF, idx, 1)][gridIndexInPath_[i + 1]];
-            state[2] = ir_state[std::get<1>(tup)][0];
+                state[2] = ir_state[ccyIdx][0];
 
             // Update the term structure's date and state.
-            auto ts = std::get<3>(tup);
             ts->move(dates_[i], state);
 
             // Create the YoY pillar dates from the tenors.
             vector<Date> pillarDates(ten_yinf_[j].size());
+            auto yyIndex = *initMarket_->yoyInflationIndex(indexName);
+            auto obsLag = initMarket_->zeroInflationObservationLags(indexName).rbegin()->second;
             for (Size k = 0; k < pillarDates.size(); ++k)
-                pillarDates[k] = dates_[i] + ten_yinf_[j][k];
+                pillarDates[k] = inflationPeriod(dates_[i] + ten_yinf_[j][k] - obsLag, yyIndex->frequency()).first;
 
             // Use the YoY term structure's YoY rates to populate the scenarios.
             auto yoyRates = ts->yoyRates(pillarDates);

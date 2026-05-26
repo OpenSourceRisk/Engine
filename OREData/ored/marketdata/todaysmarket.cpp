@@ -615,6 +615,7 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
                 // index is not interpolated
                 auto tmp = parseZeroInflationIndex(node.name, Handle<ZeroInflationTermStructure>(ts));
                 zeroInflationIndices_[make_pair(configuration, node.name)] = Handle<ZeroInflationIndex>(tmp);
+                zeroInflationObservationLags_[make_pair(configuration, node.name)] = itr->second->observationLags(); 
             }
 
             if (node.obj == MarketObject::YoYInflationCurve) {
@@ -625,12 +626,11 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
                         itr->second->inflationTermStructure());
                 QL_REQUIRE(ts,
                            "expected yoy inflation term structure for index " << node.name << ", but could not cast");
-            QL_DEPRECATED_DISABLE_WARNING
-                           yoyInflationIndices_[make_pair(configuration, node.name)] =
+                yoyInflationIndices_[make_pair(configuration, node.name)] =
                     Handle<YoYInflationIndex>(QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(
-                        parseZeroInflationIndex(node.name, Handle<ZeroInflationTermStructure>()), false,
+                        parseZeroInflationIndex(node.name, Handle<ZeroInflationTermStructure>()),
                         Handle<YoYInflationTermStructure>(ts)));
-            QL_DEPRECATED_ENABLE_WARNING
+                yoyInflationObservationLags_[make_pair(configuration, node.name)] = itr->second->observationLags();
             }
             break;
         }

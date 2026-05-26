@@ -28,8 +28,7 @@ namespace QuantExt {
 
 	std::pair<RandomVariable, RandomVariable> InfDkVectorised::infdkI(const Size i, const Time t, const Time T,
                                                                     const RandomVariable& z,
-                                                                    const RandomVariable& y,
-                                                                    bool indexIsInterpolated) const {
+                                                                    const RandomVariable& y) const {
             
             Size n_samples = z.size();
 
@@ -43,8 +42,8 @@ namespace QuantExt {
             // compute final results depending on z and y
             const auto& zts = cam_->infdk(i)->termStructure();
             auto dc = cam_->irlgm1f(0)->termStructure()->dayCounter();
-            RandomVariable growth_t(n_samples, inflationGrowth(zts, t, dc, indexIsInterpolated));
-            RandomVariable growth_T(n_samples, inflationGrowth(zts, T, dc, indexIsInterpolated));
+            RandomVariable growth_t(n_samples, inflationGrowth(zts, t, dc));
+            RandomVariable growth_T(n_samples, inflationGrowth(zts, T, dc));
             // Vectorize the scalars
 
 

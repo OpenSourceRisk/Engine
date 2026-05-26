@@ -270,13 +270,14 @@ void InflationCapFloorVolCurve::buildFromVolatilities(
             QL_REQUIRE(yyTs, "YoY Inflation curve required for vol surface " << index->name());
             index = QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(
                 parseZeroInflationIndex(config->index(), Handle<ZeroInflationTermStructure>()),
-                true, Handle<YoYInflationTermStructure>(yyTs));
+                Handle<YoYInflationTermStructure>(yyTs));
         }
 
         YoYPriceSurfaceFromVolatilities volToPriceConverter;
 
-        auto priceSurface = volToPriceConverter(capVol, index, getObservationInterpolation(config),
-                                                discountCurve_, quoteVolatilityType, 0.0);
+        auto priceSurface =
+            volToPriceConverter(capVol, index, config->observationLag(), getObservationInterpolation(config),
+                                discountCurve_, quoteVolatilityType, 0.0);
 
         // Get configuration values for bootstrap
         Real accuracy = config->bootstrapConfig().accuracy();
@@ -558,16 +559,15 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
             useMarketYoyCurve_ = true;
             index = QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(
                 parseZeroInflationIndex(config->index(), Handle<ZeroInflationTermStructure>()),
-                true, Handle<YoYInflationTermStructure>(yyTs));
+                Handle<YoYInflationTermStructure>(yyTs));
         } else {
             useMarketYoyCurve_ = false;
             QuantLib::ext::shared_ptr<ZeroInflationTermStructure> zeroTs =
                 QuantLib::ext::dynamic_pointer_cast<ZeroInflationTermStructure>(ts);
-            QL_REQUIRE(zeroTs,
-                        "Inflation term structure " << config->indexCurve() << "must be of type YoY or Zero");
+            QL_REQUIRE(zeroTs, "Inflation term structure " << config->indexCurve() << "must be of type YoY or Zero");
             index = QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(
                 parseZeroInflationIndex(config->index(), Handle<ZeroInflationTermStructure>(zeroTs)),
-                true, Handle<YoYInflationTermStructure>());
+                Handle<YoYInflationTermStructure>());
         }
         // Build the term structure
         QuantLib::ext::shared_ptr<

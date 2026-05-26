@@ -104,15 +104,15 @@ Time inflationTime(const Date& date, const QuantLib::ext::shared_ptr<InflationTe
     return inflationYearFraction(inflationTs->frequency(), indexIsInterpolated, dc, inflationTs->baseDate(), date);
 }
 
-Real inflationGrowth(const Handle<ZeroInflationTermStructure>& ts, Time t, const std::optional<DayCounter>& dc, bool indexIsInterpolated) {
+Real inflationGrowth(const Handle<ZeroInflationTermStructure>& ts, Time t, const std::optional<DayCounter>& dc) {
     // in the simulation at time t we effectively observe the inflation zero rate at time t - simLag
     // this is due to the publishing lag of CPI indices, the simulation lag is the difference between
     // the last known cpi fixing date and today (t0).
-    if(!dc.has_value())
+    if (!dc.has_value())
         QL_FAIL("Not simulation day counter given");
     auto effectiveDayCounter = dc.value_or(ts->dayCounter());
     // TODO refactor this code once we refactored the yoy model curves and can get rid of the indexIsInterpolated flag
-    auto lag = inflationTime(ts->referenceDate(), ts.currentLink(), indexIsInterpolated, effectiveDayCounter);
+    auto lag = inflationTime(ts->referenceDate(), ts.currentLink(), true, effectiveDayCounter);
     auto effectiveObservationTime = t - lag;
     auto effectiveObservationDate = lowerDate(effectiveObservationTime, ts->referenceDate(), effectiveDayCounter);
     auto observationTime = ts->dayCounter().yearFraction(ts->referenceDate(), effectiveObservationDate);
@@ -121,8 +121,8 @@ Real inflationGrowth(const Handle<ZeroInflationTermStructure>& ts, Time t, const
     return std::pow(1.0 + zeroRate, tau);
 }
 
-Real inflationGrowth(const Handle<ZeroInflationTermStructure>& ts, Time t, bool indexIsInterpolated) {
-    return inflationGrowth(ts, t, ts->dayCounter(), indexIsInterpolated);
+Real inflationGrowth(const Handle<ZeroInflationTermStructure>& ts, Time t) {
+    return inflationGrowth(ts, t, ts->dayCounter());
 }
 
 int simulationLag(const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts) {

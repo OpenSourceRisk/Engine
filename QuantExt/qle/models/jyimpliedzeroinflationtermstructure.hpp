@@ -59,7 +59,6 @@ protected:
 */
 QuantLib::Real inflationGrowth(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, QuantLib::Size index,
                                QuantLib::Time S, QuantLib::Time T, QuantLib::Real irState, QuantLib::Real rrState,
-                               bool indexIsInterpolated,
                                std::optional<QuantLib::DayCounter> simulationDayCounter = std::nullopt);
 } // namespace QuantExt
 
