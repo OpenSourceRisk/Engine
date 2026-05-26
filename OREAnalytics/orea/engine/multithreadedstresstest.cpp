@@ -31,6 +31,7 @@
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <future>
+#include <random> 
 
 #ifdef ORE_MULTITHREADING_CPU_AFFINITY
 #include <pthread.h>
