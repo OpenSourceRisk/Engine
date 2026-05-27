@@ -1017,7 +1017,6 @@ std::pair<Real, Real> CrossAssetModel::infdkI(const Size i, const Time t, const 
     Real Hyt = Hy(i).eval(*this, t);
     Real HyT = Hy(i).eval(*this, T);
 
-    // TODO account for seasonality ...
     // compute final results depending on z and y
     const auto& zts = infdk(i)->termStructure();
     auto relevantDc = dayCounter();

@@ -78,7 +78,7 @@ void YoYInflationModelTermStructure::move(const Date& d, const Array& s) {
 
 Real YoYInflationModelTermStructure::yoyRate(const Date& d, const Period& obsLag, bool forceLinearInterpolation,
                                              bool extrapolate) const {
-    return yoyRates({d}).at(d);
+    return yoyRates({d}, {obsLag}).at(d);
 }
 
 Real YoYInflationModelTermStructure::yoyRateImpl(Time t) const {

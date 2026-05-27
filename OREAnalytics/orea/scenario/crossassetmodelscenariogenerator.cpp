@@ -666,13 +666,14 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
 
             // Create the YoY pillar dates from the tenors.
             vector<Date> pillarDates(ten_yinf_[j].size());
-            auto yyIndex = *initMarket_->yoyInflationIndex(indexName);
+            // Get the obsLag depended on the t0 curve, at moment take latest obsLag
             auto obsLag = initMarket_->zeroInflationObservationLags(indexName).rbegin()->second;
-            for (Size k = 0; k < pillarDates.size(); ++k)
-                pillarDates[k] = inflationPeriod(dates_[i] + ten_yinf_[j][k] - obsLag, yyIndex->frequency()).first;
-
+            vector<Period> observationLags(pillarDates.size(), obsLag);
+            for (Size k = 0; k < pillarDates.size(); ++k) {
+                pillarDates[k] = dates_[i] + ten_yinf_[j][k];
+            }
             // Use the YoY term structure's YoY rates to populate the scenarios.
-            auto yoyRates = ts->yoyRates(pillarDates);
+            auto yoyRates = ts->yoyRates(pillarDates, observationLags);
             for (Size k = 0; k < pillarDates.size(); ++k) {
                 scenarios[i]->add(rfKeyCounter++, yoyRates.at(pillarDates[k]));
             }
@@ -750,9 +751,9 @@ void CrossAssetModelScenarioGenerator::reset() {
 
     pathGenerator_->reset();
 
-    for (auto const& [x, b, m, t] : zeroInfCurves_)
+    for (auto const& [x, b, m, t, n] : zeroInfCurves_)
         t->clearCache();
-    for (auto const& [x, b, m, t] : yoyInfCurves_)
+    for (auto const& [x, b, m, t, n] : yoyInfCurves_)
         t->clearCache();
 }
 

@@ -46,8 +46,6 @@
 #include <qle/termstructures/pricecurve.hpp>
 #include <qle/termstructures/swaptionvolcube2.hpp>
 #include <qle/termstructures/swaptionvolcubewithatm.hpp>
-#include <qle/termstructures/yoyinflationcurveobserverstatic.hpp>
-#include <qle/termstructures/zeroinflationcurveobserverstatic.hpp>
 #include <qle/utilities/inflation.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
 

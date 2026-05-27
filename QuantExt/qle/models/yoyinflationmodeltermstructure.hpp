@@ -85,7 +85,11 @@ public:
         QL_DEPRECATED_ENABLE_WARNING
     }
 
-    
+    /*! Return the year-on-year rates for the maturities associated with \p dates. If an \p obsLag is explicitly 
+        provided and not set to <code>-1 * QuantLib::Days</code>, it is used as the observation lag. Otherwise, the 
+        term structure's observation lag is used.
+    */
+    virtual std::map<QuantLib::Date, QuantLib::Real> yoyRates(const std::vector<QuantLib::Date>& dates, const std::vector<QuantLib::Period>& observationPeriods) const = 0;
 
     void enableCache(const bool b = true) const { enableCache_ = b; }
     virtual void clearCache() const {}
@@ -119,12 +123,6 @@ protected:
         auto its = inflationTermStructure(model_, index_);
         return its->referenceDate() - its->baseDate();
     }
-
-    /*! Return the year-on-year rates for the maturities associated with \p dates. If an \p obsLag is explicitly 
-        provided and not set to <code>-1 * QuantLib::Days</code>, it is used as the observation lag. Otherwise, the 
-        term structure's observation lag is used.
-    */
-    virtual std::map<QuantLib::Date, QuantLib::Real> yoyRates(const std::vector<QuantLib::Date>& dates) const = 0;
 
     mutable bool enableCache_ = false;
 };

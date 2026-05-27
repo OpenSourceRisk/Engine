@@ -42,8 +42,8 @@ class YoYInflationCurveObserverMoving : public YoYInflationTermStructure,
                                         public LazyObject {
 public:
     YoYInflationCurveObserverMoving(
-        Natural settlementDays, const Calendar& calendar, const DayCounter& dayCounter, const Period& lag,
-        Frequency frequency, bool indexIsInterpolated, const std::vector<Time>& times,
+        Natural settlementDays, const Calendar& calendar, const DayCounter& dayCounter, const int simulationLag,
+        const Period& observationLag, Frequency frequency, bool indexIsInterpolated, const std::vector<Period>& tenors,
         const std::vector<Handle<Quote>>& rates,
         const QuantLib::ext::shared_ptr<Seasonality>& seasonality = QuantLib::ext::shared_ptr<Seasonality>(),
         const Interpolator& interpolator = Interpolator());
@@ -60,8 +60,7 @@ public:
     const std::vector<Time>& times() const;
     const std::vector<Real>& data() const;
     const std::vector<Rate>& rates() const;
-    // std::vector<std::pair<Date, Rate> > nodes() const;
-    const std::vector<Handle<Quote> >& quotes() const { return quotes_; };
+    const std::vector<Handle<Quote>>& quotes() const { return quotes_; };
     //@}
 
     //! \name Observer interface
@@ -81,38 +80,39 @@ protected:
     //@{
     Rate yoyRateImpl(Time t) const override;
     //@}
-    std::vector<Handle<Quote> > quotes_;
-    bool indexIsInterpolated_;
+    std::vector<Handle<Quote>> quotes_;
+    std::vector<Period> tenors_;
+
     mutable Date baseDate_;
     // Need the observation lag to recompute the new base date when the evaluation date moves.
     Period observationLag_;
+    int simulationLag_;
 };
 
 // template definitions
-QL_DEPRECATED_DISABLE_WARNING
 template <class Interpolator>
 YoYInflationCurveObserverMoving<Interpolator>::YoYInflationCurveObserverMoving(
-    Natural settlementDays, const Calendar& calendar, const DayCounter& dayCounter, const Period& lag,
-    Frequency frequency, bool indexIsInterpolated, const std::vector<Time>& times,
+    Natural settlementDays, const Calendar& calendar, const DayCounter& dayCounter, const int simulationLag,
+    const Period& observationLag, Frequency frequency, bool indexIsInterpolated, const std::vector<Period>& tenors,
     const std::vector<Handle<Quote>>& rates, const QuantLib::ext::shared_ptr<Seasonality>& seasonality,
     const Interpolator& interpolator)
     : YoYInflationTermStructure(settlementDays, calendar, Date(), (rates.empty() ? Null<Rate>() : rates[0]->value()),
                                 frequency, dayCounter, seasonality),
       InterpolatedCurve<Interpolator>(std::vector<Time>(), std::vector<Real>(), interpolator), quotes_(rates),
-      indexIsInterpolated_(indexIsInterpolated), observationLag_(lag) {
+      tenors_(tenors), observationLag_(observationLag), simulationLag_(simulationLag) {
 
-    QL_REQUIRE(times.size() > 1, "too few times: " << times.size());
+    QL_REQUIRE(tenors.size() > 1, "too few tenors: " << tenors.size());
+    this->times_.resize(tenors_.size());
     updateBaseDate();
-    this->times_.resize(times.size());
-    this->times_[0] = times[0];
-    for (Size i = 1; i < times.size(); i++) {
-        QL_REQUIRE(times[i] > times[i - 1], "times not sorted");
-        this->times_[i] = times[i];
+    for (Size i = 0; i < tenors_.size(); i++) {
+        this->times_[i] = dayCounter.yearFraction(
+            referenceDate(), inflationPeriod(referenceDate() + tenors_[i] - observationLag_, frequency).first);
+        QL_REQUIRE(i == 0 || this->times_[i] > this->times_[i - 1],
+                   "non increasing times: " << this->times_[i - 1] << " vs " << this->times_[i]);
     }
 
     QL_REQUIRE(this->quotes_.size() == this->times_.size(),
                "quotes/times count mismatch: " << this->quotes_.size() << " vs " << this->times_.size());
-
     // initialise data vector, values are copied from quotes in performCalculations()
     this->data_.resize(this->times_.size());
     for (Size i = 0; i < this->times_.size(); i++)
@@ -125,7 +125,6 @@ YoYInflationCurveObserverMoving<Interpolator>::YoYInflationCurveObserverMoving(
     for (Size i = 0; i < this->quotes_.size(); i++)
         registerWith(this->quotes_[i]);
 }
-QL_DEPRECATED_ENABLE_WARNING
 
 template <class T> Date YoYInflationCurveObserverMoving<T>::baseDate() const {
     // if indexIsInterpolated we fixed the dates in the constructor
@@ -172,11 +171,10 @@ template <class T> inline void YoYInflationCurveObserverMoving<T>::performCalcul
 
 template <class T> inline void YoYInflationCurveObserverMoving<T>::updateBaseDate() const {
     Date d = Settings::instance().evaluationDate();
-    Date d0 = d - this->observationLag_;
-    if (!indexIsInterpolated_) {
-        baseDate_ = inflationPeriod(d0, this->frequency_).first;
-    } else {
-        baseDate_ = d0;
+    baseDate_ = inflationPeriod(d - simulationLag_, frequency()).first;
+    for (Size i = 0; i < tenors_.size(); i++) {
+        this->times_[i] = dayCounter().yearFraction(
+            referenceDate(), inflationPeriod(referenceDate() + tenors_[i] - observationLag_, frequency()).first);
     }
 }
 
