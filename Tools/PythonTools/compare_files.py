@@ -7,7 +7,10 @@ import difflib
 import json
 import logging
 import pandas as pd
-from datacompy.core import Compare
+try:
+    from datacompy.core import Compare
+except ImportError:
+    from datacompy import Compare
 import re
 import tempfile
 import jsondiff
