@@ -2646,8 +2646,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                         Handle<YoYInflationTermStructure> yoyInflationTs =
                             yoyInflationIndex->yoyInflationTermStructure();
                         vector<string> keys(parameters->yoyInflationTenors(name).size());
-
-                        Date date0 = asof_ - yoyInflationTs->observationLag();
+                        auto obsLag = initMarket->yoyInflationObservationLags(name, configuration).rbegin()->second;
+                        Date date0 = asof_ - obsLag;
                         DayCounter dc = yoyInflationTs->dayCounter();
                         vector<Date> quoteDates;
                         vector<Time> yoyCurveTimes(
@@ -2659,13 +2659,13 @@ ScenarioSimMarket::ScenarioSimMarket(
                                    "yoy inflation tenors must not include t=0");
 
                         for (auto& tenor : parameters->yoyInflationTenors(name)) {
-                            Date inflDate = inflationPeriod(date0 + tenor, yoyInflationTs->frequency()).first;
+                            Date inflDate = inflationPeriod(date0 + tenor - obsLag, yoyInflationTs->frequency()).first;
                             yoyCurveTimes.push_back(dc.yearFraction(asof_, inflDate));
                             quoteDates.push_back(asof_ + tenor);
                         }
 
                         for (Size i = 1; i < yoyCurveTimes.size(); i++) {
-                            Real rate = yoyInflationTs->yoyRate(quoteDates[i - 1] - yoyInflationTs->observationLag());
+                            Real rate = yoyInflationTs->yoyRate(yoyCurveTimes[i]);
                             auto q = QuantLib::ext::make_shared<SimpleQuote>(useSpreadedTermStructures_ ? 0.0 : rate);
                             if (i == 1) {
                                 // add the zero rate at first tenor to the T0 time, to ensure flat interpolation of T1

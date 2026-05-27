@@ -405,9 +405,9 @@ void CrossAssetModelScenarioGenerator::init() {
                    "CrossAssetModelScenarioGenerator: expected inflation model to be JY or DK.");
         QuantLib::ext::shared_ptr<YoYInflationModelTermStructure> ts;
         if (mt == CrossAssetModel::ModelType::DK) {
-            ts = QuantLib::ext::make_shared<DkImpliedYoYInflationTermStructure>(model_, idx, false);
+            ts = QuantLib::ext::make_shared<DkImpliedYoYInflationTermStructure>(model_, idx, dateGrid_->dayCounter());
         } else {
-            ts = QuantLib::ext::make_shared<JyImpliedYoYInflationTermStructure>(model_, idx, false);
+            ts = QuantLib::ext::make_shared<JyImpliedYoYInflationTermStructure>(model_, idx, dateGrid_->dayCounter());
         }
         QL_REQUIRE(model_->modelType(CrossAssetModel::AssetType::IR, 0) == CrossAssetModel::ModelType::LGM1F,
                    "Simulation of INF DK or JY model for YoY curves is only supported for LGM1F ir model type.");
