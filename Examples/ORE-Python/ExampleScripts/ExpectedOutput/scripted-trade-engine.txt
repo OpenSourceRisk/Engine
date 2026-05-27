@@ -169,3 +169,27 @@ Asian Option (average of 1..12 fixings):
   Average index   = 6.5000
   Strike          = 5.0
   Asian Payoff    = 1.5000
+============================================================
+  Shared Market Objects: Native QL vs. Scripted Engine
+============================================================
+  Native QL Call NPV   = 10.450584
+  Scripted  Call NPV   = 10.450584
+[OK] Both representations produce matching NPVs
+
+  Spot bump 100 -> 110 (via SimpleQuote):
+  Native QL Call NPV   = 17.662954
+  Scripted  Call NPV   = 17.662954
+[OK] Both pricers re-price correctly after spot bump
+============================================================
+  Payoff Script vs. Close Price (time value decomposition)
+============================================================
+  European Call: K=100, r=5%, vol=20%, T=1Y
+    Spot |     Payoff |   Close PV |   Time Val
+  -------+------------+------------+-----------
+    80.0 |     0.0000 |     1.8594 |     1.8594
+    90.0 |     0.0000 |     5.0912 |     5.0912
+   100.0 |     0.0000 |    10.4506 |    10.4506
+   105.0 |     5.0000 |    13.8579 |     8.8579
+   110.0 |    10.0000 |    17.6630 |     7.6630
+   120.0 |    20.0000 |    26.1690 |     6.1690
+   130.0 |    30.0000 |    35.4403 |     5.4403

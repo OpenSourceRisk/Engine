@@ -365,7 +365,161 @@ print(f"  Strike          = 5.0")
 print(f"  Asian Payoff    = {ctx.getScalar('AsianPayoff'):.4f}")
 
 # %% [markdown]
-# ## 9. Full Pricing Workflow Summary
+# ## 9. Shared Market Objects — Native QL vs. Scripted Engine
+#
+# A European call can be represented two ways within the ORE/QL ecosystem:
+#
+# 1. **Native QL instrument** — `VanillaOption` with `AnalyticEuropeanEngine`,
+#    wired to a `BlackScholesProcess` built from QL market term structures.
+# 2. **Scripted trade** — the same Black-Scholes payoff as a script, executed
+#    by `ScriptEngine` with inputs extracted from the **same** QL market objects.
+#
+# Both approaches share one source of market truth. Updating a `SimpleQuote`
+# automatically propagates through QuantLib's observer graph to the native
+# engine; the scripted engine reads the updated values on the next evaluation.
+
+# %%
+# Anchor the global evaluation date so term structures resolve correctly.
+today  = ore.Date(27, ore.May, 2026)
+ore.Settings.instance().evaluationDate = today
+expiry = ore.Date(27, ore.May, 2027)  # 1Y maturity
+
+day_count_ql = ore.Actual365Fixed()
+calendar_ql  = ore.NullCalendar()
+strike_ql    = 100.0
+
+# Shared market objects — single source of truth for both pricers.
+spot_quote = ore.SimpleQuote(100.0)
+rf_flat    = ore.FlatForward(today, 0.05, day_count_ql)
+vol_flat   = ore.BlackConstantVol(today, calendar_ql, 0.20, day_count_ql)
+
+# 1. Native QL: VanillaOption + BlackScholesProcess + AnalyticEuropeanEngine.
+bs_proc = ore.BlackScholesProcess(
+    ore.QuoteHandle(spot_quote),
+    ore.YieldTermStructureHandle(rf_flat),
+    ore.BlackVolTermStructureHandle(vol_flat),
+)
+option_ql = ore.VanillaOption(
+    ore.PlainVanillaPayoff(ore.Option.Call, strike_ql),
+    ore.EuropeanExercise(expiry),
+)
+option_ql.setPricingEngine(ore.AnalyticEuropeanEngine(bs_proc))
+ql_npv = option_ql.NPV()
+
+# 2. Scripted engine — pull market values from the same QL objects.
+T_ql   = day_count_ql.yearFraction(today, expiry)
+S_ql   = spot_quote.value()
+r_ql   = -math.log(rf_flat.discount(expiry)) / T_ql
+sig_ql = vol_flat.blackVol(expiry, strike_ql)
+
+ctx_ql = ore.Context()
+ctx_ql.resetSize(1)
+ctx_ql.setScalar("S",      S_ql)
+ctx_ql.setScalar("K",      strike_ql)
+ctx_ql.setScalar("r",      r_ql)
+ctx_ql.setScalar("sigma",  sig_ql)
+ctx_ql.setScalar("T",      T_ql)
+ctx_ql.setScalar("d1",     0.0)
+ctx_ql.setScalar("d2",     0.0)
+ctx_ql.setScalar("CallPV", 0.0)
+ctx_ql.setScalar("PutPV",  0.0)
+eng_ql = ore.ScriptEngine(parser.ast(), ctx_ql)
+eng_ql.run(BLACK_SCHOLES_SCRIPT)
+scripted_npv = ctx_ql.getScalar("CallPV")
+
+print("=" * 60)
+print("  Shared Market Objects: Native QL vs. Scripted Engine")
+print("=" * 60)
+print(f"  Native QL Call NPV   = {ql_npv:.6f}")
+print(f"  Scripted  Call NPV   = {scripted_npv:.6f}")
+assert abs(ql_npv - scripted_npv) < 1e-4, "NPV mismatch!"
+print("[OK] Both representations produce matching NPVs")
+
+# 3. Spot bump — observe both pricers re-pricing from the same quote.
+spot_quote.setValue(110.0)          # QL observer graph propagates automatically
+ql_bumped = option_ql.NPV()         # native engine re-prices via lazy evaluation
+
+ctx_b = ore.Context()
+ctx_b.resetSize(1)
+ctx_b.setScalar("S",      spot_quote.value())
+ctx_b.setScalar("K",      strike_ql)
+ctx_b.setScalar("r",      r_ql)
+ctx_b.setScalar("sigma",  sig_ql)
+ctx_b.setScalar("T",      T_ql)
+ctx_b.setScalar("d1",     0.0)
+ctx_b.setScalar("d2",     0.0)
+ctx_b.setScalar("CallPV", 0.0)
+ctx_b.setScalar("PutPV",  0.0)
+eng_b = ore.ScriptEngine(parser.ast(), ctx_b)
+eng_b.run(BLACK_SCHOLES_SCRIPT)
+scripted_bumped = ctx_b.getScalar("CallPV")
+
+print()
+print(f"  Spot bump 100 -> 110 (via SimpleQuote):")
+print(f"  Native QL Call NPV   = {ql_bumped:.6f}")
+print(f"  Scripted  Call NPV   = {scripted_bumped:.6f}")
+assert abs(ql_bumped - scripted_bumped) < 1e-4, "NPV mismatch after spot bump!"
+print("[OK] Both pricers re-price correctly after spot bump")
+
+spot_quote.setValue(100.0)
+
+# %% [markdown]
+# ## 10. Payoff Script vs. Close Price
+#
+# A European call can be described at two levels within the scripting framework:
+#
+# 1. **Payoff script** — `Payoff = max(S - K, 0.0)` — evaluates the terminal payoff
+#    at a given spot level. This is *what* the option pays, not *what it is worth today*.
+# 2. **Pricing script** (the Black-Scholes formula in sections 1–3) — evaluates the
+#    *risk-neutral expected payoff*, discounted to today. This is the close price.
+#
+# The difference between the two is the **time value**: the market charges a premium
+# over intrinsic value because the underlying may move favourably before expiry.
+
+# %%
+PAYOFF_SCRIPT = "Payoff = max(S - K, 0.0);"
+parser_payoff = ore.ScriptParser(PAYOFF_SCRIPT)
+assert parser_payoff.success(), f"Parse error: {parser_payoff.error()}"
+
+print("=" * 60)
+print("  Payoff Script vs. Close Price (time value decomposition)")
+print("=" * 60)
+print(f"  European Call: K=100, r=5%, vol=20%, T=1Y")
+print(f"  {'Spot':>6} | {'Payoff':>10} | {'Close PV':>10} | {'Time Val':>10}")
+print(f"  {'-'*6}-+-{'-'*10}-+-{'-'*10}-+-{'-'*10}")
+
+for s_val in [80, 90, 100, 105, 110, 120, 130]:
+    # Terminal payoff at the given spot (deterministic — no discounting)
+    ctx_p = ore.Context()
+    ctx_p.resetSize(1)
+    ctx_p.setScalar("S",      float(s_val))
+    ctx_p.setScalar("K",      100.0)
+    ctx_p.setScalar("Payoff", 0.0)
+    eng_p = ore.ScriptEngine(parser_payoff.ast(), ctx_p)
+    eng_p.run(PAYOFF_SCRIPT)
+    payoff_val = ctx_p.getScalar("Payoff")
+
+    # Close price from the Black-Scholes pricing script (same formula as sections 1–3)
+    ctx_c = ore.Context()
+    ctx_c.resetSize(1)
+    ctx_c.setScalar("S",      float(s_val))
+    ctx_c.setScalar("K",      100.0)
+    ctx_c.setScalar("r",      0.05)
+    ctx_c.setScalar("sigma",  0.20)
+    ctx_c.setScalar("T",      1.0)
+    ctx_c.setScalar("d1",     0.0)
+    ctx_c.setScalar("d2",     0.0)
+    ctx_c.setScalar("CallPV", 0.0)
+    ctx_c.setScalar("PutPV",  0.0)
+    eng_c = ore.ScriptEngine(parser.ast(), ctx_c)
+    eng_c.run(BLACK_SCHOLES_SCRIPT)
+    close_pv = ctx_c.getScalar("CallPV")
+
+    time_val = close_pv - payoff_val
+    print(f"  {s_val:6.1f} | {payoff_val:10.4f} | {close_pv:10.4f} | {time_val:10.4f}")
+
+# %% [markdown]
+# ## 11. Full Pricing Workflow Summary
 #
 # The scripting engine enables a complete pricing workflow from Python:
 #
