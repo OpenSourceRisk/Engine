@@ -42,10 +42,10 @@ public:
     std::set<QuantLib::Date> asofDates() const override;
 
     // add a market datum
-    virtual void add(QuantLib::Date date, const string& name, QuantLib::Real value);
+    virtual void add(QuantLib::Date date, const string& name, QuantLib::Real value, bool overwrite = false);
 
     // add a market datum
-    virtual void add(const QuantLib::ext::shared_ptr<MarketDatum>& md);
+    virtual void add(const QuantLib::ext::shared_ptr<MarketDatum>& md, bool overwrite = false);
 
     // add a fixing
     virtual void addFixing(QuantLib::Date date, const string& name, QuantLib::Real value);
