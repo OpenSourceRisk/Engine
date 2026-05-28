@@ -785,8 +785,13 @@ results. Evaluating the local regression at many points (samples) has a signific
 here to limit the number of evaluations.
 \item {\tt dimLocalRegressionBandwidth:} Nadaraya-Watson local regression bandwidth in standard deviations of the
 independent variable (NPV)
-\item {\tt dimScaling:} Scaling factor applied to all DIM values used, e.g. to reconcile simulated DIM with actual IM at
-$t_0$
+\item {\tt dimScaling:} Optional scaling factor applied to DIM values ({\tt Regression} and
+{\tt DeltaVaR}-family models only; no effect for {\tt SimmAnalytic} or {\tt DynamicIM}).
+When set, this value is used directly for all netting sets and the collateral balance IM is
+ignored. When omitted, the scaling is derived per netting set as
+$\text{IM}_{t_0}^{\text{actual}}/\text{DIM}_{t_0}^{\text{model}}$ from
+{\tt collateralBalancesFile}; the IM must be strictly positive for each netting set or the
+run will abort. Set to {\tt 1.0} to apply no scaling.
 \item {\tt dimEvolutionFile:} Output file name to store the evolution of zero order DIM and average of nth order DIM
 through time
 \item {\tt dimRegressionFiles:} Output file name(s) for a DIM regression snapshot, comma separated list

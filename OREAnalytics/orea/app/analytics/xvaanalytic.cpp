@@ -244,6 +244,7 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
     inputs->loadParameter<string>(dimOutputNettingSet_, "xva", "dimOutputNettingSet", false);
     inputs->loadParameter<Size>(dimLocalRegressionEvaluations_, "xva", "dimLocalRegressionEvaluations", false, parseInteger);
     inputs->loadParameter<Real>(dimLocalRegressionBandwidth_, "xva", "dimLocalRegressionBandwidth", false, parseReal);
+    inputs->loadParameter<Real>(dimScaling_, "xva", "dimScaling", false, parseReal);
     string dimModel;
     inputs->loadParameter<string>(dimModel, "xva", "dimModel", false);
     if (!dimModel.empty()) {
@@ -1210,10 +1211,17 @@ void XvaAnalyticImpl::runPostProcessor() {
     if (!dimCalculator_ && (analytics["mva"] || analytics["dim"])) {
         LOG("dim calculator not set, create one");
 	    std::map<std::string, Real> currentIM;
-        if (xvaVars->collateralBalances_) {
+        Real dimScaling = xvaVars->dimScaling_;
+        if (dimScaling == QuantLib::Null<Real>() && xvaVars->collateralBalances_) {
                 for (auto const& [n, b] : xvaVars->collateralBalances_->collateralBalances()) {
+                Real im = b->initialMargin();
+                QL_REQUIRE(im != QuantLib::Null<Real>() && im > 0.0,
+                           "DIM: collateral balance initial margin for netting set '"
+                               << n.nettingSetId()
+                               << "' is zero or not set. "
+                                  "Provide a valid IM or set dimScaling explicitly in the xva analytic.");
                 currentIM[n.nettingSetId()] =
-                    b->initialMargin() *
+                    im *
                     (b->currency() == baseCurrency
                          ? 1.0
                          : analytic()->market()->fxRate(b->currency() + baseCurrency, marketConfiguration)->value());
@@ -1226,7 +1234,8 @@ void XvaAnalyticImpl::runPostProcessor() {
             dimCalculator_ = QuantLib::ext::make_shared<RegressionDynamicInitialMarginCalculator>(
                 analytic()->portfolio(), cube_, cubeInterpreter_, scenarioData_, dimQuantile,
                 dimHorizonCalendarDays, dimRegressionOrder, dimRegressors, dimLocalRegressionEvaluations,
-                dimLocalRegressionBandwidth, currentIM);
+                dimLocalRegressionBandwidth, currentIM,
+                xvaVars->deterministicInitialMargin_, dimScaling);
         } else if (xvaVars->dimModel_ == "DeltaVaR" ||
 		   xvaVars->dimModel_ == "DeltaGammaNormalVaR" ||
                    xvaVars->dimModel_ == "DeltaGammaVaR") {
@@ -1245,7 +1254,7 @@ void XvaAnalyticImpl::runPostProcessor() {
                 model_, nettingSetCube_, sensitivityStorageManager_, xvaVars->curveSensiGrid_, dimHorizonCalendarDays);
             dimCalculator_ = QuantLib::ext::make_shared<DynamicDeltaVaRCalculator>(
                 analytic()->portfolio(), cube_, cubeInterpreter_, scenarioData_, dimQuantile,
-                dimHorizonCalendarDays, dimHelper, ddvOrder, currentIM);
+                dimHorizonCalendarDays, dimHelper, ddvOrder, currentIM, dimScaling);
         } else if (xvaVars->dimModel_ == "SimmAnalytic") {
             QL_REQUIRE(nettingSetCube_ && sensitivityStorageManager_,
                        "netting set cube or sensitivity storage manager not set - "
