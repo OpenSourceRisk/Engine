@@ -410,7 +410,7 @@ void MultiThreadedStressTest::runStressTest(
                         for (auto const& t : cfCube[index->second][0])
                             baseCf[std::make_pair(t.legNo, t.cashflowNo)] = t;
 
-                        for (Size j = 0; j < nScenariosForThread; ++j) {
+                        for (Size j = jStart; j < nScenariosForThread; ++j) {
                             const std::string& label = scenarioGenerator->scenarios()[j]->label();
 
                             std::map<std::pair<Size, Size>, TradeCashflowReportData> scenCf;
@@ -557,6 +557,22 @@ void MultiThreadedStressTest::runStressTest(
             return x - y;
         };
 
+        // Merge all thread results and sort by tradeId, then scenarioLabel
+        std::vector<CashflowResultData> allCfResults;
+        for (Size i = 0; i < eff_nThreads; ++i) {
+            allCfResults.insert(allCfResults.end(), miniCfResults[i].begin(), miniCfResults[i].end());
+        }
+        std::sort(allCfResults.begin(), allCfResults.end(),
+                  [](const CashflowResultData& a, const CashflowResultData& b) {
+                      if (a.tradeId != b.tradeId)
+                          return a.tradeId < b.tradeId;
+                      if (a.scenarioLabel != b.scenarioLabel)
+                          return a.scenarioLabel < b.scenarioLabel;
+                      if (a.legNo != b.legNo)
+                          return a.legNo < b.legNo;
+                      return a.cashflowNo < b.cashflowNo;
+                  });
+
         cfReport->addColumn("TradeId", std::string());
         cfReport->addColumn("ScenarioLabel", std::string());
         cfReport->addColumn("Type", std::string());
@@ -605,17 +621,6 @@ void MultiThreadedStressTest::runStressTest(
         cfReport->addColumn("EffectiveFloorVolatility_Scen", double(), 6);
         cfReport->addColumn("EffectiveCapVolatility_Base", double(), 6);
         cfReport->addColumn("EffectiveCapVolatility_Scen", double(), 6);
-
-        std::vector<CashflowResultData> allCfResults;
-        for (Size i = 0; i < eff_nThreads; ++i) {
-            allCfResults.insert(allCfResults.end(), miniCfResults[i].begin(), miniCfResults[i].end());
-        }
-        std::sort(allCfResults.begin(), allCfResults.end(),
-                  [](const CashflowResultData& a, const CashflowResultData& b) {
-            if (a.tradeId != b.tradeId)
-                return a.tradeId < b.tradeId;
-            return a.scenarioLabel < b.scenarioLabel;
-        });
 
         for (const auto& cf : allCfResults) {
             cfReport->next();
