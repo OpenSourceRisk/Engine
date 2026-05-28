@@ -1,4 +1,3 @@
-
 """
  Copyright (C) 2019 Quaternion Risk Management Ltd
  All rights reserved.
@@ -141,7 +140,8 @@ class CSVLoaderTest(LoaderTest, unittest.TestCase):
     def setUp(self):
         """ Set-up CSV Loader """
         super(CSVLoaderTest, self).setUp()
-        self.loader = CSVLoader(self.marketfile, self.fixingfile, True)
+        self.loader = CSVLoader(True)
+        self.loader.fromFiles(self.marketfile, self.fixingfile)
         self.marketdata_loader = self.loader.loadQuotes(self.asofDate)
         self.fixingdata_loader = self.loader.loadFixings()
 

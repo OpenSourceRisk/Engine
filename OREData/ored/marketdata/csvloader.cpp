@@ -20,10 +20,10 @@
     \brief Market Datum Loader impl
     \ingroup
 */
-
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
 #include <fstream>
+#include <sstream>
 #include <map>
 #include <ored/marketdata/csvloader.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
@@ -35,60 +35,45 @@ using namespace std;
 namespace ore {
 namespace data {
 
-CSVLoader::CSVLoader(const string& marketFilename, const string& fixingFilename, bool implyTodaysFixings,
-		     Date fixingCutOffDate)
-    : CSVLoader(marketFilename, fixingFilename, "", implyTodaysFixings, fixingCutOffDate) {}
+CSVLoader::CSVLoader(bool implyTodaysFixings, Date fixingCutOffDate)
+    : implyTodaysFixings_(implyTodaysFixings), fixingCutOffDate_(fixingCutOffDate) {}
 
-CSVLoader::CSVLoader(const vector<string>& marketFiles, const vector<string>& fixingFiles, bool implyTodaysFixings, Date fixingCutOffDate)
-    : CSVLoader(marketFiles, fixingFiles, {}, implyTodaysFixings, fixingCutOffDate) {}
+void CSVLoader::fromBuffers(const string& marketData, const string& fixingData) {
+    std::istringstream marketStream(marketData);
+    std::istringstream fixingStream(fixingData);
+    loadStream(marketStream, DataType::Market, "CSV buffer");
+    if (!fixingData.empty())
+        loadStream(fixingStream, DataType::Fixing, "CSV buffer");
+    LOG("CSVLoader complete.");
+}
 
-CSVLoader::CSVLoader(const string& marketFilename, const string& fixingFilename, const string& dividendFilename,
-                     bool implyTodaysFixings, Date fixingCutOffDate)
-    : implyTodaysFixings_(implyTodaysFixings), fixingCutOffDate_(fixingCutOffDate) {
-
-    // load market data
+void CSVLoader::fromFiles(const string& marketFilename, const string& fixingFilename,
+                          const string& dividendFilename) {
     loadFile(marketFilename, DataType::Market);
-    // log
     for (auto it : data_) {
         LOG("CSVLoader loaded " << it.second.size() << " market data points for " << it.first);
     }
-
-    // load fixings
     loadFile(fixingFilename, DataType::Fixing);
     LOG("CSVLoader loaded " << fixings_.size() << " fixings");
-
-    // load dividends
     if (dividendFilename != "") {
         loadFile(dividendFilename, DataType::Dividend);
         LOG("CSVLoader loaded " << dividends_.size() << " dividends");
     }
-
     LOG("CSVLoader complete.");
 }
 
-CSVLoader::CSVLoader(const vector<string>& marketFiles, const vector<string>& fixingFiles,
-                     const vector<string>& dividendFiles, bool implyTodaysFixings,
-		     Date fixingCutOffDate)
-    : implyTodaysFixings_(implyTodaysFixings), fixingCutOffDate_(fixingCutOffDate) {
-
-    for (auto marketFile : marketFiles)
-        // load market data
+void CSVLoader::fromFiles(const vector<string>& marketFiles, const vector<string>& fixingFiles,
+                          const vector<string>& dividendFiles) {
+    for (const auto& marketFile : marketFiles)
         loadFile(marketFile, DataType::Market);
-
-    // log
     for (auto it : data_)
         LOG("CSVLoader loaded " << it.second.size() << " market data points for " << it.first);
-
-    for (auto fixingFile : fixingFiles)
-        // load fixings
+    for (const auto& fixingFile : fixingFiles)
         loadFile(fixingFile, DataType::Fixing);
     LOG("CSVLoader loaded " << fixings_.size() << " fixings");
-
-    for (auto dividendFile : dividendFiles)
-        // load dividends
+    for (const auto& dividendFile : dividendFiles)
         loadFile(dividendFile, DataType::Dividend);
     LOG("CSVLoader loaded " << dividends_.size() << " dividends");
-
     LOG("CSVLoader complete.");
 }
 
@@ -97,18 +82,14 @@ QuantLib::ext::shared_ptr<MarketDatum> makeDummyMarketDatum(const Date& d, const
                                            MarketDatum::InstrumentType::NONE);
 }
 
-void CSVLoader::loadFile(const string& filename, DataType dataType) {
-    LOG("CSVLoader loading from " << filename);
+void CSVLoader::loadStream(std::istream& stream, DataType dataType, const string& source) {
+    LOG("CSVLoader loading from " << source);
 
     Date today = QuantLib::Settings::instance().evaluationDate();
 
-    ifstream file;
-    file.open(filename.c_str());
-    QL_REQUIRE(file.is_open(), "error opening file " << filename);
-
-    while (!file.eof()) {
+    while (!stream.eof()) {
         string line;
-        getline(file, line);
+        getline(stream, line);
         boost::trim(line);
         // skip blank and comment lines
         if (line.size() > 0 && line[0] != '#') {
@@ -155,7 +136,7 @@ void CSVLoader::loadFile(const string& filename, DataType dataType) {
                         } else if (!addFX.first) {
                             DLOG("Skipped MarketDatum " << key << " - dominant FX already present.")
                         }
-						else {
+					else {
                             DLOG("Skipped MarketDatum " << key << " - this is already present.");
                         }
                     }
@@ -190,8 +171,14 @@ void CSVLoader::loadFile(const string& filename, DataType dataType) {
             }
         }
     }
-    file.close();
-    LOG("CSVLoader completed processing " << filename);
+    LOG("CSVLoader completed processing " << source);
+}
+
+void CSVLoader::loadFile(const string& filename, DataType dataType) {
+    std::ifstream file;
+    file.open(filename.c_str());
+    QL_REQUIRE(file.is_open(), "error opening file " << filename);
+    loadStream(file, dataType, filename);
 }
 
 vector<QuantLib::ext::shared_ptr<MarketDatum>> CSVLoader::loadQuotes(const QuantLib::Date& d) const {
