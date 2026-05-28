@@ -360,12 +360,12 @@ std::string getCalibrationDetails(const std::vector<QuantLib::ext::shared_ptr<Bl
         Real valueDiff = (modelValue - marketValue);
         QuantLib::ext::shared_ptr<CpiCapFloorHelper> instr =
             QuantLib::ext::dynamic_pointer_cast<CpiCapFloorHelper>(basket[j]);
-        if (instr != nullptr && parametrization != nullptr) {
+        if (instr != nullptr && parametrization != nullptr && instr->instrument() != nullptr) {
             // report alpha, H at t_expiry^-
             t = inflationYearFraction(
                 parametrization->termStructure()->frequency(), indexIsInterpolated,
                 parametrization->termStructure()->dayCounter(), parametrization->termStructure()->baseDate(),
-                instr->instrument()->payDate() - parametrization->termStructure()->observationLag());
+                instr->instrument()->payDate() - instr->instrument()->observationLag());
             modelAlpha = parametrization->alpha(t - 1.0 / 250.0);
             modelH = parametrization->H(t - 1.0 / 250.0);
         }

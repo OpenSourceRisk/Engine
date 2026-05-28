@@ -548,7 +548,7 @@ Helpers InfJyBuilder::buildYoYSwapBasket(const CalibrationBasket& cb,
     auto calendar = yoyInflationIndex_->fixingCalendar();
     auto dc = Thirty360(Thirty360::BondBasis);
     auto bdc = Following;
-    auto obsLag = yoyTs->observationLag();
+    auto obsLag = market_->yoyInflationObservationLags(data_->index(), configuration_).rbegin()->second;
 
     // Avoid instruments with duplicate expiry times in the loop below
     set<Time, CloseCmp> expiryTimes;

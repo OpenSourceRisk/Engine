@@ -634,7 +634,7 @@ Handle<YoYInflationIndex> TestMarket::makeYoYInflationIndex(string index, vector
     pYoYts->recalculate();
     yoyTS = QuantLib::ext::dynamic_pointer_cast<YoYInflationTermStructure>(pYoYts);
     return Handle<YoYInflationIndex>(QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(
-        parseZeroInflationIndex(index), false, Handle<YoYInflationTermStructure>(pYoYts)));
+        parseZeroInflationIndex(index), Handle<YoYInflationTermStructure>(pYoYts)));
 }
 
 Handle<ZeroInflationTermStructure> TestMarket::flatZeroInflationCurve(Real inflationRate, Rate nominalRate) {

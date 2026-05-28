@@ -76,7 +76,7 @@ public:
         \p extrapolate are ignored.
     */
     [[deprecated("Use the overload without a lag instead")]]
-    QuantLib::Real yoyRate(const QuantLib::Date& d, const QuantLib::Period& obsLag = -1 * QuantLib::Days,
+    QuantLib::Real yoyRate(const QuantLib::Date& d, const QuantLib::Period& obsLag,
                            bool forceLinearInterpolation = false, bool extrapolate = false) const;
 
     QuantLib::Real yoyRate(const QuantLib::Date& d, bool extrapolate = false) const {
