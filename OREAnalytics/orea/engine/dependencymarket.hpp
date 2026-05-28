@@ -110,7 +110,7 @@ public:
     virtual QuantLib::Handle<QuantLib::Quote> cpr(const std::string&, const std::string&) const override;
     virtual QuantLib::Handle<QuantExt::CorrelationTermStructure>
     correlationCurve(const std::string&, const std::string&, const std::string&) const override;
-        std::map<QuantLib::Period, QuantLib::Period>
+    std::map<QuantLib::Period, QuantLib::Period>
     zeroInflationObservationLags(const string& indexName,
                                  const string& configuration = Market::defaultConfiguration) const override;
 

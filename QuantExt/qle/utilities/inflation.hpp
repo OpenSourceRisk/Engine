@@ -31,6 +31,8 @@
 #include <ql/time/period.hpp>
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/models/zeroinflationmodeltermstructure.hpp>
+#include <concepts>
+#include <type_traits>
 
 namespace QuantExt {
 
@@ -57,15 +59,35 @@ QuantLib::Real inflationGrowth(const QuantLib::Handle<QuantLib::ZeroInflationTer
 QuantLib::Real inflationGrowth(const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts,
     QuantLib::Time t);
 
-int simulationLag(const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts);
+template <class T>
+concept TermstructureWithBaseAndReferenceDate = requires(const T ts) {
+    { ts.baseDate() } -> std::convertible_to<QuantLib::Date>;
+    { ts.referenceDate() } -> std::convertible_to<QuantLib::Date>;
+};
 
-int simulationLag(const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationTermStructure>& ts);
+template <TermstructureWithBaseAndReferenceDate T>
+int simulationLag(const QuantLib::ext::shared_ptr<T>& ts) {
+    QL_REQUIRE(ts != nullptr, "simulationLag can not be computed, no curve given");
+    return ts->referenceDate() - ts->baseDate();
+}
 
-double simulationLagTime(const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts,
-                         const std::optional<QuantLib::DayCounter>& dc = std::nullopt);
+template <TermstructureWithBaseAndReferenceDate T>
+int simulationLag(const QuantLib::Handle<T>& ts) {
+    return simulationLag(ts.currentLink());
+}
 
-double simulationLagTime(const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationTermStructure>& ts,
-                         const std::optional<QuantLib::DayCounter>& dc = std::nullopt);
+template <TermstructureWithBaseAndReferenceDate T>
+double simulationLagTime(const QuantLib::ext::shared_ptr<T>& ts,
+                         const std::optional<QuantLib::DayCounter>& dc = std::nullopt) {
+    QL_REQUIRE(ts != nullptr, "simulationLag can not be computed, no curve given");
+    return dc.value_or(ts->dayCounter()).yearFraction(ts->baseDate(), ts->referenceDate());
+}
+
+template <TermstructureWithBaseAndReferenceDate T>
+double simulationLagTime(const QuantLib::Handle<T>& ts,
+                         const std::optional<QuantLib::DayCounter>& dc = std::nullopt) {
+    return simulationLagTime(ts.currentLink(), dc);
+}
 
 /*! Compute a seasonality-adjusted zero rate for a given observation date.
     It takes the time tau between the term structure base date and the observation date as

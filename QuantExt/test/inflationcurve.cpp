@@ -99,7 +99,7 @@ buildZeroInflationCurve(CommonData& cd, bool useLastKnownFixing, const QuantLib:
     Date baseDate =
         QuantExt::ZeroInflation::curveBaseDate(useLastKnownFixing, today, cd.obsLag, index->frequency(), index);
     QuantLib::ext::shared_ptr<ZeroInflationCurve> curve =
-        QuantLib::ext::make_shared<QuantLib::PiecewiseZeroInflationCurve<Linear>>(today, baseDate, cd.obsLag, index->frequency(),
+        QuantLib::ext::make_shared<QuantLib::PiecewiseZeroInflationCurve<Linear>>(today, baseDate, index->frequency(),
                                                                                   dc, helpers, seasonality, 1e-10);
     if (seasonality) {
         curve->setSeasonality(seasonality);
@@ -374,7 +374,7 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolatedCPICurve) {
 
     ext::shared_ptr<QuantExt::PiecewiseCPIInflationCurve<Linear>> pZITS =
         ext::make_shared<QuantExt::PiecewiseCPIInflationCurve<Linear>>(evaluationDate, baseDate, baseCPI,
-                                                                       observationLag, frequency, dc, helpers);
+                                                                       frequency, dc, helpers);
     hz.linkTo(pZITS);
 
     //===========================================================================================

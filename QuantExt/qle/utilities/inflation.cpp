@@ -125,26 +125,6 @@ Real inflationGrowth(const Handle<ZeroInflationTermStructure>& ts, Time t) {
     return inflationGrowth(ts, t, ts->dayCounter());
 }
 
-int simulationLag(const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts) {
-    return simulationLag(ts.currentLink());
-}
-
-int simulationLag(const QuantLib::ext::shared_ptr<ZeroInflationTermStructure>& ts) {
-    QL_REQUIRE(ts != nullptr, "simulationLag can not be computed, no curve given");
-    return ts->referenceDate() - ts->baseDate();
-}
-
-double simulationLagTime(const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts,
-                         const std::optional<QuantLib::DayCounter>& dc) {
-    return simulationLagTime(ts.currentLink(), dc);
-}
-
-double simulationLagTime(const QuantLib::ext::shared_ptr<ZeroInflationTermStructure>& ts,
-                         const std::optional<QuantLib::DayCounter>& dc) {
-    QL_REQUIRE(ts != nullptr, "simulationLag can not be computed, no curve given");
-    return dc.value_or(ts->dayCounter()).yearFraction(ts->baseDate(), ts->referenceDate());
-}
-
 Real continuousSeasonalityAdjustment(const Date& baseDate, const Date& observationDate, Rate unadjustedZeroRate,
                                      Time tau, const QuantLib::ext::shared_ptr<ZeroInflationTermStructure>& ts) {
     if (ts->seasonality() == nullptr) {

@@ -2455,8 +2455,8 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                         Handle<ZeroInflationIndex> inflationIndex = initMarket->zeroInflationIndex(name, configuration);
                         auto observationLegs = initMarket->zeroInflationObservationLags(name, configuration);
-
-
+                        auto obsLag = observationLegs.rbegin()->second; // take the longest lag as the main lag for simulation,
+                        
                         Handle<ZeroInflationTermStructure> inflationTs = inflationIndex->zeroInflationTermStructure();
                         vector<string> keys(parameters->zeroInflationTenors(name).size());
 
@@ -2512,7 +2512,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             tenors.insert(tenors.end(), parameters->zeroInflationTenors(name).begin(),
                                           parameters->zeroInflationTenors(name).end());
                             zeroCurve = QuantLib::ext::make_shared<ZeroInflationCurveObserverMoving<Linear>>(
-                                0, inflationIndex->fixingCalendar(), dc, simLag, *observationLegs.rbegin(),
+                                0, inflationIndex->fixingCalendar(), dc, simLag, obsLag,
                                 inflationTs->frequency(), false, tenors, quotes, inflationTs->seasonality());
                         }
 
@@ -2694,9 +2694,13 @@ ScenarioSimMarket::ScenarioSimMarket(
                             yoyCurve =
                                 QuantLib::ext::make_shared<SpreadedYoYInflationCurve>(yoyInflationTs, yoyCurveTimes, quotes);
                         } else {
+                            int simLag = simulationLag(yoyInflationTs);
+                            vector<Period> tenors(1, 0 * Days);
+                            tenors.insert(tenors.end(), parameters->zeroInflationTenors(name).begin(),
+                                          parameters->zeroInflationTenors(name).end());
                             yoyCurve = QuantLib::ext::make_shared<YoYInflationCurveObserverMoving<Linear>>(
-                                0, yoyInflationIndex->fixingCalendar(), dc, yoyInflationTs->observationLag(),
-                                yoyInflationTs->frequency(), yoyInflationIndex->interpolated(), yoyCurveTimes,
+                                0, yoyInflationIndex->fixingCalendar(), dc, simLag, obsLag,
+                                yoyInflationTs->frequency(), yoyInflationIndex->interpolated(), tenors,
                                 quotes, yoyInflationTs->seasonality());
                         }
                         yoyCurve->setAdjustReferenceDate(false);

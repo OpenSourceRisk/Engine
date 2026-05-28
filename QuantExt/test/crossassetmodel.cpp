@@ -2051,7 +2051,7 @@ struct IrFxInfCrComModelTestData {
         auto seasonalityCurve = QuantLib::ext::make_shared<QuantLib::MultiplicativePriceSeasonality>(baseDate, Monthly, infSeasonalFactors);
 
         infEurTs = Handle<ZeroInflationTermStructure>(
-            QuantLib::ext::make_shared<ZeroInflationCurve>(referenceDate, infDates, infRates, infBaseLag, Monthly, infDc));
+            QuantLib::ext::make_shared<ZeroInflationCurve>(referenceDate, infDates, infRates, Monthly, infDc));
         infEurTs->enableExtrapolation();
         
         if(seasonality){
@@ -2080,7 +2080,7 @@ struct IrFxInfCrComModelTestData {
             singleModels.push_back(QuantLib::ext::make_shared<InfJyParameterization>(realRateParam, indexParam, index));
         }
         infGbpTs = Handle<ZeroInflationTermStructure>(QuantLib::ext::make_shared<ZeroInflationCurve>(referenceDate,
-            infDates, infRates, infBaseLag, Monthly, infDc));
+            infDates, infRates, Monthly, infDc));
         infGbpTs->enableExtrapolation();
         
         if(seasonality){
@@ -2714,7 +2714,6 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
         // GBP zerobond
         gbpzb1(d.modelExact->discountBond(2, T, T2, zgbp1) * fxgbp1 / d.modelExact->numeraire(0, T, zeur1));
         // EUR CPI indexed bond
-        bool indexIsInterpolated = true;
         if (infEurIsDk) {
             std::pair<Real, Real> sinfeur1 = d.modelExact->infdkI(0, T, T2, infeurz1, infeury1);
             infeur1(sinfeur1.first * sinfeur1.second * d.modelExact->discountBond(0, T, T2, zeur1) /
@@ -3083,9 +3082,9 @@ struct IrFxInfCrEqModelTestData {
         infRates.push_back(0.01);
         infRates.push_back(0.01);
         infEurTs = Handle<ZeroInflationTermStructure>(QuantLib::ext::make_shared<ZeroInflationCurve>(
-            referenceDate, infDates, infRates, 3 * Months, Monthly, Actual365Fixed()));
+            referenceDate, infDates, infRates, Monthly, Actual365Fixed()));
         infGbpTs = Handle<ZeroInflationTermStructure>(QuantLib::ext::make_shared<ZeroInflationCurve>(
-            referenceDate, infDates, infRates, 3 * Months, Monthly, Actual365Fixed()));
+            referenceDate, infDates, infRates, Monthly, Actual365Fixed()));
         infEurTs->enableExtrapolation();
         infGbpTs->enableExtrapolation();
         // same for eur and gbp (doesn't matter anyway, since we are
@@ -4390,7 +4389,7 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrCorrelationRecovery) {
     infRates.push_back(0.01);
     infRates.push_back(0.01);
     Handle<ZeroInflationTermStructure> its(QuantLib::ext::make_shared<ZeroInflationCurve>(
-        refDate, infDates, infRates, 3 * Months, Monthly, Actual365Fixed()));
+        refDate, infDates, infRates, Monthly, Actual365Fixed()));
 
     Handle<DefaultProbabilityTermStructure> hts(
         QuantLib::ext::make_shared<FlatHazardRate>(0, NullCalendar(), 0.01, Actual365Fixed()));
@@ -4576,7 +4575,7 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqCorrelationRecovery) {
     infRates.push_back(0.01);
     infRates.push_back(0.01);
     Handle<ZeroInflationTermStructure> its(QuantLib::ext::make_shared<ZeroInflationCurve>(
-        refDate, infDates, infRates, 3 * Months, Monthly, Actual365Fixed()));
+        refDate, infDates, infRates, Monthly, Actual365Fixed()));
 
     Handle<DefaultProbabilityTermStructure> hts(
         QuantLib::ext::make_shared<FlatHazardRate>(0, NullCalendar(), 0.01, Actual365Fixed()));
@@ -4764,7 +4763,7 @@ BOOST_AUTO_TEST_CASE(testCpiCalibrationByAlpha) {
     infRates.push_back(0.0075);
     infRates.push_back(0.0075);
     Handle<ZeroInflationTermStructure> infEurTs(QuantLib::ext::make_shared<ZeroInflationCurve>(
-        refDate, infDates, infRates, 3 * Months, Monthly, Actual365Fixed()));
+        refDate, infDates, infRates, Monthly, Actual365Fixed()));
     infEurTs->enableExtrapolation();
     Handle<ZeroInflationIndex> infIndex(QuantLib::ext::make_shared<EUHICPXT>(infEurTs));
     
@@ -4899,7 +4898,7 @@ BOOST_AUTO_TEST_CASE(testCpiCalibrationByH) {
     infRates.push_back(0.0075);
     infRates.push_back(0.0075);
     Handle<ZeroInflationTermStructure> infEurTs(QuantLib::ext::make_shared<ZeroInflationCurve>(
-        refDate, infDates, infRates, 3 * Months, Monthly, Actual365Fixed()));
+        refDate, infDates, infRates, Monthly, Actual365Fixed()));
     infEurTs->enableExtrapolation();
     Handle<ZeroInflationIndex> infIndex(QuantLib::ext::make_shared<EUHICPXT>(infEurTs));
     infIndex->addFixing(Date(1, April, 2015), 100);
