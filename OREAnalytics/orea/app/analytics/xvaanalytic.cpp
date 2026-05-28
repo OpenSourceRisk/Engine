@@ -47,6 +47,7 @@
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
 #include <orea/app/analytics/correlationanalytic.hpp>
+#include <orea/app/analytics/utilities.hpp>
 
 #include <ored/model/crossassetmodelbuilder.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
@@ -130,6 +131,8 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
     if (!writeCube.empty())
         writeCube_ = true;
     inputs->loadParameter<string>(writeScenarios, "simulation", "scenariodump", false);
+    inputs->loadParameter<vector<QuantExt::RiskFactorKey::KeyType>>(filterRiskKeys_, "simulation", "filterRiskKeys",
+                                                                    false, parseListOfRiskFactorKeyValues);
     if (!writeScenarios.empty())
         writeScenarios_ = true;
     if (!writeCube_)
@@ -633,8 +636,8 @@ void XvaAnalyticImpl::buildScenarioGenerator(const bool continueOnCalibrationErr
     if (xvaVars->writeScenarios_) {
         auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
         analytic()->addReport(LABEL, "scenario", report);
-        scenarioGenerator_ =
-            QuantLib::ext::make_shared<ScenarioWriter>(scenarioGenerator_, report, std::vector<RiskFactorKey>{}, false);
+        scenarioGenerator_ = QuantLib::ext::make_shared<ScenarioWriter>(
+            scenarioGenerator_, report, std::vector<RiskFactorKey>{}, false, 8, xvaVars->filterRiskKeys_);
     }
 }
 

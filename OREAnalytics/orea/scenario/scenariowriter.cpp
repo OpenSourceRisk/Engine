@@ -26,26 +26,27 @@ namespace analytics {
 
 ScenarioWriter::ScenarioWriter(const QuantLib::ext::shared_ptr<ScenarioGenerator>& src, const std::string& filename,
                                const char sep, const string& filemode, const std::vector<RiskFactorKey>& headerKeys,
-                               const bool writeDuplicateDates, const int precision)
+                               const bool writeDuplicateDates, const int precision,
+                               const std::vector<RiskFactorKey::KeyType>& filterKeyTypes)
     : src_(src), fp_(nullptr), i_(0), sep_(sep), headerKeys_(headerKeys), writeDuplicateDates_(writeDuplicateDates),
-      precision_(precision) {
+      precision_(precision), filterKeyTypes_(filterKeyTypes) {
     open(filename, filemode);
 }
 
 ScenarioWriter::ScenarioWriter(const std::string& filename, const char sep, const string& filemode,
                                const std::vector<RiskFactorKey>& headerKeys, const bool writeDuplicateDates,
-                               const int precision)
+                               const int precision, const std::vector<RiskFactorKey::KeyType>& filterKeyTypes)
     : fp_(nullptr), i_(0), sep_(sep), headerKeys_(headerKeys), writeDuplicateDates_(writeDuplicateDates),
-      precision_(precision) {
+      precision_(precision), filterKeyTypes_(filterKeyTypes) {
     open(filename, filemode);
 }
 
 ScenarioWriter::ScenarioWriter(const QuantLib::ext::shared_ptr<ScenarioGenerator>& src,
                                QuantLib::ext::shared_ptr<ore::data::Report> report,
                                const std::vector<RiskFactorKey>& headerKeys, const bool writeDuplicateDates,
-                               const int precision)
+                               const int precision, const std::vector<RiskFactorKey::KeyType>& filterKeyTypes)
     : src_(src), report_(report), fp_(nullptr), i_(0), sep_(','), headerKeys_(headerKeys),
-      writeDuplicateDates_(writeDuplicateDates), precision_(precision) {}
+      writeDuplicateDates_(writeDuplicateDates), precision_(precision), filterKeyTypes_(filterKeyTypes) {}
 
 void ScenarioWriter::open(const std::string& filename, const std::string& filemode) {
     fp_ = fopen(filename.c_str(), filemode.c_str());
@@ -106,6 +107,20 @@ void ScenarioWriter::writeScenario(const QuantLib::ext::shared_ptr<Scenario>& s,
         keysHash_ = s->keysHash();
     }
 
+    if (!filterKeyTypes_.empty()) {
+        for (auto removeKey : filterKeyTypes_) {
+            if (!headerKeys_.empty())
+                std::erase_if(headerKeys_, [removeKey](const RiskFactorKey& k) { return k.keytype == removeKey; });
+            if (!keys_.empty())
+                std::erase_if(keys_, [removeKey](const RiskFactorKey& k) { return k.keytype == removeKey; });
+        }
+        WLOG("Finished filtering out risk factory keys.");
+        if (keys_.empty()){
+            WLOG("No keys left after filtering.");
+            return;
+        }
+    }
+
     if (fp_) {
         if (writeHeader) {
             QL_REQUIRE(keys_.size() > 0, "No keys in scenario");
@@ -131,8 +146,8 @@ void ScenarioWriter::writeScenario(const QuantLib::ext::shared_ptr<Scenario>& s,
             report_->addColumn("Date", string());
             report_->addColumn("Scenario", string());
             report_->addColumn("Numeraire", double(), precision_);
-            for (Size i = 0; i < headerKeys_.size(); i++)
-                report_->addColumn(to_string(headerKeys_[i]), double(), precision_);
+            for (Size i = 0; i < headerKeys_.size(); i++) 
+                 report_->addColumn(to_string(headerKeys_[i]), double(), precision_);   
         }
 
         report_->next();
