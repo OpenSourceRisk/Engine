@@ -168,6 +168,51 @@ class CrifRecord {
     bool isEmpty() const;
     bool isFrtbCurvatureRisk() const;
     CurvatureScenario frtbCurveatureScenario() const;
+
+    // Standard readable/writable fields
+    std::string tradeId;
+    std::string tradeType;
+    ore::data::NettingSetDetails nettingSetDetails;
+    RiskType riskType;
+    std::string qualifier;
+    std::string bucket;
+    std::string label1;
+    std::string label2;
+    QuantLib::Real amount;
+    std::string amountCurrency;
+    QuantLib::Real amountUsd;
+
+    // SA-CCR scalar fields
+    QuantLib::Real saccrEndDate;
+    SaccrRegulation regulation;
+
+    // saccrLabel1/saccrLabel2 are boost::variant — not directly wrappable.
+    // Use the %extend helpers below: saccrLabel1Type(), saccrLabel1AsReal(),
+    // saccrLabel1AsString(), saccrLabel1AsSize(), and the saccrLabel2 equivalents.
+    %extend {
+        // saccrLabel1: boost::variant<Real, string, Size>
+        // Returns which() index: 0 = Real, 1 = string, 2 = Size
+        int saccrLabel1Type() const { return $self->saccrLabel1.which(); }
+        QuantLib::Real saccrLabel1AsReal() const {
+            return boost::get<QuantLib::Real>($self->saccrLabel1);
+        }
+        std::string saccrLabel1AsString() const {
+            return boost::get<std::string>($self->saccrLabel1);
+        }
+        QuantLib::Size saccrLabel1AsSize() const {
+            return boost::get<QuantLib::Size>($self->saccrLabel1);
+        }
+
+        // saccrLabel2: boost::variant<Real, string>
+        // Returns which() index: 0 = Real, 1 = string
+        int saccrLabel2Type() const { return $self->saccrLabel2.which(); }
+        QuantLib::Real saccrLabel2AsReal() const {
+            return boost::get<QuantLib::Real>($self->saccrLabel2);
+        }
+        std::string saccrLabel2AsString() const {
+            return boost::get<std::string>($self->saccrLabel2);
+        }
+    }
 };
 
 class Crif {
