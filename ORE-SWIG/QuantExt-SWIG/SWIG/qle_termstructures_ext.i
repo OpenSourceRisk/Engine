@@ -89,6 +89,19 @@ public:
 };
 }
 
+%shared_ptr(QuantExt::FlatCorrelation)
+namespace QuantExt {
+class FlatCorrelation : public QuantExt::CorrelationTermStructure {
+public:
+    FlatCorrelation(const Date& referenceDate, const Handle<Quote>& correlation, const DayCounter&);
+    FlatCorrelation(const Date& referenceDate, Real correlation, const DayCounter&);
+    FlatCorrelation(Natural settlementDays, const Calendar& calendar, const Handle<Quote>& correlation,
+                    const DayCounter&);
+    FlatCorrelation(Natural settlementDays, const Calendar& calendar, Real correlation, const DayCounter&);
+    const Handle<Quote>& quote() const;
+};
+}
+
 %shared_ptr(QuantExt::CorrelationValue)
 namespace QuantExt {
 class CorrelationValue : public Quote {
