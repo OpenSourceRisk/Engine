@@ -164,6 +164,11 @@ void StressScenarioGenerator::addFxShifts(StressTestScenarioData::StressTestData
         Real size = data.shiftSize;
 
         RiskFactorKey key(RiskFactorKey::KeyType::FXSpot, ccypair);
+        // Check if base scenario contains the FX rate
+        if (!scenario->has(key)) {
+            WLOG("Skipping FX shift for " << ccypair << " - key not in base scenario");
+            continue;
+        }
         Real rate = scenario->get(key);
         Real newRate;
         if (type == ShiftType::EqualTo)
@@ -193,6 +198,11 @@ void StressScenarioGenerator::addEquityShifts(StressTestScenarioData::StressTest
         Real size = data.shiftSize;
 
         RiskFactorKey key(RiskFactorKey::KeyType::EquitySpot, equity);
+        // Check if base scenario contains the Equity rate
+        if (!baseScenarioAbsolute_->has(key)) {
+            WLOG("Skipping Equity shift for " << equity << " - key not in base scenario");
+            continue;
+        }
         Real rate = baseScenarioAbsolute_->get(key);
         Real newRate;
         if (type == ShiftType::EqualTo)
@@ -238,6 +248,11 @@ void StressScenarioGenerator::addCommodityCurveShifts(StressTestScenarioData::St
             Date d = asof + simMarketData_->commodityCurveTenors(commodity)[j];
             times[j] = dc.yearFraction(asof, d);
             RiskFactorKey key(RiskFactorKey::KeyType::CommodityCurve, commodity, j);
+            // Check if base scenario contains the Commodity rate
+            if (!baseScenarioAbsolute_->has(key)) {
+                WLOG("Skipping Commodity shift for " << commodity << " - key not in base scenario");
+                continue;
+            }
             basePrices[j] = baseScenarioAbsolute_->get(key);
         }
 
@@ -288,6 +303,13 @@ void StressScenarioGenerator::addDiscountCurveShifts(StressTestScenarioData::Str
     for (auto d : data) {
         string ccy = d.first;
         TLOG("Apply stress scenario to discount curve " << ccy);
+
+        // Check if base scenario contains the discount curve
+        RiskFactorKey checkKey(RiskFactorKey::KeyType::DiscountCurve, ccy, 0);
+        if (!baseScenarioAbsolute_->has(checkKey)) {
+            WLOG("Skipping discount curve shift for " << ccy << " - key not in base scenario");
+            continue;
+        }
 
         Size n_ten = simMarketData_->yieldCurveTenors(ccy).size();
         // original curves' buffer
@@ -448,6 +470,13 @@ void StressScenarioGenerator::addIndexCurveShifts(StressTestScenarioData::Stress
         string indexName = d.first;
         TLOG("Apply stress scenario to index curve " << indexName);
 
+        // Check if base scenario contains the yield curve
+        RiskFactorKey checkKey(RiskFactorKey::KeyType::IndexCurve, indexName, 0);
+        if (!baseScenarioAbsolute_->has(checkKey)) {
+            WLOG("Skipping index curve shift for " << indexName << " - key not in base scenario");
+            continue;
+        }
+
         Size n_ten = simMarketData_->yieldCurveTenors(indexName).size();
 
         // original curves' buffer
@@ -526,6 +555,13 @@ void StressScenarioGenerator::addYieldCurveShifts(StressTestScenarioData::Stress
     for (auto d : data) {
         string name = d.first;
         TLOG("Apply stress scenario to yield curve " << name);
+
+        // Check if base scenario contains the yield curve
+        RiskFactorKey checkKey(RiskFactorKey::KeyType::YieldCurve, name, 0);
+        if (!baseScenarioAbsolute_->has(checkKey)) {
+            WLOG("Skipping yield curve shift for " << name << " - key not in base scenario");
+            continue;
+        }
 
         Size n_ten = simMarketData_->yieldCurveTenors(name).size();
 
