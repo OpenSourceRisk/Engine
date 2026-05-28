@@ -2015,10 +2015,7 @@ void ParSensitivityInstrumentBuilder::makeYoYCapFloor(ParSensitivityInstrumentBu
         QuantLib::ext::make_shared<YoYInflationCapFloor>(type, yoyLeg, std::vector<Real>(yoyLeg.size(), strike));
     helper->setPricingEngine(engine);
 
-    instruments.parYoYCaps_[key] = helper;
-    instruments.parYoYCapsYts_[key] = discountCurve;
-    instruments.parYoYCapsIndex_[key] = Handle<YoYInflationIndex>(index);
-    instruments.parYoYCapsVts_[key] = ovs;
+    instruments.parYoYCaps_[key] = {helper, discountCurve, ovs, Handle<YoYInflationIndex>(index), conv->observationLag()};
 }
 
 } // namespace analytics
