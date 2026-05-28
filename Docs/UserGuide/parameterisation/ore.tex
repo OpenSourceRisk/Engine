@@ -343,6 +343,7 @@ as well as American Monte Carlo (AMC), see below. The setup in \ref{lst:ore_simu
     <Parameter name="cubeFile">cube.csv.gz</Parameter>
     <Parameter name="nettingSetCubeFile">nettingSetCube.csv.gz</Parameter>
     <Parameter name="scenariodump">scenariodump.csv</Parameter>
+    <Parameter name="filterRiskKeys">DiscountCurve</Parameter>
     <Parameter name="aggregationScenarioDataFileName">scenariodata.csv.gz</Parameter>
     <Parameter name="storeFlows">Y</Parameter>
     <Parameter name="cptyCubeFile">cptyCube.csv.gz</Parameter>
@@ -361,6 +362,7 @@ today (specified in section Setup).  Key base currency determines into which cur
 writing the (trade-level) cube and nettingSetCube files.
 The scenario dump file name, if provided here, causes ORE to export full ``raw'' market scenarios for later inspection/use,
 i.e. discount factors for yield curves.
+The 'filter risk keys' is an optional parameter that filters out the given risk factor key types from the outputted scenriodump file.
 The aggregationScenarioData file name, if provided here, causes ORE to write furthermore selected market data (simulated
 FX rates and index fixings, which might be needed in the XVA postprocessor for Variation Margin calculations) to a zipped csv.
 The selection is specified in the simulation config file, see AggregationScenarioDataCurrencies, AggregationScenarioDataIndices),
