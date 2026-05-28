@@ -105,6 +105,9 @@ class SaCcrAnalytic : public ore::analytics::Analytic {
                 inputs, QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>());
         }
     }
+
+    const QuantLib::ext::shared_ptr<ore::analytics::SaccrCalculator> saccrCalculator() const;
+    const QuantLib::ext::shared_ptr<ore::analytics::SaccrTradeData> saccrTradeData() const;
 };
 }
 }
