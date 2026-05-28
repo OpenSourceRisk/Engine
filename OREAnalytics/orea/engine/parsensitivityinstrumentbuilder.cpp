@@ -1831,7 +1831,7 @@ QuantLib::ext::shared_ptr<Instrument> ParSensitivityInstrumentBuilder::makeZeroI
     Date end = start + term;
     QuantLib::ext::shared_ptr<ZeroCouponInflationSwap> helper(new ZeroCouponInflationSwap(
         ZeroCouponInflationSwap::Payer, 1.0, start, end, conv->infCalendar(), conv->infConvention(), conv->dayCounter(),
-        0.0, index, conv->observationLag(), CPI::AsIndex));
+        0.0, index, conv->observationLag(), conv->interpolated() ? CPI::Linear : CPI::Flat));
 
     if (market != nullptr) {
         QuantLib::ext::shared_ptr<PricingEngine> swapEngine =
