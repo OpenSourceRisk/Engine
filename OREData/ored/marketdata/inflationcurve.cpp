@@ -72,6 +72,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
             results = buildZeroInflationCurve(asof, loader, conventions, config, nominalTs, seasonality);
             curve_ = results.curve;
             zcIndex = results.index;
+            observationLags_ = results.observationLags;
             // Force bootstrapping, throw errors now and not later
             auto zr =
                     QuantLib::ext::static_pointer_cast<QuantLib::PiecewiseZeroInflationCurve<Linear>>(curve_)->zeroRate(
@@ -89,6 +90,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
             results =
                 buildYoYInflationCurve(asof, loader, conventions, config, nominalTs, seasonality, derive_yoy_from_zc, zeroInflCurve_);
             curve_ = results.curve;
+            observationLags_ = results.observationLags;
             // Force bootstrapping, throw errors now and not later
             auto yoyRate = QuantLib::ext::static_pointer_cast<PiecewiseYoYInflationCurve<Linear>>(curve_)->yoyRate(QL_EPSILON);
             DLOG("YoY rate at base date " << curve_->baseDate() << " is " << yoyRate);
@@ -366,25 +368,26 @@ InflationCurve::CurveBuildResults
                            const QuantLib::ext::shared_ptr<InflationTermStructure>& zcCurve) const {
     CurveBuildResults results;
     std::vector<QuantLib::ext::shared_ptr<QuantExt::YoYInflationTraits::helper>> helpers;
-    
     // Shall we allow different indices in the segments? 
     // For now we require all segments to use the same index.
     QuantLib::ext::shared_ptr<ZeroInflationIndex> zcIndex;
     QuantLib::ext::shared_ptr<YoYInflationIndex> index;
     QuantLib::Period obsLagFromSegment = 0 * Days;
     for (const auto& segment : config->segments()) {
+        LOG("Building segment with " << segment.quotes().size() << " quotes");
         auto convention =
             QuantLib::ext::dynamic_pointer_cast<InflationSwapConvention>(conventions->get(segment.convention()));
         QL_REQUIRE(convention, "InflationSwap Conventions for " << segment.convention() << " not found.");
         auto p = getStartAndLag(asof, *convention);
         Date swapStart = p.first;
+        LOG("Segment swap start " << swapStart << " with observation lag " << p.second);
         if (p.second != 0 * Days) {
             // keep the largest lag across all segments for the curve as observation lag,
             // only relevant if we have multiple segments and publication rules given, otherwise we use lag
             // from the curve config
             obsLagFromSegment = obsLagFromSegment == 0 * Days ? p.second : std::max(obsLagFromSegment, p.second);
-            results.observationLags[convention->observationLag()] = convention->observationLag();
         }
+        results.observationLags[convention->observationLag()] = convention->observationLag();
         QL_REQUIRE(zcIndex == nullptr || zcIndex == convention->index(),
                    "all segments must use the same zero inflation index");
         zcIndex = convention->index();

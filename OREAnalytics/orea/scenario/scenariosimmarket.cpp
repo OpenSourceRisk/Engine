@@ -2450,11 +2450,10 @@ ScenarioSimMarket::ScenarioSimMarket(
                 for (const auto& name : param.second.second) {
                     bool simDataWritten = false;
                     try {
-                        DLOG("building " << name << " zero inflation curve");
-
-
                         Handle<ZeroInflationIndex> inflationIndex = initMarket->zeroInflationIndex(name, configuration);
                         auto observationLegs = initMarket->zeroInflationObservationLags(name, configuration);
+                        QL_REQUIRE(!observationLegs.empty(),
+                                   "Zero inflation index " << name << " has no observation legs defined");
                         auto obsLag = observationLegs.rbegin()->second; // take the longest lag as the main lag for simulation,
                         
                         Handle<ZeroInflationTermStructure> inflationTs = inflationIndex->zeroInflationTermStructure();
@@ -2470,9 +2469,11 @@ ScenarioSimMarket::ScenarioSimMarket(
                                    "zero inflation tenors must not be empty");
                         QL_REQUIRE(parameters->zeroInflationTenors(name).front() > 0 * Days,
                                    "zero inflation tenors must not include t=0");
-
+                        DLOG("ScenarioSimMarket building zero inflation curve for " << name << " with base date " << date0
+                                                                           << " and obs lag " << obsLag);
                         for (auto& tenor : parameters->zeroInflationTenors(name)) {
-                            Date inflDate = inflationPeriod(date0 + tenor, inflationTs->frequency()).first;
+                            Date inflDate = inflationPeriod(asof_ + tenor - obsLag, inflationTs->frequency()).first;
+                            DLOG("ScenarioSimMarket zero inflation curve " << name << " inflation date: " << inflDate);
                             zeroCurveTimes.push_back(dc.yearFraction(asof_, inflDate));
                         }
 
@@ -2646,7 +2647,10 @@ ScenarioSimMarket::ScenarioSimMarket(
                         Handle<YoYInflationTermStructure> yoyInflationTs =
                             yoyInflationIndex->yoyInflationTermStructure();
                         vector<string> keys(parameters->yoyInflationTenors(name).size());
-                        auto obsLag = initMarket->yoyInflationObservationLags(name, configuration).rbegin()->second;
+                        auto observationLegs = initMarket->yoyInflationObservationLags(name, configuration);
+                        QL_REQUIRE(!observationLegs.empty(), "YoY inflation index " << name << " has no observation legs defined");
+                        auto obsLag = observationLegs.rbegin()->second;
+                        
                         Date date0 = asof_ - obsLag;
                         DayCounter dc = yoyInflationTs->dayCounter();
                         vector<Date> quoteDates;
