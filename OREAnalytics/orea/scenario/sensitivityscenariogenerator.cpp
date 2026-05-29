@@ -30,7 +30,6 @@
 
 #include <algorithm>
 #include <ostream>
-#include <string_view>
 
 using namespace QuantLib;
 using namespace QuantExt;
