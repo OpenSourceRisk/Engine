@@ -191,6 +191,15 @@ bool createSabrAdapter(RelinkableHandle<OptionletVolatilityStructure> hCapletVol
     return false;
 }
 
+// Helper function to sort and check uniqueness. Can be used below with strikes or expiries for example.
+template <class T, class Equal = std::equal_to<T>>
+void sortCheckUnique(vector<T>& values, const std::string& msgPrefix, const std::string& name, Equal eq = Equal()) {
+    QL_REQUIRE(!values.empty(), msgPrefix << " for " << name << " should have at least one element.");
+    std::sort(values.begin(), values.end());
+    auto it = std::unique(values.begin(), values.end(), eq);
+    QL_REQUIRE(it == values.end(), msgPrefix << " for " << name << " should be unique.");
+}
+
 } // namespace
 
 namespace ore {
@@ -381,6 +390,15 @@ ScenarioSimMarket::ScenarioSimMarket(
     LOG("building ScenarioSimMarket...");
     asof_ = initMarket->asofDate();
     DLOG("AsOf " << QuantLib::io::iso_date(asof_));
+
+    // Create the build context in case we want to move logic out of the case statements e.g. createBondFutureVol.
+    BuildContext bc {
+        initMarket,
+        configuration,
+        curveConfigs,
+        todaysMarketParams,
+        continueOnError
+    };
 
     // check ssm parameters
     QL_REQUIRE(parameters_->interpolation() == "LogLinear" || parameters_->interpolation() == "LinearZero",
@@ -3138,6 +3156,18 @@ ScenarioSimMarket::ScenarioSimMarket(
                 }
                 break;
 
+            case RiskFactorKey::KeyType::BondFutureVolatility:
+                for (const auto& name : param.second.second) {
+                    bool simDataWritten = false;
+                    try {
+                        createBondFutureVol(param.first, name, param.second.first, simDataWritten, bc);
+                    } catch (const std::exception& e) {
+                        processException(e, name, param.first, simDataWritten);
+                        gotException = true;
+                    }
+                }
+                break;
+
             case RiskFactorKey::KeyType::Correlation:
                 for (const auto& name : param.second.second) {
                     bool simDataWritten = false;
@@ -3908,6 +3938,107 @@ void ScenarioSimMarket::applyCurveAlgebraCommodityPriceCurve(
         QL_FAIL("ScenarioSimMarket::applyCurveAlgebraSpreadedRateCurve(): target curve could not be cast to one of the "
                 "supported curve types. Internal error, contact dev.");
     }
+}
+
+void ScenarioSimMarket::createBondFutureVol(RiskFactorKey::KeyType rfKeyType, const string& name, bool simulate,
+    bool& simDataWritten, const BuildContext& bc) {
+
+    DLOG("ScenarioSimMarket: building bond future volatility for " << name);
+
+    // Containers used below.
+    map<RiskFactorKey, ext::shared_ptr<SimpleQuote>> simDataTmp;
+    map<RiskFactorKey, Real> absoluteSimDataTmp;
+
+    // We only support an expiry x absolute strike surface here as the implementation was done for CRIF.
+
+    // The new volatility strucuture to be populated.
+    Handle<BlackVolTermStructure> newVol;
+
+    // Get initial base volatility structure
+    Handle<BlackVolTermStructure> baseVol = bc.initMarket->bondFutureVol(name, bc.configuration);
+    bool stickyStrike = parameters_->commodityVolSmileDynamics(name) == "StickyStrike";
+
+    if (simulate) {
+        DLOG("ScenarioSimMarket: simulating bond future volatilities for " << name << " with smile dynamics " <<
+            parameters_->commodityVolSmileDynamics(name));
+        vector<Real> moneyness = parameters_->bondFutureVolMoneyness(name);
+        sortCheckUnique(moneyness, "Bond future volatility moneyness ", name,
+            [](Real x, Real y) { return close(x, y); });
+        vector<Period> expiries = parameters_->bondFutureVolExpiries(name);
+        sortCheckUnique(expiries, "Bond future volatility expiries ", name);
+
+        // Populate expiry times for the new volatility surface below.
+        vector<Time> expiryTimes(expiries.size());
+        vector<Date> expiryDates(expiries.size());
+        DayCounter dayCounter = baseVol->dayCounter();
+        for (Size j = 0; j < expiries.size(); ++j) {
+            Date d = asof_ + expiries[j];
+            expiryDates[j] = d;
+            expiryTimes[j] = dayCounter.yearFraction(asof_, d);
+        }
+
+        // We set up spot moneyness below. For now, just set the spot, which we take as the future price, to 1.0. The 
+        // moneyness will then just be the absolute strike. May change it later to use the actual future price.
+        Real spotPrice = 1.0;
+        Handle<Quote> spot(ext::make_shared<SimpleQuote>(spotPrice));
+
+        // Populate the quotes for the new surface.
+        using QuoteRow = vector<Handle<Quote>>;
+        using QuoteMatrix = vector<QuoteRow>;
+        QuoteMatrix quotes(moneyness.size(), QuoteRow(expiries.size()));
+        Size index = 0;
+        for (Size i = 0; i < moneyness.size(); ++i) {
+            for (Size j = 0; j < expiries.size(); ++j) {
+                Real strike = moneyness[i] * spotPrice;
+                auto vol = baseVol->blackVol(expiryDates[j], strike);
+                Real quoteValue = useSpreadedTermStructures_ ? 0.0 : vol;
+                auto quote = ext::make_shared<SimpleQuote>(quoteValue);
+                simDataTmp.emplace(RiskFactorKey{rfKeyType, name, index}, quote);
+                if (useSpreadedTermStructures_) {
+                    absoluteSimDataTmp.emplace(RiskFactorKey{rfKeyType, name, index}, vol);
+                }
+                quotes[i][j] = Handle<Quote>(quote);
+                ++index;
+            }
+        }
+
+        // Write the simulation data and update the flag.
+        writeSimData(simDataTmp, absoluteSimDataTmp, rfKeyType, name, { moneyness, expiryTimes });
+        simDataWritten = true;
+
+        // Create the new volatility surface.
+        bool flatExtrapMoneyness = true;
+        if (useSpreadedTermStructures_) {
+            Handle<YieldTermStructure> emptyYts;
+            auto volPtr = QuantLib::ext::make_shared<SpreadedBlackVolatilitySurfaceMoneynessSpot>(
+                Handle<BlackVolTermStructure>(baseVol), spot, expiryTimes, moneyness, quotes, spot, emptyYts,
+                emptyYts, emptyYts, emptyYts, stickyStrike);
+            newVol = Handle<BlackVolTermStructure>(volPtr);
+        } else {
+            auto volPtr = QuantLib::ext::make_shared<BlackVarianceSurfaceMoneynessSpot>(
+                baseVol->calendar(), spot, expiryTimes, moneyness, quotes, dayCounter, stickyStrike,
+                flatExtrapMoneyness, BlackVolTimeExtrapolation::FlatVolatility, baseVol->volType(), baseVol->shift());
+            newVol = Handle<BlackVolTermStructure>(volPtr);
+        }
+
+    } else {
+        // This is a straight copy from other volatility structures. It will likely never be used for bond future 
+        // volatilities but if it is needed, it will need to be reviewed.
+        string decayModeString = parameters_->commodityVolDecayMode();
+        DLOG("ScenarioSimMarket: deterministic bond future volatilities with decay mode " <<
+            decayModeString << " for " << name);
+        ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
+        auto stickyness = stickyStrike ? StickyStrike : StickyLogMoneyness;
+        auto volPtr = QuantLib::ext::make_shared<QuantExt::DynamicBlackVolTermStructure<tag::curve>>(
+            baseVol, 0, NullCalendar(), decayMode, stickyness);
+        newVol = Handle<BlackVolTermStructure>(volPtr);
+    }
+
+    newVol->setAdjustReferenceDate(false);
+    newVol->enableExtrapolation(baseVol->allowsExtrapolation());
+    bondFutureVols_.emplace(std::pair{Market::defaultConfiguration, name}, newVol);
+
+    DLOG("ScenarioSimMarket: bond future volatility built for " << name);
 }
 
 } // namespace analytics

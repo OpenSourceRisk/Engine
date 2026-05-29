@@ -157,6 +157,11 @@ public:
                                                                           const std::string&) const override {
         return QuantLib::Handle<QuantExt::CorrelationTermStructure>();
     }
+
+    QuantLib::Handle<QuantLib::BlackVolTermStructure> bondFutureVol(const std::string& contractName,
+        const std::string& configuration) const override {
+        return QuantLib::Handle<QuantLib::BlackVolTermStructure>();
+    }
 };
 
 } // namespace data

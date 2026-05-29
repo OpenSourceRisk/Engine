@@ -122,6 +122,7 @@ void ScenarioSimMarketParameters::setDefaults() {
     setSecuritySpreadsSimulate(false);
     setSimulateFxSpots(true);
     setSimulateCorrelations(false);
+    setBondFutureVolSimulate(false);
 
     // set default smile dynamics
     setSwapVolSmileDynamics("", "StickyStrike");
@@ -133,6 +134,7 @@ void ScenarioSimMarketParameters::setDefaults() {
     setFxVolSmileDynamics("", "StickyStrike");
     setEquityVolSmileDynamics("", "StickyStrike");
     setCommodityVolSmileDynamics("", "StickyStrike");
+    setBondFutureVolSmileDynamics("", "StickyStrike");
 
     // Set default tenors
     defaultTenors_[""] = vector<Period>();
@@ -149,6 +151,7 @@ void ScenarioSimMarketParameters::setDefaults() {
     setSimulateCommodityVolATMOnly(false);
     setSimulateSwapVolATMOnly(false);
     setSimulateCdsVolsATMOnly(false);
+    setSimulateBondFutureVolATMOnly(false);
     // Default interpolation for yield curves
     interpolation_ = "LogLinear";
     extrapolation_ = "FlatFwd";
@@ -220,6 +223,10 @@ const string& ScenarioSimMarketParameters::commodityVolSmileDynamics(const strin
     return lookup(commodityVolSmileDynamics_, key);
 }
 
+const string& ScenarioSimMarketParameters::bondFutureVolSmileDynamics(const string& key) const {
+    return lookup(bondFutureVolSmileDynamics_, key);
+}
+
 const vector<Period>& ScenarioSimMarketParameters::swapVolTerms(const string& key) const {
     return lookup(swapVolTerms_, key);
 }
@@ -268,6 +275,10 @@ const vector<Period>& ScenarioSimMarketParameters::commodityVolExpiries(const st
     return lookup(commodityVolExpiries_, commodityName);
 }
 
+const vector<Period>& ScenarioSimMarketParameters::bondFutureVolExpiries(const string& contractName) const {
+    return lookup(bondFutureVolExpiries_, contractName);
+}
+
 const vector<Real>& ScenarioSimMarketParameters::fxVolMoneyness(const string& ccypair) const {
     return lookup(fxMoneyness_, ccypair);
 }
@@ -295,6 +306,14 @@ const vector<Real>& ScenarioSimMarketParameters::commodityVolMoneyness(const str
         return commodityVolMoneyness_.at(commodityName);
     } else {
         QL_FAIL("no moneyness for commodity \"" << commodityName << "\" found.");
+    }
+}
+
+const vector<Real>& ScenarioSimMarketParameters::bondFutureVolMoneyness(const string& contractName) const {
+    if (bondFutureVolMoneyness_.count(contractName) > 0) {
+        return bondFutureVolMoneyness_.at(contractName);
+    } else {
+        QL_FAIL("no strikes for bond future \"" << contractName << "\" found.");
     }
 }
 
@@ -332,6 +351,10 @@ void ScenarioSimMarketParameters::setFxVolSmileDynamics(const string& key, const
 }
 void ScenarioSimMarketParameters::setCommodityVolSmileDynamics(const string& key, const string& smileDynamics) {
     commodityVolSmileDynamics_[key] = smileDynamics;
+}
+
+void ScenarioSimMarketParameters::setBondFutureVolSmileDynamics(const string& key, const string& smileDynamics) {
+    bondFutureVolSmileDynamics_[key] = smileDynamics;
 }
 
 void ScenarioSimMarketParameters::setSwapVolTerms(const string& key, const vector<Period>& p) {
@@ -518,6 +541,10 @@ void ScenarioSimMarketParameters::setCommodityVolNames(vector<string> names) {
     addParamsName(RiskFactorKey::KeyType::CommodityVolatility, names);
 }
 
+void ScenarioSimMarketParameters::setBondFutureVolNames(vector<string> names) {
+    addParamsName(RiskFactorKey::KeyType::BondFutureVolatility, names);
+}
+
 void ScenarioSimMarketParameters::setCommodityCurves(vector<string> names) {
     addParamsName(RiskFactorKey::KeyType::CommodityCurve, names);
 }
@@ -610,6 +637,10 @@ void ScenarioSimMarketParameters::setSimulateCprs(bool simulate) {
     setParamsSimulate(RiskFactorKey::KeyType::CPR, simulate);
 }
 
+void ScenarioSimMarketParameters::setBondFutureVolSimulate(bool simulate) {
+    setParamsSimulate(RiskFactorKey::KeyType::BondFutureVolatility, simulate);
+}
+
 void ScenarioSimMarketParameters::setEquityVolIsSurface(const string& name, bool isSurface) {
     equityVolIsSurface_[name] = isSurface;
 }
@@ -683,6 +714,10 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
         commodityCurveTenors_ != rhs.commodityCurveTenors_ || commodityVolDecayMode_ != rhs.commodityVolDecayMode_ ||
         commodityVolExpiries_ != rhs.commodityVolExpiries_ || commodityVolMoneyness_ != rhs.commodityVolMoneyness_ ||
         commodityVolSimulateATMOnly_ != rhs.commodityVolSimulateATMOnly_ ||
+        bondFutureVolSmileDynamics_ != rhs.bondFutureVolSmileDynamics_ ||
+        bondFutureVolExpiries_ != rhs.bondFutureVolExpiries_ ||
+        bondFutureVolMoneyness_ != rhs.bondFutureVolMoneyness_ ||
+        bondFutureVolSimulateATMOnly_ != rhs.bondFutureVolSimulateATMOnly_ ||
         correlationIsSurface_ != rhs.correlationIsSurface_ || correlationExpiries_ != rhs.correlationExpiries_ ||
         correlationStrikes_ != rhs.correlationStrikes_ || cprSimulate_ != rhs.cprSimulate_ || cprs_ != rhs.cprs_ || conversionFactors_ != rhs.conversionFactors_ ||
         yieldVolTerms_ != rhs.yieldVolTerms_ || yieldVolExpiries_ != rhs.yieldVolExpiries_ ||
@@ -1529,6 +1564,39 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         }
     }
 
+    DLOG("Loading bond future volatility data");
+    nodeChild = XMLUtils::getChildNode(node, "BondFutureVolatilities");
+    if (nodeChild && XMLUtils::getChildNode(nodeChild)) {
+        setBondFutureVolSimulate(XMLUtils::getChildValueAsBool(nodeChild, "Simulate", true));
+        bondFutureVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
+
+        vector<string> names;
+        if (XMLNode* namesNode = XMLUtils::getChildNode(nodeChild, "Names")) {
+            for (XMLNode* child = XMLUtils::getChildNode(namesNode, "Name"); child;
+                 child = XMLUtils::getNextSibling(child)) {
+                // Get the vol configuration for each bond future name
+                string name = XMLUtils::getAttribute(child, "id");
+                names.push_back(name);
+                bondFutureVolExpiries_[name] = XMLUtils::getChildrenValuesAsPeriods(child, "Expiries", true);
+                vector<Real> moneyness = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Moneyness", false);
+                if (moneyness.empty())
+                    moneyness = { 1.0 };
+                bondFutureVolMoneyness_[name] = moneyness;
+            }
+        }
+        setBondFutureVolNames(names);
+        // Get smile dynamics
+        vector<XMLNode*> smileDynamicsNodes = XMLUtils::getChildrenNodes(nodeChild, "SmileDynamics");
+        for (XMLNode* smileDynamicsNode : smileDynamicsNodes) {
+            string key = XMLUtils::getAttribute(smileDynamicsNode, "key");
+            bondFutureVolSmileDynamics_.insert(make_pair(key, XMLUtils::getNodeValue(smileDynamicsNode)));
+        }
+        XMLNode* atmOnlyNode = XMLUtils::getChildNode(nodeChild, "SimulateATMOnly");
+        if (atmOnlyNode) {
+            bondFutureVolSimulateATMOnly_ = XMLUtils::getChildValueAsBool(nodeChild, "SimulateATMOnly", true);
+        }
+    }
+
     DLOG("Loading credit states data");
     nodeChild = XMLUtils::getChildNode(node, "CreditStates");
     numberOfCreditStates_ = 0;
@@ -1946,6 +2014,28 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) const {
         }
         if (commodityVolSimulateATMOnly_) {
             XMLUtils::addChild(doc, commodityVolatilitiesNode, "SimulateATMOnly", commodityVolSimulateATMOnly_);
+        }
+    }
+
+    // Bond future volatilities
+    if (!bondFutureVolNames().empty()) {
+        DLOG("Writing bond future volatilities");
+        XMLNode* bondFutureVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "BondFutureVolatilities");
+        XMLUtils::addChild(doc, bondFutureVolatilitiesNode, "Simulate", bondFutureVolSimulate());
+        XMLUtils::addChild(doc, bondFutureVolatilitiesNode, "ReactionToTimeDecay", bondFutureVolDecayMode_);
+        XMLNode* namesNode = XMLUtils::addChild(doc, bondFutureVolatilitiesNode, "Names");
+        for (const auto& name : bondFutureVolNames()) {
+            XMLNode* nameNode = doc.allocNode("Name");
+            XMLUtils::addAttribute(doc, nameNode, "id", name);
+            XMLUtils::addGenericChildAsList(doc, nameNode, "Expiries", bondFutureVolExpiries_.find(name)->second);
+            XMLUtils::addGenericChildAsList(doc, nameNode, "Moneyness", bondFutureVolMoneyness_.find(name)->second);
+            XMLUtils::appendNode(namesNode, nameNode);
+        }
+        for (auto it = bondFutureVolSmileDynamics_.begin(); it != bondFutureVolSmileDynamics_.end(); it++) {
+            XMLUtils::addChild(doc, bondFutureVolatilitiesNode, "SmileDynamics", it->second, "key", it->first);
+        }
+        if (bondFutureVolSimulateATMOnly_) {
+            XMLUtils::addChild(doc, bondFutureVolatilitiesNode, "SimulateATMOnly", bondFutureVolSimulateATMOnly_);
         }
     }
 
