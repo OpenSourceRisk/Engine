@@ -62,6 +62,8 @@
 %include ored_reports.i
 %include ored_referencedatamanager.i
 %include ored_todaysmarketparameters.i
+%include ored_yieldcurve_builder.i
+%include ored_dependencygraph.i
 %include ored_to_string.i
 %include ored_tradegenerator.i
 %include ored_utilities.i
