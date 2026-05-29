@@ -43,7 +43,8 @@
       <Parameter name="simulationConfigFile">simulation.xml</Parameter>
       <Parameter name="pricingEnginesFile">../../../Input/pricingengine.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
-      <!-- Parameter name="scenariodump">scenariodump.csv</Parameter> -->
+      <Parameter name="scenariodump">scenariodump.csv</Parameter>
+	  <Parameter name="filterRiskKeys">DiscountCurve</Parameter>
       <Parameter name="storeFlows">Y</Parameter>
       <Parameter name="cubeFile">cube.csv.gz</Parameter>
       <Parameter name="aggregationScenarioDataFileName">scenariodata.csv.gz</Parameter>
