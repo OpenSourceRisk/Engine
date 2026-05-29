@@ -391,6 +391,7 @@ QuantLib::Real sanitizeScenarioValue(const RiskFactorKey::KeyType keyType, const
     case RiskFactorKey::KeyType::RecoveryRate:
     case RiskFactorKey::KeyType::CPIIndex:
     case RiskFactorKey::KeyType::SurvivalWeight:
+    case RiskFactorKey::KeyType::BondFutureVolatility:
         return std::max(0.0, rawValue);
 
     case RiskFactorKey::KeyType::DiscountCurve:

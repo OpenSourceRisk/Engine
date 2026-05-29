@@ -663,6 +663,13 @@ DependencyMarket::correlationCurve(const std::string& index1, const std::string&
         QuantLib::ext::make_shared<QuantExt::FlatCorrelation>(0, NullCalendar(), 0, ActualActual(ActualActual::ISDA)));
 }
 
+Handle<BlackVolTermStructure> DependencyMarket::bondFutureVol(const string& contractName,
+    const string& configuration) const {
+    addRiskFactor(RiskFactorKey::KeyType::BondFutureVolatility, contractName);
+    addMarketObject(MarketObject::BondFutureVol, contractName, configuration);
+    return flatRateFxv();
+}
+
 bool DependencyMarket::hasRiskFactorType(const RiskFactorKey::KeyType& riskFactorType) const {
     return riskFactors_.find(riskFactorType) != riskFactors_.end();
 }

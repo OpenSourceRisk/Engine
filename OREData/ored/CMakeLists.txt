@@ -2,6 +2,7 @@
 
 set(OREData_SRC configuration/basecorrelationcurveconfig.cpp
 configuration/baseltrafficlightconfig.cpp
+configuration/bondfuturevolcurveconfig.cpp
 configuration/bootstrapconfig.cpp
 configuration/capfloorvolcurveconfig.cpp
 configuration/cdsvolcurveconfig.cpp
@@ -28,6 +29,7 @@ configuration/yieldcurveconfig.cpp
 marketdata/adjustedinmemoryloader.cpp
 marketdata/adjustmentfactors.cpp
 marketdata/basecorrelationcurve.cpp
+marketdata/bondfuturevolcurve.cpp
 marketdata/bondspreadimply.cpp
 marketdata/bondspreadimplymarket.cpp
 marketdata/capfloorvolcurve.cpp
@@ -421,6 +423,7 @@ utilities/xmlutils.cpp)
 set(OREData_HDR auto_link.hpp
 configuration/basecorrelationcurveconfig.hpp
 configuration/baseltrafficlightconfig.hpp
+configuration/bondfuturevolcurveconfig.hpp
 configuration/bootstrapconfig.hpp
 configuration/capfloorvolcurveconfig.hpp
 configuration/cdsvolcurveconfig.hpp
@@ -451,6 +454,7 @@ configuration/yieldvolcurveconfig.hpp
 marketdata/adjustedinmemoryloader.hpp
 marketdata/adjustmentfactors.hpp
 marketdata/basecorrelationcurve.hpp
+marketdata/bondfuturevolcurve.hpp
 marketdata/bondspreadimply.hpp
 marketdata/bondspreadimplymarket.hpp
 marketdata/capfloorvolcurve.hpp

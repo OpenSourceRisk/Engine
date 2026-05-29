@@ -70,7 +70,8 @@ protected:
             quantity_(quantity), strike_(std::move(strike)), index_(index), indexName_(indexName),
             forwardDate_(std::move(forwardDate)) {}
 
-    std::pair<QuantLib::Exercise::Type, QuantLib::ext::shared_ptr<QuantLib::Exercise>> exerciseDetails();
+    std::pair<QuantLib::Exercise::Type, QuantLib::ext::shared_ptr<QuantLib::Exercise>> exerciseDetails(
+        QuantLib::ext::optional<QuantLib::Exercise::Type> exerciseTypeOverride = QuantLib::ext::nullopt);
 
     std::pair<QuantLib::Option::Type, QuantLib::ext::shared_ptr<QuantLib::StrikedTypePayoff>> payoffDetails() const;
 

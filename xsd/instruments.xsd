@@ -46,6 +46,7 @@
       <xs:element type="bondData" name="BondData"/>
       <xs:element type="forwardBondData" name="ForwardBondData"/>
       <xs:element type="bondFutureData" name="BondFutureData"/>
+      <xs:element type="bondFutureOptionData" name="BondFutureOptionData"/>
       <xs:element type="creditDefaultSwapData" name="CreditDefaultSwapData"/>
       <xs:element type="creditDefaultSwapOptionData" name="CreditDefaultSwapOptionData"/>
       <xs:element type="commodityForwardData" name="CommodityForwardData"/>
@@ -426,6 +427,15 @@
       <xs:element type="xs:string" name="LongShort"/>
       <xs:element type="xs:boolean" name="ApplyConversionFactor" minOccurs="0"/>
       <xs:element type="xs:boolean" name="UseFuturePrice" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="bondFutureOptionData">
+    <xs:all>
+      <xs:element type="optionData" name="OptionData"/>
+      <xs:element type="xs:string" name="ContractName"/>
+      <xs:element type="xs:float" name="ContractNotional"/>
+      <xs:element ref="strikeGroup"/>
     </xs:all>
   </xs:complexType>
 
@@ -1367,6 +1377,7 @@
       <xs:enumeration value="Bond"/>
       <xs:enumeration value="ForwardBond"/>
       <xs:enumeration value="BondFuture"/>
+      <xs:enumeration value="BondFutureOption"/>
       <xs:enumeration value="CreditDefaultSwap"/>
       <xs:enumeration value="CreditDefaultSwapOption"/>
       <xs:enumeration value="Failed"/>

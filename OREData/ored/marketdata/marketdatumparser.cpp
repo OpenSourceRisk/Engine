@@ -84,7 +84,8 @@ MarketDatum::InstrumentType parseInstrumentType(const string& s) {
         {"COMMODITY_OPTION", MarketDatum::InstrumentType::COMMODITY_OPTION},
         {"COMMODITY_CALENDAR_SPREAD_OPTION", MarketDatum::InstrumentType::COMMODITY_CALENDAR_SPREAD_OPTION},
         {"CPR", MarketDatum::InstrumentType::CPR},
-        {"RATING", MarketDatum::InstrumentType::RATING}};
+        {"RATING", MarketDatum::InstrumentType::RATING},
+        {"BOND_FUTURE_OPTION", MarketDatum::InstrumentType::BOND_FUTURE_OPTION}};
 
     auto it = b.find(s);
     if (it != b.end()) {

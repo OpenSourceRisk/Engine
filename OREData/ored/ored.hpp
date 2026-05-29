@@ -7,6 +7,7 @@
 
 #include <ored/configuration/basecorrelationcurveconfig.hpp>
 #include <ored/configuration/baseltrafficlightconfig.hpp>
+#include <ored/configuration/bondfuturevolcurveconfig.hpp>
 #include <ored/configuration/bootstrapconfig.hpp>
 #include <ored/configuration/capfloorvolcurveconfig.hpp>
 #include <ored/configuration/cdsvolcurveconfig.hpp>
@@ -37,6 +38,7 @@
 #include <ored/marketdata/adjustedinmemoryloader.hpp>
 #include <ored/marketdata/adjustmentfactors.hpp>
 #include <ored/marketdata/basecorrelationcurve.hpp>
+#include <ored/marketdata/bondfuturevolcurve.hpp>
 #include <ored/marketdata/bondspreadimply.hpp>
 #include <ored/marketdata/bondspreadimplymarket.hpp>
 #include <ored/marketdata/capfloorvolcurve.hpp>

@@ -186,5 +186,10 @@ Handle<Quote> WrappedMarket::cpr(const string& securityID, const string& configu
     return market_->cpr(securityID, configuration);
 }
 
+Handle<BlackVolTermStructure> WrappedMarket::bondFutureVol(const string& contractName,
+    const string& configuration) const {
+    return market_->bondFutureVol(contractName, configuration);
+}
+
 } // namespace data
 } // namespace ore

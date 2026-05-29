@@ -383,6 +383,7 @@ termstructures/blackvolsurfacedelta.cpp
 termstructures/blackvolsurfaceproxy.cpp
 termstructures/blackvolsurfacesvi.cpp
 termstructures/blackvolsurfacewithatm.cpp
+termstructures/bondfuturevolstripper.cpp
 termstructures/brlcdiratehelper.cpp
 termstructures/capfloorhelper.cpp
 termstructures/capfloortermvolsurface.cpp
@@ -995,6 +996,7 @@ termstructures/blackvolsurfacedelta.hpp
 termstructures/blackvolsurfaceproxy.hpp
 termstructures/blackvolsurfacesvi.hpp
 termstructures/blackvolsurfacewithatm.hpp
+termstructures/bondfuturevolstripper.hpp
 termstructures/bondyieldshiftedcurvetermstructure.hpp
 termstructures/brlcdiratehelper.hpp
 termstructures/capfloorhelper.hpp

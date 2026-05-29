@@ -33,7 +33,8 @@
 namespace ore {
 namespace data {
 
-class BondFutureOptionEngineBuilder : public CachingPricingEngineBuilder<std::string, const std::string&>
+class BondFutureOptionEngineBuilder :
+    public CachingPricingEngineBuilder<std::string, const std::string&, const std::string&>
 {
 public:
     const BondFutureUtils::IndexResults& indexResults() const {
@@ -45,12 +46,20 @@ protected:
         : CachingEngineBuilder(model, engine, {"BondFutureOption"}) {}
 
     // Note: `contractName` here is the name of the bond future contract underlying the option.
-    std::string keyImpl(const std::string& contractName) override {
-        return contractName;
+    //       `optTypeSuffix` is used to differentiate between call and put options when separate volatility surfaces 
+    //        are used. So it may be `CALL` or `PUT` or empty i.e. ``.
+    std::string keyImpl(const std::string& contractName, const std::string& optTypeSuffix) override {
+        if (optTypeSuffix.empty())
+            return contractName;
+        else
+            return contractName + "_" + optTypeSuffix;
     }
 
-    QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> createBsProcess(const std::string& contractName)
+    QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> createBsProcess(
+        const std::string& contractName, const std::string& optTypeSuffix)
     {
+        string config = configuration(ore::data::MarketContext::pricing);
+
         // Wrapping a non-owned pointer in a shared_ptr like this is not recommended but should be safe here.
         // The alternative is large chunks of code being refactored / added to take `EngineFactory&` instead of 
         // `shared_ptr<EngineFactory>`.
@@ -65,12 +74,11 @@ protected:
 
         // Discount curve
         std::string contractCcy = indexResults_.refData->bondFutureData().currency;
-        auto discountCurve = market_->discountCurve(contractCcy, configuration(MarketContext::pricing));
+        auto discountCurve = market_->discountCurve(contractCcy, config);
 
         // Volatility.
-        auto volPtr = QuantLib::ext::make_shared<QuantLib::BlackConstantVol>(
-            0, QuantLib::NullCalendar(), 0.070496, QuantLib::Actual365Fixed());
-        auto vol = QuantLib::Handle<QuantLib::BlackVolTermStructure>(volPtr);
+        string bondFutureVolName = keyImpl(contractName, optTypeSuffix);
+        auto vol = market_->bondFutureVol(bondFutureVolName, config);
 
         return QuantLib::ext::make_shared<QuantLib::BlackProcess>(futurePrice, discountCurve, vol);
     }
@@ -86,9 +94,11 @@ public:
         : BondFutureOptionEngineBuilder("BlackScholesMerton", "AnalyticEuropeanEngine") {}
 
 protected:
-    QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::string& contractName) override
+    QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::string& contractName,
+        const std::string& optTypeSuffix) override
     {
-        return QuantLib::ext::make_shared<QuantExt::AnalyticEuropeanEngine>(createBsProcess(contractName));
+        return QuantLib::ext::make_shared<QuantExt::AnalyticEuropeanEngine>(
+            createBsProcess(contractName, optTypeSuffix));
     }
 };
 

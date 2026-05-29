@@ -69,12 +69,12 @@ VolatilityDataCrif::VolatilityDataCrif(const QuantLib::ext::shared_ptr<CrifMarke
 
 double VolatilityDataCrif::vegaTimesVol(ore::analytics::RiskFactorKey::KeyType rfType, const std::string& rfName,
                                         double sensitivity, const std::string& expiryTenor,
-                                        const std::string& underlyingTerm) {
+                                        const std::string& underlyingTerm, ext::optional<Real> strike) {
     auto shiftData = getShiftData(rfType, rfName);
     if (shiftData.shiftType == ShiftType::Relative) {
         return sensitivity / shiftData.shiftSize;
     } else {
-        double vol = getVolatility(rfType, rfName, expiryTenor, underlyingTerm);
+        double vol = getVolatility(rfType, rfName, expiryTenor, underlyingTerm, strike);
         DLOG("[crif-vol-weighting] For (" << rfType << ") sensitivity (" << rfName << "," << expiryTenor << "," << underlyingTerm << "), "
                      << std::fixed << std::setprecision(2) << "(sensi, atm_vol, shift_size) is (" << sensitivity
                      << std::setprecision(9) << "," << vol << "," << shiftData.shiftSize << ").");
@@ -83,7 +83,8 @@ double VolatilityDataCrif::vegaTimesVol(ore::analytics::RiskFactorKey::KeyType r
 }
 
 Volatility VolatilityDataCrif::getVolatility(RiskFactorKey::KeyType rfType, const string& rfName,
-                                             const string& expiryTenor, const string& underlyingTerm) {
+                                             const string& expiryTenor, const string& underlyingTerm,
+                                             ext::optional<Real> strike) {
 
     // Have we cached the volatility from a previous call.
     Key key{rfType, rfName, expiryTenor, underlyingTerm};
@@ -198,6 +199,18 @@ Volatility VolatilityDataCrif::getVolatility(RiskFactorKey::KeyType rfType, cons
             vol = yieldVolSurface->volatility(parsePeriod(expiryTenor), parsePeriod(underlyingTerm), Null<Real>());
             break;
     }
+
+    case RiskFactorKey::KeyType::BondFutureVolatility: {
+        QL_REQUIRE(crifMarket_, "VolatilityDataCrif: need non-empty crifMarket for bond future volatility");
+        QL_REQUIRE(crifMarket_->simMarket(), "VolatilityDataCrif: crifMarket need non-empty simMarket "
+            "for bond future volatility");
+        QL_REQUIRE(strike, "VolatilityDataCrif: need non-empty strike level for bond future volatility");
+        auto bondFutureVolSurface = crifMarket_->simMarket()->bondFutureVol(rfName);
+        Date optionExpiryDate = bondFutureVolSurface->optionDateFromTenor(parsePeriod(expiryTenor));
+        vol = bondFutureVolSurface->blackVol(optionExpiryDate, *strike);
+        break;
+    }
+
     default:
         QL_FAIL("VolatilityDataCrif: risk factor key type " << rfType << " not supported.");
     }
@@ -365,6 +378,9 @@ QuantLib::ext::optional<ore::analytics::CrifRecord> CrifRecordGenerator::operato
         case RiskFactorKey::KeyType::Correlation:
             LOG("CRIF: Skip Correlation factor " << sr.key_1.name << " for trade " << sr.tradeId
                                                  << " as it is not needed.");
+            break;
+        case RiskFactorKey::KeyType::BondFutureVolatility:
+            data = bondFutureVolatilityImpl(sr, rfTokens);
             break;
         default:
             QL_FAIL("CRIF: unexpected risk factor key " << sr.key_1.keytype);
@@ -668,6 +684,46 @@ std::optional<double> CrifRecordGenerator::CdsAtmVol(const std::string& tradeId,
     Real atmVol = 0.0;
     QL_FAIL("CrifRecordGenerator::CdsAtmVol not implemented");
     return atmVol;
+}
+
+CrifRecordData CrifRecordGenerator::bondFutureVolatilityImpl(const ore::analytics::SensitivityRecord& sr,
+    const std::vector<std::string>& rfTokens) {
+
+    auto data = defaultRecord(sr, rfTokens, true, false);
+
+    // Use the bond future currency as qualifier.
+    data.qualifier = sr.tradeCurrency;
+
+    // For bond future volatility, we expect rfTokens to always be of the form rfTokens[0] = <Number>d for expiry tenor 
+    // and rfTokens[1] = absolute strike. For example, rfTokens[0] = "10D" and rfTokens[1] = "1.1075".
+
+    Real strike = parseReal(rfTokens[1]);
+    data.sensitivity = volatilityData_.vegaTimesVol(sr.key_1.keytype, sr.key_1.name, sr.delta,
+        rfTokens.front(), "", strike);
+
+    // A hack for now that needs to be updated later.
+    // Need to map the bond future expiry tenor to the correct IR volatility CRIF tenor.
+    const Date asof = crifMarket_->asofDate();
+    static const map<Period, string> irCrifTenors{
+        { 2 * Weeks, "2w" },
+        { 1 * Months, "1m" },
+        { 3 * Months, "3m" },
+        { 6 * Months, "6m" },
+        { 1 * Years, "1y" },
+        { 2 * Years, "2y" },
+        { 3 * Years, "3y" },
+        { 5 * Years, "5y" },
+        { 10 * Years, "10y" },
+        { 15 * Years, "15y" },
+        { 20 * Years, "20y" },
+        { 30 * Years, "30y" }
+    };
+    Date expiryDate = asof + parsePeriod(rfTokens.front());
+    auto it = std::find_if(irCrifTenors.begin(), irCrifTenors.end(),
+        [&](const auto& kv) { return asof + kv.first >= expiryDate; });
+    data.label1 = it != irCrifTenors.end() ? it->second : irCrifTenors.rbegin()->second;
+
+    return data;
 }
 
 SimmRecordGenerator::SimmRecordGenerator(const QuantLib::ext::shared_ptr<SimmConfiguration>& simmConfiguration,

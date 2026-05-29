@@ -110,6 +110,10 @@ public:
     virtual QuantLib::Handle<QuantLib::Quote> cpr(const std::string&, const std::string&) const override;
     virtual QuantLib::Handle<QuantExt::CorrelationTermStructure>
     correlationCurve(const std::string&, const std::string&, const std::string&) const override;
+
+    QuantLib::Handle<QuantLib::BlackVolTermStructure> bondFutureVol(const std::string& contractName,
+        const std::string& configuration) const override;
+
     virtual void refresh(const std::string&) override {}
     //@}
 

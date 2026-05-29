@@ -30,6 +30,32 @@ using std::map;
 using std::set;
 using std::string;
 
+namespace {
+
+// Helper to determine option type suffix for engine builder.
+// May want to use separate volatility surface for calls and puts. This can be determined from the engine 
+// parameters and also on the trade level via the envelope(trade level wins if specified). If this is the case, 
+// then separate engines are attached to the call and put options on a given underlying contract.
+string getOptionTypeSuffix(const BondFutureOptionEngineBuilder& bfoEngineBuilder,
+    const Envelope& envelope, Option::Type type) {
+
+    bool separateCallPutVols = false;
+    string strSeparateCallPutVols = bfoEngineBuilder.engineParameter("SeparateCallPutVols", {}, false, "");
+    if (!strSeparateCallPutVols.empty())
+        separateCallPutVols = parseBool(strSeparateCallPutVols);
+    strSeparateCallPutVols = envelope.additionalField("SeparateCallPutVols", false, "");
+    if (!strSeparateCallPutVols.empty())
+        separateCallPutVols = parseBool(strSeparateCallPutVols);
+
+    string optTypeSuffix;
+    if (separateCallPutVols)
+        optTypeSuffix = type == Option::Call ? "CALL" : "PUT";
+
+    return optTypeSuffix;
+}
+
+}
+
 BondFutureOption::BondFutureOption()
     : VanillaOptionTrade("BondFutureOption", AssetClass::BOND) {}
 
@@ -47,8 +73,8 @@ void BondFutureOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
 
     BondFutureUtils::addIsdaTaxonomy(additionalData_);
 
-    // Exercise
-    auto [exerciseType, exercise] = exerciseDetails();
+    // Exercise: for now, we use European engine for American options as well.
+    auto [exerciseType, exercise] = exerciseDetails(Exercise::Type::European);
     string builderTradeType = exerciseType == Exercise::Type::American ? tradeType_ + "American" : tradeType_;
 
     // Payoff
@@ -65,7 +91,8 @@ void BondFutureOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
         " cannot be cast to a BondFutureOptionEngineBuilder.");
 
     // Set the bond future option pricing engine. Note: asset() gives the future contract name here.
-    option->setPricingEngine(bfoEngineBuilder->engine(asset()));
+    string optTypeSuffix = getOptionTypeSuffix(*bfoEngineBuilder, envelope(), type);
+    option->setPricingEngine(bfoEngineBuilder->engine(asset(), optTypeSuffix));
 
     // Set some Trade specific data.
     setSensitivityTemplate(*bfoEngineBuilder);

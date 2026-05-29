@@ -350,7 +350,7 @@ BondFutureOptionQuote::BondFutureOptionQuote(Real value, Date asofDate, const st
       contractName_(std::move(contractName)), expiry_(std::move(expiry)), strike_(std::move(strike)), isCall_(isCall)
 {
     // Only support explicit expiry dates for now.
-    Date expiryDate = parseDate(expiry);
+    Date expiryDate = parseDate(expiry_);
     QL_REQUIRE(asofDate_ <= expiryDate, "BondFutureOptionQuote: invalid quote, expiry date "
         << io::iso_date(expiryDate) << " must be on or after asof date " << io::iso_date(asofDate_) << ".");
 }

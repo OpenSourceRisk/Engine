@@ -422,8 +422,9 @@ string VanillaOptionTrade::notionalCurrency() const {
     return delegatingBuilderTrade_ != nullptr ? delegatingBuilderTrade_->notionalCurrency() : Trade::notionalCurrency();
 }
 
-pair<Exercise::Type, ext::shared_ptr<Exercise>> VanillaOptionTrade::exerciseDetails()
-{
+pair<Exercise::Type, ext::shared_ptr<Exercise>> VanillaOptionTrade::exerciseDetails(
+    ext::optional<Exercise::Type> exerciseTypeOverride) {
+
     const auto& exDates = option_.exerciseDates();
     QL_REQUIRE(exDates.size() == 1, "VanillaOptionTrade::build: expected 1 "
         "exercise date but got " << exDates.size() << ".");
@@ -431,7 +432,7 @@ pair<Exercise::Type, ext::shared_ptr<Exercise>> VanillaOptionTrade::exerciseDeta
     maturity_ = expiryDate_;
     maturityType_ = "Expiry Date";
 
-    Exercise::Type exerciseType = parseExerciseType(option_.style());
+    Exercise::Type exerciseType = exerciseTypeOverride ? *exerciseTypeOverride : parseExerciseType(option_.style());
 
     ext::shared_ptr<Exercise> exercise;
     switch (exerciseType)
