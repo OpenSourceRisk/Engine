@@ -323,8 +323,8 @@ public:
     void setWriteCubeFile(bool b);
     void setWriteRawCubeFile(bool b);
     void setWriteNetCubeFile(bool b);
-    // TODO: load from XML
-    // void setCounterpartyManager(const std::string& xml);
+    void setCounterpartyManager(const std::string& xml);
+    void setCounterpartyManager(const ext::shared_ptr<ore::data::CounterpartyManager>& cm);
     void setCollateralBalances(const std::string& xml);
     void setCollateralBalances(const ext::shared_ptr<ore::data::CollateralBalances>& xml);
     void setReportBufferSize(Size s);

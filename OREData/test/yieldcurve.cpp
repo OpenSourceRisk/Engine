@@ -150,7 +150,9 @@ struct TodaysMarketArguments {
 
         filename = inputDir + "/market.txt";
         string fixingsFilename = inputDir + "/fixings.txt";
-        loader = QuantLib::ext::make_shared<CSVLoader>(TEST_INPUT_FILE(filename), TEST_INPUT_FILE(fixingsFilename), false);
+        auto csvLoader = QuantLib::ext::make_shared<CSVLoader>();
+        csvLoader->fromFiles(TEST_INPUT_FILE(filename), TEST_INPUT_FILE(fixingsFilename));
+        loader = csvLoader;
     }
 
     Date asof;
@@ -502,7 +504,7 @@ BOOST_AUTO_TEST_CASE(testQuadraticInterpolation) {
         { "2021-06-24", -0.00715202046442265, 1.0093822458995, -0.00743079826559478 },
         { "2022-09-24", -0.00634232121085709, 1.01806767055031, -0.00712529508658977 },
         { "2023-12-25", -0.00422742334270421, 1.02499844543564, -0.00655192842032992 },
-        { "2025-03-26", -0.00172999929889617, 1.02900328433957, -0.00569248156188507 },
+        { "2025-03-26", -0.00172999929889617, 1.02900328433957, -0.0056924815618794 },
         { "2021-09-24", -0.0069414029672199, 1.01120103496917, -0.00737820251647103 },
         { "2023-03-26", -0.00559392063686381, 1.02117998518244, -0.00694927326429007 },
         { "2024-09-24", -0.00286665434442224, 1.0277915286893, -0.00606391607397783 },

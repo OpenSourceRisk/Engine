@@ -154,6 +154,22 @@ public:
 } // namespace data
 } // namespace ore
 
+%shared_ptr(ore::data::CommoditySchwartzData)
+namespace ore {
+namespace data {
+class CommoditySchwartzData {
+public:
+    CommoditySchwartzData();
+    std::string& name();
+    std::string& currency();
+    std::vector<std::string>& optionExpiries();
+    std::vector<std::string>& optionStrikes();
+    void fromXML(ore::data::XMLNode* node);
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc);
+};
+} // namespace data
+} // namespace ore
+
 %template(IrModelDataMap) std::map<std::string, ext::shared_ptr<ore::data::IrModelData>>;
 %template(FxDataMap) std::map<std::string, ext::shared_ptr<ore::data::FxData>>;
 %template(EqBsDataMap) std::map<std::string, ext::shared_ptr<ore::data::EqBsData>>;

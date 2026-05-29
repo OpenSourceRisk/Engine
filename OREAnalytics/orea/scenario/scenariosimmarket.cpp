@@ -1307,7 +1307,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                                                        << ")");
                                             optionDates[i] = std::max(
                                                 asof_ + 1, wrapper->useEffectiveVolatility()
-                                                               ? lastCoupon->underlying()->fixingDates().back()
+                                                               ? lastCoupon->underlying()->fixingDateNoCutoff()
                                                                : lastCoupon->underlying()->fixingDates().front());
                                         }
                                     } else {

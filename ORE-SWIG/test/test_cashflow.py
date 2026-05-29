@@ -364,6 +364,118 @@ class IndexedCouponTest(unittest.TestCase):
         self.assertAlmostEqual(multiplier, qty * initialFixing, delta=1e-10)
 
 
+class BondTRSCashFlowTest(unittest.TestCase):
+    def setUp(self):
+        """Set up a BondTRSCashFlow using a BondIndex.
+
+        evaluationDate is set AFTER both fixing dates so they become historical
+        and index.fixing() uses stored fixings rather than trying to forecast
+        (which would require an actual Bond object attached to the BondIndex).
+        """
+        self.todayDate = Date(1, May, 2026)
+        Settings.instance().evaluationDate = self.todayDate
+
+        self.calendar = UnitedStates(UnitedStates.NYSE)
+        self.dayCounter = Actual365Fixed()
+        self.flatForward = FlatForward(self.todayDate, 0.03, self.dayCounter)
+        self.discountCurve = RelinkableYieldTermStructureHandle(self.flatForward)
+
+        # BondIndex with no bond object; only historical fixings will be used
+        self.bondIndex = BondIndex(
+            "BOND-TEST", False, True,
+            self.calendar, None,
+            self.discountCurve)
+
+        self.fixingStartDate = Date(15, January, 2026)
+        self.fixingEndDate = Date(15, April, 2026)
+        self.paymentDate = Date(17, April, 2026)
+        self.bondNotional = 1000000.0
+
+        # Relative clean prices: par at start, +2% gain at end
+        self.bondIndex.addFixing(self.fixingStartDate, 1.0)
+        self.bondIndex.addFixing(self.fixingEndDate, 1.02)
+
+    def testBondTRSCashFlowConstruction(self):
+        """Test BondTRSCashFlow constructs and basic accessors work."""
+        cf = BondTRSCashFlow(
+            self.paymentDate,
+            self.fixingStartDate,
+            self.fixingEndDate,
+            self.bondNotional,
+            self.bondIndex)
+
+        self.assertEqual(cf.date(), self.paymentDate)
+        self.assertAlmostEqual(cf.notional(), self.bondNotional, delta=1e-10)
+        self.assertEqual(cf.fixingStartDate(), self.fixingStartDate)
+        self.assertEqual(cf.fixingEndDate(), self.fixingEndDate)
+
+    def testBondTRSCashFlowAmount(self):
+        """Test BondTRSCashFlow.amount() computes total return correctly."""
+        cf = BondTRSCashFlow(
+            self.paymentDate,
+            self.fixingStartDate,
+            self.fixingEndDate,
+            self.bondNotional,
+            self.bondIndex)
+
+        # amount = notional * (endPrice - startPrice) = 1e6 * (1.02 - 1.0) = 20000
+        self.assertAlmostEqual(cf.amount(), 20000.0, delta=1e-4)
+
+    def testBondTRSCashFlowWithInitialPrice(self):
+        """Test BondTRSCashFlow construction with explicit initialPrice."""
+        cf = BondTRSCashFlow(
+            self.paymentDate,
+            self.fixingStartDate,
+            self.fixingEndDate,
+            self.bondNotional,
+            self.bondIndex,
+            1.0)  # initialPrice
+
+        # Basic accessors still work; amount() is not tested here because
+        # with initialPrice set, assetStart() calls notional(date) which
+        # requires a real Bond object attached to BondIndex.
+        self.assertEqual(cf.date(), self.paymentDate)
+        self.assertAlmostEqual(cf.notional(), self.bondNotional, delta=1e-10)
+        self.assertAlmostEqual(cf.initialPrice(), 1.0, delta=1e-10)
+
+    def testBondTRSCashFlowSetFixingStartDate(self):
+        """Test setFixingStartDate updates the fixing start date."""
+        cf = BondTRSCashFlow(
+            self.paymentDate,
+            self.fixingStartDate,
+            self.fixingEndDate,
+            self.bondNotional,
+            self.bondIndex)
+
+        # Feb 2, 2026 is a Monday (valid NYSE business day)
+        newStart = Date(2, February, 2026)
+        self.bondIndex.addFixing(newStart, 1.01)
+        cf.setFixingStartDate(newStart)
+        self.assertEqual(cf.fixingStartDate(), newStart)
+
+    def testBondTRSLegBuilder(self):
+        """Test BondTRSLeg builder produces a Leg with correct length."""
+        valuationDates = [
+            Date(15, January, 2026),
+            Date(15, April, 2026),
+            Date(15, July, 2026)]
+        paymentDates = [
+            Date(17, April, 2026),
+            Date(17, July, 2026)]
+
+        self.bondIndex.addFixing(Date(15, July, 2026), 1.03)
+
+        leg = BondTRSLeg(
+            valuationDates=valuationDates,
+            paymentDates=paymentDates,
+            bondNotional=self.bondNotional,
+            index=self.bondIndex,
+            initialPrice=1.0)
+
+        # leg has len(valuationDates) - 1 cashflows
+        self.assertEqual(len(leg), 2)
+
+
 if __name__ == '__main__':
     print('testing ORE ' + ORE.__version__)
     suite = unittest.TestSuite()
@@ -372,6 +484,7 @@ if __name__ == '__main__':
     suite.addTest(unittest.makeSuite(CommodityIndexedAverageCashFlowTest,'test'))
     suite.addTest(unittest.makeSuite(EquityCouponTest,'test'))
     suite.addTest(unittest.makeSuite(IndexedCouponTest,'test'))
+    suite.addTest(unittest.makeSuite(BondTRSCashFlowTest,'test'))
     unittest.TextTestRunner(verbosity=2).run(suite)
     unittest.main()
 
