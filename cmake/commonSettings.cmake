@@ -231,6 +231,9 @@ set(Boost_NO_WARN_NEW_VERSIONS ON)
 
 # Find Boost components.
 list(APPEND BOOST_COMPONENT_LIST filesystem serialization timer log iostreams thread)
+if(NOT MSVC)
+    list(APPEND BOOST_COMPONENT_LIST stacktrace_basic)
+endif()
 find_package(Boost REQUIRED COMPONENTS ${BOOST_COMPONENT_LIST})
 
 if (MSVC)

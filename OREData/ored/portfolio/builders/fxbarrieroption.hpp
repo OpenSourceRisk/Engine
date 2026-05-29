@@ -127,7 +127,7 @@ protected:
 class FxBarrierOptionScriptedEngineBuilder : public DelegatingEngineBuilder {
 public:
     FxBarrierOptionScriptedEngineBuilder()
-        : DelegatingEngineBuilder("ScriptedTrade", "ScriptedTrade", {"FxBarrierOption"}) {}
+        : DelegatingEngineBuilder("ScriptedTrade", "ScriptedTrade", {"FxBarrierOption", "FxDoubleBarrierOption"}) {}
     QuantLib::ext::shared_ptr<ore::data::Trade>
     build(const Trade* trade, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) override;
     std::string effectiveTradeType() const override { return "ScriptedTrade"; }

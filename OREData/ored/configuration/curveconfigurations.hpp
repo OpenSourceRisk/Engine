@@ -24,6 +24,7 @@
 #pragma once
 
 #include <ored/configuration/basecorrelationcurveconfig.hpp>
+#include <ored/configuration/bondfuturevolcurveconfig.hpp>
 #include <ored/configuration/capfloorvolcurveconfig.hpp>
 #include <ored/configuration/cdsvolcurveconfig.hpp>
 #include <ored/configuration/commoditycurveconfig.hpp>
@@ -133,6 +134,9 @@ public:
     bool hasCorrelationCurveConfig(const std::string& curveID) const;
     QuantLib::ext::shared_ptr<CorrelationCurveConfig> correlationCurveConfig(const std::string& curveID) const;
 
+    bool hasBondFutureVolatilityConfig(const std::string& curveID) const;
+    QuantLib::ext::shared_ptr<BondFutureVolatilityConfig> bondFutureVolatilityConfig(const std::string& curveID) const;
+
     QuantLib::ext::shared_ptr<CurveConfigurations>
     minimalCurveConfig(const QuantLib::ext::shared_ptr<TodaysMarketParameters> todaysMarketParams,
                        const std::set<std::string>& configurations = {""}) const;
@@ -196,6 +200,7 @@ public:
     ReportConfig reportConfigIrSwaptionVols_;
     ReportConfig reportConfigYieldCurves_;
     ReportConfig reportConfigInflationCapFloorVols_;
+    ReportConfig reportConfigBondFutureVols_;
     ReportConfig reportConfigDefaultCurves_;
 
     mutable std::map<CurveSpec::CurveType, std::map<std::string, QuantLib::ext::shared_ptr<CurveConfig>>> configs_;

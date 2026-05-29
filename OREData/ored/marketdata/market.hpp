@@ -84,7 +84,8 @@ enum class MarketObject {
     CommodityCurve = 18,
     CommodityVolatility = 19,
     Correlation = 20,
-    YieldVol = 21
+    YieldVol = 21,
+    BondFutureVol = 22
 };
 
 //! Struct to store parameters for commodities to be treatred as pseudo currencies
@@ -335,6 +336,12 @@ public:
     //@{
     virtual Handle<Quote> cpr(const string& securityID,
                               const string& configuration = Market::defaultConfiguration) const = 0;
+    //@}
+
+    //! \name Bond future volatility
+    //@{
+    virtual QuantLib::Handle<QuantLib::BlackVolTermStructure> bondFutureVol(const std::string& contractName,
+        const std::string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
     // public utility

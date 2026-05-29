@@ -150,7 +150,8 @@ public:
         string marketFile = TEST_INPUT_FILE("market/market.txt");
         string fixingsFile = TEST_INPUT_FILE("market/fixings_for_bootstrap.txt");
         string dividendsFile = TEST_INPUT_FILE("market/dividends.txt");
-        auto loader = QuantLib::ext::make_shared<CSVLoader>(marketFile, fixingsFile, dividendsFile, false);
+        auto loader = QuantLib::ext::make_shared<CSVLoader>();
+        loader->fromFiles(marketFile, fixingsFile, dividendsFile);
 
         bool continueOnError = false;
         QuantLib::ext::shared_ptr<TodaysMarket> market = QuantLib::ext::make_shared<TodaysMarket>(

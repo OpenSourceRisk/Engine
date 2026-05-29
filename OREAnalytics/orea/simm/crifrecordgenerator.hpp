@@ -35,6 +35,7 @@
 #include <ored/report/report.hpp>
 
 #include <ql/types.hpp>
+#include <ql/optional.hpp>
 
 #include <string>
 #include <tuple>
@@ -49,12 +50,14 @@ public:
     VolatilityDataCrif(const QuantLib::ext::shared_ptr<CrifMarket>& crifMarket);
 
     double vegaTimesVol(ore::analytics::RiskFactorKey::KeyType rfType, const std::string& rfName, double sensitivity,
-                        const std::string& expiryTenor, const std::string& underlyingTerm);
+                        const std::string& expiryTenor, const std::string& underlyingTerm,
+                        QuantLib::ext::optional<QuantLib::Real> strike = QuantLib::ext::nullopt);
 
     //! If we have a absolute shift it computes delta * atmvol(T_E, T_U) / shiftSize, 
     //! for relative shifts it returns delta / shiftSize
     QuantLib::Volatility getVolatility(ore::analytics::RiskFactorKey::KeyType rfType, const std::string& rfName,
-                                       const std::string& expiryTenor, const std::string& underlyingTerm = "");
+                                       const std::string& expiryTenor, const std::string& underlyingTerm = "",
+                                       QuantLib::ext::optional<QuantLib::Real> strike = QuantLib::ext::nullopt);
 
     ore::analytics::SensitivityScenarioData::SensitivityScenarioData::ShiftData getShiftData(ore::analytics::RiskFactorKey::KeyType rfType, const std::string& rfName);
 
@@ -97,7 +100,7 @@ class CrifRecordGenerator {
 public:
     CrifRecordGenerator(const QuantLib::ext::shared_ptr<ore::analytics::CrifConfiguration>& config,
                         const QuantLib::ext::shared_ptr<SimmNameMapper>& nameMapper,
-			const QuantLib::ext::shared_ptr<SimmTradeData>& simmTradeData,
+                        const QuantLib::ext::shared_ptr<SimmTradeData>& simmTradeData,
                         const QuantLib::ext::shared_ptr<CrifMarket>& crifMarket, bool xccyDiscounting,
                         const std::string& currency, QuantLib::Real usdSpot,
                         const QuantLib::ext::shared_ptr<ore::data::PortfolioFieldGetter>& fieldGetter,
@@ -236,6 +239,9 @@ protected:
     //! Handle special case if all non basecurrency discount curves are treated as xccy basis risk
     virtual CrifRecordData xccyBasisImpl(const std::string qualifier, double sensitivity);
 
+    virtual CrifRecordData bondFutureVolatilityImpl(const ore::analytics::SensitivityRecord& sr,
+        const std::vector<std::string>& rfTokens);
+
     virtual ore::analytics::CrifRecord::RiskType
     riskTypeImpl(const ore::analytics::RiskFactorKey::KeyType& rfKeyType) = 0;
 
@@ -261,7 +267,7 @@ class SimmRecordGenerator : public CrifRecordGenerator {
 public:
     SimmRecordGenerator(const QuantLib::ext::shared_ptr<SimmConfiguration>& simmConfiguration,
                         const QuantLib::ext::shared_ptr<SimmNameMapper>& nameMapper,
-			const QuantLib::ext::shared_ptr<SimmTradeData>& tradeData,
+                        const QuantLib::ext::shared_ptr<SimmTradeData>& tradeData,
                         const QuantLib::ext::shared_ptr<CrifMarket>& crifMarket, bool xccyDiscounting = false,
                         const std::string& currency = "USD", QuantLib::Real usdSpot = 1.0,
                         const QuantLib::ext::shared_ptr<ore::data::PortfolioFieldGetter>& fieldGetter = nullptr,

@@ -219,6 +219,8 @@ const ShiftData& SensitivityScenarioData::shiftData(const RiskFactorKey::KeyType
         return *securityShiftData().at(name);
     case RFType::Correlation:
         return *correlationShiftData().at(name);
+    case RFType::BondFutureVolatility:
+        return *bondFutureVolShiftData().at(name);
     default:
         QL_FAIL("Cannot return shift data for key type: " << keyType);
     }
@@ -544,6 +546,17 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             auto data = QuantLib::ext::make_shared<VolShiftData>();
             volShiftDataFromXML(child, *data);
             correlationShiftData_[label] = data;
+        }
+    }
+
+    DLOG("Get bond future volatility sensitivity parameters.");
+    if (XMLNode* bfvNode = XMLUtils::getChildNode(node, "BondFutureVolatilities")) {
+        for (XMLNode* child = XMLUtils::getChildNode(bfvNode, "BondFutureVolatility"); child;
+            child = XMLUtils::getNextSibling(child)) {
+            string name = XMLUtils::getAttribute(child, "name");
+            auto data = ext::make_shared<VolShiftData>();
+            volShiftDataFromXML(child, *data);
+            bondFutureVolShiftData_[name] = data;
         }
     }
 
@@ -948,6 +961,16 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) const {
         }
     }
 
+    if (!bondFutureVolShiftData_.empty()) {
+        DLOG("toXML for BondFutureVolatilities");
+        XMLNode* parent = XMLUtils::addChild(doc, root, "BondFutureVolatilities");
+        for (const auto& kv : bondFutureVolShiftData_) {
+            XMLNode* node = XMLUtils::addChild(doc, parent, "BondFutureVolatility");
+            XMLUtils::addAttribute(doc, node, "name", kv.first);
+            volShiftDataToXML(doc, node, *kv.second);
+        }
+    }
+
     if (!crossGammaFilter_.empty()) {
         DLOG("toXML for CrossGammaFilter");
         XMLNode* parent = XMLUtils::addChild(doc, root, "CrossGammaFilter");
@@ -1184,6 +1207,8 @@ std::set<std::string> getShiftSpecKeys(const SensitivityScenarioData& d) {
     for (auto const& [_, v] : d.correlationShiftData())
         extractKeysFromShiftData(*v, pids);
     for (auto const& [_, v] : d.securityShiftData())
+        extractKeysFromShiftData(*v, pids);
+    for (auto const& [_, v] : d.bondFutureVolShiftData())
         extractKeysFromShiftData(*v, pids);
     return pids;
 }

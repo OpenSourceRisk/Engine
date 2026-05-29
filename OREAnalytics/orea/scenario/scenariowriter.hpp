@@ -38,18 +38,18 @@ public:
     ScenarioWriter(const QuantLib::ext::shared_ptr<ScenarioGenerator>& src, const std::string& filename,
                    const char sep = ',', const string& filemode = "w+",
                    const std::vector<RiskFactorKey>& headerKeys = {}, const bool writeDuplicateDates = true, 
-                   const int precision = 8);
+                   const int precision = 8, const std::vector<RiskFactorKey::KeyType>& filterKeyTypes = {});
 
     //! Constructor to write single scenarios
     ScenarioWriter(const std::string& filename, const char sep = ',', const string& filemode = "w+",
                    const std::vector<RiskFactorKey>& headerKeys = {}, const bool writeDuplicateDates = true, 
-                   const int precision = 8);
+                   const int precision = 8, const std::vector<RiskFactorKey::KeyType>& filterKeyTypes = {});
 
     //! Constructor to write into an in-memory report for later io
     ScenarioWriter(const QuantLib::ext::shared_ptr<ScenarioGenerator>& src,
                    QuantLib::ext::shared_ptr<ore::data::Report> report,
                    const std::vector<RiskFactorKey>& headerKeys = {}, const bool writeDuplicateDates = true, 
-                   const int precision = 8);
+                   const int precision = 8, const std::vector<RiskFactorKey::KeyType>& filterKeyTypes = {});
 
     //! Destructor
     virtual ~ScenarioWriter();
@@ -79,6 +79,7 @@ private:
     std::vector<RiskFactorKey> headerKeys_;
     bool writeDuplicateDates_ = true;
     int precision_ = 8;
+    std::vector<RiskFactorKey::KeyType> filterKeyTypes_ = {};
 
     Size writtenDatesScenario_ = 0;
     std::set<Date> writtenDates_;

@@ -22,9 +22,8 @@
 #include <ored/portfolio/convertiblebondreferencedata.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/utilities/log.hpp>
-
+#include <ored/portfolio/builders/bondfuture.hpp>
 #include <qle/pricingengines/forwardenabledbondengine.hpp>
-
 #include <ql/cashflows/fixedratecoupon.hpp>
 
 namespace ore {
@@ -254,15 +253,15 @@ BondFutureUtils::deduceDates(const std::string& currency, const std::string& con
 
 BondFutureUtils::BondFutureType BondFutureUtils::getBondFutureType(const std::string& deliverableGrade) {
 
-    //                         Deliverable Maturities	    CME Globex  Bloomberg
-    // 2-Year T-Note                 1 3/4 to 2 years	           ZT          TU
-    // 3-Year T-Note                  9/12 to 3 years	          Z3N          3Y
-    // 5-Year T-Note             4 1/6 to 5 1/4 years	           ZF          FV
-    // 10-Year T-Note                6 1/2 to 8 years	           ZN          TY
-    // Ultra 10-Year T-Note 	   9 5/12 to 10 Years	           TN         UXY
-    // T-Bond                 15 years up to 25 years	           ZB          US
-    // 20-Year T-Bond       19 2/12 to 19 11/12 years	          TWE         TWE
-    // Ultra T-Bond	         25 years to 30 years	           UB          WN
+    //                         Deliverable Maturities    CME Globex  Bloomberg
+    // 2-Year T-Note                 1 3/4 to 2 years           ZT          TU
+    // 3-Year T-Note                  9/12 to 3 years          Z3N          3Y
+    // 5-Year T-Note             4 1/6 to 5 1/4 years           ZF          FV
+    // 10-Year T-Note                6 1/2 to 8 years           ZN          TY
+    // Ultra 10-Year T-Note        9 5/12 to 10 years           TN         UXY
+    // T-Bond                 15 years up to 25 years           ZB          US
+    // 20-Year T-Bond       19 2/12 to 19 11/12 years          TWE         TWE
+    // Ultra T-Bond              25 years to 30 years           UB          WN
     // source: https://www.cmegroup.com/trading/interest-rates/basics-of-us-treasury-futures.html
 
     string val_up = boost::to_upper_copy(deliverableGrade);
@@ -490,6 +489,66 @@ void BondFutureUtils::modifyToForwardBond(const Date& expiry, QuantLib::ext::sha
     bond = modifiedBond;
 }
 
+map<AssetClass, set<string>> BondFutureUtils::underlyingBondIndices(const string& contractName,
+    const ext::shared_ptr<ReferenceDataManager>& referenceDataManager)
+{
+    map<AssetClass, set<string>> result;
+    if (referenceDataManager && referenceDataManager->hasData("BondFuture", contractName)) {
+        auto refData = ext::dynamic_pointer_cast<BondFutureReferenceDatum>(
+            referenceDataManager->getData("BondFuture", contractName));
+        for (const auto& sec : refData->bondFutureData().deliveryBasket) {
+            result[AssetClass::BOND].insert(StructuredSecurityId(sec, contractName));
+            result[AssetClass::BOND].insert(sec);
+        }
+    }
+    return result;
+}
+
+void BondFutureUtils::addIsdaTaxonomy(map<string, ext::any>& additionalData)
+{
+    // ISDA taxonomy https://www.isda.org/a/20EDE/q4-2011-credit-standardisation-legend.pdf
+    // TODO: clarify ISDA taxonomy
+    additionalData["isdaAssetClass"] = string("Credit");
+    additionalData["isdaBaseProduct"] = string("Other");
+    additionalData["isdaSubProduct"] = string("");
+    additionalData["isdaTransaction"] = string("");
+}
+
+BondFutureUtils::IndexResults BondFutureUtils::createIndex(const string& contractName,
+    const ext::shared_ptr<EngineFactory>& engineFactory)
+{
+    IndexResults res;
+
+    const auto& refData = engineFactory->referenceData();
+    auto resPair = refData->tryGetData("BondFuture", contractName);
+    QL_REQUIRE(resPair.first, "BondFutureUtils::getCtdBondDetails: no bond future reference data "
+        "found for contract " << contractName << ".");
+
+    res.refData = ext::dynamic_pointer_cast<BondFutureReferenceDatum>(resPair.second);
+    QL_REQUIRE(res.refData, "BondFutureUtils::getCtdBondDetails: could not cast reference data "
+        "found for contract " << contractName << " to a BondFutureReferenceDatum.");
+
+    auto builder = ext::dynamic_pointer_cast<BondFutureEngineBuilder>(engineFactory->builder("BondFuture"));
+    QL_REQUIRE(builder, "BondFutureUtils::getCtdBondDetails: could not cast engine builder found for "
+        "BondFuture to a BondFutureEngineBuilder.");
+
+    const auto& params = builder->globalParameters();
+    bool pricing = params.count("Calibrate") == 0 || parseBool(params.at("Calibrate"));
+
+    std::tie(res.ctdSecurityId, res.ctdConversionFactor) = BondFutureUtils::identifyCtdBond(
+        engineFactory, contractName, !pricing);
+    std::tie(res.futureExpiry, res.futureSettle) = BondFutureUtils::deduceDates(res.refData);
+
+    StructuredSecurityId ssid(res.ctdSecurityId, contractName);
+    res.ctdBuilderResult = BondFactory::instance().build(engineFactory, refData, ssid);
+
+    const string& strIsDirtyPrice = res.refData->bondFutureData().dirtyQuotation;
+    bool isDirtyPrice = strIsDirtyPrice.empty() ? false : parseBool(strIsDirtyPrice);
+    res.index = QuantLib::ext::make_shared<QuantExt::BondFuturesIndex>(
+        contractName, res.futureExpiry, res.ctdBuilderResult.bond, res.ctdConversionFactor, isDirtyPrice);
+
+    return res;
+}
 
 } // namespace data
 } // namespace ore

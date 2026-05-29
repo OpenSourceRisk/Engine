@@ -22,6 +22,7 @@
 */
 
 #include <ored/marketdata/basecorrelationcurve.hpp>
+#include <ored/marketdata/bondfuturevolcurve.hpp>
 #include <ored/marketdata/capfloorvolcurve.hpp>
 #include <ored/marketdata/cdsvolcurve.hpp>
 #include <ored/marketdata/commoditycurve.hpp>
@@ -869,6 +870,25 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
             DLOG("Added SwapIndex " << swapIndexName << " with DiscountingIndex " << discountIndex);
             requiredSwapIndices_[configuration][swapIndexName] =
                 swapIndices_.at(std::make_pair(configuration, swapIndexName)).currentLink();
+            break;
+        }
+
+        // Bond Future Vol
+        case CurveSpec::CurveType::BondFutureVolatility: {
+            using BFVCS = BondFutureVolatilityCurveSpec;
+            ext::shared_ptr<BFVCS> bfvcs = ext::dynamic_pointer_cast<BFVCS>(spec);
+            QL_REQUIRE(bfvcs, "Failed to convert curve spec " << *spec << " to BondFutureVolatilityCurveSpec.");
+            auto it = requiredBondFutureVolCurves_.find(bfvcs->name());
+            if (it == requiredBondFutureVolCurves_.end()) {
+                DLOG("Building bond future volatility for date " << asof_ << ".");
+                ext::shared_ptr<BondFutureVolCurve> bfVolCurve = ext::make_shared<BondFutureVolCurve>(
+                    asof_, *bfvcs, *loader_, *curveConfigs_, requiredYieldCurves_);
+                it = requiredBondFutureVolCurves_.insert(make_pair(bfvcs->name(), bfVolCurve)).first;
+            }
+            DLOG("Adding bond future volatility (" << node.name << ") with spec " << *bfvcs <<
+                " to configuration " << configuration);
+            bondFutureVols_[make_pair(configuration, node.name)] =
+                Handle<BlackVolTermStructure>(it->second->volTermStructure());
             break;
         }
 

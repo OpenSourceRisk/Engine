@@ -16,6 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <qle/math/gpuqrsolve.hpp>
+
 #include <orea/aggregation/dimflatcalculator.hpp>
 #include <orea/aggregation/dimdirectcalculator.hpp>
 #include <orea/aggregation/dimregressioncalculator.hpp>
@@ -48,6 +50,7 @@
 #include <orea/scenario/simplescenariofactory.hpp>
 #include <orea/scenario/filteredscenarioreader.hpp>
 #include <orea/app/analytics/correlationanalytic.hpp>
+#include <orea/app/analytics/utilities.hpp>
 
 #include <ored/model/crossassetmodelbuilder.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
@@ -87,6 +90,13 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
     inputs->loadParameter<string>(amcPathDataOutput_, "simulation", "amcPathDataOutput", false);
     inputs->loadParameter<bool>(amcIndividualTrainingInput_, "xsimulationva", "amcIndividualTrainingInput", false, parseBool);
     inputs->loadParameter<bool>(amcIndividualTrainingOutput_, "simulation", "amcIndividualTrainingOutput", false, parseBool);
+
+    // Opt-in: route AMC regression QR through GPU (cuSOLVER).
+    {
+        bool tmp = false;
+        inputs->loadParameter<bool>(tmp, "simulation", "amcUseGpuRegression", false, parseBool);
+        QuantExt::setUseGpuRegression(tmp);
+    }
 
     scenarioReader_ = inputs->loadScenarioReader("simulation", "scenarioFile");
     inputs->loadParameterXML<EngineData>(simulationPricingEngine_, "simulation", "pricingEnginesFile");
@@ -131,6 +141,8 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
     if (!writeCube.empty())
         writeCube_ = true;
     inputs->loadParameter<string>(writeScenarios, "simulation", "scenariodump", false);
+    inputs->loadParameter<vector<QuantExt::RiskFactorKey::KeyType>>(filterRiskKeys_, "simulation", "filterRiskKeys",
+                                                                    false, parseListOfRiskFactorKeyValues);
     if (!writeScenarios.empty())
         writeScenarios_ = true;
     if (!writeCube_)
@@ -650,8 +662,8 @@ void XvaAnalyticImpl::buildScenarioGenerator(const bool continueOnCalibrationErr
     if (xvaVars->writeScenarios_) {
         auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
         analytic()->addReport(LABEL, "scenario", report);
-        scenarioGenerator_ =
-            QuantLib::ext::make_shared<ScenarioWriter>(scenarioGenerator_, report, std::vector<RiskFactorKey>{}, false);
+        scenarioGenerator_ = QuantLib::ext::make_shared<ScenarioWriter>(
+            scenarioGenerator_, report, std::vector<RiskFactorKey>{}, false, 8, xvaVars->filterRiskKeys_);
     }
 }
 

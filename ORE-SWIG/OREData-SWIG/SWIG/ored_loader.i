@@ -91,10 +91,12 @@ namespace ore {
 namespace data {
 class CSVLoader : public ore::data::Loader {
   public:
-    CSVLoader(const std::string& marketFilename, const std::string& fixingFilename,
-              bool implyTodaysFixings = false);
-    CSVLoader(const std::vector<std::string>& marketFiles, const std::vector<std::string>& fixingFiles,
-              bool implyTodaysFixings = false);
+    CSVLoader(bool implyTodaysFixings = false, QuantLib::Date fixingCutOffDate = QuantLib::Date());
+    void fromFiles(const std::string& marketFilename, const std::string& fixingFilename,
+                   const std::string& dividendFilename = "");
+    void fromFiles(const std::vector<std::string>& marketFiles, const std::vector<std::string>& fixingFiles,
+                   const std::vector<std::string>& dividendFiles = {});
+    void fromBuffers(const std::string& marketData, const std::string& fixingData = "");
 };
 
 class InMemoryLoader : public ore::data::Loader {

@@ -53,6 +53,7 @@
 #include <map>
 #include <ql/qldefines.hpp>
 #include <queue>
+#include <ql/errors.hpp>
 
 #ifndef BOOST_MSVC
 #include <unistd.h>
@@ -461,6 +462,9 @@ public:
     void setMask(unsigned mask) {
         boost::unique_lock<boost::shared_mutex> lock(mutex());
         mask_ = mask;
+#if defined(__GNUC__) or defined(__clang__)
+        qlStoreStacktrace = mask_ >= ORE_DEBUG;
+#endif
     }
     const std::filesystem::path& rootPath() {
         boost::shared_lock<boost::shared_mutex> lock(mutex());
