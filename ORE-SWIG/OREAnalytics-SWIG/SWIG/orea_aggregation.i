@@ -54,7 +54,7 @@ class DynamicInitialMarginCalculator {
 public:
     virtual ~DynamicInitialMarginCalculator() {}
     virtual void build() = 0;
-    const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& dimCube() const;
+    const ext::shared_ptr<ore::analytics::NPVCube>& dimCube() const;
 
     // Result accessors
     const std::vector<std::vector<QuantLib::Real>>& dynamicIM(const std::string& nettingSet) const;
@@ -130,12 +130,12 @@ public:
     std::map<std::string, Date> nettingSetMaturity();
     std::vector<Real> times();
     std::string baseCurrency();
-    QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio();
-    QuantLib::ext::shared_ptr<ore::analytics::NPVCube> npvCube();
-    QuantLib::ext::shared_ptr<ore::data::Market> market();
+    ext::shared_ptr<ore::data::Portfolio> portfolio();
+    ext::shared_ptr<ore::analytics::NPVCube> npvCube();
+    ext::shared_ptr<ore::data::Market> market();
 
     // Cube accessor
-    const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& exposureCube();
+    const ext::shared_ptr<ore::analytics::NPVCube>& exposureCube();
 
     // Per-trade exposure profiles
     std::vector<Real> epe(const std::string& tid);
@@ -164,8 +164,8 @@ public:
     virtual ~NettedExposureCalculator() {}
     virtual void build();
 
-    const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& exposureCube();
-    const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& nettedCube();
+    const ext::shared_ptr<ore::analytics::NPVCube>& exposureCube();
+    const ext::shared_ptr<ore::analytics::NPVCube>& nettedCube();
 
     // Per-netting-set profiles
     std::vector<Real> epe(const std::string& nid);
@@ -321,7 +321,7 @@ public:
     };
 
     virtual ~ExposureAllocator() {}
-    const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& exposureCube();
+    const ext::shared_ptr<ore::analytics::NPVCube>& exposureCube();
     virtual void build();
 };
 
@@ -382,9 +382,9 @@ namespace analytics {
 class PostProcess {
 public:
     // Cube accessors
-    const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& cube();
-    const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& netCube();
-    const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& cptyCube();
+    const ext::shared_ptr<ore::analytics::NPVCube>& cube();
+    const ext::shared_ptr<ore::analytics::NPVCube>& netCube();
+    const ext::shared_ptr<ore::analytics::NPVCube>& cptyCube();
 
     // Trade-level exposure profiles
     const std::vector<QuantLib::Real>& tradeEPE(const std::string& tradeId);
@@ -456,9 +456,18 @@ public:
     const std::map<std::string, QuantLib::Size> tradeIds();
     const std::map<std::string, QuantLib::Size> nettingSetIds();
     const std::map<std::string, std::string>& counterpartyId();
-    const QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio();
+    const ext::shared_ptr<ore::data::Portfolio> portfolio();
 };
 }
+}
+
+// Extend Analytic to provide postProcess() accessor (requires XvaAnalyticImpl downcast)
+%extend ore::analytics::Analytic {
+    ext::shared_ptr<ore::analytics::PostProcess> postProcess() {
+        auto* impl = dynamic_cast<ore::analytics::XvaAnalyticImpl*>($self->impl().get());
+        if (!impl) return nullptr;
+        return impl->postProcess();
+    }
 }
 
 #endif
