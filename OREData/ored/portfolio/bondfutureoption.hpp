@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2026 AcadiaSoft Inc.
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,57 +16,52 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file portfolio/equityoption.hpp
-    \brief Equity Option data model and serialization
+/*! \file portfolio/bondfutureoption.hpp
+    \brief Bond Future Option data model and serialization
     \ingroup tradedata
 */
-
 #pragma once
-
+#include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/underlying.hpp>
 #include <ored/portfolio/vanillaoption.hpp>
 #include <ored/portfolio/tradestrike.hpp>
 
 namespace ore {
 namespace data {
-using std::string;
 
-//! Serializable Equity Option
-/*!
-  \ingroup tradedata
-*/
-class EquityOption : public VanillaOptionTrade {
+//! Serializable Bond Future Option
+/*! \ingroup tradedata
+ */
+class BondFutureOption : public VanillaOptionTrade {
 public:
     //! Default constructor
-    EquityOption() : VanillaOptionTrade("EquityOption", AssetClass::EQ) {}
-    //! Constructor
-    EquityOption(Envelope& env, OptionData option, EquityUnderlying equityUnderlying, string currency,
-        QuantLib::Real quantity, TradeStrike tradeStrike)
-        : VanillaOptionTrade("EquityOption", env, AssetClass::EQ, option, equityUnderlying.name(), currency, quantity,
-            tradeStrike), equityUnderlying_(std::move(equityUnderlying)) {}
+    BondFutureOption();
 
-    //! Build QuantLib/QuantExt instrument, link pricing engine
+    //! Detailed constructor
+    BondFutureOption(Envelope& env,
+        OptionData optionData,
+        std::string futureContractName,
+        QuantLib::Real futureContractNotional,
+        QuantLib::Real strikePrice);
+
+    //! Build QuantLib or QuantExt instrument and link pricing engine.
     void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
 
-    //! Add underlying Equity names
+    //! Add names relating to the bond future contract.
     std::map<AssetClass, std::set<std::string>> underlyingIndices(
         const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
-    //! \name Inspectors
-    //@{
-    const string& equityName() const { return equityUnderlying_.name(); }
-    const string& strikeCurrency() const { return strikeCurrency_; }
-    //@}
-
-    //! \name Serialisation
+    //! \name Serialization
     //@{
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
-protected:
-    EquityUnderlying equityUnderlying_;
-    string strikeCurrency_;
+    //! Available after `build()` has been called. Contains details of the underlying bond future contract's CTD bond.
+    const BondData& bondData() const { return bondData_; }
+
+private:
+    BondData bondData_;
 };
 } // namespace data
 } // namespace ore

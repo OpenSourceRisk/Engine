@@ -254,6 +254,17 @@ public:
     vector<std::string> correlationPairs() const { return paramsLookup(RiskFactorKey::KeyType::Correlation); }
     const vector<Real>& correlationStrikes() const { return correlationStrikes_; }
 
+    // Bond future volatility data getters
+    bool bondFutureVolSimulate() const { return paramsSimulate(RiskFactorKey::KeyType::BondFutureVolatility); }
+    bool simulateBondFutureVolATMOnly() const { return bondFutureVolSimulateATMOnly_; }
+    const std::string& bondFutureVolDecayMode() const { return bondFutureVolDecayMode_; }
+    std::vector<std::string> bondFutureVolNames() const {
+        return paramsLookup(RiskFactorKey::KeyType::BondFutureVolatility);
+    }
+    const std::vector<QuantLib::Period>& bondFutureVolExpiries(const std::string& contractName) const;
+    const std::vector<QuantLib::Real>& bondFutureVolMoneyness(const std::string& contractName) const;
+    const string& bondFutureVolSmileDynamics(const string& contractName) const;
+
     Size numberOfCreditStates() const { return numberOfCreditStates_; }
 
     const CurveAlgebraData& curveAlgebraData() const { return curveAlgebraData_; }
@@ -420,6 +431,19 @@ public:
     void setCorrelationPairs(vector<string> names);
     vector<Real>& correlationStrikes() { return correlationStrikes_; }
     void setNumberOfCreditStates(Size numberOfCreditStates) { numberOfCreditStates_ = numberOfCreditStates; }
+
+    // Bond future volatility data setters
+    void setBondFutureVolSimulate(bool simulate);
+    void setSimulateBondFutureVolATMOnly(bool simulateATMOnly) { bondFutureVolSimulateATMOnly_ = simulateATMOnly; }
+    std::string& bondFutureVolDecayMode() { return bondFutureVolDecayMode_; }
+    void setBondFutureVolNames(vector<string> names);
+    std::vector<QuantLib::Period>& bondFutureVolExpiries(const std::string& contractName) {
+        return bondFutureVolExpiries_[contractName];
+    }
+    std::vector<QuantLib::Real>& bondFutureVolMoneyness(const std::string& contractName) {
+        return bondFutureVolMoneyness_[contractName];
+    }
+    void setBondFutureVolSmileDynamics(const string& key, const string& smileDynamics);
     //@}
 
     //! \name Serialisation
@@ -537,6 +561,13 @@ private:
     vector<Period> correlationExpiries_;
     vector<Real> correlationStrikes_;
     Size numberOfCreditStates_ = 0;
+
+    // Bond future volatility data
+    bool bondFutureVolSimulateATMOnly_ = false;
+    std::string bondFutureVolDecayMode_;
+    std::map<std::string, std::vector<QuantLib::Period>> bondFutureVolExpiries_;
+    std::map<std::string, std::vector<QuantLib::Real>> bondFutureVolMoneyness_;
+    map<string, string> bondFutureVolSmileDynamics_;
 
     CurveAlgebraData curveAlgebraData_;
 

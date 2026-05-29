@@ -47,9 +47,9 @@ TRSWrapper::TRSWrapper(
     const Currency& fundingCurrency, const Size fundingResetGracePeriod, const bool paysAsset, const bool paysFunding,
     const Leg& additionalCashflowLeg, const bool additionalCashflowLegPayer, const Currency& additionalCashflowCurrency,
     const std::vector<QuantLib::ext::shared_ptr<FxIndex>>& fxIndexAsset, const QuantLib::ext::shared_ptr<FxIndex>& fxIndexReturn,
-                       const QuantLib::ext::shared_ptr<FxIndex>& fxIndexAdditionalCashflows,
-                       const std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& addFxIndices,
-                       const QuantLib::ext::optional<TRS::FXConversion>& fxConversion)
+    const QuantLib::ext::shared_ptr<FxIndex>& fxIndexAdditionalCashflows,
+    const std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& addFxIndices,
+    const QuantLib::ext::optional<TRS::FXConversion>& fxConversion, Real indexQuantity, bool pricePerIndexUnit)
 
     : underlying_(underlying), underlyingIndex_(underlyingIndex), underlyingMultiplier_(underlyingMultiplier),
       includeUnderlyingCashflowsInReturn_(includeUnderlyingCashflowsInReturn), initialPrice_(initialPrice),
@@ -61,7 +61,8 @@ TRSWrapper::TRSWrapper(
       additionalCashflowLeg_(additionalCashflowLeg), additionalCashflowLegPayer_(additionalCashflowLegPayer),
       additionalCashflowCurrency_(additionalCashflowCurrency), fxIndexAsset_(fxIndexAsset),
       fxIndexReturn_(fxIndexReturn), fxIndexAdditionalCashflows_(fxIndexAdditionalCashflows),
-      addFxIndices_(addFxIndices), fxConversion_(fxConversion) {
+      addFxIndices_(addFxIndices), fxConversion_(fxConversion), indexQuantity_(indexQuantity),
+      pricePerIndexUnit_(pricePerIndexUnit) {
 
     QL_REQUIRE(!paymentSchedule_.empty(), "TRSWrapper::TRSWrapper(): payment schedule must not be empty()");
 
@@ -141,6 +142,11 @@ TRSWrapper::TRSWrapper(
             lastDate_ = std::max(lastDate_, c->date());
     for (auto const& c : additionalCashflowLeg_)
         lastDate_ = std::max(lastDate_, c->date());
+
+    if (!portfolioId_.empty() && pricePerIndexUnit_) {
+        // If we have a portfolio ID and the price per index unit flag is set, we set the basket level index.
+        basketIndex_ = ext::make_shared<QuantExt::GenericIndex>("GENERIC-" + portfolioId_);
+    }
 }
 
 bool TRSWrapper::isExpired() const {
@@ -178,6 +184,9 @@ void TRSWrapper::setupArguments(PricingEngine::arguments* args) const {
     a->fxIndexAdditionalCashflows_ = fxIndexAdditionalCashflows_;
     a->addFxIndices_ = addFxIndices_;
     a->fxConversion_ = fxConversion_;
+    a->indexQuantity_ = indexQuantity_;
+    a->pricePerIndexUnit_ = pricePerIndexUnit_;
+    a->basketIndex_ = basketIndex_;
 }
 
 void TRSWrapper::arguments::validate() const {
@@ -229,9 +238,9 @@ bool TRSWrapperAccrualEngine::computeStartValue(std::vector<Real>& underlyingSta
                                             << ")");
                 if (nth == 0 && arguments_.initialPrice_ != Null<Real>()) {
                     if (i == 0) {
-                        Real s0 =
-                            arguments_.initialPrice_ *
-                            (arguments_.underlyingMultiplier_.size() == 1 ? arguments_.underlyingMultiplier_[i] : 1.0);
+                        Real factor = arguments_.underlyingMultiplier_.size() == 1 ?
+                            arguments_.underlyingMultiplier_[i] : arguments_.indexQuantity_;
+                        Real s0 = arguments_.initialPrice_ * factor;
                         Real fx0 = getFxConversionRate(today, arguments_.initialPriceCurrency_,
                                                        arguments_.returnCurrency_, false);
                         DLOG("start value (underlying "
@@ -268,11 +277,21 @@ bool TRSWrapperAccrualEngine::computeStartValue(std::vector<Real>& underlyingSta
                     if (i == 0) {
                         DLOG("initial price is given as " << arguments_.initialPrice_ << " "
                                                           << arguments_.initialPriceCurrency_);
-                        s0 = arguments_.initialPrice_ *
-                             (arguments_.underlying_.size() == 1 ? arguments_.underlyingMultiplier_[i] : 1.0);
+                        Real factor = arguments_.underlying_.size() == 1 ?
+                            arguments_.underlyingMultiplier_[i] : arguments_.indexQuantity_;
+                        s0 = arguments_.initialPrice_ * factor;
                         fx0 = getFxConversionRate(fxDate, arguments_.initialPriceCurrency_, arguments_.returnCurrency_,
                                                   false);
                         usingInitialPrice = true;
+                    }
+                } else if (!arguments_.portfolioId_.empty() && arguments_.pricePerIndexUnit_) {
+                    // If we have a portfolio ID and the price per index unit flag is set, we look up the initial 
+                    // price for the basket in the fixings as opposed to getting the fixings for all of the individual 
+                    // underlyings separately. Must have fixing on valuation date v0 or pricing fails.
+                    if (i == 0) {
+                        s0 = arguments_.basketIndex_->fixing(v0) * arguments_.indexQuantity_;
+                        fx0 = getFxConversionRate(fxDate, arguments_.initialPriceCurrency_,
+                            arguments_.returnCurrency_, false);
                     }
                 } else {
                     std::map<std::string, QuantLib::ext::any> s0AdditionalData;
@@ -425,7 +444,8 @@ Real TRSWrapperAccrualEngine::getUnderlyingNPV(const Size i, std::map<std::strin
     if (QuantLib::ext::dynamic_pointer_cast<BondIndex>(arguments_.underlyingIndex_[i]) != nullptr ||
         QuantLib::ext::dynamic_pointer_cast<BondFuturesIndex>(arguments_.underlyingIndex_[i]) != nullptr) {
         Date today = Settings::instance().evaluationDate();
-        return arguments_.underlyingIndex_[i]->fixing(today, true) * arguments_.underlyingMultiplier_[i];
+        return arguments_.underlyingIndex_[i]->fixing(today, true) * arguments_.underlyingMultiplier_[i]
+            * arguments_.indexQuantity_;
     } else {
         if(auto bondPositionWrapper = QuantLib::ext::dynamic_pointer_cast<BondPositionInstrumentWrapper>(arguments_.underlying_[i]->instrument())){
             auto bondDetails = bondPositionWrapper->NPVBreakDown();
@@ -435,9 +455,9 @@ Real TRSWrapperAccrualEngine::getUnderlyingNPV(const Size i, std::map<std::strin
                 fixingAdditionalData["underlying["+ std::to_string(k)+ "]_fxConversion"] = std::get<2>(bondDetails[k]);
                 fixingAdditionalData["underlying["+ std::to_string(k)+ "]_npv"] = std::get<3>(bondDetails[k]);
             }
-            return bondPositionWrapper->NPV();
+            return bondPositionWrapper->NPV() * arguments_.indexQuantity_;
         }
-        return arguments_.underlying_[i]->instrument()->NPV();
+        return arguments_.underlying_[i]->instrument()->NPV() * arguments_.indexQuantity_;
     }
 }
 

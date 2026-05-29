@@ -163,6 +163,7 @@ private:
     void generateCommodityVolScenarios(bool up);
     void generateSecuritySpreadScenarios(bool up);
     void generateCorrelationScenarios(bool up);
+    void generateBondFutureVolScenarios(bool up);
 
     // common helper for generateSwaptionVolScenarios(), generateYieldVolScenarios()
     void generateGenericYieldVolScenarios(bool up, RiskFactorKey::KeyType rfType);
@@ -202,6 +203,8 @@ private:
     ScenarioDescription securitySpreadScenarioDescription(string bond, bool up, ShiftScheme shiftScheme);
     ScenarioDescription correlationScenarioDescription(string pair, Size expiryBucket, Size strikeBucket, bool up,
                                                        ShiftScheme shiftScheme);
+    ScenarioDescription bondFutureVolScenarioDescription(const std::string& contractName, QuantLib::Size expiryBucket,
+        QuantLib::Size strikeBucket, bool up, ShiftScheme shiftScheme);
 
     QuantLib::ext::shared_ptr<SensitivityScenarioData> sensitivityData_;
     QuantLib::ext::shared_ptr<ScenarioFactory> sensiScenarioFactory_;
