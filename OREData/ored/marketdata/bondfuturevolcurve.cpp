@@ -183,9 +183,9 @@ BondFutureVolCurve::generateStrikesExpiries(const VolatilityStrikeSurfaceConfig&
     }
 
     const auto& strikes = vssc.strikes();
-    bool strkWc = false;
+    result.strikeWildcard = false;
     if (find(strikes.begin(), strikes.end(), "*") != strikes.end()) {
-        strkWc = true;
+        result.strikeWildcard = true;
         QL_REQUIRE(strikes.size() == 1, "BondFutureVolCurve: wild card strike given, no more strikes allowed.");
         DLOG("Have strike wildcard pattern " << strikes[0]);
     }
