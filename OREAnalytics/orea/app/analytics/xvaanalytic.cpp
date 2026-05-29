@@ -1230,6 +1230,14 @@ void XvaAnalyticImpl::runPostProcessor() {
 
         DLOG("Create a '" << xvaVars->dimModel_ << "' Dynamic Initial Margin Calculator");
 
+        if (dimScaling == QuantLib::Null<Real>() &&
+            xvaVars->dimModel_ != "SimmAnalytic" && xvaVars->dimModel_ != "DynamicIM") {
+            QL_REQUIRE(xvaVars->collateralBalances_,
+                       "DIM: dimScaling is not set and no collateralBalancesFile is provided. "
+                       "Provide dimScaling explicitly in the xva analytic or supply a "
+                       "collateralBalancesFile with valid initial margins for each netting set.");
+        }
+
         if (xvaVars->dimModel_ == "Regression") {
             dimCalculator_ = QuantLib::ext::make_shared<RegressionDynamicInitialMarginCalculator>(
                 analytic()->portfolio(), cube_, cubeInterpreter_, scenarioData_, dimQuantile,
@@ -1237,7 +1245,7 @@ void XvaAnalyticImpl::runPostProcessor() {
                 dimLocalRegressionBandwidth, currentIM,
                 xvaVars->deterministicInitialMargin_, dimScaling);
         } else if (xvaVars->dimModel_ == "DeltaVaR" ||
-		   xvaVars->dimModel_ == "DeltaGammaNormalVaR" ||
+                   xvaVars->dimModel_ == "DeltaGammaNormalVaR" ||
                    xvaVars->dimModel_ == "DeltaGammaVaR") {
             QL_REQUIRE(nettingSetCube_ && sensitivityStorageManager_,
                        "netting set cube or sensitivity storage manager not set - "
