@@ -21,7 +21,7 @@
 namespace ore {
 namespace data {
 
-void AdjustedInMemoryLoader::add(Date date, const string& name, Real value) {
+void AdjustedInMemoryLoader::add(Date date, const string& name, Real value, bool overwrite) {
     Real factor = 1.0;
     try {
         auto datum = parseMarketDatum(date, name, Null<Real>());
@@ -30,10 +30,10 @@ void AdjustedInMemoryLoader::add(Date date, const string& name, Real value) {
         else if (auto eqDatum = QuantLib::ext::dynamic_pointer_cast<EquityForwardQuote>(datum))
             factor = factors_.getFactor(eqDatum->eqName(), date);
         datum->setValue(value * factor);
-        InMemoryLoader::add(datum);
+        InMemoryLoader::add(datum, overwrite);
     } catch (const std::exception& e) {
         DLOG("AdjustedInMemoryLoader failure on " << name << ": " << e.what());
-        InMemoryLoader::add(date, name, value);
+        InMemoryLoader::add(date, name, value, overwrite);
     }
 }
 

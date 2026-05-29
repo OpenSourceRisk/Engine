@@ -64,8 +64,8 @@ BOOST_AUTO_TEST_CASE(testSingleCurrencyYieldCurveBootstrap) {
     todaysMarketParams->fromFile(TEST_INPUT_FILE("todaysmarket_01.xml"));
     auto curveConfigs = QuantLib::ext::make_shared<CurveConfigurations>();
     curveConfigs->fromFile(TEST_INPUT_FILE("curveconfig_01.xml"));
-    auto loader =
-        QuantLib::ext::make_shared<CSVLoader>(TEST_INPUT_FILE("market_01.txt"), TEST_INPUT_FILE("fixings.txt"), false);
+    auto loader = QuantLib::ext::make_shared<CSVLoader>();
+    loader->fromFiles(TEST_INPUT_FILE("market_01.txt"), TEST_INPUT_FILE("fixings.txt"));
     QuantLib::ext::shared_ptr<TodaysMarket> market =
         QuantLib::ext::make_shared<TodaysMarket>(asof, todaysMarketParams, loader, curveConfigs, false);
 
@@ -99,8 +99,8 @@ BOOST_AUTO_TEST_CASE(testCrossCurrencyYieldCurveBootstrap) {
     todaysMarketParams->fromFile(TEST_INPUT_FILE("todaysmarket_02.xml"));
     auto curveConfigs = QuantLib::ext::make_shared<CurveConfigurations>();
     curveConfigs->fromFile(TEST_INPUT_FILE("curveconfig_02.xml"));
-    auto loader =
-        QuantLib::ext::make_shared<CSVLoader>(TEST_INPUT_FILE("market_02.txt"), TEST_INPUT_FILE("fixings.txt"), false);
+    auto loader = QuantLib::ext::make_shared<CSVLoader>();
+    loader->fromFiles(TEST_INPUT_FILE("market_02.txt"), TEST_INPUT_FILE("fixings.txt"));
     QuantLib::ext::shared_ptr<TodaysMarket> market =
         QuantLib::ext::make_shared<TodaysMarket>(asof, todaysMarketParams, loader, curveConfigs, false);
 
@@ -135,8 +135,8 @@ BOOST_AUTO_TEST_CASE(testCapFloorStrip) {
     todaysMarketParams->fromFile(TEST_INPUT_FILE("todaysmarket_03.xml"));
     auto curveConfigs = QuantLib::ext::make_shared<CurveConfigurations>();
     curveConfigs->fromFile(TEST_INPUT_FILE("curveconfig_03.xml"));
-    auto loader =
-        QuantLib::ext::make_shared<CSVLoader>(TEST_INPUT_FILE("market_03.txt"), TEST_INPUT_FILE("fixings.txt"), false);
+    auto loader = QuantLib::ext::make_shared<CSVLoader>();
+    loader->fromFiles(TEST_INPUT_FILE("market_03.txt"), TEST_INPUT_FILE("fixings.txt"));
     QuantLib::ext::shared_ptr<TodaysMarket> market =
         QuantLib::ext::make_shared<TodaysMarket>(asof, todaysMarketParams, loader, curveConfigs, false);
 
