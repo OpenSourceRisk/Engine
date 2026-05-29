@@ -2651,9 +2651,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                         QL_REQUIRE(!observationLegs.empty(), "YoY inflation index " << name << " has no observation legs defined");
                         auto obsLag = observationLegs.rbegin()->second;
                         
-                        Date date0 = asof_ - obsLag;
+                        Date date0 = yoyInflationTs->baseDate();
                         DayCounter dc = yoyInflationTs->dayCounter();
-                        vector<Date> quoteDates;
+                        
                         vector<Time> yoyCurveTimes(
                             1, -dc.yearFraction(inflationPeriod(date0, yoyInflationTs->frequency()).first, asof_));
                         vector<Handle<Quote>> quotes;
@@ -2663,9 +2663,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                                    "yoy inflation tenors must not include t=0");
 
                         for (auto& tenor : parameters->yoyInflationTenors(name)) {
-                            Date inflDate = inflationPeriod(date0 + tenor - obsLag, yoyInflationTs->frequency()).first;
+                            Date inflDate = inflationPeriod(asof_ + tenor - obsLag, yoyInflationTs->frequency()).first;
                             yoyCurveTimes.push_back(dc.yearFraction(asof_, inflDate));
-                            quoteDates.push_back(asof_ + tenor);
                         }
 
                         for (Size i = 1; i < yoyCurveTimes.size(); i++) {
