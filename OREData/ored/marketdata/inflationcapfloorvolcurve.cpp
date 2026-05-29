@@ -69,8 +69,7 @@ std::pair<Date, bool> getStartDateAndIsInterpolated(
 CPI::InterpolationType getObservationInterpolation(
     const QuantLib::ext::shared_ptr<ore::data::InflationCapFloorVolatilityCurveConfig>& config) {
     auto [_, interpolated] = getStartDateAndIsInterpolated(Settings::instance().evaluationDate(), config);
-    // If the convention is not interpolated, return AsIndex, it will defualt to flat
-    return interpolated ? CPI::Linear : CPI::AsIndex;
+    return interpolated ? CPI::Linear : CPI::Flat;
 }
 
 } // namespace
@@ -261,6 +260,8 @@ void InflationCapFloorVolCurve::buildFromVolatilities(
                                                                  tenors, strikes, vols, config->dayCounter());
 
         QuantLib::ext::shared_ptr<YoYInflationIndex> index;
+        auto obsInterpolation = getObservationInterpolation(config);
+
         auto it2 = inflationCurves.find(config->indexCurve());
         if (it2 != inflationCurves.end()) {
             QuantLib::ext::shared_ptr<InflationTermStructure> ts = it2->second->inflationTermStructure();
@@ -271,12 +272,13 @@ void InflationCapFloorVolCurve::buildFromVolatilities(
             index = QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(
                 parseZeroInflationIndex(config->index(), Handle<ZeroInflationTermStructure>()),
                 Handle<YoYInflationTermStructure>(yyTs));
+            obsInterpolation = CPI::Linear;
         }
 
         YoYPriceSurfaceFromVolatilities volToPriceConverter;
 
         auto priceSurface =
-            volToPriceConverter(capVol, index, config->observationLag(), getObservationInterpolation(config),
+            volToPriceConverter(capVol, index, config->observationLag(), obsInterpolation,
                                 discountCurve_, quoteVolatilityType, 0.0);
 
         // Get configuration values for bootstrap

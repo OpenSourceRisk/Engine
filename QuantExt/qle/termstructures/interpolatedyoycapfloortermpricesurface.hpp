@@ -83,9 +83,8 @@ public:
         // work in terms of maturity-of-instruments
         // so ask for rate with observation lag
         // Third parameter = force linear interpolation of yoy
-        auto index = yoyIndex_->clone(Handle<YoYInflationTermStructure>(yoy_));
         Period relevantObsLag = obsLag == Period(-1, Days) ? observationLag() : obsLag;
-        return CPI::laggedYoYRate(index, d, relevantObsLag, indexIsInterpolated_ ? CPI::Linear : CPI::Flat);
+        return yoy_->yoyRate(d - relevantObsLag, extrapolate);
     }
     //@}
 
@@ -320,10 +319,9 @@ void InterpolatedYoYCapFloorTermPriceSurface<I2D, I1D>::calculateYoYTermStructur
     // usually this base rate is known
     // however for the data to be self-consistent
     // we pick this as the end of the curve
-
+    Rate baseYoYRate = atmYoYSwapRate(referenceDate()); //!
     QuantLib::Date baseDate = QuantExt::ZeroInflation::curveBaseDate(
         false, nominalTS_->referenceDate(), observationLag(), yoyIndex()->frequency(), yoyIndex());
-    Rate baseYoYRate = atmYoYSwapRate(baseDate);
     QuantLib::ext::shared_ptr<PiecewiseYoYInflationCurve<I1D>> pYITS(new PiecewiseYoYInflationCurve<I1D>(
         nominalTS_->referenceDate(), baseDate, baseYoYRate, yoyIndex()->frequency(), dayCounter(), YYhelpers));
     pYITS->recalculate();
