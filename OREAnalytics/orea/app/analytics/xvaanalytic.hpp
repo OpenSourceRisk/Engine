@@ -76,6 +76,7 @@ struct XvaVariables : public InputVariables {
     bool storeSurvivalProbabilities_ = false;
     bool writeCube_ = false;
     bool writeScenarios_ = false;
+    vector<QuantExt::RiskFactorKey::KeyType> filterRiskKeys_ = {};
     bool generateCorrelations_ = false;
     bool outputCrossAssetModelData_ = false;
     bool cubeNpvOverlay_ = false;

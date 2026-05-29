@@ -41,7 +41,8 @@ struct ScenarioGenerationVariables : public InputVariables {
     bool scenarioOutputStatistics_ = true;
     bool scenarioOutputDistributions_ = true;
     QuantLib::Integer scenarioPrecision_ = 8;
-    std::string amcPathDataOutput_;    
+    std::string amcPathDataOutput_;   
+    std::vector<QuantExt::RiskFactorKey::KeyType> filterRiskKeys_;
     
     QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketParams_;
     QuantLib::ext::shared_ptr<ScenarioGeneratorData> scenarioGeneratorData_;
