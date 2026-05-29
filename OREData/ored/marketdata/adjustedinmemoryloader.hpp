@@ -31,7 +31,7 @@ public:
     AdjustedInMemoryLoader(const ore::data::AdjustmentFactors& factors) : factors_(factors){};
 
     // add a market datum
-    void add(QuantLib::Date date, const std::string& name, QuantLib::Real value) override;
+    void add(QuantLib::Date date, const std::string& name, QuantLib::Real value, bool overwrite = false) override;
     // add a fixing
     void addFixing(QuantLib::Date date, const std::string& name, QuantLib::Real value) override;
 
