@@ -1212,31 +1212,30 @@ void XvaAnalyticImpl::runPostProcessor() {
         LOG("dim calculator not set, create one");
 	    std::map<std::string, Real> currentIM;
         Real dimScaling = xvaVars->dimScaling_;
-        if (dimScaling == QuantLib::Null<Real>() && xvaVars->collateralBalances_) {
+        if (dimScaling == QuantLib::Null<Real>()) {
+            QL_REQUIRE(xvaVars->dimModel_ == "SimmAnalytic" || xvaVars->dimModel_ == "DynamicIM" ||
+                           xvaVars->collateralBalances_,
+                       "DIM: dimScaling is not set and no collateralBalancesFile is provided. "
+                       "Provide dimScaling explicitly in the xva analytic or supply a "
+                       "collateralBalancesFile with valid initial margins for each netting set.");
+            if (xvaVars->collateralBalances_) {
                 for (auto const& [n, b] : xvaVars->collateralBalances_->collateralBalances()) {
-                Real im = b->initialMargin();
-                QL_REQUIRE(im != QuantLib::Null<Real>() && im > 0.0,
-                           "DIM: collateral balance initial margin for netting set '"
-                               << n.nettingSetId()
-                               << "' is zero or not set. "
-                                  "Provide a valid IM or set dimScaling explicitly in the xva analytic.");
-                currentIM[n.nettingSetId()] =
-                    im *
-                    (b->currency() == baseCurrency
-                         ? 1.0
-                         : analytic()->market()->fxRate(b->currency() + baseCurrency, marketConfiguration)->value());
+                    Real im = b->initialMargin();
+                    QL_REQUIRE(im != QuantLib::Null<Real>() && im > 0.0,
+                               "DIM: collateral balance initial margin for netting set '"
+                                   << n.nettingSetId()
+                                   << "' is zero or not set. "
+                                      "Provide a valid IM or set dimScaling explicitly in the xva analytic.");
+                    currentIM[n.nettingSetId()] =
+                        im *
+                        (b->currency() == baseCurrency
+                             ? 1.0
+                             : analytic()->market()->fxRate(b->currency() + baseCurrency, marketConfiguration)->value());
+                }
             }
         }
 
         DLOG("Create a '" << xvaVars->dimModel_ << "' Dynamic Initial Margin Calculator");
-
-        if (dimScaling == QuantLib::Null<Real>() &&
-            xvaVars->dimModel_ != "SimmAnalytic" && xvaVars->dimModel_ != "DynamicIM") {
-            QL_REQUIRE(xvaVars->collateralBalances_,
-                       "DIM: dimScaling is not set and no collateralBalancesFile is provided. "
-                       "Provide dimScaling explicitly in the xva analytic or supply a "
-                       "collateralBalancesFile with valid initial margins for each netting set.");
-        }
 
         if (xvaVars->dimModel_ == "Regression") {
             dimCalculator_ = QuantLib::ext::make_shared<RegressionDynamicInitialMarginCalculator>(
