@@ -26,6 +26,7 @@
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/averageonindexedcouponpricer.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
+#include <qle/instruments/pathlevelresult.hpp>
 #include <qle/math/flatextrapolation.hpp>
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/models/lgmfdsolver.hpp>
@@ -223,7 +224,8 @@ Real FdGaussianCam::extractT0Result(const RandomVariable& result) const {
 
     // roll back to today (if necessary)
 
-    RandomVariable r = npv(result, referenceDate(), Filter(), QuantLib::ext::nullopt, RandomVariable(), RandomVariable());
+    RandomVariable r =
+        npv(result, referenceDate(), Filter(), QuantLib::ext::nullopt, RandomVariable(), RandomVariable());
 
     // we expect the results to be determinstic as per LgmBackwardSolver interface
 
@@ -231,6 +233,41 @@ Real FdGaussianCam::extractT0Result(const RandomVariable& result) const {
                                   "deterministic after rollback to time t = 0");
 
     return r.at(0);
+}
+
+void FdGaussianCam::populateAdditionalResultsPathLevel() const {
+
+    std::vector<PathLevelResult> pathLevelResults;
+
+    for (Size d = 0; d < effectiveSimulationDates_.size(); ++d) {
+        Date date = *std::next(effectiveSimulationDates_.begin(), d);
+        for (Size i = 0; i < indices_.size(); ++i) {
+            PathLevelResult r;
+            r.resultId = indices_[i].name();
+            r.index = i;
+            r.date = date;
+            r.time = timeFromReference(r.date);
+            r.values = static_cast<std::vector<double>>(getIndexValue(i, date));
+            pathLevelResults.push_back(r);
+        }
+        for (Size i = 0; i < irIndices_.size(); ++i) {
+            PathLevelResult r;
+            r.resultId = irIndices_[i].first.name();
+            r.index = i;
+            r.date = date;
+            r.time = timeFromReference(r.date);
+            r.values = static_cast<std::vector<double>>(getIrIndexValue(i, date));
+            pathLevelResults.push_back(r);
+        }
+        PathLevelResult r;
+        r.resultId = "NUMERAIRE";
+        r.date = date;
+        r.time = timeFromReference(r.date);
+        r.values = static_cast<std::vector<double>>(getNumeraire(date));
+        pathLevelResults.push_back(r);
+    }
+
+    additionalResultsPathLevel_["gaussiancam_results_pathlevel"] = pathLevelResults;
 }
 
 } // namespace data

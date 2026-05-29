@@ -313,7 +313,7 @@ private:
 class FutureConvention : public Convention {
 public:
     //! SecondThursday is kept as a backward-compatible alias for IMMAUD.
-    enum class DateGenerationRule { IMM, FirstDayOfMonth, IMMAUD, IMMNZD, IMMCAD };
+    enum class DateGenerationRule { IMM, FirstDayOfMonth, IMMAUD, IMMNZD, IMMCAD, IMMEUR };
     //! \name Constructors
     //@{
     //! Default constructor

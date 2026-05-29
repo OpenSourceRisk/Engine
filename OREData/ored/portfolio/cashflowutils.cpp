@@ -65,7 +65,7 @@ void populateReportDataFromAdditionalResults(std::vector<TradeCashflowReportData
 
     // ensures all cashFlowResults from composite trades are being accounted for
     auto lower = addResults.lower_bound("cashFlowResults");
-    auto upper = addResults.lower_bound("cashFlowResults_a"); // Upper bound due to alphabetical order
+    auto upper = addResults.lower_bound("cashFlowResults_:"); // Upper bound due to alphabetical order
 
     for (auto cashFlowResults = lower; cashFlowResults != upper; ++cashFlowResults) {
 

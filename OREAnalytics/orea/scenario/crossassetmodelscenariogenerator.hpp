@@ -88,7 +88,6 @@ private:
     QuantLib::ext::shared_ptr<ore::data::Market> initMarket_;
     const std::string configuration_;
     std::string amcPathDataOutput_;
-    Size samples_;
     // generated data
     bool initialized_ = false;
     std::vector<QuantLib::ext::shared_ptr<QuantExt::CrossAssetModelImpliedFxVolTermStructure>> fxVols_;

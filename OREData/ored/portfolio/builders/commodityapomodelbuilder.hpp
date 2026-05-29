@@ -45,8 +45,6 @@ protected:
 
     AssetModelWrapper::ProcessType processType() const override;
     std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> getCalibratedProcesses() const override;
-    std::vector<std::vector<Real>> getCurveTimes() const override;
-    std::vector<std::vector<std::pair<Real, Real>>> getVolTimesStrikes() const override;
 
     QuantLib::ext::shared_ptr<QuantExt::CommodityAveragePriceOption> apo_;
     bool dontCalibrate_ = false;

@@ -98,131 +98,6 @@ void CrifVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParam
         inputs->setSimmBucketMapperFromFile(fileName);
     }
 }
-
-std::pair<QuantLib::ext::shared_ptr<SensitivityStream>,
-          std::map<std::string, QuantLib::ext::shared_ptr<InMemoryReport>>>
-computeSensitivities(QuantLib::ext::shared_ptr<ore::analytics::SensitivityAnalysis>& sensiAnalysis,
-                     const QuantLib::ext::shared_ptr<InputParameters>& inputs, ore::analytics::Analytic* analytic,
-                     const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const bool writeReports) {
-    
-    analytic->startTimer("computeSensitivities()");
-    
-    LOG("Initialise sensitivity analysis");
-
-    map<string, QuantLib::ext::shared_ptr<InMemoryReport>> sensiReports;
-    if (inputs->nThreads() == 1) {
-        sensiAnalysis = QuantLib::ext::make_shared<SensitivityAnalysis>(
-            portfolio, analytic->market(), Market::defaultConfiguration, inputs->pricingEngine(),
-            analytic->configurations().simMarketParams, analytic->configurations().sensiScenarioData,
-            inputs->sensiRecalibrateModels(), inputs->sensiLaxFxConversion(), analytic->configurations().curveConfig,
-            analytic->configurations().todaysMarketParams, false, inputs->refDataManager(),
-            inputs->iborFallbackConfig(), true, inputs->dryRun(), inputs->useAtParCouponsTrades(), 
-            inputs->computeTheta(), inputs->thetaPeriod());
-    } else {
-        sensiAnalysis = QuantLib::ext::make_shared<SensitivityAnalysis>(
-            inputs->nThreads(), inputs->asof(), analytic->loader(), portfolio, Market::defaultConfiguration,
-            inputs->pricingEngine(), analytic->configurations().simMarketParams,
-            analytic->configurations().sensiScenarioData, inputs->sensiRecalibrateModels(),
-            inputs->sensiLaxFxConversion(), analytic->configurations().curveConfig,
-            analytic->configurations().todaysMarketParams, false, inputs->refDataManager(),
-            inputs->iborFallbackConfig(), true, inputs->dryRun(), "analytic/" + analytic->label(),
-            inputs->useAtParCouponsCurves(), inputs->useAtParCouponsTrades(),
-            inputs->computeTheta(), inputs->thetaPeriod());
-    }
-
-    LOG("Sensitivity analysis initialised");
-    MEM_LOG;
-
-    LOG("Align pillars for the par sensitivity calculation");
-    set<RiskFactorKey::KeyType> typesDisabled{RiskFactorKey::KeyType::OptionletVolatility};
-    QuantLib::ext::shared_ptr<ParSensitivityAnalysis> parAnalysis = QuantLib::ext::make_shared<ParSensitivityAnalysis>(
-        inputs->asof(), analytic->configurations().simMarketParams, *analytic->configurations().sensiScenarioData,
-        Market::defaultConfiguration, true, typesDisabled);
-    parAnalysis->alignPillars();
-    sensiAnalysis->overrideTenors(true);
-    LOG("Pillars aligned");
-    MEM_LOG;
-
-    LOG("Generate sensitivities");
-    sensiAnalysis->registerProgressIndicator(QuantLib::ext::make_shared<ProgressLog>("sensi sim"));
-    sensiAnalysis->generateSensitivities();
-    LOG("Sensitivities generated");
-    MEM_LOG;
-
-    ReportWriter reportWriter(inputs->reportNaString());
-
-    if (writeReports) {
-        auto simmScenarioReport = QuantLib::ext::make_shared<InMemoryReport>();
-        reportWriter.writeScenarioReport(*simmScenarioReport, sensiAnalysis->sensiCubes(),
-                                         inputs->sensiThreshold());
-        sensiReports["crif_scenario"] = simmScenarioReport;
-    } else {
-        LOG("Skipping SIMM scenario report, this is an optional report and writeOptionalReports is set to false");
-    }
-    MEM_LOG;
-
-    QuantLib::ext::shared_ptr<SensitivityStream> ss = QuantLib::ext::make_shared<SensitivityCubeStream>(
-        sensiAnalysis->sensiCubes(), analytic->configurations().simMarketParams->baseCcy(), portfolio);
-    if (writeReports) {
-        auto simmSensitivityReport = QuantLib::ext::make_shared<InMemoryReport>();
-        reportWriter.writeSensitivityReport(*simmSensitivityReport, ss, inputs->sensiThreshold(), analytic->market(),
-                                            Market::defaultConfiguration, inputs->sensiOutputPrecision());
-        sensiReports["crif_sensitivity"] = simmSensitivityReport;
-    } else {
-        LOG("Skipping SIMM sensitivity report, this is an optional report and writeOptionalReports is set to "
-            "false");
-    }
-    MEM_LOG;
-
-    if (writeReports) {
-        auto simmSensitivityConfigReport = QuantLib::ext::make_shared<InMemoryReport>();
-        reportWriter.writeSensitivityConfigReport(
-            *simmSensitivityConfigReport, sensiAnalysis->scenarioGenerator()->shiftSizes(),
-            sensiAnalysis->scenarioGenerator()->baseValues(), sensiAnalysis->scenarioGenerator()->keyToFactor());
-        sensiReports["crif_sensitivity_config"] = simmSensitivityConfigReport;
-    } else {
-        LOG("Skipping SIMM sensitivity config report, this is an optional report and writeOptionalReports is set "
-            "to false");
-    }
-    MEM_LOG;
-
-    parAnalysis->computeParInstrumentSensitivities(sensiAnalysis->simMarket());
-    if (writeReports) {
-        QuantLib::ext::shared_ptr<InMemoryReport> parScenarioRatesReport =
-            QuantLib::ext::make_shared<InMemoryReport>(inputs->reportBufferSize());
-        parAnalysis->writeParRatesReport(*parScenarioRatesReport);
-        sensiReports["crif_scenario_par_rates"] = parScenarioRatesReport;
-    }
-    QuantLib::ext::shared_ptr<ParSensitivityConverter> parConverter =
-        QuantLib::ext::make_shared<ParSensitivityConverter>(parAnalysis->parSensitivities(), parAnalysis->shiftSizes());
-    auto parCube = QuantLib::ext::make_shared<ZeroToParCube>(sensiAnalysis->sensiCubes(), parConverter, typesDisabled, true);
-    ss = QuantLib::ext::make_shared<ParSensitivityCubeStream>(
-        parCube, analytic->configurations().simMarketParams->baseCcy(), portfolio);
-    // The stream will be reused for the crif generation, so we wrap it into a buffered stream to gain some
-    // performance. The cost for this is the memory footpring of the buffer.
-    ss = QuantLib::ext::make_shared<ore::analytics::BufferedSensitivityStream>(ss);
-    if (writeReports) {
-        auto simmParSensitivityReport = QuantLib::ext::make_shared<InMemoryReport>();
-        reportWriter.writeSensitivityReport(*simmParSensitivityReport, ss, inputs->sensiThreshold(), analytic->market(),
-                                            Market::defaultConfiguration, inputs->sensiOutputPrecision());
-        sensiReports["crif_par_sensitivity"] = simmParSensitivityReport;
-    }
-    MEM_LOG;
-
-    if (writeReports && inputs->outputJacobi()) {
-        auto jacobiReport = QuantLib::ext::make_shared<InMemoryReport>();
-        writeParConversionMatrix(parAnalysis->parSensitivities(), *jacobiReport);
-        sensiReports["crif_par_conversion_matrix"] = jacobiReport;
-
-        auto jacobiInverseReport = QuantLib::ext::make_shared<InMemoryReport>();
-        parConverter->writeConversionMatrix(*jacobiInverseReport);
-        sensiReports["crif_par_conversion_matrix_inverse"] = jacobiInverseReport;
-    }
-
-    analytic->stopTimer("computeSensitivities()");
-
-    return std::make_pair(ss, sensiReports);
-};
   
 void CrifAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
@@ -342,16 +217,18 @@ void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
 
     CONSOLEW("CRIF: Build Market");
     analytic()->buildMarket(loader);
-    CONSOLE("OK");
-
-    CONSOLEW("CRIF: Build Portfolio");
-    analytic()->buildPortfolio();
+    analytic()->applyOffsetScenario();
     CONSOLE("OK");
 
     ObservationMode::instance().setMode(ObservationMode::Mode::None);
 
     auto crifAnalytic = dynamic_cast<CrifAnalyticBase*>(analytic());
     QL_REQUIRE(crifAnalytic, "Analytic must be of type CRIF");
+
+
+    CONSOLEW("CRIF: Build Portfolio");
+    analytic()->buildPortfolio();
+    CONSOLE("OK");
 
     // Save portfolio state before applying SIMM exemptions
     auto portfolioNoSimmExemptions = QuantLib::ext::make_shared<Portfolio>();
@@ -360,7 +237,6 @@ void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
     crifAnalytic->setPortfolioNoSimmExemptions(portfolioNoSimmExemptions);
 
     auto marketConfig = inputs_->marketConfig("pricing");
-
     // NPV report before applying SIMM exemptions
     auto npvWithoutReport = QuantLib::ext::make_shared<InMemoryReport>();
     ReportWriter(inputs_->reportNaString())
@@ -403,7 +279,6 @@ void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
         .writeNpv(*npvWithReport, crifAnalytic->baseCurrency(), analytic()->market(), marketConfig,
                   analytic()->portfolio());
     analytic()->addReport(LABEL, "npv_with_simm_exemptions", npvWithReport);
-
     // CF report after applying SIMM exemptions
     auto cfWithReport = QuantLib::ext::make_shared<InMemoryReport>();
     ReportWriter(inputs_->reportNaString())
@@ -445,9 +320,9 @@ void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
         bool savedAlignPillars = inputs_->alignPillars();
         inputs_->setParSensi(true);
         inputs_->setAlignPillars(true);
-
+        DLOG("Running sensitivity analytic for CRIF with SIMM exemptions, portfolio size: " << portfolioSimmExemptions->size());
         sensiAnalytic->runAnalytic(loader, {"SENSITIVITY"});
-
+        DLOG("Finished running sensitivity analytic for CRIF with SIMM exemptions");
         inputs_->setParSensi(savedParSensi);
         inputs_->setAlignPillars(savedAlignPillars);
 
@@ -525,5 +400,6 @@ CrifAnalytic::computeCrif(const QuantLib::ext::shared_ptr<ore::data::Portfolio>&
     stopTimer("computeCrif()");
     return QuantLib::ext::make_shared<ore::analytics::Crif>();
 }
+
 } // namespace analytics
 }
