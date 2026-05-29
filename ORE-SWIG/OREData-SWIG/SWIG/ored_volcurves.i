@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2019, 2020 Quaternion Risk Management Ltd
+ Copyright (C) 2019, 2020, 2026 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -20,36 +20,64 @@
 #define ored_volcurves_i
 
 %include std_set.i
+%include ored_modelbuilders.i
 
 %template(DateSet) std::set<Date>;
 
 // GenericYieldVolCurve and SwaptionVolCurve wrappers are intentionally deferred.
 
-%shared_ptr(ore::data::LocalVolModelBuilder)
+// ---------------------------------------------------------------------------
+// AssetModelBuilderBase — abstract base for LocalVolModelBuilder / HestonModelBuilder
+// ---------------------------------------------------------------------------
+
+%shared_ptr(ore::data::AssetModelBuilderBase)
+%nodefaultctor ore::data::AssetModelBuilderBase;
 namespace ore {
 namespace data {
-class LocalVolModelBuilder : public BlackScholesModelBuilderBase {
-    public:
-         enum class Type { Dupire, DupireFloored, AndreasenHuge };
-         LocalVolModelBuilder(const std::vector<Handle<YieldTermStructure>>& curves,
-                              const std::vector<ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
-                              const std::set<Date>& simulationDates = {}, const std::set<Date>& addDates = {},
-                              const Size timeStepsPerYear = 1, const Type lvType = Type::Dupire,
-                              const std::vector<Real>& calibrationMoneyness = {-2.0, -1.0, 0.0, 1.0, 2.0},
-                              const std::string& referenceCalibrationGrid = "", const bool dontCalibrate = false,
-                              const Handle<YieldTermStructure>& baseCurve = {});
-         LocalVolModelBuilder(const Handle<YieldTermStructure>& curve,
-                              const ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
-                              const std::set<Date>& simulationDates = {}, const std::set<Date>& addDates = {},
-                              const Size timeStepsPerYear = 1, const Type lvType = Type::Dupire,
-                              const std::vector<Real>& calibrationMoneyness = {-2.0, -1.0, 0.0, 1.0, 2.0},
-                              const std::string& referenceCalibrationGrid = "", const bool dontCalibrate = false,
-                              const Handle<YieldTermStructure>& baseCurve = {});
-         std::vector<ext::shared_ptr<StochasticProcess>> getCalibratedProcesses() const override;
+class AssetModelBuilderBase : public QuantExt::ModelBuilder {
+public:
+    void forceRecalculate() override;
+    bool requiresRecalibration() const override;
+    void newCalcWithoutRecalibration() const override;
 };
-
 } // namespace data
 } // namespace ore
 
+// ---------------------------------------------------------------------------
+// LocalVolModelBuilder
+// ---------------------------------------------------------------------------
+
+%shared_ptr(ore::data::LocalVolModelBuilder)
+namespace ore {
+namespace data {
+class LocalVolModelBuilder : public AssetModelBuilderBase {
+public:
+    enum class Type { Dupire, DupireFloored, AndreasenHuge };
+    LocalVolModelBuilder(
+        const std::vector<QuantLib::Handle<QuantLib::YieldTermStructure>>& curves,
+        const std::vector<QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess>>& processes,
+        const std::set<QuantLib::Date>& simulationDates = {},
+        const std::set<QuantLib::Date>& addDates = {},
+        const QuantLib::Size timeStepsPerYear = 1,
+        const Type lvType = Type::Dupire,
+        const std::vector<QuantLib::Real>& calibrationMoneyness = {-2.0, -1.0, 0.0, 1.0, 2.0},
+        const std::string& referenceCalibrationGrid = "",
+        const bool dontCalibrate = false,
+        const QuantLib::Handle<QuantLib::YieldTermStructure>& baseCurve = {});
+    LocalVolModelBuilder(
+        const QuantLib::Handle<QuantLib::YieldTermStructure>& curve,
+        const QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess>& process,
+        const std::set<QuantLib::Date>& simulationDates = {},
+        const std::set<QuantLib::Date>& addDates = {},
+        const QuantLib::Size timeStepsPerYear = 1,
+        const Type lvType = Type::Dupire,
+        const std::vector<QuantLib::Real>& calibrationMoneyness = {-2.0, -1.0, 0.0, 1.0, 2.0},
+        const std::string& referenceCalibrationGrid = "",
+        const bool dontCalibrate = false,
+        const QuantLib::Handle<QuantLib::YieldTermStructure>& baseCurve = {});
+    std::vector<QuantLib::ext::shared_ptr<QuantLib::StochasticProcess>> getCalibratedProcesses() const;
+};
+} // namespace data
+} // namespace ore
 
 #endif
