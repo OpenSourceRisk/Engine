@@ -1,4 +1,4 @@
-"""Tests for ACADIAQPR-14138: SA-CCR engine layer SWIG bindings.
+"""Tests for SA-CCR SWIG bindings.
 
 Covers:
   - Symbol availability for SaccrTradeData, SaccrCalculator, and related types
@@ -9,6 +9,9 @@ Covers:
   - %extend helpers on SaccrContribution (hedgingSet, qualifier, saccrAssetClassInt, etc.)
   - SaccrAnalytic exposes saccrCalculator() and saccrTradeData() accessors
   - NettingSetDetailsSet and SaccrImplMap container templates are usable
+  - CrifRecord standard and SA-CCR field accessors
+  - CrifRecord saccrLabel1/saccrLabel2 variant helpers
+  - InputParameters.setCounterpartyManager() symbol availability
 """
 
 import unittest
@@ -236,3 +239,107 @@ class SaccrAnalyticConstructTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class CrifRecordFieldTest(unittest.TestCase):
+    """CrifRecord standard and SA-CCR field accessors exposed via SWIG."""
+
+    def _make_record(self) -> "ORE.CrifRecord":
+        return ORE.CrifRecord()
+
+    def test_default_construct(self) -> None:
+        r = self._make_record()
+        self.assertIsNotNone(r)
+
+    def test_string_fields_readable_and_writable(self) -> None:
+        r = self._make_record()
+        for field, value in (
+            ("tradeId", "TRD-001"),
+            ("tradeType", "IRS"),
+            ("qualifier", "USD"),
+            ("bucket", "3"),
+            ("label1", "2Y"),
+            ("label2", "OIS"),
+            ("amountCurrency", "USD"),
+        ):
+            setattr(r, field, value)
+            self.assertEqual(getattr(r, field), value,
+                             msg=f"CrifRecord.{field} round-trip failed")
+
+    def test_real_fields_readable_and_writable(self) -> None:
+        r = self._make_record()
+        r.amount = 1_000_000.0
+        self.assertAlmostEqual(r.amount, 1_000_000.0)
+        r.amountUsd = 950_000.0
+        self.assertAlmostEqual(r.amountUsd, 950_000.0)
+        r.saccrEndDate = 12345.0
+        self.assertAlmostEqual(r.saccrEndDate, 12345.0)
+
+    def test_risktype_field(self) -> None:
+        r = self._make_record()
+        r.riskType = ORE.CrifRecord.RiskType_IRCurve
+        self.assertEqual(r.riskType, ORE.CrifRecord.RiskType_IRCurve)
+
+    def test_regulation_field(self) -> None:
+        r = self._make_record()
+        r.regulation = ORE.CrifRecord.SaccrRegulation_Basel
+        self.assertEqual(r.regulation, ORE.CrifRecord.SaccrRegulation_Basel)
+
+    def test_netting_set_details_field(self) -> None:
+        r = self._make_record()
+        nsd = ORE.NettingSetDetails("NS-001")
+        r.nettingSetDetails = nsd
+        self.assertEqual(r.nettingSetDetails.nettingSetId(), "NS-001")
+
+
+class CrifRecordVariantHelperTest(unittest.TestCase):
+    """saccrLabel1/saccrLabel2 variant %extend helpers on CrifRecord."""
+
+    def _make_record(self) -> "ORE.CrifRecord":
+        return ORE.CrifRecord()
+
+    def test_saccrLabel1_default_is_string_type(self) -> None:
+        """Default saccrLabel1 = '' → variant holds string (which() == 1)."""
+        r = self._make_record()
+        self.assertEqual(r.saccrLabel1Type(), 1,
+                         msg="Default saccrLabel1 should hold string (type index 1)")
+
+    def test_saccrLabel1_default_string_value(self) -> None:
+        r = self._make_record()
+        self.assertEqual(r.saccrLabel1AsString(), "")
+
+    def test_saccrLabel2_default_is_string_type(self) -> None:
+        """Default saccrLabel2 = '' → variant holds string (which() == 1)."""
+        r = self._make_record()
+        self.assertEqual(r.saccrLabel2Type(), 1,
+                         msg="Default saccrLabel2 should hold string (type index 1)")
+
+    def test_saccrLabel2_default_string_value(self) -> None:
+        r = self._make_record()
+        self.assertEqual(r.saccrLabel2AsString(), "")
+
+    def test_variant_helper_methods_exist(self) -> None:
+        r = self._make_record()
+        for method in (
+            "saccrLabel1Type", "saccrLabel1AsReal", "saccrLabel1AsString", "saccrLabel1AsSize",
+            "saccrLabel2Type", "saccrLabel2AsReal", "saccrLabel2AsString",
+        ):
+            self.assertTrue(hasattr(r, method),
+                            msg=f"CrifRecord missing %extend helper: {method}")
+
+
+class InputParametersCounterpartyManagerTest(unittest.TestCase):
+    """InputParameters.setCounterpartyManager() is exposed and callable."""
+
+    def test_set_counterparty_manager_symbol_exists(self) -> None:
+        ip = ORE.InputParameters()
+        self.assertTrue(
+            hasattr(ip, "setCounterpartyManager"),
+            msg="InputParameters missing setCounterpartyManager()",
+        )
+
+    def test_set_counterparty_manager_shared_ptr_overload(self) -> None:
+        ip = ORE.InputParameters()
+        cm = ORE.CounterpartyManager()
+        # Should not raise
+        ip.setCounterpartyManager(cm)
