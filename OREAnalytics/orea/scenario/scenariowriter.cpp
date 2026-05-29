@@ -108,11 +108,22 @@ void ScenarioWriter::writeScenario(const QuantLib::ext::shared_ptr<Scenario>& s,
     }
 
     if (!filterKeyTypes_.empty()) {
-        for (auto removeKey : filterKeyTypes_) {
-            if (!headerKeys_.empty())
-                std::erase_if(headerKeys_, [removeKey](const RiskFactorKey& k) { return k.keytype == removeKey; });
-            if (!keys_.empty())
-                std::erase_if(keys_, [removeKey](const RiskFactorKey& k) { return k.keytype == removeKey; });
+        if (!headerKeys_.empty()) {
+            headerKeys_.erase(std::remove_if(headerKeys_.begin(), headerKeys_.end(),
+                                             [&filterKeyTypes = filterKeyTypes_](const RiskFactorKey& k) {
+                                                 return std::find(filterKeyTypes.begin(), filterKeyTypes.end(),
+                                                                  k.keytype) == filterKeyTypes.end();
+                                             }),
+                              headerKeys_.end());
+        }
+        if (!keys_.empty()){
+            keys_.erase(std::remove_if(keys_.begin(), keys_.end(),
+                                       [&filterKeyTypes = filterKeyTypes_](const RiskFactorKey& k) {
+                                           return std::find(filterKeyTypes.begin(), filterKeyTypes.end(), k.keytype) ==
+                                                  filterKeyTypes.end();
+                                       }),
+                        keys_.end());   
+
         }
         WLOG("Finished filtering out risk factory keys.");
         if (keys_.empty()){
