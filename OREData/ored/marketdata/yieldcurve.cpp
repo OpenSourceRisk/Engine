@@ -2318,7 +2318,11 @@ void YieldCurve::addFutures(const std::size_t index, const QuantLib::ext::shared
                 QL_REQUIRE(futureQuote->tenor().units() == Months || futureQuote->tenor().units() == Years,
                            "Tenor of future quote (" << futureQuote->name()
                                                      << ") must be expressed in months or years");
-
+                QL_REQUIRE(!futureConvention->overnightIndexTenor().has_value() ||
+                               futureConvention->overnightIndexTenor().value() == futureQuote->tenor(),
+                           "Overnight index tenor in future convention for index "
+                               << on->name() << " must match the tenor of the future quote (" << futureQuote->name()
+                               << ")");
                 // Create a Overnight index future helper
                 Date startDate, endDate;
                 std::pair<Date, Date> startEndDate;
@@ -2467,14 +2471,18 @@ void YieldCurve::addFras(const std::size_t index, const QuantLib::ext::shared_pt
                 Size imm1 = immFraQuote->imm1();
                 Size imm2 = immFraQuote->imm2();
                 helper = QuantLib::ext::make_shared<FraRateHelper>(
-                    immFraQuote->quote(), imm1, imm2, fraConvention->index(), pillarChoice(segment->pillarChoice()));
+                    immFraQuote->quote(), imm1, imm2, fraConvention->index(),
+                    pillarChoice(segment->pillarChoice()), Date(), true,
+                    fraConvention->endDateFromStart());
             } else if (marketQuote->instrumentType() == MarketDatum::InstrumentType::FRA) {
                 QuantLib::ext::shared_ptr<FRAQuote> fraQuote;
                 fraQuote = QuantLib::ext::dynamic_pointer_cast<FRAQuote>(marketQuote);
                 Period periodToStart = fraQuote->fwdStart();
 
                 helper = QuantLib::ext::make_shared<FraRateHelper>(
-                    fraQuote->quote(), periodToStart, fraConvention->index(), pillarChoice(segment->pillarChoice()));
+                    fraQuote->quote(), periodToStart, fraConvention->index(),
+                    pillarChoice(segment->pillarChoice()), Date(), true,
+                    fraConvention->endDateFromStart());
             } else {
                 QL_FAIL("Market quote not of type FRA.");
             }

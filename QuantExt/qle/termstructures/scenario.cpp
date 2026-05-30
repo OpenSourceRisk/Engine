@@ -103,6 +103,8 @@ std::ostream& operator<<(std::ostream& out, const RiskFactorKey::KeyType& type) 
         return out << "CPR";
     case RiskFactorKey::KeyType::Theta:
         return out << "Theta";
+    case RiskFactorKey::KeyType::BondFutureVolatility:
+        return out << "BondFutureVolatility";
     default:
         return out << "?";
     }
@@ -239,6 +241,8 @@ RiskFactorKey::KeyType parseRiskFactorKeyType(const string& str) {
         return RiskFactorKey::KeyType::CPR;
     else if (str == "Theta")
         return RiskFactorKey::KeyType::Theta;
+    else if (str == "BondFutureVolatility")
+        return RiskFactorKey::KeyType::BondFutureVolatility;
 
     QL_FAIL("RiskFactorKey " << str << " does not exist.");
 }

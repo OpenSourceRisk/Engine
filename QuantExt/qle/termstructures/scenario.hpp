@@ -77,7 +77,8 @@ public:
         SecuritySpread,
         Correlation,
         CPR,
-        Theta
+        Theta,
+        BondFutureVolatility
     };
 
     //! Constructor

@@ -236,6 +236,20 @@ protected:
         std::vector<RawData> rrRawData;
     };
     AsdCacheData asdCache_;
+
+private:
+
+    // A private struct to pass parameters from the ctor to helper methods.
+    struct BuildContext {
+        const QuantLib::ext::shared_ptr<ore::data::Market>& initMarket;
+        const std::string& configuration;
+        const ore::data::CurveConfigurations& curveConfigs;
+        const ore::data::TodaysMarketParameters& todaysMarketParams;
+        bool continueOnError;
+    };
+
+    void createBondFutureVol(QuantExt::RiskFactorKey::KeyType rfKeyType, const std::string& name, bool simulate,
+        bool& simDataWritten, const BuildContext& context);
 };
 } // namespace analytics
 } // namespace ore

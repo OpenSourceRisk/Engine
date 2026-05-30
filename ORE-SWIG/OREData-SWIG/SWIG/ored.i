@@ -56,16 +56,21 @@
 %include ored_market.i
 %include ored_marketdatum.i
 %include ored_modelbuilders.i
+%include ored_inflationmodelbuilders.i
 %include ored_parsers.i
 %include ored_portfolio.i
 %include ored_portfolio2.i
 %include ored_reports.i
 %include ored_referencedatamanager.i
 %include ored_todaysmarketparameters.i
+%include ored_yieldcurve_builder.i
+%include ored_dependencygraph.i
 %include ored_to_string.i
 %include ored_tradegenerator.i
 %include ored_utilities.i
 %include ored_volcurves.i
+%include ored_wrappedmarket.i
+%include ored_fixings.i
 %include ored_xmlutils.i
 %include ored_yieldcurveconfig.i
 

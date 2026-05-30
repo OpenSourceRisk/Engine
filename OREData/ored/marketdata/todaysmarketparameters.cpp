@@ -69,7 +69,8 @@ static const vector<MarketObjectMetaInfo> marketObjectData = {
      "CommodityVolatilities",
      "CommodityVolatilities",
      {"CommodityVolatility", "name"}},
-    {MarketObject::Correlation, "Correlation", "Correlations", {"Correlation", "name"}}};
+    {MarketObject::Correlation, "Correlation", "Correlations", {"Correlation", "name"}},
+    {MarketObject::BondFutureVol, "BondFutureVol", "BondFutureVolatilities", {"BondFutureVolatility", "name"}}};
 
 } // anonymous namespace
 

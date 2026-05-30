@@ -76,6 +76,7 @@ struct XvaVariables : public InputVariables {
     bool storeSurvivalProbabilities_ = false;
     bool writeCube_ = false;
     bool writeScenarios_ = false;
+    vector<QuantExt::RiskFactorKey::KeyType> filterRiskKeys_ = {};
     bool generateCorrelations_ = false;
     bool outputCrossAssetModelData_ = false;
     bool cubeNpvOverlay_ = false;
@@ -129,7 +130,7 @@ struct XvaVariables : public InputVariables {
     bool timeAveragedNettedExposureOutput_ = false;
     std::string rawCubeOutputFile_, netCubeOutputFile_, timeAveragedNettedExposureOutputFile_;
     // funding value adjustment details
-    std::string fvaBorrowingCurve_, fvaLendingCurve_;
+    std::string borrowingCurve_, lendingCurve_;
     std::string flipViewBorrowingCurvePostfix_ = "_BORROW";
     std::string flipViewLendingCurvePostfix_ = "_LEND";
     // deterministic initial margin by netting set
@@ -186,6 +187,9 @@ public:
     void applyConfigurationFallback(const QuantLib::ext::shared_ptr<Portfolio>& portfolio);
 
     void buildDependencies() override;
+
+    //! Access the post-process results (available after runAnalytic completes)
+    const QuantLib::ext::shared_ptr<PostProcess>& postProcess() const { return postProcess_; }
 
 protected:
     QuantLib::ext::shared_ptr<ore::data::EngineFactory> engineFactory() override;
