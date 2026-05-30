@@ -32,16 +32,30 @@ RandomVariable randomVariableOpConditionalExpectation(const Size size, const Siz
                                                       const bool usePythonIntegration,
                                                       const std::vector<const RandomVariable*>& args) {
 
+    QL_REQUIRE(args.size() >= 2,
+               "randomVariableOpConditionalExpectation(): args size (" << args.size() << ") must be geq 2");
+    QL_REQUIRE(args.size() % 2 == 0,
+               "randomVariableOpConditionalExpectation(): args size (" << args.size() << ") must be even");
+
+    Size regressorLength = (args.size() - 2) / 2;
+
     std::vector<const RandomVariable*> regressor;
-    for (auto r = std::next(args.begin(), 2); r != args.end(); ++r) {
-        if ((*r)->initialised() && !(*r)->deterministic())
-            regressor.push_back(*r);
+    std::vector<const RandomVariable*> evaluationRegressor;
+    for (Size i = 0; i < regressorLength; ++i) {
+        Size i1 = 2 + i;
+        Size i2 = regressorLength + 2 + i;
+        QL_REQUIRE(args[i1]->initialised() == args[i2]->initialised(),
+                   "randomVariableOpConditionalExpectation(): args at "
+                       << i1 << " and " << i2 << " (regressor and evaluation regressor component " << i
+                       << ", respectively)are not both initialized or uninitialized, this is not allowed.");
+        if (!args[i1]->initialised() || (args[i1]->deterministic() && args[i2]->deterministic()))
+            continue;
+        regressor.push_back(args[i1]);
+        evaluationRegressor.push_back(args[i2]);
     }
 
     if (regressor.empty())
         return expectation(*args[0]);
-
-    QL_REQUIRE(!args.empty(), "randomVariableOpConditionalExpectation(): args are empty.");
 
     if (args[0]->deterministic())
         return *args[0];
@@ -55,25 +69,29 @@ RandomVariable randomVariableOpConditionalExpectation(const Size size, const Siz
                    << regressionVarianceCutoff << ")");
 
     std::vector<RandomVariable> transformedRegressor;
+    std::vector<RandomVariable> transformedEvaluationRegressor;
     Matrix coordinateTransform;
     if (regressionVarianceCutoff != Null<Real>()) {
         coordinateTransform = pcaCoordinateTransform(regressor, regressionVarianceCutoff);
         transformedRegressor = applyCoordinateTransform(regressor, coordinateTransform);
+        transformedEvaluationRegressor = applyCoordinateTransform(evaluationRegressor, coordinateTransform);
         regressor = vec2vecptr(transformedRegressor);
+        evaluationRegressor = vec2vecptr(transformedEvaluationRegressor);
     }
 
     Filter filter = !close_enough(*args[1], RandomVariable(size, 0.0));
 
     if (usePythonIntegration && filter.deterministic() && filter[0]) {
 
-        // FIXME does not support regressor groups, non-trivial filters at the moment
+        // FIXME does not support regressor groups, non-trivial filters, evaluationRegressor != regressor at the moment
 
         return PythonFunctions::instance().conditionalExpectation(*args[0], regressor);
 
     } else {
         auto tmp = multiPathBasisSystem(regressor.size(), regressionOrder, polynomType,
                                         trivialRegressorGroups ? std::set<std::set<size_t>>{} : regressorGroups, size);
-        return conditionalExpectation(*args[0], regressor, tmp, !close_enough(*args[1], RandomVariable(size, 0.0)));
+        return conditionalExpectation(*args[0], regressor, tmp, !close_enough(*args[1], RandomVariable(size, 0.0)),
+                                      RandomVariableRegressionMethod::QR, evaluationRegressor);
     }
 }
 

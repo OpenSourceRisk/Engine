@@ -57,7 +57,7 @@ public:
     void buildComputationGraph(
         const bool stickyCloseOutDateRun = false, std::vector<TradeExposure>* tradeExposure = nullptr,
         TradeExposureMetaInfo* tradeExposureMetaInfo = nullptr,
-        const std::map<std::set<std::string>, std::string>& baseCurrencySuggestions = {}) const override;
+        std::function<std::string(std::set<std::string>)> baseCurrencySuggestions = {}) const override;
     void calculate() const;
 
 protected:
@@ -98,12 +98,13 @@ protected:
     // set by engine
     mutable std::set<std::set<std::string>> relevantCurrencySets_;
     mutable std::set<std::string> relevantCurrencies_;
-    mutbale std::map<std::set<std::string>, std::string> currencySetBaseCurrency_;
+    mutable std::map<std::set<std::string>, std::string> currencySetToBaseCurrency_;
+    mutable std::string complexBaseCurrency_;
     mutable std::size_t npv_;
     mutable double npvValue_;
 
     // cached exercise indicators to be used in sticky close-out date run
-    mutable std::vector<std::size_t> cachedExerciseIndicators_;
+    mutable std::vector<std::vector<std::size_t>> cachedExerciseIndicators_;
 
     // remaining state
     mutable std::size_t cgVersion_ = 0;
@@ -119,28 +120,35 @@ private:
         Size legNo = Null<Size>(), cfNo = Null<Size>();
         Date payDate = Null<Date>();
         Date exIntoCriterionDate = Null<Date>();
-        // pay ccy + if applicable  additional ccys (from index, fx linked etc.) + baseCurrency
+        // pay ccy + if applicable  additional ccys (from index, fx linked etc.)
+        // localBaseCurrency is added here as well during the processing
         std::set<std::string> currencies;
-        // base ccy that is used in the flow node
-        std::string baseCurrency;
+        // local base ccy that is used in the flow node
+        std::string localBaseCurrency;
         bool payer = false;
         std::size_t flowNode;
+        std::size_t flowNodeBaseCcy; // for complex trades only if model base ccy != complex base ccy
     };
+
+    // get a currency in the intersection of admissable model base currencies and a given set of currencies
+    std::set<std::string> commonBaseCurrency(const std::set<std::string>& currencySet) const;
 
     // get the relevant currencies for a cashflow
     std::set<std::string> getCashflowCurrencies(QuantLib::ext::shared_ptr<QuantLib::CashFlow> flow,
-                                                                  const std::string& payCcy);
+                                                                  const std::string& payCcy) const;
 
     // create the info for a given flow
     CashflowInfo createCashflowInfo(QuantLib::ext::shared_ptr<QuantLib::CashFlow> flow, const std::string& payCcy,
                                     const bool payer, const Size legNo, const Size cfNo,
-                                    const std::map<std::set<std::string>, std::string>& baseCurrencySuggestions) const;
+                                    std::function<std::string(std::set<std::string>)> baseCurrencySuggestions,
+                                    const bool generateBaseCcyFlow) const;
 
     // create a regression model (i.e. an npv - node in the graph)
-    std::size_t createRegressionModel(const std::size_t amount, const Date& d,
-                                      const std::vector<CashflowInfo>& cashflowInfo,
-                                      const std::function<bool(std::size_t)>& cashflowRelevant,
-                                      const std::size_t filter) const;
+    std::vector<std::size_t> createRegressionModel(const std::size_t amount, const Date& d,
+                                                   const std::vector<CashflowInfo>& cashflowInfo,
+                                                   const std::function<bool(std::size_t)>& cashflowRelevant,
+                                                   const std::size_t filter, const bool localBaseCcy,
+                                                   const bool modelBaseCcy) const;
 };
 
 } // namespace data

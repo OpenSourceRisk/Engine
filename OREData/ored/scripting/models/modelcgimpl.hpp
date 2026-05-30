@@ -67,20 +67,24 @@ public:
 
     // Model interface implementation (partial)
     Real actualTimeFromReference(const Date& d) const override;
-    const std::string& baseCcy() const override { return currencies_.front(); }
+    const std::string& baseCurrency() const override { return currencies_.front(); }
+    const std::set<std::string>& admissableLocalBaseCurrencies() const override;
     const std::vector<std::string>& currencies() const override { return currencies_; }
     std::size_t dt(const Date& d1, const Date& d2) const override;
     std::size_t pay(const std::size_t amount, const Date& obsdate, const Date& paydate,
-                    const std::string& currency) const override;
-    std::size_t discount(const Date& obsdate, const Date& paydate, const std::string& currency) const override;
-    std::size_t fxRate(const Date& obsdate, const std::string& curreny) const override;
-    std::size_t radonNikodymDerivative(const Date& s, const std::string& currency) const override;
+                    const std::string& currency, const std::string& localBaseCurrency = {}) const override;
+    std::size_t discount(const Date& obsdate, const Date& paydate, const std::string& currency,
+                         const std::string& localBaseCurrency = {}) const override;
+    std::size_t fxRate(const Date& obsdate, const std::string& currency,
+                       const std::string& localBaseCurrency = {}) const override;
+    std::size_t convertToBaseCcy(const Date& s, const std::string& localBaseCurrency) const override;
     std::size_t eval(const std::string& index, const Date& obsdate, const Date& fwddate,
-                     const bool returnMissingMissingAsNull = false,
-                     const bool ignoreTodaysFixing = false) const override;
+                     const bool returnMissingMissingAsNull = false, const bool ignoreTodaysFixing = false,
+                     const std::string& localBaseCurrency = {}) const override;
     std::size_t fxSpotT0(const std::string& forCcy, const std::string& domCcy) const override;
     std::size_t barrierProbability(const std::string& index, const Date& obsdate1, const Date& obsdate2,
-                                   const std::size_t barrier, const bool above) const override;
+                                   const std::size_t barrier, const bool above,
+                                   const std::string& localBaseCurrency = {}) const override;
 
     // provide default implementation for MC type models (taking a simple expectation)
     Real extractT0Result(const RandomVariable& value) const override;
@@ -92,20 +96,25 @@ public:
 
 protected:
     // get (non-ir) index (forward) value for index[indexNo] for (fwd >=) d >= reference date
-    virtual std::size_t getIndexValue(const Size indexNo, const Date& d, const Date& fwd = Null<Date>()) const = 0;
+    virtual std::size_t getIndexValue(const Size indexNo, const Date& d, const Date& fwd = Null<Date>(),
+                                      const std::string& localBaseCurrency = {}) const = 0;
     // get projection for irIndices[indexNo] for (fwd >=) d >= reference date, this should also return a value
     // if d (resp. fwd if given) is not a valid fixing date for the index
-    virtual std::size_t getIrIndexValue(const Size indexNo, const Date& d, const Date& fwd = Null<Date>()) const = 0;
+    virtual std::size_t getIrIndexValue(const Size indexNo, const Date& d, const Date& fwd = Null<Date>(),
+                                        const std::string& localBaseCurrency = {}) const = 0;
     // get projection for infIndices[indexNo] for fwd >= d >= base date; fwd will always be given and be a first day of
     // an inflation period (this function is called twice, interpolation will be handled in the ModelCGImpl class then)
-    virtual std::size_t getInfIndexValue(const Size indexNo, const Date& d, const Date& fwd) const = 0;
+    virtual std::size_t getInfIndexValue(const Size indexNo, const Date& d, const Date& fwd,
+                                         const std::string& localBaseCurrency = {}) const = 0;
     // get discount factor P(s,t) for ccy currencies[idx], t > s >= referenceDate
-    virtual std::size_t getDiscount(const Size idx, const Date& s, const Date& t) const = 0;
+    virtual std::size_t getDiscount(const Size idx, const Date& s, const Date& t,
+                                    const std::string& localBaseCurrency = {}) const = 0;
     // get fx spot for currencies[idx] vs. currencies[0], as of the referenceDate, should be 1 for idx=0
     virtual std::size_t getFxSpot(const Size idx) const = 0;
     // get barrier probability for refDate <= obsdate1 <= obsdate2, the case obsdate1 < refDate is handled in this class
     virtual std::size_t getFutureBarrierProb(const std::string& index, const Date& obsdate1, const Date& obsdate2,
-                                             const std::size_t barrier, const bool above) const = 0;
+                                             const std::size_t barrier, const bool above,
+                                             const std::string& localBaseCurrency = {}) const = 0;
 
     ModelCG::Type type_;
     DayCounter dayCounter_;
@@ -132,11 +141,9 @@ private:
     std::size_t getInflationIndexFixing(const bool returnMissingFixingAsNull, const std::string& indexInput,
                                         const QuantLib::ext::shared_ptr<ZeroInflationIndex>& infIndex,
                                         const Size indexNo, const Date& limDate, const Date& obsdate,
-                                        const Date& fwddate, const Date& baseDate) const;
+                                        const Date& fwddate, const Date& baseDate,
+                                        const std::string& localBaseCurrency = {}) const;
 };
-
-// map date to a coarser grid if sloppyDates = true, otherwise just return d
-Date getSloppyDate(const Date& d, const bool sloppyDates, const std::set<Date>& dates);
 
 } // namespace data
 } // namespace ore

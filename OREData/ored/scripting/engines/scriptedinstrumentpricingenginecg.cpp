@@ -85,15 +85,16 @@ ScriptedInstrumentPricingEngineCG::~ScriptedInstrumentPricingEngineCG() {
 ScriptedInstrumentPricingEngineCG::ScriptedInstrumentPricingEngineCG(
     const std::string& npv, const std::vector<std::pair<std::string, std::string>>& additionalResults,
     const QuantLib::ext::shared_ptr<ModelCG>& model, const std::set<std::string>& minimalModelCcys,
-    const std::vector<std::string>& amcCgComponents, const std::string& amcCgTargetValue,
-    const std::string& amcCgTargetDerivative, const ASTNodePtr ast, const QuantLib::ext::shared_ptr<Context>& context,
-    const Model::Params& params, const double indicatorSmoothingForValues,
-    const double indicatorSmoothingForDerivatives, const double sqrtSmoothingForDerivatives, const std::string& script,
-    const bool interactive, const bool amcEnabled, const bool generateAdditionalResults,
-    const bool generateAdditionalResultsPathLevel, const bool includePastCashflows, const bool useCachedSensis,
-    const bool useExternalComputeFramework, const bool useDoublePrecisionForExternalCalculation)
+    const std::string& localBaseCcy, const std::vector<std::string>& amcCgComponents,
+    const std::string& amcCgTargetValue, const std::string& amcCgTargetDerivative, const ASTNodePtr ast,
+    const QuantLib::ext::shared_ptr<Context>& context, const Model::Params& params,
+    const double indicatorSmoothingForValues, const double indicatorSmoothingForDerivatives,
+    const double sqrtSmoothingForDerivatives, const std::string& script, const bool interactive, const bool amcEnabled,
+    const bool generateAdditionalResults, const bool generateAdditionalResultsPathLevel,
+    const bool includePastCashflows, const bool useCachedSensis, const bool useExternalComputeFramework,
+    const bool useDoublePrecisionForExternalCalculation)
     : npv_(npv), additionalResults_(additionalResults), model_(model), minimalModelCcys_(minimalModelCcys),
-      baseCcy_(baseCcy), amcCgComponents_(amcCgComponents), amcCgTargetValue_(amcCgTargetValue),
+      localBaseCcy_(localBaseCcy), amcCgComponents_(amcCgComponents), amcCgTargetValue_(amcCgTargetValue),
       amcCgTargetDerivative_(amcCgTargetDerivative), ast_(ast), context_(context), params_(params),
       indicatorSmoothingForValues_(indicatorSmoothingForValues),
       indicatorSmoothingForDerivatives_(indicatorSmoothingForDerivatives),
@@ -132,7 +133,7 @@ std::set<std::set<std::string>> ScriptedInstrumentPricingEngineCG::relevantCurre
 void ScriptedInstrumentPricingEngineCG::buildComputationGraph(
     const bool stickyCloseOutDateRun, std::vector<TradeExposure>* tradeExposure,
     TradeExposureMetaInfo* tradeExposureMetaInfo,
-    const std::map<std::set<std::string>, std::string>& baseCurrencySuggestions) const {
+    std::function<std::string(std::set<std::string>)> baseCurrencySuggestions) const {
 
     // TODO add sticky close-out states
 
@@ -184,7 +185,7 @@ void ScriptedInstrumentPricingEngineCG::buildComputationGraph(
     // build graph
 
     ComputationGraphBuilder cgBuilder(*g, getRandomVariableOpLabels(), ast_, workingContext_, model_, minimalModelCcys_,
-                                      baseCcy_);
+                                      localBaseCcy_);
     cgBuilder.run(generateAdditionalResults_, includePastCashflows_, script_, interactive_);
     DLOG("Built computation graph version " << cgVersion_ << " size is " << g->size());
     TLOGGERSTREAM(ssaForm(*g, getRandomVariableOpLabels()));
@@ -222,9 +223,11 @@ void ScriptedInstrumentPricingEngineCG::buildComputationGraph(
 
                 std::get<SimpleTradeExposure>((*tradeExposure)[i]).groups.push_back({});
                 std::get<SimpleTradeExposure>((*tradeExposure)[i]).groups.back().pathValue = n;
-                std::get<SimpleTradeExposure>((*tradeExposure)[i]).groups.back().baseCurrency = baseCcy_;
-                std::get<SimpleTradeExposure>((*tradeExposure)[i]).groups.back().regressors =
-                    model_->npvRegressors(valDate, minimalModelCcys_, baseCcy_);
+                std::get<SimpleTradeExposure>((*tradeExposure)[i]).groups.back().localBaseCurrency = localBaseCcy_;
+                std::get<SimpleTradeExposure>((*tradeExposure)[i]).groups.back().regressorsLocalBaseCcy =
+                    model_->npvRegressors(valDate, minimalModelCcys_, localBaseCcy_);
+                std::get<SimpleTradeExposure>((*tradeExposure)[i]).groups.back().regressorsBaseCcy =
+                    model_->npvRegressors(valDate, minimalModelCcys_);
             }
 
         } else {
@@ -241,17 +244,22 @@ void ScriptedInstrumentPricingEngineCG::buildComputationGraph(
             for (Size i = 0; i < tradeExposure->size(); ++i) {
 
                 if (i == 0) {
-
-                    std::get<SimpleTradeExposure>((*tradeExposure)[i]).groups.push_back({});
+                    auto& simple=std::get<SimpleTradeExposure>((*tradeExposure)[i]);
+                    simple.groups.push_back({});
                     std::size_t n = g->variable(npv_, ComputationGraph::VarDoesntExist::Nan);
                     QL_REQUIRE(n != ComputationGraph::nan,
                                "ScriptedInstrumentPricingEngineCG::buildComputationGraph(): variable "
                                    << npv_ << " not found.");
-                    std::get<SimpleTradeExposure>((*tradeExposure)[i]).groups.back().pathValue = n;
-                    std::get<SimpleTradeExposure>((*tradeExposure)[i]).groups.back().regressors =
-                        model_->npvRegressors(model_->referenceDate(), minimalModelCcys_, baseCcy_);
+                    simple.groups.back().pathValue = n;
+                    simple.groups.back().localBaseCurrency = localBaseCcy_;
+                    simple.groups.back().regressorsLocalBaseCcy =
+                        model_->npvRegressors(model_->referenceDate(), minimalModelCcys_, localBaseCcy_);
+                    simple.groups.back().regressorsBaseCcy =
+                        model_->npvRegressors(model_->referenceDate(), minimalModelCcys_);
 
                 } else {
+
+                    auto& complex = std::get<ComplexTradeExposure>((*tradeExposure)[i]);
 
                     for (Size c = 0; c < amcCgComponents_.size(); ++c) {
                         std::size_t n = g->variable(amcCgComponents_[c] + "_" + std::to_string(i - 1),
@@ -259,7 +267,7 @@ void ScriptedInstrumentPricingEngineCG::buildComputationGraph(
                         QL_REQUIRE(n != ComputationGraph::nan,
                                    "ScriptedInstrumentPricingEngineCG::buildComputationGraph(): array "
                                        << amcCgComponents_[c] << " at index " << i << " not found.");
-                        std::get<ComplexTradeExposure>((*tradeExposure)[i]).componentPathValues.push_back(n);
+                        complex.componentPathValues.push_back(n);
                     }
 
                     std::size_t n = g->variable(amcCgTargetValue_ + "_" + std::to_string(i - 1),
@@ -267,16 +275,16 @@ void ScriptedInstrumentPricingEngineCG::buildComputationGraph(
                     QL_REQUIRE(n != ComputationGraph::nan,
                                "ScriptedInstrumentPricingEngineCG::buildComputationGraph(): array "
                                    << amcCgTargetValue_ << " at index " << (i + 1) << " not found.");
-                    std::get<ComplexTradeExposure>((*tradeExposure)[i]).targetConditionalExpectation = n;
+                    complex.targetConditionalExpectation = n;
 
                     n = g->variable(effectiveAmcCgTargetDerivative + "_" + std::to_string(i - 1),
                                     ComputationGraph::VarDoesntExist::Nan);
                     QL_REQUIRE(n != ComputationGraph::nan,
                                "ScriptedInstrumentPricingEngineCG::buildComputationGraph(): array "
                                    << effectiveAmcCgTargetDerivative << " at index " << i << " not found.");
-                    std::get<ComplexTradeExposure>((*tradeExposure)[i + 1]).targetConditionalExpectationDerivative = n;
+                    complex.targetConditionalExpectationDerivative = n;
 
-                    std::get<ComplexTradeExposure>((*tradeExposure)[i + 1]).baseCurrency = baseCcy_;
+                    complex.localBaseCurrency = localBaseCcy_;
                 }
             }
         }
@@ -289,14 +297,14 @@ void ScriptedInstrumentPricingEngineCG::buildComputationGraph(
         for (auto const& ccy : minimalModelCcys_) {
             tradeExposureMetaInfo->relevantModelParameters.insert(
                 ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, ccy));
-            if (ccy != model_->baseCcy()) {
+            if (ccy != model_->baseCurrency()) {
                 tradeExposureMetaInfo->relevantModelParameters.insert(
                     ModelCG::ModelParameter(ModelCG::ModelParameter::Type::logFxSpot, ccy));
             }
             if (tradeExposureMetaInfo->hasVega) {
                 tradeExposureMetaInfo->relevantModelParameters.insert(
                     ModelCG::ModelParameter(ModelCG::ModelParameter::Type::lgm_zeta, ccy));
-                if (ccy != model_->baseCcy()) {
+                if (ccy != model_->baseCurrency()) {
                     tradeExposureMetaInfo->relevantModelParameters.insert(
                         ModelCG::ModelParameter(ModelCG::ModelParameter::Type::fxbs_sigma, ccy));
                 }
@@ -483,7 +491,7 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
             baseNpv_ = results_.value = model_->extractT0Result(values[baseNpvNode]);
         }
 
-        DLOG("got NPV = " << results_.value << " " << model_->baseCcy());
+        DLOG("got NPV = " << results_.value << " " << model_->baseCurrency());
 
         // extract additional results (TODO support external compute framework)
 
@@ -612,7 +620,7 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
                 Real discount = 0.0;
                 cashFlowResults[i].amount = model_->extractT0Result(paylog->amounts().at(i));
                 if (paylog->dates().at(i) > model_->referenceDate()) {
-                    fx = model_->getDirectFxSpotT0(paylog->currencies().at(i), model_->baseCcy());
+                    fx = model_->getDirectFxSpotT0(paylog->currencies().at(i), model_->baseCurrency());
                     discount = model_->getDirectDiscountT0(paylog->dates().at(i), paylog->currencies().at(i));
                     cashFlowResults[i].amount /= fx * discount;
                 }
@@ -636,7 +644,7 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
                 }
                 DLOG("got cashflow " << QuantLib::io::iso_date(cashFlowResults[i].payDate) << " "
                                      << cashFlowResults[i].currency << cashFlowResults[i].amount << " "
-                                     << cashFlowResults[i].currency << "-" << model_->baseCcy() << " " << fx
+                                     << cashFlowResults[i].currency << "-" << model_->baseCurrency() << " " << fx
                                      << "discount(" << cashFlowResults[i].currency << ") " << discount);
                 if (paylog->dates().at(i) > model_->referenceDate()) {
                     cashFlowMcErr[i] = addMcErrorEstimate(

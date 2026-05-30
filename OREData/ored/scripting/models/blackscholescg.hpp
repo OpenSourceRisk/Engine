@@ -82,14 +82,19 @@ public:
     const Date& referenceDate() const override;
     std::size_t npv(const std::size_t amount, const Date& obsdate, const std::size_t filter,
                     const std::optional<long>& memSlot, const std::set<std::size_t> addRegressors,
-                    const std::optional<std::set<std::size_t>>& overwriteRegressors) const override;
+                    const std::optional<std::set<std::size_t>>& overwriteRegressors,
+                    const std::optional<std::set<std::size_t>>& evaluationRegressors = {}) const override;
+
     std::set<std::size_t> npvRegressors(const Date& obsdate,
-                                        const std::optional<std::set<std::string>>& relevantCurrencies) const override;
-    std::size_t numeraire(const Date& s, const std::string& currency = {}) const override;
+                                        const std::optional<std::set<std::string>>& relevantCurrencies,
+                                        const std::string& localBaseCurrrency = {}) const override;
+    std::size_t numeraire(const Date& s, const std::string& currency = {},
+                          const std::string& localBaseCurrency = {}) const override;
     std::size_t fwdCompAvg(const bool isAvg, const std::string& indexInput, const Date& obsdate, const Date& start,
                            const Date& end, const Real spread, const Real gearing, const Integer lookback,
                            const Natural rateCutoff, const Natural fixingDays, const bool includeSpread, const Real cap,
-                           const Real floor, const bool nakedOption, const bool localCapFloor) const override;
+                           const Real floor, const bool nakedOption, const bool localCapFloor,
+                           const std::string& localBaseCurrency = {}) const override;
 
     // t0 market data functions from the ModelCG interface
     Real getDirectFxSpotT0(const std::string& forCcy, const std::string& domCcy) const override;
@@ -103,13 +108,18 @@ public:
 protected:
     // ModelImpl interface implementation
     void performCalculations() const override;
-    std::size_t getIndexValue(const Size indexNo, const Date& d, const Date& fwd = Null<Date>()) const override;
-    std::size_t getIrIndexValue(const Size indexNo, const Date& d, const Date& fwd = Null<Date>()) const override;
-    std::size_t getInfIndexValue(const Size indexNo, const Date& d, const Date& fwd = Null<Date>()) const override;
-    std::size_t getDiscount(const Size idx, const Date& s, const Date& t) const override;
+    std::size_t getIndexValue(const Size indexNo, const Date& d, const Date& fwd = Null<Date>(),
+                              const std::string& localBaseCurrency = {}) const override;
+    std::size_t getIrIndexValue(const Size indexNo, const Date& d, const Date& fwd = Null<Date>(),
+                                const std::string& localBaseCurrency = {}) const override;
+    std::size_t getInfIndexValue(const Size indexNo, const Date& d, const Date& fwd = Null<Date>(),
+                                 const std::string& localBaseCurrency = {}) const override;
+    std::size_t getDiscount(const Size idx, const Date& s, const Date& t,
+                            const std::string& localBaseCurrency = {}) const override;
     std::size_t getFxSpot(const Size idx) const override;
     std::size_t getFutureBarrierProb(const std::string& index, const Date& obsdate1, const Date& obsdate2,
-                                     const std::size_t barrier, const bool above) const override;
+                                     const std::size_t barrier, const bool above,
+                                     const std::string& localBaseCurrency = {}) const override;
 
     // helper functions
     void setupDatesAndTimes() const;
@@ -133,8 +143,8 @@ protected:
     mutable std::set<Date> effectiveSimulationDates_; // the dates effectively simulated (including today)
     mutable TimeGrid timeGrid_;                       // the (possibly refined) time grid for the simulation
     mutable std::vector<Size> positionInTimeGrid_;    // for each effective simulation date the index in the time grid
-    mutable std::vector<double> effectiveCalibrationStrikes_; // final eff cal strike for each index
-    mutable std::set<Real> curveTimes_;                       // curve times (notification filtering)
+    mutable std::vector<double> effectiveCalibrationStrikes_;              // final eff cal strike for each index
+    mutable std::set<Real> curveTimes_;                                    // curve times (notification filtering)
     mutable std::vector<std::set<std::pair<Real, Real>>> volTimesStrikes_; // volTimesStrikes (notification filtering)
 
     // updated in derived classes' performCalculations() whenever cg version changes

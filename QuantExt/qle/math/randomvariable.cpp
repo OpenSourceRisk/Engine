@@ -1371,11 +1371,12 @@ RandomVariable conditionalExpectation(
 RandomVariable conditionalExpectation(
     const RandomVariable& r, const std::vector<const RandomVariable*>& regressor,
     const std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>& basisFn,
-    const Filter& filter, const RandomVariableRegressionMethod regressionMethod) {
+    const Filter& filter, const RandomVariableRegressionMethod regressionMethod,
+    const std::vector<const RandomVariable*>& finalRegressor) {
     if (r.deterministic())
         return r;
     auto coeff = regressionCoefficients(r, regressor, basisFn, filter, regressionMethod);
-    return conditionalExpectation(regressor, basisFn, coeff);
+    return conditionalExpectation(finalRegressor.empty() ? regressor : finalRegressor, basisFn, coeff);
 }
 
 RandomVariable expectation(const RandomVariable& r) {

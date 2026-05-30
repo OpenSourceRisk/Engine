@@ -361,11 +361,12 @@ RandomVariable conditionalExpectation(
     const std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>& basisFn,
     const Array& coefficients);
 
-// compute and evaluate regression in one run
+// compute and evaluate regression in one run (training on regressor, evaluation on finalRegressor, if given)
 RandomVariable conditionalExpectation(
     const RandomVariable& r, const std::vector<const RandomVariable*>& regressor,
     const std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>& basisFn,
-    const Filter& filter = Filter(), const RandomVariableRegressionMethod = RandomVariableRegressionMethod::QR);
+    const Filter& filter = Filter(), const RandomVariableRegressionMethod = RandomVariableRegressionMethod::QR,
+    const std::vector<const RandomVariable*>& finalRegressor = {});
 
 // time zero expectation
 RandomVariable expectation(const RandomVariable& r);

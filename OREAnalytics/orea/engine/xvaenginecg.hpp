@@ -150,7 +150,8 @@ private:
                                  std::vector<RandomVariable>& values,
                                  std::vector<ExternalRandomVariable>& valuesExternal) const;
 
-    std::size_t createExposureNode(const std::vector<TradeExposure*>& exposures);
+    std::size_t createExposureNode(const std::vector<const TradeExposure*>& exposures, const std::size_t dateIndex,
+                                   const bool isValuationDate);
     std::size_t createPortfolioExposureNode(const std::size_t dateIndex, const bool isValuationDate);
     std::size_t createTradeExposureNode(const std::size_t dateIndex, const std::size_t tradeIndex,
                                         const bool isValuationDate);
@@ -280,15 +281,18 @@ private:
         // simple trade data
         struct SimpleKey {
             std::set<ModelCG::ModelParameter> modelParameters;
-            std::set<std::size_t> regressors;
-            std::string baseCurrency;
+            std::set<std::size_t> regressorsLocalBaseCurrency;
+            std::set<std::size_t> regressorsBaseCurrency;
+            std::string localBaseCurrency;
             std::size_t conversionToBaseCcy;
+            auto operator<=>(const SimpleKey&) const = default;
         };
         std::map<SimpleKey, std::size_t> simplePathValues;
         // complex trade data
         struct ComplexKey {
             std::pair<std::size_t, std::size_t> complexTradeId;
             std::size_t conversionToBaseCcy;
+            auto operator<=>(const ComplexKey&) const = default;
         };
         std::set<ComplexKey> complexTradeData;
     };

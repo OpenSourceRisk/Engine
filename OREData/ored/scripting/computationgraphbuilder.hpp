@@ -51,9 +51,12 @@ public:
                             const QuantLib::ext::shared_ptr<Context> context,
                             const QuantLib::ext::shared_ptr<ModelCG> model = nullptr,
                             const std::optional<std::set<std::string>>& minimalModelCcys = std::nullopt,
-                            const std::string& baseCcy = {})
+                            const std::string& localBaseCcy = {})
         : g_(g), opLabels_(opLabels), root_(root), context_(context), model_(model),
-          minimalModelCcys_(minimalModelCcys) {}
+          minimalModelCcys_(minimalModelCcys), localBaseCcy_(localBaseCcy) {
+        QL_REQUIRE(localBaseCcy_.empty() || localBaseCcy_ == model_->baseCurrency(),
+                   "ComputationGraphBuilder: local base ccy != model base ccy not yet supported.");
+    }
     void run(const bool generatePayLog, const bool includePastCashflows = false, const std::string& script = "",
              bool interactive = false);
     const std::set<std::size_t>& keepNodes() const { return keepNodes_; }
@@ -67,7 +70,7 @@ private:
     QuantLib::ext::shared_ptr<Context> context_;
     QuantLib::ext::shared_ptr<ModelCG> model_;
     std::optional<std::set<std::string>> minimalModelCcys_;
-    std::string baseCcy_;
+    std::string localBaseCcy_;
 
     std::set<std::size_t> keepNodes_;
     std::vector<PayLogEntry> payLogEntries_;

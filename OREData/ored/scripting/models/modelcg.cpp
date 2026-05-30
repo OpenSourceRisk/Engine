@@ -151,8 +151,8 @@ std::ostream& operator<<(std::ostream& o, const ModelCG::ModelParameter::Type& t
         return o << "fxSpotT0";
     case ModelCG::ModelParameter::Type::fxRate:
         return o << "fxRate";
-    case ModelCG::ModelParameter::Type::radonNikodymDerivative:
-        return o << "radonNikodymDerivative";
+    case ModelCG::ModelParameter::Type::convertToBaseCcy:
+        return o << "convertToBaseCcy";
     }
     return o << "unknown";
 }

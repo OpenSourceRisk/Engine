@@ -250,7 +250,8 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
 
     // 17 compile the processes (needed for BlackScholes, LocalVol only)
 
-    if (modelParam_ == "BlackScholes" || modelParam_ == "LocalVolDupire" || modelParam_ == "LocalVolAndreasenHuge" || modelParam_ == "Heston")
+    if (modelParam_ == "BlackScholes" || modelParam_ == "LocalVolDupire" || modelParam_ == "LocalVolAndreasenHuge" ||
+        modelParam_ == "Heston")
         setupBlackScholesProcesses();
 
     // 18 setup IR reversion values (needed for Gaussian CAM only)
@@ -313,7 +314,7 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
     DLOG("externalDevice       = " << (useExternalComputeDevice_ ? externalComputeDevice_ : "na"));
     DLOG("calibration          = " << calibration_);
     DLOG("base ccy             = " << baseCcy_);
-    DLOG("model base (npv) ccy = " << (model_ != nullptr ? model_->baseCcy() : modelCG_->baseCcy()));
+    DLOG("model base (npv) ccy = " << (model_ != nullptr ? model_->baseCcy() : modelCG_->baseCurrency()));
     DLOG("ccys                 = " << modelCcys_.size());
     DLOG("eq,fx,com indices    = " << modelIndices_.size());
     DLOG("ir indices           = " << irIndices_.size());
@@ -592,23 +593,33 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
             parseListOfValues<Real>(engineParameter("CalibrationMoneyness", getModelEngineQualifiers()), &parseReal);
     } else if (modelParam_ == "Heston") {
         calibrationMoneyness_ =
-	  parseListOfValues<Real>(engineParameter("CalibrationMoneyness", getModelEngineQualifiers(), false, "-2.0,-1.5,-1.0,-0.5,0.0,0.5,1.0,1.5,2.0"), &parseReal);
-        hestonCalibrationExpiries_ =
-	  parseListOfValues<Period>(engineParameter("Heston.CalibrationExpiries", getModelEngineQualifiers(),false,""), &parsePeriod);
-        hestonCalibrationVarianceTerms_ =
-	  parseListOfValues<Period>(engineParameter("Heston.CalibrationVarianceTerms", getModelEngineQualifiers(), false, ""), &parsePeriod);
-        hestonInitialValues_ =
-	  parseListOfValues<Real>(engineParameter("Heston.InitialValues", getModelEngineQualifiers(), false, "0.04,1.0,0.5,-0.5,0.04"), &parseReal);
-        hestonFixedValues_ =
-	  parseListOfValues<bool>(engineParameter("Heston.FixedValues", getModelEngineQualifiers(), false, "N,N,N,N,N"), &parseBool);
-        hestonRelaxedFellerConstraint_ = parseReal(engineParameter("Heston.RelaxedFellerConstraint", getModelEngineQualifiers(), false, "0.25"));
-        hestonMaxCalibrationAttempts_ = parseInteger(engineParameter("Heston.MaxCalibrationAttempts", getModelEngineQualifiers(), false, "0"));
-        hestonMaximumInitialValues_ =
-	  parseListOfValues<Real>(engineParameter("Heston.MaximumInitialValues", getModelEngineQualifiers(), false, "0.1,20,3,0.9,0.1"), &parseReal);
-        hestonCalibrationMethod_ = engineParameter("Heston.CalibrationMethod", getModelEngineQualifiers(), false, "ConstantBestFit");
-        hestonEarlyExitThreshold_ = parseReal(engineParameter("Heston.EarlyExitThreshold", getModelEngineQualifiers(), false, "0.005"));
-        hestonMaxAcceptableError_ = parseReal(engineParameter("Heston.MaxAcceptableError", getModelEngineQualifiers(), false, "0.05"));
-        auto tmp = engineParameter("Heston.ProcessDiscretization", getModelEngineQualifiers(), false, "QuadraticExponential");
+            parseListOfValues<Real>(engineParameter("CalibrationMoneyness", getModelEngineQualifiers(), false,
+                                                    "-2.0,-1.5,-1.0,-0.5,0.0,0.5,1.0,1.5,2.0"),
+                                    &parseReal);
+        hestonCalibrationExpiries_ = parseListOfValues<Period>(
+            engineParameter("Heston.CalibrationExpiries", getModelEngineQualifiers(), false, ""), &parsePeriod);
+        hestonCalibrationVarianceTerms_ = parseListOfValues<Period>(
+            engineParameter("Heston.CalibrationVarianceTerms", getModelEngineQualifiers(), false, ""), &parsePeriod);
+        hestonInitialValues_ = parseListOfValues<Real>(
+            engineParameter("Heston.InitialValues", getModelEngineQualifiers(), false, "0.04,1.0,0.5,-0.5,0.04"),
+            &parseReal);
+        hestonFixedValues_ = parseListOfValues<bool>(
+            engineParameter("Heston.FixedValues", getModelEngineQualifiers(), false, "N,N,N,N,N"), &parseBool);
+        hestonRelaxedFellerConstraint_ =
+            parseReal(engineParameter("Heston.RelaxedFellerConstraint", getModelEngineQualifiers(), false, "0.25"));
+        hestonMaxCalibrationAttempts_ =
+            parseInteger(engineParameter("Heston.MaxCalibrationAttempts", getModelEngineQualifiers(), false, "0"));
+        hestonMaximumInitialValues_ = parseListOfValues<Real>(
+            engineParameter("Heston.MaximumInitialValues", getModelEngineQualifiers(), false, "0.1,20,3,0.9,0.1"),
+            &parseReal);
+        hestonCalibrationMethod_ =
+            engineParameter("Heston.CalibrationMethod", getModelEngineQualifiers(), false, "ConstantBestFit");
+        hestonEarlyExitThreshold_ =
+            parseReal(engineParameter("Heston.EarlyExitThreshold", getModelEngineQualifiers(), false, "0.005"));
+        hestonMaxAcceptableError_ =
+            parseReal(engineParameter("Heston.MaxAcceptableError", getModelEngineQualifiers(), false, "0.05"));
+        auto tmp =
+            engineParameter("Heston.ProcessDiscretization", getModelEngineQualifiers(), false, "QuadraticExponential");
         hestonProcessDiscretization_ = parseHestonProcessDiscretization(tmp);
         hestonQuantoTimeStepsPerYear_ = parseInteger(engineParameter(
             "HestonQuantoTimeStepsPerYear", getModelEngineQualifiers(), false, to_string(timeStepsPerYear_)));
@@ -642,13 +653,14 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
         params_.externalDeviceCompatibilityMode = externalDeviceCompatibilityMode_;
     } else if (engineParam_ == "FD") {
         params_.stateGridPoints = parseInteger(engineParameter("StateGridPoints", getModelEngineQualifiers()));
-	if (modelParam_ == "Heston") 
-	    params_.varianceStateGridPoints = parseInteger(engineParameter("VarianceStateGridPoints", getModelEngineQualifiers()));
-	else
-	    params_.varianceStateGridPoints = 1;
+        if (modelParam_ == "Heston")
+            params_.varianceStateGridPoints =
+                parseInteger(engineParameter("VarianceStateGridPoints", getModelEngineQualifiers()));
+        else
+            params_.varianceStateGridPoints = 1;
         modelSize_ = params_.stateGridPoints * params_.varianceStateGridPoints;
-	params_.mesherEpsilon =
-	    parseReal(engineParameter("MesherEpsilon", getModelEngineQualifiers(), false, "1.0E-4"));
+        params_.mesherEpsilon =
+            parseReal(engineParameter("MesherEpsilon", getModelEngineQualifiers(), false, "1.0E-4"));
         params_.mesherScaling = parseReal(engineParameter("MesherScaling", getModelEngineQualifiers(), false, "1.5"));
         params_.mesherConcentration =
             parseReal(engineParameter("MesherConcentration", getModelEngineQualifiers(), false, "0.1"));
@@ -885,23 +897,17 @@ void ScriptedTradeEngineBuilder::compileModelCcyList() {
                                  << "), because it is a single currency model");
             }
         }
-    } else if(amcCgModel_ != nullptr) {
-        // for AMC-CG we check if the available base currencies contain
-        std::vector<std::string> commonCurrencies;
-        std::set_intersection(modelCg_->availableBaseCurrencies().begin(), modelCg_->availableBaseCurrencies().end(),
-                              tmpCcys.begin(), tmpCcys.end(), std::back_inserter(commonCurrencies));
-        if (!commonCurrencies.empty()) {
-            baseCcy_ = commonCurrencies.front();
-            addBaseCcyToModelCcys = false;
-        } else {
-            baseCcy_ = amcCgModel_->baseCcy();
-        }
+    } else if (amcCgModel_ != nullptr) {
+        // for now, we don't support a base ccy different from the global model base ccy, this requires more work in
+        // the computation graph builder, also, how do we make sure that the base ccy we pick here is available
+        // in the model
+        baseCcy_ = amcCgModel_->baseCurrency();
     }
 
     // build currency vector with the base ccy at the front
     modelCcys_.clear();
     if (addBaseCcyToModelCcys)
-        modelCcys_.push_back(baseCcy);
+        modelCcys_.push_back(baseCcy_);
     for (auto const& c : tmpCcys)
         if (c != baseCcy_)
             modelCcys_.push_back(c);
@@ -1190,7 +1196,7 @@ void ScriptedTradeEngineBuilder::compileSimulationAndAddDates() {
                                        << io::iso_date(lim.second + 1 + lag) << "' (from index eval date ["
                                        << io::iso_date(d) << "], start next inf period ["
                                        << io::iso_date(lim.second + 1) << "] + lag[" << lag << "])");
-                        simulationDates_.insert(lim.second + 1 + lag);
+                    simulationDates_.insert(lim.second + 1 + lag);
                 }
             } else {
                 // for all other indices we just take the original dates
@@ -1392,8 +1398,8 @@ void ScriptedTradeEngineBuilder::buildFdBlackScholes(
     auto filteredStrikes = filterBlackScholesCalibrationStrikes(calibrationStrikes_, modelIndices_, processes_, T);
     model_ = QuantLib::ext::make_shared<BlackScholes>(
         Model::Type::FD, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
-        modelIndices_, modelIndicesCurrencies_, payCcys_, correlations_, simulationDates_,
-        timeStepsPerYear_, addDates_, iborFallbackConfig, calibration_, filteredStrikes, params_);
+        modelIndices_, modelIndicesCurrencies_, payCcys_, correlations_, simulationDates_, timeStepsPerYear_, addDates_,
+        iborFallbackConfig, calibration_, filteredStrikes, params_);
     auto builder = QuantLib::ext::make_shared<BlackScholesModelBuilder>(
         modelCurves_, processes_, simulationDates_, addDates_, timeStepsPerYear_, calibration_,
         getCalibrationStrikesVector(filteredStrikes, modelIndices_), baseCcyModelCurve_,
@@ -1417,8 +1423,8 @@ void ScriptedTradeEngineBuilder::buildLocalVol(
     auto filteredStrikes = filterBlackScholesCalibrationStrikes(calibrationStrikes_, modelIndices_, processes_, T);
     model_ = QuantLib::ext::make_shared<LocalVol>(
         Model::Type::MC, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
-        modelIndices_, modelIndicesCurrencies_, payCcys_, correlations_, simulationDates_,
-        timeStepsPerYear_, addDates_, iborFallbackConfig, "Smile", filteredStrikes, params_);
+        modelIndices_, modelIndicesCurrencies_, payCcys_, correlations_, simulationDates_, timeStepsPerYear_, addDates_,
+        iborFallbackConfig, "Smile", filteredStrikes, params_);
     auto builder = QuantLib::ext::make_shared<LocalVolModelBuilder>(
         modelCurves_, processes_, simulationDates_, addDates_, timeStepsPerYear_, lvType, calibrationMoneyness_,
         referenceCalibrationGrid_, !calibrate_ || zeroVolatility_, baseCcyModelCurve_, false,
@@ -1467,8 +1473,8 @@ void ScriptedTradeEngineBuilder::buildHeston(const std::string& id,
     }
     model_ = QuantLib::ext::make_shared<Heston>(
         Model::Type::MC, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
-        modelIndices_, modelIndicesCurrencies_, payCcys_, correlations_, simulationDates_, steps,
-        addDates_, iborFallbackConfig, "Smile", filteredStrikes, params_);
+        modelIndices_, modelIndicesCurrencies_, payCcys_, correlations_, simulationDates_, steps, addDates_,
+        iborFallbackConfig, "Smile", filteredStrikes, params_);
     auto builder = QuantLib::ext::make_shared<HestonModelBuilder>(
         modelIndices_, modelCurves_, processes_, simulationDates_, addDates_, steps, hestonCalibrationExpiries_,
         calibrationMoneyness_, hestonCalibrationVarianceTerms_, hestonInitialValues_, hestonFixedValues_,
@@ -1680,25 +1686,29 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(
             }
             std::vector<QuantLib::ext::shared_ptr<CalibrationInstrument>> calInstr;
             DLOG("building calibration basket for inflation index '" << modelInfIndices_[i].first);
-            for (auto const& d : calibrationDates){
-                auto simLag =  simulationLag(modelInfIndices_[i].second->zeroInflationTermStructure());
+            for (auto const& d : calibrationDates) {
+                auto simLag = simulationLag(modelInfIndices_[i].second->zeroInflationTermStructure());
                 Date effectiveFixingDate = d - simLag;
                 auto cpiVolatility = market_->cpiInflationCapFloorVolatilitySurface(modelInfIndices_[i].first);
                 Date maturity = effectiveFixingDate + cpiVolatility->observationLag();
                 DLOG("processing calibration date " << d << " for inflation index '" << modelInfIndices_[i].first << "'"
-                     << " with simulationLag (days) " << simLag << ", effective fixing date " << effectiveFixingDate << " and maturity " << maturity);
+                                                    << " with simulationLag (days) " << simLag
+                                                    << ", effective fixing date " << effectiveFixingDate
+                                                    << " and maturity " << maturity);
                 if (maturity < referenceDate) {
-                    DLOG("skipping calibration instrument for inflation index '" << modelInfIndices_[i].first
-                         << "' with expiry " << d << " and effective fixing date " << effectiveFixingDate
-                         << " (maturity " << maturity << ") since maturity is before reference date");
+                    DLOG("skipping calibration instrument for inflation index '"
+                         << modelInfIndices_[i].first << "' with expiry " << d << " and effective fixing date "
+                         << effectiveFixingDate << " (maturity " << maturity
+                         << ") since maturity is before reference date");
                     continue;
                 }
-                DLOG("adding calibration instrument for inflation index '" << modelInfIndices_[i].first
-                     << "' with expiry " << d << " and effective fixing date " << effectiveFixingDate << " (maturity " << maturity
-                     << ") and strike " << calibrationStrike->toString());
-                
-                calInstr.push_back(
-                    QuantLib::ext::make_shared<CpiCapFloor>(QuantLib::CapFloor::Type::Floor, maturity, calibrationStrike));
+                DLOG("adding calibration instrument for inflation index '"
+                     << modelInfIndices_[i].first << "' with expiry " << d << " and effective fixing date "
+                     << effectiveFixingDate << " (maturity " << maturity << ") and strike "
+                     << calibrationStrike->toString());
+
+                calInstr.push_back(QuantLib::ext::make_shared<CpiCapFloor>(QuantLib::CapFloor::Type::Floor, maturity,
+                                                                           calibrationStrike));
             }
             std::vector<CalibrationBasket> calBaskets(1, CalibrationBasket(calInstr));
             if (infModelType_ == "DK") {

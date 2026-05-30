@@ -116,6 +116,24 @@ const Date& GaussianCamCG::referenceDate() const {
 
 Size GaussianCamCG::size() const { return ModelCG::size(); }
 
+const std::set<std::string>& GaussianCamCG::admissableLocalBaseCurrencies() const {
+    return admissableLocalBaseCurrencies_;
+}
+
+void GaussianCamCG::setAdmissableLocalBaseCurrencies(const std::set<std::string>& baseCcys) const {
+    admissableLocalBaseCurrencies_ = baseCcys;
+    // the global base ccy is always admissable, but we do not hold this in the member
+    admissableLocalBaseCurrencies_.erase(baseCurrency());
+    // trigger new path generation
+    underlyingPathsCgVersion_ = 0;
+    // check
+    for (auto const& b : admissableLocalBaseCurrencies_) {
+        QL_REQUIRE(std::find(currencies_.begin(), currencies_.end(), b) != currencies_.end(),
+                   "GaussianCamCG::setAdmissableCurrencies(): currency "
+                       << b << " not in model currency set, this is not allowed.");
+    }
+}
+
 void GaussianCamCG::performCalculations() const {
 
     // needed for base class performCalculations()
@@ -167,7 +185,7 @@ void GaussianCamCG::performCalculations() const {
 
     // noting to do if underlying paths are populated
 
-    if (!underlyingPaths_.empty())
+    if (!irStates_.empty())
         return;
 
     // exit if there are no future simulation dates (i.e. only the reference date)
@@ -182,23 +200,27 @@ void GaussianCamCG::performCalculations() const {
         irStates_[d] = std::vector<std::size_t>(currencies_.size(), ComputationGraph::nan);
         infStates_[d] = std::vector<std::pair<std::size_t, std::size_t>>(
             infIndices_.size(), std::make_pair(ComputationGraph::nan, ComputationGraph::nan));
+        for (auto const& b : admissableLocalBaseCurrencies_) {
+            irStatesV1_[b][d] = ComputationGraph::nan;
+        }
     }
 
     underlyingPathsOnFullTimeGrid_.resize(indices_.size(),
                                           std::vector<std::size_t>(timeGrid_.size(), ComputationGraph::nan));
     irStatesOnFullTimeGrid_.resize(currencies_.size(),
                                    std::vector<std::size_t>(timeGrid_.size(), ComputationGraph::nan));
+    for (auto const& b : admissableLocalBaseCurrencies_) {
+        irStatesOnFullTimeGridV1_[b].resize(timeGrid_.size(), ComputationGraph::nan);
+    }
+
     infStatesOnFullTimeGrid_.resize(
         infIndices_.size(), std::vector<std::pair<std::size_t, std::size_t>>(
                                 timeGrid_.size(), std::make_pair(ComputationGraph::nan, ComputationGraph::nan)));
 
     // populate index mappings
 
-    currencyPositionInProcess_.clear();
     currencyPositionInCam_.clear();
     for (Size i = 0; i < currencies_.size(); ++i) {
-        currencyPositionInProcess_.push_back(
-            cam_->pIdx(CrossAssetModel::AssetType::IR, cam_->ccyIndex(parseCurrency(currencies_[i]))));
         currencyPositionInCam_.push_back(
             cam_->idx(CrossAssetModel::AssetType::IR, cam_->ccyIndex(parseCurrency(currencies_[i]))));
     }
@@ -208,11 +230,9 @@ void GaussianCamCG::performCalculations() const {
         irIndexPositionInCam_.push_back(cam_->ccyIndex(irIndices_[i].second->currency()));
     }
 
-    infIndexPositionInProcess_.clear();
     infIndexPositionInCam_.clear();
     for (Size i = 0; i < infIndices_.size(); ++i) {
         Size infIdx = cam_->infIndex(infIndices_[i].first.infName());
-        infIndexPositionInProcess_.push_back(cam_->pIdx(CrossAssetModel::AssetType::INF, infIdx));
         infIndexPositionInCam_.push_back(infIdx);
     }
 
@@ -233,6 +253,22 @@ void GaussianCamCG::performCalculations() const {
             QL_FAIL("index '" << indices_[i].name() << "' expected to be FX or EQ");
         }
     }
+
+    // calculate number of ir components for v1 local base currency handling
+
+    Size numberOfIrStatesV1 = 0;
+    if (!admissableLocalBaseCurrencies_.empty()) {
+        for (Size j = 0; j < currencies_.size(); ++j) {
+            numberOfIrStatesV1 += cam_->stateVariables(CrossAssetModel::AssetType::IR, j);
+        }
+    }
+
+    // set up currency lookup
+
+    std::map<std::string, std::size_t> currencyLookup;
+    std::size_t index = 0;
+    for (auto const& c : currencies())
+        currencyLookup[c] = index++;
 
     // set the required random variables to evolve the stochastic process
 
@@ -311,8 +347,10 @@ void GaussianCamCG::performCalculations() const {
 
     // precompute drift nodes (state independent parts)
 
-    std::vector<std::vector<std::size_t>> drift(timeGrid_.size() - 1,
-                                                std::vector<std::size_t>(cam->dimension(), cg_const(*g_, 0.0)));
+    std::vector<std::vector<std::size_t>> drift1a(timeGrid_.size() - 1,
+                                                  std::vector<std::size_t>(cam->dimension(), cg_const(*g_, 0.0)));
+    std::vector<std::vector<std::size_t>> drift1b(timeGrid_.size() - 1,
+                                                  std::vector<std::size_t>(cam->dimension(), cg_const(*g_, 0.0)));
     for (Size i = 0; i < timeGrid_.size() - 1; ++i) {
         Real t = timeGrid_[i];
         Real t2 = timeGrid_[i + 1];
@@ -341,7 +379,7 @@ void GaussianCamCG::performCalculations() const {
                 cg_sqrt(*g_, cg_mult(*g_, cg_const(*g_, 1.0 / (t2 - t)), cg_subtract(*g_, zeta2, zeta)));
             if (j == 0) {
                 if (cam->measure() == IrModel::Measure::BA) {
-                    drift[i][cam->pIdx(CrossAssetModel::AssetType::IR, i, 0)] =
+                    drift1a[i][cam->pIdx(CrossAssetModel::AssetType::IR, i, 0)] =
                         cg_negative(*g_, cg_mult(*g_, cg_mult(*g_, H, alpha), alpha));
                 }
             } else {
@@ -366,7 +404,7 @@ void GaussianCamCG::performCalculations() const {
                         return cam->correlation(CrossAssetModel::AssetType::IR, j, CrossAssetModel::AssetType::FX,
                                                 j - 1);
                     });
-                drift[i][cam->pIdx(CrossAssetModel::AssetType::IR, j, 0)] =
+                drift1b[i][cam->pIdx(CrossAssetModel::AssetType::IR, j, 0)] =
                     cg_add(*g_, {cg_negative(*g_, cg_mult(*g_, cg_mult(*g_, H, alpha), alpha)),
                                  cg_mult(*g_, cg_mult(*g_, cg_mult(*g_, H0, alpha0), alpha), rhozz0j),
                                  cg_negative(*g_, cg_mult(*g_, cg_mult(*g_, sigma, alpha), rhozxjj))});
@@ -389,15 +427,15 @@ void GaussianCamCG::performCalculations() const {
                 std::size_t irDrift =
                     cg_mult(*g_, cg_const(*g_, -1.0 / (t2 - t)),
                             cg_log(*g_, cg_mult(*g_, cg_div(*g_, dsc0b, dsc0a), cg_div(*g_, dscja, dscjb))));
-                drift[i][cam->pIdx(CrossAssetModel::AssetType::FX, j - 1, 0)] =
+                drift1b[i][cam->pIdx(CrossAssetModel::AssetType::FX, j - 1, 0)] =
                     cg_add(*g_, {cg_mult(*g_, cg_mult(*g_, cg_mult(*g_, H0, alpha0), sigma), rhozx0j), irDrift,
                                  cg_negative(*g_, cg_mult(*g_, cg_mult(*g_, cg_const(*g_, 0.5), sigma), sigma))});
                 if (cam->measure() == IrModel::Measure::BA) {
-                    drift[i][cam->pIdx(CrossAssetModel::AssetType::IR, j, 0)] =
-                        cg_subtract(*g_, drift[i][cam->pIdx(CrossAssetModel::AssetType::IR, j, 0)],
+                    drift1b[i][cam->pIdx(CrossAssetModel::AssetType::IR, j, 0)] =
+                        cg_subtract(*g_, drift1b[i][cam->pIdx(CrossAssetModel::AssetType::IR, j, 0)],
                                     cg_mult(*g_, cg_mult(*g_, cg_mult(*g_, H0, alpha0), alpha), rhozz0j));
-                    drift[i][cam->pIdx(CrossAssetModel::AssetType::FX, j - 1, 0)] =
-                        cg_subtract(*g_, drift[i][cam->pIdx(CrossAssetModel::AssetType::FX, j - 1, 0)],
+                    drift1b[i][cam->pIdx(CrossAssetModel::AssetType::FX, j - 1, 0)] =
+                        cg_subtract(*g_, drift1b[i][cam->pIdx(CrossAssetModel::AssetType::FX, j - 1, 0)],
                                     cg_mult(*g_, cg_mult(*g_, cg_mult(*g_, H0, alpha0), sigma), rhozx0j));
                 }
             }
@@ -407,6 +445,7 @@ void GaussianCamCG::performCalculations() const {
     // initialize state vector
 
     std::vector<std::size_t> state(cam->dimension(), cg_const(*g_, 0.0));
+    std::vector<std::size_t> statev1(numberOfIrStatesV1, cg_const(*g_, 0.0));
 
     for (Size j = 0; j < cam->components(CrossAssetModel::AssetType::FX); ++j) {
         state[cam->pIdx(CrossAssetModel::AssetType::FX, j, 0)] =
@@ -419,6 +458,10 @@ void GaussianCamCG::performCalculations() const {
     for (Size j = 0; j < currencies_.size(); ++j) {
         irStates_[*effectiveSimulationDates_.begin()][j] = irStatesOnFullTimeGrid_[j][0] =
             state[cam->pIdx(CrossAssetModel::AssetType::IR, j, 0)];
+        for (auto const& b : admissableLocalBaseCurrencies_) {
+            irStatesV1_[b][*effectiveSimulationDates_.begin()] = irStatesOnFullTimeGridV1_[b][0] =
+                state[cam->pIdx(CrossAssetModel::AssetType::IR, j, 0)];
+        }
     }
 
     for (Size j = 0; j < indices_.size(); ++j) {
@@ -481,19 +524,30 @@ void GaussianCamCG::performCalculations() const {
             for (Size k = 0; k < cam->brownians(); ++k) {
                 state[j] = cg_add(*g_, state[j], cg_mult(*g_, diffusionOnCorrelatedBrownians[i][j][k], dz[k]));
             }
-
-            state[j] = cg_add(
-                *g_, state[j],
-                cg_mult(*g_, cg_const(*g_, timeGrid_[i + 1] - timeGrid_[i]), cg_add(*g_, drift[i][j], drift2[j])));
+            state[j] = cg_add(*g_, state[j],
+                              cg_mult(*g_, cg_const(*g_, timeGrid_[i + 1] - timeGrid_[i]),
+                                      cg_add(*g_, {drift1a[i][j], drift1b[i][j], drift2[j]})));
+        }
+        for (Size j = 0; j < numberOfIrStatesV1; ++j) {
+            for (Size k = 0; k < cam->brownians(); ++k) {
+                statev1[j] = cg_add(*g_, statev1[j], cg_mult(*g_, diffusionOnCorrelatedBrownians[i][j][k], dz[k]));
+            }
+            statev1[j] =
+                cg_add(*g_, statev1[j], cg_mult(*g_, cg_const(*g_, timeGrid_[i + 1] - timeGrid_[i]), drift1a[i][j]));
         }
 
         // set model states
 
         if (positionInTimeGrid_[dateIndex] == i + 1) {
 
+            Date d = *std::next(effectiveSimulationDates_.begin(), dateIndex);
+
             for (Size j = 0; j < currencies_.size(); ++j) {
-                irStates_[*std::next(effectiveSimulationDates_.begin(), dateIndex)][j] =
-                    state[cam->pIdx(CrossAssetModel::AssetType::IR, j, 0)];
+                irStates_[d][j] = state[cam->pIdx(CrossAssetModel::AssetType::IR, j, 0)];
+            }
+
+            for (auto const& b : admissableLocalBaseCurrencies_) {
+                irStatesV1_[b][d] = statev1[cam->pIdx(CrossAssetModel::AssetType::IR, currencyLookup[b], 0)];
             }
 
             for (Size j = 0; j < indices_.size(); ++j) {
@@ -508,10 +562,14 @@ void GaussianCamCG::performCalculations() const {
             irStatesOnFullTimeGrid_[j][i + 1] = state[cam->pIdx(CrossAssetModel::AssetType::IR, j, 0)];
         }
 
+        for (auto const& b : admissableLocalBaseCurrencies_) {
+            irStatesOnFullTimeGridV1_[b][i + 1] =
+                statev1[cam->pIdx(CrossAssetModel::AssetType::IR, currencyLookup[b], 0)];
+        }
+
         for (Size j = 0; j < indices_.size(); ++j) {
             underlyingPathsOnFullTimeGrid_[j][i + 1] = cg_exp(*g_, state[indexPositionInProcess_[j]]);
         }
-
     }
 
     QL_REQUIRE(dateIndex == effectiveSimulationDates_.size(),
@@ -529,7 +587,13 @@ Date GaussianCamCG::adjustForStickyCloseOut(const Date& d) const {
     return d;
 }
 
-std::size_t GaussianCamCG::getInterpolatedUnderlyingPath(const Date& d, const Size indexNo) const {
+std::size_t GaussianCamCG::getInterpolatedUnderlyingPath(const Date& d, const Size indexNo,
+                                                         const std::string& localBaseCurrency) const {
+
+    QL_REQUIRE(localBaseCurrency.empty() || localBaseCurrency == baseCurrency(),
+               "GaussianCamCG::getInterpolatedUnderlyingPath(): localBaseCurrency (" << localBaseCurrency
+                                                                                     << ") not allowed.");
+
     if (effectiveSimulationDates_.find(d) != effectiveSimulationDates_.end())
         return underlyingPaths_.at(d).at(indexNo);
     if (d > *effectiveSimulationDates_.rbegin()) {
@@ -551,9 +615,19 @@ std::size_t GaussianCamCG::getInterpolatedUnderlyingPath(const Date& d, const Si
     return n;
 }
 
-std::size_t GaussianCamCG::getInterpolatedIrState(const Date& d, const Size ccyIndex) const {
-    if (effectiveSimulationDates_.find(d) != effectiveSimulationDates_.end())
-        return irStates_.at(d).at(ccyIndex);
+std::size_t GaussianCamCG::getInterpolatedIrState(const Date& d, const Size ccyIndex,
+                                                  const std::string& localBaseCurrency) const {
+    QL_REQUIRE(localBaseCurrency.empty() || localBaseCurrency == baseCurrency() ||
+                   currencies_[ccyIndex] == localBaseCurrency,
+               "GaussianCamCG::getInterpolatedIrState(): currency "
+                   << currencies_[ccyIndex] << " must match local base ccy " << localBaseCurrency
+                   << " if that is not equal to global base ccy (" << baseCurrency() << ")");
+    if (effectiveSimulationDates_.find(d) != effectiveSimulationDates_.end()) {
+        if (localBaseCurrency.empty() || localBaseCurrency == baseCurrency())
+            return irStates_.at(d).at(ccyIndex);
+        else
+            return irStatesV1_.at(localBaseCurrency).at(d);
+    }
     if (d > *effectiveSimulationDates_.rbegin()) {
         // alternative a) extrapolation not allowed (ENABLED)
         QL_FAIL("GaussianCamCG::getInterpolatedIrState(" << d << "," << ccyIndex << "): extrapolation at " << d << " > "
@@ -566,20 +640,36 @@ std::size_t GaussianCamCG::getInterpolatedIrState(const Date& d, const Size ccyI
     if (auto m = cachedParameters_.find(id); m != cachedParameters_.end())
         return m->node();
     auto [d1, d2, w1, w2] = getInterpolationWeights(actualTimeFromReference(d), timeGrid_);
-    auto n = cg_add(*g_, cg_mult(*g_, w1, irStatesOnFullTimeGrid_.at(ccyIndex).at(d1)),
-                    cg_mult(*g_, w2, irStatesOnFullTimeGrid_.at(ccyIndex).at(d2)));
+    std::size_t n;
+    if (localBaseCurrency.empty() || localBaseCurrency == baseCurrency()) {
+        n = cg_add(*g_, cg_mult(*g_, w1, irStatesOnFullTimeGrid_.at(ccyIndex).at(d1)),
+                   cg_mult(*g_, w2, irStatesOnFullTimeGrid_.at(ccyIndex).at(d2)));
+    } else {
+        n = cg_add(*g_, cg_mult(*g_, w1, irStatesOnFullTimeGridV1_.at(localBaseCurrency).at(d1)),
+                   cg_mult(*g_, w2, irStatesOnFullTimeGridV1_.at(localBaseCurrency).at(d2)));
+    }
     id.setNode(n);
     cachedParameters_.insert(id);
     return n;
 }
 
-std::size_t GaussianCamCG::getIndexValue(const Size indexNo, const Date& d, const Date& fwd) const {
+std::size_t GaussianCamCG::getFutureBarrierProb(const std::string& index, const Date& obsdate1, const Date& obsdate2,
+                                                const std::size_t barrier, const bool above,
+                                                const std::string& localBaseCurrency) const {
+    QL_FAIL("getFutureBarrierProb not implemented by GaussianCamCG");
+}
+
+std::size_t GaussianCamCG::getIndexValue(const Size indexNo, const Date& d, const Date& fwd,
+                                         const std::string& localBaseCurrency) const {
+    QL_REQUIRE(localBaseCurrency.empty() || localBaseCurrency == baseCurrency(),
+               "GaussianCamCG::getIndexValue(): localBaseCurrency (" << localBaseCurrency << ") not allowed.");
     QL_REQUIRE(fwd == Null<Date>(), "GaussianCamCG::getIndexValue(): fwd != null not implemented ("
                                         << indexNo << "," << d << "," << fwd << ")");
     return getInterpolatedUnderlyingPath(adjustForStickyCloseOut(d), indexNo);
 }
 
-std::size_t GaussianCamCG::getIrIndexValue(const Size indexNo, const Date& d, const Date& fwd) const {
+std::size_t GaussianCamCG::getIrIndexValue(const Size indexNo, const Date& d, const Date& fwd,
+                                           const std::string& localBaseCurrency) const {
     Date fixingDate = d;
     if (fwd != Null<Date>())
         fixingDate = fwd;
@@ -591,10 +681,11 @@ std::size_t GaussianCamCG::getIrIndexValue(const Size indexNo, const Date& d, co
         currencies_[currencyIdx], *g_, [cam, currencyIdx] { return cam->irlgm1f(currencyIdx); }, modelParameters_,
         cachedParameters_);
     return lgmcg.fixing(irIndices_[indexNo].second, fixingDate, d,
-                        getInterpolatedIrState(adjustForStickyCloseOut(d), currencyIdx));
+                        getInterpolatedIrState(adjustForStickyCloseOut(d), currencyIdx, localBaseCurrency));
 }
 
-std::size_t GaussianCamCG::getInfIndexValue(const Size indexNo, const Date& d, const Date& fwd) const {
+std::size_t GaussianCamCG::getInfIndexValue(const Size indexNo, const Date& d, const Date& fwd,
+                                            const std::string& localBaseCurrency) const {
     QL_FAIL("GaussianCamCG::getInfIndexValue(): not implemented");
 }
 
@@ -602,7 +693,8 @@ std::size_t GaussianCamCG::fwdCompAvg(const bool isAvg, const std::string& index
                                       const Date& start, const Date& end, const Real spread, const Real gearing,
                                       const Integer lookback, const Natural rateCutoff, const Natural fixingDays,
                                       const bool includeSpread, const Real cap, const Real floor,
-                                      const bool nakedOption, const bool localCapFloor) const {
+                                      const bool nakedOption, const bool localCapFloor,
+                                      const std::string& localBaseCurrency) const {
     calculate();
     auto ir = std::find_if(irIndices_.begin(), irIndices_.end(),
                            [&indexInput](const std::pair<IndexInfo, QuantLib::ext::shared_ptr<InterestRateIndex>>& p) {
@@ -625,37 +717,39 @@ std::size_t GaussianCamCG::fwdCompAvg(const bool isAvg, const std::string& index
 
     Date effobsdate = std::max(referenceDate(), obsdate);
     if (isAvg) {
-        return lgmcg.averagedOnRate(on, coupon->fixingDates(), coupon->valueDates(), coupon->dt(), rateCutoff,
-                                    includeSpread, spread, gearing, lookback * Days, cap, floor, localCapFloor,
-                                    nakedOption, effobsdate,
-                                    getInterpolatedIrState(adjustForStickyCloseOut(effobsdate), currencyIdx));
+        return lgmcg.averagedOnRate(
+            on, coupon->fixingDates(), coupon->valueDates(), coupon->dt(), rateCutoff, includeSpread, spread, gearing,
+            lookback * Days, cap, floor, localCapFloor, nakedOption, effobsdate,
+            getInterpolatedIrState(adjustForStickyCloseOut(effobsdate), currencyIdx, localBaseCurrency));
     } else {
-        return lgmcg.compoundedOnRate(on, coupon->fixingDates(), coupon->valueDates(), coupon->dt(), rateCutoff,
-                                      includeSpread, spread, gearing, lookback * Days, cap, floor, localCapFloor,
-                                      nakedOption, effobsdate,
-                                      getInterpolatedIrState(adjustForStickyCloseOut(effobsdate), currencyIdx));
+        return lgmcg.compoundedOnRate(
+            on, coupon->fixingDates(), coupon->valueDates(), coupon->dt(), rateCutoff, includeSpread, spread, gearing,
+            lookback * Days, cap, floor, localCapFloor, nakedOption, effobsdate,
+            getInterpolatedIrState(adjustForStickyCloseOut(effobsdate), currencyIdx, localBaseCurrency));
     }
 }
 
-std::size_t GaussianCamCG::getDiscount(const Size idx, const Date& s, const Date& t) const {
+std::size_t GaussianCamCG::getDiscount(const Size idx, const Date& s, const Date& t,
+                                       const std::string& localBaseCurrency) const {
     auto cam(cam_);
     Size cpidx = currencyPositionInCam_[idx];
     LgmCG lgmcg(
         currencies_[idx], *g_, [cam, cpidx] { return cam->irlgm1f(cpidx); }, modelParameters_, cachedParameters_);
-    return lgmcg.discountBond(s, t, getInterpolatedIrState(adjustForStickyCloseOut(s), idx),
+    return lgmcg.discountBond(s, t, getInterpolatedIrState(adjustForStickyCloseOut(s), idx, localBaseCurrency),
                               Handle<YieldTermStructure>(), "default");
 }
 
-std::size_t GaussianCamCG::numeraire(const Date& s, const std::string& currency) const {
-    auto ccy = currency.empty() ? currencies_.begin() : std::find(currencies_.begin(), currencies_.end(), currency);
+std::size_t GaussianCamCG::numeraire(const Date& s, const std::string& currency,
+                                     const std::string& localBaseCurrency) const {
+    auto ccy = std::find(currencies_.begin(), currencies_.end(), currency.empty() ? baseCurrency() : currency);
     QL_REQUIRE(ccy != currencies_.end(), "currency " << currency << " not handled");
     Size cidx = std::distance(currencies_.begin(), ccy);
     auto cam(cam_);
     Size cpidx = currencyPositionInCam_[cidx];
     LgmCG lgmcg(
         currencies_[cidx], *g_, [cam, cpidx] { return cam->irlgm1f(cpidx); }, modelParameters_, cachedParameters_);
-    return lgmcg.numeraire(s, getInterpolatedIrState(adjustForStickyCloseOut(s), cidx), Handle<YieldTermStructure>(),
-                           "default");
+    return lgmcg.numeraire(s, getInterpolatedIrState(adjustForStickyCloseOut(s), cidx, localBaseCurrency),
+                           Handle<YieldTermStructure>(), "default");
 }
 
 std::size_t GaussianCamCG::getFxSpot(const Size idx) const {
@@ -686,14 +780,9 @@ Real GaussianCamCG::getDirectDiscountT0(const Date& paydate, const std::string& 
     return curves_.at(cidx)->discount(paydate);
 }
 
-std::set<std::size_t>
-GaussianCamCG::npvRegressors(const Date& obsdate,
-                             const std::optional<std::set<std::string>>& relevantCurrencies) const {
-
-    std::optional<std::set<std::string>> effectiveRelevantCurrencies = relevantCurrencies;
-    if (effectiveRelevantCurrencies) {
-        effectiveRelevantCurrencies->insert(baseCcy());
-    }
+std::set<std::size_t> GaussianCamCG::npvRegressors(const Date& obsdate,
+                                                   const std::optional<std::set<std::string>>& relevantCurrencies,
+                                                   const std::string& localBaseCurrency) const {
 
     std::set<std::size_t> state;
 
@@ -701,11 +790,15 @@ GaussianCamCG::npvRegressors(const Date& obsdate,
         return state;
     }
 
-    if (conditionalExpectationUseAsset_ && !underlyingPaths_.empty()) {
+    std::set<std::string> effRelCcys =
+        relevantCurrencies ? *relevantCurrencies : std::set<std::string>(currencies().begin(), currencies().end());
+
+    bool noLocalBaseCurrency = localBaseCurrency.empty() || localBaseCurrency == baseCurrency();
+
+    if (noLocalBaseCurrency && conditionalExpectationUseAsset_ && !underlyingPaths_.empty()) {
         for (Size i = 0; i < indices_.size(); ++i) {
-            if (effectiveRelevantCurrencies && indices_[i].isFx()) {
-                if (effectiveRelevantCurrencies->find(indices_[i].fx()->sourceCurrency().code()) ==
-                    effectiveRelevantCurrencies->end())
+            if (indices_[i].isFx()) {
+                if (effRelCcys.find(indices_[i].fx()->sourceCurrency().code()) == effRelCcys.end())
                     continue;
             }
             state.insert(getInterpolatedUnderlyingPath(adjustForStickyCloseOut(obsdate), i));
@@ -715,9 +808,8 @@ GaussianCamCG::npvRegressors(const Date& obsdate,
     // TODO we include zero vol ir states here, we could exclude them
     if (conditionalExpectationUseIr_) {
         for (Size ccy = 0; ccy < currencies_.size(); ++ccy) {
-            if (!effectiveRelevantCurrencies ||
-                effectiveRelevantCurrencies->find(currencies_[ccy]) != effectiveRelevantCurrencies->end()) {
-                state.insert(getInterpolatedIrState(adjustForStickyCloseOut(obsdate), ccy));
+            if (effRelCcys.find(currencies_[ccy]) != effRelCcys.end()) {
+                state.insert(getInterpolatedIrState(adjustForStickyCloseOut(obsdate), ccy, localBaseCurrency));
             }
         }
     }
@@ -727,7 +819,8 @@ GaussianCamCG::npvRegressors(const Date& obsdate,
 
 std::size_t GaussianCamCG::npv(const std::size_t amount, const Date& obsdate, const std::size_t filter,
                                const std::optional<long>& memSlot, const std::set<std::size_t> addRegressors,
-                               const std::optional<std::set<std::size_t>>& overwriteRegressors) const {
+                               const std::optional<std::set<std::size_t>>& overwriteRegressors,
+                               const std::optional<std::set<std::size_t>>& evaluationRegressors) const {
 
     calculate();
 
@@ -742,17 +835,35 @@ std::size_t GaussianCamCG::npv(const std::size_t amount, const Date& obsdate, co
     // build the state
 
     std::vector<std::size_t> state;
+    std::vector<std::size_t> evalState;
 
     if (overwriteRegressors) {
         state.insert(state.end(), overwriteRegressors->begin(), overwriteRegressors->end());
-    } else {
-        std::set<std::size_t> r = npvRegressors(obsdate, std::nullopt);
-        state.insert(state.end(), r.begin(), r.end());
     }
 
-    for (auto const& r : addRegressors)
-        if (r != ComputationGraph::nan)
-            state.push_back(r);
+    if (evaluationRegressors) {
+        evalState.insert(state.end(), evaluationRegressors->begin(), evaluationRegressors->end());
+    }
+
+    if (state.empty()) {
+        std::set<std::size_t> r = npvRegressors(obsdate, std::nullopt);
+        state.insert(state.end(), r.begin(), r.end());
+        for (auto const& r : addRegressors) {
+            if (r != ComputationGraph::nan) {
+                state.push_back(r);
+            }
+        }
+    }
+
+    if (evalState.empty()) {
+        std::set<std::size_t> r = npvRegressors(obsdate, std::nullopt);
+        evalState.insert(state.end(), r.begin(), r.end());
+        for (auto const& r : addRegressors) {
+            if (r != ComputationGraph::nan) {
+                state.push_back(r);
+            }
+        }
+    }
 
     // if the state is empty, return the plain expectation (no conditioning)
 
