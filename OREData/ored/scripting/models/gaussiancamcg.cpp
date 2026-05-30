@@ -741,7 +741,8 @@ std::size_t GaussianCamCG::getDiscount(const Size idx, const Date& s, const Date
 
 std::size_t GaussianCamCG::numeraire(const Date& s, const std::string& currency,
                                      const std::string& localBaseCurrency) const {
-    auto ccy = std::find(currencies_.begin(), currencies_.end(), currency.empty() ? baseCurrency() : currency);
+    auto ccy = std::find(currencies_.begin(), currencies_.end(),
+                         localBaseCurrency.empty() ? baseCurrency() : localBaseCurrency);
     QL_REQUIRE(ccy != currencies_.end(), "currency " << currency << " not handled");
     Size cidx = std::distance(currencies_.begin(), ccy);
     auto cam(cam_);

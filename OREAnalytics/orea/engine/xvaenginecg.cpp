@@ -362,13 +362,11 @@ void XvaEngineCG::buildCgPartB() {
         // trigger setupArguments()
         if (!trade->instrument()->qlInstrument()->isCalculated())
             trade->instrument()->qlInstrument()->recalculate();
-
         // main instrument
         tradeData.push_back({tradeIndex,
                              QuantLib::ext::dynamic_pointer_cast<AmcCgPricingEngine>(
                                  trade->instrument()->qlInstrument()->pricingEngine()),
                              trade->instrument()->multiplier() * trade->instrument()->multiplier2(), "main"});
-
         // fees as single currency swaps per currency
         std::map<std::string, std::pair<std::vector<Real>, std::vector<std::string>>> tradeFees;
         for (Size i = 0; i < trade->instrument()->additionalInstruments().size(); ++i) {
@@ -384,19 +382,22 @@ void XvaEngineCG::buildCgPartB() {
             }
         }
         for (auto const& [ccy, flows] : tradeFees) {
-            ore::data::Swap swap(
-                Envelope(), {LegData(QuantLib::ext::make_shared<CashflowData>(flows.first, flows.second), false, ccy)});
-            swap.build(engineFactory_);
+            additionalTrades_.push_back(QuantLib::ext::make_shared<ore::data::Swap>(
+                Envelope(), std::vector<LegData>{LegData(
+                                QuantLib::ext::make_shared<CashflowData>(flows.first, flows.second), false, ccy)}));
+            additionalTrades_.back()->build(engineFactory_);
             // trigger setupArguments
-            if (!swap.instrument()->qlInstrument()->isCalculated())
-                swap.instrument()->qlInstrument()->recalculate();
+            if (!additionalTrades_.back()->instrument()->qlInstrument()->isCalculated())
+                additionalTrades_.back()->instrument()->qlInstrument()->recalculate();
             tradeData.push_back({tradeIndex,
                                  QuantLib::ext::dynamic_pointer_cast<AmcCgPricingEngine>(
-                                     swap.instrument()->qlInstrument()->pricingEngine()),
+                                     additionalTrades_.back()->instrument()->qlInstrument()->pricingEngine()),
                                  1.0, "fee"});
         }
         ++tradeIndex;
     }
+
+    DLOG("TradeData set up with " << tradeData.size() << " entries.");
 
     // build base ccy suggestions and set admissable base ccys in model
 
@@ -405,6 +406,7 @@ void XvaEngineCG::buildCgPartB() {
         auto s = d.engine->relevantCurrencySets();
         currencySets.insert(s.begin(), s.end());
     }
+
     // v1 local base ccy handling, this is all our model implementation can handle at the moment
     auto baseCcySuggestions = buildBaseCcySuggestions(model_, currencySets, true);
     auto baseCcySuggestionsFct = [baseCcySuggestions](const std::set<std::string>& ccySet) {
@@ -419,6 +421,11 @@ void XvaEngineCG::buildCgPartB() {
         admissableBaseCcys.insert(v);
 
     model_->setAdmissableLocalBaseCurrencies(admissableBaseCcys);
+
+    DLOG("Built local base currency suggestions:");
+    for (auto const& [k, v] : baseCcySuggestions) {
+        DLOG(boost::join(k, "'") << " -> " << v);
+    }
 
     // build the cg of the trades
 
@@ -450,6 +457,7 @@ void XvaEngineCG::buildCgPartB() {
             std::vector<TradeExposure> tradeExposure;
             TradeExposureMetaInfo metaInfo;
             try {
+                TLOG("build cg for trade " << id);
                 engine->buildComputationGraph(false, &tradeExposure, &metaInfo, baseCcySuggestionsFct);
             } catch (const std::exception& e) {
                 QL_FAIL("XvaEngineCG::buildCgPartB(): failed to build cg for trade '" << id << "' (" << desc

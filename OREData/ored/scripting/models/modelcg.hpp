@@ -191,14 +191,17 @@ public:
     virtual std::size_t dt(const Date& d1, const Date& d2) const;
 
     // result must be as of max(refdate, obsdate); refdate < paydate and obsdate <= paydate required
+    // localBaseCurrency determines both the result ccy and the paths used for fx, discount and numeraire
     virtual std::size_t pay(const std::size_t amount, const Date& obsdate, const Date& paydate,
-                            const std::string& currency, const std::string& localBaseCurrency = {}) const = 0;
+                            const std::string& currency,
+                            const std::string& localBaseCurrency = {}) const = 0;
 
-    // refdate <= obsdate <= paydate required
+    // refdate <= obsdate <= paydate required, in currency, localBaseCurrency determines the paths
     virtual std::size_t discount(const Date& obsdate, const Date& paydate, const std::string& currency,
                                  const std::string& localBaseCurrency = {}) const = 0;
 
-    // fx rate at date obsdate vs. (local) base ccy, refdate <= obsdate required
+    // fx rate at date obsdate, currency vs. baseCcy resp. localBaseCcy, if given, 
+    // on paths in baseCcy reps. localBaseCcy. refdate <= obsdate required
     virtual std::size_t fxRate(const Date& obsdate, const std::string& currency,
                                const std::string& localBaseCurrency = {}) const = 0;
 
@@ -244,8 +247,8 @@ public:
     virtual std::size_t numeraire(const Date& s, const std::string& currency = {},
                                   const std::string& localBaseCurrency = {}) const = 0;
 
-    /* get conversion to base factor FX_new-base(t) * N_new(t) / N_base(t)
-       note: this vector is given on global base ccy paths always */
+    /* get conversion to base factor FX_local-global(t) * N_local(t) / N_global(t)
+       note: the paths are in global base ccy paths always */
     virtual std::size_t convertToBaseCcy(const Date& s, const std::string& localBaseCurrency) const = 0;
 
     // forward looking daily comp/avg, obsdate <= start < end required, result must be as of max(refdate, obsdate)

@@ -253,6 +253,9 @@ private:
     std::size_t externalCalculationId_ = 0;
     QuantExt::ComputeContext::Settings externalComputeDeviceSettings_;
 
+    // additional trades built in buildCgPartB(): fees
+    std::vector<QuantLib::ext::shared_ptr<ore::data::Trade>> additionalTrades_;
+
     /* Per trade and time step the exposure of a trade, which is represented by a vector of TradeExposure
        entries for the components of a trade (buildPartB()). It is guaranteed that the number of components
        is constant across all time steps. Includes t = 0 as first time step.

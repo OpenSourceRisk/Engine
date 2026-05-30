@@ -104,7 +104,8 @@ protected:
     mutable double npvValue_;
 
     // cached exercise indicators to be used in sticky close-out date run
-    mutable std::vector<std::vector<std::size_t>> cachedExerciseIndicators_;
+    mutable std::vector<std::size_t> cachedExerciseIndicators_;
+    mutable std::vector<std::size_t> cachedExerciseIndicatorsBase_;
 
     // remaining state
     mutable std::size_t cgVersion_ = 0;
@@ -127,7 +128,6 @@ private:
         std::string localBaseCurrency;
         bool payer = false;
         std::size_t flowNode;
-        std::size_t flowNodeBaseCcy; // for complex trades only if model base ccy != complex base ccy
     };
 
     // get a currency in the intersection of admissable model base currencies and a given set of currencies
@@ -140,8 +140,7 @@ private:
     // create the info for a given flow
     CashflowInfo createCashflowInfo(QuantLib::ext::shared_ptr<QuantLib::CashFlow> flow, const std::string& payCcy,
                                     const bool payer, const Size legNo, const Size cfNo,
-                                    std::function<std::string(std::set<std::string>)> baseCurrencySuggestions,
-                                    const bool generateBaseCcyFlow) const;
+                                    std::function<std::string(std::set<std::string>)> baseCurrencySuggestions) const;
 
     // create a regression model (i.e. an npv - node in the graph)
     std::vector<std::size_t> createRegressionModel(const std::size_t amount, const Date& d,

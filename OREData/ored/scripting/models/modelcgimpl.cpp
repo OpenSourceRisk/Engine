@@ -133,7 +133,7 @@ std::size_t ModelCGImpl::pay(const std::size_t amount, const Date& obsdate, cons
 
     n = cg_mult(*g_,
                 cg_div(*g_, getDiscount(cidx, effectiveDate, paydate, localBaseCurrency),
-                       numeraire(effectiveDate, localBaseCurrency)),
+                       numeraire(effectiveDate, localBaseCurrency, localBaseCurrency)),
                 fxRate(effectiveDate, currency, localBaseCurrency));
 
     id.setNode(n);
@@ -156,6 +156,8 @@ std::size_t ModelCGImpl::fxRate(const Date& obsdate, const std::string& currency
 
     calculate();
 
+    TLOG("ModelCGImpl::fxRate(" << obsdate << "," << currency << "," << localBaseCurrency<< ")");
+
     ModelCG::ModelParameter id(ModelCG::ModelParameter::Type::fxRate, currency, localBaseCurrency, obsdate);
     if (auto m = cachedParameters_.find(id); m != cachedParameters_.end()) {
         return m->node();
@@ -168,7 +170,7 @@ std::size_t ModelCGImpl::fxRate(const Date& obsdate, const std::string& currency
     Size cidx2 = 0;
     if (!localBaseCurrency.empty()) {
         auto ccy = std::find(currencies_.begin(), currencies_.end(), localBaseCurrency);
-        QL_REQUIRE(ccy != currencies_.end(), "currency " << currency << " no handled");
+        QL_REQUIRE(ccy != currencies_.end(), "currency " << localBaseCurrency << " no handled");
         cidx2 = std::distance(currencies_.begin(), ccy);
     }
 
@@ -222,6 +224,14 @@ std::size_t ModelCGImpl::fxRate(const Date& obsdate, const std::string& currency
 std::size_t ModelCGImpl::convertToBaseCcy(const Date& s, const std::string& localBaseCurrency) const {
 
     calculate();
+
+    TLOG("ModelCGImpl::convertToBaseCcy(" << s << "," << localBaseCurrency << ")");
+
+    if (localBaseCurrency == baseCurrency())
+        return cg_const(*g_, 1.0);
+
+    if (s == referenceDate())
+        return fxSpotT0(localBaseCurrency, baseCurrency());
 
     ModelCG::ModelParameter id(ModelCG::ModelParameter::Type::convertToBaseCcy, localBaseCurrency, {}, s);
     if (auto m = cachedParameters_.find(id); m != cachedParameters_.end()) {
