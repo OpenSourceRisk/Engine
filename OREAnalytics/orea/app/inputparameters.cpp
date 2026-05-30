@@ -193,26 +193,27 @@ void SetupVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputPara
     }
 
     // Additional results might be its own node or part of npv node for backward compatibility
-    inputs->loadParameter<bool>(outputAdditionalResults_, "additionalResults", "active", false, parseBool);
-    if (!outputAdditionalResults_)
+    bool wasLoaded = inputs->loadParameter<bool>(outputAdditionalResults_, "additionalResults",
+        "active", false, parseBool);
+    if (!wasLoaded)
         inputs->loadParameter<bool>(outputAdditionalResults_, "npv", "additionalResults", false, parseBool);
 
-    inputs->loadParameter<Natural>(additionalResultsReportPrecision_, "additionalResults", "additionalResultsReportPrecision",
-                            false, parseInteger);
-    // additionalResultsReportPrecision was previously part of npv node, but moved to setup, check npv node for backward
-    // compatibility
-    if (!additionalResultsReportPrecision_)
-        inputs->loadParameter<Natural>(additionalResultsReportPrecision_, "npv", "additionalResultsReportPrecision", false,
-                                parseInteger);
+    // additionalResultsReportPrecision was previously part of npv node, but moved to setup, check npv node for 
+    // backward compatibility
+    wasLoaded = inputs->loadParameter<Natural>(additionalResultsReportPrecision_, "additionalResults",
+        "additionalResultsReportPrecision", false, parseInteger);
+    if (!wasLoaded)
+        inputs->loadParameter<Natural>(additionalResultsReportPrecision_, "npv",
+            "additionalResultsReportPrecision", false, parseInteger);
 
-    inputs->loadParameter<bool>(includePastCashflows_, "setup", "includePastCashflows", false, parseBool);
-    // includePastCashflows was previously part of cashflow node, but moved to setup, check npv node for backward
+    // includePastCashflows was previously part of cashflow node, but moved to setup, check cashflow node for backward
     // compatibility
-    if (!includePastCashflows_)
+    wasLoaded = inputs->loadParameter<bool>(includePastCashflows_, "setup", "includePastCashflows", false, parseBool);
+    if (!wasLoaded)
         inputs->loadParameter<bool>(includePastCashflows_, "cashflow", "includePastCashflows", false, parseBool);
 
     inputs->loadParameter<bool>(computeTheta_, {"sensitivity", "simm", "crif"}, "computeTheta", false, parseBool);
-    if(!computeTheta_)
+    if(computeTheta_)
         inputs->loadParameter<Period>(thetaPeriod_, "sensitivity", "thetaPeriod", false, parsePeriod);
 
 }

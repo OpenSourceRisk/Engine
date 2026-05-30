@@ -149,8 +149,61 @@ class CommodityBasisPriceTermStructure : public PriceTermStructure {
 // --- SurvivalProbabilityCurve::Extrapolation (standalone alias for nested enum) ---
 enum class SurvivalProbabilityCurveExtrapolation { flatFwd, flatZero };
 
-// Note: std::map<Date, Handle<Quote>> template (DateQuoteHandleMap) deferred to Step 4
-// to avoid duplicate swig::traits specializations.
+// --- std::map<Date, Handle<Quote>> conversion for CommodityBasisPriceCurve ---
+// We avoid %template(DateQuoteHandleMap) because swig::traits<Date> and
+// swig::traits<Handle<Quote>> are already specialized. Instead, provide a
+// Python-side helper via %typemap or use an %extend constructor that takes vectors.
+%{
+#include <map>
+%}
+%inline %{
+typedef std::map<QuantLib::Date, QuantLib::Handle<QuantLib::Quote> > DateQuoteHandleMap;
+%}
+
+// Provide input typemap to convert a Python list of (Date, QuoteHandle) tuples to std::map
+%typemap(in) const std::map<QuantLib::Date, QuantLib::Handle<QuantLib::Quote> >& (std::map<QuantLib::Date, QuantLib::Handle<QuantLib::Quote> > temp) {
+    if (!PyList_Check($input) && !PyDict_Check($input)) {
+        SWIG_exception_fail(SWIG_TypeError, "Expected a list of (Date, QuoteHandle) tuples or a dict");
+    }
+    if (PyDict_Check($input)) {
+        PyObject *key, *value;
+        Py_ssize_t pos = 0;
+        while (PyDict_Next($input, &pos, &key, &value)) {
+            void* argp1 = 0;
+            void* argp2 = 0;
+            int res1 = SWIG_ConvertPtr(key, &argp1, $descriptor(QuantLib::Date*), 0);
+            if (!SWIG_IsOK(res1)) {
+                SWIG_exception_fail(SWIG_ArgError(res1), "dict key must be a Date");
+            }
+            int res2 = SWIG_ConvertPtr(value, &argp2, $descriptor(QuantLib::Handle<QuantLib::Quote>*), 0);
+            if (!SWIG_IsOK(res2)) {
+                SWIG_exception_fail(SWIG_ArgError(res2), "dict value must be a QuoteHandle");
+            }
+            temp[*reinterpret_cast<QuantLib::Date*>(argp1)] = *reinterpret_cast<QuantLib::Handle<QuantLib::Quote>*>(argp2);
+        }
+    } else {
+        Py_ssize_t n = PyList_Size($input);
+        for (Py_ssize_t i = 0; i < n; i++) {
+            PyObject* item = PyList_GetItem($input, i);
+            if (!PyTuple_Check(item) || PyTuple_Size(item) != 2) {
+                SWIG_exception_fail(SWIG_TypeError, "Expected (Date, QuoteHandle) tuple");
+            }
+            void* argp1 = 0;
+            void* argp2 = 0;
+            int res1 = SWIG_ConvertPtr(PyTuple_GetItem(item, 0), &argp1, $descriptor(QuantLib::Date*), 0);
+            int res2 = SWIG_ConvertPtr(PyTuple_GetItem(item, 1), &argp2, $descriptor(QuantLib::Handle<QuantLib::Quote>*), 0);
+            if (!SWIG_IsOK(res1) || !SWIG_IsOK(res2)) {
+                SWIG_exception_fail(SWIG_TypeError, "Expected (Date, QuoteHandle) tuple");
+            }
+            temp[*reinterpret_cast<QuantLib::Date*>(argp1)] = *reinterpret_cast<QuantLib::Handle<QuantLib::Quote>*>(argp2);
+        }
+    }
+    $1 = &temp;
+}
+
+%typemap(typecheck, precedence=SWIG_TYPECHECK_MAP) const std::map<QuantLib::Date, QuantLib::Handle<QuantLib::Quote> >& {
+    $1 = (PyList_Check($input) || PyDict_Check($input)) ? 1 : 0;
+}
 
 // ================================================================
 // Step 2: Standalone Classes
@@ -225,5 +278,240 @@ class Name : public DefaultProbabilityTermStructure {
 
 export_QleSurvivalProbabilityCurve(SurvivalProbabilityCurveLinear, Linear);
 export_QleSurvivalProbabilityCurve(SurvivalProbabilityCurveLogLinear, LogLinear);
+
+// ================================================================
+// Step 3: Volatility Surfaces (Ticket 2)
+// ================================================================
+
+// --- DynamicBlackVolTermStructure<tag::surface> ---
+%{
+#include <qle/termstructures/dynamicblackvoltermstructure.hpp>
+using DynamicBlackVolTermStructureSurface = QuantExt::DynamicBlackVolTermStructure<QuantExt::tag::surface>;
+%}
+
+%shared_ptr(DynamicBlackVolTermStructureSurface)
+class DynamicBlackVolTermStructureSurface : public BlackVolTermStructure {
+  public:
+    DynamicBlackVolTermStructureSurface(
+        const QuantLib::Handle<QuantLib::BlackVolTermStructure>& source,
+        QuantLib::Natural settlementDays,
+        const QuantLib::Calendar& calendar,
+        QuantExt::ReactionToTimeDecay decayMode = QuantExt::ConstantVariance,
+        QuantExt::Stickyness stickyness = QuantExt::StickyLogMoneyness,
+        const QuantLib::Handle<QuantLib::YieldTermStructure>& riskfree = QuantLib::Handle<QuantLib::YieldTermStructure>(),
+        const QuantLib::Handle<QuantLib::YieldTermStructure>& dividend = QuantLib::Handle<QuantLib::YieldTermStructure>(),
+        const QuantLib::Handle<QuantLib::Quote>& spot = QuantLib::Handle<QuantLib::Quote>(),
+        const std::vector<QuantLib::Real> initialForwardGrid = std::vector<QuantLib::Real>());
+    QuantLib::Real minStrike() const;
+    QuantLib::Real maxStrike() const;
+    QuantLib::Date maxDate() const;
+};
+
+// --- SpreadedBlackVolatilitySurfaceMoneyness family ---
+%{
+#include <qle/termstructures/spreadedblackvolatilitysurfacemoneyness.hpp>
+%}
+
+%shared_ptr(QuantExt::SpreadedBlackVolatilitySurfaceMoneyness)
+%nodefaultctor QuantExt::SpreadedBlackVolatilitySurfaceMoneyness;
+namespace QuantExt {
+class SpreadedBlackVolatilitySurfaceMoneyness : public BlackVolTermStructure {
+  public:
+    const std::vector<QuantLib::Real>& moneyness() const;
+    QuantLib::Date maxDate() const;
+    const QuantLib::Date& referenceDate() const;
+    QuantLib::Real minStrike() const;
+    QuantLib::Real maxStrike() const;
+};
+}
+
+// Macro to stamp out each concrete subclass (all share the base constructor via using declaration)
+%define export_SpreadedMoneynessSubclass(Name)
+%shared_ptr(QuantExt::Name)
+namespace QuantExt {
+class Name : public SpreadedBlackVolatilitySurfaceMoneyness {
+  public:
+    Name(const QuantLib::Handle<QuantLib::BlackVolTermStructure>& referenceVol,
+         const QuantLib::Handle<QuantLib::Quote>& movingSpot,
+         const std::vector<QuantLib::Time>& times,
+         const std::vector<QuantLib::Real>& moneyness,
+         const std::vector<std::vector<QuantLib::Handle<QuantLib::Quote> > >& volSpreads,
+         const QuantLib::Handle<QuantLib::Quote>& stickySpot,
+         const QuantLib::Handle<QuantLib::YieldTermStructure>& stickyDividendTs,
+         const QuantLib::Handle<QuantLib::YieldTermStructure>& stickyRiskFreeTs,
+         const QuantLib::Handle<QuantLib::YieldTermStructure>& movingDividendTs,
+         const QuantLib::Handle<QuantLib::YieldTermStructure>& movingRiskFreeTs,
+         bool stickyStrike);
+};
+}
+%enddef
+
+export_SpreadedMoneynessSubclass(SpreadedBlackVolatilitySurfaceMoneynessSpot)
+export_SpreadedMoneynessSubclass(SpreadedBlackVolatilitySurfaceMoneynessForward)
+export_SpreadedMoneynessSubclass(SpreadedBlackVolatilitySurfaceLogMoneynessSpot)
+export_SpreadedMoneynessSubclass(SpreadedBlackVolatilitySurfaceLogMoneynessForward)
+export_SpreadedMoneynessSubclass(SpreadedBlackVolatilitySurfaceMoneynessSpotAbsolute)
+export_SpreadedMoneynessSubclass(SpreadedBlackVolatilitySurfaceMoneynessForwardAbsolute)
+export_SpreadedMoneynessSubclass(SpreadedBlackVolatilitySurfaceStdDevs)
+
+// --- BlackVarianceSurfaceSparse<Linear, Linear> ---
+%{
+#include <qle/termstructures/blackvariancesurfacesparse.hpp>
+using BlackVarianceSurfaceSparseLinear = QuantExt::BlackVarianceSurfaceSparse<QuantLib::Linear, QuantLib::Linear>;
+%}
+
+%shared_ptr(BlackVarianceSurfaceSparseLinear)
+class BlackVarianceSurfaceSparseLinear : public BlackVolTermStructure {
+  public:
+    BlackVarianceSurfaceSparseLinear(
+        const QuantLib::Date& referenceDate,
+        const QuantLib::Calendar& cal,
+        const std::vector<QuantLib::Date>& dates,
+        const std::vector<QuantLib::Real>& strikes,
+        const std::vector<QuantLib::Volatility>& volatilities,
+        const QuantLib::DayCounter& dayCounter,
+        bool lowerStrikeConstExtrap = true,
+        bool upperStrikeConstExtrap = true,
+        QuantLib::BlackVolTimeExtrapolation::Type timeExtrapolationType
+            = QuantLib::BlackVolTimeExtrapolation::FlatVolatility,
+        QuantLib::VolatilityType volType = QuantLib::ShiftedLognormal,
+        QuantLib::Real shift = 0.0);
+    QuantLib::Date maxDate() const;
+    QuantLib::Real minStrike() const;
+    QuantLib::Real maxStrike() const;
+};
+
+// --- BlackVolatilitySurfaceDelta ---
+// Already wrapped in QuantLib SWIG volatilities.i. Extend with inspectors.
+%{
+#include <ql/termstructures/volatility/equityfx/blackvolsurfacedelta.hpp>
+%}
+%extend BlackVolatilitySurfaceDelta {
+    const std::vector<Date>& dates() const {
+        return self->dates();
+    }
+    ext::shared_ptr<SmileSection> blackVolSmile(Time t) const {
+        return self->blackVolSmile(t);
+    }
+}
+
+// ================================================================
+// Step 4: Commodity Basis Curve (Ticket 2)
+// ================================================================
+
+// --- CommodityBasisPriceCurve<T> ---
+%{
+#include <qle/termstructures/commoditybasispricecurve.hpp>
+%}
+
+%define export_CommodityBasisPriceCurve(Name, Interpolator)
+
+%{
+typedef QuantExt::CommodityBasisPriceCurve<Interpolator> Name;
+%}
+
+%shared_ptr(Name)
+class Name : public QuantExt::CommodityBasisPriceTermStructure {
+  public:
+    Name(const QuantLib::Date& referenceDate,
+         const std::map<QuantLib::Date, QuantLib::Handle<QuantLib::Quote> >& basisData,
+         const QuantLib::ext::shared_ptr<QuantExt::FutureExpiryCalculator>& basisFec,
+         const QuantLib::ext::shared_ptr<QuantExt::CommodityIndex>& baseIndex,
+         const QuantLib::ext::shared_ptr<QuantExt::FutureExpiryCalculator>& baseFec,
+         bool addBasis = true,
+         QuantLib::Size monthOffset = 0,
+         bool priceAsHistFixing = true);
+    QuantLib::Date maxDate() const;
+    QuantLib::Time maxTime() const;
+    QuantLib::Time minTime() const;
+    std::vector<QuantLib::Date> pillarDates() const;
+    const QuantLib::Currency& currency() const;
+    const std::vector<QuantLib::Time>& times() const;
+    const std::vector<QuantLib::Real>& prices() const;
+};
+
+%enddef
+
+export_CommodityBasisPriceCurve(CommodityBasisPriceCurveLinear, Linear);
+export_CommodityBasisPriceCurve(CommodityBasisPriceCurveLogLinear, LogLinear);
+
+// ================================================================
+// Step 5: Optionlet Bootstrapping (Ticket 2)
+// ================================================================
+
+// --- OISCapFloorHelper ---
+%{
+#include <qle/termstructures/oiscapfloorhelper.hpp>
+%}
+
+%shared_ptr(QuantExt::OISCapFloorHelper)
+namespace QuantExt {
+class OISCapFloorHelper : public BootstrapHelper<OptionletVolatilityStructure> {
+  public:
+    OISCapFloorHelper(CapFloorHelper::Type type,
+                      const Period& tenor,
+                      const Period& rateComputationPeriod,
+                      Rate strike,
+                      const Handle<Quote>& quote,
+                      const ext::shared_ptr<OvernightIndex>& index,
+                      const Handle<YieldTermStructure>& discountingCurve,
+                      bool moving = true,
+                      const Date& effectiveDate = Date(),
+                      CapFloorHelper::QuoteType quoteType = CapFloorHelper::Premium,
+                      VolatilityType quoteVolatilityType = Normal,
+                      Real quoteDisplacement = 0.0,
+                      bool useEffectiveVolatility = false);
+    Leg capFloor() const;
+    Real impliedQuote() const;
+    Real atmStrike() const;
+};
+}
+
+// --- InterpolatedOptionletCurve<Linear> (base class stub) ---
+%{
+#include <qle/termstructures/optionletcurve.hpp>
+using InterpolatedOptionletCurveLinear = QuantExt::InterpolatedOptionletCurve<QuantLib::Linear>;
+%}
+
+%shared_ptr(InterpolatedOptionletCurveLinear)
+%nodefaultctor InterpolatedOptionletCurveLinear;
+class InterpolatedOptionletCurveLinear : public OptionletVolatilityStructure {
+  public:
+    QuantLib::Date maxDate() const;
+    const std::vector<QuantLib::Time>& times() const;
+    const std::vector<QuantLib::Date>& dates() const;
+    const std::vector<QuantLib::Real>& volatilities() const;
+    const std::vector<QuantLib::Real>& data() const;
+    std::vector<std::pair<QuantLib::Date, QuantLib::Real> > nodes() const;
+    QuantLib::VolatilityType volatilityType() const;
+    QuantLib::Real displacement() const;
+};
+
+// --- PiecewiseOptionletCurve<Linear, IterativeBootstrap> ---
+%{
+#include <qle/termstructures/piecewiseoptionletcurve.hpp>
+using PiecewiseOptionletCurveLinear =
+    QuantExt::PiecewiseOptionletCurve<QuantLib::Linear, QuantExt::IterativeBootstrap>;
+%}
+
+%shared_ptr(PiecewiseOptionletCurveLinear)
+class PiecewiseOptionletCurveLinear : public InterpolatedOptionletCurveLinear {
+  public:
+    PiecewiseOptionletCurveLinear(
+        const QuantLib::Date& referenceDate,
+        const std::vector<QuantLib::ext::shared_ptr<BootstrapHelper<OptionletVolatilityStructure> > >& instruments,
+        const QuantLib::Calendar& calendar,
+        QuantLib::BusinessDayConvention bdc,
+        const QuantLib::DayCounter& dayCounter,
+        QuantLib::VolatilityType volatilityType = QuantLib::Normal,
+        QuantLib::Real displacement = 0.0,
+        bool flatFirstPeriod = true,
+        bool useEffectiveVolatility = false);
+    QuantLib::Date maxDate() const;
+    const std::vector<QuantLib::Time>& times() const;
+    const std::vector<QuantLib::Date>& dates() const;
+    const std::vector<QuantLib::Real>& volatilities() const;
+    std::vector<std::pair<QuantLib::Date, QuantLib::Real> > nodes() const;
+};
 
 #endif

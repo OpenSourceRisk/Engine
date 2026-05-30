@@ -57,6 +57,8 @@ public:
 	const bool dvaAnalytic,
 	//! Whether FVA (FCA/FBA) computation is enabled
 	const bool fvaAnalytic,
+	//! Whether MVA computation is enabled
+	const bool mvaAnalytic,
         //! Deactivate initial margin calculation even if active at netting set level
 	const bool applyDynamicInitialMargin,
         //! Dynamic Initial Margin calculator

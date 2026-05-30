@@ -90,7 +90,7 @@ void CommodityDigitalOption::build(const QuantLib::ext::shared_ptr<EngineFactory
         // Set the VanillaOptionTrade forwardDate_ if the index is a CommodityFuturesIndex - we possibly still have a 
         // CommoditySpotIndex at this point so check. Also, will only work for European exercise.
         auto et = parseExerciseType(optionData_.style());
-	QL_REQUIRE(et == Exercise::European, "European style expected for CommodityDigitalOption");
+        QL_REQUIRE(et == Exercise::European, "European style expected for CommodityDigitalOption");
         if (et == Exercise::European && QuantLib::ext::dynamic_pointer_cast<CommodityFuturesIndex>(index_)) {
             forwardDate_ = expiryDate;
         }

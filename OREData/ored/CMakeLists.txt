@@ -2,6 +2,7 @@
 
 set(OREData_SRC configuration/basecorrelationcurveconfig.cpp
 configuration/baseltrafficlightconfig.cpp
+configuration/bondfuturevolcurveconfig.cpp
 configuration/bootstrapconfig.cpp
 configuration/capfloorvolcurveconfig.cpp
 configuration/cdsvolcurveconfig.cpp
@@ -28,6 +29,7 @@ configuration/yieldcurveconfig.cpp
 marketdata/adjustedinmemoryloader.cpp
 marketdata/adjustmentfactors.cpp
 marketdata/basecorrelationcurve.cpp
+marketdata/bondfuturevolcurve.cpp
 marketdata/bondspreadimply.cpp
 marketdata/bondspreadimplymarket.cpp
 marketdata/capfloorvolcurve.cpp
@@ -127,6 +129,7 @@ portfolio/bestentryoption.cpp
 portfolio/bond.cpp
 portfolio/bondbasket.cpp
 portfolio/bondfuture.cpp
+portfolio/bondfutureoption.cpp
 portfolio/bondoption.cpp
 portfolio/bondposition.cpp
 portfolio/bondrepo.cpp
@@ -420,6 +423,7 @@ utilities/xmlutils.cpp)
 set(OREData_HDR auto_link.hpp
 configuration/basecorrelationcurveconfig.hpp
 configuration/baseltrafficlightconfig.hpp
+configuration/bondfuturevolcurveconfig.hpp
 configuration/bootstrapconfig.hpp
 configuration/capfloorvolcurveconfig.hpp
 configuration/cdsvolcurveconfig.hpp
@@ -450,6 +454,7 @@ configuration/yieldvolcurveconfig.hpp
 marketdata/adjustedinmemoryloader.hpp
 marketdata/adjustmentfactors.hpp
 marketdata/basecorrelationcurve.hpp
+marketdata/bondfuturevolcurve.hpp
 marketdata/bondspreadimply.hpp
 marketdata/bondspreadimplymarket.hpp
 marketdata/capfloorvolcurve.hpp
@@ -554,6 +559,7 @@ portfolio/bestentryoption.hpp
 portfolio/bond.hpp
 portfolio/bondbasket.hpp
 portfolio/bondfuture.hpp
+portfolio/bondfutureoption.hpp
 portfolio/bondoption.hpp
 portfolio/bondposition.hpp
 portfolio/bondrepo.hpp
@@ -564,6 +570,7 @@ portfolio/builders/asianoption.hpp
 portfolio/builders/balanceguaranteedswap.hpp
 portfolio/builders/bond.hpp
 portfolio/builders/bondfuture.hpp
+portfolio/builders/bondfutureoption.hpp
 portfolio/builders/bondoption.hpp
 portfolio/builders/bondrepo.hpp
 portfolio/builders/bondtotalreturnswap.hpp

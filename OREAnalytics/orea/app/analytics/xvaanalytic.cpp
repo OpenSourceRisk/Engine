@@ -50,6 +50,7 @@
 #include <orea/scenario/simplescenariofactory.hpp>
 #include <orea/scenario/filteredscenarioreader.hpp>
 #include <orea/app/analytics/correlationanalytic.hpp>
+#include <orea/app/analytics/utilities.hpp>
 
 #include <ored/model/crossassetmodelbuilder.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
@@ -140,6 +141,8 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
     if (!writeCube.empty())
         writeCube_ = true;
     inputs->loadParameter<string>(writeScenarios, "simulation", "scenariodump", false);
+    inputs->loadParameter<vector<QuantExt::RiskFactorKey::KeyType>>(filterRiskKeys_, "simulation", "filterRiskKeys",
+                                                                    false, parseListOfRiskFactorKeyValues);
     if (!writeScenarios.empty())
         writeScenarios_ = true;
     if (!writeCube_)
@@ -218,8 +221,8 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
         timeAveragedNettedExposureOutput_ = true;
 
     // FVA
-    inputs->loadParameter<string>(fvaBorrowingCurve_, "xva", "fvaBorrowingCurve", false);
-    inputs->loadParameter<string>(fvaLendingCurve_, "xva", "fvaLendingCurve", false);
+    inputs->loadParameter<string>(borrowingCurve_, "xva", vector<string>({"borrowingCurve", "fvaBorrowingCurve"}), false);
+    inputs->loadParameter<string>(lendingCurve_, "xva", vector<string>({"lendingCurve", "fvaLendingCurve"}), false);
     inputs->loadParameter<string>(flipViewBorrowingCurvePostfix_, "xva", "flipViewBorrowingCurvePostfix", false);
     inputs->loadParameter<string>(flipViewLendingCurvePostfix_, "xva", "flipViewLendingCurvePostfix", false);
 
@@ -659,8 +662,8 @@ void XvaAnalyticImpl::buildScenarioGenerator(const bool continueOnCalibrationErr
     if (xvaVars->writeScenarios_) {
         auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
         analytic()->addReport(LABEL, "scenario", report);
-        scenarioGenerator_ =
-            QuantLib::ext::make_shared<ScenarioWriter>(scenarioGenerator_, report, std::vector<RiskFactorKey>{}, false);
+        scenarioGenerator_ = QuantLib::ext::make_shared<ScenarioWriter>(
+            scenarioGenerator_, report, std::vector<RiskFactorKey>{}, false, 8, xvaVars->filterRiskKeys_);
     }
 }
 
@@ -1180,8 +1183,8 @@ void XvaAnalyticImpl::runPostProcessor() {
     Real marginalAllocationLimit = xvaVars->marginalAllocationLimit_;
     Real quantile = xvaVars->pfeQuantile_;
     string dvaName = xvaVars->dvaName_;
-    string fvaLendingCurve = xvaVars->fvaLendingCurve_;
-    string fvaBorrowingCurve = xvaVars->fvaBorrowingCurve_;
+    string lendingCurve = xvaVars->lendingCurve_;
+    string borrowingCurve = xvaVars->borrowingCurve_;
 
     Real dimQuantile = xvaVars->dimQuantile_;
     Size dimHorizonCalendarDays = xvaVars->dimHorizonCalendarDays_;
@@ -1282,8 +1285,8 @@ void XvaAnalyticImpl::runPostProcessor() {
 
     postProcess_ = QuantLib::ext::make_shared<PostProcess>(
         analytic()->portfolio(), netting, balances, market, marketConfiguration, cube_, scenarioData_, analytics,
-        baseCurrency, allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName, fvaBorrowingCurve,
-        fvaLendingCurve, dimCalculator_, cubeInterpreter_, fullInitialCollateralisation, cvaSensiGrid,
+        baseCurrency, allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName, borrowingCurve,
+        lendingCurve, dimCalculator_, cubeInterpreter_, fullInitialCollateralisation, cvaSensiGrid,
         cvaSensiShiftSize, kvaCapitalDiscountRate, kvaAlpha, kvaRegAdjustment, kvaCapitalHurdle, kvaOurPdFloor,
         kvaTheirPdFloor, kvaOurCvaRiskWeight, kvaTheirCvaRiskWeight, cptyCube_, flipViewBorrowingCurvePostfix,
         flipViewLendingCurvePostfix, xvaVars->creditSimulationParameters_, xvaVars->creditMigrationDistributionGrid_,

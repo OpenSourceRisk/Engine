@@ -88,5 +88,140 @@ class OREDataModelBuilderBindingSmokeTest(unittest.TestCase):
         )
 
 
+class Phase3ModelBuilderBindingSmokeTest(unittest.TestCase):
+    """Verify Phase 3 model builder wrappers are exposed and usable."""
+
+    # ------------------------------------------------------------------
+    # Symbol availability
+    # ------------------------------------------------------------------
+
+    def test_phase3_symbols_are_available(self) -> None:
+        """Ensure all Phase 3 builder and data classes are exported."""
+        required = [
+            "CalibrationConfiguration",
+            "HestonModelCalibration",
+            "HestonModelBuilder",
+            "EqBsBuilder",
+            "CommoditySchwartzModelBuilder",
+            "CommoditySchwartzData",
+            "AssetModelBuilderBase",
+            "LocalVolModelBuilder",
+            "InfDkBuilder",
+            "InfJyBuilder",
+            "InfJyData",
+        ]
+        for symbol in required:
+            self.assertTrue(hasattr(ORE, symbol), msg=f"Missing symbol: {symbol}")
+
+    # ------------------------------------------------------------------
+    # CalibrationConfiguration
+    # ------------------------------------------------------------------
+
+    def test_calibration_configuration_default_ctor(self) -> None:
+        """CalibrationConfiguration is default-constructible."""
+        cfg = ORE.CalibrationConfiguration()
+        self.assertIsNotNone(cfg)
+
+    def test_calibration_configuration_setters(self) -> None:
+        """CalibrationConfiguration exposes rmse tolerance and max iterations accessors."""
+        cfg = ORE.CalibrationConfiguration()
+        self.assertTrue(hasattr(cfg, "maxIterations"))
+        self.assertTrue(hasattr(cfg, "rmseTolerance"))
+        self.assertTrue(hasattr(cfg, "fromXMLString"))
+        self.assertTrue(hasattr(cfg, "toXMLString"))
+
+    # ------------------------------------------------------------------
+    # HestonModelCalibration
+    # ------------------------------------------------------------------
+
+    def test_heston_model_calibration_default_ctor(self) -> None:
+        """HestonModelCalibration class is present and has expected API."""
+        # The constructor requires mandatory args (indexName, process),
+        # so we verify the class is accessible and exposes its calibrated model.
+        self.assertTrue(hasattr(ORE.HestonModelCalibration, "model"))
+
+    def test_heston_model_calibration_api(self) -> None:
+        """HestonModelCalibration exposes the model accessor."""
+        self.assertTrue(hasattr(ORE.HestonModelCalibration, "model"))
+
+    # ------------------------------------------------------------------
+    # CommoditySchwartzData
+    # ------------------------------------------------------------------
+
+    def test_commodity_schwartz_data_default_ctor(self) -> None:
+        """CommoditySchwartzData is default-constructible."""
+        data = ORE.CommoditySchwartzData()
+        self.assertIsNotNone(data)
+
+    def test_commodity_schwartz_data_api(self) -> None:
+        """CommoditySchwartzData exposes name/currency and xml round-trip."""
+        data = ORE.CommoditySchwartzData()
+        self.assertTrue(hasattr(data, "name"))
+        self.assertTrue(hasattr(data, "currency"))
+        self.assertTrue(hasattr(data, "fromXML"))
+        self.assertTrue(hasattr(data, "toXML"))
+
+    # ------------------------------------------------------------------
+    # InfJyData
+    # ------------------------------------------------------------------
+
+    def test_inf_jy_data_default_ctor(self) -> None:
+        """InfJyData is default-constructible."""
+        data = ORE.InfJyData()
+        self.assertIsNotNone(data)
+
+    def test_inf_jy_data_xml_roundtrip(self) -> None:
+        """InfJyData exposes fromXMLString / toXMLString."""
+        data = ORE.InfJyData()
+        self.assertTrue(hasattr(data, "fromXMLString"))
+        self.assertTrue(hasattr(data, "toXMLString"))
+
+    # ------------------------------------------------------------------
+    # Builder API surface (no live calibration required)
+    # ------------------------------------------------------------------
+
+    def test_heston_model_builder_api(self) -> None:
+        """HestonModelBuilder class is present with expected callable methods."""
+        cls = ORE.HestonModelBuilder
+        self.assertTrue(hasattr(cls, "getCalibratedProcesses"))
+        self.assertTrue(hasattr(cls, "requiresRecalibration"))
+
+    def test_eq_bs_builder_api(self) -> None:
+        """EqBsBuilder class is present with expected callable methods."""
+        cls = ORE.EqBsBuilder
+        self.assertTrue(hasattr(cls, "parametrization"))
+        self.assertTrue(hasattr(cls, "error"))
+
+    def test_commodity_schwartz_model_builder_api(self) -> None:
+        """CommoditySchwartzModelBuilder class is present with expected callable methods."""
+        cls = ORE.CommoditySchwartzModelBuilder
+        self.assertTrue(hasattr(cls, "error"))
+        self.assertTrue(hasattr(cls, "name"))
+        self.assertTrue(hasattr(cls, "optionBasket"))
+
+    def test_local_vol_model_builder_api(self) -> None:
+        """LocalVolModelBuilder class is present with expected callable methods."""
+        cls = ORE.LocalVolModelBuilder
+        self.assertTrue(hasattr(cls, "getCalibratedProcesses"))
+
+    def test_inf_dk_builder_api(self) -> None:
+        """InfDkBuilder class is present with expected callable methods."""
+        cls = ORE.InfDkBuilder
+        self.assertTrue(hasattr(cls, "infIndex"))
+        self.assertTrue(hasattr(cls, "optionBasket"))
+
+    def test_inf_jy_builder_api(self) -> None:
+        """InfJyBuilder class is present with expected callable methods."""
+        cls = ORE.InfJyBuilder
+        self.assertTrue(hasattr(cls, "inflationIndex"))
+        self.assertTrue(hasattr(cls, "recalibrate"))
+
+    def test_asset_model_builder_base_api(self) -> None:
+        """AssetModelBuilderBase exposes the standard recalibration interface."""
+        cls = ORE.AssetModelBuilderBase
+        self.assertTrue(hasattr(cls, "requiresRecalibration"))
+        self.assertTrue(hasattr(cls, "recalibrate"))
+
+
 if __name__ == "__main__":
     unittest.main()

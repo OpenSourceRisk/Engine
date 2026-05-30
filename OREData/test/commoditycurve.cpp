@@ -91,7 +91,8 @@ QuantLib::ext::shared_ptr<CommodityCurve> createCurve(const string& inputDir,
     filename = inputDir + "/" + curveConfigFile;
     curveConfigs.fromFile(TEST_INPUT_FILE(filename));
     filename = inputDir + "/market.txt";
-    CSVLoader loader(TEST_INPUT_FILE(filename), TEST_INPUT_FILE("fixings.txt"), false);
+    CSVLoader loader;
+    loader.fromFiles(TEST_INPUT_FILE(filename), TEST_INPUT_FILE("fixings.txt"));
 
     // Commodity curve spec
     CommodityCurveSpec curveSpec("USD", "PM:XAUUSD");
@@ -116,8 +117,9 @@ QuantLib::ext::shared_ptr<TodaysMarket> createTodaysMarket(const Date& asof, con
     todaysMarketParameters->fromFile(TEST_INPUT_FILE(string(inputDir + "/todaysmarket.xml")));
 
     string fixingsFile = inputDir + "/fixings_" + to_string(io::iso_date(asof)) + ".txt";
-    auto loader = QuantLib::ext::make_shared<CSVLoader>(TEST_INPUT_FILE(string(inputDir + "/market.txt")),
-                                                TEST_INPUT_FILE(fixingsFile), false);
+    auto loader = QuantLib::ext::make_shared<CSVLoader>();
+    loader->fromFiles(TEST_INPUT_FILE(string(inputDir + "/market.txt")),
+                      TEST_INPUT_FILE(fixingsFile));
 
     return QuantLib::ext::make_shared<TodaysMarket>(asof, todaysMarketParameters, loader, curveConfigs);
 }

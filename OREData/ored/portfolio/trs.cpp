@@ -209,6 +209,8 @@ void TRS::fromXML(XMLNode* node) {
         QL_REQUIRE(portfolioId_ != "", "BasketName must not be empty.");
         portfolioDeriv_ = true;
         indexQuantity_ = XMLUtils::getChildValueAsDouble(underlyingTradeNodes3, "IndexQuantity", false, 1);
+        if (auto n = XMLUtils::getChildNode(underlyingTradeNodes3, "PriceIsPerUnit"))
+            pricePerIndexUnit_ = parseBool(XMLUtils::getNodeValue(n));
     }
     QL_REQUIRE(!underlyingTradeNodes.empty() || !underlyingSubTradeNodes.empty() || !underlyingTradeNodes2.empty() ||
                    !portfolioId_.empty(),
@@ -306,13 +308,22 @@ XMLNode* TRS::toXML(XMLDocument& doc) const {
     XMLNode* underlyingDataNode = doc.allocNode("UnderlyingData");
     XMLUtils::appendNode(dataNode, underlyingDataNode);
 
-    for (Size i = 0; i < underlying_.size(); ++i) {
-        if (underlyingDerivativeId_[i].empty()) {
-            XMLUtils::appendNode(underlyingDataNode, underlying_[i]->toXML(doc));
-        } else {
-            auto d = XMLUtils::addChild(doc, underlyingDataNode, "Derivative");
-            XMLUtils::addChild(doc, d, "Id", underlyingDerivativeId_[i]);
-            XMLUtils::appendNode(d, underlying_[i]->toXML(doc));
+    if (!portfolioId_.empty() && portfolioDeriv_) {
+        XMLNode* pitdNode = doc.allocNode("PortfolioIndexTradeData");
+        XMLUtils::addChild(doc, pitdNode, "BasketName", portfolioId_);
+        XMLUtils::addChild(doc, pitdNode, "IndexQuantity", indexQuantity_);
+        if (pricePerIndexUnit_)
+            XMLUtils::addChild(doc, pitdNode, "PriceIsPerUnit", *pricePerIndexUnit_);
+        XMLUtils::appendNode(underlyingDataNode, pitdNode);
+    } else {
+        for (Size i = 0; i < underlying_.size(); ++i) {
+            if (underlyingDerivativeId_[i].empty()) {
+                XMLUtils::appendNode(underlyingDataNode, underlying_[i]->toXML(doc));
+            } else {
+                auto d = XMLUtils::addChild(doc, underlyingDataNode, "Derivative");
+                XMLUtils::addChild(doc, d, "Id", underlyingDerivativeId_[i]);
+                XMLUtils::appendNode(d, underlying_[i]->toXML(doc));
+            }
         }
     }
 
@@ -356,24 +367,18 @@ TRS::getFxIndex(const QuantLib::ext::shared_ptr<Market> market, const std::strin
     return fx;
 }
 
-/*TRS::FXConversion TRS::ReturnData::parseFXConversion(string fxConv_) { return  (fxConv_ == "Start" ? FXConversion::Start
-                                                                                               : FXConversion::End);
-}*/
+void TRS::reset() {
+    creditRiskCurrency_.clear();
+    creditQualifierMapping_.clear();
+    Trade::reset();
+}
 
 void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     DLOG("TRS::build() called for id = " << id());
-
-    // clear trade members
-
-    reset();
-
-    creditRiskCurrency_.clear();
-    creditQualifierMapping_.clear();
     notionalCurrency_ = returnData_.currency();
 
     // checks
-
     std::set<bool> fundingLegPayers;
     std::set<std::string> fundingCurrencies;
 
@@ -391,6 +396,7 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     QL_REQUIRE(fundingCurrencies.size() <= 1, "funding leg currencies must match");
     QuantLib::Real portfolioInitialPrice = Null<Real>();
 
+    Real quantityForWrapper = 1;
     if (!portfolioId_.empty() && portfolioDeriv_) {
         populateFromReferenceData(engineFactory->referenceData());
         std::string indexName = "GENERIC-" + portfolioId_;
@@ -404,7 +410,9 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
         // The try-catch is used to avoid a failure as we load the data (i.e fixings) at the second run after portfolio construction.
         try {
             portfolioInitialPrice = underlyingIndex->fixing(date);
-        } catch (...) { }                
+        } catch (...) { }
+        if (pricePerIndexUnit_.value_or(false))
+            quantityForWrapper = indexQuantity_;
     }
 
     // a builder might update the underlying (e.g. promote it from bond to convertible bond)
@@ -646,8 +654,8 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     if (initialPrice != Null<Real>()) {
         DLOG("initial price is given as " << initialPrice << " " << initialPriceCurrency);
-	initialPrice = convertMinorToMajorCurrency(initialPriceCurrency, initialPrice);
-	DLOG("initial price after conversion to major ccy " << initialPrice);
+        initialPrice = convertMinorToMajorCurrency(initialPriceCurrency, initialPrice);
+        DLOG("initial price after conversion to major ccy " << initialPrice);
     } else {
         DLOG("no initial price is given");
     }
@@ -832,7 +840,8 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
         parseCurrency(returnData_.currency()), valuationDates, paymentDates, fundingLegs, fundingNotionalTypes,
         parseCurrency(fundingCurrency), fundingData_.fundingResetGracePeriod(), returnData_.payer(), fundingLegPayer,
         additionalCashflowLeg, additionalCashflowLegPayer, parseCurrency(additionalCashflowLegCurrency), fxIndexAsset,
-        fxIndexReturn, fxIndexAdditionalCashflows, fxIndices, returnData_.fxConversionAtPeriodEnd());
+        fxIndexReturn, fxIndexAdditionalCashflows, fxIndices, returnData_.fxConversionAtPeriodEnd(),
+        quantityForWrapper, pricePerIndexUnit_.value_or(false));
 
     Handle<YieldTermStructure> additionalCashflowCurrencyDiscountCurve;
     if (!additionalCashflowLeg.empty()) {
@@ -942,8 +951,9 @@ void TRS::getTradesFromReferenceData(const QuantLib::ext::shared_ptr<PortfolioBa
     DLOG("populating portfolio basket data from reference data");
     QL_REQUIRE(ptfReferenceDatum, "populateFromReferenceData(): empty portfolio reference datum given");
 
-    auto refData = ptfReferenceDatum->getTrades();
     underlying_.clear();
+    underlyingDerivativeId_.clear();
+    auto refData = ptfReferenceDatum->getTrades();
     for (Size i = 0; i < refData.size(); i++) {
         underlyingDerivativeId_.push_back((portfolioId_));
         refData[i]->isSubTrade() = true;

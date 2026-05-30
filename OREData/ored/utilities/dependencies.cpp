@@ -55,11 +55,12 @@ CurveSpec::CurveType marketObjectToCurveType(MarketObject mo) {
         {MarketObject::CommodityCurve, CurveSpec::CurveType::Commodity},
         {MarketObject::CommodityVolatility, CurveSpec::CurveType::CommodityVolatility},
         {MarketObject::Correlation, CurveSpec::CurveType::Correlation},
-        {MarketObject::YieldVol, CurveSpec::CurveType::YieldVolatility}};
-     
+        {MarketObject::YieldVol, CurveSpec::CurveType::YieldVolatility},
+        {MarketObject::BondFutureVol, CurveSpec::CurveType::BondFutureVolatility}};
+
     auto it = moct.find(mo);
     if (it == moct.end())
-        QL_FAIL("Cannot convert market object " << mo << "to curve type");
+        QL_FAIL("Cannot convert market object " << mo << " to curve type");
     return it->second;
 }
 
@@ -67,7 +68,7 @@ string marketObjectToCurveSpec(const MarketObject& mo, const string& name, const
                                const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
                                bool configFallback) {
     auto ct = marketObjectToCurveType(mo);
-    CurveSpec* cs = nullptr;
+    string csName;
 
     switch (ct) {
     case CurveSpec::CurveType::Yield: {
@@ -75,61 +76,58 @@ string marketObjectToCurveSpec(const MarketObject& mo, const string& name, const
         if (curveConfigs->hasYieldCurveConfig(name))
             ccy = curveConfigs->yieldCurveConfig(name)->currency();
         else
-            ccy = name.substr(0, 3); // assume the first 3 chars are the currency code
-        cs = new YieldCurveSpec(ccy, name);
+            // assume the first 3 chars are the currency code
+            ccy = name.substr(0, 3);
+        csName = YieldCurveSpec(ccy, name).name();
         break;
     }
     case CurveSpec::CurveType::FX: {
         auto ccyPair = parseCurrencyPair(name, "");
-        cs = new FXSpotSpec(ccyPair.first.code(), ccyPair.second.code());
+        csName = FXSpotSpec(ccyPair.first.code(), ccyPair.second.code()).name();
         break;
     }
     case CurveSpec::CurveType::FXVolatility: {
         auto ccyPair = parseCurrencyPair(name, "");
-        cs = new FXVolatilityCurveSpec(ccyPair.first.code(), ccyPair.second.code(), name);
+        csName = FXVolatilityCurveSpec(ccyPair.first.code(), ccyPair.second.code(), name).name();
         break;
     }
     case CurveSpec::CurveType::SwaptionVolatility: {
         string key = name;
         // if the key is an index and we don't have a cc for that, fall back to the ccy
-        QuantLib::ext::shared_ptr<IborIndex> ind;
+        ext::shared_ptr<IborIndex> ind;
         if (tryParseIborIndex(name, ind) && !curveConfigs->hasSwaptionVolCurveConfig(name) && configFallback) {
             key = ind->currency().code();
         }
-        cs = new SwaptionVolatilityCurveSpec(key, key);
+        csName = SwaptionVolatilityCurveSpec(key, key).name();
         break;
     }
     case CurveSpec::CurveType::Default: {
-        std::string nameStrippedSec = creditCurveNameFromSecuritySpecificCreditCurveName(name);
+        string nameStrippedSec = creditCurveNameFromSecuritySpecificCreditCurveName(name);
         if (curveConfigs->hasDefaultCurveConfig(nameStrippedSec)) {
-            auto cc = QuantLib::ext::dynamic_pointer_cast<DefaultCurveConfig>(curveConfigs->get(ct, nameStrippedSec));
-            cs = new DefaultCurveSpec(cc->currency(), name);
+            auto cc = ext::dynamic_pointer_cast<DefaultCurveConfig>(curveConfigs->get(ct, nameStrippedSec));
+            csName = DefaultCurveSpec(cc->currency(), name).name();
+        } else {
+            StructuredCurveErrorMessage(name, "Market Object to curve spec", "No default curve config for curve '"
+                + name + "'. Cannot add curve to todays market parameters. Add a curve config for this ID.").log();
         }
-        else {
-            StructuredCurveErrorMessage(
-				name, "Market Object to curve spec",
-				"No default curve config for curve '" + name +
-					"'.  Cannot add this curve to todays market parameters. Add a curve config for this ID.")
-				.log();
-		}
         break;
     }
     case CurveSpec::CurveType::CDSVolatility: {
-        cs = new CDSVolatilityCurveSpec(name);
+        csName = CDSVolatilityCurveSpec(name).name();
         break;
     }
     case CurveSpec::CurveType::BaseCorrelation: {
-        cs = new BaseCorrelationCurveSpec(name);
+        csName = BaseCorrelationCurveSpec(name).name();
         break;
     }
     case CurveSpec::CurveType::CapFloorVolatility: {
         string key = name;
         // if the key is an index and we don't have a cc for that, fall back to the ccy
-        QuantLib::ext::shared_ptr<IborIndex> ind;
+        ext::shared_ptr<IborIndex> ind;
         if (tryParseIborIndex(name, ind) && !curveConfigs->hasCapFloorVolCurveConfig(name) && configFallback) {
             key = ind->currency().code();
         }
-        cs = new CapFloorVolatilityCurveSpec(key, key);
+        csName = CapFloorVolatilityCurveSpec(key, key).name();
         break;
     }
     case CurveSpec::CurveType::Inflation: {
@@ -140,7 +138,7 @@ string marketObjectToCurveSpec(const MarketObject& mo, const string& name, const
         } else if (auto cc = curveConfigs->findInflationCurveConfig(name, InflationCurveConfig::Type::YY))
             cId = cc->curveID();
 
-        cs = new InflationCurveSpec(name, cId);
+        csName = InflationCurveSpec(name, cId).name();
         break;
     }
     case CurveSpec::CurveType::InflationCapFloorVolatility: {
@@ -153,60 +151,49 @@ string marketObjectToCurveSpec(const MarketObject& mo, const string& name, const
                        name, InflationCapFloorVolatilityCurveConfig::Type::YY))
             cId = cc->curveID();
 
-        cs = new InflationCapFloorVolatilityCurveSpec(name, cId);
+        csName = InflationCapFloorVolatilityCurveSpec(name, cId).name();
         break;
     }
     case CurveSpec::CurveType::Equity: {
         if (curveConfigs->hasEquityCurveConfig(name)) {
             string eqName = boost::replace_all_copy(name, "/", "\\/");
-            cs = new EquityCurveSpec(curveConfigs->equityCurveConfig(name)->currency(), eqName);
+            csName = EquityCurveSpec(curveConfigs->equityCurveConfig(name)->currency(), eqName).name();
         } else {
-            StructuredCurveErrorMessage(
-                name, "Market Object to curve spec",
-                "No equity curve config for curve '" + name +
-                    "'.  Cannot add this curve to todays market parameters. Add a curve config for this ID.")
-                .log();
+            StructuredCurveErrorMessage(name, "Market Object to curve spec", "No equity curve config for curve '"
+                + name + "'. Cannot add curve to todays market parameters. Add a curve config for this ID.").log();
         }
         break;
     }
     case CurveSpec::CurveType::EquityVolatility: {
         if (curveConfigs->hasEquityVolCurveConfig(name)) {
             string eqName = boost::replace_all_copy(name, "/", "\\/");
-            cs = new EquityVolatilityCurveSpec(curveConfigs->equityVolCurveConfig(name)->ccy(), eqName);
+            csName = EquityVolatilityCurveSpec(curveConfigs->equityVolCurveConfig(name)->ccy(), eqName).name();
         } else {
-            StructuredCurveErrorMessage(
-                name, "Market Object to curve spec",
-                "No equity vol curve config for curve '" + name +
-                    "'.  Cannot add this curve to todays market parameters. Add a curve config for this ID.")
-                .log();
+            StructuredCurveErrorMessage(name, "Market Object to curve spec", "No equity vol curve config for curve '"
+                + name + "'. Cannot add curve to todays market parameters. Add a curve config for this ID.").log();
         }
         break;
     }
     case CurveSpec::CurveType::Security: {
-        cs = new SecuritySpec(name);
+        csName = SecuritySpec(name).name();
         break;
     }
     case CurveSpec::CurveType::Commodity: {
         if (curveConfigs->hasCommodityCurveConfig(name)) {
-            cs = new CommodityCurveSpec(curveConfigs->commodityCurveConfig(name)->currency(), name);
+            csName = CommodityCurveSpec(curveConfigs->commodityCurveConfig(name)->currency(), name).name();
         } else {
-            StructuredCurveErrorMessage(
-                name, "Market Object to config",
-                "No commodity curve config for curve '" + name +
-                    "'.  Can not add this curve to todays market parameters. Add a curve config for this id.")
-                .log();
+            StructuredCurveErrorMessage(name, "Market Object to config", "No commodity curve config for curve '"
+                + name + "'. Cannot add curve to todays market parameters. Add a curve config for this id.").log();
         }
         break;
     }
     case CurveSpec::CurveType::CommodityVolatility: {
         if (curveConfigs->hasCommodityVolatilityConfig(name)) {
-            cs = new CommodityVolatilityCurveSpec(curveConfigs->commodityVolatilityConfig(name)->currency(), name);
+            csName = CommodityVolatilityCurveSpec(curveConfigs->commodityVolatilityConfig(name)->currency(),
+                name).name();
         } else {
-            StructuredCurveErrorMessage(
-                name, "Market Object to config",
-                "No commodity vol curve config for curve '" + name +
-                    "'.  Can not add this curve to todays market parameters. Add a curve config for this id.")
-                .log();
+            StructuredCurveErrorMessage(name, "Market Object to config", "No commodity vol curve config for curve '"
+                + name + "'. Cannot add curve to todays market parameters. Add a curve config for this id.").log();
         }
         break;
     }
@@ -219,23 +206,31 @@ string marketObjectToCurveSpec(const MarketObject& mo, const string& name, const
             if (curveConfigs->hasCorrelationCurveConfig(tmp))
                 cId = tmp;
         }
-		cs = new CorrelationCurveSpec(cId);
+        csName = CorrelationCurveSpec(cId).name();
         break;
     }
     case CurveSpec::CurveType::YieldVolatility: {
-        cs = new YieldVolatilityCurveSpec(name);
+        csName = YieldVolatilityCurveSpec(name).name();
+        break;
+    }
+    case CurveSpec::CurveType::BondFutureVolatility: {
+        if (curveConfigs->hasBondFutureVolatilityConfig(name)) {
+            // Use the volatility config name in the spec name. The volatility config name may be of the form 
+            // `<BOND_FUTURE_CONTRACT_NAME>_CALL`, `<BOND_FUTURE_CONTRACT_NAME>_PUT` or `<BOND_FUTURE_CONTRACT_NAME>`
+            csName = BondFutureVolatilityCurveSpec(name).name();
+        } else {
+            StructuredCurveErrorMessage(name, "Market Object to curve spec", "No bond future vol curve config for '"
+                + name + "'. Cannot add curve to todays market parameters. Add a curve config for this ID.").log();
+        }
         break;
     }
     case CurveSpec::CurveType::SwapIndex: {
         return swapIndexDiscountCurve(name.substr(0, 3), baseCcy, name);
     }
-	default:
-		QL_FAIL("Cannot convert market object " << mo << "to curve spec");
+    default:
+        QL_FAIL("Cannot convert market object " << mo << " to curve spec");
     }
-    if (cs == nullptr)
-        return string();	    
-    else
-        return cs->name();
+    return csName;
 }
 
 
