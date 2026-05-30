@@ -1,0 +1,195 @@
+RUN scripted-trade-engine.py
+Black-Scholes script parsed successfully.
+
+AST:
+Sequence
+  Assignment
+    Variable(d1)
+      -
+    OperatorDivide
+      OperatorPlus
+        FunctionLog
+          OperatorDivide
+            Variable(S)
+              -
+            Variable(K)
+              -
+        OperatorMultiply
+          OperatorPlus
+            Variable(r)
+              -
+            OperatorDivide
+              OperatorMultiply
+                Variable(sigma)
+                  -
+                Variable(sigma)
+                  -
+              ConstantNumber(2.000000)
+          Variable(T)
+            -
+      OperatorMultiply
+        Variable(sigma)
+          -
+        FunctionSqrt
+          Variable(T)
+            -
+  Assignment
+    Variable(d2)
+      -
+    OperatorMinus
+      Variable(d1)
+        -
+      OperatorMultiply
+        Variable(sigma)
+          -
+        FunctionSqrt
+          Variable(T)
+            -
+  Assignment
+    Variable(CallPV)
+      -
+    OperatorMinus
+      OperatorMultiply
+        Variable(S)
+          -
+        FunctionNormalCdf
+          Variable(d1)
+            -
+      OperatorMultiply
+        OperatorMultiply
+          Variable(K)
+            -
+          FunctionExp
+            OperatorMultiply
+              Negate
+                Variable(r)
+                  -
+              Variable(T)
+                -
+        FunctionNormalCdf
+          Variable(d2)
+            -
+  Assignment
+    Variable(PutPV)
+      -
+    OperatorMinus
+      OperatorMultiply
+        OperatorMultiply
+          Variable(K)
+            -
+          FunctionExp
+            OperatorMultiply
+              Negate
+                Variable(r)
+                  -
+              Variable(T)
+                -
+        FunctionNormalCdf
+          Negate
+            Variable(d2)
+              -
+      OperatorMultiply
+        Variable(S)
+          -
+        FunctionNormalCdf
+          Negate
+            Variable(d1)
+              -
+
+==================================================
+  European Option Pricing (Black-Scholes)
+==================================================
+  Spot (S)      = 100.00
+  Strike (K)    = 100.00
+  Rate (r)      = 5.00%
+  Vol (sigma)   = 20.00%
+  Maturity (T)  = 1.00 years
+--------------------------------------------------
+  d1            = 0.350000
+  d2            = 0.150000
+  Call PV       = 10.450584
+  Put PV        = 5.573526
+==================================================
+Verification:
+  Script Call PV = 10.4505835722
+  Python Call PV = 10.4505835722
+  Difference     = 0.00e+00
+
+  Script Put PV  = 5.5735260223
+  Python Put PV  = 5.5735260223
+  Difference     = 0.00e+00
+
+  Put-Call Parity: C - P = 4.877058
+                  S - Ke^(-rT) = 4.877058
+                  Error = 0.00e+00
+
+[OK] All results verified to machine precision
+  Spot |    Call PV |     Put PV |  Intrinsic
+-------+------------+------------+-----------
+  70.0 |     0.4414 |    25.5644 |     0.0000
+  75.0 |     0.9672 |    21.0902 |     0.0000
+  80.0 |     1.8594 |    16.9824 |     0.0000
+  85.0 |     3.2136 |    13.3365 |     0.0000
+  90.0 |     5.0912 |    10.2142 |     0.0000
+  95.0 |     7.5109 |     7.6338 |     0.0000
+ 100.0 |    10.4506 |     5.5735 |     0.0000
+ 105.0 |    13.8579 |     3.9808 |     5.0000
+ 110.0 |    17.6630 |     2.7859 |    10.0000
+ 115.0 |    21.7905 |     1.9135 |    15.0000
+ 120.0 |    26.1690 |     1.2920 |    20.0000
+ 125.0 |    30.7360 |     0.8590 |    25.0000
+ 130.0 |    35.4403 |     0.5632 |    30.0000
+==================================================
+  European Call Greeks (ATM, 1Y)
+==================================================
+  PV       =    10.450584
+  Delta    =     0.636745
+  Gamma    =     0.018760
+  Vega     =     0.375704
+  Theta    =    -0.017581
+==================================================
+
+  Analytical Delta N(d1) = 0.636831
+  FD Delta               = 0.636745
+  Error                  = 8.60e-05
+Digital Option (S=105, K=100): Payoff = 1,000,000
+Digital Option (S=95,  K=100): Payoff = 0
+  Spot |  Long Call |  Short Put |    Collar PV
+-------+------------+------------+-------------
+  80.0 |     0.0000 |   -10.0000 |     -1000.00
+  85.0 |     0.0000 |    -5.0000 |      -500.00
+  90.0 |     0.0000 |    -0.0000 |         0.00
+  95.0 |     0.0000 |    -0.0000 |         0.00
+ 100.0 |     0.0000 |    -0.0000 |         0.00
+ 105.0 |     0.0000 |    -0.0000 |         0.00
+ 110.0 |     0.0000 |    -0.0000 |         0.00
+ 115.0 |     5.0000 |    -0.0000 |       500.00
+ 120.0 |    10.0000 |    -0.0000 |      1000.00
+Asian Option (average of 1..12 fixings):
+  Average index   = 6.5000
+  Strike          = 5.0
+  Asian Payoff    = 1.5000
+============================================================
+  Shared Market Objects: Native QL vs. Scripted Engine
+============================================================
+  Native QL Call NPV   = 10.450584
+  Scripted  Call NPV   = 10.450584
+[OK] Both representations produce matching NPVs
+
+  Spot bump 100 -> 110 (via SimpleQuote):
+  Native QL Call NPV   = 17.662954
+  Scripted  Call NPV   = 17.662954
+[OK] Both pricers re-price correctly after spot bump
+============================================================
+  Payoff Script vs. Close Price (time value decomposition)
+============================================================
+  European Call: K=100, r=5%, vol=20%, T=1Y
+    Spot |     Payoff |   Close PV |   Time Val
+  -------+------------+------------+-----------
+    80.0 |     0.0000 |     1.8594 |     1.8594
+    90.0 |     0.0000 |     5.0912 |     5.0912
+   100.0 |     0.0000 |    10.4506 |    10.4506
+   105.0 |     5.0000 |    13.8579 |     8.8579
+   110.0 |    10.0000 |    17.6630 |     7.6630
+   120.0 |    20.0000 |    26.1690 |     6.1690
+   130.0 |    30.0000 |    35.4403 |     5.4403
