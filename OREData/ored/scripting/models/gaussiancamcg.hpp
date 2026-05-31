@@ -53,7 +53,6 @@ public:
                   const std::vector<Date>& stickyCloseOutDates = {}, const Size timeStepsPerYear = 1);
 
     // Model interface implementation
-    const std::set<std::string>& admissableLocalBaseCurrencies() const override;
     const Date& referenceDate() const override;
     std::size_t npv(const std::size_t amount, const Date& obsdate, const std::size_t filter,
                     const std::optional<long>& memSlot, const std::set<std::size_t> addRegressors,
@@ -83,7 +82,6 @@ public:
                                               const std::string& localBaseCurrency = {}) const;
     std::size_t getInterpolatedIrState(const Date& d, const Size ccyIndex,
                                        const std::string& localBaseCurrency = {}) const;
-    void setAdmissableLocalBaseCurrencies(const std::set<std::string>& baseCcys) const;
 
 protected:
     // ModelCGImpl interface implementation
@@ -134,7 +132,7 @@ protected:
     mutable bool conditionalExpectationUseInf_;   // derived from input conditionalExpectationModelState
     mutable bool conditionalExpectationUseAsset_; // derived from input conditionalExpectationModelState
 
-    // admissable base ccy ir states (v1 local base currency handling)
+    // local base ccy ir states (for v1 local base currency handling)
     mutable std::map<std::string, std::map<Date, std::size_t>> irStatesV1_;
     mutable std::map<std::string, std::vector<std::size_t>> irStatesOnFullTimeGridV1_;
 
@@ -142,7 +140,6 @@ protected:
 
     // state
     mutable bool useStickyCloseOutDates_ = false;
-    mutable std::set<std::string> admissableLocalBaseCurrencies_;
 };
 
 } // namespace data

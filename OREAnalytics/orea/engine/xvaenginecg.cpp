@@ -420,8 +420,6 @@ void XvaEngineCG::buildCgPartB() {
     for (auto const& [k, v] : baseCcySuggestions)
         admissableBaseCcys.insert(v);
 
-    model_->setAdmissableLocalBaseCurrencies(admissableBaseCcys);
-
     DLOG("Built local base currency suggestions:");
     for (auto const& [k, v] : baseCcySuggestions) {
         DLOG(boost::join(k, "'") << " -> " << v);
@@ -561,7 +559,7 @@ std::size_t XvaEngineCG::createExposureNode(const std::vector<const TradeExposur
     for (auto const& [ccys, nodes] : simplePathValues) {
         values.push_back(cg_mult(*g, model_->convertToBaseCcy(obsDate, std::get<0>(ccys)),
                                  model_->npv(cg_add(*g, nodes), obsDate, cg_const(*g, 1.0), std::nullopt, {},
-                                             std::get<2>(ccys), std::get<2>(ccys))));
+                                             std::get<1>(ccys), std::get<2>(ccys))));
     }
 
     // diable stickyness again
@@ -648,6 +646,7 @@ void XvaEngineCG::buildCgDynamicIM() {
                         DynamicImInfo::SimpleKey key;
                         key.modelParameters = tradeExposureMetaInfo_[j][k].relevantModelParameters;
                         key.regressorsLocalBaseCurrency = s.regressorsLocalBaseCcy;
+                        key.regressorsBaseCurrency = s.regressorsBaseCcy;
                         key.localBaseCurrency = s.localBaseCurrency;
                         key.conversionToBaseCcy = model_->convertToBaseCcy(valuationDates_[i], s.localBaseCurrency);
                         pathValues[key].push_back(cg_mult(*g, cg_const(*g, simple.multiplier), s.pathValue));
@@ -813,6 +812,7 @@ void XvaEngineCG::doForwardEvaluation() {
         for (std::size_t i = 0; i < valuationDates_.size(); ++i) {
             for (auto const& [key, val] : dynamicImInfo_[i].simplePathValues) {
                 keepNodes_[key.conversionToBaseCcy] = true;
+                keepNodes_[val] = true;
                 for (auto const& n : key.regressorsLocalBaseCurrency)
                     keepNodes_[n] = true;
                 for (auto const& n : key.regressorsBaseCurrency)
@@ -1401,15 +1401,15 @@ void XvaEngineCG::calculateDynamicIM() {
         keepNodesDerivatives[n] = true;
     }
 
+    std::map<std::string, std::size_t> currencyLookup;
+    std::size_t index = 0;
+    for (auto const& c : model_->currencies())
+        currencyLookup[c] = index++;
+
     for (std::size_t i = 0; i < valuationDates_.size() + 1; i += dynamicIMStepSize_) {
 
         Date valDate = i == 0 ? model_->referenceDate() : valuationDates_[i - 1];
         Real t = model_->actualTimeFromReference(valDate);
-
-        std::map<std::string, std::size_t> currencyLookup;
-        std::size_t index = 0;
-        for (auto const& c : model_->currencies())
-            currencyLookup[c] = index++;
 
         /* calculate path derivatives for simple trades, grouped by model parameter groups to be able
            to filter out unwanted sensitivities that are artifacts of the simulation */
@@ -1438,7 +1438,7 @@ void XvaEngineCG::calculateDynamicIM() {
 
             dynamicIMDerivatives_[exposureNode].setAll(1.0);
 
-            // run backward derivatives from n, note: we use eps = 0 in grads_ here!
+            // run backward derivatives from n
 
             backwardDerivatives(*g, values_, dynamicIMDerivatives_, grads_, RandomVariable::deleter,
                                 keepNodesDerivatives, ops_, opNodeRequirements_, keepNodes_,
@@ -1496,12 +1496,13 @@ void XvaEngineCG::calculateDynamicIM() {
         auto condExp = [this, i](const RandomVariable* regressand, const std::size_t baseCurrencyConversion,
                                  const std::set<std::size_t>& regressors, const std::set<std::size_t>& evalRegressors,
                                  const std::string& label) {
-            // first entry is populated below with each regressand
-            std::vector<const RandomVariable*> args(1);
-            // second entry is the filter which we set to trivial here
+            QL_REQUIRE(regressors.size() == evalRegressors.size(),
+                       "XvaEngineCg::calculateDynamicIm(): internal error, regressors size ("
+                           << regressors.size() << ") must match evalRegressors size (" << evalRegressors.size()
+                           << ")");
+            std::vector<const RandomVariable*> args(1, regressand);
             RandomVariable trivialFilter(model_->size(), 1.0);
             args.push_back(&trivialFilter);
-            // the remaining entries are the regressors
             for (const auto& r : regressors)
                 args.push_back(&values_[r]);
             for (const auto& r : evalRegressors)
@@ -1943,6 +1944,7 @@ void XvaEngineCG::outputGraphStats() {
 
 void XvaEngineCG::outputTimings() {
     LOG("XvaEngineCG: graph size               : " << model_->computationGraph()->size());
+    LOG("XvaEngineCG: red nodes ranges         : " << model_->computationGraph()->redBlockRanges().size());
     LOG("XvaEngineCG: red nodes                : " << numberOfRedNodes_);
     LOG("XvaEngineCG: red node dependendices   : " << model_->computationGraph()->redBlockDependencies().size());
     LOG("XvaEngineCG: Peak mem usage           : " << ore::data::os::getPeakMemoryUsageBytes() / 1024 / 1024 << " MB");
@@ -1966,7 +1968,7 @@ void XvaEngineCG::outputTimings() {
     LOG("XvaEngineCG: RV gen                   : " << std::fixed << std::setprecision(1) << timing_poprv_ / 1E6
                                                    << " ms");
     LOG("XvaEngineCG: Forward eval             : " << std::fixed << std::setprecision(1) << timing_fwd_ / 1E6 << " ms");
-    LOG("XvaEngineCG: DynamicIM             : " << std::fixed << std::setprecision(1) << timing_dynamicIM_ / 1E6
+    LOG("XvaEngineCG: DynamicIM                : " << std::fixed << std::setprecision(1) << timing_dynamicIM_ / 1E6
                                                 << " ms");
     LOG("XvaEngineCG: Backward deriv           : " << std::fixed << std::setprecision(1) << timing_bwd_ / 1E6 << " ms");
     LOG("XvaEngineCG: Sensi Cube Gen           : " << std::fixed << std::setprecision(1) << timing_sensi_ / 1E6
@@ -2015,7 +2017,9 @@ void XvaEngineCG::run() {
         buildAsdNodes();
     }
 
-    // the cg is final at this point
+    // the cg is final at this point and should not be modified from this point onwards
+
+    model_->computationGraph()->setReadOnly(true);
 
     if (firstRun_) {
         outputGraphStats();
@@ -2026,6 +2030,7 @@ void XvaEngineCG::run() {
     updateProgress(1, 5);
 
     setupValueContainers();
+
     doForwardEvaluation();
 
     // dump model parameters
@@ -2040,6 +2045,7 @@ void XvaEngineCG::run() {
     updateProgress(3, 5);
 
     if (enableDynamicIM_) {
+
         calculateDynamicIM();
         populateDynamicIMOutputCube();
         generateDynamicImRegressionReport();

@@ -181,9 +181,6 @@ public:
     // the (global) base ccy of the model
     virtual const std::string& baseCurrency() const = 0;
 
-    // admissable local base ccys of the model (excluding the global base ccy)
-    virtual const std::set<std::string>& admissableLocalBaseCurrencies() const = 0;
-
     // the list of supported model currencies
     virtual const std::vector<std::string>& currencies() const = 0;
 

@@ -939,7 +939,7 @@ std::size_t BlackScholesCG::npv(const std::size_t amount, const Date& obsdate, c
     }
 
     if (evaluationRegressors) {
-        evalState.insert(state.end(), evaluationRegressors->begin(), evaluationRegressors->end());
+        evalState.insert(evalState.end(), evaluationRegressors->begin(), evaluationRegressors->end());
     }
 
     if (state.empty()) {
@@ -957,7 +957,7 @@ std::size_t BlackScholesCG::npv(const std::size_t amount, const Date& obsdate, c
         evalState.insert(state.end(), r.begin(), r.end());
         for (auto const& r : addRegressors) {
             if (r != ComputationGraph::nan) {
-                state.push_back(r);
+                evalState.push_back(r);
             }
         }
     }

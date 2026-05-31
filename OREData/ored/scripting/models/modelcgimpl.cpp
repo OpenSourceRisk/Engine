@@ -101,11 +101,6 @@ ModelCGImpl::ModelCGImpl(
 
 } // ModelCGImpl ctor
 
-const std::set<std::string>& ModelCGImpl::admissableLocalBaseCurrencies() const {
-    static std::set<std::string> empty;
-    return empty;
-}
-
 Real ModelCGImpl::actualTimeFromReference(const Date& d) const { return dayCounter_.yearFraction(referenceDate(), d); }
 
 std::size_t ModelCGImpl::dt(const Date& d1, const Date& d2) const {
@@ -225,7 +220,8 @@ std::size_t ModelCGImpl::convertToBaseCcy(const Date& s, const std::string& loca
 
     calculate();
 
-    TLOG("ModelCGImpl::convertToBaseCcy(" << s << "," << localBaseCurrency << ")");
+    TLOG("ModelCGImpl::convertToBaseCcy(" << s << "," << localBaseCurrency << ") - model base ccy is "
+                                          << baseCurrency());
 
     if (localBaseCurrency == baseCurrency())
         return cg_const(*g_, 1.0);

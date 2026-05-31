@@ -116,24 +116,6 @@ const Date& GaussianCamCG::referenceDate() const {
 
 Size GaussianCamCG::size() const { return ModelCG::size(); }
 
-const std::set<std::string>& GaussianCamCG::admissableLocalBaseCurrencies() const {
-    return admissableLocalBaseCurrencies_;
-}
-
-void GaussianCamCG::setAdmissableLocalBaseCurrencies(const std::set<std::string>& baseCcys) const {
-    admissableLocalBaseCurrencies_ = baseCcys;
-    // the global base ccy is always admissable, but we do not hold this in the member
-    admissableLocalBaseCurrencies_.erase(baseCurrency());
-    // trigger new path generation
-    underlyingPathsCgVersion_ = 0;
-    // check
-    for (auto const& b : admissableLocalBaseCurrencies_) {
-        QL_REQUIRE(std::find(currencies_.begin(), currencies_.end(), b) != currencies_.end(),
-                   "GaussianCamCG::setAdmissableCurrencies(): currency "
-                       << b << " not in model currency set, this is not allowed.");
-    }
-}
-
 void GaussianCamCG::performCalculations() const {
 
     // needed for base class performCalculations()
@@ -193,6 +175,8 @@ void GaussianCamCG::performCalculations() const {
     if (effectiveSimulationDates_.size() == 1)
         return;
 
+    std::vector<std::string> localBaseCurrencies(std::next(currencies().begin(), 1), currencies().end());
+
     // init underlying path where we map a date to a node representing the path value
 
     for (auto const& d : effectiveSimulationDates_) {
@@ -200,7 +184,7 @@ void GaussianCamCG::performCalculations() const {
         irStates_[d] = std::vector<std::size_t>(currencies_.size(), ComputationGraph::nan);
         infStates_[d] = std::vector<std::pair<std::size_t, std::size_t>>(
             infIndices_.size(), std::make_pair(ComputationGraph::nan, ComputationGraph::nan));
-        for (auto const& b : admissableLocalBaseCurrencies_) {
+        for (auto const& b : localBaseCurrencies) {
             irStatesV1_[b][d] = ComputationGraph::nan;
         }
     }
@@ -209,7 +193,7 @@ void GaussianCamCG::performCalculations() const {
                                           std::vector<std::size_t>(timeGrid_.size(), ComputationGraph::nan));
     irStatesOnFullTimeGrid_.resize(currencies_.size(),
                                    std::vector<std::size_t>(timeGrid_.size(), ComputationGraph::nan));
-    for (auto const& b : admissableLocalBaseCurrencies_) {
+    for (auto const& b : localBaseCurrencies) {
         irStatesOnFullTimeGridV1_[b].resize(timeGrid_.size(), ComputationGraph::nan);
     }
 
@@ -257,7 +241,7 @@ void GaussianCamCG::performCalculations() const {
     // calculate number of ir components for v1 local base currency handling
 
     Size numberOfIrStatesV1 = 0;
-    if (!admissableLocalBaseCurrencies_.empty()) {
+    if (!localBaseCurrencies.empty()) {
         for (Size j = 0; j < currencies_.size(); ++j) {
             numberOfIrStatesV1 += cam_->stateVariables(CrossAssetModel::AssetType::IR, j);
         }
@@ -458,7 +442,7 @@ void GaussianCamCG::performCalculations() const {
     for (Size j = 0; j < currencies_.size(); ++j) {
         irStates_[*effectiveSimulationDates_.begin()][j] = irStatesOnFullTimeGrid_[j][0] =
             state[cam->pIdx(CrossAssetModel::AssetType::IR, j, 0)];
-        for (auto const& b : admissableLocalBaseCurrencies_) {
+        for (auto const& b : localBaseCurrencies) {
             irStatesV1_[b][*effectiveSimulationDates_.begin()] = irStatesOnFullTimeGridV1_[b][0] =
                 state[cam->pIdx(CrossAssetModel::AssetType::IR, j, 0)];
         }
@@ -546,7 +530,7 @@ void GaussianCamCG::performCalculations() const {
                 irStates_[d][j] = state[cam->pIdx(CrossAssetModel::AssetType::IR, j, 0)];
             }
 
-            for (auto const& b : admissableLocalBaseCurrencies_) {
+            for (auto const& b : localBaseCurrencies) {
                 irStatesV1_[b][d] = statev1[cam->pIdx(CrossAssetModel::AssetType::IR, currencyLookup[b], 0)];
             }
 
@@ -562,7 +546,7 @@ void GaussianCamCG::performCalculations() const {
             irStatesOnFullTimeGrid_[j][i + 1] = state[cam->pIdx(CrossAssetModel::AssetType::IR, j, 0)];
         }
 
-        for (auto const& b : admissableLocalBaseCurrencies_) {
+        for (auto const& b : localBaseCurrencies) {
             irStatesOnFullTimeGridV1_[b][i + 1] =
                 statev1[cam->pIdx(CrossAssetModel::AssetType::IR, currencyLookup[b], 0)];
         }
@@ -843,7 +827,7 @@ std::size_t GaussianCamCG::npv(const std::size_t amount, const Date& obsdate, co
     }
 
     if (evaluationRegressors) {
-        evalState.insert(state.end(), evaluationRegressors->begin(), evaluationRegressors->end());
+        evalState.insert(evalState.end(), evaluationRegressors->begin(), evaluationRegressors->end());
     }
 
     if (state.empty()) {
@@ -861,10 +845,12 @@ std::size_t GaussianCamCG::npv(const std::size_t amount, const Date& obsdate, co
         evalState.insert(state.end(), r.begin(), r.end());
         for (auto const& r : addRegressors) {
             if (r != ComputationGraph::nan) {
-                state.push_back(r);
+                evalState.push_back(r);
             }
         }
     }
+
+   state.insert(state.end(), evalState.begin(), evalState.end());
 
     // if the state is empty, return the plain expectation (no conditioning)
 

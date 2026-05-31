@@ -188,8 +188,7 @@ AmcCgBaseEngine::createCashflowInfo(QuantLib::ext::shared_ptr<QuantLib::CashFlow
 
         // fallback: we follow the v1 local base currency handling
 
-        if (cfCurrencies.size() == 1 && modelCg_->admissableLocalBaseCurrencies().find(*cfCurrencies.begin()) !=
-                                            modelCg_->admissableLocalBaseCurrencies().end()) {
+        if (cfCurrencies.size() == 1) {
             info.localBaseCurrency = *cfCurrencies.begin();
         } else {
             info.localBaseCurrency = modelCg_->baseCurrency();
@@ -1021,6 +1020,7 @@ void AmcCgBaseEngine::buildComputationGraph(
 
     std::get<SimpleTradeExposure>((*tradeExposure)[0]).groups.push_back({});
     std::get<SimpleTradeExposure>((*tradeExposure)[0]).groups.back().pathValue = npv_;
+    std::get<SimpleTradeExposure>((*tradeExposure)[0]).groups.back().localBaseCurrency = modelCg_->baseCurrency();
 
     if (exercise_ == nullptr) {
 
