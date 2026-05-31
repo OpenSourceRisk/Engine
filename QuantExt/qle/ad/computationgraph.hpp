@@ -57,6 +57,8 @@ public:
     const std::map<std::string, std::size_t>& variables() const;
     void setVariable(const std::string& name, const std::size_t node);
 
+    void setReadOnly(const bool b = true);
+
     void enableLabels(const bool b = true);
     const std::map<std::size_t, std::set<std::string>>& labels() const;
 
@@ -65,8 +67,6 @@ public:
     std::size_t redBlockId(const std::size_t node) const;
     const std::vector<std::pair<std::size_t, std::size_t>>& redBlockRanges() const;
     const std::set<std::size_t>& redBlockDependencies() const;
-
-    
 
 private:
     std::vector<std::vector<std::size_t>> predecessors_;
@@ -81,6 +81,7 @@ private:
     std::map<std::string, std::size_t> variables_;
     std::map<std::string, std::size_t> variableVersion_;
 
+    bool readOnly_ = false;
     bool enableLabels_ = false;
     std::map<std::size_t, std::set<std::string>> labels_;
 
