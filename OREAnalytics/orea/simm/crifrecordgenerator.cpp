@@ -26,6 +26,7 @@
 #include <orea/app/structuredanalyticswarning.hpp>
 
 #include <ored/portfolio/referencedata.hpp>
+#include <ored/portfolio/bondutils.hpp>
 #include <ored/report/report.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
@@ -46,6 +47,7 @@
 using namespace ore::analytics;
 
 using ore::data::checkCurrency;
+using ore::data::futureContractName;
 using ore::data::parseIborIndex;
 using ore::data::parseZeroInflationIndex;
 using ore::data::Report;
@@ -208,12 +210,17 @@ Volatility VolatilityDataCrif::getVolatility(RiskFactorKey::KeyType rfType, cons
 
     case RiskFactorKey::KeyType::BondFutureVolatility: {
         QL_REQUIRE(crifMarket_, "VolatilityDataCrif: need non-empty crifMarket for bond future volatility");
-        QL_REQUIRE(crifMarket_->simMarket(), "VolatilityDataCrif: crifMarket need non-empty simMarket "
-            "for bond future volatility");
-        QL_REQUIRE(strike, "VolatilityDataCrif: need non-empty strike level for bond future volatility");
-        auto bondFutureVolSurface = crifMarket_->simMarket()->bondFutureVol(rfName);
+        const auto& simMarket = crifMarket_->simMarket();
+        QL_REQUIRE(simMarket, "VolatilityDataCrif: crifMarket need non-empty simMarket for bond future volatility");
+        auto bondFutureVolSurface = simMarket->bondFutureVol(rfName);
         Date optionExpiryDate = bondFutureVolSurface->optionDateFromTenor(parsePeriod(expiryTenor));
-        vol = bondFutureVolSurface->blackVol(optionExpiryDate, *strike);
+        if (strike) {
+            vol = bondFutureVolSurface->blackVol(optionExpiryDate, *strike);
+        } else {
+            string futureName{ futureContractName(rfName) };
+            Real atmStrike = simMarket->securityPrice(futureName)->value();
+            vol = bondFutureVolSurface->blackVol(optionExpiryDate, atmStrike);
+        }
         break;
     }
 
@@ -702,10 +709,12 @@ CrifRecordData CrifRecordGenerator::bondFutureVolatilityImpl(const ore::analytic
     // Use the bond future currency as qualifier.
     data.qualifier = sr.tradeCurrency;
 
-    // For bond future volatility, we expect rfTokens to always be of the form rfTokens[0] = <Number>d for expiry tenor 
-    // and rfTokens[1] = absolute strike. For example, rfTokens[0] = "10D" and rfTokens[1] = "1.1075".
+    // For bond future volatility, we expect rfTokens to be of the form rfTokens[0] = <Number>d for expiry tenor 
+    // and rfTokens[1] = absolute strike or ATM. For example, rfTokens[0] = "10D" and rfTokens[1] = "1.1075" or "ATM".
 
-    Real strike = parseReal(rfTokens[1]);
+    ext::optional<Real> strike;
+    if (rfTokens[1] != "ATM")
+        strike = parseReal(rfTokens[1]);
     data.sensitivity = volatilityData_.vegaTimesVol(sr.key_1.keytype, sr.key_1.name, sr.delta,
         rfTokens.front(), "", strike);
 
