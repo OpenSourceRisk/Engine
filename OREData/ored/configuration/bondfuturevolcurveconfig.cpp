@@ -41,7 +41,8 @@ BondFutureVolatilityConfig::BondFutureVolatilityConfig(
     string useOnlyPutCall,
     ext::optional<OneDimSolverConfig> solverConfig,
     ext::optional<bool> preferOutOfTheMoney,
-    string engineOverride)
+    string engineOverride,
+    ext::optional<bool> treatAsEuropean)
     : CurveConfig(curveId, curveDescription),
       contractName_(std::move(contractName)),
       volatilityConfig_(std::move(volatilityConfig)),
@@ -52,7 +53,8 @@ BondFutureVolatilityConfig::BondFutureVolatilityConfig(
       useOnlyPutCall_(std::move(useOnlyPutCall)),
       solverConfig_(std::move(solverConfig)),
       preferOutOfTheMoney_(std::move(preferOutOfTheMoney)),
-      engineOverride_(std::move(engineOverride)) {
+      engineOverride_(std::move(engineOverride)),
+      treatAsEuropean_(std::move(treatAsEuropean)) {
     populateQuotes();
 }
 
@@ -105,6 +107,10 @@ const ext::optional<bool>& BondFutureVolatilityConfig::preferOutOfTheMoney() con
 
 const string& BondFutureVolatilityConfig::engineOverride() const { return engineOverride_; }
 
+const ext::optional<bool>& BondFutureVolatilityConfig::treatAsEuropean() const {
+    return treatAsEuropean_;
+}
+
 void BondFutureVolatilityConfig::fromXML(XMLNode* node) {
 
     XMLUtils::checkNode(node, "BondFutureVolatility");
@@ -135,6 +141,9 @@ void BondFutureVolatilityConfig::fromXML(XMLNode* node) {
         preferOutOfTheMoney_ = parseBool(XMLUtils::getNodeValue(n));
 
     engineOverride_ = XMLUtils::getChildValue(node, "EngineOverride", false);
+
+    if (auto n = XMLUtils::getChildNode(node, "TreatAsEuropean"))
+        treatAsEuropean_ = parseBool(XMLUtils::getNodeValue(n));
 
     populateQuotes();
 }
@@ -170,6 +179,9 @@ XMLNode* BondFutureVolatilityConfig::toXML(XMLDocument& doc) const {
 
     if (!engineOverride_.empty())
         XMLUtils::addChild(doc, node, "EngineOverride", engineOverride_);
+
+    if (treatAsEuropean_)
+        XMLUtils::addChild(doc, node, "TreatAsEuropean", *treatAsEuropean_);
 
     return node;
 }

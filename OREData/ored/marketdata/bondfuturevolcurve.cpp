@@ -155,6 +155,8 @@ BondFutureVolCurve::BondFutureVolCurve(Date asof,
             "are currently supported for bond future volatility surfaces");
         QL_REQUIRE(vssc->expiries().size() > 0, "BondFutureVolCurve: no expiries configured");
         QL_REQUIRE(vssc->strikes().size() > 0, "BondFutureVolCurve: no strikes configured");
+        QL_REQUIRE(vssc->exerciseType() == Exercise::European || vssc->exerciseType() == Exercise::American,
+            "BondFutureVolCurve: only European or American exercise type is supported");
 
         // Build volatility from premia.
         buildVolatilityFromPremia(asof, config, *vssc, loader, yieldCurves);
@@ -336,9 +338,15 @@ void BondFutureVolCurve::buildVolatilityFromPremia(const Date& asof, BondFutureV
     auto [flatStrikeExtrap, timeExtrapType] = getStrikeTimeExtrap(vssc);
     bool preferOutOfTheMoney = vc.preferOutOfTheMoney() ? *vc.preferOutOfTheMoney() : true;
 
+    // Determine the exercise type.
+    auto exerciseType = vssc.exerciseType();
+    if (exerciseType == Exercise::American && vc.treatAsEuropean().value_or(false)) {
+        exerciseType = Exercise::European;
+    }
+
     // Create the bond future volatility stripper.
     BondFutureVolStripper volStripper(asof, calendar_, Following, dayCounter_, futurePriceQuote, yts, quotes,
-        getSolverOptions(vc.solverConfig()), Exercise::European, flatStrikeExtrap, flatStrikeExtrap, timeExtrapType,
+        getSolverOptions(vc.solverConfig()), exerciseType, flatStrikeExtrap, flatStrikeExtrap, timeExtrapType,
         preferOutOfTheMoney);
 
     // Set the volatility curve using the stripper.
