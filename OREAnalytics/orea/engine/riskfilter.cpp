@@ -74,10 +74,10 @@ MarketRiskConfiguration::RiskClass parseVarRiskClass(const string& rc) {
     return riskClassMap.right.at(rc);
 }
 
-MarketRiskConfiguration::RiskType parseVarMarginType(const string& mt) {
-    QL_REQUIRE(riskTypeMap.right.count(mt) > 0,
-               "Risk type string " << mt << " does not correspond to a valid MarketRiskConfiguration::RiskType");
-    return riskTypeMap.right.at(mt);
+MarketRiskConfiguration::RiskType parseVarRiskType(const string& rt) {
+    QL_REQUIRE(riskTypeMap.right.count(rt) > 0,
+               "Risk type string " << rt << " does not correspond to a valid MarketRiskConfiguration::RiskType");
+    return riskTypeMap.right.at(rt);
 }
 
 //! Give back a set containing the RiskClass values optionally excluding 'All'
