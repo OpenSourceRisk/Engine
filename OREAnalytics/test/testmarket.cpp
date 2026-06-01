@@ -394,9 +394,10 @@ TestMarket::TestMarket(Date asof, bool swapVolCube) : MarketImpl(false) {
     // build inflation indices
     auto zeroIndex = Handle<ZeroInflationIndex>(QuantLib::ext::make_shared<UKRPI>(flatZeroInflationCurve(0.02, 0.01)));
     zeroInflationIndices_[make_pair(Market::defaultConfiguration, "UKRP1")] = zeroIndex;
+    zeroInflationObservationLags_[make_pair(Market::defaultConfiguration, "UKRP1")] = {{Period(1, Years), Period(2, Months)}};
     yoyInflationIndices_[make_pair(Market::defaultConfiguration, "UKRP1")] = Handle<YoYInflationIndex>(
         QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(*zeroIndex, flatYoYInflationCurve(0.02, 0.01)));
-
+    yoyInflationObservationLags_[make_pair(Market::defaultConfiguration, "UKRP1")] = {{Period(1, Years), Period(2, Months)}};
     // build inflation cap / floor vol curves
     yoyCapFloorVolSurfaces_[make_pair(Market::defaultConfiguration, "UKRP1")] =
         flatYoYOptionletVolatilitySurface(0.0040);
@@ -444,14 +445,15 @@ TestMarket::TestMarket(Date asof, bool swapVolCube) : MarketImpl(false) {
     zeroInflationIndices_[make_pair(Market::defaultConfiguration, "EUHICPXT")] =
         makeZeroInflationIndex("EUHICPXT", datesZCII, ratesZCII, euii,
                                yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")]);
+    zeroInflationObservationLags_[make_pair(Market::defaultConfiguration, "EUHICPXT")] = {{Period(1, Years), Period(2, Months)}};
     zeroInflationIndices_[make_pair(Market::defaultConfiguration, "UKRPI")] =
         makeZeroInflationIndex("UKRPI", datesZCII, ratesZCII, ii,
                                yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "GBP")]);
-
+    zeroInflationObservationLags_[make_pair(Market::defaultConfiguration, "UKRPI")] = {{Period(1, Years), Period(2, Months)}};
     yoyInflationIndices_[make_pair(Market::defaultConfiguration, "UKRPI")] =
          makeYoYInflationIndex("UKRPI", datesZCII, ratesZCII, yi,
                                yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "GBP")]);
-
+    yoyInflationObservationLags_[make_pair(Market::defaultConfiguration, "UKRPI")] = {{Period(1, Years), Period(2, Months)}};
     cpiInflationCapFloorVolatilitySurfaces_[make_pair(Market::defaultConfiguration, "EUHICPXT")] =
         flatCpiVolSurface(0.05);
     cpiInflationCapFloorVolatilitySurfaces_[make_pair(Market::defaultConfiguration, "UKRPI")] = flatCpiVolSurface(0.04);
@@ -1148,6 +1150,7 @@ void TestMarketParCurves::createZeroInflationIndex(const string& idxName, const 
         ore::data::parseZeroInflationIndex(idxName, Handle<ZeroInflationTermStructure>(its));
     Handle<ZeroInflationIndex> zh(i);
     zeroInflationIndices_[make_pair(Market::defaultConfiguration, idxName)] = zh;
+    zeroInflationObservationLags_[make_pair(Market::defaultConfiguration, idxName)] = {{1 * Years, conv->observationLag()}};
 }
 
 void TestMarketParCurves::createYoYInflationIndex(const string& idxName, const vector<string>& parInst,
@@ -1187,6 +1190,7 @@ void TestMarketParCurves::createYoYInflationIndex(const string& idxName, const v
     QuantLib::ext::shared_ptr<YoYInflationIndex> i(yi->clone(its));
     Handle<YoYInflationIndex> zh(i);
     yoyInflationIndices_[make_pair(Market::defaultConfiguration, idxName)] = zh;
+    yoyInflationObservationLags_[make_pair(Market::defaultConfiguration, idxName)] = {{1 * Years, conv->observationLag()}};
 }
 
 Handle<YieldTermStructure> TestMarketParCurves::flatRateYts(Real forward) {

@@ -641,7 +641,9 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
             // Populate the zero inflation scenario values based on the current date and state.
             auto index = *initMarket_->zeroInflationIndex(indexName);
             // use the latest observation lag if there are more than one
-            auto obsLag = initMarket_->zeroInflationObservationLags(indexName).rbegin()->second; 
+            auto obsLags = initMarket_->zeroInflationObservationLags(indexName);
+            QL_REQUIRE(!obsLags.empty(), "No observation lag found for zero inflation index " << indexName);
+            auto obsLag = obsLags.rbegin()->second;
             for (Size k = 0; k < ten_zinf_[j].size(); k++) {
                 auto zeroRate =
                     scenarioInflationZeroRateFromModelTs(dates_[i], ten_zinf_[j][k], obsLag, index, ts, modelType, dc);
@@ -667,7 +669,9 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
             // Create the YoY pillar dates from the tenors.
             vector<Date> pillarDates(ten_yinf_[j].size());
             // Get the obsLag depended on the t0 curve, at moment take latest obsLag
-            auto obsLag = initMarket_->zeroInflationObservationLags(indexName).rbegin()->second;
+            auto obsLags = initMarket_->yoyInflationObservationLags(indexName);
+            QL_REQUIRE(!obsLags.empty(), "No observation lag found for zero inflation index " << indexName);
+            auto obsLag = obsLags.rbegin()->second;
             vector<Period> observationLags(pillarDates.size(), obsLag);
             for (Size k = 0; k < pillarDates.size(); ++k) {
                 pillarDates[k] = dates_[i] + ten_yinf_[j][k];

@@ -2648,7 +2648,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                             yoyInflationIndex->yoyInflationTermStructure();
                         vector<string> keys(parameters->yoyInflationTenors(name).size());
                         auto observationLegs = initMarket->yoyInflationObservationLags(name, configuration);
-                        QL_REQUIRE(!observationLegs.empty(), "YoY inflation index " << name << " has no observation legs defined");
+                        QL_REQUIRE(!observationLegs.empty(),
+                                   "YoY inflation index " << name << " has no observation legs defined");
                         auto obsLag = observationLegs.rbegin()->second;
                         
                         Date date0 = yoyInflationTs->baseDate();
@@ -2699,8 +2700,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                         } else {
                             int simLag = simulationLag(yoyInflationTs);
                             vector<Period> tenors(1, 0 * Days);
-                            tenors.insert(tenors.end(), parameters->zeroInflationTenors(name).begin(),
-                                          parameters->zeroInflationTenors(name).end());
+                            tenors.insert(tenors.end(), parameters->yoyInflationTenors(name).begin(),
+                                          parameters->yoyInflationTenors(name).end());
                             yoyCurve = QuantLib::ext::make_shared<YoYInflationCurveObserverMoving<Linear>>(
                                 0, yoyInflationIndex->fixingCalendar(), dc, simLag, obsLag,
                                 yoyInflationTs->frequency(), yoyInflationIndex->interpolated(), tenors,

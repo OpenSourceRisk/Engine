@@ -357,8 +357,11 @@ Handle<ZeroInflationIndex> MarketImpl::zeroInflationIndex(const string& indexNam
 std::map<QuantLib::Period, QuantLib::Period>
 MarketImpl::zeroInflationObservationLags(const string& indexName, const string& configuration) const {
     require(MarketObject::ZeroInflationCurve, indexName, configuration);
-    return lookup<std::map<QuantLib::Period, QuantLib::Period>>(zeroInflationObservationLags_, indexName, configuration,
-                                                                "zero inflation observation lags");
+    auto it = zeroInflationObservationLags_.find(make_pair(configuration, indexName));
+    QL_REQUIRE(it != zeroInflationObservationLags_.end(),
+               "did not find zero inflation observation lag for index '" << indexName << "' under configuration '"
+               << configuration << "'");
+    return it->second;
 }
 
 Handle<YoYInflationIndex> MarketImpl::yoyInflationIndex(const string& indexName, const string& configuration) const {
@@ -369,8 +372,11 @@ Handle<YoYInflationIndex> MarketImpl::yoyInflationIndex(const string& indexName,
 std::map<QuantLib::Period, QuantLib::Period>
 MarketImpl::yoyInflationObservationLags(const string& indexName, const string& configuration) const {
     require(MarketObject::YoYInflationCurve, indexName, configuration);
-    return lookup<std::map<QuantLib::Period, QuantLib::Period>>(yoyInflationObservationLags_, indexName, configuration,
-                                                                "yoy inflation observation lags");
+    auto it = yoyInflationObservationLags_.find(make_pair(configuration, indexName));
+    QL_REQUIRE(it != yoyInflationObservationLags_.end(),
+               "did not find yoy inflation observation lag for index '" << indexName << "' under configuration '"
+               << configuration << "'");
+    return it->second;
 }
 
 Handle<CPIVolatilitySurface> MarketImpl::cpiInflationCapFloorVolatilitySurface(const string& indexName,
