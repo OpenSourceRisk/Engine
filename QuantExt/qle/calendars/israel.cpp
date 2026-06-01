@@ -27,6 +27,7 @@ Israel::Israel(MarketExt market) {
     // all calendar instances share the same implementation instance
     static QuantLib::ext::shared_ptr<Calendar::Impl> telborImpl = QuantLib::ext::make_shared<TelborImpl>();
 
+    // Update the impl_ if we have been passed Telbor
     if (market == Telbor) {
         impl_ = telborImpl;
     }
