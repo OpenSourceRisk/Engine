@@ -46,7 +46,6 @@ void StressTestAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
     analytic()->configurations().simMarketParams = inputs_->stressSimMarketParams();
     analytic()->configurations().sensiScenarioData = inputs_->stressSensitivityScenarioData();
-    std::cout << "inputs_->stressGenerateCashflows() = " << inputs_->stressGenerateCashflows() << std::endl;
     if (inputs_->stressGenerateCashflows())
         setGenerateAdditionalResults(true);
 }
@@ -126,8 +125,6 @@ void StressTestAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
 
     analytic()->addReport(label(), "stress", report);
     if (cfReport) {
-        std::cout << "Adding cashflow report with " << cfReport->rows() << " rows and " << cfReport->columns()
-                  << " columns." << std::endl;
         analytic()->addReport(label(), "stress_cashflows", cfReport);
     }
 

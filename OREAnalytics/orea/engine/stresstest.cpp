@@ -181,7 +181,8 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
                 calcs.push_back(
                     QuantLib::ext::make_shared<CashflowReportCalculator>(baseCcy, includePastCashflows, *threadCfCube));
                 std::lock_guard<std::mutex> lock(cfMutex);
-                threadCfCubes.push_back({std::vector<std::string>(p->ids().begin(), p->ids().end()), threadCfCube});
+                const std::set<std::string> tradeIds = p->ids();
+                threadCfCubes.push_back({std::vector<std::string>(tradeIds.begin(), tradeIds.end()), threadCfCube});
             }
             return calcs;
         };
@@ -293,8 +294,6 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
     // write stressed cashflow report
 
     if (cfReport) {
-        try {
-        std::cout << "write stressed cashflow report" << std::endl;
         cfReport->addColumn("TradeId", string());
         cfReport->addColumn("ScenarioLabel", string());
         cfReport->addColumn("Type", string());
@@ -448,11 +447,6 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
             }
         }
         cfReport->end();
-    }
-    catch (const std::exception& e) {
-        LOG("ERROR writing stress cashflow report: " << e.what());
-        std::cout << "ERROR writing stress cashflow report: " << e.what() << std::endl;
-    }
     }
 
     LOG("Stress testing done");
