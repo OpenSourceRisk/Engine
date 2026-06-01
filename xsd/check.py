@@ -29,7 +29,9 @@ def remove_temp_files(dir_name:str) -> None:
             os.remove(check_log_path)
 
 def iter_xml_files(root_dir: str):
-    for dirpath, _, filenames in os.walk(root_dir):
+    for dirpath, dirnames, filenames in os.walk(root_dir):
+        # Skip PyCharm generated directories which have XML files that we do not want to check.
+        dirnames[:] = [d for d in dirnames if d != ".idea"]
         for fname in filenames:
             if fname.lower().endswith(".xml"):
                 yield os.path.join(dirpath, fname)

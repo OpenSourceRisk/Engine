@@ -173,6 +173,7 @@ math/differentialevolution_mt.cpp
 math/discretedistribution.cpp
 math/fillemptymatrix.cpp
 math/gpucodegenerator.cpp
+math/gpuqrsolve.cpp
 math/matrixfunctions.cpp
 math/openclenvironment.cpp
 math/randomvariable.cpp
@@ -362,6 +363,7 @@ processes/multiassetquantohestonprocess.cpp
 processes/ptdhestonprocess.cpp
 processes/quantohestonprocess.cpp
 python_integration/pythonfunctions.cpp
+quotes/bondfuturequote.cpp
 quotes/logquote.cpp
 termstructures/aposurface.cpp
 termstructures/averagefuturepricehelper.cpp
@@ -381,6 +383,7 @@ termstructures/blackvolsurfacedelta.cpp
 termstructures/blackvolsurfaceproxy.cpp
 termstructures/blackvolsurfacesvi.cpp
 termstructures/blackvolsurfacewithatm.cpp
+termstructures/bondfuturevolstripper.cpp
 termstructures/brlcdiratehelper.cpp
 termstructures/capfloorhelper.cpp
 termstructures/capfloortermvolsurface.cpp
@@ -699,6 +702,7 @@ instruments/multilegoption.hpp
 instruments/nullinstrument.hpp
 instruments/outperformanceoption.hpp
 instruments/pairwisevarianceswap.hpp
+instruments/pathlevelresult.hpp
 instruments/payment.hpp
 instruments/rebatedexercise.hpp
 instruments/riskparticipationagreement.hpp
@@ -965,6 +969,7 @@ processes/ptdhestonprocess.hpp
 processes/quantohestonprocess.hpp
 python_integration/pythonfunctions.hpp
 quotes/basecorrelationquote.hpp
+quotes/bondfuturequote.hpp
 quotes/compositevectorquote.hpp
 quotes/exceptionquote.hpp
 quotes/logquote.hpp
@@ -991,6 +996,7 @@ termstructures/blackvolsurfacedelta.hpp
 termstructures/blackvolsurfaceproxy.hpp
 termstructures/blackvolsurfacesvi.hpp
 termstructures/blackvolsurfacewithatm.hpp
+termstructures/bondfuturevolstripper.hpp
 termstructures/bondyieldshiftedcurvetermstructure.hpp
 termstructures/brlcdiratehelper.hpp
 termstructures/capfloorhelper.hpp
@@ -1145,20 +1151,21 @@ utilities/solvers.hpp
 utilities/time.hpp
 version.hpp)
 
-add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_LIST_DIR}/gitversion.hpp
+writeAll("qle" "${CMAKE_CURRENT_LIST_DIR}/quantext.hpp" "auto_link.hpp" "${QuantExt_HDR}")
+add_library(${QLE_LIB_NAME} ${QuantExt_SRC} ${QuantExt_HDR} "quantext.hpp")
+# This adds Ore::QuantExt as an alias for the target QuantExt. So Ore::QuantExt can be used in the mono-repo build
+# (locally) and in the split build during CI i.e. build ORE, import ORE CMake targets, build OREPlus.
+add_library(${ORE_PACKAGE_NAME}::${QLE_LIB_NAME} ALIAS ${QLE_LIB_NAME})
+
+add_custom_target(gitVersionGeneration ALL
     COMMAND ${CMAKE_COMMAND}
             -D IN_FILE=${CMAKE_CURRENT_LIST_DIR}/gitversion.hpp.in
             -D OUT_FILE=${CMAKE_CURRENT_LIST_DIR}/gitversion.hpp
+            -D GIT_HASH=${GIT_HASH}
             -P "${PROJECT_SOURCE_DIR}/cmake/generateGitVersion.cmake"
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
-
-writeAll("qle" "${CMAKE_CURRENT_LIST_DIR}/quantext.hpp" "auto_link.hpp" "${QuantExt_HDR}")
-add_library(${QLE_LIB_NAME} ${QuantExt_SRC} ${QuantExt_HDR} "quantext.hpp")
-# This adds Ore::QuantExt as an alias for the target QuantExt. So Ore::QuantExt can be used in the mono-repo build 
-# (locally) and in the split build during CI i.e. build ORE, import ORE CMake targets, build OREPlus.
-add_library(${ORE_PACKAGE_NAME}::${QLE_LIB_NAME} ALIAS ${QLE_LIB_NAME})
+add_dependencies(${QLE_LIB_NAME} gitVersionGeneration)
 
 target_include_directories(${QLE_LIB_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>

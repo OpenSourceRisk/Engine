@@ -1,4 +1,3 @@
-
 # Copyright (C) 2019 Quaternion Risk Manaement Ltd
 # All rights reserved.
 
@@ -50,7 +49,9 @@ def check_data(loader):
             assert f.fixing == fix_value
     
 
-csv_loader = CSVLoader("../../Input/market_20160205.txt", "../../Input/fixings_20160205.txt", True)
+csv_loader = CSVLoader(True)
+csv_loader.fromFiles("../../Input/market_20160205.txt", "../../Input/fixings_20160205.txt")
+
 check_data(csv_loader)
 
 im_loader = InMemoryLoader()

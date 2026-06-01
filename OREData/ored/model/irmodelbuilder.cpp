@@ -246,9 +246,8 @@ void IrModelBuilder::newCalcWithoutRecalibration() const {
 }
 
 bool IrModelBuilder::requiresRecalibration() const {
-    return requiresCalibration_ && !dontCalibrate_ &&
-           (volSurfaceChanged(false) || marketObserver_->hasUpdated(false) || forceCalibration_) &&
-           !suspendCalibration_;
+    return !suspendCalibration_ && requiresCalibration_ && !dontCalibrate_ &&
+           (volSurfaceChanged(false) || marketObserver_->hasUpdated(false) || forceCalibration_);
 }
 
 void IrModelBuilder::performCalculations() const {

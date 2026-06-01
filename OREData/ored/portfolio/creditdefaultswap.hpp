@@ -43,7 +43,7 @@ public:
         : Trade("CreditDefaultSwap", env), swap_(swap) {}
 
     virtual void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
-    QuantLib::Real notional() const override;
+    QuantLib::Real notional(NotionalType type = NotionalType::Default) const override;
 
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;

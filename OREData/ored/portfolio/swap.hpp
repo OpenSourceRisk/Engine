@@ -55,7 +55,7 @@ public:
     //! Build QuantLib/QuantExt instrument, link pricing engine
     virtual void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
     virtual void setIsdaTaxonomyFields();
-    QuantLib::Real notional() const override;
+    QuantLib::Real notional(NotionalType type = NotionalType::Default) const override;
     std::string notionalCurrency() const override;
 
     //! Add underlying index names

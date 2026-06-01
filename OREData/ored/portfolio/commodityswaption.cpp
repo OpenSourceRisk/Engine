@@ -109,7 +109,7 @@ void CommoditySwaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
     maturityType_ = "Underlying Maturity Date";
 }
 
-QuantLib::Real CommoditySwaption::notional() const {
+QuantLib::Real CommoditySwaption::notional(NotionalType type) const {
     return commoditySwap_->notional();
 }
 

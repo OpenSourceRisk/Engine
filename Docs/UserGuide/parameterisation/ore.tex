@@ -343,6 +343,7 @@ as well as American Monte Carlo (AMC), see below. The setup in \ref{lst:ore_simu
     <Parameter name="cubeFile">cube.csv.gz</Parameter>
     <Parameter name="nettingSetCubeFile">nettingSetCube.csv.gz</Parameter>
     <Parameter name="scenariodump">scenariodump.csv</Parameter>
+    <Parameter name="filterRiskKeys">DiscountCurve</Parameter>
     <Parameter name="aggregationScenarioDataFileName">scenariodata.csv.gz</Parameter>
     <Parameter name="storeFlows">Y</Parameter>
     <Parameter name="cptyCubeFile">cptyCube.csv.gz</Parameter>
@@ -361,6 +362,7 @@ today (specified in section Setup).  Key base currency determines into which cur
 writing the (trade-level) cube and nettingSetCube files.
 The scenario dump file name, if provided here, causes ORE to export full ``raw'' market scenarios for later inspection/use,
 i.e. discount factors for yield curves.
+The 'filter risk keys' is an optional parameter that filters out all but the risk factor key types provided from the outputted scenriodump file.
 The aggregationScenarioData file name, if provided here, causes ORE to write furthermore selected market data (simulated
 FX rates and index fixings, which might be needed in the XVA postprocessor for Variation Margin calculations) to a zipped csv.
 The selection is specified in the simulation config file, see AggregationScenarioDataCurrencies, AggregationScenarioDataIndices),
@@ -1156,6 +1158,7 @@ The {\tt Correlation} analytic provide computation of the correlation matrix bas
       <Parameter name="historicalScenarioFile">scenarios.csv</Parameter>
       <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
       <Parameter name="historicalPeriod">2016-12-30,2019-12-30</Parameter>
+      <Parameter name="filterCamCorrelationScenarioTenor">{"DiscountCurve/.*":"2Y", "IndexCurve/USD-FedFunds":"1Y"}</Parameter>
       <Parameter name="mporDays">10</Parameter>
       <Parameter name="mporCalendar">USD</Parameter>
       <Parameter name="outputFile">correlation.csv</Parameter>
@@ -1176,6 +1179,7 @@ The parameters have the following interpretation:
 \item {\tt historicalScenarioFile}: csv file containing the market scenarios for each date in the observation periods defined below; the granularity of the scenarios (e.g. discount and index curves, number of yield curve tenors) needs to match the simulation market definition above; each yield curve tenor scenario is represented as a discount factor.
 \item {\tt sensitivityConfigFile}: Sensitivity parameterisation for the sensitivity analysis on asofDate.
 \item {\tt historicalPeriod}: comma-separated date list, an even number of ordered dates is required (d1, d2, d3, d4, ...), where each pair (d1-d2, d3-d4, ...) defines the start and end of historical observation periods used.
+\item {\tt filterCamCorrelationScenarioTenor}: JSON object mapping regex patterns to tenors for filtering correlation scenario output. Patterns are matched against risk factor keys (format ``KeyType/Name'') in reverse order (last entry has highest priority). If no pattern matches a risk factor, all tenors are included. Example: \verb+{"DiscountCurve/.*":"5Y", "DiscountCurve/USD/.*":"3Y", "IndexCurve/USD-FedFunds":"10Y"}+.
 \item {\tt mporDays}: Alternatively, the second date can be specified in terms of calendar days from asofDate.
 \item {\tt mporCalendar}: Calendar for computing the mporDate from asofDate and mporDays.
 \item {\tt outputFile}: Output file name

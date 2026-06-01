@@ -339,10 +339,11 @@ Schedule makeSchedule(const ScheduleDerived& data, const Schedule& baseSchedule)
     if (baseSchedule.hasEndOfMonthBusinessDayConvention())
         endOfMonthConvention = baseSchedule.endOfMonthBusinessDayConvention();
 
-    return QuantLib::Schedule(vector<Date>(derivedDates.begin(), derivedDates.end()), calendar, convention, QuantLib::ext::nullopt,
-                              baseSchedule.tenor(), QuantLib::ext::nullopt, baseSchedule.endOfMonth(), std::vector<bool>(0),
-                              data.removeFirstDate(), data.removeLastDate(),
-                              endOfMonthConvention);
+    return QuantLib::Schedule(
+        vector<Date>(derivedDates.begin(), derivedDates.end()), calendar, convention, ext::nullopt,
+        baseSchedule.hasTenor() ? ext::optional<Period>(baseSchedule.tenor()) : ext::nullopt, ext::nullopt,
+        baseSchedule.hasEndOfMonth() ? ext::optional<bool>(baseSchedule.endOfMonth()) : ext::nullopt,
+        std::vector<bool>(0), data.removeFirstDate(), data.removeLastDate(), endOfMonthConvention);
 }
 
 Schedule makeSchedule(const ScheduleRules& data, const Date& openEndDateReplacement) {

@@ -217,8 +217,9 @@ QuantLib::ext::shared_ptr<TodaysMarket> createTodaysMarket(const Date& asof, con
     auto todaysMarketParameters = QuantLib::ext::make_shared<TodaysMarketParameters>();
     todaysMarketParameters->fromFile(TEST_INPUT_FILE(string(inputDir + "/" + tmf.todaysMarket)));
 
-    auto loader = QuantLib::ext::make_shared<CSVLoader>(TEST_INPUT_FILE(string(inputDir + "/" + tmf.market)),
-                                                TEST_INPUT_FILE(string(inputDir + "/" + tmf.fixings)), false);
+    auto loader = QuantLib::ext::make_shared<CSVLoader>();
+    loader->fromFiles(TEST_INPUT_FILE(string(inputDir + "/" + tmf.market)),
+                      TEST_INPUT_FILE(string(inputDir + "/" + tmf.fixings)));
 
     return QuantLib::ext::make_shared<TodaysMarket>(asof, todaysMarketParameters, loader, curveConfigs);
 }

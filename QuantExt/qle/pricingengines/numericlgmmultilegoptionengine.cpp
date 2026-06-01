@@ -465,10 +465,15 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
 
     // handle empty exercise
 
+    auto const& ts = solver_->model()->parametrization()->termStructure();
+    Date refDate = ts->referenceDate();
+
     if (exercise_ == nullptr) {
         npv_ = 0.0;
         for (Size i = 0; i < legs_.size(); ++i) {
             for (Size j = 0; j < legs_[i].size(); ++j) {
+                if (legs_[i][j]->date() <= refDate)
+                    continue;
                 npv_ += legs_[i][j]->amount() * discountCurve_->discount(legs_[i][j]->date());
             }
         }
@@ -479,8 +484,6 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
     // we have a non-empty exercise
 
     auto rebatedExercise = QuantLib::ext::dynamic_pointer_cast<QuantExt::RebatedExercise>(exercise_);
-    auto const& ts = solver_->model()->parametrization()->termStructure();
-    Date refDate = ts->referenceDate();
 
     /* Build the cashflow info */
 
@@ -491,6 +494,8 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
 
     for (Size i = 0; i < legs_.size(); ++i) {
         for (Size j = 0; j < legs_[i].size(); ++j) {
+            if (legs_[i][j]->date() <= refDate)
+                continue;
             cashflows.push_back(buildCashflowInfo(
                 legs_[i][j], payer_[i] ? -1.0 : 1.0,
                 [this](const Date& d) {

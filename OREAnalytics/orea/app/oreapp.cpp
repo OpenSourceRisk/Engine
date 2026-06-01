@@ -68,6 +68,20 @@ using boost::timer::default_places;
 namespace ore {
 namespace analytics {
 
+//! Constructor that uses ORE parameters and input data from files
+OREApp::OREApp(QuantLib::ext::shared_ptr<Parameters> params, bool console, const std::filesystem::path& logRootPath)
+    : params_(params), inputs_(nullptr), console_(console), logRootPath_(logRootPath) {
+    ore::data::os::setAssertHandler();
+}
+
+//! Constructor that assumes we have already assembled input parameters via API
+OREApp::OREApp(const QuantLib::ext::shared_ptr<InputParameters>& inputs, const std::string& logFile, Size logLevel,
+               bool console, bool clearLog, const std::filesystem::path& logRootPath)
+    : params_(nullptr), inputs_(inputs), logFile_(logFile), logMask_(logLevel), console_(console), clearLog_(clearLog),
+      logRootPath_(logRootPath) {
+    ore::data::os::setAssertHandler();
+}
+
 std::set<std::string> OREApp::getAnalyticTypes() {
     QL_REQUIRE(analyticsManager_, "analyticsManager_ not set yet, call analytics first");
     return analyticsManager_->requestedAnalytics();
@@ -229,7 +243,8 @@ QuantLib::ext::shared_ptr<CSVLoader> OREApp::buildCsvLoader(const QuantLib::ext:
         WLOG("fixing cutoff date not set");
     }
     
-    auto loader = QuantLib::ext::make_shared<CSVLoader>(marketFiles, fixingFiles, dividendFiles, implyTodaysFixings, cutoff);
+    auto loader = QuantLib::ext::make_shared<CSVLoader>(implyTodaysFixings, cutoff);
+    loader->fromFiles(marketFiles, fixingFiles, dividendFiles);
 
     return loader;
 }
@@ -1067,16 +1082,21 @@ void OREAppInputParameters::loadParameters() {
     LOG("SIMM");
     tmp = params_->getString("simm", "active", false);
     bool doSimm = !tmp.empty() ? parseBool(tmp) : false;
+    tmp = params_->getString("stressedSimm", "active", false);
+    bool doSimmStressed = !tmp.empty() ? parseBool(tmp) : false;
+
     if (doSimm) {
         insertAnalytic("SIMM");
+    }
 
+    if (doSimmStressed) {
+        insertAnalytic("SIMM_STRESS");
+    }
+
+    if (doSimm || doSimmStressed) {
         tmp = params_->getString("simm", "version", false);
         if (tmp != "")
             setSimmVersion(tmp);
-        else if (simmVersion() == "") {
-            LOG("set SIMM version to 2.1 (default)");
-            setSimmVersion("2.1");
-        }
 
         tmp = params_->getString("simm", "mporDays", false);
         if (tmp != "")
@@ -1185,9 +1205,6 @@ void OREAppInputParameters::loadParameters() {
             string tmpSimm = params_->getString("simm", "version", false);
             QL_REQUIRE(!doSimm || tmp == tmpSimm, "version for imschedule and simm should match");
             setSimmVersion(tmp);
-        } else if (simmVersion() == "") {
-            LOG("set SIMM version for IM Schedule to 2.6, required to load CRIF")
-            setSimmVersion("2.6");
         }
 
         tmp = params_->getString("imschedule", "crif", false);
@@ -1752,9 +1769,6 @@ void OREAppInputParameters::loadParameters() {
 	    tmp = params_->getString("crif", "simmVersion", false);
         if (tmp != "") {
             setSimmVersion(tmp);
-        } else {
-            LOG("set SIMM version for CRIF generation to 2.6")
-            setSimmVersion("2.6");
         }
 
 	    auto nameMapper = QuantLib::ext::make_shared<SimmBasicNameMapper>();

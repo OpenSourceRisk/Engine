@@ -718,7 +718,7 @@ Swaption::buildUnderlyingSwaps(const QuantLib::ext::shared_ptr<PricingEngine>& s
     return swaps;
 }
 
-QuantLib::Real Swaption::notional() const {
+QuantLib::Real Swaption::notional(NotionalType type) const {
     Real tmp = 0.0;
     for (auto const& l : underlying_->legs()) {
         tmp = std::max(tmp, currentNotional(l));

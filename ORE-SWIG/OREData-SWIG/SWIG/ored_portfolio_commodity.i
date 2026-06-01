@@ -122,7 +122,7 @@ public:
     void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
-    QuantLib::Real notional() const override;
+    QuantLib::Real notional(Trade::NotionalType type = Trade::NotionalType::Default) const override;
     std::string notionalCurrency() const override;
 };
 %pythoncode %{ ORECommodityOption = CommodityOption %}

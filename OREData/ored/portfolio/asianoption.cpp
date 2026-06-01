@@ -309,7 +309,7 @@ void AsianOption::populateIndexName() const {
     }
 }
 
-QuantLib::Real AsianOption::notional() const {
+QuantLib::Real AsianOption::notional(NotionalType type) const {
     return delegatingBuilderTrade_ != nullptr ? delegatingBuilderTrade_->notional() : Trade::notional();
 }
 

@@ -56,6 +56,9 @@ using std::string;
 class Trade : public XMLSerializable {
 public:
 
+    //! Enum to control notional calculation behaviour
+    enum class NotionalType { Default, IMSchedule };
+
     //! Default constructor
     Trade() {}
 
@@ -153,11 +156,8 @@ public:
     enum class LegCashflowInclusion { IfNoEngineCashflows, Never, Always };
     const std::map<size_t, LegCashflowInclusion>& legCashflowInclusion() const { return legCashflowInclusion_; }
 
-    const string& npvCurrency() const { return npvCurrency_; }
-
-    //! Return the current notional in npvCurrency. See individual sub-classes for the precise definition
-    // of notional, for exotic trades this may not be what you expect.
-    virtual QuantLib::Real notional() const { return notional_; }
+    const string& npvCurrency() const { return npvCurrency_; } // of notional, for exotic trades this may not be what you expect.
+    virtual QuantLib::Real notional(NotionalType type = NotionalType::Default) const { return notional_; }
 
     virtual string notionalCurrency() const { return notionalCurrency_; }
 

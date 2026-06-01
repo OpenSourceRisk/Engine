@@ -189,7 +189,7 @@ void FxForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
     legPayers_ = {false, true};
 }
     
-QuantLib::Real FxForward::notional() const {
+QuantLib::Real FxForward::notional(NotionalType type) const {
     // try to get the notional from the additional results of the instrument
     try {
         return instrument_->qlInstrument(true)->result<Real>("currentNotional");

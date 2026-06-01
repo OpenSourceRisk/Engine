@@ -54,7 +54,7 @@ class DynamicInitialMarginCalculator {
 public:
     virtual ~DynamicInitialMarginCalculator() {}
     virtual void build() = 0;
-    const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& dimCube() const;
+    const ext::shared_ptr<ore::analytics::NPVCube>& dimCube() const;
 
     // Result accessors
     const std::vector<std::vector<QuantLib::Real>>& dynamicIM(const std::string& nettingSet) const;
@@ -130,12 +130,12 @@ public:
     std::map<std::string, Date> nettingSetMaturity();
     std::vector<Real> times();
     std::string baseCurrency();
-    QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio();
-    QuantLib::ext::shared_ptr<ore::analytics::NPVCube> npvCube();
-    QuantLib::ext::shared_ptr<ore::data::Market> market();
+    ext::shared_ptr<ore::data::Portfolio> portfolio();
+    ext::shared_ptr<ore::analytics::NPVCube> npvCube();
+    ext::shared_ptr<ore::data::Market> market();
 
     // Cube accessor
-    const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& exposureCube();
+    const ext::shared_ptr<ore::analytics::NPVCube>& exposureCube();
 
     // Per-trade exposure profiles
     std::vector<Real> epe(const std::string& tid);
@@ -164,8 +164,8 @@ public:
     virtual ~NettedExposureCalculator() {}
     virtual void build();
 
-    const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& exposureCube();
-    const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& nettedCube();
+    const ext::shared_ptr<ore::analytics::NPVCube>& exposureCube();
+    const ext::shared_ptr<ore::analytics::NPVCube>& nettedCube();
 
     // Per-netting-set profiles
     std::vector<Real> epe(const std::string& nid);
@@ -272,6 +272,109 @@ public:
 }
 }
 
+// --- CVASpreadSensitivityCalculator ---
+
+%shared_ptr(ore::analytics::CVASpreadSensitivityCalculator)
+namespace ore {
+namespace analytics {
+class CVASpreadSensitivityCalculator {
+public:
+    CVASpreadSensitivityCalculator(const std::string& key,
+                                   const QuantLib::Date& asof,
+                                   const std::vector<QuantLib::Real>& epe,
+                                   const std::vector<QuantLib::Date>& dates,
+                                   const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& dts,
+                                   const QuantLib::Real& recovery,
+                                   const QuantLib::Handle<QuantLib::YieldTermStructure>& yts,
+                                   const std::vector<QuantLib::Period>& shiftTenors,
+                                   QuantLib::Real shiftSize = 0.0001);
+
+    const std::string key();
+    QuantLib::Date asof();
+    const std::vector<QuantLib::Real>& exposureProfile();
+    const std::vector<QuantLib::Date>& exposureDateGrid();
+    QuantLib::Real recoveryRate();
+    const std::vector<QuantLib::Period> shiftTenors();
+
+    const std::vector<QuantLib::Real> shiftTimes();
+    QuantLib::Real shiftSize();
+    const std::vector<QuantLib::Real> hazardRateSensitivities();
+    const std::vector<QuantLib::Real> cdsSpreadSensitivities();
+};
+}
+}
+
+// --- ExposureAllocator and subclasses ---
+
+%shared_ptr(ore::analytics::ExposureAllocator)
+%nodefaultctor ore::analytics::ExposureAllocator;
+namespace ore {
+namespace analytics {
+class ExposureAllocator {
+public:
+    enum class AllocationMethod {
+        None,
+        Marginal,
+        RelativeFairValueGross,
+        RelativeFairValueNet,
+        RelativeXVA
+    };
+
+    virtual ~ExposureAllocator() {}
+    const ext::shared_ptr<ore::analytics::NPVCube>& exposureCube();
+    virtual void build();
+};
+
+ExposureAllocator::AllocationMethod parseAllocationMethod(const std::string& s);
+}
+}
+
+%shared_ptr(ore::analytics::RelativeFairValueNetExposureAllocator)
+%nodefaultctor ore::analytics::RelativeFairValueNetExposureAllocator;
+namespace ore {
+namespace analytics {
+class RelativeFairValueNetExposureAllocator : public ExposureAllocator {
+public:
+    virtual ~RelativeFairValueNetExposureAllocator() {}
+};
+}
+}
+
+%shared_ptr(ore::analytics::RelativeFairValueGrossExposureAllocator)
+%nodefaultctor ore::analytics::RelativeFairValueGrossExposureAllocator;
+namespace ore {
+namespace analytics {
+class RelativeFairValueGrossExposureAllocator : public ExposureAllocator {
+public:
+    virtual ~RelativeFairValueGrossExposureAllocator() {}
+};
+}
+}
+
+%shared_ptr(ore::analytics::RelativeXvaExposureAllocator)
+%nodefaultctor ore::analytics::RelativeXvaExposureAllocator;
+namespace ore {
+namespace analytics {
+class RelativeXvaExposureAllocator : public ExposureAllocator {
+public:
+    virtual ~RelativeXvaExposureAllocator() {}
+};
+}
+}
+
+%shared_ptr(ore::analytics::NoneExposureAllocator)
+%nodefaultctor ore::analytics::NoneExposureAllocator;
+namespace ore {
+namespace analytics {
+class NoneExposureAllocator : public ExposureAllocator {
+public:
+    virtual ~NoneExposureAllocator() {}
+};
+}
+}
+
+// --- PostProcess ---
+
 %shared_ptr(ore::analytics::PostProcess)
 %nodefaultctor ore::analytics::PostProcess;
 namespace ore {
@@ -279,9 +382,9 @@ namespace analytics {
 class PostProcess {
 public:
     // Cube accessors
-    const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& cube();
-    const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& netCube();
-    const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& cptyCube();
+    const ext::shared_ptr<ore::analytics::NPVCube>& cube();
+    const ext::shared_ptr<ore::analytics::NPVCube>& netCube();
+    const ext::shared_ptr<ore::analytics::NPVCube>& cptyCube();
 
     // Trade-level exposure profiles
     const std::vector<QuantLib::Real>& tradeEPE(const std::string& tradeId);
@@ -353,9 +456,18 @@ public:
     const std::map<std::string, QuantLib::Size> tradeIds();
     const std::map<std::string, QuantLib::Size> nettingSetIds();
     const std::map<std::string, std::string>& counterpartyId();
-    const QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio();
+    const ext::shared_ptr<ore::data::Portfolio> portfolio();
 };
 }
+}
+
+// Extend Analytic to provide postProcess() accessor (requires XvaAnalyticImpl downcast)
+%extend ore::analytics::Analytic {
+    ext::shared_ptr<ore::analytics::PostProcess> postProcess() {
+        auto* impl = dynamic_cast<ore::analytics::XvaAnalyticImpl*>($self->impl().get());
+        if (!impl) return nullptr;
+        return impl->postProcess();
+    }
 }
 
 #endif

@@ -147,7 +147,7 @@ void ScriptedTrade::setIsdaTaxonomyFields() {
     }
 }
 
-QuantLib::Real ScriptedTrade::notional() const {
+QuantLib::Real ScriptedTrade::notional(NotionalType type) const {
     if (isPfAnalyserRun_ || instrument_->qlInstrument()->isExpired())
         return 0.0;
     // try to get the notional from the additional results of the instrument

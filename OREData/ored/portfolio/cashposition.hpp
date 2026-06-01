@@ -43,7 +43,7 @@ public:
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
     void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
-    QuantLib::Real notional() const override { return amount_; }
+    QuantLib::Real notional(NotionalType type = NotionalType::Default) const override { return amount_; }
 
     //! \name Inspectors
     //@{

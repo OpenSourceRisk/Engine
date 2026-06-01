@@ -583,6 +583,7 @@ public:
 
     // Setters for Correlation
     void setCorrelationMethod(const std::string& s) { parameters_.set("correlation", "correlationMethod", s); }
+    void setCorrelationUri(const std::string& s) { parameters_.set("xva", "correlationUri", s); }
 
     // Setters for exposure simulation
     void setExposureIncludeTodaysCashFlows(bool b) { parameters_.set("simulation", "includeTodaysCashFlows", b); }

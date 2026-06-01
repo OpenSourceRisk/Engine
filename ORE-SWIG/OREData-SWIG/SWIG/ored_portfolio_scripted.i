@@ -223,7 +223,7 @@ class ScriptedTrade : public Trade {
 public:
     ScriptedTrade(const std::string& tradeType = "ScriptedTrade", const Envelope& env = Envelope());
     void build(const ext::shared_ptr<EngineFactory>&) override;
-    QuantLib::Real notional() const override;
+    QuantLib::Real notional(Trade::NotionalType type = Trade::NotionalType::Default) const override;
     std::string notionalCurrency() const override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
@@ -287,7 +287,7 @@ public:
                 const ext::shared_ptr<Underlying>& underlying, const QuantLib::Date& settlementDate,
                 const std::string& currency);
     void build(const ext::shared_ptr<EngineFactory>&) override;
-    QuantLib::Real notional() const override;
+    QuantLib::Real notional(Trade::NotionalType type = Trade::NotionalType::Default) const override;
     std::string notionalCurrency() const override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;

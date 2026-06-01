@@ -128,7 +128,16 @@ void PricingAnalyticImpl::runAnalytic(
                 analytic()->addReport(type, "additional_results", addReport);
                 CONSOLE("OK");
 
-		CONSOLEW("Pricing: Model Calibration Reports");
+                CONSOLEW("Pricing: Additional Results Report Path Level");
+                QuantLib::ext::shared_ptr<InMemoryReport> addReportPaths =
+                    QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+                ReportWriter(inputs_->reportNaString())
+                    .writeAdditionalResultsPathLevelReport(*addReportPaths, analytic()->portfolio(),
+                                                           inputs_->additionalResultsReportPrecision());
+                analytic()->addReport(type, "additional_results_path_level", addReportPaths);
+                CONSOLE("OK");
+
+                CONSOLEW("Pricing: Model Calibration Reports");
                 auto calReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                 ReportWriter(inputs_->reportNaString())
                     .writeModelCalibrationReport(*calReport, analytic()->portfolio());
@@ -138,12 +147,6 @@ void PricingAnalyticImpl::runAnalytic(
                 ReportWriter(inputs_->reportNaString())
                     .writeModelCalibrationDetailReport(*calDetailReport, analytic()->portfolio());
                 analytic()->addReport(type, "assetmodel_calibration_detail", calDetailReport);
-                CONSOLE("OK");
-
-		CONSOLEW("Pricing: Model Path Report");
-                auto pathReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-                ReportWriter(inputs_->reportNaString()).writeModelPathReport(*pathReport, analytic()->portfolio());
-                analytic()->addReport(type, "assetmodel_paths", pathReport);
                 CONSOLE("OK");
             }
             auto pVars = QuantLib::ext::dynamic_pointer_cast<PricingVariables>(inputVariables_);
@@ -210,9 +213,9 @@ void PricingAnalyticImpl::runAnalytic(
                 LOG("Multi-threaded sensi analysis created");
             }
 
-            if (offsetScenario_ != nullptr) {
-                sensiAnalysis_->setOffsetScenario(offsetScenario_);
-                sensiAnalysis_->setOffsetSimMarketParams(offsetSimMarketParams_);
+            if (analytic()->offsetScenario() != nullptr) {
+                sensiAnalysis_->setOffsetScenario(analytic()->offsetScenario());
+                sensiAnalysis_->setOffsetSimMarketParams(analytic()->offsetSimMarketParams());
             }
 
             const set<RiskFactorKey::KeyType>& typesDisabled = analytic()->configurations().sensiScenarioData->parConversionExcludes();

@@ -28,6 +28,12 @@ namespace QuantExt {
 
 using namespace QuantLib;
 
+//! Process-wide opt-in flag for the GPU QR path. Default off.
+void setUseGpuRegression(bool b);
+
+//! Read the process-wide opt-in flag.
+bool useGpuRegression();
+
 //! GPU-accelerated QR solve for least squares problems
 /*! This function solves the least squares problem:
     minimize ||A*x - b||_2
@@ -44,21 +50,5 @@ Array gpuQrSolve(const Matrix& A, const Array& b);
 
 //! Check if GPU QR solve is available
 bool gpuQrSolveAvailable();
-
-//! Check if cuSOLVER is disabled via ORE_DISABLE_CUSOLVER environment variable
-/*! Returns true if the environment variable ORE_DISABLE_CUSOLVER is set
-    to any non-empty value other than "0" or "false".
-    This allows forcing CPU-only execution for comparison or debugging.
-*/
-bool isCusolverDisabled();
-
-//! Set minimum problem size for GPU acceleration
-/*! Problems smaller than this threshold will use CPU implementation.
-    Default is 1000 rows.
-*/
-void setGpuQrSolveMinSize(Size minSize);
-
-//! Get current minimum problem size threshold
-Size getGpuQrSolveMinSize();
 
 } // namespace QuantExt

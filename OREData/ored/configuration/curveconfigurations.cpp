@@ -138,6 +138,10 @@ void CurveConfigurations::parseNode(const CurveSpec::CurveType& type, const stri
                 QL_FAIL("CurveConfigurations::parseNode(): internal error, SwapIndex is unexpected.");
                 break;
             }
+            case CurveSpec::CurveType::BondFutureVolatility: {
+                config = QuantLib::ext::make_shared<BondFutureVolatilityConfig>();
+                break;
+            }
             }
             try {
                 config->fromXMLString(itc->second);
@@ -650,6 +654,16 @@ CurveConfigurations::correlationCurveConfig(const string& curveID) const {
     return QuantLib::ext::dynamic_pointer_cast<CorrelationCurveConfig>(cc);
 }
 
+bool CurveConfigurations::hasBondFutureVolatilityConfig(const string& curveID) const {
+    return has(CurveSpec::CurveType::BondFutureVolatility, curveID);
+}
+
+ext::shared_ptr<BondFutureVolatilityConfig>
+CurveConfigurations::bondFutureVolatilityConfig(const string& curveID) const {
+    auto cc = get(CurveSpec::CurveType::BondFutureVolatility, curveID);
+    return ext::dynamic_pointer_cast<BondFutureVolatilityConfig>(cc);
+}
+
 #include <iostream>
 void CurveConfigurations::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "CurveConfiguration");
@@ -684,6 +698,10 @@ void CurveConfigurations::fromXML(XMLNode* node) {
             if (auto tmp3 = XMLUtils::getChildNode(tmp2, "Report"))
                 reportConfigInflationCapFloorVols_.fromXML(tmp3);
         }
+        if (auto tmp2 = XMLUtils::getChildNode(tmp, "BondFutureVolatilities")) {
+            if (auto tmp3 = XMLUtils::getChildNode(tmp2, "Report"))
+                reportConfigBondFutureVols_.fromXML(tmp3);
+        }
     }
 
     // Load YieldCurves, FXVols, etc, etc
@@ -704,6 +722,7 @@ void CurveConfigurations::fromXML(XMLNode* node) {
     getNode(node, "CommodityCurves", "CommodityCurve");
     getNode(node, "CommodityVolatilities", "CommodityVolatility");
     getNode(node, "Correlations", "Correlation");
+    getNode(node, "BondFutureVolatilities", "BondFutureVolatility");
 }
 
 XMLNode* CurveConfigurations::toXML(XMLDocument& doc) const {
@@ -726,6 +745,7 @@ XMLNode* CurveConfigurations::toXML(XMLDocument& doc) const {
     addNodes(doc, parent, "CommodityCurves");
     addNodes(doc, parent, "CommodityVolatilities");
     addNodes(doc, parent, "Correlations");
+    addNodes(doc, parent, "BondFutureVolatilities");
     addReportConfigurationNode(doc, parent);
 
     return parent;
@@ -756,6 +776,7 @@ void CurveConfigurations::addReportConfigurationNode(XMLDocument& doc, XMLNode* 
     f(reportConfigIrSwaptionVols_, "IRSwaptionVolatilities");
     f(reportConfigYieldCurves_, "YieldCurves");
     f(reportConfigInflationCapFloorVols_, "InflationCapFloorVolatilities");
+    f(reportConfigBondFutureVols_, "BondFutureVolatilities");
     // If the newly generated ReportConfiguration node contains any data then append it to the parent node
     if (!XMLUtils::getChildrenNodes(node, "").empty())
         XMLUtils::appendNode(parent, node);

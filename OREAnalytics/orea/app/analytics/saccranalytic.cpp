@@ -48,10 +48,7 @@ void SaCcrVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputPara
     inputs->loadParameter<std::string>(tmp, "saccr", "simmVersion");
     if (!tmp.empty())
         inputs->setSimmVersion(tmp);
-    else if (inputs->simmVersion().empty()) {
-        inputs->setSimmVersion("2.1");
-        WLOG("Setting SIMM version to " << inputs->simmVersion() << " for SACCR");
-    }
+    QL_REQUIRE(!inputs->simmVersion().empty(), "SIMM version must not be empty for SA-CCR");
 
     tmp = {};
     inputs->loadParameter<std::string>(tmp, "saccr", "nameMappingInputFile");

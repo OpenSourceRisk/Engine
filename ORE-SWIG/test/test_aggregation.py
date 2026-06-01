@@ -16,6 +16,13 @@ class AggregationBindingSmokeTest(unittest.TestCase):
             "DynamicInitialMarginCalculator",
             "CollateralAccount",
             "XvaCalculator",
+            "CVASpreadSensitivityCalculator",
+            "ExposureAllocator",
+            "RelativeFairValueNetExposureAllocator",
+            "RelativeFairValueGrossExposureAllocator",
+            "RelativeXvaExposureAllocator",
+            "NoneExposureAllocator",
+            "parseAllocationMethod",
         ]
         for name in required:
             self.assertTrue(hasattr(ORE, name), msg=f"Missing ORE symbol: {name}")
@@ -24,6 +31,49 @@ class AggregationBindingSmokeTest(unittest.TestCase):
         """Construct default collateral account."""
         account = ORE.CollateralAccount()
         self.assertIsNotNone(account)
+
+    def test_xva_analytic_downcast_helper_available(self) -> None:
+        """Verify asXvaAnalytic helper function is exposed."""
+        self.assertTrue(
+            hasattr(ORE, "asXvaAnalytic"),
+            msg="Missing ORE symbol: asXvaAnalytic",
+        )
+
+    def test_analytic_has_postprocess_method(self) -> None:
+        """Analytic class must expose postProcess() method."""
+        self.assertTrue(
+            hasattr(ORE.Analytic, "postProcess"),
+            msg="Analytic missing postProcess() method",
+        )
+
+    def test_dim_calculator_symbols(self) -> None:
+        """Verify DIM calculator concrete classes are exposed."""
+        dim_classes = [
+            "RegressionDynamicInitialMarginCalculator",
+            "FlatDynamicInitialMarginCalculator",
+            "DirectDynamicInitialMarginCalculator",
+        ]
+        for name in dim_classes:
+            self.assertTrue(
+                hasattr(ORE, name), msg=f"Missing DIM class: {name}"
+            )
+
+    def test_netted_exposure_calculator_available(self) -> None:
+        """NettedExposureCalculator must be wrapped."""
+        self.assertTrue(
+            hasattr(ORE, "NettedExposureCalculator"),
+            msg="Missing ORE symbol: NettedExposureCalculator",
+        )
+
+    def test_static_dynamic_credit_xva_calculators(self) -> None:
+        """Static and Dynamic credit XVA calculators are wrapped."""
+        for name in [
+            "StaticCreditXvaCalculator",
+            "DynamicCreditXvaCalculator",
+        ]:
+            self.assertTrue(
+                hasattr(ORE, name), msg=f"Missing XVA calculator: {name}"
+            )
 
 
 class PostProcessAccessorSmokeTest(unittest.TestCase):
