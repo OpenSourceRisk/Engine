@@ -116,7 +116,7 @@ void CrifAnalyticImpl::setUpConfigurations() {
 void CrifAnalyticImpl::buildDependencies() { 
     auto sensiAnalytic =
                 AnalyticFactory::instance().build("SENSITIVITY", inputs_, analytic()->analyticsManager(), false);
-    sensiAnalytic->setApplySimmExemptions(false);
+    sensiAnalytic.second->setApplySimmExemptions(false);
     addDependentAnalytic("SENSITIVITY", sensiAnalytic.second);
 }
 

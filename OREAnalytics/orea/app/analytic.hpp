@@ -181,6 +181,7 @@ public:
     }
     void addTimer(const std::string& key, const Timer& timer) { timer_.addTimer(key, timer); }
 
+<<<<<<< HEAD
     void setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario,
                            const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketParams);
 
@@ -194,6 +195,10 @@ public:
 
     void applyOffsetScenario(bool continueOnError = true, bool useSpreadedTermStructures = true,
                              bool overrideTenors = true);
+=======
+    void setApplySimmExemptions(bool flag) { applySimmExemptions_ = flag; }
+    bool applySimmExemptions() const { return applySimmExemptions_; }
+>>>>>>> 5a2d7da4bd (ACADIAQPR-14129 fixes)
 
 protected:
     std::unique_ptr<Impl> impl_;
@@ -215,6 +220,8 @@ protected:
     analytic_mktcubes mktCubes_;
     analytic_stresstests stressTests_;
     QuantLib::ext::shared_ptr<ParSensitivityCubeStream> parCvaSensiCubeStream_;
+
+    bool applySimmExemptions_ = false;
   
     //! Whether to write intermediate reports or not.
     //! This would typically be used when the analytic is being called by another analytic
@@ -290,9 +297,6 @@ public:
 		return QuantLib::ext::dynamic_pointer_cast<T>(inputVariables_);
 	}
 
-    void setApplySimmExemptions(bool flag) { applySimmExemptions_ = flag; }
-    bool applySimmExemptions() const { return applySimmExemptions_; }
-
 protected:
     QuantLib::ext::shared_ptr<InputParameters> inputs_;
     QuantLib::ext::shared_ptr<InputVariables> inputVariables_;
@@ -302,8 +306,6 @@ protected:
 
     //! map to dependent analytics, holds a bool if we want to report intermeditate reports
     std::map<std::string, std::pair<QuantLib::ext::shared_ptr<Analytic>, bool>> dependentAnalytics_;
-
-    bool applySimmExemptions_ = false;
 
 private:
     Analytic* analytic_;
