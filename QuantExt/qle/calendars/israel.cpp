@@ -27,9 +27,11 @@ Israel::Israel(MarketExt market) {
     // all calendar instances share the same implementation instance
     static QuantLib::ext::shared_ptr<Calendar::Impl> telborImpl = QuantLib::ext::make_shared<TelborImpl>();
 
-    // Update the impl_ if we have been passed Telbor
     if (market == Telbor) {
         impl_ = telborImpl;
+    } else if (market == TASE_National) {
+        // Use the QuantLib Israel TASE_National implementation (Sat/Sun weekends from Jan 5, 2026)
+        *static_cast<Calendar*>(this) = QuantLib::Israel(QuantLib::Israel::TASE_National);
     }
 }
 

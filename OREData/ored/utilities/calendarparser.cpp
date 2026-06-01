@@ -58,6 +58,18 @@ using namespace QuantExt;
 CalendarParser::CalendarParser() { reset(); }
 
 QuantLib::Calendar CalendarParser::parseCalendar(const std::string& name) const {
+    // Israel TASE transitioned from Fri/Sat to Sat/Sun weekends on Jan 5, 2026
+    static const std::set<std::string> israelTaseNames = {
+        "IL", "ISR", "ILS", "ILa", "ILX", "ILs", "ILA", "XTAE"
+    };
+    if (israelTaseNames.count(name)) {
+        Date asof = Settings::instance().evaluationDate();
+        if (asof >= Date(5, January, 2026))
+            return QuantLib::Israel(QuantLib::Israel::TASE_National);
+        else
+            return QuantLib::Israel(QuantLib::Israel::TASE);
+    }
+
     boost::shared_lock<boost::shared_mutex> lock(mutex_);
     auto it = calendars_.find(name);
     if (it != calendars_.end())
