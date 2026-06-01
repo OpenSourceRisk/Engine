@@ -21,6 +21,7 @@
 #include <ored/portfolio/bondutils.hpp>
 #include <ored/portfolio/builders/bondfutureoption.hpp>
 #include <ql/instruments/vanillaoption.hpp>
+#include <regex>
 
 namespace ore {
 namespace data {
@@ -34,24 +35,69 @@ namespace {
 
 // Helper to determine option type suffix for engine builder.
 // May want to use separate volatility surface for calls and puts. This can be determined from the engine 
-// parameters and also on the trade level via the envelope(trade level wins if specified). If this is the case, 
+// parameters and also on the trade level via the envelope (trade level wins if specified). If this is the case, 
 // then separate engines are attached to the call and put options on a given underlying contract.
 string getOptionTypeSuffix(const BondFutureOptionEngineBuilder& bfoEngineBuilder,
     const Envelope& envelope, Option::Type type) {
 
+    // Default is false.
     bool separateCallPutVols = false;
+
+    // Check the engine builder.
     string strSeparateCallPutVols = bfoEngineBuilder.engineParameter("SeparateCallPutVols", {}, false, "");
     if (!strSeparateCallPutVols.empty())
         separateCallPutVols = parseBool(strSeparateCallPutVols);
+
+    // Check the trade envelope.
     strSeparateCallPutVols = envelope.additionalField("SeparateCallPutVols", false, "");
     if (!strSeparateCallPutVols.empty())
         separateCallPutVols = parseBool(strSeparateCallPutVols);
 
+    // Set the suffix if specified in engine builder or in trade envelope.
     string optTypeSuffix;
     if (separateCallPutVols)
         optTypeSuffix = type == Option::Call ? "CALL" : "PUT";
 
     return optTypeSuffix;
+}
+
+// Check if we are overriding the exercise type on options for this bond future contract.
+ext::optional<Exercise::Type> getExerciseTypeOverride(const ext::shared_ptr<EngineFactory>& engineFactory,
+    const string& futureContract) {
+
+    // The default if no exercise type override is configured i.e. uninitialised optional.
+    ext::optional<Exercise::Type> result;
+
+    // If BondFutureAmericanAsEuropean is not in the global engine parameters, then there is no override.
+    const auto& globalEngineParams = engineFactory->engineData()->globalParameters();
+    auto itGlobal = globalEngineParams.find("BondFutureAmericanAsEuropean");
+    if (itGlobal == globalEngineParams.end() || itGlobal->second.empty())
+        return result;
+
+    // We have BondFutureAmericanAsEuropean. It can be:
+    // 1. a global setting of true or false
+    // 2. a regex that matches the future contract name.
+
+    // Check first for true or false.
+    bool amerAsEuro = false;
+    bool isGlobalBool = tryParse<bool>(itGlobal->second, amerAsEuro, parseBool);
+    if (isGlobalBool) {
+        if (amerAsEuro)
+            result = Exercise::Type::European;
+        return result;
+    }
+
+    // Check now for regex.
+    try {
+        std::regex futureIncPattern{ itGlobal->second };
+        if (std::regex_match(futureContract, futureIncPattern))
+            result = Exercise::Type::European;
+    } catch (const std::regex_error& e) {
+        WLOG("Invalid regex in global engine parameter BondFutureAmericanAsEuropean: " << itGlobal->second <<
+            ". Error: " << e.what() << ". No exercise type override will be applied.");
+    }
+
+    return result;
 }
 
 }
@@ -73,8 +119,10 @@ void BondFutureOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
 
     BondFutureUtils::addIsdaTaxonomy(additionalData_);
 
-    // Exercise: for now, we use European engine for American options as well.
-    auto [exerciseType, exercise] = exerciseDetails(Exercise::Type::European);
+    // If pricing engine has been configured to treat bond future options as European, then override the exercise type
+    // to European regardless of what is specified on the trade.
+    ext::optional<Exercise::Type> exTypeOverride = getExerciseTypeOverride(engineFactory, asset());
+    auto [exerciseType, exercise] = exerciseDetails(exTypeOverride);
     string builderTradeType = exerciseType == Exercise::Type::American ? tradeType_ + "American" : tradeType_;
 
     // Payoff
