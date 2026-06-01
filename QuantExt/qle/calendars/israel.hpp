@@ -48,7 +48,7 @@ private:
     };
 
 public:
-    enum MarketExt { Settlement, TASE, TASE_National, Telbor };
+    enum MarketExt { Settlement, TASE, Telbor };
     Israel(MarketExt market = Telbor);
 };
 

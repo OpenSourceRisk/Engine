@@ -60,6 +60,7 @@ CalendarParser::CalendarParser() { reset(); }
 
 QuantLib::Calendar CalendarParser::parseCalendar(const std::string& name) const {
     // Israel TASE transitioned from Fri/Sat to Sat/Sun weekends on Jan 5, 2026
+    // https://www.tase.co.il/en/content/about/tradingdays_change
     static const std::set<std::string> israelTaseNames = {
         "IL", "ISR", "ILS", "ILa", "ILX", "ILs", "ILA", "XTAE"
     };

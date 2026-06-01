@@ -29,9 +29,6 @@ Israel::Israel(MarketExt market) {
 
     if (market == Telbor) {
         impl_ = telborImpl;
-    } else if (market == TASE_National) {
-        // Use the QuantLib Israel TASE_National implementation (Sat/Sun weekends from Jan 5, 2026)
-        *static_cast<Calendar*>(this) = QuantLib::Israel(QuantLib::Israel::TASE_National);
     }
 }
 
