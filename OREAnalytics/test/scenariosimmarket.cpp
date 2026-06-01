@@ -222,8 +222,12 @@ void testZeroInflationCurve(QuantLib::ext::shared_ptr<ore::data::Market>& initMa
         }
 
         for (const auto& date : dates) {
-            BOOST_CHECK_CLOSE(simCurve->zeroRate(date),
-                              initCurve->zeroRate(date), 1e-12);
+            auto obsLags = initMarket->zeroInflationObservationLags(spec);
+            QL_REQUIRE(obsLags.size() > 0, "no observation lag found for zero inflation index " << spec);
+            auto obsLag = obsLags.rbegin()->second;
+            Date fixingDate = inflationPeriod(date - obsLag, initCurve->frequency()).first;
+            BOOST_CHECK_CLOSE(simCurve->zeroRate(fixingDate),
+                              initCurve->zeroRate(fixingDate), 1e-12);
         }
     }
 }
