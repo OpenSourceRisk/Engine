@@ -290,6 +290,9 @@ public:
 		return QuantLib::ext::dynamic_pointer_cast<T>(inputVariables_);
 	}
 
+    void setApplySimmExemptions(bool flag) { applySimmExemptions_ = flag; }
+    bool applySimmExemptions() const { return applySimmExemptions_; }
+
 protected:
     QuantLib::ext::shared_ptr<InputParameters> inputs_;
     QuantLib::ext::shared_ptr<InputVariables> inputVariables_;
@@ -299,6 +302,8 @@ protected:
 
     //! map to dependent analytics, holds a bool if we want to report intermeditate reports
     std::map<std::string, std::pair<QuantLib::ext::shared_ptr<Analytic>, bool>> dependentAnalytics_;
+
+    bool applySimmExemptions_ = false;
 
 private:
     Analytic* analytic_;
