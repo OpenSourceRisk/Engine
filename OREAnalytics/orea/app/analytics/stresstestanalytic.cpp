@@ -46,6 +46,7 @@ void StressTestAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
     analytic()->configurations().simMarketParams = inputs_->stressSimMarketParams();
     analytic()->configurations().sensiScenarioData = inputs_->stressSensitivityScenarioData();
+    std::cout << "inputs_->stressGenerateCashflows() = " << inputs_->stressGenerateCashflows() << std::endl;
     if (inputs_->stressGenerateCashflows())
         setGenerateAdditionalResults(true);
 }
@@ -108,37 +109,25 @@ void StressTestAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     
     if (stressVars->scenarioReader_) {
         runStressTest(analytic()->portfolio(), analytic()->market(), marketConfig, inputs_->pricingEngine(),
-                      analytic()->configurations().simMarketParams, stressVars->scenarioReader_, report, cfReport,
-                      inputs_->stressThreshold(), inputs_->stressPrecision(), inputs_->includePastCashflows(),
+                      analytic()->configurations().simMarketParams, stressVars->scenarioReader_, report, loader,
+                      cfReport, inputs_->stressThreshold(), inputs_->stressPrecision(), inputs_->includePastCashflows(),
                       *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams,
                       inputs_->refDataManager(), inputs_->iborFallbackConfig(), inputs_->continueOnError(),
-                      scenarioReport, inputs_->useAtParCouponsTrades());
+                      scenarioReport, inputs_->useAtParCouponsTrades(), inputs_->nThreads());
     } else {
         QL_REQUIRE(scenarioData, "StressTestAnalytic::runAnalytic: No stress scenario data provided.");
-        Size nThreads = inputs_->nThreads();
-        if (nThreads > 1) {
-            LOG("Running multi-threaded stress test with " << nThreads << " threads");
-            MultiThreadedStressTest stressTest(
-                nThreads, analytic()->portfolio(), analytic()->market(), marketConfig, inputs_->pricingEngine(),
-                analytic()->configurations().simMarketParams, scenarioData, *analytic()->configurations().curveConfig,
-                *analytic()->configurations().todaysMarketParams, nullptr, inputs_->refDataManager(),
-                inputs_->iborFallbackConfig(), loader, inputs_->continueOnError(), inputs_->useAtParCouponsTrades());
-            stressTest.registerProgressIndicator(
-                QuantLib::ext::make_shared<ProgressLog>("stress scenarios", 100, oreSeverity::notice));
-            stressTest.runStressTest(report, cfReport, inputs_->stressThreshold(), inputs_->stressPrecision(),
-                                     inputs_->includePastCashflows(), scenarioReport);
-        } else {
-            runStressTest(analytic()->portfolio(), analytic()->market(), marketConfig, inputs_->pricingEngine(),
-                          analytic()->configurations().simMarketParams, scenarioData, report, cfReport,
-                          inputs_->stressThreshold(), inputs_->stressPrecision(), inputs_->includePastCashflows(),
-                          *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams,
-                          nullptr, inputs_->refDataManager(), inputs_->iborFallbackConfig(), inputs_->continueOnError(),
-                          scenarioReport, inputs_->useAtParCouponsTrades());
-        }
+        runStressTest(analytic()->portfolio(), analytic()->market(), marketConfig, inputs_->pricingEngine(),
+                      analytic()->configurations().simMarketParams, scenarioData, report, loader, cfReport,
+                      inputs_->stressThreshold(), inputs_->stressPrecision(), inputs_->includePastCashflows(),
+                      *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams,
+                      nullptr, inputs_->refDataManager(), inputs_->iborFallbackConfig(), inputs_->continueOnError(),
+                      scenarioReport, inputs_->useAtParCouponsTrades(), inputs_->nThreads());
     }
 
     analytic()->addReport(label(), "stress", report);
     if (cfReport) {
+        std::cout << "Adding cashflow report with " << cfReport->rows() << " rows and " << cfReport->columns()
+                  << " columns." << std::endl;
         analytic()->addReport(label(), "stress_cashflows", cfReport);
     }
 
