@@ -22,6 +22,7 @@
 
 #include <ored/utilities/calendarparser.hpp>
 
+#include <ql/settings.hpp>
 #include <ql/time/calendars/all.hpp>
 #include <qle/calendars/amendedcalendar.hpp>
 #include <qle/calendars/austria.hpp>
