@@ -69,7 +69,7 @@ protected:
     bool withoutTransformation_ = false;
 
 private:
-    mutable std::vector<Real> b_;
+    mutable std::vector<Real> a_, b_;
 };
 
 //! Piecewise Constant Helper 11
@@ -195,11 +195,15 @@ inline Real PiecewiseConstantHelper1::inverse(const Real y) const
 }
 
 inline void PiecewiseConstantHelper1::update() const {
-    Real sum = 0.0;
+    Real sum = 0.0, sum2 = 0.0;
+    a_.resize(t_.size());
     b_.resize(t_.size());
     for (Size i = 0; i < t_.size(); ++i) {
-        sum += direct(y_->params()[i]) * direct(y_->params()[i]) * (t_[i] - (i == 0 ? 0.0 : t_[i - 1]));
-        b_[i] = sum;
+        Real d = direct(y_->params()[i]);
+        sum += d * (t_[i] - (i == 0 ? 0.0 : t_[i - 1]));
+        a_[i] = sum;
+        sum2 += d * d * (t_[i] - (i == 0 ? 0.0 : t_[i - 1]));
+        b_[i] = sum2;
     }
 }
 
@@ -307,10 +311,8 @@ inline Real PiecewiseConstantHelper1::int_y(const Time t) const {
         return 0.0;
     Size i = std::upper_bound(t_.begin(), t_.end(), t) - t_.begin();
     Real res = 0.0;
-    for (Size j = 0; j < i && j < t_.size(); ++j) {
-        Real a = direct(y_->params()[std::min(j, y_->size() - 1)]);
-        res += a * (t_[j] - (j == 0 ? 0.0 : t_[j - 1]));
-    }
+    if (i >= 1)
+        res += a_[std::min(i - 1, a_.size() - 1)];
     Real a = direct(y_->params()[std::min(i, y_->size() - 1)]);
     res += a * (t - (i == 0 ? 0.0 : t_[i - 1]));
     return res;
