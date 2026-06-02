@@ -36,12 +36,15 @@ using QuantLib::PiecewiseYoYInflationCurve;
 using QuantLib::YearOnYearInflationSwapHelper;
 
 namespace QuantExt {
-
+// we set baseRate to zero because inflationTermStructure gives us a zero inf curve,
+// zeroinflationtermstructure doesnt have a base rate anymore but the inflation curve base class
+// the base class throws at null (missing base rate)
+// seems incomplete refactoring in QL, since yoy termstructure still has base rate.
 YoYInflationModelTermStructure::YoYInflationModelTermStructure(
     const QuantLib::ext::shared_ptr<CrossAssetModel>& model, Size index,
     const std::optional<QuantLib::DayCounter>& simulationDayCounter)
     : YoYInflationTermStructure(
-          inflationTermStructure(model, index)->baseDate(), inflationTermStructure(model, index)->baseRate(),
+          inflationTermStructure(model, index)->baseDate(), 0.0,
           inflationTermStructure(model, index)->frequency(), inflationTermStructure(model, index)->dayCounter()),
       model_(model), index_(index), simulationDayCounter_(simulationDayCounter),
       referenceDate_(inflationTermStructure(model_, index_)->referenceDate()), relativeTime_(0.0) {
