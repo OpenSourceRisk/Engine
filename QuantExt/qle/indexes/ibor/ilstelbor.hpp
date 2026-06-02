@@ -28,7 +28,6 @@
 #include <ql/indexes/iborindex.hpp>
 #include <ql/time/calendars/israel.hpp>
 #include <ql/time/daycounters/actual360.hpp>
-#include <qle/calendars/israel.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -43,7 +42,7 @@ using namespace QuantLib;
 class ILSTelbor : public IborIndex {
 public:
     ILSTelbor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
-        : IborIndex("ILS-TELBOR", tenor, 2, ILSCurrency(), QuantExt::Israel(QuantExt::Israel::Telbor),
+        : IborIndex("ILS-TELBOR", tenor, 2, ILSCurrency(), QuantLib::Israel(QuantLib::Israel::Telbor),
                     ModifiedFollowing, false, Actual360(), h) {}
 };
 } // namespace QuantExt
