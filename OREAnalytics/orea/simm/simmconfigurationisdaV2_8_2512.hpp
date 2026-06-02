@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/simm/simmconfigurationisdav2_8_2512_2.hpp
-    \brief SIMM configuration for SIMM version 2.8+2512.2
+/*! \file orea/simm/simmconfigurationisdav2_8_2512.hpp
+    \brief SIMM configuration for SIMM version 2.8+2512
 */
 
 #pragma once
@@ -28,15 +28,15 @@ namespace ore {
 namespace analytics {
 
 /*! Class giving the SIMM configuration as outlined in the document
-    <em>ISDA SIMM Methodology, version 2.8+2512.2.
+    <em>ISDA SIMM Methodology, version 2.8+2512.
         Effective Date: July 11, 2026.</em>
 */
-class SimmConfiguration_ISDA_V2_8_2512_2 : public SimmConfigurationBase {
+class SimmConfiguration_ISDA_V2_8_2512 : public SimmConfigurationBase {
 public:
-    SimmConfiguration_ISDA_V2_8_2512_2(const QuantLib::ext::shared_ptr<SimmBucketMapper>& simmBucketMapper,
+    SimmConfiguration_ISDA_V2_8_2512(const QuantLib::ext::shared_ptr<SimmBucketMapper>& simmBucketMapper,
                                 const QuantLib::Size& mporDays = 10,
-                                const std::string& name = "SIMM ISDA 2.8+2512.2 (11 July 2026)",
-                                const std::string version = "2.8+2512.2");
+                                const std::string& name = "SIMM ISDA 2.8+2512 (11 July 2026)",
+                                const std::string version = "2.8+2512");
 
     //! Return the SIMM <em>Label2</em> value for the given interest rate index
     std::string label2(const QuantLib::ext::shared_ptr<QuantLib::InterestRateIndex>& irIndex) const override;
