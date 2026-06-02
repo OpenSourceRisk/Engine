@@ -19,7 +19,6 @@
 #include <orea/app/analytics/stresstestanalytic.hpp>
 #include <orea/app/inputparameters.hpp>
 #include <orea/app/reportwriter.hpp>
-#include <orea/engine/multithreadedstresstest.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/parsensitivityanalysis.hpp>
 #include <orea/engine/parstressconverter.hpp>
