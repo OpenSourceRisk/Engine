@@ -95,6 +95,14 @@ public:
     virtual void clearCache() const {}
 
 protected:
+    //! convert par yoy swap rates to swaplet yoy rates, accounting for the linear interpolation of the yoy curve and
+    //! gaps in the pillars, ensure consistent pricing of yoy swaps with the model curve, but depending on the given
+    //! pillars, the individual swaplet rates are not guaranteed to be the same as the model swaplet rates.
+    std::map<QuantLib::Date, QuantLib::Real>
+    modelParRatesToSwapletRates(const std::vector<QuantLib::Date>& dates, const std::vector<QuantLib::Period>& obsLags,
+                                const std::map<QuantLib::Date, QuantLib::Real>& parRates,
+                                const std::map<QuantLib::Date, QuantLib::Real>& discounts) const;
+
     QuantLib::ext::shared_ptr<CrossAssetModel> model_;
     QuantLib::Size index_;
     std::optional<QuantLib::DayCounter> simulationDayCounter_;

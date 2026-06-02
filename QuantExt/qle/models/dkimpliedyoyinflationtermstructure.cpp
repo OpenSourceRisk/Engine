@@ -100,10 +100,13 @@ map<Date, Real> DkImpliedYoYInflationTermStructure::yoyRates(const vector<Date>&
         }
         Real yoyRate = (yoyLegRate / fixedDiscounts);
 
+        
+
         yoys[maturity] = yoyRate;
     }
 
-    return yoys;
+    return modelParRatesToSwapletRates(dts, observationPeriods, yoys, yoydiscount);
+;
 }
 
 Real DkImpliedYoYInflationTermStructure::yoySwapletRate(Time S, Time T) const {

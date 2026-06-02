@@ -16,9 +16,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ql/termstructures/inflation/inflationhelpers.hpp>
-#include <ql/termstructures/inflation/piecewiseyoyinflationcurve.hpp>
-#include <ql/termstructures/yield/discountcurve.hpp>
 #include <ql/time/schedule.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
 #include <qle/models/crossassetanalytics.hpp>
@@ -27,15 +24,12 @@
 #include <qle/utilities/inflation.hpp>
 
 using QuantLib::Date;
-using QuantLib::InterpolatedDiscountCurve;
-using QuantLib::Linear;
 using QuantLib::MakeSchedule;
-using QuantLib::PiecewiseYoYInflationCurve;
 using QuantLib::Real;
 using QuantLib::Schedule;
 using QuantLib::Size;
 using QuantLib::Time;
-using QuantLib::YearOnYearInflationSwapHelper;
+
 using std::exp;
 using std::map;
 using std::vector;
@@ -53,7 +47,7 @@ map<Date, Real> JyImpliedYoYInflationTermStructure::yoyRates(const vector<Date>&
     // First step is to calculate the YoY swap rate for each maturity date in dts and store in yyiisRates.
     map<Date, Real> yoySwaplets;
     map<Date, Real> discounts;
-    map<Date, Real> yyiisRates;
+    map<Date, Real> yyParRates;
     auto irIdx = model_->ccyIndex(model_->infjy(index_)->currency());
 
     // Will need a YoY index below in the helpers.
@@ -126,12 +120,12 @@ map<Date, Real> JyImpliedYoYInflationTermStructure::yoyRates(const vector<Date>&
         }
 
         // The model implied YoY inflation swap rate
-        yyiisRates[maturity] = yoyLegValue / fixedLegAnnuity;
+        yyParRates[maturity] = yoyLegValue / fixedLegAnnuity;
     }
 
-    QL_REQUIRE(!yyiisRates.empty(), "JyImpliedYoYInflationTermStructure: yoyRates did not create any YoY swap rates.");
+    QL_REQUIRE(!yyParRates.empty(), "JyImpliedYoYInflationTermStructure: yoyRates did not create any YoY swap rates.");
 
-    return yyiisRates;
+    return modelParRatesToSwapletRates(dts, observationPeriods, yyParRates, discounts);
 }
 
 Real JyImpliedYoYInflationTermStructure::yoySwaplet(Time S, Time T) const {
