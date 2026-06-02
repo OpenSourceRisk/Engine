@@ -369,11 +369,8 @@ Handle<YoYInflationIndex> MarketImpl::yoyInflationIndex(const string& indexName,
 std::map<QuantLib::Period, QuantLib::Period>
 MarketImpl::yoyInflationObservationLags(const string& indexName, const string& configuration) const {
     require(MarketObject::YoYInflationCurve, indexName, configuration);
-    auto it = yoyInflationObservationLags_.find(make_pair(configuration, indexName));
-    QL_REQUIRE(it != yoyInflationObservationLags_.end(),
-               "did not find yoy inflation observation lag for index '" << indexName << "' under configuration '"
-               << configuration << "'");
-    return it->second;
+    return lookup<std::map<QuantLib::Period, QuantLib::Period>>(yoyInflationObservationLags_, indexName, configuration,
+                                                              "yoy inflation observation lags");
 }
 
 Handle<CPIVolatilitySurface> MarketImpl::cpiInflationCapFloorVolatilitySurface(const string& indexName,
