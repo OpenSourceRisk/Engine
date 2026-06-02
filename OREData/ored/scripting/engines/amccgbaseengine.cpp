@@ -922,16 +922,22 @@ void AmcCgBaseEngine::buildComputationGraph(
                     pathValueUndExIntoRunning, *d, cashflowInfo,
                     [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, cg_const(g, 1.0), true, true);
                 auto exerciseValue = cg_add(g, reg[0], pathValueRebate[counter]);
-                auto exerciseValueBase = cg_add(g, reg[1], pathValueRebate[counter]);
+                auto pathValueRebateBase = createRegressionModel(
+                                               pathValueRebate[counter], *d, cashflowInfo,
+                                               [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; },
+                                               cg_const(g, 1.0), false, true)
+                                               .front();
+                auto exerciseValueBase = cg_add(g, reg[1], pathValueRebateBase);
                 std::size_t filter = cg_indicatorGt(g, exerciseValue, cg_const(g, 0.0));
                 auto continuationValue = createRegressionModel(
                     pathValueOption[counter + 1], *d, cashflowInfo,
                     [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, filter, true, true);
+
                 exerciseIndicator[exerciseCounter] = cg_mult(g, cg_indicatorGt(g, exerciseValue, continuationValue[0]),
                                                              cg_indicatorGt(g, exerciseValue, cg_const(g, 0.0)));
                 exerciseIndicatorBase[exerciseCounter] =
                     cg_mult(g, cg_indicatorGt(g, exerciseValueBase, continuationValue[1]),
-                            cg_indicatorGt(g, exerciseValue, cg_const(g, 0.0)));
+                            cg_indicatorGt(g, exerciseValueBase, cg_const(g, 0.0)));
                 cachedExerciseIndicators_[exerciseCounter] = exerciseIndicator[exerciseCounter];
                 cachedExerciseIndicatorsBase_[exerciseCounter] = exerciseIndicatorBase[exerciseCounter];
             }
