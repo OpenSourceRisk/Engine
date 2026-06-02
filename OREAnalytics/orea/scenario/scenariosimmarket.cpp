@@ -2461,7 +2461,6 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                         Date date0 = inflationTs->baseDate();
                         DayCounter dc = inflationTs->dayCounter();
-                        vector<Date> quoteDates;
                         vector<Time> zeroCurveTimes(
                             1, -dc.yearFraction(inflationPeriod(date0, inflationTs->frequency()).first, asof_));
                         vector<Handle<Quote>> quotes;
