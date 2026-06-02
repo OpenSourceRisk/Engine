@@ -42,7 +42,7 @@ JyImpliedYoYInflationTermStructure::JyImpliedYoYInflationTermStructure(
     : YoYInflationModelTermStructure(model, index, simulationDayCounter) {}
 
 map<Date, Real> JyImpliedYoYInflationTermStructure::yoyRates(const vector<Date>& dts,
-                                                             const vector<Period>& observationPeriods) const {
+                                                             const QuantLib::Period& obsLag) const {
 
     // First step is to calculate the YoY swap rate for each maturity date in dts and store in yyiisRates.
     map<Date, Real> yoySwaplets;
@@ -88,8 +88,8 @@ map<Date, Real> JyImpliedYoYInflationTermStructure::yoyRates(const vector<Date>&
             Real swaplet;
             auto dc = simulationDayCounter_.value_or(dayCounter());
             // Need to calculate observation date = maturity - obsLag
-            auto fixingDateStart = inflationPeriod(start - observationPeriods[i - 1], index->frequency()).first;
-            auto fixingDateEnd = inflationPeriod(end - observationPeriods[i - 1], index->frequency()).first;
+            auto fixingDateStart = inflationPeriod(start - obsLag, index->frequency()).first;
+            auto fixingDateEnd = inflationPeriod(end - obsLag, index->frequency()).first;
             // At time T we simulation inflation at time T - simLag (difference between initial base and ref date, kept
             // constant)
             auto T_maturity = relativeTime_ + dc.yearFraction(referenceDate_, end);
@@ -125,7 +125,7 @@ map<Date, Real> JyImpliedYoYInflationTermStructure::yoyRates(const vector<Date>&
 
     QL_REQUIRE(!yyParRates.empty(), "JyImpliedYoYInflationTermStructure: yoyRates did not create any YoY swap rates.");
 
-    return modelParRatesToSwapletRates(dts, observationPeriods, yyParRates, discounts);
+    return modelParRatesToSwapletRates(dts, obsLag, yyParRates, discounts);
 }
 
 Real JyImpliedYoYInflationTermStructure::yoySwaplet(Time S, Time T) const {

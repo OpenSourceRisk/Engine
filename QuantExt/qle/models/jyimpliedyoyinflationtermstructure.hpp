@@ -44,7 +44,7 @@ public:
 
     //! \name YoYInflationModelTermStructure interface
     //@{
-    std::map<QuantLib::Date, QuantLib::Real> yoyRates(const std::vector<QuantLib::Date>& dates, const std::vector<QuantLib::Period>& observationPeriods) const override;
+    std::map<QuantLib::Date, QuantLib::Real> yoyRates(const std::vector<QuantLib::Date>& dates, const QuantLib::Period& obsLag) const override;
     //@}
 
 protected:

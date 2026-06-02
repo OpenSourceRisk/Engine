@@ -672,12 +672,11 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
             auto obsLags = initMarket_->yoyInflationObservationLags(indexName);
             QL_REQUIRE(!obsLags.empty(), "No observation lag found for zero inflation index " << indexName);
             auto obsLag = obsLags.rbegin()->second;
-            vector<Period> observationLags(pillarDates.size(), obsLag);
             for (Size k = 0; k < pillarDates.size(); ++k) {
                 pillarDates[k] = dates_[i] + ten_yinf_[j][k];
             }
             // Use the YoY term structure's YoY rates to populate the scenarios.
-            auto yoyRates = ts->yoyRates(pillarDates, observationLags);
+            auto yoyRates = ts->yoyRates(pillarDates, obsLag);
             for (Size k = 0; k < pillarDates.size(); ++k) {
                 scenarios[i]->add(rfKeyCounter++, yoyRates.at(pillarDates[k]));
             }
