@@ -442,10 +442,10 @@ void GaussianCamCG::performCalculations() const {
     for (Size j = 0; j < currencies_.size(); ++j) {
         irStates_[*effectiveSimulationDates_.begin()][j] = irStatesOnFullTimeGrid_[j][0] =
             state[cam->pIdx(CrossAssetModel::AssetType::IR, j, 0)];
-        for (auto const& b : localBaseCurrencies) {
-            irStatesV1_[b][*effectiveSimulationDates_.begin()] = irStatesOnFullTimeGridV1_[b][0] =
-                state[cam->pIdx(CrossAssetModel::AssetType::IR, j, 0)];
-        }
+    }
+    for (auto const& b : localBaseCurrencies) {
+        irStatesV1_[b][*effectiveSimulationDates_.begin()] = irStatesOnFullTimeGridV1_[b][0] =
+            state[cam->pIdx(CrossAssetModel::AssetType::IR, currencyLookup[b], 0)];
     }
 
     for (Size j = 0; j < indices_.size(); ++j) {
@@ -726,8 +726,7 @@ std::size_t GaussianCamCG::getDiscount(const Size idx, const Date& s, const Date
 
 std::size_t GaussianCamCG::numeraire(const Date& s, const std::string& currency,
                                      const std::string& localBaseCurrency) const {
-    auto ccy = std::find(currencies_.begin(), currencies_.end(),
-                         localBaseCurrency.empty() ? baseCurrency() : localBaseCurrency);
+    auto ccy = std::find(currencies_.begin(), currencies_.end(), currency.empty() ? baseCurrency() : currency);
     QL_REQUIRE(ccy != currencies_.end(), "currency " << currency << " not handled");
     Size cidx = std::distance(currencies_.begin(), ccy);
     auto cam(cam_);

@@ -243,7 +243,7 @@ public:
                              const bool returnMissingFixingAsNull = false, const bool ignoreTodaysFixing = false,
                              const std::string& localBaseCurrency = {}) const = 0;
 
-    /* get numeraire N(s) for s >= referenceDate */
+    /* get numeraire N(s) for s >= referenceDate in currency on paths determined by localBaseCurrency */
     virtual std::size_t numeraire(const Date& s, const std::string& currency = {},
                                   const std::string& localBaseCurrency = {}) const = 0;
 
