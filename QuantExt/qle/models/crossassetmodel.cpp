@@ -1018,7 +1018,7 @@ std::pair<Real, Real> CrossAssetModel::infdkI(const Size i, const Time t, const 
     Real HyT = Hy(i).eval(*this, T);
 
     // compute final results depending on z and y
-    const auto& zts = infdk(i)->termStructure();
+    const auto& zts = infdk(i)->dkLgmParam()->termStructure();
     auto relevantDc = dayCounter();
     QL_REQUIRE(relevantDc.has_value(), "internal error, daycounter should be available, contact dev");
     Real growth_t = inflationGrowth(zts, t, relevantDc);
@@ -1158,7 +1158,7 @@ Real CrossAssetModel::crV(const Size i, const Size ccy, const Time t, const Time
 Handle<ZeroInflationTermStructure> inflationTermStructure(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, Size index) {
 
     if (model->modelType(CrossAssetModel::AssetType::INF, index) == CrossAssetModel::ModelType::DK) {
-        return model->infdk(index)->termStructure();
+        return model->infdk(index)->dkLgmParam()->termStructure();
     } else if (model->modelType(CrossAssetModel::AssetType::INF, index) == CrossAssetModel::ModelType::JY) {
         return model->infjy(index)->realRate()->termStructure();
     } else {

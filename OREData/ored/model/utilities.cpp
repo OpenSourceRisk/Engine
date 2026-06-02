@@ -363,11 +363,11 @@ std::string getCalibrationDetails(const std::vector<QuantLib::ext::shared_ptr<Bl
         if (instr != nullptr && parametrization != nullptr && instr->instrument() != nullptr) {
             // report alpha, H at t_expiry^-
             t = inflationYearFraction(
-                parametrization->termStructure()->frequency(), indexIsInterpolated,
-                parametrization->termStructure()->dayCounter(), parametrization->termStructure()->baseDate(),
+                parametrization->dkLgmParam()->termStructure()->frequency(), indexIsInterpolated,
+                parametrization->dkLgmParam()->termStructure()->dayCounter(), parametrization->dkLgmParam()->termStructure()->baseDate(),
                 instr->instrument()->payDate() - instr->instrument()->observationLag());
-            modelAlpha = parametrization->alpha(t - 1.0 / 250.0);
-            modelH = parametrization->H(t - 1.0 / 250.0);
+            modelAlpha = parametrization->dkLgmParam()->alpha(t - 1.0 / 250.0);
+            modelH = parametrization->dkLgmParam()->H(t - 1.0 / 250.0);
         }
         // TODO handle other calibration helpers, too (capfloor)
         log << std::setw(3) << j << std::setprecision(6) << std::setw(14) << t << std::setw(14) << modelValue
@@ -376,8 +376,8 @@ std::string getCalibrationDetails(const std::vector<QuantLib::ext::shared_ptr<Bl
     }
     if (parametrization != nullptr) {
         // report alpha, kappa at t_expiry^+ for last expiry
-        modelAlpha = parametrization->alpha(t + 1.0 / 250.0);
-        modelH = parametrization->H(t + 1.0 / 2500.0);
+        modelAlpha = parametrization->dkLgmParam()->alpha(t + 1.0 / 250.0);
+        modelH = parametrization->dkLgmParam()->H(t + 1.0 / 2500.0);
     }
     log << "t >= " << t << ": infDkAlpha = " << modelAlpha << " infDkH = " << modelH << "\n";
     return log.str();

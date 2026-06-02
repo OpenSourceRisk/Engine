@@ -35,12 +35,12 @@ namespace QuantExt {
             std::pair<Real, Real> Vs = cam_->infdkV(i, t, T);
             RandomVariable V0(n_samples, Vs.first);
             RandomVariable V_tilde(n_samples, Vs.second);
-            RandomVariable Hyt(n_samples, cam_->infdk(i)->H(t));
-            RandomVariable HyT(n_samples, cam_->infdk(i)->H(T));
+            RandomVariable Hyt(n_samples, cam_->infdk(i)->dkLgmParam()->H(t));
+            RandomVariable HyT(n_samples, cam_->infdk(i)->dkLgmParam()->H(T));
 
             // TODO account for seasonality ...
             // compute final results depending on z and y
-            const auto& zts = cam_->infdk(i)->termStructure();
+            const auto& zts = cam_->infdk(i)->dkLgmParam()->termStructure();
             auto dc = cam_->irlgm1f(0)->termStructure()->dayCounter();
             RandomVariable growth_t(n_samples, inflationGrowth(zts, t, dc));
             RandomVariable growth_T(n_samples, inflationGrowth(zts, T, dc));
