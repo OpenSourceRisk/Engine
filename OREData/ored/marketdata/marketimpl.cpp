@@ -357,11 +357,8 @@ Handle<ZeroInflationIndex> MarketImpl::zeroInflationIndex(const string& indexNam
 std::map<QuantLib::Period, QuantLib::Period>
 MarketImpl::zeroInflationObservationLags(const string& indexName, const string& configuration) const {
     require(MarketObject::ZeroInflationCurve, indexName, configuration);
-    auto it = zeroInflationObservationLags_.find(make_pair(configuration, indexName));
-    QL_REQUIRE(it != zeroInflationObservationLags_.end(),
-               "did not find zero inflation observation lag for index '" << indexName << "' under configuration '"
-               << configuration << "'");
-    return it->second;
+    return lookup<std::map<QuantLib::Period, QuantLib::Period>>(zeroInflationObservationLags_, indexName, configuration,
+                                                              "zero inflation observation lags");
 }
 
 Handle<YoYInflationIndex> MarketImpl::yoyInflationIndex(const string& indexName, const string& configuration) const {
