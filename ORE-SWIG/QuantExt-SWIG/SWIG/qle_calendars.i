@@ -25,7 +25,6 @@
 // multiply-defined symbols in the generated Python module.
 %rename(QLEAustria) QuantExt::Austria;
 %rename(QLEFrance) QuantExt::France;
-%rename(QLEIsrael) QuantExt::Israel;
 %rename(QLESwitzerland) QuantExt::Switzerland;
 
 namespace QuantExt {
@@ -213,12 +212,6 @@ class France : public Calendar {
     public:
         enum Market { Settlement };
         France(Market m = Settlement);
-};
-
-class Israel : public QuantLib::Israel {
-    public:
-        enum MarketExt { Settlement, TASE, Telbor };
-        Israel(MarketExt market = Telbor);
 };
 
 class Mauritius : public Calendar {
