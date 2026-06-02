@@ -504,10 +504,9 @@ NettedExposureCalculator::collateralPaths(const string& nettingSetId, const Real
         QL_REQUIRE(scenarioData_->has(AggregationScenarioDataType::FXSpot, netting->csaDetails()->csaCurrency()),
                    "scenario data does not provide FX rates for " << csaFxPair);
     }
-    if (csaIndexName != "") {
-        QL_REQUIRE(scenarioData_->has(AggregationScenarioDataType::IndexFixing, csaIndexName),
-                   "scenario data does not provide index values for " << csaIndexName);
-    }
+    QL_REQUIRE(scenarioData_->has(AggregationScenarioDataType::IndexFixing, csaIndexName),
+               "scenario data does not provide index values for " << csaIndexName 
+               << ". Please update AggregationScenarioDataIndices in the scenario market configuration.");
     for (Size j = 0; j < cube_->dates().size(); ++j) {
         for (Size k = 0; k < cube_->samples(); ++k) {
 	  if (netting->csaDetails()->csaCurrency() != baseCurrency_)
@@ -515,10 +514,8 @@ NettedExposureCalculator::collateralPaths(const string& nettingSetId, const Real
                   scenarioData_, AggregationScenarioDataType::FXSpot, j, k, netting->csaDetails()->csaCurrency());
             else
                 csaScenFxRates[j][k] = 1.0;
-            if (csaIndexName != "") {
-                csaScenRates[j][k] = cubeInterpretation_->getDefaultAggregationScenarioData(
-                    scenarioData_, AggregationScenarioDataType::IndexFixing, j, k, csaIndexName);
-            }
+            csaScenRates[j][k] = cubeInterpretation_->getDefaultAggregationScenarioData(
+                scenarioData_, AggregationScenarioDataType::IndexFixing, j, k, csaIndexName);
         }
     }
 
