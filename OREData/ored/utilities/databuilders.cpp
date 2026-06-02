@@ -600,6 +600,7 @@ void dataBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(BalanceGuaranteedSwapDiscountingEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(BalanceGuaranteedSwapFlexiSwapLGMGridEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(BondFutureEuropeanOptionEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(BondFutureAmericanFDOptionEngineBuilder, false)
 
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("Bond", BondTrsUnderlyingBuilder, false)
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("BondFuture", BondFutureTrsUnderlyingBuilder, false)

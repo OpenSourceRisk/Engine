@@ -140,7 +140,7 @@ void BondFutureOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
 
     // Set the bond future option pricing engine. Note: asset() gives the future contract name here.
     string optTypeSuffix = getOptionTypeSuffix(*bfoEngineBuilder, envelope(), type);
-    option->setPricingEngine(bfoEngineBuilder->engine(asset(), optTypeSuffix));
+    option->setPricingEngine(bfoEngineBuilder->engine(asset(), optTypeSuffix, expiryDate_));
 
     // Set some Trade specific data.
     setSensitivityTemplate(*bfoEngineBuilder);
