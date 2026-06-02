@@ -168,6 +168,7 @@ void BondFutureOption::fromXML(XMLNode* node)
     XMLNode* bfoNode = XMLUtils::getChildNode(node, "BondFutureOptionData");
     QL_REQUIRE(bfoNode, "BondFutureOption::fromXML: expected a BondFutureOptionData node.");
     option_.fromXML(XMLUtils::getChildNode(bfoNode, "OptionData"));
+    option_.setPayoffAtExpiry(false);
     assetName_ = XMLUtils::getChildValue(bfoNode, "ContractName", true);
     quantity_ = XMLUtils::getChildValueAsDouble(bfoNode, "ContractNotional", true);
     strike_.fromXML(bfoNode);

@@ -26,6 +26,7 @@
 #include <ored/portfolio/bondutils.hpp>
 #include <ored/portfolio/builders/utilities.hpp>
 #include <qle/pricingengines/analyticeuropeanengine.hpp>
+#include <qle/pricingengines/baroneadesiwhaleyengine.hpp>
 #include <qle/pricingengines/fdblackscholesvanillaengine.hpp>
 #include <qle/quotes/bondfuturequote.hpp>
 #include <qle/termstructures/blackmonotonevarvoltermstructure.hpp>
@@ -153,6 +154,22 @@ protected:
         auto bsp = createBsProcess(contractName, optTypeSuffix, fdp.timePoints);
         return QuantLib::ext::make_shared<QuantExt::FdBlackScholesVanillaEngine2>(
             bsp, fdp.tGrid, fdp.xGrid, fdp.dampingSteps, fdp.scheme);
+    }
+};
+
+class BondFutureAmericanBAWOptionEngineBuilder : public BondFutureOptionEngineBuilder {
+public:
+    BondFutureAmericanBAWOptionEngineBuilder()
+        : BondFutureOptionEngineBuilder("BlackScholesMerton", "BaroneAdesiWhaleyApproximationEngine",
+            { "BondFutureOptionAmerican" }) {}
+
+protected:
+    QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::string& contractName,
+        const std::string& optTypeSuffix, const QuantLib::Date& unusedExpiryDate) override
+    {
+        populateIndexResults(contractName);
+        return QuantLib::ext::make_shared<QuantExt::BaroneAdesiWhaleyApproximationEngine>(
+            createBsProcess(contractName, optTypeSuffix));
     }
 };
 
