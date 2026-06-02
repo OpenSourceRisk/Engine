@@ -490,8 +490,6 @@ NettedExposureCalculator::collateralPaths(const string& nettingSetId, const Real
     // Don't use Settings::instance().evaluationDate() here, this has moved to simulation end date.
     Date today = market_->asofDate();
     string csaIndexName = netting->csaDetails()->index();
-    QL_REQUIRE(!csaIndexName.empty(), "CSA Index must be specified for netting set '" << nettingSetId
-                                          << "' to compute collateral paths.");
     // avoid thrown errors of the index fixing here on holidays of the index, instead take the preceding date then.
     if (!market_->iborIndex(csaIndexName, configuration_)->isValidFixingDate(today)) {
         today = market_->iborIndex(csaIndexName, configuration_)->fixingCalendar().adjust(today, Preceding);
@@ -507,7 +505,8 @@ NettedExposureCalculator::collateralPaths(const string& nettingSetId, const Real
                    "scenario data does not provide FX rates for " << csaFxPair);
     }
     QL_REQUIRE(scenarioData_->has(AggregationScenarioDataType::IndexFixing, csaIndexName),
-               "scenario data does not provide index values for " << csaIndexName);
+               "scenario data does not provide index values for " << csaIndexName 
+               << ". Please update AggregationScenarioDataIndices in the scenario market configuration.");
     for (Size j = 0; j < cube_->dates().size(); ++j) {
         for (Size k = 0; k < cube_->samples(); ++k) {
 	  if (netting->csaDetails()->csaCurrency() != baseCurrency_)

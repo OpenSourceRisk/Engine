@@ -170,7 +170,7 @@ void NettingSetDefinition::fromXML(XMLNode* node) {
         if (csaTypeStr.empty())
             csaTypeStr = "Bilateral";
         string csaCurrency = XMLUtils::getChildValue(csaChild, "CSACurrency", false);
-        string index = XMLUtils::getChildValue(csaChild, "Index", false);
+        string index = XMLUtils::getChildValue(csaChild, "Index", true);
         QL_REQUIRE(!index.empty(), "CSA Index must be specified when ActiveCSAFlag is true for netting set '" 
                   << nettingSetDetails_.nettingSetId() << "'");
         Real thresholdPay = XMLUtils::getChildValueAsDouble(csaChild, "ThresholdPay", false, 0.0);
