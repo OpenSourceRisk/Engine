@@ -552,9 +552,7 @@ std::size_t XvaEngineCG::createExposureNode(const std::vector<const TradeExposur
             }
         } else {
             auto const& complex = std::get<ComplexTradeExposure>(*exposure);
-            values.push_back(
-                cg_mult(*g, model_->convertToBaseCcy(obsDate, complex.localBaseCurrency),
-                        cg_mult(*g, complex.targetConditionalExpectation, cg_const(*g, complex.multiplier))));
+            values.push_back(cg_mult(*g, complex.targetConditionalExpectation, cg_const(*g, complex.multiplier)));
             if (pfExposureLocalBaseCcy) {
                 valuesLocalBaseCcy[complex.localBaseCurrency].push_back(values.back());
             }
@@ -678,11 +676,7 @@ void XvaEngineCG::buildCgDynamicIM() {
                         pathValues[key].push_back(cg_mult(*g, cg_const(*g, simple.multiplier), s.pathValue));
                     }
                 } else {
-                    const auto& complex = std::get<ComplexTradeExposure>(tradeExposureValuation_[j][i][k]);
-                    dynamicImInfo_.back().complexTradeData.insert(
-                        {std::make_pair(j, k),
-                         model_->convertToBaseCcy(i == 0 ? model_->referenceDate() : valuationDates_[i - 1],
-                                                  complex.localBaseCurrency)});
+                    dynamicImInfo_.back().complexTradeData.insert({std::make_pair(j, k)});
                 }
             }
         }
@@ -855,8 +849,6 @@ void XvaEngineCG::doForwardEvaluation() {
             for(auto const& [key, val] : dynamicImInfo_[i].pfExposureLocalBaseCcy) {
                 keepNodes_[val] = true;
             }
-            for (auto const& [tradeId, conversionToBaseCcy] : dynamicImInfo_[i].complexTradeData)
-                keepNodes_[conversionToBaseCcy] = true;
             for (std::size_t j = 0; j < tradeExposureMetaInfo_.size(); ++j) {
                 for (std::size_t k = 0; k < tradeExposureValuation_[j][i].size(); ++k) {
                     if (std::holds_alternative<ComplexTradeExposure>(tradeExposureValuation_[j][i][k])) {
@@ -1282,8 +1274,7 @@ void XvaEngineCG::dynamicImAddToConvertedSensis(
 
 RandomVariable XvaEngineCG::dynamicImCombineComponents(const std::vector<const RandomVariable*>& componentDerivatives,
                                                        const Size tradeId, const Size k, const Size timeStep,
-                                                       const std::string& label, const double multiplier,
-                                                       const std::size_t convertToBaseCurrency) {
+                                                       const std::string& label, const double multiplier) {
 
     auto data = std::get<ComplexTradeExposure>(tradeExposureValuation_[tradeId][timeStep][k]);
 
@@ -1354,7 +1345,7 @@ RandomVariable XvaEngineCG::dynamicImCombineComponents(const std::vector<const R
 
     // return the conditional expectation
 
-    return tmp[endNode] * RandomVariable(tmp[endNode].size(), multiplier) * values_[convertToBaseCurrency];
+    return tmp[endNode] * RandomVariable(tmp[endNode].size(), multiplier);
 }
 
 void XvaEngineCG::calculateDynamicIM() {
@@ -1682,7 +1673,7 @@ void XvaEngineCG::calculateDynamicIM() {
                     tmpIrDelta[ccy][b] = dynamicImCombineComponents(compDer, tradeId, k, i,
                                                                     "irDelta_" + model_->currencies()[ccy] + "_" +
                                                                         ore::data::to_string(irDeltaTerms[b]),
-                                                                    data.multiplier, complexKey.conversionToBaseCcy);
+                                                                    data.multiplier);
                 }
                 for (std::size_t b = 0; b < irVegaTerms.size(); ++b) {
                     for (std::size_t comp = 0; comp < nComponents; ++comp)
@@ -1690,21 +1681,21 @@ void XvaEngineCG::calculateDynamicIM() {
                     tmpIrVega[ccy][b] = dynamicImCombineComponents(compDer, tradeId, k, i,
                                                                    "irVega_" + model_->currencies()[ccy] + "_" +
                                                                        ore::data::to_string(irVegaTerms[b]),
-                                                                   data.multiplier, complexKey.conversionToBaseCcy);
+                                                                   data.multiplier);
                 }
                 if (ccy > 0) {
                     for (std::size_t comp = 0; comp < nComponents; ++comp)
                         compDer[comp] = &pathFxDeltaC[comp][ccy - 1];
                     tmpFxDelta[ccy - 1] =
                         dynamicImCombineComponents(compDer, tradeId, k, i, "fxDelta" + model_->currencies()[ccy],
-                                                   data.multiplier, complexKey.conversionToBaseCcy);
+                                                   data.multiplier);
                     for (std::size_t b = 0; b < fxVegaTerms.size(); ++b) {
                         for (std::size_t comp = 0; comp < nComponents; ++comp)
                             compDer[comp] = &pathFxVegaC[comp][ccy - 1][b];
                         tmpFxVega[ccy - 1][b] = dynamicImCombineComponents(
                             compDer, tradeId, k, i,
                             "fxVega_" + model_->currencies()[ccy] + "_" + ore::data::to_string(fxVegaTerms[b]),
-                            data.multiplier, complexKey.conversionToBaseCcy);
+                            data.multiplier);
                     }
                 }
             }

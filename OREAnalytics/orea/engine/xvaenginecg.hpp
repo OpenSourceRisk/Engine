@@ -178,8 +178,7 @@ private:
                                        std::vector<std::vector<RandomVariable>>& conditionalFxVega);
     RandomVariable dynamicImCombineComponents(const std::vector<const RandomVariable*>& componentDerivatives,
                                               const Size tradeId, const Size k, const Size timeStep,
-                                              const std::string& label, const double multiplier,
-                                              const std::size_t convertToBaseCurrency);
+                                              const std::string& label, const double multiplier);
 
     // set via additional methods
 
@@ -299,7 +298,6 @@ private:
         // complex trade data
         struct ComplexKey {
             std::pair<std::size_t, std::size_t> complexTradeId;
-            std::size_t conversionToBaseCcy;
             auto operator<=>(const ComplexKey&) const = default;
         };
         std::set<ComplexKey> complexTradeData;

@@ -1160,6 +1160,7 @@ void AmcCgBaseEngine::buildComputationGraph(
 
                 auto& complex = std::get<ComplexTradeExposure>((*tradeExposure)[simCounter + 1]);
                 complex.componentPathValues = {comp1, comp2};
+                complex.localBaseCurrency = complexBaseCurrency_;
 
                 std::size_t exercisedValueCond = cg_mult(
                     g, modelCg_->convertToBaseCcy(d, complexBaseCurrency_),
