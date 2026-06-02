@@ -1184,8 +1184,8 @@ public:
         }
         value.push(RandomVariable()); // uninitialized, since model dependent
         std::size_t node = model_->npv(amount_node, obs, regFilter_node, mem, {addRegressor1_node, addRegressor2_node},
-                                       model_->npvRegressors(obs, minimalModelCcys_, localBaseCcy_),
-                                       model_->npvRegressors(obs, minimalModelCcys_));
+                                       model_->npvRegressors(obs, minimalModelCcys_, localBaseCcy_, localBaseCcy_),
+                                       model_->npvRegressors(obs, minimalModelCcys_, localBaseCcy_));
         value_node.push(node);
         if (hasMemSlot) {
             TRACE("npvmem( " << amount << " , " << obsdate << " , " << memSlot << " , " << regFilter << " , "

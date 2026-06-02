@@ -884,10 +884,15 @@ Real BlackScholesCG::getDirectDiscountT0(const Date& paydate, const std::string&
 
 std::set<std::size_t> BlackScholesCG::npvRegressors(const Date& obsdate,
                                                     const std::optional<std::set<std::string>>& relevantCurrencies,
-                                                    const std::string& localBaseCurrency) const {
+                                                    const std::string& localBaseCurrency,
+                                                    const std::string& localBaseCurrencyPaths) const {
 
     QL_REQUIRE(localBaseCurrency.empty() || localBaseCurrency == baseCurrency(),
                "BlackScholesCG::npvRegressors: localBaseCurrency ("
+                   << localBaseCurrency << ") not allowed, must be empty or equal to global base ccy ("
+                   << baseCurrency() << ")");
+    QL_REQUIRE(localBaseCurrencyPaths.empty() || localBaseCurrencyPaths == baseCurrency(),
+               "BlackScholesCG::npvRegressors: localBaseCurrencyPaths ("
                    << localBaseCurrency << ") not allowed, must be empty or equal to global base ccy ("
                    << baseCurrency() << ")");
 

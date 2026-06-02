@@ -186,7 +186,7 @@ AmcCgBaseEngine::createCashflowInfo(QuantLib::ext::shared_ptr<QuantLib::CashFlow
 
     if (info.localBaseCurrency.empty()) {
 
-        // fallback: we follow the v1 local base currency handling
+        // fallback if no suggestion: we follow the v1 local base currency handling
 
         if (cfCurrencies.size() == 1) {
             info.localBaseCurrency = *cfCurrencies.begin();
@@ -233,7 +233,8 @@ AmcCgBaseEngine::createCashflowInfo(QuantLib::ext::shared_ptr<QuantLib::CashFlow
         Date fxLinkedFixingDate = fxl->fxFixingDate();
         std::string fxIndex = IndexNameTranslator::instance().oreName(fxl->fxIndex()->name());
         info.flowNode = modelCg_->pay(
-            cg_mult(g, cg_const(g, fxl->foreignAmount()), modelCg_->eval(fxIndex, fxLinkedFixingDate, Null<Date>())),
+            cg_mult(g, cg_const(g, fxl->foreignAmount()),
+                    modelCg_->eval(fxIndex, fxLinkedFixingDate, Null<Date>(), false, false, info.localBaseCurrency)),
             flow->date(), flow->date(), payCcy, info.localBaseCurrency);
         info.currencies.insert(fxl->fxIndex()->sourceCurrency().code());
         info.currencies.insert(fxl->fxIndex()->targetCurrency().code());
@@ -270,7 +271,8 @@ AmcCgBaseEngine::createCashflowInfo(QuantLib::ext::shared_ptr<QuantLib::CashFlow
 
     std::size_t fxLinkedNode = ComputationGraph::nan;
     if (isFxLinked || isFxIndexed) {
-        fxLinkedNode = modelCg_->eval(fxLinkedIndex, fxLinkedFixingDate, Null<Date>());
+        fxLinkedNode =
+            modelCg_->eval(fxLinkedIndex, fxLinkedFixingDate, Null<Date>(), false, false, info.localBaseCurrency);
     }
 
     bool isCapFloored = false;
@@ -301,7 +303,8 @@ AmcCgBaseEngine::createCashflowInfo(QuantLib::ext::shared_ptr<QuantLib::CashFlow
         info.currencies.insert(ibor->index()->currency().code());
 
         std::string indexName = IndexNameTranslator::instance().oreName(ibor->index()->name());
-        std::size_t fixing = modelCg_->eval(indexName, ibor->fixingDate(), Null<Date>());
+        std::size_t fixing =
+            modelCg_->eval(indexName, ibor->fixingDate(), Null<Date>(), false, false, info.localBaseCurrency);
 
         std::size_t effectiveRate;
         if (isCapFloored) {
@@ -344,8 +347,10 @@ AmcCgBaseEngine::createCashflowInfo(QuantLib::ext::shared_ptr<QuantLib::CashFlow
             IndexNameTranslator::instance().oreName(ibor->interpolatedIborIndex()->shortIndex()->name());
         std::string indexNameLong =
             IndexNameTranslator::instance().oreName(ibor->interpolatedIborIndex()->longIndex()->name());
-        std::size_t fixingShort = modelCg_->eval(indexNameShort, ibor->fixingDate(), Null<Date>());
-        std::size_t fixingLong = modelCg_->eval(indexNameLong, ibor->fixingDate(), Null<Date>());
+        std::size_t fixingShort =
+            modelCg_->eval(indexNameShort, ibor->fixingDate(), Null<Date>(), false, false, info.localBaseCurrency);
+        std::size_t fixingLong =
+            modelCg_->eval(indexNameLong, ibor->fixingDate(), Null<Date>(), false, false, info.localBaseCurrency);
         std::size_t shortWeight = cg_const(g, ibor->interpolatedIborIndex()->shortWeight(ibor->fixingDate()));
         std::size_t longWeight = cg_const(g, ibor->interpolatedIborIndex()->longWeight(ibor->fixingDate()));
         std::size_t fixing = cg_add(g, cg_mult(g, shortWeight, fixingShort), cg_mult(g, longWeight, fixingLong));
@@ -388,7 +393,8 @@ AmcCgBaseEngine::createCashflowInfo(QuantLib::ext::shared_ptr<QuantLib::CashFlow
         info.currencies.insert(cms->index()->currency().code());
 
         std::string indexName = IndexNameTranslator::instance().oreName(cms->index()->name());
-        std::size_t fixing = modelCg_->eval(indexName, cms->fixingDate(), Null<Date>());
+        std::size_t fixing =
+            modelCg_->eval(indexName, cms->fixingDate(), Null<Date>(), false, false, info.localBaseCurrency);
 
         std::size_t effectiveRate;
         if (isCapFloored) {
@@ -533,7 +539,8 @@ AmcCgBaseEngine::createCashflowInfo(QuantLib::ext::shared_ptr<QuantLib::CashFlow
 
         std::string indexName = IndexNameTranslator::instance().oreName(bma->index()->name());
 
-        std::size_t fixing = modelCg_->eval(indexName, bma->fixingDates().front(), Null<Date>());
+        std::size_t fixing =
+            modelCg_->eval(indexName, bma->fixingDates().front(), Null<Date>(), false, false, info.localBaseCurrency);
         std::size_t effectiveRate =
             cg_add(g, cg_mult(g, cg_const(g, bma->gearing()), fixing), cg_const(g, bma->spread()));
         info.flowNode =
@@ -555,7 +562,8 @@ AmcCgBaseEngine::createCashflowInfo(QuantLib::ext::shared_ptr<QuantLib::CashFlow
         info.currencies.insert(bma->index()->currency().code());
 
         std::string indexName = IndexNameTranslator::instance().oreName(bma->index()->name());
-        std::size_t fixing = modelCg_->eval(indexName, bma->fixingDates().front(), Null<Date>());
+        std::size_t fixing =
+            modelCg_->eval(indexName, bma->fixingDates().front(), Null<Date>(), false, false, info.localBaseCurrency);
 
         effFloor = cfbma->effectiveFloor();
         effCap = cfbma->effectiveFloor();
@@ -602,7 +610,8 @@ AmcCgBaseEngine::createCashflowInfo(QuantLib::ext::shared_ptr<QuantLib::CashFlow
 
         std::string indexName = IndexNameTranslator::instance().oreName(sub->index()->name());
 
-        std::size_t fixing = modelCg_->eval(indexName, sub->fixingDates().front(), Null<Date>());
+        std::size_t fixing =
+            modelCg_->eval(indexName, sub->fixingDates().front(), Null<Date>(), false, false, info.localBaseCurrency);
         std::size_t effectiveRate =
             cg_add(g, cg_mult(g, cg_const(g, sub->gearing()), fixing), cg_const(g, sub->spread()));
         info.flowNode =
@@ -1036,10 +1045,10 @@ void AmcCgBaseEngine::buildComputationGraph(
                 simple.groups.back().pathValue = pathValueUndDirty[counter][ccySet];
                 auto const& currencySet = *std::next(relevantCurrencySets_.begin(), ccySet);
                 std::string localBaseCurrency = currencySetToBaseCurrency_.at(currencySet);
-                simple.groups.back().regressorsLocalBaseCcy =
-                    modelCg_->npvRegressors(*std::next(simDates.begin(), counter), currencySet, localBaseCurrency);
+                simple.groups.back().regressorsLocalBaseCcy = modelCg_->npvRegressors(
+                    *std::next(simDates.begin(), counter), currencySet, localBaseCurrency, localBaseCurrency);
                 simple.groups.back().regressorsBaseCcy =
-                    modelCg_->npvRegressors(*std::next(simDates.begin(), counter), currencySet);
+                    modelCg_->npvRegressors(*std::next(simDates.begin(), counter), currencySet, localBaseCurrency);
                 simple.groups.back().localBaseCurrency = localBaseCurrency;
             }
         }
@@ -1198,12 +1207,12 @@ std::vector<std::size_t> AmcCgBaseEngine::createRegressionModel(
     // TODO use relevant cashflow info to refine regressor if regressor model == LaggedFX
     std::vector<std::size_t> result;
     if (localBaseCcy) {
-        auto regressors = modelCg_->npvRegressors(d, relevantCurrencies_, complexBaseCurrency_);
+        auto regressors = modelCg_->npvRegressors(d, relevantCurrencies_, complexBaseCurrency_, complexBaseCurrency_);
         result.push_back(modelCg_->npv(amount, d, filter, std::nullopt, {}, regressors, regressors));
     }
     if (modelBaseCcy) {
-        auto regressors = modelCg_->npvRegressors(d, relevantCurrencies_, complexBaseCurrency_);
-        auto regressorsBase = modelCg_->npvRegressors(d, relevantCurrencies_, modelCg_->baseCurrency());
+        auto regressors = modelCg_->npvRegressors(d, relevantCurrencies_, complexBaseCurrency_, complexBaseCurrency_);
+        auto regressorsBase = modelCg_->npvRegressors(d, relevantCurrencies_, complexBaseCurrency_);
         result.push_back(modelCg_->npv(amount, d, filter, std::nullopt, {}, regressors, regressorsBase));
     }
     return result;

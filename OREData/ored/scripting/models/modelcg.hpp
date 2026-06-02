@@ -218,13 +218,16 @@ public:
                             const std::optional<std::set<std::size_t>>& evaluationRegressors = {}) const = 0;
 
     /* regressors used in npv()
-      - relevant currencies - if not none - restrict the set of currencies for which regressors are generated
-      - localBaseCurrency is used to determine which underlying paths are used, but it is not automatically added
-        to the relevant currency set, and nor is the global base ccy, i.e. those must be contained in
-        relevantCurrencies */
+      - relevantCurrencies - if not none - restrict the set of currencies for which regressors are generated
+      - localBaseCurrency is used to determine the relevant fx indices in the regressor set
+      - localBaseCurrencyPaths determines the paths w.r.t. which the regressors are built
+      - both localBaseCurrency and localBaseCurrencyPaths default to the global model base ccy, if not given
+      - relevantCurrencies must contain all relevant currencies, i.e. localBaseCurrency (or localBaseCurrencyPaths)
+        will _not_ be added to this set of currencies */
     virtual std::set<std::size_t> npvRegressors(const Date& obsdate,
                                                 const std::optional<std::set<std::string>>& relevantCurrencies,
-                                                const std::string& localBaseCurrrency = {}) const = 0;
+                                                const std::string& localBaseCurrency = {},
+                                                const std::string& localBaseCurrencyPaths = {}) const = 0;
 
     /* eval index at (past or future) obsdate:
        - if fwddate != null, fwddate > obsdate is required. A check must be implemented that the obsdate allows for

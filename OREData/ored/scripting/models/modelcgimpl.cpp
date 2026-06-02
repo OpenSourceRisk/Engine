@@ -153,6 +153,10 @@ std::size_t ModelCGImpl::fxRate(const Date& obsdate, const std::string& currency
 
     TLOG("ModelCGImpl::fxRate(" << obsdate << "," << currency << "," << localBaseCurrency<< ")");
 
+    if ((localBaseCurrency.empty() && currency == baseCurrency()) ||
+        (!localBaseCurrency.empty() && currency == localBaseCurrency))
+        return cg_const(*g_, 1.0);
+
     ModelCG::ModelParameter id(ModelCG::ModelParameter::Type::fxRate, currency, localBaseCurrency, obsdate);
     if (auto m = cachedParameters_.find(id); m != cachedParameters_.end()) {
         return m->node();
@@ -163,7 +167,7 @@ std::size_t ModelCGImpl::fxRate(const Date& obsdate, const std::string& currency
     Size cidx = std::distance(currencies_.begin(), ccy);
 
     Size cidx2 = 0;
-    if (!localBaseCurrency.empty()) {
+    if (!localBaseCurrency.empty() && localBaseCurrency != baseCurrency()) {
         auto ccy = std::find(currencies_.begin(), currencies_.end(), localBaseCurrency);
         QL_REQUIRE(ccy != currencies_.end(), "currency " << localBaseCurrency << " no handled");
         cidx2 = std::distance(currencies_.begin(), ccy);
@@ -200,10 +204,10 @@ std::size_t ModelCGImpl::fxRate(const Date& obsdate, const std::string& currency
             fxSpot = cg_const(*g_, 1.0);
     }
 
-    if (cidx2 > 0 && fxSpot2 == ComputationGraph::nan) {
+    if (fxSpot2 == ComputationGraph::nan) {
         if (cidx2 > 0)
             fxSpot2 = cg_div(
-                *g_, cg_mult(*g_, getFxSpot(cidx - 1), getDiscount(cidx2, referenceDate(), obsdate, localBaseCurrency)),
+                *g_, cg_mult(*g_, getFxSpot(cidx2 - 1), getDiscount(cidx2, referenceDate(), obsdate, localBaseCurrency)),
                 getDiscount(0, referenceDate(), obsdate, localBaseCurrency));
         else
             fxSpot2 = cg_const(*g_, 1.0);

@@ -47,7 +47,8 @@ RandomVariable randomVariableOpConditionalExpectation(const Size size, const Siz
         QL_REQUIRE(args[i1]->initialised() == args[i2]->initialised(),
                    "randomVariableOpConditionalExpectation(): args at "
                        << i1 << " and " << i2 << " (regressor and evaluation regressor component " << i
-                       << ", respectively)are not both initialized or uninitialized, this is not allowed.");
+                       << ", respectively) are not both initialized or uninitialized, this is not allowed: "
+                       << std::boolalpha << args[i1]->initialised() << ", " << args[i2]->initialised());
         if (!args[i1]->initialised() || (args[i1]->deterministic() && args[i2]->deterministic()))
             continue;
         regressor.push_back(args[i1]);
@@ -78,6 +79,8 @@ RandomVariable randomVariableOpConditionalExpectation(const Size size, const Siz
         regressor = vec2vecptr(transformedRegressor);
         evaluationRegressor = vec2vecptr(transformedEvaluationRegressor);
     }
+
+    std::cout << "randomVarOpCondExp(): using regressor of size " << regressor.size() << std::endl;
 
     Filter filter = !close_enough(*args[1], RandomVariable(size, 0.0));
 

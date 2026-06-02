@@ -300,7 +300,7 @@ private:
         std::set<ComplexKey> complexTradeData;
     };
 
-    // dynamic im info per valuation date,
+    // dynamic im info per valuation date, includes t=0 as first component
     std::vector<DynamicImInfo> dynamicImInfo_;
 
     /* regressor groups, set for the npv()-nodes involved in the following members, to be used to set up ops_:

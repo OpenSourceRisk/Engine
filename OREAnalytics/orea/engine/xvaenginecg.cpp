@@ -648,14 +648,16 @@ void XvaEngineCG::buildCgDynamicIM() {
                         key.regressorsLocalBaseCurrency = s.regressorsLocalBaseCcy;
                         key.regressorsBaseCurrency = s.regressorsBaseCcy;
                         key.localBaseCurrency = s.localBaseCurrency;
-                        key.conversionToBaseCcy = model_->convertToBaseCcy(valuationDates_[i], s.localBaseCurrency);
+                        key.conversionToBaseCcy = model_->convertToBaseCcy(
+                            i == 0 ? model_->referenceDate() : valuationDates_[i - 1], s.localBaseCurrency);
                         pathValues[key].push_back(cg_mult(*g, cg_const(*g, simple.multiplier), s.pathValue));
                     }
                 } else {
                     const auto& complex = std::get<ComplexTradeExposure>(tradeExposureValuation_[j][i][k]);
                     dynamicImInfo_.back().complexTradeData.insert(
                         {std::make_pair(j, k),
-                         model_->convertToBaseCcy(valuationDates_[i], complex.localBaseCurrency)});
+                         model_->convertToBaseCcy(i == 0 ? model_->referenceDate() : valuationDates_[i - 1],
+                                                  complex.localBaseCurrency)});
                 }
             }
         }
@@ -809,21 +811,23 @@ void XvaEngineCG::doForwardEvaluation() {
     }
 
     if (enableDynamicIM_) {
-        for (std::size_t i = 0; i < valuationDates_.size(); ++i) {
+        for (std::size_t i = 0; i < valuationDates_.size() + 1; ++i) {
             for (auto const& [key, val] : dynamicImInfo_[i].simplePathValues) {
                 keepNodes_[key.conversionToBaseCcy] = true;
                 keepNodes_[val] = true;
-                for (auto const& n : key.regressorsLocalBaseCurrency)
+                for (auto const& n : key.regressorsLocalBaseCurrency) {
                     keepNodes_[n] = true;
-                for (auto const& n : key.regressorsBaseCurrency)
+                }
+                for (auto const& n : key.regressorsBaseCurrency) {
                     keepNodes_[n] = true;
+                }
             }
             for (auto const& [tradeId, conversionToBaseCcy] : dynamicImInfo_[i].complexTradeData)
                 keepNodes_[conversionToBaseCcy] = true;
             for (std::size_t j = 0; j < tradeExposureMetaInfo_.size(); ++j) {
-                for (std::size_t k = 0; k < tradeExposureValuation_[j][i + 1].size(); ++k) {
-                    if (std::holds_alternative<ComplexTradeExposure>(tradeExposureValuation_[j][i + 1][k])) {
-                        auto complex = std::get<ComplexTradeExposure>(tradeExposureValuation_[j][i + 1][k]);
+                for (std::size_t k = 0; k < tradeExposureValuation_[j][i].size(); ++k) {
+                    if (std::holds_alternative<ComplexTradeExposure>(tradeExposureValuation_[j][i][k])) {
+                        auto complex = std::get<ComplexTradeExposure>(tradeExposureValuation_[j][i][k]);
                         for (auto const n : dependentNodes(*g, complex.componentPathValues.back() + 1,
                                                            complex.targetConditionalExpectationDerivative + 1)) {
                             keepNodes_[n] = true;
@@ -1503,10 +1507,12 @@ void XvaEngineCG::calculateDynamicIM() {
             std::vector<const RandomVariable*> args(1, regressand);
             RandomVariable trivialFilter(model_->size(), 1.0);
             args.push_back(&trivialFilter);
-            for (const auto& r : regressors)
+            for (const auto& r : regressors) {
                 args.push_back(&values_[r]);
-            for (const auto& r : evalRegressors)
+            }
+            for (const auto& r : evalRegressors) {
                 args.push_back(&values_[r]);
+            }
             auto result = values_[baseCurrencyConversion] *
                           randomVariableOpConditionalExpectation(
                               model_->size(), regressionOrderDynamicIm_, QuantLib::LsmBasisSystem::Monomial,
@@ -1543,7 +1549,7 @@ void XvaEngineCG::calculateDynamicIM() {
         for (auto const& [key, val] : pathIrVega) {
             for (std::size_t ccy = 0; ccy < model_->currencies().size(); ++ccy) {
                 for (std::size_t b = 0; b < irVegaTerms.size(); ++b) {
-                    tmpIrDelta[ccy][b] =
+                    tmpIrVega[ccy][b] =
                         condExp(&val[ccy][b], std::get<0>(key), std::get<1>(key), std::get<2>(key),
                                 "irVega_" + model_->currencies()[ccy] + "_" + ore::data::to_string(irVegaTerms[b]));
                 }
@@ -1969,7 +1975,7 @@ void XvaEngineCG::outputTimings() {
                                                    << " ms");
     LOG("XvaEngineCG: Forward eval             : " << std::fixed << std::setprecision(1) << timing_fwd_ / 1E6 << " ms");
     LOG("XvaEngineCG: DynamicIM                : " << std::fixed << std::setprecision(1) << timing_dynamicIM_ / 1E6
-                                                << " ms");
+                                                   << " ms");
     LOG("XvaEngineCG: Backward deriv           : " << std::fixed << std::setprecision(1) << timing_bwd_ / 1E6 << " ms");
     LOG("XvaEngineCG: Sensi Cube Gen           : " << std::fixed << std::setprecision(1) << timing_sensi_ / 1E6
                                                    << " ms");

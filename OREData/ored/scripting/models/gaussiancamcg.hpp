@@ -60,7 +60,8 @@ public:
                     const std::optional<std::set<std::size_t>>& evaluationRegressors = {}) const override;
     std::set<std::size_t> npvRegressors(const Date& obsdate,
                                         const std::optional<std::set<std::string>>& relevantCurrencies,
-                                        const std::string& localBaseCurrency = {}) const override;
+                                        const std::string& localBaseCurrency = {},
+                                        const std::string& localBaseCurrencyPaths = {}) const override;
     std::size_t numeraire(const Date& s, const std::string& currency = {},
                           const std::string& localBaseCurrency = {}) const override;
     std::size_t fwdCompAvg(const bool isAvg, const std::string& indexInput, const Date& obsdate, const Date& start,

@@ -609,8 +609,9 @@ std::size_t GaussianCamCG::getInterpolatedIrState(const Date& d, const Size ccyI
     if (effectiveSimulationDates_.find(d) != effectiveSimulationDates_.end()) {
         if (localBaseCurrency.empty() || localBaseCurrency == baseCurrency())
             return irStates_.at(d).at(ccyIndex);
-        else
+        else {
             return irStatesV1_.at(localBaseCurrency).at(d);
+        }
     }
     if (d > *effectiveSimulationDates_.rbegin()) {
         // alternative a) extrapolation not allowed (ENABLED)
@@ -767,7 +768,8 @@ Real GaussianCamCG::getDirectDiscountT0(const Date& paydate, const std::string& 
 
 std::set<std::size_t> GaussianCamCG::npvRegressors(const Date& obsdate,
                                                    const std::optional<std::set<std::string>>& relevantCurrencies,
-                                                   const std::string& localBaseCurrency) const {
+                                                   const std::string& localBaseCurrency,
+                                                   const std::string& localBaseCurrencyPaths) const {
 
     std::set<std::size_t> state;
 
@@ -778,15 +780,33 @@ std::set<std::size_t> GaussianCamCG::npvRegressors(const Date& obsdate,
     std::set<std::string> effRelCcys =
         relevantCurrencies ? *relevantCurrencies : std::set<std::string>(currencies().begin(), currencies().end());
 
-    bool noLocalBaseCurrency = localBaseCurrency.empty() || localBaseCurrency == baseCurrency();
+    // fx asset indices
 
-    if (noLocalBaseCurrency && conditionalExpectationUseAsset_ && !underlyingPaths_.empty()) {
+    if (!underlyingPaths_.empty()) {
+        // add all fx indices except the one for the local base ccy (if given)
         for (Size i = 0; i < indices_.size(); ++i) {
-            if (indices_[i].isFx()) {
-                if (effRelCcys.find(indices_[i].fx()->sourceCurrency().code()) == effRelCcys.end())
-                    continue;
+            if (indices_[i].isFx() && indices_[i].fx()->sourceCurrency().code() != localBaseCurrency &&
+                effRelCcys.find(indices_[i].fx()->sourceCurrency().code()) != effRelCcys.end())
+                state.insert(
+                    getInterpolatedUnderlyingPath(adjustForStickyCloseOut(obsdate), i, localBaseCurrencyPaths));
+        }
+        // if we have at least one index, then we need the local base ccy index (if given) as well for tringulation
+        if(!state.empty() && !localBaseCurrency.empty()) {
+            for (Size i = 0; i < indices_.size(); ++i) {
+                if (indices_[i].isFx() && indices_[i].fx()->sourceCurrency().code() == localBaseCurrency)
+                    state.insert(
+                        getInterpolatedUnderlyingPath(adjustForStickyCloseOut(obsdate), i, localBaseCurrencyPaths));
             }
-            state.insert(getInterpolatedUnderlyingPath(adjustForStickyCloseOut(obsdate), i));
+        }
+    }
+
+    // no-fx asset indices
+
+    if (conditionalExpectationUseAsset_ && !underlyingPaths_.empty()) {
+        for (Size i = 0; i < indices_.size(); ++i) {
+            if (indices_[i].isFx())
+                continue;
+            state.insert(getInterpolatedUnderlyingPath(adjustForStickyCloseOut(obsdate), i, localBaseCurrencyPaths));
         }
     }
 
@@ -794,7 +814,7 @@ std::set<std::size_t> GaussianCamCG::npvRegressors(const Date& obsdate,
     if (conditionalExpectationUseIr_) {
         for (Size ccy = 0; ccy < currencies_.size(); ++ccy) {
             if (effRelCcys.find(currencies_[ccy]) != effRelCcys.end()) {
-                state.insert(getInterpolatedIrState(adjustForStickyCloseOut(obsdate), ccy, localBaseCurrency));
+                state.insert(getInterpolatedIrState(adjustForStickyCloseOut(obsdate), ccy, localBaseCurrencyPaths));
             }
         }
     }

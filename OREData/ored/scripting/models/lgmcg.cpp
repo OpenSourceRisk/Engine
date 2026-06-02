@@ -35,7 +35,7 @@ namespace ore::data {
 std::size_t LgmCG::numeraire(const Date& d, const std::size_t x, const Handle<YieldTermStructure>& discountCurve,
                              const std::string& discountCurveId) const {
 
-    ModelCG::ModelParameter id(ModelCG::ModelParameter::Type::lgm_numeraire, qualifier_, discountCurveId, d);
+    ModelCG::ModelParameter id(ModelCG::ModelParameter::Type::lgm_numeraire, qualifier_, discountCurveId, d, {}, {}, x);
     if (auto m = cachedParameters_.find(id); m != cachedParameters_.end())
         return m->node();
 
@@ -70,7 +70,8 @@ std::size_t LgmCG::discountBond(const Date& d, const Date& e, const std::size_t 
     if (d == e)
         return cg_const(g_, 1.0);
 
-    ModelCG::ModelParameter id(ModelCG::ModelParameter::Type::lgm_discountBond, qualifier_, discountCurveId, d, e);
+    ModelCG::ModelParameter id(ModelCG::ModelParameter::Type::lgm_discountBond, qualifier_, discountCurveId, d, e, {},
+                               x);
     if (auto m = cachedParameters_.find(id); m != cachedParameters_.end())
         return m->node();
 
@@ -90,7 +91,7 @@ std::size_t LgmCG::reducedDiscountBond(const Date& d, Date e, const std::size_t 
         return cg_div(g_, cg_const(g_, 1.0), numeraire(d, x, discountCurve, discountCurveId));
 
     ModelCG::ModelParameter id(ModelCG::ModelParameter::Type::lgm_reducedDiscountBond, qualifier_, discountCurveId, d,
-                               e, expiryDate);
+                               e, expiryDate, x);
     if (auto m = cachedParameters_.find(id); m != cachedParameters_.end())
         return m->node();
 
@@ -122,7 +123,7 @@ std::size_t LgmCG::reducedDiscountBond(const Date& d, Date e, const std::size_t 
 std::size_t LgmCG::fixing(const QuantLib::ext::shared_ptr<InterestRateIndex>& index, const Date& fixingDate,
                           const Date& t, const std::size_t x) const {
 
-    ModelCG::ModelParameter id(ModelCG::ModelParameter::Type::fix, index->name(), {}, fixingDate, t);
+    ModelCG::ModelParameter id(ModelCG::ModelParameter::Type::fix, index->name(), {}, fixingDate, t, {}, x);
 
     Date today = Settings::instance().evaluationDate();
 
@@ -279,7 +280,7 @@ std::size_t LgmCG::compoundedOnRate(const QuantLib::ext::shared_ptr<OvernightInd
 
     // id for caching
 
-    ModelCG::ModelParameter id(ModelCG::ModelParameter::Type::complexRate, index->name(), {}, t, {}, {}, 0, 0, hash);
+    ModelCG::ModelParameter id(ModelCG::ModelParameter::Type::complexRate, index->name(), {}, t, {}, {}, x, 0, hash);
 
     if (auto m = cachedParameters_.find(id); m != cachedParameters_.end())
         return m->node();
@@ -515,7 +516,7 @@ std::size_t LgmCG::averagedOnRate(const QuantLib::ext::shared_ptr<OvernightIndex
 
     // id for caching
 
-    ModelCG::ModelParameter id(ModelCG::ModelParameter::Type::complexRate, index->name(), {}, t, {}, {}, 0, 0, hash);
+    ModelCG::ModelParameter id(ModelCG::ModelParameter::Type::complexRate, index->name(), {}, t, {}, {}, x, 0, hash);
 
     if (auto m = cachedParameters_.find(id); m != cachedParameters_.end())
         return m->node();

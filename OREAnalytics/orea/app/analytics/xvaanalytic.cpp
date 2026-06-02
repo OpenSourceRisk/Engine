@@ -251,7 +251,6 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
     inputs->loadParameter<string>(dimModel, "xva", "dimModel", false);
     if (!dimModel.empty()) {
         dimModel_ = dimModel;
-        dimAnalytic_ = true;
         QL_REQUIRE(
             dimModel_ == "Regression" || dimModel_ == "Flat" || dimModel_ == "DeltaVaR" ||
                 dimModel_ == "DeltaGammaNormalVaR" || dimModel_ == "DeltaGammaVaR" || dimModel_ == "DynamicIM" ||
