@@ -35,7 +35,6 @@
 #include <qle/calendars/ice.hpp>
 #include <qle/calendars/ireland.hpp>
 #include <qle/calendars/islamicweekendsonly.hpp>
-#include <qle/calendars/israel.hpp>
 #include <qle/calendars/luxembourg.hpp>
 #include <qle/calendars/malaysia.hpp>
 #include <qle/calendars/mauritius.hpp>
@@ -405,7 +404,7 @@ void CalendarParser::reset() {
 
         // Other / Legacy
         {"DEN", Denmark()}, // TODO: consider remove it, not ISO
-        {"Telbor", QuantExt::Israel(QuantExt::Israel::Telbor)},
+        {"Telbor", QuantLib::Israel(QuantLib::Israel::Telbor)},
         {"London stock exchange", UnitedKingdom(UnitedKingdom::Exchange)},
         {"LNB", UnitedKingdom()},
         {"New York stock exchange", UnitedStates(UnitedStates::NYSE)},
