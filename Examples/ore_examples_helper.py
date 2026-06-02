@@ -151,7 +151,8 @@ class OreExample(object):
             elif os.path.isfile("/ore/App/ore"):
                 self.ore_exe = "/ore/App/ore"
             else:
-                self.ore_exe = "ore2"
+                print_on_console("ORE executable not found.")
+                quit()
         ore_exe_path = os.path.abspath(self.ore_exe)
         print_on_console("Using ORE executable " + ore_exe_path)
         # Only write details of the ORE exe when running a CI build.
