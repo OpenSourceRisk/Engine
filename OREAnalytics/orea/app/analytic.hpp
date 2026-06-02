@@ -181,7 +181,9 @@ public:
     }
     void addTimer(const std::string& key, const Timer& timer) { timer_.addTimer(key, timer); }
 
-<<<<<<< HEAD
+    void setApplySimmExemptions(bool flag) { applySimmExemptions_ = flag; }
+    bool applySimmExemptions() const { return applySimmExemptions_; }
+
     void setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario,
                            const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketParams);
 
@@ -195,10 +197,6 @@ public:
 
     void applyOffsetScenario(bool continueOnError = true, bool useSpreadedTermStructures = true,
                              bool overrideTenors = true);
-=======
-    void setApplySimmExemptions(bool flag) { applySimmExemptions_ = flag; }
-    bool applySimmExemptions() const { return applySimmExemptions_; }
->>>>>>> 5a2d7da4bd (ACADIAQPR-14129 fixes)
 
 protected:
     std::unique_ptr<Impl> impl_;
