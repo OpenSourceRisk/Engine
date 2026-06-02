@@ -80,8 +80,6 @@ RandomVariable randomVariableOpConditionalExpectation(const Size size, const Siz
         evaluationRegressor = vec2vecptr(transformedEvaluationRegressor);
     }
 
-    std::cout << "randomVarOpCondExp(): using regressor of size " << regressor.size() << std::endl;
-
     Filter filter = !close_enough(*args[1], RandomVariable(size, 0.0));
 
     if (usePythonIntegration && filter.deterministic() && filter[0]) {
