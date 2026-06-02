@@ -512,7 +512,8 @@ void XvaEngineCG::buildCgPartB() {
 }
 
 std::size_t XvaEngineCG::createExposureNode(const std::vector<const TradeExposure*>& exposures,
-                                            const std::size_t dateIndex, const bool isValuationDate) {
+                                            const std::size_t dateIndex, const bool isValuationDate,
+                                            std::map<std::string, size_t>* pfExposureLocalBaseCcy) {
     auto g = model_->computationGraph();
 
     // determine valuation date and - if applicable - closeout date
@@ -536,6 +537,7 @@ std::size_t XvaEngineCG::createExposureNode(const std::vector<const TradeExposur
     // sum the exposures
 
     std::vector<std::size_t> values;
+    std::map<std::string, std::vector<std::size_t>> valuesLocalBaseCcy;
 
     // local base ccy, regressors local base ccy, regressors model base ccy
     std::map<std::tuple<std::string, std::set<std::size_t>, std::set<std::size_t>>, std::vector<std::size_t>>
@@ -553,6 +555,9 @@ std::size_t XvaEngineCG::createExposureNode(const std::vector<const TradeExposur
             values.push_back(
                 cg_mult(*g, model_->convertToBaseCcy(obsDate, complex.localBaseCurrency),
                         cg_mult(*g, complex.targetConditionalExpectation, cg_const(*g, complex.multiplier))));
+            if (pfExposureLocalBaseCcy) {
+                valuesLocalBaseCcy[complex.localBaseCurrency].push_back(values.back());
+            }
         }
     }
 
@@ -560,11 +565,20 @@ std::size_t XvaEngineCG::createExposureNode(const std::vector<const TradeExposur
         values.push_back(cg_mult(*g, model_->convertToBaseCcy(obsDate, std::get<0>(ccys)),
                                  model_->npv(cg_add(*g, nodes), obsDate, cg_const(*g, 1.0), std::nullopt, {},
                                              std::get<1>(ccys), std::get<2>(ccys))));
+        if (pfExposureLocalBaseCcy) {
+            valuesLocalBaseCcy[std::get<0>(ccys)].push_back(values.back());
+        }
     }
 
     // diable stickyness again
 
     model_->useStickyCloseOutDates(false);
+
+    // set exposure by local base ccy result, if desired
+
+    for (auto const& [k, v] : valuesLocalBaseCcy) {
+        pfExposureLocalBaseCcy->operator[](k) = cg_add(*g, v);
+    }
 
     // return result
 
@@ -579,7 +593,13 @@ std::size_t XvaEngineCG::createPortfolioExposureNode(const std::size_t dateIndex
                                                 : &tradeExposureCloseOut_[j][dateIndex][k]);
         }
     }
-    return createExposureNode(exposures, dateIndex, isValuationDate);
+
+    // if dynamic im is enabled we populate the local base ccy exposure map here, too
+    if (enableDynamicIM_)
+        pfExposureLocalBaseCcy_.resize(valuationDates_.size() + 1);
+
+    return createExposureNode(exposures, dateIndex, isValuationDate,
+                              enableDynamicIM_ && isValuationDate ? &pfExposureLocalBaseCcy_[dateIndex] : nullptr);
 }
 
 std::size_t XvaEngineCG::createTradeExposureNode(const std::size_t dateIndex, const std::size_t tradeIndex,
@@ -600,7 +620,7 @@ void XvaEngineCG::buildCgPartC() {
     boost::timer::cpu_timer timer;
     auto g = model_->computationGraph();
 
-    if (mode_ == Mode::Full || !tradeLevelBreakDown_) {
+    if (mode_ == Mode::Full || !tradeLevelBreakDown_ || enableDynamicIM_) {
         for (Size i = 0; i < valuationDates_.size() + 1; ++i) {
             pfExposureValuation_.push_back(createPortfolioExposureNode(i, true));
             if (!closeOutDates_.empty()) {
@@ -632,6 +652,11 @@ void XvaEngineCG::buildCgDynamicIM() {
 
     boost::timer::cpu_timer timer;
     auto g = model_->computationGraph();
+
+    QL_REQUIRE(pfExposureLocalBaseCcy_.size() == valuationDates_.size() + 1,
+               "XvaEnginecg::buildCgDynamicIM(): internal error, pfExposureLocalBaseCcy has size ("
+                   << pfExposureLocalBaseCcy_.size() << "), should have size #aluationDates + 1 ("
+                   << valuationDates_.size() + 1 << ")");
 
     for (Size i = 0; i < valuationDates_.size() + 1; ++i) {
         dynamicImInfo_.push_back({});
@@ -665,6 +690,11 @@ void XvaEngineCG::buildCgDynamicIM() {
         for (auto const& [key, values] : pathValues) {
             dynamicImInfo_.back().simplePathValues[key] = cg_add(*g, values);
         }
+
+        /* pf conditional expectations (converted to model base ccy), grouped by their local base currency,
+           these create additional fx delta exposure */
+
+        dynamicImInfo_.back().pfExposureLocalBaseCcy = pfExposureLocalBaseCcy_[i];
     }
 
     timing_partc2_ = timer.elapsed().wall;
@@ -821,6 +851,9 @@ void XvaEngineCG::doForwardEvaluation() {
                 for (auto const& n : key.regressorsBaseCurrency) {
                     keepNodes_[n] = true;
                 }
+            }
+            for(auto const& [key, val] : dynamicImInfo_[i].pfExposureLocalBaseCcy) {
+                keepNodes_[val] = true;
             }
             for (auto const& [tradeId, conversionToBaseCcy] : dynamicImInfo_[i].complexTradeData)
                 keepNodes_[conversionToBaseCcy] = true;
@@ -1685,6 +1718,16 @@ void XvaEngineCG::calculateDynamicIM() {
             }
 
         } // loop over complex trades
+
+        // additional fx spot exposure from local base ccy -> model base ccy conversion
+
+        for (std::size_t ccy = 1; ccy < model_->currencies().size(); ++ccy) {
+            std::string currency = model_->currencies()[ccy];
+            if (auto d = dynamicImInfo_[i].pfExposureLocalBaseCcy.find(currency);
+                d != dynamicImInfo_[i].pfExposureLocalBaseCcy.end()) {
+                conditionalFxDelta[ccy - 1] += 0.01 * values_[d->second];
+            }
+        }
 
         // scale ir vega for im calculation
 

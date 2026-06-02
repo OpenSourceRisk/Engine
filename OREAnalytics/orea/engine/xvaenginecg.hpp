@@ -151,7 +151,8 @@ private:
                                  std::vector<ExternalRandomVariable>& valuesExternal) const;
 
     std::size_t createExposureNode(const std::vector<const TradeExposure*>& exposures, const std::size_t dateIndex,
-                                   const bool isValuationDate);
+                                   const bool isValuationDate,
+                                   std::map<std::string, size_t>* pfExposureLocalBaseCcy = nullptr);
     std::size_t createPortfolioExposureNode(const std::size_t dateIndex, const bool isValuationDate);
     std::size_t createTradeExposureNode(const std::size_t dateIndex, const std::size_t tradeIndex,
                                         const bool isValuationDate);
@@ -279,6 +280,10 @@ private:
     std::vector<std::vector<std::size_t>> tradeExposureNodes_;
     std::vector<std::vector<std::size_t>> tradeExposureCloseOutNodes_;
 
+    /* portfolio exposure by local base ccy, converted to model base ccy, only populated and used for dim,
+       on valuation dates, includes t=0, these are conditional expectations */
+    std::vector<std::map<std::string, std::size_t>> pfExposureLocalBaseCcy_;
+
     /* for dynamic im calculation, per time step data */
     struct DynamicImInfo {
         // simple trade data
@@ -298,6 +303,8 @@ private:
             auto operator<=>(const ComplexKey&) const = default;
         };
         std::set<ComplexKey> complexTradeData;
+        // cond pf exposure by local base ccy (in model base ccy)
+        std::map<std::string, std::size_t> pfExposureLocalBaseCcy;
     };
 
     // dynamic im info per valuation date, includes t=0 as first component
