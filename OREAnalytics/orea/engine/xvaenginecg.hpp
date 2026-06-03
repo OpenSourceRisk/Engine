@@ -284,6 +284,7 @@ private:
     std::vector<std::map<std::string, std::size_t>> pfExposureLocalBaseCcy_;
 
     /* for dynamic im calculation, per time step data */
+    /// @cond
     struct DynamicImInfo {
         // simple trade data
         struct SimpleKey {
@@ -304,6 +305,7 @@ private:
         // cond pf exposure by local base ccy (in model base ccy)
         std::map<std::string, std::size_t> pfExposureLocalBaseCcy;
     };
+    /// @endcond
 
     // dynamic im info per valuation date, includes t=0 as first component
     std::vector<DynamicImInfo> dynamicImInfo_;
