@@ -57,7 +57,7 @@ using ore::data::BootstrapConfig;
 using ore::data::PriceSegment;
 using ore::data::YieldCurveSegment;
 using ore::data::ParametricSmileConfiguration;
-
+using ore::data::BondFutureVolatilityConfig;
 %}
 
 %shared_ptr(ore::data::ReportConfig)
@@ -343,6 +343,9 @@ class CurveConfigurations  : public XMLSerializable  {
 
     bool hasCorrelationCurveConfig(const std::string& curveID) const;
     ext::shared_ptr<CorrelationCurveConfig> correlationCurveConfig(const std::string& curveID) const;
+
+    bool hasBondFutureVolatilityConfig(const std::string& curveID) const;
+    QuantLib::ext::shared_ptr<BondFutureVolatilityConfig> bondFutureVolatilityConfig(const std::string& curveID) const;
 
     ext::shared_ptr<CurveConfigurations> minimalCurveConfig(const ext::shared_ptr<TodaysMarketParameters> todaysMarketParams,
                        const std::set<std::string>& configurations = {""}) const;
@@ -673,6 +676,7 @@ if 'DefaultCurveConfigConfig' in globals():
 %shared_ptr(ore::data::FXVolatilityCurveConfig)
 %shared_ptr(ore::data::CapFloorVolatilityCurveConfig)
 %shared_ptr(ore::data::EquityVolatilityCurveConfig)
+%shared_ptr(ore::data::BondFutureVolatilityConfig)
 
 namespace ore {
 namespace data {
@@ -954,6 +958,40 @@ public:
     const ReportConfig& reportConfig() const;
     string& ccy();
     string& dayCounter();
+};
+
+class BondFutureVolatilityConfig : public CurveConfig {
+public:
+    BondFutureVolatilityConfig();
+    BondFutureVolatilityConfig(
+        const std::string& curveId,
+        const std::string& curveDescription,
+        std::string contractName,
+        std::vector<QuantLib::ext::shared_ptr<VolatilityConfig>> volatilityConfig,
+        std::string dayCounter = "A365",
+        std::string calendar = "NullCalendar",
+        std::string yieldCurveId = "",
+        QuantLib::Real strikeFactor = 1.0,
+        std::string useOnlyPutCall = "",
+        QuantLib::ext::optional<OneDimSolverConfig> solverConfig = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<bool> preferOutOfTheMoney = QuantLib::ext::nullopt,
+        std::string engineOverride = "",
+        QuantLib::ext::optional<bool> treatAsEuropean = QuantLib::ext::nullopt);
+
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
+
+    const std::string& contractName() const;
+    const std::vector<QuantLib::ext::shared_ptr<VolatilityConfig>>& volatilityConfig() const;
+    const std::string& dayCounter() const;
+    const std::string& calendar() const;
+    const std::string& yieldCurveId() const;
+    QuantLib::Real strikeFactor() const;
+    const std::string& useOnlyPutCall() const;
+    const QuantLib::ext::optional<OneDimSolverConfig>& solverConfig() const;
+    const QuantLib::ext::optional<bool>& preferOutOfTheMoney() const;
+    const std::string& engineOverride() const;
+    const QuantLib::ext::optional<bool>& treatAsEuropean() const;
 };
 
 } // namespace data

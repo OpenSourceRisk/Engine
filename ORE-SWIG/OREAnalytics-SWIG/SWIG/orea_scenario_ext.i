@@ -58,7 +58,9 @@ public:
         CommodityVolatility,
         SecuritySpread,
         Correlation,
-        CPR
+        CPR,
+        Theta,
+        BondFutureVolatility
     };
 
     RiskFactorKey();

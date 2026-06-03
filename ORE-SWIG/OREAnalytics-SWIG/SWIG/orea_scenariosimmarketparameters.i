@@ -184,6 +184,14 @@ public:
     std::vector<std::string> correlationPairs() const;
     const std::vector<QuantLib::Real>& correlationStrikes() const;
 
+    bool bondFutureVolSimulate() const;
+    bool simulateBondFutureVolATMOnly() const;
+    const std::string& bondFutureVolDecayMode() const;
+    std::vector<std::string> bondFutureVolNames() const;
+    const std::vector<QuantLib::Period>& bondFutureVolExpiries(const std::string& contractName) const;
+    const std::vector<QuantLib::Real>& bondFutureVolMoneyness(const std::string& contractName) const;
+    const string& bondFutureVolSmileDynamics(const string& contractName) const;
+
     QuantLib::Size numberOfCreditStates() const;
 
     const std::map<ore::analytics::RiskFactorKey::KeyType, std::pair<bool, std::set<std::string>>>& parameters() const;
@@ -326,6 +334,15 @@ public:
     void setCorrelationPairs(std::vector<std::string> names);
     std::vector<QuantLib::Real>& correlationStrikes();
     void setNumberOfCreditStates(QuantLib::Size numberOfCreditStates);
+
+    void setBondFutureVolSimulate(bool simulate);
+    void setSimulateBondFutureVolATMOnly(bool simulateATMOnly);
+    std::string& bondFutureVolDecayMode();
+    void setBondFutureVolNames(std::vector<std::string> names);
+    std::vector<QuantLib::Period>& bondFutureVolExpiries(const std::string& contractName);
+    std::vector<QuantLib::Real>& bondFutureVolMoneyness(const std::string& contractName);
+    void setBondFutureVolSmileDynamics(const std::string& key, const std::string& smileDynamics);
+
     bool operator==(const ScenarioSimMarketParameters& rhs);
     bool operator!=(const ScenarioSimMarketParameters& rhs);
 
