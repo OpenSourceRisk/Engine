@@ -260,7 +260,13 @@ void InflationCapFloorVolCurve::buildFromVolatilities(
                                                                  tenors, strikes, vols, config->dayCounter());
 
         QuantLib::ext::shared_ptr<YoYInflationIndex> index;
-        auto obsInterpolation = getObservationInterpolation(config);
+        auto [startDate, isInterpolated] = getStartDateAndIsInterpolated(asof, config);
+        startDate = startDate != Date() ? startDate : asof;
+        // Work around if startdate is not today (e.g. legacy quarterly AUCPI, adjust the obsLag by the start delay).
+        // Correct solution: implement start date in the yoy surfaces 
+        auto observationDate = startDate - config->observationLag();
+        Period obsLag = startDate != asof ? (asof - observationDate) * Days : config->observationLag();
+        auto obsInterpolation = isInterpolated ? CPI::Linear : CPI::Flat;
 
         auto it2 = inflationCurves.find(config->indexCurve());
         if (it2 != inflationCurves.end()) {
