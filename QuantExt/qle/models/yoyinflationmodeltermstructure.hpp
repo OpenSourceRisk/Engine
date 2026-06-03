@@ -89,7 +89,7 @@ public:
         provided and not set to <code>-1 * QuantLib::Days</code>, it is used as the observation lag. Otherwise, the 
         term structure's observation lag is used.
     */
-    virtual std::map<QuantLib::Date, QuantLib::Real> yoyRates(const std::vector<QuantLib::Date>& dates, const std::vector<QuantLib::Period>& observationPeriods) const = 0;
+    virtual std::map<QuantLib::Date, QuantLib::Real> yoyRates(const std::vector<QuantLib::Date>& dates, const QuantLib::Period& obsLag) const = 0;
 
     void enableCache(const bool b = true) const { enableCache_ = b; }
     virtual void clearCache() const {}
@@ -99,9 +99,11 @@ protected:
     //! gaps in the pillars, ensure consistent pricing of yoy swaps with the model curve, but depending on the given
     //! pillars, the individual swaplet rates are not guaranteed to be the same as the model swaplet rates.
     std::map<QuantLib::Date, QuantLib::Real>
-    modelParRatesToSwapletRates(const std::vector<QuantLib::Date>& dates, const std::vector<QuantLib::Period>& obsLags,
+    modelParRatesToSwapletRates(const std::vector<QuantLib::Date>& dates, const QuantLib::Period& obsLag,
                                 const std::map<QuantLib::Date, QuantLib::Real>& parRates,
-                                const std::map<QuantLib::Date, QuantLib::Real>& discounts) const;
+                                const std::map<QuantLib::Date, QuantLib::Real>& discounts,
+                                const QuantLib::Size irIndex,
+                                const QuantLib::ext::shared_ptr<ZeroInflationIndex>& infIndex) const;
 
     QuantLib::ext::shared_ptr<CrossAssetModel> model_;
     QuantLib::Size index_;

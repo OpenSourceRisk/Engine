@@ -100,21 +100,21 @@ Real YoYInflationModelTermStructure::yoyRateImpl(Time t) const {
 }
 
 std::map<QuantLib::Date, QuantLib::Real> YoYInflationModelTermStructure::modelParRatesToSwapletRates(
-    const std::vector<QuantLib::Date>& dates, const std::vector<QuantLib::Period>& obsLags,
+    const std::vector<QuantLib::Date>& dates, const QuantLib::Period& obsLag,
     const std::map<QuantLib::Date, QuantLib::Real>& parRates,
-    const std::map<QuantLib::Date, QuantLib::Real>& discounts) const {
+    const std::map<QuantLib::Date, QuantLib::Real>& discounts,
+    const QuantLib::Size irIndex,
+    const QuantLib::ext::shared_ptr<ZeroInflationIndex>& infIndex) const {
     QL_REQUIRE(!dates.empty(),
                "YoYInflationModelTermStructure::modelParRatesToSwapletRates: empty dates vector provided.");
-    QL_REQUIRE(dates.size() == obsLags.size(),
-               "YoYInflationModelTermStructure::modelParRatesToSwapletRates: dates and obsLags vectors must have the same size.");
     std::map<QuantLib::Date, QuantLib::Real> swapletRates;
     QuantLib::ext::shared_ptr<YoYInflationIndex> index =
-        QuantLib::ext::make_shared<YoYInflationIndexWrapper>(model_->infjy(index_)->inflationIndex());
+        QuantLib::ext::make_shared<YoYInflationIndexWrapper>(infIndex);
     
     // Will need a discount term structure in the bootstrap below so create it here from the discounts map.
     std::vector<Date> dfDates;
     std::vector<Real> dfValues;
-    auto irIdx = model_->ccyIndex(model_->infjy(index_)->currency());
+
     if (discounts.count(referenceDate_) == 0) {
         dfDates.push_back(referenceDate_);
         dfValues.push_back(1.0);
@@ -124,10 +124,10 @@ std::map<QuantLib::Date, QuantLib::Real> YoYInflationModelTermStructure::modelPa
         dfDates.push_back(kv.first);
         dfValues.push_back(kv.second);
     }
+    auto discountDayCounter = model_->irlgm1f(irIndex)->termStructure()->dayCounter();
 
-    auto irTs = model_->irlgm1f(irIdx)->termStructure();
     Handle<YieldTermStructure> yts(QuantLib::ext::make_shared<InterpolatedDiscountCurve<LogLinear>>(
-        dfDates, dfValues, irTs->dayCounter(), LogLinear()));
+        dfDates, dfValues, discountDayCounter, LogLinear()));
 
     // Create the YoY swap helpers from the YoY swap rates calculated above.
     // Using the curve's day counter as the helper's day counter for now.
@@ -135,7 +135,6 @@ std::map<QuantLib::Date, QuantLib::Real> YoYInflationModelTermStructure::modelPa
     std::vector<QuantLib::ext::shared_ptr<YoYHelper>> helpers;
     for (size_t i = 0; i < dates.size(); ++i) {
         QuantLib::Date maturity = dates[i];
-        QuantLib::Period obsLag = obsLags[i];
         auto it = parRates.find(dates[i]);
         QL_REQUIRE(it != parRates.end(), "YoYInflationModelTermStructure::yoySwaptletRates: par rate for maturity "
                                              << maturity
@@ -154,7 +153,7 @@ std::map<QuantLib::Date, QuantLib::Real> YoYInflationModelTermStructure::modelPa
         referenceDate_, baseDate(), baseRate, frequency(), dayCounter(), helpers);
     // Read the necessary YoY swaplet rates from the bootstrapped YoY inflation curve
     for (size_t i = 0; i < dates.size(); ++i) {
-        auto fixingDate = inflationPeriod(dates[i] - obsLags[i], frequency()).first;
+        auto fixingDate = inflationPeriod(dates[i] - obsLag, frequency()).first;
         swapletRates[dates[i]] = yoyCurve->yoyRate(fixingDate);
     }
     return swapletRates;

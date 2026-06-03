@@ -49,10 +49,7 @@ map<Date, Real> JyImpliedYoYInflationTermStructure::yoyRates(const vector<Date>&
     map<Date, Real> discounts;
     map<Date, Real> yyParRates;
     auto irIdx = model_->ccyIndex(model_->infjy(index_)->currency());
-
-    // Will need a YoY index below in the helpers.
-    QuantLib::ext::shared_ptr<YoYInflationIndex> index =
-        QuantLib::ext::make_shared<YoYInflationIndexWrapper>(model_->infjy(index_)->inflationIndex());
+    auto infIndex = model_->infjy(index_)->inflationIndex();
 
     for (const auto& maturity : dts) {
 
@@ -88,8 +85,8 @@ map<Date, Real> JyImpliedYoYInflationTermStructure::yoyRates(const vector<Date>&
             Real swaplet;
             auto dc = simulationDayCounter_.value_or(dayCounter());
             // Need to calculate observation date = maturity - obsLag
-            auto fixingDateStart = inflationPeriod(start - obsLag, index->frequency()).first;
-            auto fixingDateEnd = inflationPeriod(end - obsLag, index->frequency()).first;
+            auto fixingDateStart = inflationPeriod(start - obsLag, infIndex->frequency()).first;
+            auto fixingDateEnd = inflationPeriod(end - obsLag, infIndex->frequency()).first;
             // At time T we simulation inflation at time T - simLag (difference between initial base and ref date, kept
             // constant)
             auto T_maturity = relativeTime_ + dc.yearFraction(referenceDate_, end);
@@ -99,11 +96,10 @@ map<Date, Real> JyImpliedYoYInflationTermStructure::yoyRates(const vector<Date>&
             // if obsLag very short it could be that the first coupon is in the future
             if (fixingDateStart <= baseDate()) {
                 // The first YoY swaplet is a zero coupon swaplet because I_{start} is known.
-                auto index = model_->infjy(index_)->inflationIndex();
                 auto growth = inflationGrowth(model_, index_, relativeTime_, T_fixing, state_[2], state_[0],
                                               simulationDayCounter_);
                 auto CPI_at_fixingStart =
-                    fixingDateStart < baseDate() ? index->fixing(fixingDateStart) : std::exp(state_[1]);
+                    fixingDateStart < baseDate() ? infIndex->fixing(fixingDateStart) : std::exp(state_[1]);
                 auto CPI_at_relativeTime = std::exp(state_[1]);
                 swaplet = discount * (CPI_at_relativeTime / CPI_at_fixingStart * growth - 1.0);
             } else {
@@ -125,7 +121,7 @@ map<Date, Real> JyImpliedYoYInflationTermStructure::yoyRates(const vector<Date>&
 
     QL_REQUIRE(!yyParRates.empty(), "JyImpliedYoYInflationTermStructure: yoyRates did not create any YoY swap rates.");
 
-    return modelParRatesToSwapletRates(dts, obsLag, yyParRates, discounts);
+    return modelParRatesToSwapletRates(dts, obsLag, yyParRates, discounts, irIdx, infIndex);
 }
 
 Real JyImpliedYoYInflationTermStructure::yoySwaplet(Time S, Time T) const {

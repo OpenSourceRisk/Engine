@@ -40,12 +40,12 @@ using namespace QuantExt;
 class InfDkParametrization : public Parametrization {
 public:
     InfDkParametrization(QuantLib::ext::shared_ptr<Lgm1fParametrization<ZeroInflationTermStructure>> dkLgmParam,
-                         const Handle<ZeroInflationIndex>& index)
+                         const QuantLib::ext::shared_ptr<ZeroInflationIndex>& index)
         : Parametrization(dkLgmParam->currency(), dkLgmParam->name()), dkLgmParam_(dkLgmParam), index_(index) {}
     const QuantLib::ext::shared_ptr<Lgm1fParametrization<ZeroInflationTermStructure>> dkLgmParam() const {
         return dkLgmParam_;
     }
-    const Handle<ZeroInflationIndex>& inflationIndex() const { return index_; }
+    const QuantLib::ext::shared_ptr<ZeroInflationIndex>& inflationIndex() const { return index_; }
 
     const Currency& currency() const override { return dkLgmParam_->currency(); }
 
@@ -63,13 +63,13 @@ public:
 
 private:
     QuantLib::ext::shared_ptr<Lgm1fParametrization<ZeroInflationTermStructure>> dkLgmParam_;
-    Handle<ZeroInflationIndex> index_;
+    QuantLib::ext::shared_ptr<ZeroInflationIndex> index_;
 };
 
 class InfDkConstantParametrization : public InfDkParametrization {
 public:
     InfDkConstantParametrization(const Currency& currency, const Handle<ZeroInflationTermStructure>& termStructure,
-                                 const Real alpha, const Real kappa, const Handle<ZeroInflationIndex>& index,
+                                 const Real alpha, const Real kappa, const QuantLib::ext::shared_ptr<ZeroInflationIndex>& index,
                                  const std::string& name = std::string())
         : InfDkParametrization(ext::make_shared<Lgm1fConstantParametrization<ZeroInflationTermStructure>>(
                                    currency, termStructure, alpha, kappa, name),
@@ -81,7 +81,7 @@ public:
     InfDkPiecewiseConstantHullWhiteAdaptor(const Currency& currency,
                                            const Handle<ZeroInflationTermStructure>& termStructure,
                                            const Array& sigmaTimes, const Array& sigma, const Array& kappaTimes,
-                                           const Array& kappa, const Handle<ZeroInflationIndex>& index,
+                                           const Array& kappa, const QuantLib::ext::shared_ptr<ZeroInflationIndex>& index,
                                            const std::string& name = std::string(),
                                            const QuantLib::ext::shared_ptr<QuantLib::Constraint>& sigmaConstraint =
                                                QuantLib::ext::make_shared<QuantLib::NoConstraint>(),
@@ -98,7 +98,7 @@ public:
     InfDkPiecewiseConstantParametrization(const Currency& currency,
                                           const Handle<ZeroInflationTermStructure>& termStructure,
                                           const Array& alphaTimes, const Array& alpha, const Array& kappaTimes,
-                                          const Array& kappa, const Handle<ZeroInflationIndex>& index,
+                                          const Array& kappa, const QuantLib::ext::shared_ptr<ZeroInflationIndex>& index,
                                           const std::string& name = std::string(),
                                           const QuantLib::ext::shared_ptr<QuantLib::Constraint>& alphaConstraint =
                                               QuantLib::ext::make_shared<QuantLib::NoConstraint>(),
@@ -115,7 +115,7 @@ public:
     InfDkPiecewiseLinearParametrization(const Currency& currency,
                                         const Handle<ZeroInflationTermStructure>& termStructure,
                                         const Array& alphaTimes, const Array& alpha, const Array& hTimes,
-                                        const Array& h, const Handle<ZeroInflationIndex>& index,
+                                        const Array& h, const QuantLib::ext::shared_ptr<ZeroInflationIndex>& index,
                                         const std::string& name = std::string(),
                                         const QuantLib::ext::shared_ptr<QuantLib::Constraint>& alphaConstraint =
                                             QuantLib::ext::make_shared<QuantLib::NoConstraint>(),
