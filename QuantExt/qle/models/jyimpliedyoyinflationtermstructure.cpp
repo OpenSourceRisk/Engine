@@ -98,10 +98,9 @@ map<Date, Real> JyImpliedYoYInflationTermStructure::yoyRates(const vector<Date>&
                 // The first YoY swaplet is a zero coupon swaplet because I_{start} is known.
                 auto growth = inflationGrowth(model_, index_, relativeTime_, T_fixing, state_[2], state_[0],
                                               simulationDayCounter_);
-                auto CPI_at_fixingStart =
-                    fixingDateStart < baseDate() ? infIndex->fixing(fixingDateStart) : std::exp(state_[1]);
-                auto CPI_at_relativeTime = std::exp(state_[1]);
-                swaplet = discount * (CPI_at_relativeTime / CPI_at_fixingStart * growth - 1.0);
+                auto pastGrowth = fixingDateStart < baseDate() ?
+                    infIndex->fixing(fixingDateStart) / infIndex->fixing(baseDate()) : 1.0;
+                swaplet = discount * (pastGrowth * growth - 1.0);
             } else {
                 swaplet = yoySwaplet(T_fixingStart, T_maturity);
             }
