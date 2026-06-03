@@ -72,6 +72,7 @@ private:
                             const std::map<std::string, std::vector<std::string>>& constituentCurrencies,
                             const std::map<std::string, double>& fxSpotShiftSize, const double eqShiftSize) const;
 
+    double fxRiskShiftSize(const std::string foreign, const std::string domestic) const;
     //! Return the sensi shift size for the shifting the ccy-baseCurrency spot quote
     double fxRiskShiftSize(const std::string ccy) const;
     //! Returns the shift sizes for all currencies in the map
