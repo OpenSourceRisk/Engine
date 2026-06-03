@@ -192,7 +192,9 @@ class AmcCgSwaptionEngineBuilder final : public CamSwaptionEngineBuilder {
 public:
     AmcCgSwaptionEngineBuilder(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& modelCg,
                                const std::vector<Date>& simulationDates)
-        : CamSwaptionEngineBuilder("AMCCG", false), modelCg_(modelCg), simulationDates_(simulationDates) {}
+        : CamSwaptionEngineBuilder("AMCCG", false), modelCg_(modelCg), simulationDates_(simulationDates) {
+        cachingEnabled_ = false;
+}
 
 private:
     QuantLib::ext::shared_ptr<PricingEngine>
