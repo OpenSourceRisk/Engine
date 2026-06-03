@@ -1208,12 +1208,19 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
                                            &values[gpuCodeGenerator_[currentId_ - 1].bufferedLocalVarMap(v[i].second) *
                                                    size_[currentId_ - 1]]);
                     }
+                    QL_REQUIRE(regressor.size() % 2 == 0, "OpenClContext::finalizeCalculation(): regressor ("
+                                                              << regressor.size() << ") must have even length.");
+                    auto regPtr = vec2vecptr(regressor);
+                    auto trainRegressor = std::vector<const RandomVariable*>(
+                        regPtr.begin(), std::next(regPtr.begin(), regressor.size() / 2));
+                    auto evalRegressor = std::vector<const RandomVariable*>(
+                        std::next(regPtr.begin(), regressor.size() / 2), regPtr.end());
 
-                    ce = conditionalExpectation(regressand, vec2vecptr(regressor),
-                                                multiPathBasisSystem(regressor.size(), settings_.regressionOrder,
+                    ce = conditionalExpectation(regressand, trainRegressor,
+                                                multiPathBasisSystem(trainRegressor.size(), settings_.regressionOrder,
                                                                      QuantLib::LsmBasisSystem::Monomial, {},
                                                                      regressand.size()),
-                                                filter);
+                                                filter, RandomVariableRegressionMethod::QR, evalRegressor);
                 }
 
                 // overwrite the value
