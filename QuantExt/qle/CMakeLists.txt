@@ -14,7 +14,6 @@ calendars/greece.cpp
 calendars/ice.cpp
 calendars/ireland.cpp
 calendars/islamicweekendsonly.cpp
-calendars/israel.cpp
 calendars/luxembourg.cpp
 calendars/malaysia.cpp
 calendars/mauritius.cpp
@@ -363,6 +362,7 @@ processes/multiassetquantohestonprocess.cpp
 processes/ptdhestonprocess.cpp
 processes/quantohestonprocess.cpp
 python_integration/pythonfunctions.cpp
+quotes/bondfuturequote.cpp
 quotes/logquote.cpp
 termstructures/aposurface.cpp
 termstructures/averagefuturepricehelper.cpp
@@ -382,6 +382,7 @@ termstructures/blackvolsurfacedelta.cpp
 termstructures/blackvolsurfaceproxy.cpp
 termstructures/blackvolsurfacesvi.cpp
 termstructures/blackvolsurfacewithatm.cpp
+termstructures/bondfuturevolstripper.cpp
 termstructures/brlcdiratehelper.cpp
 termstructures/capfloorhelper.cpp
 termstructures/capfloortermvolsurface.cpp
@@ -496,7 +497,6 @@ calendars/greece.hpp
 calendars/ice.hpp
 calendars/ireland.hpp
 calendars/islamicweekendsonly.hpp
-calendars/israel.hpp
 calendars/luxembourg.hpp
 calendars/malaysia.hpp
 calendars/mauritius.hpp
@@ -967,6 +967,7 @@ processes/ptdhestonprocess.hpp
 processes/quantohestonprocess.hpp
 python_integration/pythonfunctions.hpp
 quotes/basecorrelationquote.hpp
+quotes/bondfuturequote.hpp
 quotes/compositevectorquote.hpp
 quotes/exceptionquote.hpp
 quotes/logquote.hpp
@@ -993,6 +994,7 @@ termstructures/blackvolsurfacedelta.hpp
 termstructures/blackvolsurfaceproxy.hpp
 termstructures/blackvolsurfacesvi.hpp
 termstructures/blackvolsurfacewithatm.hpp
+termstructures/bondfuturevolstripper.hpp
 termstructures/bondyieldshiftedcurvetermstructure.hpp
 termstructures/brlcdiratehelper.hpp
 termstructures/capfloorhelper.hpp

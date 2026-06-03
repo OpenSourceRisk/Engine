@@ -31,14 +31,12 @@ namespace ore {
 namespace data {
 
 EquityFutureOption::EquityFutureOption(Envelope& env, OptionData option, const string& currency, Real quantity,
-                                       const QuantLib::ext::shared_ptr<ore::data::Underlying>& underlying, TradeStrike strike,
-                                       QuantLib::Date forwardDate, const QuantLib::ext::shared_ptr<QuantLib::Index>& index,
+                                       const QuantLib::ext::shared_ptr<ore::data::Underlying>& underlying,
+                                       TradeStrike strike, QuantLib::Date forwardDate,
+                                       const QuantLib::ext::shared_ptr<QuantLib::Index>& index,
                                        const std::string& indexName)
-    : VanillaOptionTrade(env, AssetClass::EQ, option, underlying->name(), currency, quantity, strike, index, indexName,
-                         forwardDate),
-      underlying_(underlying) {
-    tradeType_ = "EquityFutureOption";
-}
+    : VanillaOptionTrade("EquityFutureOption", env, AssetClass::EQ, option, underlying->name(), currency, quantity,
+        strike, index, indexName, forwardDate), underlying_(underlying) {}
 
 void EquityFutureOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     QL_REQUIRE(quantity_ > 0, "Equity futures option requires a positive quantity");

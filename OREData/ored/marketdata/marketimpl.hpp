@@ -183,6 +183,10 @@ public:
                                 const string& configuration = Market::defaultConfiguration) const override;
     //@}
 
+    //! Bond future volatilities
+    QuantLib::Handle<QuantLib::BlackVolTermStructure> bondFutureVol(const std::string& contractName,
+        const std::string& configuration = Market::defaultConfiguration) const override;
+
     //! \name Disable copying
     //@{
     MarketImpl(const MarketImpl&) = delete;
@@ -245,6 +249,7 @@ protected:
     mutable map<pair<string, string>, QuantLib::Handle<QuantLib::BlackVolTermStructure>> commodityVols_;
     mutable map<pair<string, string>, QuantLib::Handle<QuantExt::EquityIndex2>> equityCurves_;
     mutable map<pair<string, string>, Handle<Quote>> cprs_;
+    mutable map<pair<string, string>, QuantLib::Handle<QuantLib::BlackVolTermStructure>> bondFutureVols_;
 
     //! add a swap index to the market
     void addSwapIndex(const string& swapindex, const string& discountIndex,

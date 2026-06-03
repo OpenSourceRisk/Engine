@@ -158,6 +158,11 @@ public:
         return QuantLib::Handle<QuantExt::CorrelationTermStructure>();
     }
 
+    QuantLib::Handle<QuantLib::BlackVolTermStructure> bondFutureVol(const std::string& contractName,
+        const std::string& configuration) const override {
+        return QuantLib::Handle<QuantLib::BlackVolTermStructure>();
+    }
+
     std::map<QuantLib::Period, QuantLib::Period>
     zeroInflationObservationLags(const string& indexName,
                                  const string& configuration = Market::defaultConfiguration) const override {

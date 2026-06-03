@@ -222,13 +222,12 @@ Handle<IborIndex> DependencyMarket::iborIndex(const string& name, const string& 
         QL_REQUIRE(oi != nullptr, "DependencyMarket::iborIndex(): could not cast rfr index '"
                                       << rfrName << "' to OvernightIndex, this is unexpected.");
         auto fallbackData = iborFallbackConfig_->fallbackData(name);
-	if (auto original = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(iip))
+        if (auto original = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(iip))
             ii = Handle<IborIndex>(QuantLib::ext::make_shared<QuantExt::FallbackOvernightIndex>(
-                original, oi, fallbackData.spread,
-                                                                               fallbackData.switchDate, false));
-	else
-	    ii = Handle<IborIndex>(QuantLib::ext::make_shared<QuantExt::FallbackIborIndex>(*ii, oi, fallbackData.spread,
-                                                                               fallbackData.switchDate, false));
+                original, oi, fallbackData.spread, fallbackData.switchDate, false));
+        else
+            ii = Handle<IborIndex>(QuantLib::ext::make_shared<QuantExt::FallbackIborIndex>(
+                *ii, oi, fallbackData.spread, fallbackData.switchDate, false));
         DLOG("Adding rfr fallback index '" << rfrName << "' for ibor index '" << name << "'");
     }
 
@@ -663,6 +662,13 @@ DependencyMarket::correlationCurve(const std::string& index1, const std::string&
     }
     return Handle<QuantExt::CorrelationTermStructure>(
         QuantLib::ext::make_shared<QuantExt::FlatCorrelation>(0, NullCalendar(), 0, ActualActual(ActualActual::ISDA)));
+}
+
+Handle<BlackVolTermStructure> DependencyMarket::bondFutureVol(const string& contractName,
+    const string& configuration) const {
+    addRiskFactor(RiskFactorKey::KeyType::BondFutureVolatility, contractName);
+    addMarketObject(MarketObject::BondFutureVol, contractName, configuration);
+    return flatRateFxv();
 }
 
 std::map<QuantLib::Period, QuantLib::Period>

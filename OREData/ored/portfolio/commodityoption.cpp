@@ -38,18 +38,16 @@ using QuantExt::PriceTermStructure;
 namespace ore {
 namespace data {
 
-CommodityOption::CommodityOption() : VanillaOptionTrade(AssetClass::COM) { tradeType_ = "CommodityOption"; }
+CommodityOption::CommodityOption() : VanillaOptionTrade("CommodityOption", AssetClass::COM) {}
 
 CommodityOption::CommodityOption(const Envelope& env, const OptionData& optionData, const string& commodityName,
                                  const string& currency, Real quantity, TradeStrike strike,
                                  const QuantLib::ext::optional<bool>& isFuturePrice, const Date& futureExpiryDate)
-    : VanillaOptionTrade(env, AssetClass::COM, optionData, commodityName, currency, quantity, strike),
-      isFuturePrice_(isFuturePrice), futureExpiryDate_(futureExpiryDate) {
-    tradeType_ = "CommodityOption";
-}
+    : VanillaOptionTrade("CommodityOption", env, AssetClass::COM, optionData, commodityName, currency, quantity,
+        strike), isFuturePrice_(isFuturePrice), futureExpiryDate_(futureExpiryDate) {}
 
 void CommodityOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
-    
+
     // ISDA taxonomy, assuming Commodity follows the Equity template
     additionalData_["isdaAssetClass"] = std::string("Commodity");
     additionalData_["isdaBaseProduct"] = std::string("Option");

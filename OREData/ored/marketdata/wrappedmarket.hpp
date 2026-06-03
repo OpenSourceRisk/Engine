@@ -127,6 +127,8 @@ public:
                      const std::string& configuration = Market::defaultConfiguration) const override;
     Handle<Quote> cpr(const string& securityID,
                       const string& configuration = Market::defaultConfiguration) const override;
+    QuantLib::Handle<QuantLib::BlackVolTermStructure> bondFutureVol(const std::string& contractName,
+        const std::string& configuration = Market::defaultConfiguration) const override;
 
     std::map<QuantLib::Period, QuantLib::Period>
     zeroInflationObservationLags(const string& indexName,

@@ -494,6 +494,11 @@ Handle<Quote> MarketImpl::cpr(const string& securityID, const string& configurat
     return lookup<Handle<Quote>>(cprs_, securityID, configuration, "cpr");
 }
 
+Handle<BlackVolTermStructure> MarketImpl::bondFutureVol(const string& contractName, const string& configuration) const {
+    require(MarketObject::BondFutureVol, contractName, configuration);
+    return lookup<Handle<BlackVolTermStructure>>(bondFutureVols_, contractName, configuration, "bond future vol curve");
+}
+
 void MarketImpl::addSwapIndex(const string& swapIndex, const string& discountIndex, const string& configuration) const {
     if (swapIndices_.find(make_pair(configuration, swapIndex)) != swapIndices_.end())
         return;

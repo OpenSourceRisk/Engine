@@ -197,5 +197,10 @@ WrappedMarket::yoyInflationObservationLags(const string& indexName,
     return market_->yoyInflationObservationLags(indexName, configuration);
 };
 
+Handle<BlackVolTermStructure> WrappedMarket::bondFutureVol(const string& contractName,
+    const string& configuration) const {
+    return market_->bondFutureVol(contractName, configuration);
+}
+
 } // namespace data
 } // namespace ore

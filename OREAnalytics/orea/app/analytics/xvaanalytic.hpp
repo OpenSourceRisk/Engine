@@ -76,6 +76,7 @@ struct XvaVariables : public InputVariables {
     bool storeSurvivalProbabilities_ = false;
     bool writeCube_ = false;
     bool writeScenarios_ = false;
+    vector<QuantExt::RiskFactorKey::KeyType> filterRiskKeys_ = {};
     bool generateCorrelations_ = false;
     bool outputCrossAssetModelData_ = false;
     bool cubeNpvOverlay_ = false;
@@ -129,7 +130,7 @@ struct XvaVariables : public InputVariables {
     bool timeAveragedNettedExposureOutput_ = false;
     std::string rawCubeOutputFile_, netCubeOutputFile_, timeAveragedNettedExposureOutputFile_;
     // funding value adjustment details
-    std::string fvaBorrowingCurve_, fvaLendingCurve_;
+    std::string borrowingCurve_, lendingCurve_;
     std::string flipViewBorrowingCurvePostfix_ = "_BORROW";
     std::string flipViewLendingCurvePostfix_ = "_LEND";
     // deterministic initial margin by netting set
