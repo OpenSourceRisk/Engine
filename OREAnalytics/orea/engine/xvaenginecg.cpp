@@ -1686,13 +1686,12 @@ void XvaEngineCG::calculateDynamicIM() {
                 if (ccy > 0) {
                     for (std::size_t comp = 0; comp < nComponents; ++comp)
                         compDer[comp] = &pathFxDeltaC[comp][ccy - 1];
-                    tmpFxDelta[ccy - 1] =
-                        dynamicImCombineComponents(compDer, tradeId, k, i, "fxDelta" + model_->currencies()[ccy],
-                                                   data.multiplier);
+                    tmpFxDelta[ccy] = dynamicImCombineComponents(
+                        compDer, tradeId, k, i, "fxDelta_" + model_->currencies()[ccy], data.multiplier);
                     for (std::size_t b = 0; b < fxVegaTerms.size(); ++b) {
                         for (std::size_t comp = 0; comp < nComponents; ++comp)
                             compDer[comp] = &pathFxVegaC[comp][ccy - 1][b];
-                        tmpFxVega[ccy - 1][b] = dynamicImCombineComponents(
+                        tmpFxVega[ccy][b] = dynamicImCombineComponents(
                             compDer, tradeId, k, i,
                             "fxVega_" + model_->currencies()[ccy] + "_" + ore::data::to_string(fxVegaTerms[b]),
                             data.multiplier);

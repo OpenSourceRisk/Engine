@@ -817,6 +817,8 @@ void AmcCgBaseEngine::buildComputationGraph(
     cachedExerciseIndicators_.resize(exerciseIndicator.size(), ComputationGraph::nan);
     cachedExerciseIndicatorsBase_.resize(exerciseIndicator.size(), ComputationGraph::nan);
 
+    bool exerciseIndicatorBaseRequired = tradeExposure != nullptr && complexBaseCurrency_ != modelCg_->baseCurrency();
+
     enum class CfStatus { open, cached, done };
     std::vector<CfStatus> cfStatus(cashflowInfo.size(), CfStatus::open);
 
@@ -911,35 +913,45 @@ void AmcCgBaseEngine::buildComputationGraph(
                 // reuse exercise indicator from previous run on valuation dates
 
                 exerciseIndicator[exerciseCounter] = cachedExerciseIndicators_[exerciseCounter];
+                if (exerciseIndicatorBaseRequired)
+                    exerciseIndicatorBase[exerciseCounter] = cachedExerciseIndicatorsBase_[exerciseCounter];
 
             } else {
 
                 // determine exercise decision
 
-                // calculate exercise and continuation value and derive exercise decision
+                /* calculate exercise and continuation value and derive exercise decision, this has to be done
+                   for the model base ccy, if required (exposure is calculated and local base ccy != model base ccy */
 
                 auto reg = createRegressionModel(
                     pathValueUndExIntoRunning, *d, cashflowInfo,
-                    [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, cg_const(g, 1.0), true, true);
+                    [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, cg_const(g, 1.0), true,
+                    exerciseIndicatorBaseRequired);
                 auto exerciseValue = cg_add(g, reg[0], pathValueRebate[counter]);
-                auto pathValueRebateBase = createRegressionModel(
-                                               pathValueRebate[counter], *d, cashflowInfo,
-                                               [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; },
-                                               cg_const(g, 1.0), false, true)
-                                               .front();
-                auto exerciseValueBase = cg_add(g, reg[1], pathValueRebateBase);
                 std::size_t filter = cg_indicatorGt(g, exerciseValue, cg_const(g, 0.0));
                 auto continuationValue = createRegressionModel(
                     pathValueOption[counter + 1], *d, cashflowInfo,
-                    [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, filter, true, true);
-
+                    [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, filter, true, false);
                 exerciseIndicator[exerciseCounter] = cg_mult(g, cg_indicatorGt(g, exerciseValue, continuationValue[0]),
                                                              cg_indicatorGt(g, exerciseValue, cg_const(g, 0.0)));
-                exerciseIndicatorBase[exerciseCounter] =
-                    cg_mult(g, cg_indicatorGt(g, exerciseValueBase, continuationValue[1]),
-                            cg_indicatorGt(g, exerciseValueBase, cg_const(g, 0.0)));
                 cachedExerciseIndicators_[exerciseCounter] = exerciseIndicator[exerciseCounter];
-                cachedExerciseIndicatorsBase_[exerciseCounter] = exerciseIndicatorBase[exerciseCounter];
+
+                if (exerciseIndicatorBaseRequired) {
+                    auto pathValueRebateBase = createRegressionModel(
+                                                   pathValueRebate[counter], *d, cashflowInfo,
+                                                   [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; },
+                                                   cg_const(g, 1.0), false, true)
+                                                   .front();
+                    auto exerciseValueBase = cg_add(g, reg[1], pathValueRebateBase);
+                    auto filterBase = cg_indicatorGt(g, exerciseValueBase, cg_const(g, 0.0));
+                    auto continuationValueBase = createRegressionModel(
+                        pathValueOption[counter + 1], *d, cashflowInfo,
+                        [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, filterBase, false, true);
+                    exerciseIndicatorBase[exerciseCounter] =
+                        cg_mult(g, cg_indicatorGt(g, exerciseValueBase, continuationValueBase[0]),
+                                cg_indicatorGt(g, exerciseValueBase, cg_const(g, 0.0)));
+                    cachedExerciseIndicatorsBase_[exerciseCounter] = exerciseIndicatorBase[exerciseCounter];
+                }
             }
 
             pathValueOption[counter] =
@@ -1089,8 +1101,11 @@ void AmcCgBaseEngine::buildComputationGraph(
                     cg_mult(g, cg_subtract(g, cg_const(g, 1.0), wasExercised), exerciseIndicator[exerciseCounter - 1]);
                 wasExercised =
                     cg_min(g, cg_add(g, wasExercised, exerciseIndicator[exerciseCounter - 1]), cg_const(g, 1.0));
-                wasExercisedBase = cg_min(g, cg_add(g, wasExercisedBase, exerciseIndicatorBase[exerciseCounter - 1]),
-                                          cg_const(g, 1.0));
+                if(exerciseIndicatorBaseRequired)
+                    wasExercisedBase = cg_min(
+                        g, cg_add(g, wasExercisedBase, exerciseIndicatorBase[exerciseCounter - 1]), cg_const(g, 1.0));
+                else
+                    wasExercisedBase = wasExercised;
 
                 // if cash settled, determine the amount on exercise and until when it is to be included in exposure
 
@@ -1213,15 +1228,21 @@ std::vector<std::size_t> AmcCgBaseEngine::createRegressionModel(
     const bool modelBaseCcy) const {
     // TODO use relevant cashflow info to refine regressor if regressor model == LaggedFX
     std::vector<std::size_t> result;
-    if (localBaseCcy) {
-        auto regressors = modelCg_->npvRegressors(d, relevantCurrencies_, complexBaseCurrency_, complexBaseCurrency_);
-        result.push_back(modelCg_->npv(amount, d, filter, std::nullopt, {}, regressors, regressors));
+    std::vector<std::string> requiredPathCcys;
+    if (localBaseCcy)
+        requiredPathCcys.push_back(complexBaseCurrency_);
+    if (modelBaseCcy && (requiredPathCcys.empty() || requiredPathCcys.front() != modelCg_->baseCurrency()))
+        requiredPathCcys.push_back(modelCg_->baseCurrency());
+    auto regressors = modelCg_->npvRegressors(d, relevantCurrencies_, complexBaseCurrency_, complexBaseCurrency_);
+    for (Size i = 0; i < requiredPathCcys.size(); ++i) {
+        std::set<std::size_t> regressorsPath =
+            requiredPathCcys[i] == complexBaseCurrency_
+                ? regressors
+                : modelCg_->npvRegressors(d, relevantCurrencies_, complexBaseCurrency_, requiredPathCcys[i]);
+        result.push_back(modelCg_->npv(amount, d, filter, std::nullopt, {}, regressors, regressorsPath));
     }
-    if (modelBaseCcy) {
-        auto regressors = modelCg_->npvRegressors(d, relevantCurrencies_, complexBaseCurrency_, complexBaseCurrency_);
-        auto regressorsBase = modelCg_->npvRegressors(d, relevantCurrencies_, complexBaseCurrency_);
-        result.push_back(modelCg_->npv(amount, d, filter, std::nullopt, {}, regressors, regressorsBase));
-    }
+    if (localBaseCcy && modelBaseCcy && result.size() == 1)
+        result.push_back(result[0]);
     return result;
 }
 
