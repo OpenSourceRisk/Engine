@@ -366,7 +366,7 @@ void XvaEngineCG::buildCgPartB() {
         tradeData.push_back({tradeIndex,
                              QuantLib::ext::dynamic_pointer_cast<AmcCgPricingEngine>(
                                  trade->instrument()->qlInstrument()->pricingEngine()),
-                             trade->instrument()->multiplier() * trade->instrument()->multiplier2(), "main"});
+                             trade->instrument()->multiplier() * trade->instrument()->multiplier2(), id + " (main)"});
         // fees as single currency swaps per currency
         std::map<std::string, std::pair<std::vector<Real>, std::vector<std::string>>> tradeFees;
         for (Size i = 0; i < trade->instrument()->additionalInstruments().size(); ++i) {
@@ -392,14 +392,14 @@ void XvaEngineCG::buildCgPartB() {
             tradeData.push_back({tradeIndex,
                                  QuantLib::ext::dynamic_pointer_cast<AmcCgPricingEngine>(
                                      additionalTrades_.back()->instrument()->qlInstrument()->pricingEngine()),
-                                 1.0, "fee"});
+                                 1.0, id + " (fee)"});
         }
         ++tradeIndex;
     }
 
     DLOG("TradeData set up with " << tradeData.size() << " entries.");
 
-    // build base ccy suggestions and set admissable base ccys in model
+    // build base ccy suggestions
 
     std::set<std::set<std::string>> currencySets;
     for (auto const& d : tradeData) {
@@ -416,10 +416,6 @@ void XvaEngineCG::buildCgPartB() {
             return std::string();
     };
 
-    std::set<std::string> admissableBaseCcys;
-    for (auto const& [k, v] : baseCcySuggestions)
-        admissableBaseCcys.insert(v);
-
     DLOG("Built local base currency suggestions:");
     for (auto const& [k, v] : baseCcySuggestions) {
         DLOG(boost::join(k, "'") << " -> " << v);
@@ -427,84 +423,70 @@ void XvaEngineCG::buildCgPartB() {
 
     // build the cg of the trades
 
-    tradeIndex = 0;
-    for (auto const& [id, trade] : portfolio_->trades()) {
+    auto populateTradeExposure = [&](const Size tradeIndex, std::vector<std::vector<std::vector<TradeExposure>>>& data,
+                                     const std::vector<TradeExposure>& tradeExposure) {
+        auto& tmpValuation = data[tradeIndex];
+        tmpValuation[0].push_back(tradeExposure[0]);
+        for (std::size_t i = 0; i < valuationDates_.size(); ++i) {
+            if (closeOutDates_.empty() || !stickyCloseOutDates_.empty()) {
+                tmpValuation[i + 1].push_back(tradeExposure[i + 1]);
+            } else {
+                std::size_t index =
+                    std::distance(simulationDates_.begin(),
+                                  std::find(simulationDates_.begin(), simulationDates_.end(), valuationDates_[i]));
+                tmpValuation[i + 1].push_back(tradeExposure[index + 1]);
+            }
+        }
+    };
 
+    auto processTrade = [&](const Size tradeIndex, const QuantLib::ext::shared_ptr<AmcCgPricingEngine>& engine,
+                            double multiplier, const std::string& desc) {
+        std::vector<TradeExposure> tradeExposure;
+        TradeExposureMetaInfo metaInfo;
+        try {
+            TLOG("build cg for trade " << desc);
+            engine->buildComputationGraph(false, &tradeExposure, &metaInfo, baseCcySuggestionsFct);
+        } catch (const std::exception& e) {
+            QL_FAIL("XvaEngineCG::buildCgPartB(): failed to build cg for trade '" << desc << ": " << e.what());
+        }
+        for (auto& t : tradeExposure) {
+            std::visit(overloads{[&](SimpleTradeExposure& e) { e.multiplier = multiplier; },
+                                 [&](ComplexTradeExposure& e) { e.multiplier = multiplier; },
+                                 [&](std::monostate& e) {}},
+                       t);
+        }
+        tradeExposureMetaInfo_[tradeIndex].push_back(metaInfo);
+        populateTradeExposure(tradeIndex, tradeExposureValuation_, tradeExposure);
+        if (!closeOutDates_.empty()) {
+            if (!stickyCloseOutDates_.empty()) {
+                model_->useStickyCloseOutDates(true);
+                tradeExposure.clear();
+                try {
+                    engine->buildComputationGraph(true, &tradeExposure, &metaInfo, baseCcySuggestionsFct);
+                } catch (const std::exception& e) {
+                    QL_FAIL("XvaEngineCG::buildCgPartB(): failed to build cg for trade '" << desc << ": " << e.what());
+                }
+                model_->useStickyCloseOutDates(false);
+                for (auto& t : tradeExposure) {
+                    std::visit(overloads{[&](SimpleTradeExposure& e) { e.multiplier = multiplier; },
+                                         [&](ComplexTradeExposure& e) { e.multiplier = multiplier; },
+                                         [&](std::monostate& e) {}},
+                               t);
+                }
+            }
+            populateTradeExposure(tradeIndex, tradeExposureCloseOut_, tradeExposure);
+        }
+    };
+
+    // process trade data
+
+    for (auto const& d : tradeData) {
         if (useRedBlocks_)
             g->startRedBlock();
-
-        auto populateTradeExposure = [&](const Size tradeIndex,
-                                         std::vector<std::vector<std::vector<TradeExposure>>>& data,
-                                         const std::vector<TradeExposure>& tradeExposure) {
-            auto& tmpValuation = data[tradeIndex];
-            tmpValuation[0].push_back(tradeExposure[0]);
-            for (std::size_t i = 0; i < valuationDates_.size(); ++i) {
-                if (closeOutDates_.empty() || !stickyCloseOutDates_.empty()) {
-                    tmpValuation[i + 1].push_back(tradeExposure[i + 1]);
-                } else {
-                    std::size_t index =
-                        std::distance(simulationDates_.begin(),
-                                      std::find(simulationDates_.begin(), simulationDates_.end(), valuationDates_[i]));
-                    tmpValuation[i + 1].push_back(tradeExposure[index + 1]);
-                }
-            }
-        };
-
-        auto processTrade = [&](const Size tradeInddex, const QuantLib::ext::shared_ptr<AmcCgPricingEngine>& engine,
-                                double multiplier, const std::string& desc) {
-            std::vector<TradeExposure> tradeExposure;
-            TradeExposureMetaInfo metaInfo;
-            try {
-                TLOG("build cg for trade " << id);
-                engine->buildComputationGraph(false, &tradeExposure, &metaInfo, baseCcySuggestionsFct);
-            } catch (const std::exception& e) {
-                QL_FAIL("XvaEngineCG::buildCgPartB(): failed to build cg for trade '" << id << "' (" << desc
-                                                                                      << "): " << e.what());
-            }
-            for (auto& t : tradeExposure) {
-                std::visit(overloads{[&](SimpleTradeExposure& e) { e.multiplier = multiplier; },
-                                     [&](ComplexTradeExposure& e) { e.multiplier = multiplier; },
-                                     [&](std::monostate& e) {}},
-                           t);
-            }
-            tradeExposureMetaInfo_[tradeIndex].push_back(metaInfo);
-            populateTradeExposure(tradeIndex, tradeExposureValuation_, tradeExposure);
-            if (!closeOutDates_.empty()) {
-                if (!stickyCloseOutDates_.empty()) {
-                    model_->useStickyCloseOutDates(true);
-                    tradeExposure.clear();
-                    try {
-                        engine->buildComputationGraph(true, &tradeExposure, &metaInfo, baseCcySuggestionsFct);
-                    } catch (const std::exception& e) {
-                        QL_FAIL("XvaEngineCG::buildCgPartB(): failed to build cg for trade '" << id << "' (" << desc
-                                                                                              << "): " << e.what());
-                    }
-                    model_->useStickyCloseOutDates(false);
-                    for (auto& t : tradeExposure) {
-                        std::visit(overloads{[&](SimpleTradeExposure& e) { e.multiplier = multiplier; },
-                                             [&](ComplexTradeExposure& e) { e.multiplier = multiplier; },
-                                             [&](std::monostate& e) {}},
-                                   t);
-                    }
-                }
-                populateTradeExposure(tradeIndex, tradeExposureCloseOut_, tradeExposure);
-            }
-        };
-
-        // process trade data
-
-        for (auto const& d : tradeData) {
-            processTrade(d.tradeIndex, d.engine, d.multiplier, d.description);
-        }
-
-        // end the trade's red block and continue with next trade in loop
-
+        processTrade(d.tradeIndex, d.engine, d.multiplier, d.description);
         if (useRedBlocks_)
             g->endRedBlock();
-
-        ++tradeIndex;
-
-    } // loop over trades in portfolio
+    }
 
     timing_partb_ = timer.elapsed().wall;
     DLOG("XvaEngineCG: build computation graph for all trades done - graph size is "
@@ -846,7 +828,7 @@ void XvaEngineCG::doForwardEvaluation() {
                     keepNodes_[n] = true;
                 }
             }
-            for(auto const& [key, val] : dynamicImInfo_[i].pfExposureLocalBaseCcy) {
+            for (auto const& [key, val] : dynamicImInfo_[i].pfExposureLocalBaseCcy) {
                 keepNodes_[val] = true;
             }
             for (std::size_t j = 0; j < tradeExposureMetaInfo_.size(); ++j) {
@@ -1691,10 +1673,10 @@ void XvaEngineCG::calculateDynamicIM() {
                     for (std::size_t b = 0; b < fxVegaTerms.size(); ++b) {
                         for (std::size_t comp = 0; comp < nComponents; ++comp)
                             compDer[comp] = &pathFxVegaC[comp][ccy - 1][b];
-                        tmpFxVega[ccy][b] = dynamicImCombineComponents(
-                            compDer, tradeId, k, i,
-                            "fxVega_" + model_->currencies()[ccy] + "_" + ore::data::to_string(fxVegaTerms[b]),
-                            data.multiplier);
+                        tmpFxVega[ccy][b] = dynamicImCombineComponents(compDer, tradeId, k, i,
+                                                                       "fxVega_" + model_->currencies()[ccy] + "_" +
+                                                                           ore::data::to_string(fxVegaTerms[b]),
+                                                                       data.multiplier);
                     }
                 }
             }
