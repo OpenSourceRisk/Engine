@@ -1543,7 +1543,7 @@ void XvaEngineCG::calculateDynamicIM() {
         for (auto const& [key, val] : pathIrDelta) {
             for (std::size_t ccy = 0; ccy < model_->currencies().size(); ++ccy) {
                 for (std::size_t b = 0; b < irDeltaTerms.size(); ++b) {
-                    tmpIrDelta[ccy][b] =
+                    tmpIrDelta[ccy][b] +=
                         condExp(&val[ccy][b], std::get<0>(key), std::get<1>(key), std::get<2>(key),
                                 "irDelta_" + model_->currencies()[ccy] + "_" + ore::data::to_string(irDeltaTerms[b]));
                 }
@@ -1555,7 +1555,7 @@ void XvaEngineCG::calculateDynamicIM() {
         for (auto const& [key, val] : pathIrVega) {
             for (std::size_t ccy = 0; ccy < model_->currencies().size(); ++ccy) {
                 for (std::size_t b = 0; b < irVegaTerms.size(); ++b) {
-                    tmpIrVega[ccy][b] =
+                    tmpIrVega[ccy][b] +=
                         condExp(&val[ccy][b], std::get<0>(key), std::get<1>(key), std::get<2>(key),
                                 "irVega_" + model_->currencies()[ccy] + "_" + ore::data::to_string(irVegaTerms[b]));
                 }
@@ -1566,7 +1566,7 @@ void XvaEngineCG::calculateDynamicIM() {
 
         for (auto const& [key, val] : pathFxDelta) {
             for (std::size_t ccy = 1; ccy < model_->currencies().size(); ++ccy) {
-                tmpFxDelta[ccy] = condExp(&val[ccy - 1], std::get<0>(key), std::get<1>(key), std::get<2>(key),
+                tmpFxDelta[ccy] += condExp(&val[ccy - 1], std::get<0>(key), std::get<1>(key), std::get<2>(key),
                                           "fxDelta_" + model_->currencies()[ccy]);
             }
         }
@@ -1576,7 +1576,7 @@ void XvaEngineCG::calculateDynamicIM() {
         for (auto const& [key, val] : pathFxVega) {
             for (std::size_t ccy = 1; ccy < model_->currencies().size(); ++ccy) {
                 for (std::size_t b = 0; b < fxVegaTerms.size(); ++b) {
-                    tmpFxVega[ccy][b] =
+                    tmpFxVega[ccy][b] +=
                         condExp(&val[ccy - 1][b], std::get<0>(key), std::get<1>(key), std::get<2>(key),
                                 "irVega_" + model_->currencies()[ccy] + "_" + ore::data::to_string(fxVegaTerms[b]));
                 }
@@ -1586,7 +1586,7 @@ void XvaEngineCG::calculateDynamicIM() {
         // add them to the converted sensis
 
         for (std::size_t ccy = 0; ccy < model_->currencies().size(); ++ccy) {
-            dynamicImAddToConvertedSensis(ccy, tmpIrDelta[ccy], tmpIrVega[ccy], tmpFxVega[ccy - 1], tmpFxDelta[ccy - 1],
+            dynamicImAddToConvertedSensis(ccy, tmpIrDelta[ccy], tmpIrVega[ccy], tmpFxVega[ccy], tmpFxDelta[ccy],
                                           irDeltaConverter, irVegaConverter, fxVegaConverter, conditionalIrDelta,
                                           conditionalFxDelta, conditionalIrVega, conditionalFxVega);
         }
