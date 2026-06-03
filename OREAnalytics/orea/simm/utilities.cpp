@@ -206,6 +206,7 @@ SimmVersion parseSimmVersion(const string& version) {
                                                   {"2.7", SimmVersion::V2_6_5},
                                                   {"2.7+2412", SimmVersion::V2_7_2412},
                                                   {"2.8+2506", SimmVersion::V2_8_2506},
+                                                  {"2.8+2512", SimmVersion::V2_8_2512},
                                                   // old names for backwards compatibility
                                                   {"ISDA_V315", SimmVersion::V1_0},
                                                   {"ISDA_V329", SimmVersion::V1_3},
