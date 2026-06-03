@@ -278,13 +278,16 @@ void InflationCapFloorVolCurve::buildFromVolatilities(
             index = QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(
                 parseZeroInflationIndex(config->index(), Handle<ZeroInflationTermStructure>()),
                 Handle<YoYInflationTermStructure>(yyTs));
+            // Previously the index interpolation was hard coded, and the index interpolation was used to
+            // determine the vol surface observation interpolation. Now we determine the vol surface observation
+            // interpolation from the price surface observation interpolation.
             obsInterpolation = CPI::Linear;
         }
 
         YoYPriceSurfaceFromVolatilities volToPriceConverter;
-
+        
         auto priceSurface =
-            volToPriceConverter(capVol, index, config->observationLag(), obsInterpolation,
+            volToPriceConverter(capVol, index, obsLag, obsInterpolation,
                                 discountCurve_, quoteVolatilityType, 0.0);
 
         // Get configuration values for bootstrap
