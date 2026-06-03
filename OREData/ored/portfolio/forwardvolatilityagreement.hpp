@@ -51,7 +51,7 @@ public:
           underlyingStrike_(underlyingStrike), impliedVolStrike_(impliedVolStrike), quantity_(quantity),
           payCcy_(payCcy), settlementDate_(settlementDate), payoffType_(payoffType),
           dayCountFraction_(dayCountFraction), dividendYield_(dividendYield), fixedRate_(fixedRate),
-          underlyingStrikeProvided_(!underlyingStrike.empty()) {}
+          underlyingStrikeProvided_(underlyingStrike != "0") {}
 
     void build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) override;
 
@@ -73,8 +73,8 @@ private:
     std::string settlementDate_;
     std::string payoffType_;
     std::string dayCountFraction_;
-    std::string dividendYield_;
-    std::string fixedRate_;
+    std::string dividendYield_ = "0";
+    std::string fixedRate_ = "0";
     bool underlyingStrikeProvided_ = false;
 };
 } // namespace data
