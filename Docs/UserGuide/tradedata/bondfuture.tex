@@ -27,6 +27,29 @@ A BondFuture can be used both as a stand alone trade (TradeType:
   Allowable values: \emph{Long}, \emph{L}, or \emph{Short}, \emph{S}
 \end{itemize}
 
+There are two additional optional fields that are added to support the \lstinline!BondFuture! trade when it is included 
+as a component in a Generic TRS via the \lstinline!Derivative! node or in the basket referenced by the 
+\lstinline!PortfolioIndexTradeData! node. When the \lstinline!BondFuture! trade type is included there, we generally 
+want the bond future price, multiplied by the notional, rather than the NPV of the bond future trade. These flags have 
+no impact on the \lstinline!BondFuture! trade when it is not a component in a Generic TRS.
+\begin{itemize}
+\item \lstinline!ApplyConversionFactor! [Optional]:
+  This flag defaults to \lstinline!true! so that the conversion factor of the CTD bond is applied.
+  When set to \lstinline!false!, the conversion factor is ignored and the bond future price itself is used.
+
+  Allowable values: \lstinline!true! or \lstinline!false!.
+
+\item \lstinline!UseFuturePrice! [Optional]:
+  This flag defaults to \lstinline!false! so that the \lstinline!BondFuture! trade component is treated as a standard 
+  bond future trade and priced as such as outlined in Section~\ref{pricing::bondfuture}.
+  When set to \lstinline!true!, the future price itself is used. In other words, the contribution of the future trade 
+  in the basket to the TRS on a given date is given by the future price on that date, $F$, multiplied by the 
+  \lstinline!ContractNotional!.
+
+  Allowable values: \lstinline!true! or \lstinline!false!.
+
+\end{itemize}
+
 Although it is not part of the trade representation, we also explain the corresponding reference data, which is shown in
 listing \ref{lst:bondfuturerefdata}. The following fields should always be specified:
 

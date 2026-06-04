@@ -76,19 +76,37 @@ indices.
       %Historical prices must be given under the fixing name ``GENERIC-$<Id>$''.
       \item Trade: The root node of a derivative trade.
     \end{itemize}
-  \item PortfolioIndexTradeData: This is a Portfolio Swap that references an underlying Basket via the \lstinline!BasketName! identifier. The underlying basket can have an arbitrary number underlying derivatives of any supported TradeType. The PortfolioIndexTradeData subnode has one subnode:
+  \item PortfolioIndexTradeData: This is a Portfolio Swap that references an underlying Basket via the \lstinline!BasketName! identifier.
+    The underlying basket can have an arbitrary number underlying derivatives of any supported TradeType.
+    The PortfolioIndexTradeData subnode has one subnode:
     \begin{itemize}
-      \item BasketName: A string with a unique identifier for the portfolioIndex, matching the underlying reference basket. 
-      %Historical prices must be given under the fixing name ``GENERIC-$<BasketName>$''.
+      \item BasketName: A string with a unique identifier for the portfolioIndex, matching the underlying reference basket.
       \item IndexQuantity: Number of shares of the index.
+      \item \lstinline!PriceIsPerUnit!:
+        The allowable values are \lstinline!true! or \lstinline!false!.
+        When set to \lstinline!false!, the contribution of the basket on a given date is simply the value of the basket.
+        When set to \lstinline!true!, the value of the basket on a given date is interpreted as the unit value of the index.
+        The contribution of the basket to the TRS is then given by this unit value multiplied by the \lstinline!IndexQuantity!.
     \end{itemize}
+    Historical index fixing levels for the basket should be given under the fixing name \lstinline!GENERIC-<BasketName>!.
   \end{itemize}
 
-  Except for PortfolioIndexTradeData, each trade is specified by a \verb+TradeType+ and a trade type dependent data block as listed above. Listing
-  \ref{lst:trsdata} shows an example for a convertible bond underlying. Listing \ref{lst:trsdata2} shows an example for
-  an equity basket underlying. Listing \ref{lst:trsdata3} shows an example for a bond basket underlying. Listing
-  \ref{lst:trsdata4} shows an example for a Derivative underlying (with 3 underlying trades in this case). Listing
-  \ref{lst:trsdata_portfolio} shows an example for a PortfolioIndexTradeData underlying.
+  Except for \lstinline!PortfolioIndexTradeData!, each trade is specified by a \lstinline!TradeType! and a trade type 
+  dependent data block as listed above.
+  \begin{itemize}
+      \item Listing \ref{lst:trsdata} shows an example for a convertible bond underlying.
+      \item Listing \ref{lst:trsdata2} shows an example for an equity basket underlying.
+      \item Listing \ref{lst:trsdata3} shows an example for a bond basket underlying.
+      \item Listing \ref{lst:trsdata4} shows an example for a Derivative underlying, with 3 underlying trades in this case.
+      \item Listing \ref{lst:trsdata_portfolio} shows an example for a \lstinline!PortfolioIndexTradeData! underlying.
+      \item Listing \ref{lst:trsdata_pitd_bond-future-option} shows an example for a \lstinline!PortfolioIndexTradeData! 
+        underlying consisting of a cash position, a bond future postion and a bond future option. The associated reference 
+        data is shown in Listing \ref{lst:trsdata_pitd_bond-future-option-ref-data}. Note the usage of 
+        \lstinline!ApplyConversionFactor! and \lstinline!UseFuturePrice! as outlined in Section~\ref{ss:bondfuture} to 
+        indicate that we want the bond future price level contributing to the index rather than the NPV of the bond 
+        future trade.
+    \end{itemize}
+  \end{itemize}
 
 \item The {\tt ReturnData} block specifies the details of the return leg.
   \begin{itemize}
@@ -593,4 +611,70 @@ Allowable values: \emph{Start}, \emph{End}. Defaults to \emph{Start} if omitted.
 \end{minted}
 \caption{CFD on STOXX50E with initial price 3399.20 EUR}
 \label{lst:trsdata_cfd}
+\end{listing}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<TotalReturnSwapData>
+  <UnderlyingData>
+    <PortfolioIndexTradeData>
+      <BasketName>TEST-BASKET</BasketName>
+      <IndexQuantity>100000</IndexQuantity>
+      <PriceIsPerUnit>true</PriceIsPerUnit>
+    </PortfolioIndexTradeData>
+  </UnderlyingData>
+  <!-- omitting other data for brevity -->
+</TotalReturnSwapData>
+\end{minted}
+\caption{Generic TRS on a \lstinline!PortfolioIndexTradeData! underlying}
+\label{lst:trsdata_pitd_bond-future-option}
+\end{listing}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<ReferenceDatum id="TEST-BASKET">
+  <Type>PortfolioBasket</Type>
+  <PortfolioBasketReferenceData>
+    <Components>
+      <Trade>
+        <TradeType>BondFutureOption</TradeType>
+        <BondFutureOptionData>
+          <OptionData>
+            <LongShort>S</LongShort>
+            <OptionType>Put</OptionType>
+            <Style>American</Style>
+            <ExerciseDates>
+              <ExerciseDate>2026-04-01</ExerciseDate>
+            </ExerciseDates>
+          </OptionData>
+          <ContractName>TYM26</ContractName>
+          <ContractNotional>24.0186141</ContractNotional>
+          <Strike>1.0825</Strike>
+        </BondFutureOptionData>
+      </Trade>
+      <Trade>
+        <TradeType>BondFuture</TradeType>
+        <BondFutureData>
+          <ContractName>TYM26</ContractName>
+          <ContractNotional>250.429169</ContractNotional>
+          <LongShort>L</LongShort>
+          <ApplyConversionFactor>false</ApplyConversionFactor>
+          <UseFuturePrice>true</UseFuturePrice>
+        </BondFutureData>
+      </Trade>
+      <Trade>
+        <TradeType>CashPosition</TradeType>
+        <CashPositionData>
+          <Currency>USD</Currency>
+          <Amount>26.26224675</Amount>
+        </CashPositionData>
+      </Trade>
+    </Components>
+  </PortfolioBasketReferenceData>
+</ReferenceDatum>
+\end{minted}
+\caption{The \lstinline!PortfolioIndexTradeData! reference data}
+\label{lst:trsdata_pitd_bond-future-option-ref-data}
 \end{listing}

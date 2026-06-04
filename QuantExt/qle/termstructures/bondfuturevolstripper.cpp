@@ -18,8 +18,10 @@
 
 #include <qle/termstructures/bondfuturevolstripper.hpp>
 #include <qle/pricingengines/analyticeuropeanengine.hpp>
+#include <qle/pricingengines/baroneadesiwhaleyengine.hpp>
 #include <qle/termstructures/blackvariancesurfacesparse.hpp>
 #include <ql/exercise.hpp>
+#include <ql/pricingengines/vanilla/baroneadesiwhaleyengine.hpp>
 #include <ql/processes/blackscholesprocess.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <sstream>
@@ -43,7 +45,8 @@ BondFutureVolStripper::BondFutureVolStripper(Date referenceDate,
     bool lowerStrikeConstExtrap,
     bool upperStrikeConstExtrap,
     TimeExtrapType timeExtrapolationType,
-    bool preferOutOfTheMoney)
+    bool preferOutOfTheMoney,
+    bool treatAsEuropean)
     : referenceDate_(std::move(referenceDate)),
       calendar_(std::move(calendar)),
       bdc_(bdc),
@@ -56,13 +59,18 @@ BondFutureVolStripper::BondFutureVolStripper(Date referenceDate,
       discountCurve_(std::move(discountCurve)),
       quotes_(std::move(quotes)),
       solverOptions_(std::move(solverOptions)),
-      preferOutOfTheMoney_(preferOutOfTheMoney) {
+      preferOutOfTheMoney_(preferOutOfTheMoney),
+      treatAsEuropean_(treatAsEuropean) {
 
-    // This will be relaxed in future.
-    QL_REQUIRE(type_ == Exercise::European, "BondFutureVolStripper: only European exercise is supported for now.");
-
+    // Some initial checks.
     QL_REQUIRE(futurePrice_->isValid(), "BondFutureVolStripper: needs a valid future price quote.");
     QL_REQUIRE(!discountCurve_.empty(), "BondFutureVolStripper: discount curve is empty");
+    QL_REQUIRE(type_ == Exercise::European || type_ == Exercise::American,
+        "BondFutureVolStripper: unsupported exercise type, " << type_ << ".");
+
+    // Switch type_ to European early if requested.
+    if (treatAsEuropean_)
+        type_ = Exercise::European;
 
     // Check that there is at least one quote at each expiry and strike and register with non-empty quotes.
     for (auto& [expiryDate, prices] : quotes_) {
@@ -120,27 +128,40 @@ void BondFutureVolStripper::performCalculations() const {
     vector<Real> strikes;
     vector<Volatility> vols;
 
-    // Create the process and engine used by the instruments in the stripping.
+    // Create the process with the handle to vol quote that will be updated during root finding.
     ext::shared_ptr<SimpleQuote> volQuote = ext::make_shared<SimpleQuote>(0.1);
     auto volPtr = QuantLib::ext::make_shared<QuantLib::BlackConstantVol>(
         referenceDate_, calendar_, Handle<Quote>(volQuote), dayCounter_);
     auto vol = QuantLib::Handle<QuantLib::BlackVolTermStructure>(volPtr);
     ext::shared_ptr<GeneralizedBlackScholesProcess> gbsp = ext::make_shared<QuantLib::BlackProcess>(
         futurePrice_, discountCurve_, vol);
-    ext::shared_ptr<PricingEngine> engine = ext::make_shared<QuantExt::AnalyticEuropeanEngine>(gbsp);
+
+    // Set the engine depending on exercise type.
+    ext::shared_ptr<PricingEngine> engine;
+    if (type_ == Exercise::American)
+        engine = ext::make_shared<QuantLib::BaroneAdesiWhaleyApproximationEngine>(gbsp);
+    else
+        engine = ext::make_shared<QuantExt::AnalyticEuropeanEngine>(gbsp);
 
     // Strip the volatilities from the prices and populate the expiries, strikes, and vols.
     for (const auto& [expiryDate, prices] : quotes_) {
         // For the given expiry, find the strike to start at i.e. first strike greater than ATM, current future price.
         Size startPos = findStartPos(prices);
+
         // Create the exercise.
-        ext::shared_ptr<Exercise> exercise = ext::make_shared<EuropeanExercise>(expiryDate);
+        ext::shared_ptr<Exercise> exercise;
+        if (type_ == Exercise::American)
+            exercise = ext::make_shared<AmericanExercise>(expiryDate);
+        else
+            exercise = ext::make_shared<EuropeanExercise>(expiryDate);
+
         // Strip the volatilities from strike at startPos down (asc parameter set to false) to first strike.
         ext::optional<Volatility> volStartPos;
         if (startPos > 0) {
             volStartPos = stripVols(prices, startPos, 0, expiries, strikes, vols, solverOptions_.initialGuess,
                 exercise, engine, *volQuote, false);
         }
+
         // If any strikes on right of startPos strike, strip the volatilities from first such strike 
         // up (asc parameter set to true) to the last strike.
         if (startPos < prices.size() - 1) {
@@ -228,13 +249,34 @@ ext::optional<Volatility> BondFutureVolStripper::stripVols(const vector<OptionPr
         try {
             vol = solver_(f, initialGuess);
         } catch (const Error& e) {
-            success = false;
-            vol = volQuote.value();
-            std::ostringstream oss;
-            oss << "Failed to imply vol for (expiry, strike) = (" << io::iso_date(expiryDate) << ", " <<
-                op.strike << ") with error message: " << e.what() << ". Final volatility is " <<
-                vol << " for target premium of " << targetPrice << " with premium error of " << f(vol) << ".";
-            errorMessages_.push_back(oss.str());
+            // If the engine is BAW, the root find may fail at the margins even though the price error is small, 
+            // in particular for deep ITM short-dated options that are approx. intrinsic value. Check the margins here 
+            // and if the accuracy is matched, set the volatility and mark the error as handled.
+            bool errorHandled = false;
+            if (type_ == Exercise::American) {
+                Real lowerBound = solverOptions_.lowerBound == Null<Real>() ? 0.0001 : solverOptions_.lowerBound;
+                Real error = std::abs(f(lowerBound));
+                if (error < solverOptions_.accuracy) {
+                    vol = lowerBound;
+                    errorHandled = true;
+                } else if (solverOptions_.upperBound != Null<Real>()) {
+                    Real error = std::abs(f(solverOptions_.upperBound));
+                    if (error < solverOptions_.accuracy) {
+                        vol = solverOptions_.upperBound;
+                        errorHandled = true;
+                    }
+                }
+            }
+
+            if (!errorHandled) {
+                success = false;
+                vol = volQuote.value();
+                std::ostringstream oss;
+                oss << "Failed to imply vol for (expiry, strike) = (" << io::iso_date(expiryDate) << ", " <<
+                    op.strike << ") with error message: " << e.what() << ". Final volatility is " <<
+                    vol << " for target premium of " << targetPrice << " with premium error of " << f(vol) << ".";
+                errorMessages_.push_back(oss.str());
+            }
         }
 
         // Add to results.
