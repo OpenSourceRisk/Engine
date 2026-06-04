@@ -140,8 +140,6 @@ void BondFutureVolatilityConfig::fromXML(XMLNode* node) {
     if (auto n = XMLUtils::getChildNode(node, "PreferOutOfTheMoney"))
         preferOutOfTheMoney_ = parseBool(XMLUtils::getNodeValue(n));
 
-    engineOverride_ = XMLUtils::getChildValue(node, "EngineOverride", false);
-
     if (auto n = XMLUtils::getChildNode(node, "TreatAsEuropean"))
         treatAsEuropean_ = parseBool(XMLUtils::getNodeValue(n));
 
@@ -176,9 +174,6 @@ XMLNode* BondFutureVolatilityConfig::toXML(XMLDocument& doc) const {
 
     if (preferOutOfTheMoney_)
         XMLUtils::addChild(doc, node, "PreferOutOfTheMoney", *preferOutOfTheMoney_);
-
-    if (!engineOverride_.empty())
-        XMLUtils::addChild(doc, node, "EngineOverride", engineOverride_);
 
     if (treatAsEuropean_)
         XMLUtils::addChild(doc, node, "TreatAsEuropean", *treatAsEuropean_);

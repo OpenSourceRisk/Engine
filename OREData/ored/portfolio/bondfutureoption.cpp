@@ -33,25 +33,47 @@ using std::string;
 
 namespace {
 
+bool matchesViaBoolOrRegex(const string& value, const string& futureContract, const string& paramName) {
+    // Try bool first. If parsing of string `value` as bool succeeds then return the parsed bool result.
+    bool result = false;
+    bool isBool = tryParse<bool>(value, result, parseBool);
+    if (isBool)
+        return result;
+
+    // If parsing as bool failed, try regex.
+    try {
+        std::regex futureIncPattern{ value };
+        result = std::regex_match(futureContract, futureIncPattern);
+    } catch (const std::regex_error& e) {
+        WLOG("BondFutureOption: Invalid regex for parameter " << paramName << ": " << value <<
+            ". Error: " << e.what() << ". Parameter will be ignored.");
+    }
+
+    return result;
+}
+
 // Helper to determine option type suffix for engine builder.
 // May want to use separate volatility surface for calls and puts. This can be determined from the engine 
 // parameters and also on the trade level via the envelope (trade level wins if specified). If this is the case, 
 // then separate engines are attached to the call and put options on a given underlying contract.
-string getOptionTypeSuffix(const BondFutureOptionEngineBuilder& bfoEngineBuilder,
+string getOptionTypeSuffix(const BondFutureOptionEngineBuilder& bfoEngineBuilder, const string& futureContract,
     const Envelope& envelope, Option::Type type) {
 
     // Default is false.
     bool separateCallPutVols = false;
 
-    // Check the engine builder.
+    // Check the engine builder for the string.
     string strSeparateCallPutVols = bfoEngineBuilder.engineParameter("SeparateCallPutVols", {}, false, "");
-    if (!strSeparateCallPutVols.empty())
-        separateCallPutVols = parseBool(strSeparateCallPutVols);
 
-    // Check the trade envelope.
-    strSeparateCallPutVols = envelope.additionalField("SeparateCallPutVols", false, "");
-    if (!strSeparateCallPutVols.empty())
-        separateCallPutVols = parseBool(strSeparateCallPutVols);
+    // If provided in the trade envelope, this overrides the engine parameter.
+    string strEnvSeparateCallPutVols = envelope.additionalField("SeparateCallPutVols", false, "");
+    if (!strEnvSeparateCallPutVols.empty())
+        strSeparateCallPutVols = strEnvSeparateCallPutVols;
+
+    // If we have a non-empty string, try to parse it. It can be:
+    // 1. a global setting of true or false
+    // 2. a regex that matches the future contract name.
+    separateCallPutVols = matchesViaBoolOrRegex(strSeparateCallPutVols, futureContract, "SeparateCallPutVols");
 
     // Set the suffix if specified in engine builder or in trade envelope.
     string optTypeSuffix;
@@ -77,25 +99,8 @@ ext::optional<Exercise::Type> getExerciseTypeOverride(const ext::shared_ptr<Engi
     // We have BondFutureAmericanAsEuropean. It can be:
     // 1. a global setting of true or false
     // 2. a regex that matches the future contract name.
-
-    // Check first for true or false.
-    bool amerAsEuro = false;
-    bool isGlobalBool = tryParse<bool>(itGlobal->second, amerAsEuro, parseBool);
-    if (isGlobalBool) {
-        if (amerAsEuro)
-            result = Exercise::Type::European;
-        return result;
-    }
-
-    // Check now for regex.
-    try {
-        std::regex futureIncPattern{ itGlobal->second };
-        if (std::regex_match(futureContract, futureIncPattern))
-            result = Exercise::Type::European;
-    } catch (const std::regex_error& e) {
-        WLOG("Invalid regex in global engine parameter BondFutureAmericanAsEuropean: " << itGlobal->second <<
-            ". Error: " << e.what() << ". No exercise type override will be applied.");
-    }
+    if (matchesViaBoolOrRegex(itGlobal->second, futureContract, "BondFutureAmericanAsEuropean"))
+        result = Exercise::Type::European;
 
     return result;
 }
@@ -121,7 +126,8 @@ void BondFutureOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
 
     // If pricing engine has been configured to treat bond future options as European, then override the exercise type
     // to European regardless of what is specified on the trade.
-    ext::optional<Exercise::Type> exTypeOverride = getExerciseTypeOverride(engineFactory, asset());
+    const string& futureContract = asset();
+    ext::optional<Exercise::Type> exTypeOverride = getExerciseTypeOverride(engineFactory, futureContract);
     auto [exerciseType, exercise] = exerciseDetails(exTypeOverride);
     string builderTradeType = exerciseType == Exercise::Type::American ? tradeType_ + "American" : tradeType_;
 
@@ -139,8 +145,8 @@ void BondFutureOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
         " cannot be cast to a BondFutureOptionEngineBuilder.");
 
     // Set the bond future option pricing engine. Note: asset() gives the future contract name here.
-    string optTypeSuffix = getOptionTypeSuffix(*bfoEngineBuilder, envelope(), type);
-    option->setPricingEngine(bfoEngineBuilder->engine(asset(), optTypeSuffix, expiryDate_));
+    string optTypeSuffix = getOptionTypeSuffix(*bfoEngineBuilder, futureContract, envelope(), type);
+    option->setPricingEngine(bfoEngineBuilder->engine(futureContract, optTypeSuffix, expiryDate_));
 
     // Set some Trade specific data.
     setSensitivityTemplate(*bfoEngineBuilder);

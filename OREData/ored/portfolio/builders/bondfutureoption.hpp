@@ -115,7 +115,7 @@ protected:
 class BondFutureEuropeanOptionEngineBuilder : public BondFutureOptionEngineBuilder {
 public:
     BondFutureEuropeanOptionEngineBuilder()
-        : BondFutureOptionEngineBuilder("BlackScholesMerton", "AnalyticEuropeanEngine", { "BondFutureOption" }) {}
+        : BondFutureOptionEngineBuilder("BlackScholes", "AnalyticEuropeanEngine", { "BondFutureOption" }) {}
 
 protected:
     QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::string& contractName,
@@ -130,7 +130,7 @@ protected:
 class BondFutureAmericanFDOptionEngineBuilder : public BondFutureOptionEngineBuilder {
 public:
     BondFutureAmericanFDOptionEngineBuilder()
-        : BondFutureOptionEngineBuilder("BlackScholesMerton", "FdBlackScholesVanillaEngine",
+        : BondFutureOptionEngineBuilder("BlackScholes", "FdBlackScholesVanillaEngine",
             { "BondFutureOptionAmerican" }) {}
 
 protected:
@@ -160,7 +160,7 @@ protected:
 class BondFutureAmericanBAWOptionEngineBuilder : public BondFutureOptionEngineBuilder {
 public:
     BondFutureAmericanBAWOptionEngineBuilder()
-        : BondFutureOptionEngineBuilder("BlackScholesMerton", "BaroneAdesiWhaleyApproximationEngine",
+        : BondFutureOptionEngineBuilder("BlackScholes", "BaroneAdesiWhaleyApproximationEngine",
             { "BondFutureOptionAmerican" }) {}
 
 protected:
