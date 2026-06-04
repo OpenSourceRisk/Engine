@@ -319,9 +319,6 @@ private:
 
     // dynamic im per netting set
     std::map<std::string, std::vector<RandomVariable>> dynamicIM_;
-    std::map<std::string, std::vector<RandomVariable>> dynamicDeltaIM_;
-    std::map<std::string, std::vector<RandomVariable>> dynamicVegaIM_;
-    std::map<std::string, std::vector<RandomVariable>> dynamicCurvatureIM_;
 
     // asd nodes
     std::vector<std::size_t> asdNumeraire_;
