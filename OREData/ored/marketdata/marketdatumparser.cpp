@@ -961,7 +961,7 @@ QuantLib::ext::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const 
 
     case MarketDatum::InstrumentType::BOND_FUTURE_OPTION: {
         // Quote of the form:
-        // BOND_FUTURE_OPTION/<QUOTE_TYPE>/<UNDERLYING_CONTRACT_NAME>/<EXPIRY>/<STRIKE>/<PUT_CALL>
+        // BOND_FUTURE_OPTION/<QUOTE_TYPE>/<UNDERLYING_CONTRACT_NAME>/<EXPIRY>/<STRIKE>[/<PUT_CALL>]
         // where:
         // - QUOTE_TYPE is either RATE_LNVOL or PRICE
         // - UNDERLYING_CONTRACT_NAME is the name of the underlying bond future contract, e.g. "TYM26"
@@ -969,19 +969,29 @@ QuantLib::ext::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const 
         // - STRIKE is the absolute strike price of the bond future option. A strike factor may be given at the curve 
         //   configuration level so the strike here can be given as a multiple e.g. 97.5 for 0.975 with strike factor 
         //   in the configuration of 100.
-        // - PUT_CALL is either C for Call or P for Put
+        // - PUT_CALL is either C for Call or P for Put. This is optional for RATE_LNVOL and defaults to `C` but is
+        //   mandatory for PRICE quotes.
 
         // Checks.
-        QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << datumName);
-        QL_REQUIRE(quoteType == MarketDatum::QuoteType::RATE_LNVOL || quoteType == MarketDatum::QuoteType::PRICE,
+        using MDQT = MarketDatum::QuoteType;
+        QL_REQUIRE(quoteType == MDQT::RATE_LNVOL || quoteType == MDQT::PRICE,
             "invalid quote type for " << datumName << ". Expected RATE_LNVOL or PRICE.");
-        QL_REQUIRE(tokens[5] == "C" || tokens[5] == "P", "expected C for call or P for put as the last "
-            "element in " << datumName);
+
+        if (quoteType == MDQT::PRICE) {
+            QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << datumName << " because quote type is PRICE");
+        } else {
+            QL_REQUIRE(tokens.size() == 5 || tokens.size() == 6, "5 or 6 tokens expected in " << datumName);
+        }
+
+        if (tokens.size() == 6) {
+            QL_REQUIRE(tokens[5] == "C" || tokens[5] == "P", "expected C for call or P for put as the last "
+                "element in " << datumName);
+        }
 
         const string& contractName = tokens[2];
         const string& expiry = tokens[3];
         auto strike = parseBaseStrike(tokens[4]);
-        bool isCall = tokens[5] == "C";
+        bool isCall = tokens.size() == 6 ? tokens[5] == "C" : true;
 
         return QuantLib::ext::make_shared<BondFutureOptionQuote>(value, asof, datumName, quoteType,
             contractName, expiry, strike, isCall);

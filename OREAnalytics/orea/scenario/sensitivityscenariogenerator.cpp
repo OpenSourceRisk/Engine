@@ -3160,8 +3160,15 @@ SensitivityScenarioGenerator::bondFutureVolScenarioDescription(const string& con
         "for bond future contract " << contractName);
     QL_REQUIRE(strikeBucket < data.shiftStrikes.size(), "strike bucket " << strikeBucket << " out of range"
         "in bond future vol shift data for bond future contract " << contractName);
+
     ostringstream o;
-    o << data.shiftExpiries[expiryBucket] << "/" << data.shiftStrikes[strikeBucket];
+    if (data.shiftStrikes.size() == 0 || close_enough(data.shiftStrikes[strikeBucket], 1.0)) {
+        o << data.shiftExpiries[expiryBucket] << "/ATM";
+    } else {
+        QL_REQUIRE(strikeBucket < data.shiftStrikes.size(), "strike bucket " << strikeBucket << " out of range");
+        o << data.shiftExpiries[expiryBucket] << "/" << data.shiftStrikes[strikeBucket];
+    }
+
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     shiftSchemes_[key] = shiftScheme;
     // default, only used if not populated before

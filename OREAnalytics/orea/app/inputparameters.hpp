@@ -526,6 +526,8 @@ public:
         sensiPricingEngine_ = engineData;
     }
     void setSensiOutputPrecision(Size p) { sensiOutputPrecision_ = p; }
+    // Used for testing bond future volatility in CRIF. May be removed later.
+    void setMatchInitialMarket(bool b) { matchInitialMarket_ = b; }
 
     // Setters for scenario
     void setScenarioSimMarketParams(const std::string& xml);
@@ -1006,7 +1008,9 @@ public:
     const QuantLib::ext::shared_ptr<ore::data::EngineData>& sensiPricingEngine() const { return sensiPricingEngine_; }
     // const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& sensiTodaysMarketParams() { return sensiTodaysMarketParams_; }
     QuantLib::Size sensiOutputPrecision() const { return sensiOutputPrecision_; }
-        
+    // Used for testing bond future volatility in CRIF. May be removed later.
+    bool matchInitialMarket() const { return matchInitialMarket_; }
+
     /****************************
      * Getters for scenario build
      ****************************/
@@ -1269,6 +1273,8 @@ protected:
     QuantLib::ext::shared_ptr<ore::data::EngineData> sensiPricingEngine_;
     // QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters> sensiTodaysMarketParams_;
     QuantLib::Size sensiOutputPrecision_ = 2;
+    // Used for testing bond future volatility in CRIF. May be removed later. Off unless explicitly turned on anyway.
+    bool matchInitialMarket_ = false;
 
     /**********************
      * SCENARIO analytic

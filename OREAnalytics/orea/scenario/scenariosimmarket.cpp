@@ -31,7 +31,7 @@
 #include <ored/configuration/inflationcurveconfig.hpp>
 #include <ored/marketdata/curvespecparser.hpp>
 #include <ored/marketdata/structuredcurveerror.hpp>
-
+#include <ored/portfolio/bondutils.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/indexparser.hpp>
@@ -768,6 +768,23 @@ ScenarioSimMarket::ScenarioSimMarket(
                             conversionFactors_.insert(
                                 make_pair(make_pair(Market::defaultConfiguration, name), Handle<Quote>(q)));
                         }
+
+                        // Add the future price also here.
+                        StructuredSecurityId ssid{ name };
+                        string futureContract = ssid.futureContract();
+                        auto futurePriceKey = std::pair{ Market::defaultConfiguration, futureContract };
+                        if (!securityPrices_.contains(futurePriceKey)) {
+                            Real futurePx = initMarket->securityPrice(futureContract, configuration)->value();
+                            auto futureQt = ext::make_shared<SimpleQuote>(useSpreadedTermStructures_ ? 1.0 : futurePx);
+                            if (useSpreadedTermStructures_) {
+                                auto m = [futurePx](Real x) { return x * futurePx; };
+                                auto derQt = ext::make_shared<DerivedQuote<decltype(m)>>(Handle<Quote>(futureQt), m);
+                                securityPrices_[futurePriceKey] = Handle<Quote>(derQt);
+                            } else {
+                                securityPrices_[futurePriceKey] = Handle<Quote>(futureQt);
+                            }
+                        }
+
                     } catch (const std::exception& e) {
                         DLOG("skipping this object: " << e.what());
                     }
@@ -3977,10 +3994,11 @@ void ScenarioSimMarket::createBondFutureVol(RiskFactorKey::KeyType rfKeyType, co
             expiryTimes[j] = dayCounter.yearFraction(asof_, d);
         }
 
-        // We set up spot moneyness below. For now, just set the spot, which we take as the future price, to 1.0. The 
-        // moneyness will then just be the absolute strike. May change it later to use the actual future price.
-        Real spotPrice = 1.0;
-        Handle<Quote> spot(ext::make_shared<SimpleQuote>(spotPrice));
+        // We set up spot moneyness below.
+        // Note name may have a suffix like _CALL or _PUT which we need to strip to get the future contract name.
+        string futureName{ futureContractName(name) };
+        Handle<Quote> futureQuote = bc.initMarket->securityPrice(futureName, bc.configuration);
+        Real futurePrice = futureQuote->value();
 
         // Populate the quotes for the new surface.
         using QuoteRow = vector<Handle<Quote>>;
@@ -3989,7 +4007,7 @@ void ScenarioSimMarket::createBondFutureVol(RiskFactorKey::KeyType rfKeyType, co
         Size index = 0;
         for (Size i = 0; i < moneyness.size(); ++i) {
             for (Size j = 0; j < expiries.size(); ++j) {
-                Real strike = moneyness[i] * spotPrice;
+                Real strike = moneyness[i] * futurePrice;
                 auto vol = baseVol->blackVol(expiryDates[j], strike);
                 Real quoteValue = useSpreadedTermStructures_ ? 0.0 : vol;
                 auto quote = ext::make_shared<SimpleQuote>(quoteValue);
@@ -4011,12 +4029,12 @@ void ScenarioSimMarket::createBondFutureVol(RiskFactorKey::KeyType rfKeyType, co
         if (useSpreadedTermStructures_) {
             Handle<YieldTermStructure> emptyYts;
             auto volPtr = QuantLib::ext::make_shared<SpreadedBlackVolatilitySurfaceMoneynessSpot>(
-                Handle<BlackVolTermStructure>(baseVol), spot, expiryTimes, moneyness, quotes, spot, emptyYts,
-                emptyYts, emptyYts, emptyYts, stickyStrike);
+                Handle<BlackVolTermStructure>(baseVol), futureQuote, expiryTimes, moneyness, quotes, futureQuote,
+                emptyYts, emptyYts, emptyYts, emptyYts, stickyStrike);
             newVol = Handle<BlackVolTermStructure>(volPtr);
         } else {
             auto volPtr = QuantLib::ext::make_shared<BlackVarianceSurfaceMoneynessSpot>(
-                baseVol->calendar(), spot, expiryTimes, moneyness, quotes, dayCounter, stickyStrike,
+                baseVol->calendar(), futureQuote, expiryTimes, moneyness, quotes, dayCounter, stickyStrike,
                 flatExtrapMoneyness, BlackVolTimeExtrapolation::FlatVolatility, baseVol->volType(), baseVol->shift());
             newVol = Handle<BlackVolTermStructure>(volPtr);
         }

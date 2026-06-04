@@ -296,8 +296,11 @@ void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
         return;
     }
 
-    // Make alterations here if necessary to simMarketParams and sensiScenarioData based on market_.
-    modifySensiConfiguration();
+    // Used for testing bond future volatility in CRIF. May be removed later.
+    // Alter the sensitivity and simulation configurations to match the expiries and strikes of the bond future 
+    // volatility structure in the initial market.
+    if (inputs_->matchInitialMarket())
+        modifySensiConfiguration();
 
     // Run the dependent SENSITIVITY analytic
     auto sensiAnalytic = dependentAnalytic(sensitivityLookUpKey);

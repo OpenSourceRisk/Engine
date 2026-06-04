@@ -52,7 +52,8 @@ public:
         std::string useOnlyPutCall = "",
         QuantLib::ext::optional<OneDimSolverConfig> solverConfig = QuantLib::ext::nullopt,
         QuantLib::ext::optional<bool> preferOutOfTheMoney = QuantLib::ext::nullopt,
-        std::string engineOverride = "");
+        std::string engineOverride = "",
+        QuantLib::ext::optional<bool> treatAsEuropean = QuantLib::ext::nullopt);
 
     //! \name Inspectors
     //@{
@@ -66,6 +67,7 @@ public:
     const QuantLib::ext::optional<OneDimSolverConfig>& solverConfig() const;
     const QuantLib::ext::optional<bool>& preferOutOfTheMoney() const;
     const std::string& engineOverride() const;
+    const QuantLib::ext::optional<bool>& treatAsEuropean() const;
     //@}
 
     //! \name Serialisation
@@ -85,6 +87,7 @@ private:
     QuantLib::ext::optional<OneDimSolverConfig> solverConfig_;
     QuantLib::ext::optional<bool> preferOutOfTheMoney_;
     std::string engineOverride_;
+    QuantLib::ext::optional<bool> treatAsEuropean_;
 
     //! Perform basic checks.
     void validate() const;

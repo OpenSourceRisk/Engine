@@ -844,6 +844,7 @@ using ore::data::EquityOptionWithBarrier;
 using ore::data::BGSTrancheData;
 using OREBalanceGuaranteedSwap = ore::data::BalanceGuaranteedSwap;
 using ore::data::BondFuture;
+using ore::data::BondFutureOption;
 using ore::data::BondPosition;
 using ore::data::BondRepo;
 using ore::data::Ascot;
@@ -960,6 +961,19 @@ public:
     void build(const ext::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
+};
+
+// ore/OREData/ored/portfolio/bondfutureoption.hpp
+
+%shared_ptr(BondFutureOption)
+class BondFutureOption : public ore::data::VanillaOptionTrade {
+public:
+    BondFutureOption();
+    BondFutureOption(Envelope& env,
+        OptionData optionData,
+        std::string futureContractName,
+        QuantLib::Real futureContractNotional,
+        QuantLib::Real strikePrice);
 };
 
 // ore/OREData/ored/portfolio/bondposition.hpp

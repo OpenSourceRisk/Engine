@@ -17,6 +17,7 @@
 */
 
 #include <ored/marketdata/bondfuturevolcurve.hpp>
+#include <qle/termstructures/blackvariancesurfacesparse.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -138,28 +139,53 @@ BondFutureVolCurve::BondFutureVolCurve(Date asof,
         calendar_ = calendar.empty() ? NullCalendar() : parseCalendar(calendar);
         dayCounter_ = parseDayCounter(config.dayCounter());
 
-        // We currently only support one volatility config.
         const auto& volConfigs = config.volatilityConfig();
-        QL_REQUIRE(volConfigs.size() == 1, "BondFutureVolCurve: only one volatility config is currently supported");
+        DLOG("BondFutureVolCurve: Attempting to build bond future vol curve from volatilityConfig, " <<
+            volConfigs.size() << " volatility configs provided.");
 
-        // Set the volatilityConfig_ and update the calendar if necessary.
-        volatilityConfig_ = volConfigs.front();
-        if (!volatilityConfig_->calendar().empty())
-            calendar_ = volatilityConfig_->calendar();
+        for (const auto& vc : volConfigs) {
+            try {
+                if (!vc->calendar().empty())
+                    calendar_ = vc->calendar();
 
-        // We currently only support one type of volatility config - premia for expiry x strike.
-        auto vssc = ext::dynamic_pointer_cast<VolatilityStrikeSurfaceConfig>(volatilityConfig_);
-        QL_REQUIRE(vssc, "BondFutureVolCurve: only volatility configurations of type VolatilityStrikeSurfaceConfig "
-            "are currently supported");
-        QL_REQUIRE(vssc->quoteType() == MarketDatum::QuoteType::PRICE, "BondFutureVolCurve: only option premiums "
-            "are currently supported for bond future volatility surfaces");
-        QL_REQUIRE(vssc->expiries().size() > 0, "BondFutureVolCurve: no expiries configured");
-        QL_REQUIRE(vssc->strikes().size() > 0, "BondFutureVolCurve: no strikes configured");
+                // We currently only support one type of volatility config - premia or vol for expiry x strike.
+                auto vssc = ext::dynamic_pointer_cast<VolatilityStrikeSurfaceConfig>(vc);
+                QL_REQUIRE(vssc, "BondFutureVolCurve: only volatility configurations of type "
+                    "VolatilityStrikeSurfaceConfig are currently supported");
+                using MDQT = MarketDatum::QuoteType;
+                QL_REQUIRE(vssc->quoteType() == MDQT::PRICE || vssc->quoteType() == MDQT::RATE_LNVOL,
+                    "BondFutureVolCurve: only option premiums or lognormal volatilities are currently supported for "
+                    "bond future volatility surfaces");
+                QL_REQUIRE(vssc->expiries().size() > 0, "BondFutureVolCurve: no expiries configured");
+                QL_REQUIRE(vssc->strikes().size() > 0, "BondFutureVolCurve: no strikes configured");
+                QL_REQUIRE(vssc->exerciseType() == Exercise::European || vssc->exerciseType() == Exercise::American,
+                    "BondFutureVolCurve: only European or American exercise type is supported");
 
-        // Build volatility from premia.
-        buildVolatilityFromPremia(asof, config, *vssc, loader, yieldCurves);
+                if (vssc->quoteType() == MDQT::PRICE) {
+                    // Build volatility surface from premia.
+                    buildVolatilityFromPremia(asof, config, *vssc, loader, yieldCurves);
+                } else {
+                    // Build volatility surface from lognormal volatilities.
+                    buildVolatilityFromVolatilities(asof, config, *vssc, loader);
+                }
 
-        QL_REQUIRE(vol_, "BondFutureVolCurve: failed to build volatility structure.");
+                // We've successfully built a surface. Set extrapolation, save the config and exit the loop
+                DLOG("BondFutureVolCurve: setting extrapolation to " << to_string(vssc->extrapolation()));
+                vol_->enableExtrapolation(vssc->extrapolation());
+                volatilityConfig_ = vc;
+                break;
+
+            } catch (std::exception& e) {
+                DLOG("BondFutureVolCurve: bond future vol curve building failed: " << e.what());
+            } catch (...) {
+                DLOG("BondFutureVolCurve: bond future vol curve building failed: unknown error");
+            }
+        }
+
+        QL_REQUIRE(vol_, "BondFutureVolCurve: failed to volatility structure from " <<
+            volConfigs.size() << " volatility configs provided.");
+
+        LOG("BondFutureVolCurve: finished building bond future volatility structure with ID " << spec.curveConfigID());
 
     } catch (std::exception& e) {
         QL_FAIL("BondFutureVolCurve: bond future volatility curve building failed with error: " << e.what() << ".");
@@ -221,16 +247,17 @@ BondFutureVolCurve::generateStrikesExpiries(const VolatilityStrikeSurfaceConfig&
     return result;
 }
 
-void BondFutureVolCurve::populateVolatilityPremiaQuotes(const Date& asof, const BondFutureVolatilityConfig& vc,
-    const Loader& loader,const ConfiguredStrikesExpiries& strikesExpiries, PremiumQuoteSurface& quotes) {
+void BondFutureVolCurve::populateVolatilityQuotes(const Date& asof, const BondFutureVolatilityConfig& vc,
+    const Loader& loader,const ConfiguredStrikesExpiries& strikesExpiries, QuoteSurface& quotes,
+    const string& quoteType) {
 
-    DLOG("BondFutureVolCurve: start populating volatility premia quotes.");
+    DLOG("BondFutureVolCurve: start populating volatility quotes.");
 
     // Store quotes by term, expiry in OptionPrice structs.
     using OptionPrice = BondFutureVolStripper::OptionPrice;
 
     // Process the relevant bond future option premium quotes.
-    string wildcardStr = "BOND_FUTURE_OPTION/PRICE/" + vc.contractName() + "/*";
+    string wildcardStr = "BOND_FUTURE_OPTION/" + quoteType + "/" + vc.contractName() + "/*";
 
     // Configuration may specify that we only want call or put quotes. Use wildcard to filter them.
     const auto& onlyPutCall = vc.useOnlyPutCall();
@@ -312,10 +339,7 @@ void BondFutureVolCurve::buildVolatilityFromPremia(const Date& asof, BondFutureV
     DLOG("BondFutureVolCurve: start building expiry x strike volatility surface from premia.");
 
     // We need a bond future price quote to create the stripper.
-    string futurePriceMdName = "BOND_FUTURE/PRICE/" + vc.contractName();
-    QL_REQUIRE(loader.has(futurePriceMdName, asof), "BondFutureVolCurve: curve " << vc.curveID() <<
-        " needs bond future price market datum " << futurePriceMdName << ".");
-    auto futurePriceQuote = loader.get(futurePriceMdName, asof)->quote();
+    auto futurePriceQuote = getFuturePriceQuote(asof, vc, loader);
 
     // We also need the a yield curve.
     const string& ytsId = vc.yieldCurveId();
@@ -329,16 +353,22 @@ void BondFutureVolCurve::buildVolatilityFromPremia(const Date& asof, BondFutureV
     auto cfgStrikesExpiries = generateStrikesExpiries(vssc, vc);
 
     // Populate the quotes.
-    PremiumQuoteSurface quotes;
-    populateVolatilityPremiaQuotes(asof, vc, loader, cfgStrikesExpiries, quotes);
+    QuoteSurface quotes;
+    populateVolatilityQuotes(asof, vc, loader, cfgStrikesExpiries, quotes, "PRICE");
 
     // Other attributes needed to create the stripper.
     auto [flatStrikeExtrap, timeExtrapType] = getStrikeTimeExtrap(vssc);
     bool preferOutOfTheMoney = vc.preferOutOfTheMoney() ? *vc.preferOutOfTheMoney() : true;
 
+    // Determine the exercise type.
+    auto exerciseType = vssc.exerciseType();
+    if (exerciseType == Exercise::American && vc.treatAsEuropean().value_or(false)) {
+        exerciseType = Exercise::European;
+    }
+
     // Create the bond future volatility stripper.
     BondFutureVolStripper volStripper(asof, calendar_, Following, dayCounter_, futurePriceQuote, yts, quotes,
-        getSolverOptions(vc.solverConfig()), Exercise::European, flatStrikeExtrap, flatStrikeExtrap, timeExtrapType,
+        getSolverOptions(vc.solverConfig()), exerciseType, flatStrikeExtrap, flatStrikeExtrap, timeExtrapType,
         preferOutOfTheMoney);
 
     // Set the volatility curve using the stripper.
@@ -351,10 +381,68 @@ void BondFutureVolCurve::buildVolatilityFromPremia(const Date& asof, BondFutureV
             WLOG("  - " << msg);
     }
 
-    DLOG("BondFutureVolCurve: setting BlackVarianceSurfaceSparse extrapolation to " << to_string(vssc.extrapolation()));
-    vol_->enableExtrapolation(vssc.extrapolation());
-
     DLOG("BondFutureVolCurve: finished building expiry x strike volatility surface from premia.");
+}
+
+void BondFutureVolCurve::buildVolatilityFromVolatilities(const Date& asof, BondFutureVolatilityConfig& vc,
+    const VolatilityStrikeSurfaceConfig& vssc, const Loader& loader) {
+
+    DLOG("BondFutureVolCurve: start building expiry x strike volatility surface from volatilities.");
+
+    // Get the configured strikes and expiries and whether or not we have wildcards.
+    auto cfgStrikesExpiries = generateStrikesExpiries(vssc, vc);
+
+    // Populate the quotes. Note: using OptionPrice struct to hold volatility quotes rather than premia quotes here.
+    QuoteSurface quotes;
+    populateVolatilityQuotes(asof, vc, loader, cfgStrikesExpiries, quotes, "RATE_LNVOL");
+
+    // We may need a bond future price to pick the volatilities below based on prefer out of the money setting.
+    Real futurePrice = getFuturePriceQuote(asof, vc, loader)->value();
+
+    // Small helper indicating whether to use call or put option.
+    bool preferOutOfTheMoney = vc.preferOutOfTheMoney() ? *vc.preferOutOfTheMoney() : true;
+    using OptionPrice = BondFutureVolStripper::OptionPrice;
+    auto useCall = [preferOutOfTheMoney, futurePrice](const OptionPrice& op) {
+        if (!op.callPrice.empty() && !op.putPrice.empty()) {
+            if (preferOutOfTheMoney)
+                return op.strike > futurePrice;
+            else
+                return op.strike < futurePrice;
+        } else {
+            return !op.callPrice.empty();
+        }
+    };
+
+    // Need to populate the expiries, strikes, and vols to create the BlackVarianceSurfaceSparse below.
+    vector<Date> expiries;
+    vector<Real> strikes;
+    vector<Volatility> vols;
+    for (const auto& [expiryDate, volQuotes] : quotes) {
+        for (const auto& volQuote : volQuotes) {
+            expiries.push_back(expiryDate);
+            strikes.push_back(volQuote.strike);
+            vols.push_back(useCall(volQuote) ? volQuote.callPrice->value() : volQuote.putPrice->value());
+        }
+    }
+
+    // Extrapolation attributes.
+    auto [flatStrikeExtrap, timeExtrapType] = getStrikeTimeExtrap(vssc);
+
+    // Populate the variance surface.
+    vol_ = ext::make_shared<BlackVarianceSurfaceSparse<>>(asof, calendar_, expiries, strikes, vols,
+        dayCounter_, flatStrikeExtrap, flatStrikeExtrap, timeExtrapType);
+
+    DLOG("BondFutureVolCurve: finished building expiry x strike volatility surface from volatilities.");
+}
+
+Handle<Quote> BondFutureVolCurve::getFuturePriceQuote(const Date& asof, const BondFutureVolatilityConfig& vc,
+    const Loader& loader) const {
+
+    string futurePriceMdName = "BOND_FUTURE/PRICE/" + vc.contractName();
+    QL_REQUIRE(loader.has(futurePriceMdName, asof), "BondFutureVolCurve: curve " << vc.curveID() <<
+        " needs bond future price market datum " << futurePriceMdName << ".");
+    auto futurePriceQuote = loader.get(futurePriceMdName, asof)->quote();
+    return futurePriceQuote;
 }
 
 } // namespace data
