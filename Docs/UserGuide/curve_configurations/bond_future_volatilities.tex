@@ -1,0 +1,265 @@
+\subsubsection{Bond Future Volatilities}
+
+ORE supports a two-dimensional volatility structure with a dependence on both expiry and strike for bond future 
+volatilities. The expiry is an expiry date and the strike is an absolute strike price. The structure can take 
+lognormal volatilities or option premia as inputs as outlined below.
+
+Listing \ref{lst:bond_future_vol_via_vols} outlines the configuration that uses lognormal volatilities as inputs.
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<BondFutureVolatility>
+  <CurveId>XCBT:TYM26[_CALL|_PUT]</CurveId>
+  <CurveDescription>Lognormal option implied vols on TYM26</CurveDescription>
+  <ContractName>XCBT:YYM26</ContractName>
+  <VolatilityConfig>
+    <StrikeSurface priority="0">
+      <QuoteType>ImpliedVolatility</QuoteType>
+      <QuoteType>Lognormal</QuoteType>
+      <ExerciseType>American</ExerciseType>
+      <Strikes>*</Strikes>
+      <Expiries>*</Expiries>
+      <TimeInterpolation>Linear</TimeInterpolation>
+      <StrikeInterpolation>Linear</StrikeInterpolation>
+      <Extrapolation>true</Extrapolation>
+      <TimeExtrapolation>Flat</TimeExtrapolation>
+      <StrikeExtrapolation>Flat</StrikeExtrapolation>
+    </StrikeSurface>
+  </VolatilityConfig>
+  <DayCounter>A365</DayCounter>
+  <Calendar>...</Calendar>
+  <StrikeFactor>100</StrikeFactor>
+  <UseOnlyPutCall>...</UseOnlyPutCall>
+  <PreferOutOfTheMoney>...</PreferOutOfTheMoney>
+</BondFutureVolatility>
+\end{minted}
+\caption{Bond future option surface using volatilities}
+\label{lst:bond_future_vol_via_vols}
+\end{longlisting}
+
+The meaning of each of the elements, outside the \lstinline!VolatilityConfig!, is as follows:
+
+\begin{itemize}
+
+\item \lstinline!CurveId!:
+  Unique identifier for the curve. The underlying bond future contract code should be used here.
+  Also, if the \lstinline!UseOnlyPutCall! is set to \lstinline!C! or \lstinline!P! and the 
+  \lstinline!SeparateCallPutVols! flag is set such that bond future options on this contract will use separate put and 
+  call surfaces, the bond future contract code should be suffixed with \lstinline!_CALL! or \lstinline!_PUT! 
+  respectively in the \lstinline!CurveId! node.
+  
+\item \lstinline!CurveDescription!:
+  A description of the curve. This field may be left blank.
+  
+\item \lstinline!ContractName!:
+  The underlying bond future contract code.
+  
+\item \lstinline!DayCounter! [Optional]:
+  The day count basis used internally by the curve to calculate the time between dates.
+  If omitted it defaults to \lstinline!A365!.
+  
+\item \lstinline!Calendar! [Optional]:
+  The calendar used internally by the volatility structure to amend dates generated from option tenors.
+  In other words, if a volatility is requested from the surface using an expiry tenor, this calendar is used to adjust 
+  the date arrived at via the tenor.
+  If omitted, it defaults to \lstinline!NullCalendar! meaning there is no adjustment to the date generated from a tenor.
+  
+\item \lstinline!StrikeFactor! [Optional]:
+  A real number used to divide the strikes found in the quote strings such that the strike is in absolute terms.
+  For example, if a quote string of \lstinline!BOND_FUTURE_OPTION/RATE_LNVOL/TYM26/2026-04-02/121.25/C! is found in 
+  the market data and the \lstinline!StrikeFactor! is \lstinline!100!, the strike of $121.25$ is divided by $100$ so 
+  that $1.2125$ is used internally in ORE. The same configuration is achieved if the quote is of the form 
+  \lstinline!BOND_FUTURE_OPTION/RATE_LNVOL/TYM26/2026-04-02/1.2125/C! and the \lstinline!StrikeFactor! is 
+  \lstinline!1! or omitted.
+  If omitted, it defaults to \lstinline!1!.
+  
+\item \lstinline!UseOnlyPutCall! [Optional]:
+  If supplied, it must be either \lstinline!C! to use only calls or \lstinline!P! to use only puts.
+  The market data may contain quotes of the form \lstinline!BOND_FUTURE_OPTION/RATE_LNVOL/TYM26/2026-04-02/121.25/C! 
+  and \lstinline!BOND_FUTURE_OPTION/RATE_LNVOL/TYM26/2026-04-02/121.25/P! i.e. call and put volatilities for the 
+  same bond future contract with the same expiry and strike. Setting this flag to \lstinline!C! ignores all put quotes 
+  and setting it to \lstinline!P! ignores all call quotes.
+  Note the comment in the \lstinline!CurveId! bullet point above when this flag is set.
+  If omitted, it is empty and both call and put volatilities are used to construct the surface if they are in the 
+  market data and match the configuration. The volatility that is chosen if both a call and a put volatility is found 
+  for a particular grid point is determined by the setting of the \lstinline!PreferOutOfTheMoney! field described below.
+  
+\item \lstinline!PreferOutOfTheMoney! [Optional]:
+  If a put and a call quote with the same tenor and expiry are found in the market data and match the configuration, 
+  this flag determines which quote is used. If set to \lstinline!true!, out of the money call and put quotes are used.
+  If set to \lstinline!false!, in the money call and put quotes are used.
+  If omitted, the default value is \lstinline!true!.
+  
+\end{itemize}
+
+The meaning of each of the elements in the \lstinline!VolatilityConfig! node is as follows:
+\begin{itemize}
+
+\item \lstinline!QuoteType! [Optional]:
+  For bond future volatilities, this should be set to \lstinline!ImpliedVolatility!.
+  This is the default for \lstinline!QuoteType! so this node may be omitted.
+
+\item \lstinline!VolatilityType! [Optional]:
+  For bond future volatilities, this should be set to \lstinline!Lognormal!.
+  This is the default for \lstinline!VolatilityType! so this node may be omitted.
+
+\item \lstinline!ExerciseType! [Optional]:
+  For bond future volatilities, this is descriptive only and indicates the exercise type of the options from which the 
+  volatilities have been implied. When configuring the surface via premia as outlined below, it is mandatory and used 
+  to determine the pricing engine used to strip volatilities from the premia.
+  The allowable values are \lstinline!American! and \lstinline!European!.
+
+\item \lstinline!Strikes!:
+  This can be a single wildcard value \lstinline!*! or a comma separated list of explicit strike prices.
+  We explain below how these strikes are combined with the other parameters in the configuration to give a list of 
+  bond future option quotes to search for in the market data.
+
+\item \lstinline!Expiries!:
+  This can be a single wildcard value \lstinline!*! or a comma separated list of expiry date strings.
+  We explain below how these expiries are combined with the other parameters in the configuration to give a list of 
+  bond future option quotes to search for in the market data.
+
+\item \lstinline!TimeInterpolation!:
+  Indicates the interpolation in the time direction. Interpolation is on the variance.
+  The allowable values are \lstinline!Linear!, \lstinline!Cubic! and \lstinline!BackwardFlat!.
+  Currently only \lstinline!Linear! is supported and it is used even if another allowable value is passed in.
+
+\item \lstinline!StrikeInterpolation!:
+  Indicates the interpolation in the strike direction. Same note as \lstinline!TimeInterpolation! applies here.
+
+\item \lstinline!Extrapolation!:
+  A boolean value indicating if extrapolation is allowed.
+
+\item \lstinline!TimeExtrapolation!:
+  Defines how to extrapolate in the time direction. Allowed values are:
+  \begin{itemize}
+  \item \lstinline!None!:
+    No extrapolation. Defaults to \lstinline!Flat! if \lstinline!Extrapolation! is \lstinline!true!.
+  \item \lstinline!Flat!:
+    Keeps the volatility constant beyond the known range.
+  \item \lstinline!UseInterpolator!:
+    Extends the configured interpolation, linear in this case, into the extrapolated range.
+  \item \lstinline!Linear!:
+    Legacy identifier and falls back to \lstinline!UseInterpolator!, but only for backward compatibility.
+    Prefer \lstinline!UseInterpolator! for clarity.
+  \end{itemize}
+
+\item \lstinline!StrikeExtrapolation!:
+  Defines how to extrapolate in the strike direction. Same note as \lstinline!TimeExtrapolation! applies here.
+
+\end{itemize}
+
+Listing \ref{lst:bond_future_vol_via_premia} outlines the configuration that uses call and put option premia as inputs.
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<BondFutureVolatility>
+  <CurveId>XCBT:TYM26[_CALL|_PUT]</CurveId>
+  <CurveDescription>Lognormal option implied vols stripped from premia on TYM26</CurveDescription>
+  <ContractName>XCBT:TYM26</ContractName>
+  <VolatilityConfig>
+    <StrikeSurface priority="0">
+      <QuoteType>Premium</QuoteType>
+      <ExerciseType>American</ExerciseType>
+      <Strikes>*</Strikes>
+      <Expiries>*</Expiries>
+      <TimeInterpolation>Linear</TimeInterpolation>
+      <StrikeInterpolation>Linear</StrikeInterpolation>
+      <Extrapolation>true</Extrapolation>
+      <TimeExtrapolation>Flat</TimeExtrapolation>
+      <StrikeExtrapolation>Flat</StrikeExtrapolation>
+    </StrikeSurface>
+  </VolatilityConfig>
+  <DayCounter>A365</DayCounter>
+  <Calendar>...</Calendar>
+  <YieldCurveId>Yield/USD/USD-SOFR</YieldCurveId>
+  <StrikeFactor>100</StrikeFactor>
+  <UseOnlyPutCall>C</UseOnlyPutCall>
+  <OneDimSolverConfig>
+    <MaxEvaluations>200</MaxEvaluations>
+    <InitialGuess>0.15</InitialGuess>
+    <Accuracy>1E-9</Accuracy>
+    <MinMax>
+      <Min>0.001</Min>
+      <Max>3.000</Max>
+    </MinMax>
+  </OneDimSolverConfig>
+  <PreferOutOfTheMoney>...</PreferOutOfTheMoney>
+  <TreatAsEuropean>...</TreatAsEuropean>
+</BondFutureVolatility>
+\end{minted}
+\caption{Bond future option surface using premia}
+\label{lst:bond_future_vol_via_premia}
+\end{longlisting}
+
+Note that configuring via option premia requires a number of additional elements versus configuring via lognormal 
+volatilities directly to support the stripping of volatilities from prices.
+If the \lstinline!ExerciseType! is \lstinline!European!, a Black-76 European engine is used to strip volatilities 
+from the premia. If the \lstinline!ExerciseType! is \lstinline!American!, a Barone-Adesi and Whaley approximation 
+engine is used to strip volatilities from the premia. Note that the \lstinline!ExerciseType! of \lstinline!American! 
+can be ignored using the \lstinline!TreatAsEuropean! flag documented below.
+
+The meaning of each element, outside the \lstinline!VolatilityConfig! that is not covered in the previous 
+section on volatilities, is as follows:
+
+\begin{itemize}
+
+\item \lstinline!YieldCurveId!:
+  The ID of a yield curve in the currency of the bond future contract of the form \lstinline!Yield/{CCY}/{NAME}!.
+
+\item \lstinline!OneDimSolverConfig! [Optional]:
+  This provides the options for the root search in the stripping of the volatilities from premia.
+  If omitted, the default set of options shown in Listing \ref{lst:bond_future_vol_via_premia} is used.
+  The \lstinline!MinMax! node can be replaced with a single \lstinline!Step! node that accepts a double giving the 
+  step size to use in the root search.
+
+\item \lstinline!TreatAsEuropean! [Optional]:
+  If the \lstinline!ExerciseType! is \lstinline!American! and this is set to \lstinline!true!, the stripping process 
+  ignores the American exercise and uses a Black-76 European engine to strip the volatilities from the premia.
+  If omitted, the default value is \lstinline!false!.
+
+\end{itemize}
+
+The following elements in the \lstinline!VolatilityConfig! node need to change when configuring via premia:
+\begin{itemize}
+
+\item \lstinline!QuoteType!:
+  For bond future volatilities via premia, this must be set to \lstinline!Premium!.
+
+\item \lstinline!VolatilityType! [Optional]:
+  For bond future volatilities via premia, this can be omitted.
+
+\item \lstinline!ExerciseType!:
+  For bond future volatilities via premia, this must be set to either \lstinline!American! or \lstinline!European!.
+
+\end{itemize}
+
+As mentioned above, the \lstinline!Expiries! and \lstinline!Strikes! nodes in the \lstinline!VolatilityConfig! node 
+are used in constructing the bond future option quote strings that are looked up in the market data.
+There are two cases:
+
+\begin{enumerate}
+
+\item
+  Both the \lstinline!Strikes! and \lstinline!Expiries! node provide a comma separated list of values.
+  For example, assume the \lstinline!Expiries! node has the set of values \lstinline!e_1,e_2,...,e_N! 
+  and that the \lstinline!Strikes! node has the set of values \lstinline!s_1,s_2,...,s_M!.
+  For each of the $N \times M$ expiry strike pairs $(e_n,s_m)$, a quote of the form 
+  \lstinline!BOND_FUTURE_OPTION/<A>/<B>/e_n/s_m<C>! will be accepted if found in the market where:
+  
+  \begin{itemize}
+  \item \lstinline!<A>! is \lstinline!PRICE! if \lstinline!QuoteType! is \lstinline!Premium! and \lstinline!RATE_LNVOL! 
+    if \lstinline!QuoteType! is \lstinline!ImpliedVolatility!.
+  \item \lstinline!<B>! is the value in the \lstinline!ContractName! node.
+  \item \lstinline!<C>! can be empty, \lstinline!/C! or \lstinline!/P! if \lstinline!QuoteType! is 
+    \lstinline!ImpliedVolatility!. Must be \lstinline!/C! or \lstinline!/P! if \lstinline!QuoteType! is 
+    \lstinline!Premium!.
+  \end{itemize}
+
+\item
+  One or both of the \lstinline!Strikes! and \lstinline!Expiries! node use a single wildcard value \lstinline!*!. The 
+  logic is identical to the previous bullet point except that if $N=1$ and $e_1$ is set to \lstinline!*!, all quotes of 
+  the form given with \emph{any} expiry date are accepted and similarly if $M=1$ and $s_1$ is set to \lstinline!*! for 
+  strikes.
+
+\end{enumerate}
