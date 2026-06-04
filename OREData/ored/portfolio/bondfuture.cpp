@@ -66,6 +66,9 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory)
     refData_ = indexResults.refData;
     bondData_ = indexResults.ctdBuilderResult.bondData;
 
+    // Add the CTD bond to the additional data so that it is available in additional results report.
+    additionalData_["CTDBond"] = indexResults.ctdSecurityId;
+
     // Create the bond future instrument.
     const auto& bondFutureData = refData_->bondFutureData();
     bool physicalSettle = bondFutureData.settlement == "Physical";

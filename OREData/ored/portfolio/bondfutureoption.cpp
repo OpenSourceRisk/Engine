@@ -161,6 +161,9 @@ void BondFutureOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
     // Store the bond data for the CTD bond.
     bondData_ = indexResults.ctdBuilderResult.bondData;
 
+    // Add the CTD bond to the additional data so that it is available in additional results report.
+    additionalData_["CTDBond"] = indexResults.ctdSecurityId;
+
     // Create the wrapper instrument. It is unlikely that we will have a premium with bond futures but we re-use the 
     // logic just in case. The discount curve is set to "" as we are fine with the market discount curve in the premium 
     // currency if there is a premium.
