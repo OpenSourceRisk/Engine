@@ -38,6 +38,7 @@ Listing \ref{lst:eqautodeltahedged_data}.
     </Underlying>
   </Underlyings>
   <ObservationStartDate>2020-11-11</ObservationStartDate>
+  <PaymentDate>2021-02-02</PaymentDate>
 </EquityAutoDeltaHedgedOptionData>
 \end{minted}
 \caption{Equity Auto Delta Hedged Option data}
@@ -71,7 +72,9 @@ The meanings and allowable values of the elements in the
     section~\ref{ss:option_data}.  The relevant fields are:
 
     \begin{itemize}
-    \item \lstinline!LongShort!:  The allowable values are \emph{Long} or \emph{Short}.
+    \item \lstinline!LongShort!:  Determines the direction of the position.  \emph{Long}
+      applies a positive sign to the batch quantity; \emph{Short} negates it.
+      The allowable values are \emph{Long} or \emph{Short}.
     \item \lstinline!OptionType!:  The allowable values are \emph{Call} or \emph{Put}.
     \item \lstinline!Style!:  Must be \emph{European}.
     \item \lstinline!Settlement!:  Must be \emph{Cash}.
@@ -106,6 +109,13 @@ The meanings and allowable values of the elements in the
 \item \lstinline!ObservationStartDate! [Mandatory]:  The date from which the discrete
   delta-hedging observation begins.  Historical fixings of the equity index between the
   observation start date and the valuation date are used to compute the realized hedge P\&L.
+
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+
+\item \lstinline!PaymentDate! [Optional]:  The cash settlement payment date.  When
+  specified, deterministic cashflows (premium and realized hedge P\&L) are discounted to
+  this date, and option present values are adjusted from expiry to the payment date using
+  the ratio $P(0,t_p)/P(0,t_e)$.  If omitted, the expiry date is used as the payment date.
 
   Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
 
