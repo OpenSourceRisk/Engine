@@ -130,7 +130,7 @@ struct XvaVariables : public InputVariables {
     bool timeAveragedNettedExposureOutput_ = false;
     std::string rawCubeOutputFile_, netCubeOutputFile_, timeAveragedNettedExposureOutputFile_;
     // funding value adjustment details
-    std::string fvaBorrowingCurve_, fvaLendingCurve_;
+    std::string borrowingCurve_, lendingCurve_;
     std::string flipViewBorrowingCurvePostfix_ = "_BORROW";
     std::string flipViewLendingCurvePostfix_ = "_LEND";
     // deterministic initial margin by netting set

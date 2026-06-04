@@ -8,7 +8,7 @@ RUN \
 curl -O -L https://github.com/boostorg/boost/releases/download/boost-1.83.0/boost-1.83.0.tar.gz && \
 tar xfz boost-1.83.0.tar.gz && \
 cd boost-1.83.0 && \
-./bootstrap.sh --with-libraries=date_time,iostreams,log,regex,serialization,system,thread,timer && \
+./bootstrap.sh --with-libraries=date_time,iostreams,log,regex,serialization,stacktrace,system,thread,timer && \
 ./b2 install
 
 # Install sccache from GitHub releases (matches Dockerfile-ORE-Dependencies)
