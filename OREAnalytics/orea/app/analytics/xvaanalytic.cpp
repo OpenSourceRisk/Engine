@@ -247,9 +247,8 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
     inputs->loadParameter<Real>(dimScaling_, "xva", "dimScaling", false, parseReal);
     string dimModel;
     inputs->loadParameter<string>(dimModel, "xva", "dimModel", false);
-    if (!dimModel.empty()) {
+    if (!dimModel.empty() && dimAnalytic_) {
         dimModel_ = dimModel;
-        dimAnalytic_ = true;
         QL_REQUIRE(
             dimModel_ == "Regression" || dimModel_ == "Flat" || dimModel_ == "DeltaVaR" ||
                 dimModel_ == "DeltaGammaNormalVaR" || dimModel_ == "DeltaGammaVaR" || dimModel_ == "DynamicIM" ||
@@ -1214,7 +1213,7 @@ void XvaAnalyticImpl::runPostProcessor() {
         Real dimScaling = xvaVars->dimScaling_;
         if (dimScaling == QuantLib::Null<Real>()) {
             QL_REQUIRE(xvaVars->dimModel_ == "SimmAnalytic" || xvaVars->dimModel_ == "DynamicIM" ||
-                           xvaVars->collateralBalances_,
+                          xvaVars->collateralBalances_,
                        "DIM: dimScaling is not set and no collateralBalancesFile is provided. "
                        "Provide dimScaling explicitly in the xva analytic or supply a "
                        "collateralBalancesFile with valid initial margins for each netting set.");
@@ -1222,15 +1221,15 @@ void XvaAnalyticImpl::runPostProcessor() {
                 for (auto const& [n, b] : xvaVars->collateralBalances_->collateralBalances()) {
                     Real im = b->initialMargin();
                     QL_REQUIRE(im != QuantLib::Null<Real>() && im > 0.0,
-                               "DIM: collateral balance initial margin for netting set '"
-                                   << n.nettingSetId()
-                                   << "' is zero or not set. "
-                                      "Provide a valid IM or set dimScaling explicitly in the xva analytic.");
+                              "DIM: collateral balance initial margin for netting set '"
+                                  << n.nettingSetId()
+                                  << "' is zero or not set. "
+                                     "Provide a valid IM or set dimScaling explicitly in the xva analytic.");
                     currentIM[n.nettingSetId()] =
-                        im *
-                        (b->currency() == baseCurrency
-                             ? 1.0
-                             : analytic()->market()->fxRate(b->currency() + baseCurrency, marketConfiguration)->value());
+                       im *
+                       (b->currency() == baseCurrency
+                            ? 1.0
+                            : analytic()->market()->fxRate(b->currency() + baseCurrency, marketConfiguration)->value());
                 }
             }
         }
