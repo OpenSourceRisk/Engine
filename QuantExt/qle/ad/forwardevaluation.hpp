@@ -66,8 +66,8 @@ void forwardEvaluation(const ComputationGraph& g, std::vector<T>& values,
 
                         // is the node required to compute derivatives, then add it to the keep nodes vector
 
-                        if (opRequiresNodesForDerivatives[g.opId(p)](args.size()).second ||
-                            opRequiresNodesForDerivatives[g.opId(node)](args.size()).first[arg])
+                        auto req = opRequiresNodesForDerivatives[g.opId(p)](args.size());
+                        if (req.second || req.first[arg])
                             keepNodesDerivatives[p] = true;
                     }
 
