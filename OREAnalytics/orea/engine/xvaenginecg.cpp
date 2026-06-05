@@ -1405,6 +1405,15 @@ void XvaEngineCG::calculateDynamicIM() {
     for (auto const& c : model_->currencies())
         currencyLookup[c] = index++;
 
+    timing_dynamicIM_bwd_ = 0;
+    timing_dynamicIM_addToPath_ = 0;
+    timing_dynamicIM_condExp_ = 0;
+    timing_dynamicIM_addToConv_ = 0;
+    timing_dynamicIM_complexBwd_ = 0;
+    timing_dynamicIM_complexAddToPath_ = 0;
+    timing_dynamicIM_complexCombine_ = 0;
+    timing_dynamicIM_complexAddToConv_ = 0;
+
     for (std::size_t i = 0; i < valuationDates_.size() + 1; i += dynamicIMStepSize_) {
 
         Date valDate = i == 0 ? model_->referenceDate() : valuationDates_[i - 1];
@@ -1439,10 +1448,15 @@ void XvaEngineCG::calculateDynamicIM() {
 
             // run backward derivatives from n
 
+            boost::timer::cpu_timer timer;
+
             backwardDerivatives(*g, values_, dynamicIMDerivatives_, grads_, RandomVariable::deleter,
                                 keepNodesDerivatives, ops_, opNodeRequirements_, keepNodes_,
                                 RandomVariableOpCode::ConditionalExpectation,
                                 ops_[RandomVariableOpCode::ConditionalExpectation]);
+
+            timing_dynamicIM_bwd_ += timer.elapsed().wall;
+            boost::timer::cpu_timer timer2;
 
             if (pathIrDelta[key].empty())
                 pathIrDelta[key] = std::vector<std::vector<RandomVariable>>(
@@ -1463,6 +1477,8 @@ void XvaEngineCG::calculateDynamicIM() {
             dynamicImAddToPathSensis(simpleKey.modelParameters, valDate, t, currencyLookup, irDeltaConverter,
                                      irVegaConverter, fxVegaConverter, pathIrDelta[key], pathFxDelta[key],
                                      pathIrVega[key], pathFxVega[key]);
+
+            timing_dynamicIM_addToPath_ += timer2.elapsed().wall;
 
         } // loop over parameter / regressor groups
 
@@ -1491,6 +1507,8 @@ void XvaEngineCG::calculateDynamicIM() {
         std::vector<std::vector<RandomVariable>> conditionalFxVega(
             model_->currencies().size() - 1,
             std::vector<RandomVariable>(fxVegaTerms.size(), RandomVariable(model_->size())));
+
+        boost::timer::cpu_timer timer;
 
         auto condExp = [this, i](const RandomVariable* regressand, const std::size_t baseCurrencyConversion,
                                  const std::set<std::size_t>& regressors, const std::set<std::size_t>& evalRegressors,
@@ -1557,7 +1575,7 @@ void XvaEngineCG::calculateDynamicIM() {
         for (auto const& [key, val] : pathFxDelta) {
             for (std::size_t ccy = 1; ccy < model_->currencies().size(); ++ccy) {
                 tmpFxDelta[ccy] += condExp(&val[ccy - 1], std::get<0>(key), std::get<1>(key), std::get<2>(key),
-                                          "fxDelta_" + model_->currencies()[ccy]);
+                                           "fxDelta_" + model_->currencies()[ccy]);
             }
         }
 
@@ -1573,6 +1591,9 @@ void XvaEngineCG::calculateDynamicIM() {
             }
         }
 
+        timing_dynamicIM_condExp_ += timer.elapsed().wall;
+        boost::timer::cpu_timer timer2;
+
         // add them to the converted sensis
 
         for (std::size_t ccy = 0; ccy < model_->currencies().size(); ++ccy) {
@@ -1580,6 +1601,8 @@ void XvaEngineCG::calculateDynamicIM() {
                                           irDeltaConverter, irVegaConverter, fxVegaConverter, conditionalIrDelta,
                                           conditionalFxDelta, conditionalIrVega, conditionalFxVega);
         }
+
+        timing_dynamicIM_addToConv_ += timer2.elapsed().wall;
 
         // handle complex trades
 
@@ -1623,17 +1646,26 @@ void XvaEngineCG::calculateDynamicIM() {
 
                 dynamicIMDerivatives_[n].setAll(1.0);
 
+                boost::timer::cpu_timer timer;
+
                 backwardDerivatives(*g, values_, dynamicIMDerivatives_, grads_, RandomVariable::deleter,
                                     keepNodesDerivatives, ops_, opNodeRequirements_, keepNodes_,
                                     RandomVariableOpCode::ConditionalExpectation,
                                     ops_[RandomVariableOpCode::ConditionalExpectation]);
 
+                timing_dynamicIM_complexBwd_ += timer.elapsed().wall;
+                boost::timer::cpu_timer timer2;
+
                 dynamicImAddToPathSensis(parameterGroup, valDate, t, currencyLookup, irDeltaConverter, irVegaConverter,
                                          fxVegaConverter, pathIrDeltaC[comp], pathFxDeltaC[comp], pathIrVegaC[comp],
                                          pathFxVegaC[comp]);
+
+                timing_dynamicIM_complexAddToPath_ = timer2.elapsed().wall;
             }
 
             // complex trade: run part of the cg that combines the components
+
+            boost::timer::cpu_timer timer;
 
             std::vector<const RandomVariable*> compDer(nComponents);
 
@@ -1671,6 +1703,9 @@ void XvaEngineCG::calculateDynamicIM() {
                 }
             }
 
+            timing_dynamicIM_complexCombine_ += timer.elapsed().wall;
+            boost::timer::cpu_timer timer2;
+
             // add them to the converted sensis
 
             for (std::size_t ccy = 0; ccy < model_->currencies().size(); ++ccy) {
@@ -1678,6 +1713,8 @@ void XvaEngineCG::calculateDynamicIM() {
                                               irDeltaConverter, irVegaConverter, fxVegaConverter, conditionalIrDelta,
                                               conditionalFxDelta, conditionalIrVega, conditionalFxVega);
             }
+
+            timing_dynamicIM_complexAddToConv_ += timer2.elapsed().wall;
 
         } // loop over complex trades
 
@@ -1705,8 +1742,8 @@ void XvaEngineCG::calculateDynamicIM() {
         RandomVariable deltaMarginIr, vegaMarginIr, curvatureMarginIr, deltaMarginFx, vegaMarginFx, curvatureMarginFx;
 
         for (auto const& n : nettingSetIds) {
-            dynamicIM_[n][i] = imCalculator.value(conditionalIrDelta, conditionalIrVega, conditionalFxDelta,
-                                                  conditionalFxVega);
+            dynamicIM_[n][i] =
+                imCalculator.value(conditionalIrDelta, conditionalIrVega, conditionalFxDelta, conditionalFxVega);
             for (Size j = i + 1; j < std::min(i + dynamicIMStepSize_, valuationDates_.size() + 1); ++j) {
                 dynamicIM_[n][j] = dynamicIM_[n][i];
             }
@@ -1947,17 +1984,21 @@ void XvaEngineCG::outputGraphStats() {
 
 void XvaEngineCG::outputTimings() {
     LOG("XvaEngineCG: graph size               : " << model_->computationGraph()->size());
+    LOG("XvaEngineCG: =========================");
     LOG("XvaEngineCG: red nodes ranges         : " << model_->computationGraph()->redBlockRanges().size());
     LOG("XvaEngineCG: red nodes                : " << numberOfRedNodes_);
     LOG("XvaEngineCG: red node dependendices   : " << model_->computationGraph()->redBlockDependencies().size());
+    LOG("XvaEngineCG: =========================");
     LOG("XvaEngineCG: Peak mem usage           : " << ore::data::os::getPeakMemoryUsageBytes() / 1024 / 1024 << " MB");
     LOG("XvaEngineCG: Peak theoretical rv mem  : " << static_cast<double>(rvMemMax_) / 1024 / 1024 * 8 * model_->size()
                                                    << " MB");
+    LOG("XvaEngineCG: =========================");
     LOG("XvaEngineCG: RV Regression Cache Size : " << randomVariableRegressionCache_.size());
     LOG("XvaEngineCG: RV Regression Cache Hit  : " << randomVariableRegressionCache_.hit());
     LOG("XvaEngineCG: RV Regression Cache Miss : " << randomVariableRegressionCache_.miss());
     LOG("XvaEngineCG: RV Regression Cache Mem  : "
         << static_cast<double>(randomVariableRegressionCache_.dataSize()) / 1024 / 1024 * 8 << " MB");
+    LOG("XvaEngineCG: =========================");
     LOG("XvaEngineCG: T0 market build          : " << std::fixed << std::setprecision(1) << timing_t0_ / 1E6 << " ms");
     LOG("XvaEngineCG: Sim market build         : " << std::fixed << std::setprecision(1) << timing_ssm_ / 1E6 << " ms");
     LOG("XvaEngineCG: Part A CG build          : " << std::fixed << std::setprecision(1) << timing_parta_ / 1E6
@@ -1976,16 +2017,36 @@ void XvaEngineCG::outputTimings() {
     LOG("XvaEngineCG: RV gen                   : " << std::fixed << std::setprecision(1) << timing_poprv_ / 1E6
                                                    << " ms");
     LOG("XvaEngineCG: Forward eval             : " << std::fixed << std::setprecision(1) << timing_fwd_ / 1E6 << " ms");
+    LOG("XvaEngineCG: =========================");
     LOG("XvaEngineCG: DynamicIM                : " << std::fixed << std::setprecision(1) << timing_dynamicIM_ / 1E6
                                                    << " ms");
+    LOG("XvaEngineCG: DynamicIM bwdderiv       : " << std::fixed << std::setprecision(1) << timing_dynamicIM_bwd_ / 1E6
+                                                   << " ms");
+    LOG("XvaEngineCG: DynamicIM addToPath      : " << std::fixed << std::setprecision(1)
+                                                   << timing_dynamicIM_addToPath_ / 1E6 << " ms");
+    LOG("XvaEngineCG: DynamicIM condExp        : " << std::fixed << std::setprecision(1)
+                                                   << timing_dynamicIM_condExp_ / 1E6 << " ms");
+    LOG("XvaEngineCG: DynamicIM addToConv      : " << std::fixed << std::setprecision(1)
+                                                   << timing_dynamicIM_addToConv_ / 1E6 << " ms");
+    LOG("XvaEngineCG: DynamicIM complexBwdDer  : " << std::fixed << std::setprecision(1)
+                                                   << timing_dynamicIM_complexBwd_ / 1E6 << " ms");
+    LOG("XvaEngineCG: DynamicIM cmplxAddToPath : " << std::fixed << std::setprecision(1)
+                                                   << timing_dynamicIM_complexAddToPath_ / 1E6 << " ms");
+    LOG("XvaEngineCG: DynamicIM cmplxComb      : " << std::fixed << std::setprecision(1)
+                                                   << timing_dynamicIM_complexCombine_ / 1E6 << " ms");
+    LOG("XvaEngineCG: DynamicIM cmplxAddToConv : " << std::fixed << std::setprecision(1)
+                                                   << timing_dynamicIM_complexAddToConv_ / 1E6 << " ms");
+    LOG("XvaEngineCG: =========================");
     LOG("XvaEngineCG: Backward deriv           : " << std::fixed << std::setprecision(1) << timing_bwd_ / 1E6 << " ms");
     LOG("XvaEngineCG: Sensi Cube Gen           : " << std::fixed << std::setprecision(1) << timing_sensi_ / 1E6
                                                    << " ms");
+    LOG("XvaEngineCG: =========================");
     LOG("XvaEngineCG: Populate ASD             : " << std::fixed << std::setprecision(1) << timing_asd_ / 1E6 << " ms");
     LOG("XvaEngineCG: Populate NPV Outcube     : " << std::fixed << std::setprecision(1) << timing_outcube_ / 1E6
                                                    << " ms");
     LOG("XvaEngineCG: Populate IM Outcube      : " << std::fixed << std::setprecision(1) << timing_imcube_ / 1E6
                                                    << " ms");
+    LOG("XvaEngineCG: =========================");
     LOG("XvaEngineCG: total                    : " << std::fixed << std::setprecision(1) << timing_total_ / 1E6
                                                    << " ms");
     LOG("XvaEngineCG: all done.");

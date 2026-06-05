@@ -345,9 +345,12 @@ private:
 
     boost::timer::nanosecond_type timing_t0_ = 0, timing_ssm_ = 0, timing_parta_ = 0, timing_pf_ = 0, timing_partb_ = 0,
                                   timing_partc_ = 0, timing_partc2_ = 0, timing_partd_ = 0, timing_popparam_ = 0,
-                                  timing_poprv_ = 0, timing_fwd_ = 0, timing_dynamicIM_ = 0, timing_bwd_ = 0,
-                                  timing_sensi_ = 0, timing_asd_ = 0, timing_outcube_ = 0, timing_imcube_ = 0,
-                                  timing_total_ = 0;
+                                  timing_poprv_ = 0, timing_fwd_ = 0, timing_dynamicIM_ = 0, timing_dynamicIM_bwd_ = 0,
+                                  timing_dynamicIM_addToPath_ = 0, timing_dynamicIM_condExp_ = 0,
+                                  timing_dynamicIM_addToConv_ = 0, timing_dynamicIM_complexBwd_ = 0,
+                                  timing_dynamicIM_complexAddToPath_ = 0, timing_dynamicIM_complexCombine_ = 0,
+                                  timing_dynamicIM_complexAddToConv_ = 0, timing_bwd_ = 0, timing_sensi_ = 0,
+                                  timing_asd_ = 0, timing_outcube_ = 0, timing_imcube_ = 0, timing_total_ = 0;
     std::size_t numberOfRedNodes_, rvMemMax_;
 
     // data to populate dynamicImRegressionReport_
