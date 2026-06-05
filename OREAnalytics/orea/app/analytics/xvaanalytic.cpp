@@ -1213,7 +1213,7 @@ void XvaAnalyticImpl::runPostProcessor() {
         Real dimScaling = xvaVars->dimScaling_;
         if (dimScaling == QuantLib::Null<Real>()) {
             QL_REQUIRE(xvaVars->dimModel_ == "SimmAnalytic" || xvaVars->dimModel_ == "DynamicIM" ||
-                          xvaVars->collateralBalances_,
+                          xvaVars->dimModel_.empty() || xvaVars->collateralBalances_,
                        "DIM: dimScaling is not set and no collateralBalancesFile is provided. "
                        "Provide dimScaling explicitly in the xva analytic or supply a "
                        "collateralBalancesFile with valid initial margins for each netting set.");
