@@ -265,6 +265,7 @@
 #include <qle/math/randomvariable_io.hpp>
 #include <qle/math/randomvariable_opcodes.hpp>
 #include <qle/math/randomvariable_ops.hpp>
+#include <qle/math/randomvariable_regressioncache.hpp>
 #include <qle/math/randomvariablelsmbasissystem.hpp>
 #include <qle/math/stabilisedglls.hpp>
 #include <qle/math/stoplightbounds.hpp>

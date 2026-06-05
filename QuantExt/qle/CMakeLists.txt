@@ -178,6 +178,7 @@ math/openclenvironment.cpp
 math/randomvariable.cpp
 math/randomvariable_io.cpp
 math/randomvariable_ops.cpp
+math/randomvariable_regressioncache.cpp
 math/randomvariablelsmbasissystem.cpp
 math/stoplightbounds.cpp
 methods/brownianbridgepathinterpolator.cpp
@@ -740,6 +741,7 @@ math/randomvariable.hpp
 math/randomvariable_io.hpp
 math/randomvariable_opcodes.hpp
 math/randomvariable_ops.hpp
+math/randomvariable_regressioncache.hpp
 math/randomvariablelsmbasissystem.hpp
 math/stabilisedglls.hpp
 math/stoplightbounds.hpp
