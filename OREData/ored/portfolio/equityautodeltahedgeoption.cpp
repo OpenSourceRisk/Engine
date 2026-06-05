@@ -79,7 +79,7 @@ void EquityAutoDeltaHedgedOption::build(const QuantLib::ext::shared_ptr<EngineFa
         Option::Type type = parseOptionType(u.optionData.callPut());
 
         // LongShort determines the position sign
-        Real positionSign = (parsePositionType(u.optionData.longShort()) == Position::Long) ? 1.0 : -1.0;
+        Real longshort = (parsePositionType(u.optionData.longShort()) == Position::Long) ? 1.0 : -1.0;
 
         auto premData = u.optionData.premiumData().premiumData();
         QL_REQUIRE(premData.size() == 1, "EquityAutoDeltaHedgedOption: expected exactly one premium per underlying, got "
@@ -92,7 +92,7 @@ void EquityAutoDeltaHedgedOption::build(const QuantLib::ext::shared_ptr<EngineFa
         QuantExt::UnderlyingOptionBatch batch;
         batch.type = type;
         batch.strike = K;
-        batch.quantity = positionSign * u.quantity;
+        batch.quantity = longshort * u.quantity;
         batch.premium = premAmount;
         batch.premiumCurrency = premCcy;
         batch.expiryDate = expiryDate;
@@ -140,7 +140,6 @@ void EquityAutoDeltaHedgedOption::fromXML(XMLNode* node) {
     string obsStartStr = XMLUtils::getChildValue(eqNode, "ObservationStartDate", true);
     observationStartDate_ = parseDate(obsStartStr);
 
-    // Parse top-level PaymentDate (fallback for per-underlying payment dates)
     string payDateStr = XMLUtils::getChildValue(eqNode, "PaymentDate", false);
     paymentDate_ = payDateStr.empty() ? Date() : parseDate(payDateStr);
 
