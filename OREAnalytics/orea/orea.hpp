@@ -108,7 +108,6 @@
 #include <orea/engine/marketriskreport.hpp>
 #include <orea/engine/mporcalculator.hpp>
 #include <orea/engine/multistatenpvcalculator.hpp>
-#include <orea/engine/multithreadedstresstest.hpp>
 #include <orea/engine/multithreadedvaluationengine.hpp>
 #include <orea/engine/npvrecord.hpp>
 #include <orea/engine/observationmode.hpp>
