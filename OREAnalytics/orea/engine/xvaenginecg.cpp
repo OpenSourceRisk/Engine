@@ -1297,9 +1297,9 @@ RandomVariable XvaEngineCG::dynamicImCombineComponents(const std::vector<const R
 
     // combine the components
 
-    auto localOps =
-        getRandomVariableOps(model_->size(), regressionOrderDynamicIm_, QuantLib::LsmBasisSystem::Monomial, 0.0,
-                             regressionVarianceCutoffDynamicIm_, pfRegressorPosGroups_, usePythonIntegrationDynamicIm_);
+    auto localOps = getRandomVariableOps(model_->size(), regressionOrderDynamicIm_, QuantLib::LsmBasisSystem::Monomial,
+                                         0.0, regressionVarianceCutoffDynamicIm_, pfRegressorPosGroups_,
+                                         usePythonIntegrationDynamicIm_, &randomVariableRegressionCache_);
     forwardEvaluation(*g, tmp, localOps, RandomVariable::deleter, false, {}, keepNodes, startNode, endNode + 1);
 
     // populate regression report data (if requested)
