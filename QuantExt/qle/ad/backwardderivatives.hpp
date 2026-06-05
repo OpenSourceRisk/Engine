@@ -60,7 +60,7 @@ void backwardDerivatives(
 
             // delete the values in the last reconstructured red block
 
-            auto range = g.redBlockRanges()[lastReconstructedRedBlockId];
+            auto range = g.redBlockRanges()[lastReconstructedRedBlockId - 1];
             QL_REQUIRE(range.second != ComputationGraph::nan,
                        "backwardDerivatives(): red block " << lastReconstructedRedBlockId << " was not closed.");
             for (std::size_t n = range.first; n < range.second; ++n) {
