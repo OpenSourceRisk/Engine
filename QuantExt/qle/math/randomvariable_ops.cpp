@@ -33,6 +33,9 @@ RandomVariable randomVariableOpConditionalExpectation(const Size size, const Siz
                                                       const std::vector<const RandomVariable*>& args,
                                                       RandomVariableRegressionCache* cache) {
 
+    // disable cache for testing....
+    cache = nullptr;
+
     QL_REQUIRE(args.size() >= 2,
                "randomVariableOpConditionalExpectation(): args size (" << args.size() << ") must be geq 2");
     QL_REQUIRE(args.size() % 2 == 0,
