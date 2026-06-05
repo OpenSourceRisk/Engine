@@ -73,7 +73,7 @@ std::size_t ComputationGraph::insert(const std::vector<std::size_t>& predecessor
     maxNodeRequiringArg_.push_back(0);
     redBlockId_.push_back(currentRedBlockId_);
     for (auto const& p : predecessors) {
-        if (redBlockId(p) != 0 && redBlockId(p) != currentRedBlockId_) {
+        if (redBlockId(p) != 0 && redBlockId(p) != currentRedBlockId_ && currentRedBlockId_ != 0) {
             redBlockDependencies_.insert(p);
         }
     }
