@@ -106,7 +106,7 @@ private:
     StrikeType strikeType_;
     Settlement::Type settlementType_;
 
-    mutable Real riskyAnnuity_;
+    mutable Real riskyAnnuity_ = Null<Real>();
     void setupExpired() const override;
     void fetchResults(const PricingEngine::results*) const override;
 };

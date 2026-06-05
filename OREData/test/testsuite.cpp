@@ -76,6 +76,8 @@ public:
     // Method called in destructor to log time taken
     void stopTimer() {
         t.stop();
+        std::ios::fmtflags f(std::cout.flags());
+        std::streamsize p = std::cout.precision();
         double seconds = t.elapsed().wall * 1e-9;
         int hours = int(seconds / 3600);
         seconds -= hours * 3600;
@@ -87,6 +89,8 @@ public:
         if (hours > 0 || minutes > 0)
             cout << minutes << " m ";
         cout << fixed << setprecision(0) << seconds << " s" << endl;
+        std::cout.flags(f);
+        std::cout.precision(p);
     }
 
 private:

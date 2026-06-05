@@ -111,7 +111,7 @@ protected:
     bool useFuturePrice_;
     ext::shared_ptr<CommodityIndex> index_;
     ext::shared_ptr<FxIndex> fxIndex_;
-    mutable QuantLib::Real amount_;
+    mutable QuantLib::Real amount_ = Null<Real>();
     mutable QuantLib::ext::shared_ptr<FutureExpiryCalculator> calc_;
 };
 } // namespace QuantExt

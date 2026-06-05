@@ -166,7 +166,7 @@ void IndexCdsVolStripper::populateEngineAndVols(const Period& term, const Handle
     }
 
     // Store engine and vol pair per term.
-    termEngineVol_.try_emplace(term, engine, Handle<SimpleQuote>(volPtr));
+    termEngineVol_.try_emplace(term, EngineVol{engine, Handle<SimpleQuote>(volPtr)});
 }
 
 void IndexCdsVolStripper::populateOptionHelpers(const Date& expiryDate, const Period& term,
