@@ -56,7 +56,7 @@ private:
     void initializeCachedData() const;
     mutable bool cachedDataIsInitialized_ = false;
     mutable Date fixingValueDate_, fixingEndDate_, fixingMaturityDate_;
-    mutable QuantLib::Time spanningTime_, spanningTimeIndexMaturity_;
+    mutable QuantLib::Time spanningTime_ = 0, spanningTimeIndexMaturity_ = 0;
 };
 
 } // namespace QuantExt

@@ -89,13 +89,13 @@ protected:
     mutable bool exerciseIntoIncludeSameDayFlows_ = false;
 
     // set from global settings
-    mutable bool includeTodaysCashflows_;
-    mutable bool includeReferenceDateEvents_;
+    mutable bool includeTodaysCashflows_ = true;
+    mutable bool includeReferenceDateEvents_ = false;
 
     // set by engine
     mutable std::set<std::string> relevantCurrencies_;
-    mutable std::size_t npv_;
-    mutable double npvValue_;
+    mutable std::size_t npv_ = 0;
+    mutable double npvValue_ = Null<double>();
 
     // cached exercise indicators to be used in sticky close-out date run
     mutable std::vector<std::size_t> cachedExerciseIndicators_;
@@ -103,7 +103,7 @@ protected:
     // remaining state
     mutable std::size_t cgVersion_ = 0;
     mutable bool haveBaseValues_ = false;
-    mutable double baseNpv_;
+    mutable double baseNpv_ = Null<double>();
     mutable std::vector<std::pair<std::size_t, double>> baseModelParams_;
     mutable std::vector<double> sensis_;
 
