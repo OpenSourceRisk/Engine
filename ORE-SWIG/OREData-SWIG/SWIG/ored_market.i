@@ -61,7 +61,8 @@ enum class MarketObject {
     CommodityCurve = 18,
     CommodityVolatility = 19,
     Correlation = 20,
-    YieldVol = 21
+    YieldVol = 21,
+    BondFutureVol = 22
 };
 
 // Market class passed around as pointer, no construction

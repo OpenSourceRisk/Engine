@@ -25,6 +25,7 @@
 
 #include <boost/make_shared.hpp>
 #include <ored/portfolio/builders/vanillaoption.hpp>
+#include <ored/portfolio/builders/utilities.hpp>
 #include <qle/termstructures/flatcorrelation.hpp>
 #include <ql/pricingengines/quanto/quantoengine.hpp>
 #include <ql/methods/finitedifferences/utilities/fdmquantohelper.hpp>
@@ -140,31 +141,8 @@ protected:
         Time expiry = riskFreeRate->dayCounter().yearFraction(riskFreeRate->referenceDate(),
                                                               std::max(riskFreeRate->referenceDate(), expiryDate));
 
-        FdmSchemeDesc scheme = parseFdmSchemeDesc(engineParameter("Scheme"));
-        Size tGrid = (Size)(parseInteger(engineParameter("TimeGridPerYear")) * expiry);
-        Size xGrid = parseInteger(engineParameter("XGrid"));
-        Size dampingSteps = parseInteger(engineParameter("DampingSteps"));
-        bool monotoneVar = parseBool(engineParameter("EnforceMonotoneVariance", {}, false, "true"));
-        Size tGridMin = parseInteger(engineParameter("TimeGridMinimumSize", {}, false, "1"));
-        tGrid = std::max(tGridMin, tGrid);
-
-        QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp;
-
-        if (monotoneVar) {
-            // Replicate the construction of time grid in FiniteDifferenceModel::rollbackImpl
-            // This time grid is required to build a BlackMonotoneVarVolTermStructure which
-            // ensures monotonic variance along the time grid
-            const Size totalSteps = tGrid + dampingSteps;
-            std::vector<Time> timePoints(totalSteps + 1);
-            Array timePointsArray(totalSteps, expiry, -expiry / totalSteps);
-            timePoints[0] = 0.0;
-            for (Size i = 0; i < totalSteps; i++)
-                timePoints[timePoints.size() - i - 1] = timePointsArray[i];
-            timePoints.insert(std::upper_bound(timePoints.begin(), timePoints.end(), 0.99 / 365), 0.99 / 365);
-            gbsp = getBlackScholesProcess(assetName, underlyingCcy, assetClassUnderlying, timePoints);
-        } else {
-            gbsp = getBlackScholesProcess(assetName, underlyingCcy, assetClassUnderlying);
-        }
+        FiniteDifferenceParams fdp = fdSchemeParams(*this, expiry);
+        auto gbsp = getBlackScholesProcess(assetName, underlyingCcy, assetClassUnderlying, fdp.timePoints);
 
         Handle<BlackVolTermStructure> fxVolatility =
             market_->fxVol(underlyingCcy.code() + payCcy.code(), configuration(MarketContext::pricing));
@@ -204,8 +182,8 @@ protected:
             quantoCorr->correlation(expiryDate), 
             fxStrike);
         
-        return QuantLib::ext::make_shared<QuantLib::FdBlackScholesVanillaEngine>(gbsp, quantoHelper, tGrid, xGrid,
-                                                                               dampingSteps, scheme);
+        return QuantLib::ext::make_shared<QuantLib::FdBlackScholesVanillaEngine>(gbsp,
+            quantoHelper, fdp.tGrid, fdp.xGrid, fdp.dampingSteps, fdp.scheme);
     }
 };
 

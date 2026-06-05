@@ -73,6 +73,10 @@ private:
     void buildVolatilityFromPremia(const QuantLib::Date& asof, BondFutureVolatilityConfig& vc,
         const VolatilityStrikeSurfaceConfig& vssc, const Loader& loader, const YieldCurveCache& yieldCurves);
 
+    // Build a volatility surface from volatilities on a collection of expiry and absolute strike pairs.
+    void buildVolatilityFromVolatilities(const QuantLib::Date& asof, BondFutureVolatilityConfig& vc,
+        const VolatilityStrikeSurfaceConfig& vssc, const Loader& loader);
+
     // Generate configured strikes and expiries.
     struct ConfiguredStrikesExpiries {
         std::vector<QuantLib::Date> expiries;
@@ -83,10 +87,15 @@ private:
     ConfiguredStrikesExpiries generateStrikesExpiries(const VolatilityStrikeSurfaceConfig& vssc,
         const BondFutureVolatilityConfig& vc) const;
 
-    //! Add the volatility premium quotes to the `quotes` container.
-    using PremiumQuoteSurface = QuantExt::BondFutureVolStripper::QuoteSurface;
-    void populateVolatilityPremiaQuotes(const QuantLib::Date& asof, const BondFutureVolatilityConfig& vc,
-        const Loader& loader, const ConfiguredStrikesExpiries& strikesExpiries, PremiumQuoteSurface& quotes);
+    // Add the volatility premium quotes to the `quotes` container.
+    using QuoteSurface = QuantExt::BondFutureVolStripper::QuoteSurface;
+    void populateVolatilityQuotes(const QuantLib::Date& asof, const BondFutureVolatilityConfig& vc,
+        const Loader& loader, const ConfiguredStrikesExpiries& strikesExpiries, QuoteSurface& quotes,
+        const std::string& quoteType);
+
+    // Get future price quote.
+    QuantLib::Handle<QuantLib::Quote> getFuturePriceQuote(const QuantLib::Date& asof,
+        const BondFutureVolatilityConfig& vc, const Loader& loader) const;
 };
 
 } // namespace data

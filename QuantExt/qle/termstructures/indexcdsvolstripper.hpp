@@ -130,6 +130,7 @@ private:
     struct EngineVol {
         EnginePtr engine;
         VolHandle vol;
+        EngineVol(EnginePtr e, VolHandle v) : engine(std::move(e)), vol(std::move(v)) {}
     };
     std::map<QuantLib::Period, EngineVol> termEngineVol_;
 

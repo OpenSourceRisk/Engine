@@ -133,7 +133,7 @@ meanings of the various elements are as follows:
   assumed to be denominated in this currency.\\
   Allowable values: Any currency. See Table \ref{tab:currency}.
 
-  \item \lstinline!Index! [Optional]: The index is used to derive the fixing which is used
+  \item \lstinline!Index! [Mandatory]: The index is used to derive the fixing which is used
   for compounding cash collateral in the master currency of the CSA.\\
   Allowable values: An alphanumeric string of the form CCY-INDEX-TENOR. CCY, INDEX and TENOR must be separated by dashes (-). CCY and INDEX must be among the supported currency and index combinations. TENOR must be an integer followed by \emph{D}, \emph{W}, \emph{M} or \emph{Y}, except for Overnight indices which do not require a TENOR. See Table \ref{tab:indices}.
 

@@ -1,0 +1,52 @@
+\subsubsection{European Bond Future Option}
+\label{pricing:european-bond-future-option}
+
+Vanilla European bond future options are priced analytically using the Black-76 
+model and log-normal volatilities.
+
+The Black-76 model assumes that the futures price process, $F(t),\; t \in [0,T]$, for a 
+futures contract maturing at $T$ is given by:
+\begin{equation}
+dF(t) = \sigma F(t) \, dW(t)
+\label{eq:black76-bond-future-price-process}
+\end{equation}
+where $W(t)$ is a standard Brownian motion under the risk-neutral measure.
+
+This leads to a Black-76 analytical solution for the present value of a European 
+bond future option, given by:
+\begin{equation*}
+\Pi = N P(T) \operatorname{Black}(K, F(0), \nu, \omega)
+\end{equation*}
+where $\nu = \sigma \sqrt{T}$ and:
+\begin{itemize}
+\item N: bond future option contract notional
+\item $K$: strike price
+\item $F(0)$: the futures contract price at time 0 i.e.\ on the valuation date
+\item $\sigma$: the Black volatility of the futures price process
+\item $\omega$: $1$ for a call option and $-1$ for a put option
+\item $P(T)$: the discount factor for maturity time $T$
+\end{itemize}
+
+See Black Model, Section~\ref{models:black}.
+
+\subsubsection{American Bond Future Option}
+\label{pricing:american-bond-future-option}
+
+Vanilla American bond future options can be priced approximately using the Barone-Adesi 
+and Whaley model with a single volatility applicable for the trade's expiry and strike.
+See Section~\ref{models:barone-adesi} for additional details. Note that in that section, 
+$r_d - r_f = 0$, since we have the futures price process given in 
+Equation~\eqref{eq:black76-bond-future-price-process}. Also, in that section, the 
+European price is calculated as outlined in Section~\ref{pricing:european-bond-future-option}.
+
+Vanilla American bond future options can also be priced using Finite Difference Methods 
+within the Black-Scholes framework using a time-dependent volatility. See 
+Section~\ref{pricing:fx_americanoption} for a brief summary of the options.
+
+Note that in market practice, American bond futures options are often quoted and risk-managed 
+using European Black-76 implied volatilities. This approximation is generally reasonable for 
+liquid exchange-traded bond futures options, where option maturities are typically short and 
+the value of the early exercise feature is often small. For this reason, we allow bond 
+future option trades and bond future volatility curve configurations to specify American 
+exercise but also provide a flag to allow the trades to be priced and option volatilities 
+to be stripped assuming European exercise and the European pricing model.

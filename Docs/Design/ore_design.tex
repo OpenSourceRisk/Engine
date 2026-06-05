@@ -130,7 +130,7 @@
 \begin{document}
 
 \title{ORE Design}
-\date{30 January 2026}
+\date{30 April 2026}
 \maketitle
 
 \newpage
@@ -146,6 +146,7 @@ Date & Author & Comment \\
 14 November 2019 & Roland Lichters & initial release\\
 4 December 2021 & Roland Kapl  & updates for release 6 \\
 26 April 2024 & Roland Lichters & updates for release 12\\
+30 April 2026 & LSEG & updates for release 16\\
 \hline
 \end{supertabular}
 \end{center}
@@ -608,6 +609,8 @@ The product coverage has then grown significantly to about 100 types over five q
       \item BondOption
       \item BondTRS
       \item BondRepo
+      \item BondFuture
+      \item BondFutureOption
       \item CreditLinkedSwap
       \item CrossCurrencySwap
       \item InflationSwap
@@ -2042,6 +2045,7 @@ SecuritySpec & ored\_curvespec.i \\
 SwaptionVolatilityCurveSpec & ored\_curvespec.i \\
 YieldCurveSpec & ored\_curvespec.i \\
 YieldVolatilityCurveSpec & ored\_curvespec.i \\
+BondFutureVolatilityCurveSpec & ored\_curvespec.i \\
 CSVLoader & ored\_loader.i \\
 InMemoryLoader & ored\_loader.i \\
 Loader & ored\_loader.i \\
@@ -2057,6 +2061,7 @@ BasisSwapQuote & ored\_marketdatum.i \\
 BondOptionQuote & ored\_marketdatum.i \\
 BondOptionShiftQuote & ored\_marketdatum.i \\
 BondPriceQuote & ored\_marketdatum.i \\
+BondFutureOptionQuote & ored\_marketdatum.i \\
 CPRQuote & ored\_marketdatum.i \\
 CapFloorQuote & ored\_marketdatum.i \\
 CapFloorShiftQuote & ored\_marketdatum.i \\

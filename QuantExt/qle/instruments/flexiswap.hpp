@@ -39,6 +39,7 @@ using QuantLib::Schedule;
 using QuantLib::Size;
 using QuantLib::Time;
 using QuantLib::VanillaSwap;
+using QuantLib::Null;
 
 //! Flexi-Swap with global notional bounds
 /*! The given non-standard swap defines the upper bound for the notionals, which must be non-increasing and consistent
@@ -121,7 +122,7 @@ private:
     void setupExpired() const override;
     void fetchResults(const QuantLib::PricingEngine::results*) const override;
 
-    mutable Real underlyingValue_; // result
+    mutable Real underlyingValue_ = Null<Real>(); // result
 };
 
 //! %Arguments for Flexi-Swap
