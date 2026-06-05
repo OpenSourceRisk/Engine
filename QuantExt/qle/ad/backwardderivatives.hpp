@@ -22,10 +22,9 @@
 
 #pragma once
 
-#include <qle/ad/computationgraph.hpp>
+#include <qle/math/randomvariable_opcodes.hpp>
 
 #include <ql/errors.hpp>
-
 #include <ql/shared_ptr.hpp>
 
 namespace QuantExt {
@@ -50,42 +49,60 @@ void backwardDerivatives(
     if (g.size() == 0)
         return;
 
-    std::size_t redBlockId = 0;
+    std::size_t lastReconstructedRedBlockId = 0;
 
     // loop over the nodes in the graph in reverse order
 
     for (std::size_t node = g.size() - 1; node > 0; --node) {
 
-        if (g.redBlockId(node) != redBlockId) {
+        if (deleter && g.redBlockId(node) > 0 && lastReconstructedRedBlockId > 0 &&
+            g.redBlockId(node) != lastReconstructedRedBlockId) {
 
-            // delete the values in the previous red block
+            // delete the values in the last reconstructured red block
 
-            if (deleter && redBlockId > 0) {
-                auto range = g.redBlockRanges()[redBlockId - 1];
-                QL_REQUIRE(range.second != ComputationGraph::nan,
-                           "backwardDerivatives(): red block " << redBlockId << " was not closed.");
-                for (std::size_t n = range.first; n < range.second; ++n) {
-                    if (g.redBlockId(n) == redBlockId && !fwdOpKeepNodes[n])
-                        deleter(values[n]);
-                }
+            auto range = g.redBlockRanges()[lastReconstructedRedBlockId];
+            QL_REQUIRE(range.second != ComputationGraph::nan,
+                       "backwardDerivatives(): red block " << lastReconstructedRedBlockId << " was not closed.");
+            for (std::size_t n = range.first; n < range.second; ++n) {
+                if (!fwdOpKeepNodes[n])
+                    deleter(values[n]);
             }
 
-            // populate the values in the current red block
-
-            if (g.redBlockId(node) > 0) {
-                auto range = g.redBlockRanges()[g.redBlockId(node) - 1];
-                QL_REQUIRE(range.second != ComputationGraph::nan,
-                           "backwardDerivatives(): red block " << g.redBlockId(node) << " was not closed.");
-                forwardEvaluation(g, values, fwdOps, deleter, true, fwdOpRequiresNodesForDerivatives, fwdOpKeepNodes,
-                                  range.first, range.second, true, fwdOpPreDeleter, fwdOpAllowsPredeletion);
-            }
-
-            // update the red block id
-
-            redBlockId = g.redBlockId(node);
+            lastReconstructedRedBlockId = 0;
         }
 
         if (!g.predecessors(node).empty() && !isDeterministicAndZero(derivatives[node])) {
+
+            if(g.redBlockId(node) > 0 && g.redBlockId(node) != lastReconstructedRedBlockId) {
+
+                // check if any of the values entering the gradient calculation below is uninitialized
+                // and if yes, reconstruct the current red block
+
+                bool reconstructionRequired = false;
+                auto req = fwdOpRequiresNodesForDerivatives[g.opId(node)](g.predecessors(node).size());
+                if (!values[node].initialised() && req.second) {
+                    reconstructionRequired = true;
+                } else {
+                    for (std::size_t arg = 0; arg < g.predecessors(node).size(); ++arg) {
+                        if (req.first[arg] && !values[g.predecessors(node)[arg]].initialised())
+                            reconstructionRequired = true;
+                    }
+                }
+
+                if (reconstructionRequired) {
+
+                    // reconstruct the current red block
+
+                    auto range = g.redBlockRanges()[g.redBlockId(node) - 1];
+                    QL_REQUIRE(range.second != ComputationGraph::nan,
+                               "backwardDerivatives(): red block " << g.redBlockId(node) << " was not closed.");
+                    forwardEvaluation(g, values, fwdOps, deleter, true, fwdOpRequiresNodesForDerivatives,
+                                      fwdOpKeepNodes, range.first, range.second, true, fwdOpPreDeleter,
+                                      fwdOpAllowsPredeletion, true);
+
+                    lastReconstructedRedBlockId = g.redBlockId(node);
+                }
+            }
 
             // propagate the derivative at a node to its predecessors
 
