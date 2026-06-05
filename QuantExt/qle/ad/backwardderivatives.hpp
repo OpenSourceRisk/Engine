@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include <qle/math/randomvariable_opcodes.hpp>
+#include <qle/ad/computationgraph.hpp>
 
 #include <ql/errors.hpp>
 #include <ql/shared_ptr.hpp>
@@ -98,7 +98,7 @@ void backwardDerivatives(
                                "backwardDerivatives(): red block " << g.redBlockId(node) << " was not closed.");
                     forwardEvaluation(g, values, fwdOps, deleter, true, fwdOpRequiresNodesForDerivatives,
                                       fwdOpKeepNodes, range.first, range.second, true, fwdOpPreDeleter,
-                                      fwdOpAllowsPredeletion, true);
+                                      fwdOpAllowsPredeletion);
 
                     lastReconstructedRedBlockId = g.redBlockId(node);
                 }
