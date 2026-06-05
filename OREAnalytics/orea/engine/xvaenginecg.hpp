@@ -43,6 +43,7 @@
 #include <qle/ad/computationgraph.hpp>
 #include <qle/ad/external_randomvariable_ops.hpp>
 #include <qle/math/computeenvironment.hpp>
+#include <qle/math/randomvariable_regressioncache.hpp>
 #include <qle/methods/cclgmfxoptionvegaparconverter.hpp>
 #include <qle/methods/irdeltaparconverter.hpp>
 #include <qle/methods/lgmswaptionvegaparconverter.hpp>
@@ -252,6 +253,7 @@ private:
     std::vector<ExternalRandomVariableGrad> gradsExternal_;
     std::size_t externalCalculationId_ = 0;
     QuantExt::ComputeContext::Settings externalComputeDeviceSettings_;
+    RandomVariableRegressionCache randomVariableRegressionCache_;
 
     // additional trades built in buildCgPartB(): fees
     std::vector<QuantLib::ext::shared_ptr<ore::data::Trade>> additionalTrades_;
@@ -284,6 +286,7 @@ private:
     std::vector<std::map<std::string, std::size_t>> pfExposureLocalBaseCcy_;
 
     /* for dynamic im calculation, per time step data */
+    // need to disable doxygen, because it throws an internal error
     /// @cond
     struct DynamicImInfo {
         // simple trade data

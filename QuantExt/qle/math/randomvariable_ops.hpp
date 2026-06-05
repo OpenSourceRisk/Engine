@@ -40,7 +40,8 @@ RandomVariable randomVariableOpConditionalExpectation(const Size size, const Siz
                                                       QuantLib::Real regressionVarianceCutoff,
                                                       const std::set<std::set<std::size_t>>& regressorGroups,
                                                       const bool usePythonIntegration,
-                                                      const std::vector<const RandomVariable*>& args);
+                                                      const std::vector<const RandomVariable*>& args,
+                                                      RandomVariableRegressionCache* cache = nullptr);
 
 // eps determines the smoothing, 0 means no smoothing (default)
 std::vector<RandomVariableOp>
@@ -48,7 +49,7 @@ getRandomVariableOps(const Size size, const Size regressionOrder = 2,
                      const QuantLib::LsmBasisSystem::PolynomialType polynomType = QuantLib::LsmBasisSystem::Monomial,
                      const double eps = 0.0, QuantLib::Real regressionVarianceCutoff = Null<Real>(),
                      const std::map<std::size_t, std::set<std::set<std::size_t>>>& regressorGroups = {},
-                     const bool usePythonIntegration = false);
+                     const bool usePythonIntegration = false, RandomVariableRegressionCache* cache = nullptr);
 
 // random variable gradients
 

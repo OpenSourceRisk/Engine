@@ -791,7 +791,7 @@ void XvaEngineCG::doForwardEvaluation() {
     } else {
         ops_ = getRandomVariableOps(model_->size(), regressionOrder_, QuantLib::LsmBasisSystem::Monomial,
                                     (sensitivityData_ && bumpCvaSensis_) ? eps : 0.0, regressionVarianceCutoff_,
-                                    pfRegressorPosGroups_, usePythonIntegration_);
+                                    pfRegressorPosGroups_, usePythonIntegration_, &randomVariableRegressionCache_);
         grads_ =
             getRandomVariableGradients(model_->size(), regressionOrder_, QuantLib::LsmBasisSystem::Monomial, eps, 1E-8);
     }
@@ -1511,7 +1511,8 @@ void XvaEngineCG::calculateDynamicIM() {
             auto result = values_[baseCurrencyConversion] *
                           randomVariableOpConditionalExpectation(
                               model_->size(), regressionOrderDynamicIm_, QuantLib::LsmBasisSystem::Monomial,
-                              regressionVarianceCutoffDynamicIm_, {}, usePythonIntegrationDynamicIm_, args);
+                              regressionVarianceCutoffDynamicIm_, {}, usePythonIntegrationDynamicIm_, args,
+                              &randomVariableRegressionCache_);
             // just to populate debug report on im regression
             if (std::find(regressionReportTimeStepsDynamicIM_.begin(), regressionReportTimeStepsDynamicIM_.end(), i) !=
                     regressionReportTimeStepsDynamicIM_.end() &&
@@ -1952,6 +1953,11 @@ void XvaEngineCG::outputTimings() {
     LOG("XvaEngineCG: Peak mem usage           : " << ore::data::os::getPeakMemoryUsageBytes() / 1024 / 1024 << " MB");
     LOG("XvaEngineCG: Peak theoretical rv mem  : " << static_cast<double>(rvMemMax_) / 1024 / 1024 * 8 * model_->size()
                                                    << " MB");
+    LOG("XvaEngineCG: RV Regression Cache Size : " << randomVariableRegressionCache_.size());
+    LOG("XvaEngineCG: RV Regression Cache Hit  : " << randomVariableRegressionCache_.hit());
+    LOG("XvaEngineCG: RV Regression Cache Miss : " << randomVariableRegressionCache_.miss());
+    LOG("XvaEngineCG: RV Regression Cache Mem  : "
+        << static_cast<double>(randomVariableRegressionCache_.dataSize()) / 1024 / 1024 * 8 << " MB");
     LOG("XvaEngineCG: T0 market build          : " << std::fixed << std::setprecision(1) << timing_t0_ / 1E6 << " ms");
     LOG("XvaEngineCG: Sim market build         : " << std::fixed << std::setprecision(1) << timing_ssm_ / 1E6 << " ms");
     LOG("XvaEngineCG: Part A CG build          : " << std::fixed << std::setprecision(1) << timing_parta_ / 1E6
