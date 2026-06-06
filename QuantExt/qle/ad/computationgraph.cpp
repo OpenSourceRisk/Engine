@@ -30,6 +30,8 @@ namespace QuantExt {
 
 std::size_t ComputationGraph::nan = std::numeric_limits<std::size_t>::max();
 
+ComputationGraph::ComputationGraph() { opNodeRequirements_ = getRandomVariableOpNodeRequirements(); }
+
 void ComputationGraph::clear() {
     predecessors_.clear();
     opId_.clear();
@@ -72,10 +74,13 @@ std::size_t ComputationGraph::insert(const std::vector<std::size_t>& predecessor
     }
     maxNodeRequiringArg_.push_back(0);
     redBlockId_.push_back(currentRedBlockId_);
+    std::size_t counter = 0;
     for (auto const& p : predecessors) {
-        if (redBlockId(p) != 0 && redBlockId(p) != currentRedBlockId_ && currentRedBlockId_ != 0) {
+        if (redBlockId(p) != 0 && redBlockId(p) != currentRedBlockId_ &&
+            (currentRedBlockId_ != 0 || opNodeRequirements_[opId](predecessors.size()).first[counter])) {
             redBlockDependencies_.insert(p);
         }
+        ++counter;
     }
     isConstant_.push_back(false);
     constantValue_.push_back(0.0);

@@ -22,6 +22,8 @@
 
 #pragma once
 
+#include <qle/math/randomvariable_ops.hpp>
+
 #include <boost/integer.hpp>
 
 #include <map>
@@ -33,9 +35,12 @@ namespace QuantExt {
 
 /*! - opId = 0 should refer to "no operation" */
 class ComputationGraph {
+
 public:
     enum class VarDoesntExist { Nan, Create, Throw };
     static std::size_t nan;
+
+    ComputationGraph();
 
     void clear();
 
@@ -89,6 +94,8 @@ private:
     std::size_t nextRedBlockId_ = 0;
     std::vector<std::pair<std::size_t, std::size_t>> redBlockRange_;
     std::set<std::size_t> redBlockDependencies_;
+
+    std::vector<RandomVariableOpNodeRequirements> opNodeRequirements_;
 };
 
 // methods to construct cg
