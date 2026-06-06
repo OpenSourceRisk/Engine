@@ -24,6 +24,13 @@
 
 namespace QuantExt {
 
+std::size_t RandomVariableRegressionCache::MatrixDecompData::size() const {
+    return 8 * (q ? q->rows() * q->columns() : 0) + (r ? r->rows() * r->columns() : 0) +
+           (svd ? svd->U().rows() * svd->U().columns() + svd->V().rows() * svd->V().columns() : 0);
+}
+
+RandomVariableRegressionCache::RandomVariableRegressionCache(const std::size_t maxSize) : maxSize_(maxSize) {}
+
 RandomVariableRegressionCache::Key::Key(
     const std::vector<const RandomVariable*>& regressor,
     const std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>& basisFn,
@@ -64,16 +71,19 @@ void RandomVariableRegressionCache::addMatrixDecomposition(const RandomVariableR
                                                            QuantLib::ext::shared_ptr<QuantLib::Matrix> r,
                                                            QuantLib::ext::shared_ptr<std::vector<QuantLib::Size>> lipvt,
                                                            QuantLib::ext::shared_ptr<QuantLib::SVD> svd) {
-    dataSize_ += q ? q->rows() * q->columns() : 0;
-    dataSize_ += r ? r->rows() * r->columns() : 0;
-    dataSize_ += svd ? svd->U().rows() * svd->U().columns() : 0;
-    dataSize_ += svd ? svd->V().rows() * svd->V().columns() : 0;
 
     MatrixDecompData d;
     d.q = std::move(q);
     d.r = std::move(r);
     d.lipvt = std::move(lipvt);
     d.svd = std::move(svd);
+
+    while (dataSize_ + d.size() > maxSize_ && !data_.empty()) {
+        dataSize_ -= std::min(dataSize_, data_.begin()->second.size());
+        data_.erase(data_.begin());
+    }
+
+    dataSize_ += d.size();
 
     QL_REQUIRE(data_.insert(std::make_pair(key(), std::move(d))).second,
                "RandomVariableRegressionCache::addMatrixDecomposition(): called with key that is already present. This "

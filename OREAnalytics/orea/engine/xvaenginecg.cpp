@@ -1997,7 +1997,7 @@ void XvaEngineCG::outputTimings() {
     LOG("XvaEngineCG: RV Regression Cache Hit  : " << randomVariableRegressionCache_.hit());
     LOG("XvaEngineCG: RV Regression Cache Miss : " << randomVariableRegressionCache_.miss());
     LOG("XvaEngineCG: RV Regression Cache Mem  : "
-        << static_cast<double>(randomVariableRegressionCache_.dataSize()) / 1024 / 1024 * 8 << " MB");
+        << static_cast<double>(randomVariableRegressionCache_.dataSize()) / 1024 / 1024 << " MB");
     LOG("XvaEngineCG: =========================");
     LOG("XvaEngineCG: T0 market build          : " << std::fixed << std::setprecision(1) << timing_t0_ / 1E6 << " ms");
     LOG("XvaEngineCG: Sim market build         : " << std::fixed << std::setprecision(1) << timing_ssm_ / 1E6 << " ms");

@@ -20,6 +20,8 @@
 
 #include <qle/math/randomvariable.hpp>
 
+#include <unordered_map>
+
 namespace QuantLib {
 class SVD;
 }
@@ -40,7 +42,8 @@ public:
         std::size_t value_;
     };
 
-    RandomVariableRegressionCache() = default;
+    // maxSize is in byte
+    RandomVariableRegressionCache(const std::size_t maxSize = 1024 * 1024 * 512);
 
     bool hasMatrixDecomposition(const Key& key) const;
     void getMatrixDecomposition(const Key& key, QuantLib::ext::shared_ptr<QuantLib::Matrix>& q,
@@ -52,19 +55,23 @@ public:
                                 QuantLib::ext::shared_ptr<std::vector<QuantLib::Size>> lipvt,
                                 QuantLib::ext::shared_ptr<QuantLib::SVD> svd);
 
+    // number of entries
     std::size_t size() const { return data_.size(); }
+    // in byte
     std::size_t dataSize() const { return dataSize_; }
     std::size_t hit() const { return cacheHit_; }
     std::size_t miss() const { return cacheMiss_; }
 
 private:
     struct MatrixDecompData {
+        std::size_t size() const;
         QuantLib::ext::shared_ptr<QuantLib::Matrix> q = nullptr;
         QuantLib::ext::shared_ptr<QuantLib::Matrix> r = nullptr;
         QuantLib::ext::shared_ptr<std::vector<QuantLib::Size>> lipvt = nullptr;
         QuantLib::ext::shared_ptr<QuantLib::SVD> svd = nullptr;
     };
-    std::map<std::size_t, MatrixDecompData> data_;
+    std::unordered_map<std::size_t, MatrixDecompData> data_;
+    std::size_t maxSize_;
     mutable std::size_t dataSize_ = 0;
     mutable std::size_t cacheHit_ = 0;
     mutable std::size_t cacheMiss_ = 0;
