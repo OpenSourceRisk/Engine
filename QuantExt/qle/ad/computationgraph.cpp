@@ -64,6 +64,12 @@ std::size_t ComputationGraph::insert(const std::string& label) {
 std::size_t ComputationGraph::insert(const std::vector<std::size_t>& predecessors, const std::size_t opId,
                                      const std::string& label) {
     QL_REQUIRE(!readOnly_, "ComputationGraph::insert(opId=" << opId << "," << label << "): graph was set to read-only");
+    if (true && opId != 0) {
+        for (std::size_t n = predecessors_.size() - 1; n > 0; --n) {
+            if(opId_[n] == opId && predecessors_[n] == predecessors)
+                return n;
+        }
+    }
     std::size_t node = predecessors_.size();
     predecessors_.push_back(predecessors);
     opId_.push_back(opId);
