@@ -1417,6 +1417,9 @@ void XvaEngineCG::calculateDynamicIM() {
 
     for (std::size_t i = 0; i < valuationDates_.size() + 1; i += dynamicIMStepSize_) {
 
+        DLOG("XvaEngineCg::calculateDynamicIm(): calculate valuation date #"
+             << (i + 1) << " out of " << valuationDates_.size() + 1 << ", step size " << dynamicIMStepSize_);
+
         Date valDate = i == 0 ? model_->referenceDate() : valuationDates_[i - 1];
         Real t = model_->actualTimeFromReference(valDate);
 
