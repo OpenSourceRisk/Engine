@@ -61,6 +61,7 @@ public:
     std::size_t dataSize() const { return dataSize_; }
     std::size_t hit() const { return cacheHit_; }
     std::size_t miss() const { return cacheMiss_; }
+    std::size_t del() const { return cacheDelete_; }
 
 private:
     struct MatrixDecompData {
@@ -75,6 +76,7 @@ private:
     mutable std::size_t dataSize_ = 0;
     mutable std::size_t cacheHit_ = 0;
     mutable std::size_t cacheMiss_ = 0;
+    mutable std::size_t cacheDelete_ = 0;
 };
 
 } // namespace QuantExt

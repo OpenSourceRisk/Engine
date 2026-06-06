@@ -72,6 +72,9 @@ void RandomVariableRegressionCache::addMatrixDecomposition(const RandomVariableR
                                                            QuantLib::ext::shared_ptr<std::vector<QuantLib::Size>> lipvt,
                                                            QuantLib::ext::shared_ptr<QuantLib::SVD> svd) {
 
+    if(maxSize_ == 0)
+        return;
+
     MatrixDecompData d;
     d.q = std::move(q);
     d.r = std::move(r);
@@ -81,6 +84,7 @@ void RandomVariableRegressionCache::addMatrixDecomposition(const RandomVariableR
     while (dataSize_ + d.size() > maxSize_ && !data_.empty()) {
         dataSize_ -= std::min(dataSize_, data_.begin()->second.size());
         data_.erase(data_.begin());
+        cacheDelete_++;
     }
 
     dataSize_ += d.size();

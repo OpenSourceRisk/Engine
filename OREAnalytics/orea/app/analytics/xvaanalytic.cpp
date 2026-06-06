@@ -170,6 +170,7 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
     inputs->loadParameter<bool>(xvaCgTradeLevelBreakdown_, "simulation", "xvaCgTradeLevelBreakDown", false, parseBool);
     inputs->loadParameter<vector<Size>>(xvaCgRegressionReportTimeStepsDynamicIM_, "simulation", "xvaCgRegressionReportTimeStepsDynamicIM", false, parseListOfIntegerValues);
     inputs->loadParameter<bool>(xvaCgUseRedBlocks_, "simulation", "xvaCgUseRedBlocks", false, parseBool);
+    inputs->loadParameter<Size>(xvaCgRegressionCacheSize_, "simulation", "xvaCgRegressionCacheSize", false, parseInteger);
     inputs->loadParameter<bool>(cubeNpvOverlay_, "simulation", "cubeNpvOverlay", false, parseBool);
 
     /**********************
@@ -1074,18 +1075,17 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun, bool continueOnCalibrationError,
             xvaVars->amcCg_, inputs_->nThreads(), inputs_->asof(), analytic()->loader(), inputs_->curveConfigs().get(),
             analytic()->configurations().todaysMarketParams, analytic()->configurations().simMarketParams,
             xvaVars->amcCgPricingEngine_, analytic()->configurations().crossAssetModelData,
-            analytic()->configurations().scenarioGeneratorData,
-            amcPortfolio_, inputs_->marketConfig("simulation"), inputs_->marketConfig("lgmcalibration"),
-            xvaVars->xvaCgSensiScenarioData_, inputs_->refDataManager(), inputs_->iborFallbackConfig(),
-            xvaVars->xvaCgBumpSensis_, xvaVars->xvaCgDynamicIM_, xvaVars->xvaCgDynamicIMStepSize_,
-            xvaVars->xvaCgRegressionOrder_, xvaVars->xvaCgRegressionVarianceCutoff_,
+            analytic()->configurations().scenarioGeneratorData, amcPortfolio_, inputs_->marketConfig("simulation"),
+            inputs_->marketConfig("lgmcalibration"), xvaVars->xvaCgSensiScenarioData_, inputs_->refDataManager(),
+            inputs_->iborFallbackConfig(), xvaVars->xvaCgBumpSensis_, xvaVars->xvaCgDynamicIM_,
+            xvaVars->xvaCgDynamicIMStepSize_, xvaVars->xvaCgRegressionOrder_, xvaVars->xvaCgRegressionVarianceCutoff_,
             xvaVars->xvaCgRegressionOrderDynamicIm_, xvaVars->xvaCgRegressionVarianceCutoffDynamicIm_,
             xvaVars->xvaCgTradeLevelBreakdown_, xvaVars->xvaCgRegressionReportTimeStepsDynamicIM_,
             xvaVars->xvaCgUseRedBlocks_, xvaVars->xvaCgUseExternalComputeDevice_,
             xvaVars->xvaCgExternalDeviceCompatibilityMode_, xvaVars->xvaCgUseDoublePrecisionForExternalCalculation_,
             xvaVars->xvaCgExternalComputeDevice_, xvaVars->xvaCgUsePythonIntegration_,
-            xvaVars->xvaCgUsePythonIntegrationDynamicIm_, true, true, true, inputs_->useAtParCouponsCurves(),
-            inputs_->useAtParCouponsTrades(), "xva analytic");
+            xvaVars->xvaCgUsePythonIntegrationDynamicIm_, xvaVars->xvaCgRegressionCacheSize_, true, true, true,
+            inputs_->useAtParCouponsCurves(), inputs_->useAtParCouponsTrades(), "xva analytic");
 
         engine.registerProgressIndicator(progressBar);
         engine.registerProgressIndicator(progressLog);
@@ -1393,8 +1393,8 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
             xvaVars->xvaCgUseRedBlocks_, xvaVars->xvaCgUseExternalComputeDevice_,
             xvaVars->xvaCgExternalDeviceCompatibilityMode_, xvaVars->xvaCgUseDoublePrecisionForExternalCalculation_,
             xvaVars->xvaCgExternalComputeDevice_, xvaVars->xvaCgUsePythonIntegration_,
-            xvaVars->xvaCgUsePythonIntegrationDynamicIm_, true, true, true, inputs_->useAtParCouponsCurves(),
-            inputs_->useAtParCouponsTrades(), "xva analytic");
+            xvaVars->xvaCgUsePythonIntegrationDynamicIm_, xvaVars->xvaCgRegressionCacheSize_, true, true, true,
+            inputs_->useAtParCouponsCurves(), inputs_->useAtParCouponsTrades(), "xva analytic");
 
         engine.run();
 

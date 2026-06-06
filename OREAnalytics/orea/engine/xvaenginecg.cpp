@@ -113,9 +113,9 @@ XvaEngineCG::XvaEngineCG(const Mode mode, const Size nThreads, const Date& asof,
                          const bool externalDeviceCompatibilityMode,
                          const bool useDoublePrecisionForExternalCalculation, const std::string& externalComputeDevice,
                          const bool usePythonIntegration, const bool usePythonIntegrationDynamicIm,
-                         const bool continueOnCalibrationError, const bool allowModelFallbacks,
-                         const bool continueOnError, const bool useAtParCouponsCurves, const bool useAtParCouponsTrades,
-                         const std::string& context)
+                         const Size regressionCacheSize, const bool continueOnCalibrationError,
+                         const bool allowModelFallbacks, const bool continueOnError, const bool useAtParCouponsCurves,
+                         const bool useAtParCouponsTrades, const std::string& context)
     : mode_(mode), asof_(asof), loader_(loader), curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams),
       simMarketData_(simMarketData), engineData_(engineData), crossAssetModelData_(crossAssetModelData),
       scenarioGeneratorData_(scenarioGeneratorData), portfolio_(portfolio), marketConfiguration_(marketConfiguration),
@@ -129,10 +129,11 @@ XvaEngineCG::XvaEngineCG(const Mode mode, const Size nThreads, const Date& asof,
       externalDeviceCompatibilityMode_(externalDeviceCompatibilityMode),
       useDoublePrecisionForExternalCalculation_(useDoublePrecisionForExternalCalculation),
       externalComputeDevice_(externalComputeDevice), usePythonIntegration_(usePythonIntegration),
-      usePythonIntegrationDynamicIm_(usePythonIntegrationDynamicIm),
+      usePythonIntegrationDynamicIm_(usePythonIntegrationDynamicIm), regressionCacheSize_(regressionCacheSize),
       continueOnCalibrationError_(continueOnCalibrationError), allowModelFallbacks_(allowModelFallbacks),
       continueOnError_(continueOnError), useAtParCouponsCurves_(useAtParCouponsCurves),
-      useAtParCouponsTrades_(useAtParCouponsTrades), context_(context) {}
+      useAtParCouponsTrades_(useAtParCouponsTrades), context_(context),
+      randomVariableRegressionCache_(regressionCacheSize * (1 << 20)) {}
 
 void XvaEngineCG::buildT0Market() {
     DLOG("XvaEngineCG: build init market");
@@ -1996,6 +1997,7 @@ void XvaEngineCG::outputTimings() {
     LOG("XvaEngineCG: RV Regression Cache Size : " << randomVariableRegressionCache_.size());
     LOG("XvaEngineCG: RV Regression Cache Hit  : " << randomVariableRegressionCache_.hit());
     LOG("XvaEngineCG: RV Regression Cache Miss : " << randomVariableRegressionCache_.miss());
+    LOG("XvaEngineCG: RV Regression Cache Del  : " << randomVariableRegressionCache_.del());
     LOG("XvaEngineCG: RV Regression Cache Mem  : "
         << static_cast<double>(randomVariableRegressionCache_.dataSize()) / 1024 / 1024 << " MB");
     LOG("XvaEngineCG: =========================");

@@ -60,6 +60,7 @@ struct XvaVariables : public InputVariables {
     bool xvaCgUsePythonIntegration_ = false;
     bool xvaCgUsePythonIntegrationDynamicIm_ = false;
     QuantLib::ext::shared_ptr<SensitivityScenarioData> xvaCgSensiScenarioData_;
+    Size xvaCgRegressionCacheSize_ = 512;
     std::set<std::string> amcTradeTypes_;
     std::string amcPathDataInput_, amcPathDataOutput_;
     bool amcIndividualTrainingInput_ = false, amcIndividualTrainingOutput_ = false;
