@@ -29,6 +29,7 @@
 #include <ql/processes/blackscholesprocess.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
+#include <ql/utilities/null_deleter.hpp>
 
 namespace ore {
 namespace data {
@@ -63,14 +64,14 @@ protected:
         // Wrapping a non-owned pointer in a shared_ptr like this is not recommended but should be safe here.
         // The alternative is large chunks of code being refactored / added to take `EngineFactory&` instead of 
         // `shared_ptr<EngineFactory>`.
-        auto engineFactory = QuantLib::ext::shared_ptr<EngineFactory>(engineFactory_, [](EngineFactory*) {});
+        auto engineFactory = QuantLib::ext::shared_ptr<EngineFactory>(engineFactory_, QuantLib::null_deleter());
 
         // Create the bond future index and get all associated results.
         indexResults_ = BondFutureUtils::createIndex(contractName, engineFactory);
 
         // Bond future quote linked to the bond future index.
         auto futurePrice = QuantLib::Handle<QuantLib::Quote>(
-            QuantLib::ext::make_shared<BondFutureQuote>(indexResults_.index));
+            QuantLib::ext::make_shared<QuantExt::BondFutureQuote>(indexResults_.index));
 
         // Discount curve
         std::string contractCcy = indexResults_.refData->bondFutureData().currency;
