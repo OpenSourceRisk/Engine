@@ -101,7 +101,7 @@ protected:
     mutable std::map<std::set<std::string>, std::string> currencySetToBaseCurrency_;
     mutable std::string complexBaseCurrency_;
     mutable std::size_t npv_ = 0;
-    mutable double npvValue_ Null<double>();
+    mutable double npvValue_ = Null<double>();
 
     // cached exercise indicators to be used in sticky close-out date run
     mutable std::vector<std::size_t> cachedExerciseIndicators_;
