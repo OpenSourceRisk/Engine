@@ -190,6 +190,7 @@ protected:
     bool staticNpvMem_;
     Real indicatorSmoothingForValues_, indicatorSmoothingForDerivatives_, sqrtSmoothingForDerivatives_;
     bool generateAdditionalResultsPathLevel_;
+    bool enableCgOptimization_;
     // Heston related
     std::vector<Period> hestonCalibrationExpiries_;
     std::vector<Period> hestonCalibrationVarianceTerms_;

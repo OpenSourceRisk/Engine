@@ -53,11 +53,11 @@ GaussianCamCG::GaussianCamCG(
     const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
     const std::set<Date>& simulationDates, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
     const std::vector<std::string>& conditionalExpectationModelStates, const std::vector<Date>& stickyCloseOutDates,
-    const Size timeStepsPerYear)
+    const Size timeStepsPerYear, const bool enableCgOptimization)
     : ModelCGImpl(ModelCG::Type::MC, curves.front()->dayCounter(), paths, currencies, irIndices, infIndices, indices,
-                  indexCurrencies, simulationDates, iborFallbackConfig),
-      cam_(cam), curves_(curves), fxSpots_(fxSpots), timeStepsPerYear_(timeStepsPerYear),
-      stickyCloseOutDates_(stickyCloseOutDates) {
+                  indexCurrencies, simulationDates, iborFallbackConfig, enableCgOptimization),
+      cam_(cam), curves_(curves), fxSpots_(fxSpots), stickyCloseOutDates_(stickyCloseOutDates),
+      timeStepsPerYear_(timeStepsPerYear), enableCgOptimization_(enableCgOptimization) {
 
     // check inputs
 

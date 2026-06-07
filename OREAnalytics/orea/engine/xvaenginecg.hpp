@@ -82,9 +82,10 @@ public:
                 const bool useDoublePrecisionForExternalCalculation = false,
                 const std::string& externalComputeDevice = std::string(), const bool usePythonIntegration = false,
                 const bool usePythonIntegrationDynamicIm = false, const Size regressionCacheSize = 512,
-                const bool continueOnCalibrationError = true, const bool allowModelFallbacks = true,
-                const bool continueOnError = true, const bool useAtParCouponsCurves = true,
-                const bool useAtParCouponsTrades = true, const std::string& context = "xva engine cg");
+                const bool enableCgOptimization = false, const bool continueOnCalibrationError = true,
+                const bool allowModelFallbacks = true, const bool continueOnError = true,
+                const bool useAtParCouponsCurves = true, const bool useAtParCouponsTrades = true,
+                const std::string& context = "xva engine cg");
 
     // if nullptr, no offset scenario to be applied, otherwise the base market will be shifted by that scenario
     void setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario);
@@ -222,6 +223,7 @@ private:
     bool usePythonIntegration_;
     bool usePythonIntegrationDynamicIm_;
     Size regressionCacheSize_;
+    bool enableCgOptimization_;
     bool continueOnCalibrationError_;
     bool allowModelFallbacks_;
     bool continueOnError_;

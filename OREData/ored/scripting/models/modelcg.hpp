@@ -150,7 +150,7 @@ public:
         mutable std::size_t node_ = QuantExt::ComputationGraph::nan;
     };
 
-    ModelCG(const QuantLib::Size n);
+    ModelCG(const QuantLib::Size n, const bool enableCgOptimization);
     virtual ~ModelCG() {}
 
     // computation graph
@@ -334,7 +334,9 @@ private:
     virtual void populateAdditionalResultsPathLevel() const {}
 
     // size of random variables within model
-    const QuantLib::Size n_;
+    QuantLib::Size n_;
+    // whether to enable optimization in cg building
+    bool enableCgOptimization_;
 };
 
 // standalone version of ModelCG::addModelParameters()

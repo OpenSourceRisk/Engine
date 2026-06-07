@@ -23,7 +23,11 @@
 namespace ore {
 namespace data {
 
-ModelCG::ModelCG(const QuantLib::Size n) : n_(n) { g_ = QuantLib::ext::make_shared<QuantExt::ComputationGraph>(); }
+ModelCG::ModelCG(const QuantLib::Size n, const bool enableCgOptimization)
+    : n_(n), enableCgOptimization_(enableCgOptimization) {
+    g_ = QuantLib::ext::make_shared<QuantExt::ComputationGraph>();
+    g_->enableOptimization(enableCgOptimization_);
+}
 
 std::size_t ModelCG::dt(const Date& d1, const Date& d2) const {
     return cg_const(*g_, QuantLib::ActualActual(QuantLib::ActualActual::ISDA).yearFraction(d1, d2));

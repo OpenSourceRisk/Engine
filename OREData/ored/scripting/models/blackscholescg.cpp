@@ -46,9 +46,11 @@ BlackScholesCG::BlackScholesCG(const ModelCG::Type type, const Size paths, const
                                const std::string& indexCurrency, const std::set<Date>& simulationDates,
                                const Size timeStepsPerYear, const std::set<Date>& addDates,
                                const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
-                               const std::string& calibration, const std::vector<Real>& calibrationStrikes)
+                               const std::string& calibration, const std::vector<Real>& calibrationStrikes,
+                               const bool enableCgOptimization)
     : BlackScholesCG(type, paths, {currency}, {curve}, {}, {}, {}, {index}, {indexCurrency}, {}, simulationDates,
-                     timeStepsPerYear, addDates, iborFallbackConfig, calibration, {{index, calibrationStrikes}}) {}
+                     timeStepsPerYear, addDates, iborFallbackConfig, calibration, {{index, calibrationStrikes}},
+                     enableCgOptimization) {}
 
 BlackScholesCG::BlackScholesCG(
     const ModelCG::Type type, const Size paths, const std::vector<std::string>& currencies,
@@ -59,9 +61,9 @@ BlackScholesCG::BlackScholesCG(
     const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
     const std::set<Date>& simulationDates, const Size timeStepsPerYear, const std::set<Date>& addDates,
     const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig, const std::string& calibration,
-    const std::map<std::string, std::vector<Real>>& calibrationStrikes)
+    const std::map<std::string, std::vector<Real>>& calibrationStrikes, const bool enableCgOptimization)
     : ModelCGImpl(type, curves.at(0)->dayCounter(), paths, currencies, irIndices, infIndices, indices, indexCurrencies,
-                  simulationDates, iborFallbackConfig),
+                  simulationDates, iborFallbackConfig, enableCgOptimization),
       curves_(curves), fxSpots_(fxSpots), correlations_(correlations), timeStepsPerYear_(timeStepsPerYear),
       addDates_(addDates), calibration_(calibration), calibrationStrikes_(calibrationStrikes) {
 

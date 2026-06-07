@@ -67,8 +67,8 @@ public:
         const std::set<Date>& simulationDates, const Size timeStepsPerYear, const std::set<Date>& addDaes,
         const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
             QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
-        const std::string& calibration = "ATM",
-        const std::map<std::string, std::vector<Real>>& calibrationStrikes = {});
+        const std::string& calibration = "ATM", const std::map<std::string, std::vector<Real>>& calibrationStrikes = {},
+        const bool enableCgOptimization = false);
 
     // ctor for single underlying
     BlackScholesCG(const ModelCG::Type type, const Size paths, const std::string& currency,
@@ -76,7 +76,8 @@ public:
                    const std::set<Date>& simulationDates, const Size timeStepsPerYear, const std::set<Date>& addDates,
                    const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
                        QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
-                   const std::string& calibration = "ATM", const std::vector<Real>& calibrationStrikes = {});
+                   const std::string& calibration = "ATM", const std::vector<Real>& calibrationStrikes = {},
+                   const bool enableCgOptimization = false);
 
     // Model interface implementation
     const Date& referenceDate() const override;

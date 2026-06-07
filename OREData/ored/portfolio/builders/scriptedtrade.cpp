@@ -307,6 +307,7 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
 
     DLOG("built model          : " << modelParam_ << " / " << engineParam_);
     DLOG("useCg                = " << std::boolalpha << useCg_);
+    DLOG("enableCgOptimization = " << std::boolalpha << enableCgOptimization_);
     DLOG("useAd                = " << std::boolalpha << useAd_);
     DLOG("useExternalDevice    = " << std::boolalpha << useExternalComputeDevice_);
     DLOG("useDblPrecExtCalc    = " << std::boolalpha << useDoublePrecisionForExternalCalculation_);
@@ -569,6 +570,8 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
     referenceCalibrationGrid_ = modelParameter("ReferenceCalibrationGrid", getModelEngineQualifiers(), false, "");
     generateAdditionalResultsPathLevel_ =
         parseBool(engineParameter("AdditionalResultsPathLevel", getModelEngineQualifiers(), false, "false"));
+    enableCgOptimization_ =
+        parseBool(engineParameter("EnableCgOptimization", getModelEngineQualifiers(), false, "false"));
 
     // usage of ad or an external device implies usage of cg
     if (useAd_ || useExternalComputeDevice_)
@@ -1370,7 +1373,7 @@ void ScriptedTradeEngineBuilder::buildBlackScholes(
         modelCG_ = QuantLib::ext::make_shared<BlackScholesCG>(
             ModelCG::Type::MC, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
             modelIndices_, modelIndicesCurrencies_, correlations_, simulationDates_, effectiveTimeStepsPerYear,
-            addDates_, iborFallbackConfig, calibration_, filteredStrikes);
+            addDates_, iborFallbackConfig, calibration_, filteredStrikes, enableCgOptimization_);
         curveTimes = ext::static_pointer_cast<BlackScholesCG>(modelCG_)->curveTimes();
         volTimesStrikes = ext::static_pointer_cast<BlackScholesCG>(modelCG_)->volTimesStrikes();
     } else {
@@ -1899,7 +1902,8 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(
             camBuilder->model(), modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
             modelIndices_, modelIndicesCurrencies_, simulationDates_, iborFallbackConfig,
             conditionalExpectationModelStates, std::vector<Date>{},
-            camBuilder->model()->discretization() == CrossAssetModel::Discretization::Exact ? 0 : timeStepsPerYear_);
+            camBuilder->model()->discretization() == CrossAssetModel::Discretization::Exact ? 0 : timeStepsPerYear_,
+            enableCgOptimization_);
     } else {
         model_ = QuantLib::ext::make_shared<GaussianCam>(
             camBuilder->model(), modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
@@ -2066,7 +2070,8 @@ void ScriptedTradeEngineBuilder::buildGaussianCamAMC(
             projectedModel, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
             modelIndices_, modelIndicesCurrencies_, simulationDates_, iborFallbackConfig,
             conditionalExpectationModelStates, std::vector<Date>{},
-            projectedModel->discretization() == CrossAssetModel::Discretization::Exact ? 0 : timeStepsPerYear_);
+            projectedModel->discretization() == CrossAssetModel::Discretization::Exact ? 0 : timeStepsPerYear_,
+            enableCgOptimization_);
     } else {
         model_ = QuantLib::ext::make_shared<GaussianCam>(
             projectedModel, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,

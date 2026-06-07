@@ -50,7 +50,8 @@ public:
                   const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
                       QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
                   const std::vector<std::string>& conditionalExpectationModelStates = {},
-                  const std::vector<Date>& stickyCloseOutDates = {}, const Size timeStepsPerYear = 1);
+                  const std::vector<Date>& stickyCloseOutDates = {}, const Size timeStepsPerYear = 1,
+                  const bool enableCgOptimization = false);
 
     // Model interface implementation
     const Date& referenceDate() const override;
@@ -108,8 +109,9 @@ protected:
     Handle<CrossAssetModel> cam_;
     std::vector<Handle<YieldTermStructure>> curves_;
     std::vector<Handle<Quote>> fxSpots_;
-    Size timeStepsPerYear_;
     std::vector<Date> stickyCloseOutDates_;
+    Size timeStepsPerYear_;
+    bool enableCgOptimization_;
 
     // updated in performCalculations()
     mutable Date referenceDate_;                      // the model reference date

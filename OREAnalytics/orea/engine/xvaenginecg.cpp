@@ -113,9 +113,10 @@ XvaEngineCG::XvaEngineCG(const Mode mode, const Size nThreads, const Date& asof,
                          const bool externalDeviceCompatibilityMode,
                          const bool useDoublePrecisionForExternalCalculation, const std::string& externalComputeDevice,
                          const bool usePythonIntegration, const bool usePythonIntegrationDynamicIm,
-                         const Size regressionCacheSize, const bool continueOnCalibrationError,
-                         const bool allowModelFallbacks, const bool continueOnError, const bool useAtParCouponsCurves,
-                         const bool useAtParCouponsTrades, const std::string& context)
+                         const Size regressionCacheSize, const bool enableCgOptimization,
+                         const bool continueOnCalibrationError, const bool allowModelFallbacks,
+                         const bool continueOnError, const bool useAtParCouponsCurves, const bool useAtParCouponsTrades,
+                         const std::string& context)
     : mode_(mode), asof_(asof), loader_(loader), curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams),
       simMarketData_(simMarketData), engineData_(engineData), crossAssetModelData_(crossAssetModelData),
       scenarioGeneratorData_(scenarioGeneratorData), portfolio_(portfolio), marketConfiguration_(marketConfiguration),
@@ -130,9 +131,9 @@ XvaEngineCG::XvaEngineCG(const Mode mode, const Size nThreads, const Date& asof,
       useDoublePrecisionForExternalCalculation_(useDoublePrecisionForExternalCalculation),
       externalComputeDevice_(externalComputeDevice), usePythonIntegration_(usePythonIntegration),
       usePythonIntegrationDynamicIm_(usePythonIntegrationDynamicIm), regressionCacheSize_(regressionCacheSize),
-      continueOnCalibrationError_(continueOnCalibrationError), allowModelFallbacks_(allowModelFallbacks),
-      continueOnError_(continueOnError), useAtParCouponsCurves_(useAtParCouponsCurves),
-      useAtParCouponsTrades_(useAtParCouponsTrades), context_(context),
+      enableCgOptimization_(enableCgOptimization), continueOnCalibrationError_(continueOnCalibrationError),
+      allowModelFallbacks_(allowModelFallbacks), continueOnError_(continueOnError),
+      useAtParCouponsCurves_(useAtParCouponsCurves), useAtParCouponsTrades_(useAtParCouponsTrades), context_(context),
       randomVariableRegressionCache_(regressionCacheSize * (1 << 20)) {}
 
 void XvaEngineCG::buildT0Market() {
@@ -247,7 +248,7 @@ void XvaEngineCG::buildCam() {
     model_ = QuantLib::ext::make_shared<GaussianCamCG>(
         camBuilder_->model(), scenarioGeneratorData_->samples(), currencies, curves, fxSpots, irIndices, infIndices,
         indices, indexCurrencies, simulationDates_, iborFallbackConfig_, std::vector<std::string>(),
-        stickyCloseOutDates_, timeStepsPerYear);
+        stickyCloseOutDates_, timeStepsPerYear, enableCgOptimization_);
 
     timing_parta_ = timer.elapsed().wall;
     DLOG("XvaEngineCG: build cam cg model done - graph size is " << model_->computationGraph()->size());
@@ -1988,6 +1989,11 @@ void XvaEngineCG::outputGraphStats() {
 
 void XvaEngineCG::outputTimings() {
     LOG("XvaEngineCG: graph size               : " << model_->computationGraph()->size());
+    LOG("XvaEngineCG: =========================");
+    for (Size i = 0; i < getRandomVariableOpLabels().size(); ++i) {
+        LOG("XvaEngineCG: #" << std::setw(24) << std::left << getRandomVariableOpLabels()[i].substr(0, 24) << ": "
+                             << model_->computationGraph()->nodesByOpId()[i].size());
+    }
     LOG("XvaEngineCG: =========================");
     LOG("XvaEngineCG: red nodes ranges         : " << model_->computationGraph()->redBlockRanges().size());
     LOG("XvaEngineCG: red nodes                : " << numberOfRedNodes_);

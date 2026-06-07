@@ -171,6 +171,7 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
     inputs->loadParameter<vector<Size>>(xvaCgRegressionReportTimeStepsDynamicIM_, "simulation", "xvaCgRegressionReportTimeStepsDynamicIM", false, parseListOfIntegerValues);
     inputs->loadParameter<bool>(xvaCgUseRedBlocks_, "simulation", "xvaCgUseRedBlocks", false, parseBool);
     inputs->loadParameter<Size>(xvaCgRegressionCacheSize_, "simulation", "xvaCgRegressionCacheSize", false, parseInteger);
+    inputs->loadParameter<bool>(xvaCgEnableCgOptimization_, "simulation", "xvaCgEnableCgOptimization", false, parseBool);
     inputs->loadParameter<bool>(cubeNpvOverlay_, "simulation", "cubeNpvOverlay", false, parseBool);
 
     /**********************
@@ -1084,8 +1085,9 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun, bool continueOnCalibrationError,
             xvaVars->xvaCgUseRedBlocks_, xvaVars->xvaCgUseExternalComputeDevice_,
             xvaVars->xvaCgExternalDeviceCompatibilityMode_, xvaVars->xvaCgUseDoublePrecisionForExternalCalculation_,
             xvaVars->xvaCgExternalComputeDevice_, xvaVars->xvaCgUsePythonIntegration_,
-            xvaVars->xvaCgUsePythonIntegrationDynamicIm_, xvaVars->xvaCgRegressionCacheSize_, true, true, true,
-            inputs_->useAtParCouponsCurves(), inputs_->useAtParCouponsTrades(), "xva analytic");
+            xvaVars->xvaCgUsePythonIntegrationDynamicIm_, xvaVars->xvaCgRegressionCacheSize_,
+            xvaVars->xvaCgEnableCgOptimization_, true, true, true, inputs_->useAtParCouponsCurves(),
+            inputs_->useAtParCouponsTrades(), "xva analytic");
 
         engine.registerProgressIndicator(progressBar);
         engine.registerProgressIndicator(progressLog);
@@ -1393,8 +1395,9 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
             xvaVars->xvaCgUseRedBlocks_, xvaVars->xvaCgUseExternalComputeDevice_,
             xvaVars->xvaCgExternalDeviceCompatibilityMode_, xvaVars->xvaCgUseDoublePrecisionForExternalCalculation_,
             xvaVars->xvaCgExternalComputeDevice_, xvaVars->xvaCgUsePythonIntegration_,
-            xvaVars->xvaCgUsePythonIntegrationDynamicIm_, xvaVars->xvaCgRegressionCacheSize_, true, true, true,
-            inputs_->useAtParCouponsCurves(), inputs_->useAtParCouponsTrades(), "xva analytic");
+            xvaVars->xvaCgUsePythonIntegrationDynamicIm_, xvaVars->xvaCgRegressionCacheSize_,
+            xvaVars->xvaCgEnableCgOptimization_, true, true, true, inputs_->useAtParCouponsCurves(),
+            inputs_->useAtParCouponsTrades(), "xva analytic");
 
         engine.run();
 

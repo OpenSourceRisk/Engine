@@ -39,9 +39,10 @@ ModelCGImpl::ModelCGImpl(
     const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
     const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
     const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
-    const std::set<Date>& simulationDates, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig)
-    : ModelCG(size), type_(type), dayCounter_(dayCounter), currencies_(currencies), indexCurrencies_(indexCurrencies),
-      simulationDates_(simulationDates), iborFallbackConfig_(iborFallbackConfig) {
+    const std::set<Date>& simulationDates, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
+    const bool enableCgOptimization)
+    : ModelCG(size, enableCgOptimization), type_(type), dayCounter_(dayCounter), currencies_(currencies),
+      indexCurrencies_(indexCurrencies), simulationDates_(simulationDates), iborFallbackConfig_(iborFallbackConfig) {
 
     // populate index vectors
 
