@@ -354,7 +354,7 @@ private:
                                   timing_dynamicIM_complexAddToPath_ = 0, timing_dynamicIM_complexCombine_ = 0,
                                   timing_dynamicIM_complexAddToConv_ = 0, timing_bwd_ = 0, timing_sensi_ = 0,
                                   timing_asd_ = 0, timing_outcube_ = 0, timing_imcube_ = 0, timing_total_ = 0;
-    std::size_t numberOfRedNodes_, rvMemMax_;
+    std::size_t numberOfRedNodes_ = 0, rvMemMax_ = 0;
 
     // data to populate dynamicImRegressionReport_
 

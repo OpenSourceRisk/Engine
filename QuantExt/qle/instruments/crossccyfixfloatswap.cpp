@@ -46,7 +46,7 @@ CrossCcyFixFloatSwap::CrossCcyFixFloatSwap(
       telescopicValueDates_(telescopicValueDates),
       floatIncludeSpread_(floatIncludeSpread), floatLookback_(floatLookback), floatFixingDays_(floatFixingDays),
       floatRateCutoff_(floatRateCutoff), floatIsAveraged_(floatIsAveraged),
-      floatObservationShift_(floatObservationShift) {
+      floatObservationShift_(floatObservationShift), fairFixedRate_(Null<Rate>()), fairSpread_(Null<Spread>()) {
 
     // Build the float leg
     Leg floatLeg;

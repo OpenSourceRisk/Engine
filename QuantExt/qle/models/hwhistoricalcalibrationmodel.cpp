@@ -198,6 +198,8 @@ void HwHistoricalCalibrationModel::pca(const Real& varianceRetained) {
                 adjMatrix[i][j] = decomp.eigenvectors()[i][j];
             }
         }
+        QL_REQUIRE(irAbsoluteReturn_.find(ccyMatrix.first) != irAbsoluteReturn_.end(),
+                   "Currency " << ccyMatrix.first << " not found in irAbsoluteReturn.");
         irAbsoluteReturnAdjusted_[ccyMatrix.first] = irAbsoluteReturn_.find(ccyMatrix.first)->second * adjMatrix;
     }
 }
@@ -248,6 +250,9 @@ void HwHistoricalCalibrationModel::meanReversionCalibration(const Size& basisFun
     }
     for (auto const& ccyMatrix : eigenVector_) {
         writeLog("Mean Reversion Calibration for currency: " + ccyMatrix.first);
+        auto it = principalComponent_.find(ccyMatrix.first);
+        QL_REQUIRE(it != principalComponent_.end(),
+                   "Principal component for currency " << ccyMatrix.first << " not found.");
         Size principalComponent = principalComponent_.find(ccyMatrix.first)->second;
         Matrix v(principalComponent, basisFunctionNumber_);
         Matrix kappa(principalComponent, basisFunctionNumber_);
@@ -384,7 +389,9 @@ Real HwHistoricalCalibrationModel::correlation(Array arr1, Array arr2) {
 
 void HwHistoricalCalibrationModel::formatIrKappa() {
     for (auto const& ccyMatrix : kappa_) {
-        Size n = principalComponent_.find(ccyMatrix.first)->second * basisFunctionNumber_;
+        auto it = principalComponent_.find(ccyMatrix.first);
+        QL_REQUIRE(it != principalComponent_.end(), "Principal component for currency " << ccyMatrix.first << " not found.");
+        Size n = it->second * basisFunctionNumber_;
         Array kappaFormatted(n, 0.0);
         for (Size i = 0; i < n; i++) {
             kappaFormatted[i] = ccyMatrix.second[i / basisFunctionNumber_][i % basisFunctionNumber_];
@@ -395,7 +402,10 @@ void HwHistoricalCalibrationModel::formatIrKappa() {
 
 void HwHistoricalCalibrationModel::formatIrSigma() {
     for (auto const& ccyMatrix : v_) {
-        Size n = principalComponent_.find(ccyMatrix.first)->second * basisFunctionNumber_;
+        auto it = principalComponent_.find(ccyMatrix.first);
+        QL_REQUIRE(it != principalComponent_.end(),
+                   "Principal component for currency " << ccyMatrix.first << " not found.");
+        Size n =it->second * basisFunctionNumber_;
         Matrix sigmaFormatted(principalComponent_.find(ccyMatrix.first)->second, n, 0.0);
         for (Size i = 0; i < n; i++) {
             sigmaFormatted[i / basisFunctionNumber_][i] =

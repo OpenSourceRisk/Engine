@@ -671,7 +671,7 @@ OvernightLeg::OvernightLeg(const Schedule& schedule, const ext::shared_ptr<Overn
     : schedule_(schedule), overnightIndex_(i), paymentCalendar_(schedule.calendar()), paymentAdjustment_(Following),
       paymentLag_(0), telescopicValueDates_(false), includeSpread_(false), lookback_(0 * Days), rateCutoff_(0),
       fixingDays_(Null<Size>()), nakedOption_(false), localCapFloor_(false), inArrears_(true),
-      observationShift_(true) {}
+      observationShift_(true), staleDatesCheck_(true) {}
 
 OvernightLeg& OvernightLeg::withNotionals(Real notional) {
     notionals_ = vector<Real>(1, notional);

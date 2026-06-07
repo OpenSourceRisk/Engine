@@ -1806,6 +1806,7 @@
         </xs:complexType>
       </xs:element>
       <xs:element name="ObservationStartDate" type="date"/>
+      <xs:element name="PaymentDate" type="date"/>
     </xs:all>
   </xs:complexType>
 

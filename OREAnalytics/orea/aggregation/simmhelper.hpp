@@ -84,7 +84,7 @@ private:
     QuantExt::RandomVariable irDeltaIM_, irVegaIM_, irCurvatureIM_;
     QuantExt::RandomVariable fxDeltaIM_, fxVegaIM_, fxCurvatureIM_;
 
-    Real totalMargin_;
+    Real totalMargin_ = Null<Real>();
 };
 
 } // namespace analytics
