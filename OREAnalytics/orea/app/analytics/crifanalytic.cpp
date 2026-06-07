@@ -37,7 +37,6 @@
 #include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/report/inmemoryreport.hpp>
 #include <ored/utilities/parsers.hpp>
-#include <qle/termstructures/blackvariancesurfacesparse.hpp>
 
 using namespace ore::data;
 using namespace std::filesystem;
@@ -296,12 +295,6 @@ void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
         return;
     }
 
-    // Used for testing bond future volatility in CRIF. May be removed later.
-    // Alter the sensitivity and simulation configurations to match the expiries and strikes of the bond future 
-    // volatility structure in the initial market.
-    if (inputs_->matchInitialMarket())
-        modifySensiConfiguration();
-
     // Run the dependent SENSITIVITY analytic
     auto sensiAnalytic = dependentAnalytic(sensitivityLookUpKey);
 
@@ -370,108 +363,6 @@ void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
     analytic()->addReport(LABEL, "crif", crifReport);
     CONSOLE("OK");
     LOG("CRIF report generated successfully");
-}
-
-void CrifAnalyticImpl::modifySensiConfiguration() {
-
-    // We want to alter the expiries and strikes of the bond future volatilities if they are part of simulation params.
-    auto simMarketParams = analytic()->configurations().simMarketParams;
-    auto bondFutureVolNames = simMarketParams->bondFutureVolNames();
-
-    // Most likely case, do nothing.
-    if (bondFutureVolNames.empty())
-        return;
-
-    // If we have bond future volatilities.
-    bool updatesMade = false;
-    auto sensiScenarioData = analytic()->configurations().sensiScenarioData;
-    auto& sensiBondFutureVolData = sensiScenarioData->bondFutureVolShiftData();
-    const auto& market = analytic()->market();
-    for (const auto& name : bondFutureVolNames) {
-        // Check if we have this name in the sensitivity scenario data, if not skip.
-        auto itSensiData = sensiBondFutureVolData.find(name);
-        if (itSensiData == sensiBondFutureVolData.end()) {
-            WLOG("CrifAnalyticImpl::modifySensiConfiguration: could not find bond future volatility: " << name <<
-                " in sensitivity scenario data, so no updates were made.");
-            continue;
-        }
-
-        auto bvts = market->bondFutureVol(name).currentLink();
-        auto bvss = ext::dynamic_pointer_cast<QuantExt::BlackVarianceSurfaceSparse<>>(bvts);
-        if (!bvss) {
-            WLOG("CrifAnalyticImpl::modifySensiConfiguration: could not cast to BlackVarianceSurfaceSparse for "
-                "bond future volatility: " << name << " so no updates were made.");
-            continue;
-        }
-
-        // Get the updated expiry periods for the sensitivity analysis.
-        vector<Date> expiryDates = bvss->expiries();
-        vector<Period> expiryPeriods;
-        expiryPeriods.reserve(expiryDates.size());
-        for (const auto& expiryDate : expiryDates) {
-            if (expiryDate > market->asofDate()) {
-                expiryPeriods.push_back(Period(expiryDate - market->asofDate(), Days));
-            }
-        }
-        if (expiryPeriods.empty()) {
-            WLOG("CrifAnalyticImpl::modifySensiConfiguration: could not deduce any expiry periods for "
-                "bond future volatility: " << name << " so no updates were made.");
-            continue;
-        }
-
-        // Get the updated strikes and put them in the moneyness field.
-        vector<Real> uniqueStrikes;
-        vector<vector<Real>> strikes = bvss->strikes();
-        if (strikes.size() < 2) {
-            WLOG("CrifAnalyticImpl::modifySensiConfiguration: strikes from initial market surface have "
-                "less than two rows for bond future volatility: " << name << " so no updates were made.");
-            continue;
-        }
-        for (Size i = 1; i < strikes.size(); ++i) {
-            const auto& vec = strikes[i];
-            uniqueStrikes.insert(uniqueStrikes.end(), vec.begin(), vec.end());
-        }
-        std::sort(uniqueStrikes.begin(), uniqueStrikes.end());
-        auto it = std::unique(uniqueStrikes.begin(), uniqueStrikes.end(), [](Real x, Real y) { return close(x, y); });
-        uniqueStrikes.erase(it, uniqueStrikes.end());
-        if (uniqueStrikes.empty()) {
-            WLOG("CrifAnalyticImpl::modifySensiConfiguration: could not deduce any strikes for "
-                "bond future volatility: " << name << " so no updates were made.");
-            continue;
-        }
-
-        // If we get here, make the updates.
-        simMarketParams->bondFutureVolExpiries(name) = expiryPeriods;
-        simMarketParams->bondFutureVolMoneyness(name) = uniqueStrikes;
-        itSensiData->second->shiftExpiries = expiryPeriods;
-        itSensiData->second->shiftStrikes = uniqueStrikes;
-        updatesMade = true;
-    }
-
-    // Write the updated reports if updates were made.
-    if (updatesMade) {
-        // Copy logic from modified label (for now).
-        string suffix = label();
-        suffix.erase(remove_if(suffix.begin(), suffix.end(),
-            [](unsigned char x) { return std::ispunct(x); }), suffix.end());
-        boost::algorithm::to_lower(suffix);
-        if (suffix.size() > 0)
-            suffix = "_" + suffix + "_updated";
-
-        if (analytic()->getWriteIntermediateReports()) {
-            string simulationFileName = "simulation" + suffix + ".xml";
-            path simulationPath = inputs_->resultsPath() / simulationFileName;
-            LOG("Saving updated ScenarioSimMarketParameters to file: " << simulationPath.string());
-            simMarketParams->toFile(simulationPath.string());
-        }
-
-        if (analytic()->getWriteIntermediateReports()) {
-            string sensitivityFileName = "sensitivity" + suffix + ".xml";
-            path sensitivityPath = inputs_->resultsPath() / sensitivityFileName;
-            LOG("Saving updated ScenarioSimMarketParameters to file: " << sensitivityPath.string());
-            sensiScenarioData->toFile(sensitivityPath.string());
-        }
-    }
 }
 
 CrifAnalytic::CrifAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,

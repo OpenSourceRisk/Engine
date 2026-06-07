@@ -127,9 +127,6 @@ protected:
                                  const QuantLib::ext::shared_ptr<Crif>& crif,
                                  const QuantLib::ext::shared_ptr<PortfolioFieldGetter>& fieldGetter);
 
-    // Used for testing bond future volatility in CRIF. May be removed later.
-    void modifySensiConfiguration();
-
     bool applySimmExemptions_ = true;
 };
 

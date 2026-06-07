@@ -71,12 +71,12 @@ VolatilityDataCrif::VolatilityDataCrif(const QuantLib::ext::shared_ptr<CrifMarke
 
 double VolatilityDataCrif::vegaTimesVol(ore::analytics::RiskFactorKey::KeyType rfType, const std::string& rfName,
                                         double sensitivity, const std::string& expiryTenor,
-                                        const std::string& underlyingTerm, ext::optional<Real> strike) {
+                                        const std::string& underlyingTerm) {
     auto shiftData = getShiftData(rfType, rfName);
     if (shiftData.shiftType == ShiftType::Relative) {
         return sensitivity / shiftData.shiftSize;
     } else {
-        double vol = getVolatility(rfType, rfName, expiryTenor, underlyingTerm, strike);
+        double vol = getVolatility(rfType, rfName, expiryTenor, underlyingTerm);
         DLOG("[crif-vol-weighting] For (" << rfType << ") sensitivity (" << rfName << "," << expiryTenor << "," << underlyingTerm << "), "
                      << std::fixed << std::setprecision(2) << "(sensi, atm_vol, shift_size) is (" << sensitivity
                      << std::setprecision(9) << "," << vol << "," << shiftData.shiftSize << ").");
@@ -85,22 +85,16 @@ double VolatilityDataCrif::vegaTimesVol(ore::analytics::RiskFactorKey::KeyType r
 }
 
 Volatility VolatilityDataCrif::getVolatility(RiskFactorKey::KeyType rfType, const string& rfName,
-                                             const string& expiryTenor, const string& underlyingTerm,
-                                             ext::optional<Real> strike) {
+                                             const string& expiryTenor, const string& underlyingTerm) {
 
     // Have we cached the volatility from a previous call.
-    // Note: currently, strike is only provided for bond future volatility (to be reviewed). If strike is provided, we 
-    //       skip the cache as we don't want to introduce a double into the key. We just get the volatility from the 
-    //       market again in this case.
     Key key{ rfType, rfName, expiryTenor, underlyingTerm };
-    if (!strike) {
-        auto it = volatilities_.find(key);
-        if (it != volatilities_.end())
-            return it->second;
+    auto it = volatilities_.find(key);
+    if (it != volatilities_.end())
+        return it->second;
 
-        // If not cached, get the volatility from CrifMarket.
-        TLOG("VolatilityDataCrif: volatility not cached for key: " << key << ".");
-    }
+    // If not cached, get the volatility from CrifMarket.
+    TLOG("VolatilityDataCrif: volatility not cached for key: " << key << ".");
 
 
     Volatility vol;
@@ -214,13 +208,9 @@ Volatility VolatilityDataCrif::getVolatility(RiskFactorKey::KeyType rfType, cons
         QL_REQUIRE(simMarket, "VolatilityDataCrif: crifMarket need non-empty simMarket for bond future volatility");
         auto bondFutureVolSurface = simMarket->bondFutureVol(rfName);
         Date optionExpiryDate = bondFutureVolSurface->optionDateFromTenor(parsePeriod(expiryTenor));
-        if (strike) {
-            vol = bondFutureVolSurface->blackVol(optionExpiryDate, *strike);
-        } else {
-            string futureName{ futureContractName(rfName) };
-            Real atmStrike = simMarket->securityPrice(futureName)->value();
-            vol = bondFutureVolSurface->blackVol(optionExpiryDate, atmStrike);
-        }
+        string futureName{ futureContractName(rfName) };
+        Real atmStrike = simMarket->securityPrice(futureName)->value();
+        vol = bondFutureVolSurface->blackVol(optionExpiryDate, atmStrike);
         break;
     }
 
@@ -228,10 +218,8 @@ Volatility VolatilityDataCrif::getVolatility(RiskFactorKey::KeyType rfType, cons
         QL_FAIL("VolatilityDataCrif: risk factor key type " << rfType << " not supported.");
     }
 
-    if (!strike) {
-        volatilities_[key] = vol;
-        TLOG("VolatilityDataCrif: cached volatility for key: " << key << ".");
-    }
+    volatilities_[key] = vol;
+    TLOG("VolatilityDataCrif: cached volatility for key: " << key << ".");
 
     return vol;
 }
@@ -709,42 +697,9 @@ CrifRecordData CrifRecordGenerator::bondFutureVolatilityImpl(const ore::analytic
     // Use the bond future currency as qualifier.
     data.qualifier = sr.tradeCurrency;
 
-    // For bond future volatility, we expect rfTokens to be of the form rfTokens[0] = <Number>d for expiry tenor 
-    // and rfTokens[1] = absolute strike or ATM. For example, rfTokens[0] = "10D" and rfTokens[1] = "1.1075" or "ATM".
-
-    ext::optional<Real> strike;
-    if (rfTokens[1] != "ATM")
-        strike = parseReal(rfTokens[1]);
-    data.sensitivity = volatilityData_.vegaTimesVol(sr.key_1.keytype, sr.key_1.name, sr.delta,
-        rfTokens.front(), "", strike);
-
-    // A hack for now that needs to be updated later.
-    // Need to map the bond future expiry tenor to the correct IR volatility CRIF tenor.
-    const Date asof = crifMarket_->asofDate();
-    static const map<Period, string> irCrifTenors{
-        { 2 * Weeks, "2w" },
-        { 1 * Months, "1m" },
-        { 3 * Months, "3m" },
-        { 6 * Months, "6m" },
-        { 1 * Years, "1y" },
-        { 2 * Years, "2y" },
-        { 3 * Years, "3y" },
-        { 5 * Years, "5y" },
-        { 10 * Years, "10y" },
-        { 15 * Years, "15y" },
-        { 20 * Years, "20y" },
-        { 30 * Years, "30y" }
-    };
-
-    // Only perform the mapping if the expiry tenor is not already in the IR CRIF tenors.
-    Period expiryTenor = parsePeriod(rfTokens.front());
-    if (!irCrifTenors.contains(expiryTenor)) {
-        Date expiryDate = asof + expiryTenor;
-        auto it = std::find_if(irCrifTenors.begin(), irCrifTenors.end(),
-            [&](const auto& kv) { return asof + kv.first >= expiryDate; });
-        data.label1 = it != irCrifTenors.end() ? it->second : irCrifTenors.rbegin()->second;
-    }
-
+    // For bond future volatility, we expect rfTokens to be of the form rfTokens[0] = a CRIF IR expiry tenor 
+    // and rfTokens[1] = ATM. For example, rfTokens[0] = "2W" and rfTokens[1] = "ATM".
+    data.sensitivity = volatilityData_.vegaTimesVol(sr.key_1.keytype, sr.key_1.name, sr.delta, rfTokens.front());
     return data;
 }
 
