@@ -40,7 +40,7 @@ public:
     enum class VarDoesntExist { Nan, Create, Throw };
     static std::size_t nan;
 
-    ComputationGraph();
+    explicit ComputationGraph();
 
     void clear();
 
@@ -67,6 +67,9 @@ public:
     void enableLabels(const bool b = true);
     const std::map<std::size_t, std::set<std::string>>& labels() const;
 
+    void enableOptimization(const bool b = true);
+    const std::vector<std::vector<std::size_t>>& nodesByOpId() const;
+
     void startRedBlock();
     void endRedBlock();
     std::size_t redBlockId(const std::size_t node) const;
@@ -89,6 +92,9 @@ private:
     bool readOnly_ = false;
     bool enableLabels_ = false;
     std::map<std::size_t, std::set<std::string>> labels_;
+    bool enableOptimization_ = false;
+
+    std::vector<std::vector<std::size_t>> nodesByOpId_;
 
     std::size_t currentRedBlockId_ = 0;
     std::size_t nextRedBlockId_ = 0;
