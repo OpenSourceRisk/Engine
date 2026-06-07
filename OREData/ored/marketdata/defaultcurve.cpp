@@ -237,7 +237,7 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                            const CurveConfigurations& curveConfigs,
                            map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves,
                            map<string, QuantLib::ext::shared_ptr<DefaultCurve>>& defaultCurves,
-						   QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData,
+                           QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData,
                            const bool buildCalibrationInfo) {
                            
     const QuantLib::ext::shared_ptr<DefaultCurveConfig>& configs = curveConfigs.defaultCurveConfig(spec.curveConfigID());
@@ -292,7 +292,6 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                     buildCdsCurve(configs->curveID(), config.second, asof, spec, loader, yieldCurves,
                                   implyDefaultFromMarket, referenceData);
                     typeStr = "SpreadCDS";
-
                     break;
                 case DefaultCurveConfig::Config::Type::HazardRate:
                     buildHazardRateCurve(configs->curveID(), config.second, asof, spec, loader);

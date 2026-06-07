@@ -57,7 +57,7 @@ public:
     DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
                  map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves,
                  map<string, QuantLib::ext::shared_ptr<DefaultCurve>>& defaultCurves, 
-				 QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData,
+                 QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData,
                  const bool buildCalibrationInfo = false);
     //@}
     //! \name Inspectors
