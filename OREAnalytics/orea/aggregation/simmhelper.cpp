@@ -22,6 +22,8 @@
 
 #include <ored/portfolio/fxoption.hpp>
 
+#include <ql/time/daycounters/actualactual.hpp>
+
 using namespace QuantLib;
 using namespace QuantExt;
 
@@ -32,7 +34,7 @@ SimmHelper::SimmHelper(const std::vector<std::string>& currencies, const QuantLi
                        const QuantLib::ext::shared_ptr<AggregationScenarioData>& marketCube,
                        const QuantLib::ext::shared_ptr<SensitivityStorageManager>& sensitivityStorageManager,
                        const QuantLib::ext::shared_ptr<ore::data::Market>& market)
-    : referenceDate_(Settings::instance().evaluationDate()), dc_(ActualActual(ActualActual::ISDA)),
+    : referenceDate_(Settings::instance().evaluationDate()), dc_(QuantLib::ActualActual(ActualActual::ISDA)),
       currencies_(currencies), cube_(cube), marketCube_(marketCube), market_(market) {
 
     QL_REQUIRE(cube, "SimmHelper: cube is null");
