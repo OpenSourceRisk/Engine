@@ -85,17 +85,12 @@ void SaCvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputPara
         inputs->setDimAnalytic(true);
     }
 
-    // Load dimScaling from the sacva section and forward it to the xva section.
-    // When a dimModel is configured for SA-CVA but no dimScaling is supplied (e.g. the Restore
-    // JSON path, where parameters are looked up flat and dimScaling is not part of the request
-    // body), default to 1.0 (unscaled). SA-CVA only uses DIM to derive CVA sensitivities, so an
-    // unscaled DIM is the correct default; an explicitly supplied dimScaling always takes precedence.
+    // Load dimScaling from sacva section and forward to the xva section
+    // so the XVA sub-analytic applies the scaling factor
     Real dimScalingValue = QuantLib::Null<Real>();
     inputs->loadParameter<Real>(dimScalingValue, "sacva", "dimScaling", false, ore::data::parseReal);
-    if (dimScalingValue == QuantLib::Null<Real>() && !tmp.empty())
-        dimScalingValue = 1.0;
     if (dimScalingValue != QuantLib::Null<Real>()) {
-        LOG("Forwarding dimScaling to xva section: " << dimScalingValue);
+        LOG("Loading dimScaling from sacva section: " << dimScalingValue);
         inputs->setDimScaling(dimScalingValue);
     }
 
