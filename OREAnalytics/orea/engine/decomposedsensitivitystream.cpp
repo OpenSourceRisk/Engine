@@ -200,20 +200,6 @@ std::map<std::string, double> DecomposedSensitivityStream::fxRiskFromDecompositi
     return results;
 }
 
-double DecomposedSensitivityStream::fxRiskShiftSize(const std::string foreign, const std::string domestic) const {
-    auto fxpair = foreign + domestic;
-    auto fxShiftSizeIt = ssd_->fxShiftData().find(fxpair);
-    if (fxShiftSizeIt == ssd_->fxShiftData().end()) {
-        fxpair = domestic + foreign;
-        fxShiftSizeIt = ssd_->fxShiftData().find(fxpair);
-    }
-    QL_REQUIRE(fxShiftSizeIt != ssd_->fxShiftData().end(),
-               "Couldn't find shiftsize for " << foreign << "/" << domestic << " or " << domestic << "/" << foreign);
-    QL_REQUIRE(fxShiftSizeIt->second->shiftType == ore::analytics::ShiftType::Relative,
-               "Requires a relative fxSpot shift for index decomposition");
-    return fxShiftSizeIt->second->shiftSize;
-}
-
 double DecomposedSensitivityStream::fxRiskShiftSize(const std::string ccy) const {
     auto fxpair = ccy + baseCurrency_;
     auto fxShiftSizeIt = ssd_->fxShiftData().find(fxpair);
@@ -359,9 +345,9 @@ DecomposedSensitivityStream::decomposeCurrencyHedgedIndexRisk(const SensitivityR
         // Correct FX Delta from FxForwards
         for (const auto& [ccy, fxRisk] :
              decomposeCurrencyHedgedIndexHelper->fxSpotRiskFromForwards(quantity, today, todaysMarket_, 1.0)) {
-            decompResults.fxRisk[ccy] =
-                decompResults.fxRisk[ccy] -
-                fxRisk * fxRiskShiftSize(ccy, decomposeCurrencyHedgedIndexHelper->indexCurrency());
+            if (ccy != baseCurrency_) {
+                decompResults.fxRisk[ccy] = decompResults.fxRisk[ccy] - fxRisk * fxRiskShiftSize(ccy);
+            }
         }
         
         return sensitivityRecords(decompResults.spotRisk, decompResults.fxRisk, indexCurrency, sr);
