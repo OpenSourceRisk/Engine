@@ -43,6 +43,7 @@
 #include <qle/ad/computationgraph.hpp>
 #include <qle/ad/external_randomvariable_ops.hpp>
 #include <qle/math/computeenvironment.hpp>
+#include <qle/math/randomvariable_regressioncache.hpp>
 #include <qle/methods/cclgmfxoptionvegaparconverter.hpp>
 #include <qle/methods/irdeltaparconverter.hpp>
 #include <qle/methods/lgmswaptionvegaparconverter.hpp>
@@ -80,7 +81,8 @@ public:
                 const bool externalDeviceCompatibilityMode = false,
                 const bool useDoublePrecisionForExternalCalculation = false,
                 const std::string& externalComputeDevice = std::string(), const bool usePythonIntegration = false,
-                const bool usePythonIntegrationDynamicIm = false, const bool continueOnCalibrationError = true,
+                const bool usePythonIntegrationDynamicIm = false, const Size regressionCacheSize = 512,
+                const bool enableCgOptimization = false, const bool continueOnCalibrationError = true,
                 const bool allowModelFallbacks = true, const bool continueOnError = true,
                 const bool useAtParCouponsCurves = true, const bool useAtParCouponsTrades = true,
                 const std::string& context = "xva engine cg");
@@ -150,15 +152,14 @@ private:
                                  std::vector<RandomVariable>& values,
                                  std::vector<ExternalRandomVariable>& valuesExternal) const;
 
-    std::pair<std::set<std::size_t>, std::set<std::set<std::size_t>>>
-    getRegressors(const std::size_t dateIndex, const Date& obsDate, const std::set<std::pair<Size, Size>>& tradeIds,
-                  const bool regressors);
-
+    std::size_t createExposureNode(const std::vector<const TradeExposure*>& exposures, const std::size_t dateIndex,
+                                   const bool isValuationDate,
+                                   std::map<std::string, size_t>* pfExposureLocalBaseCcy = nullptr);
     std::size_t createPortfolioExposureNode(const std::size_t dateIndex, const bool isValuationDate);
     std::size_t createTradeExposureNode(const std::size_t dateIndex, const std::size_t tradeIndex,
                                         const bool isValuationDate);
 
-    void dynamicImAddToPathSensis(const std::set<ModelCG::ModelParameter>& parameterGroup, const Date& valDate,
+    void dynamicImAddToPathSensis(const std::set<ModelCG::ModelParameter>& modelParameters, const Date& valDate,
                                   const double t, const std::map<std::string, std::size_t>& currencyLookup,
                                   const std::vector<IrDeltaParConverter>& irDeltaConverter,
                                   const std::vector<LgmSwaptionVegaParConverter>& irVegaConverter,
@@ -221,6 +222,8 @@ private:
     std::string externalComputeDevice_;
     bool usePythonIntegration_;
     bool usePythonIntegrationDynamicIm_;
+    Size regressionCacheSize_;
+    bool enableCgOptimization_;
     bool continueOnCalibrationError_;
     bool allowModelFallbacks_;
     bool continueOnError_;
@@ -253,19 +256,18 @@ private:
     std::vector<ExternalRandomVariableGrad> gradsExternal_;
     std::size_t externalCalculationId_ = 0;
     QuantExt::ComputeContext::Settings externalComputeDeviceSettings_;
+    RandomVariableRegressionCache randomVariableRegressionCache_;
 
-    /* Per trade and time step the exposure of a trade, which is represented by a vector of TradeExposure
-       entries for the components of a trade (buildPartB()). It is guaranteed that the number of components
-       is constant across all time steps. Includes t = 0 as first time step.
-       The index of the outmost vector corresponds to the position of the trade in portfolio->trades(), and
-       there is an entry for each trade, possibly identically zero for trades that fail in the computation
-       graph build within this engine. */
+    // additional trades built in buildCgPartB(): fees
+    std::vector<QuantLib::ext::shared_ptr<ore::data::Trade>> additionalTrades_;
+
+    /* Per trade, time step amd trade component, the exposure. Includes t = 0 as first time step.
+       The number of trade components is constant across time steps.
+       The number of trade components might be zero for failed trades or trades with cg build error. */
     std::vector<std::vector<std::vector<TradeExposure>>> tradeExposureValuation_;
     std::vector<std::vector<std::vector<TradeExposure>>> tradeExposureCloseOut_;
 
-    /* Per trade vector of meta info (buildPartB()). outer vector size is guaranteed to be the same as for
-       tradeExposureValuation_, and tradeExposureCloseOut_ members, inner vector size is equal to components
-       per respective trade. */
+    /* Per trade and trade comoponent the exposure meta info. */
     std::vector<std::vector<TradeExposureMetaInfo>> tradeExposureMetaInfo_;
 
     // per time step portfolio exposure as conditional expectation (buildPartC(), includes t=0)
@@ -277,33 +279,47 @@ private:
     std::vector<std::vector<std::size_t>> tradeExposureNodes_;
     std::vector<std::vector<std::size_t>> tradeExposureCloseOutNodes_;
 
-    /* for dynamic im calculation */
-    struct DynamicImInfo {
-        // plain trade ids, i.e. trades without TradeExposure::targetConditionalExpectation
-        // the id is the pair of trade id and component
-        std::set<std::pair<std::size_t, std::size_t>> plainTradeIds;
-        // sum of path exposures for plain trades, grouped by relevant model parameters
-        std::map<std::set<ModelCG::ModelParameter>, std::size_t> plainTradeSumGrouped;
-        // set of regressor nodes and var groups for plain trades
-        std::set<std::size_t> plainTradeRegressors;
-        std::set<std::set<std::size_t>> plainTradeRegressorGroups;
-        // indices in tradeExposureValuation with TradeExposure::targetConditionalExpectation set
-        std::set<std::pair<std::size_t, std::size_t>> individualTradeIds;
-    };
+    /* portfolio exposure by local base ccy, converted to model base ccy, only populated and used for dim,
+       on valuation dates, includes t=0, these are conditional expectations */
+    std::vector<std::map<std::string, std::size_t>> pfExposureLocalBaseCcy_;
 
-    // dynamic im info per valuation date,
+    /* for dynamic im calculation, per time step data */
+    // need to disable doxygen, because it throws an internal error
+    /// @cond
+    struct DynamicImInfo {
+        // simple trade data
+        struct SimpleKey {
+            std::set<ModelCG::ModelParameter> modelParameters;
+            std::set<std::size_t> regressorsLocalBaseCurrency;
+            std::set<std::size_t> regressorsBaseCurrency;
+            std::string localBaseCurrency;
+            std::size_t conversionToBaseCcy;
+            auto operator<=>(const SimpleKey&) const = default;
+        };
+        std::map<SimpleKey, std::size_t> simplePathValues;
+        // complex trade data
+        struct ComplexKey {
+            std::pair<std::size_t, std::size_t> complexTradeId;
+            auto operator<=>(const ComplexKey&) const = default;
+        };
+        std::set<ComplexKey> complexTradeData;
+        // cond pf exposure by local base ccy (in model base ccy)
+        std::map<std::string, std::size_t> pfExposureLocalBaseCcy;
+    };
+    /// @endcond
+
+    // dynamic im info per valuation date, includes t=0 as first component
     std::vector<DynamicImInfo> dynamicImInfo_;
 
     /* regressor groups, set for the npv()-nodes involved in the following members, to be used to set up ops_:
        - pfExposureValuation
-       - pfExposureCloseOut   */
+       - pfExposureCloseOut
+       note: not used at the moment.
+    */
     std::map<std::size_t, std::set<std::set<std::size_t>>> pfRegressorPosGroups_;
 
     // dynamic im per netting set
     std::map<std::string, std::vector<RandomVariable>> dynamicIM_;
-    std::map<std::string, std::vector<RandomVariable>> dynamicDeltaIM_;
-    std::map<std::string, std::vector<RandomVariable>> dynamicVegaIM_;
-    std::map<std::string, std::vector<RandomVariable>> dynamicCurvatureIM_;
 
     // asd nodes
     std::vector<std::size_t> asdNumeraire_;
@@ -326,8 +342,12 @@ private:
     QuantLib::ext::shared_ptr<DoublePrecisionSensiCube> sensiResultCube_;
 
     boost::timer::nanosecond_type timing_t0_ = 0, timing_ssm_ = 0, timing_parta_ = 0, timing_pf_ = 0, timing_partb_ = 0,
-                                  timing_partc_ = 0,timing_partc2_ = 0, timing_partd_ = 0, timing_popparam_ = 0, timing_poprv_ = 0,
-                                  timing_fwd_ = 0, timing_dynamicIM_ = 0, timing_bwd_ = 0, timing_sensi_ = 0,
+                                  timing_partc_ = 0, timing_partc2_ = 0, timing_partd_ = 0, timing_popparam_ = 0,
+                                  timing_poprv_ = 0, timing_fwd_ = 0, timing_dynamicIM_ = 0, timing_dynamicIM_bwd_ = 0,
+                                  timing_dynamicIM_addToPath_ = 0, timing_dynamicIM_condExp_ = 0,
+                                  timing_dynamicIM_addToConv_ = 0, timing_dynamicIM_complexBwd_ = 0,
+                                  timing_dynamicIM_complexAddToPath_ = 0, timing_dynamicIM_complexCombine_ = 0,
+                                  timing_dynamicIM_complexAddToConv_ = 0, timing_bwd_ = 0, timing_sensi_ = 0,
                                   timing_asd_ = 0, timing_outcube_ = 0, timing_imcube_ = 0, timing_total_ = 0;
     std::size_t numberOfRedNodes_ = 0, rvMemMax_ = 0;
 

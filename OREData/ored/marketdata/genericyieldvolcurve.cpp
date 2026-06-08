@@ -441,7 +441,7 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                         if (nonZeroValues > 0) {
 
                             auto li = ext::make_shared<LinearInterpolation>(x.begin(), x.end(), y.begin());
-                            auto f = ext::make_shared<FlatExtrapolation>(li);
+                            auto f = ext::make_shared<QuantExt::FlatExtrapolation>(li);
                             f->enableExtrapolation();
 
                             for (Size k = 0; k < spreads.size(); ++k) {

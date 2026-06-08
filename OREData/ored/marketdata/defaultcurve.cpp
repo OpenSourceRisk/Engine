@@ -410,7 +410,7 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
     set<QuoteData> quotes = getConfiguredQuotes(curveID, config, asof, loader);
 
     // Set up ref data for the curve, except runningSpread which is set below
-    CreditCurve::RefData refData = createRefData(config.indexTerm(), config.startDate(), cdsConv);
+    QuantExt::CreditCurve::RefData refData = createRefData(config.indexTerm(), config.startDate(), cdsConv);
 
     // If the configuration instructs us to imply a default from the market data, we do it here.
     if (implyDefaultFromMarket) {
@@ -978,10 +978,10 @@ void DefaultCurve::buildYieldCurveAsDefaultCurve(const std::string& curveID, con
     LOG("Finished building default curve from yield curve for " << curveID);
 }
 
-CreditCurve::RefData createRefData(const Period& indexTerm, const Date& startDate,
+QuantExt::CreditCurve::RefData createRefData(const Period& indexTerm, const Date& startDate,
     const ext::shared_ptr<CdsConvention>& cdsConvention, Real runningSpread, bool eom)
 {
-    CreditCurve::RefData refData;
+    QuantExt::CreditCurve::RefData refData;
     refData.startDate = startDate;
     refData.indexTerm = indexTerm;
     refData.tenor = Period(cdsConvention->frequency());

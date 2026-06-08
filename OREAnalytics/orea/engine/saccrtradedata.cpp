@@ -74,7 +74,6 @@
 #include <ql/instruments/doublebarrieroption.hpp>
 #include <ql/position.hpp>
 #include <ql/settings.hpp>
-#include <ql/time/daycounter.hpp>
 #include <qle/cashflows/commodityindexedaveragecashflow.hpp>
 #include <qle/cashflows/commodityindexedcashflow.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>

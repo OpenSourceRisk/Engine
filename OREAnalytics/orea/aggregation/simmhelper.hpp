@@ -66,12 +66,6 @@ public:
     Real initialMargin(const std::string& nettingSetId, const Size dateIndex = Null<Size>(),
                        const Size sampleIndex = Null<Size>());
 
-    Real deltaMargin() { return deltaMargin_; }
-    Real vegaMargin() { return vegaMargin_; }
-    Real curvatureMargin() { return curvatureMargin_; }
-    Real irDeltaMargin() { return irDeltaMargin_; }
-    Real fxDeltaMargin() { return fxDeltaMargin_; }
-
 private:
     Real timeFromReference(const Date& d) const;
 
@@ -91,11 +85,6 @@ private:
     QuantExt::RandomVariable fxDeltaIM_, fxVegaIM_, fxCurvatureIM_;
 
     Real totalMargin_ = Null<Real>();
-    Real deltaMargin_ = Null<Real>();
-    Real vegaMargin_ = Null<Real>();
-    Real curvatureMargin_ = Null<Real>();
-    Real irDeltaMargin_ = Null<Real>();
-    Real fxDeltaMargin_ = Null<Real>();
 };
 
 } // namespace analytics

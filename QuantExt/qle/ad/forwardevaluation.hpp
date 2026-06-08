@@ -95,7 +95,8 @@ void forwardEvaluation(const ComputationGraph& g, std::vector<T>& values,
                     preDeleter(values[n]);
             }
 
-            values[node] = ops[g.opId(node)](args, node);
+            if(!redBlockReconstruction || !values[node].initialised())
+                values[node] = ops[g.opId(node)](args, node);
 
             QL_REQUIRE(values[node].initialised(), "forwardEvaluation(): value at active node "
                                                        << node << " is not initialized, opId = " << g.opId(node));

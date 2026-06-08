@@ -130,13 +130,7 @@ SimpleDynamicSimm::SimpleDynamicSimm(const std::size_t n, const std::vector<std:
 QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<std::vector<QuantExt::RandomVariable>>& irDelta,
                                                   const std::vector<std::vector<QuantExt::RandomVariable>>& irVega,
                                                   const std::vector<QuantExt::RandomVariable>& fxDelta,
-                                                  const std::vector<std::vector<QuantExt::RandomVariable>>& fxVega,
-                                                  QuantExt::RandomVariable* deltaMarginIrReturn,
-                                                  QuantExt::RandomVariable* vegaMarginIrReturn,
-                                                  QuantExt::RandomVariable* curvatureMarginIrReturn,
-                                                  QuantExt::RandomVariable* deltaMarginFxReturn,
-                                                  QuantExt::RandomVariable* vegaMarginFxReturn,
-                                                  QuantExt::RandomVariable* curvatureMarginFxReturn) {
+                                                  const std::vector<std::vector<QuantExt::RandomVariable>>& fxVega) {
 
     // DeltaMargin_IR
 
@@ -346,21 +340,6 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<std::vector<
     RandomVariable imProductRatesFx =
         sqrt(imIr * imIr + imFx * imFx + RandomVariable(n_, 2.0 * corrIrFx_) * imIr * imFx);
     
-    // populate optional return arguments
-
-    if (deltaMarginIrReturn)
-        *deltaMarginIrReturn = deltaMarginIr;
-    if (vegaMarginIrReturn)
-        *vegaMarginIrReturn = vegaMarginIr;
-    if (curvatureMarginIrReturn)
-        *curvatureMarginIrReturn = curvatureMarginIr;
-    if (deltaMarginFxReturn)
-        *deltaMarginFxReturn = deltaMarginFx;
-    if (vegaMarginFxReturn)
-        *vegaMarginFxReturn = vegaMarginFx;
-    if (curvatureMarginFxReturn)
-        *curvatureMarginFxReturn = curvatureMarginFx;
-
     // return total margin
 
     return imProductRatesFx;

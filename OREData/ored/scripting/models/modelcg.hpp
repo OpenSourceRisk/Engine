@@ -49,13 +49,25 @@ using QuantLib::Natural;
 using QuantLib::Real;
 using QuantLib::Size;
 
+/*! The local base ccy functionality only makes sense with model type MC, it can not be used with FD 
+
+    There are two versions of this functionality, of which only v1 is currently implemented in derived classes:
+
+    v1: for local base ccy != global base ccy, only underlying indices with index ccy = local base ccy and payments
+        in local base ccy can be processed
+
+    v2: no restrictions, all underlying indices and payment currencies can be processed
+
+    Derived classes are required to provide suitable checks, i.e., throw an error when v2 functionality is required
+    but only v1 is implemented.
+*/
 class ModelCG : public QuantLib::LazyObject {
 public:
     enum class Type { MC, FD };
 
     class ModelParameter {
     public:
-        /* '*derived*' model parameters depend on other more fundamental nodes and parameters and are
+        /* '*derived*' model parameters depend on other, more fundamental nodes and parameters and are
            only there to cache results in a convenient way, i.e. we could use a separate class for them */
         enum class Type {
             none,                    // type not set (= model param is not initialized)
@@ -82,7 +94,12 @@ public:
             lgm_discountBond,        // dito, *derived*
             lgm_reducedDiscountBond, // dito, *derived*
             interpolated_undpath,    // interpolated underlying path value (only gcam), *derived*
-            interpolated_irstate     // interpolated ir state value (only gcam), *derived*
+            interpolated_irstate,    // interpolated ir state value (only gcam), *derived*
+            pay,                     // pay function cache (ModelCGImpl), *derived*
+            eval,                    // eval function cache (ModelCGImpl), *derived*
+            fxSpotT0,                // possibly triangulated fx spot t0, *derived*
+            fxRate,                  // fx rate (to base ccy) at an obs date, *derived*
+            convertToBaseCcy         // for convertToBaseCcy(), *derived*
         };
 
         ~ModelParameter() = default;
@@ -93,6 +110,7 @@ public:
                        const std::size_t hash = 0, const double time = 0.0);
         ModelParameter(const ModelParameter& p) = default;
         ModelParameter(ModelParameter&& p) = default;
+        ModelParameter& operator=(const ModelParameter& p) = default;
         ModelParameter& operator=(ModelParameter&& p) = default;
 
         friend bool operator==(const ModelParameter& x, const ModelParameter& y);
@@ -132,7 +150,7 @@ public:
         mutable std::size_t node_ = QuantExt::ComputationGraph::nan;
     };
 
-    ModelCG(const QuantLib::Size n);
+    ModelCG(const QuantLib::Size n, const bool enableCgOptimization);
     virtual ~ModelCG() {}
 
     // computation graph
@@ -144,10 +162,10 @@ public:
     // number of paths
     virtual QuantLib::Size size() const { return n_; }
 
-    // if not null, this model uses a separate mc training phase for NPV() calcs
+    // DEAD at the moment - if not null, this model uses a separate mc training phase for NPV() calcs
     virtual Size trainingSamples() const { return QuantLib::Null<Size>(); }
 
-    /* enable / disable the usage of the training paths (if trainingPaths() is not null)
+    /* DEAD at the moment - enable / disable the usage of the training paths (if trainingPaths() is not null)
        the model should be using training paths only temporarily and reset to normal model via RAII */
     virtual void toggleTrainingPaths() const {}
 
@@ -160,8 +178,8 @@ public:
     // the (actual) time from reference measured in the model
     virtual Real actualTimeFromReference(const Date& d) const = 0;
 
-    // the base ccy of the model
-    virtual const std::string& baseCcy() const = 0;
+    // the (global) base ccy of the model
+    virtual const std::string& baseCurrency() const = 0;
 
     // the list of supported model currencies
     virtual const std::vector<std::string>& currencies() const = 0;
@@ -170,22 +188,46 @@ public:
     virtual std::size_t dt(const Date& d1, const Date& d2) const;
 
     // result must be as of max(refdate, obsdate); refdate < paydate and obsdate <= paydate required
+    // localBaseCurrency determines both the result ccy and the paths used for fx, discount and numeraire
     virtual std::size_t pay(const std::size_t amount, const Date& obsdate, const Date& paydate,
-                            const std::string& currency) const = 0;
+                            const std::string& currency,
+                            const std::string& localBaseCurrency = {}) const = 0;
 
-    // refdate <= obsdate <= paydate required
-    virtual std::size_t discount(const Date& obsdate, const Date& paydate, const std::string& currency) const = 0;
+    // refdate <= obsdate <= paydate required, in currency, localBaseCurrency determines the paths
+    virtual std::size_t discount(const Date& obsdate, const Date& paydate, const std::string& currency,
+                                 const std::string& localBaseCurrency = {}) const = 0;
 
-    // refdate <= obsdate required
-    // overwriteRegressors - if given - replaces the automatically generated regressor node set
+    // fx rate at date obsdate, currency vs. baseCcy resp. localBaseCcy, if given, 
+    // on paths in baseCcy reps. localBaseCcy. refdate <= obsdate required
+    virtual std::size_t fxRate(const Date& obsdate, const std::string& currency,
+                               const std::string& localBaseCurrency = {}) const = 0;
+
+    /* refdate <= obsdate required
+      - automatic mode (no overwrite regressors are given):
+        the whole model state (in global base ccy) plus addRegressors are used to calculate the conditional expectation
+      - overwriteRegressors are given (only for MC):
+        these replace the whole regressor set and must also include any additional regressors (i.e., addRegressors are
+      ignored) these can also be used to use regressors from a local base ccy
+      - evaluationRegressors are given (only for MC):
+        these determine the final variables on which the regression model is evaluated, the number of regressors must be
+      consistent with those used for training, usually this is used in combination with overwriteRegressor, but it is
+      also possible to use with automatic mode */
     virtual std::size_t npv(const std::size_t amount, const Date& obsdate, const std::size_t filter,
                             const std::optional<long>& memSlot, const std::set<std::size_t> addRegressors,
-                            const std::optional<std::set<std::size_t>>& overwriteRegressors) const = 0;
+                            const std::optional<std::set<std::size_t>>& overwriteRegressors,
+                            const std::optional<std::set<std::size_t>>& evaluationRegressors = {}) const = 0;
 
-    // default regressors used in npv()
-    // relevant currencies - if not none - restrict the set of currencies for which regressors are generated
-    virtual std::set<std::size_t>
-    npvRegressors(const Date& obsdate, const std::optional<std::set<std::string>>& relevantCurrencies) const = 0;
+    /* regressors used in npv()
+      - relevantCurrencies - if not none - restrict the set of currencies for which regressors are generated
+      - localBaseCurrency is used to determine the relevant fx indices in the regressor set
+      - localBaseCurrencyPaths determines the paths w.r.t. which the regressors are built
+      - both localBaseCurrency and localBaseCurrencyPaths default to the global model base ccy, if not given
+      - relevantCurrencies must contain all relevant currencies, i.e. localBaseCurrency (or localBaseCurrencyPaths)
+        will _not_ be added to this set of currencies */
+    virtual std::set<std::size_t> npvRegressors(const Date& obsdate,
+                                                const std::optional<std::set<std::string>>& relevantCurrencies,
+                                                const std::string& localBaseCurrency = {},
+                                                const std::string& localBaseCurrencyPaths = {}) const = 0;
 
     /* eval index at (past or future) obsdate:
        - if fwddate != null, fwddate > obsdate is required. A check must be implemented that the obsdate allows for
@@ -198,22 +240,28 @@ public:
          referencedate, even if  a historical fixing is available; for inflation indices, ignore this flag
     */
     virtual std::size_t eval(const std::string& index, const Date& obsdate, const Date& fwddate,
-                             const bool returnMissingFixingAsNull = false,
-                             const bool ignoreTodaysFixing = false) const = 0;
+                             const bool returnMissingFixingAsNull = false, const bool ignoreTodaysFixing = false,
+                             const std::string& localBaseCurrency = {}) const = 0;
 
-    /* get numeraire N(s) for s >= referenceDate */
-    virtual std::size_t numeraire(const Date& s) const = 0;
+    /* get numeraire N(s) for s >= referenceDate in currency on paths determined by localBaseCurrency */
+    virtual std::size_t numeraire(const Date& s, const std::string& currency = {},
+                                  const std::string& localBaseCurrency = {}) const = 0;
+
+    /* get conversion to base factor FX_local-global(t) * N_local(t) / N_global(t)
+       note: the paths are in global base ccy paths always */
+    virtual std::size_t convertToBaseCcy(const Date& s, const std::string& localBaseCurrency) const = 0;
 
     // forward looking daily comp/avg, obsdate <= start < end required, result must be as of max(refdate, obsdate)
     virtual std::size_t fwdCompAvg(const bool isAvg, const std::string& index, const Date& obsdate, const Date& start,
                                    const Date& end, const Real spread, const Real gearing, const Integer lookback,
                                    const Natural rateCutoff, const Natural fixingDays, const bool includeSpread,
-                                   const Real cap, const Real floor, const bool nakedOption,
-                                   const bool localCapFloor) const = 0;
+                                   const Real cap, const Real floor, const bool nakedOption, const bool localCapFloor,
+                                   const std::string& localBaseCurrency) const = 0;
 
     // barrier hit probability, obsdate1 <= obsdate2 required, but refdate can lie anywhere w.r.t. obsdate1, 2
     virtual std::size_t barrierProbability(const std::string& index, const Date& obsdate1, const Date& obsdate2,
-                                           const std::size_t barrier, const bool above) const = 0;
+                                           const std::size_t barrier, const bool above,
+                                           const std::string& localBaseCurrency) const = 0;
 
     // get T0 fx spot
     virtual std::size_t fxSpotT0(const std::string& forCcy, const std::string& domCcy) const = 0;
@@ -286,7 +334,9 @@ private:
     virtual void populateAdditionalResultsPathLevel() const {}
 
     // size of random variables within model
-    const QuantLib::Size n_;
+    QuantLib::Size n_;
+    // whether to enable optimization in cg building
+    bool enableCgOptimization_;
 };
 
 // standalone version of ModelCG::addModelParameters()
