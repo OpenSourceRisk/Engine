@@ -425,8 +425,8 @@ void XvaEngineCG::buildCgPartB() {
                         qlInstr->recalculate();
                     auto engine = QuantLib::ext::dynamic_pointer_cast<AmcCgPricingEngine>(qlInstr->pricingEngine());
                     QL_REQUIRE(engine, "engine is null for component " << counter << ". This is unexpected.");
-                    tradeData.push_back({tradeIndex, id, trade->tradeType(), "comp_" + std::to_string(counter), engine,
-                                         trade->instrument()->multiplier() * trade->instrument()->multiplier2()});
+                    tradeData.push_back(
+                        {tradeIndex, id, trade->tradeType(), "comp_" + std::to_string(counter), engine, mult});
                     ++counter;
                 }
             }
@@ -460,7 +460,7 @@ void XvaEngineCG::buildCgPartB() {
 
     DLOG("Built local base currency suggestions:");
     for (auto const& [k, v] : baseCcySuggestions) {
-        DLOG(boost::join(k, "'") << " -> " << v);
+        DLOG(boost::join(k, ",") << " -> " << v);
     }
 
     // build the cg of the trades
