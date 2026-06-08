@@ -94,6 +94,16 @@ void SaCvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputPara
         inputs->setDimScaling(dimScalingValue);
     }
 
+    // Load collateralBalancesFile from sacva section and forward to the xva section.
+    // When dimScaling is not provided, the XVA analytic will derive the DIM scaling from
+    // the initial margins in this file, just as it does when running XVA standalone.
+    tmp = {};
+    inputs->loadParameter<std::string>(tmp, "sacva", "collateralBalancesFile");
+    if (!tmp.empty()) {
+        LOG("Forwarding collateralBalancesFile from sacva section: " << tmp);
+        inputs->setCollateralBalances(tmp);
+    }
+
     // Forward storeSensis from sacva to simulation section
     // so the XVA sub-analytic creates nettingSetCube and sensitivityStorageManager for DIM
     tmp = {};
