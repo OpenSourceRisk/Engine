@@ -433,10 +433,12 @@ void XvaEngineCG::buildCgPartB() {
 
         } catch (const std::exception& e) {
             StructuredTradeErrorMessage(
-                trade, "XvaEngineCG::buildCgPartB(): Failed to build trade, trade will be ignored in exposure.",
+                trade, "XvaEngineCG::buildCgPartB(): Failed to set up trade data, trade will be ignored in exposure.",
                 e.what())
                 .log();
         }
+
+        ++tradeIndex;
     }
 
     DLOG("TradeData set up with " << tradeData.size() << " entries.");
@@ -484,7 +486,7 @@ void XvaEngineCG::buildCgPartB() {
     auto processTrade = [&](const Size tradeIndex, const std::string& tradeId, const std::string& tradeType,
                             const std::string& tradeComponent,
                             const QuantLib::ext::shared_ptr<AmcCgPricingEngine>& engine, double multiplier) {
-        std::vector<TradeExposure> tradeExposure;
+        std::vector<TradeExposure> tradeExposure, tradeExposureCloseOut;
         TradeExposureMetaInfo metaInfo;
         try {
             TLOG("build cg for trade " << tradeId << ", " << tradeType << "," << tradeComponent);
@@ -495,38 +497,38 @@ void XvaEngineCG::buildCgPartB() {
                                      [&](std::monostate& e) {}},
                            t);
             }
+            if (!closeOutDates_.empty()) {
+                if (!stickyCloseOutDates_.empty()) {
+                    model_->useStickyCloseOutDates(true);
+                    try {
+                        engine->buildComputationGraph(true, &tradeExposureCloseOut, &metaInfo, baseCcySuggestionsFct);
+                        for (auto& t : tradeExposureCloseOut) {
+                            std::visit(overloads{[&](SimpleTradeExposure& e) { e.multiplier = multiplier; },
+                                                 [&](ComplexTradeExposure& e) { e.multiplier = multiplier; },
+                                                 [&](std::monostate& e) {}},
+                                       t);
+                        }
+                    } catch (const std::exception& e) {
+                        StructuredTradeErrorMessage(
+                            tradeId, tradeType,
+                            "XvaEngineCG::buildCgPartB(): failed to build cg for trade (component: " + tradeComponent +
+                                "). Component is ignored in exposure (close-out date).",
+                            e.what());
+                    }
+                    model_->useStickyCloseOutDates(false);
+                } else {
+                    tradeExposureCloseOut = tradeExposure;
+                }
+            }
             tradeExposureMetaInfo_[tradeIndex].push_back(metaInfo);
             populateTradeExposure(tradeIndex, tradeExposureValuation_, tradeExposure);
+            if (!closeOutDates_.empty())
+                populateTradeExposure(tradeIndex, tradeExposureCloseOut_, tradeExposureCloseOut);
         } catch (const std::exception& e) {
             StructuredTradeErrorMessage(tradeId, tradeType,
                                         "XvaEngineCG::buildCgPartB(): failed to build cg for trade (component: " +
-                                            tradeComponent + "). Component is ignored in exposure (valuation date).",
+                                            tradeComponent + "). Component is ignored in exposure.",
                                         e.what());
-        }
-        if (!closeOutDates_.empty()) {
-            if (!stickyCloseOutDates_.empty()) {
-                model_->useStickyCloseOutDates(true);
-                tradeExposure.clear();
-                try {
-                    engine->buildComputationGraph(true, &tradeExposure, &metaInfo, baseCcySuggestionsFct);
-                    for (auto& t : tradeExposure) {
-                        std::visit(overloads{[&](SimpleTradeExposure& e) { e.multiplier = multiplier; },
-                                             [&](ComplexTradeExposure& e) { e.multiplier = multiplier; },
-                                             [&](std::monostate& e) {}},
-                                   t);
-                    }
-                    populateTradeExposure(tradeIndex, tradeExposureCloseOut_, tradeExposure);
-                } catch (const std::exception& e) {
-                    StructuredTradeErrorMessage(
-                        tradeId, tradeType,
-                        "XvaEngineCG::buildCgPartB(): failed to build cg for trade (component: " + tradeComponent +
-                            "). Component is ignored in exposure (close-out date)",
-                        e.what());
-                }
-                model_->useStickyCloseOutDates(false);
-            } else {
-                populateTradeExposure(tradeIndex, tradeExposureCloseOut_, tradeExposure);
-            }
         }
     };
 
