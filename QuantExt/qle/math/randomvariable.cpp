@@ -1286,6 +1286,11 @@ Array regressionCoefficients(
                                                << r.size() << ") must be geq basis fns size (" << basisFn.size()
                                                << ")");
 
+#ifdef ORE_ENABLE_CUDA
+    if (gpuQrSolveApplicable(A, b))
+        return gpuQrSolve(A, b);
+#endif
+
     resumeCalcStats();
 
     ext::shared_ptr<Matrix> qr_q, qr_r;
@@ -1345,11 +1350,7 @@ Array regressionCoefficients(
             }
         }
     } else if (regressionMethod == RandomVariableRegressionMethod::QR) {
-#ifdef ORE_ENABLE_CUDA
-        res = gpuQrSolve(A, b);
-#else
         res = qrSolve(*qr_lipvt, *qr_q, *qr_r, b);
-#endif
     } else {
         QL_FAIL("regressionCoefficients(): unknown regression method, expected SVD or QR");
     }
