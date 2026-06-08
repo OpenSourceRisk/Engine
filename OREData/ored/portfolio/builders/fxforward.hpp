@@ -100,6 +100,7 @@ public:
     AmcCgFxForwardEngineBuilder(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& modelCg,
                                 const std::vector<Date>& simulationDates)
         : FxForwardEngineBuilderBase("CrossAssetModel", "AMCCG"), modelCg_(modelCg), simulationDates_(simulationDates) {
+        cachingEnabled_ = false;
     }
 
 protected:

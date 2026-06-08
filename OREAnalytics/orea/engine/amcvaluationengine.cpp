@@ -26,23 +26,18 @@
 #include <ored/marketdata/clonedloader.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/model/crossassetmodelbuilder.hpp>
-#include <ored/portfolio/compositeinstrumentwrapper.hpp>
 #include <ored/portfolio/enginefactory.hpp>
+#include <ored/portfolio/optionwrapper.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
-#include <ored/portfolio/compositetrade.hpp>
+#include <ored/portfolio/tradeutils.hpp>
 #include <ored/utilities/to_string.hpp>
 
 #include <qle/indexes/fallbackiborindex.hpp>
-#include <qle/instruments/multiccycompositeinstrument.hpp>
 #include <qle/instruments/payment.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/methods/multipathvariategenerator.hpp>
 #include <qle/models/lgmimpliedyieldtermstructure.hpp>
 #include <qle/pricingengines/mcmultilegbaseengine.hpp>
-
-#include <ql/instruments/compositeinstrument.hpp>
-
-#include <ored/portfolio/optionwrapper.hpp>
 
 #include <boost/timer/timer.hpp>
 
@@ -422,22 +417,7 @@ void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
 
             // 3 unpack CompositeInstrumentWrapper
 
-            std::set<QuantLib::ext::shared_ptr<InstrumentWrapper>> wrappers{trade->instrument()};
-            std::set<QuantLib::ext::shared_ptr<InstrumentWrapper>> wrappersTmp;
-            bool compositeFound;
-            do {
-                compositeFound = false;
-                for (auto const& w : wrappers) {
-                    if (auto comp = QuantLib::ext::dynamic_pointer_cast<CompositeInstrumentWrapper>(w)) {
-                        wrappersTmp.insert(comp->wrappers().begin(), comp->wrappers().end());
-                        compositeFound = true;
-                    } else {
-                        wrappersTmp.insert(w);
-                    }
-                }
-                wrappers.swap(wrappersTmp);
-                wrappersTmp.clear();
-            } while (compositeFound);
+            auto wrappers = unpackCompositeInstrumentWrappers({trade->instrument()});
 
             // 4 process the wrappers
 
@@ -465,29 +445,7 @@ void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
 
                 // 4.3 unpack composite ql / qle instruments
 
-                std::set<std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Real>> qlInstrumentsTmp;
-                bool compositeFound;
-                do {
-                    compositeFound = false;
-                    for (auto const& [qlInstrument, outerMult] : qlInstruments) {
-
-                        if (auto c = QuantLib::ext::dynamic_pointer_cast<MultiCcyCompositeInstrument>(qlInstrument)) {
-                            for (auto const& [instr, innerMult, _] : c->components()) {
-                                qlInstrumentsTmp.insert(std::make_pair(instr, outerMult * innerMult));
-                            }
-                            compositeFound = true;
-                        } else if (auto c = QuantLib::ext::dynamic_pointer_cast<CompositeInstrument>(qlInstrument)) {
-                            for (auto const& [instr, innerMult] : c->components()) {
-                                qlInstrumentsTmp.insert(std::make_pair(instr, outerMult * innerMult));
-                            }
-                            compositeFound = true;
-                        } else {
-                            qlInstrumentsTmp.insert(std::make_pair(qlInstrument, outerMult));
-                        }
-                    }
-                    qlInstruments.swap(qlInstrumentsTmp);
-                    qlInstrumentsTmp.clear();
-                } while (compositeFound);
+                qlInstruments = unpackCompositeInstruments(qlInstruments);
 
                 // 4.4 process qlInstruments
 

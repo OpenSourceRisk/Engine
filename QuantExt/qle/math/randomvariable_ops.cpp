@@ -30,21 +30,39 @@ RandomVariable randomVariableOpConditionalExpectation(const Size size, const Siz
                                                       QuantLib::Real regressionVarianceCutoff,
                                                       const std::set<std::set<std::size_t>>& regressorGroups,
                                                       const bool usePythonIntegration,
-                                                      const std::vector<const RandomVariable*>& args) {
+                                                      const std::vector<const RandomVariable*>& args,
+                                                      RandomVariableRegressionCache* cache) {
+
+    QL_REQUIRE(args.size() >= 2,
+               "randomVariableOpConditionalExpectation(): args size (" << args.size() << ") must be geq 2");
+    QL_REQUIRE(args.size() % 2 == 0,
+               "randomVariableOpConditionalExpectation(): args size (" << args.size() << ") must be even");
+
+    Size regressorLength = (args.size() - 2) / 2;
 
     std::vector<const RandomVariable*> regressor;
-    for (auto r = std::next(args.begin(), 2); r != args.end(); ++r) {
-        if ((*r)->initialised() && !(*r)->deterministic())
-            regressor.push_back(*r);
+    std::vector<const RandomVariable*> evaluationRegressor;
+    for (Size i = 0; i < regressorLength; ++i) {
+        Size i1 = 2 + i;
+        Size i2 = regressorLength + 2 + i;
+        QL_REQUIRE(args[i1]->initialised() == args[i2]->initialised(),
+                   "randomVariableOpConditionalExpectation(): args at "
+                       << i1 << " and " << i2 << " (regressor and evaluation regressor component " << i
+                       << ", respectively) are not both initialized or uninitialized, this is not allowed: "
+                       << std::boolalpha << args[i1]->initialised() << ", " << args[i2]->initialised());
+        if (!args[i1]->initialised() || (args[i1]->deterministic() && args[i2]->deterministic()))
+            continue;
+        regressor.push_back(args[i1]);
+        evaluationRegressor.push_back(args[i2]);
     }
 
     if (regressor.empty())
         return expectation(*args[0]);
 
-    QL_REQUIRE(!args.empty(), "randomVariableOpConditionalExpectation(): args are empty.");
-
     if (args[0]->deterministic())
         return *args[0];
+
+    // std::cout << "randomVarOpCondExp(): using regressor of size " << regressor.size() << std::endl;
 
     bool trivialRegressorGroups =
         regressorGroups.empty() || (regressorGroups.size() == 1 && regressorGroups.begin()->size() == regressor.size());
@@ -55,25 +73,29 @@ RandomVariable randomVariableOpConditionalExpectation(const Size size, const Siz
                    << regressionVarianceCutoff << ")");
 
     std::vector<RandomVariable> transformedRegressor;
+    std::vector<RandomVariable> transformedEvaluationRegressor;
     Matrix coordinateTransform;
     if (regressionVarianceCutoff != Null<Real>()) {
         coordinateTransform = pcaCoordinateTransform(regressor, regressionVarianceCutoff);
         transformedRegressor = applyCoordinateTransform(regressor, coordinateTransform);
+        transformedEvaluationRegressor = applyCoordinateTransform(evaluationRegressor, coordinateTransform);
         regressor = vec2vecptr(transformedRegressor);
+        evaluationRegressor = vec2vecptr(transformedEvaluationRegressor);
     }
 
     Filter filter = !close_enough(*args[1], RandomVariable(size, 0.0));
 
     if (usePythonIntegration && filter.deterministic() && filter[0]) {
 
-        // FIXME does not support regressor groups, non-trivial filters at the moment
+        // FIXME does not support regressor groups, non-trivial filters, evaluationRegressor != regressor at the moment
 
         return PythonFunctions::instance().conditionalExpectation(*args[0], regressor);
 
     } else {
         auto tmp = multiPathBasisSystem(regressor.size(), regressionOrder, polynomType,
                                         trivialRegressorGroups ? std::set<std::set<size_t>>{} : regressorGroups, size);
-        return conditionalExpectation(*args[0], regressor, tmp, !close_enough(*args[1], RandomVariable(size, 0.0)));
+        return conditionalExpectation(*args[0], regressor, tmp, !close_enough(*args[1], RandomVariable(size, 0.0)),
+                                      RandomVariableRegressionMethod::QR, evaluationRegressor, cache);
     }
 }
 
@@ -81,7 +103,7 @@ std::vector<RandomVariableOp>
 getRandomVariableOps(const Size size, const Size regressionOrder, QuantLib::LsmBasisSystem::PolynomialType polynomType,
                      const double eps, QuantLib::Real regressionVarianceCutoff,
                      const std::map<std::size_t, std::set<std::set<std::size_t>>>& regressorGroups,
-                     const bool usePythonIntegration) {
+                     const bool usePythonIntegration, RandomVariableRegressionCache* cache) {
 
     std::vector<RandomVariableOp> ops;
 
@@ -115,12 +137,13 @@ getRandomVariableOps(const Size size, const Size regressionOrder, QuantLib::LsmB
         [](const std::vector<const RandomVariable*>& args, const Size node) { return *args[0] / (*args[1]); });
 
     // ConditionalExpectation = 6
-    ops.push_back([size, regressionOrder, polynomType, regressionVarianceCutoff, regressorGroups,
-                   usePythonIntegration](const std::vector<const RandomVariable*>& args, const Size node) {
+    ops.push_back([size, regressionOrder, polynomType, regressionVarianceCutoff, regressorGroups, usePythonIntegration,
+                   cache](const std::vector<const RandomVariable*>& args, const Size node) {
         auto g = regressorGroups.find(node);
-        return randomVariableOpConditionalExpectation(
-            size, regressionOrder, polynomType, regressionVarianceCutoff,
-            g == regressorGroups.end() ? std::set<std::set<std::size_t>>{} : g->second, usePythonIntegration, args);
+        return randomVariableOpConditionalExpectation(size, regressionOrder, polynomType, regressionVarianceCutoff,
+                                                      g == regressorGroups.end() ? std::set<std::set<std::size_t>>{}
+                                                                                 : g->second,
+                                                      usePythonIntegration, args, cache);
     });
 
     // IndicatorEq = 7
@@ -323,12 +346,11 @@ std::vector<RandomVariableGrad> getRandomVariableGradients(const Size size, cons
 
 std::vector<RandomVariableOpNodeRequirements> getRandomVariableOpNodeRequirements() {
     std::vector<RandomVariableOpNodeRequirements> res;
-    /*
-    Each op is a function f(x1,...,xn) args. If the value is needed, we set the value to true.
-    The vector represents x1,...,xn and the second element of the pair f(vector<xi>)
-    Note: It is used for optimization, i.e. values that are not needed are deleted early. If everything is set to true, that will increase the memory footprint unnecessarily. 
-    And if something is set to false that is actually required later on to calculate a gradient, a run time error about an uninitilized randomvariable
-     */
+    /* Each op is a function f(x1,...,xn) args. If the value is needed, we set the value to true.
+       The vector represents x1,...,xn and the second element of the pair f(vector<xi>)
+       Note: It is used for optimization, i.e. values that are not needed are deleted early. If everything is set to true,
+             that will increase the memory footprint unnecessarily. And if something is set to false that is actually required
+             later on to calculate a gradient, a run time error about an uninitilized randomvariable */
 
     // None = 0
     res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, false), false); });

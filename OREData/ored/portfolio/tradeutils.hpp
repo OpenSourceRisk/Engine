@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2024 Quaternion Risk Management Ltd
+ Copyright (C) 2026 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,28 +16,27 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/scripting/engines/amccgmultilegoptionengine.hpp>
+/*! \file ored/portfolio/tradeutils.hpp
+    \brief trade utility functions
+    \ingroup portfolio
+*/
+
+#pragma once
+
+#include <ored/portfolio/instrumentwrapper.hpp>
+
+#include <qle/instruments/multiccycompositeinstrument.hpp>
+
+#include <ql/instruments/compositeinstrument.hpp>
 
 namespace ore {
 namespace data {
 
-void AmcCgMultiLegOptionEngine::calculate() const {
-    leg_ = arguments_.legs;
-    currency_.clear();
-    std::transform(arguments_.currency.begin(), arguments_.currency.end(), std::back_inserter(currency_),
-                   [](const QuantLib::Currency& c) { return c.code(); });
-    payer_ = arguments_.payer;
-    exercise_ = arguments_.exercise;
-    optionSettlement_ = arguments_.settlementType;
-    cashSettlementDates_ = arguments_.settlementDates;
+std::set<QuantLib::ext::shared_ptr<InstrumentWrapper>>
+unpackCompositeInstrumentWrappers(const std::set<QuantLib::ext::shared_ptr<InstrumentWrapper>>& wrappers);
 
-    AmcCgBaseEngine::calculate();
-
-    if(!amcEnabled_)
-        results_.value = npvValue_;
-    else
-        results_.value = 0.0;
-}
+std::set<std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Real>> unpackCompositeInstruments(
+    const std::set<std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Real>>& qlInstruments);
 
 } // namespace data
 } // namespace ore

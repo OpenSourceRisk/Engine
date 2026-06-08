@@ -39,9 +39,10 @@ ModelCGImpl::ModelCGImpl(
     const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
     const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
     const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
-    const std::set<Date>& simulationDates, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig)
-    : ModelCG(size), type_(type), dayCounter_(dayCounter), currencies_(currencies), indexCurrencies_(indexCurrencies),
-      simulationDates_(simulationDates), iborFallbackConfig_(iborFallbackConfig) {
+    const std::set<Date>& simulationDates, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
+    const bool enableCgOptimization)
+    : ModelCG(size, enableCgOptimization), type_(type), dayCounter_(dayCounter), currencies_(currencies),
+      indexCurrencies_(indexCurrencies), simulationDates_(simulationDates), iborFallbackConfig_(iborFallbackConfig) {
 
     // populate index vectors
 
@@ -108,57 +109,140 @@ std::size_t ModelCGImpl::dt(const Date& d1, const Date& d2) const {
 }
 
 std::size_t ModelCGImpl::pay(const std::size_t amount, const Date& obsdate, const Date& paydate,
-                             const std::string& currency) const {
+                             const std::string& currency, const std::string& localBaseCurrency) const {
     calculate();
 
-    std::string id = "__pay_" + ore::data::to_string(obsdate) + "_" + ore::data::to_string(paydate) + "_" + currency;
+    ModelCG::ModelParameter id(ModelCG::ModelParameter::Type::pay, currency, localBaseCurrency, obsdate, paydate);
+    if (auto m = cachedParameters_.find(id); m != cachedParameters_.end())
+        return cg_mult(*g_, amount, m->node());
 
     std::size_t n;
-    if (n = cg_var(*g_, id, ComputationGraph::VarDoesntExist::Nan); n == ComputationGraph::nan) {
 
-        // result is as of max(obsdate, refDate) by definition of pay()
+    // result is as of max(obsdate, refDate) by definition of pay()
 
-        Date effectiveDate = std::max(obsdate, referenceDate());
-        auto c = std::find(currencies_.begin(), currencies_.end(), currency);
-        QL_REQUIRE(c != currencies_.end(), "currency " << currency << " not handled");
-        Size cidx = std::distance(currencies_.begin(), c);
+    Date effectiveDate = std::max(obsdate, referenceDate());
+    auto c = std::find(currencies_.begin(), currencies_.end(), currency);
+    QL_REQUIRE(c != currencies_.end(), "currency " << currency << " not handled");
+    Size cidx = std::distance(currencies_.begin(), c);
 
-        // do we have a dynamic fx underlying to convert to base at the effective date?
+    // discount from pay to obs date on ccy curve, convert to base ccy and divide by the numeraire
 
-        std::size_t fxSpot = 0;
-        for (Size i = 0; i < indexCurrencies_.size(); ++i) {
-            if (indices_.at(i).isFx() && currency == indexCurrencies_[i]) {
-                fxSpot = getIndexValue(i, effectiveDate);
-                break;
-            }
-        }
+    n = cg_mult(*g_,
+                cg_div(*g_, getDiscount(cidx, effectiveDate, paydate, localBaseCurrency),
+                       numeraire(effectiveDate, localBaseCurrency, localBaseCurrency)),
+                fxRate(effectiveDate, currency, localBaseCurrency));
 
-        // if no we use the zero vol fx spot at the effective date
-
-        if (fxSpot == 0) {
-            if (cidx > 0)
-                fxSpot =
-                    cg_div(*g_, cg_mult(*g_, getFxSpot(cidx - 1), getDiscount(cidx, referenceDate(), effectiveDate)),
-                           getDiscount(0, referenceDate(), effectiveDate));
-            else
-                fxSpot = cg_const(*g_, 1.0);
-        }
-
-        // discount from pay to obs date on ccy curve, convert to base ccy and divide by the numeraire
-
-        n = cg_mult(*g_, cg_div(*g_, getDiscount(cidx, effectiveDate, paydate), numeraire(effectiveDate)), fxSpot);
-        g_->setVariable(id, n);
-    }
+    id.setNode(n);
+    cachedParameters_.insert(id);
 
     return cg_mult(*g_, amount, n);
 }
 
-std::size_t ModelCGImpl::discount(const Date& obsdate, const Date& paydate, const std::string& currency) const {
+std::size_t ModelCGImpl::discount(const Date& obsdate, const Date& paydate, const std::string& currency,
+                                  const std::string& localBaseCurrency) const {
     calculate();
     auto c = std::find(currencies_.begin(), currencies_.end(), currency);
     QL_REQUIRE(c != currencies_.end(), "currency " << currency << " not handled");
     Size cidx = std::distance(currencies_.begin(), c);
-    return getDiscount(cidx, obsdate, paydate);
+    return getDiscount(cidx, obsdate, paydate, localBaseCurrency);
+}
+
+std::size_t ModelCGImpl::fxRate(const Date& obsdate, const std::string& currency,
+                                const std::string& localBaseCurrency) const {
+
+    calculate();
+
+    TLOG("ModelCGImpl::fxRate(" << obsdate << "," << currency << "," << localBaseCurrency<< ")");
+
+    if ((localBaseCurrency.empty() && currency == baseCurrency()) ||
+        (!localBaseCurrency.empty() && currency == localBaseCurrency))
+        return cg_const(*g_, 1.0);
+
+    ModelCG::ModelParameter id(ModelCG::ModelParameter::Type::fxRate, currency, localBaseCurrency, obsdate);
+    if (auto m = cachedParameters_.find(id); m != cachedParameters_.end()) {
+        return m->node();
+    }
+
+    auto ccy = std::find(currencies_.begin(), currencies_.end(), currency);
+    QL_REQUIRE(ccy != currencies_.end(), "currency " << currency << " no handled");
+    Size cidx = std::distance(currencies_.begin(), ccy);
+
+    Size cidx2 = 0;
+    if (!localBaseCurrency.empty() && localBaseCurrency != baseCurrency()) {
+        auto ccy = std::find(currencies_.begin(), currencies_.end(), localBaseCurrency);
+        QL_REQUIRE(ccy != currencies_.end(), "currency " << localBaseCurrency << " no handled");
+        cidx2 = std::distance(currencies_.begin(), ccy);
+    }
+
+    // do we have a dynamic fx underlying to convert to base at the effective date?
+
+    std::size_t fxSpot = ComputationGraph::nan;
+    for (Size i = 0; i < indexCurrencies_.size(); ++i) {
+        if (indices_.at(i).isFx() && currency == indexCurrencies_[i]) {
+            fxSpot = getIndexValue(i, obsdate, {}, localBaseCurrency);
+            break;
+        }
+    }
+
+    std::size_t fxSpot2 = ComputationGraph::nan;
+    if (cidx2 > 0) {
+        for (Size i = 0; i < indexCurrencies_.size(); ++i) {
+            if (indices_.at(i).isFx() && localBaseCurrency == indexCurrencies_[i]) {
+                fxSpot2 = getIndexValue(i, obsdate, {}, localBaseCurrency);
+                break;
+            }
+        }
+    }
+
+    // use the zero vol fx spot at the effective date if we do not have dynamic rates
+
+    if (fxSpot == ComputationGraph::nan) {
+        if (cidx > 0)
+            fxSpot = cg_div(
+                *g_, cg_mult(*g_, getFxSpot(cidx - 1), getDiscount(cidx, referenceDate(), obsdate, localBaseCurrency)),
+                getDiscount(0, referenceDate(), obsdate, localBaseCurrency));
+        else
+            fxSpot = cg_const(*g_, 1.0);
+    }
+
+    if (fxSpot2 == ComputationGraph::nan) {
+        if (cidx2 > 0)
+            fxSpot2 = cg_div(
+                *g_, cg_mult(*g_, getFxSpot(cidx2 - 1), getDiscount(cidx2, referenceDate(), obsdate, localBaseCurrency)),
+                getDiscount(0, referenceDate(), obsdate, localBaseCurrency));
+        else
+            fxSpot2 = cg_const(*g_, 1.0);
+    }
+
+    // set result and return
+
+    id.setNode(cidx2 == 0 ? fxSpot : cg_div(*g_, fxSpot, fxSpot2));
+    cachedParameters_.insert(id);
+    return fxSpot;
+}
+
+std::size_t ModelCGImpl::convertToBaseCcy(const Date& s, const std::string& localBaseCurrency) const {
+
+    calculate();
+
+    TLOG("ModelCGImpl::convertToBaseCcy(" << s << "," << localBaseCurrency << ") - model base ccy is "
+                                          << baseCurrency());
+
+    if (localBaseCurrency == baseCurrency())
+        return cg_const(*g_, 1.0);
+
+    if (s == referenceDate())
+        return fxSpotT0(localBaseCurrency, baseCurrency());
+
+    ModelCG::ModelParameter id(ModelCG::ModelParameter::Type::convertToBaseCcy, localBaseCurrency, {}, s);
+    if (auto m = cachedParameters_.find(id); m != cachedParameters_.end()) {
+        return m->node();
+    }
+    auto tmp = cg_mult(*g_, fxRate(s, localBaseCurrency),
+                       cg_div(*g_, numeraire(s, localBaseCurrency), numeraire(s, baseCurrency())));
+    id.setNode(tmp);
+    cachedParameters_.insert(id);
+    return tmp;
 }
 
 namespace {
@@ -174,7 +258,8 @@ struct comp {
 std::size_t ModelCGImpl::getInflationIndexFixing(const bool returnMissingFixingAsNull, const std::string& indexInput,
                                                  const QuantLib::ext::shared_ptr<ZeroInflationIndex>& infIndex,
                                                  const Size indexNo, const Date& limDate, const Date& obsdate,
-                                                 const Date& fwddate, const Date& baseDate) const {
+                                                 const Date& fwddate, const Date& baseDate,
+                                                 const std::string& localBaseCurrency) const {
     std::size_t res;
     Real f = infIndex->timeSeries()[limDate];
     // we exclude historical fixings
@@ -185,7 +270,7 @@ std::size_t ModelCGImpl::getInflationIndexFixing(const bool returnMissingFixingA
     } else {
         Date effectiveObsDate = std::min(obsdate, limDate);
         if (effectiveObsDate >= baseDate) {
-            res = getInfIndexValue(indexNo, effectiveObsDate, limDate);
+            res = getInfIndexValue(indexNo, effectiveObsDate, limDate, localBaseCurrency);
         } else if (returnMissingFixingAsNull) {
             return ComputationGraph::nan;
         } else {
@@ -198,15 +283,16 @@ std::size_t ModelCGImpl::getInflationIndexFixing(const bool returnMissingFixingA
 }
 
 std::size_t ModelCGImpl::eval(const std::string& indexInput, const Date& obsdate, const Date& fwddate,
-                              const bool returnMissingFixingAsNull, const bool ignoreTodaysFixing) const {
+                              const bool returnMissingFixingAsNull, const bool ignoreTodaysFixing,
+                              const std::string& localBaseCurrency) const {
     calculate();
 
-    std::string id = "__eval_" + indexInput + "_" + ore::data::to_string(obsdate) + "_" +
-                     ore::data::to_string(fwddate) + "_" + (returnMissingFixingAsNull ? "1" : "0") + "_" +
-                     (ignoreTodaysFixing ? "1" : "0");
+    std::size_t hash = (returnMissingFixingAsNull ? 1 << 0 : 0) + (ignoreTodaysFixing ? 1 << 1 : 0);
+    ModelCG::ModelParameter id(ModelCG::ModelParameter::Type::eval, indexInput, localBaseCurrency, obsdate, fwddate, {},
+                               0, 0, hash);
 
-    if (std::size_t n = cg_var(*g_, id, ComputationGraph::VarDoesntExist::Nan); n != ComputationGraph::nan) {
-        return n;
+    if (auto m = cachedParameters_.find(id); m != cachedParameters_.end()) {
+        return m->node();
     }
 
     std::string index = indexInput;
@@ -221,9 +307,9 @@ std::size_t ModelCGImpl::eval(const std::string& indexInput, const Date& obsdate
         Date baseDate = inf->second->zeroInflationTermStructure()->baseDate();
         Date effectiveFixingDate = fwddate != Null<Date>() ? fwddate : obsdate;
         std::pair<Date, Date> lim = inflationPeriod(effectiveFixingDate, inf->second->frequency());
-        std::size_t indexStart =
-            getInflationIndexFixing(returnMissingFixingAsNull, indexInput, inf->second,
-                                    std::distance(infIndices_.begin(), inf), lim.first, obsdate, fwddate, baseDate);
+        std::size_t indexStart = getInflationIndexFixing(returnMissingFixingAsNull, indexInput, inf->second,
+                                                         std::distance(infIndices_.begin(), inf), lim.first, obsdate,
+                                                         fwddate, baseDate, localBaseCurrency);
         // if the index is not interpolated we are done
         if (!indexInfo.infIsInterpolated()) {
             return indexStart;
@@ -231,13 +317,14 @@ std::size_t ModelCGImpl::eval(const std::string& indexInput, const Date& obsdate
         // otherwise we need to get a second value and interpolate as in ZeroInflationIndex
         std::size_t indexEnd = getInflationIndexFixing(returnMissingFixingAsNull, indexInput, inf->second,
                                                        std::distance(infIndices_.begin(), inf), lim.second + 1, obsdate,
-                                                       fwddate, baseDate);
+                                                       fwddate, baseDate, localBaseCurrency);
         // this is not entirely correct, since we should use the days in the lagged period, but we don't know the lag
         std::size_t n = cg_add(*g_, indexStart,
                                cg_mult(*g_, cg_subtract(*g_, indexEnd, indexStart),
                                        cg_const(*g_, (static_cast<Real>(effectiveFixingDate - lim.first) /
                                                       static_cast<Real>(lim.second + 1 - lim.first)))));
-        g_->setVariable(id, n);
+        id.setNode(n);
+        cachedParameters_.insert(id);
         return n;
     }
     // 2 handle non-inflation indices
@@ -253,7 +340,8 @@ std::size_t ModelCGImpl::eval(const std::string& indexInput, const Date& obsdate
                 if (ir != irIndices_.end()) {
                     std::size_t n =
                         cg_const(*g_, ir->second->fixing(ir->second->fixingCalendar().adjust(obsdate, Preceding)));
-                    g_->setVariable(id, n);
+                    id.setNode(n);
+                    cachedParameters_.insert(id);
                     return n;
                 } else {
                     QL_FAIL("ir (fallback ibor) index '" << indexInput
@@ -269,14 +357,16 @@ std::size_t ModelCGImpl::eval(const std::string& indexInput, const Date& obsdate
                 }
                 if (fixing != Null<Real>()) {
                     std::size_t n = cg_const(*g_, fixing);
-                    g_->setVariable(id, n);
+                    id.setNode(n);
+                    cachedParameters_.insert(id);
                     return n;
                 } else {
                     // for dates < refDate we are stuck now
                     if (obsdate != referenceDate()) {
                         if (returnMissingFixingAsNull) {
                             std::size_t n = ComputationGraph::nan;
-                            g_->setVariable(id, n);
+                            id.setNode(n);
+                            cachedParameters_.insert(id);
                             return n;
                         } else {
                             QL_FAIL("missing "
@@ -303,12 +393,14 @@ std::size_t ModelCGImpl::eval(const std::string& indexInput, const Date& obsdate
     if (indexInfo.isIr()) {
         auto ir = std::find_if(irIndices_.begin(), irIndices_.end(), comp(indexInput));
         if (ir != irIndices_.end()) {
-            std::size_t res = getIrIndexValue(std::distance(irIndices_.begin(), ir), obsdate, fwddate);
+            std::size_t res =
+                getIrIndexValue(std::distance(irIndices_.begin(), ir), obsdate, fwddate, localBaseCurrency);
             QL_REQUIRE(res != ComputationGraph::nan, "internal error: could not project "
                                                          << ir->second->name() << " fixing for (obsdate/fwddate) = ("
                                                          << QuantLib::io::iso_date(obsdate) << ","
                                                          << QuantLib::io::iso_date(fwddate) << ")");
-            g_->setVariable(id, res);
+            id.setNode(res);
+            cachedParameters_.insert(id);
             return res;
         }
     }
@@ -325,7 +417,7 @@ std::size_t ModelCGImpl::eval(const std::string& indexInput, const Date& obsdate
     auto i = std::find(indices_.begin(), indices_.end(), indexInfo);
     if (i != indices_.end()) {
         // we have the index directly as an underlying
-        res = getIndexValue(std::distance(indices_.begin(), i), obsdate, fwddate);
+        res = getIndexValue(std::distance(indices_.begin(), i), obsdate, fwddate, localBaseCurrency);
     } else {
         // if not, we can only try something else for FX indices
         QL_REQUIRE(indexInfo.isFx(), "ModelCGImpl::eval(): index " << index << " not handled");
@@ -345,10 +437,10 @@ std::size_t ModelCGImpl::eval(const std::string& indexInput, const Date& obsdate
                 }
             }
             if (ind1 != Null<Size>()) {
-                fx1 = getIndexValue(ind1, obsdate);
+                fx1 = getIndexValue(ind1, obsdate, {}, localBaseCurrency);
             }
             if (ind2 != Null<Size>()) {
-                fx2 = getIndexValue(ind2, obsdate);
+                fx2 = getIndexValue(ind2, obsdate, {}, localBaseCurrency);
             }
             res = cg_div(*g_, fx1, fx2);
             if (fwddate != Null<Date>()) {
@@ -358,39 +450,43 @@ std::size_t ModelCGImpl::eval(const std::string& indexInput, const Date& obsdate
                                                                   << " in index " << index << " not handled");
                 QL_REQUIRE(ind2 != currencies_.end(), "currency " << indexInfo.fx()->targetCurrency().code()
                                                                   << " in index " << index << " not handled");
-                res = cg_mult(*g_, res,
-                              cg_div(*g_, getDiscount(std::distance(currencies_.begin(), ind1), obsdate, fwddate),
-                                     getDiscount(std::distance(currencies_.begin(), ind2), obsdate, fwddate)));
+                res = cg_mult(
+                    *g_, res,
+                    cg_div(*g_,
+                           getDiscount(std::distance(currencies_.begin(), ind1), obsdate, fwddate, localBaseCurrency),
+                           getDiscount(std::distance(currencies_.begin(), ind2), obsdate, fwddate, localBaseCurrency)));
             }
         }
     }
-    g_->setVariable(id, res);
+    id.setNode(res);
+    cachedParameters_.insert(id);
     return res;
 }
 
 std::size_t ModelCGImpl::fxSpotT0(const std::string& forCcy, const std::string& domCcy) const {
     calculate();
-    std::string id = "__fxspott0_" + forCcy + "_" + domCcy;
-    std::size_t fx;
-    if (fx = cg_var(*g_, id, ComputationGraph::VarDoesntExist::Nan); fx == ComputationGraph::nan) {
-        auto c1 = std::find(currencies_.begin(), currencies_.end(), forCcy);
-        auto c2 = std::find(currencies_.begin(), currencies_.end(), domCcy);
-        QL_REQUIRE(c1 != currencies_.end(), "currency " << forCcy << " not handled");
-        QL_REQUIRE(c2 != currencies_.end(), "currency " << domCcy << " not handled");
-        Size cidx1 = std::distance(currencies_.begin(), c1);
-        Size cidx2 = std::distance(currencies_.begin(), c2);
-        std::size_t fx = cg_const(*g_, 1.0);
-        if (cidx1 > 0)
-            fx = cg_mult(*g_, fx, getFxSpot(cidx1 - 1));
-        if (cidx2 > 0)
-            fx = cg_div(*g_, fx, getFxSpot(cidx2 - 1));
-        g_->setVariable(id, fx);
-    }
+    ModelCG::ModelParameter id(ModelCG::ModelParameter::Type::fxSpotT0, forCcy, domCcy);
+    if (auto m = cachedParameters_.find(id); m != cachedParameters_.end())
+        return m->node();
+
+    auto c1 = std::find(currencies_.begin(), currencies_.end(), forCcy);
+    auto c2 = std::find(currencies_.begin(), currencies_.end(), domCcy);
+    QL_REQUIRE(c1 != currencies_.end(), "currency " << forCcy << " not handled");
+    QL_REQUIRE(c2 != currencies_.end(), "currency " << domCcy << " not handled");
+    Size cidx1 = std::distance(currencies_.begin(), c1);
+    Size cidx2 = std::distance(currencies_.begin(), c2);
+    std::size_t fx = cg_const(*g_, 1.0);
+    if (cidx1 > 0)
+        fx = cg_mult(*g_, fx, getFxSpot(cidx1 - 1));
+    if (cidx2 > 0)
+        fx = cg_div(*g_, fx, getFxSpot(cidx2 - 1));
+    id.setNode(fx);
     return fx;
 }
 
 std::size_t ModelCGImpl::barrierProbability(const std::string& index, const Date& obsdate1, const Date& obsdate2,
-                                            const std::size_t barrier, const bool above) const {
+                                            const std::size_t barrier, const bool above,
+                                            const std::string& localBaseCurrency) const {
 
     calculate();
 
@@ -432,8 +528,8 @@ std::size_t ModelCGImpl::barrierProbability(const std::string& index, const Date
 
     // handle future part (call into derived classes, this is model dependent)
 
-    std::size_t futureBarrierHit =
-        getFutureBarrierProb(index, std::max<Date>(obsdate1, referenceDate()), obsdate2, barrier, above);
+    std::size_t futureBarrierHit = getFutureBarrierProb(index, std::max<Date>(obsdate1, referenceDate()), obsdate2,
+                                                        barrier, above, localBaseCurrency);
 
     // combine historical and future part and return result
 
@@ -448,6 +544,7 @@ void ModelCGImpl::performCalculations() const {
         cgEvalDate_ = referenceDate();
         randomVariates_.clear();
         modelParameters_.clear();
+        cachedParameters_.clear();
         g_->clear();
     }
 }
@@ -460,15 +557,6 @@ std::size_t ModelCGImpl::cgVersion() const {
 const std::vector<std::vector<std::size_t>>& ModelCGImpl::randomVariates() const {
     calculate();
     return randomVariates_;
-}
-
-Date getSloppyDate(const Date& d, const bool sloppyDates, const std::set<Date>& dates) {
-    if (!sloppyDates)
-        return d;
-    auto s = std::lower_bound(dates.begin(), dates.end(), d);
-    if (s == dates.end())
-        return *dates.rbegin();
-    return *s;
 }
 
 } // namespace data
