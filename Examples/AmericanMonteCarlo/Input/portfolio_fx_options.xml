@@ -393,4 +393,43 @@
       <SoldAmount>1080000</SoldAmount>
     </FxDoubleBarrierOptionData>
   </Trade>
+  <Trade id="FX_ASIAN_OPTION">
+    <TradeType>FxAsianOption</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields />
+    </Envelope>
+    <FxAsianOptionData>
+      <Currency>USD</Currency>
+      <Quantity>1000000</Quantity>
+      <Strike>1.08</Strike>
+      <Underlying>
+        <Type>FX</Type>
+        <Name>ECB-EUR-USD</Name>
+        <Weight>1.0</Weight>
+      </Underlying>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <OptionType>Call</OptionType>
+        <PayoffType>Asian</PayoffType>
+        <ExerciseDates>
+          <ExerciseDate>2022-03-01</ExerciseDate>
+        </ExerciseDates>
+      </OptionData>
+      <Settlement>2022-03-05</Settlement>
+      <ObservationDates>
+        <Rules>
+          <StartDate>2022-02-01</StartDate>
+          <EndDate>2022-03-01</EndDate>
+          <Tenor>1D</Tenor>
+          <Calendar>TGT,US</Calendar>
+          <Convention>F</Convention>
+          <TermConvention>F</TermConvention>
+          <Rule>Forward</Rule>
+        </Rules>
+      </ObservationDates>
+    </FxAsianOptionData>
+  </Trade>
+
 </Portfolio>

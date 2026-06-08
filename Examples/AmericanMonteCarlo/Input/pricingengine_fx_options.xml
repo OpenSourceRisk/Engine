@@ -18,7 +18,12 @@
     <Engine>ScriptedTrade</Engine>
     <EngineParameters/>
   </Product>
-  
+    <Product type="FxAsianOptionArithmeticPrice">
+    <Model>ScriptedTrade</Model>
+    <ModelParameters/>
+    <Engine>ScriptedTrade</Engine>
+    <EngineParameters/>
+  </Product>
   <Product type="ScriptedTrade">
     <Model>Generic</Model>
     <ModelParameters>
