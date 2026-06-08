@@ -17,6 +17,7 @@
 #include <ql/optional.hpp>
 #include <ql/time/period.hpp>
 #include <ql/utilities/null.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
 
 #include <boost/optional.hpp>
 #include <string>
