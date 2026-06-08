@@ -363,7 +363,10 @@ void XvaEngineCG::buildCgPartB() {
     std::vector<TradeData> tradeData;
 
     Size tradeIndex = 0;
-    for (auto const& [id, trade] : portfolio_->trades()) {
+    for (auto it = portfolio_->trades().begin(); it != portfolio_->trades().end(); ++it, ++tradeIndex) {
+
+        auto const& id = it->first;
+        auto const& trade = it->second;
 
         // handle failed trades
 
@@ -437,8 +440,6 @@ void XvaEngineCG::buildCgPartB() {
                 e.what())
                 .log();
         }
-
-        ++tradeIndex;
     }
 
     DLOG("TradeData set up with " << tradeData.size() << " entries.");
