@@ -29,6 +29,7 @@
 
 #include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/portfolio/swap.hpp>
+#include <ored/portfolio/tradeutils.hpp>
 #include <ored/report/inmemoryreport.hpp>
 #include <ored/scripting/engines/scriptedinstrumentpricingenginecg.hpp>
 #include <ored/utilities/to_string.hpp>
@@ -352,51 +353,90 @@ void XvaEngineCG::buildCgPartB() {
 
     struct TradeData {
         Size tradeIndex;
+        std::string tradeId;
+        std::string tradeType;
+        std::string tradeComponent;
         QuantLib::ext::shared_ptr<AmcCgPricingEngine> engine;
         double multiplier;
-        std::string description;
     };
 
     std::vector<TradeData> tradeData;
 
     Size tradeIndex = 0;
     for (auto const& [id, trade] : portfolio_->trades()) {
-        // trigger setupArguments()
-        if (!trade->instrument()->qlInstrument()->isCalculated())
-            trade->instrument()->qlInstrument()->recalculate();
-        // main instrument
-        tradeData.push_back({tradeIndex,
-                             QuantLib::ext::dynamic_pointer_cast<AmcCgPricingEngine>(
-                                 trade->instrument()->qlInstrument()->pricingEngine()),
-                             trade->instrument()->multiplier() * trade->instrument()->multiplier2(), id + " (main)"});
-        // fees as single currency swaps per currency
-        std::map<std::string, std::pair<std::vector<Real>, std::vector<std::string>>> tradeFees;
-        for (Size i = 0; i < trade->instrument()->additionalInstruments().size(); ++i) {
-            if (auto p = QuantLib::ext::dynamic_pointer_cast<QuantExt::Payment>(
-                    trade->instrument()->additionalInstruments()[i])) {
-                tradeFees[p->currency().code()].first.push_back(p->cashFlow()->amount() *
-                                                                trade->instrument()->additionalMultipliers()[i]);
-                tradeFees[p->currency().code()].second.push_back(ore::data::to_string(p->cashFlow()->date()));
-            } else {
-                StructuredTradeErrorMessage(trade, "Additional instrument is ignored in AMCCG simulation",
-                                            "only QuantExt::Payment is handled as additional instrument.")
-                    .log();
+
+        // handle failed trades
+
+        if (trade->tradeType() == "Failed")
+            continue;
+
+        try {
+
+            // unpack CompositeInstrumentWrapper
+
+            auto wrappers = unpackCompositeInstrumentWrappers({trade->instrument()});
+
+            // process the wrappers
+
+            for (auto const& wrapper : wrappers) {
+
+                // store main ql instrument and its multipliers in provisional qlInstruments container
+
+                std::set<std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Real>> qlInstruments{
+                    std::make_pair(wrapper->qlInstrument(), wrapper->multiplier() * wrapper->multiplier2())};
+
+                // extract fees resp. store non-fees as al instruments to be processed in qlInstruments container
+
+                std::map<std::string, std::pair<std::vector<Real>, std::vector<std::string>>> tradeFees;
+
+                for (Size i = 0; i < wrapper->additionalInstruments().size(); ++i) {
+                    if (auto p = QuantLib::ext::dynamic_pointer_cast<QuantExt::Payment>(
+                            wrapper->additionalInstruments()[i])) {
+                        tradeFees[p->currency().code()].first.push_back(
+                            p->cashFlow()->amount() * trade->instrument()->additionalMultipliers()[i]);
+                        tradeFees[p->currency().code()].second.push_back(ore::data::to_string(p->cashFlow()->date()));
+                    } else {
+                        qlInstruments.insert(
+                            std::make_pair(wrapper->additionalInstruments()[i], wrapper->additionalMultipliers()[i]));
+                    }
+                }
+
+                // unpack composite ql / qle instruments
+
+                qlInstruments = unpackCompositeInstruments(qlInstruments);
+
+                // add trade fees to ql instrument container
+
+                for (auto const& [ccy, flows] : tradeFees) {
+                    additionalTrades_.push_back(QuantLib::ext::make_shared<ore::data::Swap>(
+                        Envelope(),
+                        std::vector<LegData>{
+                            LegData(QuantLib::ext::make_shared<CashflowData>(flows.first, flows.second), false, ccy)}));
+                    additionalTrades_.back()->build(engineFactory_);
+                    qlInstruments.insert(std::make_pair(additionalTrades_.back()->instrument()->qlInstrument(), 1.0));
+                }
+
+                // process ql instruments
+
+                Size counter = 0;
+                for (auto const& [qlInstr, mult] : qlInstruments) {
+                    // trigger setupArguments()
+                    if (!qlInstr->isCalculated())
+                        qlInstr->recalculate();
+                    auto engine = QuantLib::ext::dynamic_pointer_cast<AmcCgPricingEngine>(qlInstr->pricingEngine());
+                    QL_REQUIRE(engine, "engine is null for component " << counter << ". This is unexpected.");
+                    tradeData.push_back({tradeIndex, id, trade->tradeType(), "comp_" + std::to_string(counter), engine,
+                                         trade->instrument()->multiplier() * trade->instrument()->multiplier2()});
+                    ++counter;
+                }
             }
+
+        } catch (const std::exception& e) {
+            StructuredTradeErrorMessage(
+                trade, "XvaEngineCG::buildCgPartB(): Failed to build trade, trade will be ignored in exposure.",
+                e.what())
+                .log();
         }
-        for (auto const& [ccy, flows] : tradeFees) {
-            additionalTrades_.push_back(QuantLib::ext::make_shared<ore::data::Swap>(
-                Envelope(), std::vector<LegData>{LegData(
-                                QuantLib::ext::make_shared<CashflowData>(flows.first, flows.second), false, ccy)}));
-            additionalTrades_.back()->build(engineFactory_);
-            // trigger setupArguments
-            if (!additionalTrades_.back()->instrument()->qlInstrument()->isCalculated())
-                additionalTrades_.back()->instrument()->qlInstrument()->recalculate();
-            tradeData.push_back({tradeIndex,
-                                 QuantLib::ext::dynamic_pointer_cast<AmcCgPricingEngine>(
-                                     additionalTrades_.back()->instrument()->qlInstrument()->pricingEngine()),
-                                 1.0, id + " (fee)"});
-        }
-        ++tradeIndex;
     }
 
     DLOG("TradeData set up with " << tradeData.size() << " entries.");
@@ -441,42 +481,52 @@ void XvaEngineCG::buildCgPartB() {
         }
     };
 
-    auto processTrade = [&](const Size tradeIndex, const QuantLib::ext::shared_ptr<AmcCgPricingEngine>& engine,
-                            double multiplier, const std::string& desc) {
+    auto processTrade = [&](const Size tradeIndex, const std::string& tradeId, const std::string& tradeType,
+                            const std::string& tradeComponent,
+                            const QuantLib::ext::shared_ptr<AmcCgPricingEngine>& engine, double multiplier) {
         std::vector<TradeExposure> tradeExposure;
         TradeExposureMetaInfo metaInfo;
         try {
-            TLOG("build cg for trade " << desc);
+            TLOG("build cg for trade " << tradeId << ", " << tradeType << "," << tradeComponent);
             engine->buildComputationGraph(false, &tradeExposure, &metaInfo, baseCcySuggestionsFct);
+            for (auto& t : tradeExposure) {
+                std::visit(overloads{[&](SimpleTradeExposure& e) { e.multiplier = multiplier; },
+                                     [&](ComplexTradeExposure& e) { e.multiplier = multiplier; },
+                                     [&](std::monostate& e) {}},
+                           t);
+            }
+            tradeExposureMetaInfo_[tradeIndex].push_back(metaInfo);
+            populateTradeExposure(tradeIndex, tradeExposureValuation_, tradeExposure);
         } catch (const std::exception& e) {
-            QL_FAIL("XvaEngineCG::buildCgPartB(): failed to build cg for trade '" << desc << ": " << e.what());
+            StructuredTradeErrorMessage(tradeId, tradeType,
+                                        "XvaEngineCG::buildCgPartB(): failed to build cg for trade (component: " +
+                                            tradeComponent + "). Component is ignored in exposure (valuation date).",
+                                        e.what());
         }
-        for (auto& t : tradeExposure) {
-            std::visit(overloads{[&](SimpleTradeExposure& e) { e.multiplier = multiplier; },
-                                 [&](ComplexTradeExposure& e) { e.multiplier = multiplier; },
-                                 [&](std::monostate& e) {}},
-                       t);
-        }
-        tradeExposureMetaInfo_[tradeIndex].push_back(metaInfo);
-        populateTradeExposure(tradeIndex, tradeExposureValuation_, tradeExposure);
         if (!closeOutDates_.empty()) {
             if (!stickyCloseOutDates_.empty()) {
                 model_->useStickyCloseOutDates(true);
                 tradeExposure.clear();
                 try {
                     engine->buildComputationGraph(true, &tradeExposure, &metaInfo, baseCcySuggestionsFct);
+                    for (auto& t : tradeExposure) {
+                        std::visit(overloads{[&](SimpleTradeExposure& e) { e.multiplier = multiplier; },
+                                             [&](ComplexTradeExposure& e) { e.multiplier = multiplier; },
+                                             [&](std::monostate& e) {}},
+                                   t);
+                    }
+                    populateTradeExposure(tradeIndex, tradeExposureCloseOut_, tradeExposure);
                 } catch (const std::exception& e) {
-                    QL_FAIL("XvaEngineCG::buildCgPartB(): failed to build cg for trade '" << desc << ": " << e.what());
+                    StructuredTradeErrorMessage(
+                        tradeId, tradeType,
+                        "XvaEngineCG::buildCgPartB(): failed to build cg for trade (component: " + tradeComponent +
+                            "). Component is ignored in exposure (close-out date)",
+                        e.what());
                 }
                 model_->useStickyCloseOutDates(false);
-                for (auto& t : tradeExposure) {
-                    std::visit(overloads{[&](SimpleTradeExposure& e) { e.multiplier = multiplier; },
-                                         [&](ComplexTradeExposure& e) { e.multiplier = multiplier; },
-                                         [&](std::monostate& e) {}},
-                               t);
-                }
+            } else {
+                populateTradeExposure(tradeIndex, tradeExposureCloseOut_, tradeExposure);
             }
-            populateTradeExposure(tradeIndex, tradeExposureCloseOut_, tradeExposure);
         }
     };
 
@@ -485,7 +535,7 @@ void XvaEngineCG::buildCgPartB() {
     for (auto const& d : tradeData) {
         if (useRedBlocks_)
             g->startRedBlock();
-        processTrade(d.tradeIndex, d.engine, d.multiplier, d.description);
+        processTrade(d.tradeIndex, d.tradeId, d.tradeType, d.tradeComponent, d.engine, d.multiplier);
         if (useRedBlocks_)
             g->endRedBlock();
     }

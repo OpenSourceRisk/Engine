@@ -261,18 +261,13 @@ private:
     // additional trades built in buildCgPartB(): fees
     std::vector<QuantLib::ext::shared_ptr<ore::data::Trade>> additionalTrades_;
 
-    /* Per trade and time step the exposure of a trade, which is represented by a vector of TradeExposure
-       entries for the components of a trade (buildPartB()). It is guaranteed that the number of components
-       is constant across all time steps. Includes t = 0 as first time step.
-       The index of the outmost vector corresponds to the position of the trade in portfolio->trades(), and
-       there is an entry for each trade, possibly identically zero for trades that fail in the computation
-       graph build within this engine. */
+    /* Per trade, time step amd trade component, the exposure. Includes t = 0 as first time step.
+       The number of trade components is constant across time steps.
+       The number of trade components might be zero for failed trades or trades with cg build error. */
     std::vector<std::vector<std::vector<TradeExposure>>> tradeExposureValuation_;
     std::vector<std::vector<std::vector<TradeExposure>>> tradeExposureCloseOut_;
 
-    /* Per trade vector of meta info (buildPartB()). outer vector size is guaranteed to be the same as for
-       tradeExposureValuation_, and tradeExposureCloseOut_ members, inner vector size is equal to components
-       per respective trade. */
+    /* Per trade and trade comoponent the exposure meta info. */
     std::vector<std::vector<TradeExposureMetaInfo>> tradeExposureMetaInfo_;
 
     // per time step portfolio exposure as conditional expectation (buildPartC(), includes t=0)
