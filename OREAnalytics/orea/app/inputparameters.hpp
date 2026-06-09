@@ -1235,6 +1235,7 @@ protected:
     bool mporForward_ = true;
     bool deriveCounterpartyDefaultCurves_ = false;
     std::string additionalMarketDataInput_;
+    std::string fxDeltaMethodOverride_ = "";
 
     /**************
      * NPV analytic
