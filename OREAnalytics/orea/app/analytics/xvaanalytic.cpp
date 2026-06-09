@@ -1231,10 +1231,15 @@ void XvaAnalyticImpl::runPostProcessor() {
 
         if (xvaVars->dimModel_ == "Regression" || xvaVars->dimModel_ == "DeltaVaR" ||
             xvaVars->dimModel_ == "DeltaGammaNormalVaR" || xvaVars->dimModel_ == "DeltaGammaVaR") {
-            QL_REQUIRE(dimScaling != QuantLib::Null<Real>() || !currentIM.empty(),
-                       "DIM: dimScaling is not set and no collateralBalancesFile is provided. "
-                       "Provide dimScaling explicitly in the XVA analytic or supply a "
-                       "collateralBalancesFile with valid initial margins for each netting set.");
+            if (dimScaling == QuantLib::Null<Real>()) {
+                for (auto const& n : getNettingSetIds(analytic()->portfolio())) {
+                    QL_REQUIRE(currentIM.count(n) > 0,
+                               "DIM: dimScaling is not set and netting set '"
+                                   << n << "' has no entry in collateralBalancesFile. "
+                                   << "Provide dimScaling explicitly in the XVA analytic or supply a "
+                                   << "collateralBalancesFile with valid initial margins for each netting set.");
+                }
+            }
         }
 
         if (xvaVars->dimModel_ == "Regression") {
