@@ -345,7 +345,9 @@ DecomposedSensitivityStream::decomposeCurrencyHedgedIndexRisk(const SensitivityR
         // Correct FX Delta from FxForwards
         for (const auto& [ccy, fxRisk] :
              decomposeCurrencyHedgedIndexHelper->fxSpotRiskFromForwards(quantity, today, todaysMarket_, 1.0)) {
-            decompResults.fxRisk[ccy] = decompResults.fxRisk[ccy] - fxRisk * fxRiskShiftSize(ccy);
+            if (ccy != baseCurrency_) {
+                decompResults.fxRisk[ccy] = decompResults.fxRisk[ccy] - fxRisk * fxRiskShiftSize(ccy);
+            }
         }
         
         return sensitivityRecords(decompResults.spotRisk, decompResults.fxRisk, indexCurrency, sr);
