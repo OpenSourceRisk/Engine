@@ -148,6 +148,7 @@ struct XvaVariables : public InputVariables {
     string dimOutputNettingSet_;
     Size dimLocalRegressionEvaluations_ = 0;
     Real dimLocalRegressionBandwidth_ = 0.25;
+    Real dimScaling_ = QuantLib::Null<Real>();
     // capital value adjustment details
     Real kvaCapitalDiscountRate_ = 0.10;
     Real kvaAlpha_ = 1.4;
