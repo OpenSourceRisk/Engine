@@ -125,8 +125,8 @@ private:
     std::vector<QuantLib::Matrix> sigmaValues_;
 
     std::vector<std::vector<double>> pcaLoadings_;
-    bool calibratePcaSigma0_;
-    ParamType pcaSigma0Type_;
+    bool calibratePcaSigma0_ = false;
+    ParamType pcaSigma0Type_ = ParamType::Constant;
     std::vector<Time> pcaSigma0Times_;
     std::vector<double> pcaSigma0Values_;
     std::vector<double> pcaSigmaRatios_;

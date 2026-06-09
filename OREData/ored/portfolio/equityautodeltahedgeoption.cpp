@@ -56,6 +56,11 @@ void EquityAutoDeltaHedgedOption::build(const QuantLib::ext::shared_ptr<EngineFa
     for (size_t i = 0; i < underlyings_.size(); ++i) {
         const auto& u = underlyings_[i];
 
+        QL_REQUIRE(parsePositionType(u.optionData.longShort()) ==
+                       parsePositionType(underlyings_.front().optionData.longShort()),
+                   "EquityAutoDeltaHedgedOption: all underlyings must have the same LongShort direction in trade "
+                       << id());
+
         QL_REQUIRE(u.optionData.exerciseDates().size() == 1,
                    "EquityAutoDeltaHedgedOption: need exactly one exercise date for underlying " << i
                                                                                                 << " in trade " << id());
@@ -73,6 +78,9 @@ void EquityAutoDeltaHedgedOption::build(const QuantLib::ext::shared_ptr<EngineFa
 
         Option::Type type = parseOptionType(u.optionData.callPut());
 
+        // LongShort determines the position sign
+        Real longshort = (parsePositionType(u.optionData.longShort()) == Position::Long) ? 1.0 : -1.0;
+
         auto premData = u.optionData.premiumData().premiumData();
         QL_REQUIRE(premData.size() == 1, "EquityAutoDeltaHedgedOption: expected exactly one premium per underlying, got "
                                              << premData.size() << " for underlying " << i << " in trade " << id());
@@ -84,10 +92,24 @@ void EquityAutoDeltaHedgedOption::build(const QuantLib::ext::shared_ptr<EngineFa
         QuantExt::UnderlyingOptionBatch batch;
         batch.type = type;
         batch.strike = K;
-        batch.quantity = u.quantity;
+        batch.quantity = longshort * u.quantity;
         batch.premium = premAmount;
         batch.premiumCurrency = premCcy;
         batch.expiryDate = expiryDate;
+
+        // Payment date: per-underlying PaymentData > top-level PaymentDate > expiryDate
+        if (u.optionData.paymentData() && !u.optionData.paymentData()->rulesBased()) {
+            const auto& payDates = u.optionData.paymentData()->dates();
+            QL_REQUIRE(payDates.size() == 1,
+                       "EquityAutoDeltaHedgedOption: expected exactly one payment date, got "
+                           << payDates.size() << " for underlying " << i << " in trade " << id());
+            batch.paymentDate = payDates.front();
+        } else if (paymentDate_ != Date()) {
+            batch.paymentDate = paymentDate_;
+        } else {
+            batch.paymentDate = expiryDate;
+        }
+
         batches.push_back(batch);
     }
 
@@ -117,6 +139,9 @@ void EquityAutoDeltaHedgedOption::fromXML(XMLNode* node) {
 
     string obsStartStr = XMLUtils::getChildValue(eqNode, "ObservationStartDate", true);
     observationStartDate_ = parseDate(obsStartStr);
+
+    string payDateStr = XMLUtils::getChildValue(eqNode, "PaymentDate", false);
+    paymentDate_ = payDateStr.empty() ? Date() : parseDate(payDateStr);
 
     XMLNode* underlyingsNode = XMLUtils::getChildNode(eqNode, "Underlyings");
     QL_REQUIRE(underlyingsNode, "No Underlyings node in EquityAutoDeltaHedgedOptionData for trade " << id());
@@ -168,6 +193,9 @@ XMLNode* EquityAutoDeltaHedgedOption::toXML(XMLDocument& doc) const {
     }
 
     XMLUtils::addChild(doc, eqNode, "ObservationStartDate", ore::data::to_string(observationStartDate_));
+
+    if (paymentDate_ != Date())
+        XMLUtils::addChild(doc, eqNode, "PaymentDate", ore::data::to_string(paymentDate_));
 
     return node;
 }

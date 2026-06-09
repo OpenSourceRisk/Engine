@@ -49,6 +49,7 @@ public:
                 mdFilterIrVols = std::find(tokens.begin(), tokens.end(), "IRVOLS") != tokens.end();
                 mdFilterCommVols = std::find(tokens.begin(), tokens.end(), "COMMVOLS") != tokens.end();
                 mdFilterCpiVols = std::find(tokens.begin(), tokens.end(), "CPIVOLS") != tokens.end();
+                mdFilterDefCurves = std::find(tokens.begin(), tokens.end(), "DEFAULTCURVES") != tokens.end();
             }
         }
 
@@ -62,6 +63,7 @@ public:
         bool mdFilterIrVols = true;
         bool mdFilterCommVols = true;
         bool mdFilterCpiVols = true;
+        bool mdFilterDefCurves = true;
     };
 
     MarketCalibrationReportBase(const std::string& calibrationFilter, std::size_t precision = 8);
@@ -120,6 +122,11 @@ public:
                            QuantLib::ext::shared_ptr<ore::data::CpiVolCalibrationInfo> vol, const std::string& name,
                            const std::string& label, const std::string& type) = 0;
 
+    // Add default curve data to array
+    virtual void addDefaultCurve(const QuantLib::Date& refdate,
+                                 QuantLib::ext::shared_ptr<ore::data::DefaultCurveCalibrationInfo> dflt,
+                                   std::string const& name, std::string const& label) = 0;
+
     // populate the calibration reports
     virtual void populateReport(const QuantLib::ext::shared_ptr<ore::data::Market>& market,
                                 const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
@@ -133,12 +140,12 @@ public:
 protected:
     std::size_t precision_;
 
-private:
-    CalibrationFilters calibrationFilters_;
-
     // a map of already reported calibrations
     const bool checkCalibrations(std::string label, std::string type, std::string id) const;
     std::map<std::string, std::map<std::string, std::set<std::string>>> calibrations_;
+
+private:
+    CalibrationFilters calibrationFilters_;
 };
 
 class MarketCalibrationReport : public MarketCalibrationReportBase {
@@ -177,6 +184,11 @@ public:
     virtual void addCpiVolImpl(const QuantLib::Date& refdate,
                                QuantLib::ext::shared_ptr<ore::data::CpiVolCalibrationInfo> vol, const std::string& name,
                                const std::string& label, const std::string& type) override;
+
+    // Add default curve data to array
+    void addDefaultCurve(const QuantLib::Date& refdate,
+                         QuantLib::ext::shared_ptr<ore::data::DefaultCurveCalibrationInfo> dflt, 
+                        const std::string& name, const std::string& label) override;
 
 private:
      QuantLib::ext::shared_ptr<ore::data::Report> report_;

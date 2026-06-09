@@ -22,6 +22,8 @@
 
 #pragma once
 
+#include <qle/math/randomvariable_ops.hpp>
+
 #include <boost/integer.hpp>
 
 #include <map>
@@ -33,9 +35,12 @@ namespace QuantExt {
 
 /*! - opId = 0 should refer to "no operation" */
 class ComputationGraph {
+
 public:
     enum class VarDoesntExist { Nan, Create, Throw };
     static std::size_t nan;
+
+    explicit ComputationGraph();
 
     void clear();
 
@@ -57,16 +62,19 @@ public:
     const std::map<std::string, std::size_t>& variables() const;
     void setVariable(const std::string& name, const std::size_t node);
 
+    void setReadOnly(const bool b = true);
+
     void enableLabels(const bool b = true);
     const std::map<std::size_t, std::set<std::string>>& labels() const;
+
+    void enableOptimization(const bool b = true);
+    const std::vector<std::vector<std::size_t>>& nodesByOpId() const;
 
     void startRedBlock();
     void endRedBlock();
     std::size_t redBlockId(const std::size_t node) const;
     const std::vector<std::pair<std::size_t, std::size_t>>& redBlockRanges() const;
     const std::set<std::size_t>& redBlockDependencies() const;
-
-    
 
 private:
     std::vector<std::vector<std::size_t>> predecessors_;
@@ -81,13 +89,19 @@ private:
     std::map<std::string, std::size_t> variables_;
     std::map<std::string, std::size_t> variableVersion_;
 
+    bool readOnly_ = false;
     bool enableLabels_ = false;
     std::map<std::size_t, std::set<std::string>> labels_;
+    bool enableOptimization_ = false;
+
+    std::vector<std::vector<std::size_t>> nodesByOpId_;
 
     std::size_t currentRedBlockId_ = 0;
     std::size_t nextRedBlockId_ = 0;
     std::vector<std::pair<std::size_t, std::size_t>> redBlockRange_;
     std::set<std::size_t> redBlockDependencies_;
+
+    std::vector<RandomVariableOpNodeRequirements> opNodeRequirements_;
 };
 
 // methods to construct cg

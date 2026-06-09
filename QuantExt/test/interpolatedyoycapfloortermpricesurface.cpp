@@ -160,13 +160,13 @@ BOOST_AUTO_TEST_CASE(testInterpolatedYoyCapFloorTermPriceSurface) {
     for (Size i = 0; i < datesZCII.size(); i++) {
         Handle<Quote> quote(QuantLib::ext::shared_ptr<Quote>(new SimpleQuote(ratesZCII[i] / 100.0)));
         QuantLib::ext::shared_ptr<BootstrapHelper<ZeroInflationTermStructure> > anInstrument(new ZeroCouponInflationSwapHelper(
-        quote, Period(3, Months), asof_, datesZCII[i], TARGET(), ModifiedFollowing, Actual365Fixed(), ii, CPI::AsIndex));
+        quote, Period(3, Months), asof_, datesZCII[i], TARGET(), ModifiedFollowing, Actual365Fixed(), ii, CPI::Flat));
         instruments.push_back(anInstrument);
     };
 
     QuantLib::Date baseDate = QuantExt::ZeroInflation::curveBaseDate(false, asof_, Period(3, Months), Monthly, ii);
     QuantLib::ext::shared_ptr<PiecewiseZeroInflationCurve<Linear>> pCPIts(
-        new PiecewiseZeroInflationCurve<Linear>(asof_, baseDate, 3 * Months, Monthly, Actual365Fixed(), instruments));
+        new PiecewiseZeroInflationCurve<Linear>(asof_, baseDate, Monthly, Actual365Fixed(), instruments));
     pCPIts->recalculate();
     cpiTS = QuantLib::ext::dynamic_pointer_cast<ZeroInflationTermStructure>(pCPIts);
 
@@ -176,10 +176,10 @@ BOOST_AUTO_TEST_CASE(testInterpolatedYoyCapFloorTermPriceSurface) {
     QuantLib::ext::shared_ptr<YoYInflationIndex> yoyIndex;
 
     yoyIndex =
-        QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(zeroIndex, true, Handle<YoYInflationTermStructure>());
+        QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(zeroIndex, Handle<YoYInflationTermStructure>());
     
     QuantExt::InterpolatedYoYCapFloorTermPriceSurface<Bilinear, Linear> ys(
-        0, Period(3, Months), yoyIndex, CPI::AsIndex, nominalTs, Actual365Fixed(), TARGET(), Following, capStrikes, floorStrikes,
+        0, Period(3, Months), yoyIndex, CPI::Flat, nominalTs, Actual365Fixed(), TARGET(), Following, capStrikes, floorStrikes,
         maturities, capPrice, floorPrice);
 
     QuantLib::ext::shared_ptr<QuantExt::InterpolatedYoYCapFloorTermPriceSurface<Bilinear, Linear> > yoySurface =

@@ -46,8 +46,6 @@
 #include <qle/termstructures/pricecurve.hpp>
 #include <qle/termstructures/swaptionvolcube2.hpp>
 #include <qle/termstructures/swaptionvolcubewithatm.hpp>
-#include <qle/termstructures/yoyinflationcurveobserverstatic.hpp>
-#include <qle/termstructures/zeroinflationcurveobserverstatic.hpp>
 #include <qle/utilities/inflation.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
 
@@ -396,9 +394,10 @@ TestMarket::TestMarket(Date asof, bool swapVolCube) : MarketImpl(false) {
     // build inflation indices
     auto zeroIndex = Handle<ZeroInflationIndex>(QuantLib::ext::make_shared<UKRPI>(flatZeroInflationCurve(0.02, 0.01)));
     zeroInflationIndices_[make_pair(Market::defaultConfiguration, "UKRP1")] = zeroIndex;
+    zeroInflationObservationLags_[make_pair(Market::defaultConfiguration, "UKRP1")] = {{Period(1, Years), Period(2, Months)}};
     yoyInflationIndices_[make_pair(Market::defaultConfiguration, "UKRP1")] = Handle<YoYInflationIndex>(
-        QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(*zeroIndex, false, flatYoYInflationCurve(0.02, 0.01)));
-
+        QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(*zeroIndex, flatYoYInflationCurve(0.02, 0.01)));
+    yoyInflationObservationLags_[make_pair(Market::defaultConfiguration, "UKRP1")] = {{Period(1, Years), Period(2, Months)}};
     // build inflation cap / floor vol curves
     yoyCapFloorVolSurfaces_[make_pair(Market::defaultConfiguration, "UKRP1")] =
         flatYoYOptionletVolatilitySurface(0.0040);
@@ -412,7 +411,7 @@ TestMarket::TestMarket(Date asof, bool swapVolCube) : MarketImpl(false) {
 
     // build UKRPI index
     QuantLib::ext::shared_ptr<ZeroInflationIndex> ii = parseZeroInflationIndex("UKRPI");
-    QuantLib::ext::shared_ptr<YoYInflationIndex> yi = QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(ii, false);
+    QuantLib::ext::shared_ptr<YoYInflationIndex> yi = QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(ii);
 
     RelinkableHandle<ZeroInflationTermStructure> hcpi;
     ii = QuantLib::ext::shared_ptr<UKRPI>(new UKRPI(hcpi));
@@ -428,7 +427,7 @@ TestMarket::TestMarket(Date asof, bool swapVolCube) : MarketImpl(false) {
 
     // build EUHICPXT index
     QuantLib::ext::shared_ptr<ZeroInflationIndex> euii = parseZeroInflationIndex("EUHICPXT");
-    QuantLib::ext::shared_ptr<YoYInflationIndex> euyi = QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(euii, false);
+    QuantLib::ext::shared_ptr<YoYInflationIndex> euyi = QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(euii);
 
     RelinkableHandle<ZeroInflationTermStructure> euhcpi;
     euii = QuantLib::ext::shared_ptr<EUHICPXT>(new EUHICPXT(euhcpi));
@@ -446,14 +445,15 @@ TestMarket::TestMarket(Date asof, bool swapVolCube) : MarketImpl(false) {
     zeroInflationIndices_[make_pair(Market::defaultConfiguration, "EUHICPXT")] =
         makeZeroInflationIndex("EUHICPXT", datesZCII, ratesZCII, euii,
                                yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")]);
+    zeroInflationObservationLags_[make_pair(Market::defaultConfiguration, "EUHICPXT")] = {{Period(1, Years), Period(2, Months)}};
     zeroInflationIndices_[make_pair(Market::defaultConfiguration, "UKRPI")] =
         makeZeroInflationIndex("UKRPI", datesZCII, ratesZCII, ii,
                                yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "GBP")]);
-
+    zeroInflationObservationLags_[make_pair(Market::defaultConfiguration, "UKRPI")] = {{Period(1, Years), Period(2, Months)}};
     yoyInflationIndices_[make_pair(Market::defaultConfiguration, "UKRPI")] =
          makeYoYInflationIndex("UKRPI", datesZCII, ratesZCII, yi,
                                yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "GBP")]);
-
+    yoyInflationObservationLags_[make_pair(Market::defaultConfiguration, "UKRPI")] = {{Period(1, Years), Period(2, Months)}};
     cpiInflationCapFloorVolatilitySurfaces_[make_pair(Market::defaultConfiguration, "EUHICPXT")] =
         flatCpiVolSurface(0.05);
     cpiInflationCapFloorVolatilitySurfaces_[make_pair(Market::defaultConfiguration, "UKRPI")] = flatCpiVolSurface(0.04);
@@ -588,7 +588,7 @@ Handle<ZeroInflationIndex> TestMarket::makeZeroInflationIndex(string index, vect
     auto frequency = ii->frequency();
     Date baseDate = QuantExt::ZeroInflation::curveBaseDate(false, asof_, obsLag, frequency, ii);
     QuantLib::ext::shared_ptr<PiecewiseZeroInflationCurve<Linear>> pCPIts(new PiecewiseZeroInflationCurve<Linear>(
-        asof_, baseDate, obsLag, frequency, ActualActual(ActualActual::ISDA), instruments));
+        asof_, baseDate, frequency, ActualActual(ActualActual::ISDA), instruments));
     pCPIts->recalculate();
     cpiTS = QuantLib::ext::dynamic_pointer_cast<ZeroInflationTermStructure>(pCPIts);
     cpiTS->enableExtrapolation(true);
@@ -631,12 +631,12 @@ Handle<YoYInflationIndex> TestMarket::makeYoYInflationIndex(string index, vector
     Date baseDate = QuantExt::ZeroInflation::curveBaseDate(false, asof_, Period(2, Months), ii->frequency(), ii);
     QL_DEPRECATED_DISABLE_WARNING
     QuantLib::ext::shared_ptr<PiecewiseYoYInflationCurve<Linear>> pYoYts(new PiecewiseYoYInflationCurve<Linear>(
-        asof_, baseDate, baseZeroRate, Period(2, Months), ii->frequency(), ActualActual(ActualActual::ISDA), instruments));
+        asof_, baseDate, baseZeroRate, ii->frequency(), ActualActual(ActualActual::ISDA), instruments));
     QL_DEPRECATED_ENABLE_WARNING
     pYoYts->recalculate();
     yoyTS = QuantLib::ext::dynamic_pointer_cast<YoYInflationTermStructure>(pYoYts);
     return Handle<YoYInflationIndex>(QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(
-        parseZeroInflationIndex(index), false, Handle<YoYInflationTermStructure>(pYoYts)));
+        parseZeroInflationIndex(index), Handle<YoYInflationTermStructure>(pYoYts)));
 }
 
 Handle<ZeroInflationTermStructure> TestMarket::flatZeroInflationCurve(Real inflationRate, Rate nominalRate) {
@@ -650,7 +650,7 @@ Handle<ZeroInflationTermStructure> TestMarket::flatZeroInflationCurve(Real infla
     dates.erase(std::unique(dates.begin(), dates.end()), dates.end());
     std::vector<Real> rates(dates.size(), inflationRate);
     auto curve = QuantLib::ext::make_shared<QuantLib::InterpolatedZeroInflationCurve<Linear>>(
-        today, dates, rates, 2 * Months, Monthly, QuantLib::ActualActual(ActualActual::ISDA));
+        today, dates, rates, Monthly, QuantLib::ActualActual(ActualActual::ISDA));
     curve->enableExtrapolation();
     return Handle<ZeroInflationTermStructure>(curve);
 }
@@ -666,7 +666,7 @@ Handle<YoYInflationTermStructure> TestMarket::flatYoYInflationCurve(Real inflati
     dates.erase(std::unique(dates.begin(), dates.end()), dates.end());
     std::vector<Real> rates(dates.size(), inflationRate);
     auto curve = QuantLib::ext::make_shared<QuantLib::InterpolatedYoYInflationCurve<Linear>>(
-        today, dates, rates, 2 * Months, Monthly, QuantLib::ActualActual(ActualActual::ISDA));
+        today, dates, rates, Monthly, QuantLib::ActualActual(ActualActual::ISDA));
     curve->enableExtrapolation();
     return Handle<YoYInflationTermStructure>(curve);
 }
@@ -1143,13 +1143,14 @@ void TestMarketParCurves::createZeroInflationIndex(const string& idxName, const 
 
     Date baseDate = QuantExt::ZeroInflation::curveBaseDate(false, asof_, conv->observationLag(), zii->frequency(), zii);
     zeroCurve = QuantLib::ext::shared_ptr<PiecewiseZeroInflationCurve<Linear>>(
-        new PiecewiseZeroInflationCurve<Linear>(asof_, baseDate, conv->observationLag(), zii->frequency(), conv->dayCounter(), instruments));
+        new PiecewiseZeroInflationCurve<Linear>(asof_, baseDate, zii->frequency(), conv->dayCounter(), instruments));
     Handle<ZeroInflationTermStructure> its(zeroCurve);
     its->enableExtrapolation();
     QuantLib::ext::shared_ptr<ZeroInflationIndex> i =
         ore::data::parseZeroInflationIndex(idxName, Handle<ZeroInflationTermStructure>(its));
     Handle<ZeroInflationIndex> zh(i);
     zeroInflationIndices_[make_pair(Market::defaultConfiguration, idxName)] = zh;
+    zeroInflationObservationLags_[make_pair(Market::defaultConfiguration, idxName)] = {{1 * Years, conv->observationLag()}};
 }
 
 void TestMarketParCurves::createYoYInflationIndex(const string& idxName, const vector<string>& parInst,
@@ -1165,7 +1166,7 @@ void TestMarketParCurves::createYoYInflationIndex(const string& idxName, const v
     yoyInflationRateHelperValuesMap_[idxName] = parQuotes;
 
     QuantLib::ext::shared_ptr<ZeroInflationIndex> zii = parseZeroInflationIndex("UKRPI");
-    QuantLib::ext::shared_ptr<YoYInflationIndex> yi = QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(zii, false);
+    QuantLib::ext::shared_ptr<YoYInflationIndex> yi = QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(zii);
     string ccy = zii->currency().code();
     QuantLib::ext::shared_ptr<ore::data::InflationSwapConvention> conv =
         QuantLib::ext::dynamic_pointer_cast<ore::data::InflationSwapConvention>(conventions->get(idxName));
@@ -1182,13 +1183,14 @@ void TestMarketParCurves::createYoYInflationIndex(const string& idxName, const v
     Date baseDate = QuantExt::ZeroInflation::curveBaseDate(false, asof_, conv->observationLag(), zii->frequency(), zii);
     QL_DEPRECATED_DISABLE_WARNING
     yoyCurve = QuantLib::ext::shared_ptr<PiecewiseYoYInflationCurve<Linear>>(new PiecewiseYoYInflationCurve<Linear>(
-        asof_, baseDate, baseRate, conv->observationLag(), yi->frequency(), conv->dayCounter(), instruments));
+        asof_, baseDate, baseRate, yi->frequency(), conv->dayCounter(), instruments));
     QL_DEPRECATED_ENABLE_WARNING
     yoyCurve->enableExtrapolation();
     Handle<YoYInflationTermStructure> its(yoyCurve);
     QuantLib::ext::shared_ptr<YoYInflationIndex> i(yi->clone(its));
     Handle<YoYInflationIndex> zh(i);
     yoyInflationIndices_[make_pair(Market::defaultConfiguration, idxName)] = zh;
+    yoyInflationObservationLags_[make_pair(Market::defaultConfiguration, idxName)] = {{1 * Years, conv->observationLag()}};
 }
 
 Handle<YieldTermStructure> TestMarketParCurves::flatRateYts(Real forward) {

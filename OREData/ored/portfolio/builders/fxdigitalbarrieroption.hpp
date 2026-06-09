@@ -27,6 +27,7 @@
 
 #include <boost/make_shared.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
+#include <ored/portfolio/builders/utilities.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
@@ -65,34 +66,20 @@ protected:
         Time expiry = riskFreeRate->dayCounter().yearFraction(riskFreeRate->referenceDate(),
                                                               std::max(riskFreeRate->referenceDate(), expiryDate));
 
-        FdmSchemeDesc scheme = ore::data::parseFdmSchemeDesc(engineParameter("Scheme"));
-        Size tGrid = std::max<Size>(1, (Size)(ore::data::parseInteger(engineParameter("TimeGridPerYear")) * expiry));
-        Size xGrid = ore::data::parseInteger(engineParameter("XGrid"));
-        Size dampingSteps = ore::data::parseInteger(engineParameter("DampingSteps"));
-        bool monotoneVar = ore::data::parseBool(engineParameter("EnforceMonotoneVariance", {}, false, "true"));
-
+        FiniteDifferenceParams fdp = fdSchemeParams(*this, expiry);
         const string pair = forCcy.code() + domCcy.code();
         Handle<BlackVolTermStructure> vol = market_->fxVol(pair, configuration(ore::data::MarketContext::pricing));
-        if (monotoneVar) {
-            // Replicate the construction of time grid in FiniteDifferenceModel::rollbackImpl
-            // This time grid is required to build a BlackMonotoneVarVolTermStructure which
-            // ensures monotonic variance along the time grid
-            const Size totalSteps = tGrid + dampingSteps;
-            std::vector<Time> timePoints(totalSteps + 1);
-            Array timePointsArray(totalSteps, expiry, -expiry / totalSteps);
-            timePoints[0] = 0.0;
-            for (Size i = 0; i < totalSteps; i++)
-                timePoints[timePoints.size() - i - 1] = timePointsArray[i];
-            timePoints.insert(std::upper_bound(timePoints.begin(), timePoints.end(), 0.99 / 365), 0.99 / 365);
+        if (fdp.monotoneVar) {
             vol = Handle<BlackVolTermStructure>(
-                QuantLib::ext::make_shared<QuantExt::BlackMonotoneVarVolTermStructure>(vol, timePoints));
+                QuantLib::ext::make_shared<QuantExt::BlackMonotoneVarVolTermStructure>(vol, fdp.timePoints));
             vol->enableExtrapolation();
         }
         QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> gbsp = QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
             market_->fxSpot(pair, configuration(ore::data::MarketContext::pricing)),
             market_->discountCurve(forCcy.code(), configuration(ore::data::MarketContext::pricing)),
             market_->discountCurve(domCcy.code(), configuration(ore::data::MarketContext::pricing)), vol);
-        return QuantLib::ext::make_shared<FdBlackScholesBarrierEngine>(gbsp, tGrid, xGrid, dampingSteps, scheme);
+        return QuantLib::ext::make_shared<FdBlackScholesBarrierEngine>(
+            gbsp, fdp.tGrid, fdp.xGrid, fdp.dampingSteps, fdp.scheme);
     }
 };
 

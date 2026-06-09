@@ -288,7 +288,7 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
 
             // Build the instrument
             LOG("Build CashSettledAmericanOption for trade " << id());
-            vanilla = QuantLib::ext::make_shared<CashSettledAmericanOption>(
+            vanilla = QuantLib::ext::make_shared<QuantExt::CashSettledAmericanOption>(
                 type, strike_.value(), expiryDate_, paymentDate, option_.isAutomaticExercise(), index_, exercised,
                 exercisePrice, fxIndex, cashSettlementFixingDate);
 

@@ -396,7 +396,8 @@ BOOST_AUTO_TEST_CASE(testConditionalExpectation) {
 
             auto one = c.createInputVariable(1.0);
             auto vs = c.createInputVariates(1, 2);
-            auto ce = c.applyOperation(RandomVariableOpCode::ConditionalExpectation, {vs[0][0], one, vs[0][1]});
+            auto ce =
+                c.applyOperation(RandomVariableOpCode::ConditionalExpectation, {vs[0][0], one, vs[0][1], vs[0][1]});
             if (multipart == 1) {
                 // create dependency on conditional expectation to enforce multi-part kernel
                 ce = c.applyOperation(RandomVariableOpCode::None, {ce});
@@ -463,12 +464,13 @@ BOOST_AUTO_TEST_CASE(testConditionalExpectation2) {
         auto ad0 = c.applyOperation(RandomVariableOpCode::Add, {vs[0][0], vs[0][1]});
         auto e = c.applyOperation(RandomVariableOpCode::ConditionalExpectation, {ad0, one});
         auto e2 = c.applyOperation(RandomVariableOpCode::ConditionalExpectation, {ad0, one});
-        auto ce = c.applyOperation(RandomVariableOpCode::ConditionalExpectation, {vs[0][0], one, vs[0][1], vs[0][2]});
+        auto ce = c.applyOperation(RandomVariableOpCode::ConditionalExpectation,
+                                   {vs[0][0], one, vs[0][1], vs[0][2], vs[0][1], vs[0][2]});
         auto ad = c.applyOperation(RandomVariableOpCode::Add, {vs[0][1], vs[0][2]});
-        auto ce2 = c.applyOperation(RandomVariableOpCode::ConditionalExpectation, {vs[0][0], one, ad});
+        auto ce2 = c.applyOperation(RandomVariableOpCode::ConditionalExpectation, {vs[0][0], one, ad, ad});
         c.freeVariable(ad);
         auto ad2 = c.applyOperation(RandomVariableOpCode::Add, {vs[0][1], ce});
-        auto ce3 = c.applyOperation(RandomVariableOpCode::ConditionalExpectation, {vs[0][0], one, ad2});
+        auto ce3 = c.applyOperation(RandomVariableOpCode::ConditionalExpectation, {vs[0][0], one, ad2, ad2});
 
         for (auto const& d : vs) {
             for (auto const& r : d) {

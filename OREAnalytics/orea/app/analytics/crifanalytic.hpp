@@ -127,8 +127,6 @@ protected:
                                  const QuantLib::ext::shared_ptr<Crif>& crif,
                                  const QuantLib::ext::shared_ptr<PortfolioFieldGetter>& fieldGetter);
 
-    void modifySensiConfiguration();
-
     bool applySimmExemptions_ = true;
 };
 

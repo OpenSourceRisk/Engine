@@ -36,6 +36,14 @@ namespace analytics {
 
 class ParSensitivityInstrumentBuilder {
 public:
+    struct YoYCapFloorInstrumentData final {
+        QuantLib::ext::shared_ptr<QuantLib::YoYInflationCapFloor> cap;
+        QuantLib::Handle<QuantLib::YieldTermStructure> yts;
+        QuantLib::Handle<QuantExt::YoYOptionletVolatilitySurface> vts;
+        QuantLib::Handle<QuantLib::YoYInflationIndex> index;
+        QuantLib::Period obsLag;
+    };
+
     struct Instruments {
         //! par helpers (all except cap/floors)
         std::map<ore::analytics::RiskFactorKey, QuantLib::ext::shared_ptr<QuantLib::Instrument>> parHelpers_;
@@ -47,10 +55,7 @@ public:
 
         
         //! par helpers: YoY cap / floors
-        std::map<ore::analytics::RiskFactorKey, QuantLib::Handle<QuantLib::YieldTermStructure>> parYoYCapsYts_;
-        std::map<ore::analytics::RiskFactorKey, QuantLib::Handle<QuantLib::YoYInflationIndex>> parYoYCapsIndex_;
-        std::map<ore::analytics::RiskFactorKey, QuantLib::ext::shared_ptr<QuantLib::YoYInflationCapFloor>> parYoYCaps_;
-        std::map<ore::analytics::RiskFactorKey, QuantLib::Handle<QuantExt::YoYOptionletVolatilitySurface>> parYoYCapsVts_;
+        std::map<ore::analytics::RiskFactorKey, YoYCapFloorInstrumentData> parYoYCaps_;
         //! par QuantLib::Instrument pillars
         std::map<std::string, std::vector<QuantLib::Period>> yieldCurvePillars_, capFloorPillars_, cdsPillars_,
             equityForecastCurvePillars_, zeroInflationPillars_, yoyInflationPillars_, yoyCapFloorPillars_;
@@ -59,6 +64,8 @@ public:
         // ql index names for which we want to remove today's fixing for the purpose of the par sensi calculation
         std::set<std::string> removeTodaysFixingIndices_;
     };
+
+    
 
     ParSensitivityInstrumentBuilder() = default;
 

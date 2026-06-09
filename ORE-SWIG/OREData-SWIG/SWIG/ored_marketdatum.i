@@ -67,6 +67,7 @@ using ore::data::CommodityOptionQuote;
 using ore::data::CorrelationQuote;
 using ore::data::CPRQuote;
 using ore::data::BondPriceQuote;
+using ore::data::BondFutureOptionQuote;
 %}
 
 %shared_ptr(ore::data::BaseStrike)
@@ -115,6 +116,7 @@ using ore::data::BondPriceQuote;
 %shared_ptr(ore::data::CorrelationQuote)
 %shared_ptr(ore::data::CPRQuote)
 %shared_ptr(ore::data::BondPriceQuote)
+%shared_ptr(ore::data::BondFutureOptionQuote)
 
 namespace ore {
 namespace data {
@@ -159,6 +161,7 @@ public:
         EQUITY_OPTION,
         BOND,
         BOND_OPTION,
+        BOND_FUTURE_OPTION,
         INDEX_CDS_OPTION,
         COMMODITY_SPOT,
         COMMODITY_FWD,
@@ -876,6 +879,31 @@ public:
     %extend {
         static const ext::shared_ptr<BondPriceQuote> getFullView(ext::shared_ptr<MarketDatum> baseInput) {
             return ext::dynamic_pointer_cast<BondPriceQuote>(baseInput);
+        }
+    }
+};
+
+class BondFutureOptionQuote : public MarketDatum {
+public:
+    BondFutureOptionQuote(
+        QuantLib::Real value,
+        QuantLib::Date asofDate,
+        const std::string& name,
+        QuoteType quoteType,
+        std::string contractName,
+        std::string expiry,
+        QuantLib::ext::shared_ptr<BaseStrike> strike,
+        bool isCall = true);
+
+    const std::string& contractName() const;
+    const std::string& expiry() const;
+    const QuantLib::ext::shared_ptr<BaseStrike>& strike() const;
+    bool isCall();
+
+    // Not sure if we still need this type of explicit method to expose downcasting but keep it for consistency.
+    %extend {
+        static const ext::shared_ptr<BondFutureOptionQuote> getFullView(ext::shared_ptr<MarketDatum> baseInput) {
+            return ext::dynamic_pointer_cast<BondFutureOptionQuote>(baseInput);
         }
     }
 };

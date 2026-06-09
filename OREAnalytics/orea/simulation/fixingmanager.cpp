@@ -159,9 +159,9 @@ void FixingManager::applyFixings(Date start, Date end) {
             currentFixingDate = fixEnd;
         } else if (auto yii = QuantLib::ext::dynamic_pointer_cast<YoYInflationIndex>(m.first)) {
             fixStart =
-                inflationPeriod(fixStart - yii->yoyInflationTermStructure()->observationLag(), yii->frequency()).first;
+                inflationPeriod(fixStart - simulationLag(yii->yoyInflationTermStructure()), yii->frequency()).first;
             fixEnd =
-                inflationPeriod(fixEnd - yii->yoyInflationTermStructure()->observationLag(), yii->frequency()).first +
+                inflationPeriod(fixEnd - simulationLag(yii->yoyInflationTermStructure()), yii->frequency()).first +
                 1;
             currentFixingDate = fixEnd;
         } else {

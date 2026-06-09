@@ -1012,7 +1012,7 @@
       </xs:element>
       <xs:element type="oneDimSolverConfigType" name="OneDimSolverConfig" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="PreferOutOfTheMoney" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="xs:string" name="EngineOverride" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="TreatAsEuropean" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -1374,6 +1374,13 @@
           </xs:all>
         </xs:complexType>
       </xs:element>
+      <xs:element name="DefaultCurves" minOccurs="0">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>
+          </xs:all>
+        </xs:complexType>
+    </xs:element>
     </xs:all>
   </xs:complexType>
   <xs:complexType name="reportConfiguration">

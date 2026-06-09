@@ -36,7 +36,7 @@
 namespace ore {
 namespace data {
 
-using SwaptionModel = std::variant<std::monostate, Handle<CrossAssetModel>, ext::shared_ptr<QuantExt::LGM>>;
+using SwaptionModel = std::variant<std::monostate, Handle<QuantExt::CrossAssetModel>, ext::shared_ptr<QuantExt::LGM>>;
 
 /*! Swaption engine builder base class. This is for the general xccy case, i.e. keys and strikes have one element per
     supported underlying currency. FX strikes are against base ccy, where base ccy is the first currenc resp. the base
@@ -59,7 +59,7 @@ public:
     virtual bool instrumentIsHandled(QuantExt::MultiLegOption& s, std::vector<std::string>& messages) const;
 
 protected:
-    CrossAssetModel::Discretization discretization_ = CrossAssetModel::Discretization::Exact;
+    QuantExt::CrossAssetModel::Discretization discretization_ = QuantExt::CrossAssetModel::Discretization::Exact;
 
 private:
     string keyImpl(const string& id, const std::vector<string>& keys, const std::vector<Date>& dates,
@@ -176,7 +176,7 @@ private:
 class CamMCCgSwaptionEngineBuilder final : public CamSwaptionEngineBuilder {
 public:
     CamMCCgSwaptionEngineBuilder() : CamSwaptionEngineBuilder("MCCG") {
-        discretization_ = CrossAssetModel::Discretization::Euler;
+        discretization_ = QuantExt::CrossAssetModel::Discretization::Euler;
     }
 
 private:
@@ -192,7 +192,9 @@ class AmcCgSwaptionEngineBuilder final : public CamSwaptionEngineBuilder {
 public:
     AmcCgSwaptionEngineBuilder(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& modelCg,
                                const std::vector<Date>& simulationDates)
-        : CamSwaptionEngineBuilder("AMCCG", false), modelCg_(modelCg), simulationDates_(simulationDates) {}
+        : CamSwaptionEngineBuilder("AMCCG", false), modelCg_(modelCg), simulationDates_(simulationDates) {
+        cachingEnabled_ = false;
+}
 
 private:
     QuantLib::ext::shared_ptr<PricingEngine>

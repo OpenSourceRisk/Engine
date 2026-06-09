@@ -36,6 +36,7 @@
 #include <orea/cube/jointnpvcube.hpp>
 #include <orea/cube/npvcube.hpp>
 #include <orea/cube/sparsenpvcube.hpp>
+#include <orea/cube/inmemorycube.hpp>
 #include <orea/engine/amcvaluationengine.hpp>
 #include <orea/engine/cptycalculator.hpp>
 #include <orea/engine/mporcalculator.hpp>
@@ -169,6 +170,8 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
     inputs->loadParameter<bool>(xvaCgTradeLevelBreakdown_, "simulation", "xvaCgTradeLevelBreakDown", false, parseBool);
     inputs->loadParameter<vector<Size>>(xvaCgRegressionReportTimeStepsDynamicIM_, "simulation", "xvaCgRegressionReportTimeStepsDynamicIM", false, parseListOfIntegerValues);
     inputs->loadParameter<bool>(xvaCgUseRedBlocks_, "simulation", "xvaCgUseRedBlocks", false, parseBool);
+    inputs->loadParameter<Size>(xvaCgRegressionCacheSize_, "simulation", "xvaCgRegressionCacheSize", false, parseInteger);
+    inputs->loadParameter<bool>(xvaCgEnableCgOptimization_, "simulation", "xvaCgEnableCgOptimization", false, parseBool);
     inputs->loadParameter<bool>(cubeNpvOverlay_, "simulation", "cubeNpvOverlay", false, parseBool);
 
     /**********************
@@ -251,7 +254,6 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
     inputs->loadParameter<string>(dimModel, "xva", "dimModel", false);
     if (!dimModel.empty()) {
         dimModel_ = dimModel;
-        dimAnalytic_ = true;
         QL_REQUIRE(
             dimModel_ == "Regression" || dimModel_ == "Flat" || dimModel_ == "DeltaVaR" ||
                 dimModel_ == "DeltaGammaNormalVaR" || dimModel_ == "DeltaGammaVaR" || dimModel_ == "DynamicIM" ||
@@ -701,11 +703,11 @@ void XvaAnalyticImpl::initCube(QuantLib::ext::shared_ptr<NPVCube>& cube, const s
         DLOG("initCube: grid[" << i << "]=" << io::iso_date(grid_->valuationDates()[i]));
 
     if (xvaVars->xvaUseDoublePrecisionCubes_)
-        cube = QuantLib::ext::make_shared<InMemoryCubeOpt<double>>(inputs_->asof(), ids, grid_->valuationDates(),
-                                                                   samples_, cubeDepth, 0.0f);
+        cube = QuantLib::ext::make_shared<DoublePrecisionInMemoryCube>(inputs_->asof(), ids, grid_->valuationDates(),
+                                                                       samples_, cubeDepth, 0.0f);
     else
-        cube = QuantLib::ext::make_shared<InMemoryCubeOpt<float>>(inputs_->asof(), ids, grid_->valuationDates(),
-                                                                  samples_, cubeDepth, 0.0f);
+        cube = QuantLib::ext::make_shared<SinglePrecisionInMemoryCube>(inputs_->asof(), ids, grid_->valuationDates(),
+                                                                       samples_, cubeDepth, 0.0f);
 }
 
 std::set<std::string> XvaAnalyticImpl::getNettingSetIds(const QuantLib::ext::shared_ptr<Portfolio>& portfolio) const {
@@ -735,10 +737,10 @@ void XvaAnalyticImpl::initClassicRun(const QuantLib::ext::shared_ptr<Portfolio>&
     if (inputs_->nThreads() == 1) {
         if (portfolio->size() > 0)
             initCube(cube_, portfolio->ids(), cubeDepth_);
-	
-	    // not required by any calculators in ore at the moment
+
+        // not required by any calculators in ore at the moment
         nettingSetCube_ = nullptr;
-	    // except in this case with a classic single-threaded run, left here for validation purposes:
+        // except in this case with a classic single-threaded run, left here for validation purposes:
         if (xvaVars->storeSensis_) {
             // Create the sensitivity storage manager
             // FIXME: Does the storage manager check consistency with the sensis provided by the delta/gamma engines?
@@ -751,7 +753,7 @@ void XvaAnalyticImpl::initClassicRun(const QuantLib::ext::shared_ptr<Portfolio>&
             Size u = vegaOptSensitivityGrid.size();
             Size v = vegaUndSensitivityGrid.size();
             Size w = fxVegaSensitivityGrid.size();
-	        QL_REQUIRE(n + u + v + w > 0, "store sensis chosen, but sensitivity grids not set"); 
+            QL_REQUIRE(n + u + v + w > 0, "store sensis chosen, but sensitivity grids not set");
             // first cube index can be set to 0, since at the moment we only use the netting-set cube for sensi storage
             if (xvaVars->dimModel_ == "SimmAnalytic")
                 sensitivityStorageManager_ = QuantLib::ext::make_shared<ore::analytics::SimmSensitivityStorageManager>(
@@ -762,14 +764,19 @@ void XvaAnalyticImpl::initClassicRun(const QuantLib::ext::shared_ptr<Portfolio>&
                     sensitivities2ndOrder);
             QL_REQUIRE(sensitivityStorageManager_, "creating sensitivity storage manager failed");
 
-            // Create the netting set cube 
-	        Size samples = analytic()->configurations().scenarioGeneratorData->samples();
+            // Create the netting set cube
+            Size samples = analytic()->configurations().scenarioGeneratorData->samples();
             vector<Date> dates = analytic()->configurations().scenarioGeneratorData->getGrid()->valuationDates();
             std::set<std::string> nettingSets = getNettingSetIds(portfolio);
-	        LOG("Initialise netting set cube for " << nettingSets.size() << " netting sets, " << dates.size() << " valuation dates, " << samples
-		        << " samples, " << sensitivityStorageManager_->getRequiredSize() << " sensitivities to store");
-            nettingSetCube_ = QuantLib::ext::make_shared<SinglePrecisionSparseNpvCube>(
-                inputs_->asof(), nettingSets, dates, samples, sensitivityStorageManager_->getRequiredSize(), 0.0f);
+            LOG("Initialise netting set cube for "
+                << nettingSets.size() << " netting sets, " << dates.size() << " valuation dates, " << samples
+                << " samples, " << sensitivityStorageManager_->getRequiredSize() << " sensitivities to store");
+            if (xvaVars->xvaUseDoublePrecisionCubes_)
+                nettingSetCube_ = QuantLib::ext::make_shared<SparseNpvCube<double>>(
+                    inputs_->asof(), nettingSets, dates, samples, sensitivityStorageManager_->getRequiredSize(), 0.0f);
+            else
+                nettingSetCube_ = QuantLib::ext::make_shared<SparseNpvCube<float>>(
+                    inputs_->asof(), nettingSets, dates, samples, sensitivityStorageManager_->getRequiredSize(), 0.0f);
         }
 
         // Init counterparty cube for the storage of survival probabilities
@@ -902,9 +909,9 @@ void XvaAnalyticImpl::buildClassicCube(const QuantLib::ext::shared_ptr<Portfolio
                                   const std::vector<QuantLib::Date>& dates,
                                   const Size samples) -> QuantLib::ext::shared_ptr<NPVCube> {
             if (xvaVars->xvaUseDoublePrecisionCubes_)
-                return QuantLib::ext::make_shared<InMemoryCubeOpt<double>>(asof, ids, dates, samples, cubeDepth_, 0.0);
+                return QuantLib::ext::make_shared<DoublePrecisionInMemoryCube>(asof, ids, dates, samples, cubeDepth_, 0.0);
             else
-                return QuantLib::ext::make_shared<InMemoryCubeOpt<float>>(asof, ids, dates, samples, cubeDepth_, 0.0);
+                return QuantLib::ext::make_shared<SinglePrecisionInMemoryCube>(asof, ids, dates, samples, cubeDepth_, 0.0);
         };
 
         std::function<QuantLib::ext::shared_ptr<NPVCube>(const QuantLib::Date&, const std::set<std::string>&,
@@ -915,9 +922,9 @@ void XvaAnalyticImpl::buildClassicCube(const QuantLib::ext::shared_ptr<Portfolio
                                      const std::vector<QuantLib::Date>& dates,
                                      const Size samples) -> QuantLib::ext::shared_ptr<NPVCube> {
                 if (xvaVars->xvaUseDoublePrecisionCubes_)
-                    return QuantLib::ext::make_shared<InMemoryCubeOpt<double>>(asof, ids, dates, samples, 0.0f);
+                    return QuantLib::ext::make_shared<DoublePrecisionInMemoryCube>(asof, ids, dates, samples, 0.0f);
                 else
-                    return QuantLib::ext::make_shared<InMemoryCubeOpt<float>>(asof, ids, dates, samples, 0.0f);
+                    return QuantLib::ext::make_shared<SinglePrecisionInMemoryCube>(asof, ids, dates, samples, 0.0f);
             };
         } else {
             cptyCubeFactory = [](const QuantLib::Date& asof, const std::set<std::string>& ids,
@@ -1057,27 +1064,29 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun, bool continueOnCalibrationError,
         initCube(amcCube_, amcPortfolio_->ids(), cubeDepth_);
 
         if (xvaVars->xvaCgDynamicIM_) {
-            // cube storing dynamic IM per netting set (total margin, delta, vega, curvature), i.e. depth 4
-            Size imCubeDepth = 4;
-            nettingSetCube_ = QuantLib::ext::make_shared<SinglePrecisionSparseNpvCube>(
-                inputs_->asof(), getNettingSetIds(amcPortfolio_), grid_->valuationDates(), samples_, imCubeDepth, 0.0f);
+            if (xvaVars->xvaUseDoublePrecisionCubes_)
+                nettingSetCube_ = QuantLib::ext::make_shared<DoublePrecisionInMemoryCube>(
+                    inputs_->asof(), getNettingSetIds(amcPortfolio_), grid_->valuationDates(), samples_, 1, 0.0f);
+            else
+                nettingSetCube_ = QuantLib::ext::make_shared<SinglePrecisionInMemoryCube>(
+                    inputs_->asof(), getNettingSetIds(amcPortfolio_), grid_->valuationDates(), samples_, 1, 0.0f);
         }
 
         XvaEngineCG engine(
             xvaVars->amcCg_, inputs_->nThreads(), inputs_->asof(), analytic()->loader(), inputs_->curveConfigs().get(),
             analytic()->configurations().todaysMarketParams, analytic()->configurations().simMarketParams,
             xvaVars->amcCgPricingEngine_, analytic()->configurations().crossAssetModelData,
-            analytic()->configurations().scenarioGeneratorData,
-            amcPortfolio_, inputs_->marketConfig("simulation"), inputs_->marketConfig("lgmcalibration"),
-            xvaVars->xvaCgSensiScenarioData_, inputs_->refDataManager(), inputs_->iborFallbackConfig(),
-            xvaVars->xvaCgBumpSensis_, xvaVars->xvaCgDynamicIM_, xvaVars->xvaCgDynamicIMStepSize_,
-            xvaVars->xvaCgRegressionOrder_, xvaVars->xvaCgRegressionVarianceCutoff_,
+            analytic()->configurations().scenarioGeneratorData, amcPortfolio_, inputs_->marketConfig("simulation"),
+            inputs_->marketConfig("lgmcalibration"), xvaVars->xvaCgSensiScenarioData_, inputs_->refDataManager(),
+            inputs_->iborFallbackConfig(), xvaVars->xvaCgBumpSensis_, xvaVars->xvaCgDynamicIM_,
+            xvaVars->xvaCgDynamicIMStepSize_, xvaVars->xvaCgRegressionOrder_, xvaVars->xvaCgRegressionVarianceCutoff_,
             xvaVars->xvaCgRegressionOrderDynamicIm_, xvaVars->xvaCgRegressionVarianceCutoffDynamicIm_,
             xvaVars->xvaCgTradeLevelBreakdown_, xvaVars->xvaCgRegressionReportTimeStepsDynamicIM_,
             xvaVars->xvaCgUseRedBlocks_, xvaVars->xvaCgUseExternalComputeDevice_,
             xvaVars->xvaCgExternalDeviceCompatibilityMode_, xvaVars->xvaCgUseDoublePrecisionForExternalCalculation_,
             xvaVars->xvaCgExternalComputeDevice_, xvaVars->xvaCgUsePythonIntegration_,
-            xvaVars->xvaCgUsePythonIntegrationDynamicIm_, true, true, true, inputs_->useAtParCouponsCurves(),
+            xvaVars->xvaCgUsePythonIntegrationDynamicIm_, xvaVars->xvaCgRegressionCacheSize_,
+            xvaVars->xvaCgEnableCgOptimization_, true, true, true, inputs_->useAtParCouponsCurves(),
             inputs_->useAtParCouponsTrades(), "xva analytic");
 
         engine.registerProgressIndicator(progressBar);
@@ -1118,11 +1127,11 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun, bool continueOnCalibrationError,
                                       const std::vector<QuantLib::Date>& dates,
                                       const Size samples) -> QuantLib::ext::shared_ptr<NPVCube> {
                 if (xvaVars->xvaUseDoublePrecisionCubes_)
-                    return QuantLib::ext::make_shared<InMemoryCubeOpt<double>>(asof, ids, dates, samples, cubeDepth_,
-                                                                               0.0);
+                    return QuantLib::ext::make_shared<DoublePrecisionInMemoryCube>(asof, ids, dates, samples,
+                                                                                   cubeDepth_, 0.0);
                 else
-                    return QuantLib::ext::make_shared<InMemoryCubeOpt<float>>(asof, ids, dates, samples, cubeDepth_,
-                                                                              0.0);
+                    return QuantLib::ext::make_shared<SinglePrecisionInMemoryCube>(asof, ids, dates, samples,
+                                                                                   cubeDepth_, 0.0);
             };
 
             auto simMarketParams =
@@ -1386,7 +1395,8 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
             xvaVars->xvaCgUseRedBlocks_, xvaVars->xvaCgUseExternalComputeDevice_,
             xvaVars->xvaCgExternalDeviceCompatibilityMode_, xvaVars->xvaCgUseDoublePrecisionForExternalCalculation_,
             xvaVars->xvaCgExternalComputeDevice_, xvaVars->xvaCgUsePythonIntegration_,
-            xvaVars->xvaCgUsePythonIntegrationDynamicIm_, true, true, true, inputs_->useAtParCouponsCurves(),
+            xvaVars->xvaCgUsePythonIntegrationDynamicIm_, xvaVars->xvaCgRegressionCacheSize_,
+            xvaVars->xvaCgEnableCgOptimization_, true, true, true, inputs_->useAtParCouponsCurves(),
             inputs_->useAtParCouponsTrades(), "xva analytic");
 
         engine.run();

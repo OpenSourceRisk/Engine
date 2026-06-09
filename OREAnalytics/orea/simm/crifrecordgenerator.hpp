@@ -50,14 +50,12 @@ public:
     VolatilityDataCrif(const QuantLib::ext::shared_ptr<CrifMarket>& crifMarket);
 
     double vegaTimesVol(ore::analytics::RiskFactorKey::KeyType rfType, const std::string& rfName, double sensitivity,
-                        const std::string& expiryTenor, const std::string& underlyingTerm,
-                        QuantLib::ext::optional<QuantLib::Real> strike = QuantLib::ext::nullopt);
+                        const std::string& expiryTenor, const std::string& underlyingTerm = "");
 
     //! If we have a absolute shift it computes delta * atmvol(T_E, T_U) / shiftSize, 
     //! for relative shifts it returns delta / shiftSize
     QuantLib::Volatility getVolatility(ore::analytics::RiskFactorKey::KeyType rfType, const std::string& rfName,
-                                       const std::string& expiryTenor, const std::string& underlyingTerm = "",
-                                       QuantLib::ext::optional<QuantLib::Real> strike = QuantLib::ext::nullopt);
+                                       const std::string& expiryTenor, const std::string& underlyingTerm = "");
 
     ore::analytics::SensitivityScenarioData::SensitivityScenarioData::ShiftData getShiftData(ore::analytics::RiskFactorKey::KeyType rfType, const std::string& rfName);
 
