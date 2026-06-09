@@ -41,6 +41,7 @@
 #include <qle/cashflows/equitycoupon.hpp>
 #include <qle/indexes/bmaindexwrapper.hpp>
 #include <qle/indexes/equityindex.hpp>
+#include <qle/time/dateutilities.hpp>
 
 #include <vector>
 
@@ -983,7 +984,9 @@ public:
             const std::string& paymentCalendar = "",
             const std::vector<std::string>& paymentDates = std::vector<std::string>(),
             const std::vector<Indexing>& indexing = {}, const bool indexingFromAssetLeg = false,
-            const string& lastPeriodDayCounter = "");
+            const string& lastPeriodDayCounter = "",
+            QuantLib::ext::optional<QuantExt::DateDeltaUnit> paymentLagUnit = QuantLib::ext::nullopt,
+            QuantLib::ext::optional<QuantExt::DateDeltaAnchor> paymentLagAnchor = QuantLib::ext::nullopt);
 
     //! \name Serialisation
     //@{
@@ -1024,6 +1027,8 @@ public:
     const ScheduleData& valuationSchedule() const { return valuationSchedule_; }
     const string& settlementFxIndex() const { return settlementFxIndex_; }
     const string& settlementFxFixingDate() const { return settlementFxFixingDate_; }
+    const QuantLib::ext::optional<QuantExt::DateDeltaUnit>& paymentLagUnit() const { return paymentLagUnit_; }
+    const QuantLib::ext::optional<QuantExt::DateDeltaAnchor>& paymentLagAnchor() const { return paymentLagAnchor_; }
     //@}
 
     //! \name modifiers
@@ -1044,6 +1049,9 @@ public:
     //@}
 
     virtual QuantLib::ext::shared_ptr<LegAdditionalData> initialiseConcreteLegData(const string&);
+
+    // Helper function to indicate if the payment date logic is non-standard.
+    bool nonStandardPaymentLogic() const;
 
 protected:
     /*! Store the set of ORE index names that appear on this leg.
@@ -1083,6 +1091,8 @@ private:
     ScheduleData valuationSchedule_;
     string settlementFxIndex_;
     string settlementFxFixingDate_;
+    QuantLib::ext::optional<QuantExt::DateDeltaUnit> paymentLagUnit_;
+    QuantLib::ext::optional<QuantExt::DateDeltaAnchor> paymentLagAnchor_;
 };
 
 //! \name Utilities for building QuantLib Legs

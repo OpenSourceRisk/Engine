@@ -27,6 +27,7 @@
 
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
+#include <ored/portfolio/utilities.hpp>
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/to_string.hpp>
 
@@ -75,6 +76,12 @@ void TRS::ReturnData::fromXML(XMLNode* node) {
         payUnderlyingCashFlowsImmediately_ = parseBool(XMLUtils::getNodeValue(n));
     }
     fxTerms_ = XMLUtils::getChildrenValues(node, "FXTerms", "FXIndex", false);
+
+    if (auto tmp = XMLUtils::getChildNode(node, "PaymentLagUnit"))
+        paymentLagUnit_ = parseDateDeltaUnit(XMLUtils::getNodeValue(tmp));
+
+    if (auto tmp = XMLUtils::getChildNode(node, "PaymentLagAnchor"))
+        paymentLagAnchor_ = parseDateDeltaAnchor(XMLUtils::getNodeValue(tmp));
 }
 
 XMLNode* TRS::ReturnData::toXML(XMLDocument& doc) const {
@@ -107,6 +114,10 @@ XMLNode* TRS::ReturnData::toXML(XMLDocument& doc) const {
     if (fxConversion_.has_value()) {
         XMLUtils::addChild(doc, n, "FXConversion", ore::data::to_string(fxConversion_.value()));
     }
+    if (paymentLagUnit_)
+        XMLUtils::addChild(doc, n, "PaymentLagUnit", to_string(*paymentLagUnit_));
+    if (paymentLagAnchor_)
+        XMLUtils::addChild(doc, n, "PaymentLagAnchor", to_string(*paymentLagAnchor_));
     return n;
 }
 
@@ -457,37 +468,41 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     DLOG("build valuation and payment dates vectors");
 
-    std::vector<Date> valuationDates, paymentDates;
-
+    // Return base schedule.
     QuantLib::Schedule schedule = makeSchedule(returnData_.scheduleData());
-    QL_REQUIRE(schedule.dates().size() >= 2, "at least two dates required in return schedule");
+    const auto& scheduleDates = schedule.dates();
+    QL_REQUIRE(scheduleDates.size() >= 2, "at least two dates required in return schedule");
 
+    // Valuation dates.
     Calendar observationCalendar = parseCalendar(returnData_.observationCalendar());
-    BusinessDayConvention observationConvention = returnData_.observationConvention().empty()
-                                                      ? Unadjusted
-                                                      : parseBusinessDayConvention(returnData_.observationConvention());
-    Period observationLag = returnData_.observationLag().empty() ? 0 * Days : parsePeriod(returnData_.observationLag());
-
-    Calendar paymentCalendar = parseCalendar(returnData_.paymentCalendar());
-    BusinessDayConvention paymentConvention = returnData_.paymentConvention().empty()
-                                                  ? Unadjusted
-                                                  : parseBusinessDayConvention(returnData_.paymentConvention());
-    PaymentLag paymentLag = parsePaymentLag(returnData_.paymentLag());
-    Period plPeriod = boost::apply_visitor(PaymentLagPeriod(), paymentLag);
-
-    for (auto const& d : schedule.dates()) {
+    const string& obsConv = returnData_.observationConvention();
+    BusinessDayConvention observationConvention = obsConv.empty() ? Unadjusted : parseBusinessDayConvention(obsConv);
+    const string& obsLag = returnData_.observationLag();
+    Period observationLag = obsLag.empty() ? 0 * Days : parsePeriod(obsLag);
+    vector<Date> valuationDates;
+    valuationDates.reserve(scheduleDates.size());
+    for (auto const& d : scheduleDates)
         valuationDates.push_back(observationCalendar.advance(d, -observationLag, observationConvention));
-        if (d != schedule.dates().front())
-            paymentDates.push_back(paymentCalendar.advance(d, plPeriod, paymentConvention));
-    }
 
-    if (!returnData_.paymentDates().empty()) {
-        paymentDates.clear();
-        QL_REQUIRE(returnData_.paymentDates().size() + 1 == valuationDates.size(),
-                   "paymentDates size (" << returnData_.paymentDates().size() << ") does no match valuatioDates size ("
-                                         << valuationDates.size() << ") minus 1");
-        for (auto const& s : returnData_.paymentDates())
-            paymentDates.push_back(parseDate(s));
+    // Payment dates.
+    vector<Date> paymentDates;
+    const auto& pmtDtStrs = returnData_.paymentDates();
+    if (pmtDtStrs.empty()) {
+        // Create payment dates if payment dates are not provided.
+        Calendar paymentCalendar = parseCalendar(returnData_.paymentCalendar());
+        const string& pmtConv = returnData_.paymentConvention();
+        BusinessDayConvention paymentConvention = pmtConv.empty() ? Unadjusted : parseBusinessDayConvention(pmtConv);
+        PaymentLag paymentLag = parsePaymentLag(returnData_.paymentLag());
+        Period plPeriod = boost::apply_visitor(PaymentLagPeriod(), paymentLag);
+        auto paymentDates = createPaymentDates(returnData_.scheduleData(), schedule, paymentCalendar, paymentConvention,
+            plPeriod, returnData_.paymentLagUnit(), returnData_.paymentLagAnchor(), true);
+    } else {
+        // Use payment dates if they are provided.
+        QL_REQUIRE(pmtDtStrs.size() + 1 == scheduleDates.size(), "TRS: return payment dates size (" <<
+            pmtDtStrs.size() << ") does not match schedule dates size (" << scheduleDates.size() << ") minus 1");
+        paymentDates.reserve(scheduleDates.size() - 1);
+        for (const auto& pmtDtStr : pmtDtStrs)
+            paymentDates.push_back(parseDate(pmtDtStr));
     }
 
     DLOG("valuation schedule:");

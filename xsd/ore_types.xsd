@@ -951,6 +951,20 @@
     </xs:sequence>
   </xs:complexType>
 
+  <xs:simpleType name="dateDeltaUnit">
+    <xs:restriction base="xs:string">
+        <xs:enumeration value="CalendarDays"/>
+        <xs:enumeration value="BusinessDays"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="dateDeltaAnchor">
+    <xs:restriction base="xs:string">
+        <xs:enumeration value="Adjusted"/>
+        <xs:enumeration value="Unadjusted"/>
+    </xs:restriction>
+  </xs:simpleType>
+
   <xs:element name="DerivedScheduleGroup" abstract="true"/>
   <xs:element name="DerivedSchedule" type="DerivedScheduleType" substitutionGroup="DerivedScheduleGroup"/>
   <xs:element name="Derived" type="DerivedScheduleType" substitutionGroup="DerivedScheduleGroup"/>
@@ -963,6 +977,8 @@
       <xs:element type="businessDayConvention" name="Convention" minOccurs="0"/>
       <xs:element type="xs:boolean" name="RemoveFirstDate" minOccurs="0"/>
       <xs:element type="xs:boolean" name="RemoveLastDate" minOccurs="0"/>
+      <xs:element type="dateDeltaUnit" name="ShiftUnit" minOccurs="0"/>
+      <xs:element type="dateDeltaAnchor" name="ShiftAnchor" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 

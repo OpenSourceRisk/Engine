@@ -338,6 +338,7 @@ portfolio/trs.cpp
 portfolio/trsunderlyingbuilder.cpp
 portfolio/trswrapper.cpp
 portfolio/underlying.cpp
+portfolio/utilities.cpp
 portfolio/vanillaoption.cpp
 portfolio/varianceswap.cpp
 portfolio/windowbarrieroption.cpp
@@ -782,6 +783,7 @@ portfolio/trsunderlyingbuilder.hpp
 portfolio/trswrapper.hpp
 portfolio/types.hpp
 portfolio/underlying.hpp
+portfolio/utilities.hpp
 portfolio/vanillaoption.hpp
 portfolio/varianceswap.hpp
 portfolio/windowbarrieroption.hpp

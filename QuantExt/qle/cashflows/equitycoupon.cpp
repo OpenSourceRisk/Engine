@@ -210,7 +210,7 @@ EquityLeg& EquityLeg::withPaymentAdjustment(BusinessDayConvention convention) {
     return *this;
 }
 
-EquityLeg& EquityLeg::withPaymentLag(Natural paymentLag) {
+EquityLeg& EquityLeg::withPaymentLag(Integer paymentLag) {
     paymentLag_ = paymentLag;
     return *this;
 }
@@ -346,7 +346,6 @@ EquityLeg::operator Leg() const {
         } else {
             paymentDate = calendar.advance(endDate, paymentLag_, Days, paymentAdjustment_);
         }
-        
 
         Date fixingStartDate = Date();
         Date fixingEndDate = Date();

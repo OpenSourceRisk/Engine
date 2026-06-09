@@ -184,7 +184,7 @@ Leg RangeAccrualLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::s
                             data.foreignAmount(), data.resetStartDate(), data.fxIndex(), data.amortizationData(),
                             data.paymentLag(), data.notionalPaymentLag(), data.paymentCalendar(),
                             data.paymentDates(), data.indexing(), data.indexingFromAssetLeg(),
-                            data.lastPeriodDayCounter());
+                            data.lastPeriodDayCounter(), data.paymentLagUnit(), data.paymentLagAnchor());
 
     // We want to build the FloatingLegData as well
     auto idx = QuantLib::ext::dynamic_pointer_cast<IborIndex>(index);

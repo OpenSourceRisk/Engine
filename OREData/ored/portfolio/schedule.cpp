@@ -158,6 +158,10 @@ void ScheduleDerived::fromXML(XMLNode* node) {
     convention_ = XMLUtils::getChildValue(node, "Convention", false);
     removeFirstDate_ = XMLUtils::getChildValueAsBool(node, "RemoveFirstDate", false, false);
     removeLastDate_ = XMLUtils::getChildValueAsBool(node, "RemoveLastDate", false, false);
+    if (auto tmp = XMLUtils::getChildNode(node, "ShiftUnit"))
+        shiftUnit_ = parseDateDeltaUnit(XMLUtils::getNodeValue(tmp));
+    if (auto tmp = XMLUtils::getChildNode(node, "ShiftAnchor"))
+        shiftAnchor_ = parseDateDeltaAnchor(XMLUtils::getNodeValue(tmp));
 }
 
 XMLNode* ScheduleDerived::toXML(XMLDocument& doc) const {
@@ -173,6 +177,10 @@ XMLNode* ScheduleDerived::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, node, "RemoveFirstDate", removeFirstDate_);
     if(removeLastDate_)
         XMLUtils::addChild(doc, node, "RemoveLastDate", removeLastDate_);
+    if (shiftUnit_)
+        XMLUtils::addChild(doc, node, "ShiftUnit", to_string(*shiftUnit_));
+    if (shiftAnchor_)
+        XMLUtils::addChild(doc, node, "ShiftAnchor", to_string(*shiftAnchor_));
     return node;
 }
 
@@ -218,8 +226,8 @@ void ScheduleBuilder::add(Schedule& schedule, const ScheduleData& data) {
     schedules_.insert(pair<string, pair<ScheduleData, Schedule&>>({name, {data, schedule}}));
 }
 
-void ScheduleBuilder::makeSchedules(const Date& openEndDateReplacement) {
-    map<string, Schedule> builtSchedules;
+void ScheduleBuilder::makeSchedules(const Date& openEndDateReplacement, bool unadjusted) {
+    BaseScheduleCache builtSchedules;
     map<string, ScheduleData> derivedSchedules;
 
     // First, we build all the rules-based and dates-based schedules
@@ -229,8 +237,8 @@ void ScheduleBuilder::makeSchedules(const Date& openEndDateReplacement) {
         Schedule& sch = s.second.second;
 
         if (!schData.hasDerived()) {
-            sch = makeSchedule(schData, openEndDateReplacement);
-            builtSchedules[schName] = sch;
+            sch = makeSchedule(schData, openEndDateReplacement, {}, unadjusted);
+            builtSchedules[schName] = { schData, sch };
         } else {
             derivedSchedules[schName] = schData;
         }
@@ -245,12 +253,13 @@ void ScheduleBuilder::makeSchedules(const Date& openEndDateReplacement) {
             ScheduleData& dsSchedData = ds.second;
             vector<string> baseNames = dsSchedData.baseScheduleNames();
             for (string& bn : baseNames) {
-                QL_REQUIRE(builtSchedules.find(bn) != builtSchedules.end(), "Could not find base schedule \" " << bn << "\" for derived schedule \" " << dsName << "\"");
+                QL_REQUIRE(builtSchedules.find(bn) != builtSchedules.end(), "Could not find base schedule \" " <<
+                    bn << "\" for derived schedule \" " << dsName << "\"");
             }
             Schedule schedule;
             schedule = makeSchedule(dsSchedData, openEndDateReplacement, builtSchedules);
             schedules_.find(dsName)->second.second = schedule;
-            builtSchedules[dsName] = schedule;
+            builtSchedules[dsName] = { dsSchedData, schedule };
             derivedSchedules.erase(dsName);
             calculated = true;
             break;
@@ -267,12 +276,11 @@ void ScheduleBuilder::makeSchedules(const Date& openEndDateReplacement) {
     }
 }
 
-Schedule makeSchedule(const ScheduleDates& data) {
+Schedule makeSchedule(const ScheduleDates& data, bool unadjusted) {
     QL_REQUIRE(data.dates().size() > 0, "Must provide at least 1 date for Schedule");
-    Calendar calendar = parseCalendar(data.calendar());
-    BusinessDayConvention convention = ModifiedFollowing;
-    if (!data.convention().empty())
-        convention = parseBusinessDayConvention(data.convention());
+    Calendar calendar = unadjusted ? NullCalendar() : parseCalendar(data.calendar());
+    BusinessDayConvention convention = unadjusted ? Unadjusted :
+        (!data.convention().empty() ? parseBusinessDayConvention(data.convention()) : ModifiedFollowing);
     // Avoid compiler warning on gcc
     // https://www.boost.org/doc/libs/1_74_0/libs/optional/doc/html/boost_optional/tutorial/
     // gotchas/false_positive_with__wmaybe_uninitialized.html
@@ -283,11 +291,10 @@ Schedule makeSchedule(const ScheduleDates& data) {
     if (!data.endOfMonth().empty())
         endOfMonth = parseBool(data.endOfMonth());
     ext::optional<BusinessDayConvention> endOfMonthConvention = QuantLib::ext::nullopt;
-    if (!data.endOfMonthConvention().empty())
+    if (!data.endOfMonthConvention().empty() && !unadjusted)
         endOfMonthConvention = parseBusinessDayConvention(data.endOfMonthConvention());
 
     // Ensure that Schedule ctor is passed a vector of unique ordered dates.
-
     std::vector<Date> dates;
     for (const auto& d : data.dates()) {
         dates.push_back(calendar.adjust(parseDate(d), convention));
@@ -298,45 +305,59 @@ Schedule makeSchedule(const ScheduleDates& data) {
         auto last = std::unique(dates.begin(), dates.end());
         dates.erase(last, dates.end());
     }
-    
-    return QuantLib::Schedule(dates, calendar, convention, QuantLib::ext::nullopt, tenor, QuantLib::ext::nullopt, endOfMonth, vector<bool>(0),
-                              false, false, endOfMonthConvention);
+
+    return QuantLib::Schedule(dates, calendar, convention, QuantLib::ext::nullopt, tenor, QuantLib::ext::nullopt,
+        endOfMonth, vector<bool>(0), false, false, endOfMonthConvention);
 }
 
-Schedule makeSchedule(const ScheduleDerived& data, const Schedule& baseSchedule) {
+Schedule makeSchedule(const ScheduleDerived& data, const pair<ScheduleData, Schedule>& baseScheduleInfo,
+    const Date& openEndDateReplacement, bool unadjusted) {
 
-    string strCalendar = data.calendar();
-    Calendar calendar;
-    if (strCalendar.empty()) {
-        calendar = NullCalendar();
+    const string& strCal = data.calendar();
+    if (strCal.empty())
         DLOG("No calendar provided in Schedule, attempting to use a null calendar.");
+    auto calendar = strCal.empty() || unadjusted ? NullCalendar() : parseCalendar(strCal);
+
+    const string& strConv = data.convention();
+    auto convention = strConv.empty() || unadjusted ? BusinessDayConvention::Unadjusted :
+        parseBusinessDayConvention(strConv);
+
+    const string& strShift = data.shift();
+    auto shift = strShift.empty() ? Period(0, Days) : parsePeriod(strShift);
+
+    // If shift unit is calendar days, need to make sure that the shift is in day units.
+    const auto& shiftUnit = data.shiftUnit();
+    if (shiftUnit && *shiftUnit == QuantExt::DateDeltaUnit::CalendarDays) {
+        QL_REQUIRE(shift.units() == Days, "makeSchedule: when making derived schedule, the shift unit is calendar "
+            "days but the shift does not have day units, it has " << shift.units() << ".");
     }
-    else
-        calendar = parseCalendar(strCalendar);
 
-    BusinessDayConvention convention;
-    string strConvention = data.convention();
-    if (strConvention.empty())
-        convention = BusinessDayConvention::Unadjusted;
-    else
-        convention = parseBusinessDayConvention(strConvention);
+    // If shift anchor is unadjusted, we build a temporary unadjusted version of the base schedule to shift from.
+    ext::optional<Schedule> unadjustedSchedule;
+    const auto& shiftAnchor = data.shiftAnchor();
+    if (shiftAnchor && *shiftAnchor == QuantExt::DateDeltaAnchor::Unadjusted) {
+        unadjustedSchedule = Schedule();
+        ScheduleBuilder scheduleBuilder;
+        scheduleBuilder.add(*unadjustedSchedule, baseScheduleInfo.first);
+        scheduleBuilder.makeSchedules(openEndDateReplacement, true);
+    }
 
-    string strShift = data.shift();
-    Period shift;
-    if (strShift.empty())
-        shift = 0 * Days;
-    else
-        shift = parsePeriod(data.shift());
+    const Schedule& baseSchedule = baseScheduleInfo.second;
+    const Schedule& anchorSchedule = unadjustedSchedule ? *unadjustedSchedule : baseSchedule;
 
-    const std::vector<QuantLib::Date>& baseDates = baseSchedule.dates();
-    std::vector<QuantLib::Date> derivedDates;
-    QuantLib::Date derivedDate;
+    const vector<Date>& baseDates = anchorSchedule.dates();
+    vector<Date> derivedDates;
+    derivedDates.reserve(baseDates.size());
     for (const Date& d : baseDates) {
-        derivedDate = calendar.advance(d, shift, convention);
-        derivedDates.push_back(derivedDate);
+        if (shiftUnit && *shiftUnit == QuantExt::DateDeltaUnit::CalendarDays) {
+            derivedDates.push_back(calendar.adjust(d + shift, convention));
+        } else {
+            derivedDates.push_back(calendar.advance(d, shift, convention));
+        }
     }
+
     ext::optional<BusinessDayConvention> endOfMonthConvention = QuantLib::ext::nullopt;
-    if (baseSchedule.hasEndOfMonthBusinessDayConvention())
+    if (baseSchedule.hasEndOfMonthBusinessDayConvention() && !unadjusted)
         endOfMonthConvention = baseSchedule.endOfMonthBusinessDayConvention();
 
     return QuantLib::Schedule(
@@ -346,15 +367,15 @@ Schedule makeSchedule(const ScheduleDerived& data, const Schedule& baseSchedule)
         std::vector<bool>(0), data.removeFirstDate(), data.removeLastDate(), endOfMonthConvention);
 }
 
-Schedule makeSchedule(const ScheduleRules& data, const Date& openEndDateReplacement) {
+Schedule makeSchedule(const ScheduleRules& data, const Date& openEndDateReplacement, bool unadjusted) {
     QL_REQUIRE(!data.endDate().empty() || openEndDateReplacement != Null<Date>(),
                "makeSchedule(): Schedule does not have an end date, this is not supported in this context / for this "
                "trade type. Please provide an end date.");
     QL_REQUIRE(!data.endDate().empty() || data.lastDate().empty(),
                "makeSchedule(): If no end date is given, a last date is not allowed either. Please remove the last "
                "date from the schedule.");
-    Calendar calendar = parseCalendar(data.calendar());
-    if (calendar == NullCalendar())
+    Calendar calendar = unadjusted ? NullCalendar() : parseCalendar(data.calendar());
+    if (calendar == NullCalendar() && !unadjusted)
         DLOG("No calendar provided in Schedule, attempting to use a null calendar.");
     Date startDate = parseDate(data.startDate());
     Date endDate = data.endDate().empty() ? openEndDateReplacement : parseDate(data.endDate());
@@ -372,23 +393,23 @@ Schedule makeSchedule(const ScheduleRules& data, const Date& openEndDateReplacem
     Period tenor = parsePeriod(data.tenor());
 
     // defaults
-    BusinessDayConvention bdc = ModifiedFollowing;
-    BusinessDayConvention bdcEnd = ModifiedFollowing;
+    BusinessDayConvention bdc = unadjusted ? Unadjusted : ModifiedFollowing;
+    BusinessDayConvention bdcEnd = unadjusted ? Unadjusted : ModifiedFollowing;
     DateGeneration::Rule rule = DateGeneration::Forward;
     bool endOfMonth = false;
     ext::optional<BusinessDayConvention> endOfMonthConvention = QuantLib::ext::nullopt;
 
     // now check the strings, if they are empty we take defaults
-    if (!data.convention().empty())
+    if (!data.convention().empty() && !unadjusted)
         bdc = parseBusinessDayConvention(data.convention());
-    if (!data.termConvention().empty())
+    if (!data.termConvention().empty() && !unadjusted)
         bdcEnd = parseBusinessDayConvention(data.termConvention());
     else
         bdcEnd = bdc; // except here
 
     if (!data.endOfMonth().empty())
         endOfMonth = parseBool(data.endOfMonth());
-    if (!data.endOfMonthConvention().empty())
+    if (!data.endOfMonthConvention().empty() && !unadjusted)
         endOfMonthConvention = parseBusinessDayConvention(data.endOfMonthConvention());
 
     if (!data.rule().empty()) {
@@ -399,12 +420,14 @@ Schedule makeSchedule(const ScheduleRules& data, const Date& openEndDateReplacem
             auto dates = everyWeekDayDates(startDate, endDate, firstDate, QuantLib::Thursday);
             for (auto& d : dates)
                 d = calendar.adjust(d, bdc);
-            return QuantLib::Schedule(dates, calendar, bdc, bdcEnd, tenor, rule, endOfMonth, std::vector<bool>(0), false, false, endOfMonthConvention);
+            return QuantLib::Schedule(dates, calendar, bdc, bdcEnd, tenor, rule, endOfMonth, std::vector<bool>(0),
+                false, false, endOfMonthConvention);
         } else if (data.rule() == "BusinessWeek" || data.rule() == "CalendarWeek") {
             auto dates = weeklyDates(startDate, endDate, firstDate, data.rule() == "CalendarWeek");
             for (auto& d : dates)
                 d = calendar.adjust(d, bdc);
-            return QuantLib::Schedule(dates, calendar, bdc, bdcEnd, tenor, rule, endOfMonth, std::vector<bool>(0), data.removeFirstDate(), data.removeLastDate(), endOfMonthConvention);
+            return QuantLib::Schedule(dates, calendar, bdc, bdcEnd, tenor, rule, endOfMonth, std::vector<bool>(0),
+                data.removeFirstDate(), data.removeLastDate(), endOfMonthConvention);
         }
 
         // parse rule for further processing below
@@ -422,8 +445,7 @@ Schedule makeSchedule(const ScheduleRules& data, const Date& openEndDateReplacem
         // The schedule builder in QL itself is not capable of doing this, it just throws an exception
         // if a first (last) date is given in combination with a CDS / CDS2015 date generation rule.
         std::vector<Date> dates = QuantLib::Schedule(startDate, endDate, tenor, calendar, bdc, bdcEnd, rule, endOfMonth,
-                                                     Date(), Date(), false, false, endOfMonthConvention)
-                                      .dates();
+            Date(), Date(), false, false, endOfMonthConvention).dates();
         QL_REQUIRE(!dates.empty(),
                    "got empty CDS or CDS2015 schedule, startDate = " << startDate << ", endDate = " << endDate);
         if (firstDate != Date())
@@ -458,7 +480,9 @@ void updateData(const std::string& s, T& t, bool& hasT, bool& hasConsistentT, co
 Calendar parseCalendarTemp(const string& s) { return parseCalendar(s); }
 } // namespace
 
-Schedule makeSchedule(const ScheduleData& data, const Date& openEndDateReplacement, const map<string, QuantLib::Schedule>& baseSchedules) {
+Schedule makeSchedule(const ScheduleData& data, const Date& openEndDateReplacement,
+    const BaseScheduleCache& baseSchedules, bool unadjusted) {
+
     if(!data.hasData())
         return Schedule();
     // only the last rule-based schedule is allowed to have an open end date, check this
@@ -469,14 +493,15 @@ Schedule makeSchedule(const ScheduleData& data, const Date& openEndDateReplaceme
     // build all the date and rule based sub-schedules we have
     vector<Schedule> schedules;
     for (auto& d : data.dates())
-        schedules.push_back(makeSchedule(d));
+        schedules.push_back(makeSchedule(d, unadjusted));
     for (auto& r : data.rules())
-        schedules.push_back(makeSchedule(r, openEndDateReplacement));
+        schedules.push_back(makeSchedule(r, openEndDateReplacement, unadjusted));
     if (!baseSchedules.empty())
         for (auto& dv : data.derived()) {
             auto baseSchedule = baseSchedules.find(dv.baseSchedule());
-            QL_REQUIRE(baseSchedule != baseSchedules.end(), "makeSchedule(): could not find base schedule \"" << dv.baseSchedule() << "\"");
-            schedules.push_back(makeSchedule(dv, baseSchedule->second));
+            QL_REQUIRE(baseSchedule != baseSchedules.end(), "makeSchedule(): could not find base schedule \"" <<
+                dv.baseSchedule() << "\"");
+            schedules.push_back(makeSchedule(dv, baseSchedule->second, openEndDateReplacement, unadjusted));
     }
     QL_REQUIRE(!schedules.empty(), "No dates or rules to build Schedule from");
     if (schedules.size() == 1)

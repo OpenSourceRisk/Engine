@@ -365,6 +365,7 @@
 #include <ored/portfolio/trswrapper.hpp>
 #include <ored/portfolio/types.hpp>
 #include <ored/portfolio/underlying.hpp>
+#include <ored/portfolio/utilities.hpp>
 #include <ored/portfolio/vanillaoption.hpp>
 #include <ored/portfolio/varianceswap.hpp>
 #include <ored/portfolio/windowbarrieroption.hpp>

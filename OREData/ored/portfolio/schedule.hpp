@@ -24,8 +24,8 @@
 #pragma once
 
 #include <ored/utilities/xmlutils.hpp>
+#include <qle/time/dateutilities.hpp>
 #include <ql/time/schedule.hpp>
-// #include <ored/utilities/parsers.hpp>
 
 namespace ore {
 namespace data {
@@ -136,6 +136,9 @@ public:
     vector<string>& modifyDates() {
         return dates_;
     }
+    string& modifyCalendar() { return calendar_; }
+    string& modifyConvention() { return convention_; }
+    string& modifyEndOfMonthConvention() { return endOfMonthConvention_; }
     //@}
 
     //! \name Serialisation
@@ -164,9 +167,12 @@ public:
     ScheduleDerived() {}
     //! Constructor
     ScheduleDerived(const string& baseSchedule, const string& calendar, const string& convention, const string& shift,
-                    const bool removeFirstDate = false, const bool removeLastDate = false)
+                    const bool removeFirstDate = false, const bool removeLastDate = false,
+                    QuantLib::ext::optional<QuantExt::DateDeltaUnit> shiftUnit = QuantLib::ext::nullopt,
+                    QuantLib::ext::optional<QuantExt::DateDeltaAnchor> shiftAnchor = QuantLib::ext::nullopt)
         : baseSchedule_(baseSchedule), calendar_(calendar), convention_(convention), shift_(shift),
-          removeFirstDate_(removeFirstDate), removeLastDate_(removeLastDate) {}
+          removeFirstDate_(removeFirstDate), removeLastDate_(removeLastDate),
+          shiftUnit_(std::move(shiftUnit)), shiftAnchor_(std::move(shiftAnchor)) {}
 
     //! \name Inspectors
     //@{
@@ -176,6 +182,8 @@ public:
     const string& shift() const { return shift_; }
     bool removeFirstDate() const { return removeFirstDate_; }
     bool removeLastDate() const { return removeLastDate_; }
+    QuantLib::ext::optional<QuantExt::DateDeltaUnit> shiftUnit() const { return shiftUnit_; }
+    QuantLib::ext::optional<QuantExt::DateDeltaAnchor> shiftAnchor() const { return shiftAnchor_; }
     //@}
 
     //! \name Modifiers
@@ -197,6 +205,8 @@ private:
     string shift_;
     bool removeFirstDate_ = false;
     bool removeLastDate_ = false;
+    QuantLib::ext::optional<QuantExt::DateDeltaUnit> shiftUnit_;
+    QuantLib::ext::optional<QuantExt::DateDeltaAnchor> shiftAnchor_;
 };
 
 //! Serializable schedule data
@@ -241,6 +251,7 @@ public:
     vector<ScheduleDates>& modifyDates() { return dates_; }
     vector<ScheduleRules>& modifyRules() { return rules_; }
     vector<ScheduleDerived>& modifyDerived() { return derived_; }
+    void setName(const std::string& name) { name_ = name; }
     //@}
 
     //! \name Serialisation
@@ -272,20 +283,29 @@ class ScheduleBuilder {
       
 public:
     void add(QuantLib::Schedule& schedule, const ScheduleData& scheduleData);
-    void makeSchedules(const QuantLib::Date& openEndDateReplacement = QuantLib::Null<QuantLib::Date>());
+    // If unadjusted is set to `true`, make unadjusted variants of the schedules.
+    void makeSchedules(const QuantLib::Date& openEndDateReplacement = QuantLib::Null<QuantLib::Date>(),
+        bool unadjusted = false);
 
 private:
     map<string, pair<ScheduleData, QuantLib::Schedule&>> schedules_;
 };
 
-//! Functions
+using BaseScheduleCache = map<string, std::pair<ScheduleData, QuantLib::Schedule>>;
 QuantLib::Schedule makeSchedule(const ScheduleData& data,
-                                const QuantLib::Date& openEndDateReplacement = QuantLib::Null<QuantLib::Date>(),
-                                const map<string, QuantLib::Schedule>& baseSchedules = map<string, QuantLib::Schedule>());
-QuantLib::Schedule makeSchedule(const ScheduleDates& dates);
+    const QuantLib::Date& openEndDateReplacement = QuantLib::Null<QuantLib::Date>(),
+    const BaseScheduleCache& baseSchedules = {}, bool unadjusted = false);
+
+QuantLib::Schedule makeSchedule(const ScheduleDates& dates, bool unadjusted = false);
+
 QuantLib::Schedule makeSchedule(const ScheduleRules& rules,
-                                const QuantLib::Date& openEndDateReplacement = QuantLib::Null<QuantLib::Date>());
-QuantLib::Schedule makeSchedule(const ScheduleDerived& derived, const QuantLib::Schedule& baseSchedule);
+    const QuantLib::Date& openEndDateReplacement = QuantLib::Null<QuantLib::Date>(),
+    bool unadjusted = false);
+
+QuantLib::Schedule makeSchedule(const ScheduleDerived& derived,
+    const std::pair<ScheduleData, QuantLib::Schedule>& baseScheduleInfo,
+    const QuantLib::Date& openEndDateReplacement = QuantLib::Null<QuantLib::Date>(),
+    bool unadjusted = false);
 
 } // namespace data
 } // namespace ore
