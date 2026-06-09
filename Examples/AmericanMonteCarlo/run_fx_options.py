@@ -13,5 +13,5 @@ print("| AMC: FX Barrier Options and Asian Options.              |")
 print("+---------------------------------------------------------+")
 
 oreex.print_headline("Run ORE to produce AMC exposure")
-oreex.run("Input/run_fx_options.xml")
+oreex.run("Input/ore_fx_options.xml")
 
