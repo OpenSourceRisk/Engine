@@ -179,7 +179,7 @@ private:
     std::string context_;
 
     std::function<std::vector<QuantLib::ext::shared_ptr<ValuationCalculator>>(
-        const QuantLib::ext::shared_ptr<ore::data::Portfolio>&)>
+        const QuantLib::Size, const QuantLib::ext::shared_ptr<ore::data::Portfolio>&)>
         npvCalculator_;
 
     //! Get the index of the as of date in the cube.

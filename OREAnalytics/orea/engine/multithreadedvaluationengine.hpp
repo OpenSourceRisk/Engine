@@ -79,7 +79,7 @@ public:
     void
     buildCube(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
               const std::function<std::vector<QuantLib::ext::shared_ptr<ore::analytics::ValuationCalculator>>(
-                  const QuantLib::ext::shared_ptr<ore::data::Portfolio>&)>& calculators,
+                  const QuantLib::Size, const QuantLib::ext::shared_ptr<ore::data::Portfolio>&)>& calculators,
               const ValuationEngine::ErrorPolicy errorPolicy = ValuationEngine::ErrorPolicy::RemoveAll,
               const std::function<std::vector<QuantLib::ext::shared_ptr<ore::analytics::CounterpartyCalculator>>()>&
                   cptyCalculators = {},

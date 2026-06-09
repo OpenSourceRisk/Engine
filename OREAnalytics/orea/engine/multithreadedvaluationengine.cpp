@@ -147,7 +147,7 @@ void MultiThreadedValuationEngine::setAggregationScenarioData(
 void MultiThreadedValuationEngine::buildCube(
     const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
     const std::function<std::vector<QuantLib::ext::shared_ptr<ore::analytics::ValuationCalculator>>(
-        const QuantLib::ext::shared_ptr<ore::data::Portfolio>&)>& calculators,
+        const QuantLib::Size, const QuantLib::ext::shared_ptr<ore::data::Portfolio>&)>& calculators,
     const ValuationEngine::ErrorPolicy errorPolicy,
     const std::function<std::vector<QuantLib::ext::shared_ptr<ore::analytics::CounterpartyCalculator>>()>&
         cptyCalculators,
@@ -398,7 +398,7 @@ void MultiThreadedValuationEngine::buildCube(
 
                 // build mini-cube
 
-                valEngine->buildCube(portfolio, miniCubes_[id], calculators(portfolio), errorPolicy, mporStickyDate,
+                valEngine->buildCube(portfolio, miniCubes_[id], calculators(id, portfolio), errorPolicy, mporStickyDate,
                                      miniNettingSetCubes_[id], miniCptyCubes_[id],
                                      cptyCalculators ? cptyCalculators()
                                                      : std::vector<QuantLib::ext::shared_ptr<CounterpartyCalculator>>(),
