@@ -47,6 +47,31 @@ namespace data {
         "      END;\n"
         "      currentNotional = Notional * Strike;\n";
 
+        static const std::string vanilla_basket_option_amc_script =
+        "      REQUIRE SIZE(Underlyings) == SIZE(Weights);\n"
+        "\n"
+        "      NUMBER u, i, basketPrice, ExerciseProbability, Payoff, currentNotional;\n"
+        "      NUMBER _AMC_NPV[SIZE(_AMC_SimDates)];\n"
+        "\n"
+        "      FOR u IN (1, SIZE(Underlyings), 1) DO\n"
+        "          basketPrice = basketPrice + Underlyings[u](Expiry) * Weights[u];\n"
+        "      END;\n"
+        "\n"
+        "      Payoff = max(PutCall * (basketPrice - Strike), 0);\n"
+        "\n"
+        "      Option = LongShort * Notional * PAY(Payoff, Expiry, Settlement, PayCcy);\n"
+        "\n"
+        "      IF Payoff > 0 THEN\n"
+        "          ExerciseProbability = 1;\n"
+        "      END;\n"
+        "      currentNotional = Notional * Strike;\n"
+        "\n"
+        "      FOR i IN (1, SIZE(_AMC_SimDates), 1) DO\n"
+        "          IF _AMC_SimDates[i] < Settlement THEN\n"
+        "              _AMC_NPV[i] = NPVMEM(Option, _AMC_SimDates[i], i);\n"
+        "          END;\n"
+        "      END;\n";
+
     static const std::string asian_basket_option_script =
         "      REQUIRE SIZE(Underlyings) == SIZE(Weights);\n"
         "\n"
@@ -70,106 +95,6 @@ namespace data {
         "      END;\n"
         "\n"
         "      currentNotional = Notional * Strike;        \n";
-
-    static const std::string average_strike_basket_option_script =
-        "      REQUIRE SIZE(Underlyings) == SIZE(Weights);\n"
-        "\n"
-        "      NUMBER d, u, timeAverageBasketPrice, currentNotional;\n"
-        "      FOR d IN (1, SIZE(ObservationDates), 1) DO\n"
-        "          FOR u IN (1, SIZE(Underlyings), 1) DO\n"
-        "              timeAverageBasketPrice = timeAverageBasketPrice\n"
-        "                + Underlyings[u](ObservationDates[d]) * Weights[u];\n"
-        "          END;\n"
-        "      END;\n"
-        "      timeAverageBasketPrice = timeAverageBasketPrice / SIZE(ObservationDates);\n"
-        "\n"
-        "      NUMBER expiryBasketPrice;\n"
-        "      FOR u IN (1, SIZE(Underlyings), 1) DO\n"
-        "         expiryBasketPrice = expiryBasketPrice + Underlyings[u](Expiry) * Weights[u];\n"
-        "      END;\n"
-        "\n"
-        "      NUMBER Payoff;\n"
-        "      Payoff = max(PutCall * (expiryBasketPrice - timeAverageBasketPrice), 0);\n"
-        "\n"
-        "      Option = LongShort * Notional * PAY(Payoff, Expiry, Settlement, PayCcy);\n"
-        "\n"
-        "      NUMBER ExerciseProbability;\n"
-        "      IF Payoff > 0 THEN\n"
-        "          ExerciseProbability = 1;\n"
-        "      END;\n"
-        "      FOR u IN (1, SIZE(Underlyings), 1) DO\n"
-        "        currentNotional = currentNotional + Notional * Underlyings[u](ObservationDates[1]) * Weights[u];\n"
-        "      END;\n";
-
-    static const std::string lookback_call_basket_option_script =
-        "      REQUIRE SIZE(Underlyings) == SIZE(Weights);\n"
-        "\n"
-        "      NUMBER d, u, basketPrice, minBasketPrice, currentNotional;\n"
-        "      FOR d IN (1, SIZE(ObservationDates), 1) DO\n"
-        "          basketPrice = 0;\n"
-        "          FOR u IN (1, SIZE(Underlyings), 1) DO\n"
-        "              basketPrice = basketPrice + Underlyings[u](ObservationDates[d]) * Weights[u];\n"
-        "          END;\n"
-        "          IF d == 1 THEN\n"
-        "              minBasketPrice = basketPrice;\n"
-        "          END;\n"
-        "          IF basketPrice < minBasketPrice THEN\n"
-        "              minBasketPrice = basketPrice;\n"
-        "          END;\n"
-        "      END;\n"
-        "\n"
-        "      NUMBER expiryBasketPrice;\n"
-        "      FOR u IN (1, SIZE(Underlyings), 1) DO\n"
-        "         expiryBasketPrice = expiryBasketPrice + Underlyings[u](Expiry) * Weights[u];\n"
-        "      END;\n"
-        "\n"
-        "      NUMBER Payoff;\n"
-        "      Payoff = max(expiryBasketPrice - minBasketPrice, 0);\n"
-        "\n"
-        "      Option = LongShort * Notional * PAY(Payoff, Expiry, Settlement, PayCcy);\n"
-        "\n"
-        "      NUMBER ExerciseProbability;\n"
-        "      IF Payoff > 0 THEN\n"
-        "          ExerciseProbability = 1;\n"
-        "      END;\n"
-        "      FOR u IN (1, SIZE(Underlyings), 1) DO\n"
-        "        currentNotional = currentNotional + Notional * Underlyings[u](ObservationDates[1]) * Weights[u];\n"
-        "      END;\n";
-
-    static const std::string lookback_put_basket_option_script =
-        "      REQUIRE SIZE(Underlyings) == SIZE(Weights);\n"
-        "\n"
-        "      NUMBER d, u, basketPrice, maxBasketPrice, currentNotional;\n"
-        "      FOR d IN (1, SIZE(ObservationDates), 1) DO\n"
-        "          basketPrice = 0;\n"
-        "          FOR u IN (1, SIZE(Underlyings), 1) DO\n"
-        "              basketPrice = basketPrice + Underlyings[u](ObservationDates[d]) * Weights[u];\n"
-        "          END;\n"
-        "          IF d == 1 THEN\n"
-        "              maxBasketPrice = basketPrice;\n"
-        "          END;\n"
-        "          IF basketPrice > maxBasketPrice THEN\n"
-        "              maxBasketPrice = basketPrice;\n"
-        "          END;\n"
-        "      END;\n"
-        "\n"
-        "      NUMBER expiryBasketPrice;\n"
-        "      FOR u IN (1, SIZE(Underlyings), 1) DO\n"
-        "         expiryBasketPrice = expiryBasketPrice + Underlyings[u](Expiry) * Weights[u];\n"
-        "      END;\n"
-        "\n"
-        "      NUMBER Payoff;\n"
-        "      Payoff = max(maxBasketPrice - expiryBasketPrice, 0);\n"
-        "\n"
-        "      Option = LongShort * Notional * PAY(Payoff, Expiry, Settlement, PayCcy);\n"
-        "\n"
-        "      NUMBER ExerciseProbability;\n"
-        "      IF Payoff > 0 THEN\n"
-        "          ExerciseProbability = 1;\n"
-        "      END;\n"
-        "      FOR u IN (1, SIZE(Underlyings), 1) DO\n"
-        "        currentNotional = currentNotional + Notional * Underlyings[u](ObservationDates[1]) * Weights[u];\n"
-        "      END;";
 
     static const std::string asian_basket_option_amc_script =
         "      REQUIRE SIZE(Underlyings) == SIZE(Weights);\n"
@@ -214,6 +139,269 @@ namespace data {
         "          END;\n"
         "      END;\n";
 
+    static const std::string average_strike_basket_option_script =
+        "      REQUIRE SIZE(Underlyings) == SIZE(Weights);\n"
+        "\n"
+        "      NUMBER d, u, timeAverageBasketPrice, currentNotional;\n"
+        "      FOR d IN (1, SIZE(ObservationDates), 1) DO\n"
+        "          FOR u IN (1, SIZE(Underlyings), 1) DO\n"
+        "              timeAverageBasketPrice = timeAverageBasketPrice\n"
+        "                + Underlyings[u](ObservationDates[d]) * Weights[u];\n"
+        "          END;\n"
+        "      END;\n"
+        "      timeAverageBasketPrice = timeAverageBasketPrice / SIZE(ObservationDates);\n"
+        "\n"
+        "      NUMBER expiryBasketPrice;\n"
+        "      FOR u IN (1, SIZE(Underlyings), 1) DO\n"
+        "         expiryBasketPrice = expiryBasketPrice + Underlyings[u](Expiry) * Weights[u];\n"
+        "      END;\n"
+        "\n"
+        "      NUMBER Payoff;\n"
+        "      Payoff = max(PutCall * (expiryBasketPrice - timeAverageBasketPrice), 0);\n"
+        "\n"
+        "      Option = LongShort * Notional * PAY(Payoff, Expiry, Settlement, PayCcy);\n"
+        "\n"
+        "      NUMBER ExerciseProbability;\n"
+        "      IF Payoff > 0 THEN\n"
+        "          ExerciseProbability = 1;\n"
+        "      END;\n"
+        "      FOR u IN (1, SIZE(Underlyings), 1) DO\n"
+        "        currentNotional = currentNotional + Notional * Underlyings[u](ObservationDates[1]) * Weights[u];\n"
+        "      END;\n";
+
+
+    
+    static const std::string average_strike_basket_option_amc_script =
+        "      REQUIRE SIZE(Underlyings) == SIZE(Weights);\n"
+        "\n"
+        "      NUMBER d, u, s, i, simDateIdx;\n"
+        "      NUMBER timeAverageBasketPrice, currentNotional;\n"
+        "      NUMBER runningSum;\n"
+        "      NUMBER _AMC_NPV[SIZE(_AMC_SimDates)];\n"
+        "      NUMBER accruedAvg[SIZE(_AMC_SimDates)];\n"
+        "\n"
+        "      simDateIdx = 1;\n"
+        "      FOR s IN (1, SIZE(ObsAndSimDates), 1) DO\n"
+        "          d = DATEINDEX(ObsAndSimDates[s], ObservationDates, EQ);\n"
+        "          IF simDateIdx <= SIZE(_AMC_SimDates) THEN\n"
+        "              IF _AMC_SimDates[simDateIdx] == ObsAndSimDates[s] THEN\n"
+        "                  accruedAvg[simDateIdx] = runningSum / SIZE(ObservationDates);\n"
+        "                  simDateIdx = simDateIdx + 1;\n"
+        "              END;\n"
+        "          END;\n"
+        "          IF d > 0 THEN\n"
+        "              FOR u IN (1, SIZE(Underlyings), 1) DO\n"
+        "                  runningSum = runningSum + Underlyings[u](ObservationDates[d]) * Weights[u];\n"
+        "              END;\n"
+        "          END;\n"
+        "      END;\n"
+        "\n"
+        "      timeAverageBasketPrice = runningSum / SIZE(ObservationDates);\n"
+        "\n"
+        "      NUMBER expiryBasketPrice;\n"
+        "      FOR u IN (1, SIZE(Underlyings), 1) DO\n"
+        "         expiryBasketPrice = expiryBasketPrice + Underlyings[u](Expiry) * Weights[u];\n"
+        "      END;\n"
+        "\n"
+        "      NUMBER Payoff;\n"
+        "      Payoff = max(PutCall * (expiryBasketPrice - timeAverageBasketPrice), 0);\n"
+        "\n"
+        "      Option = LongShort * Notional * PAY(Payoff, Expiry, Settlement, PayCcy);\n"
+        "\n"
+        "      NUMBER ExerciseProbability;\n"
+        "      IF Payoff > 0 THEN\n"
+        "          ExerciseProbability = 1;\n"
+        "      END;\n"
+        "      FOR u IN (1, SIZE(Underlyings), 1) DO\n"
+        "        currentNotional = currentNotional + Notional * Underlyings[u](ObservationDates[1]) * Weights[u];\n"
+        "      END;\n"
+        "\n"
+        "      FOR i IN (1, SIZE(_AMC_SimDates), 1) DO\n"
+        "          IF _AMC_SimDates[i] < Settlement THEN\n"
+        "              _AMC_NPV[i] = NPVMEM(Option, _AMC_SimDates[i], i, 1 > 0, accruedAvg[i]);\n"
+        "          END;\n"
+        "      END;\n";
+
+    static const std::string lookback_call_basket_option_script =
+        "      REQUIRE SIZE(Underlyings) == SIZE(Weights);\n"
+        "\n"
+        "      NUMBER d, u, basketPrice, minBasketPrice, currentNotional;\n"
+        "      FOR d IN (1, SIZE(ObservationDates), 1) DO\n"
+        "          basketPrice = 0;\n"
+        "          FOR u IN (1, SIZE(Underlyings), 1) DO\n"
+        "              basketPrice = basketPrice + Underlyings[u](ObservationDates[d]) * Weights[u];\n"
+        "          END;\n"
+        "          IF d == 1 THEN\n"
+        "              minBasketPrice = basketPrice;\n"
+        "          END;\n"
+        "          IF basketPrice < minBasketPrice THEN\n"
+        "              minBasketPrice = basketPrice;\n"
+        "          END;\n"
+        "      END;\n"
+        "\n"
+        "      NUMBER expiryBasketPrice;\n"
+        "      FOR u IN (1, SIZE(Underlyings), 1) DO\n"
+        "         expiryBasketPrice = expiryBasketPrice + Underlyings[u](Expiry) * Weights[u];\n"
+        "      END;\n"
+        "\n"
+        "      NUMBER Payoff;\n"
+        "      Payoff = max(expiryBasketPrice - minBasketPrice, 0);\n"
+        "\n"
+        "      Option = LongShort * Notional * PAY(Payoff, Expiry, Settlement, PayCcy);\n"
+        "\n"
+        "      NUMBER ExerciseProbability;\n"
+        "      IF Payoff > 0 THEN\n"
+        "          ExerciseProbability = 1;\n"
+        "      END;\n"
+        "      FOR u IN (1, SIZE(Underlyings), 1) DO\n"
+        "        currentNotional = currentNotional + Notional * Underlyings[u](ObservationDates[1]) * Weights[u];\n"
+        "      END;\n";
+
+    static const std::string lookback_call_basket_option_amc_script =
+        "      REQUIRE SIZE(Underlyings) == SIZE(Weights);\n"
+        "\n"
+        "      NUMBER d, u, s, i, simDateIdx;\n"
+        "      NUMBER basketPrice, minBasketPrice, currentNotional;\n"
+        "      NUMBER _AMC_NPV[SIZE(_AMC_SimDates)];\n"
+        "      NUMBER accruedMin[SIZE(_AMC_SimDates)];\n"
+        "\n"
+        "      simDateIdx = 1;\n"
+        "      FOR s IN (1, SIZE(ObsAndSimDates), 1) DO\n"
+        "          d = DATEINDEX(ObsAndSimDates[s], ObservationDates, EQ);\n"
+        "          IF simDateIdx <= SIZE(_AMC_SimDates) THEN\n"
+        "              IF _AMC_SimDates[simDateIdx] == ObsAndSimDates[s] THEN\n"
+        "                  accruedMin[simDateIdx] = minBasketPrice;\n"
+        "                  simDateIdx = simDateIdx + 1;\n"
+        "              END;\n"
+        "          END;\n"
+        "          IF d > 0 THEN\n"
+        "              basketPrice = 0;\n"
+        "              FOR u IN (1, SIZE(Underlyings), 1) DO\n"
+        "                  basketPrice = basketPrice + Underlyings[u](ObservationDates[d]) * Weights[u];\n"
+        "              END;\n"
+        "              IF d == 1 THEN\n"
+        "                  minBasketPrice = basketPrice;\n"
+        "              END;\n"
+        "              IF basketPrice < minBasketPrice THEN\n"
+        "                  minBasketPrice = basketPrice;\n"
+        "              END;\n"
+        "          END;\n"
+        "      END;\n"
+        "\n"
+        "      NUMBER expiryBasketPrice;\n"
+        "      FOR u IN (1, SIZE(Underlyings), 1) DO\n"
+        "         expiryBasketPrice = expiryBasketPrice + Underlyings[u](Expiry) * Weights[u];\n"
+        "      END;\n"
+        "\n"
+        "      NUMBER Payoff;\n"
+        "      Payoff = max(expiryBasketPrice - minBasketPrice, 0);\n"
+        "\n"
+        "      Option = LongShort * Notional * PAY(Payoff, Expiry, Settlement, PayCcy);\n"
+        "\n"
+        "      NUMBER ExerciseProbability;\n"
+        "      IF Payoff > 0 THEN\n"
+        "          ExerciseProbability = 1;\n"
+        "      END;\n"
+        "      FOR u IN (1, SIZE(Underlyings), 1) DO\n"
+        "        currentNotional = currentNotional + Notional * Underlyings[u](ObservationDates[1]) * Weights[u];\n"
+        "      END;\n"
+        "\n"
+        "      FOR i IN (1, SIZE(_AMC_SimDates), 1) DO\n"
+        "          IF _AMC_SimDates[i] < Settlement THEN\n"
+        "              _AMC_NPV[i] = NPVMEM(Option, _AMC_SimDates[i], i, 1 > 0, accruedMin[i]);\n"
+        "          END;\n"
+        "      END;\n";
+
+    static const std::string lookback_put_basket_option_script =
+        "      REQUIRE SIZE(Underlyings) == SIZE(Weights);\n"
+        "\n"
+        "      NUMBER d, u, basketPrice, maxBasketPrice, currentNotional;\n"
+        "      FOR d IN (1, SIZE(ObservationDates), 1) DO\n"
+        "          basketPrice = 0;\n"
+        "          FOR u IN (1, SIZE(Underlyings), 1) DO\n"
+        "              basketPrice = basketPrice + Underlyings[u](ObservationDates[d]) * Weights[u];\n"
+        "          END;\n"
+        "          IF d == 1 THEN\n"
+        "              maxBasketPrice = basketPrice;\n"
+        "          END;\n"
+        "          IF basketPrice > maxBasketPrice THEN\n"
+        "              maxBasketPrice = basketPrice;\n"
+        "          END;\n"
+        "      END;\n"
+        "\n"
+        "      NUMBER expiryBasketPrice;\n"
+        "      FOR u IN (1, SIZE(Underlyings), 1) DO\n"
+        "         expiryBasketPrice = expiryBasketPrice + Underlyings[u](Expiry) * Weights[u];\n"
+        "      END;\n"
+        "\n"
+        "      NUMBER Payoff;\n"
+        "      Payoff = max(maxBasketPrice - expiryBasketPrice, 0);\n"
+        "\n"
+        "      Option = LongShort * Notional * PAY(Payoff, Expiry, Settlement, PayCcy);\n"
+        "\n"
+        "      NUMBER ExerciseProbability;\n"
+        "      IF Payoff > 0 THEN\n"
+        "          ExerciseProbability = 1;\n"
+        "      END;\n"
+        "      FOR u IN (1, SIZE(Underlyings), 1) DO\n"
+        "        currentNotional = currentNotional + Notional * Underlyings[u](ObservationDates[1]) * Weights[u];\n"
+        "      END;";
+
+    static const std::string lookback_put_basket_option_amc_script =
+        "      REQUIRE SIZE(Underlyings) == SIZE(Weights);\n"
+        "\n"
+        "      NUMBER d, u, s, i, simDateIdx;\n"
+        "      NUMBER basketPrice, maxBasketPrice, currentNotional;\n"
+        "      NUMBER _AMC_NPV[SIZE(_AMC_SimDates)];\n"
+        "      NUMBER accruedMax[SIZE(_AMC_SimDates)];\n"
+        "\n"
+        "      simDateIdx = 1;\n"
+        "      FOR s IN (1, SIZE(ObsAndSimDates), 1) DO\n"
+        "          d = DATEINDEX(ObsAndSimDates[s], ObservationDates, EQ);\n"
+        "          IF simDateIdx <= SIZE(_AMC_SimDates) THEN\n"
+        "              IF _AMC_SimDates[simDateIdx] == ObsAndSimDates[s] THEN\n"
+        "                  accruedMax[simDateIdx] = maxBasketPrice;\n"
+        "                  simDateIdx = simDateIdx + 1;\n"
+        "              END;\n"
+        "          END;\n"
+        "          IF d > 0 THEN\n"
+        "              basketPrice = 0;\n"
+        "              FOR u IN (1, SIZE(Underlyings), 1) DO\n"
+        "                  basketPrice = basketPrice + Underlyings[u](ObservationDates[d]) * Weights[u];\n"
+        "              END;\n"
+        "              IF d == 1 THEN\n"
+        "                  maxBasketPrice = basketPrice;\n"
+        "              END;\n"
+        "              IF basketPrice > maxBasketPrice THEN\n"
+        "                  maxBasketPrice = basketPrice;\n"
+        "              END;\n"
+        "          END;\n"
+        "      END;\n"
+        "\n"
+        "      NUMBER expiryBasketPrice;\n"
+        "      FOR u IN (1, SIZE(Underlyings), 1) DO\n"
+        "         expiryBasketPrice = expiryBasketPrice + Underlyings[u](Expiry) * Weights[u];\n"
+        "      END;\n"
+        "\n"
+        "      NUMBER Payoff;\n"
+        "      Payoff = max(maxBasketPrice - expiryBasketPrice, 0);\n"
+        "\n"
+        "      Option = LongShort * Notional * PAY(Payoff, Expiry, Settlement, PayCcy);\n"
+        "\n"
+        "      NUMBER ExerciseProbability;\n"
+        "      IF Payoff > 0 THEN\n"
+        "          ExerciseProbability = 1;\n"
+        "      END;\n"
+        "      FOR u IN (1, SIZE(Underlyings), 1) DO\n"
+        "        currentNotional = currentNotional + Notional * Underlyings[u](ObservationDates[1]) * Weights[u];\n"
+        "      END;\n"
+        "\n"
+        "      FOR i IN (1, SIZE(_AMC_SimDates), 1) DO\n"
+        "          IF _AMC_SimDates[i] < Settlement THEN\n"
+        "              _AMC_NPV[i] = NPVMEM(Option, _AMC_SimDates[i], i, 1 > 0, accruedMax[i]);\n"
+        "          END;\n"
+        "      END;\n";
+
 // clang-format on
 
 void BasketOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory) {
@@ -250,6 +438,7 @@ void BasketOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory
     std::vector<ScriptedTradeScriptData::NewScheduleData> amcNewSchedules;
     if (optionData_.payoffType() == "Vanilla") {
         scriptToUse = vanilla_basket_option_script;
+        amcScriptToUse = vanilla_basket_option_amc_script;
         numbers_.emplace_back("Number", "PutCall", parseOptionType(optionData_.callPut()) == Option::Call ? "1" : "-1");
         numbers_.emplace_back("Number", "Strike", strike);
     } else if (optionData_.payoffType() == "Asian") {
@@ -262,14 +451,23 @@ void BasketOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory
             ScriptedTradeScriptData::NewScheduleData("ObsAndSimDates", "Join", {"_AMC_SimDates", "ObservationDates"})};
     } else if (optionData_.payoffType() == "AverageStrike") {
         scriptToUse = average_strike_basket_option_script;
+        amcScriptToUse = average_strike_basket_option_amc_script;
         numbers_.emplace_back("Number", "PutCall", parseOptionType(optionData_.callPut()) == Option::Call ? "1" : "-1");
         events_.emplace_back("ObservationDates", observationDates_);
+        amcNewSchedules = {
+            ScriptedTradeScriptData::NewScheduleData("ObsAndSimDates", "Join", {"_AMC_SimDates", "ObservationDates"})};
     } else if (optionData_.payoffType() == "LookbackCall") {
         scriptToUse = lookback_call_basket_option_script;
+        amcScriptToUse = lookback_call_basket_option_amc_script;
         events_.emplace_back("ObservationDates", observationDates_);
+        amcNewSchedules = {
+            ScriptedTradeScriptData::NewScheduleData("ObsAndSimDates", "Join", {"_AMC_SimDates", "ObservationDates"})};
     } else if (optionData_.payoffType() == "LookbackPut") {
         scriptToUse = lookback_put_basket_option_script;
+        amcScriptToUse = lookback_put_basket_option_amc_script;
         events_.emplace_back("ObservationDates", observationDates_);
+        amcNewSchedules = {
+            ScriptedTradeScriptData::NewScheduleData("ObsAndSimDates", "Join", {"_AMC_SimDates", "ObservationDates"})};
     } else {
         QL_FAIL("payoff type '" << optionData_.payoffType() << "' not recognised");
     }
@@ -284,11 +482,9 @@ void BasketOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory
         {"", ScriptedTradeScriptData(scriptToUse, "Option",
                                      {{"currentNotional", "currentNotional"}, {"notionalCurrency", "PayCcy"}}, {})}};
 
-    if (!amcScriptToUse.empty()) {
-        script_["AMC"] = ScriptedTradeScriptData(
-            amcScriptToUse, "Option", {{"currentNotional", "currentNotional"}, {"notionalCurrency", "PayCcy"}}, {},
-            amcNewSchedules);
-    }
+    script_["AMC"] = ScriptedTradeScriptData(amcScriptToUse, "Option",
+                                             {{"currentNotional", "currentNotional"}, {"notionalCurrency", "PayCcy"}},
+                                             {}, amcNewSchedules);
     // build trade
 
     ScriptedTrade::build(factory, optionData_.premiumData(), positionType == QuantLib::Position::Long ? -1.0 : 1.0);

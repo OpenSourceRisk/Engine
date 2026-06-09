@@ -44,6 +44,12 @@
     <Engine>ScriptedTrade</Engine>
     <EngineParameters/>
   </Product>
+  <Product type="FxAsianOptionArithmeticStrike">
+    <Model>ScriptedTrade</Model>
+    <ModelParameters />
+    <Engine>ScriptedTrade</Engine>
+    <EngineParameters />
+  </Product>
   <Product type="FxEuropeanBarrierOption">
     <Model>ScriptedTrade</Model>
     <ModelParameters />

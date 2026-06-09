@@ -24,6 +24,12 @@
     <Engine>ScriptedTrade</Engine>
     <EngineParameters/>
   </Product>
+  <Product type="FxAsianOptionArithmeticStrike">
+    <Model>ScriptedTrade</Model>
+    <ModelParameters />
+    <Engine>ScriptedTrade</Engine>
+    <EngineParameters />
+  </Product>
   <Product type="ScriptedTrade">
     <Model>Generic</Model>
     <ModelParameters>
