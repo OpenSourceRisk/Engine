@@ -39,12 +39,11 @@ public:
     //! \name Constructors
     //@{
     PiecewiseCPIInflationCurve(const QuantLib::Date& referenceDate, QuantLib::Date baseDate, QuantLib::Rate baseCPI,
-                               const QuantLib::Period& lag, QuantLib::Frequency frequency,
-                               const QuantLib::DayCounter& dayCounter,
+                               QuantLib::Frequency frequency, const QuantLib::DayCounter& dayCounter,
                                std::vector<QuantLib::ext::shared_ptr<typename Traits::helper>> instruments,
                                const QuantLib::ext::shared_ptr<QuantLib::Seasonality>& seasonality = {},
                                QuantLib::Real accuracy = 1.0e-14, const Interpolator& i = Interpolator())
-        : base_curve(referenceDate, baseDate, baseCPI, lag, frequency, dayCounter, seasonality, i),
+        : base_curve(referenceDate, baseDate, baseCPI, frequency, dayCounter, seasonality, i),
           instruments_(std::move(instruments)), accuracy_(accuracy) {
         bootstrap_.setup(this);
     }

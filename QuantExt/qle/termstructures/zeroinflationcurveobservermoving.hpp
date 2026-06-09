@@ -18,7 +18,6 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 
 /*! \file qle/termstructures/zeroinflationcurveobservermoving.hpp
     \brief Observable inflation term structure based on the interpolation of zero rate quotes,
-           but with floating reference date
 */
 
 #ifndef quantext_zero_inflation_curve_observer_moving_hpp
@@ -59,7 +58,6 @@ public:
     const std::vector<Time>& times() const;
     const std::vector<Real>& data() const;
     const std::vector<Rate>& rates() const;
-    // std::vector<std::pair<Time, Rate> > nodes() const;
     const std::vector<Handle<Quote>>& quotes() const { return quotes_; };
     //@}
 
@@ -95,12 +93,11 @@ ZeroInflationCurveObserverMoving<Interpolator>::ZeroInflationCurveObserverMoving
     const Period& observationLag, Frequency frequency, bool indexIsInterpolated, const std::vector<Period>& tenors,
     const std::vector<Handle<Quote>>& rates, const QuantLib::ext::shared_ptr<Seasonality>& seasonality,
     const Interpolator& interpolator)
-    : ZeroInflationTermStructure(settlementDays, calendar, Date(), observationLag, frequency, dayCounter, seasonality),
+    : ZeroInflationTermStructure(settlementDays, calendar, Date(), frequency, dayCounter, seasonality),
       InterpolatedCurve<Interpolator>(std::vector<Time>(), std::vector<Real>(), interpolator), quotes_(rates),
       tenors_(tenors), observationLag_(observationLag), simulationLag_(simulationLag) {
 
     QL_REQUIRE(tenors.size() > 1, "too few tenors: " << tenors.size());
-    //std::cout << "update base date"<<std::endl;
     this->times_.resize(tenors_.size());
     updateBaseDate();
     for (Size i = 0; i < tenors_.size(); i++) {
@@ -112,7 +109,6 @@ ZeroInflationCurveObserverMoving<Interpolator>::ZeroInflationCurveObserverMoving
 
     QL_REQUIRE(this->quotes_.size() == this->times_.size(),
                "quotes/times count mismatch: " << this->quotes_.size() << " vs " << this->times_.size());
-
     // initialise data vector, values are copied from quotes in performCalculations()
     this->data_.resize(this->times_.size());
     for (Size i = 0; i < this->times_.size(); i++)
@@ -121,7 +117,6 @@ ZeroInflationCurveObserverMoving<Interpolator>::ZeroInflationCurveObserverMoving
     this->interpolation_ =
         this->interpolator_.interpolate(this->times_.begin(), this->times_.end(), this->data_.begin());
     this->interpolation_.update();
-
     // register with each of the quotes
     for (Size i = 0; i < this->quotes_.size(); i++)
         registerWith(this->quotes_[i]);

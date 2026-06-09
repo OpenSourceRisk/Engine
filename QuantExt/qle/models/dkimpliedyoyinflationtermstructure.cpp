@@ -16,12 +16,12 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/models/dkimpliedyoyinflationtermstructure.hpp>
 #include <ql/time/schedule.hpp>
+#include <qle/models/dkimpliedyoyinflationtermstructure.hpp>
 
 using QuantLib::Date;
-using QuantLib::Real;
 using QuantLib::MakeSchedule;
+using QuantLib::Real;
 using QuantLib::Schedule;
 using QuantLib::Size;
 using QuantLib::Time;
@@ -31,60 +31,60 @@ using std::vector;
 namespace QuantExt {
 
 DkImpliedYoYInflationTermStructure::DkImpliedYoYInflationTermStructure(
-    const QuantLib::ext::shared_ptr<CrossAssetModel>& model, Size index, bool indexIsInterpolated)
-    : YoYInflationModelTermStructure(model, index, indexIsInterpolated) {}
+    const QuantLib::ext::shared_ptr<CrossAssetModel>& model, Size index,
+    const std::optional<QuantLib::DayCounter>& simulationDayCounter)
+    : YoYInflationModelTermStructure(model, index, simulationDayCounter) {}
 
-map<Date, Real> DkImpliedYoYInflationTermStructure::yoyRates(const vector<Date>& dts, const Period& obsLag) const {
-    
+map<Date, Real> DkImpliedYoYInflationTermStructure::yoyRates(const vector<Date>& dts,
+                                                             const QuantLib::Period& obsLag) const {
+
     map<Date, Real> yoys;
     map<Date, Real> yoyswaplet;
     map<Date, Real> yoydiscount;
-    Period useLag = obsLag == -1 * Days ? observationLag() : obsLag;
-    Calendar cal = model_->infdk(index_)->termStructure()->calendar();
-    DayCounter dc = model_->infdk(index_)->termStructure()->dayCounter();
-    Date maturity;
 
-    for (Size j = 0; j < dts.size(); j++) {
-        
-        if (indexIsInterpolated_) {
-            maturity = dts[j] - useLag;
-        } else {
-            maturity = inflationPeriod(dts[j] - useLag, frequency()).first;
-        }
-
+    Calendar cal = model_->infdk(index_)->dkLgmParam()->termStructure()->calendar();
+    DayCounter dc = model_->infdk(index_)->dkLgmParam()->termStructure()->dayCounter();
+    auto irIndex = model_->ccyIndex(model_->infdk(index_)->currency());
+    auto infIndex = model_->infdk(index_)->inflationIndex();
+    // need to be unadjusted for the schedule generation, it defines the payment
+    // date of the yoy coupons
+    for (const auto& maturity : dts) {
         Schedule schedule = MakeSchedule()
-            .from(baseDate())
-            .to(maturity)
-            .withTenor(1 * Years)
-            .withConvention(Unadjusted)
-            .withCalendar(cal)
-            .backwards();
+                                .from(referenceDate())
+                                .to(maturity)
+                                .withTenor(1 * Years)
+                                .withConvention(Unadjusted)
+                                .withCalendar(cal)
+                                .backwards();
 
         Real yoyLegRate = 0.0;
         Real fixedDiscounts = 0.0;
         for (Size i = 1; i < schedule.dates().size(); i++) {
+
             map<Date, Real>::const_iterator it = yoyswaplet.find(schedule.dates()[i]);
-            Real swapletPrice, discount;
+            Real swapletPrice, discount;            
+            
+            Date fixingDateStart = inflationPeriod(schedule.dates()[i - 1] - obsLag, infIndex->frequency()).first;
+            Date fixingDateEnd = inflationPeriod(schedule.dates()[i] - obsLag, infIndex->frequency()).first;
+            auto dc = simulationDayCounter_.value_or(dayCounter());
             if (it == yoyswaplet.end()) {
-                if (schedule.dates()[i - 1] < baseDate()) {
-                    // for the first YoY swaplet, I(T_i-1) is known, obtained from a fixing. I(T_i) comes from the model
-                    // directly - I(t) * Itilde(t,T).
-                    Time t1 = dayCounter().yearFraction(model_->infdk(index_)->termStructure()->baseDate(),
-                        schedule.dates()[i - 1]);
-                    Real I1 = model_->infdkI(index_, t1, t1, state_[0], state_[1]).first;
-                    Time t2 = dc.yearFraction(baseDate(), schedule.dates()[i]);
+                Time tMaturity = relativeTime_ + dc.yearFraction(referenceDate(), schedule.dates()[i]);
+                    // At time T we observe inflation process at T - simulationLag(), therefore add it here
+                Time t2Fixing =  dc.yearFraction(referenceDate(), fixingDateEnd) + simulationLag();
+                Time t1Fixing =  dc.yearFraction(referenceDate(), fixingDateStart) + simulationLag();
+                discount = model_->discountBond(irIndex, relativeTime_, tMaturity, state_[2]);
+                if (fixingDateStart <= baseDate()) {                    
                     std::pair<Real, Real> II2 =
-                        model_->infdkI(index_, relativeTime_, relativeTime_ + t2, state_[0], state_[1]);
+                        model_->infdkI(index_, relativeTime_, relativeTime_ + t2Fixing, state_[0], state_[1]);
                     Real I2 = II2.first * II2.second;
-                    discount = model_->discountBond(model_->ccyIndex(model_->infdk(index_)->currency()), relativeTime_,
-                        relativeTime_ + t2, state_[2]);
+                    // Compute I1, if fixingDateStart is before base date, we need historical fixing,
+                    // but we dont have the index, so take I1 from model
+                    Real pastGrowth = fixingDateStart < baseDate() ?
+                        infIndex->fixing(fixingDateStart) / infIndex->fixing(baseDate()) : 1.0;
+                    Real I1 = pastGrowth * model_->infdkI(index_, relativeTime_, relativeTime_, state_[0], state_[1]).first;
                     swapletPrice = discount * ((I2 / I1) - 1);
                 } else {
-                    Time t1 = dc.yearFraction(baseDate(), schedule.dates()[i - 1]);
-                    Time t2 = dc.yearFraction(baseDate(), schedule.dates()[i]);
-                    discount = model_->discountBond(model_->ccyIndex(model_->infdk(index_)->currency()), relativeTime_,
-                        relativeTime_ + t2, state_[2]);
-                    swapletPrice = yoySwapletRate(t1, t2);
+                    swapletPrice = yoySwapletRate(t1Fixing, t2Fixing);
                 }
                 yoyswaplet[schedule.dates()[i]] = swapletPrice;
                 yoydiscount[schedule.dates()[i]] = discount;
@@ -97,24 +97,22 @@ map<Date, Real> DkImpliedYoYInflationTermStructure::yoyRates(const vector<Date>&
         }
         Real yoyRate = (yoyLegRate / fixedDiscounts);
 
-        if (hasSeasonality()) {
-            yoyRate = seasonality()->correctYoYRate(dts[j] - useLag, yoyRate, *this);
-        }
-        yoys[dts[j]] = yoyRate;
-    }
+        
 
-    return yoys;
+        yoys[maturity] = yoyRate;
+    }
+    return modelParRatesToSwapletRates(dts, obsLag, yoys, yoydiscount, irIndex, infIndex);
 }
 
 Real DkImpliedYoYInflationTermStructure::yoySwapletRate(Time S, Time T) const {
-    return model_->infdkYY(index_, relativeTime_, relativeTime_ + S,
-        relativeTime_ + T, state_[0], state_[1], state_[2]);
+    return model_->infdkYY(index_, relativeTime_, relativeTime_ + S, relativeTime_ + T, state_[0], state_[1],
+                           state_[2]);
 }
 
 void DkImpliedYoYInflationTermStructure::checkState() const {
     // For DK YoY, expect the state to be three variables i.e. z_I and y_I and z_{ir}.
-    QL_REQUIRE(state_.size() == 3, "DkImpliedYoYInflationTermStructure: expected state to have " <<
-        "three elements but got " << state_.size());
+    QL_REQUIRE(state_.size() == 3, "DkImpliedYoYInflationTermStructure: expected state to have "
+                                       << "three elements but got " << state_.size());
 }
 
-}
+} // namespace QuantExt

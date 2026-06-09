@@ -216,14 +216,70 @@ public:
 %nodefaultctor QuantExt::InfDkParametrization;
 namespace QuantExt {
 class InfDkParametrization : public QuantExt::Parametrization {
+};
+}
+
+%feature("notabstract") QuantExt::InfDkConstantParametrization;
+%shared_ptr(QuantExt::InfDkConstantParametrization)
+namespace QuantExt {
+class InfDkConstantParametrization : public QuantExt::InfDkParametrization {
 public:
-    virtual Real zeta(const Time t) const = 0;
-    virtual Real H(const Time t) const = 0;
-    virtual Real alpha(const Time t) const;
-    virtual Real kappa(const Time t) const;
-    virtual Real Hprime(const Time t) const;
-    virtual Real Hprime2(const Time t) const;
-    virtual Real hullWhiteSigma(const Time t) const;
+    InfDkConstantParametrization(const Currency& currency,
+                                 const Handle<ZeroInflationTermStructure>& termStructure,
+                                 const Real alpha, const Real kappa,
+                                 const QuantLib::ext::shared_ptr<ZeroInflationIndex>& index,
+                                 const std::string& name = std::string());
+};
+}
+
+%feature("notabstract") QuantExt::InfDkPiecewiseConstantHullWhiteAdaptor;
+%shared_ptr(QuantExt::InfDkPiecewiseConstantHullWhiteAdaptor)
+namespace QuantExt {
+class InfDkPiecewiseConstantHullWhiteAdaptor : public QuantExt::InfDkParametrization {
+public:
+    InfDkPiecewiseConstantHullWhiteAdaptor(
+        const Currency& currency, const Handle<ZeroInflationTermStructure>& termStructure,
+        const Array& sigmaTimes, const Array& sigma, const Array& kappaTimes, const Array& kappa,
+        const QuantLib::ext::shared_ptr<ZeroInflationIndex>& index,
+        const std::string& name = std::string(),
+        const QuantLib::ext::shared_ptr<QuantLib::Constraint>& sigmaConstraint =
+            QuantLib::ext::make_shared<QuantLib::NoConstraint>(),
+        const QuantLib::ext::shared_ptr<QuantLib::Constraint>& kappaConstraint =
+            QuantLib::ext::make_shared<QuantLib::NoConstraint>());
+};
+}
+
+%feature("notabstract") QuantExt::InfDkPiecewiseConstantParametrization;
+%shared_ptr(QuantExt::InfDkPiecewiseConstantParametrization)
+namespace QuantExt {
+class InfDkPiecewiseConstantParametrization : public QuantExt::InfDkParametrization {
+public:
+    InfDkPiecewiseConstantParametrization(
+        const Currency& currency, const Handle<ZeroInflationTermStructure>& termStructure,
+        const Array& alphaTimes, const Array& alpha, const Array& kappaTimes, const Array& kappa,
+        const QuantLib::ext::shared_ptr<ZeroInflationIndex>& index,
+        const std::string& name = std::string(),
+        const QuantLib::ext::shared_ptr<QuantLib::Constraint>& alphaConstraint =
+            QuantLib::ext::make_shared<QuantLib::NoConstraint>(),
+        const QuantLib::ext::shared_ptr<QuantLib::Constraint>& kappaConstraint =
+            QuantLib::ext::make_shared<QuantLib::NoConstraint>());
+};
+}
+
+%feature("notabstract") QuantExt::InfDkPiecewiseLinearParametrization;
+%shared_ptr(QuantExt::InfDkPiecewiseLinearParametrization)
+namespace QuantExt {
+class InfDkPiecewiseLinearParametrization : public QuantExt::InfDkParametrization {
+public:
+    InfDkPiecewiseLinearParametrization(
+        const Currency& currency, const Handle<ZeroInflationTermStructure>& termStructure,
+        const Array& alphaTimes, const Array& alpha, const Array& hTimes, const Array& h,
+        const QuantLib::ext::shared_ptr<ZeroInflationIndex>& index,
+        const std::string& name = std::string(),
+        const QuantLib::ext::shared_ptr<QuantLib::Constraint>& alphaConstraint =
+            QuantLib::ext::make_shared<QuantLib::NoConstraint>(),
+        const QuantLib::ext::shared_ptr<QuantLib::Constraint>& hConstraint =
+            QuantLib::ext::make_shared<QuantLib::NoConstraint>());
 };
 }
 
@@ -319,6 +375,22 @@ toParametrization(const ext::shared_ptr<QuantExt::FxBsConstantParametrization>& 
 }
 ext::shared_ptr<QuantExt::Parametrization>
 toParametrization(const ext::shared_ptr<QuantExt::FxBsPiecewiseConstantParametrization>& p) {
+    return ext::static_pointer_cast<QuantExt::Parametrization>(p);
+}
+ext::shared_ptr<QuantExt::Parametrization>
+toParametrization(const ext::shared_ptr<QuantExt::InfDkConstantParametrization>& p) {
+    return ext::static_pointer_cast<QuantExt::Parametrization>(p);
+}
+ext::shared_ptr<QuantExt::Parametrization>
+toParametrization(const ext::shared_ptr<QuantExt::InfDkPiecewiseConstantHullWhiteAdaptor>& p) {
+    return ext::static_pointer_cast<QuantExt::Parametrization>(p);
+}
+ext::shared_ptr<QuantExt::Parametrization>
+toParametrization(const ext::shared_ptr<QuantExt::InfDkPiecewiseConstantParametrization>& p) {
+    return ext::static_pointer_cast<QuantExt::Parametrization>(p);
+}
+ext::shared_ptr<QuantExt::Parametrization>
+toParametrization(const ext::shared_ptr<QuantExt::InfDkPiecewiseLinearParametrization>& p) {
     return ext::static_pointer_cast<QuantExt::Parametrization>(p);
 }
 ext::shared_ptr<QuantExt::FxBsParametrization>

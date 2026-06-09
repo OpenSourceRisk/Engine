@@ -185,6 +185,17 @@ WrappedMarket::correlationCurve(const std::string& index1, const std::string& in
 Handle<Quote> WrappedMarket::cpr(const string& securityID, const string& configuration) const {
     return market_->cpr(securityID, configuration);
 }
+std::map<QuantLib::Period, QuantLib::Period>
+WrappedMarket::zeroInflationObservationLags(const string& indexName,
+                                            const string& configuration) const {
+    return market_->zeroInflationObservationLags(indexName, configuration);
+};
+
+std::map<QuantLib::Period, QuantLib::Period>
+WrappedMarket::yoyInflationObservationLags(const string& indexName,
+                                           const string& configuration) const {
+    return market_->yoyInflationObservationLags(indexName, configuration);
+};
 
 Handle<BlackVolTermStructure> WrappedMarket::bondFutureVol(const string& contractName,
     const string& configuration) const {

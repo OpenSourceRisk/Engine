@@ -1121,12 +1121,10 @@ termstructures/terminterpolateddefaultcurve.hpp
 termstructures/weightedyieldtermstructure.hpp
 termstructures/yieldplusdefaultyieldtermstructure.hpp
 termstructures/yoyinflationcurveobservermoving.hpp
-termstructures/yoyinflationcurveobserverstatic.hpp
 termstructures/yoyoptionletsolver.hpp
 termstructures/yoyoptionletsurfacestripper.hpp
 termstructures/yoypricesurfacefromvols.hpp
 termstructures/zeroinflationcurveobservermoving.hpp
-termstructures/zeroinflationcurveobserverstatic.hpp
 time/dateutilities.hpp
 time/futureexpirycalculator.hpp
 time/monthcounter.hpp
