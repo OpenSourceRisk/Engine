@@ -82,6 +82,7 @@ void SaCvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputPara
     if (!tmp.empty()) {
         LOG("Loading dimModel from sacva section: " << tmp);
         inputs->setDimModel(tmp);
+        inputs->setDimAnalytic(true);
     }
 
     // Forward storeSensis from sacva to simulation section

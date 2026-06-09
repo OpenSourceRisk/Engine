@@ -237,10 +237,13 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                            const CurveConfigurations& curveConfigs,
                            map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves,
                            map<string, QuantLib::ext::shared_ptr<DefaultCurve>>& defaultCurves,
-                           QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData) {
+                           QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData,
+                           const bool buildCalibrationInfo) {
+                           
     const QuantLib::ext::shared_ptr<DefaultCurveConfig>& configs = curveConfigs.defaultCurveConfig(spec.curveConfigID());
     bool built = false;
     std::string errors;
+    std::string typeStr;
     // Try building the curve with each config in turn, until one works
     // run first all configs with implyDefaultFromMarket false, only if all configurations have failed
     // we retry CDSSpread and Price configurations that have implyDefaultFromMarket true
@@ -280,6 +283,7 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                         }
                     }
                 }
+
                 // Build the default curve of the requested type
                 switch (config.second.type()) {
                 case DefaultCurveConfig::Config::Type::SpreadCDS:
@@ -287,21 +291,27 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                 case DefaultCurveConfig::Config::Type::Price:
                     buildCdsCurve(configs->curveID(), config.second, asof, spec, loader, yieldCurves,
                                   implyDefaultFromMarket, referenceData);
+                    typeStr = "SpreadCDS";
                     break;
                 case DefaultCurveConfig::Config::Type::HazardRate:
                     buildHazardRateCurve(configs->curveID(), config.second, asof, spec, loader);
+                    typeStr = "HazardRate";
                     break;
                 case DefaultCurveConfig::Config::Type::Benchmark:
                     buildBenchmarkCurve(configs->curveID(), config.second, asof, spec, loader, yieldCurves);
+                    typeStr = "Benchmark";
                     break;
                 case DefaultCurveConfig::Config::Type::MultiSection:
                     buildMultiSectionCurve(configs->curveID(), config.second, asof, spec, loader, defaultCurves);
+                    typeStr = "MultiSection";
                     break;
                 case DefaultCurveConfig::Config::Type::TransitionMatrix:
                     buildTransitionMatrixCurve(configs->curveID(), config.second, asof, spec, loader, defaultCurves);
+                    typeStr = "TransitionMatrix";
                     break;
                 case DefaultCurveConfig::Config::Type::Null:
                     buildNullCurve(configs->curveID(), config.second, asof, spec);
+                    typeStr = "Null";
                     break;
                 case DefaultCurveConfig::Config::Type::YieldCurve:
                     buildYieldCurveAsDefaultCurve(configs->curveID(), config.second, asof, spec, yieldCurves);
@@ -311,12 +321,50 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                                                            << " was not recognised");
                 }
                 built = true;
+
+                if (buildCalibrationInfo) {
+                    auto calInfo = QuantLib::ext::make_shared<DefaultCurveCalibrationInfo>();
+
+                    // Get Report Config details first
+                    try {
+                        ReportConfig rc =
+                            effectiveReportConfig(curveConfigs.reportConfigDefaultCurves(), configs->reportConfig());
+                        std::vector<QuantLib::Period> pillars = *rc.expiries();
+                        if (!pillars.empty()) {
+                            calInfo->pillarDates.clear();
+                            for (auto const& p : pillars)
+                                calInfo->pillarDates.push_back(asof + p);
+                        }
+                    } catch (...) {
+                        DLOG(
+                            "Report configuration for default curves not set - using predefined/default pillar dates.");
+                    }
+
+                    // Build calibration structure
+                    calInfo->typeStr = typeStr;
+                    calInfo->dayCounter = config.second.dayCounter().name();
+                    calInfo->calendar = curve_->refData().calendar.name();
+                    calInfo->runningSpread = config.second.runningSpread();
+
+                    if (calInfo->pillarDates.empty()) {
+                        for (auto const& p : DefaultCurveCalibrationInfo::defaultPeriods)
+                            calInfo->pillarDates.push_back(asof + p);
+                    }
+                    for (auto const& d : calInfo->pillarDates) {
+                        calInfo->defaultProb.push_back(curve_->curve()->defaultProbability(d, true));
+                        calInfo->survivalProb.push_back(curve_->curve()->survivalProbability(d, true));
+                        calInfo->hazardRates.push_back(curve_->curve()->hazardRate(d, true));
+                        calInfo->defaultDensities.push_back(curve_->curve()->defaultDensity(d, true));
+                    }
+
+                    calibrationInfo_ = calInfo;
+                }
+
                 break;
             } catch (exception& e) {
                 std::ostringstream message;
                 message << "build attempt failed for " << configs->curveID() << " using config with priority "
-                        << config.first << ": " << e.what()
-                        << " and implyDefaultFromMarket= " << to_string(implyDefaultFromMarket);
+                        << config.first << ": " << e.what();
                 DLOG(message.str());
                 if (!errors.empty())
                     errors += ", ";
@@ -362,7 +410,7 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
     set<QuoteData> quotes = getConfiguredQuotes(curveID, config, asof, loader);
 
     // Set up ref data for the curve, except runningSpread which is set below
-    CreditCurve::RefData refData = createRefData(config.indexTerm(), config.startDate(), cdsConv);
+    QuantExt::CreditCurve::RefData refData = createRefData(config.indexTerm(), config.startDate(), cdsConv);
 
     // If the configuration instructs us to imply a default from the market data, we do it here.
     if (implyDefaultFromMarket) {
@@ -930,10 +978,10 @@ void DefaultCurve::buildYieldCurveAsDefaultCurve(const std::string& curveID, con
     LOG("Finished building default curve from yield curve for " << curveID);
 }
 
-CreditCurve::RefData createRefData(const Period& indexTerm, const Date& startDate,
+QuantExt::CreditCurve::RefData createRefData(const Period& indexTerm, const Date& startDate,
     const ext::shared_ptr<CdsConvention>& cdsConvention, Real runningSpread, bool eom)
 {
-    CreditCurve::RefData refData;
+    QuantExt::CreditCurve::RefData refData;
     refData.startDate = startDate;
     refData.indexTerm = indexTerm;
     refData.tenor = Period(cdsConvention->frequency());

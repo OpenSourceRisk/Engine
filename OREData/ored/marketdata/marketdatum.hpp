@@ -1999,7 +1999,7 @@ public:
     //@}
 
 private:
-    int offset_;
+    int offset_ = 0;
     //! Serialization
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned int version);

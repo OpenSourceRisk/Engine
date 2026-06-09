@@ -1006,7 +1006,7 @@ public:
     const QuantLib::ext::shared_ptr<ore::data::EngineData>& sensiPricingEngine() const { return sensiPricingEngine_; }
     // const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& sensiTodaysMarketParams() { return sensiTodaysMarketParams_; }
     QuantLib::Size sensiOutputPrecision() const { return sensiOutputPrecision_; }
-        
+
     /****************************
      * Getters for scenario build
      ****************************/

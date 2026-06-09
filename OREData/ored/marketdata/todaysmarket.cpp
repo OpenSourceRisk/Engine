@@ -41,6 +41,7 @@
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
 #include <ored/marketdata/yieldvolcurve.hpp>
+#include <ored/portfolio/bondutils.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/log.hpp>
@@ -534,8 +535,10 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
                 // build the curve
                 DLOG("Building DefaultCurve for asof " << asof_);
                 QuantLib::ext::shared_ptr<DefaultCurve> defaultCurve = QuantLib::ext::make_shared<DefaultCurve>(
-                    asof_, *defaultspec, *loader_, *curveConfigs_, requiredYieldCurves_, requiredDefaultCurves_, referenceData_);
+                    asof_, *defaultspec, *loader_, *curveConfigs_, requiredYieldCurves_, requiredDefaultCurves_, referenceData_,
+                    buildCalibrationInfo_);
                 itr = requiredDefaultCurves_.insert(make_pair(defaultspec->name(), defaultCurve)).first;
+                calibrationInfo_->defaultCurveCalibrationInfo[defaultspec->name()] = defaultCurve->calibrationInfo();
             }
             DLOG("Adding DefaultCurve (" << node.name << ") with spec " << *defaultspec << " to configuration "
                                          << configuration);
@@ -759,8 +762,15 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
                 recoveryRates_[make_pair(configuration, node.name)] = itr->second->recoveryRate();
             if (!itr->second->cpr().empty())
                 cprs_[make_pair(configuration, node.name)] = itr->second->cpr();
-            if (!itr->second->conversionFactor().empty())
+            if (!itr->second->conversionFactor().empty()) {
                 conversionFactors_[make_pair(configuration, node.name)] = itr->second->conversionFactor();
+                // We know that we have a future contract. Store the future contract price so that we can query it 
+                // from the market later also.
+                StructuredSecurityId ssid{node.name};
+                string futureContract = ssid.futureContract();
+                if (!futureContract.empty())
+                    securityPrices_.try_emplace(std::pair{ configuration, futureContract }, itr->second->price());
+            }
             if (!itr->second->price().empty())
                 securityPrices_[make_pair(configuration, node.name)] = itr->second->price();
             break;

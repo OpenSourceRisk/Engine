@@ -22,6 +22,8 @@
 
 #include <ored/portfolio/fxoption.hpp>
 
+#include <ql/time/daycounters/actualactual.hpp>
+
 using namespace QuantLib;
 using namespace QuantExt;
 
@@ -32,7 +34,7 @@ SimmHelper::SimmHelper(const std::vector<std::string>& currencies, const QuantLi
                        const QuantLib::ext::shared_ptr<AggregationScenarioData>& marketCube,
                        const QuantLib::ext::shared_ptr<SensitivityStorageManager>& sensitivityStorageManager,
                        const QuantLib::ext::shared_ptr<ore::data::Market>& market)
-    : referenceDate_(Settings::instance().evaluationDate()), dc_(ActualActual(ActualActual::ISDA)),
+    : referenceDate_(Settings::instance().evaluationDate()), dc_(QuantLib::ActualActual(ActualActual::ISDA)),
       currencies_(currencies), cube_(cube), marketCube_(marketCube), market_(market) {
 
     QL_REQUIRE(cube, "SimmHelper: cube is null");
@@ -182,15 +184,8 @@ Real SimmHelper::initialMargin(const std::string& nettingSetId, const Size dateI
         }
     }
 
-    RandomVariable res = imCalculator_->value(irDeltaIM, irVegaIM, fxDeltaIM, fxVegaIM, &irDeltaIM_, &irVegaIM_,
-                                              &irCurvatureIM_, &fxDeltaIM_, &fxVegaIM_, &fxCurvatureIM_);
+    RandomVariable res = imCalculator_->value(irDeltaIM, irVegaIM, fxDeltaIM, fxVegaIM);
     totalMargin_ = res.at(0);
-
-    deltaMargin_ = irDeltaIM_.at(0) + fxDeltaIM_.at(0);
-    vegaMargin_ = irVegaIM_.at(0) + fxVegaIM_.at(0);
-    curvatureMargin_ = irCurvatureIM_.at(0) + fxCurvatureIM_.at(0);
-    irDeltaMargin_ = irDeltaIM_.at(0);
-    fxDeltaMargin_ = fxDeltaIM_.at(0);
 
     DLOG("SimmHelper::initialMargin done for date " << dateIndex << ", sample " << sampleIndex);
 

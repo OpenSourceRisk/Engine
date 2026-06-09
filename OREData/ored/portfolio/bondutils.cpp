@@ -550,5 +550,14 @@ BondFutureUtils::IndexResults BondFutureUtils::createIndex(const string& contrac
     return res;
 }
 
+
+std::string_view futureContractName(std::string_view futureSurfaceName) {
+    if (futureSurfaceName.ends_with("_CALL"))
+        futureSurfaceName.remove_suffix(5);
+    else if (futureSurfaceName.ends_with("_PUT"))
+        futureSurfaceName.remove_suffix(4);
+    return futureSurfaceName;
+}
+
 } // namespace data
 } // namespace ore

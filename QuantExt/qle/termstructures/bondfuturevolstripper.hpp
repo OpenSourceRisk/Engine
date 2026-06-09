@@ -67,7 +67,8 @@ public:
         bool lowerStrikeConstExtrap = true,
         bool upperStrikeConstExtrap = true,
         TimeExtrapType timeExtrapolationType = TimeExtrapType::FlatVolatility,
-        bool preferOutOfTheMoney = false);
+        bool preferOutOfTheMoney = false,
+        bool treatAsEuropean = false);
 
     //! Return the stripped volatility structure.
     QuantLib::ext::shared_ptr<QuantLib::BlackVolTermStructure> volSurface();
@@ -109,6 +110,7 @@ private:
     QuoteSurface quotes_;
     Solver1DOptions solverOptions_;
     bool preferOutOfTheMoney_;
+    bool treatAsEuropean_;
 
     // Store any error messages during the stripping process.
     mutable std::vector<std::string> errorMessages_;
