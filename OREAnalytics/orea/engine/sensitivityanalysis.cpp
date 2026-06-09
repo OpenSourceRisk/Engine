@@ -127,7 +127,6 @@ splitPortfolioByScenarioGenerators(
     }
     return result;
 }
-} // namespace
 
 Real aggregateTradeFlow(const Date& d0, const Date& d1,
             const std::vector<ore::data::TradeCashflowReportData>& cashflows,
@@ -143,6 +142,36 @@ Real aggregateTradeFlow(const Date& d0, const Date& d1,
         flow += fx * cf.amount;
     }
     return flow;
+}
+} // namespace
+
+std::map<std::string, Real> SensitivityAnalysis::computeTheta(const ext::shared_ptr<Portfolio>& pf,
+                                                              const ext::shared_ptr<NPVCube>& cube) const {
+    std::map<std::string, Real> thetaMap;
+    if (computeTheta_) {
+        Date thetaDate = asof_ + thetaPeriod_;
+        LOG("Computing theta for " << pf->size() << " trades, shifting eval date by " << thetaPeriod_ << " from "
+                                   << asof_ << " to " << thetaDate);
+        simMarket_->reset();
+        auto thetaFixingManager = QuantLib::ext::make_shared<FixingManager>(asof_);
+        thetaFixingManager->initialise(pf, simMarket_, marketConfiguration_);
+        thetaFixingManager->update(thetaDate);
+        simMarket_->updateDate(thetaDate);
+        std::string baseCcy = simMarketData_->baseCcy();
+        for (auto const& [id, trade] : pf->trades()) {
+            Real periodFlow =
+                aggregateTradeFlow(asof_, thetaDate, trade->cashflows(baseCcy, simMarket_, marketConfiguration_, false),
+                                   simMarket_, marketConfiguration_, baseCcy);
+            Real baseNpv = cube->getT0(id, 0);
+            Real npv = trade->instrument()->NPV() *
+                       (trade->npvCurrency() != baseCcy
+                            ? simMarket_->fxRate(trade->npvCurrency() + baseCcy, marketConfiguration_)->value()
+                            : 1.0);
+            thetaMap[id] = npv - baseNpv + periodFlow;
+        }
+        simMarket_->reset();
+    }
+    return thetaMap;
 }
 
 void SensitivityAnalysis::generateSensitivities() {
@@ -250,61 +279,16 @@ void SensitivityAnalysis::generateSensitivities() {
             engine.buildCube(pf, cube, calculators, ValuationEngine::ErrorPolicy::RemoveAll, true, nullptr, nullptr, {},
                              dryRun_);
 
-            // Compute theta separately: build a new sim market at thetaDate, reprice, store in a map
-            std::map<std::string, Real> thetaMap;
-            if (computeTheta_) {
-                LOG("Computing theta for " << pf->size() << " trades, shifting eval date by "
-                                           << thetaPeriod_);
-                Date thetaDate = asof_ + thetaPeriod_; //Calendar??
-                // Shift evaluation date asof + 1D
-                Settings::instance().evaluationDate() = thetaDate;
-                // Create a new ScenarioSimMarket at thetaDate from the original market
-                auto thetaSimMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
-                    market_, simMarketData_, marketConfiguration_,
-                    curveConfigs_ ? *curveConfigs_ : ore::data::CurveConfigurations(),
-                    todaysMarketParams_ ? *todaysMarketParams_ : ore::data::TodaysMarketParameters(),
-                    continueOnError_, false /*useSpreadedTermStructures*/, false /*cacheSimData*/,
-                    false /*allowPartialScenarios*/, iborFallbackConfig_);
-                // Build the portfolio against the theta sim market
-                map<MarketContext, string> thetaConfigurations;
-                thetaConfigurations[MarketContext::pricing] = marketConfiguration_;
-                auto thetaFactory = QuantLib::ext::make_shared<EngineFactory>(
-                    ed, thetaSimMarket, thetaConfigurations, referenceData_, iborFallbackConfig_);
-                pf->reset();
-                pf->build(thetaFactory, "sensi theta", true, useAtParCouponsTrades_);
-                // Backfill fixings from asof_ to thetaDate (e.g. equity spots become historical fixings)
-                auto thetaFixingManager = QuantLib::ext::make_shared<FixingManager>(asof_);
-                thetaFixingManager->initialise(pf, thetaSimMarket, marketConfiguration_);
-                thetaFixingManager->update(thetaDate);
-                // Reprice each trade and compute theta
-                auto baseCcy = simMarketData_->baseCcy();
-                for (auto const& [id, trade] : pf->trades()) {
-                    auto cfData = trade->cashflows(baseCcy, thetaSimMarket, marketConfiguration_, false);
-                    Real periodFlow = aggregateTradeFlow(asof_, thetaDate, cfData, thetaSimMarket,
-                                                         marketConfiguration_, baseCcy);
-                    Real npv = trade->instrument()->NPV();
-                    Real fx = 1.0;
-                    if (trade->npvCurrency() != baseCcy) {
-                        auto ccyPair = trade->npvCurrency() + baseCcy;
-                        fx = thetaSimMarket->fxRate(ccyPair, marketConfiguration_)->value();
-                    }
-                    Size tradeIdx = cube->idsAndIndexes().at(id);
-                    Real baseNpv = cube->getT0(tradeIdx, 0);
-                    thetaMap[id] = npv * fx - baseNpv + periodFlow;
-                }
-                // Restore original fixings and reset evaluation date
-                thetaFixingManager->reset();
-                Settings::instance().evaluationDate() = asof_;
-                LOG("Theta computation completed");
-            }
+            // populate sensiCubes_
 
             sensiCubes_.push_back(QuantLib::ext::make_shared<SensitivityCube>(cube, scenGen->scenarioDescriptions(),
                                                                       scenarioGenerator_->shiftSizes(),
                                                                       scenGen->shiftSizes(), scenGen->shiftSchemes()));
-            if (!thetaMap.empty()) {
-                sensiCubes_.back()->setThetaMap(thetaMap);
-                sensiCubes_.back()->setThetaPeriod(thetaPeriod_);
-            }
+
+            // compute theta and add to the sensi cube
+
+            sensiCubes_.back()->setThetaMap(computeTheta(pf, cube));
+            sensiCubes_.back()->setThetaPeriod(thetaPeriod_);
         }
     } else {
 
@@ -380,61 +364,13 @@ void SensitivityAnalysis::generateSensitivities() {
             }
             auto cube = QuantLib::ext::make_shared<JointNPVSensiCube>(miniCubes, pf->ids());
 
-            // Compute theta separately: build a new sim market at thetaDate, reprice, store in a map
-            std::map<std::string, Real> thetaMap;
-            if (computeTheta_) {
-                LOG("Computing theta for " << pf->size() << " trades, shifting eval date by "
-                                           << thetaPeriod_);
-                Date thetaDate = asof_ + thetaPeriod_;
-                // Shift evaluation date
-                Settings::instance().evaluationDate() = thetaDate;
-                // Create a new ScenarioSimMarket at thetaDate from the original market
-                auto thetaSimMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
-                    market_, simMarketData_, marketConfiguration_,
-                    curveConfigs_ ? *curveConfigs_ : ore::data::CurveConfigurations(),
-                    todaysMarketParams_ ? *todaysMarketParams_ : ore::data::TodaysMarketParameters(),
-                    continueOnError_, false /*useSpreadedTermStructures*/, false /*cacheSimData*/,
-                    false /*allowPartialScenarios*/, iborFallbackConfig_);
-                // Build the portfolio against the theta sim market
-                map<MarketContext, string> thetaConfigurations;
-                thetaConfigurations[MarketContext::pricing] = marketConfiguration_;
-                auto thetaFactory = QuantLib::ext::make_shared<EngineFactory>(
-                    ed, thetaSimMarket, thetaConfigurations, referenceData_, iborFallbackConfig_);
-                pf->reset();
-                pf->build(thetaFactory, "sensi theta", true, useAtParCouponsTrades_);
-                // Backfill fixings from asof_ to thetaDate (e.g. equity spots become historical fixings)
-                auto thetaFixingManager = QuantLib::ext::make_shared<FixingManager>(asof_);
-                thetaFixingManager->initialise(pf, thetaSimMarket, marketConfiguration_);
-                thetaFixingManager->update(thetaDate);
-                // Reprice each trade and compute theta
-                auto baseCcy = simMarketData_->baseCcy();
-                for (auto const& [id, trade] : pf->trades()) {
-                    auto cfData = trade->cashflows(baseCcy, thetaSimMarket, marketConfiguration_, false);
-                    Real periodFlow = aggregateTradeFlow(asof_, thetaDate, cfData, thetaSimMarket,
-                                                         marketConfiguration_, baseCcy);
-                    Real npv = trade->instrument()->NPV();
-                    Real fx = 1.0;
-                    if (trade->npvCurrency() != baseCcy) {
-                        auto ccyPair = trade->npvCurrency() + baseCcy;
-                        fx = thetaSimMarket->fxRate(ccyPair, marketConfiguration_)->value();
-                    }
-                    Size tradeIdx = cube->idsAndIndexes().at(id);
-                    Real baseNpv = cube->getT0(tradeIdx, 0);
-                    thetaMap[id] = npv * fx - baseNpv + periodFlow;
-                }
-                // Restore original fixings and reset evaluation date
-                thetaFixingManager->reset();
-                Settings::instance().evaluationDate() = asof_;
-                LOG("Theta computation completed");
-            }
-
             sensiCubes_.push_back(QuantLib::ext::make_shared<SensitivityCube>(cube, scenGen->scenarioDescriptions(),
                                                                       scenarioGenerator_->shiftSizes(),
                                                                       scenGen->shiftSizes(), scenGen->shiftSchemes()));
-            if (!thetaMap.empty()) {
-                sensiCubes_.back()->setThetaMap(thetaMap);
-                sensiCubes_.back()->setThetaPeriod(thetaPeriod_);
-            }
+            // compute theta and add to the sensi cube
+
+            sensiCubes_.back()->setThetaMap(computeTheta(pf, cube));
+            sensiCubes_.back()->setThetaPeriod(thetaPeriod_);
         }
     }
 

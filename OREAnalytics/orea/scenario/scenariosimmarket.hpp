@@ -116,7 +116,6 @@ public:
     virtual const QuantLib::ext::shared_ptr<ScenarioFilter>& filter() const { return filter_; }
 
     //! Update
-    // virtual void update(const Date&) override;
     virtual void preUpdate() override;
     virtual void updateScenario(const Date&) override;
     virtual void updateDate(const Date&) override;

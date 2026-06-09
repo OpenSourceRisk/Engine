@@ -153,6 +153,9 @@ public:
     }
 
 private:
+    std::map<std::string, Real> computeTheta(const ext::shared_ptr<Portfolio>& pf,
+                                             const ext::shared_ptr<NPVCube>& cube) const;
+
     QuantLib::ext::shared_ptr<ore::data::Market> market_;
     std::string marketConfiguration_;
     Date asof_;
