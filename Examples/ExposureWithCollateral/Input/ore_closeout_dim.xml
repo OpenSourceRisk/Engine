@@ -66,6 +66,7 @@
       <Parameter name="mva">Y</Parameter>
       <Parameter name="dimQuantile">0.99</Parameter>
       <Parameter name="dimModel">Regression</Parameter>
+      <Parameter name="dimScaling">1.0</Parameter>
       <Parameter name="dimRegressionOrder">1</Parameter>
       <Parameter name="dimOutputNettingSet">CPTY_A</Parameter>
       <Parameter name="dimEvolutionFile">dim_evolution.csv</Parameter>

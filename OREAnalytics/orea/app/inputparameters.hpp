@@ -724,6 +724,7 @@ public:
     void setDimDistributionGridSize(Size n) { parameters_.set("xva", "dimDistributionGridSize", n); }
     void setDimLocalRegressionEvaluations(Size s) { parameters_.set("xva", "dimLocalRegressionEvaluations", s); }
     void setDimLocalRegressionBandwidth(Real r) { parameters_.set("xva", "dimLocalRegressionBandwidth", r); }
+    void setDimScaling(Real r) { parameters_.set("xva", "dimScaling", r); }
     // capital value adjustment details
     void setKvaCapitalDiscountRate(Real r) { parameters_.set("xva", "kvaCapitalDiscountRate", r); }
     void setKvaAlpha(Real r) { parameters_.set("xva", "kvaAlpha", r); }
