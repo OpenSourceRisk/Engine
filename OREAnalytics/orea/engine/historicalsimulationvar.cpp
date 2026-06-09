@@ -80,20 +80,12 @@ void HistoricalSimulationVarReport::createAdditionalReports(
 void HistoricalSimulationVarReport::handleFullRevalResults(const ext::shared_ptr<MarketRiskReport::Reports>& reports,
                                                            const ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
                                                            const ext::shared_ptr<TradeGroupBase>& tradeGroup) {
-    if (!tradePnl_ && !riskFactorBreakdown_) {
-        pnls_ = histPnlGen_->pnl(period_.value(), tradeIdIdxPairs_);
-    }else if(riskFactorBreakdown_){
-        //Full PnL report
-        if(!tradePnl_){
-            pnls_ = histPnlGen_->pnl(period_.value(), tradeIdIdxPairs_);
-        }else{
-            tradePnls_ = histPnlGen_->tradeLevelPnl(period_.value(), tradeIdIdxPairs_);
-        }      
-        // The PnL breakdown per scenario on risk factors
-        riskFactorPnls_ = histPnlGen_->riskFactorLevelPnlSeries(period_.value());
-    } else {
+    // Always compute aggregate PnL for the main VaR report
+    pnls_ = histPnlGen_->pnl(period_.value(), tradeIdIdxPairs_);
+    if (tradePnl_)
         tradePnls_ = histPnlGen_->tradeLevelPnl(period_.value(), tradeIdIdxPairs_);
-    }
+    if (riskFactorBreakdown_)
+        riskFactorPnls_ = histPnlGen_->riskFactorLevelPnlSeries(period_.value());
 
     // Add theta adjustment to PnLs if enabled
     if (includeTheta_ && !thetaPerTrade_.empty()) {
