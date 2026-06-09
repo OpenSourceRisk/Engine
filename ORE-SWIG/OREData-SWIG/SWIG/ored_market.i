@@ -20,10 +20,12 @@
 #define ored_market_i
 
 %include <std_pair.i>
+%include <std_map.i>
 %include ored_conventions.i
 
 %shared_ptr(ore::data::MarketImpl)
 %shared_ptr(ore::data::TodaysMarket)
+%shared_ptr(ore::data::TodaysMarketCalibrationInfo)
 %template(CPICapFloorTermPriceSurfaceHandle) Handle<QuantLib::CPICapFloorTermPriceSurface>;
 %template(YoYCapFloorTermPriceSurfaceHandle) Handle<QuantLib::YoYCapFloorTermPriceSurface>;
 %template(StringPeriodPair) std::pair<std::string, Period>;
@@ -59,7 +61,8 @@ enum class MarketObject {
     CommodityCurve = 18,
     CommodityVolatility = 19,
     Correlation = 20,
-    YieldVol = 21
+    YieldVol = 21,
+    BondFutureVol = 22
 };
 
 // Market class passed around as pointer, no construction
@@ -233,7 +236,36 @@ class TodaysMarket : public MarketImpl {
                  const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr,
                  const bool preserveQuoteLinkage = false,
          const QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig>& iborFallbackConfig =
-           QuantLib::ext::make_shared<ore::data::IborFallbackConfig>(ore::data::IborFallbackConfig::defaultConfig()));
+           QuantLib::ext::make_shared<ore::data::IborFallbackConfig>(ore::data::IborFallbackConfig::defaultConfig()),
+                 const bool buildCalibrationInfo = true,
+                 const bool handlePseudoCurrencies = true,
+                 const bool useAtParCoupons = true);
+
+  QuantLib::ext::shared_ptr<ore::data::TodaysMarketCalibrationInfo> calibrationInfo() const;
+};
+
+// FX triangulation: resolve cross-rate quotes and indices
+class FXTriangulation {
+public:
+    FXTriangulation();
+
+    %extend {
+        // Accepts parallel arrays of currency-pair strings and QuoteHandles (QuoteHandleVector)
+        FXTriangulation(const std::vector<std::string>& pairs,
+                        const std::vector<QuantLib::Handle<QuantLib::Quote>>& quotes) {
+            std::map<std::string, QuantLib::Handle<QuantLib::Quote>> m;
+            for (std::size_t i = 0; i < pairs.size() && i < quotes.size(); ++i)
+                m[pairs[i]] = quotes[i];
+            return new ore::data::FXTriangulation(m);
+        }
+        QuantLib::Handle<QuantExt::FxIndex> getIndex(const std::string& indexOrPair,
+                                                     const ore::data::MarketImpl* market,
+                                                     const std::string& configuration) const {
+            return self->getIndex(indexOrPair, market, configuration);
+        }
+    }
+
+    QuantLib::Handle<QuantLib::Quote> getQuote(const std::string& pair) const;
 };
 
 } // namespace data

@@ -69,8 +69,7 @@ std::pair<Date, bool> getStartDateAndIsInterpolated(
 CPI::InterpolationType getObservationInterpolation(
     const QuantLib::ext::shared_ptr<ore::data::InflationCapFloorVolatilityCurveConfig>& config) {
     auto [_, interpolated] = getStartDateAndIsInterpolated(Settings::instance().evaluationDate(), config);
-    // If the convention is not interpolated, return AsIndex, it will defualt to flat
-    return interpolated ? CPI::Linear : CPI::AsIndex;
+    return interpolated ? CPI::Linear : CPI::Flat;
 }
 
 } // namespace
@@ -261,6 +260,14 @@ void InflationCapFloorVolCurve::buildFromVolatilities(
                                                                  tenors, strikes, vols, config->dayCounter());
 
         QuantLib::ext::shared_ptr<YoYInflationIndex> index;
+        auto [startDate, isInterpolated] = getStartDateAndIsInterpolated(asof, config);
+        startDate = startDate != Date() ? startDate : asof;
+        // Work around if startdate is not today (e.g. legacy quarterly AUCPI, adjust the obsLag by the start delay).
+        // Correct solution: implement start date in the yoy surfaces 
+        auto observationDate = startDate - config->observationLag();
+        Period obsLag = startDate != asof ? (asof - observationDate) * Days : config->observationLag();
+        auto obsInterpolation = isInterpolated ? CPI::Linear : CPI::Flat;
+
         auto it2 = inflationCurves.find(config->indexCurve());
         if (it2 != inflationCurves.end()) {
             QuantLib::ext::shared_ptr<InflationTermStructure> ts = it2->second->inflationTermStructure();
@@ -270,13 +277,18 @@ void InflationCapFloorVolCurve::buildFromVolatilities(
             QL_REQUIRE(yyTs, "YoY Inflation curve required for vol surface " << index->name());
             index = QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(
                 parseZeroInflationIndex(config->index(), Handle<ZeroInflationTermStructure>()),
-                true, Handle<YoYInflationTermStructure>(yyTs));
+                Handle<YoYInflationTermStructure>(yyTs));
+            // Previously the index interpolation was hard coded, and the index interpolation was used to
+            // determine the vol surface observation interpolation. Now we determine the vol surface observation
+            // interpolation from the price surface observation interpolation.
+            obsInterpolation = CPI::Linear;
         }
 
         YoYPriceSurfaceFromVolatilities volToPriceConverter;
-
-        auto priceSurface = volToPriceConverter(capVol, index, getObservationInterpolation(config),
-                                                discountCurve_, quoteVolatilityType, 0.0);
+        
+        auto priceSurface =
+            volToPriceConverter(capVol, index, obsLag, obsInterpolation,
+                                discountCurve_, quoteVolatilityType, 0.0);
 
         // Get configuration values for bootstrap
         Real accuracy = config->bootstrapConfig().accuracy();
@@ -558,16 +570,15 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
             useMarketYoyCurve_ = true;
             index = QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(
                 parseZeroInflationIndex(config->index(), Handle<ZeroInflationTermStructure>()),
-                true, Handle<YoYInflationTermStructure>(yyTs));
+                Handle<YoYInflationTermStructure>(yyTs));
         } else {
             useMarketYoyCurve_ = false;
             QuantLib::ext::shared_ptr<ZeroInflationTermStructure> zeroTs =
                 QuantLib::ext::dynamic_pointer_cast<ZeroInflationTermStructure>(ts);
-            QL_REQUIRE(zeroTs,
-                        "Inflation term structure " << config->indexCurve() << "must be of type YoY or Zero");
+            QL_REQUIRE(zeroTs, "Inflation term structure " << config->indexCurve() << "must be of type YoY or Zero");
             index = QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(
                 parseZeroInflationIndex(config->index(), Handle<ZeroInflationTermStructure>(zeroTs)),
-                true, Handle<YoYInflationTermStructure>());
+                Handle<YoYInflationTermStructure>());
         }
         // Build the term structure
         QuantLib::ext::shared_ptr<

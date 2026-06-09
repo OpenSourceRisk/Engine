@@ -2051,7 +2051,7 @@ struct IrFxInfCrComModelTestData {
         auto seasonalityCurve = QuantLib::ext::make_shared<QuantLib::MultiplicativePriceSeasonality>(baseDate, Monthly, infSeasonalFactors);
 
         infEurTs = Handle<ZeroInflationTermStructure>(
-            QuantLib::ext::make_shared<ZeroInflationCurve>(referenceDate, infDates, infRates, infBaseLag, Monthly, infDc));
+            QuantLib::ext::make_shared<ZeroInflationCurve>(referenceDate, infDates, infRates, Monthly, infDc));
         infEurTs->enableExtrapolation();
         
         if(seasonality){
@@ -2063,8 +2063,9 @@ struct IrFxInfCrComModelTestData {
         Real infEurAlpha = 0.01;
         Real infEurKappa = 0.01;
         if (infEurIsDK) {
+            auto index = QuantLib::ext::make_shared<EUHICP>();
             singleModels.push_back(QuantLib::ext::make_shared<InfDkConstantParametrization>(
-                EURCurrency(), infEurTs, infEurAlpha, infEurKappa));
+                EURCurrency(), infEurTs, infEurAlpha, infEurKappa, index));
         } else {
             Real infEurSigma = 0.15;
             Real eurBaseCPI = 1.0;
@@ -2080,7 +2081,7 @@ struct IrFxInfCrComModelTestData {
             singleModels.push_back(QuantLib::ext::make_shared<InfJyParameterization>(realRateParam, indexParam, index));
         }
         infGbpTs = Handle<ZeroInflationTermStructure>(QuantLib::ext::make_shared<ZeroInflationCurve>(referenceDate,
-            infDates, infRates, infBaseLag, Monthly, infDc));
+            infDates, infRates, Monthly, infDc));
         infGbpTs->enableExtrapolation();
         
         if(seasonality){
@@ -2090,8 +2091,9 @@ struct IrFxInfCrComModelTestData {
         Real infGbpAlpha = 0.01;
         Real infGbpKappa = 0.01;
         if (infGbpIsDK) {
+            auto index = QuantLib::ext::make_shared<UKRPI>();
             singleModels.push_back(QuantLib::ext::make_shared<InfDkConstantParametrization>(
-                GBPCurrency(), infGbpTs, infGbpAlpha, infGbpKappa));
+                GBPCurrency(), infGbpTs, infGbpAlpha, infGbpKappa, index));
         } else {
             Real infGbpSigma = 0.10;
             Real gbpBaseCPI = 1.0;
@@ -2414,7 +2416,7 @@ BOOST_DATA_TEST_CASE(testZeroInflationMartingaleTest,
             auto tauSim = infDc.yearFraction(BaseDateT1, inflationObsDate);
             BOOST_TEST_MESSAGE("tauSim " << tauSim);
             auto zeroRate =
-                std::pow(inflationGrowth(model, 0, T, T2_index, zeur1, infeurz1, indexIsInterpolated), 1.0 / tauSim) -
+                std::pow(inflationGrowth(model, 0, T, T2_index, zeur1, infeurz1), 1.0 / tauSim) -
                 1.0;
             infeur1(seasonalizeCPI(inflationObsDate, exp(infeury1) * std::pow(1.0 + zeroRate, tauSim), d.infEurTs) * model->discountBond(0, T, T2_discount, zeur1) /
                     model->numeraire(0, T, zeur1));
@@ -2431,7 +2433,7 @@ BOOST_DATA_TEST_CASE(testZeroInflationMartingaleTest,
             auto baseCPI = seasonalizeCPI(BaseDateT1, exp(infgbpy1), d.infGbpTs);
             auto tauSim = infDc.yearFraction(BaseDateT1, inflationObsDate);
             auto zeroRate =
-                std::pow(inflationGrowth(model, 1, T, T2_index, zgbp1, infgbpz1, indexIsInterpolated), 1.0 / tauSim) -
+                std::pow(inflationGrowth(model, 1, T, T2_index, zgbp1, infgbpz1), 1.0 / tauSim) -
                 1.0;
             auto adjZeroRate = continuousSeasonalityAdjustment(BaseDateT1, inflationObsDate, zeroRate, tauSim,
                                                                d.infGbpTs.currentLink());
@@ -2714,13 +2716,12 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
         // GBP zerobond
         gbpzb1(d.modelExact->discountBond(2, T, T2, zgbp1) * fxgbp1 / d.modelExact->numeraire(0, T, zeur1));
         // EUR CPI indexed bond
-        bool indexIsInterpolated = true;
         if (infEurIsDk) {
             std::pair<Real, Real> sinfeur1 = d.modelExact->infdkI(0, T, T2, infeurz1, infeury1);
             infeur1(sinfeur1.first * sinfeur1.second * d.modelExact->discountBond(0, T, T2, zeur1) /
                 d.modelExact->numeraire(0, T, zeur1));
         } else {
-            infeur1(exp(infeury1) * inflationGrowth(d.modelExact, 0, T, T2, zeur1, infeurz1, indexIsInterpolated) *
+            infeur1(exp(infeury1) * inflationGrowth(d.modelExact, 0, T, T2, zeur1, infeurz1) *
                     d.modelExact->discountBond(0, T, T2, zeur1) / d.modelExact->numeraire(0, T, zeur1));
         }
         // GBP CPI indexed bond
@@ -2729,7 +2730,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
             infgbp1(sinfgbp1.first * sinfgbp1.second * d.modelExact->discountBond(2, T, T2, zgbp1) * fxgbp1 /
                 d.modelExact->numeraire(0, T, zeur1));
         } else {
-            infgbp1(exp(infgbpy1) * inflationGrowth(d.modelExact, 1, T, T2, zgbp1, infgbpz1, indexIsInterpolated) *
+            infgbp1(exp(infgbpy1) * inflationGrowth(d.modelExact, 1, T, T2, zgbp1, infgbpz1) *
                 d.modelExact->discountBond(2, T, T2, zgbp1) * fxgbp1 / d.modelExact->numeraire(0, T, zeur1));
         }
         // EUR defaultable zerobond
@@ -2748,7 +2749,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
             infeur2(sinfeur2.first * sinfeur2.second * d.modelExact->discountBond(0, T, T2, zeur2) /
                 d.modelExact->numeraire(0, T, zeur2));
         } else {
-            infeur2(exp(infeury2) * inflationGrowth(d.modelExact, 0, T, T2, zeur2, infeurz2, indexIsInterpolated) *
+            infeur2(exp(infeury2) * inflationGrowth(d.modelExact, 0, T, T2, zeur2, infeurz2) *
                     d.modelExact->discountBond(0, T, T2, zeur2) / d.modelExact->numeraire(0, T, zeur2));
         }
         // GBP CPI indexed bond
@@ -2757,7 +2758,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
             infgbp2(sinfgbp2.first * sinfgbp2.second * d.modelExact->discountBond(2, T, T2, zgbp2) * fxgbp2 /
                 d.modelExact->numeraire(0, T, zeur2));
         } else {
-            infgbp2(exp(infgbpy2) * inflationGrowth(d.modelExact, 1, T, T2, zgbp2, infgbpz2, indexIsInterpolated) *
+            infgbp2(exp(infgbpy2) * inflationGrowth(d.modelExact, 1, T, T2, zgbp2, infgbpz2) *
                     d.modelExact->discountBond(2, T, T2, zgbp2) * fxgbp2 / d.modelExact->numeraire(0, T, zeur2));
         }
         // EUR defaultable zerobond
@@ -3083,9 +3084,11 @@ struct IrFxInfCrEqModelTestData {
         infRates.push_back(0.01);
         infRates.push_back(0.01);
         infEurTs = Handle<ZeroInflationTermStructure>(QuantLib::ext::make_shared<ZeroInflationCurve>(
-            referenceDate, infDates, infRates, 3 * Months, Monthly, Actual365Fixed()));
+            referenceDate, infDates, infRates, Monthly, Actual365Fixed()));
+        auto infEurIndex = QuantLib::ext::make_shared<EUHICP>();
         infGbpTs = Handle<ZeroInflationTermStructure>(QuantLib::ext::make_shared<ZeroInflationCurve>(
-            referenceDate, infDates, infRates, 3 * Months, Monthly, Actual365Fixed()));
+            referenceDate, infDates, infRates, Monthly, Actual365Fixed()));
+        auto infGbpIndex = QuantLib::ext::make_shared<UKRPI>();
         infEurTs->enableExtrapolation();
         infGbpTs->enableExtrapolation();
         // same for eur and gbp (doesn't matter anyway, since we are
@@ -3185,8 +3188,8 @@ struct IrFxInfCrEqModelTestData {
                                                                            fxSigmasGbp_a);
 
         // inflation
-        infEur_p = QuantLib::ext::make_shared<InfDkConstantParametrization>(EURCurrency(), infEurTs, infEurAlpha, infEurKappa);
-        infGbp_p = QuantLib::ext::make_shared<InfDkConstantParametrization>(GBPCurrency(), infGbpTs, infGbpAlpha, infGbpKappa);
+        infEur_p = QuantLib::ext::make_shared<InfDkConstantParametrization>(EURCurrency(), infEurTs, infEurAlpha, infEurKappa, infEurIndex);
+        infGbp_p = QuantLib::ext::make_shared<InfDkConstantParametrization>(GBPCurrency(), infGbpTs, infGbpAlpha, infGbpKappa, infGbpIndex);
 
         // credit
         n1_p = QuantLib::ext::make_shared<CrLgm1fConstantParametrization>(EURCurrency(), n1Ts, n1Alpha, n1Kappa);
@@ -4390,8 +4393,8 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrCorrelationRecovery) {
     infRates.push_back(0.01);
     infRates.push_back(0.01);
     Handle<ZeroInflationTermStructure> its(QuantLib::ext::make_shared<ZeroInflationCurve>(
-        refDate, infDates, infRates, 3 * Months, Monthly, Actual365Fixed()));
-
+        refDate, infDates, infRates, Monthly, Actual365Fixed()));
+    auto infIndex = QuantLib::ext::make_shared<EUHICP>();
     Handle<DefaultProbabilityTermStructure> hts(
         QuantLib::ext::make_shared<FlatHazardRate>(0, NullCalendar(), 0.01, Actual365Fixed()));
 
@@ -4459,7 +4462,7 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrCorrelationRecovery) {
                 // INF
                 for (Size i = 0; i < cpiindexes[kk]; ++i) {
                     parametrizations.push_back(
-                        QuantLib::ext::make_shared<InfDkConstantParametrization>(pseudoCcy[0], its, 0.01, 0.01));
+                        QuantLib::ext::make_shared<InfDkConstantParametrization>(pseudoCcy[0], its, 0.01, 0.01, infIndex));
                 }
                 // CR
                 for (Size i = 0; i < creditnames[jj]; ++i) {
@@ -4576,8 +4579,8 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqCorrelationRecovery) {
     infRates.push_back(0.01);
     infRates.push_back(0.01);
     Handle<ZeroInflationTermStructure> its(QuantLib::ext::make_shared<ZeroInflationCurve>(
-        refDate, infDates, infRates, 3 * Months, Monthly, Actual365Fixed()));
-
+        refDate, infDates, infRates, Monthly, Actual365Fixed()));
+    auto infIndex = QuantLib::ext::make_shared<EUHICP>();
     Handle<DefaultProbabilityTermStructure> hts(
         QuantLib::ext::make_shared<FlatHazardRate>(0, NullCalendar(), 0.01, Actual365Fixed()));
 
@@ -4646,7 +4649,7 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqCorrelationRecovery) {
                     // INF
                     for (Size i = 0; i < cpiindexes[kk]; ++i) {
                         parametrizations.push_back(
-                            QuantLib::ext::make_shared<InfDkConstantParametrization>(pseudoCcy[0], its, 0.01, 0.01));
+                            QuantLib::ext::make_shared<InfDkConstantParametrization>(pseudoCcy[0], its, 0.01, 0.01, infIndex));
                     }
                     // CR
                     for (Size i = 0; i < creditnames[jj]; ++i) {
@@ -4764,7 +4767,7 @@ BOOST_AUTO_TEST_CASE(testCpiCalibrationByAlpha) {
     infRates.push_back(0.0075);
     infRates.push_back(0.0075);
     Handle<ZeroInflationTermStructure> infEurTs(QuantLib::ext::make_shared<ZeroInflationCurve>(
-        refDate, infDates, infRates, 3 * Months, Monthly, Actual365Fixed()));
+        refDate, infDates, infRates, Monthly, Actual365Fixed()));
     infEurTs->enableExtrapolation();
     Handle<ZeroInflationIndex> infIndex(QuantLib::ext::make_shared<EUHICPXT>(infEurTs));
     
@@ -4792,7 +4795,7 @@ BOOST_AUTO_TEST_CASE(testCpiCalibrationByAlpha) {
 
     QuantLib::ext::shared_ptr<InfDkPiecewiseConstantParametrization> infeur_p =
         QuantLib::ext::make_shared<InfDkPiecewiseConstantParametrization>(EURCurrency(), infEurTs, volStepTimes, infVols,
-                                                                  noTimes, infRev);
+                                                                  noTimes, infRev, *infIndex);
 
     std::vector<QuantLib::ext::shared_ptr<Parametrization> > parametrizations;
     parametrizations.push_back(ireur_p);
@@ -4899,7 +4902,7 @@ BOOST_AUTO_TEST_CASE(testCpiCalibrationByH) {
     infRates.push_back(0.0075);
     infRates.push_back(0.0075);
     Handle<ZeroInflationTermStructure> infEurTs(QuantLib::ext::make_shared<ZeroInflationCurve>(
-        refDate, infDates, infRates, 3 * Months, Monthly, Actual365Fixed()));
+        refDate, infDates, infRates, Monthly, Actual365Fixed()));
     infEurTs->enableExtrapolation();
     Handle<ZeroInflationIndex> infIndex(QuantLib::ext::make_shared<EUHICPXT>(infEurTs));
     infIndex->addFixing(Date(1, April, 2015), 100);
@@ -4930,7 +4933,7 @@ BOOST_AUTO_TEST_CASE(testCpiCalibrationByH) {
 
     QuantLib::ext::shared_ptr<InfDkPiecewiseLinearParametrization> infeur_p =
         QuantLib::ext::make_shared<InfDkPiecewiseLinearParametrization>(EURCurrency(), infEurTs, volStepTimes, infVols,
-                                                                volStepTimes, infRev);
+                                                                volStepTimes, infRev, *infIndex);
 
     std::vector<QuantLib::ext::shared_ptr<Parametrization> > parametrizations;
     parametrizations.push_back(ireur_p);

@@ -24,26 +24,108 @@
 #define quantext_infdklgm1f_parametrization_hpp
 
 #include <ql/handle.hpp>
+#include <ql/indexes/inflationindex.hpp>
 #include <ql/termstructures/inflationtermstructure.hpp>
 #include <qle/models/irlgm1fconstantparametrization.hpp>
 #include <qle/models/irlgm1fparametrization.hpp>
 #include <qle/models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp>
 #include <qle/models/irlgm1fpiecewiseconstantparametrization.hpp>
 #include <qle/models/irlgm1fpiecewiselinearparametrization.hpp>
+#include <qle/models/parametrization.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
 using namespace QuantExt;
 
-typedef Lgm1fParametrization<ZeroInflationTermStructure> InfDkParametrization;
+class InfDkParametrization : public Parametrization {
+public:
+    InfDkParametrization(QuantLib::ext::shared_ptr<Lgm1fParametrization<ZeroInflationTermStructure>> dkLgmParam,
+                         const QuantLib::ext::shared_ptr<ZeroInflationIndex>& index)
+        : Parametrization(dkLgmParam->currency(), dkLgmParam->name()), dkLgmParam_(dkLgmParam), index_(index) {}
+    const QuantLib::ext::shared_ptr<Lgm1fParametrization<ZeroInflationTermStructure>> dkLgmParam() const {
+        return dkLgmParam_;
+    }
+    const QuantLib::ext::shared_ptr<ZeroInflationIndex>& inflationIndex() const { return index_; }
 
-typedef Lgm1fConstantParametrization<ZeroInflationTermStructure> InfDkConstantParametrization;
+    const Currency& currency() const override { return dkLgmParam_->currency(); }
 
-typedef Lgm1fPiecewiseConstantHullWhiteAdaptor<ZeroInflationTermStructure> InfDkPiecewiseConstantHullWhiteAdaptor;
+    const Array& parameterTimes(const Size i) const override { return dkLgmParam_->parameterTimes(i); }
 
-typedef Lgm1fPiecewiseConstantParametrization<ZeroInflationTermStructure> InfDkPiecewiseConstantParametrization;
+    virtual Size numberOfParameters() const override { return dkLgmParam_->numberOfParameters(); }
 
-typedef Lgm1fPiecewiseLinearParametrization<ZeroInflationTermStructure> InfDkPiecewiseLinearParametrization;
+    virtual Array parameterValues(const Size i) const override { return dkLgmParam_->parameterValues(i); }
+
+    virtual const QuantLib::ext::shared_ptr<Parameter> parameter(const Size i) const override {
+        return dkLgmParam_->parameter(i);
+    }
+
+    virtual void update() const override { dkLgmParam_->update(); }
+
+private:
+    QuantLib::ext::shared_ptr<Lgm1fParametrization<ZeroInflationTermStructure>> dkLgmParam_;
+    QuantLib::ext::shared_ptr<ZeroInflationIndex> index_;
+};
+
+class InfDkConstantParametrization : public InfDkParametrization {
+public:
+    InfDkConstantParametrization(const Currency& currency, const Handle<ZeroInflationTermStructure>& termStructure,
+                                 const Real alpha, const Real kappa, const QuantLib::ext::shared_ptr<ZeroInflationIndex>& index,
+                                 const std::string& name = std::string())
+        : InfDkParametrization(ext::make_shared<Lgm1fConstantParametrization<ZeroInflationTermStructure>>(
+                                   currency, termStructure, alpha, kappa, name),
+                               index) {}
+};
+
+class InfDkPiecewiseConstantHullWhiteAdaptor : public InfDkParametrization {
+public:
+    InfDkPiecewiseConstantHullWhiteAdaptor(const Currency& currency,
+                                           const Handle<ZeroInflationTermStructure>& termStructure,
+                                           const Array& sigmaTimes, const Array& sigma, const Array& kappaTimes,
+                                           const Array& kappa, const QuantLib::ext::shared_ptr<ZeroInflationIndex>& index,
+                                           const std::string& name = std::string(),
+                                           const QuantLib::ext::shared_ptr<QuantLib::Constraint>& sigmaConstraint =
+                                               QuantLib::ext::make_shared<QuantLib::NoConstraint>(),
+                                           const QuantLib::ext::shared_ptr<QuantLib::Constraint>& kappaConstraint =
+                                               QuantLib::ext::make_shared<QuantLib::NoConstraint>())
+        : InfDkParametrization(ext::make_shared<Lgm1fPiecewiseConstantHullWhiteAdaptor<ZeroInflationTermStructure>>(
+                                   currency, termStructure, sigmaTimes, sigma, kappaTimes, kappa, name, sigmaConstraint,
+                                   kappaConstraint),
+                               index) {}
+};
+
+class InfDkPiecewiseConstantParametrization : public InfDkParametrization {
+public:
+    InfDkPiecewiseConstantParametrization(const Currency& currency,
+                                          const Handle<ZeroInflationTermStructure>& termStructure,
+                                          const Array& alphaTimes, const Array& alpha, const Array& kappaTimes,
+                                          const Array& kappa, const QuantLib::ext::shared_ptr<ZeroInflationIndex>& index,
+                                          const std::string& name = std::string(),
+                                          const QuantLib::ext::shared_ptr<QuantLib::Constraint>& alphaConstraint =
+                                              QuantLib::ext::make_shared<QuantLib::NoConstraint>(),
+                                          const QuantLib::ext::shared_ptr<QuantLib::Constraint>& kappaConstraint =
+                                              QuantLib::ext::make_shared<QuantLib::NoConstraint>())
+        : InfDkParametrization(ext::make_shared<Lgm1fPiecewiseConstantParametrization<ZeroInflationTermStructure>>(
+                                   currency, termStructure, alphaTimes, alpha, kappaTimes, kappa, name, alphaConstraint,
+                                   kappaConstraint),
+                               index) {}
+};
+
+class InfDkPiecewiseLinearParametrization : public InfDkParametrization {
+public:
+    InfDkPiecewiseLinearParametrization(const Currency& currency,
+                                        const Handle<ZeroInflationTermStructure>& termStructure,
+                                        const Array& alphaTimes, const Array& alpha, const Array& hTimes,
+                                        const Array& h, const QuantLib::ext::shared_ptr<ZeroInflationIndex>& index,
+                                        const std::string& name = std::string(),
+                                        const QuantLib::ext::shared_ptr<QuantLib::Constraint>& alphaConstraint =
+                                            QuantLib::ext::make_shared<QuantLib::NoConstraint>(),
+                                        const QuantLib::ext::shared_ptr<QuantLib::Constraint>& hConstraint =
+                                            QuantLib::ext::make_shared<QuantLib::NoConstraint>())
+        : InfDkParametrization(
+              ext::make_shared<Lgm1fPiecewiseLinearParametrization<ZeroInflationTermStructure>>(
+                  currency, termStructure, alphaTimes, alpha, hTimes, h, name, alphaConstraint, hConstraint),
+              index) {}
+};
 
 } // namespace QuantExt
 

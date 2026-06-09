@@ -137,8 +137,8 @@ private:
     QuantLib::ext::optional<bool> recObservationShift_;
     bool telescopicValueDates_;
 
-    mutable Spread fairPaySpread_;
-    mutable Spread fairRecSpread_;
+    mutable Spread fairPaySpread_ = Null<Spread>();
+    mutable Spread fairRecSpread_ = Null<Spread>();
 };
 
 //! \ingroup instruments

@@ -40,6 +40,8 @@ void AmcCgSwapEngine::calculate() const {
 
     if(!amcEnabled_)
         results_.value = npvValue_;
+    else
+        results_.value = 0.0;
 }
 
 } // namespace data

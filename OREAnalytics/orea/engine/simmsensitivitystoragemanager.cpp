@@ -28,6 +28,8 @@
 #include <qle/currencies/currencycomparator.hpp>
 #include <qle/instruments/currencyswap.hpp>
 
+#include <ql/time/daycounters/actualactual.hpp>
+
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace ore::data;

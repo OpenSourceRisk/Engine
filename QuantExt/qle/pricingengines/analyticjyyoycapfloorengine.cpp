@@ -50,7 +50,7 @@ namespace QuantExt {
 
 AnalyticJyYoYCapFloorEngine::AnalyticJyYoYCapFloorEngine(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, Size index,
                                                          bool indexIsInterpolated)
-    : model_(model), index_(index), indexIsInterpolated_(indexIsInterpolated) {}
+    : model_(model), index_(index) {}
 
 void AnalyticJyYoYCapFloorEngine::calculate() const {
 
@@ -121,10 +121,10 @@ void AnalyticJyYoYCapFloorEngine::calculate() const {
         // If we get to here, we are in scenario 3 or 4.
         Date denFixingDate = fixingDate - 1 * Years;
         auto zts = model_->infjy(index_)->realRate()->termStructure();
-        auto S = inflationTime(denFixingDate, *zts, indexIsInterpolated_);
-        auto T = inflationTime(fixingDate, *zts, indexIsInterpolated_);
+        auto S = inflationTime(denFixingDate, *zts, true); // continuous time model, interpolated true
+        auto T = inflationTime(fixingDate, *zts, true); // continuous time model, interpolated true
 
-        Real mean = jyExpectedIndexRatio(model_, index_, S, T, indexIsInterpolated_);
+        Real mean = jyExpectedIndexRatio(model_, index_, S, T);
         Real stdDev = sqrt(varianceLogRatio(S, T));
 
         Real payoff = 0.0;

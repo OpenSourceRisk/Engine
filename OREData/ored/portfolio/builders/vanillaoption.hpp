@@ -25,6 +25,7 @@
 
 #include <boost/make_shared.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
+#include <ored/portfolio/builders/utilities.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
@@ -42,6 +43,7 @@
 #include <qle/termstructures/pricetermstructureadapter.hpp>
 #include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
 #include <qle/pricingengines/cashsettledamericanengine.hpp>
+
 namespace ore {
 namespace data {
 
@@ -306,38 +308,16 @@ protected:
                 assetNameLocal= removeAfterLastDelimiter(assetName, delimiter);
         }
 
-        FdmSchemeDesc scheme = parseFdmSchemeDesc(engineParameter("Scheme"));
-        Size tGrid = (Size)(parseInteger(engineParameter("TimeGridPerYear")) * expiry);
-        Size xGrid = parseInteger(engineParameter("XGrid"));
-        Size dampingSteps = parseInteger(engineParameter("DampingSteps"));
-        bool monotoneVar = parseBool(engineParameter("EnforceMonotoneVariance", {}, false, "true"));
-        Size tGridMin = parseInteger(engineParameter("TimeGridMinimumSize", {}, false, "1"));
-        tGrid = std::max(tGridMin, tGrid);
-        
-        QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp;
+        FiniteDifferenceParams fdp = fdSchemeParams(*this, expiry);
+        auto gbsp = getBlackScholesProcess(assetNameLocal, ccy, assetClass, fdp.timePoints, true, forwardDate);
 
-        if (monotoneVar) {
-            // Replicate the construction of time grid in FiniteDifferenceModel::rollbackImpl
-            // This time grid is required to build a BlackMonotoneVarVolTermStructure which
-            // ensures monotonic variance along the time grid
-            const Size totalSteps = tGrid + dampingSteps;
-            std::vector<Time> timePoints(totalSteps + 1);
-            Array timePointsArray(totalSteps, expiry, -expiry / totalSteps);
-            timePoints[0] = 0.0;
-            for (Size i = 0; i < totalSteps; i++)
-                timePoints[timePoints.size() - i - 1] = timePointsArray[i];
-            timePoints.insert(std::upper_bound(timePoints.begin(), timePoints.end(), 0.99 / 365), 0.99 / 365);
-            gbsp = getBlackScholesProcess(assetNameLocal, ccy, assetClass, timePoints, true, forwardDate);
-        } else {
-            gbsp = getBlackScholesProcess(assetNameLocal, ccy, assetClass, {}, true, forwardDate);
-        }
         auto volTS = gbsp->blackVolatility();
         QL_REQUIRE(volTS->volType() == QuantLib::VolatilityType::ShiftedLognormal &&
                        QuantLib::close_enough(volTS->shift(), 0.0),
                    "AmericanOptionFDEngineBuilder: currently only lognormal vols are supported");
 
-        return QuantLib::ext::make_shared<QuantExt::FdBlackScholesVanillaEngine2>(gbsp, tGrid, xGrid, dampingSteps,
-                                                                                  scheme);
+        return QuantLib::ext::make_shared<QuantExt::FdBlackScholesVanillaEngine2>(
+            gbsp, fdp.tGrid, fdp.xGrid, fdp.dampingSteps, fdp.scheme);
     }
 };
 
@@ -450,38 +430,16 @@ protected:
                 assetNameLocal = removeAfterLastDelimiter(assetName, delimiter);
         }
 
-        FdmSchemeDesc scheme = parseFdmSchemeDesc(engineParameter("Scheme"));
-        Size tGrid = (Size)(parseInteger(engineParameter("TimeGridPerYear")) * expiry);
-        Size xGrid = parseInteger(engineParameter("XGrid"));
-        Size dampingSteps = parseInteger(engineParameter("DampingSteps"));
-        bool monotoneVar = parseBool(engineParameter("EnforceMonotoneVariance", {}, false, "true"));
-        Size tGridMin = parseInteger(engineParameter("TimeGridMinimumSize", {}, false, "1"));
-        tGrid = std::max(tGridMin, tGrid);
+        FiniteDifferenceParams fdp = fdSchemeParams(*this, expiry);
+        auto gbsp = getBlackScholesProcess(assetNameLocal, ccy, assetClass, fdp.timePoints, true, forwardDate);
 
-        QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp;
-
-        if (monotoneVar) {
-            // Replicate the construction of time grid in FiniteDifferenceModel::rollbackImpl
-            // This time grid is required to build a BlackMonotoneVarVolTermStructure which
-            // ensures monotonic variance along the time grid
-            const Size totalSteps = tGrid + dampingSteps;
-            std::vector<Time> timePoints(totalSteps + 1);
-            Array timePointsArray(totalSteps, expiry, -expiry / totalSteps);
-            timePoints[0] = 0.0;
-            for (Size i = 0; i < totalSteps; i++)
-                timePoints[timePoints.size() - i - 1] = timePointsArray[i];
-            timePoints.insert(std::upper_bound(timePoints.begin(), timePoints.end(), 0.99 / 365), 0.99 / 365);
-            gbsp = getBlackScholesProcess(assetNameLocal, ccy, assetClass, timePoints, true, forwardDate);
-        } else {
-            gbsp = getBlackScholesProcess(assetNameLocal, ccy, assetClass, {}, true, forwardDate);
-        }
         auto volTS = gbsp->blackVolatility();
         QL_REQUIRE(volTS->volType() == QuantLib::VolatilityType::ShiftedLognormal &&
                        QuantLib::close_enough(volTS->shift(), 0.0),
                    "AmericanOptionFDEngineBuilder: currently only lognormal vols are supported");
 
         auto underlyingEngine = QuantLib::ext::make_shared<QuantExt::FdBlackScholesVanillaEngine2>(
-            gbsp, tGrid, xGrid, dampingSteps, scheme);
+            gbsp, fdp.tGrid, fdp.xGrid, fdp.dampingSteps, fdp.scheme);
 
         Handle<YieldTermStructure> discountCurve =
             discountCurveName.empty()

@@ -72,7 +72,8 @@ BOOST_AUTO_TEST_CASE(testNPV) {
     todaysMarketParams->fromFile(TEST_INPUT_FILE("todaysmarket.xml"));
     auto curveConfigs = QuantLib::ext::make_shared<CurveConfigurations>();
     curveConfigs->fromFile(TEST_INPUT_FILE("curveconfig.xml"));
-    auto loader = QuantLib::ext::make_shared<CSVLoader>(TEST_INPUT_FILE("market.txt"), TEST_INPUT_FILE("fixings.txt"), false);
+    auto loader = QuantLib::ext::make_shared<CSVLoader>();
+    loader->fromFiles(TEST_INPUT_FILE("market.txt"), TEST_INPUT_FILE("fixings.txt"));
     auto market = QuantLib::ext::make_shared<TodaysMarket>(asof, todaysMarketParams, loader, curveConfigs, false);
 
     // Portfolio to test market

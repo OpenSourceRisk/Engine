@@ -2,6 +2,7 @@
 
 set(OREData_SRC configuration/basecorrelationcurveconfig.cpp
 configuration/baseltrafficlightconfig.cpp
+configuration/bondfuturevolcurveconfig.cpp
 configuration/bootstrapconfig.cpp
 configuration/capfloorvolcurveconfig.cpp
 configuration/cdsvolcurveconfig.cpp
@@ -28,6 +29,7 @@ configuration/yieldcurveconfig.cpp
 marketdata/adjustedinmemoryloader.cpp
 marketdata/adjustmentfactors.cpp
 marketdata/basecorrelationcurve.cpp
+marketdata/bondfuturevolcurve.cpp
 marketdata/bondspreadimply.cpp
 marketdata/bondspreadimplymarket.cpp
 marketdata/capfloorvolcurve.cpp
@@ -127,6 +129,7 @@ portfolio/bestentryoption.cpp
 portfolio/bond.cpp
 portfolio/bondbasket.cpp
 portfolio/bondfuture.cpp
+portfolio/bondfutureoption.cpp
 portfolio/bondoption.cpp
 portfolio/bondposition.cpp
 portfolio/bondrepo.cpp
@@ -205,6 +208,7 @@ portfolio/builders/riskparticipationagreement.cpp
 portfolio/builders/scriptedtrade.cpp
 portfolio/builders/swap.cpp
 portfolio/builders/swaption.cpp
+portfolio/builders/utilities.cpp
 portfolio/builders/varianceswap.cpp
 portfolio/builders/yoycapfloor.cpp
 portfolio/callablebond.cpp
@@ -329,6 +333,7 @@ portfolio/tradefactory.cpp
 portfolio/tradegenerator.cpp
 portfolio/trademonetary.cpp
 portfolio/tradestrike.cpp
+portfolio/tradeutils.cpp
 portfolio/tranche.cpp
 portfolio/trs.cpp
 portfolio/trsunderlyingbuilder.cpp
@@ -420,6 +425,7 @@ utilities/xmlutils.cpp)
 set(OREData_HDR auto_link.hpp
 configuration/basecorrelationcurveconfig.hpp
 configuration/baseltrafficlightconfig.hpp
+configuration/bondfuturevolcurveconfig.hpp
 configuration/bootstrapconfig.hpp
 configuration/capfloorvolcurveconfig.hpp
 configuration/cdsvolcurveconfig.hpp
@@ -450,6 +456,7 @@ configuration/yieldvolcurveconfig.hpp
 marketdata/adjustedinmemoryloader.hpp
 marketdata/adjustmentfactors.hpp
 marketdata/basecorrelationcurve.hpp
+marketdata/bondfuturevolcurve.hpp
 marketdata/bondspreadimply.hpp
 marketdata/bondspreadimplymarket.hpp
 marketdata/capfloorvolcurve.hpp
@@ -554,6 +561,7 @@ portfolio/bestentryoption.hpp
 portfolio/bond.hpp
 portfolio/bondbasket.hpp
 portfolio/bondfuture.hpp
+portfolio/bondfutureoption.hpp
 portfolio/bondoption.hpp
 portfolio/bondposition.hpp
 portfolio/bondrepo.hpp
@@ -564,6 +572,7 @@ portfolio/builders/asianoption.hpp
 portfolio/builders/balanceguaranteedswap.hpp
 portfolio/builders/bond.hpp
 portfolio/builders/bondfuture.hpp
+portfolio/builders/bondfutureoption.hpp
 portfolio/builders/bondoption.hpp
 portfolio/builders/bondrepo.hpp
 portfolio/builders/bondtotalreturnswap.hpp
@@ -635,6 +644,7 @@ portfolio/builders/riskparticipationagreement.hpp
 portfolio/builders/scriptedtrade.hpp
 portfolio/builders/swap.hpp
 portfolio/builders/swaption.hpp
+portfolio/builders/utilities.hpp
 portfolio/builders/vanillaoption.hpp
 portfolio/builders/varianceswap.hpp
 portfolio/builders/yoycapfloor.hpp
@@ -767,6 +777,7 @@ portfolio/tradefactory.hpp
 portfolio/tradegenerator.hpp
 portfolio/trademonetary.hpp
 portfolio/tradestrike.hpp
+portfolio/tradeutils.hpp
 portfolio/tranche.hpp
 portfolio/trs.hpp
 portfolio/trsunderlyingbuilder.hpp

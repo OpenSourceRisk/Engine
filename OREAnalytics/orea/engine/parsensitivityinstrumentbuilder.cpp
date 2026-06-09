@@ -1836,7 +1836,7 @@ QuantLib::ext::shared_ptr<Instrument> ParSensitivityInstrumentBuilder::makeZeroI
     Date end = start + term;
     QuantLib::ext::shared_ptr<ZeroCouponInflationSwap> helper(new ZeroCouponInflationSwap(
         ZeroCouponInflationSwap::Payer, 1.0, start, end, conv->infCalendar(), conv->infConvention(), conv->dayCounter(),
-        0.0, index, conv->observationLag(), CPI::AsIndex));
+        0.0, index, conv->observationLag(), conv->interpolated() ? CPI::Linear : CPI::Flat));
 
     if (market != nullptr) {
         QuantLib::ext::shared_ptr<PricingEngine> swapEngine =
@@ -1864,7 +1864,7 @@ QuantLib::ext::shared_ptr<Instrument> ParSensitivityInstrumentBuilder::makeYoyIn
 
     QuantLib::ext::shared_ptr<ZeroInflationIndex> zeroIndex = conv->index();
     QuantLib::ext::shared_ptr<YoYInflationIndex> index =
-        QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(zeroIndex, conv->interpolated());
+        QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(zeroIndex);
 
     // Potentially use conventions here to get an updated start date e.g. AU CPI conventions with a publication roll.
     Date start = Settings::instance().evaluationDate();
@@ -1892,7 +1892,7 @@ QuantLib::ext::shared_ptr<Instrument> ParSensitivityInstrumentBuilder::makeYoyIn
         // Get the inflation index
         if (fromZero) {
             zeroIndex = *market->zeroInflationIndex(name, marketConfiguration);
-            index = QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(zeroIndex, false);
+            index = QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(zeroIndex);
         } else {
             index = *market->yoyInflationIndex(name, marketConfiguration);
         }
@@ -1909,7 +1909,8 @@ QuantLib::ext::shared_ptr<Instrument> ParSensitivityInstrumentBuilder::makeYoyIn
     }
     QuantLib::ext::shared_ptr<YearOnYearInflationSwap> helper(new YearOnYearInflationSwap(
         YearOnYearInflationSwap::Payer, 1.0, fixSchedule, 0.0, conv->dayCounter(), yoySchedule, index,
-        conv->observationLag(), QuantLib::CPI::AsIndex, 0.0, conv->dayCounter(), conv->infCalendar()));
+        conv->observationLag(), conv->interpolated() ? QuantLib::CPI::Linear : QuantLib::CPI::Flat, 0.0,
+        conv->dayCounter(), conv->infCalendar()));
     QuantLib::ext::shared_ptr<InflationCouponPricer> yoyCpnPricer =
         QuantLib::ext::make_shared<YoYInflationCouponPricer>(discountCurve);
     for (auto& c : helper->yoyLeg()) {
@@ -1949,7 +1950,7 @@ void ParSensitivityInstrumentBuilder::makeYoYCapFloor(ParSensitivityInstrumentBu
 
     QuantLib::ext::shared_ptr<ZeroInflationIndex> zeroIndex = conv->index();
     QuantLib::ext::shared_ptr<YoYInflationIndex> index =
-        QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(zeroIndex, conv->interpolated());
+        QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(zeroIndex);
 
     Date start = Settings::instance().evaluationDate();
     Date end = start + term;
@@ -1969,7 +1970,7 @@ void ParSensitivityInstrumentBuilder::makeYoYCapFloor(ParSensitivityInstrumentBu
         // Get the inflation index
         if (fromZero) {
             zeroIndex = *market->zeroInflationIndex(name, marketConfiguration);
-            index = QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(zeroIndex, conv->interpolated());
+            index = QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(zeroIndex);
         } else {
             index = *market->yoyInflationIndex(name, marketConfiguration);
         }
@@ -1986,11 +1987,11 @@ void ParSensitivityInstrumentBuilder::makeYoYCapFloor(ParSensitivityInstrumentBu
     }
 
     // build the leg data and instrument
-    Leg yoyLeg =
-        yoyInflationLeg(yoySchedule, yoySchedule.calendar(), index, conv->observationLag(), QuantLib::CPI::AsIndex)
-            .withNotionals(1.0)
-            .withPaymentDayCounter(conv->dayCounter())
-            .withRateCurve(discountCurve);
+    Leg yoyLeg = yoyInflationLeg(yoySchedule, yoySchedule.calendar(), index, conv->observationLag(),
+                                 conv->interpolated() ? QuantLib::CPI::Linear : QuantLib::CPI::Flat)
+                     .withNotionals(1.0)
+                     .withPaymentDayCounter(conv->dayCounter())
+                     .withRateCurve(discountCurve);
     if (market == nullptr)
         return;
 
@@ -2019,10 +2020,7 @@ void ParSensitivityInstrumentBuilder::makeYoYCapFloor(ParSensitivityInstrumentBu
         QuantLib::ext::make_shared<YoYInflationCapFloor>(type, yoyLeg, std::vector<Real>(yoyLeg.size(), strike));
     helper->setPricingEngine(engine);
 
-    instruments.parYoYCaps_[key] = helper;
-    instruments.parYoYCapsYts_[key] = discountCurve;
-    instruments.parYoYCapsIndex_[key] = Handle<YoYInflationIndex>(index);
-    instruments.parYoYCapsVts_[key] = ovs;
+    instruments.parYoYCaps_[key] = {helper, discountCurve, ovs, Handle<YoYInflationIndex>(index), conv->observationLag()};
 }
 
 } // namespace analytics

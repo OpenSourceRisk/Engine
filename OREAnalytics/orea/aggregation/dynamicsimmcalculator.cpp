@@ -75,15 +75,6 @@ void DynamicSimmCalculator::build() {
 	Real tmp = simmHelper_->initialMargin(nid, Null<Size>(), Null<Size>());
 
         dimCube_->setT0(tmp, 0, 0);
-        if (dimCube_->depth() > 3) {
-            dimCube_->setT0(simmHelper_->deltaMargin(), 0, 1);
-            dimCube_->setT0(simmHelper_->vegaMargin(), 0, 2);
-            dimCube_->setT0(simmHelper_->curvatureMargin(), 0, 3);
-        }
-        if (dimCube_->depth() > 5) {
-            dimCube_->setT0(simmHelper_->irDeltaMargin(), 0, 4);
-            dimCube_->setT0(simmHelper_->fxDeltaMargin(), 0, 5);
-	}
 	
         for (Size j = 0; j < stopDatesLoop; ++j)
             nettingSetExpectedDIM_[nid][j] = 0.0;
@@ -98,15 +89,6 @@ void DynamicSimmCalculator::build() {
                 nettingSetDIM_[nid][j][k] = tmp;
                 nettingSetExpectedDIM_[nid][j] += tmp / samples;
                 dimCube_->set(tmp, i, j, k);
-                if (dimCube_->depth() > 3) {
-                    dimCube_->set(simmHelper_->deltaMargin() * nettingSetDimScaling / num, i, j, k, 1);
-                    dimCube_->set(simmHelper_->vegaMargin()  * nettingSetDimScaling / num, i, j, k, 2);
-                    dimCube_->set(simmHelper_->curvatureMargin()  * nettingSetDimScaling / num, i, j, k, 3);
-                }
-		if (dimCube_->depth() > 5) {
-                    dimCube_->set(simmHelper_->irDeltaMargin() * nettingSetDimScaling / num, i, j, k, 4);
-                    dimCube_->set(simmHelper_->fxDeltaMargin() * nettingSetDimScaling / num, i, j, k, 5);
-		}
            }
         }
 

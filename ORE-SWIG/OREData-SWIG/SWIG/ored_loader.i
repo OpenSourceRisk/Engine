@@ -25,6 +25,8 @@
 %shared_ptr(ore::data::Loader)
 %shared_ptr(ore::data::CSVLoader)
 %shared_ptr(ore::data::InMemoryLoader)
+%shared_ptr(ore::data::CompositeLoader)
+%shared_ptr(ore::data::ClonedLoader)
 
 namespace ore {
 namespace data {
@@ -91,10 +93,12 @@ namespace ore {
 namespace data {
 class CSVLoader : public ore::data::Loader {
   public:
-    CSVLoader(const std::string& marketFilename, const std::string& fixingFilename,
-              bool implyTodaysFixings = false);
-    CSVLoader(const std::vector<std::string>& marketFiles, const std::vector<std::string>& fixingFiles,
-              bool implyTodaysFixings = false);
+    CSVLoader(bool implyTodaysFixings = false, QuantLib::Date fixingCutOffDate = QuantLib::Date());
+    void fromFiles(const std::string& marketFilename, const std::string& fixingFilename,
+                   const std::string& dividendFilename = "");
+    void fromFiles(const std::vector<std::string>& marketFiles, const std::vector<std::string>& fixingFiles,
+                   const std::vector<std::string>& dividendFiles = {});
+    void fromBuffers(const std::string& marketData, const std::string& fixingData = "");
 };
 
 class InMemoryLoader : public ore::data::Loader {
@@ -102,6 +106,23 @@ class InMemoryLoader : public ore::data::Loader {
     InMemoryLoader();
     void add(QuantLib::Date date, const std::string& name, QuantLib::Real value);
     void addFixing(QuantLib::Date date, const std::string& name, QuantLib::Real value);
+};
+
+// ore/OREData/ored/marketdata/compositeloader.hpp
+
+class CompositeLoader : public ore::data::Loader {
+public:
+    CompositeLoader(const ext::shared_ptr<ore::data::Loader>& a,
+                    const ext::shared_ptr<ore::data::Loader>& b);
+};
+
+// ore/OREData/ored/marketdata/clonedloader.hpp
+
+class ClonedLoader : public ore::data::InMemoryLoader {
+public:
+    ClonedLoader(const QuantLib::Date& loaderDate,
+                 const ext::shared_ptr<ore::data::Loader>& inLoader);
+    const QuantLib::Date& getLoaderDate() const;
 };
 
 struct Fixing {

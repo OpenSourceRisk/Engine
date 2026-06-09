@@ -51,7 +51,7 @@ CrossCcyFixFloatMtMResetSwap::CrossCcyFixFloatMtMResetSwap(
       fxIndex_(fxIdx), resetsOnFloatLeg_(resetsOnFloatLeg), receiveFixed_(receiveFixed),
       floatIncludeSpread_(floatIncludeSpread), floatLookback_(floatLookback), floatFixingDays_(floatFixingDays),
       floatRateCutoff_(floatRateCutoff), floatIsAveraged_(floatIsAveraged),
-      floatObservationShift_(floatObservationShift) {
+      floatObservationShift_(floatObservationShift), fairSpread_(Null<Spread>()), fairFixedRate_(Null<Spread>()) {
 
     registerWith(floatIndex_);
     registerWith(fxIndex_);

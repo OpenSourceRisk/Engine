@@ -38,7 +38,7 @@
 namespace ore {
 namespace data {
 
-class GaussianCamCG : public ModelCGImpl {
+class GaussianCamCG final : public ModelCGImpl {
 public:
     /* For the constructor arguments see ModelCGImpl, plus the notes in GaussianCam */
     GaussianCamCG(const Handle<CrossAssetModel>& cam, const Size paths, const std::vector<std::string>& currencies,
@@ -50,20 +50,26 @@ public:
                   const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
                       QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
                   const std::vector<std::string>& conditionalExpectationModelStates = {},
-                  const std::vector<Date>& stickyCloseOutDates = {}, const Size timeStepsPerYear = 1);
+                  const std::vector<Date>& stickyCloseOutDates = {}, const Size timeStepsPerYear = 1,
+                  const bool enableCgOptimization = false);
 
     // Model interface implementation
     const Date& referenceDate() const override;
     std::size_t npv(const std::size_t amount, const Date& obsdate, const std::size_t filter,
                     const std::optional<long>& memSlot, const std::set<std::size_t> addRegressors,
-                    const std::optional<std::set<std::size_t>>& overwriteRegressors) const override;
+                    const std::optional<std::set<std::size_t>>& overwriteRegressors,
+                    const std::optional<std::set<std::size_t>>& evaluationRegressors = {}) const override;
     std::set<std::size_t> npvRegressors(const Date& obsdate,
-                                        const std::optional<std::set<std::string>>& relevantCurrencies) const override;
-    std::size_t numeraire(const Date& s) const override;
+                                        const std::optional<std::set<std::string>>& relevantCurrencies,
+                                        const std::string& localBaseCurrency = {},
+                                        const std::string& localBaseCurrencyPaths = {}) const override;
+    std::size_t numeraire(const Date& s, const std::string& currency = {},
+                          const std::string& localBaseCurrency = {}) const override;
     std::size_t fwdCompAvg(const bool isAvg, const std::string& indexInput, const Date& obsdate, const Date& start,
                            const Date& end, const Real spread, const Real gearing, const Integer lookback,
                            const Natural rateCutoff, const Natural fixingDays, const bool includeSpread, const Real cap,
-                           const Real floor, const bool nakedOption, const bool localCapFloor) const override;
+                           const Real floor, const bool nakedOption, const bool localCapFloor,
+                           const std::string& localBaseCurrency = {}) const override;
     QuantLib::Size size() const override;
 
     // t0 market data functions from the ModelCG interface
@@ -72,23 +78,28 @@ public:
 
     void useStickyCloseOutDates(const bool b) const override;
 
+    // non-interface methods
     const Handle<CrossAssetModel>& cam() const { return cam_; };
-
-    std::size_t getInterpolatedUnderlyingPath(const Date& d, const Size indexNo) const;
-    std::size_t getInterpolatedIrState(const Date& d, const Size ccyIndex) const;
+    std::size_t getInterpolatedUnderlyingPath(const Date& d, const Size indexNo,
+                                              const std::string& localBaseCurrency = {}) const;
+    std::size_t getInterpolatedIrState(const Date& d, const Size ccyIndex,
+                                       const std::string& localBaseCurrency = {}) const;
 
 protected:
     // ModelCGImpl interface implementation
-    virtual std::size_t getFutureBarrierProb(const std::string& index, const Date& obsdate1, const Date& obsdate2,
-                                             const std::size_t barrier, const bool above) const override {
-        QL_FAIL("getFutureBarrierProb not implemented by GaussianCamCG");
-    }
+    std::size_t getFutureBarrierProb(const std::string& index, const Date& obsdate1, const Date& obsdate2,
+                                     const std::size_t barrier, const bool above,
+                                     const std::string& localBaseCurrency = {}) const override;
     // ModelCGImpl interface implementation
     void performCalculations() const override;
-    std::size_t getIndexValue(const Size indexNo, const Date& d, const Date& fwd = Null<Date>()) const override;
-    std::size_t getIrIndexValue(const Size indexNo, const Date& d, const Date& fwd = Null<Date>()) const override;
-    std::size_t getInfIndexValue(const Size indexNo, const Date& d, const Date& fwd = Null<Date>()) const override;
-    std::size_t getDiscount(const Size idx, const Date& s, const Date& t) const override;
+    std::size_t getIndexValue(const Size indexNo, const Date& d, const Date& fwd = Null<Date>(),
+                              const std::string& localBaseCurrency = {}) const override;
+    std::size_t getIrIndexValue(const Size indexNo, const Date& d, const Date& fwd = Null<Date>(),
+                                const std::string& localBaseCurrency = {}) const override;
+    std::size_t getInfIndexValue(const Size indexNo, const Date& d, const Date& fwd = Null<Date>(),
+                                 const std::string& localBaseCurrency = {}) const override;
+    std::size_t getDiscount(const Size idx, const Date& s, const Date& t,
+                            const std::string& localBaseCurrency = {}) const override;
     std::size_t getFxSpot(const Size idx) const override;
 
     // helper methods
@@ -98,8 +109,9 @@ protected:
     Handle<CrossAssetModel> cam_;
     std::vector<Handle<YieldTermStructure>> curves_;
     std::vector<Handle<Quote>> fxSpots_;
-    Size timeStepsPerYear_;
     std::vector<Date> stickyCloseOutDates_;
+    Size timeStepsPerYear_;
+    bool enableCgOptimization_;
 
     // updated in performCalculations()
     mutable Date referenceDate_;                      // the model reference date
@@ -107,23 +119,25 @@ protected:
     mutable TimeGrid timeGrid_;                       // the (possibly refined) time grid for the simulation
     mutable std::vector<Size> positionInTimeGrid_;    // for each effective simulation date the index in the time grid
     mutable std::map<Date, std::vector<std::size_t>> underlyingPaths_; // per simulation date index states
-    mutable std::map<Date, std::vector<std::size_t>> irStates_;        // per simulation date ir states for currencies_
+    mutable std::map<Date, std::vector<std::size_t>> irStates_;        // per simulation date ir states per currencies_
     mutable std::map<Date, std::vector<std::pair<std::size_t, std::size_t>>>
         infStates_; // per simulation date dk (x,y) or jy (x,y)
-    mutable std::vector<std::vector<std::size_t>> underlyingPathsOnFullTimeGrid_; // index states on timeGrid_
-    mutable std::vector<std::vector<std::size_t>> irStatesOnFullTimeGrid_;        // ir states on timeGrid_
+    mutable std::vector<std::vector<std::size_t>> underlyingPathsOnFullTimeGrid_;       // index states on timeGrid_
+    mutable std::vector<std::vector<std::size_t>> irStatesOnFullTimeGrid_;              // ir states on timeGrid_
     mutable std::vector<std::vector<std::pair<std::size_t, std::size_t>>>
-        infStatesOnFullTimeGrid_;                         // dk (x,y) or jy (x,y) on timeGrid_
-    mutable std::vector<Size> indexPositionInProcess_;    // maps index no to position in state process
-    mutable std::vector<Size> infIndexPositionInProcess_; // maps inf index no to position in state process
-    mutable std::vector<Size> currencyPositionInProcess_; // maps currency no to position in state process
-    mutable std::vector<Size> irIndexPositionInCam_;      // maps ir index no to currency idx in cam
-    mutable std::vector<Size> infIndexPositionInCam_;     // maps inf index no to inf idx in cam
-    mutable std::vector<Size> currencyPositionInCam_;     // maps currency no to position in cam parametrizations
+        infStatesOnFullTimeGrid_;                      // dk (x,y) or jy (x,y) on timeGrid_
+    mutable std::vector<Size> indexPositionInProcess_; // maps index no to position in state process
+    mutable std::vector<Size> irIndexPositionInCam_;   // maps ir index no to currency idx in cam
+    mutable std::vector<Size> infIndexPositionInCam_;  // maps inf index no to inf idx in cam
+    mutable std::vector<Size> currencyPositionInCam_;  // maps currency no to position in cam parametrizations
     mutable std::vector<Size> eqIndexInCam_;      // maps index no to eq position in cam (or null, if not an eq index)
     mutable bool conditionalExpectationUseIr_;    // derived from input conditionalExpectationModelState
     mutable bool conditionalExpectationUseInf_;   // derived from input conditionalExpectationModelState
     mutable bool conditionalExpectationUseAsset_; // derived from input conditionalExpectationModelState
+
+    // local base ccy ir states (for v1 local base currency handling)
+    mutable std::map<std::string, std::map<Date, std::size_t>> irStatesV1_;
+    mutable std::map<std::string, std::vector<std::size_t>> irStatesOnFullTimeGridV1_;
 
     mutable std::size_t underlyingPathsCgVersion_ = 0;
 

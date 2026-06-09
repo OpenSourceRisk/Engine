@@ -157,6 +157,23 @@ public:
                                                                           const std::string&) const override {
         return QuantLib::Handle<QuantExt::CorrelationTermStructure>();
     }
+
+    QuantLib::Handle<QuantLib::BlackVolTermStructure> bondFutureVol(const std::string& contractName,
+        const std::string& configuration) const override {
+        return QuantLib::Handle<QuantLib::BlackVolTermStructure>();
+    }
+
+    std::map<QuantLib::Period, QuantLib::Period>
+    zeroInflationObservationLags(const string& indexName,
+                                 const string& configuration = Market::defaultConfiguration) const override {
+        return std::map<QuantLib::Period, QuantLib::Period>();
+    }
+
+    std::map<QuantLib::Period, QuantLib::Period>
+    yoyInflationObservationLags(const string& indexName,
+                                const string& configuration = Market::defaultConfiguration) const override {
+        return std::map<QuantLib::Period, QuantLib::Period>();
+    }
 };
 
 } // namespace data

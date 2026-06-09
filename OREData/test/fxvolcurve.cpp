@@ -69,7 +69,9 @@ struct TodaysMarketArguments {
 
         filename = "market.txt";
         string fixingsFilename = "fixings.txt";
-        loader = QuantLib::ext::make_shared<CSVLoader>(TEST_INPUT_FILE(filename), TEST_INPUT_FILE(fixingsFilename), false);
+        auto csvLoader = QuantLib::ext::make_shared<CSVLoader>();
+        csvLoader->fromFiles(TEST_INPUT_FILE(filename), TEST_INPUT_FILE(fixingsFilename));
+        loader = csvLoader;
     }
 
     Date asof;

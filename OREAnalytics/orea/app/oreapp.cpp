@@ -243,7 +243,8 @@ QuantLib::ext::shared_ptr<CSVLoader> OREApp::buildCsvLoader(const QuantLib::ext:
         WLOG("fixing cutoff date not set");
     }
     
-    auto loader = QuantLib::ext::make_shared<CSVLoader>(marketFiles, fixingFiles, dividendFiles, implyTodaysFixings, cutoff);
+    auto loader = QuantLib::ext::make_shared<CSVLoader>(implyTodaysFixings, cutoff);
+    loader->fromFiles(marketFiles, fixingFiles, dividendFiles);
 
     return loader;
 }

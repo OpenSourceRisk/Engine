@@ -7,6 +7,7 @@
 
 #include <ored/configuration/basecorrelationcurveconfig.hpp>
 #include <ored/configuration/baseltrafficlightconfig.hpp>
+#include <ored/configuration/bondfuturevolcurveconfig.hpp>
 #include <ored/configuration/bootstrapconfig.hpp>
 #include <ored/configuration/capfloorvolcurveconfig.hpp>
 #include <ored/configuration/cdsvolcurveconfig.hpp>
@@ -37,6 +38,7 @@
 #include <ored/marketdata/adjustedinmemoryloader.hpp>
 #include <ored/marketdata/adjustmentfactors.hpp>
 #include <ored/marketdata/basecorrelationcurve.hpp>
+#include <ored/marketdata/bondfuturevolcurve.hpp>
 #include <ored/marketdata/bondspreadimply.hpp>
 #include <ored/marketdata/bondspreadimplymarket.hpp>
 #include <ored/marketdata/capfloorvolcurve.hpp>
@@ -141,6 +143,7 @@
 #include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/bondbasket.hpp>
 #include <ored/portfolio/bondfuture.hpp>
+#include <ored/portfolio/bondfutureoption.hpp>
 #include <ored/portfolio/bondoption.hpp>
 #include <ored/portfolio/bondposition.hpp>
 #include <ored/portfolio/bondrepo.hpp>
@@ -151,6 +154,7 @@
 #include <ored/portfolio/builders/balanceguaranteedswap.hpp>
 #include <ored/portfolio/builders/bond.hpp>
 #include <ored/portfolio/builders/bondfuture.hpp>
+#include <ored/portfolio/builders/bondfutureoption.hpp>
 #include <ored/portfolio/builders/bondoption.hpp>
 #include <ored/portfolio/builders/bondrepo.hpp>
 #include <ored/portfolio/builders/bondtotalreturnswap.hpp>
@@ -222,6 +226,7 @@
 #include <ored/portfolio/builders/scriptedtrade.hpp>
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
+#include <ored/portfolio/builders/utilities.hpp>
 #include <ored/portfolio/builders/vanillaoption.hpp>
 #include <ored/portfolio/builders/varianceswap.hpp>
 #include <ored/portfolio/builders/yoycapfloor.hpp>
@@ -354,6 +359,7 @@
 #include <ored/portfolio/tradegenerator.hpp>
 #include <ored/portfolio/trademonetary.hpp>
 #include <ored/portfolio/tradestrike.hpp>
+#include <ored/portfolio/tradeutils.hpp>
 #include <ored/portfolio/tranche.hpp>
 #include <ored/portfolio/trs.hpp>
 #include <ored/portfolio/trsunderlyingbuilder.hpp>
