@@ -54,7 +54,7 @@ std::pair<QuantLib::Real, QuantLib::Real> JyImpliedZeroInflationTermStructure::i
     // at time t, we effectivly observe the inflation at time t - simulationLag, so we need to add the simulation lag to
     // get the correct T.
     auto T = relativeTime_ + t + simulationLag();
-    auto ratio = inflationGrowth(model_, index_, S, T, state_[2], state_[0], true, simulationDayCounter_);
+    auto ratio = inflationGrowth(model_, index_, S, T, state_[2], state_[0], simulationDayCounter_);
     return std::make_pair(std::exp(state_[1]), ratio);
 }
 
@@ -65,7 +65,7 @@ void JyImpliedZeroInflationTermStructure::checkState() const {
 }
 
 Real inflationGrowth(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, Size index, Time S, Time T, Real irState,
-                     Real rrState, bool indexIsInterpolated, std::optional<QuantLib::DayCounter> simulationDayCounter) {
+                     Real rrState, std::optional<QuantLib::DayCounter> simulationDayCounter) {
     QL_REQUIRE(T >= S, "inflationGrowth: end time (" << T << ") must be >= start time (" << S << ")");
 
     // After this step, p_n holds P_n(S, T) * P_n(0, S) / P_n(0, T)
@@ -87,7 +87,7 @@ Real inflationGrowth(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, Si
     // Now, use the original zero inflation term structure to get P_r(0, S) / P_n(0, S) and P_r(0, T) / P_n(0, T) and
     // return \frac{P_r(S, T)}{P_n(S, T)}
     const auto& zts = model->infjy(index)->realRate()->termStructure();
-    return inflationGrowth(zts, T, simulationDayCounter.value_or(irTs->dayCounter()), indexIsInterpolated) /
-           inflationGrowth(zts, S, simulationDayCounter.value_or(irTs->dayCounter()), indexIsInterpolated) * p_r / p_n;
+    return inflationGrowth(zts, T, simulationDayCounter.value_or(irTs->dayCounter())) /
+           inflationGrowth(zts, S, simulationDayCounter.value_or(irTs->dayCounter())) * p_r / p_n;
 }
 }

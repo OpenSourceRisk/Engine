@@ -68,14 +68,13 @@ Rate JyYoYInflationCouponPricer::adjustedFixing(Rate) const {
 
     // Use the JY model to calculate the adjusted fixing.
     auto zts = model_->infjy(index_)->realRate()->termStructure();
-    auto S = inflationTime(denFixingDate, *zts, index->interpolated());
-    auto T = inflationTime(numFixingDate, *zts, index->interpolated());
+    auto S = inflationTime(denFixingDate, *zts, true); // continuous time model, interpolated true 
+    auto T = inflationTime(numFixingDate, *zts, true); // continuous time model, interpolated true
 
-    return jyExpectedIndexRatio(model_, index_, S, T, index->interpolated()) - 1;
+    return jyExpectedIndexRatio(model_, index_, S, T) - 1;
 }
 
-Real jyExpectedIndexRatio(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, Size index, Time S, Time T,
-                          bool indexIsInterpolated) {
+Real jyExpectedIndexRatio(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, Size index, Time S, Time T) {
 
     using namespace CrossAssetAnalytics;
     auto irIdx = model->ccyIndex(model->infjy(index)->currency());
@@ -83,7 +82,7 @@ Real jyExpectedIndexRatio(const QuantLib::ext::shared_ptr<CrossAssetModel>& mode
     auto zts = model->infjy(index)->realRate()->termStructure();
 
     // Calculate growthRatio: \frac{P_r(0,T)}{P_n(0,T)} / \frac{P_r(0,S)}{P_n(0,S)}
-    auto growthRatio = inflationGrowth(zts, T, indexIsInterpolated) / inflationGrowth(zts, S, indexIsInterpolated);
+    auto growthRatio = inflationGrowth(zts, T) / inflationGrowth(zts, S);
 
     // Calculate exponent of the convexity adjustment i.e. c.
     auto rrParam = model->infjy(index)->realRate();

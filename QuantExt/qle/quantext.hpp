@@ -645,12 +645,10 @@
 #include <qle/termstructures/weightedyieldtermstructure.hpp>
 #include <qle/termstructures/yieldplusdefaultyieldtermstructure.hpp>
 #include <qle/termstructures/yoyinflationcurveobservermoving.hpp>
-#include <qle/termstructures/yoyinflationcurveobserverstatic.hpp>
 #include <qle/termstructures/yoyoptionletsolver.hpp>
 #include <qle/termstructures/yoyoptionletsurfacestripper.hpp>
 #include <qle/termstructures/yoypricesurfacefromvols.hpp>
 #include <qle/termstructures/zeroinflationcurveobservermoving.hpp>
-#include <qle/termstructures/zeroinflationcurveobserverstatic.hpp>
 #include <qle/time/dateutilities.hpp>
 #include <qle/time/futureexpirycalculator.hpp>
 #include <qle/time/monthcounter.hpp>

@@ -481,7 +481,6 @@ Handle<YoYInflationIndex> DependencyMarket::yoyInflationIndex(const string& name
     Handle<ZeroInflationTermStructure> zits;
     auto ii = ore::data::parseZeroInflationIndex(name, zits);
     auto dc = ActualActual(ActualActual::ISDA);
-    vector<Time> zeroCurveTimes = {0, 1, 2};
     vector<Handle<Quote>> quotes;
     QuantLib::ext::shared_ptr<SimpleQuote> q0(new SimpleQuote(0));
     Handle<Quote> qh0(q0);
@@ -491,13 +490,15 @@ Handle<YoYInflationIndex> DependencyMarket::yoyInflationIndex(const string& name
         Handle<Quote> qh1(q1);
         quotes.push_back(qh1);
     }
+    vector<QuantLib::Period> tenors {0 * Days, 1 * Years, 2 * Years};
     QuantLib::ext::shared_ptr<YoYInflationTermStructure> yoyCurve =
-        QuantLib::ext::shared_ptr<YoYInflationCurveObserverMoving<Linear>>(new YoYInflationCurveObserverMoving<Linear>(
-            0, WeekendsOnly(), dc, Period(2, Months), QuantLib::Frequency::Semiannual, true, zeroCurveTimes, quotes));
+        QuantLib::ext::make_shared<YoYInflationCurveObserverMoving<Linear>>(
+            0, WeekendsOnly(), dc, 60, Period(2, Months), QuantLib::Frequency::Semiannual, true,
+            tenors, quotes);
     Handle<YoYInflationTermStructure> its(yoyCurve);
     its->enableExtrapolation();
     return Handle<YoYInflationIndex>(
-        QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(ii, false, its));
+        QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(ii, its));
 }
 
 Handle<QuantLib::CPIVolatilitySurface> DependencyMarket::cpiInflationCapFloorVolatilitySurface(const string& name,
@@ -669,6 +670,16 @@ Handle<BlackVolTermStructure> DependencyMarket::bondFutureVol(const string& cont
     addMarketObject(MarketObject::BondFutureVol, contractName, configuration);
     return flatRateFxv();
 }
+
+std::map<QuantLib::Period, QuantLib::Period>
+DependencyMarket::zeroInflationObservationLags(const string& indexName, const string& configuration) const {
+    return {{1 * Years, 3 * Months}};
+};
+
+std::map<QuantLib::Period, QuantLib::Period>
+DependencyMarket::yoyInflationObservationLags(const string& indexName, const string& configuration) const {
+    return {{1 * Years, 3 * Months}};
+};
 
 bool DependencyMarket::hasRiskFactorType(const RiskFactorKey::KeyType& riskFactorType) const {
     return riskFactors_.find(riskFactorType) != riskFactors_.end();

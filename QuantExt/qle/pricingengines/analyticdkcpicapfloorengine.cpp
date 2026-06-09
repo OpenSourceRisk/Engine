@@ -34,7 +34,7 @@ void AnalyticDkCpiCapFloorEngine::calculate() const {
     bool interpolate = arguments_.observationInterpolation == CPI::Linear;
 
     //Date startDate = inflationPeriod(arguments_.startDate - arguments_.observationLag, arguments_.index->frequency()).first;
-    auto zits = model_->infdk(index_)->termStructure();
+    auto zits = model_->infdk(index_)->dkLgmParam()->termStructure();
     Size irIdx = model_->ccyIndex(model_->infdk(index_)->currency());
     auto yts = model_->irlgm1f(irIdx)->termStructure();
 

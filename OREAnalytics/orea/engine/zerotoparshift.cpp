@@ -56,7 +56,7 @@ ZeroToParShiftConverter::ZeroToParShiftConverter(const ParSensitivityInstrumentB
         for (auto it : instruments_.parCaps_)
             it.second->deepUpdate();
         for (auto it : instruments_.parYoYCaps_)
-            it.second->deepUpdate();
+            it.second.cap->deepUpdate();
     }
     baseValues_ = parRates();
 };
@@ -86,7 +86,7 @@ ZeroToParShiftConverter::parShifts(QuantLib::ext::shared_ptr<Scenario> scenario)
         for (auto it : instruments_.parCaps_)
             it.second->deepUpdate();
         for (auto it : instruments_.parYoYCaps_)
-            it.second->deepUpdate();
+            it.second.cap->deepUpdate();
     }
 
     auto scenarioValues = parRates();

@@ -33,8 +33,8 @@ template <class Interpolator>
 class InterpolatedCPIInflationCurve : public CPICurve, protected QuantLib::InterpolatedCurve<Interpolator> {
 public:
     InterpolatedCPIInflationCurve(const QuantLib::Date& referenceDate, std::vector<QuantLib::Date> dates,
-                                  const std::vector<QuantLib::Rate>& cpis, const QuantLib::Period& lag,
-                                  QuantLib::Frequency frequency, const QuantLib::DayCounter& dayCounter,
+                                  const std::vector<QuantLib::Rate>& cpis, QuantLib::Frequency frequency,
+                                  const QuantLib::DayCounter& dayCounter,
                                   const QuantLib::ext::shared_ptr<QuantLib::Seasonality>& seasonality = {},
                                   const Interpolator& interpolator = Interpolator());
 
@@ -64,7 +64,7 @@ protected:
         construction.
     */
     InterpolatedCPIInflationCurve(const QuantLib::Date& referenceDate, const QuantLib::Date& baseDate,
-                                  QuantLib::Rate baseCPI, const QuantLib::Period& lag, QuantLib::Frequency frequency,
+                                  QuantLib::Rate baseCPI, QuantLib::Frequency frequency,
                                   const QuantLib::DayCounter& dayCounter,
                                   const QuantLib::ext::shared_ptr<QuantLib::Seasonality>& seasonality = {},
                                   const Interpolator& interpolator = Interpolator());
@@ -77,9 +77,9 @@ typedef InterpolatedCPIInflationCurve<QuantLib::Linear> CPIInflationCurve;
 template <class Interpolator>
 InterpolatedCPIInflationCurve<Interpolator>::InterpolatedCPIInflationCurve(
     const QuantLib::Date& referenceDate, std::vector<QuantLib::Date> dates, const std::vector<QuantLib::Rate>& cpi,
-    const QuantLib::Period& lag, QuantLib::Frequency frequency, const QuantLib::DayCounter& dayCounter,
+    QuantLib::Frequency frequency, const QuantLib::DayCounter& dayCounter,
     const QuantLib::ext::shared_ptr<QuantLib::Seasonality>& seasonality, const Interpolator& interpolator)
-    : CPICurve(referenceDate, dates.at(0), cpi.at(0), lag, frequency, dayCounter, seasonality),
+    : CPICurve(referenceDate, dates.at(0), cpi.at(0), frequency, dayCounter, seasonality),
       QuantLib::InterpolatedCurve<Interpolator>(std::vector<QuantLib::Time>(), cpi, interpolator),
       dates_(std::move(dates)) {
 
@@ -100,9 +100,9 @@ InterpolatedCPIInflationCurve<Interpolator>::InterpolatedCPIInflationCurve(
 template <class Interpolator>
 InterpolatedCPIInflationCurve<Interpolator>::InterpolatedCPIInflationCurve(
     const QuantLib::Date& referenceDate, const QuantLib::Date& baseDate, QuantLib::Rate baseCPI,
-    const QuantLib::Period& lag, QuantLib::Frequency frequency, const QuantLib::DayCounter& dayCounter,
+    QuantLib::Frequency frequency, const QuantLib::DayCounter& dayCounter,
     const QuantLib::ext::shared_ptr<QuantLib::Seasonality>& seasonality, const Interpolator& interpolator)
-    : CPICurve(referenceDate, baseDate, baseCPI, lag, frequency, dayCounter, seasonality),
+    : CPICurve(referenceDate, baseDate, baseCPI, frequency, dayCounter, seasonality),
       QuantLib::InterpolatedCurve<Interpolator>(interpolator) {}
 
 template <class T> QuantLib::Date InterpolatedCPIInflationCurve<T>::baseDate() const {
