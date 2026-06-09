@@ -26,6 +26,7 @@
 
 #include <ored/utilities/log.hpp>
 
+#include <ql/utilities/null_deleter.hpp>
 #include <ql/errors.hpp>
 
 #include <boost/lexical_cast.hpp>
@@ -167,11 +168,10 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
         QuantLib::ext::shared_ptr<DateGrid> dg = QuantLib::ext::make_shared<DateGrid>("1,0W", NullCalendar());
         Size nSamples = scenGenerator->samples();
 
-        std::mutex cfMutex;
-        std::vector<ThreadCfData> threadCfCubes;
+        std::vector<ThreadCfData> threadCfCubes(nThreads);
 
-        auto calculatorsFactory = [&baseCcy, &cfReport, &includePastCashflows, &cfMutex, &threadCfCubes,
-                                   &nSamples](const QuantLib::ext::shared_ptr<ore::data::Portfolio>& p) {
+        auto calculatorsFactory = [&baseCcy, &cfReport, &includePastCashflows, &threadCfCubes,
+                                   &nSamples](const Size id, const QuantLib::ext::shared_ptr<ore::data::Portfolio>& p) {
             std::vector<QuantLib::ext::shared_ptr<ValuationCalculator>> calcs;
             calcs.push_back(QuantLib::ext::make_shared<NPVCalculator>(baseCcy));
             if (cfReport) {
@@ -180,15 +180,18 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
                         p->ids().size(), std::vector<std::vector<TradeCashflowReportData>>(nSamples + 1));
                 calcs.push_back(
                     QuantLib::ext::make_shared<CashflowReportCalculator>(baseCcy, includePastCashflows, *threadCfCube));
-                std::lock_guard<std::mutex> lock(cfMutex);
                 const std::set<std::string> tradeIds = p->ids();
-                threadCfCubes.push_back({std::vector<std::string>(tradeIds.begin(), tradeIds.end()), threadCfCube});
+                threadCfCubes[id] = {std::vector<std::string>(tradeIds.begin(), tradeIds.end()), threadCfCube};
             }
             return calcs;
         };
 
-        auto curveConfigsPtr = QuantLib::ext::make_shared<CurveConfigurations>(curveConfigs);
-        auto todaysMarketParamsPtr = QuantLib::ext::make_shared<TodaysMarketParameters>(todaysMarketParams);
+        //auto curveConfigsPtr = QuantLib::ext::make_shared<CurveConfigurations>(curveConfigs);
+        //auto todaysMarketParamsPtr = QuantLib::ext::make_shared<TodaysMarketParameters>(todaysMarketParams);
+        auto curveConfigsPtr = QuantLib::ext::shared_ptr<CurveConfigurations>(
+            const_cast<CurveConfigurations*>(&curveConfigs), QuantLib::null_deleter());
+        auto todaysMarketParamsPtr = QuantLib::ext::shared_ptr<TodaysMarketParameters>(
+            const_cast<TodaysMarketParameters*>(&todaysMarketParams), QuantLib::null_deleter());
 
         MultiThreadedValuationEngine engine(
             nThreads, asof, dg, nSamples, loader, scenarioGenerator, ed, curveConfigsPtr, todaysMarketParamsPtr,
@@ -277,7 +280,7 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
                 npv0 != Null<Real>() && errors.samples.find(std::make_pair(index->second, j)) == errors.samples.end()
                     ? cube->get(index->second, 0, j, 0)
                     : Null<Real>();
-            Real sensi = npv0 == Null<Real>() || npv0 == Null<Real>() ? Null<Real>() : npv - npv0;
+            Real sensi = npv0 == Null<Real>() || npv == Null<Real>() ? Null<Real>() : npv - npv0;
             if (fabs(sensi) > threshold || QuantLib::close_enough(sensi, threshold)) {
                 report->next();
                 report->add(tradeId);
