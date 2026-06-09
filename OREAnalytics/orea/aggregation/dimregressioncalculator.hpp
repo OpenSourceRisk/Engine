@@ -63,7 +63,9 @@ public:
 	    //! Actual t0 IM by netting set used to scale the DIM evolution, no scaling if the argument is omitted
 	    const std::map<std::string, Real>& currentIM = std::map<std::string, Real>(),
         //! Deterministic Intitial Margin time series by netting set
-        const std::map<std::string, TimeSeries<Real>>& deterministicInitialMargin = {});
+        const std::map<std::string, TimeSeries<Real>>& deterministicInitialMargin = {},
+        //! Explicit DIM scaling override; when set, currentIM-based derivation is skipped
+        Real explicitDimScaling = QuantLib::Null<Real>());
 
     const map<string, Real>& unscaledCurrentDIM() const override;
     void build() override;
@@ -97,6 +99,7 @@ private:
 
     map<string, Real> currentDIM_;
     std::map<std::string, TimeSeries<Real>> deterministicInitialMargin_;
+    Real explicitDimScaling_;
 };
 
 inline bool lessThan(const Array& a, const Array& b) {

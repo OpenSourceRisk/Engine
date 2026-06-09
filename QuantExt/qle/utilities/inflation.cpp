@@ -104,15 +104,15 @@ Time inflationTime(const Date& date, const QuantLib::ext::shared_ptr<InflationTe
     return inflationYearFraction(inflationTs->frequency(), indexIsInterpolated, dc, inflationTs->baseDate(), date);
 }
 
-Real inflationGrowth(const Handle<ZeroInflationTermStructure>& ts, Time t, const std::optional<DayCounter>& dc, bool indexIsInterpolated) {
+Real inflationGrowth(const Handle<ZeroInflationTermStructure>& ts, Time t, const std::optional<DayCounter>& dc) {
     // in the simulation at time t we effectively observe the inflation zero rate at time t - simLag
     // this is due to the publishing lag of CPI indices, the simulation lag is the difference between
     // the last known cpi fixing date and today (t0).
-    if(!dc.has_value())
+    if (!dc.has_value())
         QL_FAIL("Not simulation day counter given");
     auto effectiveDayCounter = dc.value_or(ts->dayCounter());
     // TODO refactor this code once we refactored the yoy model curves and can get rid of the indexIsInterpolated flag
-    auto lag = inflationTime(ts->referenceDate(), ts.currentLink(), indexIsInterpolated, effectiveDayCounter);
+    auto lag = inflationTime(ts->referenceDate(), ts.currentLink(), true, effectiveDayCounter);
     auto effectiveObservationTime = t - lag;
     auto effectiveObservationDate = lowerDate(effectiveObservationTime, ts->referenceDate(), effectiveDayCounter);
     auto observationTime = ts->dayCounter().yearFraction(ts->referenceDate(), effectiveObservationDate);
@@ -121,28 +121,8 @@ Real inflationGrowth(const Handle<ZeroInflationTermStructure>& ts, Time t, const
     return std::pow(1.0 + zeroRate, tau);
 }
 
-Real inflationGrowth(const Handle<ZeroInflationTermStructure>& ts, Time t, bool indexIsInterpolated) {
-    return inflationGrowth(ts, t, ts->dayCounter(), indexIsInterpolated);
-}
-
-int simulationLag(const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts) {
-    return simulationLag(ts.currentLink());
-}
-
-int simulationLag(const QuantLib::ext::shared_ptr<ZeroInflationTermStructure>& ts) {
-    QL_REQUIRE(ts != nullptr, "simulationLag can not be computed, no curve given");
-    return ts->referenceDate() - ts->baseDate();
-}
-
-double simulationLagTime(const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts,
-                         const std::optional<QuantLib::DayCounter>& dc) {
-    return simulationLagTime(ts.currentLink(), dc);
-}
-
-double simulationLagTime(const QuantLib::ext::shared_ptr<ZeroInflationTermStructure>& ts,
-                         const std::optional<QuantLib::DayCounter>& dc) {
-    QL_REQUIRE(ts != nullptr, "simulationLag can not be computed, no curve given");
-    return dc.value_or(ts->dayCounter()).yearFraction(ts->baseDate(), ts->referenceDate());
+Real inflationGrowth(const Handle<ZeroInflationTermStructure>& ts, Time t) {
+    return inflationGrowth(ts, t, ts->dayCounter());
 }
 
 Real continuousSeasonalityAdjustment(const Date& baseDate, const Date& observationDate, Rate unadjustedZeroRate,

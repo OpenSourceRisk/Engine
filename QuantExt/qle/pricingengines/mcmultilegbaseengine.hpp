@@ -29,7 +29,7 @@
 #include <qle/models/lgmvectorised.hpp>
 #include <qle/pricingengines/amccalculator.hpp>
 #include <qle/pricingengines/mccashflowinfo.hpp>
-#include <qle/pricingengines/mcregressionmodel.hpp>
+#include <qle/pricingengines/mcengineregression.hpp>
 #include <qle/utilities/mcstats.hpp>
 
 #include <ql/indexes/interestrateindex.hpp>

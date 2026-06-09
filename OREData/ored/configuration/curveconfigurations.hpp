@@ -76,6 +76,7 @@ public:
     const ReportConfig& reportConfigIrSwaptionVols() const { return reportConfigIrSwaptionVols_; }
     const ReportConfig& reportConfigYieldCurves() const { return reportConfigYieldCurves_; }
     const ReportConfig& reportConfigInflationCapFloorVols() const { return reportConfigInflationCapFloorVols_; }
+    const ReportConfig& reportConfigDefaultCurves() const { return reportConfigDefaultCurves_; }
 
     void setCurveConfigOverride(const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigOverride) {
         curveConfigOverride_ = curveConfigOverride;
@@ -200,6 +201,7 @@ public:
     ReportConfig reportConfigYieldCurves_;
     ReportConfig reportConfigInflationCapFloorVols_;
     ReportConfig reportConfigBondFutureVols_;
+    ReportConfig reportConfigDefaultCurves_;
 
     mutable std::map<CurveSpec::CurveType, std::map<std::string, QuantLib::ext::shared_ptr<CurveConfig>>> configs_;
     mutable std::map<CurveSpec::CurveType, std::map<std::string, std::string>> unparsed_;

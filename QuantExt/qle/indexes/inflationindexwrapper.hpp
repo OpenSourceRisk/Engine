@@ -66,7 +66,7 @@ public:
     YoYInflationIndexWrapper(const QuantLib::ext::shared_ptr<ZeroInflationIndex> zeroIndex,
                              const Handle<YoYInflationTermStructure>& ts = Handle<YoYInflationTermStructure>());
 
-    [[deprecated]]
+    [[deprecated("use of the overload without the interpolated parameter instead")]]
     YoYInflationIndexWrapper(const QuantLib::ext::shared_ptr<ZeroInflationIndex> zeroIndex, const bool interpolated,
                              const Handle<YoYInflationTermStructure>& ts = Handle<YoYInflationTermStructure>());
 

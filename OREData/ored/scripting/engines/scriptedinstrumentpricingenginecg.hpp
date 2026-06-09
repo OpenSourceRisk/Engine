@@ -44,8 +44,8 @@ public:
     ScriptedInstrumentPricingEngineCG(
         const std::string& npv, const std::vector<std::pair<std::string, std::string>>& additionalResults,
         const QuantLib::ext::shared_ptr<ModelCG>& model, const std::set<std::string>& minimalModelCcys,
-        const std::vector<std::string>& amcCgComponents, const std::string& amcCgTargetValue,
-        const std::string& amcCgTargetDerivative, const ASTNodePtr ast,
+        const std::string& localBaseCcy, const std::vector<std::string>& amcCgComponents,
+        const std::string& amcCgTargetValue, const std::string& amcCgTargetDerivative, const ASTNodePtr ast,
         const QuantLib::ext::shared_ptr<Context>& context, const Model::Params& mcParams,
         const double indicatorSmoothingForValues, const double indicatorSmoothingForDerivatives,
         const double sqrtSmoothingForDerivatives, const std::string& script = "", const bool interactive = false,
@@ -57,9 +57,12 @@ public:
 
     bool lastCalculationWasValid() const { return lastCalculationWasValid_; }
 
-    void buildComputationGraph(const bool stickyCloseOutDateRun = false,
-                               std::vector<TradeExposure>* tradeExposure = nullptr,
-                               TradeExposureMetaInfo* tradeExposureMetaInfo = nullptr) const override;
+    virtual bool isComplexTrade() const override;
+    std::set<std::set<std::string>> relevantCurrencySets() const override;
+    void buildComputationGraph(
+        const bool stickyCloseOutDateRun = false, std::vector<TradeExposure>* tradeExposure = nullptr,
+        TradeExposureMetaInfo* tradeExposureMetaInfo = nullptr,
+        std::function<std::string(std::set<std::string>)> baseCurrencySuggestions = {}) const override;
 
 private:
     void calculate() const override;
@@ -112,6 +115,7 @@ private:
     std::vector<std::pair<std::string, std::string>> additionalResults_;
     QuantLib::ext::shared_ptr<ModelCG> model_;
     std::set<std::string> minimalModelCcys_;
+    std::string localBaseCcy_;
     std::vector<std::string> amcCgComponents_;
     std::string amcCgTargetValue_;
     std::string amcCgTargetDerivative_;

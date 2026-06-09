@@ -156,7 +156,7 @@ std::vector<QuantLib::ext::shared_ptr<InterestRateIndex>> getInterestRateIndexFr
     std::vector<QuantLib::ext::shared_ptr<InterestRateIndex>> result;
     for (auto const& l : legs) {
         for (auto c : l) {
-            if (auto s = QuantLib::ext::dynamic_pointer_cast<ScaledCoupon>(c)) {
+            if (auto s = QuantLib::ext::dynamic_pointer_cast<QuantExt::ScaledCoupon>(c)) {
                 c = s->underlyingCoupon();
             }
             if (auto cpn = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(c)) {
@@ -191,7 +191,7 @@ std::vector<QuantLib::Real> getCalibrationStrikesFromLegs(const std::vector<Leg>
                 auto c = ci;
 
                 // unpack scaled coupons
-                if (auto scp = QuantLib::ext::dynamic_pointer_cast<ScaledCoupon>(c)) {
+                if (auto scp = QuantLib::ext::dynamic_pointer_cast<QuantExt::ScaledCoupon>(c)) {
                     c = scp->underlyingCoupon();
                 }
 

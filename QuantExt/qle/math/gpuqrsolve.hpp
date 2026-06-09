@@ -34,6 +34,9 @@ void setUseGpuRegression(bool b);
 //! Read the process-wide opt-in flag.
 bool useGpuRegression();
 
+//! Check whether gpu qr-solve will be applied to given A, b
+bool gpuQrSolveApplicable(const Matrix& A, const Array& b);
+
 //! GPU-accelerated QR solve for least squares problems
 /*! This function solves the least squares problem:
     minimize ||A*x - b||_2

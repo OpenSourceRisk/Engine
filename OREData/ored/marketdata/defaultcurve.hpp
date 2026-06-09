@@ -25,8 +25,10 @@
 
 #include <ored/configuration/conventions.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
+#include <ored/configuration/defaultcurveconfig.hpp>
 #include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/loader.hpp>
+#include <ored/marketdata/todaysmarketcalibrationinfo.hpp>
 #include <ql/termstructures/credit/interpolatedhazardratecurve.hpp>
 #include <ql/termstructures/credit/piecewisedefaultcurve.hpp>
 #include <qle/termstructures/creditcurve.hpp>
@@ -35,6 +37,7 @@ namespace ore {
 namespace data {
 using ore::data::Conventions;
 using ore::data::CurveConfigurations;
+using ore::data::DefaultCurveConfig;
 using QuantLib::Date;
 
 class YieldCurve;
@@ -53,18 +56,21 @@ public:
     //! Detailed constructor
     DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
                  map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves,
-                 map<string, QuantLib::ext::shared_ptr<DefaultCurve>>& defaultCurves,
-                 QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData);
+                 map<string, QuantLib::ext::shared_ptr<DefaultCurve>>& defaultCurves, 
+                 QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData,
+                 const bool buildCalibrationInfo = false);
     //@}
     //! \name Inspectors
     //@{
     const DefaultCurveSpec& spec() const { return spec_; }
     const QuantLib::ext::shared_ptr<QuantExt::CreditCurve>& creditCurve() const { return curve_; }
+    QuantLib::ext::shared_ptr<DefaultCurveCalibrationInfo> calibrationInfo() const { return calibrationInfo_; }
     Real recoveryRate() { return recoveryRate_; }
     //@}
 private:
     DefaultCurveSpec spec_;
     QuantLib::ext::shared_ptr<QuantExt::CreditCurve> curve_;
+    QuantLib::ext::shared_ptr<DefaultCurveCalibrationInfo> calibrationInfo_;
     Real recoveryRate_;
     
     //! Build a default curve from CDS spread quotes

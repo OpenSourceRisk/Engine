@@ -162,6 +162,18 @@ public:
         const std::string& configuration) const override {
         return QuantLib::Handle<QuantLib::BlackVolTermStructure>();
     }
+
+    std::map<QuantLib::Period, QuantLib::Period>
+    zeroInflationObservationLags(const string& indexName,
+                                 const string& configuration = Market::defaultConfiguration) const override {
+        return std::map<QuantLib::Period, QuantLib::Period>();
+    }
+
+    std::map<QuantLib::Period, QuantLib::Period>
+    yoyInflationObservationLags(const string& indexName,
+                                const string& configuration = Market::defaultConfiguration) const override {
+        return std::map<QuantLib::Period, QuantLib::Period>();
+    }
 };
 
 } // namespace data

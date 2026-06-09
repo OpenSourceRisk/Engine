@@ -518,7 +518,7 @@ RandomVariable GaussianCam::getInfIndexValue(const Size indexNo, const Date& d, 
         InfDkVectorised infdkv(*cam_);
         RandomVariable baseFixingVec(size(), baseFixing);
         QL_REQUIRE(t < T || close_enough(t, T), "infdkI: t (" << t << ") <= T (" << T << ") required");
-        auto dk = infdkv.infdkI(camIndex, t, T, state.first, state.second, true);
+        auto dk = infdkv.infdkI(camIndex, t, T, state.first, state.second);
         result = baseFixingVec * dk.first * (fixingDate != obsDate ? dk.second : RandomVariable(size(), 1.0));
     } else if (cam_->modelType(CrossAssetModel::AssetType::INF, camIndex) == CrossAssetModel::ModelType::JY) {
         result = exp(state.second);
@@ -527,7 +527,7 @@ RandomVariable GaussianCam::getInfIndexValue(const Size indexNo, const Date& d, 
             RandomVariable growthFactor(size());
             growthFactor.expand();
             for (Size p = 0; p < size(); ++p) {
-                growthFactor.data()[p] = inflationGrowth(*cam_, indexNo, t, T, state.first[p], state.second[p], true);
+                growthFactor.data()[p] = inflationGrowth(*cam_, indexNo, t, T, state.first[p], state.second[p]);
             }
             result *= growthFactor;
         }

@@ -264,8 +264,17 @@ public:
     //! Inflation Indexes
     virtual Handle<ZeroInflationIndex>
     zeroInflationIndex(const string& indexName, const string& configuration = Market::defaultConfiguration) const = 0;
+
+    virtual std::map<QuantLib::Period, QuantLib::Period>
+    zeroInflationObservationLags(const string& indexName,
+                                 const string& configuration = Market::defaultConfiguration) const = 0;
+
     virtual Handle<YoYInflationIndex>
     yoyInflationIndex(const string& indexName, const string& configuration = Market::defaultConfiguration) const = 0;
+
+    virtual std::map<QuantLib::Period, QuantLib::Period>
+    yoyInflationObservationLags(const string& indexName,
+                                const string& configuration = Market::defaultConfiguration) const = 0;
 
     //! CPI Inflation Cap Floor Volatility Surfaces
     virtual Handle<QuantLib::CPIVolatilitySurface>

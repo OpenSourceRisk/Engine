@@ -66,9 +66,10 @@
       <Parameter name="colva">Y</Parameter>
       <Parameter name="collateralFloor">Y</Parameter>
       <Parameter name="dim">Y</Parameter>
+      <Parameter name="dimScaling">1.0</Parameter>
       <Parameter name="mva">Y</Parameter>
       <Parameter name="deterministicInitialMarginFile">dim_evolution.csv</Parameter>
     </Analytic>
-    
+
   </Analytics>
 </ORE>

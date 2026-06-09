@@ -359,6 +359,7 @@
 #include <ored/portfolio/tradegenerator.hpp>
 #include <ored/portfolio/trademonetary.hpp>
 #include <ored/portfolio/tradestrike.hpp>
+#include <ored/portfolio/tradeutils.hpp>
 #include <ored/portfolio/tranche.hpp>
 #include <ored/portfolio/trs.hpp>
 #include <ored/portfolio/trsunderlyingbuilder.hpp>

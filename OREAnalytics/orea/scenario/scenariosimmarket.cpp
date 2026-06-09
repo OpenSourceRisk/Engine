@@ -2485,16 +2485,17 @@ ScenarioSimMarket::ScenarioSimMarket(
                 for (const auto& name : param.second.second) {
                     bool simDataWritten = false;
                     try {
-                        DLOG("building " << name << " zero inflation curve");
-
-
                         Handle<ZeroInflationIndex> inflationIndex = initMarket->zeroInflationIndex(name, configuration);
+                        auto observationLegs = initMarket->zeroInflationObservationLags(name, configuration);
+                        QL_REQUIRE(!observationLegs.empty(),
+                                   "Zero inflation index " << name << " has no observation legs defined");
+                        auto obsLag = observationLegs.rbegin()->second; // take the longest lag as the main lag for simulation,
+                        
                         Handle<ZeroInflationTermStructure> inflationTs = inflationIndex->zeroInflationTermStructure();
                         vector<string> keys(parameters->zeroInflationTenors(name).size());
 
-                        Date date0 = asof_ - inflationTs->observationLag();
+                        Date date0 = inflationTs->baseDate();
                         DayCounter dc = inflationTs->dayCounter();
-                        vector<Date> quoteDates;
                         vector<Time> zeroCurveTimes(
                             1, -dc.yearFraction(inflationPeriod(date0, inflationTs->frequency()).first, asof_));
                         vector<Handle<Quote>> quotes;
@@ -2502,20 +2503,16 @@ ScenarioSimMarket::ScenarioSimMarket(
                                    "zero inflation tenors must not be empty");
                         QL_REQUIRE(parameters->zeroInflationTenors(name).front() > 0 * Days,
                                    "zero inflation tenors must not include t=0");
-
+                        DLOG("ScenarioSimMarket building zero inflation curve for " << name << " with base date " << date0
+                                                                           << " and obs lag " << obsLag);
                         for (auto& tenor : parameters->zeroInflationTenors(name)) {
-                            Date inflDate = inflationPeriod(date0 + tenor, inflationTs->frequency()).first;
+                            Date inflDate = inflationPeriod(asof_ + tenor - obsLag, inflationTs->frequency()).first;
+                            DLOG("ScenarioSimMarket zero inflation curve " << name << " inflation date: " << inflDate);
                             zeroCurveTimes.push_back(dc.yearFraction(asof_, inflDate));
-                            quoteDates.push_back(asof_ + tenor);
                         }
 
                         for (Size i = 1; i < zeroCurveTimes.size(); i++) {
-                            Date obsDate = inflationPeriod(quoteDates[i - 1] - inflationTs->observationLag(), inflationTs->frequency()).first;
-                            Real rate = inflationTs->zeroRate(obsDate);
-                            if (inflationTs->hasSeasonality()) {
-                                rate = inflationTs->seasonality()->deseasonalisedZeroRate(obsDate,                                 
-                                    rate, *inflationTs.currentLink());
-                            }
+                            Real rate = inflationTs->zeroRate(zeroCurveTimes[i]);
                             auto q = QuantLib::ext::make_shared<SimpleQuote>(useSpreadedTermStructures_ ? 0.0 : rate);
                             if (i == 1) {
                                 // add the zero rate at first tenor to the T0 time, to ensure flat interpolation of T1
@@ -2541,17 +2538,17 @@ ScenarioSimMarket::ScenarioSimMarket(
                         // FIXME: Settlement days set to zero - needed for floating term structure implementation
                         QuantLib::ext::shared_ptr<ZeroInflationTermStructure> zeroCurve;
                         if (useSpreadedTermStructures_) {
-                            zeroCurve =
-                                QuantLib::ext::make_shared<SpreadedZeroInflationCurve>(inflationTs, zeroCurveTimes, quotes);
+                            zeroCurve = QuantLib::ext::make_shared<SpreadedZeroInflationCurve>(inflationTs,
+                                                                                               zeroCurveTimes, quotes);
                         } else {
                             int simLag = simulationLag(inflationTs);
                             // Quotes are build with first time to be (baseDate), need to 0 Days tenors here
-                            vector<Period> tenors(1, 0 * Days); 
-                            tenors.insert(tenors.end(), parameters->zeroInflationTenors(name).begin(), parameters->zeroInflationTenors(name).end());
+                            vector<Period> tenors(1, 0 * Days);
+                            tenors.insert(tenors.end(), parameters->zeroInflationTenors(name).begin(),
+                                          parameters->zeroInflationTenors(name).end());
                             zeroCurve = QuantLib::ext::make_shared<ZeroInflationCurveObserverMoving<Linear>>(
-                                0, inflationIndex->fixingCalendar(), dc, simLag, inflationTs->observationLag(),
-                                inflationTs->frequency(), false, tenors, quotes,
-                                inflationTs->seasonality());
+                                0, inflationIndex->fixingCalendar(), dc, simLag, obsLag,
+                                inflationTs->frequency(), false, tenors, quotes, inflationTs->seasonality());
                         }
 
                         Handle<ZeroInflationTermStructure> its(zeroCurve);
@@ -2561,7 +2558,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                             parseZeroInflationIndex(name, Handle<ZeroInflationTermStructure>(its));
                         Handle<ZeroInflationIndex> zh(i);
                         zeroInflationIndices_.insert(make_pair(make_pair(Market::defaultConfiguration, name), zh));
-
+                        zeroInflationObservationLags_.insert(
+                            make_pair(make_pair(Market::defaultConfiguration, name), observationLegs));
                         DLOG("building " << name << " zero inflation curve done");
                     } catch (const std::exception& e) {
                         processException(e, name, param.first, simDataWritten);
@@ -2683,10 +2681,14 @@ ScenarioSimMarket::ScenarioSimMarket(
                         Handle<YoYInflationTermStructure> yoyInflationTs =
                             yoyInflationIndex->yoyInflationTermStructure();
                         vector<string> keys(parameters->yoyInflationTenors(name).size());
-
-                        Date date0 = asof_ - yoyInflationTs->observationLag();
+                        auto observationLegs = initMarket->yoyInflationObservationLags(name, configuration);
+                        QL_REQUIRE(!observationLegs.empty(),
+                                   "YoY inflation index " << name << " has no observation legs defined");
+                        auto obsLag = observationLegs.rbegin()->second;
+                        
+                        Date date0 = yoyInflationTs->baseDate();
                         DayCounter dc = yoyInflationTs->dayCounter();
-                        vector<Date> quoteDates;
+                        
                         vector<Time> yoyCurveTimes(
                             1, -dc.yearFraction(inflationPeriod(date0, yoyInflationTs->frequency()).first, asof_));
                         vector<Handle<Quote>> quotes;
@@ -2696,13 +2698,12 @@ ScenarioSimMarket::ScenarioSimMarket(
                                    "yoy inflation tenors must not include t=0");
 
                         for (auto& tenor : parameters->yoyInflationTenors(name)) {
-                            Date inflDate = inflationPeriod(date0 + tenor, yoyInflationTs->frequency()).first;
+                            Date inflDate = inflationPeriod(asof_ + tenor - obsLag, yoyInflationTs->frequency()).first;
                             yoyCurveTimes.push_back(dc.yearFraction(asof_, inflDate));
-                            quoteDates.push_back(asof_ + tenor);
                         }
 
                         for (Size i = 1; i < yoyCurveTimes.size(); i++) {
-                            Real rate = yoyInflationTs->yoyRate(quoteDates[i - 1] - yoyInflationTs->observationLag());
+                            Real rate = yoyInflationTs->yoyRate(yoyCurveTimes[i]);
                             auto q = QuantLib::ext::make_shared<SimpleQuote>(useSpreadedTermStructures_ ? 0.0 : rate);
                             if (i == 1) {
                                 // add the zero rate at first tenor to the T0 time, to ensure flat interpolation of T1
@@ -2731,9 +2732,13 @@ ScenarioSimMarket::ScenarioSimMarket(
                             yoyCurve =
                                 QuantLib::ext::make_shared<SpreadedYoYInflationCurve>(yoyInflationTs, yoyCurveTimes, quotes);
                         } else {
+                            int simLag = simulationLag(yoyInflationTs);
+                            vector<Period> tenors(1, 0 * Days);
+                            tenors.insert(tenors.end(), parameters->yoyInflationTenors(name).begin(),
+                                          parameters->yoyInflationTenors(name).end());
                             yoyCurve = QuantLib::ext::make_shared<YoYInflationCurveObserverMoving<Linear>>(
-                                0, yoyInflationIndex->fixingCalendar(), dc, yoyInflationTs->observationLag(),
-                                yoyInflationTs->frequency(), yoyInflationIndex->interpolated(), yoyCurveTimes,
+                                0, yoyInflationIndex->fixingCalendar(), dc, simLag, obsLag,
+                                yoyInflationTs->frequency(), yoyInflationIndex->interpolated(), tenors,
                                 quotes, yoyInflationTs->seasonality());
                         }
                         yoyCurve->setAdjustReferenceDate(false);

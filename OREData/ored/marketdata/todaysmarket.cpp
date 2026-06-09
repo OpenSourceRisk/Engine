@@ -535,8 +535,10 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
                 // build the curve
                 DLOG("Building DefaultCurve for asof " << asof_);
                 QuantLib::ext::shared_ptr<DefaultCurve> defaultCurve = QuantLib::ext::make_shared<DefaultCurve>(
-                    asof_, *defaultspec, *loader_, *curveConfigs_, requiredYieldCurves_, requiredDefaultCurves_, referenceData_);
+                    asof_, *defaultspec, *loader_, *curveConfigs_, requiredYieldCurves_, requiredDefaultCurves_, referenceData_,
+                    buildCalibrationInfo_);
                 itr = requiredDefaultCurves_.insert(make_pair(defaultspec->name(), defaultCurve)).first;
+                calibrationInfo_->defaultCurveCalibrationInfo[defaultspec->name()] = defaultCurve->calibrationInfo();
             }
             DLOG("Adding DefaultCurve (" << node.name << ") with spec " << *defaultspec << " to configuration "
                                          << configuration);
@@ -617,6 +619,7 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
                 // index is not interpolated
                 auto tmp = parseZeroInflationIndex(node.name, Handle<ZeroInflationTermStructure>(ts));
                 zeroInflationIndices_[make_pair(configuration, node.name)] = Handle<ZeroInflationIndex>(tmp);
+                zeroInflationObservationLags_[make_pair(configuration, node.name)] = itr->second->observationLags(); 
             }
 
             if (node.obj == MarketObject::YoYInflationCurve) {
@@ -627,12 +630,11 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
                         itr->second->inflationTermStructure());
                 QL_REQUIRE(ts,
                            "expected yoy inflation term structure for index " << node.name << ", but could not cast");
-            QL_DEPRECATED_DISABLE_WARNING
-                           yoyInflationIndices_[make_pair(configuration, node.name)] =
+                yoyInflationIndices_[make_pair(configuration, node.name)] =
                     Handle<YoYInflationIndex>(QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(
-                        parseZeroInflationIndex(node.name, Handle<ZeroInflationTermStructure>()), false,
+                        parseZeroInflationIndex(node.name, Handle<ZeroInflationTermStructure>()),
                         Handle<YoYInflationTermStructure>(ts)));
-            QL_DEPRECATED_ENABLE_WARNING
+                yoyInflationObservationLags_[make_pair(configuration, node.name)] = itr->second->observationLags();
             }
             break;
         }

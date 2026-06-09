@@ -113,6 +113,10 @@ void YoYInflationCapFloorEngine::calculate() const {
     results_.additionalResults["vega"] = vega;
     results_.additionalResults["optionletsPrice"] = values;
     results_.additionalResults["optionletsAtmForward"] = forwards;
+    results_.additionalResults["optionletsFixingDates"] = arguments_.fixingDates;
+    results_.additionalResults["optionletsPayDates"] = arguments_.payDates;
+    results_.additionalResults["optionletsStrikes"] = arguments_.capRates;
+    
     if (type != YoYInflationCapFloor::Collar)
         results_.additionalResults["optionletsStdDev"] = stdDevs;
 }

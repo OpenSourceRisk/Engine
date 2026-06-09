@@ -114,6 +114,14 @@ public:
     QuantLib::Handle<QuantLib::BlackVolTermStructure> bondFutureVol(const std::string& contractName,
         const std::string& configuration) const override;
 
+    std::map<QuantLib::Period, QuantLib::Period>
+    zeroInflationObservationLags(const string& indexName,
+                                 const string& configuration = Market::defaultConfiguration) const override;
+
+    std::map<QuantLib::Period, QuantLib::Period>
+    yoyInflationObservationLags(const string& indexName,
+                                const string& configuration = Market::defaultConfiguration) const override;
+
     virtual void refresh(const std::string&) override {}
     //@}
 

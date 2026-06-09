@@ -99,7 +99,7 @@ buildZeroInflationCurve(CommonData& cd, bool useLastKnownFixing, const QuantLib:
     Date baseDate =
         QuantExt::ZeroInflation::curveBaseDate(useLastKnownFixing, today, cd.obsLag, index->frequency(), index);
     QuantLib::ext::shared_ptr<ZeroInflationCurve> curve =
-        QuantLib::ext::make_shared<QuantLib::PiecewiseZeroInflationCurve<Linear>>(today, baseDate, cd.obsLag, index->frequency(),
+        QuantLib::ext::make_shared<QuantLib::PiecewiseZeroInflationCurve<Linear>>(today, baseDate, index->frequency(),
                                                                                   dc, helpers, seasonality, 1e-10);
     if (seasonality) {
         curve->setSeasonality(seasonality);
@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(testZeroInflationCurveNonInterpolatedLastMonthFixingUnknown
 
     for (size_t i = 0; i < expectedPillarDates.size(); ++i) {
         BOOST_CHECK_EQUAL(curve->dates().at(i), expectedPillarDates.at(i));
-        BOOST_CHECK_CLOSE(curve->zeroRate(curve->dates().at(i), 0 * Days), expectedZeroRates.at(i), cd.tolerance);
+        BOOST_CHECK_CLOSE(curve->zeroRate(curve->dates().at(i)), expectedZeroRates.at(i), cd.tolerance);
     }
 
     // Check index fixing forecasts
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(testZeroInflationCurveNonInterpolatedLastMonthFixing) {
 
     for (size_t i = 0; i < expectedPillarDates.size(); ++i) {
         BOOST_CHECK_EQUAL(curve->dates().at(i), expectedPillarDates.at(i));
-        BOOST_CHECK_CLOSE(curve->zeroRate(curve->dates().at(i), 0 * Days), expectedZeroRates.at(i), cd.tolerance);
+        BOOST_CHECK_CLOSE(curve->zeroRate(curve->dates().at(i)), expectedZeroRates.at(i), cd.tolerance);
     }
 
     // Check index fixing forecasts
@@ -224,7 +224,7 @@ BOOST_AUTO_TEST_CASE(testZeroInflationCurveInterpolatedLastMonthFixing) {
 
     for (size_t i = 0; i < expectedPillarDates.size(); ++i) {
         BOOST_CHECK_EQUAL(curve->dates().at(i), expectedPillarDates.at(i));
-        BOOST_CHECK_CLOSE(curve->zeroRate(curve->dates().at(i), 0 * Days), expectedZeroRates.at(i), 1e-6);
+        BOOST_CHECK_CLOSE(curve->zeroRate(curve->dates().at(i)), expectedZeroRates.at(i), 1e-6);
     }
 
     // Check index fixing forecasts
@@ -268,7 +268,7 @@ BOOST_AUTO_TEST_CASE(testZeroInflationCurveNonInterpolatedLastMonthFixingUnknown
 
     for (size_t i = 0; i < expectedPillarDates.size(); ++i) {
         BOOST_CHECK_EQUAL(curve->dates().at(i), expectedPillarDates.at(i));
-        BOOST_CHECK_CLOSE(curve->zeroRate(curve->dates().at(i), 0 * Days), expectedZeroRates.at(i), cd.tolerance);
+        BOOST_CHECK_CLOSE(curve->zeroRate(curve->dates().at(i)), expectedZeroRates.at(i), cd.tolerance);
         BOOST_CHECK_CLOSE(curve->data().at(i), expectedZeroRates.at(i), cd.tolerance);
     }
 
@@ -312,7 +312,7 @@ BOOST_AUTO_TEST_CASE(testZeroInflationCurveNonInterpolatedLastMonthFixingWithSea
     for (size_t i = 0; i < expectedPillarDates.size(); ++i) {
         BOOST_CHECK_EQUAL(curve->dates().at(i), expectedPillarDates.at(i));
         BOOST_CHECK_CLOSE(curve->data().at(i), expectedZeroRatesWithoutSeasonality.at(i), cd.tolerance);
-        BOOST_CHECK_CLOSE(curve->zeroRate(curve->dates().at(i), 0 * Days), expectedZeroRates.at(i), cd.tolerance);
+        BOOST_CHECK_CLOSE(curve->zeroRate(curve->dates().at(i)), expectedZeroRates.at(i), cd.tolerance);
     }
     // Check index fixing forecasts
 
@@ -374,7 +374,7 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolatedCPICurve) {
 
     ext::shared_ptr<QuantExt::PiecewiseCPIInflationCurve<Linear>> pZITS =
         ext::make_shared<QuantExt::PiecewiseCPIInflationCurve<Linear>>(evaluationDate, baseDate, baseCPI,
-                                                                       observationLag, frequency, dc, helpers);
+                                                                       frequency, dc, helpers);
     hz.linkTo(pZITS);
 
     //===========================================================================================
@@ -410,7 +410,7 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolatedCPICurve) {
     Date bd = hz->baseDate();
     Real bf = ii->fixing(bd);
     for (const auto& d : testIndex) {
-        Real z = hz->zeroRate(d, Period(0, Days));
+        Real z = hz->zeroRate(d);
         Real t = hz->dayCounter().yearFraction(bd, inflationPeriod(d, ii->frequency()).first);
         Real calc = bf * std::pow(1 + z, t);
         if (t <= 0)
@@ -435,7 +435,7 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolatedCPICurve) {
     pZITS->setSeasonality(nonUnitSeasonality);
 
     for (const auto& d : testIndex) {
-        Real z = hz->zeroRate(d, Period(0, Days));
+        Real z = hz->zeroRate(d);
         Real t = hz->dayCounter().yearFraction(bd, inflationPeriod(d, ii->frequency()).first);
         Real calc = bf * std::pow(1 + z, t);
         if (t <= 0)

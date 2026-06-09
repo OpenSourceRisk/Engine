@@ -148,8 +148,8 @@ void DiscountingForwardBondEngine::calculate() const {
     results_.additionalResults["forwardPrice"] = forwardPrice;
     results_.additionalResults["strikeAmount"] = strikeAmount;
     results_.additionalResults["accruedAmount"] = accruedAmountDollar;
-    results_.additionalResults["position"] = arguments_.isLong ? "long" : "short";
-    results_.additionalResults["settlement"] = arguments_.isPhysicallySettled ? "physical" : "cash";
+    results_.additionalResults["position"] = (std::string)(arguments_.isLong ? "long" : "short");
+    results_.additionalResults["settlement"] = (std::string)(arguments_.isPhysicallySettled ? "physical" : "cash");
     results_.additionalResults["forwardContractDiscountFactor"] = discountCurve_->discount(effSettlementDate);
     results_.additionalResults["fowardContractSettlementDate"] = effSettlementDate;
     results_.additionalResults["bondSettlementDate"] = bondSettlementDate;

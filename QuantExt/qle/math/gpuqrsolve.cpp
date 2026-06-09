@@ -195,16 +195,26 @@ bool gpuQrSolveAvailable() {
 #endif
 }
 
-Array gpuQrSolve(const Matrix& A, const Array& b) {
-    const Size m = A.rows();
-    QL_REQUIRE(b.size() == m, "gpuQrSolve: dim mismatch (A.rows=" << m << ", b.size=" << b.size() << ")");
-
+bool gpuQrSolveApplicable(const Matrix& A, const Array& b) {
 #ifdef ORE_ENABLE_CUDA
-    const Size n = A.columns();
+    return gpuQrSolveAvailable() && m >= kGpuMinRows && ensureThreadCtx();
+#else
+    return false;
+#endif
 
-    if (!gpuQrSolveAvailable() || m < kGpuMinRows || !ensureThreadCtx()) {
+}
+
+Array gpuQrSolve(const Matrix& A, const Array& b) {
+
+    if (!gpuQrSolveApplicable (A,b)) {
         return qrSolve(A, b);
     }
+
+#ifdef ORE_ENABLE_CUDA
+    const Size m = A.rows();
+    const Size n = A.columns();
+
+    QL_REQUIRE(b.size() == m, "gpuQrSolve: dim mismatch (A.rows=" << m << ", b.size=" << b.size() << ")");
 
     // Pinned host staging. If pinning fails we fall through to CPU rather
     // than degrade silently to pageable async memcpy (which serialises and
@@ -310,9 +320,9 @@ Array gpuQrSolve(const Matrix& A, const Array& b) {
         x[i] = std::abs(Rii) < 1e-14 ? 0.0 : s / Rii;
     }
     return x;
-#else
-    return qrSolve(A, b);
 #endif
+
+    QL_FAIL("unreachable code.");
 }
 
 } // namespace QuantExt

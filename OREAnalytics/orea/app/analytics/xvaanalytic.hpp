@@ -60,6 +60,8 @@ struct XvaVariables : public InputVariables {
     bool xvaCgUsePythonIntegration_ = false;
     bool xvaCgUsePythonIntegrationDynamicIm_ = false;
     QuantLib::ext::shared_ptr<SensitivityScenarioData> xvaCgSensiScenarioData_;
+    Size xvaCgRegressionCacheSize_ = 512;
+    bool xvaCgEnableCgOptimization_ = false;
     std::set<std::string> amcTradeTypes_;
     std::string amcPathDataInput_, amcPathDataOutput_;
     bool amcIndividualTrainingInput_ = false, amcIndividualTrainingOutput_ = false;
@@ -146,6 +148,7 @@ struct XvaVariables : public InputVariables {
     string dimOutputNettingSet_;
     Size dimLocalRegressionEvaluations_ = 0;
     Real dimLocalRegressionBandwidth_ = 0.25;
+    Real dimScaling_ = QuantLib::Null<Real>();
     // capital value adjustment details
     Real kvaCapitalDiscountRate_ = 0.10;
     Real kvaAlpha_ = 1.4;

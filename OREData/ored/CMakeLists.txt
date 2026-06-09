@@ -333,6 +333,7 @@ portfolio/tradefactory.cpp
 portfolio/tradegenerator.cpp
 portfolio/trademonetary.cpp
 portfolio/tradestrike.cpp
+portfolio/tradeutils.cpp
 portfolio/tranche.cpp
 portfolio/trs.cpp
 portfolio/trsunderlyingbuilder.cpp
@@ -777,6 +778,7 @@ portfolio/tradefactory.hpp
 portfolio/tradegenerator.hpp
 portfolio/trademonetary.hpp
 portfolio/tradestrike.hpp
+portfolio/tradeutils.hpp
 portfolio/tranche.hpp
 portfolio/trs.hpp
 portfolio/trsunderlyingbuilder.hpp

@@ -38,7 +38,7 @@ public:
     InfDkVectorised(const QuantLib::ext::shared_ptr<CrossAssetModel>& cam);
 
     std::pair<RandomVariable, RandomVariable> infdkI(const Size i, const Time t, const Time T, const RandomVariable& z,
-                                                     const RandomVariable& y, bool indexIsInterpolated) const;
+                                                     const RandomVariable& y) const;
 
 private:
     const QuantLib::ext::shared_ptr<CrossAssetModel> cam_;
