@@ -4584,6 +4584,7 @@
       <xs:element type="stFreeStyleDayCounter" name="DayCountFraction"/>
       <xs:element type="stFreeStyleNumber" name="DividendYield"/>
       <xs:element type="stFreeStyleNumber" name="FixedRate"/>
+      <xs:element type="xs:string" name="PayoffType" minOccurs="0"/>
 
     </xs:all>
   </xs:complexType>
