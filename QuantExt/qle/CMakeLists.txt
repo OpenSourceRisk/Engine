@@ -416,6 +416,7 @@ termstructures/fxvoltimeweighting.cpp
 termstructures/generatordefaulttermstructure.cpp
 termstructures/hazardspreadeddefaulttermstructure.cpp
 termstructures/iborfallbackcurve.cpp
+termstructures/intradaypricetermstructure.cpp
 termstructures/immfraratehelper.cpp
 termstructures/indexcdsvolstripper.cpp
 termstructures/inflation/constantcpivolatility.cpp
@@ -1059,6 +1060,9 @@ termstructures/interpolateddiscountcurve.hpp
 termstructures/interpolateddiscountcurve2.hpp
 termstructures/interpolatedhazardratecurve.hpp
 termstructures/interpolatedyoycapfloortermpricesurface.hpp
+termstructures/intradayshapetermstructure.hpp
+termstructures/intradayloadingtermstructure.hpp
+termstructures/intradaypricetermstructure.hpp
 termstructures/iterativebootstrap.hpp
 termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp
 termstructures/multisectiondefaultcurve.hpp

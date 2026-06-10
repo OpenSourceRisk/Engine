@@ -583,6 +583,9 @@
 #include <qle/termstructures/interpolateddiscountcurve2.hpp>
 #include <qle/termstructures/interpolatedhazardratecurve.hpp>
 #include <qle/termstructures/interpolatedyoycapfloortermpricesurface.hpp>
+#include <qle/termstructures/intradayloadingtermstructure.hpp>
+#include <qle/termstructures/intradaypricetermstructure.hpp>
+#include <qle/termstructures/intradayshapetermstructure.hpp>
 #include <qle/termstructures/iterativebootstrap.hpp>
 #include <qle/termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp>
 #include <qle/termstructures/multisectiondefaultcurve.hpp>

@@ -72,6 +72,7 @@ index.cpp
 inflationcurve.cpp
 inflationvol.cpp
 interpolatedyoycapfloortermpricesurface.cpp
+intradaypowercurves.cpp
 lgmbgsflexiswapengine.cpp
 lgmflexiswapengine.cpp
 lgmpricing.cpp
