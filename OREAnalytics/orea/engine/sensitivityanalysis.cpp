@@ -152,12 +152,16 @@ std::map<std::string, Real> SensitivityAnalysis::computeTheta(const ext::shared_
         Date thetaDate = asof_ + thetaPeriod_;
         LOG("Computing theta for " << pf->size() << " trades, shifting eval date by " << thetaPeriod_ << " from "
                                    << asof_ << " to " << thetaDate);
+
         simMarket_->reset();
         auto thetaFixingManager = QuantLib::ext::make_shared<FixingManager>(asof_);
         thetaFixingManager->initialise(pf, simMarket_, marketConfiguration_);
-        thetaFixingManager->update(thetaDate);
+        simMarket_->preUpdate();
         simMarket_->updateDate(thetaDate);
+        simMarket_->postUpdate(thetaDate);
+        thetaFixingManager->update(thetaDate);
         std::string baseCcy = simMarketData_->baseCcy();
+
         for (auto const& [id, trade] : pf->trades()) {
             Real periodFlow =
                 aggregateTradeFlow(asof_, thetaDate, trade->cashflows(baseCcy, simMarket_, marketConfiguration_, false),
@@ -169,7 +173,9 @@ std::map<std::string, Real> SensitivityAnalysis::computeTheta(const ext::shared_
                             : 1.0);
             thetaMap[id] = npv - baseNpv + periodFlow;
         }
+
         simMarket_->reset();
+
     }
     return thetaMap;
 }
