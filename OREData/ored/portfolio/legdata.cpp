@@ -104,13 +104,15 @@ void populatePaymentData(const LegData& data, const Schedule& schedule, const Sc
     const Date& openEndDateReplacement, Calendar& outPmtCal, BusinessDayConvention& outPmtConv,
     PaymentLag& outPmtLag, vector<Date>& outPmtDates, Integer& outPmtLagDays, bool daysUsed = true) {
 
-    // Payment calendar.
-    if (!data.paymentCalendar().empty())
-        outPmtCal = parseCalendar(data.paymentCalendar());
-    else if (!paymentSchedule.calendar().empty())
-        outPmtCal = paymentSchedule.calendar();
-    else if (!schedule.calendar().empty())
-        outPmtCal = schedule.calendar();
+    // Payment calendar. For backwards compatibility, we allow it to be specified at call site and not overridden here.
+    if (outPmtCal.empty()) {
+        if (!data.paymentCalendar().empty())
+            outPmtCal = parseCalendar(data.paymentCalendar());
+        else if (!paymentSchedule.calendar().empty())
+            outPmtCal = paymentSchedule.calendar();
+        else if (!schedule.calendar().empty())
+            outPmtCal = schedule.calendar();
+    }
 
     // Payment convention.
     const string& pmtConvStr = data.paymentConvention();
@@ -138,7 +140,9 @@ void populatePaymentData(const LegData& data, const Schedule& schedule, const Sc
     if (!paymentSchedule.empty()) {
         outPmtDates = paymentSchedule.dates();
     } else if (!data.paymentDates().empty()) {
-        auto pmtDtsCal = outPmtCal.empty() ? NullCalendar() : outPmtCal;
+        // For backward comptibility, the calendar here ignores the calendar in `outPmtCal` above.
+        const auto& pmtDtsCalStr = data.paymentCalendar();
+        auto pmtDtsCal = pmtDtsCalStr.empty() ? NullCalendar() : parseCalendar(pmtDtsCalStr);
         outPmtDates = parseVectorOfValues<Date>(data.paymentDates(), &parseDate);
         for (Size i = 0; i < outPmtDates.size(); i++)
             outPmtDates[i] = pmtDtsCal.adjust(outPmtDates[i], outPmtConv);
@@ -1707,6 +1711,10 @@ Leg makeOISLeg(const LegData& data, const QuantLib::ext::shared_ptr<OvernightInd
 
     // Get payment related data.
     Calendar paymentCalendar;
+    // For some reason, in the code before this ticket, ACADIAQPR-14080, if the `data.paymentCalendar()` was empty, the 
+    // payment calendar was set to the overnight index fixing calendar. We preserve this behaviour here.
+    if (data.paymentCalendar().empty())
+        paymentCalendar = index->fixingCalendar();
     BusinessDayConvention paymentConvention;
     PaymentLag paymentLag;
     vector<Date> paymentDates;
