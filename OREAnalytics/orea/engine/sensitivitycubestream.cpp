@@ -21,6 +21,8 @@
 #include <orea/scenario/shiftscenariogenerator.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/portfolio/portfolio.hpp>
+
 #include <qle/utilities/time.hpp>
 
 using QuantLib::Real;
