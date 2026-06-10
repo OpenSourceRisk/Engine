@@ -813,6 +813,7 @@
                   <xs:element type="xs:string" name="Tenors"/>
                   <xs:element type="ycInterpolation" name="Interpolation" minOccurs="0"/>
                   <xs:element type="ycExtrapolation" name="Extrapolation" minOccurs="0"/>
+                  <xs:element type="ycRollDown" name="RollDown" minOccurs="0"/>
                   <xs:element type="dayCounter" name="DayCounter" minOccurs="0"/>
                 </xs:all>
                 <xs:attribute name="curve" type="xs:string" use="optional" />
@@ -1689,6 +1690,13 @@
       <xs:enumeration value="false"/>
       <xs:enumeration value="0"/>
       <xs:enumeration value=""/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ycRollDown">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="ConstantDiscounts"/>
+      <xs:enumeration value="ForwardForward"/>
     </xs:restriction>
   </xs:simpleType>
 
