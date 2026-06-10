@@ -10,7 +10,7 @@ cases = [ "run_benchmark.py",          # 39
 	  "run_forwardbond.py",        # 73
           "run_overlapping.py",        # 60
           "run_scenariostatistics.py",  # 75
-          "run_genericbarrier.py",
+          "run_fx_options.py",
           "run_fx_localvol.py"
          ]
 

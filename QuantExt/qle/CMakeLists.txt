@@ -14,7 +14,6 @@ calendars/greece.cpp
 calendars/ice.cpp
 calendars/ireland.cpp
 calendars/islamicweekendsonly.cpp
-calendars/israel.cpp
 calendars/luxembourg.cpp
 calendars/malaysia.cpp
 calendars/mauritius.cpp
@@ -173,11 +172,13 @@ math/differentialevolution_mt.cpp
 math/discretedistribution.cpp
 math/fillemptymatrix.cpp
 math/gpucodegenerator.cpp
+math/gpuqrsolve.cpp
 math/matrixfunctions.cpp
 math/openclenvironment.cpp
 math/randomvariable.cpp
 math/randomvariable_io.cpp
 math/randomvariable_ops.cpp
+math/randomvariable_regressioncache.cpp
 math/randomvariablelsmbasissystem.cpp
 math/stoplightbounds.cpp
 methods/brownianbridgepathinterpolator.cpp
@@ -338,7 +339,7 @@ pricingengines/mclgmswapengine.cpp
 pricingengines/mclgmswaptionengine.cpp
 pricingengines/mcmultilegbaseengine.cpp
 pricingengines/mcmultilegoptionengine.cpp
-pricingengines/mcregressionmodel.cpp
+pricingengines/mcengineregression.cpp
 pricingengines/midpointcdoengine.cpp
 pricingengines/midpointcdsenginemultistate.cpp
 pricingengines/midpointindexcdsengine.cpp
@@ -362,6 +363,7 @@ processes/multiassetquantohestonprocess.cpp
 processes/ptdhestonprocess.cpp
 processes/quantohestonprocess.cpp
 python_integration/pythonfunctions.cpp
+quotes/bondfuturequote.cpp
 quotes/logquote.cpp
 termstructures/aposurface.cpp
 termstructures/averagefuturepricehelper.cpp
@@ -381,6 +383,7 @@ termstructures/blackvolsurfacedelta.cpp
 termstructures/blackvolsurfaceproxy.cpp
 termstructures/blackvolsurfacesvi.cpp
 termstructures/blackvolsurfacewithatm.cpp
+termstructures/bondfuturevolstripper.cpp
 termstructures/brlcdiratehelper.cpp
 termstructures/capfloorhelper.cpp
 termstructures/capfloortermvolsurface.cpp
@@ -495,7 +498,6 @@ calendars/greece.hpp
 calendars/ice.hpp
 calendars/ireland.hpp
 calendars/islamicweekendsonly.hpp
-calendars/israel.hpp
 calendars/luxembourg.hpp
 calendars/malaysia.hpp
 calendars/mauritius.hpp
@@ -699,6 +701,7 @@ instruments/multilegoption.hpp
 instruments/nullinstrument.hpp
 instruments/outperformanceoption.hpp
 instruments/pairwisevarianceswap.hpp
+instruments/pathlevelresult.hpp
 instruments/payment.hpp
 instruments/rebatedexercise.hpp
 instruments/riskparticipationagreement.hpp
@@ -738,6 +741,7 @@ math/randomvariable.hpp
 math/randomvariable_io.hpp
 math/randomvariable_opcodes.hpp
 math/randomvariable_ops.hpp
+math/randomvariable_regressioncache.hpp
 math/randomvariablelsmbasissystem.hpp
 math/stabilisedglls.hpp
 math/stoplightbounds.hpp
@@ -939,7 +943,7 @@ pricingengines/mclgmswapengine.hpp
 pricingengines/mclgmswaptionengine.hpp
 pricingengines/mcmultilegbaseengine.hpp
 pricingengines/mcmultilegoptionengine.hpp
-pricingengines/mcregressionmodel.hpp
+pricingengines/mcengineregression.hpp
 pricingengines/midpointcdoengine.hpp
 pricingengines/midpointcdsenginemultistate.hpp
 pricingengines/midpointindexcdsengine.hpp
@@ -965,6 +969,7 @@ processes/ptdhestonprocess.hpp
 processes/quantohestonprocess.hpp
 python_integration/pythonfunctions.hpp
 quotes/basecorrelationquote.hpp
+quotes/bondfuturequote.hpp
 quotes/compositevectorquote.hpp
 quotes/exceptionquote.hpp
 quotes/logquote.hpp
@@ -991,6 +996,7 @@ termstructures/blackvolsurfacedelta.hpp
 termstructures/blackvolsurfaceproxy.hpp
 termstructures/blackvolsurfacesvi.hpp
 termstructures/blackvolsurfacewithatm.hpp
+termstructures/bondfuturevolstripper.hpp
 termstructures/bondyieldshiftedcurvetermstructure.hpp
 termstructures/brlcdiratehelper.hpp
 termstructures/capfloorhelper.hpp
@@ -1115,12 +1121,10 @@ termstructures/terminterpolateddefaultcurve.hpp
 termstructures/weightedyieldtermstructure.hpp
 termstructures/yieldplusdefaultyieldtermstructure.hpp
 termstructures/yoyinflationcurveobservermoving.hpp
-termstructures/yoyinflationcurveobserverstatic.hpp
 termstructures/yoyoptionletsolver.hpp
 termstructures/yoyoptionletsurfacestripper.hpp
 termstructures/yoypricesurfacefromvols.hpp
 termstructures/zeroinflationcurveobservermoving.hpp
-termstructures/zeroinflationcurveobserverstatic.hpp
 time/dateutilities.hpp
 time/futureexpirycalculator.hpp
 time/monthcounter.hpp
@@ -1145,20 +1149,21 @@ utilities/solvers.hpp
 utilities/time.hpp
 version.hpp)
 
-add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_LIST_DIR}/gitversion.hpp
+writeAll("qle" "${CMAKE_CURRENT_LIST_DIR}/quantext.hpp" "auto_link.hpp" "${QuantExt_HDR}")
+add_library(${QLE_LIB_NAME} ${QuantExt_SRC} ${QuantExt_HDR} "quantext.hpp")
+# This adds Ore::QuantExt as an alias for the target QuantExt. So Ore::QuantExt can be used in the mono-repo build
+# (locally) and in the split build during CI i.e. build ORE, import ORE CMake targets, build OREPlus.
+add_library(${ORE_PACKAGE_NAME}::${QLE_LIB_NAME} ALIAS ${QLE_LIB_NAME})
+
+add_custom_target(gitVersionGeneration ALL
     COMMAND ${CMAKE_COMMAND}
             -D IN_FILE=${CMAKE_CURRENT_LIST_DIR}/gitversion.hpp.in
             -D OUT_FILE=${CMAKE_CURRENT_LIST_DIR}/gitversion.hpp
+            -D GIT_HASH=${GIT_HASH}
             -P "${PROJECT_SOURCE_DIR}/cmake/generateGitVersion.cmake"
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
-
-writeAll("qle" "${CMAKE_CURRENT_LIST_DIR}/quantext.hpp" "auto_link.hpp" "${QuantExt_HDR}")
-add_library(${QLE_LIB_NAME} ${QuantExt_SRC} ${QuantExt_HDR} "quantext.hpp")
-# This adds Ore::QuantExt as an alias for the target QuantExt. So Ore::QuantExt can be used in the mono-repo build 
-# (locally) and in the split build during CI i.e. build ORE, import ORE CMake targets, build OREPlus.
-add_library(${ORE_PACKAGE_NAME}::${QLE_LIB_NAME} ALIAS ${QLE_LIB_NAME})
+add_dependencies(${QLE_LIB_NAME} gitVersionGeneration)
 
 target_include_directories(${QLE_LIB_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>

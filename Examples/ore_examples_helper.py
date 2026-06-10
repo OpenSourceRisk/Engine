@@ -58,6 +58,18 @@ def print_on_console(line):
     print(line)
     sys.stdout.flush()
 
+def write_ore_exe_details_to_file(full_ore_exe_path, base_dir):
+    worker = os.environ.get("PYTEST_XDIST_WORKER", "main")
+    outfile = os.path.join(base_dir, f"examples_ore_executable_used_{worker}.txt")
+    if not os.path.exists(outfile):
+        with open(outfile, "w") as f:
+            f.write(f"Using ORE executable: {full_ore_exe_path}\n")
+            try:
+                ore_hash = subprocess.check_output([full_ore_exe_path, "--hash"], text=True, stderr=subprocess.STDOUT)
+                f.write(f"ORE hash: {ore_hash}\n")
+            except Exception as e:
+                f.write(f"ORE hash failed: {e}\n")
+
 
 class OreExample(object):
     def __init__(self, dry=False):
@@ -141,7 +153,12 @@ class OreExample(object):
             else:
                 print_on_console("ORE executable not found.")
                 quit()
-        print_on_console("Using ORE executable " + (os.path.abspath(self.ore_exe)))
+        ore_exe_path = os.path.abspath(self.ore_exe)
+        print_on_console("Using ORE executable " + ore_exe_path)
+        # Only write details of the ORE exe when running a CI build.
+        ci_project_dir = os.environ.get("CI_PROJECT_DIR")
+        if ci_project_dir:
+            write_ore_exe_details_to_file(ore_exe_path, ci_project_dir)
 
     def print_headline(self, headline):
         self.headlinecounter += 1

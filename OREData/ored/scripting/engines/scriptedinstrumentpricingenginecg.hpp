@@ -44,24 +44,29 @@ public:
     ScriptedInstrumentPricingEngineCG(
         const std::string& npv, const std::vector<std::pair<std::string, std::string>>& additionalResults,
         const QuantLib::ext::shared_ptr<ModelCG>& model, const std::set<std::string>& minimalModelCcys,
-        const std::vector<std::string>& amcCgComponents, const std::string& amcCgTargetValue,
-        const std::string& amcCgTargetDerivative, const ASTNodePtr ast,
+        const std::string& localBaseCcy, const std::vector<std::string>& amcCgComponents,
+        const std::string& amcCgTargetValue, const std::string& amcCgTargetDerivative, const ASTNodePtr ast,
         const QuantLib::ext::shared_ptr<Context>& context, const Model::Params& mcParams,
         const double indicatorSmoothingForValues, const double indicatorSmoothingForDerivatives,
         const double sqrtSmoothingForDerivatives, const std::string& script = "", const bool interactive = false,
         const bool amcEnabled = false, const bool generateAdditionalResults = false,
-        const bool includePastCashflows = false, const bool useCachedSensis = false,
-        const bool useExternalComputeFramework = false, const bool useDoublePrecisionForExternalCalculation = false);
+        const bool generateAdditionalResultsPathLevel = false, const bool includePastCashflows = false,
+        const bool useCachedSensis = false, const bool useExternalComputeFramework = false,
+        const bool useDoublePrecisionForExternalCalculation = false);
     ~ScriptedInstrumentPricingEngineCG();
 
     bool lastCalculationWasValid() const { return lastCalculationWasValid_; }
 
-    void buildComputationGraph(const bool stickyCloseOutDateRun = false,
-                               std::vector<TradeExposure>* tradeExposure = nullptr,
-                               TradeExposureMetaInfo* tradeExposureMetaInfo = nullptr) const override;
+    virtual bool isComplexTrade() const override;
+    std::set<std::set<std::string>> relevantCurrencySets() const override;
+    void buildComputationGraph(
+        const bool stickyCloseOutDateRun = false, std::vector<TradeExposure>* tradeExposure = nullptr,
+        TradeExposureMetaInfo* tradeExposureMetaInfo = nullptr,
+        std::function<std::string(std::set<std::string>)> baseCurrencySuggestions = {}) const override;
 
 private:
     void calculate() const override;
+    Real addMcErrorEstimate(const std::string& label, const ValueType& v) const;
 
     // calculation state, true iff calculate() was called at least once and last call went without errors
 
@@ -98,10 +103,11 @@ private:
     // store base scenario model parameters to compute sensi-based NPVs
 
     mutable bool haveBaseValues_ = false;
-    mutable double baseNpv_;
+    mutable double baseNpv_ = Null<double>();
     mutable std::vector<std::pair<std::size_t, double>> baseModelParams_;
     mutable std::vector<double> sensis_;
     mutable std::map<std::string, QuantLib::ext::any> instrumentAdditionalResults_;
+    mutable std::map<std::string, QuantLib::ext::any> instrumentAdditionalResultsPathLevel_;
 
     // inputs
 
@@ -109,6 +115,7 @@ private:
     std::vector<std::pair<std::string, std::string>> additionalResults_;
     QuantLib::ext::shared_ptr<ModelCG> model_;
     std::set<std::string> minimalModelCcys_;
+    std::string localBaseCcy_;
     std::vector<std::string> amcCgComponents_;
     std::string amcCgTargetValue_;
     std::string amcCgTargetDerivative_;
@@ -123,6 +130,7 @@ private:
     bool interactive_;
     bool amcEnabled_;
     bool generateAdditionalResults_;
+    bool generateAdditionalResultsPathLevel_;
     bool includePastCashflows_;
     bool useCachedSensis_;
     bool useExternalComputeFramework_;

@@ -233,6 +233,7 @@ class Trade : public XMLSerializable {
   private:
     Trade();
   public:
+    enum class NotionalType { Default, IMSchedule };
     const std::string& id();
     void setId(const std::string& id);
     const std::string& tradeType();
@@ -240,7 +241,7 @@ class Trade : public XMLSerializable {
     std::vector<std::vector<QuantLib::ext::shared_ptr<QuantLib::CashFlow>>> legs();
     const ore::data::Envelope& envelope() const;
     const QuantLib::Date& maturity();
-    QuantLib::Real notional();
+    QuantLib::Real notional(NotionalType type = NotionalType::Default);
 };
 
 class Portfolio : public XMLSerializable {

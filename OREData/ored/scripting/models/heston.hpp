@@ -50,15 +50,7 @@ private:
                             const QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>& gen,
                             const Matrix& correlation, const Matrix& sqrtCorr,
                             const std::vector<Size>& eqComIdx) const;
-    void setAdditionalResults() const;
-};
-
-
-struct MultiAssetHestonPaths {
-    Size samples;
-    std::vector<std::string> indexNames;
-    std::vector<Date> dates;
-    std::map<Date, std::vector<std::vector<Real>>> data;
+    void populateAdditionalResults() const override;
 };
 
 } // namespace data

@@ -61,7 +61,7 @@ public:
     //! Return a PricingEngine or a FloatingRateCouponPricer
     QuantLib::ext::shared_ptr<U> engine(Args... params) {
         T key = keyImpl(params...);
-        if (engines_.find(key) == engines_.end()) {
+        if (engines_.find(key) == engines_.end() || !cachingEnabled_) {
             // build first (in case it throws)
             QuantLib::ext::shared_ptr<U> engine = engineImpl(params...);
             // then add to map
@@ -77,6 +77,7 @@ protected:
     virtual QuantLib::ext::shared_ptr<U> engineImpl(Args...) = 0;
 
     map<T, QuantLib::ext::shared_ptr<U>> engines_;
+    bool cachingEnabled_ = true;
 };
 
 template <class T, typename... Args>

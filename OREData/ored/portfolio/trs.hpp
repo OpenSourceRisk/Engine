@@ -140,6 +140,7 @@ public:
     }
 
     void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
+    void reset() override;
 
     //! Inspectors
     //@{
@@ -158,7 +159,7 @@ public:
     //@{
     std::map<AssetClass, std::set<std::string>>
     underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
-    QuantLib::Real notional() const override;
+    QuantLib::Real notional(NotionalType type = NotionalType::Default) const override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
     //@}
@@ -180,8 +181,9 @@ protected:
     void populateFromReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const;
     void getTradesFromReferenceData(const QuantLib::ext::shared_ptr<PortfolioBasketReferenceDatum>& ptfReferenceDatum) const;
     std::string portfolioId_;
-    bool portfolioDeriv_;
-    double indexQuantity_;
+    bool portfolioDeriv_ = false;
+    double indexQuantity_ = 1;
+    QuantLib::ext::optional<bool> pricePerIndexUnit_;
 };
 
 TRS::FundingData::NotionalType parseTrsFundingNotionalType(const std::string& s);

@@ -804,6 +804,7 @@
       <xs:enumeration value="SecondThursday"/><!-- backward-compatible alias for IMMAUD -->
       <xs:enumeration value="IMMNZD"/>
       <xs:enumeration value="IMMCAD"/>
+      <xs:enumeration value="IMMEUR"/>
     </xs:restriction>
   </xs:simpleType>
 

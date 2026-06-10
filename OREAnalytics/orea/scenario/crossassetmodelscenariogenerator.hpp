@@ -88,7 +88,6 @@ private:
     QuantLib::ext::shared_ptr<ore::data::Market> initMarket_;
     const std::string configuration_;
     std::string amcPathDataOutput_;
-    Size samples_;
     // generated data
     bool initialized_ = false;
     std::vector<QuantLib::ext::shared_ptr<QuantExt::CrossAssetModelImpliedFxVolTermStructure>> fxVols_;
@@ -104,9 +103,9 @@ private:
     vector<QuantLib::ext::shared_ptr<IborIndex>> indices_;
     std::vector<Size> indexCcyIdx_, yieldCurveCcyIndex_;
     vector<string> zeroInflationIndex_, yoyInflationIndex_;
-    vector<tuple<Size, Size, CrossAssetModel::ModelType, QuantLib::ext::shared_ptr<ZeroInflationModelTermStructure>>>
+    vector<tuple<Size, Size, CrossAssetModel::ModelType, QuantLib::ext::shared_ptr<ZeroInflationModelTermStructure>, std::string>>
         zeroInfCurves_;
-    vector<tuple<Size, Size, CrossAssetModel::ModelType, QuantLib::ext::shared_ptr<YoYInflationModelTermStructure>>>
+    vector<tuple<Size, Size, CrossAssetModel::ModelType, QuantLib::ext::shared_ptr<YoYInflationModelTermStructure>, std::string>>
         yoyInfCurves_;
     vector<QuantLib::ext::shared_ptr<QuantExt::LgmImpliedDefaultTermStructure>> lgmDefaultCurves_;
     vector<QuantLib::ext::shared_ptr<QuantExt::CirppImpliedDefaultTermStructure>> cirppDefaultCurves_;

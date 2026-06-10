@@ -244,7 +244,9 @@ void FutureConvention::build() {
     auto tmpIndex = parseIborIndex(strIndex_);
     auto oisIndex = QuantLib::ext::dynamic_pointer_cast<QuantLib::OvernightIndex>(tmpIndex);
     isOisIndex_ = oisIndex != nullptr;
-    tenor_ = isOisIndex_ && !strOvernightIndexTenor_.empty() ? parsePeriod(strOvernightIndexTenor_) : tmpIndex->tenor();
+    if (isOisIndex_ && !strOvernightIndexTenor_.empty()) {
+        overnightIndexTenor_ = parsePeriod(strOvernightIndexTenor_);
+    }
     calendar_ = strCalendar_.empty() ? tmpIndex->fixingCalendar() : parseCalendar(strCalendar_);
 }
 
@@ -280,7 +282,8 @@ XMLNode* FutureConvention::toXML(XMLDocument& doc) const {
 
 QuantLib::ext::shared_ptr<IborIndex> FutureConvention::index() const { return parseIborIndex(strIndex_); }
 
-FraConvention::FraConvention(const string& id, const string& index) : Convention(id, Type::FRA), strIndex_(index) {
+FraConvention::FraConvention(const string& id, const string& index, bool endDateFromStart)
+    : Convention(id, Type::FRA), strIndex_(index), endDateFromStart_(endDateFromStart) {
     parseIborIndex(strIndex_);
 }
 
@@ -291,6 +294,16 @@ void FraConvention::fromXML(XMLNode* node) {
     id_ = XMLUtils::getChildValue(node, "Id", true);
     strIndex_ = XMLUtils::getChildValue(node, "Index", true);
     parseIborIndex(strIndex_);
+
+    string endDateConvStr = XMLUtils::getChildValue(node, "EndDateConvention", false);
+    if (endDateConvStr == "FromStart") {
+        endDateFromStart_ = true;
+    } else {
+        QL_REQUIRE(endDateConvStr.empty() || endDateConvStr == "FromSpot",
+                   "FraConvention: unknown EndDateConvention '" << endDateConvStr
+                   << "', expected 'FromSpot' or 'FromStart'");
+        endDateFromStart_ = false;
+    }
 }
 
 XMLNode* FraConvention::toXML(XMLDocument& doc) const {
@@ -298,6 +311,8 @@ XMLNode* FraConvention::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("FRA");
     XMLUtils::addChild(doc, node, "Id", id_);
     XMLUtils::addChild(doc, node, "Index", strIndex_);
+    if (endDateFromStart_)
+        XMLUtils::addChild(doc, node, "EndDateConvention", string("FromStart"));
 
     return node;
 }
@@ -1289,10 +1304,12 @@ QuantLib::ext::shared_ptr<QuantLib::IborIndex> CrossCcyFixFloatSwapConvention::i
 }
 
 CdsConvention::CdsConvention() : settlementDays_(0), frequency_(Quarterly), paymentConvention_(Following),
-    rule_(DateGeneration::CDS2015), settlesAccrual_(true), paysAtDefaultTime_(true), upfrontSettlementDays_(3) {}
+    rule_(DateGeneration::CDS2015), settlesAccrual_(true), paysAtDefaultTime_(true), upfrontSettlementDays_(3), usesReferenceData_(false) {}
 
 CdsConvention::CdsConvention(const string& id, const bool usesReferenceData)
-    : Convention(id, Type::CDS), usesReferenceData_(usesReferenceData) {}
+    : Convention(id, Type::CDS), settlementDays_(Null<Natural>()), frequency_(Null<Frequency>()),
+      paymentConvention_(Following), rule_(DateGeneration::CDS2015), settlesAccrual_(true), paysAtDefaultTime_(true),
+      upfrontSettlementDays_(Null<Natural>()), usesReferenceData_(usesReferenceData) {}
 
 CdsConvention::CdsConvention(const string& id, const string& strSettlementDays, const string& strCalendar,
                              const string& strFrequency, const string& strPaymentConvention, const string& strRule,

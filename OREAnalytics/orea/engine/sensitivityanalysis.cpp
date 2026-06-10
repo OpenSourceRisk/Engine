@@ -201,7 +201,7 @@ void SensitivityAnalysis::generateSensitivities() {
                 sensitivityData_->useSpreadedTermStructures(), continueOnError_, overrideTenors_, iborFallbackConfig_);
         } else {
             simMarket_ = QuantLib::ext::make_shared<ScenarioSimMarket>(
-                market_, offsetSimMarketParams_, marketConfiguration_,
+                market_, offsetSimMarketParams_ == nullptr ? simMarketData_ : offsetSimMarketParams_, marketConfiguration_,
                 curveConfigs_ ? *curveConfigs_ : ore::data::CurveConfigurations(),
                 todaysMarketParams_ ? *todaysMarketParams_ : ore::data::TodaysMarketParameters(), continueOnError_,
                 sensitivityData_->useSpreadedTermStructures(), continueOnError_, overrideTenors_, iborFallbackConfig_, true, offsetScenario_);
@@ -325,7 +325,7 @@ void SensitivityAnalysis::generateSensitivities() {
                 sensitivityData_->useSpreadedTermStructures(), false, false, iborFallbackConfig_);
         } else {
             simMarket_ = QuantLib::ext::make_shared<ScenarioSimMarket>(
-                market_, offsetSimMarketParams_, marketConfiguration_,
+                market_, offsetSimMarketParams_ == nullptr ? simMarketData_ : offsetSimMarketParams_, marketConfiguration_,
                 curveConfigs_ ? *curveConfigs_ : ore::data::CurveConfigurations(),
                 todaysMarketParams_ ? *todaysMarketParams_ : ore::data::TodaysMarketParameters(), continueOnError_,
                 sensitivityData_->useSpreadedTermStructures(), false, false, iborFallbackConfig_, true, offsetScenario_);

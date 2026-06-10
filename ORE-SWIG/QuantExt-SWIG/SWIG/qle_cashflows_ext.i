@@ -22,6 +22,7 @@
 %include common.i
 %include cashflows.i
 %include volatilities.i
+%include inflation.i
 %include qle_indexes.i
 
 namespace QuantExt {
@@ -177,6 +178,314 @@ Leg _EquityLeg(
     const std::vector<Date>& paymentDates = {},
     const Schedule& valuationSchedule = Schedule());
 
+// QuantExt::IndexedCoupon – coupon with an indexed notional multiplier
+%{
+#include <qle/cashflows/indexedcoupon.hpp>
+%}
+
+%shared_ptr(QuantExt::IndexedCoupon)
+namespace QuantExt {
+class IndexedCoupon : public Coupon {
+  public:
+    IndexedCoupon(const ext::shared_ptr<Coupon>& c, Real qty,
+                  const ext::shared_ptr<Index>& index,
+                  const Date& fixingDate);
+    IndexedCoupon(const ext::shared_ptr<Coupon>& c, Real qty,
+                  Real initialFixing);
+
+    Real amount() const;
+    Real nominal() const;
+    Rate rate() const;
+    DayCounter dayCounter() const;
+    Real accruedAmount(const Date& d) const;
+
+    ext::shared_ptr<Coupon> underlying() const;
+    Real quantity() const;
+    ext::shared_ptr<Index> index() const;
+    const Date& fixingDate() const;
+    Real initialFixing() const;
+    Real multiplier() const;
+};
+} // namespace QuantExt
+
+// QuantExt::IndexWrappedCashFlow – cashflow with an indexed notional multiplier
+%shared_ptr(QuantExt::IndexWrappedCashFlow)
+namespace QuantExt {
+class IndexWrappedCashFlow : public CashFlow {
+  public:
+    IndexWrappedCashFlow(const ext::shared_ptr<CashFlow>& c, Real qty,
+                         const ext::shared_ptr<Index>& index,
+                         const Date& fixingDate);
+    IndexWrappedCashFlow(const ext::shared_ptr<CashFlow>& c, Real qty,
+                         Real initialFixing);
+
+    Date date() const;
+    Real amount() const;
+
+    ext::shared_ptr<CashFlow> underlying() const;
+    Real quantity() const;
+    ext::shared_ptr<Index> index() const;
+    const Date& fixingDate() const;
+    Real initialFixing() const;
+    Real multiplier() const;
+};
+} // namespace QuantExt
+
+// Free functions for unpacking indexed coupons/cashflows
+namespace QuantExt {
+    ext::shared_ptr<CashFlow> unpackIndexedCouponOrCashFlow(
+        const ext::shared_ptr<CashFlow>& c);
+    ext::shared_ptr<Coupon> unpackIndexedCoupon(
+        const ext::shared_ptr<Coupon>& c);
+    ext::shared_ptr<CashFlow> unpackIndexWrappedCashFlow(
+        const ext::shared_ptr<CashFlow>& c);
+    Real getIndexedCouponOrCashFlowMultiplier(
+        const ext::shared_ptr<CashFlow>& c);
+}
+
+// QuantExt::IndexedCouponLeg builder using helper-function-with-kwargs pattern
+%{
+Leg _IndexedCouponLeg(
+    const Leg& underlyingLeg,
+    Real qty,
+    const ext::shared_ptr<Index>& index,
+    Real initialFixing = Null<Real>(),
+    Real initialNotionalFixing = Null<Real>(),
+    Size fixingDays = 0,
+    const Calendar& fixingCalendar = Calendar(),
+    const BusinessDayConvention& fixingConvention = Following,
+    bool inArrearsFixing = false)
+{
+    QuantExt::IndexedCouponLeg leg(underlyingLeg, qty, index);
+    if (initialFixing != Null<Real>())
+        leg.withInitialFixing(initialFixing);
+    if (initialNotionalFixing != Null<Real>())
+        leg.withInitialNotionalFixing(initialNotionalFixing);
+    leg.withFixingDays(fixingDays)
+       .withFixingCalendar(fixingCalendar)
+       .withFixingConvention(fixingConvention)
+       .inArrearsFixing(inArrearsFixing);
+    return leg;
+}
+%}
+#if !defined(SWIGJAVA) && !defined(SWIGCSHARP)
+%feature("kwargs") _IndexedCouponLeg;
+#endif
+%rename(IndexedCouponLeg) _IndexedCouponLeg;
+Leg _IndexedCouponLeg(
+    const Leg& underlyingLeg,
+    Real qty,
+    const ext::shared_ptr<Index>& index,
+    Real initialFixing = Null<Real>(),
+    Real initialNotionalFixing = Null<Real>(),
+    Size fixingDays = 0,
+    const Calendar& fixingCalendar = Calendar(),
+    const BusinessDayConvention& fixingConvention = Following,
+    bool inArrearsFixing = false);
+
+// ---------------------------------------------------------------------------
+// CPIVolatilitySurface – minimal SWIG declaration (not in QuantLib-SWIG)
+// ---------------------------------------------------------------------------
+%{
+#include <ql/termstructures/volatility/inflation/cpivolatilitystructure.hpp>
+using QuantLib::CPIVolatilitySurface;
+%}
+%shared_ptr(CPIVolatilitySurface)
+class CPIVolatilitySurface : public VolatilityTermStructure {
+  private:
+    CPIVolatilitySurface();
+};
+%template(CPIVolatilitySurfaceHandle) Handle<CPIVolatilitySurface>;
+%template(RelinkableCPIVolatilitySurfaceHandle) RelinkableHandle<CPIVolatilitySurface>;
+
+// ---------------------------------------------------------------------------
+// QuantExt::CPICoupon – extends QuantLib::CPICoupon
+// ---------------------------------------------------------------------------
+%{
+#include <qle/cashflows/cpicoupon.hpp>
+#include <qle/cashflows/cpicouponpricer.hpp>
+%}
+
+%shared_ptr(QuantExt::CPICoupon)
+%rename(QLECPICoupon) QuantExt::CPICoupon;
+namespace QuantExt {
+class CPICoupon : public ::CPICoupon {
+  public:
+    CPICoupon(Real baseCPI,
+              const Date& paymentDate, Real nominal,
+              const Date& startDate, const Date& endDate,
+              const ext::shared_ptr<ZeroInflationIndex>& index,
+              const Period& observationLag,
+              CPI::InterpolationType observationInterpolation,
+              const DayCounter& dayCounter,
+              Real fixedRate,
+              const Date& refPeriodStart = Date(),
+              const Date& refPeriodEnd = Date(),
+              const Date& exCouponDate = Date(),
+              bool subtractInflationNominal = false);
+
+    bool subtractInflationNotional();
+};
+} // namespace QuantExt
+
+// ---------------------------------------------------------------------------
+// QuantExt::CappedFlooredCPICashFlow
+// ---------------------------------------------------------------------------
+%shared_ptr(QuantExt::CappedFlooredCPICashFlow)
+namespace QuantExt {
+class CappedFlooredCPICashFlow : public CPICashFlow {
+  public:
+    CappedFlooredCPICashFlow(const ext::shared_ptr<CPICashFlow>& underlying,
+                             Date startDate = Date(),
+                             Period observationLag = 0 * Days,
+                             Rate cap = Null<Rate>(),
+                             Rate floor = Null<Rate>());
+
+    void setPricer(const ext::shared_ptr<QuantExt::InflationCashFlowPricer>& pricer);
+    bool isCapped() const;
+    bool isFloored() const;
+    ext::shared_ptr<CPICashFlow> underlying() const;
+};
+} // namespace QuantExt
+
+// ---------------------------------------------------------------------------
+// QuantExt::CappedFlooredCPICoupon
+// ---------------------------------------------------------------------------
+%shared_ptr(QuantExt::CappedFlooredCPICoupon)
+namespace QuantExt {
+class CappedFlooredCPICoupon : public CPICoupon {
+  public:
+    CappedFlooredCPICoupon(const ext::shared_ptr<CPICoupon>& underlying,
+                           Date startDate = Date(),
+                           Rate cap = Null<Rate>(),
+                           Rate floor = Null<Rate>());
+
+    ext::shared_ptr<CPICoupon> underlying() const;
+    bool isCapped() const;
+    bool isFloored() const;
+};
+} // namespace QuantExt
+
+// ---------------------------------------------------------------------------
+// QuantExt Inflation Pricers
+// ---------------------------------------------------------------------------
+%shared_ptr(QuantExt::InflationCashFlowPricer)
+namespace QuantExt {
+class InflationCashFlowPricer : public Observer, public Observable {
+  public:
+    InflationCashFlowPricer(
+        const Handle<CPIVolatilitySurface>& vol = Handle<CPIVolatilitySurface>(),
+        const Handle<YieldTermStructure>& yts = Handle<YieldTermStructure>());
+    Handle<CPIVolatilitySurface> volatility();
+    Handle<YieldTermStructure> yieldCurve();
+};
+} // namespace QuantExt
+
+%shared_ptr(QuantExt::BlackCPICashFlowPricer)
+namespace QuantExt {
+class BlackCPICashFlowPricer : public InflationCashFlowPricer {
+  public:
+    BlackCPICashFlowPricer(
+        const Handle<CPIVolatilitySurface>& vol = Handle<CPIVolatilitySurface>(),
+        const Handle<YieldTermStructure>& yts = Handle<YieldTermStructure>());
+};
+} // namespace QuantExt
+
+%shared_ptr(QuantExt::BachelierCPICashFlowPricer)
+namespace QuantExt {
+class BachelierCPICashFlowPricer : public InflationCashFlowPricer {
+  public:
+    BachelierCPICashFlowPricer(
+        const Handle<CPIVolatilitySurface>& vol = Handle<CPIVolatilitySurface>(),
+        const Handle<YieldTermStructure>& yts = Handle<YieldTermStructure>());
+};
+} // namespace QuantExt
+
+%shared_ptr(QuantExt::CappedFlooredCPICouponPricer)
+namespace QuantExt {
+class CappedFlooredCPICouponPricer : public CPICouponPricer {
+  public:
+    CappedFlooredCPICouponPricer(
+        const Handle<CPIVolatilitySurface>& vol = Handle<CPIVolatilitySurface>(),
+        const Handle<YieldTermStructure>& yts = Handle<YieldTermStructure>());
+};
+} // namespace QuantExt
+
+%shared_ptr(QuantExt::BlackCPICouponPricer)
+namespace QuantExt {
+class BlackCPICouponPricer : public CappedFlooredCPICouponPricer {
+  public:
+    BlackCPICouponPricer(
+        const Handle<CPIVolatilitySurface>& vol = Handle<CPIVolatilitySurface>(),
+        const Handle<YieldTermStructure>& yts = Handle<YieldTermStructure>());
+};
+} // namespace QuantExt
+
+%shared_ptr(QuantExt::BachelierCPICouponPricer)
+namespace QuantExt {
+class BachelierCPICouponPricer : public CappedFlooredCPICouponPricer {
+  public:
+    BachelierCPICouponPricer(
+        const Handle<CPIVolatilitySurface>& vol = Handle<CPIVolatilitySurface>(),
+        const Handle<YieldTermStructure>& yts = Handle<YieldTermStructure>());
+};
+} // namespace QuantExt
+
+// ---------------------------------------------------------------------------
+// QuantExt::CPILeg builder (kwargs pattern)
+// ---------------------------------------------------------------------------
+%{
+Leg _QLECPILeg(
+    const Schedule& schedule,
+    const ext::shared_ptr<ZeroInflationIndex>& index,
+    const Handle<YieldTermStructure>& rateCurve,
+    Real baseCPI,
+    const Period& observationLag,
+    const std::vector<Real>& notionals,
+    const std::vector<Real>& fixedRates,
+    const DayCounter& paymentDayCounter = DayCounter(),
+    const BusinessDayConvention paymentConvention = Following,
+    const Calendar& paymentCalendar = Calendar(),
+    Natural paymentLag = 0,
+    CPI::InterpolationType observationInterpolation = CPI::AsIndex,
+    bool subtractInflationNominal = false,
+    const std::vector<Rate>& caps = {},
+    const std::vector<Rate>& floors = {})
+{
+    return QuantExt::CPILeg(schedule, index, rateCurve, baseCPI, observationLag)
+        .withNotionals(notionals)
+        .withFixedRates(fixedRates)
+        .withPaymentDayCounter(paymentDayCounter)
+        .withPaymentAdjustment(paymentConvention)
+        .withPaymentCalendar(paymentCalendar)
+        .withPaymentLag(paymentLag)
+        .withObservationInterpolation(observationInterpolation)
+        .withSubtractInflationNominal(subtractInflationNominal)
+        .withCaps(caps)
+        .withFloors(floors);
+}
+%}
+#if !defined(SWIGJAVA) && !defined(SWIGCSHARP)
+%feature("kwargs") _QLECPILeg;
+#endif
+%rename(QLECPILeg) _QLECPILeg;
+Leg _QLECPILeg(
+    const Schedule& schedule,
+    const ext::shared_ptr<ZeroInflationIndex>& index,
+    const Handle<YieldTermStructure>& rateCurve,
+    Real baseCPI,
+    const Period& observationLag,
+    const std::vector<Real>& notionals,
+    const std::vector<Real>& fixedRates,
+    const DayCounter& paymentDayCounter = DayCounter(),
+    const BusinessDayConvention paymentConvention = Following,
+    const Calendar& paymentCalendar = Calendar(),
+    Natural paymentLag = 0,
+    CPI::InterpolationType observationInterpolation = CPI::AsIndex,
+    bool subtractInflationNominal = false,
+    const std::vector<Rate>& caps = {},
+    const std::vector<Rate>& floors = {});
+
 %shared_ptr(QuantExt::CommodityCashFlow)
 namespace QuantExt {
 class CommodityCashFlow : public CashFlow {
@@ -212,6 +521,148 @@ class CommodityIndexedCashFlow : public CommodityCashFlow {
 };
 } // namespace QuantExt
 
+// QuantExt::CommodityQuantityFrequency enum
+namespace QuantExt {
+enum class CommodityQuantityFrequency {
+    PerCalculationPeriod,
+    PerCalendarDay,
+    PerPricingDay,
+    PerHour,
+    PerHourAndCalendarDay
+};
+} // namespace QuantExt
+
+// QuantExt::CommodityIndexedAverageCashFlow
+%shared_ptr(QuantExt::CommodityIndexedAverageCashFlow)
+namespace QuantExt {
+class CommodityIndexedAverageCashFlow : public CommodityCashFlow {
+  public:
+    enum class PaymentTiming { InAdvance, InArrears };
+
+    // Constructor 1: explicit payment date
+    CommodityIndexedAverageCashFlow(
+        QuantLib::Real quantity, const QuantLib::Date& startDate, const QuantLib::Date& endDate,
+        const QuantLib::Date& paymentDate, const ext::shared_ptr<CommodityIndex>& index,
+        const QuantLib::Calendar& pricingCalendar = QuantLib::Calendar(),
+        QuantLib::Real spread = 0.0, QuantLib::Real gearing = 1.0,
+        bool useFuturePrice = false, QuantLib::Natural deliveryDateRoll = 0,
+        QuantLib::Integer futureMonthOffset = 0,
+        const ext::shared_ptr<FutureExpiryCalculator>& calc = nullptr,
+        bool includeEndDate = true, bool excludeStartDate = true,
+        bool useBusinessDays = true);
+
+    // Constructor 2: deduced payment date
+    CommodityIndexedAverageCashFlow(
+        QuantLib::Real quantity, const QuantLib::Date& startDate, const QuantLib::Date& endDate,
+        QuantLib::Natural paymentLag, QuantLib::Calendar paymentCalendar,
+        QuantLib::BusinessDayConvention paymentConvention,
+        const ext::shared_ptr<CommodityIndex>& index,
+        const QuantLib::Calendar& pricingCalendar = QuantLib::Calendar(),
+        QuantLib::Real spread = 0.0, QuantLib::Real gearing = 1.0,
+        CommodityIndexedAverageCashFlow::PaymentTiming paymentTiming
+            = CommodityIndexedAverageCashFlow::PaymentTiming::InArrears,
+        bool useFuturePrice = false, QuantLib::Natural deliveryDateRoll = 0,
+        QuantLib::Integer futureMonthOffset = 0,
+        const ext::shared_ptr<FutureExpiryCalculator>& calc = nullptr,
+        bool includeEndDate = true, bool excludeStartDate = true,
+        const QuantLib::Date& paymentDateOverride = Date(),
+        bool useBusinessDays = true);
+
+    // Accessors
+    const QuantLib::Date& startDate() const;
+    const QuantLib::Date& endDate() const;
+    ext::shared_ptr<CommodityIndex> index() const;
+    QuantLib::Natural deliveryDateRoll() const;
+    QuantLib::Integer futureMonthOffset() const;
+    bool useBusinessDays() const;
+    QuantLib::Real periodQuantity() const;
+    QuantLib::Date date() const;
+    QuantLib::Real amount() const;
+};
+} // namespace QuantExt
+
+// QuantExt::CommodityIndexedAverageLeg builder using helper-function-with-kwargs pattern
+%{
+Leg _CommodityIndexedAverageLeg(
+    const Schedule& schedule,
+    const ext::shared_ptr<QuantExt::CommodityIndex>& index,
+    const std::vector<Real>& quantities,
+    Natural paymentLag = 0,
+    const Calendar& paymentCalendar = Calendar(),
+    BusinessDayConvention paymentConvention = Following,
+    const Calendar& pricingCalendar = Calendar(),
+    const std::vector<Real>& spreads = {},
+    const std::vector<Real>& gearings = {},
+    QuantExt::CommodityIndexedAverageCashFlow::PaymentTiming paymentTiming
+        = QuantExt::CommodityIndexedAverageCashFlow::PaymentTiming::InArrears,
+    bool useFuturePrice = false,
+    Natural deliveryDateRoll = 0,
+    Integer futureMonthOffset = 0,
+    const ext::shared_ptr<QuantExt::FutureExpiryCalculator>& calc = nullptr,
+    bool includeEndDate = true,
+    bool excludeStartDate = true,
+    bool useBusinessDays = true,
+    QuantExt::CommodityQuantityFrequency quantityFrequency
+        = QuantExt::CommodityQuantityFrequency::PerCalculationPeriod,
+    const ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr)
+{
+    QuantExt::CommodityIndexedAverageLeg leg(schedule, index);
+    if (quantities.size() == 1)
+        leg.withQuantities(quantities[0]);
+    else
+        leg.withQuantities(quantities);
+    leg.withPaymentLag(paymentLag)
+       .withPaymentCalendar(paymentCalendar)
+       .withPaymentConvention(paymentConvention)
+       .withPricingCalendar(pricingCalendar)
+       .paymentTiming(paymentTiming)
+       .useFuturePrice(useFuturePrice)
+       .withDeliveryDateRoll(deliveryDateRoll)
+       .withFutureMonthOffset(futureMonthOffset)
+       .withFutureExpiryCalculator(calc)
+       .includeEndDate(includeEndDate)
+       .excludeStartDate(excludeStartDate)
+       .useBusinessDays(useBusinessDays)
+       .withQuantityFrequency(quantityFrequency)
+       .withFxIndex(fxIndex);
+    if (spreads.size() == 1)
+        leg.withSpreads(spreads[0]);
+    else if (!spreads.empty())
+        leg.withSpreads(spreads);
+    if (gearings.size() == 1)
+        leg.withGearings(gearings[0]);
+    else if (!gearings.empty())
+        leg.withGearings(gearings);
+    return leg;
+}
+%}
+#if !defined(SWIGJAVA) && !defined(SWIGCSHARP)
+%feature("kwargs") _CommodityIndexedAverageLeg;
+#endif
+%rename(CommodityIndexedAverageLeg) _CommodityIndexedAverageLeg;
+Leg _CommodityIndexedAverageLeg(
+    const Schedule& schedule,
+    const ext::shared_ptr<QuantExt::CommodityIndex>& index,
+    const std::vector<Real>& quantities,
+    Natural paymentLag = 0,
+    const Calendar& paymentCalendar = Calendar(),
+    BusinessDayConvention paymentConvention = Following,
+    const Calendar& pricingCalendar = Calendar(),
+    const std::vector<Real>& spreads = {},
+    const std::vector<Real>& gearings = {},
+    QuantExt::CommodityIndexedAverageCashFlow::PaymentTiming paymentTiming
+        = QuantExt::CommodityIndexedAverageCashFlow::PaymentTiming::InArrears,
+    bool useFuturePrice = false,
+    Natural deliveryDateRoll = 0,
+    Integer futureMonthOffset = 0,
+    const ext::shared_ptr<QuantExt::FutureExpiryCalculator>& calc = nullptr,
+    bool includeEndDate = true,
+    bool excludeStartDate = true,
+    bool useBusinessDays = true,
+    QuantExt::CommodityQuantityFrequency quantityFrequency
+        = QuantExt::CommodityQuantityFrequency::PerCalculationPeriod,
+    const ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr);
+
 %shared_ptr(QuantExt::TRSCashFlow)
 namespace QuantExt {
 class TRSCashFlow : public CashFlow {
@@ -229,7 +680,59 @@ class TRSCashFlow : public CashFlow {
     Date date() const override;
     const Date& fixingStartDate() const;
     const Date& fixingEndDate() const;
+    Real initialPrice() const;
 };
 } // namespace QuantExt
+
+// QuantExt::BondTRSCashFlow – bond TRS cashflow (subclass of TRSCashFlow)
+%shared_ptr(QuantExt::BondTRSCashFlow)
+namespace QuantExt {
+class BondTRSCashFlow : public TRSCashFlow {
+  public:
+    BondTRSCashFlow(const Date& paymentDate,
+                    const Date& fixingStartDate,
+                    const Date& fixingEndDate,
+                    Real bondNotional,
+                    const ext::shared_ptr<Index>& index,
+                    Real initialPrice = Null<Real>(),
+                    const ext::shared_ptr<FxIndex>& fxIndex = nullptr,
+                    bool applyFXIndexFixingDays = false);
+
+    Real notional(Date date) const;
+    Real notional() const;
+    void setFixingStartDate(Date fixingDate);
+};
+} // namespace QuantExt
+
+// QuantExt::BondTRSLeg builder using helper-function-with-kwargs pattern
+%{
+Leg _BondTRSLeg(
+    const std::vector<Date>& valuationDates,
+    const std::vector<Date>& paymentDates,
+    Real bondNotional,
+    const ext::shared_ptr<Index>& index,
+    const ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
+    Real initialPrice = Null<Real>(),
+    bool applyFXIndexFixingDays = false)
+{
+    QuantExt::BondTRSLeg leg(valuationDates, paymentDates, bondNotional, index, fxIndex);
+    if (initialPrice != Null<Real>())
+        leg.withInitialPrice(initialPrice);
+    leg.withApplyFXIndexFixingDays(applyFXIndexFixingDays);
+    return leg;
+}
+%}
+#if !defined(SWIGJAVA) && !defined(SWIGCSHARP)
+%feature("kwargs") _BondTRSLeg;
+#endif
+%rename(BondTRSLeg) _BondTRSLeg;
+Leg _BondTRSLeg(
+    const std::vector<Date>& valuationDates,
+    const std::vector<Date>& paymentDates,
+    Real bondNotional,
+    const ext::shared_ptr<Index>& index,
+    const ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
+    Real initialPrice = Null<Real>(),
+    bool applyFXIndexFixingDays = false);
 
 #endif

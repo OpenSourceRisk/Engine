@@ -22,6 +22,7 @@
 
 #include <ored/utilities/calendarparser.hpp>
 
+#include <ql/settings.hpp>
 #include <ql/time/calendars/all.hpp>
 #include <qle/calendars/amendedcalendar.hpp>
 #include <qle/calendars/austria.hpp>
@@ -34,7 +35,6 @@
 #include <qle/calendars/ice.hpp>
 #include <qle/calendars/ireland.hpp>
 #include <qle/calendars/islamicweekendsonly.hpp>
-#include <qle/calendars/israel.hpp>
 #include <qle/calendars/luxembourg.hpp>
 #include <qle/calendars/malaysia.hpp>
 #include <qle/calendars/mauritius.hpp>
@@ -58,6 +58,19 @@ using namespace QuantExt;
 CalendarParser::CalendarParser() { reset(); }
 
 QuantLib::Calendar CalendarParser::parseCalendar(const std::string& name) const {
+    // Israel TASE transitioned from Fri/Sat to Sat/Sun weekends on Jan 5, 2026
+    // https://www.tase.co.il/en/content/about/tradingdays_change
+    static const std::set<std::string> israelTaseNames = {
+        "IL", "ISR", "ILS", "ILa", "ILX", "ILs", "ILA", "XTAE"
+    };
+    if (israelTaseNames.count(name)) {
+        Date asof = Settings::instance().evaluationDate();
+        if (asof >= Date(5, January, 2026))
+            return QuantLib::Israel(QuantLib::Israel::TASE_National);
+        else
+            return QuantLib::Israel(QuantLib::Israel::TASE);
+    }
+
     boost::shared_lock<boost::shared_mutex> lock(mutex_);
     auto it = calendars_.find(name);
     if (it != calendars_.end())
@@ -391,7 +404,7 @@ void CalendarParser::reset() {
 
         // Other / Legacy
         {"DEN", Denmark()}, // TODO: consider remove it, not ISO
-        {"Telbor", QuantExt::Israel(QuantExt::Israel::Telbor)},
+        {"Telbor", QuantLib::Israel(QuantLib::Israel::Telbor)},
         {"London stock exchange", UnitedKingdom(UnitedKingdom::Exchange)},
         {"LNB", UnitedKingdom()},
         {"New York stock exchange", UnitedStates(UnitedStates::NYSE)},

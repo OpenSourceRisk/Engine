@@ -58,10 +58,33 @@ void MarketCalibrationReportBase::populateReport(const QuantLib::ext::shared_ptr
     if (calibrationFilters_.mdFilterCurves) {
         // First cut at adding curves
 
-        // TODO simplify that and just loop over yield and dividend curve calibration info, the only change
-        // would be that we would not be able to set the discountCurve flag any more, not sure if that is very
-        // important? add to curves here Add discount curves first, so EUR-EONIA gets marked as a discount curve
-        // even if it is an IndexCurve too
+        // We process IndexCurve first because the index (forward) curve contains all the information
+        // of the discount curve (discount factors, zero rates) plus forward rates. If a curve is both
+        // a discount curve and an index curve (e.g. AONIA when base ccy is AUD), we want to output the
+        // version with forward rates. The duplicate detection will then skip the discount-only version.
+
+        // Collect discount curve specs to correctly set isDiscount flag on index curves
+        std::set<std::string> discountCurveSpecs;
+        if (todaysMarketParams->hasMarketObject(MarketObject::DiscountCurve)) {
+            for (auto it : todaysMarketParams->mapping(MarketObject::DiscountCurve, Market::defaultConfiguration)) {
+                discountCurveSpecs.insert(it.second);
+            }
+        }
+
+        if (todaysMarketParams->hasMarketObject(MarketObject::IndexCurve)) {
+            for (auto it : todaysMarketParams->mapping(MarketObject::IndexCurve, Market::defaultConfiguration)) {
+                auto yts = calibrationInfo->yieldCurveCalibrationInfo.find(it.second);
+                bool isAlsoDiscount = discountCurveSpecs.count(it.second) > 0;
+                try {
+                    auto index = market->iborIndex(it.first);
+                    if (yts != calibrationInfo->yieldCurveCalibrationInfo.end())
+                        addYieldCurve(calibrationInfo->asof, yts->second, getCurveName(it.second), isAlsoDiscount, label, index);
+                } catch (...) {
+                    if (yts != calibrationInfo->yieldCurveCalibrationInfo.end())
+                        addYieldCurve(calibrationInfo->asof, yts->second, getCurveName(it.second), isAlsoDiscount, label);
+                }
+            }
+        }
         if (todaysMarketParams->hasMarketObject(MarketObject::DiscountCurve)) {
             for (auto it : todaysMarketParams->mapping(MarketObject::DiscountCurve, Market::defaultConfiguration)) {
                 auto yts = calibrationInfo->yieldCurveCalibrationInfo.find(it.second);
@@ -81,19 +104,6 @@ void MarketCalibrationReportBase::populateReport(const QuantLib::ext::shared_ptr
                 auto yts = calibrationInfo->dividendCurveCalibrationInfo.find(it.second);
                 if (yts != calibrationInfo->dividendCurveCalibrationInfo.end())
                     addYieldCurve(calibrationInfo->asof, yts->second, getCurveName(it.second), false, label);
-            }
-        }
-        if (todaysMarketParams->hasMarketObject(MarketObject::IndexCurve)) {
-            for (auto it : todaysMarketParams->mapping(MarketObject::IndexCurve, Market::defaultConfiguration)) {
-                auto yts = calibrationInfo->yieldCurveCalibrationInfo.find(it.second);
-                try {
-                    auto index = market->iborIndex(it.first);
-                    if (yts != calibrationInfo->yieldCurveCalibrationInfo.end())
-                        addYieldCurve(calibrationInfo->asof, yts->second, getCurveName(it.second), false, label, index);
-                } catch (...) {
-                    if (yts != calibrationInfo->yieldCurveCalibrationInfo.end())
-                        addYieldCurve(calibrationInfo->asof, yts->second, getCurveName(it.second), false, label);
-                }
             }
         }
     }
@@ -144,6 +154,13 @@ void MarketCalibrationReportBase::populateReport(const QuantLib::ext::shared_ptr
         // cpi vols
         for (auto const& c : calibrationInfo->cpiVolCalibrationInfo) {
             addCpiVol(calibrationInfo->asof, c.second, getCurveName(c.first), label);
+        }
+    }
+
+    if (calibrationFilters_.mdFilterDefCurves) {
+        // default curves
+        for (auto const& c : calibrationInfo->defaultCurveCalibrationInfo) {
+            addDefaultCurve(calibrationInfo->asof, c.second, c.first, label);
         }
     }
 }
@@ -703,5 +720,37 @@ void MarketCalibrationReportBase::addCpiVol(const QuantLib::Date& refdate,
 
     calibrations_[label][type].insert(id);
 }
+
+// Add default curve data to array
+void MarketCalibrationReport::addDefaultCurve(const QuantLib::Date& refdate, 
+                                              QuantLib::ext::shared_ptr<ore::data::DefaultCurveCalibrationInfo> info,
+                                              const std::string& id, const std::string& label) {
+    if (info == nullptr)
+        return;
+    
+    const string defaultStr = "defaultCurve";
+
+    // check if we have already processed this curve
+    if (checkCalibrations(label, defaultStr, id)) {
+        DLOG("Skipping curve " << id << " for label " << label << " as it has already been added");
+        return;
+    }
+
+    addRowReport(defaultStr, id, "type", "", "", "", info->typeStr);
+    addRowReport(defaultStr, id, "dayCounter", "", "", "", info->dayCounter);
+    addRowReport(defaultStr, id, "calendar", "", "", "", info->calendar);
+    addRowReport(defaultStr, id, "runningSpread", "", "", "", info->runningSpread);
+
+    for (Size i = 0; i < info->pillarDates.size(); ++i) {
+        std::string tStr = to_string(info->pillarDates.at(i));
+        addRowReport(defaultStr, id, "defaultProbabilty", tStr, "", "", info->defaultProb.at(i));
+        addRowReport(defaultStr, id, "survivalProbabilty", tStr, "", "", info->survivalProb.at(i));
+        addRowReport(defaultStr, id, "hazardRates", tStr, "", "", info->hazardRates.at(i));
+        addRowReport(defaultStr, id, "defaultDensities", tStr, "", "", info->defaultDensities.at(i));
+    }
+
+    calibrations_[label][defaultStr].insert(id);
+}
+
 } // namespace analytics
 } // namespace ore

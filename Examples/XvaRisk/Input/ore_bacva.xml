@@ -33,6 +33,7 @@
     </Analytic>
     <Analytic type="bacva">
       <Parameter name="active">Y</Parameter>
+      <Parameter name="simmVersion">2.1</Parameter>
       <Parameter name="csaFile">netting.xml</Parameter>
       <Parameter name="collateralBalancesFile">collateralbalances.xml</Parameter>
     </Analytic>

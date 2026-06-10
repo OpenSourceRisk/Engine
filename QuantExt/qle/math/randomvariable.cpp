@@ -18,9 +18,9 @@
 
 #include <qle/math/randomvariable.hpp>
 #include <qle/math/randomvariablelsmbasissystem.hpp>
-
+#include <qle/math/randomvariable_regressioncache.hpp>
 #ifdef ORE_ENABLE_CUDA
-#include <qle/math/gpuqrsolve_multistream.hpp>
+#include <qle/math/gpuqrsolve.hpp>
 #endif
 
 #include <ql/experimental/math/moorepenroseinverse.hpp>
@@ -457,6 +457,19 @@ RandomVariable::operator Array() const {
         stopDataStats(n_);
     }
     return array;
+}
+
+RandomVariable::operator std::vector<double>() const {
+    std::vector<double> v(n_);
+    if (deterministic_)
+        std::fill(v.begin(), v.end(), constantData_);
+    else if (n_ != 0) {
+        resumeDataStats();
+        // std::memcpy(array.begin(), data_, n_ * sizeof(double));
+        std::copy(data_, data_ + n_, v.begin());
+        stopDataStats(n_);
+    }
+    return v;
 }
 
 void RandomVariable::clear() {
@@ -1258,7 +1271,8 @@ std::vector<const RandomVariable*> vec2vecptr(const std::vector<RandomVariable>&
 Array regressionCoefficients(
     RandomVariable r, std::vector<const RandomVariable*> regressor,
     const std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>& basisFn,
-    const Filter& filter, const RandomVariableRegressionMethod regressionMethod, const std::string& debugLabel) {
+    const Filter& filter, const RandomVariableRegressionMethod regressionMethod, const std::string& debugLabel,
+    RandomVariableRegressionCache* cache) {
 
     for (auto const reg : regressor) {
         QL_REQUIRE(reg->size() == r.size(),
@@ -1272,33 +1286,60 @@ Array regressionCoefficients(
                                                << r.size() << ") must be geq basis fns size (" << basisFn.size()
                                                << ")");
 
+#ifdef ORE_ENABLE_CUDA
+    if (gpuQrSolveApplicable(A, b))
+        return gpuQrSolve(A, b);
+#endif
+
     resumeCalcStats();
 
-    Matrix A(r.size(), basisFn.size());
-    for (Size j = 0; j < basisFn.size(); ++j) {
-        RandomVariable a = basisFn[j](regressor);
-        if (filter.initialised()) {
-            a = applyFilter(a, filter);
-        }
-        if (a.deterministic())
-            std::fill(A.column_begin(j), A.column_end(j), a[0]);
-        else
-            a.copyToMatrixCol(A, j);
-    }
+    ext::shared_ptr<Matrix> qr_q, qr_r;
+    ext::shared_ptr<std::vector<Size>> qr_lipvt;
+    ext::shared_ptr<SVD> svd;
 
-    if (filter.size() > 0) {
-        r = applyFilter(r, filter);
+    RandomVariableRegressionCache::Key cacheKey;
+
+    if(cache)
+        cacheKey = RandomVariableRegressionCache::Key(regressor, basisFn, filter, regressionMethod);
+
+    if (!cache || !cache->hasMatrixDecomposition(cacheKey)) {
+        Matrix A(r.size(), basisFn.size());
+        for (Size j = 0; j < basisFn.size(); ++j) {
+            RandomVariable a = basisFn[j](regressor);
+            if (filter.initialised()) {
+                a = applyFilter(a, filter);
+            }
+            if (a.deterministic())
+                std::fill(A.column_begin(j), A.column_end(j), a[0]);
+            else
+                a.copyToMatrixCol(A, j);
+        }
+
+        if (filter.size() > 0) {
+            r = applyFilter(r, filter);
+        }
+
+        if (regressionMethod == RandomVariableRegressionMethod::SVD) {
+            svd = ext::make_shared<SVD>(A);
+        } else if (regressionMethod == RandomVariableRegressionMethod::QR) {
+            qr_q = ext::make_shared<Matrix>();
+            qr_r = ext::make_shared<Matrix>();
+            qr_lipvt = ext::make_shared<std::vector<Size>>();
+            *qr_lipvt = qrDecomposition(A, *qr_q, *qr_r);
+        }
+        if(cache)
+            cache->addMatrixDecomposition(cacheKey, qr_q, qr_r, qr_lipvt, svd);
+    } else {
+        cache->getMatrixDecomposition(cacheKey, qr_q, qr_r, qr_lipvt, svd);
     }
 
     Array b = static_cast<Array>(r);
-
     Array res;
     if (regressionMethod == RandomVariableRegressionMethod::SVD) {
-        SVD svd(A);
-        const Matrix& V = svd.V();
-        const Matrix& U = svd.U();
-        const Array& w = svd.singularValues();
-        Real threshold = r.size() * QL_EPSILON * svd.singularValues()[0];
+        const Matrix& V = svd->V();
+        const Matrix& U = svd->U();
+        const Array& w = svd->singularValues();
+        Real threshold = r.size() * QL_EPSILON * w[0];
         res = Array(basisFn.size(), 0.0);
         for (Size i = 0; i < basisFn.size(); ++i) {
             if (w[i] > threshold) {
@@ -1309,11 +1350,7 @@ Array regressionCoefficients(
             }
         }
     } else if (regressionMethod == RandomVariableRegressionMethod::QR) {
-#ifdef ORE_ENABLE_CUDA
-        res = gpuQrSolveMultiStream(A, b);
-#else
-        res = qrSolve(A, b);
-#endif
+        res = qrSolve(*qr_lipvt, *qr_q, *qr_r, b);
     } else {
         QL_FAIL("regressionCoefficients(): unknown regression method, expected SVD or QR");
     }
@@ -1359,11 +1396,12 @@ RandomVariable conditionalExpectation(
 RandomVariable conditionalExpectation(
     const RandomVariable& r, const std::vector<const RandomVariable*>& regressor,
     const std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>& basisFn,
-    const Filter& filter, const RandomVariableRegressionMethod regressionMethod) {
+    const Filter& filter, const RandomVariableRegressionMethod regressionMethod,
+    const std::vector<const RandomVariable*>& finalRegressor, RandomVariableRegressionCache* cache) {
     if (r.deterministic())
         return r;
-    auto coeff = regressionCoefficients(r, regressor, basisFn, filter, regressionMethod);
-    return conditionalExpectation(regressor, basisFn, coeff);
+    auto coeff = regressionCoefficients(r, regressor, basisFn, filter, regressionMethod, std::string(), cache);
+    return conditionalExpectation(finalRegressor.empty() ? regressor : finalRegressor, basisFn, coeff);
 }
 
 RandomVariable expectation(const RandomVariable& r) {
@@ -1483,6 +1521,23 @@ multiPathBasisSystem(Size dim, Size order, QuantLib::LsmBasisSystem::PolynomialT
     auto tmp = RandomVariableLsmBasisSystem::multiPathBasisSystem(dim, order, type, varGroups);
     cache[h] = tmp;
     return tmp;
+}
+
+std::size_t hash_value(const RandomVariable& r) {
+    std::size_t seed = r.size();
+    boost::hash_combine(seed, r.time());
+    boost::hash_combine(seed, r[0]);
+    if (!r.deterministic())
+        boost::hash_range(seed, r.data(), r.data() + r.size());
+    return seed;
+}
+
+std::size_t hash_value(const Filter& r) {
+    std::size_t seed = r.size();
+    boost::hash_combine(seed, r[0]);
+    if (!r.deterministic())
+        boost::hash_range(seed, r.data(), r.data() + r.size());
+    return seed;
 }
 
 template <class Archive> void Filter::serialize(Archive& ar, const unsigned int version) {

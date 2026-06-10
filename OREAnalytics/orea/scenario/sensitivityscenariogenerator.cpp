@@ -195,6 +195,11 @@ void SensitivityScenarioGenerator::generateScenarios() {
         generateCorrelationScenarios(false);
     }
 
+    if (simMarketData_->bondFutureVolSimulate()) {
+        generateBondFutureVolScenarios(true);
+        generateBondFutureVolScenarios(false);
+    }
+
     // fill keyToFactor and factorToKey maps from scenario descriptions
 
     DLOG("Fill maps linking factors with RiskFactorKeys");
@@ -2591,6 +2596,121 @@ void SensitivityScenarioGenerator::generateSecuritySpreadScenarios(bool up) {
     DLOG("Security scenarios done");
 }
 
+void SensitivityScenarioGenerator::generateBondFutureVolScenarios(bool up) {
+
+    // Log an ALERT if some bond future vol names in simulation market are not in the list
+    const auto& bfvsDataMap = sensitivityData_->bondFutureVolShiftData();
+    for (const string& name : simMarketData_->bondFutureVolNames()) {
+        if (bfvsDataMap.find(name) == bfvsDataMap.end()) {
+            ALOG("Bond future volatility " << name << " in simulation market is not included in sensitivity analysis");
+        }
+    }
+
+    // Loop over each bond future vol and create volatility scenario.
+    Date asof = baseScenario_->asof();
+    for (const auto& bfvsDataPair : bfvsDataMap) {
+        string name = bfvsDataPair.first;
+        // Simulation market data for the current name
+        vector<Period> expiries;
+        try {
+            expiries = simMarketData_->bondFutureVolExpiries(name);
+        } catch (const std::exception& e) {
+            ALOG("skip scenario generation for bond future vol " << name << ": " << e.what());
+            continue;
+        }
+        const vector<Real>& moneyness = simMarketData_->bondFutureVolMoneyness(name);
+        QL_REQUIRE(!expiries.empty(), "Sim market bond future vol expiries have not been specified for " << name);
+        QL_REQUIRE(!moneyness.empty(), "Sim market bond future vol moneyness has not been specified for " << name);
+        // Store base scenario volatilities, strike x expiry
+        vector<vector<Real>> baseValues(moneyness.size(), vector<Real>(expiries.size()));
+        vector<vector<Real>> offsets(moneyness.size(), vector<Real>(expiries.size()));
+        // Time to each expiry
+        vector<Time> times(expiries.size());
+        // Store shifted scenario volatilities
+        vector<vector<Real>> shiftedValues = baseValues;
+
+        SensitivityScenarioData::VolShiftData sd = *bfvsDataPair.second;
+        if (!isScenarioRelevant(up, sd))
+            continue;
+        QL_REQUIRE(!sd.shiftExpiries.empty(), "bond future volatility shift tenors empty for " << name);
+
+        ShiftType shiftType = getShiftType(sd);
+        vector<Time> shiftTimes(sd.shiftExpiries.size());
+        DayCounter dc = Actual365Fixed();
+        try {
+            if (auto s = simMarket_.lock()) {
+                dc = s->bondFutureVol(name)->dayCounter();
+            } else {
+                QL_FAIL("Internal error: could not lock simMarket. Contact dev.");
+            }
+        } catch (const std::exception&) {
+            WLOG("Day counter lookup in simulation market failed for bond future vol surface " <<
+                name << ", using default A365");
+        }
+
+        // Get the base scenario volatility values
+        bool valid = true;
+        for (Size j = 0; j < expiries.size(); j++) {
+            times[j] = dc.yearFraction(asof, asof + expiries[j]);
+            for (Size i = 0; i < moneyness.size(); i++) {
+                RiskFactorKey key(RiskFactorKey::KeyType::BondFutureVolatility, name, i * expiries.size() + j);
+                valid = valid && tryGetBaseScenarioValue(baseScenarioAbsolute_, key,
+                    baseValues[i][j], continueOnError_);
+                valid = valid && tryGetBaseScenarioValue(baseScenario_, key, offsets[i][j], continueOnError_);
+            }
+        }
+
+        if (!valid)
+            continue;
+
+        // Store the shift expiry times
+        for (Size sj = 0; sj < sd.shiftExpiries.size(); ++sj) {
+            shiftTimes[sj] = dc.yearFraction(asof, asof + sd.shiftExpiries[sj]);
+        }
+
+        // Can we store a valid shift size?
+        bool validShiftSize = vectorSubset(times, shiftTimes);
+        validShiftSize = validShiftSize && vectorSubset(moneyness, sd.shiftStrikes);
+
+        // Loop and apply scenarios
+        for (Size sj = 0; sj < sd.shiftExpiries.size(); ++sj) {
+            for (Size si = 0; si < sd.shiftStrikes.size(); ++si) {
+
+                QuantLib::ext::shared_ptr<Scenario> scenario =
+                    sensiScenarioFactory_->buildScenario(asof, !sensitivityData_->useSpreadedTermStructures());
+
+                applyShift(si, sj, getShiftSize(sd), up, shiftType, sd.shiftStrikes, shiftTimes, moneyness, times,
+                           baseValues, shiftedValues, true);
+
+                Size counter = 0;
+                for (Size i = 0; i < moneyness.size(); i++) {
+                    for (Size j = 0; j < expiries.size(); ++j) {
+                        RiskFactorKey key(RFType::BondFutureVolatility, name, counter++);
+                        if (sensitivityData_->useSpreadedTermStructures()) {
+                            scenario->add(key, shiftedValues[i][j] - baseValues[i][j] + offsets[i][j]);
+                        } else {
+                            scenario->add(key, shiftedValues[i][j]);
+                        }
+                        // Possibly store valid shift size
+                        if (validShiftSize && moneyness[i] == sd.shiftStrikes[si] && times[j] == shiftTimes[sj]) {
+                            storeShiftData(key, baseValues[i][j], shiftedValues[i][j]);
+                        }
+                    }
+                }
+
+                // Give the scenario a label
+
+                // Add the final scenario to the scenario vector
+                scenarioDescriptions_.push_back(bondFutureVolScenarioDescription(name, sj, si, up, getShiftScheme(sd)));
+                scenario->label(to_string(scenarioDescriptions_.back()));
+                scenarios_.push_back(scenario);
+                DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
+            }
+        }
+    }
+    DLOG("Bond future volatility scenarios done");
+}
+
 SensitivityScenarioGenerator::ScenarioDescription
 SensitivityScenarioGenerator::fxScenarioDescription(string ccypair, bool up, ShiftScheme shiftScheme) {
     RiskFactorKey key(RiskFactorKey::KeyType::FXSpot, ccypair);
@@ -3021,6 +3141,39 @@ SensitivityScenarioGenerator::securitySpreadScenarioDescription(string bond, boo
     shiftSchemes_[key] = shiftScheme;
     storeShiftData(key, 0.0, 0.0); // default, only used if not popoulated before
     return desc;
+}
+
+SensitivityScenarioGenerator::ScenarioDescription
+SensitivityScenarioGenerator::bondFutureVolScenarioDescription(const string& contractName, Size expiryBucket,
+    Size strikeBucket, bool up, ShiftScheme shiftScheme) {
+
+    auto it = sensitivityData_->bondFutureVolShiftData().find(contractName);
+    QL_REQUIRE(it != sensitivityData_->bondFutureVolShiftData().end(), "bond future contract " <<
+        contractName << " not found in bond future vol shift data");
+
+    SensitivityScenarioData::VolShiftData data = *it->second;
+    QL_REQUIRE(expiryBucket < data.shiftExpiries.size(), "expiry bucket " << expiryBucket << " out of range "
+        "in bond future vol shift data for bond future contract " << contractName);
+    Size index = strikeBucket * data.shiftExpiries.size() + expiryBucket;
+    RiskFactorKey key(RiskFactorKey::KeyType::BondFutureVolatility, contractName, index);
+    QL_REQUIRE(data.shiftStrikes.size() > 0, "no shift strikes found in bond future vol shift data "
+        "for bond future contract " << contractName);
+    QL_REQUIRE(strikeBucket < data.shiftStrikes.size(), "strike bucket " << strikeBucket << " out of range"
+        "in bond future vol shift data for bond future contract " << contractName);
+
+    ostringstream o;
+    if (data.shiftStrikes.size() == 0 || close_enough(data.shiftStrikes[strikeBucket], 1.0)) {
+        o << data.shiftExpiries[expiryBucket] << "/ATM";
+    } else {
+        QL_REQUIRE(strikeBucket < data.shiftStrikes.size(), "strike bucket " << strikeBucket << " out of range");
+        o << data.shiftExpiries[expiryBucket] << "/" << data.shiftStrikes[strikeBucket];
+    }
+
+    ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
+    shiftSchemes_[key] = shiftScheme;
+    // default, only used if not populated before
+    storeShiftData(key, 0.0, 0.0);
+    return ScenarioDescription(type, key, o.str());
 }
 
 } // namespace analytics

@@ -195,6 +195,10 @@ public:
     }
     const map<string, QuantLib::ext::shared_ptr<SpotShiftData>>& securityShiftData() const { return securityShiftData_; }
 
+    const map<string, QuantLib::ext::shared_ptr<VolShiftData>>& bondFutureVolShiftData() const {
+        return bondFutureVolShiftData_;
+    }
+
     const vector<pair<string, string>>& crossGammaFilter() const { return crossGammaFilter_; }
     const bool computeGamma() const { return computeGamma_; }
     const bool useSpreadedTermStructures() const { return useSpreadedTermStructures_; }
@@ -242,6 +246,7 @@ public:
     map<string, QuantLib::ext::shared_ptr<VolShiftData>>& commodityVolShiftData() { return commodityVolShiftData_; }
     map<string, QuantLib::ext::shared_ptr<VolShiftData>>& correlationShiftData() { return correlationShiftData_; }
     map<string, QuantLib::ext::shared_ptr<SpotShiftData>>& securityShiftData() { return securityShiftData_; }
+    map<string, QuantLib::ext::shared_ptr<VolShiftData>>& bondFutureVolShiftData() { return bondFutureVolShiftData_; }
 
     set<ore::analytics::RiskFactorKey::KeyType>& parConversionExcludes() { return parConversionExcludes_; }
 
@@ -302,6 +307,9 @@ public:
     void addCommodityVolShiftData(const string& s, const QuantLib::ext::shared_ptr<VolShiftData>& d) { commodityVolShiftData_[s] = d; }
     void addCorrelationShiftData(const string& s, const QuantLib::ext::shared_ptr<VolShiftData>& d) { correlationShiftData_[s] = d; }
     void addSecurityShiftData(const string& s, const QuantLib::ext::shared_ptr<SpotShiftData>& d) { securityShiftData_[s] = d; }
+    void addBondFutureVolShiftData(const string& s, const QuantLib::ext::shared_ptr<VolShiftData>& d) {
+        bondFutureVolShiftData_[s] = d;
+    }
 
     void setCrossGammaFilter(const vector<pair<string, string>>& d) { crossGammaFilter_ = d; }
     void setComputeGamma(const bool b) { computeGamma_ = b; }
@@ -364,6 +372,7 @@ protected:
     map<string, QuantLib::ext::shared_ptr<VolShiftData>> correlationShiftData_;
     map<string, QuantLib::ext::shared_ptr<VolShiftData>> commodityVolShiftData_;
     map<string, QuantLib::ext::shared_ptr<SpotShiftData>> securityShiftData_; // key: security name
+    map<string, QuantLib::ext::shared_ptr<VolShiftData>> bondFutureVolShiftData_;
 
     vector<pair<string, string>> crossGammaFilter_;
     bool computeGamma_;

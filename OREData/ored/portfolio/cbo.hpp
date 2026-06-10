@@ -80,7 +80,7 @@ public:
     void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
-    QuantLib::Real notional() const override { return notional_; }
+    QuantLib::Real notional(NotionalType type = NotionalType::Default) const override { return notional_; }
     std::string notionalCurrency() const override { return ccy_; }
 
     std::string investedTrancheName() { return investedTrancheName_; };

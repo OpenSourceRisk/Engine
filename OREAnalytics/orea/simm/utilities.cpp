@@ -50,25 +50,10 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/simmcurrencies.hpp>
-
 #include <ored/portfolio/bond.hpp>
-#include <ored/portfolio/bondoption.hpp>
-#include <ored/portfolio/bondposition.hpp>
-#include <ored/portfolio/bondrepo.hpp>
-#include <ored/portfolio/bondtotalreturnswap.hpp>
-#include <ored/portfolio/compositetrade.hpp>
 #include <ored/portfolio/callablebond.hpp>
-#include <ored/portfolio/convertiblebond.hpp>
-#include <ored/portfolio/forwardbond.hpp>
 #include <ored/portfolio/bondfuture.hpp>
-#include <ored/portfolio/fxderivative.hpp>
-#include <ored/portfolio/fxforward.hpp>
-#include <ored/portfolio/fxoption.hpp>
-#include <ored/portfolio/fxswap.hpp>
-#include <ored/portfolio/trs.hpp>
-#include <ored/utilities/log.hpp>
-#include <ored/utilities/parsers.hpp>
-#include <ored/portfolio/scriptedtrade.hpp>
+#include <ored/portfolio/bondfutureoption.hpp>
 
 #include <ql/math/matrixutilities/symmetricschurdecomposition.hpp>
 #include <ql/utilities/null.hpp>
@@ -221,6 +206,7 @@ SimmVersion parseSimmVersion(const string& version) {
                                                   {"2.7", SimmVersion::V2_6_5},
                                                   {"2.7+2412", SimmVersion::V2_7_2412},
                                                   {"2.8+2506", SimmVersion::V2_8_2506},
+                                                  {"2.8+2512", SimmVersion::V2_8_2512},
                                                   // old names for backwards compatibility
                                                   {"ISDA_V315", SimmVersion::V1_0},
                                                   {"ISDA_V329", SimmVersion::V1_3},
@@ -525,6 +511,8 @@ CrifRecord::ProductClass scheduleProductClassFromOreTrade(const QuantLib::ext::s
         return productClassBond(QuantLib::ext::dynamic_pointer_cast<const ore::data::BondFuture>(trade));
     } else if (trade->tradeType() == "BondRepo") {
         return productClassBond(QuantLib::ext::dynamic_pointer_cast<const ore::data::BondRepo>(trade));
+    } else if (trade->tradeType() == "BondFutureOption") {
+        return productClassBond(QuantLib::ext::dynamic_pointer_cast<const ore::data::BondFutureOption>(trade));
     } else if (trade->tradeType() == "FxForward") {
         // ORE FX derivatives need to be handled in turn
         return productClassFX(QuantLib::ext::dynamic_pointer_cast<const ore::data::FxForward>(trade));

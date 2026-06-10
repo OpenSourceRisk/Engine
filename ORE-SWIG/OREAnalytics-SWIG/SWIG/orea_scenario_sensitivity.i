@@ -240,6 +240,7 @@ class SensitivityScenarioData : public ore::data::XMLSerializable {
     void addCommodityCurveShiftData(const std::string& s, const ext::shared_ptr<CurveShiftData>& d);
     void addCommodityVolShiftData(const std::string& s, const ext::shared_ptr<VolShiftData>& d);
     void addSecurityShiftData(const string& s, const ext::shared_ptr<SpotShiftData>& d);
+    void addBondFutureVolShiftData(const std::string& s, const QuantLib::ext::shared_ptr<VolShiftData>& d);
     void setCrossGammaFilter(const std::vector<std::pair<std::string, std::string>>& d);
     void setComputeGamma(const bool b);
     void setUseSpreadedTermStructures(const bool b);

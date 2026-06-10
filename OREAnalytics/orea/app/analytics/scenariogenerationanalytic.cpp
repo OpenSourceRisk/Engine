@@ -21,6 +21,7 @@
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
+#include <orea/app/analytics/utilities.hpp>
 #include <orea/scenario/clonescenariofactory.hpp>
 #include <orea/scenario/crossassetmodelscenariogenerator.hpp>
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
@@ -72,6 +73,8 @@ void ScenarioGenerationVariables::loadVariablesImpl(const QuantLib::ext::shared_
     inputs->loadParameter<Integer>(scenarioPrecision_, analyticStr, "scenarioPrecision", false,
                                     std::function<Integer(const string&)>(parseInteger));
     inputs->loadParameter<string>(amcPathDataOutput_, analyticStr, "amcPathDataOutput", false);
+    inputs->loadParameter<std::vector<QuantExt::RiskFactorKey::KeyType>>(filterRiskKeys_, analyticStr, "filterRiskKeys",
+                                                                         false, parseListOfRiskFactorKeyValues);
 }
 
 ScenarioGenerationType parseScenarioGenerationType(const string& s) {
@@ -156,7 +159,7 @@ void ScenarioGenerationAnalyticImpl::buildScenarioGenerator(const bool continueO
     auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     analytic()->addReport("SCENARIO_GENERATION", "scenario", report);
     scenarioGenerator_ = QuantLib::ext::make_shared<ScenarioWriter>(
-        scenarioGenerator_, report, std::vector<RiskFactorKey>{}, false, sgVars->scenarioPrecision_);
+        scenarioGenerator_, report, std::vector<RiskFactorKey>{}, false, sgVars->scenarioPrecision_, sgVars->filterRiskKeys_);
 }
 
 void ScenarioGenerationAnalyticImpl::buildCrossAssetModel(const bool continueOnCalibrationError,

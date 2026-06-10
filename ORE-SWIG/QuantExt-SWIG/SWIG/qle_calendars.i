@@ -21,6 +21,12 @@
 
 %include calendars.i
 
+// Rename QuantExt calendars that share names with QuantLib calendars to avoid
+// multiply-defined symbols in the generated Python module.
+%rename(QLEAustria) QuantExt::Austria;
+%rename(QLEFrance) QuantExt::France;
+%rename(QLESwitzerland) QuantExt::Switzerland;
+
 namespace QuantExt {
 
 class Belgium : public Calendar {
@@ -189,6 +195,40 @@ class Wmr : public Calendar {
     public:
         enum Market {Settlement};
         Wmr(Market market = Settlement);
+};
+
+class AmendedCalendar : public Calendar {
+    public:
+        AmendedCalendar(const QuantLib::Calendar&, const std::string& name);
+};
+
+class Austria : public Calendar {
+    public:
+        enum Market { Settlement };
+        Austria(Market m = Settlement);
+};
+
+class France : public Calendar {
+    public:
+        enum Market { Settlement };
+        France(Market m = Settlement);
+};
+
+class Mauritius : public Calendar {
+    public:
+        enum Market { SEM };
+        Mauritius(Market m = SEM);
+};
+
+class Switzerland : public Calendar {
+    public:
+        enum Market { Settlement, SIX };
+        Switzerland(Market market = Settlement);
+};
+
+class UnitedArabEmirates : public Calendar {
+    public:
+        UnitedArabEmirates();
 };
 
 } // namespace QuantExt

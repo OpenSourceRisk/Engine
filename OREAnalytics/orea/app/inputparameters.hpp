@@ -583,6 +583,7 @@ public:
 
     // Setters for Correlation
     void setCorrelationMethod(const std::string& s) { parameters_.set("correlation", "correlationMethod", s); }
+    void setCorrelationUri(const std::string& s) { parameters_.set("xva", "correlationUri", s); }
 
     // Setters for exposure simulation
     void setExposureIncludeTodaysCashFlows(bool b) { parameters_.set("simulation", "includeTodaysCashFlows", b); }
@@ -723,6 +724,7 @@ public:
     void setDimDistributionGridSize(Size n) { parameters_.set("xva", "dimDistributionGridSize", n); }
     void setDimLocalRegressionEvaluations(Size s) { parameters_.set("xva", "dimLocalRegressionEvaluations", s); }
     void setDimLocalRegressionBandwidth(Real r) { parameters_.set("xva", "dimLocalRegressionBandwidth", r); }
+    void setDimScaling(Real r) { parameters_.set("xva", "dimScaling", r); }
     // capital value adjustment details
     void setKvaCapitalDiscountRate(Real r) { parameters_.set("xva", "kvaCapitalDiscountRate", r); }
     void setKvaAlpha(Real r) { parameters_.set("xva", "kvaAlpha", r); }
@@ -1005,7 +1007,7 @@ public:
     const QuantLib::ext::shared_ptr<ore::data::EngineData>& sensiPricingEngine() const { return sensiPricingEngine_; }
     // const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& sensiTodaysMarketParams() { return sensiTodaysMarketParams_; }
     QuantLib::Size sensiOutputPrecision() const { return sensiOutputPrecision_; }
-        
+
     /****************************
      * Getters for scenario build
      ****************************/
@@ -1234,6 +1236,7 @@ protected:
     bool mporForward_ = true;
     bool deriveCounterpartyDefaultCurves_ = false;
     std::string additionalMarketDataInput_;
+    std::string fxDeltaMethodOverride_ = "";
 
     /**************
      * NPV analytic

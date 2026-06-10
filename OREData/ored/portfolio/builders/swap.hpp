@@ -182,7 +182,9 @@ class AmcCgSwapEngineBuilder : public SwapEngineBuilderBase {
 public:
     AmcCgSwapEngineBuilder(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& modelCg,
                            const std::vector<Date>& simulationDates)
-        : SwapEngineBuilderBase("CrossAssetModel", "AMCCG"), modelCg_(modelCg), simulationDates_(simulationDates) {}
+        : SwapEngineBuilderBase("CrossAssetModel", "AMCCG"), modelCg_(modelCg), simulationDates_(simulationDates) {
+        cachingEnabled_ = false;
+    }
 
 protected:
     virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const std::string& discountCurve,

@@ -55,6 +55,6 @@ private:
     \f]
 */
 QuantLib::Real jyExpectedIndexRatio(const QuantLib::ext::shared_ptr<CrossAssetModel>& model,
-    QuantLib::Size index, QuantLib::Time S, QuantLib::Time T, bool indexIsInterpolated);
+    QuantLib::Size index, QuantLib::Time S, QuantLib::Time T);
 
 }

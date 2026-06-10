@@ -163,14 +163,30 @@ public:
     virtual void resetNPVMem() {}
 
     // additional results provided by the model
-    const std::map<std::string, QuantLib::ext::any>& additionalResults() const { return additionalResults_; }
+    const std::map<std::string, QuantLib::ext::any>& additionalResults() const {
+        if (additionalResults_.empty())
+            populateAdditionalResults();
+        return additionalResults_;
+    }
+
+    // path level additional results provided by the model
+    const std::map<std::string, QuantLib::ext::any>& additionalResultsPathLevel() const {
+        if (additionalResultsPathLevel_.empty())
+            populateAdditionalResultsPathLevel();
+        return additionalResultsPathLevel_;
+    }
 
 protected:
     // default implementation lazy object interface
     void performCalculations() const override {}
 
+    // populate additional results on demand
+    virtual void populateAdditionalResults() const {}
+    virtual void populateAdditionalResultsPathLevel() const {}
+
     // map with additional results provided by this model instance
     mutable std::map<std::string, QuantLib::ext::any> additionalResults_;
+    mutable std::map<std::string, QuantLib::ext::any> additionalResultsPathLevel_;
 
 private:
     // size of random variables within model

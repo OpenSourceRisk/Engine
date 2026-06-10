@@ -477,7 +477,7 @@ struct Hy {
 
     QuantLib::Real eval(const CrossAssetModel& x, const QuantLib::Real t) const {
         if (x.modelType(CrossAssetModel::AssetType::INF, i_) == CrossAssetModel::ModelType::DK)
-            return x.infdk(i_)->H(t);
+            return x.infdk(i_)->dkLgmParam()->H(t);
         else if (x.modelType(CrossAssetModel::AssetType::INF, i_) == CrossAssetModel::ModelType::JY)
             return x.infjy(i_)->realRate()->H(t);
         else
@@ -493,7 +493,7 @@ struct ay {
 
     QuantLib::Real eval(const CrossAssetModel& x, const QuantLib::Real t) const {
         if (x.modelType(CrossAssetModel::AssetType::INF, i_) == CrossAssetModel::ModelType::DK)
-            return x.infdk(i_)->alpha(t);
+            return x.infdk(i_)->dkLgmParam()->alpha(t);
         else if (x.modelType(CrossAssetModel::AssetType::INF, i_) == CrossAssetModel::ModelType::JY)
             return x.infjy(i_)->realRate()->alpha(t);
         else
@@ -509,7 +509,7 @@ struct zetay {
 
     Real eval(const CrossAssetModel& x, const Real t) const {
         if (x.modelType(CrossAssetModel::AssetType::INF, i_) == CrossAssetModel::ModelType::DK)
-            return x.infdk(i_)->zeta(t);
+            return x.infdk(i_)->dkLgmParam()->zeta(t);
         else if (x.modelType(CrossAssetModel::AssetType::INF, i_) == CrossAssetModel::ModelType::JY)
             return x.infjy(i_)->realRate()->zeta(t);
         else

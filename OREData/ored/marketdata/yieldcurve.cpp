@@ -222,10 +222,6 @@ buildYieldCurve(YieldCurve::InterpolationMethod interpolationMethod,
                                                            CubicInterpolation::SecondDerivative, 0.0),
                                                      extrapolation, excludeT0));
         break;
-    case YieldCurve::InterpolationMethod::DefaultLogMixedLinearCubic:
-        yieldts.reset(new CurveType<KrugerLogMixedLinearCubic>(dates, data, dayCounter, KrugerLogMixedLinearCubic(n),
-                                                                extrapolation, excludeT0));
-        break;
     case YieldCurve::InterpolationMethod::MonotonicLogMixedLinearCubic:
         yieldts.reset(new CurveType<MonotonicLogMixedLinearCubic>(
             dates, data, dayCounter, MonotonicLogMixedLinearCubic(n), extrapolation, excludeT0));
@@ -332,8 +328,8 @@ YieldCurve::InterpolationMethod parseYieldCurveInterpolationMethod(const string&
         return YieldCurve::InterpolationMethod::Hermite;
     else if (s == "CubicSpline")
         return YieldCurve::InterpolationMethod::CubicSpline;
-    else if (s == "DefaultLogMixedLinearCubic")
-        return YieldCurve::InterpolationMethod::DefaultLogMixedLinearCubic;
+    else if (s == "DefaultLogMixedLinearCubic") // deprecated,for backwards compatibility
+        return YieldCurve::InterpolationMethod::KrugerLogMixedLinearCubic;
     else if (s == "MonotonicLogMixedLinearCubic")
         return YieldCurve::InterpolationMethod::MonotonicLogMixedLinearCubic;
     else if (s == "KrugerLogMixedLinearCubic")
@@ -392,8 +388,6 @@ std::ostream& operator<<(std::ostream& out, const YieldCurve::InterpolationMetho
         return out << "Hermite";
     else if (m == YieldCurve::InterpolationMethod::CubicSpline)
         return out << "CubicSpline";
-    else if (m == YieldCurve::InterpolationMethod::DefaultLogMixedLinearCubic)
-        return out << "DefaultLogMixedLinearCubic";
     else if (m == YieldCurve::InterpolationMethod::MonotonicLogMixedLinearCubic)
         return out << "MonotonicLogMixedLinearCubic";
     else if (m == YieldCurve::InterpolationMethod::KrugerLogMixedLinearCubic)
@@ -883,9 +877,6 @@ YieldCurve::buildPiecewiseCurve(const std::size_t index, const std::size_t mixed
                  LogCubic(CubicInterpolation::Spline, true, CubicInterpolation::SecondDerivative, 0.0,
                           CubicInterpolation::SecondDerivative, 0.0))
             break;
-        case InterpolationMethod::DefaultLogMixedLinearCubic:
-            PWYC(ZeroYield, DefaultLogMixedLinearCubic, DefaultLogMixedLinearCubic(mixedInterpolationSize))
-            break;
         case InterpolationMethod::MonotonicLogMixedLinearCubic:
             PWYC(ZeroYield, MonotonicLogMixedLinearCubic, MonotonicLogMixedLinearCubic(mixedInterpolationSize))
             break;
@@ -957,9 +948,6 @@ YieldCurve::buildPiecewiseCurve(const std::size_t index, const std::size_t mixed
                  LogCubic(CubicInterpolation::Spline, true, CubicInterpolation::SecondDerivative, 0.0,
                           CubicInterpolation::SecondDerivative, 0.0))
             break;
-        case InterpolationMethod::DefaultLogMixedLinearCubic:
-            PWYC(Discount, DefaultLogMixedLinearCubic, DefaultLogMixedLinearCubic(mixedInterpolationSize))
-            break;
         case InterpolationMethod::MonotonicLogMixedLinearCubic:
             PWYC(Discount, MonotonicLogMixedLinearCubic, MonotonicLogMixedLinearCubic(mixedInterpolationSize))
             break;
@@ -1030,9 +1018,6 @@ YieldCurve::buildPiecewiseCurve(const std::size_t index, const std::size_t mixed
             PWYC(ForwardRate, LogCubic,
                  LogCubic(CubicInterpolation::Spline, true, CubicInterpolation::SecondDerivative, 0.0,
                           CubicInterpolation::SecondDerivative, 0.0))
-            break;
-        case InterpolationMethod::DefaultLogMixedLinearCubic:
-            PWYC(ForwardRate, KrugerLogMixedLinearCubic, KrugerLogMixedLinearCubic(mixedInterpolationSize))
             break;
         case InterpolationMethod::MonotonicLogMixedLinearCubic:
             PWYC(ForwardRate, MonotonicLogMixedLinearCubic, MonotonicLogMixedLinearCubic(mixedInterpolationSize))
@@ -2333,7 +2318,11 @@ void YieldCurve::addFutures(const std::size_t index, const QuantLib::ext::shared
                 QL_REQUIRE(futureQuote->tenor().units() == Months || futureQuote->tenor().units() == Years,
                            "Tenor of future quote (" << futureQuote->name()
                                                      << ") must be expressed in months or years");
-
+                QL_REQUIRE(!futureConvention->overnightIndexTenor().has_value() ||
+                               futureConvention->overnightIndexTenor().value() == futureQuote->tenor(),
+                           "Overnight index tenor in future convention for index "
+                               << on->name() << " must match the tenor of the future quote (" << futureQuote->name()
+                               << ")");
                 // Create a Overnight index future helper
                 Date startDate, endDate;
                 std::pair<Date, Date> startEndDate;
@@ -2395,10 +2384,11 @@ void YieldCurve::addFutures(const std::size_t index, const QuantLib::ext::shared
                 // Create a MM future helper
                 QL_REQUIRE(
                     futureConvention->dateGenerationRule() == FutureConvention::DateGenerationRule::IMM ||
+                    futureConvention->dateGenerationRule() == FutureConvention::DateGenerationRule::IMMEUR ||
                     futureConvention->dateGenerationRule() == FutureConvention::DateGenerationRule::IMMAUD ||
                     futureConvention->dateGenerationRule() == FutureConvention::DateGenerationRule::IMMNZD ||
                     futureConvention->dateGenerationRule() == FutureConvention::DateGenerationRule::IMMCAD,
-                    "For MM Futures only 'IMM', 'IMMAUD' (alias 'SecondThursday'), 'IMMNZD', or 'IMMCAD' are allowed "
+                    "For MM Futures only 'IMM', 'IMMEUR' (2 bd before ThirdWednesday), 'IMMAUD' (alias 'SecondThursday'), 'IMMNZD', or 'IMMCAD' are allowed "
                     "as date generation rules, check the future convention '"
                         << segment->conventionsID() << "'");
                 Date immDate = getMmFutureExpiryDate(futureQuote->expiryMonth(), futureQuote->expiryYear(),
@@ -2481,14 +2471,18 @@ void YieldCurve::addFras(const std::size_t index, const QuantLib::ext::shared_pt
                 Size imm1 = immFraQuote->imm1();
                 Size imm2 = immFraQuote->imm2();
                 helper = QuantLib::ext::make_shared<FraRateHelper>(
-                    immFraQuote->quote(), imm1, imm2, fraConvention->index(), pillarChoice(segment->pillarChoice()));
+                    immFraQuote->quote(), imm1, imm2, fraConvention->index(),
+                    pillarChoice(segment->pillarChoice()), Date(), true,
+                    fraConvention->endDateFromStart());
             } else if (marketQuote->instrumentType() == MarketDatum::InstrumentType::FRA) {
                 QuantLib::ext::shared_ptr<FRAQuote> fraQuote;
                 fraQuote = QuantLib::ext::dynamic_pointer_cast<FRAQuote>(marketQuote);
                 Period periodToStart = fraQuote->fwdStart();
 
                 helper = QuantLib::ext::make_shared<FraRateHelper>(
-                    fraQuote->quote(), periodToStart, fraConvention->index(), pillarChoice(segment->pillarChoice()));
+                    fraQuote->quote(), periodToStart, fraConvention->index(),
+                    pillarChoice(segment->pillarChoice()), Date(), true,
+                    fraConvention->endDateFromStart());
             } else {
                 QL_FAIL("Market quote not of type FRA.");
             }

@@ -34,7 +34,6 @@
 #include <iomanip>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
-#include <ql/errors.hpp>
 
 using namespace std::filesystem;
 using namespace boost::posix_time;
@@ -555,11 +554,38 @@ string JSONMessage::jsonify(const QuantLib::ext::any& obj) {
     }
 }
 
+#if defined(__GNUC__) or defined(__clang__)
+static std::string formatStacktrace(const boost::stacktrace::stacktrace& st) {
+    std::string result;
+    int count = 0;
+    for (const auto& frame : st) {
+        if (frame.empty() || frame.name().find("__cxa_throw") != std::string::npos ||
+            frame.name().find("boost::stacktrace") != std::string::npos)
+            continue;
+        if (!result.empty())
+            result += "    ";
+        result += "#" + std::to_string(count) + ": " + frame.name();
+        if (!frame.source_file().empty()) {
+            result += ":" + frame.source_file() + ":" + std::to_string(frame.source_line());
+        }
+        ++count;
+    }
+    return result;
+}
+#endif
+
 StructuredMessage::StructuredMessage(const Category& category, const Group& group, const string& message,
                                      const map<string, string>& subFields) {
     data_["category"] = to_string(category);
     data_["group"] = to_string(group);
     data_["message"] = message;
+
+    // Retrieve stacktrace captured at the point the exception was thrown
+#if defined(__GNUC__) or defined(__clang__)
+    if (ore::data::Log::instance().mask() >= ORE_DEBUG) {
+        data_["stacktrace"] = formatStacktrace(qlLastStacktrace);
+    }
+#endif
 
     if (!subFields.empty()) {
         vector<QuantLib::ext::any> subFieldsVector;

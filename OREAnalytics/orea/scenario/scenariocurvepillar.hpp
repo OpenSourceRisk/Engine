@@ -51,9 +51,12 @@ public:
     QuantLib::Period toPeriod(const QuantLib::Date& referenceDate) const {
         QL_REQUIRE(convention_ != nullptr, "IRFutureExpiryies are only allowed in the context of par scenarios");
         bool isMMFuture = !convention_->isOvernightIndexFuture();
+        QL_REQUIRE(isMMFuture || convention_->overnightIndexTenor().has_value(),
+                   "IRFutureExpiryies are only allowed for overnight index futures if an overnight index tenor is "
+                   "specified in the convention");
         QuantLib::Date d = isMMFuture
                                ? getMmFutureExpiryDate(month_, year_, convention_->dateGenerationRule())
-                               : getOiFutureStartEndDate(month_, year_, convention_->tenor(),
+                               : getOiFutureStartEndDate(month_, year_, convention_->overnightIndexTenor().value(),
                                                          convention_->dateGenerationRule(), convention_->calendar())
                                      .second;
         return QuantLib::Period((d - referenceDate) * QuantLib::Days);

@@ -322,24 +322,21 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
 
 
 
-    for (auto& c : instruments_.parYoYCaps_) {
+    for (auto const& [rfKey, c] : instruments_.parYoYCaps_) {
 
-        QL_REQUIRE(instruments_.parYoYCapsYts_.count(c.first) > 0,
-                   "computeParInstrumentSensitivities(): no cap yts found for key " << c.first);
-        QL_REQUIRE(instruments_.parYoYCapsIndex_.count(c.first) > 0,
-                   "computeParInstrumentSensitivities(): no cap index found for key " << c.first);
-        QL_REQUIRE(instruments_.parYoYCapsVts_.count(c.first) > 0,
-                   "computeParInstrumentSensitivities(): no cap vts found for key " << c.first);
+        QL_REQUIRE(!c.yts.empty(), "computeParInstrumentSensitivities(): no cap yts found for key " << rfKey);
+        QL_REQUIRE(!c.index.empty(), "computeParInstrumentSensitivities(): no cap index found for key " << rfKey);
+        QL_REQUIRE(!c.vts.empty(), "computeParInstrumentSensitivities(): no cap vts found for key " << rfKey);
 
-        Volatility parVol = impliedVolatility(c.first, instruments_);
-        parCapVols[c.first] = parVol;
-        TLOG("Fair implied yoy cap volatility for key " << c.first << " is " << std::fixed << std::setprecision(12)
+        Volatility parVol = impliedVolatility(rfKey, instruments_);
+        parCapVols[rfKey] = parVol;
+        TLOG("Fair implied yoy cap volatility for key " << rfKey << " is " << std::fixed << std::setprecision(12)
                                                         << parVol << ".");
 
         // Populate zero and par shift size for the current risk factor
-        populateShiftSizes(c.first, parVol, simMarket);
-        auto shiftSize = shiftSizes_.at(c.first).second;
-        parRatesBaseAndScenarioValue_[c.first] = std::make_pair(parVol, parVol + shiftSize);
+        populateShiftSizes(rfKey, parVol, simMarket);
+        auto shiftSize = shiftSizes_.at(rfKey).second;
+        parRatesBaseAndScenarioValue_[rfKey] = std::make_pair(parVol, parVol + shiftSize);
     }
 
     LOG("Caching base scenario par rates and float vols done.");
@@ -395,7 +392,7 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
             for (auto it : instruments_.parCaps_)
                 it.second->deepUpdate();
             for (auto it : instruments_.parYoYCaps_)
-                it.second->deepUpdate();
+                it.second.cap->deepUpdate();
         }
 
         rawKeysCheck.insert(desc[i].key1());
@@ -509,14 +506,14 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
 
         // process par yoy caps
 
-        for (auto const& p : instruments_.parYoYCaps_) {
+        for (auto const& [rfKey, yoyCap] : instruments_.parYoYCaps_) {
 
-            if (p.second->isCalculated() && p.first != desc[i].key1())
+            if (yoyCap.cap->isCalculated() && rfKey != desc[i].key1())
                 continue;
 
-            auto fair = impliedVolatility(p.first, instruments_);
-            auto base = parCapVols.find(p.first);
-            QL_REQUIRE(base != parCapVols.end(), "internal error: did not find parCapVols[" << p.first << "]");
+            auto fair = impliedVolatility(rfKey, instruments_);
+            auto base = parCapVols.find(rfKey);
+            QL_REQUIRE(base != parCapVols.end(), "internal error: did not find parCapVols[" << rfKey << "]");
 
             Real tmp = (fair - base->second) / shiftSize;
 
@@ -524,13 +521,13 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
             // a) the shift size used to compute dpar / dzero might be close to zero and / or
             // b) the implied vol calculation has numerical inaccuracies
 
-            if (p.first == desc[i].key1()) {
-                tmp = applyRegularisation(sensitivityData_.parConversionMatrixRegularisation(), p.first, desc[i].key1(), tmp, "YoYCapFloorVol");
+            if (rfKey == desc[i].key1()) {
+                tmp = applyRegularisation(sensitivityData_.parConversionMatrixRegularisation(), rfKey, desc[i].key1(), tmp, "YoYCapFloorVol");
             }
 
             // write sensitivity
 
-            writeSensitivity(p.first, desc[i].key1(), tmp, parSensi_, parKeysNonZero, rawKeysNonZero);
+            writeSensitivity(rfKey, desc[i].key1(), tmp, parSensi_, parKeysNonZero, rawKeysNonZero);
         }
 
     } // end of loop over samples
@@ -560,7 +557,7 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
         else if (auto tmp = instruments_.parCaps_.find(k); tmp != instruments_.parCaps_.end())
             parHelperValue = tmp->second->NPV();
         else if (auto tmp = instruments_.parYoYCaps_.find(k); tmp != instruments_.parYoYCaps_.end())
-            parHelperValue = tmp->second->NPV();
+            parHelperValue = tmp->second.cap->NPV();
         Real zeroFactorValue = Null<Real>();
         if (simMarket->baseScenarioAbsolute()->has(k))
             zeroFactorValue = simMarket->baseScenarioAbsolute()->get(k);

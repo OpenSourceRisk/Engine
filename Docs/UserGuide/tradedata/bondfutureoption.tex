@@ -1,0 +1,99 @@
+\subsubsection{Bond Future Option}
+\label{ss:input_bond_future_option}
+
+\ifdefined\IncludePayoff
+{
+\textbf{Payoff}
+
+A bond future option is an exchange traded option giving the holder the option to enter into an underlying bond future 
+contract at a specified price called the strike price. The underlying bond future contract that is entered into is 
+described in Section~\ref{ss:bondfuture}. The options may be European or American exercise and are generally 
+short dated options on upcoming future contract months.
+
+{\bf Input}
+}
+\fi
+
+The \lstinline!BondFutureOptionData! node is the trade data container for the \lstinline!BondFutureOption! trade type.
+Vanilla bond future options with exercise style \lstinline!European! or \lstinline!American! are supported.
+The \lstinline!BondFutureOptionData! node includes exactly one \lstinline!OptionData! trade component sub-node 
+along with elements specific to the bond future option.
+The structure of a \lstinline!BondFutureOptionData! node for a bond future option is shown in 
+Listing \ref{lst:bond-future-option_data}.
+Note that the \lstinline!BondFutureOption! trade type can be used as a component in an index or basket underlying a 
+Generic TRS. The Generic TRS is described in Section~\ref{ss:GenericTRS}. In particular, the 
+\lstinline!BondFutureOption! node can be included as a component in the \lstinline!Derivative! node or 
+as a component in the basket referenced by the \lstinline!PortfolioIndexTradeData! node.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<BondFutureOptionData>
+  <OptionData>
+    <LongShort>Short</LongShort>
+    <OptionType>Call</OptionType>
+    <Style>American</Style>
+    <ExerciseDates>
+      <ExerciseDate>2026-04-10</ExerciseDate>
+    </ExerciseDates>
+  </OptionData>
+  <ContractName>TYM26</ContractName>
+  <ContractNotional>1000000</ContractNotional>
+  <Strike>1.1175</Strike>
+</BondFutureOptionData>
+\end{minted}
+\caption{Bond Future Option data}
+\label{lst:bond-future-option_data}
+\end{listing}
+
+The meaning and allowable values of the elements in the \lstinline!BondFutureOptionData! node are given below.
+
+\begin{itemize}
+
+\item \lstinline!OptionData!:
+  The \lstinline!OptionData! node is as described in Section~\ref{ss:option_data}.
+  The relevant fields in the \lstinline!OptionData! node for a \lstinline!BondFutureOption! are:
+  \begin{itemize}
+  \item \lstinline!LongShort!: The allowable values are \lstinline!Long! or \lstinline!Short!.
+  \item \lstinline!OptionType!: The allowable values are \lstinline!Call! or \lstinline!Put!.
+  \item \lstinline!Style!: The allowable values are \lstinline!European! or \lstinline!American!.
+  \item \lstinline!ExerciseDates!:
+    This node must contain exactly one \lstinline!ExerciseDate! element giving the option expiry date.
+    Allowable values: See Date description in Table \ref{tab:allow_stand_data}.
+  \item \lstinline!Premiums! [Optional]:
+    Option premium node with amounts paid by the option buyer to the option seller.
+    Allowable values: see Section~\ref{ss:premiums}
+  \end{itemize}
+ 
+\item \lstinline!ContractName!: The name of the underlying bond future contract. \\
+  Allowable values: see \lstinline!ContractName! for bond future trades in Section~\ref{ss:bondfuture}.
+
+\item \lstinline!ContractNotional!: The notional of the position expressed in the currency of the bond future contract. \\
+  Allowable values: A non-negative real number.
+
+\item \lstinline!Strike!: The bond future option strike price.
+  Note: bond future prices and option strikes are generally expressed in points and fractions of points.
+        The \lstinline!Strike! expects the price in absolute terms.
+        For example, a strike price of 111.75 points is given in the \lstinline!Strike! node as \lstinline!1.1175!. \\
+  Allowable values: A positive real number.
+
+\end{itemize}
+
+Note also that \lstinline!SeparateCallPutVols! can be set in the additional fields section of the trade envelope to 
+override the setting of \lstinline!SeparateCallPutVols! given in the pricing engines configuration.
+This parameter can be set to true or false or to a regex inclusion pattern.
+For the trade envelope, setting it to \lstinline!true! or \lstinline!false! is probably all that is needed. In other 
+words, the regex option is not that useful at the trade level and was only added to support a more granular configuration 
+at the pricing engine level.
+If set to false, the default, the same volatility surface is used for puts and calls.
+If set to true, there will be a separate volatility surface used to price puts and calls on the same underlying 
+bond future contract. Which surface is picked depends on the option type of the trade.
+If set to a regex pattern, all bond future option trades where the underlying contract name matches the regex 
+will use a volatility surface for puts if the option type is a put and a volatility surface for calls if the 
+option type is a call.
+Obviously, the bond future volatility structures need to be configured in a way that matches the setting here.
+See the bond future volatility curve configuration for details on how to set these up. The convention is 
+generally to use the underlying bond future contract name as the curve ID of the bond future volatility 
+curve where only one surface is needed for that contract.
+Where a separate call and put surface is needed for the contract, the bond future contract name should be 
+suffixed with \lstinline!_CALL! and \lstinline!_PUT! respectively.

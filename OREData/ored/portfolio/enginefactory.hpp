@@ -27,8 +27,6 @@
 #include <ored/marketdata/market.hpp>
 #include <ored/portfolio/enginedata.hpp>
 #include <ored/portfolio/legdata.hpp>
-#include <ored/scripting/models/modelcg.hpp>
-#include <ored/scripting/models/model.hpp>
 
 #include <qle/models/modelbuilder.hpp>
 
@@ -54,6 +52,7 @@ class Trade;
 class LegBuilder;
 class ReferenceDataManager;
 class EngineFactory;
+class ModelCG;
 
 /*! Market configuration contexts. Note that there is only one pricing context.
   If several are needed (for different trade types, different collateral
@@ -287,9 +286,6 @@ public:
     //! return model builders
     set<std::pair<string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>>& modelBuilders();
 
-    //! return scripting models
-    set<std::pair<string, QuantLib::ext::shared_ptr<ore::data::Model>>>& scriptingModels();
-
     struct ParameterOverride {
         std::string source;
         std::function<bool(string)> applies;
@@ -315,7 +311,6 @@ private:
     std::vector<ParameterOverride> modelParameterOverrides_;
     std::vector<ParameterOverride> engineParameterOverrides_;
     set<std::pair<string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>> modelBuilders_;
-    set<std::pair<string, QuantLib::ext::shared_ptr<ore::data::Model>>> scriptingModels_;
 };
 
 //! Leg builder

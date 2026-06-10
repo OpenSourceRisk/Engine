@@ -35,7 +35,7 @@ namespace analytics {
 void SaCvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) {
 
     auto inputPath = inputs->setupVariables().inputPath_;
-    
+
     vector<string> analyticStrs = {"sacva", "bacva", "setup"};
     inputs->loadParameterXML<NettingSetManager>(nettingSetManager_, analyticStrs, "csaFile");
 
@@ -82,6 +82,26 @@ void SaCvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputPara
     if (!tmp.empty()) {
         LOG("Loading dimModel from sacva section: " << tmp);
         inputs->setDimModel(tmp);
+        inputs->setDimAnalytic(true);
+    }
+
+    // Load dimScaling from sacva section and forward to the xva section
+    // so the XVA sub-analytic applies the scaling factor
+    Real dimScalingValue = QuantLib::Null<Real>();
+    inputs->loadParameter<Real>(dimScalingValue, "sacva", "dimScaling", false, ore::data::parseReal);
+    if (dimScalingValue != QuantLib::Null<Real>()) {
+        LOG("Loading dimScaling from sacva section: " << dimScalingValue);
+        inputs->setDimScaling(dimScalingValue);
+    }
+
+    // Load collateralBalancesFile from sacva section and forward to the xva section.
+    // When dimScaling is not provided, the XVA analytic will derive the DIM scaling from
+    // the initial margins in this file, just as it does when running XVA standalone.
+    tmp = {};
+    inputs->loadParameter<std::string>(tmp, "sacva", "collateralBalancesFile");
+    if (!tmp.empty()) {
+        LOG("Forwarding collateralBalancesFile from sacva section: " << tmp);
+        inputs->setCollateralBalances(tmp);
     }
 
     // Forward storeSensis from sacva to simulation section
@@ -177,7 +197,7 @@ void SaCvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::I
 	    //   capital calculator is sensitivity divided by ABSOLUTE shift size 0.0001, i.e. a partial derivative proxy;
 	    // - FX rate, FX and yield vol sensis have to be calculated using RELATIVE shifts of 1% = 0.01, and the
 	    //   input into the capital calculator is sensitivity divided by shift size 0.01
-	    // See https://www.bis.org/basel_framework/chapter/MAR/50.htm 
+	    // See https://www.bis.org/basel_framework/chapter/MAR/50.htm
         SaCvaSensitivityLoader cvaLoader;
         cvaLoader.loadFromRawSensis(pss, inputs_->baseCurrency(), analytic()->configurations().sensiScenarioData,
                                     inputs_->counterpartyManager());

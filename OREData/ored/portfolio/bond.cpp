@@ -397,20 +397,20 @@ BondBuilder::Result VanillaBondBuilder::build(const QuantLib::ext::shared_ptr<En
     bond->id() = "VanillaBondBuilder_" + securityId;
     bond->build(engineFactory);
 
-    QL_REQUIRE(bond->instrument(), "VanillaBondBuilder: constructed bond is null, this is unexpected");
+    QL_REQUIRE(bond->instrument(), "VanillaBondBuilder: bond instrument, for security ID " <<
+        securityId << " is null.");
+    QL_REQUIRE(bond->instrument()->qlInstrument(), "VanillaBondBuilder: bond QL instrument for security ID " <<
+        securityId << " is null.");
     auto qlBond = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(bond->instrument()->qlInstrument());
-
-    QL_REQUIRE(bond->instrument() && bond->instrument()->qlInstrument(),
-               "VanillaBondBuilder: constructed bond trade does not provide a valid ql instrument, this is unexpected "
-               "(either the instrument wrapper or the ql instrument is null)");
+    // Should potentially be a fail but leaving it backward compatible for now.
+    if (!qlBond)
+        WLOG("VanillaBondBuilder: could not convert QL instrument to Bond for security ID " << securityId << ".");
 
     Result res;
     res.bond = qlBond;
     res.trade = bond;
     res.bondData = data;
-    if (data.isInflationLinked()) {
-        res.isInflationLinked = true;
-    }
+    res.isInflationLinked = data.isInflationLinked();
     res.hasCreditRisk = data.hasCreditRisk() && !data.creditCurveId().empty();
     res.currency = data.currency();
     res.creditCurveId = data.creditCurveId();

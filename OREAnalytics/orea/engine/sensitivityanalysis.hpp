@@ -61,7 +61,8 @@ class ValuationCalculator;
   \ingroup simulation
 */
 
-class SensitivityAnalysis : public ore::data::ProgressReporter {
+class 
+SensitivityAnalysis : public ore::data::ProgressReporter {
 public:
     //! Constructor using single-threaded engine
     SensitivityAnalysis(
@@ -185,7 +186,7 @@ private:
 
     bool useSingleThreadedEngine_;
     // additional members needed for multihreaded constructor
-    Size nThreads_;
+    Size nThreads_ = 1;
     QuantLib::ext::shared_ptr<ore::data::Loader> loader_;
     std::string context_;
     bool useAtParCouponsCurves_ = true;

@@ -15,12 +15,13 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ql/errors.hpp>
-#include <ql/math/matrixutilities/qrdecomposition.hpp>
 #include <qle/math/gpuqrsolve.hpp>
 
-#include <cstdlib>
-#include <cstring>
+#include <ql/errors.hpp>
+#include <ql/math/matrixutilities/qrdecomposition.hpp>
+
+#include <algorithm>
+#include <atomic>
 #include <iostream>
 
 #ifdef ORE_ENABLE_CUDA
@@ -29,289 +30,299 @@
 #endif
 
 namespace {
-// Minimum problem size (rows) to use GPU acceleration
-// Below this, CPU implementation is often faster due to GPU overhead
-QuantLib::Size gpuMinSize = 1000;
+
+// Process-wide opt-in flag set by the simulation analytic during input
+// parsing when the user has
+// `<Parameter name="amcUseGpuRegression">Y</Parameter>` in their XML
+// config. Read on every entry into gpuQrSolve. Default false so a
+// CUDA-built binary running an existing config that does not set the
+// flag behaves exactly like a non-CUDA build.
+std::atomic<bool> g_use_gpu_regression{false};
 
 #ifdef ORE_ENABLE_CUDA
-// Thread-local cuSOLVER handle for reuse
-thread_local cusolverDnHandle_t cusolverHandle = nullptr;
-thread_local bool cusolverInitialized = false;
 
-void ensureCusolverHandle() {
-    if (!cusolverInitialized) {
-        cusolverStatus_t status = cusolverDnCreate(&cusolverHandle);
-        if (status != CUSOLVER_STATUS_SUCCESS) {
-            cusolverHandle = nullptr;
-            return;
-        }
-        cusolverInitialized = true;
+// Below this row count the per-call CUDA launch overhead exceeds the GEMM
+// win for AMC-shaped problems, so the dispatcher routes back to CPU. Chosen
+// empirically; AMC regression matrices are typically m >= calibrationSamples
+// (1000+) so this threshold rarely fires in practice.
+constexpr QuantLib::Size kGpuMinRows = 1000;
+
+// Per-worker-thread state. RAII destructor frees device + pinned host
+// buffers and tears down the cuSOLVER handle / stream when the AMC worker
+// thread exits. C++ runs thread_local destructors at thread exit only for
+// objects with non-trivial dtors, so we keep ALL state in this struct
+// (don't pull pieces out as raw thread_local handles — those would leak).
+struct ThreadCtx {
+    cusolverDnHandle_t handle = nullptr;
+    cudaStream_t stream = nullptr;
+    bool initialized = false;
+    bool init_failed = false; // sticky; once set we go straight to CPU
+
+    // Device buffers (pooled, grow on demand).
+    double* d_A = nullptr;
+    double* d_b = nullptr;
+    double* d_tau = nullptr;
+    double* d_work = nullptr;
+    int* d_info = nullptr;
+    std::size_t cap_A = 0;     // doubles
+    std::size_t cap_b = 0;     // doubles
+    std::size_t cap_tau = 0;   // doubles
+    std::size_t cap_work = 0;  // doubles
+
+    // Pinned host buffers (cudaMallocHost). cudaMemcpyAsync from pageable
+    // memory silently stages through an internal pinned buffer, which
+    // serialises the copy with subsequent stream work — defeating the
+    // per-thread-stream concurrency. Pinning is a measurable speedup.
+    double* h_A = nullptr;
+    double* h_b = nullptr;
+    double* h_R = nullptr;
+    double* h_qtb = nullptr;
+    int* h_info = nullptr;
+    std::size_t cap_hA = 0;    // doubles
+    std::size_t cap_hb = 0;    // doubles
+    std::size_t cap_hR = 0;    // doubles
+    std::size_t cap_hqtb = 0;  // doubles
+
+    ~ThreadCtx() {
+        // Best-effort cleanup. Errors during program-exit teardown are
+        // swallowed — the CUDA primary context may already have been
+        // reset by the runtime, in which case these calls return error
+        // codes we can't act on.
+        if (d_A) cudaFree(d_A);
+        if (d_b) cudaFree(d_b);
+        if (d_tau) cudaFree(d_tau);
+        if (d_work) cudaFree(d_work);
+        if (d_info) cudaFree(d_info);
+        if (h_A) cudaFreeHost(h_A);
+        if (h_b) cudaFreeHost(h_b);
+        if (h_R) cudaFreeHost(h_R);
+        if (h_qtb) cudaFreeHost(h_qtb);
+        if (h_info) cudaFreeHost(h_info);
+        if (handle) cusolverDnDestroy(handle);
+        if (stream) cudaStreamDestroy(stream);
     }
-}
+};
 
-void cleanupCusolverHandle() {
-    if (cusolverInitialized && cusolverHandle != nullptr) {
-        cusolverDnDestroy(cusolverHandle);
-        cusolverHandle = nullptr;
-        cusolverInitialized = false;
-    }
-}
+thread_local ThreadCtx tctx;
 
-// Check for CUDA errors
-bool checkCuda(cudaError_t err, const char* msg) {
-    if (err != cudaSuccess) {
-        std::cerr << "CUDA error at " << msg << ": " << cudaGetErrorString(err) << std::endl;
-        return false;
-    }
-    return true;
-}
-
-// Check for cuSOLVER errors
-bool checkCusolver(cusolverStatus_t err, const char* msg) {
-    if (err != CUSOLVER_STATUS_SUCCESS) {
-        std::cerr << "cuSOLVER error at " << msg << ": " << err << std::endl;
-        return false;
-    }
-    return true;
-}
-#endif
-} // namespace
-
-namespace QuantExt {
-
-// Check if cuSOLVER is disabled via environment variable
-bool isCusolverDisabled() {
-    const char* envVar = std::getenv("ORE_DISABLE_CUSOLVER");
-    if (envVar != nullptr) {
-        std::string val(envVar);
-        // Any non-empty value (except "0" or "false") disables cuSOLVER
-        if (!val.empty() && val != "0" && val != "false" && val != "FALSE") {
-            return true;
-        }
-    }
+bool checkCuda(cudaError_t e, const char* what) {
+    if (e == cudaSuccess) return true;
+    std::cerr << "[gpuQrSolve] cuda " << what << ": " << cudaGetErrorString(e) << std::endl;
     return false;
 }
 
-bool gpuQrSolveAvailable() {
-#ifdef ORE_ENABLE_CUDA
-    // Check if disabled via environment variable
-    if (isCusolverDisabled()) {
+bool checkCusolver(cusolverStatus_t e, const char* what) {
+    if (e == CUSOLVER_STATUS_SUCCESS) return true;
+    std::cerr << "[gpuQrSolve] cusolver " << what << ": " << e << std::endl;
+    return false;
+}
+
+// Lazily create the per-thread non-blocking stream + cuSOLVER handle and
+// bind them. On any failure we mark init_failed so subsequent calls go
+// straight to the CPU path without retrying.
+bool ensureThreadCtx() {
+    if (tctx.initialized) return true;
+    if (tctx.init_failed) return false;
+
+    if (!checkCuda(cudaStreamCreateWithFlags(&tctx.stream, cudaStreamNonBlocking), "stream create")) {
+        tctx.stream = nullptr;
+        tctx.init_failed = true;
         return false;
     }
-    int deviceCount = 0;
-    cudaError_t err = cudaGetDeviceCount(&deviceCount);
-    return (err == cudaSuccess && deviceCount > 0);
+    if (!checkCusolver(cusolverDnCreate(&tctx.handle), "handle create")) {
+        cudaStreamDestroy(tctx.stream);
+        tctx.stream = nullptr;
+        tctx.handle = nullptr;
+        tctx.init_failed = true;
+        return false;
+    }
+    if (!checkCusolver(cusolverDnSetStream(tctx.handle, tctx.stream), "set stream")) {
+        cusolverDnDestroy(tctx.handle);
+        cudaStreamDestroy(tctx.stream);
+        tctx.handle = nullptr;
+        tctx.stream = nullptr;
+        tctx.init_failed = true;
+        return false;
+    }
+    tctx.initialized = true;
+    return true;
+}
+
+// Grow pooled device buffer to at least `need_doubles`. 20% headroom so
+// modest size drift does not retrigger malloc.
+bool growDevice(double*& buf, std::size_t& cap, std::size_t need, const char* name) {
+    if (cap >= need && buf != nullptr) return true;
+    if (buf) cudaFree(buf);
+    buf = nullptr;
+    cap = static_cast<std::size_t>(need * 1.2) + 16;
+    if (!checkCuda(cudaMalloc(&buf, cap * sizeof(double)), name)) {
+        buf = nullptr;
+        cap = 0;
+        return false;
+    }
+    return true;
+}
+
+bool growPinned(double*& buf, std::size_t& cap, std::size_t need, const char* name) {
+    if (cap >= need && buf != nullptr) return true;
+    if (buf) cudaFreeHost(buf);
+    buf = nullptr;
+    cap = static_cast<std::size_t>(need * 1.2) + 16;
+    if (!checkCuda(cudaMallocHost(reinterpret_cast<void**>(&buf), cap * sizeof(double)), name)) {
+        buf = nullptr;
+        cap = 0;
+        return false;
+    }
+    return true;
+}
+
+#endif // ORE_ENABLE_CUDA
+
+} // anonymous namespace
+
+namespace QuantExt {
+
+void setUseGpuRegression(bool b) { g_use_gpu_regression.store(b, std::memory_order_relaxed); }
+bool useGpuRegression() { return g_use_gpu_regression.load(std::memory_order_relaxed); }
+
+bool gpuQrSolveAvailable() {
+#ifdef ORE_ENABLE_CUDA
+    if (!useGpuRegression()) return false;
+    int n = 0;
+    return cudaGetDeviceCount(&n) == cudaSuccess && n > 0;
 #else
     return false;
 #endif
 }
 
-void setGpuQrSolveMinSize(Size minSize) { gpuMinSize = minSize; }
+bool gpuQrSolveApplicable(const Matrix& A, const Array& b) {
+#ifdef ORE_ENABLE_CUDA
+    return gpuQrSolveAvailable() && m >= kGpuMinRows && ensureThreadCtx();
+#else
+    return false;
+#endif
 
-Size getGpuQrSolveMinSize() { return gpuMinSize; }
+}
 
 Array gpuQrSolve(const Matrix& A, const Array& b) {
-    const Size m = A.rows();
 
-    QL_REQUIRE(b.size() == m, "gpuQrSolve: dimensions of A and b don't match");
+    if (!gpuQrSolveApplicable (A,b)) {
+        return qrSolve(A, b);
+    }
 
 #ifdef ORE_ENABLE_CUDA
+    const Size m = A.rows();
     const Size n = A.columns();
-    // Check if GPU is available and problem is large enough
-    if (gpuQrSolveAvailable() && m >= gpuMinSize) {
-        ensureCusolverHandle();
-        if (cusolverHandle == nullptr) {
-            // Fall back to CPU if handle creation failed
-            return qrSolve(A, b);
-        }
 
-        // Allocate device memory
-        double* d_A = nullptr;
-        double* d_b = nullptr;
-        double* d_tau = nullptr;
-        double* d_work = nullptr;
-        int* d_info = nullptr;
-        int lwork = 0;
+    QL_REQUIRE(b.size() == m, "gpuQrSolve: dim mismatch (A.rows=" << m << ", b.size=" << b.size() << ")");
 
-        bool success = true;
-
-        // A is stored row-major in QuantLib, cuSOLVER expects column-major
-        // We need to transpose A for cuSOLVER
-        std::vector<double> A_col_major(m * n);
-        for (Size i = 0; i < m; ++i) {
-            for (Size j = 0; j < n; ++j) {
-                A_col_major[j * m + i] = A[i][j];
-            }
-        }
-
-        // b needs to be extended to have space for the solution (n elements)
-        // Since m >= n for least squares, we use m-sized buffer
-        std::vector<double> b_extended(std::max(m, n));
-        std::copy(b.begin(), b.end(), b_extended.begin());
-
-        do {
-            if (!checkCuda(cudaMalloc(&d_A, m * n * sizeof(double)), "cudaMalloc d_A")) {
-                success = false;
-                break;
-            }
-            if (!checkCuda(cudaMalloc(&d_b, std::max(m, n) * sizeof(double)), "cudaMalloc d_b")) {
-                success = false;
-                break;
-            }
-            if (!checkCuda(cudaMalloc(&d_tau, n * sizeof(double)), "cudaMalloc d_tau")) {
-                success = false;
-                break;
-            }
-            if (!checkCuda(cudaMalloc(&d_info, sizeof(int)), "cudaMalloc d_info")) {
-                success = false;
-                break;
-            }
-
-            // Copy data to device
-            if (!checkCuda(cudaMemcpy(d_A, A_col_major.data(), m * n * sizeof(double), cudaMemcpyHostToDevice),
-                           "cudaMemcpy d_A")) {
-                success = false;
-                break;
-            }
-            if (!checkCuda(cudaMemcpy(d_b, b_extended.data(), m * sizeof(double), cudaMemcpyHostToDevice),
-                           "cudaMemcpy d_b")) {
-                success = false;
-                break;
-            }
-
-            // Query workspace size for QR factorization
-            if (!checkCusolver(cusolverDnDgeqrf_bufferSize(cusolverHandle, m, n, d_A, m, &lwork), "geqrf_bufferSize")) {
-                success = false;
-                break;
-            }
-
-            if (!checkCuda(cudaMalloc(&d_work, lwork * sizeof(double)), "cudaMalloc d_work")) {
-                success = false;
-                break;
-            }
-
-            // Perform QR factorization: A = Q * R
-            if (!checkCusolver(cusolverDnDgeqrf(cusolverHandle, m, n, d_A, m, d_tau, d_work, lwork, d_info), "geqrf")) {
-                success = false;
-                break;
-            }
-
-            // Check for errors in QR factorization
-            int info = 0;
-            if (!checkCuda(cudaMemcpy(&info, d_info, sizeof(int), cudaMemcpyDeviceToHost), "cudaMemcpy d_info")) {
-                success = false;
-                break;
-            }
-            if (info != 0) {
-                success = false;
-                break;
-            }
-
-            // Query workspace for ormqr (multiply by Q^T)
-            int lwork_ormqr = 0;
-            if (!checkCusolver(cusolverDnDormqr_bufferSize(cusolverHandle, CUBLAS_SIDE_LEFT, CUBLAS_OP_T, m, 1, n, d_A,
-                                                           m, d_tau, d_b, m, &lwork_ormqr),
-                               "ormqr_bufferSize")) {
-                success = false;
-                break;
-            }
-
-            if (lwork_ormqr > lwork) {
-                cudaFree(d_work);
-                lwork = lwork_ormqr;
-                if (!checkCuda(cudaMalloc(&d_work, lwork * sizeof(double)), "cudaMalloc d_work realloc")) {
-                    success = false;
-                    break;
-                }
-            }
-
-            // Apply Q^T to b: b = Q^T * b
-            if (!checkCusolver(cusolverDnDormqr(cusolverHandle, CUBLAS_SIDE_LEFT, CUBLAS_OP_T, m, 1, n, d_A, m, d_tau,
-                                                d_b, m, d_work, lwork, d_info),
-                               "ormqr")) {
-                success = false;
-                break;
-            }
-
-            // Check for errors
-            if (!checkCuda(cudaMemcpy(&info, d_info, sizeof(int), cudaMemcpyDeviceToHost), "cudaMemcpy d_info ormqr")) {
-                success = false;
-                break;
-            }
-            if (info != 0) {
-                success = false;
-                break;
-            }
-
-            // Solve R * x = Q^T * b using triangular solve
-            // R is upper triangular and stored in the upper part of d_A
-            // We need to use cublas for triangular solve, but cusolverDn doesn't have it directly
-            // Instead, we'll do a simple back-substitution on CPU after copying R back
-
-            // Copy R matrix (upper n x n part of A) back to host
-            std::vector<double> R_col_major(n * n);
-            // Copy only the upper triangular part (first n columns of the m x n matrix)
-            if (!checkCuda(cudaMemcpy(R_col_major.data(), d_A, n * n * sizeof(double), cudaMemcpyDeviceToHost),
-                           "cudaMemcpy R")) {
-                success = false;
-                break;
-            }
-
-            // Copy Q^T * b (first n elements) back to host
-            std::vector<double> qtb(n);
-            if (!checkCuda(cudaMemcpy(qtb.data(), d_b, n * sizeof(double), cudaMemcpyDeviceToHost), "cudaMemcpy qtb")) {
-                success = false;
-                break;
-            }
-
-            // Clean up device memory
-            cudaFree(d_A);
-            cudaFree(d_b);
-            cudaFree(d_tau);
-            cudaFree(d_work);
-            cudaFree(d_info);
-
-            // Back-substitution to solve R * x = qtb
-            // R is stored column-major, so R[i][j] = R_col_major[j * n + i]
-            Array x(n);
-            for (int i = static_cast<int>(n) - 1; i >= 0; --i) {
-                double sum = qtb[i];
-                for (Size j = i + 1; j < n; ++j) {
-                    sum -= R_col_major[j * n + i] * x[j]; // R[i][j] in column-major
-                }
-                double R_ii = R_col_major[i * n + i]; // R[i][i]
-                if (std::abs(R_ii) < 1e-14) {
-                    x[i] = 0.0; // Handle near-singular case
-                } else {
-                    x[i] = sum / R_ii;
-                }
-            }
-
-            return x;
-
-        } while (false);
-
-        // Cleanup on failure
-        if (d_A)
-            cudaFree(d_A);
-        if (d_b)
-            cudaFree(d_b);
-        if (d_tau)
-            cudaFree(d_tau);
-        if (d_work)
-            cudaFree(d_work);
-        if (d_info)
-            cudaFree(d_info);
-
-        if (!success) {
-            // Fall back to CPU implementation
+    // Pinned host staging. If pinning fails we fall through to CPU rather
+    // than degrade silently to pageable async memcpy (which serialises and
+    // wipes out the per-thread-stream win).
+    if (!growPinned(tctx.h_A, tctx.cap_hA, m * n, "alloc h_A")
+        || !growPinned(tctx.h_b, tctx.cap_hb, std::max(m, n), "alloc h_b")
+        || !growPinned(tctx.h_R, tctx.cap_hR, n * n, "alloc h_R")
+        || !growPinned(tctx.h_qtb, tctx.cap_hqtb, n, "alloc h_qtb")) {
+        return qrSolve(A, b);
+    }
+    if (tctx.h_info == nullptr) {
+        if (!checkCuda(cudaMallocHost(reinterpret_cast<void**>(&tctx.h_info), sizeof(int)), "alloc h_info")) {
             return qrSolve(A, b);
         }
     }
+
+    // Device buffers. d_b is sized max(m, n) so the in-place ormqr write
+    // and the back-sub read share storage even when n exceeds m (which it
+    // shouldn't for valid AMC inputs but we don't want to UB on it).
+    if (!growDevice(tctx.d_A, tctx.cap_A, m * n, "alloc d_A")
+        || !growDevice(tctx.d_b, tctx.cap_b, std::max(m, n), "alloc d_b")
+        || !growDevice(tctx.d_tau, tctx.cap_tau, n, "alloc d_tau")) {
+        return qrSolve(A, b);
+    }
+    if (tctx.d_info == nullptr) {
+        if (!checkCuda(cudaMalloc(&tctx.d_info, sizeof(int)), "alloc d_info")) {
+            return qrSolve(A, b);
+        }
+    }
+
+    // QuantLib::Matrix is row-major; cuSOLVER wants column-major. Transpose
+    // while copying into the pinned staging buffer.
+    for (Size i = 0; i < m; ++i)
+        for (Size j = 0; j < n; ++j)
+            tctx.h_A[j * m + i] = A[i][j];
+    std::copy(b.begin(), b.end(), tctx.h_b);
+
+    bool ok = false;
+    do {
+        // All device I/O is on tctx.stream (non-blocking). We sync once at
+        // the end. cudaMemcpyAsync from pinned memory is truly async; from
+        // pageable it would silently stage and serialise.
+        if (!checkCuda(cudaMemcpyAsync(tctx.d_A, tctx.h_A, m * n * sizeof(double),
+                                     cudaMemcpyHostToDevice, tctx.stream), "memcpy A")) break;
+        if (!checkCuda(cudaMemcpyAsync(tctx.d_b, tctx.h_b, m * sizeof(double),
+                                     cudaMemcpyHostToDevice, tctx.stream), "memcpy b")) break;
+
+        // Workspace size for geqrf (host-side query).
+        int lwork_geqrf = 0;
+        if (!checkCusolver(cusolverDnDgeqrf_bufferSize(tctx.handle, m, n, tctx.d_A, m, &lwork_geqrf),
+                     "geqrf bufsize")) break;
+        // Workspace size for ormqr — query before any allocation so we
+        // size d_work for the larger of the two and avoid mid-flight
+        // realloc (which would force a stream sync).
+        int lwork_ormqr = 0;
+        if (!checkCusolver(cusolverDnDormqr_bufferSize(tctx.handle, CUBLAS_SIDE_LEFT, CUBLAS_OP_T,
+                                                  m, 1, n, tctx.d_A, m, tctx.d_tau, tctx.d_b, m,
+                                                  &lwork_ormqr), "ormqr bufsize")) break;
+        const int lwork = std::max(lwork_geqrf, lwork_ormqr);
+        if (!growDevice(tctx.d_work, tctx.cap_work, static_cast<std::size_t>(lwork), "alloc d_work")) break;
+
+        if (!checkCusolver(cusolverDnDgeqrf(tctx.handle, m, n, tctx.d_A, m, tctx.d_tau,
+                                       tctx.d_work, lwork, tctx.d_info), "geqrf")) break;
+
+        // Apply Q^T to b in-place: d_b <- Q^T * d_b.
+        if (!checkCusolver(cusolverDnDormqr(tctx.handle, CUBLAS_SIDE_LEFT, CUBLAS_OP_T,
+                                       m, 1, n, tctx.d_A, m, tctx.d_tau, tctx.d_b, m,
+                                       tctx.d_work, lwork, tctx.d_info), "ormqr")) break;
+
+        // R is the upper n x n block of d_A (column-major, stride m). A flat
+        // cudaMemcpy of n*n*8 bytes would read only column 0 — the long-
+        // standing "R-copy pitch" bug. cudaMemcpy2DAsync with src pitch =
+        // m*sizeof(double) selects the right block.
+        if (!checkCuda(cudaMemcpy2DAsync(tctx.h_R, n * sizeof(double),
+                                        tctx.d_A, m * sizeof(double),
+                                        n * sizeof(double), n,
+                                        cudaMemcpyDeviceToHost, tctx.stream), "memcpy2D R")) break;
+        if (!checkCuda(cudaMemcpyAsync(tctx.h_qtb, tctx.d_b, n * sizeof(double),
+                                     cudaMemcpyDeviceToHost, tctx.stream), "memcpy qtb")) break;
+        if (!checkCuda(cudaMemcpyAsync(tctx.h_info, tctx.d_info, sizeof(int),
+                                     cudaMemcpyDeviceToHost, tctx.stream), "memcpy info")) break;
+
+        if (!checkCuda(cudaStreamSynchronize(tctx.stream), "stream sync")) break;
+
+        if (*tctx.h_info != 0) {
+            std::cerr << "[gpuQrSolve] cusolver info=" << *tctx.h_info << " — falling back" << std::endl;
+            break;
+        }
+
+        ok = true;
+    } while (false);
+
+    if (!ok) return qrSolve(A, b);
+
+    // Back-substitute R x = Q^T b on the host. n is small (basis dim ~10),
+    // a trsm kernel + round-trip costs more than this loop.
+    Array x(n);
+    for (int i = static_cast<int>(n) - 1; i >= 0; --i) {
+        double s = tctx.h_qtb[i];
+        for (Size j = i + 1; j < n; ++j)
+            s -= tctx.h_R[j * n + i] * x[j];
+        const double Rii = tctx.h_R[i * n + i];
+        x[i] = std::abs(Rii) < 1e-14 ? 0.0 : s / Rii;
+    }
+    return x;
 #endif
 
-    // Use CPU implementation for small problems or when CUDA is not available
-    return qrSolve(A, b);
+    QL_FAIL("unreachable code.");
 }
 
 } // namespace QuantExt

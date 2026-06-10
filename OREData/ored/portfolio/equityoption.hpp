@@ -38,21 +38,19 @@ using std::string;
 class EquityOption : public VanillaOptionTrade {
 public:
     //! Default constructor
-    EquityOption() : VanillaOptionTrade(AssetClass::EQ) { tradeType_ = "EquityOption"; }
+    EquityOption() : VanillaOptionTrade("EquityOption", AssetClass::EQ) {}
     //! Constructor
     EquityOption(Envelope& env, OptionData option, EquityUnderlying equityUnderlying, string currency,
         QuantLib::Real quantity, TradeStrike tradeStrike)
-        : VanillaOptionTrade(env, AssetClass::EQ, option, equityUnderlying.name(), currency, quantity, tradeStrike),
-          equityUnderlying_(equityUnderlying) {
-        tradeType_ = "EquityOption";
-    }
+        : VanillaOptionTrade("EquityOption", env, AssetClass::EQ, option, equityUnderlying.name(), currency, quantity,
+            tradeStrike), equityUnderlying_(std::move(equityUnderlying)) {}
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
     void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
 
     //! Add underlying Equity names
-    std::map<AssetClass, std::set<std::string>>
-    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+    std::map<AssetClass, std::set<std::string>> underlyingIndices(
+        const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
     //! \name Inspectors
     //@{

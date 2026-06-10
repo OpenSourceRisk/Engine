@@ -43,11 +43,11 @@ public:
         const std::map<std::string, std::pair<std::vector<double>, std::vector<std::string>>>& lowerNotionalBounds,
         const std::string& optionLongShort)
         : Trade("FlexiSwap", env), underlyingData_(underlyingData), lowerNotionalBounds_(lowerNotionalBounds),
-          optionLongShort_(optionLongShort) {}
+          optionLongShort_(optionLongShort), notionalTakenFromLeg_(Null<Size>()) {}
 
     void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>&) override;
 
-    QuantLib::Real notional() const override;
+    QuantLib::Real notional(NotionalType type = NotionalType::Default) const override;
 
     //! \name Serialisation
     //@{

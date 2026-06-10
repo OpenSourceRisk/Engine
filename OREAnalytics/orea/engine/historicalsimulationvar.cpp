@@ -38,7 +38,7 @@ HistoricalSimulationVarReport::HistoricalSimulationVarReport(
     const vector<Real>& p, QuantLib::ext::optional<TimePeriod> period,
     const ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen, std::unique_ptr<FullRevalArgs> fullRevalArgs, std::unique_ptr<MultiThreadArgs> multiThreadArgs,
     const bool breakdown, const bool includeExpectedShortfall, const bool tradePnl, const bool riskFactorBreakdown, const bool useAtParCouponsCurves,
-    const bool useAtParCouponsTrades, const bool riskClassBreakdown)
+    const bool useAtParCouponsTrades, const bool riskClassBreakdown, const bool includeTheta)
     : VarReport(baseCurrency, portfolio, portfolioFilter, p, period, hisScenGen, nullptr, std::move(fullRevalArgs),
                 std::move(multiThreadArgs), false, useAtParCouponsCurves, useAtParCouponsTrades, tradePnl, riskFactorBreakdown,
                 riskClassBreakdown),
@@ -46,6 +46,7 @@ HistoricalSimulationVarReport::HistoricalSimulationVarReport(
     fullReval_ = true;
     tradePnl_ = tradePnl;
     riskFactorBreakdown_ = riskFactorBreakdown;
+    includeTheta_ = includeTheta;
 }
 
 void HistoricalSimulationVarReport::createVarCalculator() {
@@ -79,19 +80,74 @@ void HistoricalSimulationVarReport::createAdditionalReports(
 void HistoricalSimulationVarReport::handleFullRevalResults(const ext::shared_ptr<MarketRiskReport::Reports>& reports,
                                                            const ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
                                                            const ext::shared_ptr<TradeGroupBase>& tradeGroup) {
-    if (!tradePnl_ && !riskFactorBreakdown_) {
-        pnls_ = histPnlGen_->pnl(period_.value(), tradeIdIdxPairs_);
-    }else if(riskFactorBreakdown_){
-        //Full PnL report
-        if(!tradePnl_){
-            pnls_ = histPnlGen_->pnl(period_.value(), tradeIdIdxPairs_);
-        }else{
-            tradePnls_ = histPnlGen_->tradeLevelPnl(period_.value(), tradeIdIdxPairs_);
-        }      
-        // The PnL breakdown per scenario on risk factors
-        riskFactorPnls_ = histPnlGen_->riskFactorLevelPnlSeries(period_.value());
-    } else {
+    // Always compute aggregate PnL for the main VaR report
+    pnls_ = histPnlGen_->pnl(period_.value(), tradeIdIdxPairs_);
+    if (tradePnl_)
         tradePnls_ = histPnlGen_->tradeLevelPnl(period_.value(), tradeIdIdxPairs_);
+    if (riskFactorBreakdown_)
+        riskFactorPnls_ = histPnlGen_->riskFactorLevelPnlSeries(period_.value());
+
+    // Add theta adjustment to PnLs if enabled
+    if (includeTheta_ && !thetaPerTrade_.empty()) {
+        if (!pnls_.empty()) {
+            // Compute aggregate theta for the current trade group
+            Real totalTheta = 0.0;
+            for (const auto& [tradeId, idx] : tradeIdIdxPairs_) {
+                auto it = thetaPerTrade_.find(tradeId);
+                if (it != thetaPerTrade_.end())
+                    totalTheta += it->second;
+            }
+            for (auto& p : pnls_)
+                p += totalTheta;
+        }
+        if (!tradePnls_.empty()) {
+            // Build a vector of per-trade theta in tradeIdIdxPairs_ order
+            std::vector<Real> tradeThetas;
+            tradeThetas.reserve(tradeIdIdxPairs_.size());
+            for (const auto& [tradeId, idx] : tradeIdIdxPairs_) {
+                auto it = thetaPerTrade_.find(tradeId);
+                tradeThetas.push_back(it != thetaPerTrade_.end() ? it->second : 0.0);
+            }
+            for (auto& scenarioPnls : tradePnls_) {
+                for (Size i = 0; i < scenarioPnls.size() && i < tradeThetas.size(); ++i)
+                    scenarioPnls[i] += tradeThetas[i];
+            }
+        }
+        // Distribute theta proportionally across risk factor PnLs so that
+        // sum(rf_pnl) per trade equals the total trade PnL (which includes theta).
+        // For each trade t in each scenario s:
+        //   adjusted_rf_pnl[k][t] = rf_pnl[k][t] * (1 + theta_t / sum_k(rf_pnl[k][t]))
+        if (riskFactorBreakdown_ && !riskFactorPnls_.empty()) {
+            // Build per-trade theta vector in tradeIdIdxPairs_ order
+            std::vector<Real> thetaVec(tradeIdIdxPairs_.size(), 0.0);
+            for (const auto& [tradeId, idx] : tradeIdIdxPairs_) {
+                auto it = thetaPerTrade_.find(tradeId);
+                if (it != thetaPerTrade_.end())
+                    thetaVec[idx] = it->second;
+            }
+            Size numTrades = tradeIdIdxPairs_.size();
+            for (Size s = 0; s < riskFactorPnls_.size(); ++s) {
+                if (riskFactorPnls_[s].empty())
+                    continue;
+                // Compute sum of RF PnLs per trade for this scenario
+                std::vector<Real> sumRfPnl(numTrades, 0.0);
+                for (const auto& [key, vals] : riskFactorPnls_[s]) {
+                    for (Size t = 0; t < numTrades && t < vals.size(); ++t) {
+                        if (!std::isnan(vals[t]))
+                            sumRfPnl[t] += vals[t];
+                    }
+                }
+                // Scale each RF PnL proportionally to absorb theta
+                for (auto& [key, vals] : riskFactorPnls_[s]) {
+                    for (Size t = 0; t < numTrades && t < vals.size(); ++t) {
+                        if (std::isnan(vals[t]) || vals[t] == 0.0)
+                            continue;
+                        if (sumRfPnl[t] != 0.0)
+                            vals[t] *= (1.0 + thetaVec[t] / sumRfPnl[t]);
+                    }
+                }
+            }
+        }
     }
 }
 

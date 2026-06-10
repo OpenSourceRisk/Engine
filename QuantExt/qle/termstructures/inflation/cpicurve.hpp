@@ -20,18 +20,16 @@
 namespace QuantExt {
 class CPICurve : public QuantLib::ZeroInflationTermStructure {
 public:
-    CPICurve(QuantLib::Date baseDate, QuantLib::Real baseCPI, const QuantLib::Period& observationLag,
-             QuantLib::Frequency frequency, const QuantLib::DayCounter& dayCounter,
+    CPICurve(QuantLib::Date baseDate, QuantLib::Real baseCPI, QuantLib::Frequency frequency,
+             const QuantLib::DayCounter& dayCounter,
              const QuantLib::ext::shared_ptr<QuantLib::Seasonality>& seasonality = {});
 
     CPICurve(const QuantLib::Date& referenceDate, QuantLib::Date baseDate, QuantLib::Real baseCPI,
-             const QuantLib::Period& observationLag, QuantLib::Frequency frequency,
-             const QuantLib::DayCounter& dayCounter,
+             QuantLib::Frequency frequency, const QuantLib::DayCounter& dayCounter,
              const QuantLib::ext::shared_ptr<QuantLib::Seasonality>& seasonality = {});
 
     CPICurve(QuantLib::Natural settlementDays, const QuantLib::Calendar& calendar, QuantLib::Date baseDate,
-             QuantLib::Real baseCPI, const QuantLib::Period& observationLag, QuantLib::Frequency frequency,
-             const QuantLib::DayCounter& dayCounter,
+             QuantLib::Real baseCPI, QuantLib::Frequency frequency, const QuantLib::DayCounter& dayCounter,
              const QuantLib::ext::shared_ptr<QuantLib::Seasonality>& seasonality = {});
 
     QuantLib::Real baseCPI() const { return baseCPI_; }

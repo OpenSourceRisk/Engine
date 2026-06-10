@@ -23,6 +23,7 @@
 
 #include <boost/make_shared.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
+#include <ored/portfolio/builders/utilities.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
@@ -99,32 +100,21 @@ protected:
         Time expiry = riskFreeRate->dayCounter().yearFraction(riskFreeRate->referenceDate(),
                                                               std::max(riskFreeRate->referenceDate(), expiryDate));
 
-        FdmSchemeDesc scheme = ore::data::parseFdmSchemeDesc(engineParameter("Scheme"));
-        Size tGrid = std::max<Size>(1, (Size)(ore::data::parseInteger(engineParameter("TimeGridPerYear")) * expiry));
-        Size xGrid = ore::data::parseInteger(engineParameter("XGrid"));
-        Size dampingSteps = ore::data::parseInteger(engineParameter("DampingSteps"));
-        bool monotoneVar = ore::data::parseBool(engineParameter("EnforceMonotoneVariance", {}, false, "true"));
-
-        QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> gbsp;
-
-        if(monotoneVar) {
-            // Replicate the construction of time grid in FiniteDifferenceModel::rollbackImpl
-            // This time grid is required to build a BlackMonotoneVarVolTermStructure which
-            // ensures monotonic variance along the time grid
-            std::vector<Time> timePoints(tGrid + 1);
-            Array timePointsArray(tGrid, expiry, -expiry / tGrid);
-            timePoints[0] = 0.0;
-            for(Size i = 0; i < tGrid; i++)
-                timePoints[timePoints.size() - i - 1] = timePointsArray[i];
-            timePoints.insert(std::upper_bound(timePoints.begin(), timePoints.end(), 0.99 / 365), 0.99 / 365);
-            gbsp = getBlackScholesProcess(assetName, ccy, timePoints);
-        } else {
-            gbsp = getBlackScholesProcess(assetName, ccy);
-        }
-        return QuantLib::ext::make_shared<FdBlackScholesBarrierEngine>(gbsp, tGrid, xGrid,
-                                                               dampingSteps, scheme);
+        FiniteDifferenceParams fdp = fdSchemeParams(*this, expiry, false);
+        auto gbsp = getBlackScholesProcess(assetName, ccy, fdp.timePoints);
+        return QuantLib::ext::make_shared<FdBlackScholesBarrierEngine>(
+            gbsp, fdp.tGrid, fdp.xGrid, fdp.dampingSteps, fdp.scheme);
     }
 
+};
+
+class EquityBarrierOptionScriptedEngineBuilder : public DelegatingEngineBuilder {
+public:
+    EquityBarrierOptionScriptedEngineBuilder()
+        : DelegatingEngineBuilder("ScriptedTrade", "ScriptedTrade", {"EquityBarrierOption", "EquityDoubleBarrierOption"}) {}
+    QuantLib::ext::shared_ptr<ore::data::Trade>
+    build(const Trade* trade, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) override;
+    std::string effectiveTradeType() const override { return "ScriptedTrade"; }
 };
 
 } // namespace data

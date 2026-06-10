@@ -122,10 +122,10 @@ public:
         const string& calculationType = "Symmetric",
         //! Credit curve name to be used for "our" credit risk in DVA calculations
         const string& dvaName = "",
-        //! Borrowing curve name to be used in FVA calculations
-        const string& fvaBorrowingCurve = "",
-        //! Lending curve name to be used in FVA calculations
-        const string& fvaLendingCurve = "",
+        //! Borrowing curve name to be used in FVA/MVA calculations
+        const string& borrowingCurve = "",
+        //! Lending curve name to be used in FVA/MVA calculations
+        const string& lendingCurve = "",
         //! Dynamic Initial Margin Calculator
         const QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator>& dimCalculator =
             QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator>(),
@@ -377,8 +377,8 @@ protected:
     Real quantile_;
     CollateralExposureHelper::CalculationType calcType_;
     string dvaName_;
-    string fvaBorrowingCurve_;
-    string fvaLendingCurve_;
+    string borrowingCurve_;
+    string lendingCurve_;
 
     QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator> dimCalculator_;
     QuantLib::ext::shared_ptr<ExposureCalculator> exposureCalculator_;

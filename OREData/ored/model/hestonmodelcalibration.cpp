@@ -172,7 +172,10 @@ void HestonModelCalibration::buildHelpers(const QuantLib::ext::shared_ptr<Pricin
             weights_.push_back(helper->marketValue() > premiumThreshold ? 1.0 : 0.0);
             DLOG("added helper: expiry " << tau << " strike " << strikePrice << " vol " << vol->value() << " price "
                                          << helper->marketValue() << " weight " << weights_.back());
+            volTimesStrikes_.push_back(std::make_pair(vts->timeFromReference(mat),strikePrice));
+            curveTimes_.push_back(vts->timeFromReference(mat));
         }
+        volTimesStrikes_.push_back(std::make_pair(vts->timeFromReference(mat), Null<Real>()));
     }
 }
 

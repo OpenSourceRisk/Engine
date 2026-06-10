@@ -23,6 +23,7 @@
 %include types.i
 %include orea_scenario_ext.i
 %include orea_cube.i
+%include orea_sensitivity.i
 %include ored_market.i
 %include ored_portfolio.i
 %include ored_curveconfigurations.i

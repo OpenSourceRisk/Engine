@@ -30,6 +30,11 @@ namespace QuantExt {
 
 std::size_t ComputationGraph::nan = std::numeric_limits<std::size_t>::max();
 
+ComputationGraph::ComputationGraph() {
+    opNodeRequirements_ = getRandomVariableOpNodeRequirements();
+    nodesByOpId_.resize(opNodeRequirements_.size());
+}
+
 void ComputationGraph::clear() {
     predecessors_.clear();
     opId_.clear();
@@ -41,11 +46,14 @@ void ComputationGraph::clear() {
     variables_.clear();
     variableVersion_.clear();
     labels_.clear();
+    nodesByOpId_.clear();
+    nodesByOpId_.resize(opNodeRequirements_.size());
 }
 
 std::size_t ComputationGraph::size() const { return predecessors_.size(); }
 
 std::size_t ComputationGraph::insert(const std::string& label) {
+    QL_REQUIRE(!readOnly_, "ComputationGraph::insert(" << label << "): graph was set to read-only");
     std::size_t node = predecessors_.size();
     predecessors_.push_back(std::vector<std::size_t>());
     opId_.push_back(0);
@@ -60,9 +68,18 @@ std::size_t ComputationGraph::insert(const std::string& label) {
 
 std::size_t ComputationGraph::insert(const std::vector<std::size_t>& predecessors, const std::size_t opId,
                                      const std::string& label) {
+    QL_REQUIRE(!readOnly_, "ComputationGraph::insert(opId=" << opId << "," << label << "): graph was set to read-only");
+    if (enableOptimization_ && opId != 0) {
+        for (auto n = nodesByOpId_[opId].rbegin(); n != nodesByOpId_[opId].rend(); ++n) {
+            if (predecessors_[*n] == predecessors)
+                return *n;
+        }
+    }
     std::size_t node = predecessors_.size();
     predecessors_.push_back(predecessors);
     opId_.push_back(opId);
+    if (enableOptimization_)
+        nodesByOpId_[opId].push_back(node);
     for (auto const& p : predecessors) {
         QL_REQUIRE(p < node,
                    "ComputationGraph::insert(): illegal predecessor node id (" << p << ") while adding node " << node);
@@ -70,10 +87,13 @@ std::size_t ComputationGraph::insert(const std::vector<std::size_t>& predecessor
     }
     maxNodeRequiringArg_.push_back(0);
     redBlockId_.push_back(currentRedBlockId_);
+    std::size_t counter = 0;
     for (auto const& p : predecessors) {
-        if (redBlockId(p) != 0 && redBlockId(p) != currentRedBlockId_) {
+        if (redBlockId(p) != 0 && redBlockId(p) != currentRedBlockId_ &&
+            (currentRedBlockId_ != 0 || opNodeRequirements_[opId](predecessors.size()).first[counter])) {
             redBlockDependencies_.insert(p);
         }
+        ++counter;
     }
     isConstant_.push_back(false);
     constantValue_.push_back(0.0);
@@ -95,6 +115,7 @@ std::size_t ComputationGraph::constant(const double x) {
     if (c != constants_.end())
         return c->second;
     else {
+        QL_REQUIRE(!readOnly_, "ComputationGraph::constant(" << x << "): graph was set to read-only");
         std::size_t node = predecessors_.size();
         constants_.insert(std::make_pair(x, node));
         predecessors_.push_back(std::vector<std::size_t>());
@@ -116,6 +137,7 @@ std::size_t ComputationGraph::variable(const std::string& name, const VarDoesntE
     if (c != variables_.end())
         return c->second;
     else if (v == VarDoesntExist::Create) {
+        QL_REQUIRE(!readOnly_, "ComputationGraph::variable(" << name << "): graph was set to read-only");
         std::size_t node = predecessors_.size();
         variables_.insert(std::make_pair(name, node));
         variableVersion_[name] = 0;
@@ -156,7 +178,13 @@ void ComputationGraph::setVariable(const std::string& name, const std::size_t no
     }
 }
 
+void ComputationGraph::setReadOnly(const bool b) { readOnly_ = b; }
+
 void ComputationGraph::enableLabels(const bool b) { enableLabels_ = b; }
+
+void ComputationGraph::enableOptimization(const bool b) { enableOptimization_ = b; }
+
+const std::vector<std::vector<std::size_t>>& ComputationGraph::nodesByOpId() const { return nodesByOpId_; }
 
 const std::map<std::size_t, std::set<std::string>>& ComputationGraph::labels() const { return labels_; }
 

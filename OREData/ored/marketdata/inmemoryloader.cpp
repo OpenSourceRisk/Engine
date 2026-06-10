@@ -105,32 +105,40 @@ bool InMemoryLoader::hasQuotes(const QuantLib::Date& d) const {
     return it != data_.end();
 }
 
-void InMemoryLoader::add(const QuantLib::ext::shared_ptr<MarketDatum>& md) {
-    if(md == nullptr)
+void InMemoryLoader::add(const QuantLib::ext::shared_ptr<MarketDatum>& md, bool overwrite) {
+    if (!md)
         return;
     std::pair<bool, string> addFX = {true, ""};
+    auto& bucket = data_[md->asofDate()];
+
+    if (overwrite) {
+        auto it = bucket.find(makeDummyMarketDatum(md->asofDate(), md->name()));
+        if (it != bucket.end())
+            bucket.erase(it);
+    }
+
     if (md->instrumentType() == MarketDatum::InstrumentType::FX_SPOT &&
         md->quoteType() == MarketDatum::QuoteType::RATE) {
         addFX = checkFxDuplicate(md, md->asofDate());
         if (!addFX.second.empty()) {
-            auto it = data_[md->asofDate()].find(makeDummyMarketDatum(md->asofDate(), addFX.second));
+            auto it = bucket.find(makeDummyMarketDatum(md->asofDate(), addFX.second));
             TLOG("Replacing MarketDatum " << addFX.second << " with " << md->name() << " due to FX Dominance.");
-            if (it != data_[md->asofDate()].end())
-                data_[md->asofDate()].erase(it);
+            if (it != bucket.end())
+                bucket.erase(it);
         }
     }
-    if (addFX.first && data_[md->asofDate()].insert(md).second) {
+    if ((overwrite || addFX.first) && bucket.insert(md).second) {
         TLOG("Added MarketDatum " << md->name());
-    } else if (!addFX.first) {
+    } else if (!overwrite && !addFX.first) {
         WLOG("Skipped MarketDatum " << md->name() << " - dominant FX already present.")
     } else {
         WLOG("Skipped MarketDatum " << md->name() << " - this is already present.");
     }
 }
 
-void InMemoryLoader::add(QuantLib::Date date, const string& name, QuantLib::Real value) {
+void InMemoryLoader::add(QuantLib::Date date, const string& name, QuantLib::Real value, bool overwrite) {
     try {
-        add(parseMarketDatum(date, name, value));
+        add(parseMarketDatum(date, name, value), overwrite);
     } catch (std::exception& e) {
         WLOG("Failed to parse MarketDatum " << name << ": " << e.what());
     }
