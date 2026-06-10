@@ -94,7 +94,7 @@ The structure of an example \lstinline!SwaptionData!  node of a European swaptio
     \lstinline!Style! &  \emph{Bermudan} or \emph{European} or \emph{American}\\ \hline
     \lstinline!ExerciseDates! & \emph{European} swaptions can only have one \lstinline!ExerciseDate! child element. \emph{American} swaptions must have two \lstinline!ExerciseDate! child elements. \emph{Bermudan} swaptions must have at least two \lstinline!ExerciseDate! child elements, or a Rules or Dates based exercise schedule. \\ \hline
     \lstinline!LegData! &  At least one \lstinline!LegData! sub-node \\ \hline
-    \lstinline!Currency! & The same currency for all \lstinline!LegData! sub-nodes.\\ \hline
+    \lstinline!Currency! & The currency of each \lstinline!LegData! sub-node. The underlying swap may be single-currency (all legs share the same currency) or cross-currency (legs in two different currencies).\\ \hline
     \lstinline!LegType! & Allowed types are \emph{Cashflow}, \emph{Fixed} or \emph{Floating}. Floating coupons can be (capped / floored) Ibor, (capped / floored) compounded or averaged OIS, or BMA/SIFMA. Standalone options (nakedOption = true) are not allowed, neither are local OIS cap/floors. \\ \hline
   \end{tabular}
   \caption{Requirements for Swaptions}
@@ -309,7 +309,7 @@ The \lstinline!SwaptionStraddleData! node is the trade data container for the \e
 \vspace{5mm}
 The Swaption Straddle shares most characteristics with the standard Swaption (see section \ref{ss:swaption}). Supported exercise styles are \emph{European}, \emph{Bermudan}, 
 and \emph{American}. Swaption Straddles of all exercise styles can have an arbitrary number of legs, with each leg represented by a \lstinline!LegData! sub-node. 
-Cross currency swaption straddles are not supported for either exercise style, i.e. the Currency element must have the same value for all \lstinline!LegData! sub-nodes of a swaption straddle. 
+Like the underlying swaption, a swaption straddle may be single-currency or cross-currency, since it is constructed as two opposite-direction swaptions sharing the same \lstinline!LegData!. 
 See Table \ref{tab:swaption_straddle_requirements} for further details on requirements for Swaption Straddles.\\
 \vspace{5mm}
 The structure of an example \lstinline!SwaptionStraddleData! node is shown in Listing \ref{lst:swaption_straddle_data}.
@@ -364,7 +364,7 @@ The structure of an example \lstinline!SwaptionStraddleData! node is shown in Li
     \lstinline!Style! &  \emph{European} or \emph{Bermudan} or \emph{American} \\ \hline
     \lstinline!ExerciseDates! & \emph{European} swaption straddles can only have one \lstinline!ExerciseDate! child element. \emph{American} swaption straddles must have two \lstinline!ExerciseDate! child elements. \emph{Bermudan} swaption straddles must have at least two \lstinline!ExerciseDate! child elements, or a Rules or Dates based exercise schedule. \\ \hline
     \lstinline!LegData! &  At least one \lstinline!LegData! sub-node \\ \hline
-    \lstinline!Currency! & The same currency for all \lstinline!LegData! sub-nodes.\\ \hline
+    \lstinline!Currency! & The currency of each \lstinline!LegData! sub-node. The underlying swap may be single-currency (all legs share the same currency) or cross-currency (legs in two different currencies).\\ \hline
     \lstinline!LegType! & Allowed types are \emph{Cashflow}, \emph{Fixed} or \emph{Floating}. Floating coupons can be (capped / floored) Ibor, (capped / floored) compounded or averaged OIS, or BMA/SIFMA. Standalone options (nakedOption = true) are not allowed, neither are local OIS cap/floors. \\ \hline
   \end{tabular}
   \caption{Requirements for Swaption Straddles}
