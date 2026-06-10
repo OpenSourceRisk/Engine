@@ -353,30 +353,17 @@ void ScenarioSimMarket::addYieldCurve(const QuantLib::ext::shared_ptr<Market>& i
     yieldCurves_.insert(make_pair(make_tuple(Market::defaultConfiguration, riskFactorYieldCurve(rf), key), ych));
 }
 
-ScenarioSimMarket::ScenarioSimMarket(const QuantLib::ext::shared_ptr<Market>& initMarket,
-                                     const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& parameters,
-                                     const std::string& configuration, const CurveConfigurations& curveConfigs,
-                                     const TodaysMarketParameters& todaysMarketParams, const bool continueOnError,
-                                     const bool useSpreadedTermStructures, const bool cacheSimData,
-                                     const bool allowPartialScenarios,
-                                     const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
-                                     const bool handlePseudoCurrencies,
-                                     const QuantLib::ext::shared_ptr<Scenario>& offSetScenario)
-    : ScenarioSimMarket(initMarket, parameters, QuantLib::ext::make_shared<FixingManager>(initMarket->asofDate()),
-                        configuration, curveConfigs, todaysMarketParams, continueOnError, useSpreadedTermStructures,
-                        cacheSimData, allowPartialScenarios, iborFallbackConfig, handlePseudoCurrencies,
-                        offSetScenario) {}
-
 ScenarioSimMarket::ScenarioSimMarket(
-    const QuantLib::ext::shared_ptr<Market>& initMarket, const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& parameters,
-    const QuantLib::ext::shared_ptr<FixingManager>& fixingManager, const std::string& configuration,
+    const QuantLib::ext::shared_ptr<Market>& initMarket,
+    const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& parameters, const std::string& configuration,
     const ore::data::CurveConfigurations& curveConfigs, const ore::data::TodaysMarketParameters& todaysMarketParams,
     const bool continueOnError, const bool useSpreadedTermStructures, const bool cacheSimData,
-    const bool allowPartialScenarios, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
-    const bool handlePseudoCurrencies, const QuantLib::ext::shared_ptr<Scenario>& offSetScenario)
-    : SimMarket(handlePseudoCurrencies), parameters_(parameters), fixingManager_(fixingManager),
-      filter_(QuantLib::ext::make_shared<ScenarioFilter>()), useSpreadedTermStructures_(useSpreadedTermStructures),
-      cacheSimData_(cacheSimData), allowPartialScenarios_(allowPartialScenarios),
+    const bool allowPartialScenarios, const bool allowDateUpdateFromScenario,
+    const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig, const bool handlePseudoCurrencies,
+    const QuantLib::ext::shared_ptr<Scenario>& offSetScenario)
+    : SimMarket(handlePseudoCurrencies), parameters_(parameters), filter_(QuantLib::ext::make_shared<ScenarioFilter>()),
+      useSpreadedTermStructures_(useSpreadedTermStructures), cacheSimData_(cacheSimData),
+      allowPartialScenarios_(allowPartialScenarios), allowDateUpdateFromScenario_(allowDateUpdateFromScenario),
       iborFallbackConfig_(iborFallbackConfig), offsetScenario_(offSetScenario) {
 
     LOG("building ScenarioSimMarket...");
@@ -3482,8 +3469,6 @@ void ScenarioSimMarket::reset() {
         QuantLib::ext::shared_ptr<QuantLib::Observable> obs = QuantLib::Settings::instance().evaluationDate();
         obs->notifyObservers();
     }
-    // reset fixing manager
-    fixingManager_->reset();
     // restore the filter
     filter_ = filterBackup;
     // reset asd cache
@@ -3650,8 +3635,10 @@ void ScenarioSimMarket::updateDate(const Date& d) {
 void ScenarioSimMarket::updateScenario(const Date& d) {
     QL_REQUIRE(scenarioGenerator_ != nullptr, "ScenarioSimMarket::update: no scenario generator set");
     auto scenario = scenarioGenerator_->next(d);
-    QL_REQUIRE(scenario->asof() == d,
+    QL_REQUIRE(allowDateUpdateFromScenario_ || scenario->asof() == d,
                "Invalid Scenario date " << scenario->asof() << ", expected " << d);
+    if(scenario->asof() != d)
+        updateDate(scenario->asof());
     numeraire_ = scenario->getNumeraire();
     label_ = scenario->label();
     applyScenario(scenario);

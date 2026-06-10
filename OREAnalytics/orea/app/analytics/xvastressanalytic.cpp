@@ -136,7 +136,7 @@ void XvaStressAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::dat
     auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
         analytic()->market(), analytic()->configurations().simMarketParams, marketConfig,
         *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams,
-        inputs_->continueOnError(), scenarioData->useSpreadedTermStructures(), false, false,
+        inputs_->continueOnError(), scenarioData->useSpreadedTermStructures(), false, false, true,
         inputs_->iborFallbackConfig(), true);
 
     auto baseScenario = simMarket->baseScenario();

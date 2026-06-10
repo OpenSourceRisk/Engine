@@ -24,7 +24,6 @@
 #pragma once
 
 #include <orea/scenario/aggregationscenariodata.hpp>
-#include <orea/simulation/fixingmanager.hpp>
 #include <ored/configuration/conventions.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 
@@ -51,7 +50,6 @@ public:
         updateDate(d);
         updateScenario(d);
         postUpdate(d);
-        fixingManager()->update(d);
         updateAsd(d);
     }
 
@@ -78,9 +76,6 @@ public:
 
     //! Reset sim market to initial state
     virtual void reset() = 0;
-
-    //! Get the fixing manager
-    virtual const QuantLib::ext::shared_ptr<FixingManager>& fixingManager() const = 0;
 
 protected:
     Real numeraire_;

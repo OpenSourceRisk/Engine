@@ -44,7 +44,7 @@ class ShiftScenarioGenerator : public ScenarioGenerator {
 public:
     class ScenarioDescription {
     public:
-        enum class Type { Base, Up, Down, Cross };
+        enum class Type { Base, Up, Down, Cross, Theta };
         //! Constructor
         ScenarioDescription(Type type)
             : type_(type), key1_(RiskFactorKey()), indexDesc1_(""), key2_(RiskFactorKey()), indexDesc2_("") {}

@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <orea/simulation/fixingmanager.hpp>
+
 #include <ored/utilities/progressbar.hpp>
 
 #include <ql/time/date.hpp>
@@ -88,7 +90,9 @@ public:
         const set<std::pair<std::string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>>& modelBuilders =
             set<std::pair<std::string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>>(),
         //! whether recalibrate() or newCalcWithoutCalibration() is called on model builders
-        const bool recalibrate = true);
+        const bool recalibrate = true,
+        //! a fixing manager, if required
+        const QuantLib::ext::shared_ptr<FixingManager>& fixingManager = nullptr);
 
     //! Build NPV cube
     void buildCube(
@@ -158,6 +162,7 @@ private:
     QuantLib::ext::shared_ptr<ore::analytics::SimMarket> simMarket_;
     set<std::pair<std::string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>> modelBuilders_;
     bool recalibrate_ = true;
+    QuantLib::ext::shared_ptr<FixingManager> fixingManager_;
 };
 } // namespace analytics
 } // namespace ore

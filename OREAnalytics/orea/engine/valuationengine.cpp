@@ -48,8 +48,9 @@ namespace analytics {
 ValuationEngine::ValuationEngine(const Date& today, const QuantLib::ext::shared_ptr<DateGrid>& dg,
                                  const QuantLib::ext::shared_ptr<SimMarket>& simMarket,
                                  const set<std::pair<string, QuantLib::ext::shared_ptr<ModelBuilder>>>& modelBuilders,
-                                 const bool recalibrate)
-    : today_(today), dg_(dg), simMarket_(simMarket), modelBuilders_(modelBuilders), recalibrate_(recalibrate) {
+                                 const bool recalibrate, const QuantLib::ext::shared_ptr<FixingManager>& fixingManager)
+    : today_(today), dg_(dg), simMarket_(simMarket), modelBuilders_(modelBuilders), recalibrate_(recalibrate),
+      fixingManager_(fixingManager) {
 
     QL_REQUIRE(dg_->size() > 0, "Error, DateGrid size must be > 0");
     QL_REQUIRE(today <= dg_->dates().front(), "ValuationEngine: Error today ("
@@ -189,9 +190,8 @@ void ValuationEngine::buildCube(const QuantLib::ext::shared_ptr<data::Portfolio>
     }
     LOG("Total number of trades = " << portfolio->size());
 
-    if (!dates.empty() && dates.front() > simMarket_->asofDate()) {
-        // the fixing manager is only required if sim dates contain future dates
-        simMarket_->fixingManager()->initialise(portfolio, simMarket_);
+    if (fixingManager_ != nullptr) {
+        fixingManager_->initialise(portfolio, simMarket_);
     }
 
     Size nTrades = trades.size();
@@ -267,7 +267,8 @@ void ValuationEngine::buildCube(const QuantLib::ext::shared_ptr<data::Portfolio>
         updateProgress(sample * nTrades, outputCube->samples() * nTrades, detail.str());
 
         auto fixingTimeStart = data::os::nanosecondsClock();
-        simMarket_->fixingManager()->reset();
+        if(fixingManager_ != nullptr)
+            fixingManager_->reset();
         timings.fixingTime += data::os::nanosecondsClock() - fixingTimeStart;
     }
 
@@ -426,8 +427,8 @@ void ValuationEngine::populateCube(
     auto t3 = data::os::nanosecondsClock();
     timings.refreshTime += t3 - t2;
 
-    if (!isStickyDate || isValueDate)
-        simMarket_->fixingManager()->update(d);
+    if (fixingManager_ && (!isStickyDate || isValueDate))
+        fixingManager_->update(d);
     auto t4 = data::os::nanosecondsClock();
     timings.fixingTime += t4 - t3;
 

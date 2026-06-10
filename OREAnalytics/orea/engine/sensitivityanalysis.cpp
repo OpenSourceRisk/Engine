@@ -126,56 +126,22 @@ splitPortfolioByScenarioGenerators(
     return result;
 }
 
-Real aggregateTradeFlow(const Date& d0, const Date& d1,
-            const std::vector<ore::data::TradeCashflowReportData>& cashflows,
-            const QuantLib::ext::shared_ptr<ore::data::Market>& market, const std::string& configuration,
-            const std::string& baseCurrency) {
-    Real flow = 0.0;
-    for (const auto& cf : cashflows) {
-        if (cf.payDate <= d0 || cf.payDate > d1)
-            continue;
-        Real fx = 1.0;
-        if (cf.currency != baseCurrency)
-            fx = market->fxRate(cf.currency + baseCurrency, configuration)->value();
-        flow += fx * cf.amount;
-    }
-    return flow;
-}
+// Real aggregateTradeFlow(const Date& d0, const Date& d1,
+//             const std::vector<ore::data::TradeCashflowReportData>& cashflows,
+//             const QuantLib::ext::shared_ptr<ore::data::Market>& market, const std::string& configuration,
+//             const std::string& baseCurrency) {
+//     Real flow = 0.0;
+//     for (const auto& cf : cashflows) {
+//         if (cf.payDate <= d0 || cf.payDate > d1)
+//             continue;
+//         Real fx = 1.0;
+//         if (cf.currency != baseCurrency)
+//             fx = market->fxRate(cf.currency + baseCurrency, configuration)->value();
+//         flow += fx * cf.amount;
+//     }
+//     return flow;
+// }
 } // namespace
-
-std::map<std::string, Real> SensitivityAnalysis::computeTheta(const ext::shared_ptr<Portfolio>& pf,
-                                                              const ext::shared_ptr<NPVCube>& cube) const {
-    std::map<std::string, Real> thetaMap;
-    if (sensitivityData_->thetaPeriod() != Period()) {
-        Date thetaDate = asof_ + sensitivityData_->thetaPeriod();
-        LOG("Computing theta for " << pf->size() << " trades, shifting eval date by " << sensitivityData_->thetaPeriod()
-                                   << " from " << asof_ << " to " << thetaDate);
-
-        simMarket_->reset();
-        auto thetaFixingManager = QuantLib::ext::make_shared<FixingManager>(asof_);
-        thetaFixingManager->initialise(pf, simMarket_, marketConfiguration_);
-        simMarket_->preUpdate();
-        simMarket_->updateDate(thetaDate);
-        simMarket_->postUpdate(thetaDate);
-        thetaFixingManager->update(thetaDate);
-        std::string baseCcy = simMarketData_->baseCcy();
-
-        for (auto const& [id, trade] : pf->trades()) {
-            Real periodFlow =
-                aggregateTradeFlow(asof_, thetaDate, trade->cashflows(baseCcy, simMarket_, marketConfiguration_, false),
-                                   simMarket_, marketConfiguration_, baseCcy);
-            Real baseNpv = cube->getT0(id, 0);
-            Real npv = trade->instrument()->NPV() *
-                       (trade->npvCurrency() != baseCcy
-                            ? simMarket_->fxRate(trade->npvCurrency() + baseCcy, marketConfiguration_)->value()
-                            : 1.0);
-            thetaMap[id] = npv - baseNpv + periodFlow;
-        }
-
-        simMarket_->reset();
-    }
-    return thetaMap;
-}
 
 void SensitivityAnalysis::generateSensitivities() {
 
@@ -217,6 +183,13 @@ void SensitivityAnalysis::generateSensitivities() {
         << sensiTemplateIdsFromPortfolio.size()
         << " sensi templates in portfolio (including default config, if configured in pe config for a trade)");
 
+    // set up fixing manager if theta is calculated
+
+    QuantLib::ext::shared_ptr<FixingManager> fixingManager;
+    if (sensitivityData_->thetaPeriod() != Period()) {
+        fixingManager = QuantLib::ext::make_shared<FixingManager>(asof_);
+    }
+
     if (useSingleThreadedEngine_) {
 
         // handle single threaded sensi analysis
@@ -230,13 +203,14 @@ void SensitivityAnalysis::generateSensitivities() {
                 market_, simMarketData_, marketConfiguration_,
                 curveConfigs_ ? *curveConfigs_ : ore::data::CurveConfigurations(),
                 todaysMarketParams_ ? *todaysMarketParams_ : ore::data::TodaysMarketParameters(), continueOnError_,
-                sensitivityData_->useSpreadedTermStructures(), continueOnError_, overrideTenors_, iborFallbackConfig_);
+                sensitivityData_->useSpreadedTermStructures(), false, false, true, iborFallbackConfig_, true);
         } else {
             simMarket_ = QuantLib::ext::make_shared<ScenarioSimMarket>(
-                market_, offsetSimMarketParams_ == nullptr ? simMarketData_ : offsetSimMarketParams_, marketConfiguration_,
-                curveConfigs_ ? *curveConfigs_ : ore::data::CurveConfigurations(),
+                market_, offsetSimMarketParams_ == nullptr ? simMarketData_ : offsetSimMarketParams_,
+                marketConfiguration_, curveConfigs_ ? *curveConfigs_ : ore::data::CurveConfigurations(),
                 todaysMarketParams_ ? *todaysMarketParams_ : ore::data::TodaysMarketParameters(), continueOnError_,
-                sensitivityData_->useSpreadedTermStructures(), continueOnError_, overrideTenors_, iborFallbackConfig_, true, offsetScenario_);
+                sensitivityData_->useSpreadedTermStructures(), false, false, true, iborFallbackConfig_, true,
+                offsetScenario_);
         }
 
         std::vector<QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>> scenarioGenerators(sensiTemplateIds.size());
@@ -276,7 +250,7 @@ void SensitivityAnalysis::generateSensitivities() {
                 QuantLib::ext::make_shared<EngineFactory>(ed, simMarket_, configurations, referenceData_, iborFallbackConfig_);
             pf->reset();
             pf->build(factory, "sensi analysis", true, useAtParCouponsTrades_);
-            ValuationEngine engine(asof_, dg, simMarket_, factory->modelBuilders(), recalibrateModels_);
+            ValuationEngine engine(asof_, dg, simMarket_, factory->modelBuilders(), recalibrateModels_, fixingManager);
             for (auto const& i : this->progressIndicators())
                 engine.registerProgressIndicator(i);
             engine.buildCube(pf, cube, calculators, ValuationEngine::ErrorPolicy::RemoveAll, true, nullptr, nullptr, {},
@@ -287,11 +261,6 @@ void SensitivityAnalysis::generateSensitivities() {
             sensiCubes_.push_back(QuantLib::ext::make_shared<SensitivityCube>(cube, scenGen->scenarioDescriptions(),
                                                                       scenarioGenerator_->shiftSizes(),
                                                                       scenGen->shiftSizes(), scenGen->shiftSchemes()));
-
-            // compute theta and add to the sensi cube
-
-            sensiCubes_.back()->setThetaMap(computeTheta(pf, cube));
-            sensiCubes_.back()->setThetaPeriod(sensitivityData_->thetaPeriod());
         }
     } else {
 
@@ -309,13 +278,14 @@ void SensitivityAnalysis::generateSensitivities() {
                 market_, simMarketData_, marketConfiguration_,
                 curveConfigs_ ? *curveConfigs_ : ore::data::CurveConfigurations(),
                 todaysMarketParams_ ? *todaysMarketParams_ : ore::data::TodaysMarketParameters(), continueOnError_,
-                sensitivityData_->useSpreadedTermStructures(), false, false, iborFallbackConfig_);
+                sensitivityData_->useSpreadedTermStructures(), false, false, true, iborFallbackConfig_);
         } else {
             simMarket_ = QuantLib::ext::make_shared<ScenarioSimMarket>(
-                market_, offsetSimMarketParams_ == nullptr ? simMarketData_ : offsetSimMarketParams_, marketConfiguration_,
-                curveConfigs_ ? *curveConfigs_ : ore::data::CurveConfigurations(),
+                market_, offsetSimMarketParams_ == nullptr ? simMarketData_ : offsetSimMarketParams_,
+                marketConfiguration_, curveConfigs_ ? *curveConfigs_ : ore::data::CurveConfigurations(),
                 todaysMarketParams_ ? *todaysMarketParams_ : ore::data::TodaysMarketParameters(), continueOnError_,
-                sensitivityData_->useSpreadedTermStructures(), false, false, iborFallbackConfig_, true, offsetScenario_);
+                sensitivityData_->useSpreadedTermStructures(), false, false, true, iborFallbackConfig_, true,
+                offsetScenario_);
         }
 
         std::vector<QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>> scenarioGenerators(sensiTemplateIds.size());
@@ -347,7 +317,7 @@ void SensitivityAnalysis::generateSensitivities() {
                    const QuantLib::Size samples) {
                     return QuantLib::ext::make_shared<ore::analytics::DoublePrecisionSensiCube>(ids, asof, samples);
                 },
-                {}, {}, context_, offsetScenario_, useAtParCouponsCurves_, useAtParCouponsTrades_);
+                {}, {}, fixingManager, context_, offsetScenario_, useAtParCouponsCurves_, useAtParCouponsTrades_);
             for (auto const& i : this->progressIndicators())
                 engine.registerProgressIndicator(i);
 
@@ -367,13 +337,9 @@ void SensitivityAnalysis::generateSensitivities() {
             }
             auto cube = QuantLib::ext::make_shared<JointNPVSensiCube>(miniCubes, pf->ids());
 
-            sensiCubes_.push_back(QuantLib::ext::make_shared<SensitivityCube>(cube, scenGen->scenarioDescriptions(),
-                                                                      scenarioGenerator_->shiftSizes(),
-                                                                      scenGen->shiftSizes(), scenGen->shiftSchemes()));
-            // compute theta and add to the sensi cube
-
-            sensiCubes_.back()->setThetaMap(computeTheta(pf, cube));
-            sensiCubes_.back()->setThetaPeriod(sensitivityData_->thetaPeriod());
+            sensiCubes_.push_back(QuantLib::ext::make_shared<SensitivityCube>(
+                cube, scenGen->scenarioDescriptions(), scenarioGenerator_->shiftSizes(), scenGen->shiftSizes(),
+                scenGen->shiftSchemes()));
         }
     }
 

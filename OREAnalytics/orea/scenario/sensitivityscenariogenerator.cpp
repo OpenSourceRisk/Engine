@@ -257,6 +257,18 @@ void SensitivityScenarioGenerator::generateScenarios() {
         }
     }
 
+    // add theta scenario, if enabled
+
+    if (sensitivityData_->thetaPeriod() != Period()) {
+        auto thetaScenario = sensiScenarioFactory_->buildScenario(asof + sensitivityData_->thetaPeriod(),
+                                                                  !sensitivityData_->useSpreadedTermStructures());
+        for (auto const& k : baseScenario_->keys()) {
+            thetaScenario->add(k, baseScenario_->get(k));
+        }
+        scenarioDescriptions_.push_back(ScenarioDescription(ScenarioDescription::Type::Theta));
+        scenarios_.push_back(thetaScenario);
+    }
+
     LOG("sensitivity scenario generator finished generating scenarios.");
 }
 
