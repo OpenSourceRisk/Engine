@@ -19,14 +19,17 @@
 #include <qle/termstructures/spreadeddiscountcurve.hpp>
 
 #include <ql/math/interpolations/loginterpolation.hpp>
+#include <ql/time/calendars/nullcalendar.hpp>
 
 namespace QuantExt {
 
 SpreadedDiscountCurve::SpreadedDiscountCurve(const Handle<YieldTermStructure>& referenceCurve,
                                              const std::vector<Time>& times, const std::vector<Handle<Quote>>& quotes,
-                                             const Interpolation interpolation, const Extrapolation extrapolation)
-    : YieldTermStructure(referenceCurve->dayCounter()), referenceCurve_(referenceCurve), times_(times), quotes_(quotes),
-      interpolation_(interpolation), extrapolation_(extrapolation), data_(times_.size(), 1.0) {
+                                             const Interpolation interpolation, const Extrapolation extrapolation,
+                                             const YieldCurveRollDown yieldCurveRollDown)
+    : YieldTermStructure(0, NullCalendar(), referenceCurve->dayCounter()), referenceCurve_(referenceCurve),
+      times_(times), quotes_(quotes), interpolation_(interpolation), extrapolation_(extrapolation),
+      yieldCurveRollDown_(yieldCurveRollDown), data_(times_.size(), 1.0) {
     QL_REQUIRE(times_.size() > 1, "SpreadedDiscountCurve: at least two times required");
     QL_REQUIRE(times_.size() == quotes.size(), "SpreadedDiscountCurve: size of time and quote vectors do not match");
     QL_REQUIRE(times_[0] == 0.0, "SpreadedDiscountCurve: first time must be 0, got " << times_[0]);
@@ -49,13 +52,12 @@ void SpreadedDiscountCurve::update() {
     TermStructure::update();
 }
 
-const Date& SpreadedDiscountCurve::referenceDate() const { return referenceCurve_->referenceDate(); }
-
-Calendar SpreadedDiscountCurve::calendar() const { return referenceCurve_->calendar(); }
-
-Natural SpreadedDiscountCurve::settlementDays() const { return referenceCurve_->settlementDays(); }
-
 void SpreadedDiscountCurve::performCalculations() const {
+
+    if(!bases_.empty() && basesReferenceDate_ != referenceDate()) {
+        updateBasesOffsets();
+    }
+
     for (Size i = 0; i < times_.size(); ++i) {
         QL_REQUIRE(!quotes_[i].empty(), "SpreadedDiscountCurve: quote at index " << i << " is empty");
         data_[i] = quotes_[i]->value();
@@ -74,47 +76,62 @@ void SpreadedDiscountCurve::performCalculations() const {
 
 DiscountFactor SpreadedDiscountCurve::discountImpl(Time t) const {
     calculate();
+
+    DiscountFactor refDf;
+    if (referenceDate() == referenceCurve_->referenceDate()) {
+        refDf = referenceCurve_->discount(t);
+    } else {
+        if (yieldCurveRollDown_ == YieldCurveRollDown::ConstantDiscounts) {
+            refDf = referenceCurve_->discount(t);
+        } else if (yieldCurveRollDown_ == YieldCurveRollDown::ForwardForward) {
+            Time t0 = referenceCurve_->timeFromReference(referenceDate());
+            refDf = referenceCurve_->discount(t + t0) / referenceCurve_->discount(t0);
+        } else {
+            QL_FAIL("SpreadedDiscountCurve::discountImpl(): yield curve rolldown not handled, internal error.");
+        }
+    }
+
     Time tMax = this->times_.back();
-    DiscountFactor dMax =
-        interpolation_ == Interpolation::logLinear ? this->data_.back() : std::exp(-this->data_.back() * tMax);
-    if (t <= this->times_.back()) {
+    if (t <= tMax) {
         Real tmp = (*dataInterpolation_)(t, true);
         if (interpolation_ == Interpolation::logLinear)
-            return referenceCurve_->discount(t) * tmp;
+            return refDf * tmp;
         else
-            return referenceCurve_->discount(t) * std::exp(-tmp * t);
+            return refDf * std::exp(-tmp * t);
     }
+
+    DiscountFactor dMax =
+        interpolation_ == Interpolation::logLinear ? this->data_.back() : std::exp(-this->data_.back() * tMax);
     if (extrapolation_ == Extrapolation::flatFwd) {
         Rate instFwdMax = -(*dataInterpolation_).derivative(tMax) / dMax;
-        return referenceCurve_->discount(t) * dMax * std::exp(-instFwdMax * (t - tMax));
+        return refDf * dMax * std::exp(-instFwdMax * (t - tMax));
     } else {
-        return referenceCurve_->discount(t) * std::pow(dMax, t / tMax);
+        return refDf * std::pow(dMax, t / tMax);
     }
 }
 
-void SpreadedDiscountCurve::makeThisCurveSpreaded(const std::vector<Handle<YieldTermStructure>>& bases,
-                                                  const std::vector<double>& multiplier) {
-
-    for (auto const& b : bases_)
-        unregisterWith(b);
-
-    bases_ = bases;
-    multiplier_ = multiplier;
-    QL_REQUIRE(bases_.size() == multiplier_.size(), "SpreadedDiscountCurve::makeThisCurveSpreaded(): bases size ("
-                                                        << bases_.size() << ") does not match multiplier size ("
-                                                        << multiplier_.size() << ")");
-
-    for (auto const& b : bases_)
-        registerWith(b);
-
-    basesOffset_.resize(bases.size());
+void SpreadedDiscountCurve::updateBasesOffsets() const {
+    basesOffset_.resize(bases_.size());
     for (Size i = 0; i < bases_.size(); ++i) {
         basesOffset_[i].resize(times_.size());
         for (Size j = 0; j < times_.size(); ++j) {
             basesOffset_[i][j] = bases_[i].empty() ? 1.0 : bases_[i]->discount(times_[j]);
         }
     }
+    basesReferenceDate_ = referenceDate();
+}
 
+void SpreadedDiscountCurve::makeThisCurveSpreaded(const std::vector<Handle<YieldTermStructure>>& bases,
+                                                  const std::vector<double>& multiplier) {
+    for (auto const& b : bases_)
+        unregisterWith(b);
+    bases_ = bases;
+    multiplier_ = multiplier;
+    QL_REQUIRE(bases_.size() == multiplier_.size(), "SpreadedDiscountCurve::makeThisCurveSpreaded(): bases size ("
+                                                        << bases_.size() << ") does not match multiplier size ("
+                                                        << multiplier_.size() << ")");
+    for (auto const& b : bases_)
+        registerWith(b);
     update();
 }
 

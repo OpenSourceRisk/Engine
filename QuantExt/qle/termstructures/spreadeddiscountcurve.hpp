@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <qle/termstructures/dynamicstype.hpp>
+
 #include <ql/math/interpolation.hpp>
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
@@ -44,14 +46,11 @@ public:
     SpreadedDiscountCurve(const Handle<YieldTermStructure>& referenceCurve, const std::vector<Time>& times,
                           const std::vector<Handle<Quote>>& quotes,
                           const Interpolation interpolation = Interpolation::logLinear,
-                          const Extrapolation extrapolation = Extrapolation::flatFwd);
+                          const Extrapolation extrapolation = Extrapolation::flatFwd,
+                          const YieldCurveRollDown = YieldCurveRollDown::ForwardForward);
 
     Date maxDate() const override;
     void update() override;
-    const Date& referenceDate() const override;
-
-    Calendar calendar() const override;
-    Natural settlementDays() const override;
 
     void makeThisCurveSpreaded(const std::vector<Handle<YieldTermStructure>>& bases,
                                const std::vector<double>& multiplier);
@@ -61,16 +60,22 @@ protected:
     DiscountFactor discountImpl(Time t) const override;
 
 private:
+    void updateBasesOffsets() const;
+
     Handle<YieldTermStructure> referenceCurve_;
     std::vector<Time> times_;
     std::vector<Handle<Quote>> quotes_;
     Interpolation interpolation_;
     Extrapolation extrapolation_;
-    mutable std::vector<Real> data_;
+    YieldCurveRollDown yieldCurveRollDown_;
+
     QuantLib::ext::shared_ptr<QuantLib::Interpolation> dataInterpolation_;
+    mutable std::vector<Real> data_;
+
     std::vector<Handle<YieldTermStructure>> bases_;
     std::vector<double> multiplier_;
-    std::vector<std::vector<Real>> basesOffset_;
+    mutable Date basesReferenceDate_;
+    mutable std::vector<std::vector<Real>> basesOffset_;
 };
 
 } // namespace QuantExt
