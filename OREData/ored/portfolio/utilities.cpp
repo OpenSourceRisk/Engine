@@ -29,14 +29,10 @@ using std::vector;
 
 vector<Date> createPaymentDates(const ScheduleData& scheduleData, const Schedule& schedule,
     const Calendar& paymentCalendar, BusinessDayConvention paymentConvention, const Period& paymentLag,
-    ext::optional<DateDeltaUnit> ddUnit, ext::optional<DateDeltaAnchor> ddAnchor, bool alwaysCalc,
+    ext::optional<DateDeltaUnit> ddUnit, ext::optional<DateDeltaAnchor> ddAnchor,
     const Date& openEndDateReplacement, bool endOfMonth, const ext::optional<BusinessDayConvention>& eomConvention) {
 
     vector<Date> res;
-
-    // If the payment lag is 0, and alwaysCalc is false, return empty dates.
-    if (paymentLag.length() == 0 && !alwaysCalc)
-        return res;
 
     // If the payment lag anchor is set and unadjusted, we need to create an unadjusted version of the main schedule to 
     // get the anchor dates from which to calculate the payment dates.

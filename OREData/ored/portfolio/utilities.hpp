@@ -32,7 +32,7 @@ namespace data {
 std::vector<QuantLib::Date> createPaymentDates(const ScheduleData& scheduleData, const QuantLib::Schedule& schedule,
     const QuantLib::Calendar& paymentCalendar, QuantLib::BusinessDayConvention paymentConvention,
     const Period& paymentLag, QuantLib::ext::optional<QuantExt::DateDeltaUnit> ddUnit,
-    QuantLib::ext::optional<QuantExt::DateDeltaAnchor> ddAnchor, bool alwaysCalc = false,
+    QuantLib::ext::optional<QuantExt::DateDeltaAnchor> ddAnchor,
     const QuantLib::Date& openEndDateReplacement = QuantLib::Null<QuantLib::Date>(), bool endOfMonth = false,
     const QuantLib::ext::optional<QuantLib::BusinessDayConvention>& eomConvention = QuantLib::ext::nullopt);
 

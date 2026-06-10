@@ -82,9 +82,10 @@ PaymentLag is not currently supported for:
   \item cap floor floating legs with averaged overnight coupons i.e.\ 
         where \lstinline!IsAveraged! is set to \lstinline!true!
   \item range accrual legs
+  \item year on year inflation legs
   \end{itemize}
 
-Allowable values: Any valid period.
+Allowable values: Usually a number of days but any valid period is allowed.
 In other words, an integer followed by a string where the last character must be one of 
 \lstinline!D!, \lstinline!W!, \lstinline!M! or \lstinline!Y!.
 Compound period definitions also work, for example \lstinline!1Y6M! and \lstinline!-6W4D!.

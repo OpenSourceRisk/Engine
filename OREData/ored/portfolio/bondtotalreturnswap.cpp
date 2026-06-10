@@ -172,7 +172,7 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
         BusinessDayConvention paymentConvention = paymentConvention_.empty() ? Unadjusted :
             parseBusinessDayConvention(paymentConvention_);
         auto paymentDates = createPaymentDates(scheduleData_, schedule, paymentCalendar, paymentConvention,
-            payLagPeriod, paymentLagUnit_, paymentLagAnchor_, true);
+            payLagPeriod, paymentLagUnit_, paymentLagAnchor_);
     } else {
         // Use payment dates if they are provided.
         QL_REQUIRE(paymentDates_.size() + 1 == scheduleDates.size(), "BondTRS: return payment dates size (" <<

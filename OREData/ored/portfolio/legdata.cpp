@@ -102,7 +102,7 @@ namespace {
 // Shared logic for populating payment attributes from leg data.
 void populatePaymentData(const LegData& data, const Schedule& schedule, const Schedule& paymentSchedule,
     const Date& openEndDateReplacement, Calendar& outPmtCal, BusinessDayConvention& outPmtConv,
-    PaymentLag& outPmtLag, vector<Date>& outPmtDates) {
+    PaymentLag& outPmtLag, vector<Date>& outPmtDates, Integer& outPmtLagDays, bool daysUsed = true) {
 
     // Payment calendar.
     if (!data.paymentCalendar().empty())
@@ -119,6 +119,21 @@ void populatePaymentData(const LegData& data, const Schedule& schedule, const Sc
     // Payment lag.
     outPmtLag = parsePaymentLag(data.paymentLag());
 
+    // If the payment lag period is not in days but `daysUsed` is set to `true` at the call site, there will be an 
+    // attempt to convert the payment lag to days and use it. This is allowed if the payment lag resolves to some 
+    // number of `Day` units. If the payment lag resolves to a `Month` or `Year` unit, the conversion to days will fail 
+    // so we calculate the payment dates here and set outPmtLagDays to 0 - the dates that we calculate here will be 
+    // used. If the payment lag resolves to a `Week` unit, it is likely that the user wanted a number of weeks and not 
+    // the equivalent number of days, so we calculate the payment dates here using the week based lag and set 
+    // outPmtLagDays to 0. Note: if the payment lag passed in was a compound period of weeks and days, e.g. `1W2D`, 
+    // this will resolve to a number of days below and outPmtLagDays will be populated and the payment dates will not 
+    // be calculated manually here. The case of payment lags in `Week`, `Month` and `Year` units is already an edge 
+    // case anyway so a lot of this is unlikely to matter in practice, but we want to allow for it.
+    Period paymentLagPeriod = boost::apply_visitor(PaymentLagPeriod(), outPmtLag);
+    bool plpNotDays = paymentLagPeriod.length() > 0 && paymentLagPeriod.units() != Days;
+    outPmtLagDays = plpNotDays ? 0 : paymentLagPeriod.length();
+    bool manualCalc = plpNotDays && daysUsed;
+
     // Get explicit payment dates, if given or generate payment dates if logic is non-standard.
     if (!paymentSchedule.empty()) {
         outPmtDates = paymentSchedule.dates();
@@ -127,12 +142,20 @@ void populatePaymentData(const LegData& data, const Schedule& schedule, const Sc
         outPmtDates = parseVectorOfValues<Date>(data.paymentDates(), &parseDate);
         for (Size i = 0; i < outPmtDates.size(); i++)
             outPmtDates[i] = pmtDtsCal.adjust(outPmtDates[i], outPmtConv);
-    } else if (data.nonStandardPaymentLogic()) {
-        bool alwaysCalc = false;
-        Period paymentLagPeriod = boost::apply_visitor(PaymentLagPeriod(), outPmtLag);
+    } else if (paymentLagPeriod.length() > 0 && (data.nonStandardPaymentLogic() || manualCalc)) {
         outPmtDates = createPaymentDates(data.schedule(), schedule, outPmtCal, outPmtConv, paymentLagPeriod,
-            data.paymentLagUnit(), data.paymentLagAnchor(), alwaysCalc, openEndDateReplacement);
+            data.paymentLagUnit(), data.paymentLagAnchor(), openEndDateReplacement);
     }
+}
+
+// Allow calling `populatePaymentData` when caller does not need the payment lag in days.
+void populatePaymentData(const LegData& data, const Schedule& schedule, const Schedule& paymentSchedule,
+    const Date& openEndDateReplacement, Calendar& outPmtCal, BusinessDayConvention& outPmtConv,
+    PaymentLag& outPmtLag, vector<Date>& outPmtDates) {
+
+    Integer pmtLagDaysUnused;
+    populatePaymentData(data, schedule, paymentSchedule, openEndDateReplacement,
+        outPmtCal, outPmtConv, outPmtLag, outPmtDates, pmtLagDaysUnused, false);
 }
 
 } // namespace
@@ -1175,8 +1198,10 @@ Leg makeFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplaceme
     BusinessDayConvention paymentConvention;
     PaymentLag paymentLag;
     vector<Date> paymentDates;
+    Integer paymentLagDays = 0;
+    bool daysUsed = !data.strictNotionalDates();
     populatePaymentData(data, schedule, paymentSchedule, openEndDateReplacement,
-        paymentCalendar, paymentConvention, paymentLag, paymentDates);
+        paymentCalendar, paymentConvention, paymentLag, paymentDates, paymentLagDays, daysUsed);
 
     // set day counter
     DayCounter dc = parseDayCounter(data.dayCounter());
@@ -1203,7 +1228,7 @@ Leg makeFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplaceme
                       .withNotionals(notionals)
                       .withCouponRates(rates, dc)
                       .withPaymentAdjustment(paymentConvention)
-                      .withPaymentLag(boost::apply_visitor(PaymentLagInteger(), paymentLag))
+                      .withPaymentLag(paymentLagDays)
                       .withPaymentCalendar(paymentCalendar)
                       .withLastPeriodDayCounter(data.lastPeriodDayCounter().empty()
                                                     ? DayCounter()
@@ -1423,8 +1448,10 @@ Leg makeIborLeg(const LegData& data, const QuantLib::ext::shared_ptr<IborIndex>&
     BusinessDayConvention paymentConvention;
     PaymentLag paymentLag;
     vector<Date> paymentDates;
+    Integer paymentLagDays = 0;
+    bool isStandard = !data.strictNotionalDates() && fixingSchedule.empty() && resetSchedule.empty();
     populatePaymentData(data, schedule, paymentSchedule, openEndDateReplacement,
-        paymentCalendar, paymentConvention, paymentLag, paymentDates);
+        paymentCalendar, paymentConvention, paymentLag, paymentDates, paymentLagDays, isStandard);
 
     // set day counter
     DayCounter dc = parseDayCounter(data.dayCounter());
@@ -1550,9 +1577,8 @@ Leg makeIborLeg(const LegData& data, const QuantLib::ext::shared_ptr<IborIndex>&
     // handle ibor leg
 
     Leg tmpLeg;
-    bool isNonStandard;
 
-    if (!data.strictNotionalDates() && fixingSchedule.empty() && resetSchedule.empty()) {
+    if (isStandard) {
 
         // no strict notional dates, no fixing or reset schedule
 
@@ -1565,7 +1591,7 @@ Leg makeIborLeg(const LegData& data, const QuantLib::ext::shared_ptr<IborIndex>&
                               .withFixingDays(fixingDays)
                               .inArrears(isInArrears)
                               .withGearings(gearings)
-                              .withPaymentLag(boost::apply_visitor(PaymentLagInteger(), paymentLag))
+                              .withPaymentLag(paymentLagDays)
                               .withPaymentDates(paymentDates);
         if (floatData->caps().size() > 0)
             iborLeg.withCaps(buildScheduledVector(floatData->caps(), floatData->capDates(), schedule));
@@ -1573,7 +1599,6 @@ Leg makeIborLeg(const LegData& data, const QuantLib::ext::shared_ptr<IborIndex>&
             iborLeg.withFloors(buildScheduledVector(floatData->floors(), floatData->floorDates(), schedule));
 
         tmpLeg = iborLeg;
-        isNonStandard = false;
 
     } else {
 
@@ -1607,10 +1632,9 @@ Leg makeIborLeg(const LegData& data, const QuantLib::ext::shared_ptr<IborIndex>&
                                         gearingDatesAsDates, data.strictNotionalDates(), dc, paymentCalendar, paymentConvention,
                                         boost::apply_visitor(PaymentLagPeriod(), paymentLag), isInArrears);
 
-        isNonStandard = true;
     }
 
-    if (attachPricer && (hasCapsFloors || isInArrears || isNonStandard)) {
+    if (attachPricer && (hasCapsFloors || isInArrears || !isStandard)) {
         auto builder = engineFactory->builder("CapFlooredIborLeg");
         QL_REQUIRE(builder, "No builder found for CapFlooredIborLeg");
         auto cappedFlooredIborBuilder = QuantLib::ext::dynamic_pointer_cast<CapFlooredIborLegEngineBuilder>(builder);
@@ -1686,8 +1710,9 @@ Leg makeOISLeg(const LegData& data, const QuantLib::ext::shared_ptr<OvernightInd
     BusinessDayConvention paymentConvention;
     PaymentLag paymentLag;
     vector<Date> paymentDates;
+    Integer paymentLagDays = 0;
     populatePaymentData(data, schedule, paymentSchedule, openEndDateReplacement,
-        paymentCalendar, paymentConvention, paymentLag, paymentDates);
+        paymentCalendar, paymentConvention, paymentLag, paymentDates, paymentLagDays);
 
     // try to set the rate computation period based on the schedule tenor
     Period rateComputationPeriod = 0 * Days;
@@ -1732,7 +1757,7 @@ Leg makeOISLeg(const LegData& data, const QuantLib::ext::shared_ptr<OvernightInd
                 .withGearings(gearings)
                 .withPaymentDayCounter(dc)
                 .withPaymentAdjustment(paymentConvention)
-                .withPaymentLag(boost::apply_visitor(PaymentLagInteger(), paymentLag))
+                .withPaymentLag(paymentLagDays)
                 .withInArrears(isInArrears)
                 .withLastRecentPeriod(floatData->lastRecentPeriod())
                 .withLastRecentPeriodCalendar(floatData->lastRecentPeriodCalendar().empty()
@@ -1780,7 +1805,7 @@ Leg makeOISLeg(const LegData& data, const QuantLib::ext::shared_ptr<OvernightInd
                       .withPaymentDayCounter(dc)
                       .withPaymentAdjustment(paymentConvention)
                       .withPaymentCalendar(paymentCalendar)
-                      .withPaymentLag(boost::apply_visitor(PaymentLagInteger(), paymentLag))
+                      .withPaymentLag(paymentLagDays)
                       .withGearings(gearings)
                       .withInArrears(isInArrears)
                       .withLastRecentPeriod(floatData->lastRecentPeriod())
@@ -1834,8 +1859,9 @@ Leg makeBMALeg(const LegData& data, const QuantLib::ext::shared_ptr<QuantExt::BM
     BusinessDayConvention paymentConvention;
     PaymentLag paymentLag;
     vector<Date> paymentDates;
+    Integer paymentLagDays = 0;
     populatePaymentData(data, schedule, paymentSchedule, openEndDateReplacement,
-        paymentCalendar, paymentConvention, paymentLag, paymentDates);
+        paymentCalendar, paymentConvention, paymentLag, paymentDates, paymentLagDays);
 
     DayCounter dc = parseDayCounter(data.dayCounter());
 
@@ -1857,7 +1883,7 @@ Leg makeBMALeg(const LegData& data, const QuantLib::ext::shared_ptr<QuantExt::BM
                   .withPaymentDayCounter(dc)
                   .withPaymentCalendar(paymentCalendar)
                   .withPaymentAdjustment(paymentConvention)
-                  .withPaymentLag(boost::apply_visitor(PaymentLagInteger(), paymentLag))
+                  .withPaymentLag(paymentLagDays)
                   .withGearings(gearings)
                   .withPaymentDates(paymentDates);
 
@@ -1980,8 +2006,9 @@ Leg makeCPILeg(const LegData& data, const QuantLib::ext::shared_ptr<ZeroInflatio
     BusinessDayConvention paymentConvention;
     PaymentLag paymentLag;
     vector<Date> paymentDates;
+    Integer paymentLagDays = 0;
     populatePaymentData(data, schedule, paymentSchedule, openEndDateReplacement,
-        paymentCalendar, paymentConvention, paymentLag, paymentDates);
+        paymentCalendar, paymentConvention, paymentLag, paymentDates, paymentLagDays);
 
     QuantLib::ext::shared_ptr<InflationSwapConvention> cpiSwapConvention = nullptr;
 
@@ -2045,7 +2072,7 @@ Leg makeCPILeg(const LegData& data, const QuantLib::ext::shared_ptr<ZeroInflatio
             .withPaymentDayCounter(dc)
             .withPaymentAdjustment(paymentConvention)
             .withPaymentCalendar(paymentCalendar)
-            .withPaymentLag(boost::apply_visitor(PaymentLagInteger(), paymentLag))
+            .withPaymentLag(paymentLagDays)
             .withFixedRates(rates)
             .withObservationInterpolation(interpolationMethod)
             .withSubtractInflationNominal(cpiLegData->subtractInflationNominal())
@@ -2451,8 +2478,9 @@ Leg makeCMSLeg(const LegData& data, const QuantLib::ext::shared_ptr<QuantLib::Sw
     BusinessDayConvention paymentConvention;
     PaymentLag paymentLag;
     vector<Date> paymentDates;
+    Integer paymentLagDays = 0;
     populatePaymentData(data, schedule, paymentSchedule, openEndDateReplacement,
-        paymentCalendar, paymentConvention, paymentLag, paymentDates);
+        paymentCalendar, paymentConvention, paymentLag, paymentDates, paymentLagDays);
 
     vector<double> spreads =
         ore::data::buildScheduledVectorNormalised(cmsData->spreads(), cmsData->spreadDates(), schedule, 0.0);
@@ -2470,7 +2498,7 @@ Leg makeCMSLeg(const LegData& data, const QuantLib::ext::shared_ptr<QuantLib::Sw
                         .withPaymentCalendar(paymentCalendar)
                         .withPaymentDayCounter(dc)
                         .withPaymentAdjustment(paymentConvention)
-                        .withPaymentLag(boost::apply_visitor(PaymentLagInteger(), paymentLag))
+                        .withPaymentLag(paymentLagDays)
                         .withFixingDays(fixingDays)
                         .inArrears(cmsData->isInArrears())
                         .withPaymentDates(paymentDates);
@@ -2684,8 +2712,9 @@ Leg makeDigitalCMSLeg(const LegData& data, const QuantLib::ext::shared_ptr<Quant
     BusinessDayConvention paymentConvention;
     PaymentLag paymentLag;
     vector<Date> paymentDates;
+    Integer paymentLagDays = 0;
     populatePaymentData(data, schedule, paymentSchedule, openEndDateReplacement,
-        paymentCalendar, paymentConvention, paymentLag, paymentDates);
+        paymentCalendar, paymentConvention, paymentLag, paymentDates, paymentLagDays);
 
     DayCounter dc = parseDayCounter(data.dayCounter());
     vector<double> spreads =
@@ -2723,7 +2752,7 @@ Leg makeDigitalCMSLeg(const LegData& data, const QuantLib::ext::shared_ptr<Quant
                                       .withPaymentDayCounter(dc)
                                       .withPaymentCalendar(paymentCalendar)
                                       .withPaymentAdjustment(paymentConvention)
-                                      .withPaymentLag(boost::apply_visitor(PaymentLagInteger(), paymentLag))
+                                      .withPaymentLag(paymentLagDays)
                                       .withFixingDays(fixingDays)
                                       .inArrears(cmsData->isInArrears())
                                       .withCallStrikes(callStrikes)
@@ -2787,8 +2816,9 @@ Leg makeCMSSpreadLeg(const LegData& data, const QuantLib::ext::shared_ptr<QuantL
     BusinessDayConvention paymentConvention;
     PaymentLag paymentLag;
     vector<Date> paymentDates;
+    Integer paymentLagDays = 0;
     populatePaymentData(data, schedule, paymentSchedule, openEndDateReplacement,
-        paymentCalendar, paymentConvention, paymentLag, paymentDates);
+        paymentCalendar, paymentConvention, paymentLag, paymentDates, paymentLagDays);
 
     DayCounter dc = parseDayCounter(data.dayCounter());
 
@@ -2809,7 +2839,7 @@ Leg makeCMSSpreadLeg(const LegData& data, const QuantLib::ext::shared_ptr<QuantL
                                     .withPaymentCalendar(paymentCalendar)
                                     .withPaymentDayCounter(dc)
                                     .withPaymentAdjustment(paymentConvention)
-                                    .withPaymentLag(boost::apply_visitor(PaymentLagInteger(), paymentLag))
+                                    .withPaymentLag(paymentLagDays)
                                     .withFixingDays(fixingDays)
                                     .inArrears(cmsSpreadData->isInArrears())
                                     .withPaymentDates(paymentDates);
@@ -3017,8 +3047,9 @@ Leg makeEquityLeg(const LegData& data, const QuantLib::ext::shared_ptr<EquityInd
     BusinessDayConvention paymentConvention;
     PaymentLag paymentLag;
     vector<Date> paymentDates;
+    Integer paymentLagDays = 0;
     populatePaymentData(data, schedule, paymentSchedule, openEndDateReplacement,
-        paymentCalendar, paymentConvention, paymentLag, paymentDates);
+        paymentCalendar, paymentConvention, paymentLag, paymentDates, paymentLagDays);
 
     auto n = schedule.size();
     QL_REQUIRE(n >= 2, "Equity leg must have 2 or more dates, found " << n << ".");
@@ -3032,7 +3063,7 @@ Leg makeEquityLeg(const LegData& data, const QuantLib::ext::shared_ptr<EquityInd
                   .withPaymentDayCounter(dc)
                   .withPaymentAdjustment(paymentConvention)
                   .withPaymentCalendar(paymentCalendar)
-                  .withPaymentLag(boost::apply_visitor(PaymentLagInteger(), paymentLag))
+                  .withPaymentLag(paymentLagDays)
                   .withReturnType(eqLegData->returnType())
                   .withDividendFactor(dividendFactor)
                   .withInitialPrice(initialPrice)

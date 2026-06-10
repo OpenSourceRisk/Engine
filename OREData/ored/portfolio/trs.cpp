@@ -495,7 +495,7 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
         PaymentLag paymentLag = parsePaymentLag(returnData_.paymentLag());
         Period plPeriod = boost::apply_visitor(PaymentLagPeriod(), paymentLag);
         auto paymentDates = createPaymentDates(returnData_.scheduleData(), schedule, paymentCalendar, paymentConvention,
-            plPeriod, returnData_.paymentLagUnit(), returnData_.paymentLagAnchor(), true);
+            plPeriod, returnData_.paymentLagUnit(), returnData_.paymentLagAnchor());
     } else {
         // Use payment dates if they are provided.
         QL_REQUIRE(pmtDtStrs.size() + 1 == scheduleDates.size(), "TRS: return payment dates size (" <<
