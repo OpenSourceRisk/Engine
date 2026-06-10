@@ -132,7 +132,7 @@ void populatePaymentData(const LegData& data, const Schedule& schedule, const Sc
     // be calculated manually here. The case of payment lags in `Week`, `Month` and `Year` units is already an edge 
     // case anyway so a lot of this is unlikely to matter in practice, but we want to allow for it.
     Period paymentLagPeriod = boost::apply_visitor(PaymentLagPeriod(), outPmtLag);
-    bool plpNotDays = paymentLagPeriod.length() > 0 && paymentLagPeriod.units() != Days;
+    bool plpNotDays = paymentLagPeriod.length() != 0 && paymentLagPeriod.units() != Days;
     outPmtLagDays = plpNotDays ? 0 : paymentLagPeriod.length();
     bool manualCalc = plpNotDays && daysUsed;
 
@@ -146,7 +146,7 @@ void populatePaymentData(const LegData& data, const Schedule& schedule, const Sc
         outPmtDates = parseVectorOfValues<Date>(data.paymentDates(), &parseDate);
         for (Size i = 0; i < outPmtDates.size(); i++)
             outPmtDates[i] = pmtDtsCal.adjust(outPmtDates[i], outPmtConv);
-    } else if (paymentLagPeriod.length() > 0 && (data.nonStandardPaymentLogic() || manualCalc)) {
+    } else if (paymentLagPeriod.length() != 0 && (data.nonStandardPaymentLogic() || manualCalc)) {
         outPmtDates = createPaymentDates(data.schedule(), schedule, outPmtCal, outPmtConv, paymentLagPeriod,
             data.paymentLagUnit(), data.paymentLagAnchor(), openEndDateReplacement);
     }
