@@ -367,7 +367,7 @@ void SensitivityAnalysis::generateSensitivities() {
             auto baseCcy = simMarketData_->baseCcy();
             engine.buildCube(
                 pf,
-                [&baseCcy, this](const QuantLib::ext::shared_ptr<ore::data::Portfolio>& p)
+                [&baseCcy, this](const QuantLib::Size, const QuantLib::ext::shared_ptr<ore::data::Portfolio>& p)
                     -> std::vector<QuantLib::ext::shared_ptr<ValuationCalculator>> {
                     return {QuantLib::ext::make_shared<NPVCalculator>(baseCcy, 0, laxFxConversion_)};
                 },
