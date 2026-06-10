@@ -1423,6 +1423,7 @@
       <xs:enumeration value="FxRainbowOption"/>
       <xs:enumeration value="EquityRainbowOption"/>
       <xs:enumeration value="CommodityRainbowOption"/>
+      <xs:enumeration value="ForwardVolatilityAgreement"/>
       <xs:enumeration value="KnockOutSwap"/>
       <xs:enumeration value="CashPosition"/>
       <xs:enumeration value="RateDigitalOption"/>
@@ -4580,7 +4581,7 @@
       <xs:element type="stFreeStyleNumber" name="Quantity"/>
       <xs:element type="stFreeStyleCurrency" name="PayCcy"/>
       <xs:element type="stFreeStyleEvent" name="SettlementDate"/>
-      <xs:element type="stFreeStyleNumber" name="UnderlyingStrike"/>
+      <xs:element type="stFreeStyleNumber" name="UnderlyingStrike" minOccurs="0"/>
       <xs:element type="stFreeStyleDayCounter" name="DayCountFraction"/>
       <xs:element type="stFreeStyleNumber" name="DividendYield"/>
       <xs:element type="stFreeStyleNumber" name="FixedRate"/>
