@@ -48,7 +48,7 @@ vector<Date> createPaymentDates(const ScheduleData& scheduleData, const Schedule
     const Schedule& anchorSchedule = unadjustedSchedule ? *unadjustedSchedule : schedule;
     QL_ENSURE(anchorSchedule.size() > 1, "createPaymentDates: anchor schedule must have at least two dates "
         "but only has " << anchorSchedule.size() << ".");
-    QL_ENSURE(anchorSchedule.size() > schedule.size(), "createPaymentDates: anchor schedule size (" <<
+    QL_ENSURE(anchorSchedule.size() == schedule.size(), "createPaymentDates: anchor schedule size (" <<
         anchorSchedule.size() << ") must be the same as the main schedule size (" << schedule.size() << ").");
 
     // If the lag unit is calendar days, the payment lag should be given in days.
