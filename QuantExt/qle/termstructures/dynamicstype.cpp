@@ -18,6 +18,8 @@
 
 #include <qle/termstructures/dynamicstype.hpp>
 
+#include <ql/errors.hpp>
+
 #include <map>
 
 namespace QuantExt {
