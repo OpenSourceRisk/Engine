@@ -4574,8 +4574,7 @@
       <xs:element type="stFreeStyleEvent" name="FvaDate"/>
       <xs:element type="stFreeStyleEvent" name="OptionExpiry"/>
       <xs:element type="stFreeStyleEvent" name="PremiumDate"/>
-
-      <xs:element type="stFreeStyleIndex" name="Underlying"/>
+      <xs:element type="underlying" name="Underlying"/>
       <xs:element type="stFreeStyleLongShort" name="LongShort"/>
       <xs:element type="stFreeStyleNumber" name="ImpliedVolStrike"/>
       <xs:element type="stFreeStyleNumber" name="Quantity"/>
