@@ -72,14 +72,14 @@ SensitivityAnalysis::SensitivityAnalysis(
     const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
     const bool nonShiftedBaseCurrencyConversion, const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
     const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig, const bool continueOnError, bool dryRun,
-    const bool useAtParCouponsTrades, const bool computeTheta, const Period thetaPeriod)
+    const bool useAtParCouponsTrades)
     : market_(market), marketConfiguration_(marketConfiguration), asof_(market ? market->asofDate() : Date()),
       simMarketData_(simMarketData), sensitivityData_(sensitivityData), recalibrateModels_(recalibrateModels),
       laxFxConversion_(laxFxConversion), curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams),
       overrideTenors_(false), nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion),
       referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig), continueOnError_(continueOnError),
       engineData_(engineData), portfolio_(portfolio), dryRun_(dryRun), useSingleThreadedEngine_(true),
-      useAtParCouponsTrades_(useAtParCouponsTrades), computeTheta_(computeTheta), thetaPeriod_(thetaPeriod) {}
+      useAtParCouponsTrades_(useAtParCouponsTrades) {}
 
 SensitivityAnalysis::SensitivityAnalysis(
     const Size nThreads, const Date& asof, const QuantLib::ext::shared_ptr<ore::data::Loader>& loader,
@@ -92,16 +92,14 @@ SensitivityAnalysis::SensitivityAnalysis(
     const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
     const bool nonShiftedBaseCurrencyConversion, const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
     const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig, const bool continueOnError, bool dryRun,
-    const std::string& context, const bool useAtParCouponsCurves, const bool useAtParCouponsTrades,
-    const bool computeTheta, const Period thetaPeriod)
+    const std::string& context, const bool useAtParCouponsCurves, const bool useAtParCouponsTrades)
     : marketConfiguration_(marketConfiguration), asof_(asof), simMarketData_(simMarketData),
       sensitivityData_(sensitivityData), recalibrateModels_(recalibrateModels), laxFxConversion_(laxFxConversion),
       curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams), overrideTenors_(false),
       nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion), referenceData_(referenceData),
       iborFallbackConfig_(iborFallbackConfig), continueOnError_(continueOnError), engineData_(engineData),
       portfolio_(portfolio), dryRun_(dryRun), useSingleThreadedEngine_(false), nThreads_(nThreads), loader_(loader),
-      context_(context), useAtParCouponsCurves_(useAtParCouponsCurves), useAtParCouponsTrades_(useAtParCouponsTrades), 
-      computeTheta_(computeTheta), thetaPeriod_(thetaPeriod) {}
+      context_(context), useAtParCouponsCurves_(useAtParCouponsCurves), useAtParCouponsTrades_(useAtParCouponsTrades) {}
 
 namespace {
 std::vector<std::pair<QuantLib::ext::shared_ptr<Portfolio>, QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>>>
@@ -148,10 +146,10 @@ Real aggregateTradeFlow(const Date& d0, const Date& d1,
 std::map<std::string, Real> SensitivityAnalysis::computeTheta(const ext::shared_ptr<Portfolio>& pf,
                                                               const ext::shared_ptr<NPVCube>& cube) const {
     std::map<std::string, Real> thetaMap;
-    if (computeTheta_) {
-        Date thetaDate = asof_ + thetaPeriod_;
-        LOG("Computing theta for " << pf->size() << " trades, shifting eval date by " << thetaPeriod_ << " from "
-                                   << asof_ << " to " << thetaDate);
+    if (sensitivityData_->thetaPeriod() != Period()) {
+        Date thetaDate = asof_ + sensitivityData_->thetaPeriod();
+        LOG("Computing theta for " << pf->size() << " trades, shifting eval date by " << sensitivityData_->thetaPeriod()
+                                   << " from " << asof_ << " to " << thetaDate);
 
         simMarket_->reset();
         auto thetaFixingManager = QuantLib::ext::make_shared<FixingManager>(asof_);
@@ -175,7 +173,6 @@ std::map<std::string, Real> SensitivityAnalysis::computeTheta(const ext::shared_
         }
 
         simMarket_->reset();
-
     }
     return thetaMap;
 }
@@ -294,7 +291,7 @@ void SensitivityAnalysis::generateSensitivities() {
             // compute theta and add to the sensi cube
 
             sensiCubes_.back()->setThetaMap(computeTheta(pf, cube));
-            sensiCubes_.back()->setThetaPeriod(thetaPeriod_);
+            sensiCubes_.back()->setThetaPeriod(sensitivityData_->thetaPeriod());
         }
     } else {
 
@@ -376,7 +373,7 @@ void SensitivityAnalysis::generateSensitivities() {
             // compute theta and add to the sensi cube
 
             sensiCubes_.back()->setThetaMap(computeTheta(pf, cube));
-            sensiCubes_.back()->setThetaPeriod(thetaPeriod_);
+            sensiCubes_.back()->setThetaPeriod(sensitivityData_->thetaPeriod());
         }
     }
 
