@@ -4580,6 +4580,11 @@
       <xs:element type="stFreeStyleNumber" name="Quantity"/>
       <xs:element type="stFreeStyleCurrency" name="PayCcy"/>
       <xs:element type="stFreeStyleEvent" name="SettlementDate"/>
+      <xs:element type="stFreeStyleNumber" name="UnderlyingStrike"/>
+      <xs:element type="stFreeStyleDayCounter" name="DayCountFraction"/>
+      <xs:element type="stFreeStyleNumber" name="DividendYield"/>
+      <xs:element type="stFreeStyleNumber" name="FixedRate"/>
+
     </xs:all>
   </xs:complexType>
 
