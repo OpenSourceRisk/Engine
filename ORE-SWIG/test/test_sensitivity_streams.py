@@ -302,5 +302,54 @@ class TestBufferedSensitivityStream(unittest.TestCase):
         self.assertFalse(bool(end))
 
 
+class TestSensitivityAggregator(unittest.TestCase):
+    """Tests for SensitivityAggregator."""
+
+    def test_aggregation(self):
+        """Aggregate sensitivities by netting sets / categories."""
+        stream = ORE.SensitivityInMemoryStream()
+        key1 = ORE.RiskFactorKey(ORE.RiskFactorKey.KeyType_DiscountCurve, "USD", 0)
+        key2 = ORE.RiskFactorKey(ORE.RiskFactorKey.KeyType_DiscountCurve, "EUR", 0)
+
+        # Add a couple of records for trade1 and trade2
+        r1 = ORE.SensitivityRecord(
+            "trade1", False, key1, "USD/DC", 0.0001,
+            ORE.RiskFactorKey(), "", 0.0, "USD", 100.0, 1.5, 0.01
+        )
+        r2 = ORE.SensitivityRecord(
+            "trade2", False, key2, "EUR/DC", 0.0001,
+            ORE.RiskFactorKey(), "", 0.0, "EUR", 200.0, 2.5, 0.02
+        )
+        stream.add(r1)
+        stream.add(r2)
+
+        # Define categories using list of strings (simple constructor)
+        categories = ORE.StringVectorMap()
+        categories["NS1"] = ORE.StrVector(["trade1", "trade2"])
+
+        agg = ORE.SensitivityAggregator(categories)
+        agg.aggregate(stream)
+
+        # Retrieve sensitivities for category NS1
+        sens = agg.sensitivities("NS1")
+        self.assertEqual(len(sens), 2)
+
+        # Extract delta and gamma
+        res = agg.getDeltaGamma("NS1")
+        deltas, gammas = res.first, res.second
+        self.assertAlmostEqual(deltas[key1], 1.5)
+        self.assertAlmostEqual(deltas[key2], 2.5)
+
+        # Reset and aggregate again
+        agg.reset()
+        stream.reset()
+        agg.aggregate(stream)
+
+        res2 = agg.getDeltaGamma("NS1")
+        deltas2, gammas2 = res2.first, res2.second
+        self.assertAlmostEqual(deltas2[key1], 1.5)
+        self.assertAlmostEqual(deltas2[key2], 2.5)
+
+
 if __name__ == "__main__":
     unittest.main()
