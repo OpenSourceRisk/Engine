@@ -232,18 +232,6 @@ ore::data::YieldCurveType riskFactorYieldCurve(const RiskFactorKey::KeyType rf) 
 }
 
 namespace {
-ReactionToTimeDecay parseDecayMode(const string& s) {
-    static map<string, ReactionToTimeDecay> m = {{"ForwardVariance", ForwardForwardVariance},
-                                                 {"ConstantVariance", ConstantVariance}};
-
-    auto it = m.find(s);
-    if (it != m.end()) {
-        return it->second;
-    } else {
-        QL_FAIL("Decay mode \"" << s << "\" not recognized");
-    }
-}
-
 void checkDayCounterConsistency(const std::string& curveId, const DayCounter& initCurveDayCounter,
                                 const DayCounter& simCurveDayCounter) {
     if (initCurveDayCounter != simCurveDayCounter) {
@@ -260,7 +248,8 @@ void checkDayCounterConsistency(const std::string& curveId, const DayCounter& in
 QuantLib::ext::shared_ptr<YieldTermStructure>
 makeYieldCurve(const std::string& curveId, const bool spreaded, const Handle<YieldTermStructure>& initMarketTs,
                const std::vector<Real>& yieldCurveTimes, const std::vector<Handle<Quote>>& quotes, const DayCounter& dc,
-               const Calendar& cal, const std::string& interpolation, const std::string& extrapolation) {
+               const Calendar& cal, const std::string& interpolation, const std::string& extrapolation,
+               const YieldCurveRollDown yieldCurveRollDown) {
     if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister && !spreaded) {
         return QuantLib::ext::shared_ptr<YieldTermStructure>(QuantLib::ext::make_shared<QuantExt::InterpolatedDiscountCurve>(
             yieldCurveTimes, quotes, 0, cal, dc,
@@ -271,12 +260,15 @@ makeYieldCurve(const std::string& curveId, const bool spreaded, const Handle<Yie
     } else {
         if (spreaded) {
             checkDayCounterConsistency(curveId, initMarketTs->dayCounter(), dc);
-            return QuantLib::ext::make_shared<QuantExt::SpreadedDiscountCurve>(
+            auto sdc = QuantLib::ext::make_shared<QuantExt::SpreadedDiscountCurve>(
                 initMarketTs, yieldCurveTimes, quotes,
                 interpolation == "LogLinear" ? QuantExt::SpreadedDiscountCurve::Interpolation::logLinear
                                              : QuantExt::SpreadedDiscountCurve::Interpolation::linearZero,
                 extrapolation == "FlatZero" ? SpreadedDiscountCurve::Extrapolation::flatZero
-                                            : SpreadedDiscountCurve::Extrapolation::flatFwd);
+                                            : SpreadedDiscountCurve::Extrapolation::flatFwd,
+                yieldCurveRollDown);
+            sdc->setAdjustReferenceDate(false);
+            return sdc;
         } else {
             auto idc = QuantLib::ext::make_shared<QuantExt::InterpolatedDiscountCurve2>(
                 yieldCurveTimes, quotes, dc,
@@ -353,7 +345,7 @@ void ScenarioSimMarket::addYieldCurve(const QuantLib::ext::shared_ptr<Market>& i
 
     QuantLib::ext::shared_ptr<YieldTermStructure> yieldCurve =
         makeYieldCurve(key, spreaded, wrapper, yieldCurveTimes, quotes, dc, TARGET(), parameters_->interpolation(),
-                       parameters_->extrapolation());
+                       parameters_->extrapolation(), parseYieldCurveRollDown(parameters_->yieldCurveRollDown()));
 
     Handle<YieldTermStructure> ych(yieldCurve);
     if (wrapper->allowsExtrapolation())
@@ -554,7 +546,8 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                         QuantLib::ext::shared_ptr<YieldTermStructure> indexCurve = makeYieldCurve(
                             name, useSpreadedTermStructures_, wrapperIndex, yieldCurveTimes, quotes, dc,
-                            index->fixingCalendar(), parameters_->interpolation(), parameters_->extrapolation());
+                            index->fixingCalendar(), parameters_->interpolation(), parameters_->extrapolation(),
+                            parseYieldCurveRollDown(parameters_->yieldCurveRollDown()));
 
                         Handle<YieldTermStructure> ich(indexCurve);
                         if (wrapperIndex->allowsExtrapolation())
@@ -863,8 +856,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                         if (param.second.first) {
                             DLOG("Simulating yield vols for ccy " << name);
                             DLOG("YieldVol simulate atm only     : " << (simulateAtmOnly ? "True" : "False"));
-                            bool stickyStrike = smileDynamics == "StickyStrike";
-                            
+                            bool stickyStrike = parseStickyness(smileDynamics) == Stickyness::StickyStrike;
+
                             if (simulateAtmOnly) {
                                 QL_REQUIRE(strikeSpreads.size() == 1 && close_enough(strikeSpreads[0], 0),
                                            "for atmOnly strikeSpreads must be {0.0}");
@@ -1724,7 +1717,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                         DLOG("building " << name << "  cds vols..");
                         Handle<QuantExt::CreditVolCurve> wrapper = initMarket->cdsVol(name, configuration);
                         Handle<QuantExt::CreditVolCurve> cvh;
-                        bool stickyStrike = parameters_->cdsVolSmileDynamics(name) == "StickyStrike";
+                        bool stickyStrike =
+                            parseStickyness(parameters_->cdsVolSmileDynamics(name)) == Stickyness::StickyStrike;
                         if (param.second.first) {
                             DLOG("Simulating CDS Vols for " << name);
                             vector<Handle<Quote>> quotes;
@@ -1843,7 +1837,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                         }
                         Handle<BlackVolTermStructure> fvh;
 
-                        bool stickyStrike = parameters_->fxVolSmileDynamics(name) == "StickyStrike";
+                        bool stickyStrike =
+                            parseStickyness(parameters_->fxVolSmileDynamics(name)) == Stickyness::StickyStrike;
 
                         if (param.second.first) {
                             DLOG("Simulating FX Vols for " << name);
@@ -2123,7 +2118,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                         Handle<BlackVolTermStructure> wrapper = initMarket->equityVol(name, configuration);
                         Handle<BlackVolTermStructure> evh;
 
-                        bool stickyStrike = parameters_->equityVolSmileDynamics(name) == "StickyStrike";
+                        bool stickyStrike =
+                            parseStickyness(parameters_->equityVolSmileDynamics(name)) == Stickyness::StickyStrike;
                         if (param.second.first) {
                             auto eqCurve = equityCurve(name, Market::defaultConfiguration);
                             Handle<Quote> spot = eqCurve->equitySpot();
@@ -2992,7 +2988,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                         Handle<BlackVolTermStructure> baseVol = initMarket->commodityVolatility(name, configuration);
 
                         Handle<BlackVolTermStructure> newVol;
-                        bool stickyStrike = parameters_->commodityVolSmileDynamics(name) == "StickyStrike";
+                        bool stickyStrike =
+                            parseStickyness(parameters_->commodityVolSmileDynamics(name)) == Stickyness::StickyStrike;
+
                         if (param.second.first) {
                             DLOG("Simulating commodity volatilities for index name " << name
                                                                                  << " with smile dynamics "
@@ -3927,6 +3925,8 @@ void ScenarioSimMarket::applyCurveAlgebraSpreadedYieldCurve(
     }
     auto target = getYieldCurve(a.key());
     if (auto c = QuantLib::ext::dynamic_pointer_cast<InterpolatedDiscountCurve2>(*target)) {
+        QL_REQUIRE(useSpreadedTermStructures_, "ScenarioSimMarket::applyCurveAlgebraSpreadedYieldCurve(): spreaded "
+                                               "term structures must be active to use this feature.");
         c->makeThisCurveSpreaded(bases, multiplier);
     } else if (auto c = QuantLib::ext::dynamic_pointer_cast<SpreadedDiscountCurve>(*target)) {
         c->makeThisCurveSpreaded(bases, multiplier);
@@ -3978,7 +3978,7 @@ void ScenarioSimMarket::createBondFutureVol(RiskFactorKey::KeyType rfKeyType, co
 
     // Get initial base volatility structure
     Handle<BlackVolTermStructure> baseVol = bc.initMarket->bondFutureVol(name, bc.configuration);
-    bool stickyStrike = parameters_->commodityVolSmileDynamics(name) == "StickyStrike";
+    bool stickyStrike = parseStickyness(parameters_->commodityVolSmileDynamics(name)) == Stickyness::StickyStrike;
 
     if (simulate) {
         DLOG("ScenarioSimMarket: simulating bond future volatilities for " << name << " with smile dynamics " <<
