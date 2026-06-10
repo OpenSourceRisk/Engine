@@ -18,6 +18,8 @@
 
 #include <qle/termstructures/dynamicstype.hpp>
 
+#include <map>
+
 namespace QuantExt {
 
 Stickyness parseStickyness(const std::string& s) {
