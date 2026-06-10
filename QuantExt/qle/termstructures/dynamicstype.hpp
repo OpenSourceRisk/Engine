@@ -25,6 +25,7 @@
 #define quantext_dynamics_type_hpp
 
 #include <ostream>
+#include <string>
 
 namespace QuantExt {
 
@@ -33,7 +34,7 @@ namespace QuantExt {
 */
 
 //! Stickiness
-enum Stickyness { StickyStrike, StickyLogMoneyness, StickyAbsoluteMoneyness };
+enum Stickyness { StickyStrike, StickyLogMoneyness, StickyDelta, StickyAbsoluteMoneyness };
 
 //! Reaction to Time Decay
 enum ReactionToTimeDecay { ConstantVariance, ForwardForwardVariance };
@@ -43,40 +44,13 @@ enum YieldCurveRollDown { ConstantDiscounts, ForwardForward };
 
 /*! @} */
 
-inline std::ostream& operator<<(std::ostream& out, const Stickyness& t) {
-    switch (t) {
-    case StickyStrike:
-        return out << "StickyStrike";
-    case StickyLogMoneyness:
-        return out << "StickyLogMoneyness";
-    case StickyAbsoluteMoneyness:
-        return out << "StickyAbsoluteMoneyness";
-    default:
-        return out << "Unknown stickiness type (" << t << ")";
-    }
-}
+Stickyness parseStickyness(const std::string& s);
+ReactionToTimeDecay parseDecayMode(const std::string& s);
+YieldCurveRollDown parseYieldCurveRollDown(const std::string& s);
 
-inline std::ostream& operator<<(std::ostream& out, const ReactionToTimeDecay& t) {
-    switch (t) {
-    case ConstantVariance:
-        return out << "ConstantVariance";
-    case ForwardForwardVariance:
-        return out << "ForwardForwardVariance";
-    default:
-        return out << "Unknown reaction to time decay type (" << t << ")";
-    }
-}
-
-inline std::ostream& operator<<(std::ostream& out, const YieldCurveRollDown& t) {
-    switch (t) {
-    case ConstantDiscounts:
-        return out << "ConstantDiscounts";
-    case ForwardForward:
-        return out << "ForwardForward";
-    default:
-        return out << "Unknown yield curve roll down type (" << t << ")";
-    }
-}
+std::ostream& operator<<(std::ostream& out, const Stickyness t);
+std::ostream& operator<<(std::ostream& out, const ReactionToTimeDecay t);
+std::ostream& operator<<(std::ostream& out, const YieldCurveRollDown t);
 
 } // namespace QuantExt
 
