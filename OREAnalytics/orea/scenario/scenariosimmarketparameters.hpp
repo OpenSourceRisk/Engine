@@ -98,6 +98,7 @@ public:
     const map<string, string>& swapIndices() const { return swapIndices_; }
     const string& interpolation() const { return interpolation_; }
     const string& extrapolation() const { return extrapolation_; }
+    const string& yieldCurveRollDown() const { return yieldCurveRollDown_; }
     const map<string, vector<Period>>& yieldCurveTenors() const { return yieldCurveTenors_; }
 
     bool simulateFxSpots() const { return paramsSimulate(RiskFactorKey::KeyType::FXSpot); }
@@ -289,6 +290,7 @@ public:
     void setSwapIndex(const std::string& key, const std::string& ind) { swapIndices_[key] = ind; }
     string& interpolation() { return interpolation_; }
     string& extrapolation() { return extrapolation_; }
+    string& yieldCurveRollDown() { return yieldCurveRollDown_; }
 
     void setSimulateFxSpots(bool simulate);
     void setFxCcyPairs(vector<string> names);
@@ -471,6 +473,7 @@ private:
     map<string, string> swapIndices_;
     string interpolation_;
     string extrapolation_;
+    string yieldCurveRollDown_;
 
     map<string, bool> swapVolIsCube_;
     bool swapVolSimulateATMOnly_ = false;

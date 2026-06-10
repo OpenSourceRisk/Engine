@@ -155,6 +155,7 @@ void ScenarioSimMarketParameters::setDefaults() {
     // Default interpolation for yield curves
     interpolation_ = "LogLinear";
     extrapolation_ = "FlatFwd";
+    yieldCurveRollDown_ = "ForwardForward";
     defaultCurveExtrapolation_ = "FlatFwd";
 }
 
@@ -687,11 +688,11 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
     if (baseCcy_ != rhs.baseCcy_ || ccys_ != rhs.ccys_ || params_ != rhs.params_ ||
         yieldCurveCurrencies_ != rhs.yieldCurveCurrencies_ || yieldCurveTenors_ != rhs.yieldCurveTenors_ ||
         swapIndices_ != rhs.swapIndices_ || interpolation_ != rhs.interpolation_ ||
-        extrapolation_ != rhs.extrapolation_ || swapVolTerms_ != rhs.swapVolTerms_ ||
-        swapVolIsCube_ != rhs.swapVolIsCube_ || swapVolSimulateATMOnly_ != rhs.swapVolSimulateATMOnly_ ||
-        swapVolExpiries_ != rhs.swapVolExpiries_ || swapVolStrikeSpreads_ != rhs.swapVolStrikeSpreads_ ||
-        swapVolDecayMode_ != rhs.swapVolDecayMode_ || capFloorVolExpiries_ != rhs.capFloorVolExpiries_ ||
-        capFloorVolStrikes_ != rhs.capFloorVolStrikes_ ||
+        extrapolation_ != rhs.extrapolation_ || yieldCurveRollDown_ != rhs.yieldCurveRollDown_ ||
+        swapVolTerms_ != rhs.swapVolTerms_ || swapVolIsCube_ != rhs.swapVolIsCube_ ||
+        swapVolSimulateATMOnly_ != rhs.swapVolSimulateATMOnly_ || swapVolExpiries_ != rhs.swapVolExpiries_ ||
+        swapVolStrikeSpreads_ != rhs.swapVolStrikeSpreads_ || swapVolDecayMode_ != rhs.swapVolDecayMode_ ||
+        capFloorVolExpiries_ != rhs.capFloorVolExpiries_ || capFloorVolStrikes_ != rhs.capFloorVolStrikes_ ||
         zeroInflationCapFloorVolExpiries_ != rhs.zeroInflationCapFloorVolExpiries_ ||
         zeroInflationCapFloorVolStrikes_ != rhs.zeroInflationCapFloorVolStrikes_ ||
         zeroInflationCapFloorVolDecayMode_ != rhs.zeroInflationCapFloorVolDecayMode_ ||
@@ -719,9 +720,9 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
         bondFutureVolMoneyness_ != rhs.bondFutureVolMoneyness_ ||
         bondFutureVolSimulateATMOnly_ != rhs.bondFutureVolSimulateATMOnly_ ||
         correlationIsSurface_ != rhs.correlationIsSurface_ || correlationExpiries_ != rhs.correlationExpiries_ ||
-        correlationStrikes_ != rhs.correlationStrikes_ || cprSimulate_ != rhs.cprSimulate_ || cprs_ != rhs.cprs_ || conversionFactors_ != rhs.conversionFactors_ ||
-        yieldVolTerms_ != rhs.yieldVolTerms_ || yieldVolExpiries_ != rhs.yieldVolExpiries_ ||
-        yieldVolDecayMode_ != rhs.yieldVolDecayMode_) {
+        correlationStrikes_ != rhs.correlationStrikes_ || cprSimulate_ != rhs.cprSimulate_ || cprs_ != rhs.cprs_ ||
+        conversionFactors_ != rhs.conversionFactors_ || yieldVolTerms_ != rhs.yieldVolTerms_ ||
+        yieldVolExpiries_ != rhs.yieldVolExpiries_ || yieldVolDecayMode_ != rhs.yieldVolDecayMode_) {
         return false;
     } else {
         return true;
@@ -774,6 +775,9 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
                 }
                 if (auto n = XMLUtils::getChildNode(child, "Extrapolation")) {
                     extrapolation_ = XMLUtils::getNodeValue(n);
+                }
+                if(auto n=XMLUtils::getChildNode(child, "RollDown")) {
+                    yieldCurveRollDown_ = XMLUtils::getNodeValue(n);
                 }
                 // for backwards compatibility, map an extrapolation value that parses to bool to FlatFwd
                 bool dummy;
@@ -1652,6 +1656,7 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) const {
         if (key == "") {
             XMLUtils::addChild(doc, configNode, "Interpolation", interpolation_);
             XMLUtils::addChild(doc, configNode, "Extrapolation", extrapolation_);
+            XMLUtils::addChild(doc, configNode, "RollDown", yieldCurveRollDown_);
         }
         XMLUtils::appendNode(yieldCurvesNode, configNode);
     }
