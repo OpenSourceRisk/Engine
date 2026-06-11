@@ -25,10 +25,8 @@
 namespace QuantExt {
 
 Stickyness parseStickyness(const std::string& s) {
-    static std::map<std::string, Stickyness> m = {{"StickyStrike", StickyStrike},
-                                             {"StickyLogMoneyness", StickyLogMoneyness},
-                                             {"StickyDelta", StickyDelta},
-                                             {"StickyAbsoluteMoneyness", StickyAbsoluteMoneyness}};
+    static std::map<std::string, Stickyness> m = {
+        {"StickyStrike", StickyStrike}, {"StickyMoneyness", StickyMoneyness}, {"StickySABR", StickySABR}};
 
     auto it = m.find(s);
     if (it != m.end()) {
@@ -66,12 +64,10 @@ std::ostream& operator<<(std::ostream& out, const Stickyness t) {
     switch (t) {
     case StickyStrike:
         return out << "StickyStrike";
-    case StickyLogMoneyness:
-        return out << "StickyLogMoneyness";
-    case StickyDelta:
-        return out << "StickyDelta";
-    case StickyAbsoluteMoneyness:
-        return out << "StickyAbsoluteMoneyness";
+    case StickyMoneyness:
+        return out << "StickyMoneyness";
+    case StickySABR:
+        return out << "StickySABR";
     default:
         return out << "Unknown stickiness type (" << t << ")";
     }

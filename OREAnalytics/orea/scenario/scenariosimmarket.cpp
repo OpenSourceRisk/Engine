@@ -824,7 +824,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         }
                         DLOG("Initial market " << name << " yield volatility type = " << wrapper->volatilityType());
 
-                        bool stickySabr = smileDynamics == "StickySABR";
+                        bool stickySabr = parseStickyness(smileDynamics) == Stickyness::StickySABR;
                         auto proxy = stickySabr || !useSpreadedTermStructures_ ?
                             QuantLib::ext::dynamic_pointer_cast<ProxySwaptionVolatility>(*wrapper) : nullptr;
                         if (proxy) {
@@ -1191,7 +1191,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                         LOG("building " << name << " cap/floor volatility curve...");
                         RelinkableHandle<OptionletVolatilityStructure> wrapper;
 
-                        bool stickySabr = parameters->capFloorVolSmileDynamics(name) == "StickySABR";
+                        bool stickySabr =
+                            parseStickyness(parameters->capFloorVolSmileDynamics(name)) == Stickyness::StickySABR;
                         QuantLib::ext::shared_ptr<ProxyOptionletVolatility> proxy;
                         proxy = stickySabr || !useSpreadedTermStructures_ ?
                             QuantLib::ext::dynamic_pointer_cast<ProxyOptionletVolatility>(

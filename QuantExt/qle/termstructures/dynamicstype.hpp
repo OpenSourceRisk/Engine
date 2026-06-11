@@ -34,7 +34,7 @@ namespace QuantExt {
 */
 
 //! Stickiness
-enum Stickyness { StickyStrike, StickyLogMoneyness, StickyDelta, StickyAbsoluteMoneyness };
+enum Stickyness { StickyStrike, StickyMoneyness, StickySABR };
 
 //! Reaction to Time Decay
 enum ReactionToTimeDecay { ConstantVariance, ForwardForwardVariance };
