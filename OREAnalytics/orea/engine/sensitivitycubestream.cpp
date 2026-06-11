@@ -33,6 +33,7 @@ namespace ore {
 namespace analytics {
 
 using crossPair = SensitivityCube::crossPair;
+using ore::data::Portfolio;
 
 SensitivityCubeStream::SensitivityCubeStream(const QuantLib::ext::shared_ptr<SensitivityCube>& cube,
                                              const string& currency,
