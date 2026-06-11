@@ -81,9 +81,9 @@ BOOST_AUTO_TEST_CASE(testIntradayPriceWithLoadProfilesFallbackAndConsistency) {
     auto intradayTs = QuantLib::ext::make_shared<IntradayPriceTermStructure>(underlying, shapeTs);
 
     // Same granularity for both load profiles: full-day bucket [0, 86400).
-    std::map<std::pair<int, int>, Real> loadToday = {{{0, 24 * 3600}, 1.0}};
-    std::map<std::pair<int, int>, Real> loadTodayPlus2 = {{{0, 24 * 3600}, 2.0}};
-    std::map<std::pair<int, int>, Real> loadDstEmpty;
+    LoadFactors loadToday = {{0, 24 * 3600, 1.0}};
+    LoadFactors loadTodayPlus2 = {{0, 24 * 3600, 2.0}};
+    LoadFactors loadDstEmpty;
 
     auto lpToday = QuantLib::ext::make_shared<IntradayLoadProfile>(loadToday, loadDstEmpty);
     auto lpTodayPlus2 = QuantLib::ext::make_shared<IntradayLoadProfile>(loadTodayPlus2, loadDstEmpty);
@@ -103,9 +103,9 @@ BOOST_AUTO_TEST_CASE(testIntradayPriceWithLoadProfilesFallbackAndConsistency) {
     BOOST_CHECK_CLOSE(loadTs->loadProfile(todayPlus2)->totalMWh(), 48.0, tol);
 
     // Price consistency checks.
-    const Real pToday = intradayTs->price(today, loadTs, true);
-    const Real pTodayPlus1 = intradayTs->price(todayPlus1, loadTs, true);
-    const Real pTodayPlus2 = intradayTs->price(todayPlus2, loadTs, true);
+    const Real pToday = intradayTs->price(today, loadTs->loadProfile(today), true);
+    const Real pTodayPlus1 = intradayTs->price(todayPlus1, loadTs->loadProfile(todayPlus1), true);
+    const Real pTodayPlus2 = intradayTs->price(todayPlus2, loadTs->loadProfile(todayPlus2), true);
 
     BOOST_CHECK_CLOSE(pToday, 25.0, tol);
     BOOST_CHECK_CLOSE(pTodayPlus1, 25.0, tol);
@@ -158,20 +158,20 @@ BOOST_AUTO_TEST_CASE(testBackwardFlatDailyCurveWithIntradayShapesAndLoads) {
     auto shapeTs = QuantLib::ext::make_shared<IntradayShapeTermstructure>(shapeMap, shapeMapDst);
     auto intradayTs = QuantLib::ext::make_shared<IntradayPriceTermStructure>(underlying, shapeTs);
 
-    std::map<std::pair<int, int>, Real> loadD = {
-        {{8 * 3600 + 15 * 60, 8 * 3600 + 30 * 60}, 100.0},
-        {{9 * 3600, 9 * 3600 + 30 * 60}, 50.0},
-        {{10 * 3600, 10 * 3600 + 15 * 60}, 100.0}};
-    std::map<std::pair<int, int>, Real> loadD7 = {
-        {{20 * 15 * 60, 21 * 15 * 60}, 150.0},
-        {{21 * 15 * 60, 22 * 15 * 60}, 100.0}
+    LoadFactors loadD = {
+        {8 * 3600 + 15 * 60, 8 * 3600 + 30 * 60, 100.0},
+        {9 * 3600, 9 * 3600 + 30 * 60, 50.0},
+        {10 * 3600, 10 * 3600 + 15 * 60, 100.0}};
+    LoadFactors loadD7 = {
+        {20 * 15 * 60, 21 * 15 * 60, 150.0},
+        {21 * 15 * 60, 22 * 15 * 60, 100.0}
     };
-    std::map<std::pair<int, int>, Real> loadD15 = {
-        {{8 * 3600 + 30 * 60, 9 * 3600 + 30 * 60}, 100.0}};
-    std::map<std::pair<int, int>, Real> loadD16 = {
-        {{8 * 3600, 10 * 3600}, 100.0},
-        {{13 * 3600, 14 * 3600}, 200.0}};
-    std::map<std::pair<int, int>, Real> loadDstEmpty;
+    LoadFactors loadD15 = {
+        {8 * 3600 + 30 * 60, 9 * 3600 + 30 * 60, 100.0}};
+    LoadFactors loadD16 = {
+        {8 * 3600, 10 * 3600, 100.0},
+        {13 * 3600, 14 * 3600, 200.0}};
+    LoadFactors loadDstEmpty;
 
     auto lpD = QuantLib::ext::make_shared<IntradayLoadProfile>(loadD, loadDstEmpty);
     auto lpD7 = QuantLib::ext::make_shared<IntradayLoadProfile>(loadD7, loadDstEmpty);
@@ -203,14 +203,14 @@ BOOST_AUTO_TEST_CASE(testBackwardFlatDailyCurveWithIntradayShapesAndLoads) {
     BOOST_CHECK_CLOSE(loadTs->loadProfile(d16)->totalMWh(), 400.0, tol);
     BOOST_CHECK_CLOSE(loadTs->loadProfile(d30)->totalMWh(), 400.0, tol);
 
-    BOOST_CHECK_CLOSE(intradayTs->price(d, loadTs, true), 25.0, tol);
-    BOOST_CHECK_CLOSE(intradayTs->price(d10, loadTs, true), (0.9 * 1.5 + 1.1) / 2.5 * 25.0, tol);
-    BOOST_CHECK_CLOSE(intradayTs->price(d15, loadTs, true), 26.0 * 1.1, tol);
+    BOOST_CHECK_CLOSE(intradayTs->price(d, loadTs->loadProfile(d), true), 25.0, tol);
+    BOOST_CHECK_CLOSE(intradayTs->price(d10, loadTs->loadProfile(d10), true), (0.9 * 1.5 + 1.1) / 2.5 * 25.0, tol);
+    BOOST_CHECK_CLOSE(intradayTs->price(d15, loadTs->loadProfile(d15), true), 26.0 * 1.1, tol);
     // 2h at 1.1 shape factor and 100MW load + 1h at 1.1 shape factor and 200MW load = 4.2
                             // load-shape factor / 4h total time
-    BOOST_CHECK_CLOSE(intradayTs->price(d16, loadTs, true), baseCurve->price(d16) * 4.2 / 4.,
+    BOOST_CHECK_CLOSE(intradayTs->price(d16, loadTs->loadProfile(d16), true), baseCurve->price(d16) * 4.2 / 4.,
                       tol); 
-    BOOST_CHECK_CLOSE(intradayTs->price(d30, loadTs, true), 27.0 * 1.2, tol);
+    BOOST_CHECK_CLOSE(intradayTs->price(d30, loadTs->loadProfile(d30), true), 27.0 * 1.2, tol);
 }
 
 BOOST_AUTO_TEST_CASE(testEmptyOrNullShape) {
@@ -258,15 +258,15 @@ BOOST_AUTO_TEST_CASE(testNullOrEmptyLoadProfile) {
     auto shapeTs = QuantLib::ext::make_shared<IntradayShapeTermstructure>(shapeMap, shapeMapDst);
     auto intradayTs = QuantLib::ext::make_shared<IntradayPriceTermStructure>(underlying, shapeTs);
 
-    std::map<std::pair<int, int>, Real> emptyLoad;
-    std::map<std::pair<int, int>, Real> emptyLoadDst;
+    LoadFactors emptyLoad;
+    LoadFactors emptyLoadDst;
     auto lpEmpty = QuantLib::ext::make_shared<IntradayLoadProfile>(emptyLoad, emptyLoadDst);
 
     std::map<Date, QuantLib::ext::shared_ptr<IntradayLoadProfile>> loadingShapes = {{d, lpEmpty}};
     auto loadTs = QuantLib::ext::make_shared<IntradayLoadingTermstructure>(loadingShapes);
 
     const Real tol = 1e-12;
-    BOOST_CHECK_CLOSE(intradayTs->price(d, loadTs, true), intradayTs->price(d, true), tol);
+    BOOST_CHECK_CLOSE(intradayTs->price(d, loadTs->loadProfile(d), true), intradayTs->price(d, true), tol);
 
 }
 
@@ -300,9 +300,9 @@ BOOST_AUTO_TEST_CASE(testIntradayPriceWithOverlappingLoadProfiles) {
 
     // Day 1: load only on [800,1600), else zero.
     // Day 2: load only on [1200,1500), else zero.
-    std::map<std::pair<int, int>, Real> day1Load = {{{800, 1600}, 1.0}};
-    std::map<std::pair<int, int>, Real> day2Load = {{{1200, 1500}, 1.0}};
-    std::map<std::pair<int, int>, Real> loadDstEmpty;
+    LoadFactors day1Load = {{800, 1600, 1.0}};
+    LoadFactors day2Load = {{1200, 1500, 1.0}};
+    LoadFactors loadDstEmpty;
 
     auto lpDay1 = QuantLib::ext::make_shared<IntradayLoadProfile>(day1Load, loadDstEmpty);
     auto lpDay2 = QuantLib::ext::make_shared<IntradayLoadProfile>(day2Load, loadDstEmpty);
@@ -318,8 +318,8 @@ BOOST_AUTO_TEST_CASE(testIntradayPriceWithOverlappingLoadProfiles) {
     const Real expectedDay1 = 25.0 * 1.15;
     const Real expectedDay2 = 25.0 * 1.2;
 
-    const Real pDay1 = intradayTs->price(day1, loadTs, true);
-    const Real pDay2 = intradayTs->price(day2, loadTs, true);
+    const Real pDay1 = intradayTs->price(day1, loadTs->loadProfile(day1), true);
+    const Real pDay2 = intradayTs->price(day2, loadTs->loadProfile(day2), true);
 
     const Real tol = 1e-12;
     BOOST_CHECK_CLOSE(pDay1, expectedDay1, tol);

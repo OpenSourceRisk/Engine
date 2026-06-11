@@ -27,7 +27,13 @@
 #include <ql/quote.hpp>
 #include <ql/termstructure.hpp>
 
+#include <map>
+#include <utility>
+#include <vector>
+
 namespace QuantExt {
+
+using ShapeFactors = std::vector<std::pair<int, QuantLib::Real>>;
 
 //! Intraday Price term structure
 /*! This abstract class defines the interface of concrete
@@ -40,8 +46,10 @@ class IntradayShapeTermstructure {
 public:
     //! \name Constructors
     //@{
-    IntradayShapeTermstructure(std::map<QuantLib::Date, std::map<int, QuantLib::Real>> shapeFactors, std::map<QuantLib::Date, std::map<int, QuantLib::Real>> shapeFactorsDST) :
-        shapeFactors_(std::move(shapeFactors)), shapeFactorsDST_(std::move(shapeFactorsDST)) {}
+    // Use map of maps to ensure that no duplicates and shapefactors are sorted
+    IntradayShapeTermstructure(const std::map<QuantLib::Date, std::map<int, QuantLib::Real>>& shapeFactors,
+                               const std::map<QuantLib::Date, std::map<int, QuantLib::Real>>& shapeFactorsDST) :
+        shapeFactors_(toSortedVectors(shapeFactors)), shapeFactorsDST_(toSortedVectors(shapeFactorsDST)) {}
     //@}
 
     virtual ~IntradayShapeTermstructure() = default;
@@ -51,7 +59,7 @@ public:
         return it != shapeFactors_.begin();
     }
 
-    const std::map<int, QuantLib::Real>& shapeFactors(const QuantLib::Date& d) const {
+    const ShapeFactors& shapeFactors(const QuantLib::Date& d) const {
         auto it = shapeFactors_.upper_bound(d);
         QL_REQUIRE(it != shapeFactors_.begin(), "no shape factors found for date " << d << " or earlier");
         --it;
@@ -63,7 +71,7 @@ public:
         return it != shapeFactorsDST_.begin();  
     }
 
-    const std::map<int, QuantLib::Real>& shapeFactorsDST(const QuantLib::Date& d) const {
+    const ShapeFactors& shapeFactorsDST(const QuantLib::Date& d) const {
         auto it = shapeFactorsDST_.upper_bound(d);
         QL_REQUIRE(it != shapeFactorsDST_.begin(), "no DST shape factors found for date " << d << " or earlier");
         --it;
@@ -74,7 +82,7 @@ public:
         if (!hasShapeFactors(d)) {
             return 1.0;
         }
-        auto factors = shapeFactors(d);
+        const auto& factors = shapeFactors(d);
         if (factors.empty()) {
             return 1.0;
         }
@@ -97,7 +105,7 @@ public:
             sum += (86400 - prevStart) * prevFactor;
             if (dayTimeSavingsAdj > 0) {
                 // adjust the factor for the hour between 2 and 3 am if there is a DST change on that day
-                auto dstFactors = shapeFactorsDST(d);
+                const auto& dstFactors = shapeFactorsDST(d);
                 // Add DST factors if they exists
                 auto prevDSTStart = 2 * 3600;
                 auto prevDSTFactor = 0;
@@ -125,8 +133,23 @@ public:
     QuantLib::Real hoursPerDay(const QuantLib::Date& d) const { return 24.0 + dayTimeSavingsAdjustment(d); }
 
 private:
-    std::map<QuantLib::Date, std::map<int, QuantLib::Real>> shapeFactors_;
-    std::map<QuantLib::Date, std::map<int, QuantLib::Real>> shapeFactorsDST_;
+    //! Convert the per-day map of (startTime -> factor) into a per-day sorted vector.
+    //  std::map iteration is already ordered by key, so the resulting vector is sorted.
+    static std::map<QuantLib::Date, ShapeFactors>
+    toSortedVectors(const std::map<QuantLib::Date, std::map<int, QuantLib::Real>>& src) {
+        std::map<QuantLib::Date, ShapeFactors> result;
+        for (const auto& [d, inner] : src) {
+            ShapeFactors v;
+            v.reserve(inner.size());
+            for (const auto& [start, factor] : inner)
+                v.emplace_back(start, factor);
+            result.emplace(d, std::move(v));
+        }
+        return result;
+    }
+
+    std::map<QuantLib::Date, ShapeFactors> shapeFactors_;
+    std::map<QuantLib::Date, ShapeFactors> shapeFactorsDST_;
     mutable std::map<QuantLib::Date, QuantLib::Real> dayFactors_;
 };
 

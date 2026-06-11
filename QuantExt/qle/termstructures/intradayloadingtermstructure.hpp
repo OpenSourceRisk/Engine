@@ -29,31 +29,41 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 
 namespace QuantExt {
 
+using LoadFactors = std::vector<std::tuple<int,int, double>>;
 class IntradayLoadProfile {
 public:
-    IntradayLoadProfile(const std::map<std::pair<int, int>, QuantLib::Real>& load,
-                        const std::map<std::pair<int, int>, QuantLib::Real>& loadDST)
+    IntradayLoadProfile(const LoadFactors& load,
+                        const LoadFactors& loadDST)
         : loadProfile_(std::move(load)), loadProfileDST_(std::move(loadDST)) {}
 
-    const std::map<std::pair<int, int>, QuantLib::Real>& loadProfile() const { return loadProfile_; }
-    const std::map<std::pair<int, int>, QuantLib::Real>& loadProfileDST() const { return loadProfileDST_; }
+    const LoadFactors& loadProfile() const { return loadProfile_; }
+    const LoadFactors& loadProfileDST() const { return loadProfileDST_; }
 
     QuantLib::Real totalMWh() const {
         QuantLib::Real total = 0.0;
-        for (const auto& [startend, load] : loadProfile_) {
-            const auto& [start, end] = startend;
+        for (const auto& [start, end, load] : loadProfile_) {
             total += load * (end - start) / 3600.0;
         }
-        for (const auto& [dstStartEnd, dstLoad] : loadProfileDST_) {
-            const auto& [start, end] = dstStartEnd;
-            total += dstLoad * (end - start) / 3600.0;
+        for (const auto& [start, end, load] : loadProfileDST_) {
+            total += load * (end - start) / 3600.0;
+        }
+        return total;
+    }
+
+    QuantLib::Real totalDeliveryHours() const {
+        QuantLib::Real total = 0.0;
+        for (const auto& [start, end, load] : loadProfile_) {
+            total += (end - start) / 3600.0;
+        }
+        for (const auto& [start, end, load] : loadProfileDST_) {
+            total += (end - start) / 3600.0;
         }
         return total;
     }
 
 private:
-    std::map<std::pair<int, int>, QuantLib::Real> loadProfile_;
-    std::map<std::pair<int, int>, QuantLib::Real> loadProfileDST_;
+    LoadFactors loadProfile_;
+    LoadFactors loadProfileDST_;
 };
 
 //! Intraday Price term structure
