@@ -66,6 +66,8 @@ public:
 
     void generateSensitivities();
     const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket> simMarket() const;
+    std::vector<QuantLib::ext::shared_ptr<ore::analytics::SensitivityCube>> sensiCubes() const;
+    QuantLib::ext::shared_ptr<ore::analytics::SensitivityCube> sensiCube() const;
 };
 
 class ParSensitivityAnalysis {
