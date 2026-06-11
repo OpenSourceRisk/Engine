@@ -427,11 +427,8 @@ void ValuationEngine::populateCube(
     auto t3 = data::os::nanosecondsClock();
     timings.refreshTime += t3 - t2;
 
-    std::cout << "populateCube: fixingManager = " << std::boolalpha << (fixingManager_ != nullptr) << std::endl;
-
     if (fixingManager_ && (!isStickyDate || isValueDate)) {
         fixingManager_->update(d);
-        std::cout << "called fixing manager update, d = " << d << std::endl;
     }
     auto t4 = data::os::nanosecondsClock();
     timings.fixingTime += t4 - t3;
