@@ -235,7 +235,7 @@ public:
     }
     //! Check if has any dates/rules/derived schedules
     bool hasData() const { return dates_.size() > 0 || rules_.size() > 0 || derived_.size() > 0; }
-    vector<string> baseScheduleNames();
+    vector<string> baseScheduleNames() const;
 
     //! \name Inspectors
     //@{
@@ -294,7 +294,8 @@ private:
 using BaseScheduleCache = map<string, std::pair<ScheduleData, QuantLib::Schedule>>;
 QuantLib::Schedule makeSchedule(const ScheduleData& data,
     const QuantLib::Date& openEndDateReplacement = QuantLib::Null<QuantLib::Date>(),
-    const BaseScheduleCache& baseSchedules = {}, bool unadjusted = false);
+    const BaseScheduleCache& baseSchedules = {}, bool unadjusted = false,
+    const BaseScheduleCache& altBaseSchedules = {});
 
 QuantLib::Schedule makeSchedule(const ScheduleDates& dates, bool unadjusted = false);
 
@@ -302,6 +303,10 @@ QuantLib::Schedule makeSchedule(const ScheduleRules& rules,
     const QuantLib::Date& openEndDateReplacement = QuantLib::Null<QuantLib::Date>(),
     bool unadjusted = false);
 
+// If `derived` has shift anchor set to `Unadjusted`, the schedule in baseScheduleInfo is expected to hold the 
+// unadjusted version of the base schedule. Otherwise, it should hold the standard version of the base schedule i.e. 
+// the version built according to the schedule data in baseScheduleInfo, regardless of the `unadjusted` flag passed 
+// into this function.
 QuantLib::Schedule makeSchedule(const ScheduleDerived& derived,
     const std::pair<ScheduleData, QuantLib::Schedule>& baseScheduleInfo,
     const QuantLib::Date& openEndDateReplacement = QuantLib::Null<QuantLib::Date>(),

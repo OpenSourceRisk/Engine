@@ -19,6 +19,7 @@
 #include <boost/test/unit_test.hpp>
 #include <ored/portfolio/schedule.hpp>
 #include <ored/utilities/toplevelfixture.hpp>
+#include <oret/util/datapaths.hpp>
 
 using namespace boost::unit_test_framework;
 using namespace ore::data;
@@ -89,6 +90,33 @@ BOOST_AUTO_TEST_CASE(testLastWednesdayDateGenerationRule) {
 
     // Check
     BOOST_CHECK_EQUAL_COLLECTIONS(s.dates().begin(), s.dates().end(), expected.begin(), expected.end());
+}
+
+BOOST_AUTO_TEST_CASE(testDerivedSchedules) {
+    string testInputPath = "derived_schedules";
+
+    // Read in a collection of ScheduleData objects from file.
+    vector<pair<ScheduleData, Schedule>> vecScheduleData;
+    vector<string> suffixes{"_01", "_02", "_03", "_04", "_05" };
+    for (const auto& suffix : suffixes) {
+        string filename = testInputPath + "/schedule_01" + suffix + ".xml";
+        ScheduleData scheduleData;
+        scheduleData.fromFile(TEST_INPUT_FILE(filename));
+        BOOST_CHECK_EQUAL(scheduleData.name(), "schedule_01" + suffix);
+        vecScheduleData.push_back({scheduleData, Schedule()});
+    }
+
+    // Add to ScheduleBuilder and make schedules, which will populate the Schedule objects in vecScheduleData.
+    ScheduleBuilder scheduleBuilder;
+    for (auto& [scheduleData, schedule] : vecScheduleData) {
+        scheduleBuilder.add(schedule, scheduleData);
+    }
+    scheduleBuilder.makeSchedules();
+
+    // Check the built schedules.
+    for (const auto& [scheduleData, schedule] : vecScheduleData) {
+        BOOST_CHECK(!schedule.empty());
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
