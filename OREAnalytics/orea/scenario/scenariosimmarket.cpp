@@ -1787,7 +1787,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                         Handle<BlackVolTermStructure>(
                                             QuantLib::ext::make_shared<BlackVolFromCreditVolWrapper>(wrapper, 5.0)),
                                         0, NullCalendar(), decayMode,
-                                        stickyStrike ? StickyStrike : StickyLogMoneyness))));
+                                        stickyStrike ? StickyStrike : StickyMoneyness))));
                         }
                         cvh->setAdjustReferenceDate(false);
                         if (wrapper->allowsExtrapolation())
@@ -2078,7 +2078,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             fvh = Handle<BlackVolTermStructure>(
                                 QuantLib::ext::make_shared<QuantExt::DynamicBlackVolTermStructure<tag::curve>>(
                                     wrapper, 0, NullCalendar(), decayMode,
-                                    stickyStrike ? StickyStrike : StickyLogMoneyness));
+                                    stickyStrike ? StickyStrike : StickyMoneyness));
                         }
 
                         fvh->setAdjustReferenceDate(false);
@@ -2318,7 +2318,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             evh = Handle<BlackVolTermStructure>(
                                 QuantLib::ext::make_shared<QuantExt::DynamicBlackVolTermStructure<tag::curve>>(
                                     wrapper, 0, NullCalendar(), decayMode,
-                                    stickyStrike ? StickyStrike : StickyLogMoneyness));
+                                    stickyStrike ? StickyStrike : StickyMoneyness));
                         }
 
                         evh->setAdjustReferenceDate(false);
@@ -3147,7 +3147,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             newVol = Handle<BlackVolTermStructure>(
                                 QuantLib::ext::make_shared<QuantExt::DynamicBlackVolTermStructure<tag::curve>>(
                                     baseVol, 0, NullCalendar(), decayMode,
-                                    stickyStrike ? StickyStrike : StickyLogMoneyness));
+                                    stickyStrike ? StickyStrike : StickyMoneyness));
                         }
 
                         newVol->setAdjustReferenceDate(false);
@@ -4039,7 +4039,7 @@ void ScenarioSimMarket::createBondFutureVol(RiskFactorKey::KeyType rfKeyType, co
         DLOG("ScenarioSimMarket: deterministic bond future volatilities with decay mode " <<
             decayModeString << " for " << name);
         ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
-        auto stickyness = stickyStrike ? StickyStrike : StickyLogMoneyness;
+        auto stickyness = stickyStrike ? StickyStrike : StickyMoneyness;
         auto volPtr = QuantLib::ext::make_shared<QuantExt::DynamicBlackVolTermStructure<tag::curve>>(
             baseVol, 0, NullCalendar(), decayMode, stickyness);
         newVol = Handle<BlackVolTermStructure>(volPtr);
