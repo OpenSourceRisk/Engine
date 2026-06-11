@@ -75,7 +75,7 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
         if (inc)
             exposureIncludeTodaysCashFlows_ = *inc;
     }
-    
+
     inputs->loadParameter<optional<bool>>(exposureIncludeReferenceDateEvents_, "simulation", "includeReferenceDateEvents",
                                           false, parseBool);
     if (!exposureIncludeReferenceDateEvents_)
@@ -208,7 +208,7 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
     inputs->loadParameter<vector<Period>>(cvaSensiGrid_, "xva", "cvaSensiGrid", false, parseListOfPeriodValues);
     inputs->loadParameter<Real>(cvaSensiShiftSize_, "xva", "cvaSensiShiftSize", false, parseReal);
     inputs->loadParameter<string>(dvaName_, "xva", "dvaName", false);
-    
+
     inputs->loadParameter<bool>(rawCubeOutput_, "xva", "rawCubeOutput", false, parseBool);
     inputs->loadParameter<string>(rawCubeOutputFile_, pfeAnalytics, "rawCubeOutputFile", false);
     if (!rawCubeOutputFile_.empty())
@@ -218,7 +218,7 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
     inputs->loadParameter<string>(netCubeOutputFile_, pfeAnalytics, "netCubeOutputFile", false);
     if (!netCubeOutputFile_.empty())
         netCubeOutput_ = true;
-    
+
     inputs->loadParameter<string>(timeAveragedNettedExposureOutputFile_, "xva", "timeAveragedNettedExposureOutputFile", false);
     if (!timeAveragedNettedExposureOutputFile_.empty())
         timeAveragedNettedExposureOutput_ = true;
@@ -236,7 +236,7 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
     inputs->loadParameter<vector<string>>(dimRegressors_, "xva", "dimRegressors", false, parseListOfStringValues);
     inputs->loadParameter<vector<Size>>(dimOutputGridPoints_, "xva", "dimOutputGridPoints", false,
                                         parseListOfIntegerValues);
-    
+
     string dimDistributionCoveredStdDevs;
     inputs->loadParameter<string>(dimDistributionCoveredStdDevs, "xva", "dimDistributionCoveredStdDevs", false);
     if (!dimDistributionCoveredStdDevs.empty()) {
@@ -250,9 +250,10 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
     inputs->loadParameter<string>(dimOutputNettingSet_, "xva", "dimOutputNettingSet", false);
     inputs->loadParameter<Size>(dimLocalRegressionEvaluations_, "xva", "dimLocalRegressionEvaluations", false, parseInteger);
     inputs->loadParameter<Real>(dimLocalRegressionBandwidth_, "xva", "dimLocalRegressionBandwidth", false, parseReal);
+    inputs->loadParameter<Real>(dimScaling_, "xva", "dimScaling", false, parseReal);
     string dimModel;
     inputs->loadParameter<string>(dimModel, "xva", "dimModel", false);
-    if (!dimModel.empty()) {
+    if (!dimModel.empty() && dimAnalytic_) {
         dimModel_ = dimModel;
         QL_REQUIRE(
             dimModel_ == "Regression" || dimModel_ == "Flat" || dimModel_ == "DeltaVaR" ||
@@ -289,12 +290,12 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
     vector<string> pfeOrSetupAnalytics = {"xva", "pfe", "setup"};
     inputs->loadParameterXML<NettingSetManager>(nettingSetManager_, pfeOrSetupAnalytics, "csaFile");
     inputs->loadParameterXML<CollateralBalances>(collateralBalances_, pfeOrSetupAnalytics, "collateralBalancesFile");
-    
+
     string correlationInputFile;
     inputs->loadParameter<string>(correlationInputFile, "xva", vector<string>({"correlationInputFile", "correlationUri"}), false);
     if (!correlationInputFile.empty())
         correlationData_ = loadCorrelationDataFromFile((inputs->setupVariables().inputPath_ / correlationInputFile).generic_string());
-        
+
 }
 
 void XvaVariables::loadCube(const QuantLib::ext::shared_ptr<InputParameters>& inputs) {
@@ -458,7 +459,7 @@ void XvaAnalyticImpl::feedCorrelationToCAM(const std::map<std::pair<RiskFactorKe
     analytic()->configurations().crossAssetModelData->setCorrelations(instantaneousCorrelation);
 }
 
-void XvaAnalyticImpl::reset() { 
+void XvaAnalyticImpl::reset() {
     model_.reset();
     scenarioGenerator_.reset();
     scenarioData_.reset();
@@ -1221,25 +1222,46 @@ void XvaAnalyticImpl::runPostProcessor() {
     if (!dimCalculator_ && (analytics["mva"] || analytics["dim"])) {
         LOG("dim calculator not set, create one");
 	    std::map<std::string, Real> currentIM;
-        if (xvaVars->collateralBalances_) {
-                for (auto const& [n, b] : xvaVars->collateralBalances_->collateralBalances()) {
+        Real dimScaling = xvaVars->dimScaling_;
+        if (dimScaling == QuantLib::Null<Real>() && xvaVars->collateralBalances_) {
+            for (auto const& [n, b] : xvaVars->collateralBalances_->collateralBalances()) {
+                Real im = b->initialMargin();
+                QL_REQUIRE(im != QuantLib::Null<Real>() && im > 0.0,
+                          "DIM: collateral balance initial margin for netting set '"
+                              << n.nettingSetId()
+                              << "' is zero or not set. "
+                                 "Provide a valid IM or set dimScaling explicitly in the xva analytic.");
                 currentIM[n.nettingSetId()] =
-                    b->initialMargin() *
-                    (b->currency() == baseCurrency
-                         ? 1.0
-                         : analytic()->market()->fxRate(b->currency() + baseCurrency, marketConfiguration)->value());
+                   im *
+                   (b->currency() == baseCurrency
+                        ? 1.0
+                        : analytic()->market()->fxRate(b->currency() + baseCurrency, marketConfiguration)->value());
             }
         }
 
         DLOG("Create a '" << xvaVars->dimModel_ << "' Dynamic Initial Margin Calculator");
 
+        if (xvaVars->dimModel_ == "Regression" || xvaVars->dimModel_ == "DeltaVaR" ||
+            xvaVars->dimModel_ == "DeltaGammaNormalVaR" || xvaVars->dimModel_ == "DeltaGammaVaR") {
+            if (dimScaling == QuantLib::Null<Real>()) {
+                for (auto const& n : getNettingSetIds(analytic()->portfolio())) {
+                    QL_REQUIRE(currentIM.count(n) > 0,
+                               "DIM: dimScaling is not set and netting set '"
+                                   << n << "' has no entry in collateralBalancesFile. "
+                                   << "Provide dimScaling explicitly in the XVA analytic or supply a "
+                                   << "collateralBalancesFile with valid initial margins for each netting set.");
+                }
+            }
+        }
+
         if (xvaVars->dimModel_ == "Regression") {
             dimCalculator_ = QuantLib::ext::make_shared<RegressionDynamicInitialMarginCalculator>(
                 analytic()->portfolio(), cube_, cubeInterpreter_, scenarioData_, dimQuantile,
                 dimHorizonCalendarDays, dimRegressionOrder, dimRegressors, dimLocalRegressionEvaluations,
-                dimLocalRegressionBandwidth, currentIM);
+                dimLocalRegressionBandwidth, currentIM,
+                xvaVars->deterministicInitialMargin_, dimScaling);
         } else if (xvaVars->dimModel_ == "DeltaVaR" ||
-		   xvaVars->dimModel_ == "DeltaGammaNormalVaR" ||
+                   xvaVars->dimModel_ == "DeltaGammaNormalVaR" ||
                    xvaVars->dimModel_ == "DeltaGammaVaR") {
             QL_REQUIRE(nettingSetCube_ && sensitivityStorageManager_,
                        "netting set cube or sensitivity storage manager not set - "
@@ -1256,7 +1278,7 @@ void XvaAnalyticImpl::runPostProcessor() {
                 model_, nettingSetCube_, sensitivityStorageManager_, xvaVars->curveSensiGrid_, dimHorizonCalendarDays);
             dimCalculator_ = QuantLib::ext::make_shared<DynamicDeltaVaRCalculator>(
                 analytic()->portfolio(), cube_, cubeInterpreter_, scenarioData_, dimQuantile,
-                dimHorizonCalendarDays, dimHelper, ddvOrder, currentIM);
+                dimHorizonCalendarDays, dimHelper, ddvOrder, currentIM, dimScaling);
         } else if (xvaVars->dimModel_ == "SimmAnalytic") {
             QL_REQUIRE(nettingSetCube_ && sensitivityStorageManager_,
                        "netting set cube or sensitivity storage manager not set - "
@@ -1601,7 +1623,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
         ProgressMessage(msg, 0, 1).log();
         LOG("Generating " + runStr + " reports and cube outputs");
 
-        // By default, will write all exposure reports individually (one report per trade, nettingset, etc.), but when 
+        // By default, will write all exposure reports individually (one report per trade, nettingset, etc.), but when
         // writeIndividualExposureReports is set to false, it will combine the reports of the same type into a single file.
 
         if (xvaVars->exposureProfilesByTrade_) {
