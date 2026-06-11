@@ -272,6 +272,10 @@ void ValuationEngine::buildCube(const QuantLib::ext::shared_ptr<data::Portfolio>
         timings.fixingTime += data::os::nanosecondsClock() - fixingTimeStart;
     }
 
+    if (fixingManager_ != nullptr) {
+        fixingManager_->reset();
+    }
+
     if (dryRun) {
         LOG("Doing a dry run - fill remaining cube with random values.");
         for (Size sample = 1; sample < outputCube->samples(); ++sample) {
