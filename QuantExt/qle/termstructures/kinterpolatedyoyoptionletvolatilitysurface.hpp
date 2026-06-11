@@ -123,7 +123,7 @@ namespace QuantExt {
          Real displacement)
     : YoYOptionletVolatilitySurface(settlementDays, cal, bdc, dc, lag,
                                     capFloorPrices->yoyIndex()->frequency(),
-                                    capFloorPrices->yoyIndex()->interpolated(),
+                                    capFloorPrices->indexIsInterpolated(),
                                     volType, displacement),
       capFloorPrices_(capFloorPrices), yoyInflationCouponPricer_(pricer),
       yoyOptionletStripper_(yoyOptionletStripper),

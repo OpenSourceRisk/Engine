@@ -844,6 +844,7 @@ using ore::data::EquityOptionWithBarrier;
 using ore::data::BGSTrancheData;
 using OREBalanceGuaranteedSwap = ore::data::BalanceGuaranteedSwap;
 using ore::data::BondFuture;
+using ore::data::BondFutureOption;
 using ore::data::BondPosition;
 using ore::data::BondRepo;
 using ore::data::Ascot;
@@ -881,6 +882,9 @@ using ore::data::FxVarSwap;
 using ore::data::ComVarSwap;
 using OREBalanceGuaranteedSwap = ore::data::BalanceGuaranteedSwap;
 using ORERiskParticipationAgreement = ore::data::RiskParticipationAgreement;
+using ore::data::EquityAutoDeltaHedgedOption;
+using ore::data::UnderlyingOptionData;
+using ore::data::RateDigitalOption;
 %}
 
 %rename(OREBondTRS) ore::data::BondTRS;
@@ -957,6 +961,19 @@ public:
     void build(const ext::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
+};
+
+// ore/OREData/ored/portfolio/bondfutureoption.hpp
+
+%shared_ptr(BondFutureOption)
+class BondFutureOption : public ore::data::VanillaOptionTrade {
+public:
+    BondFutureOption();
+    BondFutureOption(Envelope& env,
+        OptionData optionData,
+        std::string futureContractName,
+        QuantLib::Real futureContractNotional,
+        QuantLib::Real strikePrice);
 };
 
 // ore/OREData/ored/portfolio/bondposition.hpp
@@ -1565,5 +1582,62 @@ public:
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 };
+
+// ore/OREData/ored/portfolio/equityautodeltahedgeoption.hpp
+// ore/OREData/ored/portfolio/ratedigitaloption.hpp
+
+%shared_ptr(ore::data::EquityAutoDeltaHedgedOption)
+%shared_ptr(ore::data::RateDigitalOption)
+
+namespace ore {
+namespace data {
+
+struct UnderlyingOptionData {
+    OptionData optionData;
+    EquityUnderlying equityUnderlying;
+    std::string currency;
+    TradeStrike strike;
+    std::string strikeCurrency;
+    double quantity;
+};
+
+class EquityAutoDeltaHedgedOption : public Trade {
+public:
+    EquityAutoDeltaHedgedOption();
+    void build(const ext::shared_ptr<EngineFactory>&) override;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+
+    const std::vector<UnderlyingOptionData>& underlyings() const;
+    double hedgingVolatility() const;
+    const QuantLib::Date& observationStartDate() const;
+    double driftRate() const;
+};
+
+class RateDigitalOption : public Trade {
+public:
+    RateDigitalOption();
+    RateDigitalOption(const Envelope& env, const OptionData& option, const std::string& index,
+                      QuantLib::Real strike, QuantLib::Real payoffAmount,
+                      const std::string& payoffCurrency, const std::string& fixingDate,
+                      const std::string& paymentDate);
+
+    void build(const ext::shared_ptr<EngineFactory>&) override;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+
+    const OptionData& option() const;
+    const std::string& indexName() const;
+    QuantLib::Real strike() const;
+    QuantLib::Real payoffAmount() const;
+    const std::string& payoffCurrency() const;
+    const std::string& fixingDate() const;
+    const std::string& paymentDate() const;
+};
+
+} // namespace data
+} // namespace ore
+
+%template(UnderlyingOptionDataVector) std::vector<ore::data::UnderlyingOptionData>;
 
 #endif

@@ -26,6 +26,7 @@
 #include <ql/optional.hpp>
 #include <ored/configuration/bootstrapconfig.hpp>
 #include <ored/configuration/curveconfig.hpp>
+#include <ored/configuration/reportconfig.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/date.hpp>
 #include <ql/time/daycounter.hpp>
@@ -192,6 +193,7 @@ public:
 
     const string& currency() const { return currency_; }
     const std::map<int, Config>& configs() const { return configs_; }
+    const ReportConfig& reportConfig() const { return reportConfig_; }
 
 private:
     void populateQuotes();
@@ -202,6 +204,7 @@ private:
                              const std::string& reinterpretedYieldCurveID) const;
     std::string currency_;
     std::map<int, Config> configs_;
+    ReportConfig reportConfig_;
 };
 
 } // namespace data

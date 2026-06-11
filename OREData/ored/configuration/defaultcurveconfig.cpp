@@ -98,6 +98,13 @@ void DefaultCurveConfig::fromXML(XMLNode* node) {
         configs_[0] = tmp;
     }
     populateQuotes();
+
+    // Option report configuration of pillar dates
+    if (auto tmp = XMLUtils::getChildNode(node, "Report")) {
+        reportConfig_.fromXML(tmp);
+    }
+
+    populateRequiredIds();
 }
 
 XMLNode* DefaultCurveConfig::toXML(XMLDocument& doc) const {
@@ -111,6 +118,8 @@ XMLNode* DefaultCurveConfig::toXML(XMLDocument& doc) const {
     for (auto& tmp : configs_) {
         XMLUtils::appendNode(configs, tmp.second.toXML(doc));
     }
+
+    XMLUtils::appendNode(node, reportConfig_.toXML(doc));
 
     return node;
 }

@@ -60,6 +60,8 @@ public:
 
     QuantLib::ext::shared_ptr<InflationCurveCalibrationInfo> calibrationInfo() const { return calibrationInfo_; }
 
+    const std::map<QuantLib::Period, QuantLib::Period>& observationLags() const { return observationLags_; }
+
 private:
     struct CurveBuildResults {
         QuantLib::ext::shared_ptr<InflationTermStructure> curve;
@@ -70,6 +72,7 @@ private:
         std::vector<double> mdQuoteValues;
         std::vector<std::string> rateHelperTypes;
         std::vector<std::function<std::vector<TradeCashflowReportData>()>> cashflowGenerators;
+        std::map<QuantLib::Period, QuantLib::Period> observationLags;
     };
 
     CurveBuildResults
@@ -102,6 +105,7 @@ private:
     InflationCurveSpec spec_;
     QuantLib::ext::shared_ptr<InflationTermStructure> curve_;
     QuantLib::ext::shared_ptr<InflationCurveCalibrationInfo> calibrationInfo_;
+    std::map<QuantLib::Period, QuantLib::Period> observationLags_;
 };
 
 /*! Given an \p asof and inflation swap \p convention, determine the start date of an inflation swap.

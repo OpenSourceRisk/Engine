@@ -70,7 +70,7 @@ DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(const Handle<YieldTermStr
                                                        const bool conditionalOnSurvival, const bool spreadOnIncome,
                                                        const bool treatSecuritySpreadAsCreditSpread)
     : securitySpread_(securitySpread), timestepPeriod_(timestepPeriod),
-      includeSettlementDateFlows_(includeSettlementDateFlows), incomeCurve_(incomeCurve),
+      includeSettlementDateFlows_(includeSettlementDateFlows), includePastCashflows_(false), incomeCurve_(incomeCurve),
       conditionalOnSurvival_(conditionalOnSurvival), spreadOnIncome_(spreadOnIncome),
       treatSecuritySpreadAsCreditSpread_(treatSecuritySpreadAsCreditSpread) {
     discountCurve_ = securitySpread_.empty() || treatSecuritySpreadAsCreditSpread_

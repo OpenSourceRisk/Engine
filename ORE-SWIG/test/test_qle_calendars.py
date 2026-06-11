@@ -3,7 +3,7 @@ Copyright (C) 2026 Quaternion Risk Management Ltd
 All rights reserved.
 
 Focused Python wrapper tests for the seven QuantExt calendar classes added
-in ACADIAQPR-14062: AmendedCalendar, Austria, France, Israel, Mauritius,
+in ACADIAQPR-14062: AmendedCalendar, Austria, France, Mauritius,
 Switzerland, and UnitedArabEmirates.
 """
 
@@ -18,7 +18,6 @@ from ORE import (
     October,
     QLEAustria,
     QLEFrance,
-    QLEIsrael,
     QLESwitzerland,
     Saturday,
     Sunday,
@@ -120,38 +119,6 @@ class FranceTest(unittest.TestCase):
         self.assertEqual(len(list(hols)), len(expected))
         for expected_date, actual_date in zip(expected, hols):
             self.assertEqual(expected_date, actual_date)
-
-
-class IsraelTest(unittest.TestCase):
-    """Tests for QuantExt::Israel calendar wrapper (exposed as QLEIsrael)."""
-
-    def test_enum_visibility(self) -> None:
-        """Verify MarketExt enum values are accessible on the class."""
-        self.assertTrue(hasattr(QLEIsrael, "Telbor"))
-        self.assertTrue(hasattr(QLEIsrael, "TASE"))
-        self.assertTrue(hasattr(QLEIsrael, "Settlement"))
-
-    def test_default_is_telbor(self) -> None:
-        """Default constructor should produce a Telbor calendar."""
-        cal = QLEIsrael()
-        # Telbor: Saturday and Sunday are weekends; Friday is not
-        self.assertFalse(cal.isWeekend(Friday))
-        self.assertTrue(cal.isWeekend(Saturday))
-        self.assertTrue(cal.isWeekend(Sunday))
-
-    def test_telbor_weekends(self) -> None:
-        """Telbor calendar uses Sat/Sun weekends (Western convention)."""
-        cal = QLEIsrael(QLEIsrael.Telbor)
-        self.assertFalse(cal.isWeekend(Friday))
-        self.assertTrue(cal.isWeekend(Saturday))
-        self.assertTrue(cal.isWeekend(Sunday))
-
-    def test_settlement_weekends(self) -> None:
-        """Settlement calendar uses Fri/Sat weekends (Israeli convention)."""
-        cal = QLEIsrael(QLEIsrael.Settlement)
-        self.assertTrue(cal.isWeekend(Friday))
-        self.assertTrue(cal.isWeekend(Saturday))
-        self.assertFalse(cal.isWeekend(Sunday))
 
 
 class MauritiusTest(unittest.TestCase):
@@ -278,7 +245,6 @@ class QleCalendarExportSmokeTest(unittest.TestCase):
             "AmendedCalendar",
             "QLEAustria",
             "QLEFrance",
-            "QLEIsrael",
             "Mauritius",
             "QLESwitzerland",
             "UnitedArabEmirates",

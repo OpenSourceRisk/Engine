@@ -208,6 +208,7 @@ portfolio/builders/riskparticipationagreement.cpp
 portfolio/builders/scriptedtrade.cpp
 portfolio/builders/swap.cpp
 portfolio/builders/swaption.cpp
+portfolio/builders/utilities.cpp
 portfolio/builders/varianceswap.cpp
 portfolio/builders/yoycapfloor.cpp
 portfolio/callablebond.cpp
@@ -332,6 +333,7 @@ portfolio/tradefactory.cpp
 portfolio/tradegenerator.cpp
 portfolio/trademonetary.cpp
 portfolio/tradestrike.cpp
+portfolio/tradeutils.cpp
 portfolio/tranche.cpp
 portfolio/trs.cpp
 portfolio/trsunderlyingbuilder.cpp
@@ -642,6 +644,7 @@ portfolio/builders/riskparticipationagreement.hpp
 portfolio/builders/scriptedtrade.hpp
 portfolio/builders/swap.hpp
 portfolio/builders/swaption.hpp
+portfolio/builders/utilities.hpp
 portfolio/builders/vanillaoption.hpp
 portfolio/builders/varianceswap.hpp
 portfolio/builders/yoycapfloor.hpp
@@ -774,6 +777,7 @@ portfolio/tradefactory.hpp
 portfolio/tradegenerator.hpp
 portfolio/trademonetary.hpp
 portfolio/tradestrike.hpp
+portfolio/tradeutils.hpp
 portfolio/tranche.hpp
 portfolio/trs.hpp
 portfolio/trsunderlyingbuilder.hpp

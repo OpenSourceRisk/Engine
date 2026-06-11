@@ -118,15 +118,15 @@ private:
     std::vector<QuantLib::Period> curveTenors_;
     std::string baseCurrency_;
     std::vector<std::string> foreignCurrencies_;
-    QuantLib::Real lambda_;
-    bool useForwardRate_;
-    QuantLib::Real varianceRetained_;
+    QuantLib::Real lambda_ = Null<Real>();
+    bool useForwardRate_ = false;
+    QuantLib::Real varianceRetained_ = Null<Real>();
     bool pcaCalibration_ = false;
     bool meanReversionCalibration_ = false;
 
-    QuantLib::Size basisFunctionNumber_;
-    QuantLib::Real kappaUpperBound_;
-    QuantLib::Size haltonMaxGuess_;
+    QuantLib::Size basisFunctionNumber_ = Null<Size>();
+    QuantLib::Real kappaUpperBound_ = Null<Real>();
+    QuantLib::Size haltonMaxGuess_ = Null<Size>();
 
     std::map<std::string, std::map<QuantLib::Date, std::vector<QuantLib::Real>>> irCurves_;
     std::map<std::string, std::map<QuantLib::Date, QuantLib::Real>> fxSpots_;

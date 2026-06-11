@@ -429,7 +429,7 @@ bool parseCommodityCalendarSpreadVolSurfaceName(const std::string& name, std::st
 
 QuantLib::ext::shared_ptr<QuantExt::PriceTermStructure>
 getCalendarSpreadPriceCurve(const ore::data::Market* market, const std::string& name, const std::string& configuration,
-                            int offset, const QuantLib::ext::shared_ptr<FutureExpiryCalculator>& expCalc) {
+                            int offset, const QuantLib::ext::shared_ptr<QuantExt::FutureExpiryCalculator>& expCalc) {
     QL_REQUIRE(market != nullptr, "market is required to build calendar spread price curve for " << name);
     Handle<QuantExt::PriceTermStructure> configuredSpreadCurve;
     try {
@@ -459,7 +459,7 @@ getCalendarSpreadPriceCurve(const ore::data::Market* market, const std::string& 
                "Underlying commodity price curve "
                    << commodityName << " is required to build calendar spread volatility surface " << name);
     DLOG("Building calendar spread price curve for " << name << " from underlying " << commodityName);
-    return QuantLib::ext::make_shared<CalendarSpreadFuturePriceTermStructure>(underlyingPriceCurve, expCalc, offset);
+    return QuantLib::ext::make_shared<QuantExt::CalendarSpreadFuturePriceTermStructure>(underlyingPriceCurve, expCalc, offset);
 }
 
 QuantLib::ext::shared_ptr<QuantExt::PriceTermStructure> getCalendarSpreadPriceCurve(const ore::data::Market* market,

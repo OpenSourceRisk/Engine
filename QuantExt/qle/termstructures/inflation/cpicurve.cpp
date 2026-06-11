@@ -19,25 +19,21 @@ using QuantLib::Seasonality;
 using QuantLib::Time;
 using QuantLib::ZeroInflationTermStructure;
 
-CPICurve::CPICurve(Date baseDate, Real baseCPI, const Period& observationLag, Frequency frequency,
+CPICurve::CPICurve(Date baseDate, Real baseCPI, Frequency frequency, const DayCounter& dayCounter,
+                   const QuantLib::ext::shared_ptr<Seasonality>& seasonality)
+    : ZeroInflationTermStructure(baseDate, frequency, dayCounter, seasonality), baseCPI_(baseCPI) {
+    check();
+}
+
+CPICurve::CPICurve(const Date& referenceDate, Date baseDate, Real baseCPI, Frequency frequency,
                    const DayCounter& dayCounter, const QuantLib::ext::shared_ptr<Seasonality>& seasonality)
-    : ZeroInflationTermStructure(baseDate, observationLag, frequency, dayCounter, seasonality), baseCPI_(baseCPI) {
+    : ZeroInflationTermStructure(referenceDate, baseDate, frequency, dayCounter, seasonality), baseCPI_(baseCPI) {
     check();
 }
 
-CPICurve::CPICurve(const Date& referenceDate, Date baseDate, Real baseCPI, const Period& observationLag,
-                   Frequency frequency, const DayCounter& dayCounter,
-                   const QuantLib::ext::shared_ptr<Seasonality>& seasonality)
-    : ZeroInflationTermStructure(referenceDate, baseDate, observationLag, frequency, dayCounter, seasonality),
-      baseCPI_(baseCPI) {
-    check();
-}
-
-CPICurve::CPICurve(Natural settlementDays, const Calendar& calendar, Date baseDate, Real baseCPI,
-                   const Period& observationLag, Frequency frequency, const DayCounter& dayCounter,
-                   const QuantLib::ext::shared_ptr<Seasonality>& seasonality)
-    : ZeroInflationTermStructure(settlementDays, calendar, baseDate, observationLag, frequency, dayCounter,
-                                 seasonality),
+CPICurve::CPICurve(Natural settlementDays, const Calendar& calendar, Date baseDate, Real baseCPI, Frequency frequency,
+                   const DayCounter& dayCounter, const QuantLib::ext::shared_ptr<Seasonality>& seasonality)
+    : ZeroInflationTermStructure(settlementDays, calendar, baseDate, frequency, dayCounter, seasonality),
       baseCPI_(baseCPI) {
     check();
 }

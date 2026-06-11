@@ -1,5 +1,6 @@
 ARG DEBIAN_TAG
 ARG DOCKER_REPO
+FROM ${DOCKER_REPO}docker:cli as docker-cli
 FROM ${DOCKER_REPO}debian:${DEBIAN_TAG}
 
 RUN apt-get update \
@@ -10,13 +11,7 @@ RUN apt-get update \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
-RUN sh -c 'curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg' \
-  && sh -c 'echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian bullseye stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null' \
-  && apt-get update \
-  && apt-get install -f -y docker-ce-cli \
-  -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" \
-  && apt-get clean \
-  && rm -rf /var/lib/apt/lists/*
+COPY --from=docker-cli /usr/local/bin/docker /usr/local/bin/
 
 # Create and activate virtual environment
 RUN python3 -m venv /venv

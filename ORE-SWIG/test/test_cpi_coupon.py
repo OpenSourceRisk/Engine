@@ -28,7 +28,7 @@ def _build_inflation_index_with_curve(today, baseCPI, observationLag, inflRate, 
 
     inflCurve = PiecewiseZeroInflation(
         today, baseDate,
-        observationLag, Monthly,
+        Monthly,
         dayCounter, [zeroHelper])
 
     inflHandle = RelinkableZeroInflationTermStructureHandle(inflCurve)

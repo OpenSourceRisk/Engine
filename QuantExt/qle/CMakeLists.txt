@@ -14,7 +14,6 @@ calendars/greece.cpp
 calendars/ice.cpp
 calendars/ireland.cpp
 calendars/islamicweekendsonly.cpp
-calendars/israel.cpp
 calendars/luxembourg.cpp
 calendars/malaysia.cpp
 calendars/mauritius.cpp
@@ -179,6 +178,7 @@ math/openclenvironment.cpp
 math/randomvariable.cpp
 math/randomvariable_io.cpp
 math/randomvariable_ops.cpp
+math/randomvariable_regressioncache.cpp
 math/randomvariablelsmbasissystem.cpp
 math/stoplightbounds.cpp
 methods/brownianbridgepathinterpolator.cpp
@@ -339,7 +339,7 @@ pricingengines/mclgmswapengine.cpp
 pricingengines/mclgmswaptionengine.cpp
 pricingengines/mcmultilegbaseengine.cpp
 pricingengines/mcmultilegoptionengine.cpp
-pricingengines/mcregressionmodel.cpp
+pricingengines/mcengineregression.cpp
 pricingengines/midpointcdoengine.cpp
 pricingengines/midpointcdsenginemultistate.cpp
 pricingengines/midpointindexcdsengine.cpp
@@ -498,7 +498,6 @@ calendars/greece.hpp
 calendars/ice.hpp
 calendars/ireland.hpp
 calendars/islamicweekendsonly.hpp
-calendars/israel.hpp
 calendars/luxembourg.hpp
 calendars/malaysia.hpp
 calendars/mauritius.hpp
@@ -742,6 +741,7 @@ math/randomvariable.hpp
 math/randomvariable_io.hpp
 math/randomvariable_opcodes.hpp
 math/randomvariable_ops.hpp
+math/randomvariable_regressioncache.hpp
 math/randomvariablelsmbasissystem.hpp
 math/stabilisedglls.hpp
 math/stoplightbounds.hpp
@@ -943,7 +943,7 @@ pricingengines/mclgmswapengine.hpp
 pricingengines/mclgmswaptionengine.hpp
 pricingengines/mcmultilegbaseengine.hpp
 pricingengines/mcmultilegoptionengine.hpp
-pricingengines/mcregressionmodel.hpp
+pricingengines/mcengineregression.hpp
 pricingengines/midpointcdoengine.hpp
 pricingengines/midpointcdsenginemultistate.hpp
 pricingengines/midpointindexcdsengine.hpp
@@ -1121,12 +1121,10 @@ termstructures/terminterpolateddefaultcurve.hpp
 termstructures/weightedyieldtermstructure.hpp
 termstructures/yieldplusdefaultyieldtermstructure.hpp
 termstructures/yoyinflationcurveobservermoving.hpp
-termstructures/yoyinflationcurveobserverstatic.hpp
 termstructures/yoyoptionletsolver.hpp
 termstructures/yoyoptionletsurfacestripper.hpp
 termstructures/yoypricesurfacefromvols.hpp
 termstructures/zeroinflationcurveobservermoving.hpp
-termstructures/zeroinflationcurveobserverstatic.hpp
 time/dateutilities.hpp
 time/futureexpirycalculator.hpp
 time/monthcounter.hpp

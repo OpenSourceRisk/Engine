@@ -56,8 +56,12 @@ SensitivityRecord ParSensitivityCubeStream::next() {
         tradeIdx_++;
         if (tradeIdx_ != cube_->zeroCubes()[zeroCubeIdx_]->tradeIdx().end()) {
             // update trade currency
-            if (!tradeCurrency_.empty())
-                currentTradeCurrency_ = tradeCurrency_.find(tradeIdx_->first)->second;
+            if (!tradeCurrency_.empty()) {
+                auto it = tradeCurrency_.find(tradeIdx_->first);
+                QL_REQUIRE(it != tradeCurrency_.end(),
+                           "cannot find currency for trade " << tradeIdx_->first << "in tradeCurrency map");
+                currentTradeCurrency_ = it->second;
+            }
             // update par deltas
             DLOG("Retrieving par deltas for trade " << tradeIdx_->first);
             currentDeltas_ = cube_->parDeltas(zeroCubeIdx_, tradeIdx_->second);
@@ -107,8 +111,12 @@ void ParSensitivityCubeStream::init() {
     // If we have trade IDs in the underlying cube
     if (!cube_->zeroCubes()[zeroCubeIdx_]->tradeIdx().empty()) {
         tradeIdx_ = cube_->zeroCubes()[zeroCubeIdx_]->tradeIdx().begin();
-        if (!tradeCurrency_.empty())
-            currentTradeCurrency_ = tradeCurrency_.find(tradeIdx_->first)->second;
+        if (!tradeCurrency_.empty()) {
+            auto it = tradeCurrency_.find(tradeIdx_->first);
+            QL_REQUIRE(it != tradeCurrency_.end(),
+                       "cannot find currency for trade " << tradeIdx_->first << "in tradeCurrency map");
+            currentTradeCurrency_ = it->second;
+        }
         DLOG("Retrieving par deltas for trade " << tradeIdx_->first);
         currentDeltas_ = cube_->parDeltas(zeroCubeIdx_, tradeIdx_->second);
         itCurrent_ = currentDeltas_.begin();

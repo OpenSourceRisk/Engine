@@ -59,6 +59,8 @@ void AmcCgFxOptionEngine::calculate() const {
     AmcCgFxOptionEngineBase::calculateFxOptionBase();
     if(!amcEnabled_)
         results_.value = npvValue_;
+    else
+        results_.value = 0.0;
 }
 
 void AmcCgFxEuropeanForwardOptionEngine::calculate() const {
@@ -71,6 +73,8 @@ void AmcCgFxEuropeanForwardOptionEngine::calculate() const {
     AmcCgFxOptionEngineBase::calculateFxOptionBase();
     if(!amcEnabled_)
         results_.value = npvValue_;
+    else
+        results_.value = 0.0;
 }
 
 void AmcCgFxEuropeanCSOptionEngine::calculate() const {
@@ -117,6 +121,8 @@ void AmcCgFxEuropeanCSOptionEngine::calculate() const {
 
     if(!amcEnabled_)
         results_.value = npvValue_;
+    else
+        results_.value = 0.0;
 }
 
 } // namespace data
