@@ -31,23 +31,33 @@
 #include <ql/optional.hpp>
 
 #include <boost/algorithm/string.hpp>
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/topological_sort.hpp>
+#include <set>
+
 namespace ore {
 namespace data {
 using namespace QuantLib;
 using namespace QuantExt;
     
-std::vector<Date> coarsenDateGrid(const std::vector<Date>& dates, const std::string& rule, const Date& referenceDate) {
+std::pair<std::vector<Date>, std::vector<Date>> coarsenDateGrid(const std::vector<Date>& dates, const std::string& rule,
+    const Date& referenceDate, const std::vector<Date>& unadjDates) {
 
     // if rule is empty return original grid
 
     if (rule.empty())
-        return dates;
+        return {dates, unadjDates};
+
+    // An initial check that if `unadjDates` is non-empty, it is the same size as `dates`.
+    QL_REQUIRE(unadjDates.empty() || unadjDates.size() == dates.size(), "coarsenDateGrid: if unadjusted dates are "
+        "provided, they should be the same size as the original date grid");
 
     // get ref date and prepare result vector
 
     Date refDate = referenceDate == Null<Date>() ? Settings::instance().evaluationDate() : referenceDate;
 
     std::vector<Date> result;
+    std::vector<Date> unadjResult;
 
     // parse the rule
 
@@ -61,11 +71,17 @@ std::vector<Date> coarsenDateGrid(const std::vector<Date>& dates, const std::str
         grid.push_back(std::make_pair(parsePeriod(tmp[0]), parsePeriod(tmp[1])));
     }
 
-    // keep all dates <= refDate
-
+    // keep all dates <= refDate (and corresponding unadjusted dates if provided).
     auto d = dates.begin();
-    for (; d != dates.end() && *d <= refDate; ++d) {
-        result.push_back(*d);
+    if (!unadjDates.empty()) {
+        for (; d != dates.end() && *d <= refDate; ++d)
+            result.push_back(*d);
+    } else {
+        auto u = unadjDates.begin();
+        for (; d != dates.end() && *d <= refDate; ++d, ++u) {
+            result.push_back(*d);
+            unadjResult.push_back(*u);
+        }
     }
 
     // step through the rule grid...
@@ -90,14 +106,19 @@ std::vector<Date> coarsenDateGrid(const std::vector<Date>& dates, const std::str
             while (d != dates.end() && *d <= start)
                 candidates.push_back(*d++);
 
-            if (!candidates.empty())
+            if (!candidates.empty()) {
                 result.push_back(candidates.back());
+                if (!unadjDates.empty()) {
+                    unadjResult.push_back(unadjDates[std::distance(dates.begin(), d) - 1]);
+                }
+            }
+
         } while (start < end);
 
         start = end;
     }
 
-    return result;
+    return {result, unadjResult};
 }
 
 std::pair<std::string, ScriptedTradeScriptData> getScript(const ScriptedTrade& scriptedTrade,
@@ -140,6 +161,75 @@ void checkDuplicateName(const QuantLib::ext::shared_ptr<Context> context, const 
                "variable '" << name << "' already declared.");
 }
 
+namespace {
+
+using std::map;
+using std::set;
+using std::string;
+using std::vector;
+
+// Vertex is simply a schedule name.
+struct VertexData {
+    std::string scheduleName;
+};
+
+// Want to have a directed graph where vertices are schedules and there is an edge from A to B if schedule A depends on
+// schedule B. We will then do a topological sort of this graph to get the order in which to build the schedules.
+using Graph = boost::adjacency_list<
+    boost::vecS,
+    boost::vecS,
+    boost::directedS,
+    VertexData>;
+
+using Vertex = boost::graph_traits<Graph>::vertex_descriptor;
+
+// A small helper that uses boost graph to order the building of derived scehdules below.
+vector<string> derivedScheduleOrder(map<string, ScriptedTradeEventData> derivedSchedules,
+    const set<string>& builtSchedules) {
+
+    Graph graph;
+
+    // Mapping from schedule name to vertex descriptor for vertices in the graph.
+    std::unordered_map<std::string, Vertex> mpVertices;
+
+    // Create vertices for all derived schedule names.
+    for (const auto& entry : derivedSchedules) {
+        const auto& schedName = entry.first;
+        Vertex v = boost::add_vertex(graph);
+        graph[v].scheduleName = schedName;
+        mpVertices.emplace(schedName, v);
+    }
+
+    // Add an edge from derived schedule to base schedule. Fail if base schedule is not available.
+    for (const auto& [schedName, schedData] : derivedSchedules) {
+        if (builtSchedules.contains(schedData.baseSchedule()))
+            continue;
+        Vertex schedVertex = mpVertices.at(schedName);
+        auto itDep = mpVertices.find(schedData.baseSchedule());
+        QL_REQUIRE(itDep != mpVertices.end(), "makeContext: base schedule '" << schedData.baseSchedule() <<
+            "' not found for derived schedule '" << schedName << "'");
+        boost::add_edge(itDep->second, schedVertex, graph);
+    }
+
+    // Topological sort with check for cycles.
+    std::vector<Vertex> schedulesSorted;
+    try {
+        boost::topological_sort(graph, std::back_inserter(schedulesSorted));
+    } catch (const boost::not_a_dag&) {
+        QL_FAIL("makeContext: circular dependency detected among derived schedules.");
+    }
+
+    // Reverse the order to get the correct order for building the schedules and return the result.
+    vector<string> result;
+    result.reserve(schedulesSorted.size());
+    for (auto it = schedulesSorted.rbegin(); it != schedulesSorted.rend(); ++it) {
+        result.push_back(graph[*it].scheduleName);
+    }
+    return result;
+}
+
+} // namespace
+
 QuantLib::ext::shared_ptr<Context> makeContext(Size nPaths, const std::string& gridCoarsening,
                                        const std::vector<std::string>& schedulesEligibleForCoarsening,
                                        const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
@@ -149,30 +239,57 @@ QuantLib::ext::shared_ptr<Context> makeContext(Size nPaths, const std::string& g
                                        const std::vector<ScriptedTradeValueTypeData>& currencies,
                                        const std::vector<ScriptedTradeValueTypeData>& daycounters) {
 
+    // In make context below, if we hit a derived schedule that has `ShiftAnchor` set to `Unadjusted`, we need to have 
+    // an unadjusted version of the base schedule available. We do a first pass here over the events to identify the 
+    // names of the base schedules that appear in a derived schedule with `ShiftAnchor` set to `Unadjusted`. We store 
+    // the base schedule name as a key in the `unadjustedBaseSchedules` map and populate the vector of dates below in 
+    // the main pass if necessary.
+    map<string, vector<Date>> unadjustedBaseSchedules;
+    for (const auto& event : events) {
+        if (event.type() == ScriptedTradeEventData::Type::Derived) {
+            const ext::optional<DateDeltaAnchor>& anchor = event.shiftAnchor();
+            if (anchor && *anchor == DateDeltaAnchor::Unadjusted) {
+                unadjustedBaseSchedules.try_emplace(event.baseSchedule());
+            }
+        }
+    }
+
     TLOG("make context");
-
     auto context = QuantLib::ext::make_shared<Context>();
-
-
     map<string, ScriptedTradeEventData> derivedSchedules;
+    // keep track of schedules we have built so far
+    set<string> builtSchedules;
     for (auto const& x : events) {
         TLOG("adding event " << x.name());
         if (x.type() == ScriptedTradeEventData::Type::Value) {
             checkDuplicateName(context, x.name());
             Date d = parseDate(x.value());
             context->scalars[x.name()] = EventVec{nPaths, d};
+            builtSchedules.insert(x.name());
         } else if (x.type() == ScriptedTradeEventData::Type::Array) {
             checkDuplicateName(context, x.name());
             QuantLib::Schedule s;
+            auto itUnadj = unadjustedBaseSchedules.find(x.name());
             try {
                 s = makeSchedule(x.schedule());
+                if (itUnadj != unadjustedBaseSchedules.end()) {
+                    auto tmpUnadj = makeSchedule(x.schedule(), Null<Date>(), {}, true);
+                    itUnadj->second = tmpUnadj.dates();
+                }
             } catch (const std::exception& e) {
                 QL_FAIL("failed building schedule '" << x.name() << "': " << e.what());
             }
             std::vector<Date> c;
             if (std::find(schedulesEligibleForCoarsening.begin(), schedulesEligibleForCoarsening.end(), x.name()) !=
                 schedulesEligibleForCoarsening.end()) {
-                c = coarsenDateGrid(s.dates(), gridCoarsening);
+
+                if (itUnadj != unadjustedBaseSchedules.end()) {
+                    std::tie(c, itUnadj->second) = coarsenDateGrid(s.dates(), gridCoarsening,
+                        Null<Date>(), itUnadj->second);
+                } else {
+                    std::tie(c, std::ignore) = coarsenDateGrid(s.dates(), gridCoarsening);
+                }
+
                 if (!gridCoarsening.empty()) {
                     TLOG("apply grid coarsening rule = " << gridCoarsening << " to '" << x.name()
                                                          << "', resulting grid:")
@@ -188,6 +305,7 @@ QuantLib::ext::shared_ptr<Context> makeContext(Size nPaths, const std::string& g
                 tmp.push_back(EventVec{nPaths, d});
             context->arrays[x.name()] = tmp;
             QL_REQUIRE(!tmp.empty(), "empty event array '" << x.name() << "' not allowed");
+            builtSchedules.insert(x.name());
         } else if (x.type() == ScriptedTradeEventData::Type::Derived) {
             derivedSchedules[x.name()] = x;
         } else {
@@ -196,41 +314,93 @@ QuantLib::ext::shared_ptr<Context> makeContext(Size nPaths, const std::string& g
         context->constants.insert(x.name());
     }
 
-    bool calculated;
-    while (derivedSchedules.size() > 0) {
-        calculated = false;
-        for (auto& ds : derivedSchedules) {
-            auto base = context->arrays.find(ds.second.baseSchedule());
-            checkDuplicateName(context, ds.second.name());
-            if (base != context->arrays.end()) {
-                try {
-                    Calendar cal = parseCalendar(ds.second.calendar());
-                    BusinessDayConvention conv = parseBusinessDayConvention(ds.second.convention());
-                    Period shift = parsePeriod(ds.second.shift());
-                    std::vector<ValueType> tmp;
-                    for (auto const& d : base->second) {
-                        QL_REQUIRE(d.which() == ValueTypeWhich::Event,
-                                   "expected event in base schedule, got " << valueTypeLabels.at(d.which()));
-                        EventVec e = boost::get<EventVec>(d);
-                        tmp.push_back(EventVec{nPaths, cal.advance(e.value, shift, conv)});
-                    }
-                    context->arrays[ds.second.name()] = tmp;
-                    derivedSchedules.erase(ds.second.name());
-                    calculated = true;
-                } catch (const std::exception& e) {
-                    QL_FAIL("failed building derived schedule '" << ds.second.name() << "': " << e.what());
-                }
-                break;
-            }
-        }
+    // Build the derived schedules, if there are any.
+    if (!derivedSchedules.empty()) {
+        vector<string> orderedSchedules = derivedScheduleOrder(derivedSchedules, builtSchedules);
+        for (const auto& schedName : orderedSchedules) {
+            const auto& evData = derivedSchedules.at(schedName);
+            checkDuplicateName(context, evData.name());
 
-        // If, after looping through the full list of derived schedules, we are unable to build any of them.
-        if (!calculated) {
-            for (const auto& ds : derivedSchedules) {
-                ALOG("Failed to build the derived schedule: " << ds.first);
+            // Populate base set of dates to be shifted.
+            vector<Date> anchorDates;
+            const ext::optional<DateDeltaAnchor>& anchor = evData.shiftAnchor();
+            if (anchor && *anchor == DateDeltaAnchor::Unadjusted) {
+                auto itUnadj = unadjustedBaseSchedules.find(evData.baseSchedule());
+                QL_REQUIRE(itUnadj != unadjustedBaseSchedules.end() && !itUnadj->second.empty(),
+                    "makeContext: unadjusted version of base schedule '" << evData.baseSchedule() <<
+                    "' not found for derived schedule '" << evData.name() << "'");
+                anchorDates = itUnadj->second;
+            } else {
+                const auto& ctxArrs = context->arrays;
+                auto itBase = ctxArrs.find(evData.baseSchedule());
+                QL_REQUIRE(itBase != ctxArrs.end(), "makeContext: base schedule '" << evData.baseSchedule() <<
+                    "' not found for derived schedule '" << evData.name() << "'");
+                anchorDates.reserve(itBase->second.size());
+                for (auto const& d : itBase->second) {
+                    QL_REQUIRE(d.which() == ValueTypeWhich::Event, "makeContext: expected event in base "
+                        "schedule, but got " << valueTypeLabels.at(d.which()));
+                    anchorDates.push_back(boost::get<EventVec>(d).value);
+                }
             }
-            QL_FAIL("Failed to build at least one derived schedule");
-            break;
+
+            // Create the shifted schedule.
+            Period shift;
+            ext::optional<DateDeltaUnit> shiftUnit;
+            vector<ValueType> thisBuiltSched;
+            try {
+                Calendar cal = parseCalendar(evData.calendar());
+                BusinessDayConvention conv = parseBusinessDayConvention(evData.convention());
+                shift = parsePeriod(evData.shift());
+                shiftUnit = evData.shiftUnit();
+                if (shiftUnit && *shiftUnit == QuantExt::DateDeltaUnit::CalendarDays) {
+                    QL_REQUIRE(shift.units() == Days, "makeContext: when making derived schedule, the shift unit "
+                        "is calendar days but the shift does not have day units, it has " << shift.units() << ".");
+                }
+
+                for (auto const& d : anchorDates) {
+                    if (shiftUnit && *shiftUnit == QuantExt::DateDeltaUnit::CalendarDays) {
+                        thisBuiltSched.push_back(EventVec{ nPaths, cal.adjust(d + shift, conv) });
+                    } else {
+                        thisBuiltSched.push_back(EventVec{ nPaths, cal.advance(d, shift, conv) });
+                    }
+                }
+
+                context->arrays[evData.name()] = thisBuiltSched;
+
+            } catch (const std::exception& e) {
+                QL_FAIL("makeContext: failed building derived schedule '" << evData.name() << "': " << e.what());
+            }
+
+            // We may want an unadjusted version of this schedule also if it is a base schedule for another 
+            // derived schedule with `ShiftAnchor` set to `Unadjusted`, so we store the unadjusted version in
+            // the map if needed.
+            auto itUnadjThis = unadjustedBaseSchedules.find(evData.name());
+            if (itUnadjThis != unadjustedBaseSchedules.end()) {
+                vector<Date> unadjDatesThis;
+                // If in this derived schedule, the shift period unit is days and the shift unit is business 
+                // days, then it is not clear what the unadjusted version of the derived schedule should be. In 
+                // this case, we log a warning and just use the possibly adjusted version above.
+                if (shift.length() != 0 && shift.units() == Days &&
+                    (!shiftUnit || *shiftUnit == QuantExt::DateDeltaUnit::BusinessDays)) {
+                    WLOG("makeContext: cannot create an unadjusted version of the derived schedule '"
+                            << evData.name() << "', using the adjusted version instead. Any derived schedule "
+                            << "depending on this unadjusted version may be affected.");
+                    unadjDatesThis.reserve(thisBuiltSched.size());
+                    for (const auto& d : thisBuiltSched)
+                        unadjDatesThis.push_back(boost::get<EventVec>(d).value);
+                } else {
+                    NullCalendar nullCal;
+                    unadjDatesThis.reserve(anchorDates.size());
+                    for (auto const& d : anchorDates) {
+                        if (shiftUnit && *shiftUnit == QuantExt::DateDeltaUnit::CalendarDays) {
+                            unadjDatesThis.push_back(d + shift);
+                        } else {
+                            unadjDatesThis.push_back(nullCal.advance(d, shift, Unadjusted));
+                        }
+                    }
+                }
+                itUnadjThis->second = unadjDatesThis;
+            }
         }
     }
 

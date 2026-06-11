@@ -182,8 +182,8 @@ public:
     const string& shift() const { return shift_; }
     bool removeFirstDate() const { return removeFirstDate_; }
     bool removeLastDate() const { return removeLastDate_; }
-    QuantLib::ext::optional<QuantExt::DateDeltaUnit> shiftUnit() const { return shiftUnit_; }
-    QuantLib::ext::optional<QuantExt::DateDeltaAnchor> shiftAnchor() const { return shiftAnchor_; }
+    const QuantLib::ext::optional<QuantExt::DateDeltaUnit>& shiftUnit() const { return shiftUnit_; }
+    const QuantLib::ext::optional<QuantExt::DateDeltaAnchor>& shiftAnchor() const { return shiftAnchor_; }
     //@}
 
     //! \name Modifiers
