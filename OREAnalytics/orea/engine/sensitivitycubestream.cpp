@@ -21,7 +21,6 @@
 #include <orea/scenario/shiftscenariogenerator.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
-#include <ored/portfolio/portfolio.hpp>
 
 #include <qle/utilities/time.hpp>
 
@@ -33,7 +32,6 @@ namespace ore {
 namespace analytics {
 
 using crossPair = SensitivityCube::crossPair;
-using ore::data::Portfolio;
 
 SensitivityCubeStream::SensitivityCubeStream(const QuantLib::ext::shared_ptr<SensitivityCube>& cube,
                                              const string& currency,

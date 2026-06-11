@@ -25,6 +25,7 @@
 
 #include <ored/marketdata/market.hpp>
 #include <ored/portfolio/optionwrapper.hpp>
+#include <ored/portfolio/trade.hpp>
 #include <ored/utilities/log.hpp>
 
 namespace ore {
