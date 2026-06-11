@@ -37,33 +37,38 @@ using namespace QuantLib;
 
     \ingroup indexes
 */
-class CommodityIntradayPowerIndex : public CommodityIndex {
+class IntradayPowerIndex : public Index {
 public:
     /*! spot quote is interpreted as of today */
-    CommodityIntradayPowerIndex(
-        const std::string& underlyingName, const QuantLib::Date& expiryDate, const Calendar& fixingCalendar,
+    IntradayPowerIndex(
+        const std::string& underlyingName, const QuantLib::Date& deliveryDate, const Calendar& fixingCalendar,
         const Handle<QuantExt::IntradayPriceTermStructure>& priceCurve = Handle<QuantExt::IntradayPriceTermStructure>(),
-        const QuantLib::Date& optionExpiryDate = QuantLib::Date(),
         const QuantLib::ext::shared_ptr<QuantExt::IntradayLoadProfile>& loadProfile = nullptr);
 
-    Real forecastFixing(const Date& fixingDate) const override;
+    std::string name() const override { return name_; }
+    Calendar fixingCalendar() const override { return fixingCalendar_; }
+    bool isValidFixingDate(const Date& fixingDate) const override { return fixingCalendar_.isBusinessDay(fixingDate); }
 
-    Real forecastFixing(const Time& fixingTime) const override;
+    Real fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const override;
+
+
+    Real forecastFixing(const Date& fixingDate) const;
 
     Real pastFixing(const Date& fixingDate) const override;
 
-    QuantLib::ext::shared_ptr<CommodityIndex>
-    clone(const QuantLib::Date& expiryDate = QuantLib::Date(), const Date& optionExpiryDate = QuantLib::Date(),
-          const QuantLib::ext::optional<QuantLib::Handle<PriceTermStructure>>& ts =
-              QuantLib::ext::nullopt) const override;
+    const Handle<QuantExt::IntradayPriceTermStructure>& priceCurve() const { return intradayCurve_; }
 
-protected:
-    Handle<QuantExt::IntradayPriceTermStructure> intradayCurve_;
-    QuantLib::ext::shared_ptr<QuantExt::IntradayLoadProfile> loadProfile_;
-    // Shared initialisation
+    const QuantLib::ext::shared_ptr<QuantExt::IntradayLoadProfile>& loadProfile() const { return loadProfile_; }
+
+    const QuantLib::Date& deliveryDate() const { return deliveryDate_; }
 
 private:
+    std::string name_;
+    QuantLib::Date deliveryDate_;
+    Calendar fixingCalendar_;
     Real intradayBucketFixing(const Date& fixingDate, int start, int end, bool isDstHour) const;
+    Handle<QuantExt::IntradayPriceTermStructure> intradayCurve_;
+    QuantLib::ext::shared_ptr<QuantExt::IntradayLoadProfile> loadProfile_;
 };
 
 } // namespace QuantExt

@@ -22,34 +22,34 @@
     \ingroup indexes
 */
 
-#include <qle/indexes/commodityintradaypowerindex.hpp>
+#include <qle/indexes/intradaypowerindex.hpp>
 
 #include <ql/indexes/indexmanager.hpp>
 #include <ql/settings.hpp>
 
 namespace QuantExt {
 
-CommodityIntradayPowerIndex::CommodityIntradayPowerIndex(
-    const std::string& underlyingName, const QuantLib::Date& expiryDate, const Calendar& fixingCalendar,
-    const Handle<QuantExt::IntradayPriceTermStructure>& priceCurve, const QuantLib::Date& optionExpiryDate,
-    const QuantLib::ext::shared_ptr<QuantExt::IntradayLoadProfile>& loadProfile)
-    : CommodityIndex(underlyingName, expiryDate, fixingCalendar, true,
-                     Handle<QuantExt::PriceTermStructure>(
-                         QuantLib::ext::dynamic_pointer_cast<QuantExt::PriceTermStructure>(priceCurve.currentLink())),
-                     optionExpiryDate),
-      intradayCurve_(priceCurve), loadProfile_(loadProfile) {}
+IntradayPowerIndex::IntradayPowerIndex(const std::string& underlyingName, const QuantLib::Date& deliveryDate,
+                                       const Calendar& fixingCalendar,
+                                       const Handle<QuantExt::IntradayPriceTermStructure>& priceCurve,
+                                       const QuantLib::ext::shared_ptr<QuantExt::IntradayLoadProfile>& loadProfile)
+    : deliveryDate_(deliveryDate), fixingCalendar_(fixingCalendar), intradayCurve_(priceCurve),
+      loadProfile_(loadProfile) {
+    std::ostringstream o;
+    o << "COMM-" << underlyingName << "-" << QuantLib::io::iso_date(deliveryDate_);
+    name_ = o.str();
 
-Real CommodityIntradayPowerIndex::forecastFixing(const Date& fixingDate) const {
-    return !intradayCurve_.empty() ? intradayCurve_->price(fixingDate, loadProfile_)
-                                   : CommodityIndex::forecastFixing(fixingDate);
+    registerWith(intradayCurve_);
+    registerWith(Settings::instance().evaluationDate());
+    registerWith(notifier());
 }
 
-Real CommodityIntradayPowerIndex::forecastFixing(const Time& fixingTime) const {
-    return !intradayCurve_.empty() ? intradayCurve_->price(fixingTime, loadProfile_)
-                                   : CommodityIndex::forecastFixing(fixingTime);
+Real IntradayPowerIndex::forecastFixing(const Date& fixingDate) const {
+    QL_REQUIRE(!intradayCurve_.empty(), "Intraday curve not provided for forecast fixing");
+    intradayCurve_->price(fixingDate, loadProfile_);
 }
 
-Real CommodityIntradayPowerIndex::intradayBucketFixing(const Date& fixingDate, int start, int end,
+Real IntradayPowerIndex::intradayBucketFixing(const Date& fixingDate, int start, int end,
                                                        bool isDstHour) const {
     QL_REQUIRE(start >= 0, "start must be >= 0, got " << start);
     QL_REQUIRE(end > start, "end must be > start, got " << end << " <= " << start);
@@ -95,9 +95,10 @@ Real CommodityIntradayPowerIndex::intradayBucketFixing(const Date& fixingDate, i
     return histFixing;
 }
 
-Real CommodityIntradayPowerIndex::pastFixing(const Date& fixingDate) const {
+Real IntradayPowerIndex::pastFixing(const Date& fixingDate) const {
+    
     if (loadProfile_ == nullptr || (loadProfile_->loadProfile().empty() && loadProfile_->loadProfileDST().empty()))
-        return CommodityIndex::pastFixing(fixingDate);
+        return Index::pastFixing(fixingDate);
     else {
         // Assume right now, that the prices can be observed at the same granularity as the load profile,
         // future improvement, define a granularity and use it to fetch the price for each time bucket
@@ -115,21 +116,9 @@ Real CommodityIntradayPowerIndex::pastFixing(const Date& fixingDate) const {
             totalLoad += load * (end - start) / 3600.0;
             amount += load * (end - start) / 3600.0 * intradayBucketFixing(fixingDate, start, end, true) ;
         }
-        return totalLoad > 0.0 ? amount / totalLoad : CommodityIndex::pastFixing(fixingDate);
+        return totalLoad > 0.0 ? amount / totalLoad : Index::pastFixing(fixingDate);
     }
 }
 
-QuantLib::ext::shared_ptr<CommodityIndex>
-CommodityIntradayPowerIndex::clone(const QuantLib::Date& expiryDate, const Date& optionExpiryDate,
-                                   const QuantLib::ext::optional<QuantLib::Handle<PriceTermStructure>>& ts) const {
-    const auto& pts = ts ? *ts : priceCurve();
-    const auto& ed = expiryDate == Date() ? this->expiryDate() : expiryDate;
-    const auto& oed = optionExpiryDate == Date() ? this->optionExpiryDate() : optionExpiryDate;
-    auto intradayPts = QuantLib::ext::dynamic_pointer_cast<IntradayPriceTermStructure>(pts.currentLink());
-    QL_REQUIRE(intradayPts, "CommodityIntradayPowerIndex::clone requires an IntradayPriceTermStructure");
-    return QuantLib::ext::make_shared<CommodityIntradayPowerIndex>(underlyingName(), ed, fixingCalendar(),
-                                                                    Handle<IntradayPriceTermStructure>(intradayPts),
-                                                                    oed, loadProfile_);
-}
 
 } // namespace QuantExt

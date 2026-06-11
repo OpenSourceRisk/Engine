@@ -8,6 +8,7 @@ configuration/capfloorvolcurveconfig.cpp
 configuration/cdsvolcurveconfig.cpp
 configuration/commoditycurveconfig.cpp
 configuration/commodityvolcurveconfig.cpp
+configuration/intradaypowercurveconfig.cpp
 configuration/conventions.cpp
 configuration/correlationcurveconfig.cpp
 configuration/currencyconfig.cpp
@@ -431,6 +432,7 @@ configuration/capfloorvolcurveconfig.hpp
 configuration/cdsvolcurveconfig.hpp
 configuration/commoditycurveconfig.hpp
 configuration/commodityvolcurveconfig.hpp
+configuration/intradaypowercurveconfig.hpp
 configuration/conventions.hpp
 configuration/correlationcurveconfig.hpp
 configuration/currencyconfig.hpp
