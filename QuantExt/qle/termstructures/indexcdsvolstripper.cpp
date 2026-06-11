@@ -117,7 +117,6 @@ void IndexCdsVolStripper::performCalculations() const
     DiscountFactor discToPremPmt = termCurves_.front()->rateCurve()->discount(premiumPmtDate);
 
     // Strip the volatilities from the prices and populate the volatility quotes for InterpolatingCreditVolCurve.
-    using QuoteKey = InterpolatingCreditVolCurve::QuoteKey;
     InterpolatingCreditVolCurve::QuoteMap volQuotes;
     for (const auto& [term, surface] : quotes_) {
         const EngineVol& engineVol = termEngineVol_.at(term);
@@ -166,7 +165,7 @@ void IndexCdsVolStripper::populateEngineAndVols(const Period& term, const Handle
     }
 
     // Store engine and vol pair per term.
-    termEngineVol_.try_emplace(term, engine, Handle<SimpleQuote>(volPtr));
+    termEngineVol_.try_emplace(term, EngineVol{engine, Handle<SimpleQuote>(volPtr)});
 }
 
 void IndexCdsVolStripper::populateOptionHelpers(const Date& expiryDate, const Period& term,

@@ -50,7 +50,6 @@ public:
 private:
     const QuantLib::ext::shared_ptr<CrossAssetModel> model_;
     QuantLib::Size index_;
-    bool indexIsInterpolated_;
 
     /*! Return the variance of the log inflation index ratio \f$\ln(I(T)/I(S))\f$ under Jarrow Yildrim where
         \f$ 0 < S < T \f$. The value is given in Section 13 of <em>Modern Derivatives Pricing and Credit Exposure

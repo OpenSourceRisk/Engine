@@ -65,9 +65,10 @@ struct CommonVars {
           conventions(XMLDocument(TEST_INPUT_FILE("conventions.xml")).toString()),
           todaysMarketConfig(XMLDocument(TEST_INPUT_FILE("todaysmarket.xml")).toString()),
           pricingEngineConfig(XMLDocument(TEST_INPUT_FILE("pricingengine.xml")).toString()),
-          curveConfig(XMLDocument(TEST_INPUT_FILE("curveconfig.xml")).toString()),
-          loader(QuantLib::ext::make_shared<CSVLoader>(TEST_INPUT_FILE("market.csv"), TEST_INPUT_FILE("fixings.csv"), "")) {
-
+          curveConfig(XMLDocument(TEST_INPUT_FILE("curveconfig.xml")).toString()) {
+        auto csvLoader = QuantLib::ext::make_shared<CSVLoader>();
+        csvLoader->fromFiles(TEST_INPUT_FILE("market.csv"), TEST_INPUT_FILE("fixings.csv"));
+        loader = csvLoader;
         Settings::instance().evaluationDate() = asof;
     }
 

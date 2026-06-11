@@ -27,6 +27,7 @@
 #include <ored/portfolio/trade.hpp>
 
 #include <qle/indexes/fxindex.hpp>
+#include <qle/indexes/genericindex.hpp>
 
 namespace ore {
 namespace data {
@@ -75,7 +76,8 @@ public:
                const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndexReturn,
                const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndexAdditionalCashflows,
                const std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& addFxindices,
-               const QuantLib::ext::optional<TRS::FXConversion>& fxConversion);
+               const QuantLib::ext::optional<TRS::FXConversion>& fxConversion,
+               QuantLib::Real indexQuantity = 1, bool pricePerIndexUnit = false);
 
 
     //! \name Instrument interface
@@ -109,6 +111,9 @@ private:
     QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndexReturn_, fxIndexAdditionalCashflows_;
     std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>> addFxIndices_;
     QuantLib::ext::optional<TRS::FXConversion> fxConversion_;
+    QuantLib::Real indexQuantity_;
+    bool pricePerIndexUnit_;
+    QuantLib::ext::shared_ptr<QuantExt::GenericIndex> basketIndex_;
 
     Date lastDate_;
 };
@@ -139,6 +144,9 @@ public:
     QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndexReturn_, fxIndexAdditionalCashflows_;
     std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>> addFxIndices_;
     QuantLib::ext::optional<TRS::FXConversion> fxConversion_;
+    QuantLib::Real indexQuantity_;
+    bool pricePerIndexUnit_;
+    QuantLib::ext::shared_ptr<QuantExt::GenericIndex> basketIndex_;
     void validate() const override;
 };
 

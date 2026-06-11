@@ -100,7 +100,7 @@ TestDatum calendarData[] = {{"TGT", TARGET()},
                             // Emerging currencies that default to WeekendsOnly
                             {"CLP", Chile()},
                             {"COP", Colombia()},
-                            {"ILS", Israel()},
+                            {"ILS", Israel(Israel::TASE_National)},
                             {"MYR", Malaysia()},
                             {"PEN", Peru()},
                             {"PHP", Philippines()},

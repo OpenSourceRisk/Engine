@@ -199,6 +199,25 @@ struct CpiVolCalibrationInfo {
     std::vector<std::vector<double>> strikeCPI;
 };
 
+// default curves
+
+struct DefaultCurveCalibrationInfo {
+    virtual ~DefaultCurveCalibrationInfo() = default;
+    
+    // default periods to determine pillarDates relative to asof
+    const static std::vector<QuantLib::Period> defaultPeriods;
+
+    std::string typeStr; 
+    std::string dayCounter;
+    std::string calendar;
+    double runningSpread;
+    std::vector<QuantLib::Date> pillarDates;
+    std::vector<double> defaultProb;
+    std::vector<double> survivalProb;
+    std::vector<double> hazardRates;
+    std::vector<double> defaultDensities;
+};
+
 // main container
 
 struct TodaysMarketCalibrationInfo {
@@ -221,6 +240,8 @@ struct TodaysMarketCalibrationInfo {
     std::map<std::string, QuantLib::ext::shared_ptr<FxEqCommVolCalibrationInfo>> commVolCalibrationInfo;
     // cpi vols
     std::map<std::string, QuantLib::ext::shared_ptr<CpiVolCalibrationInfo>> cpiVolCalibrationInfo;
+    // default
+    std::map<std::string, QuantLib::ext::shared_ptr<DefaultCurveCalibrationInfo>> defaultCurveCalibrationInfo;
 };
 
 } // namespace data

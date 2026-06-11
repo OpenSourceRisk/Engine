@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <istream>
 #include <map>
 #include <ored/marketdata/loader.hpp>
 
@@ -41,47 +42,18 @@ namespace data {
 class CSVLoader : public Loader {
 public:
     //! Constructor
-    CSVLoader() {}
+    CSVLoader(bool implyTodaysFixings = false, Date fixingCutOffDate = Date());
 
-    CSVLoader( //! Quote file name
-        const string& marketFilename,
-        //! Fixing file name
-        const string& fixingFilename,
-        //! Enable/disable implying today's fixings
-        bool implyTodaysFixings = false,
-        //! Load fixings up to this date
-        Date fixingCutOffDate = Date());
+    //! Load market, fixing, and optionally dividend data from files
+    void fromFiles(const string& marketFilename, const string& fixingFilename,
+                   const string& dividendFilename = "");
 
-    CSVLoader( //! Quote file name
-        const vector<string>& marketFiles,
-        //! Fixing file name
-        const vector<string>& fixingFiles,
-        //! Enable/disable implying today's fixings
-        bool implyTodaysFixings = false,
-        //! Load fixings up to this date
-        Date fixingCutOffDate = Date());
+    //! Load market, fixing, and optionally dividend data from multiple files
+    void fromFiles(const vector<string>& marketFiles, const vector<string>& fixingFiles,
+                   const vector<string>& dividendFiles = {});
 
-    CSVLoader( //! Quote file name
-        const string& marketFilename,
-        //! Fixing file name
-        const string& fixingFilename,
-        //! Dividend file name
-        const string& dividendFilename,
-        //! Enable/disable implying today's fixings
-        bool implyTodaysFixings = false,
-        //! Load fixings up to this date
-        Date fixingCutOffDate = Date());
-
-    CSVLoader( //! Quote file name
-        const vector<string>& marketFiles,
-        //! Fixing file name
-        const vector<string>& fixingFiles,
-        //! Dividend file name
-        const vector<string>& dividendFiles,
-        //! Enable/disable implying today's fixings
-        bool implyTodaysFixings = false,
-        //! Load fixings up to this date
-        Date fixingCutOffDate = Date());
+    //! Load market and fixing data from in-memory CSV buffers
+    void fromBuffers(const std::string& marketData, const std::string& fixingData = "");
 
     std::vector<QuantLib::ext::shared_ptr<MarketDatum>> loadQuotes(const QuantLib::Date&) const override;
 
@@ -102,6 +74,7 @@ public:
 private:
     enum class DataType { Market, Fixing, Dividend };
     void loadFile(const string&, DataType);
+    void loadStream(std::istream&, DataType, const std::string& source);
 
     bool implyTodaysFixings_;
     std::map<QuantLib::Date, std::set<QuantLib::ext::shared_ptr<MarketDatum>, SharedPtrMarketDatumComparator>> data_;

@@ -222,13 +222,12 @@ Handle<IborIndex> DependencyMarket::iborIndex(const string& name, const string& 
         QL_REQUIRE(oi != nullptr, "DependencyMarket::iborIndex(): could not cast rfr index '"
                                       << rfrName << "' to OvernightIndex, this is unexpected.");
         auto fallbackData = iborFallbackConfig_->fallbackData(name);
-	if (auto original = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(iip))
+        if (auto original = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(iip))
             ii = Handle<IborIndex>(QuantLib::ext::make_shared<QuantExt::FallbackOvernightIndex>(
-                original, oi, fallbackData.spread,
-                                                                               fallbackData.switchDate, false));
-	else
-	    ii = Handle<IborIndex>(QuantLib::ext::make_shared<QuantExt::FallbackIborIndex>(*ii, oi, fallbackData.spread,
-                                                                               fallbackData.switchDate, false));
+                original, oi, fallbackData.spread, fallbackData.switchDate, false));
+        else
+            ii = Handle<IborIndex>(QuantLib::ext::make_shared<QuantExt::FallbackIborIndex>(
+                *ii, oi, fallbackData.spread, fallbackData.switchDate, false));
         DLOG("Adding rfr fallback index '" << rfrName << "' for ibor index '" << name << "'");
     }
 
@@ -482,7 +481,6 @@ Handle<YoYInflationIndex> DependencyMarket::yoyInflationIndex(const string& name
     Handle<ZeroInflationTermStructure> zits;
     auto ii = ore::data::parseZeroInflationIndex(name, zits);
     auto dc = ActualActual(ActualActual::ISDA);
-    vector<Time> zeroCurveTimes = {0, 1, 2};
     vector<Handle<Quote>> quotes;
     QuantLib::ext::shared_ptr<SimpleQuote> q0(new SimpleQuote(0));
     Handle<Quote> qh0(q0);
@@ -492,13 +490,15 @@ Handle<YoYInflationIndex> DependencyMarket::yoyInflationIndex(const string& name
         Handle<Quote> qh1(q1);
         quotes.push_back(qh1);
     }
+    vector<QuantLib::Period> tenors {0 * Days, 1 * Years, 2 * Years};
     QuantLib::ext::shared_ptr<YoYInflationTermStructure> yoyCurve =
-        QuantLib::ext::shared_ptr<YoYInflationCurveObserverMoving<Linear>>(new YoYInflationCurveObserverMoving<Linear>(
-            0, WeekendsOnly(), dc, Period(2, Months), QuantLib::Frequency::Semiannual, true, zeroCurveTimes, quotes));
+        QuantLib::ext::make_shared<YoYInflationCurveObserverMoving<Linear>>(
+            0, WeekendsOnly(), dc, 60, Period(2, Months), QuantLib::Frequency::Semiannual, true,
+            tenors, quotes);
     Handle<YoYInflationTermStructure> its(yoyCurve);
     its->enableExtrapolation();
     return Handle<YoYInflationIndex>(
-        QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(ii, false, its));
+        QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(ii, its));
 }
 
 Handle<QuantLib::CPIVolatilitySurface> DependencyMarket::cpiInflationCapFloorVolatilitySurface(const string& name,
@@ -663,6 +663,23 @@ DependencyMarket::correlationCurve(const std::string& index1, const std::string&
     return Handle<QuantExt::CorrelationTermStructure>(
         QuantLib::ext::make_shared<QuantExt::FlatCorrelation>(0, NullCalendar(), 0, ActualActual(ActualActual::ISDA)));
 }
+
+Handle<BlackVolTermStructure> DependencyMarket::bondFutureVol(const string& contractName,
+    const string& configuration) const {
+    addRiskFactor(RiskFactorKey::KeyType::BondFutureVolatility, contractName);
+    addMarketObject(MarketObject::BondFutureVol, contractName, configuration);
+    return flatRateFxv();
+}
+
+std::map<QuantLib::Period, QuantLib::Period>
+DependencyMarket::zeroInflationObservationLags(const string& indexName, const string& configuration) const {
+    return {{1 * Years, 3 * Months}};
+};
+
+std::map<QuantLib::Period, QuantLib::Period>
+DependencyMarket::yoyInflationObservationLags(const string& indexName, const string& configuration) const {
+    return {{1 * Years, 3 * Months}};
+};
 
 bool DependencyMarket::hasRiskFactorType(const RiskFactorKey::KeyType& riskFactorType) const {
     return riskFactors_.find(riskFactorType) != riskFactors_.end();

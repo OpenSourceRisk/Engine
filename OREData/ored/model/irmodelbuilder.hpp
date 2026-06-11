@@ -130,7 +130,7 @@ protected:
     std::string currency_;
 
     mutable bool parametrizationIsInitialized_ = false;
-    mutable Real error_;
+    mutable Real error_ = Null<Real>();
     mutable QuantLib::ext::shared_ptr<QuantExt::IrModel> model_;
     mutable Array params_;
     mutable QuantLib::ext::shared_ptr<QuantExt::Parametrization> parametrization_;

@@ -21,6 +21,7 @@
       <xs:element type="simCommodityCurves" name="CommodityCurves" minOccurs="0"/>
       <xs:element type="commodityVolatilities" name="CommodityVolatilities" minOccurs="0"/>
       <xs:element type="correlations" name="Correlations" minOccurs="0"/>
+      <xs:element type="bondFutureVolatilities" name="BondFutureVolatilities" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
   <!-- Volatility configurations -->
@@ -979,6 +980,42 @@
       <xs:element type="xs:string" name="OptionTenors" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
+
+  <xs:complexType name="bondFutureVolatilities">
+    <xs:sequence>
+      <xs:element type="bondFutureVolatility" name="BondFutureVolatility" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="bondFutureVolatility">
+    <xs:sequence>
+      <xs:element type="xs:string" name="CurveId"/>
+      <xs:element type="xs:string" name="CurveDescription"/>
+      <xs:element type="xs:string" name="ContractName"/>
+      <xs:choice>
+        <xs:element type="volatilityConfig" name="VolatilityConfig" minOccurs="0" maxOccurs="1"/>
+        <xs:choice minOccurs="0">
+          <xs:element type="volatilityStrikeSurfaceConfig" name="StrikeSurface"/>
+        </xs:choice>
+      </xs:choice>
+      <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="YieldCurveId" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="positiveDecimal" name="StrikeFactor" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="UseOnlyPutCall" minOccurs="0" maxOccurs="1">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="C"/>
+            <xs:enumeration value="P"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element type="oneDimSolverConfigType" name="OneDimSolverConfig" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="PreferOutOfTheMoney" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="TreatAsEuropean" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
   <xs:complexType name="segmentsType">
     <xs:choice minOccurs="1" maxOccurs="unbounded">
       <xs:element type="directSegmentType" name="Direct"/>
@@ -1337,6 +1374,13 @@
           </xs:all>
         </xs:complexType>
       </xs:element>
+      <xs:element name="DefaultCurves" minOccurs="0">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>
+          </xs:all>
+        </xs:complexType>
+    </xs:element>
     </xs:all>
   </xs:complexType>
   <xs:complexType name="reportConfiguration">

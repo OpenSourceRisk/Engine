@@ -115,6 +115,7 @@ public:
         BOND,
         BOND_FUTURE,
         BOND_OPTION,
+        BOND_FUTURE_OPTION,
         INDEX_CDS_OPTION,
         INDEX_CDS_TRANCHE,
         COMMODITY_SPOT,
@@ -1998,7 +1999,7 @@ public:
     //@}
 
 private:
-    int offset_;
+    int offset_ = 0;
     //! Serialization
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned int version);
@@ -2192,6 +2193,52 @@ private:
     template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
+
+/** Bond future option data class.
+ *  
+ *  This class holds single market points of type `BOND_FUTURE_OPTION`.
+ *  
+ *  \ingroup marketdata
+ */
+class BondFutureOptionQuote : public MarketDatum
+{
+public:
+    BondFutureOptionQuote() {}
+    BondFutureOptionQuote(QuantLib::Real value,
+        QuantLib::Date asofDate,
+        const std::string& name,
+        QuoteType quoteType,
+        std::string contractName,
+        std::string expiry,
+        QuantLib::ext::shared_ptr<BaseStrike> strike,
+        bool isCall = true);
+
+    //! Make a copy of the market datum
+    QuantLib::ext::shared_ptr<MarketDatum> clone() override
+    {
+        return QuantLib::ext::make_shared<BondFutureOptionQuote>(quote_->value(), asofDate_, name_, quoteType_,
+            contractName_, expiry_, strike_, isCall_);
+    }
+
+    //! \name Inspectors
+    //@{
+    const std::string& contractName() const { return contractName_; }
+    const std::string& expiry() const { return expiry_; }
+    const QuantLib::ext::shared_ptr<BaseStrike>& strike() const { return strike_; }
+    bool isCall() { return isCall_; }
+    //@}
+
+private:
+    std::string contractName_;
+    std::string expiry_;
+    QuantLib::ext::shared_ptr<BaseStrike> strike_;
+    bool isCall_ = true;
+
+    //! Serialization
+    friend class boost::serialization::access;
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
+};
+
 } // namespace data
 } // namespace ore
 
@@ -2241,3 +2288,4 @@ BOOST_CLASS_EXPORT_KEY(ore::data::BondPriceQuote);
 BOOST_CLASS_EXPORT_KEY(ore::data::BondFuturePriceQuote);
 BOOST_CLASS_EXPORT_KEY(ore::data::BondFutureConversionFactor);
 BOOST_CLASS_EXPORT_KEY(ore::data::TransitionProbabilityQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::BondFutureOptionQuote);

@@ -36,7 +36,7 @@
 #include <qle/instruments/cdsoption.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/models/crossassetmodel.hpp>
-#include <qle/pricingengines/mcregressionmodel.hpp>
+#include <qle/pricingengines/mcengineregression.hpp>
 #include <qle/termstructures/sabrparametricvolatility.hpp>
 #include <qle/termstructures/sviparametricvolatility.hpp>
 #include <qle/termstructures/scenario.hpp>

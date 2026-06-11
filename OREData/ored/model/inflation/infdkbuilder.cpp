@@ -130,16 +130,16 @@ InfDkBuilder::InfDkBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& m
         DLOG("INF parametrization: InfDkPiecewiseConstantHullWhiteAdaptor");
         parametrization_ = QuantLib::ext::make_shared<InfDkPiecewiseConstantHullWhiteAdaptor>(
             inflationIndex_->currency(), inflationIndex_->zeroInflationTermStructure(), aTimes, alpha, hTimes, h,
-            data_->index());
+            inflationIndex_, data_->index());
     } else if (reversion.reversionType() == LgmData::ReversionType::HullWhite) {
         DLOG("INF parametrization for " << data_->index() << ": InfDkPiecewiseConstant");
         parametrization_ = QuantLib::ext::make_shared<InfDkPiecewiseConstantParametrization>(
             inflationIndex_->currency(), inflationIndex_->zeroInflationTermStructure(), aTimes, alpha, hTimes, h,
-            data_->index());
+            inflationIndex_, data_->index());
     } else {
         parametrization_ = QuantLib::ext::make_shared<InfDkPiecewiseLinearParametrization>(
             inflationIndex_->currency(), inflationIndex_->zeroInflationTermStructure(), aTimes, alpha, hTimes, h,
-            data_->index());
+            inflationIndex_, data_->index());
         DLOG("INF parametrization for " << data_->index() << ": InfDkPiecewiseLinear");
     }
 
@@ -154,12 +154,12 @@ InfDkBuilder::InfDkBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& m
 
     if (horizon > 0.0) {
         DLOG("Apply shift horizon " << horizon << " to the " << data_->index() << " DK model");
-        parametrization_->shift() = horizon;
+        parametrization_->dkLgmParam()->shift() = horizon;
     }
 
     if (scaling != 1.0) {
         DLOG("Apply scaling " << scaling << " to the " << data_->index() << " DK model");
-        parametrization_->scaling() = scaling;
+        parametrization_->dkLgmParam()->scaling() = scaling;
     }
 }
 

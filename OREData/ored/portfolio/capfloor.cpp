@@ -474,7 +474,7 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
             QL_REQUIRE(!zeroIndex.empty(), "Could not find inflation index (of type either zero or yoy) "
                                                << underlyingIndex << " in market.");
             yoyIndex = Handle<YoYInflationIndex>(QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(
-                zeroIndex.currentLink(), false));
+                zeroIndex.currentLink()));
         }
 
         legs_.push_back(makeYoYLeg(legData_, yoyIndex.currentLink(), engineFactory));

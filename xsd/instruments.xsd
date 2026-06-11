@@ -46,6 +46,7 @@
       <xs:element type="bondData" name="BondData"/>
       <xs:element type="forwardBondData" name="ForwardBondData"/>
       <xs:element type="bondFutureData" name="BondFutureData"/>
+      <xs:element type="bondFutureOptionData" name="BondFutureOptionData"/>
       <xs:element type="creditDefaultSwapData" name="CreditDefaultSwapData"/>
       <xs:element type="creditDefaultSwapOptionData" name="CreditDefaultSwapOptionData"/>
       <xs:element type="commodityForwardData" name="CommodityForwardData"/>
@@ -424,20 +425,17 @@
       <xs:element type="xs:string" name="ContractName"/>
       <xs:element type="xs:string" name="ContractNotional"/>
       <xs:element type="xs:string" name="LongShort"/>
-      <xs:element type="currencyCode" name="Currency" maxOccurs="1" minOccurs="0"/>
-      <xs:element type="xs:string" name="ContractMonth" maxOccurs="1" minOccurs="0"/>
-      <xs:element type="xs:string" name="DeliverableGrade" maxOccurs="1" minOccurs="0"/>
-      <xs:element type="xs:string" name="FairPrice" maxOccurs="1" minOccurs="0"/>
-      <xs:element type="xs:string" name="Settlement" maxOccurs="1" minOccurs="0"/>
-      <xs:element type="xs:string" name="SettlementDirty" maxOccurs="1" minOccurs="0"/>
-      <xs:element type="xs:string" name="RootDate" maxOccurs="1" minOccurs="0"/>
-      <xs:element type="xs:string" name="ExpiryBasis" maxOccurs="1" minOccurs="0"/>
-      <xs:element type="xs:string" name="SettlementBasis" maxOccurs="1" minOccurs="0"/>
-      <xs:element type="xs:string" name="ExpiryLag" maxOccurs="1" minOccurs="0"/>
-      <xs:element type="xs:string" name="SettlementLag" maxOccurs="1" minOccurs="0"/>
-      <xs:element type="xs:string" name="LastTradingDate" maxOccurs="1" minOccurs="0"/>
-      <xs:element type="xs:string" name="LastDeliveryDate" maxOccurs="1" minOccurs="0"/>
-      <xs:element type="deliveryBasket" name="DeliveryBasket" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="xs:boolean" name="ApplyConversionFactor" minOccurs="0"/>
+      <xs:element type="xs:boolean" name="UseFuturePrice" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="bondFutureOptionData">
+    <xs:all>
+      <xs:element type="optionData" name="OptionData"/>
+      <xs:element type="xs:string" name="ContractName"/>
+      <xs:element type="xs:float" name="ContractNotional"/>
+      <xs:element ref="strikeGroup"/>
     </xs:all>
   </xs:complexType>
 
@@ -1379,6 +1377,7 @@
       <xs:enumeration value="Bond"/>
       <xs:enumeration value="ForwardBond"/>
       <xs:enumeration value="BondFuture"/>
+      <xs:enumeration value="BondFutureOption"/>
       <xs:enumeration value="CreditDefaultSwap"/>
       <xs:enumeration value="CreditDefaultSwapOption"/>
       <xs:enumeration value="Failed"/>
@@ -1807,6 +1806,7 @@
         </xs:complexType>
       </xs:element>
       <xs:element name="ObservationStartDate" type="date"/>
+      <xs:element name="PaymentDate" type="date"/>
     </xs:all>
   </xs:complexType>
 
@@ -2442,31 +2442,22 @@
     <xs:sequence>
       <xs:choice maxOccurs="unbounded">
         <xs:element name="Derivative">
-		 <xs:complexType>
-          <xs:sequence>
-           <xs:element type="xs:string" name="Id"/>
-			<xs:element ref="subTradeGroup"/>
-		  </xs:sequence>
-         </xs:complexType>
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:string" name="Id"/>
+              <xs:element ref="subTradeGroup"/>
+            </xs:sequence>
+          </xs:complexType>
         </xs:element>
-		<!-- <xs:element name="Trade"> -->
-         <!-- <xs:complexType> -->
-           <!-- <xs:sequence> -->
-            <!-- <xs:element type="oreTradeType" name="TradeType"/> -->
-            <!-- <xs:element type="envelope" name="Envelope" minOccurs="0"/> -->
-            <!-- <xs:group ref="oreTradeData"/> -->
-            <!-- </xs:sequence> -->
-          <!-- <xs:attribute type="xs:string" name="id"/> -->
-         <!-- </xs:complexType> -->
-        <!-- </xs:element> -->
-		<xs:element ref="subTradeGroup"/>
+        <xs:element ref="subTradeGroup"/>
         <xs:element name="PortfolioIndexTradeData" minOccurs="0">
-         <xs:complexType>
-           <xs:sequence>
-            <xs:element type="xs:string" name="BasketName" minOccurs="1"/>
-            <xs:element type="xs:string" name="IndexQuantity" minOccurs="0"/>
-           </xs:sequence>
-         </xs:complexType>
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:string" name="BasketName" minOccurs="1"/>
+              <xs:element type="xs:string" name="IndexQuantity" minOccurs="0"/>
+              <xs:element type="xs:boolean" name="PriceIsPerUnit" minOccurs="0"/>
+            </xs:sequence>
+          </xs:complexType>
         </xs:element>
       </xs:choice>
     </xs:sequence>

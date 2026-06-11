@@ -60,13 +60,15 @@ public:
         //! Own party name for DVA calculations
         const string& dvaName,
         //! FVA borrowing curve
-        const string& fvaBorrowingCurve,
+        const string& borrowingCurve,
         //! FVA lending curve
-        const string& fvaLendingCurve,
+        const string& lendingCurve,
         //! Whether DVA computation is enabled
         const bool dvaAnalytic,
         //! Whether FVA (FCA/FBA) computation is enabled
         const bool fvaAnalytic,
+        //! Whether MVA computation is enabled
+        const bool mvaAnalytic,
 	    //! Deactivate initial margin calculation even if active at netting set level
         const bool applyDynamicInitialMargin,
 	    //! Dynamic Initial Margin calculator
@@ -87,8 +89,8 @@ public:
         const bool flipViewXVA = false,
         //! Postfix for flipView borrowing curve for fva
         const string& flipViewBorrowingCurvePostfix = "_BORROW",
-	//! Postfix for flipView lending curve for fva
-	const string& flipViewLendingCurvePostfix = "_LEND");
+	    //! Postfix for flipView lending curve for fva
+	    const string& flipViewLendingCurvePostfix = "_LEND");
 
     virtual ~ValueAdjustmentCalculator() {}
 
@@ -202,10 +204,11 @@ protected:
     string configuration_;
     string baseCurrency_;
     string dvaName_;
-    string fvaBorrowingCurve_;
-    string fvaLendingCurve_;
+    string borrowingCurve_;
+    string lendingCurve_;
     bool dvaAnalytic_;
     bool fvaAnalytic_;
+    bool mvaAnalytic_;
     bool applyDynamicInitialMargin_;
     QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator> dimCalculator_;
     const QuantLib::ext::shared_ptr<NPVCube> tradeExposureCube_;

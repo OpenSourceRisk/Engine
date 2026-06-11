@@ -39,7 +39,7 @@ class EquityFutureOption : public VanillaOptionTrade {
 public:
 
     //! Default constructor
-    EquityFutureOption() : VanillaOptionTrade(AssetClass::EQ) { tradeType_ = "EquityFutureOption"; }
+    EquityFutureOption() : VanillaOptionTrade("EquityFutureOption", AssetClass::EQ) {}
     //! Constructor
     EquityFutureOption(Envelope& env, OptionData option, const string& currency, Real quantity, 
         const QuantLib::ext::shared_ptr<ore::data::Underlying>& underlying, TradeStrike strike, QuantLib::Date forwardDate,

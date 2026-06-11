@@ -89,6 +89,7 @@ private:
     double hedgingVol_ = 0.0;
     double driftRate_ = 0.0;
     QuantLib::Date observationStartDate_;
+    QuantLib::Date paymentDate_; //!< Cash settlement payment date (fallback for all underlyings)
 };
 
 } // namespace data

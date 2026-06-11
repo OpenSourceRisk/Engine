@@ -334,7 +334,7 @@ private:
     string backStubLongIndex_;
     string backStubRoundingType_;
     string backStubRoundingPrecision_;
-    bool stubUseOriginalCurve_;
+    bool stubUseOriginalCurve_ = false;
     QuantLib::ext::optional<bool> observationShift_;
 };
 

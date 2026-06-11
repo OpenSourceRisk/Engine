@@ -35,7 +35,8 @@ Allowable values: Any real number.
   SWAPTION, CAPFLOOR, FX\_OPTION, HAZARD\_RATE, RECOVERY\_RATE, ASSUMED\_RECOVERY\_RATE,
   ZC\_INFLATIONSWAP, YY\_INFLATIONSWAP, ZC\_INFLATIONCAPFLOOR,
   SEASONALITY, EQUITY\_SPOT, EQUITY\_FWD, EQUITY\_DIVIDEND,
-  EQUITY\_OPTION, BOND, INDEX\_CDS\_OPTION, CPR, COMMODITY, COMMODITY\_FWD, COMMODITY\_OPTION} \\
+  EQUITY\_OPTION, BOND, INDEX\_CDS\_OPTION, CPR, COMMODITY, COMMODITY\_FWD, COMMODITY\_OPTION,
+  BOND\_FUTURE\_OPTION} \\
 \hline
   Quote Type & \emph{BASIS\_SPREAD, CREDIT\_SPREAD, CONV\_CREDIT\_SPREAD, YIELD\_SPREAD, HAZARD\_RATE,
   RATE, RATIO, PRICE, RATE\_LNVOL, RATE\_NVOL, RATE\_SLNVOL,
@@ -1612,6 +1613,76 @@ This quote provides the spread for a specified bond over the benchmark rate.
 Examples:
 \begin{itemize}
 	\item CPR/RATE/SECURITY\_1
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Bond Future Option Implied Volatility}
+\label{md:bond_future_option_iv}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|p{3cm}|p{5.5cm}|p{5cm}|}
+    \hline
+    {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+    Instrument Type & \emph{BOND\_FUTURE\_OPTION} & \\ \hline
+    Quote Type & \emph{RATE\_LNVOL} & \\ \hline
+    Name & String & Underlying bond future contract name \\ \hline
+    Expiry & Date string & Expiry date of the option \\ \hline
+    Strike & Real & Absolute strike price of the option \\ \hline
+    CallPut & \lstinline!C! or \lstinline!P! & Optional flag indicating if volatility is for call or put \\ \hline
+    \end{tabular}
+    \caption{Bond Future Option Implied Volatility}
+    \label{tab:bond_future_option_iv_quote}
+\end{table}
+
+Note that how the strike from the quote string is interpreted depends on the \lstinline!StrikeFactor! 
+provided in the curve configuration for the bond future volatility structures. The strike from the 
+quote string is divided by this value. So, for example, a strike in the quote string of 
+\lstinline!121.25! along with a \lstinline!StrikeFactor! of \lstinline!100! in the curve configuration 
+would interpret the strike as $1.2125$. Another option in this example would be to use \lstinline!1.2125! 
+directly in the quote string and use a \lstinline!StrikeFactor! of \lstinline!1! in the curve configuration 
+or omit it letting it default to \lstinline!1!.
+
+\medskip
+Example:
+\begin{itemize}
+    \item \lstinline!BOND_FUTURE_OPTION/RATE_LNVOL/TYM26/2026-04-02/121.25/C!
+    \item \lstinline!BOND_FUTURE_OPTION/RATE_LNVOL/TYM26/2026-04-02/121.25/P!
+    \item \lstinline!BOND_FUTURE_OPTION/RATE_LNVOL/TYM26/2026-04-02/1.2125/P!
+    \item \lstinline!BOND_FUTURE_OPTION/RATE_LNVOL/TYM26/2026-04-02/1.2125!
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Bond Future Option Premium}
+\label{md:bond_future_option_premium}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|p{3cm}|p{5.5cm}|p{5cm}|}
+    \hline
+    {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+    Instrument Type & \emph{BOND\_FUTURE\_OPTION} & \\ \hline
+    Quote Type & \emph{PRICE} & \\ \hline
+    Name & String & Underlying bond future contract name \\ \hline
+    Expiry & Date string & Expiry date of the option \\ \hline
+    Strike & Real & Absolute strike price of the option \\ \hline
+    CallPut & \lstinline!C! or \lstinline!P! & Indicates if premium is for call or put \\ \hline
+    \end{tabular}
+    \caption{Bond Future Option Premium}
+    \label{tab:bond_future_option_premium_quote}
+\end{table}
+
+See comment in Section~\ref{md:bond_future_option_iv} regarding the strike price. Also, note that 
+the \lstinline!CallPut! flag is mandatory for premium quotes.
+
+\medskip
+Example:
+\begin{itemize}
+    \item \lstinline!BOND_FUTURE_OPTION/PRICE/TYM26/2026-04-02/121.25/C!
+    \item \lstinline!BOND_FUTURE_OPTION/PRICE/TYM26/2026-04-02/121.25/P!
+    \item \lstinline!BOND_FUTURE_OPTION/PRICE/TYM26/2026-04-02/1.2125/P!
 \end{itemize}
 
 % %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

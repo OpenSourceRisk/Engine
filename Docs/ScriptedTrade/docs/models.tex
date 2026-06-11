@@ -43,6 +43,7 @@ wip An example pricing engine configuration looks as follows.
       <Parameter name="IndicatorSmoothingForValues">0.0</Parameter>
       <Parameter name="IndicatorSmoothingForDerivatives">0.0</Parameter>
       <Parameter name="AdditionalResultsPathLevel">false</Parameter>
+      <Parameter name="EnableCgOptimization">false</Parameter>
       <Parameter name="ZeroVolatility">false</Parameter>
       <!-- MC parameter -->
       <Parameter name="Seed">42</Parameter>
@@ -209,7 +210,8 @@ The engine parameters have the following meaning:
   applied to indicator functions in cg-based runs for values calculation. Defaults to $0$.
 \item IndicatorSmoothingForDerivatives: as above, smoothing parameter for derivatives calculation. Defaults to $0.2$.
 \item SqrtSmoothingForDerivatives: as above, smoothing parameter for sqrt derivative calculation. Defaults to $1E-8$.
-\item GenerateAdditionalResultsPathLevel: if true, generate additional results on path level
+\item AdditionalResultsPathLevel: if true, generate additional results on path level
+\item EnableCgOptimization: if true, optimization of cg is enabled
 \item ZeroVolatility [Optional]: enforce zero volatility in model SDEs, default is false
 \item Heston-specific parameters [Optional]:
   \begin{itemize}

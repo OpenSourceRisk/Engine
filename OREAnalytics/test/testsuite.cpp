@@ -81,12 +81,16 @@ public:
         seconds -= hours * 3600;
         int minutes = int(seconds / 60);
         seconds -= minutes * 60;
+        std::ios::fmtflags f(std::cout.flags());
+        std::streamsize p = std::cout.precision();
         std::cout << std::endl << "OREAnalytics tests completed in ";
         if (hours > 0)
             std::cout << hours << " h ";
         if (hours > 0 || minutes > 0)
             std::cout << minutes << " m ";
         std::cout << std::fixed << std::setprecision(0) << seconds << " s" << std::endl;
+        std::cout.flags(f);
+        std::cout.precision(p);
     }
 
 private:

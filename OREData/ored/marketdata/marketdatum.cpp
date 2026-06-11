@@ -344,6 +344,17 @@ CorrelationQuote::CorrelationQuote(Real value, const Date& asof, const string& n
             << outDate << " must be after asof date " << asof);
 }
 
+BondFutureOptionQuote::BondFutureOptionQuote(Real value, Date asofDate, const string& name,
+    QuoteType quoteType, string contractName, string expiry, ext::shared_ptr<BaseStrike> strike, bool isCall)
+    : MarketDatum(value, asofDate, name, quoteType, InstrumentType::BOND_FUTURE_OPTION),
+      contractName_(std::move(contractName)), expiry_(std::move(expiry)), strike_(std::move(strike)), isCall_(isCall)
+{
+    // Only support explicit expiry dates for now.
+    Date expiryDate = parseDate(expiry_);
+    QL_REQUIRE(asofDate_ <= expiryDate, "BondFutureOptionQuote: invalid quote, expiry date "
+        << io::iso_date(expiryDate) << " must be on or after asof date " << io::iso_date(asofDate_) << ".");
+}
+
 template <class Archive> void MarketDatum::serialize(Archive& ar, const unsigned int version) {
     Real value;
     // save / load the value of the quote, do not try to serialize the quote as such
@@ -720,6 +731,14 @@ template <class Archive> void TransitionProbabilityQuote::serialize(Archive& ar,
     ar& toRating_;
 }
 
+template <class Archive> void BondFutureOptionQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& contractName_;
+    ar& expiry_;
+    ar& strike_;
+    ar& isCall_;
+}
+
 template void MarketDatum::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
 template void MarketDatum::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
 template void MoneyMarketQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
@@ -820,6 +839,7 @@ template void BondFutureConversionFactor::serialize(boost::archive::binary_oarch
 template void BondFutureConversionFactor::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
 template void TransitionProbabilityQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
 template void TransitionProbabilityQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void BondFutureOptionQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
 
 } // namespace data
 } // namespace ore
@@ -873,3 +893,4 @@ BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::BondPriceQuote);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::BondFuturePriceQuote);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::BondFutureConversionFactor);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::TransitionProbabilityQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::BondFutureOptionQuote);

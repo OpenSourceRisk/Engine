@@ -454,8 +454,9 @@ Helpers InfJyBuilder::buildYoYCapFloorBasket(const CalibrationBasket& cb, vector
 
         /*! Get the configured strike.
             FIXME If the strike is atm, the value will not be updated on evaluation date changes */
+        // Should be first of month if not interpolated?
         Date today = Settings::instance().evaluationDate();
-        Date maturityDate = calendar.advance(calendar.advance(today, settlementDays * Days), yoyCapFloor->tenor(), bdc);
+        Date maturityDate = calendar.adjust(calendar.advance(today, settlementDays * Days) + yoyCapFloor->tenor() - obsLag, bdc);
         Real strikeValue = yoyCapFloorStrikeValue(yoyCapFloor->strike(), *yoyTs, maturityDate);
 
         // Build the YoY cap floor helper.
@@ -547,7 +548,7 @@ Helpers InfJyBuilder::buildYoYSwapBasket(const CalibrationBasket& cb,
     auto calendar = yoyInflationIndex_->fixingCalendar();
     auto dc = Thirty360(Thirty360::BondBasis);
     auto bdc = Following;
-    auto obsLag = yoyTs->observationLag();
+    auto obsLag = market_->yoyInflationObservationLags(data_->index(), configuration_).rbegin()->second;
 
     // Avoid instruments with duplicate expiry times in the loop below
     set<Time, CloseCmp> expiryTimes;

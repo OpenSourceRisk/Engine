@@ -124,7 +124,7 @@ protected:
 
     //! Logging
     string logFile_;
-    Size logMask_;
+    Size logMask_ = 15;
     bool console_;
     string outputPath_;
     bool clearLog_ = true;

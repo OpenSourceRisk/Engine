@@ -92,15 +92,15 @@ createOvs(const string& key, const Date& asof, const QuantLib::ext::shared_ptr<S
         Date optionDate = iborIndex->fixingCalendar().adjust(ovs->optionDateFromTenor(tenor));
         Rate forward;
         if (isOis) {
-	    Date startDate = iborIndex->valueDate(optionDate);
-	    Date maturityDate = iborIndex->fixingCalendar().advance(startDate, rateComputationPeriod);
+            Date startDate = iborIndex->valueDate(optionDate);
+            Date maturityDate = iborIndex->fixingCalendar().advance(startDate, rateComputationPeriod);
             QuantExt::OvernightIndexedCoupon coupon(maturityDate, 1.0, iborIndex->valueDate(optionDate), maturityDate,
                                                     QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(iborIndex));
             forward = coupon.rate();
         } else {
             forward = iborIndex->fixing(optionDate);
         }
-	// skip duplicate or non-monotonic tenors
+        // skip duplicate or non-monotonic tenors
         if (!expiries.empty() && optionDate <= expiries.back())
             continue;
         expiries.push_back(optionDate);
