@@ -203,14 +203,15 @@ void SensitivityAnalysis::generateSensitivities() {
                 market_, simMarketData_, marketConfiguration_,
                 curveConfigs_ ? *curveConfigs_ : ore::data::CurveConfigurations(),
                 todaysMarketParams_ ? *todaysMarketParams_ : ore::data::TodaysMarketParameters(), continueOnError_,
-                sensitivityData_->useSpreadedTermStructures(), false, false, true, iborFallbackConfig_, true);
+                sensitivityData_->useSpreadedTermStructures(), continueOnError_, overrideTenors_, true,
+                iborFallbackConfig_, true);
         } else {
             simMarket_ = QuantLib::ext::make_shared<ScenarioSimMarket>(
                 market_, offsetSimMarketParams_ == nullptr ? simMarketData_ : offsetSimMarketParams_,
                 marketConfiguration_, curveConfigs_ ? *curveConfigs_ : ore::data::CurveConfigurations(),
                 todaysMarketParams_ ? *todaysMarketParams_ : ore::data::TodaysMarketParameters(), continueOnError_,
-                sensitivityData_->useSpreadedTermStructures(), false, false, true, iborFallbackConfig_, true,
-                offsetScenario_);
+                sensitivityData_->useSpreadedTermStructures(), continueOnError_, overrideTenors_, true,
+                iborFallbackConfig_, true, offsetScenario_);
         }
 
         std::vector<QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>> scenarioGenerators(sensiTemplateIds.size());
