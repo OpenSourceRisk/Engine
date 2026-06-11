@@ -396,8 +396,8 @@ void tradeExercisable(bool enable, const std::vector<QuantLib::ext::shared_ptr<O
 } // namespace
 
 void ValuationEngine::populateCube(
-    const QuantLib::Date& d, size_t cubeDateIndex, size_t sample, bool isValueDate, bool isStickyDate,
-    bool scenarioUpdated, const std::map<std::string, QuantLib::ext::shared_ptr<Trade>>& trades,
+    QuantLib::Date d, size_t cubeDateIndex, size_t sample, bool isValueDate, bool isStickyDate, bool scenarioUpdated,
+    const std::map<std::string, QuantLib::ext::shared_ptr<Trade>>& trades,
     const std::vector<QuantLib::ext::shared_ptr<OptionWrapper>>& optionWrappers, const ErrorPolicy errorPolicy,
     std::vector<bool>& tradeHasT0Error, std::vector<bool>& tradeHasSampleError,
     const std::vector<QuantLib::ext::shared_ptr<ValuationCalculator>>& calculators,
@@ -417,7 +417,7 @@ void ValuationEngine::populateCube(
     auto t1 = data::os::nanosecondsClock();
     timings.updateDateTime += t1 - t0;
     if (!scenarioUpdated) {
-        simMarket_->updateScenario(d);
+        d = simMarket_->updateScenario(d);
     }
 
     auto t2 = data::os::nanosecondsClock();
@@ -427,8 +427,12 @@ void ValuationEngine::populateCube(
     auto t3 = data::os::nanosecondsClock();
     timings.refreshTime += t3 - t2;
 
-    if (fixingManager_ && (!isStickyDate || isValueDate))
+    std::cout << "populateCube: fixingManager = " << std::boolalpha << (fixingManager_ != nullptr) << std::endl;
+
+    if (fixingManager_ && (!isStickyDate || isValueDate)) {
         fixingManager_->update(d);
+        std::cout << "called fixing manager update, d = " << d << std::endl;
+    }
     auto t4 = data::os::nanosecondsClock();
     timings.fixingTime += t4 - t3;
 

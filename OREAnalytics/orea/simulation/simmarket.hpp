@@ -59,8 +59,9 @@ public:
     //! Update to the given date
     virtual void updateDate(const Date&) = 0;
 
-    //! Retrieve next market scenario and apply this, but don't update date
-    virtual void updateScenario(const Date&) = 0;
+    /*! Retrieve next market scenario and apply this, return date which might be updated, e.g., in ScenarioSimMarket,
+      if the scenario asof != input date and allowDateUpdateFromScenario = true */
+    virtual Date updateScenario(const Date&) = 0;
 
     //! Observable reset depending on selected mode, instrument updates
     virtual void postUpdate(const Date&) = 0;

@@ -88,11 +88,26 @@ void SensitivityCube::initialise() {
     QL_REQUIRE(scenarioDescriptions_[0].type() == ShiftScenarioDescription::Type::Base,
                "Expected the first scenario in the sensitivity cube to be of type 'Base'");
 
+    thetaScenarioIndex_ = Null<Size>();
+
     // Populate the scenario lookup map
+
     crossPair factorPair;
     std::map<crossPair, Size> crossFactors;
+
     for (Size i = 0; i < scenarioDescriptions_.size(); i++) {
         auto des = scenarioDescriptions_[i];
+        scenarioIdx_[des] = i;
+
+        // handle theta scenario
+
+        if(des.type() == ShiftScenarioDescription::Type::Theta) {
+            thetaScenarioIndex_ = i;
+            continue;
+        }
+
+        // handle all other types of scenarios
+
         FactorData fd;
         // Don't info add for base - missing from maps
         if (des.type() != ShiftScenarioDescription::Type::Base) {
@@ -102,7 +117,6 @@ void SensitivityCube::initialise() {
             fd.rfkey = des.key1();
             fd.factorDesc = QuantExt::deconstructFactor(des.factor1()).second;
         }
-        scenarioIdx_[des] = i;
 
         // Populate factors_ = list of factors for which we can calculate a delta/gamma
         switch (des.type()) {
@@ -226,6 +240,21 @@ Real scaling(const SensitivityCube::FactorData& fd) {
 }
 } // namespace
 
+std::pair<QuantLib::Real, QuantLib::Period> SensitivityCube::theta(const Size tradeIdx) const {
+    if(thetaScenarioIndex_ == Null<Size>())
+        return std::make_pair(QuantLib::Null<Real>(), 0 * Days);
+    else
+        return std::make_pair(cube_->get(tradeIdx, thetaScenarioIndex_) - cube_->getT0(tradeIdx),
+                              parsePeriod(scenarioDescriptions_[thetaScenarioIndex_].indexDesc1()));
+}
+
+std::pair<QuantLib::Real, QuantLib::Period> SensitivityCube::theta(const std::string& tradeId) const {
+    if (auto t = cube_->idsAndIndexes().find(tradeId); t != cube_->idsAndIndexes().end()) {
+        return theta(t->second);
+    }
+    return std::make_pair(Null<Real>(), 0 * Days);
+}
+
 Real SensitivityCube::delta(const Size tradeIdx, const RiskFactorKey& riskFactorKey) const {
     auto s = shiftSchemes_.find(riskFactorKey);
     QL_REQUIRE(s != shiftSchemes_.end(),
@@ -295,13 +324,6 @@ std::set<RiskFactorKey> SensitivityCube::relevantRiskFactors() const {
             result.insert(scenarioDescriptions_[i].key2());
     }
     return result;
-}
-
-Real SensitivityCube::theta(const string& tradeId) const {
-    auto it = thetaMap_.find(tradeId);
-    if (it != thetaMap_.end())
-        return it->second;
-    return Null<Real>();
 }
 
 } // namespace analytics

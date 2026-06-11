@@ -3633,7 +3633,7 @@ void ScenarioSimMarket::updateDate(const Date& d) {
     }
 }
 
-void ScenarioSimMarket::updateScenario(const Date& d) {
+Date ScenarioSimMarket::updateScenario(const Date& d) {
     QL_REQUIRE(scenarioGenerator_ != nullptr, "ScenarioSimMarket::update: no scenario generator set");
     auto scenario = scenarioGenerator_->next(d);
     QL_REQUIRE(allowDateUpdateFromScenario_ || scenario->asof() == d,
@@ -3643,6 +3643,7 @@ void ScenarioSimMarket::updateScenario(const Date& d) {
     numeraire_ = scenario->getNumeraire();
     label_ = scenario->label();
     applyScenario(scenario);
+    return scenario->asof();
 }
 
 void ScenarioSimMarket::postUpdate(const Date& d) {

@@ -105,7 +105,7 @@ public:
 
     //! Update
     virtual void preUpdate() override;
-    virtual void updateScenario(const Date&) override;
+    virtual Date updateScenario(const Date&) override;
     virtual void updateDate(const Date&) override;
     virtual void postUpdate(const Date& d) override;
     virtual void updateAsd(const Date&) override;

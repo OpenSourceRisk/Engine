@@ -132,7 +132,7 @@ private:
         long calibrationTime = 0;
     };
 
-    void populateCube(const QuantLib::Date& d, size_t cubeDateIndex, size_t sample, bool isValueDate, bool isStickyDate,
+    void populateCube(QuantLib::Date d, size_t cubeDateIndex, size_t sample, bool isValueDate, bool isStickyDate,
                       bool scenarioUpdated,
                       const std::map<std::string, QuantLib::ext::shared_ptr<ore::data::Trade>>& trades,
                       const std::vector<QuantLib::ext::shared_ptr<ore::data::OptionWrapper>>& optionWrappers,
