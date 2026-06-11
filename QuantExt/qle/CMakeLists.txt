@@ -84,6 +84,7 @@ currencies/metals.cpp
 indexes/bondindex.cpp
 indexes/commoditybasisfutureindex.cpp
 indexes/commodityindex.cpp
+indexes/commodityintradaypowerindex.cpp
 indexes/compoequityindex.cpp
 indexes/compositeindex.cpp
 indexes/dividendmanager.cpp

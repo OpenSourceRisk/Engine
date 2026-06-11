@@ -29,6 +29,9 @@
 
 namespace QuantExt {
 
+
+
+
 IntradayPriceTermStructure::IntradayPriceTermStructure(
     const QuantLib::Handle<PriceTermStructure>& underlying,
     const QuantLib::ext::shared_ptr<IntradayShapeTermstructure>& shape)
@@ -105,6 +108,8 @@ QuantLib::Real intradayShapeFactor(const QuantLib::Date& d, int startTime, int e
     return timeWeightedShapeFactor(factors, startTime, endTime);
 }
 
+
+
 QuantLib::Real
 IntradayPriceTermStructure::price(const QuantLib::Date& d,
                                   const QuantLib::ext::shared_ptr<QuantExt::IntradayLoadProfile>& load,
@@ -129,6 +134,14 @@ IntradayPriceTermStructure::price(const QuantLib::Date& d,
         amount += loadFactor * (end-start) / 3600. * intradayShapeFactor(d, start, end, true, shapeFactor, dstShapeFactor, dstAdj) * underlyingPrice;
     }
     return amount / load->totalMWh();
+}
+
+QuantLib::Real
+IntradayPriceTermStructure::price(QuantLib::Time t,
+                                  const QuantLib::ext::shared_ptr<QuantExt::IntradayLoadProfile>& load,
+                                  bool extrapolate) const {
+    auto d = lowerDate(t, referenceDate(), dayCounter());
+    return price(d, load, extrapolate);
 }
 //@}
 

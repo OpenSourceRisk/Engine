@@ -28,10 +28,9 @@
 
 namespace QuantExt {
 
-//! Intraday Price term structure
-/*! This abstract class defines the interface of concrete
-    price term structures which will be derived from this one.
-
+//! Commodity Price term structure
+/*! A commodity price term structure which can handle intraday power
+ by applying an optional intraday shape factors to an underlying daily price curve.
     \ingroup termstructures
 */
 class IntradayPriceTermStructure : public QuantExt::PriceTermStructure {
@@ -39,7 +38,7 @@ public:
     //! \name Constructors
     //@{
     IntradayPriceTermStructure(const QuantLib::Handle<PriceTermStructure>& underlying, 
-                               const QuantLib::ext::shared_ptr<IntradayShapeTermstructure>& shape);
+                               const QuantLib::ext::shared_ptr<IntradayShapeTermstructure>& shape = nullptr);
     //@}
 
     //! \name Prices
@@ -47,6 +46,9 @@ public:
     QuantLib::Real price(QuantLib::Time t, bool extrapolate = false) const override;
     QuantLib::Real price(const QuantLib::Date& d, bool extrapolate = false) const override;
     QuantLib::Real price(const QuantLib::Date& d,
+                         const QuantLib::ext::shared_ptr<QuantExt::IntradayLoadProfile>& load,
+                         bool extrapolate = false) const;
+    QuantLib::Real price(QuantLib::Time t,
                          const QuantLib::ext::shared_ptr<QuantExt::IntradayLoadProfile>& load,
                          bool extrapolate = false) const;
     //@}
