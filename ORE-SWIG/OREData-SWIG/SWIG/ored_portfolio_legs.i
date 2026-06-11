@@ -41,6 +41,7 @@ using ore::data::DigitalCMSSpreadLegData;
 using ore::data::EquityLegData;
 using ore::data::CMBLegData;
 using ore::data::LegDataFactory;
+using ore::data::LegType;
 using ore::data::CommodityPayRelativeTo;
 using ore::data::CommodityPriceType;
 using ore::data::CommodityPricingDateRule;
@@ -96,6 +97,27 @@ using ore::data::XMLSerializable;
 namespace ore {
 namespace data {
 
+enum class LegType {
+    Fixed,
+    Floating,
+    Cashflow,
+    CMS,
+    CMB,
+    DigitalCMS,
+    DurationAdjustedCMS,
+    CMSSpread,
+    DigitalCMSSpread,
+    Equity,
+    CPI,
+    ZeroCouponFixed,
+    FormulaBased,
+    CommodityFloating,
+    CommodityFixed,
+    EquityMargin,
+    YY,
+    RangeAccrual
+};
+
 class ScheduleRules : public XMLSerializable {
 public:
   ScheduleRules();
@@ -104,6 +126,14 @@ public:
           const std::string& endOfMonth = "N", const std::string& firstDate = "", const std::string& lastDate = "",
                   const bool removeFirstDate = false, const bool removeLastDate = false,
           const std::string& endOfMonthConvention = "");
+    const std::string& startDate() const;
+    const std::string& endDate() const;
+    const std::string& tenor() const;
+    const std::string& calendar() const;
+    const std::string& convention() const;
+    const std::string& termConvention() const;
+    const std::string& rule() const;
+    bool hasData() const;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 };
@@ -114,6 +144,10 @@ public:
   ScheduleDates(const std::string& calendar, const std::string& convention, const std::string& tenor,
                 const std::vector<std::string>& dates, const std::string& endOfMonth = "",
                 const std::string& endOfMonthConvention = "", bool includeDuplicateDates = false);
+    const std::vector<std::string>& dates() const;
+    const std::string& calendar() const;
+    const std::string& convention() const;
+    const std::string& tenor() const;
   virtual void fromXML(XMLNode* node) override;
   virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
@@ -134,11 +168,16 @@ public:
   ScheduleData(const ScheduleDates& dates, const std::string& name = "");
   ScheduleData(const ScheduleRules& rules, const std::string& name = "");
   ScheduleData(const ScheduleDerived& derived, const std::string& name = "");
+    const std::vector<ScheduleRules>& rules() const;
+    const std::vector<ScheduleDates>& dates() const;
+    bool hasData() const;
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
 
 class LegAdditionalData : public XMLSerializable {
+public:
+    const LegType& legType() const;
 };
 
 // ore/OREData/ored/portfolio/legdata.hpp - CashflowData
@@ -231,6 +270,13 @@ class LegData : public XMLSerializable {
   public:
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
+    bool isPayer() const;
+    const std::string& currency() const;
+    const std::vector<double>& notionals() const;
+    const ScheduleData& schedule() const;
+    const std::string& dayCounter() const;
+    const LegType& legType() const;
+    ext::shared_ptr<LegAdditionalData> concreteLegData() const;
 };
 %extend LegData {
   LegData() { return new LegData(); }
@@ -452,6 +498,8 @@ class CommodityFloatingLegData : public LegAdditionalData {
 %template(AmortizationDataVector) std::vector<ext::shared_ptr<ore::data::AmortizationData>>;
 %template(IndexingVector) std::vector<ore::data::Indexing>;
 %template(LegDataVector) std::vector<ext::shared_ptr<ore::data::LegData>>;
+%template(ScheduleRulesVector) std::vector<ore::data::ScheduleRules>;
+%template(ScheduleDatesVector) std::vector<ore::data::ScheduleDates>;
 SWIG_SHARED_PTR_VECTOR_TYPEMAP(ore::data::LegData, LegDataVector)
 
 // ore/OREData/ored/portfolio/legbuilders.hpp
