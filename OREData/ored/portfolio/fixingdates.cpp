@@ -893,21 +893,6 @@ void FixingDateGetter::visit(RangeAccrualFloatersCoupon& c) {
     requiredFixings_.addFixingDate(c.fixingDate(), 
                                    IndexNameTranslator::instance().oreName(c.index()->name()), 
                                    c.date());
-    // Register all observation fixing dates needed by the pricer.
-    // The RangeAccrualPricer iterates over observationSchedule().dates() (which includes the
-    // accrual start and end dates, unlike observationDates()) and shifts each date back by
-    // fixingDays using the index fixing calendar. We must replicate that logic here so the
-    // required fixings set includes every date the pricer will actually request.
-    Calendar calendar = c.index()->fixingCalendar();
-    const std::vector<Date>& scheduleDates = c.observationSchedule().dates();
-    std::vector<Date> adjustedDates;
-    adjustedDates.reserve(scheduleDates.size());
-    for (const auto& d : scheduleDates) {
-        adjustedDates.push_back(calendar.advance(d, -static_cast<Integer>(c.fixingDays()), Days));
-    }
-    requiredFixings_.addFixingDates(adjustedDates, 
-                                   IndexNameTranslator::instance().oreName(c.index()->name()), 
-                                   c.date());
 }
 
 void addToRequiredFixings(const QuantLib::Leg& leg, const QuantLib::ext::shared_ptr<FixingDateGetter>& fixingDateGetter) {
