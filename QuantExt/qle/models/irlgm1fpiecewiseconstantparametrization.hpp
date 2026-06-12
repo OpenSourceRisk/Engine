@@ -52,7 +52,6 @@ public:
     Real zeta(const Time t) const override;
     Real H(const Time t) const override;
     Real alpha(const Time t) const override;
-    Real intAlpha(const Time t) const override;
     Real kappa(const Time t) const override;
     Real Hprime(const Time t) const override;
     Real Hprime2(const Time t) const override;
@@ -131,10 +130,6 @@ template <class TS> inline Real Lgm1fPiecewiseConstantParametrization<TS>::H(con
 
 template <class TS> inline Real Lgm1fPiecewiseConstantParametrization<TS>::alpha(const Time t) const {
     return PiecewiseConstantHelper1::y(t) / this->scaling_;
-}
-
-template <class TS> inline Real Lgm1fPiecewiseConstantParametrization<TS>::intAlpha(const Time t) const {
-    return PiecewiseConstantHelper1::int_y(t) / this->scaling_;
 }
 
 template <class TS> inline Real Lgm1fPiecewiseConstantParametrization<TS>::kappa(const Time t) const {

@@ -52,8 +52,6 @@ public:
     virtual Real Hprime(const Time t) const;
     virtual Real Hprime2(const Time t) const;
     virtual Real hullWhiteSigma(const Time t) const;
-    /*! \f[ \int_0^t \alpha(u) du \f] */
-    virtual Real intAlpha(const Time t) const;
     const Handle<TS> termStructure() const;
 
     /*! \f[ \int_0^t alpha^2(u) H^n(u) du \f]*/
@@ -107,16 +105,6 @@ template <class TS> inline Real Lgm1fParametrization<TS>::hullWhiteSigma(const T
 }
 
 template <class TS> inline Real Lgm1fParametrization<TS>::kappa(const Time t) const { return -Hprime2(t) / Hprime(t); }
-
-template <class TS> inline Real Lgm1fParametrization<TS>::intAlpha(const Time t) const {
-    // since we integrate over alpha, we just need to take into account the times for this
-    // parameter, not for all parameters
-    const Array& alphaTimes = parameterTimes(0);
-    std::vector<Real> times(alphaTimes.begin(), alphaTimes.end());
-    auto integrator = QuantLib::ext::make_shared<SegmentIntegral>(100);
-    PiecewiseIntegral pwint(integrator, times, true);
-    return pwint([this](Real s) { return this->alpha(s); }, 0.0, t);
-}
 
 template <class TS> inline const Handle<TS> Lgm1fParametrization<TS>::termStructure() const { return termStructure_; }
 
