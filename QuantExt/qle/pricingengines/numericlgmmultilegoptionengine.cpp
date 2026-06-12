@@ -306,7 +306,6 @@ NumericLgmMultiLegOptionEngineBase::CashflowInfo NumericLgmMultiLegOptionEngineB
             Real raFixedRate = Null<Real>();
             if (auto raPricer = QuantLib::ext::dynamic_pointer_cast<QuantLib::RangeAccrualPricer>(ra->pricer()))
                 raFixedRate = raPricer->fixedRate();
-                std::cout<<"raFixedRate = "<<raFixedRate<<std::endl;
                 info.calculator_ = [ra, iborIndex, raFixedRate, T, payrec, multiplier](
                                    const LgmVectorised& lgm, const Real t, const RandomVariable& x,
                                    const Handle<YieldTermStructure>& discountCurve) {
