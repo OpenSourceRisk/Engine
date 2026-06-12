@@ -74,7 +74,7 @@ void SpreadedDiscountCurve::performCalculations() const {
     dataInterpolation_->update();
 }
 
-DiscountFactor SpreadedDiscountCurve::discountImpl(Time t) const {
+DiscountFactor SpreadedDiscountCurve::getDiscount(Time t, bool includeSpread) const {
     calculate();
 
     DiscountFactor refDf;
@@ -93,7 +93,7 @@ DiscountFactor SpreadedDiscountCurve::discountImpl(Time t) const {
 
     Time tMax = this->times_.back();
     if (t <= tMax) {
-        Real tmp = (*dataInterpolation_)(t, true);
+        Real tmp = includeSpread ? (*dataInterpolation_)(t, true) : 1.0;
         if (interpolation_ == Interpolation::logLinear)
             return refDf * tmp;
         else
@@ -101,21 +101,29 @@ DiscountFactor SpreadedDiscountCurve::discountImpl(Time t) const {
     }
 
     DiscountFactor dMax =
-        interpolation_ == Interpolation::logLinear ? this->data_.back() : std::exp(-this->data_.back() * tMax);
+        includeSpread
+            ? interpolation_ == Interpolation::logLinear ? this->data_.back() : std::exp(-this->data_.back() * tMax)
+            : 1.0;
     if (extrapolation_ == Extrapolation::flatFwd) {
-        Rate instFwdMax = -(*dataInterpolation_).derivative(tMax) / dMax;
+        Rate instFwdMax = includeSpread ? -(*dataInterpolation_).derivative(tMax) / dMax : 0.0;
         return refDf * dMax * std::exp(-instFwdMax * (t - tMax));
     } else {
         return refDf * std::pow(dMax, t / tMax);
     }
 }
 
+DiscountFactor SpreadedDiscountCurve::discountImpl(Time t) const { return getDiscount(t, true); }
+Real SpreadedDiscountCurve::discountWithoutSpread(Time t) const { return getDiscount(t, false); }
+
 void SpreadedDiscountCurve::updateBasesOffsets() const {
     basesOffset_.resize(bases_.size());
     for (Size i = 0; i < bases_.size(); ++i) {
+        auto c = QuantLib::ext::dynamic_pointer_cast<SpreadedDiscountCurve>(*bases_[i]);
+        QL_REQUIRE(c,
+                   "SpreadedDiscountCurve::updateBasesOffsets(): only SpreadedDiscountCurve is allowed as base curve.");
         basesOffset_[i].resize(times_.size());
         for (Size j = 0; j < times_.size(); ++j) {
-            basesOffset_[i][j] = bases_[i].empty() ? 1.0 : bases_[i]->discount(times_[j]);
+            basesOffset_[i][j] = bases_[i].empty() ? 1.0 : c->discountWithoutSpread(times_[j]);
         }
     }
     basesReferenceDate_ = referenceDate();

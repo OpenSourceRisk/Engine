@@ -55,12 +55,15 @@ public:
     void makeThisCurveSpreaded(const std::vector<Handle<YieldTermStructure>>& bases,
                                const std::vector<double>& multiplier);
 
+    Real discountWithoutSpread(Time t) const;
+
 protected:
     void performCalculations() const override;
     DiscountFactor discountImpl(Time t) const override;
 
 private:
     void updateBasesOffsets() const;
+    Real getDiscount(Time t, bool includeSpread) const;
 
     Handle<YieldTermStructure> referenceCurve_;
     std::vector<Time> times_;
