@@ -109,9 +109,10 @@ template <class TS> inline Real Lgm1fParametrization<TS>::hullWhiteSigma(const T
 template <class TS> inline Real Lgm1fParametrization<TS>::kappa(const Time t) const { return -Hprime2(t) / Hprime(t); }
 
 template <class TS> inline Real Lgm1fParametrization<TS>::intAlpha(const Time t) const {
-    std::vector<Real> times;
-    for (Size i = 0; i < numberOfParameters(); ++i)
-        times.insert(times.end(), parameterTimes(i).begin(), parameterTimes(i).end());
+    // since we integrate over alpha, we just need to take into account the times for this
+    // parameter, not for all parameters
+    const Array& alphaTimes = parameterTimes(0);
+    std::vector<Real> times(alphaTimes.begin(), alphaTimes.end());
     auto integrator = QuantLib::ext::make_shared<SegmentIntegral>(100);
     PiecewiseIntegral pwint(integrator, times, true);
     return pwint([this](Real s) { return this->alpha(s); }, 0.0, t);
