@@ -82,10 +82,14 @@ void ValuationEngine::buildCube(const QuantLib::ext::shared_ptr<data::Portfolio>
                                 Errors* errors) {
 
     struct SimMarketResetter {
-        SimMarketResetter(QuantLib::ext::shared_ptr<SimMarket> simMarket) : simMarket_(simMarket) {}
-        ~SimMarketResetter() { simMarket_->reset(); }
+        ~SimMarketResetter() {
+            simMarket_->reset();
+            if (fixingManager_)
+                fixingManager_->reset();
+        }
         QuantLib::ext::shared_ptr<SimMarket> simMarket_;
-    } simMarketResetter(simMarket_);
+        QuantLib::ext::shared_ptr<FixingManager> fixingManager_;
+    } simMarketResetter{simMarket_, fixingManager_};
 
     LOG("Build cube with mporStickyDate=" << mporStickyDate << ", dryRun=" << std::boolalpha << dryRun);
 
@@ -270,10 +274,6 @@ void ValuationEngine::buildCube(const QuantLib::ext::shared_ptr<data::Portfolio>
         if(fixingManager_ != nullptr)
             fixingManager_->reset();
         timings.fixingTime += data::os::nanosecondsClock() - fixingTimeStart;
-    }
-
-    if (fixingManager_ != nullptr) {
-        fixingManager_->reset();
     }
 
     if (dryRun) {
