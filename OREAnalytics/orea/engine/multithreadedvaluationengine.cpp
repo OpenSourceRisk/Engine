@@ -394,7 +394,7 @@ void MultiThreadedValuationEngine::buildCube(
 
                 auto valEngine = QuantLib::ext::make_shared<ore::analytics::ValuationEngine>(
                     today_, dateGrid_, simMarket, engineFactory->modelBuilders(), recalibrateModels_,
-                    QuantLib::ext::make_shared<FixingManager>(*fixingManager_));
+                    fixingManager_ ? QuantLib::ext::make_shared<FixingManager>(*fixingManager_) : nullptr);
                 valEngine->registerProgressIndicator(progressIndicator);
 
                 // build mini-cube
