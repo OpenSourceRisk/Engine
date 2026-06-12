@@ -165,13 +165,13 @@ public:
 
     QuantLib::Handle<QuantExt::IntradayPowerPriceTermStructure>
     intradayPowerPriceCurve(const std::string& indexName,
-                            const std::string& configuration = Market::defaultConfiguration) const {
+                            const std::string& configuration = Market::defaultConfiguration) const override {
         return QuantLib::Handle<QuantExt::IntradayPowerPriceTermStructure>();
     }
 
     QuantLib::Handle<QuantExt::IntradayPowerIndex>
     intradayPowerIndex(const std::string& indexName,
-                       const std::string& configuration = Market::defaultConfiguration) const {
+                       const std::string& configuration = Market::defaultConfiguration) const override {
         return QuantLib::Handle<QuantExt::IntradayPowerIndex>();
     }
 
