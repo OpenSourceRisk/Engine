@@ -624,14 +624,19 @@ void XvaAnalyticImpl::buildScenarioSimMarket() {
 
     TLOG("XvaAnalytic:Finished building Scenario SimMarket");
     TLOG("RfKey,BaseScenarioValue,BaseScenarioAbsValue");
-    for (const auto& key : simMarket_->baseScenario()->keys()) {
-        TLOG(key << "," << simMarket_->baseScenario()->get(key) << "," << simMarket_->baseScenarioAbsolute()->get(key));
+    if (Log::instance().mask() >= ORE_DATA) {
+        for (const auto& key : simMarket_->baseScenario()->keys()) {
+            TLOG(key << "," << simMarket_->baseScenario()->get(key) << ","
+                     << simMarket_->baseScenarioAbsolute()->get(key));
+        }
     }
     TLOG("XvaAnalytic: Finished building Scenario SimMarket for model calibration (useSpreadedTermStructure)");
     TLOG("RfKey,BaseScenarioValue,BaseScenarioAbsValue");
-    for (const auto& key : simMarketCalibration_->baseScenario()->keys()) {
-        TLOG(key << "," << simMarketCalibration_->baseScenario()->get(key) << ","
-                 << simMarketCalibration_->baseScenarioAbsolute()->get(key));
+    if (Log::instance().mask() >= ORE_DATA) {
+        for (const auto& key : simMarketCalibration_->baseScenario()->keys()) {
+            TLOG(key << "," << simMarketCalibration_->baseScenario()->get(key) << ","
+                     << simMarketCalibration_->baseScenarioAbsolute()->get(key));
+        }
     }
 }
 
