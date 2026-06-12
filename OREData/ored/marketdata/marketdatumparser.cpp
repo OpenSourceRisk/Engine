@@ -963,17 +963,18 @@ QuantLib::ext::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const 
 
     case MarketDatum::InstrumentType::SHAPE_PROFILE: {
         // Expects the following form:
-        // SHAPE_PROFILE/SHAPE_FACTOR/QuoteName/DeliveryDate/StartTimeInSec
-        // Example: SHAPE_PROFILE/SHAPE_FACTOR/PJM_WH_RT/2027-02-02/0
-        QL_REQUIRE(tokens.size() == 5, "5 tokens expected in " << datumName);
+        // SHAPE_PROFILE/SHAPE_FACTOR/QuoteName/DeliveryDate/StartTimeInSec/UNIT/<Optional Flag to mark DST factors>
+        // Example: SHAPE_PROFILE/SHAPE_FACTOR/PJM_WH_RT/2027-02-02/0/UNIT/<DST>
+        QL_REQUIRE(tokens.size() >= 6, "5 tokens expected in " << datumName);
         QL_REQUIRE(quoteType == MarketDatum::QuoteType::SHAPE_FACTOR, "Invalid quote type for " << datumName);
         
         const string& quoteName = tokens[2];
         Date deliveryDate = parseDate(tokens[3]);
         Size startTimeInSec = parseInteger(tokens[4]);
-        
+        IntradayPowerTimeUnit timeUnit = parseIntradayPowerTimeUnit(tokens[5]);
+        bool isDST = tokens.size() > 6 ? tokens[6] == "DST" : false;
         return QuantLib::ext::make_shared<IntradayPowerCurveQuote>(value, asof, datumName, quoteType, quoteName, 
-                                                                    deliveryDate, startTimeInSec);
+                                                                    deliveryDate, startTimeInSec, timeUnit, isDST);
     }
 
     case MarketDatum::InstrumentType::BOND_FUTURE_OPTION: {

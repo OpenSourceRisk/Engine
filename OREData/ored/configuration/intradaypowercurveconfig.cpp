@@ -30,7 +30,9 @@ IntradayPowerCurveConfig::IntradayPowerCurveConfig(const string& curveId, const 
                                                    const string& dailyAveragePriceCurve,
                                                    const string& shapeQuoteName)
     : CurveConfig(curveId, curveDescription), currency_(currency),
-      dailyAveragePriceCurve_(dailyAveragePriceCurve), shapeQuoteName_(shapeQuoteName) {}
+      dailyAveragePriceCurve_(dailyAveragePriceCurve), shapeQuoteName_(shapeQuoteName) {
+        quotes_.push_back("SHAPE_PROFILE/SHAPE_FACTOR/" + shapeQuoteName +"/*");
+      }
 
 void IntradayPowerCurveConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "IntradayPowerCurve");

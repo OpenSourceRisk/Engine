@@ -40,26 +40,36 @@ IntradayPowerIndex::IntradayPowerIndex(const std::string& underlyingName, const 
                                        const Calendar& fixingCalendar,
                                        const Handle<QuantExt::IntradayPowerPriceTermStructure>& priceCurve,
                                        const QuantLib::ext::shared_ptr<QuantExt::IntradayLoadProfile>& loadProfile)
-    : deliveryDate_(deliveryDate), fixingCalendar_(fixingCalendar), intradayCurve_(priceCurve),
+    : underlyingName_(underlyingName), deliveryDate_(deliveryDate), fixingCalendar_(fixingCalendar),
+      intradayCurve_(priceCurve),
       loadProfile_(loadProfile) {
+    std::cout << "Constructing IntradayPowerIndex with underlying " << underlyingName_ << " and delivery date "
+              << deliveryDate_ << std::endl;
     std::ostringstream o;
     o << "POWER-" << underlyingName << "-" << QuantLib::io::iso_date(deliveryDate_);
     name_ = o.str();
-
+    std::cout << "IntradayPowerIndex name set to " << name_ << std::endl;
     registerWith(intradayCurve_);
     registerWith(Settings::instance().evaluationDate());
+    registerWith(notifier());
 
-    for (const auto& [start, end, load] : loadProfile_->loadProfile()) {
-        std::string name = bucketName(name_, start, end, false);
-        QL_DEPRECATED_DISABLE_WARNING
-        IndexManager::instance().notifier(name);
-        QL_DEPRECATED_ENABLE_WARNING
+    if (loadProfile_ != nullptr) {
+        for (const auto& [start, end, load] : loadProfile_->loadProfile()) {
+            std::string name = bucketName(name_, start, end, false);
+            std::cout << "IntradayPowerIndex bucket name set to " << name << std::endl;
+            QL_DEPRECATED_DISABLE_WARNING
+            registerWith(IndexManager::instance().notifier(name));
+            QL_DEPRECATED_ENABLE_WARNING
+        }
     }
-    for (const auto& [start, end, load] : loadProfile_->loadProfileDST()) {
-        std::string name = bucketName(name_, start, end, true);
-        QL_DEPRECATED_DISABLE_WARNING
-        IndexManager::instance().notifier(name);
-        QL_DEPRECATED_ENABLE_WARNING
+
+    if (loadProfile_ != nullptr) {
+        for (const auto& [start, end, load] : loadProfile_->loadProfileDST()) {
+            std::string name = bucketName(name_, start, end, true);
+            QL_DEPRECATED_DISABLE_WARNING
+            registerWith(IndexManager::instance().notifier(name));
+            QL_DEPRECATED_ENABLE_WARNING
+        }
     }
 }
 
@@ -210,6 +220,11 @@ const std::vector<std::string> IntradayPowerIndex::intraDayIndexNames() const {
         names.push_back(name_);
     }
     return names;
+}
+QuantLib::ext::shared_ptr<IntradayPowerIndex>
+IntradayPowerIndex::clone(const Date& deliveryDate, ext::shared_ptr<IntradayLoadProfile> loadProfile) const {
+    return QuantLib::ext::make_shared<IntradayPowerIndex>(underlyingName_, deliveryDate, fixingCalendar_,
+                                                          intradayCurve_, loadProfile);
 }
 
 } // namespace QuantExt

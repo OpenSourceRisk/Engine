@@ -105,6 +105,7 @@
 #include <ored/portfolio/builders/fxtouchoption.hpp>
 #include <ored/portfolio/builders/indexcreditdefaultswap.hpp>
 #include <ored/portfolio/builders/indexcreditdefaultswapoption.hpp>
+#include <ored/portfolio/builders/intradaypowerforward.hpp>
 #include <ored/portfolio/builders/pairwisevarianceswap.hpp>
 #include <ored/portfolio/builders/quantoequityoption.hpp>
 #include <ored/portfolio/builders/quantovanillaoption.hpp>
@@ -185,6 +186,7 @@
 #include <ored/portfolio/indexing.hpp>
 #include <ored/portfolio/inflationswap.hpp>
 #include <ored/portfolio/instrumentwrapper.hpp>
+#include <ored/portfolio/intradaypowerforward.hpp>
 #include <ored/portfolio/legbuilders.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/legdatafactory.hpp>
@@ -398,6 +400,7 @@ void dataBuilders() {
     ORE_REGISTER_TRADE_BUILDER("EquityStrikeResettableOption", EquityStrikeResettableOption, false)
     ORE_REGISTER_TRADE_BUILDER("FxStrikeResettableOption", FxStrikeResettableOption, false)
     ORE_REGISTER_TRADE_BUILDER("CommodityStrikeResettableOption", CommodityStrikeResettableOption, false)
+    ORE_REGISTER_TRADE_BUILDER("IntradayPowerForward", IntradayPowerForward, false)
 
     ORE_REGISTER_TRADE_BUILDER("BalanceGuaranteedSwap", BalanceGuaranteedSwap, false)
     ORE_REGISTER_TRADE_BUILDER("CallableSwap", CallableSwap, false)
@@ -602,6 +605,8 @@ void dataBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(BondFutureEuropeanOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(BondFutureAmericanFDOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(BondFutureAmericanBAWOptionEngineBuilder, false)
+
+    ORE_REGISTER_ENGINE_BUILDER(IntradayPowerForwardEngineBuilder, false)
 
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("Bond", BondTrsUnderlyingBuilder, false)
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("BondFuture", BondFutureTrsUnderlyingBuilder, false)

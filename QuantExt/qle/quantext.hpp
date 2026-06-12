@@ -665,6 +665,7 @@
 #include <qle/utilities/fairrate.hpp>
 #include <qle/utilities/inflation.hpp>
 #include <qle/utilities/interpolation.hpp>
+#include <qle/utilities/intradaypower.hpp>
 #include <qle/utilities/localiborcouponsettings.hpp>
 #include <qle/utilities/mcstats.hpp>
 #include <qle/utilities/ratehelpers.hpp>

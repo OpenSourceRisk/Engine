@@ -878,6 +878,17 @@ parseIntradayPowerIndex(const std::string& name, bool hasPrefix,
                         const QuantLib::Calendar& cal) {
     // Whether we check for "POWER-" prefix depends on hasPrefix.
     string commName = name;
+    auto fixingCalendar = cal;
+    if (fixingCalendar == NullCalendar()) {
+        QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+        const auto [found, conventionPtr] = conventions->get(commName, Convention::Type::CommodityFuture);
+        if (found) {
+            if (auto convention = QuantLib::ext::dynamic_pointer_cast<CommodityFutureConvention>(conventionPtr)) {
+                fixingCalendar = convention->calendar();
+            }
+        }
+    }
+
     if (hasPrefix) {
         // Make sure the prefix is correct
         string prefix = name.substr(0, 6);
@@ -890,17 +901,22 @@ parseIntradayPowerIndex(const std::string& name, bool hasPrefix,
     split(tokens, commName, boost::is_any_of("-"));
     // Only name given, no delivery date or delivery time
     if (tokens.empty() || tokens.size() == 1) {
+        DLOG("parseIntradayPowerIndex(" << name << ") -> " << commName << " with no delivery date or time");
         return QuantLib::ext::make_shared<QuantExt::IntradayPowerIndex>(commName, Settings::instance().evaluationDate(),
-                                                                        cal, ts, loadProfile);
+                                                                        fixingCalendar, ts, loadProfile);
     }
     // Have date but no delivery time
     if (tokens.size() == 4) {
+        DLOG("parseIntradayPowerIndex(" << name << ") -> " << commName << " with delivery date " << tokens[1] << "-" << tokens[2] << "-" << tokens[3] << " and no delivery time");
         Date deliveryDate = parseDate(tokens[1] + "-" + tokens[2] + "-" + tokens[3]);
         commName = tokens[0];
-        return QuantLib::ext::make_shared<QuantExt::IntradayPowerIndex>(commName, deliveryDate, cal, ts, loadProfile);
+        return QuantLib::ext::make_shared<QuantExt::IntradayPowerIndex>(commName, deliveryDate, fixingCalendar, ts, loadProfile);
     }
 
     if (tokens.size() == 6 || tokens.size() == 7) {
+        DLOG("parseIntradayPowerIndex(" << name << ") -> " << commName << " with delivery date " << tokens[1] << "-" << tokens[2] << "-" << tokens[3] 
+             << " and delivery time from " << tokens[4] << " to " << tokens[5] 
+             << (tokens.size() == 7 ? (" with " + tokens[6]) : " with no DST flag"));
         Date deliveryDate = parseDate(tokens[1] + "-" + tokens[2] + "-" + tokens[3]);
         commName = tokens[0];
         int deliveryStart = parseInteger(tokens[4]);
@@ -909,7 +925,7 @@ parseIntradayPowerIndex(const std::string& name, bool hasPrefix,
                    "if delivery time tuple has a third token it must be DST, got '" << tokens[6] << "'");
         bool isDstHour = tokens.size() == 7 && boost::iequals(tokens[6], "DST");
         return QuantLib::ext::make_shared<QuantExt::IntradayPowerIndex>(commName, deliveryDate, deliveryStart,
-                                                                        deliveryEnd, isDstHour, cal, ts);
+                                                                        deliveryEnd, isDstHour, fixingCalendar, ts);
     }
 
     QL_FAIL("invalid intraday power index name: "

@@ -477,6 +477,7 @@ utilities/creditcurves.cpp
 utilities/creditindexconstituentcurvecalibration.cpp
 utilities/fairrate.cpp
 utilities/inflation.cpp
+utilities/intradaypower.cpp
 utilities/ratehelpers.cpp
 utilities/time.cpp)
 
@@ -1143,6 +1144,7 @@ utilities/creditindexconstituentcurvecalibration.hpp
 utilities/fairrate.hpp
 utilities/inflation.hpp
 utilities/interpolation.hpp
+utilities/intradaypower.hpp
 utilities/localiborcouponsettings.hpp
 utilities/mcstats.hpp
 utilities/ratehelpers.hpp

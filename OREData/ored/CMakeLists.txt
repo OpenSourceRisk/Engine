@@ -40,6 +40,7 @@ marketdata/commoditycurve.cpp
 marketdata/commodityvolcurve.cpp
 marketdata/correlationcurve.cpp
 marketdata/csvloader.cpp
+marketdata/intradaypowercurve.cpp
 marketdata/curvespec.cpp
 marketdata/curvespecparser.cpp
 marketdata/defaultcurve.cpp
@@ -298,6 +299,7 @@ portfolio/indexcreditdefaultswapoption.cpp
 portfolio/indexing.cpp
 portfolio/inflationswap.cpp
 portfolio/instrumentwrapper.cpp
+portfolio/intradaypowerforward.cpp
 portfolio/knockoutswap.cpp
 portfolio/legbuilders.cpp
 portfolio/legdata.cpp
@@ -468,6 +470,7 @@ marketdata/commoditycurve.hpp
 marketdata/commodityvolcurve.hpp
 marketdata/compositeloader.hpp
 marketdata/correlationcurve.hpp
+marketdata/intradaypowercurve.hpp
 marketdata/csvloader.hpp
 marketdata/curvespec.hpp
 marketdata/curvespecparser.hpp
@@ -639,6 +642,7 @@ portfolio/builders/fxoption.hpp
 portfolio/builders/fxtouchoption.hpp
 portfolio/builders/indexcreditdefaultswap.hpp
 portfolio/builders/indexcreditdefaultswapoption.hpp
+portfolio/builders/intradaypowerforward.hpp
 portfolio/builders/pairwisevarianceswap.hpp
 portfolio/builders/quantoequityoption.hpp
 portfolio/builders/quantovanillaoption.hpp
@@ -738,6 +742,7 @@ portfolio/indexcreditdefaultswapoption.hpp
 portfolio/indexing.hpp
 portfolio/inflationswap.hpp
 portfolio/instrumentwrapper.hpp
+portfolio/intradaypowerforward.hpp
 portfolio/knockoutswap.hpp
 portfolio/legbuilders.hpp
 portfolio/legdata.hpp

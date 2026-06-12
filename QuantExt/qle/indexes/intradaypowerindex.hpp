@@ -70,7 +70,10 @@ public:
 
     const std::vector<std::string> intraDayIndexNames() const;
 
+    QuantLib::ext::shared_ptr<IntradayPowerIndex> clone(const QuantLib::Date& deliveryDate, ext::shared_ptr<QuantExt::IntradayLoadProfile> loadProfile) const;
+
 private:
+    std::string underlyingName_;
     std::string name_;
     QuantLib::Date deliveryDate_;
     std::optional<std::tuple<int, int, bool>> deliveryTime_ = std::nullopt;

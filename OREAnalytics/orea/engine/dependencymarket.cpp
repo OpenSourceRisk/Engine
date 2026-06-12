@@ -688,12 +688,17 @@ Handle<QuantExt::IntradayPowerPriceTermStructure> DependencyMarket::intradayPowe
 }
 
 Handle<QuantExt::IntradayPowerIndex> DependencyMarket::intradayPowerIndex(const string& name, const string& config) const {
+    TLOG("Dependencymarket: Building intraday power index for " << name);
     auto pts = intradayPowerPriceCurve(name, config);
+    TLOG("Dependencymarket: Built intraday power price curve for " << name);
     // if (conventions_)
     //     return Handle<CommodityIndex>(parseCommodityIndex(name, *conventions_, false, pts));
     // else
     //     return Handle<CommodityIndex>(parseCommodityIndex(name, false, NullCalendar(), pts));
-    return Handle<QuantExt::IntradayPowerIndex>(parseIntradayPowerIndex(name, false, pts));
+    auto index = parseIntradayPowerIndex(name, false, pts);
+    QL_REQUIRE(index != nullptr, "Failed to parse intraday power index " << name);
+    DLOG("Dependencymarket: Built intraday power index for " << name << " with " << index->name());
+    return Handle<QuantExt::IntradayPowerIndex>(index);
 }
 
 std::map<QuantLib::Period, QuantLib::Period>
