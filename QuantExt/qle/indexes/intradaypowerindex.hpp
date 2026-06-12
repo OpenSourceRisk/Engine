@@ -58,10 +58,6 @@ public:
 
     Real fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const override;
 
-    Real forecastFixing(const Date& fixingDate) const;
-
-    Real pastFixing(const Date& fixingDate) const override;
-
     const Handle<QuantExt::IntradayPowerPriceTermStructure>& priceCurve() const { return intradayCurve_; }
 
     const QuantLib::ext::shared_ptr<QuantExt::IntradayLoadProfile>& loadProfile() const { return loadProfile_; }
@@ -72,14 +68,23 @@ public:
 
     QuantLib::ext::shared_ptr<IntradayPowerIndex> clone(const QuantLib::Date& deliveryDate, ext::shared_ptr<QuantExt::IntradayLoadProfile> loadProfile) const;
 
+    Real pastFixing(const Date& fixingDate) const override;
+
 private:
+    Real forecastFixing(const Date& fixingDate) const;
+
+    Real forecastBucketFixing(const Date& fixingDate, int start, int end, bool isDstHour) const;
+
+    //! Compute the fixing for a single intraday time bucket, falling back to a forecast if no past fixing is available.
+    Real pastBucketFixing(const Date& fixingDate, int start, int end, bool isDstHour, bool enforceTodaysFixing) const;
+
     std::string underlyingName_;
     std::string name_;
     QuantLib::Date deliveryDate_;
     std::optional<std::tuple<int, int, bool>> deliveryTime_ = std::nullopt;
     Calendar fixingCalendar_;
 
-    Real intradayBucketFixing(const Date& fixingDate, int start, int end, bool isDstHour) const;
+    Real pastIntradayFixing(const Date& fixingDate, int start, int end, bool isDstHour) const;
     Handle<QuantExt::IntradayPowerPriceTermStructure> intradayCurve_;
     QuantLib::ext::shared_ptr<QuantExt::IntradayLoadProfile> loadProfile_;
 };

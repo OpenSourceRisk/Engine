@@ -95,6 +95,7 @@ IntradayPowerCurve::buildShape(const Date& asof, const string& shapeQuoteName, c
         if (!q)
             continue;
         auto start = static_cast<int>(q->startTimeInSec()) * static_cast<int>(q->timeUnit());
+        
         QL_REQUIRE(start >= 0 && start < 86400,
                    "IntradayPowerCurve: start time " << start << " is out of range for quote " << q->name());
         if (!q->isDST())
@@ -106,6 +107,8 @@ IntradayPowerCurve::buildShape(const Date& asof, const string& shapeQuoteName, c
                     << q->name() << " has start time " << start);
             shapeFactorsDST[q->deliveryDate()][start] = q->quote()->value();
         }
+        TLOG("IntradayPowerCurve: loaded shape factor quote " << q->name() << " with delivery date " << q->deliveryDate()
+             << ", start time " << start << " and value " << q->quote()->value() << (q->isDST() ? " (DST)" : ""));
     }
 
     // Perform some basic checks on the shape factors
