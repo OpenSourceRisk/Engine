@@ -163,6 +163,18 @@ public:
         return QuantLib::Handle<QuantLib::BlackVolTermStructure>();
     }
 
+    QuantLib::Handle<QuantExt::IntradayPowerPriceTermStructure>
+    intradayPowerPriceCurve(const std::string& indexName,
+                            const std::string& configuration = Market::defaultConfiguration) const {
+        return QuantLib::Handle<QuantExt::IntradayPowerPriceTermStructure>();
+    }
+
+    QuantLib::Handle<QuantExt::IntradayPowerIndex>
+    intradayPowerIndex(const std::string& indexName,
+                       const std::string& configuration = Market::defaultConfiguration) const {
+        return QuantLib::Handle<QuantExt::IntradayPowerIndex>();
+    }
+
     std::map<QuantLib::Period, QuantLib::Period>
     zeroInflationObservationLags(const string& indexName,
                                  const string& configuration = Market::defaultConfiguration) const override {

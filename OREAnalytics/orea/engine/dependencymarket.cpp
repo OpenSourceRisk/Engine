@@ -671,6 +671,31 @@ Handle<BlackVolTermStructure> DependencyMarket::bondFutureVol(const string& cont
     return flatRateFxv();
 }
 
+Handle<QuantExt::IntradayPowerPriceTermStructure> DependencyMarket::intradayPowerPriceCurve(const string& name, const string& config) const {
+    addRiskFactor(RiskFactorKey::KeyType::IntradayPowerCurve, name);
+    addMarketObject(MarketObject::IntradayPowerPriceCurve, name, config);
+    Currency commCcy;
+    if (curveConfigs_ && curveConfigs_->hasIntradayPowerCurveConfig(name)) {
+        auto curveconf = curveConfigs_->intradayPowerCurveConfig(name);
+        commCcy = parseCurrency(curveconf->currency());
+        
+    } else {
+        commCcy = Currency();
+    }
+    auto pts = flatRatePts(commCcy);
+    return Handle<QuantExt::IntradayPowerPriceTermStructure>(QuantLib::ext::make_shared<QuantExt::IntradayPowerPriceTermStructure>(pts));
+    QL_FAIL("Didn't find commodity curve config for " << name);
+}
+
+Handle<QuantExt::IntradayPowerIndex> DependencyMarket::intradayPowerIndex(const string& name, const string& config) const {
+    auto pts = intradayPowerPriceCurve(name, config);
+    // if (conventions_)
+    //     return Handle<CommodityIndex>(parseCommodityIndex(name, *conventions_, false, pts));
+    // else
+    //     return Handle<CommodityIndex>(parseCommodityIndex(name, false, NullCalendar(), pts));
+    return Handle<QuantExt::IntradayPowerIndex>(parseIntradayPowerIndex(name, false, pts));
+}
+
 std::map<QuantLib::Period, QuantLib::Period>
 DependencyMarket::zeroInflationObservationLags(const string& indexName, const string& configuration) const {
     return {{1 * Years, 3 * Months}};
