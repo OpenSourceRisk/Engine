@@ -724,15 +724,12 @@ RandomVariable LgmVectorised::rangeAccrualRate(const QuantLib::ext::shared_ptr<I
         Real S_i = p_->termStructure()->timeFromReference(valueDate);
         Real T_i = p_->termStructure()->timeFromReference(maturityDate);
 
-        // Ensure S_i >= t for the formula to apply
-        if (S_i >= t) {
-            // If the value date has passed but we don't have a fixing, use forward rate
-            RandomVariable fwdRate = fixing(index, obsDate, t, x);
-            RandomVariable inRange = indicatorGeq(fwdRate, RandomVariable(sample, lowerTrigger)) *
-                                     indicatorGeq(RandomVariable(sample, upperTrigger), fwdRate);
-            rangeAccrualFactor += inRange;
-            continue;
-        }
+        // Precondition: the observation value date must not precede the conditioning time t.
+        // The analytical formula conditions on z(t) = x and integrates alpha^2 over [t, S_i]
+        // (sigma^2 ~ zeta(S_i) - zeta(t)). For S_i < t this variance term would be negative
+        QL_REQUIRE(S_i >= t, "LgmVectorised::rangeAccrualRate(): observation value date ("
+                                 << valueDate << ", S_i=" << S_i << ") must be >= conditioning time t (" << t
+                                 << "); the analytical range-accrual formula requires t <= S_i.");
 
         Real H_S = p_->H(S_i);
         Real H_T = p_->H(T_i);

@@ -111,7 +111,10 @@ public:
    /*! Analytical pricing of a range accrual coupon in the LGM1F model.
        Each observation is priced as a digital caplet/floorlet using the closed-form formula
        for digital options on zero bonds with delayed payment (see ORE documentation 5.1.25).
-       Requires observation time t <= earliest observation fixing date.
+       Requires the conditioning time t to be no later than the value date S_i of every future
+       observation, i.e. t <= S_i. This is necessary because the formula conditions on z(t) = x
+       and integrates alpha^2 over [t, S_i]; for S_i < t the fixing would depend on the path of x
+       before t, which is not available in the 1D backward solver. A violation triggers QL_REQUIRE.
        \param index the underlying Ibor index for the range observations
        \param fixingDate the fixing date of the coupon rate
        \param observationDates the observation dates within the accrual period
