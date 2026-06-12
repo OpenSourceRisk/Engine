@@ -122,6 +122,8 @@ public:
        \param payTime the payment time (year fraction)
        \param t the current observation/simulation time
        \param x the LGM state variable
+       \param fixedRate if not Null<Real>(), the coupon pays fixedRate * (n/N) instead of
+                        the floating formula gearing * Libor * (n/N) + spread
    */
     RandomVariable rangeAccrualRate(const QuantLib::ext::shared_ptr<IborIndex>& index,
                                     const Date& fixingDate,
@@ -129,7 +131,8 @@ public:
                                     const Real lowerTrigger, const Real upperTrigger,
                                     const Real gearing, const Spread spread,
                                     const Time payTime,
-                                    const Time t, const RandomVariable& x) const;
+                                    const Time t, const RandomVariable& x,
+                                    const Real fixedRate = Null<Real>()) const;
 
 private:
     QuantLib::ext::shared_ptr<IrLgm1fParametrization> p_;

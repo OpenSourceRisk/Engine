@@ -672,7 +672,8 @@ RandomVariable LgmVectorised::rangeAccrualRate(const QuantLib::ext::shared_ptr<I
                                                const Real lowerTrigger, const Real upperTrigger,
                                                const Real gearing, const Spread spread,
                                                const Time payTime,
-                                               const Time t, const RandomVariable& x) const {
+                                               const Time t, const RandomVariable& x,
+                                               const Real fixedRate) const {
 
     // Analytical pricing of a range accrual coupon in the LGM1F model.
     // The range accrual is decomposed into a weighted sum of digital caplets/floorlets.
@@ -723,8 +724,8 @@ RandomVariable LgmVectorised::rangeAccrualRate(const QuantLib::ext::shared_ptr<I
         Real S_i = p_->termStructure()->timeFromReference(valueDate);
         Real T_i = p_->termStructure()->timeFromReference(maturityDate);
 
-        // Ensure S_i > t for the formula to apply
-        if (S_i <= t) {
+        // Ensure S_i >= t for the formula to apply
+        if (S_i >= t) {
             // If the value date has passed but we don't have a fixing, use forward rate
             RandomVariable fwdRate = fixing(index, obsDate, t, x);
             RandomVariable inRange = indicatorGeq(fwdRate, RandomVariable(sample, lowerTrigger)) *
@@ -753,8 +754,7 @@ RandomVariable LgmVectorised::rangeAccrualRate(const QuantLib::ext::shared_ptr<I
 
         // Compute ln P^fwd(t, S_i, T_i | x) = ln(P^fwd(T_i)/P^fwd(S_i)) - (H_T - H_S)*x - 0.5*zeta(t)*(H_T^2 - H_S^2)
         Real fwdBondT0 = std::log(curve->discount(T_i) / curve->discount(S_i));
-        RandomVariable lnFwdBond = RandomVariable(sample, fwdBondT0) - dH * x -
-                                   RandomVariable(sample, 0.5 * zeta_t * (H_T * H_T - H_S * H_S));
+        RandomVariable lnFwdBond = fwdBondT0 - dH * x - 0.5 * zeta_t * ( H_T * H_T - H_S * H_S);
 
         // mu = ln P^fwd(t,S,T|x) + [(H(Tp)-H(S))(H(T)-H(S)) - 0.5*(H(T)-H(S))^2] * (zeta(S) - zeta(t))
         Real convexityAdj = ((H_Tp - H_S) * dH - 0.5 * dH * dH) * dZeta;
@@ -780,12 +780,16 @@ RandomVariable LgmVectorised::rangeAccrualRate(const QuantLib::ext::shared_ptr<I
     // Average over all observation dates
     rangeAccrualFactor /= RandomVariable(sample, static_cast<Real>(n));
 
-    // Compute the coupon rate: (gearing * L_fixing + spread) * rangeAccrualFactor
-    RandomVariable forwardRate = fixing(index, fixingDate, t, x);
-    RandomVariable rate = (RandomVariable(sample, gearing) * forwardRate + RandomVariable(sample, spread)) *
-                          rangeAccrualFactor;
+    // Compute the coupon rate. rangeAccrualFactor now equals E[n/N | x], the expected
+    // fraction of observations in range. The caller multiplies by accrualPeriod * nominal.
+    if (fixedRate != Null<Real>()) {
+        // Fixed-rate range accrual: fixedRate * (n/N)
+        return RandomVariable(sample, fixedRate) * rangeAccrualFactor;
+    }
 
-    return rate;
+    // Floating range accrual: (gearing * L_fixing + spread) * (n/N)
+    RandomVariable forwardRate = fixing(index, fixingDate, t, x);
+    return (RandomVariable(sample, gearing) * forwardRate + RandomVariable(sample, spread)) * rangeAccrualFactor;
 }
 
 } // namespace QuantExt

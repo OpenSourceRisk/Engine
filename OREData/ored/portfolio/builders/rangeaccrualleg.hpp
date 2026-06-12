@@ -41,19 +41,25 @@ namespace data {
 */
 class RangeAccrualLegEngineBuilder
     : public CachingCouponPricerBuilder<std::string, const std::string&, const QuantLib::Date&,
-                                        const QuantLib::Date&> {
+                                        const QuantLib::Date&, QuantLib::Real> {
 public:
     RangeAccrualLegEngineBuilder()
         : CachingEngineBuilder("BGM", "FloatingRateCouponPricer", {"IborRangeAccrualLeg"}) {}
 
 protected:
     std::string keyImpl(const std::string& index, const QuantLib::Date& accrualStartDate,
-                        const QuantLib::Date& accrualEndDate) override {
-        return index + "/" + ore::data::to_string(accrualStartDate) + "/" + ore::data::to_string(accrualEndDate);
+                        const QuantLib::Date& accrualEndDate, QuantLib::Real fixedRate) override {
+        // The fixed rate is part of the key so that fixed-rate and floating coupons (and
+        // coupons with different fixed rates) do not share a cached pricer instance. The
+        // returned pricer has its fixed rate set in engineImpl, so a shared instance would
+        // otherwise leak fixed-rate state across trades / coupons.
+        return index + "/" + ore::data::to_string(accrualStartDate) + "/" +
+               ore::data::to_string(accrualEndDate) + "/" + ore::data::to_string(fixedRate);
     }
 
-    QuantLib::ext::shared_ptr<QuantLib::FloatingRateCouponPricer> engineImpl(const std::string& index, const QuantLib::Date& accrualStartDate,
-               const QuantLib::Date& accrualEndDate) override;
+    QuantLib::ext::shared_ptr<QuantLib::FloatingRateCouponPricer>
+    engineImpl(const std::string& index, const QuantLib::Date& accrualStartDate,
+               const QuantLib::Date& accrualEndDate, QuantLib::Real fixedRate) override;
 };
 
 //! Engine Builder for RangeAccrualLeg using call-spread replication on optionlet vols

@@ -30,6 +30,7 @@
 #include <ql/handle.hpp>
 #include <ql/math/integrals/integral.hpp>
 #include <ql/math/integrals/simpsonintegral.hpp>
+#include <ql/math/integrals/segmentintegral.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <map>
 
@@ -111,7 +112,7 @@ template <class TS> inline Real Lgm1fParametrization<TS>::intAlpha(const Time t)
     std::vector<Real> times;
     for (Size i = 0; i < numberOfParameters(); ++i)
         times.insert(times.end(), parameterTimes(i).begin(), parameterTimes(i).end());
-    auto integrator = QuantLib::ext::make_shared<SimpsonIntegral>(1.0e-10, 100);
+    auto integrator = QuantLib::ext::make_shared<SegmentIntegral>(100);
     PiecewiseIntegral pwint(integrator, times, true);
     return pwint([this](Real s) { return this->alpha(s); }, 0.0, t);
 }
