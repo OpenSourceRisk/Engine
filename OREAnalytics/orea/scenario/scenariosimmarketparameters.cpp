@@ -317,6 +317,18 @@ const vector<Real>& ScenarioSimMarketParameters::bondFutureVolMoneyness(const st
     }
 }
 
+vector<string> ScenarioSimMarketParameters::intradayPowerCurveNames() const {
+    return paramsLookup(RiskFactorKey::KeyType::IntradayPowerCurve);
+}
+
+const vector<Period>& ScenarioSimMarketParameters::intradayPowerCurveTenors(const string& intradayPowerName) const {
+    return lookup(intradayPowerCurveTenors_, intradayPowerName);
+}
+
+bool ScenarioSimMarketParameters::hasIntradayPowerCurveTenors(const string& intradayPowerName) const {
+    return intradayPowerCurveTenors_.count(intradayPowerName) > 0;
+}
+
 void ScenarioSimMarketParameters::setYieldCurveTenors(const string& key, const std::vector<Period>& p) {
     yieldCurveTenors_[key] = p;
 }
@@ -682,6 +694,23 @@ const vector<Real>& ScenarioSimMarketParameters::equityVolStandardDevs(const str
     return lookup(equityStandardDevs_, key);
 }
 
+void ScenarioSimMarketParameters::setIntradayPowerCurveNames(vector<string> names) {
+    addParamsName(RiskFactorKey::KeyType::IntradayPowerCurve, names);
+}
+
+void ScenarioSimMarketParameters::setIntradayPowerCurveSimulate(bool simulate) {
+    setParamsSimulate(RiskFactorKey::KeyType::IntradayPowerCurve, simulate);
+}
+
+void ScenarioSimMarketParameters::setIntradayPowerCurves(vector<string> names) {
+    addParamsName(RiskFactorKey::KeyType::IntradayPowerCurve, names);
+}
+
+void ScenarioSimMarketParameters::setIntradayPowerCurveTenors(const string& intradayPowerName,
+                                                              const vector<Period>& p) {
+    intradayPowerCurveTenors_[intradayPowerName] = p;
+}
+
 bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& rhs) {
 
     if (baseCcy_ != rhs.baseCcy_ || ccys_ != rhs.ccys_ || params_ != rhs.params_ ||
@@ -721,7 +750,7 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
         correlationIsSurface_ != rhs.correlationIsSurface_ || correlationExpiries_ != rhs.correlationExpiries_ ||
         correlationStrikes_ != rhs.correlationStrikes_ || cprSimulate_ != rhs.cprSimulate_ || cprs_ != rhs.cprs_ || conversionFactors_ != rhs.conversionFactors_ ||
         yieldVolTerms_ != rhs.yieldVolTerms_ || yieldVolExpiries_ != rhs.yieldVolExpiries_ ||
-        yieldVolDecayMode_ != rhs.yieldVolDecayMode_) {
+        yieldVolDecayMode_ != rhs.yieldVolDecayMode_ || intradayPowerCurveTenors_ != rhs.intradayPowerCurveTenors_) {
         return false;
     } else {
         return true;
@@ -1597,6 +1626,49 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         }
     }
 
+    DLOG("Loading intraday power curve data");
+    nodeChild = XMLUtils::getChildNode(node, "IntradayPowerCurves");
+    if (nodeChild && XMLUtils::getChildNode(nodeChild)) {
+        XMLNode* intradayPowerCurveSimNode = XMLUtils::getChildNode(nodeChild, "Simulate");
+        setIntradayPowerCurveSimulate(
+            intradayPowerCurveSimNode ? parseBool(XMLUtils::getNodeValue(intradayPowerCurveSimNode)) : false);
+
+        vector<string> intradayPowerCurveNames = XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true);
+        setIntradayPowerCurveNames(intradayPowerCurveNames);
+
+        set<string> names = params_.find(RiskFactorKey::KeyType::IntradayPowerCurve)->second.second;
+        QL_REQUIRE(names.size() > 0, "Intraday power curves need at least one name");
+
+        // Get the configured tenors. They are of the form:
+        // - <Tenors name="NAME">t_1,...,t_n</Tenors> for commodity name specific tenors
+        // - <Tenors>t_1,...,t_n</Tenors> or <Tenors name="">t_1,...,t_n</Tenors> for a default set of tenors
+        // Only need a default tenor set if every commodity name has not been given a tenor set explicitly
+        vector<XMLNode*> tenorNodes = XMLUtils::getChildrenNodes(nodeChild, "Tenors");
+        QL_REQUIRE(tenorNodes.size() > 0, "Commodities needs at least one Tenors node");
+        set<string> namesCheck = names;
+        bool defaultProvided = false;
+        for (XMLNode* tenorNode : tenorNodes) {
+            // If there is no "name" attribute, getAttribute returns "" which is what we want in any case
+            string name = XMLUtils::getAttribute(tenorNode, "name");
+
+            // An empty tenor list here means that the scenario simulation market should be set up on the
+            // same pillars as the initial t_0 market from which it is sampling its values
+            vector<Period> tenors;
+            string strTenorList = XMLUtils::getNodeValue(tenorNode);
+            if (!strTenorList.empty()) {
+                tenors = parseListOfValues<Period>(XMLUtils::getNodeValue(tenorNode), &parsePeriod);
+            }
+
+            QL_REQUIRE(intradayPowerCurveTenors_.insert(make_pair(name, tenors)).second,
+                       "Intraday power curves has duplicate expiries for key '" << name << "'");
+            namesCheck.erase(name);
+            defaultProvided = name == "";
+        }
+        QL_REQUIRE(defaultProvided || namesCheck.size() == 0, "Intraday power curves has no tenors for "
+                                                                  << "names '" << join(namesCheck, ",")
+                                                                  << "' and no default tenor set has been given");
+    }
+
     DLOG("Loading credit states data");
     nodeChild = XMLUtils::getChildNode(node, "CreditStates");
     numberOfCreditStates_ = 0;
@@ -1992,6 +2064,24 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) const {
             XMLNode* tenorsNode = doc.allocNode("Tenors", nodeValue);
             XMLUtils::addAttribute(doc, tenorsNode, "name", kv.first);
             XMLUtils::appendNode(commodityPriceNode, tenorsNode);
+        }
+    }
+
+    // Intraday power curves
+    if (!intradayPowerCurveNames().empty()) {
+        DLOG("Writing intraday power curves");
+        XMLNode* intradayPowerCurveNode = XMLUtils::addChild(doc, marketNode, "IntradayPowerCurves");
+        XMLUtils::addChild(doc, intradayPowerCurveNode, "Simulate", intradayPowerCurveSimulate());
+        XMLUtils::addChildren(doc, intradayPowerCurveNode, "Names", "Name", intradayPowerCurveNames());
+
+        // Write out tenors node for each intraday power curve name
+        for (auto kv : intradayPowerCurveTenors_) {
+            // Single bar here is a boost range adaptor. Documented here:
+            // https://www.boost.org/doc/libs/1_71_0/libs/range/doc/html/range/reference/adaptors/introduction.html
+            string nodeValue = join(kv.second | transformed([](Period p) { return ore::data::to_string(p); }), ",");
+            XMLNode* tenorsNode = doc.allocNode("Tenors", nodeValue);
+            XMLUtils::addAttribute(doc, tenorsNode, "name", kv.first);
+            XMLUtils::appendNode(intradayPowerCurveNode, tenorsNode);
         }
     }
 

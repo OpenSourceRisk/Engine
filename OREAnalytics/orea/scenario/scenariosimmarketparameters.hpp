@@ -265,6 +265,13 @@ public:
     const std::vector<QuantLib::Real>& bondFutureVolMoneyness(const std::string& contractName) const;
     const string& bondFutureVolSmileDynamics(const string& contractName) const;
 
+
+    // Intraday power curve data getters
+    bool intradayPowerCurveSimulate() const { return paramsSimulate(RiskFactorKey::KeyType::IntradayPowerCurve); }
+    std::vector<std::string> intradayPowerCurveNames() const;
+    const std::vector<QuantLib::Period>& intradayPowerCurveTenors(const std::string& intradayPowerName) const;
+    bool hasIntradayPowerCurveTenors(const std::string& intradayPowerName) const;
+
     Size numberOfCreditStates() const { return numberOfCreditStates_; }
 
     const CurveAlgebraData& curveAlgebraData() const { return curveAlgebraData_; }
@@ -444,6 +451,13 @@ public:
         return bondFutureVolMoneyness_[contractName];
     }
     void setBondFutureVolSmileDynamics(const string& key, const string& smileDynamics);
+    
+    // Intraday power curve data setters
+    void setIntradayPowerCurveSimulate(bool simulate);
+    void setIntradayPowerCurveNames(vector<string> names);
+    void setIntradayPowerCurves(vector<string> names);
+    void setIntradayPowerCurveTenors(const std::string& intradayPowerName, const std::vector<QuantLib::Period>& p);
+    
     //@}
 
     //! \name Serialisation
@@ -568,6 +582,9 @@ private:
     std::map<std::string, std::vector<QuantLib::Period>> bondFutureVolExpiries_;
     std::map<std::string, std::vector<QuantLib::Real>> bondFutureVolMoneyness_;
     map<string, string> bondFutureVolSmileDynamics_;
+
+    // Commodity price curve data
+    std::map<std::string, std::vector<QuantLib::Period>> intradayPowerCurveTenors_;
 
     CurveAlgebraData curveAlgebraData_;
 
