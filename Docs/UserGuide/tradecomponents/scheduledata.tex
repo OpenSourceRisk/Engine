@@ -10,20 +10,27 @@ Example structures of \lstinline!ScheduleData! nodes based on rules, dates and d
 Listing \ref{lst:schedule_data_true}, Listing \ref{lst:schedule_data_false}, and Listing \ref{lst:schedule_data_derived}
 respectively.
 
+A \lstinline!ScheduleData! object has a \lstinline!name!. The default \lstinline!name! for a \lstinline!ScheduleData! 
+object created from a \lstinline!ScheduleData! XML node is the node name itself i.e.\ \lstinline!ScheduleData!. This 
+name can be overridden via an optional \lstinline!name! attribute on the \lstinline!ScheduleData! node. The main 
+reason to do this would be so that you can refer to it in the \lstinline!BaseSchedule! node of a \lstinline!Derived! 
+section using a more appropriate name. Listing \ref{lst:derived_pmt_schedule} shows the use of this in a 
+\lstinline!LegData! node.
+
 \begin{listing}[H]
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
-              <ScheduleData>
-                <Rules>
-                  <StartDate>2013-02-01</StartDate>
-                  <EndDate>2030-02-01</EndDate>
-                  <Tenor>1Y</Tenor>
-                  <Calendar>UK</Calendar>
-                  <Convention>MF</Convention>
-                  <TermConvention>MF</TermConvention>
-                  <Rule>Forward</Rule>
-                </Rules>
-              </ScheduleData>
+<ScheduleData>
+  <Rules>
+    <StartDate>2013-02-01</StartDate>
+    <EndDate>2030-02-01</EndDate>
+    <Tenor>1Y</Tenor>
+    <Calendar>UK</Calendar>
+    <Convention>MF</Convention>
+    <TermConvention>MF</TermConvention>
+    <Rule>Forward</Rule>
+  </Rules>
+</ScheduleData>
 \end{minted}
 \caption{Schedule data, rules based}
 \label{lst:schedule_data_true}
@@ -32,24 +39,24 @@ respectively.
 \begin{listing}[H]
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
-              <ScheduleData>
-                <Dates>
-                  <Calendar>NYB</Calendar>
-                  <Convention>Following</Convention>
-                  <Tenor>3M</Tenor>
-                  <EndOfMonth>false</EndOfMonth>
-                  <EndOfMOnthConvention>Following</EndOfMOnthConvention>
-                  <IncludeDuplicateDates>false</IncludeDuplicateDates>
-                  <Dates>
-                    <Date>2012-01-06</Date>
-                    <Date>2012-04-10</Date>
-                    <Date>2012-07-06</Date>
-                    <Date>2012-10-08</Date>
-                    <Date>2013-01-07</Date>
-                    <Date>2013-04-08</Date>
-                  </Dates>
-                </Dates> 
-              </ScheduleData>
+<ScheduleData>
+  <Dates>
+    <Calendar>NYB</Calendar>
+    <Convention>Following</Convention>
+    <Tenor>3M</Tenor>
+    <EndOfMonth>false</EndOfMonth>
+    <EndOfMOnthConvention>Following</EndOfMOnthConvention>
+    <IncludeDuplicateDates>false</IncludeDuplicateDates>
+    <Dates>
+      <Date>2012-01-06</Date>
+      <Date>2012-04-10</Date>
+      <Date>2012-07-06</Date>
+      <Date>2012-10-08</Date>
+      <Date>2013-01-07</Date>
+      <Date>2013-04-08</Date>
+    </Dates>
+  </Dates>
+</ScheduleData>
 \end{minted}
 \caption{Schedule data, date based}
 \label{lst:schedule_data_false}
@@ -58,17 +65,40 @@ respectively.
 \begin{listing}[H]
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
-              <ScheduleData>
-                <Derived>
-                  <BaseSchedule>ScheduleData</BaseSchedule>
-                  <Shift>3M</Shift>
-                  <Calendar>GBP</Calendar>
-                  <Convention>Following</Convention>
-                </Derived> 
-              </ScheduleData>
+<ScheduleData>
+  <Derived>
+    <BaseSchedule>ScheduleData</BaseSchedule>
+    <Shift>3M</Shift>
+    <Calendar>GBP</Calendar>
+    <Convention>Following</Convention>
+  </Derived>
+</ScheduleData>
 \end{minted}
 \caption{Schedule data, derived}
 \label{lst:schedule_data_derived}
+\end{listing}
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<LegData>
+  <!-- Leg data information omitted for brevity -->
+  <ScheduleData name="accrual_schedule">
+    <Rules>
+      <StartDate>2026-03-05</StartDate>
+      <!-- Remaining rules information omitted for brevity -->
+    </Rules>
+  </ScheduleData>
+  <PaymentSchedule>
+    <Derived>
+      <BaseSchedule>accrual_schedule</BaseSchedule>
+      <Shift>-2D</Shift>
+      <!-- Remaining derived information omitted for brevity -->
+    </Derived>
+  </PaymentSchedule>
+</LegData>
+\end{minted}
+\caption{Derived payment schedule in \lstinline!LegData!.}
+\label{lst:derived_pmt_schedule}
 \end{listing}
 
 The ScheduleData section can contain any number and combination of
