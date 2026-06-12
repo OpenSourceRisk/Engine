@@ -3914,8 +3914,6 @@ void ScenarioSimMarket::applyCurveAlgebraSpreadedYieldCurve(
     }
     auto target = getYieldCurve(a.key());
     if (auto c = QuantLib::ext::dynamic_pointer_cast<InterpolatedDiscountCurve2>(*target)) {
-        QL_REQUIRE(useSpreadedTermStructures_, "ScenarioSimMarket::applyCurveAlgebraSpreadedYieldCurve(): spreaded "
-                                               "term structures must be active to use this feature.");
         c->makeThisCurveSpreaded(bases, multiplier);
     } else if (auto c = QuantLib::ext::dynamic_pointer_cast<SpreadedDiscountCurve>(*target)) {
         c->makeThisCurveSpreaded(bases, multiplier);
