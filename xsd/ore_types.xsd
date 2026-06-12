@@ -901,6 +901,7 @@
       </xs:element>
       <xs:element ref="DerivedScheduleGroup"/>
     </xs:choice>
+    <xs:attribute name="name" type="xs:string" use="optional"/>
   </xs:complexType>
 
   <xs:simpleType name="publicationRoll">

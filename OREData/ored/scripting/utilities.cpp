@@ -345,20 +345,20 @@ QuantLib::ext::shared_ptr<Context> makeContext(Size nPaths, const std::string& g
 
             // Create the shifted schedule.
             Period shift;
-            ext::optional<DateDeltaUnit> shiftUnit;
+            ext::optional<DateDeltaUnit> shiftUnit = evData.shiftUnit();
+            bool suIsCalDays = shiftUnit && *shiftUnit == QuantExt::DateDeltaUnit::CalendarDays;
             vector<ValueType> thisBuiltSched;
             try {
                 Calendar cal = parseCalendar(evData.calendar());
                 BusinessDayConvention conv = parseBusinessDayConvention(evData.convention());
                 shift = parsePeriod(evData.shift());
-                shiftUnit = evData.shiftUnit();
-                if (shiftUnit && *shiftUnit == QuantExt::DateDeltaUnit::CalendarDays) {
+                if (suIsCalDays) {
                     QL_REQUIRE(shift.units() == Days, "makeContext: when making derived schedule, the shift unit "
                         "is calendar days but the shift does not have day units, it has " << shift.units() << ".");
                 }
 
                 for (auto const& d : anchorDates) {
-                    if (shiftUnit && *shiftUnit == QuantExt::DateDeltaUnit::CalendarDays) {
+                    if (suIsCalDays) {
                         thisBuiltSched.push_back(EventVec{ nPaths, cal.adjust(d + shift, conv) });
                     } else {
                         thisBuiltSched.push_back(EventVec{ nPaths, cal.advance(d, shift, conv) });
@@ -380,8 +380,7 @@ QuantLib::ext::shared_ptr<Context> makeContext(Size nPaths, const std::string& g
                 // If in this derived schedule, the shift period unit is days and the shift unit is business 
                 // days, then it is not clear what the unadjusted version of the derived schedule should be. In 
                 // this case, we log a warning and just use the possibly adjusted version above.
-                if (shift.length() != 0 && shift.units() == Days &&
-                    (!shiftUnit || *shiftUnit == QuantExt::DateDeltaUnit::BusinessDays)) {
+                if (shift.length() != 0 && shift.units() == Days && !suIsCalDays) {
                     WLOG("makeContext: cannot create an unadjusted version of the derived schedule '"
                             << evData.name() << "', using the adjusted version instead. Any derived schedule "
                             << "depending on this unadjusted version may be affected.");
@@ -392,7 +391,7 @@ QuantLib::ext::shared_ptr<Context> makeContext(Size nPaths, const std::string& g
                     NullCalendar nullCal;
                     unadjDatesThis.reserve(anchorDates.size());
                     for (auto const& d : anchorDates) {
-                        if (shiftUnit && *shiftUnit == QuantExt::DateDeltaUnit::CalendarDays) {
+                        if (suIsCalDays) {
                             unadjDatesThis.push_back(d + shift);
                         } else {
                             unadjDatesThis.push_back(nullCal.advance(d, shift, Unadjusted));
