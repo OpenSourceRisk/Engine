@@ -123,6 +123,7 @@ public:
         CORRELATION,
         COMMODITY_OPTION,
         COMMODITY_CALENDAR_SPREAD_OPTION,
+        SHAPE_PROFILE,
         CPR,
         RATING,
         NONE
@@ -145,6 +146,7 @@ public:
         SHIFT,
         TRANSITION_PROBABILITY,
         CONVERSION_FACTOR,
+        SHAPE_FACTOR,
         NONE
     };
 
@@ -2239,6 +2241,51 @@ private:
     template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
+//! Intraday Power Curve Quote data class
+/*!
+This class holds single market points for intraday power curve shape profiles.
+The name format is: SHAPE_PROFILE/SHAPE_FACTOR/QuoteName/DeliveryDate/StartTimeInSec
+
+Example: SHAPE_PROFILE/SHAPE_FACTOR/PJM_WH_RT/2027-02-02/0
+
+\ingroup marketdata
+*/
+class IntradayPowerCurveQuote : public MarketDatum {
+public:
+    IntradayPowerCurveQuote() {}
+
+    //! Constructor
+    IntradayPowerCurveQuote(QuantLib::Real value, const QuantLib::Date& asofDate, const std::string& name,
+                            QuoteType quoteType, const std::string& quoteName, const QuantLib::Date& deliveryDate,
+                            QuantLib::Size startTimeInSec)
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::SHAPE_PROFILE), quoteName_(quoteName),
+          deliveryDate_(deliveryDate), startTimeInSec_(startTimeInSec) {
+        QL_REQUIRE(quoteType == QuoteType::SHAPE_FACTOR, "Quote type must be SHAPE_FACTOR for IntradayPowerCurveQuote");
+    }
+
+    //! Make a copy of the market datum
+    QuantLib::ext::shared_ptr<MarketDatum> clone() override {
+        return QuantLib::ext::make_shared<IntradayPowerCurveQuote>(quote_->value(), asofDate_, name_, quoteType_,
+                                                                   quoteName_, deliveryDate_, startTimeInSec_);
+    }
+
+    //! \name Inspectors
+    //@{
+    const std::string& quoteName() const { return quoteName_; }
+    const QuantLib::Date& deliveryDate() const { return deliveryDate_; }
+    QuantLib::Size startTimeInSec() const { return startTimeInSec_; }
+    //@}
+
+private:
+    std::string quoteName_;
+    QuantLib::Date deliveryDate_;
+    QuantLib::Size startTimeInSec_;
+
+    //! Serialization
+    friend class boost::serialization::access;
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
+};
+
 } // namespace data
 } // namespace ore
 
@@ -2289,3 +2336,4 @@ BOOST_CLASS_EXPORT_KEY(ore::data::BondFuturePriceQuote);
 BOOST_CLASS_EXPORT_KEY(ore::data::BondFutureConversionFactor);
 BOOST_CLASS_EXPORT_KEY(ore::data::TransitionProbabilityQuote);
 BOOST_CLASS_EXPORT_KEY(ore::data::BondFutureOptionQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::IntradayPowerCurveQuote);

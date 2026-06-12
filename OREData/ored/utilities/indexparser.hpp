@@ -32,6 +32,7 @@
 #include <qle/indexes/commodityindex.hpp>
 #include <qle/indexes/equityindex.hpp>
 #include <qle/indexes/fxindex.hpp>
+#include <qle/indexes/intradaypowerindex.hpp>
 
 namespace ore {
 namespace data {
@@ -182,6 +183,13 @@ QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(
     const std::string& name, bool hasPrefix = true,
     const QuantLib::Handle<QuantExt::PriceTermStructure>& ts = QuantLib::Handle<QuantExt::PriceTermStructure>(),
     const QuantLib::Calendar& cal = QuantLib::NullCalendar(), const bool enforceFutureIndex = true);
+
+
+QuantLib::ext::shared_ptr<QuantExt::IntradayPowerIndex> parseIntradayPowerIndex(
+    const std::string& name, bool hasPrefix = true,
+    const QuantLib::Handle<QuantExt::IntradayPowerPriceTermStructure>& ts = QuantLib::Handle<QuantExt::IntradayPowerPriceTermStructure>(),
+    const QuantLib::ext::shared_ptr<QuantExt::IntradayLoadProfile>& loadProfile = nullptr,
+    const QuantLib::Calendar& cal = QuantLib::NullCalendar());
 
 //! Convert std::string (GENERIC-...) to QuantExt::Index
 /*!

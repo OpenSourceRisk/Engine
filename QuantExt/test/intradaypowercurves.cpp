@@ -6,7 +6,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <qle/termstructures/intradayshapetermstructure.hpp>
-#include <qle/termstructures/intradaypricetermstructure.hpp>
+#include <qle/termstructures/intradaypowerpricetermstructure.hpp>
 #include <qle/termstructures/pricecurve.hpp>
 #include <ql/currencies/america.hpp>
 #include <ql/quotes/simplequote.hpp>
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(testIntradayPriceWithLoadProfilesFallbackAndConsistency) {
     std::map<Date, std::map<int, Real>> shapeMapDst;
     
     auto shapeTs = QuantLib::ext::make_shared<IntradayShapeTermstructure>(shapeMap, shapeMapDst);
-    auto intradayTs = QuantLib::ext::make_shared<IntradayPriceTermStructure>(underlying, shapeTs);
+    auto intradayTs = QuantLib::ext::make_shared<IntradayPowerPriceTermStructure>(underlying, shapeTs);
 
     // Same granularity for both load profiles: full-day bucket [0, 86400).
     LoadFactors loadToday = {{0, 24 * 3600, 1.0}};
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(testIntradayPriceWithLoadProfilesFallbackAndConsistency) {
         {todayPlus2, lpTodayPlus2}
     };
 
-    auto loadTs = QuantLib::ext::make_shared<IntradayLoadingTermstructure>(loadingShapes);
+    auto loadTs = QuantLib::ext::make_shared<IntradayPowerLoadTermStructure>(loadingShapes);
 
     const Real tol = 1e-12;
 
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(testBackwardFlatDailyCurveWithIntradayShapesAndLoads) {
         {d30, shapeD30}};
     std::map<Date, std::map<int, Real>> shapeMapDst;
     auto shapeTs = QuantLib::ext::make_shared<IntradayShapeTermstructure>(shapeMap, shapeMapDst);
-    auto intradayTs = QuantLib::ext::make_shared<IntradayPriceTermStructure>(underlying, shapeTs);
+    auto intradayTs = QuantLib::ext::make_shared<IntradayPowerPriceTermStructure>(underlying, shapeTs);
 
     LoadFactors loadD = {
         {8 * 3600 + 15 * 60, 8 * 3600 + 30 * 60, 100.0},
@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE(testBackwardFlatDailyCurveWithIntradayShapesAndLoads) {
         {d7, lpD7},
         {d15, lpD15},
         {d16, lpD16}};
-    auto loadTs = QuantLib::ext::make_shared<IntradayLoadingTermstructure>(loadingShapes);
+    auto loadTs = QuantLib::ext::make_shared<IntradayPowerLoadTermStructure>(loadingShapes);
 
     const Real tol = 1e-12;
 
@@ -230,11 +230,11 @@ BOOST_AUTO_TEST_CASE(testEmptyOrNullShape) {
     std::map<Date, std::map<int, Real>> shapeMap;
     std::map<Date, std::map<int, Real>> shapeMapDst;
     auto shapeTs = QuantLib::ext::make_shared<IntradayShapeTermstructure>(shapeMap, shapeMapDst);
-    auto intradayTs = QuantLib::ext::make_shared<IntradayPriceTermStructure>(underlying, shapeTs);
+    auto intradayTs = QuantLib::ext::make_shared<IntradayPowerPriceTermStructure>(underlying, shapeTs);
 
     BOOST_CHECK_CLOSE(intradayTs->price(d, true), 25.0, 1e-12);
 
-    auto intradayTs2 = QuantLib::ext::make_shared<IntradayPriceTermStructure>(underlying, nullptr);
+    auto intradayTs2 = QuantLib::ext::make_shared<IntradayPowerPriceTermStructure>(underlying, nullptr);
     BOOST_CHECK_CLOSE(intradayTs2->price(d + 30, true), 26, 1e-12);
 }
 
@@ -256,14 +256,14 @@ BOOST_AUTO_TEST_CASE(testNullOrEmptyLoadProfile) {
     std::map<Date, std::map<int, Real>> shapeMap = {{d, scaleShape}};
     std::map<Date, std::map<int, Real>> shapeMapDst;
     auto shapeTs = QuantLib::ext::make_shared<IntradayShapeTermstructure>(shapeMap, shapeMapDst);
-    auto intradayTs = QuantLib::ext::make_shared<IntradayPriceTermStructure>(underlying, shapeTs);
+    auto intradayTs = QuantLib::ext::make_shared<IntradayPowerPriceTermStructure>(underlying, shapeTs);
 
     LoadFactors emptyLoad;
     LoadFactors emptyLoadDst;
     auto lpEmpty = QuantLib::ext::make_shared<IntradayLoadProfile>(emptyLoad, emptyLoadDst);
 
     std::map<Date, QuantLib::ext::shared_ptr<IntradayLoadProfile>> loadingShapes = {{d, lpEmpty}};
-    auto loadTs = QuantLib::ext::make_shared<IntradayLoadingTermstructure>(loadingShapes);
+    auto loadTs = QuantLib::ext::make_shared<IntradayPowerLoadTermStructure>(loadingShapes);
 
     const Real tol = 1e-12;
     BOOST_CHECK_CLOSE(intradayTs->price(d, loadTs->loadProfile(d), true), intradayTs->price(d, true), tol);
@@ -296,7 +296,7 @@ BOOST_AUTO_TEST_CASE(testIntradayPriceWithOverlappingLoadProfiles) {
     std::map<Date, std::map<int, Real>> shapeMapDst;
 
     auto shapeTs = QuantLib::ext::make_shared<IntradayShapeTermstructure>(shapeMap, shapeMapDst);
-    auto intradayTs = QuantLib::ext::make_shared<IntradayPriceTermStructure>(underlying, shapeTs);
+    auto intradayTs = QuantLib::ext::make_shared<IntradayPowerPriceTermStructure>(underlying, shapeTs);
 
     // Day 1: load only on [800,1600), else zero.
     // Day 2: load only on [1200,1500), else zero.
@@ -310,7 +310,7 @@ BOOST_AUTO_TEST_CASE(testIntradayPriceWithOverlappingLoadProfiles) {
     std::map<Date, QuantLib::ext::shared_ptr<IntradayLoadProfile>> loadingShapes = {
         {day1, lpDay1},
         {day2, lpDay2}};
-    auto loadTs = QuantLib::ext::make_shared<IntradayLoadingTermstructure>(loadingShapes);
+    auto loadTs = QuantLib::ext::make_shared<IntradayPowerLoadTermStructure>(loadingShapes);
 
     // Expected factors from shape:
     // [800,1600): (0.8*100 + 1.2*700) / 800 = 1.15

@@ -83,6 +83,7 @@ MarketDatum::InstrumentType parseInstrumentType(const string& s) {
         {"CORRELATION", MarketDatum::InstrumentType::CORRELATION},
         {"COMMODITY_OPTION", MarketDatum::InstrumentType::COMMODITY_OPTION},
         {"COMMODITY_CALENDAR_SPREAD_OPTION", MarketDatum::InstrumentType::COMMODITY_CALENDAR_SPREAD_OPTION},
+        {"SHAPE_PROFILE", MarketDatum::InstrumentType::SHAPE_PROFILE},
         {"CPR", MarketDatum::InstrumentType::CPR},
         {"RATING", MarketDatum::InstrumentType::RATING},
         {"BOND_FUTURE_OPTION", MarketDatum::InstrumentType::BOND_FUTURE_OPTION}};
@@ -112,6 +113,7 @@ MarketDatum::QuoteType parseQuoteType(const string& s) {
         {"SHIFT", MarketDatum::QuoteType::SHIFT},
         {"TRANSITION_PROBABILITY", MarketDatum::QuoteType::TRANSITION_PROBABILITY},
         {"CONVERSION_FACTOR", MarketDatum::QuoteType::CONVERSION_FACTOR},
+        {"SHAPE_FACTOR", MarketDatum::QuoteType::SHAPE_FACTOR},
         {"NULL", MarketDatum::QuoteType::NONE}};
 
     if (s == "RATE_GVOL")
@@ -957,6 +959,21 @@ QuantLib::ext::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const 
         const string& toRating = tokens[4];
         QL_REQUIRE(quoteType == MarketDatum::QuoteType::TRANSITION_PROBABILITY, "Invalid quote type for " << datumName);
         return QuantLib::ext::make_shared<TransitionProbabilityQuote>(value, asof, datumName, name, fromRating, toRating);
+    }
+
+    case MarketDatum::InstrumentType::SHAPE_PROFILE: {
+        // Expects the following form:
+        // SHAPE_PROFILE/SHAPE_FACTOR/QuoteName/DeliveryDate/StartTimeInSec
+        // Example: SHAPE_PROFILE/SHAPE_FACTOR/PJM_WH_RT/2027-02-02/0
+        QL_REQUIRE(tokens.size() == 5, "5 tokens expected in " << datumName);
+        QL_REQUIRE(quoteType == MarketDatum::QuoteType::SHAPE_FACTOR, "Invalid quote type for " << datumName);
+        
+        const string& quoteName = tokens[2];
+        Date deliveryDate = parseDate(tokens[3]);
+        Size startTimeInSec = parseInteger(tokens[4]);
+        
+        return QuantLib::ext::make_shared<IntradayPowerCurveQuote>(value, asof, datumName, quoteType, quoteName, 
+                                                                    deliveryDate, startTimeInSec);
     }
 
     case MarketDatum::InstrumentType::BOND_FUTURE_OPTION: {

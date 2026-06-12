@@ -20,7 +20,7 @@
     \brief Term structure of intraday power prices
 */
 
-#include <qle/termstructures/intradaypricetermstructure.hpp>
+#include <qle/termstructures/intradaypowerpricetermstructure.hpp>
 #include <qle/utilities/time.hpp>
 
 #include <algorithm>
@@ -32,7 +32,7 @@ namespace QuantExt {
 
 
 
-IntradayPriceTermStructure::IntradayPriceTermStructure(
+IntradayPowerPriceTermStructure::IntradayPowerPriceTermStructure(
     const QuantLib::Handle<PriceTermStructure>& underlying,
     const QuantLib::ext::shared_ptr<IntradayShapeTermstructure>& shape)
     : PriceTermStructure(underlying->referenceDate(), underlying->calendar(), underlying->dayCounter()),
@@ -42,11 +42,11 @@ IntradayPriceTermStructure::IntradayPriceTermStructure(
 
 //! \name Prices
 //@{
-QuantLib::Real IntradayPriceTermStructure::price(QuantLib::Time t, bool extrapolate) const {
+QuantLib::Real IntradayPowerPriceTermStructure::price(QuantLib::Time t, bool extrapolate) const {
     auto d = lowerDate(t, referenceDate(), dayCounter());
     return underlying_->price(t, extrapolate) * (shape_ == nullptr ? 1.0 : shape_->dayFactor(d));
 }
-QuantLib::Real IntradayPriceTermStructure::price(const QuantLib::Date& d, bool extrapolate) const {
+QuantLib::Real IntradayPowerPriceTermStructure::price(const QuantLib::Date& d, bool extrapolate) const {
     return underlying_->price(d, extrapolate) * (shape_ == nullptr ? 1.0 : shape_->dayFactor(d));
 }
 
@@ -111,7 +111,7 @@ QuantLib::Real intradayShapeFactor(const QuantLib::Date& d, int startTime, int e
 
 
 QuantLib::Real
-IntradayPriceTermStructure::price(const QuantLib::Date& d,
+IntradayPowerPriceTermStructure::price(const QuantLib::Date& d,
                                   const QuantLib::ext::shared_ptr<QuantExt::IntradayLoadProfile>& load,
                                   bool extrapolate) const {
     if (shape_ == nullptr || load == nullptr || load->loadProfile().empty()) {
@@ -137,7 +137,7 @@ IntradayPriceTermStructure::price(const QuantLib::Date& d,
 }
 
 QuantLib::Real
-IntradayPriceTermStructure::price(QuantLib::Time t,
+IntradayPowerPriceTermStructure::price(QuantLib::Time t,
                                   const QuantLib::ext::shared_ptr<QuantExt::IntradayLoadProfile>& load,
                                   bool extrapolate) const {
     auto d = lowerDate(t, referenceDate(), dayCounter());
@@ -145,7 +145,7 @@ IntradayPriceTermStructure::price(QuantLib::Time t,
 }
 //@}
 
-void IntradayPriceTermStructure::update() {
+void IntradayPowerPriceTermStructure::update() {
     TermStructure::update();
 }
 

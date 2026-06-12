@@ -66,6 +66,8 @@ std::ostream& operator<<(std::ostream& out, const MarketDatum::QuoteType& type) 
         return out << "TRANSITION_PROBABILITY";
     case MarketDatum::QuoteType::CONVERSION_FACTOR:
         return out << "CONVERSION_FACTOR";
+    case MarketDatum::QuoteType::SHAPE_FACTOR:
+        return out << "SHAPE_FACTOR";
     case MarketDatum::QuoteType::NONE:
         return out << "NULL";
     default:
@@ -157,6 +159,8 @@ std::ostream& operator<<(std::ostream& out, const MarketDatum::InstrumentType& t
         return out << "COMMODITY_OPTION";
     case MarketDatum::InstrumentType::COMMODITY_CALENDAR_SPREAD_OPTION:
         return out << "COMMODITY_CALENDAR_SPREAD_OPTION";
+    case MarketDatum::InstrumentType::SHAPE_PROFILE:
+        return out << "SHAPE_PROFILE";
     case MarketDatum::InstrumentType::CPR:
         return out << "CPR";
     case MarketDatum::InstrumentType::RATING:

@@ -499,6 +499,18 @@ Handle<BlackVolTermStructure> MarketImpl::bondFutureVol(const string& contractNa
     return lookup<Handle<BlackVolTermStructure>>(bondFutureVols_, contractName, configuration, "bond future vol curve");
 }
 
+QuantLib::Handle<QuantExt::IntradayPowerPriceTermStructure>
+MarketImpl::intradayPowerPriceCurve(const std::string& commodityName, const std::string& configuration) const {
+    return intradayPowerIndex(commodityName, configuration)->priceCurve();
+}
+
+QuantLib::Handle<QuantExt::IntradayPowerIndex> MarketImpl::intradayPowerIndex(const std::string& commodityName,
+                                                                              const std::string& configuration) const {
+    require(MarketObject::CommodityCurve, commodityName, configuration);
+    return lookup<Handle<QuantExt::IntradayPowerIndex>>(intradayPowerIndices_, commodityName, configuration,
+                                                        "intraday power indices");
+}
+
 void MarketImpl::addSwapIndex(const string& swapIndex, const string& discountIndex, const string& configuration) const {
     if (swapIndices_.find(make_pair(configuration, swapIndex)) != swapIndices_.end())
         return;

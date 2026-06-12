@@ -24,7 +24,7 @@
 
 #include <qle/termstructures/pricetermstructure.hpp>
 #include <qle/termstructures/intradayshapetermstructure.hpp>
-#include <qle/termstructures/intradayloadingtermstructure.hpp>
+#include <qle/termstructures/intradaypowerloadtermstructure.hpp>
 
 namespace QuantExt {
 
@@ -33,11 +33,11 @@ namespace QuantExt {
  by applying an optional intraday shape factors to an underlying daily price curve.
     \ingroup termstructures
 */
-class IntradayPriceTermStructure : public QuantExt::PriceTermStructure {
+class IntradayPowerPriceTermStructure : public QuantExt::PriceTermStructure {
 public:
     //! \name Constructors
     //@{
-    IntradayPriceTermStructure(const QuantLib::Handle<PriceTermStructure>& underlying, 
+    IntradayPowerPriceTermStructure(const QuantLib::Handle<PriceTermStructure>& underlying, 
                                const QuantLib::ext::shared_ptr<IntradayShapeTermstructure>& shape = nullptr);
     //@}
 
@@ -71,7 +71,7 @@ public:
 protected:
     //@{
     //! Price calculation
-    virtual QuantLib::Real priceImpl(QuantLib::Time) const override { QL_FAIL("priceImpl(Time) not implemented for IntradayPriceTermStructure"); }
+    virtual QuantLib::Real priceImpl(QuantLib::Time) const override { QL_FAIL("priceImpl(Time) not implemented for IntradayPowerPriceTermStructure"); }
     //@}
 
 private:

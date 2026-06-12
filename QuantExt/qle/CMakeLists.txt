@@ -84,7 +84,7 @@ currencies/metals.cpp
 indexes/bondindex.cpp
 indexes/commoditybasisfutureindex.cpp
 indexes/commodityindex.cpp
-indexes/commodityintradaypowerindex.cpp
+indexes/intradaypowerindex.cpp
 indexes/compoequityindex.cpp
 indexes/compositeindex.cpp
 indexes/dividendmanager.cpp
@@ -417,7 +417,7 @@ termstructures/fxvoltimeweighting.cpp
 termstructures/generatordefaulttermstructure.cpp
 termstructures/hazardspreadeddefaulttermstructure.cpp
 termstructures/iborfallbackcurve.cpp
-termstructures/intradaypricetermstructure.cpp
+termstructures/intradaypowerpricetermstructure.cpp
 termstructures/immfraratehelper.cpp
 termstructures/indexcdsvolstripper.cpp
 termstructures/inflation/constantcpivolatility.cpp
@@ -1062,8 +1062,8 @@ termstructures/interpolateddiscountcurve2.hpp
 termstructures/interpolatedhazardratecurve.hpp
 termstructures/interpolatedyoycapfloortermpricesurface.hpp
 termstructures/intradayshapetermstructure.hpp
-termstructures/intradayloadingtermstructure.hpp
-termstructures/intradaypricetermstructure.hpp
+termstructures/intradaypowerloadtermstructure.hpp
+termstructures/intradaypowerpricetermstructure.hpp
 termstructures/iterativebootstrap.hpp
 termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp
 termstructures/multisectiondefaultcurve.hpp

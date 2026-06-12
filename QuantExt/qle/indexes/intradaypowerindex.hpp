@@ -25,8 +25,8 @@
 #pragma once
 
 #include <qle/indexes/commodityindex.hpp>
-#include <qle/termstructures/intradayloadingtermstructure.hpp>
-#include <qle/termstructures/intradaypricetermstructure.hpp>
+#include <qle/termstructures/intradaypowerloadtermstructure.hpp>
+#include <qle/termstructures/intradaypowerpricetermstructure.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -40,10 +40,17 @@ using namespace QuantLib;
 class IntradayPowerIndex : public Index {
 public:
     /*! spot quote is interpreted as of today */
-    IntradayPowerIndex(
-        const std::string& underlyingName, const QuantLib::Date& deliveryDate, const Calendar& fixingCalendar,
-        const Handle<QuantExt::IntradayPriceTermStructure>& priceCurve = Handle<QuantExt::IntradayPriceTermStructure>(),
-        const QuantLib::ext::shared_ptr<QuantExt::IntradayLoadProfile>& loadProfile = nullptr);
+    IntradayPowerIndex(const std::string& underlyingName, const QuantLib::Date& deliveryDate,
+                       const Calendar& fixingCalendar,
+                       const Handle<QuantExt::IntradayPowerPriceTermStructure>& priceCurve =
+                           Handle<QuantExt::IntradayPowerPriceTermStructure>(),
+                       const QuantLib::ext::shared_ptr<QuantExt::IntradayLoadProfile>& loadProfile = nullptr);
+
+    //! Constructor used for a single time bucket
+    IntradayPowerIndex(const std::string& underlyingName, const QuantLib::Date& deliveryDate, int deliveryStart,
+                       int deliveryEnd, bool isDstHour, const Calendar& fixingCalendar,
+                       const Handle<QuantExt::IntradayPowerPriceTermStructure>& priceCurve =
+                           Handle<QuantExt::IntradayPowerPriceTermStructure>());
 
     std::string name() const override { return name_; }
     Calendar fixingCalendar() const override { return fixingCalendar_; }
@@ -51,23 +58,26 @@ public:
 
     Real fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const override;
 
-
     Real forecastFixing(const Date& fixingDate) const;
 
     Real pastFixing(const Date& fixingDate) const override;
 
-    const Handle<QuantExt::IntradayPriceTermStructure>& priceCurve() const { return intradayCurve_; }
+    const Handle<QuantExt::IntradayPowerPriceTermStructure>& priceCurve() const { return intradayCurve_; }
 
     const QuantLib::ext::shared_ptr<QuantExt::IntradayLoadProfile>& loadProfile() const { return loadProfile_; }
 
     const QuantLib::Date& deliveryDate() const { return deliveryDate_; }
 
+    const std::vector<std::string> intraDayIndexNames() const;
+
 private:
     std::string name_;
     QuantLib::Date deliveryDate_;
+    std::optional<std::tuple<int, int, bool>> deliveryTime_ = std::nullopt;
     Calendar fixingCalendar_;
+
     Real intradayBucketFixing(const Date& fixingDate, int start, int end, bool isDstHour) const;
-    Handle<QuantExt::IntradayPriceTermStructure> intradayCurve_;
+    Handle<QuantExt::IntradayPowerPriceTermStructure> intradayCurve_;
     QuantLib::ext::shared_ptr<QuantExt::IntradayLoadProfile> loadProfile_;
 };
 

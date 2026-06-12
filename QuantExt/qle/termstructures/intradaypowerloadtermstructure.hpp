@@ -72,12 +72,12 @@ private:
 
     \ingroup termstructures
 */
-class IntradayLoadingTermstructure {
+class IntradayPowerLoadTermStructure {
 
 public:
     //! \name Constructors
     //@{
-    IntradayLoadingTermstructure(std::map<QuantLib::Date, QuantLib::ext::shared_ptr<IntradayLoadProfile>> loadingShapes)
+    IntradayPowerLoadTermStructure(std::map<QuantLib::Date, QuantLib::ext::shared_ptr<IntradayLoadProfile>> loadingShapes)
         : loadingShapes_(std::move(loadingShapes)) {}
     //@}
 
