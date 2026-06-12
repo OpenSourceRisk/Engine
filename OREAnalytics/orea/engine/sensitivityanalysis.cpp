@@ -216,12 +216,12 @@ void SensitivityAnalysis::generateSensitivities() {
         vector<QuantLib::ext::shared_ptr<ValuationCalculator>> calculators;
         if (nonShiftedBaseCurrencyConversion_)
             // use "original" FX rates to convert sensi to base currency
-            calculators.push_back(
-                QuantLib::ext::make_shared<NPVCalculatorFXT0>(simMarketData_->baseCcy(), market_, 0, laxFxConversion_));
+            calculators.push_back(QuantLib::ext::make_shared<NPVCalculatorFXT0>(simMarketData_->baseCcy(), market_, 0,
+                                                                                laxFxConversion_, true));
         else
             // use the scenario FX rate when converting sensi to base currency
             calculators.push_back(
-                QuantLib::ext::make_shared<NPVCalculator>(simMarketData_->baseCcy(), 0, laxFxConversion_));
+                QuantLib::ext::make_shared<NPVCalculator>(simMarketData_->baseCcy(), 0, laxFxConversion_, true));
 
         sensiCubes_.clear();
         for (auto const& [pf, scenGen] :
@@ -311,7 +311,7 @@ void SensitivityAnalysis::generateSensitivities() {
             engine.buildCube(
                 pf,
                 [&baseCcy, this]() -> std::vector<QuantLib::ext::shared_ptr<ValuationCalculator>> {
-                    return {QuantLib::ext::make_shared<NPVCalculator>(baseCcy, 0, laxFxConversion_)};
+                    return {QuantLib::ext::make_shared<NPVCalculator>(baseCcy, 0, laxFxConversion_, true)};
                 },
                 ValuationEngine::ErrorPolicy::RemoveAll, {}, true, dryRun_);
             std::vector<QuantLib::ext::shared_ptr<NPVSensiCube>> miniCubes;
