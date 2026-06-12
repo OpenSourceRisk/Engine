@@ -166,6 +166,7 @@ void StressedSimmAnalyticImpl::runStressTest(
         auto scenario = scenarioGenerator->next(inputs_->asof());
         const std::string& label = scenario != nullptr ? scenario->label() : std::string();
         try {
+            scenario->label("stress_" + label);
             simmAnalytic->reset();
             DLOG("Calculate SIMM for scenario " << label);
             simmAnalytic->setOffsetScenario(scenario, nullptr);
