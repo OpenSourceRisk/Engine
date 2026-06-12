@@ -108,6 +108,7 @@ private:
     QuantLib::ext::shared_ptr<ScenarioFactory> stressScenarioFactory_;
     QuantLib::ext::shared_ptr<Scenario> baseScenarioAbsolute_;
     bool useSpreadedTermStructures_ = true;
+    std::set<RiskFactorKey> missingBaseScenarioKeys_;
 };
 } // namespace analytics
 } // namespace ore

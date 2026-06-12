@@ -15,6 +15,7 @@
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
+#include <orea/app/structuredanalyticswarning.hpp>
 #include <ored/portfolio/structuredconfigurationerror.hpp>
 #include <orea/scenario/stressscenariogenerator.hpp>
 #include <ored/utilities/log.hpp>
@@ -97,6 +98,19 @@ void StressScenarioGenerator::generateScenarios() {
         scenarios_.push_back(scenario);
     }
 
+    // Structured warning for missing risk factors in base scenario
+    if (!missingBaseScenarioKeys_.empty()) {
+        std::string riskFactorKeys;
+        for (const auto& key : missingBaseScenarioKeys_)
+            riskFactorKeys += (riskFactorKeys.empty() ? "" : ", ") + ore::data::to_string(key);
+        StructuredAnalyticsWarningMessage(
+            "Stress", "Risk factor keys missing in base scenario",
+            "Skipped stress shifts for risk factor keys that are not in the base scenario.",
+            {{"numberOfRiskFactors", std::to_string(missingBaseScenarioKeys_.size())},
+             {"riskFactorKeys", riskFactorKeys}})
+            .log();
+    }
+
     DLOG("stress scenario generator: all scenarios generated.");
 }
 
@@ -138,6 +152,13 @@ void StressScenarioGenerator::addFxShifts(StressTestScenarioData::StressTestData
     for (auto d : data) {
         string ccypair = d.first; // foreign + domestic;
 
+        RiskFactorKey key(RiskFactorKey::KeyType::FXSpot, ccypair);
+        // Check if base scenario contains the FX rate
+        if (!scenario->has(key)) {
+            missingBaseScenarioKeys_.insert(key);
+            continue;
+        }
+
         // Is this too strict?
         // - implemented to avoid cases where input cross FX rates are not consistent
         // - Consider an example (baseCcy = EUR) of a GBPUSD FX trade - two separate routes to pricing
@@ -163,7 +184,6 @@ void StressScenarioGenerator::addFxShifts(StressTestScenarioData::StressTestData
         // QL_REQUIRE(type == ShiftType::Relative, "FX scenario type must be relative");
         Real size = data.shiftSize;
 
-        RiskFactorKey key(RiskFactorKey::KeyType::FXSpot, ccypair);
         Real rate = scenario->get(key);
         Real newRate;
         if (type == ShiftType::EqualTo)
@@ -186,13 +206,18 @@ void StressScenarioGenerator::addEquityShifts(StressTestScenarioData::StressTest
 
     for(const auto& d : data) {
         string equity = d.first;
+        RiskFactorKey key(RiskFactorKey::KeyType::EquitySpot, equity);
+        // Check if base scenario contains the Equity rate
+        if (!baseScenarioAbsolute_->has(key)) {
+            missingBaseScenarioKeys_.insert(key);
+            continue;
+        }
+        TLOG("Apply stress scenario to equity curve " << equity);
         StressTestScenarioData::SpotShiftData data = *d.second;
         ShiftType type = data.shiftType;
         bool relShift = (type == ShiftType::Relative);
         // QL_REQUIRE(type == ShiftType::Relative, "EQ scenario type must be relative");
         Real size = data.shiftSize;
-
-        RiskFactorKey key(RiskFactorKey::KeyType::EquitySpot, equity);
         Real rate = baseScenarioAbsolute_->get(key);
         Real newRate;
         if (type == ShiftType::EqualTo)
@@ -216,6 +241,13 @@ void StressScenarioGenerator::addCommodityCurveShifts(StressTestScenarioData::St
 
     for (auto d : std.commodityCurveShifts) {
         string commodity = d.first;
+
+        // Check if base scenario contains the commodity curve
+        RiskFactorKey checkKey(RiskFactorKey::KeyType::CommodityCurve, commodity, 0);
+        if (!baseScenarioAbsolute_->has(checkKey)) {
+            missingBaseScenarioKeys_.insert(checkKey);
+            continue;
+        }
         TLOG("Apply stress scenario to commodity curve " << commodity);
 
         Size n_ten = simMarketData_->commodityCurveTenors(commodity).size();
@@ -287,6 +319,14 @@ void StressScenarioGenerator::addDiscountCurveShifts(StressTestScenarioData::Str
 
     for (auto d : data) {
         string ccy = d.first;
+
+        // Check if base scenario contains the discount curve
+        RiskFactorKey checkKey(RiskFactorKey::KeyType::DiscountCurve, ccy, 0);
+        if (!baseScenarioAbsolute_->has(checkKey)) {
+            missingBaseScenarioKeys_.insert(checkKey);
+            continue;
+        }
+
         TLOG("Apply stress scenario to discount curve " << ccy);
 
         Size n_ten = simMarketData_->yieldCurveTenors(ccy).size();
@@ -368,6 +408,14 @@ void StressScenarioGenerator::addSurvivalProbabilityShifts(StressTestScenarioDat
 
     for(const auto& d : data) {
         string name = d.first;
+
+        // Check if base scenario contains the survival probability curve
+        RiskFactorKey checkKey(RiskFactorKey::KeyType::SurvivalProbability, name, 0);
+        if (!baseScenarioAbsolute_->has(checkKey)) {
+            missingBaseScenarioKeys_.insert(checkKey);
+            continue;
+        }
+
         TLOG("Apply stress scenario to " << name);
 
         Size n_ten = simMarketData_->defaultTenors(name).size();
@@ -446,6 +494,14 @@ void StressScenarioGenerator::addIndexCurveShifts(StressTestScenarioData::Stress
 
     for (auto d : data) {
         string indexName = d.first;
+
+        // Check if base scenario contains the yield curve
+        RiskFactorKey checkKey(RiskFactorKey::KeyType::IndexCurve, indexName, 0);
+        if (!baseScenarioAbsolute_->has(checkKey)) {
+            missingBaseScenarioKeys_.insert(checkKey);
+            continue;
+        }
+
         TLOG("Apply stress scenario to index curve " << indexName);
 
         Size n_ten = simMarketData_->yieldCurveTenors(indexName).size();
@@ -525,6 +581,13 @@ void StressScenarioGenerator::addYieldCurveShifts(StressTestScenarioData::Stress
 
     for (auto d : data) {
         string name = d.first;
+
+        // Check if base scenario contains the yield curve
+        RiskFactorKey checkKey(RiskFactorKey::KeyType::YieldCurve, name, 0);
+        if (!baseScenarioAbsolute_->has(checkKey)) {
+            missingBaseScenarioKeys_.insert(checkKey);
+            continue;
+        }
         TLOG("Apply stress scenario to yield curve " << name);
 
         Size n_ten = simMarketData_->yieldCurveTenors(name).size();
@@ -614,6 +677,13 @@ void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestD
             StructuredConfigurationErrorMessage("Simulation Market", "Fx Volatility",
                                                 "Stresstest support only ATM shifts", "Skip stresstest for " + ccypair)
                 .log();
+            continue;
+        }
+
+        // Check if base scenario contains the fx vol surface
+        RiskFactorKey checkKey(RiskFactorKey::KeyType::FXVolatility, ccypair, 0);
+        if (!baseScenarioAbsolute_->has(checkKey)) {
+            missingBaseScenarioKeys_.insert(checkKey);
             continue;
         }
 
@@ -735,6 +805,12 @@ void StressScenarioGenerator::addEquityVolShifts(StressTestScenarioData::StressT
 
     for(const auto& d : data) {
         string equity = d.first;
+        // Check if base scenario contains the equity vol surface
+        RiskFactorKey checkKey(RiskFactorKey::KeyType::EquityVolatility, equity, 0);
+        if (!baseScenarioAbsolute_->has(checkKey)) {
+            missingBaseScenarioKeys_.insert(checkKey);
+            continue;
+        }
         TLOG("Apply stress scenario to equity vol structure " << equity);
         Size n_eqvol_exp = simMarketData_->equityVolExpiries(equity).size();
 
@@ -803,6 +879,12 @@ void StressScenarioGenerator::addCommodityVolShifts(StressTestScenarioData::Stre
 
     for (auto d : data) {
         string commodity = d.first;
+        // Check if base scenario contains the commodity vol surface
+        RiskFactorKey checkKey(RiskFactorKey::KeyType::CommodityVolatility, commodity, 0);
+        if (!baseScenarioAbsolute_->has(checkKey)) {
+            missingBaseScenarioKeys_.insert(checkKey);
+            continue;
+        }
         TLOG("Apply stress scenario to commodity vol structure " << commodity);
         vector<Period> expiries = simMarketData_->commodityVolExpiries(commodity);
         const vector<Real>& moneyness = simMarketData_->commodityVolMoneyness(commodity);
@@ -880,6 +962,11 @@ void StressScenarioGenerator::addSwaptionVolShifts(StressTestScenarioData::Stres
 
     for (auto d : data) {
         std::string key = d.first;
+        RiskFactorKey checkKey(RiskFactorKey::KeyType::SwaptionVolatility, key, 0);
+        if (!baseScenarioAbsolute_->has(checkKey)) {
+            missingBaseScenarioKeys_.insert(checkKey);
+            continue;
+        }
         TLOG("Apply stress scenario to swaption vol structure '" << key << "'");
 
         Size n_swvol_term = simMarketData_->swapVolTerms(key).size();
@@ -978,6 +1065,12 @@ void StressScenarioGenerator::addCapFloorVolShifts(StressTestScenarioData::Stres
 
     for (auto d : data) {
         std::string key = d.first;
+        // Check if base scenario contains the optionlet vol surface
+        RiskFactorKey checkKey(RiskFactorKey::KeyType::OptionletVolatility, key, 0);
+        if (!baseScenarioAbsolute_->has(checkKey)) {
+            missingBaseScenarioKeys_.insert(checkKey);
+            continue;
+        }
         TLOG("Apply stress scenario to cap/floor vol structure " << key);
 
         vector<Real> volStrikes = simMarketData_->capFloorVolStrikes(key);
@@ -1070,13 +1163,17 @@ void StressScenarioGenerator::addSecuritySpreadShifts(StressTestScenarioData::St
 
     for(const auto& d : data) {
         string bond = d.first;
+        RiskFactorKey key(RiskFactorKey::KeyType::SecuritySpread, bond);
+        // Check if base scenario contains the security spread
+        if (!baseScenarioAbsolute_->has(key)) {
+            missingBaseScenarioKeys_.insert(key);
+            continue;
+        }
         TLOG("Apply stress scenario to security spread " << bond);
         StressTestScenarioData::SpotShiftData data = *d.second;
         ShiftType type = data.shiftType;
         bool relShift = (type == ShiftType::Relative);
         Real size = data.shiftSize;
-
-        RiskFactorKey key(RiskFactorKey::KeyType::SecuritySpread, bond);
         Real base_spread = baseScenarioAbsolute_->get(key);
 
         Real newSpread;
@@ -1100,13 +1197,17 @@ void StressScenarioGenerator::addRecoveryRateShifts(StressTestScenarioData::Stre
 
     for(const auto& d : data) {
         string isin = d.first;
+        RiskFactorKey key(RiskFactorKey::KeyType::RecoveryRate, isin);
+        // Check if base scenario contains the recovery rate
+        if (!baseScenarioAbsolute_->has(key)) {
+            missingBaseScenarioKeys_.insert(key);
+            continue;
+        }
         TLOG("Apply stress scenario to recovery rate " << isin);
         StressTestScenarioData::SpotShiftData data = *d.second;
         ShiftType type = data.shiftType;
         bool relShift = (type == ShiftType::Relative);
         Real size = data.shiftSize;
-
-        RiskFactorKey key(RiskFactorKey::KeyType::RecoveryRate, isin);
         Real base_recoveryRate = baseScenarioAbsolute_->get(key);
         Real new_recoveryRate;
         if (type == ShiftType::EqualTo)
