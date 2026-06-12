@@ -88,19 +88,36 @@ IntradayPowerCurve::buildShape(const Date& asof, const string& shapeQuoteName, c
 
     // Group the shape factors per delivery date and intraday start time.
     map<Date, map<int, Real>> shapeFactors;
+    map<Date, map<int, Real>>
+        shapeFactorsDST; // DST shape factors are not supported through this quote format yet, keep empty.
     for (const auto& md : data) {
         auto q = QuantLib::ext::dynamic_pointer_cast<IntradayPowerCurveQuote>(md);
         if (!q)
             continue;
-        shapeFactors[q->deliveryDate()][static_cast<int>(q->startTimeInSec())] = q->quote()->value();
+        auto start = static_cast<int>(q->startTimeInSec()) * static_cast<int>(q->timeUnit());
+        QL_REQUIRE(start >= 0 && start < 86400,
+                   "IntradayPowerCurve: start time " << start << " is out of range for quote " << q->name());
+        if (!q->isDST())
+            shapeFactors[q->deliveryDate()][start] = q->quote()->value();
+        else {
+            QL_REQUIRE(
+                start >= 2 * 3600 && start < 3 * 3600,
+                "IntradayPowerCurve: DST shape factors are only supported for the hour between 2 and 3 am, but quote "
+                    << q->name() << " has start time " << start);
+            shapeFactorsDST[q->deliveryDate()][start] = q->quote()->value();
+        }
     }
 
-    QL_REQUIRE(!shapeFactors.empty(),
-               "IntradayPowerCurve: no SHAPE_PROFILE/SHAPE_FACTOR/" << shapeQuoteName << "/* quotes found for asof "
-                                                                    << QuantLib::io::iso_date(asof));
+    // Perform some basic checks on the shape factors
+    QL_REQUIRE(!shapeFactors.empty(), "IntradayPowerCurve: no SHAPE_PROFILE/SHAPE_FACTOR/"
+                                          << shapeQuoteName << "/* quotes found for asof "
+                                          << QuantLib::io::iso_date(asof));
+    for (const auto& [d, factors] : shapeFactorsDST) {
+        QL_REQUIRE(factors.empty() || factors.begin()->first == 2 * 3600,
+                   "IntradayPowerCurve: DST shape factors need to start with 2am for date "
+                       << d << " but quote has start time " << factors.begin()->first);
+    }
 
-    // DST shape factors are not provided through this quote format yet, pass an empty map.
-    map<Date, map<int, Real>> shapeFactorsDST;
     return QuantLib::ext::make_shared<IntradayShapeTermstructure>(shapeFactors, shapeFactorsDST);
 }
 
