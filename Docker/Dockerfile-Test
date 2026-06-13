@@ -19,7 +19,7 @@ ENV PATH="/venv/bin:$PATH"
 
 # Install Python packages inside the virtual environment
 RUN pip3 install --break-system-packages \
-    matplotlib pandas pytest pytest-xdist pytest-timeout pytest-rerunfailures "datacompy<1" jsondiff lxml jupyter xmldiff numpy scipy ipywidgets papermill python-dotenv requests xmlschema clang-format openpyxl \
+    matplotlib==3.10.9 pandas==2.3.3 pytest==9.0.3 pytest-xdist==3.8.0 pytest-timeout==2.4.0 pytest-rerunfailures==16.3 datacompy=0.19.5 jsondiff==2.2.1 lxml==6.6.1 jupyter==1.1.1 xmldiff==2.7.0 numpy==2.4.3 scipy=1.17.1 ipywidgets==8.1.8 papermill==2.7.0 python-dotenv=1.2.2 requests=2.34.2 xmlschema==4.3.1 clang-format==22.1.5 openpyxl==3.1.5 \
     && rm -rf ~/.cache/pip
 
 CMD bash
