@@ -37,7 +37,7 @@ def get_list_of_new_examples():
             "CurveBuilding",
             "Exposure",
             #"ExposureWithCollateral",
-            "InitialMargin",
+            #"InitialMargin",
             "MarketRisk",
             "MinimalSetup",
             "ORE-API",
