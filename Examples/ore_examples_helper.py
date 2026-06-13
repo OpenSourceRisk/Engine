@@ -36,7 +36,7 @@ def get_list_of_new_examples():
             "CreditRisk",
             "CurveBuilding",
             "Exposure",
-            "ExposureWithCollateral",
+            #"ExposureWithCollateral",
             "InitialMargin",
             "MarketRisk",
             "MinimalSetup",
