@@ -1,7 +1,7 @@
 [submodule "QuantLib"]
 	path = QuantLib
-	url = ../QuantLib
+	url = ../QuantLib-Gitlab
 	branch = master
 [submodule "ORE-SWIG/QuantLib-SWIG"]
 	path = ORE-SWIG/QuantLib-SWIG
-	url = ../QuantLib-SWIG
+	url = ../QuantLib-SWIG-Gitlab
