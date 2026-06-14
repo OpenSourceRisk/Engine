@@ -24,6 +24,7 @@
 %include orea_scenario_ext.i
 %include orea_cube.i
 %include orea_sensitivity.i
+%include orea_riskfilter.i
 %include ored_market.i
 %include ored_portfolio.i
 %include ored_curveconfigurations.i
@@ -65,6 +66,8 @@ public:
 
     void generateSensitivities();
     const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket> simMarket() const;
+    std::vector<QuantLib::ext::shared_ptr<ore::analytics::SensitivityCube>> sensiCubes() const;
+    QuantLib::ext::shared_ptr<ore::analytics::SensitivityCube> sensiCube() const;
 };
 
 class ParSensitivityAnalysis {
@@ -121,6 +124,7 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
                    const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketData,
                    const QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData>& stressData,
                    const QuantLib::ext::shared_ptr<ore::data::Report>& report,
+				   const QuantLib::ext::shared_ptr<ore::data::Loader>& loader = nullptr,
                    const QuantLib::ext::shared_ptr<ore::data::Report>& cfReport = nullptr, const double threshold = 0.0,
                    const Size precision = 2, const bool includePastCashflows = false,
                    const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
@@ -131,7 +135,7 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
                        QuantLib::ext::make_shared<ore::data::IborFallbackConfig>(ore::data::IborFallbackConfig::defaultConfig()),
                    bool continueOnError = false,
                    const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& scenarioReport = nullptr,
-                   const bool useAtParCouponsTrades = true);
+                   const bool useAtParCouponsTrades = true, const Size nThreads = 1);
 
 } // namespace analytics
 } // namespace ore

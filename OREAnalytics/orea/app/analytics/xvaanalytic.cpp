@@ -839,7 +839,7 @@ void XvaAnalyticImpl::buildClassicCube(const QuantLib::ext::shared_ptr<Portfolio
 
     auto xvaVars = ext::dynamic_pointer_cast<XvaVariables>(inputVariables_);
     // set up valuation calculator factory
-    auto calculators = [this, xvaVars]() {
+    auto calculators = [this, xvaVars](const Size, const QuantLib::ext::shared_ptr<ore::data::Portfolio>&) {
         vector<QuantLib::ext::shared_ptr<ValuationCalculator>> calculators;
         if (analytic()->configurations().scenarioGeneratorData->withCloseOutLag()) {
             QuantLib::ext::shared_ptr<NPVCalculator> npvCalc =
@@ -900,7 +900,7 @@ void XvaAnalyticImpl::buildClassicCube(const QuantLib::ext::shared_ptr<Portfolio
                                QuantLib::ext::make_shared<FixingManager>(inputs_->asof()));
         engine.registerProgressIndicator(progressBar);
         engine.registerProgressIndicator(progressLog);
-        engine.buildCube(portfolio, cube_, calculators(), ValuationEngine::ErrorPolicy::RemoveAll,
+        engine.buildCube(portfolio, cube_, calculators(0, portfolio), ValuationEngine::ErrorPolicy::RemoveAll,
                          analytic()->configurations().scenarioGeneratorData->withMporStickyDate(), nettingSetCube_,
                          cptyCube_, cptyCalculators());
     } else {
