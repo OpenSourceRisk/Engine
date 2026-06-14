@@ -195,7 +195,7 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
             nThreads, asof, dg, nSamples, loader, scenarioGenerator, ed, curveConfigsPtr, todaysMarketParamsPtr,
             marketConfiguration, simMarketData, useSpreadedTermStructures, false,
             QuantLib::ext::make_shared<ScenarioFilter>(), referenceData, iborFallbackConfig, true, true, true, {}, {},
-            {}, "stress analysis", nullptr, true, useAtParCouponsTrades);
+            {}, nullptr, "stress analysis", nullptr, true, useAtParCouponsTrades);
 
         engine.registerProgressIndicator(
             QuantLib::ext::make_shared<ProgressLog>("stress scenarios", 100, oreSeverity::notice));
