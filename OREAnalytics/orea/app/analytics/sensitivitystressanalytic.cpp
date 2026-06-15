@@ -44,8 +44,9 @@ void SensitivityStressVariables::loadVariablesImpl(const QuantLib::ext::shared_p
 }
 
 SensitivityStressAnalyticImpl::SensitivityStressAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-                                             const QuantLib::ext::optional<QuantLib::ext::shared_ptr<StressTestScenarioData>>& scenarios)
-    : Analytic::Impl(inputs, QuantLib::ext::make_shared<SensitivityStressVariables>()), stressScenarios_(scenarios) {
+                                             const QuantLib::ext::optional<QuantLib::ext::shared_ptr<StressTestScenarioData>>& scenarios,
+                                             const std::string& reportNamePrefix)
+    : Analytic::Impl(inputs, QuantLib::ext::make_shared<SensitivityStressVariables>()), stressScenarios_(scenarios), reportNamePrefix(reportNamePrefix) {
     setLabel(LABEL);
 }
 
@@ -154,7 +155,7 @@ void SensitivityStressAnalyticImpl::runStressTest(const QuantLib::ext::shared_pt
                     // add scenario column to report and copy it, concat it later
                     if (boost::starts_with(name, "sensitivity")) {
                         DLOG("Save and extend report " << name);
-                        sensitivityReports[name].push_back(addColumnToExisitingReport("Scenario", label, rpt));
+                        sensitivityReports[reportNamePrefix + name].push_back(addColumnToExisitingReport("Scenario", label, rpt));
                     }
                 }
 
