@@ -19,7 +19,7 @@
     <Parameter name="calendarAdjustment">../../Input/calendaradjustment.xml</Parameter>
     <Parameter name="currencyConfiguration">../../Input/currencies.xml</Parameter>
     <Parameter name="useAnalytics">true</Parameter>
-    <Parameter name="nThreads">2</Parameter>
+    <Parameter name="nThreads">1</Parameter>
   </Setup>
   <Markets>
     <Parameter name="lgmcalibration">libor</Parameter>
