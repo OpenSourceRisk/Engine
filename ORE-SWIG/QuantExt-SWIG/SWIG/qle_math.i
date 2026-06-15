@@ -28,6 +28,8 @@
 #include <qle/math/flatextrapolation2d.hpp>
 #include <qle/math/quadraticinterpolation.hpp>
 #include <qle/math/logquadraticinterpolation.hpp>
+#include <qle/math/discretedistribution.hpp>
+#include <qle/math/bucketeddistribution.hpp>
 #include <sstream>
 
 struct SafeInterpolationHelper : public QuantLib::Interpolation {
@@ -363,6 +365,92 @@ public:
         return QuantLib::ext::make_shared<SafeInterpolation2DWrapper>(x, y, z, [self](const std::vector<QuantLib::Real>& x_vec, const std::vector<QuantLib::Real>& y_vec, const QuantLib::Matrix& z_mat) {
             return self->interpolate(x_vec.begin(), x_vec.end(), y_vec.begin(), y_vec.end(), z_mat);
         });
+    }
+}
+
+// ===== Distribution Classes =====
+
+%template(DistributionPairVector) std::vector<QuantExt::Distributionpair>;
+%rename(x) QuantExt::Distributionpair::x_;
+%rename(probability) QuantExt::Distributionpair::y_;
+
+namespace QuantExt {
+
+    class Distributionpair {
+    public:
+        Distributionpair(Real x = 0, Real y = 0);
+        Real x_;
+        Real y_;
+    };
+
+    class DiscreteDistribution {
+    public:
+        DiscreteDistribution();
+        DiscreteDistribution(const std::vector<Distributionpair>&);
+        DiscreteDistribution(const std::vector<Real>& dataPoints, const std::vector<Real>& probabilities);
+        Size size() const;
+        std::vector<Distributionpair> get() const;
+        Distributionpair get(Size i) const;
+        Real probability(Size i) const;
+        Real data(Size i) const;
+    };
+
+    class MDD {
+    public:
+        static DiscreteDistribution convolve(const DiscreteDistribution& a, const DiscreteDistribution& b, Size buckets);
+        static DiscreteDistribution rebucketfixednumber(const DiscreteDistribution& a, Size buckets);
+        static DiscreteDistribution rebucketfixedstep(const DiscreteDistribution& a, Real step);
+        static DiscreteDistribution sum(const DiscreteDistribution& a, const DiscreteDistribution& b, Size buckets);
+        static DiscreteDistribution sumspecialunsorted(const DiscreteDistribution& a, const DiscreteDistribution& b, Real c);
+        static DiscreteDistribution sumspecial(const DiscreteDistribution& a, const DiscreteDistribution& b, Real c);
+        static DiscreteDistribution sumspecialright(const DiscreteDistribution& a, const DiscreteDistribution& b, Real c);
+        static DiscreteDistribution splicemezz(const DiscreteDistribution& a, const DiscreteDistribution& b, Real c);
+        static DiscreteDistribution scalarmultprob(const DiscreteDistribution& a, const Real& b);
+        static DiscreteDistribution scalarmultx(const DiscreteDistribution& a, const Real& b);
+        static DiscreteDistribution scalarshiftx(const DiscreteDistribution& a, const Real& b);
+        static DiscreteDistribution functionmax(const DiscreteDistribution& a, const Real& b);
+        static DiscreteDistribution functionmin(const DiscreteDistribution& a, const Real& b);
+        static Real expectation(const DiscreteDistribution& a);
+        static Real stdev(const DiscreteDistribution& a);
+        static Real leftstdev(const DiscreteDistribution& a);
+        static Real probabilitymatch(const DiscreteDistribution& a, const DiscreteDistribution& b, Real c, bool forward);
+        static Real probabilitymatch(const DiscreteDistribution& a, const DiscreteDistribution& b, Real c);
+    };
+
+    class BucketedDistribution {
+    public:
+        BucketedDistribution();
+        BucketedDistribution(Real min, Real max, Size numberBuckets);
+        BucketedDistribution(Real min, Real max, Size numberBuckets, Real initialValue);
+        BucketedDistribution(const std::vector<Real>& buckets, const std::vector<Real>& initialProbabilities,
+                             const std::vector<Real>& initialPoints);
+        BucketedDistribution(const BucketedDistribution& other);
+        void add(const DiscreteDistribution& distribution);
+        const std::vector<Real>& buckets() const;
+        const std::vector<Real>& probabilities() const;
+        const std::vector<Real>& points() const;
+        Size numberBuckets() const;
+        std::vector<Real> cumulativeProbabilities() const;
+        std::vector<Real> complementaryProbabilities() const;
+        void applyShift(Real shift);
+        void applyFactor(Real factor);
+        Real cumulativeProbability(Real x) const;
+        Real inverseCumulativeProbability(Real p) const;
+        DiscreteDistribution createDiscrete() const;
+        void erase(Size n);
+        Size bucket(Real value) const;
+    };
+}
+
+%extend QuantExt::BucketedDistribution {
+    QuantExt::BucketedDistribution __add__(const QuantExt::BucketedDistribution& other) {
+        return (*self) + other;
+    }
+    QuantExt::BucketedDistribution __mul__(QuantLib::Real factor) {
+        return (*self) * factor;
+    }
+    QuantExt::BucketedDistribution __rmul__(QuantLib::Real factor) {
+        return factor * (*self);
     }
 }
 
