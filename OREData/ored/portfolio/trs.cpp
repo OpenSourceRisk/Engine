@@ -494,7 +494,7 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
         BusinessDayConvention paymentConvention = pmtConv.empty() ? Unadjusted : parseBusinessDayConvention(pmtConv);
         PaymentLag paymentLag = parsePaymentLag(returnData_.paymentLag());
         Period plPeriod = boost::apply_visitor(PaymentLagPeriod(), paymentLag);
-        auto paymentDates = createPaymentDates(returnData_.scheduleData(), schedule, paymentCalendar, paymentConvention,
+        paymentDates = createPaymentDates(returnData_.scheduleData(), schedule, paymentCalendar, paymentConvention,
             plPeriod, returnData_.paymentLagUnit(), returnData_.paymentLagAnchor());
     } else {
         // Use payment dates if they are provided.
