@@ -28,6 +28,7 @@
 #include <qle/math/flatextrapolation2d.hpp>
 #include <qle/math/quadraticinterpolation.hpp>
 #include <qle/math/logquadraticinterpolation.hpp>
+#include <sstream>
 
 struct SafeInterpolationHelper : public QuantLib::Interpolation {
     static QuantLib::ext::shared_ptr<Impl> get_impl(const QuantLib::Interpolation& interp) {
@@ -114,6 +115,10 @@ public:
     : SafeLogQuadraticInterpolationData(x, y),
       QuantExt::LogQuadraticInterpolation(x_.begin(), x_.end(), y_.begin(), x_mul, x_offset, y_mul, y_offset, skip) {}
 };
+
+#include <qle/math/randomvariable.hpp>
+#include <qle/math/randomvariablelsmbasissystem.hpp>
+#include <ql/methods/montecarlo/lsmbasissystem.hpp>
 %}
 
 // ===== Base Interpolation Classes =====
@@ -360,5 +365,326 @@ public:
         });
     }
 }
+
+// ===== RandomVariable and Filter Suite =====
+
+%template(RandomVariableVector) std::vector<QuantExt::RandomVariable>;
+
+namespace QuantExt {
+
+    struct Filter {
+        Filter();
+        Filter(const Filter& r);
+        explicit Filter(const Size n, const bool value = false);
+        void clear();
+        void set(const Size i, const bool v);
+        void setAll(const bool v);
+        void resetSize(const Size n);
+        bool deterministic() const;
+        void updateDeterministic();
+        bool initialised() const;
+        Size size() const;
+        bool at(const Size i) const;
+        void expand();
+    };
+
+    struct RandomVariable {
+        RandomVariable();
+        RandomVariable(const RandomVariable& r);
+        explicit RandomVariable(const Size n, const Real value = 0.0, const Real time = Null<Real>());
+        explicit RandomVariable(const Filter& f, const Real valueTrue = 1.0, const Real valueFalse = 0.0,
+                                const Real time = Null<Real>());
+        explicit RandomVariable(const std::vector<double>& data, const Real time = Null<Real>());
+        explicit RandomVariable(const QuantLib::Array& data, const Real time = Null<Real>());
+
+        void clear();
+        void set(const Size i, const Real v);
+        void setTime(const Real time);
+        void setAll(const Real v);
+        void resetSize(const Size n);
+
+        bool deterministic() const;
+        void updateDeterministic();
+        bool initialised() const;
+        bool isfinite() const;
+        Size size() const;
+        Real at(const Size i) const;
+        Real time() const;
+        void expand();
+    };
+
+    enum class RandomVariableRegressionMethod { QR, SVD };
+
+    class RandomVariableLsmBasisSystem {
+    private:
+        RandomVariableLsmBasisSystem();
+    public:
+        static Real size(Size dim, Size order);
+    };
+
+    class RandomVariableStats {
+    private:
+        RandomVariableStats();
+    public:
+        static RandomVariableStats& instance();
+        void reset();
+        bool enabled;
+        std::size_t data_ops;
+        std::size_t calc_ops;
+    };
+
+    // Free functions under namespace QuantExt
+    RandomVariable max(RandomVariable, const RandomVariable&);
+    RandomVariable max(RandomVariable, const Real);
+    RandomVariable max(const Real, RandomVariable);
+    RandomVariable min(RandomVariable, const RandomVariable&);
+    RandomVariable min(RandomVariable, const Real);
+    RandomVariable min(Real, RandomVariable);
+    RandomVariable pow(RandomVariable, const RandomVariable&);
+    RandomVariable pow(RandomVariable, const Real);
+    RandomVariable round(RandomVariable, const RandomVariable&);
+    RandomVariable round(RandomVariable, const Real);
+    RandomVariable abs(RandomVariable);
+    RandomVariable exp(RandomVariable);
+    RandomVariable frac(RandomVariable);
+    RandomVariable log(RandomVariable);
+    RandomVariable sqrt(RandomVariable);
+    RandomVariable sin(RandomVariable);
+    RandomVariable cos(RandomVariable);
+    RandomVariable normalCdf(RandomVariable);
+    RandomVariable normalPdf(RandomVariable);
+    RandomVariable indicatorEq(RandomVariable, const RandomVariable&, const Real trueVal = 1.0, const Real falseVal = 0.0);
+    RandomVariable indicatorGt(RandomVariable, const RandomVariable&, const Real trueVal = 1.0, const Real falseVal = 0.0,
+                               const Real eps = 0.0);
+    RandomVariable indicatorGeq(RandomVariable, const RandomVariable&, const Real trueVal = 1.0, const Real falseVal = 0.0,
+                                const Real eps = 0.0);
+
+    RandomVariable conditionalResult(const Filter&, RandomVariable, const RandomVariable&);
+
+    void checkTimeConsistency(const RandomVariable& x, const RandomVariable& y);
+
+    RandomVariable applyFilter(RandomVariable, const Filter&);
+    RandomVariable applyInverseFilter(RandomVariable, const Filter&);
+
+    RandomVariable expectation(const RandomVariable& r);
+    RandomVariable variance(const RandomVariable& r);
+    RandomVariable covariance(const RandomVariable& r, const RandomVariable& s);
+
+    RandomVariable black(const RandomVariable& omega, const RandomVariable& t, const RandomVariable& strike,
+                         const RandomVariable& forward, const RandomVariable& impliedVol);
+
+    RandomVariable indicatorDerivative(const RandomVariable& x, const double eps);
+
+    bool isDeterministicAndZero(const RandomVariable& x);
+}
+
+%extend QuantExt::Filter {
+    bool __getitem__(Size i) const {
+        return self->at(i);
+    }
+    void __setitem__(Size i, bool v) {
+        self->set(i, v);
+    }
+    Filter __and__(const Filter& other) {
+        return (*self) && other;
+    }
+    Filter __or__(const Filter& other) {
+        return (*self) || other;
+    }
+    Filter __invert__() {
+        return !(*self);
+    }
+    bool __eq__(const Filter& other) {
+        return (*self) == other;
+    }
+    bool __ne__(const Filter& other) {
+        return !((*self) == other);
+    }
+    std::string __str__() {
+        std::ostringstream oss;
+        oss << "Filter(size=" << self->size() << ", deterministic=" << (self->deterministic() ? "True" : "False") << ")";
+        return oss.str();
+    }
+}
+
+%extend QuantExt::RandomVariable {
+    Real __getitem__(Size i) const {
+        return self->at(i);
+    }
+    void __setitem__(Size i, Real v) {
+        self->set(i, v);
+    }
+    RandomVariable __add__(const RandomVariable& other) {
+        return (*self) + other;
+    }
+    RandomVariable __add__(Real other) {
+        return (*self) + other;
+    }
+    RandomVariable __radd__(Real other) {
+        return other + (*self);
+    }
+    RandomVariable __sub__(const RandomVariable& other) {
+        return (*self) - other;
+    }
+    RandomVariable __sub__(Real other) {
+        return (*self) - other;
+    }
+    RandomVariable __rsub__(Real other) {
+        return other - (*self);
+    }
+    RandomVariable __mul__(const RandomVariable& other) {
+        return (*self) * other;
+    }
+    RandomVariable __mul__(Real other) {
+        return (*self) * other;
+    }
+    RandomVariable __rmul__(Real other) {
+        return other * (*self);
+    }
+    RandomVariable __truediv__(const RandomVariable& other) {
+        return (*self) / other;
+    }
+    RandomVariable __truediv__(Real other) {
+        return (*self) / other;
+    }
+    RandomVariable __rtruediv__(Real other) {
+        return other / (*self);
+    }
+    RandomVariable __neg__() {
+        return -(*self);
+    }
+    RandomVariable __abs__() {
+        return abs(*self);
+    }
+    
+    RandomVariable& __iadd__(const RandomVariable& other) {
+        *self += other;
+        return *self;
+    }
+    RandomVariable& __iadd__(Real other) {
+        *self += other;
+        return *self;
+    }
+    RandomVariable& __isub__(const RandomVariable& other) {
+        *self -= other;
+        return *self;
+    }
+    RandomVariable& __isub__(Real other) {
+        *self -= other;
+        return *self;
+    }
+    RandomVariable& __imul__(const RandomVariable& other) {
+        *self *= other;
+        return *self;
+    }
+    RandomVariable& __imul__(Real other) {
+        *self *= other;
+        return *self;
+    }
+    RandomVariable& __itruediv__(const RandomVariable& other) {
+        *self /= other;
+        return *self;
+    }
+    RandomVariable& __itruediv__(Real other) {
+        *self /= other;
+        return *self;
+    }
+
+    Filter __lt__(const RandomVariable& other) {
+        return (*self) < other;
+    }
+    Filter __le__(const RandomVariable& other) {
+        return (*self) <= other;
+    }
+    Filter __gt__(const RandomVariable& other) {
+        return (*self) > other;
+    }
+    Filter __ge__(const RandomVariable& other) {
+        return (*self) >= other;
+    }
+    bool __eq__(const RandomVariable& other) {
+        return (*self) == other;
+    }
+    bool __ne__(const RandomVariable& other) {
+        return !((*self) == other);
+    }
+
+    std::vector<double> to_vector() const {
+        return (std::vector<double>)(*self);
+    }
+    QuantLib::Array to_array() const {
+        return (QuantLib::Array)(*self);
+    }
+
+    std::string __str__() {
+        std::ostringstream oss;
+        oss << "RandomVariable(size=" << self->size() << ", time=" << self->time() << ", deterministic=" << (self->deterministic() ? "True" : "False") << ")";
+        return oss.str();
+    }
+}
+
+%extend QuantExt::RandomVariableLsmBasisSystem {
+    static std::vector<QuantExt::RandomVariable> evaluatePathBasis(QuantLib::Size order, QuantLib::LsmBasisSystem::PolynomialType type, const QuantExt::RandomVariable& rv) {
+        auto basis = QuantExt::RandomVariableLsmBasisSystem::pathBasisSystem(order, type);
+        std::vector<QuantExt::RandomVariable> res;
+        res.reserve(basis.size());
+        for (const auto& f : basis) {
+            res.push_back(f(rv));
+        }
+        return res;
+    }
+
+    static std::vector<QuantExt::RandomVariable> evaluateMultiPathBasis(QuantLib::Size dim, QuantLib::Size order, QuantLib::LsmBasisSystem::PolynomialType type, const std::vector<QuantExt::RandomVariable>& rvs) {
+        auto basis = QuantExt::RandomVariableLsmBasisSystem::multiPathBasisSystem(dim, order, type);
+        std::vector<const QuantExt::RandomVariable*> ptrs = QuantExt::vec2vecptr(rvs);
+        std::vector<QuantExt::RandomVariable> res;
+        res.reserve(basis.size());
+        for (const auto& f : basis) {
+            res.push_back(f(ptrs));
+        }
+        return res;
+    }
+}
+
+%inline %{
+namespace QuantExt {
+    QuantLib::Matrix pcaCoordinateTransform(const std::vector<QuantExt::RandomVariable>& regressor, const QuantLib::Real varianceCutoff = 1E-5) {
+        return QuantExt::pcaCoordinateTransform(QuantExt::vec2vecptr(regressor), varianceCutoff);
+    }
+    
+    std::vector<QuantExt::RandomVariable> applyCoordinateTransform(const std::vector<QuantExt::RandomVariable>& regressor, const QuantLib::Matrix& transform) {
+        return QuantExt::applyCoordinateTransform(QuantExt::vec2vecptr(regressor), transform);
+    }
+
+    QuantLib::Array regressionCoefficients(
+        const QuantExt::RandomVariable& r,
+        const std::vector<QuantExt::RandomVariable>& basisValues,
+        const QuantExt::Filter& filter = QuantExt::Filter(),
+        const QuantExt::RandomVariableRegressionMethod method = QuantExt::RandomVariableRegressionMethod::QR) {
+        
+        std::vector<std::function<QuantExt::RandomVariable(const std::vector<const QuantExt::RandomVariable*>&)>> basisFn;
+        for (Size j = 0; j < basisValues.size(); ++j) {
+            QuantExt::RandomVariable val = basisValues[j];
+            basisFn.push_back([val](const std::vector<const QuantExt::RandomVariable*>&) {
+                return val;
+            });
+        }
+        
+        std::vector<const QuantExt::RandomVariable*> emptyRegressor;
+        return QuantExt::regressionCoefficients(r, emptyRegressor, basisFn, filter, method);
+    }
+
+    QuantExt::RandomVariable conditionalExpectation(const std::vector<QuantExt::RandomVariable>& regressor,
+                                                     const std::vector<QuantExt::RandomVariable>& basisValues,
+                                                     const QuantLib::Array& coefficients) {
+        QL_REQUIRE(basisValues.size() == coefficients.size(), "basisValues and coefficients size mismatch");
+        QuantExt::RandomVariable res(regressor.empty() ? 0 : regressor[0].size(), 0.0);
+        for (Size i = 0; i < basisValues.size(); ++i) {
+            res += coefficients[i] * basisValues[i];
+        }
+        return res;
+    }
+}
+%}
 
 #endif
