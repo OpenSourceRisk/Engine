@@ -60,18 +60,21 @@ public:
     QuantLib::Date maxDate() const override { return underlying_->maxDate(); }
     QuantLib::Time maxTime() const override { return underlying_->maxTime(); }
     //! The minimum time for which the curve can return values
-    virtual QuantLib::Time minTime() const override { return underlying_->minTime(); }
+    QuantLib::Time minTime() const override { return underlying_->minTime(); }
 
     //! The currency in which prices are expressed
-    virtual const QuantLib::Currency& currency() const override { return underlying_->currency(); }
+    const QuantLib::Currency& currency() const override { return underlying_->currency(); }
 
     //! The pillar dates for the PriceTermStructure
-    virtual std::vector<QuantLib::Date> pillarDates() const override { return underlying_->pillarDates(); }
+    std::vector<QuantLib::Date> pillarDates() const override { return underlying_->pillarDates(); }
+
+    const QuantLib::Handle<PriceTermStructure>& averageDayPriceCurve() const { return underlying_; }
+    const QuantLib::ext::shared_ptr<IntradayShapeTermstructure>& intradayShape() const { return shape_; }
 
 protected:
     //@{
     //! Price calculation
-    virtual QuantLib::Real priceImpl(QuantLib::Time) const override { QL_FAIL("priceImpl(Time) not implemented for IntradayPowerPriceTermStructure"); }
+    QuantLib::Real priceImpl(QuantLib::Time) const override { QL_FAIL("priceImpl(Time) not implemented for IntradayPowerPriceTermStructure"); }
     //@}
 
 private:

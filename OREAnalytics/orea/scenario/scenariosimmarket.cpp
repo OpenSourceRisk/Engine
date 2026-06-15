@@ -119,6 +119,7 @@ using namespace QuantExt;
 using namespace ore::data;
 using namespace std;
 
+
 namespace {
 
 // Utility function that is in catch blocks below
@@ -198,6 +199,20 @@ void sortCheckUnique(vector<T>& values, const std::string& msgPrefix, const std:
     std::sort(values.begin(), values.end());
     auto it = std::unique(values.begin(), values.end(), eq);
     QL_REQUIRE(it == values.end(), msgPrefix << " for " << name << " should be unique.");
+}
+
+// Helper function to extract tenors from curve if no sim tenors are given
+
+std::vector<QuantLib::Period> curveTenors(const QuantLib::Handle<QuantExt::PriceTermStructure>& initialCurve,
+                                          const QuantLib::Date& asof) {
+    std::vector<QuantLib::Period> simulationTenors;
+    simulationTenors.reserve(initialCurve->pillarDates().size());
+    for (const Date& d : initialCurve->pillarDates()) {
+        QL_REQUIRE(d >= asof, "Commodity curve pillar date (" << io::iso_date(d) << ") must be after as of ("
+                                                              << io::iso_date(asof) << ").");
+        simulationTenors.push_back(Period(d - asof, Days));
+    }
+    return simulationTenors;
 }
 
 } // namespace
@@ -2880,25 +2895,14 @@ ScenarioSimMarket::ScenarioSimMarket(
                         // Get the configured simulation tenors. Simulation tenors being empty at this point means
                         // that we wish to use the pillar date points from the t_0 market PriceTermStructure.
                         vector<Period> simulationTenors = parameters->commodityCurveTenors(name);
-                        DayCounter commodityCurveDayCounter = initialCommodityCurve->dayCounter();
-                        if (simulationTenors.empty()) {
-                            DLOG("simulation tenors are empty, use "
-                                 << initialCommodityCurve->pillarDates().size()
-                                 << " pillar dates from T0 curve to build ssm curve.");
-                            simulationTenors.reserve(initialCommodityCurve->pillarDates().size());
-                            for (const Date& d : initialCommodityCurve->pillarDates()) {
-                                QL_REQUIRE(d >= asof_, "Commodity curve pillar date (" << io::iso_date(d)
-                                                                                       << ") must be after as of ("
-                                                                                       << io::iso_date(asof_) << ").");
-                                simulationTenors.push_back(Period(d - asof_, Days));
-                            }
-
+                        if (simulationTenors.empty()){
+                            DLOG("simulation tenors are empty, use pillar dates from T0 curve to build ssm curve.");
+                            simulationTenors = curveTenors(initialCommodityCurve, asof_);
                             // It isn't great to be updating parameters here. However, actual tenors are requested
                             // downstream from parameters and they need to be populated.
                             parameters->setCommodityCurveTenors(name, simulationTenors);
-                        } else {
-                            DLOG("using " << simulationTenors.size() << " simulation tenors.");
                         }
+                        DLOG("Commodity curve " << name << " simulation tenors: " << simulationTenors.size());
 
                         // Get prices at specified simulation times from time 0 market curve and place in quotes
                         vector<Handle<Quote>> quotes(simulationTenors.size());
@@ -2931,7 +2935,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         if (param.second.first && useSpreadedTermStructures_) {
                             vector<Real> simulationTimes;
                             for (auto const& t : simulationTenors) {
-                                simulationTimes.push_back(commodityCurveDayCounter.yearFraction(asof_, asof_ + t));
+                                simulationTimes.push_back(initialCommodityCurve->dayCounter().yearFraction(asof_, asof_ + t));
                             }
                             if (simulationTimes.front() != 0.0) {
                                 simulationTimes.insert(simulationTimes.begin(), 0.0);
@@ -2943,7 +2947,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                                                                         simulationTimes, quotes);
                         } else {
                             priceCurve= QuantLib::ext::make_shared<InterpolatedPriceCurve<LinearFlat>>(
-                                simulationTenors, quotes, commodityCurveDayCounter, initialCommodityCurve->currency());
+                                simulationTenors, quotes, initialCommodityCurve->dayCounter(), initialCommodityCurve->currency());
                         }
                         
                         auto orgBasisCurve =
@@ -3327,6 +3331,92 @@ ScenarioSimMarket::ScenarioSimMarket(
 
             case RiskFactorKey::KeyType::None:
                 WLOG("RiskFactorKey None not yet implemented");
+                break;
+
+            case RiskFactorKey::KeyType::IntradayPowerCurve:
+                for (const auto& name : param.second.second) {
+                    bool simDataWritten = false;
+                    try {
+                        // At the moment only shifts of the day average price, the shape factors will not be shifted
+                        DLOG("building intraday power curve for " << name);
+
+                        auto initialIntradayPowerCurve =
+                            initMarket->intradayPowerPriceCurve(name, configuration);
+                        
+                        QL_REQUIRE(!initialIntradayPowerCurve.empty(), "ScenarioSimMarket: Initial curve for " << name << " is empty");
+                        auto averageDayPriceCurve = initialIntradayPowerCurve->averageDayPriceCurve();
+                        
+                        bool allowsExtrapolation = initialIntradayPowerCurve->allowsExtrapolation();
+
+                        // Get the configured simulation tenors. Simulation tenors being empty at this point means
+                        // that we wish to use the pillar date points from the t_0 market PriceTermStructure.
+                        vector<Period> simulationTenors = parameters->intradayPowerCurveTenors(name);
+                        if (simulationTenors.empty()){
+                            DLOG("simulation tenors are empty, use pillar dates from T0 curve to build ssm curve.");
+                            simulationTenors = curveTenors(averageDayPriceCurve, asof_);
+                            // It isn't great to be updating parameters here. However, actual tenors are requested
+                            // downstream from parameters and they need to be populated.
+                            parameters->setIntradayPowerCurveTenors(name, simulationTenors);
+                        }
+                        DLOG("Intraday power curve " << name << " simulation tenors: " << simulationTenors.size());
+
+                        // Get prices at specified simulation times from time 0 market curve and place in quotes
+                        vector<Handle<Quote>> quotes(simulationTenors.size());
+                        vector<Real> times;
+                        for (Size i = 0; i < simulationTenors.size(); i++) {
+                            Date d = asof_ + simulationTenors[i];
+                            Real price = averageDayPriceCurve->price(d, allowsExtrapolation);
+                            times.push_back(averageDayPriceCurve->timeFromReference(d));
+                            TLOG("Intraday power curve: price at " << io::iso_date(d) << " is " << price);
+                            // if we simulate the factors and use spreaded ts, the quote should be zero
+                            QuantLib::ext::shared_ptr<SimpleQuote> quote = QuantLib::ext::make_shared<SimpleQuote>(
+                                param.second.first && useSpreadedTermStructures_ ? 0.0 : price);
+                            quotes[i] = Handle<Quote>(quote);
+
+                            // If we are simulating commodities, add the quote to simData_
+                            if (param.second.first) {
+                                simDataTmp.emplace(piecewise_construct, forward_as_tuple(param.first, name, i),
+                                                   forward_as_tuple(quote));
+                                if (useSpreadedTermStructures_)
+                                    absoluteSimDataTmp.emplace(piecewise_construct,
+                                                               forward_as_tuple(param.first, name, i),
+                                                               forward_as_tuple(price));
+                            }
+                        }
+
+                        writeSimData(simDataTmp, absoluteSimDataTmp, param.first, name, {times});
+                        simDataWritten = true;
+                        QuantLib::ext::shared_ptr<PriceTermStructure> priceCurve;
+
+                        if (param.second.first && useSpreadedTermStructures_) {
+                            vector<Real> simulationTimes;
+                            for (auto const& t : simulationTenors) {
+                                simulationTimes.push_back(averageDayPriceCurve->dayCounter().yearFraction(asof_, asof_ + t));
+                            }
+                            if (simulationTimes.front() != 0.0) {
+                                simulationTimes.insert(simulationTimes.begin(), 0.0);
+                                quotes.insert(quotes.begin(), quotes.front());
+                            }
+                            // Created spreaded commodity price curve if we simulate commodities and spreads should be
+                            // used
+                            priceCurve = QuantLib::ext::make_shared<SpreadedPriceTermStructure>(averageDayPriceCurve,
+                                                                                        simulationTimes, quotes);
+                        } else {
+                            priceCurve= QuantLib::ext::make_shared<InterpolatedPriceCurve<LinearFlat>>(
+                                simulationTenors, quotes, averageDayPriceCurve->dayCounter(), averageDayPriceCurve->currency());
+                        }
+                        Handle<IntradayPowerPriceTermStructure> ippts(
+                            QuantLib::ext::make_shared<IntradayPowerPriceTermStructure>(
+                                QuantLib::Handle<QuantExt::PriceTermStructure>(priceCurve), initialIntradayPowerCurve->intradayShape()));
+                        auto powerIndex = parseIntradayPowerIndex(name, false, ippts);
+                        intradayPowerIndices_.emplace(piecewise_construct,
+                                                  forward_as_tuple(Market::defaultConfiguration, name),
+                                                  forward_as_tuple(powerIndex));
+                    } catch (const std::exception& e) {
+                        processException(e, name, param.first, simDataWritten);
+                        gotException = true;
+                    }
+                }
                 break;
             }
 

@@ -180,6 +180,11 @@ void SensitivityScenarioGenerator::generateScenarios() {
         generateCommodityCurveScenarios(false);
     }
 
+    if (simMarketData_->intradayPowerCurveSimulate()) {
+        generateIntradayPowerCurveScenarios(true);
+        generateIntradayPowerCurveScenarios(false);
+    }
+
     if (simMarketData_->commodityVolSimulate()) {
         generateCommodityVolScenarios(true);
         generateCommodityVolScenarios(false);
@@ -2322,6 +2327,101 @@ void SensitivityScenarioGenerator::generateCommodityCurveScenarios(bool up) {
     DLOG("Commodity curve scenarios done");
 }
 
+void SensitivityScenarioGenerator::generateIntradayPowerCurveScenarios(bool up) {
+
+    Date asof = baseScenario_->asof();
+
+    for (const string& name : simMarketData_->intradayPowerCurveNames()) {
+        if (sensitivityData_->intradayPowerCurveShiftData().find(name) ==
+            sensitivityData_->intradayPowerCurveShiftData().end()) {
+            ALOG("Intraday power curve " << name
+                                         << " in simulation market is not "
+                                            "included in intraday power sensitivity analysis");
+        }
+    }
+
+    for (const auto& c : sensitivityData_->intradayPowerCurveShiftData()) {
+        string name = c.first;
+
+        vector<Period> simMarketTenors;
+        try {
+            simMarketTenors = simMarketData_->intradayPowerCurveTenors(name);
+        } catch (const std::exception& e) {
+            ALOG("skip scenario generation for intraday power curve " << name << ": " << e.what());
+            continue;
+        }
+
+        DayCounter dc = Actual365Fixed();
+        try {
+            if (auto s = simMarket_.lock()) {
+                dc = s->intradayPowerPriceCurve(name)->dayCounter();
+            } else {
+                QL_FAIL("Internal error: could not lock simMarket. Contact dev.");
+            }
+        } catch (const std::exception&) {
+            WLOG("Day counter lookup in simulation market failed for intraday power price curve " << name
+                                                                                                     << ", using default A365");
+        }
+
+        vector<Real> times(simMarketTenors.size());
+        vector<Real> basePrices(times.size());
+        vector<Real> shiftedPrices(times.size());
+        vector<Real> offsets(times.size());
+
+        bool valid = true;
+        for (Size j = 0; j < times.size(); ++j) {
+            times[j] = dc.yearFraction(asof, asof + simMarketTenors[j]);
+            RiskFactorKey key(RiskFactorKey::KeyType::IntradayPowerCurve, name, j);
+            valid = valid && tryGetBaseScenarioValue(baseScenarioAbsolute_, key, basePrices[j], continueOnError_);
+            valid = valid && tryGetBaseScenarioValue(baseScenario_, key, offsets[j], continueOnError_);
+        }
+        if (!valid)
+            continue;
+
+        SensitivityScenarioData::IntradayPowerShiftData data = *c.second;
+        if (!isScenarioRelevant(up, data))
+            continue;
+        ShiftType shiftType = getShiftType(data);
+        Real shiftSize = getShiftSize(data);
+
+        QL_REQUIRE(!data.shiftTenors.empty(), "Intraday power curve shift tenors have not been given");
+        vector<Time> shiftTimes(data.shiftTenors.size());
+        for (Size j = 0; j < data.shiftTenors.size(); ++j) {
+            shiftTimes[j] = dc.yearFraction(asof, asof + data.shiftTenors[j]);
+        }
+
+        bool validShiftSize = vectorSubset(times, shiftTimes);
+
+        for (Size j = 0; j < data.shiftTenors.size(); ++j) {
+
+            QuantLib::ext::shared_ptr<Scenario> scenario =
+                sensiScenarioFactory_->buildScenario(asof, !sensitivityData_->useSpreadedTermStructures());
+
+            applyShift(j, shiftSize, up, shiftType, shiftTimes, basePrices, times, shiftedPrices, true);
+
+            for (Size k = 0; k < times.size(); ++k) {
+                RiskFactorKey key(RFType::IntradayPowerCurve, name, k);
+                if (sensitivityData_->useSpreadedTermStructures()) {
+                    scenario->add(key, shiftedPrices[k] - basePrices[k] + offsets[k]);
+                } else {
+                    scenario->add(key, shiftedPrices[k]);
+                }
+
+                if (validShiftSize && shiftTimes[j] == times[k]) {
+                    RiskFactorKey key(RFType::IntradayPowerCurve, name, j);
+                    storeShiftData(key, basePrices[k], shiftedPrices[k]);
+                }
+            }
+
+            scenarios_.push_back(scenario);
+            scenarioDescriptions_.push_back(intradayPowerCurveScenarioDescription(name, j, up, getShiftScheme(data)));
+            scenario->label(to_string(scenarioDescriptions_.back()));
+            DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
+        }
+    }
+    DLOG("Intraday power curve scenarios done");
+}
+
 void SensitivityScenarioGenerator::generateCommodityVolScenarios(bool up) {
 
     // Log an ALERT if some commodity vol names in simulation market are not in the list
@@ -3076,6 +3176,24 @@ SensitivityScenarioGenerator::commodityCurveScenarioDescription(const string& co
     QL_REQUIRE(bucket < shiftTenors.size(), "bucket " << bucket << " out of commodity curve bucket range");
 
     RiskFactorKey key(RiskFactorKey::KeyType::CommodityCurve, commodityName, bucket);
+    ostringstream oss;
+    oss << shiftTenors[bucket];
+    ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
+    shiftSchemes_[key] = shiftScheme;
+    storeShiftData(key, 0.0, 0.0); // default, only used if not popoulated before
+    return ScenarioDescription(type, key, oss.str());
+}
+
+SensitivityScenarioGenerator::ScenarioDescription
+SensitivityScenarioGenerator::intradayPowerCurveScenarioDescription(const string& curveName, Size bucket, bool up,
+                                                                    ShiftScheme shiftScheme) {
+
+    QL_REQUIRE(sensitivityData_->intradayPowerCurveShiftData().count(curveName) > 0,
+               "Name " << curveName << " not found in intraday power curve shift data");
+    auto& shiftTenors = sensitivityData_->intradayPowerCurveShiftData()[curveName]->shiftTenors;
+    QL_REQUIRE(bucket < shiftTenors.size(), "bucket " << bucket << " out of intraday power curve bucket range");
+
+    RiskFactorKey key(RiskFactorKey::KeyType::IntradayPowerCurve, curveName, bucket);
     ostringstream oss;
     oss << shiftTenors[bucket];
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
