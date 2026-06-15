@@ -43,7 +43,7 @@ def get_list_of_new_examples():
             "ORE-API",
             "ORE-Python",
             "Performance",
-            # "Products",
+            "Products",
             "ScriptedTrade",
             "XvaRisk"
             ]
