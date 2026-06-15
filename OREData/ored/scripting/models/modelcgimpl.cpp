@@ -550,12 +550,10 @@ void ModelCGImpl::performCalculations() const {
 }
 
 std::size_t ModelCGImpl::cgVersion() const {
-    calculate();
     return cgVersion_;
 }
 
 const std::vector<std::vector<std::size_t>>& ModelCGImpl::randomVariates() const {
-    calculate();
     return randomVariates_;
 }
 
