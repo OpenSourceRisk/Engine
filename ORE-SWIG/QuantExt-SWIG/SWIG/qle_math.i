@@ -926,4 +926,38 @@ namespace QuantExt {
 }
 %}
 
+// Python dispatch wrappers to prevent QuantExt free functions from silently
+// overriding Python built-ins (abs, round, max, min, pow) when users do
+// "from ORE import *".  The wrappers route calls to the QuantExt C++ function
+// when at least one argument is a RandomVariable, and fall back to the Python
+// built-in otherwise.
+%pythoncode %{
+import builtins as _ore_builtins
+
+def max(*args, **kwargs):
+    if not kwargs and args and any(isinstance(a, RandomVariable) for a in args):
+        return _ORE.max(*args)
+    return _ore_builtins.max(*args, **kwargs)
+
+def min(*args, **kwargs):
+    if not kwargs and args and any(isinstance(a, RandomVariable) for a in args):
+        return _ORE.min(*args)
+    return _ore_builtins.min(*args, **kwargs)
+
+def pow(*args, **kwargs):
+    if not kwargs and args and any(isinstance(a, RandomVariable) for a in args):
+        return _ORE.pow(*args)
+    return _ore_builtins.pow(*args, **kwargs)
+
+def round(x, *args, **kwargs):
+    if isinstance(x, RandomVariable):
+        return _ORE.round(x, *args)
+    return _ore_builtins.round(x, *args, **kwargs)
+
+def abs(x):
+    if isinstance(x, RandomVariable):
+        return _ORE.abs(x)
+    return _ore_builtins.abs(x)
+%}
+
 #endif
