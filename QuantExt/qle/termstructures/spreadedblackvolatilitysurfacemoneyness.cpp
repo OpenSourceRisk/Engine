@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <qle/termstructures/dynamicstype.hpp>
 #include <qle/termstructures/spreadedblackvolatilitysurfacemoneyness.hpp>
 
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
@@ -36,13 +37,14 @@ SpreadedBlackVolatilitySurfaceMoneyness::SpreadedBlackVolatilitySurfaceMoneyness
     const std::vector<Real>& moneyness, const std::vector<std::vector<Handle<Quote>>>& volSpreads,
     const Handle<Quote>& stickySpot, const Handle<YieldTermStructure>& stickyDividendTs,
     const Handle<YieldTermStructure>& stickyRiskFreeTs, const Handle<YieldTermStructure>& movingDividendTs,
-    const Handle<YieldTermStructure>& movingRiskFreeTs, bool stickyStrike)
+    const Handle<YieldTermStructure>& movingRiskFreeTs, bool stickyStrike, ReactionToTimeDecay decayMode,
+    YieldCurveRollDown yieldCurveRollDown)
     : BlackVolatilityTermStructure(referenceVol->businessDayConvention(), referenceVol->dayCounter(),
                                    referenceVol->volType(), referenceVol->shift()),
       referenceVol_(referenceVol), movingSpot_(movingSpot), times_(times), moneyness_(moneyness),
       volSpreads_(volSpreads), stickySpot_(stickySpot), stickyDividendTs_(stickyDividendTs),
       stickyRiskFreeTs_(stickyRiskFreeTs), movingDividendTs_(movingDividendTs), movingRiskFreeTs_(movingRiskFreeTs),
-      stickyStrike_(stickyStrike) {
+      stickyStrike_(stickyStrike), decayMode_(decayMode), yieldCurveRollDown_(yieldCurveRollDown) {
 
     // register with observables
 
@@ -114,6 +116,9 @@ void SpreadedBlackVolatilitySurfaceMoneyness::update() {
 const std::vector<QuantLib::Real>& SpreadedBlackVolatilitySurfaceMoneyness::moneyness() const { return moneyness_; }
 
 void SpreadedBlackVolatilitySurfaceMoneyness::performCalculations() const {
+    originalRefDate_ = referenceVol_->referenceDate();
+    actualRefDate_ = referenceDate();
+    t0_ = timeFromReference(originalRefDate_);
     for (Size j = 0; j < data_.columns(); ++j) {
         for (Size i = 0; i < data_.rows(); ++i) {
             data_(i, j) = volSpreads_[i][j]->value();
@@ -123,26 +128,54 @@ void SpreadedBlackVolatilitySurfaceMoneyness::performCalculations() const {
 }
 
 Real SpreadedBlackVolatilitySurfaceMoneyness::blackVolImpl(Time t, Real strike) const {
+
     calculate();
     QL_REQUIRE(!referenceVol_.empty(), "SpreadedBlackVolatilitySurfaceMoneyness: reference vol is empty");
+
+    // the current moneyness
     Real m = moneynessFromStrike(t, strike, false);
+
     QL_REQUIRE(std::isfinite(m),
                "SpreadedBlackVolatilitySurfaceMoneyness: got invalid moneyness (dynamic reference) at t = "
                    << t << ", strike = " << strike << ": " << m);
+
     Real effStrike;
-    if (stickyStrike_)
+    if (stickyStrike_) {
         effStrike = strike;
-    else {
+    } else {
         effStrike = strikeFromMoneyness(t, m, true);
         QL_REQUIRE(std::isfinite(effStrike),
                    "SpreadedBlackVolatilitySurfaceMoneyness: got invalid strike from moneyness at t = "
                        << t << ", input strike = " << strike << ", moneyness = " << m);
     }
+
     Real m2 = moneynessFromStrike(t, strike, false);
     QL_REQUIRE(std::isfinite(m2),
                "SpreadedBlackVolatilitySurfaceMoneyness: got invalid moneyness (sticky reference) at t = "
                    << t << ", strike = " << strike << ": " << m2);
-    return std::max(0.0, referenceVol_->blackVol(t, effStrike) + volSpreadSurface_(t, m2));
+
+    if (originalRefDate_ == actualRefDate_)
+        return std::max(0.0, referenceVol_->blackVol(t, effStrike)) + volSpreadSurface_(t, m2);
+
+    if (decayMode_ == ReactionToTimeDecay::ConstantVariance) {
+        Real effStrike2 = strikeFromMoneyness(t, moneynessFromStrike(t, effStrike, true), true, true);
+        return std::max(0.0, referenceVol_->blackVol(t, effStrike2)) + volSpreadSurface_(t, m2);
+    } else {
+        Real effStrike2 = strikeFromMoneyness(t + t0_, moneynessFromStrike(t, effStrike, true), true, true);
+        Real effStrike3 = strikeFromMoneyness(t0_, moneynessFromStrike(t0_, effStrike, true), true, true);
+        return std::sqrt(std::max(0.0, referenceVol_->blackVariance(t + t0_, effStrike2) -
+                                           referenceVol_->blackVariance(t0_, effStrike3)) /
+                         t);
+    }
+}
+
+Real SpreadedBlackVolatilitySurfaceMoneyness::getRollDownDiscount(const Handle<YieldTermStructure>& r, Time t,
+                                                                  bool noRollDown) const {
+    if (yieldCurveRollDown_ == YieldCurveRollDown::ConstantDiscounts || noRollDown) {
+        return r->discount(t);
+    } else {
+        return r->discount(t + t0_) / r->discount(t0_);
+    }
 }
 
 Real SpreadedBlackVolatilitySurfaceMoneynessSpot::moneynessFromStrike(Time t, Real strike,
@@ -159,7 +192,8 @@ Real SpreadedBlackVolatilitySurfaceMoneynessSpot::moneynessFromStrike(Time t, Re
 }
 
 Real SpreadedBlackVolatilitySurfaceMoneynessSpot::strikeFromMoneyness(Time t, Real moneyness,
-                                                                      const bool stickyReference) const {
+                                                                      const bool stickyReference,
+                                                                      const bool noRollDown) const {
     QL_REQUIRE(!stickyReference || !stickySpot_.empty(),
                "SpreadedBlackVolatilitySurfaceMoneynessSpot: stickySpot is empty");
     QL_REQUIRE(stickyReference || !movingSpot_.empty(),
@@ -181,7 +215,8 @@ Real SpreadedBlackVolatilitySurfaceLogMoneynessSpot::moneynessFromStrike(Time t,
 }
 
 Real SpreadedBlackVolatilitySurfaceLogMoneynessSpot::strikeFromMoneyness(Time t, Real moneyness,
-                                                                         const bool stickyReference) const {
+                                                                         const bool stickyReference,
+                                                                         const bool noRollDown) const {
     QL_REQUIRE(!stickyReference || !stickySpot_.empty(),
                "SpreadedBlackVolatilitySurfaceLogMoneynessSpot: stickySpot is empty");
     QL_REQUIRE(stickyReference || !movingSpot_.empty(),
@@ -201,7 +236,8 @@ Real SpreadedBlackVolatilitySurfaceMoneynessForward::moneynessFromStrike(Time t,
                        "SpreadedBlackVolatilitySurfaceMoneynessForward: stickyDividendTs is empty");
             QL_REQUIRE(!stickyRiskFreeTs_.empty(),
                        "SpreadedBlackVolatilitySurfaceMoneynessForward: stickyRiskFreeTs is empty");
-            forward = stickySpot_->value() * stickyDividendTs_->discount(t) / stickyRiskFreeTs_->discount(t);
+            forward = stickySpot_->value() * getRollDownDiscount(stickyDividendTs_, t) /
+                      getRollDownDiscount(stickyRiskFreeTs_, t);
         } else {
             QL_REQUIRE(!movingSpot_.empty(), "SpreadedBlackVolatilitySurfaceMoneynessForward: movingSpot is empty");
             QL_REQUIRE(!movingDividendTs_.empty(),
@@ -215,7 +251,8 @@ Real SpreadedBlackVolatilitySurfaceMoneynessForward::moneynessFromStrike(Time t,
 }
 
 Real SpreadedBlackVolatilitySurfaceMoneynessForward::strikeFromMoneyness(Time t, Real moneyness,
-                                                                         const bool stickyReference) const {
+                                                                         const bool stickyReference,
+                                                                         const bool noRollDown) const {
     Real forward;
     if (stickyReference) {
         QL_REQUIRE(!stickySpot_.empty(), "SpreadedBlackVolatilitySurfaceMoneynessForward: stickySpot is empty");
@@ -223,7 +260,8 @@ Real SpreadedBlackVolatilitySurfaceMoneynessForward::strikeFromMoneyness(Time t,
                    "SpreadedBlackVolatilitySurfaceMoneynessForward: stickyDividendTs is empty");
         QL_REQUIRE(!stickyRiskFreeTs_.empty(),
                    "SpreadedBlackVolatilitySurfaceMoneynessForward: stickyRiskFreeTs is empty");
-        forward = stickySpot_->value() * stickyDividendTs_->discount(t) / stickyRiskFreeTs_->discount(t);
+        forward = stickySpot_->value() * getRollDownDiscount(stickyDividendTs_, t, noRollDown) /
+                  getRollDownDiscount(stickyRiskFreeTs_, t, noRollDown);
     } else {
         QL_REQUIRE(!movingSpot_.empty(), "SpreadedBlackVolatilitySurfaceMoneynessForward: movingSpot is empty");
         QL_REQUIRE(!movingDividendTs_.empty(),
@@ -247,7 +285,8 @@ Real SpreadedBlackVolatilitySurfaceLogMoneynessForward::moneynessFromStrike(Time
                        "SpreadedBlackVolatilitySurfaceLogMoneynessForward: stickyDividendTs is empty");
             QL_REQUIRE(!stickyRiskFreeTs_.empty(),
                        "SpreadedBlackVolatilitySurfaceLogMoneynessForward: stickyRiskFreeTs is empty");
-            forward = stickySpot_->value() * stickyDividendTs_->discount(t) / stickyRiskFreeTs_->discount(t);
+            forward = stickySpot_->value() * getRollDownDiscount(stickyDividendTs_, t) /
+                      getRollDownDiscount(stickyRiskFreeTs_, t);
         } else {
             QL_REQUIRE(!movingSpot_.empty(), "SpreadedBlackVolatilitySurfaceLogMoneynessForward: movingSpot is empty");
             QL_REQUIRE(!movingDividendTs_.empty(),
@@ -261,7 +300,8 @@ Real SpreadedBlackVolatilitySurfaceLogMoneynessForward::moneynessFromStrike(Time
 }
 
 Real SpreadedBlackVolatilitySurfaceLogMoneynessForward::strikeFromMoneyness(Time t, Real moneyness,
-                                                                            const bool stickyReference) const {
+                                                                            const bool stickyReference,
+                                                                            const bool noRollDown) const {
     Real forward;
     if (stickyReference) {
         QL_REQUIRE(!stickySpot_.empty(), "SpreadedBlackVolatilitySurfaceLogMoneynessForward: stickySpot is empty");
@@ -269,7 +309,8 @@ Real SpreadedBlackVolatilitySurfaceLogMoneynessForward::strikeFromMoneyness(Time
                    "SpreadedBlackVolatilitySurfaceLogMoneynessForward: stickyDividendTs is empty");
         QL_REQUIRE(!stickyRiskFreeTs_.empty(),
                    "SpreadedBlackVolatilitySurfaceLogMoneynessForward: stickyRiskFreeTs is empty");
-        forward = stickySpot_->value() * stickyDividendTs_->discount(t) / stickyRiskFreeTs_->discount(t);
+        forward = stickySpot_->value() * getRollDownDiscount(stickyDividendTs_, t, noRollDown) /
+                  getRollDownDiscount(stickyRiskFreeTs_, t, noRollDown);
     } else {
         QL_REQUIRE(!movingSpot_.empty(), "SpreadedBlackVolatilitySurfaceLogMoneynessForward: movingSpot is empty");
         QL_REQUIRE(!movingDividendTs_.empty(),
@@ -288,7 +329,8 @@ Real SpreadedBlackVolatilitySurfaceStdDevs::moneynessFromStrike(Time t, Real str
         QL_REQUIRE(!stickySpot_.empty(), "SpreadedBlackVolatilitySurfaceStdDevs: stickySpot is empty");
         QL_REQUIRE(!stickyDividendTs_.empty(), "SpreadedBlackVolatilitySurfaceStdDevs: stickyDividendTs is empty");
         QL_REQUIRE(!stickyRiskFreeTs_.empty(), "SpreadedBlackVolatilitySurfaceStdDevs: stickyRiskFreeTs is empty");
-        Real stickyForward = stickySpot_->value() * stickyDividendTs_->discount(t) / stickyRiskFreeTs_->discount(t);
+        Real stickyForward = stickySpot_->value() * getRollDownDiscount(stickyDividendTs_, t) /
+                             getRollDownDiscount(stickyRiskFreeTs_, t);
         Real forward;
         if (stickyReference) {
             forward = stickyForward;
@@ -306,9 +348,10 @@ Real SpreadedBlackVolatilitySurfaceStdDevs::moneynessFromStrike(Time t, Real str
     }
 }
 
-Real SpreadedBlackVolatilitySurfaceStdDevs::strikeFromMoneyness(Time t, Real moneyness,
-                                                                const bool stickyReference) const {
-    Real stickyForward = stickySpot_->value() * stickyDividendTs_->discount(t) / stickyRiskFreeTs_->discount(t);
+Real SpreadedBlackVolatilitySurfaceStdDevs::strikeFromMoneyness(Time t, Real moneyness, const bool stickyReference,
+                                                                const bool noRollDown) const {
+    Real stickyForward = stickySpot_->value() * getRollDownDiscount(stickyDividendTs_, t, true) /
+                         getRollDownDiscount(stickyRiskFreeTs_, t, true);
     Real forward;
     if (stickyReference) {
         forward = stickyForward;
@@ -339,7 +382,8 @@ Real SpreadedBlackVolatilitySurfaceMoneynessSpotAbsolute::moneynessFromStrike(Ti
 }
 
 Real SpreadedBlackVolatilitySurfaceMoneynessSpotAbsolute::strikeFromMoneyness(Time t, Real moneyness,
-                                                                              const bool stickyReference) const {
+                                                                              const bool stickyReference,
+                                                                              const bool noRollDown) const {
     QL_REQUIRE(!stickyReference || !stickySpot_.empty(),
                "SpreadedBlackVolatilitySurfaceMoneynessSpot: stickySpot is empty");
     QL_REQUIRE(stickyReference || !movingSpot_.empty(),
@@ -359,7 +403,8 @@ Real SpreadedBlackVolatilitySurfaceMoneynessForwardAbsolute::moneynessFromStrike
                        "SpreadedBlackVolatilitySurfaceMoneynessForward: stickyDividendTs is empty");
             QL_REQUIRE(!stickyRiskFreeTs_.empty(),
                        "SpreadedBlackVolatilitySurfaceMoneynessForward: stickyRiskFreeTs is empty");
-            forward = stickySpot_->value() * stickyDividendTs_->discount(t) / stickyRiskFreeTs_->discount(t);
+            forward = stickySpot_->value() * getRollDownDiscount(stickyDividendTs_, t) /
+                      getRollDownDiscount(stickyRiskFreeTs_, t);
         } else {
             QL_REQUIRE(!movingSpot_.empty(), "SpreadedBlackVolatilitySurfaceMoneynessForward: movingSpot is empty");
             QL_REQUIRE(!movingDividendTs_.empty(),
@@ -373,7 +418,8 @@ Real SpreadedBlackVolatilitySurfaceMoneynessForwardAbsolute::moneynessFromStrike
 }
 
 Real SpreadedBlackVolatilitySurfaceMoneynessForwardAbsolute::strikeFromMoneyness(Time t, Real moneyness,
-                                                                                 const bool stickyReference) const {
+                                                                                 const bool stickyReference,
+                                                                                 const bool noRollDown) const {
     Real forward;
     if (stickyReference) {
         QL_REQUIRE(!stickySpot_.empty(), "SpreadedBlackVolatilitySurfaceMoneynessForward: stickySpot is empty");
@@ -381,7 +427,8 @@ Real SpreadedBlackVolatilitySurfaceMoneynessForwardAbsolute::strikeFromMoneyness
                    "SpreadedBlackVolatilitySurfaceMoneynessForward: stickyDividendTs is empty");
         QL_REQUIRE(!stickyRiskFreeTs_.empty(),
                    "SpreadedBlackVolatilitySurfaceMoneynessForward: stickyRiskFreeTs is empty");
-        forward = stickySpot_->value() * stickyDividendTs_->discount(t) / stickyRiskFreeTs_->discount(t);
+        forward = stickySpot_->value() * getRollDownDiscount(stickyDividendTs_, t, noRollDown) /
+                  getRollDownDiscount(stickyRiskFreeTs_, t, noRollDown);
     } else {
         QL_REQUIRE(!movingSpot_.empty(), "SpreadedBlackVolatilitySurfaceMoneynessForward: movingSpot is empty");
         QL_REQUIRE(!movingDividendTs_.empty(),

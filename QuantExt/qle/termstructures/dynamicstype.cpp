@@ -56,7 +56,18 @@ YieldCurveRollDown parseYieldCurveRollDown(const std::string& s) {
     if (it != m.end()) {
         return it->second;
     } else {
-        QL_FAIL("Decay mode \"" << s << "\" not recognized");
+        QL_FAIL("yield curve roll down mode \"" << s << "\" not recognized");
+    }
+}
+
+PriceCurveRollDown parsePriceCurveRollDown(const std::string& s) {
+    static std::map<std::string, PriceCurveRollDown> m = {{"Forward", Forward}, {"Spot", Spot}};
+
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("price curve roll down mode \"" << s << "\" not recognized");
     }
 }
 
@@ -90,6 +101,17 @@ std::ostream& operator<<(std::ostream& out, const YieldCurveRollDown t) {
         return out << "ConstantDiscounts";
     case ForwardForward:
         return out << "ForwardForward";
+    default:
+        return out << "Unknown yield curve roll down type (" << t << ")";
+    }
+}
+
+std::ostream& operator<<(std::ostream& out, const PriceCurveRollDown t) {
+    switch (t) {
+    case Forward:
+        return out << "Forward";
+    case Spot:
+        return out << "Spot";
     default:
         return out << "Unknown yield curve roll down type (" << t << ")";
     }

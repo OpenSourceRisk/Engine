@@ -20,15 +20,17 @@
 
 #include <qle/math/flatextrapolation.hpp>
 
+#include <ql/time/calendars/nullcalendar.hpp>
+
 using namespace QuantLib;
 
 namespace QuantExt {
 
 SpreadedPriceTermStructure::SpreadedPriceTermStructure(
     const QuantLib::Handle<PriceTermStructure>& referenceCurve, const std::vector<QuantLib::Real>& times,
-    const std::vector<QuantLib::Handle<QuantLib::Quote>>& priceSpreads)
-    : PriceTermStructure(referenceCurve->dayCounter()), referenceCurve_(referenceCurve), times_(times),
-      priceSpreads_(priceSpreads), data_(times.size()) {
+    const std::vector<QuantLib::Handle<QuantLib::Quote>>& priceSpreads, const PriceCurveRollDown priceCurveRollDown)
+    : PriceTermStructure(0, NullCalendar(), referenceCurve->dayCounter()), referenceCurve_(referenceCurve),
+      times_(times), priceSpreads_(priceSpreads), priceCurveRollDown_(priceCurveRollDown), data_(times.size()) {
     QL_REQUIRE(times_.size() > 1, "SpreadedPriceTermStructure: at least two times required");
     QL_REQUIRE(times_.size() == priceSpreads_.size(),
                "SpreadedPriceTermStructure: size of time and quote vectors do not match");
@@ -48,12 +50,6 @@ void SpreadedPriceTermStructure::update() {
     TermStructure::update();
 }
 
-const Date& SpreadedPriceTermStructure::referenceDate() const { return referenceCurve_->referenceDate(); }
-
-Calendar SpreadedPriceTermStructure::calendar() const { return referenceCurve_->calendar(); }
-
-Natural SpreadedPriceTermStructure::settlementDays() const { return referenceCurve_->settlementDays(); }
-
 QuantLib::Time SpreadedPriceTermStructure::minTime() const { return referenceCurve_->minTime(); }
 
 const QuantLib::Currency& SpreadedPriceTermStructure::currency() const { return referenceCurve_->currency(); }
@@ -61,6 +57,9 @@ const QuantLib::Currency& SpreadedPriceTermStructure::currency() const { return 
 std::vector<QuantLib::Date> SpreadedPriceTermStructure::pillarDates() const { return referenceCurve_->pillarDates(); }
 
 void SpreadedPriceTermStructure::performCalculations() const {
+    if (!bases_.empty() && basesReferenceDate_ != referenceDate()) {
+        updateBasesOffsets();
+    }
     for (Size i = 0; i < times_.size(); ++i) {
         QL_REQUIRE(!priceSpreads_[i].empty(), "SpreadedPriceTermStructure: quote at index " << i << " is empty");
         data_[i] = priceSpreads_[i]->value();
@@ -71,9 +70,41 @@ void SpreadedPriceTermStructure::performCalculations() const {
     interpolation_->update();
 }
 
-QuantLib::Real SpreadedPriceTermStructure::priceImpl(QuantLib::Time t) const {
+QuantLib::Real SpreadedPriceTermStructure::getPrice(QuantLib::Time t, bool includeSpread) const {
     calculate();
-    return referenceCurve_->price(t) + (*interpolation_)(t);
+    Real refPrice;
+    if (referenceDate() == referenceCurve_->referenceDate()) {
+        refPrice = referenceCurve_->price(t);
+    } else {
+        if (priceCurveRollDown_ == PriceCurveRollDown::Spot) {
+            refPrice = referenceCurve_->price(t);
+        } else if (priceCurveRollDown_ == PriceCurveRollDown::Forward) {
+            Time t0 = referenceCurve_->timeFromReference(referenceDate());
+            refPrice = referenceCurve_->price(t + t0);
+        } else {
+            QL_FAIL("SpreadedPriceTermStructure::getPrice(): yield curve rolldown not handled, internal error.");
+        }
+    }
+    return refPrice + (*interpolation_)(t);
+}
+
+QuantLib::Real SpreadedPriceTermStructure::priceImpl(QuantLib::Time t) const { return getPrice(t, true); }
+
+QuantLib::Real SpreadedPriceTermStructure::priceWithoutSpread(QuantLib::Time t) const { return getPrice(t, false); }
+
+void SpreadedPriceTermStructure::updateBasesOffsets() const {
+    basesOffset_.resize(bases_.size());
+    for (Size i = 0; i < bases_.size(); ++i) {
+        basesOffset_[i].resize(times_.size());
+        auto c = QuantLib::ext::dynamic_pointer_cast<SpreadedPriceTermStructure>(*bases_[i]);
+        QL_REQUIRE(
+            c,
+            "SpreadedDiscountCurve::updateBasesOffsets(): only SpreadedPriceTermStructure is allowed as base curve.");
+        for (Size j = 0; j < times_.size(); ++j) {
+            basesOffset_[i][j] = bases_[i].empty() ? 0.0 : c->priceWithoutSpread(times_[j]);
+        }
+    }
+    basesReferenceDate_ = referenceDate();
 }
 
 void SpreadedPriceTermStructure::makeThisCurveSpreaded(const std::vector<QuantLib::Handle<PriceTermStructure>>& bases,
@@ -90,14 +121,6 @@ void SpreadedPriceTermStructure::makeThisCurveSpreaded(const std::vector<QuantLi
 
     for (auto const& b : bases_)
         registerWith(b);
-
-    basesOffset_.resize(bases.size());
-    for (Size i = 0; i < bases_.size(); ++i) {
-        basesOffset_[i].resize(times_.size());
-        for (Size j = 0; j < times_.size(); ++j) {
-            basesOffset_[i][j] = bases_[i].empty() ? 0.0 : bases_[i]->price(times_[j]);
-        }
-    }
 
     update();
 }

@@ -156,7 +156,11 @@ void ScenarioSimMarketParameters::setDefaults() {
     interpolation_ = "LogLinear";
     extrapolation_ = "FlatFwd";
     yieldCurveRollDown_ = "ForwardForward";
+
     defaultCurveExtrapolation_ = "FlatFwd";
+    defaultCurveRollDown_ = "ForwardForward";
+
+    commodityCurveRollDown_ = "Forward";
 }
 
 void ScenarioSimMarketParameters::reset() {
@@ -443,6 +447,11 @@ void ScenarioSimMarketParameters::setCommodityCurveTenors(const string& commodit
     commodityCurveTenors_[commodityName] = p;
 }
 
+void ScenarioSimMarketParameters::setCommodityCurveRollDown(const string& r) {
+    commodityCurveRollDown_ = r;
+}
+
+
 void ScenarioSimMarketParameters::setDiscountCurveNames(vector<string> names) {
     ccys_ = names;
     addParamsName(RiskFactorKey::KeyType::DiscountCurve, names);
@@ -698,7 +707,8 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
         zeroInflationCapFloorVolDecayMode_ != rhs.zeroInflationCapFloorVolDecayMode_ ||
         capFloorVolIsAtm_ != rhs.capFloorVolIsAtm_ || capFloorVolDecayMode_ != rhs.capFloorVolDecayMode_ ||
         defaultCurveCalendars_ != rhs.defaultCurveCalendars_ || defaultTenors_ != rhs.defaultTenors_ ||
-        defaultCurveExtrapolation_ != rhs.defaultCurveExtrapolation_ || cdsVolExpiries_ != rhs.cdsVolExpiries_ ||
+        defaultCurveExtrapolation_ != rhs.defaultCurveExtrapolation_ ||
+        defaultCurveRollDown_ != rhs.defaultCurveRollDown_ || cdsVolExpiries_ != rhs.cdsVolExpiries_ ||
         cdsVolDecayMode_ != rhs.cdsVolDecayMode_ || cdsVolSimulateATMOnly_ != rhs.cdsVolSimulateATMOnly_ ||
         equityDividendTenors_ != rhs.equityDividendTenors_ || fxVolIsSurface_ != rhs.fxVolIsSurface_ ||
         fxVolExpiries_ != rhs.fxVolExpiries_ || fxVolDecayMode_ != rhs.fxVolDecayMode_ ||
@@ -1267,6 +1277,9 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         if (auto n = XMLUtils::getChildNode(nodeChild, "Extrapolation")) {
             defaultCurveExtrapolation_ = XMLUtils::getNodeValue(n);
         }
+        if (auto n = XMLUtils::getChildNode(nodeChild, "RollDown")) {
+            defaultCurveRollDown_ = XMLUtils::getNodeValue(n);
+        }
     }
 
     DLOG("Loading Equities Rates");
@@ -1497,7 +1510,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     if (nodeChild && XMLUtils::getChildNode(nodeChild)) {
         XMLNode* commoditySimNode = XMLUtils::getChildNode(nodeChild, "Simulate");
         setCommodityCurveSimulate(commoditySimNode ? parseBool(XMLUtils::getNodeValue(commoditySimNode)) : false);
-
+        commodityCurveRollDown_ = XMLUtils::getChildValue(nodeChild, "RollDown", false, "Forward");
         vector<string> commodityNames = XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true);
         setCommodityNames(commodityNames);
 
@@ -1705,6 +1718,9 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) const {
 
         if (!defaultCurveExtrapolation_.empty()) {
             XMLUtils::addChild(doc, defaultCurvesNode, "Extrapolation", defaultCurveExtrapolation_);
+        }
+        if (!defaultCurveRollDown_.empty()) {
+            XMLUtils::addChild(doc, defaultCurvesNode, "RollDown", defaultCurveRollDown_);
         }
     }
 
@@ -1987,6 +2003,7 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) const {
         DLOG("Writing commodity price curves");
         XMLNode* commodityPriceNode = XMLUtils::addChild(doc, marketNode, "Commodities");
         XMLUtils::addChild(doc, commodityPriceNode, "Simulate", commodityCurveSimulate());
+        XMLUtils::addChild(doc, commodityPriceNode, "RollDown", commodityCurveRollDown());
         XMLUtils::addChildren(doc, commodityPriceNode, "Names", "Name", commodityNames());
 
         // Write out tenors node for each commodity name

@@ -18,13 +18,17 @@
 
 #include <qle/termstructures/spreadedsurvivalprobabilitytermstructure.hpp>
 
+#include <ql/time/calendars/nullcalendar.hpp>
+
 namespace QuantExt {
 
 SpreadedSurvivalProbabilityTermStructure::SpreadedSurvivalProbabilityTermStructure(
     const Handle<DefaultProbabilityTermStructure>& referenceCurve, const std::vector<Time>& times,
-    const std::vector<Handle<Quote>>& spreads, const Extrapolation extrapolation)
-    : SurvivalProbabilityStructure(referenceCurve->dayCounter()), referenceCurve_(referenceCurve), times_(times),
-      spreads_(spreads), data_(times.size(), 1.0), extrapolation_(extrapolation) {
+    const std::vector<Handle<Quote>>& spreads, const Extrapolation extrapolation,
+    const YieldCurveRollDown yieldCurveRollDown)
+    : SurvivalProbabilityStructure(0, QuantLib::NullCalendar(), referenceCurve->dayCounter()),
+      referenceCurve_(referenceCurve), times_(times), spreads_(spreads), data_(times.size(), 1.0),
+      extrapolation_(extrapolation), yieldCurveRollDown_(yieldCurveRollDown) {
     QL_REQUIRE(times_.size() > 1, "at least two times required");
     QL_REQUIRE(times_.size() == spreads_.size(), "size of time and quote vectors do not match");
     QL_REQUIRE(times_[0] == 0.0, "First time must be 0, got " << times_[0]);
@@ -57,32 +61,38 @@ Probability SpreadedSurvivalProbabilityTermStructure::survivalProbabilityImpl(Ti
     calculate();
     if (QuantLib::close_enough(referenceCurve()->survivalProbability(t), 0.0))
         return 0.0;
+
+    Real baseSurvProb;
+    if (referenceDate() == referenceCurve_->referenceDate()) {
+        baseSurvProb = referenceCurve_->survivalProbability(t);
+    } else {
+        if (yieldCurveRollDown_ == YieldCurveRollDown::ConstantDiscounts) {
+            baseSurvProb = referenceCurve_->survivalProbability(t);
+        } else if (yieldCurveRollDown_ == YieldCurveRollDown::ForwardForward) {
+            Time t0 = referenceCurve_->timeFromReference(referenceDate());
+            baseSurvProb = referenceCurve_->survivalProbability(t + t0) / referenceCurve_->survivalProbability(t0);
+        } else {
+            QL_FAIL("SpreadedSurvivalProbabilityTermStructure::survivalProbabilityImpl(): yield curve rolldown not "
+                    "handled, internal error.");
+        }
+    }
+
     if (t <= this->times_.back())
-        return referenceCurve_->survivalProbability(t) * (*interpolation_)(t, true);
+        return baseSurvProb * (*interpolation_)(t, true);
     // flat fwd extrapolation
     Real tMax = this->times_.back();
     Real dMax = this->data_.back();
     if (extrapolation_ == Extrapolation::flatFwd) {
         Real instFwdMax = -(*interpolation_).derivative(tMax) / dMax;
-        return referenceCurve_->survivalProbability(t) * dMax * std::exp(-instFwdMax * (t - tMax));
+        return baseSurvProb * dMax * std::exp(-instFwdMax * (t - tMax));
     } else {
-        return referenceCurve_->survivalProbability(t) * std::pow(dMax, t / tMax);
+        return baseSurvProb * std::pow(dMax, t / tMax);
     }
 }
 
-DayCounter SpreadedSurvivalProbabilityTermStructure::dayCounter() const { return referenceCurve_->dayCounter(); }
-
 Date SpreadedSurvivalProbabilityTermStructure::maxDate() const { return referenceCurve_->maxDate(); }
 
-Time SpreadedSurvivalProbabilityTermStructure::maxTime() const { return referenceCurve_->maxTime(); }
-
-const Date& SpreadedSurvivalProbabilityTermStructure::referenceDate() const { return referenceCurve_->referenceDate(); }
-
-Calendar SpreadedSurvivalProbabilityTermStructure::calendar() const { return referenceCurve_->calendar(); }
-
-Natural SpreadedSurvivalProbabilityTermStructure::settlementDays() const { return referenceCurve_->settlementDays(); }
-
-std::vector<Time> SpreadedSurvivalProbabilityTermStructure::times() { return times_; }
+std::vector<Time> SpreadedSurvivalProbabilityTermStructure::times() const { return times_; }
 
 Handle<DefaultProbabilityTermStructure> SpreadedSurvivalProbabilityTermStructure::referenceCurve() const {
     return referenceCurve_;

@@ -902,6 +902,7 @@
               </xs:complexType>
             </xs:element>
 	    <xs:element type="defaultCurveExtrapolation" name="Extrapolation" minOccurs="0"/>
+	    <xs:element type="ycRollDown" name="RollDown" minOccurs="0"/>
           </xs:all>
         </xs:complexType>
       </xs:element>
@@ -1452,6 +1453,7 @@
         <xs:complexType>
           <xs:sequence>
             <xs:element type="bool" name="Simulate" maxOccurs="1" minOccurs="0"/>
+            <xs:element type="priceRollDown" name="RollDown" minOccurs="0"/>
             <xs:element name="Names" maxOccurs="1" minOccurs="1">
               <xs:complexType>
                 <xs:sequence>

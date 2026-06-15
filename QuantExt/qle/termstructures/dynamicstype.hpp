@@ -42,11 +42,15 @@ enum ReactionToTimeDecay { ConstantVariance, ForwardForwardVariance };
 //! Yield Curve Roll Down
 enum YieldCurveRollDown { ConstantDiscounts, ForwardForward };
 
+//! Price Curve Roll Down
+enum PriceCurveRollDown { Forward, Spot };
+
 /*! @} */
 
 Stickyness parseStickyness(const std::string& s);
 ReactionToTimeDecay parseDecayMode(const std::string& s);
 YieldCurveRollDown parseYieldCurveRollDown(const std::string& s);
+PriceCurveRollDown parsePriceCurveRollDown(const std::string& s);
 
 std::ostream& operator<<(std::ostream& out, const Stickyness t);
 std::ostream& operator<<(std::ostream& out, const ReactionToTimeDecay t);

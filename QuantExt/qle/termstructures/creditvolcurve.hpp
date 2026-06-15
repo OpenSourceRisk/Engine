@@ -24,12 +24,14 @@
 
 #include <qle/termstructures/creditcurve.hpp>
 #include <qle/termstructures/sviparametricvolatility.hpp>
+#include <qle/termstructures/dynamicstype.hpp>
 
 #include <ql/handle.hpp>
 #include <ql/math/interpolation.hpp>
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/quote.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
+
 #include <map>
 #include <tuple>
 
@@ -148,7 +150,8 @@ public:
     SpreadedCreditVolCurve(const QuantLib::Handle<CreditVolCurve> baseCurve, const std::vector<QuantLib::Date> expiries,
                            const std::vector<QuantLib::Handle<QuantLib::Quote>> spreads, const bool stickyMoneyness,
                            const std::vector<QuantLib::Period>& terms = {},
-                           const std::vector<QuantLib::Handle<CreditCurve>>& termCurves = {});
+                           const std::vector<QuantLib::Handle<CreditCurve>>& termCurves = {},
+                           ReactionToTimeDecay decayMode = ReactionToTimeDecay::ForwardForwardVariance);
 
     QuantLib::Real volatility(const QuantLib::Date& exerciseDate, const QuantLib::Real underlyingLength,
                               const QuantLib::Real strike, const Type& targetType) const override;
@@ -161,11 +164,14 @@ private:
     QuantLib::Handle<CreditVolCurve> baseCurve_;
     std::vector<QuantLib::Date> expiries_;
     std::vector<QuantLib::Handle<QuantLib::Quote>> spreads_;
-    const bool stickyMoneyness_;
+    bool stickyMoneyness_;
+    ReactionToTimeDecay decayMode_;
 
     mutable std::vector<QuantLib::Real> times_;
     mutable std::vector<QuantLib::Real> spreadValues_;
     mutable QuantLib::ext::shared_ptr<QuantLib::Interpolation> interpolatedSpreads_;
+    mutable QuantLib::Date originalRefDate_, actualRefDate_;
+    mutable QuantLib::Real t0_;
 };
 
 class CreditVolCurveWrapper : public CreditVolCurve {

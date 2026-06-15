@@ -87,7 +87,7 @@ DiscountFactor SpreadedDiscountCurve::getDiscount(Time t, bool includeSpread) co
             Time t0 = referenceCurve_->timeFromReference(referenceDate());
             refDf = referenceCurve_->discount(t + t0) / referenceCurve_->discount(t0);
         } else {
-            QL_FAIL("SpreadedDiscountCurve::discountImpl(): yield curve rolldown not handled, internal error.");
+            QL_FAIL("SpreadedDiscountCurve::getDiscount(): yield curve rolldown not handled, internal error.");
         }
     }
 

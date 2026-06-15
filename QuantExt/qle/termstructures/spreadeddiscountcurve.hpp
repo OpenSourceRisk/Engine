@@ -38,7 +38,7 @@ using namespace QuantLib;
   curve with a spread. The quotes are interpolated loglinearly. The spread curve is given in terms of
   times relative to the reference date, which means that the spread will float with a changing reference
   date in the reference curve. */
-class SpreadedDiscountCurve : public YieldTermStructure, public LazyObject {
+class SpreadedDiscountCurve final : public YieldTermStructure, public LazyObject {
 public:
     enum class Interpolation { logLinear, linearZero };
     enum class Extrapolation { flatFwd, flatZero };
@@ -57,11 +57,9 @@ public:
 
     Real discountWithoutSpread(Time t) const;
 
-protected:
+private:
     void performCalculations() const override;
     DiscountFactor discountImpl(Time t) const override;
-
-private:
     void updateBasesOffsets() const;
     Real getDiscount(Time t, bool includeSpread) const;
 

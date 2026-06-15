@@ -22,14 +22,14 @@
 
 namespace QuantExt {
 
-SpreadedBlackVolatilityCurve::SpreadedBlackVolatilityCurve(const Handle<BlackVolTermStructure>& referenceVol,
-                                                           const std::vector<Time>& times,
-                                                           const std::vector<Handle<Quote>>& volSpreads,
-                                                           const bool useAtmReferenceVolsOnly)
+SpreadedBlackVolatilityCurve::SpreadedBlackVolatilityCurve(
+    const Handle<BlackVolTermStructure>& referenceVol, const std::vector<Time>& times,
+    const std::vector<Handle<Quote>>& volSpreads, const bool useAtmReferenceVolsOnly,
+    const ReactionToTimeDecay decayMode)
     : BlackVolatilityTermStructure(referenceVol->businessDayConvention(), referenceVol->dayCounter(),
                                    referenceVol->volType(), referenceVol->shift()),
       referenceVol_(referenceVol), times_(times), volSpreads_(volSpreads),
-      useAtmReferenceVolsOnly_(useAtmReferenceVolsOnly), data_(times.size(), 0.0) {
+      useAtmReferenceVolsOnly_(useAtmReferenceVolsOnly), decayMode_(decayMode), data_(times.size(), 0.0) {
     registerWith(referenceVol_);
     QL_REQUIRE(times_.size() >= 2, "at least two times required");
     QL_REQUIRE(times_.size() == volSpreads_.size(), "size of time and quote vectors do not match");
@@ -42,7 +42,7 @@ SpreadedBlackVolatilityCurve::SpreadedBlackVolatilityCurve(const Handle<BlackVol
 
 Date SpreadedBlackVolatilityCurve::maxDate() const { return referenceVol_->maxDate(); }
 
-const Date& SpreadedBlackVolatilityCurve::referenceDate() const { return referenceVol_->referenceDate(); }
+const Date& SpreadedBlackVolatilityCurve::referenceDate() const { return actualRefDate_; }
 
 Calendar SpreadedBlackVolatilityCurve::calendar() const { return referenceVol_->calendar(); }
 
@@ -58,6 +58,9 @@ void SpreadedBlackVolatilityCurve::update() {
 }
 
 void SpreadedBlackVolatilityCurve::performCalculations() const {
+    originalRefDate_ = referenceVol_->referenceDate();
+    actualRefDate_ = referenceDate();
+    t0_ = timeFromReference(originalRefDate_);
     for (Size i = 0; i < times_.size(); ++i) {
         QL_REQUIRE(!volSpreads_[i].empty(), "SpreadedBlackVolatilityCurve: empty quote at index " << (i - 1));
         data_[i] = volSpreads_[i]->value();
@@ -67,8 +70,15 @@ void SpreadedBlackVolatilityCurve::performCalculations() const {
 
 Real SpreadedBlackVolatilityCurve::blackVolImpl(Time t, Real k) const {
     calculate();
-    return std::max(0.0,
-                    referenceVol_->blackVol(t, useAtmReferenceVolsOnly_ ? Null<Real>() : k) + (*interpolation_)(t));
+    Real effStrike = useAtmReferenceVolsOnly_ ? Null<Real>() : k;
+    if (originalRefDate_ == actualRefDate_ || decayMode_ == ReactionToTimeDecay::ConstantVariance) {
+        return std::max(0.0,
+                        referenceVol_->blackVol(t, effStrike) + (*interpolation_)(t));
+    } else {
+        return std::max(0.0, std::sqrt((referenceVol_->blackVariance(t + t0_, effStrike) -
+                                        referenceVol_->blackVariance(t0_, effStrike)) /
+                                       t));
+    }
 }
 
 } // namespace QuantExt

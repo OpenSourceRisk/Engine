@@ -567,16 +567,21 @@ const Date& ProxyCreditVolCurve::referenceDate() const { return source_->referen
 SpreadedCreditVolCurve::SpreadedCreditVolCurve(const Handle<CreditVolCurve> baseCurve, const std::vector<Date> expiries,
                                                const std::vector<Handle<Quote>> spreads, const bool stickyMoneyness,
                                                const std::vector<Period>& terms,
-                                               const std::vector<Handle<CreditCurve>>& termCurves)
+                                               const std::vector<Handle<CreditCurve>>& termCurves,
+                                               ReactionToTimeDecay decayMode)
     : CreditVolCurve(baseCurve->businessDayConvention(), baseCurve->dayCounter(), terms, termCurves, baseCurve->type()),
-      baseCurve_(baseCurve), expiries_(expiries), spreads_(spreads), stickyMoneyness_(stickyMoneyness) {
+      baseCurve_(baseCurve), expiries_(expiries), spreads_(spreads), stickyMoneyness_(stickyMoneyness),
+      decayMode_(decayMode) {
     for (auto const& s : spreads)
         registerWith(s);
 }
 
-const Date& SpreadedCreditVolCurve::referenceDate() const { return baseCurve_->referenceDate(); }
+const Date& SpreadedCreditVolCurve::referenceDate() const { return actualRefDate_; }
 
 void SpreadedCreditVolCurve::performCalculations() const {
+    originalRefDate_ = baseCurve_->referenceDate();
+    actualRefDate_ = referenceDate();
+    t0_ = timeFromReference(originalRefDate_);
     CreditVolCurve::performCalculations();
     times_.clear();
     spreadValues_.clear();
@@ -599,7 +604,15 @@ Real SpreadedCreditVolCurve::volatility(const Date& exerciseDate, const Real und
         effectiveStrike = this->strike(this->moneyness(strike, this->atmStrike(exerciseDate, underlyingLength)),
                                        baseCurve_->atmStrike(exerciseDate, underlyingLength));
     }
-    Real base = baseCurve_->volatility(exerciseDate, underlyingLength, effectiveStrike, targetType);
+    Real base;
+    if(actualRefDate_ == originalRefDate_ || decayMode_ == ReactionToTimeDecay::ConstantVariance) { 
+        base = baseCurve_->volatility(exerciseDate, underlyingLength, effectiveStrike, targetType);
+    } else {
+        Real t = timeFromReference(exerciseDate);
+        Real vol2 = baseCurve_->volatility(t + t0_, underlyingLength, effectiveStrike, targetType);
+        Real vol1 = baseCurve_->volatility(t0_, underlyingLength, effectiveStrike, targetType);
+        base = std::sqrt(std::max(1E-6, (vol2 * vol2 * (t + t0_) - vol1 * vol1 * t0_) / t));
+    }
     Real spread = interpolatedSpreads_->operator()(timeFromReference(exerciseDate));
     return base + spread;
 }

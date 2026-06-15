@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <qle/termstructures/dynamicstype.hpp>
+
 #include <ql/math/interpolation.hpp>
 #include <ql/math/interpolations/interpolation2d.hpp>
 #include <ql/patterns/lazyobject.hpp>
@@ -39,16 +41,15 @@ class SpreadedBlackVolatilitySurfaceMoneyness : public LazyObject, public BlackV
 public:
     /* The smile dynamics is defined in terms of the forward curve defined by the spot and moving term structure.
        The sticky spot and term structures define the sticky forward curve of the reference vol instead, which
-       should not react to the moving forward curve. */
-    SpreadedBlackVolatilitySurfaceMoneyness(const Handle<BlackVolTermStructure>& referenceVol,
-                                            const Handle<Quote>& movingSpot, const std::vector<Time>& times,
-                                            const std::vector<Real>& moneyness,
-                                            const std::vector<std::vector<Handle<Quote>>>& volSpreads,
-                                            const Handle<Quote>& stickySpot,
-                                            const Handle<YieldTermStructure>& stickyDividendTs,
-                                            const Handle<YieldTermStructure>& stickyRiskFreeTs,
-                                            const Handle<YieldTermStructure>& movingDividendTs,
-                                            const Handle<YieldTermStructure>& movingRiskFreeTs, bool stickyStrike);
+       should not react to the moving forward curve, and also not to reference date changes. */
+    SpreadedBlackVolatilitySurfaceMoneyness(
+        const Handle<BlackVolTermStructure>& referenceVol, const Handle<Quote>& movingSpot,
+        const std::vector<Time>& times, const std::vector<Real>& moneyness,
+        const std::vector<std::vector<Handle<Quote>>>& volSpreads, const Handle<Quote>& stickySpot,
+        const Handle<YieldTermStructure>& stickyDividendTs, const Handle<YieldTermStructure>& stickyRiskFreeTs,
+        const Handle<YieldTermStructure>& movingDividendTs, const Handle<YieldTermStructure>& movingRiskFreeTs,
+        bool stickyStrike, ReactionToTimeDecay decayMode = ReactionToTimeDecay::ForwardForwardVariance,
+        YieldCurveRollDown yieldCurveRollDown = YieldCurveRollDown::ForwardForward);
 
     Date maxDate() const override;
     const Date& referenceDate() const override;
@@ -61,8 +62,11 @@ public:
     const std::vector<QuantLib::Real>& moneyness() const;
 
 protected:
-    virtual Real strikeFromMoneyness(Time t, Real moneyness, const bool stickyReference) const = 0;
+    virtual Real strikeFromMoneyness(Time t, Real moneyness, const bool stickyReference,
+                                     const bool noRollDown = false) const = 0;
     virtual Real moneynessFromStrike(Time t, Real strike, const bool stickyReference) const = 0;
+
+    Real getRollDownDiscount(const Handle<YieldTermStructure>& movingDividendTs, Time t, bool noRollDown = false) const;
 
     Handle<BlackVolTermStructure> referenceVol_;
     Handle<Quote> movingSpot_;
@@ -75,11 +79,16 @@ protected:
     Handle<YieldTermStructure> movingDividendTs_;
     Handle<YieldTermStructure> movingRiskFreeTs_;
     bool stickyStrike_;
+    ReactionToTimeDecay decayMode_;
+    YieldCurveRollDown yieldCurveRollDown_;
 
     mutable Matrix data_;
     mutable Interpolation2D volSpreadSurface_;
 
 private:
+    mutable Date originalRefDate_, actualRefDate_;
+    mutable Real t0_;
+
     void performCalculations() const override;
     Real blackVolImpl(Time t, Real strike) const override;
 };
@@ -90,7 +99,7 @@ public:
     using SpreadedBlackVolatilitySurfaceMoneyness::SpreadedBlackVolatilitySurfaceMoneyness;
 
 private:
-    Real strikeFromMoneyness(Time t, Real moneyness, const bool stickyReference) const override;
+    Real strikeFromMoneyness(Time t, Real moneyness, const bool stickyReference, const bool noRollDown) const override;
     Real moneynessFromStrike(Time t, Real strike, const bool stickyReference) const override;
 };
 
@@ -100,7 +109,7 @@ public:
     using SpreadedBlackVolatilitySurfaceMoneyness::SpreadedBlackVolatilitySurfaceMoneyness;
 
 private:
-    Real strikeFromMoneyness(Time t, Real moneyness, const bool stickyReference) const override;
+    Real strikeFromMoneyness(Time t, Real moneyness, const bool stickyReference, const bool noRollDown) const override;
     Real moneynessFromStrike(Time t, Real strike, const bool stickyReference) const override;
 };
 
@@ -110,7 +119,7 @@ public:
     using SpreadedBlackVolatilitySurfaceMoneyness::SpreadedBlackVolatilitySurfaceMoneyness;
 
 private:
-    Real strikeFromMoneyness(Time t, Real moneyness, const bool stickyReference) const override;
+    Real strikeFromMoneyness(Time t, Real moneyness, const bool stickyReference, const bool noRollDown) const override;
     Real moneynessFromStrike(Time t, Real strike, const bool stickyReference) const override;
 };
 
@@ -120,7 +129,7 @@ public:
     using SpreadedBlackVolatilitySurfaceMoneyness::SpreadedBlackVolatilitySurfaceMoneyness;
 
 private:
-    Real strikeFromMoneyness(Time t, Real moneyness, const bool stickyReference) const override;
+    Real strikeFromMoneyness(Time t, Real moneyness, const bool stickyReference, const bool noRollDown) const override;
     Real moneynessFromStrike(Time t, Real strike, const bool stickyReference) const override;
 };
 
@@ -130,7 +139,7 @@ public:
     using SpreadedBlackVolatilitySurfaceMoneyness::SpreadedBlackVolatilitySurfaceMoneyness;
 
 private:
-    Real strikeFromMoneyness(Time t, Real moneyness, const bool stickyReference) const override;
+    Real strikeFromMoneyness(Time t, Real moneyness, const bool stickyReference, const bool noRollDown) const override;
     Real moneynessFromStrike(Time t, Real strike, const bool stickyReference) const override;
 };
 
@@ -140,7 +149,7 @@ public:
     using SpreadedBlackVolatilitySurfaceMoneyness::SpreadedBlackVolatilitySurfaceMoneyness;
 
 private:
-    Real strikeFromMoneyness(Time t, Real moneyness, const bool stickyReference) const override;
+    Real strikeFromMoneyness(Time t, Real moneyness, const bool stickyReference, const bool noRollDown) const override;
     Real moneynessFromStrike(Time t, Real strike, const bool stickyReference) const override;
 };
 
@@ -150,7 +159,7 @@ public:
     using SpreadedBlackVolatilitySurfaceMoneyness::SpreadedBlackVolatilitySurfaceMoneyness;
 
 private:
-    Real strikeFromMoneyness(Time t, Real moneyness, const bool stickyReference) const override;
+    Real strikeFromMoneyness(Time t, Real moneyness, const bool stickyReference, const bool noRollDown) const override;
     Real moneynessFromStrike(Time t, Real strike, const bool stickyReference) const override;
 };
 
