@@ -91,10 +91,10 @@ void FxDigitalCallSpreadEngine::calculate() const {
         return std::make_pair(option.NPV(), option.delta());
     };
 
-    Real priceLo = vanillaData(strikeLo).first;
-    Real deltaLo = vanillaData(strikeLo).second;
-    Real priceHi = vanillaData(strikeHi).first;
-    Real deltaHi = vanillaData(strikeHi).second;
+    auto lo = vanillaData(strikeLo);
+    auto hi = vanillaData(strikeHi);
+    Real priceLo = lo.first, deltaLo = lo.second;
+    Real priceHi = hi.first, deltaHi = hi.second;
 
     Real spreadValue;
     if (type == Option::Call)
