@@ -1961,6 +1961,8 @@ void XvaEngineCG::calculateSensitivities() {
             sensiResultCube_->set(cva + sensi, 0, 0, sample, 0);
         }
 
+        simMarket_->reset();
+
         timing_sensi_ = timer.elapsed().wall - timing_bwd_;
 
         DLOG("XvaEngineCG: finished running " << sensiResultCube_->samples() << " sensi scenarios, thereof "
