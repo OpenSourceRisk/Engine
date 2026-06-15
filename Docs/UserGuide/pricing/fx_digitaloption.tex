@@ -2,46 +2,57 @@
 \label{pricing:fx_digitaloption}
 
 Digital FX Options are cash or nothing instruments on an underlying FX rate.
-They can be either priced 
+They are always cash settled, allowing the cash payment date to be later than
+the option expiry date. They can be either priced
 \begin{itemize}
 \item analytically using formulas developed by \cite{Rubinstein_1991} 
 based on the Black-Scholes framework, see \cite{Haug_1997} Ch 4.19.2, or
 \item as call respectively put spreads
 \end{itemize}
 
-In the current implementation, digital FX Options are priced analytically as described in section
-\ref{pricing:fx_option_digital_analytical}.
+Both pricing approaches are available for the trade type \lstinline!FxDigitalOption!
+and are selected via the engine configuration:
+\begin{itemize}
+\item engine \lstinline!AnalyticCashSettledEuropeanEngine!: analytic pricing as
+described in section \ref{pricing:fx_option_digital_analytical} (default),
+\item engine \lstinline!CallSpreadEngine!: call/put spread replication as described
+in section \ref{pricing:fx_option_digital_callspread}.
+\end{itemize}
 
 \subsubsection*{Analytical Digital FX Option}\label{pricing:fx_option_digital_analytical}
 
 The NPV of a Digital FX option can be expressed as:
 $$
-\NPV = N \cdot P(T)\cdot \Phi(\omega\,d), \qquad d = \frac{1}{\sigma\sqrt{T}}\left(\ln\frac{F_T}{K} - \frac{\sigma^2 T}{2}\right)
+\NPV = N \cdot P(t_p)\cdot \Phi(\omega\,d), \qquad d = \frac{1}{\sigma\sqrt{T}}\left(\ln\frac{F_T}{K} - \frac{\sigma^2 T}{2}\right)
 $$
 where:
 \begin{itemize}
-\item $N$: the amount to be paid at expiration if the option is in-the-money
-\item $P(T)$: the discount factor for option expiry time $T$
+\item $N$: the amount to be paid at the payment date if the option is in-the-money
+\item $P(t_p)$: the discount factor for the cash payment date $t_p$
 \item $\Phi(\cdot)$: the cumulative standard normal distribution
 \item $\omega$: 1 for a call option, -1 for a put option
-\item $F_T$: the forward projected FX rate for time T at time 0  
+\item $F_T$: the forward projected FX rate for the expiry time $T$ at time 0  
 \item $K$: the strike FX rate
 \item $\sigma$: the volatility FX forward rate
 \end{itemize}
+
+If the option has already expired but the cash payment has not yet been made
+($t \geq T$, $t < t_p$), the payoff is fixed and is simply discounted from the
+payment date $t_p$.
 
 \subsubsection*{Digital FX Option as Call/Put Spread}\label{pricing:fx_option_digital_callspread}
 
 Alternatively, when a more accurate reflection of volatility smiles is a priority, 
 Digital FX options can be priced using call/put spreads (i.e. by approximating 
 the digital FX option payment with the difference between two European vanilla 
-FX options). Given a digital call/put option with strike rate K, the two v
-anilla call/put options will have strikes $K_- \leq K$ and $K_+\geq K$, where 
-$K_\pm=K \pm\epsilon$ and $\epsilon$ is small.
+FX options). Given a digital call/put option with strike rate K, the two
+vanilla call/put options will have strikes $K_- \leq K$ and $K_+\geq K$, where 
+$K_\pm=K \pm \epsilon/2$ and $\epsilon$ is a small spread width centred on $K$.
 
 The present value of digital FX call and put options with strike K and payout 
 amount $M$ in currency A, can be expressed in terms of bought and sold vanilla 
 FX calls/puts to exchange amount $N$ of currency B for amount $K_\pm \cdot N$ 
-in currency A. All PV?s are expressed in currency A:
+in currency A. All PVs are expressed in currency A:
 \begin{align*}
 \NPV_{DigitalCall}(M,K) &\approx\NPV_{Call}(N,K_-) - \NPV_{Call}(N,K_+) \\
 \NPV_{DigitalPut}(M,K) &\approx\NPV_{Put}(N,K_+) - \NPV_{Put}(N,K_-) 
@@ -50,8 +61,17 @@ where:
 \begin{itemize}
 \item $M$: the amount in currency A to be paid at expiration if the digital 
 call/put is in-the-money
-\item $N = M/(K_+ - K_-)$
+\item $N = M/(K_+ - K_-) = M/\epsilon$
 \end{itemize}
 
-The European vanilla FX options are priced with the Garman-Kohlhagen / Black76
-analytic formula (Section \ref{pricing:fx_option}).
+The spread width $\epsilon$ is configurable via the engine parameter
+\lstinline!CallSpreadEps! (default $10^{-4}$). The European vanilla FX options
+are priced with the Garman-Kohlhagen / Black76 analytic formula (Section
+\ref{pricing:fx_option}), evaluated at strikes $K_\pm$ so that the market
+volatility smile is naturally incorporated.
+
+As for the analytic engine, the digital is cash settled: the call/put spread is
+priced assuming payment on the option expiry date $T$ and the deferred payment to
+$t_p$ is then accounted for by multiplying with the forward discount factor
+$P(T,t_p)$ between expiry and payment date. If the option has already expired
+($t \geq T$), the payoff is fixed and is discounted from the payment date $t_p$.

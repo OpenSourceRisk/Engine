@@ -127,10 +127,10 @@ void FxDigitalOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engi
                                                                         paymentDate, option_.isAutomaticExercise(),
                                                                         fxIndex, exercised, exercisePrice);
         // set pricing engines
-        QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("FxDigitalOptionEuropeanCS");
+        QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("FxDigitalOption");
         QL_REQUIRE(builder, "No builder found for " << tradeType_);
-        QuantLib::ext::shared_ptr<FxDigitalCSOptionEngineBuilder> fxOptBuilder =
-            QuantLib::ext::dynamic_pointer_cast<FxDigitalCSOptionEngineBuilder>(builder);
+        QuantLib::ext::shared_ptr<FxDigitalOptionEngineBuilderBase> fxOptBuilder =
+            QuantLib::ext::dynamic_pointer_cast<FxDigitalOptionEngineBuilderBase>(builder);
         vanilla->setPricingEngine(fxOptBuilder->engine(forCcy, domCcy, flipResults));
         setSensitivityTemplate(*fxOptBuilder);
         addProductModelEngine(*fxOptBuilder);

@@ -468,7 +468,7 @@ void dataBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(CommodityAmericanCSOptionBAWEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CapFloorEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(FxDigitalOptionEngineBuilder, false)
-    ORE_REGISTER_ENGINE_BUILDER(FxDigitalCSOptionEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(FxDigitalOptionCallSpreadEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CommoditySwaptionAnalyticalEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CommoditySwaptionMonteCarloEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(FxDigitalBarrierOptionEngineBuilder, false)
