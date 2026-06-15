@@ -30,6 +30,14 @@
 #include <qle/math/logquadraticinterpolation.hpp>
 #include <qle/math/discretedistribution.hpp>
 #include <qle/math/bucketeddistribution.hpp>
+#include <qle/math/covariancesalvage.hpp>
+#include <qle/math/matrixfunctions.hpp>
+#include <qle/math/fillemptymatrix.hpp>
+#include <qle/math/stabilisedglls.hpp>
+#include <qle/math/nadarayawatson.hpp>
+#include <qle/math/trace.hpp>
+#include <cmath>
+#include <functional>
 #include <sstream>
 
 struct SafeInterpolationHelper : public QuantLib::Interpolation {
@@ -116,6 +124,58 @@ public:
                                  QuantLib::Size skip = 0)
     : SafeLogQuadraticInterpolationData(x, y),
       QuantExt::LogQuadraticInterpolation(x_.begin(), x_.end(), y_.begin(), x_mul, x_offset, y_mul, y_offset, skip) {}
+};
+
+struct GaussianKernel {
+    QuantLib::Real bandwidth_;
+    explicit GaussianKernel(QuantLib::Real bandwidth) : bandwidth_(bandwidth) {}
+    QuantLib::Real operator()(QuantLib::Real x) const {
+        const QuantLib::Real z = x / bandwidth_;
+        return std::exp(-0.5 * z * z);
+    }
+};
+
+struct SafeNadarayaWatsonData {
+    std::vector<QuantLib::Real> x_, y_;
+    QuantLib::Real bandwidth_;
+    SafeNadarayaWatsonData(const std::vector<QuantLib::Real>& x, const std::vector<QuantLib::Real>& y,
+                           QuantLib::Real bandwidth)
+        : x_(x), y_(y), bandwidth_(bandwidth) {
+        QL_REQUIRE(!x_.empty(), "NadarayaWatson: x must not be empty");
+        QL_REQUIRE(x_.size() == y_.size(), "NadarayaWatson: x and y size mismatch");
+        QL_REQUIRE(bandwidth_ > 0.0, "NadarayaWatson: bandwidth must be positive");
+    }
+};
+
+class SafeNadarayaWatson : private SafeNadarayaWatsonData, public QuantExt::NadarayaWatson {
+public:
+    SafeNadarayaWatson(const std::vector<QuantLib::Real>& x, const std::vector<QuantLib::Real>& y,
+                       QuantLib::Real bandwidth = 1.0)
+        : SafeNadarayaWatsonData(x, y, bandwidth),
+          QuantExt::NadarayaWatson(x_.begin(), x_.end(), y_.begin(), GaussianKernel(bandwidth_)) {}
+};
+
+struct SafeStabilisedGLLSData {
+    std::vector<QuantLib::Real> x_, y_;
+    std::vector<std::function<QuantLib::Real(QuantLib::Real)>> basis_;
+    SafeStabilisedGLLSData(const std::vector<QuantLib::Real>& x, const std::vector<QuantLib::Real>& y,
+                           QuantLib::Size polynomialOrder)
+        : x_(x), y_(y) {
+        QL_REQUIRE(!x_.empty(), "StabilisedGLLS: x must not be empty");
+        QL_REQUIRE(x_.size() == y_.size(), "StabilisedGLLS: x and y size mismatch");
+        basis_.reserve(polynomialOrder + 1);
+        for (QuantLib::Size i = 0; i <= polynomialOrder; ++i) {
+            basis_.push_back([i](QuantLib::Real xValue) { return std::pow(xValue, static_cast<int>(i)); });
+        }
+    }
+};
+
+class SafeStabilisedGLLS : private SafeStabilisedGLLSData, public QuantExt::StabilisedGLLS {
+public:
+    SafeStabilisedGLLS(const std::vector<QuantLib::Real>& x, const std::vector<QuantLib::Real>& y,
+                       QuantLib::Size polynomialOrder = 2,
+                       QuantExt::StabilisedGLLS::Method method = QuantExt::StabilisedGLLS::Method::MeanStdDev)
+        : SafeStabilisedGLLSData(x, y, polynomialOrder), QuantExt::StabilisedGLLS(x_, y_, basis_, method) {}
 };
 
 #include <qle/math/randomvariable.hpp>
@@ -453,6 +513,97 @@ namespace QuantExt {
         return factor * (*self);
     }
 }
+
+// ===== Statistical Utilities =====
+
+%shared_ptr(QuantExt::CovarianceSalvage)
+%shared_ptr(QuantExt::NoCovarianceSalvage)
+%shared_ptr(QuantExt::SpectralCovarianceSalvage)
+%nodefaultctor QuantExt::CovarianceSalvage;
+
+%ignore QuantExt::CovarianceSalvage::salvage;
+%ignore QuantExt::NoCovarianceSalvage::salvage;
+%ignore QuantExt::SpectralCovarianceSalvage::salvage;
+
+namespace QuantExt {
+    class CovarianceSalvage {
+      public:
+        virtual ~CovarianceSalvage();
+    };
+
+    class NoCovarianceSalvage : public CovarianceSalvage {
+      public:
+        NoCovarianceSalvage();
+    };
+
+    class SpectralCovarianceSalvage : public CovarianceSalvage {
+      public:
+        SpectralCovarianceSalvage();
+    };
+
+    bool supports_Logm();
+    bool supports_Expm();
+    QuantLib::Matrix Logm(const QuantLib::Matrix& m);
+    QuantLib::Matrix Expm(const QuantLib::Matrix& m);
+    QuantLib::Real Trace(const QuantLib::Matrix& m);
+}
+
+%extend QuantExt::CovarianceSalvage {
+    QuantLib::Matrix salvageMatrix(const QuantLib::Matrix& m) const {
+        return self->salvage(m).first;
+    }
+    QuantLib::Matrix salvageSqrt(const QuantLib::Matrix& m) const {
+        return self->salvage(m).second;
+    }
+}
+
+%inline %{
+namespace QuantExt {
+    QuantLib::Matrix fillIncompleteMatrix(const QuantLib::Matrix& input, bool interpRows, QuantLib::Real blank) {
+        QuantLib::Matrix out = input;
+        QuantExt::fillIncompleteMatrix(out, interpRows, blank);
+        return out;
+    }
+}
+%}
+
+%rename(None_) SafeStabilisedGLLS::None;
+%shared_ptr(QuantExt::StabilisedGLLS)
+%shared_ptr(SafeStabilisedGLLS)
+%rename(StabilisedGLLS) SafeStabilisedGLLS;
+class SafeStabilisedGLLS {
+  public:
+    enum Method {
+        None,
+        MaxAbs,
+        MeanStdDev
+    };
+    SafeStabilisedGLLS(const std::vector<QuantLib::Real>& x, const std::vector<QuantLib::Real>& y,
+                       QuantLib::Size polynomialOrder = 2,
+                       SafeStabilisedGLLS::Method method = SafeStabilisedGLLS::MeanStdDev);
+    const QuantLib::Array& transformedCoefficients() const;
+    const QuantLib::Array& transformedResiduals() const;
+    const QuantLib::Array& transformedStandardErrors() const;
+    const QuantLib::Array& transformedError() const;
+    const QuantLib::Array& xMultiplier() const;
+    const QuantLib::Array& xShift() const;
+    QuantLib::Real yMultiplier() const;
+    QuantLib::Real yShift() const;
+    QuantLib::Size size() const;
+    QuantLib::Size dim() const;
+};
+
+%shared_ptr(QuantExt::NadarayaWatson)
+%shared_ptr(SafeNadarayaWatson)
+%rename(NadarayaWatson) SafeNadarayaWatson;
+class SafeNadarayaWatson {
+  public:
+    SafeNadarayaWatson(const std::vector<QuantLib::Real>& x, const std::vector<QuantLib::Real>& y,
+                       QuantLib::Real bandwidth = 1.0);
+    %rename(__call__) operator();
+    QuantLib::Real operator()(QuantLib::Real x) const;
+    QuantLib::Real standardDeviation(QuantLib::Real x) const;
+};
 
 // ===== RandomVariable and Filter Suite =====
 
