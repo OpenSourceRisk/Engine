@@ -105,13 +105,13 @@ int main(int argc, char** argv) {
     }
 
     if (vm.count("help")) {
-        cout << "usage: ORE --input path/to/ore.xml [--output OutputDir] [--<setupParam> <value> ...]" << endl
+        cout << "usage: ORE path/to/ore.xml" << endl
+             << "       ORE --input path/to/ore.xml [--output OutputDir] [--<setupParam> <value> ...]" << endl
              << endl
              << desc << endl;
         return 0;
     }
 
-    // Collect any additional --<name> <value> options as overrides for the "setup" group.
     std::map<std::string, std::string> setupOverrides;
     for (std::size_t i = 0; i < unrecognized.size(); ++i) {
         const std::string& token = unrecognized[i];
@@ -131,6 +131,9 @@ int main(int argc, char** argv) {
                 return -1;
             }
             setupOverrides[key] = value;
+        } else if (inputFile.empty()) {
+            // A single bare token is treated as the input file (backward compatible positional form).
+            inputFile = token;
         } else {
             cout << "error parsing command line: unexpected argument '" << token << "'" << endl << endl
                  << desc << endl;
@@ -140,7 +143,8 @@ int main(int argc, char** argv) {
 
     if (inputFile.empty()) {
         cout << endl
-             << "usage: ORE --input path/to/ore.xml [--output OutputDir] [--<setupParam> <value> ...]" << endl
+             << "usage: ORE path/to/ore.xml" << endl
+             << "       ORE --input path/to/ore.xml [--output OutputDir] [--<setupParam> <value> ...]" << endl
              << endl
              << desc << endl;
         return -1;
