@@ -73,7 +73,7 @@ std::pair<std::vector<Date>, std::vector<Date>> coarsenDateGrid(const std::vecto
 
     // keep all dates <= refDate (and corresponding unadjusted dates if provided).
     auto d = dates.begin();
-    if (!unadjDates.empty()) {
+    if (unadjDates.empty()) {
         for (; d != dates.end() && *d <= refDate; ++d)
             result.push_back(*d);
     } else {
