@@ -375,6 +375,7 @@ class OreExample(object):
 def run_example(example):
     current_dir = os.getcwd()
     print_on_console("Running: " + example)
+    exit_code = 1
     try:
         os.chdir(os.path.join(os.getcwd(), example))
         filename = "run.py"
