@@ -1369,16 +1369,6 @@ void OREAppInputParameters::loadParameters() {
         } else {
             WLOG("ScenarioSimMarket parameters for sensitivity stress testing not loaded");
         }
-
-        tmp = params_->getString("sensitivityStress", "stressConfigFile", false);
-        if (!tmp.empty()) {
-            string file = (setupVariables_.inputPath_ / tmp).generic_string();
-            LOG("Load sensitivity stress test scenario data from file" << file);
-            setSensitivityStressScenarioDataFromFile(file);
-        } else {
-            WLOG("Sensitivity Stress scenario data not loaded");
-        }
-
         tmp = params_->getString("sensitivityStress", "sensitivityConfigFile", false);
         if (tmp != "") {
             string file = (setupVariables_.inputPath_ / tmp).generic_string();
@@ -1388,14 +1378,6 @@ void OREAppInputParameters::loadParameters() {
             WLOG("Sensitivity scenario data not loaded, don't support par stress tests");
         }
 
-        tmp = params_->getString("sensitivityStress", "calcBaseScenario", false);
-        if (!tmp.empty()) {
-            bool calcBaseScenario = false;
-            bool success = tryParse<bool>(tmp, calcBaseScenario, parseBool);
-            if (success) {
-                setSensitivityStressCalculateBaseScenario(calcBaseScenario);
-            }
-        }
     }
 
     /*************

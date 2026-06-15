@@ -943,7 +943,6 @@ OutputParameters::OutputParameters(const ext::shared_ptr<Parameters>& params) {
     stressTestCashflowFileName_ = params->getString("stress", "scenarioCashflowOutputFile", false);
     stressZeroScenarioDataFileName_ = params->getString("stress", "stressZeroScenarioDataFile", false);
     xvaStressTestFileName_ = params->getString("xvaStress", "scenarioOutputFile", false);
-    sensitivityStressTestFileName_ = params->getString("sensitivityStress", "scenarioOutputFile", false);
     varFileName_ = params->getString("parametricVar", "outputFile", false);
     if (varFileName_.empty())
         varFileName_ = params->getString("historicalSimulationVar", "outputFile", false);
