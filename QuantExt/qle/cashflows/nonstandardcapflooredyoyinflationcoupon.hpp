@@ -149,6 +149,8 @@ public:
     NonStandardYoYInflationLeg& withRateCurve(const Handle<YieldTermStructure>& rateCurve);
     NonStandardYoYInflationLeg& withInflationNotional(bool addInflationNotional_);
     NonStandardYoYInflationLeg& withObservationInterpolation(QuantLib::CPI::InterpolationType interpolation);
+    NonStandardYoYInflationLeg& withPaymentDates(const std::vector<QuantLib::Date>& paymentDates);
+    NonStandardYoYInflationLeg& withPaymentLag(QuantLib::Integer lag);
     operator Leg() const;
 
 private:
@@ -166,6 +168,8 @@ private:
     Handle<YieldTermStructure> rateCurve_;
     bool addInflationNotional_;
     QuantLib::CPI::InterpolationType interpolation_;
+    std::vector<QuantLib::Date> paymentDates_;
+    QuantLib::Integer paymentLag_;
 };
 
 } // namespace QuantExt

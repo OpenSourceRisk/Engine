@@ -54,9 +54,13 @@ Allowable values:  See Table \ref{tab:currency} \lstinline!Currency!. When \lsti
 
 \item PaymentCalendar [Optional]: The payment calendar of the leg coupons. The \lstinline!PaymentCalendar! is used in conjunction with the \lstinline!PaymentConvention!, \lstinline!PaymentLag! and \lstinline!NotionalPaymentLag! to determine the payments dates, unless the \lstinline!PaymentDates! node is used which defines the payment dates explicitly.
 
-Allowable values: See Table \ref{tab:calendar} \lstinline!Calendar!. If left blank or omitted, defaults to the calendar in the \lstinline!ScheduleData! node, unless \lstinline!LegType! is \emph{Floating} and \lstinline!Index! is OIS, in which case this defaults to the index calendar. 
-
-The \lstinline!PaymentCalendar! calendar field is currently only supported for \lstinline!LegType! \emph{Floating} (with an IBOR, BMA or OIS underlying index), \emph{CMS}, \emph{CMSSpread}, \emph{DigitalCMSSpread}, \emph{Equity}, \emph{YY}, \emph{CPI}, \emph{Fixed}, \emph{ZeroCouponFixed}, \emph{DigitalCMS}. For unsupported legs it defaults to the schedule calendar, and if no calendar is set in the \lstinline!ScheduleData! node (for dates-based schedules the calendar field is optional), the \emph{NullCalendar} is used. 
+Allowable values: See Table \ref{tab:calendar} \lstinline!Calendar!.
+If left blank or omitted, it defaults to the calendar in the \lstinline!ScheduleData! node,
+unless \lstinline!LegType! is \lstinline!Floating! and \lstinline!Index! is OIS,
+in which case this defaults to the index fixing calendar.
+If the PaymentCalendar defaults to the calendar in the \lstinline!ScheduleData! node, 
+as is the case for non-OIS indices on floating legs, and no calendar is set in ScheduleData 
+(for dates-based schedules the calendar field is optional), the \lstinline!NullCalendar! is used.
 
 \item PaymentConvention: The payment convention of the leg coupons. 
 
@@ -64,26 +68,7 @@ Allowable values: See Table \ref{tab:convention}.
 
 \item \lstinline!PaymentLag! [optional]:
 The lag between the, adjusted or unadjusted (see \lstinline!PaymentLagAnchor! below), reference schedule period end 
-date and the payment date. The payment lag applies to the coupons on the following legs:
-  \begin{itemize}
-  \item Fixed
-  \item Equity
-  \item Floating with Ibor, OIS, BMA or SIFMA indices
-  \item CMS
-  \item CMS Spread
-  \item CPI
-  \item Zero Coupon Fixed
-  \end{itemize}
-
-PaymentLag is not currently supported for:
-  \begin{itemize}
-  \item cap floor floating legs that have Ibor coupons with sub periods i.e.\ 
-        where \lstinline!HasSubPeriods! is set to \lstinline!true!
-  \item cap floor floating legs with averaged overnight coupons i.e.\ 
-        where \lstinline!IsAveraged! is set to \lstinline!true!
-  \item range accrual legs
-  \item year on year inflation legs
-  \end{itemize}
+date and the payment date.
 
 Allowable values: Usually a number of days but any valid period is allowed.
 In other words, an integer followed by a string where the last character must be one of 

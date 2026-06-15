@@ -1564,16 +1564,18 @@ Leg makeIborLeg(const LegData& data, const QuantLib::ext::shared_ptr<IborIndex>&
         QL_REQUIRE(floatData->caps().empty() && floatData->floors().empty(),
                    "SubPeriodsLegs does not support caps or floors");
         QL_REQUIRE(!isInArrears, "SubPeriodLegs do not support in arrears fixings");
+        auto avgType = floatData->isAveraged() ? SubPeriodsCoupon1::Averaging : SubPeriodsCoupon1::Compounding;
         Leg leg = QuantExt::SubPeriodsLeg1(schedule, index)
                       .withNotionals(notionals)
                       .withPaymentDayCounter(dc)
                       .withPaymentAdjustment(paymentConvention)
                       .withGearings(gearings)
                       .withSpreads(spreads)
-                      .withType(floatData->isAveraged() ? QuantExt::SubPeriodsCoupon1::Averaging
-                                                        : QuantExt::SubPeriodsCoupon1::Compounding)
-                      .includeSpread(floatData->includeSpread());
-        QuantExt::setCouponPricer(leg, QuantLib::ext::make_shared<QuantExt::SubPeriodsCouponPricer1>());
+                      .withType(avgType)
+                      .includeSpread(floatData->includeSpread())
+                      .withPaymentLag(paymentLagDays)
+                      .withPaymentDates(paymentDates);
+        QuantExt::setCouponPricer(leg, ext::make_shared<QuantExt::SubPeriodsCouponPricer1>());
         /* TODO: add stub interpolation */
         return leg;
     }
@@ -2197,8 +2199,9 @@ Leg makeYoYLeg(const LegData& data, const QuantLib::ext::shared_ptr<InflationInd
     BusinessDayConvention paymentConvention;
     PaymentLag paymentLag;
     vector<Date> paymentDates;
+    Integer paymentLagDays = 0;
     populatePaymentData(data, schedule, paymentSchedule, openEndDateReplacement,
-        paymentCalendar, paymentConvention, paymentLag, paymentDates);
+        paymentCalendar, paymentConvention, paymentLag, paymentDates, paymentLagDays);
 
     QuantLib::ext::shared_ptr<InflationSwapConvention> cpiSwapConvention = nullptr;
 
@@ -2248,7 +2251,8 @@ Leg makeYoYLeg(const LegData& data, const QuantLib::ext::shared_ptr<InflationInd
                 .withInflationNotional(addInflationNotional)
                 .withRateCurve(engineFactory->market()->discountCurve(
                     data.currency(), engineFactory->configuration(MarketContext::pricing)))
-                .withPaymentDates(paymentDates);
+                .withPaymentDates(paymentDates)
+                .withPaymentLag(paymentLagDays);
         QL_DEPRECATED_ENABLE_WARNING
         if (couponCap)
             yoyLeg.withCaps(buildScheduledVector(yoyLegData->caps(), yoyLegData->capDates(), schedule));
@@ -2297,7 +2301,7 @@ Leg makeYoYLeg(const LegData& data, const QuantLib::ext::shared_ptr<InflationInd
         auto zcIndex = QuantLib::ext::dynamic_pointer_cast<ZeroInflationIndex>(index);
         QL_REQUIRE(zcIndex, "Need a Zero Coupon Inflation Index");
         QuantExt::NonStandardYoYInflationLeg yoyLeg =
-            QuantExt::NonStandardYoYInflationLeg(schedule, schedule.calendar(), zcIndex, observationLag)
+            QuantExt::NonStandardYoYInflationLeg(schedule, paymentCalendar, zcIndex, observationLag)
                 .withNotionals(notionals)
                 .withPaymentDayCounter(dc)
                 .withPaymentAdjustment(paymentConvention)
@@ -2307,7 +2311,9 @@ Leg makeYoYLeg(const LegData& data, const QuantLib::ext::shared_ptr<InflationInd
                 .withRateCurve(engineFactory->market()->discountCurve(
                     data.currency(), engineFactory->configuration(MarketContext::pricing)))
                 .withInflationNotional(addInflationNotional)
-                .withObservationInterpolation(interpolation);
+                .withObservationInterpolation(interpolation)
+                .withPaymentDates(paymentDates)
+                .withPaymentLag(paymentLagDays);
 
         if (couponCap)
             yoyLeg.withCaps(buildScheduledVector(yoyLegData->caps(), yoyLegData->capDates(), schedule));
@@ -2365,7 +2371,22 @@ Leg makeRangeAccrualLeg(const LegData& data, const QuantLib::ext::shared_ptr<Ibo
     auto iborIndex = QuantLib::ext::dynamic_pointer_cast<IborIndex>(index);
     QL_REQUIRE(iborIndex, "makeRangeAccrualLeg: expected IborIndex for " << floatData->index());
 
-    Schedule schedule = makeSchedule(data.schedule(), openEndDateReplacement);
+    // Create schedules.
+    Schedule paymentSchedule;
+    Schedule schedule;
+    ScheduleBuilder scheduleBuilder;
+    scheduleBuilder.add(schedule, data.schedule());
+    scheduleBuilder.add(paymentSchedule, data.paymentSchedule());
+    scheduleBuilder.makeSchedules(openEndDateReplacement);
+
+    // Get payment related data.
+    Calendar paymentCalendar;
+    BusinessDayConvention paymentConvention;
+    PaymentLag paymentLag;
+    vector<Date> paymentDates;
+    Integer paymentLagDays = 0;
+    populatePaymentData(data, schedule, paymentSchedule, openEndDateReplacement,
+        paymentCalendar, paymentConvention, paymentLag, paymentDates, paymentLagDays);
 
     vector<double> notionals =
         buildScheduledVectorNormalised(data.notionals(), data.notionalDates(), schedule, 0.0);
@@ -2412,7 +2433,10 @@ Leg makeRangeAccrualLeg(const LegData& data, const QuantLib::ext::shared_ptr<Ibo
                       .withLowerTriggers(lowerBound)
                       .withUpperTriggers(upperBound)
                       .withObservationTenor(1 * Days)
-                      .withObservationConvention(bdc);
+                      .withObservationConvention(bdc)
+                      .withPaymentCalendar(paymentCalendar)
+                      .withPaymentDates(paymentDates)
+                      .withPaymentLag(paymentLagDays);
 
     // Attach per-coupon range accrual pricers with correct expiry/payment smile sections.
     // Only attach pricers to live coupons (payment date > today). Past coupons are fully
