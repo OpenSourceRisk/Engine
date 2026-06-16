@@ -25,6 +25,7 @@
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/yield/forwardcurve.hpp>
 #include <ql/utilities/dataformatters.hpp>
+#include <ql/time/calendars/nullcalendar.hpp>
 
 #include <boost/make_shared.hpp>
 
@@ -39,8 +40,9 @@ SpreadedBlackVolatilitySurfaceMoneyness::SpreadedBlackVolatilitySurfaceMoneyness
     const Handle<YieldTermStructure>& stickyRiskFreeTs, const Handle<YieldTermStructure>& movingDividendTs,
     const Handle<YieldTermStructure>& movingRiskFreeTs, bool stickyStrike, ReactionToTimeDecay decayMode,
     YieldCurveRollDown yieldCurveRollDown)
-    : BlackVolatilityTermStructure(0, referenceVol->calendar(), referenceVol->businessDayConvention(),
-                                   referenceVol->dayCounter(), referenceVol->volType(), referenceVol->shift()),
+    : BlackVolatilityTermStructure(0, !referenceVol->calendar().empty() ? referenceVol->calendar() : NullCalendar(),
+                                   referenceVol->businessDayConvention(), referenceVol->dayCounter(),
+                                   referenceVol->volType(), referenceVol->shift()),
       referenceVol_(referenceVol), movingSpot_(movingSpot), times_(times), moneyness_(moneyness),
       volSpreads_(volSpreads), stickySpot_(stickySpot), stickyDividendTs_(stickyDividendTs),
       stickyRiskFreeTs_(stickyRiskFreeTs), movingDividendTs_(movingDividendTs), movingRiskFreeTs_(movingRiskFreeTs),

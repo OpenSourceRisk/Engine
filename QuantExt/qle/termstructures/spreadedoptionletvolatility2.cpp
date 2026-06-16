@@ -24,6 +24,8 @@
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
 #include <ql/math/interpolations/flatextrapolation2d.hpp>
 
+#include <ql/time/calendars/nullcalendar.hpp>
+
 namespace QuantExt {
 
 SpreadedOptionletVolatility2::SpreadedOptionletVolatility2(const Handle<OptionletVolatilityStructure>& baseVol,
@@ -31,7 +33,8 @@ SpreadedOptionletVolatility2::SpreadedOptionletVolatility2(const Handle<Optionle
                                                            const std::vector<Real>& strikes,
                                                            const std::vector<std::vector<Handle<Quote>>>& volSpreads,
                                                            const ReactionToTimeDecay decayMode)
-    : OptionletVolatilityStructure(0, baseVol->calendar(), baseVol->businessDayConvention(), baseVol->dayCounter()),
+    : OptionletVolatilityStructure(0, !baseVol->calendar().empty() ? baseVol->calendar() : NullCalendar(),
+                                   baseVol->businessDayConvention(), baseVol->dayCounter()),
       baseVol_(baseVol), optionDates_(optionDates), strikes_(strikes), volSpreads_(volSpreads), decayMode_(decayMode) {
     registerWith(baseVol_);
 

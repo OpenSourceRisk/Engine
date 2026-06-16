@@ -19,6 +19,8 @@
 #include <qle/math/flatextrapolation.hpp>
 #include <qle/termstructures/spreadedblackvolatilitycurve.hpp>
 
+#include <ql/time/calendars/nullcalendar.hpp>
+
 namespace QuantExt {
 
 SpreadedBlackVolatilityCurve::SpreadedBlackVolatilityCurve(const Handle<BlackVolTermStructure>& referenceVol,
@@ -26,8 +28,9 @@ SpreadedBlackVolatilityCurve::SpreadedBlackVolatilityCurve(const Handle<BlackVol
                                                            const std::vector<Handle<Quote>>& volSpreads,
                                                            const bool useAtmReferenceVolsOnly,
                                                            const ReactionToTimeDecay decayMode)
-    : BlackVolatilityTermStructure(0, referenceVol->calendar(), referenceVol->businessDayConvention(),
-                                   referenceVol->dayCounter(), referenceVol->volType(), referenceVol->shift()),
+    : BlackVolatilityTermStructure(0, !referenceVol->calendar().empty() ? referenceVol->calendar() : NullCalendar(),
+                                   referenceVol->businessDayConvention(), referenceVol->dayCounter(),
+                                   referenceVol->volType(), referenceVol->shift()),
       referenceVol_(referenceVol), times_(times), volSpreads_(volSpreads),
       useAtmReferenceVolsOnly_(useAtmReferenceVolsOnly), decayMode_(decayMode), data_(times.size(), 0.0) {
     registerWith(referenceVol_);

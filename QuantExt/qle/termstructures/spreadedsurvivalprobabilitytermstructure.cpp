@@ -18,13 +18,16 @@
 
 #include <qle/termstructures/spreadedsurvivalprobabilitytermstructure.hpp>
 
+#include <ql/time/calendars/nullcalendar.hpp>
+
 namespace QuantExt {
 
 SpreadedSurvivalProbabilityTermStructure::SpreadedSurvivalProbabilityTermStructure(
     const Handle<DefaultProbabilityTermStructure>& referenceCurve, const std::vector<Time>& times,
     const std::vector<Handle<Quote>>& spreads, const Extrapolation extrapolation,
     const YieldCurveRollDown yieldCurveRollDown)
-    : SurvivalProbabilityStructure(0, referenceCurve->calendar(), referenceCurve->dayCounter()),
+    : SurvivalProbabilityStructure(0, !referenceCurve->calendar().empty() ? referenceCurve->calendar() : NullCalendar(),
+                                   referenceCurve->dayCounter()),
       referenceCurve_(referenceCurve), times_(times), spreads_(spreads), data_(times.size(), 1.0),
       extrapolation_(extrapolation), yieldCurveRollDown_(yieldCurveRollDown) {
     QL_REQUIRE(times_.size() > 1, "at least two times required");
