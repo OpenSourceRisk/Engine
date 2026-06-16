@@ -156,8 +156,6 @@ public:
     QuantLib::Real volatility(const QuantLib::Date& exerciseDate, const QuantLib::Real underlyingLength,
                               const QuantLib::Real strike, const Type& targetType) const override;
 
-    const QuantLib::Date& referenceDate() const override;
-
 private:
     void performCalculations() const override;
 

@@ -156,10 +156,10 @@ void ScenarioSimMarketParameters::setDefaults() {
     interpolation_ = "LogLinear";
     extrapolation_ = "FlatFwd";
     yieldCurveRollDown_ = "ForwardForward";
-
+    yieldVolDecayMode_ = "ForwardVariance";
+    swapVolDecayMode_ = "ForwardVariance";
     defaultCurveExtrapolation_ = "FlatFwd";
     defaultCurveRollDown_ = "ForwardForward";
-
     commodityCurveRollDown_ = "Forward";
 }
 

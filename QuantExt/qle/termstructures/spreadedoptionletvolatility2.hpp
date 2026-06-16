@@ -43,12 +43,7 @@ public:
     BusinessDayConvention businessDayConvention() const override;
     Rate minStrike() const override;
     Rate maxStrike() const override;
-    DayCounter dayCounter() const override;
     Date maxDate() const override;
-    Time maxTime() const override;
-    const Date& referenceDate() const override;
-    Calendar calendar() const override;
-    Natural settlementDays() const override;
     VolatilityType volatilityType() const override;
     Real displacement() const override;
     void update() override;

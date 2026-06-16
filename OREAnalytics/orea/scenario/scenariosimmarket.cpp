@@ -799,7 +799,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         RelinkableHandle<SwaptionVolatilityStructure> wrapper;
                         vector<Period> optionTenors, underlyingTenors;
                         vector<Real> strikeSpreads;
-                        string shortSwapIndexBase = "", swapIndexBase = "", smileDynamics = "";
+                        string shortSwapIndexBase, swapIndexBase, smileDynamics, decayMode;
                         bool isCube, isAtm, simulateAtmOnly;
                         if (param.first == RiskFactorKey::KeyType::SwaptionVolatility) {
                             DLOG("building " << name << " swaption volatility curve...");
@@ -812,6 +812,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             strikeSpreads = parameters->swapVolStrikeSpreads(name);
                             simulateAtmOnly = parameters->simulateSwapVolATMOnly();
                             smileDynamics = parameters->swapVolSmileDynamics(name);
+                            decayMode = parameters->swapVolDecayMode();
                         } else {
                             DLOG("building " << name << " yield volatility curve...");
                             wrapper.linkTo(*initMarket->yieldVol(name, configuration));
@@ -821,6 +822,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             strikeSpreads = {0.0};
                             simulateAtmOnly = true;
                             smileDynamics = parameters->yieldVolSmileDynamics(name);
+                            decayMode = parameters->yieldVolDecayMode();
                         }
                         DLOG("Initial market " << name << " yield volatility type = " << wrapper->volatilityType());
 
@@ -1035,11 +1037,10 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     DLOG("Linking to SABR cube atm vol surface for sim market");
                                     wrapper.linkTo(*sabrCube->atmVol());
                                 }
-                                ReactionToTimeDecay decayMode = parseDecayMode(parameters->swapVolDecayMode());
                                 svp = Handle<SwaptionVolatilityStructure>(
                                     QuantLib::ext::make_shared<SpreadedSwaptionVolatility>(
                                         wrapper, optionTenors, underlyingTenors, strikeSpreads, quotes, swapIndex,
-                                        shortSwapIndex, simSwapIndex, simShortSwapIndex, !stickyStrike, decayMode,
+                                        shortSwapIndex, simSwapIndex, simShortSwapIndex, !stickyStrike, parseDecayMode(decayMode),
                                         parseYieldCurveRollDown(parameters_->yieldCurveRollDown())));
                                 svp->setAdjustReferenceDate(false);
                             } else {
@@ -1142,7 +1143,6 @@ ScenarioSimMarket::ScenarioSimMarket(
                                                                                         *initMarket->swapIndex(shortSwapIndexBase, configuration)));
                             }
                         } else {
-                            ReactionToTimeDecay decayMode = parseDecayMode(parameters->swapVolDecayMode());
                             DLOG("Dynamic (" << wrapper->volatilityType() << ") yield vols (" << decayMode
                                              << ") for qualifier " << name);
 
@@ -1162,7 +1162,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 WLOG("Only ATM slice is considered from init market's cube");
                             QuantLib::ext::shared_ptr<QuantLib::SwaptionVolatilityStructure> svolp =
                                 QuantLib::ext::make_shared<QuantExt::DynamicSwaptionVolatilityMatrix>(
-                                    atmSlice, 0, NullCalendar(), decayMode);
+                                    atmSlice, 0, NullCalendar(), parseDecayMode(decayMode));
                             svp = Handle<SwaptionVolatilityStructure>(svolp);
                         }
                         svp->setAdjustReferenceDate(false);

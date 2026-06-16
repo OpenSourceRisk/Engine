@@ -61,12 +61,7 @@ SpreadedOptionletVolatility2::SpreadedOptionletVolatility2(const Handle<Optionle
             registerWith(q);
 }
 
-DayCounter SpreadedOptionletVolatility2::dayCounter() const { return baseVol_->dayCounter(); }
 Date SpreadedOptionletVolatility2::maxDate() const { return baseVol_->maxDate(); }
-Time SpreadedOptionletVolatility2::maxTime() const { return baseVol_->maxTime(); }
-const Date& SpreadedOptionletVolatility2::referenceDate() const { return actualRefDate_; }
-Calendar SpreadedOptionletVolatility2::calendar() const { return baseVol_->calendar(); }
-Natural SpreadedOptionletVolatility2::settlementDays() const { return baseVol_->settlementDays(); }
 BusinessDayConvention SpreadedOptionletVolatility2::businessDayConvention() const {
     return baseVol_->businessDayConvention();
 }
