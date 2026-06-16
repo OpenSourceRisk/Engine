@@ -3997,6 +3997,9 @@ void ScenarioSimMarket::applyCurveAlgebra() {
         case RiskFactorKey::KeyType::CommodityCurve:
             applyCurveAlgebraCommodityPriceCurve(a);
             break;
+        case RiskFactorKey::KeyType::IntradayPowerCurve:
+            applyCurveAlgebraIntradayPowerPriceCurve(a);
+            break;
         default:
             QL_FAIL("ScenarioSimMarket::applyCurveAlgebra(): target key type "
                     << rfKeyTarget.keytype
@@ -4026,6 +4029,20 @@ void ScenarioSimMarket::applyCurveAlgebraSpreadedYieldCurve(
     }
 }
 
+void makeCommodityPriceCurveSpreaded(const Handle<PriceTermStructure>& target,
+                                     const std::vector<Handle<PriceTermStructure>>& bases,
+                                     const std::vector<double>& multiplier) {
+    if (auto c = QuantLib::ext::dynamic_pointer_cast<InterpolatedPriceCurve<Linear>>(*target)) {
+        c->makeThisCurveSpreaded(bases, multiplier);
+    } else if (auto c = QuantLib::ext::dynamic_pointer_cast<SpreadedPriceTermStructure>(*target)) {
+        c->makeThisCurveSpreaded(bases, multiplier);
+    } else if (auto c = QuantLib::ext::dynamic_pointer_cast<CommodityBasisPriceCurveWrapper>(*target)) {
+        c->makeThisCurveSpreaded(bases, multiplier);
+    } else {
+        QL_FAIL("makeCommodityPriceCurveSpreaded(): target curve could not be cast to one of the "
+                "supported curve types. Internal error, contact dev.");
+    }
+}
 
 void ScenarioSimMarket::applyCurveAlgebraCommodityPriceCurve(
     const ScenarioSimMarketParameters::CurveAlgebraData::Curve& a) {
@@ -4040,17 +4057,31 @@ void ScenarioSimMarket::applyCurveAlgebraCommodityPriceCurve(
     }
     auto rf = parseRiskFactorKey(a.key() + "/0");
     auto target = commodityIndex(rf.name)->priceCurve();
-    if (auto c = QuantLib::ext::dynamic_pointer_cast<InterpolatedPriceCurve<Linear>>(*target)) {
-        c->makeThisCurveSpreaded(bases, multiplier);
-    } else if (auto c = QuantLib::ext::dynamic_pointer_cast<SpreadedPriceTermStructure>(*target)) {
-        c->makeThisCurveSpreaded(bases, multiplier);
-    } else if (auto c = QuantLib::ext::dynamic_pointer_cast<CommodityBasisPriceCurveWrapper>(*target)) {
-        c->makeThisCurveSpreaded(bases, multiplier);
-    } else {
-        QL_FAIL("ScenarioSimMarket::applyCurveAlgebraSpreadedRateCurve(): target curve could not be cast to one of the "
-                "supported curve types. Internal error, contact dev.");
-    }
+    makeCommodityPriceCurveSpreaded(target, bases, multiplier);
 }
+
+void ScenarioSimMarket::applyCurveAlgebraIntradayPowerPriceCurve(const ScenarioSimMarketParameters::CurveAlgebraData::Curve& a) {
+    std::vector<Handle<PriceTermStructure>> bases;
+    std::vector<double> multiplier;
+    for (auto const& arg : a.arguments()) {
+        auto v = parseListOfValues(arg);
+        auto rf = parseRiskFactorKey(v[0] + "/0");
+        QL_REQUIRE(rf.keytype == RiskFactorKey::KeyType::CommodityCurve,
+                   "ScenarioSimMarket::applyCurveAlgebraIntradayPowerPriceCurve(): argument curve "
+                       << v[0] << " is not of type CommodityCurve. Internal error, contact dev.");
+        multiplier.push_back(v.size() <= 1 ? 1.0 : parseReal(v[1]));
+        DLOG("curve " << a.key() << " is set as spreaded over " << v[0] << ", multiplier " << multiplier.back());
+    }
+    auto rf = parseRiskFactorKey(a.key() + "/0");
+    QL_REQUIRE(rf.keytype == RiskFactorKey::KeyType::IntradayPowerCurve,
+               "ScenarioSimMarket::applyCurveAlgebraIntradayPowerPriceCurve(): target curve "
+                   << a.key() << " is not of type IntradayPowerCurve. Internal error, contact dev.");
+    auto target = intradayPowerIndex(rf.name)->priceCurve();
+    auto& avgDayPriceCurve = target->averageDayPriceCurve();
+    makeCommodityPriceCurveSpreaded(avgDayPriceCurve, bases, multiplier);
+}
+
+
 
 void ScenarioSimMarket::createBondFutureVol(RiskFactorKey::KeyType rfKeyType, const string& name, bool simulate,
     bool& simDataWritten, const BuildContext& bc) {
