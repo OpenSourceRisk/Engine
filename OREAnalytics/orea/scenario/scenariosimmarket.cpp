@@ -4069,6 +4069,7 @@ void ScenarioSimMarket::applyCurveAlgebraIntradayPowerPriceCurve(const ScenarioS
         QL_REQUIRE(rf.keytype == RiskFactorKey::KeyType::CommodityCurve,
                    "ScenarioSimMarket::applyCurveAlgebraIntradayPowerPriceCurve(): argument curve "
                        << v[0] << " is not of type CommodityCurve. Internal error, contact dev.");
+        bases.push_back(commodityIndex(rf.name)->priceCurve());
         multiplier.push_back(v.size() <= 1 ? 1.0 : parseReal(v[1]));
         DLOG("curve " << a.key() << " is set as spreaded over " << v[0] << ", multiplier " << multiplier.back());
     }
