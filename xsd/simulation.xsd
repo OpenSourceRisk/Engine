@@ -1702,6 +1702,13 @@
     </xs:restriction>
   </xs:simpleType>
 
+  <xs:simpleType name="priceRollDown">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Spot"/>
+      <xs:enumeration value="Forward"/>
+    </xs:restriction>
+  </xs:simpleType>
+
   <xs:simpleType name="defaultCurveExtrapolation">
     <xs:restriction base="xs:string">
       <xs:enumeration value="FlatFwd"/>
