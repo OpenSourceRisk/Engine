@@ -114,8 +114,9 @@ void AssetModelBuilderBase::performCalculations() const {
 
         // these are enhanced with additional points in getCalibratedProcesses() below
 
-        curveTimes_ = curveTimesBase_(discretisationTimeGrid_);
-        volTimesStrikes_ = volTimesStrikesBase_(discretisationTimeGrid_);
+        curveTimes_ = curveTimesBase_ ? curveTimesBase_(discretisationTimeGrid_) : std::set<Real>{};
+        volTimesStrikes_ = volTimesStrikesBase_ ? volTimesStrikesBase_(discretisationTimeGrid_)
+                                                : std::vector<std::set<std::pair<Real, Real>>>(processes_.size());
 
         for (Size j = 1; j < discretisationTimeGrid_.size(); ++j) {
             curveTimes_.insert(discretisationTimeGrid_[j]);
