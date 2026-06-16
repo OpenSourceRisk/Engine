@@ -109,11 +109,6 @@ GaussianCamCG::GaussianCamCG(
 
 } // GaussianCamCG ctor
 
-const Date& GaussianCamCG::referenceDate() const {
-    calculate();
-    return referenceDate_;
-}
-
 Size GaussianCamCG::size() const { return ModelCG::size(); }
 
 void GaussianCamCG::performCalculations() const {

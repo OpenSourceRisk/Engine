@@ -539,12 +539,14 @@ std::size_t ModelCGImpl::barrierProbability(const std::string& index, const Date
 Real ModelCGImpl::extractT0Result(const RandomVariable& value) const { return expectation(value).at(0); }
 
 void ModelCGImpl::performCalculations() const {
-    if (cgEvalDate_ != referenceDate()) {
+    if (cgEvalDate_ != referenceDate_) {
         ++cgVersion_;
-        cgEvalDate_ = referenceDate();
+        cgEvalDate_ = referenceDate_;
         randomVariates_.clear();
         modelParameters_.clear();
         cachedParameters_.clear();
+        additionalResults_.clear();
+        additionalResultsPathLevel_.clear();
         g_->clear();
     }
 }

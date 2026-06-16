@@ -54,7 +54,6 @@ public:
                   const bool enableCgOptimization = false);
 
     // Model interface implementation
-    const Date& referenceDate() const override;
     std::size_t npv(const std::size_t amount, const Date& obsdate, const std::size_t filter,
                     const std::optional<long>& memSlot, const std::set<std::size_t> addRegressors,
                     const std::optional<std::set<std::size_t>>& overwriteRegressors,
@@ -114,7 +113,6 @@ protected:
     bool enableCgOptimization_;
 
     // updated in performCalculations()
-    mutable Date referenceDate_;                      // the model reference date
     mutable std::set<Date> effectiveSimulationDates_; // the dates effectively simulated (including today)
     mutable TimeGrid timeGrid_;                       // the (possibly refined) time grid for the simulation
     mutable std::vector<Size> positionInTimeGrid_;    // for each effective simulation date the index in the time grid
