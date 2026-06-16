@@ -31,6 +31,11 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
+using std::map;
+using std::set;
+using std::string;
+using std::unordered_map;
+
 namespace {
 std::vector<Date> everyWeekDayDates(const Date& startDate, const Date& endDate, const Date& firstDate, const QuantLib::Weekday weekday) {
     std::vector<Date> result;
@@ -236,32 +241,21 @@ void ScheduleBuilder::add(Schedule& schedule, const ScheduleData& data) {
     schedules_.insert(pair<string, pair<ScheduleData, Schedule&>>({name, {data, schedule}}));
 }
 
-namespace {
-
-using std::map;
-using std::set;
-using std::string;
-using std::unordered_map;
-
-// Vertex is simply a schedule name.
-struct VertexData {
-    string scheduleName;
-};
-
-// Want to have a directed graph where vertices are schedules and there is an edge from A to B if schedule A depends on
-// schedule B. We will then do a topological sort of this graph to get the order in which to build the schedules.
-using Graph = boost::adjacency_list<
-    boost::vecS,
-    boost::vecS,
-    boost::directedS,
-    VertexData>;
-
-using Vertex = boost::graph_traits<Graph>::vertex_descriptor;
-
-// A small helper that uses boost graph to order the building of derived scehdules below.
-vector<string> derivedScheduleOrder(const map<string, ScheduleData>& derivedSchedules,
+vector<string> derivedScheduleOrder(const map<string, vector<string>>& derivedSchedules,
     const set<string>& builtSchedules) {
 
+    // Boost graph typedefs:
+    //   - Vertex is simply a schedule name.
+    //   - Want to have a directed graph where vertices are schedules and there is an edge from A to B if schedule A
+    //     depends on schedule B. We will then do a topological sort of this graph to get the order in which to build 
+    //     the schedules.
+    struct VertexData {
+        string scheduleName;
+    };
+    using Graph = boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, VertexData>;
+    using Vertex = boost::graph_traits<Graph>::vertex_descriptor;
+
+    // Implementation.
     Graph graph;
 
     // Mapping from schedule name to vertex descriptor for vertices in the graph.
@@ -276,24 +270,24 @@ vector<string> derivedScheduleOrder(const map<string, ScheduleData>& derivedSche
     }
 
     // Add an edge from derived schedule to base schedule. Fail if base schedule is not available.
-    for (const auto& [schedName, schedData] : derivedSchedules) {
+    for (const auto& [schedName, baseSchedNames] : derivedSchedules) {
         Vertex schedVertex = mpVertices.at(schedName);
-        for (const auto& baseSchedName : schedData.baseScheduleNames()) {
+        for (const auto& baseSchedName : baseSchedNames) {
             if (builtSchedules.contains(baseSchedName))
                 continue;
             auto itDep = mpVertices.find(baseSchedName);
-            QL_REQUIRE(itDep != mpVertices.end(), "makeContext: base schedule '" << baseSchedName <<
+            QL_REQUIRE(itDep != mpVertices.end(), "derivedScheduleOrder: base schedule '" << baseSchedName <<
                 "' not found for derived schedule '" << schedName << "'");
             boost::add_edge(itDep->second, schedVertex, graph);
         }
     }
 
     // Topological sort with check for cycles.
-    std::vector<Vertex> schedulesSorted;
+    vector<Vertex> schedulesSorted;
     try {
         boost::topological_sort(graph, std::back_inserter(schedulesSorted));
     } catch (const boost::not_a_dag&) {
-        QL_FAIL("makeContext: circular dependency detected among derived schedules.");
+        QL_FAIL("derivedScheduleOrder: circular dependency detected among derived schedules.");
     }
 
     // Reverse the order to get the correct order for building the schedules and return the result.
@@ -302,10 +296,9 @@ vector<string> derivedScheduleOrder(const map<string, ScheduleData>& derivedSche
     for (auto it = schedulesSorted.rbegin(); it != schedulesSorted.rend(); ++it) {
         result.push_back(graph[*it].scheduleName);
     }
+
     return result;
 }
-
-} // namespace
 
 void ScheduleBuilder::makeSchedules(const Date& openEndDateReplacement, bool unadjusted) {
 
@@ -337,6 +330,7 @@ void ScheduleBuilder::makeSchedules(const Date& openEndDateReplacement, bool una
 
     // First, we build all the schedules that do not have a derived component.
     map<string, ScheduleData> derivedSchedules;
+    map<string, vector<string>> derivedScheduleDeps;
     set<string> builtScheduleNames;
     for (auto& s : schedules_) {
         string schName = s.first;
@@ -356,13 +350,14 @@ void ScheduleBuilder::makeSchedules(const Date& openEndDateReplacement, bool una
             }
         } else {
             derivedSchedules[schName] = schData;
+            derivedScheduleDeps[schName] = schData.baseScheduleNames();
         }
     }
 
     // Build any derived schedules.
     if (!derivedSchedules.empty()) {
         // Check no cylces or missing dependencies and get the order in which to build the derived schedules.
-        vector<string> dvOrderedSchedules = derivedScheduleOrder(derivedSchedules, builtScheduleNames);
+        vector<string> dvOrderedSchedules = derivedScheduleOrder(derivedScheduleDeps, builtScheduleNames);
 
         // We need to pass built schedules to helper functions.
         BaseScheduleCache builtSchedules;
