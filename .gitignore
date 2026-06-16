@@ -71,6 +71,7 @@ Docs/Inflation/*.pdf
 Examples/Legacy/Example_?/Output/
 Examples/Legacy/Example_[0-9][0-9]/Output/
 Examples/Academy/*/Output/
+Examples/Products/Output_*
 # these are generated
 Examples/Legacy/Example_26/Input/EUR_xois_portfolio.xml
 Examples/Legacy/Example_26/Input/USD_xois_portfolio.xml

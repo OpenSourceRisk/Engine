@@ -68,10 +68,42 @@ are {\tt BondData}, {\tt TotalReturnData} and {\tt FundingData}.
 
       Allowable values: Any valid calendar, see Table \ref{tab:calendar} Calendar. Defaults to the \emph{NullCalendar} (no holidays) if left blank or omitted.
 
-  \item PaymentLag [Optional]: The lag between the reference schedule period end date and the payment date.
+  \item \lstinline!PaymentLag! [optional]:
+  The lag between the, adjusted or unadjusted (see \lstinline!PaymentLagAnchor! below), reference schedule period end 
+  date and the payment date.
 
-    Allowable values: Any valid period, i.e.\ a non-negative whole number, optionally followed by \emph{D} (days), \emph{W} (weeks), \emph{M} (months),
-  \emph{Y} (years). Defaults to \emph{0D} if left blank or omitted. If a whole number is given and no letter, it is assumed that it is a number of  \emph{D} (days).
+  Allowable values: Any valid period.
+  In other words, an integer followed by a string where the last character must be one of 
+  \lstinline!D!, \lstinline!W!, \lstinline!M! or \lstinline!Y!.
+  Compound period definitions also work, for example \lstinline!1Y6M! and \lstinline!-6W4D!.
+  Note that compound periods only work for year and month pairs or week and day pairs.
+  If left blank or omitted, it defaults to \lstinline!0D!.
+  Note also that negative periods are allowed where they make sense.
+  If a whole number is given without the unit suffix, it is assumed that it is a number of days i.e.\ 
+  that the suffix is \lstinline!D!.
+
+  \item \lstinline!PaymentLagUnit! [optional]:
+  Determines how the \lstinline!PaymentLag! is used to calculate the payment date from an anchor date.
+  If omitted, or \lstinline!BusinessDays! is given, the \lstinline!PaymentLag! is applied in the usual way.
+  In other words the anchor date is shifted by the period defined by the \lstinline!PaymentLag! using the 
+  \lstinline!PaymentCalendar! and \lstinline!PaymentConvention!.
+  If \lstinline!CalendarDays! is given, the \lstinline!PaymentLag! period must have day units.
+  In this case, the anchor date is shifted by \lstinline!PaymentLag! \emph{calendar} days.
+  If the resulting date is not a good business day with respect to the \lstinline!PaymentCalendar!,
+  it is adjusted using the \lstinline!PaymentCalendar! and \lstinline!PaymentConvention!.
+  The anchor date used for the payment date generation can be influenced by the \lstinline!PaymentLagAnchor! below.
+
+  Allowable values: \lstinline!BusinessDays! or \lstinline!CalendarDays!.
+  Defaults to \lstinline!BusinessDays! if omitted.
+
+  \item \lstinline!PaymentLagAnchor! [optional]:
+  Determines the base or anchor date to use when calculating a payment date using the \lstinline!PaymentLag!.
+  If omitted, or \lstinline!Adjusted! is given, the anchor date is the underlying schedule date.
+  This schedule date may have had adjustments applied.
+  If \lstinline!Unadjusted! is given, the anchor date is the underlying schedule date 
+  before any adjustments have been applied.
+
+  Allowable values: \lstinline!Adjusted! or \lstinline!Unadjusted!. Defaults to \lstinline!Adjusted! if omitted.
 
   \item PaymentConvention [Optional]: The business day convention to be used when applying the payment lag.
 

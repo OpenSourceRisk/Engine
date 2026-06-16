@@ -13,4 +13,4 @@ print("| Products: CBO                                       |")
 print("+-----------------------------------------------------+")
 
 oreex.print_headline("Run ORE to price the CBO example")
-oreex.run("Input/CBO/ore.xml")
+oreex.run("Input_CBO/ore.xml")

@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2021 Quaternion Risk Management Ltd
+ Copyright (C) 2026 AcadiaSoft Inc.
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,30 +16,21 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file dateutilities.hpp
-     \brief helper functions and structures for date operations
-*/
-
-#pragma once
-#include <ql/time/date.hpp>
-#include <iosfwd>
+#ifndef qle_time_i
+#define qle_time_i
 
 namespace QuantExt {
-
-namespace DateUtilities {
-QuantLib::Date lastWeekday(QuantLib::Weekday dayOfWeek, QuantLib::Month m, QuantLib::Year y);
-} // namespace DateUtilities
 
 enum class DateDeltaUnit {
     BusinessDays,
     CalendarDays
 };
-std::ostream& operator<<(std::ostream&, DateDeltaUnit);
 
 enum class DateDeltaAnchor {
     Adjusted,
     Unadjusted
 };
-std::ostream& operator<<(std::ostream&, DateDeltaAnchor);
 
 } // namespace QuantExt
+
+#endif
