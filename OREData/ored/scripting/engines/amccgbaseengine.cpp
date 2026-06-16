@@ -1257,6 +1257,8 @@ void AmcCgBaseEngine::calculate() const {
     //            "ScriptedInstrumentPricingEngineCG: when using external compute framework, usage of cached sensis is "
     //            "not supported yet");
 
+    modelCg_->calculate();
+
     buildComputationGraph(false);
 
     if (!haveBaseValues_ || !useCachedSensis_) {
