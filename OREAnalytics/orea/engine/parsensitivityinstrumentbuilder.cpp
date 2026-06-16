@@ -70,6 +70,7 @@
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
 #include <qle/pricingengines/inflationcapfloorengines.hpp>
 #include <qle/cashflows/blackovernightindexedcouponpricer.hpp>
+#include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/termstructures/oiscapfloorhelper.hpp>
 
 using namespace QuantLib;
@@ -1229,7 +1230,7 @@ std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Date> ParSensitivityI
     auto helper = QuantLib::ext::make_shared<TenorBasisSwap>(
         settlementDate, 1.0, term, payIndex, 0.0, conv->payFrequency(), receiveIndex, 0.0, conv->receiveFrequency(),
         DateGeneration::Backward, conv->includeSpread(), conv->spreadOnRec(), conv->subPeriodsCouponType(),
-        telescopicValueDates);
+        conv->isPayAveraged(), conv->isRecAveraged(), telescopicValueDates);
 
     auto lastPayCoupon = helper->payLeg().back();
     auto lastReceiveCoupon = helper->recLeg().back();

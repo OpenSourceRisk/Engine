@@ -463,6 +463,8 @@ node is shown in Listing \ref{lst:tenor_basis_conventions}.
   <SpreadOnRec> </SpreadOnRec>
   <IncludeSpread> </IncludeSpread>
   <SubPeriodsCouponType> </SubPeriodsCouponType>
+  <PayIsAveraged> </PayIsAveraged>
+  <RecIsAveraged> </RecIsAveraged>
 </TenorBasisSwap>
 \end{minted}
 \caption{Tenor basis swap conventions}
@@ -487,6 +489,8 @@ If not provided, this defaults to \emph{False}.
 \item SubPeriodsCouponType [Optional]: This field can have the value \emph{Compounding} or \emph{Averaging}. It applies to Ibor vs OI and Ibor vs Ibor basis swaps when the frequency of payments on the spread leg does not equal the spread leg index’s tenor.
 If \emph{Compounding} is specified, then the spread tenor Ibor index is compounded and paid on the frequency specified in the corresponding node.
 If \emph{Averaging} is specified, then the short tenor Ibor index is averaged and paid on the frequency specified in the corresponding node.
+\item PayIsAveraged [Optional]: \emph{True} if the pay leg coupon is averaged and \emph{False} if it is compounded.
+\item RecIsAveraged [Optional]: \emph{True} if the receive leg coupon is averaged and \emph{False} if it is compounded.
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

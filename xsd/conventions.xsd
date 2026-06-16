@@ -152,6 +152,8 @@
       <xs:element type="bool" name="SpreadOnRec" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="IncludeSpread" minOccurs="0" maxOccurs="1"/>
       <xs:element type="subPeriodsCouponType" name="SubPeriodsCouponType" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="PayIsAveraged" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="RecIsAveraged" minOccurs="0" maxOccurs="1"/>
       <!-- deprecated fields -->
       <xs:element type="xs:string" name="LongIndex" minOccurs="0" maxOccurs="1"/>
       <xs:element type="period" name="LongPayTenor" minOccurs="0" maxOccurs="1"/>

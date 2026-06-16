@@ -2884,7 +2884,8 @@ void YieldCurve::addTenorBasisSwaps(const std::size_t index,
                 receiveIndexGiven, discountCurveGiven_[index], basisSwapConvention->spreadOnRec(),
                 basisSwapConvention->includeSpread(), basisSwapConvention->payFrequency(),
                 basisSwapConvention->receiveFrequency(), telescopicValueDates,
-                basisSwapConvention->subPeriodsCouponType(), pillarChoice(segment->pillarChoice()));
+                basisSwapConvention->subPeriodsCouponType(), pillarChoice(segment->pillarChoice()),
+                Date(), basisSwapConvention->isPayAveraged(), basisSwapConvention->isRecAveraged());
 
             instruments.push_back({helper, mainPillarDate(segment->pillarChoice(), helper->pillarDate()),
                                    additionalPillarDates(segment->pillarChoice(), helper->earliestDate()),
