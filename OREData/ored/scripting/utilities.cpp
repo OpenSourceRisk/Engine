@@ -31,8 +31,6 @@
 #include <ql/optional.hpp>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/graph/adjacency_list.hpp>
-#include <boost/graph/topological_sort.hpp>
 #include <set>
 
 namespace ore {
@@ -161,75 +159,6 @@ void checkDuplicateName(const QuantLib::ext::shared_ptr<Context> context, const 
                "variable '" << name << "' already declared.");
 }
 
-namespace {
-
-using std::map;
-using std::set;
-using std::string;
-using std::vector;
-
-// Vertex is simply a schedule name.
-struct VertexData {
-    std::string scheduleName;
-};
-
-// Want to have a directed graph where vertices are schedules and there is an edge from A to B if schedule A depends on
-// schedule B. We will then do a topological sort of this graph to get the order in which to build the schedules.
-using Graph = boost::adjacency_list<
-    boost::vecS,
-    boost::vecS,
-    boost::directedS,
-    VertexData>;
-
-using Vertex = boost::graph_traits<Graph>::vertex_descriptor;
-
-// A small helper that uses boost graph to order the building of derived scehdules below.
-vector<string> derivedScheduleOrder(map<string, ScriptedTradeEventData> derivedSchedules,
-    const set<string>& builtSchedules) {
-
-    Graph graph;
-
-    // Mapping from schedule name to vertex descriptor for vertices in the graph.
-    std::unordered_map<std::string, Vertex> mpVertices;
-
-    // Create vertices for all derived schedule names.
-    for (const auto& entry : derivedSchedules) {
-        const auto& schedName = entry.first;
-        Vertex v = boost::add_vertex(graph);
-        graph[v].scheduleName = schedName;
-        mpVertices.emplace(schedName, v);
-    }
-
-    // Add an edge from derived schedule to base schedule. Fail if base schedule is not available.
-    for (const auto& [schedName, schedData] : derivedSchedules) {
-        if (builtSchedules.contains(schedData.baseSchedule()))
-            continue;
-        Vertex schedVertex = mpVertices.at(schedName);
-        auto itDep = mpVertices.find(schedData.baseSchedule());
-        QL_REQUIRE(itDep != mpVertices.end(), "makeContext: base schedule '" << schedData.baseSchedule() <<
-            "' not found for derived schedule '" << schedName << "'");
-        boost::add_edge(itDep->second, schedVertex, graph);
-    }
-
-    // Topological sort with check for cycles.
-    std::vector<Vertex> schedulesSorted;
-    try {
-        boost::topological_sort(graph, std::back_inserter(schedulesSorted));
-    } catch (const boost::not_a_dag&) {
-        QL_FAIL("makeContext: circular dependency detected among derived schedules.");
-    }
-
-    // Reverse the order to get the correct order for building the schedules and return the result.
-    vector<string> result;
-    result.reserve(schedulesSorted.size());
-    for (auto it = schedulesSorted.rbegin(); it != schedulesSorted.rend(); ++it) {
-        result.push_back(graph[*it].scheduleName);
-    }
-    return result;
-}
-
-} // namespace
-
 QuantLib::ext::shared_ptr<Context> makeContext(Size nPaths, const std::string& gridCoarsening,
                                        const std::vector<std::string>& schedulesEligibleForCoarsening,
                                        const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
@@ -257,6 +186,7 @@ QuantLib::ext::shared_ptr<Context> makeContext(Size nPaths, const std::string& g
     TLOG("make context");
     auto context = QuantLib::ext::make_shared<Context>();
     map<string, ScriptedTradeEventData> derivedSchedules;
+    map<string, vector<string>> derivedScheduleDeps;
     // keep track of schedules we have built so far
     set<string> builtSchedules;
     for (auto const& x : events) {
@@ -308,6 +238,7 @@ QuantLib::ext::shared_ptr<Context> makeContext(Size nPaths, const std::string& g
             builtSchedules.insert(x.name());
         } else if (x.type() == ScriptedTradeEventData::Type::Derived) {
             derivedSchedules[x.name()] = x;
+            derivedScheduleDeps[x.name()] = {x.baseSchedule()};
         } else {
             QL_FAIL("unexpected ScriptedTradeEventData::Type");
         }
@@ -316,7 +247,7 @@ QuantLib::ext::shared_ptr<Context> makeContext(Size nPaths, const std::string& g
 
     // Build the derived schedules, if there are any.
     if (!derivedSchedules.empty()) {
-        vector<string> orderedSchedules = derivedScheduleOrder(derivedSchedules, builtSchedules);
+        vector<string> orderedSchedules = derivedScheduleOrder(derivedScheduleDeps, builtSchedules);
         for (const auto& schedName : orderedSchedules) {
             const auto& evData = derivedSchedules.at(schedName);
             checkDuplicateName(context, evData.name());

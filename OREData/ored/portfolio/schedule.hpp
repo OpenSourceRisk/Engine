@@ -26,6 +26,9 @@
 #include <ored/utilities/xmlutils.hpp>
 #include <qle/time/dateutilities.hpp>
 #include <ql/time/schedule.hpp>
+#include <map>
+#include <set>
+#include <string>
 
 namespace ore {
 namespace data {
@@ -311,6 +314,12 @@ QuantLib::Schedule makeSchedule(const ScheduleDerived& derived,
     const std::pair<ScheduleData, QuantLib::Schedule>& baseScheduleInfo,
     const QuantLib::Date& openEndDateReplacement = QuantLib::Null<QuantLib::Date>(),
     bool unadjusted = false);
+
+// Determine the order in which derived schedules should be built, given a map of derived schedules `derivedSchedules` 
+// and a set of already built schedules `builtSchedules`. The map key is the derived schedule name, and the value is a
+// vector of base schedule names that the derived schedule depends on.
+std::vector<std::string> derivedScheduleOrder(const std::map<std::string, std::vector<std::string>>& derivedSchedules,
+    const std::set<std::string>& builtSchedules);
 
 } // namespace data
 } // namespace ore
