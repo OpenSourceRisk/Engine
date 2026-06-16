@@ -66,7 +66,7 @@ IntradayPowerCurve::IntradayPowerCurve(const Date& asof, const IntradayPowerCurv
 
         // Build the intraday power index with the same id as the curve.
         Handle<IntradayPowerPriceTermStructure> ts(curve_);
-        index_ = parseIntradayPowerIndex(spec_.curveConfigID(), false, ts);
+        index_ = parseIntradayPowerIndex(config->indexName().empty() ? spec_.curveConfigID() : config->indexName(), false, ts);
 
     } catch (std::exception& e) {
         QL_FAIL("intraday power curve building failed: " << e.what());

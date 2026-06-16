@@ -28,9 +28,11 @@ namespace data {
 IntradayPowerCurveConfig::IntradayPowerCurveConfig(const string& curveId, const string& curveDescription,
                                                    const string& currency,
                                                    const string& dailyAveragePriceCurve,
-                                                   const string& shapeQuoteName)
+                                                                                                     const string& shapeQuoteName,
+                                                                                                     const string& indexName)
     : CurveConfig(curveId, curveDescription), currency_(currency),
-      dailyAveragePriceCurve_(dailyAveragePriceCurve), shapeQuoteName_(shapeQuoteName) {
+            dailyAveragePriceCurve_(dailyAveragePriceCurve), shapeQuoteName_(shapeQuoteName),
+            indexName_(indexName) {
         quotes_.push_back("SHAPE_PROFILE/SHAPE_FACTOR/" + shapeQuoteName +"/*");
       }
 
@@ -42,6 +44,7 @@ void IntradayPowerCurveConfig::fromXML(XMLNode* node) {
     currency_ = XMLUtils::getChildValue(node, "Currency", true);
     dailyAveragePriceCurve_ = XMLUtils::getChildValue(node, "DailyAveragePriceCurve", true);
     shapeQuoteName_ = XMLUtils::getChildValue(node, "ShapeQuoteName", true);
+    indexName_ = XMLUtils::getChildValue(node, "IndexName", false);
 }
 
 XMLNode* IntradayPowerCurveConfig::toXML(XMLDocument& doc) const {
@@ -52,6 +55,9 @@ XMLNode* IntradayPowerCurveConfig::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "Currency", currency_);
     XMLUtils::addChild(doc, node, "DailyAveragePriceCurve", dailyAveragePriceCurve_);
     XMLUtils::addChild(doc, node, "ShapeQuoteName", shapeQuoteName_);
+    if (!indexName_.empty()) {
+        XMLUtils::addChild(doc, node, "IndexName", indexName_);
+    }
 
     return node;
 }

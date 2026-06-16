@@ -30,6 +30,8 @@
 namespace QuantExt {
 std::string bucketName(const std::string& name, int start, int end, bool isDstHour) {
     std::ostringstream o;
+    if (start == 0 && end == 24 * 3600)
+        return name;
     o << name << "-" << start << "-" << end;
     if (isDstHour)
         o << "-DST";
@@ -156,7 +158,7 @@ Real IntradayPowerIndex::pastFixing(const Date& fixingDate) const {
                                        << io::iso_date(deliveryDate_) << "). Eval date is " << io::iso_date(today));
     
     bool enforceTodaysFixing = fixingDate < today || Settings::instance().enforcesTodaysHistoricFixings();
-    // Fallback if no profile given, just assume constant load and get day average price as fixing
+    // No Profolile given or empty profile, just return the fixing for the whole day
     if (loadProfile_ == nullptr || (loadProfile_->loadProfile().empty() && loadProfile_->loadProfileDST().empty())) {
         auto fixing = Index::pastFixing(fixingDate);
         QL_REQUIRE(fixing != Null<Real>() || !enforceTodaysFixing, "Missing " << name() << " fixing for " << fixingDate);
@@ -217,19 +219,20 @@ Real IntradayPowerIndex::fixing(const Date& fixingDate, bool forecastTodaysFixin
 }
 
 const std::vector<std::string> IntradayPowerIndex::intraDayIndexNames() const {
-    std::vector<std::string> names;
+    std::set<std::string> names;
     if (loadProfile_ != nullptr) {
         for (const auto& [start, end, load] : loadProfile_->loadProfile()) {
-            names.push_back(bucketName(name_, start, end, false));
+            names.insert(bucketName(name_, start, end, false));
         }
         for (const auto& [start, end, load] : loadProfile_->loadProfileDST()) {
-            names.push_back(bucketName(name_, start, end, true));
+            names.insert(bucketName(name_, start, end, true));
         }
     } else {
-        names.push_back(name_);
+        names.insert(name_);
     }
-    return names;
+    return std::vector<std::string>(names.begin(), names.end());
 }
+
 QuantLib::ext::shared_ptr<IntradayPowerIndex>
 IntradayPowerIndex::clone(const Date& deliveryDate, ext::shared_ptr<IntradayLoadProfile> loadProfile) const {
     return QuantLib::ext::make_shared<IntradayPowerIndex>(underlyingName_, deliveryDate, fixingCalendar_,

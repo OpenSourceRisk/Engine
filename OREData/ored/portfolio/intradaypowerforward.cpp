@@ -124,8 +124,6 @@ void IntradayPowerForward::build(const QuantLib::ext::shared_ptr<EngineFactory>&
         DLOG("Adding required fixing date " << io::iso_date(maturity_) << " for index " << intraDayFixingNames);
         requiredFixings_.addFixingDate(maturity_, intraDayFixingNames, paymentDate == Date() ? maturity_ : paymentDate);
     }
-  
-
     // Create the commodity forward instrument
     Currency currency = parseCurrency(currency_);
     Position::Type position = parsePositionType(position_);
