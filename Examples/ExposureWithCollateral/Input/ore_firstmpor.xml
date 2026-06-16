@@ -15,7 +15,7 @@
     <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
     <Parameter name="portfolioFile">portfolio.xml</Parameter>
     <Parameter name="observationModel">Disable</Parameter>
-    <Parameter name="nThreads">1</Parameter>
+    <Parameter name="nThreads">2</Parameter>
   </Setup>
   <Markets>
     <Parameter name="lgmcalibration">default</Parameter>
