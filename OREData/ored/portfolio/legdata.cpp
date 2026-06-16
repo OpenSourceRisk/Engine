@@ -925,7 +925,8 @@ LegData::LegData(const QuantLib::ext::shared_ptr<LegAdditionalData>& concreteLeg
                  const string& notionalPaymentLag, const string& paymentCalendar, const vector<string>& paymentDates,
                  const std::vector<Indexing>& indexing, const bool indexingFromAssetLeg,
                  const string& lastPeriodDayCounter, ext::optional<DateDeltaUnit> paymentLagUnit,
-                 ext::optional<DateDeltaAnchor> paymentLagAnchor)
+                 ext::optional<DateDeltaAnchor> paymentLagAnchor, ext::optional<DateDeltaUnit> notionalPaymentLagUnit,
+                 ext::optional<DateDeltaAnchor> notionalPaymentLagAnchor)
     : concreteLegData_(concreteLegData), isPayer_(isPayer), currency_(currency), schedule_(scheduleData),
       dayCounter_(dayCounter), notionals_(notionals), notionalDates_(notionalDates),
       paymentConvention_(paymentConvention), notionalInitialExchange_(notionalInitialExchange),
@@ -934,7 +935,9 @@ LegData::LegData(const QuantLib::ext::shared_ptr<LegAdditionalData>& concreteLeg
       resetStartDate_(resetStartDate), fxIndex_(fxIndex), amortizationData_(amortizationData), paymentLag_(paymentLag),
       notionalPaymentLag_(notionalPaymentLag), paymentCalendar_(paymentCalendar), paymentDates_(paymentDates),
       indexing_(indexing), indexingFromAssetLeg_(indexingFromAssetLeg), lastPeriodDayCounter_(lastPeriodDayCounter),
-      paymentLagUnit_(std::move(paymentLagUnit)), paymentLagAnchor_(std::move(paymentLagAnchor)) {
+      paymentLagUnit_(std::move(paymentLagUnit)), paymentLagAnchor_(std::move(paymentLagAnchor)),
+      notionalPaymentLagUnit_(std::move(notionalPaymentLagUnit)),
+      notionalPaymentLagAnchor_(std::move(notionalPaymentLagAnchor)) {
 
     indices_ = concreteLegData_->indices();
 
@@ -1050,6 +1053,12 @@ void LegData::fromXML(XMLNode* node) {
     if (auto tmp = XMLUtils::getChildNode(node, "PaymentLagAnchor"))
         paymentLagAnchor_ = parseDateDeltaAnchor(XMLUtils::getNodeValue(tmp));
 
+    if (auto tmp = XMLUtils::getChildNode(node, "NotionalPaymentLagUnit"))
+        notionalPaymentLagUnit_ = parseDateDeltaUnit(XMLUtils::getNodeValue(tmp));
+
+    if (auto tmp = XMLUtils::getChildNode(node, "NotionalPaymentLagAnchor"))
+        notionalPaymentLagAnchor_ = parseDateDeltaAnchor(XMLUtils::getNodeValue(tmp));
+
     concreteLegData_ = initialiseConcreteLegData(legType);
     concreteLegData_->fromXML(XMLUtils::getChildNode(node, concreteLegData_->legNodeName()));
 
@@ -1151,6 +1160,12 @@ XMLNode* LegData::toXML(XMLDocument& doc) const {
 
     if (paymentLagAnchor_)
         XMLUtils::addChild(doc, node, "PaymentLagAnchor", to_string(*paymentLagAnchor_));
+
+    if (notionalPaymentLagUnit_)
+        XMLUtils::addChild(doc, node, "NotionalPaymentLagUnit", to_string(*notionalPaymentLagUnit_));
+
+    if (notionalPaymentLagAnchor_)
+        XMLUtils::addChild(doc, node, "NotionalPaymentLagAnchor", to_string(*notionalPaymentLagAnchor_));
 
     if (!settlementFxIndex_.empty()) {
         XMLNode* settlementDataNode = doc.allocNode("SettlementData");
@@ -1943,11 +1958,26 @@ Leg makeBMALeg(const LegData& data, const QuantLib::ext::shared_ptr<QuantExt::BM
 }
 
 Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalNomFlow, const bool amortNomFlow,
-                    const Natural notionalPaymentLag,  const BusinessDayConvention paymentConvention,
-                    const Calendar paymentCalendar, const bool excludeIndexing) {
+                    const Integer notionalPaymentLag, const BusinessDayConvention paymentConvention,
+                    const Calendar paymentCalendar, const bool excludeIndexing,
+                    const ext::optional<DateDeltaUnit>& paymentLagUnit,
+                    const ext::optional<DateDeltaAnchor>& paymentLagAnchor,
+                    const Schedule& unadjustedSchedule) {
 
     if (refLeg.empty())
         return Leg();
+
+    // Populate some variables up front and perform some checks if necessary.
+    bool pluIsCalDays = false;
+    bool plaIsUnadj = false;
+    if (initNomFlow || amortNomFlow || finalNomFlow) {
+        pluIsCalDays = paymentLagUnit && *paymentLagUnit == DateDeltaUnit::CalendarDays;
+        plaIsUnadj = paymentLagAnchor && *paymentLagAnchor == DateDeltaAnchor::Unadjusted;
+        if (plaIsUnadj) {
+            QL_REQUIRE(unadjustedSchedule.size() - 1 == refLeg.size(), "makeNotionalLeg: unadjusted schedule " <<
+                "size - 1 (" << unadjustedSchedule.size() - 1 << ") doesn't match leg size (" << refLeg.size() << ").");
+        }
+    }
 
     // Assumption - Cashflows on Input Leg are all coupons
     // This is the Leg to be populated
@@ -1955,41 +1985,49 @@ Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalN
 
     // Initial Flow Amount
     if (initNomFlow) {
-        auto coupon = QuantLib::ext::dynamic_pointer_cast<QuantLib::Coupon>(refLeg[0]);
-        QL_REQUIRE(coupon, "makeNotionalLeg does not support non-coupon legs");
+        auto coupon = ext::dynamic_pointer_cast<Coupon>(refLeg.front());
+        QL_REQUIRE(coupon, "makeNotionalLeg: non-coupon legs are not supported.");
         double initFlowAmt = (excludeIndexing ? unpackIndexedCoupon(coupon) : coupon)->nominal();
-        Date initDate = coupon->accrualStartDate();
-        initDate = paymentCalendar.advance(initDate, notionalPaymentLag, Days, paymentConvention);
+        Date initDate = plaIsUnadj ? unadjustedSchedule.front() : coupon->accrualStartDate();
+        initDate = pluIsCalDays ? paymentCalendar.adjust(initDate + notionalPaymentLag, paymentConvention) :
+            paymentCalendar.advance(initDate, notionalPaymentLag, Days, paymentConvention);
         if (initFlowAmt != 0)
-            leg.push_back(QuantLib::ext::shared_ptr<CashFlow>(new SimpleCashFlow(-initFlowAmt, initDate)));
+            leg.push_back(ext::make_shared<SimpleCashFlow>(-initFlowAmt, initDate));
     }
 
     // Amortization Flows
     if (amortNomFlow) {
+        auto prevCoupon = ext::dynamic_pointer_cast<Coupon>(refLeg.front());
+        QL_REQUIRE(prevCoupon, "makeNotionalLeg: non-coupon legs are not supported.");
+
         for (Size i = 1; i < refLeg.size(); i++) {
-            auto coupon = QuantLib::ext::dynamic_pointer_cast<QuantLib::Coupon>(refLeg[i]);
-            QL_REQUIRE(coupon, "makeNotionalLeg does not support non-coupon legs");
-            auto coupon2 = QuantLib::ext::dynamic_pointer_cast<QuantLib::Coupon>(refLeg[i - 1]);
-            QL_REQUIRE(coupon, "makeNotionalLeg does not support non-coupon legs");
-            Date flowDate = coupon->accrualStartDate();
-            flowDate = paymentCalendar.advance(flowDate, notionalPaymentLag, Days, paymentConvention);
-            Real initNom = (excludeIndexing ? unpackIndexedCoupon(coupon2) : coupon2)->nominal();
+            auto coupon = ext::dynamic_pointer_cast<Coupon>(refLeg[i]);
+            QL_REQUIRE(coupon, "makeNotionalLeg: non-coupon legs are not supported.");
+
+            Date flowDate = plaIsUnadj ? unadjustedSchedule[i] : coupon->accrualStartDate();
+            flowDate = pluIsCalDays ? paymentCalendar.adjust(flowDate + notionalPaymentLag, paymentConvention) :
+                paymentCalendar.advance(flowDate, notionalPaymentLag, Days, paymentConvention);
+
+            Real initNom = (excludeIndexing ? unpackIndexedCoupon(prevCoupon) : prevCoupon)->nominal();
             Real newNom = (excludeIndexing ? unpackIndexedCoupon(coupon) : coupon)->nominal();
             Real flow = initNom - newNom;
             if (flow != 0)
-                leg.push_back(QuantLib::ext::shared_ptr<CashFlow>(new SimpleCashFlow(flow, flowDate)));
+                leg.push_back(ext::make_shared<SimpleCashFlow>(flow, flowDate));
+
+            prevCoupon = coupon;
         }
     }
 
     // Final Nominal Return at Maturity
     if (finalNomFlow) {
-        auto coupon = QuantLib::ext::dynamic_pointer_cast<QuantLib::Coupon>(refLeg.back());
-        QL_REQUIRE(coupon, "makeNotionalLeg does not support non-coupon legs");
+        auto coupon = ext::dynamic_pointer_cast<Coupon>(refLeg.back());
+        QL_REQUIRE(coupon, "makeNotionalLeg: non-coupon legs are not supported.");
         double finalNomFlow = (excludeIndexing ? unpackIndexedCoupon(coupon) : coupon)->nominal();
-        Date finalDate = coupon->accrualEndDate();
-        finalDate = paymentCalendar.advance(finalDate, notionalPaymentLag, Days, paymentConvention);
+        Date finalDate = plaIsUnadj ? unadjustedSchedule.back() : coupon->accrualEndDate();
+        finalDate = pluIsCalDays ? paymentCalendar.adjust(finalDate + notionalPaymentLag, paymentConvention) :
+            paymentCalendar.advance(finalDate, notionalPaymentLag, Days, paymentConvention);
         if (finalNomFlow != 0)
-            leg.push_back(QuantLib::ext::shared_ptr<CashFlow>(new SimpleCashFlow(finalNomFlow, finalDate)));
+            leg.push_back(ext::make_shared<SimpleCashFlow>(finalNomFlow, finalDate));
     }
 
     return leg;
@@ -3429,8 +3467,50 @@ Leg joinLegs(const std::vector<Leg>& legs) {
     return masterLeg;
 }
 
+namespace {
+
+struct NotionalPaymentInfo
+{
+    Calendar calendar;
+    BusinessDayConvention convention = Unadjusted;
+    Integer lag = 0;
+    bool nplaIsUnadj = false;
+    Schedule unadjSchedule;
+    bool npluIsCalDays = false;
+};
+
+// Helper function to get notional payment info in `buildNotionalLeg` below, including shadow unadjusted schedule 
+// if necessary.
+NotionalPaymentInfo ntlPaymentInfo(const LegData& data, const Leg& leg, const Date& openEndDateReplacement) {
+
+    NotionalPaymentInfo npi;
+    npi.calendar = parseCalendar(data.paymentCalendar());
+    npi.convention = parseBusinessDayConvention(data.paymentConvention());
+    npi.lag = boost::apply_visitor(PaymentLagInteger(), parsePaymentLag(data.notionalPaymentLag()));
+
+    // If notional payment lag anchor is set and unadjusted, we need to build an unadjusted schedule for the base 
+    // or anchor dates from which to calculate the notional payment dates. If not, do nothing => empty schedule.
+    const auto& npla = data.notionalPaymentLagAnchor();
+    npi.nplaIsUnadj = npla && *npla == DateDeltaAnchor::Unadjusted;
+    if (npi.nplaIsUnadj) {
+        ScheduleBuilder scheduleBuilder;
+        scheduleBuilder.add(npi.unadjSchedule, data.schedule());
+        scheduleBuilder.makeSchedules(openEndDateReplacement, true);
+        QL_REQUIRE(npi.unadjSchedule.size() - 1 == leg.size(), "ntlPaymentInfo: unadjusted schedule size - 1 (" <<
+            npi.unadjSchedule.size() - 1 << ") does not match leg size (" << leg.size() << ").");
+    }
+
+    const auto& nplu = data.notionalPaymentLagUnit();
+    npi.npluIsCalDays = nplu && *nplu == DateDeltaUnit::CalendarDays;
+
+    return npi;
+}
+
+} // namespace
+
 Leg buildNotionalLeg(const LegData& data, const Leg& leg, RequiredFixings& requiredFixings,
-                     const QuantLib::ext::shared_ptr<Market>& market, const std::string& configuration) {
+                     const QuantLib::ext::shared_ptr<Market>& market, const std::string& configuration,
+                     const Date& openEndDateReplacement) {
 
     if (!data.isNotResetXCCY()) {
         // If we have an FX resetting leg, add the notional amount at the start and end of each coupon period.
@@ -3440,18 +3520,22 @@ Leg buildNotionalLeg(const LegData& data, const Leg& leg, RequiredFixings& requi
         auto fxIndex =
             buildFxIndex(data.fxIndex(), data.currency(), data.foreignCurrency(), market, configuration, true);
 
-        PaymentLag notionalPayLag = parsePaymentLag(data.notionalPaymentLag());
-        Natural payLagInteger = boost::apply_visitor(PaymentLagInteger(), notionalPayLag);
-        const Calendar& payCalendar = parseCalendar(data.paymentCalendar());
-        const BusinessDayConvention& payConvention = parseBusinessDayConvention(data.paymentConvention());
+        auto npi = ntlPaymentInfo(data, leg, openEndDateReplacement);
 
         Leg resettingLeg;
         for (Size j = 0; j < leg.size(); j++) {
             QuantLib::ext::shared_ptr<Coupon> c = QuantLib::ext::dynamic_pointer_cast<Coupon>(leg[j]);
             QL_REQUIRE(c, "Expected each cashflow in FX resetting leg to be of type Coupon");
 
-            const Date& initFlowDate = payCalendar.advance(c->accrualStartDate(), payLagInteger, Days, payConvention);
-            const Date& finalFlowDate = payCalendar.advance(c->accrualEndDate(), payLagInteger, Days, payConvention);
+            Date initFlowDate = npi.nplaIsUnadj ? npi.unadjSchedule[j] : c->accrualStartDate();
+            Date finalFlowDate = npi.nplaIsUnadj ? npi.unadjSchedule[j + 1] : c->accrualEndDate();
+            if (npi.npluIsCalDays) {
+                initFlowDate = npi.calendar.adjust(initFlowDate + npi.lag, npi.convention);
+                finalFlowDate = npi.calendar.adjust(finalFlowDate + npi.lag, npi.convention);
+            } else {
+                initFlowDate = npi.calendar.advance(initFlowDate, npi.lag, Days, npi.convention);
+                finalFlowDate = npi.calendar.advance(finalFlowDate, npi.lag, Days, npi.convention);
+            }
 
             // Build a pair of notional flows, one at the start and one at the end of the accrual period.
             // They both have the same FX fixing date => same amount in this leg's currency.
@@ -3520,16 +3604,11 @@ Leg buildNotionalLeg(const LegData& data, const Leg& leg, RequiredFixings& requi
 
     } else if ((data.notionalInitialExchange() || data.notionalFinalExchange() || data.notionalAmortizingExchange()) &&
                (data.legType() != LegType::CPI)) {
-
         // check for notional exchanges on non FX reseting trades
-
-        PaymentLag notionalPayLag = parsePaymentLag(data.notionalPaymentLag());
-        Natural notionalPayLagInteger = boost::apply_visitor(PaymentLagInteger(), notionalPayLag);
-
+        auto npi = ntlPaymentInfo(data, leg, openEndDateReplacement);
         return makeNotionalLeg(leg, data.notionalInitialExchange(), data.notionalFinalExchange(),
-                               data.notionalAmortizingExchange(), notionalPayLagInteger,
-                               parseBusinessDayConvention(data.paymentConvention()),
-                               parseCalendar(data.paymentCalendar()), true);
+            data.notionalAmortizingExchange(), npi.lag, npi.convention, npi.calendar, true,
+            data.notionalPaymentLagUnit(), data.notionalPaymentLagAnchor(), npi.unadjSchedule);
     } else {
         return Leg();
     }

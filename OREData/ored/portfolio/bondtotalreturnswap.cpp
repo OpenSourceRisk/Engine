@@ -241,7 +241,7 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
     Leg fundingNotionalLeg;
     if (fundingLegData_.notionalInitialExchange() || fundingLegData_.notionalFinalExchange() ||
         fundingLegData_.notionalAmortizingExchange()) {
-        Natural fundingLegPayLag = 0;
+        Integer fundingLegPayLag = 0;
         fundingNotionalLeg =
             makeNotionalLeg(fundingLeg, fundingLegData_.notionalInitialExchange(),
                             fundingLegData_.notionalFinalExchange(), fundingLegData_.notionalAmortizingExchange(),

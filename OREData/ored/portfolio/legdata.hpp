@@ -986,7 +986,9 @@ public:
             const std::vector<Indexing>& indexing = {}, const bool indexingFromAssetLeg = false,
             const string& lastPeriodDayCounter = "",
             QuantLib::ext::optional<QuantExt::DateDeltaUnit> paymentLagUnit = QuantLib::ext::nullopt,
-            QuantLib::ext::optional<QuantExt::DateDeltaAnchor> paymentLagAnchor = QuantLib::ext::nullopt);
+            QuantLib::ext::optional<QuantExt::DateDeltaAnchor> paymentLagAnchor = QuantLib::ext::nullopt,
+            QuantLib::ext::optional<QuantExt::DateDeltaUnit> notionalPaymentLagUnit = QuantLib::ext::nullopt,
+            QuantLib::ext::optional<QuantExt::DateDeltaAnchor> notionalPaymentLagAnchor = QuantLib::ext::nullopt);
 
     //! \name Serialisation
     //@{
@@ -1029,6 +1031,12 @@ public:
     const string& settlementFxFixingDate() const { return settlementFxFixingDate_; }
     const QuantLib::ext::optional<QuantExt::DateDeltaUnit>& paymentLagUnit() const { return paymentLagUnit_; }
     const QuantLib::ext::optional<QuantExt::DateDeltaAnchor>& paymentLagAnchor() const { return paymentLagAnchor_; }
+    const QuantLib::ext::optional<QuantExt::DateDeltaUnit>& notionalPaymentLagUnit() const {
+        return notionalPaymentLagUnit_;
+    }
+    const QuantLib::ext::optional<QuantExt::DateDeltaAnchor>& notionalPaymentLagAnchor() const {
+        return notionalPaymentLagAnchor_;
+    }
     //@}
 
     //! \name modifiers
@@ -1093,6 +1101,8 @@ private:
     string settlementFxFixingDate_;
     QuantLib::ext::optional<QuantExt::DateDeltaUnit> paymentLagUnit_;
     QuantLib::ext::optional<QuantExt::DateDeltaAnchor> paymentLagAnchor_;
+    QuantLib::ext::optional<QuantExt::DateDeltaUnit> notionalPaymentLagUnit_;
+    QuantLib::ext::optional<QuantExt::DateDeltaAnchor> notionalPaymentLagAnchor_;
 };
 
 //! \name Utilities for building QuantLib Legs
@@ -1113,8 +1123,11 @@ Leg makeBMALeg(const LegData& data, const QuantLib::ext::shared_ptr<QuantExt::BM
                std::set<std::tuple<std::set<std::string>, std::string, std::string>>* = nullptr);
 Leg makeSimpleLeg(const LegData& data);
 Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalNomFlow, const bool amortNomFlow,
-                    const QuantLib::Natural notionalPaymentLag, const BusinessDayConvention paymentConvention,
-                    const Calendar paymentCalendar, const bool excludeIndexing = true);
+                    const QuantLib::Integer notionalPaymentLag, const BusinessDayConvention paymentConvention,
+                    const Calendar paymentCalendar, const bool excludeIndexing = true,
+                    const QuantLib::ext::optional<QuantExt::DateDeltaUnit>& paymentLagUnit = QuantLib::ext::nullopt,
+                    const QuantLib::ext::optional<QuantExt::DateDeltaAnchor>& paymentLagAnchor = QuantLib::ext::nullopt,
+                    const QuantLib::Schedule& unadjustedSchedule = {});
 Leg makeCPILeg(const LegData& data, const QuantLib::ext::shared_ptr<ZeroInflationIndex>& index,
                const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                const QuantLib::Date& openEndDateReplacement = Null<Date>(), const bool attachPricer = true,
@@ -1322,7 +1335,8 @@ Leg joinLegs(const std::vector<Leg>& legs);
 
 // build a notional leg for a given coupon leg, returns an empty Leg if not applicable
 Leg buildNotionalLeg(const LegData& data, const Leg& leg, RequiredFixings& requiredFixings,
-                     const QuantLib::ext::shared_ptr<Market>& market, const std::string& configuration);
+                     const QuantLib::ext::shared_ptr<Market>& market, const std::string& configuration,
+                     const QuantLib::Date& openEndDateReplacement = Null<Date>());
 
 // replace given Ibor coupon by interpolated Ibor coupon
 void applyStubInterpolation(Leg::iterator c, const std::string& shortIndexStr, const std::string& longIndexStr,

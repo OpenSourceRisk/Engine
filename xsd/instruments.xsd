@@ -931,6 +931,8 @@
       <xs:element type="dateDeltaUnit" name="PaymentLagUnit" minOccurs="0"/>
       <xs:element type="dateDeltaAnchor" name="PaymentLagAnchor" minOccurs="0"/>
       <xs:element type="xs:integer" name="NotionalPaymentLag" minOccurs="0"/>
+      <xs:element type="dateDeltaUnit" name="NotionalPaymentLagUnit" minOccurs="0"/>
+      <xs:element type="dateDeltaAnchor" name="NotionalPaymentLagAnchor" minOccurs="0"/>
       <xs:element type="xs:string" name="PaymentCalendar" minOccurs="0"/>
       <xs:element type="dayCounter" name="DayCounter" minOccurs="0"/>
       <xs:element name="Amortizations" minOccurs="0" maxOccurs="1">

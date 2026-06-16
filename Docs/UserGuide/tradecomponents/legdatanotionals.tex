@@ -100,9 +100,19 @@ before any adjustments have been applied.
 
 Allowable values: \lstinline!Adjusted! or \lstinline!Unadjusted!. Defaults to \lstinline!Adjusted! if omitted.
 
-\item NotionalPaymentLag [optional]: The notional payment lag (in days) applied to any notional exchanges.
+\item \lstinline!NotionalPaymentLag! [optional]: The notional payment lag, in days, applied to any notional exchanges.
 
-Allowable values: Any non-negative integer. Defaults to zero if left blank or omitted.
+Allowable values: Any integer that makes economic sense.
+In most cases, if non-zero, it is a small positive number of days.
+Defaults to zero if left blank or omitted.
+
+\item \lstinline!NotionalPaymentLagUnit! [optional]:
+This setting interacts with \lstinline!NotionalPaymentLag! in the same way that \lstinline!PaymentLagUnit! interacts 
+with \lstinline!PaymentLag!. See the relevant bullet points above for a description and allowable values.
+
+\item \lstinline!NotionalPaymentLagAnchor! [optional]:
+This setting interacts with \lstinline!NotionalPaymentLag! in the same way that \lstinline!PaymentLagAnchor! interacts 
+with \lstinline!PaymentLag!. See the relevant bullet points above for a description and allowable values.
 
 \item DayCounter: The day count convention of the leg coupons. Note that \lstinline!DayCounter! is mandatory for all leg types except \emph{Equity}.
 
