@@ -770,6 +770,18 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
             shiftMult = vol;
         }
     } break;
+    case RiskFactorKey::KeyType::IntradayPowerCurve: {
+        auto it = sensiParams.intradayPowerCurveShiftData().find(keylabel);
+        QL_REQUIRE(it != sensiParams.intradayPowerCurveShiftData().end(), "shiftData not found for " << keylabel);
+        shiftSize = it->second->shiftSize;
+        if (it->second->shiftType == ShiftType::Relative) {
+            auto p = convertSensitivityCurvePillarToPeriod(asof, it->second->shiftTenors[key.index], key, false,
+                                                           sensiParams.parConversion());
+            auto priceCurve = simMarket->intradayPowerPriceCurve(keylabel, marketConfiguration);
+            Time t = priceCurve->dayCounter().yearFraction(asof, asof + p);
+            shiftMult = priceCurve->averageDayPriceCurve()->price(t);
+        }
+    } break;
     case RiskFactorKey::KeyType::SecuritySpread: {
         auto itr = sensiParams.securityShiftData().find(keylabel);
         QL_REQUIRE(itr != sensiParams.securityShiftData().end(), "shiftData not found for " << keylabel);

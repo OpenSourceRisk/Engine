@@ -352,6 +352,7 @@ QuantLib::ext::optional<ore::analytics::CrifRecord> CrifRecordGenerator::operato
             data = baseCorrelationImpl(sr, rfTokens);
             break;
         case RiskFactorKey::KeyType::CommodityCurve:
+        case RiskFactorKey::KeyType::IntradayPowerCurve:
             data = commodityCurveImpl(sr, rfTokens);
             break;
         case RiskFactorKey::KeyType::CommodityVolatility:

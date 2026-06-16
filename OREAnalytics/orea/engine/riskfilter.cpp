@@ -117,6 +117,7 @@ RiskFilter::RiskFilter(const MarketRiskConfiguration::RiskClass& riskClass, cons
                                                          RiskFactorKey::KeyType::EquityVolatility,
                                                          RiskFactorKey::KeyType::CommodityCurve,
                                                          RiskFactorKey::KeyType::CommodityVolatility,
+                                                         RiskFactorKey::KeyType::IntradayPowerCurve,
                                                          RiskFactorKey::KeyType::DividendYield,
                                                          RiskFactorKey::KeyType::SurvivalProbability,
                                                          RiskFactorKey::KeyType::RecoveryRate,
@@ -144,6 +145,7 @@ RiskFilter::RiskFilter(const MarketRiskConfiguration::RiskClass& riskClass, cons
                             RiskFactorKey::KeyType::DividendYield,
                             RiskFactorKey::KeyType::SurvivalProbability, 
                             RiskFactorKey::KeyType::CommodityCurve,
+                            RiskFactorKey::KeyType::IntradayPowerCurve,
                             RiskFactorKey::KeyType::RecoveryRate,
                             RiskFactorKey::KeyType::CPIIndex,
                             RiskFactorKey::KeyType::ZeroInflationCurve,
@@ -194,7 +196,8 @@ RiskFilter::RiskFilter(const MarketRiskConfiguration::RiskClass& riskClass, cons
                              RiskFactorKey::KeyType::DividendYield};
             break;
         case MarketRiskConfiguration::RiskClass::Commodity:
-            allowed_class = {RiskFactorKey::KeyType::CommodityCurve, RiskFactorKey::KeyType::CommodityVolatility};
+            allowed_class = {RiskFactorKey::KeyType::CommodityCurve, RiskFactorKey::KeyType::CommodityVolatility,
+                             RiskFactorKey::KeyType::IntradayPowerCurve};
             break;
         case MarketRiskConfiguration::RiskClass::FX:
             allowed_class = {RiskFactorKey::KeyType::FXSpot, RiskFactorKey::KeyType::FXVolatility};

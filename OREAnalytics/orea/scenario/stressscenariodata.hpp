@@ -100,6 +100,12 @@ public:
         vector<Real> shifts; 
     };
 
+    struct IntradayPowerShiftData {
+        ShiftType shiftType;
+        vector<Period> shiftTenors;
+        vector<Real> shifts;
+    };
+
 
     struct StressTestData {
         string label;
@@ -111,6 +117,7 @@ public:
         map<string, QuantLib::ext::shared_ptr<SpotShiftData>> equityShifts;         // by equity
         map<string, QuantLib::ext::shared_ptr<VolShiftData>> equityVolShifts;             // by equity
         map<string, QuantLib::ext::shared_ptr<CurveShiftData>> commodityCurveShifts;       // by commodity
+        map<string, QuantLib::ext::shared_ptr<IntradayPowerShiftData>> intradayPowerCurveShifts; // by intraday power curve
         map<string, QuantLib::ext::shared_ptr<CommodityVolShiftData>> commodityVolShifts;  // by commodity
         map<string, QuantLib::ext::shared_ptr<CapFloorVolShiftData>> capVolShifts; // by currency
         map<string, QuantLib::ext::shared_ptr<SwaptionVolShiftData>> swaptionVolShifts;  // by currency
@@ -152,6 +159,11 @@ public:
         void setCommodityVolShift(std::string s,
                                const QuantLib::ext::shared_ptr<StressTestScenarioData::CommodityVolShiftData>& csd) { 
             commodityVolShifts[s] = csd;
+        }
+        void setIntradayPowerCurveShift(
+            std::string s,
+            const QuantLib::ext::shared_ptr<StressTestScenarioData::IntradayPowerShiftData>& csd) {
+            intradayPowerCurveShifts[s] = csd;
         }
         void setCapVolShift(std::string s,
                             const QuantLib::ext::shared_ptr<StressTestScenarioData::CapFloorVolShiftData>& csd) {
@@ -237,6 +249,14 @@ public:
                 vsd.push_back(std::make_pair(k, v));
             }
             return vsd;
+        };
+        std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<IntradayPowerShiftData>>>
+        getIntradayPowerCurveShifts() const {
+            std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<IntradayPowerShiftData>>> ipsd;
+            for (const auto& [k, v] : intradayPowerCurveShifts) {
+                ipsd.push_back(std::make_pair(k, v));
+            }
+            return ipsd;
         };
         std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<CapFloorVolShiftData>>>
         getCapVolShifts() const {

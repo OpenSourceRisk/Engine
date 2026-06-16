@@ -299,6 +299,28 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
             }
         }
 
+        DLOG("Get intraday power curve shift parameters");
+        test.intradayPowerCurveShifts.clear();
+        XMLNode* intradayPowerCurves = XMLUtils::getChildNode(testCase, "IntradayPowerCurves");
+        if (intradayPowerCurves) {
+            for (XMLNode* child = XMLUtils::getChildNode(intradayPowerCurves, "IntradayPowerCurve"); child;
+                 child = XMLUtils::getNextSibling(child)) {
+                string name = XMLUtils::getAttribute(child, "name");
+                DLOG("Loading stress parameters for intraday power curve " << name);
+                IntradayPowerShiftData data;
+                data.shiftType = QuantExt::parseShiftType(XMLUtils::getChildValue(child, "ShiftType", true));
+                data.shifts = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Shifts", true);
+                data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
+                QL_REQUIRE(data.shifts.size() == data.shiftTenors.size(),
+                           "number of tenors ("
+                               << data.shiftTenors.size() << ") and shifts (" << data.shifts.size()
+                               << ") does not match in intraday power curve stress data for curve = " << name);
+                QL_REQUIRE(data.shifts.size() > 0,
+                           "no shifts provided in intraday power curve stress data for curve = " << name);
+                test.intradayPowerCurveShifts[name] = ext::make_shared<IntradayPowerShiftData>(data);
+            }
+        }
+
         DLOG("Get commodity vol stress parameters");
         test.commodityVolShifts.clear();
         XMLNode* commodityVols = XMLUtils::getChildNode(testCase, "CommodityVolatilities");
@@ -463,6 +485,20 @@ void commodityVolShiftDataToXml(
     }
 }
 
+void intradayPowerShiftDataToXml(
+    ore::data::XMLDocument& doc, XMLNode* node,
+    const std::map<std::string, ext::shared_ptr<StressTestScenarioData::IntradayPowerShiftData>>& data,
+    const std::string& identifier, const std::string& nodeName, const std::string& parentNodeName) {
+    auto parentNode = XMLUtils::addChild(doc, node, parentNodeName);
+    for (const auto& [key, data] : data) {
+        auto childNode = XMLUtils::addChild(doc, parentNode, nodeName);
+        XMLUtils::addAttribute(doc, childNode, identifier, key);
+        XMLUtils::addChild(doc, childNode, "ShiftType", ore::data::to_string(data->shiftType));
+        XMLUtils::addGenericChildAsList(doc, childNode, "Shifts", data->shifts);
+        XMLUtils::addGenericChildAsList(doc, childNode, "ShiftTenors", data->shiftTenors);
+    }
+}
+
 void fxVolDataToXml(ore::data::XMLDocument& doc, XMLNode* node,
                     const std::map<std::string, ext::shared_ptr<StressTestScenarioData::FXVolShiftData>>& shiftdata,
                     const std::string& identifier, const std::string& nodeName, const std::string& parentNodeName) {
@@ -600,6 +636,9 @@ XMLNode* StressTestScenarioData::toXML(ore::data::XMLDocument& doc) const {
         if (!test.commodityCurveShifts.empty())
             curveShiftDataToXml(doc, testNode, test.commodityCurveShifts, "commodity", "CommodityCurve",
                                 "CommodityCurves");
+        if (!test.intradayPowerCurveShifts.empty())
+            intradayPowerShiftDataToXml(doc, testNode, test.intradayPowerCurveShifts, "name", "IntradayPowerCurve",
+                                        "IntradayPowerCurves");
         if (!test.commodityVolShifts.empty())
             commodityVolShiftDataToXml(doc, testNode, test.commodityVolShifts, "commodity", "CommodityVolatility",
                                        "CommodityVolatilities");
