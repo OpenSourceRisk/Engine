@@ -46,8 +46,7 @@ public:
                          const QuantExt::SubPeriodsCoupon1::Type type = QuantExt::SubPeriodsCoupon1::Compounding,
                          QuantLib::Pillar::Choice pillarChoice = QuantLib::Pillar::Choice::LastRelevantDate,
                          const QuantLib::Date& customPillarDate = QuantLib::Date(),
-                         QuantLib::ext::optional<bool> isAveraged = QuantLib::ext::nullopt,
-                         QuantLib::ext::optional<bool> flatIsAveraged = QuantLib::ext::nullopt);
+                         bool payIsAveraged = false, bool recIsAveraged = false);
 
     //! \name RateHelper interface
     //@{
@@ -81,8 +80,8 @@ protected:
     QuantExt::SubPeriodsCoupon1::Type type_;
     QuantLib::Pillar::Choice pillarChoice_;
 
-    QuantLib::ext::optional<bool> isAveraged_;
-    QuantLib::ext::optional<bool> flatIsAveraged_;
+    bool payIsAveraged_;
+    bool recIsAveraged_;
 
     bool automaticDiscountRelinkableHandle_;
 

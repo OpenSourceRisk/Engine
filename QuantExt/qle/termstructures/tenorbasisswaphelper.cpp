@@ -32,13 +32,13 @@ TenorBasisSwapHelper::TenorBasisSwapHelper(
     const bool payIndexGiven, const bool receiveIndexGiven, const bool discountingGiven, const bool spreadOnRec,
     const bool includeSpread, const Period& payFrequency, const Period& recFrequency, const bool telescopicValueDates,
     const QuantExt::SubPeriodsCoupon1::Type type, QuantLib::Pillar::Choice pillarChoice,
-    const QuantLib::Date& customPillarDate, QuantLib::ext::optional<bool> isAveraged, QuantLib::ext::optional<bool> flatIsAveraged)
+    const QuantLib::Date& customPillarDate, bool payIsAveraged, bool recIsAveraged)
     : RelativeDateRateHelper(spread), swapTenor_(swapTenor), payIndex_(payIndex), receiveIndex_(receiveIndex),
       payIndexGiven_(payIndexGiven), receiveIndexGiven_(receiveIndexGiven), discountingGiven_(discountingGiven),
       spreadOnRec_(spreadOnRec), includeSpread_(includeSpread), payFrequency_(payFrequency),
       recFrequency_(recFrequency), telescopicValueDates_(telescopicValueDates), type_(type),
-            pillarChoice_(pillarChoice), isAveraged_(isAveraged), flatIsAveraged_(flatIsAveraged),
-            discountHandle_(discountingCurve) {
+      pillarChoice_(pillarChoice), payIsAveraged_(payIsAveraged), recIsAveraged_(recIsAveraged),
+      discountHandle_(discountingCurve) {
 
     /* depending on the given curves we proceed as outlined in the following table
 
@@ -146,7 +146,7 @@ void TenorBasisSwapHelper::initializeDates() {
         effectiveDate, 1.0, swapTenor_, payIndex_,
         quote().empty() || !quote()->isValid() || spreadOnRec_ ? 0.0 : quote()->value(), payFrequency_, receiveIndex_,
         quote().empty() || !quote()->isValid() || !spreadOnRec_ ? 0.0 : quote()->value(), recFrequency_,
-        DateGeneration::Backward, includeSpread_, spreadOnRec_, type_, isAveraged_, flatIsAveraged_, telescopicValueDates_);
+        DateGeneration::Backward, includeSpread_, spreadOnRec_, type_, payIsAveraged_, recIsAveraged_, telescopicValueDates_);
     auto engine = QuantLib::ext::make_shared<DiscountingSwapEngine>(discountRelinkableHandle_);
     swap_->setPricingEngine(engine);
 

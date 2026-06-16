@@ -18,7 +18,6 @@
 
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/cashflows/overnightindexedcoupon.hpp>
-#include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <ql/indexes/ibor/libor.hpp>
 #include <ql/math/solvers1d/brent.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
@@ -67,8 +66,7 @@ TenorBasisSwap::TenorBasisSwap(const Date& effectiveDate, Real nominal, const Pe
                                const Period& payFrequency, const QuantLib::ext::shared_ptr<IborIndex>& recIndex,
                                Spread recSpread, const Period& recFrequency, DateGeneration::Rule rule,
                                bool includeSpread, bool spreadOnRec, QuantExt::SubPeriodsCoupon1::Type type,
-                               QuantLib::ext::optional<bool> payIsAveraged, QuantLib::ext::optional<bool> recIsAveraged,
-                               const bool telescopicValueDates)
+                               bool payIsAveraged, bool recIsAveraged, const bool telescopicValueDates)
     : Swap(2), nominals_(std::vector<Real>(1, nominal)), payIndex_(payIndex), paySpread_(paySpread),
             payFrequency_(payFrequency), recIndex_(recIndex), recSpread_(recSpread), recFrequency_(recFrequency),
             includeSpread_(includeSpread), spreadOnRec_(spreadOnRec), type_(type), telescopicValueDates_(telescopicValueDates),
@@ -111,8 +109,7 @@ TenorBasisSwap::TenorBasisSwap(Real nominal, const Schedule& paySchedule,
                                const QuantLib::ext::shared_ptr<IborIndex>& payIndex, Spread paySpread,
                                const Schedule& recSchedule, const QuantLib::ext::shared_ptr<IborIndex>& recIndex,
                                Spread recSpread, bool includeSpread, bool spreadOnRec, QuantExt::SubPeriodsCoupon1::Type type,
-                               QuantLib::ext::optional<bool> payIsAveraged, QuantLib::ext::optional<bool> recIsAveraged,
-                               const bool telescopicValueDates)
+                               bool payIsAveraged, bool recIsAveraged, const bool telescopicValueDates)
     : Swap(2), nominals_(std::vector<Real>(1, nominal)), paySchedule_(paySchedule), payIndex_(payIndex),
             paySpread_(paySpread), recSchedule_(recSchedule), recIndex_(recIndex), recSpread_(recSpread),
             includeSpread_(includeSpread), spreadOnRec_(spreadOnRec), type_(type), telescopicValueDates_(telescopicValueDates),
@@ -126,9 +123,7 @@ TenorBasisSwap::TenorBasisSwap(const std::vector<Real>& nominals, const Schedule
                                const QuantLib::ext::shared_ptr<IborIndex>& payIndex, Spread paySpread,
                                const Schedule& recSchedule, const QuantLib::ext::shared_ptr<IborIndex>& recIndex,
                                Spread recSpread, bool includeSpread, bool spreadOnRec, QuantExt::SubPeriodsCoupon1::Type type,
-                               QuantLib::ext::optional<bool> payIsAveraged,
-                               QuantLib::ext::optional<bool> recIsAveraged,
-                               const bool telescopicValueDates)
+                               bool payIsAveraged, bool recIsAveraged, const bool telescopicValueDates)
     : Swap(2), nominals_(nominals), paySchedule_(paySchedule), payIndex_(payIndex),
             paySpread_(paySpread), recSchedule_(recSchedule), recIndex_(recIndex), recSpread_(recSpread),
             includeSpread_(includeSpread), spreadOnRec_(spreadOnRec), type_(type), telescopicValueDates_(telescopicValueDates),
@@ -151,18 +146,13 @@ void TenorBasisSwap::initializeLegs() {
     Leg payLeg;
 
     if (payIndexON) {
-        if (payIsAveraged_ && *payIsAveraged_) {
-            payLeg = AverageONLeg(paySchedule_, payIndexON)
-                         .withNotionals(nominals_)
-                         .withSpread(paySpread_)
-                         .withTelescopicValueDates(telescopicValueDates_);
-        } else {
-            payLeg = OvernightLeg(paySchedule_, payIndexON)
-                         .withNotionals(nominals_)
-                         .withSpreads(paySpread_)
-                         .withTelescopicValueDates(telescopicValueDates_);
-        }
-        
+        auto averagingMethod = payIsAveraged_ ? RateAveraging::Simple : RateAveraging::Compound;
+
+        payLeg = QuantLib::OvernightLeg(paySchedule_, payIndexON)
+                     .withNotionals(nominals_)
+                     .withSpreads(paySpread_)
+                     .withTelescopicValueDates(telescopicValueDates_)
+                     .withAveragingMethod(averagingMethod);
     } else {
         if (paySchedule_.tenor() == payIndex_->tenor()) {
             payLeg = IborLeg(paySchedule_, payIndex_)
@@ -195,17 +185,13 @@ void TenorBasisSwap::initializeLegs() {
     Leg recLeg;
 
     if (recIndexON) {
-        if (recIsAveraged_ && *recIsAveraged_) {
-            recLeg = AverageONLeg(recSchedule_, recIndexON)
-                         .withNotionals(nominals_)
-                         .withSpread(recSpread_)
-                         .withTelescopicValueDates(telescopicValueDates_);
-        } else {
-            recLeg = OvernightLeg(recSchedule_, recIndexON)
-                         .withNotionals(nominals_)
-                         .withSpreads(recSpread_)
-                         .withTelescopicValueDates(telescopicValueDates_);
-        }
+        auto averagingMethod = recIsAveraged_? RateAveraging::Simple : RateAveraging::Compound;
+
+        recLeg = QuantLib::OvernightLeg(recSchedule_, recIndexON)
+                     .withNotionals(nominals_)
+                     .withSpreads(recSpread_)
+                     .withTelescopicValueDates(telescopicValueDates_)
+                     .withAveragingMethod(averagingMethod);
     } else {
         if (recSchedule_.tenor() == recIndex_->tenor()) {
             recLeg = IborLeg(recSchedule_, recIndex_)

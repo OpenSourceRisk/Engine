@@ -1230,7 +1230,7 @@ std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Date> ParSensitivityI
     auto helper = QuantLib::ext::make_shared<TenorBasisSwap>(
         settlementDate, 1.0, term, payIndex, 0.0, conv->payFrequency(), receiveIndex, 0.0, conv->receiveFrequency(),
         DateGeneration::Backward, conv->includeSpread(), conv->spreadOnRec(), conv->subPeriodsCouponType(),
-        conv->isAveraged(), conv->flatIsAveraged(), telescopicValueDates);
+        conv->isPayAveraged(), conv->isRecAveraged(), telescopicValueDates);
 
     auto lastPayCoupon = helper->payLeg().back();
     auto lastReceiveCoupon = helper->recLeg().back();
@@ -1242,12 +1242,9 @@ std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Date> ParSensitivityI
             return c->valueDates().back();
         if (auto c = QuantLib::ext::dynamic_pointer_cast<QuantLib::OvernightIndexedCoupon>(flow)) {
             return cal.advance(c->valueDates().back(), 1 * Days);
-        }
-        if (auto c = QuantLib::ext::dynamic_pointer_cast<AverageONIndexedCoupon>(flow)) {
-            return cal.advance(c->valueDates().back(), 1 * Days);
         } else {
             QL_FAIL("ParSensitivityInstrumentBuilder::makeTenorBasisSwap(): Either IborCoupon, SubPeriodsCoupon1 or "
-                    "OvernightIndexedCoupon or AverageONIndexedCoupon cashflow "
+                    "OvernightIndexedCoupon cashflow "
                     "expected.");
         }
     };
