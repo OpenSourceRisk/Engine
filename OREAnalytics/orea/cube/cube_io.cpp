@@ -31,6 +31,8 @@
 
 #include <iomanip>
 #include <regex>
+#include <chrono>
+#include <sstream>
 
 namespace ore {
 namespace analytics {
@@ -70,13 +72,39 @@ QuantLib::ext::shared_ptr<NPVCubeWithMetaData> loadCube(const std::string& filen
     // open file
 
     bool gzip = use_compression(filename);
+
+    auto start_read = std::chrono::steady_clock::now();
     std::ifstream in1(filename, gzip ? (std::ios::binary | std::ios::in) : std::ios::in);
-    boost::iostreams::filtering_stream<boost::iostreams::input> in;
+    QL_REQUIRE(in1.is_open(), "Failed to open file " << filename);
+    std::stringstream buffer;
+    buffer << in1.rdbuf();
+    auto end_read = std::chrono::steady_clock::now();
+    auto read_duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_read - start_read).count();
+
+    std::string decompressed_data;
+    long long decompress_duration = 0;
+
 #ifdef ORE_USE_ZLIB
-    if (gzip)
-        in.push(boost::iostreams::gzip_decompressor());
+    if (gzip) {
+        auto start_decompress = std::chrono::steady_clock::now();
+        boost::iostreams::filtering_stream<boost::iostreams::input> decompress_stream;
+        decompress_stream.push(boost::iostreams::gzip_decompressor());
+        decompress_stream.push(buffer);
+        
+        std::stringstream decomp_ss;
+        decomp_ss << decompress_stream.rdbuf();
+        decompressed_data = decomp_ss.str();
+        auto end_decompress = std::chrono::steady_clock::now();
+        decompress_duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_decompress - start_decompress).count();
+    }
 #endif
-    in.push(in1);
+
+    std::stringstream in;
+    if (gzip) {
+        in.str(decompressed_data);
+    } else {
+        in << buffer.rdbuf();
+    }
 
     // read meta data
 
@@ -160,101 +188,122 @@ QuantLib::ext::shared_ptr<NPVCubeWithMetaData> loadCube(const std::string& filen
         ++nData;
     }
 
+    LOG("Loaded cube from " << filename << ": read time = " << read_duration << " ms, decompress time = " << decompress_duration << " ms");
     LOG("loaded cube from " << filename << ": asof = " << asof << ", dim = " << numIds << " x " << numDates << " x "
                             << samples << " x " << depth << ", " << nData << " data lines read.");
 
     return result;
 }
 
-void saveCube(const std::string& filename, const NPVCubeWithMetaData& cube) {
+void saveCube(const std::string& filename, const NPVCubeWithMetaData& cube, int gzipCompressionLevel) {
 
-    // open file
+    auto start_write = std::chrono::steady_clock::now();
 
-    bool gzip = use_compression(filename);
-    std::ofstream out1(filename, gzip ? (std::ios::binary | std::ios::out) : std::ios::out);
-    boost::iostreams::filtering_stream<boost::iostreams::output> out;
-#ifdef ORE_USE_ZLIB
-    if (gzip)
-        out.push(boost::iostreams::gzip_compressor(/*boost::iostreams::gzip_params(9)*/));
-#endif
-    out.push(out1);
-
-    // write meta data (tag width is hardcoded and used in getMetaData())
-
-    out << "# asof       : " << ore::data::to_string(cube.cube()->asof()) << "\n";
-    out << "# numIds     : " << std::to_string(cube.cube()->numIds()) << "\n";
-    out << "# numDates   : " << std::to_string(cube.cube()->numDates()) << "\n";
-    out << "# samples    : " << ore::data::to_string(cube.cube()->samples()) << "\n";
-    out << "# depth      : " << ore::data::to_string(cube.cube()->depth()) << "\n";
-    out << "# usesDblPrc : " << std::boolalpha << cube.cube()->usesDoublePrecision() << "\n";
-    out << "# dates      : \n";
-    for (auto const& d : cube.cube()->dates())
-        out << "# " << ore::data::to_string(d) << "\n";
-
-    out << "# ids        : \n";
-    std::map<Size, std::string> ids;
-    for (auto const& d : cube.cube()->idsAndIndexes()) {
-        ids[d.second] = d.first;
-    }
-    for (auto const& d : ids) {
-        out << "# " << d.second << "\n";
+    int validLevel = gzipCompressionLevel;
+    if (validLevel < 0 || validLevel > 9) {
+        WLOG("Invalid gzipCompressionLevel (" << validLevel << ") specified. Must be between 0 and 9. Falling back to default (6).");
+        validLevel = 6;
     }
 
-    if (cube.scenarioGeneratorData()) {
-        std::string scenGenDataXml =
-            std::regex_replace(cube.scenarioGeneratorData()->toXMLString(), std::regex("\\r\\n|\\r|\\n|\\t"), "");
-        out << "# scenGenDta : " << scenGenDataXml << "\n";
-    }
-    if (cube.storeFlows()) {
-        out << "# storeFlows : " << std::boolalpha << *cube.storeFlows() << "\n";
-    }
-    if (cube.storeCreditStateNPVs()) {
-        out << "# storeCrSt  : " << *cube.storeCreditStateNPVs() << "\n";
-    }
-
-    // write cube data
     {
-        BufWriter w(out);
-        static constexpr char hdr[] = "#id,date,sample,depth,value\n";
-        w.write(hdr, sizeof(hdr) - 1);
+        // open file
 
-        char idxBuf[128]; // sufficient for 4 x uint64 indices + commas
-        char valBuf[32];  // sufficient for any double in shortest round-trip form
+        bool gzip = use_compression(filename);
+        std::ofstream out1(filename, gzip ? (std::ios::binary | std::ios::out) : std::ios::out);
+        boost::iostreams::filtering_stream<boost::iostreams::output> out;
+#ifdef ORE_USE_ZLIB
+        if (gzip)
+            out.push(boost::iostreams::gzip_compressor(boost::iostreams::gzip_params(validLevel)));
+#endif
+        out.push(out1);
 
-        for (Size i = 0; i < cube.cube()->numIds(); ++i) {
-            // T0 line: "i,0,0,0,value\n"
-            {
-                char* p = std::to_chars(idxBuf, idxBuf + 24, i).ptr;
-                *p++ = ','; *p++ = '0'; *p++ = ','; *p++ = '0'; *p++ = ','; *p++ = '0'; *p++ = ',';
-                char* vp = write_double(valBuf, valBuf + sizeof(valBuf), cube.cube()->getT0(i));
-                w.write(idxBuf, static_cast<std::size_t>(p - idxBuf));
-                w.write(valBuf, static_cast<std::size_t>(vp - valBuf));
-                w.put('\n');
-            }
+        // write meta data (tag width is hardcoded and used in getMetaData())
 
-            char* p0_end = std::to_chars(idxBuf, idxBuf + 24, i).ptr;
-            *p0_end++ = ',';
-            for (Size j = 0; j < cube.cube()->numDates(); ++j) {
-                char* p1_end = std::to_chars(p0_end, p0_end + 24, j + 1).ptr;
-                *p1_end++ = ',';
-                for (Size k = 0; k < cube.cube()->samples(); ++k) {
-                    char* p2_end = std::to_chars(p1_end, p1_end + 24, k).ptr;
-                    *p2_end++ = ',';
-                    for (Size d = 0; d < cube.cube()->depth(); ++d) {
-                        double value = cube.cube()->get(i, j, k, d);
-                        if (value != 0.0) {
-                            char* p3_end = std::to_chars(p2_end, p2_end + 24, d).ptr;
-                            *p3_end++ = ',';
-                            char* vp = write_double(valBuf, valBuf + sizeof(valBuf), value);
-                            w.write(idxBuf, static_cast<std::size_t>(p3_end - idxBuf));
-                            w.write(valBuf, static_cast<std::size_t>(vp - valBuf));
-                            w.put('\n');
+        out << "# asof       : " << ore::data::to_string(cube.cube()->asof()) << "\n";
+        out << "# numIds     : " << std::to_string(cube.cube()->numIds()) << "\n";
+        out << "# numDates   : " << std::to_string(cube.cube()->numDates()) << "\n";
+        out << "# samples    : " << ore::data::to_string(cube.cube()->samples()) << "\n";
+        out << "# depth      : " << ore::data::to_string(cube.cube()->depth()) << "\n";
+        out << "# usesDblPrc : " << std::boolalpha << cube.cube()->usesDoublePrecision() << "\n";
+        out << "# dates      : \n";
+        for (auto const& d : cube.cube()->dates())
+            out << "# " << ore::data::to_string(d) << "\n";
+
+        out << "# ids        : \n";
+        std::map<Size, std::string> ids;
+        for (auto const& d : cube.cube()->idsAndIndexes()) {
+            ids[d.second] = d.first;
+        }
+        for (auto const& d : ids) {
+            out << "# " << d.second << "\n";
+        }
+
+        if (cube.scenarioGeneratorData()) {
+            std::string scenGenDataXml =
+                std::regex_replace(cube.scenarioGeneratorData()->toXMLString(), std::regex("\\r\\n|\\r|\\n|\\t"), "");
+            out << "# scenGenDta : " << scenGenDataXml << "\n";
+        }
+        if (cube.storeFlows()) {
+            out << "# storeFlows : " << std::boolalpha << *cube.storeFlows() << "\n";
+        }
+        if (cube.storeCreditStateNPVs()) {
+            out << "# storeCrSt  : " << *cube.storeCreditStateNPVs() << "\n";
+        }
+
+        // write cube data
+        {
+            BufWriter w(out);
+            static constexpr char hdr[] = "#id,date,sample,depth,value\n";
+            w.write(hdr, sizeof(hdr) - 1);
+
+            char idxBuf[128]; // sufficient for 4 x uint64 indices + commas
+            char valBuf[32];  // sufficient for any double in shortest round-trip form
+
+            for (Size i = 0; i < cube.cube()->numIds(); ++i) {
+                // T0 line: "i,0,0,0,value\n"
+                {
+                    char* p = std::to_chars(idxBuf, idxBuf + 24, i).ptr;
+                    *p++ = ','; *p++ = '0'; *p++ = ','; *p++ = '0'; *p++ = ','; *p++ = '0'; *p++ = ',';
+                    char* vp = write_double(valBuf, valBuf + sizeof(valBuf), cube.cube()->getT0(i));
+                    w.write(idxBuf, static_cast<std::size_t>(p - idxBuf));
+                    w.write(valBuf, static_cast<std::size_t>(vp - valBuf));
+                    w.put('\n');
+                }
+
+                char* p0_end = std::to_chars(idxBuf, idxBuf + 24, i).ptr;
+                *p0_end++ = ',';
+                for (Size j = 0; j < cube.cube()->numDates(); ++j) {
+                    char* p1_end = std::to_chars(p0_end, p0_end + 24, j + 1).ptr;
+                    *p1_end++ = ',';
+                    for (Size k = 0; k < cube.cube()->samples(); ++k) {
+                        char* p2_end = std::to_chars(p1_end, p1_end + 24, k).ptr;
+                        *p2_end++ = ',';
+                        for (Size d = 0; d < cube.cube()->depth(); ++d) {
+                            double value = cube.cube()->get(i, j, k, d);
+                            if (value != 0.0) {
+                                char* p3_end = std::to_chars(p2_end, p2_end + 24, d).ptr;
+                                *p3_end++ = ',';
+                                char* vp = write_double(valBuf, valBuf + sizeof(valBuf), value);
+                                w.write(idxBuf, static_cast<std::size_t>(p3_end - idxBuf));
+                                w.write(valBuf, static_cast<std::size_t>(vp - valBuf));
+                                w.put('\n');
+                            }
                         }
                     }
                 }
             }
         }
     }
+
+    auto end_write = std::chrono::steady_clock::now();
+    auto write_duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_write - start_write).count();
+
+    std::uintmax_t file_size = 0;
+    try {
+        file_size = std::filesystem::file_size(filename);
+    } catch (...) {}
+
+    LOG("Saved cube to " << filename << ": write time = " << write_duration << " ms, file size = " << file_size << " bytes");
 }
 
 QuantLib::ext::shared_ptr<AggregationScenarioData> loadAggregationScenarioData(const std::string& filename) {
@@ -262,13 +311,39 @@ QuantLib::ext::shared_ptr<AggregationScenarioData> loadAggregationScenarioData(c
     // open file
 
     bool gzip = use_compression(filename);
+
+    auto start_read = std::chrono::steady_clock::now();
     std::ifstream in1(filename, gzip ? (std::ios::binary | std::ios::in) : std::ios::in);
-    boost::iostreams::filtering_stream<boost::iostreams::input> in;
+    QL_REQUIRE(in1.is_open(), "Failed to open file " << filename);
+    std::stringstream buffer;
+    buffer << in1.rdbuf();
+    auto end_read = std::chrono::steady_clock::now();
+    auto read_duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_read - start_read).count();
+
+    std::string decompressed_data;
+    long long decompress_duration = 0;
+
 #ifdef ORE_USE_ZLIB
-    if (gzip)
-        in.push(boost::iostreams::gzip_decompressor());
+    if (gzip) {
+        auto start_decompress = std::chrono::steady_clock::now();
+        boost::iostreams::filtering_stream<boost::iostreams::input> decompress_stream;
+        decompress_stream.push(boost::iostreams::gzip_decompressor());
+        decompress_stream.push(buffer);
+        
+        std::stringstream decomp_ss;
+        decomp_ss << decompress_stream.rdbuf();
+        decompressed_data = decomp_ss.str();
+        auto end_decompress = std::chrono::steady_clock::now();
+        decompress_duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_decompress - start_decompress).count();
+    }
 #endif
-    in.push(in1);
+
+    std::stringstream in;
+    if (gzip) {
+        in.str(decompressed_data);
+    } else {
+        in << buffer.rdbuf();
+    }
 
     // read meta data
 
@@ -321,6 +396,7 @@ QuantLib::ext::shared_ptr<AggregationScenarioData> loadAggregationScenarioData(c
         ++nData;
     }
 
+    LOG("Loaded cube from " << filename << ": read time = " << read_duration << " ms, decompress time = " << decompress_duration << " ms");
     LOG("loaded aggregation scenario data from " << filename << ": dimDates = " << dimDates
                                                  << ", dimSamples = " << dimSamples << ", keys = " << keys.size()
                                                  << ", " << nData << " data lines read.");
@@ -328,53 +404,73 @@ QuantLib::ext::shared_ptr<AggregationScenarioData> loadAggregationScenarioData(c
     return result;
 }
 
-void saveAggregationScenarioData(const std::string& filename, const AggregationScenarioData& cube) {
+void saveAggregationScenarioData(const std::string& filename, const AggregationScenarioData& cube, int gzipCompressionLevel) {
 
-    // open file
+    auto start_write = std::chrono::steady_clock::now();
 
-    bool gzip = use_compression(filename);
-    std::ofstream out1(filename, gzip ? (std::ios::binary | std::ios::out) : std::ios::out);
-    boost::iostreams::filtering_stream<boost::iostreams::output> out;
-#ifdef ORE_USE_ZLIB
-    if (gzip)
-        out.push(boost::iostreams::gzip_compressor(/*boost::iostreams::gzip_params(9)*/));
-#endif
-    out.push(out1);
-
-    // write meta data (tag width is hardcoded and used in getMetaData())
-
-    out << "# dimDates   : " << std::to_string(cube.dimDates()) << "\n";
-    out << "# dimSamples : " << std::to_string(cube.dimSamples()) << "\n";
-
-    auto keys = cube.keys();
-
-    out << "# keys       : " << std::to_string(keys.size()) << "\n";
-    for (auto const& k : keys) {
-        out << "# " << (unsigned int)k.first << "," << k.second << "\n";
+    int validLevel = gzipCompressionLevel;
+    if (validLevel < 0 || validLevel > 9) {
+        WLOG("Invalid gzipCompressionLevel (" << validLevel << ") specified. Must be between 0 and 9. Falling back to default (6).");
+        validLevel = 6;
     }
 
-    // write data
     {
-        BufWriter w(out);
-        static constexpr char hdr[] = "#date,sample,key,value\n";
-        w.write(hdr, sizeof(hdr) - 1);
+        // open file
 
-        char lineBuf[128]; // date + sample + key + value + 3 commas + newline
-        for (Size i = 0; i < cube.dimDates(); ++i) {
-            for (Size j = 0; j < cube.dimSamples(); ++j) {
-                for (Size k = 0; k < keys.size(); ++k) {
-                    char* p = lineBuf;
-                    p = std::to_chars(p, p + 20, i + 1).ptr; *p++ = ',';
-                    p = std::to_chars(p, p + 20, j).ptr;     *p++ = ',';
-                    p = std::to_chars(p, p + 20, k).ptr;     *p++ = ',';
-                    p = write_double(p, p + 32,
-                                     cube.get(i, j, keys[k].first, keys[k].second));
-                    *p++ = '\n';
-                    w.write(lineBuf, static_cast<std::size_t>(p - lineBuf));
+        bool gzip = use_compression(filename);
+        std::ofstream out1(filename, gzip ? (std::ios::binary | std::ios::out) : std::ios::out);
+        boost::iostreams::filtering_stream<boost::iostreams::output> out;
+#ifdef ORE_USE_ZLIB
+        if (gzip)
+            out.push(boost::iostreams::gzip_compressor(boost::iostreams::gzip_params(validLevel)));
+#endif
+        out.push(out1);
+
+        // write meta data (tag width is hardcoded and used in getMetaData())
+
+        out << "# dimDates   : " << std::to_string(cube.dimDates()) << "\n";
+        out << "# dimSamples : " << std::to_string(cube.dimSamples()) << "\n";
+
+        auto keys = cube.keys();
+
+        out << "# keys       : " << std::to_string(keys.size()) << "\n";
+        for (auto const& k : keys) {
+            out << "# " << (unsigned int)k.first << "," << k.second << "\n";
+        }
+
+        // write data
+        {
+            BufWriter w(out);
+            static constexpr char hdr[] = "#date,sample,key,value\n";
+            w.write(hdr, sizeof(hdr) - 1);
+
+            char lineBuf[128]; // date + sample + key + value + 3 commas + newline
+            for (Size i = 0; i < cube.dimDates(); ++i) {
+                for (Size j = 0; j < cube.dimSamples(); ++j) {
+                    for (Size k = 0; k < keys.size(); ++k) {
+                        char* p = lineBuf;
+                        p = std::to_chars(p, p + 20, i + 1).ptr; *p++ = ',';
+                        p = std::to_chars(p, p + 20, j).ptr;     *p++ = ',';
+                        p = std::to_chars(p, p + 20, k).ptr;     *p++ = ',';
+                        p = write_double(p, p + 32,
+                                         cube.get(i, j, keys[k].first, keys[k].second));
+                        *p++ = '\n';
+                        w.write(lineBuf, static_cast<std::size_t>(p - lineBuf));
+                    }
                 }
             }
         }
     }
+
+    auto end_write = std::chrono::steady_clock::now();
+    auto write_duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_write - start_write).count();
+
+    std::uintmax_t file_size = 0;
+    try {
+        file_size = std::filesystem::file_size(filename);
+    } catch (...) {}
+
+    LOG("Saved cube to " << filename << ": write time = " << write_duration << " ms, file size = " << file_size << " bytes");
 }
 
 } // namespace analytics
