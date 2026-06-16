@@ -1369,6 +1369,16 @@ void OREAppInputParameters::loadParameters() {
         } else {
             WLOG("ScenarioSimMarket parameters for sensitivity stress testing not loaded");
         }
+
+        tmp = params_->getString("sensitivityStress", "stressConfigFile", false);
+        if (!tmp.empty()) {
+            string file = (setupVariables_.inputPath_ / tmp).generic_string();
+            LOG("Load sensitivity stress test scenario data from file" << file);
+            setSensitivityStressScenarioDataFromFile(file);
+        } else {
+            WLOG("Sensitivity Stress scenario data not loaded");
+        }
+
         tmp = params_->getString("sensitivityStress", "sensitivityConfigFile", false);
         if (tmp != "") {
             string file = (setupVariables_.inputPath_ / tmp).generic_string();

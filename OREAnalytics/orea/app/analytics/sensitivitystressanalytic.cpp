@@ -36,9 +36,6 @@ namespace analytics {
 
 void SensitivityStressVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) {
     string analyticStr = "sensitivityStress";
-
-    inputs->loadParameterXML<StressTestScenarioData>(sensitivityStressScenarioData_, analyticStr, "stressConfigFile", true);
-    LOG("Loaded sensitivity stress scenario data from file " << (sensitivityStressScenarioData_ != nullptr ? "not null" : "null"));
     inputs->loadParameter<bool>(calcBaseScenario_, analyticStr, "calcBaseScenario", false,
                                 std::function<bool(const string&)>(parseBool));
 }
@@ -75,7 +72,7 @@ void SensitivityStressAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<
 
     analytic()->buildMarket(loader);
     auto vars = ext::dynamic_pointer_cast<SensitivityStressVariables>(inputVariables_);
-    QuantLib::ext::shared_ptr<StressTestScenarioData> scenarioData = stressScenarios_.value_or(vars->sensitivityStressScenarioData_);
+    QuantLib::ext::shared_ptr<StressTestScenarioData> scenarioData = stressScenarios_.value_or(inputs_->sensitivityStressScenarioData());
     if (scenarioData != nullptr && scenarioData->hasScenarioWithParShifts()) {
         try {
             QuantLib::ext::shared_ptr<InMemoryReport> parScenarioReport =
@@ -94,26 +91,21 @@ void SensitivityStressAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<
         }
     }
 
-    LOG("Sensitivity Stress: Build SimMarket and StressTestScenarioGenerator");
-    LOG("Build SimMarket with market config " << (analytic()->configurations().simMarketParams == nullptr ? "null"
-        : "not null"));
-    LOG("and today's market params " << (analytic()->configurations().todaysMarketParams == nullptr ? "null"
-                                                                                                   : "not null"));
-    LOG("and scenarioData " << (scenarioData != nullptr ? "not null" : "null"));
-
+    LOG("Sensitivity Stress: Build SimMarket and StressTestScenarioGenerator")
+    bool useSpreadedTermStructures = scenarioData != nullptr ? scenarioData->useSpreadedTermStructures() : false;
     auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
         analytic()->market(), analytic()->configurations().simMarketParams, marketConfig,
         *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams,
-        inputs_->continueOnError(), scenarioData->useSpreadedTermStructures(), false, false,
+        inputs_->continueOnError(), useSpreadedTermStructures, false, false,
         inputs_->iborFallbackConfig(), true);
-    LOG("SimMarket built, build stress scenario generator")
+
     auto baseScenario = simMarket->baseScenario();
     auto scenarioFactory = QuantLib::ext::make_shared<CloneScenarioFactory>(baseScenario);
     auto scenarioGenerator = QuantLib::ext::make_shared<StressScenarioGenerator>(
         scenarioData, baseScenario, analytic()->configurations().simMarketParams, simMarket, scenarioFactory,
         simMarket->baseScenarioAbsolute());
     simMarket->scenarioGenerator() = scenarioGenerator;
-    LOG("Stress scenario generator built with " << scenarioGenerator->samples() << " scenarios.");
+
     CONSOLE("OK");
 
     // generate the stress scenarios and run dependent sensitivity analytic under each of them
@@ -131,7 +123,6 @@ void SensitivityStressAnalyticImpl::runStressTest(const QuantLib::ext::shared_pt
                                           const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader, bool calcBaseScenario) {
 
     std::map<std::string, std::vector<QuantLib::ext::shared_ptr<ore::data::InMemoryReport>>> sensitivityReports;
-    
     for (size_t i = 0; i < scenarioGenerator->samples(); ++i) {
         auto scenario = scenarioGenerator->next(inputs_->asof());
         const std::string& label = scenario != nullptr ? scenario->label() : std::string();

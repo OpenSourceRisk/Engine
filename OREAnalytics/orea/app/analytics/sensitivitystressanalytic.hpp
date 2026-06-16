@@ -37,7 +37,6 @@ class InputParameters;
 
 struct SensitivityStressVariables : public InputVariables {
     void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
-    QuantLib::ext::shared_ptr<StressTestScenarioData> sensitivityStressScenarioData_;
     bool calcBaseScenario_ = false;
 };
 
