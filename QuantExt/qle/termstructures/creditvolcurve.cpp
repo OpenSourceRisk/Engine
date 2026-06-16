@@ -569,7 +569,8 @@ SpreadedCreditVolCurve::SpreadedCreditVolCurve(const Handle<CreditVolCurve> base
                                                const std::vector<Period>& terms,
                                                const std::vector<Handle<CreditCurve>>& termCurves,
                                                ReactionToTimeDecay decayMode)
-    : CreditVolCurve(baseCurve->businessDayConvention(), baseCurve->dayCounter(), terms, termCurves, baseCurve->type()),
+    : CreditVolCurve(0, baseCurve->calendar(), baseCurve->businessDayConvention(), baseCurve->dayCounter(), terms,
+                     termCurves, baseCurve->type()),
       baseCurve_(baseCurve), expiries_(expiries), spreads_(spreads), stickyMoneyness_(stickyMoneyness),
       decayMode_(decayMode) {
     for (auto const& s : spreads)

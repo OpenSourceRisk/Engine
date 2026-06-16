@@ -19,7 +19,6 @@
 #include <qle/termstructures/spreadeddiscountcurve.hpp>
 
 #include <ql/math/interpolations/loginterpolation.hpp>
-#include <ql/time/calendars/nullcalendar.hpp>
 
 namespace QuantExt {
 
@@ -27,7 +26,7 @@ SpreadedDiscountCurve::SpreadedDiscountCurve(const Handle<YieldTermStructure>& r
                                              const std::vector<Time>& times, const std::vector<Handle<Quote>>& quotes,
                                              const Interpolation interpolation, const Extrapolation extrapolation,
                                              const YieldCurveRollDown yieldCurveRollDown)
-    : YieldTermStructure(0, NullCalendar(), referenceCurve->dayCounter()), referenceCurve_(referenceCurve),
+    : YieldTermStructure(0, referenceCurve->calendar(), referenceCurve->dayCounter()), referenceCurve_(referenceCurve),
       times_(times), quotes_(quotes), interpolation_(interpolation), extrapolation_(extrapolation),
       yieldCurveRollDown_(yieldCurveRollDown), data_(times_.size(), 1.0) {
     QL_REQUIRE(times_.size() > 1, "SpreadedDiscountCurve: at least two times required");

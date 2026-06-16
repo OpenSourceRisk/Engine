@@ -39,8 +39,8 @@ SpreadedBlackVolatilitySurfaceMoneyness::SpreadedBlackVolatilitySurfaceMoneyness
     const Handle<YieldTermStructure>& stickyRiskFreeTs, const Handle<YieldTermStructure>& movingDividendTs,
     const Handle<YieldTermStructure>& movingRiskFreeTs, bool stickyStrike, ReactionToTimeDecay decayMode,
     YieldCurveRollDown yieldCurveRollDown)
-    : BlackVolatilityTermStructure(referenceVol->businessDayConvention(), referenceVol->dayCounter(),
-                                   referenceVol->volType(), referenceVol->shift()),
+    : BlackVolatilityTermStructure(0, referenceVol->calendar(), referenceVol->businessDayConvention(),
+                                   referenceVol->dayCounter(), referenceVol->volType(), referenceVol->shift()),
       referenceVol_(referenceVol), movingSpot_(movingSpot), times_(times), moneyness_(moneyness),
       volSpreads_(volSpreads), stickySpot_(stickySpot), stickyDividendTs_(stickyDividendTs),
       stickyRiskFreeTs_(stickyRiskFreeTs), movingDividendTs_(movingDividendTs), movingRiskFreeTs_(movingRiskFreeTs),
@@ -102,9 +102,6 @@ SpreadedBlackVolatilitySurfaceMoneyness::SpreadedBlackVolatilitySurfaceMoneyness
 }
 
 Date SpreadedBlackVolatilitySurfaceMoneyness::maxDate() const { return referenceVol_->maxDate(); }
-const Date& SpreadedBlackVolatilitySurfaceMoneyness::referenceDate() const { return referenceVol_->referenceDate(); }
-Calendar SpreadedBlackVolatilitySurfaceMoneyness::calendar() const { return referenceVol_->calendar(); }
-Natural SpreadedBlackVolatilitySurfaceMoneyness::settlementDays() const { return referenceVol_->settlementDays(); }
 Real SpreadedBlackVolatilitySurfaceMoneyness::minStrike() const { return referenceVol_->minStrike(); }
 Real SpreadedBlackVolatilitySurfaceMoneyness::maxStrike() const { return referenceVol_->maxStrike(); }
 

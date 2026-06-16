@@ -52,9 +52,6 @@ public:
         YieldCurveRollDown yieldCurveRollDown = YieldCurveRollDown::ForwardForward);
 
     Date maxDate() const override;
-    const Date& referenceDate() const override;
-    Calendar calendar() const override;
-    Natural settlementDays() const override;
     Real minStrike() const override;
     Real maxStrike() const override;
     void update() override;

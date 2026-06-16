@@ -1041,6 +1041,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                         wrapper, optionTenors, underlyingTenors, strikeSpreads, quotes, swapIndex,
                                         shortSwapIndex, simSwapIndex, simShortSwapIndex, !stickyStrike, decayMode,
                                         parseYieldCurveRollDown(parameters_->yieldCurveRollDown())));
+                                svp->setAdjustReferenceDate(false);
                             } else {
                                 Handle<SwaptionVolatilityStructure> atm;
                                 atm = Handle<SwaptionVolatilityStructure>(QuantLib::ext::make_shared<SwaptionVolatilityMatrix>(
@@ -1486,11 +1487,13 @@ ScenarioSimMarket::ScenarioSimMarket(
                                             proxy->targetIndex(), proxy->baseRateComputationPeriod(),
                                             proxy->targetRateComputationPeriod(), proxy->scalingFactor(),
                                             parseDecayMode(parameters->capFloorVolDecayMode())));
+                                    hCapletVol->setAdjustReferenceDate(false);
                                 } else {
                                     hCapletVol = Handle<OptionletVolatilityStructure>(
                                         QuantLib::ext::make_shared<QuantExt::SpreadedOptionletVolatility2>(
                                             wrapper, optionDates, strikes, quotes,
                                             parseDecayMode(parameters->capFloorVolDecayMode())));
+                                    hCapletVol->setAdjustReferenceDate(false);
                                 }
                                                                                                        
                                 if (stickySabr) {
@@ -1635,6 +1638,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                         ? QuantExt::SpreadedSurvivalProbabilityTermStructure::Extrapolation::flatZero
                                         : QuantExt::SpreadedSurvivalProbabilityTermStructure::Extrapolation::flatFwd,
                                     parseYieldCurveRollDown(parameters_->yieldCurveRollDown())));
+                            defaultCurve->setAdjustReferenceDate(false);
                         } else {
                             defaultCurve = Handle<DefaultProbabilityTermStructure>(
                                 QuantLib::ext::make_shared<QuantExt::SurvivalProbabilityCurve<LogLinear>>(
@@ -1766,6 +1770,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 cvh = Handle<CreditVolCurve>(QuantLib::ext::make_shared<SpreadedCreditVolCurve>(
                                     wrapper, expiryDates, spreads, !stickyStrike, simTerms, simTermCurves,
                                     parseDecayMode(parameters->cdsVolDecayMode())));
+                                cvh->setAdjustReferenceDate(false);
                             } else {
                                 // TODO support strike and term dependence
                                 cvh = Handle<CreditVolCurve>(QuantLib::ext::make_shared<CreditVolCurveWrapper>(
@@ -1927,6 +1932,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                                 Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(spot->value())),
                                                 initForTS, initDomTS, forTS, domTS, stickyStrike,
                                                 parseDecayMode(parameters->fxVolDecayMode()));
+                                        fxVolCurve->setAdjustReferenceDate(false);
                                     } else {
                                         fxVolCurve = QuantLib::ext::make_shared<BlackVarianceSurfaceMoneynessForward>(
                                             cal, spot, times, parameters->fxVolMoneyness(name), quotes, dc, forTS,
@@ -1997,6 +2003,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                                 Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(spot->value())),
                                                 initForTS, initDomTS, forTS, domTS, stickyStrike,
                                                 parseDecayMode(parameters->fxVolDecayMode()));
+                                            fxVolCurve->setAdjustReferenceDate(false);
                                         } else {
                                             fxVolCurve =
                                                 QuantLib::ext::make_shared<BlackVarianceSurfaceMoneynessForward>(
@@ -2014,6 +2021,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                                         QuantLib::ext::make_shared<SimpleQuote>(spot->value())),
                                                     initForTS, initDomTS, forTS, domTS, stickyStrike,
                                                     parseDecayMode(parameters->fxVolDecayMode()));
+                                            fxVolCurve->setAdjustReferenceDate(false);
                                         } else {
                                             fxVolCurve = QuantLib::ext::make_shared<BlackVarianceSurfaceStdDevs>(
                                                 cal, spot, times, parameters->fxVolStdDevs(name), quotes, dc,
@@ -2053,6 +2061,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                         Handle<BlackVolTermStructure>(wrapper), times, quotes[0],
                                         !parameters->simulateFxVolATMOnly(),
                                         parseDecayMode(parameters->fxVolDecayMode()));
+                                    fxVolCurve->setAdjustReferenceDate(false);
                                 } else {
                                     DLOG("ATM FX Vols (BlackVarianceCurve3) for " << name);
                                     QuantLib::ext::shared_ptr<BlackVolTermStructure> atmCurve;
@@ -2187,6 +2196,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                                 initMarket->equityCurve(name, configuration)->equityForecastCurve(),
                                                 eqCurve->equityDividendCurve(), eqCurve->equityForecastCurve(),
                                                 stickyStrike, parseDecayMode(parameters->equityVolDecayMode()));
+                                        eqVolCurve->setAdjustReferenceDate(false);
                                     } else {
                                         eqVolCurve = QuantLib::ext::make_shared<BlackVarianceSurfaceMoneynessForward>(
                                             cal, spot, times, parameters->equityVolMoneyness(name), quotes, dc,
@@ -2257,6 +2267,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                             initMarket->equityCurve(name, configuration)->equityForecastCurve(),
                                             eqCurve->equityDividendCurve(), eqCurve->equityForecastCurve(),
                                             stickyStrike, parseDecayMode(parameters->equityVolDecayMode()));
+                                        eqVolCurve->setAdjustReferenceDate(false);
                                     } else {
                                         eqVolCurve = QuantLib::ext::make_shared<BlackVarianceSurfaceStdDevs>(
                                             cal, spot, times, parameters->equityVolStandardDevs(name), quotes, dc,
@@ -2531,6 +2542,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         if (useSpreadedTermStructures_) {
                             zeroCurve = QuantLib::ext::make_shared<SpreadedZeroInflationCurve>(inflationTs,
                                                                                                zeroCurveTimes, quotes);
+                            zeroCurve->setAdjustReferenceDate(false);
                         } else {
                             int simLag = simulationLag(inflationTs);
                             // Quotes are build with first time to be (baseDate), need to 0 Days tenors here
@@ -2625,6 +2637,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 hCpiVol = Handle<QuantLib::CPIVolatilitySurface>(
                                     QuantLib::ext::make_shared<SpreadedCPIVolatilitySurface>(
                                         Handle<QuantExt::CPIVolatilitySurface>(surface), optionDates, strikes, quotes));
+                                hCpiVol->setAdjustReferenceDate(false);
                             } else {
                                 auto surface =
                                     QuantLib::ext::dynamic_pointer_cast<QuantExt::CPIVolatilitySurface>(wrapper.currentLink());
@@ -2722,6 +2735,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         if (useSpreadedTermStructures_) {
                             yoyCurve =
                                 QuantLib::ext::make_shared<SpreadedYoYInflationCurve>(yoyInflationTs, yoyCurveTimes, quotes);
+                            yoyCurve->setAdjustReferenceDate(false);
                         } else {
                             int simLag = simulationLag(yoyInflationTs);
                             vector<Period> tenors(1, 0 * Days);
@@ -2805,6 +2819,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             if (useSpreadedTermStructures_) {
                                 yoyoptionletvolsurface = QuantLib::ext::make_shared<QuantExt::SpreadedYoYVolatilitySurface>(
                                     wrapper, optionDates, strikes, quotes);
+                                yoyoptionletvolsurface->setAdjustReferenceDate(false);
                             } else {
                                 yoyoptionletvolsurface = QuantLib::ext::make_shared<StrippedYoYInflationOptionletVol>(
                                     0, wrapper->calendar(), wrapper->businessDayConvention(), dc,
@@ -2933,6 +2948,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             priceCurve = QuantLib::ext::make_shared<SpreadedPriceTermStructure>(
                                 initialCommodityCurve, simulationTimes, quotes,
                                 parsePriceCurveRollDown(parameters->commodityCurveRollDown()));
+                            priceCurve->setAdjustReferenceDate(false);
                         } else {
                             priceCurve= QuantLib::ext::make_shared<InterpolatedPriceCurve<LinearFlat>>(
                                 simulationTenors, quotes, commodityCurveDayCounter, initialCommodityCurve->currency());
@@ -3107,6 +3123,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                             Handle<BlackVolTermStructure>(baseVol), expiryTimes, quotes[0],
                                             !parameters->simulateCommodityVolATMOnly(),
                                             parseDecayMode(parameters->commodityVolDecayMode())));
+                                    newVol->setAdjustReferenceDate(false);
                                 } else {
                                     newVol = Handle<BlackVolTermStructure>(QuantLib::ext::make_shared<BlackVarianceCurve3>(
                                         0, NullCalendar(), baseVol->businessDayConvention(), dayCounter, expiryTimes,
@@ -3137,6 +3154,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                             Handle<BlackVolTermStructure>(baseVol), spot, expiryTimes, moneyness,
                                             quotes, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(spot->value())),
                                             initMarketPriceYts, initMarketYts, priceYts, yts, stickyStrike));
+                                    newVol->setAdjustReferenceDate(false);
                                 } else {
                                     newVol = Handle<BlackVolTermStructure>(
                                         QuantLib::ext::make_shared<BlackVarianceSurfaceMoneynessForward>(

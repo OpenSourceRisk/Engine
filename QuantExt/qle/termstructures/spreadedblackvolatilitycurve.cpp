@@ -16,18 +16,18 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/termstructures/spreadedblackvolatilitycurve.hpp>
-
 #include <qle/math/flatextrapolation.hpp>
+#include <qle/termstructures/spreadedblackvolatilitycurve.hpp>
 
 namespace QuantExt {
 
-SpreadedBlackVolatilityCurve::SpreadedBlackVolatilityCurve(
-    const Handle<BlackVolTermStructure>& referenceVol, const std::vector<Time>& times,
-    const std::vector<Handle<Quote>>& volSpreads, const bool useAtmReferenceVolsOnly,
-    const ReactionToTimeDecay decayMode)
-    : BlackVolatilityTermStructure(referenceVol->businessDayConvention(), referenceVol->dayCounter(),
-                                   referenceVol->volType(), referenceVol->shift()),
+SpreadedBlackVolatilityCurve::SpreadedBlackVolatilityCurve(const Handle<BlackVolTermStructure>& referenceVol,
+                                                           const std::vector<Time>& times,
+                                                           const std::vector<Handle<Quote>>& volSpreads,
+                                                           const bool useAtmReferenceVolsOnly,
+                                                           const ReactionToTimeDecay decayMode)
+    : BlackVolatilityTermStructure(0, referenceVol->calendar(), referenceVol->businessDayConvention(),
+                                   referenceVol->dayCounter(), referenceVol->volType(), referenceVol->shift()),
       referenceVol_(referenceVol), times_(times), volSpreads_(volSpreads),
       useAtmReferenceVolsOnly_(useAtmReferenceVolsOnly), decayMode_(decayMode), data_(times.size(), 0.0) {
     registerWith(referenceVol_);
@@ -41,12 +41,6 @@ SpreadedBlackVolatilityCurve::SpreadedBlackVolatilityCurve(
 }
 
 Date SpreadedBlackVolatilityCurve::maxDate() const { return referenceVol_->maxDate(); }
-
-const Date& SpreadedBlackVolatilityCurve::referenceDate() const { return actualRefDate_; }
-
-Calendar SpreadedBlackVolatilityCurve::calendar() const { return referenceVol_->calendar(); }
-
-Natural SpreadedBlackVolatilityCurve::settlementDays() const { return referenceVol_->settlementDays(); }
 
 Real SpreadedBlackVolatilityCurve::minStrike() const { return referenceVol_->minStrike(); }
 

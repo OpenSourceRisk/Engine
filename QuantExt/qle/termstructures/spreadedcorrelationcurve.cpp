@@ -19,8 +19,6 @@
 #include <qle/termstructures/spreadedcorrelationcurve.hpp>
 #include <qle/math/flatextrapolation.hpp>
 
-#include <ql/time/calendars/nullcalendar.hpp>
-
 namespace QuantExt {
 using namespace QuantLib;
 
@@ -28,7 +26,7 @@ SpreadedCorrelationCurve::SpreadedCorrelationCurve(const Handle<CorrelationTermS
                                                    const std::vector<Time>& times,
                                                    const std::vector<Handle<Quote>>& corrSpreads,
                                                    const bool useAtmReferenceCorrsOnly)
-    : CorrelationTermStructure(0, NullCalendar(), referenceCorrelation->dayCounter()),
+    : CorrelationTermStructure(0, referenceCorrelation->calendar(), referenceCorrelation->dayCounter()),
       referenceCorrelation_(referenceCorrelation), times_(times), corrSpreads_(corrSpreads),
       useAtmReferenceCorrsOnly_(useAtmReferenceCorrsOnly) {
     QL_REQUIRE(!times_.empty(), "SpreadedCorrelationCurve: times are empty");
@@ -48,9 +46,6 @@ SpreadedCorrelationCurve::SpreadedCorrelationCurve(const Handle<CorrelationTermS
 }
 
 Date SpreadedCorrelationCurve::maxDate() const { return referenceCorrelation_->maxDate(); }
-const Date& SpreadedCorrelationCurve::referenceDate() const { return referenceCorrelation_->referenceDate(); }
-Calendar SpreadedCorrelationCurve::calendar() const { return referenceCorrelation_->calendar(); }
-Natural SpreadedCorrelationCurve::settlementDays() const { return referenceCorrelation_->settlementDays(); }
 Time SpreadedCorrelationCurve::minTime() const { return referenceCorrelation_->minTime(); }
 
 void SpreadedCorrelationCurve::update() {

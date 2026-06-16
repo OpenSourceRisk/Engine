@@ -99,10 +99,12 @@ void AssetModelBuilderBase::forceRecalculate() {
 
 void AssetModelBuilderBase::setupDatesAndTimes() const {
     Date referenceDate = curves_.front()->referenceDate();
-    effectiveSimulationDates_ = std::set<Date>(simulationDates_.lower_bound(referenceDate), simulationDates_.end());
-    effectiveSimulationDates_.insert(referenceDate);
-    discretisationTimeGrid_ =
-        buildTimeGrid(referenceDate, curves_.front()->dayCounter(), simulationDates_, timeStepsPerYear_);
+    if (referenceDate != referenceDate_) {
+        effectiveSimulationDates_ = std::set<Date>(simulationDates_.lower_bound(referenceDate), simulationDates_.end());
+        effectiveSimulationDates_.insert(referenceDate);
+        discretisationTimeGrid_ =
+            buildTimeGrid(referenceDate, curves_.front()->dayCounter(), simulationDates_, timeStepsPerYear_);
+    }
 }
 
 void AssetModelBuilderBase::performCalculations() const {

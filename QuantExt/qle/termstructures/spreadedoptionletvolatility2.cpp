@@ -31,7 +31,8 @@ SpreadedOptionletVolatility2::SpreadedOptionletVolatility2(const Handle<Optionle
                                                            const std::vector<Real>& strikes,
                                                            const std::vector<std::vector<Handle<Quote>>>& volSpreads,
                                                            const ReactionToTimeDecay decayMode)
-    : baseVol_(baseVol), optionDates_(optionDates), strikes_(strikes), volSpreads_(volSpreads), decayMode_(decayMode) {
+    : OptionletVolatilityStructure(0, baseVol->calendar(), baseVol->businessDayConvention(), baseVol->dayCounter()),
+      baseVol_(baseVol), optionDates_(optionDates), strikes_(strikes), volSpreads_(volSpreads), decayMode_(decayMode) {
     registerWith(baseVol_);
 
     QL_REQUIRE(!optionDates_.empty(), "SpreadedOptionletVolatility2(): optionDates are empty");
