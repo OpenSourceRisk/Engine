@@ -1304,12 +1304,14 @@ void AmcCgBaseEngine::calculate() const {
                     }
                 }
             }
+            DLOG("generated random variates for dim = " << rv.size() << ", steps = " << rv.front().size());
         }
-        DLOG("generated random variates for dim = " << rv.size() << ", steps = " << rv.front().size());
 
         // set flags for nodes we want to keep (model params, npv and additional results)
 
         std::vector<bool> keepNodes(g->size(), false);
+
+        QL_REQUIRE(npv_ != Null<Size>(), "AmcCgBaseEngine: npv node is not set. Internal error.");
 
         keepNodes[npv_] = true;
 
