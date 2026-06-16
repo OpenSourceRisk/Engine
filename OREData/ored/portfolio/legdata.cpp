@@ -2503,20 +2503,19 @@ Leg makeRangeAccrualLeg(const LegData& data, const QuantLib::ext::shared_ptr<Ibo
             if (raCoupon) {
                 if (raCoupon->date() > today) {
                     QuantLib::ext::shared_ptr<FloatingRateCouponPricer> pricer;
-                    if (raBuilder)
-                        pricer = raBuilder->engine(
-                            indexName, raCoupon->accrualStartDate(), raCoupon->accrualEndDate());
-                    else
+                    if (raBuilder) {
+                        // Pass the per-coupon fixed rate (Null<Real>() in floating mode) so the
+                        // pricer computes fixedRate * (n/N) instead of gearing * Libor * (n/N) +
+                        // spread. The fixed rate is part of the builder's cache key, so fixed and
+                        // floating coupons never share a (mutated) pricer instance.
+                        Real raFixedRate = fixedRateMode ? coupon[std::min(couponIdx, coupon.size() - 1)]
+                                                         : Null<Real>();
+                        pricer = raBuilder->engine(indexName, raCoupon->accrualStartDate(),
+                                                   raCoupon->accrualEndDate(), raFixedRate);
+                    } else {
                         pricer = csPricer;
-
-                    if (fixedRateMode) {
-                        // Set the per-coupon fixed rate on the pricer so it computes
-                        // fixedRate * (n/N) instead of gearing * Libor * (n/N) + spread
-                        auto raPricer =
-                            QuantLib::ext::dynamic_pointer_cast<RangeAccrualPricer>(pricer);
-                        if (raPricer)
-                            raPricer->setFixedRate(coupon[std::min(couponIdx, coupon.size() - 1)]);
                     }
+
                     raCoupon->setPricer(pricer);
                 }
                 ++couponIdx;

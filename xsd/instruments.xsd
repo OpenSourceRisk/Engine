@@ -583,7 +583,7 @@
         <xs:element name="Coupons" minOccurs="0" maxOccurs="1">
           <xs:complexType>
             <xs:sequence>
-              <xs:element name="Coupon" maxOccurs="unbounded">
+              <xs:element name="Coupon" minOccurs="0" maxOccurs="unbounded">
                 <xs:complexType>
                   <xs:simpleContent>
                     <xs:extension base="xs:float">
