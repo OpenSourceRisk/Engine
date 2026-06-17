@@ -445,10 +445,9 @@ Leg EquityLegBuilder::buildLeg(
 
 Leg IntradayPowerFloatingLegBuilder::buildLeg(
     const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-    RequiredFixings& requiredFixings, const string& configuration,
-    const QuantLib::Date& openEndDateReplacement = Null<Date>(), const bool useXbsCurves = false,
-    const bool attachPricer = true,
-    std::set<std::tuple<std::set<std::string>, std::string, std::string>>* productModelEngines = nullptr) const {
+    RequiredFixings& requiredFixings, const string& configuration, const QuantLib::Date& openEndDateReplacement,
+    const bool useXbsCurves, const bool attachPricer,
+    std::set<std::tuple<std::set<std::string>, std::string, std::string>>* productModelEngines) const {
 
     auto intradayData = QuantLib::ext::dynamic_pointer_cast<IntradayPowerFloatingLegData>(data.concreteLegData());
     QL_REQUIRE(intradayData, "Wrong LegType, expected IntradayPowerFloating");
@@ -473,7 +472,7 @@ Leg IntradayPowerFloatingLegBuilder::buildLeg(
                                configuration, useXbsCurves);
     }
     Leg result =
-        makeIntradayPowerFloatingLeg(data, index, loadTermStructure, engineFactory, fxIndex, openEndDateReplacement);
+        makeIntradayPowerFloatingLeg(data, *index, loadTermStructure, engineFactory, fxIndex, openEndDateReplacement);
     addToRequiredFixings(result, QuantLib::ext::make_shared<FixingDateGetter>(requiredFixings));
     return result;
 }
