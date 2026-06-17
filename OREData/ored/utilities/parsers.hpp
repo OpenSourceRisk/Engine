@@ -40,6 +40,7 @@
 #include <qle/termstructures/sabrparametricvolatility.hpp>
 #include <qle/termstructures/sviparametricvolatility.hpp>
 #include <qle/termstructures/scenario.hpp>
+#include <qle/time/dateutilities.hpp>
 
 #include <ql/cashflows/cpicoupon.hpp>
 #include <ql/compounding.hpp>
@@ -723,6 +724,18 @@ std::string removeAfterLastDelimiter(const std::string& s, const std::string& de
 \ingroup utilities
 */
 HestonProcess::Discretization parseHestonProcessDiscretization(const std::string& s);
+
+/**
+ * Convert text to QuantExt::DateDeltaUnit
+ * \ingroup utilities
+ */
+QuantExt::DateDeltaUnit parseDateDeltaUnit(const std::string& s);
+
+/**
+ * Convert text to QuantExt::DateDeltaAnchor
+ * \ingroup utilities
+ */
+QuantExt::DateDeltaAnchor parseDateDeltaAnchor(const std::string& s);
 
 } // namespace data
 } // namespace ore

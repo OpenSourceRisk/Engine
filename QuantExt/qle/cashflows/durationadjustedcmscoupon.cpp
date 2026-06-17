@@ -84,7 +84,7 @@ DurationAdjustedCmsLeg& DurationAdjustedCmsLeg::withPaymentAdjustment(BusinessDa
     return *this;
 }
 
-DurationAdjustedCmsLeg& DurationAdjustedCmsLeg::withPaymentLag(Natural lag) {
+DurationAdjustedCmsLeg& DurationAdjustedCmsLeg::withPaymentLag(Integer lag) {
     paymentLag_ = lag;
     return *this;
 }

@@ -446,6 +446,10 @@ void ScriptedTradeEventData::fromXML(XMLNode* node) {
         shift_ = XMLUtils::getChildValue(v, "Shift", true);
         calendar_ = XMLUtils::getChildValue(v, "Calendar", true);
         convention_ = XMLUtils::getChildValue(v, "Convention", true);
+        if (auto tmp = XMLUtils::getChildNode(v, "ShiftUnit"))
+            shiftUnit_ = parseDateDeltaUnit(XMLUtils::getNodeValue(tmp));
+        if (auto tmp = XMLUtils::getChildNode(v, "ShiftAnchor"))
+            shiftAnchor_ = parseDateDeltaAnchor(XMLUtils::getNodeValue(tmp));
     } else {
         QL_FAIL("Expected Value or ScheduleData node");
     }
@@ -464,6 +468,10 @@ XMLNode* ScriptedTradeEventData::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, d, "Shift", shift_);
         XMLUtils::addChild(doc, d, "Calendar", calendar_);
         XMLUtils::addChild(doc, d, "Convention", convention_);
+        if (shiftUnit_)
+            XMLUtils::addChild(doc, d, "ShiftUnit", to_string(*shiftUnit_));
+        if (shiftAnchor_)
+            XMLUtils::addChild(doc, d, "ShiftAnchor", to_string(*shiftAnchor_));
         XMLUtils::appendNode(n, d);
     } else {
         QL_FAIL("ScriptedTradeEventData::toXML(): unexpected ScriptedTradeEventData::Type");

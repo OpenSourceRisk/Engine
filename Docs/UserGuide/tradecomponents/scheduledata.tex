@@ -10,20 +10,27 @@ Example structures of \lstinline!ScheduleData! nodes based on rules, dates and d
 Listing \ref{lst:schedule_data_true}, Listing \ref{lst:schedule_data_false}, and Listing \ref{lst:schedule_data_derived}
 respectively.
 
+A \lstinline!ScheduleData! object has a \lstinline!name!. The default \lstinline!name! for a \lstinline!ScheduleData! 
+object created from a \lstinline!ScheduleData! XML node is the node name itself i.e.\ \lstinline!ScheduleData!. This 
+name can be overridden via an optional \lstinline!name! attribute on the \lstinline!ScheduleData! node. The main 
+reason to do this would be so that you can refer to it in the \lstinline!BaseSchedule! node of a \lstinline!Derived! 
+section using a more appropriate name. Listing \ref{lst:derived_pmt_schedule} shows the use of this in a 
+\lstinline!LegData! node.
+
 \begin{listing}[H]
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
-              <ScheduleData>
-                <Rules>
-                  <StartDate>2013-02-01</StartDate>
-                  <EndDate>2030-02-01</EndDate>
-                  <Tenor>1Y</Tenor>
-                  <Calendar>UK</Calendar>
-                  <Convention>MF</Convention>
-                  <TermConvention>MF</TermConvention>
-                  <Rule>Forward</Rule>
-                </Rules>
-              </ScheduleData>
+<ScheduleData>
+  <Rules>
+    <StartDate>2013-02-01</StartDate>
+    <EndDate>2030-02-01</EndDate>
+    <Tenor>1Y</Tenor>
+    <Calendar>UK</Calendar>
+    <Convention>MF</Convention>
+    <TermConvention>MF</TermConvention>
+    <Rule>Forward</Rule>
+  </Rules>
+</ScheduleData>
 \end{minted}
 \caption{Schedule data, rules based}
 \label{lst:schedule_data_true}
@@ -32,24 +39,24 @@ respectively.
 \begin{listing}[H]
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
-              <ScheduleData>
-                <Dates>
-                  <Calendar>NYB</Calendar>
-                  <Convention>Following</Convention>
-                  <Tenor>3M</Tenor>
-                  <EndOfMonth>false</EndOfMonth>
-                  <EndOfMOnthConvention>Following</EndOfMOnthConvention>
-                  <IncludeDuplicateDates>false</IncludeDuplicateDates>
-                  <Dates>
-                    <Date>2012-01-06</Date>
-                    <Date>2012-04-10</Date>
-                    <Date>2012-07-06</Date>
-                    <Date>2012-10-08</Date>
-                    <Date>2013-01-07</Date>
-                    <Date>2013-04-08</Date>
-                  </Dates>
-                </Dates> 
-              </ScheduleData>
+<ScheduleData>
+  <Dates>
+    <Calendar>NYB</Calendar>
+    <Convention>Following</Convention>
+    <Tenor>3M</Tenor>
+    <EndOfMonth>false</EndOfMonth>
+    <EndOfMOnthConvention>Following</EndOfMOnthConvention>
+    <IncludeDuplicateDates>false</IncludeDuplicateDates>
+    <Dates>
+      <Date>2012-01-06</Date>
+      <Date>2012-04-10</Date>
+      <Date>2012-07-06</Date>
+      <Date>2012-10-08</Date>
+      <Date>2013-01-07</Date>
+      <Date>2013-04-08</Date>
+    </Dates>
+  </Dates>
+</ScheduleData>
 \end{minted}
 \caption{Schedule data, date based}
 \label{lst:schedule_data_false}
@@ -58,17 +65,40 @@ respectively.
 \begin{listing}[H]
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
-              <ScheduleData>
-                <Derived>
-                  <BaseSchedule>ScheduleData</BaseSchedule>
-                  <Shift>3M</Shift>
-                  <Calendar>GBP</Calendar>
-                  <Convention>Following</Convention>
-                </Derived> 
-              </ScheduleData>
+<ScheduleData>
+  <Derived>
+    <BaseSchedule>ScheduleData</BaseSchedule>
+    <Shift>3M</Shift>
+    <Calendar>GBP</Calendar>
+    <Convention>Following</Convention>
+  </Derived>
+</ScheduleData>
 \end{minted}
 \caption{Schedule data, derived}
 \label{lst:schedule_data_derived}
+\end{listing}
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<LegData>
+  <!-- Leg data information omitted for brevity -->
+  <ScheduleData name="accrual_schedule">
+    <Rules>
+      <StartDate>2026-03-05</StartDate>
+      <!-- Remaining rules information omitted for brevity -->
+    </Rules>
+  </ScheduleData>
+  <PaymentSchedule>
+    <Derived>
+      <BaseSchedule>accrual_schedule</BaseSchedule>
+      <Shift>-2D</Shift>
+      <!-- Remaining derived information omitted for brevity -->
+    </Derived>
+  </PaymentSchedule>
+</LegData>
+\end{minted}
+\caption{Derived payment schedule in \lstinline!LegData!.}
+\label{lst:derived_pmt_schedule}
 \end{listing}
 
 The ScheduleData section can contain any number and combination of
@@ -220,11 +250,17 @@ The meanings and allowable values of the elements in a {\tt <Derived>} section o
 
 Allowable values: Must be the node name of another schedule in a given leg data node.
 
-\item \lstinline!Shift! [Optional]: The tenor/period offset to be applied to each date in the base schedule in order to obtain the derived schedule.
+\item \lstinline!Shift! [Optional]:
+The period offset to be applied to each date in the base schedule in order to obtain the derived schedule.
+The period may be positive, for a forward shift of the base schedule, or negative,
+for a backward shift of the base schedule.
 
-Allowable values: A string where the last character must be \emph{D} or \emph{W} or
-\emph{M} or \emph{Y}.  The characters before that must be a positive integer. \\ \emph{D}
-$=$ Day, \emph{W} $=$ Week, \emph{M} $=$ Month, \emph{Y} $=$ Year. If left blank or omitted, defaults to \emph{0D}.
+Allowable values: Any valid period.
+In other words, an integer followed by a string where the last character must be one of 
+\lstinline!D!, \lstinline!W!, \lstinline!M! or \lstinline!Y!.
+Compound period definitions also work, for example \lstinline!1Y6M! and \lstinline!-6W4D!.
+Note that compound periods only work for year and month pairs or week and day pairs.
+If left blank or omitted, it defaults to \lstinline!0D!.
 
 \item \lstinline!Calendar! [Optional]: The calendar adjustment to be applied to each date in the base schedule in order to obtain the derived schedule.
 
@@ -233,6 +269,29 @@ Allowable values: See Table \ref{tab:calendar} Calendar. Defaults to \emph{NullC
 \item \lstinline!Convention! [Optional]: The roll convention to be applied to each date in the base schedule in order to obtain the derived schedule.
 
 Allowable values: See Table \ref{tab:convention} Roll Convention. Defaults to \emph{Unadjusted} if left blank or omitted.
+
+\item \lstinline!ShiftUnit! [optional]:
+Determines how the \lstinline!Shift! is used to calculate the derived date from the base schedule date.
+If omitted, or \lstinline!BusinessDays! is given, the \lstinline!Shift! is applied in the usual way.
+In other words, the anchor date is shifted by the period defined by the \lstinline!Shift! using the 
+\lstinline!Calendar! and \lstinline!Convention!.
+If \lstinline!CalendarDays! is given, the \lstinline!Shift! period must have day units i.e.\ must be an integer or an 
+integer followed by a \lstinline!D!.
+In this case, the anchor date is shifted by \lstinline!Shift! \emph{calendar} days.
+If the resulting date is not a good business day with respect to the \lstinline!Calendar!,
+it is adjusted using the \lstinline!Calendar! and \lstinline!Convention!.
+The anchor date used, off which the shift is based, can be influenced by the \lstinline!ShiftAnchor! below.
+
+Allowable values: \lstinline!BusinessDays! or \lstinline!CalendarDays!. Defaults to \lstinline!BusinessDays! if omitted.
+
+\item \lstinline!ShiftAnchor! [optional]:
+Determines the base or anchor date to use when shifting a date using the \lstinline!Shift!.
+If omitted, or \lstinline!Adjusted! is given, the anchor date is the underlying base schedule date.
+This base schedule date may have had adjustments applied.
+If \lstinline!Unadjusted! is given, the anchor date is the underlying base schedule date 
+before any adjustments have been applied.
+
+Allowable values: \lstinline!Adjusted! or \lstinline!Unadjusted!. Defaults to \lstinline!Adjusted! if omitted.
 
 \item \lstinline!RemoveFirstDate! [Optional]: If true the first date will be removed from the schedule. Useful to define a payment schedule based on a calculation schedule.
 

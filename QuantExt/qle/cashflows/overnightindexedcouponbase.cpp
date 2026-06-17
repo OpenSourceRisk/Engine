@@ -114,6 +114,9 @@ OvernightIndexedCouponBase::OvernightIndexedCouponBase(Type rateType, const Date
     lastFixingDate_ = rateCutOffStart;
     lastFixingDateNoCutoff_ = fixEnd;
 
+    QL_REQUIRE(paymentDate_ >= lastFixingDate_, "OvernightIndexedCouponBase: payment date (" << paymentDate_ <<
+        ") cannot be earlier than the last fixing date (" << lastFixingDate_ << ").");
+
     if (!telescopicDates_ || cachedEvalDate_ >= rateCutOffStart) {
 
         // Build full dates schedule.

@@ -17,17 +17,29 @@
 */
 
 /*! \file dateutilities.hpp
-     \brief helper functions for date operations
+     \brief helper functions and structures for date operations
 */
 
-#include <ql/time/date.hpp>
-
 #pragma once
+#include <ql/time/date.hpp>
+#include <iosfwd>
 
 namespace QuantExt {
+
 namespace DateUtilities {
-
 QuantLib::Date lastWeekday(QuantLib::Weekday dayOfWeek, QuantLib::Month m, QuantLib::Year y);
+} // namespace DateUtilities
 
-}
+enum class DateDeltaUnit {
+    BusinessDays,
+    CalendarDays
+};
+std::ostream& operator<<(std::ostream&, DateDeltaUnit);
+
+enum class DateDeltaAnchor {
+    Adjusted,
+    Unadjusted
+};
+std::ostream& operator<<(std::ostream&, DateDeltaAnchor);
+
 } // namespace QuantExt
