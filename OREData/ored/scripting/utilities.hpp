@@ -43,12 +43,17 @@ class GeneralizedBlackScholesProcess;
 namespace ore {
 namespace data {
 
-/*! coarsens given date grid starting at eval date using the given rule, which is of the form
-    3M(1W),1Y(1M),5Y(3M),10Y(1Y),50Y(5Y)
+/*! coarsens given date grid `dates` starting at eval date using the given rule, which is of the form
+    3M(1W),1Y(1M),5Y(3M),10Y(1Y),50Y(5Y) and returns the coarsened grid as the first element in the pair.
     the rough idea is out to 3M at least a 1W spacing is used, output 1Y a 1M spacing etc.
-    for the exact algorithm that generates the coarsened grid, see the code */
-std::vector<Date> coarsenDateGrid(const std::vector<Date>& date, const std::string& rule,
-                                  const Date& referenceDate = Null<Date>());
+    for the exact algorithm that generates the coarsened grid, see the code
+    In some cases, an `unadjDates` date grid of the same size as `dates` is passed in. The coarsening is still 
+    performed on `dates` and the `unadjDates` date grid is coarsened by picking elements at corrsponding positions.
+    The coarsened `unadjDates` grid is returned as the second element in the pair. If `unadjDates` is empty, the second
+    element in the pair will also be an empty vector.
+ */
+std::pair<std::vector<Date>, std::vector<Date>> coarsenDateGrid(const std::vector<Date>& dates, const std::string& rule,
+    const Date& referenceDate = Null<Date>(), const std::vector<Date>& unadjDates = {});
 
 /*! get product tag + script, if a name is defined in the scriptTrade, get the script from the library, otherwise
   from the trade itself; use the give purpose and fall back on an empty purpose if specified */

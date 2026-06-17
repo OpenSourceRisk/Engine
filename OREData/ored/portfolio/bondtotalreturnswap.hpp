@@ -64,6 +64,8 @@ public:
     const std::string& paymentConvention() const { return paymentConvention_; }
     const std::string& paymentCalendar() const { return paymentCalendar_; }
     const std::vector<std::string>& paymentDates() { return paymentDates_; }
+    const QuantLib::ext::optional<QuantExt::DateDeltaUnit>& paymentLagUnit() const { return paymentLagUnit_; }
+    const QuantLib::ext::optional<QuantExt::DateDeltaAnchor>& paymentLagAnchor() const { return paymentLagAnchor_; }
 
 private:
     // underlying bond data
@@ -83,6 +85,8 @@ private:
     std::string paymentConvention_;
     std::string paymentCalendar_;
     std::vector<std::string> paymentDates_;
+    QuantLib::ext::optional<QuantExt::DateDeltaUnit> paymentLagUnit_;
+    QuantLib::ext::optional<QuantExt::DateDeltaAnchor> paymentLagAnchor_;
 
     // optional fx terms for composite bond trs
     string fxIndex_ = "";

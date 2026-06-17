@@ -161,7 +161,7 @@ public:
     AverageONLeg& withTelescopicValueDates(bool telescopicValueDates);
     AverageONLeg& withRateCutoff(Natural rateCutoff);
     AverageONLeg& withPaymentCalendar(const Calendar& calendar);
-    AverageONLeg& withPaymentLag(Natural lag);
+    AverageONLeg& withPaymentLag(QuantLib::Integer lag);
     AverageONLeg& withLookback(const Period& lookback);
     AverageONLeg& withFixingDays(const Size fixingDays);
     AverageONLeg& withCaps(Rate cap);
@@ -188,7 +188,7 @@ private:
     std::vector<Real> notionals_;
     DayCounter paymentDayCounter_;
     BusinessDayConvention paymentAdjustment_;
-    Natural paymentLag_;
+    QuantLib::Integer paymentLag_;
     std::vector<Real> gearings_;
     std::vector<Spread> spreads_;
     bool telescopicValueDates_;

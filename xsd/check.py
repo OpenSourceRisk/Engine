@@ -4,6 +4,7 @@ import argparse
 from lxml import etree
 from lxml.etree import XMLSchemaParseError
 from lxml.etree import XMLSyntaxError
+import re
 import sys
 from typing import Iterable, List, Optional
 from pathlib import Path
@@ -36,6 +37,9 @@ def iter_xml_files(root_dir: str):
             if fname.lower().endswith(".xml"):
                 yield os.path.join(dirpath, fname)
 
+def should_exclude(path: str, patterns: list[str]) -> bool:
+    normalized = Path(path).resolve().as_posix()
+    return any(re.search(p, normalized, re.IGNORECASE) for p in patterns)
 
 def xml_validator(xml_path: str, schema: etree.XMLSchema) -> None:
     """
@@ -133,7 +137,7 @@ def _setup_logging(log_level: str, dir_name: str) -> None:
     logger.addHandler(fh)
 
 
-def main(xml_path:str, jobs:int=1) -> None:
+def main(xml_path:str, jobs:int=1, exclude_xml: list[str] | None = None) -> None:
     """
     Main function to initiate XML schema validation for configured files.
 
@@ -169,6 +173,11 @@ def main(xml_path:str, jobs:int=1) -> None:
     # Collect all XML files to validate
     paths_to_scan = list(dict_paths.values())
     xml_files = _collect_xmls(paths_to_scan)
+
+    if exclude_xml is not None:
+        logging.info(f"Found {len(xml_files)} XML files to validate before applying filter")
+        xml_files = [f for f in xml_files if not should_exclude(f, exclude_xml)]
+
     logging.info(f"Found {len(xml_files)} XML files to validate")
 
     # Optional parallel validation using threads (safe for IO-bound parsing)
@@ -205,13 +214,19 @@ if __name__ == '__main__':
     parser.add_argument('--log_level', type=str, default="INFO")
     parser.add_argument('--xml_path', type=str, default="", help="Direct XML path")
     parser.add_argument('--jobs', type=int, default=2, help="Number of parallel validation workers (threads)")
+    parser.add_argument("--exclude_xml", action="append",
+        default=[
+            r"ore/OREData/test/input/schedule/derived_schedules/.*\.xml$"
+        ],
+        help="Regex for XML files to exclude. Can be supplied multiple times."
+    )
     args = parser.parse_args()
 
     # Prepare logging (console ERROR-only, file full details) before running main
     script_dir = os.path.abspath(os.path.dirname(__file__))
     _setup_logging(args.log_level, script_dir)
 
-    main(xml_path=args.xml_path, jobs=args.jobs)
+    main(xml_path=args.xml_path, jobs=args.jobs, exclude_xml=args.exclude_xml)
 
     if not ERROR:
         sys.exit(1)

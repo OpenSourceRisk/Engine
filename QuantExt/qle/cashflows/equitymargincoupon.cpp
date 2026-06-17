@@ -183,7 +183,7 @@ EquityMarginLeg& EquityMarginLeg::withPaymentAdjustment(BusinessDayConvention co
     return *this;
 }
 
-EquityMarginLeg& EquityMarginLeg::withPaymentLag(Natural paymentLag) {
+EquityMarginLeg& EquityMarginLeg::withPaymentLag(Integer paymentLag) {
     paymentLag_ = paymentLag;
     return *this;
 }

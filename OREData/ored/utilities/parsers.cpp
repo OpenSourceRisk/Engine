@@ -18,7 +18,6 @@
 */
 
 /*! \file ored/utilities/parsers.cpp
-    \brief
     \ingroup utilities
 */
 
@@ -678,10 +677,10 @@ Month parseMonth(const string& s) {
 
 PaymentLag parsePaymentLag(const string& s) {
     Period p;
-    Natural n;
+    Integer n;
     if (tryParse<Period>(s, p, parsePeriod))
         return p;
-    else if (tryParse<Natural>(s, n, parseInteger))
+    else if (tryParse<Integer>(s, n, parseInteger))
         return n;
     else
         return 0;
@@ -1950,6 +1949,25 @@ std::ostream& operator<<(std::ostream& os, HestonProcess::Discretization dis) {
     return os;
 }
 
-  
+DateDeltaUnit parseDateDeltaUnit(const string& s) {
+    if (s == "BusinessDays") {
+        return DateDeltaUnit::BusinessDays;
+    } else if (s == "CalendarDays") {
+        return DateDeltaUnit::CalendarDays;
+    } else {
+        QL_FAIL("Invalid DateDeltaUnit: " << s << ". Valid values are: BusinessDays, CalendarDays.");
+    }
+}
+
+DateDeltaAnchor parseDateDeltaAnchor(const string& s) {
+    if (s == "Adjusted") {
+        return DateDeltaAnchor::Adjusted;
+    } else if (s == "Unadjusted") {
+        return DateDeltaAnchor::Unadjusted;
+    } else {
+        QL_FAIL("Invalid DateDeltaAnchor: " << s << ". Valid values are: Adjusted, Unadjusted.");
+    }
+}
+
 } // namespace data
 } // namespace ore
