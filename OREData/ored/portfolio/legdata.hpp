@@ -1124,8 +1124,10 @@ public:
     const PowerLoadProfileData& loadProfileData() const { return loadProfileData_; }
     const std::string& fxIndex() const { return fxIndex_; }
     QuantLib::Natural avgPricePrecision() const { return avgPricePrecision_; }
+    const std::string& priceCurrency() const { return priceCurrency_; }
+    const std::string& tag() const { return tag_; }
     //@}
-
+    
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;
@@ -1146,6 +1148,8 @@ private:
     PowerLoadProfileData loadProfileData_;
     std::string fxIndex_;
     QuantLib::Natural avgPricePrecision_;
+    std::string priceCurrency_;
+    std::string tag_;
 };
 
 //! \name Utilities for building QuantLib Legs

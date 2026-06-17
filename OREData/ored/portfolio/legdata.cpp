@@ -419,6 +419,8 @@ void IntradayPowerFloatingLegData::fromXML(XMLNode* node) {
                    "IntradayPowerFloatingLegData: avgPricePrecision must be non-negative, got " << precision);
         avgPricePrecision_ = static_cast<Natural>(precision);
     }
+
+    tag_ = XMLUtils::getChildValue(node, "Tag", false);
 }
 
 XMLNode* IntradayPowerFloatingLegData::toXML(XMLDocument& doc) const {
@@ -453,6 +455,9 @@ XMLNode* IntradayPowerFloatingLegData::toXML(XMLDocument& doc) const {
 
     if (avgPricePrecision_ != Null<Natural>())
         XMLUtils::addChild(doc, node, "AvgPricePrecision", static_cast<int>(avgPricePrecision_));
+
+    if (!tag_.empty())
+        XMLUtils::addChild(doc, node, "Tag", tag_);
 
     return node;
 }
