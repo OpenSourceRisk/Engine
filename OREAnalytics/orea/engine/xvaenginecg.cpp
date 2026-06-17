@@ -251,6 +251,8 @@ void XvaEngineCG::buildCam() {
         indices, indexCurrencies, simulationDates_, iborFallbackConfig_, std::vector<std::string>(),
         stickyCloseOutDates_, timeStepsPerYear, enableCgOptimization_);
 
+    model_->calculate();
+
     timing_parta_ = timer.elapsed().wall;
     DLOG("XvaEngineCG: build cam cg model done - graph size is " << model_->computationGraph()->size());
 }
