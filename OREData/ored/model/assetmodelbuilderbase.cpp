@@ -149,6 +149,8 @@ void AssetModelBuilderBase::buildCacheData(const std::set<Real>& curveTimes,
     for (Size i = 0; i < allCurves_.size(); ++i) {
         curveData.push_back(std::vector<Real>());
         for (auto t : curveTimes) {
+            QL_REQUIRE(t >= 0.0,
+                       "AssetModelBuilderBase::buildCacheData(): invalid curve time " << t << ". Internal error.");
             curveData.back().push_back(allCurves_[i]->discount(t));
         }
     }
@@ -156,6 +158,8 @@ void AssetModelBuilderBase::buildCacheData(const std::set<Real>& curveTimes,
     for (Size i = 0; i < volTimesStrikes.size(); ++i) {
         volData.push_back(std::vector<Real>());
         for (auto [t, k] : volTimesStrikes[i]) {
+            QL_REQUIRE(t >= 0.0,
+                       "AssetModelBuilderBase::buildCacheData(): invalid vol time " << t << ". Internal error.");
             if (k == Null<Real>())
                 k = atmForward(processes_[i]->x0(), processes_[i]->riskFreeRate(), processes_[i]->dividendYield(), t);
             volData.back().push_back(vols_[i]->blackVol(t, k));
