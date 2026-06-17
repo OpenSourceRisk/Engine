@@ -27,6 +27,7 @@
 #include <ored/portfolio/fixingdates.hpp>
 #include <ored/portfolio/indexing.hpp>
 #include <ored/portfolio/legdatafactory.hpp>
+#include <ored/portfolio/powerloadprofiledata.hpp>
 #include <ored/portfolio/schedule.hpp>
 #include <ored/portfolio/simmcreditqualifiermapping.hpp>
 #include <ored/portfolio/underlying.hpp>
@@ -41,6 +42,7 @@
 #include <qle/cashflows/equitycoupon.hpp>
 #include <qle/indexes/bmaindexwrapper.hpp>
 #include <qle/indexes/equityindex.hpp>
+#include <qle/indexes/intradaypowerindex.hpp>
 
 #include <vector>
 
@@ -1086,6 +1088,66 @@ private:
     string settlementFxFixingDate_;
 };
 
+//! Serializable Intraday Power Floating Leg Data
+/*!
+  \ingroup tradedata
+*/
+class IntradayPowerFloatingLegData : public LegAdditionalData {
+public:
+    //! Default constructor
+    IntradayPowerFloatingLegData();
+
+    //! Constructor
+    IntradayPowerFloatingLegData(const std::string& name, const std::vector<QuantLib::Real>& quantities,
+                         const std::vector<std::string>& quantityDates = {},
+                         const std::vector<QuantLib::Real>& spreads = {},
+                         const std::vector<std::string>& spreadDates = {},
+                         const std::vector<QuantLib::Real>& gearings = {},
+                         const std::vector<std::string>& gearingDates = {},
+                         const std::string& pricingCalendar = std::string(), bool includePeriodStart = true,
+                         bool includePeriodEnd = false, const PowerLoadProfileData& loadProfileData = PowerLoadProfileData(),
+                         const std::string& fxIndex = std::string(),
+                         QuantLib::Natural avgPricePrecision = QuantLib::Null<QuantLib::Natural>());
+
+    //! \name Inspectors
+    //@{
+    const std::string& name() const { return name_; }
+    const std::vector<QuantLib::Real>& quantities() const { return quantities_; }
+    const std::vector<std::string>& quantityDates() const { return quantityDates_; }
+    const std::vector<QuantLib::Real>& spreads() const { return spreads_; }
+    const std::vector<std::string>& spreadDates() const { return spreadDates_; }
+    const std::vector<QuantLib::Real>& gearings() const { return gearings_; }
+    const std::vector<std::string>& gearingDates() const { return gearingDates_; }
+    const std::string& pricingCalendar() const { return pricingCalendar_; }
+    bool includePeriodStart() const { return includePeriodStart_; }
+    bool includePeriodEnd() const { return includePeriodEnd_; }
+    const PowerLoadProfileData& loadProfileData() const { return loadProfileData_; }
+    const std::string& fxIndex() const { return fxIndex_; }
+    QuantLib::Natural avgPricePrecision() const { return avgPricePrecision_; }
+    //@}
+
+    //! \name Serialisation
+    //@{
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+    //@}
+
+private:
+    std::string name_;
+    std::vector<QuantLib::Real> quantities_;
+    std::vector<std::string> quantityDates_;
+    std::vector<QuantLib::Real> spreads_;
+    std::vector<std::string> spreadDates_;
+    std::vector<QuantLib::Real> gearings_;
+    std::vector<std::string> gearingDates_;
+    std::string pricingCalendar_;
+    bool includePeriodStart_;
+    bool includePeriodEnd_;
+    PowerLoadProfileData loadProfileData_;
+    std::string fxIndex_;
+    QuantLib::Natural avgPricePrecision_;
+};
+
 //! \name Utilities for building QuantLib Legs
 //@{
 Leg makeFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplacement = Null<Date>());
@@ -1142,6 +1204,14 @@ Leg makeEquityLeg(const LegData& data, const QuantLib::ext::shared_ptr<QuantExt:
                   const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr, const bool attachPricer = true,
                   const QuantLib::Date& openEndDateReplacement = Null<Date>(),
                   std::set<std::tuple<std::set<std::string>, std::string, std::string>>* = nullptr);
+
+Leg makeIntradayPowerFloatingLeg(
+    const LegData& data, const QuantLib::ext::shared_ptr<QuantExt::IntradayPowerIndex>& powerIndex,
+    const QuantLib::ext::shared_ptr<QuantExt::IntradayPowerLoadTermStructure>& loadTermStructure,
+    const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+    const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
+    const QuantLib::Date& openEndDateReplacement = Null<Date>());
+
 Real currentNotional(const Leg& leg);
 Real originalNotional(const Leg& leg);
 

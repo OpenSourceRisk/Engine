@@ -321,7 +321,6 @@
 #include <ored/portfolio/inflationswap.hpp>
 #include <ored/portfolio/instrumentwrapper.hpp>
 #include <ored/portfolio/intradaypowerforward.hpp>
-#include <ored/portfolio/intradaypowerlegdata.hpp>
 #include <ored/portfolio/knockoutswap.hpp>
 #include <ored/portfolio/legbuilders.hpp>
 #include <ored/portfolio/legdata.hpp>

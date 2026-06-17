@@ -23,6 +23,7 @@
 
 #include <qle/cashflows/fixedratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
+#include <qle/cashflows/intradaypowercashflow.hpp>
 #include <qle/indexes/iborindexfixingoverride.hpp>
 
 using namespace QuantExt;
@@ -438,6 +439,41 @@ Leg EquityLegBuilder::buildLeg(
 
     Leg result =
         makeEquityLeg(data, eqCurve, engineFactory, fxIndex, attachPricer, openEndDateReplacement, productModelEngines);
+    addToRequiredFixings(result, QuantLib::ext::make_shared<FixingDateGetter>(requiredFixings));
+    return result;
+}
+
+Leg IntradayPowerFloatingLegBuilder::buildLeg(
+    const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+    RequiredFixings& requiredFixings, const string& configuration,
+    const QuantLib::Date& openEndDateReplacement = Null<Date>(), const bool useXbsCurves = false,
+    const bool attachPricer = true,
+    std::set<std::tuple<std::set<std::string>, std::string, std::string>>* productModelEngines = nullptr) const {
+
+    auto intradayData = QuantLib::ext::dynamic_pointer_cast<IntradayPowerFloatingLegData>(data.concreteLegData());
+    QL_REQUIRE(intradayData, "Wrong LegType, expected IntradayPowerFloating");
+
+    string indexName = intradayData->name();
+
+    auto loadTermStructure =
+        ext::make_shared<IntradayPowerLoadTermStructure>(intradayData->loadProfileData().getLoadProfiles());
+    auto index = engineFactory->market()->intradayPowerIndex(indexName, configuration);
+    auto curve = index->priceCurve();
+
+    auto legCurrency = parseCurrencyWithMinors(data.currency());
+    auto priceCurrency = curve->currency();
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex = nullptr;
+    // if price currency differs from the leg currency we need an FxIndex
+    if (legCurrency != priceCurrency) {
+        QL_REQUIRE(intradayData->fxIndex() != "", "No FxIndex - if price currency ("
+                                                      << priceCurrency << ") differs from leg currency (" << legCurrency
+                                                      << ") an FxIndex must be provided");
+
+        fxIndex = buildFxIndex(intradayData->fxIndex(), data.currency(), priceCurrency.code(), engineFactory->market(),
+                               configuration, useXbsCurves);
+    }
+    Leg result =
+        makeIntradayPowerFloatingLeg(data, index, loadTermStructure, engineFactory, fxIndex, openEndDateReplacement);
     addToRequiredFixings(result, QuantLib::ext::make_shared<FixingDateGetter>(requiredFixings));
     return result;
 }

@@ -55,6 +55,7 @@
 #include <qle/cashflows/indexedcoupon.hpp>
 #include <qle/cashflows/interpolatediborcoupon.hpp>
 #include <qle/cashflows/interpolatediborcouponpricer.hpp>
+#include <qle/cashflows/intradaypowercashflow.hpp>
 #include <qle/cashflows/nonstandardcapflooredyoyinflationcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/strippedcapflooredcpicoupon.hpp>
@@ -355,6 +356,105 @@ void RangeAccrualLegData::fromXML(XMLNode* node) {
                                                              true);
     lowerBound_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "LowerBounds", "LowerBound", "startDate", lowerBoundDates_, &parseReal,
                                                              true);
+}
+
+IntradayPowerFloatingLegData::IntradayPowerFloatingLegData()
+    : LegAdditionalData(LegType::IntradayPowerFloating), includePeriodStart_(true), includePeriodEnd_(false),
+      avgPricePrecision_(Null<Natural>()) {}
+
+IntradayPowerFloatingLegData::IntradayPowerFloatingLegData(const string& name, const vector<Real>& quantities,
+                                           const vector<string>& quantityDates, const vector<Real>& spreads,
+                                           const vector<string>& spreadDates, const vector<Real>& gearings,
+                                           const vector<string>& gearingDates, const string& pricingCalendar,
+                                           bool includePeriodStart, bool includePeriodEnd,
+                                           const PowerLoadProfileData& loadProfileData, const string& fxIndex,
+                                           Natural avgPricePrecision)
+    : LegAdditionalData(LegType::IntradayPowerFloating), name_(name), quantities_(quantities),
+      quantityDates_(quantityDates), spreads_(spreads), spreadDates_(spreadDates), gearings_(gearings),
+      gearingDates_(gearingDates), pricingCalendar_(pricingCalendar), includePeriodStart_(includePeriodStart),
+      includePeriodEnd_(includePeriodEnd), loadProfileData_(loadProfileData), fxIndex_(fxIndex),
+      avgPricePrecision_(avgPricePrecision) {
+    indices_.insert("POWER-" + name_);
+}
+
+void IntradayPowerFloatingLegData::fromXML(XMLNode* node) {
+
+    XMLUtils::checkNode(node, "IntradayPowerFloatingLegData");
+
+    indices_.clear();
+    name_ = XMLUtils::getChildValue(node, "Name", true);
+    indices_.insert("POWER-" + name_);
+
+    quantities_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Quantities", "Quantity", "startDate",
+                                                                  quantityDates_, &parseReal, true);
+
+    spreads_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Spreads", "Spread", "startDate", spreadDates_,
+                                                               &parseReal);
+    gearings_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Gearings", "Gearing", "startDate",
+                                                                gearingDates_, &parseReal);
+
+    pricingCalendar_ = XMLUtils::getChildValue(node, "PricingCalendar", false);
+
+    includePeriodStart_ = true;
+    if (XMLNode* n = XMLUtils::getChildNode(node, "IncludePeriodStart")) {
+        includePeriodStart_ = parseBool(XMLUtils::getNodeValue(n));
+    }
+
+    includePeriodEnd_ = false;
+    if (XMLNode* n = XMLUtils::getChildNode(node, "IncludePeriodEnd")) {
+        includePeriodEnd_ = parseBool(XMLUtils::getNodeValue(n));
+    }
+
+    loadProfileData_ = PowerLoadProfileData();
+    if (XMLNode* n = XMLUtils::getChildNode(node, "PowerLoadProfileData")) {
+        loadProfileData_.fromXML(n);
+    }
+
+    fxIndex_ = XMLUtils::getChildValue(node, "FXIndex", false);
+
+    avgPricePrecision_ = Null<Natural>();
+    if (XMLNode* n = XMLUtils::getChildNode(node, "AvgPricePrecision")) {
+        int precision = parseInteger(XMLUtils::getNodeValue(n));
+        QL_REQUIRE(precision >= 0,
+                   "IntradayPowerFloatingLegData: avgPricePrecision must be non-negative, got " << precision);
+        avgPricePrecision_ = static_cast<Natural>(precision);
+    }
+}
+
+XMLNode* IntradayPowerFloatingLegData::toXML(XMLDocument& doc) const {
+
+    XMLNode* node = doc.allocNode("IntradayPowerFloatingLegData");
+
+    XMLUtils::addChild(doc, node, "Name", name_);
+    XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Quantities", "Quantity", quantities_, "startDate",
+                                                quantityDates_);
+
+    if (!spreads_.empty())
+        XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Spreads", "Spread", spreads_, "startDate",
+                                                    spreadDates_);
+
+    if (!gearings_.empty())
+        XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Gearings", "Gearing", gearings_, "startDate",
+                                                    gearingDates_);
+
+    if (!pricingCalendar_.empty())
+        XMLUtils::addChild(doc, node, "PricingCalendar", pricingCalendar_);
+
+    XMLUtils::addChild(doc, node, "IncludePeriodStart", includePeriodStart_);
+    XMLUtils::addChild(doc, node, "IncludePeriodEnd", includePeriodEnd_);
+
+    if (!loadProfileData_.getLoadProfiles().empty()) {
+        auto lpNode = loadProfileData_.toXML(doc);
+        XMLUtils::appendNode(node, lpNode);
+    }
+
+    if (!fxIndex_.empty())
+        XMLUtils::addChild(doc, node, "FXIndex", fxIndex_);
+
+    if (avgPricePrecision_ != Null<Natural>())
+        XMLUtils::addChild(doc, node, "AvgPricePrecision", static_cast<int>(avgPricePrecision_));
+
+    return node;
 }
 
 XMLNode* RangeAccrualLegData::toXML(XMLDocument& doc) const {
@@ -3550,6 +3650,77 @@ Leg buildNotionalLeg(const LegData& data, const Leg& leg, RequiredFixings& requi
     } else {
         return Leg();
     }
+}
+
+Leg makeIntradayPowerFloatingLeg(const LegData& data, const QuantLib::ext::shared_ptr<IntradayPowerIndex>& powerIndex,
+                                 const QuantLib::ext::shared_ptr<IntradayPowerLoadTermStructure>& loadTermStructure,
+                                 const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                                 const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex,
+                                 const QuantLib::Date& openEndDateReplacement) {
+    Schedule schedule;
+    Schedule paymentSchedule;
+    ScheduleBuilder scheduleBuilder;
+    scheduleBuilder.add(schedule, data.schedule());
+    scheduleBuilder.add(paymentSchedule, data.paymentSchedule());
+    scheduleBuilder.makeSchedules(openEndDateReplacement);
+
+    // Get explicit payment dates, if given
+
+    vector<Date> paymentDates;
+
+    if (!paymentSchedule.empty()) {
+        paymentDates = paymentSchedule.dates();
+    } else if (!data.paymentDates().empty()) {
+        BusinessDayConvention paymentDatesConvention =
+            data.paymentConvention().empty() ? Unadjusted : parseBusinessDayConvention(data.paymentConvention());
+        Calendar paymentDatesCalendar =
+            data.paymentCalendar().empty() ? NullCalendar() : parseCalendar(data.paymentCalendar());
+        paymentDates = parseVectorOfValues<Date>(data.paymentDates(), &parseDate);
+        for (Size i = 0; i < paymentDates.size(); i++)
+            paymentDates[i] = paymentDatesCalendar.adjust(paymentDates[i], paymentDatesConvention);
+    }
+
+    // set payment calendar
+
+    Calendar paymentCalendar;
+    if (!data.paymentCalendar().empty())
+        paymentCalendar = parseCalendar(data.paymentCalendar());
+    else if (!paymentSchedule.calendar().empty())
+        paymentCalendar = paymentSchedule.calendar();
+    else if (!schedule.calendar().empty())
+        paymentCalendar = schedule.calendar();
+
+    // set day counter and bdc
+
+    DayCounter dc = parseDayCounter(data.dayCounter());
+    BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
+    
+    auto intradayData = QuantLib::ext::dynamic_pointer_cast<IntradayPowerFloatingLegData>(data.concreteLegData());
+    QL_REQUIRE(intradayData, "Wrong LegType, expected IntradayPowerFloating");
+    // build standard schedules (for non-strict notional dates)
+    vector<Real> quantities =
+        buildScheduledVector(intradayData->quantities(), intradayData->quantityDates(), schedule);
+
+    // Get spreads and gearings which may be empty
+    vector<Real> spreads = buildScheduledVector(intradayData->spreads(), intradayData->spreadDates(), schedule);
+    vector<Real> gearings =
+        buildScheduledVector(intradayData->gearings(), intradayData->gearingDates(), schedule);
+
+    PaymentLag paymentLag = parsePaymentLag(data.paymentLag());
+
+    Leg leg = IntradayPowerLeg(schedule, powerIndex, loadTermStructure)
+                  .withQuantities(quantities)
+                  .withPricingCalendar(parseCalendar(intradayData->pricingCalendar()))
+                  .withPaymentCalendar(paymentCalendar)
+                  .withPaymentConvention(bdc)
+                  .withPaymentLag(boost::apply_visitor(PaymentLagInteger(), paymentLag))
+                  .withSpreads(spreads)
+                  .withGearings(gearings)
+                  .withPaymentDates(paymentDates)
+                  .includeStartDate(intradayData->includePeriodStart())
+                  .includeEndDate(intradayData->includePeriodEnd())
+                  .withFxIndex(fxIndex);
+    return leg;
 }
 
 namespace {

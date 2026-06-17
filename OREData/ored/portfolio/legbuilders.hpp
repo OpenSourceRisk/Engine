@@ -174,5 +174,16 @@ public:
                      nullptr) const override;
 };
 
+class IntradayPowerFloatingLegBuilder : public LegBuilder {
+public:
+    IntradayPowerFloatingLegBuilder() : LegBuilder(LegType::IntradayPowerFloating) {}
+    Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                 RequiredFixings& requiredFixings, const string& configuration,
+                 const QuantLib::Date& openEndDateReplacement = Null<Date>(), const bool useXbsCurves = false,
+                 const bool attachPricer = true,
+                 std::set<std::tuple<std::set<std::string>, std::string, std::string>>* productModelEngines =
+                     nullptr) const override;
+};
+
 } // namespace data
 } // namespace ore

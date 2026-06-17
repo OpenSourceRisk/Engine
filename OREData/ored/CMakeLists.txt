@@ -300,7 +300,6 @@ portfolio/indexing.cpp
 portfolio/inflationswap.cpp
 portfolio/instrumentwrapper.cpp
 portfolio/intradaypowerforward.cpp
-portfolio/intradaypowerlegdata.cpp
 portfolio/knockoutswap.cpp
 portfolio/legbuilders.cpp
 portfolio/legdata.cpp
@@ -745,7 +744,6 @@ portfolio/indexing.hpp
 portfolio/inflationswap.hpp
 portfolio/instrumentwrapper.hpp
 portfolio/intradaypowerforward.hpp
-portfolio/intradaypowerlegdata.hpp
 portfolio/knockoutswap.hpp
 portfolio/legbuilders.hpp
 portfolio/legdata.hpp
