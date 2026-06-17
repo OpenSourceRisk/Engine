@@ -69,7 +69,6 @@ public:
                            const Natural rateCutoff, const Natural fixingDays, const bool includeSpread, const Real cap,
                            const Real floor, const bool nakedOption, const bool localCapFloor,
                            const std::string& localBaseCurrency = {}) const override;
-    QuantLib::Size size() const override;
 
     // t0 market data functions from the ModelCG interface
     Real getDirectFxSpotT0(const std::string& forCcy, const std::string& domCcy) const override;
