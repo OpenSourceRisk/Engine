@@ -57,7 +57,7 @@ void SpreadedBlackVolatilityCurve::update() {
 void SpreadedBlackVolatilityCurve::performCalculations() const {
     originalRefDate_ = referenceVol_->referenceDate();
     actualRefDate_ = referenceDate();
-    t0_ = timeFromReference(originalRefDate_);
+    t0_ = referenceVol_->timeFromReference(actualRefDate_);
     for (Size i = 0; i < times_.size(); ++i) {
         QL_REQUIRE(!volSpreads_[i].empty(), "SpreadedBlackVolatilityCurve: empty quote at index " << (i - 1));
         data_[i] = volSpreads_[i]->value();

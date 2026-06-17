@@ -580,7 +580,7 @@ SpreadedCreditVolCurve::SpreadedCreditVolCurve(const Handle<CreditVolCurve> base
 void SpreadedCreditVolCurve::performCalculations() const {
     originalRefDate_ = baseCurve_->referenceDate();
     actualRefDate_ = referenceDate();
-    t0_ = timeFromReference(originalRefDate_);
+    t0_ = baseCurve_->timeFromReference(actualRefDate_);
     CreditVolCurve::performCalculations();
     times_.clear();
     spreadValues_.clear();

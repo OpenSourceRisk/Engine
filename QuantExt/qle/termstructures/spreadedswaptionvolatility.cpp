@@ -195,7 +195,7 @@ Real SpreadedSwaptionVolatility::shiftImpl(Time optionTime, Time swapLength) con
 void SpreadedSwaptionVolatility::performCalculations() const {
     originalRefDate_ = base_->referenceDate();
     actualRefDate_ = referenceDate();
-    t0_ = timeFromReference(originalRefDate_);
+    t0_ = base_->timeFromReference(actualRefDate_);
     SwaptionVolatilityDiscrete::performCalculations();
     for (Size k = 0; k < strikeSpreads_.size(); ++k) {
         for (Size i = 0; i < optionTenors_.size(); ++i) {

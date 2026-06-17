@@ -92,7 +92,7 @@ Volatility SpreadedOptionletVolatility2::volatilityImpl(Time optionTime, Rate st
 void SpreadedOptionletVolatility2::performCalculations() const {
     originalRefDate_ = baseVol_->referenceDate();
     actualRefDate_ = referenceDate();
-    t0_ = timeFromReference(originalRefDate_);
+    t0_ = baseVol_->timeFromReference(actualRefDate_);
     for (Size i = 0; i < optionDates_.size(); ++i)
         optionTimes_[i] = timeFromReference(optionDates_[i]);
     for (Size k = 0; k < strikes_.size(); ++k) {

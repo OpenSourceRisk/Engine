@@ -117,7 +117,7 @@ const std::vector<QuantLib::Real>& SpreadedBlackVolatilitySurfaceMoneyness::mone
 void SpreadedBlackVolatilitySurfaceMoneyness::performCalculations() const {
     originalRefDate_ = referenceVol_->referenceDate();
     actualRefDate_ = referenceDate();
-    t0_ = timeFromReference(originalRefDate_);
+    t0_ = referenceVol_->timeFromReference(actualRefDate_);
     for (Size j = 0; j < data_.columns(); ++j) {
         for (Size i = 0; i < data_.rows(); ++i) {
             data_(i, j) = volSpreads_[i][j]->value();
