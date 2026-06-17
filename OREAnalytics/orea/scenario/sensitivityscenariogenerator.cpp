@@ -23,10 +23,12 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
 
+#include <qle/termstructures/swaptionvolconstantspread.hpp>
+#include <qle/utilities/time.hpp>
+
 #include <ql/math/comparison.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
-#include <qle/termstructures/swaptionvolconstantspread.hpp>
 
 #include <algorithm>
 #include <ostream>
@@ -255,6 +257,23 @@ void SensitivityScenarioGenerator::generateScenarios() {
             scenarios_.push_back(crossScenario);
             DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << crossScenario->label() << " created");
         }
+    }
+
+    // add theta scenario, if enabled
+
+    if (sensitivityData_->thetaPeriod() != Period()) {
+        auto thetaScenario = sensiScenarioFactory_->buildScenario(asof + sensitivityData_->thetaPeriod(),
+                                                                  !sensitivityData_->useSpreadedTermStructures());
+        for (auto const& k : baseScenario_->keys()) {
+            thetaScenario->add(k, baseScenario_->get(k));
+        }
+        scenarioDescriptions_.push_back(ScenarioDescription(ScenarioDescription::Type::Theta,
+                                                            RiskFactorKey(RiskFactorKey::KeyType::Theta, std::string()),
+                                                            to_string(sensitivityData_->thetaPeriod())));
+        thetaScenario->label(to_string(scenarioDescriptions_.back()));
+        scenarios_.push_back(thetaScenario);
+        shiftSizes_[RiskFactorKey(RiskFactorKey::KeyType::Theta, std::string())] =
+            QuantExt::periodToTime(sensitivityData_->thetaPeriod());
     }
 
     LOG("sensitivity scenario generator finished generating scenarios.");

@@ -125,6 +125,7 @@
     </CrossGammaFilter>
     -->
   <ComputeGamma>false</ComputeGamma>
+  <ThetaPeriod>1D</ThetaPeriod>
   <UseSpreadedTermStructures>true</UseSpreadedTermStructures>
 </SensitivityAnalysis>
 

@@ -68,20 +68,20 @@ public:
     QuantLib::Date asof() const override { return asof_; }
 
     //! Get a T0 value from the cube
-    Real getT0(Size i, Size) const override {
-        this->check(i, 0, 0);
+    Real getT0(Size i, Size d) const override {
+        this->check(i, 0, 0, d);
         return this->t0Data_[i];
     }
 
     //! Set a value in the cube
-    void setT0(Real value, Size i, Size) override {
-        this->check(i, 0, 0);
+    void setT0(Real value, Size i, Size d) override {
+        this->check(i, 0, 0, d);
         this->t0Data_[i] = static_cast<QuantLib::Real>(value);
     }
 
     //! Get a value from the cube
-    Real get(Size i, Size j, Size k, Size) const override {
-        this->check(i, j, k);
+    Real get(Size i, Size j, Size k, Size d) const override {
+        this->check(i, j, k, d);
 
         auto itr = this->tradeNPVs_[i].find(k);
         if (itr != tradeNPVs_[i].end()) {
@@ -92,8 +92,8 @@ public:
     }
 
     //! Set a value in the cube
-    void set(Real value, Size i, Size j, Size k, Size) override {
-        this->check(i, j, k);
+    void set(Real value, Size i, Size j, Size k, Size d) override {
+        this->check(i, j, k, d);
         QuantLib::Real castValue = static_cast<QuantLib::Real>(value);
         if (boost::math::epsilon_difference<QuantLib::Real>(castValue, t0Data_[i]) > 42) {
             this->tradeNPVs_[i][k] = castValue;
@@ -102,14 +102,14 @@ public:
     }
 
     void removeT0(Size i) override {
-        this->check(i, 0, 0);
+        this->check(i, 0, 0, 0);
         this->t0Data_[i] = 0.0;
     }
 
     void remove(Size i, Size k, bool useT0) override {
         // we can ignore useT0 since get() return the t0 value anyhow if missing k
         if (k != QuantLib::Null<Size>()) {
-            this->check(i, 0, k);
+            this->check(i, 0, k, 0);
             this->tradeNPVs_[i].erase(k);
         } else {
             this->tradeNPVs_[i].clear();
@@ -133,10 +133,11 @@ protected:
     std::vector<std::map<QuantLib::Size, QuantLib::Real>> tradeNPVs_;
     std::set<QuantLib::Size> relevantScenarios_;
 
-    void check(QuantLib::Size i, QuantLib::Size j, QuantLib::Size k) const {
+    void check(QuantLib::Size i, QuantLib::Size j, QuantLib::Size k, QuantLib::Size d) const {
         QL_REQUIRE(i < numIds(), "Out of bounds on ids (i=" << i << ")");
-        QL_REQUIRE(j < depth(), "Out of bounds on depth (j=" << j << ")");
+        // all dates are mapped to date index 0
         QL_REQUIRE(k < samples(), "Out of bounds on samples (k=" << k << ")");
+        QL_REQUIRE(d < depth(), "Out of bounds on depth (j=" << j << ")");
     }
 };
 

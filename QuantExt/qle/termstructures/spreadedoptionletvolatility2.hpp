@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <qle/termstructures/dynamicstype.hpp>
+
 #include <ql/math/interpolations/interpolation2d.hpp>
 #include <ql/quote.hpp>
 #include <ql/termstructures/volatility/optionlet/optionletvolatilitystructure.hpp>
@@ -36,16 +38,12 @@ class SpreadedOptionletVolatility2 : public OptionletVolatilityStructure, public
 public:
     SpreadedOptionletVolatility2(const Handle<OptionletVolatilityStructure>& baseVol,
                                  const std::vector<Date>& optionDates, const std::vector<Real>& strikes,
-                                 const std::vector<std::vector<Handle<Quote>>>& volSpreads);
+                                 const std::vector<std::vector<Handle<Quote>>>& volSpreads,
+                                 ReactionToTimeDecay decayMode);
     BusinessDayConvention businessDayConvention() const override;
     Rate minStrike() const override;
     Rate maxStrike() const override;
-    DayCounter dayCounter() const override;
     Date maxDate() const override;
-    Time maxTime() const override;
-    const Date& referenceDate() const override;
-    Calendar calendar() const override;
-    Natural settlementDays() const override;
     VolatilityType volatilityType() const override;
     Real displacement() const override;
     void update() override;
@@ -61,27 +59,29 @@ protected:
     const std::vector<Real>& optionTimes() const { return optionTimes_; }
     const Matrix& volSpreadValues() const { return volSpreadValues_; }
 
-private:
     Handle<OptionletVolatilityStructure> baseVol_;
     std::vector<Date> optionDates_;
     std::vector<Real> strikes_;
     std::vector<std::vector<Handle<Quote>>> volSpreads_;
-    //
+    ReactionToTimeDecay decayMode_;
+
     mutable std::vector<Real> optionTimes_;
     mutable Matrix volSpreadValues_;
     mutable Interpolation2D volSpreadInterpolation_;
+    mutable Date originalRefDate_, actualRefDate_;
+    mutable Real t0_;
 };
 
 class AtmAdjustedSpreadedOptionletVolatility2 : public SpreadedOptionletVolatility2 {
 public:
-    AtmAdjustedSpreadedOptionletVolatility2(const Handle<OptionletVolatilityStructure>& baseVol,
-                                            const std::vector<Date>& optionDates, const std::vector<Real>& strikes,
-                                            const std::vector<std::vector<Handle<Quote>>>& volSpreads,
-                                            const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& baseIndex,
-                                            const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& targetIndex,
-                                            const QuantLib::Period& baseRateComputationPeriod = 0 * QuantLib::Days,
-                                            const QuantLib::Period& targetRateComputationPeriod = 0 * QuantLib::Days,
-                                            Real scalingFactor = 1.0);
+    AtmAdjustedSpreadedOptionletVolatility2(
+        const Handle<OptionletVolatilityStructure>& baseVol, const std::vector<Date>& optionDates,
+        const std::vector<Real>& strikes, const std::vector<std::vector<Handle<Quote>>>& volSpreads,
+        const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& baseIndex,
+        const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& targetIndex,
+        const QuantLib::Period& baseRateComputationPeriod = 0 * QuantLib::Days,
+        const QuantLib::Period& targetRateComputationPeriod = 0 * QuantLib::Days, Real scalingFactor = 1.0,
+        ReactionToTimeDecay decayMode = ReactionToTimeDecay::ForwardForwardVariance);
     void update() override;
     void deepUpdate() override;
 

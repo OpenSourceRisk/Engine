@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(testConstantVarianceStickyLogMoneyness) {
 
     Handle<DynamicBlackVolTermStructure<tag::surface> > dyn(
         QuantLib::ext::make_shared<DynamicBlackVolTermStructure<tag::surface> >(
-            d.refVol, 0, TARGET(), ConstantVariance, StickyLogMoneyness, d.riskfreeTs, d.dividendTs, d.spot_q));
+            d.refVol, 0, TARGET(), ConstantVariance, StickyMoneyness, d.riskfreeTs, d.dividendTs, d.spot_q));
 
     dyn->enableExtrapolation();
 
@@ -300,7 +300,7 @@ BOOST_AUTO_TEST_CASE(testForwardVarianceStickyLogMoneyness) {
 
     Handle<DynamicBlackVolTermStructure<tag::surface> > dyn(
         QuantLib::ext::make_shared<DynamicBlackVolTermStructure<tag::surface> >(
-            d.refVol, 0, TARGET(), ForwardForwardVariance, StickyLogMoneyness, d.riskfreeTs, d.dividendTs, d.spot_q));
+            d.refVol, 0, TARGET(), ForwardForwardVariance, StickyMoneyness, d.riskfreeTs, d.dividendTs, d.spot_q));
 
     dyn->enableExtrapolation();
 

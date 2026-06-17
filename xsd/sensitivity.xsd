@@ -33,6 +33,7 @@
       <xs:element type="sensiBondFutureVolatilities" name="BondFutureVolatilities" minOccurs="0"/>
       <xs:element type="crossgammafilter" name="CrossGammaFilter" minOccurs="0"/>
       <xs:element type="bool" name="ComputeGamma" minOccurs="0"/>
+      <xs:element type="period" name="ThetaPeriod" minOccurs="0"/>
       <xs:element type="bool" name="UseSpreadedTermStructures" minOccurs="0"/>
       <xs:element type="setRiskFactorKeyTypes" name="TwoSidedDeltaKeyTypes" minOccurs="0"/>
     </xs:all>
