@@ -197,7 +197,7 @@ void AssetModel::performCalculations() const {
                                                           << indices_.size() << ")");
 
     QL_REQUIRE(!inTrainingPhase_, "AssetModel::performCalculations(): state inTrainingPhase should be false, this was "
-                                  "not resetted appropriately.");
+                                  "not reset appropriately. Internal error.");
 
     referenceDate_ = curves_.front()->referenceDate();
 
