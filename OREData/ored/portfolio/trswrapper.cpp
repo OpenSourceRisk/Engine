@@ -319,7 +319,6 @@ bool TRSWrapperAccrualEngine::computeStartValue(std::vector<Real>& underlyingSta
             startDate = Null<Date>();
         }
     } // loop over underlyings
-
     return true;
 }
 
@@ -506,6 +505,12 @@ void TRSWrapperAccrualEngine::calculate() const {
                 if (endDate == Null<Date>()) {
                     s1 = getUnderlyingNPV(i, s1AdditionalData);
                     fx1 = getFxConversionRate(today, arguments_.assetCurrency_[i], arguments_.returnCurrency_, true);
+                } else if (!arguments_.portfolioId_.empty() && arguments_.pricePerIndexUnit_) {
+                    // Portfolio priced per index unit: the completed-period end value is taken once from the
+                    // basket index (i == 0), mirroring the start value, since all decomposed constituents share
+                    // the same basket-level GENERIC index and would otherwise each return the whole basket price.
+                    s1 = i == 0 ? arguments_.basketIndex_->fixing(endDate) * arguments_.indexQuantity_ : 0.0;
+                    fx1 = getFxConversionRate(endDate, arguments_.initialPriceCurrency_, arguments_.returnCurrency_, false);
                 } else {
                     s1 = getUnderlyingFixing(i, endDate, false, s1AdditionalData) * arguments_.underlyingMultiplier_[i];
                     fx1 = getFxConversionRate(endDate, arguments_.assetCurrency_[i], arguments_.returnCurrency_, false);
@@ -674,6 +679,17 @@ void TRSWrapperAccrualEngine::calculate() const {
                             localNotionalFactor =
                                 arguments_.initialPrice_ *
                                 (arguments_.underlying_.size() == 1 ? arguments_.underlyingMultiplier_[j] : 1.0);
+                            localFxFactor = getFxConversionRate(arguments_.valuationSchedule_[currentIdx],
+                                                                arguments_.initialPriceCurrency_,
+                                                                arguments_.fundingCurrency_, false);
+                        }
+                    } else if (!arguments_.portfolioId_.empty() && arguments_.pricePerIndexUnit_) {
+                        // Portfolio priced per index unit: the reset notional is taken once from the basket index
+                        // (j == 0), since all decomposed constituents share the same basket-level GENERIC index.
+                        if (j == 0) {
+                            localNotionalFactor =
+                                arguments_.basketIndex_->fixing(arguments_.valuationSchedule_[currentIdx]) *
+                                arguments_.indexQuantity_;
                             localFxFactor = getFxConversionRate(arguments_.valuationSchedule_[currentIdx],
                                                                 arguments_.initialPriceCurrency_,
                                                                 arguments_.fundingCurrency_, false);
@@ -902,9 +918,18 @@ void TRSWrapperAccrualEngine::calculate() const {
         // the start fixing will refer to the last of the nth current return periods
         std::string resultSuffix = arguments_.underlying_.size() == 1 ? "" : "_" + std::to_string(j);
         Real startFixing = Null<Real>(), todaysFixing = Null<Real>();
-        try {
-            startFixing = getUnderlyingFixing(j, startDate, false);
-        } catch (...) {
+        if (!arguments_.portfolioId_.empty() && arguments_.pricePerIndexUnit_) {
+            if (j == 0) {
+                try {
+                    startFixing = arguments_.basketIndex_->fixing(startDate);
+                } catch (...) {
+                }
+            }
+        } else {
+            try {
+                startFixing = getUnderlyingFixing(j, startDate, false);
+            } catch (...) {
+            }
         }
         try {
             todaysFixing = getUnderlyingFixing(j, today, true);
