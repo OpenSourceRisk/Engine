@@ -848,6 +848,8 @@ std::size_t BlackScholesCG::getDiscount(const Size idx, const Date& s, const Dat
 std::size_t BlackScholesCG::numeraire(const Date& s, const std::string& currency,
                                       const std::string& localBaseCurrency) const {
 
+    calculate();
+
     QL_REQUIRE(localBaseCurrency.empty() || localBaseCurrency == baseCurrency(),
                "BlackScholesCG::numeraire(): localBaseCurrency ("
                    << localBaseCurrency << ") not allowed, must be empty or equal to global base ccy ("
@@ -896,6 +898,8 @@ std::set<std::size_t> BlackScholesCG::npvRegressors(const Date& obsdate,
                                                     const std::optional<std::set<std::string>>& relevantCurrencies,
                                                     const std::string& localBaseCurrency,
                                                     const std::string& localBaseCurrencyPaths) const {
+
+    calculate();
 
     QL_REQUIRE(localBaseCurrency.empty() || localBaseCurrency == baseCurrency(),
                "BlackScholesCG::npvRegressors: localBaseCurrency ("
