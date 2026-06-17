@@ -47,7 +47,7 @@ public:
 
     IntradayPowerCurveConfig(const std::string& curveId, const std::string& curveDescription,
                              const std::string& currency, const std::string& dailyAveragePriceCurve,
-                             const std::string& shapeQuoteName, const std::string& indexName = "");
+                             const std::string& shapeQuoteName);
     //@}
 
     //! \name Serialisation
@@ -64,7 +64,6 @@ public:
     const std::string& dailyAveragePriceCurve() const { return dailyAveragePriceCurve_; }
     /*! Quote name prefix used to retrieve SHAPE_PROFILE/SHAPE_FACTOR market data. */
     const std::string& shapeQuoteName() const { return shapeQuoteName_; }
-    const std::string& indexName() const { return indexName_; }
     //@}
 
     //! \name Setters
@@ -81,7 +80,6 @@ private:
     std::string currency_;
     std::string dailyAveragePriceCurve_;
     std::string shapeQuoteName_;
-    std::string indexName_;
 };
 
 } // namespace data
