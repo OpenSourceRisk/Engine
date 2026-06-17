@@ -65,7 +65,7 @@ public:
     FormulaBasedLeg& withNotionals(const std::vector<Real>& notionals);
     FormulaBasedLeg& withPaymentDayCounter(const DayCounter&);
     FormulaBasedLeg& withPaymentAdjustment(BusinessDayConvention);
-    FormulaBasedLeg& withPaymentLag(Natural lag);
+    FormulaBasedLeg& withPaymentLag(QuantLib::Integer lag);
     FormulaBasedLeg& withPaymentCalendar(const Calendar&);
     FormulaBasedLeg& withFixingDays(Natural fixingDays);
     FormulaBasedLeg& withFixingDays(const std::vector<Natural>& fixingDays);
@@ -80,7 +80,7 @@ private:
     std::vector<Real> notionals_;
     DayCounter paymentDayCounter_;
     BusinessDayConvention paymentAdjustment_;
-    Natural paymentLag_;
+    QuantLib::Integer paymentLag_;
     Calendar paymentCalendar_;
     std::vector<Natural> fixingDays_;
     bool inArrears_, zeroPayments_;

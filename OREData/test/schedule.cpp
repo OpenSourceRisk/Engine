@@ -16,13 +16,24 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+// clang-format off
 #include <boost/test/unit_test.hpp>
+#include <boost/test/data/test_case.hpp>
+// clang-format on
 #include <ored/portfolio/schedule.hpp>
 #include <ored/utilities/toplevelfixture.hpp>
+#include <oret/util/fileutilities.hpp>
+#include <oret/util/datapaths.hpp>
+#include <sstream>
+#include <iomanip>
+#include <fstream>
 
 using namespace boost::unit_test_framework;
 using namespace ore::data;
 using namespace QuantLib;
+using namespace std;
+namespace bdata = boost::unit_test::data;
+namespace fs = std::filesystem;
 
 BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::data::TopLevelFixture)
 
@@ -89,6 +100,82 @@ BOOST_AUTO_TEST_CASE(testLastWednesdayDateGenerationRule) {
 
     // Check
     BOOST_CHECK_EQUAL_COLLECTIONS(s.dates().begin(), s.dates().end(), expected.begin(), expected.end());
+}
+
+#ifdef __INTELLISENSE__
+void testDerivedSchedules(string prefix, bool unadjusted)
+#else
+BOOST_DATA_TEST_CASE(testDerivedSchedules,
+    bdata::make({ string("_01"), string("_02") }) * bdata::make({true, false}),
+    prefix, unadjusted
+)
+#endif
+{
+    // Find all files in test input directory of form schedule<prefix><suffix>.xml.
+    fs::path testInputDir = TEST_INPUT_PATH / "derived_schedules";
+    string filenamePrefix = "schedule" + prefix;
+    vector<string> xmlFilenamesNoExt;
+    for (const auto& entry : fs::directory_iterator(testInputDir)) {
+        if (entry.is_regular_file()) {
+            string filename = entry.path().filename().string();
+            if (filename.starts_with(filenamePrefix) && entry.path().extension() == ".xml")
+                xmlFilenamesNoExt.push_back(entry.path().stem().string());
+        }
+    }
+
+    // Read in the collection of ScheduleData objects from file.
+    vector<pair<ScheduleData, Schedule>> vecScheduleData;
+    for (const auto& xmlFilenameNoExt : xmlFilenamesNoExt) {
+        string filename = testInputDir.string() + "/" + xmlFilenameNoExt + ".xml";
+        ScheduleData scheduleData;
+        scheduleData.fromFile(TEST_INPUT_FILE(filename));
+        BOOST_CHECK_EQUAL(scheduleData.name(), xmlFilenameNoExt);
+        vecScheduleData.push_back({scheduleData, Schedule()});
+    }
+
+    // Add to ScheduleBuilder and make schedules, which will populate the Schedule objects in vecScheduleData.
+    ScheduleBuilder scheduleBuilder;
+    for (auto& [scheduleData, schedule] : vecScheduleData) {
+        scheduleBuilder.add(schedule, scheduleData);
+    }
+    scheduleBuilder.makeSchedules(Null<Date>(), unadjusted);
+
+    // Create directory needed for output.
+    fs::path outDir = TEST_OUTPUT_PATH / "derived_schedules";
+    std::error_code ec;
+    fs::create_directories(outDir, ec);
+    BOOST_REQUIRE_MESSAGE(!ec, "testDerivedSchedules: failed to create directories at " <<
+        outDir << " with error: " << ec.message());
+
+    // Create output file name.
+    ostringstream oss;
+    oss << "schedules" << prefix << "_" << (unadjusted ? "unadjusted" : "standard");
+    string outFilename = oss.str();
+
+    // Open the output file.
+    fs::path outFilePath = outDir / path(outFilename + ".csv");
+    ofstream outFile(outFilePath);
+    BOOST_REQUIRE_MESSAGE(outFile.is_open(), "testDerivedSchedules: failed to open file at: " << outFilePath);
+
+    // Write out the dates from the built schedules.
+    for (const auto& elem : vecScheduleData) {
+        // Check schedule is non-empty.
+        const Schedule& schedule = elem.second;
+        BOOST_CHECK(!schedule.empty());
+        // Write out the dates for each schedule.
+        outFile << elem.first.name();
+        for (const auto& date : schedule.dates()) {
+            outFile << "," << io::iso_date(date);
+        }
+        outFile << "\n";
+    }
+
+    // Close the output file.
+    outFile.close();
+
+    // Compare output against expected output.
+    fs::path expFilePath = testInputDir / path(outFilename + "_expected.csv");
+    BOOST_CHECK(compareFiles(outFilePath.string(), expFilePath.string()));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

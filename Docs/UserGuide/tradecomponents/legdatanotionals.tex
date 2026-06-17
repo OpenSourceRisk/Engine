@@ -54,23 +54,65 @@ Allowable values:  See Table \ref{tab:currency} \lstinline!Currency!. When \lsti
 
 \item PaymentCalendar [Optional]: The payment calendar of the leg coupons. The \lstinline!PaymentCalendar! is used in conjunction with the \lstinline!PaymentConvention!, \lstinline!PaymentLag! and \lstinline!NotionalPaymentLag! to determine the payments dates, unless the \lstinline!PaymentDates! node is used which defines the payment dates explicitly.
 
-Allowable values: See Table \ref{tab:calendar} \lstinline!Calendar!. If left blank or omitted, defaults to the calendar in the \lstinline!ScheduleData! node, unless \lstinline!LegType! is \emph{Floating} and \lstinline!Index! is OIS, in which case this defaults to the index calendar. 
-
-The \lstinline!PaymentCalendar! calendar field is currently only supported for \lstinline!LegType! \emph{Floating} (with an IBOR, BMA or OIS underlying index), \emph{CMS}, \emph{CMSSpread}, \emph{DigitalCMSSpread}, \emph{Equity}, \emph{YY}, \emph{CPI}, \emph{Fixed}, \emph{ZeroCouponFixed}, \emph{DigitalCMS}. For unsupported legs it defaults to the schedule calendar, and if no calendar is set in the \lstinline!ScheduleData! node (for dates-based schedules the calendar field is optional), the \emph{NullCalendar} is used. 
+Allowable values: See Table \ref{tab:calendar} \lstinline!Calendar!.
+If left blank or omitted, it defaults to the calendar in the \lstinline!ScheduleData! node,
+unless \lstinline!LegType! is \lstinline!Floating! and \lstinline!Index! is OIS,
+in which case this defaults to the index fixing calendar.
+If the PaymentCalendar defaults to the calendar in the \lstinline!ScheduleData! node, 
+as is the case for non-OIS indices on floating legs, and no calendar is set in ScheduleData 
+(for dates-based schedules the calendar field is optional), the \lstinline!NullCalendar! is used.
 
 \item PaymentConvention: The payment convention of the leg coupons. 
 
 Allowable values: See Table \ref{tab:convention}.
 
-\item PaymentLag [optional]: The payment lag applies to the coupons on Fixed legs, Equity legs, and Floating legs with Ibor and OIS indices (including BMA/SIFMA indices), as well as CMS legs, CMSSpread legs, CPI legs and Zero Coupon Fixed legs. \\
-PaymentLag is also not supported for CapFloor Floating legs that have Ibor coupons with sub periods (HasSubPeriods = \emph{true}), nor for CapFloor Floating legs with averaged ON coupons (IsAveraged = \emph{true}).
+\item \lstinline!PaymentLag! [optional]:
+The lag between the, adjusted or unadjusted (see \lstinline!PaymentLagAnchor! below), reference schedule period end 
+date and the payment date.
 
-Allowable values: Any valid period, i.e. a non-negative whole number, optionally followed by \emph{D} (days), \emph{W} (weeks), \emph{M} (months),
-  \emph{Y} (years). Defaults to \emph{0D} if left blank or omitted. If a whole number is given and no letter, it is assumed that it is a number of  \emph{D} (days).
+Allowable values: Usually a number of days but any valid period is allowed.
+In other words, an integer followed by a string where the last character must be one of 
+\lstinline!D!, \lstinline!W!, \lstinline!M! or \lstinline!Y!.
+Compound period definitions also work, for example \lstinline!1Y6M! and \lstinline!-6W4D!.
+Note that compound periods only work for year and month pairs or week and day pairs.
+If left blank or omitted, it defaults to \lstinline!0D!.
+Note also that negative periods are allowed where they make sense.
 
-\item NotionalPaymentLag [optional]: The notional payment lag (in days) applied to any notional exchanges.
+\item \lstinline!PaymentLagUnit! [optional]:
+Determines how the \lstinline!PaymentLag! is used to calculate the payment date from an anchor date.
+If omitted, or \lstinline!BusinessDays! is given, the \lstinline!PaymentLag! is applied in the usual way.
+In other words the anchor date is shifted by the period defined by the \lstinline!PaymentLag! using the 
+\lstinline!PaymentCalendar! and \lstinline!PaymentConvention!.
+If \lstinline!CalendarDays! is given, the \lstinline!PaymentLag! period must have day units.
+In this case, the anchor date is shifted by \lstinline!PaymentLag! \emph{calendar} days.
+If the resulting date is not a good business day with respect to the \lstinline!PaymentCalendar!,
+it is adjusted using the \lstinline!PaymentCalendar! and \lstinline!PaymentConvention!.
+The anchor date used for the payment date generation can be influenced by the \lstinline!PaymentLagAnchor! below.
 
-Allowable values: Any non-negative integer. Defaults to zero if left blank or omitted.
+Allowable values: \lstinline!BusinessDays! or \lstinline!CalendarDays!. Defaults to \lstinline!BusinessDays! if omitted.
+
+\item \lstinline!PaymentLagAnchor! [optional]:
+Determines the base or anchor date to use when calculating a payment date using the \lstinline!PaymentLag!.
+If omitted, or \lstinline!Adjusted! is given, the anchor date is the underlying schedule date.
+This schedule date may have had adjustments applied.
+If \lstinline!Unadjusted! is given, the anchor date is the underlying schedule date 
+before any adjustments have been applied.
+
+Allowable values: \lstinline!Adjusted! or \lstinline!Unadjusted!. Defaults to \lstinline!Adjusted! if omitted.
+
+\item \lstinline!NotionalPaymentLag! [optional]: The notional payment lag, in days, applied to any notional exchanges.
+
+Allowable values: Any integer that makes economic sense.
+In most cases, if non-zero, it is a small positive number of days.
+Defaults to zero if left blank or omitted.
+
+\item \lstinline!NotionalPaymentLagUnit! [optional]:
+This setting interacts with \lstinline!NotionalPaymentLag! in the same way that \lstinline!PaymentLagUnit! interacts 
+with \lstinline!PaymentLag!. See the relevant bullet points above for a description and allowable values.
+
+\item \lstinline!NotionalPaymentLagAnchor! [optional]:
+This setting interacts with \lstinline!NotionalPaymentLag! in the same way that \lstinline!PaymentLagAnchor! interacts 
+with \lstinline!PaymentLag!. See the relevant bullet points above for a description and allowable values.
 
 \item DayCounter: The day count convention of the leg coupons. Note that \lstinline!DayCounter! is mandatory for all leg types except \emph{Equity}.
 
