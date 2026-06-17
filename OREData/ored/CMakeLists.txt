@@ -300,6 +300,7 @@ portfolio/indexing.cpp
 portfolio/inflationswap.cpp
 portfolio/instrumentwrapper.cpp
 portfolio/intradaypowerforward.cpp
+portfolio/intradaypowerlegdata.cpp
 portfolio/knockoutswap.cpp
 portfolio/legbuilders.cpp
 portfolio/legdata.cpp
@@ -315,6 +316,7 @@ portfolio/optionwrapper.cpp
 portfolio/pairwisevarianceswap.cpp
 portfolio/performanceoption_01.cpp
 portfolio/portfolio.cpp
+portfolio/powerloadprofiledata.cpp
 portfolio/premiumdata.cpp
 portfolio/rainbowoption.cpp
 portfolio/rangebound.cpp
@@ -743,6 +745,7 @@ portfolio/indexing.hpp
 portfolio/inflationswap.hpp
 portfolio/instrumentwrapper.hpp
 portfolio/intradaypowerforward.hpp
+portfolio/intradaypowerlegdata.hpp
 portfolio/knockoutswap.hpp
 portfolio/legbuilders.hpp
 portfolio/legdata.hpp
@@ -758,6 +761,7 @@ portfolio/optionwrapper.hpp
 portfolio/pairwisevarianceswap.hpp
 portfolio/performanceoption_01.hpp
 portfolio/portfolio.hpp
+portfolio/powerloadprofiledata.hpp
 portfolio/premiumdata.hpp
 portfolio/rainbowoption.hpp
 portfolio/rangebound.hpp

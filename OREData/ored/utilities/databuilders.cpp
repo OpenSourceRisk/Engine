@@ -187,6 +187,7 @@
 #include <ored/portfolio/inflationswap.hpp>
 #include <ored/portfolio/instrumentwrapper.hpp>
 #include <ored/portfolio/intradaypowerforward.hpp>
+#include <ored/portfolio/intradaypowerlegdata.hpp>
 #include <ored/portfolio/legbuilders.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/legdatafactory.hpp>
@@ -262,6 +263,7 @@ void dataBuilders() {
     ORE_REGISTER_LEG_DATA("DurationAdjustedCMS", DurationAdjustedCmsLegData, false)
     ORE_REGISTER_LEG_DATA("EquityMargin", EquityMarginLegData, false)
     ORE_REGISTER_LEG_DATA("FormulaBased", FormulaBasedLegData, false)
+    ORE_REGISTER_LEG_DATA("IntradayPowerFloating", IntradayPowerLegData, false)
     ORE_REGISTER_LEG_DATA("RangeAccrual", RangeAccrualLegData, false)
 
     ORE_REGISTER_CALIBRATION_INSTRUMENT("CpiCapFloor", CpiCapFloor, false)

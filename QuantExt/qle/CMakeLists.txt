@@ -56,6 +56,7 @@ cashflows/iborfracoupon.cpp
 cashflows/indexedcoupon.cpp
 cashflows/interpolatediborcoupon.cpp
 cashflows/interpolatediborcouponpricer.cpp
+cashflows/intradaypowercashflow.cpp
 cashflows/jyyoyinflationcouponpricer.cpp
 cashflows/lognormalcmsspreadpricer.cpp
 cashflows/mcgaussianformulabasedcouponpricer.cpp
@@ -545,6 +546,7 @@ cashflows/iborfracoupon.hpp
 cashflows/indexedcoupon.hpp
 cashflows/interpolatediborcoupon.hpp
 cashflows/interpolatediborcouponpricer.hpp
+cashflows/intradaypowercashflow.hpp
 cashflows/jyyoyinflationcouponpricer.hpp
 cashflows/lognormalcmsspreadpricer.hpp
 cashflows/mcgaussianformulabasedcouponpricer.hpp

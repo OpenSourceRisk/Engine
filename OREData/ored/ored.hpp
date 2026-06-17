@@ -321,6 +321,7 @@
 #include <ored/portfolio/inflationswap.hpp>
 #include <ored/portfolio/instrumentwrapper.hpp>
 #include <ored/portfolio/intradaypowerforward.hpp>
+#include <ored/portfolio/intradaypowerlegdata.hpp>
 #include <ored/portfolio/knockoutswap.hpp>
 #include <ored/portfolio/legbuilders.hpp>
 #include <ored/portfolio/legdata.hpp>
@@ -336,6 +337,7 @@
 #include <ored/portfolio/pairwisevarianceswap.hpp>
 #include <ored/portfolio/performanceoption_01.hpp>
 #include <ored/portfolio/portfolio.hpp>
+#include <ored/portfolio/powerloadprofiledata.hpp>
 #include <ored/portfolio/premiumdata.hpp>
 #include <ored/portfolio/rainbowoption.hpp>
 #include <ored/portfolio/rangebound.hpp>

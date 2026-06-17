@@ -66,6 +66,7 @@
 #include <qle/cashflows/indexedcoupon.hpp>
 #include <qle/cashflows/interpolatediborcoupon.hpp>
 #include <qle/cashflows/interpolatediborcouponpricer.hpp>
+#include <qle/cashflows/intradaypowercashflow.hpp>
 #include <qle/cashflows/jyyoyinflationcouponpricer.hpp>
 #include <qle/cashflows/lognormalcmsspreadpricer.hpp>
 #include <qle/cashflows/mcgaussianformulabasedcouponpricer.hpp>

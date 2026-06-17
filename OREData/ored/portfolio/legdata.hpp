@@ -69,6 +69,7 @@ enum class LegType {
     CPI,
     ZeroCouponFixed,
     FormulaBased,
+    IntradayPowerFloating,
     CommodityFloating,
     CommodityFixed,
     EquityMargin,

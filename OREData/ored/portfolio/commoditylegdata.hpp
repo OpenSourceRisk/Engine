@@ -194,5 +194,7 @@ private:
     std::string foreignCurrency_;
 };
 
+
+
 } // namespace data
 } // namespace ore
