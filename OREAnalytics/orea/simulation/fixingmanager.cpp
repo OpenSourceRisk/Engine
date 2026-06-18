@@ -61,7 +61,8 @@ Date nextValidFixingDate(Date d, const QuantLib::ext::shared_ptr<Index>& index, 
 
 FixingManager::~FixingManager() { reset(); }
 
-FixingManager::FixingManager(Date today) : today_(today), fixingsEnd_(today), modifiedFixingHistory_(false) {}
+FixingManager::FixingManager(Date today, Mode mode)
+    : today_(std::move(today)), mode_(mode), fixingsEnd_(today_), modifiedFixingHistory_(false) {}
 
 void FixingManager::initialise(const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const QuantLib::ext::shared_ptr<Market>& market,
                                const std::string& configuration) {
@@ -120,7 +121,7 @@ void FixingManager::initialise(const QuantLib::ext::shared_ptr<Portfolio>& portf
     }
 }
 
-void FixingManager::update(Date d) {
+void FixingManager::update(const Date& d) {
     QL_REQUIRE(d >= today_, "FixingManager::update(): given date "
                                 << d << " must be later or equal than the manager's anchor date (" << today_ << ")");
     if (!fixingMap_.empty()) {
@@ -145,7 +146,8 @@ void FixingManager::reset() {
     fixingsEnd_ = today_;
 }
 
-void FixingManager::applyFixings(Date start, Date end) {
+void FixingManager::applyFixings(const Date& start, const Date& end) {
+
     // Loop over all indices
     for (auto const& m : fixingMap_) {
         Date fixStart = start;
