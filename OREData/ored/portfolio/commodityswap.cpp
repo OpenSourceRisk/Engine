@@ -565,15 +565,13 @@ void CommoditySwap::buildNettedLegs(const QuantLib::ext::shared_ptr<EngineFactor
         Leg nettedLeg;
         size_t numberCashflows = originalLegsBeforeNetting_[firstId].size();
         for (Size i = 0; i < numberCashflows; ++i) {
-            vector<std::variant<ext::shared_ptr<CommodityCashFlow>, ext::shared_ptr<IntradayPowerCashFlow>>> cfs;
+            vector<ext::shared_ptr<CommodityCashFlow>> cfs;
             vector<bool> payers;
             for (const auto& legId : legIds) {
                 if (auto cf = QuantLib::ext::dynamic_pointer_cast<CommodityCashFlow>(unpackIndexWrappedCashFlow(originalLegsBeforeNetting_[legId][i]))) {
                     cfs.push_back(cf);
-                } else if (auto cf = QuantLib::ext::dynamic_pointer_cast<IntradayPowerCashFlow>(unpackIndexWrappedCashFlow(originalLegsBeforeNetting_[legId][i]))) {
-                    cfs.push_back(cf);
-                } else {
-                    QL_FAIL("NettedCommodityCashFlow: underlying cashflow is not a CommodityCashFlow or IntradayPowerCashFlow type");
+                } else{
+                    QL_FAIL("NettedCommodityCashFlow: is only supported for commodity cashflows (not intraday power cashflows) for trade " << id() << ".");
                 }
                 payers.push_back(originalLegPayersBeforeNetting_[legId]);
             }
