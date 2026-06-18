@@ -67,6 +67,89 @@ void BestEntryOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& fact
         "\n"
         "Option = PAY(payoff, ExpiryDate, SettlementDate, Currency) - PAY(Premium, PremiumDate, PremiumDate, Currency);\n";
 
+    // The BEO payoff branches on whether the trigger has ever fired (triggerEvent == 1),
+    // which determines whether initialIndex equals strikeIndexLevel (no trigger) or
+    // max(resetMinimum * strikeIndexLevel, strikeIndexObs) (trigger fired).  Conditioning
+    // NPVMEM on the current model state alone (X_simDate) produces a biased conditional
+    // expectation because it averages over both trigger outcomes instead of conditioning on
+    // the realised trigger state.  Pattern 4 (separate NPVMEM slots per branch, filter
+    // condition restricting training to the relevant paths) fixes this:
+    //   - Untriggered branch (slot i):   initialIndex = strikeIndexLevel on all training
+    //     paths → clean regression; no R1 needed.
+    //   - Triggered branch (slot SIZE+i): R1 = strikeObsAtSim[i] (the realised running
+    //     minimum of triggered observation spots captured before the coincident obs date).
+    //     This conditions the regression on HOW LOW the minimum has gone, which directly
+    //     determines initialIndex.  strikeObsAtSim[i] lies in
+    //     [resetMin·strikeIndexLevel, TriggerLevel·strikeIndexLevel) for all triggered paths
+    //     — a well-behaved bounded continuous interval, never at the strikeIndexLevel
+    //     boundary that caused polynomial-extrapolation bias in earlier attempts.
+    //
+    // Both arrays are captured with a pre-obs convention: the forward loop over
+    // ObsAndSimDates = Join(_AMC_SimDates, StrikeObservationDates) freezes
+    // triggerAtSim[i] and strikeObsAtSim[i] BEFORE processing any observation that
+    // falls on the same date as sim date i.
+    // Both arrays are captured with a pre-obs convention: the forward loop over
+    // ObsAndSimDates = Join(_AMC_SimDates, StrikeObservationDates) freezes
+    // triggerAtSim[i] and strikeObsAtSim[i] BEFORE processing any observation that
+    // falls on the same date as sim date i.
+    static const std::string amc_script =
+        "NUMBER payoff, initialIndex, triggerEvent, strikeIndexObs, strikeIndexLevel, d, resetMinValue;\n"
+        "NUMBER simDateIdx, s, i;\n"
+        "NUMBER triggerAtSim[SIZE(_AMC_SimDates)];\n"
+        "NUMBER strikeObsAtSim[SIZE(_AMC_SimDates)];\n"
+        "NUMBER _AMC_NPV[SIZE(_AMC_SimDates)];\n"
+        "\n"
+        "triggerEvent = 0;\n"
+        "\n"
+        "strikeIndexLevel = Underlying(StrikeDate);\n"
+        "\n"
+        "resetMinValue = strikeIndexLevel * ResetMinimum;\n"
+        "\n"
+        "strikeIndexObs = Underlying(StrikeObservationDates[1]);\n"
+        "\n"
+        "simDateIdx = 1;\n"
+        "FOR s IN (1, SIZE(ObsAndSimDates), 1) DO\n"
+        "  IF simDateIdx <= SIZE(_AMC_SimDates) THEN\n"
+        "    IF ObsAndSimDates[s] == _AMC_SimDates[simDateIdx] THEN\n"
+        "      triggerAtSim[simDateIdx] = triggerEvent;\n"
+        "      strikeObsAtSim[simDateIdx] = strikeIndexObs;\n"
+        "      simDateIdx = simDateIdx + 1;\n"
+        "    END;\n"
+        "  END;\n"
+        "  d = DATEINDEX(ObsAndSimDates[s], StrikeObservationDates, EQ);\n"
+        "  IF d > 0 THEN\n"
+        "    IF Underlying(StrikeObservationDates[d]) < TriggerLevel * strikeIndexLevel THEN\n"
+        "      triggerEvent = 1;\n"
+        "      strikeIndexObs = min(strikeIndexObs, Underlying(StrikeObservationDates[d]));\n"
+        "    END;\n"
+        "  END;\n"
+        "END;\n"
+        "\n"
+        "IF triggerEvent == 1 THEN\n"
+        "  initialIndex = max(ResetMinimum * strikeIndexLevel, strikeIndexObs);\n"
+        "ELSE\n"
+        "  initialIndex = strikeIndexLevel;\n"
+        "END;\n"
+        "\n"
+        "IF Underlying(ExpiryDate) > Strike * initialIndex THEN\n"
+        "  payoff = LongShort * Notional * Multiplier * min(Cap, max(0, (Underlying(ExpiryDate) - initialIndex)/initialIndex));\n"
+        "ELSE\n"
+        "  payoff = -1* LongShort * Notional * (Strike * initialIndex - Underlying(ExpiryDate))/initialIndex;\n"
+        "END;\n"
+        "\n"
+        "Option = PAY(payoff, ExpiryDate, SettlementDate, Currency) - PAY(Premium, PremiumDate, PremiumDate, Currency);\n"
+        "\n"
+        "FOR i IN (1, SIZE(_AMC_SimDates), 1) DO\n"
+        "  IF _AMC_SimDates[i] < SettlementDate THEN\n"
+        "    IF triggerAtSim[i] == 0 THEN\n"
+        "      _AMC_NPV[i] = NPVMEM(Option, _AMC_SimDates[i], i, triggerAtSim[i] == 0);\n"
+        "    ELSE\n"
+        "      _AMC_NPV[i] = NPVMEM(Option, _AMC_SimDates[i], SIZE(_AMC_SimDates) + i,\n"
+        "                           triggerAtSim[i] == 1, strikeObsAtSim[i]);\n"
+        "    END;\n"
+        "  END;\n"
+        "END;\n";
+
     // clang-format on
 
     numbers_.emplace_back("Number", "Notional", notional_);
@@ -109,6 +192,19 @@ void BestEntryOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& fact
                                            {"Cap", "Cap"},
                                            {"TriggerEvent", "triggerEvent"}}, 
         {});
+
+    script_["AMC"] = ScriptedTradeScriptData(amc_script, "Option",
+        {{"initialIndex", "initialIndex"}, {"strikeIndexLevel", "strikeIndexLevel"},
+         {"payoffAmount", "payoff"}, {"resetMinimumValue", "resetMinValue"},
+         {"lowestStrikeObs", "strikeIndexObs"},
+         {"Cap", "Cap"},
+         {"TriggerEvent", "triggerEvent"}},
+        {},
+        {ScriptedTradeScriptData::NewScheduleData("ObsAndSimDates", "Join",
+                                                  {"_AMC_SimDates", "StrikeObservationDates"})},
+        {},
+        {"triggerEvent"},
+        {"Asset"});
 
     // build trade
 

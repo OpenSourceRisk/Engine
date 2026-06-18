@@ -810,5 +810,61 @@ void GaussianCam::populateAdditionalResultsPathLevel() const {
     additionalResultsPathLevel_["gaussiancam_results_pathlevel"] = pathLevelResults;
 }
 
+RandomVariable GaussianCam::getFutureBarrierProb(const std::string& index, const Date& obsdate1, const Date& obsdate2,
+                                                  const RandomVariable& barrier, const bool above) const {
+
+    // get path values at the two endpoints
+    RandomVariable v1 = eval(index, obsdate1, Null<Date>());
+    RandomVariable v2 = eval(index, obsdate2, Null<Date>());
+
+    // check barrier at endpoints
+    Filter barrierHit(barrier.size(), false);
+    if (above) {
+        barrierHit = barrierHit || v1 >= barrier;
+        barrierHit = barrierHit || v2 >= barrier;
+    } else {
+        barrierHit = barrierHit || v1 <= barrier;
+        barrierHit = barrierHit || v2 <= barrier;
+    }
+
+    RandomVariable result(barrierHit, 1.0, 0.0);
+
+    // resolve index to its position in indices_
+    IndexInfo indexInfo(index);
+    if (indexInfo.isFx())
+        indexInfo = IndexInfo("FX-GENERIC-" + indexInfo.fx()->sourceCurrency().code() + "-" +
+                              indexInfo.fx()->targetCurrency().code());
+
+    auto it = std::find(indices_.begin(), indices_.end(), indexInfo);
+    QL_REQUIRE(it != indices_.end(), "GaussianCam::getFutureBarrierProb(): index '" << index << "' not found");
+    Size indexNo = std::distance(indices_.begin(), it);
+
+    // get the integrated variance of log(S) over [obsdate1, obsdate2] from the CAM parametrisation
+    Real t1 = timeFromReference(obsdate1);
+    Real t2 = timeFromReference(obsdate2);
+    Real variance = 0.0;
+
+    if (indices_[indexNo].isFx()) {
+        Size ccyIdx = cam_->ccyIndex(parseCurrency(indexCurrencies_[indexNo]));
+        QL_REQUIRE(ccyIdx > 0, "GaussianCam::getFutureBarrierProb(): FX index is base currency");
+        variance = cam_->fxbs(ccyIdx - 1)->variance(t2) - cam_->fxbs(ccyIdx - 1)->variance(t1);
+    } else if (eqIndexInCam_[indexNo] != Null<Size>()) {
+        variance = cam_->eqbs(eqIndexInCam_[indexNo])->variance(t2) -
+                   cam_->eqbs(eqIndexInCam_[indexNo])->variance(t1);
+    } else {
+        QL_FAIL("GaussianCam::getFutureBarrierProb(): index '" << index << "' is not FX or EQ");
+    }
+
+    // apply the reflection principle (Gobet formula)
+    if (!QuantLib::close_enough(variance, 0.0)) {
+        RandomVariable eps(barrier.size(), 1E-14);
+        RandomVariable hitProb = exp(RandomVariable(barrier.size(), -2.0 / variance) *
+                                     log(v1 / max(barrier, eps)) * log(v2 / max(barrier, eps)));
+        result = result + applyInverseFilter(hitProb, barrierHit);
+    }
+
+    return result;
+}
+
 } // namespace data
 } // namespace ore

@@ -51,6 +51,36 @@ void StrikeResettableOption::build(const QuantLib::ext::shared_ptr<EngineFactory
         "\n"
         "Option = LongShort * (PAY(payoff, ExpiryDate, SettlementDate, Currency) - PAY(Premium, PremiumDate, PremiumDate, Currency));\n";
 
+    // The AMC script mirrors the PV script payoff exactly.  No extra regressor R1 is passed
+    // to NPVMEM: the effective strike (InitialStrike or ResetStrike) is binary-valued, and
+    // any binary R1 has R1^2 exactly linearly dependent on {1, R1}, making the degree-2
+    // polynomial regression basis rank-deficient on every sim date regardless of the values
+    // chosen.  The GaussianCam model state already encodes whether the trigger threshold was
+    // crossed (the trigger is a function of the same spot process), so no extra regressor is
+    // needed for a well-conditioned regression.
+    static const std::string amc_script =
+        "NUMBER payoff, strike, d, notional, i;\n"
+        "NUMBER _AMC_NPV[SIZE(_AMC_SimDates)];\n"
+        "\n"
+        "notional = Quantity * ResetStrike;\n"
+        "strike = InitialStrike;\n"
+        "\n"
+        "FOR d IN (1, SIZE(ObservationDates), 1) DO\n"
+        "  IF (Underlying(ObservationDates[d]) - TriggerPrice) * TriggerType >= 0 THEN\n"
+        "    strike = ResetStrike;\n"
+        "  END;\n"
+        "END;\n"
+        "\n"
+        "payoff = Quantity * max(0, (Underlying(ExpiryDate) - strike) * OptionType);"
+        "\n"
+        "Option = LongShort * (PAY(payoff, ExpiryDate, SettlementDate, Currency) - PAY(Premium, PremiumDate, PremiumDate, Currency));\n"
+        "\n"
+        "FOR i IN (1, SIZE(_AMC_SimDates), 1) DO\n"
+        "  IF _AMC_SimDates[i] < SettlementDate THEN\n"
+        "    _AMC_NPV[i] = NPVMEM(Option, _AMC_SimDates[i], i);\n"
+        "  END;\n"
+        "END;\n";
+
     // clang-format on
 
     numbers_.emplace_back("Number", "LongShort", longShort_ == "Long" ? "1" : "-1");
@@ -91,6 +121,21 @@ void StrikeResettableOption::build(const QuantLib::ext::shared_ptr<EngineFactory
                                            {"currentNotional", "notional"},
                                            {"notionalCurrency", "Currency"}},
                                           {});
+
+    script_["AMC"] = ScriptedTradeScriptData(amc_script, "Option",
+                                              {{"strike", "InitialStrike"},
+                                               {"quantity", "Quantity"},
+                                               {"underlyingSecurityId", "Underlying"},
+                                               {"strikeCurrency", "Currency"},
+                                               {"FinalStrike", "strike"},
+                                               {"payoffAmount", "payoff"},
+                                               {"currentNotional", "notional"},
+                                               {"notionalCurrency", "Currency"}},
+                                              {},
+                                              {},
+                                              {},
+                                              {},
+                                              {"Asset"});
 
     // build trade
 
