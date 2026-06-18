@@ -1428,6 +1428,7 @@
       <xs:enumeration value="FxRainbowOption"/>
       <xs:enumeration value="EquityRainbowOption"/>
       <xs:enumeration value="CommodityRainbowOption"/>
+      <xs:enumeration value="ForwardVolatilityAgreement"/>
       <xs:enumeration value="KnockOutSwap"/>
       <xs:enumeration value="CashPosition"/>
       <xs:enumeration value="RateDigitalOption"/>
@@ -4556,13 +4557,18 @@
       <xs:element type="stFreeStyleEvent" name="FvaDate"/>
       <xs:element type="stFreeStyleEvent" name="OptionExpiry"/>
       <xs:element type="stFreeStyleEvent" name="PremiumDate"/>
-
-      <xs:element type="stFreeStyleIndex" name="Underlying"/>
+      <xs:element type="underlying" name="Underlying"/>
       <xs:element type="stFreeStyleLongShort" name="LongShort"/>
       <xs:element type="stFreeStyleNumber" name="ImpliedVolStrike"/>
       <xs:element type="stFreeStyleNumber" name="Quantity"/>
       <xs:element type="stFreeStyleCurrency" name="PayCcy"/>
       <xs:element type="stFreeStyleEvent" name="SettlementDate"/>
+      <xs:element type="stFreeStyleNumber" name="UnderlyingStrike" minOccurs="0"/>
+      <xs:element type="stFreeStyleDayCounter" name="DayCountFraction"/>
+      <xs:element type="stFreeStyleNumber" name="DividendYield"/>
+      <xs:element type="stFreeStyleNumber" name="FixedRate"/>
+      <xs:element type="xs:string" name="PayoffType" minOccurs="0"/>
+
     </xs:all>
   </xs:complexType>
 
