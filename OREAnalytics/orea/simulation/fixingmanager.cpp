@@ -186,7 +186,10 @@ void FixingManager::applyFixings(const Date& start, const Date& end) {
                 currentFixingDate = nextValidFixingDate(currentFixingDate, index);
         }
 
-        if (!dates.empty() && (*dates.rbegin() >= fixStart || *dates.begin() < fixEnd)) {
+        auto l = dates.lower_bound(fixStart);
+        auto h = dates.lower_bound(fixEnd);
+
+        if (!dates.empty() && l != h) {
 
             Rate currentFixing;
 
