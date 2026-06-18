@@ -98,6 +98,8 @@ string ShiftScenarioGenerator::ScenarioDescription::typeString() const {
         return "Down";
     else if (type_ == ScenarioDescription::Type::Cross)
         return "Cross";
+    else if (type_ == ScenarioDescription::Type::Theta)
+        return "Theta";
     else
         QL_FAIL("ScenarioDescription::Type not covered");
 }

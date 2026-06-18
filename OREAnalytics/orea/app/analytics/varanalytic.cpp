@@ -199,7 +199,7 @@ void ParametricVarAnalyticImpl::setVarReport(const QuantLib::ext::shared_ptr<ore
         auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
             analytic()->market(), analytic()->configurations().simMarketParams, Market::defaultConfiguration,
             *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams, true, false,
-            false, false, inputs_->iborFallbackConfig());
+            false, false, true, inputs_->iborFallbackConfig());
         simMarket->scenarioGenerator() = scenarios;
         scenarios->baseScenario() = simMarket->baseScenario();
 
@@ -262,7 +262,7 @@ void HistoricalSimulationVarAnalyticImpl::setVarReport(
     auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
         analytic()->market(), analytic()->configurations().simMarketParams, Market::defaultConfiguration,
         *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams, true, false, false,
-        allowPartialScenarios_, inputs_->iborFallbackConfig());
+        allowPartialScenarios_, true, inputs_->iborFallbackConfig());
     simMarket->scenarioGenerator() = scenarios;
     scenarios->baseScenario() = simMarket->baseScenario();
 
@@ -338,7 +338,7 @@ HistoricalSimulationVarAnalyticImpl::computeTheta(const QuantLib::ext::shared_pt
     auto thetaSimMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
         analytic()->market(), analytic()->configurations().simMarketParams, Market::defaultConfiguration,
         *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams, true, false, false,
-        false, inputs_->iborFallbackConfig());
+        false, true, inputs_->iborFallbackConfig());
 
     // Build the portfolio against the theta sim market
     QuantLib::ext::shared_ptr<EngineData> edCopy = QuantLib::ext::make_shared<EngineData>(*inputs_->pricingEngine());

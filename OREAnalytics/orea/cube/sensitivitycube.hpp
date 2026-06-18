@@ -147,21 +147,15 @@ public:
     QuantLib::Real crossGamma(QuantLib::Size tradeIdx, QuantLib::Size upIdx_1, QuantLib::Size upIdx_2,
                               QuantLib::Size crossId, QuantLib::Real scaling1, QuantLib::Real scaling2) const;
 
+    //! Get the trade theta for trade with index \p tradeIdx
+    std::pair<QuantLib::Real, QuantLib::Period> theta(const Size tradeIdx) const;
+
+    //! Get the trade theta for trade with ID \p tradeId
+    std::pair<QuantLib::Real, QuantLib::Period> theta(const std::string& tradeId) const;
+
     //! Get the relevant risk factors
     std::set<RiskFactorKey> relevantRiskFactors() const;
 
-    //! Check if theta values are available
-    bool hasTheta() const { return !thetaMap_.empty(); }
-
-    //! Set theta values (tradeId -> theta)
-    void setThetaMap(const std::map<std::string, QuantLib::Real>& thetaMap) { thetaMap_ = thetaMap; }
-
-    //! Set / get the theta period
-    void setThetaPeriod(const QuantLib::Period& p) { thetaPeriod_ = p; }
-    const QuantLib::Period& thetaPeriod() const { return thetaPeriod_; }
-
-    //! Get the trade theta for trade with ID \p tradeId
-    QuantLib::Real theta(const std::string& tradeId) const;
 
 private:
     //! Initialise method used by the constructors
@@ -192,11 +186,8 @@ private:
     std::map<QuantLib::Size, RiskFactorKey> downIndexToKey_;
     std::map<QuantLib::Size, crossPair> crossIndexToKey_;
 
-    // theta values per trade (tradeId -> theta)
-    std::map<std::string, QuantLib::Real> thetaMap_;
-    // theta period (e.g. 1D)
-    QuantLib::Period thetaPeriod_;
-
+    // map of trade id to theta
+    QuantLib::Size thetaScenarioIndex_;
 };
 
 std::ostream& operator<<(std::ostream& out, const SensitivityCube::crossPair& cp);
