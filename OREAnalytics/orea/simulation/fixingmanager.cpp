@@ -156,8 +156,11 @@ void FixingManager::applyFixings(const Date& start, const Date& end) {
                "FixingManager::applyFixing(): mode backward flat requires end date ("
                    << end << ") = today (" << today << "). Internal error, check orchestration.");
     QL_REQUIRE(mode_ != Mode::Projected || start == today,
-               "FixingManager::applyFixing(): mode backward flat requires start date ("
+               "FixingManager::applyFixing(): mode Projected flat requires start date ("
                    << start << ") = today (" << today << "). Internal error, check orchestration.");
+
+    // for now, until we implement the projected mode properly
+    Settings::instance().evaluationDate() = end;
 
     for (auto const& [index, dates] : fixingMap_) {
 
