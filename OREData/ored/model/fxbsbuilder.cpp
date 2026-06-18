@@ -141,7 +141,7 @@ void FxBsBuilder::initParametrization() const {
     else if (data_->sigmaParamType() == ParamType::Constant)
         parametrization_ = QuantLib::ext::make_shared<QuantExt::FxBsConstantParametrization>(ccy, fxSpot_, sigma[0]);
     else
-        QL_FAIL("interpolation type not supported for FX");
+        QL_FAIL("parametrization type not supported for FX");
 }
 
 void FxBsBuilder::processException(const std::string& s, const std::exception& e) {
@@ -172,11 +172,11 @@ bool FxBsBuilder::requiresRecalibration() const {
 }
 
 void FxBsBuilder::performCalculations() const {
-
     if (requiresRecalibration()) {
         referenceDate_ = ytsDom_->referenceDate();
         buildOptionBasket();
     }
+    referenceDate_ = ytsDom_->referenceDate();
     initParametrization();
 }
 

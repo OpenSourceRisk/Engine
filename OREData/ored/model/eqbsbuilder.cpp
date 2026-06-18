@@ -146,7 +146,7 @@ void EqBsBuilder::initParametrization() const {
         parametrization_ = QuantLib::ext::make_shared<QuantExt::EqBsConstantParametrization>(ccy, data_->eqName(), eqSpot_, fxSpot_,
                                                                                      sigma[0], ytsRate_, ytsDiv_);
     else
-        QL_FAIL("interpolation type not supported for Equity");
+        QL_FAIL("parametrization type not supported for Equity");
 }
 
 void EqBsBuilder::processException(const std::string& s, const std::exception& e) {
@@ -181,6 +181,7 @@ void EqBsBuilder::performCalculations() const {
         referenceDate_ = ytsRate_->referenceDate();
         buildOptionBasket();
     }
+    referenceDate_ = ytsRate_->referenceDate();
     initParametrization();
 }
 

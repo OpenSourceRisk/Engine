@@ -189,6 +189,7 @@ void InfDkBuilder::performCalculations() const {
         referenceDate_ = rateCurve_->referenceDate();
         buildCapFloorBasket();
     }
+    referenceDate_ = rateCurve_->referenceDate();
     initParametrization();
 }
 

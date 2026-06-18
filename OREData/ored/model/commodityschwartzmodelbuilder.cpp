@@ -142,7 +142,7 @@ std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>> CommoditySchwartz
 }
 
 bool CommoditySchwartzModelBuilder::requiresRecalibration() const {
-    return (data_->calibrateSigma() || data_->calibrateKappa()) &&
+    return (data_->calibrateSigma() || data_->calibrateKappa() || data_->calibrateSeasonality()) &&
            (referenceDate_ != curve_->referenceDate() || volSurfaceChanged(false) ||
             marketObserver_->hasUpdated(false) || forceCalibration_);
 }
@@ -152,6 +152,7 @@ void CommoditySchwartzModelBuilder::performCalculations() const {
         referenceDate_ = curve_->referenceDate();
         buildOptionBasket();
     }
+    referenceDate_ = curve_->referenceDate();
    initParametrization();
 }
 

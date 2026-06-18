@@ -135,6 +135,7 @@ void InfJyBuilder::performCalculations() const {
         referenceDate_ = rateCurve_->referenceDate();
         buildCalibrationBaskets();
     }
+    referenceDate_ = rateCurve_->referenceDate();
     initParametrization();
 }
 
