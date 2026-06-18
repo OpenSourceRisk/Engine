@@ -95,10 +95,6 @@ bool vectorSubset(const vector<Real>& v_1, const vector<Real>& v_2) {
 void SensitivityScenarioGenerator::generateScenarios() {
     Date asof = baseScenario_->asof();
 
-    QL_REQUIRE(sensitivityData_->crossGammaFilter().empty() || sensitivityData_->computeGamma(),
-               "SensitivityScenarioGenerator::generateScenarios(): if gamma computation is disabled, the cross gamma "
-               "filter must be empty");
-
     generateDiscountCurveScenarios(true);
     generateDiscountCurveScenarios(false);
 
@@ -217,45 +213,48 @@ void SensitivityScenarioGenerator::generateScenarios() {
 
     // add simultaneous up-moves in two risk factors for cross gamma calculation
 
-    for (Size i = 0; i < scenarios_.size(); ++i) {
-        ScenarioDescription iDesc = scenarioDescriptions_[i];
-        if (iDesc.type() != ScenarioDescription::Type::Up)
-            continue;
-        string iKeyName = iDesc.keyName1();
-
-        // check if iKey matches filter
-        if (find_if(sensitivityData_->crossGammaFilter().begin(), sensitivityData_->crossGammaFilter().end(),
-                    findFactor(iKeyName)) == sensitivityData_->crossGammaFilter().end())
-            continue;
-
-        for (Size j = i + 1; j < scenarios_.size(); ++j) {
-            ScenarioDescription jDesc = scenarioDescriptions_[j];
-            if (jDesc.type() != ScenarioDescription::Type::Up)
+    if (sensitivityData_->computeGamma()) {
+        for (Size i = 0; i < scenarios_.size(); ++i) {
+            ScenarioDescription iDesc = scenarioDescriptions_[i];
+            if (iDesc.type() != ScenarioDescription::Type::Up)
                 continue;
-            string jKeyName = jDesc.keyName1();
+            string iKeyName = iDesc.keyName1();
 
-            // check if jKey matches filter
+            // check if iKey matches filter
             if (find_if(sensitivityData_->crossGammaFilter().begin(), sensitivityData_->crossGammaFilter().end(),
-                        findPair(iKeyName, jKeyName)) == sensitivityData_->crossGammaFilter().end())
+                        findFactor(iKeyName)) == sensitivityData_->crossGammaFilter().end())
                 continue;
 
-            // build cross scenario
-            QuantLib::ext::shared_ptr<Scenario> crossScenario =
-                sensiScenarioFactory_->buildScenario(asof, !sensitivityData_->useSpreadedTermStructures());
+            for (Size j = i + 1; j < scenarios_.size(); ++j) {
+                ScenarioDescription jDesc = scenarioDescriptions_[j];
+                if (jDesc.type() != ScenarioDescription::Type::Up)
+                    continue;
+                string jKeyName = jDesc.keyName1();
 
-            for (auto const& k : baseScenario_->keys()) {
-                Real v1 = scenarios_[i]->get(k);
-                Real v2 = scenarios_[j]->get(k);
-                Real b = baseScenario_->get(k);
-                if (!close_enough(v1, b) || !close_enough(v2, b))
-                    // this is correct for both absolute and relative shifts
-                    crossScenario->add(k, v1 + v2 - b);
+                // check if jKey matches filter
+                if (find_if(sensitivityData_->crossGammaFilter().begin(), sensitivityData_->crossGammaFilter().end(),
+                            findPair(iKeyName, jKeyName)) == sensitivityData_->crossGammaFilter().end())
+                    continue;
+
+                // build cross scenario
+                QuantLib::ext::shared_ptr<Scenario> crossScenario =
+                    sensiScenarioFactory_->buildScenario(asof, !sensitivityData_->useSpreadedTermStructures());
+
+                for (auto const& k : baseScenario_->keys()) {
+                    Real v1 = scenarios_[i]->get(k);
+                    Real v2 = scenarios_[j]->get(k);
+                    Real b = baseScenario_->get(k);
+                    if (!close_enough(v1, b) || !close_enough(v2, b))
+                        // this is correct for both absolute and relative shifts
+                        crossScenario->add(k, v1 + v2 - b);
+                }
+
+                scenarioDescriptions_.push_back(ScenarioDescription(iDesc, jDesc));
+                crossScenario->label(to_string(scenarioDescriptions_.back()));
+                scenarios_.push_back(crossScenario);
+                DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << crossScenario->label()
+                                               << " created");
             }
-
-            scenarioDescriptions_.push_back(ScenarioDescription(iDesc, jDesc));
-            crossScenario->label(to_string(scenarioDescriptions_.back()));
-            scenarios_.push_back(crossScenario);
-            DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << crossScenario->label() << " created");
         }
     }
 
