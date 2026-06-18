@@ -47,6 +47,7 @@ public:
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 
+    bool isLong() const;
     bool applyConversionFactor() const;
     bool useFuturePrice() const;
 
