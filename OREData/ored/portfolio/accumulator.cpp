@@ -96,6 +96,71 @@ namespace data {
       "            value = LongShort * Payoff;\n"
       "            currentNotional = FixingAmount * dailyMult * Strike[1];";
 
+    // AMC variant: European (non-AmericanKO) barrier only; backward induction over SettlementDates.
+    // REQUIRE AmericanKO == -1 because ABOVEPROB/BELOWPROB are not supported by GaussianCam.
+    static const std::string accumulator01_amc_script =
+      "            REQUIRE SIZE(FixingDates) == SIZE(SettlementDates);\n"
+      "            REQUIRE KnockOutType == 3 OR KnockOutType == 4;\n"
+      "            REQUIRE AmericanKO == -1;\n"
+      "            NUMBER Payoff, fix, d, r, Alive, currentNotional, Factor, ThisPayout, Fixing[SIZE(FixingDates)], dailyMult;\n"
+      "            NUMBER a, s, nthPayoff[SIZE(FixingDates)], bwdPayoff, _AMC_NPV[SIZE(_AMC_SimDates)];\n"
+      "            Alive = 1;\n"
+      "            dailyMult = 1;\n"
+      "            FOR d IN (1, SIZE(FixingDates), 1) DO\n"
+      "                fix = Underlying(FixingDates[d]);\n"
+      "                Fixing[d] = fix;\n"
+      "\n"
+      "                IF DailyFixingAmount == 1 THEN\n"
+      "                  IF d == 1 THEN\n"
+      "                     dailyMult = days(DailyFixingAmountDayCounter, StartDate, FixingDates[d]);\n"
+      "                  ELSE\n"
+      "                     dailyMult = days(DailyFixingAmountDayCounter, FixingDates[d-1], FixingDates[d]);\n"
+      "                  END;\n"
+      "                END;\n"
+      "\n"
+      "                IF {BarrierStrictComparison == 0 AND KnockOutType == 4 AND fix >= KnockOutLevel} OR\n"
+      "                   {BarrierStrictComparison == 0 AND KnockOutType == 3 AND fix <= KnockOutLevel} OR\n"
+      "                   {BarrierStrictComparison == 1 AND KnockOutType == 4 AND fix > KnockOutLevel} OR\n"
+      "                   {BarrierStrictComparison == 1 AND KnockOutType == 3 AND fix < KnockOutLevel} THEN\n"
+      "                   Alive = 0;\n"
+      "                 END;\n"
+      "\n"
+      "                IF d <= GuaranteedFixings THEN\n"
+      "                  Factor = 1;\n"
+      "                ELSE\n"
+      "                  Factor = Alive;\n"
+      "                END;\n"
+      "\n"
+      "                FOR r IN (1, SIZE(RangeUpperBounds), 1) DO\n"
+      "                  IF fix > RangeLowerBounds[r] AND fix <= RangeUpperBounds[r] THEN\n"
+      "                    IF NakedOption == 1 THEN\n"
+      "                      ThisPayout = abs(RangeLeverages[r]) * FixingAmount * dailyMult * max(0, OptionType * (fix - Strike[r])) * Factor;\n"
+      "                    ELSE\n"
+      "                      ThisPayout = RangeLeverages[r] * FixingAmount * dailyMult * (fix - Strike[r]) * Factor;\n"
+      "                    END;\n"
+      "                    IF d > GuaranteedFixings OR ThisPayout >= 0 THEN\n"
+      "                      Payoff = Payoff + LOGPAY(ThisPayout, FixingDates[d], SettlementDates[d], PayCcy);\n"
+      "                      nthPayoff[d] = nthPayoff[d] + PAY(ThisPayout, FixingDates[d], SettlementDates[d], PayCcy);\n"
+      "                    END;\n"
+      "                  END;\n"
+      "                END;\n"
+      "            END;\n"
+      "            value = LongShort * Payoff;\n"
+      "            currentNotional = FixingAmount * dailyMult * Strike[1];\n"
+      // Backward induction keyed on SettlementDates so sim dates between a fixing date and
+      // its T+N settlement correctly see the pending cashflow in bwdPayoff.
+      // NPV is computed before adding the payoff (post-settlement convention).
+      "            FOR a IN (SIZE(SettlementAndSimDates), 1, -1) DO\n"
+      "              s = DATEINDEX(SettlementAndSimDates[a], _AMC_SimDates, EQ);\n"
+      "              IF s > 0 THEN\n"
+      "                _AMC_NPV[s] = LongShort * NPVMEM(bwdPayoff, _AMC_SimDates[s], a);\n"
+      "              END;\n"
+      "              d = DATEINDEX(SettlementAndSimDates[a], SettlementDates, EQ);\n"
+      "              IF d > 0 THEN\n"
+      "                bwdPayoff = bwdPayoff + nthPayoff[d];\n"
+      "              END;\n"
+      "            END;";
+
 
     static const std::string accumulator02_script =
         "            REQUIRE SIZE(ObservationDates) == SIZE(KnockOutSettlementDates);\n"
@@ -159,6 +224,91 @@ namespace data {
         "              END;\n"
         "            END;\n"
         "            currentNotional = FixingAmount *  Strike;";
+
+    // AMC variant for accumulator02: backward induction over SettlementDates ∪ KnockOutSettlementDates.
+    // nthPayoff_period[p] = net PAY for period p (settled at SettlementDates[p]).
+    // nthPayoff_ko[k]     = net PAY for KO at observation k (settled at KnockOutSettlementDates[k]).
+    static const std::string accumulator02_amc_script =
+        "            REQUIRE SIZE(ObservationDates) == SIZE(KnockOutSettlementDates);\n"
+        "            REQUIRE SIZE(ObservationPeriodEndDates) == SIZE(SettlementDates);\n"
+        "            REQUIRE SIZE(RangeUpperBounds) == SIZE(RangeLowerBounds);\n"
+        "            REQUIRE SIZE(RangeUpperBounds) == SIZE(RangeLeverages);\n"
+        "            REQUIRE ObservationPeriodEndDates[SIZE(ObservationPeriodEndDates)] >= ObservationDates[SIZE(ObservationDates)];\n"
+        "            NUMBER Payoff, fix, d, dd, KnockedOut, currentNotional, Days[SIZE(RangeUpperBounds)], knockOutDays, Fixing[SIZE(ObservationPeriodEndDates)];\n"
+        "            NUMBER currentPeriod, r, ThisPayout;\n"
+        "            NUMBER a, s, d_p, d_k, nthPayoff_period[SIZE(ObservationPeriodEndDates)], nthPayoff_ko[SIZE(ObservationDates)], bwdPayoff, _AMC_NPV[SIZE(_AMC_SimDates)];\n"
+        "            currentPeriod = 1;\n"
+        "\n"
+        "            FOR d IN (1, SIZE(ObservationDates), 1) DO\n"
+        "              fix = Underlying(ObservationDates[d]);\n"
+        "\n"
+        "              knockOutDays = max(DATEINDEX(GuaranteedPeriodEndDate, ObservationDates, GT) - 1 - d, 0);\n"
+        "\n"
+        "              IF KnockedOut == 0 THEN\n"
+        "                  IF {BarrierStrictComparison == 0 AND KnockOutType == 4 AND fix >= KnockOutLevel} OR\n"
+        "                     {BarrierStrictComparison == 0 AND KnockOutType == 3 AND fix <= KnockOutLevel} OR\n"
+        "                     {BarrierStrictComparison == 1 AND KnockOutType == 4 AND fix > KnockOutLevel} OR\n"
+        "                     {BarrierStrictComparison == 1 AND KnockOutType == 3 AND fix < KnockOutLevel} THEN\n"
+        "                      KnockedOut = 1;\n"
+        "                      IF KnockOutFixingAtSettlementDate == 1 THEN\n"
+        "                         fix = Underlying(KnockOutSettlementDates[d]);\n"
+        "                      END;\n"
+        "                      Days[DefaultRange] = Days[DefaultRange] + knockOutDays;\n"
+        "                      FOR r IN (1, SIZE(RangeUpperBounds), 1) DO\n"
+        "                        IF NakedOption == 1 THEN\n"
+        "                          ThisPayout = LongShort * FixingAmount * abs(RangeLeverages[r]) * Days[r] * max(0, OptionType * (fix - Strike) );\n"
+        "                        ELSE\n"
+        "                          ThisPayout = LongShort * FixingAmount * RangeLeverages[r] * Days[r] * ( fix - Strike );\n"
+        "                        END;\n"
+        "                        value = value + PAY( ThisPayout, ObservationDates[d], KnockOutSettlementDates[d], PayCcy );\n"
+        "                        nthPayoff_ko[d] = nthPayoff_ko[d] + PAY( ThisPayout, ObservationDates[d], KnockOutSettlementDates[d], PayCcy );\n"
+        "                      END;\n"
+        "                   END;\n"
+        "              END;\n"
+        "\n"
+        "              IF KnockedOut == 0 THEN\n"
+        "                FOR r IN (1, SIZE(RangeUpperBounds), 1) DO\n"
+        "                  IF fix > RangeLowerBounds[r] AND fix <= RangeUpperBounds[r] THEN\n"
+        "                    Days[r] = Days[r] + 1;\n"
+        "                  END;\n"
+        "                END;\n"
+        "                IF ObservationDates[d] >= ObservationPeriodEndDates[currentPeriod] THEN\n"
+        "                  FOR r IN (1, SIZE(RangeUpperBounds), 1) DO\n"
+        "                    IF NakedOption == 1 THEN\n"
+        "                      ThisPayout = LongShort * FixingAmount * abs(RangeLeverages[r]) * Days[r] * max(0, OptionType * (fix - Strike) );\n"
+        "                    ELSE\n"
+        "                      ThisPayout = LongShort * FixingAmount * RangeLeverages[r] * Days[r] * ( fix - Strike );\n"
+        "                    END;\n"
+        "                    value = value + LOGPAY( ThisPayout, ObservationDates[d], SettlementDates[currentPeriod], PayCcy );\n"
+        "                    nthPayoff_period[currentPeriod] = nthPayoff_period[currentPeriod] + PAY( ThisPayout, ObservationDates[d], SettlementDates[currentPeriod], PayCcy );\n"
+        "                  END;\n"
+        "                END;\n"
+        "              END;\n"
+        "              IF ObservationDates[d] >= ObservationPeriodEndDates[currentPeriod] THEN\n"
+        "                Fixing[currentPeriod] = fix;\n"
+        "                currentPeriod = currentPeriod + 1;\n"
+        "                FOR r IN (1, SIZE(RangeUpperBounds), 1) DO\n"
+        "                  Days[r] = 0;\n"
+        "                END;\n"
+        "              END;\n"
+        "            END;\n"
+        "            currentNotional = FixingAmount *  Strike;\n"
+        // Backward induction keyed on both SettlementDates (period-end) and KnockOutSettlementDates.
+        // NPV computed before payoff (post-settlement convention for coincident sim/settlement dates).
+        "            FOR a IN (SIZE(AllSettlementAndSimDates), 1, -1) DO\n"
+        "              s = DATEINDEX(AllSettlementAndSimDates[a], _AMC_SimDates, EQ);\n"
+        "              IF s > 0 THEN\n"
+        "                _AMC_NPV[s] = NPVMEM(bwdPayoff, _AMC_SimDates[s], a);\n"
+        "              END;\n"
+        "              d_p = DATEINDEX(AllSettlementAndSimDates[a], SettlementDates, EQ);\n"
+        "              IF d_p > 0 THEN\n"
+        "                bwdPayoff = bwdPayoff + nthPayoff_period[d_p];\n"
+        "              END;\n"
+        "              d_k = DATEINDEX(AllSettlementAndSimDates[a], KnockOutSettlementDates, EQ);\n"
+        "              IF d_k > 0 THEN\n"
+        "                bwdPayoff = bwdPayoff + nthPayoff_ko[d_k];\n"
+        "              END;\n"
+        "            END;";
 
     static const std::string accumulator02_compo_script =
         "            REQUIRE SIZE(ObservationDates) == SIZE(KnockOutSettlementDates);\n"
@@ -226,6 +376,93 @@ namespace data {
         "              END;\n"
         "            END;\n"
         "            currentNotional = FixingAmount *  Strike;";
+
+    // AMC variant for accumulator02_compo (FX-composite): same as accumulator02_amc_script
+    // but with FX conversion for the fixing. conditionalExpectationModelStates = {} (multi-asset).
+    static const std::string accumulator02_compo_amc_script =
+        "            REQUIRE SIZE(ObservationDates) == SIZE(KnockOutSettlementDates);\n"
+        "            REQUIRE SIZE(ObservationPeriodEndDates) == SIZE(SettlementDates);\n"
+        "            REQUIRE SIZE(RangeUpperBounds) == SIZE(RangeLowerBounds);\n"
+        "            REQUIRE SIZE(RangeUpperBounds) == SIZE(RangeLeverages);\n"
+        "            REQUIRE ObservationPeriodEndDates[SIZE(ObservationPeriodEndDates)] >= ObservationDates[SIZE(ObservationDates)];\n"
+        "            NUMBER Payoff, fix, d, dd, KnockedOut, currentNotional, Days[SIZE(RangeUpperBounds)], knockOutDays, Fixing[SIZE(ObservationPeriodEndDates)];\n"
+        "            NUMBER fxFixings[SIZE(ObservationDates)], underlyingFixings[SIZE(ObservationDates)];\n"
+        "            NUMBER currentPeriod, r, ThisPayout;\n"
+        "            NUMBER a, s, d_p, d_k, nthPayoff_period[SIZE(ObservationPeriodEndDates)], nthPayoff_ko[SIZE(ObservationDates)], bwdPayoff, _AMC_NPV[SIZE(_AMC_SimDates)];\n"
+        "            currentPeriod = 1;\n"
+        "\n"
+        "            FOR d IN (1, SIZE(ObservationDates), 1) DO\n"
+        "              underlyingFixings[d] = Underlying(ObservationDates[d]);\n"
+        "              fxFixings[d] = FxUnderlying(ObservationDates[d]);\n"
+        "              fix = underlyingFixings[d] * fxFixings[d];\n"
+        "\n"
+        "              knockOutDays = max(DATEINDEX(GuaranteedPeriodEndDate, ObservationDates, GT) - 1 - d, 0);\n"
+        "\n"
+        "              IF KnockedOut == 0 THEN\n"
+        "                   IF {BarrierStrictComparison == 0 AND KnockOutType == 4 AND fix >= KnockOutLevel} OR\n"
+        "                      {BarrierStrictComparison == 0 AND KnockOutType == 3 AND fix <= KnockOutLevel} OR\n"
+        "                      {BarrierStrictComparison == 1 AND KnockOutType == 4 AND fix > KnockOutLevel} OR\n"
+        "                      {BarrierStrictComparison == 1 AND KnockOutType == 3 AND fix < KnockOutLevel} THEN\n"
+        "                      KnockedOut = 1;\n"
+        "                      IF KnockOutFixingAtSettlementDate == 1 THEN\n"
+        "                         fix = Underlying(KnockOutSettlementDates[d]);\n"
+        "                         fix = fix * FxUnderlying(KnockOutSettlementDates[d]);\n"
+        "                      END;\n"
+        "                      Days[DefaultRange] = Days[DefaultRange] + knockOutDays;\n"
+        "                      FOR r IN (1, SIZE(RangeUpperBounds), 1) DO\n"
+        "                        IF NakedOption == 1 THEN\n"
+        "                          ThisPayout = LongShort * FixingAmount * abs(RangeLeverages[r]) * Days[r] * max(0, OptionType * (fix - Strike) );\n"
+        "                        ELSE\n"
+        "                          ThisPayout = LongShort * FixingAmount * RangeLeverages[r] * Days[r] * ( fix - Strike );\n"
+        "                        END;\n"
+        "                        value = value + PAY( ThisPayout, ObservationDates[d], KnockOutSettlementDates[d], PayCcy );\n"
+        "                        nthPayoff_ko[d] = nthPayoff_ko[d] + PAY( ThisPayout, ObservationDates[d], KnockOutSettlementDates[d], PayCcy );\n"
+        "                      END;\n"
+        "                  END;\n"
+        "              END;\n"
+        "\n"
+        "              IF KnockedOut == 0 THEN\n"
+        "                FOR r IN (1, SIZE(RangeUpperBounds), 1) DO\n"
+        "                  IF fix > RangeLowerBounds[r] AND fix <= RangeUpperBounds[r] THEN\n"
+        "                    Days[r] = Days[r] + 1;\n"
+        "                  END;\n"
+        "                END;\n"
+        "                IF ObservationDates[d] >= ObservationPeriodEndDates[currentPeriod] THEN\n"
+        "                  FOR r IN (1, SIZE(RangeUpperBounds), 1) DO\n"
+        "                    IF NakedOption == 1 THEN\n"
+        "                      ThisPayout = LongShort * FixingAmount * abs(RangeLeverages[r]) * Days[r] * max(0, OptionType * (fix - Strike) );\n"
+        "                    ELSE\n"
+        "                      ThisPayout = LongShort * FixingAmount * RangeLeverages[r] * Days[r] * ( fix - Strike );\n"
+        "                    END;\n"
+        "                    value = value + LOGPAY( ThisPayout, ObservationDates[d], SettlementDates[currentPeriod], PayCcy );\n"
+        "                    nthPayoff_period[currentPeriod] = nthPayoff_period[currentPeriod] + PAY( ThisPayout, ObservationDates[d], SettlementDates[currentPeriod], PayCcy );\n"
+        "                  END;\n"
+        "                END;\n"
+        "               END;\n"
+        "              IF ObservationDates[d] >= ObservationPeriodEndDates[currentPeriod] THEN\n"
+        "                Fixing[currentPeriod] = fix;\n"
+        "                currentPeriod = currentPeriod + 1;\n"
+        "                FOR r IN (1, SIZE(RangeUpperBounds), 1) DO\n"
+        "                  Days[r] = 0;\n"
+        "                END;\n"
+        "              END;\n"
+        "            END;\n"
+        "            currentNotional = FixingAmount *  Strike;\n"
+        // Backward induction keyed on both SettlementDates and KnockOutSettlementDates.
+        "            FOR a IN (SIZE(AllSettlementAndSimDates), 1, -1) DO\n"
+        "              s = DATEINDEX(AllSettlementAndSimDates[a], _AMC_SimDates, EQ);\n"
+        "              IF s > 0 THEN\n"
+        "                _AMC_NPV[s] = NPVMEM(bwdPayoff, _AMC_SimDates[s], a);\n"
+        "              END;\n"
+        "              d_p = DATEINDEX(AllSettlementAndSimDates[a], SettlementDates, EQ);\n"
+        "              IF d_p > 0 THEN\n"
+        "                bwdPayoff = bwdPayoff + nthPayoff_period[d_p];\n"
+        "              END;\n"
+        "              d_k = DATEINDEX(AllSettlementAndSimDates[a], KnockOutSettlementDates, EQ);\n"
+        "              IF d_k > 0 THEN\n"
+        "                bwdPayoff = bwdPayoff + nthPayoff_ko[d_k];\n"
+        "              END;\n"
+        "            END;";
 
 
     static const std::string accumulator02_script_fd =
@@ -509,6 +746,17 @@ void Accumulator::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory)
              {"Alive", "Alive"},
              {"Fixing", "Fixing"}},
             {}, {}, {ScriptedTradeScriptData::CalibrationData("Underlying", {"Strike", "KnockOutLevel"})});
+        script_["AMC"] = ScriptedTradeScriptData(
+            accumulator01_amc_script, "value",
+            {{"currentNotional", "currentNotional"},
+             {"notionalCurrency", "PayCcy"},
+             {"Alive", "Alive"},
+             {"Fixing", "Fixing"}},
+            {},
+            {ScriptedTradeScriptData::NewScheduleData("SettlementAndSimDates", "Join", {"_AMC_SimDates", "SettlementDates"})},
+            {ScriptedTradeScriptData::CalibrationData("Underlying", {"Strike", "KnockOutLevel"})},
+            {"Alive"},
+            {"Asset"});
     }  else if(scriptToUse == AccumulatorScript::Accumulator02Composite) {
         script_[""] = ScriptedTradeScriptData(
             accumulator02_compo_script, "value",
@@ -519,6 +767,19 @@ void Accumulator::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory)
              {"fxFixings", "fxFixings"},
              {"underlyingFixings", "underlyingFixings"}},
             {}, {}, {ScriptedTradeScriptData::CalibrationData("Underlying", {"Strike", "KnockOutLevel"})});
+        script_["AMC"] = ScriptedTradeScriptData(
+            accumulator02_compo_amc_script, "value",
+            {{"currentNotional", "currentNotional"},
+             {"notionalCurrency", "PayCcy"},
+             {"KnockedOut", "KnockedOut"},
+             {"Fixing", "Fixing"},
+             {"fxFixings", "fxFixings"},
+             {"underlyingFixings", "underlyingFixings"}},
+            {},
+            {ScriptedTradeScriptData::NewScheduleData("AllSettlementAndSimDates", "Join", {"_AMC_SimDates", "SettlementDates", "KnockOutSettlementDates"})},
+            {ScriptedTradeScriptData::CalibrationData("Underlying", {"Strike", "KnockOutLevel"})},
+            {"KnockedOut"},
+            {});
     } else {
         script_[""] = ScriptedTradeScriptData(
             accumulator02_script, "value",
@@ -527,6 +788,17 @@ void Accumulator::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory)
              {"KnockedOut", "KnockedOut"},
              {"Fixing", "Fixing"}},
             {}, {}, {ScriptedTradeScriptData::CalibrationData("Underlying", {"Strike", "KnockOutLevel"})});
+        script_["AMC"] = ScriptedTradeScriptData(
+            accumulator02_amc_script, "value",
+            {{"currentNotional", "currentNotional"},
+             {"notionalCurrency", "PayCcy"},
+             {"KnockedOut", "KnockedOut"},
+             {"Fixing", "Fixing"}},
+            {},
+            {ScriptedTradeScriptData::NewScheduleData("AllSettlementAndSimDates", "Join", {"_AMC_SimDates", "SettlementDates", "KnockOutSettlementDates"})},
+            {ScriptedTradeScriptData::CalibrationData("Underlying", {"Strike", "KnockOutLevel"})},
+            {"KnockedOut"},
+            {"Asset"});
         script_["FD"] = ScriptedTradeScriptData(
             accumulator02_script_fd, "value",
             {{"currentNotional", "currentNotional"}, {"notionalCurrency", "PayCcy"}, {"Fixing", "Fixing"}}, {}, {},

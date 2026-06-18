@@ -198,7 +198,92 @@ void KnockOutSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory
 	mc_script, "value", {{"currentNotional", "Notional"}, {"notionalCurrency", "PayCurrency"}, {"Alive", "Alive"}},
 	{}, {}, {}, {});
 
-    // build trade
+    // AMC variant: backward induction keyed on payment dates (FixedSchedule ∪ FloatSchedule).
+    // nthPayoff_fixed[j+1] and nthPayoff_float[j+1] capture the per-period coupon PAYs so that
+    // sim dates between coupon fixing and payment correctly see the pending cashflow in bwdPayoff.
+
+    // clang-format off
+
+    std::string amc_script = std::string(
+      "REQUIRE KnockOutType == 3 OR KnockOutType == 4;\n"
+      "NUMBER Alive[SIZE(FloatFixingSchedule)], aliveInd, lastFixedIndex, lastFloatIndex, d, j, fix;\n"
+      "NUMBER a, s, d_f, d_l, nthPayoff_fixed[SIZE(FixedSchedule)], nthPayoff_float[SIZE(FloatSchedule)], bwdPayoff, _AMC_NPV[SIZE(_AMC_SimDates)];\n"
+
+      "aliveInd = 1;\n"
+
+      "FOR d IN (1, SIZE(FloatFixingSchedule), 1) DO\n"
+
+      "   FOR j IN (lastFixedIndex + 1, SIZE(FixedSchedule) - 1, 1) DO\n"
+      "     IF FixedSchedule[j] < FloatFixingSchedule[d] OR d == SIZE(FloatFixingSchedule) THEN\n"
+      "        value = value + LOGPAY( Payer * aliveInd * Notional * FixedRate * dcf( FixedDayCounter, FixedSchedule[j], FixedSchedule[j+1]),\n"
+      "                             FixedSchedule[j], FixedSchedule[j+1], PayCurrency, 1, FixedLegCoupon );\n"
+      "        nthPayoff_fixed[j+1] = nthPayoff_fixed[j+1] + PAY( Payer * aliveInd * Notional * FixedRate * dcf( FixedDayCounter, FixedSchedule[j], FixedSchedule[j+1]),\n"
+      "                             FixedSchedule[j], FixedSchedule[j+1], PayCurrency );\n"
+      "        lastFixedIndex = j;\n"
+      "      END;\n"
+      "    END;\n"
+
+      "    FOR j IN (lastFloatIndex + 1, SIZE(FloatSchedule) - 1, 1) DO\n"
+      "      IF FloatSchedule[j] < FloatFixingSchedule[d] OR d == SIZE(FloatFixingSchedule) THEN\n"
+      "        value = value + LOGPAY( (-Payer) * aliveInd * Notional *\n") + std::string(
+    isIborBased ?
+      "                             ( FloatGearing * FloatIndex(FloatFixingSchedule[j]) + FloatMargin)\n"
+    :
+      "                             FWDCOMP(FloatIndex, FloatFixingSchedule[j], FloatSchedule[j], FloatSchedule[j+1], FloatMargin, FloatGearing)\n") + std::string(
+      "                             * dcf( FloatDayCounter, FloatSchedule[j], FloatSchedule[j+1]),\n"
+      "                             FloatFixingSchedule[j], FloatSchedule[j+1], PayCurrency, 2, FloatingLegCoupon );\n"
+      "        nthPayoff_float[j+1] = nthPayoff_float[j+1] + PAY( (-Payer) * aliveInd * Notional *\n") + std::string(
+    isIborBased ?
+      "                             ( FloatGearing * FloatIndex(FloatFixingSchedule[j]) + FloatMargin)\n"
+    :
+      "                             FWDCOMP(FloatIndex, FloatFixingSchedule[j], FloatSchedule[j], FloatSchedule[j+1], FloatMargin, FloatGearing)\n") + std::string(
+      "                             * dcf( FloatDayCounter, FloatSchedule[j], FloatSchedule[j+1]),\n"
+      "                             FloatFixingSchedule[j], FloatSchedule[j+1], PayCurrency );\n"
+      "        lastFloatIndex = j;\n"
+      "      END;\n"
+      "    END;\n"
+
+      "   IF d < SIZE(FloatFixingSchedule) THEN\n"
+      "     fix = FloatIndex(FloatFixingSchedule[d]);\n"
+      "     IF FloatFixingSchedule[d] >= BarrierStartDate AND\n"
+      "          {{BarrierStrictComparison == 0 AND KnockOutType == 3 AND fix <= KnockOutLevel} OR\n"
+      "           {BarrierStrictComparison == 0 AND KnockOutType == 4 AND fix >= KnockOutLevel} OR\n"
+      "           {BarrierStrictComparison == 1 AND KnockOutType == 3 AND fix < KnockOutLevel} OR\n"
+      "           {BarrierStrictComparison == 1 AND KnockOutType == 4 AND fix > KnockOutLevel}} THEN\n"
+      "          aliveInd = 0;\n"
+      "      END;\n"
+      "      Alive[d] = aliveInd;\n"
+      "   END;\n"
+
+      "END;\n"
+      // Backward induction keyed on coupon payment dates (FixedSchedule ∪ FloatSchedule).
+      // d_f > 1 and d_l > 1 skip the schedule start dates (index 1) which carry no coupon payment.
+      // NPV is computed before adding the payoff (post-settlement convention).
+      "FOR a IN (SIZE(AllPayAndSimDates), 1, -1) DO\n"
+      "  s = DATEINDEX(AllPayAndSimDates[a], _AMC_SimDates, EQ);\n"
+      "  IF s > 0 THEN\n"
+      "    _AMC_NPV[s] = NPVMEM(bwdPayoff, _AMC_SimDates[s], a);\n"
+      "  END;\n"
+      "  d_f = DATEINDEX(AllPayAndSimDates[a], FixedSchedule, EQ);\n"
+      "  IF d_f > 1 THEN\n"
+      "    bwdPayoff = bwdPayoff + nthPayoff_fixed[d_f];\n"
+      "  END;\n"
+      "  d_l = DATEINDEX(AllPayAndSimDates[a], FloatSchedule, EQ);\n"
+      "  IF d_l > 1 THEN\n"
+      "    bwdPayoff = bwdPayoff + nthPayoff_float[d_l];\n"
+      "  END;\n"
+      "END;\n");
+
+    // clang-format on
+
+    script_["AMC"] = ScriptedTradeScriptData(
+	amc_script, "value",
+	{{"currentNotional", "Notional"}, {"notionalCurrency", "PayCurrency"}, {"Alive", "Alive"}},
+	{},
+	{ScriptedTradeScriptData::NewScheduleData("AllPayAndSimDates", "Join", {"_AMC_SimDates", "FixedSchedule", "FloatSchedule"})},
+	{},
+	{"aliveInd"},
+	{"IR"});
 
     ScriptedTrade::build(factory);
 }
