@@ -3636,6 +3636,10 @@ void ScenarioSimMarket::applyScenario(const QuantLib::ext::shared_ptr<QuantExt::
         }
         QL_FAIL("mismatch between scenario and sim data size, exit.");
     }
+
+    numeraire_ = scenario->getNumeraire();
+    label_ = scenario->label();
+    updateDate(scenario->asof());
 }
 
 void ScenarioSimMarket::preUpdate() {
@@ -3662,17 +3666,17 @@ void ScenarioSimMarket::updateDate(const Date& d) {
     }
 }
 
-Date ScenarioSimMarket::updateScenario(const Date& d) {
+Date ScenarioSimMarket::loadNextScenario(const Date& d) {
     QL_REQUIRE(scenarioGenerator_ != nullptr, "ScenarioSimMarket::update: no scenario generator set");
-    auto scenario = scenarioGenerator_->next(d);
-    QL_REQUIRE(allowDateUpdateFromScenario_ || scenario->asof() == d,
-               "Invalid Scenario date " << scenario->asof() << ", expected " << d);
-    if(scenario->asof() != d)
-        updateDate(scenario->asof());
-    numeraire_ = scenario->getNumeraire();
-    label_ = scenario->label();
-    applyScenario(scenario);
-    return scenario->asof();
+    loadedScenario_ = scenarioGenerator_->next(d);
+    QL_REQUIRE(allowDateUpdateFromScenario_ || loadedScenario_->asof() == d,
+               "ScenarioSimMarket::loadNextScenario(): scenario asof ("
+                   << loadedScenario_->asof() << ") does not match update date (" << d << ")");
+    return loadedScenario_->asof();
+}
+
+void ScenarioSimMarket::applyLoadedScenario() {
+    applyScenario(loadedScenario_);
 }
 
 void ScenarioSimMarket::postUpdate(const Date& d) {

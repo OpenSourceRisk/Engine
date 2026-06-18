@@ -19,5 +19,12 @@
 #include <orea/simulation/simmarket.hpp>
 
 namespace ore {
-namespace analytics {}
+namespace analytics {
+
+void SimMarket::updateScenario(const Date& d) {
+    loadNextScenario(d);
+    applyLoadedScenario();
+}
+
+} // namespace analytics
 } // namespace ore

@@ -47,22 +47,30 @@ public:
     //! Generate or retrieve market scenario, update market, notify termstructures and update fixings
     virtual void update(const Date& d) {
         preUpdate();
-        updateDate(updateScenario(d));
+        updateScenario(d);
         postUpdate(d);
         updateAsd(d);
     }
 
-    //! Observable settings depending on selected mode, before we update the market
+    //! 1  Observable settings depending on selected mode, before we update the market
     virtual void preUpdate() = 0;
 
-    //! Update to the given date
+    //! 2  Update eval date to the given date
     virtual void updateDate(const Date&) = 0;
 
-    /*! Retrieve next market scenario and apply this, return date which might be updated, e.g., in ScenarioSimMarket,
-      if the scenario asof != input date and allowDateUpdateFromScenario = true */
-    virtual Date updateScenario(const Date&) = 0;
+    /*! 3a Get next scenario without applying it and return the scenario date. The scenario date generally
+           corresponds to the input date, but this is not enforced. Implementations might or might not
+           allow for a deviating scenario date. The scenario date is the one that is used to update the
+           eval date in 3b. */
+    virtual Date loadNextScenario(const Date&) = 0;
 
-    //! Observable reset depending on selected mode, instrument updates
+    //! 3b Apply scenario from 3a, includes updating the eval date (using the scenario date, see 3a)
+    virtual void applyLoadedScenario() = 0;
+
+    /*! 3  loadNextScenario() then applyLoadedScenario() */
+    void updateScenario(const Date&);
+
+    //! 4  Observable reset depending on selected mode, instrument updates
     virtual void postUpdate(const Date&) = 0;
 
     //! Update aggregation scenario data

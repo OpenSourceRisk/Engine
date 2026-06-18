@@ -104,11 +104,12 @@ public:
     virtual const QuantLib::ext::shared_ptr<ScenarioFilter>& filter() const { return filter_; }
 
     //! Update
-    virtual void preUpdate() override;
-    virtual Date updateScenario(const Date&) override;
-    virtual void updateDate(const Date&) override;
-    virtual void postUpdate(const Date& d) override;
-    virtual void updateAsd(const Date&) override;
+    void preUpdate() override;
+    void updateDate(const Date&) override;
+    Date loadNextScenario(const Date&) override;
+    void applyLoadedScenario() override;
+    void postUpdate(const Date& d) override;
+    void updateAsd(const Date&) override;
 
     //! Reset sim market to initial state
     virtual void reset() override;
@@ -198,6 +199,7 @@ protected:
     std::set<ore::analytics::RiskFactorKey> diffToBaseKeys_;
 
     mutable QuantLib::ext::shared_ptr<Scenario> currentScenario_;
+    mutable QuantLib::ext::shared_ptr<Scenario> loadedScenario_;
     QuantLib::ext::shared_ptr<Scenario> offsetScenario_;
     QuantLib::ext::shared_ptr<QuantExt::ScenarioInformationSetter> scenarioInformationSetter_;
 
