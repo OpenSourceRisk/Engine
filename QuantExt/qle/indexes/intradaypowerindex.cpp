@@ -158,11 +158,12 @@ Real IntradayPowerIndex::pastFixing(const Date& fixingDate) const {
                                        << io::iso_date(deliveryDate_) << "). Eval date is " << io::iso_date(today));
     
     bool enforceTodaysFixing = fixingDate < today || Settings::instance().enforcesTodaysHistoricFixings();
-    // No Profolile given or empty profile, just return the fixing for the whole day
-    if (loadProfile_ == nullptr || (loadProfile_->loadProfile().empty() && loadProfile_->loadProfileDST().empty())) {
+    // No Load profile, assume constant load during the day and fetch the price for the whole day
+    if (loadProfile_ == nullptr){
         auto fixing = Index::pastFixing(fixingDate);
-        QL_REQUIRE(fixing != Null<Real>() || !enforceTodaysFixing, "Missing " << name() << " fixing for " << fixingDate);
-        return fixing;
+        QL_REQUIRE(fixing != Null<Real>() || !enforceTodaysFixing,
+                   "Missing " << name() << " fixing for " << fixingDate);
+        return fixing == Null<Real>() ? forecastFixing(fixingDate) : fixing;
     }
     // Assume right now, that the prices can be observed at the same granularity as the load profile,
     // future improvement, define a granularity and use it to fetch the price for each time bucket
@@ -171,16 +172,16 @@ Real IntradayPowerIndex::pastFixing(const Date& fixingDate) const {
     for (const auto& [start, end, load] : loadProfile_->loadProfile()) {
         if (load == 0.0)
             continue;
-        totalLoad += load * (end - start) / 3600.0;
-        amount += load * (end - start) / 3600.0 * pastBucketFixing(fixingDate, start, end, false, enforceTodaysFixing);
+        totalLoad += load * (end - start);
+        amount += load * (end - start) * pastBucketFixing(fixingDate, start, end, false, enforceTodaysFixing);
     }
     for (const auto& [start, end, load] : loadProfile_->loadProfileDST()) {
         if (load == 0.0)
             continue;
-        totalLoad += load * (end - start) / 3600.0;
-        amount += load * (end - start) / 3600.0 * pastBucketFixing(fixingDate, start, end, false, enforceTodaysFixing);
+        totalLoad += load * (end - start);
+        amount += load * (end - start) * pastBucketFixing(fixingDate, start, end, true, enforceTodaysFixing);
     }
-    return totalLoad > 0.0 ? amount / totalLoad : Index::pastFixing(fixingDate);
+    return (totalLoad == 0.0) ? 0.0 : amount / totalLoad;
 }
 
 Real IntradayPowerIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {
@@ -193,43 +194,24 @@ Real IntradayPowerIndex::fixing(const Date& fixingDate, bool forecastTodaysFixin
                                        << ") that is past the delivery date (" << io::iso_date(deliveryDate_)
                                        << "). Eval date is " << today);
 
-    // If fixing required read price at delivery date
     if (fixingDate > today || (fixingDate == today && forecastTodaysFixing))
         return forecastFixing(deliveryDate_);
 
-    Real result = Null<Decimal>();
-    result = pastFixing(fixingDate);
-    return result;
+    // Handle past fixing with a load profile
+    return pastFixing(fixingDate);
 
-
-    if (fixingDate < today || Settings::instance().enforcesTodaysHistoricFixings()) {
-        // must have been fixed
-        // do not catch exceptions
-        
-        QL_REQUIRE(result != Null<Real>(), "Missing " << name() << " fixing for " << fixingDate);
-    } else {
-        try {
-            // Try load the required fixing for today, if not available, fall back to forecast
-
-            result = pastFixing(fixingDate);
-        } catch (Error&) {
-            ; // fall through and forecast
-        }
-        if (result == Null<Real>())
-            return forecastFixing(fixingDate);
-    }
-
-    return result;
 }
 
 const std::vector<std::string> IntradayPowerIndex::intraDayIndexNames() const {
     std::set<std::string> names;
     if (loadProfile_ != nullptr) {
         for (const auto& [start, end, load] : loadProfile_->loadProfile()) {
-            names.insert(bucketName(name_, start, end, false));
+            if (load > 0.0)
+                names.insert(bucketName(name_, start, end, false));
         }
         for (const auto& [start, end, load] : loadProfile_->loadProfileDST()) {
-            names.insert(bucketName(name_, start, end, true));
+            if (load > 0.0)
+                names.insert(bucketName(name_, start, end, true));
         }
     } else {
         names.insert(name_);

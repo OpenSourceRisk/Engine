@@ -66,15 +66,15 @@ void IntradayPowerCashFlow::rolloutIndices(const ext::shared_ptr<IntradayPowerIn
 
 void IntradayPowerCashFlow::initWeights() {
     double totalLoad = 0.0;
-    for (const auto& kv : indices_) {
-        auto loadProfile = loadCurve_ != nullptr ? loadCurve_->loadProfile(kv.first) : nullptr;
+    for (const auto& [deliverydate, index] : indices_) {
+        auto loadProfile = loadCurve_ != nullptr ? loadCurve_->loadProfile(deliverydate) : nullptr;
         // If we have a load profile the weight we dont assume equal weight for each day, so we need to weight it by
         // total period load
         if (loadProfile) {
-            weights_[kv.first] += loadProfile->totalMWh();
+            weights_[deliverydate] += loadProfile->totalMWh();
             totalLoad += loadProfile->totalMWh();
         } else {
-            weights_[kv.first] = 1.0;
+            weights_[deliverydate] = 1.0;
             totalLoad += 1.0;
         }
     }

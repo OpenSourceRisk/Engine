@@ -334,6 +334,8 @@ const std::map<std::string,QuantLib::ext::any>& CommoditySwap::additionalData() 
                     std::vector<Date> indexExpiryVec, pricingDateVec;
                     std::vector<Real> priceVec;
                     std::vector<Real> weightsVector;
+                    std::vector<Real> totalDeliveryHoursVec;
+                    std::vector<Real> totalMWhVec;
                     auto weights = intradayPowerFlow->weights();
                     for (const auto& [deliveryDate, index] : intradayPowerFlow->indices()) {
                         indexVec.push_back(index->name());
@@ -345,6 +347,10 @@ const std::map<std::string,QuantLib::ext::any>& CommoditySwap::additionalData() 
                             // Add null for missing weight, dont throw here
                             weightsVector.push_back(weight != weights.end() ? weight->second : Null<Real>());
                         }
+                        if (index->loadProfile() != nullptr) {
+                            totalDeliveryHoursVec.push_back(index->loadProfile()->totalDeliveryHours());
+                            totalMWhVec.push_back(index->loadProfile()->totalMWh());
+                        }
                     }
                     additionalData_["index[" + label + "]"] = indexVec;
                     additionalData_["indexExpiry[" + label + "]"] = indexExpiryVec;
@@ -352,7 +358,8 @@ const std::map<std::string,QuantLib::ext::any>& CommoditySwap::additionalData() 
                     additionalData_["pricingDate[" + label + "]"] = pricingDateVec;
                     additionalData_["periodUnitPrice[" + label + "]"] = intradayPowerFlow->fixing();
                     additionalData_["weights[" + label + "]"] = weightsVector;
-
+                    additionalData_["loadProfileTotalDeliveryHours[" + label + "]"] = totalDeliveryHoursVec;
+                    additionalData_["loadProfileTotalMWh[" + label + "]"] = totalMWhVec;
                 }
                 // CommodityFixedLeg consists of simple cash flows
                 Real flowAmount = 0.0;

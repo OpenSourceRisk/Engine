@@ -29,68 +29,32 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 
 namespace QuantExt {
 
-using LoadFactors = std::vector<std::tuple<int,int, double>>;
+using LoadFactors = std::vector<std::tuple<int, int, double>>;
 class IntradayLoadProfile {
 public:
-    IntradayLoadProfile(const LoadFactors& load,
-                        const LoadFactors& loadDST)
-        : loadProfile_(std::move(load)), loadProfileDST_(std::move(loadDST)) {}
+    IntradayLoadProfile(const LoadFactors& load, const LoadFactors& loadDST);
 
-    const LoadFactors& loadProfile() const { return loadProfile_; }
-    const LoadFactors& loadProfileDST() const { return loadProfileDST_; }
+    const LoadFactors& loadProfile() const;
+    const LoadFactors& loadProfileDST() const;
 
-    QuantLib::Real totalMWh() const {
-        QuantLib::Real total = 0.0;
-        for (const auto& [start, end, load] : loadProfile_) {
-            total += load * (end - start) / 3600.0;
-        }
-        for (const auto& [start, end, load] : loadProfileDST_) {
-            total += load * (end - start) / 3600.0;
-        }
-        return total;
-    }
+    QuantLib::Real totalMWh() const;
 
-    QuantLib::Real totalDeliveryHours() const {
-        QuantLib::Real total = 0.0;
-        for (const auto& [start, end, load] : loadProfile_) {
-            total += (end - start) / 3600.0;
-        }
-        for (const auto& [start, end, load] : loadProfileDST_) {
-            total += (end - start) / 3600.0;
-        }
-        return total;
-    }
+    QuantLib::Real totalDeliveryHours() const;
 
 private:
     LoadFactors loadProfile_;
     LoadFactors loadProfileDST_;
+    QuantLib::Real totalMWh_ = 0.0;
+    QuantLib::Real totalDeliveryHours_ = 0.0;
 };
 
-//! Intraday Price term structure
-/*! This abstract class defines the interface of concrete
-    price term structures which will be derived from this one.
-
-    \ingroup termstructures
-*/
 class IntradayPowerLoadTermStructure {
 
 public:
-    //! \name Constructors
-    //@{
-    IntradayPowerLoadTermStructure(std::map<QuantLib::Date, QuantLib::ext::shared_ptr<IntradayLoadProfile>> loadingShapes)
-        : loadingShapes_(std::move(loadingShapes)) {}
-    //@}
+    IntradayPowerLoadTermStructure(
+        std::map<QuantLib::Date, QuantLib::ext::shared_ptr<IntradayLoadProfile>> loadingShapes);
 
-    //! \name Find the loading shapes on a given date or the last day before the given date, return nullptr if no date before is found
-    //@{
-    QuantLib::ext::shared_ptr<IntradayLoadProfile> loadProfile(const QuantLib::Date& d) const {
-        auto it = loadingShapes_.upper_bound(d);
-        if (it == loadingShapes_.begin()) {
-            return nullptr;
-        }
-        --it;
-        return it->second;
-    }
+    QuantLib::ext::shared_ptr<IntradayLoadProfile> loadProfile(const QuantLib::Date& d) const;
 
 private:
     std::map<QuantLib::Date, QuantLib::ext::shared_ptr<IntradayLoadProfile>> loadingShapes_;

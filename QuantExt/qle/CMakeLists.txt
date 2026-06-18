@@ -418,6 +418,7 @@ termstructures/fxvoltimeweighting.cpp
 termstructures/generatordefaulttermstructure.cpp
 termstructures/hazardspreadeddefaulttermstructure.cpp
 termstructures/iborfallbackcurve.cpp
+termstructures/intradaypowerloadtermstructure.cpp
 termstructures/intradaypowerpricetermstructure.cpp
 termstructures/immfraratehelper.cpp
 termstructures/indexcdsvolstripper.cpp
