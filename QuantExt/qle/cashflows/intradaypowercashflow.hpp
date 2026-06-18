@@ -38,6 +38,7 @@ public:
                           const ext::shared_ptr<IntradayPowerLoadTermStructure> loadCurve = nullptr,
                           const QuantLib::Calendar& pricingCalendar = QuantLib::Calendar(), QuantLib::Real spread = 0.0,
                           QuantLib::Real gearing = 1.0, bool includeStartDate = false, bool includeEndDate = true,
+                          bool businessDays = true,
                           const ext::shared_ptr<FxIndex>& fxIndex = nullptr,
                           std::optional<QuantLib::Natural> avgPricePrecision = std::nullopt);
 
@@ -48,6 +49,7 @@ public:
     const QuantLib::Real gearing() const { return gearing_; }
     bool includeStartDate() const { return includeStartDate_; }
     bool includeEndDate() const { return includeEndDate_; }
+    bool businessDays() const { return businessDays_; }
     const ext::shared_ptr<IntradayPowerLoadTermStructure>& loadCurve() const { return loadCurve_; }
     const ext::shared_ptr<FxIndex>& fxIndex() const { return fxIndex_; }
     std::optional<QuantLib::Natural> avgPricePrecision() const { return avgPricePrecision_; }
@@ -86,6 +88,7 @@ private:
     
     bool includeStartDate_;
     bool includeEndDate_;
+    bool businessDays_;
     ext::shared_ptr<FxIndex> fxIndex_;
     std::optional<QuantLib::Natural> avgPricePrecision_;
 
@@ -116,6 +119,7 @@ public:
     IntradayPowerLeg& withGearings(const std::vector<QuantLib::Real>& gearings);
     IntradayPowerLeg& includeEndDate(bool flag = true);
     IntradayPowerLeg& includeStartDate(bool flag = false);
+    IntradayPowerLeg& useBusinessDays(bool flag = true);
     IntradayPowerLeg& withPaymentDates(const std::vector<QuantLib::Date>& paymentDates);
     IntradayPowerLeg& withFxIndex(const ext::shared_ptr<FxIndex>& fxIndex);
     IntradayPowerLeg& withAvgPricePrecision(std::optional<QuantLib::Natural> precision = std::nullopt);
@@ -134,6 +138,7 @@ private:
     std::vector<QuantLib::Real> gearings_;
     bool includeEndDate_ = true;
     bool includeStartDate_ = false;
+    bool businessDays_ = true;
     std::vector<QuantLib::Date> paymentDates_;
     ext::shared_ptr<FxIndex> fxIndex_;
     std::optional<QuantLib::Natural> avgPricePrecision_ = std::nullopt;

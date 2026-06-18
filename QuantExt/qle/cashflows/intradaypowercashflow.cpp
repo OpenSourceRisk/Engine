@@ -39,11 +39,12 @@ IntradayPowerCashFlow::IntradayPowerCashFlow(QuantLib::Real quantity, const Quan
                                              const ext::shared_ptr<IntradayPowerLoadTermStructure> loadCurve,
                                              const QuantLib::Calendar& pricingCalendar, QuantLib::Real spread,
                                              QuantLib::Real gearing, bool includeStartDate, bool includeEndDate,
-                                             const ext::shared_ptr<FxIndex>& fxIndex,
+                                             bool businessDays, const ext::shared_ptr<FxIndex>& fxIndex,
                                              std::optional<QuantLib::Natural> avgPricePrecision)
     : startDate_(startDate), endDate_(endDate), paymentDate_(paymentDate), loadCurve_(loadCurve),
       pricingCalendar_(pricingCalendar), spread_(spread), gearing_(gearing), includeStartDate_(includeStartDate),
-      includeEndDate_(includeEndDate), fxIndex_(fxIndex), avgPricePrecision_(avgPricePrecision) {
+      includeEndDate_(includeEndDate), businessDays_(businessDays), fxIndex_(fxIndex),
+      avgPricePrecision_(avgPricePrecision) {
     init(quantity, index);
 }
 
@@ -57,7 +58,7 @@ void IntradayPowerCashFlow::computePeriodQuantity(const QuantLib::Real quantity)
 
 void IntradayPowerCashFlow::rolloutIndices(const ext::shared_ptr<IntradayPowerIndex>& index) {
     auto deliveryDates =
-        pricingDates(startDate_, endDate_, pricingCalendar_, !includeStartDate_, includeEndDate_, true);
+        pricingDates(startDate_, endDate_, pricingCalendar_, !includeStartDate_, includeEndDate_, businessDays_);
     for (const auto& d : deliveryDates) {
         auto loadProfile = loadCurve_ != nullptr ? loadCurve_->loadProfile(d) : nullptr;
         indices_.push_back({d, index->clone(d, loadProfile)});
@@ -129,7 +130,8 @@ void IntradayPowerCashFlow::accept(AcyclicVisitor& v) {
 IntradayPowerLeg::IntradayPowerLeg(const Schedule& schedule, const ext::shared_ptr<IntradayPowerIndex>& index,
                                    const ext::shared_ptr<IntradayPowerLoadTermStructure> loadCurve)
     : schedule_(schedule), index_(index), loadCurve_(loadCurve), paymentLag_(0), paymentCalendar_(NullCalendar()),
-      paymentConvention_(Unadjusted), pricingCalendar_(Calendar()), includeEndDate_(true), includeStartDate_(false) {}
+      paymentConvention_(Unadjusted), pricingCalendar_(Calendar()), includeEndDate_(true), includeStartDate_(false),
+      businessDays_(true) {}
 
 IntradayPowerLeg& IntradayPowerLeg::withQuantities(Real quantity) {
     quantities_ = vector<Real>(1, quantity);
@@ -191,6 +193,11 @@ IntradayPowerLeg& IntradayPowerLeg::includeStartDate(bool flag) {
     return *this;
 }
 
+IntradayPowerLeg& IntradayPowerLeg::useBusinessDays(bool flag) {
+    businessDays_ = flag;
+    return *this;
+}
+
 IntradayPowerLeg& IntradayPowerLeg::withPaymentDates(const vector<Date>& paymentDates) {
     paymentDates_ = paymentDates;
     return *this;
@@ -245,7 +252,7 @@ IntradayPowerLeg::operator Leg() const {
 
         leg.push_back(ext::make_shared<IntradayPowerCashFlow>(quantity, start, end, paymentDate, index_, loadCurve_,
                                                               pricingCalendar_, spread, gearing, includeStart,
-                                                              includeEnd, fxIndex_, avgPricePrecision_));
+                                                              includeEnd, businessDays_, fxIndex_, avgPricePrecision_));
     }
 
     return leg;
