@@ -29,12 +29,15 @@ where $S(T)$ is the spot price of the underlying at option expiry $T$.
 
 The Straddle NPV from the perspective of the long party is:
 
-$$
-\text{FVA NPV} = \text{LongShort} \cdot \text{Quantity} \cdot \left(
-  \text{PAY}(\text{floatingPayoff},\, T,\, T_{\text{settle}},\, \text{PayCcy}) -
-  \text{PAY}(\text{fixedPremium},\, T_{\text{FVA}},\, T_{\text{premium}},\, \text{PayCcy})
-\right)
-$$
+\begin{equation}
+\begin{split}
+\text{FVA NPV}
+= \text{LongShort} \cdot \text{Quantity} \cdot \Big(
+&\text{PAY}(\text{floatingPayoff},\, T,\, T_{\text{settle}},\, \text{PayCcy}) \\
+&{}- \text{PAY}(\text{fixedPremium},\, T_{\text{FVA}},\, T_{\text{premium}},\, \text{PayCcy})
+\Big)
+\end{split}
+\end{equation}
 
 \textbf{Put payoff.} The long party pays a fixed premium equal to the Black-Scholes value of a put option at the
 FVA date, computed using the spot price of the underlying at the FVA date, and in return receives the intrinsic
@@ -62,12 +65,15 @@ $$
 
 The Put NPV from the perspective of the long party is:
 
-$$
-\text{FVA NPV} = \text{LongShort} \cdot \text{Quantity} \cdot \left(
-  \text{PAY}(\text{Payoff},\, T,\, T_{\text{settle}},\, \text{PayCcy}) -
-  \text{PAY}(\text{fixedPremium},\, T_{\text{FVA}},\, T_{\text{premium}},\, \text{PayCcy})
-\right)
-$$
+\begin{equation}
+\begin{split}
+\text{FVA NPV}
+= \text{LongShort} \cdot \text{Quantity} \cdot \Big(
+&\text{PAY}(\text{Payoff},\, T,\, T_{\text{settle}},\, \text{PayCcy}) \\
+&{}- \text{PAY}(\text{fixedPremium},\, T_{\text{FVA}},\, T_{\text{premium}},\, \text{PayCcy})
+\Big)
+\end{split}
+\end{equation}
 
 {\bf Input}}\fi
 
@@ -137,8 +143,6 @@ following meaning:
 \item DayCountFraction [Optional]: The day count convention used to compute the time fraction $\tau$ from
   \lstinline!FvaDate! to \lstinline!OptionExpiry! in the Black-Scholes premium calculation. Required when
   \lstinline!PayoffType! is \emph{Put}.
-
-  Allowable values: See Table \ref{tab:dcf} Day Count Fraction.
 
 \item DividendYield [Optional]: The continuous dividend yield $q$ used in the Black-Scholes premium calculation.
   Required when \lstinline!PayoffType! is \emph{Put}. Expressed in decimal form, e.g.\ \lstinline!0.02! for 2\%.
