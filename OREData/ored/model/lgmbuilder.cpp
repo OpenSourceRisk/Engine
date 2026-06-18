@@ -53,7 +53,7 @@ LgmBuilder::LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& marke
 
 void LgmBuilder::initParametrization() const {
 
-    if (parametrizationInitializedOnAnchorDate_ == Settings::instance().evaluationDate())
+    if (parametrizationInitializedOnAnchorDate_ == referenceDate_)
         return;
 
     auto lgmData = QuantLib::ext::dynamic_pointer_cast<LgmData>(data_);
@@ -152,7 +152,7 @@ void LgmBuilder::initParametrization() const {
     model_ = QuantLib::ext::make_shared<QuantExt::LGM>(lgmParametrization);
     params_ = model_->params();
 
-    parametrizationInitializedOnAnchorDate_ = Settings::instance().evaluationDate();
+    parametrizationInitializedOnAnchorDate_ = referenceDate_;
 } // initiParametrization()
 
 void LgmBuilder::calibrate() const {

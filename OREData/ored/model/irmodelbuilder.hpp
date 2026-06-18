@@ -162,6 +162,7 @@ protected:
 
     bool forceCalibration_ = false;
     mutable bool suspendCalibration_ = false;
+    mutable Date referenceDate_;
 
     // Market Observer
     QuantLib::ext::shared_ptr<QuantExt::MarketObserver> marketObserver_;

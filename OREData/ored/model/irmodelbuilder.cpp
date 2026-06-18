@@ -247,7 +247,8 @@ void IrModelBuilder::newCalcWithoutRecalibration() const {
 
 bool IrModelBuilder::requiresRecalibration() const {
     return !suspendCalibration_ && requiresCalibration_ && !dontCalibrate_ &&
-           (volSurfaceChanged(false) || marketObserver_->hasUpdated(false) || forceCalibration_);
+           (referenceDate_ != calibrationDiscountCurve_->referenceDate() || volSurfaceChanged(false) ||
+            marketObserver_->hasUpdated(false) || forceCalibration_);
 }
 
 void IrModelBuilder::performCalculations() const {
@@ -260,6 +261,8 @@ void IrModelBuilder::performCalculations() const {
         initParametrization();
         return;
     }
+
+    referenceDate_ = calibrationDiscountCurve_->referenceDate();
 
     // reset lgm observer's updated flag
     marketObserver_->hasUpdated(true);

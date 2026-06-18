@@ -71,13 +71,16 @@ public:
     void setCalibrationDone() const;
 
 private:
+    void initParametrization() const;
+
     QuantLib::ext::shared_ptr<Market> market_;
     std::string configuration_;
     QuantLib::ext::shared_ptr<InfJyData> data_;
     std::string referenceCalibrationGrid_;
     bool dontCalibrate_;
     
-    QuantLib::ext::shared_ptr<QuantExt::InfJyParameterization> parameterization_;
+    mutable QuantLib::ext::shared_ptr<QuantExt::InfJyParameterization> parameterization_;
+
     QuantLib::ext::shared_ptr<QuantExt::MarketObserver> marketObserver_;
 
     // The rate curve to use
@@ -93,6 +96,9 @@ private:
 
     // Helper flag used in the forceRecalculate() method.
     bool forceCalibration_ = false;
+
+    mutable Date referenceDate_;
+    mutable Date parametrizationInitializedOnAnchorDate_;
 
     /*! Calibration instruments to use for calibrating the real rate portion of the JY model. The basket is
         empty if we are not calibrating the real rate portion of the JY model. Depending on the calibration 

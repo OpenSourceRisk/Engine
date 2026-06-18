@@ -96,10 +96,9 @@ InfJyBuilder::InfJyBuilder(const QuantLib::ext::shared_ptr<Market>& market, cons
 
     // Notify observers of all market data changes, not only when not calculated
     alwaysForwardNotifications();
+}
 
-    // Build the calibration instruments
-    buildCalibrationBaskets();
-
+void InfJyBuilder::initParametrization() const {
     // Create the JY parameterisation.
     parameterization_ = QuantLib::ext::make_shared<QuantExt::InfJyParameterization>(
         createRealRateParam(), createIndexParam(), zeroInflationIndex_);
@@ -127,13 +126,16 @@ Helpers InfJyBuilder::indexBasket() const {
 bool InfJyBuilder::requiresRecalibration() const {
     return (data_->realRateVolatility().calibrate() || data_->realRateReversion().calibrate() ||
             data_->indexVolatility().calibrate()) &&
-           (marketObserver_->hasUpdated(false) || forceCalibration_ || pricesChanged(false));
+           (referenceDate_ != rateCurve_->referenceDate() || marketObserver_->hasUpdated(false) || forceCalibration_ ||
+            pricesChanged(false));
 }
 
 void InfJyBuilder::performCalculations() const {
     if (requiresRecalibration()) {
+        referenceDate_ = rateCurve_->referenceDate();
         buildCalibrationBaskets();
     }
+    initParametrization();
 }
 
 void InfJyBuilder::setCalibrationDone() const {

@@ -83,8 +83,8 @@ private:
     void performCalculations() const override;
     Real optionStrike(const Size j) const;
     Date optionExpiry(const Size j) const;
+    void initParametrization() const;
     void buildOptionBasket() const;
-    // checks whether vols have changed compared to cache and updates the cache if requested
     bool volSurfaceChanged(const bool updateCache) const;
 
     // input data
@@ -112,8 +112,10 @@ private:
     // Cache the volatilities
     mutable std::vector<QuantLib::Real> volCache_;
 
-    // helper flag to process forRecalculate()
     bool forceCalibration_ = false;
+
+    mutable Date referenceDate_;
+    mutable Date parametrizationInitializedOnAnchorDate_;
 
     // market observer
     QuantLib::ext::shared_ptr<QuantExt::MarketObserver> marketObserver_;

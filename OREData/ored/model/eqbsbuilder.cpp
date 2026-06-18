@@ -48,10 +48,9 @@ EqBsBuilder::EqBsBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& mar
 
     optionActive_ = std::vector<bool>(data_->optionExpiries().size(), false);
     marketObserver_ = QuantLib::ext::make_shared<MarketObserver>();
-    QuantLib::Currency ccy = ore::data::parseCurrency(data->currency());
-    string eqName = data->eqName();
+    QuantLib::Currency ccy = ore::data::parseCurrency(data_->currency());
 
-    LOG("Start building EqBs model for " << eqName);
+    LOG("Start building EqBs model for " << data_->eqName());
 
     // try to get market objects, if sth fails, we fall back to a default and log a structured error
 
@@ -61,7 +60,7 @@ EqBsBuilder::EqBsBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& mar
         QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.01, Actual365Fixed()));
 
     try {
-        eqSpot_ = market_->equitySpot(eqName, configuration_);
+        eqSpot_ = market_->equitySpot(data_->eqName(), configuration_);
     } catch (const std::exception& e) {
         processException("equity spot", e);
         eqSpot_ = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
@@ -75,18 +74,28 @@ EqBsBuilder::EqBsBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& mar
     }
 
     try {
-        ytsRate_ = market_->equityForecastCurve(eqName, configuration_);
+        ytsRate_ = market_->equityForecastCurve(data_->eqName(), configuration_);
     } catch (const std::exception& e) {
         processException("equity forecast curve", e);
         ytsRate_ = dummyYts;
     }
 
     try {
-        ytsDiv_ = market_->equityDividendCurve(eqName, configuration_);
+        ytsDiv_ = market_->equityDividendCurve(data_->eqName(), configuration_);
     } catch (const std::exception& e) {
         processException("equity dividend curve", e);
         ytsDiv_ = dummyYts;
     }
+
+    try {
+        eqVol_ = market_->equityVol(data_->eqName(), configuration_);
+    } catch (const std::exception& e) {
+        processException("equity vol surface", e);
+        eqVol_ = Handle<BlackVolTermStructure>(
+            QuantLib::ext::make_shared<BlackConstantVol>(0, NullCalendar(), 0.0010, Actual365Fixed()));
+    }
+
+    registerWith(eqVol_);
 
     // register with market observables except vols
     marketObserver_->registerWith(eqSpot_);
@@ -99,31 +108,28 @@ EqBsBuilder::EqBsBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& mar
 
     // notify observers of all market data changes, not only when not calculated
     alwaysForwardNotifications();
+}
 
-    // build option basket and derive parametrization from it
-    if (data->calibrateSigma()) {
-        try {
-            eqVol_ = market_->equityVol(eqName, configuration_);
-        } catch (const std::exception& e) {
-            processException("equity vol surface", e);
-            eqVol_ = Handle<BlackVolTermStructure>(QuantLib::ext::make_shared<BlackConstantVol>(
-                0, NullCalendar(), 0.0010, Actual365Fixed()));
-        }
-        registerWith(eqVol_);
-        buildOptionBasket();
-    }
+
+void EqBsBuilder::initParametrization() const {
+
+    QuantLib::Currency ccy = ore::data::parseCurrency(data_->currency());
+
+    if (parametrizationInitializedOnAnchorDate_ == referenceDate_)
+        return;
+    parametrizationInitializedOnAnchorDate_ = referenceDate_;
 
     Array sigmaTimes, sigma;
-    if (data->sigmaParamType() == ParamType::Constant) {
-        QL_REQUIRE(data->sigmaTimes().size() == 0, "empty sigma time grid expected");
-        QL_REQUIRE(data->sigmaValues().size() == 1, "initial sigma grid size 1 expected");
+    if (data_->sigmaParamType() == ParamType::Constant) {
+        QL_REQUIRE(data_->sigmaTimes().size() == 0, "empty sigma time grid expected");
+        QL_REQUIRE(data_->sigmaValues().size() == 1, "initial sigma grid size 1 expected");
         sigmaTimes = Array(0);
         sigma = Array(data_->sigmaValues().begin(), data_->sigmaValues().end());
     } else {
-        if (data->calibrateSigma()) { // override
+        if (data_->calibrateSigma()) { // override
             QL_REQUIRE(optionExpiries_.size() > 0, "optionExpiries is empty");
             sigmaTimes = Array(optionExpiries_.begin(), optionExpiries_.end() - 1);
-            sigma = Array(sigmaTimes.size() + 1, data->sigmaValues()[0]);
+            sigma = Array(sigmaTimes.size() + 1, data_->sigmaValues()[0]);
         } else {
             // use input time grid and input alpha array otherwise
             sigmaTimes = Array(data_->sigmaTimes().begin(), data_->sigmaTimes().end());
@@ -133,11 +139,11 @@ EqBsBuilder::EqBsBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& mar
     }
 
     // Quotation needs to be consistent with FX spot quotation in the FX calibration basket
-    if (data->sigmaParamType() == ParamType::Piecewise)
+    if (data_->sigmaParamType() == ParamType::Piecewise)
         parametrization_ = QuantLib::ext::make_shared<QuantExt::EqBsPiecewiseConstantParametrization>(
-            ccy, eqName, eqSpot_, fxSpot_, sigmaTimes, sigma, ytsRate_, ytsDiv_);
-    else if (data->sigmaParamType() == ParamType::Constant)
-        parametrization_ = QuantLib::ext::make_shared<QuantExt::EqBsConstantParametrization>(ccy, eqName, eqSpot_, fxSpot_,
+            ccy, data_->eqName(), eqSpot_, fxSpot_, sigmaTimes, sigma, ytsRate_, ytsDiv_);
+    else if (data_->sigmaParamType() == ParamType::Constant)
+        parametrization_ = QuantLib::ext::make_shared<QuantExt::EqBsConstantParametrization>(ccy, data_->eqName(), eqSpot_, fxSpot_,
                                                                                      sigma[0], ytsRate_, ytsDiv_);
     else
         QL_FAIL("interpolation type not supported for Equity");
@@ -166,15 +172,16 @@ std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>> EqBsBuilder::opti
 }
 
 bool EqBsBuilder::requiresRecalibration() const {
-    return data_->calibrateSigma() &&
-           (volSurfaceChanged(false) || marketObserver_->hasUpdated(false) || forceCalibration_);
+    return data_->calibrateSigma() && (referenceDate_ != ytsRate_->referenceDate() || volSurfaceChanged(false) ||
+                                       marketObserver_->hasUpdated(false) || forceCalibration_);
 }
 
 void EqBsBuilder::performCalculations() const {
     if (requiresRecalibration()) {
-        // build option basket
+        referenceDate_ = ytsRate_->referenceDate();
         buildOptionBasket();
     }
+    initParametrization();
 }
 
 void EqBsBuilder::setCalibrationDone() const {
