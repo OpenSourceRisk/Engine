@@ -415,7 +415,8 @@ void test_performance(Size portfolioSize, ObservationMode::Mode om, double nonZe
     BOOST_TEST_MESSAGE("Portfolio size after build: " << portfolio->size());
 
     // Now calculate exposure
-    ValuationEngine valEngine(today, dg, simMarket, {}, true, QuantLib::ext::make_shared<FixingManager>(today));
+    ValuationEngine valEngine(today, dg, simMarket, {}, true,
+                              QuantLib::ext::make_shared<FixingManager>(today, FixingManager::Mode::BackwardFlat));
 
     // Calculate Cube
     boost::timer::cpu_timer t;

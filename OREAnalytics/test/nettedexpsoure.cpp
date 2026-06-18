@@ -346,7 +346,8 @@ QuantLib::ext::shared_ptr<NPVCube> buildNPVCube(QuantLib::ext::shared_ptr<DateGr
 
     Date today = Settings::instance().evaluationDate();
     // Now calculate exposure
-    ValuationEngine valEngine(today, dateGrid, simMarket, {}, true, QuantLib::ext::make_shared<FixingManager>(today));
+    ValuationEngine valEngine(today, dateGrid, simMarket, {}, true,
+                              QuantLib::ext::make_shared<FixingManager>(today, FixingManager::Mode::BackwardFlat));
 
     Size depth = 1;
     if (withCloseOutGrid)

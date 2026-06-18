@@ -120,7 +120,7 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     std::string effectiveResultCurrency =
         inputs_->resultCurrency().empty() ? inputs_->baseCurrency() : inputs_->resultCurrency();
 
-    auto fixingManager = QuantLib::ext::make_shared<FixingManager>(inputs_->asof());
+    auto fixingManager = QuantLib::ext::make_shared<FixingManager>(inputs_->asof(), FixingManager::Mode::Projected);
 
     /*******************************
      *

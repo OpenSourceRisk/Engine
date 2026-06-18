@@ -1188,7 +1188,7 @@ BOOST_AUTO_TEST_CASE(testCpiSwapExposure) {
     BOOST_TEST_MESSAGE("set up scenario sim market");
     auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(d.market, simMarketConfig);
     simMarket->scenarioGenerator() = sg;
-    auto fixingManager = QuantLib::ext::make_shared<FixingManager>(d.referenceDate);
+    auto fixingManager = QuantLib::ext::make_shared<FixingManager>(d.referenceDate, FixingManager::Mode::BackwardFlat);
 
     Size samples = 5000;
 

@@ -84,9 +84,9 @@ HistoricalPnlGenerator::HistoricalPnlGenerator(
     simMarket_->scenarioGenerator() = hisScenGen_;
 
     auto grid = QuantLib::ext::make_shared<DateGrid>();
-    valuationEngine_ =
-        QuantLib::ext::make_shared<ValuationEngine>(simMarket_->asofDate(), grid, simMarket_, modelBuilders, true,
-                                                    QuantLib::ext::make_shared<FixingManager>(simMarket->asofDate()));
+    valuationEngine_ = QuantLib::ext::make_shared<ValuationEngine>(
+        simMarket_->asofDate(), grid, simMarket_, modelBuilders, true,
+        QuantLib::ext::make_shared<FixingManager>(simMarket->asofDate(), FixingManager::Mode::Projected));
 }
 
 HistoricalPnlGenerator::HistoricalPnlGenerator(
@@ -154,11 +154,11 @@ void HistoricalPnlGenerator::generateCube(const QuantLib::ext::shared_ptr<Scenar
                                     ValuationEngine::ErrorPolicy::RemoveAll, true,
                                     nullptr, nullptr, {}, dryRun_);
     } else {
-        MultiThreadedValuationEngine engine(nThreads_, today_, QuantLib::ext::make_shared<ore::analytics::DateGrid>(),
-                                            hisScenGen_->numScenarios(), loader_, hisScenGen_, engineData_,
-                                            curveConfigs_, todaysMarketParams_, configuration_, simMarketData_, false,
-                                            false, filter, referenceData_, iborFallbackConfig_, true, true, true, {},
-                                            {}, {}, QuantLib::ext::make_shared<FixingManager>(today_), context_);
+        MultiThreadedValuationEngine engine(
+            nThreads_, today_, QuantLib::ext::make_shared<ore::analytics::DateGrid>(), hisScenGen_->numScenarios(),
+            loader_, hisScenGen_, engineData_, curveConfigs_, todaysMarketParams_, configuration_, simMarketData_,
+            false, false, filter, referenceData_, iborFallbackConfig_, true, true, true, {}, {}, {},
+            QuantLib::ext::make_shared<FixingManager>(today_, FixingManager::Mode::Projected), context_);
         for (auto const& i : this->progressIndicators()) {
             i->reset();
             engine.registerProgressIndicator(i);
@@ -275,7 +275,7 @@ void HistoricalPnlGenerator::generateCube(const QuantLib::ext::shared_ptr<Scenar
                             auto grid = QuantLib::ext::make_shared<ore::data::DateGrid>();
                             auto valEngine = QuantLib::ext::make_shared<ValuationEngine>(
                                 simMkt->asofDate(), grid, simMkt, engFactory->modelBuilders(), true,
-                                QuantLib::ext::make_shared<FixingManager>(today_));
+                                QuantLib::ext::make_shared<FixingManager>(today_, FixingManager::Mode::Projected));
 
                             // Process assigned risk factor keys
                             for (auto const& key : threadKeys[id]) {

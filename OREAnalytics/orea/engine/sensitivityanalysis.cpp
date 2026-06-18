@@ -172,7 +172,7 @@ void SensitivityAnalysis::generateSensitivities() {
 
     QuantLib::ext::shared_ptr<FixingManager> fixingManager;
     if (sensitivityData_->thetaPeriod() != Period()) {
-        fixingManager = QuantLib::ext::make_shared<FixingManager>(asof_);
+        fixingManager = QuantLib::ext::make_shared<FixingManager>(asof_, FixingManager::Mode::Projected);
     }
 
     if (useSingleThreadedEngine_) {

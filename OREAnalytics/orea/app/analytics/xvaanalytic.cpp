@@ -896,8 +896,9 @@ void XvaAnalyticImpl::buildClassicCube(const QuantLib::ext::shared_ptr<Portfolio
 
         // single-threaded engine run
 
-        ValuationEngine engine(inputs_->asof(), grid_, simMarket_, engineFactory()->modelBuilders(), false,
-                               QuantLib::ext::make_shared<FixingManager>(inputs_->asof()));
+        ValuationEngine engine(
+            inputs_->asof(), grid_, simMarket_, engineFactory()->modelBuilders(), false,
+            QuantLib::ext::make_shared<FixingManager>(inputs_->asof(), FixingManager::Mode::BackwardFlat));
         engine.registerProgressIndicator(progressBar);
         engine.registerProgressIndicator(progressLog);
         engine.buildCube(portfolio, cube_, calculators(0, portfolio), ValuationEngine::ErrorPolicy::RemoveAll,
@@ -943,8 +944,9 @@ void XvaAnalyticImpl::buildClassicCube(const QuantLib::ext::shared_ptr<Portfolio
             inputs_->marketConfig("simulation"), analytic()->configurations().simMarketParams, false, false,
             QuantLib::ext::make_shared<ScenarioFilter>(), inputs_->refDataManager(), inputs_->iborFallbackConfig(),
             true, false, false, cubeFactory, {}, cptyCubeFactory,
-            QuantLib::ext::make_shared<FixingManager>(inputs_->asof()), "xva-simulation", analytic()->offsetScenario(),
-            inputs_->useAtParCouponsCurves(), inputs_->useAtParCouponsTrades());
+            QuantLib::ext::make_shared<FixingManager>(inputs_->asof(), FixingManager::Mode::BackwardFlat),
+            "xva-simulation", analytic()->offsetScenario(), inputs_->useAtParCouponsCurves(),
+            inputs_->useAtParCouponsTrades());
 
         engine.setAggregationScenarioData(scenarioData_);
         engine.registerProgressIndicator(progressBar);
