@@ -58,12 +58,22 @@ struct IndexComparator {
   - set to the projected fixing as seen from t_(n-1),
     assuming a zero volatiliy dynamics for all underlyings                         if Mode is Projected
 
-  \ingroup simulation */
+  Note: The different modes require a different orchestration of the simulation:
+
+  - BackwardFlat: fixing manager must be updated _after_ the simulation market was updated to the new date
+  - Projected   : fixing manager must be updated _before_ the simulation market is updated to the new date
+
+  The valuation engine takes care of this difference. If the fixing manager is used manually, the order of
+  updates must be taken care of in the user code. The fixing manager will raise an error if the mode is
+  not consistent with the orchestration.
+
+  \ingroup simulation
+*/
 class FixingManager {
 public:
     enum class Mode { BackwardFlat, Projected };
 
-    FixingManager(Date today, Mode mode);
+    explicit FixingManager(Date anchor, Mode mode = Mode::BackwardFlat);
     virtual ~FixingManager();
 
     //! Initialise the manager with these flows and indices from the given portfolio
@@ -71,10 +81,9 @@ public:
                     const QuantLib::ext::shared_ptr<Market>& market,
                     const std::string& configuration = Market::defaultConfiguration);
 
-    //! Update fixings to date d
+    Mode mode() const { return mode_; }
+    const Date& fixingsEnd() const { return fixingsEnd_; }
     void update(const Date& d);
-
-    //! Reset fixings to t0 (today)
     void reset();
 
 private:
@@ -84,7 +93,7 @@ private:
     void applyFixings(const Date& start, const Date& end);
 
     // inputs
-    Date today_;
+    Date anchor_;
     Mode mode_;
 
     // state

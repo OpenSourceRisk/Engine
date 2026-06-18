@@ -241,8 +241,8 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
     // Now update simMarket on asof date t0, with the t0 shift scenario
     sgen->setScenario(t0Scenario);
-    t0SimMarket_->update(t0SimMarket_->asofDate());
     fixingManager->update(t0SimMarket_->asofDate());
+    t0SimMarket_->update(t0SimMarket_->asofDate());
     analytic()->setMarket(t0SimMarket_);
 
     // Build the portfolio, linked to the shifted market
@@ -284,8 +284,8 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     analytic()->setMarket(simMarket1);
     sgen1->setScenario(t1Scenario);
     simMarket1->scenarioGenerator() = sgen1;
-    simMarket1->update(d1);
     fixingManager->update(d1);
+    simMarket1->update(d1);
     analytic()->buildPortfolio();
 
     // t1m0p0NpvReport renamed from t1NpvLaggedReport
@@ -315,8 +315,8 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
         
     sgen1->setScenario(sai->scenarioSimMarket()->baseScenario());
     simMarket1->scenarioGenerator() = sgen1;
-    simMarket1->update(d1);
     fixingManager->update(d1);
+    simMarket1->update(d1);
 
     analytic()->buildPortfolio();
 

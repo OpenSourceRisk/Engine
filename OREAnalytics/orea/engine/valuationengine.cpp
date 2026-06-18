@@ -413,49 +413,64 @@ void ValuationEngine::populateCube(
     QL_REQUIRE(cubeDateIndex >= 0, "first date should be a valuation date");
 
     auto t0 = data::os::nanosecondsClock();
+
     simMarket_->preUpdate();
+    if (fixingManager_ && fixingManager_->mode() == FixingManager::Mode::Projected) {
+        fixingManager_->update(d);
+    }
+
+    if (!scenarioUpdated) {
+        d = simMarket_->updateScenario(d);
+    } else {
+        d = Settings::instance().evaluationDate();
+    }
+    auto t1 = data::os::nanosecondsClock();
+    timings.updateScenarioTime += t1 - t0;
+
+    auto t2 = data::os::nanosecondsClock();
+    if (fixingManager_ && fixingManager_->mode() == FixingManager::Mode::Projected &&
+        d > fixingManager_->fixingsEnd()) {
+        fixingManager_->update(d);
+    }
+    timings.fixingTime += t2 - t1;
+
     if (isValueDate || !isStickyDate) {
         simMarket_->updateDate(d);
     }
-    // We can skip this step, if we have done that above in the close-out date section
-    auto t1 = data::os::nanosecondsClock();
-    timings.updateDateTime += t1 - t0;
-    if (!scenarioUpdated) {
-        d = simMarket_->updateScenario(d);
-    }
 
-    auto t2 = data::os::nanosecondsClock();
-    timings.updateScenarioTime += t2 - t1;
+    auto t3 = data::os::nanosecondsClock();
+    timings.updateDateTime += t3 - t2;
 
     simMarket_->postUpdate(d);
-    auto t3 = data::os::nanosecondsClock();
-    timings.refreshTime += t3 - t2;
+    auto t4 = data::os::nanosecondsClock();
+    timings.refreshTime += t4 - t3;
 
-    if (fixingManager_ && (!isStickyDate || isValueDate)) {
+    if (fixingManager_ && fixingManager_->mode() == FixingManager::Mode::BackwardFlat &&
+        (!isStickyDate || isValueDate)) {
         fixingManager_->update(d);
     }
-    auto t4 = data::os::nanosecondsClock();
-    timings.fixingTime += t4 - t3;
+    auto t5 = data::os::nanosecondsClock();
+    timings.fixingTime += t5 - t4;
 
     // Aggregation scenario data update on valuation dates only
     if (isValueDate) {
         simMarket_->updateAsd(d);
     }
-    auto t5 = data::os::nanosecondsClock();
-    timings.asdTime += t5 - t4;
+    auto t6 = data::os::nanosecondsClock();
+    timings.asdTime += t6 - t5;
 
     recalibrateModels();
-    auto t6 = data::os::nanosecondsClock();
-    timings.calibrationTime += t6 - t5;
+    auto t7 = data::os::nanosecondsClock();
+    timings.calibrationTime += t7 - t6;
 
     if (isStickyDate && !isValueDate) // switch on again, if sticky
         tradeExercisable(false, optionWrappers);
-    // loop over trades
+
     runCalculators(!isValueDate, trades, errorPolicy, tradeHasT0Error, tradeHasSampleError, calculators, outputCube,
                    outputCubeNettingSet, d, cubeDateIndex, sample, simMarket_->label(), errors);
     if (isStickyDate && !isValueDate) // switch on again, if sticky
         tradeExercisable(true, optionWrappers);
-    // loop over counterparty names
+
     if (isValueDate) {
         runCalculators(false, counterparties, cptyCalculators, outputCptyCube, d, cubeDateIndex, sample);
     }

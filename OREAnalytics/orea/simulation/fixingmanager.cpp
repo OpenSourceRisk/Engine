@@ -22,6 +22,7 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/portfolio/trade.hpp>
+#include <ored/portfolio/structuredtradeerror.hpp>
 
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/equitycoupon.hpp>
@@ -48,42 +49,43 @@ using namespace ore::data;
 namespace ore {
 namespace analytics {
 
-// Search for a valid fixing date maximum gap days larger than d, the only relevant case for this so far is BMA/SIFMA
-Date nextValidFixingDate(Date d, const QuantLib::ext::shared_ptr<Index>& index, Size gap = 7) {
+inline Date nextValidFixingDate(Date d, const QuantLib::ext::shared_ptr<Index>& index, Size gap = 7) {
     Date adjusted = d;
-    for (Size i = 0; i <= gap; ++i) {
-        adjusted = d + i;
+    for (Size i = 0; i <= gap; ++i, ++adjusted) {
         if (index->isValidFixingDate(adjusted))
             return adjusted;
     }
-    QL_FAIL("no valid fixing date found for index " << index->name() << " within gap from " << io::iso_date(d));
+    QL_FAIL("FixingManager::nextValidFixingDate(): no valid fixing date found for index "
+            << index->name() << " within gap " << gap << " from start date" << io::iso_date(d));
 }
 
 FixingManager::~FixingManager() { reset(); }
 
-FixingManager::FixingManager(Date today, Mode mode)
-    : today_(std::move(today)), mode_(mode), fixingsEnd_(today_), modifiedFixingHistory_(false) {}
+FixingManager::FixingManager(Date anchor, Mode mode)
+    : anchor_(std::move(anchor)), mode_(mode), fixingsEnd_(anchor_), modifiedFixingHistory_(false) {}
 
 void FixingManager::initialise(const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const QuantLib::ext::shared_ptr<Market>& market,
                                const std::string& configuration) {
 
-    // populate the map "Index -> set of required fixing dates", where the index on the LHS is linked to curves
     for (auto const& [tradeId,t] : portfolio->trades()) {
+
         auto r = t->requiredFixings();
         r.unsetPayDates();
         for (auto const& [name, fixingDates] : r.fixingDatesIndices(QuantLib::Date::maxDate())) {
+
             std::set<Date> dates;
             for (const auto& [d, _] : fixingDates) {
                 dates.insert(d);
             }
+
             try {
                 auto rawIndex = parseIndex(name);
+                // dnamic pointer casts should be fine here, since initialise() is only called to init the manager
                 if (auto index = QuantLib::ext::dynamic_pointer_cast<EquityIndex2>(rawIndex)) {
-                    
                     fixingMap_[*market->equityCurve(index->familyName(), configuration)].insert(dates.begin(),
                                                                                                 dates.end());
                 } else if (auto index = QuantLib::ext::dynamic_pointer_cast<BondIndex>(rawIndex)) {
-                    QL_FAIL("BondIndex not handled");
+                    QL_FAIL("FixingManager: BondIndex not handled");
                 } else if (auto index = QuantLib::ext::dynamic_pointer_cast<CommodityIndex>(rawIndex)) {
                     // for comm indices with non-daily expiries the expiry date's day of month is 1 always
                     Date safeExpiryDate = index->expiryDate();
@@ -96,9 +98,9 @@ void FixingManager::initialise(const QuantLib::ext::shared_ptr<Portfolio>& portf
                 } else if (auto index = QuantLib::ext::dynamic_pointer_cast<FxIndex>(rawIndex)) {
                     fixingMap_[*market->fxIndex(name, configuration)].insert(dates.begin(), dates.end());
                 } else if (auto index = QuantLib::ext::dynamic_pointer_cast<GenericIndex>(rawIndex)) {
-                    QL_FAIL("GenericIndex not handled");
+                    QL_FAIL("FixingManager: GenericIndex not handled");
                 } else if (auto index = QuantLib::ext::dynamic_pointer_cast<ConstantMaturityBondIndex>(rawIndex)) {
-                    QL_FAIL("ConstantMaturityBondIndex not handled");
+                    QL_FAIL("FixingManager: ConstantMaturityBondIndex not handled");
                 } else if (auto index = QuantLib::ext::dynamic_pointer_cast<IborIndex>(rawIndex)) {
                     fixingMap_[*market->iborIndex(name, configuration)].insert(dates.begin(), dates.end());
                 } else if (auto index = QuantLib::ext::dynamic_pointer_cast<SwapIndex>(rawIndex)) {
@@ -107,13 +109,13 @@ void FixingManager::initialise(const QuantLib::ext::shared_ptr<Portfolio>& portf
                     fixingMap_[*market->zeroInflationIndex(name, configuration)].insert(dates.begin(), dates.end());
                 }
             } catch (const std::exception& e) {
-                ALOG("FixingManager: error " << e.what() << " - no fixings are added for '" << name << "'");
+                StructuredTradeErrorMessage(t, "FixingManager: no fixings are added for index '" + name + "'", e.what())
+                    .log();
             }
             TLOG("Added " << dates.size() << " fixing dates for '" << name << "'");
         }
     }
 
-    // Now cache the original fixings so we can re-write on reset()
     for (auto const& m : fixingMap_) {
         QL_DEPRECATED_DISABLE_WARNING
         fixingCache_[m.first] = IndexManager::instance().getHistory(m.first->name());
@@ -122,8 +124,8 @@ void FixingManager::initialise(const QuantLib::ext::shared_ptr<Portfolio>& portf
 }
 
 void FixingManager::update(const Date& d) {
-    QL_REQUIRE(d >= today_, "FixingManager::update(): given date "
-                                << d << " must be later or equal than the manager's anchor date (" << today_ << ")");
+    QL_REQUIRE(d >= anchor_, "FixingManager::update(): given date "
+                                << d << " must be later or equal than the manager's anchor date (" << anchor_ << ")");
     if (!fixingMap_.empty()) {
         if (d < fixingsEnd_) {
             reset();
@@ -138,29 +140,40 @@ void FixingManager::update(const Date& d) {
 void FixingManager::reset() {
     QL_DEPRECATED_DISABLE_WARNING
     if (modifiedFixingHistory_) {
-        for (auto& kv : fixingCache_)
-            IndexManager::instance().setHistory(kv.first->name(), kv.second);
+        for (auto const& [index, ts] : fixingCache_)
+            IndexManager::instance().setHistory(index->name(), ts);
         modifiedFixingHistory_ = false;
     }
     QL_DEPRECATED_ENABLE_WARNING
-    fixingsEnd_ = today_;
+    fixingsEnd_ = anchor_;
 }
 
 void FixingManager::applyFixings(const Date& start, const Date& end) {
 
-    // Loop over all indices
-    for (auto const& m : fixingMap_) {
+    Date today = Settings::instance().evaluationDate();
+ 
+   QL_REQUIRE(mode_ != Mode::BackwardFlat || end == today,
+               "FixingManager::applyFixing(): mode backward flat requires end date ("
+                   << end << ") = today (" << today << "). Internal error, check orchestration.");
+    QL_REQUIRE(mode_ != Mode::Projected || start == today,
+               "FixingManager::applyFixing(): mode backward flat requires start date ("
+                   << start << ") = today (" << today << "). Internal error, check orchestration.");
+
+    for (auto const& [index, dates] : fixingMap_) {
+
         Date fixStart = start;
         Date fixEnd = end;
         Date currentFixingDate;
-        if (auto zii = QuantLib::ext::dynamic_pointer_cast<ZeroInflationIndex>(m.first)) {
+
+        // TODO: avoid dnamic pointer casts here, since applyFixing() is called frequently during MC exposure simulation
+        if (auto zii = QuantLib::ext::dynamic_pointer_cast<ZeroInflationIndex>(index)) {
             fixStart =
                 inflationPeriod(fixStart - simulationLag(zii->zeroInflationTermStructure()), zii->frequency()).first;
             fixEnd =
                 inflationPeriod(fixEnd - simulationLag(zii->zeroInflationTermStructure()), zii->frequency()).first +
                 1;
             currentFixingDate = fixEnd;
-        } else if (auto yii = QuantLib::ext::dynamic_pointer_cast<YoYInflationIndex>(m.first)) {
+        } else if (auto yii = QuantLib::ext::dynamic_pointer_cast<YoYInflationIndex>(index)) {
             fixStart =
                 inflationPeriod(fixStart - simulationLag(yii->yoyInflationTermStructure()), yii->frequency()).first;
             fixEnd =
@@ -168,36 +181,26 @@ void FixingManager::applyFixings(const Date& start, const Date& end) {
                 1;
             currentFixingDate = fixEnd;
         } else {
-            currentFixingDate = m.first->fixingCalendar().adjust(fixEnd, Following);
-            // This date is a business day but may not be a valid fixing date in case of BMA/SIFMA
-            if (!m.first->isValidFixingDate(currentFixingDate))
-                currentFixingDate = nextValidFixingDate(currentFixingDate, m.first);
+            currentFixingDate = index->fixingCalendar().adjust(fixEnd, Following);
+            if (!index->isValidFixingDate(currentFixingDate))
+                currentFixingDate = nextValidFixingDate(currentFixingDate, index);
         }
 
-        // Add we have a coupon between start and asof.
-        bool needFixings = false;
-        for (auto const& d : m.second) {
-            if (d >= fixStart && d < fixEnd) {
-                needFixings = true;
-                break;
-            }
-        }
+        if (!dates.empty() && (*dates.rbegin() >= fixStart || *dates.begin() < fixEnd)) {
 
-        if (needFixings) {
             Rate currentFixing;
-            if (auto comm = QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityIndex>(m.first);
+
+            if (auto comm = QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityIndex>(index);
                 comm != nullptr && comm->expiryDate() < currentFixingDate) {
                 currentFixing = comm->priceCurve()->price(currentFixingDate);
             } else {
-                currentFixing = m.first->fixing(currentFixingDate);
+                currentFixing = index->fixing(currentFixingDate);
             }
-            // if we read the fixing from an inverted FxIndex we have to undo the inversion
+
             TimeSeries<Real> history;
-            for (auto const& d : m.second) {
+            for (auto const& d : dates) {
                 if (d >= fixStart && d < fixEnd) {
-                    // Fixing dates include the valuation grid dates which might not be valid fixing dates (BMA/SIFMA)
-                    bool valid = m.first->isValidFixingDate(d);
-                    if (valid) {
+                    if (index->isValidFixingDate(d)) {
                         history[d] = currentFixing;
                         modifiedFixingHistory_ = true;
                     }
@@ -205,7 +208,7 @@ void FixingManager::applyFixings(const Date& start, const Date& end) {
                 if (d >= fixEnd)
                     break;
             }
-            m.first->addFixings(history, true);
+            index->addFixings(history, true);
         }
     }
 }

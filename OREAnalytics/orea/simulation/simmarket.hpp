@@ -47,8 +47,7 @@ public:
     //! Generate or retrieve market scenario, update market, notify termstructures and update fixings
     virtual void update(const Date& d) {
         preUpdate();
-        updateDate(d);
-        updateScenario(d);
+        updateDate(updateScenario(d));
         postUpdate(d);
         updateAsd(d);
     }
