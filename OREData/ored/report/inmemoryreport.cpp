@@ -216,14 +216,14 @@ bool use_compression(const std::string& filename) {
 }
 
 void InMemoryReport::toZip(const string& filename, const char sep, const bool commentCharacter, char quoteChar,
-                            const string& nullString, bool lowerHeader) {
+                            const string& nullString, bool lowerHeader, int gzipCompressionLevel) {
 
     bool gzip = use_compression(filename);
     std::ofstream out1(filename, gzip ? (std::ios::binary | std::ios::out) : std::ios::out);
     boost::iostreams::filtering_stream<boost::iostreams::output> out;
 #ifdef ORE_USE_ZLIB
     if (gzip)
-        out.push(boost::iostreams::gzip_compressor(/*boost::iostreams::gzip_params(9)*/));
+        out.push(boost::iostreams::gzip_compressor(boost::iostreams::gzip_params(gzipCompressionLevel)));
 #endif
     out.push(out1);
 
