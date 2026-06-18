@@ -57,7 +57,7 @@ void IntradayPowerCashFlow::computePeriodQuantity(const QuantLib::Real quantity)
 
 void IntradayPowerCashFlow::rolloutIndices(const ext::shared_ptr<IntradayPowerIndex>& index) {
     auto deliveryDates =
-        pricingDates(startDate_, endDate_, pricingCalendar_, !includeStartDate_, includeEndDate_, false);
+        pricingDates(startDate_, endDate_, pricingCalendar_, !includeStartDate_, includeEndDate_, true);
     for (const auto& d : deliveryDates) {
         auto loadProfile = loadCurve_ != nullptr ? loadCurve_->loadProfile(d) : nullptr;
         indices_.push_back({d, index->clone(d, loadProfile)});

@@ -3697,7 +3697,6 @@ Leg makeIntradayPowerFloatingLeg(const LegData& data, const QuantLib::ext::share
 
     // set day counter and bdc
 
-    DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
     
     auto intradayData = QuantLib::ext::dynamic_pointer_cast<IntradayPowerFloatingLegData>(data.concreteLegData());

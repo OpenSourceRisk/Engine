@@ -117,6 +117,9 @@ IntradayPowerPriceTermStructure::price(const QuantLib::Date& d,
     if (shape_ == nullptr || load == nullptr || load->loadProfile().empty()) {
         return price(d, extrapolate);
     }
+    if (load->totalMWh() == 0.0) {
+        return 0.0;
+    }
     auto underlyingPrice = underlying_->price(d, extrapolate);
     auto shapeFactor = shape_->hasShapeFactors(d) ? shape_->shapeFactors(d) : ShapeFactors();
     auto dstShapeFactor = shape_->hasShapeFactorsDST(d) ? shape_->shapeFactorsDST(d) : ShapeFactors();

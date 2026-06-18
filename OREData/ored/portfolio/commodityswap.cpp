@@ -328,6 +328,32 @@ const std::map<std::string,QuantLib::ext::any>& CommoditySwap::additionalData() 
                         additionalData_["weights[" + label + "]"] = weightsVector;
                     }
                 }
+                auto intradayPowerFlow = QuantLib::ext::dynamic_pointer_cast<IntradayPowerCashFlow>(unpackIndexWrappedCashFlow(flow));
+                if (intradayPowerFlow) {
+                    std::vector<std::string> indexVec;
+                    std::vector<Date> indexExpiryVec, pricingDateVec;
+                    std::vector<Real> priceVec;
+                    std::vector<Real> weightsVector;
+                    auto weights = intradayPowerFlow->weights();
+                    for (const auto& [deliveryDate, index] : intradayPowerFlow->indices()) {
+                        indexVec.push_back(index->name());
+                        indexExpiryVec.push_back(index->deliveryDate());
+                        pricingDateVec.push_back(deliveryDate);
+                        priceVec.push_back(index->fixing(deliveryDate));
+                        if (!weights.empty()) {
+                            auto weight = weights.find(deliveryDate);
+                            // Add null for missing weight, dont throw here
+                            weightsVector.push_back(weight != weights.end() ? weight->second : Null<Real>());
+                        }
+                    }
+                    additionalData_["index[" + label + "]"] = indexVec;
+                    additionalData_["indexExpiry[" + label + "]"] = indexExpiryVec;
+                    additionalData_["price[" + label + "]"] = priceVec;
+                    additionalData_["pricingDate[" + label + "]"] = pricingDateVec;
+                    additionalData_["periodUnitPrice[" + label + "]"] = intradayPowerFlow->fixing();
+                    additionalData_["weights[" + label + "]"] = weightsVector;
+
+                }
                 // CommodityFixedLeg consists of simple cash flows
                 Real flowAmount = 0.0;
                 try {

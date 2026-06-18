@@ -169,10 +169,14 @@ Real IntradayPowerIndex::pastFixing(const Date& fixingDate) const {
     auto amount = 0.0;
     auto totalLoad = 0.0;
     for (const auto& [start, end, load] : loadProfile_->loadProfile()) {
+        if (load == 0.0)
+            continue;
         totalLoad += load * (end - start) / 3600.0;
         amount += load * (end - start) / 3600.0 * pastBucketFixing(fixingDate, start, end, false, enforceTodaysFixing);
     }
     for (const auto& [start, end, load] : loadProfile_->loadProfileDST()) {
+        if (load == 0.0)
+            continue;
         totalLoad += load * (end - start) / 3600.0;
         amount += load * (end - start) / 3600.0 * pastBucketFixing(fixingDate, start, end, false, enforceTodaysFixing);
     }

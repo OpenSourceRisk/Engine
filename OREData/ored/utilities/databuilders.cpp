@@ -426,7 +426,7 @@ void dataBuilders() {
     ORE_REGISTER_LEGBUILDER("EquityMarginLegBuilder", EquityMarginLegBuilder, false)
     ORE_REGISTER_LEGBUILDER("FormulaBasedLegBuilder", FormulaBasedLegBuilder, false)
     ORE_REGISTER_LEGBUILDER("RangeAccrualLegBuilder", RangeAccrualLegBuilder, false)
-    ORE_REGISTER_LEGBUILDER("IntradayPowerLegBuilder", IntradayPowerLegBuilder, false)
+    ORE_REGISTER_LEGBUILDER("IntradayPowerFloatingLegBuilder", IntradayPowerFloatingLegBuilder, false)
 
     ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcCurrencySwapEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(AmcSwaptionEngineBuilder, false)
