@@ -353,7 +353,7 @@ HistoricalSimulationVarAnalyticImpl::computeTheta(const QuantLib::ext::shared_pt
     thetaPortfolio->build(thetaFactory, "theta computation", true);
 
     // Backfill fixings from t0 to thetaDate
-    auto thetaFixingManager = QuantLib::ext::make_shared<FixingManager>(t0);
+    auto thetaFixingManager = QuantLib::ext::make_shared<FixingManager>(t0, FixingManager::Mode::Projected);
     thetaFixingManager->initialise(thetaPortfolio, thetaSimMarket, Market::defaultConfiguration);
     thetaFixingManager->update(thetaDate);
 
