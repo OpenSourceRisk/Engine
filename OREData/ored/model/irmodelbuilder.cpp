@@ -258,6 +258,7 @@ void IrModelBuilder::performCalculations() const {
 
     if (!requiresRecalibration()) {
         DLOG("Skipping calibration as nothing has changed or calibration is not required.");
+        referenceDate_ = calibrationDiscountCurve_->referenceDate();
         initParametrization();
         return;
     }
