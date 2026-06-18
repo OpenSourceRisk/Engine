@@ -24,8 +24,6 @@
 
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/schedule.hpp>
-#include <ored/portfolio/underlying.hpp>
-#include <ored/scripting/utilities.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/model/assetmodelbuilderbase.hpp>
@@ -333,19 +331,10 @@ void ScriptedTrade::fromXML(XMLNode* node) {
         // the name of the node will be the name of the script variable
         std::string varName = XMLUtils::getNodeName(child);
         std::string type = XMLUtils::getAttribute(child, "type");
-        std::string scalarValue = XMLUtils::getNodeValue(child);
-
-        // Backward compatible support for complex Underlying nodes in freestyle xData trades.
-        if (type.empty() && varName == "Underlying" && XMLUtils::getChildNode(child, "Type") &&
-            XMLUtils::getChildNode(child, "Name")) {
-            UnderlyingBuilder underlyingBuilder;
-            underlyingBuilder.fromXML(child);
-            type = "index";
-            scalarValue = scriptedIndexName(underlyingBuilder.underlying());
-        }
 
         QL_REQUIRE(!type.empty(), "no type given for node '" << varName << "'");
 
+        std::string scalarValue = XMLUtils::getNodeValue(child);
         if (!scalarValue.empty()) {
             // if we have a value, this is a scalar
             auto native = getNativeTypeAndValue(scalarValue, type);
