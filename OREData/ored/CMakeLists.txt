@@ -277,6 +277,7 @@ portfolio/formulabasedindexbuilder.cpp
 portfolio/formulabasedlegbuilder.cpp
 portfolio/formulabasedlegdata.cpp
 portfolio/forwardbond.cpp
+portfolio/forwardvolatilityagreement.cpp
 portfolio/forwardrateagreement.cpp
 portfolio/fxaverageforward.cpp
 portfolio/fxbarrieroption.cpp
@@ -716,6 +717,7 @@ portfolio/formulabasedindexbuilder.hpp
 portfolio/formulabasedlegbuilder.hpp
 portfolio/formulabasedlegdata.hpp
 portfolio/forwardbond.hpp
+portfolio/forwardvolatilityagreement.hpp
 portfolio/forwardrateagreement.hpp
 portfolio/fxaverageforward.hpp
 portfolio/fxbarrieroption.hpp
