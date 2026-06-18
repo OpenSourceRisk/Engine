@@ -28,6 +28,8 @@
 #include <qle/models/irlgm1fpiecewiselinearparametrization.hpp>
 #include <qle/pricingengines/analyticlgmswaptionengine.hpp>
 
+#include <ql/models/shortrate/calibrationhelpers/swaptionhelper.hpp>
+
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace std;
@@ -51,7 +53,7 @@ LgmBuilder::LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& marke
 
 void LgmBuilder::initParametrization() const {
 
-    if (parametrizationInitialized_)
+    if (parametrizationInitializedOnAnchorDate_ == Settings::instance().evaluationDate())
         return;
 
     auto lgmData = QuantLib::ext::dynamic_pointer_cast<LgmData>(data_);
@@ -150,7 +152,7 @@ void LgmBuilder::initParametrization() const {
     model_ = QuantLib::ext::make_shared<QuantExt::LGM>(lgmParametrization);
     params_ = model_->params();
 
-    parametrizationInitialized_ = true;
+    parametrizationInitializedOnAnchorDate_ = Settings::instance().evaluationDate();
 } // initiParametrization()
 
 void LgmBuilder::calibrate() const {
