@@ -61,6 +61,7 @@ void IntradayPowerCashFlow::rolloutIndices(const ext::shared_ptr<IntradayPowerIn
     for (const auto& d : deliveryDates) {
         auto loadProfile = loadCurve_ != nullptr ? loadCurve_->loadProfile(d) : nullptr;
         indices_.push_back({d, index->clone(d, loadProfile)});
+        registerWith(indices_.back().second);
     }
 }
 
