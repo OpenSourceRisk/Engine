@@ -53,16 +53,36 @@ void PerformanceOption_01::build(const QuantLib::ext::shared_ptr<EngineFactory>&
     // set script
 
     // clang-format off
-    script_ = {{"", ScriptedTradeScriptData(std::string("NUMBER i, p, currentNotional;\n") +
-                        "FOR i IN (1, SIZE(Underlyings), 1) DO\n" +
-                        (strikeIncluded_ ? "  p = p + Weights[i] * ( Underlyings[i](ValuationDate) / StrikePrices[i] - Strike );\n" :
-			 "  p = p + Weights[i] * Underlyings[i](ValuationDate) / StrikePrices[i];\n") +
-                        "END;\n"
-                        "Option = LOGPAY( LongShort * NotionalAmount * ParticipationRate *\n" +
-                        (strikeIncluded_ ? "                 max( p, 0 ), ValuationDate, SettlementDate, PayCcy );\n" :
-			 "                 max( p - Strike, 0 ), ValuationDate, SettlementDate, PayCcy );\n") +
-			 "currentNotional = NotionalAmount * ParticipationRate;\n",
-                        "Option", {{"currentNotional", "currentNotional"}, {"notionalCurrency", "PayCcy"}}, {})}};
+    std::string pvBody =
+        std::string("NUMBER i, p, currentNotional;\n") +
+        "FOR i IN (1, SIZE(Underlyings), 1) DO\n" +
+        (strikeIncluded_ ? "  p = p + Weights[i] * ( Underlyings[i](ValuationDate) / StrikePrices[i] - Strike );\n" :
+                           "  p = p + Weights[i] * Underlyings[i](ValuationDate) / StrikePrices[i];\n") +
+        "END;\n"
+        "Option = LOGPAY( LongShort * NotionalAmount * ParticipationRate *\n" +
+        (strikeIncluded_ ? "                 max( p, 0 ), ValuationDate, SettlementDate, PayCcy );\n" :
+                           "                 max( p - Strike, 0 ), ValuationDate, SettlementDate, PayCcy );\n") +
+        "currentNotional = NotionalAmount * ParticipationRate;\n";
+
+    std::string amcBody =
+        std::string("NUMBER i, p, currentNotional;\n") +
+        "NUMBER amcIdx, _AMC_NPV[SIZE(_AMC_SimDates)];\n" +
+        "FOR i IN (1, SIZE(Underlyings), 1) DO\n" +
+        (strikeIncluded_ ? "  p = p + Weights[i] * ( Underlyings[i](ValuationDate) / StrikePrices[i] - Strike );\n" :
+                           "  p = p + Weights[i] * Underlyings[i](ValuationDate) / StrikePrices[i];\n") +
+        "END;\n"
+        "Option = LOGPAY( LongShort * NotionalAmount * ParticipationRate *\n" +
+        (strikeIncluded_ ? "                 max( p, 0 ), ValuationDate, SettlementDate, PayCcy );\n" :
+                           "                 max( p - Strike, 0 ), ValuationDate, SettlementDate, PayCcy );\n") +
+        "currentNotional = NotionalAmount * ParticipationRate;\n"
+        "FOR amcIdx IN (1, SIZE(_AMC_SimDates), 1) DO\n"
+        "  IF _AMC_SimDates[amcIdx] < SettlementDate THEN\n"
+        "    _AMC_NPV[amcIdx] = NPVMEM(Option, _AMC_SimDates[amcIdx], amcIdx);\n"
+        "  END;\n"
+        "END;\n";
+
+    script_ = {{"",    ScriptedTradeScriptData(pvBody,  "Option", {{"currentNotional", "currentNotional"}, {"notionalCurrency", "PayCcy"}}, {})},
+               {"AMC", ScriptedTradeScriptData(amcBody, "Option", {{"currentNotional", "currentNotional"}, {"notionalCurrency", "PayCcy"}}, {})}};
     // clang-format on
 
     // build trade
