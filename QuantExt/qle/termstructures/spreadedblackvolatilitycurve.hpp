@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <qle/termstructures/dynamicstype.hpp>
+
 #include <ql/math/interpolation.hpp>
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/quote.hpp>
@@ -40,11 +42,9 @@ public:
      */
     SpreadedBlackVolatilityCurve(const Handle<BlackVolTermStructure>& referenceVol, const std::vector<Time>& times,
                                  const std::vector<Handle<Quote>>& volSpreads,
-                                 const bool useAtmReferenceVolsOnly = false);
+                                 const bool useAtmReferenceVolsOnly = false,
+                                 const ReactionToTimeDecay decayMode = ReactionToTimeDecay::ForwardForwardVariance);
     Date maxDate() const override;
-    const Date& referenceDate() const override;
-    Calendar calendar() const override;
-    Natural settlementDays() const override;
     Real minStrike() const override;
     Real maxStrike() const override;
     void update() override;
@@ -57,8 +57,12 @@ private:
     std::vector<Time> times_;
     std::vector<Handle<Quote>> volSpreads_;
     bool useAtmReferenceVolsOnly_;
+    ReactionToTimeDecay decayMode_;
+
     mutable std::vector<Real> data_;
     QuantLib::ext::shared_ptr<Interpolation> interpolation_;
+    mutable Date originalRefDate_, actualRefDate_;
+    mutable Real t0_;
 };
 
 } // namespace QuantExt

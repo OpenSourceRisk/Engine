@@ -23,12 +23,12 @@
 namespace ore {
 namespace data {
 
-AssetModelBuilderBase::AssetModelBuilderBase(const Handle<YieldTermStructure>& curve,
-                                             const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
-                                             const std::set<Date>& simulationDates, const std::set<Date>& addDates,
-                                             const Size timeStepsPerYear, const Handle<YieldTermStructure>& baseCurve,
-                                             const bool observeContinuum, const std::set<Real>& curveTimes,
-                                             const std::vector<std::set<std::pair<Real, Real>>>& volTimesStrikes)
+AssetModelBuilderBase::AssetModelBuilderBase(
+    const Handle<YieldTermStructure>& curve, const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
+    const std::set<Date>& simulationDates, const std::set<Date>& addDates, const Size timeStepsPerYear,
+    const Handle<YieldTermStructure>& baseCurve, const bool observeContinuum,
+    const std::function<std::set<Real>(const TimeGrid&)>& curveTimes,
+    const std::function<std::vector<std::set<std::pair<Real, Real>>>(const TimeGrid&)>& volTimesStrikes)
     : AssetModelBuilderBase(std::vector<Handle<YieldTermStructure>>{curve},
                             std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>>{process},
                             simulationDates, addDates, timeStepsPerYear, baseCurve, observeContinuum) {}
@@ -37,20 +37,14 @@ AssetModelBuilderBase::AssetModelBuilderBase(
     const std::vector<Handle<YieldTermStructure>>& curves,
     const std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
     const std::set<Date>& simulationDates, const std::set<Date>& addDates, const Size timeStepsPerYear,
-    const Handle<YieldTermStructure>& baseCurve, const bool observeContinuum, const std::set<Real>& curveTimes,
-    const std::vector<std::set<std::pair<Real, Real>>>& volTimesStrikes)
+    const Handle<YieldTermStructure>& baseCurve, const bool observeContinuum,
+    const std::function<std::set<Real>(const TimeGrid&)>& curveTimes,
+    const std::function<std::vector<std::set<std::pair<Real, Real>>>(const TimeGrid&)>& volTimesStrikes)
     : curves_(curves), baseCurve_(baseCurve), processes_(processes), simulationDates_(simulationDates),
       addDates_(addDates), timeStepsPerYear_(timeStepsPerYear), observeContinuum_(observeContinuum),
       curveTimesBase_(curveTimes), volTimesStrikesBase_(volTimesStrikes) {
 
     QL_REQUIRE(!curves_.empty(), "AssetModelBuilderBase: no curves given");
-
-    if (volTimesStrikesBase_.empty())
-        volTimesStrikesBase_.resize(processes_.size());
-
-    QL_REQUIRE(processes.size() == volTimesStrikesBase_.size(),
-               "AssetModelBuilderBase: processes (" << processes.size() << ") must match volTimesStrikes ("
-                                                    << volTimesStrikesBase_.size() << ")");
 
     marketObserver_ = QuantLib::ext::make_shared<MarketObserver>();
 
@@ -78,10 +72,6 @@ AssetModelBuilderBase::AssetModelBuilderBase(
         allCurves_.push_back(p->riskFreeRate());
         allCurves_.push_back(p->dividendYield());
     }
-
-    // init curveTimes and volTimesStrikes
-    curveTimes_ = curveTimesBase_;
-    volTimesStrikes_ = volTimesStrikesBase_;
 }
 
 AssetModelBuilderBase::AssetModelBuilderBase(const Handle<YieldTermStructure>& curve,
@@ -95,7 +85,8 @@ Handle<AssetModelWrapper> AssetModelBuilderBase::model() const {
 
 bool AssetModelBuilderBase::requiresRecalibration() const {
     setupDatesAndTimes();
-    return (forceCalibration_ || marketObserver_->hasUpdated(false) || calibrationPointsChanged(false));
+    return (forceCalibration_ || referenceDate_ != curves_.front()->referenceDate() ||
+            marketObserver_->hasUpdated(false) || calibrationPointsChanged(false));
 }
 
 void AssetModelBuilderBase::newCalcWithoutRecalibration() const { calculate(); }
@@ -108,19 +99,26 @@ void AssetModelBuilderBase::forceRecalculate() {
 
 void AssetModelBuilderBase::setupDatesAndTimes() const {
     Date referenceDate = curves_.front()->referenceDate();
-    effectiveSimulationDates_ = std::set<Date>(simulationDates_.lower_bound(referenceDate), simulationDates_.end());
-    effectiveSimulationDates_.insert(referenceDate);
-    discretisationTimeGrid_ =
-        buildTimeGrid(referenceDate, curves_.front()->dayCounter(), simulationDates_, timeStepsPerYear_);
+    if (referenceDate != referenceDate_) {
+        effectiveSimulationDates_ = std::set<Date>(simulationDates_.lower_bound(referenceDate), simulationDates_.end());
+        effectiveSimulationDates_.insert(referenceDate);
+        discretisationTimeGrid_ =
+            buildTimeGrid(referenceDate, curves_.front()->dayCounter(), simulationDates_, timeStepsPerYear_);
+    }
 }
 
 void AssetModelBuilderBase::performCalculations() const {
     if (requiresRecalibration()) {
 
+        // update reference date
+
+        referenceDate_ = curves_.front()->referenceDate();
+
         // these are enhanced with additional points in getCalibratedProcesses() below
 
-        curveTimes_ = curveTimesBase_;
-        volTimesStrikes_ = volTimesStrikesBase_;
+        curveTimes_ = curveTimesBase_ ? curveTimesBase_(discretisationTimeGrid_) : std::set<Real>{};
+        volTimesStrikes_ = volTimesStrikesBase_ ? volTimesStrikesBase_(discretisationTimeGrid_)
+                                                : std::vector<std::set<std::pair<Real, Real>>>(processes_.size());
 
         for (Size j = 1; j < discretisationTimeGrid_.size(); ++j) {
             curveTimes_.insert(discretisationTimeGrid_[j]);
@@ -151,6 +149,8 @@ void AssetModelBuilderBase::buildCacheData(const std::set<Real>& curveTimes,
     for (Size i = 0; i < allCurves_.size(); ++i) {
         curveData.push_back(std::vector<Real>());
         for (auto t : curveTimes) {
+            QL_REQUIRE(t >= 0.0,
+                       "AssetModelBuilderBase::buildCacheData(): invalid curve time " << t << ". Internal error.");
             curveData.back().push_back(allCurves_[i]->discount(t));
         }
     }
@@ -158,6 +158,8 @@ void AssetModelBuilderBase::buildCacheData(const std::set<Real>& curveTimes,
     for (Size i = 0; i < volTimesStrikes.size(); ++i) {
         volData.push_back(std::vector<Real>());
         for (auto [t, k] : volTimesStrikes[i]) {
+            QL_REQUIRE(t >= 0.0,
+                       "AssetModelBuilderBase::buildCacheData(): invalid vol time " << t << ". Internal error.");
             if (k == Null<Real>())
                 k = atmForward(processes_[i]->x0(), processes_[i]->riskFreeRate(), processes_[i]->dividendYield(), t);
             volData.back().push_back(vols_[i]->blackVol(t, k));

@@ -54,6 +54,8 @@ using namespace data;
 
   Both UP and DOWN shifts are generated in order to facilitate delta and gamma calculation.
 
+  If theta is enabled, a corresponding date shift scenario is generated.
+
   The generator currently covers the IR/FX asset class, with shifts for the following term
   structure types:
   - FX spot rates

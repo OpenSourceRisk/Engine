@@ -72,7 +72,7 @@ public:
 
     DynamicBlackVolTermStructure(const Handle<BlackVolTermStructure>& source, Natural settlementDays,
                                  const Calendar& calendar, ReactionToTimeDecay decayMode = ConstantVariance,
-                                 Stickyness stickyness = StickyLogMoneyness,
+                                 Stickyness stickyness = StickyMoneyness,
                                  const Handle<YieldTermStructure>& riskfree = Handle<YieldTermStructure>(),
                                  const Handle<YieldTermStructure>& dividend = Handle<YieldTermStructure>(),
                                  const Handle<Quote>& spot = Handle<Quote>(),
@@ -122,7 +122,7 @@ DynamicBlackVolTermStructure<mode>::DynamicBlackVolTermStructure(const Handle<Bl
       atmKnown_(!riskfree.empty() && !dividend.empty() && !spot.empty()),
       forwardCurveSampleGrid_(forwardCurveSampleGrid) {
 
-    QL_REQUIRE(stickyness == StickyStrike || stickyness == StickyLogMoneyness,
+    QL_REQUIRE(stickyness == StickyStrike || stickyness == StickyMoneyness,
                "stickiness (" << stickyness << ") not supported");
     QL_REQUIRE(decayMode == ConstantVariance || decayMode == ForwardForwardVariance,
                "reaction to time decay (" << decayMode << ") not supported");
@@ -191,7 +191,7 @@ template <typename mode> Real DynamicBlackVolTermStructure<mode>::minStrike() co
     if (stickyness_ == StickyStrike) {
         return source_->minStrike();
     }
-    if (stickyness_ == StickyLogMoneyness) {
+    if (stickyness_ == StickyMoneyness) {
         // we do not specify this, since it is maturity dependent
         // instead we allow for extrapolation when asking the
         // source for a volatility and are not in sticky strike mode
@@ -204,7 +204,7 @@ template <typename mode> Real DynamicBlackVolTermStructure<mode>::maxStrike() co
     if (stickyness_ == StickyStrike) {
         return source_->maxStrike();
     }
-    if (stickyness_ == StickyLogMoneyness) {
+    if (stickyness_ == StickyMoneyness) {
         // see above
         return QL_MAX_REAL;
     }
@@ -233,7 +233,7 @@ Real DynamicBlackVolTermStructure<mode>::blackVarianceImplTag(Time t, Real strik
         scenarioT0 = source_->timeFromReference(referenceDate());
         scenarioT1 = scenarioT0 + t;
     }
-    if (stickyness_ == StickyLogMoneyness) {
+    if (stickyness_ == StickyMoneyness) {
         Real forward = spot_->value() / riskfree_->discount(t) * dividend_->discount(t);
         scenarioStrike1 = initialForwardCurve_->operator()(scenarioT1) / forward * strike;
         scenarioStrike0 = initialForwardCurve_->operator()(scenarioT0) / spot_->value() * strike;

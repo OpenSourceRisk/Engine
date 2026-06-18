@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <qle/termstructures/dynamicstype.hpp>
+
 #include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/quote.hpp>
@@ -38,19 +40,17 @@ public:
     //! times should be consistent with reference ts day counter
     SpreadedSurvivalProbabilityTermStructure(const Handle<DefaultProbabilityTermStructure>& referenceCurve,
                                              const std::vector<Time>& times, const std::vector<Handle<Quote>>& spreads,
-                                             const Extrapolation extrapolation = Extrapolation::flatFwd);
+                                             const Extrapolation extrapolation = Extrapolation::flatFwd,
+                                             const YieldCurveRollDown = YieldCurveRollDown::ForwardForward);
     //@}
     //! \name TermStructure interface
     //@{
-    DayCounter dayCounter() const override;
     Date maxDate() const override;
-    Time maxTime() const override;
-    const Date& referenceDate() const override;
-    Calendar calendar() const override;
-    Natural settlementDays() const override;
-    std::vector<Time> times();
-    Handle<DefaultProbabilityTermStructure> referenceCurve() const;
     //@}
+
+    Handle<DefaultProbabilityTermStructure> referenceCurve() const;
+    std::vector<Time> times() const;
+
 private:
     void performCalculations() const override;
     Probability survivalProbabilityImpl(Time) const override;
@@ -62,6 +62,7 @@ private:
     mutable std::vector<Real> data_;
     QuantLib::ext::shared_ptr<Interpolation> interpolation_;
     Extrapolation extrapolation_;
+    YieldCurveRollDown yieldCurveRollDown_;
 };
 
 } // namespace QuantExt

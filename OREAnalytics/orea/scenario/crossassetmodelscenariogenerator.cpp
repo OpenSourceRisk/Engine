@@ -451,6 +451,15 @@ void copyPathToArray(const MultiPath& p, Size t, Size a, Array& target) {
 
 std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextPath() {
 
+    // for the scope of this method ensure that the global evaluation date is the anchor date of the scenario generator
+
+    struct DateResetter {
+        Date d;
+        ~DateResetter() { Settings::instance().evaluationDate() = d; }
+    } dateResetter(Settings::instance().evaluationDate());
+
+    Settings::instance().evaluationDate() = today_;
+
     if(!initialized_) {
         init();
         initialized_ = true;

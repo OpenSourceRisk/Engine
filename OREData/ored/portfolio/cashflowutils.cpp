@@ -535,5 +535,20 @@ std::vector<TradeCashflowReportData> getCashflowReportData(
     return result;
 }
 
+Real getAggregateTradeFlows(const Date& d0, const Date& d1,
+                            const std::vector<ore::data::TradeCashflowReportData>& cashflows,
+                            const QuantLib::ext::shared_ptr<ore::data::Market>& market,
+                            const std::string& configuration, const std::string& baseCurrency) {
+    Real flow = 0.0;
+    for (const auto& cf : cashflows) {
+        if (cf.payDate <= d0 || cf.payDate > d1)
+            continue;
+        flow +=
+            cf.amount *
+            (cf.currency == baseCurrency ? 1.0 : market->fxRate(cf.currency + baseCurrency, configuration)->value());
+    }
+    return flow;
+}
+
 } // namespace data
 } // namespace ore

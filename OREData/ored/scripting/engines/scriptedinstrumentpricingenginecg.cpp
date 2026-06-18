@@ -330,6 +330,8 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
 
     lastCalculationWasValid_ = false;
 
+    model_->calculate();
+
     buildComputationGraph(false);
 
     if (!haveBaseValues_ || !useCachedSensis_) {
