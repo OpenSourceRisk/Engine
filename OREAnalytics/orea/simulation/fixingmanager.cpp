@@ -63,8 +63,6 @@ FixingManager::~FixingManager() { reset(); }
 
 FixingManager::FixingManager(Date today) : today_(today), fixingsEnd_(today), modifiedFixingHistory_(false) {}
 
-//! Initialise the manager-
-
 void FixingManager::initialise(const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const QuantLib::ext::shared_ptr<Market>& market,
                                const std::string& configuration) {
 
@@ -122,19 +120,20 @@ void FixingManager::initialise(const QuantLib::ext::shared_ptr<Portfolio>& portf
     }
 }
 
-//! Update fixings to date d
 void FixingManager::update(Date d) {
+    QL_REQUIRE(d >= today_, "FixingManager::update(): given date "
+                                << d << " must be later or equal than the manager's anchor date (" << today_ << ")");
     if (!fixingMap_.empty()) {
-        QL_REQUIRE(d >= fixingsEnd_, "Can't go back in time, fixings must be reset."
-                                     " Update date "
-                                         << d << " but current fixings go to " << fixingsEnd_);
-        if (d > fixingsEnd_)
+        if (d < fixingsEnd_) {
+            reset();
+        }
+        if (d > fixingsEnd_) {
             applyFixings(fixingsEnd_, d);
+        }
     }
     fixingsEnd_ = d;
 }
 
-//! Reset fixings to t0 (today)
 void FixingManager::reset() {
     QL_DEPRECATED_DISABLE_WARNING
     if (modifiedFixingHistory_) {
