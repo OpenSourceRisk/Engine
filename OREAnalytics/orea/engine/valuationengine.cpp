@@ -415,31 +415,26 @@ void ValuationEngine::populateCube(
     auto t0 = data::os::nanosecondsClock();
 
     simMarket_->preUpdate();
-    if (fixingManager_ && fixingManager_->mode() == FixingManager::Mode::Projected) {
-        fixingManager_->update(d);
-    }
 
     if (!scenarioUpdated) {
-        d = simMarket_->updateScenario(d);
+        d = simMarket_->loadNextScenario(d);
     } else {
         d = Settings::instance().evaluationDate();
     }
     auto t1 = data::os::nanosecondsClock();
     timings.updateScenarioTime += t1 - t0;
 
-    auto t2 = data::os::nanosecondsClock();
-    if (fixingManager_ && fixingManager_->mode() == FixingManager::Mode::Projected &&
-        d > fixingManager_->fixingsEnd()) {
+    if (fixingManager_ && fixingManager_->mode() == FixingManager::Mode::Projected && (!isStickyDate || isValueDate)) {
         fixingManager_->update(d);
     }
+    auto t2 = data::os::nanosecondsClock();
     timings.fixingTime += t2 - t1;
 
-    if (isValueDate || !isStickyDate) {
-        simMarket_->updateDate(d);
+    if (!scenarioUpdated) {
+        simMarket_->applyLoadedScenario();
     }
-
     auto t3 = data::os::nanosecondsClock();
-    timings.updateDateTime += t3 - t2;
+    timings.updateScenarioTime += t3 - t2;
 
     simMarket_->postUpdate(d);
     auto t4 = data::os::nanosecondsClock();
@@ -452,7 +447,6 @@ void ValuationEngine::populateCube(
     auto t5 = data::os::nanosecondsClock();
     timings.fixingTime += t5 - t4;
 
-    // Aggregation scenario data update on valuation dates only
     if (isValueDate) {
         simMarket_->updateAsd(d);
     }
@@ -463,12 +457,13 @@ void ValuationEngine::populateCube(
     auto t7 = data::os::nanosecondsClock();
     timings.calibrationTime += t7 - t6;
 
-    if (isStickyDate && !isValueDate) // switch on again, if sticky
+    if (isStickyDate && !isValueDate)
         tradeExercisable(false, optionWrappers);
 
     runCalculators(!isValueDate, trades, errorPolicy, tradeHasT0Error, tradeHasSampleError, calculators, outputCube,
                    outputCubeNettingSet, d, cubeDateIndex, sample, simMarket_->label(), errors);
-    if (isStickyDate && !isValueDate) // switch on again, if sticky
+
+    if (isStickyDate && !isValueDate)
         tradeExercisable(true, optionWrappers);
 
     if (isValueDate) {
