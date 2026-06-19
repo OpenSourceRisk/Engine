@@ -216,7 +216,7 @@ bool use_compression(const std::string& filename) {
 }
 
 void InMemoryReport::toZip(const string& filename, const char sep, const bool commentCharacter, char quoteChar,
-                            const string& nullString, bool lowerHeader, int gzipCompressionLevel) {
+                            const string& nullString, bool lowerHeader, uint gzipCompressionLevel) {
 
     bool gzip = use_compression(filename);
     std::ofstream out1(filename, gzip ? (std::ios::binary | std::ios::out) : std::ios::out);

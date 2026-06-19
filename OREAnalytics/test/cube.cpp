@@ -594,6 +594,11 @@ BOOST_AUTO_TEST_CASE(testCubeCompressionLevel) {
     string filename1 = unique_path().string() + ".csv.gz";
     string filename9 = unique_path().string() + ".csv.gz";
 
+    auto cleanup = std::shared_ptr<void>(nullptr, [&](void*) {
+        std::filesystem::remove(filename1);
+        std::filesystem::remove(filename9);
+    });
+
     // Save with level 1 (fastest, largest)
     saveCube(filename1, NPVCubeWithMetaData{cube, nullptr, QuantLib::ext::nullopt, QuantLib::ext::nullopt}, 1);
     // Save with level 9 (slowest, smallest)
@@ -614,10 +619,6 @@ BOOST_AUTO_TEST_CASE(testCubeCompressionLevel) {
 
     // Level 9 should be smaller than or equal to level 1
     BOOST_CHECK_PREDICATE(std::less_equal<std::uintmax_t>(), (size9)(size1));
-
-    // Cleanup
-    std::filesystem::remove(filename1);
-    std::filesystem::remove(filename9);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
