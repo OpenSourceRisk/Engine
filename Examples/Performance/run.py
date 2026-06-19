@@ -31,10 +31,9 @@ ore_runs = [
 max_parallel = int(os.getenv("EXAMPLES_PARALLEL", "1"))
 
 def run_ore(label, xml):
-    print(f"Running: {label} ({xml})")
+    print_on_console(f"Running: {label} ({xml})")
     oreex.run(xml)
-    print(f"Completed: {label} ({xml})")
-    return label, xml
+    print_on_console(f"Completed: {label} ({xml})")
 
 failed = False
 with ThreadPoolExecutor(max_workers=max_parallel) as executor:
@@ -43,14 +42,9 @@ with ThreadPoolExecutor(max_workers=max_parallel) as executor:
         label, xml = futures[future]
         try:
             result = future.result()
+            print_on_console(f"{label} ({xml}) completed successfully")
         except Exception as e:
             print_on_console(f"{label} ({xml}) failed with error: {e}")
-            failed = True
-            continue
-
-        print_on_console(f"{label} ({xml}) finished with exit code: {result}")
-
-        if result != 0:
             failed = True
 
 sys.exit(1 if failed else 0)
