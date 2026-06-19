@@ -75,12 +75,8 @@
 				<Key>GBP</Key>
 				<Key>USD</Key>
 			</Keys>
-			<Expiries key="EUR">2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</Expiries>
-			<Expiries key="GBP">2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</Expiries>
-			<Expiries key="USD">2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</Expiries>
-			<Terms key="EUR">1Y, 2Y, 3Y, 4Y, 5Y, 7Y, 10Y, 15Y, 20Y, 30Y</Terms>
-			<Terms key="GBP">1Y, 2Y, 3Y, 4Y, 5Y, 7Y, 10Y, 15Y, 20Y, 30Y</Terms>
-			<Terms key="USD">1Y, 2Y, 3Y, 4Y, 5Y, 7Y, 10Y, 15Y, 20Y, 30Y</Terms>
+			<Expiries>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</Expiries>
+			<Terms>1Y, 2Y, 3Y, 4Y, 5Y, 7Y, 10Y, 15Y, 20Y, 30Y</Terms>
 			<SimulateATMOnly>true</SimulateATMOnly>
 			<SmileDynamics key="">StickyStrike</SmileDynamics>
 			<SmileDynamics key="EUR">StickyStrike</SmileDynamics>
