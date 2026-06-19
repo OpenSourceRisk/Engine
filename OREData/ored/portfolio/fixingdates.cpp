@@ -833,7 +833,7 @@ void FixingDateGetter::visit(TRSCashFlow& bc) {
             e->dividendFixingDates(bc.fixingStartDate(), bc.fixingEndDate());
 
         for (const auto& f : fixings)
-            requiredFixings_.addFixingDate(f.first, ore::data::IndexNameTranslator::instance().oreName(f.second));
+            requiredFixings_.addFixingDate(f.first, ore::data::IndexNameTranslator::instance().oreName(f.second));  
     } else {
         indexes.push_back(bc.index());
     }
@@ -848,18 +848,25 @@ void FixingDateGetter::visit(TRSCashFlow& bc) {
         if (ind) {
             auto startDate = ind->fixingCalendar().adjust(bc.fixingStartDate(), Preceding);
             auto endDate = ind->fixingCalendar().adjust(bc.fixingEndDate(), Preceding);
+            auto vd = Settings::instance().evaluationDate();
+            if((startDate == vd || endDate == vd)){
+                continue;
+            }else{
+                auto gi = QuantLib::ext::dynamic_pointer_cast<QuantExt::GenericIndex>(ind);
 
-            auto gi = QuantLib::ext::dynamic_pointer_cast<QuantExt::GenericIndex>(ind);
+                if (!gi || gi->expiry() == Date() || startDate < gi->expiry()) {
+                    if (bc.initialPrice() == Null<Real>() || requireFixingStartDates_){
+                        requiredFixings_.addFixingDate(startDate, IndexNameTranslator::instance().oreName(ind->name()),
+                                                    bc.date());
+                    }
 
-            if (!gi || gi->expiry() == Date() || startDate < gi->expiry()) {
-                if (bc.initialPrice() == Null<Real>() || requireFixingStartDates_)
-                    requiredFixings_.addFixingDate(startDate, IndexNameTranslator::instance().oreName(ind->name()),
-                                                   bc.date());
+                }
+
+                if (!gi || gi->expiry() == Date() || endDate < gi->expiry()){
+                    requiredFixings_.addFixingDate(endDate, IndexNameTranslator::instance().oreName(ind->name()),
+                                                bc.date());
+                }
             }
-
-            if (!gi || gi->expiry() == Date() || endDate < gi->expiry())
-                requiredFixings_.addFixingDate(endDate, IndexNameTranslator::instance().oreName(ind->name()),
-                                               bc.date());
         }
     }
 

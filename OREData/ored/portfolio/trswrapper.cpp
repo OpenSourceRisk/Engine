@@ -926,7 +926,6 @@ void TRSWrapperAccrualEngine::calculate() const {
             if (!arguments_.portfolioId_.empty() && arguments_.pricePerIndexUnit_) {
                 if (j == 0) {
                     try {
-                        std::cout<<"evalDate = "<<Settings::instance().evaluationDate()<<std::endl;
                         if(startDate != Settings::instance().evaluationDate()){
                             startFixing = getUnderlyingFixing(j, startDate, false);
                             results_.additionalResults["startFixing"] = startFixing;
