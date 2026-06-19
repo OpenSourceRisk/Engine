@@ -71,6 +71,7 @@ QuantLib::ext::shared_ptr<NPVCubeWithMetaData> loadCube(const std::string& filen
 
     bool gzip = use_compression(filename);
     std::ifstream in1(filename, gzip ? (std::ios::binary | std::ios::in) : std::ios::in);
+    QL_REQUIRE(in1.is_open(), "Failed to open file " << filename);
     boost::iostreams::filtering_stream<boost::iostreams::input> in;
 #ifdef ORE_USE_ZLIB
     if (gzip)
@@ -166,7 +167,7 @@ QuantLib::ext::shared_ptr<NPVCubeWithMetaData> loadCube(const std::string& filen
     return result;
 }
 
-void saveCube(const std::string& filename, const NPVCubeWithMetaData& cube) {
+void saveCube(const std::string& filename, const NPVCubeWithMetaData& cube, uint gzipCompressionLevel) {
 
     // open file
 
@@ -175,7 +176,7 @@ void saveCube(const std::string& filename, const NPVCubeWithMetaData& cube) {
     boost::iostreams::filtering_stream<boost::iostreams::output> out;
 #ifdef ORE_USE_ZLIB
     if (gzip)
-        out.push(boost::iostreams::gzip_compressor(/*boost::iostreams::gzip_params(9)*/));
+        out.push(boost::iostreams::gzip_compressor(boost::iostreams::gzip_params(gzipCompressionLevel)));
 #endif
     out.push(out1);
 
@@ -263,6 +264,7 @@ QuantLib::ext::shared_ptr<AggregationScenarioData> loadAggregationScenarioData(c
 
     bool gzip = use_compression(filename);
     std::ifstream in1(filename, gzip ? (std::ios::binary | std::ios::in) : std::ios::in);
+    QL_REQUIRE(in1.is_open(), "Failed to open file " << filename);
     boost::iostreams::filtering_stream<boost::iostreams::input> in;
 #ifdef ORE_USE_ZLIB
     if (gzip)
@@ -328,7 +330,7 @@ QuantLib::ext::shared_ptr<AggregationScenarioData> loadAggregationScenarioData(c
     return result;
 }
 
-void saveAggregationScenarioData(const std::string& filename, const AggregationScenarioData& cube) {
+void saveAggregationScenarioData(const std::string& filename, const AggregationScenarioData& cube, uint gzipCompressionLevel) {
 
     // open file
 
@@ -337,7 +339,7 @@ void saveAggregationScenarioData(const std::string& filename, const AggregationS
     boost::iostreams::filtering_stream<boost::iostreams::output> out;
 #ifdef ORE_USE_ZLIB
     if (gzip)
-        out.push(boost::iostreams::gzip_compressor(/*boost::iostreams::gzip_params(9)*/));
+        out.push(boost::iostreams::gzip_compressor(boost::iostreams::gzip_params(gzipCompressionLevel)));
 #endif
     out.push(out1);
 
