@@ -1,18 +1,16 @@
 import platform
 import subprocess
 import shutil
-
 import matplotlib
 import os
 import sys
-
 matplotlib.use('Agg')
-
 import matplotlib.pyplot as plt
 import matplotlib.ticker
 import pandas as pd
 from datetime import datetime
 from math import log
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 skip_examples = [
     "Example_54",
@@ -388,6 +386,48 @@ def run_example(example):
     finally:
         os.chdir(current_dir)
     return exit_code
+
+
+def run_script(script_name, timeout=None):
+    if timeout is None:
+        timeout = os.getenv("ORE_EXAMPLE_TIMEOUT")
+        timeout = int(timeout) if timeout is not None else None
+
+    cmd = [sys.executable, script_name]
+    print_on_console("Calling: " + " ".join(cmd))
+
+    completed = subprocess.run(cmd, timeout=timeout, check=False)
+    return completed.returncode
+
+
+def run_scripts(cases, max_parallel=None, timeout=None):
+    if max_parallel is None:
+        max_parallel = int(os.getenv("EXAMPLES_PARALLEL", "1"))
+
+    failed = False
+
+    with ThreadPoolExecutor(max_workers=max_parallel) as executor:
+        futures = {
+            executor.submit(run_script, case, timeout): case
+            for case in cases
+        }
+
+        for future in as_completed(futures):
+            case = futures[future]
+
+            try:
+                result = future.result()
+            except Exception as e:
+                print_on_console(f"{case} failed with exception: {e}")
+                failed = True
+                continue
+
+            print_on_console(f"{case} finished with exit code: {result}")
+
+            if result != 0:
+                failed = True
+
+    return 1 if failed else 0
 
 
 if __name__ == "__main__":
