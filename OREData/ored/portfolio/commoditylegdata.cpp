@@ -365,8 +365,8 @@ IntradayPowerFloatingLegData::IntradayPowerFloatingLegData()
 IntradayPowerFloatingLegData::IntradayPowerFloatingLegData(
     const string& name, const vector<Real>& quantities, const vector<string>& quantityDates,
     const vector<Real>& spreads, const vector<string>& spreadDates, const vector<Real>& gearings,
-    const vector<string>& gearingDates, const string& pricingCalendar, bool includePeriodStart,
-    bool includePeriodEnd, bool businessDays, const PowerLoadProfileData& loadProfileData, const string& fxIndex,
+    const vector<string>& gearingDates, const string& pricingCalendar, bool includePeriodStart, bool includePeriodEnd,
+    bool businessDays, const std::optional<PowerLoadProfileData>& loadProfileData, const string& fxIndex,
     Natural avgPricePrecision, QuantExt::IntradayPowerQuantityMode quantityMode)
     : LegAdditionalData(LegType::IntradayPowerFloating), name_(name), quantities_(quantities),
       quantityDates_(quantityDates), spreads_(spreads), spreadDates_(spreadDates), gearings_(gearings),
@@ -409,9 +409,10 @@ void IntradayPowerFloatingLegData::fromXML(XMLNode* node) {
         businessDays_ = parseBool(XMLUtils::getNodeValue(n));
     }
 
-    loadProfileData_ = PowerLoadProfileData();
+    
     if (XMLNode* n = XMLUtils::getChildNode(node, "PowerLoadProfileData")) {
-        loadProfileData_.fromXML(n);
+        loadProfileData_ = PowerLoadProfileData();
+        loadProfileData_->fromXML(n);
     }
 
     fxIndex_ = XMLUtils::getChildValue(node, "FXIndex", false);
@@ -455,8 +456,8 @@ XMLNode* IntradayPowerFloatingLegData::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "IncludePeriodEnd", includePeriodEnd_);
     XMLUtils::addChild(doc, node, "BusinessDays", businessDays_);
 
-    if (!loadProfileData_.getLoadProfiles().empty()) {
-        auto lpNode = loadProfileData_.toXML(doc);
+    if (loadProfileData_.has_value()) {
+        auto lpNode = loadProfileData_->toXML(doc);
         XMLUtils::appendNode(node, lpNode);
     }
 

@@ -32,6 +32,7 @@ namespace QuantExt {
 using LoadFactors = std::vector<std::tuple<int, int, double>>;
 class IntradayLoadProfile {
 public:
+    IntradayLoadProfile() {} 
     IntradayLoadProfile(const LoadFactors& load, const LoadFactors& loadDST);
 
     const LoadFactors& loadProfile() const;
@@ -49,17 +50,52 @@ private:
 };
 
 class IntradayPowerLoadTermStructure {
+public:
+    virtual ~IntradayPowerLoadTermStructure() = default;
+    virtual QuantLib::ext::shared_ptr<IntradayLoadProfile> loadProfile(const QuantLib::Date& d) const = 0;
+    virtual bool empty() const = 0;
+};
+
+class IntradayPowerLoadTermStructureExplicit : public IntradayPowerLoadTermStructure {
 
 public:
-    IntradayPowerLoadTermStructure(
-        std::map<QuantLib::Date, QuantLib::ext::shared_ptr<IntradayLoadProfile>> loadingShapes);
+    IntradayPowerLoadTermStructureExplicit(
+        std::map<QuantLib::Date, QuantLib::ext::shared_ptr<IntradayLoadProfile>> loadingShapes)
+        : loadingShapes_(std::move(loadingShapes)) {}
 
-    QuantLib::ext::shared_ptr<IntradayLoadProfile> loadProfile(const QuantLib::Date& d) const;
-    bool empty() const { return loadingShapes_.empty(); }
+    QuantLib::ext::shared_ptr<IntradayLoadProfile> loadProfile(const QuantLib::Date& d) const override;
+    bool empty() const override { return loadingShapes_.empty(); }
 
+    const std::map<QuantLib::Date, QuantLib::ext::shared_ptr<IntradayLoadProfile>>& loadProfiles() const {
+        return loadingShapes_;
+    }
 
 private:
     std::map<QuantLib::Date, QuantLib::ext::shared_ptr<IntradayLoadProfile>> loadingShapes_;
+};
+
+class IntradayPowerLoadTermStructureBusinessDayRule : public IntradayPowerLoadTermStructure {
+public:
+    struct BusinessDayRuleLoadProfile {
+        QuantLib::Calendar calendar;
+        QuantLib::ext::shared_ptr<IntradayLoadProfile> businessDayProfile;
+        QuantLib::ext::shared_ptr<IntradayLoadProfile> nonBusinessDayProfile;
+    };
+
+    IntradayPowerLoadTermStructureBusinessDayRule(
+        std::map<QuantLib::Date, QuantLib::ext::shared_ptr<BusinessDayRuleLoadProfile>> loadingShapes)
+        : loadingShapes_(std::move(loadingShapes)) {}
+
+    QuantLib::ext::shared_ptr<IntradayLoadProfile> loadProfile(const QuantLib::Date& d) const override;
+
+    const std::map<QuantLib::Date, QuantLib::ext::shared_ptr<BusinessDayRuleLoadProfile>>& loadProfiles() const {
+        return loadingShapes_;
+    }
+
+    bool empty() const override { return loadingShapes_.empty(); }
+
+private:
+    std::map<QuantLib::Date, QuantLib::ext::shared_ptr<BusinessDayRuleLoadProfile>> loadingShapes_;
 };
 
 } // namespace QuantExt

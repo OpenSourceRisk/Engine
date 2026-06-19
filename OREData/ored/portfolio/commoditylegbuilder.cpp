@@ -838,7 +838,8 @@ Leg IntradayPowerFloatingLegBuilder::buildLeg(
     string indexName = intradayData->name();
 
     auto loadTermStructure =
-        ext::make_shared<IntradayPowerLoadTermStructure>(intradayData->loadProfileData().getLoadProfiles());
+        intradayData->loadProfileData().has_value() ? intradayData->loadProfileData()->loadTermStructure() : nullptr;
+
     auto index = engineFactory->market()->intradayPowerIndex(indexName, configuration);
     auto curve = index->priceCurve();
 

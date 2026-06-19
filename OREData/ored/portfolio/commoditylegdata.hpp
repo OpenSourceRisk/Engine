@@ -28,6 +28,7 @@
 #include <qle/cashflows/commoditycashflow.hpp>
 #include <qle/cashflows/intradaypowercashflow.hpp>
 #include <qle/indexes/commodityindex.hpp>
+#include <optional>
 
 namespace ore {
 namespace data {
@@ -214,7 +215,7 @@ public:
                                  const std::vector<std::string>& gearingDates = {},
                                  const std::string& pricingCalendar = std::string(), bool includePeriodStart = true,
                                  bool includePeriodEnd = false, bool businessDays = true,
-                                 const PowerLoadProfileData& loadProfileData = PowerLoadProfileData(),
+                                 const std::optional<PowerLoadProfileData>& loadProfileData = std::nullopt,
                                  const std::string& fxIndex = std::string(),
                                  QuantLib::Natural avgPricePrecision = QuantLib::Null<QuantLib::Natural>(),
                                  QuantExt::IntradayPowerQuantityMode quantityMode = QuantExt::IntradayPowerQuantityMode::TotalEnergy);
@@ -232,7 +233,7 @@ public:
     bool includePeriodStart() const { return includePeriodStart_; }
     bool includePeriodEnd() const { return includePeriodEnd_; }
     bool businessDays() const { return businessDays_; }
-    const PowerLoadProfileData& loadProfileData() const { return loadProfileData_; }
+    const std::optional<PowerLoadProfileData>& loadProfileData() const { return loadProfileData_; }
     const std::string& fxIndex() const { return fxIndex_; }
     QuantLib::Natural avgPricePrecision() const { return avgPricePrecision_; }
     const std::string& priceCurrency() const { return priceCurrency_; }
@@ -258,7 +259,7 @@ private:
     bool includePeriodStart_;
     bool includePeriodEnd_;
     bool businessDays_;
-    PowerLoadProfileData loadProfileData_;
+    std::optional<PowerLoadProfileData> loadProfileData_ = std::nullopt;
     std::string fxIndex_;
     QuantLib::Natural avgPricePrecision_;
     std::string priceCurrency_;

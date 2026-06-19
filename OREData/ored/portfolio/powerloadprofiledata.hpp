@@ -28,27 +28,82 @@
 #include <qle/termstructures/intradaypowerloadtermstructure.hpp>
 
 #include <map>
+#include <memory>
 
 namespace ore {
 namespace data {
-//! Serializable object holding power load profile data
 
-class PowerLoadProfileData : public XMLSerializable {
+//! Base class for power load profile data
+class PowerLoadData : public XMLSerializable {
 public:
-    PowerLoadProfileData() {}
+    virtual ~PowerLoadData() = default;
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) const override;
+    virtual void fromXML(XMLNode* node) override = 0;
+    virtual XMLNode* toXML(XMLDocument& doc) const override = 0;
     //@}
 
-    const std::map<QuantLib::Date, QuantLib::ext::shared_ptr<QuantExt::IntradayLoadProfile>>& getLoadProfiles() const {
-        return loadProfiles_;
+    //! Load term structure
+    virtual QuantLib::ext::shared_ptr<QuantExt::IntradayPowerLoadTermStructure> loadTermStructure() const {
+        return nullptr;
+    }
+};
+
+//! Explicit dates implementation of power load profile data
+class ExplicitData : public PowerLoadData {
+public:
+    ExplicitData() = default;
+
+    //! \name Serialisation
+    //@{
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+    //@}
+
+    QuantLib::ext::shared_ptr<QuantExt::IntradayPowerLoadTermStructure> loadTermStructure() const override {
+        return loadTermStructure_;
     }
 
 private:
-    std::map<QuantLib::Date, QuantLib::ext::shared_ptr<QuantExt::IntradayLoadProfile>> loadProfiles_;
+    QuantLib::ext::shared_ptr<QuantExt::IntradayPowerLoadTermStructureExplicit> loadTermStructure_;
+};
+
+//! Business day rule implementation of power load profile data
+class BusinessDayRuleData : public PowerLoadData {
+public:
+    BusinessDayRuleData() = default;
+
+    //! \name Serialisation
+    //@{
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+    //@}
+
+    QuantLib::ext::shared_ptr<QuantExt::IntradayPowerLoadTermStructure> loadTermStructure() const override {
+        return loadTermStructure_;
+    }
+
+private:
+    QuantLib::ext::shared_ptr<QuantExt::IntradayPowerLoadTermStructureBusinessDayRule> loadTermStructure_;
+};
+
+//! Serializable object holding power load profile data
+class PowerLoadProfileData : public PowerLoadData {
+public:
+    PowerLoadProfileData() = default;
+
+    //! \name Serialisation
+    //@{
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+    //@}
+
+    //! Load term structure (delegates to concrete implementation)
+    QuantLib::ext::shared_ptr<QuantExt::IntradayPowerLoadTermStructure> loadTermStructure() const override;
+
+private:
+    QuantLib::ext::shared_ptr<PowerLoadData> concreteData_;
 };
 
 } // namespace data

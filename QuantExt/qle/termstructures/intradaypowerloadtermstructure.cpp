@@ -24,6 +24,17 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 
 namespace QuantExt {
 
+namespace {
+
+template <typename T> T find(const std::map<QuantLib::Date, T>& m, const QuantLib::Date& d) {
+    auto it = m.upper_bound(d);
+    if (it == m.begin())
+        return nullptr;
+    --it;
+    return it->second;
+}
+} // namespace
+
 IntradayLoadProfile::IntradayLoadProfile(const LoadFactors& load, const LoadFactors& loadDST)
     : loadProfile_(std::move(load)), loadProfileDST_(std::move(loadDST)) {
     totalDeliveryHours_ = 0.0;
@@ -51,17 +62,23 @@ QuantLib::Real IntradayLoadProfile::totalMWh() const { return totalMWh_; }
 
 QuantLib::Real IntradayLoadProfile::totalDeliveryHours() const { return totalDeliveryHours_; }
 
-IntradayPowerLoadTermStructure::IntradayPowerLoadTermStructure(
-    std::map<QuantLib::Date, QuantLib::ext::shared_ptr<IntradayLoadProfile>> loadingShapes)
-    : loadingShapes_(std::move(loadingShapes)) {}
+QuantLib::ext::shared_ptr<IntradayLoadProfile>
+IntradayPowerLoadTermStructureExplicit::loadProfile(const QuantLib::Date& d) const {
+    auto profile = find(loadingShapes_, d);
+    if (profile == nullptr)
+        return QuantLib::ext::shared_ptr<IntradayLoadProfile>();
+    return profile;
+}
 
 QuantLib::ext::shared_ptr<IntradayLoadProfile>
-IntradayPowerLoadTermStructure::loadProfile(const QuantLib::Date& d) const {
-    auto it = loadingShapes_.upper_bound(d);
-    if (it == loadingShapes_.begin()) {
-        return nullptr;
-    }
-    --it;
-    return it->second;
+IntradayPowerLoadTermStructureBusinessDayRule::loadProfile(const QuantLib::Date& d) const {
+    auto loadShape = find(loadingShapes_, d);
+    if (loadShape == nullptr)
+        return QuantLib::ext::shared_ptr<IntradayLoadProfile>();
+    if (loadShape->calendar.isBusinessDay(d))
+        return loadShape->businessDayProfile;
+    else
+        return loadShape->nonBusinessDayProfile;
 }
+
 } // namespace QuantExt
