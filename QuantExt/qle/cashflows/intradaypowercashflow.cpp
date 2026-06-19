@@ -81,7 +81,7 @@ void IntradayPowerCashFlow::computePeriodQuantity(const QuantLib::Real quantity)
         periodQuantity_ = quantity;
         return;
     }
-    QL_REQUIRE( loadCurve_ != nullptr, "LoadShape required for quantity mode " << quantityMode_);
+    QL_REQUIRE(loadCurve_ != nullptr && !loadCurve_->empty(), "LoadShape required for quantity mode " << quantityMode_);
     periodQuantity_ = 0.0;
     for (const auto& [deliverydate, index] : indices_) {
         auto loadProfile = loadCurve_->loadProfile(deliverydate);
@@ -95,9 +95,11 @@ void IntradayPowerCashFlow::computePeriodQuantity(const QuantLib::Real quantity)
 void IntradayPowerCashFlow::rolloutIndices(const ext::shared_ptr<IntradayPowerIndex>& index) {
     auto deliveryDates =
         pricingDates(startDate_, endDate_, pricingCalendar_, !includeStartDate_, includeEndDate_, businessDays_);
-    if (loadCurve_ == nullptr) {
-        indices_.push_back({endDate_, index->clone(endDate_, nullptr)});
-        registerWith(indices_.back().second);
+    if (loadCurve_ == nullptr || loadCurve_->empty()) {
+        for (const auto& d : deliveryDates) {
+            indices_.push_back({d, index->clone(d, nullptr)});
+            registerWith(indices_.back().second);
+        }
     } else {
         for (const auto& d : deliveryDates) {
             auto loadProfile = loadCurve_->loadProfile(d);
@@ -109,7 +111,7 @@ void IntradayPowerCashFlow::rolloutIndices(const ext::shared_ptr<IntradayPowerIn
 }
 
 void IntradayPowerCashFlow::initWeights() {
-    if (loadCurve_ == nullptr) {
+    if (loadCurve_ == nullptr || loadCurve_->empty()) {
         // If we do not have a load curve, we assume constant load and equal weight for each day
         for (const auto& [deliverydate, index] : indices_) {
             weights_[deliverydate] = 1.0;
