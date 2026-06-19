@@ -44,15 +44,7 @@ static const std::string autocallable_01_amc_script =
     "                        FixingDates[i], SettlementDates[i], PayCcy);\n"
     "  END;\n"
     "END;\n"
-    // Backward induction: accumulate payoffs keyed on SettlementDates so that sim dates
-    // falling between a fixing date and its settlement (T+2/T+3) correctly include the
-    // pending cashflow in the regression target.  The merged schedule
-    // SettlementAndSimDates = _AMC_SimDates ∪ SettlementDates guarantees every
-    // settlement date is visited before any sim date that precedes it chronologically.
-    // When a sim date coincides exactly with a settlement date (e.g. April-28 fixing with
-    // May-02 settlement when the monthly sim grid also lands on May-02), the NPV is
-    // computed first (post-settlement convention: today's payment has already been made)
-    // and the payoff is added to bwdPayoff afterwards so earlier sim dates still see it.
+    // Backward induction keyed on SettlementDates; NPV computed before adding payoff.
     "FOR a IN (SIZE(SettlementAndSimDates), 1, -1) DO\n"
     "  s = DATEINDEX(SettlementAndSimDates[a], _AMC_SimDates, EQ);\n"
     "  IF s > 0 THEN\n"

@@ -67,31 +67,8 @@ void BestEntryOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& fact
         "\n"
         "Option = PAY(payoff, ExpiryDate, SettlementDate, Currency) - PAY(Premium, PremiumDate, PremiumDate, Currency);\n";
 
-    // The BEO payoff branches on whether the trigger has ever fired (triggerEvent == 1),
-    // which determines whether initialIndex equals strikeIndexLevel (no trigger) or
-    // max(resetMinimum * strikeIndexLevel, strikeIndexObs) (trigger fired).  Conditioning
-    // NPVMEM on the current model state alone (X_simDate) produces a biased conditional
-    // expectation because it averages over both trigger outcomes instead of conditioning on
-    // the realised trigger state.  Pattern 4 (separate NPVMEM slots per branch, filter
-    // condition restricting training to the relevant paths) fixes this:
-    //   - Untriggered branch (slot i):   initialIndex = strikeIndexLevel on all training
-    //     paths → clean regression; no R1 needed.
-    //   - Triggered branch (slot SIZE+i): R1 = strikeObsAtSim[i] (the realised running
-    //     minimum of triggered observation spots captured before the coincident obs date).
-    //     This conditions the regression on HOW LOW the minimum has gone, which directly
-    //     determines initialIndex.  strikeObsAtSim[i] lies in
-    //     [resetMin·strikeIndexLevel, TriggerLevel·strikeIndexLevel) for all triggered paths
-    //     — a well-behaved bounded continuous interval, never at the strikeIndexLevel
-    //     boundary that caused polynomial-extrapolation bias in earlier attempts.
-    //
-    // Both arrays are captured with a pre-obs convention: the forward loop over
-    // ObsAndSimDates = Join(_AMC_SimDates, StrikeObservationDates) freezes
-    // triggerAtSim[i] and strikeObsAtSim[i] BEFORE processing any observation that
-    // falls on the same date as sim date i.
-    // Both arrays are captured with a pre-obs convention: the forward loop over
-    // ObsAndSimDates = Join(_AMC_SimDates, StrikeObservationDates) freezes
-    // triggerAtSim[i] and strikeObsAtSim[i] BEFORE processing any observation that
-    // falls on the same date as sim date i.
+    // AMC variant: separate NPVMEM slots for untriggered (slot i) and triggered (slot SIZE+i)
+    // branches; R1 = running minimum spot for triggered paths captures the reset state.
     static const std::string amc_script =
         "NUMBER payoff, initialIndex, triggerEvent, strikeIndexObs, strikeIndexLevel, d, resetMinValue;\n"
         "NUMBER simDateIdx, s, i;\n"

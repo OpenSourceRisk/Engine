@@ -339,10 +339,7 @@ void WorstOfBasketSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& fa
              {{"currentNotional", "Quantity"},
               {"notionalCurrency", "Currency"}},
              {})},
-        // AMC variant: backward induction keyed on FloatingPayDates ∪ FixedPayDates.
-        // PAY calls capture per-period cashflows alongside each LOGPAY.
-        // InitialFixedPayDate = FloatingPayDates[1]; KnockInPayDate = FloatingPayDates[SIZE(FloatingPayDates)] (defaults).
-        // _AMC_NPV[s] is computed before adding payoffs (post-settlement convention).
+        // AMC variant: backward induction keyed on FloatingPayDates ∪ FixedPayDates; NPV computed before adding payoffs.
         {"AMC",
          ScriptedTradeScriptData(
              std::string(

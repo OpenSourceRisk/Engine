@@ -51,13 +51,7 @@ void StrikeResettableOption::build(const QuantLib::ext::shared_ptr<EngineFactory
         "\n"
         "Option = LongShort * (PAY(payoff, ExpiryDate, SettlementDate, Currency) - PAY(Premium, PremiumDate, PremiumDate, Currency));\n";
 
-    // The AMC script mirrors the PV script payoff exactly.  No extra regressor R1 is passed
-    // to NPVMEM: the effective strike (InitialStrike or ResetStrike) is binary-valued, and
-    // any binary R1 has R1^2 exactly linearly dependent on {1, R1}, making the degree-2
-    // polynomial regression basis rank-deficient on every sim date regardless of the values
-    // chosen.  The GaussianCam model state already encodes whether the trigger threshold was
-    // crossed (the trigger is a function of the same spot process), so no extra regressor is
-    // needed for a well-conditioned regression.
+    // AMC variant: no extra regressor needed; the model state encodes the trigger crossing.
     static const std::string amc_script =
         "NUMBER payoff, strike, d, notional, i;\n"
         "NUMBER _AMC_NPV[SIZE(_AMC_SimDates)];\n"

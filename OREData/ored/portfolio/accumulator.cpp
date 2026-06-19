@@ -147,9 +147,7 @@ namespace data {
       "            END;\n"
       "            value = LongShort * Payoff;\n"
       "            currentNotional = FixingAmount * dailyMult * Strike[1];\n"
-      // Backward induction keyed on SettlementDates so sim dates between a fixing date and
-      // its T+N settlement correctly see the pending cashflow in bwdPayoff.
-      // NPV is computed before adding the payoff (post-settlement convention).
+      // Backward induction keyed on SettlementDates; NPV computed before adding payoff.
       "            FOR a IN (SIZE(SettlementAndSimDates), 1, -1) DO\n"
       "              s = DATEINDEX(SettlementAndSimDates[a], _AMC_SimDates, EQ);\n"
       "              IF s > 0 THEN\n"
@@ -293,8 +291,7 @@ namespace data {
         "              END;\n"
         "            END;\n"
         "            currentNotional = FixingAmount *  Strike;\n"
-        // Backward induction keyed on both SettlementDates (period-end) and KnockOutSettlementDates.
-        // NPV computed before payoff (post-settlement convention for coincident sim/settlement dates).
+        // Backward induction keyed on SettlementDates ∪ KnockOutSettlementDates; NPV computed before adding payoff.
         "            FOR a IN (SIZE(AllSettlementAndSimDates), 1, -1) DO\n"
         "              s = DATEINDEX(AllSettlementAndSimDates[a], _AMC_SimDates, EQ);\n"
         "              IF s > 0 THEN\n"

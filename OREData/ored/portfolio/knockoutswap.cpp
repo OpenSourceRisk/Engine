@@ -198,9 +198,7 @@ void KnockOutSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory
 	mc_script, "value", {{"currentNotional", "Notional"}, {"notionalCurrency", "PayCurrency"}, {"Alive", "Alive"}},
 	{}, {}, {}, {});
 
-    // AMC variant: backward induction keyed on payment dates (FixedSchedule ∪ FloatSchedule).
-    // nthPayoff_fixed[j+1] and nthPayoff_float[j+1] capture the per-period coupon PAYs so that
-    // sim dates between coupon fixing and payment correctly see the pending cashflow in bwdPayoff.
+    // AMC variant: backward induction keyed on coupon payment dates (FixedSchedule ∪ FloatSchedule).
 
     // clang-format off
 
@@ -256,9 +254,7 @@ void KnockOutSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory
       "   END;\n"
 
       "END;\n"
-      // Backward induction keyed on coupon payment dates (FixedSchedule ∪ FloatSchedule).
-      // d_f > 1 and d_l > 1 skip the schedule start dates (index 1) which carry no coupon payment.
-      // NPV is computed before adding the payoff (post-settlement convention).
+      // Backward induction keyed on coupon payment dates; NPV computed before adding payoff.
       "FOR a IN (SIZE(AllPayAndSimDates), 1, -1) DO\n"
       "  s = DATEINDEX(AllPayAndSimDates[a], _AMC_SimDates, EQ);\n"
       "  IF s > 0 THEN\n"
