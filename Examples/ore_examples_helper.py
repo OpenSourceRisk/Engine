@@ -353,39 +353,56 @@ class OreExample(object):
         print_on_console("Saving plot...." + file)
         plt.close()
 
-    def run(self, xml):
-        if not self.dry:
-            if(self.use_python):
-                if(os.path.isfile(os.path.join(os.pardir, "ore_wrapper.py"))):
-                    res = subprocess.call([sys.executable, os.path.join(os.pardir, "ore_wrapper.py"), xml])
-                elif(os.path.isfile(os.path.join(os.pardir, "..", "ore_wrapper.py"))):
-                    res = subprocess.call([sys.executable, os.path.join(os.pardir, "..", "ore_wrapper.py"), xml])
+    def run(self, xml, timeout=None):
+        if self.dry:
+            return 0
+
+        if timeout is None:
+            timeout = os.getenv("ORE_EXAMPLE_TIMEOUT")
+            timeout = int(timeout) if timeout is not None else None
+
+        if self.use_python:
+            if os.path.isfile(os.path.join(os.pardir, "ore_wrapper.py")):
+                cmd = [sys.executable, os.path.join(os.pardir, "ore_wrapper.py"), xml]
+            elif os.path.isfile(os.path.join(os.pardir, "..", "ore_wrapper.py")):
+                cmd = [sys.executable, os.path.join(os.pardir, "..", "ore_wrapper.py"), xml]
             else:
-                res = subprocess.call([self.ore_exe, xml])
-            if res != 0:
-                raise Exception("Return Code was not Null.")
+                raise RuntimeError("ORE Python wrapper not found.")
+        else:
+            cmd = [self.ore_exe, xml]
+
+        try:
+            completed = subprocess.run(cmd, timeout=timeout, check=False)
+        except subprocess.TimeoutExpired as e:
+            raise RuntimeError(f"ORE timed out after {timeout}s: {' '.join(cmd)}") from e
+
+        if completed.returncode != 0:
+            raise RuntimeError(f"ORE failed with return code {completed.returncode}: {' '.join(cmd)}")
+
+        return completed.returncode
 
     def run_plus(self, xml):
         if not self.dry:
             if subprocess.call([self.ore_plus_exe, xml]) != 0:
                 raise Exception("Return Code was not Null.")
 
-def run_example(example):
+def run_example(example_name, timeout=None):
+    if timeout is None:
+        timeout = os.getenv("ORE_EXAMPLE_TIMEOUT")
+        timeout = int(timeout) if timeout is not None else None
+
     current_dir = os.getcwd()
-    print_on_console("Running: " + example)
+    print_on_console(f"Running: {example_name}")
     try:
-        os.chdir(os.path.join(os.getcwd(), example))
-        filename = "run.py"
-        sys.argv = [filename, 0]
-        exit_code = subprocess.call([sys.executable, filename])
-        os.chdir(os.path.dirname(os.getcwd()))
-        print_on_console('-' * 50)
-        print_on_console('')
-    except:
-        print_on_console("Error running " + example)
+        os.chdir(os.path.join(current_dir, example_name))
+        completed = subprocess.run([sys.executable, "run.py"], timeout=timeout, check=False)
+
+        if completed.returncode != 0:
+            raise RuntimeError(f"{example_name}/run.py failed with return code {completed.returncode}")
+
+        return completed.returncode
     finally:
         os.chdir(current_dir)
-    return exit_code
 
 
 def run_script(script_name, timeout=None):
