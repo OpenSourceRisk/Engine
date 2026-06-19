@@ -137,11 +137,17 @@ QuantLib::ext::shared_ptr<SmileSection> SpreadedSwaptionVolatility::smileSection
     Real anchorSimulatedAtmLevel = Null<Real>();
     if (decayMode_ == ReactionToTimeDecay::ForwardForwardVariance) {
         if (simulatedIndexBaseRollDown_ == YieldCurveRollDown::ConstantDiscounts) {
-            auto cube = QuantLib::ext::dynamic_pointer_cast<SwaptionVolatilityCube>(*base_);
-            QL_REQUIRE(cube, "SpreadedSwaptionVolatility::smileSectionImpl(): base must be SwaptionVolatilityCube");
             Rounding rounder(0);
             Period swapTenor(static_cast<Integer>(rounder(swapLength * 12.0)), Months);
-            anchorBaseAtmLevel = cube->atmStrike(referenceDate(), swapTenor);
+            QuantLib::SavedSettings s;
+            QuantLib::Settings::instance().evaluationDate() = base_->referenceDate();
+            if (swapTenor > baseShortSwapIndexBase_->tenor()) {
+                anchorBaseAtmLevel = baseSwapIndexBase_->clone(swapTenor)->fixing(
+                    baseSwapIndexBase_->fixingCalendar().adjust(base_->referenceDate()));
+            } else {
+                anchorBaseAtmLevel = baseShortSwapIndexBase_->clone(swapTenor)->fixing(
+                    baseShortSwapIndexBase_->fixingCalendar().adjust(base_->referenceDate()));
+            }
         } else {
             anchorBaseAtmLevel = base_->smileSection(t0_, swapLength)->atmLevel();
         }
