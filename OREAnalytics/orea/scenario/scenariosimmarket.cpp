@@ -3640,7 +3640,6 @@ void ScenarioSimMarket::applyScenario(const QuantLib::ext::shared_ptr<QuantExt::
 
     numeraire_ = scenario->getNumeraire();
     label_ = scenario->label();
-    updateDate(scenario->asof());
 }
 
 void ScenarioSimMarket::preUpdate() {

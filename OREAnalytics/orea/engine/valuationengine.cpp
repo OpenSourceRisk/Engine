@@ -417,9 +417,7 @@ void ValuationEngine::populateCube(
     simMarket_->preUpdate();
 
     if (!scenarioUpdated) {
-        d = simMarket_->loadNextScenario(d);
-    } else {
-        d = Settings::instance().evaluationDate();
+        d = std::max(d, simMarket_->loadNextScenario(d));
     }
     auto t1 = data::os::nanosecondsClock();
     timings.updateScenarioTime += t1 - t0;
@@ -430,32 +428,36 @@ void ValuationEngine::populateCube(
     auto t2 = data::os::nanosecondsClock();
     timings.fixingTime += t2 - t1;
 
+    simMarket_->updateDate(d);
+    auto t3 = data::os::nanosecondsClock();
+    timings.updateDateTime += t3 - t2;
+
     if (!scenarioUpdated) {
         simMarket_->applyLoadedScenario();
     }
-    auto t3 = data::os::nanosecondsClock();
-    timings.updateScenarioTime += t3 - t2;
+    auto t4 = data::os::nanosecondsClock();
+    timings.updateScenarioTime += t4 - t3;
 
     simMarket_->postUpdate(d);
-    auto t4 = data::os::nanosecondsClock();
-    timings.refreshTime += t4 - t3;
+    auto t5 = data::os::nanosecondsClock();
+    timings.refreshTime += t5 - t4;
 
     if (fixingManager_ && fixingManager_->mode() == FixingManager::Mode::BackwardFlat &&
         (!isStickyDate || isValueDate)) {
         fixingManager_->update(d);
     }
-    auto t5 = data::os::nanosecondsClock();
-    timings.fixingTime += t5 - t4;
+    auto t6 = data::os::nanosecondsClock();
+    timings.fixingTime += t6 - t5;
 
     if (isValueDate) {
         simMarket_->updateAsd(d);
     }
-    auto t6 = data::os::nanosecondsClock();
-    timings.asdTime += t6 - t5;
+    auto t7 = data::os::nanosecondsClock();
+    timings.asdTime += t7 - t6;
 
     recalibrateModels();
-    auto t7 = data::os::nanosecondsClock();
-    timings.calibrationTime += t7 - t6;
+    auto t8 = data::os::nanosecondsClock();
+    timings.calibrationTime += t8 - t7;
 
     if (isStickyDate && !isValueDate)
         tradeExercisable(false, optionWrappers);

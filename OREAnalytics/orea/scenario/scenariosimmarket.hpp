@@ -134,7 +134,7 @@ public:
     //! is risk factor key simulated by this sim market instance?
     virtual bool isSimulated(const RiskFactorKey::KeyType& factor) const;
 
-    //! apply scenario, update date and numeraire
+    //! apply scenario, update numeraire and label of current scenario
     void applyScenario(const QuantLib::ext::shared_ptr<Scenario>& scenario);
 
 protected:

@@ -45,12 +45,7 @@ public:
     explicit SimMarket(const bool handlePseudoCurrencies) : MarketImpl(handlePseudoCurrencies), numeraire_(1.0) {}
 
     //! Generate or retrieve market scenario, update market, notify termstructures and update fixings
-    virtual void update(const Date& d) {
-        preUpdate();
-        updateScenario(d);
-        postUpdate(d);
-        updateAsd(d);
-    }
+    void update(const Date& d);
 
     //! 1  Observable settings depending on selected mode, before we update the market
     virtual void preUpdate() = 0;
@@ -59,12 +54,12 @@ public:
     virtual void updateDate(const Date&) = 0;
 
     /*! 3a Get next scenario without applying it and return the scenario date. The scenario date generally
-           corresponds to the input date, but this is not enforced. Implementations might or might not
-           allow for a deviating scenario date. The scenario date is the one that is used to update the
-           eval date in 3b. */
+           corresponds to the input date. We allow for the scenario date to be greater than the input date,
+           to facilitate sensitivity and stress scenarios with date shifts. The maximum of the returned
+           date and the input date should be used in updateDate(). */
     virtual Date loadNextScenario(const Date&) = 0;
 
-    //! 3b Apply scenario from 3a, includes updating the eval date (using the scenario date, see 3a)
+    //! 3b Apply scenario from 3a
     virtual void applyLoadedScenario() = 0;
 
     /*! 3  loadNextScenario() then applyLoadedScenario() */
