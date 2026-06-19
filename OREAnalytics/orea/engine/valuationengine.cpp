@@ -428,7 +428,9 @@ void ValuationEngine::populateCube(
     auto t2 = data::os::nanosecondsClock();
     timings.fixingTime += t2 - t1;
 
-    simMarket_->updateDate(d);
+    if (isValueDate || !isStickyDate) {
+        simMarket_->updateDate(d);
+    }
     auto t3 = data::os::nanosecondsClock();
     timings.updateDateTime += t3 - t2;
 
