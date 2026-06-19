@@ -171,7 +171,7 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
         // Create payment dates if payment dates are not provided.
         BusinessDayConvention paymentConvention = paymentConvention_.empty() ? Unadjusted :
             parseBusinessDayConvention(paymentConvention_);
-        paymentDates = createPaymentDates(scheduleData_, schedule, paymentCalendar, paymentConvention,
+        auto paymentDates = createPaymentDates(scheduleData_, schedule, paymentCalendar, paymentConvention,
             payLagPeriod, paymentLagUnit_, paymentLagAnchor_);
     } else {
         // Use payment dates if they are provided.
