@@ -214,7 +214,7 @@ class OreExample(object):
         yMin = pow(float(yTmp[0]), exponent) / yScale
         for i in range(0, len(xTmp)-1):
             try :
-                tmp = pow(float(yTmp[i]), exponent) / yScale;
+                tmp = pow(float(yTmp[i]), exponent) / yScale
                 y.append(tmp)
                 yMax = max(tmp, yMax)
                 yMin = min(tmp, yMin)
@@ -387,10 +387,6 @@ class OreExample(object):
                 raise Exception("Return Code was not Null.")
 
 def run_example(example_name, timeout=None):
-    if timeout is None:
-        timeout = os.getenv("ORE_EXAMPLE_TIMEOUT")
-        timeout = int(timeout) if timeout is not None else None
-
     current_dir = os.getcwd()
     print_on_console(f"Running: {example_name}")
     try:
