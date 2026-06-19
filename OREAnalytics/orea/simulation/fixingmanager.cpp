@@ -64,10 +64,10 @@ FixingManager::~FixingManager() { reset(); }
 FixingManager::FixingManager(Date anchor, Mode mode)
     : anchor_(std::move(anchor)), mode_(mode), fixingsEnd_(anchor_), modifiedFixingHistory_(false) {}
 
-void FixingManager::initialise(const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const QuantLib::ext::shared_ptr<Market>& market,
-                               const std::string& configuration) {
+void FixingManager::initialise(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
+                               const QuantLib::ext::shared_ptr<Market>& market, const std::string& configuration) {
 
-    for (auto const& [tradeId,t] : portfolio->trades()) {
+    for (auto const& [tradeId, t] : portfolio->trades()) {
 
         auto r = t->requiredFixings();
         r.unsetPayDates();
@@ -149,18 +149,55 @@ void FixingManager::reset() {
 }
 
 void FixingManager::applyFixings(const Date& start, const Date& end) {
+    if (mode_ == Mode::BackwardFlat)
+        applyFixingsBackwardFlat(start, end);
+    else if (mode_ == Mode::Projected)
+        applyFixingsProjected(start, end);
+    else {
+        QL_FAIL("FixingManager::applyFixing(): mode (" << static_cast<int>(mode_) << ") not handled. Internal error.");
+    }
+}
+
+namespace {
+
+void getStartEndCurrentDate(const QuantLib::ext::shared_ptr<Index>& index, Date& fixStart, Date& fixEnd,
+                            Date& currentFixingDate) {
+    // TODO: avoid dnamic pointer casts here, since applyFixing() is called frequently during MC exposure simulation
+    if (auto zii = QuantLib::ext::dynamic_pointer_cast<ZeroInflationIndex>(index)) {
+        fixStart = inflationPeriod(fixStart - simulationLag(zii->zeroInflationTermStructure()), zii->frequency()).first;
+        fixEnd = inflationPeriod(fixEnd - simulationLag(zii->zeroInflationTermStructure()), zii->frequency()).first + 1;
+        currentFixingDate = fixEnd;
+    } else if (auto yii = QuantLib::ext::dynamic_pointer_cast<YoYInflationIndex>(index)) {
+        fixStart = inflationPeriod(fixStart - simulationLag(yii->yoyInflationTermStructure()), yii->frequency()).first;
+        fixEnd = inflationPeriod(fixEnd - simulationLag(yii->yoyInflationTermStructure()), yii->frequency()).first + 1;
+        currentFixingDate = fixEnd;
+    } else {
+        currentFixingDate = index->fixingCalendar().adjust(fixEnd, Following);
+        if (!index->isValidFixingDate(currentFixingDate))
+            currentFixingDate = nextValidFixingDate(currentFixingDate, index);
+    }
+}
+
+Rate getFixing(const QuantLib::ext::shared_ptr<Index>& index, const Date& currentFixingDate) {
+    Rate currentFixing;
+    if (auto comm = QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityIndex>(index);
+        comm != nullptr && comm->expiryDate() < currentFixingDate) {
+        currentFixing = comm->priceCurve()->price(currentFixingDate);
+    } else {
+        currentFixing = index->fixing(currentFixingDate);
+    }
+    return currentFixing;
+}
+
+} // namespace
+
+void FixingManager::applyFixingsBackwardFlat(const Date& start, const Date& end) {
 
     Date today = Settings::instance().evaluationDate();
- 
-   QL_REQUIRE(mode_ != Mode::BackwardFlat || end == today,
+
+   QL_REQUIRE(end == today,
                "FixingManager::applyFixing(): mode backward flat requires end date ("
                    << end << ") = today (" << today << "). Internal error, check orchestration.");
-    QL_REQUIRE(mode_ != Mode::Projected || start == today,
-               "FixingManager::applyFixing(): mode Projected flat requires start date ("
-                   << start << ") = today (" << today << "). Internal error, check orchestration.");
-
-    // for now, until we implement the projected mode properly
-    Settings::instance().evaluationDate() = end;
 
     for (auto const& [index, dates] : fixingMap_) {
 
@@ -168,40 +205,14 @@ void FixingManager::applyFixings(const Date& start, const Date& end) {
         Date fixEnd = end;
         Date currentFixingDate;
 
-        // TODO: avoid dnamic pointer casts here, since applyFixing() is called frequently during MC exposure simulation
-        if (auto zii = QuantLib::ext::dynamic_pointer_cast<ZeroInflationIndex>(index)) {
-            fixStart =
-                inflationPeriod(fixStart - simulationLag(zii->zeroInflationTermStructure()), zii->frequency()).first;
-            fixEnd =
-                inflationPeriod(fixEnd - simulationLag(zii->zeroInflationTermStructure()), zii->frequency()).first +
-                1;
-            currentFixingDate = fixEnd;
-        } else if (auto yii = QuantLib::ext::dynamic_pointer_cast<YoYInflationIndex>(index)) {
-            fixStart =
-                inflationPeriod(fixStart - simulationLag(yii->yoyInflationTermStructure()), yii->frequency()).first;
-            fixEnd =
-                inflationPeriod(fixEnd - simulationLag(yii->yoyInflationTermStructure()), yii->frequency()).first +
-                1;
-            currentFixingDate = fixEnd;
-        } else {
-            currentFixingDate = index->fixingCalendar().adjust(fixEnd, Following);
-            if (!index->isValidFixingDate(currentFixingDate))
-                currentFixingDate = nextValidFixingDate(currentFixingDate, index);
-        }
+        getStartEndCurrentDate(index, fixStart, fixEnd, currentFixingDate);
 
         auto l = dates.lower_bound(fixStart);
         auto h = dates.lower_bound(fixEnd);
 
         if (!dates.empty() && l != h) {
 
-            Rate currentFixing;
-
-            if (auto comm = QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityIndex>(index);
-                comm != nullptr && comm->expiryDate() < currentFixingDate) {
-                currentFixing = comm->priceCurve()->price(currentFixingDate);
-            } else {
-                currentFixing = index->fixing(currentFixingDate);
-            }
+            Rate currentFixing = getFixing(index, currentFixingDate);
 
             TimeSeries<Real> history;
             for (auto const& d : dates) {
@@ -217,6 +228,53 @@ void FixingManager::applyFixings(const Date& start, const Date& end) {
             index->addFixings(history, true);
         }
     }
+}
+
+void FixingManager::applyFixingsProjected(const Date& start, const Date& end) {
+
+    Date today = Settings::instance().evaluationDate();
+
+    QL_REQUIRE(start == today,
+               "FixingManager::applyFixing(): mode Projected flat requires start date ("
+                   << start << ") = today (" << today << "). Internal error, check orchestration.");
+
+    std::map<Date, std::set<QuantLib::ext::shared_ptr<Index>, detail::IndexComparator>> dateMap;
+
+    for(auto const& [index, dates] : fixingMap_) {
+
+        Date fixStart = start;
+        Date fixEnd = end;
+        Date currentFixingDate;
+
+        getStartEndCurrentDate(index, fixStart, fixEnd, currentFixingDate);
+
+        auto l = dates.lower_bound(fixStart);
+        auto h = dates.lower_bound(fixEnd);
+
+        if (!dates.empty() && l != h) {
+            for (auto const& d : dates) {
+                if (d >= fixStart && d < fixEnd) {
+                    if (index->isValidFixingDate(d)) {
+                        dateMap[d].insert(index);
+                    }
+                }
+                if (d >= fixEnd)
+                    break;
+            }
+        }
+    }
+
+    for (auto const& [d, indices] : dateMap) {
+
+        Settings::instance().evaluationDate() = d;
+
+        for (auto const& index : indices) {
+            index->addFixing(d, getFixing(index, d));
+            modifiedFixingHistory_ = true;
+        }
+    }
+
+    Settings::instance().evaluationDate() = end;
 }
 
 } // namespace analytics

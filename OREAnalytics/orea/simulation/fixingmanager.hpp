@@ -67,6 +67,8 @@ struct IndexComparator {
   updates must be taken care of in the user code. The fixing manager will raise an error if the mode is
   not consistent with the orchestration.
 
+  Note: Projected does not work with disabled observability (observation mode 'Disabled').
+
   \ingroup simulation
 */
 class FixingManager {
@@ -91,17 +93,21 @@ private:
     using FixingMap = std::map<QuantLib::ext::shared_ptr<Index>, std::set<Date>, detail::IndexComparator>;
 
     void applyFixings(const Date& start, const Date& end);
+    void applyFixingsBackwardFlat(const Date& start, const Date& end);
+    void applyFixingsProjected(const Date& start, const Date& end);
 
     // inputs
     Date anchor_;
     Mode mode_;
 
+    // calculated from inputs
+    FixingMap fixingMap_;
+    FixingCache fixingCache_;
+
     // state
     Date fixingsEnd_;
     bool modifiedFixingHistory_;
 
-    FixingMap fixingMap_;
-    FixingCache fixingCache_;
 };
 
 } // namespace analytics
