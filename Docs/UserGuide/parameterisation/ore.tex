@@ -48,6 +48,7 @@ This subset of data is easiest explained using an example, see listing \ref{lst:
   <Parameter name="enrichIndexFixings">false</Parameter>
   <Parameter name="ignoreFixingLead">0</Parameter>
   <Parameter name="ignoreFixingLag">0</Parameter>
+  <Parameter name="gzipCompressionLevel">6</Parameter>
 </Setup>
 \end{minted}
 %\hrule
@@ -129,6 +130,8 @@ If not given, the parameter defaults to {\tt 0}.
 \medskip If the previous fixing date lags by more than Parameter {\tt ignoreFixingLag}, the fixing would not be used as the fallback.
 A {\tt 0} {\tt ignoreFixingLag} disables the check.
 If not given, the parameter defaults to {\tt 0}.
+
+\medskip Optional parameter {\tt gzipCompressionLevel} specifies the gzip compression level to use when writing zipped cube files. Allowed values are integers between {\tt 0} and {\tt 9}, where {\tt 0} means no compression (fastest write time, largest file size) and {\tt 9} means maximum compression (slowest write time, smallest file size). If not given, the parameter defaults to {\tt 6} (recommended balance of speed and size). An error is raised if the value is outside the range {\tt 0}--{\tt 9}.
 
 \subsubsection{Logging}\label{sec:master_input_logging}
 The {\tt Logging} section (see listing \ref{lst:ore_logging}) is used to configure some ORE logging options.
