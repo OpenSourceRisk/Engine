@@ -20,6 +20,7 @@
 #include <ql/utilities/vectors.hpp>
 #include <qle/cashflows/commoditycashflow.hpp>
 #include <qle/cashflows/intradaypowercashflow.hpp>
+#include <boost/algorithm/string.hpp>
 
 using QuantLib::AcyclicVisitor;
 using QuantLib::BusinessDayConvention;
@@ -33,52 +34,98 @@ using std::vector;
 
 namespace QuantExt {
 
+IntradayPowerQuantityMode parseIntradayPowerQuantityMode(const std::string& s) {
+    if (boost::iequals(s, "TotalEnergy")) {
+        return IntradayPowerQuantityMode::TotalEnergy;
+    } else if (boost::iequals(s, "LoadShapeMultiplier")) {
+        return IntradayPowerQuantityMode::LoadShapeMultiplier;
+    } else {
+        QL_FAIL("Could not parse " << s << " to IntradayPowerQuantityMode");
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, IntradayPowerQuantityMode cqf) {
+    if (cqf == IntradayPowerQuantityMode::TotalEnergy) {
+        return os << "TotalEnergy";
+    } else if (cqf == IntradayPowerQuantityMode::LoadShapeMultiplier) {
+        return os << "LoadShapeMultiplier";
+    } else {
+        QL_FAIL("Do not recognise IntradayPowerQuantityMode " << static_cast<int>(cqf));
+    }
+}
+
+
 IntradayPowerCashFlow::IntradayPowerCashFlow(QuantLib::Real quantity, const QuantLib::Date& startDate,
                                              const QuantLib::Date& endDate, const QuantLib::Date& paymentDate,
                                              const ext::shared_ptr<IntradayPowerIndex>& index,
                                              const ext::shared_ptr<IntradayPowerLoadTermStructure> loadCurve,
                                              const QuantLib::Calendar& pricingCalendar, QuantLib::Real spread,
                                              QuantLib::Real gearing, bool includeStartDate, bool includeEndDate,
-                                             bool businessDays, const ext::shared_ptr<FxIndex>& fxIndex,
+                                             bool businessDays, IntradayPowerQuantityMode quantityMode, const ext::shared_ptr<FxIndex>& fxIndex,
                                              std::optional<QuantLib::Natural> avgPricePrecision)
     : startDate_(startDate), endDate_(endDate), paymentDate_(paymentDate), loadCurve_(loadCurve),
       pricingCalendar_(pricingCalendar), spread_(spread), gearing_(gearing), includeStartDate_(includeStartDate),
-      includeEndDate_(includeEndDate), businessDays_(businessDays), fxIndex_(fxIndex),
+      includeEndDate_(includeEndDate), businessDays_(businessDays), quantityMode_(quantityMode), fxIndex_(fxIndex),
       avgPricePrecision_(avgPricePrecision) {
     init(quantity, index);
 }
 
 void IntradayPowerCashFlow::init(const QuantLib::Real quantity, const ext::shared_ptr<IntradayPowerIndex>& index) {
-    computePeriodQuantity(quantity);
     rolloutIndices(index);
     initWeights();
+    computePeriodQuantity(quantity);
 }
 
-void IntradayPowerCashFlow::computePeriodQuantity(const QuantLib::Real quantity) { periodQuantity_ = quantity; }
+void IntradayPowerCashFlow::computePeriodQuantity(const QuantLib::Real quantity) { QL_REQUIRE(quantity >= 0.0, "quantity must be non-negative"); 
+    if (quantityMode_ == IntradayPowerQuantityMode::TotalEnergy){
+        periodQuantity_ = quantity;
+        return;
+    }
+    QL_REQUIRE( loadCurve_ != nullptr, "LoadShape required for quantity mode " << quantityMode_);
+    periodQuantity_ = 0.0;
+    for (const auto& [deliverydate, index] : indices_) {
+        auto loadProfile = loadCurve_->loadProfile(deliverydate);
+        QL_REQUIRE(loadProfile != nullptr || quantityMode_ == IntradayPowerQuantityMode::TotalEnergy,
+                   "LoadShape required for quantity mode " << quantityMode_ << " for delivery date " << deliverydate);
+        periodQuantity_ += loadProfile->totalMWh();
+    }
+    periodQuantity_ *= quantity;
+}
 
 void IntradayPowerCashFlow::rolloutIndices(const ext::shared_ptr<IntradayPowerIndex>& index) {
     auto deliveryDates =
         pricingDates(startDate_, endDate_, pricingCalendar_, !includeStartDate_, includeEndDate_, businessDays_);
-    for (const auto& d : deliveryDates) {
-        auto loadProfile = loadCurve_ != nullptr ? loadCurve_->loadProfile(d) : nullptr;
-        indices_.push_back({d, index->clone(d, loadProfile)});
+    if (loadCurve_ == nullptr) {
+        indices_.push_back({endDate_, index->clone(endDate_, nullptr)});
         registerWith(indices_.back().second);
+    } else {
+        for (const auto& d : deliveryDates) {
+            auto loadProfile = loadCurve_->loadProfile(d);
+            QL_REQUIRE(loadProfile != nullptr, "LoadShape required for delivery date " << d);
+            indices_.push_back({d, index->clone(d, loadProfile)});
+            registerWith(indices_.back().second);
+        }
     }
 }
 
 void IntradayPowerCashFlow::initWeights() {
-    double totalLoad = 0.0;
-    for (const auto& [deliverydate, index] : indices_) {
-        auto loadProfile = loadCurve_ != nullptr ? loadCurve_->loadProfile(deliverydate) : nullptr;
-        // If we have a load profile the weight we dont assume equal weight for each day, so we need to weight it by
-        // total period load
-        if (loadProfile) {
-            weights_[deliverydate] += loadProfile->totalMWh();
-            totalLoad += loadProfile->totalMWh();
-        } else {
+    if (loadCurve_ == nullptr) {
+        // If we do not have a load curve, we assume constant load and equal weight for each day
+        for (const auto& [deliverydate, index] : indices_) {
             weights_[deliverydate] = 1.0;
-            totalLoad += 1.0;
         }
+        for (auto& kv : weights_) {
+            kv.second /= weights_.size();
+        }
+        return;
+    }
+    // If we have a load curve, we calculate the weights based on the total load for each day
+    QuantLib::Real totalLoad = 0.0;
+    for (const auto& [deliverydate, index] : indices_) {
+        auto loadProfile = index->loadProfile();
+        QL_REQUIRE(loadProfile != nullptr, "LoadShape required for delivery date " << deliverydate);
+        weights_[deliverydate] += loadProfile->totalMWh();
+        totalLoad += loadProfile->totalMWh();
     }
     for (auto& kv : weights_) {
         kv.second /= totalLoad == 0 ? 1.0 : totalLoad;
@@ -213,6 +260,11 @@ IntradayPowerLeg& IntradayPowerLeg::withAvgPricePrecision(std::optional<QuantLib
     return *this;
 }
 
+IntradayPowerLeg& IntradayPowerLeg::withQuantityMode(QuantExt::IntradayPowerQuantityMode quantityMode) {
+    quantityMode_ = quantityMode;
+    return *this;
+}
+
 IntradayPowerLeg::operator Leg() const {
 
     // Number of cashflows
@@ -252,7 +304,7 @@ IntradayPowerLeg::operator Leg() const {
 
         leg.push_back(ext::make_shared<IntradayPowerCashFlow>(quantity, start, end, paymentDate, index_, loadCurve_,
                                                               pricingCalendar_, spread, gearing, includeStart,
-                                                              includeEnd, businessDays_, fxIndex_, avgPricePrecision_));
+                                                              includeEnd, businessDays_, quantityMode_, fxIndex_, avgPricePrecision_));
     }
 
     return leg;

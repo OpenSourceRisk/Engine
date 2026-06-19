@@ -821,6 +821,7 @@ Leg makeIntradayPowerFloatingLeg(const LegData& data, const QuantLib::ext::share
                   .includeStartDate(intradayData->includePeriodStart())
                   .includeEndDate(intradayData->includePeriodEnd())
                   .useBusinessDays(intradayData->businessDays())
+                  .withQuantityMode(intradayData->quantityMode())
                   .withFxIndex(fxIndex);
     return leg;
 }

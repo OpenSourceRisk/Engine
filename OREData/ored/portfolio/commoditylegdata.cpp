@@ -360,19 +360,19 @@ XMLNode* CommodityFloatingLegData::toXML(XMLDocument& doc) const {
 
 IntradayPowerFloatingLegData::IntradayPowerFloatingLegData()
     : LegAdditionalData(LegType::IntradayPowerFloating), includePeriodStart_(true), includePeriodEnd_(false),
-      businessDays_(true), avgPricePrecision_(Null<Natural>()) {}
+      businessDays_(true), avgPricePrecision_(Null<Natural>()), quantityMode_(QuantExt::IntradayPowerQuantityMode::TotalEnergy) {}
 
 IntradayPowerFloatingLegData::IntradayPowerFloatingLegData(
     const string& name, const vector<Real>& quantities, const vector<string>& quantityDates,
     const vector<Real>& spreads, const vector<string>& spreadDates, const vector<Real>& gearings,
     const vector<string>& gearingDates, const string& pricingCalendar, bool includePeriodStart,
     bool includePeriodEnd, bool businessDays, const PowerLoadProfileData& loadProfileData, const string& fxIndex,
-    Natural avgPricePrecision)
+    Natural avgPricePrecision, QuantExt::IntradayPowerQuantityMode quantityMode)
     : LegAdditionalData(LegType::IntradayPowerFloating), name_(name), quantities_(quantities),
       quantityDates_(quantityDates), spreads_(spreads), spreadDates_(spreadDates), gearings_(gearings),
       gearingDates_(gearingDates), pricingCalendar_(pricingCalendar), includePeriodStart_(includePeriodStart),
       includePeriodEnd_(includePeriodEnd), businessDays_(businessDays), loadProfileData_(loadProfileData),
-      fxIndex_(fxIndex), avgPricePrecision_(avgPricePrecision) {
+      fxIndex_(fxIndex), avgPricePrecision_(avgPricePrecision), quantityMode_(quantityMode) {
     indices_.insert("POWER-" + name_);
 }
 
@@ -425,6 +425,11 @@ void IntradayPowerFloatingLegData::fromXML(XMLNode* node) {
     }
 
     tag_ = XMLUtils::getChildValue(node, "Tag", false);
+
+    quantityMode_ = QuantExt::IntradayPowerQuantityMode::TotalEnergy;
+    if (XMLNode* n = XMLUtils::getChildNode(node, "QuantityMode")) {
+        quantityMode_ = QuantExt::parseIntradayPowerQuantityMode(XMLUtils::getNodeValue(n));
+    }
 }
 
 XMLNode* IntradayPowerFloatingLegData::toXML(XMLDocument& doc) const {
@@ -463,6 +468,8 @@ XMLNode* IntradayPowerFloatingLegData::toXML(XMLDocument& doc) const {
 
     if (!tag_.empty())
         XMLUtils::addChild(doc, node, "Tag", tag_);
+
+    XMLUtils::addChild(doc, node, "QuantityMode", to_string(quantityMode_));
 
     return node;
 }

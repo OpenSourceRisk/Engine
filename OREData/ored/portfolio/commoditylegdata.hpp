@@ -26,6 +26,7 @@
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/powerloadprofiledata.hpp>
 #include <qle/cashflows/commoditycashflow.hpp>
+#include <qle/cashflows/intradaypowercashflow.hpp>
 #include <qle/indexes/commodityindex.hpp>
 
 namespace ore {
@@ -215,7 +216,8 @@ public:
                                  bool includePeriodEnd = false, bool businessDays = true,
                                  const PowerLoadProfileData& loadProfileData = PowerLoadProfileData(),
                                  const std::string& fxIndex = std::string(),
-                                 QuantLib::Natural avgPricePrecision = QuantLib::Null<QuantLib::Natural>());
+                                 QuantLib::Natural avgPricePrecision = QuantLib::Null<QuantLib::Natural>(),
+                                 QuantExt::IntradayPowerQuantityMode quantityMode = QuantExt::IntradayPowerQuantityMode::TotalEnergy);
 
     //! \name Inspectors
     //@{
@@ -235,6 +237,7 @@ public:
     QuantLib::Natural avgPricePrecision() const { return avgPricePrecision_; }
     const std::string& priceCurrency() const { return priceCurrency_; }
     const std::string& tag() const { return tag_; }
+    QuantExt::IntradayPowerQuantityMode quantityMode() const { return quantityMode_; }
     //@}
 
     //! \name Serialisation
@@ -260,6 +263,7 @@ private:
     QuantLib::Natural avgPricePrecision_;
     std::string priceCurrency_;
     std::string tag_;
+    QuantExt::IntradayPowerQuantityMode quantityMode_;
 };
 
 

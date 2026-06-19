@@ -20,7 +20,7 @@
  */
 
 #pragma once
-
+#include <iostream>
 #include <ql/cashflow.hpp>
 #include <ql/patterns/visitor.hpp>
 #include <ql/time/schedule.hpp>
@@ -28,6 +28,15 @@
 #include <qle/indexes/intradaypowerindex.hpp>
 
 namespace QuantExt {
+
+enum class IntradayPowerQuantityMode {
+    TotalEnergy,
+    LoadShapeMultiplier,
+};
+
+IntradayPowerQuantityMode parseIntradayPowerQuantityMode(const std::string& s);
+
+std::ostream& operator<<(std::ostream& os, IntradayPowerQuantityMode cqf);
 
 class IntradayPowerCashFlow : public QuantLib::CashFlow {
 
@@ -38,7 +47,7 @@ public:
                           const ext::shared_ptr<IntradayPowerLoadTermStructure> loadCurve = nullptr,
                           const QuantLib::Calendar& pricingCalendar = QuantLib::Calendar(), QuantLib::Real spread = 0.0,
                           QuantLib::Real gearing = 1.0, bool includeStartDate = false, bool includeEndDate = true,
-                          bool businessDays = true,
+                          bool businessDays = true, IntradayPowerQuantityMode quantityMode = IntradayPowerQuantityMode::TotalEnergy,
                           const ext::shared_ptr<FxIndex>& fxIndex = nullptr,
                           std::optional<QuantLib::Natural> avgPricePrecision = std::nullopt);
 
@@ -89,6 +98,7 @@ private:
     bool includeStartDate_;
     bool includeEndDate_;
     bool businessDays_;
+    IntradayPowerQuantityMode quantityMode_;
     ext::shared_ptr<FxIndex> fxIndex_;
     std::optional<QuantLib::Natural> avgPricePrecision_;
 
@@ -122,6 +132,7 @@ public:
     IntradayPowerLeg& useBusinessDays(bool flag = true);
     IntradayPowerLeg& withPaymentDates(const std::vector<QuantLib::Date>& paymentDates);
     IntradayPowerLeg& withFxIndex(const ext::shared_ptr<FxIndex>& fxIndex);
+    IntradayPowerLeg& withQuantityMode(IntradayPowerQuantityMode quantityMode);
     IntradayPowerLeg& withAvgPricePrecision(std::optional<QuantLib::Natural> precision = std::nullopt);
     operator Leg() const;
 
@@ -139,6 +150,7 @@ private:
     bool includeEndDate_ = true;
     bool includeStartDate_ = false;
     bool businessDays_ = true;
+    IntradayPowerQuantityMode quantityMode_ = IntradayPowerQuantityMode::TotalEnergy;
     std::vector<QuantLib::Date> paymentDates_;
     ext::shared_ptr<FxIndex> fxIndex_;
     std::optional<QuantLib::Natural> avgPricePrecision_ = std::nullopt;
