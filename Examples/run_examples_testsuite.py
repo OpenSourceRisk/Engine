@@ -18,7 +18,8 @@ examples_exempt_from_scenariogenerator_samples_overwrite = [
     'Legacy/Example_72']
 
 # Pull in some shared utilities
-sys.path.append(str(Path(__file__).resolve().parent.parent))
+script_dir = Path(__file__).parent
+sys.path.append(str(script_dir.parent))
 from Examples.ore_examples_helper import get_list_of_legacy_examples  # noqa
 from Examples.ore_examples_helper import get_list_of_examples  # noqa
 from Examples.ore_examples_helper import get_list_ore_academy  # noqa
