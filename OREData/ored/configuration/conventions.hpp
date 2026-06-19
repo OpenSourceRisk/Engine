@@ -26,6 +26,7 @@
 
 #include <ored/utilities/xmlutils.hpp>
 #include <ored/portfolio/schedule.hpp>
+#include <ored/portfolio/powerloadprofiledata.hpp>
 #include <ql/quotes/deltavolquote.hpp>
 #include <ql/indexes/iborindex.hpp>
 #include <ql/indexes/inflationindex.hpp>
@@ -82,7 +83,8 @@ public:
         CommodityFuture,
         FxOption,
         FxOptionTimeWeighting,
-        BondYield
+        BondYield,
+        IntradayPowerLoad
     };
 
     //! Default destructor
@@ -2007,6 +2009,32 @@ private:
     QuantLib::Real accuracy_;
     QuantLib::Size maxEvaluations_;
     QuantLib::Real guess_;
+};
+
+//! Container for storing Intraday Power Load conventions
+/*!
+  \ingroup marketdata
+ */
+class IntradayPowerLoadConvention : public Convention {
+public:
+    IntradayPowerLoadConvention() : Convention("", Type::IntradayPowerLoad) {}
+    IntradayPowerLoadConvention(const string& id, const QuantLib::ext::shared_ptr<PowerLoadProfileData>& data)
+        : Convention(id, Type::IntradayPowerLoad), data_(data) {}
+
+    //! \name Inspectors
+    //@{
+    const QuantLib::ext::shared_ptr<PowerLoadProfileData>& data() const { return data_; }
+    //@}
+
+    //! \name Serialisation
+    //@{
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
+    virtual void build() override;
+    //@}
+
+private:
+    QuantLib::ext::shared_ptr<PowerLoadProfileData> data_;
 };
 
 } // namespace data
