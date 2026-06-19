@@ -833,7 +833,7 @@ void FixingDateGetter::visit(TRSCashFlow& bc) {
             e->dividendFixingDates(bc.fixingStartDate(), bc.fixingEndDate());
 
         for (const auto& f : fixings)
-            requiredFixings_.addFixingDate(f.first, ore::data::IndexNameTranslator::instance().oreName(f.second));  
+            requiredFixings_.addFixingDate(f.first, ore::data::IndexNameTranslator::instance().oreName(f.second));
     } else {
         indexes.push_back(bc.index());
     }
