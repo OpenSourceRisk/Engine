@@ -25,7 +25,7 @@ void SimMarket::update(const Date& d) {
     preUpdate();
     auto d2 = loadNextScenario(d);
     updateDate(std::max(d, d2));
-    updateScenario(d);
+    applyLoadedScenario();
     postUpdate(d);
     updateAsd(d);
 }
