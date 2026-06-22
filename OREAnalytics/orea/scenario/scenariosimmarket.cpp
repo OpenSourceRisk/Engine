@@ -91,6 +91,8 @@
 
 #include <ql/instruments/makecapfloor.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
+#include <ql/math/interpolations/forwardflatinterpolation.hpp>
+
 #include <ql/termstructures/credit/interpolatedsurvivalprobabilitycurve.hpp>
 #include <ql/termstructures/defaulttermstructure.hpp>
 #include <ql/termstructures/volatility/capfloor/capfloortermvolatilitystructure.hpp>
@@ -4037,6 +4039,20 @@ void makeCommodityPriceCurveSpreaded(const Handle<PriceTermStructure>& target,
     } else if (auto c = QuantLib::ext::dynamic_pointer_cast<SpreadedPriceTermStructure>(*target)) {
         c->makeThisCurveSpreaded(bases, multiplier);
     } else if (auto c = QuantLib::ext::dynamic_pointer_cast<CommodityBasisPriceCurveWrapper>(*target)) {
+        c->makeThisCurveSpreaded(bases, multiplier);
+    } else if (auto c = QuantLib::ext::dynamic_pointer_cast<InterpolatedPriceCurve<BackwardFlat>>(*target)) {
+        c->makeThisCurveSpreaded(bases, multiplier);
+    } else if (auto c = QuantLib::ext::dynamic_pointer_cast<InterpolatedPriceCurve<LogLinear>>(*target)) {
+        c->makeThisCurveSpreaded(bases, multiplier);
+    } else if (auto c = QuantLib::ext::dynamic_pointer_cast<InterpolatedPriceCurve<Cubic>>(*target)) {
+        c->makeThisCurveSpreaded(bases, multiplier);
+    } else if (auto c = QuantLib::ext::dynamic_pointer_cast<InterpolatedPriceCurve<LinearFlat>>(*target)) {
+        c->makeThisCurveSpreaded(bases, multiplier);
+    } else if (auto c = QuantLib::ext::dynamic_pointer_cast<InterpolatedPriceCurve<LogLinearFlat>>(*target)) {
+        c->makeThisCurveSpreaded(bases, multiplier);
+    } else if (auto c = QuantLib::ext::dynamic_pointer_cast<InterpolatedPriceCurve<CubicFlat>>(*target)) {
+        c->makeThisCurveSpreaded(bases, multiplier);
+    } else if (auto c = QuantLib::ext::dynamic_pointer_cast<InterpolatedPriceCurve<ForwardFlat>>(*target)) {
         c->makeThisCurveSpreaded(bases, multiplier);
     } else {
         QL_FAIL("makeCommodityPriceCurveSpreaded(): target curve could not be cast to one of the "
