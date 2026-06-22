@@ -420,6 +420,7 @@ termstructures/hazardspreadeddefaulttermstructure.cpp
 termstructures/iborfallbackcurve.cpp
 termstructures/intradaypowerloadtermstructure.cpp
 termstructures/intradaypowerpricetermstructure.cpp
+termstructures/intradayshapetermstructure.cpp
 termstructures/immfraratehelper.cpp
 termstructures/indexcdsvolstripper.cpp
 termstructures/inflation/constantcpivolatility.cpp

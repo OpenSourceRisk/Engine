@@ -66,11 +66,11 @@ inline QuantLib::Real calcShapeFactor(const QuantLib::Date& d, int startTime, in
     QL_REQUIRE(endTime > startTime, "endTime must be > startTime, got " << endTime << " <= " << startTime);
     QL_REQUIRE(endTime <= 24 * 3600, "endTime out of range, got " << endTime);
 
-    if (dayTimeSavingsAdj < 1 && !factors.empty()) {
+    if (dayTimeSavingsAdj < 1 && factors.empty()) {
         return 1.0;
     }
 
-    if (dayTimeSavingsAdj == 1 && !dstFactors.empty() && !factors.empty()) {
+    if (dayTimeSavingsAdj == 1 && dstFactors.empty() && factors.empty()) {
         return 1.0;
     }
 
