@@ -101,9 +101,9 @@ MultiThreadedValuationEngine::MultiThreadedValuationEngine(
     const std::function<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>(
         const QuantLib::Date&, const std::set<std::string>&, const std::vector<QuantLib::Date>&, const QuantLib::Size)>&
         cptyCubeFactory,
-    const QuantLib::ext::shared_ptr<FixingManager>& fixingManager, const std::string& context,
-    const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& offSetScenario, const bool useAtParCouponsCurves,
-    const bool useAtParCouponsTrades)
+    const QuantLib::ext::shared_ptr<FixingManager>& fixingManager, const bool resetAfterEachPath,
+    const std::string& context, const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& offSetScenario,
+    const bool useAtParCouponsCurves, const bool useAtParCouponsTrades)
     : nThreads_(nThreads), today_(today), dateGrid_(dateGrid), nSamples_(nSamples), loader_(loader),
       scenarioGenerator_(scenarioGenerator), engineData_(engineData), curveConfigs_(curveConfigs),
       todaysMarketParams_(todaysMarketParams), configuration_(configuration), simMarketData_(simMarketData),
@@ -112,8 +112,9 @@ MultiThreadedValuationEngine::MultiThreadedValuationEngine(
       handlePseudoCurrenciesTodaysMarket_(handlePseudoCurrenciesTodaysMarket),
       handlePseudoCurrenciesSimMarket_(handlePseudoCurrenciesSimMarket), recalibrateModels_(recalibrateModels),
       cubeFactory_(cubeFactory), nettingSetCubeFactory_(nettingSetCubeFactory), cptyCubeFactory_(cptyCubeFactory),
-      fixingManager_(fixingManager), context_(context), offsetScenario_(offSetScenario),
-      useAtParCouponsCurves_(useAtParCouponsCurves), useAtParCouponsTrades_(useAtParCouponsTrades) {
+      fixingManager_(fixingManager), resetAfterEachPath_(resetAfterEachPath), context_(context),
+      offsetScenario_(offSetScenario), useAtParCouponsCurves_(useAtParCouponsCurves),
+      useAtParCouponsTrades_(useAtParCouponsTrades) {
 
     QL_REQUIRE(nThreads_ != 0, "MultiThreadedValuationEngine: nThreads must be > 0");
 
@@ -395,7 +396,8 @@ void MultiThreadedValuationEngine::buildCube(
 
                 auto valEngine = QuantLib::ext::make_shared<ore::analytics::ValuationEngine>(
                     today_, dateGrid_, simMarket, engineFactory->modelBuilders(), recalibrateModels_,
-                    fixingManager_ ? QuantLib::ext::make_shared<FixingManager>(*fixingManager_) : nullptr);
+                    fixingManager_ ? QuantLib::ext::make_shared<FixingManager>(*fixingManager_) : nullptr,
+                    resetAfterEachPath_);
                 valEngine->registerProgressIndicator(progressIndicator);
 
                 // build mini-cube

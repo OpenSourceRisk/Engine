@@ -92,7 +92,9 @@ public:
         //! whether recalibrate() or newCalcWithoutCalibration() is called on model builders
         const bool recalibrate = true,
         //! a fixing manager, if required
-        const QuantLib::ext::shared_ptr<FixingManager>& fixingManager = nullptr);
+        const QuantLib::ext::shared_ptr<FixingManager>& fixingManager = nullptr,
+        //! if true, fixing manager and global eval date are reset after each path
+        const resetAfterEachPath = true);
 
     //! Build NPV cube
     void buildCube(
@@ -163,6 +165,7 @@ private:
     set<std::pair<std::string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>> modelBuilders_;
     bool recalibrate_ = true;
     QuantLib::ext::shared_ptr<FixingManager> fixingManager_;
+    bool resetAfterEachPath_ = true;
 };
 } // namespace analytics
 } // namespace ore

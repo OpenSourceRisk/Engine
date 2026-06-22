@@ -48,9 +48,10 @@ namespace analytics {
 ValuationEngine::ValuationEngine(const Date& today, const QuantLib::ext::shared_ptr<DateGrid>& dg,
                                  const QuantLib::ext::shared_ptr<SimMarket>& simMarket,
                                  const set<std::pair<string, QuantLib::ext::shared_ptr<ModelBuilder>>>& modelBuilders,
-                                 const bool recalibrate, const QuantLib::ext::shared_ptr<FixingManager>& fixingManager)
+                                 const bool recalibrate, const QuantLib::ext::shared_ptr<FixingManager>& fixingManager,
+                                 const bool resetAfterEachPath)
     : today_(today), dg_(dg), simMarket_(simMarket), modelBuilders_(modelBuilders), recalibrate_(recalibrate),
-      fixingManager_(fixingManager) {
+      fixingManager_(fixingManager), resetAfterEachPath_(resetAfterEachPath) {
 
     QL_REQUIRE(dg_->size() > 0, "Error, DateGrid size must be > 0");
     QL_REQUIRE(today <= dg_->dates().front(), "ValuationEngine: Error today ("
@@ -270,8 +271,12 @@ void ValuationEngine::buildCube(const QuantLib::ext::shared_ptr<data::Portfolio>
                << (outputCube->samples() == 1 ? "" : "s");
         updateProgress(sample * nTrades, outputCube->samples() * nTrades, detail.str());
 
-        if (fixingManager_ && dg_->size() > 1)
-            fixingManager_->reset();
+        if(resetAfterEachPath_) {
+            if (fixingManager_)
+                fixingManager_->reset();
+            simMarket_->updateDate(simMarket_->asofDate());
+        }
+
     }
 
     if (dryRun) {
