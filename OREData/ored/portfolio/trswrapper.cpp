@@ -678,6 +678,17 @@ void TRSWrapperAccrualEngine::calculate() const {
                 } else if (arguments_.fundingNotionalTypes_[i] == TRS::FundingData::NotionalType::PeriodReset) {
 
                     Real localNotionalFactor = 0.0, localFxFactor = 1.0; // local per underlying
+                    auto addPeriodResetFactor = [&](Real notional, Real fx, bool isSuffix = true) {
+                        fundingLegNotionalFactor += notional * fx;
+                        if(!isSuffix){
+                            results_.additionalResults["fundingLegNotional" + resultSuffix + resultSuffix2] = notional;
+                            results_.additionalResults["fundingLegFxRate" + resultSuffix + resultSuffix2] = fx;
+                        }else{
+                            results_.additionalResults["fundingLegNotional"] = notional;
+                            results_.additionalResults["fundingLegFxRate"] = fx;
+                        }
+
+                    };
                     if (currentIdx == 0 && arguments_.initialPrice_ != Null<Real>()) {
                         if (j == 0) {
                             localNotionalFactor =
@@ -686,6 +697,7 @@ void TRSWrapperAccrualEngine::calculate() const {
                             localFxFactor = getFxConversionRate(arguments_.valuationSchedule_[currentIdx],
                                                                 arguments_.initialPriceCurrency_,
                                                                 arguments_.fundingCurrency_, false);
+                            addPeriodResetFactor(localNotionalFactor, localFxFactor, false);
                         }
                     } else if (!arguments_.portfolioId_.empty() && arguments_.pricePerIndexUnit_) {
                         // Portfolio priced per index unit: the reset notional is taken once from the basket index
@@ -697,6 +709,7 @@ void TRSWrapperAccrualEngine::calculate() const {
                             localFxFactor = getFxConversionRate(arguments_.valuationSchedule_[currentIdx],
                                                                 arguments_.initialPriceCurrency_,
                                                                 arguments_.fundingCurrency_, false);
+                            addPeriodResetFactor(localNotionalFactor, localFxFactor);
                         }
                     } else {
                         localNotionalFactor = arguments_.underlyingMultiplier_[j] *
@@ -704,13 +717,8 @@ void TRSWrapperAccrualEngine::calculate() const {
                         localFxFactor =
                             getFxConversionRate(arguments_.valuationSchedule_[currentIdx], arguments_.assetCurrency_[j],
                                                 arguments_.fundingCurrency_, false);
+                        addPeriodResetFactor(localNotionalFactor, localFxFactor);
                     }
-
-                    fundingLegNotionalFactor += localNotionalFactor * localFxFactor;
-
-                    results_.additionalResults["fundingLegNotional" + resultSuffix + resultSuffix2] =
-                        localNotionalFactor;
-                    results_.additionalResults["fundingLegFxRate" + resultSuffix + resultSuffix2] = localFxFactor;
 
                 } else if (arguments_.fundingNotionalTypes_[i] == TRS::FundingData::NotionalType::DailyReset &&
                            (QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(cpn) ||
@@ -920,7 +928,7 @@ void TRSWrapperAccrualEngine::calculate() const {
 
     for (Size j = 0; j < arguments_.underlying_.size(); ++j) {
         // the start fixing will refer to the last of the nth current return periods
-        std::string resultSuffix = arguments_.underlying_.size() == 1 ? "" : "_" + std::to_string(j);
+        std::string resultSuffix = arguments_.underlying_.size() == 1 ? "" : "_" + std::to_string(j + 1);
         Real startFixing = Null<Real>(), todaysFixing = Null<Real>();
         try {
             if (!arguments_.portfolioId_.empty() && arguments_.pricePerIndexUnit_) {
