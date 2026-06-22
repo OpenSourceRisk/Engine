@@ -42,9 +42,8 @@ struct LoadFactor {
 
 class IntradayLoadProfile {
 public:
-    IntradayLoadProfile() {} 
+    IntradayLoadProfile() {}
     IntradayLoadProfile(std::vector<LoadFactor> load);
-
 
     const std::vector<LoadFactor>& loadProfile() const;
 
@@ -54,8 +53,6 @@ public:
 
 private:
     std::vector<LoadFactor> loadProfile_;
-    QuantLib::Real totalMWh_ = 0.0;
-    QuantLib::Real totalDeliveryHours_ = 0.0;
 };
 
 class IntradayPowerLoadTermStructure {
