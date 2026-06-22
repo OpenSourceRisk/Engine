@@ -59,6 +59,7 @@
 #include <signal.h>
 #endif
 
+#include <cstring>
 #include <ctime>
 
 using namespace std;
@@ -407,6 +408,18 @@ void setAssertHandler() { LOG("oreplus::data::setAssertHandler() not defined for
 static void _oreplus_handler(int sig) {
     ALOG("Received Signal " << sig)
     dumpStacktrace();
+
+    // Could use `signal(sig, SIG_DFL);` here but I read that using sigaction is more robust and portable, so let's do
+    // that instead. Main thing is that we want to reset the signal handler to default so that if the signal is raised
+    // again we don't keep calling our handler defined here and dumping the stacktrace.
+    struct sigaction sa;
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_handler = SIG_DFL;
+    sigemptyset(&sa.sa_mask);
+    sigaction(sig, &sa, NULL);
+
+    // Reraise the signal so that the default handler is called and the program terminates.
+    raise(sig);
 }
 
 void setAssertHandler() {
@@ -416,7 +429,15 @@ void setAssertHandler() {
     static bool sigaction_is_set = false;
     if (!sigaction_is_set) {
         struct sigaction psa;
+        // Not strictly necessary, but just in case we want to be sure that the struct is zeroed out.
+        memset(&psa, 0, sizeof(psa));
+        // Set the handler to our function.
         psa.sa_handler = _oreplus_handler;
+        // Clear the mask of signals to be blocked during the execution of the handler.
+        sigemptyset(&psa.sa_mask);
+        // Set the flags to reset the handler to the default after the first signal is received.
+        // I don't rely on this though and will reset the handler to default in the handler function.
+        psa.sa_flags = SA_RESETHAND;
         sigaction(SIGABRT, &psa, NULL);
         sigaction(SIGSEGV, &psa, NULL);
         sigaction_is_set = true;

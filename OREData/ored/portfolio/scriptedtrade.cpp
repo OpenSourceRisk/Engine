@@ -331,6 +331,7 @@ void ScriptedTrade::fromXML(XMLNode* node) {
         // the name of the node will be the name of the script variable
         std::string varName = XMLUtils::getNodeName(child);
         std::string type = XMLUtils::getAttribute(child, "type");
+
         QL_REQUIRE(!type.empty(), "no type given for node '" << varName << "'");
 
         std::string scalarValue = XMLUtils::getNodeValue(child);
