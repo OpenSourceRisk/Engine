@@ -167,7 +167,7 @@ QuantLib::ext::shared_ptr<NPVCubeWithMetaData> loadCube(const std::string& filen
     return result;
 }
 
-void saveCube(const std::string& filename, const NPVCubeWithMetaData& cube, uint gzipCompressionLevel) {
+void saveCube(const std::string& filename, const NPVCubeWithMetaData& cube, unsigned int gzipCompressionLevel) {
 
     // open file
 
@@ -330,7 +330,8 @@ QuantLib::ext::shared_ptr<AggregationScenarioData> loadAggregationScenarioData(c
     return result;
 }
 
-void saveAggregationScenarioData(const std::string& filename, const AggregationScenarioData& cube, uint gzipCompressionLevel) {
+void saveAggregationScenarioData(const std::string& filename, const AggregationScenarioData& cube,
+    unsigned int gzipCompressionLevel) {
 
     // open file
 
