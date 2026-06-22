@@ -309,7 +309,7 @@ string getOsVersion() {
         return unameData.release;
 }
 
-static string parseProcFile(const char* filename, const string& nodename) {
+string parseProcFile(const char* filename, const string& nodename) {
     ifstream ifile(filename);
     if (ifile.is_open()) {
         string line;
