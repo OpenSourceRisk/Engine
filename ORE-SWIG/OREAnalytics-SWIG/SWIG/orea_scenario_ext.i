@@ -195,7 +195,7 @@ public:
     void update(const Date& d = Date());
     virtual void preUpdate() = 0;
     virtual void updateDate(const Date&) = 0;
-    virtual Date loadNextScenario(const Date& d = Date()) = 0;
+    virtual Date loadNextScenario(const Date& d) = 0;
     virtual void applyLoadedScenario() = 0;
     void updateScenario(const Date& d = Date());
     virtual void postUpdate() = 0;
@@ -218,7 +218,7 @@ public:
 
     virtual void preUpdate() override;
     virtual void updateDate(const Date&) override;
-    virtual Date loadNextScenario(const Date& d = Date()) override;
+    virtual Date loadNextScenario(const Date& d) override;
     virtual void applyLoadedScenario() override;
     virtual void postUpdate() override;
     virtual void updateAsd() override;
