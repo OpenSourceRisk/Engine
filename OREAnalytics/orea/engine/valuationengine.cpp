@@ -269,6 +269,9 @@ void ValuationEngine::buildCube(const QuantLib::ext::shared_ptr<data::Portfolio>
         detail << nTrades << " trade" << (nTrades == 1 ? "" : "s") << ", " << outputCube->samples() << " sample"
                << (outputCube->samples() == 1 ? "" : "s");
         updateProgress(sample * nTrades, outputCube->samples() * nTrades, detail.str());
+
+        if (fixingManager_ && dg_->size() > 1)
+            fixingManager_->reset();
     }
 
     if (dryRun) {
