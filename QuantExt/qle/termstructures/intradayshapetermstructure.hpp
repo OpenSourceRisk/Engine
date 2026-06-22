@@ -26,6 +26,7 @@
 #include <ql/math/comparison.hpp>
 #include <ql/quote.hpp>
 #include <ql/termstructure.hpp>
+#include <qle/utilities/time.hpp>
 
 #include <map>
 #include <utility>
@@ -48,8 +49,9 @@ public:
     //@{
     // Use map of maps to ensure that no duplicates and shapefactors are sorted
     IntradayShapeTermstructure(const std::map<QuantLib::Date, std::map<int, QuantLib::Real>>& shapeFactors,
-                               const std::map<QuantLib::Date, std::map<int, QuantLib::Real>>& shapeFactorsDST) :
-        shapeFactors_(toSortedVectors(shapeFactors)), shapeFactorsDST_(toSortedVectors(shapeFactorsDST)) {}
+                               const std::map<QuantLib::Date, std::map<int, QuantLib::Real>>& shapeFactorsDST,
+                               const std::string& daylightSavingsLocation = "") :
+        shapeFactors_(toSortedVectors(shapeFactors)), shapeFactorsDST_(toSortedVectors(shapeFactorsDST)), daylightSavingsLocation_(daylightSavingsLocation) {}
     //@}
 
     virtual ~IntradayShapeTermstructure() = default;
@@ -126,8 +128,7 @@ public:
     
     // returns -1, 0, +1 depending if the day is a day with a DST change and if the change is backward, no change, or forward
     virtual int dayTimeSavingsAdjustment(const QuantLib::Date& d) const {
-        // TODO implement later, virtual for testing purposes for now
-        return 0;
+        return daylightSavingCorrection(daylightSavingsLocation_.empty() ? "Null" : daylightSavingsLocation_, d, d+1);
     }
 
     QuantLib::Real hoursPerDay(const QuantLib::Date& d) const { return 24.0 + dayTimeSavingsAdjustment(d); }
@@ -151,6 +152,7 @@ private:
     std::map<QuantLib::Date, ShapeFactors> shapeFactors_;
     std::map<QuantLib::Date, ShapeFactors> shapeFactorsDST_;
     mutable std::map<QuantLib::Date, QuantLib::Real> dayFactors_;
+    std::string daylightSavingsLocation_;
 };
 
 } // namespace QuantExt
