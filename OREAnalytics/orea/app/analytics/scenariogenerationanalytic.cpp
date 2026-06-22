@@ -116,7 +116,7 @@ void ScenarioGenerationAnalyticImpl::buildScenarioSimMarket() {
     simMarket_ = QuantLib::ext::make_shared<ScenarioSimMarket>(
         analytic()->market(), analytic()->configurations().simMarketParams, configuration,
         *inputs_->curveConfigs().get(), *analytic()->configurations().todaysMarketParams, inputs_->continueOnError(),
-        false, true, false, false, inputs_->iborFallbackConfig(), false);
+        false, true, false, inputs_->iborFallbackConfig(), false);
 }
 
 void ScenarioGenerationAnalyticImpl::buildScenarioGenerator(const bool continueOnCalibrationError,

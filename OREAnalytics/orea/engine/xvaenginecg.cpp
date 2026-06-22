@@ -155,7 +155,7 @@ void XvaEngineCG::buildSsm() {
     // note: set useSpreadedTermStructures == true here even if sensi config does not have that
     simMarket_ = QuantLib::ext::make_shared<ore::analytics::ScenarioSimMarket>(
         initMarket_, simMarketData_, marketConfiguration_, *curveConfigs_, *todaysMarketParams_, continueOnError_, true,
-        false, false, false, iborFallbackConfig_, true);
+        false, false, iborFallbackConfig_, true);
 
     simMarketObs_ = static_pointer_cast<ore::data::Market>(simMarket_);
 
@@ -1898,8 +1898,8 @@ void XvaEngineCG::calculateSensitivities() {
             // update sim market to next scenario
 
             simMarket_->preUpdate();
-            simMarket_->updateScenario(asof_);
-            simMarket_->postUpdate(asof_);
+            simMarket_->updateScenario();
+            simMarket_->postUpdate();
 
             // recalibrate the model
 

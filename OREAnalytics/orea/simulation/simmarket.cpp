@@ -21,16 +21,15 @@
 namespace ore {
 namespace analytics {
 
-void SimMarket::update(const Date& d) {
+void SimMarket::update(const QuantLib::Date& d) {
     preUpdate();
-    auto d2 = loadNextScenario(d);
-    updateDate(std::max(d, d2));
+    updateDate(loadNextScenario(d));
     applyLoadedScenario();
-    postUpdate(d);
-    updateAsd(d);
+    postUpdate();
+    updateAsd();
 }
 
-void SimMarket::updateScenario(const Date& d) {
+void SimMarket::updateScenario(const QuantLib::Date& d) {
     loadNextScenario(d);
     applyLoadedScenario();
 }

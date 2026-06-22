@@ -595,7 +595,7 @@ void XvaAnalyticImpl::buildScenarioSimMarket() {
     simMarket_ = QuantLib::ext::make_shared<ScenarioSimMarket>(
         analytic()->market(), analytic()->configurations().simMarketParams, configuration,
         *inputs_->curveConfigs().get(), *analytic()->configurations().todaysMarketParams, inputs_->continueOnError(),
-        false, true, xvaVars->allowPartialScenarios_, false, inputs_->iborFallbackConfig(), false,
+        false, true, xvaVars->allowPartialScenarios_, inputs_->iborFallbackConfig(), false,
         analytic()->offsetScenario());
 
     if (analytic()->offsetScenario() == nullptr) {
@@ -606,13 +606,13 @@ void XvaAnalyticImpl::buildScenarioSimMarket() {
         simMarketCalibration_ = QuantLib::ext::make_shared<ScenarioSimMarket>(
             analytic()->market(), analytic()->offsetSimMarketParams(), configuration, *inputs_->curveConfigs().get(),
             *analytic()->configurations().todaysMarketParams, inputs_->continueOnError(), true, true,
-            xvaVars->allowPartialScenarios_, false, inputs_->iborFallbackConfig(), false, analytic()->offsetScenario());
+            xvaVars->allowPartialScenarios_, inputs_->iborFallbackConfig(), false, analytic()->offsetScenario());
 
         // Create a third market used for AMC and Postprocessor, holds a larger simmarket, e.g. default curves
         offsetSimMarket_ = QuantLib::ext::make_shared<ScenarioSimMarket>(
             analytic()->market(), analytic()->offsetSimMarketParams(), configuration, *inputs_->curveConfigs().get(),
             *analytic()->configurations().todaysMarketParams, inputs_->continueOnError(), true, true,
-            xvaVars->allowPartialScenarios_, false, inputs_->iborFallbackConfig(), false, analytic()->offsetScenario());
+            xvaVars->allowPartialScenarios_, inputs_->iborFallbackConfig(), false, analytic()->offsetScenario());
 
         TLOG("XvaAnalytic: Offset Scenario used in building SimMarket");
         TLOG("XvaAnalytic: Offset scenario is absolute = " << analytic()->offsetScenario()->isAbsolute());

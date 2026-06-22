@@ -364,7 +364,7 @@ void MultiThreadedValuationEngine::buildCube(
                 QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket> simMarket =
                     QuantLib::ext::make_shared<ore::analytics::ScenarioSimMarket>(
                         initMarket, simMarketData_, configuration_, *curveConfigs_, *todaysMarketParams_, true,
-                        useSpreadedTermStructures_, cacheSimData_, false, true, iborFallbackConfig_,
+                        useSpreadedTermStructures_, cacheSimData_, false, iborFallbackConfig_,
                         handlePseudoCurrenciesSimMarket_, offsetScenario_);
 
                 // set aggregation scenario data, but only in one of the sim markets, that's sufficient to populate it

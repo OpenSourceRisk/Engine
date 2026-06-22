@@ -358,13 +358,12 @@ ScenarioSimMarket::ScenarioSimMarket(
     const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& parameters, const std::string& configuration,
     const ore::data::CurveConfigurations& curveConfigs, const ore::data::TodaysMarketParameters& todaysMarketParams,
     const bool continueOnError, const bool useSpreadedTermStructures, const bool cacheSimData,
-    const bool allowPartialScenarios, const bool allowDateUpdateFromScenario,
-    const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig, const bool handlePseudoCurrencies,
-    const QuantLib::ext::shared_ptr<Scenario>& offSetScenario)
+    const bool allowPartialScenarios, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
+    const bool handlePseudoCurrencies, const QuantLib::ext::shared_ptr<Scenario>& offSetScenario)
     : SimMarket(handlePseudoCurrencies), parameters_(parameters), filter_(QuantLib::ext::make_shared<ScenarioFilter>()),
       useSpreadedTermStructures_(useSpreadedTermStructures), cacheSimData_(cacheSimData),
-      allowPartialScenarios_(allowPartialScenarios), allowDateUpdateFromScenario_(allowDateUpdateFromScenario),
-      iborFallbackConfig_(iborFallbackConfig), offsetScenario_(offSetScenario) {
+      allowPartialScenarios_(allowPartialScenarios), iborFallbackConfig_(iborFallbackConfig),
+      offsetScenario_(offSetScenario) {
 
     LOG("building ScenarioSimMarket...");
     asof_ = initMarket->asofDate();
@@ -3669,9 +3668,9 @@ void ScenarioSimMarket::updateDate(const Date& d) {
 Date ScenarioSimMarket::loadNextScenario(const Date& d) {
     QL_REQUIRE(scenarioGenerator_ != nullptr, "ScenarioSimMarket::update: no scenario generator set");
     loadedScenario_ = scenarioGenerator_->next(d);
-    QL_REQUIRE(allowDateUpdateFromScenario_ || loadedScenario_->asof() == d,
-               "ScenarioSimMarket::loadNextScenario(): scenario asof ("
-                   << loadedScenario_->asof() << ") does not match update date (" << d << ")");
+    QL_REQUIRE(d == Date() || d == loadedScenario_->asof(), "ScenarioSimMarket::loadNextScenario(): date ("
+                                                                << d << ") inconsistent with scenario asof ("
+                                                                << loadedScenario_->asof() << ").");
     return loadedScenario_->asof();
 }
 
@@ -3679,7 +3678,7 @@ void ScenarioSimMarket::applyLoadedScenario() {
     applyScenario(loadedScenario_);
 }
 
-void ScenarioSimMarket::postUpdate(const Date& d) {
+void ScenarioSimMarket::postUpdate() {
     ObservationMode::Mode om = ObservationMode::instance().mode();
     // Observation Mode - key to update these before fixings are set
     if (om == ObservationMode::Mode::Disable) {
@@ -3712,9 +3711,11 @@ void ScenarioSimMarket::setAsd(Size cacheCounter) {
     asd_->set(numeraire_, AggregationScenarioDataType::Numeraire);
 }
 
-void ScenarioSimMarket::updateAsd(const Date& d) {
+void ScenarioSimMarket::updateAsd() {
 
     if (asd_) {
+
+        Date d = Settings::instance().evaluationDate();
 
         if (cachingAsd_) {
 

@@ -254,7 +254,7 @@ void HistoricalPnlGenerator::generateCube(const QuantLib::ext::shared_ptr<Scenar
                             // Build ScenarioSimMarket (once per thread)
                             auto simMkt = QuantLib::ext::make_shared<ScenarioSimMarket>(
                                 initMarket, simMarketData_, configuration_, *curveConfigs_, *todaysMarketParams_, true,
-                                false, false, false, false, iborFallbackConfig_, true);
+                                false, false, false, iborFallbackConfig_, true);
 
                             // Link scenario generator and set filter
                             simMkt->scenarioGenerator() = localHisScenGen;

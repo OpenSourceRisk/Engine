@@ -199,7 +199,7 @@ void ParametricVarAnalyticImpl::setVarReport(const QuantLib::ext::shared_ptr<ore
         auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
             analytic()->market(), analytic()->configurations().simMarketParams, Market::defaultConfiguration,
             *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams, true, false,
-            false, false, true, inputs_->iborFallbackConfig());
+            false, false, inputs_->iborFallbackConfig());
         simMarket->scenarioGenerator() = scenarios;
         scenarios->baseScenario() = simMarket->baseScenario();
 
@@ -261,7 +261,7 @@ void HistoricalSimulationVarAnalyticImpl::setVarReport(
                                               false, inputs_->csvQuoteChar(), inputs_->reportNaString()));
     auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
         analytic()->market(), analytic()->configurations().simMarketParams, Market::defaultConfiguration,
-        *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams, true, false, false,
+        *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams, true, false,
         allowPartialScenarios_, true, inputs_->iborFallbackConfig());
     simMarket->scenarioGenerator() = scenarios;
     scenarios->baseScenario() = simMarket->baseScenario();

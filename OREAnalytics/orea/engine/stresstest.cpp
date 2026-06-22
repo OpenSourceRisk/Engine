@@ -69,7 +69,7 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
 
     QuantLib::ext::shared_ptr<ScenarioSimMarket> simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
         market, simMarketData, marketConfiguration, curveConfigs, todaysMarketParams, continueOnError,
-        stressData->useSpreadedTermStructures(), false, false, true, iborFallbackConfig, true);
+        stressData->useSpreadedTermStructures(), false, false, iborFallbackConfig, true);
 
     QuantLib::ext::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
     auto scenFactory =
@@ -105,7 +105,7 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
 
     QuantLib::ext::shared_ptr<ScenarioSimMarket> simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
         market, simMarketData, marketConfiguration, curveConfigs, todaysMarketParams, continueOnError, true, false,
-        false, true, iborFallbackConfig, true);
+        false, iborFallbackConfig, true);
 
     QuantLib::ext::shared_ptr<Scenario> baseScenario = simMarket->baseScenarioAbsolute();
     QuantLib::ext::shared_ptr<ShiftScenarioGenerator> scenarioGenerator =

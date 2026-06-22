@@ -952,7 +952,7 @@ void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<ore::data::Po
             std::string configuration = configurationFinalModel_;
             market = QuantLib::ext::make_shared<ScenarioSimMarket>(
                 initMarket, simMarketParams_, configuration, *curveConfigs_, *todaysMarketParams_, continueOnError,
-                true, true, false, false, iborFallbackConfig_, false, offsetScenario_);
+                true, true, false, iborFallbackConfig_, false, offsetScenario_);
         }
         ore::data::CrossAssetModelBuilder modelBuilder(
             market, crossAssetModelData_, configurationLgmCalibration_, configurationFxCalibration_,

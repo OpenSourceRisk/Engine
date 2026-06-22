@@ -82,7 +82,6 @@ public:
                       const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
                       const bool continueOnError = false, const bool useSpreadedTermStructures = false,
                       const bool cacheSimData = false, const bool allowPartialScenarios = false,
-                      const bool allowDateUpdateFromScenario = false,
                       const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
                           QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
                       const bool handlePseudoCurrencies = true,
@@ -108,8 +107,8 @@ public:
     void updateDate(const Date&) override;
     Date loadNextScenario(const Date&) override;
     void applyLoadedScenario() override;
-    void postUpdate(const Date& d) override;
-    void updateAsd(const Date&) override;
+    void postUpdate() override;
+    void updateAsd() override;
 
     //! Reset sim market to initial state
     virtual void reset() override;
@@ -193,7 +192,6 @@ protected:
 
     bool cacheSimData_;
     bool allowPartialScenarios_;
-    bool allowDateUpdateFromScenario_;
     QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig_;
 
     // for delta scenario application
