@@ -192,11 +192,16 @@ public:
 class SimMarket : public ore::data::MarketImpl {
 public:
     explicit SimMarket(const bool handlePseudoCurrencies);
+    void update(const Date& d = Date());
     virtual void preUpdate() = 0;
     virtual void updateDate(const Date&) = 0;
-    virtual void updateScenario(const Date&) = 0;
-    virtual void postUpdate(const Date& d) = 0;
-    virtual void updateAsd(const Date&) = 0;
+    virtual Date loadNextScenario(const Date& d = Date()) = 0;
+    virtual void applyLoadedScenario() = 0;
+    void updateScenario(const Date& d = Date());
+    virtual void postUpdate() = 0;
+    virtual void updateAsd() = 0;
+    Real numeraire() { return numeraire_; }
+    const std::string& label() { return label_; }
     virtual void reset() = 0;
 };
 
@@ -212,10 +217,11 @@ public:
     virtual const QuantLib::ext::shared_ptr<ore::analytics::ScenarioFilter>& filter() const;
 
     virtual void preUpdate() override;
-    virtual void updateScenario(const Date&) override;
     virtual void updateDate(const Date&) override;
-    virtual void postUpdate(const Date& d) override;
-    virtual void updateAsd(const Date&) override;
+    virtual Date loadNextScenario(const Date& d = Date()) override;
+    virtual void applyLoadedScenario() override;
+    virtual void postUpdate() override;
+    virtual void updateAsd() override;
     virtual void reset() override;
 
     virtual QuantLib::ext::shared_ptr<QuantExt::Scenario> baseScenario() const;
