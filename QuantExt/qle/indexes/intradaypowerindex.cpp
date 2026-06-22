@@ -53,17 +53,8 @@ IntradayPowerIndex::IntradayPowerIndex(const std::string& underlyingName, const 
     registerWith(notifier());
 
     if (loadProfile_ != nullptr) {
-        for (const auto& [start, end, load] : loadProfile_->loadProfile()) {
-            std::string name = bucketName(name_, start, end, false);
-            QL_DEPRECATED_DISABLE_WARNING
-            registerWith(IndexManager::instance().notifier(name));
-            QL_DEPRECATED_ENABLE_WARNING
-        }
-    }
-
-    if (loadProfile_ != nullptr) {
-        for (const auto& [start, end, load] : loadProfile_->loadProfileDST()) {
-            std::string name = bucketName(name_, start, end, true);
+        for (const auto& [start, end, load, isDST, mwh] : loadProfile_->loadProfile()) {
+            std::string name = bucketName(name_, start, end, isDST);
             QL_DEPRECATED_DISABLE_WARNING
             registerWith(IndexManager::instance().notifier(name));
             QL_DEPRECATED_ENABLE_WARNING
@@ -92,12 +83,19 @@ Real IntradayPowerIndex::forecastFixing(const Date& fixingDate) const {
     QL_REQUIRE(!intradayCurve_.empty(), "Intraday curve not provided for forecast fixing");
     if (deliveryTime_.has_value()) {
         auto [start, end, isDstHour] = *deliveryTime_;
-        auto load =
-            QuantLib::ext::make_shared<IntradayLoadProfile>(isDstHour ? LoadFactors{} : LoadFactors{{start, end, 1.0}},
-                                                            isDstHour ? LoadFactors{{start, end, 1.0}} : LoadFactors{});
-        return intradayCurve_->price(fixingDate, load);
+        return forecastBucketFixing(fixingDate, start, end, isDstHour);
     }
-    return intradayCurve_->price(fixingDate, loadProfile_);
+    if (loadProfile_ == nullptr)
+        return intradayCurve_->price(fixingDate, true);
+    auto loadWeightedPrice = 0.0;
+    auto totalLoad = 0.0;
+    for (const auto& [start, end, load, isDstHour, mwh] : loadProfile_->loadProfile()) {
+        if (mwh == 0.0)
+            continue;
+        loadWeightedPrice += mwh * forecastBucketFixing(fixingDate, start, end, isDstHour);
+        totalLoad += mwh;
+    }
+    return totalLoad > 0 ? loadWeightedPrice / totalLoad : 0.0;
 }
 
 Real IntradayPowerIndex::pastIntradayFixing(const Date& fixingDate, int start, int end, bool isDstHour) const {
@@ -124,11 +122,7 @@ Real IntradayPowerIndex::forecastBucketFixing(const Date& fixingDate, int start,
     QL_REQUIRE(end <= 24 * 3600, "end must be <= 24h in seconds, got " << end);
     QL_REQUIRE(!isDstHour || (start >= 2 * 3600 && end <= 3 * 3600),
                "DST hour must be between 2am and 3am, got " << start << "-" << end);
-
-    auto load =
-        QuantLib::ext::make_shared<IntradayLoadProfile>(isDstHour ? LoadFactors{} : LoadFactors{{start, end, 1.0}},
-                                                        isDstHour ? LoadFactors{{start, end, 1.0}} : LoadFactors{});
-    return intradayCurve_->price(fixingDate, load);
+    return intradayCurve_->price(fixingDate, start, end, isDstHour, true);
 }
 
 Real IntradayPowerIndex::pastBucketFixing(const Date& fixingDate, int start, int end, bool isDstHour,
@@ -169,19 +163,13 @@ Real IntradayPowerIndex::pastFixing(const Date& fixingDate) const {
     // future improvement, define a granularity and use it to fetch the price for each time bucket
     auto amount = 0.0;
     auto totalLoad = 0.0;
-    for (const auto& [start, end, load] : loadProfile_->loadProfile()) {
+    for (const auto& [start, end, load, isDstHour, mwh] : loadProfile_->loadProfile()) {
         if (load == 0.0)
             continue;
-        totalLoad += load * (end - start);
-        amount += load * (end - start) * pastBucketFixing(fixingDate, start, end, false, enforceTodaysFixing);
+        totalLoad += mwh;
+        amount += mwh * pastBucketFixing(fixingDate, start, end, isDstHour, enforceTodaysFixing);
     }
-    for (const auto& [start, end, load] : loadProfile_->loadProfileDST()) {
-        if (load == 0.0)
-            continue;
-        totalLoad += load * (end - start);
-        amount += load * (end - start) * pastBucketFixing(fixingDate, start, end, true, enforceTodaysFixing);
-    }
-    return (totalLoad == 0.0) ? 0.0 : amount / totalLoad;
+    return (totalLoad > 0.0) ? amount / totalLoad : 0.0;
 }
 
 Real IntradayPowerIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {
@@ -205,13 +193,9 @@ Real IntradayPowerIndex::fixing(const Date& fixingDate, bool forecastTodaysFixin
 const std::vector<std::string> IntradayPowerIndex::intraDayIndexNames() const {
     std::set<std::string> names;
     if (loadProfile_ != nullptr) {
-        for (const auto& [start, end, load] : loadProfile_->loadProfile()) {
+        for (const auto& [start, end, load, isDstHour, mwh] : loadProfile_->loadProfile()) {
             if (load > 0.0)
                 names.insert(bucketName(name_, start, end, false));
-        }
-        for (const auto& [start, end, load] : loadProfile_->loadProfileDST()) {
-            if (load > 0.0)
-                names.insert(bucketName(name_, start, end, true));
         }
     } else {
         names.insert(name_);

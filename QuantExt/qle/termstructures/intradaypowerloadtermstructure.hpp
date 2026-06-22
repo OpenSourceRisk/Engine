@@ -29,22 +29,31 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 
 namespace QuantExt {
 
-using LoadFactors = std::vector<std::tuple<int, int, double>>;
+struct LoadFactor {
+    const int startTime;
+    const int endTime;
+    const QuantLib::Real load;
+    const bool isDSTextraHour;
+    const QuantLib::Real mwhValue;
+
+    LoadFactor(int start, int end, QuantLib::Real load, bool isDST = false)
+        : startTime(start), endTime(end), load(load), isDSTextraHour(isDST), mwhValue(load * (end - start) / 3600.0) {}
+};
+
 class IntradayLoadProfile {
 public:
     IntradayLoadProfile() {} 
-    IntradayLoadProfile(const LoadFactors& load, const LoadFactors& loadDST);
+    IntradayLoadProfile(std::vector<LoadFactor> load);
 
-    const LoadFactors& loadProfile() const;
-    const LoadFactors& loadProfileDST() const;
+
+    const std::vector<LoadFactor>& loadProfile() const;
 
     QuantLib::Real totalMWh() const;
 
     QuantLib::Real totalDeliveryHours() const;
 
 private:
-    LoadFactors loadProfile_;
-    LoadFactors loadProfileDST_;
+    std::vector<LoadFactor> loadProfile_;
     QuantLib::Real totalMWh_ = 0.0;
     QuantLib::Real totalDeliveryHours_ = 0.0;
 };

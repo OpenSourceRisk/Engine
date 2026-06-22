@@ -35,28 +35,20 @@ template <typename T> T find(const std::map<QuantLib::Date, T>& m, const QuantLi
 }
 } // namespace
 
-IntradayLoadProfile::IntradayLoadProfile(const LoadFactors& load, const LoadFactors& loadDST)
-    : loadProfile_(std::move(load)), loadProfileDST_(std::move(loadDST)) {
+IntradayLoadProfile::IntradayLoadProfile(std::vector<LoadFactor> load)
+    : loadProfile_(std::move(load)) {
     totalDeliveryHours_ = 0.0;
     totalMWh_ = 0.0;
 
-    for (const auto& [start, end, load] : loadProfile_) {
+    for (const auto& [start, end, load, isDST, mwh] : loadProfile_) {
         if (load > 0.0) {
-            totalMWh_ += load * (end - start) / 3600.0;
-            totalDeliveryHours_ += (end - start) / 3600.0;
-        }
-    }
-
-    for (const auto& [start, end, load] : loadProfileDST_) {
-        if (load > 0.0) {
-            totalMWh_ += load * (end - start) / 3600.0;
+            totalMWh_ += mwh;
             totalDeliveryHours_ += (end - start) / 3600.0;
         }
     }
 }
 
-const LoadFactors& IntradayLoadProfile::loadProfile() const { return loadProfile_; }
-const LoadFactors& IntradayLoadProfile::loadProfileDST() const { return loadProfileDST_; }
+const std::vector<LoadFactor>& IntradayLoadProfile::loadProfile() const { return loadProfile_; }
 
 QuantLib::Real IntradayLoadProfile::totalMWh() const { return totalMWh_; }
 
@@ -73,12 +65,13 @@ IntradayPowerLoadTermStructureExplicit::loadProfile(const QuantLib::Date& d) con
 QuantLib::ext::shared_ptr<IntradayLoadProfile>
 IntradayPowerLoadTermStructureBusinessDayRule::loadProfile(const QuantLib::Date& d) const {
     auto loadShape = find(loadingShapes_, d);
-    if (loadShape == nullptr)
+    if (loadShape == nullptr){
         return QuantLib::ext::shared_ptr<IntradayLoadProfile>();
-    if (loadShape->calendar.isBusinessDay(d))
+    }
+    if (loadShape->calendar.isBusinessDay(d)){
         return loadShape->businessDayProfile;
-    else
-        return loadShape->nonBusinessDayProfile;
+    }
+    return loadShape->nonBusinessDayProfile;
 }
 
 } // namespace QuantExt

@@ -94,11 +94,9 @@ void IntradayPowerForward::build(const QuantLib::ext::shared_ptr<EngineFactory>&
         additionalData_["fixingDate"] = fixingDate_;
         additionalData_["fxIndex"] = fxIndex;
     }
-    QuantExt::LoadFactors factors { {deliveryStart_, deliveryEnd_, quantity_}};
-    auto loadFactors = isDstHour_ ? QuantExt::LoadFactors {} : factors ;
-    auto loadFactorsDst = isDstHour_ ? factors : QuantExt::LoadFactors {};
+    std::vector<QuantExt::LoadFactor> factors(1, QuantExt::LoadFactor {deliveryStart_, deliveryEnd_, quantity_, isDstHour_});
 
-    auto loadProfile = QuantLib::ext::make_shared<QuantExt::IntradayLoadProfile>(loadFactors, loadFactorsDst);
+    auto loadProfile = QuantLib::ext::make_shared<QuantExt::IntradayLoadProfile>(factors);
 
     index = index->clone(deliveryDate_, loadProfile);
 

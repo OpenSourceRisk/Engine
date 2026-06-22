@@ -409,8 +409,16 @@ void IntradayPowerFloatingLegData::fromXML(XMLNode* node) {
         businessDays_ = parseBool(XMLUtils::getNodeValue(n));
     }
 
-    
-    if (XMLNode* n = XMLUtils::getChildNode(node, "PowerLoadProfileData")) {
+    powerLoadProfileReference_ = XMLUtils::getChildValue(node, "PowerLoadProfileReference", false);
+    if (!powerLoadProfileReference_.empty() && InstrumentConventions::instance().conventions()->has(
+                                             powerLoadProfileReference_, Convention::Type::IntradayPowerLoad)) {
+        auto [found, conv] = InstrumentConventions::instance().conventions()->get(powerLoadProfileReference_, Convention::Type::IntradayPowerLoad);
+        loadProfileData_ = QuantLib::ext::dynamic_pointer_cast<IntradayPowerLoadConvention>(conv)->data();
+
+    }
+
+    if (XMLNode* n = XMLUtils::getChildNode(node, "PowerLoadProfileData");
+        !loadProfileData_.has_value() && n != nullptr) {
         loadProfileData_ = PowerLoadProfileData();
         loadProfileData_->fromXML(n);
     }
@@ -456,7 +464,9 @@ XMLNode* IntradayPowerFloatingLegData::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "IncludePeriodEnd", includePeriodEnd_);
     XMLUtils::addChild(doc, node, "BusinessDays", businessDays_);
 
-    if (loadProfileData_.has_value()) {
+    if (powerLoadProfileReference_ != "") {
+        XMLUtils::addChild(doc, node, "PowerLoadProfileReference", powerLoadProfileReference_);
+    } else if (loadProfileData_.has_value()) {
         auto lpNode = loadProfileData_->toXML(doc);
         XMLUtils::appendNode(node, lpNode);
     }

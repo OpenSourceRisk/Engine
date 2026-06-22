@@ -2968,6 +2968,8 @@ QuantLib::ext::shared_ptr<Convention> Conventions::get(const string& id) const {
         convention = QuantLib::ext::make_shared<ZeroInflationIndexConvention>();
     } else if (type == "BondYield") {
         convention = QuantLib::ext::make_shared<BondYieldConvention>();
+    } else if (type == "IntradayPowerLoad") {
+        convention = QuantLib::ext::make_shared<IntradayPowerLoadConvention>();
     } else {
         QL_FAIL("Convention '" << id << "' has unknown type '" + type + "' not recognized.");
     }
@@ -3068,8 +3070,7 @@ void IntradayPowerLoadConvention::fromXML(XMLNode* node) {
     // Parse the PowerLoadProfileData from the XML node
     XMLNode* dataNode = XMLUtils::getChildNode(node, "PowerLoadProfileData");
     if (dataNode) {
-        data_ = QuantLib::ext::make_shared<PowerLoadProfileData>();
-        data_->fromXML(dataNode);
+        data_.fromXML(dataNode);
     }
     build();
 }
@@ -3078,10 +3079,8 @@ XMLNode* IntradayPowerLoadConvention::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("IntradayPowerLoad");
     XMLUtils::addChild(doc, node, "Id", id_);
 
-    if (data_) {
-        XMLNode* dataNode = data_->toXML(doc);
-        XMLUtils::appendNode(node, dataNode);
-    }
+    XMLNode* dataNode = data_.toXML(doc);
+    XMLUtils::appendNode(node, dataNode);
 
     return node;
 }

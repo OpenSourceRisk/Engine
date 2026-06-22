@@ -2018,12 +2018,12 @@ private:
 class IntradayPowerLoadConvention : public Convention {
 public:
     IntradayPowerLoadConvention() : Convention("", Type::IntradayPowerLoad) {}
-    IntradayPowerLoadConvention(const string& id, const QuantLib::ext::shared_ptr<PowerLoadProfileData>& data)
-        : Convention(id, Type::IntradayPowerLoad), data_(data) {}
+    IntradayPowerLoadConvention(const string& id, PowerLoadProfileData data)
+        : Convention(id, Type::IntradayPowerLoad), data_(std::move(data)) {}
 
     //! \name Inspectors
     //@{
-    const QuantLib::ext::shared_ptr<PowerLoadProfileData>& data() const { return data_; }
+    const PowerLoadProfileData& data() const { return data_; }
     //@}
 
     //! \name Serialisation
@@ -2034,7 +2034,7 @@ public:
     //@}
 
 private:
-    QuantLib::ext::shared_ptr<PowerLoadProfileData> data_;
+    PowerLoadProfileData data_;
 };
 
 } // namespace data

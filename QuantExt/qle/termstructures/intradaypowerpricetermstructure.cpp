@@ -29,9 +29,6 @@
 
 namespace QuantExt {
 
-
-
-
 IntradayPowerPriceTermStructure::IntradayPowerPriceTermStructure(
     const QuantLib::Handle<PriceTermStructure>& underlying,
     const QuantLib::ext::shared_ptr<IntradayShapeTermstructure>& shape)
@@ -87,8 +84,19 @@ QuantLib::Real intradayShapeFactor(const QuantLib::Date& d, int startTime, int e
         return 1.0;
     }
     if (dts == -1 && startTime < 3 * 3600 && endTime > 2 * 3600) {
-        QL_FAIL("Time between 2am and 3am on " << d << " is not valid due to DST change, got startTime " << startTime
-                                               << " and endTime " << endTime);
+        auto startTimeBefore2am = std::min(startTime, 2 * 3600);
+        auto endTimeAfter3am = std::max(endTime, 3 * 3600);
+        // compute time time weighted average of the shape factor for the hours before 2am and the shape factor for the
+        // hours after 3am
+        auto validDuration = (2 * 3600 - startTimeBefore2am) + (endTimeAfter3am - 3 * 3600);
+        if (validDuration <= 0) {
+            return 0;
+        }
+        auto priceFactorBefore2am = timeWeightedShapeFactor(factors, startTimeBefore2am, 2 * 3600);
+        auto priceFactorAfter3am = timeWeightedShapeFactor(factors, 3 * 3600, endTimeAfter3am);
+        return (priceFactorBefore2am * (2 * 3600 - startTimeBefore2am) +
+                priceFactorAfter3am * (endTimeAfter3am - 3 * 3600)) /
+               validDuration;
     }
     if (dts == 1 && isDSTHour) {
         // The repeated 2-3am hour on a fall-back DST day.
@@ -108,50 +116,23 @@ QuantLib::Real intradayShapeFactor(const QuantLib::Date& d, int startTime, int e
     return timeWeightedShapeFactor(factors, startTime, endTime);
 }
 
-
-
-QuantLib::Real
-IntradayPowerPriceTermStructure::price(const QuantLib::Date& d,
-                                  const QuantLib::ext::shared_ptr<QuantExt::IntradayLoadProfile>& load,
-                                  bool extrapolate) const {
-    if (shape_ == nullptr || load == nullptr || load->loadProfile().empty()) {
+QuantLib::Real IntradayPowerPriceTermStructure::price(const QuantLib::Date& d, int deliveryStartTime,
+                                                      int deliveryEndTime, bool isDSTextraHour,
+                                                      bool extrapolate) const {
+    if (shape_ == nullptr) {
         return price(d, extrapolate);
     }
-    if (load->totalMWh() == 0.0) {
-        return 0.0;
-    }
+
     auto underlyingPrice = underlying_->price(d, extrapolate);
     auto shapeFactor = shape_->hasShapeFactors(d) ? shape_->shapeFactors(d) : ShapeFactors();
     auto dstShapeFactor = shape_->hasShapeFactorsDST(d) ? shape_->shapeFactorsDST(d) : ShapeFactors();
     auto dstAdj = shape_->dayTimeSavingsAdjustment(d);
-    auto amount = 0.0;
-    for(const auto& [start, end, loadFactor] : load->loadProfile()) {
-        QL_REQUIRE(start >= 0, "start time in load profile must be >= 0, got " << start);
-        QL_REQUIRE(end > start, "end time in load profile must be > start time, got " << end << " <= " << start);
-        QL_REQUIRE(end <= 24 * 3600, "end time in load profile out of range, got " << end);
-        amount += loadFactor * (end-start) / 3600. * intradayShapeFactor(d, start, end, false, shapeFactor, dstShapeFactor, dstAdj) *  underlyingPrice;
-    }
-    for(const auto& [start, end, loadFactor] : load->loadProfileDST()) {
-        QL_REQUIRE(start >= 2 * 3600 && start < 3 * 3600, "start time in DST load profile must be between 2am and 3am, got " << start);
-        QL_REQUIRE(end > start && end <= 3 * 3600, "end time in DST load profile must be between 2am and 3am and greater than start time, got " << end);
-        amount += loadFactor * (end-start) / 3600. * intradayShapeFactor(d, start, end, true, shapeFactor, dstShapeFactor, dstAdj) * underlyingPrice;
-    }
-    return amount / load->totalMWh();
+
+    return intradayShapeFactor(d, deliveryStartTime, deliveryEndTime, isDSTextraHour, shapeFactor, dstShapeFactor,
+                               dstAdj) *
+           underlyingPrice;
 }
 
-QuantLib::Real
-IntradayPowerPriceTermStructure::price(QuantLib::Time t,
-                                  const QuantLib::ext::shared_ptr<QuantExt::IntradayLoadProfile>& load,
-                                  bool extrapolate) const {
-    auto d = lowerDate(t, referenceDate(), dayCounter());
-    return price(d, load, extrapolate);
-}
-//@}
-
-void IntradayPowerPriceTermStructure::update() {
-    TermStructure::update();
-}
-
+void IntradayPowerPriceTermStructure::update() { TermStructure::update(); }
 
 } // namespace QuantExt
-

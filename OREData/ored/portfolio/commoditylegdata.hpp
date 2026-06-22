@@ -259,6 +259,7 @@ private:
     bool includePeriodStart_;
     bool includePeriodEnd_;
     bool businessDays_;
+    std::string powerLoadProfileReference_;
     std::optional<PowerLoadProfileData> loadProfileData_ = std::nullopt;
     std::string fxIndex_;
     QuantLib::Natural avgPricePrecision_;

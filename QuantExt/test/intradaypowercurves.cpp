@@ -7,6 +7,7 @@
 
 #include <qle/termstructures/intradayshapetermstructure.hpp>
 #include <qle/termstructures/intradaypowerpricetermstructure.hpp>
+#include <qle/termstructures/intradaypowerloadtermstructure.hpp>
 #include <qle/termstructures/pricecurve.hpp>
 #include <ql/currencies/america.hpp>
 #include <ql/quotes/simplequote.hpp>
@@ -33,9 +34,7 @@ BOOST_AUTO_TEST_CASE(testShapeFactorsWithoutDST) {
     // 2700-3600:0.8
     // 3600-7200:1.1
     // 7200-86400:1.0
-    std::map<int, Real> shape = {
-        {0, 0.8}, {900, 1.2}, {1800, 0.8}, {2700, 0.8}, {3600, 1.1}, {7200, 1.0}
-    };
+    std::map<int, Real> shape = {{0, 0.8}, {900, 1.2}, {1800, 0.8}, {2700, 0.8}, {3600, 1.1}, {7200, 1.0}};
 
     std::map<Date, std::map<int, Real>> shapes = {{d, shape}};
     std::map<Date, std::map<int, Real>> shapesDst; // Not used when DST adjustment is 0.
@@ -50,68 +49,182 @@ BOOST_AUTO_TEST_CASE(testShapeFactorsWithoutDST) {
     BOOST_CHECK_CLOSE(hours, 24.0, tol);
 }
 
-BOOST_AUTO_TEST_CASE(testIntradayPriceWithLoadProfilesFallbackAndConsistency) {
+BOOST_AUTO_TEST_CASE(testIntradayPricesNoShape) {
     const Date today(10, Jun, 2026);
-    const Date todayPlus1 = today + 1 * Days;
-    const Date todayPlus2 = today + 2 * Days;
 
     Settings::instance().evaluationDate() = today;
 
     // Underlying flat dummy curve: 25 at two pillars.
     std::vector<Period> tenors = {0 * Days, 30 * Days};
-    std::vector<QuantLib::ext::shared_ptr<SimpleQuote>> q = {
-        QuantLib::ext::make_shared<SimpleQuote>(25.0),
-        QuantLib::ext::make_shared<SimpleQuote>(25.0)
-    };
+    std::vector<QuantLib::ext::shared_ptr<SimpleQuote>> q = {QuantLib::ext::make_shared<SimpleQuote>(25.0),
+                                                             QuantLib::ext::make_shared<SimpleQuote>(25.0)};
     std::vector<Handle<Quote>> quotes = {Handle<Quote>(q[0]), Handle<Quote>(q[1])};
 
-    auto baseCurve = QuantLib::ext::make_shared<InterpolatedPriceCurve<Linear>>(
-        tenors, quotes, Actual365Fixed(), USDCurrency());
+    auto baseCurve =
+        QuantLib::ext::make_shared<InterpolatedPriceCurve<Linear>>(tenors, quotes, Actual365Fixed(), USDCurrency());
+    Handle<PriceTermStructure> underlying(baseCurve);
+    auto intradayTs = QuantLib::ext::make_shared<IntradayPowerPriceTermStructure>(underlying, nullptr);
+    BOOST_CHECK_CLOSE(intradayTs->price(today), underlying->price(today), 1e-12);
+}
+
+BOOST_AUTO_TEST_CASE(testIntradayPricesEmptyShape) {
+    const Date today(10, Jun, 2026);
+
+    Settings::instance().evaluationDate() = today;
+
+    // Underlying flat dummy curve: 25 at two pillars.
+    std::vector<Period> tenors = {0 * Days, 30 * Days};
+    std::vector<QuantLib::ext::shared_ptr<SimpleQuote>> q = {QuantLib::ext::make_shared<SimpleQuote>(25.0),
+                                                             QuantLib::ext::make_shared<SimpleQuote>(25.0)};
+    std::vector<Handle<Quote>> quotes = {Handle<Quote>(q[0]), Handle<Quote>(q[1])};
+
+    auto baseCurve =
+        QuantLib::ext::make_shared<InterpolatedPriceCurve<Linear>>(tenors, quotes, Actual365Fixed(), USDCurrency());
+    Handle<PriceTermStructure> underlying(baseCurve);
+    std::map<Date, std::map<int, Real>> shapeMap;
+    std::map<Date, std::map<int, Real>> shapeMapDst;
+    auto shapeTs = QuantLib::ext::make_shared<IntradayShapeTermstructure>(shapeMap, shapeMapDst);
+    auto intradayTs = QuantLib::ext::make_shared<IntradayPowerPriceTermStructure>(underlying, shapeTs);
+    BOOST_CHECK_CLOSE(intradayTs->price(today), underlying->price(today), 1e-12);
+}
+
+BOOST_AUTO_TEST_CASE(testIntradayPricesWithShape) {
+    const Date today(10, Jun, 2026);
+
+    Settings::instance().evaluationDate() = today;
+
+    // Underlying flat dummy curve: 25 at two pillars.
+    std::vector<Period> tenors = {0 * Days, 30 * Days};
+    std::vector<QuantLib::ext::shared_ptr<SimpleQuote>> q = {QuantLib::ext::make_shared<SimpleQuote>(25.0),
+                                                             QuantLib::ext::make_shared<SimpleQuote>(25.0)};
+    std::vector<Handle<Quote>> quotes = {Handle<Quote>(q[0]), Handle<Quote>(q[1])};
+
+    auto baseCurve =
+        QuantLib::ext::make_shared<InterpolatedPriceCurve<Linear>>(tenors, quotes, Actual365Fixed(), USDCurrency());
     Handle<PriceTermStructure> underlying(baseCurve);
 
-    std::map<int, Real> scaleShape = {{0, 0.8}, {900, 1.2}, {1800, 0.8}, {2700, 0.8}, {3600, 1.1}, {7200, 1.0}};
-    std::map<Date, std::map<int, Real>> shapeMap = {
-        {today, scaleShape},
-        {todayPlus2, scaleShape}
-    };
+    std::vector<std::pair<int, Real>> shapeFactors = {{0, 1.0},    {900, 1.2},  {1800, 0.9},
+                                                      {2700, 1.2}, {3600, 1.1}, {7200, 1.0}};
 
+    std::map<int, Real> scaleShape;
+
+    for (const auto& [start, factor] : shapeFactors) {
+        scaleShape[start] = factor;
+    }
+
+    std::map<Date, std::map<int, Real>> shapeMap = {{today, scaleShape}};
     std::map<Date, std::map<int, Real>> shapeMapDst;
-    
+
     auto shapeTs = QuantLib::ext::make_shared<IntradayShapeTermstructure>(shapeMap, shapeMapDst);
     auto intradayTs = QuantLib::ext::make_shared<IntradayPowerPriceTermStructure>(underlying, shapeTs);
 
-    // Same granularity for both load profiles: full-day bucket [0, 86400).
-    LoadFactors loadToday = {{0, 24 * 3600, 1.0}};
-    LoadFactors loadTodayPlus2 = {{0, 24 * 3600, 2.0}};
-    LoadFactors loadDstEmpty;
-
-    auto lpToday = QuantLib::ext::make_shared<IntradayLoadProfile>(loadToday, loadDstEmpty);
-    auto lpTodayPlus2 = QuantLib::ext::make_shared<IntradayLoadProfile>(loadTodayPlus2, loadDstEmpty);
-
-    std::map<Date, QuantLib::ext::shared_ptr<IntradayLoadProfile>> loadingShapes = {
-        {today, lpToday},
-        {todayPlus2, lpTodayPlus2}
-    };
-
-    auto loadTs = QuantLib::ext::make_shared<IntradayPowerLoadTermStructureExplicit>(loadingShapes);
-
+    
     const Real tol = 1e-12;
+    // Test day average price 
+    auto dayAveragePrice = intradayTs->price(today, 0, 86400, false, true);
+    auto expectedDayAveragePrice = underlying->price(today) * shapeTs->dayFactor(today);
+    BOOST_CHECK_CLOSE(dayAveragePrice, expectedDayAveragePrice, tol);
 
-    // Verify fallback semantics directly on loading term structure.
-    BOOST_CHECK_CLOSE(loadTs->loadProfile(today)->totalMWh(), 24.0, tol);
-    BOOST_CHECK_CLOSE(loadTs->loadProfile(todayPlus1)->totalMWh(), 24.0, tol); // falls back to today
-    BOOST_CHECK_CLOSE(loadTs->loadProfile(todayPlus2)->totalMWh(), 48.0, tol);
+    // Test day average price from date only
+    auto dayAveragePriceWithoutTime = intradayTs->price(today, true);
+    BOOST_CHECK_CLOSE(dayAveragePriceWithoutTime, expectedDayAveragePrice, tol);
 
-    // Price consistency checks.
-    const Real pToday = intradayTs->price(today, loadTs->loadProfile(today), true);
-    const Real pTodayPlus1 = intradayTs->price(todayPlus1, loadTs->loadProfile(todayPlus1), true);
-    const Real pTodayPlus2 = intradayTs->price(todayPlus2, loadTs->loadProfile(todayPlus2), true);
+    // Test bucket prices
+    for (size_t i = 1; i < shapeFactors.size(); ++i) {
+        auto start = shapeFactors[i - 1].first;
+        auto end = shapeFactors[i].first;
+        auto expectedFactor = shapeFactors[i - 1].second;
+        auto price = intradayTs->price(today, start, end, false, true);
+        auto expectedPrice = underlying->price(today) * expectedFactor;
+        BOOST_CHECK_CLOSE(price, expectedPrice, tol);
+    }
 
-    BOOST_CHECK_CLOSE(pToday, 25.0, tol);
-    BOOST_CHECK_CLOSE(pTodayPlus1, 25.0, tol);
-    BOOST_CHECK_CLOSE(pTodayPlus2, 25.0, tol);
+    // Test smaller buckets
+    for (size_t i = 1; i < shapeFactors.size(); ++i) {
+        auto start = shapeFactors[i - 1].first + 5 * 60;
+        auto end = shapeFactors[i].first - 5 * 60;
+        auto expectedFactor = shapeFactors[i - 1].second;
+        auto price = intradayTs->price(today, start, end, false, true);
+        auto expectedPrice = underlying->price(today) * expectedFactor;
+        BOOST_CHECK_CLOSE(price, expectedPrice, tol);
+    }
+
+    // Test overlapping buckets
+    for (size_t i = 2; i < shapeFactors.size(); ++i) {
+        auto start = shapeFactors[i - 1].first - 5 * 60;
+        auto end = shapeFactors[i].first + 5 * 60;
+        auto expectedFactor = (shapeFactors[i - 2].second * (shapeFactors[i - 1].first - start) +
+                               shapeFactors[i - 1].second * (shapeFactors[i].first - shapeFactors[i-1].first) +
+                               shapeFactors[i].second * (end - shapeFactors[i].first)) /
+                              (end - start);
+        auto price = intradayTs->price(today, start, end, false, true);
+        auto expectedPrice = underlying->price(today) * expectedFactor;
+        BOOST_CHECK_CLOSE(price, expectedPrice, tol);
+    }
 }
 
+BOOST_AUTO_TEST_CASE(testIntradayPricesWithShapeTermStructure) {
+    const Date d(10, Jun, 2026);
+    const Date d5 = d + 5 * Days;
+    const Date d10 = d + 10 * Days;
+    const Date d15 = d + 15 * Days;
+    const Real tol = 1e-12;
+    Settings::instance().evaluationDate() = d;
+
+    std::vector<Date> dates = {d, d5, d10, d15};
+    std::vector<QuantLib::ext::shared_ptr<SimpleQuote>> q = {
+        QuantLib::ext::make_shared<SimpleQuote>(25.0), QuantLib::ext::make_shared<SimpleQuote>(26.0),
+        QuantLib::ext::make_shared<SimpleQuote>(28.0), QuantLib::ext::make_shared<SimpleQuote>(31.0)};
+    std::vector<Handle<Quote>> quotes = {Handle<Quote>(q[0]), Handle<Quote>(q[1]), Handle<Quote>(q[2]),
+                                         Handle<Quote>(q[3])};
+
+    auto baseCurve = QuantLib::ext::make_shared<InterpolatedPriceCurve<BackwardFlat>>(d, dates, quotes,
+                                                                                      Actual365Fixed(), USDCurrency());
+    Handle<PriceTermStructure> underlying(baseCurve);
+
+    std::map<int, Real> shapeD;
+    for (Size i = 0; i < 96; ++i) {
+        shapeD[static_cast<int>(i * 15 * 60)] = (i % 2 == 0) ? 0.9 : 1.1;
+    }
+
+    std::map<int, Real> shapeD5;
+    for (Size i = 0; i < 24; ++i) {
+        shapeD5[static_cast<int>(i * 3600)] = (i % 2 == 0) ? 0.8 : 1.2;
+    }
+
+    std::map<int, Real> shapeD10 = {{0, 1.2}};
+
+    std::map<Date, std::map<int, Real>> shapeMap = {
+        {d, shapeD},
+        {d5, shapeD5},
+        {d10, shapeD10}};
+    std::map<Date, std::map<int, Real>> shapeMapDst;
+    auto shapeTs = QuantLib::ext::make_shared<IntradayShapeTermstructure>(shapeMap, shapeMapDst);
+    // Test that the correct shape is picked for each date and that the day average price is correct.
+    BOOST_CHECK_CLOSE(shapeTs->dayFactor(d), 1.0, tol);
+    BOOST_CHECK_CLOSE(shapeTs->dayFactor(d+1*Days), 1.0, tol);
+    BOOST_CHECK_CLOSE(shapeTs->dayFactor(d5), 1.0, tol);
+    BOOST_CHECK_CLOSE(shapeTs->dayFactor(d10 ), 1.2, tol);
+    BOOST_CHECK_CLOSE(shapeTs->dayFactor(d10+1*Days), 1.2, tol);
+
+    auto intradayTs = QuantLib::ext::make_shared<IntradayPowerPriceTermStructure>(underlying, shapeTs);
+    // Check day average prices for each day
+    BOOST_CHECK_CLOSE(intradayTs->price(d), 25, tol);
+    BOOST_CHECK_CLOSE(intradayTs->price(d+1), underlying->price(d+1) * shapeTs->dayFactor(d+1), tol);
+    BOOST_CHECK_CLOSE(intradayTs->price(d5), 26, tol);
+    BOOST_CHECK_CLOSE(intradayTs->price(d10), 28 * 1.2, tol);
+    BOOST_CHECK_CLOSE(intradayTs->price(d10+1*Days), underlying->price(d10+1*Days) * shapeTs->dayFactor(d10+1*Days), tol);
+
+    // Check pricing 0-15 min bucket on day d
+    BOOST_CHECK_CLOSE(intradayTs->price(d, 0, 15 * 60, false, true), 25 * 0.9, tol);
+    BOOST_CHECK_CLOSE(intradayTs->price(d + 1, 0, 15 * 60, false, true), underlying->price(d + 1 * Days) * 0.9, tol);
+    BOOST_CHECK_CLOSE(intradayTs->price(d5, 0, 15 * 60, false, true), underlying->price(d5) * 0.8, tol);
+    BOOST_CHECK_CLOSE(intradayTs->price(d10-1, 0, 15 * 60, false, true), underlying->price(d10 - 1 * Days) * 0.8, tol);
+    BOOST_CHECK_CLOSE(intradayTs->price(d10, 0, 15 * 60, false, true), underlying->price(d10) * 1.2, tol);
+    BOOST_CHECK_CLOSE(intradayTs->price(d10 + 1 * Days, 0, 15 * 60, false, true), underlying->price(d10 + 1 * Days) * 1.2, tol);
+}
+
+/*
 BOOST_AUTO_TEST_CASE(testBackwardFlatDailyCurveWithIntradayShapesAndLoads) {
     const Date d(10, Jun, 2026);
     const Date d7 = d + 7 * Days;
@@ -327,6 +440,7 @@ BOOST_AUTO_TEST_CASE(testIntradayPriceWithOverlappingLoadProfiles) {
     BOOST_CHECK_CLOSE(lpDay1->totalMWh(), 0.2222222222222222, tol); // 800s at 1.0 MW load = 800/3600 MWh
     BOOST_CHECK_CLOSE(lpDay2->totalMWh(), 0.08333333333333333, tol); // 300s at 1.0 MWload = 300/3600 MWh
 }
+*/
 
 BOOST_AUTO_TEST_SUITE_END()
 

@@ -22,9 +22,8 @@
 
 #pragma once
 
-#include <qle/termstructures/pricetermstructure.hpp>
 #include <qle/termstructures/intradayshapetermstructure.hpp>
-#include <qle/termstructures/intradaypowerloadtermstructure.hpp>
+#include <qle/termstructures/pricetermstructure.hpp>
 
 namespace QuantExt {
 
@@ -37,19 +36,15 @@ class IntradayPowerPriceTermStructure : public QuantExt::PriceTermStructure {
 public:
     //! \name Constructors
     //@{
-    IntradayPowerPriceTermStructure(const QuantLib::Handle<PriceTermStructure>& underlying, 
-                               const QuantLib::ext::shared_ptr<IntradayShapeTermstructure>& shape = nullptr);
+    IntradayPowerPriceTermStructure(const QuantLib::Handle<PriceTermStructure>& underlying,
+                                    const QuantLib::ext::shared_ptr<IntradayShapeTermstructure>& shape = nullptr);
     //@}
 
     //! \name Prices
     //@{
     QuantLib::Real price(QuantLib::Time t, bool extrapolate = false) const override;
     QuantLib::Real price(const QuantLib::Date& d, bool extrapolate = false) const override;
-    QuantLib::Real price(const QuantLib::Date& d,
-                         const QuantLib::ext::shared_ptr<QuantExt::IntradayLoadProfile>& load,
-                         bool extrapolate = false) const;
-    QuantLib::Real price(QuantLib::Time t,
-                         const QuantLib::ext::shared_ptr<QuantExt::IntradayLoadProfile>& load,
+    QuantLib::Real price(const QuantLib::Date& d, int deliveryStartTime, int deliveryEndTime, bool isDSTextraHour,
                          bool extrapolate = false) const;
     //@}
 
@@ -74,13 +69,14 @@ public:
 protected:
     //@{
     //! Price calculation
-    QuantLib::Real priceImpl(QuantLib::Time) const override { QL_FAIL("priceImpl(Time) not implemented for IntradayPowerPriceTermStructure"); }
+    QuantLib::Real priceImpl(QuantLib::Time) const override {
+        QL_FAIL("priceImpl(Time) not implemented for IntradayPowerPriceTermStructure");
+    }
     //@}
 
 private:
     QuantLib::Handle<PriceTermStructure> underlying_;
     QuantLib::ext::shared_ptr<IntradayShapeTermstructure> shape_;
 };
-
 
 } // namespace QuantExt
