@@ -51,7 +51,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
         DLOG("Get date / date shift");
         auto date = XMLUtils::getChildValue(testCase, "Date", false);
         if (!date.empty())
-            test.date = parseDateOrPeriod(date);
+            test.date = data::parseDateOrPeriod(date);
 
         DLOG("Get par shift parameters");
         XMLNode* parShiftsNode = XMLUtils::getChildNode(testCase, "ParShifts");
