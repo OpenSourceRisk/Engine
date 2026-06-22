@@ -84,6 +84,12 @@ public:
     //! Returns the npv currency for a given trade ID \p tradeId
     std::string npvCurrency(const std::string& tradeId) const override;
 
+    /*! Try getting `fieldName` from additional fields in envelope of `tradeId`.
+        If `checkAdditionalData` is `true`, check the trade's additional data if not found in the envelope fields.
+    */
+    QuantLib::ext::optional<std::string> tryGetField(const std::string& tradeId,
+        const std::string& fieldName, bool checkAdditionalData = false) const;
+
 private:
     //! The portfolio of trades
     QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio_;
