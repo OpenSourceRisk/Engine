@@ -234,9 +234,8 @@ void FixingManager::applyFixingsProjected(const Date& start, const Date& end) {
 
     Date today = Settings::instance().evaluationDate();
 
-    QL_REQUIRE(start == today,
-               "FixingManager::applyFixing(): mode Projected flat requires start date ("
-                   << start << ") = today (" << today << "). Internal error, check orchestration.");
+    QL_REQUIRE(start == today, "FixingManager::applyFixing(): mode Projected requires start date ("
+                                   << start << ") = today (" << today << "). Internal error, check orchestration.");
 
     std::map<Date, std::set<QuantLib::ext::shared_ptr<Index>, detail::IndexComparator>> dateMap;
 

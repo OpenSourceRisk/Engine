@@ -269,11 +269,6 @@ void ValuationEngine::buildCube(const QuantLib::ext::shared_ptr<data::Portfolio>
         detail << nTrades << " trade" << (nTrades == 1 ? "" : "s") << ", " << outputCube->samples() << " sample"
                << (outputCube->samples() == 1 ? "" : "s");
         updateProgress(sample * nTrades, outputCube->samples() * nTrades, detail.str());
-
-        auto fixingTimeStart = data::os::nanosecondsClock();
-        if(fixingManager_ != nullptr)
-            fixingManager_->reset();
-        timings.fixingTime += data::os::nanosecondsClock() - fixingTimeStart;
     }
 
     if (dryRun) {
