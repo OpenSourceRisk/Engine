@@ -339,6 +339,7 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
             }
             // Convexity adjustment
             if (auto eqc = QuantLib::ext::dynamic_pointer_cast<QuantExt::EquityCoupon>(flow)) {
+                eqc->rate();
                 auto arc = eqc->pricer()->additionalResultCache();
                 auto label = "[" + legID + "][" + std::to_string(j) + "]";
                 if (arc.equityVolatility != Null<Real>())
