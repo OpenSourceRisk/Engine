@@ -124,8 +124,11 @@ void FixingManager::initialise(const QuantLib::ext::shared_ptr<Portfolio>& portf
 }
 
 void FixingManager::update(const Date& d) {
+    if (d == Null<Date>())
+        return;
+
     QL_REQUIRE(d >= anchor_, "FixingManager::update(): given date "
-                                << d << " must be later or equal than the manager's anchor date (" << anchor_ << ")");
+                                 << d << " must be later or equal than the manager's anchor date (" << anchor_ << ")");
     if (!fixingMap_.empty()) {
         if (d < fixingsEnd_) {
             reset();

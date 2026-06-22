@@ -3650,6 +3650,8 @@ void ScenarioSimMarket::preUpdate() {
 }
 
 void ScenarioSimMarket::updateDate(const Date& d) {
+    if(d == Null<Date>())
+        return;
     ObservationMode::Mode om = ObservationMode::instance().mode();
     if (d != Settings::instance().evaluationDate())
         Settings::instance().evaluationDate() = d;
