@@ -944,7 +944,7 @@ void XvaAnalyticImpl::buildClassicCube(const QuantLib::ext::shared_ptr<Portfolio
             inputs_->marketConfig("simulation"), analytic()->configurations().simMarketParams, false, false,
             QuantLib::ext::make_shared<ScenarioFilter>(), inputs_->refDataManager(), inputs_->iborFallbackConfig(),
             true, false, false, cubeFactory, {}, cptyCubeFactory,
-            QuantLib::ext::make_shared<FixingManager>(inputs_->asof(), FixingManager::Mode::BackwardFlat),
+            QuantLib::ext::make_shared<FixingManager>(inputs_->asof(), FixingManager::Mode::BackwardFlat), true,
             "xva-simulation", analytic()->offsetScenario(), inputs_->useAtParCouponsCurves(),
             inputs_->useAtParCouponsTrades());
 

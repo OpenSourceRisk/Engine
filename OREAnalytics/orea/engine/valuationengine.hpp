@@ -94,7 +94,7 @@ public:
         //! a fixing manager, if required
         const QuantLib::ext::shared_ptr<FixingManager>& fixingManager = nullptr,
         //! if true, fixing manager and global eval date are reset after each path
-        const resetAfterEachPath = true);
+        const bool resetAfterEachPath = true);
 
     //! Build NPV cube
     void buildCube(
