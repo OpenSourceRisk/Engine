@@ -85,17 +85,7 @@ Real IntradayPowerIndex::forecastFixing(const Date& fixingDate) const {
         auto [start, end, isDstHour] = *deliveryTime_;
         return forecastBucketFixing(fixingDate, start, end, isDstHour);
     }
-    if (loadProfile_ == nullptr)
-        return intradayCurve_->price(fixingDate, true);
-    auto loadWeightedPrice = 0.0;
-    auto totalLoad = 0.0;
-    for (const auto& [start, end, load, isDstHour, mwh] : loadProfile_->loadProfile()) {
-        if (mwh == 0.0)
-            continue;
-        loadWeightedPrice += mwh * forecastBucketFixing(fixingDate, start, end, isDstHour);
-        totalLoad += mwh;
-    }
-    return totalLoad > 0 ? loadWeightedPrice / totalLoad : 0.0;
+    return intradayCurve_->price(fixingDate, loadProfile_);
 }
 
 Real IntradayPowerIndex::pastIntradayFixing(const Date& fixingDate, int start, int end, bool isDstHour) const {

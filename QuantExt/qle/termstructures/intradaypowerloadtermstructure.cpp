@@ -37,22 +37,33 @@ template <typename T> T find(const std::map<QuantLib::Date, T>& m, const QuantLi
 
 IntradayLoadProfile::IntradayLoadProfile(std::vector<LoadFactor> load)
     : loadProfile_(std::move(load)) {
-    totalDeliveryHours_ = 0.0;
-    totalMWh_ = 0.0;
-
-    for (const auto& [start, end, load, isDST, mwh] : loadProfile_) {
-        if (load > 0.0) {
-            totalMWh_ += mwh;
-            totalDeliveryHours_ += (end - start) / 3600.0;
-        }
-    }
+    
 }
 
 const std::vector<LoadFactor>& IntradayLoadProfile::loadProfile() const { return loadProfile_; }
 
-QuantLib::Real IntradayLoadProfile::totalMWh() const { return totalMWh_; }
+QuantLib::Real IntradayLoadProfile::totalMWh() const {
+    auto totalMWh_ = 0.0;
 
-QuantLib::Real IntradayLoadProfile::totalDeliveryHours() const { return totalDeliveryHours_; }
+    for (const auto& [start, end, load, isDST, mwh] : loadProfile_) {
+        if (load > 0.0) {
+            totalMWh_ += mwh;
+        }
+    }
+    return totalMWh_;
+}
+
+QuantLib::Real IntradayLoadProfile::totalDeliveryHours() const {
+    auto totalDeliveryHours_ = 0.0;
+
+    for (const auto& [start, end, load, isDST, mwh] : loadProfile_) {
+        if (load > 0.0) {
+
+            totalDeliveryHours_ += (end - start) / 3600.0;
+        }
+    };
+    return totalDeliveryHours_;
+}
 
 QuantLib::ext::shared_ptr<IntradayLoadProfile>
 IntradayPowerLoadTermStructureExplicit::loadProfile(const QuantLib::Date& d) const {

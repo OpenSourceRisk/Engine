@@ -47,91 +47,32 @@ QuantLib::Real IntradayPowerPriceTermStructure::price(const QuantLib::Date& d, b
     return underlying_->price(d, extrapolate) * (shape_ == nullptr ? 1.0 : shape_->dayFactor(d));
 }
 
-QuantLib::Real timeWeightedShapeFactor(const ShapeFactors& factors, int startTime, int endTime) {
-    QuantLib::Real weightedSum = 0.0;
-    if (factors.empty()) {
-        return 1.0;
-    }
-    // First active segment at startTime: first segment whose start > startTime, stepped back one.
-    auto it = std::upper_bound(factors.begin(), factors.end(), startTime,
-                               [](int t, const std::pair<int, QuantLib::Real>& seg) { return t < seg.first; });
-    --it; // Safe because first key is required to be 0 and startTime >= 0.
+QuantLib::Real
+IntradayPowerPriceTermStructure::price(const QuantLib::Date& d,
+                                       const QuantLib::ext::shared_ptr<QuantExt::IntradayLoadProfile>& load,
+                                       bool extrapolate) const {
 
-    for (; it != factors.end(); ++it) {
-        const int segStart = it->first;
-        const QuantLib::Real segWeight = it->second;
-
-        auto nextIt = std::next(it);
-        const int segEnd = (nextIt == factors.end()) ? 24 * 3600 : nextIt->first;
-
-        // Overlap of [startTime, endTime) with [segStart, segEnd).
-        const int overlapStart = std::max(startTime, segStart);
-        const int overlapEnd = std::min(endTime, segEnd);
-        if (overlapEnd > overlapStart) {
-            weightedSum += segWeight * static_cast<QuantLib::Real>(overlapEnd - overlapStart);
-        }
-
-        if (segEnd >= endTime) {
-            break;
-        }
+    if (shape_ == nullptr || load == nullptr) {
+        return price(d, extrapolate);
     }
-    return weightedSum / static_cast<QuantLib::Real>(endTime - startTime);
-}
 
-QuantLib::Real intradayShapeFactor(const QuantLib::Date& d, int startTime, int endTime, bool isDSTHour,
-                                   const ShapeFactors& factors, const ShapeFactors& dstFactors, int dts) {
-    if ((dts < 1 && factors.empty()) || (dts == 1 && dstFactors.empty() && factors.empty())) {
-        return 1.0;
+    if (load->totalMWh() == 0.0) {
+        return 0.0;
     }
-    if (dts == -1 && startTime < 3 * 3600 && endTime > 2 * 3600) {
-        auto startTimeBefore2am = std::min(startTime, 2 * 3600);
-        auto endTimeAfter3am = std::max(endTime, 3 * 3600);
-        // compute time time weighted average of the shape factor for the hours before 2am and the shape factor for the
-        // hours after 3am
-        auto validDuration = (2 * 3600 - startTimeBefore2am) + (endTimeAfter3am - 3 * 3600);
-        if (validDuration <= 0) {
-            return 0;
-        }
-        auto priceFactorBefore2am = timeWeightedShapeFactor(factors, startTimeBefore2am, 2 * 3600);
-        auto priceFactorAfter3am = timeWeightedShapeFactor(factors, 3 * 3600, endTimeAfter3am);
-        return (priceFactorBefore2am * (2 * 3600 - startTimeBefore2am) +
-                priceFactorAfter3am * (endTimeAfter3am - 3 * 3600)) /
-               validDuration;
-    }
-    if (dts == 1 && isDSTHour) {
-        // The repeated 2-3am hour on a fall-back DST day.
-        QL_REQUIRE(startTime >= 2 * 3600 && endTime <= 3 * 3600,
-                   "For DST hour on " << d << " startTime and endTime must be between 2am and 3am, got startTime "
-                                      << startTime << " and endTime " << endTime);
-        if (dstFactors.empty()) {
-            return timeWeightedShapeFactor(factors, startTime, endTime);
-        }
-        QL_REQUIRE(dstFactors.begin()->first == 2 * 3600,
-                   "DST shape factors must start at 2am, got first key " << dstFactors.begin()->first);
-        return timeWeightedShapeFactor(dstFactors, startTime, endTime);
-    }
-    QL_REQUIRE(startTime >= 0, "startTime must be >= 0, got " << startTime);
-    QL_REQUIRE(endTime > startTime, "endTime must be > startTime, got " << endTime << " <= " << startTime);
-    QL_REQUIRE(endTime <= 24 * 3600, "endTime out of range, got " << endTime);
-    return timeWeightedShapeFactor(factors, startTime, endTime);
+
+    auto underlyingPrice = underlying_->price(d, extrapolate);
+    auto shapeFactor = shape_->loadWeightedIntradayShapeFactor(d, load);
+    return shapeFactor * underlyingPrice;
 }
 
 QuantLib::Real IntradayPowerPriceTermStructure::price(const QuantLib::Date& d, int deliveryStartTime,
                                                       int deliveryEndTime, bool isDSTextraHour,
                                                       bool extrapolate) const {
-    if (shape_ == nullptr) {
-        return price(d, extrapolate);
-    }
-
-    auto underlyingPrice = underlying_->price(d, extrapolate);
-    auto shapeFactor = shape_->hasShapeFactors(d) ? shape_->shapeFactors(d) : ShapeFactors();
-    auto dstShapeFactor = shape_->hasShapeFactorsDST(d) ? shape_->shapeFactorsDST(d) : ShapeFactors();
-    auto dstAdj = shape_->dayTimeSavingsAdjustment(d);
-
-    return intradayShapeFactor(d, deliveryStartTime, deliveryEndTime, isDSTextraHour, shapeFactor, dstShapeFactor,
-                               dstAdj) *
-           underlyingPrice;
+    std::vector<LoadFactor> load(1, LoadFactor{deliveryStartTime, deliveryEndTime, 1.0, isDSTextraHour});
+    return price(d, QuantLib::ext::make_shared<IntradayLoadProfile>(load), extrapolate);
 }
+
+//@}
 
 void IntradayPowerPriceTermStructure::update() { TermStructure::update(); }
 

@@ -22,8 +22,9 @@
 
 #pragma once
 
-#include <qle/termstructures/intradayshapetermstructure.hpp>
 #include <qle/termstructures/pricetermstructure.hpp>
+#include <qle/termstructures/intradayshapetermstructure.hpp>
+#include <qle/termstructures/intradaypowerloadtermstructure.hpp>
 
 namespace QuantExt {
 
@@ -36,8 +37,8 @@ class IntradayPowerPriceTermStructure : public QuantExt::PriceTermStructure {
 public:
     //! \name Constructors
     //@{
-    IntradayPowerPriceTermStructure(const QuantLib::Handle<PriceTermStructure>& underlying,
-                                    const QuantLib::ext::shared_ptr<IntradayShapeTermstructure>& shape = nullptr);
+    IntradayPowerPriceTermStructure(const QuantLib::Handle<PriceTermStructure>& underlying, 
+                               const QuantLib::ext::shared_ptr<IntradayShapeTermstructure>& shape = nullptr);
     //@}
 
     //! \name Prices
@@ -45,6 +46,8 @@ public:
     QuantLib::Real price(QuantLib::Time t, bool extrapolate = false) const override;
     QuantLib::Real price(const QuantLib::Date& d, bool extrapolate = false) const override;
     QuantLib::Real price(const QuantLib::Date& d, int deliveryStartTime, int deliveryEndTime, bool isDSTextraHour,
+                         bool extrapolate = false) const;
+    QuantLib::Real price(const QuantLib::Date& d, const QuantLib::ext::shared_ptr<QuantExt::IntradayLoadProfile>& load,
                          bool extrapolate = false) const;
     //@}
 

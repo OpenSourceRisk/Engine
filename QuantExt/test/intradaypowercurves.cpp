@@ -49,6 +49,28 @@ BOOST_AUTO_TEST_CASE(testShapeFactorsWithoutDST) {
     BOOST_CHECK_CLOSE(hours, 24.0, tol);
 }
 
+
+
+BOOST_AUTO_TEST_CASE(testShapeFactorsWithSpringDST) {
+    const Date d(28, March, 2026); // Last Sunday of March, DST starts at 2am, 1 hour is skipped.
+
+    // Shape with day-average exactly equal to 1.0 over 23h (since there is a DST change that makes the day 1 hour shorter) and it should ignore the 1.2 factor between 2 and 3 am since that hour does not exist on that day.
+    std::map<int, Real> shape = {{0, 0.8}, {2 * 3600, 1.2}, {3 * 3600, 1.2}, {5 * 3600, 1.0}};
+
+    std::map<Date, std::map<int, Real>> shapes = {{d, shape}};
+    std::map<Date, std::map<int, Real>> shapesDst; // Only used for the extra hour in autumn DST change, not for spring DST change.
+
+    IntradayShapeTermstructure ts(shapes, shapesDst);
+
+    const Real dayFactor = ts.dayFactor(d);
+    const Real hours = ts.hoursPerDay(d);
+
+    const Real tol = 1e-12;
+    BOOST_CHECK_CLOSE(dayFactor, 1.0, tol);
+    BOOST_CHECK_CLOSE(hours, 23.0, tol);
+}
+
+
 BOOST_AUTO_TEST_CASE(testIntradayPricesNoShape) {
     const Date today(10, Jun, 2026);
 
@@ -223,6 +245,10 @@ BOOST_AUTO_TEST_CASE(testIntradayPricesWithShapeTermStructure) {
     BOOST_CHECK_CLOSE(intradayTs->price(d10, 0, 15 * 60, false, true), underlying->price(d10) * 1.2, tol);
     BOOST_CHECK_CLOSE(intradayTs->price(d10 + 1 * Days, 0, 15 * 60, false, true), underlying->price(d10 + 1 * Days) * 1.2, tol);
 }
+
+
+
+
 
 /*
 BOOST_AUTO_TEST_CASE(testBackwardFlatDailyCurveWithIntradayShapesAndLoads) {
