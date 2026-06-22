@@ -293,9 +293,24 @@ bool TRSWrapperAccrualEngine::computeStartValue(std::vector<Real>& underlyingSta
                     if (i == 0 && (v0 != v0_endDate)) {
                         s0 = getUnderlyingFixing(i, v0, false, s0AdditionalData) * arguments_.indexQuantity_;
                         fx0 = getFxConversionRate(fxDate, arguments_.initialPriceCurrency_, arguments_.returnCurrency_, false);
-                    }else if(v0 == v0_endDate){
-                        s0 = getUnderlyingFixing(i, v0, false, s0AdditionalData) * arguments_.indexQuantity_;
-                        fx0 = getFxConversionRate(fxDate, arguments_.initialPriceCurrency_, arguments_.returnCurrency_, false);
+                    } else if (v0 == v0_endDate) {
+                        if (i == 0) {
+                            try {
+                                s0 = getUnderlyingFixing(i, v0, false, s0AdditionalData) * arguments_.indexQuantity_;
+                                fx0 = getFxConversionRate(fxDate, arguments_.initialPriceCurrency_,
+                                                          arguments_.returnCurrency_, false);
+                            } catch (...) {
+                                s0 = getUnderlyingNPV(i, s0AdditionalData);
+                                fx0 = getFxConversionRate(today, arguments_.assetCurrency_[i],
+                                                          arguments_.returnCurrency_, true);
+                            }
+                        } else {
+                            // i > 0: use individual underlying component fixing so that s0 == s1 in same-day
+                            // periods and the reported notional matches the fixing value (like the non-basket path).
+                            s0 = getUnderlyingFixing(i, v0, false, s0AdditionalData) * arguments_.underlyingMultiplier_[i];
+                            fx0 = getFxConversionRate(fxDate, arguments_.assetCurrency_[i],
+                                                      arguments_.returnCurrency_, false);
+                        }
                     }
                 } else {
                     s0 = getUnderlyingFixing(i, v0, false, s0AdditionalData) * arguments_.underlyingMultiplier_[i];
@@ -508,6 +523,24 @@ void TRSWrapperAccrualEngine::calculate() const {
                 if (endDate == Null<Date>()) {
                     s1 = getUnderlyingNPV(i, s1AdditionalData);
                     fx1 = getFxConversionRate(today, arguments_.assetCurrency_[i], arguments_.returnCurrency_, true);
+                } else if (!arguments_.portfolioId_.empty() && arguments_.pricePerIndexUnit_) {
+                    // Basket priced per index unit: use basket fixing once (i == 0) and set other decomposed
+                    // constituents to zero. If basket fixing is unavailable, fall back to underlying valuation.
+                    if (i == 0) {
+                        try {
+                            s1 = getUnderlyingFixing(i, endDate, false, s1AdditionalData) * arguments_.indexQuantity_;
+                            fx1 = getFxConversionRate(endDate, arguments_.initialPriceCurrency_,
+                                                      arguments_.returnCurrency_, false);
+                        } catch (...) {
+                            s1 = getUnderlyingNPV(i, s1AdditionalData);
+                            fx1 =
+                                getFxConversionRate(today, arguments_.assetCurrency_[i], arguments_.returnCurrency_, true);
+                        }
+                    } else {
+                        // i > 0: use individual underlying component fixing, consistent with S0 logic.
+                        s1 = getUnderlyingFixing(i, endDate, false, s1AdditionalData) * arguments_.underlyingMultiplier_[i];
+                        fx1 = getFxConversionRate(endDate, arguments_.assetCurrency_[i], arguments_.returnCurrency_, false);
+                    }
                 } else {
                     s1 = getUnderlyingFixing(i, endDate, false, s1AdditionalData) * arguments_.underlyingMultiplier_[i];
                     fx1 = getFxConversionRate(endDate, arguments_.assetCurrency_[i], arguments_.returnCurrency_, false);
