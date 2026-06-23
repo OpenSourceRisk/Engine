@@ -26,6 +26,7 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <ql/math/comparison.hpp>
 #include <ql/quote.hpp>
 #include <ql/termstructure.hpp>
+#include <qle/utilities/intradaypower.hpp>
 
 namespace QuantExt {
 
@@ -47,18 +48,7 @@ struct TotalLoadFactor {
 using IntradayPowerLoadProfile = std::vector<LoadFactor>;
 using IntradayPowerLoadProfileWithMWh = std::vector<TotalLoadFactor>;
 
-//! DST adjusment -1 for spring forward, 0 for no adjustment, +1 for fall back
-inline TotalLoadFactor dstAdjustedTotalLoad(const LoadFactor& loadFactor, QuantLib::Real dstAdjustment) {
-    auto mwh = loadFactor.load * (loadFactor.endTime - loadFactor.startTime);
-    if (dstAdjustment >= 0 || loadFactor.endTime <= 2 * 3600 || loadFactor.startTime >= 3 * 3600) {
-        return {loadFactor.startTime, loadFactor.endTime, loadFactor.load, mwh, loadFactor.isDSTextraHour};
-    }
-    auto dststart = std::max(2 * 3600, loadFactor.startTime);
-    auto dstend = std::min(3 * 3600, loadFactor.endTime);
-    auto dstOverlap = std::max(0, dstend - dststart);
-    return {loadFactor.startTime, loadFactor.endTime, loadFactor.load, mwh - loadFactor.load * dstOverlap, loadFactor.isDSTextraHour};
-}
-
+TotalLoadFactor dstAdjustedTotalLoad(const LoadFactor& loadFactor, QuantExt::IntradayPowerDSTAdjustment dayTimeSavingsAdj);
 class IntradayPowerLoadTermStructure {
 public:
     virtual ~IntradayPowerLoadTermStructure() = default;

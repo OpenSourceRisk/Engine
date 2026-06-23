@@ -23,7 +23,7 @@
 */
 
 #include <qle/indexes/intradaypowerindex.hpp>
-
+#include <qle/utilities/intradaypower.hpp>
 #include <ql/indexes/indexmanager.hpp>
 #include <ql/settings.hpp>
 
@@ -54,7 +54,10 @@ IntradayPowerIndex::IntradayPowerIndex(const std::string& underlyingName, const 
     if (loadProfile != nullptr) {
         loadProfile_ = QuantLib::ext::make_shared<IntradayPowerLoadProfileWithMWh>();
         loadProfile_->reserve(loadProfile->size());
-        auto dstAdjustment = intradayCurve_.empty() ? 0.0 : intradayCurve_->intradayShape()->dayTimeSavingsAdjustment(deliveryDate_);
+        auto dstAdjustment =
+            intradayCurve_.empty()
+                ? QuantExt::IntradayPowerDSTAdjustment::NoAdjustment
+                : QuantExt::dayTimeSavingsAdjustment(deliveryDate_, intradayCurve_->intradayShape()->daylightSavingsLocation());
         for (const auto& load : *loadProfile) {
             loadProfile_->push_back(dstAdjustedTotalLoad(load, dstAdjustment));
             totalLoad_ += loadProfile_->back().totalMWh;
@@ -74,8 +77,8 @@ IntradayPowerIndex::IntradayPowerIndex(const std::string& underlyingName, const 
     QL_REQUIRE(deliveryStart >= 0, "deliveryStart must be >= 0, got " << deliveryStart);
     QL_REQUIRE(deliveryEnd > deliveryStart,
                "deliveryEnd must be > deliveryStart, got " << deliveryEnd << " <= " << deliveryStart);
-    QL_REQUIRE(deliveryEnd <= 24 * 3600, "deliveryEnd must be <= 24h in seconds, got " << deliveryEnd);
-    QL_REQUIRE(!isDstHour || (deliveryStart >= 2 * 3600 && deliveryEnd <= 3 * 3600),
+    QL_REQUIRE(deliveryEnd <= QuantExt::SECONDS_PER_DAY, "deliveryEnd must be <= 24h in seconds, got " << deliveryEnd);
+    QL_REQUIRE(!isDstHour || (deliveryStart >= QuantExt::TWO_AM_IN_SECONDS && deliveryEnd <= QuantExt::THREE_AM_IN_SECONDS),
                "DST hour must be between 2am and 3am, got " << deliveryStart << "-" << deliveryEnd);
     std::ostringstream o;
     o << "POWER-" << underlyingName << "-" << QuantLib::io::iso_date(deliveryDate_);
@@ -95,8 +98,8 @@ Real IntradayPowerIndex::forecastFixing(const Date& fixingDate) const {
 Real IntradayPowerIndex::pastIntradayFixing(const Date& fixingDate, int start, int end, bool isDstHour) const {
     QL_REQUIRE(start >= 0, "start must be >= 0, got " << start);
     QL_REQUIRE(end > start, "end must be > start, got " << end << " <= " << start);
-    QL_REQUIRE(end <= 24 * 3600, "end must be <= 24h in seconds, got " << end);
-    QL_REQUIRE(!isDstHour || (start >= 2 * 3600 && end <= 3 * 3600),
+    QL_REQUIRE(end <= QuantExt::SECONDS_PER_DAY, "end must be <= 24h in seconds, got " << end);
+    QL_REQUIRE(!isDstHour || (start >= QuantExt::TWO_AM_IN_SECONDS && end <= QuantExt::THREE_AM_IN_SECONDS),
                "DST hour must be between 2am and 3am, got " << start << "-" << end);
 
     std::string bucket = bucketName(name_, start, end, isDstHour);
@@ -113,15 +116,15 @@ Real IntradayPowerIndex::forecastBucketFixing(const Date& fixingDate, int start,
     QL_REQUIRE(!intradayCurve_.empty(), "Intraday curve not provided for forecast fixing");
     QL_REQUIRE(start >= 0, "start must be >= 0, got " << start);
     QL_REQUIRE(end > start, "end must be > start, got " << end << " <= " << start);
-    QL_REQUIRE(end <= 24 * 3600, "end must be <= 24h in seconds, got " << end);
-    QL_REQUIRE(!isDstHour || (start >= 2 * 3600 && end <= 3 * 3600),
+    QL_REQUIRE(end <= QuantExt::SECONDS_PER_DAY, "end must be <= 24h in seconds, got " << end);
+    QL_REQUIRE(!isDstHour || (start >= QuantExt::TWO_AM_IN_SECONDS && end <= QuantExt::THREE_AM_IN_SECONDS),
                "DST hour must be between 2am and 3am, got " << start << "-" << end);
     return intradayCurve_->price(fixingDate, start, end, isDstHour, true);
 }
 
 Real IntradayPowerIndex::pastBucketFixing(const Date& fixingDate, int start, int end, bool isDstHour,
                                       bool enforceTodaysFixing) const {
-    auto fixing = (start == 0 && end == 24 * 3600) ? Index::pastFixing(fixingDate)
+    auto fixing = (start == 0 && end == QuantExt::SECONDS_PER_DAY) ? Index::pastFixing(fixingDate)
                                                    : pastIntradayFixing(fixingDate, start, end, isDstHour);
     if (fixing == Null<Real>()) {
         QL_REQUIRE(!enforceTodaysFixing, "Missing " << name() << " fixing for " << fixingDate << " and time bucket "

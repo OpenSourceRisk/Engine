@@ -82,16 +82,7 @@ public:
     QuantLib::Real loadWeightedIntradayShapeFactor(const QuantLib::Date& d,
                                                    const IntradayPowerLoadProfileWithMWh& load) const;
 
-    // returns -1, 0, +1 depending if the day is a day with a DST change and if the change is backward, no change, or
-    // forward
-    int dayTimeSavingsAdjustment(const QuantLib::Date& d) const {
-        return daylightSavingCorrection(daylightSavingsLocation_.empty() ? "Null" : daylightSavingsLocation_, d, d+1);
-    }
-
-    QuantLib::Real hoursPerDay(const QuantLib::Date& d) const { return 24.0 + dayTimeSavingsAdjustment(d); }
-
-
-    
+    const std::string& daylightSavingsLocation() const { return daylightSavingsLocation_; }
 
 private:
     

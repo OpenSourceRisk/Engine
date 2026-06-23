@@ -71,8 +71,6 @@ public:
     
     const QuantLib::ext::shared_ptr<IntradayShapeTermstructure>& intradayShape() const { return shape_; }
     
-    const QuantLib::Real daylightSavingsAdjustment(const QuantLib::Date& d) const { return shape_->dayTimeSavingsAdjustment(d); }
-
 protected:
     //@{
     //! Price calculation

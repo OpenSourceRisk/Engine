@@ -21,6 +21,7 @@
 */
 
 #include <qle/termstructures/intradayshapetermstructure.hpp>
+#include <qle/utilities/intradaypower.hpp>
 
 namespace QuantExt {
 
@@ -41,7 +42,7 @@ inline QuantLib::Real timeWeightedShapeFactor(const ShapeFactors& factors, int s
         const QuantLib::Real segWeight = it->second;
 
         auto nextIt = std::next(it);
-        const int segEnd = (nextIt == factors.end()) ? 24 * 3600 : nextIt->first;
+        const int segEnd = (nextIt == factors.end()) ? QuantExt::SECONDS_PER_DAY : nextIt->first;
 
         // Overlap of [startTime, endTime) with [segStart, segEnd).
         const int overlapStart = std::max(startTime, segStart);
@@ -59,27 +60,31 @@ inline QuantLib::Real timeWeightedShapeFactor(const ShapeFactors& factors, int s
 
 inline QuantLib::Real calcShapeFactor(const QuantLib::Date& d, int startTime, int endTime, bool isDSTHour,
                                       const ShapeFactors& factors, const ShapeFactors& dstFactors,
-                                      int dayTimeSavingsAdj) {
-    QL_REQUIRE(isDSTHour == false || dayTimeSavingsAdj == 1,
-               "isDSTHour is true but there is no forward DST change on " << QuantLib::io::iso_date(d));
+                                      QuantExt::IntradayPowerDSTAdjustment dayTimeSavingsAdj) {
+
+    
     QL_REQUIRE(startTime >= 0, "startTime must be >= 0, got " << startTime);
     QL_REQUIRE(endTime > startTime, "endTime must be > startTime, got " << endTime << " <= " << startTime);
-    QL_REQUIRE(endTime <= 24 * 3600, "endTime out of range, got " << endTime);
+    QL_REQUIRE(endTime <= QuantExt::SECONDS_PER_DAY, "endTime out of range, got " << endTime);
 
-    if (dayTimeSavingsAdj < 1 && factors.empty()) {
+    if (dayTimeSavingsAdj != QuantExt::IntradayPowerDSTAdjustment::Backward && factors.empty()) {
         return 1.0;
     }
 
-    if (dayTimeSavingsAdj == 1 && dstFactors.empty() && factors.empty()) {
+    if (dayTimeSavingsAdj == QuantExt::IntradayPowerDSTAdjustment::Backward && dstFactors.empty() && factors.empty()) {
         return 1.0;
     }
 
     if (isDSTHour) {
-        QL_REQUIRE(startTime >= 2 * 3600 && endTime <= 3 * 3600,
+        QL_REQUIRE(startTime >= QuantExt::TWO_AM_IN_SECONDS && endTime <= QuantExt::THREE_AM_IN_SECONDS,
                    "For DST hour on " << d << " startTime and endTime must be between 2am and 3am, got startTime "
                                       << startTime << " and endTime " << endTime);
+        // Ignore DST extra hour load if not a BACKWARD date
+        if (dayTimeSavingsAdj != QuantExt::IntradayPowerDSTAdjustment::Backward) {
+            return 0.0;
+        }
         if (!dstFactors.empty()) {
-            QL_REQUIRE(dstFactors.begin()->first == 2 * 3600,
+            QL_REQUIRE(dstFactors.begin()->first == QuantExt::TWO_AM_IN_SECONDS,
                        "DST shape factors must start at 2am, got first key " << dstFactors.begin()->first);
             return timeWeightedShapeFactor(dstFactors, startTime, endTime);
         }
@@ -89,13 +94,13 @@ inline QuantLib::Real calcShapeFactor(const QuantLib::Date& d, int startTime, in
 
     auto factor = timeWeightedShapeFactor(factors, startTime, endTime);
     // not extra hour and not the missing hour on spring dst change date, return factor
-    if (dayTimeSavingsAdj >= 0) {
+    if (dayTimeSavingsAdj != QuantExt::IntradayPowerDSTAdjustment::Forward) {
         return factor;
     }
     // we are in spring dst date and 2 - 3am doesnt exists, need to adjust the factor to remove the weight of the 2-3am
     // hour
-    auto dststart = std::max(2 * 3600, startTime);
-    auto dstend = std::min(3 * 3600, endTime);
+    auto dststart = std::max(QuantExt::TWO_AM_IN_SECONDS, startTime);
+    auto dstend = std::min(QuantExt::THREE_AM_IN_SECONDS, endTime);
     auto dstOverlap = std::max(0, dstend - dststart);
     if (dstOverlap > 0) {
         auto effectiveTime = endTime - startTime - dstOverlap;
@@ -111,15 +116,15 @@ inline QuantLib::Real calcShapeFactor(const QuantLib::Date& d, int startTime, in
 } // namespace
 
 QuantLib::Real IntradayShapeTermstructure::dayFactor(const QuantLib::Date& d) const {
-    auto dayTimeSavingsAdj = dayTimeSavingsAdjustment(d);
+    auto dayTimeSavingsAdj = dayTimeSavingsAdjustment(d, daylightSavingsLocation_);
     auto it = dayFactors_.find(d);
     if (it == dayFactors_.end()) {
         auto& shapeFactor = hasShapeFactors(d) ? shapeFactors(d) : ShapeFactors();
         auto& dstShapeFactor = hasShapeFactorsDST(d) ? shapeFactorsDST(d) : ShapeFactors();
-        auto factor = calcShapeFactor(d, 0, 24 * 3600, false, shapeFactor, dstShapeFactor, dayTimeSavingsAdj);
-        if (dayTimeSavingsAdj == 1) {
+        auto factor = calcShapeFactor(d, 0, QuantExt::SECONDS_PER_DAY, false, shapeFactor, dstShapeFactor, dayTimeSavingsAdj);
+        if (dayTimeSavingsAdj == QuantExt::IntradayPowerDSTAdjustment::Backward) {
             auto dstFactor =
-                calcShapeFactor(d, 2 * 3600, 3 * 3600, true, shapeFactor, dstShapeFactor, dayTimeSavingsAdj);
+                calcShapeFactor(d, QuantExt::TWO_AM_IN_SECONDS, QuantExt::THREE_AM_IN_SECONDS, true, shapeFactor, dstShapeFactor, dayTimeSavingsAdj);
             factor = (factor * 24.0 + dstFactor) / 25.0;
         }
         dayFactors_[d] = factor;
@@ -129,7 +134,7 @@ QuantLib::Real IntradayShapeTermstructure::dayFactor(const QuantLib::Date& d) co
 
 QuantLib::Real IntradayShapeTermstructure::intradayShapeFactor(const QuantLib::Date& d, int startTime, int endTime,
                                                                bool isDSTHour) const {
-    auto dayTimeSavingsAdj = dayTimeSavingsAdjustment(d);
+    auto dayTimeSavingsAdj = dayTimeSavingsAdjustment(d, daylightSavingsLocation_);
     auto& shapeFactor = hasShapeFactors(d) ? shapeFactors(d) : ShapeFactors();
     auto& dstShapeFactor = hasShapeFactorsDST(d) ? shapeFactorsDST(d) : ShapeFactors();
     return calcShapeFactor(d, startTime, endTime, isDSTHour, shapeFactor, dstShapeFactor, dayTimeSavingsAdj);
@@ -141,7 +146,7 @@ IntradayShapeTermstructure::loadWeightedIntradayShapeFactor(const QuantLib::Date
     if (load.empty()) {
         return 0.0;
     }
-    auto dayTimeSavingsAdj = dayTimeSavingsAdjustment(d);
+    auto dayTimeSavingsAdj = dayTimeSavingsAdjustment(d, daylightSavingsLocation_);
     auto& shapeFactor = hasShapeFactors(d) ? shapeFactors(d) : ShapeFactors();
     auto& dstShapeFactor = hasShapeFactorsDST(d) ? shapeFactorsDST(d) : ShapeFactors();
     auto amount = 0.0;

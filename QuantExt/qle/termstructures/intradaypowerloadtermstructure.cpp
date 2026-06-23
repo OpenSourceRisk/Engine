@@ -35,6 +35,26 @@ template <typename T> T find(const std::map<QuantLib::Date, T>& m, const QuantLi
 }
 } // namespace
 
+int overlapWithMissingDSTHour(int start, int end) {
+    return std::max(0, std::min(end, QuantExt::THREE_AM_IN_SECONDS) - std::max(start, QuantExt::TWO_AM_IN_SECONDS));
+}
+
+TotalLoadFactor dstAdjustedTotalLoad(const LoadFactor& loadFactor,
+                                     QuantExt::IntradayPowerDSTAdjustment dayTimeSavingsAdj) {
+    const auto duration = loadFactor.endTime - loadFactor.startTime;
+
+    auto excludedSeconds = dayTimeSavingsAdj == QuantExt::IntradayPowerDSTAdjustment::Forward
+                               ? overlapWithMissingDSTHour(loadFactor.startTime, loadFactor.endTime)
+                               : 0.0;
+
+    const auto adjustedDuration = duration - excludedSeconds;
+
+    const auto mwh = (loadFactor.isDSTextraHour && dayTimeSavingsAdj != QuantExt::IntradayPowerDSTAdjustment::Backward)
+                         ? 0.0
+                         : loadFactor.load * adjustedDuration / static_cast<QuantLib::Real>(QuantExt::SECONDS_PER_HOUR);
+
+    return {loadFactor.startTime, loadFactor.endTime, loadFactor.load, mwh, loadFactor.isDSTextraHour};
+}
 
 QuantLib::ext::shared_ptr<IntradayPowerLoadProfile>
 IntradayPowerLoadTermStructureExplicit::loadProfile(const QuantLib::Date& d) const {

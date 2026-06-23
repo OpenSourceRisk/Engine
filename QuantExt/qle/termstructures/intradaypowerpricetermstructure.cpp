@@ -22,6 +22,7 @@
 
 #include <qle/termstructures/intradaypowerpricetermstructure.hpp>
 #include <qle/utilities/time.hpp>
+#include <qle/utilities/intradaypower.hpp>
 
 #include <algorithm>
 #include <iterator>
@@ -69,7 +70,9 @@ QuantLib::Real IntradayPowerPriceTermStructure::price(const QuantLib::Date& d, i
                                                       int deliveryEndTime, bool isDSTextraHour,
                                                       bool extrapolate) const {
     std::vector<TotalLoadFactor> load;
-    load.emplace_back(dstAdjustedTotalLoad(LoadFactor{deliveryStartTime, deliveryEndTime, 1.0, isDSTextraHour}, shape_->dayTimeSavingsAdjustment(d)));
+    auto dstAdjustment = dayTimeSavingsAdjustment(d, shape_->daylightSavingsLocation());
+    load.emplace_back(
+        dstAdjustedTotalLoad(LoadFactor{deliveryStartTime, deliveryEndTime, 1.0, isDSTextraHour}, dstAdjustment));
     return price(d, QuantLib::ext::make_shared<IntradayPowerLoadProfileWithMWh>(load), extrapolate);
 }
 

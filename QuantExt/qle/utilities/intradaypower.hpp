@@ -25,6 +25,8 @@ namespace QuantExt {
 
 constexpr int SECONDS_PER_HOUR = 3600;
 constexpr int SECONDS_PER_DAY = 24 * SECONDS_PER_HOUR;
+constexpr int TWO_AM_IN_SECONDS = 2 * SECONDS_PER_HOUR;
+constexpr int THREE_AM_IN_SECONDS = 3 * SECONDS_PER_HOUR;
 
 enum class IntradayPowerTimeUnit { HOUR = 3600, SECOND = 1 };
 
