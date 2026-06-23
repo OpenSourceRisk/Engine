@@ -3670,9 +3670,6 @@ void ScenarioSimMarket::updateDate(const Date& d) {
 Date ScenarioSimMarket::loadNextScenario(const Date& d) {
     QL_REQUIRE(scenarioGenerator_ != nullptr, "ScenarioSimMarket::update: no scenario generator set");
     loadedScenario_ = scenarioGenerator_->next(d);
-    QL_REQUIRE(d == Date() || d == loadedScenario_->asof(), "ScenarioSimMarket::loadNextScenario(): date ("
-                                                                << d << ") inconsistent with scenario asof ("
-                                                                << loadedScenario_->asof() << ").");
     return loadedScenario_->asof();
 }
 

@@ -417,14 +417,11 @@ void ValuationEngine::populateCube(
 
     auto t0 = data::os::nanosecondsClock();
 
-    if (dg_->size() <= 1)
-        d = Null<Date>();
-
     simMarket_->preUpdate();
 
     if (!scenarioUpdated) {
         auto tmp = simMarket_->loadNextScenario(d);
-        QL_REQUIRE(d == Null<Date>() || tmp == d,
+        QL_REQUIRE(dg_->size() <= 1 || tmp == d,
                    "ValuationEngine::populateCube(): have non-trivial date grid and mismatching scenario date ("
                        << tmp << ") versus simulated date grid date from engine (" << d << "). Internal error.");
         d = tmp;
