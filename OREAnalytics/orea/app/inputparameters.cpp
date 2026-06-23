@@ -139,6 +139,8 @@ void SetupVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputPara
     inputs->loadParameter<bool>(dryRun_, "setup", "dryRun", false, parseBool);
     inputs->loadParameter<string>(reportNaString_, "setup", "reportNaString", false);
     inputs->loadParameter<Size>(nThreads_, "setup", "nThreads", false, parseInteger);
+    inputs->loadParameter<Size>(gzipCompressionLevel_, "setup", "gzipCompressionLevel", false, parseInteger);
+    QL_REQUIRE(gzipCompressionLevel_ <= 9, "gzipCompressionLevel must be between 0 and 9, got " << gzipCompressionLevel_);
     inputs->loadParameter<bool>(continueOnError_, "setup", "continueOnError", false, parseBool);
     inputs->loadParameter<bool>(allowModelBuilderFallbacks_, "setup", "allowModelBuilderFallbacks", false, parseBool);
     inputs->loadParameter<bool>(lazyMarketBuilding_, "setup", "lazyMarketBuilding", false, parseBool);

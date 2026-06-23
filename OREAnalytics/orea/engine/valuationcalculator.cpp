@@ -25,7 +25,9 @@
 
 #include <ored/marketdata/market.hpp>
 #include <ored/portfolio/optionwrapper.hpp>
+#include <ored/portfolio/trade.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/portfolio/cashflowutils.hpp>
 
 namespace ore {
 namespace analytics {
@@ -59,8 +61,17 @@ void NPVCalculator::calculate(const QuantLib::ext::shared_ptr<Trade>& trade, Siz
                               const QuantLib::ext::shared_ptr<SimMarket>& simMarket, QuantLib::ext::shared_ptr<NPVCube>& outputCube,
                               QuantLib::ext::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date, Size dateIndex,
                               Size sample, bool isCloseOut) {
-    if (!isCloseOut)
-        outputCube->set(npv(tradeIndex, trade, simMarket), tradeIndex, dateIndex, sample, index_);
+    if (!isCloseOut) {
+        Real flows = 0.0;
+        if(includeAggregateFlows_) {
+            Date d0 = dateIndex == 0 ? simMarket->asofDate() : outputCube->dates()[dateIndex-1];
+            flows = getAggregateTradeFlows(
+                        d0, date, trade->cashflows(baseCcyCode_, simMarket, Market::defaultConfiguration, false),
+                        simMarket, Market::defaultConfiguration, baseCcyCode_) /
+                    simMarket->numeraire();
+        }
+        outputCube->set(npv(tradeIndex, trade, simMarket) + flows, tradeIndex, dateIndex, sample, index_);
+    }
 }
 
 void NPVCalculator::calculateT0(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,
@@ -214,8 +225,18 @@ void NPVCalculatorFXT0::calculate(const QuantLib::ext::shared_ptr<Trade>& trade,
                                   const QuantLib::ext::shared_ptr<SimMarket>& simMarket, QuantLib::ext::shared_ptr<NPVCube>& outputCube,
                                   QuantLib::ext::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date, Size dateIndex,
                                   Size sample, bool isCloseOut) {
-    if (!isCloseOut)
-        outputCube->set(npv(tradeIndex, trade, simMarket), tradeIndex, dateIndex, sample, index_);
+    if (!isCloseOut) {
+        Real flows = 0.0;
+        if (includeAggregateFlows_) {
+            Date d0 = dateIndex == 0 ? simMarket->asofDate() : outputCube->dates()[dateIndex - 1];
+            flows = getAggregateTradeFlows(
+                        d0, date, trade->cashflows(baseCcyCode_, simMarket, Market::defaultConfiguration, false),
+                        t0Market_, Market::defaultConfiguration, baseCcyCode_) /
+                    simMarket->numeraire();
+        }
+        outputCube->set(npv(tradeIndex, trade, simMarket) + flows / simMarket->numeraire(), tradeIndex, dateIndex,
+                        sample, index_);
+    }
 }
 
 void NPVCalculatorFXT0::calculateT0(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,

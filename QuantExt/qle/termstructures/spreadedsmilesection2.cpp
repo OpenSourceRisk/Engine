@@ -28,9 +28,34 @@ SpreadedSmileSection2::SpreadedSmileSection2(const QuantLib::ext::shared_ptr<Smi
                                              const Real simulatedAtmLevel, const bool stickyAbsMoney)
     : SmileSection(base->exerciseTime(), base->dayCounter(), base->volatilityType(),
                    base->volatilityType() == ShiftedLognormal ? base->shift() : 0.0),
-      base_(base), volSpreads_(volSpreads), strikes_(strikes), strikesRelativeToAtm_(strikesRelativeToAtm),
-      baseAtmLevel_(baseAtmLevel), simulatedAtmLevel_(simulatedAtmLevel), stickyAbsMoney_(stickyAbsMoney) {
+      fwdfwd_(false), base_(base), volSpreads_(volSpreads), strikes_(strikes),
+      strikesRelativeToAtm_(strikesRelativeToAtm), baseAtmLevel_(baseAtmLevel), simulatedAtmLevel_(simulatedAtmLevel),
+      stickyAbsMoney_(stickyAbsMoney) {
     registerWith(base_);
+    QL_REQUIRE(!strikes_.empty(), "SpreadedSmileSection2: strikes empty");
+    QL_REQUIRE(strikes_.size() == volSpreads_.size(), "SpreadedSmileSection2: strike spreads ("
+                                                          << strikes_.size() << ") inconsistent with vol spreads ("
+                                                          << volSpreads_.size() << ")");
+    if (volSpreads_.size() > 1) {
+        volSpreadInterpolation_ = LinearFlat().interpolate(strikes_.begin(), strikes_.end(), volSpreads_.begin());
+        volSpreadInterpolation_.enableExtrapolation();
+    }
+}
+
+SpreadedSmileSection2::SpreadedSmileSection2(const QuantLib::ext::shared_ptr<SmileSection>& base,
+                                             const QuantLib::ext::shared_ptr<SmileSection>& anchor,
+                                             const std::vector<Real>& volSpreads, const std::vector<Real>& strikes,
+                                             const bool strikesRelativeToAtm, const Real baseAtmLevel,
+                                             const Real anchorBaseAtmLevel, const Real simulatedAtmLevel,
+                                             const Real anchorSimulatedAtmLevel, const bool stickyAbsMoney)
+    : SmileSection(base->exerciseTime() - anchor->exerciseTime(), base->dayCounter(), base->volatilityType(),
+                   base->volatilityType() == ShiftedLognormal ? base->shift() : 0.0),
+      fwdfwd_(true), base_(base), volSpreads_(volSpreads), strikes_(strikes),
+      strikesRelativeToAtm_(strikesRelativeToAtm), baseAtmLevel_(baseAtmLevel), simulatedAtmLevel_(simulatedAtmLevel),
+      stickyAbsMoney_(stickyAbsMoney), anchor_(anchor), anchorBaseAtmLevel_(anchorBaseAtmLevel),
+      anchorSimulatedAtmLevel_(anchorSimulatedAtmLevel) {
+    registerWith(base_);
+    registerWith(anchor_);
     QL_REQUIRE(!strikes_.empty(), "SpreadedSmileSection2: strikes empty");
     QL_REQUIRE(strikes_.size() == volSpreads_.size(), "SpreadedSmileSection2: strike spreads ("
                                                           << strikes_.size() << ") inconsistent with vol spreads ("
@@ -57,7 +82,21 @@ Rate SpreadedSmileSection2::getSafeBaseAtmLevel() const {
     return baseAtmLevel_ != Null<Real>() ? baseAtmLevel_ : base_->atmLevel();
 }
 
+Rate SpreadedSmileSection2::getSafeAnchorAtmLevel() const {
+    QL_REQUIRE(anchorSimulatedAtmLevel_ != Null<Real>(), "SpreadedSmileSection2::atmLevel(): anchorSimulatedAtmLevel_ not set.");
+    return anchorSimulatedAtmLevel_;
+}
+
+Rate SpreadedSmileSection2::getSafeAnchorBaseAtmLevel() const {
+    QL_REQUIRE(anchorBaseAtmLevel_ != Null<Real>(),
+               "SpreadedSmileSection2::getSafeBaseAtmLevel(): anchorBaseAtmLevel_ not provided.");
+    return anchorBaseAtmLevel_ != Null<Real>() ? baseAtmLevel_ : base_->atmLevel();
+}
+
 Volatility SpreadedSmileSection2::volatilityImpl(Rate strike) const {
+
+    // handle regular case
+
     if (strike == Null<Real>()) {
         strike = getSafeAtmLevel();
     }
@@ -75,7 +114,22 @@ Volatility SpreadedSmileSection2::volatilityImpl(Rate strike) const {
     } else {
         tmp= std::max(1E-8, base_->volatility(effStrike) + volSpreadInterpolation_(strike));
     }
-    return tmp;
+
+    if(!fwdfwd_)
+        return tmp;
+
+    // handle fwd-fwd case
+
+    Real effStrikeAnchor;
+    if (stickyAbsMoney_) {
+        effStrikeAnchor = strike - (getSafeAnchorAtmLevel() - getSafeAnchorBaseAtmLevel());
+    } else {
+        effStrikeAnchor = strike;
+    }
+
+    Real tmp2 = anchor_->volatility(effStrikeAnchor);
+
+    return std::sqrt((tmp * tmp * base_->exerciseTime() - tmp2 * tmp2 * anchor_->exerciseTime()) / exerciseTime());
 }
 
 } // namespace QuantExt

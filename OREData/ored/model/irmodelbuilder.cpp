@@ -255,10 +255,9 @@ void IrModelBuilder::performCalculations() const {
     DLOG("Recalibrate IR model " << modelLabel_ << " for qualifier " << data_->qualifier() << " currency "
                                  << currency_);
 
-    initParametrization();
-
     if (!requiresRecalibration()) {
         DLOG("Skipping calibration as nothing has changed or calibration is not required.");
+        initParametrization();
         return;
     }
 
@@ -271,6 +270,8 @@ void IrModelBuilder::performCalculations() const {
     volSurfaceChanged(true);
     updateSwaptionBasketVols();
 
+    initParametrization();
+
     for (Size j = 0; j < swaptionBasket_.size(); j++) {
         swaptionBasket_[j]->setPricingEngine(getPricingEngine());
         // necessary if notifications are disabled (observation mode = Disable)
@@ -282,7 +283,6 @@ void IrModelBuilder::performCalculations() const {
 
     // call into calibration routines
     calibrate();
-
 } // performCalculations()
 
 void IrModelBuilder::getExpiryAndTerm(const Size j, Period& expiryPb, Period& termPb, Date& expiryDb, Date& termDb,

@@ -59,7 +59,7 @@ private:
     HwModel::Discretization discretization_;
     bool evaluateBankAccount_;
 
-    mutable bool parametrizationInitialized_ = false;
+    mutable Date parametrizationInitializedOnAnchorDate_;
 };
 
 } // namespace data

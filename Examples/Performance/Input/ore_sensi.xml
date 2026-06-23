@@ -52,7 +52,6 @@
       <Parameter name="sensitivityOutputFile">sensitivity.csv</Parameter>
       <Parameter name="outputSensitivityThreshold">0.000001</Parameter>
       <Parameter name="recalibrateModels">Y</Parameter>
-      <Parameter name="computeTheta">Y</Parameter>
     </Analytic>
   </Analytics>
 </ORE>

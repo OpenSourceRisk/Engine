@@ -115,8 +115,8 @@ public:
 
     void setModel(const Handle<AssetModelWrapper>& model);
 
-    const std::set<Real> curveTimes() const { return curveTimes_; }
-    const std::vector<std::set<std::pair<Real, Real>>> volTimesStrikes() const { return volTimesStrikes_; };
+    const std::function<std::set<Real>(const TimeGrid&)> curveTimes() const;
+    const std::function<std::vector<std::set<std::pair<Real, Real>>>(const TimeGrid&)> volTimesStrikes() const;
 
 protected:
     // to be implemented by derived classes
@@ -164,6 +164,10 @@ protected:
     std::string calibration_;
     std::map<std::string, std::vector<Real>> calibrationStrikes_;
 
+    // model provided curve times and volTimesStrikes for notification filtering
+    std::function<std::set<Real>(const TimeGrid&)> curveTimes_;
+    std::function<std::vector<std::set<std::pair<Real, Real>>>(const TimeGrid&)> volTimesStrikes_;
+
     // quanto adjustment parameters (used for model type FD only)
     bool applyQuantoAdjustment_ = false;
     Size quantoSourceCcyIndex_, quantoTargetCcyIndex_;
@@ -175,8 +179,6 @@ protected:
     mutable TimeGrid timeGrid_;                       // the (possibly refined) time grid for the simulation
     mutable std::vector<Size> positionInTimeGrid_;    // for each effective simulation date the index in the time grid
     mutable Matrix correlation_;                      // the correlation matrix (constant in time)
-    mutable std::set<Real> curveTimes_;               // curve times (notification filtering)
-    mutable std::vector<std::set<std::pair<Real, Real>>> volTimesStrikes_; // volTimesStrikes (notification filtering)
 
     // used for MC only:
     mutable std::map<Date, std::vector<RandomVariable>> underlyingPaths_;         // per simulation date index states

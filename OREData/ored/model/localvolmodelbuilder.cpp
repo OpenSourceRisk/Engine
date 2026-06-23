@@ -44,7 +44,8 @@ LocalVolModelBuilder::LocalVolModelBuilder(
     const std::set<Date>& simulationDates, const std::set<Date>& addDates, const Size timeStepsPerYear,
     const Type lvType, const std::vector<Real>& calibrationMoneyness, const std::string& referenceCalibrationGrid,
     const bool dontCalibrate, const Handle<YieldTermStructure>& baseCurve, const bool observeContinuum,
-    const std::set<Real>& curveTimes, const std::vector<std::set<std::pair<Real, Real>>>& volTimesStrikes)
+    const std::function<std::set<Real>(const TimeGrid&)>& curveTimes,
+    const std::function<std::vector<std::set<std::pair<Real, Real>>>(const TimeGrid&)>& volTimesStrikes)
     : AssetModelBuilderBase(curves, processes, simulationDates, addDates, timeStepsPerYear, baseCurve,
                             observeContinuum || lvType == Type::Dupire || lvType == Type::DupireFloored, curveTimes,
                             volTimesStrikes),

@@ -24,7 +24,6 @@
 #pragma once
 
 #include <orea/scenario/aggregationscenariodata.hpp>
-#include <orea/simulation/fixingmanager.hpp>
 #include <ored/configuration/conventions.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 
@@ -51,7 +50,6 @@ public:
         updateDate(d);
         updateScenario(d);
         postUpdate(d);
-        fixingManager()->update(d);
         updateAsd(d);
     }
 
@@ -61,8 +59,9 @@ public:
     //! Update to the given date
     virtual void updateDate(const Date&) = 0;
 
-    //! Retrieve next market scenario and apply this, but don't update date
-    virtual void updateScenario(const Date&) = 0;
+    /*! Retrieve next market scenario and apply this, return date which might be updated, e.g., in ScenarioSimMarket,
+      if the scenario asof != input date and allowDateUpdateFromScenario = true */
+    virtual Date updateScenario(const Date&) = 0;
 
     //! Observable reset depending on selected mode, instrument updates
     virtual void postUpdate(const Date&) = 0;
@@ -78,9 +77,6 @@ public:
 
     //! Reset sim market to initial state
     virtual void reset() = 0;
-
-    //! Get the fixing manager
-    virtual const QuantLib::ext::shared_ptr<FixingManager>& fixingManager() const = 0;
 
 protected:
     Real numeraire_;

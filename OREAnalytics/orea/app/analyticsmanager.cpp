@@ -295,7 +295,8 @@ void AnalyticsManager::toFile(const ore::analytics::Analytic::analytic_reports& 
             }else if(endsWith(fileName,".gz")){
                 fullFileName = outputPath + "/" + fileName;
                 report->toZip(fullFileName, sep, commentCharacter, quoteChar, nullString,
-                            lowerHeaderReportNames.find(reportName) != lowerHeaderReportNames.end());  
+                            lowerHeaderReportNames.find(reportName) != lowerHeaderReportNames.end(),
+                            inputs_ ? inputs_->gzipCompressionLevel() : 6);  
             }else{
                 fullFileName = outputPath + "/" + fileName + suffix;
                 report->toFile(fullFileName, sep, commentCharacter, quoteChar, nullString,
