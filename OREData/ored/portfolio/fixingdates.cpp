@@ -848,25 +848,18 @@ void FixingDateGetter::visit(TRSCashFlow& bc) {
         if (ind) {
             auto startDate = ind->fixingCalendar().adjust(bc.fixingStartDate(), Preceding);
             auto endDate = ind->fixingCalendar().adjust(bc.fixingEndDate(), Preceding);
-            auto vd = Settings::instance().evaluationDate();
-            if((startDate == vd || endDate == vd)){
-                continue;
-            }else{
-                auto gi = QuantLib::ext::dynamic_pointer_cast<QuantExt::GenericIndex>(ind);
 
-                if (!gi || gi->expiry() == Date() || startDate < gi->expiry()) {
-                    if (bc.initialPrice() == Null<Real>() || requireFixingStartDates_){
-                        requiredFixings_.addFixingDate(startDate, IndexNameTranslator::instance().oreName(ind->name()),
-                                                    bc.date());
-                    }
+            auto gi = QuantLib::ext::dynamic_pointer_cast<QuantExt::GenericIndex>(ind);
 
-                }
-
-                if (!gi || gi->expiry() == Date() || endDate < gi->expiry()){
-                    requiredFixings_.addFixingDate(endDate, IndexNameTranslator::instance().oreName(ind->name()),
-                                                bc.date());
-                }
+            if (!gi || gi->expiry() == Date() || startDate < gi->expiry()) {
+                if (bc.initialPrice() == Null<Real>() || requireFixingStartDates_)
+                    requiredFixings_.addFixingDate(startDate, IndexNameTranslator::instance().oreName(ind->name()),
+                                                   bc.date());
             }
+
+            if (!gi || gi->expiry() == Date() || endDate < gi->expiry())
+                requiredFixings_.addFixingDate(endDate, IndexNameTranslator::instance().oreName(ind->name()),
+                                               bc.date());
         }
     }
 
