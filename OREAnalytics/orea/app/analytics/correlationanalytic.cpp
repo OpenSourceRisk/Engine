@@ -152,13 +152,12 @@ void CorrelationAnalyticImpl::setCorrelationReport(const QuantLib::ext::shared_p
     auto defaultReturnConfig = QuantLib::ext::make_shared<ReturnConfiguration>();
 
     std::string configuration = inputs_->marketConfig("simulation");
-    
+
     auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
-        analytic()->market(), analytic()->configurations().simMarketParams,
-        QuantLib::ext::make_shared<FixingManager>(inputs_->asof()), configuration, *inputs_->curveConfigs().get(),
-        *analytic()->configurations().todaysMarketParams, inputs_->continueOnError(), false, true,
-        corrVars->allowPartialScenarios_, inputs_->iborFallbackConfig(), false, nullptr);
-    
+        analytic()->market(), analytic()->configurations().simMarketParams, configuration,
+        *inputs_->curveConfigs().get(), *analytic()->configurations().todaysMarketParams, inputs_->continueOnError(),
+        false, true, corrVars->allowPartialScenarios_, false, inputs_->iborFallbackConfig(), false, nullptr);
+
     QL_REQUIRE(corrVars->scenarioReader_, "ScenarioReader Required.");
     
     auto scenarios = buildHistoricalScenarioGenerator(

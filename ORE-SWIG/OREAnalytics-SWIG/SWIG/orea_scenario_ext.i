@@ -198,7 +198,6 @@ public:
     virtual void postUpdate(const Date& d) = 0;
     virtual void updateAsd(const Date&) = 0;
     virtual void reset() = 0;
-    virtual const QuantLib::ext::shared_ptr<ore::analytics::FixingManager>& fixingManager() const = 0;
 };
 
 class ScenarioSimMarket : public SimMarket {
@@ -222,7 +221,6 @@ public:
     virtual QuantLib::ext::shared_ptr<QuantExt::Scenario> baseScenario() const;
     virtual QuantLib::ext::shared_ptr<QuantExt::Scenario> baseScenarioAbsolute() const;
     bool useSpreadedTermStructures() const;
-    const QuantLib::ext::shared_ptr<ore::analytics::FixingManager>& fixingManager() const override;
     virtual bool isSimulated(const QuantExt::RiskFactorKey::KeyType& factor) const;
     void applyScenario(const QuantLib::ext::shared_ptr<QuantExt::Scenario>& scenario);
 };

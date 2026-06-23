@@ -583,6 +583,44 @@ BOOST_AUTO_TEST_CASE(testInMemoryReportBuffer) {
     diffFiles(filename_0, filename_100000);
 }
 
+BOOST_AUTO_TEST_CASE(testCubeCompressionLevel) {
+    std::set<string> ids{string("id")};
+    Date d(1, QuantLib::Jan, 2016);
+    vector<Date> dates(50, d);
+    Size samples = 200;
+    auto cube = QuantLib::ext::make_shared<DoublePrecisionInMemoryCube>(d, ids, dates, samples);
+    initCube(*cube);
+
+    string filename1 = unique_path().string() + ".csv.gz";
+    string filename9 = unique_path().string() + ".csv.gz";
+
+    auto cleanup = std::shared_ptr<void>(nullptr, [&](void*) {
+        std::filesystem::remove(filename1);
+        std::filesystem::remove(filename9);
+    });
+
+    // Save with level 1 (fastest, largest)
+    saveCube(filename1, NPVCubeWithMetaData{cube, nullptr, QuantLib::ext::nullopt, QuantLib::ext::nullopt}, 1);
+    // Save with level 9 (slowest, smallest)
+    saveCube(filename9, NPVCubeWithMetaData{cube, nullptr, QuantLib::ext::nullopt, QuantLib::ext::nullopt}, 9);
+
+    // Read back and verify they are both valid
+    auto cube1 = loadCube(filename1)->cube();
+    auto cube9 = loadCube(filename9)->cube();
+
+    BOOST_CHECK_EQUAL(cube1->numIds(), cube->numIds());
+    BOOST_CHECK_EQUAL(cube9->numIds(), cube->numIds());
+
+    std::uintmax_t size1 = std::filesystem::file_size(filename1);
+    std::uintmax_t size9 = std::filesystem::file_size(filename9);
+
+    BOOST_TEST_MESSAGE("Saved cube level 1 size: " << size1 << " bytes");
+    BOOST_TEST_MESSAGE("Saved cube level 9 size: " << size9 << " bytes");
+
+    // Level 9 should be smaller than or equal to level 1
+    BOOST_CHECK_PREDICATE(std::less_equal<std::uintmax_t>(), (size9)(size1));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

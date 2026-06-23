@@ -1,0 +1,27 @@
+<ScheduleData name="schedule_01_01">
+  <Rules>
+    <StartDate>2026-04-03</StartDate>
+    <EndDate>2026-07-03</EndDate>
+    <Tenor>1M</Tenor>
+    <Calendar>US</Calendar>
+    <Convention>ModifiedFollowing</Convention>
+    <Rule>Forward</Rule>
+  </Rules>
+  <Dates>
+    <Calendar>US</Calendar>
+    <Convention>ModifiedFollowing</Convention>
+    <Dates>
+      <Date>2026-07-03</Date>
+      <Date>2026-08-03</Date>
+      <Date>2026-09-03</Date>
+    </Dates>
+  </Dates>
+  <Rules>
+    <StartDate>2026-09-03</StartDate>
+    <EndDate>2026-11-03</EndDate>
+    <Tenor>1M</Tenor>
+    <Calendar>US</Calendar>
+    <Convention>ModifiedFollowing</Convention>
+    <Rule>Forward</Rule>
+  </Rules>
+</ScheduleData>

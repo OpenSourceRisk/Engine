@@ -165,6 +165,7 @@
 #include <ored/portfolio/formulabasedlegbuilder.hpp>
 #include <ored/portfolio/formulabasedlegdata.hpp>
 #include <ored/portfolio/forwardbond.hpp>
+#include <ored/portfolio/forwardvolatilityagreement.hpp>
 #include <ored/portfolio/forwardrateagreement.hpp>
 #include <ored/portfolio/fxaverageforward.hpp>
 #include <ored/portfolio/fxbarrieroption.hpp>
@@ -295,6 +296,7 @@ void dataBuilders() {
     ORE_REGISTER_TRADE_BUILDER("CommoditySwaption", CommoditySwaption, false)
     ORE_REGISTER_TRADE_BUILDER("FxDigitalBarrierOption", FxDigitalBarrierOption, false)
     ORE_REGISTER_TRADE_BUILDER("ForwardRateAgreement", ForwardRateAgreement, false)
+    ORE_REGISTER_TRADE_BUILDER("ForwardVolatilityAgreement", ForwardVolatilityAgreement, false)
     ORE_REGISTER_TRADE_BUILDER("CommodityDigitalAveragePriceOption", CommodityDigitalAveragePriceOption, false)
     ORE_REGISTER_TRADE_BUILDER("CommoditySwap", CommoditySwap, false)
     ORE_REGISTER_TRADE_BUILDER("EquitySwap", EquitySwap, false)

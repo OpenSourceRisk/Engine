@@ -59,6 +59,8 @@ Date nextValidFixingDate(Date d, const QuantLib::ext::shared_ptr<Index>& index, 
     QL_FAIL("no valid fixing date found for index " << index->name() << " within gap from " << io::iso_date(d));
 }
 
+FixingManager::~FixingManager() { reset(); }
+
 FixingManager::FixingManager(Date today) : today_(today), fixingsEnd_(today), modifiedFixingHistory_(false) {}
 
 //! Initialise the manager-

@@ -50,7 +50,7 @@ private:
 
     bool setCalibrationInfo_ = false;
 
-    mutable bool parametrizationInitialized_ = false;
+    mutable Date parametrizationInitializedOnAnchorDate_;
 };
 
 } // namespace data

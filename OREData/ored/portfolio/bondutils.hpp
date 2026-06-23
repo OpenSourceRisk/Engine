@@ -162,7 +162,7 @@ struct BondFutureUtils {
  * may also store a separate call and put surface in which case the future surface name will be `TYH25_CALL` and
  * `TYH25_PUT` respectively. This helper extracts the bond future contract name from the future surface name.
  */
-std::string_view futureContractName(std::string_view futureSurfaceName);
+std::string futureContractName(std::string_view futureSurfaceName);
 
 } // namespace data
 } // namespace ore

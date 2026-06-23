@@ -18,8 +18,8 @@ examples_exempt_from_scenariogenerator_samples_overwrite = [
     'Legacy/Example_72']
 
 # Pull in some shared utilities
-script_dir = Path(__file__).parents[0]
-sys.path.append(os.path.join(script_dir, '../'))
+script_dir = Path(__file__).parent
+sys.path.append(str(script_dir.parent))
 from Examples.ore_examples_helper import get_list_of_legacy_examples  # noqa
 from Examples.ore_examples_helper import get_list_of_examples  # noqa
 from Examples.ore_examples_helper import get_list_ore_academy  # noqa
@@ -73,13 +73,17 @@ class TestExamples(unittest.TestCase):
             self.logger.warning('No ExpectedOutput folder detected, skipped.')
 
     def runAndRegressExample(self, name):
+        # Pass timeout into run_example below if given.
+        timeout = os.getenv("ORE_EXAMPLE_TIMEOUT")
+        timeout = int(timeout) if timeout is not None else None
+
         os.environ['OVERWRITE_SCENARIOGENERATOR_SAMPLES'] = '50'
         for exname in examples_exempt_from_scenariogenerator_samples_overwrite:
             if name.endswith(exname):
                 os.environ['OVERWRITE_SCENARIOGENERATOR_SAMPLES'] = ''
         self.logger.info('{}: run {}'.format(self._testMethodName, name))
         if not get_env_bool('ORE_EXAMPLES_COMPARE_ONLY'):
-            ret = run_example(name)
+            ret = run_example(name, timeout)
             os.environ['OVERWRITE_SCENARIOGENERATOR_SAMPLES'] = ''
             assert ret == 0
 

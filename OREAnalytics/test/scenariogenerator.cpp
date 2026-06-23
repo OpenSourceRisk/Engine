@@ -23,6 +23,7 @@
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/simplescenario.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
+#include <orea/simulation/fixingmanager.hpp>
 #include <ored/marketdata/market.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/model/calibrationinstruments/cpicapfloor.hpp>
@@ -1187,6 +1188,7 @@ BOOST_AUTO_TEST_CASE(testCpiSwapExposure) {
     BOOST_TEST_MESSAGE("set up scenario sim market");
     auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(d.market, simMarketConfig);
     simMarket->scenarioGenerator() = sg;
+    auto fixingManager = QuantLib::ext::make_shared<FixingManager>(d.referenceDate);
 
     Size samples = 5000;
 
@@ -1229,13 +1231,12 @@ BOOST_AUTO_TEST_CASE(testCpiSwapExposure) {
     BOOST_TEST_MESSAGE("running " << samples << " samples simulation over " << grid->dates().size() << " time steps");
     for (Size i = 0; i < samples; i++) {
         simMarket->update(grid->dates().back());
+        fixingManager->update(grid->dates().back());
         // we do not use the valuation engine, so in case updates are disabled we need to
         // take care of the instrument update ourselves
         cpiSwap->update();
         Real numeraire = simMarket->numeraire();
         cpiSwap_epe += std::max(cpiSwap->NPV(), 0.0) / numeraire;
-
-        simMarket->fixingManager()->reset();
     }
     BOOST_TEST_MESSAGE("Simulation time " << timer.format(default_places, "%w"));
 

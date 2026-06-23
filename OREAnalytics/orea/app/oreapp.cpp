@@ -312,7 +312,7 @@ void OREApp::analytics() {
                 std::string fileName =
                     inputs_->resultsPath().string() + "/" + outputs_->outputFileName(reportName, "csv.gz");
                 LOG("write npv cube " << reportName << " to file " << fileName);
-                saveCube(fileName, *b.second);
+                saveCube(fileName, *b.second, inputs_->gzipCompressionLevel());
             }
         }
 
@@ -323,7 +323,7 @@ void OREApp::analytics() {
                 std::string fileName =
                     inputs_->resultsPath().string() + "/" + outputs_->outputFileName(reportName, "csv.gz");
                 LOG("write market cube " << reportName << " to file " << fileName);
-                saveAggregationScenarioData(fileName, *b.second);
+                saveAggregationScenarioData(fileName, *b.second, inputs_->gzipCompressionLevel());
             }
         }
 

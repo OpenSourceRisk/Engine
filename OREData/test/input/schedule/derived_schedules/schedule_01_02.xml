@@ -1,0 +1,12 @@
+<ScheduleData name="schedule_01_02">
+  <Derived>
+    <BaseSchedule>schedule_01_03</BaseSchedule>
+    <Shift>2D</Shift>
+    <Calendar>US</Calendar>
+    <Convention>ModifiedFollowing</Convention>
+    <RemoveFirstDate>False</RemoveFirstDate>
+    <RemoveLastDate>False</RemoveLastDate>
+    <ShiftUnit>BusinessDays</ShiftUnit>
+    <ShiftAnchor>Unadjusted</ShiftAnchor>
+  </Derived>
+</ScheduleData>

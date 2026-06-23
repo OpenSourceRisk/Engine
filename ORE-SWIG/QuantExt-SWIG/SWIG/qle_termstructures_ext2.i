@@ -51,7 +51,7 @@ using SurvivalProbabilityCurveExtrapolation =
 
 // --- Dynamics enums (dynamicstype.hpp) ---
 namespace QuantExt {
-    enum Stickyness { StickyStrike, StickyLogMoneyness, StickyAbsoluteMoneyness };
+    enum Stickyness { StickyStrike, StickyMoneyness, StickySABR };
     enum ReactionToTimeDecay { ConstantVariance, ForwardForwardVariance };
     enum YieldCurveRollDown { ConstantDiscounts, ForwardForward };
 }

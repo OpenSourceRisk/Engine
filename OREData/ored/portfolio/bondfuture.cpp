@@ -124,6 +124,10 @@ XMLNode* BondFuture::toXML(XMLDocument& doc) const
     return node;
 }
 
+bool BondFuture::isLong() const {
+    return parsePositionType(longShort_) == QuantLib::Position::Type::Long;
+}
+
 bool BondFuture::applyConversionFactor() const
 {
     return applyConversionFactor_.value_or(true);

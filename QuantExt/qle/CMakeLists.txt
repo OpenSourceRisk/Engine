@@ -406,6 +406,7 @@ termstructures/dynamiccpivolatilitystructure.cpp
 termstructures/dynamicoptionletvolatilitystructure.cpp
 termstructures/dynamicswaptionvolmatrix.cpp
 termstructures/dynamicyoyoptionletvolatilitystructure.cpp
+termstructures/dynamicstype.cpp
 termstructures/eqcommoptionsurfacestripper.cpp
 termstructures/equityforwardcurvestripper.cpp
 termstructures/flatcorrelation.cpp
@@ -1104,7 +1105,6 @@ termstructures/spreadedsmilesection2.hpp
 termstructures/spreadedsurvivalprobabilitytermstructure.hpp
 termstructures/spreadedswaptionvolatility.hpp
 termstructures/spreadedyoyvolsurface.hpp
-termstructures/staticallycorrectedyieldtermstructure.hpp
 termstructures/strippedcpivolatilitystructure.hpp
 termstructures/strippedoptionlet.hpp
 termstructures/strippedoptionletadapter.hpp

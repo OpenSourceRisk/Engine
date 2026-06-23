@@ -48,18 +48,18 @@ public:
                    DateGeneration::Rule rule = DateGeneration::Backward, bool includeSpread = false,
                    bool spreadOnRec = true,
                    QuantExt::SubPeriodsCoupon1::Type type = QuantExt::SubPeriodsCoupon1::Compounding,
-                   const bool telescopicValueDates = false);
+                   bool payIsAveraged = false, bool recIsAveraged = false, const bool telescopicValueDates = false);
     //! Constructor using Schedules with a full interface
     TenorBasisSwap(Real nominal, const Schedule& paySchedule, const QuantLib::ext::shared_ptr<IborIndex>& payIndex,
                    Spread paySpread, const Schedule& recSchedule, const QuantLib::ext::shared_ptr<IborIndex>& recIndex,
                    Spread recSpread, bool includeSpread = false, bool spreadOnRec = true,
                    QuantExt::SubPeriodsCoupon1::Type type = QuantExt::SubPeriodsCoupon1::Compounding,
-                   const bool telescopicValueDates = false);
+                   bool payIsAveraged = false, bool recIsAveraged = false, const bool telescopicValueDates = false);
     TenorBasisSwap(const std::vector<Real>& nominals, const Schedule& paySchedule, const QuantLib::ext::shared_ptr<IborIndex>& payIndex,
                    Spread paySpread, const Schedule& recSchedule, const QuantLib::ext::shared_ptr<IborIndex>& recIndex,
                    Spread recSpread, bool includeSpread = false, bool spreadOnRec = true,
                    QuantExt::SubPeriodsCoupon1::Type type = QuantExt::SubPeriodsCoupon1::Compounding,
-                   const bool telescopicValueDates = false);
+                   bool payIsAveraged = false, bool recIsAveraged = false, const bool telescopicValueDates = false);
 
     //@}
     //! \name Inspectors
@@ -122,6 +122,9 @@ private:
 
     Calendar recIndexCalendar_, payIndexCalendar_;
     Size idxRec_, idxPay_;
+
+    bool payIsAveraged_;
+    bool recIsAveraged_;
 };
 
 //! %Results from tenor basis swap calculation

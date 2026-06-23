@@ -76,11 +76,11 @@ void forwardEvaluation(const ComputationGraph& g, std::vector<T>& values,
                     if (g.maxNodeRequiringArg(p) > node)
                         continue;
 
-                    // is the node marked as to be kept ?
+                    // is the node marked to be kept?
 
                     if ((!keepNodes.empty() && keepNodes[p]) ||
                         (!keepNodesDerivatives.empty() && keepNodesDerivatives[p] &&
-                         (g.redBlockId(p) == 0 || redBlockReconstruction)))
+                         (g.redBlockId(p) == 0 || g.opId(p) == RandomVariableOpCode::None || redBlockReconstruction)))
                         continue;
 
                     // add to nodes to delete

@@ -1,0 +1,181 @@
+\subsubsection{Range Accrual Leg}
+\label{pricing:ir_rangeaccrualleg}
+
+\underline{Analytical pricing for non-callable structures}
+
+TODO ...
+
+\underline{LGM pricing for callable structures}
+
+The range accrual payoff can be viewed as a weighted sum over digital caplets on an Ibor rate with delayed
+payment. We derive a formula for the PV of such a caplet in the LGM1F model.
+
+Let $t$ be the time w.r.t. which we wish to calculate the PV and $z(t)$ the LGM state at $t$. The model dynamics is given by
+
+\begin{equation}
+dz(t) = \alpha(t) dW(t)
+\end{equation}
+
+with $z(0) = 0$ and $\alpha(t)$ a time-dependent (``Hagan''-) volatility. Let $[S,T]$ with $t<S<T$ denote the forward
+period of the caplet underlying and $\tau$ the applicable day count fraction for this period. The pv of the caplet at
+time $S$ is given by
+
+\begin{equation}\label{pricing:ir_rangeaccrualleg_payout}
+1_{L(S,S,T) > K}
+\end{equation}
+
+with a strike $K$ and the Ibor rate
+
+\begin{equation}
+L(t,S,T) := \frac{1}{\tau} \left( \frac{P(t,S)}{P(t,T)} - 1 \right)
+\end{equation}
+
+where $P(t,T)$ is the zero bond price on the forward estimation curve of $L$. The caplet price $V$ calculated in the
+$S$-forward measure takes the form
+
+\begin{equation}
+V(t) = P(t,S) E^{S}_t( P(S,T_p) 1_{L(S,S,T) > K} )
+\end{equation}
+
+if the payout is made at time $T_p > S$. We shift to the $T_p$-forward measure and call the Radon-Nikodyn derivative of
+$T_p$-forward w.r.t. $S$-forward measure $\zeta(\cdot)$. We get
+
+\begin{equation}
+\frac{\zeta(S)}{\zeta(t)} = \frac{P(S,T_p)P(t,S)}{P(t,T_p)P(S,S)}
+\end{equation}
+
+and
+
+\begin{equation}
+V(t) = P(t,T_p) E^{T_p}_t( 1_{L(S,S,T) > K} )
+\end{equation}
+
+The payout condition \ref{pricing:ir_rangeaccrualleg_payout} is equivalent to
+
+\begin{equation}
+\frac{P(S,T)}{P(S,S)} < \frac{1}{1+\tau K} =: K^*
+\end{equation}
+
+i.e. we effectively have to price a digital option on a zero bond (with delayed payment). The caplet price $V(t)$ can be
+written
+
+\begin{equation}
+V(t) = P(t,T_p) E^{T_p}_t( 1_{P(S,S,T) < K^*} )
+\end{equation}
+
+where we write $P(t,S,T) := P(t,T) / P(t,S)$ for the forward zero bond price observed at $t$ for the period
+$[S,T]$. In general we have
+
+\begin{equation}
+\frac{dP(t,S,T)}{P(t,S,T)} = -( \sigma_P(t,T) - \sigma_P(t,S) ) dW^S(t)
+\end{equation}
+
+under the $S$-forward measure, see e.g. \cite{Andersen_Piterbarg_2010}, (4.33) and from (4.34) we get the dynamics
+under the $T_p$-forward measure
+
+\begin{equation}\label{pricing:ir_rangeaccrualleg_dynamics}
+\begin{split}
+\frac{dP(t,S,T)}{P(t,S,T)} = ( \sigma_P(t,T_p) - \sigma_P(t,S) )( \sigma_P(t,T) - \sigma_P(t,S) ) dt -\\ ( \sigma_P(t,T) - \sigma_P(t,S) ) dW^{T_p}(t)
+\end{split}
+\end{equation}
+
+We can express the bond volatility $\sigma_p(t,U)$ as
+
+\begin{equation}\label{pricing:ir_rangeaccrualleg_bondvol}
+\sigma_P(t,U) = \alpha(t) \left( H(U) - H(t) \right)
+\end{equation}
+
+with $H(s)$ as defined below. This follows direcly from \cite{Andersen_Piterbarg_2010}, (4.36)
+
+\begin{equation}
+\sigma_f(t,T) = \frac{\partial}{\partial T} \sigma_P(t,T)
+\end{equation}
+
+i.e.
+
+\begin{equation}
+\sigma_P(t,T) = \int_0^T \sigma_f(t,u) du
+\end{equation}
+
+and the separability condition
+
+\begin{equation}
+\sigma_f(t,T) = g(t)h(T)
+\end{equation}
+
+for the LGM / HW model class, where $g(t) = \alpha(t)$ is the LGM volatility by construction of the LGM model
+formulation and $h(s)$ is usually related to a mean reversion $\kappa(u)$ via $h(s) = e^{-\int_0^s \kappa(u) du}$.
+$H(T)$ is then defined as $\int_0^T h(s) ds$.
+
+From \ref{pricing:ir_rangeaccrualleg_dynamics} and \ref{pricing:ir_rangeaccrualleg_bondvol} we see that the distribution
+of $\ln P(S,S,T)$ conditional on $z(t)$ is normal with mean
+
+\begin{equation}
+\begin{split}
+\mu = \ln P(t,S,T) + \int_t^S ( \sigma_P(u,T_p) - \sigma_P(u,S) )( \sigma_P(u,T) - \sigma_P(u,S) ) du - \\
+ \frac{1}{2} \int_t^S ( \sigma_P(u,T) - \sigma_P(u,S) )^2 du
+\end{split}
+\end{equation}
+
+and variance
+
+\begin{equation}
+\sigma^2 = \int_t^S ( \sigma_P(u,T) - \sigma_P(u,S) )^2 du
+\end{equation}
+
+Using \ref{pricing:ir_rangeaccrualleg_bondvol} we compute the differences appearing in the integrands:
+
+\begin{equation}
+\sigma_P(u,T_p) - \sigma_P(u,S) = \alpha(u)(H(T_p) - H(u)) - \alpha(u)(H(S) - H(u)) = \alpha(u)(H(T_p) - H(S))
+\end{equation}
+
+\begin{equation}
+\sigma_P(u,T) - \sigma_P(u,S) = \alpha(u)(H(T) - H(u)) - \alpha(u)(H(S) - H(u)) = \alpha(u)(H(T) - H(S))
+\end{equation}
+
+Note that these differences are proportional to $\alpha(u)$ with constant factors $(H(T_p)-H(S))$ and $(H(T)-H(S))$
+respectively. Substituting into the integrals:
+
+\begin{equation}
+\int_t^S ( \sigma_P(u,T_p) - \sigma_P(u,S) )( \sigma_P(u,T) - \sigma_P(u,S) ) du = (H(T_p)-H(S))(H(T)-H(S)) \int_t^S \alpha^2(u) du
+\end{equation}
+
+\begin{equation}
+\int_t^S ( \sigma_P(u,T) - \sigma_P(u,S) )^2 du = (H(T)-H(S))^2 \int_t^S \alpha^2(u) du
+\end{equation}
+
+Therefore the mean becomes
+
+\begin{equation}\label{pricing:ir_rangeaccrualleg_mu}
+\mu = \ln P(t,S,T) + \left[ (H(T_p)-H(S))(H(T)-H(S)) - \frac{1}{2}(H(T)-H(S))^2 \right] \int_t^S \alpha^2(u) du
+\end{equation}
+
+and the variance as
+
+\begin{equation}\label{pricing:ir_rangeaccrualleg_sigma}
+\sigma^2 = (H(T)-H(S))^2 \int_t^S \alpha(u)^2 du
+\end{equation}
+
+If a variable $X$ has lognormal distribution $LN(\mu,\sigma^2)$, i.e., $X=e^{\mu+\sigma Z}$, with $Z$ standard normally distributed, then obviously
+
+\begin{equation}
+P( X < K^* ) = \Phi^{-1} \left( \frac{ \ln K^* - \mu }{\sigma} \right)
+\end{equation}
+
+which gives the final pricing formula for the caplet
+
+\begin{equation}
+V(t) = P(t,T_p) E^{T_p}_t( 1_{L(S,S,T) > K} ) = P(t, T_p) \Phi^{-1}\left( \frac{ \ln K^* - \mu }{\sigma} \right)
+\end{equation}
+
+with $\Phi(x)$ denoting the cumulative standard normal distribution function, and
+
+\begin{equation}
+K^* = \frac{1}{1+\tau K}
+\end{equation}
+
+and $\mu$ and $\sigma$ as in \ref{pricing:ir_rangeaccrualleg_mu}, \ref{pricing:ir_rangeaccrualleg_sigma}. For formula for a floorlet is given by
+
+\begin{equation}
+V(t) = P(t,T_p) E^{T_p}_t( 1_{L(S,S,T) < K} ) = P(t, T_p) \left[ 1 - \Phi^{-1}\left( \frac{ \ln K^* - \mu }{\sigma} \right) \right]
+\end{equation}

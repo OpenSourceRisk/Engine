@@ -228,7 +228,8 @@ Handle<OptionletVolatilityStructure> CapFlooredAverageONIndexedCouponPricer::cap
 AverageONLeg::AverageONLeg(const Schedule& schedule, const QuantLib::ext::shared_ptr<OvernightIndex>& i)
     : schedule_(schedule), overnightIndex_(i), paymentAdjustment_(Following), paymentLag_(0),
       telescopicValueDates_(false), paymentCalendar_(schedule.calendar()), rateCutoff_(0), lookback_(0 * Days),
-      fixingDays_(Null<Size>()), includeSpread_(false), nakedOption_(false), localCapFloor_(false), inArrears_(true) {}
+      fixingDays_(Null<Size>()), includeSpread_(false), nakedOption_(false), localCapFloor_(false), inArrears_(true),
+      observationShift_(true), staleDatesCheck_(true) {}
 
 AverageONLeg& AverageONLeg::withNotional(Real notional) {
     notionals_ = std::vector<Real>(1, notional);
@@ -285,7 +286,7 @@ AverageONLeg& AverageONLeg::withPaymentCalendar(const Calendar& calendar) {
     return *this;
 }
 
-AverageONLeg& AverageONLeg::withPaymentLag(Natural lag) {
+AverageONLeg& AverageONLeg::withPaymentLag(Integer lag) {
     paymentLag_ = lag;
     return *this;
 }

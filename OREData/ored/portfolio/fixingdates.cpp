@@ -30,6 +30,7 @@
 #include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/cashflows/inflationcoupon.hpp>
 #include <ql/cashflows/overnightindexedcoupon.hpp>
+#include <ql/cashflows/rangeaccrual.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/cashflows/yoyinflationcoupon.hpp>
 #include <ql/experimental/coupons/cmsspreadcoupon.hpp>
@@ -886,6 +887,11 @@ void FixingDateGetter::visit(InterpolatedIborCoupon& c) {
     requiredFixings_.addFixingDate(c.fixingDate(),
                                    IndexNameTranslator::instance().oreName(c.interpolatedIborIndex()->longIndex()->name()),
                                    c.date(), true);
+}
+
+void FixingDateGetter::visit(RangeAccrualFloatersCoupon& c) {
+    auto oreIndexName = IndexNameTranslator::instance().oreName(c.index()->name());
+    requiredFixings_.addFixingDates(c.fixingDates(), oreIndexName, c.date());
 }
 
 void addToRequiredFixings(const QuantLib::Leg& leg, const QuantLib::ext::shared_ptr<FixingDateGetter>& fixingDateGetter) {
