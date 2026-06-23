@@ -10,13 +10,16 @@ based on the Black-Scholes framework, see \cite{Haug_1997} Ch 4.19.2, or
 \item as call respectively put spreads
 \end{itemize}
 
-Both pricing approaches are available for the trade type \lstinline!FxDigitalOption!
-and are selected via the engine configuration:
+For engine configuration, the following product types are supported:
 \begin{itemize}
-\item engine \lstinline!AnalyticCashSettledEuropeanEngine!: analytic pricing as
-described in section \ref{pricing:fx_option_digital_analytical} (default),
-\item engine \lstinline!CallSpreadEngine!: call/put spread replication as described
-in section \ref{pricing:fx_option_digital_callspread}.
+\item product type \lstinline!FxDigitalOption!: supports both
+\lstinline!AnalyticEuropeanEngine! (analytic pricing as described in section
+\ref{pricing:fx_option_digital_analytical}, default) and
+\lstinline!CallSpreadEngine! (call/put spread replication as described in
+section \ref{pricing:fx_option_digital_callspread}),
+\item product type \lstinline!FxDigitalOptionEuropeanCS!: supports
+\lstinline!AnalyticCashSettledEuropeanEngine! (analytic pricing as described
+in section \ref{pricing:fx_option_digital_analytical}).
 \end{itemize}
 
 \subsubsection*{Analytical Digital FX Option}\label{pricing:fx_option_digital_analytical}
