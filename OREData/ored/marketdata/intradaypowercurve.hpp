@@ -72,7 +72,7 @@ private:
 
     //! Build the intraday shape term structure from SHAPE_PROFILE/SHAPE_FACTOR/<shapeQuoteName>/* quotes.
     QuantLib::ext::shared_ptr<QuantExt::IntradayShapeTermstructure>
-    buildShape(const QuantLib::Date& asof, const std::string& shapeQuoteName, const Loader& loader) const;
+    buildShape(const QuantLib::Date& asof, const std::string& shapeQuoteName, const Loader& loader, const std::string& savingsTime) const;
 };
 
 } // namespace data

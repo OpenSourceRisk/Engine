@@ -47,7 +47,7 @@ public:
 
     IntradayPowerCurveConfig(const std::string& curveId, const std::string& curveDescription,
                              const std::string& currency, const std::string& dailyAveragePriceCurve,
-                             const std::string& shapeQuoteName);
+                             const std::string& shapeQuoteName, const std::string& conventionsId);
     //@}
 
     //! \name Serialisation
@@ -71,6 +71,7 @@ public:
     std::string& currency() { return currency_; }
     std::string& dailyAveragePriceCurve() { return dailyAveragePriceCurve_; }
     std::string& shapeQuoteName() { return shapeQuoteName_; }
+    std::string& convention() { return conventionsId_; }
     //@}
 
 private:
@@ -80,6 +81,7 @@ private:
     std::string currency_;
     std::string dailyAveragePriceCurve_;
     std::string shapeQuoteName_;
+    std::string conventionsId_;
 };
 
 } // namespace data

@@ -59,7 +59,16 @@ IntradayPowerCurve::IntradayPowerCurve(const Date& asof, const IntradayPowerCurv
         Handle<PriceTermStructure> underlying(it->second->commodityPriceCurve());
 
         // Build the intraday shape term structure from the shape factor quotes.
-        auto shape = buildShape(asof, config->shapeQuoteName(), loader);
+
+        std::string savingsTime;
+        const auto& [found, conv] = InstrumentConventions::instance().conventions()->get(
+            config->convention(), Convention::Type::CommodityFuture);
+        if (found){
+            auto c = QuantLib::ext::dynamic_pointer_cast<CommodityFutureConvention>(conv);
+            savingsTime = c->savingsTime();
+        }
+
+        auto shape = buildShape(asof, config->shapeQuoteName(), loader, savingsTime);
 
         // Build the intraday power price term structure wrapping the daily average curve with the shape.
         curve_ = QuantLib::ext::make_shared<IntradayPowerPriceTermStructure>(underlying, shape);
@@ -75,8 +84,10 @@ IntradayPowerCurve::IntradayPowerCurve(const Date& asof, const IntradayPowerCurv
     }
 }
 
-QuantLib::ext::shared_ptr<IntradayShapeTermstructure>
-IntradayPowerCurve::buildShape(const Date& asof, const string& shapeQuoteName, const Loader& loader) const {
+QuantLib::ext::shared_ptr<IntradayShapeTermstructure> IntradayPowerCurve::buildShape(const Date& asof,
+                                                                                     const string& shapeQuoteName,
+                                                                                     const Loader& loader,
+                                                                                     const string& savingsTime) const {
 
     // Always load all shape factor quotes for the configured shape quote name using a wildcard:
     // SHAPE_PROFILE/SHAPE_FACTOR/<shapeQuoteName>/*
@@ -95,7 +106,7 @@ IntradayPowerCurve::buildShape(const Date& asof, const string& shapeQuoteName, c
         if (!q)
             continue;
         auto start = static_cast<int>(q->startTimeInSec()) * static_cast<int>(q->timeUnit());
-        
+
         QL_REQUIRE(start >= 0 && start < 86400,
                    "IntradayPowerCurve: start time " << start << " is out of range for quote " << q->name());
         if (!q->isDST())
@@ -107,8 +118,9 @@ IntradayPowerCurve::buildShape(const Date& asof, const string& shapeQuoteName, c
                     << q->name() << " has start time " << start);
             shapeFactorsDST[q->deliveryDate()][start] = q->quote()->value();
         }
-        TLOG("IntradayPowerCurve: loaded shape factor quote " << q->name() << " with delivery date " << q->deliveryDate()
-             << ", start time " << start << " and value " << q->quote()->value() << (q->isDST() ? " (DST)" : ""));
+        TLOG("IntradayPowerCurve: loaded shape factor quote "
+             << q->name() << " with delivery date " << q->deliveryDate() << ", start time " << start << " and value "
+             << q->quote()->value() << (q->isDST() ? " (DST)" : ""));
     }
 
     // Perform some basic checks on the shape factors
@@ -121,7 +133,7 @@ IntradayPowerCurve::buildShape(const Date& asof, const string& shapeQuoteName, c
                        << d << " but quote has start time " << factors.begin()->first);
     }
 
-    return QuantLib::ext::make_shared<IntradayShapeTermstructure>(shapeFactors, shapeFactorsDST);
+    return QuantLib::ext::make_shared<IntradayShapeTermstructure>(shapeFactors, shapeFactorsDST, savingsTime);
 }
 
 } // namespace data

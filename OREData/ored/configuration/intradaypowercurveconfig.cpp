@@ -27,9 +27,9 @@ namespace data {
 
 IntradayPowerCurveConfig::IntradayPowerCurveConfig(const string& curveId, const string& curveDescription,
                                                    const string& currency, const string& dailyAveragePriceCurve,
-                                                   const string& shapeQuoteName)
+                                                   const string& shapeQuoteName, const string& conventionsName)
     : CurveConfig(curveId, curveDescription), currency_(currency), dailyAveragePriceCurve_(dailyAveragePriceCurve),
-      shapeQuoteName_(shapeQuoteName) {
+      shapeQuoteName_(shapeQuoteName), conventionsId_(conventionsName) {
     quotes_.push_back("SHAPE_PROFILE/SHAPE_FACTOR/" + shapeQuoteName + "/*");
 }
 
@@ -41,6 +41,7 @@ void IntradayPowerCurveConfig::fromXML(XMLNode* node) {
     currency_ = XMLUtils::getChildValue(node, "Currency", true);
     dailyAveragePriceCurve_ = XMLUtils::getChildValue(node, "DailyAveragePriceCurve", true);
     shapeQuoteName_ = XMLUtils::getChildValue(node, "ShapeQuoteName", true);
+    conventionsId_ = XMLUtils::getChildValue(node, "Convention", true);
 }
 
 XMLNode* IntradayPowerCurveConfig::toXML(XMLDocument& doc) const {
@@ -51,7 +52,7 @@ XMLNode* IntradayPowerCurveConfig::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "Currency", currency_);
     XMLUtils::addChild(doc, node, "DailyAveragePriceCurve", dailyAveragePriceCurve_);
     XMLUtils::addChild(doc, node, "ShapeQuoteName", shapeQuoteName_);
-
+    
     return node;
 }
 
