@@ -78,7 +78,7 @@ public:
     QuantLib::Real intradayShapeFactor(const QuantLib::Date& d, int startTime, int endTime, bool isDSTHour) const;
 
     QuantLib::Real loadWeightedIntradayShapeFactor(const QuantLib::Date& d,
-                                                   const QuantLib::ext::shared_ptr<IntradayLoadProfile>& load) const;
+                                                   const QuantLib::ext::shared_ptr<IntradayPowerLoadProfileWithMWh>& load) const;
 
     // returns -1, 0, +1 depending if the day is a day with a DST change and if the change is backward, no change, or
     // forward
@@ -87,6 +87,9 @@ public:
     }
 
     QuantLib::Real hoursPerDay(const QuantLib::Date& d) const { return 24.0 + dayTimeSavingsAdjustment(d); }
+
+
+    
 
 private:
     

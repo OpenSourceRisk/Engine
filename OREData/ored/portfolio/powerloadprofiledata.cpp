@@ -51,7 +51,7 @@ QuantExt::LoadFactor parseLoadFactor(XMLNode* lfNode) {
 
 // Helper function to write load factors to an XML node
 void writeLoadFactorsToNode(XMLDocument& doc, XMLNode* parentNode, const std::vector<QuantExt::LoadFactor>& loadFactors) {
-    for (const auto& [from, to, loadValue, isDstHour, mwh] : loadFactors) {
+    for (const auto& [from, to, loadValue, isDstHour] : loadFactors) {
         std::vector<std::string> attributesKeys = {"from", "to", "dst"};
         std::vector<std::string> attributesValues = {ore::data::to_string(from), ore::data::to_string(to), "y"};
         XMLUtils::addChild(doc, parentNode, "LoadFactor", to_string(loadValue), attributesKeys, attributesValues);
@@ -63,7 +63,7 @@ void writeLoadFactorsToNode(XMLDocument& doc, XMLNode* parentNode, const std::ve
 void ExplicitData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "ExplicitDates");
 
-    std::map<QuantLib::Date, QuantLib::ext::shared_ptr<QuantExt::IntradayLoadProfile>> loadProfiles;
+    std::map<QuantLib::Date, QuantLib::ext::shared_ptr<QuantExt::IntradayPowerLoadProfile>> loadProfiles;
 
     // Get all LoadProfileDatum nodes
     std::vector<XMLNode*> datumNodes = XMLUtils::getChildrenNodes(node, "LoadProfileDatum");
@@ -87,7 +87,7 @@ void ExplicitData::fromXML(XMLNode* node) {
             profileDatumForDate.push_back(parseLoadFactor(lfNode));
         }
         loadProfiles[date] =
-            QuantLib::ext::make_shared<QuantExt::IntradayLoadProfile>(std::move(profileDatumForDate));
+            QuantLib::ext::make_shared<QuantExt::IntradayPowerLoadProfile>(std::move(profileDatumForDate));
     }
     loadTermStructure_ =
         QuantLib::ext::make_shared<QuantExt::IntradayPowerLoadTermStructureExplicit>(std::move(loadProfiles));
@@ -98,6 +98,9 @@ XMLNode* ExplicitData::toXML(XMLDocument& doc) const {
 
     // Group load factors by date
     for (const auto& [date, loadProfile] : loadTermStructure_->loadProfiles()) {
+        if (loadProfile == nullptr) {
+            continue;
+        }
         XMLNode* datumNode = XMLUtils::addChild(doc, node, "LoadProfileDatum");
 
         // Add date in YYYY-MM-DD format
@@ -106,7 +109,7 @@ XMLNode* ExplicitData::toXML(XMLDocument& doc) const {
         // Add load factors container
         XMLNode* loadFactorsNode = XMLUtils::addChild(doc, datumNode, "LoadFactors");
 
-        writeLoadFactorsToNode(doc, loadFactorsNode, loadProfile->loadProfile());
+        writeLoadFactorsToNode(doc, loadFactorsNode, *loadProfile);
     }
 
     return node;
@@ -158,9 +161,9 @@ void BusinessDayRuleData::fromXML(XMLNode* node) {
             QuantExt::IntradayPowerLoadTermStructureBusinessDayRule::BusinessDayRuleLoadProfile>();
         bdProfile->calendar = calendar;
         bdProfile->businessDayProfile =
-            QuantLib::ext::make_shared<QuantExt::IntradayLoadProfile>(std::move(loadFactorsBusinessDay));
+            QuantLib::ext::make_shared<QuantExt::IntradayPowerLoadProfile>(std::move(loadFactorsBusinessDay));
         bdProfile->nonBusinessDayProfile =
-            QuantLib::ext::make_shared<QuantExt::IntradayLoadProfile>(std::move(loadFactorsNonBusinessDay));
+            QuantLib::ext::make_shared<QuantExt::IntradayPowerLoadProfile>(std::move(loadFactorsNonBusinessDay));
 
         loadProfiles[date] = bdProfile;
     }
@@ -172,6 +175,10 @@ XMLNode* BusinessDayRuleData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("BusinessDayRules");
 
     for (const auto& [date, bdProfile] : loadTermStructure_->loadProfiles()) {
+        if (bdProfile == nullptr) {
+            continue;
+        }
+
         XMLNode* ruleNode = XMLUtils::addChild(doc, node, "LoadProfileBusinessDayRule");
 
         // Add date
@@ -181,13 +188,16 @@ XMLNode* BusinessDayRuleData::toXML(XMLDocument& doc) const {
         // TODO: Extract calendar name properly
         XMLUtils::addChild(doc, ruleNode, "Calendar", ""); // Placeholder
 
-        // Add business day load factors
-        XMLNode* bdlfNode = XMLUtils::addChild(doc, ruleNode, "BusinessDayLoadFactors");
-        writeLoadFactorsToNode(doc, bdlfNode, bdProfile->businessDayProfile->loadProfile());
-
-        // Add non-business day load factors
-        XMLNode* nbdlfNode = XMLUtils::addChild(doc, ruleNode, "NonBusinessDayLoadFactors");
-        writeLoadFactorsToNode(doc, nbdlfNode, bdProfile->nonBusinessDayProfile->loadProfile());
+        if (bdProfile->businessDayProfile != nullptr) {
+            // Add business day load factors
+            XMLNode* bdlfNode = XMLUtils::addChild(doc, ruleNode, "BusinessDayLoadFactors");
+            writeLoadFactorsToNode(doc, bdlfNode, *(bdProfile->businessDayProfile));
+        }
+        if (bdProfile->nonBusinessDayProfile != nullptr) {
+            // Add non-business day load factors
+            XMLNode* nbdlfNode = XMLUtils::addChild(doc, ruleNode, "NonBusinessDayLoadFactors");
+            writeLoadFactorsToNode(doc, nbdlfNode, *(bdProfile->nonBusinessDayProfile));
+        }
     }
 
     return node;

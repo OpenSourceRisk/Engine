@@ -874,7 +874,7 @@ QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const st
 QuantLib::ext::shared_ptr<QuantExt::IntradayPowerIndex>
 parseIntradayPowerIndex(const std::string& name, bool hasPrefix,
                         const QuantLib::Handle<QuantExt::IntradayPowerPriceTermStructure>& ts,
-                        const QuantLib::ext::shared_ptr<QuantExt::IntradayLoadProfile>& loadProfile,
+                        const QuantLib::ext::shared_ptr<QuantExt::IntradayPowerLoadProfile>& loadProfile,
                         const QuantLib::Calendar& cal) {
     // Whether we check for "POWER-" prefix depends on hasPrefix.
     string commName = name;
@@ -965,7 +965,7 @@ QuantLib::ext::shared_ptr<Index> parseIndex(const string& s) {
     }
     if (!ret_idx) {
         try {
-            ret_idx = parseIntradayPowerIndex(s, true, QuantLib::Handle<QuantExt::IntradayPowerPriceTermStructure>(), QuantLib::ext::shared_ptr<QuantExt::IntradayLoadProfile>(), QuantLib::NullCalendar());
+            ret_idx = parseIntradayPowerIndex(s, true, QuantLib::Handle<QuantExt::IntradayPowerPriceTermStructure>(), QuantLib::ext::shared_ptr<QuantExt::IntradayPowerLoadProfile>(), QuantLib::NullCalendar());
         } catch (...) { 
         }
     }

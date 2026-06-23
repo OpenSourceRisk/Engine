@@ -188,7 +188,7 @@ QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(
 QuantLib::ext::shared_ptr<QuantExt::IntradayPowerIndex> parseIntradayPowerIndex(
     const std::string& name, bool hasPrefix = true,
     const QuantLib::Handle<QuantExt::IntradayPowerPriceTermStructure>& ts = QuantLib::Handle<QuantExt::IntradayPowerPriceTermStructure>(),
-    const QuantLib::ext::shared_ptr<QuantExt::IntradayLoadProfile>& loadProfile = nullptr,
+    const QuantLib::ext::shared_ptr<QuantExt::IntradayPowerLoadProfile>& loadProfile = nullptr,
     const QuantLib::Calendar& cal = QuantLib::NullCalendar());
 
 //! Convert std::string (GENERIC-...) to QuantExt::Index

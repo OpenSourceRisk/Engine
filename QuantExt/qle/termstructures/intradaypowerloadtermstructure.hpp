@@ -34,31 +34,35 @@ struct LoadFactor {
     const int endTime;
     const QuantLib::Real load;
     const bool isDSTextraHour;
-    const QuantLib::Real mwhValue;
-
-    LoadFactor(int start, int end, QuantLib::Real load, bool isDST = false)
-        : startTime(start), endTime(end), load(load), isDSTextraHour(isDST), mwhValue(load * (end - start) / 3600.0) {}
 };
 
-class IntradayLoadProfile {
-public:
-    IntradayLoadProfile() {}
-    IntradayLoadProfile(std::vector<LoadFactor> load);
-
-    const std::vector<LoadFactor>& loadProfile() const;
-
-    QuantLib::Real totalMWh() const;
-
-    QuantLib::Real totalDeliveryHours() const;
-
-private:
-    std::vector<LoadFactor> loadProfile_;
+struct TotalLoadFactor {
+    const int startTime;
+    const int endTime;
+    const QuantLib::Real load;
+    const QuantLib::Real totalMWh;
+    const bool isDSTextraHour;
 };
+
+using IntradayPowerLoadProfile = std::vector<LoadFactor>;
+using IntradayPowerLoadProfileWithMWh = std::vector<TotalLoadFactor>;
+
+//! DST adjusment -1 for spring forward, 0 for no adjustment, +1 for fall back
+inline TotalLoadFactor dstAdjustedTotalLoad(const LoadFactor& loadFactor, QuantLib::Real dstAdjustment) {
+    auto mwh = loadFactor.load * (loadFactor.endTime - loadFactor.startTime);
+    if (dstAdjustment >= 0 || loadFactor.endTime <= 2 * 3600 || loadFactor.startTime >= 3 * 3600) {
+        return {loadFactor.startTime, loadFactor.endTime, loadFactor.load, mwh, loadFactor.isDSTextraHour};
+    }
+    auto dststart = std::max(2 * 3600, loadFactor.startTime);
+    auto dstend = std::min(3 * 3600, loadFactor.endTime);
+    auto dstOverlap = std::max(0, dstend - dststart);
+    return {loadFactor.startTime, loadFactor.endTime, loadFactor.load, mwh - loadFactor.load * dstOverlap, loadFactor.isDSTextraHour};
+}
 
 class IntradayPowerLoadTermStructure {
 public:
     virtual ~IntradayPowerLoadTermStructure() = default;
-    virtual QuantLib::ext::shared_ptr<IntradayLoadProfile> loadProfile(const QuantLib::Date& d) const = 0;
+    virtual QuantLib::ext::shared_ptr<IntradayPowerLoadProfile> loadProfile(const QuantLib::Date& d) const = 0;
     virtual bool empty() const = 0;
 };
 
@@ -66,33 +70,33 @@ class IntradayPowerLoadTermStructureExplicit : public IntradayPowerLoadTermStruc
 
 public:
     IntradayPowerLoadTermStructureExplicit(
-        std::map<QuantLib::Date, QuantLib::ext::shared_ptr<IntradayLoadProfile>> loadingShapes)
+        std::map<QuantLib::Date, QuantLib::ext::shared_ptr<IntradayPowerLoadProfile>> loadingShapes)
         : loadingShapes_(std::move(loadingShapes)) {}
 
-    QuantLib::ext::shared_ptr<IntradayLoadProfile> loadProfile(const QuantLib::Date& d) const override;
+    QuantLib::ext::shared_ptr<IntradayPowerLoadProfile> loadProfile(const QuantLib::Date& d) const override;
     bool empty() const override { return loadingShapes_.empty(); }
 
-    const std::map<QuantLib::Date, QuantLib::ext::shared_ptr<IntradayLoadProfile>>& loadProfiles() const {
+    const std::map<QuantLib::Date, QuantLib::ext::shared_ptr<IntradayPowerLoadProfile>>& loadProfiles() const {
         return loadingShapes_;
     }
 
 private:
-    std::map<QuantLib::Date, QuantLib::ext::shared_ptr<IntradayLoadProfile>> loadingShapes_;
+    std::map<QuantLib::Date, QuantLib::ext::shared_ptr<IntradayPowerLoadProfile>> loadingShapes_;
 };
 
 class IntradayPowerLoadTermStructureBusinessDayRule : public IntradayPowerLoadTermStructure {
 public:
     struct BusinessDayRuleLoadProfile {
         QuantLib::Calendar calendar;
-        QuantLib::ext::shared_ptr<IntradayLoadProfile> businessDayProfile;
-        QuantLib::ext::shared_ptr<IntradayLoadProfile> nonBusinessDayProfile;
+        QuantLib::ext::shared_ptr<IntradayPowerLoadProfile> businessDayProfile;
+        QuantLib::ext::shared_ptr<IntradayPowerLoadProfile> nonBusinessDayProfile;
     };
 
     IntradayPowerLoadTermStructureBusinessDayRule(
         std::map<QuantLib::Date, QuantLib::ext::shared_ptr<BusinessDayRuleLoadProfile>> loadingShapes)
         : loadingShapes_(std::move(loadingShapes)) {}
 
-    QuantLib::ext::shared_ptr<IntradayLoadProfile> loadProfile(const QuantLib::Date& d) const override;
+    QuantLib::ext::shared_ptr<IntradayPowerLoadProfile> loadProfile(const QuantLib::Date& d) const override;
 
     const std::map<QuantLib::Date, QuantLib::ext::shared_ptr<BusinessDayRuleLoadProfile>>& loadProfiles() const {
         return loadingShapes_;

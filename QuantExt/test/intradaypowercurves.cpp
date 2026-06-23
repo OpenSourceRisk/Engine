@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(testShapeFactorsWithSpringDST) {
     const Date d(29, March, 2026); // Last Sunday of March, DST starts at 2am, 1 hour is skipped.
 
     // Shape with day-average exactly equal to 1.0 over 23h (since there is a DST change that makes the day 1 hour shorter) and it should ignore the 1.2 factor between 2 and 3 am since that hour does not exist on that day.
-    std::map<int, Real> shape = {{0, 0.8}, {2 * 3600, 1.2}, {3 * 3600, 1.2}, {5 * 3600, 1.0}};
+    std::map<int, Real> shape = {{0, 1.1}, {2 * 3600, 1.2}, {3 * 3600, 0.9}, {5 * 3600, 1.0}};
 
     std::map<Date, std::map<int, Real>> shapes = {{d, shape}};
     std::map<Date, std::map<int, Real>> shapesDst; // Only used for the extra hour in autumn DST change, not for spring DST change.
@@ -66,9 +66,25 @@ BOOST_AUTO_TEST_CASE(testShapeFactorsWithSpringDST) {
     const Real hours = ts.hoursPerDay(d);
 
     const Real tol = 1e-12;
+    
     BOOST_CHECK_CLOSE(dayFactor, 1.0, tol);
+    
     BOOST_CHECK_CLOSE(hours, 23, tol);
+
+    // Test the intraday shape factor for the 2-3am hour
+    Real factor = ts.intradayShapeFactor(d, 2 * 3600, 3 * 3600, false);
+    BOOST_CHECK_CLOSE(factor, 0.0, tol); // Should be zero since that hour does not exist on that day due to DST change.
+
+    // Test the intraday shape factor for the 0-2:30am hour
+    factor = ts.intradayShapeFactor(d, 0, 2 * 3600 + 1800, false);
+    BOOST_CHECK_CLOSE(factor, 1.1, tol); // Should be 1.1 
+
+    // Test the intraday shape factor for the 2-5am hour
+    factor = ts.intradayShapeFactor(d, 2 * 3600, 5 * 3600, false);
+    BOOST_CHECK_CLOSE(factor, 0.9, tol); // Should be 0.9 
 }
+
+
 
 
 BOOST_AUTO_TEST_CASE(testIntradayPricesNoShape) {
@@ -314,12 +330,12 @@ BOOST_AUTO_TEST_CASE(testBackwardFlatDailyCurveWithIntradayShapesAndLoads) {
         {13 * 3600, 14 * 3600, 200.0}};
     LoadFactors loadDstEmpty;
 
-    auto lpD = QuantLib::ext::make_shared<IntradayLoadProfile>(loadD, loadDstEmpty);
-    auto lpD7 = QuantLib::ext::make_shared<IntradayLoadProfile>(loadD7, loadDstEmpty);
-    auto lpD15 = QuantLib::ext::make_shared<IntradayLoadProfile>(loadD15, loadDstEmpty);
-    auto lpD16 = QuantLib::ext::make_shared<IntradayLoadProfile>(loadD16, loadDstEmpty);
+    auto lpD = QuantLib::ext::make_shared<IntradayPowerLoadProfile>(loadD, loadDstEmpty);
+    auto lpD7 = QuantLib::ext::make_shared<IntradayPowerLoadProfile>(loadD7, loadDstEmpty);
+    auto lpD15 = QuantLib::ext::make_shared<IntradayPowerLoadProfile>(loadD15, loadDstEmpty);
+    auto lpD16 = QuantLib::ext::make_shared<IntradayPowerLoadProfile>(loadD16, loadDstEmpty);
 
-    std::map<Date, QuantLib::ext::shared_ptr<IntradayLoadProfile>> loadingShapes = {
+    std::map<Date, QuantLib::ext::shared_ptr<IntradayPowerLoadProfile>> loadingShapes = {
         {d, lpD},
         {d7, lpD7},
         {d15, lpD15},
@@ -401,9 +417,9 @@ BOOST_AUTO_TEST_CASE(testNullOrEmptyLoadProfile) {
 
     LoadFactors emptyLoad;
     LoadFactors emptyLoadDst;
-    auto lpEmpty = QuantLib::ext::make_shared<IntradayLoadProfile>(emptyLoad, emptyLoadDst);
+    auto lpEmpty = QuantLib::ext::make_shared<IntradayPowerLoadProfile>(emptyLoad, emptyLoadDst);
 
-    std::map<Date, QuantLib::ext::shared_ptr<IntradayLoadProfile>> loadingShapes = {{d, lpEmpty}};
+    std::map<Date, QuantLib::ext::shared_ptr<IntradayPowerLoadProfile>> loadingShapes = {{d, lpEmpty}};
     auto loadTs = QuantLib::ext::make_shared<IntradayPowerLoadTermStructureExplicit>(loadingShapes);
 
     const Real tol = 1e-12;
@@ -445,10 +461,10 @@ BOOST_AUTO_TEST_CASE(testIntradayPriceWithOverlappingLoadProfiles) {
     LoadFactors day2Load = {{1200, 1500, 1.0}};
     LoadFactors loadDstEmpty;
 
-    auto lpDay1 = QuantLib::ext::make_shared<IntradayLoadProfile>(day1Load, loadDstEmpty);
-    auto lpDay2 = QuantLib::ext::make_shared<IntradayLoadProfile>(day2Load, loadDstEmpty);
+    auto lpDay1 = QuantLib::ext::make_shared<IntradayPowerLoadProfile>(day1Load, loadDstEmpty);
+    auto lpDay2 = QuantLib::ext::make_shared<IntradayPowerLoadProfile>(day2Load, loadDstEmpty);
 
-    std::map<Date, QuantLib::ext::shared_ptr<IntradayLoadProfile>> loadingShapes = {
+    std::map<Date, QuantLib::ext::shared_ptr<IntradayPowerLoadProfile>> loadingShapes = {
         {day1, lpDay1},
         {day2, lpDay2}};
     auto loadTs = QuantLib::ext::make_shared<IntradayPowerLoadTermStructureExplicit>(loadingShapes);

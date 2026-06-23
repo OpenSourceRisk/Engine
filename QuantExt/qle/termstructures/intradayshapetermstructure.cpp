@@ -98,9 +98,13 @@ inline QuantLib::Real calcShapeFactor(const QuantLib::Date& d, int startTime, in
     auto dstend = std::min(3 * 3600, endTime);
     auto dstOverlap = std::max(0, dstend - dststart);
     if (dstOverlap > 0) {
+        auto effectiveTime = endTime - startTime - dstOverlap;
+        if (effectiveTime <= 0) {
+            return 0.0;
+        }
         // adjust the factor for the overlapping hours between 2 and 3 am if there is a DST change on that day
         auto dstFactor = timeWeightedShapeFactor(factors, dststart, dstend);
-        factor = (factor * (endTime - startTime) - dstFactor * dstOverlap) / (endTime - startTime - dstOverlap);
+        factor = (factor * (endTime - startTime) - dstFactor * dstOverlap) / effectiveTime;
     }
     return factor;
 }
@@ -132,15 +136,21 @@ QuantLib::Real IntradayShapeTermstructure::intradayShapeFactor(const QuantLib::D
 }
 
 QuantLib::Real IntradayShapeTermstructure::loadWeightedIntradayShapeFactor(
-    const QuantLib::Date& d, const QuantLib::ext::shared_ptr<IntradayLoadProfile>& load) const {
+    const QuantLib::Date& d, const QuantLib::ext::shared_ptr<IntradayPowerLoadProfileWithMWh>& load) const {
+    if (load == nullptr || load->empty()) {
+        return dayFactor(d);
+    }
     auto dayTimeSavingsAdj = dayTimeSavingsAdjustment(d);
     auto& shapeFactor = hasShapeFactors(d) ? shapeFactors(d) : ShapeFactors();
     auto& dstShapeFactor = hasShapeFactorsDST(d) ? shapeFactorsDST(d) : ShapeFactors();
     auto amount = 0.0;
-    for (const auto& [start, end, loadFactor, isDst, mwh] : load->loadProfile()) {
-        amount += mwh * calcShapeFactor(d, start, end, isDst, shapeFactor, dstShapeFactor, dayTimeSavingsAdj);
+    auto totalMWh = 0.0;
+    for (const auto& [start, end, load, mwh, isDSTextraHour] : *load) {
+        amount += mwh * calcShapeFactor(d, start, end, isDSTextraHour,
+                                                 shapeFactor, dstShapeFactor, dayTimeSavingsAdj);
+        totalMWh += mwh;
     }
-    return (load->totalMWh() > 0.0) ? amount / load->totalMWh() : 0.0;
+    return (totalMWh > 0.0) ? amount / totalMWh : 0.0;
 }
 
 } // namespace QuantExt

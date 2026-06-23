@@ -41,10 +41,10 @@ std::string bucketName(const std::string& name, int start, int end, bool isDstHo
 IntradayPowerIndex::IntradayPowerIndex(const std::string& underlyingName, const QuantLib::Date& deliveryDate,
                                        const Calendar& fixingCalendar,
                                        const Handle<QuantExt::IntradayPowerPriceTermStructure>& priceCurve,
-                                       const QuantLib::ext::shared_ptr<QuantExt::IntradayLoadProfile>& loadProfile)
+                                       const QuantLib::ext::shared_ptr<QuantExt::IntradayPowerLoadProfile>& loadProfile)
     : underlyingName_(underlyingName), deliveryDate_(deliveryDate), fixingCalendar_(fixingCalendar),
       intradayCurve_(priceCurve),
-      loadProfile_(loadProfile) {
+      loadProfile_(ext::make_shared<QuantExt::IntradayPowerLoadProfileWithMWh>()) {
     std::ostringstream o;
     o << "POWER-" << underlyingName << "-" << QuantLib::io::iso_date(deliveryDate_);
     name_ = o.str();
@@ -52,9 +52,13 @@ IntradayPowerIndex::IntradayPowerIndex(const std::string& underlyingName, const 
     registerWith(Settings::instance().evaluationDate());
     registerWith(notifier());
 
-    if (loadProfile_ != nullptr) {
-        for (const auto& [start, end, load, isDST, mwh] : loadProfile_->loadProfile()) {
-            std::string name = bucketName(name_, start, end, isDST);
+    if (loadProfile != nullptr) {
+        auto dstAdjustment = intradayCurve_.empty() ? 0.0 : intradayCurve_->intradayShape()->dayTimeSavingsAdjustment(deliveryDate_);
+        loadProfile_->reserve(loadProfile->size());
+        for (const auto& load : *loadProfile) {
+            loadProfile_->push_back(dstAdjustedTotalLoad(load, dstAdjustment));
+            totalLoad_ += loadProfile_->back().totalMWh;
+            std::string name = bucketName(name_, load.startTime, load.endTime, load.isDSTextraHour);
             QL_DEPRECATED_DISABLE_WARNING
             registerWith(IndexManager::instance().notifier(name));
             QL_DEPRECATED_ENABLE_WARNING
@@ -152,14 +156,12 @@ Real IntradayPowerIndex::pastFixing(const Date& fixingDate) const {
     // Assume right now, that the prices can be observed at the same granularity as the load profile,
     // future improvement, define a granularity and use it to fetch the price for each time bucket
     auto amount = 0.0;
-    auto totalLoad = 0.0;
-    for (const auto& [start, end, load, isDstHour, mwh] : loadProfile_->loadProfile()) {
+    for (const auto& [start, end, load, mwh, isDstHour] : *loadProfile_) {
         if (load == 0.0)
             continue;
-        totalLoad += mwh;
         amount += mwh * pastBucketFixing(fixingDate, start, end, isDstHour, enforceTodaysFixing);
     }
-    return (totalLoad > 0.0) ? amount / totalLoad : 0.0;
+    return (totalLoad_ > 0.0) ? amount / totalLoad_ : 0.0;
 }
 
 Real IntradayPowerIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {
@@ -172,6 +174,10 @@ Real IntradayPowerIndex::fixing(const Date& fixingDate, bool forecastTodaysFixin
                                        << ") that is past the delivery date (" << io::iso_date(deliveryDate_)
                                        << "). Eval date is " << today);
 
+    if (loadProfile_ != nullptr) {
+        // Do day fixings
+    }
+
     if (fixingDate > today || (fixingDate == today && forecastTodaysFixing))
         return forecastFixing(deliveryDate_);
 
@@ -183,9 +189,9 @@ Real IntradayPowerIndex::fixing(const Date& fixingDate, bool forecastTodaysFixin
 const std::vector<std::string> IntradayPowerIndex::intraDayIndexNames() const {
     std::set<std::string> names;
     if (loadProfile_ != nullptr) {
-        for (const auto& [start, end, load, isDstHour, mwh] : loadProfile_->loadProfile()) {
+        for (const auto& [start, end, load, mwh, isDstHour] : *loadProfile_) {
             if (load > 0.0)
-                names.insert(bucketName(name_, start, end, false));
+                names.insert(bucketName(name_, start, end, isDstHour));
         }
     } else {
         names.insert(name_);
@@ -194,7 +200,7 @@ const std::vector<std::string> IntradayPowerIndex::intraDayIndexNames() const {
 }
 
 QuantLib::ext::shared_ptr<IntradayPowerIndex>
-IntradayPowerIndex::clone(const Date& deliveryDate, ext::shared_ptr<IntradayLoadProfile> loadProfile) const {
+IntradayPowerIndex::clone(const Date& deliveryDate, ext::shared_ptr<IntradayPowerLoadProfile> loadProfile) const {
     return QuantLib::ext::make_shared<IntradayPowerIndex>(underlyingName_, deliveryDate, fixingCalendar_,
                                                           intradayCurve_, loadProfile);
 }

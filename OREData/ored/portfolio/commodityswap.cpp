@@ -348,8 +348,7 @@ const std::map<std::string,QuantLib::ext::any>& CommoditySwap::additionalData() 
                             weightsVector.push_back(weight != weights.end() ? weight->second : Null<Real>());
                         }
                         if (index->loadProfile() != nullptr) {
-                            totalDeliveryHoursVec.push_back(index->loadProfile()->totalDeliveryHours());
-                            totalMWhVec.push_back(index->loadProfile()->totalMWh());
+                            totalMWhVec.push_back(index->totalLoadMWh());
                         }
                     }
                     additionalData_["index[" + label + "]"] = indexVec;

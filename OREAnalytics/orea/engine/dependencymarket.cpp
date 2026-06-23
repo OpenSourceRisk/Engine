@@ -683,7 +683,8 @@ Handle<QuantExt::IntradayPowerPriceTermStructure> DependencyMarket::intradayPowe
         commCcy = Currency();
     }
     auto pts = flatRatePts(commCcy);
-    return Handle<QuantExt::IntradayPowerPriceTermStructure>(QuantLib::ext::make_shared<QuantExt::IntradayPowerPriceTermStructure>(pts));
+    return Handle<QuantExt::IntradayPowerPriceTermStructure>(
+        QuantLib::ext::make_shared<QuantExt::IntradayPowerPriceTermStructure>(pts));
     QL_FAIL("Didn't find commodity curve config for " << name);
 }
 

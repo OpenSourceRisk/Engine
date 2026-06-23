@@ -34,6 +34,9 @@ IntradayPowerPriceTermStructure::IntradayPowerPriceTermStructure(
     const QuantLib::ext::shared_ptr<IntradayShapeTermstructure>& shape)
     : PriceTermStructure(underlying->referenceDate(), underlying->calendar(), underlying->dayCounter()),
       underlying_(underlying), shape_(shape) {
+    QL_REQUIRE(!underlying_.empty(), "IntradayPowerPriceTermStructure: Underlying PriceTermStructure is empty");
+    QL_REQUIRE(shape_ != nullptr,
+               "IntradayPowerPriceTermStructure: Shape is required for IntradayPowerPriceTermStructure");
     registerWith(underlying_);
 }
 
@@ -41,23 +44,20 @@ IntradayPowerPriceTermStructure::IntradayPowerPriceTermStructure(
 //@{
 QuantLib::Real IntradayPowerPriceTermStructure::price(QuantLib::Time t, bool extrapolate) const {
     auto d = lowerDate(t, referenceDate(), dayCounter());
-    return underlying_->price(t, extrapolate) * (shape_ == nullptr ? 1.0 : shape_->dayFactor(d));
+    return underlying_->price(t, extrapolate) * shape_->dayFactor(d);
 }
 QuantLib::Real IntradayPowerPriceTermStructure::price(const QuantLib::Date& d, bool extrapolate) const {
-    return underlying_->price(d, extrapolate) * (shape_ == nullptr ? 1.0 : shape_->dayFactor(d));
+    return underlying_->price(d, extrapolate) * shape_->dayFactor(d);
 }
 
 QuantLib::Real
 IntradayPowerPriceTermStructure::price(const QuantLib::Date& d,
-                                       const QuantLib::ext::shared_ptr<QuantExt::IntradayLoadProfile>& load,
+                                       const QuantLib::ext::shared_ptr<QuantExt::IntradayPowerLoadProfileWithMWh>& load,
                                        bool extrapolate) const {
 
-    if (shape_ == nullptr || load == nullptr) {
+    // No load given assume full day constant load
+    if (load == nullptr) {
         return price(d, extrapolate);
-    }
-
-    if (load->totalMWh() == 0.0) {
-        return 0.0;
     }
 
     auto underlyingPrice = underlying_->price(d, extrapolate);
@@ -68,8 +68,9 @@ IntradayPowerPriceTermStructure::price(const QuantLib::Date& d,
 QuantLib::Real IntradayPowerPriceTermStructure::price(const QuantLib::Date& d, int deliveryStartTime,
                                                       int deliveryEndTime, bool isDSTextraHour,
                                                       bool extrapolate) const {
-    std::vector<LoadFactor> load(1, LoadFactor{deliveryStartTime, deliveryEndTime, 1.0, isDSTextraHour});
-    return price(d, QuantLib::ext::make_shared<IntradayLoadProfile>(load), extrapolate);
+    std::vector<TotalLoadFactor> load;
+    load.emplace_back(dstAdjustedTotalLoad(LoadFactor{deliveryStartTime, deliveryEndTime, 1.0, isDSTextraHour}, shape_->dayTimeSavingsAdjustment(d)));
+    return price(d, QuantLib::ext::make_shared<IntradayPowerLoadProfileWithMWh>(load), extrapolate);
 }
 
 //@}

@@ -35,49 +35,20 @@ template <typename T> T find(const std::map<QuantLib::Date, T>& m, const QuantLi
 }
 } // namespace
 
-IntradayLoadProfile::IntradayLoadProfile(std::vector<LoadFactor> load)
-    : loadProfile_(std::move(load)) {
-    
-}
 
-const std::vector<LoadFactor>& IntradayLoadProfile::loadProfile() const { return loadProfile_; }
-
-QuantLib::Real IntradayLoadProfile::totalMWh() const {
-    auto totalMWh_ = 0.0;
-
-    for (const auto& [start, end, load, isDST, mwh] : loadProfile_) {
-        if (load > 0.0) {
-            totalMWh_ += mwh;
-        }
-    }
-    return totalMWh_;
-}
-
-QuantLib::Real IntradayLoadProfile::totalDeliveryHours() const {
-    auto totalDeliveryHours_ = 0.0;
-
-    for (const auto& [start, end, load, isDST, mwh] : loadProfile_) {
-        if (load > 0.0) {
-
-            totalDeliveryHours_ += (end - start) / 3600.0;
-        }
-    };
-    return totalDeliveryHours_;
-}
-
-QuantLib::ext::shared_ptr<IntradayLoadProfile>
+QuantLib::ext::shared_ptr<IntradayPowerLoadProfile>
 IntradayPowerLoadTermStructureExplicit::loadProfile(const QuantLib::Date& d) const {
     auto profile = find(loadingShapes_, d);
     if (profile == nullptr)
-        return QuantLib::ext::shared_ptr<IntradayLoadProfile>();
+        return QuantLib::ext::shared_ptr<IntradayPowerLoadProfile>();
     return profile;
 }
 
-QuantLib::ext::shared_ptr<IntradayLoadProfile>
+QuantLib::ext::shared_ptr<IntradayPowerLoadProfile>
 IntradayPowerLoadTermStructureBusinessDayRule::loadProfile(const QuantLib::Date& d) const {
     auto loadShape = find(loadingShapes_, d);
     if (loadShape == nullptr){
-        return QuantLib::ext::shared_ptr<IntradayLoadProfile>();
+        return QuantLib::ext::shared_ptr<IntradayPowerLoadProfile>();
     }
     if (loadShape->calendar.isBusinessDay(d)){
         return loadShape->businessDayProfile;

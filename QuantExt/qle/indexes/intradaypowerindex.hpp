@@ -44,7 +44,7 @@ public:
                        const Calendar& fixingCalendar,
                        const Handle<QuantExt::IntradayPowerPriceTermStructure>& priceCurve =
                            Handle<QuantExt::IntradayPowerPriceTermStructure>(),
-                       const QuantLib::ext::shared_ptr<QuantExt::IntradayLoadProfile>& loadProfile = nullptr);
+                       const QuantLib::ext::shared_ptr<QuantExt::IntradayPowerLoadProfile>& loadProfile = nullptr);
 
     //! Constructor used for a single time bucket
     IntradayPowerIndex(const std::string& underlyingName, const QuantLib::Date& deliveryDate, int deliveryStart,
@@ -60,16 +60,18 @@ public:
 
     const Handle<QuantExt::IntradayPowerPriceTermStructure>& priceCurve() const { return intradayCurve_; }
 
-    const QuantLib::ext::shared_ptr<QuantExt::IntradayLoadProfile>& loadProfile() const { return loadProfile_; }
+    const QuantLib::ext::shared_ptr<QuantExt::IntradayPowerLoadProfileWithMWh>& loadProfile() const { return loadProfile_; }
 
     const QuantLib::Date& deliveryDate() const { return deliveryDate_; }
 
     const std::vector<std::string> intraDayIndexNames() const;
 
-    QuantLib::ext::shared_ptr<IntradayPowerIndex> clone(const QuantLib::Date& deliveryDate, ext::shared_ptr<QuantExt::IntradayLoadProfile> loadProfile) const;
+    QuantLib::ext::shared_ptr<IntradayPowerIndex> clone(const QuantLib::Date& deliveryDate, ext::shared_ptr<QuantExt::IntradayPowerLoadProfile> loadProfile) const;
 
     Real pastFixing(const Date& fixingDate) const override;
 
+
+    Real totalLoadMWh() const { return totalLoad_; }
 private:
     Real forecastFixing(const Date& fixingDate) const;
 
@@ -86,7 +88,8 @@ private:
 
     Real pastIntradayFixing(const Date& fixingDate, int start, int end, bool isDstHour) const;
     Handle<QuantExt::IntradayPowerPriceTermStructure> intradayCurve_;
-    QuantLib::ext::shared_ptr<QuantExt::IntradayLoadProfile> loadProfile_;
+    QuantLib::ext::shared_ptr<QuantExt::IntradayPowerLoadProfileWithMWh> loadProfile_;
+    QuantLib::Real totalLoad_ = 0.0;
 };
 
 } // namespace QuantExt

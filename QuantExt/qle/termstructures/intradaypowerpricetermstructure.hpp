@@ -37,8 +37,9 @@ class IntradayPowerPriceTermStructure : public QuantExt::PriceTermStructure {
 public:
     //! \name Constructors
     //@{
-    IntradayPowerPriceTermStructure(const QuantLib::Handle<PriceTermStructure>& underlying, 
-                               const QuantLib::ext::shared_ptr<IntradayShapeTermstructure>& shape = nullptr);
+    IntradayPowerPriceTermStructure(const QuantLib::Handle<PriceTermStructure>& underlying,
+                                    const QuantLib::ext::shared_ptr<IntradayShapeTermstructure>& shape =
+                                        QuantLib::ext::make_shared<IntradayShapeTermstructure>());
     //@}
 
     //! \name Prices
@@ -47,8 +48,8 @@ public:
     QuantLib::Real price(const QuantLib::Date& d, bool extrapolate = false) const override;
     QuantLib::Real price(const QuantLib::Date& d, int deliveryStartTime, int deliveryEndTime, bool isDSTextraHour,
                          bool extrapolate = false) const;
-    QuantLib::Real price(const QuantLib::Date& d, const QuantLib::ext::shared_ptr<QuantExt::IntradayLoadProfile>& load,
-                         bool extrapolate = false) const;
+    QuantLib::Real price(const QuantLib::Date& d, const QuantLib::ext::shared_ptr<QuantExt::IntradayPowerLoadProfileWithMWh>& load,
+                         bool extrapolate = false) const;    
     //@}
 
     //! \name Observer interface
@@ -67,7 +68,10 @@ public:
     std::vector<QuantLib::Date> pillarDates() const override { return underlying_->pillarDates(); }
 
     const QuantLib::Handle<PriceTermStructure>& averageDayPriceCurve() const { return underlying_; }
+    
     const QuantLib::ext::shared_ptr<IntradayShapeTermstructure>& intradayShape() const { return shape_; }
+    
+    const QuantLib::Real daylightSavingsAdjustment(const QuantLib::Date& d) const { return shape_->dayTimeSavingsAdjustment(d); }
 
 protected:
     //@{

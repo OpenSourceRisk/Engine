@@ -84,10 +84,10 @@ void IntradayPowerCashFlow::computePeriodQuantity(const QuantLib::Real quantity)
     QL_REQUIRE(loadCurve_ != nullptr && !loadCurve_->empty(), "LoadShape required for quantity mode " << quantityMode_);
     periodQuantity_ = 0.0;
     for (const auto& [deliverydate, index] : indices_) {
-        auto loadProfile = loadCurve_->loadProfile(deliverydate);
+        auto loadProfile = index->loadProfile();
         QL_REQUIRE(loadProfile != nullptr || quantityMode_ == IntradayPowerQuantityMode::TotalEnergy,
                    "LoadShape required for quantity mode " << quantityMode_ << " for delivery date " << deliverydate);
-        periodQuantity_ += loadProfile->totalMWh();
+        periodQuantity_ += index->totalLoadMWh();
     }
     periodQuantity_ *= quantity;
 }
@@ -126,8 +126,8 @@ void IntradayPowerCashFlow::initWeights() {
     for (const auto& [deliverydate, index] : indices_) {
         auto loadProfile = index->loadProfile();
         QL_REQUIRE(loadProfile != nullptr, "LoadShape required for delivery date " << deliverydate);
-        weights_[deliverydate] += loadProfile->totalMWh();
-        totalLoad += loadProfile->totalMWh();
+        weights_[deliverydate] += index->totalLoadMWh();
+        totalLoad += index->totalLoadMWh();
     }
     for (auto& kv : weights_) {
         kv.second /= totalLoad == 0 ? 1.0 : totalLoad;
