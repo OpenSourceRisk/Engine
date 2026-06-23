@@ -135,19 +135,19 @@ QuantLib::Real IntradayShapeTermstructure::intradayShapeFactor(const QuantLib::D
     return calcShapeFactor(d, startTime, endTime, isDSTHour, shapeFactor, dstShapeFactor, dayTimeSavingsAdj);
 }
 
-QuantLib::Real IntradayShapeTermstructure::loadWeightedIntradayShapeFactor(
-    const QuantLib::Date& d, const QuantLib::ext::shared_ptr<IntradayPowerLoadProfileWithMWh>& load) const {
-    if (load == nullptr || load->empty()) {
-        return dayFactor(d);
+QuantLib::Real
+IntradayShapeTermstructure::loadWeightedIntradayShapeFactor(const QuantLib::Date& d,
+                                                            const IntradayPowerLoadProfileWithMWh& load) const {
+    if (load.empty()) {
+        return 0.0;
     }
     auto dayTimeSavingsAdj = dayTimeSavingsAdjustment(d);
     auto& shapeFactor = hasShapeFactors(d) ? shapeFactors(d) : ShapeFactors();
     auto& dstShapeFactor = hasShapeFactorsDST(d) ? shapeFactorsDST(d) : ShapeFactors();
     auto amount = 0.0;
     auto totalMWh = 0.0;
-    for (const auto& [start, end, load, mwh, isDSTextraHour] : *load) {
-        amount += mwh * calcShapeFactor(d, start, end, isDSTextraHour,
-                                                 shapeFactor, dstShapeFactor, dayTimeSavingsAdj);
+    for (const auto& [start, end, load, mwh, isDSTextraHour] : load) {
+        amount += mwh * calcShapeFactor(d, start, end, isDSTextraHour, shapeFactor, dstShapeFactor, dayTimeSavingsAdj);
         totalMWh += mwh;
     }
     return (totalMWh > 0.0) ? amount / totalMWh : 0.0;

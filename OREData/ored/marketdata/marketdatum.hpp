@@ -2258,7 +2258,7 @@ public:
     //! Constructor
     IntradayPowerCurveQuote(QuantLib::Real value, const QuantLib::Date& asofDate, const std::string& name,
                             QuoteType quoteType, const std::string& quoteName, const QuantLib::Date& deliveryDate,
-                            QuantLib::Size startTime, IntradayPowerTimeUnit timeUnit, bool isDST)
+                            QuantLib::Size startTime, QuantExt::IntradayPowerTimeUnit timeUnit, bool isDST)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::SHAPE_PROFILE), quoteName_(quoteName),
           deliveryDate_(deliveryDate), startTimeInSec_(startTime), timeUnit_(timeUnit), isDST_(isDST) {
         QL_REQUIRE(quoteType == QuoteType::SHAPE_FACTOR, "Quote type must be SHAPE_FACTOR for IntradayPowerCurveQuote");
@@ -2275,7 +2275,7 @@ public:
     const std::string& quoteName() const { return quoteName_; }
     const QuantLib::Date& deliveryDate() const { return deliveryDate_; }
     QuantLib::Size startTimeInSec() const { return startTimeInSec_; }
-    IntradayPowerTimeUnit timeUnit() const { return timeUnit_; }
+    QuantExt::IntradayPowerTimeUnit timeUnit() const { return timeUnit_; }
     bool isDST() const { return isDST_; }
     //@}
 
@@ -2283,7 +2283,7 @@ private:
     std::string quoteName_;
     QuantLib::Date deliveryDate_;
     QuantLib::Size startTimeInSec_;
-    IntradayPowerTimeUnit timeUnit_;
+    QuantExt::IntradayPowerTimeUnit timeUnit_;
     bool isDST_;
 
     //! Serialization

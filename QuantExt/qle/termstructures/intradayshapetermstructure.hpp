@@ -44,6 +44,8 @@ using ShapeFactors = std::vector<std::pair<int, QuantLib::Real>>;
 */
 class IntradayShapeTermstructure {
 public:
+    IntradayShapeTermstructure() = default;
+
     IntradayShapeTermstructure(const std::map<QuantLib::Date, std::map<int, QuantLib::Real>>& shapeFactors,
                                const std::map<QuantLib::Date, std::map<int, QuantLib::Real>>& shapeFactorsDST,
                                const std::string& daylightSavingsLocation = "") :
@@ -78,7 +80,7 @@ public:
     QuantLib::Real intradayShapeFactor(const QuantLib::Date& d, int startTime, int endTime, bool isDSTHour) const;
 
     QuantLib::Real loadWeightedIntradayShapeFactor(const QuantLib::Date& d,
-                                                   const QuantLib::ext::shared_ptr<IntradayPowerLoadProfileWithMWh>& load) const;
+                                                   const IntradayPowerLoadProfileWithMWh& load) const;
 
     // returns -1, 0, +1 depending if the day is a day with a DST change and if the change is backward, no change, or
     // forward

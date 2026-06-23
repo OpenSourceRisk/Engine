@@ -43,8 +43,7 @@ IntradayPowerIndex::IntradayPowerIndex(const std::string& underlyingName, const 
                                        const Handle<QuantExt::IntradayPowerPriceTermStructure>& priceCurve,
                                        const QuantLib::ext::shared_ptr<QuantExt::IntradayPowerLoadProfile>& loadProfile)
     : underlyingName_(underlyingName), deliveryDate_(deliveryDate), fixingCalendar_(fixingCalendar),
-      intradayCurve_(priceCurve),
-      loadProfile_(ext::make_shared<QuantExt::IntradayPowerLoadProfileWithMWh>()) {
+      intradayCurve_(priceCurve) {
     std::ostringstream o;
     o << "POWER-" << underlyingName << "-" << QuantLib::io::iso_date(deliveryDate_);
     name_ = o.str();
@@ -53,8 +52,9 @@ IntradayPowerIndex::IntradayPowerIndex(const std::string& underlyingName, const 
     registerWith(notifier());
 
     if (loadProfile != nullptr) {
-        auto dstAdjustment = intradayCurve_.empty() ? 0.0 : intradayCurve_->intradayShape()->dayTimeSavingsAdjustment(deliveryDate_);
+        loadProfile_ = QuantLib::ext::make_shared<IntradayPowerLoadProfileWithMWh>();
         loadProfile_->reserve(loadProfile->size());
+        auto dstAdjustment = intradayCurve_.empty() ? 0.0 : intradayCurve_->intradayShape()->dayTimeSavingsAdjustment(deliveryDate_);
         for (const auto& load : *loadProfile) {
             loadProfile_->push_back(dstAdjustedTotalLoad(load, dstAdjustment));
             totalLoad_ += loadProfile_->back().totalMWh;

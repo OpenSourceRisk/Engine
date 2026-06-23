@@ -18,13 +18,24 @@
 #pragma once
 
 #include <iostream>
+#include <qle/utilities/time.hpp>
 #include <string>
 
-enum class IntradayPowerTimeUnit {
-    HOUR = 3600,
-    SECOND = 1
-};
+namespace QuantExt {
+
+constexpr int SECONDS_PER_HOUR = 3600;
+constexpr int SECONDS_PER_DAY = 24 * SECONDS_PER_HOUR;
+
+enum class IntradayPowerTimeUnit { HOUR = 3600, SECOND = 1 };
+
+enum class IntradayPowerDSTAdjustment { Forward = -1, NoAdjustment = 0, Backward = 1 };
+
+inline IntradayPowerDSTAdjustment dayTimeSavingsAdjustment(const QuantLib::Date& d,
+                                                           const std::string& daylightSavingsLocation) {
+    return static_cast<IntradayPowerDSTAdjustment>(daylightSavingCorrection(daylightSavingsLocation.empty() ? "Null" : daylightSavingsLocation, d, d + 1));
+}
 
 std::ostream& operator<<(std::ostream& out, const IntradayPowerTimeUnit& unit);
 
 IntradayPowerTimeUnit parseIntradayPowerTimeUnit(const std::string& s);
+} // namespace QuantExt

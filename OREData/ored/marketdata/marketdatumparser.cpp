@@ -971,7 +971,7 @@ QuantLib::ext::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const 
         const string& quoteName = tokens[2];
         Date deliveryDate = parseDate(tokens[3]);
         Size startTimeInSec = parseInteger(tokens[4]);
-        IntradayPowerTimeUnit timeUnit = parseIntradayPowerTimeUnit(tokens[5]);
+        QuantExt::IntradayPowerTimeUnit timeUnit = QuantExt::parseIntradayPowerTimeUnit(tokens[5]);
         bool isDST = tokens.size() > 6 ? tokens[6] == "DST" : false;
         return QuantLib::ext::make_shared<IntradayPowerCurveQuote>(value, asof, datumName, quoteType, quoteName, 
                                                                     deliveryDate, startTimeInSec, timeUnit, isDST);

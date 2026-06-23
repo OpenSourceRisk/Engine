@@ -37,7 +37,7 @@ QuantExt::LoadFactor parseLoadFactor(XMLNode* lfNode) {
     int to = parseInteger(toStr);
 
     std::string unitStr = XMLUtils::getAttribute(lfNode, "unit");
-    auto unit = unitStr.empty() ? IntradayPowerTimeUnit::SECOND : parseIntradayPowerTimeUnit(unitStr);
+    auto unit = unitStr.empty() ? QuantExt::IntradayPowerTimeUnit::SECOND : QuantExt::parseIntradayPowerTimeUnit(unitStr);
 
     std::string dstStr = XMLUtils::getAttribute(lfNode, "dst");
     bool dst = dstStr.empty() ? false : parseBool(dstStr);

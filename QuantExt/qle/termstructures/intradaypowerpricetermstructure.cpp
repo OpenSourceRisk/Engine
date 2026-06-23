@@ -61,7 +61,7 @@ IntradayPowerPriceTermStructure::price(const QuantLib::Date& d,
     }
 
     auto underlyingPrice = underlying_->price(d, extrapolate);
-    auto shapeFactor = shape_->loadWeightedIntradayShapeFactor(d, load);
+    auto shapeFactor = shape_->loadWeightedIntradayShapeFactor(d, *load);
     return shapeFactor * underlyingPrice;
 }
 

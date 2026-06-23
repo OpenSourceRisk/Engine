@@ -15,11 +15,11 @@
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
-#pragma once
-
 #include <boost/algorithm/string.hpp>
 #include <ql/errors.hpp>
 #include <qle/utilities/intradaypower.hpp>
+
+namespace QuantExt {
 
 std::ostream& operator<<(std::ostream& out, const IntradayPowerTimeUnit& unit) {
     switch (unit) {
@@ -40,4 +40,5 @@ IntradayPowerTimeUnit parseIntradayPowerTimeUnit(const std::string& s) {
         return IntradayPowerTimeUnit::SECOND;
     else
         QL_FAIL("Unknown IntradayPowerTimeUnit: " << s);
+}
 }
