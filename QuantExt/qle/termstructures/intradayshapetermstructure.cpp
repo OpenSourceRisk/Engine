@@ -79,7 +79,7 @@ inline QuantLib::Real calcShapeFactor(const QuantLib::Date& d, int startTime, in
         QL_REQUIRE(startTime >= QuantExt::TWO_AM_IN_SECONDS && endTime <= QuantExt::THREE_AM_IN_SECONDS,
                    "For DST hour on " << d << " startTime and endTime must be between 2am and 3am, got startTime "
                                       << startTime << " and endTime " << endTime);
-        // Ignore DST extra hour load if not a BACKWARD date
+        // Ignore DST on non DST days
         if (dayTimeSavingsAdj != QuantExt::IntradayPowerDSTAdjustment::Backward) {
             return 0.0;
         }
@@ -119,8 +119,8 @@ QuantLib::Real IntradayShapeTermstructure::dayFactor(const QuantLib::Date& d) co
     auto dayTimeSavingsAdj = dayTimeSavingsAdjustment(d, daylightSavingsLocation_);
     auto it = dayFactors_.find(d);
     if (it == dayFactors_.end()) {
-        auto& shapeFactor = hasShapeFactors(d) ? shapeFactors(d) : ShapeFactors();
-        auto& dstShapeFactor = hasShapeFactorsDST(d) ? shapeFactorsDST(d) : ShapeFactors();
+        const ShapeFactors& shapeFactor = hasShapeFactors(d) ? shapeFactors(d) : ShapeFactors();
+        const ShapeFactors& dstShapeFactor = hasShapeFactorsDST(d) ? shapeFactorsDST(d) : ShapeFactors();
         auto factor = calcShapeFactor(d, 0, QuantExt::SECONDS_PER_DAY, false, shapeFactor, dstShapeFactor, dayTimeSavingsAdj);
         if (dayTimeSavingsAdj == QuantExt::IntradayPowerDSTAdjustment::Backward) {
             auto dstFactor =
@@ -135,8 +135,8 @@ QuantLib::Real IntradayShapeTermstructure::dayFactor(const QuantLib::Date& d) co
 QuantLib::Real IntradayShapeTermstructure::intradayShapeFactor(const QuantLib::Date& d, int startTime, int endTime,
                                                                bool isDSTHour) const {
     auto dayTimeSavingsAdj = dayTimeSavingsAdjustment(d, daylightSavingsLocation_);
-    auto& shapeFactor = hasShapeFactors(d) ? shapeFactors(d) : ShapeFactors();
-    auto& dstShapeFactor = hasShapeFactorsDST(d) ? shapeFactorsDST(d) : ShapeFactors();
+    const ShapeFactors& shapeFactor = hasShapeFactors(d) ? shapeFactors(d) : ShapeFactors();
+    const ShapeFactors& dstShapeFactor = hasShapeFactorsDST(d) ? shapeFactorsDST(d) : ShapeFactors();
     return calcShapeFactor(d, startTime, endTime, isDSTHour, shapeFactor, dstShapeFactor, dayTimeSavingsAdj);
 }
 
@@ -147,8 +147,8 @@ IntradayShapeTermstructure::loadWeightedIntradayShapeFactor(const QuantLib::Date
         return 0.0;
     }
     auto dayTimeSavingsAdj = dayTimeSavingsAdjustment(d, daylightSavingsLocation_);
-    auto& shapeFactor = hasShapeFactors(d) ? shapeFactors(d) : ShapeFactors();
-    auto& dstShapeFactor = hasShapeFactorsDST(d) ? shapeFactorsDST(d) : ShapeFactors();
+    const ShapeFactors& shapeFactor = hasShapeFactors(d) ? shapeFactors(d) : ShapeFactors();
+    const ShapeFactors& dstShapeFactor = hasShapeFactorsDST(d) ? shapeFactorsDST(d) : ShapeFactors();
     auto amount = 0.0;
     auto totalMWh = 0.0;
     for (const auto& [start, end, load, mwh, isDSTextraHour] : load) {
