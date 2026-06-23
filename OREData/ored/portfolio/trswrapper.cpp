@@ -691,7 +691,7 @@ void TRSWrapperAccrualEngine::calculate() const {
                     Real localNotionalFactor = 0.0, localFxFactor = 1.0; // local per underlying
                     auto addPeriodResetFactor = [&](Real notional, Real fx, bool isSuffix = true) {
                         fundingLegNotionalFactor += notional * fx;
-                        if(!isSuffix){
+                        if(isSuffix){
                             results_.additionalResults["fundingLegNotional" + resultSuffix + resultSuffix2] = notional;
                             results_.additionalResults["fundingLegFxRate" + resultSuffix + resultSuffix2] = fx;
                         }else{
@@ -708,7 +708,7 @@ void TRSWrapperAccrualEngine::calculate() const {
                             localFxFactor = getFxConversionRate(arguments_.valuationSchedule_[currentIdx],
                                                                 arguments_.initialPriceCurrency_,
                                                                 arguments_.fundingCurrency_, false);
-                            addPeriodResetFactor(localNotionalFactor, localFxFactor, false);
+                            addPeriodResetFactor(localNotionalFactor, localFxFactor);
                         }
                     } else if (!arguments_.portfolioId_.empty() && arguments_.pricePerIndexUnit_) {
                         // Portfolio priced per index unit: the reset notional is taken once from the basket index
@@ -720,14 +720,14 @@ void TRSWrapperAccrualEngine::calculate() const {
                             localFxFactor = getFxConversionRate(arguments_.valuationSchedule_[currentIdx],
                                                                 arguments_.initialPriceCurrency_,
                                                                 arguments_.fundingCurrency_, false);
-                            addPeriodResetFactor(localNotionalFactor, localFxFactor);
+                            addPeriodResetFactor(localNotionalFactor, localFxFactor, false); //We don't want suffix
                         }
                     } else {
                         localNotionalFactor = arguments_.underlyingMultiplier_[j] *
                                               getUnderlyingFixing(j, arguments_.valuationSchedule_[currentIdx], false);
-                        localFxFactor =
-                            getFxConversionRate(arguments_.valuationSchedule_[currentIdx], arguments_.assetCurrency_[j],
-                                                arguments_.fundingCurrency_, false);
+                        localFxFactor = getFxConversionRate(arguments_.valuationSchedule_[currentIdx],
+                                                            arguments_.assetCurrency_[j],
+                                                            arguments_.fundingCurrency_, false);
                         addPeriodResetFactor(localNotionalFactor, localFxFactor);
                     }
 
