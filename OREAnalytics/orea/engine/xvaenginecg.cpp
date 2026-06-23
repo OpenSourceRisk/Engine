@@ -155,7 +155,7 @@ void XvaEngineCG::buildSsm() {
     // note: set useSpreadedTermStructures == true here even if sensi config does not have that
     simMarket_ = QuantLib::ext::make_shared<ore::analytics::ScenarioSimMarket>(
         initMarket_, simMarketData_, marketConfiguration_, *curveConfigs_, *todaysMarketParams_, continueOnError_, true,
-        false, false, iborFallbackConfig_, true);
+        false, false, false, iborFallbackConfig_, true);
 
     simMarketObs_ = static_pointer_cast<ore::data::Market>(simMarket_);
 
@@ -250,6 +250,8 @@ void XvaEngineCG::buildCam() {
         camBuilder_->model(), scenarioGeneratorData_->samples(), currencies, curves, fxSpots, irIndices, infIndices,
         indices, indexCurrencies, simulationDates_, iborFallbackConfig_, std::vector<std::string>(),
         stickyCloseOutDates_, timeStepsPerYear, enableCgOptimization_);
+
+    model_->calculate();
 
     timing_parta_ = timer.elapsed().wall;
     DLOG("XvaEngineCG: build cam cg model done - graph size is " << model_->computationGraph()->size());
@@ -1960,6 +1962,8 @@ void XvaEngineCG::calculateSensitivities() {
 
             sensiResultCube_->set(cva + sensi, 0, 0, sample, 0);
         }
+
+        simMarket_->reset();
 
         timing_sensi_ = timer.elapsed().wall - timing_bwd_;
 

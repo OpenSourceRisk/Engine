@@ -22,6 +22,7 @@
 #include <ored/portfolio/builders/bondtotalreturnswap.hpp>
 #include <ored/portfolio/fixingdates.hpp>
 #include <ored/portfolio/legdata.hpp>
+#include <ored/portfolio/utilities.hpp>
 #include <ored/utilities/bondindexbuilder.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/indexparser.hpp>
@@ -140,6 +141,7 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
     additionalData_["underlyingSecurityId"] = bondData_.securityId();
 
     Schedule schedule = makeSchedule(scheduleData_);
+    const auto& scheduleDates = schedule.dates();
 
     auto configuration = builder_trs->configuration(MarketContext::pricing);
     auto legBuilder = engineFactoryOverride->legBuilder(fundingLegData_.legType());
@@ -150,32 +152,34 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
     // build return leg valuation and payment schedule
     DLOG("build valuation and payment dates vectors");
 
+    // Valuation dates.
     Period observationLag = observationLag_.empty() ? 0 * Days : parsePeriod(observationLag_);
     Calendar observationCalendar = parseCalendar(observationCalendar_);
     BusinessDayConvention observationConvention =
         observationConvention_.empty() ? Unadjusted : parseBusinessDayConvention(observationConvention_);
+    vector<Date> valuationDates;
+    valuationDates.reserve(scheduleDates.size());
+    for (auto const& d : scheduleDates)
+        valuationDates.push_back(observationCalendar.advance(d, -observationLag, observationConvention));
 
+    // Payment dates.
+    vector<Date> paymentDates;
     PaymentLag paymentLag = parsePaymentLag(paymentLag_);
     Period payLagPeriod = boost::apply_visitor(PaymentLagPeriod(), paymentLag);
     Calendar paymentCalendar = parseCalendar(paymentCalendar_);
-    BusinessDayConvention paymentConvention =
-        paymentConvention_.empty() ? Unadjusted : parseBusinessDayConvention(paymentConvention_);
-
-    std::vector<Date> valuationDates, paymentDates;
-
-    for (auto const& d : schedule.dates()) {
-        valuationDates.push_back(observationCalendar.advance(d, -observationLag, observationConvention));
-        if (d != schedule.dates().front())
-            paymentDates.push_back(paymentCalendar.advance(d, payLagPeriod, paymentConvention));
-    }
-
-    if (!paymentDates_.empty()) {
-        paymentDates.clear();
-        QL_REQUIRE(paymentDates_.size() + 1 == valuationDates.size(),
-                   "paymentDates size (" << paymentDates_.size() << ") does no match valuatioDates size ("
-                                         << valuationDates.size() << ") minus 1");
-        for (auto const& s : paymentDates_)
-            paymentDates.push_back(parseDate(s));
+    if (paymentDates_.empty()) {
+        // Create payment dates if payment dates are not provided.
+        BusinessDayConvention paymentConvention = paymentConvention_.empty() ? Unadjusted :
+            parseBusinessDayConvention(paymentConvention_);
+        paymentDates = createPaymentDates(scheduleData_, schedule, paymentCalendar, paymentConvention,
+            payLagPeriod, paymentLagUnit_, paymentLagAnchor_);
+    } else {
+        // Use payment dates if they are provided.
+        QL_REQUIRE(paymentDates_.size() + 1 == scheduleDates.size(), "BondTRS: return payment dates size (" <<
+            paymentDates_.size() << ") does not match schedule dates size (" << scheduleDates.size() << ") minus 1");
+        paymentDates.reserve(scheduleDates.size() - 1);
+        for (const auto& pmtDtStr : paymentDates_)
+            paymentDates.push_back(parseDate(pmtDtStr));
     }
 
     DLOG("valuation schedule:");
@@ -237,7 +241,7 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
     Leg fundingNotionalLeg;
     if (fundingLegData_.notionalInitialExchange() || fundingLegData_.notionalFinalExchange() ||
         fundingLegData_.notionalAmortizingExchange()) {
-        Natural fundingLegPayLag = 0;
+        Integer fundingLegPayLag = 0;
         fundingNotionalLeg =
             makeNotionalLeg(fundingLeg, fundingLegData_.notionalInitialExchange(),
                             fundingLegData_.notionalFinalExchange(), fundingLegData_.notionalAmortizingExchange(),
@@ -326,6 +330,12 @@ void BondTRS::fromXML(XMLNode* node) {
     paymentCalendar_ = XMLUtils::getChildValue(bondTRSDataNode, "PaymentCalendar");
     paymentDates_ = XMLUtils::getChildrenValues(bondTRSDataNode, "PaymentDates", "PaymentDate");
 
+    if (auto tmp = XMLUtils::getChildNode(bondTRSDataNode, "PaymentLagUnit"))
+        paymentLagUnit_ = parseDateDeltaUnit(XMLUtils::getNodeValue(tmp));
+
+    if (auto tmp = XMLUtils::getChildNode(bondTRSDataNode, "PaymentLagAnchor"))
+        paymentLagAnchor_ = parseDateDeltaAnchor(XMLUtils::getNodeValue(tmp));
+
     initialPrice_ = Null<Real>();
     if (auto n = XMLUtils::getChildNode(bondTRSDataNode, "InitialPrice"))
         initialPrice_ = parseReal(XMLUtils::getNodeValue(n));
@@ -381,6 +391,10 @@ XMLNode* BondTRS::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, trsDataNode, "PaymentCalendar", paymentCalendar_);
     if (!paymentDates_.empty())
         XMLUtils::addChildren(doc, trsDataNode, "PaymentDates", "PaymentDate", paymentDates_);
+    if (paymentLagUnit_)
+        XMLUtils::addChild(doc, trsDataNode, "PaymentLagUnit", to_string(*paymentLagUnit_));
+    if (paymentLagAnchor_)
+        XMLUtils::addChild(doc, trsDataNode, "PaymentLagAnchor", to_string(*paymentLagAnchor_));
 
     if (!fxIndex_.empty()) {
         XMLNode* fxNode = doc.allocNode("FXTerms");

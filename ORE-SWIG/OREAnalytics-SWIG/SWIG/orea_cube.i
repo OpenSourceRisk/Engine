@@ -88,7 +88,7 @@ class SensitivityCube {
         QuantLib::Real gamma(const QuantLib::Size tradeIdx, const QuantExt::RiskFactorKey& riskFactorKey) const;
         QuantLib::Real crossGamma(const std::string& tradeId, const crossPair& riskFactorKeyPair) const;
         QuantLib::Real crossGamma(const QuantLib::Size tradeIdx, const crossPair& riskFactorKeyPair) const;
-        QuantLib::Real theta(const std::string& tradeId) const;
+        std::pair<QuantLib::Real, QuantLib::Period> theta(const std::string& tradeId) const;
 
         QuantLib::Real targetShiftSize(const QuantExt::RiskFactorKey& riskFactorKey) const;
         QuantLib::Real actualShiftSize(const QuantExt::RiskFactorKey& riskFactorKey) const;

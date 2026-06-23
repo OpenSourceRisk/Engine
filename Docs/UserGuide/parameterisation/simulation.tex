@@ -692,6 +692,7 @@ For Yield Curves, there are several choices for the interpolation and extrapolat
 \begin{itemize}
 \item Interpolation: This can be LogLinear or LinearZero. If not given, the value defaults to LogLinear.
 \item Extrapolation: This can be FlatFwd or FlatZero. If not given, the value defaults to FlatFwd.
+\item RollDown: This can be ForwardForward or ConstantDiscounts. If not given, the value defaults to ForwardForward.
 \end{itemize}
 
 For Default Curve, there is a similar choice for the extrapolation:
@@ -759,6 +760,7 @@ multipliers $1$ and $-2$, respectively.
       <Tenors>3M,6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y</Tenors>
       <Interpolation>LogLinear</Interpolation>
       <Extrapolation>FlatFwd</Extrapolation>
+      <RollDown>ForwardForward</RollDown>
       <DayCounter>ACT/ACT</DayCounter> <!-- Sets a new default for all yieldCurves -->
     </Configuration>
   </YieldCurves>

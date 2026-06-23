@@ -1367,8 +1367,8 @@ void ScriptedTradeEngineBuilder::buildBlackScholes(
     auto filteredStrikes = filterBlackScholesCalibrationStrikes(calibrationStrikes_, modelIndices_, processes_, T);
     // ignore timeStepsPerYear if we have no correlations, i.e. we can take large timesteps without changing anything
     Size effectiveTimeStepsPerYear = correlations_.empty() ? 0 : timeStepsPerYear_;
-    std::set<Real> curveTimes;
-    std::vector<std::set<std::pair<Real, Real>>> volTimesStrikes;
+    std::function<std::set<Real>(const TimeGrid&)> curveTimes;
+    std::function<std::vector<std::set<std::pair<Real, Real>>>(const TimeGrid&)> volTimesStrikes;
     if (useCg_) {
         modelCG_ = QuantLib::ext::make_shared<BlackScholesCG>(
             ModelCG::Type::MC, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,

@@ -303,7 +303,9 @@ public:
                    const std::vector<std::string>& paymentDates, const QuantLib::Real initialPrice,
                    const std::string& initialPriceCurrency, const std::vector<std::string>& fxTerms,
                    const QuantLib::ext::optional<bool> payUnderlyingCashFlowsImmediately,
-                   const QuantLib::ext::optional<TRS::FXConversion> fxConversion);
+                   const QuantLib::ext::optional<TRS::FXConversion> fxConversion,
+                   QuantLib::ext::optional<QuantExt::DateDeltaUnit> paymentLagUnit = QuantLib::ext::nullopt,
+                   QuantLib::ext::optional<QuantExt::DateDeltaAnchor> paymentLagAnchor = QuantLib::ext::nullopt);
         bool payer() const;
         const std::string& currency() const;
         const ScheduleData& scheduleData() const;

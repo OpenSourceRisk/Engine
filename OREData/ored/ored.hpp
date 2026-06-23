@@ -297,6 +297,7 @@
 #include <ored/portfolio/formulabasedlegdata.hpp>
 #include <ored/portfolio/forwardbond.hpp>
 #include <ored/portfolio/forwardrateagreement.hpp>
+#include <ored/portfolio/forwardvolatilityagreement.hpp>
 #include <ored/portfolio/fxaverageforward.hpp>
 #include <ored/portfolio/fxbarrieroption.hpp>
 #include <ored/portfolio/fxderivative.hpp>
@@ -366,6 +367,7 @@
 #include <ored/portfolio/trswrapper.hpp>
 #include <ored/portfolio/types.hpp>
 #include <ored/portfolio/underlying.hpp>
+#include <ored/portfolio/utilities.hpp>
 #include <ored/portfolio/vanillaoption.hpp>
 #include <ored/portfolio/varianceswap.hpp>
 #include <ored/portfolio/windowbarrieroption.hpp>

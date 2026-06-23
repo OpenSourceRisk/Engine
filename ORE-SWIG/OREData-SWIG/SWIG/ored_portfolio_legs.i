@@ -123,7 +123,9 @@ public:
   ScheduleDerived();
   ScheduleDerived(const std::string& baseSchedule, const std::string& calendar,
                   const std::string& convention, const std::string& shift,
-                  const bool removeFirstDate = false, const bool removeLastDate = false);
+                  const bool removeFirstDate = false, const bool removeLastDate = false,
+                  QuantLib::ext::optional<QuantExt::DateDeltaUnit> shiftUnit = QuantLib::ext::nullopt,
+                  QuantLib::ext::optional<QuantExt::DateDeltaAnchor> shiftAnchor = QuantLib::ext::nullopt);
   virtual void fromXML(XMLNode* node) override;
   virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
@@ -232,28 +234,45 @@ class LegData : public XMLSerializable {
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
+
 %extend LegData {
-  LegData() { return new LegData(); }
-  LegData(const ext::shared_ptr<LegAdditionalData>& innerLegData, bool isPayer, const std::string& currency,
-      const ScheduleData& scheduleData = ScheduleData(), const std::string& dayCounter = "",
-            const std::vector<double>& notionals = std::vector<double>(),
-      const std::vector<std::string>& notionalDates = std::vector<std::string>(), const std::string& paymentConvention = "F",
-            const bool notionalInitialExchange = false, const bool notionalFinalExchange = false,
-            const bool notionalAmortizingExchange = false, const bool isNotResetXCCY = true,
-      const std::string& foreignCurrency = "", const double foreignAmount = 0, const std::string& resetStartDate = "", const std::string& fxIndex = "",
-            const std::vector<ext::shared_ptr<AmortizationData>>& amortizationData = std::vector<ext::shared_ptr<AmortizationData>>(),
-      const std::string& paymentLag = "", const std::string& notionalPaymentLag = "",
-            const std::string& paymentCalendar = "",
-            const std::vector<std::string>& paymentDates = std::vector<std::string>(),
-            const std::vector<Indexing>& indexing = {}, const bool indexingFromAssetLeg = false,
-      const std::string& lastPeriodDayCounter = "") {
-                return new LegData(innerLegData, isPayer, currency, scheduleData,
-                    dayCounter, notionals, notionalDates, paymentConvention,
-                    notionalInitialExchange, notionalFinalExchange,
-                    notionalAmortizingExchange, isNotResetXCCY, foreignCurrency,
-                    foreignAmount, resetStartDate, fxIndex, VECTOR_SWIG_TO_ORE(amortizationData),
-                    paymentLag, notionalPaymentLag, paymentCalendar, paymentDates,
-                    indexing, indexingFromAssetLeg, lastPeriodDayCounter);
+    LegData() { return new LegData(); }
+    LegData(const ext::shared_ptr<LegAdditionalData>& innerLegData,
+        bool isPayer,
+        const std::string& currency,
+        const ScheduleData& scheduleData = ScheduleData(),
+        const std::string& dayCounter = "",
+        const std::vector<double>& notionals = std::vector<double>(),
+        const std::vector<std::string>& notionalDates = std::vector<std::string>(),
+        const std::string& paymentConvention = "F",
+        const bool notionalInitialExchange = false,
+        const bool notionalFinalExchange = false,
+        const bool notionalAmortizingExchange = false,
+        const bool isNotResetXCCY = true,
+        const std::string& foreignCurrency = "",
+        const double foreignAmount = 0,
+        const std::string& resetStartDate = "",
+        const std::string& fxIndex = "",
+        const std::vector<ext::shared_ptr<AmortizationData>>& amortizationData =
+            std::vector<ext::shared_ptr<AmortizationData>>(),
+        const std::string& paymentLag = "",
+        const std::string& notionalPaymentLag = "",
+        const std::string& paymentCalendar = "",
+        const std::vector<std::string>& paymentDates = std::vector<std::string>(),
+        const std::vector<Indexing>& indexing = {},
+        const bool indexingFromAssetLeg = false,
+        const std::string& lastPeriodDayCounter = "",
+        QuantLib::ext::optional<QuantExt::DateDeltaUnit> paymentLagUnit = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<QuantExt::DateDeltaAnchor> paymentLagAnchor = QuantLib::ext::nullopt) {
+
+            return new LegData(innerLegData, isPayer, currency, scheduleData,
+                dayCounter, notionals, notionalDates, paymentConvention,
+                notionalInitialExchange, notionalFinalExchange,
+                notionalAmortizingExchange, isNotResetXCCY, foreignCurrency,
+                foreignAmount, resetStartDate, fxIndex, VECTOR_SWIG_TO_ORE(amortizationData),
+                paymentLag, notionalPaymentLag, paymentCalendar, paymentDates,
+                indexing, indexingFromAssetLeg, lastPeriodDayCounter,
+                paymentLagUnit, paymentLagAnchor);
     }
 }
 

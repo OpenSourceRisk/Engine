@@ -79,8 +79,7 @@ public:
         const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
         const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
             QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
-        const bool continueOnError = false, const bool dryRun = false, const bool useAtParCouponsTrades = true, 
-        const bool computeTheta = false, const Period thetaPeriod = Period(1,Days));
+        const bool continueOnError = false, const bool dryRun = false, const bool useAtParCouponsTrades = true);
 
     //! Constructor using multi-threaded engine
     SensitivityAnalysis(const Size nThreads, const Date& asof,
@@ -99,8 +98,7 @@ public:
                             QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
                         const bool continueOnError = false, bool dryRun = false,
                         const std::string& context = "sensi analysis", const bool useAtParCouponsCurves = true,
-                        const bool useAtParCouponsTrades = true,
-                        const bool computeTheta = false, const Period thetaPeriod = Period(1,Days));
+                        const bool useAtParCouponsTrades = true);
 
     virtual ~SensitivityAnalysis() {}
 
@@ -191,8 +189,6 @@ private:
     std::string context_;
     bool useAtParCouponsCurves_ = true;
     bool useAtParCouponsTrades_ = true;
-    bool computeTheta_ = false;
-    Period thetaPeriod_ = Period(1,Days);
 
 protected:
     QuantLib::ext::shared_ptr<Scenario> offsetScenario_;

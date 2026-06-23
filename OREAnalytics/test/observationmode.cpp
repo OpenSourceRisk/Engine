@@ -313,7 +313,7 @@ void simulation(string dateGridString, bool checkFixings) {
     }
 
     // Now calculate exposure
-    ValuationEngine valEngine(today, dg, simMarket);
+    ValuationEngine valEngine(today, dg, simMarket, {}, true, QuantLib::ext::make_shared<FixingManager>(today));
 
     // Calculate Cube
     cpu_timer t;

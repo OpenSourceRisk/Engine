@@ -41,18 +41,19 @@ using namespace QuantLib;
 
 class AssetModelBuilderBase : public ModelBuilder {
 public:
-    AssetModelBuilderBase(const std::vector<Handle<YieldTermStructure>>& curves,
-                          const std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
-                          const std::set<Date>& simulationDates, const std::set<Date>& addDates,
-                          const Size timeStepsPerYear, const Handle<YieldTermStructure>& baseCurve = {},
-                          const bool observeContinuum = false, const std::set<Real>& curveTimes = {},
-                          const std::vector<std::set<std::pair<Real, Real>>>& volTimesStrikes = {});
-    AssetModelBuilderBase(const Handle<YieldTermStructure>& curve,
-                          const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
-                          const std::set<Date>& simulationDates, const std::set<Date>& addDates,
-                          const Size timeStepsPerYear, const Handle<YieldTermStructure>& baseCurve = {},
-                          const bool observeContinuum = false, const std::set<Real>& curveTimes = {},
-                          const std::vector<std::set<std::pair<Real, Real>>>& volTimesStrikes = {});
+    AssetModelBuilderBase(
+        const std::vector<Handle<YieldTermStructure>>& curves,
+        const std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
+        const std::set<Date>& simulationDates, const std::set<Date>& addDates, const Size timeStepsPerYear,
+        const Handle<YieldTermStructure>& baseCurve = {}, const bool observeContinuum = false,
+        const std::function<std::set<Real>(const TimeGrid&)>& curveTimes = {},
+        const std::function<std::vector<std::set<std::pair<Real, Real>>>(const TimeGrid&)>& volTimesStrikes = {});
+    AssetModelBuilderBase(
+        const Handle<YieldTermStructure>& curve,
+        const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process, const std::set<Date>& simulationDates,
+        const std::set<Date>& addDates, const Size timeStepsPerYear, const Handle<YieldTermStructure>& baseCurve = {},
+        const bool observeContinuum = false, const std::function<std::set<Real>(const TimeGrid&)>& curveTimes = {},
+        const std::function<std::vector<std::set<std::pair<Real, Real>>>(const TimeGrid&)>& volTimesStrikes = {});
 
     Handle<AssetModelWrapper> model() const;
     const std::set<Date>& simulationDates() const { return simulationDates_; }
@@ -98,8 +99,11 @@ protected:
     std::vector<Handle<BlackVolTermStructure>> vols_;
     std::vector<Handle<YieldTermStructure>> allCurves_;
     mutable CalibrationPointCache cache_, cacheModel_;
-    mutable std::set<Real> curveTimesBase_, curveTimes_;
-    mutable std::vector<std::set<std::pair<Real, Real>>> volTimesStrikesBase_, volTimesStrikes_;
+    mutable std::function<std::set<Real>(const TimeGrid&)> curveTimesBase_;
+    mutable std::set<Real> curveTimes_;
+    mutable std::function<std::vector<std::set<std::pair<Real, Real>>>(const TimeGrid&)> volTimesStrikesBase_;
+    mutable std::vector<std::set<std::pair<Real, Real>>> volTimesStrikes_;
+    mutable Date referenceDate_;
 
     mutable std::vector<AssetModelCalibrationResults> calibrationResults_;
 };

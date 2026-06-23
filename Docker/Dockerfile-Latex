@@ -1,19 +1,63 @@
-FROM blang/latex:ubuntu
+# syntax = docker/dockerfile:1.2
+ARG DOCKER_REPO
+ARG DEBIAN_TAG=trixie
 
-MAINTAINER Quaternion Risk Management
-LABEL Description="Update blang/latex:ubuntu to use newest version of latexmk."
+# ==============================================================================
+# Self-maintained, slim LaTeX toolchain image. Built and cached in Artifactory 
+# by a dedicated image project.
+#
+# Curated TeX Live package set (NOT texlive-full) sized to exactly what the
+# ORE / OREPlus PDF docs need, as determined from ore/Docs/UserGuide/settings.tex
+# and the DocsPlus preambles:
+#   - minted          -> needs python3 + python3-pygments AND -shell-escape
+#   - epstopdf        -> needs ghostscript + texlive-font-utils
+#   - latexmkrc gnu->pdf custom dependency -> needs the gnuplot binary
+#   - siunitx, tabu, floatrow, makecell, todonotes, multirow, soul, supertabular,
+#     mleftright, colortbl, footmisc, dsfont (\mathds) -> latex-extra/science/fonts-extra
+# Engine is pdflatex only (see Docs/build_docs.sh), so xetex/luatex stacks are omitted.
+# ==============================================================================
+FROM ${DOCKER_REPO}debian:${DEBIAN_TAG}
 
-RUN cd / \
- && apt-get update && apt-get upgrade -y \
- && apt-get install -f -y wget \
- && apt-get clean \
- && rm -rf /var/lib/apt/lists/* \
- && wget https://www.cantab.net/users/johncollins/software/latexmk-jcc/latexmk-469a.zip \
- && unzip latexmk-469a.zip \
- && rm -f latexmk-469a.zip \
- && mv /usr/bin/latexmk /usr/bin/latexmk_base \
- && cp latexmk/latexmk.pl /usr/bin/latexmk \
- && cd /data
+LABEL org.opencontainers.image.title="ore-latexmk"
+LABEL org.opencontainers.image.description="Slim TeX Live + latexmk + gnuplot + Pygments for ORE/OREPlus PDF documentation builds"
+LABEL org.opencontainers.image.vendor="Quaternion Risk Management / LSEG"
 
-CMD bash
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        texlive-latex-base \
+        texlive-latex-recommended \
+        texlive-latex-extra \
+        texlive-science \
+        texlive-pictures \
+        texlive-plain-generic \
+        texlive-fonts-recommended \
+        texlive-fonts-extra \
+        texlive-font-utils \
+        latexmk \
+        gnuplot-nox \
+        ghostscript \
+        python3 \
+        python3-pygments \
+        make \
+        bash \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Fail the build early if the slim set is missing anything the docs actually use.
+# Catches the classic "slimmed too far" regressions before the image ever ships.
+RUN set -e \
+    && latexmk --version \
+    && pdflatex --version \
+    && gnuplot --version \
+    && gs --version \
+    && pygmentize -V \
+    && for sty in minted siunitx tabu floatrow makecell todonotes multirow \
+                  supertabular mleftright colortbl soul footmisc dsfont \
+                  longtable hyperref; do \
+         kpsewhich "$sty.sty" >/dev/null || { echo "MISSING: $sty.sty"; exit 1; }; \
+       done \
+    && echo "LaTeX toolchain sanity check passed."
+
+WORKDIR /workdir
+CMD ["bash"]
 

@@ -102,6 +102,7 @@ struct SetupVariables : public InputVariables {
     bool allFixings_ = false;
     bool eomInflationFixings_ = true;
     bool useMarketDataFixings_ = true;
+    Size gzipCompressionLevel_ = 6;
 
     QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio_;
     QuantLib::ext::shared_ptr<ore::data::BasicReferenceDataManager> refDataManager_;
@@ -941,6 +942,7 @@ public:
   
     QuantLib::Size maxRetries() const { return maxRetries_; }
     QuantLib::Size nThreads() const { return setupVariables_.nThreads_; }
+    Size gzipCompressionLevel() const { return setupVariables_.gzipCompressionLevel_; }
     bool entireMarket() const { return setupVariables_.entireMarket_; }
     bool allFixings() const { return setupVariables_.allFixings_; }
     bool eomInflationFixings() const { return setupVariables_.eomInflationFixings_; }

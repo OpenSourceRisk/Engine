@@ -80,7 +80,6 @@ public:
                    const bool enableCgOptimization = false);
 
     // Model interface implementation
-    const Date& referenceDate() const override;
     std::size_t npv(const std::size_t amount, const Date& obsdate, const std::size_t filter,
                     const std::optional<long>& memSlot, const std::set<std::size_t> addRegressors,
                     const std::optional<std::set<std::size_t>>& overwriteRegressors,
@@ -104,8 +103,8 @@ public:
 
     void setModel(const Handle<AssetModelWrapper>& model);
 
-    const std::set<Real> curveTimes() const { return curveTimes_; }
-    const std::vector<std::set<std::pair<Real, Real>>> volTimesStrikes() const { return volTimesStrikes_; };
+    const std::function<std::set<Real>(const TimeGrid&)> curveTimes() const;
+    const std::function<std::vector<std::set<std::pair<Real, Real>>>(const TimeGrid&)> volTimesStrikes() const;
 
 protected:
     // ModelImpl interface implementation
@@ -134,6 +133,10 @@ protected:
     std::set<Date> addDates_;
     Handle<AssetModelWrapper> model_; // via setter
 
+    // model provided curve times and volTimesStrikes for notification filtering
+    std::function<std::set<Real>(const TimeGrid&)> curveTimes_;
+    std::function<std::vector<std::set<std::pair<Real, Real>>>(const TimeGrid&)> volTimesStrikes_;
+
     // The calibration to use, ATM or Deal
     std::string calibration_;
 
@@ -141,13 +144,10 @@ protected:
     std::map<std::string, std::vector<Real>> calibrationStrikes_;
 
     // updated in performCalculations()
-    mutable Date referenceDate_;                      // the model reference date
     mutable std::set<Date> effectiveSimulationDates_; // the dates effectively simulated (including today)
     mutable TimeGrid timeGrid_;                       // the (possibly refined) time grid for the simulation
     mutable std::vector<Size> positionInTimeGrid_;    // for each effective simulation date the index in the time grid
     mutable std::vector<double> effectiveCalibrationStrikes_;              // final eff cal strike for each index
-    mutable std::set<Real> curveTimes_;                                    // curve times (notification filtering)
-    mutable std::vector<std::set<std::pair<Real, Real>>> volTimesStrikes_; // volTimesStrikes (notification filtering)
 
     // updated in derived classes' performCalculations() whenever cg version changes
     mutable std::map<Date, std::vector<std::size_t>> underlyingPaths_; // per simulation date index states

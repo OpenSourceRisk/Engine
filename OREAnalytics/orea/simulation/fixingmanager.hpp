@@ -57,7 +57,7 @@ struct IndexComparator {
 class FixingManager {
 public:
     explicit FixingManager(Date today);
-    virtual ~FixingManager() {}
+    virtual ~FixingManager();
 
     //! Initialise the manager with these flows and indices from the given portfolio
     void initialise(const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const QuantLib::ext::shared_ptr<Market>& market,

@@ -1,0 +1,10 @@
+<ScheduleData name="schedule_01_04">
+  <Rules>
+    <StartDate>2026-01-03</StartDate>
+    <EndDate>2026-03-03</EndDate>
+    <Tenor>1M</Tenor>
+    <Calendar>US</Calendar>
+    <Convention>ModifiedFollowing</Convention>
+    <Rule>Forward</Rule>
+  </Rules>
+</ScheduleData>

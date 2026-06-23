@@ -24,13 +24,18 @@
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
 #include <ql/math/interpolations/flatextrapolation2d.hpp>
 
+#include <ql/time/calendars/nullcalendar.hpp>
+
 namespace QuantExt {
 
 SpreadedOptionletVolatility2::SpreadedOptionletVolatility2(const Handle<OptionletVolatilityStructure>& baseVol,
                                                            const std::vector<Date>& optionDates,
                                                            const std::vector<Real>& strikes,
-                                                           const std::vector<std::vector<Handle<Quote>>>& volSpreads)
-    : baseVol_(baseVol), optionDates_(optionDates), strikes_(strikes), volSpreads_(volSpreads) {
+                                                           const std::vector<std::vector<Handle<Quote>>>& volSpreads,
+                                                           const ReactionToTimeDecay decayMode)
+    : OptionletVolatilityStructure(0, !baseVol->calendar().empty() ? baseVol->calendar() : NullCalendar(),
+                                   baseVol->businessDayConvention(), baseVol->dayCounter()),
+      baseVol_(baseVol), optionDates_(optionDates), strikes_(strikes), volSpreads_(volSpreads), decayMode_(decayMode) {
     registerWith(baseVol_);
 
     QL_REQUIRE(!optionDates_.empty(), "SpreadedOptionletVolatility2(): optionDates are empty");
@@ -56,12 +61,7 @@ SpreadedOptionletVolatility2::SpreadedOptionletVolatility2(const Handle<Optionle
             registerWith(q);
 }
 
-DayCounter SpreadedOptionletVolatility2::dayCounter() const { return baseVol_->dayCounter(); }
 Date SpreadedOptionletVolatility2::maxDate() const { return baseVol_->maxDate(); }
-Time SpreadedOptionletVolatility2::maxTime() const { return baseVol_->maxTime(); }
-const Date& SpreadedOptionletVolatility2::referenceDate() const { return baseVol_->referenceDate(); }
-Calendar SpreadedOptionletVolatility2::calendar() const { return baseVol_->calendar(); }
-Natural SpreadedOptionletVolatility2::settlementDays() const { return baseVol_->settlementDays(); }
 BusinessDayConvention SpreadedOptionletVolatility2::businessDayConvention() const {
     return baseVol_->businessDayConvention();
 }
@@ -76,7 +76,13 @@ QuantLib::ext::shared_ptr<SmileSection> SpreadedOptionletVolatility2::smileSecti
     for (Size k = 0; k < strikes_.size(); ++k) {
         volSpreads[k] = volSpreadInterpolation_(optionTime, strikes_[k]);
     }
-    return QuantLib::ext::make_shared<SpreadedSmileSection2>(baseVol_->smileSection(optionTime), volSpreads, strikes_);
+    if (originalRefDate_ == actualRefDate_ || decayMode_ == ReactionToTimeDecay::ConstantVariance) {
+        return QuantLib::ext::make_shared<SpreadedSmileSection2>(baseVol_->smileSection(optionTime), volSpreads,
+                                                                 strikes_);
+    } else {
+        return QuantLib::ext::make_shared<SpreadedSmileSection2>(baseVol_->smileSection(optionTime + t0_),
+                                                                 baseVol_->smileSection(t0_), volSpreads, strikes_);
+    }
 }
 
 Volatility SpreadedOptionletVolatility2::volatilityImpl(Time optionTime, Rate strike) const {
@@ -84,6 +90,9 @@ Volatility SpreadedOptionletVolatility2::volatilityImpl(Time optionTime, Rate st
 }
 
 void SpreadedOptionletVolatility2::performCalculations() const {
+    originalRefDate_ = baseVol_->referenceDate();
+    actualRefDate_ = referenceDate();
+    t0_ = baseVol_->timeFromReference(actualRefDate_);
     for (Size i = 0; i < optionDates_.size(); ++i)
         optionTimes_[i] = timeFromReference(optionDates_[i]);
     for (Size k = 0; k < strikes_.size(); ++k) {
@@ -109,22 +118,18 @@ void SpreadedOptionletVolatility2::deepUpdate() {
 }
 
 AtmAdjustedSpreadedOptionletVolatility2::AtmAdjustedSpreadedOptionletVolatility2(
-    const Handle<OptionletVolatilityStructure>& baseVol,
-    const std::vector<Date>& optionDates, const std::vector<Real>& strikes,
-    const std::vector<std::vector<Handle<Quote>>>& volSpreads,
+    const Handle<OptionletVolatilityStructure>& baseVol, const std::vector<Date>& optionDates,
+    const std::vector<Real>& strikes, const std::vector<std::vector<Handle<Quote>>>& volSpreads,
     const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& baseIndex,
     const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& targetIndex,
-    const QuantLib::Period& baseRateComputationPeriod,
-    const QuantLib::Period& targetRateComputationPeriod,
-    Real scalingFactor)
-    : SpreadedOptionletVolatility2(baseVol, optionDates, strikes, volSpreads),
-      baseIndex_(baseIndex), targetIndex_(targetIndex),
-      baseRateComputationPeriod_(baseRateComputationPeriod),
-      targetRateComputationPeriod_(targetRateComputationPeriod),
-      scalingFactor_(scalingFactor) {
-      registerWith(baseVol);
-      registerWith(baseIndex_);
-      registerWith(targetIndex_);
+    const QuantLib::Period& baseRateComputationPeriod, const QuantLib::Period& targetRateComputationPeriod,
+    Real scalingFactor, ReactionToTimeDecay decayMode)
+    : SpreadedOptionletVolatility2(baseVol, optionDates, strikes, volSpreads, decayMode), baseIndex_(baseIndex),
+      targetIndex_(targetIndex), baseRateComputationPeriod_(baseRateComputationPeriod),
+      targetRateComputationPeriod_(targetRateComputationPeriod), scalingFactor_(scalingFactor) {
+    registerWith(baseVol);
+    registerWith(baseIndex_);
+    registerWith(targetIndex_);
 }
 
 QuantLib::ext::shared_ptr<SmileSection> AtmAdjustedSpreadedOptionletVolatility2::smileSectionImpl(

@@ -36,8 +36,6 @@ namespace analytics {
  *******************************************************************/
 
  void PricingVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs){
-    inputs->loadParameter<bool>(computeTheta_, "sensitivity", "computeTheta", false, parseBool);
-    inputs->loadParameter<Period>(thetaPeriod_, "sensitivity", "thetaPeriod", false, parsePeriod);
     inputs->loadParameter<bool>(outputCurves_, "curves", "active", false,
                                 std::function<bool(const string&)>(parseBool));
     if (!outputCurves_)
@@ -187,8 +185,6 @@ void PricingAnalyticImpl::runAnalytic(
             bool ccyConv = false;
             std::string configuration = inputs_->marketConfig("pricing");
             auto pVars = QuantLib::ext::dynamic_pointer_cast<PricingVariables>(inputVariables_);
-            bool computeTheta = pVars ? pVars->computeTheta_ : inputs_->computeTheta();
-            Period thetaPeriod = pVars ? pVars->thetaPeriod_ : inputs_->thetaPeriod();
             if (inputs_->nThreads() == 1) {
                 LOG("Single-threaded sensi analysis");
                 sensiAnalysis_ = QuantLib::ext::make_shared<SensitivityAnalysis>(
@@ -197,7 +193,7 @@ void PricingAnalyticImpl::runAnalytic(
                     inputs_->sensiRecalibrateModels(), inputs_->sensiLaxFxConversion(),
                     analytic()->configurations().curveConfig, analytic()->configurations().todaysMarketParams, ccyConv,
                     inputs_->refDataManager(), inputs_->iborFallbackConfig(), true, inputs_->dryRun(),
-                    inputs_->useAtParCouponsTrades(), computeTheta, thetaPeriod);
+                    inputs_->useAtParCouponsTrades());
                 LOG("Single-threaded sensi analysis created");
             }
             else {
@@ -209,7 +205,7 @@ void PricingAnalyticImpl::runAnalytic(
                     inputs_->sensiLaxFxConversion(), analytic()->configurations().curveConfig,
                     analytic()->configurations().todaysMarketParams, ccyConv, inputs_->refDataManager(),
                     inputs_->iborFallbackConfig(), true, inputs_->dryRun(), "sensi analysis",
-                    inputs_->useAtParCouponsCurves(), inputs_->useAtParCouponsTrades(), computeTheta, thetaPeriod);
+                    inputs_->useAtParCouponsCurves(), inputs_->useAtParCouponsTrades());
                 LOG("Multi-threaded sensi analysis created");
             }
 

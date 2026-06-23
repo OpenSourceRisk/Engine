@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <qle/termstructures/dynamicstype.hpp>
+
 #include <ql/indexes/swapindex.hpp>
 #include <ql/math/interpolations/interpolation2d.hpp>
 #include <ql/quote.hpp>
@@ -39,24 +41,24 @@ public:
     /* If the swap index bases are not provided, it is assumed that the base svts is atm-only and volSpreads has size 1.
        All volatility queries are routed to base with strike = Null<Real>() in this case.  If the swap index bases are
        provided, the simulated swap index bases represent the current ATM level reacting to changes in rate level. The
-       base swap index bases and the base vol on the other had must not react to rate level changes. */
-    SpreadedSwaptionVolatility(const Handle<SwaptionVolatilityStructure>& base, const std::vector<Period>& optionTenors,
-                               const std::vector<Period>& swapTenors, const std::vector<Real>& strikeSpreads,
-                               const std::vector<std::vector<Handle<Quote>>>& volSpreads,
-                               const QuantLib::ext::shared_ptr<SwapIndex>& baseSwapIndexBase = nullptr,
-                               const QuantLib::ext::shared_ptr<SwapIndex>& baseShortSwapIndexBase = nullptr,
-                               const QuantLib::ext::shared_ptr<SwapIndex>& simulatedSwapIndexBase = nullptr,
-                               const QuantLib::ext::shared_ptr<SwapIndex>& simulatedShortSwapIndexBase = nullptr,
-                               const bool stickyAbsMoney = false);
+       base swap index bases and the base vol on the other had must not react to rate level changes.
+       The parameter simulatedIndexBaseRollDown should be set according to the behavior of the rate curves linked to the
+       simulated swap index bases. */
+    SpreadedSwaptionVolatility(
+        const Handle<SwaptionVolatilityStructure>& base, const std::vector<Period>& optionTenors,
+        const std::vector<Period>& swapTenors, const std::vector<Real>& strikeSpreads,
+        const std::vector<std::vector<Handle<Quote>>>& volSpreads,
+        const QuantLib::ext::shared_ptr<SwapIndex>& baseSwapIndexBase = nullptr,
+        const QuantLib::ext::shared_ptr<SwapIndex>& baseShortSwapIndexBase = nullptr,
+        const QuantLib::ext::shared_ptr<SwapIndex>& simulatedSwapIndexBase = nullptr,
+        const QuantLib::ext::shared_ptr<SwapIndex>& simulatedShortSwapIndexBase = nullptr,
+        const bool stickyAbsMoney = false,
+        const ReactionToTimeDecay decayMode = ReactionToTimeDecay::ForwardForwardVariance,
+        const YieldCurveRollDown simulatedIndexBaseRollDown = YieldCurveRollDown::ForwardForward);
 
     //! \name TermStructure interface
     //@{
-    DayCounter dayCounter() const override;
     Date maxDate() const override;
-    Time maxTime() const override;
-    const Date& referenceDate() const override;
-    Calendar calendar() const override;
-    Natural settlementDays() const override;
     //! \name VolatilityTermStructure interface
     //@{
     Rate minStrike() const override;
@@ -89,8 +91,12 @@ private:
     QuantLib::ext::shared_ptr<SwapIndex> baseSwapIndexBase_, baseShortSwapIndexBase_;
     QuantLib::ext::shared_ptr<SwapIndex> simulatedSwapIndexBase_, simulatedShortSwapIndexBase_;
     bool stickyAbsMoney_;
+    ReactionToTimeDecay decayMode_;
+    YieldCurveRollDown simulatedIndexBaseRollDown_;
     mutable std::vector<Matrix> volSpreadValues_;
     mutable std::vector<Interpolation2D> volSpreadInterpolation_;
+    mutable Date originalRefDate_, actualRefDate_;
+    mutable Real t0_;
 };
 
 } // namespace QuantExt

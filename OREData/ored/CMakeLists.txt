@@ -277,6 +277,7 @@ portfolio/formulabasedindexbuilder.cpp
 portfolio/formulabasedlegbuilder.cpp
 portfolio/formulabasedlegdata.cpp
 portfolio/forwardbond.cpp
+portfolio/forwardvolatilityagreement.cpp
 portfolio/forwardrateagreement.cpp
 portfolio/fxaverageforward.cpp
 portfolio/fxbarrieroption.cpp
@@ -339,6 +340,7 @@ portfolio/trs.cpp
 portfolio/trsunderlyingbuilder.cpp
 portfolio/trswrapper.cpp
 portfolio/underlying.cpp
+portfolio/utilities.cpp
 portfolio/vanillaoption.cpp
 portfolio/varianceswap.cpp
 portfolio/windowbarrieroption.cpp
@@ -715,6 +717,7 @@ portfolio/formulabasedindexbuilder.hpp
 portfolio/formulabasedlegbuilder.hpp
 portfolio/formulabasedlegdata.hpp
 portfolio/forwardbond.hpp
+portfolio/forwardvolatilityagreement.hpp
 portfolio/forwardrateagreement.hpp
 portfolio/fxaverageforward.hpp
 portfolio/fxbarrieroption.hpp
@@ -784,6 +787,7 @@ portfolio/trsunderlyingbuilder.hpp
 portfolio/trswrapper.hpp
 portfolio/types.hpp
 portfolio/underlying.hpp
+portfolio/utilities.hpp
 portfolio/vanillaoption.hpp
 portfolio/varianceswap.hpp
 portfolio/windowbarrieroption.hpp
