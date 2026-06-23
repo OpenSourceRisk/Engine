@@ -675,16 +675,26 @@ Handle<QuantExt::IntradayPowerPriceTermStructure> DependencyMarket::intradayPowe
     addRiskFactor(RiskFactorKey::KeyType::IntradayPowerCurve, name);
     addMarketObject(MarketObject::IntradayPowerPriceCurve, name, config);
     Currency commCcy;
+    std::string savingsTime;
     if (curveConfigs_ && curveConfigs_->hasIntradayPowerCurveConfig(name)) {
         auto curveconf = curveConfigs_->intradayPowerCurveConfig(name);
         commCcy = parseCurrency(curveconf->currency());
+        const auto& [found, conv] = InstrumentConventions::instance().conventions()->get(
+            curveconf->convention(), Convention::Type::CommodityFuture);
+        if (found) {
+            auto commFutureConv = QuantLib::ext::dynamic_pointer_cast<CommodityFutureConvention>(conv);
+            savingsTime = commFutureConv->savingsTime();
+        }
         
     } else {
         commCcy = Currency();
     }
     auto pts = flatRatePts(commCcy);
+
+    auto shapeTS = QuantLib::ext::make_shared<QuantExt::IntradayShapeTermstructure>(savingsTime);
+
     return Handle<QuantExt::IntradayPowerPriceTermStructure>(
-        QuantLib::ext::make_shared<QuantExt::IntradayPowerPriceTermStructure>(pts));
+        QuantLib::ext::make_shared<QuantExt::IntradayPowerPriceTermStructure>(pts, shapeTS));
     QL_FAIL("Didn't find commodity curve config for " << name);
 }
 

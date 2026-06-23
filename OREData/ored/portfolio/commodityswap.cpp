@@ -359,6 +359,9 @@ const std::map<std::string,QuantLib::ext::any>& CommoditySwap::additionalData() 
                     additionalData_["weights[" + label + "]"] = weightsVector;
                     additionalData_["loadProfileTotalDeliveryHours[" + label + "]"] = totalDeliveryHoursVec;
                     additionalData_["loadProfileTotalMWh[" + label + "]"] = totalMWhVec;
+                    additionalData_["periodQuantity[" + label + "]"] = intradayPowerFlow->periodQuantity();
+                    additionalData_["gearing[" + label + "]"] = intradayPowerFlow->gearing();
+                    additionalData_["spread[" + label + "]"] = intradayPowerFlow->spread();
                 }
                 // CommodityFixedLeg consists of simple cash flows
                 Real flowAmount = 0.0;

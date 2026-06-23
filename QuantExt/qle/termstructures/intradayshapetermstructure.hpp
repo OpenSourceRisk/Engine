@@ -46,6 +46,8 @@ class IntradayShapeTermstructure {
 public:
     IntradayShapeTermstructure() = default;
 
+    IntradayShapeTermstructure(const std::string& daylightSavingsLocation) : daylightSavingsLocation_(daylightSavingsLocation) {}
+
     IntradayShapeTermstructure(const std::map<QuantLib::Date, std::map<int, QuantLib::Real>>& shapeFactors,
                                const std::map<QuantLib::Date, std::map<int, QuantLib::Real>>& shapeFactorsDST,
                                const std::string& daylightSavingsLocation = "") :
