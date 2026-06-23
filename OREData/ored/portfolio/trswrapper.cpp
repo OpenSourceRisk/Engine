@@ -290,26 +290,15 @@ bool TRSWrapperAccrualEngine::computeStartValue(std::vector<Real>& underlyingSta
                     // price for the basket in the fixings as opposed to getting the fixings for all of the individual 
                     // underlyings separately. Must have fixing on valuation date v0 or pricing fails.
                     auto v0_endDate = (endDate == Null<Date>() ? today : endDate);
-                    if (i == 0 && (v0 != v0_endDate)) {
-                        s0 = getUnderlyingFixing(i, v0, false, s0AdditionalData) * arguments_.indexQuantity_;
-                        fx0 = getFxConversionRate(fxDate, arguments_.initialPriceCurrency_, arguments_.returnCurrency_, false);
-                    } else if (v0 == v0_endDate) {
+                    if ((i == 0 && v0 != v0_endDate) || v0 == v0_endDate) {
                         if (i == 0) {
-                            try {
-                                s0 = getUnderlyingFixing(i, v0, false, s0AdditionalData) * arguments_.indexQuantity_;
-                                fx0 = getFxConversionRate(fxDate, arguments_.initialPriceCurrency_,
-                                                          arguments_.returnCurrency_, false);
-                            } catch (...) {
-                                s0 = getUnderlyingNPV(i, s0AdditionalData);
-                                fx0 = getFxConversionRate(today, arguments_.assetCurrency_[i],
-                                                          arguments_.returnCurrency_, true);
-                            }
+                            s0 = getUnderlyingFixing(i, v0, false, s0AdditionalData) * arguments_.indexQuantity_;
+                            fx0 = getFxConversionRate(fxDate, arguments_.initialPriceCurrency_, arguments_.returnCurrency_, false);
                         } else {
                             // i > 0: use individual underlying component fixing so that s0 == s1 in same-day
                             // periods and the reported notional matches the fixing value (like the non-basket path).
                             s0 = getUnderlyingFixing(i, v0, false, s0AdditionalData) * arguments_.underlyingMultiplier_[i];
-                            fx0 = getFxConversionRate(fxDate, arguments_.assetCurrency_[i],
-                                                      arguments_.returnCurrency_, false);
+                            fx0 = getFxConversionRate(fxDate, arguments_.assetCurrency_[i], arguments_.returnCurrency_, false);
                         }
                     }
                 } else {
