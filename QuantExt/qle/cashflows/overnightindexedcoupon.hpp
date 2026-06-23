@@ -70,7 +70,8 @@ public:
                            bool includeSpread = false, const Period& lookback = 0 * Days, const Natural rateCutoff = 0,
                            const Natural fixingDays = Null<Size>(), const Date& rateComputationStartDate = Date(),
                            const Date& rateComputationEndDate = Date(), bool observationShift = true,
-                           bool staleDatesCheck = true);
+                           bool staleDatesCheck = true,
+                           const ext::optional<Rounding>& rounding = ext::nullopt);
     //! \name Inspectors
     //@{
     /** If `true`, the spread is included in the daily compounding. If `false` the compounding is performed without the 
@@ -246,6 +247,7 @@ public:
         const QuantLib::ext::shared_ptr<CappedFlooredOvernightIndexedCouponPricer>& couponPricer);
     OvernightLeg& withObservationShift(bool observationShift);
     OvernightLeg& withStaleDatesCheck(bool staleDatesCheck);
+    OvernightLeg& withRounding(const QuantLib::ext::optional<QuantLib::Rounding>& rounding);
     operator Leg() const;
 
 private:
@@ -274,6 +276,7 @@ private:
     QuantLib::ext::shared_ptr<CappedFlooredOvernightIndexedCouponPricer> capFlooredCouponPricer_;
     bool observationShift_;
     bool staleDatesCheck_;
+    QuantLib::ext::optional<QuantLib::Rounding> rounding_;
 };
 
 } // namespace QuantExt

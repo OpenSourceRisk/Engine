@@ -341,6 +341,7 @@ void FloatingLegData::fromXML(XMLNode* node) {
     stubUseOriginalCurve_ = XMLUtils::getChildValueAsBool(node, "StubUseOriginalCurve", false, false);
     if (XMLNode* obsShiftNode = XMLUtils::getChildNode(node, "ObservationShift"))
         observationShift_ = parseBool(XMLUtils::getNodeValue(obsShiftNode));
+    roundingPrecision_ = XMLUtils::getChildValue(node, "RoundingPrecision", false);
 }
 
 XMLNode* FloatingLegData::toXML(XMLDocument& doc) const {
@@ -405,6 +406,8 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) const {
     }
     if (observationShift_)
         XMLUtils::addChild(doc, node, "ObservationShift", *observationShift_);
+    if (!roundingPrecision_.empty())
+        XMLUtils::addChild(doc, node, "RoundingPrecision", roundingPrecision_);
     return node;
 }
 
@@ -1753,6 +1756,10 @@ Leg makeOISLeg(const LegData& data, const QuantLib::ext::shared_ptr<OvernightInd
         buildScheduledVectorNormalised(floatData->gearings(), floatData->gearingDates(), schedule, 1.0);
     bool isInArrears = floatData->isInArrears() ? *floatData->isInArrears() : true;
 
+    QuantLib::ext::optional<QuantLib::Rounding> rounding;
+    if (!floatData->roundingPrecision().empty())
+        rounding = QuantLib::Rounding(parseInteger(floatData->roundingPrecision()), QuantLib::Rounding::Closest);
+
     applyAmortization(notionals, data, schedule, false);
 
     if (floatData->isAveraged()) {
@@ -1802,7 +1809,8 @@ Leg makeOISLeg(const LegData& data, const QuantLib::ext::shared_ptr<OvernightInd
                 .withCapFlooredAverageONIndexedCouponPricer(cfCouponPricer)
                 .withTelescopicValueDates(floatData->telescopicValueDates())
                 .withPaymentDates(paymentDates)
-                .withObservationShift(floatData->observationShift() ? *floatData->observationShift() : true);
+                .withObservationShift(floatData->observationShift() ? *floatData->observationShift() : true)
+                .withRounding(rounding);
         return leg;
 
     } else {
@@ -1851,7 +1859,8 @@ Leg makeOISLeg(const LegData& data, const QuantLib::ext::shared_ptr<OvernightInd
                       .withCapFlooredOvernightIndexedCouponPricer(cfCouponPricer)
                       .withTelescopicValueDates(floatData->telescopicValueDates())
                       .withPaymentDates(paymentDates)
-                      .withObservationShift(floatData->observationShift() ? *floatData->observationShift() : true);
+                      .withObservationShift(floatData->observationShift() ? *floatData->observationShift() : true)
+                      .withRounding(rounding);
 
         // If the overnight index is BRL CDI, we need a special coupon pricer
         QuantLib::ext::shared_ptr<BRLCdi> brlCdiIndex = QuantLib::ext::dynamic_pointer_cast<BRLCdi>(index);
