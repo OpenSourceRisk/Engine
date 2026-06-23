@@ -272,6 +272,7 @@ bool TRSWrapperAccrualEngine::computeStartValue(std::vector<Real>& underlyingSta
                                   ? v0
                                   : (endDate == Null<Date>() ? today : endDate);
                 Real s0 = 0.0, fx0 = 1.0;
+                std::map<std::string, QuantLib::ext::any> s0AdditionalData;
                 if (nth == 0 && arguments_.initialPrice_ != Null<Real>() &&
                     v0 == arguments_.valuationSchedule_.front()) {
                     if (i == 0) {
@@ -288,13 +289,19 @@ bool TRSWrapperAccrualEngine::computeStartValue(std::vector<Real>& underlyingSta
                     // If we have a portfolio ID and the price per index unit flag is set, we look up the initial 
                     // price for the basket in the fixings as opposed to getting the fixings for all of the individual 
                     // underlyings separately. Must have fixing on valuation date v0 or pricing fails.
-                    if (i == 0) {
-                        s0 = arguments_.basketIndex_->fixing(v0) * arguments_.indexQuantity_;
-                        fx0 = getFxConversionRate(fxDate, arguments_.initialPriceCurrency_,
-                            arguments_.returnCurrency_, false);
+                    auto v0_endDate = (endDate == Null<Date>() ? today : endDate);
+                    if ((i == 0 && v0 != v0_endDate) || v0 == v0_endDate) {
+                        if (i == 0) {
+                            s0 = getUnderlyingFixing(i, v0, false, s0AdditionalData) * arguments_.indexQuantity_;
+                            fx0 = getFxConversionRate(fxDate, arguments_.initialPriceCurrency_, arguments_.returnCurrency_, false);
+                        } else {
+                            // i > 0: use individual underlying component fixing so that s0 == s1 in same-day
+                            // periods and the reported notional matches the fixing value (like the non-basket path).
+                            s0 = getUnderlyingFixing(i, v0, false, s0AdditionalData) * arguments_.underlyingMultiplier_[i];
+                            fx0 = getFxConversionRate(fxDate, arguments_.assetCurrency_[i], arguments_.returnCurrency_, false);
+                        }
                     }
                 } else {
-                    std::map<std::string, QuantLib::ext::any> s0AdditionalData;
                     s0 = getUnderlyingFixing(i, v0, false, s0AdditionalData) * arguments_.underlyingMultiplier_[i];
                     for (const auto& [key, value] : s0AdditionalData) {
                         results_.additionalResults["s0_" + key] = value;
@@ -319,7 +326,6 @@ bool TRSWrapperAccrualEngine::computeStartValue(std::vector<Real>& underlyingSta
             startDate = Null<Date>();
         }
     } // loop over underlyings
-
     return true;
 }
 
@@ -506,6 +512,13 @@ void TRSWrapperAccrualEngine::calculate() const {
                 if (endDate == Null<Date>()) {
                     s1 = getUnderlyingNPV(i, s1AdditionalData);
                     fx1 = getFxConversionRate(today, arguments_.assetCurrency_[i], arguments_.returnCurrency_, true);
+                } else if (!arguments_.portfolioId_.empty() && arguments_.pricePerIndexUnit_) {
+                    // Basket priced per index unit: use basket fixing for i==0, individual component fixing for i>0.
+                    // If basket fixing is unavailable, fall back to underlying valuation.
+                    Real multiplier = (i == 0) ? arguments_.indexQuantity_ : arguments_.underlyingMultiplier_[i];
+                    const Currency& priceCurrency = (i == 0) ? arguments_.initialPriceCurrency_ : arguments_.assetCurrency_[i];
+                    s1 = getUnderlyingFixing(i, endDate, false, s1AdditionalData) * multiplier;
+                    fx1 = getFxConversionRate(endDate, priceCurrency, arguments_.returnCurrency_, false);
                 } else {
                     s1 = getUnderlyingFixing(i, endDate, false, s1AdditionalData) * arguments_.underlyingMultiplier_[i];
                     fx1 = getFxConversionRate(endDate, arguments_.assetCurrency_[i], arguments_.returnCurrency_, false);
@@ -519,8 +532,15 @@ void TRSWrapperAccrualEngine::calculate() const {
                                               << io::iso_date(endDate == Null<Date>() ? today : endDate));
 
                 // add details  return leg valuation to additional results
-                results_.additionalResults["s0" + resultSuffix] = underlyingStartValue[i];
-                results_.additionalResults["fx0" + resultSuffix] = fxConversionFactor[i];
+                //We want S0 or S0_i_nth(>0)
+                if(nthCurrentPeriod == 0 && i==0){
+                    results_.additionalResults["s0"] = underlyingStartValue[i];
+                    results_.additionalResults["fx0"] = fxConversionFactor[i];
+                }else if(nthCurrentPeriod > 0){
+                    results_.additionalResults["s0" + resultSuffix] = underlyingStartValue[i];
+                    results_.additionalResults["fx0" + resultSuffix] = fxConversionFactor[i];
+                }
+
                 results_.additionalResults["s1" + resultSuffix] = s1;
                 results_.additionalResults["fx1" + resultSuffix] = fx1;
                 results_.additionalResults["underlyingMultiplier" + resultSuffix] = arguments_.underlyingMultiplier_[i];
@@ -669,6 +689,17 @@ void TRSWrapperAccrualEngine::calculate() const {
                 } else if (arguments_.fundingNotionalTypes_[i] == TRS::FundingData::NotionalType::PeriodReset) {
 
                     Real localNotionalFactor = 0.0, localFxFactor = 1.0; // local per underlying
+                    auto addPeriodResetFactor = [&](Real notional, Real fx, bool isSuffix = true) {
+                        fundingLegNotionalFactor += notional * fx;
+                        if(isSuffix){
+                            results_.additionalResults["fundingLegNotional" + resultSuffix + resultSuffix2] = notional;
+                            results_.additionalResults["fundingLegFxRate" + resultSuffix + resultSuffix2] = fx;
+                        }else{
+                            results_.additionalResults["fundingLegNotional"] = notional;
+                            results_.additionalResults["fundingLegFxRate"] = fx;
+                        }
+
+                    };
                     if (currentIdx == 0 && arguments_.initialPrice_ != Null<Real>()) {
                         if (j == 0) {
                             localNotionalFactor =
@@ -677,20 +708,28 @@ void TRSWrapperAccrualEngine::calculate() const {
                             localFxFactor = getFxConversionRate(arguments_.valuationSchedule_[currentIdx],
                                                                 arguments_.initialPriceCurrency_,
                                                                 arguments_.fundingCurrency_, false);
+                            addPeriodResetFactor(localNotionalFactor, localFxFactor);
+                        }
+                    } else if (!arguments_.portfolioId_.empty() && arguments_.pricePerIndexUnit_) {
+                        // Portfolio priced per index unit: the reset notional is taken once from the basket index
+                        // (j == 0), since all decomposed constituents share the same basket-level GENERIC index.
+                        if (j == 0) {
+                            localNotionalFactor =
+                                arguments_.basketIndex_->fixing(arguments_.valuationSchedule_[currentIdx]) *
+                                arguments_.indexQuantity_;
+                            localFxFactor = getFxConversionRate(arguments_.valuationSchedule_[currentIdx],
+                                                                arguments_.initialPriceCurrency_,
+                                                                arguments_.fundingCurrency_, false);
+                            addPeriodResetFactor(localNotionalFactor, localFxFactor, false); //We don't want suffix
                         }
                     } else {
                         localNotionalFactor = arguments_.underlyingMultiplier_[j] *
                                               getUnderlyingFixing(j, arguments_.valuationSchedule_[currentIdx], false);
-                        localFxFactor =
-                            getFxConversionRate(arguments_.valuationSchedule_[currentIdx], arguments_.assetCurrency_[j],
-                                                arguments_.fundingCurrency_, false);
+                        localFxFactor = getFxConversionRate(arguments_.valuationSchedule_[currentIdx],
+                                                            arguments_.assetCurrency_[j],
+                                                            arguments_.fundingCurrency_, false);
+                        addPeriodResetFactor(localNotionalFactor, localFxFactor);
                     }
-
-                    fundingLegNotionalFactor += localNotionalFactor * localFxFactor;
-
-                    results_.additionalResults["fundingLegNotional" + resultSuffix + resultSuffix2] =
-                        localNotionalFactor;
-                    results_.additionalResults["fundingLegFxRate" + resultSuffix + resultSuffix2] = localFxFactor;
 
                 } else if (arguments_.fundingNotionalTypes_[i] == TRS::FundingData::NotionalType::DailyReset &&
                            (QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(cpn) ||
@@ -900,17 +939,30 @@ void TRSWrapperAccrualEngine::calculate() const {
 
     for (Size j = 0; j < arguments_.underlying_.size(); ++j) {
         // the start fixing will refer to the last of the nth current return periods
-        std::string resultSuffix = arguments_.underlying_.size() == 1 ? "" : "_" + std::to_string(j);
+        std::string resultSuffix = arguments_.underlying_.size() == 1 ? "" : "_" + std::to_string(j + 1);
         Real startFixing = Null<Real>(), todaysFixing = Null<Real>();
         try {
-            startFixing = getUnderlyingFixing(j, startDate, false);
+            if (!arguments_.portfolioId_.empty() && arguments_.pricePerIndexUnit_) {
+                if (j == 0) {
+                    try {
+                        if(startDate != Settings::instance().evaluationDate()){
+                            startFixing = getUnderlyingFixing(j, startDate, false);
+                            results_.additionalResults["startFixing"] = startFixing;
+                        }
+                    } catch (...) {
+                    }
+                }
+            }else{
+                startFixing = getUnderlyingFixing(j, startDate, false);
+                results_.additionalResults["startFixing" + resultSuffix] = startFixing;
+            }
+            
         } catch (...) {
         }
         try {
             todaysFixing = getUnderlyingFixing(j, today, true);
         } catch (...) {
         }
-        results_.additionalResults["startFixing" + resultSuffix] = startFixing;
         results_.additionalResults["todaysFixing" + resultSuffix] = todaysFixing;
     }
 
