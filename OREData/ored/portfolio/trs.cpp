@@ -424,6 +424,8 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
         } catch (...) { }
         if (pricePerIndexUnit_.value_or(false))
             quantityForWrapper = indexQuantity_;
+        // Make the portfolio ID available in the TRS trade additional data.
+        additionalData_["IndexName"] = portfolioId_;
     }
 
     // a builder might update the underlying (e.g. promote it from bond to convertible bond)
