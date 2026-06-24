@@ -506,7 +506,7 @@ MarketImpl::intradayPowerPriceCurve(const std::string& commodityName, const std:
 
 QuantLib::Handle<QuantExt::IntradayPowerIndex> MarketImpl::intradayPowerIndex(const std::string& commodityName,
                                                                               const std::string& configuration) const {
-    require(MarketObject::CommodityCurve, commodityName, configuration);
+    require(MarketObject::IntradayPowerPriceCurve, commodityName, configuration);
     return lookup<Handle<QuantExt::IntradayPowerIndex>>(intradayPowerIndices_, commodityName, configuration,
                                                         "intraday power indices");
 }
