@@ -45,7 +45,8 @@ public:
                            const Period& lookback = 0 * Days, const Size fixingDays = Null<Size>(),
                            const Date& rateComputationStartDate = Date(),
                            const Date& rateComputationEndDate = Date(), const bool telescopicValueDates = false,
-                           bool observationShift = true, bool staleDatesCheck = true);
+                           bool observationShift = true, bool staleDatesCheck = true,
+                           const QuantLib::ext::optional<QuantLib::Rounding>& rounding = QuantLib::ext::nullopt);
     //! \name Visitability
     //@{
     void accept(AcyclicVisitor&) override;
@@ -180,6 +181,7 @@ public:
         const QuantLib::ext::shared_ptr<CapFlooredAverageONIndexedCouponPricer>& couponPricer);
     AverageONLeg& withObservationShift(bool observationShift);
     AverageONLeg& withStaleDatesCheck(bool staleDatesCheck);
+    AverageONLeg& withRounding(const QuantLib::ext::optional<QuantLib::Rounding>& rounding);
     operator Leg() const;
 
 private:
@@ -208,6 +210,7 @@ private:
     QuantLib::ext::shared_ptr<CapFlooredAverageONIndexedCouponPricer> capFlooredCouponPricer_;
     bool observationShift_;
     bool staleDatesCheck_;
+    QuantLib::ext::optional<QuantLib::Rounding> rounding_;
 };
 
 } // namespace QuantExt

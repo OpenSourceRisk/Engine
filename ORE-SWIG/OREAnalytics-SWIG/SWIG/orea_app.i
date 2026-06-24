@@ -435,7 +435,6 @@ public:
     void setSensitivityStressScenarioDataFromFile(const std::string& s);
     void setSensitivityStressSensitivityScenarioData(const std::string& xml);
     void setSensitivityStressSensitivityScenarioDataFromFile(const std::string& fileName);
-    void setSensitivityStressCalculateBaseScenario(const bool calcBaseScenario);
 
     // Setters for xvaSensi
     void setXvaSensiSimMarketParams(const std::string& xml);

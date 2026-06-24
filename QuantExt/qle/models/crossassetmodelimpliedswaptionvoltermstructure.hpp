@@ -45,7 +45,7 @@ class AnalyticLgmSwaptionEngine;
 
 class CrossAssetModelImpliedSwaptionVolTermStructure : public SwaptionVolatilityStructure {
 public:
-    CrossAssetModelImpliedSwaptionVolTermStructure(const QuantLib::ext::shared_ptr<CrossAssetModel>& model,
+    CrossAssetModelImpliedSwaptionVolTermStructure(const QuantLib::Handle<CrossAssetModel>& model,
 						   const ext::shared_ptr<YieldTermStructure>& impliedDiscountCurve,
 						   const std::vector<QuantLib::ext::shared_ptr<IborIndex>>& impliedIborIndices,
                                                    const ext::shared_ptr<SwapIndex>& swapIndex,
@@ -83,7 +83,7 @@ private:
                                                   ext::shared_ptr<IborIndex> iborIndex, Rate fixedRate,
                                                   Swap::Type type = Swap::Payer, Real nominal = 10000.0) const;
 
-    const QuantLib::ext::shared_ptr<CrossAssetModel> model_;
+    const QuantLib::Handle<CrossAssetModel> model_;
     const Size ccyIndex_; // position in the scenario's and model's vector of currencies
     ext::shared_ptr<YieldTermStructure> impliedDiscountCurve_; 
     std::vector<ext::shared_ptr<IborIndex>> impliedIborIndices_; 

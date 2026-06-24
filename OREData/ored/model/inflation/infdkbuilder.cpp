@@ -74,8 +74,14 @@ InfDkBuilder::InfDkBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& m
     registerWith(infVol_);
     // notify observers of all market data changes, not only when not calculated
     alwaysForwardNotifications();
+}
 
-    // build option basket and derive parametrization from it
+void InfDkBuilder::initParametrization() const {
+
+    if (parametrizationInitializedOnAnchorDate_ == referenceDate_)
+        return;
+    parametrizationInitializedOnAnchorDate_ = referenceDate_;
+
     const ReversionParameter& reversion = data_->reversion();
     const VolatilityParameter& volatility = data_->volatility();
     if (volatility.calibrate() || reversion.calibrate())
@@ -175,14 +181,16 @@ std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>> InfDkBuilder::opt
 
 bool InfDkBuilder::requiresRecalibration() const {
     return (data_->volatility().calibrate() || data_->reversion().calibrate()) &&
-           (volSurfaceChanged(false) || marketObserver_->hasUpdated(false) || forceCalibration_);
+           (referenceDate_ != rateCurve_->referenceDate() || volSurfaceChanged(false) || marketObserver_->hasUpdated(false) || forceCalibration_);
 }
 
 void InfDkBuilder::performCalculations() const {
     if (requiresRecalibration()) {
-        // build option basket
+        referenceDate_ = rateCurve_->referenceDate();
         buildCapFloorBasket();
     }
+    referenceDate_ = rateCurve_->referenceDate();
+    initParametrization();
 }
 
 void InfDkBuilder::setCalibrationDone() const {

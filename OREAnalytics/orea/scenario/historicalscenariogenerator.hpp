@@ -88,7 +88,9 @@ public:
         //! indicates if the generated sceanrios will be absolute or difference
         const bool generateDifferenceScenarios = false,
         //! whether or not to break down the scenario return into risk factor contributions
-        const bool riskFactorBreakdown = false);
+        const bool riskFactorBreakdown = false,
+        //! whether to inlude theta effect
+        const bool includeTheta = false);
 
     //! Constructor with no mporDays/Calendar, construct historical shift scenario between each scenario
     HistoricalScenarioGenerator(
@@ -178,6 +180,8 @@ public:
 
     void setRiskFactorBreakdown(const bool b) { riskFactorBreakdown_ = b; }
     bool isRiskFactorBreakdown() const {return riskFactorBreakdown_; }
+    void setIncludeTheta(const bool b) { includeTheta_ = b; }
+    bool includeTheta() const {return includeTheta_; }
     virtual void setCurrentKey(const RiskFactorKey& k);
     RiskFactorKey getCurrentKey() const { return currentKey_;}
     virtual void setIterator(const Size& k);
@@ -222,6 +226,7 @@ private:
     std::string labelPrefix_;
     bool generateDifferenceScenarios_ = false;
     bool riskFactorBreakdown_ = false;
+    bool includeTheta_ = false;
     bool populateAllKeysOnBreakdown_ = false;
     RiskFactorKey currentKey_;
 };
@@ -303,7 +308,8 @@ QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> buildHistoricalScenarioGe
     const QuantLib::ext::shared_ptr<ore::data::AdjustmentFactors>& adjFactors, const TimePeriod& period,
     Calendar calendar, Size mporDays, const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simParams,
     const QuantLib::ext::shared_ptr<TodaysMarketParameters>& marketParam,
-    const QuantLib::ext::shared_ptr<ReturnConfiguration>& returnConfiguration, const bool overlapping = true, const bool riskFactorKey = false);
+    const QuantLib::ext::shared_ptr<ReturnConfiguration>& returnConfiguration, const bool overlapping = true,
+    const bool riskFactorKey = false, const bool includeTheta = false);
 
 QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>
 buildHistoricalScenarioGenerator(const QuantLib::ext::shared_ptr<ScenarioReader>& hsr,

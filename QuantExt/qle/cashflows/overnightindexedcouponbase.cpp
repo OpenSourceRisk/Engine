@@ -58,13 +58,13 @@ OvernightIndexedCouponBase::OvernightIndexedCouponBase(Type rateType, const Date
     Spread spread, const Date& refPeriodStart, const Date& refPeriodEnd, const DayCounter& dayCounter,
     bool telescopicValueDates, const Period& lookback, const Natural rateCutoff, const Natural fixingDays,
     const Date& rateComputationStartDate, const Date& rateComputationEndDate, bool observationShift,
-    bool staleDatesCheck)
+    bool staleDatesCheck, const ext::optional<Rounding>& rounding)
     : FloatingRateCoupon(paymentDate, nominal, startDate, endDate, fixingDays, overnightIndex, gearing, spread,
         refPeriodStart, refPeriodEnd, dayCounter, false),
       rateType_(rateType), telescopicDates_(telescopicValueDates), overnightIndex_(overnightIndex), lookback_(lookback),
       rateCutoff_(rateCutoff), rateComputationStartDate_(rateComputationStartDate),
       rateComputationEndDate_(rateComputationEndDate), observationShift_(observationShift),
-      staleDatesCheck_(staleDatesCheck) {
+      staleDatesCheck_(staleDatesCheck), rounding_(rounding) {
 
     // Lookback was never intended to be positive i.e. it was designed to allow time to calculate the coupon before
     // a coupon payment date. QuantLib has it as Natural => non-negative but we won't change the interface now but just 
@@ -288,6 +288,8 @@ void OvernightIndexedCouponBase::performCalculations() const {
         additionalResults_.clear();
         Date upToDate = separateRateCompPeriod() ? interestDates_.back() : accrualEndDate_;
         std::tie(rate_, upToDateAdj_) = effectiveRate(upToDate);
+        if (rounding_)
+            rate_ = (*rounding_)(rate_);
     }
 
     // Restore value of staleDatesCheck_.

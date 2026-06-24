@@ -113,8 +113,8 @@ BOOST_AUTO_TEST_CASE(testAgainstSwaptionEngines) {
         EURCurrency(), yts, stepTimes, Array(sigmas.begin(), sigmas.end()), stepTimes, Array(sigmas.size(), reversion));
 
     // fix any T forward measure
-    QuantLib::ext::shared_ptr<LinearGaussMarkovModel> lgm = QuantLib::ext::make_shared<LinearGaussMarkovModel>(lgmParam);
-    QuantLib::ext::shared_ptr<Gaussian1dModel> lgmGaussian1d = QuantLib::ext::make_shared<Gaussian1dCrossAssetAdaptor>(lgm);
+    auto lgm = Handle<LGM>(QuantLib::ext::make_shared<LinearGaussMarkovModel>(lgmParam));
+    QuantLib::ext::shared_ptr<Gaussian1dModel> lgmGaussian1d = QuantLib::ext::make_shared<Gaussian1dCrossAssetAdaptor>(*lgm);
 
     // Setup the different pricing engines
     QuantLib::ext::shared_ptr<PricingEngine> swaptionEngineGsr =
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(testAgainstSwaptionEngines) {
         QuantLib::ext::make_shared<Gaussian1dSwaptionEngine>(lgmGaussian1d, 64, 7.0, true, false);
 
     QuantLib::ext::shared_ptr<PricingEngine> swaptionEngineLgm2 =
-        QuantLib::ext::make_shared<NumericLgmSwaptionEngine>(lgm, 7.0, 16, 7.0, 32);
+        QuantLib::ext::make_shared<NumericLgmSwaptionEngine>(QuantLib::Handle<LGM>(lgm), 7.0, 16, 7.0, 32);
 
     Size polynomOrder = 4;
     LsmBasisSystem::PolynomialType polynomType = LsmBasisSystem::Monomial;

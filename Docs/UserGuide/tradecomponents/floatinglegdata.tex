@@ -389,4 +389,10 @@ averaging or compounding will be $r \times 3 / 360$.
 
   Allowable values: \lstinline!true!, \lstinline!false!. Defaults to \lstinline!true! if left blank or omitted.
 
+\item \lstinline!RoundingPrecision! [Optional]: Only applicable to OIS legs (compounding or averaging). Rounds the effective 
+period rate to the specified number of decimal places using the round-half-away-from-zero convention before the coupon amount is computed. 
+For example, \lstinline!5! rounds to $0.00001$ precision.  If omitted, no rounding is applied.
+
+  Allowable values: A non-negative integer.
+
 \end{itemize}

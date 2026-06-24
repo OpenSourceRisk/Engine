@@ -45,18 +45,17 @@ CommoditySchwartzModelBuilder::CommoditySchwartzModelBuilder(
     : market_(market), configuration_(configuration), data_(data), referenceCalibrationGrid_(referenceCalibrationGrid),
       baseCcy_(baseCcy) {
 
-    optionActive_ = std::vector<bool>(data->optionExpiries().size(), false);
+    optionActive_ = std::vector<bool>(data_->optionExpiries().size(), false);
     marketObserver_ = QuantLib::ext::make_shared<MarketObserver>();
-    QuantLib::Currency ccy = ore::data::parseCurrency(data->currency());
-    string name = data->name();
+    QuantLib::Currency ccy = ore::data::parseCurrency(data_->currency());
 
-    LOG("Start building CommoditySchwartz model for " << name);
+    LOG("Start building CommoditySchwartz model for " << data_->name());
 
     // get market data
     std::string fxCcyPair = ccy.code() + baseCcy_.code();
     fxSpot_ = market_->fxRate(fxCcyPair, configuration_);
-    curve_ = market_->commodityPriceCurve(name, configuration_);
-    vol_ = market_->commodityVolatility(name, configuration_);
+    curve_ = market_->commodityPriceCurve(data_->name(), configuration_);
+    vol_ = market_->commodityVolatility(data_->name(), configuration_);
 
     // register with market observables except vols
     marketObserver_->registerWith(fxSpot_);
@@ -68,41 +67,50 @@ CommoditySchwartzModelBuilder::CommoditySchwartzModelBuilder(
 
     // notify observers of all market data changes, not only when not calculated
     alwaysForwardNotifications();
+}
+
+void CommoditySchwartzModelBuilder::initParametrization() const {
+
+    QuantLib::Currency ccy = ore::data::parseCurrency(data_->currency());
+
+    if (parametrizationInitializedOnAnchorDate_ == referenceDate_)
+        return;
+    parametrizationInitializedOnAnchorDate_ = referenceDate_;
 
     // build option basket and derive parametrization from it
-    if (data->calibrateSigma() || data->calibrateKappa() || data->calibrateSeasonality())
+    if (data_->calibrateSigma() || data_->calibrateKappa() || data_->calibrateSeasonality())
         buildOptionBasket();
 
     Array seasonalityTimes_a, seasonalityValues_a;
 
-    if (data->seasonalityParamType()  == ParamType::Constant ){
-        QL_REQUIRE(data->seasonalityTimes().size() == 0, "seasonality time grid size 0 expected");
-        QL_REQUIRE(data->seasonalityValues().size() == 1, "initial seasonality grid size 1 expected");
-        seasonalityValues_a = Array(data->seasonalityValues().begin(), data->seasonalityValues().end());
+    if (data_->seasonalityParamType()  == ParamType::Constant ){
+        QL_REQUIRE(data_->seasonalityTimes().size() == 0, "seasonality time grid size 0 expected");
+        QL_REQUIRE(data_->seasonalityValues().size() == 1, "initial seasonality grid size 1 expected");
+        seasonalityValues_a = Array(data_->seasonalityValues().begin(), data_->seasonalityValues().end());
     } else {
-        if (data->calibrateSeasonality()) { // override
+        if (data_->calibrateSeasonality()) { // override
             QL_REQUIRE(optionExpiries_.size() > 0, "optionExpiries is empty");
             // the last expiry is taken, as a(T) is calibrated not \int_{0}^T \sigma_{T-1}(u)du
             seasonalityTimes_a = Array(optionExpiries_.begin(), optionExpiries_.end()); 
-            seasonalityValues_a = Array(seasonalityTimes_a.size(), data->seasonalityValues()[0]);
+            seasonalityValues_a = Array(seasonalityTimes_a.size(), data_->seasonalityValues()[0]);
         } else {
             // use input time grid and input alpha array otherwise
-            seasonalityTimes_a = Array(data->seasonalityTimes().begin(), data->seasonalityTimes().end());
-            seasonalityValues_a = Array(data->seasonalityValues().begin(), data->seasonalityValues().end());
+            seasonalityTimes_a = Array(data_->seasonalityTimes().begin(), data_->seasonalityTimes().end());
+            seasonalityValues_a = Array(data_->seasonalityValues().begin(), data_->seasonalityValues().end());
             QL_REQUIRE(seasonalityValues_a.size() == seasonalityTimes_a.size(), "seasonality grids do not match");
         }
     }
-    if (data->seasonalityParamType() == ParamType::Piecewise)
-        parametrization_ = QuantLib::ext::make_shared<QuantExt::CommoditySchwartzPiecewiseConstantParametrization>(ccy, name, curve_, fxSpot_,
-                                                                                                    data->sigmaValue(), data->kappaValue(),
+    if (data_->seasonalityParamType() == ParamType::Piecewise)
+        parametrization_ = QuantLib::ext::make_shared<QuantExt::CommoditySchwartzPiecewiseConstantParametrization>(ccy, data_->name(), curve_, fxSpot_,
+                                                                                                    data_->sigmaValue(), data_->kappaValue(),
                                                                                                     seasonalityTimes_a, seasonalityValues_a, 
                                                                                                     QuantLib::ext::make_shared<QuantLib::NoConstraint>(),
-                                                                                                    data->driftFreeState());
-    else if (data->seasonalityParamType() == ParamType::Constant)
-        parametrization_ = QuantLib::ext::make_shared<QuantExt::CommoditySchwartzConstantParametrization>(ccy, name, curve_, fxSpot_,
-                                                                                                    data->sigmaValue(), data->kappaValue(),
+                                                                                                    data_->driftFreeState());
+    else if (data_->seasonalityParamType() == ParamType::Constant)
+        parametrization_ = QuantLib::ext::make_shared<QuantExt::CommoditySchwartzConstantParametrization>(ccy, data_->name(), curve_, fxSpot_,
+                                                                                                    data_->sigmaValue(), data_->kappaValue(),
                                                                                                     seasonalityValues_a[0],
-                                                                                                    data->driftFreeState());
+                                                                                                    data_->driftFreeState());
     else
         QL_FAIL("interpolation type not supported for commodity");
 
@@ -110,7 +118,8 @@ CommoditySchwartzModelBuilder::CommoditySchwartzModelBuilder(
 
     //TODO: constant parametrisation see eqbsmodelbuilder.cpp
     model_ = QuantLib::ext::make_shared<QuantExt::CommoditySchwartzModel>(parametrization_);
-    params_ = model_->params();
+    params_[referenceDate_] = model_->params();
+
 }
 
 QuantLib::ext::shared_ptr<QuantExt::CommoditySchwartzModel> CommoditySchwartzModelBuilder::model() const {
@@ -133,15 +142,18 @@ std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>> CommoditySchwartz
 }
 
 bool CommoditySchwartzModelBuilder::requiresRecalibration() const {
-    return (data_->calibrateSigma() || data_->calibrateKappa()) &&
-           (volSurfaceChanged(false) || marketObserver_->hasUpdated(false) || forceCalibration_);
+    return (data_->calibrateSigma() || data_->calibrateKappa() || data_->calibrateSeasonality()) &&
+           (referenceDate_ != curve_->referenceDate() || volSurfaceChanged(false) ||
+            marketObserver_->hasUpdated(false) || forceCalibration_);
 }
 
 void CommoditySchwartzModelBuilder::performCalculations() const {
     if (requiresRecalibration()) {
-        DLOG("COM model requires recalibration");
+        referenceDate_ = curve_->referenceDate();
         buildOptionBasket();
     }
+    referenceDate_ = curve_->referenceDate();
+   initParametrization();
 }
 
 void CommoditySchwartzModelBuilder::setCalibrationDone() const {

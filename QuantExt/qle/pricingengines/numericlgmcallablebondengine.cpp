@@ -455,7 +455,7 @@ NumericLgmCallableBondEngine::NumericLgmCallableBondEngine(
     const Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve,
     const Handle<QuantLib::YieldTermStructure>& incomeCurve, const Handle<QuantLib::Quote>& recoveryRate,
     const bool spreadOnIncome, const bool generateAdditionalResults)
-    : NumericLgmCallableBondEngineBase(QuantLib::ext::make_shared<LgmConvolutionSolver2>(*model, sy, ny, sx, nx),
+    : NumericLgmCallableBondEngineBase(QuantLib::ext::make_shared<LgmConvolutionSolver2>(model, sy, ny, sx, nx),
                                        americanExerciseTimeStepsPerYear, referenceCurve, discountingSpread, creditCurve,
                                        incomeCurve, recoveryRate, spreadOnIncome),
       generateAdditionalResultsInput_(generateAdditionalResults) {
@@ -474,7 +474,7 @@ NumericLgmCallableBondEngine::NumericLgmCallableBondEngine(
     const Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve,
     const Handle<QuantLib::YieldTermStructure>& incomeCurve, const Handle<QuantLib::Quote>& recoveryRate,
     const bool spreadOnIncome, const bool generateAdditionalResults)
-    : NumericLgmCallableBondEngineBase(QuantLib::ext::make_shared<LgmFdSolver>(*model, maxTime, scheme, stateGridPoints,
+    : NumericLgmCallableBondEngineBase(QuantLib::ext::make_shared<LgmFdSolver>(model, maxTime, scheme, stateGridPoints,
                                                                                timeStepsPerYear, mesherEpsilon),
                                        americanExerciseTimeStepsPerYear, referenceCurve, discountingSpread, creditCurve,
                                        incomeCurve, recoveryRate, spreadOnIncome),

@@ -36,6 +36,7 @@
 #include <qle/math/distributioncount.hpp>
 
 #include <ql/cashflows/floatingratecoupon.hpp>
+#include <qle/cashflows/equitycoupon.hpp>
 
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/framework/accumulator_set.hpp>
@@ -1158,6 +1159,17 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, QuantLib::ext::s
                             c->rate(); // ensure the additional results results are available
                             for (auto const& kv : c->additionalResults()) {
                                 addAnyResults(report, tradeId,
+                                              kv.first + "[" + std::to_string(i) + "][" + std::to_string(j) + "]",
+                                              kv.second, precision);
+                            }
+                        } catch (...) {
+                        }
+                    } else if (auto c =
+                                   QuantLib::ext::dynamic_pointer_cast<QuantExt::EquityCoupon>(trade->legs()[i][j])) {
+                        try {
+                            c->rate(); // ensure the additional results are available
+                            for (auto const& kv : c->additionalResults()) {
+                                addAnyResults(report, trade->id(),
                                               kv.first + "[" + std::to_string(i) + "][" + std::to_string(j) + "]",
                                               kv.second, precision);
                             }

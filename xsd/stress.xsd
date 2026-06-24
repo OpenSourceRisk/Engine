@@ -52,6 +52,7 @@
 
   <xs:complexType name="stresstest">
     <xs:all>
+      <xs:element type="xs:string" name="Date" minOccurs="0"/>
       <xs:element type="stresstestparshifts" name="ParShifts" minOccurs="0"/>
       <xs:element type="stressdiscountcurves" name="DiscountCurves" minOccurs="0"/>
       <xs:element type="stressindexcurves" name="IndexCurves" minOccurs="0"/>

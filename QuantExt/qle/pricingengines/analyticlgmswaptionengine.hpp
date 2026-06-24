@@ -84,13 +84,13 @@ public:
     enum class FloatSpreadMapping { nextCoupon, proRata, simple };
 
     /*! Lgm model based constructor */
-    AnalyticLgmSwaptionEngine(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model,
+    AnalyticLgmSwaptionEngine(const QuantLib::Handle<LinearGaussMarkovModel>& model,
                               const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
                               const FloatSpreadMapping floatSpreadMapping = FloatSpreadMapping::proRata,
                               const Real x0 = 0.0);
 
     /*! CrossAsset model based constructor */
-    AnalyticLgmSwaptionEngine(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, const Size ccy,
+    AnalyticLgmSwaptionEngine(const QuantLib::Handle<CrossAssetModel>& model, const Size ccy,
                               const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
                               const FloatSpreadMapping floatSpreadMapping = FloatSpreadMapping::proRata,
                               const Real x0 = 0.0);

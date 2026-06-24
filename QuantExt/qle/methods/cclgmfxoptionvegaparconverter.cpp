@@ -23,7 +23,7 @@
 
 namespace QuantExt {
 
-CcLgmFxOptionVegaParConverter::CcLgmFxOptionVegaParConverter(const QuantLib::ext::shared_ptr<CrossAssetModel>& model,
+CcLgmFxOptionVegaParConverter::CcLgmFxOptionVegaParConverter(const QuantLib::Handle<CrossAssetModel>& model,
                                                              const Size foreignCurrency,
                                                              const std::vector<Period>& optionTerms)
     : model_(model), foreignCurrency_(foreignCurrency), optionTerms_(optionTerms) {

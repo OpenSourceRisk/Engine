@@ -42,7 +42,7 @@ namespace QuantExt {
 */
 class AnalyticXAssetLgmEquityOptionEngine : public VanillaOption::engine {
 public:
-    AnalyticXAssetLgmEquityOptionEngine(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, const Size equityIdx,
+    AnalyticXAssetLgmEquityOptionEngine(const QuantLib::Handle<CrossAssetModel>& model, const Size equityIdx,
                                         const Size ccyIdx);
     void calculate() const override;
 
@@ -53,7 +53,7 @@ public:
                const Real domesticDiscount, const Real eqForward) const;
 
 private:
-    const QuantLib::ext::shared_ptr<CrossAssetModel> model_;
+    const QuantLib::Handle<CrossAssetModel> model_;
     const Size eqIdx_, ccyIdx_;
 };
 

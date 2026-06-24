@@ -66,10 +66,9 @@ public:
         : FlexiSwapBGSEngineBuilderBase(tradeType, model, "Grid") {}
 
 protected:
-    QuantLib::ext::shared_ptr<QuantExt::IrModel> model(const std::string& id, const std::string& key,
-                                                       const std::vector<QuantLib::Date>& dates,
-                                                       const QuantLib::Date& maturity,
-                                                       const std::vector<QuantLib::Real>& strikes);
+    QuantLib::Handle<QuantExt::LGM> model(const std::string& id, const std::string& key,
+                                          const std::vector<QuantLib::Date>& dates, const QuantLib::Date& maturity,
+                                          const std::vector<QuantLib::Real>& strikes);
 };
 
 //! Balance Guaranteed Swap Discounting Engine Builder
