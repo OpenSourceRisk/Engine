@@ -163,13 +163,16 @@ Real EquityCoupon::accruedAmount(const Date& d) const {
     }
 }
 
-Rate EquityCoupon::rate() const {
+void EquityCoupon::performCalculations() const {
+    CashFlow::performCalculations();
     QL_REQUIRE(pricer_, "pricer not set");
-    // we know it is the correct type because checkPricerImpl checks on setting
-    // in general pricer_ will be a derived class, as will *this on calling
-    additionalResults_.clear();
     pricer_->initialize(*this);
-    return pricer_->swapletRate();
+    rate_ = pricer_->swapletRate();
+}
+
+Rate EquityCoupon::rate() const {
+    calculate();
+    return rate_;
 }
 
 std::vector<Date> EquityCoupon::fixingDates() const {
