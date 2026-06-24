@@ -220,7 +220,7 @@ Real IrModelBuilder::error() const {
     return error_;
 }
 
-QuantLib::ext::shared_ptr<QuantExt::IrModel> IrModelBuilder::model() const {
+QuantLib::Handle<QuantExt::IrModel> IrModelBuilder::model() const {
     calculate();
     return model_;
 }
@@ -247,7 +247,8 @@ void IrModelBuilder::newCalcWithoutRecalibration() const {
 
 bool IrModelBuilder::requiresRecalibration() const {
     return !suspendCalibration_ && requiresCalibration_ && !dontCalibrate_ &&
-           (volSurfaceChanged(false) || marketObserver_->hasUpdated(false) || forceCalibration_);
+           (referenceDate_ != calibrationDiscountCurve_->referenceDate() || volSurfaceChanged(false) ||
+            marketObserver_->hasUpdated(false) || forceCalibration_);
 }
 
 void IrModelBuilder::performCalculations() const {
@@ -257,9 +258,12 @@ void IrModelBuilder::performCalculations() const {
 
     if (!requiresRecalibration()) {
         DLOG("Skipping calibration as nothing has changed or calibration is not required.");
+        referenceDate_ = calibrationDiscountCurve_->referenceDate();
         initParametrization();
         return;
     }
+
+    referenceDate_ = calibrationDiscountCurve_->referenceDate();
 
     // reset lgm observer's updated flag
     marketObserver_->hasUpdated(true);
@@ -279,7 +283,7 @@ void IrModelBuilder::performCalculations() const {
     }
 
     // reset model parameters to ensure identical results on identical market data input
-    model_->setParams(params_);
+    model_->setParams(params_.at(referenceDate_));
 
     // call into calibration routines
     calibrate();

@@ -26,7 +26,7 @@
 
 namespace QuantExt {
 
-LgmSwaptionVegaParConverter::LgmSwaptionVegaParConverter(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model,
+LgmSwaptionVegaParConverter::LgmSwaptionVegaParConverter(const QuantLib::Handle<LinearGaussMarkovModel>& model,
                                                          const std::vector<QuantLib::Period>& optionTerms,
                                                          const std::vector<QuantLib::Period>& underlyingTerms,
                                                          const QuantExt::ext::shared_ptr<SwapIndex>& index)

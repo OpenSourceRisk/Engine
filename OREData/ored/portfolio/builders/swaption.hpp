@@ -36,7 +36,7 @@
 namespace ore {
 namespace data {
 
-using SwaptionModel = std::variant<std::monostate, Handle<QuantExt::CrossAssetModel>, ext::shared_ptr<QuantExt::LGM>>;
+using SwaptionModel = std::variant<std::monostate, Handle<QuantExt::CrossAssetModel>, Handle<QuantExt::LGM>>;
 
 /*! Swaption engine builder base class. This is for the general xccy case, i.e. keys and strikes have one element per
     supported underlying currency. FX strikes are against base ccy, where base ccy is the first currenc resp. the base

@@ -19,5 +19,20 @@
 #include <orea/simulation/simmarket.hpp>
 
 namespace ore {
-namespace analytics {}
+namespace analytics {
+
+void SimMarket::update(const QuantLib::Date& d) {
+    preUpdate();
+    updateDate(loadNextScenario(d));
+    applyLoadedScenario();
+    postUpdate();
+    updateAsd();
+}
+
+void SimMarket::updateScenario(const QuantLib::Date& d) {
+    loadNextScenario(d);
+    applyLoadedScenario();
+}
+
+} // namespace analytics
 } // namespace ore

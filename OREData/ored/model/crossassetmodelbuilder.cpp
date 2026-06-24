@@ -191,7 +191,7 @@ void CrossAssetModelBuilder::resetModelParams(const CrossAssetModel::AssetType t
     auto mp = model_->MoveParameter(t, param, index, i);
     for (Size idx = 0; idx < mp.size(); ++idx) {
         if (!mp[idx]) {
-            model_->setParam(idx, params_[idx]);
+            model_->setParam(idx, params_[referenceDate_][idx]);
         }
     }
 }
@@ -215,7 +215,7 @@ void CrossAssetModelBuilder::copyModelParams(const CrossAssetModel::AssetType t0
     std::vector<Real> sourceValues(s0);
     for (Size idx0 = 0, count = 0; idx0 < mp0.size(); ++idx0) {
         if (!mp0[idx0]) {
-            sourceValues[count++] = params_[idx0];
+            sourceValues[count++] = params_[referenceDate_][idx0];
         }
     }
     for (Size idx1 = 0, count = 0; idx1 < mp1.size(); ++idx1) {
@@ -635,8 +635,10 @@ void CrossAssetModelBuilder::buildModel() const {
        This is only used for fx, eq, inf, cr, com, for ir this is handled in LgmBuilder directly.
        Therefore it does not matter that the IR parameters are calibrated at this point already. */
 
-    if (!buildersAreInitialized) {
-        params_ = model_->params();
+    Date today = Settings::instance().evaluationDate();
+    if (referenceDate_ != today) {
+        referenceDate_ = today;
+        params_[referenceDate_] = model_->params();
     }
 
     /*************************
@@ -687,7 +689,7 @@ void CrossAssetModelBuilder::buildModel() const {
                 continue;
             }
             QuantLib::ext::shared_ptr<QuantExt::AnalyticCcLgmFxOptionEngine> engine =
-                QuantLib::ext::make_shared<QuantExt::AnalyticCcLgmFxOptionEngine>(*model_, i);
+                QuantLib::ext::make_shared<QuantExt::AnalyticCcLgmFxOptionEngine>(model_, i);
             engine->cache(true);
             for (Size j = 0; j < fxOptionBaskets_[i].size(); j++)
                 fxOptionBaskets_[i][j]->setPricingEngine(engine);
@@ -784,7 +786,7 @@ void CrossAssetModelBuilder::buildModel() const {
         Currency eqCcy = eqParametrizations[i]->currency();
         Size eqCcyIdx = model_->ccyIndex(eqCcy);
         QuantLib::ext::shared_ptr<QuantExt::AnalyticXAssetLgmEquityOptionEngine> engine =
-            QuantLib::ext::make_shared<QuantExt::AnalyticXAssetLgmEquityOptionEngine>(*model_, i, eqCcyIdx);
+            QuantLib::ext::make_shared<QuantExt::AnalyticXAssetLgmEquityOptionEngine>(model_, i, eqCcyIdx);
         for (Size j = 0; j < eqOptionBaskets_[i].size(); j++)
             eqOptionBaskets_[i][j]->setPricingEngine(engine);
 
@@ -987,7 +989,7 @@ void CrossAssetModelBuilder::calibrateInflation(
     Handle<ZeroInflationIndex> zInfIndex =
         market_.value()->zeroInflationIndex(model_->infdk(modelIdx)->name(), configurationInfCalibration_);
     Real baseCPI = dontCalibrate_ ? 100. : zInfIndex->fixing(zInfIndex->zeroInflationTermStructure()->baseDate());
-    auto engine = QuantLib::ext::make_shared<QuantExt::AnalyticDkCpiCapFloorEngine>(*model_, modelIdx, baseCPI);
+    auto engine = QuantLib::ext::make_shared<QuantExt::AnalyticDkCpiCapFloorEngine>(model_, modelIdx, baseCPI);
     for (Size j = 0; j < cb.size(); j++)
         cb[j]->setPricingEngine(engine);
 

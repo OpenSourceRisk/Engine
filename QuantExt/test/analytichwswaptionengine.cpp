@@ -76,9 +76,9 @@ BOOST_AUTO_TEST_CASE(test1FAgainstLgm) {
     Real sigma = 0.0070;
     Real kappa = 0.01;
 
-    auto hwModel = ext::make_shared<HwModel>(
+    auto hwModel = Handle<HwModel>(ext::make_shared<HwModel>(
         ext::make_shared<IrHwConstantParametrization>(USDCurrency(), discount, Matrix{{sigma}}, Array{kappa}),
-        IrModel::Measure::BA, HwModel::Discretization::Euler, false);
+        IrModel::Measure::BA, HwModel::Discretization::Euler, false));
     auto lgmModel = ext::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(USDCurrency(), discount, Array(),
                                                                                Array{sigma}, Array(), Array{kappa});
 
@@ -129,14 +129,14 @@ BOOST_AUTO_TEST_CASE(test2FAgainstMC) {
     auto hwModel =
         ext::make_shared<HwModel>(ext::make_shared<IrHwConstantParametrization>(USDCurrency(), discount, sigma, kappa),
                                   IrModel::Measure::BA, HwModel::Discretization::Euler, true);
-    auto hwEngine = ext::make_shared<AnalyticHwSwaptionEngine>(hwModel);
+    auto hwEngine = ext::make_shared<AnalyticHwSwaptionEngine>(Handle<HwModel>(hwModel));
     swaption->setPricingEngine(hwEngine);
     Real hwNpv = swaption->NPV();
 
     auto process = hwModel->stateProcess();
 
-    auto modelDiscount = ext::make_shared<ModelImpliedYtsFwdFwdCorrected>(hwModel, discount);
-    auto modelForward = ext::make_shared<ModelImpliedYtsFwdFwdCorrected>(hwModel, forward);
+    auto modelDiscount = ext::make_shared<ModelImpliedYtsFwdFwdCorrected>(Handle<IrModel>(hwModel), discount);
+    auto modelForward = ext::make_shared<ModelImpliedYtsFwdFwdCorrected>(Handle<IrModel>(hwModel), forward);
 
     indexForward.linkTo(modelForward);
     swap->setPricingEngine(ext::make_shared<DiscountingSwapEngine>(Handle<YieldTermStructure>(modelDiscount)));

@@ -70,7 +70,7 @@ public:
     Real error() const;
     std::string qualifier();
     std::string ccy();
-    QuantLib::ext::shared_ptr<QuantExt::IrModel> model() const;
+    QuantLib::Handle<QuantExt::IrModel> model() const;
     RelinkableHandle<YieldTermStructure> discountCurve();
     QuantLib::ext::shared_ptr<QuantExt::Parametrization> parametrization() const;
     std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>> swaptionBasket() const;
@@ -101,6 +101,7 @@ public:
                const bool allowChangingFallbacksUnderScenarios = false,
                const bool allowModelFallbacks = false,
                const bool dontCalibrate = false);
+    QuantLib::Handle<QuantExt::LGM> modelAsLgm() const;
 };
 
 } // namespace data
@@ -127,6 +128,7 @@ public:
               const bool allowChangingFallbacksUnderScenarios = false,
               const bool allowModelFallbacks = false,
               const bool dontCalibrate = false);
+    QuantLib::Handle<QuantExt::HwModel> modelAsHw() const;
 };
 
 } // namespace data

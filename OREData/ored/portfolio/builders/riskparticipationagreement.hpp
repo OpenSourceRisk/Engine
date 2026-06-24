@@ -77,9 +77,8 @@ public:
         : RiskParticipationAgreementEngineBuilderBase("LGM", "Grid", tradeTypes) {}
 
 protected:
-    QuantLib::ext::shared_ptr<QuantExt::IrModel> model(const string& id, const string& key,
-                                                       const std::vector<Date>& expiries, const Date& maturity,
-                                                       const std::vector<Real>& strikes);
+    QuantLib::Handle<QuantExt::LGM> model(const string& id, const string& key, const std::vector<Date>& expiries,
+                                          const Date& maturity, const std::vector<Real>& strikes);
 };
 
 //! RPA Numeric LGM engine builder for swap underlyings

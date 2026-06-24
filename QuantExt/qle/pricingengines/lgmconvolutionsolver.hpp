@@ -35,7 +35,7 @@ namespace QuantExt {
 
 class LgmConvolutionSolver {
 public:
-    LgmConvolutionSolver(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const Real sy, const Size ny,
+    LgmConvolutionSolver(const QuantLib::Handle<LinearGaussMarkovModel>& model, const Real sy, const Size ny,
                          const Real sx, const Size nx);
 
     /* get grid size */
@@ -50,10 +50,10 @@ public:
                                     const ValueType zero = ValueType(0.0)) const;
 
     /* the underlying model */
-    const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model() const { return model_; }
+    const QuantLib::Handle<LinearGaussMarkovModel>& model() const { return model_; }
 
 private:
-    QuantLib::ext::shared_ptr<LinearGaussMarkovModel> model_;
+    QuantLib::Handle<LinearGaussMarkovModel> model_;
     int mx_, my_, nx_;
     Real h_;
     std::vector<Real> y_, w_;

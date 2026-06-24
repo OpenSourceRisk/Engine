@@ -1106,6 +1106,9 @@ a configuration example.
     <Parameter name="mporOverlappingPeriods">true</Parameter>
     <Parameter name="quantiles">0.01,0.05,0.95,0.99</Parameter>
     <Parameter name="includeExpectedShortfall">Y</Parameter>
+    <!-- Optional sensitivity-based calculation -->
+    <!-- <Parameter name="sensitivityInputFile">sensitivity.csv</Parameter> -->
+    <!-- <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter> -->
     <Parameter name="tradePnl">N</Parameter>
     <Parameter name="riskFactorBreakdown">N</Parameter>
     <Parameter name="riskClassBreakdown">Y</Parameter>
@@ -1137,6 +1140,13 @@ The parameters have the following interpretation:
   {\tt ExpectedShortfall\_<p>} columns are appended to the output report for each requested quantile. The
   Expected Shortfall at confidence level $p$ is the average P\&L of all scenarios that fall at or below
   the corresponding VaR level; see section~\ref{histsimvar} for the mathematical definition.
+\item {\tt sensitivityInputFile} [Optional]: csv file containing delta, gamma and cross-gamma sensitivities in
+  the same format as {\tt parametricVar.sensitivityInputFile}. If this and {\tt sensitivityConfigFile} are both
+  provided, historical P\&Ls are calculated from the sensitivities and historical scenario shifts instead of full
+  revaluation.
+\item {\tt sensitivityConfigFile} [Optional]: sensitivity scenario configuration used to map historical scenario
+  moves to the risk-factor keys in {\tt sensitivityInputFile}. If either sensitivity input parameter is omitted,
+  the analytic uses the existing full-revaluation path.
 \item {\tt tradePnl} [Optional, default {\tt N}]: if {\tt Y}, the second output report provides a P\&L breakdown by
   trade ID, risk class and risk type.
 \item {\tt riskFactorBreakdown} [Optional, default {\tt N}]: if {\tt Y}, a third output report provides a

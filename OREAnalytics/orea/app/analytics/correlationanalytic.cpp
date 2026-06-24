@@ -156,7 +156,7 @@ void CorrelationAnalyticImpl::setCorrelationReport(const QuantLib::ext::shared_p
     auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
         analytic()->market(), analytic()->configurations().simMarketParams, configuration,
         *inputs_->curveConfigs().get(), *analytic()->configurations().todaysMarketParams, inputs_->continueOnError(),
-        false, true, corrVars->allowPartialScenarios_, false, inputs_->iborFallbackConfig(), false, nullptr);
+        false, true, corrVars->allowPartialScenarios_, inputs_->iborFallbackConfig(), false, nullptr);
 
     QL_REQUIRE(corrVars->scenarioReader_, "ScenarioReader Required.");
     

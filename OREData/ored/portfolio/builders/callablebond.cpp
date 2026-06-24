@@ -35,9 +35,9 @@
 namespace ore {
 namespace data {
 
-ext::shared_ptr<QuantExt::IrModel> CallableBondLgmEngineBuilder::model(const std::string& id, const std::string& ccy,
-                                                                         const QuantLib::Date& maturityDate,
-                                                                         const bool generateAdditionalResults) {
+QuantLib::Handle<QuantExt::LGM> CallableBondLgmEngineBuilder::model(const std::string& id, const std::string& ccy,
+                                                                        const QuantLib::Date& maturityDate,
+                                                                        const bool generateAdditionalResults) {
 
     auto calibration = parseCalibrationType(modelParameter("Calibration"));
     auto calibrationStrategy = parseCalibrationStrategy(modelParameter("CalibrationStrategy"));
@@ -160,7 +160,7 @@ ext::shared_ptr<QuantExt::IrModel> CallableBondLgmEngineBuilder::model(const std
 
     engineFactory()->modelBuilders().insert(std::make_pair(id, calib));
 
-    return calib->model();
+    return calib->modelAsLgm();
 }
 
 Handle<QuantExt::CrossAssetModel> CallableBondCamEngineBuilder::model(const std::string& id, const std::string& ccy,
@@ -380,8 +380,7 @@ CallableBondLgmEngineBuilder::makeEngine(const std::string& id, const std::strin
     Size americanExerciseTimeStepsPerYear = parseInteger(modelParameter("ExerciseTimeStepsPerYear", {}, false, "0"));
 
     return QuantLib::ext::make_shared<QuantExt::NumericLgmCallableBondEngine>(
-        Handle<QuantExt::LGM>(QuantLib::ext::dynamic_pointer_cast<QuantExt::LGM>(lgm)), args...,
-        americanExerciseTimeStepsPerYear, referenceCurve, spread, defaultCurve, incomeCurve, recovery,
+        lgm, args..., americanExerciseTimeStepsPerYear, referenceCurve, spread, defaultCurve, incomeCurve, recovery,
         parseBool(engineParameter("SpreadOnIncomeCurve", {}, false, "true")), generateAdditionalResults());
 }
 
