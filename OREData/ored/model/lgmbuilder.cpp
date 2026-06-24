@@ -157,7 +157,7 @@ void LgmBuilder::initParametrization() const {
     auto m = QuantLib::ext::make_shared<QuantExt::LGM>(lgmParametrization);
     model_.linkTo(m);
     modelLgm_.linkTo(m);
-    params_ = model_->params();
+    params_[referenceDate_] = model_->params();
 
     parametrizationInitializedOnAnchorDate_ = referenceDate_;
 } // initiParametrization()
@@ -171,7 +171,7 @@ void LgmBuilder::calibrate() const {
     if (lgmData->calibrateA() && lgmData->calibrationType() == CalibrationType::Bootstrap) {
         DLOG("running precheck whether initial modelVol values are high enough to produce a signal for the "
              "optimizer.");
-        Array tunedParams(params_);
+        Array tunedParams(params_[referenceDate_]);
         for (Size j = 0; j < swaptionBasket_.size(); ++j) {
             constexpr double minRatio = 1E-4;
             constexpr Size maxAttempts = 10;
@@ -195,10 +195,10 @@ void LgmBuilder::calibrate() const {
                     if (swaptionBasket_[j]->modelValue() / swaptionBasket_[j]->marketValue() < minRatio) {
                         DLOG("swaption #" << j << ": increasing modelVol did not bring modelValue / marketValue below "
                                           << minRatio << ". Continue with original modelVol");
-                        tunedParams[idx] = params_[idx];
+                        tunedParams[idx] = params_[referenceDate_][idx];
                         modelLgm_->setParams(tunedParams);
                     }
-                    DLOG("swaption #" << j << ": change modelVol " << params_[idx] << " -> " << tunedParams[idx]
+                    DLOG("swaption #" << j << ": change modelVol " << params_[referenceDate_][idx] << " -> " << tunedParams[idx]
                                       << ": new modelValue = " << swaptionBasket_[j]->modelValue()
                                       << ", new ratio to marketValue = "
                                       << swaptionBasket_[j]->modelValue() / swaptionBasket_[j]->marketValue());

@@ -132,7 +132,7 @@ protected:
     mutable bool parametrizationIsInitialized_ = false;
     mutable Real error_ = Null<Real>();
     mutable QuantLib::RelinkableHandle<QuantExt::IrModel> model_;
-    mutable Array params_;
+    mutable std::map<Date, Array> params_;
     mutable QuantLib::ext::shared_ptr<QuantExt::Parametrization> parametrization_;
 
     // index of swaption in swaptionBasket for expiries in data->optionExpries(), or null if inactive

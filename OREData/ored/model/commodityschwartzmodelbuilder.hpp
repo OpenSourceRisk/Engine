@@ -122,7 +122,7 @@ private:
 
     mutable std::vector<Real> calibrationErrors_;
 
-    mutable Array params_;
+    mutable std::map<Date, Array> params_;
 };
 } // namespace data
 } // namespace ore

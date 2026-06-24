@@ -191,7 +191,7 @@ void CrossAssetModelBuilder::resetModelParams(const CrossAssetModel::AssetType t
     auto mp = model_->MoveParameter(t, param, index, i);
     for (Size idx = 0; idx < mp.size(); ++idx) {
         if (!mp[idx]) {
-            model_->setParam(idx, params_[idx]);
+            model_->setParam(idx, params_[referenceDate_][idx]);
         }
     }
 }
@@ -215,7 +215,7 @@ void CrossAssetModelBuilder::copyModelParams(const CrossAssetModel::AssetType t0
     std::vector<Real> sourceValues(s0);
     for (Size idx0 = 0, count = 0; idx0 < mp0.size(); ++idx0) {
         if (!mp0[idx0]) {
-            sourceValues[count++] = params_[idx0];
+            sourceValues[count++] = params_[referenceDate_][idx0];
         }
     }
     for (Size idx1 = 0, count = 0; idx1 < mp1.size(); ++idx1) {
@@ -635,8 +635,10 @@ void CrossAssetModelBuilder::buildModel() const {
        This is only used for fx, eq, inf, cr, com, for ir this is handled in LgmBuilder directly.
        Therefore it does not matter that the IR parameters are calibrated at this point already. */
 
-    if (!buildersAreInitialized) {
-        params_ = model_->params();
+    Date today = Settings::instance().evaluationDate();
+    if (referenceDate_ != today) {
+        referenceDate_ = today;
+        params_[referenceDate_] = model_->params();
     }
 
     /*************************

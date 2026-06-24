@@ -283,7 +283,7 @@ void IrModelBuilder::performCalculations() const {
     }
 
     // reset model parameters to ensure identical results on identical market data input
-    model_->setParams(params_);
+    model_->setParams(params_.at(referenceDate_));
 
     // call into calibration routines
     calibrate();

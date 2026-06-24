@@ -127,7 +127,7 @@ void HwBuilder::initParametrization() const {
     model_.linkTo(m);
     modelHw_.linkTo(m);
 
-    params_ = model_->params();
+    params_[referenceDate_] = model_->params();
 
     parametrizationInitializedOnAnchorDate_ = referenceDate_;
 

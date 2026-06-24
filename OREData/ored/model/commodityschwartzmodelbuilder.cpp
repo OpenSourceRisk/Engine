@@ -118,7 +118,7 @@ void CommoditySchwartzModelBuilder::initParametrization() const {
 
     //TODO: constant parametrisation see eqbsmodelbuilder.cpp
     model_ = QuantLib::ext::make_shared<QuantExt::CommoditySchwartzModel>(parametrization_);
-    params_ = model_->params();
+    params_[referenceDate_] = model_->params();
 
 }
 
