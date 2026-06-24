@@ -313,12 +313,6 @@ void HistoricalSimulationVarAnalyticImpl::setVarReport(
             varVars->includeExpectedShortfall_, varVars->tradePnL_, riskFactorBreakdown_,
             inputs_->useAtParCouponsCurves(), inputs_->useAtParCouponsTrades(), riskClassBreakdown_,
             varVars->includeTheta_);
-
-        if (varVars->includeTheta_) {
-            auto thetaMap = computeTheta(loader);
-            auto histSimReport = ext::dynamic_pointer_cast<HistoricalSimulationVarReport>(varReport_);
-            histSimReport->setThetaPerTrade(thetaMap);
-        }
     }
 }
 
