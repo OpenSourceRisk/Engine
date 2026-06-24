@@ -19,8 +19,10 @@
 */
 
 #include <qle/time/dateutilities.hpp>
+#include <ql/errors.hpp>
 
 namespace QuantExt {
+
 namespace DateUtilities {
 
 using QuantLib::Date;
@@ -40,4 +42,31 @@ Date lastWeekday(Weekday dayOfWeek, Month m, Year y) {
 }
 
 } // namespace DateUtilities
+
+using std::ostream;
+
+ostream& operator<<(ostream& os, DateDeltaUnit unit) {
+    switch (unit)
+    {
+    case DateDeltaUnit::BusinessDays:
+        return os << "BusinessDays";
+    case DateDeltaUnit::CalendarDays:
+        return os << "CalendarDays";
+    default:
+        QL_FAIL("Unknown DateDeltaUnit (" << static_cast<int>(unit) << ")");
+    }
+}
+
+ostream& operator<<(ostream& os, DateDeltaAnchor anchor) {
+    switch (anchor)
+    {
+    case DateDeltaAnchor::Adjusted:
+        return os << "Adjusted";
+    case DateDeltaAnchor::Unadjusted:
+        return os << "Unadjusted";
+    default:
+        QL_FAIL("Unknown DateDeltaAnchor (" << static_cast<int>(anchor) << ")");
+    }
+}
+
 } // namespace QuantExt

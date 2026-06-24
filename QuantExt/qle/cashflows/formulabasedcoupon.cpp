@@ -65,7 +65,7 @@ FormulaBasedLeg& FormulaBasedLeg::withPaymentAdjustment(BusinessDayConvention co
     return *this;
 }
 
-FormulaBasedLeg& FormulaBasedLeg::withPaymentLag(Natural lag) {
+FormulaBasedLeg& FormulaBasedLeg::withPaymentLag(Integer lag) {
     paymentLag_ = lag;
     return *this;
 }

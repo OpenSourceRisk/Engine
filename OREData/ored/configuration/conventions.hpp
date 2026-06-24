@@ -671,8 +671,9 @@ public:
     //! Detailed constructor
     TenorBasisSwapConvention(const string& id, const string& payIndex, const string& receiveIndex,
                              const string& receiveFrequency = "", const string& payFrequency = "",
-                             const string& spreadOnRec = "", const string& includeSpread = "",
-                             const string& subPeriodsCouponType = "");
+                             const string& spreadOnRec = "", const string& includeSpread = "", 
+                             const string& subPeriodsCouponType = "", const string& strPayIsAveraged = "",
+                             const string& strRecIsAveraged = "");
     //@}
 
     //! \name Inspectors
@@ -686,6 +687,8 @@ public:
     bool spreadOnRec() const { return spreadOnRec_; }
     bool includeSpread() const { return includeSpread_; }
     SubPeriodsCoupon1::Type subPeriodsCouponType() const { return subPeriodsCouponType_; }
+    bool isPayAveraged() const { return isPayAveraged_; }
+    bool isRecAveraged() const { return isRecAveraged_; }
     //@}
 
     //! \name Serialisation
@@ -701,6 +704,8 @@ private:
     bool spreadOnRec_;
     bool includeSpread_;
     SubPeriodsCoupon1::Type subPeriodsCouponType_;
+    bool isPayAveraged_ = false;
+    bool isRecAveraged_ = false;
 
     // Strings to store the inputs
     string strPayIndex_;
@@ -710,6 +715,8 @@ private:
     string strSpreadOnRec_;
     string strIncludeSpread_;
     string strSubPeriodsCouponType_;
+    string strPayIsAveraged_;
+    string strRecIsAveraged_;
 };
 
 //! Container for storing conventions for Tenor Basis Swaps quoted as a spread of two interest rate swaps

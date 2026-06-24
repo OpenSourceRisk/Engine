@@ -693,14 +693,8 @@ std::optional<double> CrifRecordGenerator::CdsAtmVol(const std::string& tradeId,
 CrifRecordData CrifRecordGenerator::bondFutureVolatilityImpl(const ore::analytics::SensitivityRecord& sr,
     const std::vector<std::string>& rfTokens) {
 
-    auto data = defaultRecord(sr, rfTokens, true, false);
-
-    // Use the bond future currency as qualifier.
-    data.qualifier = sr.tradeCurrency;
-
-    // For bond future volatility, we expect rfTokens to be of the form rfTokens[0] = a CRIF IR expiry tenor 
-    // and rfTokens[1] = ATM. For example, rfTokens[0] = "2W" and rfTokens[1] = "ATM".
-    data.sensitivity = volatilityData_.vegaTimesVol(sr.key_1.keytype, sr.key_1.name, sr.delta, rfTokens.front());
+    CrifRecordData data;
+    ALOG("CrifRecordGenerator: Bond future volatility sensitivity not covered, returning empty CRIF record data");
     return data;
 }
 

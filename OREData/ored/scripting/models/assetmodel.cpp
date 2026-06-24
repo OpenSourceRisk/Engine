@@ -93,83 +93,88 @@ AssetModel::AssetModel(
 
     setupDatesAndTimes();
 
-    // populate volTimesStrikes, and curve times
+    // for FD there are some more points to do
 
-    volTimesStrikes_.clear();
-    curveTimes_.clear();
+    if (type_ == Type::FD) {
 
-    volTimesStrikes_.resize(indices_.size());
-    curveTimes_.insert(timeGrid_.begin() + 1, timeGrid_.end());
-    for (auto const& d : addDates_) {
-        if (d > curves_.front()->referenceDate()) {
-            curveTimes_.insert(curves_.front()->timeFromReference(d));
-        }
-    }
+        // if we have one underlying + one FX index, we do a 1D PDE with a quanto adjustment under certain circumstances
 
-    // for MC we are done at this point
-
-    if (type_ == Type::MC)
-        return;
-
-    // for FD add volTimesStrikes and curve times for (dynamic) mesher
-
-    if (!params_.staticMesher) {
-        auto calibrationStrikes = getCalibrationStrikes();
-        for (Size i = 0; i < indices_.size(); ++i)
-            volTimesStrikes_[i].insert({{timeGrid_.back(), calibrationStrikes[0]}});
-    }
-
-    // if we have one underlying + one FX index, we do a 1D PDE with a quanto adjustment under certain circumstances
-
-    if (indices_.size() == 2) {
-        // check whether we have exactly one pay ccy ...
-        if (payCcys_.size() == 1) {
-            std::string payCcy = *payCcys_.begin();
-            // ... and the second index is an FX index suitable to do a quanto adjustment
-            // from the first index's currency to the pay ccy ...
-            std::string mainIndexCcy = indexCurrencies_[0];
-            if (indices_[0].isFx()) {
-                mainIndexCcy = indices_[0].fx()->targetCurrency().code();
-            }
-            if (indices_[1].isFx()) {
-                std::string ccy1 = indices_[1].fx()->sourceCurrency().code();
-                std::string ccy2 = indices_[1].fx()->targetCurrency().code();
-                if ((ccy1 == mainIndexCcy && ccy2 == payCcy) || (ccy1 == payCcy && ccy2 == mainIndexCcy)) {
-                    applyQuantoAdjustment_ = true;
-                    quantoSourceCcyIndex_ = std::distance(
-                        currencies.begin(), std::find(currencies.begin(), currencies.end(), mainIndexCcy));
-                    quantoTargetCcyIndex_ =
-                        std::distance(currencies.begin(), std::find(currencies.begin(), currencies.end(), payCcy));
-                    quantoCorrelationMultiplier_ = ccy2 == payCcy ? 1.0 : -1.0;
+        if (indices_.size() == 2) {
+            // check whether we have exactly one pay ccy ...
+            if (payCcys_.size() == 1) {
+                std::string payCcy = *payCcys_.begin();
+                // ... and the second index is an FX index suitable to do a quanto adjustment
+                // from the first index's currency to the pay ccy ...
+                std::string mainIndexCcy = indexCurrencies_[0];
+                if (indices_[0].isFx()) {
+                    mainIndexCcy = indices_[0].fx()->targetCurrency().code();
                 }
-                DLOG("AssetModel model will be run for index '"
-                     << indices_[0].name() << "' with a quanto-adjustment " << currencies_[quantoSourceCcyIndex_]
-                     << " => " << currencies_[quantoTargetCcyIndex_] << " derived from index '" << indices_[1].name()
-                     << "'");
-                return;
+                if (indices_[1].isFx()) {
+                    std::string ccy1 = indices_[1].fx()->sourceCurrency().code();
+                    std::string ccy2 = indices_[1].fx()->targetCurrency().code();
+                    if ((ccy1 == mainIndexCcy && ccy2 == payCcy) || (ccy1 == payCcy && ccy2 == mainIndexCcy)) {
+                        applyQuantoAdjustment_ = true;
+                        quantoSourceCcyIndex_ = std::distance(
+                            currencies.begin(), std::find(currencies.begin(), currencies.end(), mainIndexCcy));
+                        quantoTargetCcyIndex_ =
+                            std::distance(currencies.begin(), std::find(currencies.begin(), currencies.end(), payCcy));
+                        quantoCorrelationMultiplier_ = ccy2 == payCcy ? 1.0 : -1.0;
+                    }
+                    DLOG("AssetModel model will be run for index '"
+                         << indices_[0].name() << "' with a quanto-adjustment " << currencies_[quantoSourceCcyIndex_]
+                         << " => " << currencies_[quantoTargetCcyIndex_] << " derived from index '"
+                         << indices_[1].name() << "'");
+                    return;
+                }
             }
         }
+
+        // check we have 1 index or 2 indices + quantoAdjustment, otherwise we can not handle this
+
+        QL_REQUIRE(indices_.size() == 1 || applyQuantoAdjustment_,
+                   "AssetModel: model does not support multi-dim fd schemes currently, use mc instead, got "
+                       << indices_.size() << " indices and can not apply quanto-adjustment to reduce dimension to 1");
     }
 
-    // add volTimesStrikes and curve times for quanto adjsutment
+    // both FD and MC: set volTimesStrikes and curve times functors
 
-    if (applyQuantoAdjustment_) {
-
-        std::set<std::pair<Real, Real>> tmp;
-        for (Size i = 0; i < timeGrid_.size(); ++i) {
-            tmp.insert(std::make_pair(timeGrid_[i], Null<Real>()));
+    volTimesStrikes_ = [this](const TimeGrid timeGrid) {
+        std::vector<std::set<std::pair<Real, Real>>> result(indices_.size());
+        if (type_ == Type::FD) {
+            if (!params_.staticMesher) {
+                auto calibrationStrikes = getCalibrationStrikes();
+                for (Size i = 0; i < indices_.size(); ++i)
+                    result[i].insert({{timeGrid.back(), calibrationStrikes[0]}});
+            }
+            if (applyQuantoAdjustment_) {
+                std::set<std::pair<Real, Real>> tmp;
+                for (Size i = 0; i < timeGrid_.size(); ++i) {
+                    tmp.insert(std::make_pair(timeGrid[i], Null<Real>()));
+                }
+                for (Size i = 0; i < indices_.size(); ++i)
+                    result[i].insert(tmp.begin(), tmp.end());
+            }
         }
-        for (Size i = 0; i < indices_.size(); ++i)
-            volTimesStrikes_[i].insert(tmp.begin(), tmp.end());
-    }
+        return result;
+    };
 
-    // check we have 1 index or 2 indices + quantoAdjustment, otherwise we can not handle this
-
-    QL_REQUIRE(indices_.size() == 1 || applyQuantoAdjustment_,
-               "AssetModel: model does not support multi-dim fd schemes currently, use mc instead, got "
-                   << indices_.size() << " indices and can not apply quanto-adjustment to reduce dimension to 1");
+    curveTimes_ = [this](const TimeGrid& timeGrid) {
+        std::set<Real> curveTimes;
+        for (auto const& d : addDates_) {
+            if (d > curves_.front()->referenceDate()) {
+                curveTimes.insert(curves_.front()->timeFromReference(d));
+            }
+        }
+        return curveTimes;
+    };
 
 } // AssetModel ctor
+
+const std::function<std::set<Real>(const TimeGrid&)> AssetModel::curveTimes() const { return curveTimes_; }
+
+const std::function<std::vector<std::set<std::pair<Real, Real>>>(const TimeGrid&)> AssetModel::volTimesStrikes() const {
+    return volTimesStrikes_;
+};
 
 void AssetModel::setModel(const Handle<AssetModelWrapper>& model) {
     unregisterWith(model_);
@@ -192,7 +197,7 @@ void AssetModel::performCalculations() const {
                                                           << indices_.size() << ")");
 
     QL_REQUIRE(!inTrainingPhase_, "AssetModel::performCalculations(): state inTrainingPhase should be false, this was "
-                                  "not resetted appropriately.");
+                                  "not reset appropriately. Internal error.");
 
     referenceDate_ = curves_.front()->referenceDate();
 

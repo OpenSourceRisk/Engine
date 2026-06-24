@@ -551,12 +551,12 @@ BondFutureUtils::IndexResults BondFutureUtils::createIndex(const string& contrac
 }
 
 
-std::string_view futureContractName(std::string_view futureSurfaceName) {
+std::string futureContractName(std::string_view futureSurfaceName) {
     if (futureSurfaceName.ends_with("_CALL"))
         futureSurfaceName.remove_suffix(5);
     else if (futureSurfaceName.ends_with("_PUT"))
         futureSurfaceName.remove_suffix(4);
-    return futureSurfaceName;
+    return std::string{ futureSurfaceName };
 }
 
 } // namespace data

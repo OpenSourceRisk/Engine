@@ -573,6 +573,7 @@
         <xs:element type="stubInterpolation" name="BackStubInterpolation" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:boolean" name="StubUseOriginalCurve" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:boolean" name="ObservationShift" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:integer" name="RoundingPrecision" minOccurs="0" maxOccurs="1"/>
       </xs:all>
     </xs:complexType>
   </xs:element>
@@ -583,7 +584,7 @@
         <xs:element name="Coupons" minOccurs="0" maxOccurs="1">
           <xs:complexType>
             <xs:sequence>
-              <xs:element name="Coupon" maxOccurs="unbounded">
+              <xs:element name="Coupon" minOccurs="0" maxOccurs="unbounded">
                 <xs:complexType>
                   <xs:simpleContent>
                     <xs:extension base="xs:float">
@@ -928,7 +929,11 @@
       <xs:element type="extendedCurrencyCode" name="Currency" minOccurs="0"/>
       <xs:element type="businessDayConvention" name="PaymentConvention" minOccurs="0"/>
       <xs:element type="paymentLag" name="PaymentLag" minOccurs="0"/>
+      <xs:element type="dateDeltaUnit" name="PaymentLagUnit" minOccurs="0"/>
+      <xs:element type="dateDeltaAnchor" name="PaymentLagAnchor" minOccurs="0"/>
       <xs:element type="xs:integer" name="NotionalPaymentLag" minOccurs="0"/>
+      <xs:element type="dateDeltaUnit" name="NotionalPaymentLagUnit" minOccurs="0"/>
+      <xs:element type="dateDeltaAnchor" name="NotionalPaymentLagAnchor" minOccurs="0"/>
       <xs:element type="xs:string" name="PaymentCalendar" minOccurs="0"/>
       <xs:element type="dayCounter" name="DayCounter" minOccurs="0"/>
       <xs:element name="Amortizations" minOccurs="0" maxOccurs="1">
@@ -994,6 +999,8 @@
       <xs:element type="dayCounter" name="DayCounter"/>
       <xs:element type="businessDayConvention" name="PaymentConvention" minOccurs="0"/>
       <xs:element type="paymentLag" name="PaymentLag" minOccurs="0"/>
+      <xs:element type="dateDeltaUnit" name="PaymentLagUnit" minOccurs="0"/>
+      <xs:element type="dateDeltaAnchor" name="PaymentLagAnchor" minOccurs="0"/>
       <xs:element type="xs:string" name="PaymentCalendar" minOccurs="0"/>
       <xs:element name="Notionals">
         <xs:complexType>
@@ -1422,6 +1429,7 @@
       <xs:enumeration value="FxRainbowOption"/>
       <xs:enumeration value="EquityRainbowOption"/>
       <xs:enumeration value="CommodityRainbowOption"/>
+      <xs:enumeration value="ForwardVolatilityAgreement"/>
       <xs:enumeration value="KnockOutSwap"/>
       <xs:enumeration value="CashPosition"/>
       <xs:enumeration value="RateDigitalOption"/>
@@ -2078,7 +2086,7 @@
       <xs:element type="xs:string" name="Type"/>
       <xs:element type="xs:string" name="Name"/>
       <xs:element type="xs:string" name="IdentifierType" minOccurs="0"/>
-      <xs:element type="currencyCode" name="Currency" minOccurs="0"/>
+      <xs:element type="extendedCurrencyCode" name="Currency" minOccurs="0"/>
       <xs:element type="xs:string" name="Exchange" minOccurs="0"/>
       <xs:element type="xs:float" name="Weight" minOccurs="0"/>
       <xs:element type="xs:string" name="PriceType" minOccurs="0"/>
@@ -2333,6 +2341,8 @@
       <xs:element type="fxTermsData" name="FXTerms" minOccurs="0" maxOccurs="1"/>
       <xs:element type="scheduleData" name="ScheduleData" maxOccurs="1" minOccurs="1"/>
       <xs:element type="xs:boolean" name="PayBondCashFlowsImmediately" minOccurs="0"/>
+      <xs:element type="dateDeltaUnit" name="PaymentLagUnit" minOccurs="0"/>
+      <xs:element type="dateDeltaAnchor" name="PaymentLagAnchor" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 
@@ -2485,6 +2495,8 @@
       <xs:element type="extendedCurrencyCode" name="InitialPriceCurrency" minOccurs="0"/>
       <xs:element type="fxTermsData" name="FXTerms" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:boolean" name="PayUnderlyingCashFlowsImmediately" minOccurs="0"/>
+      <xs:element type="dateDeltaUnit" name="PaymentLagUnit" minOccurs="0"/>
+      <xs:element type="dateDeltaAnchor" name="PaymentLagAnchor" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 
@@ -2495,13 +2507,13 @@
       <xs:enumeration value="Fixed"/>
     </xs:restriction>
   </xs:simpleType>
-  
+
   <xs:simpleType name="trsFxConversion">
     <xs:restriction base="xs:string">
       <xs:enumeration value="Start"/>
       <xs:enumeration value="End"/>
     </xs:restriction>
-  </xs:simpleType>  
+  </xs:simpleType>
 
   <xs:complexType name="trsFundingData">
     <xs:choice minOccurs="0" maxOccurs="unbounded">
@@ -2656,7 +2668,7 @@
   </xs:complexType>
 
   <xs:complexType name="cboBondBasketData">
-    
+
 	<xs:sequence>
 		<xs:element ref="subTradeGroup" maxOccurs="unbounded"/>
       <!-- <xs:element name="Trade" maxOccurs="unbounded"> -->
@@ -3412,7 +3424,7 @@
       <xs:element type="stFreeStyleCurrency" name="PayCcy"/>
     </xs:all>
   </xs:complexType>
-  
+
   <xs:complexType name="pairwiseGeometricVarianceDispersionSwapData">
     <xs:all>
       <xs:element type="stFreeStyleLongShort" name="LongShort"/>
@@ -3611,16 +3623,7 @@
                     <xs:choice>
                       <xs:element name="Value"/>
                       <xs:element type="scheduleData" name="ScheduleData"/>
-                      <xs:element name="DerivedSchedule">
-                        <xs:complexType>
-                          <xs:all>
-                            <xs:element type="xs:string" name="BaseSchedule"/>
-                            <xs:element type="xs:string" name="Shift"/>
-                            <xs:element type="xs:string" name="Calendar"/>
-                            <xs:element type="xs:string" name="Convention"/>
-                          </xs:all>
-                        </xs:complexType>
-                      </xs:element>
+                      <xs:element type="DerivedScheduleType" name="DerivedSchedule"/>
                     </xs:choice>
                     <xs:element type="bool" name="ApplyCoarsening" minOccurs="0"/>
                   </xs:sequence>
@@ -3780,16 +3783,7 @@
     <xs:sequence>
       <xs:choice>
         <xs:element type="scheduleData" name="ScheduleData"/>
-        <xs:element name="DerivedSchedule">
-          <xs:complexType>
-            <xs:all>
-              <xs:element type="xs:string" name="BaseSchedule"/>
-              <xs:element type="xs:string" name="Shift"/>
-              <xs:element type="xs:string" name="Calendar"/>
-              <xs:element type="xs:string" name="Convention"/>
-            </xs:all>
-          </xs:complexType>
-        </xs:element>
+        <xs:element type="DerivedScheduleType" name="DerivedSchedule"/>
       </xs:choice>
     </xs:sequence>
   </xs:complexType>
@@ -4564,13 +4558,18 @@
       <xs:element type="stFreeStyleEvent" name="FvaDate"/>
       <xs:element type="stFreeStyleEvent" name="OptionExpiry"/>
       <xs:element type="stFreeStyleEvent" name="PremiumDate"/>
-
-      <xs:element type="stFreeStyleIndex" name="Underlying"/>
+      <xs:element type="underlying" name="Underlying"/>
       <xs:element type="stFreeStyleLongShort" name="LongShort"/>
       <xs:element type="stFreeStyleNumber" name="ImpliedVolStrike"/>
       <xs:element type="stFreeStyleNumber" name="Quantity"/>
       <xs:element type="stFreeStyleCurrency" name="PayCcy"/>
       <xs:element type="stFreeStyleEvent" name="SettlementDate"/>
+      <xs:element type="stFreeStyleNumber" name="UnderlyingStrike" minOccurs="0"/>
+      <xs:element type="stFreeStyleDayCounter" name="DayCountFraction"/>
+      <xs:element type="stFreeStyleNumber" name="DividendYield"/>
+      <xs:element type="stFreeStyleNumber" name="FixedRate"/>
+      <xs:element type="xs:string" name="PayoffType" minOccurs="0"/>
+
     </xs:all>
   </xs:complexType>
 

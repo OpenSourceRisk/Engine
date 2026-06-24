@@ -98,6 +98,7 @@ public:
     const map<string, string>& swapIndices() const { return swapIndices_; }
     const string& interpolation() const { return interpolation_; }
     const string& extrapolation() const { return extrapolation_; }
+    const string& yieldCurveRollDown() const { return yieldCurveRollDown_; }
     const map<string, vector<Period>>& yieldCurveTenors() const { return yieldCurveTenors_; }
 
     bool simulateFxSpots() const { return paramsSimulate(RiskFactorKey::KeyType::FXSpot); }
@@ -173,6 +174,7 @@ public:
     const vector<Period>& defaultTenors(const string& key) const;
     bool hasDefaultTenors(const string& key) const { return defaultTenors_.count(key) > 0; }
     const string& defaultCurveExtrapolation() const { return defaultCurveExtrapolation_; }
+    const string& defaultCurveRollDown() const { return defaultCurveRollDown_; }
 
     bool simulateCdsVols() const { return paramsSimulate(RiskFactorKey::KeyType::CDSVolatility); }
     bool simulateCdsVolATMOnly() const { return cdsVolSimulateATMOnly_; }    
@@ -233,6 +235,7 @@ public:
 
     // Commodity price curve data getters
     bool commodityCurveSimulate() const { return paramsSimulate(RiskFactorKey::KeyType::CommodityCurve); }
+    const std::string& commodityCurveRollDown() const { return commodityCurveRollDown_; }
     std::vector<std::string> commodityNames() const;
     const std::vector<QuantLib::Period>& commodityCurveTenors(const std::string& commodityName) const;
     bool hasCommodityCurveTenors(const std::string& commodityName) const;
@@ -296,6 +299,7 @@ public:
     void setSwapIndex(const std::string& key, const std::string& ind) { swapIndices_[key] = ind; }
     string& interpolation() { return interpolation_; }
     string& extrapolation() { return extrapolation_; }
+    string& yieldCurveRollDown() { return yieldCurveRollDown_; }
 
     void setSimulateFxSpots(bool simulate);
     void setFxCcyPairs(vector<string> names);
@@ -351,6 +355,7 @@ public:
     void setDefaultTenors(const string& key, const vector<Period>& p);
     void setDefaultCurveCalendars(const string& key, const string& p);
     void setDefaultCurveExtrapolation(const std::string& e) { defaultCurveExtrapolation_ = e; }
+    void setDefaultCurveRollDown(const std::string& e) { defaultCurveRollDown_ = e; }
 
     void setSimulateCdsVols(bool simulate);
     void setSimulateCdsVolsATMOnly(bool simulateATMOnly) { cdsVolSimulateATMOnly_ = simulateATMOnly; }
@@ -415,6 +420,7 @@ public:
 
     // Commodity price curve data setters
     void setCommodityCurveSimulate(bool simulate);
+    void setCommodityCurveRollDown(const string& r);
     void setCommodityNames(vector<string> names);
     void setCommodityCurves(vector<string> names);
     void setCommodityCurveTenors(const std::string& commodityName, const std::vector<QuantLib::Period>& p);
@@ -485,6 +491,7 @@ private:
     map<string, string> swapIndices_;
     string interpolation_;
     string extrapolation_;
+    string yieldCurveRollDown_;
 
     map<string, bool> swapVolIsCube_;
     bool swapVolSimulateATMOnly_ = false;
@@ -520,6 +527,7 @@ private:
     map<string, string> defaultCurveCalendars_;
     map<string, vector<Period>> defaultTenors_;
     string defaultCurveExtrapolation_;
+    string defaultCurveRollDown_;
 
     bool cdsVolSimulateATMOnly_ = false;
     vector<Period> cdsVolExpiries_;
@@ -563,6 +571,7 @@ private:
 
     // Commodity price curve data
     std::map<std::string, std::vector<QuantLib::Period>> commodityCurveTenors_;
+    std::string commodityCurveRollDown_;
 
     // Commodity volatility data
     bool commodityVolSimulateATMOnly_ = false;

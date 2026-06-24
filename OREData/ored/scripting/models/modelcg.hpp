@@ -172,8 +172,8 @@ public:
     // if true use sticky close out date impmlied market for all subsequent calls;
     virtual void useStickyCloseOutDates(const bool b) const;
 
-    // the eval date
-    virtual const Date& referenceDate() const = 0;
+    // the current ref date of the model
+    const Date& referenceDate() const { return referenceDate_; };
 
     // the (actual) time from reference measured in the model
     virtual Real actualTimeFromReference(const Date& d) const = 0;
@@ -321,6 +321,9 @@ protected:
 
     // the underlying computation graph
     QuantLib::ext::shared_ptr<QuantExt::ComputationGraph> g_;
+
+    // the current reference date of the model
+    mutable Date referenceDate_;
 
     // container holding model parameters and cached parameters
     mutable std::set<ModelCG::ModelParameter> modelParameters_;

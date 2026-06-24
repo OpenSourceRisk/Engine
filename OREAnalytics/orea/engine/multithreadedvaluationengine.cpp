@@ -101,8 +101,9 @@ MultiThreadedValuationEngine::MultiThreadedValuationEngine(
     const std::function<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>(
         const QuantLib::Date&, const std::set<std::string>&, const std::vector<QuantLib::Date>&, const QuantLib::Size)>&
         cptyCubeFactory,
-    const std::string& context, const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& offSetScenario,
-    const bool useAtParCouponsCurves, const bool useAtParCouponsTrades)
+    const QuantLib::ext::shared_ptr<FixingManager>& fixingManager, const std::string& context,
+    const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& offSetScenario, const bool useAtParCouponsCurves,
+    const bool useAtParCouponsTrades)
     : nThreads_(nThreads), today_(today), dateGrid_(dateGrid), nSamples_(nSamples), loader_(loader),
       scenarioGenerator_(scenarioGenerator), engineData_(engineData), curveConfigs_(curveConfigs),
       todaysMarketParams_(todaysMarketParams), configuration_(configuration), simMarketData_(simMarketData),
@@ -111,8 +112,8 @@ MultiThreadedValuationEngine::MultiThreadedValuationEngine(
       handlePseudoCurrenciesTodaysMarket_(handlePseudoCurrenciesTodaysMarket),
       handlePseudoCurrenciesSimMarket_(handlePseudoCurrenciesSimMarket), recalibrateModels_(recalibrateModels),
       cubeFactory_(cubeFactory), nettingSetCubeFactory_(nettingSetCubeFactory), cptyCubeFactory_(cptyCubeFactory),
-      context_(context), offsetScenario_(offSetScenario), useAtParCouponsCurves_(useAtParCouponsCurves),
-      useAtParCouponsTrades_(useAtParCouponsTrades) {
+      fixingManager_(fixingManager), context_(context), offsetScenario_(offSetScenario),
+      useAtParCouponsCurves_(useAtParCouponsCurves), useAtParCouponsTrades_(useAtParCouponsTrades) {
 
     QL_REQUIRE(nThreads_ != 0, "MultiThreadedValuationEngine: nThreads must be > 0");
 
@@ -146,7 +147,8 @@ void MultiThreadedValuationEngine::setAggregationScenarioData(
 
 void MultiThreadedValuationEngine::buildCube(
     const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
-    const std::function<std::vector<QuantLib::ext::shared_ptr<ore::analytics::ValuationCalculator>>()>& calculators,
+    const std::function<std::vector<QuantLib::ext::shared_ptr<ore::analytics::ValuationCalculator>>(
+        const QuantLib::Size, const QuantLib::ext::shared_ptr<ore::data::Portfolio>&)>& calculators,
     const ValuationEngine::ErrorPolicy errorPolicy,
     const std::function<std::vector<QuantLib::ext::shared_ptr<ore::analytics::CounterpartyCalculator>>()>&
         cptyCalculators,
@@ -362,7 +364,7 @@ void MultiThreadedValuationEngine::buildCube(
                 QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket> simMarket =
                     QuantLib::ext::make_shared<ore::analytics::ScenarioSimMarket>(
                         initMarket, simMarketData_, configuration_, *curveConfigs_, *todaysMarketParams_, true,
-                        useSpreadedTermStructures_, cacheSimData_, false, iborFallbackConfig_,
+                        useSpreadedTermStructures_, cacheSimData_, false, true, iborFallbackConfig_,
                         handlePseudoCurrenciesSimMarket_, offsetScenario_);
 
                 // set aggregation scenario data, but only in one of the sim markets, that's sufficient to populate it
@@ -392,12 +394,13 @@ void MultiThreadedValuationEngine::buildCube(
                 // build valuation engine
 
                 auto valEngine = QuantLib::ext::make_shared<ore::analytics::ValuationEngine>(
-                    today_, dateGrid_, simMarket, engineFactory->modelBuilders(), recalibrateModels_);
+                    today_, dateGrid_, simMarket, engineFactory->modelBuilders(), recalibrateModels_,
+                    fixingManager_ ? QuantLib::ext::make_shared<FixingManager>(*fixingManager_) : nullptr);
                 valEngine->registerProgressIndicator(progressIndicator);
 
                 // build mini-cube
 
-                valEngine->buildCube(portfolio, miniCubes_[id], calculators(), errorPolicy, mporStickyDate,
+                valEngine->buildCube(portfolio, miniCubes_[id], calculators(id, portfolio), errorPolicy, mporStickyDate,
                                      miniNettingSetCubes_[id], miniCptyCubes_[id],
                                      cptyCalculators ? cptyCalculators()
                                                      : std::vector<QuantLib::ext::shared_ptr<CounterpartyCalculator>>(),

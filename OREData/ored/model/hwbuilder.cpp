@@ -52,7 +52,7 @@ HwBuilder::HwBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& market,
 
 void HwBuilder::initParametrization() const {
 
-    if (parametrizationInitialized_)
+    if (parametrizationInitializedOnAnchorDate_ == Settings::instance().evaluationDate())
         return;
 
     auto hwData = QuantLib::ext::dynamic_pointer_cast<HwModelData>(data_);
@@ -120,7 +120,8 @@ void HwBuilder::initParametrization() const {
         QuantLib::ext::dynamic_pointer_cast<IrHwParametrization>(parametrization_), measure_, discretization_,
         evaluateBankAccount_);
     params_ = model_->params();
-    parametrizationInitialized_ = true;
+
+    parametrizationInitializedOnAnchorDate_ = Settings::instance().evaluationDate();
 
 } // initiParametrization()
 

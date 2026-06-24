@@ -628,7 +628,6 @@
 #include <qle/termstructures/spreadedsurvivalprobabilitytermstructure.hpp>
 #include <qle/termstructures/spreadedswaptionvolatility.hpp>
 #include <qle/termstructures/spreadedyoyvolsurface.hpp>
-#include <qle/termstructures/staticallycorrectedyieldtermstructure.hpp>
 #include <qle/termstructures/strippedcpivolatilitystructure.hpp>
 #include <qle/termstructures/strippedoptionlet.hpp>
 #include <qle/termstructures/strippedoptionletadapter.hpp>

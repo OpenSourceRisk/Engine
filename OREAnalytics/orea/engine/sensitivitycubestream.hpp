@@ -25,12 +25,16 @@
 #include <orea/cube/sensitivitycube.hpp>
 #include <orea/engine/sensitivitystream.hpp>
 
+#include <ored/portfolio/portfolio.hpp>
+
 #include <map>
 #include <set>
 #include <string>
 
 namespace ore {
 namespace analytics {
+
+using ore::data::Portfolio;
 
 /*! Class for streaming SensitivityRecords from a SensitivityCube
  */

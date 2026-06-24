@@ -109,13 +109,6 @@ GaussianCamCG::GaussianCamCG(
 
 } // GaussianCamCG ctor
 
-const Date& GaussianCamCG::referenceDate() const {
-    calculate();
-    return referenceDate_;
-}
-
-Size GaussianCamCG::size() const { return ModelCG::size(); }
-
 void GaussianCamCG::performCalculations() const {
 
     // needed for base class performCalculations()
@@ -726,6 +719,7 @@ std::size_t GaussianCamCG::getDiscount(const Size idx, const Date& s, const Date
 
 std::size_t GaussianCamCG::numeraire(const Date& s, const std::string& currency,
                                      const std::string& localBaseCurrency) const {
+    calculate();
     auto ccy = std::find(currencies_.begin(), currencies_.end(), currency.empty() ? baseCurrency() : currency);
     QL_REQUIRE(ccy != currencies_.end(), "currency " << currency << " not handled");
     Size cidx = std::distance(currencies_.begin(), ccy);
@@ -769,6 +763,8 @@ std::set<std::size_t> GaussianCamCG::npvRegressors(const Date& obsdate,
                                                    const std::optional<std::set<std::string>>& relevantCurrencies,
                                                    const std::string& localBaseCurrency,
                                                    const std::string& localBaseCurrencyPaths) const {
+
+    calculate();
 
     std::set<std::size_t> state;
 

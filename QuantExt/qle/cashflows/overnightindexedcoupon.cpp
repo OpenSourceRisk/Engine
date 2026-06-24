@@ -75,10 +75,11 @@ OvernightIndexedCoupon::OvernightIndexedCoupon(const Date& paymentDate, Real nom
                                                bool includeSpread, const Period& lookback, const Natural rateCutoff,
                                                const Natural fixingDays, const Date& rateComputationStartDate,
                                                const Date& rateComputationEndDate, bool observationShift,
-                                               bool staleDatesCheck)
+                                               bool staleDatesCheck, const ext::optional<Rounding>& rounding)
     : OvernightIndexedCouponBase(rateTypeFromIndex(overnightIndex), paymentDate, nominal, startDate, endDate,
         overnightIndex, gearing, spread, refPeriodStart, refPeriodEnd, dayCounter, telescopicValueDates, lookback,
-        rateCutoff, fixingDays, rateComputationStartDate, rateComputationEndDate, observationShift, staleDatesCheck),
+        rateCutoff, fixingDays, rateComputationStartDate, rateComputationEndDate, observationShift, staleDatesCheck,
+        rounding),
         includeSpread_(includeSpread) {
     if (rateType() == RateType::BrlCdi)
         setPricer(ext::make_shared<BRLCdiCouponPricer>());
@@ -698,7 +699,7 @@ OvernightLeg& OvernightLeg::withPaymentCalendar(const Calendar& cal) {
     return *this;
 }
 
-OvernightLeg& OvernightLeg::withPaymentLag(Natural lag) {
+OvernightLeg& OvernightLeg::withPaymentLag(Integer lag) {
     paymentLag_ = lag;
     return *this;
 }
@@ -820,6 +821,11 @@ OvernightLeg& OvernightLeg::withStaleDatesCheck(bool staleDatesCheck) {
     return *this;
 }
 
+OvernightLeg& OvernightLeg::withRounding(const ext::optional<Rounding>& rounding) {
+    rounding_ = rounding;
+    return *this;
+}
+
 OvernightLeg::operator Leg() const {
 
     QL_REQUIRE(!notionals_.empty(), "no notional given for compounding overnight leg");
@@ -911,7 +917,7 @@ OvernightLeg::operator Leg() const {
                 paymentDate, detail::get(notionals_, i, 1.0), start, end, overnightIndex_,
                 detail::get(gearings_, i, 1.0), detail::get(spreads_, i, 0.0), refStart, refEnd, paymentDayCounter_,
                 telescopicValueDates_, includeSpread_, lookback_, rateCutoff_, fixingDays_, rateComputationStartDate,
-                rateComputationEndDate, observationShift_, staleDatesCheck_);
+                rateComputationEndDate, observationShift_, staleDatesCheck_, rounding_);
             if (couponPricer_) {
                 cpn->setPricer(couponPricer_);
             }

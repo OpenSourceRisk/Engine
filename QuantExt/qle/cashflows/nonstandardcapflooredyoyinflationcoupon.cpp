@@ -176,7 +176,8 @@ NonStandardYoYInflationLeg::NonStandardYoYInflationLeg(const Schedule& schedule,
                                                        const ext::shared_ptr<ZeroInflationIndex>& index,
                                                        const Period& observationLag)
     : schedule_(schedule), index_(index), observationLag_(observationLag), paymentAdjustment_(ModifiedFollowing),
-      paymentCalendar_(paymentCalendar), addInflationNotional_(false), interpolation_(QuantLib::CPI::Flat) {}
+      paymentCalendar_(paymentCalendar), addInflationNotional_(false), interpolation_(QuantLib::CPI::Flat),
+      paymentLag_(0) {}
 
 NonStandardYoYInflationLeg& NonStandardYoYInflationLeg::withNotionals(Real notional) {
     notionals_ = std::vector<Real>(1, notional);
@@ -263,6 +264,16 @@ NonStandardYoYInflationLeg& NonStandardYoYInflationLeg::withObservationInterpola
     return *this;
 }
 
+NonStandardYoYInflationLeg& NonStandardYoYInflationLeg::withPaymentDates(const std::vector<Date>& paymentDates) {
+    paymentDates_ = paymentDates;
+    return *this;
+}
+
+NonStandardYoYInflationLeg& NonStandardYoYInflationLeg::withPaymentLag(Integer lag) {
+    paymentLag_ = lag;
+    return *this;
+}
+
 NonStandardYoYInflationLeg::operator Leg() const {
 
     Size n = schedule_.size() - 1;
@@ -276,14 +287,21 @@ NonStandardYoYInflationLeg::operator Leg() const {
     Leg leg;
     leg.reserve(n);
 
-    Calendar calendar = paymentCalendar_;
+    if (!paymentDates_.empty()) {
+        QL_REQUIRE(paymentDates_.size() == n, "Expected the number of explicit payment dates ("
+            << paymentDates_.size() << ") to equal the number of calculation periods (" << n << ")");
+    }
 
-    Date refStart, start, refEnd, end;
+    Date refStart, start, refEnd, end, paymentDate;
 
     for (Size i = 0; i < n; ++i) {
         refStart = start = schedule_.date(i);
         refEnd = end = schedule_.date(i + 1);
-        Date paymentDate = calendar.adjust(end, paymentAdjustment_);
+        if (!paymentDates_.empty()) {
+            paymentDate = paymentDates_[i];
+        } else {
+            paymentDate = paymentCalendar_.advance(end, paymentLag_, Days, paymentAdjustment_);
+        }
         if (i == 0 && schedule_.hasIsRegular() && !schedule_.isRegular(i + 1)) {
             BusinessDayConvention bdc = schedule_.businessDayConvention();
             refStart = schedule_.calendar().adjust(end - schedule_.tenor(), bdc);

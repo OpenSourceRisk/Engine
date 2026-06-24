@@ -67,6 +67,7 @@ public:
         const std::function<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>(
             const QuantLib::Date&, const std::set<std::string>&, const std::vector<QuantLib::Date>&,
             const QuantLib::Size)>& cptyCubeFactory = {},
+        const QuantLib::ext::shared_ptr<FixingManager>& fixingManager = nullptr,
         const std::string& context = "unspecified",
         const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& offSetScenario = nullptr,
         const bool useAtParCouponsCurves = true, const bool useAtParCouponsTrades = true);
@@ -76,13 +77,14 @@ public:
 
     /* analoguous to buildCube() in the single-threaded engine, results are retrieved using below constructors
        if no cptyCalculators is given a function returning an empty vector of calculators will be returned */
-    void buildCube(
-        const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
-        const std::function<std::vector<QuantLib::ext::shared_ptr<ore::analytics::ValuationCalculator>>()>& calculators,
-        const ValuationEngine::ErrorPolicy errorPolicy = ValuationEngine::ErrorPolicy::RemoveAll,
-        const std::function<std::vector<QuantLib::ext::shared_ptr<ore::analytics::CounterpartyCalculator>>()>&
-            cptyCalculators = {},
-        bool mporStickyDate = true, bool dryRun = false);
+    void
+    buildCube(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
+              const std::function<std::vector<QuantLib::ext::shared_ptr<ore::analytics::ValuationCalculator>>(
+                  const QuantLib::Size, const QuantLib::ext::shared_ptr<ore::data::Portfolio>&)>& calculators,
+              const ValuationEngine::ErrorPolicy errorPolicy = ValuationEngine::ErrorPolicy::RemoveAll,
+              const std::function<std::vector<QuantLib::ext::shared_ptr<ore::analytics::CounterpartyCalculator>>()>&
+                  cptyCalculators = {},
+              bool mporStickyDate = true, bool dryRun = false);
 
     // result output cubes (mini-cubes, one per thread)
     std::vector<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>> outputCubes() const { return miniCubes_; }
@@ -126,6 +128,7 @@ private:
     std::function<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>(const QuantLib::Date&, const std::set<std::string>&,
                                                              const std::vector<QuantLib::Date>&, const QuantLib::Size)>
         cptyCubeFactory_;
+    QuantLib::ext::shared_ptr<FixingManager> fixingManager_;
     std::string context_;
     QuantLib::ext::shared_ptr<ore::analytics::Scenario> offsetScenario_;
     bool useAtParCouponsCurves_ = true;

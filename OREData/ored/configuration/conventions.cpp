@@ -72,8 +72,8 @@ namespace data {
 Convention::Convention(const string& id, Type type) : type_(type), id_(id) {}
 
 const QuantLib::ext::shared_ptr<ore::data::Conventions>& InstrumentConventions::conventions(QuantLib::Date d) const {
-    QL_REQUIRE(!conventions_.empty(), "InstrumentConventions: No conventions provided.");
     boost::shared_lock<boost::shared_mutex> lock(mutex_);
+    QL_REQUIRE(!conventions_.empty(), "InstrumentConventions: No conventions provided.");
     Date dt = d == Date() ? Settings::instance().evaluationDate() : d;
     auto it = conventions_.lower_bound(dt);
     if(it != conventions_.end() && it->first == dt)
@@ -654,10 +654,12 @@ QuantLib::ext::shared_ptr<OvernightIndex> AverageOisConvention::index() const {
 TenorBasisSwapConvention::TenorBasisSwapConvention(const string& id, const string& payIndex, const string& receiveIndex,
                                                    const string& receiveFrequency, const string& payFrequency,
                                                    const string& spreadOnRec, const string& includeSpread, 
-                                                   const string& subPeriodsCouponType)
+                                                   const string& subPeriodsCouponType, const string& strPayIsAveraged,
+                                                   const string& strRecIsAveraged)
     : Convention(id, Type::TenorBasisSwap), strPayIndex_(payIndex), strReceiveIndex_(receiveIndex),
       strReceiveFrequency_(receiveFrequency), strPayFrequency_(payFrequency), strSpreadOnRec_(spreadOnRec),
-      strIncludeSpread_(includeSpread), strSubPeriodsCouponType_(subPeriodsCouponType) {
+      strIncludeSpread_(includeSpread), strSubPeriodsCouponType_(subPeriodsCouponType),
+      strPayIsAveraged_(strPayIsAveraged), strRecIsAveraged_(strRecIsAveraged) {
     build();
 }
 
@@ -697,6 +699,10 @@ void TenorBasisSwapConvention::build() {
 
     subPeriodsCouponType_ = strSubPeriodsCouponType_.empty() ? SubPeriodsCoupon1::Compounding
                                                              : parseSubPeriodsCouponType(strSubPeriodsCouponType_);
+    if (!strPayIsAveraged_.empty())
+        isPayAveraged_ = parseBool(strPayIsAveraged_);
+    if (!strRecIsAveraged_.empty())
+        isRecAveraged_ = parseBool(strRecIsAveraged_);
 }
 
 void TenorBasisSwapConvention::fromXML(XMLNode* node) {
@@ -713,6 +719,8 @@ void TenorBasisSwapConvention::fromXML(XMLNode* node) {
     strSpreadOnRec_ = XMLUtils::getChildValue(node, "SpreadOnRec", false);
     strIncludeSpread_ = XMLUtils::getChildValue(node, "IncludeSpread", false);
     strSubPeriodsCouponType_ = XMLUtils::getChildValue(node, "SubPeriodsCouponType", false);
+    strPayIsAveraged_ = XMLUtils::getChildValue(node, "PayIsAveraged", false);
+    strRecIsAveraged_ = XMLUtils::getChildValue(node, "RecIsAveraged", false);
 
     // handle deprecated fields...
     if (strPayIndex_.empty()) {
@@ -773,6 +781,10 @@ XMLNode* TenorBasisSwapConvention::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, node, "IncludeSpread", strIncludeSpread_);
     if (!strSubPeriodsCouponType_.empty())
         XMLUtils::addChild(doc, node, "SubPeriodsCouponType", strSubPeriodsCouponType_);
+    if (!strPayIsAveraged_.empty())
+        XMLUtils::addChild(doc, node, "SpreadIsAveraged", strPayIsAveraged_);
+    if (!strRecIsAveraged_.empty())
+        XMLUtils::addChild(doc, node, "FlatIsAveraged", strRecIsAveraged_);
     return node;
 }
 

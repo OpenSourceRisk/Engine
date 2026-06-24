@@ -15,8 +15,8 @@ class DynamicsEnumTest(unittest.TestCase):
 
     def test_stickyness_values(self):
         self.assertEqual(int(StickyStrike), 0)
-        self.assertEqual(int(StickyLogMoneyness), 1)
-        self.assertEqual(int(StickyAbsoluteMoneyness), 2)
+        self.assertEqual(int(StickyMoneyness), 1)
+        self.assertEqual(int(StickySABR), 2)
 
     def test_reaction_to_time_decay_values(self):
         self.assertEqual(int(ConstantVariance), 0)
@@ -291,7 +291,7 @@ class DynamicBlackVolTermStructureSurfaceTest(unittest.TestCase):
         self.assertIsNotNone(dyn.minStrike())
         self.assertIsNotNone(dyn.maxStrike())
 
-    def test_sticky_log_moneyness_requires_ts(self):
+    def test_sticky_moneyness_requires_ts(self):
         """StickyLogMoneyness requires riskfree, dividend, and spot."""
         flat_vol = 0.20
         vol_ts = BlackConstantVol(self.today, self.cal, flat_vol, self.dc)
@@ -305,7 +305,7 @@ class DynamicBlackVolTermStructureSurfaceTest(unittest.TestCase):
         div_h = YieldTermStructureHandle(div)
 
         dyn = DynamicBlackVolTermStructureSurface(
-            vol_handle, 0, self.cal, ConstantVariance, StickyLogMoneyness,
+            vol_handle, 0, self.cal, ConstantVariance, StickyMoneyness,
             rf_h, div_h, spot_h)
         dyn.enableExtrapolation()
 

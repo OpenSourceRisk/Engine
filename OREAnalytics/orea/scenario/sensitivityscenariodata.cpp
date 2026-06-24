@@ -599,6 +599,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
 
     DLOG("Get compute gamma flag");
     computeGamma_ = XMLUtils::getChildValueAsBool(node, "ComputeGamma", false); // defaults to true
+    thetaPeriod_ = ore::data::parsePeriod(XMLUtils::getChildValue(node, "ThetaPeriod", false, "0D"));
 
     DLOG("Get useSpreadedTermStructures flag");
     if (auto n = XMLUtils::getChildNode(node, "UseSpreadedTermStructures"))
@@ -1015,6 +1016,8 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) const {
     }
 
     XMLUtils::addChild(doc, root, "ComputeGamma", computeGamma_);
+    if(thetaPeriod_ != Period())
+        XMLUtils::addChild(doc, root, "ThetaPeriod", thetaPeriod_);
 
     XMLUtils::addChild(doc, root, "UseSpreadedTermStructures", useSpreadedTermStructures_);
 

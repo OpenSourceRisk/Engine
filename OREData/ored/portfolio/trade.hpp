@@ -178,6 +178,8 @@ public:
 
     //! returns any additional datum.
     template <typename T> T additionalDatum(const std::string& tag) const;
+    //! Try to return any additional datum.
+    template <typename T> QuantLib::ext::optional<T> tryGetAdditionalDatum(const std::string& tag) const;
     //! returns all additional data returned by the trade once built
     const virtual std::map<std::string,QuantLib::ext::any>& additionalData() const;
 
@@ -286,6 +288,15 @@ inline T Trade::additionalDatum(const std::string& tag) const {
     QL_REQUIRE(value != additionalData_.end(),
                tag << " not provided");
     return QuantLib::ext::any_cast<T>(value->second);
+}
+
+template <typename T> QuantLib::ext::optional<T> Trade::tryGetAdditionalDatum(const std::string& tag) const {
+    auto it = additionalData_.find(tag);
+    if (it != additionalData_.end()) {
+        if (auto* value = QuantLib::ext::any_cast<T>(&it->second))
+            return *value;
+    }
+    return QuantLib::ext::nullopt;
 }
 
 } // namespace data

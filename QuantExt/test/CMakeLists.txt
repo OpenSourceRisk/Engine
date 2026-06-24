@@ -97,7 +97,6 @@ randomvariable.cpp
 randomvariablelsmbasissystem.cpp
 ratehelpers.cpp
 stabilisedglls.cpp
-staticallycorrectedyieldtermstructure.cpp
 stoplightbounds.cpp
 strippedoptionletadapter.cpp
 strippedoptionletadapter2.cpp

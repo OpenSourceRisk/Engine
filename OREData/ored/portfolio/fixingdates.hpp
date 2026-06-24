@@ -47,6 +47,7 @@ class AverageBMACoupon;
 class CmsSpreadCoupon;
 class DigitalCoupon;
 class StrippedCappedFlooredCoupon;
+class RangeAccrualFloatersCoupon;
 } // namespace QuantLib
 
 namespace QuantExt {
@@ -274,6 +275,7 @@ class FixingDateGetter : public QuantLib::AcyclicVisitor,
                          public QuantLib::Visitor<QuantExt::BondTRSCashFlow>,
                          public QuantLib::Visitor<QuantExt::TRSCashFlow>,
                          public QuantLib::Visitor<QuantExt::InterpolatedIborCoupon>,
+                         public QuantLib::Visitor<QuantLib::RangeAccrualFloatersCoupon>,
                          public QuantLib::Visitor<QuantExt::IntradayPowerCashFlow> {
 
 public:
@@ -318,6 +320,7 @@ public:
     void visit(QuantExt::BondTRSCashFlow& c) override;
     void visit(QuantExt::TRSCashFlow& c) override;
     void visit(QuantExt::InterpolatedIborCoupon& c) override;
+    void visit(QuantLib::RangeAccrualFloatersCoupon& c) override;
     void visit(QuantExt::IntradayPowerCashFlow& c) override;
     //@}
         

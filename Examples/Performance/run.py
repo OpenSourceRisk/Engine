@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
 import os
-import sys
-import subprocess
 from concurrent.futures import ThreadPoolExecutor, as_completed
-
-sys.path.append('../')
-from ore_examples_helper import OreExample
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+from ore_examples_helper import OreExample  # noqa
+from ore_examples_helper import print_on_console  # noqa
 
 oreex = OreExample(sys.argv[1] if len(sys.argv) > 1 else False)
 
@@ -31,20 +31,20 @@ ore_runs = [
 max_parallel = int(os.getenv("EXAMPLES_PARALLEL", "1"))
 
 def run_ore(label, xml):
-    print(f"Running: {label} ({xml})")
+    print_on_console(f"Running: {label} ({xml})")
     oreex.run(xml)
-    print(f"Completed: {label} ({xml})")
-    return (label, xml)
+    print_on_console(f"Completed: {label} ({xml})")
 
-status = 0
+failed = False
 with ThreadPoolExecutor(max_workers=max_parallel) as executor:
     futures = {executor.submit(run_ore, label, xml): (label, xml) for label, xml in ore_runs}
     for future in as_completed(futures):
         label, xml = futures[future]
         try:
-            future.result()
+            result = future.result()
+            print_on_console(f"{label} ({xml}) completed successfully")
         except Exception as e:
-            print(f"Failed: {label} ({xml}) with error: {e}")
-            status = 1
+            print_on_console(f"{label} ({xml}) failed with error: {e}")
+            failed = True
 
-sys.exit(status)
+sys.exit(1 if failed else 0)
