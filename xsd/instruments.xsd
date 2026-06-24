@@ -2,6 +2,7 @@
   xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
   <xs:include schemaLocation="ore_types.xsd"/>
+  <xs:include schemaLocation="intradaypowerloaddata.xsd"/>
 
   <xs:group name="oreTradeData">
     <xs:choice>
@@ -1193,6 +1194,27 @@
     </xs:complexType>
   </xs:element>
 
+  <xs:element name="IntradayPowerFloatingLegData" substitutionGroup="legDataType">
+    <xs:complexType>
+      <xs:all>
+        <xs:element type="xs:string" name="Name"/>
+        <xs:element type="quantitiesType" name="Quantities"/>
+        <xs:element type="spreads" name="Spreads" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="gearings" name="Gearings" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="calendar" name="PricingCalendar" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:boolean" name="IncludePeriodStart" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:boolean" name="IncludePeriodEnd" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:boolean" name="BusinessDays" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:string" name="PowerLoadProfileReference" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="powerLoadProfileDataType" name="PowerLoadProfileData" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:string" name="FXIndex" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:nonNegativeInteger" name="AvgPricePrecision" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:string" name="Tag" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:string" name="QuantityMode" minOccurs="0" maxOccurs="1"/>
+      </xs:all>
+    </xs:complexType>
+  </xs:element>
+
   <xs:complexType name="commoditySwapData">
     <xs:sequence>
       <xs:element type="xs:boolean" name="RoundNettedFloatingLegs" minOccurs="0" maxOccurs="1"/>
@@ -1455,6 +1477,7 @@
       <xs:enumeration value="Equity"/>
       <xs:enumeration value="FormulaBased"/>
       <xs:enumeration value="ZeroCouponFixed"/>
+      <xs:enumeration value="IntradayPowerFloating"/>
       <xs:enumeration value="CommodityFixed"/>
       <xs:enumeration value="CommodityFloating"/>
       <xs:enumeration value="EquityMargin"/>
