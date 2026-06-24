@@ -34,11 +34,16 @@
 namespace ore {
 namespace analytics {
 
-void SensitivityStressVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) { }
+void SensitivityStressVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) {
+    string analyticStr = "sensitivityStress";
+    inputs->loadParameter<bool>(calcBaseScenario_, analyticStr, "calcBaseScenario", false,
+                                std::function<bool(const string&)>(parseBool));
+}
 
 SensitivityStressAnalyticImpl::SensitivityStressAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-                                             const QuantLib::ext::optional<QuantLib::ext::shared_ptr<StressTestScenarioData>>& scenarios)
-    : Analytic::Impl(inputs, QuantLib::ext::make_shared<SensitivityStressVariables>()), stressScenarios_(scenarios.value_or(inputs->sensitivityStressScenarioData())) {
+                                             const QuantLib::ext::optional<QuantLib::ext::shared_ptr<StressTestScenarioData>>& scenarios,
+                                             const std::string& reportNamePrefix)
+    : Analytic::Impl(inputs, QuantLib::ext::make_shared<SensitivityStressVariables>()), stressScenarios_(scenarios), reportNamePrefix(reportNamePrefix) {
     setLabel(LABEL);
 }
 
@@ -66,8 +71,8 @@ void SensitivityStressAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<
     CONSOLEW("SENSITIVITY_STRESS: Build T0 and Sim Markets and Stress Scenario Generator");
 
     analytic()->buildMarket(loader);
-
-    QuantLib::ext::shared_ptr<StressTestScenarioData> scenarioData = stressScenarios_;
+    auto vars = ext::dynamic_pointer_cast<SensitivityStressVariables>(inputVariables_);
+    QuantLib::ext::shared_ptr<StressTestScenarioData> scenarioData = stressScenarios_.value_or(inputs_->sensitivityStressScenarioData());
     if (scenarioData != nullptr && scenarioData->hasScenarioWithParShifts()) {
         try {
             QuantLib::ext::shared_ptr<InMemoryReport> parScenarioReport =
@@ -87,10 +92,11 @@ void SensitivityStressAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<
     }
 
     LOG("Sensitivity Stress: Build SimMarket and StressTestScenarioGenerator")
+    bool useSpreadedTermStructures = scenarioData != nullptr ? scenarioData->useSpreadedTermStructures() : false;
     auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
         analytic()->market(), analytic()->configurations().simMarketParams, marketConfig,
         *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams,
-        inputs_->continueOnError(), scenarioData->useSpreadedTermStructures(), false, false, true,
+        inputs_->continueOnError(), useSpreadedTermStructures, false, false, true,
         inputs_->iborFallbackConfig(), true);
 
     auto baseScenario = simMarket->baseScenario();
@@ -108,19 +114,19 @@ void SensitivityStressAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<
 
     // run stress test
     LOG("Run Sensitivity Stresstest")
-    runStressTest(scenarioGenerator, loader);
+    runStressTest(scenarioGenerator, loader, vars->calcBaseScenario_);
 
     LOG("Running Sensitivity Stress analytic finished.");
 }
 
 void SensitivityStressAnalyticImpl::runStressTest(const QuantLib::ext::shared_ptr<StressScenarioGenerator>& scenarioGenerator,
-                                          const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
+                                          const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader, bool calcBaseScenario) {
 
     std::map<std::string, std::vector<QuantLib::ext::shared_ptr<ore::data::InMemoryReport>>> sensitivityReports;
     for (size_t i = 0; i < scenarioGenerator->samples(); ++i) {
         auto scenario = scenarioGenerator->next(inputs_->asof());
         const std::string& label = scenario != nullptr ? scenario->label() : std::string();
-        if ((inputs_->sensitivityStressCalcBaseScenario() && label == "BASE") || (label != "BASE")) {
+        if ((calcBaseScenario && label == "BASE") || (label != "BASE")) {
             try {
                 DLOG("Calculate Sensitivity for scenario " << label);
                 CONSOLE("SENSITIVITY_STRESS: Apply scenario " << label);
@@ -140,7 +146,7 @@ void SensitivityStressAnalyticImpl::runStressTest(const QuantLib::ext::shared_pt
                     // add scenario column to report and copy it, concat it later
                     if (boost::starts_with(name, "sensitivity")) {
                         DLOG("Save and extend report " << name);
-                        sensitivityReports[name].push_back(addColumnToExisitingReport("Scenario", label, rpt));
+                        sensitivityReports[reportNamePrefix + name].push_back(addColumnToExisitingReport("Scenario", label, rpt));
                     }
                 }
 
