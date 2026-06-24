@@ -25,7 +25,7 @@
 namespace QuantExt {
 
 CrossAssetModelImpliedEqVolTermStructure::CrossAssetModelImpliedEqVolTermStructure(
-    const QuantLib::ext::shared_ptr<CrossAssetModel>& model, const Size equityIndex, BusinessDayConvention bdc,
+    const QuantLib::Handle<CrossAssetModel>& model, const Size equityIndex, BusinessDayConvention bdc,
     const DayCounter& dc, const bool purelyTimeBased)
     : BlackVolTermStructure(bdc, dc == DayCounter() ? model->irlgm1f(0)->termStructure()->dayCounter() : dc),
       model_(model), eqIndex_(equityIndex), purelyTimeBased_(purelyTimeBased),

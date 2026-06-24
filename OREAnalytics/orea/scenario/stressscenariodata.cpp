@@ -48,6 +48,12 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
 
         DLOG("Load stress test label " << test.label);
 
+        DLOG("Get date / date shift");
+        auto date = XMLUtils::getChildValue(testCase, "Date", false);
+        if (!date.empty())
+            test.date = data::parseDateOrPeriod(date);
+
+        DLOG("Get par shift parameters");
         XMLNode* parShiftsNode = XMLUtils::getChildNode(testCase, "ParShifts");
         if (parShiftsNode) {
             test.irCurveParShifts = XMLUtils::getChildValueAsBool(parShiftsNode, "IRCurves", false, false);

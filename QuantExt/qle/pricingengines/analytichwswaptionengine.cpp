@@ -28,7 +28,7 @@
 
 namespace QuantExt {
 
-AnalyticHwSwaptionEngine::AnalyticHwSwaptionEngine(const ext::shared_ptr<HwModel>& model,
+AnalyticHwSwaptionEngine::AnalyticHwSwaptionEngine(const Handle<HwModel>& model,
                                                    const Handle<YieldTermStructure>& discountCurve)
     : GenericEngine<Swaption::arguments, Swaption::results>(), model_(model), p_(model->parametrization()),
       c_(discountCurve.empty() ? p_->termStructure() : discountCurve) {

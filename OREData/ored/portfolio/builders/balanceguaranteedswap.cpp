@@ -29,9 +29,10 @@
 namespace ore {
 namespace data {
 
-QuantLib::ext::shared_ptr<QuantExt::IrModel>
-FlexiSwapBGSLGMGridEngineBuilderBase::model(const string& id, const string& key, const std::vector<Date>& expiries,
-                                            const Date& maturity, const std::vector<Real>& strikes) {
+QuantLib::Handle<QuantExt::LGM> FlexiSwapBGSLGMGridEngineBuilderBase::model(const string& id, const string& key,
+                                                                                const std::vector<Date>& expiries,
+                                                                                const Date& maturity,
+                                                                                const std::vector<Real>& strikes) {
 
     // TODO this is the same as in LGMBermudanSwaptionEngineBuilder::model(), factor the model building out
 
@@ -142,7 +143,7 @@ FlexiSwapBGSLGMGridEngineBuilderBase::model(const string& id, const string& key,
 
     engineFactory()->modelBuilders().insert(std::make_pair(id, calib));
 
-    return calib->model();
+    return calib->modelAsLgm();
 }
 
 QuantLib::ext::shared_ptr<PricingEngine>
@@ -163,7 +164,7 @@ BalanceGuaranteedSwapFlexiSwapLGMGridEngineBuilder::engineImpl(const string& id,
                                                                const std::vector<Real>& strikes) {
     DLOG("Building LGM Grid BGS Flexi Swap engine for trade " << id);
 
-    auto lgm = QuantLib::ext::dynamic_pointer_cast<QuantExt::LGM>(model(id, ccy, expiries, maturity, strikes));
+    auto lgm = model(id, ccy, expiries, maturity, strikes);
 
     DLOG("Get engine data");
     Real sy = parseReal(engineParameter("sy"));

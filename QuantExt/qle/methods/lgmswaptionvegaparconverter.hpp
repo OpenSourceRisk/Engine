@@ -31,7 +31,7 @@ namespace QuantExt {
 class LgmSwaptionVegaParConverter {
 public:
     LgmSwaptionVegaParConverter() = default;
-    LgmSwaptionVegaParConverter(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model,
+    LgmSwaptionVegaParConverter(const QuantLib::Handle<LinearGaussMarkovModel>& model,
                                 const std::vector<QuantLib::Period>& optionTerms,
                                 const std::vector<QuantLib::Period>& underlyingTerms,
                                 const QuantExt::ext::shared_ptr<QuantLib::SwapIndex>& index);
@@ -44,7 +44,7 @@ public:
     const std::vector<Real>& baseImpliedVols() const;
 
 private:
-    QuantLib::ext::shared_ptr<LinearGaussMarkovModel> model_;
+    QuantLib::Handle<LinearGaussMarkovModel> model_;
     std::vector<QuantLib::Period> optionTerms_, underlyingTerms_;
     QuantExt::ext::shared_ptr<SwapIndex> index_;
 

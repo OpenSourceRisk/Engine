@@ -47,7 +47,7 @@ McMultiLegOptionEngine::McMultiLegOptionEngine(
 }
 
 McMultiLegOptionEngine::McMultiLegOptionEngine(
-    const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const SequenceType calibrationPathGenerator,
+    const QuantLib::Handle<LinearGaussMarkovModel>& model, const SequenceType calibrationPathGenerator,
     const SequenceType pricingPathGenerator, const Size calibrationSamples, const Size pricingSamples,
     const Size calibrationSeed, const Size pricingSeed, const Size polynomOrder,
     const LsmBasisSystem::PolynomialType polynomType, const SobolBrownianGenerator::Ordering ordering,
@@ -60,7 +60,7 @@ McMultiLegOptionEngine::McMultiLegOptionEngine(
     const Size regressionMaxSimTimesFx, const Size regressionMaxSimTimesEq,
     const McRegressionModel::VarGroupMode regressionVarGroupMode, const bool generateAdditionalResults)
     : McMultiLegOptionEngine(Handle<CrossAssetModel>(QuantLib::ext::make_shared<CrossAssetModel>(
-                                 std::vector<QuantLib::ext::shared_ptr<IrModel>>(1, model),
+                                 std::vector<QuantLib::ext::shared_ptr<IrModel>>(1, *model),
                                  std::vector<QuantLib::ext::shared_ptr<FxBsParametrization>>())),
                              calibrationPathGenerator, pricingPathGenerator, calibrationSamples, pricingSamples,
                              calibrationSeed, pricingSeed, polynomOrder, polynomType, ordering, directionIntegers,
