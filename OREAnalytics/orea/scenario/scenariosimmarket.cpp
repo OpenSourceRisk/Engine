@@ -217,6 +217,25 @@ std::vector<QuantLib::Period> curveTenors(const QuantLib::Handle<QuantExt::Price
     return simulationTenors;
 }
 
+QuantLib::ext::shared_ptr<QuantExt::PriceTermStructure> makeInterpolatedPriceCurve(
+    const std::vector<QuantLib::Period>& tenors, const std::vector<QuantLib::Handle<QuantLib::Quote>>& quotes,
+    const QuantLib::DayCounter& dayCounter, const QuantLib::Currency& currency, const std::string& interpolation) {
+    if (interpolation == "Linear")
+        return QuantLib::ext::make_shared<QuantExt::InterpolatedPriceCurve<QuantExt::LinearFlat>>(tenors, quotes,
+                                                                                                  dayCounter, currency);
+    else if (interpolation == "Cubic")
+        return QuantLib::ext::make_shared<QuantExt::InterpolatedPriceCurve<QuantExt::CubicFlat>>(tenors, quotes,
+                                                                                                 dayCounter, currency);
+    else if (interpolation == "BackwardFlat")
+        return QuantLib::ext::make_shared<QuantExt::InterpolatedPriceCurve<QuantLib::BackwardFlat>>(
+            tenors, quotes, dayCounter, currency);
+    else if (interpolation == "ForwardFlat")
+        return QuantLib::ext::make_shared<QuantExt::InterpolatedPriceCurve<QuantLib::ForwardFlat>>(
+            tenors, quotes, dayCounter, currency);
+    else
+        QL_FAIL("makeInterpolatedPriceCurve: interpolation '" << interpolation << "' not recognised.");
+}
+
 } // namespace
 
 namespace ore {
@@ -2953,11 +2972,13 @@ ScenarioSimMarket::ScenarioSimMarket(
                             // used
                             priceCurve = QuantLib::ext::make_shared<SpreadedPriceTermStructure>(
                                 initialCommodityCurve, simulationTimes, quotes,
-                                parsePriceCurveRollDown(parameters->commodityCurveRollDown()));
+                                parsePriceCurveRollDown(parameters->commodityCurveRollDown()),
+                                parameters->commodityCurveInterpolation(name));
                             priceCurve->setAdjustReferenceDate(false);
                         } else {
-                            priceCurve= QuantLib::ext::make_shared<InterpolatedPriceCurve<LinearFlat>>(
-                                simulationTenors, quotes, initialCommodityCurve->dayCounter(), initialCommodityCurve->currency());
+                            priceCurve = makeInterpolatedPriceCurve(
+                                simulationTenors, quotes, initialCommodityCurve->dayCounter(),
+                                initialCommodityCurve->currency(), parameters->commodityCurveInterpolation(name));
                         }
                         
                         auto orgBasisCurve =
@@ -3416,11 +3437,13 @@ ScenarioSimMarket::ScenarioSimMarket(
                             }
                             // Created spreaded commodity price curve if we simulate commodities and spreads should be
                             // used
-                            priceCurve = QuantLib::ext::make_shared<SpreadedPriceTermStructure>(averageDayPriceCurve,
-                                                                                        simulationTimes, quotes);
+                            priceCurve = QuantLib::ext::make_shared<SpreadedPriceTermStructure>(
+                                averageDayPriceCurve, simulationTimes, quotes, PriceCurveRollDown::Forward,
+                                parameters->intradayPowerCurveInterpolation(name));
                         } else {
-                            priceCurve= QuantLib::ext::make_shared<InterpolatedPriceCurve<LinearFlat>>(
-                                simulationTenors, quotes, averageDayPriceCurve->dayCounter(), averageDayPriceCurve->currency());
+                            priceCurve = makeInterpolatedPriceCurve(
+                                simulationTenors, quotes, averageDayPriceCurve->dayCounter(),
+                                averageDayPriceCurve->currency(), parameters->intradayPowerCurveInterpolation(name));
                         }
                         Handle<IntradayPowerPriceTermStructure> ippts(
                             QuantLib::ext::make_shared<IntradayPowerPriceTermStructure>(

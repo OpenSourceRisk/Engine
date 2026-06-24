@@ -1461,6 +1461,15 @@
                 </xs:sequence>
               </xs:complexType>
             </xs:element>
+            <xs:element name="Interpolation" maxOccurs="unbounded" minOccurs="0">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="name" type="xs:string" use="optional"/>
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
             <xs:element name="Tenors" maxOccurs="unbounded" minOccurs="1">
               <xs:complexType>
                 <xs:simpleContent>
