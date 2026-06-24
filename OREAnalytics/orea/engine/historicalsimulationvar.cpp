@@ -18,6 +18,7 @@
 
 #include <orea/engine/historicalsimulationvar.hpp>
 #include <orea/engine/historicalpnlgenerator.hpp>
+#include <orea/engine/historicalsensipnlcalculator.hpp>
 #include <orea/cube/cube_io.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <ored/utilities/to_string.hpp>
@@ -42,11 +43,30 @@ HistoricalSimulationVarReport::HistoricalSimulationVarReport(
     : VarReport(baseCurrency, portfolio, portfolioFilter, p, period, hisScenGen, nullptr, std::move(fullRevalArgs),
                 std::move(multiThreadArgs), false, useAtParCouponsCurves, useAtParCouponsTrades, tradePnl, riskFactorBreakdown,
                 riskClassBreakdown),
-                includeExpectedShortfall_(includeExpectedShortfall) {
+      includeExpectedShortfall_(includeExpectedShortfall),
+      tradePnl_(tradePnl),
+      riskFactorBreakdown_(riskFactorBreakdown),
+      includeTheta_(includeTheta) {
     fullReval_ = true;
-    tradePnl_ = tradePnl;
-    riskFactorBreakdown_ = riskFactorBreakdown;
-    includeTheta_ = includeTheta;
+}
+
+HistoricalSimulationVarReport::HistoricalSimulationVarReport(
+    const string& baseCurrency, const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const string& portfolioFilter,
+    const vector<Real>& p, QuantLib::ext::optional<TimePeriod> period,
+    const ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen, std::unique_ptr<SensiRunArgs> sensiArgs,
+    const bool breakdown, const bool includeExpectedShortfall, const bool tradePnl, const bool riskFactorBreakdown,
+    const bool useAtParCouponsCurves, const bool useAtParCouponsTrades, const bool riskClassBreakdown)
+    : VarReport(baseCurrency, portfolio, portfolioFilter, p, period, hisScenGen, std::move(sensiArgs), nullptr, nullptr,
+                breakdown, useAtParCouponsCurves, useAtParCouponsTrades, tradePnl, riskFactorBreakdown,
+                riskClassBreakdown),
+      includeExpectedShortfall_(includeExpectedShortfall),
+      tradePnl_(tradePnl),
+      riskFactorBreakdown_(riskFactorBreakdown),
+      includeTheta_(false) {
+    fullReval_ = false;
+    sensiBased_ = true;
+    requireTradePnl_ = tradePnl_;
+    requireRiskFactorPnl_ = riskFactorBreakdown_;
 }
 
 void HistoricalSimulationVarReport::createVarCalculator() {
@@ -74,7 +94,27 @@ void HistoricalSimulationVarReport::createAdditionalReports(
             .addColumn("PLDate2", Date())
             .addColumn("PLAmount", double(), 6);
     }
-        
+
+}
+
+void HistoricalSimulationVarReport::addPnlCalculators(
+    const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) {
+    if (!sensiBased_)
+        return;
+    QL_REQUIRE(period_, "HistoricalSimulationVarReport: period is required for sensi-based run");
+    pnlCalculators_.push_back(QuantLib::ext::make_shared<PNLCalculator>(period_.value()));
+}
+
+void HistoricalSimulationVarReport::handleSensiResults(
+    const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
+    const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
+    const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) {
+    QL_REQUIRE(pnlCalculators_.size() == 1, "HistoricalSimulationVarReport: expecting exactly 1 PNLCalculator");
+    pnls_ = pnlCalculators_.front()->pnls();
+    if (tradePnl_)
+        tradePnls_ = pnlCalculators_.front()->tradePnls();
+    if (riskFactorBreakdown_)
+        sensiRiskFactorPnls_ = pnlCalculators_.front()->riskFactorTradePnls();
 }
 
 void HistoricalSimulationVarReport::handleFullRevalResults(const ext::shared_ptr<MarketRiskReport::Reports>& reports,
@@ -88,6 +128,23 @@ void HistoricalSimulationVarReport::handleFullRevalResults(const ext::shared_ptr
         riskFactorPnls_ = histPnlGen_->riskFactorLevelPnlSeries(period_.value());
 }
 
+void HistoricalSimulationVarReport::reset(const ext::shared_ptr<MarketRiskGroupBase>& riskGroup) {
+    MarketRiskReport::reset(riskGroup);
+    pnls_.clear();
+    tradePnls_.clear();
+    riskFactorPnls_.clear();
+    sensiRiskFactorPnls_.clear();
+}
+
+void HistoricalSimulationVarReport::writeReports(
+    const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
+    const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
+    const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) {
+    if (sensiBased_ && pnls_.empty() && (!tradePnl_ || tradePnls_.empty()))
+        return;
+    VarReport::writeReports(reports, riskGroup, tradeGroup);
+}
+
 void HistoricalSimulationVarReport::writeAdditionalReports(
     const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
     const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
@@ -98,14 +155,34 @@ void HistoricalSimulationVarReport::writeAdditionalReports(
     auto rg = ext::dynamic_pointer_cast<MarketRiskGroup>(riskGroup);
     auto tg = ext::dynamic_pointer_cast<TradeGroup>(tradeGroup);
 
+    Size samples;
+    if (sensiBased_) {
+        samples = tradePnl_ ? tradePnls_.size() : pnls_.size();
+    } else {
+        QL_REQUIRE(histPnlGen_ && histPnlGen_->cube(),
+                   "HistoricalSimulationVarReport: historical PnL cube is required for full revaluation");
+        samples = histPnlGen_->cube()->samples();
+    }
+    QL_REQUIRE(hisScenGen_, "HistoricalSimulationVarReport: historical scenario generator is required");
+    QL_REQUIRE(hisScenGen_->startDates().size() >= samples && hisScenGen_->endDates().size() >= samples,
+               "HistoricalSimulationVarReport: scenario date vectors shorter than PnL vectors");
+
+    // Loop-invariant string representations of risk class and risk type
+    const std::string riskClassStr = to_string(rg->riskClass());
+    const std::string riskTypeStr = to_string(rg->riskType());
+
+    // Loop-invariant risk factor breakdown flag and report2 pointer
+    const bool writeRFBreakdown = riskFactorBreakdown_ && (countRF_ < 1);
+    QuantLib::ext::shared_ptr<Report> report2 = writeRFBreakdown ? reports->reports().at(2) : nullptr;
+
     // Loop through all samples
-    for (Size s = 0; s < histPnlGen_->cube()->samples(); ++s) {
+    for (Size s = 0; s < samples; ++s) {
         if (tradePnl_) {
             for (const auto& t : tradeIdIdxPairs_) {
                 report->next();
                 report->add(t.first);
-                report->add(to_string(rg->riskClass()));
-                report->add(to_string(rg->riskType()));
+                report->add(riskClassStr);
+                report->add(riskTypeStr);
                 report->add(hisScenGen_->startDates()[s]);
                 report->add(hisScenGen_->endDates()[s]);
                 report->add(tradePnls_[s][t.second]);
@@ -113,16 +190,33 @@ void HistoricalSimulationVarReport::writeAdditionalReports(
         } else {
             report->next();
             report->add(tg->portfolioId());
-            report->add(to_string(rg->riskClass()));
-            report->add(to_string(rg->riskType()));
+            report->add(riskClassStr);
+            report->add(riskTypeStr);
             report->add(hisScenGen_->startDates()[s]);
             report->add(hisScenGen_->endDates()[s]);
-            report->add(pnls_.at(s));
+            report->add(pnls_[s]);
         }
-        if (riskFactorBreakdown_) {
+        if (writeRFBreakdown) {
             // The PnL breakdown on risk factors per scenario
-            QuantLib::ext::shared_ptr<Report> report2 = reports->reports().at(2);
-            if (s < riskFactorPnls_.size() && countRF_ < 1) {
+            if (sensiBased_ && s < sensiRiskFactorPnls_.size()) {
+                for (const auto& r : sensiRiskFactorPnls_[s]) {
+                    const auto& key = r.first;
+                    const std::vector<Real>& vals = r.second;
+                    for (const auto& t : tradeIdIdxPairs_) {
+                        if (t.second < vals.size()) {
+                            Real pnl = vals[t.second];
+                            if (!std::isnan(pnl) && !close_enough(pnl, 0.0)) {
+                                report2->next();
+                                report2->add(key);
+                                report2->add(t.first);
+                                report2->add(hisScenGen_->startDates()[s]);
+                                report2->add(hisScenGen_->endDates()[s]);
+                                report2->add(pnl);
+                            }
+                        }
+                    }
+                }
+            } else if (s < riskFactorPnls_.size()) {
                 for (const auto& r : riskFactorPnls_[s]) {
                     const auto& key = r.first;
                     const std::vector<Real>& vals = r.second;

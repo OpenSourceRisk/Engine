@@ -683,7 +683,7 @@ void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestD
         string ccypair = d.first;
         if(simMarketData_->fxVolIsSurface(ccypair)){
             StructuredConfigurationErrorMessage("Simulation Market", "Fx Volatility",
-                                                "Stresstest support only ATM shifts", "Skip stresstest for " + ccypair)
+                                                "Stresstest supports only ATM shifts, please update simulation.xml", "Skip stresstest for FxVol" + ccypair)
                 .log();
             continue;
         }

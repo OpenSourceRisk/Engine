@@ -24,6 +24,7 @@
 #pragma once
 
 #include <orea/engine/historicalpnlgenerator.hpp>
+#include <orea/engine/historicalsensipnlcalculator.hpp>
 #include <orea/engine/sensitivityaggregator.hpp>
 #include <orea/engine/sensitivitystream.hpp>
 #include <orea/engine/varcalculator.hpp>
@@ -80,6 +81,17 @@ public:
                                   const bool useAtParCouponsCurves = true, const bool useAtParCouponsTrades = true,
                                   const bool riskClassBreakdown = true,
                                   const bool includeTheta = false);
+    HistoricalSimulationVarReport(const std::string& baseCurrency,
+                                  const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
+                                  const std::string& portfolioFilter, const vector<Real>& p,
+                                  QuantLib::ext::optional<ore::data::TimePeriod> period,
+                                  const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen,
+                                  std::unique_ptr<SensiRunArgs> sensiArgs, const bool breakdown = false,
+                                  const bool includeExpectedShortfall = false, const bool tradePnl = false,
+                                  const bool riskFactorBreakdown = false,
+                                  const bool useAtParCouponsCurves = true,
+                                  const bool useAtParCouponsTrades = true,
+                                  const bool riskClassBreakdown = true);
 
     void createAdditionalReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) override;
 
@@ -92,9 +104,18 @@ protected:
     void createVarCalculator() override;
     void writeHeader(const QuantLib::ext::shared_ptr<Report>& report) const override;
     std::vector<Real> calcVarsForQuantiles() const override;
+    bool runFullReval(const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup) const override { return fullReval_; }
+    void addPnlCalculators(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) override;
+    void handleSensiResults(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
+                            const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
+                            const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) override;
     void handleFullRevalResults(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
                                 const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
                                 const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) override;
+    void reset(const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup) override;
+    void writeReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
+                      const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
+                      const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) override;
 
     void writeAdditionalReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
                                 const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
@@ -104,6 +125,7 @@ private:
     std::vector<QuantLib::Real> pnls_;
     ore::analytics::TradePnLStore tradePnls_;
     ore::analytics::HistoricalPnlGenerator::RiskFactorPnLSeries riskFactorPnls_;
+    ore::analytics::PNLCalculator::RiskFactorTradePnLStore sensiRiskFactorPnls_;
     bool includeExpectedShortfall_ = false;
     bool tradePnl_ = false;
     bool riskFactorBreakdown_ = false;

@@ -123,6 +123,7 @@ struct HistoricalSimulationVarVariables : public VarVariables {
     bool riskClassBreakdown_ = true;
     bool includeTheta_ = false;
     bool includePeriodCashflow_ = false;
+    QuantLib::ext::shared_ptr<SensitivityStream> sensitivityStream_;
 };
 
 class HistoricalSimulationVarAnalyticImpl : public VarAnalyticImpl {
@@ -140,6 +141,7 @@ protected:
     bool riskFactorBreakdown_ = false;
     bool riskClassBreakdown_ = true;
     bool allowPartialScenarios_ = false;
+    bool sensiBased_ = false;
 };
 
 class HistoricalSimulationVarAnalytic : public VarAnalytic {
