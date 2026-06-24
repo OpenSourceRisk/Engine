@@ -268,6 +268,9 @@ void FixingManager::applyFixingsProjected(const Date& start, const Date& end) {
 
     for (auto const& [d, indices] : dateMap) {
 
+        if (d < today)
+            continue;
+
         Settings::instance().evaluationDate() = d;
 
         for (auto const& index : indices) {
