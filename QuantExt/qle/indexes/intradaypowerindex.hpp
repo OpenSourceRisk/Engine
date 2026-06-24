@@ -89,6 +89,7 @@ private:
     Real pastIntradayFixing(const Date& fixingDate, int start, int end, bool isDstHour) const;
     Handle<QuantExt::IntradayPowerPriceTermStructure> intradayCurve_;
     QuantLib::ext::shared_ptr<QuantExt::IntradayPowerLoadProfile> loadProfile_;
+    std::vector<QuantLib::Real> loadProfileMWh_;
     QuantLib::Real totalLoad_ = 0.0;
 };
 

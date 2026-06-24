@@ -56,12 +56,18 @@ IntradayPowerIndex::IntradayPowerIndex(const std::string& underlyingName, const 
             intradayCurve_.empty()
                 ? QuantExt::IntradayPowerDSTAdjustment::NoAdjustment
                 : QuantExt::dayTimeSavingsAdjustment(deliveryDate_, intradayCurve_->intradayShape()->daylightSavingsLocation());
-        for (const auto& load : *loadProfile_) {
-            totalLoad_ += daylightSavingAdjustedLoadMWh(load, dstAdjustment);
-            std::string name = bucketName(name_, load.startTime, load.endTime, load.isDSTextraHour);
-            QL_DEPRECATED_DISABLE_WARNING
-            registerWith(IndexManager::instance().notifier(name));
-            QL_DEPRECATED_ENABLE_WARNING
+        loadProfileMWh_.reserve(loadProfile_->size());
+        for (size_t i = 0; i < loadProfile_->size(); ++i) {
+            const auto& load = (*loadProfile_)[i];
+            auto mwh = daylightSavingAdjustedLoadMWh(load, dstAdjustment);
+            loadProfileMWh_.push_back(mwh);
+            if (mwh > 0.0){
+                totalLoad_ += mwh;
+                std::string name = bucketName(name_, load.startTime, load.endTime, load.isDSTextraHour);
+                QL_DEPRECATED_DISABLE_WARNING
+                registerWith(IndexManager::instance().notifier(name));
+                QL_DEPRECATED_ENABLE_WARNING
+            }
         }
     }
 }
@@ -193,8 +199,10 @@ Real IntradayPowerIndex::fixing(const Date& fixingDate, bool forecastTodaysFixin
 const std::vector<std::string> IntradayPowerIndex::intraDayIndexNames() const {
     std::set<std::string> names;
     if (loadProfile_ != nullptr) {
-        for (const auto& load : *loadProfile_) {
-            if (load.load > 0.0)
+        for (size_t i = 0; i < loadProfile_->size(); ++i) {
+            const auto& load = (*loadProfile_)[i];
+            auto mwh = loadProfileMWh_[i];
+            if (mwh > 0.0)
                 names.insert(bucketName(name_, load.startTime, load.endTime, load.isDSTextraHour));
         }
     } else {
