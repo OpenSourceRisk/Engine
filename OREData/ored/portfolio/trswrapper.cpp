@@ -520,8 +520,15 @@ void TRSWrapperAccrualEngine::calculate() const {
                                               << io::iso_date(endDate == Null<Date>() ? today : endDate));
 
                 // add details  return leg valuation to additional results
-                results_.additionalResults["s0" + resultSuffix] = underlyingStartValue[i];
-                results_.additionalResults["fx0" + resultSuffix] = fxConversionFactor[i];
+                // We want S0 or S0_i_nth(>0)
+                if (nthCurrentPeriod == 0 && i == 0) {
+                    results_.additionalResults["s0"] = underlyingStartValue[i];
+                    results_.additionalResults["fx0"] = fxConversionFactor[i];
+                } else if (nthCurrentPeriod > 0) {
+                    results_.additionalResults["s0" + resultSuffix] = underlyingStartValue[i];
+                    results_.additionalResults["fx0" + resultSuffix] = fxConversionFactor[i];
+                }
+
                 results_.additionalResults["s1" + resultSuffix] = s1;
                 results_.additionalResults["fx1" + resultSuffix] = fx1;
                 results_.additionalResults["underlyingMultiplier" + resultSuffix] = arguments_.underlyingMultiplier_[i];
