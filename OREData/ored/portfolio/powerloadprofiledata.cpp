@@ -52,8 +52,12 @@ QuantExt::LoadFactor parseLoadFactor(XMLNode* lfNode) {
 // Helper function to write load factors to an XML node
 void writeLoadFactorsToNode(XMLDocument& doc, XMLNode* parentNode, const std::vector<QuantExt::LoadFactor>& loadFactors) {
     for (const auto& [from, to, loadValue, isDstHour] : loadFactors) {
-        std::vector<std::string> attributesKeys = {"from", "to", "dst"};
-        std::vector<std::string> attributesValues = {ore::data::to_string(from), ore::data::to_string(to), "y"};
+        std::vector<std::string> attributesKeys = {"from", "to"};
+        std::vector<std::string> attributesValues = {ore::data::to_string(from), ore::data::to_string(to)};
+        if (isDstHour) {
+            attributesKeys.push_back("dst");
+            attributesValues.push_back("Y");
+        }
         XMLUtils::addChild(doc, parentNode, "LoadFactor", to_string(loadValue), attributesKeys, attributesValues);
     }
 }
